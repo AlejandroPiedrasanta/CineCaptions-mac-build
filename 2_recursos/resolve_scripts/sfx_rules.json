@@ -1,0 +1,68 @@
+{
+  "_ayuda": {
+    "que_es": "Reglas que deciden que efecto de sonido le toca a cada bloque de subtitulo. Se editan aca, NO en el codigo Python.",
+    "de_donde_salen_los_sonidos": "De las carpetas dentro de sfx_library/. Los nombres de las carpetas son los que ves aca abajo (Bass Hit, Click, Esenciales, futurista, Glitch, Hit, Power Down, Power Up, Riser, Slams, Slices, Whoosh) — se referencian con su nombre exacto, respetando mayusculas y espacios.",
+    "por_defecto": "Sin reglas activas, todos los bloques destacados usan 'Esenciales'.",
+    "modos": "En la pantalla Sonido hay dos modos. SIMPLE (el de siempre al estrenar): un efecto al principio de cada bloque, alternando dos sonidos (de fabrica TAP_POP y typewriter; se cambian desde la pantalla). AVANZADO: mandan las reglas de este archivo. El modo y los dos sonidos se guardan en ~/DaVinciSubtitles/sfx_modo.json.",
+    "como_funciona": "Las reglas se prueban EN ORDEN, de arriba hacia abajo. Gana la primera que se cumple. Si no se cumple ninguna, se usa 'categoria_por_defecto'.",
+    "variedad": "Dentro de una categoria los sonidos se turnan y nunca se repite el mismo dos veces seguidas, asi que con 'Esenciales' ya hay 12 sonidos rotando.",
+    "condiciones_disponibles": {
+      "texto_termina_en": "lista de signos; se cumple si el texto del bloque termina en alguno",
+      "texto_contiene": "lista de palabras; se cumple si alguna aparece en el bloque (sin distinguir mayusculas ni tildes)",
+      "texto_contiene_numero": "true si el bloque tiene alguna cifra",
+      "pausa_antes_mayor_a": "segundos de silencio entre el bloque anterior y este",
+      "es_primer_bloque": "true solo para el primer bloque del video",
+      "es_ultimo_bloque": "true solo para el ultimo",
+      "solo_una_palabra": "true si el bloque es una sola palabra suelta",
+      "roles_incluyen": "lista de roles que el bloque debe tener (context / main / complement / base)"
+    },
+    "nota": "Si en una regla pones varias condiciones, se tienen que cumplir TODAS.",
+    "sin_efecto": "Para que un bloque no suene, pon la categoria en null. Poniendo 'categoria_por_defecto': null solo suenan los bloques que enganchan una regla."
+  },
+
+  "version": 3,
+  "nombre_pista_audio": "SFX",
+  "volumen_db": -12,
+  "minimo_segundos_entre_efectos": 0.25,
+  "categoria_por_defecto": "Esenciales",
+
+  "reglas": [],
+
+  "reglas_de_ejemplo": [
+    {
+      "categoria": "Power Down",
+      "descripcion": "Cierre del video: el ultimo bloque baja la energia.",
+      "cuando": { "es_ultimo_bloque": true }
+    },
+    {
+      "categoria": "Riser",
+      "descripcion": "Preguntas: el riser levanta la tension antes de la respuesta.",
+      "cuando": { "texto_termina_en": ["?"] }
+    },
+    {
+      "categoria": "Slams",
+      "descripcion": "Enfasis fuerte: exclamaciones, impacto seco.",
+      "cuando": { "texto_termina_en": ["!"] }
+    },
+    {
+      "categoria": "Bass Hit",
+      "descripcion": "Cifras y precios: el golpe grave subraya el dato.",
+      "cuando": { "texto_contiene_numero": true }
+    },
+    {
+      "categoria": "Glitch",
+      "descripcion": "Cambio brusco de tema: pausa larga antes del bloque.",
+      "cuando": { "pausa_antes_mayor_a": 1.2 }
+    },
+    {
+      "categoria": "Whoosh",
+      "descripcion": "Cambio de tema suave: pausa media antes del bloque.",
+      "cuando": { "pausa_antes_mayor_a": 0.6 }
+    },
+    {
+      "categoria": "Hit",
+      "descripcion": "Enfasis normal: bloque completo de 3 lineas.",
+      "cuando": { "roles_incluyen": ["context", "main", "complement"] }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+# CineCaptions · By Cinema Productions
+# Compila los instaladores de Mac (Apple Silicon e Intel) en los servidores de GitHub.
+# Actions > "Instaladores Mac" > Run workflow. Los .dmg quedan en "Artifacts" (y en Releases si se pone publicar).
+name: Instaladores Mac
+on:
+  workflow_dispatch:
+  push:
+    tags: ['mac-v*']
+jobs:
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: AppleSilicon
+            runner: macos-14          # arm64
+            python: '3.14'
+          - nombre: Intel
+            runner: macos-15-intel    # x86_64 (onnxruntime Intel solo existe hasta Python 3.13)
+            python: '3.13'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Compilar
+        env:
+          CINECAPTIONS_PYTHON: python3
+          CINECAPTIONS_SIN_PANTALLA: '1'
+        run: bash 7_mac/Construir_Instalador_Mac.sh
+      - name: Registro de la autoprueba
+        if: always()
+        run: cat 6_compilacion_mac/autoprueba.txt || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CineCaptions-Mac-${{ matrix.nombre }}
+          path: INSTALADORES/Mac/CineCaptions_Mac_*.dmg
+          if-no-files-found: error
+          retention-days: 1          # el .dmg se baja al terminar: no se acumulan GB de artefactos (el plan gratis da 500 MB)

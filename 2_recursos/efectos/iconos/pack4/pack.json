@@ -1,0 +1,42 @@
+{
+ "base": [
+  941,
+  1672
+ ],
+ "sprites": [
+  {
+   "archivo": "01.png",
+   "borde": [],
+   "cx": 0.203,
+   "cy": 0.1746,
+   "ancho": 254,
+   "alto": 290
+  },
+  {
+   "archivo": "02.png",
+   "borde": [],
+   "cx": 0.8624,
+   "cy": 0.2395,
+   "ancho": 197,
+   "alto": 113
+  },
+  {
+   "archivo": "03.png",
+   "borde": [
+    "der"
+   ],
+   "cx": 0.7072,
+   "cy": 0.7147,
+   "ancho": 551,
+   "alto": 714
+  },
+  {
+   "archivo": "04.png",
+   "borde": [],
+   "cx": 0.1849,
+   "cy": 0.6322,
+   "ancho": 320,
+   "alto": 266
+  }
+ ]
+}

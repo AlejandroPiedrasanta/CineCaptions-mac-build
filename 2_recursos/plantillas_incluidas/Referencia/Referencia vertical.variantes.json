@@ -1,0 +1,738 @@
+{
+ "1": {
+  "nombre": "Impacto cian",
+  "color": "#4C94F5",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Poppins",
+     "ExtraBold"
+    ],
+    "f2": [
+     "Poppins",
+     "ExtraBold"
+    ],
+    "tam": 0.257,
+    "color": "#4C94F5",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "2": {
+  "nombre": "Editorial rosa",
+  "color": "#FF75B2",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.28,
+    "color": "#FF75B2",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "3": {
+  "nombre": "Amro Highlight naranja",
+  "color": "#FF8C26",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Inter",
+     "Black"
+    ],
+    "f2": [
+     "Inter",
+     "Black"
+    ],
+    "tam": 0.17,
+    "color": "#FF8C26",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": true
+ },
+ "4": {
+  "nombre": "Moderno blanco",
+  "color": "#FFFFFF",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "5": {
+  "nombre": "Editorial azul",
+  "color": "#5C9EF5",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.28,
+    "color": "#5C9EF5",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "6": {
+  "nombre": "Amro Fire",
+  "color": "#FF4C26",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Inter",
+     "Black"
+    ],
+    "f2": [
+     "Inter",
+     "Black"
+    ],
+    "tam": 0.17,
+    "color": "#FF4C26",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": true
+ },
+ "7": {
+  "nombre": "Amro Strike rojo",
+  "color": "#FF4747",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Inter",
+     "Black"
+    ],
+    "f2": [
+     "Inter",
+     "Black"
+    ],
+    "tam": 0.17,
+    "color": "#FF4747",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": true
+ },
+ "8": {
+  "nombre": "Amro Underline lima",
+  "color": "#9EFF4C",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Inter",
+     "Black"
+    ],
+    "f2": [
+     "Inter",
+     "Black"
+    ],
+    "tam": 0.17,
+    "color": "#9EFF4C",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": true
+ },
+ "9": {
+  "nombre": "Impacto cian · Screen",
+  "color": "#4C94F5",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Poppins",
+     "ExtraBold"
+    ],
+    "f2": [
+     "Poppins",
+     "ExtraBold"
+    ],
+    "tam": 0.257,
+    "color": "#4C94F5",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "10": {
+  "nombre": "Editorial rosa · Screen",
+  "color": "#FF75B2",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.28,
+    "color": "#FF75B2",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "11": {
+  "nombre": "Moderno blanco · Screen",
+  "color": "#FFFFFF",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "12": {
+  "nombre": "Editorial azul · Screen",
+  "color": "#5C9EF5",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.28,
+    "color": "#5C9EF5",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "13": {
+  "nombre": "Impacto cian · Sólido",
+  "color": "#4C94F5",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Poppins",
+     "ExtraBold"
+    ],
+    "f2": [
+     "Poppins",
+     "ExtraBold"
+    ],
+    "tam": 0.257,
+    "color": "#4C94F5",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "14": {
+  "nombre": "Editorial rosa · Sólido",
+  "color": "#FF75B2",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.28,
+    "color": "#FF75B2",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "15": {
+  "nombre": "Moderno blanco · Sólido",
+  "color": "#FFFFFF",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "16": {
+  "nombre": "Editorial azul · Sólido",
+  "color": "#5C9EF5",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.28,
+    "color": "#5C9EF5",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ }
+}

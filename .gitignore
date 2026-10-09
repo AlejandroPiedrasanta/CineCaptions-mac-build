@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.exe
+*.dmg
+*.pkg
+6_compilacion_mac/

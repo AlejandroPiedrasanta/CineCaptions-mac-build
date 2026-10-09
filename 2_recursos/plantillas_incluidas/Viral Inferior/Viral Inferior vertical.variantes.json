@@ -1,0 +1,137 @@
+{
+ "1": {
+  "nombre": "Impacto",
+  "color": "#FFFFFF",
+  "roles": {
+   "context": {
+    "f1": [
+     "Inter 18pt",
+     "Light"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Light"
+    ],
+    "tam": 0.128,
+    "color": "#FFFFFF",
+    "mayus": true
+   },
+   "main": {
+    "f1": [
+     "Montserrat",
+     "Black"
+    ],
+    "f2": [
+     "Montserrat",
+     "Black"
+    ],
+    "tam": 0.192,
+    "color": "#FFFFFF",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Inter 18pt",
+     "Light"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Light"
+    ],
+    "tam": 0.128,
+    "color": "#FFFFFF",
+    "mayus": true
+   }
+  }
+ },
+ "2": {
+  "nombre": "Oro",
+  "color": "#FFCC38",
+  "roles": {
+   "context": {
+    "f1": [
+     "Inter 18pt",
+     "Light"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Light"
+    ],
+    "tam": 0.122,
+    "color": "#FFFFFF",
+    "mayus": true
+   },
+   "main": {
+    "f1": [
+     "Montserrat",
+     "ExtraBold"
+    ],
+    "f2": [
+     "Montserrat",
+     "ExtraBold"
+    ],
+    "tam": 0.198,
+    "color": "#FFCC38",
+    "mayus": true
+   },
+   "complement": {
+    "f1": [
+     "Inter 18pt",
+     "Light"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Light"
+    ],
+    "tam": 0.122,
+    "color": "#FFFFFF",
+    "mayus": true
+   }
+  }
+ },
+ "3": {
+  "nombre": "Editorial",
+  "color": "#FAF2E0",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Regular"
+    ],
+    "f2": [
+     "Poppins",
+     "Regular"
+    ],
+    "tam": 0.096,
+    "color": "#FAF2E0",
+    "mayus": true
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.262,
+    "color": "#FAF2E0",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Regular"
+    ],
+    "f2": [
+     "Poppins",
+     "Regular"
+    ],
+    "tam": 0.096,
+    "color": "#FAF2E0",
+    "mayus": true
+   }
+  }
+ }
+}

@@ -1,0 +1,245 @@
+==============================================================================
+ 1_codigo\  —  EL PROGRAMA
+ CineCaptions · By Cinema Productions
+==============================================================================
+
+Todo CineCaptions en Python. Va DENTRO del .exe (3_compilar lo copia y lo compila).
+El principal es «CineCaptions (script principal).py»: la ventana, el Editor de palabras, GO,
+la licencia y main(). Cada tema pesado tiene su módulo (la lista de abajo).
+Cada archivo dice en su 2.ª línea qué es. La lógica completa: LEEME.txt, sección 4.
+
+QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
+------------------------------------------------------------------------------
+    actualizaciones.py
+        actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
+    ajustes_ui.py
+        Ajustes: panel rápido y ventana completa (General, Interfaz, Atajos, Acerca de, Ayuda) + notas de la versión.
+    archivos_seguros.py
+        escritura atómica de JSON/texto (preferencias, marcas, proyectos): un corte o dos hilos ya no dejan archivos a medias.
+    avisos_sistema.py
+    banco_pruebas.py
+        banco de pruebas: timeline temporal con fondo liso + audio, render en Resolve y comparación cuadro a cuadro con un video de referencia.
+    bpm.py
+        detección de BPM y de los golpes de pulso de una música (v5.4.8), solo con numpy.
+    brillo_ui.py
+        barridos de luz y ondas al pulsar para todos los botones.
+    broll.py
+        B-roll de bancos de stock (Pexels) en las palabras que nombran cosas concretas (v5.4.8).
+    cache_voz.py
+        caché de transcripciones: el mismo video con el mismo motor e idioma no se vuelve a transcribir.
+    CineCaptions (script principal).py
+        el programa: ventana principal (Inicio/GO, Proyecto, Editor, SFX Lab), editor de palabras, licencia, generar y colocar en Resolve, main().
+    cola_trabajos.py
+        cola de trabajos de FONDO: máximo 2 a la vez y se apartan mientras GO trabaja.
+    colocacion.py
+        qué edición de Resolve hay (Free / Studio), si lo colocado en el timeline es REAL, por qué falló en lenguaje claro, cómo repararlo solo y cómo dejar la vista.
+    composicion.py
+        Composición de los bloques dinámicos: layouts (alineación de contexto/complemento) y desplazamientos.
+    copias.py
+        copias de seguridad de ~/DaVinciSubtitles (crear y restaurar un .zip).
+    crea_estilo_ui.py
+        «Crea tu estilo»: la galería de 48 ejemplos (con su vista real de Resolve) para armar un pack en un clic y el popup que explica la estructura de nombres.
+    cuda_libs.py
+        las librerías CUDA que necesita Whisper en la GPU: detectarlas, registrarlas y repararlas.
+    descargas.py
+        descargas grandes que se reanudan y se verifican (SHA-256).
+    ducking.py
+        baja la música sola mientras hay voz (ducking), calculado desde las palabras de la transcripción.
+    dynamic_subtitles.py
+        el «cerebro» de los subtítulos dinámicos: frases, roles (contexto/PRINCIPAL/complemento) y bloques.
+    edicion_pack.py
+        «Editar en Resolve»: abre un pack de «Pack de estilos» como timeline para modificarlo y exportarlo de nuevo.
+    editor_ui.py
+        piezas del editor Creativo: barra de herramientas, tarjeta del párrafo, palabras por línea, play y el panel de avance de Asistencia/Generar.
+    efectos_extra.py
+        más efectos para la página «Efectos» (v5.4.8): números 1-2-3, pegatinas, subrayados, overlays continuos, efectos propios y cierre (outro).
+    efectos_extra_ui.py
+        la sección «Más efectos» de la página Efectos: números, pegatinas, énfasis, ambiente, mis efectos y el cierre (outro).
+    efectos_pagina.py
+        la página «Efectos»: elegir la intro (con su sonido), las transiciones de los cortes y los iconos flotantes (y en qué palabras salen).
+    efectos_ui.py
+        animaciones de la interfaz: fondo vivo, vistas reales animadas, entrada escalonada de tarjetas.
+    efectos_visuales.py
+        efectos visuales que acompañan a los captions: intro, transiciones en los cortes e iconos flotantes en las frases clave.
+    ejemplos_estilo.py
+        los 48 ejemplos de «Crea tu estilo» (posición, tipografía y colores; 18 con un principal de Amro.Films Captions), su vista y cómo se vuelven un pack o un timeline de Resolve.
+    emojis.py
+        emojis de las palabras clave: catálogo, biblioteca Fluent 3D, PNG propios y sugerencias por idioma.
+    emojis_animados.py
+        emojis ANIMADOS del selector: Noto Animated Emoji (Google, CC BY 4.0), bajados al pedirlos y cacheados.
+    emojis_sets.py
+        SETS de emojis (estilos de imagen) que se bajan al pedirlos: Fluent 3D completo (Microsoft, MIT) y Noto de Google (Apache 2.0).
+    emojis_sfx.py
+        el sonido de cada emoji (fuego → fuego, beso → beso…): qué familia le toca, el que el usuario eligió y los eventos que se mandan a Resolve.
+    emojis_sfx_ui.py
+        pestaña «Emojis» del SFX Lab: todos los emojis en una rejilla y el sonido de cada uno, para cambiarlo.
+    energia.py
+        la «curva de energía» del habla: cuánta intensidad tiene cada tramo del video, calculada desde las palabras.
+    ensure_lang_pack.py
+        instala los paquetes de traducción sin internet (Argos Translate) que falten.
+    escena_go.py
+        la escena de Inicio: esfera de partículas 3D, absorción, cometas de pasos y explosión final.
+    estilo_desde_imagen.py
+        «Estilo desde una imagen»: lee un fotograma de un video viral y arma un pack con sus colores, su peso y su posición.
+    estilos_bloque.py
+        qué estilo (variante del pack) lleva CADA bloque: lo decide la app y lo enseña Creativo, ya no el azar de Resolve.
+    estilos_inicio.py
+        los 10 estilos de la pantalla de Inicio: cada uno es un rediseño completo (héroe, fondo, partículas).
+    estilos_slider.py
+        el carrusel horizontal de «Pack de estilos»: tarjetas verticales sobre fotos de video con los captions de Resolve encima.
+    fuentes_sistema.py
+        encuentra en el disco el archivo .ttf/.otf de una familia y estilo.
+    fusion_v1.py
+    guion_captions.py
+        estilo «guion»: la frase se arma palabra a palabra (cada palabra, su pista, su estilo, su sitio y su momento).
+    guion_editor.py
+        el editor Creativo para el estilo «guion»: las marcas de las palabras → el plan de bloques (el MISMO que usa Generar).
+    guion_planificador.py
+        del texto con tiempos (ASR) a los bloques del estilo «guion»: frases, palabra grande, negritas, pila, estilo y momento.
+    guion_referencia.py
+        los 15 bloques de REFERENCIA.mp4 medidos a mano (tiempos, palabras, pesos, estilos y sitios): la «verdad» contra la que se prueba el planificador.
+    guion_vista.py
+        «Así se verá este bloque» del estilo «guion»: dibuja el bloque con la MISMA geometría que coloca Resolve (cada palabra en su x, y y tamaño).
+    hacer_previas_efectos.py
+        herramienta de desarrollo: las vistas previas (mp4 + jpg) de la página «Efectos».
+    hacer_vista_kinetic.py
+        genera la vista previa INCLUIDA del estilo «Kinetic» (los fotogramas que enseña la tarjeta del slider de Estilos).
+    hacer_vista_slider.py
+        genera el VIDEO que se reproduce en la tarjeta de un pack del slider «Pack de estilos» (captions reales de Resolve).
+    hacer_vista_viral.py
+        genera la vista previa INCLUIDA del estilo «VIRAL» (los fotogramas que enseña la tarjeta del slider de Estilos).
+    hacer_vistas_guia_video.py
+        genera los CLIPS de 4 s (entrada, texto sostenido y SALIDA) de los 48 ejemplos de «Crea tu estilo», renderizados por Resolve.
+    i18n.py
+        idiomas de la interfaz: tr("texto en español") y los catálogos de 2_recursos/locales.
+    ia_texto.py
+        IA de texto local (Qwen3): corrige, elige palabras clave y emojis virales, quita signos.
+    instalador_scripts.py
+        copia los scripts de CineCaptions al menú de DaVinci Resolve y comprueba que estén al día.
+    instalar_fuentes.py
+        instala en el sistema las tipografías de las plantillas (para que Resolve/Fusion las vea).
+    isla_ui.py
+        la «isla dinámica»: el menú de navegación flotante de arriba, los controles de la ventana y el borde.
+    kinetic_captions.py
+        estilo «Kinetic»: la geometría de la pila de elementos (tamaños con la tipografía real, posiciones, giros, tiempos) y el .json para Resolve.
+    kinetic_planificador.py
+        del texto con tiempos (ASR) a los bloques del estilo «Kinetic»: frases, palabra héroe, receta (plantilla), elementos y momentos.
+    kinetic_vista.py
+        vista aproximada (Pillow) de un bloque del estilo «Kinetic»: la pila ya armada, dibujada sin pasar por Resolve.
+    licencia.py
+        la licencia (Lemon Squeezy / Gumroad): activar, verificar, desactivar, estado firmado, 7 días sin internet.
+    mantenimiento.py
+        límite y limpieza automática de las cachés del programa (secuencias, vistas, voz, emojis…).
+    mapa_codigo.py
+        consulta el código y la documentación POR TEMA sin leer archivos enteros (mapa, símbolo, módulo, cambios); lo usan el MCP y la línea de comandos.
+    mcp_cinecaptions.py
+        servidor MCP (stdio, sin dependencias) de CineCaptions: estado, packs, transcribir, planificar, colocar, renderizar y comparar.
+    medir_barrido.py
+        mide, sobre un render de probar_barrido.py, si el barrido de luz recorre TODA la palabra y cuánto dura.
+    medir_texto.py
+        mide cuánto ocupa cada palabra en pantalla (look «pintado»).
+    mograf_ui.py
+        Motion Graphics de la interfaz: entrada de tarjetas con marcas, título cinético, traza de luz, formas ambiente y HUD de Inicio.
+    motor_voz.py
+        motor de voz e IA Qwen3 en su propio Python 3.12: instalar, detectar y transcribir.
+    musica_go.py
+        música de fondo automática para GO (v5.4.8): elige, alinea al pulso, nivela y baja sola cuando se habla.
+    novedades_visuales.py
+    orbe_mecanica.py
+        el botón GO como un astrolabio mecánico: anillo de runas, engranaje de bronce, filigrana y gema de esmeralda.
+    ortografia.py
+        revisión ortográfica del editor (marca y propone, nunca corrige solo).
+    packs_drt.py
+        lee los packs .drt/.drb SIN abrir Resolve (sets, formatos, tipografías).
+    pausas.py
+        «Quitar pausas» (jump cuts en los silencios) para GO (v5.4.8).
+    plantillas.py
+        packs de estilos: leer, guardar, elegir y preparar el pack que se aplica.
+    preparar_efectos.py
+        herramienta de desarrollo: convierte las imágenes de iconos sobre fondo blanco en SPRITES con transparencia (uno por icono).
+    probar_barrido.py
+        prueba en el banco zz_BANCO (Resolve) del BARRIDO DE LUZ de las palabras grandes del pack «Referencia»: ¿llega hasta el final de la palabra, en cuánto tiempo?
+    probar_efectos.py
+        prueba de punta a punta de la página «Efectos»: suelta un video en la app sin pantalla (GO real con los efectos visuales ENCENDIDOS), Resolve renderiza y se saca una hoja de cuadros.
+    probar_estilos_app.py
+        prueba de los 3 estilos (VIRAL, Kinetic, Referencia) DENTRO de la app, sin pantalla y SIN Resolve: sonidos, emojis y colores que salen en cada uno.
+    probar_fusion_v1.py
+        prueba en Resolve del movimiento sobre el video (fusion_v1.py): zoom lento, temblor, transiciones y fondo desenfocado.
+    probar_go.py
+        pulsa GO de la app SIN pantalla sobre un archivo y un pack, y deja los bloques en el timeline actual de Resolve (el banco zz_BANCO).
+    probar_kinetic.py
+        prueba del estilo «Kinetic» de punta a punta: voz → bloques → Resolve (banco zz_BANCO) → render → hoja de cuadros.
+    probar_viral.py
+        prueba del estilo «VIRAL»: laboratorio de comps, planificador sobre un video real y render con hoja de cuadros.
+    probar_viral_app.py
+        prueba del estilo «VIRAL» DENTRO de la app (sin pantalla y SIN Resolve): GO, Creativo (palabras marcadas), sonidos y emojis.
+    proyecto_pruebas.py
+        un proyecto TEMPORAL y vacío de Resolve para probar sin ensuciar el del usuario.
+    proyectos.py
+        registro de proyectos (vídeos) trabajados: recientes, abrir, borrar.
+    qt_kit.py
+        kit de interfaz Qt: colores, tipografía Inter, controles, mensajes, hilos (correr_en_hilo, despues).
+    recomendaciones.py
+        lo que recomendamos para cada estilo: al elegir VIRAL, Kinetic o Referencia el sonido y la página Efectos quedan ya configurados.
+    recorrido_ui.py
+        recorrido visual por pasos: una capa sobre la ventana que ilumina cada zona de la interfaz y la explica (se desactiva en Ajustes).
+    registro.py
+        el registro de avisos y errores: archivo de log, historial y señal para la interfaz.
+    registro_ayuda.py
+        traduce cada aviso o error del Registro a lenguaje claro: qué pasó, qué significa y qué hacer.
+    registro_ui.py
+        el aviso en la barra de título, el botón del registro con contador y la ventana Registro.
+    resolve_bridge.py
+        conexión con Resolve: API externa (Studio), Puente (Free) o paso manual; ejecuta los scripts.
+    resolve_mcp.py
+        conexión con el MCP oficial de Resolve 21.1+: abrir Resolve, proyecto reciente, ejecutar scripts.
+    ritmo_ui.py
+        Regulador del ritmo de las animaciones: si la interfaz va justa (GO usando CPU/GPU, equipo modesto) baja los fotogramas del fondo y de la esfera para que los clics respondan; los sube al aliviarse.
+    salud.py
+        chequeo de librerías al arrancar (versiones fijadas, motor de IA, MCP).
+    sentimiento.py
+        si una frase suena positiva o negativa (listas de palabras, sin modelos), para el sonido de los emojis (v5.4.8).
+    sfx_audio.py
+        audio del SFX Lab: cargar, cambiar tono y velocidad, reproducir.
+    sfx_editor.py
+        la ventana «Editar» de un sonido: elegir de forma visual qué parte suena (onda con asas) y su volumen.
+    sfx_rules.py
+        decide el efecto de sonido de cada bloque leyendo resolve_scripts/sfx_rules.json.
+    sfx_studio.py
+        la pantalla SFX Lab (biblioteca, pad XY, marcadores por color, reemplazar).
+    sidecar_lua.py
+        escribe <archivo>.lua junto a cada .json (canal de lectura para Resolve Free 21.1).
+    sonidos_extra.py
+        los sonidos extra de GO (v5.4.8): música de fondo, sonidos de transición en los cortes, riser + golpe + silencio en el gancho.
+    subtitle_transcriber.py
+        transcripción con Whisper, traducción con Argos y escritura de .srt / manifiestos.
+    sugerencias_ia.py
+        sugiere la palabra PRINCIPAL de cada bloque (motor clásico, sin IA instalada).
+    tareas_instalador.py
+        lo que el instalador pide al programa (--tarea verificar/scripts/fuentes/modelo/motor_ia...).
+    tema.py
+        temas de la interfaz (superficies, color de resaltado, tamaño) y su traductor de colores.
+    tts_prueba.ps1
+        voz de prueba (Windows SAPI) → WAV: para probar los captions con un video SIN audio útil.
+    ui_toast.py
+        avisos que se cierran solos (toasts).
+    un_clic_ui.py
+        la pantalla de Inicio: botón GO, pasos animados, cinta viral y vista previa.
+    ventana_licencia.py
+        la ventana «Activa tu licencia» (formato CineSlide: panel animado, clave, confeti).
+    version.py
+        la versión del programa (APP_VERSION) y el autor, en un solo sitio.
+    vigilancia.py
+        guardián de tareas largas (GO, Generar): detecta atascos, destraba motores, chequeos periódicos y arranque atascado.
+    viral_captions.py
+        estilo «VIRAL»: la geometría de la pila (tamaños con la tipografía real, posiciones, tiempos) y el .json para Resolve.
+    viral_planificador.py
+        del texto con tiempos (ASR) a los bloques del estilo «VIRAL»: frases, palabra con efecto, líneas finas y negritas, y momentos.
+    vista_previa_fx.py
+        la vista previa de 3 segundos de la página «Efectos» (v5.4.8): TODO lo que está encendido, sobre fotos de muestra, sin abrir Resolve.
+    vistas_guia.py
+        las vistas REALES (renderizadas por Resolve) de los ejemplos de «Crea tu estilo»: se piden, se reducen y se guardan en caché.
+    vistas_reales.py
+        vistas previas renderizadas DE VERDAD por Resolve (packs y bloques de GO).
+    vistas_slider.py
+        los VIDEOS que se reproducen dentro de las tarjetas del slider «Pack de estilos» (captions reales de Resolve, no imágenes fijas).

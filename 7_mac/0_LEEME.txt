@@ -1,0 +1,51 @@
+==============================================================================
+ 7_mac\  —  INSTALADORES PARA MAC (Apple Silicon e Intel)
+ CineCaptions · By Cinema Productions
+==============================================================================
+
+Entrega (carpeta INSTALADORES/Mac): CineCaptions_Mac_AppleSilicon_<version>.dmg y CineCaptions_Mac_Intel_<version>.dmg  →  dentro, Instalar_CineCaptions.pkg
+(instala en Aplicaciones, deja los scripts en el menú de Resolve y las
+tipografías, igual que el instalador de Windows) + Desinstalar_CineCaptions.command.
+
+IMPORTANTE: PyInstaller no compila para Mac desde Windows. Hay dos vías:
+
+A) En una Mac (compila para la arquitectura de ESA Mac; Python 3.14 en Apple Silicon, 3.13 en Intel):
+       bash 7_mac/Construir_Instalador_Mac.sh
+   Deja CineCaptions_Mac_<version>.dmg en INSTALADORES/Mac (el de la versión anterior se quita).
+   (--solo-instalador reusa la app ya compilada y solo rehace .pkg y .dmg.)
+
+B) Sin Mac: GitHub Actions (ya configurado en .github\workflows\mac.yml).
+   En el repositorio: Actions > "Instaladores Mac" > Run workflow. Compila los dos:
+       macos-14        Apple Silicon  -> CineCaptions_Mac_AppleSilicon_<version>.dmg  (Python 3.14)
+       macos-15-intel  Intel          -> CineCaptions_Mac_Intel_<version>.dmg         (Python 3.13)
+   Los .dmg se descargan en "Artifacts". Repositorio privado: el código no es público.
+
+NOTAS
+- Intel: onnxruntime (detección de voz) ya no publica versión Intel para Python 3.14, por eso la
+  versión Intel se compila con Python 3.13 y onnxruntime 1.23.2 (la última con Intel).
+- Voz: en Mac se usa Whisper (large-v3-turbo, CPU). El motor Qwen3 es solo de Windows.
+  El modelo (~1,6 GB) se baja la primera vez que se transcribe.
+- Sin cuenta de Apple Developer (99 USD/año) el programa funciona, pero macOS pide
+  abrir el .pkg con clic derecho > Abrir la primera vez. Con la cuenta, firma y notariza:
+      export FIRMA_APP="Developer ID Application: Tu Nombre (TEAMID)"
+      export FIRMA_PKG="Developer ID Installer: Tu Nombre (TEAMID)"
+      xcrun notarytool store-credentials cinecaptions   # una vez
+      export NOTARIO_PERFIL=cinecaptions
+      bash 7_mac/Construir_Instalador_Mac.sh
+- Resolve en Mac: Preferencias > Sistema > General > Uso de scripting externo = Local,
+  y Python 3 instalado (python.org). Resolve de la Mac App Store corre aislado y no
+  deja actualizar sus scripts (el programa lo avisa).
+- El registro de la instalación queda en ~/DaVinciSubtitles/instalacion_mac.log.
+- Pendiente de probar en una Mac real: nada de esto se pudo ejecutar desde Windows.
+  Verificado aquí: que todas las librerías fijadas de requirements.txt tienen versión
+  para macOS arm64 con Python 3.14, y que el código ya trae rutas/rutinas de Mac
+  (Resolve, fuentes, licencia/IOPlatformUUID, abrir carpetas).
+
+ARCHIVOS
+    Construir_Instalador_Mac.sh   venv → PyInstaller → autoprueba → .pkg → .dmg (→ notarizar)
+    cinecaptions_mac.spec         receta de PyInstaller (CineCaptions.app, Info.plist)
+    entitlements.plist            permisos del runtime reforzado (Python/Qt/onnxruntime)
+    pkg\scripts\postinstall       scripts de Resolve y tipografías, como el usuario
+    pkg\recursos\*.html           pantallas de bienvenida y final del instalador
+    Desinstalar_CineCaptions.command
+    github_actions_mac.yml        compilar sin Mac

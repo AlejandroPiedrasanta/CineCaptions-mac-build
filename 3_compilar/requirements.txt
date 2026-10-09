@@ -1,0 +1,36 @@
+# Librerias del programa compilado (Python 3.14.8). Versiones FIJAS a proposito:
+# el instalador anterior (.bat) subia todo "a la ultima" y asi entro PyAV 19,
+# que rompe faster-whisper 1.2.1 (av.open ya no acepta metadata_errors =>
+# ninguna transcripcion funciona). Antes de subir una version: compilar,
+# instalar y correr  "CineCaptions.exe" --tarea verificar
+# Interfaz: PySide6 (Qt 6). Solo los modulos esenciales (QtCore/QtGui/QtWidgets).
+PySide6-Essentials==6.11.2
+shiboken6==6.11.2
+# v5.2: iconos de linea modernos (Phosphor) para la interfaz
+qtawesome==1.4.2
+QtPy==2.4.3
+pillow==12.3.0
+numpy==2.5.3
+av==18.1.0
+pyspellchecker==0.9.0
+certifi==2026.7.22
+pynput==1.8.2
+six==1.17.0
+ctranslate2==4.8.2
+faster-whisper==1.2.1
+onnxruntime==1.30.0
+tokenizers==0.23.2
+huggingface_hub==1.33.0
+hf-xet==1.6.0
+PyYAML==6.0.3
+tqdm==4.70.1
+# Traduccion sin internet: argostranslate se instala con --no-deps (ver
+# Construir_Instalador.ps1) porque declara stanza+spacy, que arrastran torch
+# (~500 MB y arranque 6x mas lento). Se usa MiniSBD; stanza queda como stub
+# (rthook_stanza_stub.py).
+minisbd==0.9.5
+sacremoses==0.1.1
+sentencepiece==0.2.2
+# Compilador
+pyinstaller==6.22.3
+pyinstaller-hooks-contrib==2026.8

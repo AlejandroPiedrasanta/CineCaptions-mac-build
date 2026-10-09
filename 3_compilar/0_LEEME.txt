@@ -1,0 +1,45 @@
+==============================================================================
+ 3_compilar\  —  COMPILAR EL .EXE
+ CineCaptions · By Cinema Productions
+==============================================================================
+
+Construir_Instalador.ps1 lo hace todo y deja Instalar_CineCaptions_<versión>.exe en INSTALADORES/Windows:
+    powershell -ExecutionPolicy Bypass -File 3_compilar\Construir_Instalador.ps1
+Ver LEEME.txt, sección 7.
+
+QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
+------------------------------------------------------------------------------
+    banner_capas\   (4 archivos)
+        astro_engr.png
+        astro_fili.png
+        astro_nucleo.png
+        astro_runas.png
+    aplicar_traducciones.py
+        mete los textos nuevos de traducciones_extra.json en los catálogos de 2_recursos/locales (en, pt, fr, de, it).
+    app.manifest
+        manifiesto del instalador (sin permisos de administrador)
+    auditar_traducciones.py
+        lista los tr("...") del código que no están en los catálogos de idioma (salen en español).
+    banner.jpg
+        el banner del instalador (lo dibuja 4_diseno/banner/crear_banner.py)
+    cinecaptions.spec
+        receta de PyInstaller del programa (qué módulos y recursos van dentro del .exe).
+    Construir_Instalador.ps1
+        arma el instalador de Windows de principio a fin (PyInstaller + autoprueba + C#).
+    documentar.py
+        regenera el índice y el mapa del código del LEEME y anota los cambios en el registro.
+    encabezados.py
+        pone (o actualiza) el encabezado de autor y la descripción en cada archivo de código.
+    huellas.json
+        huellas de cada archivo: con ellas documentar.py anota qué cambió
+    Instalador.cs
+        el instalador y desinstalador (C#, .NET Framework 4): pasos, banner, registro.
+    notas_de_version.py
+        imprime las mejoras de una versión (las de ajustes_ui.NOTAS_VERSION), una por línea con viñeta: Publicar_Version.ps1 las manda al manifiesto.
+    requirements.txt
+        librerías del programa con versión FIJA (Python 3.14)
+    rthook_stanza_stub.py
+        hook de arranque de PyInstaller (sustituye stanza para que Argos no arrastre torch).
+    sincronizar_version.py
+        pone la versión de version.py en todos los sitios que la repiten (scripts de Resolve, Puente) y avisa si algo no cuadra.
+    traducciones_extra.json

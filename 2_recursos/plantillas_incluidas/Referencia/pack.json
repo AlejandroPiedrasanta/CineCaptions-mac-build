@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "nombre": "Referencia",
+  "formatos": {
+    "v": {
+      "drb": "Referencia vertical.drb"
+    }
+  },
+  "guion": "referencia"
+}

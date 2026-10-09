@@ -1,0 +1,538 @@
+{
+ "fuego": {
+  "origen": "OpenGameArt",
+  "pack": "Fire Crackling",
+  "autor": "AntumDeluge",
+  "url": "https://opengameart.org/content/fire-crackling",
+  "archivo": "fire-1.wav",
+  "licencia": "CC0"
+ },
+ "risa": {
+  "origen": "OpenGameArt",
+  "pack": "Group giggling",
+  "autor": "Nocturnal_Vanguard",
+  "url": "https://opengameart.org/content/group-giggling",
+  "archivo": "group_giggling.ogg",
+  "licencia": "CC0"
+ },
+ "aplauso": {
+  "origen": "OpenGameArt",
+  "pack": "Applause in a large hall or church",
+  "autor": "eXpl0it3r",
+  "url": "https://opengameart.org/content/applause-in-a-large-hall-or-church",
+  "archivo": "applause-clapping-church-crowd-immersive.wav",
+  "licencia": "CC0"
+ },
+ "gato": {
+  "origen": "OpenGameArt",
+  "pack": "Meowing Cat Made in LabChirp",
+  "autor": "Traceletz",
+  "url": "https://opengameart.org/content/meowing-cat-made-in-labchirp",
+  "archivo": "meowing_cat.mp3",
+  "licencia": "CC0"
+ },
+ "perro": {
+  "origen": "OpenGameArt",
+  "pack": "Dog barking mono",
+  "autor": "HaelDB",
+  "url": "https://opengameart.org/content/dog-barking-mono",
+  "archivo": "dog_barking_mono.wav",
+  "licencia": "CC0"
+ },
+ "vaca": {
+  "origen": "OpenGameArt",
+  "pack": "Sci-Fi Aliens and Cows Pack",
+  "autor": "qubodup",
+  "url": "https://opengameart.org/content/sci-fi-aliens-and-cows-pack",
+  "archivo": "moo-notification.wav",
+  "licencia": "CC0"
+ },
+ "rana": {
+  "origen": "OpenGameArt",
+  "pack": "Mutant Frog",
+  "autor": "AntumDeluge",
+  "url": "https://opengameart.org/content/mutant-frog",
+  "archivo": "mutant_frog-2.wav",
+  "licencia": "CC0"
+ },
+ "pajaro": {
+  "origen": "OpenGameArt",
+  "pack": "Ambient Bird Sounds",
+  "autor": "isaiah658",
+  "url": "https://opengameart.org/content/ambient-bird-sounds",
+  "archivo": "birds-isaiah658_0.ogg",
+  "licencia": "CC0"
+ },
+ "leon": {
+  "origen": "OpenGameArt",
+  "pack": "80 CC0 RPG SFX",
+  "autor": "rubberduck",
+  "url": "https://opengameart.org/content/80-cc0-rpg-sfx",
+  "archivo": "creature_monster_04.ogg",
+  "licencia": "CC0"
+ },
+ "camara": {
+  "origen": "OpenGameArt",
+  "pack": "Camera",
+  "autor": "themightyglider",
+  "url": "https://opengameart.org/content/camera",
+  "archivo": "photo.ogg",
+  "licencia": "CC0"
+ },
+ "sirena": {
+  "origen": "OpenGameArt",
+  "pack": "Sirens and Alarm Noise",
+  "autor": "aquinn",
+  "url": "https://opengameart.org/content/sirens-and-alarm-noise",
+  "archivo": "siren_0.mp3",
+  "licencia": "CC0"
+ },
+ "avion": {
+  "origen": "OpenGameArt",
+  "pack": "War on Water:  SNDFX",
+  "autor": "yd",
+  "url": "https://opengameart.org/content/war-on-water-sndfx",
+  "archivo": "airplane.ogg",
+  "licencia": "CC0"
+ },
+ "telefono": {
+  "origen": "OpenGameArt",
+  "pack": "Crank movie telephone ringtone",
+  "autor": "cyberdyne",
+  "url": "https://opengameart.org/content/crank-movie-telephone-ringtone",
+  "archivo": "crank_ringtone.mp3",
+  "licencia": "CC0"
+ },
+ "motor": {
+  "origen": "OpenGameArt",
+  "pack": "Motor Sound Effect",
+  "autor": "EZduzziteh",
+  "url": "https://opengameart.org/content/motor-sound-effect",
+  "archivo": "motor_looping_0.mp3",
+  "licencia": "CC0"
+ },
+ "guitarra": {
+  "origen": "OpenGameArt",
+  "pack": "Guitar",
+  "autor": "AntumDeluge",
+  "url": "https://opengameart.org/content/guitar-0",
+  "archivo": "guitar-1.wav",
+  "licencia": "CC0"
+ },
+ "magia": {
+  "origen": "OpenGameArt",
+  "pack": "RPG Sound Pack",
+  "autor": "artisticdude",
+  "url": "https://opengameart.org/content/rpg-sound-pack",
+  "archivo": "magic1.wav",
+  "licencia": "CC0"
+ },
+ "calavera": {
+  "origen": "OpenGameArt",
+  "pack": "Bones 2",
+  "autor": "AntumDeluge",
+  "url": "https://opengameart.org/content/bones-2",
+  "archivo": "bones-2.wav",
+  "licencia": "CC0"
+ },
+ "crunch": {
+  "origen": "OpenGameArt",
+  "pack": "7 Eating Crunches",
+  "autor": "StarNinjas",
+  "url": "https://opengameart.org/content/7-eating-crunches",
+  "archivo": "crunch.5.ogg",
+  "licencia": "CC0"
+ },
+ "corazon": {
+  "origen": "OpenGameArt",
+  "pack": "Heartbeat sounds",
+  "autor": "bart",
+  "url": "https://opengameart.org/content/heartbeat-sounds",
+  "archivo": "heartbeat_fast_0.wav",
+  "licencia": "CC0"
+ },
+ "gota": {
+  "origen": "OpenGameArt",
+  "pack": "Water Drops",
+  "autor": "CeoxBlackj",
+  "url": "https://opengameart.org/content/water-drops",
+  "archivo": "water drops.mp3",
+  "licencia": "CC0"
+ },
+ "dormir": {
+  "origen": "OpenGameArt",
+  "pack": "80 CC0 creture SFX #2",
+  "autor": "rubberduck",
+  "url": "https://opengameart.org/content/80-cc0-creture-sfx-2",
+  "archivo": "snore_02.ogg",
+  "licencia": "CC0"
+ },
+ "fanfarria": {
+  "origen": "OpenGameArt",
+  "pack": "8-bit sound FX",
+  "autor": "Dizzy Crow",
+  "url": "https://opengameart.org/content/8-bit-sound-fx",
+  "archivo": "VictorySmall.wav",
+  "licencia": "CC0"
+ },
+ "fantasma": {
+  "origen": "OpenGameArt",
+  "pack": "Ghost Monster Voice Moaning & Growling",
+  "autor": "qubodup",
+  "url": "https://opengameart.org/content/ghost-monster-voice-moaning-growling",
+  "archivo": "qubodup-GhostMoan05.wav",
+  "licencia": "CC0"
+ },
+ "libro": {
+  "origen": "OpenGameArt",
+  "pack": "10 Book Page Flips",
+  "autor": "StarNinjas",
+  "url": "https://opengameart.org/content/10-book-page-flips",
+  "archivo": "book_flip.8.ogg",
+  "licencia": "CC0"
+ },
+ "lluvia": {
+  "origen": "OpenGameArt",
+  "pack": "30 CC0 SFX loops",
+  "autor": "rubberduck",
+  "url": "https://opengameart.org/content/30-cc0-sfx-loops",
+  "archivo": "rain.ogg",
+  "licencia": "CC0"
+ },
+ "martillo": {
+  "origen": "OpenGameArt",
+  "pack": "100 CC0 metal and wood SFX",
+  "autor": "rubberduck",
+  "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+  "archivo": "hammer_01.ogg",
+  "licencia": "CC0"
+ },
+ "musculo": {
+  "origen": "OpenGameArt",
+  "pack": "Voiceover Pack (40+ lines)",
+  "autor": "Kenney",
+  "url": "https://opengameart.org/content/voiceover-pack-40-lines",
+  "archivo": "power_up.ogg",
+  "licencia": "CC0"
+ },
+ "olas": {
+  "origen": "OpenGameArt",
+  "pack": "Water Waves",
+  "autor": "qubodup",
+  "url": "https://opengameart.org/content/water-waves",
+  "archivo": "wave_03_cc0-11505__transitking__wavesound.flac",
+  "licencia": "CC0"
+ },
+ "rayo": {
+  "origen": "OpenGameArt",
+  "pack": "Electricity Game Sound Pack",
+  "autor": "faxcorp",
+  "url": "https://opengameart.org/content/electricity-game-sound-pack",
+  "archivo": "crackleelectricityloop.wav",
+  "licencia": "CC0"
+ },
+ "salpicadura": {
+  "origen": "OpenGameArt",
+  "pack": "40 CC0 water / splash / slime SFX",
+  "autor": "rubberduck",
+  "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+  "archivo": "splash_04.ogg",
+  "licencia": "CC0"
+ },
+ "saludo": {
+  "origen": "OpenGameArt",
+  "pack": "18 random video game sound effects",
+  "autor": "bart",
+  "url": "https://opengameart.org/content/18-random-video-game-sound-effects",
+  "archivo": "whoosh2.wav",
+  "licencia": "CC0"
+ },
+ "viento": {
+  "origen": "OpenGameArt",
+  "pack": "wind1",
+  "autor": "Luke.RUSTLTD",
+  "url": "https://opengameart.org/content/wind1",
+  "archivo": "wind1.wav",
+  "licencia": "CC0"
+ },
+ "burbuja": {
+  "origen": "OpenGameArt",
+  "pack": "bubbles 'pop'",
+  "autor": "farfadet46",
+  "url": "https://opengameart.org/content/bubbles-pop",
+  "archivo": "pop.ogg",
+  "licencia": "CC0"
+ },
+ "cohete": {
+  "origen": "OpenGameArt",
+  "pack": "50 CC0 Sci-Fi SFX",
+  "autor": "rubberduck",
+  "url": "https://opengameart.org/content/50-cc0-sci-fi-sfx",
+  "archivo": "rocket_01.ogg",
+  "licencia": "CC0"
+ },
+ "llave": {
+  "origen": "OpenGameArt",
+  "pack": "100 CC0 metal and wood SFX",
+  "autor": "rubberduck",
+  "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+  "archivo": "keys_01.ogg",
+  "licencia": "CC0"
+ },
+ "claxon": {
+  "origen": "OpenGameArt",
+  "pack": "Bicycle Horn",
+  "autor": "AntumDeluge",
+  "url": "https://opengameart.org/content/bicycle-horn",
+  "archivo": "bicycle-horn-1.wav",
+  "licencia": "CC0"
+ },
+ "triste": {
+  "origen": "OpenGameArt",
+  "pack": "Game Over Trumpet SFX",
+  "autor": "0new4y",
+  "url": "https://opengameart.org/content/game-over-trumpet-sfx",
+  "archivo": "losetrumpet.mp3",
+  "licencia": "CC0"
+ },
+ "beso": {
+  "origen": "Wikimedia Commons",
+  "pack": "Kiss Pop.ogg",
+  "autor": "Nathan Smith (me)",
+  "url": "https://commons.wikimedia.org/wiki/File%3AKiss_Pop.ogg",
+  "archivo": "Kiss Pop.ogg",
+  "licencia": "Public domain"
+ },
+ "abeja": {
+  "origen": "Wikimedia Commons",
+  "pack": "Bombus buzz.ogg",
+  "autor": "Mysid",
+  "url": "https://commons.wikimedia.org/wiki/File%3ABombus_buzz.ogg",
+  "archivo": "Bombus buzz.ogg",
+  "licencia": "Public domain"
+ },
+ "alarma": {
+  "origen": "Wikimedia Commons",
+  "pack": "Alarm Clock (Directory.Audio).mp3",
+  "autor": "Yoo-toob-FX (https://directory.audio/authoritems/665-yoo-toob-fx, https://web.ar",
+  "url": "https://commons.wikimedia.org/wiki/File%3AAlarm_Clock_%28Directory.Audio%29.mp3",
+  "archivo": "Alarm Clock _Directory.Audio_.mp3",
+  "licencia": "CC0"
+ },
+ "cerdo": {
+  "origen": "Wikimedia Commons",
+  "pack": "Man grunts like pig.ogg",
+  "autor": "stilgar",
+  "url": "https://commons.wikimedia.org/wiki/File%3AMan_grunts_like_pig.ogg",
+  "archivo": "Man grunts like pig.ogg",
+  "licencia": "Public domain"
+ },
+ "dinero": {
+  "origen": "Wikimedia Commons",
+  "pack": "Cash register.ogg",
+  "autor": "Me",
+  "url": "https://commons.wikimedia.org/wiki/File%3ACash_register.ogg",
+  "archivo": "Cash register.ogg",
+  "licencia": "Public domain"
+ },
+ "enojo": {
+  "origen": "Wikimedia Commons",
+  "pack": "Monster growls.ogg",
+  "autor": "stilgar",
+  "url": "https://commons.wikimedia.org/wiki/File%3AMonster_growls.ogg",
+  "archivo": "Monster growls.ogg",
+  "licencia": "Public domain"
+ },
+ "estrella": {
+  "origen": "Wikimedia Commons",
+  "pack": "Windchimes.ogg",
+  "autor": "Esc861",
+  "url": "https://commons.wikimedia.org/wiki/File%3AWindchimes.ogg",
+  "archivo": "Windchimes.ogg",
+  "licencia": "Public domain"
+ },
+ "tren": {
+  "origen": "Wikimedia Commons",
+  "pack": "Nathan M5.ogg",
+  "autor": "HarveyHenkelmann",
+  "url": "https://commons.wikimedia.org/wiki/File%3ANathan_M5.ogg",
+  "archivo": "Nathan M5.ogg",
+  "licencia": "CC0"
+ },
+ "serpiente": {
+  "origen": "Wikimedia Commons",
+  "pack": "Rattlesnake.ogg",
+  "autor": "varios",
+  "url": "https://commons.wikimedia.org/wiki/File%3ARattlesnake.ogg",
+  "archivo": "Rattlesnake.ogg",
+  "licencia": "Public domain"
+ },
+ "silbato": {
+  "origen": "Wikimedia Commons",
+  "pack": "218318 splicesound referee-whistle-blow-gymnasium.wav",
+  "autor": "SpliceSound",
+  "url": "https://commons.wikimedia.org/wiki/File%3A218318_splicesound_referee-whistle-blow-gymnasium.wav",
+  "archivo": "218318 splicesound referee-whistle-blow-gymnasium.wav",
+  "licencia": "CC0"
+ },
+ "tambor": {
+  "origen": "Wikimedia Commons",
+  "pack": "Drum Roll - Concert Band - United States Air Force Band.mp3",
+  "autor": "varios",
+  "url": "https://commons.wikimedia.org/wiki/File%3ADrum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3",
+  "archivo": "Drum Roll - Concert Band - United States Air Force Band.mp3",
+  "licencia": "Public domain"
+ },
+ "pensando": {
+  "origen": "Wikimedia Commons",
+  "pack": "En-us-hmm.ogg",
+  "autor": "Dvortygirl",
+  "url": "https://commons.wikimedia.org/wiki/File%3AEn-us-hmm.ogg",
+  "archivo": "En-us-hmm.ogg",
+  "licencia": "Public domain"
+ },
+ "campana": {
+  "origen": "Kenney",
+  "pack": "Kenney · Impact Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/impact-sounds",
+  "archivo": "impact_bell_heavy_001.ogg",
+  "licencia": "CC0"
+ },
+ "hielo": {
+  "origen": "Kenney",
+  "pack": "Kenney · Impact Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/impact-sounds",
+  "archivo": "impact_glass_medium_001.ogg",
+  "licencia": "CC0"
+ },
+ "golpe": {
+  "origen": "Kenney",
+  "pack": "Kenney · Impact Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/impact-sounds",
+  "archivo": "impact_punch_heavy_001.ogg",
+  "licencia": "CC0"
+ },
+ "patada": {
+  "origen": "Kenney",
+  "pack": "Kenney · Impact Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/impact-sounds",
+  "archivo": "impact_soft_heavy_002.ogg",
+  "licencia": "CC0"
+ },
+ "diana": {
+  "origen": "Kenney",
+  "pack": "Kenney · Impact Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/impact-sounds",
+  "archivo": "impact_wood_light_001.ogg",
+  "licencia": "CC0"
+ },
+ "candado": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "switch_003.wav",
+  "licencia": "CC0"
+ },
+ "acierto": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "confirmation_002.wav",
+  "licencia": "CC0"
+ },
+ "ding": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "confirmation_003.wav",
+  "licencia": "CC0"
+ },
+ "ok": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "confirmation_004.wav",
+  "licencia": "CC0"
+ },
+ "pulgar_abajo": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "error_005.wav",
+  "licencia": "CC0"
+ },
+ "error": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "error_003.wav",
+  "licencia": "CC0"
+ },
+ "pregunta": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "question_002.wav",
+  "licencia": "CC0"
+ },
+ "pop_a": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "pluck_001.wav",
+  "licencia": "CC0"
+ },
+ "pop_b": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "select_004.wav",
+  "licencia": "CC0"
+ },
+ "pop_d": {
+  "origen": "Kenney",
+  "pack": "Kenney · Interface Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "archivo": "toggle_003.wav",
+  "licencia": "CC0"
+ },
+ "explosion": {
+  "origen": "Kenney",
+  "pack": "Kenney · Sci-fi Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/sci-fi-sounds",
+  "archivo": "explosion_crunch_001.ogg",
+  "licencia": "CC0"
+ },
+ "trueno": {
+  "origen": "Kenney",
+  "pack": "Kenney · Sci-fi Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/sci-fi-sounds",
+  "archivo": "low_frequency_explosion_001.ogg",
+  "licencia": "CC0"
+ },
+ "robot": {
+  "origen": "Kenney",
+  "pack": "Kenney · Sci-fi Sounds",
+  "autor": "Kenney (www.kenney.nl)",
+  "url": "https://kenney.nl/assets/sci-fi-sounds",
+  "archivo": "computer_noise_002.ogg",
+  "licencia": "CC0"
+ }
+}

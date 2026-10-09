@@ -1,0 +1,193 @@
+TIPOGRAFIAS INCLUIDAS EN CINECAPTIONS
+=================================
+
+Estos archivos viajan dentro del programa para que los packs de estilos
+se vean como fueron diseñados. Cada uno conserva su licencia original,
+leida de la propia tabla 'name' del archivo (nameID 0 / 13 / 14).
+
+Arial NO se incluye: viene con Windows y con macOS.
+
+------------------------------------------------------------------
+AppleGaramond-BoldItalic.ttf   (45 KB)
+  Copyright: Copyright 1991 as an unpublished work by Bitstream Inc. All rights reserved. Confidential.
+------------------------------------------------------------------
+Atakana sarif.otf   (27 KB)
+  Copyright: Copyright (c) 2020 by Rama Tipe. All rights reserved.
+------------------------------------------------------------------
+AwesomeSerifItalic-SemBdTall.otf   (30 KB)
+  Copyright: Copyright (c) 2022 by Nicky Laatz. All rights reserved.
+  URL       : nickylaatz.com/EULA
+------------------------------------------------------------------
+BalloryRegular-rgR3B.ttf   (20 KB)
+  Copyright: Flawless And Co
+------------------------------------------------------------------
+Inter-Italic-VariableFont_opsz,wght.ttf   (883 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_18pt-Black.ttf   (337 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_18pt-ExtraBold.ttf   (337 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_18pt-Light.ttf   (336 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_18pt-MediumItalic.ttf   (339 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_18pt-Regular.ttf   (335 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_24pt-MediumItalic.ttf   (339 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_28pt-Black.ttf   (337 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_28pt-ExtraBold.ttf   (337 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Inter_28pt-Medium.ttf   (335 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+KingsguardCalligraphy.otf   (239 KB)
+  Copyright: 2024 (C) Copyright by Mans Greback AB
+  Licencia  : Please visit www.mansgreback.com to obtain a commercial license.
+  URL       : http://www.mansgreback.com
+  Nota      : el archivo es la edicion de demostracion (la familia interna
+              se llama "Kingsguard Calligraphy PERSONA"); se incluye porque
+              Cinema Productions declara tener la licencia comercial (03-09-2026).
+              Las plantillas referencian ESE nombre de familia: sustituirlo
+              por la edicion comercial cambiaria el nombre y los comps
+              dejarian de encontrarla.
+------------------------------------------------------------------
+Montserrat-Black.ttf   (194 KB)
+  Copyright: Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+  URL       : http://scripts.sil.org/OFL
+------------------------------------------------------------------
+Montserrat-Bold.ttf   (194 KB)
+  Copyright: Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+  URL       : http://scripts.sil.org/OFL
+------------------------------------------------------------------
+Montserrat-ExtraBoldItalic.ttf   (198 KB)
+  Copyright: Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+  URL       : http://scripts.sil.org/OFL
+------------------------------------------------------------------
+Montserrat-Medium.ttf   (323 KB)
+  Copyright: Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Montserrat-MediumItalic.ttf   (198 KB)
+  Copyright: Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+  URL       : http://scripts.sil.org/OFL
+------------------------------------------------------------------
+Montserrat-Regular.ttf   (194 KB)
+  Copyright: Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+  URL       : http://scripts.sil.org/OFL
+------------------------------------------------------------------
+Montserrat-SemiBold.ttf   (326 KB)
+  Copyright: Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+
+==================================================================
+Añadidas en la v1.0.57 (la plantilla «Títulos dinámicos II» y los
+cortes Helvetica Neue LT Std de la plantilla base). Para todas las
+comerciales de este bloque, Cinema Productions declara tener licencia
+(09-09-2026); los nombres internos se verificaron contra los comps.
+==================================================================
+------------------------------------------------------------------
+Antagon.otf   (347 KB)
+  Copyright: Typeface (c) RantautypeStudio. 2024. All Rights Reserved
+  URL       : https://rantaustudio.com/license/
+------------------------------------------------------------------
+Gotham-Bold.otf / Gotham-Medium.otf / Gotham-Ultra.otf   (124-131 KB)
+  Copyright: Copyright (C) 2000, 2007 Hoefler & Frere-Jones. http://www.typography.com
+  Licencia  : EULA en http://www.typography.com/support/eula.html
+------------------------------------------------------------------
+HeadingProCompressed-Regular.ttf   (714 KB)
+  Copyright: Copyright (c) 2017 by Studio Kmzero & Zetafonts. All rights reserved.
+  URL       : www.zetafonts.com
+  Nota      : el archivo de origen es la edicion "trial"; la familia
+              interna es "Heading Compressed Pro", la que piden los comps.
+------------------------------------------------------------------
+HelveticaNeueBlack.otf   (607 KB)
+  Copyright: Copyrighted (c) 1981, 1997 by and the property of Linotype-Hell AG and/or its subsidiaries. All Rights Reserved.
+------------------------------------------------------------------
+HelveticaNeueLTStd-55Roman.otf / -63MdEx.otf / -67MdCn.otf / -95Black.otf   (27-30 KB)
+  Copyright: Copyright (c) 1988-2002 Adobe Systems Incorporated / Heidelberger Druckmaschinen AG.
+  URL       : http://www.adobe.com/type/legal.html
+------------------------------------------------------------------
+Inter_18pt-Medium.ttf / Inter_24pt-Bold.ttf   (335-336 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
+Montserrat-ExtraBold.ttf   (194 KB)
+  Copyright: Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+  URL       : http://scripts.sil.org/OFL
+------------------------------------------------------------------
+OwnersNarrow-Black.otf   (81 KB)
+  Copyright: Copyright 2021 MCKL Inc.
+  URL       : http://typekit.com/eulas/00000000000000007735f292
+------------------------------------------------------------------
+Tempting.otf   (27 KB)
+  Copyright: (la tabla name no trae datos; el archivo de origen decia
+              "PERSONAL USE ONLY" — licencia comercial declarada por
+              Cinema Productions, 09-09-2026)
+------------------------------------------------------------------
+OwnersWide-Bold.otf   (v2.0.1, 14-09) — la que piden los comps de
+"Titulos dinamicos II" (familia interna "Owners Wide", estilo "Bold",
+verificada). Tomada del equipo de Cinema Productions (instalada como
+fonnts.com-Owners_Wide_Bold.otf); licencia comercial declarada por
+Cinema Productions, como el resto de este archivo. Sustituye a la edicion TRIAL que
+no servia ("Owners TRIAL Wide").
+Poppins-Bold.ttf   (150 KB)
+  Copyright: Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL
+  URL       : https://scripts.sil.org/OFL
+------------------------------------------------------------------
+Poppins-Regular.ttf   (155 KB)  — la que pide «Luxe Slide» en Regular (plantilla base nueva)
+  Copyright: Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL
+  URL       : https://scripts.sil.org/OFL
+------------------------------------------------------------------
+DMSerifText-Italic.ttf   (68 KB)
+  Copyright: Copyright 2014 - 2017 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name 'Source'. Copyright 2019 Google LLC.
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+  URL       : http://scripts.sil.org/OFL
+------------------------------------------------------------------
+Inter-Black.ttf   (337 KB)
+  Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL
+  Nota      : es Inter_28pt-Black con la tabla de nombres reescrita (familia "Inter", estilo "Black") para que
+              Resolve y el instalador de tipografias la reconozcan con el nombre que usan los Text+ de Amro.
+------------------------------------------------------------------

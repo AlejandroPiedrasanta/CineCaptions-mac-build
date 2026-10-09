@@ -1,0 +1,74 @@
+{
+ "base": [
+  941,
+  1672
+ ],
+ "sprites": [
+  {
+   "archivo": "01.png",
+   "borde": [],
+   "cx": 0.1828,
+   "cy": 0.1047,
+   "ancho": 222,
+   "alto": 212
+  },
+  {
+   "archivo": "02.png",
+   "borde": [],
+   "cx": 0.8502,
+   "cy": 0.1112,
+   "ancho": 174,
+   "alto": 216
+  },
+  {
+   "archivo": "03.png",
+   "borde": [
+    "der"
+   ],
+   "cx": 0.8608,
+   "cy": 0.3466,
+   "ancho": 262,
+   "alto": 265
+  },
+  {
+   "archivo": "04.png",
+   "borde": [
+    "izq"
+   ],
+   "cx": 0.0685,
+   "cy": 0.3376,
+   "ancho": 129,
+   "alto": 121
+  },
+  {
+   "archivo": "05.png",
+   "borde": [],
+   "cx": 0.161,
+   "cy": 0.5849,
+   "ancho": 201,
+   "alto": 200
+  },
+  {
+   "archivo": "06.png",
+   "borde": [
+    "der"
+   ],
+   "cx": 0.8959,
+   "cy": 0.5861,
+   "ancho": 196,
+   "alto": 144
+  },
+  {
+   "archivo": "07.png",
+   "borde": [
+    "izq",
+    "der",
+    "abajo"
+   ],
+   "cx": 0.5,
+   "cy": 0.8825,
+   "ancho": 941,
+   "alto": 393
+  }
+ ]
+}

@@ -1,0 +1,125 @@
+==============================================================================
+ 2_recursos\  —  LO QUE VIAJA DENTRO DEL .EXE (además del código)
+ CineCaptions · By Cinema Productions
+==============================================================================
+
+Todo lo de aquí lo busca el programa en BASE_RECURSOS (dentro del .exe, sys._MEIPASS). Los
+nombres de las subcarpetas los usa el código: NO se renombran. El logo va suelto aquí
+porque así queda también dentro del .exe.
+
+QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
+------------------------------------------------------------------------------
+    efectos\   (54 archivos)
+    emojis\   (546 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
+    fondos_estilos\   (11 archivos)
+        fondo_01.jpg
+        fondo_02.jpg
+        fondo_03.jpg
+        fondo_04.jpg
+        fondo_05.jpg
+        fondo_06.jpg
+        fondo_07.jpg
+        fondo_08.jpg
+        fondo_09.jpg
+        fondo_10.jpg
+        fondo_11.jpg
+    fonts\   (44 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
+    generador_packs\   (17 archivos)
+        construir_pack.py
+            arma los .drb (bin de Resolve) de los packs nuevos con los macros reales Luxe Shine / Luxe Slide (luxe_macro.py).
+        generar_comps.py
+        kinetic_comps.py
+            escribe las comps de Fusion (.comp) de los elementos del estilo «Kinetic» (héroe, serie, cinta, anillo, subrayado…).
+        kinetic_elementos.py
+            los elementos del estilo «Kinetic»: héroe, serie, serif, guion, etiqueta, cinta, anillo y subrayado.
+        kinetic_pack.py
+            arma un .drb con clips de nombre libre y una comp de Fusion propia en cada uno (pack «Kinetic»).
+        leer_comp.py
+            lee la comp de Fusion (texto) que lleva un clip de un .drb: para ver cómo escribe Resolve cada herramienta.
+        luxe_macro.py
+            pone los macros REALES «Luxe Shine» (principal) y «Luxe Slide» (el resto) del Luxe Title Pack en cada clip, con la tipografía, el color y la posición de cada variante.
+        luxe_shine_base.lua
+        luxe_shine_cabecera.txt
+        luxe_slide_base.lua
+        luxe_slide_cabecera.txt
+        pack_kinetic.py
+            arma el pack «Kinetic»: los elementos del estilo de títulos de gancho (héroe, líneas, serif, pincel, cintas, anillos, subrayados).
+        pack_referencia.py
+            arma el pack «Referencia»: 8 estilos de principal (Luxe Shine y presets de Amro) con las líneas pequeñas en dos pesos.
+        pack_viral.py
+            arma el pack «VIRAL»: los elementos del estilo de subtítulos virales (línea fina, negrita, shatter, select, drag).
+        viral_comps.py
+            piezas de Fusion propias del estilo «VIRAL» (polígonos, medida del texto, animaciones): se suman a kinetic_comps.py.
+        viral_elementos.py
+            los elementos del estilo «VIRAL»: línea fina, negrita, shatter, select y drag.
+        viral_lab.py
+            laboratorio del estilo «VIRAL»: comps de PRUEBA para ver en Resolve qué admite Fusion (herramienta de desarrollo, no va en el pack).
+    generador_sfx_emoji\   (69 archivos)
+    generador_sfx_estilo\   (1 archivos)
+        preparar_sonidos.py
+            prepara los sonidos que el usuario aportó para los estilos (riser de gancho, golpecito del iPhone, obturadores de transición).
+    guia_estilo\   (388 archivos)
+    locales\   (5 archivos)  — textos de la interfaz en en, pt, fr, de, it (la clave es el español)
+        de.json
+        en.json
+        fr.json
+        it.json
+        pt.json
+    motor_qwen\   (3 archivos)  — motor de voz e IA (corren en su propio Python 3.12) y sus versiones fijas
+        motor_qwen.py
+            motor de voz Qwen3-ASR + alineador (corre en el Python 3.12 del motor).
+        motor_texto.py
+            IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
+        requisitos_motor_qwen.txt
+            versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
+    plantillas_incluidas\   (37 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    resolve_scripts\   (18 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
+        CineCaptions - Detectar Video.py
+            renderiza el audio del timeline activo para transcribirlo (Studio).
+        CineCaptions - Importar Estilos.py
+            saca un pack de estilos de un timeline con Text+ (Studio).
+        CineCaptions - Insertar SFX.py
+            importa un sonido y lo coloca en el cabezal (Studio).
+        CineCaptions - Puente.py
+            el Puente en Python: vigila ~/DaVinciSubtitles/jobs y ejecuta las órdenes.
+        CineCaptions - SFX Marcadores.py
+            efectos de sonido en los marcadores, por color (Studio).
+        CineCaptions - SFX Reemplazar.py
+            reemplaza el efecto de sonido bajo el cabezal (Studio).
+        CineCaptions - Vista Real.py
+            renderiza las vistas previas reales en un timeline temporal (lo lanza el MCP).
+        CineCaptions.py
+            coloca los subtítulos en el timeline (núcleo en Python para Resolve Studio).
+        CineCaptions_DetectarVideo.lua
+            renderiza el audio del timeline activo (Resolve Free).
+        CineCaptions_Exportar_PackDRB.lua
+            herramienta de desarrollo: exporta un pack como .drb.
+        CineCaptions_ImportarEstilos.lua
+            saca un pack de estilos de un timeline (Resolve Free).
+        CineCaptions_InsertarSFX.lua
+            importa un sonido y lo coloca en el cabezal (Resolve Free).
+        CineCaptions_Prueba_MediaPool.lua
+            herramienta de prueba: comprueba si se puede meter un Text+ al Media Pool.
+        CineCaptions_Puente.lua
+            el Puente para Resolve Free: vigila la cola de trabajos y ejecuta los scripts.
+        CineCaptions_SfxMarcadores.lua
+            efectos de sonido en los marcadores por color (Resolve Free).
+        CineCaptions_SfxReemplazar.lua
+            reemplaza el efecto bajo el cabezal (Resolve Free).
+        CineCaptions_Subtitulos.lua
+            coloca los subtítulos en el timeline (núcleo en Lua para Resolve Free).
+        sfx_rules.json
+            cuándo suena cada efecto de sonido (editable sin tocar código)
+    sfx_emoji\   (101 archivos)
+    sfx_library\   (128 archivos)  — los efectos de sonido, una carpeta por categoría
+    vistas_slider\   (4 archivos)
+        Kinetic.jpg
+        Kinetic.mp4
+        Referencia.jpg
+        Referencia.mp4
+    fondo_esfera.jpg
+    logo_cinecaptions.ico
+        el icono del .exe y del instalador
+    logo_cinecaptions.png
+        el icono del programa (lo crea 4_diseno/icono/crear_icono.py)
+    logo_cinema_productions.png

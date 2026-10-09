@@ -1,0 +1,36 @@
+#!/bin/bash
+# CineCaptions · By Cinema Productions
+# 7_mac/pkg/scripts/postinstall — corre al terminar de copiar la app: deja los scripts en el menu de
+# DaVinci Resolve y las tipografias del usuario (lo mismo que hace el instalador de Windows).
+# Corre como root: las tareas se lanzan como el usuario que esta frente a la Mac.
+# Nunca falla la instalacion: si algo no se pudo, el programa lo reintenta al abrirse.
+
+APP="/Applications/CineCaptions.app"
+BIN="$APP/Contents/MacOS/CineCaptions"
+
+xattr -dr com.apple.quarantine "$APP" 2>/dev/null
+
+USUARIO=$(stat -f%Su /dev/console 2>/dev/null)
+[ -z "$USUARIO" ] || [ "$USUARIO" = "root" ] && exit 0
+UID_U=$(id -u "$USUARIO")
+CASA=$(dscl . -read "/Users/$USUARIO" NFSHomeDirectory 2>/dev/null | awk '{print $2}')
+[ -d "$CASA" ] || exit 0
+
+CARPETA="$CASA/DaVinciSubtitles"
+mkdir -p "$CARPETA" && chown "$USUARIO" "$CARPETA"
+LOG="$CARPETA/instalacion_mac.log"
+echo "== $(date '+%Y-%m-%d %H:%M:%S')  CineCaptions: tareas de instalacion" >> "$LOG"
+
+for TAREA in scripts fuentes; do
+    ESTADO="/tmp/cinecaptions_$TAREA.$$.txt"
+    : > "$ESTADO"; chmod 666 "$ESTADO"
+    launchctl asuser "$UID_U" sudo -u "$USUARIO" -H env -i \
+        HOME="$CASA" USER="$USUARIO" PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        QT_QPA_PLATFORM=offscreen \
+        "$BIN" --tarea "$TAREA" "$ESTADO" >> "$LOG" 2>&1
+    echo "-- $TAREA (codigo $?)" >> "$LOG"
+    grep -v '^PROGRESO' "$ESTADO" >> "$LOG" 2>/dev/null
+    rm -f "$ESTADO"
+done
+chown "$USUARIO" "$LOG" 2>/dev/null
+exit 0

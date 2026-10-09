@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "nombre": "Kinetic",
+  "formatos": {
+    "v": {
+      "drb": "Kinetic vertical.drb"
+    }
+  },
+  "guion": "kinetic"
+}

@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "nombre": "VIRAL",
+  "formatos": {
+    "v": {
+      "drb": "VIRAL vertical.drb"
+    },
+    "h": {
+      "drb": "VIRAL horizontal.drb"
+    }
+  },
+  "guion": "viral"
+}
