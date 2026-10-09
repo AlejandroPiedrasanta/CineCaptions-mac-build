@@ -23,7 +23,7 @@ def sfx_ruta_reglas_usuario():
     """Donde queda el sfx_rules.json que el usuario SI puede editar."""
     from sfx_rules import CARPETA_USUARIO
     return CARPETA_USUARIO / 'sfx_rules.json'
-MENU_SCRIPTS = tr('Área de trabajo > Scripts > Utility   (en inglés: Workspace > Scripts > Utility)')
+MENU_SCRIPTS = tr('Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español)   (en inglés: Workspace > Scripts)')
 EXTENSIONES_MENU = ('*.lua',)
 def _nuestros_scripts():
     """Los scripts que van al MENU de Resolve (solo .lua)."""

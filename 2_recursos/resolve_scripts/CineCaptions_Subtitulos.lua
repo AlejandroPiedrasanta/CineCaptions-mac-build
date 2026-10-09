@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.4.15 (subtitulos)"
+local VERSION = "5.4.16 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -385,7 +385,7 @@ local function vista_final(timeline, manifest, solo_pagina)
                     print("  Aviso: Resolve no aplico la disposicion «" .. preset .. "».")
                 end
             else
-                print("  Aviso: no tienes guardada la disposicion de pantalla «" .. preset .. "» (Area de trabajo > Presets de diseno > Guardar como nuevo, o el boton «Guardar la vista actual de Resolve» de CineCaptions).")
+                print("  Nota: no tienes guardada la disposicion de pantalla «" .. preset .. "» (Area de trabajo > Distribucion de interfaz (Layout Presets) > Guardar como nueva, o el boton «Guardar la vista actual de Resolve» de CineCaptions).")
             end
         end)
         if not ok then print("  Aviso: no pude aplicar la disposicion de pantalla (" .. tostring(msg) .. ").") end
@@ -1261,14 +1261,21 @@ end
 local function poner_props(item, props)
     -- 21.1 trae SetProperties (y da SetProperty por forma vieja); las
     -- versiones anteriores solo tienen SetProperty. Se prueban las dos.
-    local ok, r = pcall(function() return item:SetProperties(props) end)
-    if ok and r then return true end
-    local todo = true
-    for k, v in pairs(props) do
-        local ok2, r2 = pcall(function() return item:SetProperty(k, v) end)
-        if not (ok2 and r2) then todo = false end
+    local function una_vez()
+        local ok, r = pcall(function() return item:SetProperties(props) end)
+        if ok and r then return true end
+        local todo = true
+        for k, v in pairs(props) do
+            local ok2, r2 = pcall(function() return item:SetProperty(k, v) end)
+            if not (ok2 and r2) then todo = false end
+        end
+        return todo
     end
-    return todo
+    if una_vez() then return true end
+    -- v5.4.16 (auto-reparacion, visto en Resolve Free: de vez en cuando un clip recien puesto rechaza su primera orden y quedaba sin tamano ni posicion):
+    -- una pausa corta y UN reintento. Solo se paga cuando falla.
+    pcall(function() if bmd and bmd.wait then bmd.wait(0.2) end end)
+    return una_vez()
 end
 
 -- Las UNIDADES de Pan/Tilt, en un solo sitio (v3.3.1): fraccion del
@@ -5389,7 +5396,8 @@ local function preparar_pack_kinetic(media_pool, nombre_pack, formato, ruta_drb,
     if not raiz_ok or not raiz then return nil, "no pude leer el Media Pool." end
     local existente = subcarpeta(raiz, nombre_bin)
     if existente and find_clip_by_name(media_pool, clip_prueba, existente) then return existente, nil end
-    if not ruta_drb or not dato_existe(ruta_drb) then
+    -- v5.4.16: archivo_existe, no dato_existe (que mira el sidecar .lua de un .json): un .drb es binario y NO tiene sidecar, asi que en el menu de Free 21.1 (sin io) siempre «faltaba»
+    if not ruta_drb or not archivo_existe(ruta_drb) then
         return nil, "el pack '" .. tostring(nombre_pack) .. "' no trae su .drb en este equipo (" .. tostring(ruta_drb or "sin ruta") .. ")."
     end
     -- Resolve a veces devuelve nil justo despues de crear el proyecto o el timeline: se reintenta, y antes de rendirse se mira si el bin se creo igual
@@ -6305,9 +6313,8 @@ function place_sfx(timeline, media_pool, cues, track, fps, start_frame)
             local base_ini = inicio_de_cue[cue] or (start_frame + math.floor(cue.start * fps + 0.5))
             for _, ev in ipairs(cue.sfx_eventos) do
                 local ruta_ev = ev.sfx_archivo
-                local fh = (type(ruta_ev) == "string" and ruta_ev ~= "") and io.open(ruta_ev, "rb") or nil
-                if fh then
-                    fh:close()
+                -- v5.4.16: archivo_existe (no io.open directo): el menu de Free 21.1 no tiene io y reventaba con «attempt to index global 'io'»
+                if type(ruta_ev) == "string" and ruta_ev ~= "" and archivo_existe(ruta_ev) then
                     local item_ev = item_de(ruta_ev)
                     if item_ev then
                         local delta = math.floor(((tonumber(ev.t) or cue.start) - cue.start) * fps + 0.5)
@@ -6324,8 +6331,7 @@ function place_sfx(timeline, media_pool, cues, track, fps, start_frame)
         local directo = cue.sfx_archivo
         local tiene_directo = false
         if (not con_eventos) and type(directo) == "string" and directo ~= "" then
-            local fh = io.open(directo, "rb")
-            if fh then fh:close(); tiene_directo = true end
+            if archivo_existe(directo) then tiene_directo = true end
         end
         if turno or tiene_directo then
             local archivo
@@ -7315,8 +7321,7 @@ local function main()
         -- usuario pegaba un informe que terminaba bien y el fallo quedaba
         -- diez lineas mas arriba.
         print("\nNO se coloco ninguna linea. El motivo esta unas lineas mas "
-              .. "arriba; el arreglo mas comun es el paso que pide el aviso "
-              .. "(arrastrar los clips del pack al Media Pool UNA vez).")
+              .. "arriba (las que empiezan por «Aviso»).")
     end
 
     -- Este resumen viaja a ultimo_resultado.json y lo muestra la app.

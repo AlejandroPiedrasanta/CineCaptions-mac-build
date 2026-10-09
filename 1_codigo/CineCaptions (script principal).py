@@ -6332,7 +6332,7 @@ class SubtitleApp(QWidget):
                 + (f': {detalle.splitlines()[0][:90]}' if detalle
                    else tr('. Usa el enlace de abajo para instalarlos.')))
             return
-        self.status_var.set(tr('Falta lanzar el Puente: en Resolve, Área de trabajo > Scripts > Utility > CineCaptions_Puente (una vez por sesión).'))
+        self.status_var.set(tr('Falta lanzar el Puente: en Resolve, Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente (una vez por sesión).'))
     def _load_logo(self):
         """El logo listo para mostrar, o None si no se puede cargar."""
         if not LOGO_PATH.exists():
@@ -8084,7 +8084,7 @@ class SubtitleApp(QWidget):
         try:
             import resolve_bridge
             if resolve_bridge.modo_actual(pasivo=True) == 'manual':
-                self._go_fin(False, tr('Generado. Falta un clic en Resolve: Scripts > Utility > CineCaptions_Subtitulos.'))
+                self._go_fin(False, tr('Generado. Falta un clic en Resolve: Scripts > CineCaptions_Subtitulos.'))
         except Exception:
             pass
     def _go_fin(self, ok, texto='', detalle=''):
@@ -10020,7 +10020,7 @@ class SubtitleApp(QWidget):
         self._refrescar_vista_estilo()
         self._refrescar_receta()
     def _carpeta_scripts_resolve(self):
-        """Donde Resolve busca los scripts del menu Scripts > Utility."""
+        """Donde Resolve busca los scripts del menu Scripts."""
         return carpeta_scripts_resolve()
     def _abrir_en_el_explorador(self, carpeta):
         """Abre una carpeta en el Finder / Explorador de archivos.
@@ -10179,7 +10179,7 @@ class SubtitleApp(QWidget):
         self.status_var.set(tr('Scripts instalados. Reinicia DaVinci Resolve para verlos en el menú.'))
         try:
             import ui_toast
-            ui_toast.mostrar(self, tr('Dejé los scripts en Resolve. Como Resolve arma su menú al abrirse, ciérralo y vuelve a abrirlo para que aparezcan en Scripts > Utility.'), duracion_ms=7000)
+            ui_toast.mostrar(self, tr('Dejé los scripts en Resolve. Como Resolve arma su menú al abrirse, ciérralo y vuelve a abrirlo para que aparezcan en Scripts.'), duracion_ms=7000)
         except Exception:
             return
     def _etiqueta_plantilla(self):
@@ -10347,7 +10347,7 @@ class SubtitleApp(QWidget):
             if not ok and resolve_bridge.modo_actual(pasivo=True) == 'manual':
                 self._vigilar_recomposicion(empezo, clave, comp, desde, aviso, al_terminar)
                 if al_terminar:
-                    al_terminar(None, tr('Pulsa CineCaptions_Subtitulos en el menú de Resolve (Workspace › Scripts › Utility) en los próximos 10 minutos: la composición se aplica ahí.'))
+                    al_terminar(None, tr('Pulsa CineCaptions_Subtitulos en el menú de Resolve (Workspace > Scripts) en los próximos 10 minutos: la composición se aplica ahí.'))
                 return None
             composicion.retirar_orden()
             self._cerrar_recomposicion(ok, str(mensaje or ''), empezo, clave, comp, desde, aviso, al_terminar)
@@ -10808,6 +10808,14 @@ class SubtitleApp(QWidget):
                 return ''
         except Exception:
             pass
+        try:                                   # v5.4.16: sin MCP (DaVinci Resolve Free) los efectos visuales no se pueden colocar: se dice claro en vez de un error técnico
+            import resolve_mcp
+            if resolve_mcp.ruta_exe() is None:
+                txt = tr('Los efectos visuales (intro, zoom y transiciones) necesitan DaVinci Resolve Studio: en la versión gratuita se omiten. Los subtítulos, emojis y sonidos sí quedaron en el timeline.')
+                registro.info(txt, 'efectos')               # una limitación conocida de Free, no un fallo: no pinta el final en ámbar
+                return tr('sin efectos visuales (solo con Studio)')
+        except Exception:
+            pass
         try:
             import efectos_visuales
             self.msg_queue.put(('status', tr('Colocando los efectos visuales en Resolve…')))
@@ -10948,7 +10956,7 @@ class SubtitleApp(QWidget):
             motivo = '\n\n' + resolve_bridge.mensaje_para_el_usuario()
         except Exception:
             motivo = ''
-        messagebox.showinfo(titulo, tr('{cabecera}\n\nAhora, con tu timeline activo:\n\nÁrea de trabajo > Scripts > Utility > CineCaptions_Subtitulos\n(en inglés: Workspace > Scripts > Utility)', cabecera=cabecera) + motivo, parent=self)
+        messagebox.showinfo(titulo, tr('{cabecera}\n\nAhora, con tu timeline activo:\n\nÁrea de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Subtitulos\n(en inglés: Workspace > Scripts)', cabecera=cabecera) + motivo, parent=self)
     def _vigilar_clic_manual(self, desde, n_cues, langs, segundos=900):
         """Free sin Puente (v3.1.6): el usuario pulsa CineCaptions_Subtitulos a mano y
         esta ventana se entera SOLA cuando termina — en 21.0.x por
@@ -11060,7 +11068,7 @@ class SubtitleApp(QWidget):
             messagebox.showerror(tr('No pude leerlo'), f'{type(e).__name__}: {e}', parent=self)
             return
         if not datos:
-            messagebox.showinfo(tr('Todavía no hay nada'), tr('Ningún script de Resolve ha dejado un resultado todavía.\n\nCorre uno (por ejemplo Área de trabajo > Scripts > Utility > CineCaptions_Subtitulos) y vuelve a mirar aquí: va a aparecer el motivo exacto, hayas visto algo en pantalla o no.'), parent=self)
+            messagebox.showinfo(tr('Todavía no hay nada'), tr('Ningún script de Resolve ha dejado un resultado todavía.\n\nCorre uno (por ejemplo Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Subtitulos) y vuelve a mirar aquí: va a aparecer el motivo exacto, hayas visto algo en pantalla o no.'), parent=self)
             return
         cuando = datos.get('cuando')
         aviso_edad = ''
@@ -11114,7 +11122,7 @@ class SubtitleApp(QWidget):
             import instalador_scripts as _ins
             if _ins.edicion_de_resolve() == 'studio':
                 self.status_var.set(tr('Resolve Studio: no hacen falta scripts en el menú.'))
-                messagebox.showinfo(tr('No hace falta'), tr('Tienes DaVinci Resolve Studio.\n\nAhí el programa se conecta directo con Resolve, así que no hay que instalar nada en el menú ni correr el Puente: los botones ya funcionan solos.\n\n(El menú Scripts > Utility es solo para la versión gratuita.)'), parent=self)
+                messagebox.showinfo(tr('No hace falta'), tr('Tienes DaVinci Resolve Studio.\n\nAhí el programa se conecta directo con Resolve, así que no hay que instalar nada en el menú ni correr el Puente: los botones ya funcionan solos.\n\n(El menú Scripts es solo para la versión gratuita.)'), parent=self)
                 return
         except Exception:
             pass
@@ -11418,7 +11426,7 @@ class SubtitleApp(QWidget):
                 return
             motivo = datos.get('diagnostico') or []
             if not datos.get('version'):
-                detalle = tr('El script que corriste dentro de Resolve es una versión vieja.\n\nUsa «Reinstalar scripts» en esta ventana, reinicia Resolve, y corre otra vez\nÁrea de trabajo > Scripts > Utility > CineCaptions_DetectarVideo')
+                detalle = tr('El script que corriste dentro de Resolve es una versión vieja.\n\nUsa «Reinstalar scripts» en esta ventana, reinicia Resolve, y corre otra vez\nÁrea de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_DetectarVideo')
             else:
                 if motivo:
                     detalle = tr('Resolve no pudo renderizar el audio del timeline. Lo que reportó:\n\n• ') + '\n• '.join(motivo[(-4):])
@@ -12754,7 +12762,7 @@ class SubtitleApp(QWidget):
                     if not getattr(self, '_aviso_puente_dado', False):
                         self._aviso_puente_dado = True
                         import resolve_bridge
-                        messagebox.showwarning(tr('Relanza el Puente en Resolve'), tr('El Puente que está corriendo dentro de Resolve es de la versión {payload}, y este programa trae la {VERSION_PUENTE_ESPERADA} (el Puente tiene numeración propia, distinta de la del programa).\n\nSigue funcionando, pero le faltan los arreglos de conexión nuevos.\n\nCómo actualizarlo (10 segundos):\nÁrea de trabajo > Scripts > Utility > CineCaptions_Puente — el nuevo releva al viejo solo.\n\nSi este aviso reaparece, cierra DaVinci Resolve por completo y ábrelo de nuevo.', payload=payload, VERSION_PUENTE_ESPERADA=resolve_bridge.VERSION_PUENTE_ESPERADA), parent=self)
+                        messagebox.showwarning(tr('Relanza el Puente en Resolve'), tr('El Puente que está corriendo dentro de Resolve es de la versión {payload}, y este programa trae la {VERSION_PUENTE_ESPERADA} (el Puente tiene numeración propia, distinta de la del programa).\n\nSigue funcionando, pero le faltan los arreglos de conexión nuevos.\n\nCómo actualizarlo (10 segundos):\nÁrea de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente — el nuevo releva al viejo solo.\n\nSi este aviso reaparece, cierra DaVinci Resolve por completo y ábrelo de nuevo.', payload=payload, VERSION_PUENTE_ESPERADA=resolve_bridge.VERSION_PUENTE_ESPERADA), parent=self)
                 elif kind == 'version_ajena':
                     if not getattr(self, '_aviso_version_dado', False):
                         self._aviso_version_dado = True

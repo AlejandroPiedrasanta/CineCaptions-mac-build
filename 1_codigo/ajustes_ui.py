@@ -484,7 +484,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
-    ('5.4.15', [
+    ('5.4.16', [
+        'DaVinci Resolve gratuito (Free): ahora los cinco estilos (VIRAL, Kinetic, Referencia, Base y Viral inferior) colocan sus subtítulos, emojis y sonidos por el Puente. Antes no colocaban nada porque Resolve Free 21.1 no deja a los scripts leer archivos. Los efectos visuales (intro, zoom y transiciones) siguen necesitando Studio y en Free se omiten con un aviso claro.',
+        'Al terminar, Resolve se pone al frente (aunque estuviera detrás de otra ventana) y reproduce el timeline desde el principio.',
+        'Los mensajes ya dicen la ruta real del menú de Resolve: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente.',
         'La tarjeta de VIRAL en «Pack de estilos» ahora reproduce un video real, con todos sus captions (la pila de texto, los tres efectos, los emojis y la intro), en vez de una imagen fija.',
     ]),
     ('5.4.14', [
@@ -2343,7 +2346,7 @@ class VentanaAjustes(_Panel):
                                              'la licencia, y lo deja listo para copiar y enviar.'),
                        Boton(tr('Ejecutar diagnóstico'), lambda: llamar('_ejecutar_diagnostico'), tipo='neutro', alto=46, tam=15), 340)
         f_scripts = _Fila(tr('Scripts de Resolve'), tr('Vuelve a poner los scripts de CineCaptions en Área de trabajo > '
-                                                      'Scripts > Utility (para Resolve Free).'),
+                                                      'Scripts (para Resolve Free).'),
                           Boton(tr('Reinstalar scripts'), lambda: llamar('_instalar_en_resolve'), tipo='neutro', alto=46, tam=15), 340)
         f_resp = _Fila(tr('Qué respondió Resolve'), tr('El último resultado que dejó un script dentro de Resolve.'),
                        Boton(tr('Ver respuesta'), lambda: llamar('_ver_ultimo_resultado'), tipo='neutro', alto=46, tam=15), 340)

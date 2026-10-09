@@ -95,7 +95,7 @@ def detectar_resolve(estado=None, refrescar=False):
         return dict(edicion=ed, camino='cerrado', version=version, texto=tr('DaVinci Resolve{c} cerrado · ábrelo con tu proyecto', c=cual), tono='aviso', listo=False,
                     ayuda=tr('Abre Resolve con tu proyecto y pulsa GO.'))
     # Resolve abierto sin MCP ni API externa: es Free (o Studio con «External scripting» en None): se habla por el Puente
-    paso = tr('Área de trabajo ▸ Scripts ▸ Utility ▸ CineCaptions_Puente')
+    paso = tr('Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente')
     if sys.platform == 'darwin':
         return dict(edicion='Free', camino='sin_puente', version=version, texto=tr('DaVinci Resolve Free detectado · lanzo el Puente al pulsar GO'), tono='aviso', listo=True,
                     ayuda=tr('Si macOS lo pide, da permiso de Accesibilidad a CineCaptions.'))
@@ -140,7 +140,7 @@ CAUSAS = [
      'scripting', 'Resolve no acepta scripts de fuera',
      'En Resolve Studio hay que permitir los scripts externos; en Free, lanzar el Puente desde el menú.',
      ['Studio: Preferencias ▸ Sistema ▸ General ▸ «External scripting using» = Local, y reinicia Resolve.',
-      'Free: Área de trabajo ▸ Scripts ▸ Utility ▸ CineCaptions_Puente.'], None),
+      'Free: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente.'], None),
     (r'no pude escribir su texto|no pude setear el texto',
      'texto', 'Los clips se pusieron pero sin su texto',
      'Resolve colocó los títulos pero no dejó escribir el texto en ellos (el pack elegido no trae un Text+ editable por script).',
@@ -332,6 +332,11 @@ def vista_en_manifiesto(ruta_manifiesto):
         usar = _prefs().get('go_vista_resolve', True) is not False
         datos['vista'] = {'pagina': 'edit', 'preset': vista_nombre() if usar else '', 'al_inicio': True}
         archivos_seguros.escribir_json(p, datos)
+        try:                                       # Resolve Free 21.1 (sin io) lee el manifiesto por su gemelo «.lua»: sin esto no veria la «vista»
+            import sidecar_lua
+            sidecar_lua.escribir_sidecar(p, datos)
+        except Exception:
+            pass
         return True
     except Exception:
         return False
@@ -356,7 +361,7 @@ def guardar_vista_actual():
     try:
         import resolve_mcp
         if not resolve_mcp.disponible():
-            return False, tr('Esto necesita Resolve abierto y conectado. En Resolve Free hazlo a mano: Área de trabajo ▸ Presets de diseño ▸ Guardar como nuevo… y llámalo «{n}».', n=vista_nombre())
+            return False, tr('Esto necesita Resolve abierto y conectado. En Resolve Free hazlo a mano: Área de trabajo ▸ Distribución de interfaz (Layout Presets) ▸ Guardar como nueva… y llámalo «{n}».', n=vista_nombre())
         ok, r, err = resolve_mcp.script(_VISTA_GUARDAR % {'nombre': vista_nombre()}, timeout=30)
         if ok and (r or {}).get('ok'):
             return True, tr('Guardé la disposición actual de Resolve como «{n}»: se aplicará cada vez que GO termine.', n=vista_nombre())
@@ -408,6 +413,37 @@ def _hwnd_de_resolve():
     return hallada[0] if hallada else None
 
 
+def _al_frente(h, intentos=4):
+    """Windows no deja que un proceso en segundo plano se ponga al frente (bloqueo del primer plano): se prueba con el truco de unir el hilo de entrada al de la ventana que lo tiene, restaurar si estaba minimizada y SwitchToThisWindow, varias veces.
+    True solo si al final Resolve de verdad tiene el foco."""
+    import ctypes
+    from ctypes import wintypes
+    user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
+    for _ in range(max(1, intentos)):
+        if user32.IsIconic(h):
+            user32.ShowWindow(h, 9)                                 # SW_RESTORE
+        if user32.GetForegroundWindow() == h:
+            return True
+        pid = wintypes.DWORD()
+        hilo_fg = user32.GetWindowThreadProcessId(user32.GetForegroundWindow(), ctypes.byref(pid))
+        hilo_yo = kernel32.GetCurrentThreadId()
+        user32.AllowSetForegroundWindow(-1)                         # ASFW_ANY
+        unido = bool(hilo_fg and hilo_fg != hilo_yo and user32.AttachThreadInput(hilo_yo, hilo_fg, True))
+        try:
+            user32.keybd_event(0x12, 0, 0, 0)                       # un toque de Alt: Windows deja cambiar el foco
+            user32.keybd_event(0x12, 0, 2, 0)
+            user32.BringWindowToTop(h)
+            user32.SetForegroundWindow(h)
+            user32.SwitchToThisWindow(h, True)
+        finally:
+            if unido:
+                user32.AttachThreadInput(hilo_yo, hilo_fg, False)
+        time.sleep(0.35)
+        if user32.GetForegroundWindow() == h:
+            return True
+    return False
+
+
 def reproducir_desde_inicio(esperar_s=0.5):
     """Al terminar GO: trae Resolve al frente, va al principio del timeline (tecla Inicio) y pulsa «reproducir» (Espacio). Resolve no tiene una llamada de script para reproducir, así que
     se manda la tecla a SU ventana; si no se puede asegurar que Resolve tiene el foco, NO se manda nada (el Espacio iría a otra ventana). Devuelve (ok, texto)."""
@@ -418,12 +454,10 @@ def reproducir_desde_inicio(esperar_s=0.5):
             h = _hwnd_de_resolve()
             if not h:
                 return False, tr('No encontré la ventana de DaVinci Resolve para reproducir.')
-            user32.ShowWindow(h, 9)
-            user32.keybd_event(0x12, 0, 0, 0)                      # un toque de Alt: Windows deja cambiar el foco
-            user32.keybd_event(0x12, 0, 2, 0)
-            user32.SetForegroundWindow(h)
+            if not _al_frente(h):
+                return False, tr('Resolve no tomó el foco (otra ventana lo tiene): no reproduzco para no pulsar teclas en otra aplicación.')
             time.sleep(max(0.2, float(esperar_s)))
-            if user32.GetForegroundWindow() != h:
+            if user32.GetForegroundWindow() != h:               # (el foco se pudo perder en esa pausa)
                 return False, tr('Resolve no tomó el foco (otra ventana lo tiene): no reproduzco para no pulsar teclas en otra aplicación.')
             for vk in (0x24, 0x20):                                # Inicio, Espacio
                 user32.keybd_event(vk, 0, 0, 0)

@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.4.15 (subtitulos)"
+VERSION = "5.4.16 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -416,7 +416,7 @@ def vista_final(timeline, manifest, solo_pagina=False):
                 else:
                     print(f"  Aviso: Resolve no aplicó la disposición «{preset}».")
             else:
-                print(f"  Aviso: no tienes guardada la disposición de pantalla «{preset}» (Área de trabajo > Presets de diseño > Guardar como nuevo, "
+                print(f"  Nota: no tienes guardada la disposición de pantalla «{preset}» (Área de trabajo > Distribución de interfaz (Layout Presets) > Guardar como nueva, "
                       "o el botón «Guardar la vista actual de Resolve» de CineCaptions).")
         except Exception as exc:
             print(f"  Aviso: no pude aplicar la disposición de pantalla ({type(exc).__name__}: {exc}).")

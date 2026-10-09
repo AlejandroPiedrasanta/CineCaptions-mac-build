@@ -72,7 +72,7 @@ _REGLAS = [
      'El Puente de Resolve perdió la conexión',
      'En la versión gratuita de Resolve el Puente (el script que deja trabajar a CineCaptions dentro de Resolve) pierde su conexión solo, cada cierto tiempo.',
      ['Si tienes DaVinci Resolve STUDIO no necesitas el Puente: en Resolve ve a Preferencias > Sistema > General, pon «External scripting using» en «Local», cierra Resolve del todo y ábrelo otra vez.',
-      'Con Resolve gratuito: Área de trabajo > Scripts > Utility > CineCaptions_Puente (en inglés: Workspace > Scripts > Utility). En Mac, CineCaptions intenta pulsarlo solo si le das el permiso de Accesibilidad.',
+      'Con Resolve gratuito: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente (en inglés: Workspace > Scripts). En Mac, CineCaptions intenta pulsarlo solo si le das el permiso de Accesibilidad.',
       'Vuelve a pulsar GO.',
       'Si sigue pasando, cierra DaVinci Resolve por completo y ábrelo otra vez.'], 'bloquea'),
     (r'sin_resolve|resolve.*(no está abierto|no responde|cerrado|no se (pudo|puede) conectar)|no (pude|se pudo) (abrir|conectar).*resolve|scripting.*(desactiv|disabled)',

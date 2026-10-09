@@ -89,7 +89,7 @@ def _setear_variables_de_entorno():
                 os.environ['RESOLVE_SCRIPT_LIB'] = str(lib)
             return True
     return False
-MENSAJE_SCRIPTING_DESACTIVADO = tr('Resolve está abierto, pero no está aceptando scripts externos.\n\nSe arregla en un sitio, y hay que hacerlo una sola vez:\n\n1. En Resolve, abre  Preferencias  >  Sistema  >  General\n   (en inglés: Preferences > System > General).\n2. Busca  «External scripting using»  y ponlo en  «Local».\n3. Acepta, cierra Resolve por completo y vuelve a abrirlo.\n\nSi ya estaba en «Local», cierra Resolve del todo y ábrelo otra vez: la conexión de scripting a veces no llega a levantar cuando Resolve arranca junto con el sistema.\n\n— — —\nHay un segundo camino que no depende de esa preferencia, por si el primero se te resiste: cierra este programa y vuelve a abrirlo (así deja los scripts en el menú de Resolve), y luego corre\n\n    Área de trabajo  >  Scripts  >  Utility  >  CineCaptions_Puente\n\nDéjalo corriendo y los botones funcionan igual.')
+MENSAJE_SCRIPTING_DESACTIVADO = tr('Resolve está abierto, pero no está aceptando scripts externos.\n\nSe arregla en un sitio, y hay que hacerlo una sola vez:\n\n1. En Resolve, abre  Preferencias  >  Sistema  >  General\n   (en inglés: Preferences > System > General).\n2. Busca  «External scripting using»  y ponlo en  «Local».\n3. Acepta, cierra Resolve por completo y vuelve a abrirlo.\n\nSi ya estaba en «Local», cierra Resolve del todo y ábrelo otra vez: la conexión de scripting a veces no llega a levantar cuando Resolve arranca junto con el sistema.\n\n— — —\nHay un segundo camino que no depende de esa preferencia, por si el primero se te resiste: cierra este programa y vuelve a abrirlo (así deja los scripts en el menú de Resolve), y luego corre\n\n    Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente\n\nDéjalo corriendo y los botones funcionan igual.')
 def es_scripting_cerrado(err):
     """¿El error dice que Resolve no acepta scripts externos? (v3.3.0)\n\n    Hasta la v3.2 la app miraba «scripts externos» en el texto. Los gemelos\n    de Studio lo siguen diciendo en español (sus registros no se traducen),\n    pero MENSAJE_SCRIPTING_DESACTIVADO ahora sale en el idioma de la\n    interfaz: se aceptan las dos formas.\n    """
     texto = str(err or '')
@@ -561,7 +561,7 @@ def puente_desactualizado():
         return False
     else:
         return version_del_puente() != VERSION_PUENTE_ESPERADA
-MENSAJE_PUENTE_VIEJO = tr('El Puente que está corriendo dentro de Resolve es de una versión anterior del programa.\n\nActualizar el programa deja el archivo nuevo en su sitio, pero el Puente que ya estaba corriendo sigue con el código viejo hasta que lo vuelvas a lanzar.\n\n1. Cierra la ventana de consola del Puente en Resolve.\n2. Vuelve a correr:\n       Área de trabajo  >  Scripts  >  Utility  >  CineCaptions_Puente\n\n(Si no aparece en el menú, cierra Resolve por completo y vuelve a abrirlo primero.)')
+MENSAJE_PUENTE_VIEJO = tr('El Puente que está corriendo dentro de Resolve es de una versión anterior del programa.\n\nActualizar el programa deja el archivo nuevo en su sitio, pero el Puente que ya estaba corriendo sigue con el código viejo hasta que lo vuelvas a lanzar.\n\n1. Cierra la ventana de consola del Puente en Resolve.\n2. Vuelve a correr:\n       Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente\n\n(Si no aparece en el menú, cierra Resolve por completo y vuelve a abrirlo primero.)')
 def _cuanto_hace(seg):
     """Una edad en segundos, en la unidad que se lee de un vistazo."""
     if seg < 90:
@@ -865,7 +865,7 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
             sin_latido += 1
             if sin_latido >= SIN_LATIDO_MAXIMO:
                 limpiar(JOB_PENDIENTE, sidecar, JOB_TOMADO)
-                return (False, tr('El puente dejó de responder. Vuelve a correrlo en Resolve: Área de trabajo > Scripts > Utility > CineCaptions_Puente.'))
+                return (False, tr('El puente dejó de responder. Vuelve a correrlo en Resolve: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente.'))
         else:
             sin_latido = 0
         if on_progreso:
@@ -877,8 +877,8 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
     limpiar(JOB_PENDIENTE, sidecar, JOB_TOMADO)
     return (False, tr('El puente no respondió en {timeout} segundos. Revisa la ventana de la consola de scripts en Resolve.',
                       timeout=timeout))
-MENSAJE_SIN_PUENTE = tr('Para colocar los subtítulos, en Resolve pulsa una vez:\n\n    Área de trabajo  >  Scripts  >  Utility  >  CineCaptions_Subtitulos\n\n(En inglés el menú es Workspace > Scripts > Utility.)\nAparecen en tu línea de tiempo al pulsarlo, y este programa se entera solo cuando el script termine.\n\nPara que se coloquen SOLOS cada vez, deja corriendo CineCaptions_Puente (en esa misma carpeta; desde la v3.1.7 también en DaVinci Resolve 21.1).\n\n(Los archivos están en: {carpeta})\n\n(Si no ves los scripts en el menú, cierra Resolve y vuelve a abrirlo: arma el menú de Scripts al arrancar.)', carpeta=CARPETA_COMPARTIDA)
-PASOS_SCRIPTING = tr('Tienes DOS formas de arreglarlo (con una basta):\n\nA) Abre DaVinci Resolve > Preferencias > Sistema > General, pon «External scripting using» en «Local», y reinicia Resolve.\n\nB) Sin tocar preferencias: en Resolve, ve a Área de trabajo > Scripts > Utility y lanza «CineCaptions_Puente». Déjalo corriendo y vuelve a generar.')
+MENSAJE_SIN_PUENTE = tr('Para colocar los subtítulos, en Resolve pulsa una vez:\n\n    Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Subtitulos\n\n(En inglés el menú es Workspace > Scripts.)\nAparecen en tu línea de tiempo al pulsarlo, y este programa se entera solo cuando el script termine.\n\nPara que se coloquen SOLOS cada vez, deja corriendo CineCaptions_Puente (en esa misma carpeta; desde la v3.1.7 también en DaVinci Resolve 21.1).\n\n(Los archivos están en: {carpeta})\n\n(Si no ves los scripts en el menú, cierra Resolve y vuelve a abrirlo: arma el menú de Scripts al arrancar.)', carpeta=CARPETA_COMPARTIDA)
+PASOS_SCRIPTING = tr('Tienes DOS formas de arreglarlo (con una basta):\n\nA) Abre DaVinci Resolve > Preferencias > Sistema > General, pon «External scripting using» en «Local», y reinicia Resolve.\n\nB) Sin tocar preferencias: en Resolve, ve a Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) y lanza «CineCaptions_Puente». Déjalo corriendo y vuelve a generar.')
 def paso_manual_pendiente(texto_resultado):
     """El paso que el ultimo registro dejo pendiente, o None.\n\n    Devuelve un dict {\"tipo\": \"arrastrar\"|\"sin_textplus\", \"timeline\": ...,\n    \"bin\": ...} para que la app lo muestre EN LA CARA. Existia solo\n    enterrado en el registro, y el usuario generaba una y otra vez sin ver\n    que le faltaba un arrastre de una sola vez.\n    """
     if not texto_resultado:
@@ -943,7 +943,7 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
                         # se le dice lo que hay que cambiar (antes salía «el Puente perdió la conexión» y el usuario de Studio no sabía qué hacer)
                         traer_resolve_al_frente()
                         return (False, mensaje_para_el_usuario())
-                    if lanzar_puente_mac():             # Mac (Resolve Free): se pulsa solo Workspace > Scripts > Utility > CineCaptions_Puente
+                    if lanzar_puente_mac():             # Mac (Resolve Free): se pulsa solo Workspace > Scripts > CineCaptions_Puente
                         ok, mensaje = _encolar(accion, datos=datos, timeout=timeout, on_progreso=on_progreso)
                         return _con_motivo_real(ok, mensaje, empezo)
                     traer_resolve_al_frente()
@@ -1005,7 +1005,7 @@ return "sin_menu"
 
 
 def lanzar_puente_mac(espera_s=25):
-    """Mac: pulsa solo el menu de Resolve (Workspace > Scripts > Utility > CineCaptions_Puente) por «System Events» y espera a que el Puente
+    """Mac: pulsa solo el menu de Resolve (Workspace > Scripts > CineCaptions_Puente) por «System Events» y espera a que el Puente
     lata. Hace falta el permiso de Accesibilidad para CineCaptions (macOS lo pide la primera vez). Devuelve True si el Puente quedo vivo.
     Nunca lanza; si algo falla deja una linea en el Registro y se sigue con el aviso de siempre."""
     if sys.platform != 'darwin':

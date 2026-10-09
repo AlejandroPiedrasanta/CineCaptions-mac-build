@@ -2436,7 +2436,7 @@ class SfxStudio(QWidget):
             text_color='#E0A030')
         messagebox.showinfo(
             tr('Reemplazar SFX'),
-            tr('No pude hacer el reemplazo automático.\n\nMotivo: {primera}\n\nRevisa que el cabezal esté SOBRE el efecto a sustituir (solo toco efectos puestos por el programa, en las pistas SFX). En la versión Free, relanza CineCaptions_Puente una vez (Área de trabajo > Scripts > Utility) para que aprenda esta función nueva.',
+            tr('No pude hacer el reemplazo automático.\n\nMotivo: {primera}\n\nRevisa que el cabezal esté SOBRE el efecto a sustituir (solo toco efectos puestos por el programa, en las pistas SFX). En la versión Free, relanza CineCaptions_Puente una vez (Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español)) para que aprenda esta función nueva.',
                primera=primera),
             parent=self)
     def _reemplazar_en_marcadores(self):
@@ -2548,7 +2548,7 @@ class SfxStudio(QWidget):
         except Exception:
             pass
         self.status.configure(
-            text=tr('WAV guardado. Corre CineCaptions_InsertarSFX en Scripts > Utility.'),
+            text=tr('WAV guardado. Corre CineCaptions_InsertarSFX en Scripts.'),
             text_color='#FFD166')
         mensaje = tr('Sonido guardado con éxito:\n{destino}',
                      destino=destino) + '\n\n'
@@ -2565,7 +2565,7 @@ class SfxStudio(QWidget):
         if edicion == 'studio':
             mensaje += tr('No pude insertarlo automáticamente esta vez. Revisa que Resolve esté abierto con un proyecto y una línea de tiempo, y vuelve a intentarlo.')
         else:
-            mensaje += tr('Para que se inserte solo, corre una vez en Resolve:\n    Área de trabajo > Scripts > Utility > CineCaptions_Puente\n\n(En inglés: Workspace > Scripts > Utility.)\n\nO insértalo ahora a mano desde:\n    Área de trabajo > Scripts > Utility > CineCaptions_InsertarSFX')
+            mensaje += tr('Para que se inserte solo, corre una vez en Resolve:\n    Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente\n\n(En inglés: Workspace > Scripts.)\n\nO insértalo ahora a mano desde:\n    Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_InsertarSFX')
         messagebox.showinfo(tr('Agregar sonido a Resolve'), mensaje,
                             parent=self)
     # -- cierre y atajos ---------------------------------------------------------

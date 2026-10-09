@@ -202,5 +202,11 @@ def construir_cues(bloques, ancho_tl=1080, alto_tl=1920):
 def escribir(cues, ruta, idioma='es'):
     ruta = Path(ruta)
     ruta.parent.mkdir(parents=True, exist_ok=True)
-    ruta.write_text(json.dumps({'language': idioma, 'cues': cues}, ensure_ascii=False, indent=1), encoding='utf-8')
+    datos = {'language': idioma, 'cues': cues}
+    ruta.write_text(json.dumps(datos, ensure_ascii=False, indent=1), encoding='utf-8')
+    try:                                         # v5.4.16: Resolve Free 21.1 no deja a los scripts leer archivos (sin io): lee este mismo dato por su gemelo «<archivo>.lua»
+        import sidecar_lua
+        sidecar_lua.escribir_sidecar(ruta, datos)
+    except Exception:
+        pass
     return str(ruta)

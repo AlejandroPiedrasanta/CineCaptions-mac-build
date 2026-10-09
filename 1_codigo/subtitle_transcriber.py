@@ -687,6 +687,6 @@ def main():
             with open(manifest_path, 'w', encoding='utf-8') as f:
                 json.dump(manifest, f, ensure_ascii=False, indent=2)
             print(f'\nListo. Manifest escrito en: {manifest_path}')
-            print('Ahora abre DaVinci Resolve y corre Workspace > Scripts > Utility > CineCaptions')
+            print('Ahora abre DaVinci Resolve y corre Workspace > Scripts > CineCaptions')
 if __name__ == '__main__':
     main()
