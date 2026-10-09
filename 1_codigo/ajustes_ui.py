@@ -484,6 +484,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.15', [
+        'La tarjeta de VIRAL en «Pack de estilos» ahora reproduce un video real, con todos sus captions (la pila de texto, los tres efectos, los emojis y la intro), en vez de una imagen fija.',
+    ]),
     ('5.4.14', [
         'GO ya no dice «¡Listo!» si en Resolve no apareció nada: cuenta las líneas que Resolve colocó de verdad. Si no colocó ninguna, intenta repararlo solo (abrir el timeline, volver a Edit) y lo reintenta una vez; si sigue igual, te dice la causa en palabras claras y qué probar, y el Registro lo explica igual.',
         'Inicio dice qué DaVinci Resolve detectó (Studio o Free) y por dónde se conecta, o si está cerrado / falta lanzar el Puente, antes de seguir con el proceso.',
