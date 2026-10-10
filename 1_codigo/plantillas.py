@@ -341,6 +341,17 @@ FABRICA = {'Kinetic': 'Tema 1', 'Referencia': 'Tema 2', 'VIRAL': 'Tema 3'}
 # v5.4.19 (pedido del usuario): SOLO existen esos tres temas en la interfaz: el slider de «Pack de estilos» y el chip «Estilo» de Inicio no enseñan nada más (ni packs importados, ni
 # «Viral · superior/inferior», ni «Añadir plantilla», ni «Crea tu estilo»). Los packs siguen en el disco; con False vuelve todo lo de antes.
 SOLO_TEMAS = True
+# v5.4.20: lo que enseña el panel de cada tema (nombre interno -> (frase corta, qué hace)).
+TEMAS_INFO = {
+    'Kinetic': ('Títulos de gancho', 'Títulos enormes con cintas y anillos animados en las frases clave, con un golpe de sonido.'),
+    'Referencia': ('Captions palabra a palabra', 'Una línea fina con la palabra importante en negrita y en grande, al ritmo de la voz.'),
+    'VIRAL': ('Subtítulos virales', 'Texto fino con negrita cursiva, efectos de impacto y emojis que aparecen con la voz.'),
+}
+
+
+def info_de_tema(nombre):
+    """(frase corta, descripción) de un tema de fábrica, o ('', '')."""
+    return TEMAS_INFO.get(nombre, ('', ''))
 
 
 def nombre_visible(nombre):

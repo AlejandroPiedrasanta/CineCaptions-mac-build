@@ -17,8 +17,8 @@ efectos_visuales.planificar al hacer GO:
 Los efectos vienen ACTIVADOS; el interruptor de arriba es el MISMO que el chip «Visuales» de Inicio (preferencia go_efectos_visuales).
 """
 from PySide6.QtCore import QRectF, Qt, QTimer, Signal
-from PySide6.QtGui import QImage, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
+from PySide6.QtGui import QFontMetricsF, QImage, QPainter, QPainterPath, QPen
+from PySide6.QtWidgets import QHBoxLayout, QPlainTextEdit, QVBoxLayout, QWidget
 
 import efectos_visuales as F
 import qt_kit as ui
@@ -147,7 +147,10 @@ class TarjetaEfecto(QWidget):
                 p.fillRect(rect, QColor('#0B1424'))
         p.restore()
         p.setPen(QColor('#FFFFFF'))
-        p.setFont(ui.fuente(13, True))
+        for _tam in (13, 12, 11, 10):                                     # el nombre se achica hasta caber («Fondo desenfocado», «Grano de película»)
+            p.setFont(ui.fuente(_tam, True))
+            if QFontMetricsF(p.font()).horizontalAdvance(self.nombre) <= self.width() - 26:
+                break
         p.drawText(QRectF(10, self.ALTO_IMAGEN + 14, self.width() - 20, 20), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self.nombre)
         p.setPen(QColor(TEXT_MUTED))
         p.setFont(ui.fuente(10))
@@ -160,6 +163,51 @@ class TarjetaEfecto(QWidget):
             p.drawLine(int(self.ANCHO - 30), 25, int(self.ANCHO - 26), 29)
             p.drawLine(int(self.ANCHO - 26), 29, int(self.ANCHO - 20), 21)
         p.end()
+
+
+# ====================================================================================== una fila de tarjetas con ejemplo
+class FilaCartas(QWidget):
+    """Una fila de TarjetaEfecto (cada una con su ejemplo animado) de la que se elige UNA: «sin efecto» (∅) y cada variante. Es como la intro: se ve cómo queda antes de elegirlo.
+    Las vistas previas son `previas/<tipo>_<clave>.mp4` (hacer_previas_efectos.py / hacer_previas_nuevas.py). `opciones` = [(clave, nombre, detalle[, ninguna])]; `al_elegir(clave)`."""
+
+    def __init__(self, tipo, opciones, actual, al_elegir=None, padre=None):
+        super().__init__(padre)
+        self.tipo = tipo
+        self._al_elegir = al_elegir
+        self.tarjetas = []
+        self._por_clave = {}
+        capa = QHBoxLayout(self)
+        capa.setContentsMargins(0, 0, 0, 0)
+        capa.setSpacing(12)
+        carpeta = F.carpeta_efectos() / 'previas'
+        for op in opciones:
+            clave, nombre, detalle = op[0], op[1], op[2]
+            ninguna = bool(op[3]) if len(op) > 3 else clave in ('', 'no')
+            previa = poster = None
+            if not ninguna:
+                m, j = carpeta / f'{tipo}_{clave}.mp4', carpeta / f'{tipo}_{clave}.jpg'
+                previa = m if m.is_file() else None
+                poster = j if j.is_file() else None
+            c = TarjetaEfecto(clave, nombre, detalle, previa, poster, ninguna=ninguna)
+            c.clic.connect(self._tocar)
+            capa.addWidget(c)
+            self.tarjetas.append(c)
+            self._por_clave[clave] = c
+        capa.addStretch(1)
+        self.poner(actual)
+
+    def poner(self, clave):
+        self._actual = clave if clave in self._por_clave else next(iter(self._por_clave))
+        for k, c in self._por_clave.items():
+            c.poner_seleccionada(k == self._actual)
+
+    def valor(self):
+        return self._actual
+
+    def _tocar(self, clave):
+        self.poner(clave)
+        if self._al_elegir:
+            self._al_elegir(clave)
 
 
 # ====================================================================================== «en qué palabras sale»
@@ -336,33 +384,24 @@ class PaginaEfectos(QWidget):
         Tooltip(self._b_original, tr('Volver al sonido que trae el programa (los últimos 2 segundos del Viral Hooks Riser, que acaban en su pico).'))
         cs.addWidget(self._b_original)
         t1.capa.addWidget(fila_s)
-        niv_i = (('no', tr('No')), ('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte')))
-        fila_z, cz_ = caja_h(espacio=10)
-        cz_.addWidget(Etiqueta(tr('Zoom en la intro'), 13, color=TEXT_MUTED))
-        self._v_zoom_intro = StringVar(self._texto_cuanto(op.get('fx_intro_zoom'), niv_i))
-        seg_zi = Segmentado([t for _k, t in niv_i], self._v_zoom_intro, self._cambio_zoom_intro, alto=32, tam=13)
-        Tooltip(seg_zi, tr('El cuadro se acerca mientras sube el riser y se suelta de golpe, con el destello, justo en su pico.'))
-        cz_.addWidget(seg_zi)
-        cz_.addStretch(1)
-        t1.capa.addWidget(fila_z)
         fila1, c1 = caja_h(espacio=12)
         self._c_intro = {}
         for ident, nombre, detalle in [('', tr('Sin intro'), tr('El video empieza limpio.'))] + [(i, tr(n), tr(d)) for i, n, d in F.INTROS]:
             self._c_intro[ident] = self._carta(ident, nombre, detalle, 'intro', c1)
         c1.addStretch(1)
         t1.capa.addWidget(fila1)
+        self._f_zoom_intro = self._fila(t1.capa, 'zoomintro', tr('Zoom en la intro'), tr('El cuadro se acerca mientras sube el riser y se suelta de golpe, con el destello, justo en su pico.'),
+                                        self._niveles(tr('Sin zoom'), tr('El cuadro no se acerca.'), tr('Un acercamiento discreto.'), tr('Un acercamiento claro.'), tr('Un acercamiento grande.')),
+                                        op.get('fx_intro_zoom'), 'fx_intro_zoom')
         capa.addWidget(t1)
         self._pintar_unico(self._c_intro, self._intro)
         self._refrescar_sonido()
         # ---- transiciones
         self._cortes = op.get('fx_cortes') or ''
         t2 = self._tarjeta(tr('Transiciones en los cortes'), tr('Se detecta cada salto entre tomas del video y se esconde con un efecto.'))
-        self._v_cortes = StringVar(self._texto_cuanto(op.get('fx_cortes_cuanto'), (('pocos', tr('Pocos')), ('normal', tr('Normales')), ('todos', tr('Todos')))))
-        fila2a, c2a = caja_h(espacio=10)
-        c2a.addWidget(Etiqueta(tr('Cuántos cortes'), 13, color=TEXT_MUTED))
-        c2a.addWidget(Segmentado([tr('Pocos'), tr('Normales'), tr('Todos')], self._v_cortes, self._cambio_cortes, alto=32, tam=13))
-        c2a.addStretch(1)
-        t2.capa.addWidget(fila2a)
+        self._f_cortes = self._fila(t2.capa, 'cuantoscortes', tr('Cuántos cortes'), tr('Cuántos de los cortes del video llevan transición.'),
+                                    [('pocos', tr('Pocos'), tr('Solo los cortes más marcados.'), False), ('normal', tr('Normales'), tr('Un buen puñado de cortes.'), False),
+                                     ('todos', tr('Todos'), tr('Todos los cortes del video.'), False)], op.get('fx_cortes_cuanto'), 'fx_cortes_cuanto', defecto='pocos')
         self._sonidos_corte = (('auto', tr('Automático')), ('shutter', tr('Obturador')), ('whoosh', tr('Whoosh')), ('ninguno', tr('Sin sonido')))
         fila2s, c2s = caja_h(espacio=10)
         c2s.addWidget(Etiqueta(tr('Sonido de la transición'), 13, color=TEXT_MUTED))
@@ -382,39 +421,21 @@ class PaginaEfectos(QWidget):
         self._pintar_unico(self._c_cortes, self._cortes)
         # ---- movimiento del video (Fusion)
         t4 = self._tarjeta(tr('Movimiento del video'), tr('Se aplica al propio video con una composición de Fusion: tu corrección de color sigue valiendo y no se duplica nada. Zoom lento todo el rato, temblor en los golpes de sonido y, si el video no llena el cuadro, un fondo desenfocado.'))
-        niveles = (('no', tr('No')), ('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte')))
-        etiquetas = [t for _k, t in niveles]
-        filaz, cz = caja_h(espacio=10)
-        cz.addWidget(Etiqueta(tr('Zoom lento'), 13, color=TEXT_MUTED))
-        self._v_zoom = StringVar(self._texto_cuanto(op.get('fx_zoom'), niveles))
-        cz.addWidget(Segmentado(etiquetas, self._v_zoom, self._cambio_movimiento, alto=32, tam=13))
-        cz.addStretch(1)
-        t4.capa.addWidget(filaz)
-        filat, ct = caja_h(espacio=10)
-        ct.addWidget(Etiqueta(tr('Temblor en los golpes'), 13, color=TEXT_MUTED))
-        self._v_temblor = StringVar(self._texto_cuanto(op.get('fx_temblor'), niveles))
-        ct.addWidget(Segmentado(etiquetas, self._v_temblor, self._cambio_movimiento, alto=32, tam=13))
-        ct.addStretch(1)
-        t4.capa.addWidget(filat)
-        self._var_fondo = ui.BooleanVar(bool(op.get('fx_fondo', True)))
-        t4.capa.addWidget(Interruptor(tr('Fondo desenfocado si el video no llena el cuadro'), self._var_fondo, self._cambio_fondo, tam=14, color='#FFFFFF'))
+        self._f_zoom = self._fila(t4.capa, 'zoom', tr('Zoom lento'), tr('El cuadro crece poco a poco durante todo el video (en el ejemplo se ve acelerado).'),
+                                  self._niveles(tr('Sin zoom'), tr('El cuadro no se mueve.'), tr('Crece despacio, casi sin notarse.'), tr('Crece poco a poco.'), tr('Crece de forma notoria.')), op.get('fx_zoom'), 'fx_zoom')
+        self._f_temblor = self._fila(t4.capa, 'temblor', tr('Temblor en los golpes'), tr('El cuadro se sacude un instante con cada golpe de sonido.'),
+                                     self._niveles(tr('Sin temblor'), tr('El cuadro no se sacude.'), tr('Un golpecito discreto.'), tr('Un golpe claro con cada sonido.'), tr('Un golpe fuerte y marcado.')), op.get('fx_temblor'), 'fx_temblor')
+        self._f_fondo = self._fila(t4.capa, 'fondo', tr('Si el video no llena el cuadro'), tr('Por ejemplo un video horizontal en un timeline vertical.'),
+                                   [('no', tr('Barras negras'), tr('Se ven barras negras arriba y abajo.'), False), ('si', tr('Fondo desenfocado'), tr('Una copia desenfocada llena el cuadro.'), False)],
+                                   'si' if bool(op.get('fx_fondo', True)) else 'no', None, guardar=lambda k: _guardar({'fx_fondo': k == 'si'}))
         capa.addWidget(t4)
         # ---- ritmo: quitar pausas (jump cuts) y zoom alterno
         t5 = self._tarjeta(tr('Ritmo: quitar pausas'), tr('GO corta los silencios del video en Resolve (los tramos con voz quedan pegados) ANTES de poner los captions, que ya salen con los tiempos nuevos. Solo en el video que sueltas en Inicio: nunca toca un timeline tuyo.'))
-        _niv = (('no', tr('No')), ('suave', tr('Pocas pausas')), ('normal', tr('Normal')), ('fuerte', tr('Todas')))
-        filap, cp = caja_h(espacio=10)
-        cp.addWidget(Etiqueta(tr('Quitar pausas'), 13, color=TEXT_MUTED))
-        self._v_pausas = StringVar(self._texto_cuanto(op.get('fx_pausas'), _niv))
-        cp.addWidget(Segmentado([t for _k, t in _niv], self._v_pausas, self._cambio_ritmo, alto=32, tam=13))
-        cp.addStretch(1)
-        t5.capa.addWidget(filap)
-        _niv2 = (('no', tr('No')), ('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte')))
-        filas, cs = caja_h(espacio=10)
-        cs.addWidget(Etiqueta(tr('Zoom alterno en cada corte'), 13, color=TEXT_MUTED))
-        self._v_saltos = StringVar(self._texto_cuanto(op.get('fx_zoom_saltos'), _niv2))
-        cs.addWidget(Segmentado([t for _k, t in _niv2], self._v_saltos, self._cambio_ritmo, alto=32, tam=13))
-        cs.addStretch(1)
-        t5.capa.addWidget(filas)
+        self._f_pausas = self._fila(t5.capa, 'pausas', tr('Quitar pausas'), tr('Los silencios se cortan y los tramos con voz quedan pegados (en el ejemplo, las pausas rojas de la línea de tiempo se cierran).'),
+                                    [('no', tr('No quitar'), tr('El video queda tal cual.')), ('suave', tr('Pocas pausas'), tr('Solo las pausas más largas.'), False),
+                                     ('normal', tr('Normal'), tr('Las pausas normales y largas.'), False), ('fuerte', tr('Todas'), tr('Todas las pausas, sin respirar.'), False)], op.get('fx_pausas'), 'fx_pausas')
+        self._f_saltos = self._fila(t5.capa, 'saltos', tr('Zoom alterno en cada corte'), tr('Con las pausas quitadas, el cuadro se acerca en un tramo sí y en el siguiente no, para que el corte seco parezca intencionado.'),
+                                    self._niveles(tr('Sin zoom'), tr('Todos los tramos igual.'), tr('Un acercamiento discreto.'), tr('Un acercamiento claro.'), tr('Un acercamiento grande.')), op.get('fx_zoom_saltos'), 'fx_zoom_saltos')
         capa.addWidget(t5)
         # ---- iconos
         self._iconos = set(op.get('fx_iconos') or [])
@@ -447,6 +468,7 @@ class PaginaEfectos(QWidget):
         # ---- más efectos (plegados tras un botón: números, pegatinas, énfasis, ambiente, cierre y mis efectos)
         from efectos_extra_ui import SeccionExtras
         self._mas = SeccionExtras()
+        self._tarjetas.extend(self._mas.tarjetas)
         self._mas.setVisible(False)
         self._b_mas = Boton(tr('Más efectos'), self._alternar_mas, alto=42, tam=14)
         capa.addWidget(self._b_mas)
@@ -462,6 +484,21 @@ class PaginaEfectos(QWidget):
         t.capa.addWidget(Etiqueta(titulo, 18, peso='medio', color='#FFFFFF'))
         t.capa.addWidget(Etiqueta(descripcion, 13, color=TEXT_MUTED, envolver=True))
         return t
+
+    @staticmethod
+    def _niveles(nombre_no, detalle_no, d_suave, d_normal, d_fuerte):
+        return [('no', nombre_no, detalle_no), ('suave', tr('Suave'), d_suave, False), ('normal', tr('Normal'), d_normal, False), ('fuerte', tr('Fuerte'), d_fuerte, False)]
+
+    def _fila(self, capa, tipo, titulo, ayuda, opciones, actual, pref, defecto='no', guardar=None):
+        """Un ajuste con su ejemplo: título, una línea de ayuda y la fila de tarjetas animadas (una por opción). Lo que se toca se guarda en la preferencia `pref`."""
+        capa.addWidget(Etiqueta(titulo, 15, peso='medio', color='#E0EBFB'))
+        if ayuda:
+            capa.addWidget(Etiqueta(ayuda, 12, color=TEXT_MUTED, envolver=True))
+        validas = {o[0] for o in opciones}
+        fila = FilaCartas(tipo, opciones, actual if actual in validas else defecto, guardar or (lambda k, p=pref: _guardar({p: k})))
+        capa.addWidget(fila)
+        self._tarjetas.extend(fila.tarjetas)
+        return fila
 
     def _carta(self, ident, nombre, detalle, tipo, capa, pack=False):
         previa = poster = None
@@ -500,18 +537,16 @@ class PaginaEfectos(QWidget):
             pass
         try:
             op = F.opciones_guardadas()
-            niv = (('no', tr('No')), ('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte')))
-            for var, clave in ((self._v_zoom_intro, 'fx_intro_zoom'), (self._v_zoom, 'fx_zoom'), (self._v_temblor, 'fx_temblor'), (self._v_saltos, 'fx_zoom_saltos')):
-                var.set(self._texto_cuanto(op.get(clave), niv))
-            self._v_pausas.set(self._texto_cuanto(op.get('fx_pausas'), (('no', tr('No')), ('suave', tr('Pocas pausas')), ('normal', tr('Normal')), ('fuerte', tr('Todas')))))
+            for fila, clave in ((self._f_zoom_intro, 'fx_intro_zoom'), (self._f_zoom, 'fx_zoom'), (self._f_temblor, 'fx_temblor'), (self._f_saltos, 'fx_zoom_saltos'),
+                                (self._f_pausas, 'fx_pausas'), (self._f_cortes, 'fx_cortes_cuanto')):
+                fila.poner(op.get(clave))
             self._v_intens.set(self._texto_cuanto(op.get('fx_intensidad'), (('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte')))))
-            self._v_cortes.set(self._texto_cuanto(op.get('fx_cortes_cuanto'), (('pocos', tr('Pocos')), ('normal', tr('Normales')), ('todos', tr('Todos')))))
+            self._f_fondo.poner('si' if bool(op.get('fx_fondo', True)) else 'no')
             self._v_iconos.set(self._texto_cuanto(op.get('fx_iconos_cuanto'), (('pocos', tr('Pocos')), ('normal', tr('Normales')), ('muchos', tr('Muchos')))))
             self._v_corte_sonido.set(self._texto_cuanto(op.get('fx_sonido_corte') or 'auto', self._sonidos_corte))
             self._intro, self._cortes = op.get('fx_intro') or '', op.get('fx_cortes') or ''
             self._pintar_unico(self._c_intro, self._intro)
             self._pintar_unico(self._c_cortes, self._cortes)
-            self._var_fondo.set(bool(op.get('fx_fondo', True)))
             self._var_iconos_on.set(bool(op.get('fx_iconos_activo', True)))
             self._var_extra.set(bool(op.get('fx_iconos_extra', True)))
             self._iconos = set(op.get('fx_iconos') or [])
@@ -551,27 +586,8 @@ class PaginaEfectos(QWidget):
         clave = {tr('Suave'): 'suave', tr('Normal'): 'normal', tr('Fuerte'): 'fuerte'}.get(self._v_intens.get(), 'normal')
         _guardar({'fx_intensidad': clave})
 
-    def _cambio_movimiento(self, _v=None):
-        mapa = {tr('No'): 'no', tr('Suave'): 'suave', tr('Normal'): 'normal', tr('Fuerte'): 'fuerte'}
-        _guardar({'fx_zoom': mapa.get(self._v_zoom.get(), 'no'), 'fx_temblor': mapa.get(self._v_temblor.get(), 'no')})
-
-    def _cambio_ritmo(self, _v=None):
-        p = {tr('No'): 'no', tr('Pocas pausas'): 'suave', tr('Normal'): 'normal', tr('Todas'): 'fuerte'}
-        s = {tr('No'): 'no', tr('Suave'): 'suave', tr('Normal'): 'normal', tr('Fuerte'): 'fuerte'}
-        _guardar({'fx_pausas': p.get(self._v_pausas.get(), 'no'), 'fx_zoom_saltos': s.get(self._v_saltos.get(), 'no')})
-
-    def _cambio_fondo(self):
-        _guardar({'fx_fondo': bool(self._var_fondo.get())})
-
-    def _cambio_cortes(self, _v=None):
-        clave = {tr('Pocos'): 'pocos', tr('Normales'): 'normal', tr('Todos'): 'todos'}.get(self._v_cortes.get(), 'pocos')
-        _guardar({'fx_cortes_cuanto': clave})
-
     def _cambio_corte_sonido(self, _v=None):
         _guardar({'fx_sonido_corte': {t: k for k, t in self._sonidos_corte}.get(self._v_corte_sonido.get(), 'auto')})
-
-    def _cambio_zoom_intro(self, _v=None):
-        _guardar({'fx_intro_zoom': {tr('No'): 'no', tr('Suave'): 'suave', tr('Normal'): 'normal', tr('Fuerte'): 'fuerte'}.get(self._v_zoom_intro.get(), 'normal')})
 
     # -- el sonido de la intro
     def _refrescar_sonido(self):

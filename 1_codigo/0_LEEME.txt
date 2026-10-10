@@ -102,6 +102,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         «Así se verá este bloque» del estilo «guion»: dibuja el bloque con la MISMA geometría que coloca Resolve (cada palabra en su x, y y tamaño).
     hacer_previas_efectos.py
         herramienta de desarrollo: las vistas previas (mp4 + jpg) de la página «Efectos».
+    hacer_previas_nuevas.py
+        herramienta de desarrollo: el ejemplo animado de CADA ajuste de la página «Efectos» que aún no lo tenía.
     hacer_vista_kinetic.py
         genera la vista previa INCLUIDA del estilo «Kinetic» (los fotogramas que enseña la tarjeta del slider de Estilos).
     hacer_vista_slider.py

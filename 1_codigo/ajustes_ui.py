@@ -484,6 +484,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.20', [
+        'La página Efectos enseña ahora cómo se ve CADA ajuste, como ya hacía la intro: zoom en la intro, cuántos cortes, zoom lento, temblor, fondo desenfocado, quitar pausas, zoom alterno y, en «Más efectos», números, pegatinas, énfasis, ambiente, cierre y B-roll. Cada opción es una tarjeta con su ejemplo animado: tócala para elegirla.',
+        'Panel del tema rediseñado: nombre, qué hace, estructura y un solo botón «Usar este tema», todo centrado. Sin el texto de la rueda del ratón.',
+    ]),
     ('5.4.19', [
         'Los estilos ahora se llaman «Tema 1» (antes Shine Kinetic), «Tema 2» (antes Shine Referencia) y «Tema 3» (antes VIRAL). Son los únicos que hay en el slider de Proyecto y en el chip «Estilo» de Inicio, vienen con el programa y no se pueden quitar.',
     ]),

@@ -21,8 +21,12 @@ import efectos_visuales as F
 import qt_kit as ui
 from qt_kit import Boton, Dialogo, Entrada, Etiqueta, Interruptor, Segmentado, StringVar, Tarjeta, caja_h
 from i18n import tr
+from efectos_pagina import FilaCartas
 
 TEXT_MUTED = ui.TEXT_MUTED
+# la línea de cada tarjeta cabe en tres renglones: versiones cortas de las descripciones del catálogo
+_BREVE = {'polvo': 'Partículas de polvo que brillan y flotan.', 'grano': 'Un grano fino de cine sobre la imagen.', 'luz': 'Un resplandor cálido que se mueve.',
+          'cta': 'Un botón «Sígueme» animado al final.', 'logo': 'Tu logo entra con un destello.', 'final': 'El video se oscurece y sale tu logo.'}
 
 
 def _guardar(cambios):
@@ -239,37 +243,46 @@ class SeccionExtras(QWidget):
     def __init__(self, padre=None):
         super().__init__(padre)
         self._dialogo = None
+        self.tarjetas = []                                 # las tarjetas con ejemplo animado (la página las mueve solo mientras se ven)
         capa = QVBoxLayout(self)
         capa.setContentsMargins(0, 0, 0, 0)
         capa.setSpacing(18)
         op = F.opciones_guardadas()
         # ---- números, pegatinas y énfasis
         t1 = self._tarjeta(tr('Números, pegatinas y énfasis'), tr('Pequeños detalles que salen solos en el momento justo. Los iconos, números y pegatinas esquivan la franja de los captions y la cara de quien habla.'))
-        self._v_num = ui.BooleanVar(bool(op.get('fx_numeros')))
-        t1.capa.addWidget(Interruptor(tr('Números 1, 2, 3… cuando enumeras («primero», «paso 2»…)'), self._v_num, lambda: _guardar({'fx_numeros': bool(self._v_num.get())}), tam=14, color='#FFFFFF'))
+        self._fila(t1.capa, 'numeros', tr('Números'), tr('Un número en una esquina cuando enumeras («primero», «paso 2»…).'),
+                   [('no', tr('Sin números'), tr('No salen números.')), ('si', tr('Números 1, 2, 3…'), tr('Sale el número de cada paso al decirlo.'), False)],
+                   'si' if op.get('fx_numeros') else 'no', lambda k: _guardar({'fx_numeros': k == 'si'}))
+        self._fila(t1.capa, 'pegatinas', tr('Pegatinas'), tr('Un emoji grande salta en una esquina cuando dices su palabra (dinero → bolsa de dinero).'),
+                   [('no', tr('Sin pegatinas'), tr('No salen pegatinas.')), ('si', tr('Pegatinas'), tr('Un emoji grande con borde blanco al decir la palabra.'), False)],
+                   'si' if op.get('fx_pegatinas') else 'no', lambda k: _guardar({'fx_pegatinas': k == 'si'}))
         fila_p, cp = caja_h(espacio=12)
-        self._v_peg = ui.BooleanVar(bool(op.get('fx_pegatinas')))
-        cp.addWidget(Interruptor(tr('Pegatinas en palabras clave (dinero → bolsa de dinero)'), self._v_peg, lambda: _guardar({'fx_pegatinas': bool(self._v_peg.get())}), tam=14, color='#FFFFFF'))
+        cp.addWidget(Boton(tr('Palabras de las pegatinas…'), self._abrir_pegatinas, alto=32, tam=12))
         cp.addStretch(1)
-        cp.addWidget(Boton(tr('Palabras…'), self._abrir_pegatinas, alto=32, tam=12))
         t1.capa.addWidget(fila_p)
-        _fila_segmentos(t1.capa, tr('Énfasis dibujado a mano'), [('no', tr('No')), ('subrayado', tr('Subrayado')), ('circulo', tr('Círculo'))], op.get('fx_enfasis') or 'no',
-                        lambda k: _guardar({'fx_enfasis': k}))
-        _fila_segmentos(t1.capa, tr('Altura del énfasis'), [('arriba', tr('Arriba')), ('centro', tr('Centro')), ('abajo', tr('Abajo'))], op.get('fx_enfasis_altura') or 'centro',
-                        lambda k: _guardar({'fx_enfasis_altura': k}))
+        self._fila(t1.capa, 'enfasis', tr('Énfasis dibujado a mano'), tr('La frase importante se subraya o se encierra en un círculo, trazado a mano.'),
+                   [('no', tr('Sin énfasis'), tr('Las frases quedan como están.')), ('subrayado', tr('Subrayado'), tr('Un trazo amarillo bajo la frase.'), False),
+                    ('circulo', tr('Círculo'), tr('Un círculo amarillo alrededor de la frase.'), False)], op.get('fx_enfasis') or 'no', lambda k: _guardar({'fx_enfasis': k}))
+        self._fila(t1.capa, 'alturaenfasis', tr('Altura del énfasis'), tr('Dónde cae el trazo: depende de dónde pone el texto el estilo que uses.'),
+                   [('arriba', tr('Arriba'), tr('El trazo cae en la parte de arriba.'), False), ('centro', tr('Centro'), tr('El trazo cae en el centro.'), False),
+                    ('abajo', tr('Abajo'), tr('El trazo cae en la parte de abajo.'), False)], op.get('fx_enfasis_altura') or 'centro', lambda k: _guardar({'fx_enfasis_altura': k}))
         self._v_evitar = ui.BooleanVar(bool(op.get('fx_evitar', True)))
         t1.capa.addWidget(Interruptor(tr('No tapar los captions ni la cara'), self._v_evitar, lambda: _guardar({'fx_evitar': bool(self._v_evitar.get())}), tam=14, color='#FFFFFF'))
         capa.addWidget(t1)
         # ---- ambiente
         t2 = self._tarjeta(tr('Ambiente'), tr('Un efecto suave en bucle sobre todo el video, mezclado en «Screen» para que solo sume luz.'))
-        _fila_segmentos(t2.capa, tr('Ambiente'), [('', tr('No'))] + [(i, tr(n)) for i, n, _d in X.OVERLAYS], op.get('fx_overlay') or '', lambda k: _guardar({'fx_overlay': k}))
+        self._fila(t2.capa, 'ambiente', tr('Ambiente'), '', [('', tr('Sin ambiente'), tr('El video queda limpio.'))] + [(i, tr(n), tr(_BREVE.get(i, d)), False) for i, n, d in X.OVERLAYS],
+                   op.get('fx_overlay') or '', lambda k: _guardar({'fx_overlay': k}))
         fuerza = float(op.get('fx_overlay_fuerza', 0.45))
-        _fila_segmentos(t2.capa, tr('Fuerza'), [('0.25', tr('Suave')), ('0.45', tr('Normal')), ('0.75', tr('Fuerte'))], min(('0.25', '0.45', '0.75'), key=lambda v: abs(float(v) - fuerza)),
-                        lambda k: _guardar({'fx_overlay_fuerza': float(k)}))
+        _clave_f = {'0.25': 'suave', '0.45': 'normal', '0.75': 'fuerte'}
+        self._fila(t2.capa, 'fuerzaambiente', tr('Fuerza del ambiente'), tr('Cuánta luz suma el ambiente que elegiste.'),
+                   [('suave', tr('Suave'), tr('Apenas se nota.'), False), ('normal', tr('Normal'), tr('Se nota sin molestar.'), False), ('fuerte', tr('Fuerte'), tr('Se nota bastante.'), False)],
+                   _clave_f[min(_clave_f, key=lambda v: abs(float(v) - fuerza))], lambda k: _guardar({'fx_overlay_fuerza': float({v: c for c, v in _clave_f.items()}[k])}))
         capa.addWidget(t2)
         # ---- cierre
         t3 = self._tarjeta(tr('Cierre del video'), tr('Los últimos segundos con una invitación a seguirte: un botón animado, tu logo o una pantalla final, con su sonido.'))
-        _fila_segmentos(t3.capa, tr('Cierre'), [('', tr('No'))] + [(i, tr(n)) for i, n, _d in X.OUTROS], op.get('fx_outro') or '', lambda k: _guardar({'fx_outro': k}))
+        self._fila(t3.capa, 'cierre', tr('Cierre'), '', [('', tr('Sin cierre'), tr('El video termina sin nada más.'))] + [(i, tr(n), tr(_BREVE.get(i, d)), False) for i, n, d in X.OUTROS],
+                   op.get('fx_outro') or '', lambda k: _guardar({'fx_outro': k}))
         fila_t, ct = caja_h(espacio=10)
         ct.addWidget(Etiqueta(tr('Texto'), 13, color=TEXT_MUTED))
         self._texto = StringVar(str(op.get('fx_outro_texto') or ''))
@@ -288,8 +301,9 @@ class SeccionExtras(QWidget):
         capa.addWidget(t3)
         # ---- B-roll de stock
         t5 = self._tarjeta(tr('B-roll de stock'), tr('Tomas de apoyo gratuitas de Pexels cuando dices cosas concretas (casa, playa, coche…). Hace falta tu clave de API gratuita (se saca en pexels.com/api). Se colocan DEBAJO de los captions y el audio original sigue sonando.'))
-        self._v_broll = ui.BooleanVar(bool(op.get('fx_broll')))
-        t5.capa.addWidget(Interruptor(tr('B-roll en las palabras concretas'), self._v_broll, lambda: _guardar({'fx_broll': bool(self._v_broll.get())}), tam=14, color='#FFFFFF'))
+        self._fila(t5.capa, 'broll', tr('B-roll en las palabras concretas'), '',
+                   [('no', tr('Sin B-roll'), tr('Solo tu video.')), ('si', tr('B-roll de stock'), tr('Una toma de apoyo cuando dices algo concreto.'), False)],
+                   'si' if op.get('fx_broll') else 'no', lambda k: _guardar({'fx_broll': k == 'si'}))
         fila_k, ck = caja_h(espacio=10)
         ck.addWidget(Etiqueta(tr('Clave de Pexels'), 13, color=TEXT_MUTED))
         self._clave = StringVar(str(op.get('pexels_key') or ''))
@@ -340,6 +354,17 @@ class SeccionExtras(QWidget):
         self._t4.capa.addWidget(fila_b)
         capa.addWidget(self._t4)
         self._pintar_propios()
+
+    def _fila(self, capa, tipo, titulo, ayuda, opciones, actual, guardar):
+        """Un ajuste con su ejemplo animado: título, ayuda y una fila de tarjetas (una por opción), como la intro."""
+        capa.addWidget(Etiqueta(titulo, 15, peso='medio', color='#E0EBFB'))
+        if ayuda:
+            capa.addWidget(Etiqueta(ayuda, 12, color=TEXT_MUTED, envolver=True))
+        validas = {o[0] for o in opciones}
+        fila = FilaCartas(tipo, opciones, actual if actual in validas else opciones[0][0], guardar)
+        capa.addWidget(fila)
+        self.tarjetas.extend(fila.tarjetas)
+        return fila
 
     @staticmethod
     def _tarjeta(titulo, descripcion):

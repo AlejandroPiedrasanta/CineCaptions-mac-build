@@ -1779,7 +1779,7 @@ class _EstructuraPack(QWidget):
     def __init__(self, datos):
         super().__init__()
         self._d = dict(datos or {})
-        self.setFixedHeight(22)
+        self.setFixedHeight(26)
         faltan = []
         if not self._d.get('imagen'):
             faltan.append(tr('Sin bloque «imagen»: el emoji va debajo del texto.'))
@@ -1790,8 +1790,12 @@ class _EstructuraPack(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setFont(fuente(10, peso='medio'))
         fm = QFontMetricsF(p.font())
-        x = 2.0
         cy = self.height() / 2
+        etiquetas = (('arriba', tr('arriba')), ('principal', tr('principal')), ('abajo', tr('abajo')), ('imagen', tr('imagen')))
+        n = int(self._d.get('variantes') or 0)
+        texto_n = (tr('{n} variantes', n=n) if n != 1 else tr('1 variante')) if n else ''
+        total = sum(10 + fm.horizontalAdvance(t) + 10 for _k, t in etiquetas) - 10 + ((18 + fm.horizontalAdvance(texto_n)) if texto_n else 0)
+        x = max(2.0, (self.width() - total) / 2.0)                 # v5.4.20: centrada (antes quedaba pegada a la izquierda)
         for clave, texto, color in (('arriba', tr('arriba'), ui.ROL_CONTEXTO), ('principal', tr('principal'), ui.ROL_PRINCIPAL),
                                     ('abajo', tr('abajo'), ui.ROL_COMPLEMENTO), ('imagen', tr('imagen'), ui.ROL_IMAGEN)):
             hay = bool(self._d.get(clave))
@@ -1808,12 +1812,9 @@ class _EstructuraPack(QWidget):
             ancho = fm.horizontalAdvance(texto)
             p.drawText(QRectF(x + 10, 0, ancho + 4, self.height()), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), texto)
             x += 10 + ancho + 10
-        n = int(self._d.get('variantes') or 0)
-        if n:
-            texto = tr('{n} variantes', n=n) if n != 1 else tr('1 variante')
+        if texto_n:
             p.setPen(QColor('#7F8DA8'))
-            p.drawText(QRectF(self.width() - fm.horizontalAdvance(texto) - 6, 0, fm.horizontalAdvance(texto) + 6, self.height()),
-                       int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight), texto)
+            p.drawText(QRectF(x + 8, 0, fm.horizontalAdvance(texto_n) + 6, self.height()), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), texto_n)
         p.end()
 class PlantillasWindow(QWidget):
     """Elegir el diseño de los subtitulos. DOS vistas, una por MODO
@@ -1873,11 +1874,12 @@ class PlantillasWindow(QWidget):
             separador.setStyleSheet(ui.traducir_hoja('QFrame { background-color: #1E2A42; border: none; }'))
             self.tarjeta.capa.addWidget(separador)
         cab, ch = caja_h(espacio=12)
-        ch.addWidget(Etiqueta(tr('Pack de estilos'), 18, peso='medio', color='#FFFFFF'))
+        ch.addWidget(Etiqueta(tr('Temas') if plantillas.SOLO_TEMAS else tr('Pack de estilos'), 18, peso='medio', color='#FFFFFF'))
         self.cuenta_lbl = Etiqueta('', 13, color=TEXT_MUTED)
         ch.addWidget(self.cuenta_lbl)
         ch.addStretch(1)
-        ch.addWidget(Etiqueta(tr('Rueda, ← → o arrastra  ·  clic en la del centro para usarla'), 12, color=TEXT_MUTED))
+        if not plantillas.SOLO_TEMAS:
+            ch.addWidget(Etiqueta(tr('Rueda, ← → o arrastra  ·  clic en la del centro para usarla'), 12, color=TEXT_MUTED))
         # «Crea tu estilo»: el único botón de la cabecera (las vistas reales de Resolve se piden solas)
         self.crear_btn = Boton(tr('Crea tu estilo'), self._crear_estilo, tipo='primario', alto=32, tam=13, negrita=True)
         icono_crear = ui.icono_linea('ph.sparkle-bold', '#FFFFFF')
@@ -1906,22 +1908,28 @@ class PlantillasWindow(QWidget):
         iv.setSpacing(4)
         fila_n, cn = caja_h(espacio=12)
         cn.addStretch(1)
-        self.info_nombre = Etiqueta('', 24, peso='extra', color='#FFFFFF')
+        self.info_nombre = Etiqueta('', 28, peso='extra', color='#FFFFFF')
         cn.addWidget(self.info_nombre)
         self.info_fuentes = ui.Enlace('', self._instalar_fuentes_central, 12, color=ui.AMBAR, color_hover=ui.NARANJA)
         self.info_fuentes.hide()
         cn.addWidget(self.info_fuentes)
         cn.addStretch(1)
         iv.addWidget(fila_n)
+        self.info_sub = Etiqueta('', 12, peso='medio', color=ui.ACCENT_CLARO, alineacion=Qt.AlignmentFlag.AlignHCenter)      # v5.4.20: la frase corta del tema (en mayúsculas)
+        iv.addWidget(self.info_sub)
         self.info_nota = Etiqueta('', 13, color=TEXT_MUTED, envolver=True, alineacion=Qt.AlignmentFlag.AlignHCenter)
-        iv.addWidget(self.info_nota)
+        self.info_nota.setFixedWidth(620)               # (con la alineación al centro el texto envuelto se quedaba en ~300 px)
+        self.info_nota.setMinimumHeight(40)             # dos líneas: sin esto la segunda se cortaba
+        iv.addWidget(self.info_nota, 0, Qt.AlignmentFlag.AlignHCenter)
         self.info_extra = QVBoxLayout()
         self.info_extra.setContentsMargins(0, 0, 0, 0)
         self.info_extra.setSpacing(6)
         iv.addLayout(self.info_extra)
         fila_b, cb = caja_h(espacio=8)
         cb.addStretch(1)
-        self.usar_btn = Boton(tr('Usar este estilo'), self._usar_central, tipo='primario', alto=38, ancho=200, tam=14, negrita=True)
+        self.info_izq = QWidget()                      # v5.4.20: del ancho de los botones de la derecha, para que «Usar este tema» quede justo en el centro
+        cb.addWidget(self.info_izq)
+        self.usar_btn = Boton(tr('Usar este tema') if plantillas.SOLO_TEMAS else tr('Usar este estilo'), self._usar_central, tipo='primario', alto=40, ancho=220, tam=14, negrita=True)
         cb.addWidget(self.usar_btn)
         self.info_acciones_w = QWidget()
         self.info_acciones = QHBoxLayout(self.info_acciones_w)
@@ -2064,7 +2072,10 @@ class PlantillasWindow(QWidget):
             self.info_fuentes.show()
         else:
             self.info_fuentes.hide()
-        texto = carta.nota or carta.detalle
+        frase, descripcion = plantillas.info_de_tema(getattr(carta.pack, 'nombre', carta.valor)) if plantillas.SOLO_TEMAS else ('', '')
+        self.info_sub.setText(frase.upper())
+        self.info_sub.setVisible(bool(frase))
+        texto = carta.nota or descripcion or carta.detalle
         self.info_nota.setText(texto)
         self.info_nota.setVisible(bool(texto))
         if carta.estructura:
@@ -2079,10 +2090,15 @@ class PlantillasWindow(QWidget):
             b.setFixedWidth(42)
             Tooltip(b, ayuda)
             self.info_acciones.addWidget(b)
-        if carta.menu:
-            m = Boton('⋯', lambda menu=carta.menu: self._menu_carta(menu), tipo='fantasma', alto=36, ancho=40, tam=16)
+        menu_carta = carta.menu
+        if plantillas.SOLO_TEMAS and menu_carta and len(menu_carta) == 1:       # v5.4.20: con los tres temas el «⋯» solo traía «Descripción»: se quita
+            menu_carta = None
+        if menu_carta:
+            m = Boton('⋯', lambda menu=menu_carta: self._menu_carta(menu), tipo='fantasma', alto=36, ancho=40, tam=16)
             m.setFixedWidth(42)
             self.info_acciones.addWidget(m)
+        self.info_izq.setVisible(self.info_acciones.count() > 0)
+        self.info_izq.setFixedWidth(max(0, self.info_acciones.count() * 48 - 6))
         self._pintar_boton_usar()
     def _menu_carta(self, opciones):
         menu = Menu(self)
@@ -2101,7 +2117,7 @@ class PlantillasWindow(QWidget):
         # en el modo «normal» la elección es la combinación (chips de abajo), no el pack
         self.usar_btn.setVisible(not (self.modo == 'normal' and c.valor != '__clasica__'))
         en_uso = c.valor == self._valor_actual()
-        self.usar_btn.setText('✓ ' + tr('En uso') if en_uso else tr('Usar este estilo'))
+        self.usar_btn.setText('✓ ' + tr('En uso') if en_uso else (tr('Usar este tema') if plantillas.SOLO_TEMAS else tr('Usar este estilo')))
         self.usar_btn.setEnabled(not en_uso)
         # «En uso» no es un botón apagado: es una confirmación (verde)
         self.usar_btn.setStyleSheet(ui.traducir_hoja('QPushButton:disabled { background-color: #0F2A22; border: 1px solid #1F7A56; color: #6FE3AE; }') if en_uso else '')
@@ -2371,7 +2387,7 @@ class PlantillasWindow(QWidget):
                 cartas.append(estilos_slider.Carta('__anadir__', tr('Añadir plantilla (.drb)'), tipo='anadir', detalle=tr('Exporta una bandeja desde Resolve y súbela aquí: queda guardada como un estilo más.')))
             self.carrusel.poner_cartas(cartas, self._valor_actual())
             try:
-                self.cuenta_lbl.configure(text=tr('{n} temas', n=len(packs)) if plantillas.SOLO_TEMAS else (tr('1 pack') if len(packs) == 1 else tr('{n} packs', n=len(packs))))
+                self.cuenta_lbl.configure(text='' if plantillas.SOLO_TEMAS else (tr('1 pack') if len(packs) == 1 else tr('{n} packs', n=len(packs))))
             except Exception:
                 pass
             self._realzar()
@@ -9537,7 +9553,9 @@ class SubtitleApp(QWidget):
         return True
     # -- Estilos y composición -------------------------------------------------
     def _pagina_estilos(self):
-        _pag, capa = self._nueva_pagina('estilos', tr('Elegir audio y estilo'), tr('Obtén el audio de tu timeline, elige el pack de estilos y mira cómo queda cada estilo en tu bloque'), desplazable=False)
+        _pag, capa = self._nueva_pagina('estilos', tr('Elegir audio y tema') if plantillas.SOLO_TEMAS else tr('Elegir audio y estilo'),
+                                        tr('Obtén el audio de tu timeline, elige un tema y mira cómo queda') if plantillas.SOLO_TEMAS
+                                        else tr('Obtén el audio de tu timeline, elige el pack de estilos y mira cómo queda cada estilo en tu bloque'), desplazable=False)
         self._estilos_capa = capa                     # v5.4.3: la página NO se desplaza: todo cabe y el slider se lleva el alto que sobra
         # el audio («Fuente», se construye en _pagina_nuevo) va dentro de la tarjeta de «Pack de estilos» (ver _asegurar_estilos)
     def _cambio_motor_voz(self, _v=None):
