@@ -30,6 +30,8 @@ CATEGORIA_DE_SECCION = {'inicio': CATEGORIA_SIMPLE, 'intro': CATEGORIA_INTRO, 'f
 CUANTOS_SIMPLES = {'inicio': 3, 'intro': 2, 'final': 2}          # cuántos sonidos guarda cada sección
 # v5.5: en QUÉ palabras suena el modo simple: en todas, solo en la principal (la grande / el héroe / la del efecto) o en ninguna (quedan la introducción y el final)
 DONDE_SIMPLE = ('todas', 'principal', 'ninguna')
+# v5.4.29: las tarjetas de la pantalla Sonido que se pueden apagar enteras (palabra = «Sonido por palabra», principal = «Sonido del texto principal», introducción y final)
+TARJETAS_SONIDO = ('palabra', 'principal', 'intro', 'final')
 def _leer_lista(archivo):
     try:
         datos = json.loads(Path(archivo).read_text(encoding='utf-8'))
@@ -61,13 +63,17 @@ def cargar_modo():
         datos = {}
     if not isinstance(datos, dict):
         datos = {}
-    modo = 'avanzado' if datos.get('modo') == 'avanzado' else 'simple'
+    modo = 'simple'                      # v5.4.29: el modo «Avanzado» ya no existe en la pantalla Sonido: aunque un archivo viejo diga 'avanzado', manda siempre el simple
     salida = {'modo': modo, 'donde': datos.get('donde') if datos.get('donde') in DONDE_SIMPLE else 'todas'}
     for clave in ('sonidos', 'intro', 'final'):
         salida[clave] = [str(x) for x in (datos.get(clave) or []) if isinstance(x, str)][:CUANTOS_SIMPLES[{'sonidos': 'inicio'}.get(clave, clave)]]
+    # v5.4.29: el efecto sonoro que el usuario elige para la palabra PRINCIPAL (vacío = automático: el sonido propio de cada efecto del estilo) y el interruptor de cada tarjeta
+    salida['principal'] = [str(x) for x in (datos.get('principal') or []) if isinstance(x, str)][:1]
+    crudas = datos.get('activas') if isinstance(datos.get('activas'), dict) else {}
+    salida['activas'] = {k: crudas.get(k) is not False for k in TARJETAS_SONIDO}
     return salida
-def guardar_modo(modo=None, sonidos=None, intro=None, final=None, donde=None):
-    """Guarda el modo, en qué palabras suena el modo simple y/o los sonidos de cada sección (lo que no se pasa se conserva)."""
+def guardar_modo(modo=None, sonidos=None, intro=None, final=None, donde=None, principal=None, activas=None):
+    """Guarda el modo, en qué palabras suena el modo simple, los sonidos de cada sección, el sonido elegido para la principal y/o los interruptores de las tarjetas (lo que no se pasa se conserva)."""
     actual = cargar_modo()
     if modo in ('simple', 'avanzado'):
         actual['modo'] = modo
@@ -76,11 +82,21 @@ def guardar_modo(modo=None, sonidos=None, intro=None, final=None, donde=None):
     for clave, valor in (('sonidos', sonidos), ('intro', intro), ('final', final)):
         if valor is not None:
             actual[clave] = [str(x) for x in valor][:CUANTOS_SIMPLES[{'sonidos': 'inicio'}.get(clave, clave)]]
+    if principal is not None:
+        actual['principal'] = [str(x) for x in principal][:1]
+    if isinstance(activas, dict):
+        actual['activas'] = {k: bool(activas.get(k, actual['activas'].get(k, True))) for k in TARJETAS_SONIDO}
     try:
         CARPETA_USUARIO.mkdir(parents=True, exist_ok=True)
         ARCHIVO_MODO.write_text(json.dumps(actual, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception:
         return None
+def sonido_principal():
+    """El efecto sonoro que el usuario eligió para la palabra principal (Path), o None = automático (el sonido propio de cada efecto del estilo)."""
+    for r in cargar_modo()['principal']:
+        if Path(r).is_file():
+            return Path(r)
+    return None
 def sonidos_de_fabrica(seccion='inicio'):
     """Los dos sonidos con los que viene cada sección del modo simple (dentro del programa)."""
     carpeta, nombres = SECCIONES_SIMPLES[seccion]
@@ -494,14 +510,19 @@ def _aplicar_modo(config):
     guardado = cargar_modo()
     modo = guardado['modo']
     config['modo'] = modo
-    config['simple_donde'] = guardado['donde']
+    donde = guardado['donde']
+    act = guardado['activas']
+    if (donde == 'todas' and not act['palabra']) or (donde == 'principal' and not act['principal']):
+        donde = 'ninguna'                    # la tarjeta de «Sonido por palabra» / «Sonido del texto principal» está apagada: esas palabras no suenan
+    config['simple_donde'] = donde
+    config['simple_principal'] = [str(sonido_principal())] if sonido_principal() else []
     if modo == 'simple' and sonidos_simples():
         config['categoria_por_defecto'] = CATEGORIA_SIMPLE
         config['reglas'] = []
         config['solo_bloques_destacados'] = False
         config['al_inicio'] = True
-        config['simple_intro'] = bool(sonidos_simples('intro'))
-        config['simple_final'] = bool(sonidos_simples('final'))
+        config['simple_intro'] = bool(act['intro'] and sonidos_simples('intro'))
+        config['simple_final'] = bool(act['final'] and sonidos_simples('final'))
     elif modo == 'avanzado':
         # (5.3) los ajustes del panel Avanzado mandan; sfx_rules.json solo pone las reglas si el usuario las escribió a mano
         av = cargar_avanzado()
@@ -941,7 +962,9 @@ def asignar_eventos_por_palabra(bloques, inicios, manuales=None, para_resolver=T
             ruta, cat, manual = final[0], CATEGORIA_FINAL, False
         else:
             propia = None                                   # v5.5: el sonido propio del EFECTO que lleva esta palabra principal (cristal, selección, arrastre, héroe)
-            if clave and callable(config.get('categoria_por_clave')):
+            if donde == 'principal' and config.get('simple_principal'):
+                propia = (str(config['simple_principal'][0]), CATEGORIA_SIMPLE)          # v5.4.29: el efecto sonoro que el usuario eligió para la principal
+            elif clave and callable(config.get('categoria_por_clave')):
                 cat_efecto = config['categoria_por_clave'](clave)
                 rutas_efecto = _rutas_de(cat_efecto) if cat_efecto else []
                 if rutas_efecto:
@@ -964,12 +987,7 @@ def asignar_eventos_por_palabra(bloques, inicios, manuales=None, para_resolver=T
 
 def curva_energia_activa():
     """True si el usuario encendio la «curva de energia» (Sonido): el ritmo del habla decide cuantas palabras suenan."""
-    try:
-        import json as _j
-        datos = _j.loads((CARPETA_USUARIO / 'preferencias.json').read_text(encoding='utf-8'))
-        return bool(datos.get('sfx_curva_energia'))
-    except Exception:
-        return False
+    return False                    # v5.4.29: el interruptor se quitó de la pantalla Sonido; sin él, apagada (que unas palabras no suenen sin que se vea el porqué era incoherente)
 
 
 def _inicios_de(bloques):

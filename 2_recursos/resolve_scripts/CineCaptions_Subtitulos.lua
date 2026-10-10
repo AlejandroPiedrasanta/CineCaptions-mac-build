@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.4.28 (subtitulos)"
+local VERSION = "5.4.32 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -5216,7 +5216,9 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
     do
         local nombres_g = { L .. "-CTX", L .. "-MAIN", L .. "-CMP", L, L .. "-EMOJI" }
         for k = 1, 24 do nombres_g[#nombres_g + 1] = string.format("%s-K%d", L, k) end
-        retirar_pistas_nuestras(timeline, nombres_g, "subtitulos", "esta corrida es de estilo guion")
+        if not track.no_retirar then        -- v5.4.30: en una mezcla la limpieza se hizo una vez al principio
+            retirar_pistas_nuestras(timeline, nombres_g, "subtitulos", "esta corrida es de estilo guion")
+        end
     end
 
     -- PISTAS. Las palabras GRANDES van en las pistas de abajo y las pequeñas
@@ -5490,16 +5492,43 @@ local function place_kinetic(timeline, media_pool, track, fps, start_frame, proj
     end
     local carpeta, aviso = preparar_pack_kinetic(media_pool, pack_previo.nombre, pack_previo.formato, pack_previo.drb, track.clip_prueba)
     if not carpeta then fail("no pude preparar el pack «" .. tostring(pack_previo.nombre) .. "»: " .. tostring(aviso)) end
+    -- v5.4.30: una MEZCLA de estilos puede traer clips de otros packs de elementos (los «v …» del pack VIRAL junto a los «k …» de Kinetic): se preparan sus bins aparte
+    local carpetas_extra = {}
+    for _, extra in ipairs(track.plantillas_extra or {}) do
+        local ok_x, err_x = pcall(function()
+            local pp = pack_del_manifiesto({ plantilla = (type(extra) == "table") and extra.plantilla or nil }, ancho_tl, alto_tl)
+            if pp and pp.drb then
+                local c2, aviso2 = preparar_pack_kinetic(media_pool, pp.nombre, pp.formato, pp.drb, (type(extra) == "table") and extra.clip_prueba or nil)
+                if c2 then
+                    carpetas_extra[#carpetas_extra + 1] = c2
+                else
+                    print("  Aviso: no pude preparar el pack «" .. tostring(pp.nombre) .. "» de la mezcla: " .. tostring(aviso2))
+                end
+            end
+        end)
+        if not ok_x then print("  Aviso: pack extra de la mezcla: " .. tostring(err_x)) end
+    end
     local clips = {}
     local function clip_de(nombre)
-        if clips[nombre] == nil then clips[nombre] = find_clip_by_name(media_pool, nombre, carpeta) or false end
+        if clips[nombre] == nil then
+            local c = find_clip_by_name(media_pool, nombre, carpeta)
+            if not c then
+                for _, c2 in ipairs(carpetas_extra) do
+                    c = find_clip_by_name(media_pool, nombre, c2)
+                    if c then break end
+                end
+            end
+            clips[nombre] = c or false
+        end
         return clips[nombre] or nil
     end
     print(string.format("\nIdioma '%s': %d bloques (estilo Kinetic).", lang, #cues))
 
     local nombres_previos = { L .. "-CTX", L .. "-MAIN", L .. "-CMP", L, L .. "-EMOJI" }
     for k = 1, 24 do nombres_previos[#nombres_previos + 1] = string.format("%s-T%d", L, k) end
-    retirar_pistas_nuestras(timeline, nombres_previos, "subtitulos", "esta corrida es de estilo Kinetic")
+    if not track.no_retirar then            -- v5.4.30: en una MEZCLA de estilos esa limpieza se hizo una vez al principio (si no, cada estilo borraría lo del otro)
+        retirar_pistas_nuestras(timeline, nombres_previos, "subtitulos", "esta corrida es de estilo Kinetic")
+    end
 
     local function a_fotogramas(segundos) return math.floor(segundos * fps + 0.5) end
     local extra_fin = tonumber(track.extra_fin_s) or 0.05
@@ -5916,6 +5945,13 @@ local function animar_emoji(colocado, largo, entrada, salida)
 end
 
 function colocar_emojis(timeline, media_pool, track, planes, fps)
+    if MEZCLA_ACUM and not MEZCLA_ACUM.volcando then
+        -- v5.4.30: en una MEZCLA las dos pistas de datos comparten UNA pista de emojis (colocar_emojis limpia la que reutiliza): se juntan y se colocan al final
+        MEZCLA_ACUM.track_emojis = MEZCLA_ACUM.track_emojis or track
+        MEZCLA_ACUM.fps_emojis = fps
+        for _, p in ipairs(planes or {}) do MEZCLA_ACUM.planes[#MEZCLA_ACUM.planes + 1] = p end
+        return 0
+    end
     local L = string.upper(tostring(track.language or "??"))
     local rutas = (type(track.emojis) == "table") and track.emojis or {}
     local secuencias = (type(track.emojis_secuencias) == "table") and track.emojis_secuencias or {}
@@ -5927,9 +5963,11 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
         end
     end
     if #con == 0 then
-        -- Sin emojis esta vez: fuera los de una corrida anterior.
-        retirar_pistas_nuestras(timeline, { L .. "-EMOJI" }, "emojis",
-                                "esta corrida no lleva emojis")
+        -- Sin emojis esta vez: fuera los de una corrida anterior (en una mezcla de estilos esa limpieza ya se hizo: no se borran los del otro estilo).
+        if not track.no_retirar then
+            retirar_pistas_nuestras(timeline, { L .. "-EMOJI" }, "emojis",
+                                    "esta corrida no lleva emojis")
+        end
         return 0
     end
     local idx, error_msg = conseguir_pista_video(timeline, L .. "-EMOJI")
@@ -6088,6 +6126,14 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
 end
 
 function place_sfx(timeline, media_pool, cues, track, fps, start_frame)
+    if MEZCLA_ACUM and not MEZCLA_ACUM.volcando then
+        -- v5.4.30: en una MEZCLA los sonidos de las dos pistas de datos van juntos y en orden a UNA sola pista de audio (place_sfx limpia la que reutiliza)
+        MEZCLA_ACUM.sfx_track = MEZCLA_ACUM.sfx_track or track
+        MEZCLA_ACUM.sfx_fps = fps
+        MEZCLA_ACUM.sfx_start = MEZCLA_ACUM.sfx_start or start_frame
+        for _, c in ipairs(cues or {}) do MEZCLA_ACUM.cues[#MEZCLA_ACUM.cues + 1] = c end
+        return 0
+    end
     local libreria = track.sfx_library
     local sfx_archivos = track.sfx_archivos or {}
     -- Con las rutas en el manifiesto ya no hace falta que exista
@@ -7264,6 +7310,25 @@ local function main()
     print(globales_lua())
 
     local total_lineas, total_efectos = 0, 0
+    -- v5.4.30: MEZCLA de estilos de varios temas (Crea tu estilo): los estilos conviven en la misma corrida. Se limpia UNA vez (todo lo nuestro de cada idioma) y
+    -- ningún estilo retira ya las pistas de los otros (no_retirar).
+    if manifest.mezcla then
+        local idiomas = {}
+        for _, t in ipairs(manifest.tracks or {}) do
+            if t.style ~= nil and t.language then idiomas[string.upper(tostring(t.language))] = true end
+        end
+        for L, _ in pairs(idiomas) do
+            local nombres_m = { L .. "-CTX", L .. "-MAIN", L .. "-CMP", L, L .. "-EMOJI" }
+            for k = 1, 24 do
+                nombres_m[#nombres_m + 1] = string.format("%s-T%d", L, k)
+                nombres_m[#nombres_m + 1] = string.format("%s-K%d", L, k)
+            end
+            retirar_pistas_nuestras(timeline, nombres_m, "subtitulos", "esta corrida es una mezcla de estilos")
+        end
+        for _, t in ipairs(manifest.tracks or {}) do t.no_retirar = true end
+        MEZCLA_ACUM = { planes = {}, cues = {}, volcando = false }
+        print("  Mezcla de estilos: " .. tostring(#(manifest.tracks or {})) .. " pista(s) de datos en la misma corrida.")
+    end
     for _, track in ipairs(manifest.tracks or {}) do
         -- La pista traducida viaja como .srt sin style. Hasta la v1.0.31
         -- este bucle la IGNORABA: en Free la traduccion nunca llegaba al
@@ -7323,6 +7388,23 @@ local function main()
             total_lineas = total_lineas + (lineas or 0)
             total_efectos = total_efectos + (efectos or 0)
         end
+    end
+
+    if MEZCLA_ACUM then
+        -- v5.4.30: los emojis y los sonidos de TODA la mezcla, de una sola vez (cada estilo los dejó apartados)
+        local acum = MEZCLA_ACUM
+        acum.volcando = true
+        if #acum.planes > 0 and acum.track_emojis then
+            table.sort(acum.planes, function(a, b) return (tonumber(a.ini) or 0) < (tonumber(b.ini) or 0) end)
+            local ok_e, err_e = pcall(colocar_emojis, timeline, media_pool, acum.track_emojis, acum.planes, acum.fps_emojis)
+            if not ok_e then print("  Aviso: los emojis de la mezcla: " .. tostring(err_e)) end
+        end
+        if #acum.cues > 0 and acum.sfx_track then
+            table.sort(acum.cues, function(a, b) return (tonumber(a.start) or 0) < (tonumber(b.start) or 0) end)
+            local ok_s, err_s = pcall(place_sfx, timeline, media_pool, acum.cues, acum.sfx_track, acum.sfx_fps, acum.sfx_start)
+            if not ok_s then print("  Aviso: los sonidos de la mezcla: " .. tostring(err_s)) end
+        end
+        MEZCLA_ACUM = nil
     end
 
     if (total_lineas or 0) > 0 then

@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.4.28 (subtitulos)"
+VERSION = "5.4.32 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -3550,6 +3550,7 @@ def _adelanto_de(track_info):
 # tempranos); esta señal dice si ALGO llego al timeline, para que el
 # epilogo no diga "Listo" con cero lineas.
 _ALGO_COLOCADO = [False]
+_MEZCLA_ACUM = {}         # v5.4.30: en una MEZCLA de estilos los emojis y los sonidos de todas las pistas de datos se juntan aquí y se colocan UNA vez al final
 _TOTAL = [0]          # v5.5: cuántas líneas / palabras / clips se colocaron en total (lo que el resultado le dice a la app: «Listo» sólo si > 0)
 
 
@@ -3616,9 +3617,10 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
         print(linea)
 
     # fuera lo de otras corridas (dinámico / normal) y lo propio de la anterior
-    _retirar_pistas_nuestras(
-        timeline, [f"{L}-CTX", f"{L}-MAIN", f"{L}-CMP", L, f"{L}-EMOJI"] + [f"{L}-K{k}" for k in range(1, 25)],
-        "subtítulos", "esta corrida es de estilo guion")
+    if not track_info.get("no_retirar"):          # v5.4.30: en una mezcla la limpieza se hizo una vez al principio
+        _retirar_pistas_nuestras(
+            timeline, [f"{L}-CTX", f"{L}-MAIN", f"{L}-CMP", L, f"{L}-EMOJI"] + [f"{L}-K{k}" for k in range(1, 25)],
+            "subtítulos", "esta corrida es de estilo guion")
 
     # PISTAS. Las palabras GRANDES van en las pistas de abajo y las pequeñas encima: el macro «Luxe Shine» es de cristal y refracta lo que tiene
     # debajo (con la línea pequeña en una pista inferior se le colaba dentro de las letras, volteada). Primero se reparte cada palabra en su hueco
@@ -3864,17 +3866,37 @@ def place_kinetic_track(timeline, media_pool, track_info, base_template,
     carpeta, aviso = preparar_pack_kinetic(media_pool, pack_previo["nombre"], pack_previo["formato"], pack_previo.get("drb"), track_info.get("clip_prueba"))
     if carpeta is None:
         fail(f"no pude preparar el pack «{pack_previo['nombre']}»: {aviso}")
+    # v5.4.30: una MEZCLA de estilos puede traer clips de otros packs de elementos (los «v …» del pack VIRAL junto a los «k …» de Kinetic): se preparan sus bins aparte
+    carpetas_extra = []
+    for extra in track_info.get("plantillas_extra") or []:
+        try:
+            pp = pack_del_manifiesto({"plantilla": (extra or {}).get("plantilla")}, ancho_tl, alto_tl)
+            if pp and pp.get("drb"):
+                c2, aviso2 = preparar_pack_kinetic(media_pool, pp["nombre"], pp["formato"], pp.get("drb"), (extra or {}).get("clip_prueba"))
+                if c2 is not None:
+                    carpetas_extra.append(c2)
+                else:
+                    print(f"  Aviso: no pude preparar el pack «{pp['nombre']}» de la mezcla: {aviso2}")
+        except Exception as exc:
+            print(f"  Aviso: pack extra de la mezcla ({type(exc).__name__}: {exc}).")
     clips = {}
 
     def _clip(nombre):
         if nombre not in clips:
-            clips[nombre] = find_clip_by_name(media_pool, nombre, carpeta)
+            c = find_clip_by_name(media_pool, nombre, carpeta)
+            if c is None:
+                for c2 in carpetas_extra:
+                    c = find_clip_by_name(media_pool, nombre, c2)
+                    if c is not None:
+                        break
+            clips[nombre] = c
         return clips[nombre]
     print(f"\nIdioma '{lang}': {len(cues)} bloques (estilo Kinetic).")
 
-    _retirar_pistas_nuestras(
-        timeline, [f"{L}-CTX", f"{L}-MAIN", f"{L}-CMP", L, f"{L}-EMOJI"] + [f"{L}-T{k}" for k in range(1, 25)],
-        "subtítulos", "esta corrida es de estilo Kinetic")
+    if not track_info.get("no_retirar"):          # v5.4.30: en una MEZCLA de estilos esa limpieza se hizo una vez al principio (si no, cada estilo borraría lo del otro)
+        _retirar_pistas_nuestras(
+            timeline, [f"{L}-CTX", f"{L}-MAIN", f"{L}-CMP", L, f"{L}-EMOJI"] + [f"{L}-T{k}" for k in range(1, 25)],
+            "subtítulos", "esta corrida es de estilo Kinetic")
 
     try:
         extra_fin = float(track_info.get("extra_fin_s", 0.05))
@@ -5252,6 +5274,12 @@ def _animar_emoji(colocado, largo, entrada, salida):
 
 
 def colocar_emojis(timeline, media_pool, track_info, planes, fps):
+    if _MEZCLA_ACUM.get("activo") and not _MEZCLA_ACUM.get("volcando"):
+        # v5.4.30: las dos pistas de datos de una mezcla comparten UNA pista de emojis (esta función limpia la que reutiliza): se juntan y se colocan al final
+        _MEZCLA_ACUM.setdefault("track_emojis", track_info)
+        _MEZCLA_ACUM["fps_emojis"] = fps
+        _MEZCLA_ACUM.setdefault("planes", []).extend(planes or [])
+        return 0
     L = str(track_info.get("language") or "??").upper()
     rutas = track_info.get("emojis") or {}
     if not isinstance(rutas, dict):
@@ -5263,9 +5291,10 @@ def colocar_emojis(timeline, media_pool, track_info, planes, fps):
     con = [p for p in planes or []
            if p.get("emoji") in rutas and p["fin"] > p["ini"]]
     if not con:
-        # Sin emojis esta vez: fuera los de una corrida anterior.
-        _retirar_pistas_nuestras(timeline, [f"{L}-EMOJI"], "emojis",
-                                 "esta corrida no lleva emojis")
+        # Sin emojis esta vez: fuera los de una corrida anterior (en una mezcla de estilos esa limpieza ya se hizo: no se borran los del otro estilo).
+        if not track_info.get("no_retirar"):
+            _retirar_pistas_nuestras(timeline, [f"{L}-EMOJI"], "emojis",
+                                     "esta corrida no lleva emojis")
         return 0
     idx, error = _conseguir_pista_video(timeline, f"{L}-EMOJI")
     if error:
@@ -6154,6 +6183,13 @@ def place_sfx_track(timeline, media_pool, cues, track_info, fps,
     categoria usar — rotando para no repetir el mismo dos veces seguidas — y
     se coloca en una pista de audio nueva.
     """
+    if _MEZCLA_ACUM.get("activo") and not _MEZCLA_ACUM.get("volcando"):
+        # v5.4.30: los sonidos de las dos pistas de datos de una mezcla van juntos y en orden a UNA sola pista de audio (esta función limpia la que reutiliza)
+        _MEZCLA_ACUM.setdefault("sfx_track", track_info)
+        _MEZCLA_ACUM["sfx_fps"] = fps
+        _MEZCLA_ACUM.setdefault("sfx_start", timeline_start_frame)
+        _MEZCLA_ACUM.setdefault("cues", []).extend(cues or [])
+        return
     libreria = track_info.get("sfx_library")
     sfx_archivos = track_info.get("sfx_archivos") or {}
     # Con las rutas en el manifiesto ya no hace falta que exista sfx_library:
@@ -6881,6 +6917,19 @@ def main():
               f"{offset}, no en {inicio_timeline}.")
         return offset
 
+    # v5.4.30: MEZCLA de estilos de varios temas (Crea tu estilo): los estilos conviven en la misma corrida. Se limpia UNA vez (todo lo nuestro de cada idioma) y ningún estilo
+    # retira ya las pistas de los otros (no_retirar).
+    if manifest.get("mezcla"):
+        for L_m in {str(t.get("language") or "").upper() for t in manifest["tracks"] if t.get("style")} - {""}:
+            _retirar_pistas_nuestras(
+                timeline, [f"{L_m}-CTX", f"{L_m}-MAIN", f"{L_m}-CMP", L_m, f"{L_m}-EMOJI"] + [f"{L_m}-T{k}" for k in range(1, 25)] + [f"{L_m}-K{k}" for k in range(1, 25)],
+                "subtítulos", "esta corrida es una mezcla de estilos")
+        for t_m in manifest["tracks"]:
+            t_m["no_retirar"] = True
+        _MEZCLA_ACUM.clear()
+        _MEZCLA_ACUM["activo"] = True
+        print(f"  Mezcla de estilos: {len(manifest['tracks'])} pista(s) de datos en la misma corrida.")
+
     for track_info in manifest["tracks"]:
         lang = track_info["language"]
         timeline_start_frame = origen_de(track_info)
@@ -7045,6 +7094,20 @@ def main():
             print(f"  Aviso: {sin_bajar} bloques traducidos quedaron en la "
                   "posición original de la plantilla (su diseño no deja "
                   "moverlos por script).")
+
+    if _MEZCLA_ACUM.get("activo"):
+        # v5.4.30: los emojis y los sonidos de TODA la mezcla, de una sola vez (cada estilo los dejó apartados)
+        _MEZCLA_ACUM["volcando"] = True
+        try:
+            planes_m = sorted(_MEZCLA_ACUM.get("planes") or [], key=lambda p: p.get("ini", 0))
+            if planes_m and _MEZCLA_ACUM.get("track_emojis"):
+                colocar_emojis(timeline, media_pool, _MEZCLA_ACUM["track_emojis"], planes_m, _MEZCLA_ACUM.get("fps_emojis"))
+            cues_m = sorted(_MEZCLA_ACUM.get("cues") or [], key=lambda c: float(c.get("start") or 0))
+            if cues_m and _MEZCLA_ACUM.get("sfx_track"):
+                place_sfx_track(timeline, media_pool, cues_m, _MEZCLA_ACUM["sfx_track"], _MEZCLA_ACUM.get("sfx_fps"), _MEZCLA_ACUM.get("sfx_start"))
+        except Exception as exc_m:
+            print(f"  Aviso: los emojis o sonidos de la mezcla ({type(exc_m).__name__}: {exc_m}).")
+        _MEZCLA_ACUM.clear()
 
     if _ALGO_COLOCADO[0]:
         print("\nListo. Revisa la línea de tiempo: cada bloque es un Text+ "

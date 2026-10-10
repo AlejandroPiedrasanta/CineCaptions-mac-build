@@ -7,7 +7,7 @@ Guarda («guardar») o aplica («cargar») la disposicion de pantalla de Resolve
 la vista expandida. En Studio lo hace el MCP; en Resolve FREE (sin MCP) el Puente la corre con dofile. La orden: vista_orden.json (sidecar .lua en Free).
 ]]
 
-local VERSION = "5.4.28 (vista)"
+local VERSION = "5.4.32 (vista)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -314,12 +314,99 @@ local function fail(msg)
 end
 
 -- ---------------------------------------------------------------------
--- La orden: vista_orden.json = { accion = "guardar" | "cargar" | "borrar", nombre = "CineCaptions vertical" }.
+-- La orden: vista_orden.json = { accion = "guardar" | "cargar" | "borrar" | "render" | "render_estado", nombre = "CineCaptions vertical" }.
 --   guardar: deja la disposicion ACTUAL de Resolve con ese nombre (la crea o la actualiza).
 --   cargar:  aplica la que ya esta guardada con ese nombre.
 --   borrar:  quita la guardada con ese nombre (para las pruebas).
+--   render:  (v5.4.30, herramienta de desarrollo: hacer_vistas_mezcla.py) manda a la cola de render el timeline ACTUAL y EMPIEZA a renderizar (no espera: un script del Puente que se queda
+--            minutos esperando deja al Puente sin latido). Orden: destino (carpeta), nombre (sin extension), ancho, alto. Devuelve el trabajo.
+--   render_estado: {en_curso, estado, avance} del trabajo `job` (o del ultimo): la app pregunta cada pocos segundos hasta que termina.
 -- ---------------------------------------------------------------------
 local RESULTADO = nil
+
+local function norm_ruta(r)
+    return string.lower(tostring(r or ""):gsub("\\", "/"):gsub("/+$", ""))
+end
+
+local function proyecto_actual()
+    local ok, pm = pcall(function() return resolve:GetProjectManager() end)
+    if not ok or pm == nil then return nil end
+    local ok2, p = pcall(function() return pm:GetCurrentProject() end)
+    if ok2 then return p end
+    return nil
+end
+
+local function render_empezar(orden)
+    local proyecto = proyecto_actual()
+    if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
+    local tl = proyecto:GetCurrentTimeline()
+    if tl == nil then fail("El proyecto no tiene un timeline actual que renderizar.") end
+    local destino = tostring(orden.destino or "")
+    local nombre = tostring(orden.nombre or "vistas")
+    if destino == "" then fail("La orden de render no trae la carpeta de destino.") end
+    -- solo se borran los trabajos DE NUESTRA carpeta: la cola de render del usuario no se toca
+    for _, j in ipairs(proyecto:GetRenderJobList() or {}) do
+        if norm_ruta(j.TargetDir) == norm_ruta(destino) then proyecto:DeleteRenderJob(j.JobId) end
+    end
+    local preset = proyecto:LoadRenderPreset(tostring(orden.preset or "H.264 Master")) and true or false
+    local ajustes = { SelectAllFrames = true, TargetDir = destino, CustomName = nombre }
+    local fps_tl = tonumber(tl:GetSetting("timelineFrameRate")) or 30
+    if tonumber(orden.hasta_s) then                                  -- solo un tramo (segundos desde el principio del timeline): MarkIn / MarkOut en fotogramas del timeline
+        local ini = (tl:GetStartFrame() or 0) + math.floor((tonumber(orden.desde_s) or 0) * fps_tl + 0.5)
+        local fin = (tl:GetStartFrame() or 0) + math.floor(tonumber(orden.hasta_s) * fps_tl + 0.5) - 1
+        ajustes.SelectAllFrames = false
+        ajustes.MarkIn = ini
+        ajustes.MarkOut = fin
+    end
+    if tonumber(orden.ancho) and tonumber(orden.alto) then
+        ajustes.FormatWidth = math.floor(tonumber(orden.ancho))
+        ajustes.FormatHeight = math.floor(tonumber(orden.alto))
+    end
+    local fps = tonumber(tl:GetSetting("timelineFrameRate"))
+    if fps then ajustes.FrameRate = fps end
+    local ok_aj = proyecto:SetRenderSettings(ajustes) and true or false
+    local job = proyecto:AddRenderJob()
+    if not job or job == "" then fail("Resolve no creo el trabajo de render (preset " .. tostring(preset) .. ", ajustes " .. tostring(ok_aj) .. ").") end
+    local inicio = proyecto:StartRendering(job) and true or false
+    RESULTADO = string.format('{"ok": %s, "accion": "render", "job": "%s", "preset": %s, "ajustes": %s, "inicio": %s, "timeline": "%s"}',
+        tostring(inicio), json_escapar(job), tostring(preset), tostring(ok_aj), tostring(inicio), json_escapar(tl:GetName() or ""))
+    print("VISTA " .. RESULTADO)
+    if not inicio then error("Resolve no empezo a renderizar.", 0) end
+end
+
+local function render_parar(orden)
+    local proyecto = proyecto_actual()
+    if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
+    pcall(function() proyecto:StopRendering() end)
+    -- fuera los trabajos DE NUESTRA carpeta (la cola de render del usuario no se toca)
+    local destino = tostring(orden.destino or "")
+    local borrados = 0
+    if destino ~= "" then
+        for _, j in ipairs(proyecto:GetRenderJobList() or {}) do
+            if norm_ruta(j.TargetDir) == norm_ruta(destino) then proyecto:DeleteRenderJob(j.JobId); borrados = borrados + 1 end
+        end
+    end
+    RESULTADO = string.format('{"ok": true, "accion": "render_parar", "borrados": %d, "en_curso": %s}', borrados, tostring(proyecto:IsRenderingInProgress() and true or false))
+    print("VISTA " .. RESULTADO)
+end
+
+local function render_estado(orden)
+    local proyecto = proyecto_actual()
+    if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
+    local job = tostring(orden.job or "")
+    local en_curso = proyecto:IsRenderingInProgress() and true or false
+    local estado, avance = "", -1
+    if job ~= "" then
+        local st = proyecto:GetRenderJobStatus(job)
+        if type(st) == "table" then
+            estado = tostring(st.JobStatus or "")
+            avance = tonumber(st.CompletionPercentage) or -1
+        end
+    end
+    RESULTADO = string.format('{"ok": true, "accion": "render_estado", "en_curso": %s, "estado": "%s", "avance": %s, "job": "%s"}',
+        tostring(en_curso), json_escapar(estado), tostring(avance), json_escapar(job))
+    print("VISTA " .. RESULTADO)
+end
 
 local function main()
     local r, diag = obtener_resolve()
@@ -333,6 +420,9 @@ local function main()
     if not habia or type(orden) ~= "table" then fail("No hay ninguna orden pendiente (vista_orden.json): la deja el programa con «Guardar la vista actual de Resolve».") end
     local nombre = tostring(orden.nombre or "CineCaptions vertical")
     local accion = tostring(orden.accion or "guardar")
+    if accion == "render" then render_empezar(orden); return end
+    if accion == "render_estado" then render_estado(orden); return end
+    if accion == "render_parar" then render_parar(orden); return end
     local lista = resolve:GetLayoutPresetList() or {}
     local existia = false
     for _, n in pairs(lista) do if n == nombre then existia = true end end

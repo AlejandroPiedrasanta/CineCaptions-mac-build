@@ -66,7 +66,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         desktop.ini
         preparar_sonidos.py
             prepara los sonidos que el usuario aportó para los estilos (riser de gancho, golpecito del iPhone, obturadores de transición).
-    guia_estilo\   (392 archivos)
+    guia_estilo\   (410 archivos)
     locales\   (7 archivos)  — textos de la interfaz en en, pt, fr, de, it (la clave es el español)
         .cf\   (1 archivos)
         de.json

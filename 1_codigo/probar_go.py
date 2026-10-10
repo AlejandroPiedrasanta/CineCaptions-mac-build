@@ -39,6 +39,11 @@ def main():
     import licencia
     licencia.vigente = lambda: True
     M.SubtitleApp._revisar_licencia_al_arrancar = lambda s: None
+    if os.environ.get('CINECAPTIONS_PACKS'):                                               # una carpeta de packs de PRUEBA (p. ej. un estilo mezclado): no toca los packs del usuario
+        import plantillas
+        from pathlib import Path
+        plantillas.CARPETA_PACKS = Path(os.environ['CINECAPTIONS_PACKS'])
+        plantillas.invalidar_packs()
     real = ajustes_ui.leer_prefs
     if pack != '-':
         ajustes_ui.leer_prefs = lambda: {**real(), 'plantilla': pack, 'go_pack': pack}        # (el chip «Estilo» del usuario, 'go_pack', mandaría sobre 'plantilla')

@@ -1,7 +1,7 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/crea_estilo_ui.py — «Crea tu estilo»: la galería de 48 ejemplos (con su vista real de Resolve) para armar un pack en un clic y el popup que explica la estructura de nombres.
 """
-Dos ventanas:
+Dos ventanas (v5.4.30: la galería trae también TODOS los looks de los tres temas, que se mezclan por frases: mezcla_planificador.py, vistas en mezcla_vista.py):
 
   * CreaEstiloDialogo : 48 ejemplos (30 con Luxe Shine de principal y 18 con un preset de Amro.Films Captions) de posición × tipografía × colores en UNA galería, ordenada
     con tres botones «Texto alto / medio / bajo». Cada uno se ve sobre una foto de muestra con su animación COMPLETA (entrada, texto y salida) renderizada por Resolve: un
@@ -15,6 +15,7 @@ from PySide6.QtGui import QPainter, QPen
 from PySide6.QtWidgets import QFrame, QGridLayout, QSizePolicy, QVBoxLayout, QWidget
 
 import ejemplos_estilo as E
+import mezcla_planificador as MP
 import qt_kit as ui
 from qt_kit import Boton, Desplazable, Dialogo, Entrada, Etiqueta, Segmentado, StringVar, Tooltip, caja_h, despues
 from qt_kit import QColor
@@ -118,7 +119,7 @@ class _Tarjeta(QWidget):
         """El reloj de la galería avisa si la tarjeta se ve: el clip solo suena mientras tanto."""
         if self._clip is None and not self._clip_listo:
             self._clip_listo = True
-            ruta = E.ruta_video(self.ej)
+            ruta = self._ruta_video()
             if ruta is not None:
                 import vistas_slider
                 self._clip = vistas_slider.Reproductor(ruta)
@@ -181,6 +182,10 @@ class _Tarjeta(QWidget):
         rect = self._rect_imagen()
         p.save()
         p.setClipPath(self._camino())
+        if self._pintar_propio(p, rect):                  # (la tarjeta de un look de los temas trae su imagen ya hecha)
+            p.restore()
+            self._pintar_pie(p, elegido)
+            return
         p.drawPixmap(rect.toRect().topLeft(), self._foto_px())
         p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Screen)
         clip = self._clip.imagen() if self._clip is not None else None
@@ -200,14 +205,31 @@ class _Tarjeta(QWidget):
             else:
                 p.drawPixmap(rect.toRect().topLeft(), E.miniatura(self.ej, self.ANCHO - 16, self.devicePixelRatioF()))
         p.restore()
+        self._pintar_pie(p, elegido)
+
+    def _ruta_video(self):
+        return E.ruta_video(self.ej)
+
+    def _titulo(self):
+        return E.nombre_visible(self.ej)
+
+    def _tam_titulo(self):
+        return 13
+
+    def _subtitulo(self):
+        return tr(E.etiqueta_posicion(self.ej))
+
+    def _pintar_propio(self, _p, _rect):
+        return False
+
+    def _pintar_pie(self, p, elegido):
         # nombre y qué es
         p.setPen(QColor('#FFFFFF'))
-        p.setFont(ui.fuente(13, True))
-        p.drawText(QRectF(10, self.ALTO_IMAGEN + 14, self.width() - 20, 20), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), E.nombre_visible(self.ej))
+        p.setFont(ui.fuente(self._tam_titulo(), True))
+        p.drawText(QRectF(10, self.ALTO_IMAGEN + 14, self.width() - 20, 20), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self._titulo())
         p.setPen(QColor(TEXT_MUTED))
         p.setFont(ui.fuente(11))
-        p.drawText(QRectF(10, self.ALTO_IMAGEN + 36, self.width() - 20, 18), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-                   tr(E.etiqueta_posicion(self.ej)))
+        p.drawText(QRectF(10, self.ALTO_IMAGEN + 36, self.width() - 20, 18), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self._subtitulo())
         if elegido:
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(QColor(AMARILLO))
@@ -218,14 +240,68 @@ class _Tarjeta(QWidget):
         p.end()
 
 
+class _TarjetaLook(_Tarjeta):
+    """Un look de Tema 1, 2 o 3 (mezcla_planificador.catalogo): su vista aproximada —hecha con el plan real de su tema sobre una foto de muestra— y su nombre. Tocarlo lo suma a la mezcla (el
+    número es el orden en que rotan por la voz)."""
+
+    def __init__(self, look, al_tocar, padre=None):
+        super().__init__({'id': 0, 'nombre': look['nombre']}, lambda _i: al_tocar(look['id']), padre)
+        self.look = look
+        self._imagen = None            # QImage de la maqueta (llega de un hilo): solo se ve mientras el look no tenga su clip real
+        Tooltip(self, tr('Toca para sumarlo a tu estilo. Los que elijas se turnan por frases mientras se habla. Toca otra vez para quitarlo.'))
+
+    def poner_imagen(self, imagen):
+        self._imagen = imagen
+        self.update()
+
+    def recargar(self):
+        if self._clip is not None:
+            self._clip.parar()
+        self._clip = None
+        self._clip_listo = False
+        self.update()
+
+    def _ruta_video(self):
+        import mezcla_vista
+        return mezcla_vista.ruta_clip(self.look['id'])
+
+    def avanzar(self, ms):
+        if self._clip is not None:                       # (un look con clip se repinta solo por su reproductor; sin clip no hay nada que mover)
+            self.update()
+
+    def _titulo(self):
+        return self.look['nombre']
+
+    def _tam_titulo(self):
+        return 11
+
+    def _subtitulo(self):
+        return tr('Tema {n}', n=self.look['tema'])
+
+    def _pintar_propio(self, p, rect):
+        clip = self._clip.imagen() if self._clip is not None else None
+        if clip is not None or (self._clip is not None and self._clip.activo):
+            p.drawPixmap(rect.toRect().topLeft(), self._foto_px())          # la foto y, encima, el clip de Resolve en «Screen» (el negro del render no tapa nada)
+            if clip is not None:
+                p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Screen)
+                p.drawImage(rect, clip)
+                p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+            return True
+        if self._imagen is not None:
+            p.drawImage(rect, self._imagen)
+        else:
+            p.fillRect(rect, QColor('#10192B'))
+        return True
+
+
 class CreaEstiloDialogo(Dialogo):
     """«Crea tu estilo», simple: una galería con los ejemplos (fondo de muestra y animación completa), tres botones «Texto alto / medio / bajo» para ordenarlos,
     se tocan hasta 3, se le pone nombre y «Crear mi pack» lo arma. al_crear(nombre, ids, terminado) arma el pack. al_resolve / al_ayuda / al_resolve_uno ya
     no tienen botón: se aceptan solo por compatibilidad."""
     COLUMNAS = 5
     TIC_MS = 40
-    GRUPOS = (('Texto alto', ('superior', 'alto')), ('Texto medio', ('centro',)), ('Texto bajo', ('bajo', 'inferior')))
-    GRUPO_INICIAL = 'Texto medio'
+    GRUPOS = (('Tema 1', 1), ('Tema 2', 2), ('Tema 3', 3), ('Texto alto', ('superior', 'alto')), ('Texto medio', ('centro',)), ('Texto bajo', ('bajo', 'inferior')))
+    GRUPO_INICIAL = 'Tema 1'
 
     def __init__(self, padre, al_crear, al_resolve=None, al_ayuda=None, al_resolve_uno=None):
         super().__init__(padre, tr('Crea tu estilo'), 1040, 800, minimo=(960, 560))
@@ -241,7 +317,7 @@ class CreaEstiloDialogo(Dialogo):
         self._estado_real = Etiqueta('', 12, color=TEXT_MUTED)
         cc.addWidget(self._estado_real)
         capa.addWidget(cab)
-        capa.addWidget(Etiqueta(tr('1. Elige dónde va el texto  ·  2. Toca hasta 3 estilos que te gusten  ·  3. Ponle un nombre y pulsa «Crear mi pack»: aparecerá en el slider de estilos.'),
+        capa.addWidget(Etiqueta(tr('Toca los estilos de los Temas 1, 2 y 3 que quieras (se turnan por frases) o hasta 3 de «Texto alto / medio / bajo»  ·  Ponle un nombre y pulsa «Crear mi pack».'),
                                 13, color='#B4C0D6', envolver=True))
         # tres botones para ordenar la galería por la altura del texto
         self._grupos = {tr(n): pos for n, pos in self.GRUPOS}
@@ -261,6 +337,9 @@ class CreaEstiloDialogo(Dialogo):
         capa.addWidget(self._desp, 1)
         for ej in E.EJEMPLOS:
             self._tarjetas[ej['id']] = _Tarjeta(ej, self._tocar)
+        self._looks = MP.catalogo()
+        for look in self._looks:
+            self._tarjetas[look['id']] = _TarjetaLook(look, self._tocar)
         # abajo: lo elegido + nombre + crear
         pie = QFrame()
         pie.setObjectName('pieCreaEstilo')
@@ -281,6 +360,7 @@ class CreaEstiloDialogo(Dialogo):
         self._renderizando = False
         self._pintar()
         self._resumir()
+        self._preparar_vistas_looks()
         self._reloj = QTimer(self)             # el reloj de las vistas: solo mueve (y hace sonar el clip de) las tarjetas que se ven
         self._reloj.timeout.connect(self._tic)
         self._reloj.start(self.TIC_MS)
@@ -331,7 +411,33 @@ class CreaEstiloDialogo(Dialogo):
     # -- la galería, ordenada por la altura del texto
     def _filtrados(self):
         pos = self._grupos.get(self._pos_var.get()) or ()
+        if isinstance(pos, int):                                  # un Tema: todos sus looks
+            return [l for l in self._looks if l['tema'] == pos]
         return [ej for ej in E.EJEMPLOS if ej['posicion'] in pos]
+
+    def _preparar_vistas_looks(self):
+        """Las vistas de los looks de los temas (Pillow, sin Resolve): se hacen en un hilo y las tarjetas se llenan al terminar."""
+        def trabajo():
+            import mezcla_vista
+            salida = {}
+            for k, look in enumerate(self._looks):
+                try:
+                    salida[look['id']] = mezcla_vista.vista(look['id'], foto=k, ancho=int(_Tarjeta.ANCHO - 16) * 2)
+                except Exception:
+                    salida[look['id']] = None
+            return salida
+
+        def fin(resultado, _error):
+            if not ui.vivo(self) or not resultado:
+                return
+            from PySide6.QtGui import QImage
+            for ident, im in resultado.items():
+                t = self._tarjetas.get(ident)
+                if t is None or im is None:
+                    continue
+                q = QImage(im.tobytes('raw', 'RGB'), im.width, im.height, im.width * 3, QImage.Format.Format_RGB888).copy()
+                t.poner_imagen(q)
+        ui.correr_en_hilo(self, trabajo, fin)
 
     def _pintar(self):
         while self._rejilla.count():
@@ -353,13 +459,18 @@ class CreaEstiloDialogo(Dialogo):
             t.poner_orden(self._elegidos.index(i) + 1 if i in self._elegidos else 0)
 
     def _tocar(self, ident):
+        """Los looks de los Temas (ids 't1:…') y los ejemplos de «Texto alto / medio / bajo» (números) NO se mezclan en un pack: tocar de la otra familia empieza una elección nueva."""
+        de_temas = isinstance(ident, str)
         if ident in self._elegidos:
             self._elegidos.remove(ident)
-        elif len(self._elegidos) < E.MAX_ELEGIDOS:
-            self._elegidos.append(ident)
         else:
-            self._resumen.configure(text=tr('Ya elegiste 3 (el máximo). Toca uno elegido para quitarlo.'), text_color=AMBAR)
-            return
+            if self._elegidos and isinstance(self._elegidos[0], str) != de_temas:
+                self._elegidos = []
+            tope = MP.MAX_LOOKS if de_temas else E.MAX_ELEGIDOS
+            if len(self._elegidos) >= tope:
+                self._resumen.configure(text=tr('Ya elegiste {n} (el máximo). Toca uno elegido para quitarlo.', n=tope), text_color=AMBAR)
+                return
+            self._elegidos.append(ident)
         self._poner_ordenes()
         self._resumir()
 
@@ -368,7 +479,8 @@ class CreaEstiloDialogo(Dialogo):
             self._resumen.configure(text=tr('Aún no has elegido ninguno: toca los estilos que te gusten.'), text_color=TEXT_MUTED)
             self._b_crear.setEnabled(False)
             return
-        partes = [f"{k} · {E.nombre_visible(E.por_id(i))}" for k, i in enumerate(self._elegidos, 1)]
+        partes = [f"{k} · " + (f"T{(MP.look_de(i) or {}).get('tema', '?')} {(MP.look_de(i) or {}).get('nombre', i)}" if isinstance(i, str) else E.nombre_visible(E.por_id(i)))
+                  for k, i in enumerate(self._elegidos, 1)]
         self._resumen.configure(text=tr('Elegidos: ') + '   ·   '.join(partes), text_color='#E0EBFB')
         self._b_crear.setEnabled(True)
 

@@ -484,6 +484,19 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.32', [
+        'Proyecto · «Crea tu estilo»: los estilos de los Temas 1, 2 y 3 ahora se ven con un VIDEO de 6 s renderizado por Resolve (entrada, texto y salida reales, sobre una foto), no con una imagen aproximada. Así Amro Highlight, Fire, Strike y Underline se ven como quedan de verdad, y también los efectos shatter, select y drag.',
+    ]),
+    ('5.4.30', [
+        'Proyecto · «Crea tu estilo»: ahora trae TODOS los estilos de los Temas 1, 2 y 3 (6 de Héroes y Serif, 8 de palabra grande y los 4 de Tema 3: pila, shatter, select y drag), cada uno con su vista sobre una foto. Toca los que quieras (hasta 8) y se turnan por frases mientras se habla: cada tramo usa su estilo con el planificador de su tema. Aparece en el slider de temas como «Mezcla de temas».',
+        'El panel «Acerca de CineCaptions» ya no muestra la barra de desplazamiento (se ajusta al alto de la ventana).',
+    ]),
+    ('5.4.29', [
+        'Inicio: se quitó el chip «Idioma». GO detecta siempre el idioma solo al transcribir.',
+        'Sonido: «Solo la principal» cambia la tarjeta de las palabras por «Sonido del texto principal», donde eliges qué efecto sonoro suena en la palabra grande (automático = el propio de cada efecto del estilo, o uno tuyo), junto a la Introducción y el Final.',
+        'Sonido: cada tarjeta (por palabra, texto principal, introducción y final) tiene su interruptor para apagar esa opción completa.',
+        'Sonido: se quitaron el modo Avanzado, la curva de energía, el interruptor de sonidos de emojis y el botón de la música con ducking (la pestaña Emojis sigue). Con ellos fuera, la curva de energía queda apagada y todo suena con el modo Simple.',
+    ]),
     ('5.4.28', [
         'El panel «Acerca de CineCaptions» (Ajustes) ya no se aprieta cuando la ventana es baja o la escala de Windows es alta: antes las notas pisaban el enlace «Leer notas de la versión» y los enlaces de la licencia salían cortados; ahora el panel se desplaza.',
         'Si «Buscar actualizaciones» falla, ahora dice el motivo (sin internet, servidor lento, error del servidor, conexión segura) en vez de un mensaje genérico, lo reintenta una vez y deja el detalle técnico en el Registro.',
@@ -1063,8 +1076,8 @@ class PanelRapido(_Panel):
         # v5.4.27+: la cabecera queda fija y TODO lo demás va en un área con desplazamiento: si la ventana es baja (o la escala de Windows es alta) el panel ya no aprieta las filas
         # hasta pisarse unas con otras (el texto de las notas tapaba el enlace y los enlaces de la licencia salían cortados); aparece una barra y se baja.
         externo = QVBoxLayout(self)
-        externo.setContentsMargins(0, 24, 0, 0)
-        externo.setSpacing(16)
+        externo.setContentsMargins(0, 20, 0, 0)
+        externo.setSpacing(12)
         self._cab = _cabecera(tr('Ajustes de la aplicación'), tr('Acerca de CineCaptions'), self.cerrar, tam=26)
         self._cab_cont = QWidget()
         lc = QVBoxLayout(self._cab_cont)
@@ -1077,13 +1090,14 @@ class PanelRapido(_Panel):
         self._scroll.setWidgetResizable(True)
         self._scroll.setFrameShape(QFrame.Shape.NoFrame)
         self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)       # v5.4.30: SIN deslizador visible (pedido); la rueda sigue moviendo el contenido si no cupiera
         self._scroll.setStyleSheet('QScrollArea { background: transparent; border: none; } QScrollArea > QWidget > QWidget { background: transparent; }')
         self._cont = QWidget()
         self._cont.setObjectName('contenidoPanelRapido')
         self._cont.setStyleSheet('QWidget#contenidoPanelRapido { background: transparent; }')
         c = QVBoxLayout(self._cont)
-        c.setContentsMargins(28, 0, 28, 24)               # (los márgenes de los lados van AQUÍ: si aparece la barra de desplazamiento, el contenido se estrecha en vez de quedar cortado)
-        c.setSpacing(16)
+        c.setContentsMargins(28, 0, 28, 16)               # (los márgenes de los lados van AQUÍ: si aparece la barra de desplazamiento, el contenido se estrecha en vez de quedar cortado)
+        c.setSpacing(12)
         self._scroll.setWidget(self._cont)
         externo.addWidget(self._scroll, 1)
         fila, cf = caja_h(espacio=8)
@@ -1145,7 +1159,7 @@ class PanelRapido(_Panel):
     def sizeHint(self):
         """El alto que PIDE el contenido entero (la cabecera + todo lo del área con desplazamiento): quien coloca el panel lo recorta a lo que quepa en la ventana."""
         try:
-            alto = 24 + self._cab_cont.sizeHint().height() + 16 + self._cont.sizeHint().height()
+            alto = 20 + self._cab_cont.sizeHint().height() + 12 + self._cont.sizeHint().height()
         except Exception:
             alto = 560
         return QSize(self.ANCHO, alto)
@@ -1174,8 +1188,8 @@ class PanelRapido(_Panel):
         def posicion(ancho_v, alto_v, panel):
             panel.adjustSize()
             if rect is not None and not rect.isEmpty():
-                y = int(rect.bottom() + 22)
-                alto = min(panel.sizeHint().height(), alto_v - y - 20)
+                y = int(rect.bottom() + 14)
+                alto = min(panel.sizeHint().height(), alto_v - y - 12)
                 x = int(min(max(16, rect.center().x() - self.ANCHO / 2), ancho_v - self.ANCHO - 16))
                 return QRect(x, y, self.ANCHO, max(200, alto))
             alto = min(panel.sizeHint().height(), alto_v - 40)

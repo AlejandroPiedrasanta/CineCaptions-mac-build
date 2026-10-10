@@ -124,7 +124,16 @@ class Pack:
     @property
     def guion(self):
         """Marca del estilo «guion» (la frase se arma palabra a palabra: guion_captions.py / guion_planificador.py) o None."""
-        return self.datos.get('guion') or None
+        g = self.datos.get('guion')
+        return None if g == 'mezcla' else (g or None)
+    @property
+    def mezcla(self):
+        """v5.4.30: True si es un estilo propio hecho con «Crea tu estilo» MEZCLANDO looks de los tres temas (mezcla_planificador.py): no lleva clips propios (usa los de Kinetic, Referencia y VIRAL)."""
+        return self.datos.get('guion') == 'mezcla'
+    @property
+    def looks(self):
+        """Los looks que rotan en un pack de mezcla (ids de mezcla_planificador.catalogo(): 't1:lima', 't2:3', 't3:shatter'…); [] si no es de mezcla."""
+        return [str(i) for i in (self.datos.get('looks') or [])] if self.mezcla else []
     @property
     def kinetic(self):
         """True si es el estilo «Kinetic» (títulos de gancho: kinetic_planificador.py; sus clips son elementos —héroe, cinta, anillo…— y no sets arriba/principal/abajo)."""
@@ -273,6 +282,14 @@ class Pack:
         if not self.formatos:
             self.problemas.append(tr('no tiene ningun formato guardado'))
             return self.problemas
+        if self.mezcla:                      # sin archivos propios: solo hace falta que sus looks existan en el catálogo
+            try:
+                import mezcla_planificador
+                if not any(mezcla_planificador.look_de(i) for i in self.looks):
+                    self.problemas.append(tr('no tiene ningún estilo elegido'))
+            except Exception:
+                pass
+            return self.problemas
         if self.kinetic:                     # sus clips no son sets: lo único que puede faltarle es el .drb
             if not any(self.ruta_drb(f) for f in self.formatos):
                 self.problemas.append(tr('falta el archivo .drb del pack'))
@@ -327,6 +344,8 @@ def cargar(carpeta, incorporado=False):
         datos = {'version': 2, 'nombre': nuevo.get('nombre') or viejo.get('nombre') or carpeta.name, 'formatos': {}}
         if nuevo.get('guion'):
             datos['guion'] = str(nuevo['guion'])
+        if nuevo.get('guion') == 'mezcla' and isinstance(nuevo.get('looks'), list):
+            datos['looks'] = [str(i) for i in nuevo['looks']]
         for origen in [viejo, nuevo]:
             for formato, bloque in (origen.get('formatos') or {}).items():
                 if formato in FORMATOS and isinstance(bloque, dict):
@@ -807,6 +826,8 @@ def para_manifiesto(nombre, formato_forzado=None):
             pack = buscar_pack(nombre)
         if pack is None:
             return {}
+        elif getattr(pack, 'mezcla', False):
+            return {'plantilla': {'pack': pack.nombre, 'mezcla': True, 'formatos': {}}}      # v5.4.30: el generador arma las pistas con el pack de CADA tema (Kinetic, Referencia, VIRAL)
         else:
             if pack.es_basicos:
                 return {}
@@ -976,12 +997,16 @@ def sirve_en_go(pack, formato=None):
     """¿Se puede elegir este pack para GO / Generar? Un pack de sets (arriba/principal/abajo) sí si trae sets; el estilo «Kinetic» (sus clips son elementos) si trae el formato."""
     if pack is None:
         return False
+    if getattr(pack, 'mezcla', False):
+        return (formato or 'v') in ('v',) and bool(pack.looks)
     if getattr(pack, 'kinetic', False):
         return (formato or 'v') in pack.formatos
     return bool(pack.numeros_de_set(formato)) if formato else bool(pack.numeros_de_set('h') or pack.numeros_de_set('v'))
 def estructura_de(pack):
     """Que bloques trae un pack, para el mosaico: {'arriba','principal','abajo','imagen','simple': bool, 'variantes': n}."""
     try:
+        if getattr(pack, 'mezcla', False):
+            return {'arriba': False, 'principal': False, 'abajo': False, 'imagen': False, 'simple': False, 'variantes': len(pack.looks), 'nuevo': False, 'kinetic': False, 'viral': False, 'mezcla': True}
         if getattr(pack, 'kinetic', False):
             return {'arriba': False, 'principal': False, 'abajo': False, 'imagen': False, 'simple': False, 'variantes': 0, 'nuevo': False, 'kinetic': True, 'viral': bool(getattr(pack, 'viral', False))}
         f = pack.formatos[0] if pack.formatos else None

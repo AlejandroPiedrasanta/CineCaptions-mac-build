@@ -41,6 +41,8 @@ def main():
     ajustes_ui.guardar_prefs = lambda *a, **k: None
     if hasattr(ajustes_ui, 'mezclar_prefs'):
         ajustes_ui.mezclar_prefs = lambda *a, **k: None
+    import sfx_rules
+    sfx_rules.guardar_modo = lambda *a, **k: None                   # (las recomendaciones del estilo escribirían el sfx_modo.json REAL del usuario)
     import resolve_mcp
     resolve_mcp.ruta_exe = lambda: None
     resolve_mcp.estado_cacheado = lambda *a, **k: {}

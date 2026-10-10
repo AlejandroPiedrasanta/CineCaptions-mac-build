@@ -115,6 +115,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         genera la vista previa INCLUIDA del estilo «VIRAL» (los fotogramas que enseña la tarjeta del slider de Estilos).
     hacer_vistas_guia_video.py
         genera los CLIPS de 4 s (entrada, texto sostenido y SALIDA) de los 48 ejemplos de «Crea tu estilo», renderizados por Resolve.
+    hacer_vistas_mezcla.py
+        genera los CLIPS de 6 s de los looks de los Temas 1, 2 y 3 que se ven en «Crea tu estilo», renderizados por Resolve (captions reales).
     i18n.py
         idiomas de la interfaz: tr("texto en español") y los catálogos de 2_recursos/locales.
     ia_texto.py
@@ -143,6 +145,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         mide, sobre un render de probar_barrido.py, si el barrido de luz recorre TODA la palabra y cuánto dura.
     medir_texto.py
         mide cuánto ocupa cada palabra en pantalla (look «pintado»).
+    mezcla_planificador.py
+        «Crea tu estilo» con los estilos de los TRES temas: Tema 1 (títulos de gancho), Tema 2 (palabra a palabra) y Tema 3 (viral), mezclados por frases.
+    mezcla_vista.py
+        las vistas aproximadas (Pillow) de los looks de los TRES temas para «Crea tu estilo»: cada look se ve sobre una foto de muestra, dibujado con el plan REAL de su tema.
     mograf_ui.py
         Motion Graphics de la interfaz: entrada de tarjetas con marcas, título cinético, traza de luz, formas ambiente y HUD de Inicio.
     motor_voz.py
@@ -174,6 +180,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         pulsa GO de la app SIN pantalla sobre un archivo y un pack, y deja los bloques en el timeline actual de Resolve (el banco zz_BANCO).
     probar_kinetic.py
         prueba del estilo «Kinetic» de punta a punta: voz → bloques → Resolve (banco zz_BANCO) → render → hoja de cuadros.
+    probar_mezcla_app.py
+        prueba del estilo MEZCLADO de «Crea tu estilo» (looks de los tres temas) DENTRO de la app, sin pantalla y SIN Resolve.
     probar_viral.py
         prueba del estilo «VIRAL»: laboratorio de comps, planificador sobre un video real y render con hoja de cuadros.
     probar_viral_app.py

@@ -44,6 +44,7 @@ def main():
     if hasattr(ajustes_ui, 'mezclar_prefs'):
         ajustes_ui.mezclar_prefs = lambda *a, **k: None
     import sfx_rules
+    sfx_rules.guardar_modo = lambda *a, **k: None                   # (las recomendaciones del estilo escribirían el sfx_modo.json REAL del usuario)
     if donde:
         original = sfx_rules.cargar_modo
         sfx_rules.cargar_modo = lambda: {**original(), 'modo': 'simple', 'donde': donde}

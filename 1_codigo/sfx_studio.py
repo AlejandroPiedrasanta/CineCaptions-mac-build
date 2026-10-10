@@ -1244,61 +1244,33 @@ class SfxStudio(QWidget):
         return s
     # -- reglas y marcadores (columna derecha) ---------------------------------
     def _pintar_reglas(self, animar=True):
-        """«Reglas automáticas por bloque», repartidas en HORIZONTAL por toda la zona, con dos modos:
-        Simple   — un efecto al PRINCIPIO de cada palabra (o solo de la principal), alternando tres sonidos (los de fábrica son TAP_POP, typewriter e Iphone Taping).
-        Avanzado — interruptores por regla (preguntas, cifras, pausas, mayúsculas…) y ajustes de cuándo y cuánto suena."""
+        """«Reglas automáticas por palabra», repartidas en HORIZONTAL por toda la zona. v5.4.29: solo «Simple» (las tarjetas de abajo) y «Emojis» (el sonido de cada emoji); se quitaron
+        el modo Avanzado, la curva de energía, el interruptor de sonidos de emojis y el botón de la música con ducking."""
         import sfx_rules
         _ENTRADA[0] = bool(animar)
         t = self.tarjeta_reglas.capa
         limpiar_capa(t)
-        modo = sfx_rules.cargar_modo()['modo']
-        ver_emojis = bool(getattr(self, '_ver_emojis', False))      # v5.8: tercera opción, el sonido de cada emoji (no cambia el modo de las reglas)
+        ver_emojis = bool(getattr(self, '_ver_emojis', False))      # v5.8: segunda opción, el sonido de cada emoji
         cab, cc = caja_h(espacio=12)
         cc.addWidget(Etiqueta(tr('Reglas automáticas por palabra'), 20, peso='extra', color='#FFFFFF'))
-        self._modos_reglas = [tr('Simple'), tr('Avanzado'), tr('Emojis')]
-        var = StringVar(self._modos_reglas[2 if ver_emojis else (0 if modo == 'simple' else 1)])
+        self._modos_reglas = [tr('Simple'), tr('Emojis')]
+        var = StringVar(self._modos_reglas[1 if ver_emojis else 0])
 
         def elegir(_v=None):
-            self._ver_emojis = var.get() == self._modos_reglas[2]
-            if not self._ver_emojis:
-                sfx_rules.guardar_modo('simple' if var.get() == self._modos_reglas[0] else 'avanzado')
+            self._ver_emojis = var.get() == self._modos_reglas[1]
             despues(0, self._pintar_reglas, self)
         seg = Segmentado(self._modos_reglas, var, elegir, alto=34, tam=13)
-        Tooltip(seg, tr('Simple: un efecto al principio de CADA PALABRA (o solo de la principal), alternando tres sonidos (si se pisan, pasan a otra pista: SFX 2, SFX 3…). Avanzado: reglas por PALABRA (todas apagadas hasta que enciendas las que quieras) y ajustes de cuándo y cuánto suenan; si dos suenan juntos, pasan a otra pista. Emojis: todos los emojis y el sonido de cada uno, para cambiarlo emoji por emoji.'))
+        Tooltip(seg, tr('Simple: los sonidos de la introducción, de las palabras y del final. Emojis: todos los emojis y el sonido de cada uno, para cambiarlo emoji por emoji.'))
         cc.addWidget(seg)
-        # v5.5: dos ideas nuevas del ritmo: la curva de energia (cuantas palabras suenan) y la musica con ducking
-        try:
-            import ajustes_ui
-            curva_var = BooleanVar(bool(ajustes_ui.leer_prefs().get('sfx_curva_energia')))
-            curva = ui.Interruptor(tr('Curva de energía'), var=curva_var, tam=12,
-                                   comando=lambda: ajustes_ui.guardar_prefs({'sfx_curva_energia': bool(curva_var.get())}))
-            Tooltip(curva, tr('El ritmo del habla decide cuántas palabras suenan: en los tramos rápidos suena casi cada palabra y en los calmados solo las importantes (la principal, la primera y la última). El video respira en vez de sonar igual de principio a fin.'))
-            cc.addSpacing(10)
-            cc.addWidget(curva)
-            emo_var = BooleanVar(ajustes_ui.leer_prefs().get('sfx_emojis', True) is not False)
-            emo = ui.Interruptor(tr('Sonidos de emojis'), var=emo_var, tam=12,
-                                 comando=lambda: ajustes_ui.guardar_prefs({'sfx_emojis': bool(emo_var.get())}))
-            Tooltip(emo, tr('Cada emoji suena a lo que es: 🔥 fuego, 😘 beso, 💰 dinero, 👏 aplausos… Los sonidos vienen en el programa; para usar una grabación tuya deja un .wav con el mismo nombre en la carpeta DaVinciSubtitles/sfx_emoji.'))
-            cc.addSpacing(10)
-            cc.addWidget(emo)
-        except Exception:
-            pass
-        duck = Boton(tr('Música con ducking…'), self._musica_ducking, alto=34, tam=12)
-        Tooltip(duck, tr('Elige una música y crea una copia que BAJA SOLA ~14 dB mientras hablas y vuelve a subir en las pausas (calculado desde tu transcripción). Resolve no deja cambiar volúmenes por script, así que el ducking va dentro de la copia.'))
-        cc.addSpacing(8)
-        cc.addWidget(duck)
         cc.addStretch(1)
         self.resumen_reglas = Etiqueta('', 18, peso='medio', color='#FFFFFF')      # v5.5: la cifra se lee de lejos
         cc.addWidget(self.resumen_reglas)
         t.addWidget(cab)
+        self.resumen_reglas.configure(text=tr('Se usa al generar (GO).'))
         if ver_emojis:
-            self.resumen_reglas.configure(text=tr('Se usa al generar (GO).'))
             self._pintar_reglas_emojis(t)
-        elif modo == 'simple':
-            self.resumen_reglas.configure(text=tr('Se usa al generar (GO).'))
-            self._pintar_reglas_simple(t)
         else:
-            self._pintar_reglas_avanzado(t, None)
+            self._pintar_reglas_simple(t)
     def _pintar_reglas_emojis(self, t):
         """La pestaña «Emojis»: todos los emojis y el sonido de cada uno (emojis_sfx_ui.PanelEmojis)."""
         import emojis_sfx_ui
@@ -1316,10 +1288,12 @@ class SfxStudio(QWidget):
         cv.setSpacing(espacio)
         return caja, cv
     SECCIONES_UI = (
-        ('inicio', 'Sonido por palabra', 'Suena cuando entra cada palabra (o solo la principal: elígelo arriba). Los tres sonidos se alternan; si se pisan, pasan a otra pista.', '#4589FF'),
+        ('inicio', 'Sonido por palabra', 'Suena cuando entra cada palabra. Los tres sonidos se alternan; si se pisan, pasan a otra pista.', '#4589FF'),
+        ('principal', 'Sonido del texto principal', 'Suena solo en la palabra grande de cada bloque. Elige qué efecto sonoro usar: el propio de cada efecto del estilo (automático) o uno tuyo.', '#4589FF'),
         ('intro', 'Introducción', 'Un riser sube la tensión en el primer bloque del video. Cámbialo o agrega otro.', '#B388FF'),
         ('final', 'Final', 'Un boom cierra el video en el último bloque. Elige al azar entre los dos.', '#FB7185'),
     )
+    TARJETA_ACTIVA = {'inicio': 'palabra', 'principal': 'principal', 'intro': 'intro', 'final': 'final'}      # qué interruptor (sfx_rules.TARJETAS_SONIDO) enciende o apaga cada tarjeta
     def _resumen_edicion(self, ruta):
         """Lo que se le hizo a un sonido en «Editar» (recorte y volumen), o '' si va tal cual."""
         import sfx_rules
@@ -1331,99 +1305,181 @@ class SfxStudio(QWidget):
         if abs(v - 1.0) > 0.005:
             partes.append(f'{int(round(v * 100))} %')
         return '  ·  '.join(partes)
+    def _cambiar_tarjeta(self, clave, var):
+        """El interruptor de una tarjeta: apaga o enciende esa opción COMPLETA (palabra, principal, introducción o final) y vuelve a pintar."""
+        import sfx_rules
+        act = dict(sfx_rules.cargar_modo()['activas'])
+        act[clave] = bool(var.get())
+        sfx_rules.guardar_modo(activas=act)
+        self.status.configure(text=tr('Listo: se usará al generar (GO).') if act[clave] else tr('Apagado: esa opción no sonará al generar (GO).'), text_color='#7EE0A8')
+        despues(0, lambda: self._pintar_reglas(animar=False), self)
     def _pintar_reglas_simple(self, t):
         import sfx_rules
-        # v5.5: en QUÉ palabras suena el modo simple (cada palabra / solo la principal / ninguna); la introducción y el final siguen sonando
+        modo_g = sfx_rules.cargar_modo()
+        donde, activas = modo_g['donde'], modo_g['activas']
+        # v5.5: en QUÉ palabras suena el modo simple (cada palabra / solo la principal / ninguna); la introducción y el final siguen sonando.
+        # v5.4.29: «Solo la principal» cambia la tarjeta de las palabras por «Sonido del texto principal» (qué efecto sonoro usar), junto a la introducción y el final
         opciones_donde = [('todas', tr('Cada palabra')), ('principal', tr('Solo la principal')), ('ninguna', tr('Ninguna'))]
-        var_donde = StringVar(next(n for k, n in opciones_donde if k == sfx_rules.cargar_modo()['donde']))
+        var_donde = StringVar(next(n for k, n in opciones_donde if k == donde))
         def cambio_donde(_v=None):
             sfx_rules.guardar_modo(donde=next((k for k, n in opciones_donde if n == var_donde.get()), 'todas'))
+            despues(0, lambda: self._pintar_reglas(animar=False), self)
         fila_d, cd_ = caja_h(espacio=12)
         cd_.addWidget(Etiqueta(tr('Sonido por palabra'), 14, peso='medio', color='#FFFFFF'))
         seg_d = Segmentado([n for _k, n in opciones_donde], var_donde, cambio_donde, alto=34, tam=13)
-        Tooltip(seg_d, tr('Cada palabra: suena una vez por cada palabra que entra. Solo la principal: suena únicamente en la palabra grande de cada bloque (la que lleva el efecto), así hay menos sonidos y cada uno pesa más. Ninguna: no suenan las palabras; la introducción y el final se mantienen.'))
+        Tooltip(seg_d, tr('Cada palabra: suena una vez por cada palabra que entra. Solo la principal: suena únicamente en la palabra grande de cada bloque y eliges qué efecto sonoro usar. Ninguna: no suenan las palabras; la introducción y el final se mantienen.'))
         cd_.addWidget(seg_d)
         cd_.addStretch(1)
         t.addWidget(fila_d)
+        orden = (['inicio'] if donde == 'todas' else ['principal'] if donde == 'principal' else []) + ['intro', 'final']
+        secciones = [s for k in orden for s in self.SECCIONES_UI if s[0] == k]
         fila = QWidget()
         lay = QHBoxLayout(fila)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(12)
         flash = getattr(self, '_flash_slot', None)
         self._flash_slot = None
-        for idx, (seccion, titulo, nota, color) in enumerate(self.SECCIONES_UI):
+        for idx, (seccion, titulo, nota, color) in enumerate(secciones):
+            clave_act = self.TARJETA_ACTIVA[seccion]
+            encendida = bool(activas.get(clave_act, True))
             caja = _TarjetaViva(color, 14, '#0F1A30', '#12203A')
             cv = QVBoxLayout(caja)
             cv.setContentsMargins(16, 14, 16, 14)
             cv.setSpacing(12)
             caja.setMinimumWidth(270)
             cab, cc = caja_h(espacio=12)
-            icono = _IconoSfx(seccion, color, 54, retraso=idx * 3)
+            icono = _IconoSfx('inicio' if seccion == 'principal' else seccion, color, 54, retraso=idx * 3)
             cc.addWidget(icono, 0, Qt.AlignmentFlag.AlignVCenter)
             titulo_w = Etiqueta(tr(titulo), 17, peso='extra', color='#FFFFFF', envolver=True)
             cc.addWidget(titulo_w, 1)
+            var_on = BooleanVar(encendida)
+            interruptor = ui.Interruptor('', var=var_on, tam=13, comando=lambda c=clave_act, v=var_on: self._cambiar_tarjeta(c, v))
+            Tooltip(interruptor, tr('Apagar o encender esta opción completa.'))
+            cc.addWidget(interruptor, 0, Qt.AlignmentFlag.AlignVCenter)
             cab.setFixedHeight(56)
             cv.addWidget(cab)
-            cv.addWidget(_Nota(tr(nota), 12, lineas=3, color='#9FB0CC'))
+            cuerpo = QWidget()                                   # todo lo de la tarjeta menos la cabecera: se atenúa y se bloquea cuando la opción está apagada
+            cb = QVBoxLayout(cuerpo)
+            cb.setContentsMargins(0, 0, 0, 0)
+            cb.setSpacing(12)
+            cb.addWidget(_Nota(tr(nota), 12, lineas=3, color='#9FB0CC'))
             for_ = Etiqueta(tr('ASÍ SONARÁ EN EL VIDEO'), 10, peso='negrita', color=TEXT_MUTED)
             for_.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-            cv.addWidget(for_)
-            escena = _Escena(seccion, color, 130)
-            cv.addWidget(escena, 1)
+            cb.addWidget(for_)
+            escena = _Escena('inicio' if seccion == 'principal' else seccion, color, 130)
+            cb.addWidget(escena, 1)
             caja.enlazar(icono, escena)
-            Tooltip(caja, tr({'inicio': 'Suena al inicio de CADA palabra (o solo de la principal), alternando los tres sonidos de abajo. Si dos caen juntos, el segundo pasa a otra pista (SFX 2, SFX 3…) para que no se pisen.',
+            Tooltip(caja, tr({'inicio': 'Suena al inicio de CADA palabra, alternando los tres sonidos de abajo. Si dos caen juntos, el segundo pasa a otra pista (SFX 2, SFX 3…) para que no se pisen.',
+                              'principal': 'Suena solo en la palabra grande de cada bloque. En automático usa el sonido propio del efecto del estilo; si eliges uno, suena ese siempre.',
                               'intro': 'Suena UNA vez, en la primera palabra del video (un riser que abre). Si hay dos sonidos, se usa el primero.',
-                              'final': 'Suena UNA vez, en la última palabra del video (un golpe que cierra). Si hay dos sonidos, se usa el primero.'}.get(seccion, nota)))   # al pasar el mouse: el icono se anima y este texto explica qué hace
-            sn_ = Etiqueta(tr('SONIDOS · SE ALTERNAN') if seccion == 'inicio' else tr('SONIDOS · UNO AL AZAR'), 10, peso='negrita', color=TEXT_MUTED)
-            sn_.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-            cv.addWidget(sn_)
-            sonidos = sfx_rules.sonidos_simples(seccion)
-            for i in range(sfx_rules.CUANTOS_SIMPLES[seccion]):
-                ruta = sonidos[i] if i < len(sonidos) else None
-                sub = _TarjetaViva(color, 10, '#0B1426', '#0E1930')
-                sl = QVBoxLayout(sub)
-                sl.setContentsMargins(10, 8, 10, 8)
-                sl.setSpacing(6)
-                f1, cf = caja_h(espacio=8)
-                cf.addWidget(Chip(str(i + 1), color, alto=22, tam=11))
-                col_n, cn = caja_v(espacio=0)
-                nombre = ui.Elidida(ruta.name if ruta else tr('(sin sonido)'), 13, peso='medio', color='#FFFFFF')
-                if ruta:
-                    nombre.setToolTip(str(ruta))
-                cn.addWidget(nombre)
-                extra = self._resumen_edicion(ruta) if ruta else ''
-                if extra:
-                    cn.addWidget(ui.Elidida(tr('Editado: ') + extra, 11, color=ui.ACCENT_CLARO))
-                cf.addWidget(col_n, 1)
-                oir = Boton('▶', (lambda _=False, r_=ruta: self._oir_ruta(r_)) if ruta else (lambda _=False: None), tipo='icono', alto=28, ancho=32, tam=12)
-                oir.setFixedWidth(32)
-                Tooltip(oir, tr('Escuchar este sonido'))
-                cf.addWidget(oir)
-                editar = Boton(tr('Editar'), lambda _=False, sc=seccion, k=i: self._editar_sonido_simple(sc, k), alto=28, tam=12)
-                editar.setMinimumWidth(70)
-                editar.setEnabled(bool(ruta))
-                Tooltip(editar, tr('Elige la parte del sonido que se usa y baja o sube su volumen.'))
-                cf.addWidget(editar)
-                sl.addWidget(f1)
-                f2, cf2 = caja_h(espacio=6)
-                usar = Boton(tr('Usar el elegido'), lambda _=False, sc=seccion, k=i: self._sonido_simple_elegido(sc, k), alto=30, tam=12)
-                Tooltip(usar, tr('Cambia este sonido por el que elegiste arriba (busca o toca una categoría).'))
-                cf2.addWidget(usar, 1)
-                otro = Boton(tr('Archivo…'), lambda _=False, sc=seccion, k=i: self._sonido_simple_archivo(sc, k), alto=30, tam=12)
-                Tooltip(otro, tr('Elige un archivo de audio de tu computadora.'))
-                cf2.addWidget(otro, 1)
-                sl.addWidget(f2)
-                cv.addWidget(sub)
-                if flash == (seccion, i):
-                    despues(140, sub.destello, sub)
-            if [str(x) for x in sonidos] != [str(x) for x in sfx_rules.sonidos_de_fabrica(seccion)]:
-                cv.addWidget(Enlace(tr('Volver a los de fábrica'), lambda sc=seccion: self._sonidos_simples_de_fabrica(sc), 12, color=TEXT_MUTED, color_hover=ui.ACCENT_CLARO))
+                              'final': 'Suena UNA vez, en la última palabra del video (un golpe que cierra). Si hay dos sonidos, se usa el primero.'}.get(seccion, nota)))
+            if seccion == 'principal':
+                self._cuerpo_principal(cb, color, flash)
+            else:
+                sn_ = Etiqueta(tr('SONIDOS · SE ALTERNAN') if seccion == 'inicio' else tr('SONIDOS · UNO AL AZAR'), 10, peso='negrita', color=TEXT_MUTED)
+                sn_.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+                cb.addWidget(sn_)
+                sonidos = sfx_rules.sonidos_simples(seccion)
+                for i in range(sfx_rules.CUANTOS_SIMPLES[seccion]):
+                    ruta = sonidos[i] if i < len(sonidos) else None
+                    sub = _TarjetaViva(color, 10, '#0B1426', '#0E1930')
+                    sl = QVBoxLayout(sub)
+                    sl.setContentsMargins(10, 8, 10, 8)
+                    sl.setSpacing(6)
+                    f1, cf = caja_h(espacio=8)
+                    cf.addWidget(Chip(str(i + 1), color, alto=22, tam=11))
+                    col_n, cn = caja_v(espacio=0)
+                    nombre = ui.Elidida(ruta.name if ruta else tr('(sin sonido)'), 13, peso='medio', color='#FFFFFF')
+                    if ruta:
+                        nombre.setToolTip(str(ruta))
+                    cn.addWidget(nombre)
+                    extra = self._resumen_edicion(ruta) if ruta else ''
+                    if extra:
+                        cn.addWidget(ui.Elidida(tr('Editado: ') + extra, 11, color=ui.ACCENT_CLARO))
+                    cf.addWidget(col_n, 1)
+                    oir = Boton('▶', (lambda _=False, r_=ruta: self._oir_ruta(r_)) if ruta else (lambda _=False: None), tipo='icono', alto=28, ancho=32, tam=12)
+                    oir.setFixedWidth(32)
+                    Tooltip(oir, tr('Escuchar este sonido'))
+                    cf.addWidget(oir)
+                    editar = Boton(tr('Editar'), lambda _=False, sc=seccion, k=i: self._editar_sonido_simple(sc, k), alto=28, tam=12)
+                    editar.setMinimumWidth(70)
+                    editar.setEnabled(bool(ruta))
+                    Tooltip(editar, tr('Elige la parte del sonido que se usa y baja o sube su volumen.'))
+                    cf.addWidget(editar)
+                    sl.addWidget(f1)
+                    f2, cf2 = caja_h(espacio=6)
+                    usar = Boton(tr('Usar el elegido'), lambda _=False, sc=seccion, k=i: self._sonido_simple_elegido(sc, k), alto=30, tam=12)
+                    Tooltip(usar, tr('Cambia este sonido por el que elegiste arriba (busca o toca una categoría).'))
+                    cf2.addWidget(usar, 1)
+                    otro = Boton(tr('Archivo…'), lambda _=False, sc=seccion, k=i: self._sonido_simple_archivo(sc, k), alto=30, tam=12)
+                    Tooltip(otro, tr('Elige un archivo de audio de tu computadora.'))
+                    cf2.addWidget(otro, 1)
+                    sl.addWidget(f2)
+                    cb.addWidget(sub)
+                    if flash == (seccion, i):
+                        despues(140, sub.destello, sub)
+                if [str(x) for x in sonidos] != [str(x) for x in sfx_rules.sonidos_de_fabrica(seccion)]:
+                    cb.addWidget(Enlace(tr('Volver a los de fábrica'), lambda sc=seccion: self._sonidos_simples_de_fabrica(sc), 12, color=TEXT_MUTED, color_hover=ui.ACCENT_CLARO))
+            if not encendida:
+                from PySide6.QtWidgets import QGraphicsOpacityEffect
+                velo = QGraphicsOpacityEffect(cuerpo)
+                velo.setOpacity(0.35)
+                cuerpo.setGraphicsEffect(velo)
+                cuerpo.setEnabled(False)
+            cv.addWidget(cuerpo, 1)
             lay.addWidget(caja, 1)
             _aparecer(caja, 90 * idx)
         t.addWidget(fila, 1)
         despues(0, lambda: self._acomodar(True), self)
+    def _cuerpo_principal(self, cb, color, flash):
+        """El cuerpo de la tarjeta «Sonido del texto principal»: QUÉ efecto sonoro suena en la palabra grande de cada bloque (automático = el propio de cada efecto del estilo, o uno que eliges)."""
+        import sfx_rules
+        elegido = sfx_rules.sonido_principal()
+        sn_ = Etiqueta(tr('EFECTO SONORO DE LA PRINCIPAL'), 10, peso='negrita', color=TEXT_MUTED)
+        sn_.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        cb.addWidget(sn_)
+        sub = _TarjetaViva(color, 10, '#0B1426', '#0E1930')
+        sl = QVBoxLayout(sub)
+        sl.setContentsMargins(10, 8, 10, 8)
+        sl.setSpacing(6)
+        f1, cf = caja_h(espacio=8)
+        cf.addWidget(Chip('★' if elegido else 'A', color, alto=22, tam=11))
+        col_n, cn = caja_v(espacio=0)
+        cn.addWidget(ui.Elidida(elegido.name if elegido else tr('Automático'), 13, peso='medio', color='#FFFFFF'))
+        extra = self._resumen_edicion(elegido) if elegido else ''
+        if elegido and extra:
+            cn.addWidget(ui.Elidida(tr('Editado: ') + extra, 11, color=ui.ACCENT_CLARO))
+        elif not elegido:
+            cn.addWidget(ui.Elidida(tr('El sonido propio de cada efecto del estilo'), 11, color=ui.ACCENT_CLARO))
+        cf.addWidget(col_n, 1)
+        oir = Boton('▶', (lambda _=False, r_=elegido: self._oir_ruta(r_)) if elegido else (lambda _=False: None), tipo='icono', alto=28, ancho=32, tam=12)
+        oir.setFixedWidth(32)
+        oir.setEnabled(bool(elegido))
+        cf.addWidget(oir)
+        editar = Boton(tr('Editar'), lambda _=False: self._editar_sonido_simple('principal', 0), alto=28, tam=12)
+        editar.setMinimumWidth(70)
+        editar.setEnabled(bool(elegido))
+        cf.addWidget(editar)
+        sl.addWidget(f1)
+        f2, cf2 = caja_h(espacio=6)
+        usar = Boton(tr('Usar el elegido'), lambda _=False: self._sonido_simple_elegido('principal', 0), alto=30, tam=12)
+        cf2.addWidget(usar, 1)
+        otro = Boton(tr('Archivo…'), lambda _=False: self._sonido_simple_archivo('principal', 0), alto=30, tam=12)
+        cf2.addWidget(otro, 1)
+        sl.addWidget(f2)
+        cb.addWidget(sub)
+        if flash == ('principal', 0):
+            despues(140, sub.destello, sub)
+        if elegido:
+            cb.addWidget(Enlace(tr('Volver a automático'), lambda: self._sonidos_simples_de_fabrica('principal'), 12, color=TEXT_MUTED, color_hover=ui.ACCENT_CLARO))
     def _guardar_sonido_simple(self, seccion, indice, ruta):
         import sfx_rules
+        if seccion == 'principal':                           # v5.4.29: UN efecto sonoro para la palabra principal (vacío = automático)
+            sfx_rules.guardar_modo(principal=[str(ruta)])
+            self.status.configure(text=tr('Efecto de la principal guardado: {name}', name=Path(ruta).name), text_color='#8FC7FF')
+            self._flash_slot = ('principal', 0)
+            self._pintar_reglas(animar=False)
+            return
         actuales = [str(x) for x in sfx_rules.sonidos_simples(seccion)]
         fabrica = [str(x) for x in sfx_rules.sonidos_de_fabrica(seccion)]
         while len(actuales) < sfx_rules.CUANTOS_SIMPLES[seccion]:
@@ -1446,6 +1502,10 @@ class SfxStudio(QWidget):
             self._guardar_sonido_simple(seccion, indice, ruta)
     def _sonidos_simples_de_fabrica(self, seccion='inicio'):
         import sfx_rules
+        if seccion == 'principal':
+            sfx_rules.guardar_modo(principal=[])
+            self._pintar_reglas(animar=False)
+            return
         sfx_rules.guardar_modo(**{{'inicio': 'sonidos'}.get(seccion, seccion): []})
         self._pintar_reglas(animar=False)
     # -- «Editar»: elegir de forma visual la parte del sonido que se usa + su volumen
@@ -1463,13 +1523,13 @@ class SfxStudio(QWidget):
     def _editar_sonido_simple(self, seccion, indice):
         import sfx_editor
         import sfx_rules
-        sonidos = sfx_rules.sonidos_simples(seccion)
-        if indice >= len(sonidos):
+        sonidos = [sfx_rules.sonido_principal()] if seccion == 'principal' else sfx_rules.sonidos_simples(seccion)
+        if indice >= len(sonidos) or not sonidos[indice]:
             return
         ruta = Path(sonidos[indice])
         color = next((c for sc, _t, _n, c in self.SECCIONES_UI if sc == seccion), '#4589FF')
         dlg = sfx_editor.DialogoEditarSonido(self, ruta, al_guardar=lambda _r, sc=seccion, k=indice: self._tras_editar_simple(sc, k),
-                                             color=color, titulo=ruta.name, icono=_IconoSfx(seccion, color, 56))
+                                             color=color, titulo=ruta.name, icono=_IconoSfx('inicio' if seccion == 'principal' else seccion, color, 56))
         dlg.show()
     def _tras_editar_simple(self, seccion, indice):
         self._flash_slot = (seccion, indice)

@@ -34,7 +34,7 @@ RECOMENDACIONES = {
     'Referencia': {
         'resumen': 'un toque por palabra (como escribir) · riser con destello y zoom suave en la intro · fuga de luz en las transiciones',
         'sonido': {'donde': 'todas'},
-        'prefs': {'sfx_emojis': True, 'sfx_curva_energia': True,
+        'prefs': {'sfx_emojis': True, 'sfx_curva_energia': False,
                   'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'suave',
                   'fx_cortes': 'fuga_de_luz', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto', 'fx_sonido_cortes': True, 'fx_sonido_gancho': True,
                   'fx_zoom': 'normal', 'fx_temblor': 'no', 'fx_iconos_activo': False},
