@@ -1054,13 +1054,38 @@ def comps_de_v1(evento_v1, info, fps, offset_frames, video=None):
     return salida
 
 
+INFO_LIBRE = None            # lo deja GO tras armar el timeline de un video soltado en Resolve Free (ver _go_timeline_del_video_libre)
+
+
+def _info_libre():
+    """(info, motivo) del timeline en Resolve Free: lo que dejó GO al armar el timeline del video soltado (INFO_LIBRE) o, si no, lo de «Detectar video» al empezar GO
+    (resolve_bridge.video_detectado): {'timeline', 'ancho', 'alto', 'fps', 'inicio', 'v1'}."""
+    if isinstance(INFO_LIBRE, dict) and INFO_LIBRE.get('timeline'):
+        return dict(INFO_LIBRE), ''
+    try:
+        import resolve_bridge
+        d = resolve_bridge.video_detectado() or {}
+        if not d.get('timeline_name') or not d.get('fps') or not d.get('ancho'):
+            return None, 'GO no pudo leer el timeline al empezar'
+        return {'timeline': d.get('timeline_name'), 'proyecto': d.get('project_name'), 'ancho': int(float(d['ancho'])), 'alto': int(float(d['alto'])), 'fps': float(d['fps']),
+                'inicio': int(float(d.get('timeline_start_frame') or 0)), 'v1': d.get('v1') if isinstance(d.get('v1'), list) else []}, ''
+    except Exception as e:
+        return None, f'{type(e).__name__}: {e}'
+
+
 def aplicar(plan, al_estado=None, offset_frames=0):
     """Coloca el plan en el timeline ACTUAL de Resolve. Devuelve (ok, mensaje)."""
     import resolve_mcp
     eventos = (plan or {}).get('eventos') or []
-    ok, info, err = resolve_mcp.script(_INFO_TIMELINE, timeout=40)
-    if not ok or not (info or {}).get('timeline'):
-        return False, f'No pude leer el timeline de Resolve: {err or info}'
+    libre = resolve_mcp.ruta_exe() is None                # v5.4.16: sin MCP = DaVinci Resolve Free: se habla por el Puente (CineCaptions_Efectos.lua), no por el MCP
+    if libre:
+        info, err = _info_libre()
+        if info is None:
+            return False, f'No pude leer el timeline de Resolve: {err}'
+    else:
+        ok, info, err = resolve_mcp.script(_INFO_TIMELINE, timeout=40)
+        if not ok or not (info or {}).get('timeline'):
+            return False, f'No pude leer el timeline de Resolve: {err or info}'
     ancho, alto, fps = int(info['ancho']), int(info['alto']), float(info['fps'])
     formato = 'h' if ancho > alto * 1.2 else 'v'
     listos = []
@@ -1068,7 +1093,10 @@ def aplicar(plan, al_estado=None, offset_frames=0):
     evitar = [tuple(z) for z in ((plan or {}).get('zonas') or [])]
     v1_comps = []
     try:                                              # el movimiento sobre V1 (Fusion): siempre se calcula, también «nada», para quitar el de una vez anterior
-        ok_v, items, _e = resolve_mcp.script(_INFO_V1, timeout=40)
+        if libre:
+            ok_v, items = True, info.get('v1')
+        else:
+            ok_v, items, _e = resolve_mcp.script(_INFO_V1, timeout=40)
         if ok_v and isinstance(items, list):
             info['v1'] = items
             v1_comps = comps_de_v1(evento_v1, info, fps, offset_frames, plan.get('video') if isinstance(plan, dict) else None)
@@ -1114,5 +1142,15 @@ def aplicar(plan, al_estado=None, offset_frames=0):
         PLAN_JSON.write_text(json.dumps(datos, ensure_ascii=False), encoding='utf-8')
     if al_estado:
         al_estado('Colocando los efectos en Resolve…')
+    if libre:                                          # Resolve Free: el plan también como sidecar «.lua» (Free 21.1 no deja a los scripts leer archivos) y la orden por el Puente
+        try:
+            import sidecar_lua
+            sidecar_lua.escribir_sidecar(PLAN_JSON, datos)
+            import resolve_bridge
+            if resolve_bridge.modo_actual() == 'manual' and not resolve_bridge.lanzar_puente_auto():
+                return False, 'El Puente de Resolve no está activo: no pude colocar los efectos visuales.'
+            return resolve_bridge.ejecutar('efectos', timeout=300)
+        except Exception as e:
+            return False, f'No pude colocar los efectos en Resolve Free: {type(e).__name__}: {e}'
     script = carpeta_efectos() / 'colocar_efectos.py'
     return resolve_mcp.ejecutar_py(script, timeout=300)

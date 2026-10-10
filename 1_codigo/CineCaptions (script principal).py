@@ -7691,11 +7691,16 @@ class SubtitleApp(QWidget):
             # v5.10: el video soltado manda: su orientación decide el formato (y con él el pack de GO) y Resolve le arma un timeline nuevo
             medio = resolve_mcp.medir_medio(archivo)
             self._ancho_timeline, self._alto_timeline, self._fps_timeline = medio['tl_ancho'], medio['tl_alto'], medio['tl_fps']
-            self.go_panel.paso('timeline', 'saltado', tr('tu video, en un timeline nuevo') if hay_mcp else tr('uso tu archivo'))
+            libre_puente = (not hay_mcp) and (getattr(self, '_estado_sistema', {}) or {}).get('modo') in ('puente', 'manual')       # DaVinci Resolve Free: se habla por el Puente
+            self.go_panel.paso('timeline', 'saltado', tr('tu video, en un timeline nuevo') if (hay_mcp or libre_puente) else tr('uso tu archivo'))
             if hay_mcp:
                 # v5.2: Resolve se va abriendo mientras se transcribe (para colocar al final); v5.10: y se le arma el timeline con el video
                 self._go_tl_listo = threading.Event()
                 threading.Thread(target=self._go_timeline_del_video, args=(archivo, medio), daemon=True, name='abrir-resolve').start()
+            elif libre_puente:
+                # v5.4.16: lo mismo en Resolve Free, por el Puente (CineCaptions_ArmarVideo.lua): proyecto nuevo + timeline con el video; los captions caen ahí, no en el timeline que hubiera abierto
+                self._go_tl_listo = threading.Event()
+                threading.Thread(target=self._go_timeline_del_video_libre, args=(archivo, medio), daemon=True, name='armar-video-free').start()
             self._go_generar()
             return
         self.go_panel.linea.configure(text=tr('Pidiéndole a Resolve el audio del timeline…'))
@@ -7722,10 +7727,10 @@ class SubtitleApp(QWidget):
                 self.msg_queue.put(('status', tr('Resolve listo · proyecto «{p}» · timeline «{t}». Exportando el audio…',
                                                  p=prep.get('proyecto') or '—', t=prep.get('timeline') or '—')))
             elif resolve_bridge.modo_actual() == 'manual':
-                if sys.platform != 'darwin':
+                if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                     return ('sin_resolve', '')
                 self.msg_queue.put(('status', tr('Lanzando el Puente en Resolve…')))
-                if not resolve_bridge.lanzar_puente_mac():          # Mac (Resolve Free): se pulsa solo el menu del Puente
+                if not resolve_bridge.lanzar_puente_auto():         # Resolve Free: Mac por el menu del Puente; Windows por la consola F6 de Resolve
                     return ('sin_resolve', '')
             ok, err = resolve_bridge.ejecutar('detectar', timeout=600)
             return ('ok' if ok else 'error', err)
@@ -7848,6 +7853,63 @@ class SubtitleApp(QWidget):
         except Exception as e:
             self._go_tl_error = f'{type(e).__name__}: {e}'
             registro.excepcion(origen='GO · timeline del video')
+        finally:
+            ev = getattr(self, '_go_tl_listo', None)
+            if ev is not None:
+                ev.set()
+    def _go_timeline_del_video_libre(self, archivo, medio):
+        """Hilo de GO con un video soltado en DaVinci Resolve FREE (sin MCP): le pide al Puente que cree el proyecto «CineCaptions» y arme el timeline con ese video
+        (CineCaptions_ArmarVideo.lua, la gemela de lo que en Studio hace el MCP). Si algo falla, GO se detiene (`_abortar_si_fallo_el_timeline`)."""
+        import resolve_bridge
+        try:
+            self._esperar_vistas_reales()
+            al_estado = lambda t: self.msg_queue.put(('status', t))
+            if resolve_bridge.modo_actual() == 'manual':
+                al_estado(tr('Lanzando el Puente en Resolve…'))
+                if not resolve_bridge.lanzar_puente_auto():
+                    self._go_tl_error = tr('No pude lanzar el Puente en Resolve Free: abre Resolve con un proyecto (la pantalla de proyectos no vale) y repite.')
+                    registro.aviso(self._go_tl_error, 'GO · timeline del video')
+                    return
+            try:
+                import efectos_visuales as _fx
+                con_broll = bool(_fx.activado() and _fx.opciones_guardadas().get('fx_broll') and _fx.broll_clave(_fx.opciones_guardadas()))
+            except Exception:
+                con_broll = False
+            orden = {'ruta': str(archivo), 'ancho': int(medio['tl_ancho']), 'alto': int(medio['tl_alto']), 'fps': float(medio['tl_fps']), 'pista_broll': bool(con_broll),
+                     'proyecto': self._go_proyecto(), 'nombre': ('CineCaptions · ' + Path(str(archivo)).stem)[:60]}
+            import archivos_seguros
+            import sidecar_lua
+            ruta_orden = st.SHARED_FOLDER / 'armar_video.json'
+            archivos_seguros.escribir_json(ruta_orden, orden)
+            sidecar_lua.escribir_sidecar(ruta_orden, orden)
+            al_estado(tr('Armando en Resolve un timeline con tu video…'))
+            desde = time.time()
+            ok, err = resolve_bridge.ejecutar('armar_video', timeout=240)
+            rep = next((r for r in reversed(resolve_bridge.reportes_del_registro()) if r.get('script') == 'CineCaptions_ArmarVideo' and (r.get('cuando') or 0) >= desde - 2), None)
+            info = (rep or {}).get('armado')
+            if not ok or not isinstance(info, dict):
+                self._go_tl_error = str(err or (rep or {}).get('mensaje') or tr('Resolve no armó el timeline'))[:300]
+                registro.aviso(tr('Resolve no armó el timeline con tu video ({m}): GO se detiene (no se toca ningún otro timeline).', m=self._go_tl_error), 'GO · timeline del video')
+                return
+            self._go_tl_info = info
+            if info.get('clip_con_audio'):
+                if info.get('audio_repuesto'):
+                    registro.aviso(tr('Resolve metió solo la imagen de tu video: añadí su audio original a la pista A1.'), 'GO · timeline del video')
+                elif not info.get('audio_a1'):
+                    registro.aviso(tr('Tu video tiene audio pero no pude ponerlo en la pista A1 del timeline. Arrástralo tú desde el Media Pool.'), 'GO · timeline del video')
+            self._ancho_timeline = info.get('ancho') or medio['tl_ancho']
+            self._alto_timeline = info.get('alto') or medio['tl_alto']
+            try:                                     # lo que los efectos visuales necesitan saber del timeline (en Studio lo pregunta el MCP)
+                import efectos_visuales
+                efectos_visuales.INFO_LIBRE = {'timeline': info.get('timeline'), 'proyecto': info.get('proyecto'), 'ancho': int(info['ancho']), 'alto': int(info['alto']),
+                                               'fps': float(info['fps']), 'inicio': int(info['inicio']), 'v1': info.get('v1') if isinstance(info.get('v1'), list) else []}
+            except Exception:
+                pass
+            registro.info(tr('Timeline «{t}» armado con tu video en el proyecto «{p}» ({w}×{h}, {f:g} fps).', t=info.get('timeline'), p=info.get('proyecto') or '—',
+                             w=self._ancho_timeline, h=self._alto_timeline, f=info.get('fps') or medio['tl_fps']), 'proceso')
+        except Exception as e:
+            self._go_tl_error = f'{type(e).__name__}: {e}'
+            registro.excepcion(origen='GO · timeline del video (Free)')
         finally:
             ev = getattr(self, '_go_tl_listo', None)
             if ev is not None:
@@ -10806,14 +10868,6 @@ class SubtitleApp(QWidget):
             actual = self.video_var.get().strip().strip('"')
             if plan.get('video') and actual and Path(plan['video']).resolve() != Path(actual).expanduser().resolve():
                 return ''
-        except Exception:
-            pass
-        try:                                   # v5.4.16: sin MCP (DaVinci Resolve Free) los efectos visuales no se pueden colocar: se dice claro en vez de un error técnico
-            import resolve_mcp
-            if resolve_mcp.ruta_exe() is None:
-                txt = tr('Los efectos visuales (intro, zoom y transiciones) necesitan DaVinci Resolve Studio: en la versión gratuita se omiten. Los subtítulos, emojis y sonidos sí quedaron en el timeline.')
-                registro.info(txt, 'efectos')               # una limitación conocida de Free, no un fallo: no pinta el final en ámbar
-                return tr('sin efectos visuales (solo con Studio)')
         except Exception:
             pass
         try:

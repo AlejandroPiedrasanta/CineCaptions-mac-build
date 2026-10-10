@@ -167,9 +167,34 @@ result = res
 '''
 
 
+def _recortar_en_resolve_libre(segmentos):
+    """DaVinci Resolve FREE (sin MCP): lo mismo por el Puente (CineCaptions_Pausas.lua). La orden va como json + sidecar .lua; el informe sale del registro de Resolve."""
+    import time
+    import archivos_seguros
+    import resolve_bridge
+    import sidecar_lua
+    carpeta = resolve_bridge.CARPETA_COMPARTIDA
+    orden = {'segs': [[round(float(a), 6), round(float(b), 6)] for a, b in segmentos]}
+    ruta = carpeta / 'pausas_orden.json'
+    archivos_seguros.escribir_json(ruta, orden)
+    sidecar_lua.escribir_sidecar(ruta, orden)
+    if resolve_bridge.modo_actual() == 'manual' and not resolve_bridge.lanzar_puente_auto():
+        return {'ok': False, 'error': 'el Puente de Resolve no está activo'}
+    desde = time.time()
+    ok, err = resolve_bridge.ejecutar('pausas', timeout=180)
+    rep = next((r for r in reversed(resolve_bridge.reportes_del_registro()) if r.get('script') == 'CineCaptions_Pausas' and (r.get('cuando') or 0) >= desde - 2), None)
+    info = (rep or {}).get('pausas')
+    if isinstance(info, dict):
+        info['ok'] = bool(info.get('ok')) and bool(ok)
+        return info
+    return {'ok': bool(ok), 'error': '' if ok else (err or 'Resolve no contestó')}
+
+
 def recortar_en_resolve(segmentos):
     """Rehace V1/A1 del timeline actual con esos tramos (segundos de la fuente) pegados. Devuelve el informe de Resolve: {'ok': bool, 'error'?, 'tramos', 'v1', 'a1'}."""
     import resolve_mcp
+    if resolve_mcp.ruta_exe() is None:                 # v5.4.16: sin MCP = Resolve Free: por el Puente
+        return _recortar_en_resolve_libre(segmentos)
     codigo = _CORTAR % {'segs': [(round(float(a), 6), round(float(b), 6)) for a, b in segmentos]}
     ok, r, err = resolve_mcp.script(codigo, timeout=120)
     if not ok or not isinstance(r, dict):

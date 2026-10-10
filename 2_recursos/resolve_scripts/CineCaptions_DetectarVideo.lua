@@ -16,7 +16,7 @@ Si el render falla, cae al plan B: el archivo del clip mas largo de la
 pista de video 1.
 ]]
 
-local VERSION = "5.4.16 (detectar video)"
+local VERSION = "5.4.17 (detectar video)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -965,6 +965,21 @@ local function main()
         partes[#partes + 1] = '"mark_in": ' .. marca.entrada
         partes[#partes + 1] = '"mark_out": ' .. marca.salida
     end
+    -- v5.4.16: los clips de V1 (inicio, duracion, resolucion, nombre): sin MCP (Resolve Free) la app los necesita para armar el movimiento sobre V1 de los efectos visuales
+    -- (zoom, temblor, transiciones). Con mas de 40 clips se omite (el registro de Resolve recorta las lineas largas y se perderia todo el reporte).
+    pcall(function()
+        local clips_v1 = timeline:GetItemListInTrack("video", 1) or {}
+        if #clips_v1 > 0 and #clips_v1 <= 40 then
+            local filas = {}
+            for _, it in ipairs(clips_v1) do
+                local res = ""
+                pcall(function() res = it:GetMediaPoolItem():GetClipProperty("Resolution") or "" end)
+                filas[#filas + 1] = string.format('{"inicio": %d, "dur": %d, "res": %s, "nombre": %s}',
+                    math.floor(tonumber(it:GetStart()) or 0), math.floor(tonumber(it:GetDuration()) or 0), json_str(tostring(res)), json_str(tostring(it:GetName()):sub(1, 40)))
+            end
+            partes[#partes + 1] = '"v1": [' .. table.concat(filas, ", ") .. ']'
+        end
+    end)
     partes[#partes + 1] = '"version": ' .. json_str(VERSION)
     partes[#partes + 1] = '"detectado_en": ' .. os.time()
     VIDEO_REPORTADO = "{" .. table.concat(partes, ", ") .. "}"

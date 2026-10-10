@@ -73,7 +73,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
     plantillas_incluidas\   (37 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
-    resolve_scripts\   (18 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
+    resolve_scripts\   (21 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
         CineCaptions - Detectar Video.py
             renderiza el audio del timeline activo para transcribirlo (Studio).
         CineCaptions - Importar Estilos.py
@@ -90,14 +90,20 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             renderiza las vistas previas reales en un timeline temporal (lo lanza el MCP).
         CineCaptions.py
             coloca los subtítulos en el timeline (núcleo en Python para Resolve Studio).
+        CineCaptions_ArmarVideo.lua
+            arma el proyecto y el timeline de un video soltado en CineCaptions (Resolve Free).
         CineCaptions_DetectarVideo.lua
             renderiza el audio del timeline activo (Resolve Free).
+        CineCaptions_Efectos.lua
+            los efectos visuales (intro, cortes, iconos, B-roll, sonidos, movimiento sobre V1) en Resolve Free.
         CineCaptions_Exportar_PackDRB.lua
             herramienta de desarrollo: exporta un pack como .drb.
         CineCaptions_ImportarEstilos.lua
             saca un pack de estilos de un timeline (Resolve Free).
         CineCaptions_InsertarSFX.lua
             importa un sonido y lo coloca en el cabezal (Resolve Free).
+        CineCaptions_Pausas.lua
+            «Quitar pausas» (jump cuts en los silencios) en Resolve Free.
         CineCaptions_Prueba_MediaPool.lua
             herramienta de prueba: comprueba si se puede meter un Text+ al Media Pool.
         CineCaptions_Puente.lua

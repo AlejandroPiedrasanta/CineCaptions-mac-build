@@ -51,7 +51,9 @@ en sus propios archivos (subtitles_manifest.json, sfx_pendiente.json).
 -- SIN_IO): latido/tomado/respuesta por ExportKeyboardPreset, trabajos por
 -- sidecar .lua, reportes por fusion:Execute -> ResolveDebug.txt. Con io no
 -- cambia nada, salvo que responder() ya escapa las barras. La MINIMA no se toca.
-local VERSION = "1.0.37"
+-- v1.0.38: la accion nueva efectos (los efectos visuales en Resolve Free: CineCaptions_Efectos.lua, gemela de colocar_efectos.py). Un Puente viejo no la conoce:
+-- la version sube y con ella VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
+local VERSION = "1.0.38"
 
 -- La version del PROGRAMA con la que se distribuyo este archivo. Existe
 -- porque el propio creador leyo el 1.0.28 de arriba como "quedo una copia
@@ -60,7 +62,7 @@ local VERSION = "1.0.37"
 -- regla que los tres auxiliares). OJO: no va en el latido — las apps
 -- viejas parten el latido en dos campos y un tercero las haria declarar
 -- INCOMPATIBLE a un Puente sano.
-local PAQUETE = "5.4.16"
+local PAQUETE = "5.4.17"
 
 -- El resolve VALIDADO del arranque. Es un local a proposito: si mas tarde
 -- algo pisa el global 'resolve' (el veneno clasico de la sesion), este
@@ -78,6 +80,9 @@ local SCRIPTS = {
     sfx_marcadores = "CineCaptions_SfxMarcadores.lua",
     sfx_reemplazar = "CineCaptions_SfxReemplazar.lua",
     importar_estilos = "CineCaptions_ImportarEstilos.lua",
+    efectos = "CineCaptions_Efectos.lua",
+    armar_video = "CineCaptions_ArmarVideo.lua",
+    pausas = "CineCaptions_Pausas.lua",
 }
 
 -- ---------------------------------------------------------------------

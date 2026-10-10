@@ -358,7 +358,7 @@ JOB_PENDIENTE = CARPETA_TRABAJOS / 'pendiente.json'
 JOB_TOMADO = CARPETA_TRABAJOS / 'pendiente.tomado'
 LATIDO_MAXIMO_S = 12
 SIN_LATIDO_MAXIMO = 3
-SCRIPTS = {'detectar': 'CineCaptions - Detectar Video.py', 'subtitulos': 'CineCaptions.py', 'sfx': 'CineCaptions - Insertar SFX.py', 'sfx_marcadores': 'CineCaptions - SFX Marcadores.py', 'sfx_reemplazar': 'CineCaptions - SFX Reemplazar.py', 'importar_estilos': 'CineCaptions - Importar Estilos.py'}
+SCRIPTS = {'detectar': 'CineCaptions - Detectar Video.py', 'subtitulos': 'CineCaptions.py', 'sfx': 'CineCaptions - Insertar SFX.py', 'sfx_marcadores': 'CineCaptions - SFX Marcadores.py', 'sfx_reemplazar': 'CineCaptions - SFX Reemplazar.py', 'importar_estilos': 'CineCaptions - Importar Estilos.py', 'efectos': 'CineCaptions - Efectos.py', 'armar_video': 'CineCaptions - Armar Video.py', 'pausas': 'CineCaptions - Pausas.py'}      # (efectos: solo por el Puente de Free, que corre CineCaptions_Efectos.lua; en Studio van por el MCP)
 def carpeta_de_scripts():
     """Donde viven los .py que ejecuta Studio por la API.\n\n    Van DENTRO del programa (BASE_RECURSOS/resolve_scripts), no en la\n    carpeta del menu de Resolve: ahi solo se instalan los .lua, para Free.\n\n    Existe para que nadie tenga que calcularla a mano. El SFX Lab pasaba la\n    carpeta del MENU y armaba la ruta con el nombre .py viejo, asi que en\n    Studio fallaba siempre con \'No encuentro el script\'.\n    """
     import instalador_scripts
@@ -519,7 +519,7 @@ def limpiar_resultado_viejo():
             ruta.rename(destino)
         except OSError:
             pass
-VERSION_PUENTE_ESPERADA = '1.0.37'
+VERSION_PUENTE_ESPERADA = '1.0.38'
 VERSION_PUENTE_MINIMA = '1.0.21'
 def _tupla_version(texto):
     """\"1.0.21\" -> (1, 0, 21). Lo raro cuenta como version 0 (muy vieja)."""
@@ -924,7 +924,7 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
         puente_vivo = puente_activo() or _puente_trabajando()
         if puente_vivo and (not puente_incompatible()):
             ok, mensaje = _encolar(accion, datos=datos, timeout=timeout, on_progreso=on_progreso)
-            if (not ok) and _puente_perdido(mensaje) and lanzar_puente_mac():
+            if (not ok) and _puente_perdido(mensaje) and lanzar_puente_auto():
                 ok, mensaje = _encolar(accion, datos=datos, timeout=timeout, on_progreso=on_progreso)       # Mac: el Puente se relanzo solo
             return _con_motivo_real(ok, mensaje, empezo)
         else:
@@ -943,7 +943,7 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
                         # se le dice lo que hay que cambiar (antes salía «el Puente perdió la conexión» y el usuario de Studio no sabía qué hacer)
                         traer_resolve_al_frente()
                         return (False, mensaje_para_el_usuario())
-                    if lanzar_puente_mac():             # Mac (Resolve Free): se pulsa solo Workspace > Scripts > CineCaptions_Puente
+                    if lanzar_puente_auto():            # Resolve Free: Mac por el menú, Windows por la consola F6 (Resolve Free): se pulsa solo Workspace > Scripts > CineCaptions_Puente
                         ok, mensaje = _encolar(accion, datos=datos, timeout=timeout, on_progreso=on_progreso)
                         return _con_motivo_real(ok, mensaje, empezo)
                     traer_resolve_al_frente()
@@ -1031,6 +1031,19 @@ def lanzar_puente_mac(espera_s=25):
         registro.aviso('Pulse el menu del Puente pero no empezo a latir en %d s.' % espera_s, 'Puente · Mac')
     except Exception:
         pass
+    return False
+
+
+def lanzar_puente_auto(espera_s=25):
+    """Resolve Free sin Puente: lo lanza solo. Mac: por el menú (lanzar_puente_mac); Windows: por la consola de comandos de Resolve (colocacion.lanzar_puente_windows). False si no se pudo."""
+    if sys.platform == 'darwin':
+        return lanzar_puente_mac(espera_s)
+    if sys.platform.startswith('win'):
+        try:
+            import colocacion
+            return colocacion.lanzar_puente_windows(espera_s)
+        except Exception:
+            return False
     return False
 
 

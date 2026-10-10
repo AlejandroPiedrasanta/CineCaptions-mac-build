@@ -484,6 +484,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.17', [
+        'DaVinci Resolve gratuito (Free) ya funciona igual que Studio: al soltar un video, CineCaptions crea el proyecto y el timeline con tu video, coloca los subtítulos, emojis y sonidos, aplica los efectos visuales (intro, zoom, transiciones) y quita las pausas, todo por el Puente.',
+        'Si Resolve Free está abierto, CineCaptions lanza el Puente solo (ya no hay que ir al menú Área de trabajo > Scripts). Si está cerrado, lo abre; abre o crea un proyecto en Resolve (la pantalla de proyectos no vale) para que siga.',
+        'Los mensajes de Inicio y del Registro dicen con claridad qué falló y qué probar; GO sigue sin decir «¡Listo!» si Resolve no colocó nada.',
+    ]),
     ('5.4.16', [
         'DaVinci Resolve gratuito (Free): ahora los cinco estilos (VIRAL, Kinetic, Referencia, Base y Viral inferior) colocan sus subtítulos, emojis y sonidos por el Puente. Antes no colocaban nada porque Resolve Free 21.1 no deja a los scripts leer archivos. Los efectos visuales (intro, zoom y transiciones) siguen necesitando Studio y en Free se omiten con un aviso claro.',
         'Al terminar, Resolve se pone al frente (aunque estuviera detrás de otra ventana) y reproduce el timeline desde el principio.',
