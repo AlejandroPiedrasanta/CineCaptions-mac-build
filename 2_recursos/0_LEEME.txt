@@ -9,9 +9,13 @@ porque así queda también dentro del .exe.
 
 QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
-    efectos\   (128 archivos)
-    emojis\   (546 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
-    fondos_estilos\   (11 archivos)
+    .cf\   (1 archivos)
+        icono.ico
+    efectos\   (148 archivos)
+    emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
+    fondos_estilos\   (13 archivos)
+        .cf\   (1 archivos)
+        desktop.ini
         fondo_01.jpg
         fondo_02.jpg
         fondo_03.jpg
@@ -23,10 +27,12 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_09.jpg
         fondo_10.jpg
         fondo_11.jpg
-    fonts\   (44 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
-    generador_packs\   (17 archivos)
+    fonts\   (46 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
+    generador_packs\   (19 archivos)
+        .cf\   (1 archivos)
         construir_pack.py
             arma los .drb (bin de Resolve) de los packs nuevos con los macros reales Luxe Shine / Luxe Slide (luxe_macro.py).
+        desktop.ini
         generar_comps.py
         kinetic_comps.py
             escribe las comps de Fusion (.comp) de los elementos del estilo «Kinetic» (héroe, serie, cinta, anillo, subrayado…).
@@ -54,26 +60,33 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             los elementos del estilo «VIRAL»: línea fina, negrita, shatter, select y drag.
         viral_lab.py
             laboratorio del estilo «VIRAL»: comps de PRUEBA para ver en Resolve qué admite Fusion (herramienta de desarrollo, no va en el pack).
-    generador_sfx_emoji\   (69 archivos)
-    generador_sfx_estilo\   (1 archivos)
+    generador_sfx_emoji\   (73 archivos)
+    generador_sfx_estilo\   (3 archivos)
+        .cf\   (1 archivos)
+        desktop.ini
         preparar_sonidos.py
             prepara los sonidos que el usuario aportó para los estilos (riser de gancho, golpecito del iPhone, obturadores de transición).
-    guia_estilo\   (388 archivos)
-    locales\   (5 archivos)  — textos de la interfaz en en, pt, fr, de, it (la clave es el español)
+    guia_estilo\   (392 archivos)
+    locales\   (7 archivos)  — textos de la interfaz en en, pt, fr, de, it (la clave es el español)
+        .cf\   (1 archivos)
         de.json
+        desktop.ini
         en.json
         fr.json
         it.json
         pt.json
-    motor_qwen\   (3 archivos)  — motor de voz e IA (corren en su propio Python 3.12) y sus versiones fijas
+    motor_qwen\   (5 archivos)  — motor de voz e IA (corren en su propio Python 3.12) y sus versiones fijas
+        .cf\   (1 archivos)
+        desktop.ini
         motor_qwen.py
             motor de voz Qwen3-ASR + alineador (corre en el Python 3.12 del motor).
         motor_texto.py
             IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
-    plantillas_incluidas\   (37 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
-    resolve_scripts\   (21 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
+    plantillas_incluidas\   (53 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    resolve_scripts\   (24 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
+        .cf\   (1 archivos)
         CineCaptions - Detectar Video.py
             renderiza el audio del timeline activo para transcribirlo (Studio).
         CineCaptions - Importar Estilos.py
@@ -114,17 +127,23 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             reemplaza el efecto bajo el cabezal (Resolve Free).
         CineCaptions_Subtitulos.lua
             coloca los subtítulos en el timeline (núcleo en Lua para Resolve Free).
+        CineCaptions_Vista.lua
+            guardar o aplicar la disposicion de pantalla de Resolve (vertical, vista expandida) por el Puente.
+        desktop.ini
         sfx_rules.json
             cuándo suena cada efecto de sonido (editable sin tocar código)
-    sfx_emoji\   (101 archivos)
-    sfx_library\   (128 archivos)  — los efectos de sonido, una carpeta por categoría
-    vistas_slider\   (6 archivos)
+    sfx_emoji\   (103 archivos)
+    sfx_library\   (158 archivos)  — los efectos de sonido, una carpeta por categoría
+    vistas_slider\   (8 archivos)
+        .cf\   (1 archivos)
+        desktop.ini
         Kinetic.jpg
         Kinetic.mp4
         Referencia.jpg
         Referencia.mp4
         VIRAL.jpg
         VIRAL.mp4
+    desktop.ini
     fondo_esfera.jpg
     logo_cinecaptions.ico
         el icono del .exe y del instalador

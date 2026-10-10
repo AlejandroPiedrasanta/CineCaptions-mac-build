@@ -53,7 +53,9 @@ en sus propios archivos (subtitles_manifest.json, sfx_pendiente.json).
 -- cambia nada, salvo que responder() ya escapa las barras. La MINIMA no se toca.
 -- v1.0.38: la accion nueva efectos (los efectos visuales en Resolve Free: CineCaptions_Efectos.lua, gemela de colocar_efectos.py). Un Puente viejo no la conoce:
 -- la version sube y con ella VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
-local VERSION = "1.0.38"
+-- v1.0.39: la accion nueva vista (guardar / aplicar la disposicion de pantalla de Resolve: CineCaptions_Vista.lua). Un Puente viejo no la conoce: la version sube y con ella
+-- VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
+local VERSION = "1.0.39"
 
 -- La version del PROGRAMA con la que se distribuyo este archivo. Existe
 -- porque el propio creador leyo el 1.0.28 de arriba como "quedo una copia
@@ -62,7 +64,7 @@ local VERSION = "1.0.38"
 -- regla que los tres auxiliares). OJO: no va en el latido — las apps
 -- viejas parten el latido en dos campos y un tercero las haria declarar
 -- INCOMPATIBLE a un Puente sano.
-local PAQUETE = "5.4.22"
+local PAQUETE = "5.4.24"
 
 -- El resolve VALIDADO del arranque. Es un local a proposito: si mas tarde
 -- algo pisa el global 'resolve' (el veneno clasico de la sesion), este
@@ -83,6 +85,7 @@ local SCRIPTS = {
     efectos = "CineCaptions_Efectos.lua",
     armar_video = "CineCaptions_ArmarVideo.lua",
     pausas = "CineCaptions_Pausas.lua",
+    vista = "CineCaptions_Vista.lua",
 }
 
 -- ---------------------------------------------------------------------

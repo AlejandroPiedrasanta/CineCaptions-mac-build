@@ -31,6 +31,15 @@ try { [Console]::OutputEncoding = $utf8 } catch {}
 $env:PIP_DISABLE_PIP_VERSION_CHECK = '1'
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 function Paso($t) { Write-Host ''; Write-Host "== $t" -ForegroundColor Cyan }
+# Borra una carpeta aunque la sincronizacion de la nube o el Explorador la dejen en solo lectura (desktop.ini, .cf): quita los atributos de TODO, tambien de la carpeta raiz.
+function BorrarCarpeta($ruta) {
+    if (-not (Test-Path -LiteralPath $ruta)) { return }
+    foreach ($i in Get-ChildItem -LiteralPath $ruta -Recurse -Force -ErrorAction SilentlyContinue) {
+        try { $i.Attributes = $(if ($i.PSIsContainer) { 'Directory' } else { 'Normal' }) } catch {}
+    }
+    try { (Get-Item -LiteralPath $ruta -Force).Attributes = 'Directory' } catch {}
+    [IO.Directory]::Delete($ruta, $true)
+}
 
 $dist = Join-Path $obra 'dist'
 $app = Join-Path $dist 'CineCaptions'
@@ -105,7 +114,7 @@ Documentar
 # 2) fuentes preparadas ----------------------------------------------------------------
 Paso 'Codigo fuente'
 $fuentes = Join-Path $obra 'fuentes'
-if (Test-Path $fuentes) { [IO.Directory]::Delete($fuentes, $true) }
+BorrarCarpeta $fuentes
 New-Item -ItemType Directory -Force -Path $fuentes | Out-Null
 foreach ($f in Get-ChildItem $codigo -Filter '*.py') {
     Copy-Item -LiteralPath $f.FullName -Destination (Join-Path $fuentes $f.Name)
@@ -123,6 +132,7 @@ Paso 'Compilando el programa (PyInstaller, 3-6 min)'
 $env:CINECAPTIONS_FUENTES = $fuentes
 $env:CINECAPTIONS_RECURSOS = $recursos
 $env:CINECAPTIONS_VERSION = $version
+BorrarCarpeta (Join-Path $dist 'CineCaptions')      # (PyInstaller no puede borrar la salida anterior si la sincronizacion la dejo en solo lectura)
 Push-Location $aqui
 try {
     # v5.5: por defecto SIN --clean: PyInstaller reutiliza su analisis (lo que no cambio no se vuelve a mirar). -Limpio lo rehace todo.
@@ -147,7 +157,7 @@ Paso 'Compilando el instalador'
 $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 if (-not (Test-Path $csc)) { $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe' }
 $tmp = Join-Path $obra 'instalador'
-if (Test-Path $tmp) { [IO.Directory]::Delete($tmp, $true) }
+BorrarCarpeta $tmp
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 $partes = (($version.Split('.') + @('0', '0', '0', '0'))[0..3]) -join '.'
 $cs = Join-Path $tmp 'Instalador.cs'

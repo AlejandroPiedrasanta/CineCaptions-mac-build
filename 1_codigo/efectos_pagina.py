@@ -358,11 +358,7 @@ class PaginaEfectos(QWidget):
         general.capa.addWidget(Etiqueta(tr('Acompañan a los captions, la música y los emojis: se colocan solos en pistas propias «FX» (tu video y tus captions no se tocan). También se enciende con el chip «Visuales» de Inicio.'),
                                         13, color=TEXT_MUTED, envolver=True))
         fila_i, ci = caja_h(espacio=10)
-        ci.addWidget(Etiqueta(tr('Intensidad'), 13, color=TEXT_MUTED))
-        self._v_intens = StringVar(self._texto_cuanto(op.get('fx_intensidad'), (('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte')))))
-        ci.addWidget(Segmentado([tr('Suave'), tr('Normal'), tr('Fuerte')], self._v_intens, self._cambio_intensidad, alto=32, tam=13))
-        ci_txt = Etiqueta(tr('Cuánto se nota todo a la vez: cuántos cortes e iconos, y la fuerza del zoom y del temblor.'), 12, color=TEXT_MUTED, envolver=True)
-        ci.addWidget(ci_txt, 1)
+        ci.addStretch(1)
         ci.addWidget(Boton(tr('Vista previa de 3 s'), self._abrir_vista_previa, alto=34, tam=12))
         general.capa.addWidget(fila_i)
         capa.addWidget(general)
@@ -467,11 +463,8 @@ class PaginaEfectos(QWidget):
         self._aplicar_iconos_on()
         # ---- más efectos (plegados tras un botón: números, pegatinas, énfasis, ambiente, cierre y mis efectos)
         from efectos_extra_ui import SeccionExtras
-        self._mas = SeccionExtras()
+        self._mas = SeccionExtras()                    # v5.4.23: siempre a la vista (antes plegado: había efectos activos que no se veían)
         self._tarjetas.extend(self._mas.tarjetas)
-        self._mas.setVisible(False)
-        self._b_mas = Boton(tr('Más efectos'), self._alternar_mas, alto=42, tam=14)
-        capa.addWidget(self._b_mas)
         capa.addWidget(self._mas)
         capa.addStretch(1)
         self._reloj = QTimer(self)
@@ -540,7 +533,6 @@ class PaginaEfectos(QWidget):
             for fila, clave in ((self._f_zoom_intro, 'fx_intro_zoom'), (self._f_zoom, 'fx_zoom'), (self._f_temblor, 'fx_temblor'), (self._f_saltos, 'fx_zoom_saltos'),
                                 (self._f_pausas, 'fx_pausas'), (self._f_cortes, 'fx_cortes_cuanto')):
                 fila.poner(op.get(clave))
-            self._v_intens.set(self._texto_cuanto(op.get('fx_intensidad'), (('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte')))))
             self._f_fondo.poner('si' if bool(op.get('fx_fondo', True)) else 'no')
             self._v_iconos.set(self._texto_cuanto(op.get('fx_iconos_cuanto'), (('pocos', tr('Pocos')), ('normal', tr('Normales')), ('muchos', tr('Muchos')))))
             self._v_corte_sonido.set(self._texto_cuanto(op.get('fx_sonido_corte') or 'auto', self._sonidos_corte))
@@ -554,6 +546,7 @@ class PaginaEfectos(QWidget):
                 c.poner_seleccionada(ident in self._iconos)
             self._aplicar_iconos_on()
             self._refrescar_sonido()
+            self._mas.refrescar()
         except Exception:
             pass
 
@@ -577,14 +570,6 @@ class PaginaEfectos(QWidget):
             self._dialogo.close()
         self._dialogo = DialogoVistaPrevia(self.window())
         self._dialogo.show()
-
-    def _alternar_mas(self):
-        self._mas.setVisible(not self._mas.isVisible())
-        self._b_mas.setText(tr('Menos efectos') if self._mas.isVisible() else tr('Más efectos'))
-
-    def _cambio_intensidad(self, _v=None):
-        clave = {tr('Suave'): 'suave', tr('Normal'): 'normal', tr('Fuerte'): 'fuerte'}.get(self._v_intens.get(), 'normal')
-        _guardar({'fx_intensidad': clave})
 
     def _cambio_corte_sonido(self, _v=None):
         _guardar({'fx_sonido_corte': {t: k for k, t in self._sonidos_corte}.get(self._v_corte_sonido.get(), 'auto')})

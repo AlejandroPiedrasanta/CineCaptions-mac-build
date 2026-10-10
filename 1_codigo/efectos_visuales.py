@@ -812,7 +812,7 @@ def _pack_de_frase(frase, packs, op, usados):
 
 
 # ----------------------------------------------------------------------------------------------------------------------- el plan
-DESPLAZA = {'suave': -1, 'normal': 0, 'fuerte': 1}
+DESPLAZA = {'suave': 0, 'normal': 0, 'fuerte': 0}          # v5.4.23: la «intensidad global» ya no mueve los niveles (la página enseñaba «Normal» y se aplicaba «Suave»): cada ajuste vale lo que dice su tarjeta
 _GOLPES_RE = re.compile(r'hit|slam|impact|boom|punch|bass|thud|golpe|impacto', re.I)
 
 

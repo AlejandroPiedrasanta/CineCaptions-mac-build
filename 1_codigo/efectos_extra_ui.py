@@ -244,6 +244,7 @@ class SeccionExtras(QWidget):
         super().__init__(padre)
         self._dialogo = None
         self.tarjetas = []                                 # las tarjetas con ejemplo animado (la página las mueve solo mientras se ven)
+        self._filas = {}
         capa = QVBoxLayout(self)
         capa.setContentsMargins(0, 0, 0, 0)
         capa.setSpacing(18)
@@ -364,7 +365,31 @@ class SeccionExtras(QWidget):
         fila = FilaCartas(tipo, opciones, actual if actual in validas else opciones[0][0], guardar)
         capa.addWidget(fila)
         self.tarjetas.extend(fila.tarjetas)
+        self._filas[tipo] = fila
         return fila
+
+    def refrescar(self):
+        """Vuelve a leer las preferencias (al elegir un tema se recomiendan algunas: sonido en cortes y en el gancho…): lo que se ve es lo que GO aplica."""
+        try:
+            op = F.opciones_guardadas()
+            import ajustes_ui
+            pref = ajustes_ui.leer_prefs()
+            f = self._filas
+            f['numeros'].poner('si' if op.get('fx_numeros') else 'no')
+            f['pegatinas'].poner('si' if op.get('fx_pegatinas') else 'no')
+            f['enfasis'].poner(op.get('fx_enfasis') or 'no')
+            f['alturaenfasis'].poner(op.get('fx_enfasis_altura') or 'centro')
+            f['ambiente'].poner(op.get('fx_overlay') or '')
+            _clave_f = {'0.25': 'suave', '0.45': 'normal', '0.75': 'fuerte'}
+            f['fuerzaambiente'].poner(_clave_f[min(_clave_f, key=lambda v: abs(float(v) - float(op.get('fx_overlay_fuerza', 0.45))))])
+            f['cierre'].poner(op.get('fx_outro') or '')
+            f['broll'].poner('si' if op.get('fx_broll') else 'no')
+            self._v_evitar.set(bool(op.get('fx_evitar', True)))
+            self._v_snd.set(bool(op.get('fx_outro_sonido', True)))
+            for clave in ('fx_sonido_cortes', 'fx_sonido_gancho', 'sfx_normalizar', 'sfx_emoji_contexto'):
+                getattr(self, '_v_' + clave).set(pref.get(clave, True) is not False)
+        except Exception:
+            pass
 
     @staticmethod
     def _tarjeta(titulo, descripcion):

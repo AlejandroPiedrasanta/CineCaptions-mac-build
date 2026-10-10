@@ -319,6 +319,17 @@ def registrar(v, edicion=None, camino=None, segundos=None, reparado=None):
 
 
 # ------------------------------------------------------------------------------------------------------------------------------- 5) la vista
+def archivo_de_la_vista():
+    """v5.4.23: la disposición de pantalla que trae el programa (2_recursos/resolve_layouts/<nombre>.preset: vertical y con «Expandir vista»), o '' si no hay. Resolve la importa
+    (resolve.ImportLayoutPreset) la primera vez que GO termina, y desde entonces la aplica siempre."""
+    try:
+        import instalador_scripts
+        p = instalador_scripts.BASE_RECURSOS / 'resolve_layouts' / (vista_nombre() + '.preset')
+        return str(p) if p.is_file() else ''
+    except Exception:
+        return ''
+
+
 def vista_en_manifiesto(ruta_manifiesto):
     """Antes de colocar: apunta en el manifiesto cómo debe quedar Resolve al terminar (el script lo lee): página Edit, la disposición de pantalla guardada (vertical y vista expandida) y el
     cabezal al inicio. `go_vista_resolve` = False lo apaga."""
@@ -330,7 +341,7 @@ def vista_en_manifiesto(ruta_manifiesto):
         if not isinstance(datos, dict):
             return False
         usar = _prefs().get('go_vista_resolve', True) is not False
-        datos['vista'] = {'pagina': 'edit', 'preset': vista_nombre() if usar else '', 'al_inicio': True}
+        datos['vista'] = {'pagina': 'edit', 'preset': vista_nombre() if usar else '', 'al_inicio': True, 'archivo': archivo_de_la_vista() if usar else ''}
         archivos_seguros.escribir_json(p, datos)
         try:                                       # Resolve Free 21.1 (sin io) lee el manifiesto por su gemelo «.lua»: sin esto no veria la «vista»
             import sidecar_lua
@@ -356,12 +367,29 @@ result = {'lista': list(resolve.GetLayoutPresetList() or [])}
 '''
 
 
+def vista_por_puente(accion='guardar', timeout=60):
+    """Resolve Free (sin MCP): guardar o aplicar la disposición de pantalla por el Puente (CineCaptions_Vista.lua). Devuelve (ok, mensaje)."""
+    import archivos_seguros
+    import resolve_bridge
+    import sidecar_lua
+    ruta = resolve_bridge.CARPETA_COMPARTIDA / 'vista_orden.json'
+    orden = {'accion': str(accion), 'nombre': vista_nombre()}
+    archivos_seguros.escribir_json(ruta, orden)
+    sidecar_lua.escribir_sidecar(ruta, orden)
+    if resolve_bridge.modo_actual() == 'manual' and not resolve_bridge.lanzar_puente_auto():
+        return False, tr('El Puente de Resolve no está activo: abre Resolve con un proyecto y repite.')
+    return resolve_bridge.ejecutar('vista', timeout=timeout)
+
+
 def guardar_vista_actual():
     """Guarda la disposición de pantalla ACTUAL de Resolve (la que el usuario dejó vertical y con la vista expandida) como la de CineCaptions. Devuelve (ok, texto para el usuario)."""
     try:
         import resolve_mcp
-        if not resolve_mcp.disponible():
-            return False, tr('Esto necesita Resolve abierto y conectado. En Resolve Free hazlo a mano: Área de trabajo ▸ Distribución de interfaz (Layout Presets) ▸ Guardar como nueva… y llámalo «{n}».', n=vista_nombre())
+        if not resolve_mcp.disponible():                          # v5.4.23: Resolve Free lo hace por el Puente (antes había que guardarla a mano)
+            ok, msg = vista_por_puente('guardar')
+            if ok:
+                return True, tr('Guardé la disposición actual de Resolve como «{n}»: se aplicará cada vez que GO termine.', n=vista_nombre())
+            return False, tr('Resolve no guardó la disposición ({e}).', e=str(msg)[:140])
         ok, r, err = resolve_mcp.script(_VISTA_GUARDAR % {'nombre': vista_nombre()}, timeout=30)
         if ok and (r or {}).get('ok'):
             return True, tr('Guardé la disposición actual de Resolve como «{n}»: se aplicará cada vez que GO termine.', n=vista_nombre())
@@ -541,6 +569,254 @@ def _ventana_principal(ventanas=None):
     return next((h for h, t in (ventanas if ventanas is not None else _ventanas_de_resolve()) if t.startswith('DaVinci Resolve - ')), None)
 
 
+# Resolve recién abierto muestra el «Organizador de proyectos» (la pantalla de proyectos): sin un proyecto abierto no hay menú de Scripts ni consola, y el Puente no puede arrancar. La app la pasa sola
+# con la accesibilidad de Windows (UI Automation): los botones de Resolve tienen ids fijos que NO cambian con el idioma (btnAddProject = «Crear proyecto», pushButton_Create = «Crear»).
+_PS_ORGANIZADOR = r'''
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$AE = [System.Windows.Automation.AutomationElement]
+$TS = [System.Windows.Automation.TreeScope]
+$ids = @(Get-Process Resolve -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+if (-not $ids) { 'NO_RESOLVE'; exit }
+function Ventanas {
+    $pm = $null; $dlg = $null
+    foreach ($id in $ids) {
+        $c = New-Object System.Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $id)
+        foreach ($v in $AE::RootElement.FindAll($TS::Children, $c)) {
+            $cn = $v.Current.ClassName
+            if ($cn -like '*NewProjectOptionsDlg*') { $dlg = $v } elseif ($cn -like '*UiProjectManagerDialog*') { $pm = $v }
+        }
+    }
+    return @($pm, $dlg)
+}
+function Buscar($raiz, $tipo, $fin) {
+    $c = New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, $tipo)
+    foreach ($e in $raiz.FindAll($TS::Descendants, $c)) { if ($e.Current.AutomationId -like $fin) { return $e } }
+    return $null
+}
+$pm, $dlg = Ventanas
+if (-not $dlg) {
+    if (-not $pm) { 'SIN_ORGANIZADOR'; exit }
+    $b = Buscar $pm ([System.Windows.Automation.ControlType]::Button) '*projActionBottomFrame.btnAddProject'
+    if (-not $b) { 'SIN_BOTON'; exit }
+    $b.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    for ($i = 0; $i -lt 32 -and -not $dlg; $i++) { Start-Sleep -Milliseconds 250; $pm, $dlg = Ventanas }
+}
+if (-not $dlg) { 'SIN_DIALOGO'; exit }
+$ed = Buscar $dlg ([System.Windows.Automation.ControlType]::Edit) '*lineEdit_ProjectName'
+$nombre = ''
+if ($ed) {
+    $vp = $ed.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+    if ($env:CC_NOMBRE) { try { $vp.SetValue($env:CC_NOMBRE) } catch {} }
+    $nombre = $vp.Current.Value
+}
+$ok = Buscar $dlg ([System.Windows.Automation.ControlType]::Button) '*pushButton_Create'
+if (-not $ok) { 'SIN_CREAR'; exit }
+$ok.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+'CREADO|' + $nombre
+'''
+
+_PS_EXPANDIR = r'''
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$AE = [System.Windows.Automation.AutomationElement]
+$TS = [System.Windows.Automation.TreeScope]
+$ids = @(Get-Process Resolve -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+if (-not $ids) { 'NO_RESOLVE'; exit }
+$main = $null
+foreach ($id in $ids) {
+    $c = New-Object System.Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $id)
+    foreach ($v in $AE::RootElement.FindAll($TS::Children, $c)) { if ($v.Current.ClassName -like '*UiMainWindow*') { $main = $v } }
+}
+if (-not $main) { 'SIN_VENTANA'; exit }
+$c = New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::CheckBox)
+$b = $null
+foreach ($e in $main.FindAll($TS::Descendants, $c)) { if ($e.Current.AutomationId -like '*btnEditExpandViewer') { $b = $e; break } }
+if (-not $b) { 'SIN_BOTON'; exit }
+$t = $b.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+if ($t.Current.ToggleState -eq 'On') { 'YA_EXPANDIDA'; exit }
+$t.Toggle()
+Start-Sleep -Milliseconds 500
+if ($t.Current.ToggleState -eq 'On') { 'EXPANDIDA' } else { 'NO_CAMBIO' }
+'''
+
+
+def _ps_uia(codigo, env_extra=None, timeout=45):
+    """Corre un script de PowerShell con UI Automation (sin ventana) y devuelve su última línea de salida. Nunca lanza."""
+    try:
+        import base64
+        import os
+        import subprocess
+        cod = base64.b64encode(codigo.encode('utf-16-le')).decode('ascii')
+        r = subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', cod], capture_output=True, text=True,
+                           encoding='utf-8', errors='replace', timeout=timeout, env={**os.environ, **(env_extra or {})}, creationflags=0x08000000)      # CREATE_NO_WINDOW
+        salida = (r.stdout or '').strip().splitlines()
+        return salida[-1].strip() if salida else ('ERROR ' + (r.stderr or '').strip()[:160])
+    except Exception as e:
+        return 'ERROR ' + str(e)[:160]
+
+
+def expandir_vista_windows():
+    """Windows: deja «Expandir vista» de Resolve ACTIVADA (el visor a toda la altura, la vista vertical): es una casilla de la barra del timeline (btnEditExpandViewer) que se maneja con UI
+    Automation, sin mouse y sin foco. Idempotente. Devuelve (ok, texto)."""
+    if not sys.platform.startswith('win'):
+        return False, tr('Expandir vista solo se automatiza en Windows.')
+    res = _ps_uia(_PS_EXPANDIR)
+    if res in ('EXPANDIDA', 'YA_EXPANDIDA'):
+        return True, tr('Vista expandida (visor a toda la altura).')
+    return False, tr('No pude activar «Expandir vista» en Resolve ({r}).', r=res)
+
+
+PROYECTO_INICIAL = None                     # nombre del proyecto VACÍO que la app creó solo para pasar el Organizador de proyectos (ArmarVideo lo borra al crear el definitivo)
+
+
+def pasar_organizador_windows(nombre):
+    """Windows: si Resolve está en el Organizador de proyectos, pulsa «Crear proyecto» y «Crear» (con `nombre`). Devuelve 'CREADO|<nombre>', 'SIN_ORGANIZADOR' (todavía no está esa
+    pantalla) u otro código de fallo. Nunca lanza."""
+    global PROYECTO_INICIAL
+    res = _ps_uia(_PS_ORGANIZADOR, {'CC_NOMBRE': str(nombre)})
+    if res.startswith('CREADO|'):
+        PROYECTO_INICIAL = res.split('|', 1)[1].strip() or None
+    return res
+
+
+# --- Mac (v5.4.24, SIN probar en un Mac real): lo mismo que en Windows por «System Events» (accesibilidad). Los AXIdentifier de Resolve son los mismos ids de Qt que ve UI Automation en
+# Windows; si en el Mac no existieran, se cae a los nombres de los botones en español e inglés. Si algo falla, solo queda una línea en el Registro y todo sigue como antes.
+_AS_BUSCAR = """
+on buscar(raiz, fin, nombres)
+    tell application "System Events"
+        try
+            set todos to entire contents of raiz
+        on error
+            return missing value
+        end try
+        repeat with e in todos
+            try
+                set ident to (value of attribute "AXIdentifier" of e) as text
+                if ident ends with fin then return e
+            end try
+        end repeat
+        if (count of nombres) > 0 then
+            repeat with e in todos
+                try
+                    if (role of e) is "AXButton" then
+                        set n to (name of e) as text
+                        if nombres contains n then return e
+                    end if
+                end try
+            end repeat
+        end if
+    end tell
+    return missing value
+end buscar
+"""
+
+_AS_ORGANIZADOR = _AS_BUSCAR + """
+on run argv
+    set nuevo to item 1 of argv
+    tell application "System Events"
+        if not (exists process "DaVinci Resolve") then return "NO_RESOLVE"
+        tell process "DaVinci Resolve"
+            set boton to missing value
+            repeat with w in windows
+                set boton to my buscar(w, "projActionBottomFrame.btnAddProject", {"Crear proyecto", "Create Project", "New Project", "Nuevo proyecto"})
+                if boton is not missing value then exit repeat
+            end repeat
+            if boton is missing value then return "SIN_ORGANIZADOR"
+            click boton
+            delay 1.5
+            set campo to missing value
+            set crear to missing value
+            repeat 12 times
+                repeat with w in windows
+                    set campo to my buscar(w, "lineEdit_ProjectName", {})
+                    set crear to my buscar(w, "pushButton_Create", {"Crear", "Create"})
+                    if crear is not missing value then exit repeat
+                end repeat
+                if crear is not missing value then exit repeat
+                delay 0.5
+            end repeat
+            if crear is missing value then return "SIN_DIALOGO"
+            set puesto to ""
+            if campo is not missing value then
+                try
+                    set value of campo to nuevo
+                end try
+                try
+                    set puesto to (value of campo) as text
+                end try
+            end if
+            click crear
+            return "CREADO|" & puesto
+        end tell
+    end tell
+end run
+"""
+
+_AS_EXPANDIR = _AS_BUSCAR + """
+on run argv
+    tell application "System Events"
+        if not (exists process "DaVinci Resolve") then return "NO_RESOLVE"
+        tell process "DaVinci Resolve"
+            repeat with w in windows
+                set b to my buscar(w, "btnEditExpandViewer", {})
+                if b is not missing value then
+                    set v to 0
+                    try
+                        set v to (value of b) as integer
+                    end try
+                    if v is 1 then return "YA_EXPANDIDA"
+                    click b
+                    delay 0.5
+                    return "EXPANDIDA"
+                end if
+            end repeat
+        end tell
+    end tell
+    return "SIN_BOTON"
+end run
+"""
+
+
+def _osascript(guion, args=(), timeout=60):
+    """Corre un AppleScript y devuelve la última línea de salida (o 'ERROR …'). Nunca lanza."""
+    try:
+        import subprocess
+        r = subprocess.run(['osascript', '-e', guion, *[str(a) for a in args]], capture_output=True, text=True, errors='replace', timeout=timeout)
+        salida = (r.stdout or '').strip().splitlines()
+        if r.returncode != 0:
+            err = (r.stderr or '')
+            if '-25211' in err or '-1719' in err or 'assistive' in err.lower():
+                return 'ERROR sin permiso de Accesibilidad para CineCaptions'
+            return 'ERROR ' + err.strip()[-160:]
+        return salida[-1].strip() if salida else 'ERROR sin respuesta'
+    except Exception as e:
+        return 'ERROR ' + str(e)[:160]
+
+
+def pasar_organizador_mac(nombre):
+    """Mac: lo mismo que `pasar_organizador_windows` (Crear proyecto → Crear). Devuelve 'CREADO|<nombre>', 'SIN_ORGANIZADOR' u otro código. Nunca lanza."""
+    global PROYECTO_INICIAL
+    if sys.platform != 'darwin':
+        return 'NO_MAC'
+    res = _osascript(_AS_ORGANIZADOR, [nombre], timeout=90)
+    if res.startswith('CREADO|'):
+        PROYECTO_INICIAL = res.split('|', 1)[1].strip() or str(nombre)
+    return res
+
+
+def expandir_vista_mac():
+    """Mac: deja «Expandir vista» activada (casilla btnEditExpandViewer). Recorrer la ventana principal por accesibilidad es lento: se llama desde un hilo aparte. (ok, texto)."""
+    if sys.platform != 'darwin':
+        return False, tr('Expandir vista solo se automatiza en Windows y Mac.')
+    res = _osascript(_AS_EXPANDIR, timeout=120)
+    if res in ('EXPANDIDA', 'YA_EXPANDIDA'):
+        return True, tr('Vista expandida (visor a toda la altura).')
+    return False, tr('No pude activar «Expandir vista» en Resolve ({r}).', r=res)
+
+
 def abrir_resolve_windows(decir=None, espera_s=240):
     """Windows (Resolve Free, sin MCP que lo abra): si Resolve no está abierto lo lanza y espera a que muestre un proyecto (por defecto reabre el último). Devuelve True si queda
     abierto con un proyecto. `decir(texto)` va contando. Nunca lanza."""
@@ -564,10 +840,24 @@ def abrir_resolve_windows(decir=None, espera_s=240):
                 decir(tr('Abriendo DaVinci Resolve…'))
             subprocess.Popen([exe], env=resolve_mcp.entorno_para_resolve(), creationflags=0x00000008 | 0x00000200, close_fds=True)         # DETACHED_PROCESS | NEW_PROCESS_GROUP
         inicio = time.time()
+        ultimo, intentos = 0.0, 0
         while time.time() - inicio < espera_s:
             if _ventana_principal() is not None:
                 time.sleep(8.0)                                        # recién cargado el proyecto, Resolve aún está armando su interfaz y a los pocos segundos se vuelve a poner al frente solo
                 return True
+            if intentos < 4 and time.time() - ultimo >= 4.0 and _ventanas_de_resolve():
+                # v5.4.23: Resolve abre en el «Organizador de proyectos» (sin proyecto no hay Scripts ni consola): se crea uno vacío; el definitivo lo crea ArmarVideo y este se borra
+                ultimo = time.time()
+                res = pasar_organizador_windows('CineCaptions_nuevo_' + time.strftime('%H%M%S'))
+                if res.startswith('CREADO'):
+                    intentos += 1
+                    ultimo = time.time() + 25                          # el proyecto tarda en abrirse: no volver a pulsar «Crear proyecto» mientras (saldrían dos)
+                    registro.info(tr('Resolve estaba en el Organizador de proyectos: {r}', r=res), 'Puente · Windows')
+                    if decir:
+                        decir(tr('Creando un proyecto en Resolve…'))
+                elif res not in ('SIN_ORGANIZADOR', 'SIN_BOTON'):       # (esas dos = la pantalla aún no está lista: se reintenta sin gastar intentos)
+                    intentos += 1
+                    registro.info(tr('Resolve estaba en el Organizador de proyectos: {r}', r=res), 'Puente · Windows')
             time.sleep(1.5)
         registro.aviso(tr('Resolve no mostró un proyecto abierto en {s} s: ábrelo tú (la pantalla de proyectos no vale) y repite.', s=int(espera_s)), 'Puente · Windows')
     except Exception:
@@ -679,6 +969,12 @@ def reproducir_desde_inicio(esperar_s=0.5):
         if sys.platform.startswith('win'):
             import ctypes
             user32 = ctypes.windll.user32
+            try:                                                   # v5.4.24: la vista vertical y expandida SIEMPRE (si Resolve la tiene como casilla; sin foco ni mouse)
+                import registro
+                ok_v, txt_v = expandir_vista_windows()
+                (registro.info if ok_v else registro.aviso)(txt_v, 'GO · vista')
+            except Exception:
+                pass
             _cerrar_consola_de_resolve()                          # (la consola del Puente reaparece sola cada vez que imprime y tapa el timeline: Inicio y Espacio tienen que ir a la ventana principal)
             h = _ventana_principal() or _hwnd_de_resolve()
             if not h:
@@ -702,6 +998,16 @@ def reproducir_desde_inicio(esperar_s=0.5):
             r = subprocess.run(['osascript', '-e', guion], capture_output=True, text=True, errors='replace', timeout=20)
             if r.returncode != 0:
                 return False, tr('No pude reproducir en Resolve ({e}). Si macOS lo pide, da permiso de Accesibilidad a CineCaptions.', e=(r.stderr or '').strip()[-100:])
+
+            def _expandir():                                       # v5.4.24: la vista vertical y expandida SIEMPRE (sin probar en un Mac real; si falla solo queda en el Registro)
+                try:
+                    import registro
+                    ok_v, txt_v = expandir_vista_mac()
+                    (registro.info if ok_v else registro.aviso)(txt_v, 'GO · vista')
+                except Exception:
+                    pass
+            import threading
+            threading.Thread(target=_expandir, daemon=True, name='expandir-vista-mac').start()
             return True, tr('Reproduciendo el timeline desde el principio.')
     except Exception as e:
         return False, tr('No pude reproducir en Resolve ({e}).', e=type(e).__name__)

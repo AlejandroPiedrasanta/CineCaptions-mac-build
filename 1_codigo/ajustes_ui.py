@@ -484,6 +484,16 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.24', [
+        'Soltar un video con Resolve Free cerrado ya funciona de punta a punta: la app abre Resolve y, si se queda en el «Organizador de proyectos», crea sola un proyecto vacío para arrancar el Puente (después se borra al crear «CineCaptions» con tu video). Antes esperaba 4 minutos y fallaba con «abre Resolve con un proyecto».',
+        'Si sueltas el video en los primeros segundos tras abrir CineCaptions, ya no cae en «Falta un clic en Resolve»: se sabe que es Resolve Free sin esperar al estado del sistema.',
+        'Al terminar GO, Resolve queda con «Expandir vista» activada (el visor a toda la altura, la vista vertical) y el timeline se reproduce desde el inicio, sin guardar ninguna disposición (Windows).',
+    ]),
+    ('5.4.23', [
+        'Ya se puede aplicar cualquier tema desde Inicio: un «Horizontal» guardado de antes dejaba los temas verticales (Tema 1 y 2) sin aplicarse. El chip «Formato» desaparece: GO arma siempre en vertical.',
+        'Página Efectos: lo que ves es lo que se aplica. «Más efectos» queda siempre a la vista (había efectos activos escondidos), se quitó la «Intensidad» global (movía los niveles en secreto) y las opciones que recomienda cada tema se refrescan en la página. Elegir un tema ya no vuelve a encender lo que apagaste en Inicio (Efectos, Emojis, Visuales).',
+        'Resolve Free: «Guardar la vista actual de Resolve» (Ajustes) ya funciona, por el Puente. Pon Resolve en vertical con «Expandir vista», púlsalo una vez y desde entonces GO aplica esa vista siempre al terminar y reproduce el timeline desde el inicio.',
+    ]),
     ('5.4.22', [
         'Se acabaron los cuadros emergentes («Recomendado para…», «Hay una versión nueva…», etc.) y los mensajes que salían al dejar el ratón quieto sobre un botón. Lo que antes avisaba un cuadro ahora solo queda en el Registro.',
         'En Proyecto, de cada tema solo se ven su nombre y su botón, y el slider es más grande (crece con la ventana). La cabecera queda con el título y el botón «Crea tu estilo»; vuelve también «Añadir plantilla (.drb)» al final del slider, y tus estilos salen junto a los tres temas.',

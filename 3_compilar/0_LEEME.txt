@@ -9,11 +9,15 @@ Ver LEEME.txt, sección 7.
 
 QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
-    banner_capas\   (4 archivos)
+    .cf\   (1 archivos)
+        icono.ico
+    banner_capas\   (6 archivos)
+        .cf\   (1 archivos)
         astro_engr.png
         astro_fili.png
         astro_nucleo.png
         astro_runas.png
+        desktop.ini
     aplicar_traducciones.py
         mete los textos nuevos de traducciones_extra.json en los catálogos de 2_recursos/locales (en, pt, fr, de, it).
     app.manifest
@@ -26,6 +30,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         receta de PyInstaller del programa (qué módulos y recursos van dentro del .exe).
     Construir_Instalador.ps1
         arma el instalador de Windows de principio a fin (PyInstaller + autoprueba + C#).
+    desktop.ini
     documentar.py
         regenera el índice y el mapa del código del LEEME y anota los cambios en el registro.
     encabezados.py

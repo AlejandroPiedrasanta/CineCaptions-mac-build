@@ -10,6 +10,8 @@ Cada archivo dice en su 2.ª línea qué es. La lógica completa: LEEME.txt, sec
 
 QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
+    .cf\   (1 archivos)
+        icono.ico
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -43,6 +45,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         las librerías CUDA que necesita Whisper en la GPU: detectarlas, registrarlas y repararlas.
     descargas.py
         descargas grandes que se reanudan y se verifican (SHA-256).
+    desktop.ini
     ducking.py
         baja la música sola mientras hay voz (ducking), calculado desde las palabras de la transcripción.
     dynamic_subtitles.py

@@ -7114,8 +7114,6 @@ class SubtitleApp(QWidget):
                   tr('Clic: con o sin efectos de sonido por palabra.')),
                  (tr('Visuales: {v}', v=tr('sí') if self._go_visuales() else tr('no')), self._alternar_visuales_go,
                   tr('Clic: con o sin efectos visuales (intro, transiciones en los cortes e iconos flotantes). Se eligen en la página «Efectos».')),
-                 (tr('Formato: {f}', f=formato), self._ciclar_formato_go,
-                  tr('Clic: Detectar solo · Horizontal · Vertical.')),
                  (tr('Proyecto: {p}', p=self._go_proyecto() or tr('el abierto')), self._alternar_proyecto_go,
                   tr('Al soltar un video en Inicio: se arma en el proyecto «CineCaptions» de Resolve (se abre o se crea solo) o en el proyecto que tengas abierto. Clic: cambiar.'))]
         chips = [(t, f, a, ui.ACCENT_CLARO) for t, f, a in chips]
@@ -7162,7 +7160,7 @@ class SubtitleApp(QWidget):
             packs = [p for p in packs if plantillas.pack_permitido(p.nombre)]
         except Exception:
             packs = []
-        formato = self._formato_forzado() or self._formato_en_juego() or 'v'
+        formato = self._formato_para_temas()
         guion = [p for p in packs if getattr(p, 'guion', None)]
         otros = [p for p in packs if not getattr(p, 'guion', None) and p.nombre != base]
         for p in guion:
@@ -7646,7 +7644,7 @@ class SubtitleApp(QWidget):
         Manda lo que se elija en el chip «Estilo» de Inicio ('auto' = el diseño de 3 líneas de antes); si no se eligió nada, el pack que ya uses
         (si es de verdad un pack) y, si no, Referencia. Los packs sin formato vertical (Referencia lo es) no valen para un video horizontal."""
         actual = getattr(self, 'plantilla_sel', '') or ''
-        formato = self._formato_forzado() or self._formato_en_juego() or 'v'
+        formato = self._formato_para_temas()
         try:
             nombres = [p.nombre for p in plantillas.listar_packs() if plantillas.sirve_en_go(p)]
         except Exception:
@@ -7712,7 +7710,11 @@ class SubtitleApp(QWidget):
             # v5.10: el video soltado manda: su orientación decide el formato (y con él el pack de GO) y Resolve le arma un timeline nuevo
             medio = resolve_mcp.medir_medio(archivo)
             self._ancho_timeline, self._alto_timeline, self._fps_timeline = medio['tl_ancho'], medio['tl_alto'], medio['tl_fps']
-            libre_puente = (not hay_mcp) and (getattr(self, '_estado_sistema', {}) or {}).get('modo') in ('puente', 'manual')       # DaVinci Resolve Free: se habla por el Puente
+            modo_sis = (getattr(self, '_estado_sistema', {}) or {}).get('modo')
+            if not modo_sis:                         # soltado en los primeros segundos: el estado del sistema aún no llegó; sin MCP es Free (Puente), no «uso tu archivo»
+                import resolve_bridge as _rb
+                modo_sis = _rb.modo_actual(pasivo=True)
+            libre_puente = (not hay_mcp) and modo_sis in ('puente', 'manual')       # DaVinci Resolve Free: se habla por el Puente
             self.go_panel.paso('timeline', 'saltado', tr('tu video, en un timeline nuevo') if (hay_mcp or libre_puente) else tr('uso tu archivo'))
             if hay_mcp:
                 # v5.2: Resolve se va abriendo mientras se transcribe (para colocar al final); v5.10: y se le arma el timeline con el video
@@ -7898,6 +7900,9 @@ class SubtitleApp(QWidget):
                 con_broll = False
             orden = {'ruta': str(archivo), 'ancho': int(medio['tl_ancho']), 'alto': int(medio['tl_alto']), 'fps': float(medio['tl_fps']), 'pista_broll': bool(con_broll),
                      'proyecto': self._go_proyecto(), 'nombre': ('CineCaptions · ' + Path(str(archivo)).stem)[:60]}
+            import colocacion
+            if getattr(colocacion, 'PROYECTO_INICIAL', None):                # el proyecto vacío que la app creó para pasar el Organizador de proyectos: ArmarVideo lo borra
+                orden['descartar'] = str(colocacion.PROYECTO_INICIAL)
             import archivos_seguros
             import sidecar_lua
             ruta_orden = st.SHARED_FOLDER / 'armar_video.json'
@@ -7906,6 +7911,7 @@ class SubtitleApp(QWidget):
             al_estado(tr('Armando en Resolve un timeline con tu video…'))
             desde = time.time()
             ok, err = resolve_bridge.ejecutar('armar_video', timeout=240)
+            colocacion.PROYECTO_INICIAL = None                       # (ya se uso: ArmarVideo borró ese proyecto vacío)
             rep = next((r for r in reversed(resolve_bridge.reportes_del_registro()) if r.get('script') == 'CineCaptions_ArmarVideo' and (r.get('cuando') or 0) >= desde - 2), None)
             info = (rep or {}).get('armado')
             if not ok or not isinstance(info, dict):
@@ -10690,8 +10696,18 @@ class SubtitleApp(QWidget):
             return plantillas.formato_de(ancho, alto)
         return None
     def _formato_forzado(self):
-        """\'h\', \'v\', o None si se deja detectar dentro de Resolve."""
-        return self.FORMATOS_VIDEO.get(self.formato_var.get())
+        """v5.4.23: siempre None (se detecta dentro de Resolve). El chip «Formato» de Inicio ya no existe: GO arma un timeline vertical y un «Horizontal» guardado de antes dejaba los
+        temas verticales (Tema 1 y 2) sin poder aplicarse («no puedo aplicar el tema»)."""
+        return None
+    def _formato_para_temas(self):
+        """El formato con el que se decide si un tema sirve: vertical (el timeline que arma GO), salvo que se haya apagado «Abrir siempre en vertical»."""
+        try:
+            import ajustes_ui
+            if ajustes_ui.leer_prefs().get('go_vertical', True) is not False:
+                return 'v'
+        except Exception:
+            pass
+        return self._formato_en_juego() or 'v'
     def _pista_plantilla(self):
         """El campo 'plantilla' del manifiesto, ya resuelto.
 

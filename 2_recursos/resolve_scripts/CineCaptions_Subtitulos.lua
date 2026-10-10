@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.4.22 (subtitulos)"
+local VERSION = "5.4.24 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -378,6 +378,19 @@ local function vista_final(timeline, manifest, solo_pagina)
             local lista = resolve:GetLayoutPresetList() or {}
             local esta = false
             for _, nombre in pairs(lista) do if nombre == preset then esta = true end end
+            local archivo = tostring(v.archivo or "")
+            local hay_archivo = true                                                  -- (archivo_existe se declara mas abajo: aqui se pregunta directo a bmd)
+            if archivo ~= "" and type(bmd) == "table" and bmd.fileexists then hay_archivo = bmd.fileexists(archivo) and true or false end
+            if (not esta) and archivo ~= "" and hay_archivo then       -- v5.4.23: la disposicion (vertical y vista expandida) viene con el programa: se importa sola
+                local ok_i, msg_i = pcall(function() return resolve:ImportLayoutPreset(archivo, preset) end)
+                if ok_i and msg_i then
+                    print("  Vista de Resolve: importe la disposicion «" .. preset .. "» que trae CineCaptions.")
+                    lista = resolve:GetLayoutPresetList() or {}
+                    for _, nombre in pairs(lista) do if nombre == preset then esta = true end end
+                else
+                    print("  Aviso: no pude importar la disposicion «" .. preset .. "» (" .. tostring(msg_i) .. ").")
+                end
+            end
             if esta then
                 if resolve:LoadLayoutPreset(preset) then
                     print("  Vista de Resolve: aplique tu disposicion «" .. preset .. "».")

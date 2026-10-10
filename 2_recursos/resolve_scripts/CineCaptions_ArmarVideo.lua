@@ -8,7 +8,7 @@ crea un proyecto NUEVO «CineCaptions» (guardando y cerrando el que hubiera abi
 que su audio suena en A1 y reserva la pista FX-BROLL si hace falta. Sin esto, en Free los captions de un video soltado caian en el timeline que hubiera abierto.
 ]]
 
-local VERSION = "5.4.22 (armar video)"
+local VERSION = "5.4.24 (armar video)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -346,9 +346,28 @@ local function nombres_de_proyectos(pm, prof, salida)
     return salida
 end
 
-local function proyecto_nuevo(pm, base)
+-- v5.4.23: «descartar» = el proyecto VACIO que la app creo (pulsando «Crear proyecto» en el Organizador de proyectos de Resolve) solo para que el Puente pudiera arrancar: al crear el
+-- definitivo se borra, para no dejar un proyecto vacio por cada video.
+local function proyecto_vacio(p)
+    local n = math.floor(tonumber(p:GetTimelineCount()) or 0)
+    if n == 0 then return true end
+    if n > 1 then return false end
+    local tl = p:GetTimelineByIndex(1)
+    if tl == nil then return true end
+    for _, t in ipairs({ "video", "audio" }) do
+        for i = 1, math.floor(tonumber(tl:GetTrackCount(t)) or 0) do
+            local items = tl:GetItemListInTrack(t, i)
+            if items ~= nil and next(items) ~= nil then return false end
+        end
+    end
+    return true
+end
+
+local function proyecto_nuevo(pm, base, descartar)
     local p = pm:GetCurrentProject()
     local previo = p and p:GetName() or nil
+    local vacio_previo = false
+    if p ~= nil then pcall(function() vacio_previo = proyecto_vacio(p) end) end
     if p ~= nil then
         local sin_nada = (tostring(previo):sub(1, 16) == "Untitled Project") and (math.floor(tonumber(p:GetTimelineCount()) or 0) == 0)
         if not sin_nada then pcall(function() pm:SaveProject() end) end
@@ -368,6 +387,12 @@ local function proyecto_nuevo(pm, base)
         existentes[nombre] = true
     end
     if not nuevo and previo then pcall(function() pm:LoadProject(previo) end) end
+    -- (por el nombre que paso la app, o por el prefijo CineCaptions_nuevo_ que ella misma le pone: sirve aunque la app se haya reiniciado entre medias)
+    if nuevo and vacio_previo and previo ~= nil and previo ~= nombre and ((descartar ~= nil and descartar ~= "" and previo == descartar) or tostring(previo):sub(1, 18) == "CineCaptions_nuevo") then
+        local borrado = false
+        pcall(function() borrado = pm:DeleteProject(previo) and true or false end)
+        print("Proyecto vacio de arranque «" .. tostring(previo) .. "»: " .. (borrado and "borrado" or "no se pudo borrar"))
+    end
     local q = pm:GetCurrentProject()
     pcall(function() resolve:OpenPage("edit") end)
     return q, nuevo ~= nil
@@ -402,7 +427,7 @@ local function main()
     local project = pm:GetCurrentProject()
     if tostring(orden.proyecto or "") ~= "" then
         local creado
-        project, creado = proyecto_nuevo(pm, tostring(orden.proyecto))
+        project, creado = proyecto_nuevo(pm, tostring(orden.proyecto), orden.descartar and tostring(orden.descartar) or nil)
         if not creado or project == nil then fail("Resolve no creo el proyecto «" .. tostring(orden.proyecto) .. "» (nombre ocupado o base de datos ocupada). Cierra los dialogos de Resolve y repite.") end
         print("Proyecto nuevo: " .. tostring(project:GetName()))
     end

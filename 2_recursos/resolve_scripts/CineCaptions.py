@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.4.22 (subtitulos)"
+VERSION = "5.4.24 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -410,6 +410,14 @@ def vista_final(timeline, manifest, solo_pagina=False):
     if preset:
         try:
             lista = resolve.GetLayoutPresetList() or []
+            archivo = str(v.get("archivo") or "")
+            if preset not in lista and archivo and os.path.isfile(archivo):          # v5.4.23: la disposición (vertical y vista expandida) viene con el programa: se importa sola
+                try:
+                    if resolve.ImportLayoutPreset(archivo, preset):
+                        print(f"  Vista de Resolve: importé la disposición «{preset}» que trae CineCaptions.")
+                    lista = resolve.GetLayoutPresetList() or []
+                except Exception as exc:
+                    print(f"  Aviso: no pude importar la disposición «{preset}» ({type(exc).__name__}: {exc}).")
             if preset in lista:
                 if resolve.LoadLayoutPreset(preset):
                     print(f"  Vista de Resolve: apliqué tu disposición «{preset}».")

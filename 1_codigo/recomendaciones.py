@@ -5,7 +5,7 @@ recomendaciones.py  (v5.5)
 --------------------------
 Cada estilo tiene su carácter y le van unos sonidos y unos efectos distintos; en vez de que el usuario los vaya buscando uno a uno, al ELEGIR el estilo (el chip de GO o la
 pantalla Estilos) se escriben las preferencias que mejor le sientan. Es una RECOMENDACIÓN: todo se puede cambiar después en Sonido y en Efectos, y no se vuelve a tocar hasta
-que se cambie de estilo. No toca lo que cambia el video de forma estructural (quitar pausas, música, B-roll, cierre, overlays, mis efectos, intensidad).
+que se cambie de estilo. v5.4.23: NO toca los interruptores generales del usuario (Efectos, Emojis y Visuales de Inicio): si los apagó, siguen apagados. No toca lo que cambia el video de forma estructural (quitar pausas, música, B-roll, cierre, overlays, mis efectos, intensidad).
 
     VIRAL       la clave de cada bloque es la protagonista: sonido SOLO en ella (un golpe que sube con el efecto), intro con riser + destello + zoom, el obturador en las transiciones
                 («destello»), movimiento suave y sin iconos flotantes (los efectos de la palabra y los emojis ya llenan el cuadro)
@@ -18,7 +18,7 @@ RECOMENDACIONES = {
     'VIRAL': {
         'resumen': 'sonido solo en la palabra clave · riser de 2 s con destello y zoom en la intro · obturador en las transiciones · movimiento suave',
         'sonido': {'donde': 'principal'},
-        'prefs': {'go_sfx': True, 'go_emojis': True, 'sfx_emojis': True, 'sfx_curva_energia': False, 'go_efectos_visuales': True,
+        'prefs': {'sfx_emojis': True, 'sfx_curva_energia': False,
                   'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'normal',
                   'fx_cortes': 'destello', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto', 'fx_sonido_cortes': True, 'fx_sonido_gancho': True,
                   'fx_zoom': 'suave', 'fx_temblor': 'suave', 'fx_iconos_activo': False},
@@ -26,7 +26,7 @@ RECOMENDACIONES = {
     'Kinetic': {
         'resumen': 'sonido solo en el héroe · riser con destello y zoom fuerte en la intro · transición con zoom desenfocado · temblor en los golpes',
         'sonido': {'donde': 'principal'},
-        'prefs': {'go_sfx': True, 'sfx_curva_energia': False, 'go_efectos_visuales': True,
+        'prefs': {'sfx_curva_energia': False,
                   'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'fuerte',
                   'fx_cortes': 'zoom_blur', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto', 'fx_sonido_cortes': True, 'fx_sonido_gancho': True,
                   'fx_zoom': 'suave', 'fx_temblor': 'normal', 'fx_iconos_activo': False},
@@ -34,7 +34,7 @@ RECOMENDACIONES = {
     'Referencia': {
         'resumen': 'un toque por palabra (como escribir) · riser con destello y zoom suave en la intro · fuga de luz en las transiciones · pocos iconos',
         'sonido': {'donde': 'todas'},
-        'prefs': {'go_sfx': True, 'go_emojis': True, 'sfx_emojis': True, 'sfx_curva_energia': True, 'go_efectos_visuales': True,
+        'prefs': {'sfx_emojis': True, 'sfx_curva_energia': True,
                   'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'suave',
                   'fx_cortes': 'fuga_de_luz', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto', 'fx_sonido_cortes': True, 'fx_sonido_gancho': True,
                   'fx_zoom': 'normal', 'fx_temblor': 'no', 'fx_iconos_activo': True, 'fx_iconos_cuanto': 'pocos'},
