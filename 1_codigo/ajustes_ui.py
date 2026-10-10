@@ -27,7 +27,7 @@ from pathlib import Path
 from PySide6.QtCore import QEasingCurve, QEvent, QPointF, QRect, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal
 from PySide6.QtGui import QFontMetricsF, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (QAbstractButton, QFrame, QGraphicsOpacityEffect, QGridLayout,
-                               QHBoxLayout, QLabel, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget)
+                               QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget)
 
 import qt_kit as ui
 from qt_kit import (BooleanVar, Boton, Combo, Desplazable, Segmentado, Enlace, Etiqueta, Interruptor, Punto,
@@ -484,6 +484,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.28', [
+        'El panel «Acerca de CineCaptions» (Ajustes) ya no se aprieta cuando la ventana es baja o la escala de Windows es alta: antes las notas pisaban el enlace «Leer notas de la versión» y los enlaces de la licencia salían cortados; ahora el panel se desplaza.',
+        'Si «Buscar actualizaciones» falla, ahora dice el motivo (sin internet, servidor lento, error del servidor, conexión segura) en vez de un mensaje genérico, lo reintenta una vez y deja el detalle técnico en el Registro.',
+    ]),
     ('5.4.27', [
         'Página Efectos: se quitaron «Temblor en los golpes», «Números, pegatinas y énfasis», «Ambiente», «B-roll de stock» y «Mis efectos» (y esos efectos quedan apagados). Los iconos flotantes vienen apagados por defecto.',
         'Actualizar ya no falla con «algún archivo está en uso» si CineCaptions abrió Resolve: Resolve se lanzaba con la carpeta del programa como carpeta actual y no dejaba reemplazarla.',
@@ -1029,9 +1033,15 @@ def buscar_actualizaciones(app, etiqueta=None):
                                    + '\n\n' + tr('¿Abrir la descarga?'), parent=app) and r.get('url'):
                 webbrowser.open(r['url'])
             return
+        if estado == 'error':
+            try:                                          # el motivo REAL queda en el Registro (antes solo salía «sin conexión o el servidor no respondió» y no se sabía cuál)
+                import registro
+                registro.aviso('No se pudo comprobar si hay actualizaciones: ' + str(r.get('mensaje') or 'sin detalle')[:200], 'actualizaciones')
+            except Exception:
+                pass
         textos = {'al_dia': tr('CineCaptions está actualizado.'),
                   'sin_canal': tr('Todavía no hay un canal de actualizaciones publicado.'),
-                  'error': tr('No pude comprobarlo: sin conexión o el servidor no respondió.')}
+                  'error': tr(actualizaciones.explicar_fallo(r.get('mensaje')))}
         if etiqueta is not None and ui.vivo(etiqueta):
             etiqueta.configure(text=textos.get(estado, ''))
     correr_en_hilo(app, lambda: actualizaciones.comprobar(_version(), beta), fin)
@@ -1050,11 +1060,32 @@ class PanelRapido(_Panel):
         self.app = app
         self._capa = None
         self.setFixedWidth(self.ANCHO)
-        c = QVBoxLayout(self)
-        c.setContentsMargins(28, 24, 28, 24)
+        # v5.4.27+: la cabecera queda fija y TODO lo demás va en un área con desplazamiento: si la ventana es baja (o la escala de Windows es alta) el panel ya no aprieta las filas
+        # hasta pisarse unas con otras (el texto de las notas tapaba el enlace y los enlaces de la licencia salían cortados); aparece una barra y se baja.
+        externo = QVBoxLayout(self)
+        externo.setContentsMargins(0, 24, 0, 0)
+        externo.setSpacing(16)
+        self._cab = _cabecera(tr('Ajustes de la aplicación'), tr('Acerca de CineCaptions'), self.cerrar, tam=26)
+        self._cab_cont = QWidget()
+        lc = QVBoxLayout(self._cab_cont)
+        lc.setContentsMargins(28, 0, 28, 0)
+        lc.setSpacing(16)
+        lc.addWidget(self._cab)
+        lc.addWidget(Separador())
+        externo.addWidget(self._cab_cont)
+        self._scroll = QScrollArea()
+        self._scroll.setWidgetResizable(True)
+        self._scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scroll.setStyleSheet('QScrollArea { background: transparent; border: none; } QScrollArea > QWidget > QWidget { background: transparent; }')
+        self._cont = QWidget()
+        self._cont.setObjectName('contenidoPanelRapido')
+        self._cont.setStyleSheet('QWidget#contenidoPanelRapido { background: transparent; }')
+        c = QVBoxLayout(self._cont)
+        c.setContentsMargins(28, 0, 28, 24)               # (los márgenes de los lados van AQUÍ: si aparece la barra de desplazamiento, el contenido se estrecha en vez de quedar cortado)
         c.setSpacing(16)
-        c.addWidget(_cabecera(tr('Ajustes de la aplicación'), tr('Acerca de CineCaptions'), self.cerrar, tam=26))
-        c.addWidget(Separador())
+        self._scroll.setWidget(self._cont)
+        externo.addWidget(self._scroll, 1)
         fila, cf = caja_h(espacio=8)
         cf.addWidget(Etiqueta('CineCaptions', 15, peso='negrita', color='#FFFFFF'))
         cf.addStretch(1)
@@ -1110,6 +1141,14 @@ class PanelRapido(_Panel):
         exp.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         c.addWidget(exp)
         self.pintar()
+
+    def sizeHint(self):
+        """El alto que PIDE el contenido entero (la cabecera + todo lo del área con desplazamiento): quien coloca el panel lo recorta a lo que quepa en la ventana."""
+        try:
+            alto = 24 + self._cab_cont.sizeHint().height() + 16 + self._cont.sizeHint().height()
+        except Exception:
+            alto = 560
+        return QSize(self.ANCHO, alto)
 
     def pintar(self):
         d = datos_licencia()

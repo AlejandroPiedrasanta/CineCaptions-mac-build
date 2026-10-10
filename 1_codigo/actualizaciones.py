@@ -101,13 +101,35 @@ def comprobar(version_local, canal_beta=False, timeout=12):
     url = url_manifiesto()
     if not url:
         return {'estado': 'sin_canal'}
-    try:
-        with _abrir(url, version_local, timeout) as r:
-            datos = json.loads(r.read().decode('utf-8'))
-            _CACHE.update(url=url, etag=r.headers.get('ETag'), datos=datos)
-    except Exception as e:
-        return {'estado': 'error', 'mensaje': str(e)}
-    return _interpretar(datos, version_local, canal_beta)
+    ultimo = ''
+    for intento in (1, 2):                                # un fallo suelto de red (recién instalado, VPN, DNS) se reintenta una vez antes de rendirse
+        try:
+            with _abrir(url, version_local, timeout) as r:
+                datos = json.loads(r.read().decode('utf-8'))
+                _CACHE.update(url=url, etag=r.headers.get('ETag'), datos=datos)
+            return _interpretar(datos, version_local, canal_beta)
+        except Exception as e:
+            ultimo = str(e)
+            if intento == 1:
+                time.sleep(1.5)
+    return {'estado': 'error', 'mensaje': ultimo}
+
+
+def explicar_fallo(mensaje):
+    """Una frase CLARA para el usuario a partir del texto crudo de un fallo de red al buscar actualizaciones (el crudo va al Registro)."""
+    m = str(mensaje or '')
+    bajo = m.lower()
+    if 'timed out' in bajo or 'timeout' in bajo:
+        return 'No pude comprobarlo: el servidor tardó demasiado en responder. Prueba otra vez en unos minutos.'
+    if 'certificate' in bajo or 'ssl' in bajo:
+        return 'No pude comprobarlo: no se pudo verificar la conexión segura. Revisa la fecha y la hora del equipo, o un antivirus o VPN que intercepte HTTPS.'
+    import re
+    codigo = re.search(r'HTTP(?: Error)? (\d{3})', m)
+    if codigo:
+        return f'No pude comprobarlo: el servidor de actualizaciones respondió con el error {codigo.group(1)}. Prueba otra vez más tarde.'
+    if 'getaddrinfo' in bajo or 'name or service' in bajo or 'unreachable' in bajo or 'urlopen error' in bajo or 'connection' in bajo:
+        return 'No pude comprobarlo: no hay conexión a internet (o un cortafuegos bloquea a CineCaptions).'
+    return 'No pude comprobarlo: ' + (m[:90] or 'el servidor no respondió.')
 
 
 _CACHE = {'url': None, 'etag': None, 'datos': None}
