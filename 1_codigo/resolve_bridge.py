@@ -521,6 +521,8 @@ def limpiar_resultado_viejo():
             pass
 VERSION_PUENTE_ESPERADA = '1.0.38'
 VERSION_PUENTE_MINIMA = '1.0.21'
+# Desde que version del Puente existe cada accion: un residente mas viejo (el que quedo corriendo en Resolve tras actualizar el programa) responde «Accion desconocida».
+VERSION_DE_ACCION = {'importar_estilos': (1, 0, 25), 'sfx_marcadores': (1, 0, 31), 'sfx_reemplazar': (1, 0, 32), 'efectos': (1, 0, 38), 'armar_video': (1, 0, 38), 'pausas': (1, 0, 38)}
 def _tupla_version(texto):
     """\"1.0.21\" -> (1, 0, 21). Lo raro cuenta como version 0 (muy vieja)."""
     try:
@@ -555,6 +557,13 @@ def version_del_puente():
         else:
             version = contenido.split('|', 1)[1].strip()
             return version or None
+def puente_no_conoce(accion):
+    """True si hay un Puente latiendo y es tan viejo que no sabe hacer esa accion."""
+    minima = VERSION_DE_ACCION.get(accion)
+    if minima is None or not puente_activo():
+        return False
+    version = version_del_puente()
+    return version is None or _tupla_version(version) < minima
 def puente_desactualizado():
     """True si el Puente corriendo es de una version anterior.\n\n    Solo se afirma cuando hay un puente vivo. Un Puente viejo que no\n    reporta version (None) tambien cuenta: si esta latiendo y no dice\n    quien es, es anterior a la 1.0.12.\n    """
     if not puente_activo():
@@ -923,6 +932,10 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
                 return _con_motivo_real(ok, mensaje, empezo)
         puente_vivo = puente_activo() or _puente_trabajando()
         if puente_vivo and (not puente_incompatible()):
+            if puente_no_conoce(accion):
+                # el Puente que quedo corriendo es de una version anterior: se le pide que se retire y, si no quedo otro en su lugar, se lanza el nuevo
+                if not pedir_retirada_del_puente() or (not puente_activo() and not lanzar_puente_auto(45)) or puente_no_conoce(accion):
+                    return (False, MENSAJE_PUENTE_VIEJO)
             ok, mensaje = _encolar(accion, datos=datos, timeout=timeout, on_progreso=on_progreso)
             if (not ok) and _puente_perdido(mensaje) and lanzar_puente_auto():
                 ok, mensaje = _encolar(accion, datos=datos, timeout=timeout, on_progreso=on_progreso)       # Mac: el Puente se relanzo solo
@@ -930,6 +943,8 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
         else:
             if disponible():
                 if not ruta.exists():
+                    if accion in ('efectos', 'armar_video', 'pausas'):          # solo existen como script .lua del Puente de Free; con Studio van por el MCP
+                        return (False, tr('Esta función necesita el MCP de DaVinci Resolve Studio 21.1 o el Puente de Resolve Free.'))
                     return (False, tr('No encuentro el script en {ruta}', ruta=ruta))
                 else:
                     ok, mensaje = ejecutar_script(str(ruta))
@@ -1004,44 +1019,125 @@ return "sin_menu"
 '''
 
 
-def lanzar_puente_mac(espera_s=25):
+def _menu_puente_mac():
+    """Corre el AppleScript que pulsa el menu del Puente: (codigo, salida, error). salida = 'ok' | 'sin_resolve' | 'sin_menu'."""
+    import subprocess
+    r = subprocess.run(['osascript', '-e', _APPLESCRIPT_PUENTE], capture_output=True, text=True, errors='replace', timeout=30)
+    return r.returncode, (r.stdout or '').strip(), (r.stderr or '')
+
+
+ARCHIVO_STOP = CARPETA_COMPARTIDA / 'puente.stop'
+
+
+def pedir_retirada_del_puente(espera_s=30):
+    """Le pide al Puente que esta corriendo que se retire y espera a que deje de latir; True si se fue. Modo señales (Free 21.1): lo hace `puente.relevo` (cualquier Puente con una
+    señal que no es suya se va); con io, `puente.stop` con un token ajeno. Un Puente lanzado desde la consola de Resolve la deja ocupada hasta que termina: por eso hay que sacarlo
+    antes de poder escribir ahi el Puente nuevo. Si en la consola habia otra orden esperando, el Puente nuevo arranca solo al irse el viejo: tambien cuenta como «se fue» (cambia la
+    version que late). Nunca lanza."""
+    try:
+        CARPETA_COMPARTIDA.mkdir(parents=True, exist_ok=True)
+        version0 = version_del_puente()
+        ARCHIVO_STOP.write_text('app', encoding='utf-8')
+        ARCHIVO_RELEVO.write_text('app', encoding='utf-8')
+        inicio = time.time()
+        faltaba_desde = None
+        while time.time() - inicio < espera_s:
+            version = version_del_puente()
+            if not puente_activo() or (version is not None and version != version0):
+                return True
+            # Un Puente RECIEN lanzado toma por suya la señal hasta que la ve desaparecer (puente_activo() la poda a los 3 s): se la vuelve a dejar cuando ya llevaba 2,5 s sin estar
+            if ARCHIVO_RELEVO.exists():
+                faltaba_desde = None
+            elif faltaba_desde is None:
+                faltaba_desde = time.time()
+            elif time.time() - faltaba_desde >= 2.5:
+                ARCHIVO_RELEVO.write_text('app', encoding='utf-8')
+                faltaba_desde = None
+            time.sleep(0.5)
+        return False
+    except Exception:
+        return False
+    finally:
+        for f in (ARCHIVO_STOP, ARCHIVO_RELEVO):
+            try:
+                f.unlink()
+            except Exception:
+                pass
+
+
+def _esperar_latido(segundos, version=None):
+    """Espera a que el Puente lata (y, si se pide, a que sea de esa version: el nuevo le pide el relevo al viejo)."""
+    inicio = time.time()
+    while time.time() - inicio < segundos:
+        if puente_activo() and (version is None or version_del_puente() == version):
+            return True
+        time.sleep(0.5)
+    return False
+
+
+def lanzar_puente_mac(espera_s=25, espera_abrir_s=180, forzar=False):
     """Mac: pulsa solo el menu de Resolve (Workspace > Scripts > CineCaptions_Puente) por «System Events» y espera a que el Puente
-    lata. Hace falta el permiso de Accesibilidad para CineCaptions (macOS lo pide la primera vez). Devuelve True si el Puente quedo vivo.
-    Nunca lanza; si algo falla deja una linea en el Registro y se sigue con el aviso de siempre."""
+    lata. Hace falta el permiso de Accesibilidad para CineCaptions (macOS lo pide la primera vez). Si Resolve esta cerrado lo abre
+    (`open -a`, Free no tiene MCP que lo abra) y espera a que muestre el menu de Scripts (= con un proyecto abierto). Devuelve True si el Puente
+    quedo vivo. Con `forzar` lo lanza aunque ya haya uno latiendo (uno de una version anterior: el nuevo le pide el relevo) y espera a que lata el de la version actual. Nunca lanza;
+    si algo falla deja una linea en el Registro y se sigue con el aviso de siempre."""
     if sys.platform != 'darwin':
         return False
     try:
         import subprocess
         import registro
-        r = subprocess.run(['osascript', '-e', _APPLESCRIPT_PUENTE], capture_output=True, text=True, timeout=30)
-        salida = (r.stdout or '').strip()
-        if r.returncode != 0 or salida != 'ok':
-            if '-25211' in (r.stderr or '') or '-1719' in (r.stderr or '') or 'asistencia' in (r.stderr or '').lower() or 'assistive' in (r.stderr or '').lower():
+        version = VERSION_PUENTE_ESPERADA if forzar else None
+        if puente_activo() and not forzar:
+            return True
+        codigo, salida, err = _menu_puente_mac()
+        if codigo == 0 and salida == 'sin_resolve':
+            ab = subprocess.run(['open', '-a', 'DaVinci Resolve'], capture_output=True, text=True, errors='replace', timeout=30)
+            if ab.returncode != 0:
+                registro.aviso('No encuentro DaVinci Resolve en este Mac (open -a): abrelo tu con un proyecto y repite.', 'Puente · Mac')
+                return False
+            registro.info('Abro DaVinci Resolve para lanzar el Puente.', 'Puente · Mac')
+            inicio = time.time()
+            while time.time() - inicio < espera_abrir_s:
+                time.sleep(4.0)
+                codigo, salida, err = _menu_puente_mac()
+                if codigo != 0 and ('-25211' in err or '-1719' in err or 'assistive' in err.lower()):
+                    registro.aviso('No pude lanzar el Puente en Resolve por el menu: sin permiso de Accesibilidad para CineCaptions (Ajustes del Sistema > Privacidad y seguridad > Accesibilidad)', 'Puente · Mac')
+                    return False
+                if codigo == 0 and salida == 'ok':
+                    if _esperar_latido(espera_s, version):
+                        registro.info('El Puente se lanzo solo desde el menu de Resolve.', 'Puente · Mac')
+                        return True
+                    # el menu estaba pero Resolve aun cargaba su proyecto: se vuelve a intentar
+            registro.aviso('Resolve no mostro un proyecto abierto en %d s: abrelo tu (la pantalla de proyectos no vale) y repite.' % int(espera_abrir_s), 'Puente · Mac')
+            return False
+        if codigo != 0 or salida != 'ok':
+            if '-25211' in err or '-1719' in err or 'asistencia' in err.lower() or 'assistive' in err.lower():
                 motivo = 'sin permiso de Accesibilidad para CineCaptions (Ajustes del Sistema > Privacidad y seguridad > Accesibilidad)'
             else:
-                motivo = salida or (r.stderr or '').strip()[-200:] or 'sin respuesta'
+                motivo = salida or err.strip()[-200:] or 'sin respuesta'
             registro.aviso('No pude lanzar el Puente en Resolve por el menu: ' + motivo, 'Puente · Mac')
             return False
-        inicio = time.time()
-        while time.time() - inicio < espera_s:
-            if puente_activo():
-                registro.info('El Puente se lanzo solo desde el menu de Resolve.', 'Puente · Mac')
-                return True
-            time.sleep(0.5)
+        if _esperar_latido(espera_s, version):
+            registro.info('El Puente se lanzo solo desde el menu de Resolve.', 'Puente · Mac')
+            return True
         registro.aviso('Pulse el menu del Puente pero no empezo a latir en %d s.' % espera_s, 'Puente · Mac')
     except Exception:
-        pass
+        try:
+            import registro
+            registro.excepcion(origen='Puente · Mac')
+        except Exception:
+            pass
     return False
 
 
-def lanzar_puente_auto(espera_s=25):
+def lanzar_puente_auto(espera_s=25, forzar=False):
     """Resolve Free sin Puente: lo lanza solo. Mac: por el menú (lanzar_puente_mac); Windows: por la consola de comandos de Resolve (colocacion.lanzar_puente_windows). False si no se pudo."""
     if sys.platform == 'darwin':
-        return lanzar_puente_mac(espera_s)
+        return lanzar_puente_mac(espera_s, forzar=forzar)
     if sys.platform.startswith('win'):
         try:
             import colocacion
-            return colocacion.lanzar_puente_windows(espera_s)
+            return colocacion.lanzar_puente_windows(espera_s, forzar=forzar)
         except Exception:
             return False
     return False

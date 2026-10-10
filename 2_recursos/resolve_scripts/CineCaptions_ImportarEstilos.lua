@@ -26,7 +26,7 @@ vuelve a Edicion.
 Este script no borra nada del proyecto ni toca los Text+: solo los lee.
 ]]
 
-local VERSION = "5.4.17 (importar estilos)"
+local VERSION = "5.4.18 (importar estilos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el

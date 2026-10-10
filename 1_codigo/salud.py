@@ -98,8 +98,10 @@ def comprobar():
     try:
         import resolve_mcp
         exe = resolve_mcp.ruta_exe()
-        filas.append({'nombre': 'MCP de DaVinci Resolve', 'ok': exe is not None,
-                      'detalle': str(exe) if exe else 'hace falta DaVinci Resolve 21.1 o más nuevo'})
+        if exe is not None:
+            filas.append({'nombre': 'MCP de DaVinci Resolve', 'ok': True, 'detalle': str(exe)})
+        else:                                  # v5.4.18: sin MCP no es una falla: DaVinci Resolve Free (o un Studio sin él) trabaja por el Puente
+            filas.append({'nombre': 'MCP de DaVinci Resolve', 'ok': None, 'detalle': 'no hace falta: DaVinci Resolve Free trabaja por el Puente (el MCP es de Studio 21.1)'})
     except Exception as e:
         filas.append({'nombre': 'MCP de DaVinci Resolve', 'ok': False, 'detalle': str(e)[:160]})
     _ULTIMO.update(filas=filas, cuando=time.time())

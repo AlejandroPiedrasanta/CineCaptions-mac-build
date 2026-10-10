@@ -484,6 +484,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.18', [
+        'Resolve Free: al abrirse con la app ya no aparece el falso aviso «Falla al iniciar: MCP de DaVinci Resolve» (el MCP es solo de Studio; Free trabaja por el Puente).',
+        'Si tras actualizar el programa quedaba corriendo en Resolve un Puente de la versión anterior, CineCaptions lo releva solo (antes decía «Acción desconocida»).',
+        'Al lanzar el Puente en una ventana de Resolve recién abierta, CineCaptions comprueba el foco antes de cada letra y se detiene si se va: ya no puede escribir en otra aplicación. En Mac, si Resolve está cerrado, también lo abre solo.',
+    ]),
     ('5.4.17', [
         'DaVinci Resolve gratuito (Free) ya funciona igual que Studio: al soltar un video, CineCaptions crea el proyecto y el timeline con tu video, coloca los subtítulos, emojis y sonidos, aplica los efectos visuales (intro, zoom, transiciones) y quita las pausas, todo por el Puente.',
         'Si Resolve Free está abierto, CineCaptions lanza el Puente solo (ya no hay que ir al menú Área de trabajo > Scripts). Si está cerrado, lo abre; abre o crea un proyecto en Resolve (la pantalla de proyectos no vale) para que siga.',

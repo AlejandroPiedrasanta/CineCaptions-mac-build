@@ -108,9 +108,9 @@ def resolve_en_proceso():
     import subprocess
     try:
         if sys.platform.startswith('win'):
-            r = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq Resolve.exe', '/NH'], capture_output=True, text=True, timeout=8, creationflags=0x08000000)
+            r = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq Resolve.exe', '/NH'], capture_output=True, text=True, errors='replace', timeout=8, creationflags=0x08000000)
             return 'resolve.exe' in (r.stdout or '').lower()
-        r = subprocess.run(['pgrep', '-x', 'Resolve'], capture_output=True, text=True, timeout=8)
+        r = subprocess.run(['pgrep', '-x', 'Resolve'], capture_output=True, text=True, errors='replace', timeout=8)
         return r.returncode == 0
     except Exception:
         return None
@@ -413,6 +413,21 @@ def _hwnd_de_resolve():
     return hallada[0] if hallada else None
 
 
+def _cerrar_consola_de_resolve():
+    """Cierra (oculta) la consola de comandos de Resolve (la ventana titulada «Resolve»): el Puente sigue vivo. Nunca lanza."""
+    try:
+        import ctypes
+        cerrada = False
+        for h, t in _ventanas_de_resolve():
+            if t.strip() == 'Resolve':
+                ctypes.windll.user32.PostMessageW(h, 0x0010, 0, 0)       # WM_CLOSE
+                cerrada = True
+        if cerrada:
+            time.sleep(0.5)
+    except Exception:
+        pass
+
+
 def _al_frente(h, intentos=4):
     """Windows no deja que un proceso en segundo plano se ponga al frente (bloqueo del primer plano): se prueba con el truco de unir el hilo de entrada al de la ventana que lo tiene, restaurar si estaba minimizada y SwitchToThisWindow, varias veces.
     True solo si al final Resolve de verdad tiene el foco."""
@@ -476,8 +491,9 @@ def _ventanas_de_resolve():
     return halladas
 
 
-def _escribir_texto(texto, pausa=0.012):
-    """Escribe `texto` en la ventana que tiene el foco con SendInput en modo Unicode: no depende del idioma del teclado ni de Bloq Mayús."""
+def _escribir_texto(texto, pausa=0.012, hwnd=None):
+    """Escribe `texto` en la ventana que tiene el foco con SendInput en modo Unicode: no depende del idioma del teclado ni de Bloq Mayus. Con `hwnd`, ANTES de cada caracter mira que esa
+    ventana siga teniendo el foco y, si no, PARA (devuelve False): en un Resolve recien abierto el foco se escapaba a media orden y el resto del texto caia en otra aplicacion."""
     import ctypes
     from ctypes import wintypes
     PUL = ctypes.POINTER(ctypes.c_ulong)
@@ -497,11 +513,27 @@ def _escribir_texto(texto, pausa=0.012):
     class INPUT(ctypes.Structure):
         _fields_ = [('type', wintypes.DWORD), ('u', _UNION)]
     envio = ctypes.windll.user32.SendInput
+    foco = ctypes.windll.user32.GetForegroundWindow
     for caracter in texto:
+        if hwnd is not None and foco() != hwnd:
+            return False
         for marca in (0x0004, 0x0004 | 0x0002):                       # KEYEVENTF_UNICODE, y el mismo con KEYUP
             entrada = INPUT(type=1, u=_UNION(ki=KEYBDINPUT(0, ord(caracter), marca, 0, None)))
             envio(1, ctypes.byref(entrada), ctypes.sizeof(entrada))
         time.sleep(pausa)
+    return True
+
+
+def _borrar_linea_de_consola(user32, consola):
+    '''Ctrl+A y Retroceso en la consola de Resolve (deja vacia la linea de entrada); cada tecla solo si la consola SIGUE con el foco.'''
+    for vk, bandera in ((0x11, 0), (0x41, 0), (0x41, 2), (0x11, 2), (0x08, 0), (0x08, 2)):
+        if user32.GetForegroundWindow() != consola:
+            if bandera == 2 and vk == 0x11:
+                user32.keybd_event(0x11, 0, 2, 0)                   # (nunca dejar Ctrl apretada)
+            return False
+        user32.keybd_event(vk, 0, bandera, 0)
+        time.sleep(0.03)
+    return True
 
 
 def _ventana_principal(ventanas=None):
@@ -534,7 +566,7 @@ def abrir_resolve_windows(decir=None, espera_s=240):
         inicio = time.time()
         while time.time() - inicio < espera_s:
             if _ventana_principal() is not None:
-                time.sleep(3.0)                                        # recién cargado el proyecto, Resolve aún está armando su interfaz
+                time.sleep(8.0)                                        # recién cargado el proyecto, Resolve aún está armando su interfaz y a los pocos segundos se vuelve a poner al frente solo
                 return True
             time.sleep(1.5)
         registro.aviso(tr('Resolve no mostró un proyecto abierto en {s} s: ábrelo tú (la pantalla de proyectos no vale) y repite.', s=int(espera_s)), 'Puente · Windows')
@@ -547,17 +579,19 @@ def abrir_resolve_windows(decir=None, espera_s=240):
     return False
 
 
-def lanzar_puente_windows(espera_s=30):
+def lanzar_puente_windows(espera_s=30, forzar=False):
     """Windows (Resolve Free): arranca el Puente SIN tocar el menú, que cambia de idioma y de lugar. La consola de comandos de Resolve (tecla F6) acepta Lua: se abre, se escribe
     `dofile([[…/CineCaptions_Puente.lua]])` y Enter; el Puente sigue vivo aunque la consola se cierre. Solo si Resolve ya está al frente de verdad (si no, las teclas irían a otra
-    aplicación) y la ventana principal es la de siempre (no un diálogo). Devuelve True si el Puente quedó latiendo. Nunca lanza."""
+    aplicación) y la ventana principal es la de siempre (no un diálogo). Devuelve True si el Puente quedó latiendo. Con `forzar` lo lanza aunque ya haya uno latiendo (uno de una versión
+    anterior que quedó corriendo tras actualizar: el nuevo le pide el relevo) y espera a que lata el de la versión actual. Nunca lanza."""
     if not sys.platform.startswith('win'):
         return False
     try:
         import registro
         import resolve_bridge as b
-        if b.puente_activo():
+        if b.puente_activo() and not forzar:
             return True
+        version = b.VERSION_PUENTE_ESPERADA if forzar else None
         import instalador_scripts as ins
         ruta = next((c / 'CineCaptions_Puente.lua' for c in ins.carpetas_scripts_resolve() if (c / 'CineCaptions_Puente.lua').is_file()), None)
         if ruta is None:
@@ -593,7 +627,21 @@ def lanzar_puente_windows(espera_s=30):
             registro.aviso(tr('La consola de Resolve no tomó el foco: no escribo en ella.'), 'Puente · Windows')
             return False
         time.sleep(0.4)
-        _escribir_texto('dofile([[' + str(ruta).replace('\\', '/') + ']])')          # (Unicode puro: con Bloq Mayús activo pynput escribía todo en MAYÚSCULAS y Lua no conoce «DOFILE»)
+        orden = 'dofile([[' + str(ruta).replace('\\', '/') + ']])'
+        escrito = False
+        for intento in range(3):                                    # (Unicode puro: con Bloq Mayús activo pynput escribía todo en MAYÚSCULAS y Lua no conoce «DOFILE»)
+            if user32.GetForegroundWindow() != consola and not _al_frente(consola, intentos=3):
+                break
+            if intento:
+                _borrar_linea_de_consola(user32, consola)
+            if _escribir_texto(orden, hwnd=consola):
+                escrito = True
+                break
+            registro.aviso(tr('El foco salió de la consola de Resolve mientras escribía: paro de teclear y lo reintento ({n}/3).', n=intento + 1), 'Puente · Windows')
+            time.sleep(2.0)
+        if not escrito:
+            registro.aviso(tr('No pude escribir el comando en la consola de Resolve (el foco no se quedaba en ella): no lanzo el Puente solo para no teclear en otra aplicación.'), 'Puente · Windows')
+            return False
         time.sleep(0.15)
         inicio = time.time()
         proximo_enter = 0.0
@@ -601,12 +649,12 @@ def lanzar_puente_windows(espera_s=30):
             if time.time() - inicio >= proximo_enter:
                 # Enter (con el foco otra vez en la consola: si Resolve lo recuperó mientras se escribía, la orden se quedaba escrita sin ejecutar). Si ya se ejecutó, un Enter en un campo
                 # vacío no hace nada: se repite cada 9 s hasta que el Puente late.
-                _al_frente(consola, intentos=2)
-                user32.keybd_event(0x0D, 0x1C, 0, 0)
-                time.sleep(0.05)
-                user32.keybd_event(0x0D, 0x1C, 2, 0)
+                if _al_frente(consola, intentos=2) and user32.GetForegroundWindow() == consola:     # (si la consola no tiene el foco, el Enter iría a otra ventana: no se pulsa)
+                    user32.keybd_event(0x0D, 0x1C, 0, 0)
+                    time.sleep(0.05)
+                    user32.keybd_event(0x0D, 0x1C, 2, 0)
                 proximo_enter += 9.0
-            if b.puente_activo():
+            if b.puente_activo() and (version is None or b.version_del_puente() == version):
                 registro.info(tr('El Puente se lanzó solo desde la consola de Resolve.'), 'Puente · Windows')
                 try:
                     user32.PostMessageW(consola, 0x0010, 0, 0)       # se cierra la consola: el Puente sigue
@@ -631,7 +679,8 @@ def reproducir_desde_inicio(esperar_s=0.5):
         if sys.platform.startswith('win'):
             import ctypes
             user32 = ctypes.windll.user32
-            h = _hwnd_de_resolve()
+            _cerrar_consola_de_resolve()                          # (la consola del Puente reaparece sola cada vez que imprime y tapa el timeline: Inicio y Espacio tienen que ir a la ventana principal)
+            h = _ventana_principal() or _hwnd_de_resolve()
             if not h:
                 return False, tr('No encontré la ventana de DaVinci Resolve para reproducir.')
             if not _al_frente(h):
@@ -650,7 +699,7 @@ def reproducir_desde_inicio(esperar_s=0.5):
             guion = ('tell application "DaVinci Resolve" to activate\ndelay 0.6\ntell application "System Events"\n'
                      'if (name of first process whose frontmost is true) is not "DaVinci Resolve" then error "sin foco"\n'
                      'key code 115\ndelay 0.25\nkey code 49\nend tell')
-            r = subprocess.run(['osascript', '-e', guion], capture_output=True, text=True, timeout=20)
+            r = subprocess.run(['osascript', '-e', guion], capture_output=True, text=True, errors='replace', timeout=20)
             if r.returncode != 0:
                 return False, tr('No pude reproducir en Resolve ({e}). Si macOS lo pide, da permiso de Accesibilidad a CineCaptions.', e=(r.stderr or '').strip()[-100:])
             return True, tr('Reproduciendo el timeline desde el principio.')

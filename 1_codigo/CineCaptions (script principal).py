@@ -7905,7 +7905,10 @@ class SubtitleApp(QWidget):
                                                'fps': float(info['fps']), 'inicio': int(info['inicio']), 'v1': info.get('v1') if isinstance(info.get('v1'), list) else []}
             except Exception:
                 pass
-            registro.info(tr('Timeline «{t}» armado con tu video en el proyecto «{p}» ({w}×{h}, {f:g} fps).', t=info.get('timeline'), p=info.get('proyecto') or '—',
+            nombre_tl = info.get('timeline')
+            if '?' in str(nombre_tl or '') and '?' not in orden['nombre']:       # el registro de Resolve cambia lo que no es ASCII (el «·» del nombre) por «?»
+                nombre_tl = orden['nombre']
+            registro.info(tr('Timeline «{t}» armado con tu video en el proyecto «{p}» ({w}×{h}, {f:g} fps).', t=nombre_tl, p=info.get('proyecto') or '—',
                              w=self._ancho_timeline, h=self._alto_timeline, f=info.get('fps') or medio['tl_fps']), 'proceso')
         except Exception as e:
             self._go_tl_error = f'{type(e).__name__}: {e}'

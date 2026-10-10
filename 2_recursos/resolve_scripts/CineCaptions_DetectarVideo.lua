@@ -16,7 +16,7 @@ Si el render falla, cae al plan B: el archivo del clip mas largo de la
 pista de video 1.
 ]]
 
-local VERSION = "5.4.17 (detectar video)"
+local VERSION = "5.4.18 (detectar video)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
