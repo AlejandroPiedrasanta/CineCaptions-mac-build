@@ -335,9 +335,12 @@ def cargar(carpeta, incorporado=False):
         pack.revisar()
         return pack
 NOMBRE_INCORPORADO = 'Base títulos dinámicos'
-# v5.4.5: los dos packs de FÁBRICA (nombre interno -> nombre que ve el usuario). El nombre interno no cambia (preferencias, GO, carpetas y proyectos guardados
-# lo siguen usando); en pantalla se llaman «Shine …» y NO se pueden quitar de la lista.
-FABRICA = {'Kinetic': 'Shine Kinetic', 'Referencia': 'Shine Referencia', 'VIRAL': 'VIRAL'}       # VIRAL (v5.4.9) también viene de fábrica y no se quita; conserva su nombre
+# v5.4.5: los packs de FÁBRICA (nombre interno -> nombre que ve el usuario). El nombre interno no cambia (preferencias, GO, carpetas y proyectos guardados
+# lo siguen usando); en pantalla se llaman «Tema 1/2/3» (v5.4.19; antes «Shine Kinetic», «Shine Referencia» y «VIRAL») y NO se pueden quitar de la lista.
+FABRICA = {'Kinetic': 'Tema 1', 'Referencia': 'Tema 2', 'VIRAL': 'Tema 3'}
+# v5.4.19 (pedido del usuario): SOLO existen esos tres temas en la interfaz: el slider de «Pack de estilos» y el chip «Estilo» de Inicio no enseñan nada más (ni packs importados, ni
+# «Viral · superior/inferior», ni «Añadir plantilla», ni «Crea tu estilo»). Los packs siguen en el disco; con False vuelve todo lo de antes.
+SOLO_TEMAS = True
 
 
 def nombre_visible(nombre):

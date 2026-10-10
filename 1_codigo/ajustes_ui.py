@@ -484,6 +484,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.19', [
+        'Los estilos ahora se llaman «Tema 1» (antes Shine Kinetic), «Tema 2» (antes Shine Referencia) y «Tema 3» (antes VIRAL). Son los únicos que hay en el slider de Proyecto y en el chip «Estilo» de Inicio, vienen con el programa y no se pueden quitar.',
+    ]),
     ('5.4.18', [
         'Resolve Free: al abrirse con la app ya no aparece el falso aviso «Falla al iniciar: MCP de DaVinci Resolve» (el MCP es solo de Studio; Free trabaja por el Puente).',
         'Si tras actualizar el programa quedaba corriendo en Resolve un Puente de la versión anterior, CineCaptions lo releva solo (antes decía «Acción desconocida»).',

@@ -1886,6 +1886,8 @@ class PlantillasWindow(QWidget):
             self.crear_btn.setIconSize(QSize(15, 15))
         Tooltip(self.crear_btn, tr('Elige hasta 3 estilos de una galería y crea tu propio pack en un clic.'))
         ch.addWidget(self.crear_btn)
+        if plantillas.SOLO_TEMAS:                    # v5.4.19: solo los tres temas de fábrica: no se crean packs nuevos desde aquí
+            self.crear_btn.hide()
         self.tarjeta.capa.addWidget(cab)
         self.nota_modo = Etiqueta('', 13, color=ui.AMBAR, envolver=True)
         self.nota_modo.hide()
@@ -2359,14 +2361,17 @@ class PlantillasWindow(QWidget):
                              and p.nombre == plantillas.NOMBRE_INCORPORADO)
                      and not getattr(p, 'es_basicos', False)]
             packs = [p for p in todos if not (p.incorporado and p.nombre in ocultos and not plantillas.es_de_fabrica(p.nombre))]
+            if plantillas.SOLO_TEMAS:                 # v5.4.19: solo los tres temas de fábrica (Tema 1, 2 y 3)
+                packs = [p for p in packs if plantillas.es_de_fabrica(p.nombre)]
             quitados = len(todos) - len(packs)
             self.ocultos_lnk.hide()                   # v5.4.5: sin «Mostrar los packs quitados» (se quitó el enlace de Proyecto)
             for pack in packs:
                 cartas.append(self._carta_pack(pack))
-            cartas.append(estilos_slider.Carta('__anadir__', tr('Añadir plantilla (.drb)'), tipo='anadir', detalle=tr('Exporta una bandeja desde Resolve y súbela aquí: queda guardada como un estilo más.')))
+            if not plantillas.SOLO_TEMAS:
+                cartas.append(estilos_slider.Carta('__anadir__', tr('Añadir plantilla (.drb)'), tipo='anadir', detalle=tr('Exporta una bandeja desde Resolve y súbela aquí: queda guardada como un estilo más.')))
             self.carrusel.poner_cartas(cartas, self._valor_actual())
             try:
-                self.cuenta_lbl.configure(text=tr('1 pack') if len(packs) == 1 else tr('{n} packs', n=len(packs)))
+                self.cuenta_lbl.configure(text=tr('{n} temas', n=len(packs)) if plantillas.SOLO_TEMAS else (tr('1 pack') if len(packs) == 1 else tr('{n} packs', n=len(packs))))
             except Exception:
                 pass
             self._realzar()
@@ -7090,7 +7095,8 @@ class SubtitleApp(QWidget):
         nombre_pack = tr('Diseño automático') if pack in ('auto', 'dinamico', 'Base títulos dinámicos') else plantillas.nombre_visible(pack)
         formato = self.formato_var.get() if hasattr(self, 'formato_var') else tr('Detectar solo')
         chips = [(tr('Estilo: {p}', p=nombre_pack), self._menu_estilo_go,
-                  tr('Clic: elegir el estilo de GO (Referencia = captions palabra a palabra, línea fina y negrita + palabra grande; Diseño automático = 3 líneas).')),
+                  tr('Clic: elegir el tema de GO (Tema 1 = títulos de gancho, Tema 2 = captions palabra a palabra, Tema 3 = subtítulos virales).') if plantillas.SOLO_TEMAS
+                  else tr('Clic: elegir el estilo de GO (Referencia = captions palabra a palabra, línea fina y negrita + palabra grande; Diseño automático = 3 líneas).')),
                  (self._texto_chip_idioma(), self._menu_idioma_go,
                   tr('El idioma que se habla en el video. En «Automático» GO lo detecta al transcribir y aquí te dice cuál oyó; si se equivocó, elige el correcto y pulsa GO otra vez.')),
                  (tr('Emojis: {v}', v=tr('sí') if self._go_emojis() else tr('no')), self._alternar_emojis_go,
@@ -7144,6 +7150,8 @@ class SubtitleApp(QWidget):
             import ajustes_ui
             ocultos = {n for n in ajustes_ui.leer_prefs().get('packs_ocultos', []) if isinstance(n, str) and not plantillas.es_de_fabrica(n)}
             packs = [p for p in plantillas.listar_packs() if plantillas.sirve_en_go(p) and p.nombre not in ocultos]
+            if plantillas.SOLO_TEMAS:
+                packs = [p for p in packs if plantillas.es_de_fabrica(p.nombre)]
         except Exception:
             packs = []
         formato = self._formato_forzado() or self._formato_en_juego() or 'v'
@@ -7156,13 +7164,14 @@ class SubtitleApp(QWidget):
                         else tr('{n} · títulos de gancho', n=plantillas.nombre_visible(p.nombre)) if getattr(p, 'kinetic', False)
                         else tr('{n} · captions palabra a palabra', n=plantillas.nombre_visible(p.nombre)))
             menu.agregar(marca + etiqueta + extra, lambda n=p.nombre: self._poner_go_pack(n))
-        marca = '✓  ' if actual in (base, 'dinamico', 'auto') else '      '
-        menu.agregar(marca + tr('Diseño automático · 3 líneas'), lambda: self._poner_go_pack('auto'))
-        for p in otros:
-            marca = '✓  ' if p.nombre == actual else '      '
-            menu.agregar(marca + plantillas.nombre_visible(p.nombre), lambda n=p.nombre: self._poner_go_pack(n))
-        menu.separador()
-        menu.agregar(tr('Más estilos y vista real…'), lambda: self.ir_a('estilos'))
+        if not plantillas.SOLO_TEMAS:
+            marca = '✓  ' if actual in (base, 'dinamico', 'auto') else '      '
+            menu.agregar(marca + tr('Diseño automático · 3 líneas'), lambda: self._poner_go_pack('auto'))
+            for p in otros:
+                marca = '✓  ' if p.nombre == actual else '      '
+                menu.agregar(marca + plantillas.nombre_visible(p.nombre), lambda n=p.nombre: self._poner_go_pack(n))
+            menu.separador()
+        menu.agregar(tr('Ver los temas…') if plantillas.SOLO_TEMAS else tr('Más estilos y vista real…'), lambda: self.ir_a('estilos'))
         menu.mostrar(QCursor.pos())
     def _quitar_ajuste_fino(self):
         """El chip «Posición ajustada ✕» de Inicio: vuelve a la posición exacta del estilo (no toca lo que ya está en el timeline)."""
@@ -7558,9 +7567,12 @@ class SubtitleApp(QWidget):
         """Lo que el usuario eligió en el chip «Estilo» de Inicio: un pack, 'auto' (el diseño de 3 líneas de siempre) o '' (no ha elegido)."""
         try:
             import ajustes_ui
-            return str(ajustes_ui.leer_prefs().get('go_pack') or '')
+            v = str(ajustes_ui.leer_prefs().get('go_pack') or '')
         except Exception:
             return ''
+        if v and plantillas.SOLO_TEMAS and not plantillas.es_de_fabrica(v):       # v5.4.19: solo existen los tres temas; lo guardado de antes (otro pack o «auto») cuenta como «sin elegir»
+            return ''
+        return v
     def _aplicar_recomendacion(self, pack):
         """v5.5: al ELEGIR un estilo con recomendación (VIRAL, Kinetic, Referencia) el sonido y la página Efectos quedan ya configurados como le van a ese estilo
         (recomendaciones.py); un aviso lo dice y se puede cambiar después en Sonido y en Efectos."""
@@ -7644,11 +7656,11 @@ class SubtitleApp(QWidget):
         if elegido and elegido in nombres and sirve(elegido):
             return elegido
         if not elegido:
-            if actual in nombres and actual not in (base, 'dinamico') and sirve(actual):
+            if actual in nombres and actual not in (base, 'dinamico') and sirve(actual) and (not plantillas.SOLO_TEMAS or plantillas.es_de_fabrica(actual)):
                 return actual
             if self.GO_PACK_DEFECTO in nombres and sirve(self.GO_PACK_DEFECTO):
                 return self.GO_PACK_DEFECTO
-        return actual if actual in nombres and sirve(actual) else base
+        return actual if actual in nombres and sirve(actual) and (not plantillas.SOLO_TEMAS or plantillas.es_de_fabrica(actual)) else base
     def _go(self):
         if getattr(self, '_go_corriendo', False) or self._editor_abierto():
             return
@@ -8298,7 +8310,8 @@ class SubtitleApp(QWidget):
             return False
         try:
             import recorrido_ui
-            self._recorrido = recorrido_ui.Recorrido(self, self._pasos_recorrido(), self._recorrido_fin, self._recorrido_no_mostrar)
+            _pasos = [p for p in self._pasos_recorrido() if not (plantillas.SOLO_TEMAS and p.titulo == tr('Crea tu estilo'))]
+            self._recorrido = recorrido_ui.Recorrido(self, _pasos, self._recorrido_fin, self._recorrido_no_mostrar)
         except Exception:
             self._recorrido = None
             registro.excepcion(origen='recorrido guiado')
@@ -10711,7 +10724,7 @@ class SubtitleApp(QWidget):
             diseño = tr('el Diseño dinámico «{p}»', p=_p)
         else:
             if pack_puesto:
-                diseño = tr('el pack «{v}»', v=pack_puesto)
+                diseño = tr('el pack «{v}»', v=plantillas.nombre_visible(pack_puesto))
             else:
                 if self.plantilla_sel == 'media_pool':
                     diseño = tr('tus plantillas del Media Pool')
@@ -10731,7 +10744,7 @@ class SubtitleApp(QWidget):
     def _avisar_sin_pack(self, motivo):
         """Dice, donde el usuario lo ve, que se genera SIN el pack pedido."""
         nombre = (tr('el diseño automático') if self.plantilla_sel in ('auto', '')
-                  else tr('el pack «{plantilla_sel}»', plantilla_sel=self.plantilla_sel))
+                  else tr('el pack «{plantilla_sel}»', plantilla_sel=plantillas.nombre_visible(self.plantilla_sel)))
         texto = tr('Pediste {nombre} pero {motivo}: genero con las plantillas del Media Pool.', nombre=nombre, motivo=motivo)
         try:
             self.msg_queue.put(('status', texto))
@@ -12233,7 +12246,7 @@ class SubtitleApp(QWidget):
         Devuelve (bloques, track, pista_sfx) con el .json ya escrito (el mismo contrato que _generar_con_motor), o None si no se puede."""
         formato = self._formato_forzado() or self._formato_en_juego() or 'v'
         if formato != 'v' or 'v' not in pack.formatos:
-            avisar(tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=pack.nombre))
+            avisar(tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
             return None
         import guion_captions as gc
         import guion_planificador as gp
@@ -12250,7 +12263,7 @@ class SubtitleApp(QWidget):
                                         automatico=bool(getattr(self, '_un_clic', False)))
         cues, plan = res_plan['cues'], res_plan['plan']
         if not cues:
-            avisar(tr('No encontré palabras para armar el estilo «{p}»: uso el diseño de siempre.', p=pack.nombre))
+            avisar(tr('No encontré palabras para armar el estilo «{p}»: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
             return None
         bloques = []
         for c, b in zip(cues, plan):
@@ -12287,7 +12300,7 @@ class SubtitleApp(QWidget):
                  'offset_frames': self._offset_frames(), **pista_plantilla, **pista_sfx, **pista_emojis}
         n_sonidos = sum(len(b.get('sfx_eventos') or [1]) for b in bloques if b.get('sfx'))
         n_emojis = sum(1 for b in bloques if b.get('emoji'))
-        avisar(tr('Estilo «{p}»: {n} bloques, {m} con palabra grande · {s} sonidos · {e} emojis.', p=pack.nombre, n=len(cues), m=sum(1 for b in plan if b['mains']), s=n_sonidos, e=n_emojis))
+        avisar(tr('Estilo «{p}»: {n} bloques, {m} con palabra grande · {s} sonidos · {e} emojis.', p=plantillas.nombre_visible(pack.nombre), n=len(cues), m=sum(1 for b in plan if b['mains']), s=n_sonidos, e=n_emojis))
         return (bloques, track, pista_sfx)
     def _generar_con_kinetic(self, pack, palabras_finales, roles_finales, pista_plantilla, project_name, base_lang, avisar, con_sfx=False):
         """El estilo «Kinetic» (pack Kinetic: títulos de gancho): el planificador (kinetic_planificador.py) parte lo hablado en bloques, elige la palabra
@@ -12298,8 +12311,8 @@ class SubtitleApp(QWidget):
         formato = self._formato_forzado() or self._formato_en_juego() or 'v'
         es_viral = bool(getattr(pack, 'viral', False))
         if formato not in (('v', 'h') if es_viral else ('v',)) or formato not in pack.formatos:
-            avisar(tr('El estilo «{p}» es para vídeo vertical u horizontal: uso el diseño de siempre.', p=pack.nombre) if es_viral
-                   else tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=pack.nombre))
+            avisar(tr('El estilo «{p}» es para vídeo vertical u horizontal: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)) if es_viral
+                   else tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
             return None          # el estilo «VIRAL» comparte este camino (mismo contrato de bloques, sonidos y colocador de Resolve): otro planificador y otros clips
         if es_viral:
             import viral_captions as kc
@@ -12328,7 +12341,7 @@ class SubtitleApp(QWidget):
             res = kp.planificar(palabras_finales, idioma=base_lang, ancla=ancla, mains=mains, fin_video=self._fin_video())
         cues, plan = res['cues'], res['plan']
         if not cues:
-            avisar(tr('No encontré palabras para armar el estilo «{p}»: uso el diseño de siempre.', p=pack.nombre))
+            avisar(tr('No encontré palabras para armar el estilo «{p}»: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
             return None
         bloques = [{'start': c['start'], 'end': c['end'], 'fin_hablado': c['end'],
                     'lines': [{'role': l['role'], 'text': l['text'], 'start': l['start']} for l in c['lines']]} for c in cues]
@@ -12361,7 +12374,7 @@ class SubtitleApp(QWidget):
         if es_viral:
             track['clip_prueba'] = 'v fina'                       # el clip que prueba que el bin del pack VIRAL está completo (el de Kinetic es «k hero blanco»)
         n_sonidos = sum(len(b.get('sfx_eventos') or [1]) for b in bloques if b.get('sfx'))
-        avisar(tr('Estilo «{p}»: {n} bloques de títulos · {s} sonidos.', p=pack.nombre, n=len(cues), s=n_sonidos))
+        avisar(tr('Estilo «{p}»: {n} bloques de títulos · {s} sonidos.', p=plantillas.nombre_visible(pack.nombre), n=len(cues), s=n_sonidos))
         return (bloques, track, pista_sfx)
     def _generar_con_motor(self, dyn, palabras_finales, roles_finales, pista_plantilla, project_name, base_lang, con_sfx, avisar):
         """El MOTOR del preset del Diseño dinámico (v1.0.51).
