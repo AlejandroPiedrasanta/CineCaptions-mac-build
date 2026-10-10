@@ -73,6 +73,9 @@ class _Toast(QFrame):
         e.accept()
 
 
+MOSTRAR_CUADROS = False        # v5.4.22 (pedido del usuario): NINGÚN cuadro emergente; el aviso solo queda en el Registro
+
+
 def mostrar(padre, mensaje, duracion_ms=4000, color='#0D1627'):
     """Aviso no modal que se cierra solo tras `duracion_ms` milisegundos.
 
@@ -84,6 +87,8 @@ def mostrar(padre, mensaje, duracion_ms=4000, color='#0D1627'):
         registro.ok(str(mensaje), 'aviso')
     except Exception:
         pass
+    if not MOSTRAR_CUADROS:
+        return None
     try:
         ventana = padre.window() if padre is not None and ui.vivo(padre) else QApplication.activeWindow()
         if ventana is None:

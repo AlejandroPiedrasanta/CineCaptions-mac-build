@@ -484,6 +484,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.22', [
+        'Se acabaron los cuadros emergentes («Recomendado para…», «Hay una versión nueva…», etc.) y los mensajes que salían al dejar el ratón quieto sobre un botón. Lo que antes avisaba un cuadro ahora solo queda en el Registro.',
+        'En Proyecto, de cada tema solo se ven su nombre y su botón, y el slider es más grande (crece con la ventana). La cabecera queda con el título y el botón «Crea tu estilo»; vuelve también «Añadir plantilla (.drb)» al final del slider, y tus estilos salen junto a los tres temas.',
+    ]),
+    ('5.4.21', [
+        'Todas las listas desplegables y menús de la app (idioma, estilo, formato…) tienen un estilo nuevo en píldoras: cada opción es una cápsula, la que tocas se ilumina y la que está en uso va rellena con un visto.',
+    ]),
     ('5.4.20', [
         'La página Efectos enseña ahora cómo se ve CADA ajuste, como ya hacía la intro: zoom en la intro, cuántos cortes, zoom lento, temblor, fondo desenfocado, quitar pausas, zoom alterno y, en «Más efectos», números, pegatinas, énfasis, ambiente, cierre y B-roll. Cada opción es una tarjeta con su ejemplo animado: tócala para elegirla.',
         'Panel del tema rediseñado: nombre, qué hace, estructura y un solo botón «Usar este tema», todo centrado. Sin el texto de la rueda del ratón.',

@@ -47,7 +47,7 @@ from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QAbstractScro
                                QComboBox, QCompleter, QDialog, QFileDialog, QFrame,
                                QGraphicsOpacityEffect, QHBoxLayout, QLabel, QLayout,
                                QLineEdit, QMenu, QPlainTextEdit, QPushButton, QRadioButton,
-                               QScrollArea, QSizePolicy, QSlider, QTextEdit, QVBoxLayout, QWidget)
+                               QScrollArea, QSizePolicy, QSlider, QStyle, QStyledItemDelegate, QTextEdit, QVBoxLayout, QWidget)
 import shiboken6
 
 from i18n import tr
@@ -489,9 +489,9 @@ QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: center r
                        width: 24px; border: none; }
 QComboBox::down-arrow { image: url(FLECHA); width: 11px; height: 11px; }
 QComboBox::down-arrow:disabled { image: url(FLECHA_OFF); }
-QComboBox QAbstractItemView { background-color: #101A2E; border: 1px solid #22324F;
-                              padding: 4px; outline: 0; color: #E0EBFB;
-                              selection-background-color: #0F62FE; selection-color: #FFFFFF; }
+QComboBox QAbstractItemView { background-color: #0F192D; border: 1px solid #22324F; border-radius: 14px;
+                              padding: 8px; outline: 0; color: #E0EBFB;
+                              selection-background-color: transparent; selection-color: #FFFFFF; }
 QComboBox QLineEdit { border: none; background: transparent; padding: 0px; }
 
 QCheckBox, QRadioButton { spacing: 8px; color: #E8F1FF; background: transparent; }
@@ -513,6 +513,14 @@ QMenu::item { padding: 7px 24px 7px 14px; border-radius: 6px; background: transp
 QMenu::item:selected { background-color: #0F62FE; color: #FFFFFF; }
 QMenu::item:disabled { color: #5A6B87; }
 QMenu::separator { height: 1px; background: #1E2A42; margin: 4px 6px; }
+QMenu[pildora="true"] { background-color: #0F192D; border: 1px solid #22324F; border-radius: 14px; padding: 8px; }
+QMenu[pildora="true"]::item { padding: 9px 26px 9px 20px; margin: 3px 0px; border: 1px solid #1E2A42; border-radius: 14px; background: transparent; }
+QMenu[pildora="true"]::item:selected { background-color: #13203A; border-color: #2C4068; color: #FFFFFF; }
+QMenu[pildora="true"]::item:checked { background-color: #0F62FE; border-color: #0F62FE; color: #FFFFFF; }
+QMenu[pildora="true"]::item:checked:selected { background-color: #2A74FF; border-color: #2A74FF; color: #FFFFFF; }
+QMenu[pildora="true"]::item:disabled { color: #5A6B87; border-color: #172238; background: transparent; }
+QMenu[pildora="true"]::indicator { width: 0px; height: 0px; image: none; }
+QMenu[pildora="true"]::separator { height: 1px; background: #1E2A42; margin: 6px 14px; }
 
 QSlider { background: transparent; }
 QSlider::groove:horizontal { height: 6px; background: #1C2840; border-radius: 3px; }
@@ -726,12 +734,16 @@ def limpiar_capa(capa):
 
 
 class Tooltip:
-    """El globo de ayuda. Qt lo trae: aqui solo queda la firma de la v4."""
+    """El globo de ayuda. v5.4.22 (pedido del usuario): ya NO sale ningún mensaje al dejar el ratón quieto; queda la firma de la v4 para no tocar a los llamadores."""
     def __init__(self, widget, texto, retraso_ms=450):
-        try:
-            widget.setToolTip(str(texto))
-        except Exception:
-            pass
+        pass
+
+
+def _sin_globos(self, *_a, **_k):
+    return None
+
+
+QWidget.setToolTip = _sin_globos            # (los `setToolTip` sueltos de toda la app: ninguno enseña nada)
 
 
 # ---------------------------------------------------------------------------
@@ -1218,6 +1230,70 @@ class Entrada(QLineEdit):
             self.setEnabled(state != 'disabled')
 
 
+class _DelegadoPildora(QStyledItemDelegate):
+    """v5.4.21: cada opción de una lista desplegable es una PÍLDORA: la que está en uso va rellena de azul con un visto, la que toca el ratón (o el teclado) con fondo y borde claros y
+    las demás con un borde fino. `combo` = el QComboBox de la lista (para saber cuál es la actual); sin él (lista de sugerencias) la elegida va rellena de azul."""
+    ALTO = 30
+
+    def __init__(self, combo=None, padre=None):
+        super().__init__(padre)
+        self._combo = combo
+
+    @staticmethod
+    def _es_separador(index):
+        return index.data(Qt.ItemDataRole.AccessibleDescriptionRole) == 'separator'
+
+    def sizeHint(self, option, index):
+        if self._es_separador(index):
+            return QSize(option.rect.width(), 12)
+        base = super().sizeHint(option, index)
+        return QSize(base.width() + 48, self.ALTO + 8)
+
+    def paint(self, p, option, index):
+        if self._es_separador(index):
+            p.save()
+            p.setPen(QPen(QColorReal('#1E2A42'), 1))
+            y = option.rect.center().y()
+            p.drawLine(option.rect.left() + 14, y, option.rect.right() - 14, y)
+            p.restore()
+            return
+        p.save()
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = QRectF(option.rect).adjusted(2, 3, -2, -3)
+        sobre = bool(option.state & QStyle.StateFlag.State_MouseOver)
+        marcada = bool(option.state & QStyle.StateFlag.State_Selected)
+        actual = (index.row() == self._combo.currentIndex()) if self._combo is not None else marcada
+        if actual:
+            fondo, borde, texto = QColorReal(ACCENT), QColorReal(ACCENT), QColorReal('#FFFFFF')
+        elif sobre or marcada:
+            fondo, borde, texto = QColorReal('#13203A'), QColorReal('#2C4068'), QColorReal('#FFFFFF')
+        else:
+            fondo, borde, texto = QColorReal(0, 0, 0, 0), QColorReal(BORDER_COLOR), QColorReal('#E0EBFB')
+        p.setPen(QPen(borde, 1.0))
+        p.setBrush(fondo)
+        radio = r.height() / 2.0
+        p.drawRoundedRect(r, radio, radio)
+        p.setFont(option.font)
+        p.setPen(texto)
+        etiqueta = QFontMetricsF(option.font).elidedText(str(index.data(Qt.ItemDataRole.DisplayRole) or ''), Qt.TextElideMode.ElideRight, r.width() - 54)
+        p.drawText(QRectF(r.left() + 20, r.top(), r.width() - 54, r.height()), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), etiqueta)
+        if actual:
+            cx, cy = r.right() - 24, r.center().y()
+            p.setPen(QPen(QColorReal('#FFFFFF'), 2.2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+            p.drawLine(QPointF(cx - 5, cy), QPointF(cx - 1.5, cy + 4))
+            p.drawLine(QPointF(cx - 1.5, cy + 4), QPointF(cx + 5, cy - 4))
+        p.restore()
+
+
+def _panel_translucido(ventana):
+    """La ventana de una lista desplegable sin fondo propio ni sombra del sistema: así se ven las esquinas redondeadas del panel. Nunca lanza."""
+    try:
+        ventana.setWindowFlags(ventana.windowFlags() | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
+        ventana.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+    except Exception:
+        pass
+
+
 class Combo(QComboBox):
     """El CTkOptionMenu: lista fija, valor en una Var y command(valor)."""
     SEPARADORES = set()
@@ -1232,7 +1308,14 @@ class Combo(QComboBox):
             self.setMinimumWidth(int(ancho))
         self.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setMaxVisibleItems(18)
+        self.setMaxVisibleItems(14)
+        try:                                           # v5.4.21: la lista que se despliega, en píldoras sobre un panel redondeado
+            self.setItemDelegate(_DelegadoPildora(self, self))
+            _cont = self.view().window()
+            if _cont is not None and _cont is not self.window():
+                _panel_translucido(_cont)
+        except Exception:
+            pass
         self._var = var
         self._comando = comando
         self._valores = []
@@ -1347,6 +1430,11 @@ class ComboBuscable(Combo):
         self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         comp = _CompletadorPlegado(self._modelo, self._plegar, self)
         comp.popup().setFont(fuente(tam))
+        try:                                           # v5.4.21: las sugerencias, en píldoras también
+            comp.popup().setItemDelegate(_DelegadoPildora(None, comp.popup()))
+            comp.popup().setStyleSheet('QListView { background-color: #0F192D; border: 1px solid #22324F; padding: 8px; outline: 0; }')       # (sin esquinas redondeadas: un popup propio con fondo translúcido no pinta el de la lista)
+        except Exception:
+            pass
         comp.activated.connect(self._confirmar_texto)
         self.setCompleter(comp)
         self.lineEdit().editingFinished.connect(self._confirmar_edicion)
@@ -2049,9 +2137,14 @@ class Menu(QMenu):
     def __init__(self, padre=None):
         super().__init__(padre)
         self.setFont(fuente(13))
+        self.setProperty('pildora', True)              # v5.4.21: opciones en píldoras (ver la hoja de estilos)
+        _panel_translucido(self)
 
     def agregar(self, texto, fn):
         a = self.addAction(str(texto))
+        if str(texto).lstrip().startswith('✓'):        # la opción en uso (los llamadores le ponen «✓  » delante): su píldora va rellena de azul
+            a.setCheckable(True)
+            a.setChecked(True)
         a.triggered.connect(lambda _=False, f=fn: f())
         return a
 

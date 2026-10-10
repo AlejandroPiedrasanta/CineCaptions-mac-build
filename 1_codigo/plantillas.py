@@ -349,6 +349,18 @@ TEMAS_INFO = {
 }
 
 
+def pack_permitido(nombre):
+    """v5.4.22: ¿se enseña este pack? Los tres temas de fábrica y los que hizo o importó el usuario («Crea tu estilo», «Añadir plantilla»); los demás packs que trae el programa
+    («Viral · superior/inferior»…) no. Con SOLO_TEMAS = False, todos."""
+    if not SOLO_TEMAS or nombre in FABRICA:
+        return True
+    try:
+        p = buscar_pack(nombre)
+    except Exception:
+        return False
+    return p is not None and not getattr(p, 'incorporado', False)
+
+
 def info_de_tema(nombre):
     """(frase corta, descripción) de un tema de fábrica, o ('', '')."""
     return TEMAS_INFO.get(nombre, ('', ''))

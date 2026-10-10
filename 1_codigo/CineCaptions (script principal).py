@@ -1888,14 +1888,12 @@ class PlantillasWindow(QWidget):
             self.crear_btn.setIconSize(QSize(15, 15))
         Tooltip(self.crear_btn, tr('Elige hasta 3 estilos de una galería y crea tu propio pack en un clic.'))
         ch.addWidget(self.crear_btn)
-        if plantillas.SOLO_TEMAS:                    # v5.4.19: solo los tres temas de fábrica: no se crean packs nuevos desde aquí
-            self.crear_btn.hide()
         self.tarjeta.capa.addWidget(cab)
         self.nota_modo = Etiqueta('', 13, color=ui.AMBAR, envolver=True)
         self.nota_modo.hide()
         self.tarjeta.capa.addWidget(self.nota_modo)
         self.filtro = StringVar(tr('Todos'))             # (sin filtro de formato: _formato_del_filtro() siempre es None)
-        self.carrusel = estilos_slider.CarruselPacks(alto=360, flexible=True)
+        self.carrusel = estilos_slider.CarruselPacks(alto=480, flexible=True)
         self.carrusel.elegida.connect(self._elegir)
         self.carrusel.centrada.connect(self._pintar_info)
         self.carrusel.anadir.connect(self._importar_drt)
@@ -2072,27 +2070,24 @@ class PlantillasWindow(QWidget):
             self.info_fuentes.show()
         else:
             self.info_fuentes.hide()
-        frase, descripcion = plantillas.info_de_tema(getattr(carta.pack, 'nombre', carta.valor)) if plantillas.SOLO_TEMAS else ('', '')
-        self.info_sub.setText(frase.upper())
-        self.info_sub.setVisible(bool(frase))
-        texto = carta.nota or descripcion or carta.detalle
+        solo_temas = plantillas.SOLO_TEMAS and carta.pack is not None and plantillas.es_de_fabrica(carta.pack.nombre)       # v5.4.22: de un tema de fábrica solo se ve el NOMBRE y el BOTÓN (sin frase, descripción, leyenda, lápiz ni «⋯»)
+        self.info_sub.setVisible(False)
+        texto = '' if solo_temas else (carta.nota or carta.detalle)
         self.info_nota.setText(texto)
         self.info_nota.setVisible(bool(texto))
-        if carta.estructura:
+        if carta.estructura and not solo_temas:
             e = _EstructuraPack(carta.estructura)
             e.setFixedWidth(360)
             self.info_extra.addWidget(e, 0, Qt.AlignmentFlag.AlignHCenter)
         if carta.extra is not None:
             self.info_extra.addWidget(carta.extra(), 0, Qt.AlignmentFlag.AlignHCenter)
-        for icono, glifo, ayuda, fn in carta.acciones:         # v5.8: ✎ editar en Resolve y 🗑 quitar
+        for icono, glifo, ayuda, fn in ([] if solo_temas else carta.acciones):         # v5.8: ✎ editar en Resolve y 🗑 quitar
             ic = ui.icono_linea(icono, '#C9D6EC')
             b = Boton('' if ic is not None else glifo, lambda _=False, f=fn: f(), tipo='fantasma', alto=36, ancho=40, tam=14, icono=ic)
             b.setFixedWidth(42)
             Tooltip(b, ayuda)
             self.info_acciones.addWidget(b)
-        menu_carta = carta.menu
-        if plantillas.SOLO_TEMAS and menu_carta and len(menu_carta) == 1:       # v5.4.20: con los tres temas el «⋯» solo traía «Descripción»: se quita
-            menu_carta = None
+        menu_carta = None if solo_temas else carta.menu
         if menu_carta:
             m = Boton('⋯', lambda menu=menu_carta: self._menu_carta(menu), tipo='fantasma', alto=36, ancho=40, tam=16)
             m.setFixedWidth(42)
@@ -2377,14 +2372,12 @@ class PlantillasWindow(QWidget):
                              and p.nombre == plantillas.NOMBRE_INCORPORADO)
                      and not getattr(p, 'es_basicos', False)]
             packs = [p for p in todos if not (p.incorporado and p.nombre in ocultos and not plantillas.es_de_fabrica(p.nombre))]
-            if plantillas.SOLO_TEMAS:                 # v5.4.19: solo los tres temas de fábrica (Tema 1, 2 y 3)
-                packs = [p for p in packs if plantillas.es_de_fabrica(p.nombre)]
+            packs = [p for p in packs if plantillas.pack_permitido(p.nombre)]                 # v5.4.22: los tres temas de fábrica + los packs del usuario
             quitados = len(todos) - len(packs)
             self.ocultos_lnk.hide()                   # v5.4.5: sin «Mostrar los packs quitados» (se quitó el enlace de Proyecto)
             for pack in packs:
                 cartas.append(self._carta_pack(pack))
-            if not plantillas.SOLO_TEMAS:
-                cartas.append(estilos_slider.Carta('__anadir__', tr('Añadir plantilla (.drb)'), tipo='anadir', detalle=tr('Exporta una bandeja desde Resolve y súbela aquí: queda guardada como un estilo más.')))
+            cartas.append(estilos_slider.Carta('__anadir__', tr('Añadir plantilla (.drb)'), tipo='anadir', detalle=tr('Exporta una bandeja desde Resolve y súbela aquí: queda guardada como un estilo más.')))
             self.carrusel.poner_cartas(cartas, self._valor_actual())
             try:
                 self.cuenta_lbl.configure(text='' if plantillas.SOLO_TEMAS else (tr('1 pack') if len(packs) == 1 else tr('{n} packs', n=len(packs))))
@@ -7166,8 +7159,7 @@ class SubtitleApp(QWidget):
             import ajustes_ui
             ocultos = {n for n in ajustes_ui.leer_prefs().get('packs_ocultos', []) if isinstance(n, str) and not plantillas.es_de_fabrica(n)}
             packs = [p for p in plantillas.listar_packs() if plantillas.sirve_en_go(p) and p.nombre not in ocultos]
-            if plantillas.SOLO_TEMAS:
-                packs = [p for p in packs if plantillas.es_de_fabrica(p.nombre)]
+            packs = [p for p in packs if plantillas.pack_permitido(p.nombre)]
         except Exception:
             packs = []
         formato = self._formato_forzado() or self._formato_en_juego() or 'v'
@@ -7183,9 +7175,10 @@ class SubtitleApp(QWidget):
         if not plantillas.SOLO_TEMAS:
             marca = '✓  ' if actual in (base, 'dinamico', 'auto') else '      '
             menu.agregar(marca + tr('Diseño automático · 3 líneas'), lambda: self._poner_go_pack('auto'))
-            for p in otros:
-                marca = '✓  ' if p.nombre == actual else '      '
-                menu.agregar(marca + plantillas.nombre_visible(p.nombre), lambda n=p.nombre: self._poner_go_pack(n))
+        for p in otros:                                 # (con SOLO_TEMAS: solo los packs del usuario)
+            marca = '✓  ' if p.nombre == actual else '      '
+            menu.agregar(marca + plantillas.nombre_visible(p.nombre), lambda n=p.nombre: self._poner_go_pack(n))
+        if otros or not plantillas.SOLO_TEMAS:
             menu.separador()
         menu.agregar(tr('Ver los temas…') if plantillas.SOLO_TEMAS else tr('Más estilos y vista real…'), lambda: self.ir_a('estilos'))
         menu.mostrar(QCursor.pos())
@@ -7586,7 +7579,7 @@ class SubtitleApp(QWidget):
             v = str(ajustes_ui.leer_prefs().get('go_pack') or '')
         except Exception:
             return ''
-        if v and plantillas.SOLO_TEMAS and not plantillas.es_de_fabrica(v):       # v5.4.19: solo existen los tres temas; lo guardado de antes (otro pack o «auto») cuenta como «sin elegir»
+        if v and plantillas.SOLO_TEMAS and not plantillas.pack_permitido(v):       # v5.4.19: lo guardado de antes que ya no se enseña (otro pack del programa o «auto») cuenta como «sin elegir»
             return ''
         return v
     def _aplicar_recomendacion(self, pack):
@@ -7672,11 +7665,11 @@ class SubtitleApp(QWidget):
         if elegido and elegido in nombres and sirve(elegido):
             return elegido
         if not elegido:
-            if actual in nombres and actual not in (base, 'dinamico') and sirve(actual) and (not plantillas.SOLO_TEMAS or plantillas.es_de_fabrica(actual)):
+            if actual in nombres and actual not in (base, 'dinamico') and sirve(actual) and plantillas.pack_permitido(actual):
                 return actual
             if self.GO_PACK_DEFECTO in nombres and sirve(self.GO_PACK_DEFECTO):
                 return self.GO_PACK_DEFECTO
-        return actual if actual in nombres and sirve(actual) and (not plantillas.SOLO_TEMAS or plantillas.es_de_fabrica(actual)) else base
+        return actual if actual in nombres and sirve(actual) and plantillas.pack_permitido(actual) else base
     def _go(self):
         if getattr(self, '_go_corriendo', False) or self._editor_abierto():
             return
@@ -8326,8 +8319,7 @@ class SubtitleApp(QWidget):
             return False
         try:
             import recorrido_ui
-            _pasos = [p for p in self._pasos_recorrido() if not (plantillas.SOLO_TEMAS and p.titulo == tr('Crea tu estilo'))]
-            self._recorrido = recorrido_ui.Recorrido(self, _pasos, self._recorrido_fin, self._recorrido_no_mostrar)
+            self._recorrido = recorrido_ui.Recorrido(self, self._pasos_recorrido(), self._recorrido_fin, self._recorrido_no_mostrar)
         except Exception:
             self._recorrido = None
             registro.excepcion(origen='recorrido guiado')

@@ -30,7 +30,7 @@ from pathlib import Path
 # Alineada con APP_VERSION desde la v1.0.59 (estaba en "2026-08-06" y la
 # carpeta parecia una mezcla de builds — la misma leccion de los
 # auxiliares .lua).
-VERSION = "5.4.20 (insertar SFX)"
+VERSION = "5.4.22 (insertar SFX)"
 
 CARPETA_COMPARTIDA = Path.home() / "DaVinciSubtitles"
 ARCHIVO_PENDIENTE = CARPETA_COMPARTIDA / "sfx_pendiente.json"

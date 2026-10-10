@@ -307,7 +307,7 @@ class CarruselPacks(QWidget):
 
     # -- geometría ------------------------------------------------------------------------------------------------------
     def _medidas(self):
-        h_carta = max(260.0, min(560.0, self.height() - self.ALTO_CONTROLES - 22.0))
+        h_carta = max(260.0, min(860.0, self.height() - self.ALTO_CONTROLES - 22.0))                 # v5.4.22: las tarjetas crecen con la ventana (antes tope 560)
         return h_carta * ASPECTO, h_carta, self.width() / 2.0, 14.0 + h_carta / 2.0
 
     def _transformar(self, d, w, h, cx, cy):
