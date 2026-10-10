@@ -6088,6 +6088,11 @@ class SubtitleApp(QWidget):
         self._estudio_ventana = None
         self._plantillas_ventana = None
         self._composicion_ventana = None
+        try:                                              # v5.4.26: los efectos vienen activos (una sola vez se encienden en las preferencias de antes)
+            import efectos_visuales as _fxv
+            _fxv.migrar_a_efectos_activos()
+        except Exception:
+            pass
         self._paginas = {}
         self._cabeceras = {}
         self._nav = {}

@@ -53,14 +53,13 @@ CANTIDAD_ICONOS = {'pocos': (18.0, 3), 'normal': (11.0, 6), 'muchos': (7.0, 12)}
 OPCIONES_POR_DEFECTO = {'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'normal', 'fx_cortes': 'fuga_de_luz', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto',
                         'fx_iconos_activo': True, 'fx_iconos': ['pack1', 'pack2', 'pack3', 'pack4'], 'fx_iconos_cuanto': 'normal',
                         'fx_iconos_palabras': {}, 'fx_iconos_extra': True,
-                        # v5.4.8: movimiento sobre el video (Fusion) e intensidad global; los nuevos vienen apagados (el usuario los enciende en la página Efectos)
-                        'fx_zoom': 'no', 'fx_temblor': 'no', 'fx_fondo': True, 'fx_intensidad': 'normal',
-                        # efectos extra (efectos_extra.py): todo apagado hasta que el usuario lo encienda
-                        'fx_numeros': False, 'fx_pegatinas': False, 'fx_pegatinas_palabras': {}, 'fx_enfasis': 'no', 'fx_enfasis_altura': 'centro',
-                        'fx_overlay': '', 'fx_overlay_fuerza': 0.45, 'fx_propios': [], 'fx_outro': '', 'fx_outro_texto': '', 'fx_outro_logo': '', 'fx_outro_sonido': True,
+                        # v5.4.26: TODOS los efectos vienen ACTIVOS (cada sección tiene su tarjeta «Sin …» para apagarlo); no hay interruptor general en la página Efectos
+                        'fx_zoom': 'suave', 'fx_temblor': 'suave', 'fx_fondo': True, 'fx_intensidad': 'normal',
+                        'fx_numeros': True, 'fx_pegatinas': True, 'fx_pegatinas_palabras': {}, 'fx_enfasis': 'circulo', 'fx_enfasis_altura': 'centro',
+                        'fx_overlay': 'luz', 'fx_overlay_fuerza': 0.45, 'fx_propios': [], 'fx_outro': '', 'fx_outro_texto': '', 'fx_outro_logo': '', 'fx_outro_sonido': True,
                         'fx_evitar': True,
-                        # quitar pausas (pausas.py) y el zoom alterno en cada corte seco
-                        'fx_pausas': 'no', 'fx_zoom_saltos': 'no',
+                        # quitar pausas (pausas.py: CORTA el video, por eso sigue apagado hasta que lo pidas) y el zoom alterno en cada corte seco
+                        'fx_pausas': 'no', 'fx_zoom_saltos': 'suave',
                         # B-roll de bancos de stock (broll.py): necesita la clave de API gratuita de Pexels
                         'fx_broll': False, 'fx_broll_cuanto': 'normal', 'pexels_key': ''}
 SONIDO_INTRO_S = 2.0                          # v5.5: los ÚLTIMOS 2 s del riser, los que acaban en su pico (el Viral Hooks Riser sube durante todo el archivo y se corta en el golpe)
@@ -121,6 +120,30 @@ def opciones_guardadas():
     if not isinstance(op.get('fx_propios'), list):
         op['fx_propios'] = []
     return op
+
+
+# lo que se enciende de una vez en las instalaciones anteriores a la 5.4.26 (donde estos efectos venían apagados): solo lo que está en «sin efecto»
+_ACTIVAR_UNA_VEZ = {'fx_zoom': 'suave', 'fx_temblor': 'suave', 'fx_numeros': True, 'fx_pegatinas': True, 'fx_enfasis': 'circulo', 'fx_overlay': 'luz', 'fx_zoom_saltos': 'suave', 'fx_iconos_activo': True}
+
+
+def migrar_a_efectos_activos():
+    """v5.4.26 (pedido: «los efectos deben estar activos por defecto, y en cada sección el modo de apagarlo»): una sola vez, enciende lo que estaba en «sin efecto» en las preferencias que ya
+    existían (los efectos nuevos venían apagados). Después cada sección se apaga con su tarjeta «Sin …» y no se vuelve a tocar. Nunca lanza; devuelve lo que cambió."""
+    try:
+        import ajustes_ui
+        p = ajustes_ui.leer_prefs()
+        if p.get('fx_activos_v1'):
+            return {}
+        cambios = {}
+        for k, v in _ACTIVAR_UNA_VEZ.items():
+            actual = p.get(k)
+            if actual in (None, '', 'no', False):
+                cambios[k] = v
+        cambios['fx_activos_v1'] = True
+        ajustes_ui.guardar_prefs(cambios)
+        return cambios
+    except Exception:
+        return {}
 
 
 def activado():

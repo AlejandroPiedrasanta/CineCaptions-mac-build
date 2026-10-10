@@ -484,6 +484,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.26', [
+        'Página Efectos: se quitó el interruptor general «Efectos visuales al hacer GO». Todos los efectos vienen ACTIVADOS (zoom, temblor, números, pegatinas, énfasis, ambiente, iconos…) y cada sección se apaga con su propia tarjeta «Sin …». Los que estaban apagados en tu instalación se encienden una sola vez; quitar pausas y el B-roll (necesita tu clave de Pexels) siguen apagados. El chip «Visuales» de Inicio sigue apagándolos todos.',
+    ]),
     ('5.4.25', [
         'Si pulsas GO otra vez sobre el mismo video (para probar otro tema), la IA de texto ya no vuelve a correr: reutiliza su resultado y esa parte pasa de hasta 2 minutos a un instante.',
         'Un emoji que la IA ponía en una palabra sin peso ya no salta a una palabra de la frase anterior: se queda en su propia frase.',

@@ -14,7 +14,7 @@ efectos_visuales.planificar al hacer GO:
     fx_iconos_palabras {pack: [palabras]} en qué palabras sale cada pack (clic en el pack); fx_iconos_extra = también en frases importantes
     fx_iconos_cuanto                      cuántos iconos
 
-Los efectos vienen ACTIVADOS; el interruptor de arriba es el MISMO que el chip «Visuales» de Inicio (preferencia go_efectos_visuales).
+v5.4.26: los efectos vienen ACTIVADOS y la página NO tiene interruptor general: cada sección se apaga con su tarjeta «Sin …». El chip «Visuales» de Inicio (go_efectos_visuales) sigue apagándolos todos.
 """
 from PySide6.QtCore import QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QFontMetricsF, QImage, QPainter, QPainterPath, QPen
@@ -347,21 +347,11 @@ class PaginaEfectos(QWidget):
         capa.setContentsMargins(0, 0, 0, 0)
         capa.setSpacing(18)
         op = F.opciones_guardadas()
-        # ---- el interruptor general
-        general = Tarjeta(espacio=6, margenes=(22, 16, 22, 16))
-        fila, cf = caja_h(espacio=14)
-        self._var_activo = ui.BooleanVar(F.activado())
-        self._sw = Interruptor(tr('Efectos visuales al hacer GO'), self._var_activo, self._cambio_general, tam=15, color='#FFFFFF')
-        cf.addWidget(self._sw)
-        cf.addStretch(1)
-        general.capa.addWidget(fila)
-        general.capa.addWidget(Etiqueta(tr('Acompañan a los captions, la música y los emojis: se colocan solos en pistas propias «FX» (tu video y tus captions no se tocan). También se enciende con el chip «Visuales» de Inicio.'),
-                                        13, color=TEXT_MUTED, envolver=True))
+        # ---- v5.4.26: sin interruptor general; los efectos vienen activos y cada sección tiene su tarjeta «Sin …» (el chip «Visuales» de Inicio sigue apagándolos todos)
         fila_i, ci = caja_h(espacio=10)
         ci.addStretch(1)
         ci.addWidget(Boton(tr('Vista previa de 3 s'), self._abrir_vista_previa, alto=34, tam=12))
-        general.capa.addWidget(fila_i)
-        capa.addWidget(general)
+        capa.addWidget(fila_i)
         # ---- intro (y su sonido)
         self._intro = op.get('fx_intro') or ''
         t1 = self._tarjeta(tr('Intro'), tr('Un destello de luz con su sonido: sube el riser (sus últimos 2 s) y, justo en su pico, el destello cubre la imagen y el cuadro se suelta con un golpe de zoom.'))
@@ -525,10 +515,6 @@ class PaginaEfectos(QWidget):
         """Al volver a la página: el interruptor general puede haberse movido desde el chip de Inicio y, desde la v5.5, las opciones pueden haber cambiado al elegir un estilo
         (la recomendación de cada estilo deja la intro, el zoom, las transiciones y los iconos ya configurados): se vuelve a leer todo."""
         try:
-            self._var_activo.set(F.activado())
-        except Exception:
-            pass
-        try:
             op = F.opciones_guardadas()
             for fila, clave in ((self._f_zoom_intro, 'fx_intro_zoom'), (self._f_zoom, 'fx_zoom'), (self._f_temblor, 'fx_temblor'), (self._f_saltos, 'fx_zoom_saltos'),
                                 (self._f_pausas, 'fx_pausas'), (self._f_cortes, 'fx_cortes_cuanto')):
@@ -549,11 +535,6 @@ class PaginaEfectos(QWidget):
             self._mas.refrescar()
         except Exception:
             pass
-
-    def _cambio_general(self):
-        _guardar({'go_efectos_visuales': bool(self._var_activo.get())})
-        if self._al_cambiar:
-            self._al_cambiar()
 
     def _tocar(self, tipo, ident):
         if tipo == 'intro':
