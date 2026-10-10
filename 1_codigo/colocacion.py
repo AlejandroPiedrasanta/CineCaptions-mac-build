@@ -651,7 +651,7 @@ def _ps_uia(codigo, env_extra=None, timeout=45):
         import subprocess
         cod = base64.b64encode(codigo.encode('utf-16-le')).decode('ascii')
         r = subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', cod], capture_output=True, text=True,
-                           encoding='utf-8', errors='replace', timeout=timeout, env={**os.environ, **(env_extra or {})}, creationflags=0x08000000)      # CREATE_NO_WINDOW
+                           encoding='utf-8', errors='replace', timeout=timeout, env={**os.environ, **(env_extra or {})}, creationflags=0x08000000, cwd=os.path.expanduser('~'))      # CREATE_NO_WINDOW
         salida = (r.stdout or '').strip().splitlines()
         return salida[-1].strip() if salida else ('ERROR ' + (r.stderr or '').strip()[:160])
     except Exception as e:
@@ -838,7 +838,9 @@ def abrir_resolve_windows(decir=None, espera_s=240):
                 return False
             if decir:
                 decir(tr('Abriendo DaVinci Resolve…'))
-            subprocess.Popen([exe], env=resolve_mcp.entorno_para_resolve(), creationflags=0x00000008 | 0x00000200, close_fds=True)         # DETACHED_PROCESS | NEW_PROCESS_GROUP
+            # cwd = la carpeta del usuario: Resolve heredaba la del programa (los accesos directos fijan la carpeta de instalación) y, mientras siguiera abierto, el instalador no podía renombrar esa carpeta
+            # al actualizar («algún archivo está en uso», 5.4.26)
+            subprocess.Popen([exe], env=resolve_mcp.entorno_para_resolve(), creationflags=0x00000008 | 0x00000200, close_fds=True, cwd=os.path.expanduser('~'))         # DETACHED_PROCESS | NEW_PROCESS_GROUP
         inicio = time.time()
         ultimo, intentos = 0.0, 0
         while time.time() - inicio < espera_s:

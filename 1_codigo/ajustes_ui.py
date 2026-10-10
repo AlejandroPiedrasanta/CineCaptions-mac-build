@@ -484,6 +484,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.27', [
+        'Página Efectos: se quitaron «Temblor en los golpes», «Números, pegatinas y énfasis», «Ambiente», «B-roll de stock» y «Mis efectos» (y esos efectos quedan apagados). Los iconos flotantes vienen apagados por defecto.',
+        'Actualizar ya no falla con «algún archivo está en uso» si CineCaptions abrió Resolve: Resolve se lanzaba con la carpeta del programa como carpeta actual y no dejaba reemplazarla.',
+        'Registro y errores más claros: cada error del Registro (y de errores.log) lleva debajo qué significa y qué hacer, con avisos nuevos para Resolve Free sin proyecto, foco de Resolve, permiso de Accesibilidad (Mac), IA lenta y GO atascado; el mismo fallo ya no sale repetido por varios sitios, y cada GO empieza con una línea de contexto (video, tema, Resolve Free/Studio, efectos).',
+    ]),
     ('5.4.26', [
         'Página Efectos: se quitó el interruptor general «Efectos visuales al hacer GO». Todos los efectos vienen ACTIVADOS (zoom, temblor, números, pegatinas, énfasis, ambiente, iconos…) y cada sección se apaga con su propia tarjeta «Sin …». Los que estaban apagados en tu instalación se encienden una sola vez; quitar pausas y el B-roll (necesita tu clave de Pexels) siguen apagados. El chip «Visuales» de Inicio sigue apagándolos todos.',
     ]),

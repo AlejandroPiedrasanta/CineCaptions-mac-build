@@ -51,12 +51,13 @@ CANTIDAD_ICONOS = {'pocos': (18.0, 3), 'normal': (11.0, 6), 'muchos': (7.0, 12)}
 
 # v5.4.7: los efectos vienen ACTIVADOS (el usuario los apaga en la página Efectos o con el chip «Visuales» de Inicio)
 OPCIONES_POR_DEFECTO = {'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'normal', 'fx_cortes': 'fuga_de_luz', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto',
-                        'fx_iconos_activo': True, 'fx_iconos': ['pack1', 'pack2', 'pack3', 'pack4'], 'fx_iconos_cuanto': 'normal',
+                        'fx_iconos_activo': False, 'fx_iconos': ['pack1', 'pack2', 'pack3', 'pack4'], 'fx_iconos_cuanto': 'normal',
                         'fx_iconos_palabras': {}, 'fx_iconos_extra': True,
                         # v5.4.26: TODOS los efectos vienen ACTIVOS (cada sección tiene su tarjeta «Sin …» para apagarlo); no hay interruptor general en la página Efectos
-                        'fx_zoom': 'suave', 'fx_temblor': 'suave', 'fx_fondo': True, 'fx_intensidad': 'normal',
-                        'fx_numeros': True, 'fx_pegatinas': True, 'fx_pegatinas_palabras': {}, 'fx_enfasis': 'circulo', 'fx_enfasis_altura': 'centro',
-                        'fx_overlay': 'luz', 'fx_overlay_fuerza': 0.45, 'fx_propios': [], 'fx_outro': '', 'fx_outro_texto': '', 'fx_outro_logo': '', 'fx_outro_sonido': True,
+                        'fx_zoom': 'suave', 'fx_temblor': 'no', 'fx_fondo': True, 'fx_intensidad': 'normal',
+                        # v5.4.27: temblor, números, pegatinas, énfasis, ambiente, B-roll y «Mis efectos» ya NO están en la página (el usuario los quitó): quedan apagados; el código sigue ahí
+                        'fx_numeros': False, 'fx_pegatinas': False, 'fx_pegatinas_palabras': {}, 'fx_enfasis': 'no', 'fx_enfasis_altura': 'centro',
+                        'fx_overlay': '', 'fx_overlay_fuerza': 0.45, 'fx_propios': [], 'fx_outro': '', 'fx_outro_texto': '', 'fx_outro_logo': '', 'fx_outro_sonido': True,
                         'fx_evitar': True,
                         # quitar pausas (pausas.py: CORTA el video, por eso sigue apagado hasta que lo pidas) y el zoom alterno en cada corte seco
                         'fx_pausas': 'no', 'fx_zoom_saltos': 'suave',
@@ -123,7 +124,9 @@ def opciones_guardadas():
 
 
 # lo que se enciende de una vez en las instalaciones anteriores a la 5.4.26 (donde estos efectos venían apagados): solo lo que está en «sin efecto»
-_ACTIVAR_UNA_VEZ = {'fx_zoom': 'suave', 'fx_temblor': 'suave', 'fx_numeros': True, 'fx_pegatinas': True, 'fx_enfasis': 'circulo', 'fx_overlay': 'luz', 'fx_zoom_saltos': 'suave', 'fx_iconos_activo': True}
+_ACTIVAR_UNA_VEZ = {'fx_zoom': 'suave', 'fx_zoom_saltos': 'suave'}
+# v5.4.27 (el usuario quitó estas secciones de la página): una sola vez se APAGAN en las preferencias (la 5.4.26 las había encendido) y los iconos flotantes quedan apagados por defecto
+_APAGAR_UNA_VEZ = {'fx_temblor': 'no', 'fx_numeros': False, 'fx_pegatinas': False, 'fx_enfasis': 'no', 'fx_overlay': '', 'fx_broll': False, 'fx_iconos_activo': False}
 
 
 def migrar_a_efectos_activos():
@@ -132,15 +135,17 @@ def migrar_a_efectos_activos():
     try:
         import ajustes_ui
         p = ajustes_ui.leer_prefs()
-        if p.get('fx_activos_v1'):
-            return {}
         cambios = {}
-        for k, v in _ACTIVAR_UNA_VEZ.items():
-            actual = p.get(k)
-            if actual in (None, '', 'no', False):
-                cambios[k] = v
-        cambios['fx_activos_v1'] = True
-        ajustes_ui.guardar_prefs(cambios)
+        if not p.get('fx_activos_v1'):
+            for k, v in _ACTIVAR_UNA_VEZ.items():
+                if p.get(k) in (None, '', 'no', False):
+                    cambios[k] = v
+            cambios['fx_activos_v1'] = True
+        if not p.get('fx_activos_v2'):
+            cambios.update(_APAGAR_UNA_VEZ)
+            cambios['fx_activos_v2'] = True
+        if cambios:
+            ajustes_ui.guardar_prefs(cambios)
         return cambios
     except Exception:
         return {}

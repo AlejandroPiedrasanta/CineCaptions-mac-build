@@ -7709,6 +7709,14 @@ class SubtitleApp(QWidget):
         hay_mcp = resolve_mcp.ruta_exe() is not None
         self._go_tl_listo = None
         self._go_tl_error = None
+        try:                                              # v5.4.27: una línea con el contexto de ESTE GO, para entender cualquier error que venga después
+            import efectos_visuales as _fxl
+            import plantillas as _pl
+            registro.info('GO empieza · %s · tema «%s» · Resolve %s · efectos %s · emojis %s' % (
+                ('video «%s»' % Path(str(archivo)).name) if archivo else 'audio del timeline de Resolve', _pl.nombre_visible(self._plantilla_un_clic()),
+                'Studio (MCP)' if hay_mcp else 'Free (Puente)', 'sí' if _fxl.activado() else 'no', 'sí' if self._go_emojis() else 'no'), 'GO')
+        except Exception:
+            pass
         if archivo and Path(archivo).exists():
             self._go_archivo = None
             self.video_var.set(archivo)

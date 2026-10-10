@@ -406,11 +406,9 @@ class PaginaEfectos(QWidget):
         capa.addWidget(t2)
         self._pintar_unico(self._c_cortes, self._cortes)
         # ---- movimiento del video (Fusion)
-        t4 = self._tarjeta(tr('Movimiento del video'), tr('Se aplica al propio video con una composición de Fusion: tu corrección de color sigue valiendo y no se duplica nada. Zoom lento todo el rato, temblor en los golpes de sonido y, si el video no llena el cuadro, un fondo desenfocado.'))
+        t4 = self._tarjeta(tr('Movimiento del video'), tr('Se aplica al propio video con una composición de Fusion: tu corrección de color sigue valiendo y no se duplica nada. Zoom lento todo el rato y, si el video no llena el cuadro, un fondo desenfocado.'))
         self._f_zoom = self._fila(t4.capa, 'zoom', tr('Zoom lento'), tr('El cuadro crece poco a poco durante todo el video (en el ejemplo se ve acelerado).'),
                                   self._niveles(tr('Sin zoom'), tr('El cuadro no se mueve.'), tr('Crece despacio, casi sin notarse.'), tr('Crece poco a poco.'), tr('Crece de forma notoria.')), op.get('fx_zoom'), 'fx_zoom')
-        self._f_temblor = self._fila(t4.capa, 'temblor', tr('Temblor en los golpes'), tr('El cuadro se sacude un instante con cada golpe de sonido.'),
-                                     self._niveles(tr('Sin temblor'), tr('El cuadro no se sacude.'), tr('Un golpecito discreto.'), tr('Un golpe claro con cada sonido.'), tr('Un golpe fuerte y marcado.')), op.get('fx_temblor'), 'fx_temblor')
         self._f_fondo = self._fila(t4.capa, 'fondo', tr('Si el video no llena el cuadro'), tr('Por ejemplo un video horizontal en un timeline vertical.'),
                                    [('no', tr('Barras negras'), tr('Se ven barras negras arriba y abajo.'), False), ('si', tr('Fondo desenfocado'), tr('Una copia desenfocada llena el cuadro.'), False)],
                                    'si' if bool(op.get('fx_fondo', True)) else 'no', None, guardar=lambda k: _guardar({'fx_fondo': k == 'si'}))
@@ -427,7 +425,7 @@ class PaginaEfectos(QWidget):
         self._iconos = set(op.get('fx_iconos') or [])
         t3 = self._tarjeta(tr('Iconos flotantes'), tr('Salen iconos animados cuando se dice una palabra que tú eliges (haz clic en un pack para escribirlas) y, si quieres, también en las frases importantes: un número, un aviso, una pregunta o el gancho.'))
         fila3g, c3g = caja_h(espacio=14)
-        self._var_iconos_on = ui.BooleanVar(bool(op.get('fx_iconos_activo', True)))
+        self._var_iconos_on = ui.BooleanVar(bool(op.get('fx_iconos_activo', False)))
         self._sw_iconos = Interruptor(tr('Iconos flotantes'), self._var_iconos_on, self._cambio_iconos_on, tam=14, color='#FFFFFF')
         c3g.addWidget(self._sw_iconos)
         self._var_extra = ui.BooleanVar(bool(op.get('fx_iconos_extra', True)))
@@ -516,7 +514,7 @@ class PaginaEfectos(QWidget):
         (la recomendación de cada estilo deja la intro, el zoom, las transiciones y los iconos ya configurados): se vuelve a leer todo."""
         try:
             op = F.opciones_guardadas()
-            for fila, clave in ((self._f_zoom_intro, 'fx_intro_zoom'), (self._f_zoom, 'fx_zoom'), (self._f_temblor, 'fx_temblor'), (self._f_saltos, 'fx_zoom_saltos'),
+            for fila, clave in ((self._f_zoom_intro, 'fx_intro_zoom'), (self._f_zoom, 'fx_zoom'), (self._f_saltos, 'fx_zoom_saltos'),
                                 (self._f_pausas, 'fx_pausas'), (self._f_cortes, 'fx_cortes_cuanto')):
                 fila.poner(op.get(clave))
             self._f_fondo.poner('si' if bool(op.get('fx_fondo', True)) else 'no')
@@ -525,7 +523,7 @@ class PaginaEfectos(QWidget):
             self._intro, self._cortes = op.get('fx_intro') or '', op.get('fx_cortes') or ''
             self._pintar_unico(self._c_intro, self._intro)
             self._pintar_unico(self._c_cortes, self._cortes)
-            self._var_iconos_on.set(bool(op.get('fx_iconos_activo', True)))
+            self._var_iconos_on.set(bool(op.get('fx_iconos_activo', False)))
             self._var_extra.set(bool(op.get('fx_iconos_extra', True)))
             self._iconos = set(op.get('fx_iconos') or [])
             for ident, c in self._c_iconos.items():

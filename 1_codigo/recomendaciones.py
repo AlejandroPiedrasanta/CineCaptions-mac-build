@@ -8,7 +8,7 @@ pantalla Estilos) se escriben las preferencias que mejor le sientan. Es una RECO
 que se cambie de estilo. v5.4.23: NO toca los interruptores generales del usuario (Efectos, Emojis y Visuales de Inicio): si los apagó, siguen apagados. No toca lo que cambia el video de forma estructural (quitar pausas, música, B-roll, cierre, overlays, mis efectos, intensidad).
 
     VIRAL       la clave de cada bloque es la protagonista: sonido SOLO en ella (un golpe que sube con el efecto), intro con riser + destello + zoom, el obturador en las transiciones
-                («destello»), movimiento suave y pocos iconos flotantes (los efectos de la palabra y los emojis ya llenan el cuadro)
+                («destello»), movimiento suave (los efectos de la palabra y los emojis ya llenan el cuadro)
     Kinetic     títulos de gancho a toda pantalla: sonido solo en el héroe, intro con zoom fuerte, transición con zoom desenfocado y un temblor en los golpes
     Referencia  la frase se arma palabra a palabra (como escribir): un toque por palabra, intro suave, transición con fuga de luz e iconos pocos
 
@@ -21,23 +21,23 @@ RECOMENDACIONES = {
         'prefs': {'sfx_emojis': True, 'sfx_curva_energia': False,
                   'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'normal',
                   'fx_cortes': 'destello', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto', 'fx_sonido_cortes': True, 'fx_sonido_gancho': True,
-                  'fx_zoom': 'suave', 'fx_temblor': 'suave', 'fx_iconos_activo': True, 'fx_iconos_cuanto': 'pocos'},
+                  'fx_zoom': 'suave', 'fx_temblor': 'no', 'fx_iconos_activo': False},
     },
     'Kinetic': {
-        'resumen': 'sonido solo en el héroe · riser con destello y zoom fuerte en la intro · transición con zoom desenfocado · temblor en los golpes',
+        'resumen': 'sonido solo en el héroe · riser con destello y zoom fuerte en la intro · transición con zoom desenfocado',
         'sonido': {'donde': 'principal'},
         'prefs': {'sfx_curva_energia': False,
                   'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'fuerte',
                   'fx_cortes': 'zoom_blur', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto', 'fx_sonido_cortes': True, 'fx_sonido_gancho': True,
-                  'fx_zoom': 'suave', 'fx_temblor': 'normal', 'fx_iconos_activo': True, 'fx_iconos_cuanto': 'pocos'},
+                  'fx_zoom': 'suave', 'fx_temblor': 'no', 'fx_iconos_activo': False},
     },
     'Referencia': {
-        'resumen': 'un toque por palabra (como escribir) · riser con destello y zoom suave en la intro · fuga de luz en las transiciones · pocos iconos',
+        'resumen': 'un toque por palabra (como escribir) · riser con destello y zoom suave en la intro · fuga de luz en las transiciones',
         'sonido': {'donde': 'todas'},
         'prefs': {'sfx_emojis': True, 'sfx_curva_energia': True,
                   'fx_intro': 'fuga_de_luz', 'fx_intro_sonido': 'viral_hooks_riser', 'fx_intro_zoom': 'suave',
                   'fx_cortes': 'fuga_de_luz', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto', 'fx_sonido_cortes': True, 'fx_sonido_gancho': True,
-                  'fx_zoom': 'normal', 'fx_temblor': 'suave', 'fx_iconos_activo': True, 'fx_iconos_cuanto': 'pocos'},
+                  'fx_zoom': 'normal', 'fx_temblor': 'no', 'fx_iconos_activo': False},
     },
 }
 

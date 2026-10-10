@@ -73,16 +73,29 @@ class _Registro(QObject):
         mensaje = str(mensaje or '').strip()
         if not mensaje:
             return None
+        if nivel in ('aviso', 'error'):
+            _preparar_ayuda()                      # (fuera del candado: importa módulos que podrían anotar algo)
+        escribir = True
         with self._candado:
             previa = self._lista[-1] if self._lista else None
-            if previa is not None and previa.mensaje == mensaje and previa.nivel == nivel and time.time() - previa.tiempo < 4.0:
+            if previa is not None and previa.nivel == nivel and time.time() - previa.tiempo < 4.0 and previa.mensaje == mensaje:
                 previa.veces += 1
                 previa.tiempo = time.time()
+                e = previa
+            elif (previa is not None and previa.nivel == nivel and nivel == 'error' and time.time() - previa.tiempo < 6.0 and previa.origen != origen
+                  and min(len(previa.mensaje), len(mensaje)) >= 30 and (previa.mensaje in mensaje or mensaje in previa.mensaje)):
+                # v5.4.27: el MISMO fallo contado por dos sitios (p. ej. «GO · resolve: X» y «mensaje: Algo salio mal: X»): una sola línea con su contador, no dos
+                previa.veces += 1
+                previa.tiempo = time.time()
+                if len(mensaje) < len(previa.mensaje):          # se queda el texto más corto y claro (sin el «Algo salio mal: » del cuadro)
+                    previa.mensaje = mensaje
+                escribir = False                                 # ya está en el archivo: no se repite la línea
                 e = previa
             else:
                 e = Entrada(nivel, mensaje, origen, detalle)
                 self._lista.append(e)
-            self._a_disco(e)
+            if escribir:
+                self._a_disco(e)
         self._emitiendo = True
         try:
             self.nueva.emit(e)
@@ -105,6 +118,8 @@ class _Registro(QObject):
                     pass
             fecha = datetime.datetime.fromtimestamp(e.tiempo).strftime('%Y-%m-%d')
             texto = f'{fecha} {e.linea()}\n'
+            for k, linea_d in enumerate(_diagnostico(e)):      # v5.4.27: qué significa y qué hacer, justo debajo del error
+                texto += ('    → ' if k == 0 else '      ') + linea_d + chr(10)
             if e.detalle:
                 texto += ''.join(f'    {l}\n' for l in e.detalle.rstrip().splitlines())
             with open(ARCHIVO, 'a', encoding='utf-8') as f:
@@ -159,6 +174,40 @@ class _Registro(QObject):
 
 
 _REGISTRO = None
+_AYUDA = {'modulo': None, 'intentado': False}
+
+
+def _preparar_ayuda():
+    """Carga registro_ayuda UNA vez (trae las reglas de «qué significa y qué hacer»). Si falla, los errores se escriben sin diagnóstico."""
+    if _AYUDA['intentado']:
+        return
+    _AYUDA['intentado'] = True
+    try:
+        import registro_ayuda
+        _AYUDA['modulo'] = registro_ayuda
+    except Exception:
+        _AYUDA['modulo'] = None
+
+
+def _diagnostico(e):
+    """Líneas «Título» / «qué pasó» / «Qué hacer: …» para los errores (y los avisos que sí tienen una regla clara); [] si no hay nada útil que añadir. Nunca lanza."""
+    try:
+        m = _AYUDA['modulo']
+        if m is None or e.nivel not in ('aviso', 'error') or e.origen.startswith(('Qt', 'entorno')):
+            return []
+        a = m.explicar(e)
+        if a.titulo in ('Aviso', 'Información', 'Anotación', 'Algo no salió como se esperaba'):
+            return ['Error sin regla conocida: lo que hay que revisar es el detalle técnico de abajo.'] if e.nivel == 'error' else []
+        if a.impacto == 'ninguno' and e.nivel == 'aviso':
+            return []
+        lineas = [a.titulo]
+        if a.que:
+            lineas.append(a.que[:300])
+        for k, paso in enumerate(a.pasos[:2]):
+            lineas.append(('Qué hacer: ' if k == 0 else 'Y luego: ') + paso[:220])
+        return lineas
+    except Exception:
+        return []
 
 
 def registro():

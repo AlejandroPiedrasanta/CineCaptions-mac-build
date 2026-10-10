@@ -1129,7 +1129,8 @@ def lanzar_puente_mac(espera_s=25, espera_abrir_s=180, forzar=False):
             if '-25211' in err or '-1719' in err or 'asistencia' in err.lower() or 'assistive' in err.lower():
                 motivo = 'sin permiso de Accesibilidad para CineCaptions (Ajustes del Sistema > Privacidad y seguridad > Accesibilidad)'
             else:
-                motivo = salida or err.strip()[-200:] or 'sin respuesta'
+                motivo = {'sin_menu': 'Resolve esta abierto pero no muestra el menu Scripts > CineCaptions_Puente (¿sin proyecto abierto, o scripts sin instalar? Ajustes > Reinstalar scripts)',
+                          'sin_resolve': 'Resolve no esta abierto'}.get(salida) or salida or err.strip()[-200:] or 'sin respuesta'
             registro.aviso('No pude lanzar el Puente en Resolve por el menu: ' + motivo, 'Puente · Mac')
             return False
         if _esperar_latido(espera_s, version):
