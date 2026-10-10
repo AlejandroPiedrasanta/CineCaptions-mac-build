@@ -484,6 +484,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.25', [
+        'Si pulsas GO otra vez sobre el mismo video (para probar otro tema), la IA de texto ya no vuelve a correr: reutiliza su resultado y esa parte pasa de hasta 2 minutos a un instante.',
+        'Un emoji que la IA ponía en una palabra sin peso ya no salta a una palabra de la frase anterior: se queda en su propia frase.',
+        'Al abrir Resolve en Mac sin proyecto, CineCaptions intenta crear un proyecto vacío para arrancar el Puente y, al terminar GO, deja activada «Expandir vista» (sin probar en un Mac real).',
+    ]),
     ('5.4.24', [
         'Soltar un video con Resolve Free cerrado ya funciona de punta a punta: la app abre Resolve y, si se queda en el «Organizador de proyectos», crea sola un proyecto vacío para arrancar el Puente (después se borra al crear «CineCaptions» con tu video). Antes esperaba 4 minutos y fallaba con «abre Resolve con un proyecto».',
         'Si sueltas el video en los primeros segundos tras abrir CineCaptions, ya no cae en «Falta un clic en Resolve»: se sabe que es Resolve Free sin esperar al estado del sistema.',

@@ -198,10 +198,73 @@ def precargar():
         return False
 
 
+# v5.4.25: el resultado de la IA se guarda por huella (palabras + idioma + modo + modelo + motor): volver a pulsar GO sobre el mismo video (probar otro tema) no vuelve a correr el modelo
+# (7 s con la GPU libre, hasta 2 min cuando hay otras cosas usándola) y deja el mismo resultado. Se guarda con archivos_seguros; se conservan las últimas 80.
+_CACHE_MAX = 80
+
+
+def _carpeta_cache():
+    return Path.home() / 'DaVinciSubtitles' / 'ia_cache'
+
+
+def _clave_cache(textos, idioma, modo, modelo):
+    import hashlib
+    try:
+        motor = hashlib.sha1(script().read_bytes()).hexdigest()[:12]
+    except Exception:
+        motor = 'sin-motor'
+    base = json.dumps({'v': 1, 'palabras': textos, 'idioma': idioma, 'modo': modo or '', 'modelo': modelo, 'motor': motor}, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha1(base.encode('utf-8')).hexdigest()
+
+
+def _resultado_de_datos(datos):
+    return {'correcciones': {int(k): v for k, v in (datos.get('correcciones') or {}).items()},
+            'pesos': {int(k): float(v) for k, v in (datos.get('pesos') or {}).items()},
+            'emojis': {int(k): str(v) for k, v in (datos.get('emojis') or {}).items()},
+            'modelo': datos.get('modelo'), 'segundos': datos.get('segundos')}
+
+
+def _leer_cache(clave):
+    try:
+        import archivos_seguros
+        datos = archivos_seguros.leer_json(_carpeta_cache() / (clave + '.json'), None)
+        if isinstance(datos, dict) and 'correcciones' in datos and 'pesos' in datos:
+            return _resultado_de_datos(datos)
+    except Exception:
+        pass
+    return None
+
+
+def _guardar_cache(clave, datos):
+    try:
+        import archivos_seguros
+        carpeta = _carpeta_cache()
+        archivos_seguros.escribir_json(carpeta / (clave + '.json'), {k: datos.get(k) for k in ('correcciones', 'pesos', 'emojis', 'modelo', 'segundos')})
+        viejos = sorted(carpeta.glob('*.json'), key=lambda f: f.stat().st_mtime, reverse=True)[_CACHE_MAX:]
+        for f in viejos:
+            try:
+                f.unlink()
+            except OSError:
+                pass
+    except Exception:
+        pass
+
+
 def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
     """Corre el modelo. Devuelve {'correcciones': {i: palabra}, 'pesos': {i: 0..1},
     'emojis': {i: glifo}}. Lanza RuntimeError si no se pudo."""
     textos = [str(p.get('word', '')).strip() for p in palabras]
+    clave = None
+    try:
+        clave = _clave_cache(textos, idioma, modo, (motor_voz.info_instalado() or {}).get('modelo_texto') or 'auto')
+        guardado = _leer_cache(clave)
+        if guardado is not None:
+            r0 = _reg()
+            if r0:
+                r0.info('Resultado de la IA reutilizado (mismas palabras, mismo idioma): no se vuelve a correr el modelo.', 'IA de texto')
+            return guardado
+    except Exception:
+        clave = None
     fd, entrada = tempfile.mkstemp(prefix='cinecaptions_texto_', suffix='.json')
     os.close(fd)
     salida = entrada[:-5] + '.out.json'
@@ -264,10 +327,9 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
             r.ok('La IA de texto volvió a funcionar.', 'IA de texto')
         _FALLOS['n'], _FALLOS['avisado'] = 0, False
         datos = json.loads(Path(salida).read_text(encoding='utf-8'))
-        return {'correcciones': {int(k): v for k, v in (datos.get('correcciones') or {}).items()},
-                'pesos': {int(k): float(v) for k, v in (datos.get('pesos') or {}).items()},
-                'emojis': {int(k): str(v) for k, v in (datos.get('emojis') or {}).items()},
-                'modelo': datos.get('modelo'), 'segundos': datos.get('segundos')}
+        if clave:
+            _guardar_cache(clave, datos)
+        return _resultado_de_datos(datos)
     finally:
         for f in (entrada, salida):
             try:
@@ -357,14 +419,19 @@ def emojis_de_ia(palabras, propuestos, idioma='es', roles=None):
     por_glifo = _por_glifo()
     elegidos = {}
     ultimo_por_id = {}
+    frase, n_frase = [], 0                             # v5.4.25: a qué frase pertenece cada palabra (el emoji de «miedo» caía en «guitarra», la última palabra de la frase ANTERIOR)
+    for w in palabras:
+        frase.append(n_frase)
+        if w.get('fin_frase'):
+            n_frase += 1
     for i in sorted(propuestos or {}):
         if not 0 <= i < len(palabras):
             continue
         destino = i
-        # en los virales el emoji acompaña a la palabra destacada (la principal)
+        # en los virales el emoji acompaña a la palabra destacada (la principal), de SU frase
         if _sin_carga(palabras[i].get('word')) or (roles is not None and roles[i] != 'main'):
             cerca = [j for j in range(max(0, i - 4), min(len(palabras), i + 5))
-                     if roles is not None and roles[j] == 'main']
+                     if roles is not None and roles[j] == 'main' and frase[j] == frase[i]]
             if cerca:
                 destino = min(cerca, key=lambda j: abs(j - i))
             elif _sin_carga(palabras[i].get('word')):
