@@ -7532,6 +7532,8 @@ class SubtitleApp(QWidget):
     def _descargar_actualizacion(self, r):
         import actualizaciones
         import editor_ui
+        if getattr(self, '_descargando_actualizacion', False):          # v5.4.41: un segundo clic (o dos avisos a la vez) no arranca otra descarga encima de la primera
+            return
         archivo = r['archivo']
         try:
             dlg = Dialogo(self, tr('Actualizando CineCaptions'), 500, 430, redimensionable=False)
@@ -7555,7 +7557,13 @@ class SubtitleApp(QWidget):
                 est['ruta'] = actualizaciones.descargar(archivo, APP_VERSION, progreso=progreso, cancelado=lambda: est['cancelado'])
             except BaseException as e:
                 est['error'] = str(e) or type(e).__name__
-        hilo = threading.Thread(target=trabajo, daemon=True, name='descarga-actualizacion')
+        self._descargando_actualizacion = True
+        def trabajo_y_liberar():
+            try:
+                trabajo()
+            finally:
+                self._descargando_actualizacion = False
+        hilo = threading.Thread(target=trabajo_y_liberar, daemon=True, name='descarga-actualizacion')
         hilo.start()
         def revisar():
             if hilo.is_alive():
@@ -7941,7 +7949,7 @@ class SubtitleApp(QWidget):
             al_estado = lambda t: self.msg_queue.put(('status', t))
             try:                                                   # v5.4.40: un Resolve que se quedó colgado (ventana «No responde», sin escribir nada) de un GO anterior se cierra y se reabre YA, sin esperar minutos
                 import colocacion
-                if resolve_bridge.estado_resolve(colgado_s=10.0, callado_s=10.0) == 'colgado':
+                if resolve_bridge.estado_resolve(colgado_s=10.0, callado_s=10.0) != 'ok' and resolve_bridge._pids_de_resolve():          # (colgado, o proceso vivo SIN ventana: Resolve cerrado por dentro)
                     colocacion.recuperar_resolve(tr('ventana sin responder'), decir=al_estado)
             except Exception:
                 registro.excepcion(origen='GO · Resolve colgado antes de empezar')

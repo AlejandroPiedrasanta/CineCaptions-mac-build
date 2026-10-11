@@ -484,6 +484,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.41', [
+        'Arreglo: si Resolve se cerraba por dentro y su proceso quedaba vivo sin ventana (9 GB, sin responder), GO esperaba minutos y fallaba con «el Puente dejó de responder». Ahora lo detecta, cierra ese Resolve fantasma, lo vuelve a abrir y repite el proceso.',
+        'Arreglo: al reabrir Resolve, dos tareas escribían a la vez en su consola y mezclaban las letras del comando que arranca el Puente («no pude lanzar el Puente»). Ahora escribe una sola.',
+        'Arreglo: al actualizar CineCaptions a veces salía «la huella (SHA-256) del archivo descargado NO coincide» o «archivo en uso» y había que repetir (dos descargas a la vez escribían en el mismo archivo). Ahora solo hay una descarga a la vez y, si la huella no cuadra por la red, se repite sola una vez.',
+    ]),
     ('5.4.40', [
         'Resolve Free ya no se cuelga al armar el proyecto de un video: se encontró la causa (se le cambiaban los ajustes al timeline recién creado antes de que Resolve terminara su copia de respaldo; el 2.º GO seguido se colgaba 5 de 7 veces) y se corrigió.',
         'Si Resolve se cuelga o se cierra solo a mitad de GO, CineCaptions lo nota en cerca de 1 minuto, lo cierra, lo vuelve a abrir y repite el proceso solo (antes esperaba 4 minutos y fallaba).',

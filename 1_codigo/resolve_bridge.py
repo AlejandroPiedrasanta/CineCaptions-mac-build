@@ -169,7 +169,7 @@ def _pids_de_resolve():
     return pids
 
 
-_COLGADO = {'t': 0.0, 'desde': None, 'hilo': None}
+_COLGADO = {'t': 0.0, 'desde': None, 'hilo': None, 'sin_ventana_desde': None}
 
 
 def _muestrear_colgado():
@@ -178,7 +178,9 @@ def _muestrear_colgado():
     ser visible y la primera prueba ya no lo ve (medido con Resolve suspendido)."""
     try:
         pids = set(_pids_de_resolve())
+        _MIRADA['hay_proceso'] = bool(pids)
         if not pids:
+            _MIRADA['hay_ventana'] = False
             return False
         import ctypes
         from ctypes import wintypes
@@ -188,13 +190,15 @@ def _muestrear_colgado():
         user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
         user32.SendMessageTimeoutW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM, wintypes.UINT, wintypes.UINT, ctypes.POINTER(ctypes.c_size_t)]
         enum_proc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
-        visto = {'colgado': False}
+        visto = {'colgado': False, 'ventana': False}
 
         def cb(hwnd, _lp):
             pid = wintypes.DWORD()
             user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
             if pid.value not in pids:
                 return True
+            if user32.IsWindowVisible(hwnd):
+                visto['ventana'] = True
             if user32.IsWindowVisible(hwnd) and user32.IsHungAppWindow(hwnd):
                 visto['colgado'] = True
                 return True
@@ -204,9 +208,38 @@ def _muestrear_colgado():
                     visto['colgado'] = True
             return True
         user32.EnumWindows(enum_proc(cb), 0)
+        _MIRADA['hay_ventana'] = bool(visto['ventana'])
         return bool(visto['colgado'])
     except Exception:
         return False
+
+
+_MIRADA = {'hay_ventana': True, 'hay_proceso': True}                 # lo que vio la última mirada de _muestrear_colgado: ¿había alguna ventana visible de Resolve?
+
+
+def _edad_proceso_resolve_s():
+    """Segundos que lleva abierto el Resolve MÁS VIEJO (0 si no se sabe): un Resolve recién lanzado tarda en enseñar su ventana y no es un Resolve «caído»."""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        k32 = ctypes.windll.kernel32
+        k32.OpenProcess.restype = wintypes.HANDLE
+        edad = 0.0
+        for pid in _pids_de_resolve():
+            h = k32.OpenProcess(0x1000, False, pid)                       # PROCESS_QUERY_LIMITED_INFORMATION
+            if not h:
+                continue
+            try:
+                c, e, k, u = (wintypes.FILETIME() for _ in range(4))
+                if k32.GetProcessTimes(h, ctypes.byref(c), ctypes.byref(e), ctypes.byref(k), ctypes.byref(u)):
+                    t100ns = (c.dwHighDateTime << 32) | c.dwLowDateTime
+                    inicio = t100ns / 1e7 - 11644473600.0                 # de 1601 a 1970
+                    edad = max(edad, time.time() - inicio)
+            finally:
+                k32.CloseHandle(h)
+        return edad
+    except Exception:
+        return 0.0
 
 
 def _tomar_muestra(maxima_edad_s=3.0):
@@ -219,6 +252,10 @@ def _tomar_muestra(maxima_edad_s=3.0):
         _COLGADO['desde'] = _COLGADO['desde'] or ahora
     else:
         _COLGADO['desde'] = None
+    if _MIRADA['hay_ventana']:                                      # (solo una ventana VISTA reinicia la cuenta: una lista de procesos que falla un instante por una carrera no cuenta)
+        _COLGADO['sin_ventana_desde'] = None
+    elif _MIRADA['hay_proceso']:
+        _COLGADO['sin_ventana_desde'] = _COLGADO['sin_ventana_desde'] or ahora
 
 
 def _vigia_colgado():
@@ -284,6 +321,11 @@ def estado_resolve(colgado_s=None, callado_s=None):
             return 'caido'
         if resolve_colgado(colgado_s) and _registro_resolve_callado_s() >= callado_s:
             return 'colgado'
+        # v5.4.41: el proceso sigue ahí pero SIN ninguna ventana (Resolve se cerró por dentro y el proceso quedó vivo, 9 GB, sin responder a nadie): está caído. Se pide que lleve rato sin
+        # ventana y que el proceso no sea recién lanzado (un Resolve que arranca tarda en enseñar la suya).
+        desde = _COLGADO.get('sin_ventana_desde')
+        if desde is not None and time.time() - desde >= 20.0 and _edad_proceso_resolve_s() >= 90.0:
+            return 'caido'
     except Exception:
         pass
     return 'ok'

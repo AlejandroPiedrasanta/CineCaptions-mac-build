@@ -33,6 +33,7 @@ import ssl
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -188,13 +189,30 @@ def sha256_de(ruta, bloque=1 << 20):
     return h.hexdigest()
 
 
+_LOCK_DESCARGA = threading.Lock()
+
+
 def descargar(archivo, version_local='', progreso=None, cancelado=None, timeout=30):
     """Baja el instalador a una carpeta temporal y devuelve su ruta. `archivo` = {'url', 'sha256', 'tam'}; progreso(bytes, total) en cada trozo;
-    cancelado() -> True corta. Lanza RuntimeError si la descarga se corta o si la huella NO coincide (el archivo se borra: nunca se ejecuta)."""
+    cancelado() -> True corta. Lanza RuntimeError si la descarga se corta o si la huella NO coincide (el archivo se borra: nunca se ejecuta).
+
+    v5.4.41: UNA descarga a la vez (dos a la vez escribían en el mismo «.parte», salía un archivo mezclado y la huella no cuadraba: «No se pudo actualizar» al primer intento y bien al segundo)
+    y, si aun así la huella no cuadra o la descarga queda a medias (red), se repite UNA vez antes de rendirse."""
+    with _LOCK_DESCARGA:
+        for intento in (1, 2):
+            try:
+                return _descargar_una_vez(archivo, version_local, progreso, cancelado, timeout)
+            except RuntimeError as e:
+                texto = str(e)
+                if intento == 2 or not ('huella' in texto or 'a medias' in texto):
+                    raise
+
+
+def _descargar_una_vez(archivo, version_local='', progreso=None, cancelado=None, timeout=30):
     url = archivo['url']
     nombre = os.path.basename(url.split('?')[0]) or 'CineCaptions_actualizacion.bin'
     destino = carpeta_descargas() / nombre
-    parcial = destino.with_name(destino.name + '.parte')
+    parcial = destino.with_name(destino.name + '.%d.%d.parte' % (os.getpid(), int(time.time() * 1000)))          # (propio de ESTE intento: nunca se comparte)
     for p in carpeta_descargas().glob('*'):                 # lo descargado de otras veces se limpia (también un instalador igual: se vuelve a comprobar)
         try:
             p.unlink()

@@ -950,6 +950,13 @@ def abrir_resolve_windows(decir=None, espera_s=240):
             return True
         hay_proceso = bool(_ventanas_de_resolve())
         if not hay_proceso:
+            try:                                                   # v5.4.41: un Resolve.exe sin ninguna ventana y de hace rato es uno que se cerró por dentro: bloquea al nuevo (240 s de espera inútil)
+                import resolve_bridge as _rb
+                if _rb._pids_de_resolve() and _rb._edad_proceso_resolve_s() >= 90.0:
+                    registro.aviso(tr('Había un Resolve sin ventana (cerrado por dentro): lo cierro del todo y lo vuelvo a abrir.'), 'Puente · Windows')
+                    cerrar_resolve_a_la_fuerza(decir)
+            except Exception:
+                pass
             import os
             import subprocess
             import resolve_bridge as b
@@ -1058,7 +1065,21 @@ def recuperar_resolve(motivo='', decir=None):
         return False
 
 
+_LOCK_PUENTE_WIN = None
+
+
 def lanzar_puente_windows(espera_s=30, forzar=False):
+    """v5.4.41: UN solo hilo teclea en la consola de Resolve a la vez. Dos hilos tecleando (p. ej. el de armar el timeline y otro que reintenta el Puente) mezclaban sus letras en la misma línea («dofile([[C:/Users…»
+    salía revuelto), el comando no se ejecutaba y GO fallaba con «no pude lanzar el Puente». El segundo espera su turno y, si el primero ya dejó el Puente latiendo, no vuelve a teclear."""
+    global _LOCK_PUENTE_WIN
+    import threading
+    if _LOCK_PUENTE_WIN is None:
+        _LOCK_PUENTE_WIN = threading.Lock()
+    with _LOCK_PUENTE_WIN:
+        return _lanzar_puente_windows(espera_s, forzar)
+
+
+def _lanzar_puente_windows(espera_s=30, forzar=False):
     """Windows (Resolve Free): arranca el Puente SIN tocar el menú, que cambia de idioma y de lugar. La consola de comandos de Resolve (tecla F6) acepta Lua: se abre, se escribe
     `dofile([[…/CineCaptions_Puente.lua]])` y Enter; el Puente sigue vivo aunque la consola se cierre. Solo si Resolve ya está al frente de verdad (si no, las teclas irían a otra
     aplicación) y la ventana principal es la de siempre (no un diálogo). Devuelve True si el Puente quedó latiendo. Con `forzar` lo lanza aunque ya haya uno latiendo (uno de una versión
