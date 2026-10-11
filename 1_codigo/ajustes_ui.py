@@ -484,6 +484,12 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.35', [
+        'Arreglo: con el Tema 4 (y con Referencia) al activar a la vez los sonidos por palabra y los emojis, Resolve se cerraba al colocar los captions y salía «El puente no respondió en 90 segundos». Ahora los emojis se colocan antes que los sonidos y el GO termina bien.',
+    ]),
+    ('5.4.33', [
+        'Tema 4 nuevo («Captions limpios»): texto blanco de una sola tipografía que se arma palabra a palabra en un recuadro centrado, con la palabra clave grande, las normales medianas y las conectoras (es, lo, que, de…) pequeñas, y un brillo suave. Cada línea se ajusta al ancho del recuadro, así que las frases cortas salen grandes y las largas pequeñas. Sale en el slider de temas, en el chip «Estilo» de Inicio y funciona con sonidos y emojis.',
+    ]),
     ('5.4.32', [
         'Proyecto · «Crea tu estilo»: los estilos de los Temas 1, 2 y 3 ahora se ven con un VIDEO de 6 s renderizado por Resolve (entrada, texto y salida reales, sobre una foto), no con una imagen aproximada. Así Amro Highlight, Fire, Strike y Underline se ven como quedan de verdad, y también los efectos shatter, select y drag.',
     ]),

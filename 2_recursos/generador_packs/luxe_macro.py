@@ -57,14 +57,14 @@ def _n(v):
     return f'{v:.6g}'
 
 
-def comp_luxe_shine(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None):
+def comp_luxe_shine(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None, brillo=None):
     """Texto de la comp completa (cabecera + Tools) con el macro Luxe Shine ya personalizado."""
-    return comp_luxe('shine', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, barrido)
+    return comp_luxe('shine', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, barrido, brillo)
 
 
-def comp_luxe_slide(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None):
+def comp_luxe_slide(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None):
     """Lo mismo con el macro Luxe Slide (contexto, complemento)."""
-    return comp_luxe('slide', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim)
+    return comp_luxe('slide', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, None, brillo)
 
 
 # v5.5 — EL BARRIDO DE LUZ del macro Luxe Shine. De fábrica empieza a los 0,25 s y tarda 1,5 s (termina a los 1,75 s): las palabras grandes de «Referencia» se ven 0,3-0,9 s (mediana
@@ -113,7 +113,7 @@ def _barrido(tools, b):
     return tools
 
 
-def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None):
+def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None, brillo=None):
     """Texto de la comp completa (cabecera + Tools) con el macro del Luxe Title Pack (tipo 'shine' o 'slide') ya personalizado.
     ajustar=False deja el tamaño en reposo como un valor suelto (sin la expresión que encoge el texto largo): así se puede cambiar desde fuera
     con sizeCtrl.RestingSize (lo hace la guía «Crea tu estilo» en Resolve)."""
@@ -159,5 +159,10 @@ def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, e
         entrada, salida = anim
         tools = re.sub(r'InLength = Input \{ Value = [0-9.eE+-]+, \}', f'InLength = Input {{ Value = {_n(entrada)}, }}', tools, count=1)
         tools = re.sub(r'OutLength = Input \{ Value = [0-9.eE+-]+, \}', f'OutLength = Input {{ Value = {_n(salida)}, }}', tools, count=1)
+    if brillo:
+        # v5.4.33: el halo suave que traen los dos macros (nodo glow1: GlowSize 17,3 · GlowIntensity 0,48) se puede reforzar: brillo = (tamaño, intensidad). El Tema 4 lo pide más fuerte.
+        tamano_b, intensidad_b = brillo
+        tools = re.sub(r'(glow1 = Glow \{.*?GlowSize = Input \{ Value = )[0-9.eE+-]+(, \})', lambda m: m.group(1) + _n(tamano_b) + m.group(2), tools, count=1, flags=re.S)
+        tools = re.sub(r'(glow1 = Glow \{.*?GlowIntensity = Input \{ Value = )[0-9.eE+-]+(, \})', lambda m: m.group(1) + _n(intensidad_b) + m.group(2), tools, count=1, flags=re.S)
     cab = re.sub(r',?\s*Compressed = true,?\s*\}\s*$', ' }', cabecera.rstrip())
     return cab[:-1].rstrip().rstrip(',') + ',\n\tTools = ' + tools + '\n}'

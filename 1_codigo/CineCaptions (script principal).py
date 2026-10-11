@@ -2378,6 +2378,8 @@ class PlantillasWindow(QWidget):
                      and not getattr(p, 'es_basicos', False)]
             packs = [p for p in todos if not (p.incorporado and p.nombre in ocultos and not plantillas.es_de_fabrica(p.nombre))]
             packs = [p for p in packs if plantillas.pack_permitido(p.nombre)]                 # v5.4.22: los tres temas de fábrica + los packs del usuario
+            _orden_temas = list(plantillas.FABRICA)
+            packs.sort(key=lambda p: _orden_temas.index(p.nombre) if p.nombre in _orden_temas else len(_orden_temas))       # Tema 1, 2, 3, 4 en ese orden (después, los del usuario)
             quitados = len(todos) - len(packs)
             self.ocultos_lnk.hide()                   # v5.4.5: sin «Mostrar los packs quitados» (se quitó el enlace de Proyecto)
             for pack in packs:
@@ -7190,6 +7192,8 @@ class SubtitleApp(QWidget):
             ocultos = {n for n in ajustes_ui.leer_prefs().get('packs_ocultos', []) if isinstance(n, str) and not plantillas.es_de_fabrica(n)}
             packs = [p for p in plantillas.listar_packs() if plantillas.sirve_en_go(p) and p.nombre not in ocultos]
             packs = [p for p in packs if plantillas.pack_permitido(p.nombre)]
+            _orden_temas = list(plantillas.FABRICA)
+            packs.sort(key=lambda p: _orden_temas.index(p.nombre) if p.nombre in _orden_temas else len(_orden_temas))
         except Exception:
             packs = []
         formato = self._formato_para_temas()
@@ -7200,6 +7204,7 @@ class SubtitleApp(QWidget):
             extra = '' if plantillas.sirve_en_go(p, formato) else tr('  (solo vertical)')
             etiqueta = (tr('{n} · subtítulos virales', n=plantillas.nombre_visible(p.nombre)) if getattr(p, 'viral', False)
                         else tr('{n} · títulos de gancho', n=plantillas.nombre_visible(p.nombre)) if getattr(p, 'kinetic', False)
+                        else tr('{n} · captions limpios', n=plantillas.nombre_visible(p.nombre)) if p.nombre == 'Tema4'
                         else tr('{n} · captions palabra a palabra', n=plantillas.nombre_visible(p.nombre)))
             menu.agregar(marca + etiqueta + extra, lambda n=p.nombre: self._poner_go_pack(n))
         if not plantillas.SOLO_TEMAS:

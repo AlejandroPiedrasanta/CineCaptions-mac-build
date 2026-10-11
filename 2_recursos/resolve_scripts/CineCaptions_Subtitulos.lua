@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.4.32 (subtitulos)"
+local VERSION = "5.4.35 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -5349,9 +5349,6 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
     -- v5.10 — SONIDOS y EMOJIS (gemela de place_guion_track de CineCaptions.py): el sonido de cada palabra cae donde entra; el emoji entra con
     -- la palabra grande del bloque (cue.emoji_ini) y se queda hasta que se va la pila, encima o debajo de su caja (cue.caja, fraccion del alto
     -- desde ARRIBA) segun emoji_posicion.
-    if track.sfx_library or track.sfx_archivos then
-        place_sfx(timeline, media_pool, cues, track, fps, start_frame)
-    end
     local planes_emoji = {}
     for _, cue in ipairs(cues) do
         if cue.emoji then
@@ -5381,6 +5378,10 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
     local ok_em, err_em = pcall(colocar_emojis, timeline, media_pool, track, planes_emoji, fps)
     if not ok_em then
         print("  Aviso: no pude colocar los emojis del estilo guion (" .. tostring(err_em) .. ").")
+    end
+    -- v5.4.35 — los sonidos DESPUES de los emojis (con los sonidos por palabra antes, Resolve Free se caia al colocar los emojis)
+    if track.sfx_library or track.sfx_archivos then
+        place_sfx(timeline, media_pool, cues, track, fps, start_frame)
     end
     -- pistas de corridas anteriores que ya no hacen falta
     local sobran = {}

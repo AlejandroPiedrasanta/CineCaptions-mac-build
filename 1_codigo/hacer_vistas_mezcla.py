@@ -78,11 +78,55 @@ def _crear_pack_temporal(carpeta, looks):
     return pack
 
 
-def _go(video, palabras, carpeta_packs, tope_s=600):
+def resolve_colgado():
+    """True si hay un Resolve abierto que «no responde» (Resolve Free se queda así tras muchos proyectos y renders: GO esperaría 4 min al Puente para nada). Solo Windows."""
+    try:
+        import ctypes
+        import colocacion
+        h = colocacion._hwnd_de_resolve()
+        return bool(h and ctypes.windll.user32.IsHungAppWindow(h))
+    except Exception:
+        return False
+
+
+def resolve_abierto():
+    """True si hay un proceso de Resolve (colgado o no). Solo Windows."""
+    try:
+        import subprocess
+        r = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq Resolve.exe', '/NH'], capture_output=True, text=True)
+        return 'Resolve.exe' in (r.stdout or '')
+    except Exception:
+        return False
+
+
+def cerrar_resolve(espera_s=60):
+    """Le pide a Resolve que se cierre (guarda antes) —solo si su proyecto es de pruebas de CineCaptions— y espera a que el proceso termine. True si ya no hay Resolve."""
+    if not resolve_abierto():
+        return True
+    if resolve_colgado():
+        print('Resolve está colgado: no se puede cerrar desde aquí (ciérralo a mano).', flush=True)
+        return False
+    try:
+        _orden_vista({'accion': 'cerrar'}, timeout=30)
+    except Exception as exc:
+        print('  (cerrar:', exc, ')', flush=True)
+    t0 = time.time()
+    while time.time() - t0 < espera_s:
+        if not resolve_abierto():
+            time.sleep(8)                                                    # (Windows tarda en soltar el puerto y los archivos de Resolve: una vuelta que empieza ya falla en 8 s)
+            return True
+        time.sleep(2)
+    return not resolve_abierto()
+
+
+def _go(video, palabras, carpeta_packs, tope_s=600, pack=PACK_NOMBRE, prefs_extra=None):
     """El botón GO de la app sin pantalla sobre el video negro (como probar_go.py --soltar), con la transcripción inventada, sin sonidos, emojis ni efectos visuales."""
     os.environ['QT_QPA_PLATFORM'] = 'offscreen'
     os.environ.pop('CINECAPTIONS_SIN_MCP', None)
     os.chdir(AQUI)
+    if resolve_colgado():
+        print('Resolve está colgado («No responde»): ciérralo y vuelve a lanzar esto (GO esperaría 4 min al Puente).', flush=True)
+        return False
     import importlib.util
     import faulthandler
     spec = importlib.util.spec_from_file_location('cc_main', str(AQUI / 'CineCaptions (script principal).py'))
@@ -99,18 +143,23 @@ def _go(video, palabras, carpeta_packs, tope_s=600):
     licencia.vigente = lambda: True
     colocacion.reproducir_desde_inicio = lambda *a, **k: (True, 'sin reproducir')       # GO reproduce el timeline al terminar: con 70+ comps de Fusion y el render a la vez, Resolve Free se cierra solo
     M.SubtitleApp._revisar_licencia_al_arrancar = lambda s: None
-    plantillas.CARPETA_PACKS = Path(carpeta_packs)
-    plantillas.invalidar_packs()
+    if carpeta_packs:
+        plantillas.CARPETA_PACKS = Path(carpeta_packs)
+        plantillas.invalidar_packs()
     real = ajustes_ui.leer_prefs
-    ajustes_ui.leer_prefs = lambda: {**real(), 'plantilla': PACK_NOMBRE, 'go_pack': PACK_NOMBRE, 'go_sfx': False, 'go_emojis': False, 'go_efectos_visuales': False}
+    ajustes_ui.leer_prefs = lambda: {**real(), 'plantilla': pack, 'go_pack': pack, 'go_sfx': False, 'go_emojis': False, 'go_efectos_visuales': False, **(prefs_extra or {})}
     ajustes_ui.guardar_prefs = lambda *a, **k: None                                       # NUNCA escribe las preferencias del usuario
+    if (prefs_extra or {}).get('sfx_emojis') is False:
+        import emojis_sfx
+        emojis_sfx.activo = lambda: False                                                  # (esa preferencia vive en preferencias.json de Sonido, no en las prefs de la app)
     if hasattr(ajustes_ui, 'mezclar_prefs'):
         ajustes_ui.mezclar_prefs = lambda *a, **k: None
     import sfx_rules
     sfx_rules.guardar_modo = lambda *a, **k: None
-    cache_voz.leer = lambda *a, **k: [dict(p) for p in palabras]                          # la transcripción inventada (no se transcribe un video negro)
-    cache_voz.guardar = lambda *a, **k: False
-    ia_texto.marcar_todo = lambda pal, *a, **k: ([dict(p) for p in pal], [None] * len(pal), {})        # sin IA de texto: las palabras tal cual y sin marcas (cada planificador elige solo)
+    if palabras is not None:
+        cache_voz.leer = lambda *a, **k: [dict(p) for p in palabras]                          # la transcripción inventada (no se transcribe un video negro)
+        cache_voz.guardar = lambda *a, **k: False
+        ia_texto.marcar_todo = lambda pal, *a, **k: ([dict(p) for p in pal], [None] * len(pal), {})        # sin IA de texto: las palabras tal cual y sin marcas (cada planificador elige solo)
 
     def _dialogo(tipo, titulo, texto, *a, **k):
         print(f'DIALOGO[{tipo}] {titulo}: {str(texto)[:300]!r}', flush=True)
@@ -120,10 +169,10 @@ def _go(video, palabras, carpeta_packs, tope_s=600):
     app = QApplication.instance() or QApplication([])
     w = M.SubtitleApp()
     w._guardar_preferencias = lambda *a, **k: None
-    w.plantilla_sel = PACK_NOMBRE
+    w.plantilla_sel = pack
     w.show()
     faulthandler.dump_traceback_later(tope_s + 120, exit=True)
-    print(f'GO sobre {Path(video).name} con el pack «{PACK_NOMBRE}» ({len(plantillas.buscar_pack(PACK_NOMBRE).looks)} looks)…', flush=True)
+    print(f'GO sobre {Path(video).name} con el pack «{pack}»…', flush=True)
     w._soltar_archivo(str(video))
     t0 = time.time()
     while not getattr(w, '_go_corriendo', False) and time.time() - t0 < 15:

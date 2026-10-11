@@ -178,10 +178,14 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         prueba en Resolve del movimiento sobre el video (fusion_v1.py): zoom lento, temblor, transiciones y fondo desenfocado.
     probar_go.py
         pulsa GO de la app SIN pantalla sobre un archivo y un pack, y deja los bloques en el timeline actual de Resolve (el banco zz_BANCO).
+    probar_go_variantes.py
+        GO de la app sin pantalla sobre un video REAL con un pack y con los sonidos / emojis / efectos visuales encendidos o apagados a mano (para encontrar qué tumba a Resolve).
     probar_kinetic.py
         prueba del estilo «Kinetic» de punta a punta: voz → bloques → Resolve (banco zz_BANCO) → render → hoja de cuadros.
     probar_mezcla_app.py
         prueba del estilo MEZCLADO de «Crea tu estilo» (looks de los tres temas) DENTRO de la app, sin pantalla y SIN Resolve.
+    probar_tema4.py
+        pone el Tema 4 en Resolve sobre un video NEGRO con las palabras de una transcripción y lo renderiza por tramos, para compararlo con la referencia.
     probar_viral.py
         prueba del estilo «VIRAL»: laboratorio de comps, planificador sobre un video real y render con hoja de cuadros.
     probar_viral_app.py
@@ -232,6 +236,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         lo que el instalador pide al programa (--tarea verificar/scripts/fuentes/modelo/motor_ia...).
     tema.py
         temas de la interfaz (superficies, color de resaltado, tamaño) y su traductor de colores.
+    tema4_planificador.py
+        Tema 4: captions blancos que se arman palabra a palabra en un recuadro, con la palabra clave grande y las conectoras pequeñas.
+    tema4_vista.py
+        vista aproximada (Pillow) de un bloque del Tema 4: las palabras ya dichas en su sitio, con el brillo suave. Para comparar con la referencia sin pasar por Resolve.
     tts_prueba.ps1
         voz de prueba (Windows SAPI) → WAV: para probar los captions con un video SIN audio útil.
     ui_toast.py

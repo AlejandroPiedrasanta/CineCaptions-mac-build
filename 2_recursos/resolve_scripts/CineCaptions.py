@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.4.32 (subtitulos)"
+VERSION = "5.4.35 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -3577,9 +3577,6 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
     if not cues:
         print(f"  Aviso: '{data_path.name}' no tiene bloques.")
         return
-    if track_info.get("sfx_library") or track_info.get("sfx_archivos"):
-        place_sfx_track(timeline, media_pool, cues, track_info, fps, timeline_start_frame)
-
     def _res(clave, por_defecto):
         try:
             v = timeline.GetSetting(clave)
@@ -3743,6 +3740,9 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
         colocar_emojis(timeline, media_pool, track_info, planes_emoji, fps)
     except Exception as exc:
         print(f"  Aviso: no pude colocar los emojis del estilo guion ({type(exc).__name__}: {exc}).")
+    # v5.4.35 — los sonidos DESPUÉS de los emojis (con los sonidos por palabra antes, Resolve Free se caía al colocar los emojis; gemela del .lua)
+    if track_info.get("sfx_library") or track_info.get("sfx_archivos"):
+        place_sfx_track(timeline, media_pool, cues, track_info, fps, timeline_start_frame)
     # pistas de corridas anteriores que ya no hacen falta (la corrida anterior tenía más palabras a la vez)
     _retirar_pistas_nuestras(timeline, [f"{L}-T{k}" for k in range(len(pistas) + 1, len(pistas) + 25)],
                              "palabras", "esta corrida necesita menos pistas")

@@ -7,7 +7,7 @@ Guarda («guardar») o aplica («cargar») la disposicion de pantalla de Resolve
 la vista expandida. En Studio lo hace el MCP; en Resolve FREE (sin MCP) el Puente la corre con dofile. La orden: vista_orden.json (sidecar .lua en Free).
 ]]
 
-local VERSION = "5.4.32 (vista)"
+local VERSION = "5.4.35 (vista)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -390,6 +390,22 @@ local function render_parar(orden)
     print("VISTA " .. RESULTADO)
 end
 
+-- «cerrar» (v5.4.35, herramienta de pruebas): guarda y cierra Resolve, SOLO si el proyecto abierto es uno de pruebas de CineCaptions («CineCaptions», «CineCaptions 7», «CineCaptions_nuevo_…»): nunca
+-- toca un proyecto del usuario. Las pruebas necesitan un Resolve recién arrancado en cada vuelta (Resolve Free se cuelga tras varios proyectos) y un script no puede matar el proceso: se lo pide a Resolve.
+local function cerrar_resolve(orden)
+    local ok_pm, pm = pcall(function() return resolve:GetProjectManager() end)
+    local proyecto = proyecto_actual()
+    local nombre = tostring(proyecto and proyecto:GetName() or "")
+    local de_pruebas = (nombre == "CineCaptions") or (nombre:match("^CineCaptions %d+$") ~= nil) or (nombre:match("^CineCaptions_nuevo") ~= nil)
+    if not de_pruebas then
+        fail("No cierro Resolve: el proyecto abierto («" .. nombre .. "») no es uno de pruebas de CineCaptions.")
+    end
+    if ok_pm and pm ~= nil then pcall(function() pm:SaveProject() end) end
+    RESULTADO = string.format('{"ok": true, "accion": "cerrar", "proyecto": "%s"}', json_escapar(nombre))
+    print("VISTA " .. RESULTADO)
+    pcall(function() CINECAPTIONS_CERRAR_RESOLVE = true end)
+end
+
 local function render_estado(orden)
     local proyecto = proyecto_actual()
     if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
@@ -423,6 +439,7 @@ local function main()
     if accion == "render" then render_empezar(orden); return end
     if accion == "render_estado" then render_estado(orden); return end
     if accion == "render_parar" then render_parar(orden); return end
+    if accion == "cerrar" then cerrar_resolve(orden); return end
     local lista = resolve:GetLayoutPresetList() or {}
     local existia = false
     for _, n in pairs(lista) do if n == nombre then existia = true end end
@@ -450,6 +467,15 @@ end
 
 -- No dejar el wrapper de print puesto (el Puente comparte estado de Lua).
 print = _print_original
+
+-- «cerrar»: el reporte ya salió (guardar_resultado); ahora se le pide a Resolve que se cierre.
+do
+    local ok_c, pedido = pcall(function() return CINECAPTIONS_CERRAR_RESOLVE end)
+    if ok_c and pedido == true then
+        CINECAPTIONS_CERRAR_RESOLVE = nil
+        pcall(function() resolve:Quit() end)
+    end
+end
 
 -- Free 21.1, sin io: el resultado viaja por el registro de Resolve. Bajo el Puente se DEVUELVE (el Puente lo relata); a mano, un error() sin capturar lo deja en ResolveDebug.txt.
 if SIN_IO then

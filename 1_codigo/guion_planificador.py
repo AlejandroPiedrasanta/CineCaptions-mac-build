@@ -515,7 +515,11 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
 
 
 def cues_de(palabras, idioma='es', pack='Referencia', ancho_tl=1080, **kw):
-    """Atajo: planifica y deja los bloques listos para el JSON de place_guion_track."""
+    """Atajo: planifica y deja los bloques listos para el JSON de place_guion_track. El pack «Tema4» (Tema 4) arma sus bloques con su propio planificador (tema4_planificador.py:
+    recuadro, tres tamaños de letra, palabras que aparecen una a una) pero usa el mismo colocador de Resolve."""
+    if pack == 'Tema4':
+        import tema4_planificador
+        return tema4_planificador.cues_de(palabras, idioma, pack, ancho_tl, **kw)
     bloques, plan = planificar(palabras, idioma, pack, ancho_tl, **kw)
     return G.construir_cues(bloques, pack, ancho_tl), plan
 

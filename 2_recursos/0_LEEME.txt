@@ -28,7 +28,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_10.jpg
         fondo_11.jpg
     fonts\   (46 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
-    generador_packs\   (19 archivos)
+    generador_packs\   (20 archivos)
         .cf\   (1 archivos)
         construir_pack.py
             arma los .drb (bin de Resolve) de los packs nuevos con los macros reales Luxe Shine / Luxe Slide (luxe_macro.py).
@@ -52,6 +52,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             arma el pack «Kinetic»: los elementos del estilo de títulos de gancho (héroe, líneas, serif, pincel, cintas, anillos, subrayados).
         pack_referencia.py
             arma el pack «Referencia»: 8 estilos de principal (Luxe Shine y presets de Amro) con las líneas pequeñas en dos pesos.
+        pack_tema4.py
+            arma el pack «Tema4» (Tema 4): captions blancos de una sola tipografía que se arman palabra a palabra en un recuadro.
         pack_viral.py
             arma el pack «VIRAL»: los elementos del estilo de subtítulos virales (línea fina, negrita, shatter, select, drag).
         viral_comps.py
@@ -84,7 +86,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
-    plantillas_incluidas\   (53 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    plantillas_incluidas\   (57 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
     resolve_scripts\   (24 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
         .cf\   (1 archivos)
         CineCaptions - Detectar Video.py

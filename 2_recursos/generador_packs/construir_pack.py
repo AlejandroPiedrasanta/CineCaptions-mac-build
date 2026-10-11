@@ -241,9 +241,9 @@ def construir(plantilla, salida, nombre_bin, pack, combinaciones=(1, 2, 3), y_po
         elif rol in ('main', 'base'):
             mayus = r['mayus'] if g.COMBINACIONES[comb].get('mayus_real') else True
             texto = luxe_macro.comp_luxe_shine(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=mayus and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'),
-                                               barrido=g.COMBINACIONES[comb].get('barrido'))
+                                               barrido=g.COMBINACIONES[comb].get('barrido'), brillo=g.COMBINACIONES[comb].get('brillo'))
         else:
-            texto = luxe_macro.comp_luxe_slide(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=r['mayus'] and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'))
+            texto = luxe_macro.comp_luxe_slide(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=r['mayus'] and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'), brillo=g.COMBINACIONES[comb].get('brillo'))
         bloque = m.group(0)
         hex_viejo = _BA.search(bloque).group(2)
         hex_nuevo = comp_de_drb(fuente['drb'], fuente['clip']) if fuente else blob_de_comp(texto, hex_viejo)
