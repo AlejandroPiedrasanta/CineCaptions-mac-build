@@ -484,6 +484,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.43', [
+        'El menú de scripts de Resolve ya no sale con todo duplicado: las copias viejas de la marca anterior (RCS_Puente, RCS_Subtitulos…) se retiran solas (con copia de respaldo) y quedan solo los CineCaptions_… ; en Resolve Free y en Studio.',
+    ]),
     ('5.4.42', [
         'GO revisa Resolve ANTES de empezar (colgado, sin ventana o con el Puente que late pero no contesta) y lo arregla al momento en vez de fallar minutos después; la revisión tarda cerca de 1 segundo.',
         'El Puente ahora se arranca pulsando CineCaptions_Puente en el menú de scripts de Resolve (sin foco ni teclado, en cualquier idioma); la consola F6 queda solo de respaldo.',

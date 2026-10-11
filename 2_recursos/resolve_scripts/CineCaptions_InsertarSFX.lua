@@ -34,7 +34,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.4.42 (insertar SFX)"
+local VERSION = "5.4.43 (insertar SFX)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el

@@ -35,6 +35,53 @@ def _nuestros_scripts():
         for patron in EXTENSIONES_MENU:
             archivos += origen.glob(patron)
         return sorted(archivos, key=lambda p: p.name)
+# v5.4.43: la marca anterior del programa («RCS», antes de llamarse CineCaptions) dejó copias viejas de los scripts en el menú de Resolve («RCS_Puente», «RCS_Subtitulos»…) AL LADO de las
+# nuevas «CineCaptions_…»: el menú salía con todo duplicado y el usuario no sabía cuál correr (ni cuál de los dos Puentes estaba vivo). Solo estos nombres, que son nuestros; nunca otro script.
+NOMBRES_VIEJOS = (
+    'RCS_ArmarVideo.lua', 'RCS_DetectarVideo.lua', 'RCS_Efectos.lua', 'RCS_Exportar_PackDRB.lua', 'RCS_ImportarEstilos.lua', 'RCS_InsertarSFX.lua', 'RCS_Pausas.lua',
+    'RCS_Prueba_MediaPool.lua', 'RCS_Puente.lua', 'RCS_SfxMarcadores.lua', 'RCS_SfxReemplazar.lua', 'RCS_Subtitulos.lua', 'RCS_Vista.lua',
+    'RCS.py', 'RCS - Detectar Video.py', 'RCS - Importar Estilos.py', 'RCS - Insertar SFX.py', 'RCS - Puente.py', 'RCS - SFX Marcadores.py', 'RCS - SFX Reemplazar.py', 'RCS - Vista Real.py',
+)
+SUBCARPETAS_DE_SCRIPTS = ('Utility', 'Edit', 'Comp', 'Color', 'Deliver')
+
+
+def retirar_scripts_viejos(respaldar=True):
+    """Borra de TODAS las carpetas de scripts de Resolve (Free y Studio, usuario y sistema) las copias de la marca anterior (NOMBRES_VIEJOS). Antes de borrar deja una copia en
+    ~/DaVinciSubtitles/respaldo_scripts_viejos/. Devuelve la lista de rutas retiradas. Nunca lanza."""
+    retirados = []
+    try:
+        respaldo = Path.home() / 'DaVinciSubtitles' / 'respaldo_scripts_viejos'
+        for raiz in raices_scripts_resolve():
+            for sub in SUBCARPETAS_DE_SCRIPTS:
+                carpeta = raiz / sub
+                if not carpeta.is_dir():
+                    continue
+                for nombre in NOMBRES_VIEJOS:
+                    archivo = carpeta / nombre
+                    try:
+                        if not archivo.is_file():
+                            continue
+                        if respaldar:
+                            try:
+                                respaldo.mkdir(parents=True, exist_ok=True)
+                                shutil.copy2(archivo, respaldo / nombre)
+                            except Exception:
+                                pass
+                        archivo.unlink()
+                        retirados.append(str(archivo))
+                    except Exception as exc:
+                        _FALLOS_LIMPIEZA.append(f'{archivo}: {exc}')
+        if retirados:
+            try:
+                import registro
+                registro.info(tr('Retiré {n} script(s) viejos de la marca anterior (RCS_…) del menú de Resolve: ahora solo salen los CineCaptions_… (Resolve los quita del menú al abrirse de nuevo).', n=len(retirados)), 'Scripts de Resolve')
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return retirados
+
+
 def _todos_los_nombres_del_programa():
     """Nombres de TODOS los scripts que el programa reconoce como suyos\n    (.py + .lua), para poder limpiar copias viejas de la carpeta de\n    Resolve sin tocar scripts ajenos del usuario."""
     origen = BASE_RECURSOS / 'resolve_scripts'
@@ -46,6 +93,7 @@ def _todos_los_nombres_del_programa():
             for p in origen.glob(patron):
                 nombres.add(p.name)
         nombres.update({'CineCaptions.py', 'CineCaptions - Insertar SFX.py', 'CineCaptions - Detectar Video.py', 'CineCaptions - Puente.py'})
+        nombres.update(NOMBRES_VIEJOS)
         return nombres
 SUBCARPETA_SCRIPTS = 'Utility'
 _CACHE_RAICES = {'valor': None, 'cuando': 0.0}
@@ -379,6 +427,7 @@ def desinstalar_scripts_del_menu():
     """Saca nuestros scripts del menu de Resolve (caso Studio).\n\n    Solo borra los nombres que sabemos que son nuestros\n    (_todos_los_nombres_del_programa), asi que un script propio del usuario\n    que viva en la misma carpeta queda intacto.\n\n    Devuelve la lista de rutas borradas.\n    """
     nuestros = _todos_los_nombres_del_programa()
     borrados = []
+    borrados += retirar_scripts_viejos(respaldar=False)               # v5.4.43: también las copias de la marca anterior (RCS_…)
     if not nuestros:
         return borrados
     else:
@@ -500,6 +549,7 @@ def instalar_scripts_en_resolve(destino=None, forzar=False):
     if alguna_ok:
         _apuntar_carpeta_de_scripts(activas[0])
         _limpiar_instalaciones_viejas(activas)
+        retirar_scripts_viejos()                                      # v5.4.43: y las de la marca anterior (RCS_…), también en la carpeta activa
         _registrar(detalle, archivos, None)
         return (copiados, None, detalle)
     motivos = '\n'.join(f'  • {c}\n      {e}' for c, c2, e in detalle if e)
