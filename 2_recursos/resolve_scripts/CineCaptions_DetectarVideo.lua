@@ -9,14 +9,14 @@ Corre DENTRO de Resolve (Area de trabajo > Scripts > Utility). Version para
 Resolve FREE.
 
 Renderiza SOLO el audio de la linea de tiempo activa a
-Descargas/CineCaptions Audio, y deja la ruta en
+<datos locales>/CineCaptions/audio (fuera de la vista), y deja la ruta en
 ~/DaVinciSubtitles/video_detectado.json para que la ventana la lea.
 
 Si el render falla, cae al plan B: el archivo del clip mas largo de la
 pista de video 1.
 ]]
 
-local VERSION = "5.4.44 (detectar video)"
+local VERSION = "5.4.45 (detectar video)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -26,7 +26,8 @@ local VERSION = "5.4.44 (detectar video)"
 -- llegan argumentos y esto queda en nil.
 local ENTREGA_PUENTE = ({...})[1]
 if type(ENTREGA_PUENTE) ~= "table" then ENTREGA_PUENTE = nil end
-local NOMBRE_CARPETA_AUDIO = "CineCaptions Audio"
+-- v5.4.45: carpeta INTERNA (nada a la vista del usuario, ya no en Descargas).
+local NOMBRE_CARPETA_AUDIO = "audio"
 local PRESET_PROPIO = "CineCaptions - Solo audio"
 local CODEC_AUDIO = "aac"
 local BITRATE_AUDIO = 256000
@@ -499,15 +500,21 @@ end
 -- Carpeta del audio
 -- ---------------------------------------------------------------------
 local function carpeta_de_audio()
-    for _, nombre in ipairs({ "Downloads", "Descargas" }) do
-        local base = home() .. SEP .. nombre
-        if existe_dir(base) then
-            local destino = base .. SEP .. NOMBRE_CARPETA_AUDIO
-            crear_dir(destino)
-            return destino
+    -- Windows: LOCALAPPDATA, subcarpeta CineCaptions/audio (oculta por defecto).
+    -- Mac: ~/Library/Application Support/CineCaptions/audio (Library esta oculta).
+    -- Se crea nivel por nivel: bmd.createdir no siempre crea los intermedios.
+    local base
+    if es_windows() then
+        base = os.getenv("LOCALAPPDATA")
+        if not base or base == "" then
+            base = home() .. SEP .. "AppData" .. SEP .. "Local"
         end
+    else
+        base = home() .. SEP .. "Library" .. SEP .. "Application Support"
     end
-    local destino = home() .. SEP .. NOMBRE_CARPETA_AUDIO
+    local raiz = base .. SEP .. "CineCaptions"
+    crear_dir(raiz)
+    local destino = raiz .. SEP .. NOMBRE_CARPETA_AUDIO
     crear_dir(destino)
     return destino
 end

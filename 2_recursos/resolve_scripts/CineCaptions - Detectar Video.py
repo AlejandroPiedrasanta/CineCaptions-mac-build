@@ -10,8 +10,9 @@ TIEMPO, para no tener que ir a buscar ningun archivo a mano.
 
 Que hace exactamente:
   1. Renderiza SOLO EL AUDIO de la linea de tiempo activa (MP4 / AAC a
-     256 kb/s: liviano y rapido de exportar) a la carpeta
-     Descargas/CineCaptions Audio. Es la mezcla final: si tu
+     256 kb/s: liviano y rapido de exportar) a la carpeta interna del
+     programa (fuera de la vista: AppData en Windows, Application Support
+     en Mac). Es la mezcla final: si tu
      timeline esta armado con diez clips distintos, cortes, musica y voz en
      off, se transcribe lo que realmente se escucha, en el tiempo exacto en
      que se escucha.
@@ -43,7 +44,7 @@ import os
 import time
 from pathlib import Path
 
-VERSION = "5.4.44 (detectar video)"
+VERSION = "5.4.45 (detectar video)"
 
 # Archivo de control que lee la ventana. Es un .json de unos pocos bytes, por
 # eso sigue viviendo en la carpeta compartida junto a los .srt y las marcas.
@@ -85,9 +86,9 @@ def marcas_de(timeline):
             return ini, fin
     return None
 
-# El audio SI va a una carpeta a la vista, porque pesa y conviene poder
-# borrarlo a mano cuando estorbe.
-NOMBRE_CARPETA_AUDIO = "CineCaptions Audio"
+# v5.4.45: el audio va a la carpeta INTERNA del programa (nada a la vista del
+# usuario, ya no en Descargas): <datos locales>/CineCaptions/audio.
+NOMBRE_CARPETA_AUDIO = "audio"
 
 # Los renders viejos se borran solos pasados estos dias, para que la carpeta
 # no crezca sin limite.
@@ -134,19 +135,17 @@ def volver_a_edicion():
 # --------------------------------------------------------------------------
 
 def carpeta_de_audio():
-    """Descargas/CineCaptions Audio, creada si no existe.
+    """<datos locales>/CineCaptions/audio, creada si no existe.
 
-    En Windows y macOS la carpeta se llama 'Downloads' en disco aunque la
-    interfaz la muestre como 'Descargas'; igual se contempla el nombre en
-    español por si acaso, y si no hay ninguna se cae al home.
+    Windows: carpeta LOCALAPPDATA, subcarpeta CineCaptions/audio (oculta por defecto).
+    Mac: ~/Library/Application Support/CineCaptions/audio (Library esta oculta).
     """
     home = Path.home()
-    for nombre in ("Downloads", "Descargas"):
-        if (home / nombre).is_dir():
-            destino = home / nombre / NOMBRE_CARPETA_AUDIO
-            destino.mkdir(parents=True, exist_ok=True)
-            return destino
-    destino = home / NOMBRE_CARPETA_AUDIO
+    if os.name == "nt":
+        base = Path(os.environ.get("LOCALAPPDATA") or (home / "AppData" / "Local"))
+    else:
+        base = home / "Library" / "Application Support"
+    destino = base / "CineCaptions" / NOMBRE_CARPETA_AUDIO
     destino.mkdir(parents=True, exist_ok=True)
     return destino
 

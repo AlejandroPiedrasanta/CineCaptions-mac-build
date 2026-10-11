@@ -11291,14 +11291,30 @@ class SubtitleApp(QWidget):
         archivos (`*_audio_<epoch>…`), nunca otra cosa de esa carpeta."""
         import re
         limite = time.time() - 86400
-        for base in [Path.home() / 'Downloads', Path.home() / 'Descargas', Path.home()]:
-            carpeta = base / 'CineCaptions Audio'
-            try:
-                if not carpeta.is_dir():
-                    continue
+        if os.name == 'nt':
+            datos = Path(os.environ.get('LOCALAPPDATA') or (Path.home() / 'AppData' / 'Local'))
+        else:
+            datos = Path.home() / 'Library' / 'Application Support'
+        # v5.4.45: los renders viven en <datos locales>/CineCaptions/audio (fuera de la vista).
+        carpeta = datos / 'CineCaptions' / 'audio'
+        try:
+            if carpeta.is_dir():
                 for f in carpeta.iterdir():
                     if re.search('_audio_\\d{9,}', f.name) and f.is_file() and (f.stat().st_mtime < limite):
-                                f.unlink()
+                        f.unlink()
+        except OSError:
+            pass
+        # Carpeta VIEJA a la vista (versiones <= 5.4.44): se vacia de NUESTROS renders y se quita si queda vacia.
+        for base in [Path.home() / 'Downloads', Path.home() / 'Descargas', Path.home()]:
+            vieja = base / 'CineCaptions Audio'
+            try:
+                if not vieja.is_dir():
+                    continue
+                for f in vieja.iterdir():
+                    if '_audio' in f.name and f.is_file() and (f.stat().st_mtime < time.time() - 3600):
+                        f.unlink()
+                if not any(vieja.iterdir()):
+                    vieja.rmdir()
             except OSError:
                 pass
     def _ver_ultimo_resultado(self):
