@@ -1030,6 +1030,51 @@ def cerrar_resolve_a_la_fuerza(decir=None, espera_s=30):
         return False
 
 
+def preparar_resolve_para_go(decir=None):
+    """v5.4.41 (Windows): revisión de Resolve ANTES de cada GO, para no descubrir minutos después que estaba mal (p. ej. tras salir el PC de suspensión, o con un Resolve cerrado por dentro).
+    1) Resolve colgado, o con el proceso vivo y SIN ventana → se cierra y se reabre (recuperar_resolve). 2) Con el Puente latiendo, un «ping» real (acción «ping» de CineCaptions_Vista.lua,
+    ~1 s): si no contesta, se relanza el Puente por el menú; si aun así no, se reinicia Resolve. Devuelve True si no hubo que tocar nada o si se arregló; False si no se pudo.
+    Nunca lanza."""
+    if not sys.platform.startswith('win'):
+        return True
+    try:
+        import registro
+        import resolve_bridge as b
+        if not b._pids_de_resolve():
+            return True                                              # Resolve cerrado: lo abre el camino de siempre
+        est = b.estado_resolve_ahora()
+        if est != 'ok':
+            return recuperar_resolve(tr('Resolve no estaba sano antes de empezar ({e})', e=est), decir=decir)
+        if not b.puente_activo():
+            return True                                              # sin Puente: GO lo lanza (menú o consola)
+        import archivos_seguros
+        import sidecar_lua
+        ruta = b.CARPETA_COMPARTIDA / 'vista_orden.json'
+        orden = {'accion': 'ping'}
+        archivos_seguros.escribir_json(ruta, orden)
+        sidecar_lua.escribir_sidecar(ruta, orden)
+        t0 = time.time()
+        ok, _msg = b.ejecutar('vista', timeout=20)
+        if ok:
+            registro.info(tr('Resolve y el Puente contestan ({s:.1f} s).', s=time.time() - t0), 'GO · Resolve')
+            return True
+        if b.es_resolve_atascado(_msg):
+            return recuperar_resolve(_msg, decir=decir)
+        registro.aviso(tr('El Puente latía pero no contestó: lo relanzo.'), 'GO · Resolve')
+        if decir:
+            decir(tr('Relanzando el Puente en Resolve…'))
+        if b.lanzar_puente_auto(forzar=True):
+            return True
+        return recuperar_resolve(tr('el Puente no contestaba'), decir=decir)
+    except Exception:
+        try:
+            import registro
+            registro.excepcion(origen='GO · revisar Resolve')
+        except Exception:
+            pass
+        return False
+
+
 def recuperar_resolve(motivo='', decir=None):
     """v5.4.40 (Windows, Resolve Free): Resolve se colgó o se cerró solo a mitad del GO → se cierra del todo, se vuelve a abrir (proyecto u Organizador) y se relanza el Puente.
     Devuelve True si el Puente late otra vez (el GO entonces re-arma el timeline y repite). Nunca lanza."""
@@ -1062,6 +1107,121 @@ def recuperar_resolve(motivo='', decir=None):
             registro.excepcion(origen='GO · recuperar Resolve')
         except Exception:
             pass
+        return False
+
+
+# v5.4.41: arrancar el Puente por el MENÚ de Resolve (Área de trabajo > Scripts > CineCaptions_Puente) con UI Automation, igual que ya se reproduce: sin foco, sin teclear y sin depender del idioma
+# (el elemento se llama como el archivo del script). Escribir `dofile(...)` en la consola F6 necesita foco, el teclado libre y la consola en Lua, y se vio revuelto cuando dos hilos tecleaban.
+# La llamada Invoke del menú puede no volver mientras el Puente corra: se espera solo la 1.ª línea y el PowerShell se deja vivo (se cierra solo cuando Resolve cierra).
+_PS_PUENTE_MENU = r'''
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$AE = [System.Windows.Automation.AutomationElement]
+$TS = [System.Windows.Automation.TreeScope]
+$ids = @(Get-Process Resolve -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+$main = $null
+foreach ($id in $ids) {
+    $c = New-Object System.Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $id)
+    foreach ($v in $AE::RootElement.FindAll($TS::Children, $c)) { if ($v.Current.ClassName -like '*UiMainWindow*') { $main = $v } }
+}
+if (-not $main) { 'SIN_VENTANA'; exit }
+$nombre = $env:CC_SCRIPT
+function Buscar-Item { $AE::RootElement.FindFirst($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::NameProperty, $nombre))) }
+# 1) el menú «Área de trabajo» / «Workspace»: por nombre, o el que va justo DESPUÉS de «Fairlight» en la barra (sirve en cualquier idioma)
+$m = $null
+foreach ($n in @($env:CC_MENUS -split '\|')) {
+    $m = $main.FindFirst($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::NameProperty, $n)))
+    if ($m) { break }
+}
+if (-not $m) {
+    $barra = $main.FindAll($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::MenuItem)))
+    $ant = $null
+    foreach ($b in $barra) { if ($ant -and $ant.Current.Name -eq 'Fairlight') { $m = $b; break }; $ant = $b }
+}
+if (-not $m) { 'SIN_MENU'; exit }
+try { $m.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand() } catch { $m.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke() }
+Start-Sleep -Milliseconds 400
+# 2) el submenú «Scripts»/«Secuencias de comandos»: el que contiene el script (se prueban los submenús hasta verlo)
+$e = Buscar-Item
+if (-not $e) {
+    $subs = @($m.FindAll($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::MenuItem))))
+    # primero los que se llaman «Scripts» / «Secuencias de comandos»…; después el resto de submenús
+    $primeros = @($env:CC_SUBS -split '\|')
+    $nombrados = @($subs | Where-Object { $primeros -contains $_.Current.Name })
+    $orden = if ($nombrados.Count -gt 0) { $nombrados } else { $subs }          # (si el menú se llama como se espera, no se pierde tiempo probando los demás)
+    foreach ($sm in $orden) {
+        try { $sm.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand() } catch { continue }
+        for ($k = 0; $k -lt 5; $k++) {                       # el submenú tarda en rellenarse (hasta ~1,5 s)
+            Start-Sleep -Milliseconds 300
+            $e = Buscar-Item
+            if ($e) { break }
+        }
+        if ($e) { break }
+    }
+}
+if (-not $e) { Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('{ESC}{ESC}{ESC}'); 'SIN_SCRIPT'; exit }
+'LANZANDO'
+[Console]::Out.Flush()
+$e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+'''
+
+_MENU_SCRIPTS = 'Scripts|Secuencias de comandos|Scripts de|Roteiros|Scripts (Python)|Skripte|Script|スクリプト|脚本'
+_MENU_AREA_TRABAJO = 'Área de trabajo|Workspace|Espaço de trabalho|Espace de travail|Arbeitsbereich|Area di lavoro|Рабочая область|ワークスペース|工作区'
+
+
+def lanzar_puente_por_menu_windows(espera_s=20, version=None):
+    """v5.4.41 (Windows): arranca el Puente pulsando CineCaptions_Puente en el menú de scripts de Resolve (UI Automation, sin teclas). Devuelve True si el Puente late al acabar la espera.
+    Si el script no está en el menú (Resolve lo arma al abrirse: si se instalaron los scripts con Resolve ya abierto, aún no sale) devuelve False y se usa la consola como siempre."""
+    try:
+        import base64
+        import os
+        import subprocess
+        import threading
+        import resolve_bridge as b
+        cod = base64.b64encode(_PS_PUENTE_MENU.encode('utf-16-le')).decode('ascii')
+        env = {**os.environ, 'CC_SCRIPT': 'CineCaptions_Puente', 'CC_MENUS': _MENU_AREA_TRABAJO, 'CC_SUBS': _MENU_SCRIPTS}
+        proc = subprocess.Popen(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', cod], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+                                encoding='utf-8', errors='replace', env=env, creationflags=0x08000000, cwd=os.path.expanduser('~'))
+        primera = []
+
+        def leer():
+            try:
+                primera.append((proc.stdout.readline() or '').strip())
+            except Exception:
+                primera.append('ERROR')
+        h = threading.Thread(target=leer, daemon=True, name='uia-puente')
+        h.start()
+        h.join(25)
+        cod_res = primera[0] if primera else 'SIN_RESPUESTA'
+        if cod_res != 'LANZANDO':
+            try:
+                proc.kill()
+            except Exception:
+                pass
+            return False
+        time.sleep(0.8)
+        _cerrar_menu_de_resolve()                              # (el menú queda dibujado hasta que se cierre)
+        t0 = time.time()
+        vivo = False
+        while time.time() - t0 < espera_s:
+            if b.puente_activo() and (version is None or b.version_del_puente() == version):
+                vivo = True
+                break
+            time.sleep(0.5)
+        if vivo:
+            try:
+                import registro
+                registro.info(tr('El Puente se lanzó solo desde el menú de scripts de Resolve.'), 'Puente · Windows')
+            except Exception:
+                pass
+        else:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+        return vivo
+    except Exception:
         return False
 
 
@@ -1102,6 +1262,8 @@ def _lanzar_puente_windows(espera_s=30, forzar=False):
         if principal is None and abrir_resolve_windows():
             ventanas = _ventanas_de_resolve()
             principal = _ventana_principal(ventanas)
+        if principal is not None and lanzar_puente_por_menu_windows(version=version):            # v5.4.41: primero el menú (sin foco ni teclado); si no está en el menú, la consola de siempre
+            return True
         if principal is None:
             registro.aviso(tr('No veo la ventana principal de DaVinci Resolve (¿abierta con un proyecto?): no puedo lanzar el Puente solo.'), 'Puente · Windows')
             return False

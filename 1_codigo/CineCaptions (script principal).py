@@ -7947,12 +7947,11 @@ class SubtitleApp(QWidget):
         try:
             self._esperar_vistas_reales()
             al_estado = lambda t: self.msg_queue.put(('status', t))
-            try:                                                   # v5.4.40: un Resolve que se quedó colgado (ventana «No responde», sin escribir nada) de un GO anterior se cierra y se reabre YA, sin esperar minutos
+            try:                                                   # v5.4.41: Resolve se revisa ANTES de empezar (colgado, sin ventana, o Puente que latía pero no contesta): se arregla YA, sin esperar minutos
                 import colocacion
-                if resolve_bridge.estado_resolve(colgado_s=10.0, callado_s=10.0) != 'ok' and resolve_bridge._pids_de_resolve():          # (colgado, o proceso vivo SIN ventana: Resolve cerrado por dentro)
-                    colocacion.recuperar_resolve(tr('ventana sin responder'), decir=al_estado)
+                colocacion.preparar_resolve_para_go(decir=al_estado)
             except Exception:
-                registro.excepcion(origen='GO · Resolve colgado antes de empezar')
+                registro.excepcion(origen='GO · revisar Resolve antes de empezar')
             if resolve_bridge.modo_actual() == 'manual':
                 al_estado(tr('Lanzando el Puente en Resolve…'))
                 if not resolve_bridge.lanzar_puente_auto():

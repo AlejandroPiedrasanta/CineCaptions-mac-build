@@ -7,7 +7,7 @@ Guarda («guardar») o aplica («cargar») la disposicion de pantalla de Resolve
 la vista expandida. En Studio lo hace el MCP; en Resolve FREE (sin MCP) el Puente la corre con dofile. La orden: vista_orden.json (sidecar .lua en Free).
 ]]
 
-local VERSION = "5.4.41 (vista)"
+local VERSION = "5.4.42 (vista)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -502,6 +502,7 @@ local function main()
     if accion == "render_estado" then render_estado(orden); return end
     if accion == "render_parar" then render_parar(orden); return end
     if accion == "cerrar" then cerrar_resolve(orden); return end
+    if accion == "ping" then RESULTADO = '{"ok": true, "accion": "ping"}'; print("VISTA " .. RESULTADO); return end
     if accion == "cabezal" then cabezal_al_inicio(orden); return end
     if accion == "inspeccionar" then inspeccionar(orden); return end
     if accion == "ajustar_clip" then ajustar_clip(orden); return end

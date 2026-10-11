@@ -331,6 +331,24 @@ def estado_resolve(colgado_s=None, callado_s=None):
     return 'ok'
 
 
+def estado_resolve_ahora():
+    """v5.4.41: mirada INMEDIATA (sin esperar a que pase el tiempo): 'caido' si hay un Resolve de más de 90 s SIN ninguna ventana visible; 'colgado' si ahora mismo no contesta y su registro lleva
+    10 s sin escribir; si no, 'ok'. Para revisar Resolve justo antes de empezar un GO. Solo Windows."""
+    if not sys.platform.startswith('win'):
+        return 'ok'
+    try:
+        if not _pids_de_resolve():
+            return 'caido'
+        colgado = _muestrear_colgado()
+        if colgado and _registro_resolve_callado_s() >= 10.0:
+            return 'colgado'
+        if not _MIRADA['hay_ventana'] and _edad_proceso_resolve_s() >= 90.0:
+            return 'caido'
+    except Exception:
+        pass
+    return 'ok'
+
+
 def esperar_estado_resolve(segundos=15.0):
     """v5.4.40: mira hasta `segundos` s si Resolve está colgado o cerrado (la ventana tarda unos segundos en marcarse «No responde»). Devuelve 'colgado' | 'caido' | 'ok'."""
     t0 = time.time()

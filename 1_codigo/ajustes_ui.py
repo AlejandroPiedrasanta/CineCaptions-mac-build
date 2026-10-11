@@ -484,6 +484,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.42', [
+        'GO revisa Resolve ANTES de empezar (colgado, sin ventana o con el Puente que late pero no contesta) y lo arregla al momento en vez de fallar minutos después; la revisión tarda cerca de 1 segundo.',
+        'El Puente ahora se arranca pulsando CineCaptions_Puente en el menú de scripts de Resolve (sin foco ni teclado, en cualquier idioma); la consola F6 queda solo de respaldo.',
+    ]),
     ('5.4.41', [
         'Arreglo: si Resolve se cerraba por dentro y su proceso quedaba vivo sin ventana (9 GB, sin responder), GO esperaba minutos y fallaba con «el Puente dejó de responder». Ahora lo detecta, cierra ese Resolve fantasma, lo vuelve a abrir y repite el proceso.',
         'Arreglo: al reabrir Resolve, dos tareas escribían a la vez en su consola y mezclaban las letras del comando que arranca el Puente («no pude lanzar el Puente»). Ahora escribe una sola.',
