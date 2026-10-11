@@ -141,7 +141,8 @@ def _go(video, palabras, carpeta_packs, tope_s=600, pack=PACK_NOMBRE, prefs_extr
     import plantillas
     import qt_kit
     licencia.vigente = lambda: True
-    colocacion.reproducir_desde_inicio = lambda *a, **k: (True, 'sin reproducir')       # GO reproduce el timeline al terminar: con 70+ comps de Fusion y el render a la vez, Resolve Free se cierra solo
+    if os.environ.get('CC_REPRODUCIR') != '1':                                            # (CC_REPRODUCIR=1: se prueba también esa parte del GO real)
+        colocacion.reproducir_desde_inicio = lambda *a, **k: (True, 'sin reproducir')       # GO reproduce el timeline al terminar: con 70+ comps de Fusion y el render a la vez, Resolve Free se cierra solo
     M.SubtitleApp._revisar_licencia_al_arrancar = lambda s: None
     if carpeta_packs:
         plantillas.CARPETA_PACKS = Path(carpeta_packs)

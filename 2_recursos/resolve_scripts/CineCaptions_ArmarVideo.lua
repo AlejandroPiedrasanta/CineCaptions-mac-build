@@ -8,7 +8,7 @@ crea un proyecto NUEVO «CineCaptions» (guardando y cerrando el que hubiera abi
 que su audio suena en A1 y reserva la pista FX-BROLL si hace falta. Sin esto, en Free los captions de un video soltado caian en el timeline que hubiera abierto.
 ]]
 
-local VERSION = "5.4.35 (armar video)"
+local VERSION = "5.4.40 (armar video)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -484,9 +484,13 @@ local function main()
     local tl = mp:CreateEmptyTimeline(nombre)
     if not tl then fail("Resolve no creo el timeline «" .. nombre .. "».") end
     res.timeline = nombre
+    -- v5.4.40: Resolve hace una copia de respaldo del timeline recien creado en segundo plano; si los SetSetting llegan antes de que acabe, Resolve Free se cuelga (medido: el 2.º GO
+    -- seguido se colgaba 5 de 7 veces, siempre justo ahi: «sequence setup changed» sin el «timeline backup created» de las veces que sale bien). Se le da tiempo y se espacian los cambios.
+    pausa(2.0)
     for _, par in ipairs({ { "useCustomSettings", "1" }, { "timelineResolutionWidth", tostring(ANCHO) }, { "timelineResolutionHeight", tostring(ALTO) },
                            { "timelineOutputResolutionWidth", tostring(ANCHO) }, { "timelineOutputResolutionHeight", tostring(ALTO) }, { "timelineFrameRate", string.format("%g", FPS) } }) do
         pcall(function() tl:SetSetting(par[1], par[2]) end)
+        pausa(0.3)
     end
     pcall(function() project:SetCurrentTimeline(tl) end)
     local ok_ap, puestos = pcall(function() return mp:AppendToTimeline({ clip }) end)

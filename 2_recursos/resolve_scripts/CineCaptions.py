@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.4.35 (subtitulos)"
+VERSION = "5.4.40 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -5401,13 +5401,17 @@ def colocar_emojis(timeline, media_pool, track_info, planes, fps):
         tope = 0.5 - lado / 2 - 0.01
         y = max(-tope, min(tope, y))
         zoom = lado * alto / min(ancho, alto)
+        # v5.4.36: Pan/Tilt de un PNG cuadrado «ajustado» (Fit) van en pixeles del clip ajustado, no del timeline (medido en Free 21.1: Pan x1, Tilt x1080/1920
+        # en vertical; sin esto el emoji quedaba ENCIMA del texto). Gemela del .lua.
+        lado_fit = min(ancho, alto)
+        k_pan, k_tilt = ancho / lado_fit, alto / lado_fit
         bien = True
         for k_t, (c_t, largo_t) in enumerate(trozos):
             _poner_props(c_t, {"Scaling": ajustar})
             if not _poner_props(c_t, {
                     "ZoomX": zoom, "ZoomY": zoom,
-                    "Pan": _pan_px(cx - 0.5 + float(p.get("dx_n") or 0.0), ancho),
-                    "Tilt": _tilt_px(y + float(p.get("dy_n") or 0.0), alto)}):
+                    "Pan": _pan_px(cx - 0.5 + float(p.get("dx_n") or 0.0), ancho) * k_pan,
+                    "Tilt": _tilt_px(y + float(p.get("dy_n") or 0.0), alto) * k_tilt}):
                 bien = False
             # entrada (rebote) en el primero y salida en el ultimo: el icono no aparece ni desaparece de golpe
             if _animar_emoji(c_t, max(2, int(largo_t)), k_t == 0, k_t == len(trozos) - 1):

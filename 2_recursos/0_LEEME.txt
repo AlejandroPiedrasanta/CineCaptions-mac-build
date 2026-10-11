@@ -136,13 +136,15 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             cuándo suena cada efecto de sonido (editable sin tocar código)
     sfx_emoji\   (103 archivos)
     sfx_library\   (158 archivos)  — los efectos de sonido, una carpeta por categoría
-    vistas_slider\   (8 archivos)
+    vistas_slider\   (10 archivos)
         .cf\   (1 archivos)
         desktop.ini
         Kinetic.jpg
         Kinetic.mp4
         Referencia.jpg
         Referencia.mp4
+        Tema4.jpg
+        Tema4.mp4
         VIRAL.jpg
         VIRAL.mp4
     desktop.ini

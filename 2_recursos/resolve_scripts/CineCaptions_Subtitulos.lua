@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.4.35 (subtitulos)"
+local VERSION = "5.4.40 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -5926,8 +5926,28 @@ local function comp_animacion_emoji(largo, entrada, salida)
         .. "\t\t\tViewInfo = OperatorInfo { Pos = { 400, 50 } },\n\t\t},\n\t},\n}\n", largo, largo, expr)
 end
 
-local function animar_emoji(colocado, largo, entrada, salida)
-    if io == nil then return false end
+local function animar_emoji(colocado, largo, entrada, salida, comps)
+    if not entrada and not salida then return false end
+    if io == nil then
+        -- v5.4.36 — Free no tiene `io`: las comps las deja escritas la app (emojis.comps_animacion) en comps.carpeta; comps.ids lista las que hay
+        -- («largo_ES»); se usa la de largo mas cercano (±3 fotogramas: la salida dura 6 y el rebote 8, no se nota).
+        if type(comps) ~= "table" or type(comps.carpeta) ~= "string" or type(comps.ids) ~= "table" then return false end
+        if comps.indice == nil then
+            comps.indice = {}
+            for _, id in ipairs(comps.ids) do comps.indice[tostring(id)] = true end
+        end
+        local banderas = (entrada and "1" or "0") .. (salida and "1" or "0")
+        for _, d in ipairs({ 0, 1, -1, 2, -2, 3, -3 }) do
+            local l = largo + d
+            if l >= 2 and comps.indice[string.format("%d_%s", l, banderas)] then
+                local sep = comps.carpeta:find("\\", 1, true) and "\\" or "/"
+                local ruta = comps.carpeta .. sep .. string.format("cinecaptions_emoji_%d_%s.comp", l, banderas)
+                local ok, hecho = pcall(function() return colocado:ImportFusionComp(ruta) end)
+                return (ok and hecho) and true or false
+            end
+        end
+        return false
+    end
     local ok, hecho = pcall(function()
         local carpeta = os.getenv("TEMP") or os.getenv("TMPDIR") or "/tmp"
         local ruta = string.format("%s/cinecaptions_emoji_%d_%d%d.comp", carpeta, largo, entrada and 1 or 0, salida and 1 or 0)
@@ -6085,17 +6105,21 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
             -- Con «Ajustar» el PNG cuadrado ocupa min(ancho, alto): de ahi
             -- el zoom.
             local zoom = lado * alto / math.min(ancho, alto)
+            -- v5.4.36: Pan/Tilt de un PNG cuadrado «ajustado» (Fit) NO van en pixeles del timeline sino del clip ajustado (medido en Resolve Free 21.1 sobre
+            -- 1080x1920: Pan x1 y Tilt x0.5625 = 1080/1920, sin depender del zoom): sin esto el emoji quedaba ENCIMA del texto en vertical. Gemela en .py.
+            local lado_fit = math.min(ancho, alto)
+            local k_pan, k_tilt = ancho / lado_fit, alto / lado_fit
             local bien = true
             for k_t, par_t in ipairs(trozos) do
                 local c_t, largo_t = par_t[1], par_t[2]
                 poner_props(c_t, { Scaling = ajustar })
                 if not poner_props(c_t, { ZoomX = zoom, ZoomY = zoom,
-                                          Pan = pan_px(cx - 0.5 + (tonumber(p.dx_n) or 0), ancho),
-                                          Tilt = tilt_px(y + (tonumber(p.dy_n) or 0), alto) }) then
+                                          Pan = pan_px(cx - 0.5 + (tonumber(p.dx_n) or 0), ancho) * k_pan,
+                                          Tilt = tilt_px(y + (tonumber(p.dy_n) or 0), alto) * k_tilt }) then
                     bien = false
                 end
                 -- entrada (rebote) en el primero y salida en el ultimo: el icono no aparece ni desaparece de golpe
-                if animar_emoji(c_t, math.max(2, math.floor(largo_t)), k_t == 1, k_t == #trozos) then
+                if animar_emoji(c_t, math.max(2, math.floor(largo_t)), k_t == 1, k_t == #trozos, track.emoji_comps) then
                     animados = animados + 1
                 end
             end

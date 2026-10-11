@@ -173,7 +173,9 @@ _COLGADO = {'t': 0.0, 'desde': None, 'hilo': None}
 
 
 def _muestrear_colgado():
-    """Una mirada: ¿alguna ventana visible de Resolve.exe «No responde» ahora mismo? (IsHungAppWindow: el hilo de su ventana lleva >5 s sin atender mensajes)."""
+    """Una mirada: ¿Resolve «No responde» ahora mismo? Dos pruebas sobre las ventanas de Resolve.exe: IsHungAppWindow (el hilo de una ventana VISIBLE lleva >5 s sin atender mensajes) y, v5.4.40, un
+    mensaje de prueba (SendMessageTimeout con SMTO_ABORTIFHUNG) a su ventana principal aunque esté oculta: cuando Windows le pone la «ventana fantasma» a un Resolve colgado, la original deja de
+    ser visible y la primera prueba ya no lo ve (medido con Resolve suspendido)."""
     try:
         pids = set(_pids_de_resolve())
         if not pids:
@@ -184,14 +186,22 @@ def _muestrear_colgado():
         user32.IsHungAppWindow.argtypes = [wintypes.HWND]
         user32.IsWindowVisible.argtypes = [wintypes.HWND]
         user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+        user32.SendMessageTimeoutW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM, wintypes.UINT, wintypes.UINT, ctypes.POINTER(ctypes.c_size_t)]
         enum_proc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
         visto = {'colgado': False}
 
         def cb(hwnd, _lp):
             pid = wintypes.DWORD()
             user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-            if pid.value in pids and user32.IsWindowVisible(hwnd) and user32.IsHungAppWindow(hwnd):
+            if pid.value not in pids:
+                return True
+            if user32.IsWindowVisible(hwnd) and user32.IsHungAppWindow(hwnd):
                 visto['colgado'] = True
+                return True
+            if user32.IsWindowVisible(hwnd):                                   # (solo ventanas visibles: las ocultas de Qt/OpenGL/IME no atienden mensajes y siempre «no contestan»)
+                res = ctypes.c_size_t()
+                if not user32.SendMessageTimeoutW(hwnd, 0, 0, 0, 0x2, 1500, ctypes.byref(res)):          # WM_NULL, SMTO_ABORTIFHUNG: 0 = no contestó
+                    visto['colgado'] = True
             return True
         user32.EnumWindows(enum_proc(cb), 0)
         return bool(visto['colgado'])
@@ -233,6 +243,60 @@ def resolve_colgado(umbral_s=0.0):
     _tomar_muestra()
     desde = _COLGADO['desde']
     return desde is not None and (time.time() - desde) >= float(umbral_s)
+
+
+ERR_RESOLVE_COLGADO = 'RESOLVE_COLGADO'      # marcas que `ejecutar` devuelve cuando Resolve dejó de contestar mientras se le esperaba (el GO lo reinicia y repite)
+ERR_RESOLVE_CAIDO = 'RESOLVE_CAIDO'
+
+
+def es_resolve_atascado(mensaje):
+    """True si el mensaje de `ejecutar` dice que Resolve se colgó o se cerró solo a mitad (v5.4.40)."""
+    t = str(mensaje or '')
+    return ERR_RESOLVE_COLGADO in t or ERR_RESOLVE_CAIDO in t
+
+
+def _registro_resolve_callado_s():
+    """Segundos desde la última línea que Resolve escribió en su registro (un script en marcha escribe cada pocos segundos; un Resolve colgado, nada)."""
+    try:
+        base = ruta_registro_resolve().parent
+        veces = []
+        for n in ('davinci_resolve.log', 'ResolveDebug.txt'):
+            f = base / n
+            if f.is_file():
+                veces.append(f.stat().st_mtime)
+        return (time.time() - max(veces)) if veces else 0.0
+    except Exception:
+        return 0.0
+
+
+UMBRAL_COLGADO_S = float(os.environ.get('CC_UMBRAL_COLGADO_S') or 60.0)                       # cuánto tiene que llevar Resolve «sin responder» Y sin escribir en su registro para darlo por colgado (las pruebas lo bajan)
+
+
+def estado_resolve(colgado_s=None, callado_s=None):
+    """'ok' | 'colgado' | 'caido' (solo Windows; en lo demás siempre 'ok'). 'colgado' = su ventana «No responde» desde hace `colgado_s` s Y su registro lleva `callado_s` s
+    sin escribir nada: mientras un script trabaja la ventana también puede marcar «No responde», pero el registro sigue moviéndose; un Resolve de verdad colgado se queda mudo."""
+    colgado_s = UMBRAL_COLGADO_S if colgado_s is None else colgado_s
+    callado_s = UMBRAL_COLGADO_S if callado_s is None else callado_s
+    if not sys.platform.startswith('win'):
+        return 'ok'
+    try:
+        if not _resolve_en_ejecucion():
+            return 'caido'
+        if resolve_colgado(colgado_s) and _registro_resolve_callado_s() >= callado_s:
+            return 'colgado'
+    except Exception:
+        pass
+    return 'ok'
+
+
+def esperar_estado_resolve(segundos=15.0):
+    """v5.4.40: mira hasta `segundos` s si Resolve está colgado o cerrado (la ventana tarda unos segundos en marcarse «No responde»). Devuelve 'colgado' | 'caido' | 'ok'."""
+    t0 = time.time()
+    est = estado_resolve(colgado_s=5.0, callado_s=5.0)
+    while est == 'ok' and time.time() - t0 < segundos:
+        time.sleep(1.0)
+        est = estado_resolve(colgado_s=5.0, callado_s=5.0)
+    return est
 
 
 def _conexion_viva(resolve):
@@ -437,12 +501,41 @@ def ultimo_reporte(desde=None):
             return
         else:
             return rep
+_REP_PUENTE_MEMO = {'rep': None, 'tam': 0}
+
+
 def _reporte_del_puente():
-    """El ultimo reporte que el propio Puente dejo en el registro de Resolve\n    (modo señales: arranque, cierre, sin canal...), o None."""
+    """El ultimo reporte que el propio Puente dejo en el registro de Resolve
+    (modo señales: arranque, cierre, sin canal...), o None.
+
+    v5.4.40: el Puente solo se anuncia al ARRANCAR. Con Resolve abierto horas y varios GO seguidos ese reporte quedaba más atrás que los últimos 512 KB que se leen del registro, la
+    versión del Puente pasaba a «?» y GO decía «el Puente es de una versión anterior» y se negaba a seguir. Ahora, si no está en la cola, se busca en TODO el registro de esta sesión de
+    Resolve y se recuerda el último hallado (mientras el registro no se haya reiniciado)."""
     for rep in reversed(reportes_del_registro()):
         if rep.get('script') == 'CineCaptions_Puente':
+            _REP_PUENTE_MEMO['rep'] = rep
             return rep
-    return
+    try:
+        ruta = RUTA_REGISTRO_RESOLVE
+        tam = ruta.stat().st_size
+        if tam < _REP_PUENTE_MEMO['tam']:                       # el registro se reinició (Resolve se cerró y se abrió): lo recordado era de otra sesión
+            _REP_PUENTE_MEMO['rep'] = None
+        _REP_PUENTE_MEMO['tam'] = tam
+        if _REP_PUENTE_MEMO['rep'] is None and tam <= 64 * 1024 * 1024:
+            ultimo = None
+            with open(ruta, 'rb') as f:
+                datos = f.read().decode('utf-8', errors='replace')
+            for linea in datos.splitlines():
+                pos = linea.find(MARCA_REPORTE)
+                if pos < 0 or 'CineCaptions_Puente' not in linea:
+                    continue
+                r = _parsear_reporte(linea[pos + len(MARCA_REPORTE):].strip())
+                if r is not None and r.get('script') == 'CineCaptions_Puente':
+                    ultimo = r
+            _REP_PUENTE_MEMO['rep'] = ultimo
+    except Exception:
+        pass
+    return _REP_PUENTE_MEMO['rep']
 def video_detectado():
     """Lo que dejo CineCaptions_DetectarVideo: video_detectado.json (con io) o el\n    ultimo reporte del registro que traiga \'video\' (Free 21.1). Gana el mas\n    nuevo por \'detectado_en\'. None si no hay nada legible."""
     datos = None
@@ -849,7 +942,14 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
     inicio = time.time()
     sin_latido = 0
     pendiente_retirado = False
+    proxima_mirada = inicio + 8.0
     while time.time() - inicio < timeout:
+        if time.time() >= proxima_mirada:                       # v5.4.40: no se espera los {timeout} s enteros a un Resolve colgado o cerrado: se avisa en cuanto se sabe
+            proxima_mirada = time.time() + 4.0
+            est = estado_resolve()
+            if est != 'ok' and not respuesta.exists():
+                limpiar(JOB_PENDIENTE, sidecar, JOB_TOMADO)
+                return (False, ERR_RESOLVE_COLGADO if est == 'colgado' else ERR_RESOLVE_CAIDO)
         if respuesta.exists():
             try:
                 r = json.loads(respuesta.read_text(encoding='utf-8'))
@@ -873,7 +973,24 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
         if not puente_activo() and not JOB_TOMADO.exists():
             sin_latido += 1
             if sin_latido >= SIN_LATIDO_MAXIMO:
+                # v5.4.40: sin latido NO es todavía «el Puente se perdió»: si Resolve está colgado o cerrado la ventana tarda unos segundos en marcarse «No responde». Se espera hasta 30 s a
+                # saber cuál de las dos cosas es: Resolve atascado (el GO lo reinicia y repite) o el latido que vuelve.
+                t_dudoso = time.time()
+                est_r, volvio = 'ok', False
+                while time.time() - t_dudoso < 30.0:
+                    est_r = estado_resolve(colgado_s=5.0, callado_s=5.0)
+                    if est_r != 'ok':
+                        break
+                    if puente_activo() or JOB_TOMADO.exists():
+                        volvio = True
+                        break
+                    time.sleep(1.0)
+                if volvio:
+                    sin_latido = 0
+                    continue
                 limpiar(JOB_PENDIENTE, sidecar, JOB_TOMADO)
+                if est_r != 'ok':
+                    return (False, ERR_RESOLVE_COLGADO if est_r == 'colgado' else ERR_RESOLVE_CAIDO)
                 return (False, tr('El puente dejó de responder. Vuelve a correrlo en Resolve: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente.'))
         else:
             sin_latido = 0
@@ -958,9 +1075,15 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
                         # se le dice lo que hay que cambiar (antes salía «el Puente perdió la conexión» y el usuario de Studio no sabía qué hacer)
                         traer_resolve_al_frente()
                         return (False, mensaje_para_el_usuario())
+                    est_x = estado_resolve(colgado_s=5.0, callado_s=5.0)             # v5.4.40
+                    if est_x == 'colgado':
+                        return (False, ERR_RESOLVE_COLGADO)
                     if lanzar_puente_auto():            # Resolve Free: Mac por el menú, Windows por la consola F6 (Resolve Free): se pulsa solo Workspace > Scripts > CineCaptions_Puente
                         ok, mensaje = _encolar(accion, datos=datos, timeout=timeout, on_progreso=on_progreso)
                         return _con_motivo_real(ok, mensaje, empezo)
+                    est_y = esperar_estado_resolve(15.0)            # v5.4.40: ¿no se pudo lanzar el Puente porque Resolve está colgado o cerrado?
+                    if est_y != 'ok':
+                        return (False, ERR_RESOLVE_COLGADO if est_y == 'colgado' else ERR_RESOLVE_CAIDO)
                     traer_resolve_al_frente()
                     return (False, mensaje_para_el_usuario())
 def ejecutar_script_o_menu(ruta_script, datos=None, timeout=90):

@@ -111,6 +111,11 @@ def slider(video, argv):
     destino.mkdir(parents=True, exist_ok=True)
     mp4 = _concatenar(trozos, destino / f'{pack}.mp4')
     print(f'{mp4.name}: {H._duracion(mp4):.1f} s, {mp4.stat().st_size / 1024:.0f} KB', flush=True)
+    import subprocess
+    t_poster = float(argv[argv.index('--poster') + 1]) if '--poster' in argv else 3.4                   # el fotograma de la tarjeta cuando no está al centro
+    jpg = destino / f'{pack}.jpg'
+    subprocess.run([H.shutil.which('ffmpeg') or 'ffmpeg', '-y', '-ss', str(t_poster), '-i', str(mp4), '-frames:v', '1', '-q:v', '3', str(jpg)], capture_output=True)
+    print(f'{jpg.name}: {jpg.stat().st_size / 1024:.0f} KB' if jpg.is_file() else 'no pude sacar el póster', flush=True)
     return 0
 
 

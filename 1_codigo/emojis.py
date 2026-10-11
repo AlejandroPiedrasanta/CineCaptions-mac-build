@@ -954,7 +954,73 @@ def medir_anchos_emoji(bloques, estilos_por_formato):
     return medidos, sorted(set(sin_medir))
 
 
-def para_manifiesto(bloques, posicion=None, forzar=False):
+CARPETA_COMPS = sfx_rules.CARPETA_USUARIO / 'emoji_comps'
+
+
+def texto_comp_animacion(largo, entrada, salida):
+    """Texto de la comp de Fusion que le da al emoji su ENTRADA (rebote de 8 fotogramas) y/o su SALIDA (6 fotogramas). Gemela de comp_animacion_emoji
+    de CineCaptions_Subtitulos.lua y de _comp_animacion_emoji de CineCaptions.py."""
+    t = "(math.min(1,math.max(0,time/8))-1)"
+    pop = "(1+2.70158*%s^3+1.70158*%s^2)" % (t, t) if entrada else "1"
+    fuera = "math.max(0,math.min(1,(%d-time)/6))" % largo if salida else "1"
+    expr = "math.max(0.001,%s*%s)" % (pop, fuera)
+    return ("Composition {\n\tCurrentTime = 0,\n\tRenderRange = { 0, %d },\n\tGlobalRange = { 0, %d },\n\tTools = ordered() {\n"
+            "\t\tTransform1 = Transform {\n\t\t\tInputs = {\n\t\t\t\tSize = Input { Value = 1, Expression = \"%s\", },\n"
+            "\t\t\t\tInput = Input { SourceOp = \"MediaIn1\", Source = \"Output\", },\n\t\t\t},\n"
+            "\t\t\tViewInfo = OperatorInfo { Pos = { 200, 50 } },\n\t\t},\n"
+            "\t\tMediaIn1 = MediaIn {\n\t\t\tViewInfo = OperatorInfo { Pos = { 0, 50 } },\n\t\t},\n"
+            "\t\tMediaOut1 = MediaOut {\n\t\t\tInputs = {\n\t\t\t\tIndex = Input { Value = \"0\", },\n"
+            "\t\t\t\tInput = Input { SourceOp = \"Transform1\", Source = \"Output\", },\n\t\t\t},\n"
+            "\t\t\tViewInfo = OperatorInfo { Pos = { 400, 50 } },\n\t\t},\n\t},\n}\n") % (largo, largo, expr)
+
+
+def comps_animacion(bloques, secuencias=None, fps=None, extra_fin=0.05):
+    """v5.4.36 — Resolve Free no tiene `io`: el script no puede escribir la comp de Fusion que anima cada emoji (rebote al entrar y encogerse al salir),
+    así que la deja escrita la app. Una comp por (largo en fotogramas, entrada, salida) en ~/DaVinciSubtitles/emoji_comps/ (se reusan entre corridas);
+    el script usa la de largo más cercano (±3 fotogramas) de la lista `ids`. Sin fps conocido se cubren los de uso común. Devuelve {'carpeta', 'ids'} o {}."""
+    try:
+        fps_pos = [float(fps)] if fps and float(fps) > 1 else [23.976, 24.0, 25.0, 29.97, 30.0, 50.0, 59.94, 60.0]
+        pedidas = set()                                                  # (largo, entrada, salida)
+        for b in bloques or []:
+            eid = b.get('emoji')
+            if not eid:
+                continue
+            try:
+                ini = float(b['emoji_ini'] if b.get('emoji_ini') is not None else b.get('start') or 0.0)
+                dur = float(b['end']) + float(extra_fin) - ini
+            except (KeyError, TypeError, ValueError):
+                continue
+            if dur <= 0:
+                continue
+            try:
+                n = int(((secuencias or {}).get(eid) or {}).get('n') or 0)
+            except (TypeError, ValueError):
+                n = 0
+            for f in fps_pos:
+                for k in (-1, 0, 1):
+                    largo = max(2, int(round(dur * f)) + k)
+                    if n >= 2 and largo > n:                             # secuencia animada en bucle: entra el 1.º tramo y sale el último
+                        pedidas.add((n, 1, 0))
+                        pedidas.add((max(2, largo - n * ((largo - 1) // n)), 0, 1))
+                    else:
+                        pedidas.add((largo, 1, 1))
+        if not pedidas:
+            return {}
+        CARPETA_COMPS.mkdir(parents=True, exist_ok=True)
+        ids = []
+        for largo, e, s in sorted(pedidas):
+            ruta = CARPETA_COMPS / ('cinecaptions_emoji_%d_%d%d.comp' % (largo, e, s))
+            if not ruta.is_file():
+                tmp = ruta.with_suffix('.tmp')
+                tmp.write_text(texto_comp_animacion(largo, bool(e), bool(s)), encoding='utf-8')
+                os.replace(tmp, ruta)
+            ids.append('%d_%d%d' % (largo, e, s))
+        return {'carpeta': str(CARPETA_COMPS), 'ids': ids}
+    except Exception:
+        return {}
+
+
+def para_manifiesto(bloques, posicion=None, forzar=False, fps=None):
     """Las claves del track: {'emojis': {id: ruta}}, o {} si ningun bloque
     lleva emoji. Las rutas son las copias PERSISTENTES
     (~/DaVinciSubtitles/emojis_usados/...). 'posicion' (v3.3.0) ya no
@@ -989,6 +1055,9 @@ def para_manifiesto(bloques, posicion=None, forzar=False):
         pass
     if forzar:
         pista['emoji_forzar'] = True          # la eleccion del usuario manda sobre el bloque «imagen» del pack
+    comps = comps_animacion(bloques, pista.get('emojis_secuencias'), fps)
+    if comps:
+        pista['emoji_comps'] = comps          # Free (sin io): las comps de entrada/salida las deja escritas la app
     return pista
 
 

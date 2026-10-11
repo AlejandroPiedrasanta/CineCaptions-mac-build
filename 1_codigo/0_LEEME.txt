@@ -200,6 +200,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         lo que recomendamos para cada estilo: al elegir VIRAL, Kinetic o Referencia el sonido y la página Efectos quedan ya configurados.
     recorrido_ui.py
         recorrido visual por pasos: una capa sobre la ventana que ilumina cada zona de la interfaz y la explica (se desactiva en Ajustes).
+    recortar_bucle_vistas.py
+        recorta los clips de muestra de «Crea tu estilo» (texto sobre NEGRO) para que den la vuelta sin tiempo muerto.
     registro.py
         el registro de avisos y errores: archivo de log, historial y señal para la interfaz.
     registro_ayuda.py

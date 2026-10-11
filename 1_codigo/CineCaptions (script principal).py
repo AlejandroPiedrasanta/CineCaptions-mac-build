@@ -5442,7 +5442,7 @@ class WordTagWindow(QWidget):
             eleccion = str(ajustes_ui.leer_prefs().get('emoji_posicion') or '')
         except Exception:
             eleccion = ''
-        img['donde'] = eleccion if eleccion in ('abajo', 'arriba') else 'abajo'
+        img['donde'] = eleccion if eleccion in ('abajo', 'arriba') else (img.get('donde') or 'abajo')
         return img
     def _imagen_del_bloque(self, k, indice, pack, formato):
         """El espacio «imagen» del bloque k: donde caera el emoji (el bloque «imagen» del pack o, sin el, debajo del
@@ -6174,6 +6174,7 @@ class SubtitleApp(QWidget):
         # v5.4: el indice de fuentes del sistema (~1100 archivos) se arma en un hilo nada mas abrir, no al pulsar «Estilos»
         despues(400, self._precalentar_fuentes, self)
         despues(1800, self._ofrecer_reanudar_go, self)                 # v5.4.8: un GO que quedó a medias se ofrece reanudar
+        despues(9000, self._precargar_al_abrir, self)                  # v5.4.40: la voz y la IA de texto se cargan en segundo plano al abrir (el primer GO se ahorra ~14 s de carga)
         despues(45000, self._limpiar_caches, self)               # v5.4.8: tope de MB por caché (mantenimiento.py), 45 s después de abrir y en un hilo
         try:                                                     # v5.4.8: lo de fondo (cola_trabajos) cede ante GO
             import cola_trabajos
@@ -7934,9 +7935,16 @@ class SubtitleApp(QWidget):
         """Hilo de GO con un video soltado en DaVinci Resolve FREE (sin MCP): le pide al Puente que cree el proyecto «CineCaptions» y arme el timeline con ese video
         (CineCaptions_ArmarVideo.lua, la gemela de lo que en Studio hace el MCP). Si algo falla, GO se detiene (`_abortar_si_fallo_el_timeline`)."""
         import resolve_bridge
+        self._go_tl_args = (archivo, medio)                     # (para volver a armar el timeline si Resolve se cuelga más adelante)
         try:
             self._esperar_vistas_reales()
             al_estado = lambda t: self.msg_queue.put(('status', t))
+            try:                                                   # v5.4.40: un Resolve que se quedó colgado (ventana «No responde», sin escribir nada) de un GO anterior se cierra y se reabre YA, sin esperar minutos
+                import colocacion
+                if resolve_bridge.estado_resolve(colgado_s=10.0, callado_s=10.0) == 'colgado':
+                    colocacion.recuperar_resolve(tr('ventana sin responder'), decir=al_estado)
+            except Exception:
+                registro.excepcion(origen='GO · Resolve colgado antes de empezar')
             if resolve_bridge.modo_actual() == 'manual':
                 al_estado(tr('Lanzando el Puente en Resolve…'))
                 if not resolve_bridge.lanzar_puente_auto():
@@ -7961,6 +7969,17 @@ class SubtitleApp(QWidget):
             al_estado(tr('Armando en Resolve un timeline con tu video…'))
             desde = time.time()
             ok, err = resolve_bridge.ejecutar('armar_video', timeout=240)
+            for _reintento in range(2):                              # v5.4.40: Resolve colgado o cerrado a mitad → se cierra, se reabre y se arma otra vez (hasta 2 veces)
+                if ok or not resolve_bridge.es_resolve_atascado(err):
+                    break
+                if not colocacion.recuperar_resolve(err, decir=al_estado):
+                    break
+                orden.pop('descartar', None)                         # (el proyecto vacío de arranque murió con Resolve)
+                archivos_seguros.escribir_json(ruta_orden, orden)
+                sidecar_lua.escribir_sidecar(ruta_orden, orden)
+                al_estado(tr('Armando en Resolve un timeline con tu video…'))
+                desde = time.time()
+                ok, err = resolve_bridge.ejecutar('armar_video', timeout=240)
             colocacion.PROYECTO_INICIAL = None                       # (ya se uso: ArmarVideo borró ese proyecto vacío)
             rep = next((r for r in reversed(resolve_bridge.reportes_del_registro()) if r.get('script') == 'CineCaptions_ArmarVideo' and (r.get('cuando') or 0) >= desde - 2), None)
             info = (rep or {}).get('armado')
@@ -7994,6 +8013,45 @@ class SubtitleApp(QWidget):
             ev = getattr(self, '_go_tl_listo', None)
             if ev is not None:
                 ev.set()
+    def _go_rearmar_en_resolve(self, motivo):
+        """v5.4.40: Resolve (Free) se colgó o se cerró SOLO a mitad de colocar → se cierra del todo, se reabre, se relanza el Puente y se vuelve a armar el timeline con el video.
+        True si el timeline quedó armado otra vez (entonces el GO repite el paso que falló). Corre en el hilo de colocar, nunca en la interfaz."""
+        try:
+            import colocacion
+            args = getattr(self, '_go_tl_args', None)
+            if not args:
+                return False
+            if not colocacion.recuperar_resolve(motivo, decir=lambda t: self.msg_queue.put(('status', t))):
+                return False
+            self._go_tl_error = None
+            self._go_timeline_del_video_libre(*args)
+            return not getattr(self, '_go_tl_error', None)
+        except Exception:
+            registro.excepcion(origen='GO · rearmar en Resolve')
+            return False
+    def _precargar_al_abrir(self):
+        """v5.4.40: con la GPU holgada (modo «residente» o «solapado»: ≥ 14,5 GB) el motor de VOZ (no la IA de texto) se carga y se calienta nada más abrir el programa, en un hilo, para que el primer GO no
+        gaste ~14 s en cargarlo (medido: «Modelo listo en 12,4 s» + calentamiento 1,7 s). Con la GPU justa (modo «secuencial») no: dejaría a Resolve sin memoria de vídeo. Se apaga con
+        la preferencia `precargar_al_abrir` = False. Nunca bloquea ni lanza."""
+        try:
+            import ajustes_ui
+            import motor_voz
+            if ajustes_ui.leer_prefs().get('precargar_al_abrir', True) is False:
+                return
+            if getattr(self, '_go_corriendo', False) or motor_voz.modo_gpu() not in ('residente', 'solapado'):
+                return
+            codigo = LANG_CODE_BY_NAME.get(self.lang_var.get(), 'es')
+            def trabajo():
+                try:                                           # SOLO la voz (~6 GB): la IA de texto (~9,5 GB) se carga al pulsar GO, no con Resolve abierto y la GPU compartida
+                    if motor_voz.motor_para(codigo) == 'qwen3':
+                        motor_voz.precargar()
+                    else:
+                        st.precargar_whisper(MODEL_SIZE)
+                except Exception:
+                    pass
+            threading.Thread(target=trabajo, daemon=True, name='precarga-voz-al-abrir').start()
+        except Exception:
+            pass
     def _precargar_motores(self):
         """v5.3: arranca EN SEGUNDO PLANO el motor de voz y la IA de texto (carga + calentamiento). Cargar el motor de voz
         cuesta ~11 s de imports + ~8 s de modelo y su primera pasada ~20 s; ya cargado, 24 s de audio se transcriben en ~5 s.
@@ -9850,7 +9908,12 @@ class SubtitleApp(QWidget):
                         forzar = False
                 except Exception:
                     pass
-            return emojis.para_manifiesto(bloques, eleccion if eleccion in ('abajo', 'arriba') else 'abajo', forzar=forzar)
+            donde = 'abajo'
+            try:
+                donde = plantillas.bloque_imagen(self.plantilla_sel, None).get('donde') or 'abajo'            # el emoji del Tema 4 va ARRIBA del texto
+            except Exception:
+                pass
+            return emojis.para_manifiesto(bloques, eleccion if eleccion in ('abajo', 'arriba') else donde, forzar=forzar, fps=getattr(self, '_fps_timeline', None))
         except Exception:
             return {}
     def _sfx_de_emojis(self, bloques, pista_sfx):
@@ -10908,14 +10971,15 @@ class SubtitleApp(QWidget):
         except Exception:
             registro.excepcion(origen='GO · quitar pausas')
             return words
-    def _planificar_efectos(self, media_path, words, cortes_fx):
-        """El plan de efectos de ESTE video (nunca rompe GO: si algo falla, se sigue sin efectos)."""
+    def _planificar_efectos(self, media_path, words, cortes_fx, avisar=True):
+        """El plan de efectos de ESTE video (nunca rompe GO: si algo falla, se sigue sin efectos). Con avisar=False (en segundo plano, mientras la IA corrige el texto) no toca la línea de estado."""
         self._efectos_plan = None
         try:
             import efectos_visuales
             visuales = efectos_visuales.activado()
             if visuales:
-                self.msg_queue.put(('status', tr('Preparando los efectos visuales…')))
+                if avisar:
+                    self.msg_queue.put(('status', tr('Preparando los efectos visuales…')))
                 if cortes_fx is not None and cortes_fx.hilo is not None:
                     cortes_fx.hilo.join(120)
             cortes = cortes_fx.resultado if (cortes_fx is not None and visuales) else None
@@ -10938,7 +11002,7 @@ class SubtitleApp(QWidget):
                 tiempos_corte = sorted([float(e['ini']) for e in evs if e.get('tipo') == 'corte'] + [float(t) for e in evs if e.get('tipo') == 'v1' for t in (e.get('cortes') or [])])
                 trans = next((e.get('asset') for e in evs if e.get('tipo') == 'corte'), None) or next((e.get('transicion') for e in evs if e.get('tipo') == 'v1' and e.get('transicion')), None)
                 audio_extra, resumen_audio = sonidos_extra.planificar(str(media_path), words, plan.get('duracion') or duracion, cortes=tiempos_corte, transicion=trans, saltos=saltos,
-                                                                       eventos_visuales=evs, al_estado=lambda t: self.msg_queue.put(('status', tr(t))))
+                                                                       eventos_visuales=evs, al_estado=(lambda t: self.msg_queue.put(('status', tr(t)))) if avisar else (lambda t: None))
                 if audio_extra:
                     evs.extend(audio_extra)
                     plan['eventos'] = evs
@@ -10974,6 +11038,11 @@ class SubtitleApp(QWidget):
             ok, mensaje = efectos_visuales.aplicar(plan, al_estado=lambda t: self.msg_queue.put(('status', str(t))), offset_frames=self._offset_frames())
             if not ok:
                 registro.aviso(f'Efectos visuales: {mensaje}', 'efectos')
+                try:
+                    import resolve_bridge
+                    self._efectos_atascado = resolve_bridge.es_resolve_atascado(mensaje)          # v5.4.40: Resolve se colgó colocando los efectos: el GO lo reinicia y repite
+                except Exception:
+                    pass
                 return tr('Los efectos visuales no se pudieron colocar: {m}', m=str(mensaje)[:120])
             return tr('con efectos visuales')
         except Exception:
@@ -11016,6 +11085,19 @@ class SubtitleApp(QWidget):
             if colocacion:
                 colocacion.vista_en_manifiesto(st.SHARED_FOLDER / 'subtitles_manifest.json')
             ok, err = resolve_bridge.ejecutar('subtitulos')
+            for _reintento in range(2):                              # v5.4.40: Resolve colgado o cerrado colocando los captions → se reinicia, se arma el timeline otra vez y se repite
+                if ok or not resolve_bridge.es_resolve_atascado(err) or not getattr(self, '_go_corriendo', False):
+                    break
+                if not self._go_rearmar_en_resolve(err):
+                    break
+                self.msg_queue.put(('status', tr('Vuelvo a colocar los subtítulos en Resolve…')))
+                empezo = time.time()
+                try:
+                    resolve_bridge.limpiar_resultado_viejo()
+                    composicion.retirar_orden()
+                except Exception:
+                    pass
+                ok, err = resolve_bridge.ejecutar('subtitulos')
             veredicto, reparado = None, []
             if colocacion and ok:
                 try:
@@ -11042,7 +11124,20 @@ class SubtitleApp(QWidget):
                 if not veredicto['ok']:
                     ok = False                         # el script corrió pero NO colocó nada: ya no se dice «Listo»
                     err = colocacion.frase_de_fallo(veredicto)
+            self._efectos_atascado = False
             nota_fx = self._colocar_efectos() if ok else ''
+            if ok and getattr(self, '_efectos_atascado', False) and getattr(self, '_go_corriendo', False):          # v5.4.40: Resolve se colgó con los efectos: se rehace todo
+                self._efectos_atascado = False
+                if self._go_rearmar_en_resolve('efectos visuales'):
+                    self.msg_queue.put(('status', tr('Vuelvo a colocar los subtítulos en Resolve…')))
+                    empezo = time.time()
+                    try:
+                        resolve_bridge.limpiar_resultado_viejo()
+                        composicion.retirar_orden()
+                    except Exception:
+                        pass
+                    ok, err = resolve_bridge.ejecutar('subtitulos')
+                    nota_fx = self._colocar_efectos() if ok else ''
             if not ok and veredicto is None:
                 try:
                     if resolve_bridge.modo_actual() == 'manual':
@@ -12708,6 +12803,11 @@ class SubtitleApp(QWidget):
                 raise SystemExit(self._sin_palabras_mensaje())
             self._abortar_si_fallo_el_timeline()          # un video soltado sin su timeline en Resolve: no se sigue (ni se gastan los minutos de la IA)
             words = self._recortar_pausas(words, media_path)         # v5.4.8: «Quitar pausas» (si el usuario lo pidió): los tiempos de las palabras pasan a ser los del video recortado
+            # v5.4.40: el plan de efectos (cortes, música, golpes de sonido) solo depende de las palabras oídas: con GO se hace en OTRO hilo mientras la IA corrige el texto
+            self._efectos_hilo = None
+            if getattr(self, '_un_clic', False):
+                self._efectos_hilo = threading.Thread(target=self._planificar_efectos, args=(media_path, words, cortes_fx, False), daemon=True, name='fx-plan')
+                self._efectos_hilo.start()
             base_lang = source_lang
             if source_lang == 'auto':
                 # con «auto» el idioma es el que se OYÓ (antes se daba por español y la corrección del texto «arreglaba» el inglés con palabras en español)
@@ -12892,7 +12992,12 @@ class SubtitleApp(QWidget):
             sidecar_lua.escribir_sidecar(manifest_path, manifest)
             langs = ', '.join((t['language'].upper() for t in manifest['tracks']))
             self._punto_control_go()
-            self._planificar_efectos(media_path, words, cortes_fx)
+            hilo_fx = getattr(self, '_efectos_hilo', None)
+            self._efectos_hilo = None
+            if hilo_fx is not None:
+                hilo_fx.join(300)                                    # (ya suele estar hecho: corrió mientras la IA trabajaba)
+            else:
+                self._planificar_efectos(media_path, words, cortes_fx)
             ev_tl = getattr(self, '_go_tl_listo', None)
             if ev_tl is not None and not ev_tl.is_set():
                 # GO con un video soltado: Resolve todavía está armando el timeline con él (los captions se colocan ahí)

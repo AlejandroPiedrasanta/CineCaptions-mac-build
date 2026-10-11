@@ -46,8 +46,9 @@ class Reproductor:
     """Reproduce un mp4 en bucle en un hilo y guarda el cuadro actual (QImage RGB32). Sin audio."""
     PAUSA_BUCLE_S = 0.8
 
-    def __init__(self, ruta):
+    def __init__(self, ruta, pausa_s=None):
         self.ruta = str(ruta)
+        self._pausa = self.PAUSA_BUCLE_S if pausa_s is None else float(pausa_s)           # «Crea tu estilo»: 0 = el clip da la vuelta sin quedarse parado
         self._img = None
         self._hilo = None
         self._parar = threading.Event()
@@ -96,7 +97,9 @@ class Reproductor:
                         a = np.ascontiguousarray(cuadro.to_ndarray(format='bgra'))
                         alto, ancho = a.shape[0], a.shape[1]
                         self._img = QImage(a.data, ancho, alto, ancho * 4, QImage.Format.Format_RGB32).copy()
-                if parar.wait(self.PAUSA_BUCLE_S):
+                if self._pausa > 0 and parar.wait(self._pausa):
+                    return
+                if parar.is_set():
                     return
         except Exception:
             self.fallo = True

@@ -484,6 +484,26 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.40', [
+        'Resolve Free ya no se cuelga al armar el proyecto de un video: se encontró la causa (se le cambiaban los ajustes al timeline recién creado antes de que Resolve terminara su copia de respaldo; el 2.º GO seguido se colgaba 5 de 7 veces) y se corrigió.',
+        'Si Resolve se cuelga o se cierra solo a mitad de GO, CineCaptions lo nota en cerca de 1 minuto, lo cierra, lo vuelve a abrir y repite el proceso solo (antes esperaba 4 minutos y fallaba).',
+        'Al terminar, Resolve queda en la vista expandida y vertical y reproduce el timeline desde el principio (las teclas Inicio y Espacio no llegaban: ahora usa el menú Reproducir).',
+        'Arreglo: tras varios GO seguidos con Resolve abierto, GO decía que el Puente era de una versión anterior y se detenía.',
+        'GO más rápido: el plan de efectos se prepara mientras la IA corrige el texto y el motor de voz se carga nada más abrir el programa (con la GPU holgada).',
+    ]),
+    ('5.4.39', [
+        'Tema 4: la tarjeta del slider de temas ahora es un VIDEO real renderizado por Resolve (captions, emojis arriba del texto y efectos sobre un video de ejemplo), igual que los Temas 1, 2 y 3, en vez de una imagen.',
+    ]),
+    ('5.4.38', [
+        'Proyecto · «Crea tu estilo»: las vistas en video ahora dan la vuelta en bucle seguido: entra, sale y vuelve a entrar sin quedarse vacías varios segundos entre una vuelta y otra.',
+    ]),
+    ('5.4.37', [
+        'Tema 4: el emoji de cada bloque ahora va ENCIMA del texto (antes debajo). Si eliges «Abajo» o «Arriba» en Sonido, esa elección manda.',
+    ]),
+    ('5.4.36', [
+        'Emojis: en Resolve Free quedaban pegados o encima del texto (Tema 4 y los demás en vertical); ahora se colocan debajo de las líneas, donde se ve en la vista previa.',
+        'Emojis: en Resolve Free ahora entran con rebote y salen encogiéndose (antes aparecían y desaparecían de golpe).',
+    ]),
     ('5.4.35', [
         'Arreglo: con el Tema 4 (y con Referencia) al activar a la vez los sonidos por palabra y los emojis, Resolve se cerraba al colocar los captions y salía «El puente no respondió en 90 segundos». Ahora los emojis se colocan antes que los sonidos y el GO termina bien.',
     ]),

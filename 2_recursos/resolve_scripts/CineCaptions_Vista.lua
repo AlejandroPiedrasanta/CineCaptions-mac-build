@@ -7,7 +7,7 @@ Guarda («guardar») o aplica («cargar») la disposicion de pantalla de Resolve
 la vista expandida. En Studio lo hace el MCP; en Resolve FREE (sin MCP) el Puente la corre con dofile. La orden: vista_orden.json (sidecar .lua en Free).
 ]]
 
-local VERSION = "5.4.35 (vista)"
+local VERSION = "5.4.40 (vista)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -424,6 +424,68 @@ local function render_estado(orden)
     print("VISTA " .. RESULTADO)
 end
 
+-- v5.4.40: lleva el cabezal al PRIMER fotograma del timeline actual (la app luego manda «reproducir»: Resolve no tiene llamada de script para reproducir ni la tecla Inicio llega siempre)
+local function cabezal_al_inicio(orden)
+    local proyecto = proyecto_actual()
+    if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
+    local tl = proyecto:GetCurrentTimeline()
+    if tl == nil then fail("No hay timeline abierto.") end
+    local tc = tl:GetStartTimecode()
+    local ok = false
+    if tc ~= nil then ok = tl:SetCurrentTimecode(tc) and true or false end
+    pcall(function() resolve:OpenPage("edit") end)
+    RESULTADO = string.format('{"ok": %s, "accion": "cabezal", "timecode": "%s"}', tostring(ok), json_escapar(tostring(tc)))
+    print("VISTA " .. RESULTADO)
+end
+
+-- DIAGNOSTICO (solo lectura): Pan/Tilt/Zoom de los clips de una pista de video del timeline abierto
+local function inspeccionar(orden)
+    local proyecto = proyecto_actual()
+    if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
+    local tl = proyecto:GetCurrentTimeline()
+    if tl == nil then fail("No hay timeline abierto.") end
+    local pista = tostring(orden.pista or "")
+    local filas = {}
+    for t = 1, tl:GetTrackCount("video") do
+        local nom = tostring(tl:GetTrackName("video", t) or "")
+        if pista == "" or nom == pista then
+            for _, it in ipairs(tl:GetItemListInTrack("video", t) or {}) do
+                local function g(k) local ok, v = pcall(function() return it:GetProperty(k) end); return (ok and tonumber(v)) or 0 end
+                filas[#filas + 1] = string.format('{"t":%d,"pista":"%s","n":"%s","ini":%d,"pan":%s,"tilt":%s,"zx":%s,"zy":%s}',
+                    t, json_escapar(nom), json_escapar(tostring(it:GetName())), it:GetStart(), tostring(g("Pan")), tostring(g("Tilt")), tostring(g("ZoomX")), tostring(g("ZoomY")))
+                if #filas >= 14 then break end
+            end
+        end
+    end
+    RESULTADO = string.format('{"ok": true, "accion": "inspeccionar", "ancho": "%s", "alto": "%s", "items": [%s]}',
+        tostring(tl:GetSetting("timelineResolutionWidth")), tostring(tl:GetSetting("timelineResolutionHeight")), table.concat(filas, ","))
+    print("VISTA " .. RESULTADO)
+end
+
+-- DIAGNOSTICO: pone Pan/Tilt/Zoom al clip N de una pista de video (orden.pista, orden.indice, orden.props)
+local function ajustar_clip(orden)
+    local proyecto = proyecto_actual()
+    if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
+    local tl = proyecto:GetCurrentTimeline()
+    if tl == nil then fail("No hay timeline abierto.") end
+    local pista = tostring(orden.pista or "")
+    local indice = math.floor(tonumber(orden.indice) or 1)
+    local hechos = {}
+    for t = 1, tl:GetTrackCount("video") do
+        if tostring(tl:GetTrackName("video", t) or "") == pista then
+            local it = (tl:GetItemListInTrack("video", t) or {})[indice]
+            if it ~= nil then
+                for k, v in pairs(orden.props or {}) do
+                    local ok, r = pcall(function() return it:SetProperty(k, tonumber(v)) end)
+                    hechos[#hechos + 1] = string.format('"%s": %s', json_escapar(tostring(k)), tostring(ok and r and true or false))
+                end
+            end
+        end
+    end
+    RESULTADO = '{"ok": true, "accion": "ajustar_clip", "hechos": {' .. table.concat(hechos, ",") .. '}}'
+    print("VISTA " .. RESULTADO)
+end
+
 local function main()
     local r, diag = obtener_resolve()
     if r == nil then
@@ -440,6 +502,9 @@ local function main()
     if accion == "render_estado" then render_estado(orden); return end
     if accion == "render_parar" then render_parar(orden); return end
     if accion == "cerrar" then cerrar_resolve(orden); return end
+    if accion == "cabezal" then cabezal_al_inicio(orden); return end
+    if accion == "inspeccionar" then inspeccionar(orden); return end
+    if accion == "ajustar_clip" then ajustar_clip(orden); return end
     local lista = resolve:GetLayoutPresetList() or {}
     local existia = false
     for _, n in pairs(lista) do if n == nombre then existia = true end end

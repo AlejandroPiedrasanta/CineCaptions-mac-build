@@ -912,13 +912,17 @@ def para_manifiesto(nombre, formato_forzado=None):
                         plantilla['formato_forzado'] = formato_forzado
                     return {'plantilla': plantilla}
 _MEMO_IMAGEN = {}
+# v5.4.37: packs sin bloque «imagen» cuyo emoji va ENCIMA del texto (el resto: debajo)
+EMOJI_ARRIBA = ('Tema4',)
+
+
 def bloque_imagen(nombre, formato=None):
     """Donde cae el bloque «imagen» del pack elegido: {'donde': 'abajo'|'arriba', 'zoom': float, 'bloque': bool}.
 
     'bloque' dice si el pack lo trae. Sin el (o sin pack) el emoji va DEBAJO del texto, a su tamaño normal. Es lo que
     dibujan las vistas previas (Creativo, Proyecto, Composicion) para que se vea donde caera el icono. Nunca lanza.
     """
-    por_defecto = {'donde': 'abajo', 'zoom': 1.0, 'bloque': False}
+    por_defecto = {'donde': 'arriba' if nombre in EMOJI_ARRIBA else 'abajo', 'zoom': 1.0, 'bloque': False}
     try:
         if nombre in ('media_pool', '', None, 'dinamico'):
             return dict(por_defecto)

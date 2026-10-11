@@ -669,6 +669,128 @@ def expandir_vista_windows():
     return False, tr('No pude activar «Expandir vista» en Resolve ({r}).', r=res)
 
 
+# v5.4.40: reproducir desde el principio SIN teclas. Medido en Resolve Free 21.1: las teclas Inicio/Espacio mandadas con keybd_event no hacían nada (el foco queda en el Media Pool o en
+# la consola), así que el cabezal se queda donde está y no reproduce. Ahora: el cabezal al primer fotograma por la API (acción «cabezal» de CineCaptions_Vista.lua) y «Reproducir hacia
+# adelante» pulsado en el MENÚ de Resolve por UI Automation (sin foco ni mouse). OJO: la llamada del menú NO vuelve hasta que acaba la reproducción, por eso se lanza aparte y no se espera.
+_PS_REPRODUCIR = r'''
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$AE = [System.Windows.Automation.AutomationElement]
+$TS = [System.Windows.Automation.TreeScope]
+$ids = @(Get-Process Resolve -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+$main = $null
+foreach ($id in $ids) {
+    $c = New-Object System.Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $id)
+    foreach ($v in $AE::RootElement.FindAll($TS::Children, $c)) { if ($v.Current.ClassName -like '*UiMainWindow*') { $main = $v } }
+}
+if (-not $main) { 'SIN_VENTANA'; exit }
+$m = $null
+foreach ($n in @($env:CC_MENUS -split '\|')) {
+    $m = $main.FindFirst($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::NameProperty, $n)))
+    if ($m) { break }
+}
+if (-not $m) {
+    # sin el nombre (otro idioma): el menú «Reproducir» es el que va justo ANTES de «Fusion» en la barra
+    $barra = $main.FindAll($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::MenuItem)))
+    $ant = $null
+    foreach ($b in $barra) { if ($b.Current.Name -eq 'Fusion') { $m = $ant; break }; $ant = $b }
+}
+if (-not $m) { 'SIN_MENU'; exit }
+try { $m.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand() } catch { $m.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke() }
+$e = $null
+foreach ($n in @($env:CC_ITEMS -split '\|')) {
+    $e = $m.FindFirst($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::NameProperty, $n)))
+    if ($e) { break }
+}
+if (-not $e) { Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('{ESC}'); 'SIN_ITEM'; exit }
+'REPRODUCIENDO'
+[Console]::Out.Flush()
+$e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+'''
+
+_MENU_REPRODUCIR = 'Reproducir|Playback|Reprodução|Lecture|Wiedergabe|Riproduzione|Воспроизведение|再生|播放'
+_ITEM_ADELANTE = ('Reproducir hacia adelante|Play Forward|Reproduzir para frente|Reproduzir para a frente|Lire en avant|Vorwärts abspielen|Riproduci in avanti|Воспроизведение вперед|順再生|正向播放')
+
+
+def cabezal_al_inicio_resolve():
+    """v5.4.40: lleva el cabezal al primer fotograma del timeline actual por el Puente (acción «cabezal» de CineCaptions_Vista.lua). True si Resolve contestó que lo movió."""
+    try:
+        import archivos_seguros
+        import resolve_bridge
+        import sidecar_lua
+        ruta = resolve_bridge.CARPETA_COMPARTIDA / 'vista_orden.json'
+        orden = {'accion': 'cabezal'}
+        archivos_seguros.escribir_json(ruta, orden)
+        sidecar_lua.escribir_sidecar(ruta, orden)
+        desde = time.time()
+        ok, _msg = resolve_bridge.ejecutar('vista', timeout=45)
+        rep = resolve_bridge.ultimo_reporte(desde=desde) or {}
+        vista = rep.get('vista')
+        return bool(ok and isinstance(vista, dict) and vista.get('ok'))
+    except Exception:
+        return False
+
+
+def _cerrar_menu_de_resolve():
+    """v5.4.40 (Windows): cierra con Escape el menú desplegable que Resolve deja abierto tras pulsar «Reproducir hacia adelante» (UIA Collapse no lo cierra). Solo si la ventana en primer plano
+    es de Resolve (el propio menú abierto lo es): si no, el Escape iría a otra aplicación y no se manda."""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        import resolve_bridge as b
+        user32 = ctypes.windll.user32
+        user32.GetForegroundWindow.restype = wintypes.HWND
+        user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+        h = user32.GetForegroundWindow()
+        pid = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(h, ctypes.byref(pid))
+        if h and int(pid.value) in b._pids_de_resolve():
+            user32.keybd_event(0x1B, 0x01, 0, 0)
+            time.sleep(0.05)
+            user32.keybd_event(0x1B, 0x01, 2, 0)
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def reproducir_por_menu_windows(espera_s=20):
+    """v5.4.40 (Windows): pulsa «Reproducir > Reproducir hacia adelante» en el menú de Resolve por UI Automation. El proceso de PowerShell se queda vivo mientras dura la reproducción
+    (la llamada no vuelve antes), así que solo se espera su PRIMERA línea. Devuelve (ok, código)."""
+    try:
+        import base64
+        import os
+        import subprocess
+        import threading
+        cod = base64.b64encode(_PS_REPRODUCIR.encode('utf-16-le')).decode('ascii')
+        env = {**os.environ, 'CC_MENUS': _MENU_REPRODUCIR, 'CC_ITEMS': _ITEM_ADELANTE}
+        proc = subprocess.Popen(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', cod], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                text=True, encoding='utf-8', errors='replace', env=env, creationflags=0x08000000, cwd=os.path.expanduser('~'))
+        primera = []
+
+        def leer():
+            try:
+                primera.append((proc.stdout.readline() or '').strip())
+            except Exception:
+                primera.append('ERROR')
+        h = threading.Thread(target=leer, daemon=True, name='uia-reproducir')
+        h.start()
+        h.join(espera_s)
+        cod_res = primera[0] if primera else 'SIN_RESPUESTA'
+        if cod_res != 'REPRODUCIENDO':
+            try:
+                proc.kill()
+            except Exception:
+                pass
+        else:
+            time.sleep(1.0)                                       # (la reproducción ya empezó; el menú se queda dibujado encima del visor hasta que se cierre)
+            _cerrar_menu_de_resolve()
+        return cod_res == 'REPRODUCIENDO', cod_res
+    except Exception as e:
+        return False, 'ERROR ' + str(e)[:120]
+
+
 PROYECTO_INICIAL = None                     # nombre del proyecto VACÍO que la app creó solo para pasar el Organizador de proyectos (ArmarVideo lo borra al crear el definitivo)
 
 
@@ -871,6 +993,71 @@ def abrir_resolve_windows(decir=None, espera_s=240):
     return False
 
 
+def cerrar_resolve_a_la_fuerza(decir=None, espera_s=30):
+    """v5.4.40 (Windows): cierra Resolve AUNQUE esté colgado («No responde»: un cierre normal no le llega). Devuelve True si ya no queda ningún Resolve.exe. Nunca lanza.
+    Solo se llama cuando el GO ya comprobó que Resolve dejó de contestar (resolve_bridge.estado_resolve); lo que Resolve tuviera sin guardar de ese proyecto de GO se pierde,
+    pero el GO lo vuelve a armar entero."""
+    if not sys.platform.startswith('win'):
+        return False
+    try:
+        import subprocess
+        import resolve_bridge as b
+        if not b._pids_de_resolve():
+            return True
+        if decir:
+            decir(tr('Cerrando Resolve…'))
+        subprocess.run(['taskkill', '/F', '/T', '/IM', 'Resolve.exe'], capture_output=True, creationflags=0x08000000, timeout=40)         # CREATE_NO_WINDOW
+        t0 = time.time()
+        while time.time() - t0 < espera_s:
+            if not b._pids_de_resolve():
+                time.sleep(3.0)                                        # (Resolve suelta su base de datos y sus archivos un instante después de morir)
+                return True
+            time.sleep(0.5)
+        return not b._pids_de_resolve()
+    except Exception:
+        try:
+            import registro
+            registro.excepcion(origen='Resolve · cerrar a la fuerza')
+        except Exception:
+            pass
+        return False
+
+
+def recuperar_resolve(motivo='', decir=None):
+    """v5.4.40 (Windows, Resolve Free): Resolve se colgó o se cerró solo a mitad del GO → se cierra del todo, se vuelve a abrir (proyecto u Organizador) y se relanza el Puente.
+    Devuelve True si el Puente late otra vez (el GO entonces re-arma el timeline y repite). Nunca lanza."""
+    if not sys.platform.startswith('win'):
+        return False
+    try:
+        import registro
+        import resolve_bridge as b
+        registro.aviso(tr('Resolve dejó de responder ({m}): lo cierro y vuelvo a empezar.', m=str(motivo or '—')), 'GO · Resolve')
+        if decir:
+            decir(tr('Resolve se quedó colgado: lo cierro y lo vuelvo a abrir…'))
+        if not cerrar_resolve_a_la_fuerza(decir):
+            registro.aviso(tr('No pude cerrar Resolve: ciérralo tú (ventana «No responde») y repite.'), 'GO · Resolve')
+            return False
+        for f in (getattr(b, 'ARCHIVO_LATIDO', None), getattr(b, 'JOB_TOMADO', None), getattr(b, 'JOB_PENDIENTE', None)):          # lo que dejó el Puente muerto
+            try:
+                if f is not None:
+                    f.unlink()
+                    f.with_name(f.name + '.lua').unlink()
+            except Exception:
+                pass
+        if decir:
+            decir(tr('Reabriendo Resolve…'))
+        ok = bool(b.lanzar_puente_auto(forzar=True))
+        registro.info(tr('Resolve reabierto y Puente {e}.', e=tr('listo') if ok else tr('NO listo')), 'GO · Resolve')
+        return ok
+    except Exception:
+        try:
+            import registro
+            registro.excepcion(origen='GO · recuperar Resolve')
+        except Exception:
+            pass
+        return False
+
+
 def lanzar_puente_windows(espera_s=30, forzar=False):
     """Windows (Resolve Free): arranca el Puente SIN tocar el menú, que cambia de idioma y de lugar. La consola de comandos de Resolve (tecla F6) acepta Lua: se abre, se escribe
     `dofile([[…/CineCaptions_Puente.lua]])` y Enter; el Puente sigue vivo aunque la consola se cierre. Solo si Resolve ya está al frente de verdad (si no, las teclas irían a otra
@@ -971,6 +1158,12 @@ def reproducir_desde_inicio(esperar_s=0.5):
         if sys.platform.startswith('win'):
             import ctypes
             user32 = ctypes.windll.user32
+            try:                                                   # v5.4.40: Resolve colgado o cerrado: no se intenta nada (UI Automation se quedaría esperando minutos)
+                import resolve_bridge as _rb
+                if _rb.estado_resolve(colgado_s=5.0, callado_s=5.0) != 'ok':
+                    return False, tr('Resolve no responde: no reproduzco.')
+            except Exception:
+                pass
             try:                                                   # v5.4.24: la vista vertical y expandida SIEMPRE (si Resolve la tiene como casilla; sin foco ni mouse)
                 import registro
                 ok_v, txt_v = expandir_vista_windows()
@@ -978,6 +1171,17 @@ def reproducir_desde_inicio(esperar_s=0.5):
             except Exception:
                 pass
             _cerrar_consola_de_resolve()                          # (la consola del Puente reaparece sola cada vez que imprime y tapa el timeline: Inicio y Espacio tienen que ir a la ventana principal)
+            try:                                                   # v5.4.40: camino fiable (sin teclas): cabezal al inicio por la API + «Reproducir hacia adelante» del menú
+                import registro as _reg
+                ok_c = cabezal_al_inicio_resolve()
+                ok_m, cod_m = reproducir_por_menu_windows()
+                if ok_m:
+                    if not ok_c:
+                        _reg.aviso(tr('Reproduje desde donde estaba el cabezal: Resolve no confirmó que lo llevara al inicio.'), 'GO · reproducir')
+                    return True, tr('Reproduciendo el timeline desde el principio.')
+                _reg.aviso(tr('No pude pulsar «Reproducir» en el menú de Resolve ({c}): pruebo con el teclado.', c=cod_m), 'GO · reproducir')
+            except Exception:
+                pass
             h = _ventana_principal() or _hwnd_de_resolve()
             if not h:
                 return False, tr('No encontré la ventana de DaVinci Resolve para reproducir.')

@@ -122,7 +122,7 @@ class _Tarjeta(QWidget):
             ruta = self._ruta_video()
             if ruta is not None:
                 import vistas_slider
-                self._clip = vistas_slider.Reproductor(ruta)
+                self._clip = vistas_slider.Reproductor(ruta, pausa_s=0)            # en bucle seguido: entra, sale y vuelve a entrar sin quedarse vacío
         if self._clip is not None:
             if visible:
                 self._clip.arrancar()
