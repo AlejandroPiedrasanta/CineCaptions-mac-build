@@ -1,10 +1,10 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/mapa_codigo.py — consulta el código y la documentación POR TEMA sin leer archivos enteros (mapa, símbolo, módulo, cambios); lo usan el MCP y la línea de comandos.
 """
-mapa_codigo.py  (v5.3.2)
+mapa_codigo.py
 ------------------------
 Para qué: que quien trabaje en el proyecto (una persona o un asistente) conteste «¿qué hace X y dónde está?» gastando lo mínimo, sin abrir el script principal
-(12 000 líneas) ni LEEME.txt. Tres fuentes, todas ya ordenadas:
+(13 600 líneas) ni DOCUMENTACION/LEEME.txt. Tres fuentes, todas ya ordenadas:
 
   DOCUMENTACION/mapa.json     un renglón por tema: id, claves, archivos, símbolos y resumen (de ahí sale el mapa de CLAUDE.md)
   DOCUMENTACION/temas/*.md    el detalle de cada tema (una sección «## id — tema» o «## nota — título»), por grupo
@@ -243,11 +243,19 @@ def modulo(nombre):
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- mapa y temas
+_CLAVES_TEMA = {'id': '', 'grupo': '', 'tema': '', 'claves': [], 'archivos': [], 'simbolos': [], 'resumen': ''}
+
+
 def _mapa():
     try:
-        return json.loads((DOC / 'mapa.json').read_text(encoding='utf-8'))
+        m = json.loads((DOC / 'mapa.json').read_text(encoding='utf-8'))
     except (OSError, ValueError):
         return {'grupos': {}, 'temas': []}
+    for t in m.get('temas', []):                     # un tema al que le falte una clave NO debe tumbar mapa() (generar() avisa)
+        t['_faltan'] = [k for k in _CLAVES_TEMA if k not in t]
+        for k, v in _CLAVES_TEMA.items():
+            t.setdefault(k, list(v) if isinstance(v, list) else v)
+    return m
 
 
 _SECC = {}
@@ -322,16 +330,26 @@ def mapa(consulta='', id='', completo=False, maximo=5):
     return '\n'.join(salida)
 
 
+def _version():
+    """APP_VERSION de 1_codigo/version.py (la única fuente); '' si no se puede leer."""
+    try:
+        return re.search(r"(?m)^APP_VERSION\s*=\s*['\"]([\d.]+)['\"]", (RAIZ / '1_codigo' / 'version.py').read_text(encoding='utf-8')).group(1)
+    except (OSError, AttributeError):
+        return ''
+
+
 def resumen():
     try:
-        return (DOC / 'RESUMEN.md').read_text(encoding='utf-8')
+        t = (DOC / 'RESUMEN.md').read_text(encoding='utf-8')
     except OSError:
         return 'no hay DOCUMENTACION/RESUMEN.md'
+    v = _version()
+    return re.sub(r'(?m)^# CineCaptions [\d.]+', '# CineCaptions ' + v, t, count=1) if v else t
 
 
 def cambios(n=6):
     """Las últimas n entradas EXPLICADAS del registro de cambios (las automáticas, que solo listan archivos, se saltan)."""
-    ruta = RAIZ / 'REGISTRO_DE_CAMBIOS.txt'
+    ruta = DOC / 'REGISTRO_DE_CAMBIOS.txt'
     try:
         t = ruta.read_text(encoding='utf-8')
     except OSError:
@@ -342,6 +360,25 @@ def cambios(n=6):
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- generar CLAUDE.md
+_SIN_TEMA_OK = ('__init__', 'version')            # (version.py ya lo cubre el tema «version»)
+
+
+def sin_tema():
+    """Archivos de código (1_codigo/*.py y los scripts de 2_recursos) que NINGÚN tema de mapa.json nombra: la señal de que alguien añadió código y no lo conectó al mapa."""
+    citados = set()
+    for t in _mapa()['temas']:
+        for a in t['archivos']:
+            citados.update((Path(a).stem.lower(), Path(a).name.lower()))
+    salida = []
+    candidatos = sorted((RAIZ / '1_codigo').glob('*.py')) + sorted((RAIZ / '2_recursos').rglob('*.py')) + sorted((RAIZ / '2_recursos').rglob('*.lua'))
+    for p in candidatos:
+        if '__pycache__' in p.parts or 'fuentes' in p.parts or p.stem in _SIN_TEMA_OK:
+            continue
+        if p.stem.lower() not in citados and p.name.lower() not in citados:
+            salida.append(p.relative_to(RAIZ).as_posix())
+    return salida
+
+
 def _nombre_corto(a):
     return a.replace('.py', '').replace('CineCaptions (script principal)', 'principal')
 
@@ -376,7 +413,7 @@ def generar(escribir=True):
             continue
         partes = []
         for t in ts:
-            fuentes = [_nombre_corto(a) for a in t['archivos'][:3]] or t['simbolos'][:2]
+            fuentes = [_nombre_corto(a) for a in t['archivos'][:1]] or t['simbolos'][:1]
             partes.append(f"`{t['id']}`" + (f" [{' '.join(fuentes)}]" if fuentes else ''))
             for a in t['archivos']:
                 if a not in archivos_reales and not any(r.endswith('/' + a) for r in archivos_reales if '/' in r):
@@ -387,11 +424,18 @@ def generar(escribir=True):
             if t['id'] not in secs:
                 avisos.append(f"{t['id']}: sin sección en DOCUMENTACION/temas/{g}.md")
         lineas.append(f'- **{g}** ({titulo}): ' + ' · '.join(partes))
+    for t in m['temas']:
+        if t.get('_faltan'):
+            avisos.append(f"{t['id']}: a mapa.json le falta la clave {', '.join(t['_faltan'])}")
+    for a in sin_tema():
+        avisos.append(f'«{a}» no está en ningún tema de mapa.json (añádelo a `archivos` de un tema o crea uno)')
     bloque = MARCA_INICIO + '\n' + '\n'.join(lineas) + '\n' + MARCA_FIN
     ruta = RAIZ / 'CLAUDE.md'
     t = ruta.read_text(encoding='utf-8')
     if MARCA_INICIO in t and MARCA_FIN in t:
         nuevo = t[:t.index(MARCA_INICIO)] + bloque + t[t.index(MARCA_FIN) + len(MARCA_FIN):]
+        if _version():
+            nuevo = re.sub(r'(?m)^(App PySide6 \()v[\d.]+(\))', lambda mo: mo.group(1) + 'v' + _version() + mo.group(2), nuevo, count=1)
         if escribir and nuevo != t:
             ruta.write_text(nuevo, encoding='utf-8', newline='')
     else:
@@ -416,11 +460,13 @@ def main(argv):
         print(cambios(int(args[0]) if args else 6))
     elif orden == 'resumen':
         print(resumen())
+    elif orden == 'sin_tema':
+        print('\n'.join(sin_tema()) or 'todo el código está en algún tema')
     elif orden == 'generar':
         av = generar()
         print('CLAUDE.md al día.' + (f' {len(av)} aviso(s):\n  ' + '\n  '.join(av) if av else ' Sin avisos.'))
     else:
-        print('órdenes: mapa, tema, simbolo, modulo, cambios, resumen, generar')
+        print('órdenes: mapa, tema, simbolo, modulo, cambios, resumen, sin_tema, generar')
     return 0
 
 

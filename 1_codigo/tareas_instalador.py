@@ -170,6 +170,8 @@ def _tarea_verificar(estado):
 
     @prueba('Lectura de audio y vídeo (PyAV)')
     def _():
+        import compat_av
+        compat_av.aplicar()
         from faster_whisper.audio import decode_audio
         with tempfile.TemporaryDirectory() as tmp:
             ruta = Path(tmp) / 'silencio.wav'

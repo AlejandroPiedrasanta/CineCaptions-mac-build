@@ -446,6 +446,11 @@ def _audio_16k(media_path):
     """El audio del video en un .wav mono 16 kHz (lo que espera el motor)."""
     import wave
     import numpy as np
+    try:
+        import compat_av
+        compat_av.aplicar()
+    except ImportError:
+        pass
     from faster_whisper.audio import decode_audio
     muestras = decode_audio(str(media_path), sampling_rate=16000)
     fd, ruta = tempfile.mkstemp(prefix='cinecaptions_voz_', suffix='.wav')

@@ -18,6 +18,16 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         astro_nucleo.png
         astro_runas.png
         desktop.ini
+    partido_listo\   (9 archivos)
+        aplicar.ps1
+        CineCaptions (script principal).py
+        editor_palabras.py
+        partir_principal.py.txt
+        selector_emojis.py
+        ui_comun.py
+        ventana_composicion.py
+        ventana_plantillas.py
+        ventanas_idioma.py
     aplicar_traducciones.py
         mete los textos nuevos de traducciones_extra.json en los catálogos de 2_recursos/locales (en, pt, fr, de, it).
     app.manifest

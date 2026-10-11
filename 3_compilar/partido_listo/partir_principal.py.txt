@@ -1,0 +1,245 @@
+"""Parte «CineCaptions (script principal).py» en módulos MOVIENDO bloques enteros (sin reescribir su código).
+python partir_principal.py [--escribir]      (sin --escribir solo informa y deja los candidatos en el scratchpad)"""
+import ast, sys
+from pathlib import Path
+
+sys.stdout.reconfigure(encoding='utf-8')
+import os
+RAIZ = Path(os.environ.get('PARTIR_RAIZ') or r'E:\VFX-EDICION VIDEOS\DAVINCI RESOLVE\RECURSOS PREMIUN\CineCaptions\1_codigo')
+PRINCIPAL = RAIZ / 'CineCaptions (script principal).py'
+SALIDA = Path(__file__).parent / 'partido'
+SALIDA.mkdir(exist_ok=True)
+ESCRIBIR = '--escribir' in sys.argv
+
+GRUPOS = {
+    'ventanas_idioma': ('Ventanas de proyectos recientes y de idiomas de traducción', ['ProyectosWindow', 'IdiomasTraduccionWindow', 'BuscadorIdiomaWindow']),
+    'selector_emojis': ('El selector de emojis de una palabra', ['_RejillaEmojis', 'EmojiPickerWindow']),
+    'ventana_composicion': ('La ventana «Composición» (estilo del bloque; sin uso visible desde la 5.1)', ['_TileLayout', '_MiniVariante', '_PreviaComposicion', 'ComposicionWindow']),
+    'ventana_plantillas': ('La pantalla «Estilos»: elegir el diseño de los subtítulos', ['_EstructuraPack', 'PlantillasWindow']),
+    'editor_palabras': ('El editor de palabras (Creativo): lienzo, pinceles y WordTagWindow', ['_Ev', '_PopupSfx', 'LienzoPalabras', 'PincelesBar', '_Pildora', '_SinBarra', '_AvisoToast', 'WordTagWindow', '_EvGlobal']),
+}
+COMUN = 'ui_comun'
+COMUN_DESC = 'Lo que comparten la ventana principal y sus ventanas: constantes, idiomas, colores, fuentes, marcas y ayudantes de la interfaz'
+REGION_COMUN = (107, 382)           # líneas del principal que pasan ENTERAS a ui_comun (se ejecutan en el mismo orden)
+
+src = PRINCIPAL.read_text(encoding='utf-8')
+lineas = src.splitlines(keepends=True)
+arbol = ast.parse(src)
+nodos = []        # (ini, fin, node)   [ini incluye los comentarios que preceden]
+previo = 0
+for n in arbol.body:
+    ini_nodo = min([n.lineno] + [d.lineno for d in getattr(n, 'decorator_list', [])])
+    nodos.append([previo + 1, n.end_lineno, n, ini_nodo])
+    previo = n.end_lineno
+
+
+def definidos(n):
+    if isinstance(n, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+        return {n.name}
+    out = set()
+    if isinstance(n, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+        objetivos = n.targets if isinstance(n, ast.Assign) else [n.target]
+        for t in objetivos:
+            if isinstance(t, ast.Name):
+                out.add(t.id)
+            elif isinstance(t, (ast.Tuple, ast.List)):
+                out.update(x.id for x in t.elts if isinstance(x, ast.Name))
+            # (os.environ[...] = ..., ui.AL_ERROR = ... NO definen nombres: solo modifican algo ya definido)
+    return out
+
+
+def usados(n):
+    return {x.id for x in ast.walk(n) if isinstance(x, ast.Name) and isinstance(x.ctx, ast.Load)}
+
+
+def importados(n):
+    out = {}
+    if isinstance(n, ast.Import):
+        for a in n.names:
+            out[(a.asname or a.name).split('.')[0]] = (n, a)
+    elif isinstance(n, ast.ImportFrom):
+        for a in n.names:
+            out[a.asname or a.name] = (n, a)
+    return out
+
+
+# ---- quién define qué
+definidor = {}                                    # nombre -> índice de nodo (la última definición manda)
+for i, (ini, fin, n, _) in enumerate(nodos):
+    for nom in definidos(n):
+        definidor.setdefault(nom, []).append(i)
+imports_de = {}                                    # nombre -> (nodo import, alias)
+for ini, fin, n, _ in nodos:
+    imports_de.update(importados(n))
+
+asign = {}                                         # índice de nodo -> módulo destino
+for i, (ini, fin, n, ini_nodo) in enumerate(nodos):
+    if REGION_COMUN[0] <= ini_nodo and fin <= REGION_COMUN[1] and not isinstance(n, (ast.Import, ast.ImportFrom)):
+        asign[i] = COMUN
+nombre_a_grupo = {}
+for g, (_, nombres) in GRUPOS.items():
+    for nom in nombres:
+        nombre_a_grupo[nom] = g
+for nom, g in nombre_a_grupo.items():
+    for i in definidor[nom]:
+        asign[i] = g
+# el lugar de la región ya está decidido; lo demás entra por cierre de dependencias
+
+
+def deps_de(i):
+    n = nodos[i][2]
+    return {j for nom in usados(n) for j in definidor.get(nom, []) if j != i and not isinstance(nodos[j][2], (ast.Import, ast.ImportFrom))}
+
+
+usuarios = {}
+for i in range(len(nodos)):
+    for j in deps_de(i):
+        usuarios.setdefault(j, set()).add(i)
+
+cambio = True
+vueltas = 0
+while cambio and vueltas < 50:
+    cambio, vueltas = False, vueltas + 1
+    # cierre: todo lo que usan los nodos ya movidos tiene que estar accesible
+    movidos = [i for i in asign]
+    for i in movidos:
+        for j in deps_de(i):
+            if j in asign:
+                continue
+            # ¿quién más lo usa?
+            destinos = set()
+            for u in usuarios.get(j, ()):
+                destinos.add(asign.get(u, 'QUEDA'))
+            if len(destinos) == 1 and 'QUEDA' not in destinos:
+                nuevo = next(iter(destinos))
+            else:
+                nuevo = COMUN
+            asign[j] = nuevo
+            cambio = True
+    # reasignar a ui_comun lo que, tras el cierre, lo usan varios destinos
+    for j in list(asign):
+        if asign[j] in GRUPOS and j not in [definidor[nom][0] for nom in nombre_a_grupo]:
+            destinos = {asign.get(u, 'QUEDA') for u in usuarios.get(j, ())} - {asign[j]}
+            if destinos - {asign[j]}:
+                if asign[j] != COMUN:
+                    asign[j] = COMUN
+                    cambio = True
+
+# ---- ui_comun no puede depender de un grupo
+errores = []
+for i, d in asign.items():
+    if d == COMUN:
+        for j in deps_de(i):
+            if asign.get(j) in GRUPOS:
+                errores.append(f'ui_comun depende de {asign[j]}: {sorted(definidos(nodos[i][2]))} -> {sorted(definidos(nodos[j][2]))}')
+
+# ---- informe
+por_modulo = {}
+for i, d in sorted(asign.items()):
+    por_modulo.setdefault(d, []).append(i)
+for d, idx in por_modulo.items():
+    lin = sum(nodos[i][1] - nodos[i][0] + 1 for i in idx)
+    ayudantes = sorted(nom for i in idx for nom in definidos(nodos[i][2]) if nom not in nombre_a_grupo)
+    print(f'{d:20} {lin:6} líneas  ayudantes: {", ".join(ayudantes) if d != COMUN else str(len(ayudantes)) + " nombres"}')
+if errores:
+    print('ERRORES:'); [print('  ', e) for e in errores]
+    sys.exit(1)
+
+# ---- generar módulos
+nombres_en = {}                                    # nombre -> módulo que lo define
+for i, d in asign.items():
+    for nom in definidos(nodos[i][2]):
+        nombres_en[nom] = d
+ORDEN_IMPORTS = [COMUN, 'selector_emojis', 'ventanas_idioma', 'ventana_composicion', 'ventana_plantillas', 'editor_palabras']
+
+
+def importes_filtrados(usados_):
+    """Las líneas de import del principal reducidas a lo que se usa."""
+    por_nodo = {}
+    for nom in sorted(usados_):
+        if nom in imports_de and nom not in nombres_en:
+            nodo, alias = imports_de[nom]
+            por_nodo.setdefault(id(nodo), (nodo, []))[1].append(alias)
+    salida = []
+    for nodo, aliases in sorted(por_nodo.values(), key=lambda x: x[0].lineno):
+        def a_texto(a):
+            return a.name + (f' as {a.asname}' if a.asname else '')
+        if isinstance(nodo, ast.Import):
+            salida.append('import ' + ', '.join(a_texto(a) for a in aliases))
+        else:
+            modulo = '.' * nodo.level + (nodo.module or '')
+            nombres = ', '.join(a_texto(a) for a in aliases)
+            salida.append(f'from {modulo} import {nombres}' if len(nombres) < 120 else f'from {modulo} import (' + nombres + ')')
+    return salida
+
+
+def cabecera(modulo, desc):
+    return (f'# CineCaptions · By Cinema Productions\n# 1_codigo/{modulo}.py — {desc}.\n'
+            f'"""\n{modulo}.py\n{"-" * (len(modulo) + 3)}\n{desc}.\n\nSalió de «CineCaptions (script principal).py» (v5.4.44) SIN cambiar su código: el principal conserva la ventana principal (SubtitleApp) y '
+            f'vuelve a importar estos nombres, así que `cc_main.NombreDeClase` sigue existiendo.\n"""\n')
+
+
+generados = {}
+for d, idx in por_modulo.items():
+    desc = COMUN_DESC if d == COMUN else GRUPOS[d][0]
+    cuerpo = ''.join(''.join(lineas[nodos[i][0] - 1:nodos[i][1]]) for i in sorted(idx))
+    todos = set()
+    for i in idx:
+        todos |= usados(nodos[i][2])
+        # decoradores / atributos base también cuentan
+    ext = {nom: nombres_en[nom] for nom in todos if nom in nombres_en and nombres_en[nom] != d}
+    imp = importes_filtrados(todos)
+    cruzados = []
+    for mod in ORDEN_IMPORTS:
+        nombres = sorted(nom for nom, m in ext.items() if m == mod)
+        if nombres:
+            cruzados.append(f'from {mod} import (' + ', '.join(nombres) + ')')
+    texto = cabecera(d, desc) + '\n'.join(imp) + '\n' + '\n'.join(cruzados) + '\n' + cuerpo.lstrip('\n')
+    if not texto.endswith('\n'):
+        texto += '\n'
+    generados[d] = texto
+    (SALIDA / f'{d}.py').write_text(texto, encoding='utf-8', newline='\n')
+
+# ---- el principal sin lo movido + las importaciones que necesita
+quedan = [i for i in range(len(nodos)) if i not in asign]
+for i in quedan:
+    n = nodos[i][2]
+    if not isinstance(n, (ast.Import, ast.ImportFrom, ast.ClassDef, ast.FunctionDef)) and not (isinstance(n, ast.Assign) and definidos(n)):
+        print('   QUEDA en el principal (sentencia suelta):', nodos[i][3], type(n).__name__, '|', lineas[nodos[i][3] - 1].strip()[:90])
+usados_quedan = set()
+for i in quedan:
+    usados_quedan |= usados(nodos[i][2])
+a_importar = {}
+for nom, mod in nombres_en.items():                 # TODOS los nombres movidos se reexportan (cc_main.NombreDeClase sigue existiendo para arneses y pruebas)
+    a_importar.setdefault(mod, []).append(nom)
+bloque_imports = ''
+for mod in ORDEN_IMPORTS:
+    if mod in a_importar:
+        nombres = sorted(a_importar[mod])
+        lineas_imp, actual = [], ''
+        for nom in nombres:
+            if len(actual) + len(nom) + 2 > 150:
+                lineas_imp.append(actual.rstrip())
+                actual = ''
+            actual += nom + ', '
+        lineas_imp.append(actual.rstrip().rstrip(','))
+        bloque_imports += f'from {mod} import (\n    ' + '\n    '.join(lineas_imp) + '\n)  # noqa: F401\n'
+# se inserta tras el último import «de cabecera» (registro_ui)
+punto = None
+for i in quedan:
+    n = nodos[i][2]
+    if isinstance(n, ast.Import) and any(a.name == 'registro_ui' for a in n.names):
+        punto = i
+nuevo = []
+for i in quedan:
+    nuevo.append(''.join(lineas[nodos[i][0] - 1:nodos[i][1]]))
+    if i == punto:
+        nuevo.append('# v5.4.44: lo que antes estaba aquí vive en estos módulos (mismo código; ver 1_codigo/ui_comun.py y las ventanas)\n' + bloque_imports)
+texto_principal = ''.join(nuevo)
+(SALIDA / 'principal.py').write_text(texto_principal, encoding='utf-8', newline='\n')
+print('principal:', texto_principal.count('\n'), 'líneas; imports que añade:', {m: len(v) for m, v in a_importar.items()})
+if ESCRIBIR:
+    for d, t in generados.items():
+        (RAIZ / f'{d}.py').write_text(t, encoding='utf-8', newline='\n')
+    PRINCIPAL.write_text(texto_principal, encoding='utf-8', newline='\n')
+    print('ESCRITO')

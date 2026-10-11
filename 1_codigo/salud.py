@@ -23,17 +23,17 @@ import time
 
 # (modulo a importar, nombre visible, version fijada)
 LIBRERIAS = (
-    ('PySide6', 'Qt (PySide6)', '6.11.2'),
+    ('PySide6', 'Qt (PySide6)', '6.12.0'),
     ('qtawesome', 'Iconos (QtAwesome)', '1.4.2'),
-    ('numpy', 'NumPy', '2.5.3'),
+    ('numpy', 'NumPy', '2.5.4'),
     ('PIL', 'Pillow', '12.3.0'),
-    ('av', 'PyAV (FFmpeg)', '18.1.0'),
+    ('av', 'PyAV (FFmpeg)', '19.0.1'),
     ('ctranslate2', 'CTranslate2', '4.8.2'),
     ('faster_whisper', 'faster-whisper', '1.2.1'),
-    ('onnxruntime', 'ONNX Runtime', '1.30.0'),
-    ('tokenizers', 'tokenizers', '0.23.2'),
-    ('huggingface_hub', 'Hugging Face Hub', '1.33.0'),
-    ('spellchecker', 'pyspellchecker', '0.9.0'),
+    ('onnxruntime', 'ONNX Runtime', '1.31.0'),
+    ('tokenizers', 'tokenizers', '0.23.3'),
+    ('huggingface_hub', 'Hugging Face Hub', '2.2.0'),
+    ('spellchecker', 'pyspellchecker', '0.9.1'),
     ('pynput', 'pynput', '1.8.2'),
     ('argostranslate', 'Argos Translate', None),
 )

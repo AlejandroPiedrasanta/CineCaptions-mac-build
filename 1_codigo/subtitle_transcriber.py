@@ -168,6 +168,8 @@ def _asegurar_modelo_descargado(tamano, aviso=None):
 
 def _modelo_whisper(tamano, device, compute_type, local_only=False, aviso=None):
     """El WhisperModel cargado (el mismo mientras no cambie tamano/dispositivo)."""
+    import compat_av
+    compat_av.aplicar()
     from faster_whisper import WhisperModel
     clave = (tamano, device, compute_type)
     with _WHISPER['lock']:
@@ -334,6 +336,8 @@ def transcribe(media_path: str, source_lang: str, model_size: str, progress_call
         idioma_w = source_lang if source_lang != 'auto' else None
         if device == 'cuda' and _duracion_segundos(media_path) > LARGO_PARA_LOTES_S:
             try:                                           # audios largos: varios tramos a la vez en la GPU
+                import compat_av
+                compat_av.aplicar()
                 from faster_whisper import BatchedInferencePipeline
                 segments, info = BatchedInferencePipeline(model=model).transcribe(
                     media_path, language=idioma_w, word_timestamps=True, vad_filter=True, batch_size=8)

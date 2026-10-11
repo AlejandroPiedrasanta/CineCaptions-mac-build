@@ -30,8 +30,8 @@ import re
 import sys
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
-LEEME = RAIZ / 'LEEME.txt'
-REGISTRO = RAIZ / 'REGISTRO_DE_CAMBIOS.txt'
+LEEME = RAIZ / 'DOCUMENTACION' / 'LEEME.txt'
+REGISTRO = RAIZ / 'DOCUMENTACION' / 'REGISTRO_DE_CAMBIOS.txt'
 HUELLAS = RAIZ / '3_compilar' / 'huellas.json'
 MARCA_REGISTRO = '=== ENTRADAS (la más nueva arriba) ==='
 # lo que se vigila (lo que forma el programa y su documentación); 6_compilacion se rehace sola

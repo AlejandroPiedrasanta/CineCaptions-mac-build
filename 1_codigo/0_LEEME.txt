@@ -12,6 +12,17 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
+    herramientas_dev\   (5 archivos)
+        probar_ciclos_go.py
+            repite el GO N veces seguidas con un pack y cuenta fallos/tiempos (cuelgues intermitentes de Resolve). SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
+        probar_cuelgue_resolve.py
+            suspende Resolve a mitad de un GO real (armar / captions / efectos) y comprueba que el programa lo nota, lo reinicia y termina. SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
+        probar_emojis_temas.py
+            GO solo con emojis por tema + render de los primeros segundos + hoja de fotogramas donde hay emoji (posición y animación). SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
+        probar_previo_resolve.py
+            suspende Resolve ANTES de pulsar GO: la revisión previa (colocacion.preparar_resolve_para_go) debe reiniciarlo y terminar bien. SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
+        probar_ventanas_humo.py
+            humo de TODAS las ventanas sin pantalla ni Resolve: crea la app, recorre sus páginas, abre cada ventana y escribe una «huella» de widgets y textos para comparar antes/después de mover código entre módulos.
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -35,6 +46,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         cola de trabajos de FONDO: máximo 2 a la vez y se apartan mientras GO trabaja.
     colocacion.py
         qué edición de Resolve hay (Free / Studio), si lo colocado en el timeline es REAL, por qué falló en lenguaje claro, cómo repararlo solo y cómo dejar la vista.
+    compat_av.py
+        puente para usar PyAV 19 con faster-whisper 1.2.1 (que aun llama a av.open(metadata_errors=...)).
     composicion.py
         Composición de los bloques dinámicos: layouts (alineación de contexto/complemento) y desplazamientos.
     copias.py
