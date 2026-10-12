@@ -13,4 +13,7 @@ fi
 echo "Se pedirá tu contraseña para borrar la app de Aplicaciones."
 sudo rm -rf "$APP"
 sudo pkgutil --forget com.cinemaproductions.cinecaptions >/dev/null 2>&1
+# v5.4.45: los audios temporales que renderiza Resolve para transcribir (carpeta interna, fuera de la vista)
+rm -rf "$HOME/Library/Application Support/CineCaptions/audio"
+rmdir "$HOME/Library/Application Support/CineCaptions" 2>/dev/null
 echo "Listo: CineCaptions desinstalado."

@@ -94,13 +94,16 @@ def es_scripting_cerrado(err):
     """¿El error dice que Resolve no acepta scripts externos? (v3.3.0)\n\n    Hasta la v3.2 la app miraba «scripts externos» en el texto. Los gemelos\n    de Studio lo siguen diciendo en español (sus registros no se traducen),\n    pero MENSAJE_SCRIPTING_DESACTIVADO ahora sale en el idioma de la\n    interfaz: se aceptan las dos formas.\n    """
     texto = str(err or '')
     return 'scripts externos' in texto or MENSAJE_SCRIPTING_DESACTIVADO.split('\n', 1)[0] in texto
-def _resolve_en_ejecucion():
-    """(5.3) True si hay un proceso Resolve.exe. dvr.scriptapp() con Resolve CERRADO se queda ~4 s dentro de
-    fusionscript.dll SIN soltar el GIL de Python: toda la interfaz se congelaba esos segundos (y otra vez cada
-    reintento). Con esta comprobacion barata (ms) ni se llama cuando Resolve no esta abierto."""
-    if not sys.platform.startswith('win'):
-        return True
-    try:
+_TOOLHELP = {}
+
+
+def _toolhelp():
+    """(kernel32, clase _Proc) PROPIOS para ToolHelp32, creados una sola vez. v5.4.45: antes cada llamada definia su propia
+    clase _Proc y la fijaba en el ctypes.windll.kernel32 COMPARTIDO; con dos hilos a la vez (el vigia de cuelgues y GO) una
+    de las dos llamadas fallaba con ArgumentError: «Resolve abierto» falso (y un intento de scriptapp de 4 s con la
+    interfaz congelada) o la deteccion de cuelgues sin ver ningun Resolve."""
+    par = _TOOLHELP.get('par')
+    if par is None:
         import ctypes
         from ctypes import wintypes
 
@@ -110,50 +113,25 @@ def _resolve_en_ejecucion():
                         ('cntThreads', wintypes.DWORD), ('th32ParentProcessID', wintypes.DWORD),
                         ('pcPriClassBase', wintypes.LONG), ('dwFlags', wintypes.DWORD),
                         ('szExeFile', ctypes.c_wchar * 260)]
-        k32 = ctypes.windll.kernel32
+        k32 = ctypes.WinDLL('kernel32')
         k32.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
         k32.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
         k32.Process32FirstW.argtypes = k32.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(_Proc)]
         k32.CloseHandle.argtypes = [wintypes.HANDLE]
-        snap = k32.CreateToolhelp32Snapshot(0x2, 0)
-        if not snap or snap == wintypes.HANDLE(-1).value:
-            return True
-        try:
-            e = _Proc()
-            e.dwSize = ctypes.sizeof(_Proc)
-            ok = k32.Process32FirstW(snap, ctypes.byref(e))
-            while ok:
-                if e.szExeFile.lower() == 'resolve.exe':
-                    return True
-                ok = k32.Process32NextW(snap, ctypes.byref(e))
-            return False
-        finally:
-            k32.CloseHandle(snap)
-    except Exception:
-        return True
-def _pids_de_resolve():
-    """Los PID de Resolve.exe (Windows); [] si no hay o no se pudo mirar."""
-    if not sys.platform.startswith('win'):
-        return []
-    pids = []
+        par = _TOOLHELP['par'] = (k32, _Proc)
+    return par
+
+
+def _listar_pids_resolve():
+    """Los PID de Resolve.exe (Windows, ToolHelp32: ~2 ms); None si no se pudo mirar."""
     try:
         import ctypes
         from ctypes import wintypes
-
-        class _Proc(ctypes.Structure):
-            _fields_ = [('dwSize', wintypes.DWORD), ('cntUsage', wintypes.DWORD), ('th32ProcessID', wintypes.DWORD),
-                        ('th32DefaultHeapID', ctypes.c_void_p), ('th32ModuleID', wintypes.DWORD),
-                        ('cntThreads', wintypes.DWORD), ('th32ParentProcessID', wintypes.DWORD),
-                        ('pcPriClassBase', wintypes.LONG), ('dwFlags', wintypes.DWORD),
-                        ('szExeFile', ctypes.c_wchar * 260)]
-        k32 = ctypes.windll.kernel32
-        k32.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
-        k32.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
-        k32.Process32FirstW.argtypes = k32.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(_Proc)]
-        k32.CloseHandle.argtypes = [wintypes.HANDLE]
+        k32, _Proc = _toolhelp()
         snap = k32.CreateToolhelp32Snapshot(0x2, 0)
         if not snap or snap == wintypes.HANDLE(-1).value:
-            return []
+            return None
+        pids = []
         try:
             e = _Proc()
             e.dwSize = ctypes.sizeof(_Proc)
@@ -164,9 +142,26 @@ def _pids_de_resolve():
                 ok = k32.Process32NextW(snap, ctypes.byref(e))
         finally:
             k32.CloseHandle(snap)
+        return pids
     except Exception:
+        return None
+
+
+def _resolve_en_ejecucion():
+    """(5.3) True si hay un proceso Resolve.exe. dvr.scriptapp() con Resolve CERRADO se queda ~4 s dentro de
+    fusionscript.dll SIN soltar el GIL de Python: toda la interfaz se congelaba esos segundos (y otra vez cada
+    reintento). Con esta comprobacion barata (ms) ni se llama cuando Resolve no esta abierto."""
+    if not sys.platform.startswith('win'):
+        return True
+    pids = _listar_pids_resolve()
+    return True if pids is None else bool(pids)
+
+
+def _pids_de_resolve():
+    """Los PID de Resolve.exe (Windows); [] si no hay o no se pudo mirar."""
+    if not sys.platform.startswith('win'):
         return []
-    return pids
+    return _listar_pids_resolve() or []
 
 
 _COLGADO = {'t': 0.0, 'desde': None, 'hilo': None, 'sin_ventana_desde': None}
@@ -370,6 +365,75 @@ def _conexion_viva(resolve):
         return False
 _CACHE = {'resolve': None, 'intentado': False, 'ultimo_fallo': 0.0, 'hueco': False}
 REINTENTO_TRAS_FALLO_S = 5.0
+_SONDA = {'pids': None, 'proxima': 0.0, 'espera': 0.0}
+SONDA_ESPERA_MAX_S = 20.0
+
+
+def _sondear_aqui():
+    """La conexion de verdad, en ESTE proceso: 'ok' | 'none' | 'hueco' | 'error: ...'. La corre la sonda
+    (tareas_instalador 'sonda_resolve') en un proceso APARTE, donde scriptapp puede tardar sin congelar a nadie."""
+    _setear_variables_de_entorno()
+    try:
+        import DaVinciResolveScript as dvr
+        r = dvr.scriptapp('Resolve')
+    except Exception as e:
+        return f'error: {type(e).__name__}: {e}'
+    if r is None:
+        return 'none'
+    return 'ok' if _conexion_viva(r) else 'hueco'
+
+
+def _sonda_api_externa():
+    """v5.4.45: ¿acepta Resolve la API externa? Se pregunta en un PROCESO APARTE (CineCaptions --tarea sonda_resolve).
+    MEDIDO en Free: cada dvr.scriptapp() tarda 4,1 s dentro de fusionscript SIN soltar el GIL; aunque se llamara desde un
+    hilo, la ventana entera (y hasta el vigia de congelaciones) se paraba esos segundos en cada GO y al arrancar. En otro
+    proceso no frena a nadie; solo si contesta 'ok' se conecta aqui (y entonces es instantaneo). Tras un «no» con el
+    MISMO Resolve abierto se espera 5, 10, 20 s antes de volver a sondear (un Studio que arranca acaba conectando; un
+    Free deja de gastar). Devuelve 'ok' | 'none' | 'hueco' | 'error: ...' | 'espera' (sin sondear, dentro de la espera),
+    o None si la sonda no se pudo correr: entonces se intenta aqui, como antes."""
+    import subprocess
+    import tempfile
+    pids = frozenset(_pids_de_resolve())
+    if _SONDA['pids'] == pids and time.time() < _SONDA['proxima']:
+        return 'espera'
+    if getattr(sys, 'frozen', False):
+        cmd = [sys.executable, '--tarea', 'sonda_resolve']
+    else:
+        cmd = [sys.executable, '-c', 'import sys; sys.path.insert(0, sys.argv[1]); import tareas_instalador as t; '
+               'sys.exit(t.ejecutar(["x", "--tarea", "sonda_resolve", sys.argv[2]]))', str(Path(__file__).resolve().parent)]
+    resultado = None
+    try:
+        fd, ruta = tempfile.mkstemp(prefix='cinecaptions_sonda_', suffix='.txt')
+        os.close(fd)
+    except OSError:
+        return None
+    try:
+        subprocess.run(cmd + [ruta], timeout=25, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        for linea in Path(ruta).read_text(encoding='utf-8', errors='replace').splitlines():
+            if linea.startswith('OK|'):
+                resultado = linea[3:].strip() or None
+            elif linea.startswith('ERROR|'):
+                return None                      # la sonda misma fallo (tarea desconocida, excepcion): se intenta aqui
+    except subprocess.TimeoutExpired:
+        resultado = 'error: la sonda de Resolve no contesto en 25 s'
+    except Exception:
+        return None
+    finally:
+        try:
+            os.unlink(ruta)
+        except OSError:
+            pass
+    if resultado is None:
+        return None
+    if resultado == 'ok':
+        _SONDA.update(pids=None, proxima=0.0, espera=0.0)
+    else:
+        espera = min(SONDA_ESPERA_MAX_S, _SONDA['espera'] * 2) if (_SONDA['pids'] == pids and _SONDA['espera']) else 5.0
+        _SONDA.update(pids=pids, espera=espera, proxima=time.time() + espera)
+    return resultado
+
+
 def conectar(refrescar=False, pasivo=False):
     """Devuelve el objeto \'resolve\' o None si no se puede.\n\n    El exito se cachea para siempre; el fallo, solo unos segundos. Antes\n    no se cacheaba el fallo en absoluto, asi que cada vez que la ventana\n    preguntaba en que modo estaba se reintentaba el import de\n    fusionscript, se formateaba un traceback y se reescribia\n    bridge_error.txt. Con el enfriamiento se deja de pagar ese costo sin\n    perder la posibilidad de reconectar si el usuario abre Resolve\n    despues del programa.\n\n    v3.3.3, \'pasivo\': NUNCA intenta conectar; devuelve el handle cacheado\n    (revalidado) o None. MEDIDO en el Windows Free del usuario: cada intento\n    de fusionscript.scriptapp tarda 4,1 s y falla, y las preguntas de\n    estado del arranque (modo actual, edicion, scripts instalados) lo\n    pagaban EN EL HILO DE TK — el «lag al iniciar». El intento real lo\n    hace un hilo al arrancar (la app) y lo que el usuario pide (generar,\n    buscar audio, reinstalar) sigue activo con el enfriamiento de siempre.\n    """
     if pasivo and (not refrescar):
@@ -401,6 +465,20 @@ def conectar(refrescar=False, pasivo=False):
         log_file = log_dir / 'bridge_error.txt'
         resolve = None
         hueco = False
+        sonda = _sonda_api_externa()          # v5.4.45: en otro proceso (scriptapp aqui congela la ventana ~4 s en Free)
+        if sonda is not None and sonda != 'ok':
+            try:
+                if sonda == 'none':
+                    log_file.write_text("DaVinciResolveScript imported, but dvr.scriptapp('Resolve') returned None.", encoding='utf-8')
+                elif sonda == 'hueco':
+                    log_file.write_text("dvr.scriptapp('Resolve') devolvio un objeto sin metodos (GetProjectManager no responde).\n\n" + MENSAJE_SCRIPTING_DESACTIVADO, encoding='utf-8')
+                elif sonda.startswith('error'):
+                    log_file.write_text('Error importing DaVinciResolveScript:\n' + sonda[len('error: '):], encoding='utf-8')
+            except OSError:
+                pass
+            hueco = sonda == 'hueco' or (sonda == 'espera' and _CACHE['hueco'])
+            _CACHE['resolve'], _CACHE['intentado'], _CACHE['hueco'], _CACHE['ultimo_fallo'] = None, True, hueco, time.time()
+            return None
         try:
             import DaVinciResolveScript as dvr
             resolve = dvr.scriptapp('Resolve')
@@ -526,7 +604,11 @@ def _parsear_reporte(cuerpo):
     if not m:
         return
     else:
-        return {'script': m.group(1), 'version': m.group(2), 'ok': m.group(3) == 'true', 'mensaje': m.group(4).replace('\\\"', '\"').replace('\\n', '\n'), 'cuando': int(m.group(5)), 'recortado': True}
+        try:
+            mensaje = json.loads('"' + m.group(4) + '"')        # v5.4.45: los scripts mandan lo no ASCII como \uXXXX
+        except ValueError:
+            mensaje = m.group(4).replace('\\\"', '\"').replace('\\n', '\n')
+        return {'script': m.group(1), 'version': m.group(2), 'ok': m.group(3) == 'true', 'mensaje': mensaje, 'cuando': int(m.group(5)), 'recortado': True}
 def reportes_del_registro():
     """Los reportes que los scripts dejaron en el registro de Resolve, del\n    mas viejo al mas nuevo. Solo la sesion actual de Resolve: el registro\n    rota a LogArchive/ en cada arranque. Nunca lanza."""
     try:

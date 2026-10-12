@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos».
 ]]
 
-local VERSION = "5.4.45 (efectos)"
+local VERSION = "5.4.46 (efectos)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -61,11 +61,25 @@ local function escribir_archivo(ruta, texto)
     f:write(texto); f:close(); return true
 end
 
+-- v5.4.45: un caracter UTF-8 (2-4 bytes) como escape \uXXXX de json (par sustituto si pasa de U+FFFF); mal formado: "?".
+local function json_u(c)
+    local b1 = c:byte(1)
+    local n = (b1 >= 240) and 4 or ((b1 >= 224) and 3 or 2)
+    if #c ~= n then return "?" end
+    local cp = b1 % ((n == 2) and 32 or ((n == 3) and 16 or 8))
+    for k = 2, n do cp = cp * 64 + (c:byte(k) - 128) end
+    if cp < 65536 then return string.format("\\u%04x", cp) end
+    cp = cp - 65536
+    return string.format("\\u%04x\\u%04x", 55296 + math.floor(cp / 1024), 56320 + cp % 1024)
+end
+
 local function json_escapar(s)
     s = tostring(s or "")
     s = s:gsub("\\", "\\\\"):gsub('"', '\\"')
     s = s:gsub("\r", " "):gsub("\n", "\\n"):gsub("\t", " ")
-    return s
+    -- v5.4.45: lo no ASCII viaja como \uXXXX (la app lo lee con json). En modo señales (Resolve Free sin io)
+    -- este json pasa por el registro de Resolve, que cambia cada byte no ASCII por "?": «tamaño» llegaba «tama??o».
+    return (s:gsub("[\192-\247][\128-\191]*", json_u))
 end
 
 print = function(...)

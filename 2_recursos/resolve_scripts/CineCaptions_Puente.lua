@@ -64,7 +64,7 @@ local VERSION = "1.0.39"
 -- regla que los tres auxiliares). OJO: no va en el latido — las apps
 -- viejas parten el latido en dos campos y un tercero las haria declarar
 -- INCOMPATIBLE a un Puente sano.
-local PAQUETE = "5.4.45"
+local PAQUETE = "5.4.46"
 
 -- El resolve VALIDADO del arranque. Es un local a proposito: si mas tarde
 -- algo pisa el global 'resolve' (el veneno clasico de la sesion), este
@@ -201,11 +201,25 @@ local KB_PRESET = nil          -- el preset de teclado que se exporta como seña
 local RELEVO_MIO = false       -- puente.relevo lo escribi yo (ver el bucle)
 local ULTIMO_ID = nil          -- sin os.rename no hay reclamo: se recuerda el id
 
+-- v5.4.45: un caracter UTF-8 (2-4 bytes) como escape \uXXXX de json (par sustituto si pasa de U+FFFF); mal formado: "?".
+local function json_u(c)
+    local b1 = c:byte(1)
+    local n = (b1 >= 240) and 4 or ((b1 >= 224) and 3 or 2)
+    if #c ~= n then return "?" end
+    local cp = b1 % ((n == 2) and 32 or ((n == 3) and 16 or 8))
+    for k = 2, n do cp = cp * 64 + (c:byte(k) - 128) end
+    if cp < 65536 then return string.format("\\u%04x", cp) end
+    cp = cp - 65536
+    return string.format("\\u%04x\\u%04x", 55296 + math.floor(cp / 1024), 56320 + cp % 1024)
+end
+
 local function json_escapar(s)
     s = tostring(s or "")
     s = s:gsub("\\", "\\\\"):gsub('"', '\\"')
     s = s:gsub("\r", " "):gsub("\n", "\\n"):gsub("\t", " ")
-    return s
+    -- v5.4.45: lo no ASCII viaja como \uXXXX (la app lo lee con json). En modo señales (Resolve Free sin io)
+    -- este json pasa por el registro de Resolve, que cambia cada byte no ASCII por "?": «tamaño» llegaba «tama??o».
+    return (s:gsub("[\192-\247][\128-\191]*", json_u))
 end
 
 -- Crea o refresca el archivo-señal 'ruta' (modo señales). true si Resolve
@@ -256,8 +270,31 @@ local function json_string(texto, clave)
         local c = texto:sub(i, i)
         if c == "\\" then
             local e = texto:sub(i + 1, i + 1)
-            partes[#partes + 1] = (e == "n") and " " or e
-            i = i + 2
+            local cp = (e == "u") and tonumber(texto:sub(i + 2, i + 5), 16) or nil
+            if cp and cp >= 55296 and cp < 56320 and texto:sub(i + 6, i + 7) == "\\u" then
+                local bajo = tonumber(texto:sub(i + 8, i + 11), 16)
+                if bajo and bajo >= 56320 and bajo < 57344 then
+                    cp = 65536 + (cp - 55296) * 1024 + (bajo - 56320)
+                    i = i + 6
+                end
+            end
+            if cp then
+                -- v5.4.45: \uXXXX (json_escapar ya no deja bytes no ASCII) de vuelta a UTF-8
+                if cp < 128 then
+                    partes[#partes + 1] = string.char(cp)
+                elseif cp < 2048 then
+                    partes[#partes + 1] = string.char(192 + math.floor(cp / 64), 128 + cp % 64)
+                elseif cp < 65536 then
+                    partes[#partes + 1] = string.char(224 + math.floor(cp / 4096), 128 + math.floor(cp / 64) % 64, 128 + cp % 64)
+                else
+                    partes[#partes + 1] = string.char(240 + math.floor(cp / 262144), 128 + math.floor(cp / 4096) % 64,
+                                                      128 + math.floor(cp / 64) % 64, 128 + cp % 64)
+                end
+                i = i + 6
+            else
+                partes[#partes + 1] = (e == "n") and " " or e
+                i = i + 2
+            end
         elseif c == '"' then
             break
         else

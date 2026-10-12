@@ -1292,6 +1292,7 @@
     "Reiniciar ahora": "Restart now",
     "Preferencias generales": "General preferences",
     "Idioma, motor de voz, conexión con Resolve y copias de seguridad.": "Language, speech engine, Resolve connection and backups.",
+    "Motor de voz, conexión con Resolve y copias de seguridad.": "Speech engine, Resolve connection and backups.",
     "Idioma de la interfaz": "Interface language",
     "Se aplica al reiniciar CineCaptions.": "Applies when CineCaptions restarts.",
     "Qwen3-ASR (recomendado)": "Qwen3-ASR (recommended)",

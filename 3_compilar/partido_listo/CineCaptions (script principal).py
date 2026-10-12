@@ -1865,7 +1865,7 @@ class SubtitleApp(QWidget):
         except Exception:
             registro.excepcion(origen='actualizar · ventana')
             return
-        est = {'texto': '', 'fase': 0, 'ruta': None, 'error': None, 'cancelado': False}
+        est = {'texto': '', 'fase': 0, 'ruta': None, 'error': None, 'cancelado': False, 'lanzado': False}
         dlg.finished.connect(lambda _r: est.__setitem__('cancelado', True))
         def progreso(h, t):
             est['texto'] = tr('{h} de {t} MB', h=f'{h / 1048576:.0f}', t=f'{(t or h) / 1048576:.0f}')
@@ -1876,6 +1876,12 @@ class SubtitleApp(QWidget):
                 est['ruta'] = actualizaciones.descargar(archivo, APP_VERSION, progreso=progreso, cancelado=lambda: est['cancelado'])
             except BaseException as e:
                 est['error'] = str(e) or type(e).__name__
+                return
+            if est['ruta'] and not est['cancelado']:
+                # v5.4.45: el instalador se lanza AQUI, en el hilo de la descarga: lanzar un .exe de 230 MB (Windows lo
+                # escanea antes de abrirlo) desde el hilo de la interfaz la dejaba 3 s congelada (registro del 11-10)
+                est['fase'], est['texto'] = 2, tr('Lanzando el instalador…')
+                est['lanzado'] = actualizaciones.instalar(est['ruta'])
         self._descargando_actualizacion = True
         def trabajo_y_liberar():
             try:
@@ -1892,7 +1898,7 @@ class SubtitleApp(QWidget):
                         panel.poner_detalle(est['texto'])
                     despues(150, revisar, self)
                 return
-            if est['cancelado'] and not est['ruta']:
+            if est['cancelado'] and not est['lanzado']:
                 return
             if est['error'] or not est['ruta']:
                 try:
@@ -1905,8 +1911,7 @@ class SubtitleApp(QWidget):
                     webbrowser.open(r['url'])
                 return
             panel.poner_fase(2)
-            panel.poner_detalle(tr('Lanzando el instalador…'))
-            ok = actualizaciones.instalar(est['ruta'])
+            ok = est['lanzado']
             registro.info(f"Actualización a {r['version']}: instalador lanzado ({est['ruta']})" if ok else 'Actualización: no pude lanzar el instalador', 'actualizaciones')
             if not ok:
                 try:
@@ -5610,14 +5615,30 @@ class SubtitleApp(QWidget):
         archivos (`*_audio_<epoch>…`), nunca otra cosa de esa carpeta."""
         import re
         limite = time.time() - 86400
-        for base in [Path.home() / 'Downloads', Path.home() / 'Descargas', Path.home()]:
-            carpeta = base / 'CineCaptions Audio'
-            try:
-                if not carpeta.is_dir():
-                    continue
+        if os.name == 'nt':
+            datos = Path(os.environ.get('LOCALAPPDATA') or (Path.home() / 'AppData' / 'Local'))
+        else:
+            datos = Path.home() / 'Library' / 'Application Support'
+        # v5.4.45: los renders viven en <datos locales>/CineCaptions/audio (fuera de la vista).
+        carpeta = datos / 'CineCaptions' / 'audio'
+        try:
+            if carpeta.is_dir():
                 for f in carpeta.iterdir():
                     if re.search('_audio_\\d{9,}', f.name) and f.is_file() and (f.stat().st_mtime < limite):
-                                f.unlink()
+                        f.unlink()
+        except OSError:
+            pass
+        # Carpeta VIEJA a la vista (versiones <= 5.4.44): se vacia de NUESTROS renders y se quita si queda vacia.
+        for base in [Path.home() / 'Downloads', Path.home() / 'Descargas', Path.home()]:
+            vieja = base / 'CineCaptions Audio'
+            try:
+                if not vieja.is_dir():
+                    continue
+                for f in vieja.iterdir():
+                    if '_audio' in f.name and f.is_file() and (f.stat().st_mtime < time.time() - 3600):
+                        f.unlink()
+                if not any(vieja.iterdir()):
+                    vieja.rmdir()
             except OSError:
                 pass
     def _ver_ultimo_resultado(self):

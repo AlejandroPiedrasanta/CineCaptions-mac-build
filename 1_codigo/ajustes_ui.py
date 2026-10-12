@@ -484,6 +484,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.46', [
+        'Arreglo: con DaVinci Resolve Free la ventana se quedaba congelada unos 4 segundos al abrir CineCaptions y en cada GO. Ya no: la conexión con Resolve se comprueba aparte, sin frenar la ventana.',
+        'El audio que Resolve prepara para transcribir ya no se guarda en Descargas («CineCaptions Audio»): va a una carpeta interna del programa, fuera de la vista. La carpeta vieja se vacía y se quita sola.',
+        'Arreglo: los avisos de Resolve Free ya no salen con letras rotas («tama??o»): las tildes y la ñ llegan bien.',
+        'Arreglo: al actualizar CineCaptions, la ventana ya no se congela unos segundos al abrir el instalador.',
+        'Librerías al día: Qt 6.12, PyAV 19, ONNX Runtime 1.31 y Hugging Face Hub 2.2.',
+    ]),
     ('5.4.43', [
         'El menú de scripts de Resolve ya no sale con todo duplicado: las copias viejas de la marca anterior (RCS_Puente, RCS_Subtitulos…) se retiran solas (con copia de respaldo) y quedan solo los CineCaptions_… ; en Resolve Free y en Studio.',
     ]),
@@ -1870,12 +1877,7 @@ class VentanaAjustes(_Panel):
     # -- General --------------------------------------------------------------
     def _pag_general(self, capa):
         self._cabeza_pagina(capa, tr('Preferencias generales'), tr('General'),
-                            tr('Idioma, motor de voz, conexión con Resolve y copias de seguridad.'))
-        import i18n
-        idioma_var = StringVar(self._idioma_inicial)
-        combo_idioma = Combo(list(i18n.IDIOMAS_UI.values()), var=idioma_var, alto=52, tam=16,
-                             comando=lambda v: self._cambio('idioma_ui', v))
-        f_idioma = _Fila(tr('Idioma de la interfaz'), tr('Se aplica al reiniciar CineCaptions.'), combo_idioma, 340)
+                            tr('Motor de voz, conexión con Resolve y copias de seguridad.'))     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
         # motor de voz
         motores ={'qwen3': tr('Qwen3-ASR (recomendado)'), 'whisper': tr('Whisper large-v3-turbo')}
         motor_var = StringVar(motores.get(self._borrador['motor_voz'], motores['qwen3']))

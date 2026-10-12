@@ -48,7 +48,7 @@ import time
 import traceback
 from pathlib import Path
 
-TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'transcribir')
+TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'transcribir', 'sonda_resolve')
 # v5.1: Whisper queda de respaldo (el motor principal es Qwen3-ASR, motor_ia)
 MODELO_WHISPER = 'large-v3-turbo'
 MODELO_BYTES_APROX = 1_620_000_000
@@ -106,6 +106,16 @@ def ejecutar(argv):
     if estado.final is None:
         estado.ok()
     return estado.final
+
+
+# ---------------------------------------------------------------------------
+# sonda_resolve: ¿acepta Resolve la API externa? (la pide resolve_bridge.conectar)
+# ---------------------------------------------------------------------------
+def _tarea_sonda_resolve(estado):
+    """v5.4.45: en Resolve Free dvr.scriptapp() tarda ~4 s SIN soltar el GIL; corrido aqui, en un proceso aparte,
+    no congela la ventana. Escribe OK|ok, OK|none, OK|hueco u OK|error: ..."""
+    import resolve_bridge
+    estado.ok(resolve_bridge._sondear_aqui())
 
 
 # ---------------------------------------------------------------------------
