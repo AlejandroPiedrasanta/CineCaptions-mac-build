@@ -7694,6 +7694,9 @@ class SubtitleApp(QWidget):
         porque con el diseño de 3 líneas GO dejaba «todo igual» (pedido: «arrastro mi video y no aplica el estilo de la referencia»).
         Manda lo que se elija en el chip «Estilo» de Inicio ('auto' = el diseño de 3 líneas de antes); si no se eligió nada, el pack que ya uses
         (si es de verdad un pack) y, si no, Referencia. Los packs sin formato vertical (Referencia lo es) no valen para un video horizontal."""
+        forzado = getattr(self, '_go_pack_forzado', None)
+        if forzado and getattr(self, '_un_clic', False):
+            return forzado                    # v5.4.47: GO sin Resolve graba Tema 4 (el único estilo que se dibuja fuera de Resolve)
         actual = getattr(self, 'plantilla_sel', '') or ''
         formato = self._formato_para_temas()
         try:
@@ -7743,11 +7746,20 @@ class SubtitleApp(QWidget):
         self._vigilar_tarea('go', 'timeline')          # v5.11: desde el primer paso (Resolve apagado / sin responder) hay alguien mirando
         self._resumen_ia = None
         self._ultimos_bloques = None
+        # v5.4.47: sin DaVinci Resolve en el equipo GO entrega el video con los subtítulos grabados (render_sin_resolve.py, estilo Tema 4)
+        self._go_sin_resolve = self._resolve_no_instalado()
+        self._go_pack_forzado = 'Tema4' if self._go_sin_resolve else None
+        self._go_cues_render = None
+        self._textos_pasos_go()
         self.go_panel.empezar()
         self.go_panel.paso('timeline')
         self._go_decir_edicion()
         self._precargar_motores()          # v5.3: la voz y la IA de texto se cargan y se calientan mientras Resolve da el audio
         archivo = getattr(self, '_go_archivo', None)
+        if not archivo and self._go_sin_resolve:          # sin Resolve no hay timeline del que sacar el audio: vale el video ya elegido
+            elegido = self.video_var.get().strip().strip('"')
+            if elegido and Path(elegido).is_file():
+                archivo = elegido
         if archivo:
             self._ultimo_go_archivo = archivo
             self._marcar_go_en_curso(archivo)
@@ -7778,8 +7790,9 @@ class SubtitleApp(QWidget):
             if not modo_sis:                         # soltado en los primeros segundos: el estado del sistema aún no llegó; sin MCP es Free (Puente), no «uso tu archivo»
                 import resolve_bridge as _rb
                 modo_sis = _rb.modo_actual(pasivo=True)
-            libre_puente = (not hay_mcp) and modo_sis in ('puente', 'manual')       # DaVinci Resolve Free: se habla por el Puente
-            self.go_panel.paso('timeline', 'saltado', tr('tu video, en un timeline nuevo') if (hay_mcp or libre_puente) else tr('uso tu archivo'))
+            libre_puente = (not hay_mcp) and modo_sis in ('puente', 'manual') and not self._go_sin_resolve       # DaVinci Resolve Free: se habla por el Puente
+            self.go_panel.paso('timeline', 'saltado', tr('tu video, en un timeline nuevo') if (hay_mcp or libre_puente) else
+                               (tr('sin Resolve: te devuelvo el video') if self._go_sin_resolve else tr('uso tu archivo')))
             if hay_mcp:
                 # v5.2: Resolve se va abriendo mientras se transcribe (para colocar al final); v5.10: y se le arma el timeline con el video
                 self._go_tl_listo = threading.Event()
@@ -7789,6 +7802,9 @@ class SubtitleApp(QWidget):
                 self._go_tl_listo = threading.Event()
                 threading.Thread(target=self._go_timeline_del_video_libre, args=(archivo, medio), daemon=True, name='armar-video-free').start()
             self._go_generar()
+            return
+        if self._go_sin_resolve:
+            self._go_fallo('timeline', tr('No hay DaVinci Resolve en este equipo. Suelta un video en CineCaptions y pulsa GO: te lo devuelvo con los subtítulos puestos.'))
             return
         self.go_panel.linea.configure(text=tr('Pidiéndole a Resolve el audio del timeline…'))
         def trabajo():
@@ -7838,6 +7854,29 @@ class SubtitleApp(QWidget):
             else:
                 self._go_fallo('timeline', (tr('Resolve no entregó el audio del timeline (código {c}).', c=str(err).strip()) if str(err or '').strip().isdigit() else err) or tr('Abre DaVinci Resolve con tu timeline, o suelta un vídeo en la ventana, y pulsa GO otra vez.'))
         _correr_en_hilo(self, trabajo, fin)
+    def _resolve_no_instalado(self):
+        """v5.4.47: True si en este equipo no hay DaVinci Resolve (ni su MCP): GO entrega entonces el MP4 con los subtítulos grabados.
+        CINECAPTIONS_SIN_RESOLVE=1 lo fuerza (pruebas en un equipo que sí tiene Resolve)."""
+        if os.environ.get('CINECAPTIONS_SIN_RESOLVE') == '1':
+            return True
+        try:
+            import resolve_mcp
+            import instalador_scripts as ins
+            return resolve_mcp.ruta_exe() is None and not ins.resolve_esta_instalado()
+        except Exception:
+            return False
+    def _textos_pasos_go(self):
+        """Los pasos de GO dicen lo que de verdad va a pasar: con Resolve, traer el timeline y colocar; sin Resolve, leer el video y grabarlo."""
+        try:
+            self.go_panel.final_cancelable = bool(getattr(self, '_go_sin_resolve', False))
+            if getattr(self, '_go_sin_resolve', False):
+                self.go_panel.renombrar_paso('timeline', tr('Leer tu video'), tr('Leyendo tu video'))
+                self.go_panel.renombrar_paso('resolve', tr('Grabar el video con los subtítulos'), tr('Grabando el video'))
+            else:
+                self.go_panel.renombrar_paso('timeline', tr('Traer el timeline de Resolve'), tr('Trayendo el timeline'))
+                self.go_panel.renombrar_paso('resolve', tr('Colocar en el timeline'), tr('Colocando'))
+        except Exception:
+            registro.excepcion(origen='GO · textos de los pasos')
     def _go_decir_edicion(self):
         """v5.5: al empezar GO la línea dice con qué Resolve va a trabajar (Studio o Free) y por qué camino; el Registro lo anota. Después sigue el proceso."""
         try:
@@ -8202,7 +8241,7 @@ class SubtitleApp(QWidget):
             con_vista = bool(ajustes_ui.leer_prefs().get('go_vista_previa', False))
         except Exception:
             con_vista = False
-        if not con_vista:
+        if not con_vista or getattr(self, '_go_sin_resolve', False):     # la vista previa real la renderiza Resolve
             self._go_paso_actual = 'resolve'
             self.go_panel.explosion_final(lambda: self._go_lanzar(n_cues, langs, folder))
             return
@@ -8288,6 +8327,9 @@ class SubtitleApp(QWidget):
         self.go_panel.paso('preview', 'hecho')
         self._go_paso_actual = 'resolve'
         self.go_panel.paso('resolve')
+        if getattr(self, '_go_sin_resolve', False):
+            self._go_grabar_video()
+            return
         self.go_panel.linea.configure(text=tr('Colocando los subtítulos en tu timeline…'))
         self._al_terminar_generacion(n_cues, langs, folder)
         # si no hay forma automatica (ni MCP, ni Studio, ni Puente) queda a mano
@@ -8299,6 +8341,77 @@ class SubtitleApp(QWidget):
                 self._go_fin(False, tr('Generado. Falta un clic en Resolve: Scripts > CineCaptions_Subtitulos.'))
         except Exception:
             pass
+    def _go_grabar_video(self):
+        """v5.4.47, GO sin DaVinci Resolve: graba los subtítulos de Tema 4 (con sus sonidos y emojis) en una copia MP4 del video, junto al original.
+        El render corre en un hilo (render_sin_resolve.renderizar); la interfaz solo lee su avance."""
+        video = self.video_var.get().strip().strip('"')
+        cues = getattr(self, '_go_cues_render', None)
+        if not cues or not video or not Path(video).is_file():
+            self._go_fallo('resolve', tr('No pude preparar los subtítulos de Tema 4 para grabarlos en el video (¿el video tiene voz?).'))
+            return
+        try:
+            proyectos.guardar(video, project_name=Path(video).expanduser().stem, idioma=self._codigo_idioma(), traducir_ingles=False)
+            self._generado_para = video
+            self._refrescar_recientes()
+        except Exception:
+            pass
+        try:
+            import ajustes_ui
+            emoji_arriba = str(ajustes_ui.leer_prefs().get('emoji_posicion') or '') != 'abajo'     # Tema 4: arriba, salvo que se eligiera «Abajo»
+        except Exception:
+            emoji_arriba = True
+        self.go_panel.linea.configure(text=tr('Grabando los subtítulos en el video…'))
+        est = {'f': 0.0, 'texto': '', 'r': None, 'error': None}
+
+        def parar():
+            """«Pausar» espera aquí (entre fotogramas); «Cancelar» corta y no deja archivo a medias."""
+            while getattr(self, '_pausa_go', False) and not getattr(self, '_cancelar_go', False):
+                time.sleep(0.2)
+            return bool(getattr(self, '_cancelar_go', False))
+
+        def trabajo():
+            import render_sin_resolve
+            try:
+                est['r'] = render_sin_resolve.renderizar(video, cues, progreso=lambda f, t: est.update(f=f, texto=t),
+                                                         cancelado=parar, emoji_arriba=emoji_arriba)
+            except BaseException as e:
+                est['error'] = f'{type(e).__name__}: {e}'
+                registro.excepcion(origen='GO sin Resolve · render')
+            if est['r'] and est['r'].get('ok'):
+                render_sin_resolve.mostrar_en_carpeta(est['r']['ruta'])
+        hilo = threading.Thread(target=trabajo, daemon=True, name='render-sin-resolve')
+        hilo.start()
+
+        def revisar():
+            if hilo.is_alive():
+                if vivo(self):
+                    pct = int(round(100 * est['f']))
+                    self.go_panel.linea.configure(text=tr('Grabando los subtítulos en el video… {p} %', p=pct))
+                    despues(200, revisar, self)
+                return
+            r = est['r'] or {}
+            if r.get('cancelado'):
+                self._go_cancelado()
+                return
+            if not r.get('ok'):
+                self._go_fallo('resolve', tr('No pude grabar el video con los subtítulos: {e}', e=est['error'] or tr('error desconocido')))
+                return
+            nombre = Path(r['ruta']).name
+            registro.ok(tr('Video con subtítulos listo en {s} s: {r}', s=r.get('segundos'), r=r['ruta']), 'GO · sin Resolve')
+            self._fin_tarea(True, '')
+            self.go_panel.paso('resolve', 'hecho', nombre[:26])
+            self._go_termino = True
+            try:
+                import avisos_sistema
+                avisos_sistema.avisar(self, tr('GO terminó'), tr('Tu video con subtítulos está listo: {n}', n=nombre)[:140])
+            except Exception:
+                pass
+            self.go_panel.terminar(True, tr('Listo: «{n}», junto a tu video. Pulsa GO para otro.', n=nombre), self._go_estadisticas())
+            self._borrar_go_en_curso()
+            self._go_corriendo = False
+            self._un_clic = False
+            self._set_inputs_enabled(True)
+        despues(200, revisar, self)
     def _go_fin(self, ok, texto='', detalle=''):
         if not getattr(self, '_go_corriendo', False):
             return
@@ -12444,7 +12557,8 @@ class SubtitleApp(QWidget):
         v5.10: también los SONIDOS (un efecto por palabra cuando entra, según el modo de Sonido) y los EMOJIS (con la palabra grande, y su sonido).
         Devuelve (bloques, track, pista_sfx) con el .json ya escrito (el mismo contrato que _generar_con_motor), o None si no se puede."""
         formato = self._formato_forzado() or self._formato_en_juego() or 'v'
-        if formato != 'v' or 'v' not in pack.formatos:
+        sin_resolve = bool(getattr(self, '_go_sin_resolve', False))     # v5.4.47: el render propio encaja el diseño vertical también en un video horizontal
+        if (formato != 'v' or 'v' not in pack.formatos) and not sin_resolve:
             avisar(tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
             return None
         import guion_captions as gc
@@ -12490,6 +12604,8 @@ class SubtitleApp(QWidget):
                 if k in b:
                     c[k] = b[k]
         json_path = gc.escribir(cues, st.SHARED_FOLDER / f'{project_name}.{base_lang}.guion.json', base_lang)
+        if sin_resolve:
+            self._go_cues_render = cues                              # GO sin Resolve: render_sin_resolve los graba en el video
         srt_path = st.SHARED_FOLDER / f'{project_name}.{base_lang}.srt'
         try:
             st.write_srt([st.Cue(start=b['start'], end=b['end'], text=' '.join(l['text'] for l in b['lines'])) for b in bloques], 42, 2, srt_path)

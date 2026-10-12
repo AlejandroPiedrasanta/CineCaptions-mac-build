@@ -484,6 +484,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.47', [
+        'CineCaptions ya funciona SIN DaVinci Resolve: si no lo tienes instalado, suelta un video y pulsa GO; te devuelve una copia MP4 con los subtítulos de Tema 4 grabados (con sus sonidos y emojis), junto a tu video.',
+    ]),
     ('5.4.46', [
         'Arreglo: con DaVinci Resolve Free la ventana se quedaba congelada unos 4 segundos al abrir CineCaptions y en cada GO. Ya no: la conexión con Resolve se comprueba aparte, sin frenar la ventana.',
         'El audio que Resolve prepara para transcribir ya no se guarda en Descargas («CineCaptions Audio»): va a una carpeta interna del programa, fuera de la vista. La carpeta vieja se vacía y se quita sola.',

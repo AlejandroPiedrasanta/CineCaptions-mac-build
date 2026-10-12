@@ -951,6 +951,22 @@ class PanelGo(QWidget):
     CORTO = {'timeline': tr('Trayendo el timeline'), 'voz': tr('Transcribiendo'), 'ia': tr('IA y palabras'), 'diseno': tr('Diseño de captions'),
              'sfx': tr('Efectos de sonido'), 'resolve': tr('Colocando')}
 
+    final_cancelable = False                    # v5.4.47: GO sin Resolve (grabar el video) se puede cancelar hasta el final; colocar en Resolve no
+
+    def renombrar_paso(self, clave, largo, corto):
+        """v5.4.47: cambia el texto de un paso antes de empezar (GO sin Resolve: «Grabar el video» en vez de «Colocar en el timeline»)."""
+        self.PASOS = tuple((c, largo if c == clave else t) for c, t in self.PASOS)
+        self.CORTO = dict(self.CORTO, **{clave: corto})
+        try:
+            self.pasos.pasos = [(c, largo if c == clave else t) for c, t in self.pasos.pasos]
+            self.pasos.update()
+        except Exception:
+            pass
+        if self.escena is not None:
+            for p in getattr(self.escena, '_pasos', None) or []:
+                if p.get('clave') == clave:
+                    p['texto'] = largo
+
     def conectar_escena(self, escena):
         self.escena = escena
         escena.poner_pasos(self.PASOS)
@@ -1063,7 +1079,7 @@ class PanelGo(QWidget):
         self._relayout()
 
     def paso(self, clave, estado='activo', detalle=None):
-        if clave == 'resolve' and estado == 'activo' and self._reserva_final:   # colocando en Resolve ya no se puede parar: fuera «Pausar / Cancelar»
+        if clave == 'resolve' and estado == 'activo' and self._reserva_final and not self.final_cancelable:   # colocando en Resolve ya no se puede parar: fuera «Pausar / Cancelar»
             self.salida.ocultar()
             self._reserva_final = 0
             self._relayout()

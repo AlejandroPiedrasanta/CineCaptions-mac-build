@@ -64,7 +64,7 @@ local VERSION = "1.0.39"
 -- regla que los tres auxiliares). OJO: no va en el latido — las apps
 -- viejas parten el latido en dos campos y un tercero las haria declarar
 -- INCOMPATIBLE a un Puente sano.
-local PAQUETE = "5.4.46"
+local PAQUETE = "5.4.47"
 
 -- El resolve VALIDADO del arranque. Es un local a proposito: si mas tarde
 -- algo pisa el global 'resolve' (el veneno clasico de la sesion), este
