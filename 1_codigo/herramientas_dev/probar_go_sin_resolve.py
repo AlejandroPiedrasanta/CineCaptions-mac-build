@@ -1,7 +1,9 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/herramientas_dev/probar_go_sin_resolve.py — GO de punta a punta SIN Resolve (CINECAPTIONS_SIN_RESOLVE=1), sin pantalla, sobre una copia del video.
 """
-    6_compilacion/venv314/Scripts/python.exe 1_codigo/herramientas_dev/probar_go_sin_resolve.py <video>
+    6_compilacion/venv314/Scripts/python.exe 1_codigo/herramientas_dev/probar_go_sin_resolve.py <video> [--por-ajuste]
+
+--por-ajuste: en vez de CINECAPTIONS_SIN_RESOLVE=1, enciende en memoria el interruptor de Ajustes «Video MP4 en lugar de Resolve».
 
 Usa una COPIA del video (el MP4 sale junto a él: «<video> (CineCaptions).mp4»). No escribe las preferencias ni los proyectos recientes del
 usuario y no abre el Explorador; sí deja en ~/DaVinciSubtitles lo de cualquier GO (<video>.<idioma>.guion.json, .srt, .marcas.json): bórralo
@@ -17,9 +19,11 @@ CODIGO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def main():
-    media = os.path.abspath(sys.argv[1])
+    media = os.path.abspath([a for a in sys.argv[1:] if not a.startswith('--')][0])
+    por_ajuste = '--por-ajuste' in sys.argv            # en vez de forzar el entorno, el interruptor de Ajustes (go_salida_mp4) solo en memoria
     os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-    os.environ['CINECAPTIONS_SIN_RESOLVE'] = '1'
+    if not por_ajuste:
+        os.environ['CINECAPTIONS_SIN_RESOLVE'] = '1'
     sys.path.insert(0, CODIGO)
     os.chdir(CODIGO)
     spec = importlib.util.spec_from_file_location('cc_main', os.path.join(CODIGO, 'CineCaptions (script principal).py'))
@@ -37,6 +41,9 @@ def main():
     M.SubtitleApp._revisar_licencia_al_arrancar = lambda s: None
     ajustes_ui.guardar_prefs = lambda *a, **k: None
     ajustes_ui.mostrar_novedades = lambda *a, **k: None
+    if por_ajuste:
+        _leer = ajustes_ui.leer_prefs
+        ajustes_ui.leer_prefs = lambda: {**_leer(), 'go_salida_mp4': True}
     if hasattr(ajustes_ui, 'mezclar_prefs'):
         ajustes_ui.mezclar_prefs = lambda *a, **k: None
     proyectos.guardar = lambda *a, **k: None

@@ -484,6 +484,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.48', [
+        'Nuevo en Ajustes > General: «Video MP4 en lugar de Resolve». Actívalo y GO te devuelve una copia MP4 de tu video con los subtítulos grabados aunque tengas Resolve instalado (para exportar rápido).',
+        'Arreglo: en un equipo donde se había desinstalado DaVinci Resolve, CineCaptions creía que seguía instalado y GO no entregaba el video. Ahora mira el programa en sí.',
+    ]),
     ('5.4.47', [
         'CineCaptions ya funciona SIN DaVinci Resolve: si no lo tienes instalado, suelta un video y pulsa GO; te devuelve una copia MP4 con los subtítulos de Tema 4 grabados (con sus sonidos y emojis), junto a tu video.',
     ]),
@@ -1946,6 +1950,12 @@ class VentanaAjustes(_Panel):
         f_avisos = _Fila(tr('Avisarme al terminar'),
                          tr('Cuando GO termina y CineCaptions no está al frente (estás en Resolve u otro programa), sale un aviso del sistema.'),
                          Interruptor('', var=avisos_var, comando=lambda: self._cambio('avisos_sistema', bool(avisos_var.get()))))
+        # v5.4.48: GO sin Resolve también a petición (render_sin_resolve.py): sin Resolve instalado ya lo hace solo
+        mp4_var = BooleanVar(bool(leer_prefs().get('go_salida_mp4', False)))
+        f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
+                      tr('GO graba los subtítulos (Tema 4, con sus sonidos y emojis) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
+                         'Si Resolve no está instalado lo hace siempre.'),
+                      Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})))
         # v5.5: lo que pasa en Resolve cuando GO termina
         repro_var = BooleanVar(leer_prefs().get('go_reproducir', True) is not False)
         f_repro = _Fila(tr('Reproducir al terminar'),
@@ -1978,7 +1988,7 @@ class VentanaAjustes(_Panel):
                          'packs de estilos, en Documentos > CineCaptions > Copias de seguridad.'), caja_cop, 340,
                       ultima=True)
         self._pintar_copias()
-        capa.addWidget(_grupo(f_motor, f_gpu, f_cache, f_con, f_encima, f_avisos, f_repro, f_vert, f_vista, f_cop))
+        capa.addWidget(_grupo(f_motor, f_gpu, f_cache, f_con, f_encima, f_avisos, f_mp4, f_repro, f_vert, f_vista, f_cop))
 
     def _pintar_motor(self):
         import motor_voz

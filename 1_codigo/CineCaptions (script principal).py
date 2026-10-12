@@ -7112,6 +7112,14 @@ class SubtitleApp(QWidget):
             return texto
         archivo_ok = archivo and Path(archivo).exists()
         ruta_ok = bool(ruta) and Path(ruta).exists()
+        motivo_mp4 = self._motivo_mp4()          # v5.4.48: GO entrega un MP4: Inicio lo dice (sin el rojo de «No encuentro DaVinci Resolve»)
+        if motivo_mp4:
+            texto_mp4 = tr('GO te devuelve el video con los subtítulos (Ajustes)') if motivo_mp4 == 'ajuste' else tr('Sin DaVinci Resolve: GO te devuelve el video con los subtítulos')
+            if archivo_ok or ruta_ok:
+                panel.reposo(_ajusta(texto_mp4, tr('«{n}»', n=Path(archivo if archivo_ok else ruta).name), tr('suelta otro vídeo para cambiarlo')))
+            else:
+                panel.reposo(_ajusta(texto_mp4, tr('suelta un video aquí')), listo=True)
+            return
         if (archivo_ok or ruta_ok) and det.get('texto') and getattr(self, '_estado_sistema', None):
             nombre_v = Path(archivo if archivo_ok else ruta).name
             panel.reposo(_ajusta(det['texto'], tr('«{n}»', n=nombre_v), tr('suelta otro vídeo para cambiarlo')), tono=tono)
@@ -7854,17 +7862,34 @@ class SubtitleApp(QWidget):
             else:
                 self._go_fallo('timeline', (tr('Resolve no entregó el audio del timeline (código {c}).', c=str(err).strip()) if str(err or '').strip().isdigit() else err) or tr('Abre DaVinci Resolve con tu timeline, o suelta un vídeo en la ventana, y pulsa GO otra vez.'))
         _correr_en_hilo(self, trabajo, fin)
-    def _resolve_no_instalado(self):
-        """v5.4.47: True si en este equipo no hay DaVinci Resolve (ni su MCP): GO entrega entonces el MP4 con los subtítulos grabados.
-        CINECAPTIONS_SIN_RESOLVE=1 lo fuerza (pruebas en un equipo que sí tiene Resolve)."""
+    def _motivo_mp4(self):
+        """Por qué GO entregaría AHORA un MP4 con los subtítulos grabados en vez de colocarlos en Resolve: 'prueba' (CINECAPTIONS_SIN_RESOLVE=1),
+        'ajuste' (Ajustes > General: «Video MP4 en lugar de Resolve», go_salida_mp4), 'sin_resolve' (no está el PROGRAMA DaVinci Resolve ni su MCP;
+        v5.4.48: se mira Resolve.exe / la app, no la carpeta de ajustes que queda al desinstalar) o None. Barato: prefs y existencia de archivos."""
         if os.environ.get('CINECAPTIONS_SIN_RESOLVE') == '1':
-            return True
+            return 'prueba'
+        try:
+            import ajustes_ui
+            if ajustes_ui.leer_prefs().get('go_salida_mp4'):
+                return 'ajuste'
+        except Exception:
+            pass
         try:
             import resolve_mcp
             import instalador_scripts as ins
-            return resolve_mcp.ruta_exe() is None and not ins.resolve_esta_instalado()
+            if resolve_mcp.ruta_exe() is None and ins.resolve_ejecutable() is None:
+                return 'sin_resolve'
         except Exception:
-            return False
+            pass                               # ante la duda, como siempre: con Resolve
+        return None
+    def _resolve_no_instalado(self):
+        """v5.4.47: True si este GO entrega el MP4 (render_sin_resolve.py); deja en el Registro por qué."""
+        motivo = self._motivo_mp4()
+        if motivo == 'ajuste':
+            registro.info(tr('GO entrega un video MP4 (Ajustes > General: «Video MP4 en lugar de Resolve»).'), 'GO')
+        elif motivo == 'sin_resolve':
+            registro.info(tr('No encuentro DaVinci Resolve en este equipo: GO entrega el video con los subtítulos grabados.'), 'GO')
+        return motivo is not None
     def _textos_pasos_go(self):
         """Los pasos de GO dicen lo que de verdad va a pasar: con Resolve, traer el timeline y colocar; sin Resolve, leer el video y grabarlo."""
         try:
@@ -7879,6 +7904,10 @@ class SubtitleApp(QWidget):
             registro.excepcion(origen='GO · textos de los pasos')
     def _go_decir_edicion(self):
         """v5.5: al empezar GO la línea dice con qué Resolve va a trabajar (Studio o Free) y por qué camino; el Registro lo anota. Después sigue el proceso."""
+        if getattr(self, '_go_sin_resolve', False):         # v5.4.48: sin Resolve no hay edición que anunciar (ni un «No encuentro DaVinci Resolve» en rojo)
+            self._go_resolve = None
+            self.go_panel.linea.configure(text=tr('GO graba tu video con los subtítulos (sin Resolve)'))
+            return
         try:
             import colocacion
             det = colocacion.detectar_resolve(getattr(self, '_estado_sistema', None))

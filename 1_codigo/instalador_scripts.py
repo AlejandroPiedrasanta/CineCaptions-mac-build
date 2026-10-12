@@ -258,6 +258,23 @@ def resolve_esta_instalado():
         else:
             marcas = [Path('/opt/resolve')]
     return any((m.exists() for m in marcas))
+def resolve_ejecutable():
+    """v5.4.48: la ruta del PROGRAMA DaVinci Resolve (Resolve.exe / la app de Mac) o None si no está. A diferencia de resolve_esta_instalado,
+    no cuenta la carpeta de ajustes (%APPDATA%\\Blackmagic Design, ~/Library/Application Support), que queda al desinstalar Resolve:
+    con ella un equipo sin Resolve parecía tenerlo y GO no entregaba el video. Si no se puede mirar, lanza la excepción (quien pregunta decide)."""
+    if sys.platform.startswith('win'):
+        import resolve_bridge
+        exe = Path(resolve_bridge._resolve_dir_windows()) / 'Resolve.exe'
+        return exe if exe.is_file() else None
+    if sys.platform == 'darwin':
+        for base in (Path('/Applications'), Path.home() / 'Applications'):
+            for app in (base / 'DaVinci Resolve' / 'DaVinci Resolve.app', base / 'DaVinci Resolve.app',
+                        base / 'DaVinci Resolve Studio' / 'DaVinci Resolve Studio.app', base / 'DaVinci Resolve Studio.app'):
+                if (app / 'Contents' / 'MacOS').is_dir():
+                    return app
+        return None
+    exe = Path('/opt/resolve/bin/resolve')
+    return exe if exe.is_file() else None
 def _quitar_cuarentena(ruta):
     """Le saca a un archivo la marca de cuarentena de macOS.\n\n    Todo lo que baja de internet queda marcado con com.apple.quarantine, y\n    un script marcado puede no ser tomado en cuenta por Resolve. Es\n    best-effort: si el atributo no esta, xattr devuelve error y da igual.\n    """
     if sys.platform != 'darwin':
