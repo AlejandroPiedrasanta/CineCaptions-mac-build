@@ -73,7 +73,37 @@ TIPOGRAFIAS = {
     'general': [('redonda', 'grotesk'), ('grotesk', 'grotesk'), ('serif', 'grotesk')],
 }
 MARCOS = {'inmobiliaria': ['ventana', 'simple'], 'boda': ['elegante', 'brillo'], 'xv': ['brillo', 'elegante'], 'restaurante': ['simple', 'elegante'],
-          'bts': ['visor', 'cinta'], 'general': ['simple', 'ventana']}
+          'bts': ['cinta', 'simple'], 'general': ['simple', 'ventana']}       # sin visor REC (al usuario no le gusta)
+ICONOS_ORBITA = {'inmobiliaria': ['casa', 'key', 'bed', 'waves', 'trees'], 'boda': ['anillos', 'corazon', 'camera', 'flower', 'wine'],
+                 'xv': ['crown', 'gift', 'music', 'cake', 'camera'], 'restaurante': ['cubiertos', 'chefHat', 'wine', 'coffee', 'pizza'],
+                 'bts': ['camera', 'clapperboard', 'aperture', 'film', 'mic'], 'general': ['lightbulb', 'target', 'trendingUp', 'users', 'rocket']}
+ORBITA_DUR = 2.8                          # el gancho: los iconos del tema giran alrededor de la cabeza en los primeros segundos
+# iconos 3D (3dicons, CC0; 2_recursos/edicion_pro/ograf/lib/iconos3d): de un icono de concepto al 3D que lo cuenta, y palabras que lo llaman
+ICONO_A_3D = {'coins': 'money-dynamic-premium', 'piggyBank': 'wallet-front-premium', 'shoppingCart': 'money-front-color', 'calendarDays': 'calendar-dynamic-color',
+              'camera': 'camera-dynamic-premium', 'image': 'picture-dynamic-premium', 'crown': 'crown-dynamic-color', 'key': 'key-front-premium',
+              'shieldCheck': 'lock-front-premium', 'plane': 'travel-dynamic-color', 'gift': 'ribbon-dynamic-color', 'target': 'flag-dynamic-color',
+              'messageSquare': 'notify-heart-front-color', 'bell': 'bell-dynamic-color', 'map': 'explorer-front-color', 'globe': 'explorer-front-color',
+              'zap': 'fire-front-color', 'trendingUp': 'fire-front-color', 'clock': 'calendar-dynamic-premium'}
+_CONC3D = {
+    'fire-front-color': 'viral fuego caliente hot fire trending tendencia increible brutal epico epica',
+    'megaphone-dynamic-color': 'anuncio anuncios oferta ofertas promocion promo aviso noticia noticias atencion announcement offer news attention',
+    'notify-heart-front-color': 'likes like sigueme siguenos seguidores followers follow comparte share',
+    'bell-dynamic-color': 'campana suscribete subscribe notificacion notificaciones',
+    'thumb-down-dynamic-color': 'malo mala peor error errores fracaso fail wrong worst bad',
+    'lock-front-premium': 'privado privada secreto secret private candado',
+}
+CONCEPTOS3D = {w: n for n, t in _CONC3D.items() for w in t.split()}
+ORBITA_3D = {'inmobiliaria': ['key-front-premium', 'money-dynamic-premium', 'wallet-front-premium', 'lock-front-premium', 'calendar-dynamic-color'],
+             'boda': ['notify-heart-front-color', 'ribbon-dynamic-color', 'bell-dynamic-color', 'camera-dynamic-premium', 'picture-dynamic-premium'],
+             'xv': ['crown-dynamic-color', 'ribbon-dynamic-color', 'notify-heart-front-color', 'camera-dynamic-premium', 'bell-dynamic-color'],
+             'restaurante': ['fire-front-color', 'money-front-color', 'notify-heart-front-color', 'calendar-dynamic-color', 'megaphone-dynamic-color'],
+             'bts': ['camera-dynamic-premium', 'picture-dynamic-premium', 'flag-dynamic-color', 'fire-front-color', 'megaphone-dynamic-color'],
+             'general': ['fire-front-color', 'megaphone-dynamic-color', 'notify-heart-front-color', 'flag-dynamic-color', 'money-front-color']}
+# «modo error»: cuando dice algo malo o se equivoca, el plano se pone en gris (con un sonido de apagón)
+_ERROR = {'es': 'malo mala error errores equivoque equivocamos equivocacion peor fracaso fracase desastre terrible horrible fatal falle fallo perdon ups',
+          'en': 'bad worst wrong mistake mistakes fail failed failure terrible horrible disaster oops sorry',
+          'pt': 'ruim pior erro errei erros fracasso desastre terrivel horrivel falhei desculpa'}
+GRIS_MAX, GRIS_SEP = 2, 8.0
 ICONO_LISTA = {'inmobiliaria': 'check', 'boda': 'corazon', 'xv': 'estrella', 'restaurante': 'punto', 'bts': 'numero', 'general': 'check'}
 
 # textos genéricos que pone la edición (en el idioma del video)
@@ -126,9 +156,30 @@ _CONC = {
     'graduationCap': 'curso clase aprender escuela course class learn school curso',
     'mic': 'entrevista podcast voz interview voice entrevista',
     'zap': 'rapido rapida energia fast quick energy rapido',
+    'bed': 'cuarto cuartos recamara recamaras habitacion habitaciones dormitorio dormitorios bedroom bedrooms quarto quartos',
+    'bath': 'bano banos bathroom bathrooms banheiro banheiros',
+    'trees': 'jardin jardines arboles bosque garden yard backyard trees forest jardim',
+    'waves': 'lago rio mar oceano alberca piscina pool lake river ocean agua water lagoa',
+    'car': 'coche carro cochera garaje garage estacionamiento parking car',
+    'cake': 'pastel torta cumpleanos cake birthday bolo',
+    'gem': 'lujo lujosa lujoso exclusivo exclusiva joya joyas diamante luxury exclusive diamond',
+    'wine': 'vino vinos brindis copa copas champagne wine toast',
+    'chefHat': 'chef cocinero cocinera cocina kitchen cozinha',
+    'coffee': 'cafe cafeteria coffee',
+    'pizza': 'pizza pizzas',
+    'aperture': 'lente lentes enfoque lens focus',
+    'mountain': 'montana montanas vista vistas mountain mountains view views',
+    'sofa': 'sala salon living sofa muebles amueblado amueblada furnished',
+    'ruler': 'metros terreno superficie hectareas lote lot acre acres',
+    'flower': 'flores flor ramo flowers bouquet',
+    'heartHandshake': 'amor love',
+    'plane': 'viaje viajes vuelo destino travel trip flight viagem',
+    'shieldCheck': 'seguro segura seguridad garantia confianza safe security warranty',
+    'map': 'mapa ubicacion zona colonia barrio vecindario neighborhood location',
 }
 CONCEPTOS = {w: icono for icono, texto in _CONC.items() for w in texto.split()}
-ESCENA_CADA = {'sobria': 14.0, 'media': 7.5, 'espectaculo': 4.5}       # segundos mínimos entre dos B-roll de motion graphics
+ESCENA_CADA = {'sobria': 14.0, 'media': 7.5, 'espectaculo': 4.5}
+Y_ESCENA = {'icono': 31, 'cifra': 33, 'lista': 32}                   # vertical: la infografía de una escena, por ENCIMA de la zona de los captions (≈ 50–70 %)       # segundos mínimos entre dos B-roll de motion graphics
 FONDO_GENERO = {'inmobiliaria': ['puntos', 'aurora'], 'boda': ['aurora'], 'xv': ['aurora', 'puntos'], 'restaurante': ['aurora', 'liso'],
                 'bts': ['rejilla', 'puntos'], 'general': ['aurora', 'rejilla', 'puntos']}
 
@@ -436,7 +487,12 @@ def _ajustar_a_corte(a, b, cortes):
 DENSIDAD = {'sobria': 6.5, 'media': 3.6, 'espectaculo': 2.0}        # segundos mínimos entre dos gráficos
 
 
-def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media', cortes=None, vertical=True, pesos=None, semilla=0, tema=None, video=''):
+def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media', cortes=None, vertical=True, pesos=None, semilla=0, tema=None, video='',
+               con_captions=True):
+    """`con_captions` (GO con los Temas 1–4: siempre): los captions ya escriben lo que se dice, así que la PRO NO lo repite (ni titulares ni rótulos
+    con las mismas palabras; esos momentos fuertes pasan a `plan['detras_pref']`: ahí los captions van detrás de la persona) y pone lo que los
+    captions no dan: escenas de motion graphics e infografía (iconos, cifras, listas, lugares), con la persona recortada delante del fondo
+    animado («fondo sustituido») o a pantalla completa, nombres, secciones, marcos y la ficha final."""
     palabras = unir_partidas([p for p in (palabras or []) if _txt(p) and p.get('start') is not None])
     # cortes: segundos sueltos o (segundo, fuerza) como los da efectos_visuales.detectar_cortes, o {'t': …}
     cortes = sorted(float(c['t'] if isinstance(c, dict) else c[0] if isinstance(c, (list, tuple)) else c) for c in (cortes or []))
@@ -453,6 +509,7 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
     frases = frases_de(palabras)
     cands = candidatos(palabras, frases, pesos, lang)
     piezas, ocupado = [], []          # ocupado: [(ini, fin)] de los gráficos «grandes» (nunca dos a la vez)
+    detras_pref = []                  # con captions: momentos fuertes (palabra remarcada, pregunta) en los que los captions van DETRÁS de la persona
 
     def libre(a, b, holgura=sep):
         return all(b + holgura * 0.35 <= x or a >= y + holgura * 0.35 for x, y in ocupado)
@@ -489,19 +546,55 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
                 piezas.append({'pieza': 'velo', 'capa': 'velo', 'ini': a, 'fin': b, 'persona': True, 'motivo': 'velo de los nombres',
                                'valores': {'forma': 'vineta', 'color': '#000000', 'intensidad': d['veloIntensidad'], 'fundido': 0.45}})
                 datos_cta.append(c['texto'])
+    # --- 1c) el GANCHO con Magic Mask (skill: «iconos que le rodean»): los iconos de lo que se dice (y los del estilo) giran alrededor de la
+    #         cabeza; la mitad de atrás pasa por DETRÁS de la persona recortada y la de delante, por delante. aplicar() la centra en su cabeza.
+    if duracion >= 6.0:
+        a, b = 0.15, min(duracion - 0.5, 0.15 + ORBITA_DUR)
+        primero = [st(c['i']) for c in cands if c['tipo'] in ('cifra', 'lista') and st(c['i']) < a + ORBITA_DUR + 0.4]
+        if primero:                                                   # un dato en los primeros segundos manda: la órbita acaba antes
+            b = min(b, min(primero) - 0.45)
+        a, b = _ajustar_a_corte(a, b, cortes)
+        if b - a >= 1.6 and libre(a, b, 0.0):
+            iconos = []
+            for c in sorted((c for c in cands if c['tipo'] == 'concepto'), key=lambda c: st(c['i'])):
+                if c['icono'] not in iconos:
+                    iconos.append(c['icono'])
+            for x in ICONOS_ORBITA[g]:
+                if len(iconos) >= 5:
+                    break
+                if x not in iconos:
+                    iconos.append(x)
+            imgs = []
+            for x in [ICONO_A_3D.get(i) for i in iconos] + ORBITA_3D[g]:
+                if x and x not in imgs and len(imgs) < 5:
+                    imgs.append(x)
+            v = {'iconos': ','.join(iconos[:5]), 'imagenes': ','.join(imgs), 'acento': d['acento'], 'colorTexto': d['colorTexto'], 'x': 50, 'y': 30, 'rx': 22, 'ry': 4.5,
+                 'inclinacion': rng.choice([-9, -6, 6, 9]), 'vueltas': round(rng.uniform(0.28, 0.36), 2), 'escala': 1.0, 'tiempos': '0'}
+            poner({'pieza': 'orbita', 'capa': 'detras', 'ini': a, 'fin': b, 'persona': True, 'ajustar': True, 'motivo': 'gancho: órbita (atrás)',
+                   'valores': dict(v, mitad='atras')})
+            piezas.append({'pieza': 'orbita', 'capa': 'delante', 'ini': a, 'fin': b, 'ajustar': True, 'motivo': 'gancho: órbita (delante)',
+                           'valores': dict(v, mitad='delante')})
     # --- 2) el gancho: el mejor candidato de los primeros segundos va DETRÁS de la persona ---
     orden = sorted(cands, key=lambda c: (-c['puntos'] - (2.5 if st(c['i']) < min(8.0, duracion * 0.25) else 0), st(c['i'])))
     titulares = 0
     ultima_escena = [-99.0]
+    n_escenas = [0]
+    iconos_usados = set()                 # una escena por concepto: «clientes» no sale dos veces en el mismo video
     cada_escena = ESCENA_CADA.get(densidad, 7.5)
 
     def escena(a, b, pieza, valores, motivo):
-        """Un B-roll de motion graphics: el fondo tapa el video y encima va la pieza, centrada."""
+        """Un B-roll de motion graphics. Se alternan dos formas (la primera, la del Magic Mask): «fondo sustituido» (el fondo animado tapa la
+        sala, la persona recortada queda DELANTE y la infografía va detrás de ella, encima de su cabeza o a un lado) y pantalla completa
+        (el fondo tapa el video entero y la pieza va centrada). Sin persona en ese momento, aplicar() la deja centrada (pantalla completa)."""
         oscuro = '#' + ''.join('%02x' % int(int(d['acento'][k:k + 2], 16) * 0.28) for k in (1, 3, 5))
-        poner({'pieza': 'fondo', 'capa': 'fondo', 'ini': a - 0.08, 'fin': b, 'pantalla': True, 'motivo': 'fondo de ' + motivo,
+        con_persona = n_escenas[0] % 2 == 0
+        n_escenas[0] += 1
+        poner({'pieza': 'fondo', 'capa': 'fondo', 'ini': a if con_persona else a - 0.08, 'fin': b, 'pantalla': True, 'persona': con_persona,
+               'motivo': ('fondo sustituido de ' if con_persona else 'fondo de ') + motivo,
                'valores': {'estilo': d['fondoEstilo'], 'entrada': d['fondoEntrada'], 'color1': d['acento'], 'color2': d['colorPanel'],
                            'color3': oscuro, 'intensidad': 0.8}})
-        piezas.append({'pieza': pieza, 'capa': 'delante', 'ini': a, 'fin': b, 'pantalla': True, 'motivo': motivo, 'valores': valores})
+        piezas.append({'pieza': pieza, 'capa': 'detras' if con_persona else 'delante', 'ini': a, 'fin': b, 'pantalla': True, 'persona': con_persona,
+                       'ajustar': con_persona, 'motivo': motivo, 'valores': valores})
         ultima_escena[0] = a
 
     def puede_escena(a):
@@ -534,7 +627,7 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
             datos_cta.append(f"{c['numero']} {c['unidad'].lower()}".strip())
             escena(a, b, 'cifra', {'numero': c['numero'], 'unidad': c['unidad'], 'etiqueta': '', 'tiempos': f"{rel(st(c['i']), a)},{rel(st(c['i']) + 0.3, a)},{rel(st(c['i']) + 0.6, a)}",
                                    'fuente': d['fuenteTexto'] if d['fuenteTexto'] != 'mono' else 'grotesk', 'acento': d['acento'], 'colorTexto': d['colorTexto'],
-                                   'estilo': d['cifraEstilo'], 'escala': 1.15, 'x': 50, 'y': 44}, f"cifra «{c['numero']} {c['unidad']}»")
+                                   'estilo': d['cifraEstilo'], 'escala': 1.15, 'x': 50, 'y': Y_ESCENA['cifra'] if vertical else 44}, f"cifra «{c['numero']} {c['unidad']}»")
         elif c['tipo'] == 'cifra':
             datos_cta.append(f"{c['numero']} {c['unidad'].lower()}".strip())
             poner({'pieza': 'cifra', 'capa': 'delante', 'ini': a, 'fin': b, 'ajustar': True, 'motivo': f"cifra «{c['numero']} {c['unidad']}»",
@@ -548,7 +641,7 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
             escena(a, b, 'lista', {'titulo': '', **{f'item{k + 1}': items[k]['texto'] if k < len(items) else '' for k in range(4)},
                                    'tiempos': ','.join(str(x) for x in ts), 'icono': d['icono'], 'disposicion': 'columna',
                                    'fuente': d['fuenteTexto'] if d['fuenteTexto'] != 'mono' else 'grotesk', 'acento': d['acento'], 'colorTexto': d['colorTexto'],
-                                   'colorPanel': d['colorPanel'], 'escala': 1.1, 'x': 50, 'y': 42}, 'lista')
+                                   'colorPanel': d['colorPanel'], 'escala': 1.1, 'x': 50, 'y': Y_ESCENA['lista'] if vertical else 42}, 'lista')
         elif c['tipo'] == 'lista':
             items = c['items']
             ts = [rel(st(c['i']) - 0.2, a)] + [rel(st(it['i']), a) for it in items]
@@ -558,6 +651,9 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
                                'tiempos': ','.join(str(x) for x in ts), 'icono': d['icono'], 'disposicion': d['listaDisposicion'] if len(items) <= 4 else 'columna',
                                'fuente': d['fuenteTexto'] if d['fuenteTexto'] != 'mono' else 'grotesk', 'acento': d['acento'], 'colorTexto': d['colorTexto'],
                                'colorPanel': d['colorPanel'], 'escala': 1.0, 'x': 50, 'y': d['yApoyo'] + 8}})
+        elif c['tipo'] == 'pregunta' and con_captions:
+            detras_pref.append((a, b))                                # la pregunta la escriben los captions, detrás de la persona
+            continue
         elif c['tipo'] == 'pregunta':
             pal = c['texto'].split()
             corte = max(1, (len(pal) + 1) // 2)
@@ -569,15 +665,16 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
                    'valores': {'linea1': l1, 'linea2': l2.upper(), 'acentoLinea': 2, 'tiempos': f"{ts2[0] if ts2 else 0},{ts2[min(corte, len(ts2) - 1)] if ts2 else 0.5}",
                                'fuente': d['fuenteTitular'], 'acento': d['acento'], 'colorTexto': d['colorTexto'], 'colorBloque': d['colorBloque'],
                                'escala': 1.0, 'x': 50, 'y': d['yApoyo'], 'inclinacion': 0}})
-        elif c['tipo'] == 'lugar' and puede_escena(a) and titulares >= 1:
+        elif c['tipo'] == 'lugar' and puede_escena(a) and (titulares >= 1 or con_captions):
             escena(a, b, 'icono', {'icono': 'pin', 'texto': c['texto'], 'kicker': T['ubicacion'], 'fuente': d['fuenteTitular'] if d['fuenteTitular'] != 'mono' else 'grotesk',
-                                   'acento': d['acento'], 'colorTexto': d['colorTexto'], 'escala': 1.0, 'x': 50, 'y': 42,
+                                   'acento': d['acento'], 'colorTexto': d['colorTexto'], 'escala': 1.0, 'x': 50, 'y': Y_ESCENA['icono'] if vertical else 42,
                                    'tiempos': f"0,{rel(st(c['i']), a)}"}, f"lugar «{c['texto']}»")
         elif c['tipo'] == 'concepto':
-            if not puede_escena(a):
+            if not puede_escena(a) or c['icono'] in iconos_usados:
                 continue
-            escena(a, b, 'icono', {'icono': c['icono'], 'texto': c['texto'], 'kicker': '', 'fuente': d['fuenteTexto'] if d['fuenteTexto'] != 'mono' else 'grotesk',
-                                   'acento': d['acento'], 'colorTexto': d['colorTexto'], 'escala': 1.0, 'x': 50, 'y': 42,
+            iconos_usados.add(c['icono'])
+            escena(a, b, 'icono', {'icono': c['icono'], 'imagen': ICONO_A_3D.get(c['icono'], ''), 'texto': c['texto'], 'kicker': '', 'fuente': d['fuenteTexto'] if d['fuenteTexto'] != 'mono' else 'grotesk',
+                                   'acento': d['acento'], 'colorTexto': d['colorTexto'], 'escala': 1.0, 'x': 50, 'y': Y_ESCENA['icono'] if vertical else 42,
                                    'tiempos': f"0,{rel(st(c['i']), a)}"}, f"concepto «{c['texto']}»")
         elif c['tipo'] == 'claqueta':
             poner({'pieza': 'etiqueta', 'capa': 'delante', 'ini': a, 'fin': b, 'ajustar': True, 'motivo': f"claqueta «{c['texto']}»",
@@ -591,12 +688,15 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
             if len(nws) > 4:
                 continue
             ts = [rel(st(k), a) for k in range(c['i'], c['fin_i'] + 1)][:len(nws)]
-            if c['tipo'] == 'lugar' and titulares >= 1:
+            if c['tipo'] == 'lugar' and (titulares >= 1 or con_captions):
                 poner({'pieza': 'etiqueta', 'capa': 'delante', 'ini': a, 'fin': b, 'ajustar': True, 'motivo': f'lugar «{texto}»',
                        'valores': {'kicker': T['ubicacion'], 'texto': texto, 'icono': 'pin', 'alinear': d['etiquetaLado'], 'fuente': d['fuenteTitular'],
                                    'acento': d['acento'], 'colorTexto': d['colorTexto'], 'escala': 1.0, 'x': 7 if d['etiquetaLado'] == 'izq' else 93,
                                    'y': 22, 'tiempos': str(ts[0] if ts else 0)}}, grande=False)
                 ocupado.append((a, b))
+                continue
+            if con_captions:                                          # lo dicen los captions: ahí van DETRÁS de la persona (sin repetirlo)
+                detras_pref.append((a, b))
                 continue
             # titular gigante detrás de la persona (+ velo que apaga el fondo); máximo uno cada ~9 s. Variedad: a veces un rótulo
             # aunque cupiera otro titular (la semilla decide), para que dos videos no tengan la misma estructura
@@ -661,15 +761,25 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
                 if x and x.lower() not in [f.lower() for f in filas] and x.lower() != nombre.lower():
                     filas.append(x[:1].upper() + x[1:])
             dicho = [w.strip(' .,;:!¡¿?') for w in cta['texto'].split()]
-            boton = ' '.join(dicho) if 2 <= len(dicho) <= 6 else T['cta'][g]
+            boton = ' '.join(dicho) if 2 <= len(dicho) <= 6 and not con_captions else T['cta'][g]
             boton = boton[:1].upper() + boton[1:]
             piezas[:] = [p for p in piezas if not (p['ini'] < b and p['fin'] > a and p['capa'] != 'velo')]
-            poner({'pieza': 'cta', 'capa': 'delante', 'ini': a, 'fin': b, 'motivo': 'llamada a la acción',
+            poner({'pieza': 'cta', 'capa': 'delante', 'ini': a, 'fin': b, 'ajustar': True, 'motivo': 'llamada a la acción',
                    'valores': {'kicker': T['kicker_cta'][g], 'titulo': nombre, 'fila1': filas[0] if len(filas) > 0 else '', 'fila2': filas[1] if len(filas) > 1 else '',
                                'fila3': filas[2] if len(filas) > 2 else '', 'boton': boton, 'tiempos': '0,0.25,0.5,0.75,1.0,1.35',
                                'fuente': d['fuenteTitular'], 'acento': d['acento'], 'colorTexto': d['colorTexto'], 'colorPanel': d['colorPanel'],
                                'escala': 1.0 if vertical else 0.8, 'x': 50 if vertical else 72, 'y': 32 if vertical else 50,
                                'icono': {'boda': 'corazon', 'xv': 'estrella'}.get(g, 'check')}})
+    # --- 6) «modo error»: algo malo o una equivocación → el plano en gris un momento (no pisa escenas ni el principio) ---
+    malas = set(_ERROR.get(lang, _ERROR['es']).split())
+    gris = []
+    for k, w in enumerate(palabras):
+        t0 = st(k)
+        if plegar(_txt(w)) not in malas or t0 < 1.5 or len(gris) >= GRIS_MAX or (gris and t0 - gris[-1][0] < GRIS_SEP):
+            continue
+        a, b = t0 - 0.08, min(duracion - 0.1, max(float(w['end']) + 1.1, t0 + 1.6), t0 + 2.6)
+        if b - a >= 1.0 and not any(p['ini'] < b and a < p['fin'] and (p.get('pantalla') or p.get('persona')) for p in piezas):
+            gris.append((round(a, 3), round(b, 3)))
     # quitar velos huérfanos y ordenar
     titulos = [(p['ini'], p['fin']) for p in piezas if p['pieza'] in ('titular', 'nombres')]
     piezas = [p for p in piezas if p['pieza'] != 'velo' or (p['ini'], p['fin']) in titulos]
@@ -681,4 +791,5 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
         cuenta[p['pieza']] = cuenta.get(p['pieza'], 0) + 1
     resumen = ', '.join(f'{n} {k}' for k, n in sorted(cuenta.items()))
     return {'version': 1, 'genero': g, 'genero_puntos': puntos_genero, 'idioma': lang, 'direccion': d, 'duracion': duracion,
-            'piezas': piezas, 'resumen': f'estilo {g}: {resumen}' if piezas else f'estilo {g}: sin gráficos'}
+            'piezas': piezas, 'detras_pref': [(round(a, 3), round(b, 3)) for a, b in detras_pref], 'gris': gris,
+            'resumen': f'estilo {g}: {resumen}' if piezas else f'estilo {g}: sin gráficos'}

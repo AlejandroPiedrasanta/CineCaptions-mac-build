@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
 ]]
 
-local VERSION = "5.4.49 (edicion pro)"
+local VERSION = "5.4.50 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -330,9 +330,11 @@ end
 -- captions. Nunca toca V1/A1 ni las pistas de los captions. Nada de InsertFusionTitleIntoTimeline: solo ImportMedia + AppendToTimeline.
 -- El plan lo deja la app en ~/DaVinciSubtitles/edicion_pro_plan.json (y su sidecar .lua, que es lo que lee Free 21.1: sin io).
 -- ---------------------------------------------------------------------
-local ORDEN = { "PRO-BROLL", "PRO-FONDO", "PRO-VELO", "PRO-DETRAS", "PRO-PERSONA", "PRO-DELANTE" }
-local CAPA = { fondo = "PRO-FONDO", velo = "PRO-VELO", detras = "PRO-DETRAS", delante = "PRO-DELANTE" }
+local ORDEN = { "PRO-BROLL", "PRO-GRIS", "PRO-FONDO", "PRO-VELO", "PRO-DETRAS", "PRO-PERSONA", "PRO-DELANTE" }
+local CAPA = { fondo = "PRO-FONDO", velo = "PRO-VELO", detras = "PRO-DETRAS", delante = "PRO-DELANTE", iconos = "PRO-ICONOS" }
 local PISTA_ENCIMA = "PRO-ENCIMA"
+local PISTA_ICONOS = "PRO-ICONOS"        -- los iconos 3D junto a los captions: encima de ellos (y debajo de PRO-ENCIMA)
+local MARCA_EMOJI = "ccpro-emoji-off"    -- el emoji del tema que se apago porque en ese bloque va un icono 3D
 local MARCA = "ccpro-subir"              -- marca en cada clip de captions que se subio: "ccpro-subir:<Tilt antes>:<Tilt despues>"
 local PISTA_SONIDO = "PRO-SONIDO"
 local BIN = "RCS · Edición PRO"
@@ -431,7 +433,7 @@ local function pistas_pro(tl)
 end
 
 local function quitar_vacias(tl)
-    local todas = { PISTA_ENCIMA }
+    local todas = { PISTA_ENCIMA, PISTA_ICONOS }
     for _, n in ipairs(ORDEN) do todas[#todas + 1] = n end
     for _, n in ipairs(todas) do
         local i = indice(tl, n)
@@ -450,13 +452,70 @@ local function es_pro(n)
     return false
 end
 
--- El recorte de la persona con IA local (ProRes 4444 con alfa recto). En Free no hay Magic Mask.
+local TRANSFORMACION = { "Scaling", "ZoomX", "ZoomY", "Pan", "Tilt", "RotationAngle", "AnchorPointX", "AnchorPointY", "Pitch", "Yaw", "FlipX", "FlipY",
+                         "CropLeft", "CropRight", "CropTop", "CropBottom", "CropSoftness" }
+
+-- El clip de V1 que contiene [f0, f1) (nil si no hay uno solo).
+local function clip_v1(tl, f0, f1)
+    for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", 1))) do
+        if it:GetStart() <= f0 and f1 <= it:GetEnd() then return it end
+    end
+    return nil
+end
+
+-- El recorte tiene que caer EXACTAMENTE sobre la persona de V1: misma escala, zoom (punch-in), Pan, Tilt, recorte...
+local function copiar_transformacion(de, a)
+    local ok, props = pcall(function() return de:GetProperty() end)
+    if not ok or type(props) ~= "table" then return end
+    for _, k in ipairs(TRANSFORMACION) do
+        if props[k] ~= nil then pcall(function() a:SetProperty(k, props[k]) end) end
+    end
+end
+
+-- El punch-in que alterna en los saltos de V1 (pausas quitadas): zoom fijo en uno de cada dos clips. Absoluto (re-aplicar no apila).
+local function punch_ins(tl, punch)
+    local zooms, puestos = {}, 0
+    for _, par in ipairs(punch or {}) do zooms[math.floor(tonumber(par[1]) or -1)] = tonumber(par[2]) end
+    for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", 1))) do
+        local z = zooms[math.floor(tonumber(it:GetStart()) or -2)]
+        if z then
+            local ok = pcall(function() it:SetProperty("ZoomX", z); it:SetProperty("ZoomY", z) end)
+            if ok then puestos = puestos + 1 end
+        end
+    end
+    return puestos
+end
+
+-- Donde acaba de verdad lo que va DETRAS de la persona que empieza en f0 (los OGraf duran mas que su tramo: llevan su salida).
+local function fin_detras(tl, idx, f0)
+    local fin = 0
+    for _, n in ipairs({ "PRO-DETRAS", "PRO-VELO", "PRO-FONDO" }) do
+        if idx[n] then
+            for _, x in ipairs(lista_api(tl:GetItemListInTrack("video", idx[n]))) do
+                if math.abs(x:GetStart() - f0) <= 2 then fin = math.max(fin, x:GetEnd()) end
+            end
+        end
+    end
+    return fin
+end
+
+-- El recorte de la persona con IA local (ProRes 4444 con alfa recto), con la transformacion del clip de V1. En Free no hay Magic Mask.
 local function poner_clip_persona(tl, mp, caja, p, f0, f1, pista)
     if p.modo ~= "clip" or not p.archivo then return nil end
+    local v1 = clip_v1(tl, f0, f1)
+    if v1 ~= nil then
+        local ok, nombres = pcall(function() return v1:GetFusionCompNameList() end)
+        for _, n in ipairs((ok and type(nombres) == "table") and nombres or {}) do
+            if n == "CineCaptions FX" then return nil end          -- con el movimiento de Efectos el recorte no casaria
+        end
+    end
     local clip = importar(mp, caja, p.archivo)
     if clip == nil then return nil end
     pcall(function() clip:SetClipProperty("Alpha mode", "Straight") end)
-    return append(mp, { mediaPoolItem = clip, startFrame = 0, endFrame = f1 - f0 - 1, recordFrame = f0, trackIndex = pista, mediaType = 1 })
+    pcall(function() f1 = math.min(f1, f0 + math.floor(tonumber(clip:GetClipProperty("Frames")) or (f1 - f0))) end)
+    local it = append(mp, { mediaPoolItem = clip, startFrame = 0, endFrame = f1 - f0 - 1, recordFrame = f0, trackIndex = pista, mediaType = 1 })
+    if it ~= nil and v1 ~= nil then copiar_transformacion(v1, it) end
+    return it
 end
 
 -- Las tomas de stock en PRO-BROLL (debajo de todo lo PRO y de los captions), llenando el cuadro.
@@ -509,6 +568,10 @@ local function deshacer_subidas(tl)
             if ok and type(marcas) == "table" then
                 for _, m in pairs(marcas) do
                     local dato = tostring(m.customData or "")
+                    if dato == MARCA_EMOJI then
+                        pcall(function() it:SetClipEnabled(true) end)
+                        pcall(function() it:DeleteMarkerByCustomData(dato) end)
+                    end
                     local antes, despues = dato:match("^ccpro%-subir:([%-%d%.]+):([%-%d%.]+)$")
                     if antes then
                         pcall(function()
@@ -526,6 +589,29 @@ local function deshacer_subidas(tl)
 end
 
 -- Sube (Tilt) los clips de los captions que EMPIEZAN dentro de cada bloque y les deja la marca. Devuelve cuantos movio.
+-- Pone el Tilt de un clip de captions y deja (o actualiza) la marca con su Tilt ORIGINAL, para que re-aplicar lo devuelva a su sitio.
+local function poner_tilt(it, nuevo)
+    local original = 0
+    pcall(function() original = tonumber(it:GetProperty("Tilt")) or 0 end)
+    local ok, marcas = pcall(function() return it:GetMarkers() end)
+    if ok and type(marcas) == "table" then
+        for _, m in pairs(marcas) do
+            local dato = tostring(m.customData or "")
+            local antes = dato:match("^ccpro%-subir:([%-%d%.]+):")
+            if antes then
+                original = tonumber(antes) or original
+                pcall(function() it:DeleteMarkerByCustomData(dato) end)
+            end
+        end
+    end
+    local ok2, r = pcall(function() return it:SetProperty("Tilt", nuevo) end)
+    if ok2 and r then
+        pcall(function() it:AddMarker(0, "Sand", "PRO · captions movidos", "", 1, string.format("%s:%.3f:%.3f", MARCA, original, nuevo)) end)
+        return true
+    end
+    return false
+end
+
 local function subir_captions(tl, cues, base)
     local clips = {}
     for _, i in ipairs(pistas_captions(tl)) do
@@ -534,15 +620,12 @@ local function subir_captions(tl, cues, base)
     local movidos = 0
     for _, c in ipairs(cues or {}) do
         local f0, f1, d = base + math.floor(tonumber(c.ini) or 0), base + math.floor(tonumber(c.fin) or 0), tonumber(c.subir) or 0
-        for _, par in ipairs(clips) do
-            if par[1] >= f0 - 1 and par[1] < f1 then
-                local it = par[2]
-                local antes = 0
-                pcall(function() antes = tonumber(it:GetProperty("Tilt")) or 0 end)
-                local ok, r = pcall(function() return it:SetProperty("Tilt", antes + d) end)
-                if ok and r then
-                    movidos = movidos + 1
-                    pcall(function() it:AddMarker(0, "Sand", "PRO · detras de la persona", "", 1, string.format("%s:%.3f:%.3f", MARCA, antes, antes + d)) end)
+        if math.abs(d) >= 0.5 then
+            for _, par in ipairs(clips) do
+                if par[1] >= f0 - 1 and par[1] < f1 then
+                    local antes = 0
+                    pcall(function() antes = tonumber(par[2]:GetProperty("Tilt")) or 0 end)
+                    if poner_tilt(par[2], antes + d) then movidos = movidos + 1 end
                 end
             end
         end
@@ -550,10 +633,51 @@ local function subir_captions(tl, cues, base)
     return movidos
 end
 
+-- REGLA DEL USUARIO: ningun emoji tapa una cara. Los emojis de cada bloque que caen sobre una de sus 'caras' bajan debajo de la barbilla o
+-- suben encima de la cabeza (lo que quede mas cerca dentro del cuadro). Devuelve cuantos aparto.
+local function emojis_sin_cara(tl, cues, base)
+    local W = tonumber(tl:GetSetting("timelineResolutionWidth")) or 1080
+    local H = tonumber(tl:GetSetting("timelineResolutionHeight")) or 1920
+    local emojis = {}
+    for _, i in ipairs(pistas_captions(tl)) do
+        if nombre_pista(tl, "video", i):upper():find("EMOJI", 1, true) then
+            for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do emojis[#emojis + 1] = { it:GetStart(), it } end
+        end
+    end
+    local r, aire, apartados = 0.045, 0.015, 0
+    for _, c in ipairs(cues or {}) do
+        local caras = (type(c.caras) == "table") and c.caras or {}
+        if #caras > 0 then
+            local f0, f1 = base + math.floor(tonumber(c.ini) or 0), base + math.floor(tonumber(c.fin) or 0)
+            for _, par in ipairs(emojis) do
+                if par[1] >= f0 - 1 and par[1] < f1 then
+                    local it, x, y = par[2], 0.5, 0.5
+                    pcall(function() x = 0.5 + (tonumber(it:GetProperty("Pan")) or 0) / W; y = 0.5 - (tonumber(it:GetProperty("Tilt")) or 0) / H end)
+                    local abajo, arriba, pisa = -1, 2, false
+                    for _, k in ipairs(caras) do
+                        if k[1] - r < x and x < k[3] + r and k[2] - r < y and y < k[4] + r then
+                            pisa = true
+                            abajo = math.max(abajo, k[4] + r + aire)
+                            arriba = math.min(arriba, k[2] - r - aire)
+                        end
+                    end
+                    if pisa then
+                        local mejor = nil
+                        for _, o in ipairs({ abajo, arriba }) do
+                            if o >= 0.04 + r and o <= 0.96 - r and (mejor == nil or math.abs(o - y) < math.abs(mejor - y)) then mejor = o end
+                        end
+                        if mejor and poner_tilt(it, (0.5 - mejor) * H) then apartados = apartados + 1 end
+                    end
+                end
+            end
+        end
+    end
+    return apartados
+end
+
 -- Los captions DETRAS de la persona: la persona recortada en PRO-ENCIMA (la pista de mas arriba) en cada tramo, su velo suave en PRO-VELO
 -- y la pila de los captions subida hasta la coronilla. Devuelve (tramos puestos, clips de captions movidos).
 local function poner_encima(tl, mp, caja, tramos, base)
-    deshacer_subidas(tl)
     local hay = false
     for _, t in ipairs(tramos) do if t.modo == "clip" then hay = true end end
     local i = indice(tl, PISTA_ENCIMA)
@@ -603,6 +727,69 @@ local function poner_encima(tl, mp, caja, tramos, base)
     return hechos, movidos
 end
 
+-- PRO-ICONOS, vacia, encima de los captions (se crea al final; PRO-ENCIMA, si hace falta, va despues y queda por encima).
+local function pista_iconos(tl, hace_falta)
+    local i = indice(tl, PISTA_ICONOS)
+    if i then vaciar(tl, i); return i end
+    if not hace_falta then return nil end
+    pcall(function() tl:AddTrack("video") end)
+    i = math.floor(tonumber(tl:GetTrackCount("video")) or 1)
+    tl:SetTrackName("video", i, PISTA_ICONOS)
+    return i
+end
+
+-- Apaga (con marca, para re-aplicar) el emoji del tema en los bloques donde va un icono 3D: uno solo, el 3D.
+local function apagar_emojis(tl, ventanas, base)
+    local apagados = 0
+    for _, i in ipairs(pistas_captions(tl)) do
+        if nombre_pista(tl, "video", i):upper():find("EMOJI", 1, true) then
+            for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do
+                local s0 = it:GetStart()
+                for _, v in ipairs(ventanas or {}) do
+                    if s0 >= base + (tonumber(v[1]) or 0) and s0 < base + (tonumber(v[2]) or 0) then
+                        local ok, r = pcall(function() return it:SetClipEnabled(false) end)
+                        if ok and r then
+                            pcall(function() it:AddMarker(0, "Sand", "PRO · emoji cambiado por un icono 3D", "", 1, MARCA_EMOJI) end)
+                            apagados = apagados + 1
+                        end
+                        break
+                    end
+                end
+            end
+        end
+    end
+    return apagados
+end
+
+-- «Modo error»: el plano en gris un momento. Una copia del clip de V1 de ese tramo, encima, sin saturacion (SetCDL), misma transformacion.
+local function poner_gris(tl, mp, tramos, base, pista)
+    local puestos = 0
+    for _, g in ipairs(tramos or {}) do
+        local f0, f1 = base + math.floor(tonumber(g[1]) or 0), base + math.floor(tonumber(g[2]) or 0)
+        local v1 = clip_v1(tl, f0, f1)
+        local fx = false
+        if v1 ~= nil then
+            local ok, nombres = pcall(function() return v1:GetFusionCompNameList() end)
+            for _, n in ipairs((ok and type(nombres) == "table") and nombres or {}) do if n == "CineCaptions FX" then fx = true end end
+        end
+        if v1 ~= nil and not fx and pista then
+            local src0 = math.floor(tonumber(v1:GetLeftOffset()) or 0) + (f0 - v1:GetStart())
+            local it = append(mp, { mediaPoolItem = v1:GetMediaPoolItem(), startFrame = src0, endFrame = src0 + (f1 - f0) - 1, recordFrame = f0, trackIndex = pista, mediaType = 1 })
+            if it ~= nil then
+                copiar_transformacion(v1, it)
+                local ok, r = pcall(function() return it:SetCDL({ NodeIndex = "1", Slope = "1.0 1.0 1.0", Offset = "0.0 0.0 0.0", Power = "1.0 1.0 1.0", Saturation = "0.0" }) end)
+                if ok and r then
+                    pcall(function() it:SetName("PRO · gris") end)
+                    puestos = puestos + 1
+                else
+                    pcall(function() tl:DeleteClips({ it }, false) end)
+                end
+            end
+        end
+    end
+    return puestos
+end
+
 local function main()
     local r, diag, rechazados = obtener_resolve()
     if r == nil then
@@ -631,9 +818,13 @@ local function main()
     local caja = caja_pro(mp)
     local v1_antes = #lista_api(tl:GetItemListInTrack("video", 1))
     local idx = pistas_pro(tl)
-    local fin_pista = {}
+    local hay_iconos = false
+    for _, g in ipairs((type(datos.graficos) == "table") and datos.graficos or {}) do if g.capa == "iconos" then hay_iconos = true end end
+    idx[PISTA_ICONOS] = pista_iconos(tl, hay_iconos)
+    local fin_pista = { [PISTA_ICONOS] = -1 }
     for _, n in ipairs(ORDEN) do fin_pista[n] = -1 end
-    local puestos = { fondo = 0, velo = 0, detras = 0, delante = 0, persona = 0, sonido = 0, broll = 0, encima = 0, movidos = 0 }
+    local puestos = { fondo = 0, velo = 0, detras = 0, delante = 0, iconos = 0, persona = 0, sonido = 0, broll = 0, encima = 0, movidos = 0, punch = 0,
+                      emojis = 0, cambiados = 0, gris = 0 }
     local sin_poner = 0
     -- 1) los graficos OGraf
     local graficos = (type(datos.graficos) == "table") and datos.graficos or {}
@@ -652,17 +843,20 @@ local function main()
                 fin_pista[nombre] = item:GetEnd()
                 pcall(function() item:SetName(tostring(g.nombre or "PRO")) end)
                 pcall(function() item:SetFusionOutputCache("enabled") end)
-                local c = (g.capa == "velo" or g.capa == "detras" or g.capa == "fondo") and g.capa or "delante"
+                local c = (g.capa == "velo" or g.capa == "detras" or g.capa == "fondo" or g.capa == "iconos") and g.capa or "delante"
                 puestos[c] = puestos[c] + 1
             end
         end
     end
     -- 2) el B-roll de stock, debajo de todo
     puestos.broll = poner_broll(tl, mp, caja, (type(datos.broll) == "table") and datos.broll or {}, base, idx["PRO-BROLL"], fps)
-    -- 3) la persona recortada con IA local (ProRes 4444 con alfa recto)
+    puestos.gris = poner_gris(tl, mp, (type(datos.gris) == "table") and datos.gris or {}, base, idx["PRO-GRIS"])
+    -- 3) la persona recortada con IA local (ProRes 4444 con alfa recto); antes, los punch-ins de V1 (el recorte copia su zoom)
+    puestos.punch = punch_ins(tl, (type(datos.punch) == "table") and datos.punch or {})
     local personas = (type(datos.persona) == "table") and datos.persona or {}
     for _, p in ipairs(personas) do
         local f0, f1 = base + math.floor(tonumber(p.ini) or 0), base + math.floor(tonumber(p.fin) or 0)
+        f1 = math.max(f1, fin_detras(tl, idx, f0))
         if f1 - f0 >= 6 and f0 >= fin_pista["PRO-PERSONA"] then
             local item = poner_clip_persona(tl, mp, caja, p, f0, f1, idx["PRO-PERSONA"])
             if item ~= nil then
@@ -674,40 +868,65 @@ local function main()
         end
     end
     -- 4) los captions DETRAS de la persona (la persona en la pista de mas arriba)
-    puestos.encima, puestos.movidos = poner_encima(tl, mp, caja, (type(datos.encima) == "table") and datos.encima or {}, base)
-    -- 5) los sonidos
+    deshacer_subidas(tl)                       -- re-aplicar no apila: primero, todo a su sitio
+    local encima = (type(datos.encima) == "table") and datos.encima or {}
+    puestos.encima, puestos.movidos = poner_encima(tl, mp, caja, encima, base)
+    -- 4b) el resto de los captions, fuera de las caras; y ningun emoji encima de una cara
+    local mover = (type(datos.mover) == "table") and datos.mover or {}
+    puestos.movidos = puestos.movidos + subir_captions(tl, mover, base)
+    local todos = {}
+    for _, e in ipairs(encima) do for _, c in ipairs((type(e.cues) == "table") and e.cues or {}) do todos[#todos + 1] = c end end
+    for _, c in ipairs(mover) do todos[#todos + 1] = c end
+    puestos.emojis = emojis_sin_cara(tl, todos, base)
+    if puestos.iconos > 0 then puestos.cambiados = apagar_emojis(tl, (type(datos.sin_emoji) == "table") and datos.sin_emoji or {}, base) end
+    -- 5) el diseno de sonido: cada familia en su pista (PRO-WHOOSH, PRO-TEXTURA, PRO-RISER, PRO-HIT), clips enteros con su nivel
     local sonidos = (type(datos.sonidos) == "table") and datos.sonidos or {}
-    local ia = indice(tl, PISTA_SONIDO, "audio")
-    if ia then vaciar(tl, ia, "audio") end
-    if #sonidos > 0 then
-        if not ia then
-            local ok = pcall(function() tl:AddTrack("audio", "stereo") end)
-            if not ok then pcall(function() tl:AddTrack("audio") end) end
-            ia = math.floor(tonumber(tl:GetTrackCount("audio")) or 1)
-            tl:SetTrackName("audio", ia, PISTA_SONIDO)
+    local por_pista = {}
+    for _, ev in ipairs(sonidos) do
+        local n = ev.pista or PISTA_SONIDO
+        por_pista[n] = por_pista[n] or {}
+        table.insert(por_pista[n], ev)
+    end
+    local todas_audio = { PISTA_SONIDO, "PRO-WHOOSH", "PRO-TEXTURA", "PRO-RISER", "PRO-HIT" }
+    for _, n in ipairs(todas_audio) do
+        local ia = indice(tl, n, "audio")
+        if ia then
+            vaciar(tl, ia, "audio")
+            if por_pista[n] == nil then pcall(function() tl:DeleteTrack("audio", ia) end) end
         end
-        table.sort(sonidos, function(a, b) return (tonumber(a.ini) or 0) < (tonumber(b.ini) or 0) end)
-        local fin = -1
-        for _, ev in ipairs(sonidos) do
-            local clip = importar(mp, caja, ev.archivo)
-            local ini = base + math.floor(tonumber(ev.ini) or 0)
-            local frames = math.max(2, redondear((tonumber(ev.dur) or 1.0) * fps))
-            if clip ~= nil and ini >= fin then
-                local item = append(mp, { mediaPoolItem = clip, startFrame = 0, endFrame = frames - 1, recordFrame = ini, trackIndex = ia, mediaType = 2 })
-                if item ~= nil then
-                    fin = ini + frames
-                    puestos.sonido = puestos.sonido + 1
-                    pcall(function() item:SetProperty("Volume", tonumber(ev.db) or -9) end)
+    end
+    for _, n in ipairs(todas_audio) do
+        local lista = por_pista[n]
+        if lista then
+            local ia = indice(tl, n, "audio")
+            if not ia then
+                local ok = pcall(function() tl:AddTrack("audio", "stereo") end)
+                if not ok then pcall(function() tl:AddTrack("audio") end) end
+                ia = math.floor(tonumber(tl:GetTrackCount("audio")) or 1)
+                tl:SetTrackName("audio", ia, n)
+            end
+            table.sort(lista, function(x, y) return (tonumber(x.ini) or 0) < (tonumber(y.ini) or 0) end)
+            local fin = -1
+            for _, ev in ipairs(lista) do
+                local clip = importar(mp, caja, ev.archivo)
+                local ini = base + math.floor(tonumber(ev.ini) or 0)
+                local frames = math.max(2, redondear((tonumber(ev.dur) or 1.0) * fps))
+                if clip ~= nil and ini >= fin then
+                    local item = append(mp, { mediaPoolItem = clip, startFrame = 0, endFrame = frames - 1, recordFrame = ini, trackIndex = ia, mediaType = 2 })
+                    if item ~= nil then
+                        fin = ini + frames
+                        puestos.sonido = puestos.sonido + 1
+                        pcall(function() item:SetProperty("Volume", tonumber(ev.db) or -9) end)
+                    end
                 end
             end
         end
-    elseif ia then
-        pcall(function() tl:DeleteTrack("audio", ia) end)
     end
     quitar_vacias(tl)
-    local total = puestos.fondo + puestos.velo + puestos.detras + puestos.delante
-    RESUMEN = string.format("Edicion PRO: %d graficos (%d detras, %d delante, %d escenas, %d velos), %d recortes de persona, captions detras de la persona en %d tramos (%d clips subidos), %d tomas de B-roll, %d sonidos%s.",
-        total, puestos.detras, puestos.delante, puestos.fondo, puestos.velo, puestos.persona, puestos.encima, puestos.movidos, puestos.broll, puestos.sonido,
+    local total = puestos.fondo + puestos.velo + puestos.detras + puestos.delante + puestos.iconos
+    RESUMEN = string.format("Edicion PRO: %d graficos (%d detras, %d delante, %d escenas, %d velos), %d recortes de persona, captions detras de la persona en %d tramos (%d clips movidos, %d emojis apartados de la cara), %d iconos 3D (%d emojis cambiados), %d tramos en gris, %d tomas de B-roll, %d punch-ins, %d sonidos%s.",
+        total, puestos.detras, puestos.delante, puestos.fondo, puestos.velo, puestos.persona, puestos.encima, puestos.movidos, puestos.emojis, puestos.iconos,
+        puestos.cambiados, puestos.gris, puestos.broll, puestos.punch, puestos.sonido,
         sin_poner > 0 and string.format(", %d sin poner", sin_poner) or "")
     print(RESUMEN)
     if #lista_api(tl:GetItemListInTrack("video", 1)) < v1_antes then fail("ATENCION: V1 perdio clips al colocar la Edicion PRO") end

@@ -1,5 +1,5 @@
 // CineCaptions · Edición PRO — «Etiqueta»: pie de foto numerado, ubicación con pin o rótulo de nombre (una línea grande + antetítulo).
-import { PiezaPro, el, esc, tiempos, P, E, FAMILIA, PESO, clamp, icono } from './lib/motor.js';
+import { PiezaPro, el, esc, tiempos, P, E, S, FAMILIA, PESO, clamp, icono } from './lib/motor.js';
 
 export default class Etiqueta extends PiezaPro {
   static DEFAULTS = {
@@ -46,7 +46,7 @@ export default class Etiqueta extends PiezaPro {
     if (this.r) this.r.style.transform = `scaleX(${Math.max(0.001, P(t, t0, 0.45, E.io3)).toFixed(3)})`;
     if (this.n) this.n.style.opacity = P(t, t0, 0.35).toFixed(3);
     if (this.p) { const pp = clamp((t - t0) / 0.5); this.p.style.transform = `translateY(${((1 - E.out4(pp)) * -60 * this.U).toFixed(1)}px)`; this.p.style.opacity = clamp(pp * 3).toFixed(3); }
-    const pt = P(t, t0 + 0.12, 0.5, E.out4);
+    const pt = S(t, t0 + 0.12, 'firme');
     this.t.style.opacity = clamp(pt * 1.6).toFixed(3);
     this.t.style.transform = `translateY(${((1 - pt) * 22 * this.U).toFixed(1)}px)`;
     const ax = s.alinear === 'der' ? 100 : s.alinear === 'centro' ? 50 : 0;

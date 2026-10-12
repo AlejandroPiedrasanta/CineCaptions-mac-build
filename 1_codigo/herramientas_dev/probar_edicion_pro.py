@@ -105,6 +105,9 @@ def main():
                 import subprocess
                 subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(mp4), '-vf', 'fps=1/1.5,scale=216:-1,tile=10x2', '-frames:v', '1', str(carpeta / 'hoja_pro.png')])
                 print('hoja:', carpeta / 'hoja_pro.png')
+            time.sleep(6)                                                   # tras un render, volver a Edición ANTES de cambiar de proyecto (si no, Resolve se colgó)
+            print('a edición:', resolve_mcp.script("resolve.OpenPage('edit'); result = resolve.GetCurrentPage()", timeout=58)[1])
+            time.sleep(4)
     finally:
         if not a.sin_salir:
             print('salir:', PP.salir())

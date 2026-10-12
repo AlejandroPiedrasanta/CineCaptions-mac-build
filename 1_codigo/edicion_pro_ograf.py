@@ -24,7 +24,7 @@ import zipfile
 from pathlib import Path
 
 SCHEMA_URL = 'https://ograf.ebu.io/v1/specification/json-schemas/graphics/schema.json'
-VERSION_PIEZAS = '1.0.0'
+VERSION_PIEZAS = '1.1.0'
 
 
 def carpeta_ograf() -> Path:
@@ -114,17 +114,38 @@ ICONOS_CONCEPTO = {'camera': 'Cámara', 'clapperboard': 'Claqueta', 'film': 'Pel
                    'image': 'Foto', 'palette': 'Paleta', 'lightbulb': 'Idea', 'rocket': 'Cohete', 'target': 'Meta', 'smartphone': 'Teléfono',
                    'mail': 'Correo', 'messageSquare': 'Mensaje', 'bell': 'Aviso', 'timer': 'Temporizador', 'hourglass': 'Reloj de arena',
                    'graduationCap': 'Graduación', 'briefcase': 'Maletín', 'thumbsUp': 'Me gusta', 'zap': 'Rayo', 'pin': 'Ubicación', 'estrella': 'Estrella',
+                   'bed': 'Recámara', 'bath': 'Baño', 'trees': 'Jardín', 'waves': 'Agua', 'car': 'Cochera', 'cake': 'Pastel', 'gem': 'Joya',
+                   'wine': 'Vino', 'chefHat': 'Chef', 'coffee': 'Café', 'pizza': 'Pizza', 'aperture': 'Lente', 'mountain': 'Montaña', 'sofa': 'Sala',
+                   'ruler': 'Terreno', 'flower': 'Flores', 'heartHandshake': 'Amor', 'plane': 'Viaje', 'shieldCheck': 'Seguridad', 'map': 'Mapa',
                    'scissors': 'Tijeras', 'wrench': 'Herramienta'}
+ICONOS3D = {'bell-dynamic-color': 'Campana', 'bell-dynamic-premium': 'Campana (oscura)', 'calendar-dynamic-color': 'Calendario',
+            'calendar-dynamic-premium': 'Calendario (oscuro)', 'camera-dynamic-premium': 'Cámara', 'crown-dynamic-color': 'Corona',
+            'explorer-front-color': 'Brújula', 'fire-front-color': 'Fuego', 'flag-dynamic-color': 'Bandera', 'key-front-premium': 'Llave',
+            'lock-front-premium': 'Candado', 'megaphone-dynamic-color': 'Megáfono', 'money-dynamic-premium': 'Dinero (oro)',
+            'money-front-color': 'Dinero', 'notify-heart-front-color': 'Me gusta', 'picture-dynamic-premium': 'Foto', 'ribbon-dynamic-color': 'Moño',
+            'thumb-down-dynamic-color': 'Pulgar abajo', 'travel-dynamic-color': 'Maleta', 'wallet-front-premium': 'Cartera'}
 ESQUEMAS['fondo'] = {'nombre': 'Fondo animado (B-roll)', 'salida_ms': 350, 'props': [
     ('estilo', _sel('Estilo', 'aurora', {'aurora': 'Aurora', 'rejilla': 'Rejilla', 'puntos': 'Puntos', 'liso': 'Liso'})),
     ('entrada', _sel('Entrada', 'iris', {'iris': 'Iris', 'cortina': 'Cortina', 'fundido': 'Fundido'})),
     ('color1', _color('Color 1 (acento)', '#c9a46a')), ('color2', _color('Color 2 (fondo)', '#121110')), ('color3', _color('Color 3', '#3a2f22')),
     ('intensidad', _num('Intensidad', 0.75, 0, 1))]}
 ESQUEMAS['icono'] = {'nombre': 'Concepto con icono', 'salida_ms': 350, 'props': [
-    ('icono', _sel('Icono', 'camera', ICONOS_CONCEPTO)), ('texto', _texto('Texto', 'CONCEPTO')), ('kicker', _texto('Antetítulo')),
+    ('icono', _sel('Icono', 'camera', ICONOS_CONCEPTO)), ('imagen', _sel('Icono 3D (sustituye al dibujo)', '', {'': 'Ninguno', **ICONOS3D})),
+    ('texto', _texto('Texto', 'CONCEPTO')), ('kicker', _texto('Antetítulo')),
     ('fuente', _sel('Tipografía', 'grotesk', FUENTES)), ('acento', _color('Acento', '#c9a46a')), ('colorTexto', _color('Texto', '#ffffff')),
     *_POS(50, 42), ('tiempos', _texto('Tiempos (s)', '0,0.35'))]}
-FUENTES_DE = {'velo': [], 'fondo': []}           # las que no usan texto no llevan fuentes (paquete más ligero)
+ESQUEMAS['icono3d'] = {'nombre': 'Icono 3D flotante', 'salida_ms': 300, 'props': [
+    ('imagen', _sel('Icono 3D', 'fire-front-color', ICONOS3D)), ('tamano', _num('Tamaño (% del alto)', 16, 3, 60)),
+    ('brillo', _num('Brillo', 0.7, 0, 1)), ('acento', _color('Color del resplandor', '#ffb020')), ('flotar', _num('Flotar', 1, 0, 3)),
+    ('giro', _num('Balanceo (°)', 8, 0, 30)), ('x', _num('Posición X (%)', 82, 0, 100)), ('y', _num('Posición Y (%)', 30, 0, 100)),
+    ('tiempos', _texto('Tiempos (s)', '0'))]}
+ESQUEMAS['orbita'] = {'nombre': 'Órbita de iconos (gancho)', 'salida_ms': 350, 'props': [
+    ('iconos', _texto('Iconos (separados por comas)', 'casa,key,bed,waves')), ('imagenes', _texto('Iconos 3D (separados por comas)')),
+    ('mitad', _sel('Mitad', 'todo', {'todo': 'Toda la órbita', 'atras': 'Solo la de atrás (debajo de la persona)', 'delante': 'Solo la de delante'})),
+    ('acento', _color('Acento', '#c9a46a')), ('colorTexto', _color('Iconos', '#ffffff')),
+    ('rx', _num('Radio horizontal (%)', 22, 3, 50)), ('ry', _num('Radio vertical (%)', 4.5, 0.5, 20)), ('inclinacion', _num('Inclinación (°)', -8, -45, 45)),
+    ('vueltas', _num('Vueltas por segundo', 0.32, 0.05, 2)), *_POS(50, 30), ('tiempos', _texto('Tiempos (s)', '0'))]}
+FUENTES_DE = {'velo': [], 'fondo': [], 'orbita': [], 'icono3d': []}           # las que no usan texto no llevan fuentes (paquete más ligero)
 
 
 def _normalizar(pieza, valores):
@@ -190,15 +211,27 @@ def js_empaquetado(pieza):
     base = carpeta_ograf()
     motor = (base / 'lib' / 'motor.js').read_text(encoding='utf-8')
     motor = re.sub(r'^export (const|function|class|async function|let) ', r'\1 ', motor, flags=re.M)
-    motor = motor.replace("'./fonts/'", "'./lib/fonts/'")
+    motor = motor.replace("'./fonts/'", "'./lib/fonts/'").replace("'./iconos3d/'", "'./lib/iconos3d/'")
     pieza_js = (base / pieza / 'pieza.js').read_text(encoding='utf-8')
     pieza_js = re.sub(r"^import [^;]*from '\./lib/motor\.js';[ \t]*$", '', pieza_js, flags=re.M)
     return motor + '\n' + pieza_js
 
 
-def _archivos_de(pieza):
-    """(ruta en el ZIP sin la carpeta raíz, ruta en disco) de lo que lleva una pieza ADEMÁS de pieza.js (que va empaquetado)."""
+def iconos3d():
+    """Los iconos 3D disponibles (3dicons, CC0): nombre → ruta del PNG."""
+    return {f.stem: f for f in sorted((carpeta_ograf() / 'lib' / 'iconos3d').glob('*.png'))}
+
+
+def _archivos_de(pieza, valores=None):
+    """(ruta en el ZIP sin la carpeta raíz, ruta en disco) de lo que lleva una pieza ADEMÁS de pieza.js (que va empaquetado): sus fuentes y
+    solo los iconos 3D que nombra (`imagen`, `imagenes`)."""
     base = carpeta_ograf()
+    v = valores or {}
+    nombres = [str(v.get('imagen') or '')] + str(v.get('imagenes') or '').split(',')
+    disp = iconos3d()
+    for n in dict.fromkeys(x.strip() for x in nombres if x and x.strip()):
+        if n in disp:
+            yield f'lib/iconos3d/{n}.png', disp[n]
     fuentes = base / 'lib' / 'fonts'
     if FUENTES_DE.get(pieza, None) != []:
         for f in sorted(fuentes.glob('*.woff2')):
@@ -238,7 +271,7 @@ def construir(pieza, valores, duracion_s, carpeta, fps=30.0, prefijo='pro', anch
     with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr(f'{nombre}/manifest.ograf.json', json.dumps(man, ensure_ascii=False, indent=1))
         z.writestr(f'{nombre}/pieza.js', js_empaquetado(pieza))
-        for dentro, real in _archivos_de(pieza):
+        for dentro, real in _archivos_de(pieza, vals):
             z.write(real, f'{nombre}/{dentro}')
     os.replace(tmp, destino)
     return destino
@@ -271,7 +304,8 @@ def instalar_plantillas():
             man = manifiesto(pieza, None, 5.0)
             (d / 'manifest.ograf.json').write_text(json.dumps(man, ensure_ascii=False, indent=1), encoding='utf-8')
             (d / 'pieza.js').write_text(js_empaquetado(pieza), encoding='utf-8')
-            for dentro, real in _archivos_de(pieza):
+            todas = {'imagenes': ','.join(iconos3d())} if pieza in ('icono3d', 'orbita', 'icono') else None     # en la caja: todos los iconos 3D
+            for dentro, real in _archivos_de(pieza, todas):
                 (d / dentro).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(real, d / dentro)
         return destino

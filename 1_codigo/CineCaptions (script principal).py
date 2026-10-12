@@ -7374,6 +7374,8 @@ class SubtitleApp(QWidget):
             return
         menu = Menu(self)
         menu.agregar(('✓  ' + tr('Edición PRO activada · desactivar')) if activa else ('      ' + tr('Activar la Edición PRO')), self._alternar_pro_go)
+        if activa:                             # v5.4.49: la PRO sustituye a los efectos visuales (intro, gancho, punch-ins, motion graphics)
+            menu.agregar('      ' + tr('(los efectos visuales se apagan: la PRO hace la intro, el gancho y los motion graphics)'), lambda: None)
         menu.separador()
         for clave, nombre in edicion_pro.NOMBRES_GENERO.items():
             marca = '✓  ' if op.get('pro_genero', 'auto') == clave else '      '
@@ -11214,7 +11216,10 @@ class SubtitleApp(QWidget):
         self._efectos_plan = None
         try:
             import efectos_visuales
-            visuales = efectos_visuales.activado()
+            import edicion_pro
+            # v5.4.49: con la Edición PRO activa, los efectos VISUALES se apagan: la PRO hace la intro, el gancho, los punch-ins y los motion graphics
+            # (y el zoom de Efectos sobre V1 desalinearía el recorte de la persona). El audio extra (música, riser del gancho) sigue.
+            visuales = efectos_visuales.activado() and not edicion_pro.activado()
             if visuales:
                 if avisar:
                     self.msg_queue.put(('status', tr('Preparando los efectos visuales…')))

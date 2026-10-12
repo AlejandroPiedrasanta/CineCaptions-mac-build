@@ -1,6 +1,6 @@
 // CineCaptions · Edición PRO — «Cifra»: un dato que se dice (3 acres, 15 años, 40 %): número grande que sube por una ranura, unidad y etiqueta.
 // El número sale ENTERO (nunca cifras intermedias: un fotograma pausado parecería un dato real).
-import { PiezaPro, el, esc, tiempos, P, E, FAMILIA, PESO, clamp } from './lib/motor.js';
+import { PiezaPro, el, esc, tiempos, P, E, S, FAMILIA, PESO, clamp } from './lib/motor.js';
 
 export default class Cifra extends PiezaPro {
   static DEFAULTS = {
@@ -59,9 +59,9 @@ export default class Cifra extends PiezaPro {
 
   pintar(t, q, s) {
     if (!this.caja) return;
-    const pn = P(t, this.ts[0] - 0.04, 0.55, E.out4);
+    const pn = S(t, this.ts[0] - 0.04, 'rebote', 0.7);          // resorte de Motion: la cifra se pasa y vuelve
     this.num.style.transform = `translateY(${((1 - pn) * 105).toFixed(2)}%)`;
-    const pu = P(t, this.ts[1] - 0.04, 0.45, E.out4);
+    const pu = S(t, this.ts[1] - 0.04, 'firme');
     this.uni.style.opacity = clamp(pu * 2).toFixed(3);
     this.uni.style.transform = `translateX(${((1 - pu) * -24 * this.U).toFixed(1)}px)`;
     const pe = P(t, this.ts[2] - 0.04, 0.45, E.out3);

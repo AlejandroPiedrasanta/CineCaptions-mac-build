@@ -12,7 +12,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (7 archivos)
+    herramientas_dev\   (9 archivos)
+        generar_resortes.js
         probar_ciclos_go.py
             repite el GO N veces seguidas con un pack y cuenta fallos/tiempos (cuelgues intermitentes de Resolve). SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
         probar_cuelgue_resolve.py
@@ -27,6 +28,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             suspende Resolve ANTES de pulsar GO: la revisión previa (colocacion.preparar_resolve_para_go) debe reiniciarlo y terminar bien. SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
         probar_ventanas_humo.py
             humo de TODAS las ventanas sin pantalla ni Resolve: crea la app, recorre sus páginas, abre cada ventana y escribe una «huella» de widgets y textos para comparar antes/después de mover código entre módulos.
+        resortes_motion.py
+            mete en el motor OGraf de la Edición PRO las curvas de resorte de Motion (motion.dev).
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -77,6 +80,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         Edición PRO: dónde está la persona (IA local) para el Magic Mask de Resolve, y su recorte si no hay Magic Mask.
     edicion_pro_planificador.py
         Edición PRO: qué gráfico va en cada momento de CUALQUIER video (sin Resolve, sin pantalla: se prueba solo).
+    edicion_pro_sonido.py
+        el diseño de sonido de la «Edición PRO»: cada gráfico suena como lo haría un editor profesional.
     editor_ui.py
         piezas del editor Creativo: barra de herramientas, tarjeta del párrafo, palabras por línea, play y el panel de avance de Asistencia/Generar.
     efectos_extra.py

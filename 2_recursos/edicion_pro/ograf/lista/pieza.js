@@ -1,5 +1,5 @@
 // CineCaptions · Edición PRO — «Lista»: pasos, datos o ventajas que se van sumando con la voz (en columna o en fichas).
-import { PiezaPro, el, esc, tiempos, P, E, FAMILIA, PESO, clamp, icono, bump, sobre } from './lib/motor.js';
+import { PiezaPro, el, esc, tiempos, P, E, S, FAMILIA, PESO, clamp, icono, bump, sobre } from './lib/motor.js';
 
 export default class Lista extends PiezaPro {
   static DEFAULTS = {
@@ -66,7 +66,7 @@ export default class Lista extends PiezaPro {
     const pk = P(t, this.ts[0] - 0.04, 0.45, E.out4);
     this.kick.style.opacity = pk.toFixed(3);
     this.filas.forEach((f, i) => {
-      const p = P(t, this.ts[i + 1] - 0.04, 0.5, E.out4), w = bump(t, this.ts[this.ts.length - 1] + 0.5 + i * 0.07, 0.3);
+      const p = S(t, this.ts[i + 1] - 0.04, 'firme'), w = bump(t, this.ts[this.ts.length - 1] + 0.5 + i * 0.07, 0.3);
       f.style.opacity = clamp(p * 1.8).toFixed(3);
       f.style.transform = `translateY(${((1 - p) * 34 * this.U - 8 * this.U * w).toFixed(1)}px) scale(${(0.94 + 0.06 * p).toFixed(4)})`;
     });

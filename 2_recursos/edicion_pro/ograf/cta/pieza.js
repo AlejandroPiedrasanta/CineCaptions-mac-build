@@ -1,5 +1,5 @@
 // CineCaptions · Edición PRO — «Llamada a la acción»: la ficha del final (título, hasta tres datos dichos en el video y un botón).
-import { PiezaPro, el, esc, tiempos, P, E, FAMILIA, PESO, clamp, icono, bump, sobre } from './lib/motor.js';
+import { PiezaPro, el, esc, tiempos, P, E, S, FAMILIA, PESO, clamp, icono, bump, sobre } from './lib/motor.js';
 
 export default class Cta extends PiezaPro {
   static DEFAULTS = {
@@ -46,7 +46,7 @@ export default class Cta extends PiezaPro {
     if (!this.caja) return;
     const p = P(t, this.ts[0] - 0.06, 0.6, E.out4);
     this.bar.style.transform = `scaleX(${Math.max(0.001, P(t, this.ts[0] + 0.1, 0.6, E.io3)).toFixed(3)})`;
-    const sube = (e, t0) => { const pe = P(t, t0, 0.45, E.out4); e.style.opacity = clamp(pe * 1.7).toFixed(3); e.style.transform = `translateY(${((1 - pe) * 18 * this.U).toFixed(1)}px)`; };
+    const sube = (e, t0) => { const pe = S(t, t0, 'firme'); e.style.opacity = clamp(pe * 1.7).toFixed(3); e.style.transform = `translateY(${((1 - pe) * 18 * this.U).toFixed(1)}px)`; };
     sube(this.k, this.ts[0] + 0.05); sube(this.t, this.ts[1]);
     this.rows.forEach((r, i) => sube(r, this.ts[2 + i]));
     sube(this.btn, this.ts[5]);

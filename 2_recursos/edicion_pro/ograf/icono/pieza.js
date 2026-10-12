@@ -1,11 +1,11 @@
 // CineCaptions · Edición PRO — «Icono»: el concepto que se nombra («boda», «precio», «clientes»…) como infografía: un icono grande que se
 // dibuja dentro de un anillo del acento y la palabra debajo. Va encima del «Fondo» (B-roll de motion graphics) o sobre el video.
-import { PiezaPro, el, esc, tiempos, P, E, FAMILIA, PESO, clamp, ICONOS, bump } from './lib/motor.js';
+import { PiezaPro, el, esc, tiempos, P, E, S, FAMILIA, PESO, clamp, ICONOS, bump, IMG3D } from './lib/motor.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
 export default class Icono extends PiezaPro {
-  static DEFAULTS = { icono: 'camera', texto: 'CONCEPTO', kicker: '', fuente: 'grotesk', acento: '#c9a46a', colorTexto: '#ffffff', escala: 1, x: 50, y: 42, tiempos: '0,0.35' };
+  static DEFAULTS = { icono: 'camera', imagen: '', texto: 'CONCEPTO', kicker: '', fuente: 'grotesk', acento: '#c9a46a', colorTexto: '#ffffff', escala: 1, x: 50, y: 42, tiempos: '0,0.35' };
   static SALIDA = 0.35;
   static CSS = `
   .ic{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*26)}
@@ -29,6 +29,15 @@ export default class Icono extends PiezaPro {
     ring.appendChild(svg);
     this.aro = svg.querySelector('circle');
     this.trazos = [...svg.querySelectorAll('g *')];
+    this.img3d = null;
+    if (s.imagen) {                                                  // icono 3D: sustituye al dibujo de líneas, flotando dentro del aro
+      svg.querySelector('g').remove();
+      this.trazos = [];
+      this.img3d = el('img', '', ring);
+      this.img3d.src = IMG3D(s.imagen);
+      Object.assign(this.img3d.style, { position: 'absolute', left: (D * 0.14) + 'px', top: (D * 0.12) + 'px', width: (D * 0.72) + 'px', height: (D * 0.72) + 'px',
+                                        objectFit: 'contain', filter: `drop-shadow(0 ${0.04 * D}px ${0.05 * D}px rgba(0,0,0,.5)) drop-shadow(0 0 ${0.05 * D}px ${s.acento})` });
+    }
     this.trazos.forEach(p => p.setAttribute('pathLength', '1'));
     this.ringEl = ring;
     this.tx = el('div', 'tx', this.caja, esc(s.texto || ''));
@@ -42,11 +51,15 @@ export default class Icono extends PiezaPro {
     const t0 = this.ts[0];
     this.aro.style.strokeDasharray = `${P(t, t0, 0.7, E.io3).toFixed(4)} 1`;
     this.trazos.forEach((p, i) => { p.style.strokeDasharray = `${P(t, t0 + 0.15 + i * 0.06, 0.6, E.io3).toFixed(4)} 1`; });
-    const pr = P(t, t0, 0.5, E.back), latido = bump(t, this.ts[1] + 0.5, 0.35);
+    if (this.img3d) {
+      const pi = S(t, t0 + 0.1, 'rebote', 0.8);
+      this.img3d.style.transform = `translateY(${(Math.sin((t - t0) * 2.1) * 0.03 * 380 * this.U).toFixed(1)}px) rotate(${(Math.sin((t - t0) * 1.3) * 5).toFixed(2)}deg) scale(${Math.max(0.001, pi).toFixed(4)})`;
+    }
+    const pr = S(t, t0, 'rebote', 0.8), latido = bump(t, this.ts[1] + 0.5, 0.35);
     this.ringEl.style.transform = `scale(${(lerpS(0.6, 1, pr) * (1 + 0.04 * latido)).toFixed(4)})`;
     const pk = P(t, t0 + 0.05, 0.4, E.out3);
     this.k.style.opacity = pk.toFixed(3);
-    const pt = P(t, this.ts[1] - 0.04, 0.45, E.out4);
+    const pt = S(t, this.ts[1] - 0.04, 'firme');
     this.tx.style.opacity = clamp(pt * 1.6).toFixed(3);
     this.tx.style.transform = `translateY(${((1 - pt) * 26 * this.U).toFixed(1)}px)`;
     this.put(this.caja, { x: this.W * (+s.x / 100), y: this.H * (+s.y / 100) - q * 24 * this.U, o: (t >= t0 - 0.05 ? 1 : 0) * (1 - q), b: q * 6 * this.U });

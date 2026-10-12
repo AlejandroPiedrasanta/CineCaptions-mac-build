@@ -484,6 +484,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.50', [
+        'Edición PRO más pro: el gancho del principio con iconos 3D que giran alrededor de la cabeza (Magic Mask), iconos 3D flotando junto a los captions en vez del emoji plano, escenas con la persona delante de un fondo animado e infografías que entran con resortes. Y nada tapa nunca la cara: ni captions, ni emojis, ni gráficos.',
+        'Con la Edición PRO activa se apagan los Efectos visuales (la PRO hace la intro, el gancho, los punch-ins en los saltos y los motion graphics), ya no repite lo que dicen los captions, los sonidos suenan justo cuando entra cada gráfico y, cuando se dice algo malo, el plano se pone en gris.',
+    ]),
     ('5.4.49', [
         'Nuevo: «Edición PRO». Actívala en el chip «Edición PRO» de Inicio o en el panel de los Temas 1–4 y GO, además de los captions, edita el video en la línea de tiempo de Resolve: titulares detrás de la persona (Magic Mask de Resolve Studio), cifras, listas, marcos, ficha final y sonidos.',
         'Cada video tiene su propio estilo (bodas, XV años, restaurantes, inmobiliaria, detrás de cámara o general, detectado solo o elegido por ti) y su propia combinación de colores y tipografías. Todo queda editable en el Inspector de Resolve.',

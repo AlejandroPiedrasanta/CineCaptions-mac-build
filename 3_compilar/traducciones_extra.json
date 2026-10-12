@@ -5402,5 +5402,12 @@
   "fr": "Montage PRO : je cherche les plans de B-roll…",
   "de": "PRO-Schnitt: suche die B-Roll-Aufnahmen…",
   "it": "Montaggio PRO: cerco le riprese di B-roll…"
+ },
+ "(los efectos visuales se apagan: la PRO hace la intro, el gancho y los motion graphics)": {
+  "en": "(visual effects are turned off: PRO does the intro, the hook and the motion graphics)",
+  "pt": "(os efeitos visuais são desligados: o PRO faz a intro, o gancho e os motion graphics)",
+  "fr": "(les effets visuels sont désactivés : le PRO fait l’intro, l’accroche et les motion graphics)",
+  "de": "(die visuellen Effekte werden ausgeschaltet: PRO macht Intro, Hook und Motion Graphics)",
+  "it": "(gli effetti visivi si spengono: il PRO fa l’intro, il gancio e i motion graphics)"
  }
 }

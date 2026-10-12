@@ -1,5 +1,5 @@
 // CineCaptions · Edición PRO — «Rótulo»: una frase que tiene que quedarse, en bloques que se levantan (la segunda línea, en el acento).
-import { PiezaPro, el, esc, tiempos, clamp, P, E, FAMILIA, PESO, sobre } from './lib/motor.js';
+import { PiezaPro, el, esc, tiempos, clamp, P, E, S, FAMILIA, PESO, sobre } from './lib/motor.js';
 
 export default class Rotulo extends PiezaPro {
   static DEFAULTS = {
@@ -32,7 +32,7 @@ export default class Rotulo extends PiezaPro {
   pintar(t, q, s) {
     if (!this.caja) return;
     this.bl.forEach((b, i) => {
-      const p = P(t, this.ts[i] - 0.04, 0.45, E.out4);
+      const p = S(t, this.ts[i] - 0.04, 'firme');
       b.style.transform = `rotateX(${((1 - p) * 85).toFixed(2)}deg) translateY(${((1 - p) * 30 * this.U).toFixed(1)}px)`;
       b.style.opacity = clamp(p * 2.5).toFixed(3);
     });

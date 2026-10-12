@@ -38,8 +38,8 @@ export default class Fondo extends PiezaPro {
     if (this.rej) this.rej.style.backgroundPosition = `${(t * 8 * this.U).toFixed(1)}px ${(t * 5 * this.U).toFixed(1)}px`;
     // entrada y salida
     const p = P(t, 0, 0.45, E.io3), cierre = q > 0 ? 1 - E.io3(q) : 1, v = Math.min(p, cierre);
-    if (s.entrada === 'iris') {
-      this.f.style.clipPath = `circle(${(v * 75).toFixed(2)}% at 50% 50%)`;
+    if (s.entrada === 'iris') {                          // el iris nace abajo (no en el centro: ahí está la cara y parecería una mancha)
+      this.f.style.clipPath = `circle(${(v * 140).toFixed(2)}% at 50% 108%)`;
       this.f.style.opacity = '1';
     } else if (s.entrada === 'cortina') {
       this.f.style.clipPath = `inset(0 ${((1 - v) * 100).toFixed(2)}% 0 0)`;

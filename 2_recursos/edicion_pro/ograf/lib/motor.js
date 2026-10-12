@@ -25,6 +25,19 @@ export const E = {
 };
 /* progreso 0..1 de algo que empieza en t0 y dura d */
 export const P = (t, t0, d, e = E.out3) => e(clamp((t - t0) / Math.max(d, 1e-6)));
+/* RESORTES:INICIO (lo escribe 1_codigo/herramientas_dev/resortes_motion.py: no lo edites a mano) */
+/* Resortes de Motion (motion.dev, MIT): tablas de 65 muestras de 0 a d segundos (lo que tarda en quedarse quieto). */
+export const RESORTES = {
+  suave: { d: 0.739, k: 140, a: 20, v: [0,0.0086,0.032,0.0666,0.1097,0.1587,0.2115,0.2666,0.3226,0.3783,0.4328,0.4855,0.536,0.5837,0.6285,0.6703,0.7089,0.7445,0.7769,0.8064,0.833,0.8569,0.8782,0.8972,0.914,0.9287,0.9416,0.9528,0.9625,0.9708,0.9779,0.9839,0.9889,0.9931,0.9965,0.9993,1.0015,1.0032,1.0046,1.0055,1.0062,1.0067,1.0069,1.007,1.0069,1.0067,1.0065,1.0062,1.0059,1.0055,1.0051,1.0047,1.0043,1.004,1.0036,1.0032,1.0029,1.0026,1.0023,1.002,1.0018,1.0016,1.0014,1.0012,1] },
+  firme: { d: 0.493, k: 320, a: 26, v: [0,0.0089,0.0332,0.0697,0.1155,0.1682,0.2257,0.286,0.3477,0.4093,0.4699,0.5287,0.5848,0.6379,0.6876,0.7336,0.7759,0.8143,0.849,0.8799,0.9073,0.9314,0.9522,0.9701,0.9852,0.9979,1.0083,1.0166,1.0232,1.0282,1.0317,1.0341,1.0355,1.036,1.0358,1.035,1.0338,1.0322,1.0303,1.0283,1.0261,1.0239,1.0217,1.0195,1.0174,1.0153,1.0134,1.0116,1.0099,1.0084,1.0069,1.0057,1.0045,1.0035,1.0026,1.0019,1.0012,1.0006,1.0002,0.9998,0.9995,0.9992,0.999,0.9989,1] },
+  rebote: { d: 1.052, k: 210, a: 13, v: [0,0.0263,0.0971,0.2002,0.3241,0.4585,0.5946,0.7251,0.8445,0.9489,1.0357,1.104,1.1539,1.1864,1.2031,1.2063,1.1984,1.1819,1.1594,1.1331,1.105,1.0771,1.0505,1.0266,1.0059,0.9888,0.9756,0.9662,0.9604,0.9576,0.9576,0.9597,0.9634,0.9683,0.9739,0.9797,0.9854,0.9908,0.9956,0.9997,1.003,1.0056,1.0073,1.0084,1.0088,1.0087,1.0082,1.0073,1.0063,1.0051,1.0039,1.0027,1.0016,1.0007,0.9999,0.9992,0.9987,0.9984,1,1,1,1,0.9985,0.9988,1] },
+  elastico: { d: 1.484, k: 260, a: 9, v: [0,0.0645,0.2336,0.4663,0.7218,0.9639,1.1648,1.3074,1.3848,1.3996,1.3618,1.286,1.1888,1.0864,0.9925,0.9172,0.8664,0.8419,0.8417,0.8612,0.8944,0.9345,0.9753,1.0114,1.0393,1.0571,1.0643,1.0622,1.0528,1.0385,1.0221,1.0061,0.9923,0.9821,0.976,0.9741,0.9757,0.9801,0.9862,0.9928,0.9991,1.0043,1.008,1.01,1.0104,1.0094,1.0074,1.0049,1.0022,0.9998,0.9979,0.9965,0.9959,0.9959,0.9964,0.9973,0.9983,0.9994,1.0003,1.001,1.0015,1,1,1.0014,1] },
+};
+const _resorte = v => p => { if (p <= 0) return 0; if (p >= 1) return 1; const x = p * (v.length - 1), i = Math.floor(x); return v[i] + (v[i + 1] - v[i]) * (x - i); };
+for (const [n, r] of Object.entries(RESORTES)) E[n] = _resorte(r.v);
+/* progreso con resorte: S(t, t0, 'rebote') (la duración es la del resorte; `vel` la acorta o alarga) */
+export const S = (t, t0, nombre = 'firme', vel = 1) => { const r = RESORTES[nombre] || RESORTES.firme; return E[nombre in RESORTES ? nombre : 'firme']((t - t0) / (r.d * vel)); };
+/* RESORTES:FIN */
 /* 0 -> 1 -> 0 entre t0 y t0 + d */
 export const bump = (t, t0, d) => (t < t0 || t > t0 + d ? 0 : Math.sin((Math.PI * (t - t0)) / d));
 
@@ -118,6 +131,27 @@ export const ICONOS = {
 };
 /* más iconos Lucide (lucide.dev, ISC) para las infografías de concepto: copiados tal cual de la plantilla de animaciones */
 const ICONOS_LUCIDE = {
+  /* iconos de tema (Lucide, ISC; vía Supericons): casa, boda/XV, restaurante, detrás de cámara */
+  bed: '<path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M12 4v6"/><path d="M2 18h20"/>',
+  bath: '<path d="M10 4 8 6"/><path d="M17 19v2"/><path d="M2 12h20"/><path d="M7 19v2"/><path d="M9 5 7.621 3.621A2.121 2.121 0 0 0 4 5v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/>',
+  trees: '<path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6"/><path d="M13 19v3"/><path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5"/>',
+  waves: '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
+  car: '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+  cake: '<path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/>',
+  gem: '<path d="M10.5 3 8 9l4 13 4-13-2.5-6"/><path d="M17 3a2 2 0 0 1 1.6.8l3 4a2 2 0 0 1 .013 2.382l-7.99 10.986a2 2 0 0 1-3.247 0l-7.99-10.986A2 2 0 0 1 2.4 7.8l2.998-3.997A2 2 0 0 1 7 3z"/><path d="M2 9h20"/>',
+  wine: '<path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/>',
+  chefHat: '<path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"/><path d="M6 17h12"/>',
+  coffee: '<path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/>',
+  pizza: '<path d="m12 14-1 1"/><path d="m13.75 18.25-1.25 1.42"/><path d="M17.775 5.654a15.68 15.68 0 0 0-12.121 12.12"/><path d="M18.8 9.3a1 1 0 0 0 2.1 7.7"/><path d="M21.964 20.732a1 1 0 0 1-1.232 1.232l-18-5a1 1 0 0 1-.695-1.232A19.68 19.68 0 0 1 15.732 2.037a1 1 0 0 1 1.232.695z"/>',
+  aperture: '<circle cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94"/><path d="M9.69 8h11.48"/><path d="m7.38 12 5.74-9.94"/><path d="M9.69 16 3.95 6.06"/><path d="M14.31 16H2.83"/><path d="m16.62 12-5.74 9.94"/>',
+  mountain: '<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>',
+  sofa: '<path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 16a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/><path d="M4 18v2"/><path d="M20 18v2"/><path d="M12 4v9"/>',
+  ruler: '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>',
+  flower: '<path d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1"/><circle cx="12" cy="8" r="2"/><path d="M12 10v12"/><path d="M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z"/><path d="M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z"/>',
+  heartHandshake: '<path d="M19.414 14.414C21 12.828 22 11.5 22 9.5a5.5 5.5 0 0 0-9.591-3.676.6.6 0 0 1-.818.001A5.5 5.5 0 0 0 2 9.5c0 2.3 1.5 4 3 5.5l5.535 5.362a2 2 0 0 0 2.879.052 2.12 2.12 0 0 0-.004-3 2.124 2.124 0 1 0 3-3 2.124 2.124 0 0 0 3.004 0 2 2 0 0 0 0-2.828l-1.881-1.882a2.41 2.41 0 0 0-3.409 0l-1.71 1.71a2 2 0 0 1-2.828 0 2 2 0 0 1 0-2.828l2.823-2.762"/>',
+  plane: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  shieldCheck: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  map: '<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>',
   gift: '<path d="M12 7v14"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5"/><rect x="3" y="7" width="18" height="4" rx="1"/>',
   music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
   bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
@@ -164,6 +198,8 @@ const ICONOS_LUCIDE = {
   zap: '<path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"/>',
 };
 Object.assign(ICONOS, ICONOS_LUCIDE);
+/* iconos 3D (3dicons, CC0): la imagen va dentro del .ograf, en lib/iconos3d/ (solo las que usa la pieza) */
+export const IMG3D = n => new URL('./iconos3d/' + String(n || '').replace(/[^a-z0-9-]/gi, '') + '.png', import.meta.url).href;
 export function icono(nombre, tam, grosor = 2) {
   return `<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round" style="display:block">${ICONOS[nombre] || ''}</svg>`;
 }
@@ -274,6 +310,12 @@ export class PiezaPro extends HTMLElement {
     this.pintar(Math.max(0, t), q, s);
   }
 
+  /* las imágenes (iconos 3D) se cargan solas y Resolve captura el fotograma en cuanto vuelve goToTime: hay que esperarlas, como a las fuentes */
+  async _listo() {
+    const imgs = [...this._escena.querySelectorAll('img')];
+    await Promise.all(imgs.map(i => (i.complete && i.naturalWidth ? null : i.decode().catch(() => null))));
+  }
+
   /* --- los 8 métodos de OGraf --- */
   async load(params) {
     this._medidas(params?.renderCharacteristics?.resolution);
@@ -283,6 +325,7 @@ export class PiezaPro extends HTMLElement {
     await cargarFuentes(this.constructor.FUENTES);
     this._montado = '';
     this._setFrame(0);
+    await this._listo();
     return { statusCode: 200 };
   }
   async dispose() { this._escena.innerHTML = ''; return { statusCode: 200 }; }
@@ -292,17 +335,20 @@ export class PiezaPro extends HTMLElement {
   async updateAction(params) {
     this._base = { ...this._base, ...(params?.data || {}) };
     this._setFrame(this._ts);
+    await this._listo();
     return { statusCode: 200 };
   }
   async setActionsSchedule(payload) {
     // cada llamada REEMPLAZA el calendario y Resolve no lo manda ordenado
     this._schedule = (payload?.schedule || []).slice().sort((a, b) => a.timestamp - b.timestamp);
     this._setFrame(this._ts);
+    await this._listo();
     return { statusCode: 200 };
   }
   async goToTime(params) {
     this._ts = params?.timestamp ?? 0;
     this._setFrame(this._ts);
+    await this._listo();
     return { statusCode: 200 };
   }
 }
