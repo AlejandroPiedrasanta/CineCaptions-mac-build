@@ -55,7 +55,9 @@ en sus propios archivos (subtitles_manifest.json, sfx_pendiente.json).
 -- la version sube y con ella VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
 -- v1.0.39: la accion nueva vista (guardar / aplicar la disposicion de pantalla de Resolve: CineCaptions_Vista.lua). Un Puente viejo no la conoce: la version sube y con ella
 -- VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
-local VERSION = "1.0.39"
+-- v1.0.40: la accion nueva edicion_pro (la Edicion PRO en Resolve Free: CineCaptions_EdicionPro.lua, gemela de 2_recursos/edicion_pro/colocar_pro.py).
+-- Un Puente viejo no la conoce: la version sube y con ella VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
+local VERSION = "1.0.40"
 
 -- La version del PROGRAMA con la que se distribuyo este archivo. Existe
 -- porque el propio creador leyo el 1.0.28 de arriba como "quedo una copia
@@ -64,7 +66,7 @@ local VERSION = "1.0.39"
 -- regla que los tres auxiliares). OJO: no va en el latido — las apps
 -- viejas parten el latido en dos campos y un tercero las haria declarar
 -- INCOMPATIBLE a un Puente sano.
-local PAQUETE = "5.4.48"
+local PAQUETE = "5.4.49"
 
 -- El resolve VALIDADO del arranque. Es un local a proposito: si mas tarde
 -- algo pisa el global 'resolve' (el veneno clasico de la sesion), este
@@ -86,6 +88,7 @@ local SCRIPTS = {
     armar_video = "CineCaptions_ArmarVideo.lua",
     pausas = "CineCaptions_Pausas.lua",
     vista = "CineCaptions_Vista.lua",
+    edicion_pro = "CineCaptions_EdicionPro.lua",
 }
 
 -- ---------------------------------------------------------------------

@@ -484,6 +484,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.4.49', [
+        'Nuevo: «Edición PRO». Actívala en el chip «Edición PRO» de Inicio o en el panel de los Temas 1–4 y GO, además de los captions, edita el video en la línea de tiempo de Resolve: titulares detrás de la persona (Magic Mask de Resolve Studio), cifras, listas, marcos, ficha final y sonidos.',
+        'Cada video tiene su propio estilo (bodas, XV años, restaurantes, inmobiliaria, detrás de cámara o general, detectado solo o elegido por ti) y su propia combinación de colores y tipografías. Todo queda editable en el Inspector de Resolve.',
+        'Con la Edición PRO los captions de los Temas 1–4 van DETRÁS de la persona en los mejores momentos (la cabeza tapa la parte de abajo de la palabra grande), y las cifras, listas y conceptos se explican con escenas de motion graphics a pantalla completa (y tomas de B-roll si tienes tu clave de Pexels).',
+    ]),
     ('5.4.48', [
         'Nuevo en Ajustes > General: «Video MP4 en lugar de Resolve». Actívalo y GO te devuelve una copia MP4 de tu video con los subtítulos grabados aunque tengas Resolve instalado (para exportar rápido).',
         'Arreglo: en un equipo donde se había desinstalado DaVinci Resolve, CineCaptions creía que seguía instalado y GO no entregaba el video. Ahora mira el programa en sí.',

@@ -25,7 +25,7 @@ RAIZ = os.path.dirname(AQUI)
 
 datas = []
 for carpeta in ('resolve_scripts', 'locales', 'plantillas_incluidas', 'fonts',
-                'sfx_library', 'sfx_emoji', 'emojis', 'motor_qwen', 'guia_estilo', 'generador_packs', 'fondos_estilos', 'vistas_slider', 'efectos'):
+                'sfx_library', 'sfx_emoji', 'emojis', 'motor_qwen', 'guia_estilo', 'generador_packs', 'fondos_estilos', 'vistas_slider', 'efectos', 'edicion_pro'):          # v5.4.49: Edición PRO (plantillas OGraf, modelo de recorte, colocador)
     origen = os.path.join(RECURSOS, carpeta)
     if not os.path.isdir(origen):
         raise SystemExit(f'Falta {origen}: sin eso el programa queda cojo')

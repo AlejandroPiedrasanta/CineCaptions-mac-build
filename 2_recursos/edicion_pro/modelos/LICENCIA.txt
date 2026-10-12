@@ -1,0 +1,4 @@
+modnet.onnx — MODNet (Trimap-Free Portrait Matting), exportado a ONNX.
+Autores: Zhanghan Ke y col. (https://github.com/ZHKKKe/MODNet) · conversión ONNX: Xenova (https://huggingface.co/Xenova/modnet).
+Licencia: Apache License 2.0 (uso comercial permitido) — https://www.apache.org/licenses/LICENSE-2.0
+CineCaptions lo usa para detectar a las personas del video (puntos del Magic Mask de Resolve) y, sin Magic Mask, para recortarlas.

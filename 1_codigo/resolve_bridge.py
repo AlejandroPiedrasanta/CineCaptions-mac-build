@@ -560,7 +560,7 @@ JOB_PENDIENTE = CARPETA_TRABAJOS / 'pendiente.json'
 JOB_TOMADO = CARPETA_TRABAJOS / 'pendiente.tomado'
 LATIDO_MAXIMO_S = 12
 SIN_LATIDO_MAXIMO = 3
-SCRIPTS = {'detectar': 'CineCaptions - Detectar Video.py', 'subtitulos': 'CineCaptions.py', 'sfx': 'CineCaptions - Insertar SFX.py', 'sfx_marcadores': 'CineCaptions - SFX Marcadores.py', 'sfx_reemplazar': 'CineCaptions - SFX Reemplazar.py', 'importar_estilos': 'CineCaptions - Importar Estilos.py', 'efectos': 'CineCaptions - Efectos.py', 'armar_video': 'CineCaptions - Armar Video.py', 'pausas': 'CineCaptions - Pausas.py', 'vista': 'CineCaptions - Vista Pantalla.py'}      # (efectos: solo por el Puente de Free, que corre CineCaptions_Efectos.lua; en Studio van por el MCP)
+SCRIPTS = {'detectar': 'CineCaptions - Detectar Video.py', 'subtitulos': 'CineCaptions.py', 'sfx': 'CineCaptions - Insertar SFX.py', 'sfx_marcadores': 'CineCaptions - SFX Marcadores.py', 'sfx_reemplazar': 'CineCaptions - SFX Reemplazar.py', 'importar_estilos': 'CineCaptions - Importar Estilos.py', 'efectos': 'CineCaptions - Efectos.py', 'armar_video': 'CineCaptions - Armar Video.py', 'pausas': 'CineCaptions - Pausas.py', 'vista': 'CineCaptions - Vista Pantalla.py', 'edicion_pro': 'CineCaptions - Edicion PRO.py'}      # (efectos: solo por el Puente de Free, que corre CineCaptions_Efectos.lua; en Studio van por el MCP)
 def carpeta_de_scripts():
     """Donde viven los .py que ejecuta Studio por la API.\n\n    Van DENTRO del programa (BASE_RECURSOS/resolve_scripts), no en la\n    carpeta del menu de Resolve: ahi solo se instalan los .lua, para Free.\n\n    Existe para que nadie tenga que calcularla a mano. El SFX Lab pasaba la\n    carpeta del MENU y armaba la ruta con el nombre .py viejo, asi que en\n    Studio fallaba siempre con \'No encuentro el script\'.\n    """
     import instalador_scripts
@@ -754,10 +754,10 @@ def limpiar_resultado_viejo():
             ruta.rename(destino)
         except OSError:
             pass
-VERSION_PUENTE_ESPERADA = '1.0.39'
+VERSION_PUENTE_ESPERADA = '1.0.40'
 VERSION_PUENTE_MINIMA = '1.0.21'
 # Desde que version del Puente existe cada accion: un residente mas viejo (el que quedo corriendo en Resolve tras actualizar el programa) responde «Accion desconocida».
-VERSION_DE_ACCION = {'importar_estilos': (1, 0, 25), 'sfx_marcadores': (1, 0, 31), 'sfx_reemplazar': (1, 0, 32), 'efectos': (1, 0, 38), 'armar_video': (1, 0, 38), 'pausas': (1, 0, 38), 'vista': (1, 0, 39)}
+VERSION_DE_ACCION = {'importar_estilos': (1, 0, 25), 'sfx_marcadores': (1, 0, 31), 'sfx_reemplazar': (1, 0, 32), 'efectos': (1, 0, 38), 'armar_video': (1, 0, 38), 'pausas': (1, 0, 38), 'vista': (1, 0, 39), 'edicion_pro': (1, 0, 40)}
 def _tupla_version(texto):
     """\"1.0.21\" -> (1, 0, 21). Lo raro cuenta como version 0 (muy vieja)."""
     try:
@@ -1202,7 +1202,7 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
         else:
             if disponible():
                 if not ruta.exists():
-                    if accion in ('efectos', 'armar_video', 'pausas', 'vista'):          # solo existen como script .lua del Puente de Free; con Studio van por el MCP
+                    if accion in ('efectos', 'armar_video', 'pausas', 'vista', 'edicion_pro'):          # solo existen como script .lua del Puente de Free; con Studio van por el MCP
                         return (False, tr('Esta función necesita el MCP de DaVinci Resolve Studio 21.1 o el Puente de Resolve Free.'))
                     return (False, tr('No encuentro el script en {ruta}', ruta=ruta))
                 else:

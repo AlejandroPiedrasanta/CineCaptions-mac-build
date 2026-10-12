@@ -5164,5 +5164,243 @@
   "fr": "Choisis un dossier de musiques",
   "de": "Wähle einen Ordner mit Musik",
   "it": "Scegli una cartella con musiche"
+ },
+ "Edición PRO: pensando la edición de este video…": {
+  "en": "PRO Edit: planning the edit for this video…",
+  "pt": "Edição PRO: pensando a edição deste vídeo…",
+  "fr": "Montage PRO : je prépare le montage de cette vidéo…",
+  "de": "PRO-Schnitt: plane den Schnitt dieses Videos…",
+  "it": "Montaggio PRO: preparo il montaggio di questo video…"
+ },
+ "Edición PRO: colocando la edición en Resolve…": {
+  "en": "PRO Edit: placing the edit in Resolve…",
+  "pt": "Edição PRO: colocando a edição no Resolve…",
+  "fr": "Montage PRO : je place le montage dans Resolve…",
+  "de": "PRO-Schnitt: lege den Schnitt in Resolve an…",
+  "it": "Montaggio PRO: inserisco il montaggio in Resolve…"
+ },
+ "Edición PRO: colocando la edición en Resolve (Magic Mask)…": {
+  "en": "PRO Edit: placing the edit in Resolve (Magic Mask)…",
+  "pt": "Edição PRO: colocando a edição no Resolve (Magic Mask)…",
+  "fr": "Montage PRO : je place le montage dans Resolve (Magic Mask)…",
+  "de": "PRO-Schnitt: lege den Schnitt in Resolve an (Magic Mask)…",
+  "it": "Montaggio PRO: inserisco il montaggio in Resolve (Magic Mask)…"
+ },
+ "Edición PRO: la IA local elige los titulares…": {
+  "en": "PRO Edit: local AI is choosing the headlines…",
+  "pt": "Edição PRO: a IA local escolhe as manchetes…",
+  "fr": "Montage PRO : l’IA locale choisit les titres…",
+  "de": "PRO-Schnitt: die lokale KI wählt die Schlagzeilen…",
+  "it": "Montaggio PRO: l’IA locale sceglie i titoli…"
+ },
+ "Edición PRO: buscando a las personas del video…": {
+  "en": "PRO Edit: finding the people in the video…",
+  "pt": "Edição PRO: procurando as pessoas do vídeo…",
+  "fr": "Montage PRO : je cherche les personnes de la vidéo…",
+  "de": "PRO-Schnitt: suche die Personen im Video…",
+  "it": "Montaggio PRO: cerco le persone nel video…"
+ },
+ "Edición PRO: recortando a la persona con IA local…": {
+  "en": "PRO Edit: cutting out the person with local AI…",
+  "pt": "Edição PRO: recortando a pessoa com IA local…",
+  "fr": "Montage PRO : je détoure la personne avec l’IA locale…",
+  "de": "PRO-Schnitt: stelle die Person mit lokaler KI frei…",
+  "it": "Montaggio PRO: scontorno la persona con l’IA locale…"
+ },
+ "Edición PRO: preparando los gráficos animados…": {
+  "en": "PRO Edit: preparing the motion graphics…",
+  "pt": "Edição PRO: preparando os gráficos animados…",
+  "fr": "Montage PRO : je prépare les animations graphiques…",
+  "de": "PRO-Schnitt: bereite die Motion Graphics vor…",
+  "it": "Montaggio PRO: preparo le grafiche animate…"
+ },
+ "La Edición PRO no se pudo colocar: {m}": {
+  "en": "The PRO Edit could not be placed: {m}",
+  "pt": "A Edição PRO não pôde ser colocada: {m}",
+  "fr": "Le montage PRO n’a pas pu être placé : {m}",
+  "de": "Der PRO-Schnitt konnte nicht angelegt werden: {m}",
+  "it": "Il montaggio PRO non è stato inserito: {m}"
+ },
+ "con Edición PRO": {
+  "en": "with PRO Edit",
+  "pt": "com Edição PRO",
+  "fr": "avec montage PRO",
+  "de": "mit PRO-Schnitt",
+  "it": "con montaggio PRO"
+ },
+ "Edición PRO: {v}": {
+  "en": "PRO Edit: {v}",
+  "pt": "Edição PRO: {v}",
+  "fr": "Montage PRO : {v}",
+  "de": "PRO-Schnitt: {v}",
+  "it": "Montaggio PRO: {v}"
+ },
+ "Edición PRO: GO edita el video en la línea de tiempo de Resolve (titulares detrás de la persona con Magic Mask, cifras, listas, marcos, ficha final y sonidos), con un estilo propio para cada video. Clic: activar y elegir el estilo.": {
+  "en": "PRO Edit: GO edits the video on the Resolve timeline (headlines behind the person with Magic Mask, figures, lists, frames, end card and sounds), with its own style for each video. Click: turn on and choose the style.",
+  "pt": "Edição PRO: o GO edita o vídeo na linha do tempo do Resolve (manchetes atrás da pessoa com Magic Mask, números, listas, molduras, cartão final e sons), com um estilo próprio para cada vídeo. Clique: ativar e escolher o estilo.",
+  "fr": "Montage PRO : GO monte la vidéo sur la timeline de Resolve (titres derrière la personne avec Magic Mask, chiffres, listes, cadres, carton final et sons), avec un style propre à chaque vidéo. Clic : activer et choisir le style.",
+  "de": "PRO-Schnitt: GO schneidet das Video in der Resolve-Timeline (Schlagzeilen hinter der Person mit Magic Mask, Zahlen, Listen, Rahmen, Abspann und Sounds), mit eigenem Stil für jedes Video. Klick: einschalten und Stil wählen.",
+  "it": "Montaggio PRO: GO monta il video sulla timeline di Resolve (titoli dietro la persona con Magic Mask, cifre, elenchi, cornici, scheda finale e suoni), con uno stile proprio per ogni video. Clic: attivare e scegliere lo stile."
+ },
+ "Edición PRO activada · desactivar": {
+  "en": "PRO Edit on · turn off",
+  "pt": "Edição PRO ativada · desativar",
+  "fr": "Montage PRO activé · désactiver",
+  "de": "PRO-Schnitt an · ausschalten",
+  "it": "Montaggio PRO attivo · disattivare"
+ },
+ "Activar la Edición PRO": {
+  "en": "Turn on PRO Edit",
+  "pt": "Ativar a Edição PRO",
+  "fr": "Activer le montage PRO",
+  "de": "PRO-Schnitt einschalten",
+  "it": "Attivare il montaggio PRO"
+ },
+ "Estilo de video: {n}": {
+  "en": "Video style: {n}",
+  "pt": "Estilo de vídeo: {n}",
+  "fr": "Style de vidéo : {n}",
+  "de": "Videostil: {n}",
+  "it": "Stile del video: {n}"
+ },
+ "Automático": {
+  "en": "Automatic",
+  "pt": "Automático",
+  "fr": "Automatique",
+  "de": "Automatisch",
+  "it": "Automatico"
+ },
+ "General": {
+  "en": "General",
+  "pt": "Geral",
+  "fr": "Général",
+  "de": "Allgemein",
+  "it": "Generale"
+ },
+ "Inmobiliaria / venta de casas": {
+  "en": "Real estate / home sales",
+  "pt": "Imobiliária / venda de casas",
+  "fr": "Immobilier / vente de maisons",
+  "de": "Immobilien / Hausverkauf",
+  "it": "Immobiliare / vendita di case"
+ },
+ "Bodas": {
+  "en": "Weddings",
+  "pt": "Casamentos",
+  "fr": "Mariages",
+  "de": "Hochzeiten",
+  "it": "Matrimoni"
+ },
+ "XV años": {
+  "en": "Quinceañera (XV)",
+  "pt": "15 anos",
+  "fr": "Quinceañera (XV)",
+  "de": "Quinceañera (XV)",
+  "it": "Quinceañera (XV)"
+ },
+ "Restaurantes": {
+  "en": "Restaurants",
+  "pt": "Restaurantes",
+  "fr": "Restaurants",
+  "de": "Restaurants",
+  "it": "Ristoranti"
+ },
+ "Detrás de cámara": {
+  "en": "Behind the scenes",
+  "pt": "Bastidores",
+  "fr": "Coulisses",
+  "de": "Hinter den Kulissen",
+  "it": "Dietro le quinte"
+ },
+ "Persona: Magic Mask (Studio) o IA local": {
+  "en": "Person: Magic Mask (Studio) or local AI",
+  "pt": "Pessoa: Magic Mask (Studio) ou IA local",
+  "fr": "Personne : Magic Mask (Studio) ou IA locale",
+  "de": "Person: Magic Mask (Studio) oder lokale KI",
+  "it": "Persona: Magic Mask (Studio) o IA locale"
+ },
+ "Persona: solo Magic Mask de Resolve": {
+  "en": "Person: Resolve Magic Mask only",
+  "pt": "Pessoa: só Magic Mask do Resolve",
+  "fr": "Personne : Magic Mask de Resolve uniquement",
+  "de": "Person: nur Magic Mask von Resolve",
+  "it": "Persona: solo Magic Mask di Resolve"
+ },
+ "Persona: recorte con IA local": {
+  "en": "Person: local AI cutout",
+  "pt": "Pessoa: recorte com IA local",
+  "fr": "Personne : détourage par IA locale",
+  "de": "Person: Freistellung mit lokaler KI",
+  "it": "Persona: scontorno con IA locale"
+ },
+ "Persona: sin recortar": {
+  "en": "Person: no cutout",
+  "pt": "Pessoa: sem recorte",
+  "fr": "Personne : sans détourage",
+  "de": "Person: ohne Freistellung",
+  "it": "Persona: senza scontorno"
+ },
+ "Animación: sobria": {
+  "en": "Animation: subtle",
+  "pt": "Animação: sóbria",
+  "fr": "Animation : sobre",
+  "de": "Animation: dezent",
+  "it": "Animazione: sobria"
+ },
+ "Animación: media": {
+  "en": "Animation: medium",
+  "pt": "Animação: média",
+  "fr": "Animation : moyenne",
+  "de": "Animation: mittel",
+  "it": "Animazione: media"
+ },
+ "Animación: espectáculo": {
+  "en": "Animation: showtime",
+  "pt": "Animação: espetáculo",
+  "fr": "Animation : spectacle",
+  "de": "Animation: Show",
+  "it": "Animazione: spettacolo"
+ },
+ "Otra combinación de colores y tipografías": {
+  "en": "Another combination of colors and fonts",
+  "pt": "Outra combinação de cores e tipografias",
+  "fr": "Une autre combinaison de couleurs et de polices",
+  "de": "Eine andere Farb- und Schriftkombination",
+  "it": "Un’altra combinazione di colori e caratteri"
+ },
+ "Edición PRO activada": {
+  "en": "PRO Edit on",
+  "pt": "Edição PRO ativada",
+  "fr": "Montage PRO activé",
+  "de": "PRO-Schnitt an",
+  "it": "Montaggio PRO attivo"
+ },
+ "Activar edición PRO": {
+  "en": "Turn on PRO Edit",
+  "pt": "Ativar edição PRO",
+  "fr": "Activer le montage PRO",
+  "de": "PRO-Schnitt einschalten",
+  "it": "Attiva montaggio PRO"
+ },
+ "Además de los captions de este tema, GO edita el video en Resolve: los captions y titulares DETRÁS de la persona (Magic Mask), escenas de motion graphics y B-roll, cifras, listas, marcos, ficha final y sonidos, con un estilo propio para cada video (bodas, XV años, restaurantes, inmobiliaria, detrás de cámara…). El estilo se elige en el chip «Edición PRO» de Inicio.": {
+  "en": "Besides this theme’s captions, GO edits the video in Resolve: captions and headlines BEHIND the person (Magic Mask), motion-graphics scenes and B-roll, figures, lists, frames, end card and sounds, with its own style for each video (weddings, quinceañeras, restaurants, real estate, behind the scenes…). Choose the style in the «PRO Edit» chip on Home.",
+  "pt": "Além das legendas deste tema, o GO edita o vídeo no Resolve: legendas e manchetes ATRÁS da pessoa (Magic Mask), cenas de motion graphics e B-roll, números, listas, molduras, cartão final e sons, com um estilo próprio para cada vídeo (casamentos, 15 anos, restaurantes, imobiliária, bastidores…). O estilo é escolhido no chip «Edição PRO» do Início.",
+  "fr": "En plus des sous-titres de ce thème, GO monte la vidéo dans Resolve : sous-titres et titres DERRIÈRE la personne (Magic Mask), scènes de motion design et B-roll, chiffres, listes, cadres, carton final et sons, avec un style propre à chaque vidéo (mariages, quinceañeras, restaurants, immobilier, coulisses…). Le style se choisit dans la puce « Montage PRO » de l’accueil.",
+  "de": "Zusätzlich zu den Untertiteln dieses Themas schneidet GO das Video in Resolve: Untertitel und Schlagzeilen HINTER der Person (Magic Mask), Motion-Graphics-Szenen und B-Roll, Zahlen, Listen, Rahmen, Abspann und Sounds, mit eigenem Stil für jedes Video (Hochzeiten, Quinceañeras, Restaurants, Immobilien, hinter den Kulissen…). Den Stil wählst du im Chip „PRO-Schnitt“ auf der Startseite.",
+  "it": "Oltre ai sottotitoli di questo tema, GO monta il video in Resolve: sottotitoli e titoli DIETRO la persona (Magic Mask), scene di motion graphics e B-roll, cifre, elenchi, cornici, scheda finale e suoni, con uno stile proprio per ogni video (matrimoni, quinceañera, ristoranti, immobiliare, dietro le quinte…). Lo stile si sceglie nel chip «Montaggio PRO» della Home."
+ },
+ "Edición PRO: buscando dónde los captions van detrás de la persona…": {
+  "en": "PRO Edit: finding where the captions go behind the person…",
+  "pt": "Edição PRO: procurando onde as legendas vão atrás da pessoa…",
+  "fr": "Montage PRO : je cherche où mettre les sous-titres derrière la personne…",
+  "de": "PRO-Schnitt: suche, wo die Untertitel hinter die Person kommen…",
+  "it": "Montaggio PRO: cerco dove mettere i sottotitoli dietro la persona…"
+ },
+ "Edición PRO: buscando las tomas de B-roll…": {
+  "en": "PRO Edit: looking for the B-roll shots…",
+  "pt": "Edição PRO: procurando as tomadas de B-roll…",
+  "fr": "Montage PRO : je cherche les plans de B-roll…",
+  "de": "PRO-Schnitt: suche die B-Roll-Aufnahmen…",
+  "it": "Montaggio PRO: cerco le riprese di B-roll…"
  }
 }

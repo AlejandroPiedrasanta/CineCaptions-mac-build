@@ -2084,6 +2084,8 @@ class PlantillasWindow(QWidget):
             self.info_extra.addWidget(e, 0, Qt.AlignmentFlag.AlignHCenter)
         if carta.extra is not None:
             self.info_extra.addWidget(carta.extra(), 0, Qt.AlignmentFlag.AlignHCenter)
+        if carta.pack is not None and plantillas.es_de_fabrica(carta.pack.nombre):          # v5.4.49: Temas 1–4 → la Edición PRO (el mismo interruptor que el chip de Inicio)
+            self.info_extra.addWidget(self._boton_pro(), 0, Qt.AlignmentFlag.AlignHCenter)
         for icono, glifo, ayuda, fn in ([] if solo_temas else carta.acciones):         # v5.8: ✎ editar en Resolve y 🗑 quitar
             ic = ui.icono_linea(icono, '#C9D6EC')
             b = Boton('' if ic is not None else glifo, lambda _=False, f=fn: f(), tipo='fantasma', alto=36, ancho=40, tam=14, icono=ic)
@@ -2103,6 +2105,34 @@ class PlantillasWindow(QWidget):
         for texto, fn in opciones:
             menu.agregar(texto, fn)
         menu.mostrar(QCursor.pos())
+    def _boton_pro(self):
+        """«Activar edición PRO»: con este tema, GO además edita el video en la línea de tiempo (motion graphics, Magic Mask, sonidos)."""
+        try:
+            import edicion_pro
+            activa = edicion_pro.activado()
+        except Exception:
+            activa = False
+        b = Boton(('✓ ' + tr('Edición PRO activada')) if activa else ('✦ ' + tr('Activar edición PRO')), self._alternar_pro,
+                  tipo='fantasma' if activa else 'primario', alto=38, ancho=260, tam=13, negrita=True)
+        if activa:
+            b.setStyleSheet(ui.traducir_hoja('QPushButton { background-color: #2A2310; border: 1px solid #C9A46A; color: #F2D9A6; }'))
+        Tooltip(b, tr('Además de los captions de este tema, GO edita el video en Resolve: los captions y titulares DETRÁS de la persona (Magic Mask), '
+                      'escenas de motion graphics y B-roll, cifras, listas, marcos, ficha final y sonidos, con un estilo propio para cada video (bodas, XV años, restaurantes, inmobiliaria, detrás de cámara…). '
+                      'El estilo se elige en el chip «Edición PRO» de Inicio.'))
+        return b
+
+    def _alternar_pro(self):
+        try:
+            import edicion_pro
+            edicion_pro.poner_activado(not edicion_pro.activado())
+        except Exception:
+            pass
+        self._pintar_info()
+        try:
+            self.app._pintar_opciones_go()
+        except Exception:
+            pass
+
     def _pintar_boton_usar(self):
         c = getattr(self, '_carta_actual', None)
         if c is None:
@@ -7157,6 +7187,8 @@ class SubtitleApp(QWidget):
                   tr('Clic: con o sin efectos de sonido por palabra.')),
                  (tr('Visuales: {v}', v=tr('sí') if self._go_visuales() else tr('no')), self._alternar_visuales_go,
                   tr('Clic: con o sin efectos visuales (intro, transiciones en los cortes e iconos flotantes). Se eligen en la página «Efectos».')),
+                 (tr('Edición PRO: {v}', v=tr('sí') if self._go_pro() else tr('no')), self._menu_pro_go,
+                  tr('Edición PRO: GO edita el video en la línea de tiempo de Resolve (titulares detrás de la persona con Magic Mask, cifras, listas, marcos, ficha final y sonidos), con un estilo propio para cada video. Clic: activar y elegir el estilo.')),
                  (tr('Proyecto: {p}', p=self._go_proyecto() or tr('el abierto')), self._alternar_proyecto_go,
                   tr('Al soltar un video en Inicio: se arma en el proyecto «CineCaptions» de Resolve (se abre o se crea solo) o en el proyecto que tengas abierto. Clic: cambiar.'))]
         chips = [(t, f, a, ui.ACCENT_CLARO) for t, f, a in chips]
@@ -7311,6 +7343,53 @@ class SubtitleApp(QWidget):
         if getattr(self, '_efectos_widget', None) is not None:
             self._efectos_widget.refrescar()
         self._pintar_opciones_go()
+    def _go_pro(self):
+        try:
+            import edicion_pro
+            return edicion_pro.activado()
+        except Exception:
+            return False
+    def _alternar_pro_go(self):
+        try:
+            import edicion_pro
+            edicion_pro.poner_activado(not edicion_pro.activado())
+        except Exception:
+            pass
+        self._pintar_opciones_go()
+    def _poner_pro_go(self, clave, valor):
+        try:
+            import edicion_pro
+            edicion_pro.guardar_opciones({clave: valor})
+            if not edicion_pro.activado():
+                edicion_pro.poner_activado(True)
+        except Exception:
+            pass
+        self._pintar_opciones_go()
+    def _menu_pro_go(self):
+        """El chip «Edición PRO» de Inicio: activarla y elegir el estilo del video, el recorte de la persona y cuánta animación."""
+        try:
+            import edicion_pro
+            op, activa = edicion_pro.opciones_guardadas(), edicion_pro.activado()
+        except Exception:
+            return
+        menu = Menu(self)
+        menu.agregar(('✓  ' + tr('Edición PRO activada · desactivar')) if activa else ('      ' + tr('Activar la Edición PRO')), self._alternar_pro_go)
+        menu.separador()
+        for clave, nombre in edicion_pro.NOMBRES_GENERO.items():
+            marca = '✓  ' if op.get('pro_genero', 'auto') == clave else '      '
+            menu.agregar(marca + tr('Estilo de video: {n}', n=tr(nombre)), lambda c=clave: self._poner_pro_go('pro_genero', c))
+        menu.separador()
+        for clave, nombre in (('auto', 'Persona: Magic Mask (Studio) o IA local'), ('magic', 'Persona: solo Magic Mask de Resolve'),
+                              ('ia', 'Persona: recorte con IA local'), ('no', 'Persona: sin recortar')):
+            marca = '✓  ' if op.get('pro_mascara', 'auto') == clave else '      '
+            menu.agregar(marca + tr(nombre), lambda c=clave: self._poner_pro_go('pro_mascara', c))
+        menu.separador()
+        for clave, nombre in (('sobria', 'Animación: sobria'), ('media', 'Animación: media'), ('espectaculo', 'Animación: espectáculo')):
+            marca = '✓  ' if op.get('pro_densidad', 'media') == clave else '      '
+            menu.agregar(marca + tr(nombre), lambda c=clave: self._poner_pro_go('pro_densidad', c))
+        menu.separador()
+        menu.agregar('      ' + tr('Otra combinación de colores y tipografías'), lambda: self._poner_pro_go('pro_variacion', int(op.get('pro_variacion') or 0) + 1))
+        menu.mostrar(QCursor.pos())
     def _alternar_sfx_go(self):
         try:
             import ajustes_ui
@@ -11082,7 +11161,12 @@ class SubtitleApp(QWidget):
         caja = types.SimpleNamespace(resultado=None, hilo=None)
         try:
             import efectos_visuales
-            if efectos_visuales.activado() and efectos_visuales.opciones_guardadas().get('fx_cortes'):
+            try:
+                import edicion_pro
+                pro = edicion_pro.activado()
+            except Exception:
+                pro = False
+            if (efectos_visuales.activado() and efectos_visuales.opciones_guardadas().get('fx_cortes')) or pro:          # v5.4.49: la Edición PRO también los usa
                 def buscar():
                     try:
                         caja.resultado = efectos_visuales.detectar_cortes(str(media_path))
@@ -11202,6 +11286,59 @@ class SubtitleApp(QWidget):
         except Exception:
             registro.excepcion(origen='efectos visuales (colocar)')
             return ''
+    def _planificar_pro(self, media_path, words, cortes_fx, idioma='es'):
+        """v5.4.49: la Edición PRO de ESTE video (motion graphics, la persona delante del texto con Magic Mask, velos, marcos, sonidos).
+        Nunca rompe GO: si algo falla, el video sale con sus captions y efectos como siempre."""
+        self._pro_plan = None
+        try:
+            import edicion_pro
+            if not edicion_pro.activado() or not words:
+                return
+            self.msg_queue.put(('status', tr('Edición PRO: pensando la edición de este video…')))
+            cortes = None
+            if cortes_fx is not None:
+                if cortes_fx.hilo is not None:
+                    cortes_fx.hilo.join(120)
+                cortes = cortes_fx.resultado
+            duracion = None
+            recorte = getattr(self, '_recorte', None)
+            if recorte:                                # con las pausas quitadas, los tiempos de la fuente ya no valen: se pasan al timeline recortado
+                import pausas
+                cortes = pausas.remapear_cortes(cortes, recorte['segmentos']) if cortes else []
+                cortes = list(cortes) + [(float(t), 1.0) for t in (recorte.get('saltos') or [])]
+                duracion = recorte['duracion_nueva']
+            plan = edicion_pro.planificar(str(media_path), words, duracion, cortes=cortes, idioma=idioma or 'es',
+                                          al_estado=lambda t: self.msg_queue.put(('status', tr(t))))
+            if plan.get('piezas'):
+                self._pro_plan = plan
+            registro.info('Edición PRO: ' + plan.get('resumen', ''), 'edición pro')
+        except Exception:
+            registro.excepcion(origen='edición PRO (plan)')
+
+    def _colocar_pro(self):
+        """Pone la Edición PRO en el timeline de Resolve (tras los captions y los efectos). Devuelve un texto corto para el estado, o ''."""
+        plan = getattr(self, '_pro_plan', None)
+        if not plan or not plan.get('piezas'):
+            return ''
+        try:                                   # el plan es de un video: si ahora hay otro cargado (regenerar), no se aplica el de antes
+            actual = self.video_var.get().strip().strip('"')
+            if plan.get('video') and actual and Path(plan['video']).resolve() != Path(actual).expanduser().resolve():
+                return ''
+        except Exception:
+            pass
+        try:
+            import edicion_pro
+            self.msg_queue.put(('status', tr('Edición PRO: colocando la edición en Resolve…')))
+            ok, mensaje = edicion_pro.aplicar(plan, al_estado=lambda t: self.msg_queue.put(('status', tr(str(t)))), offset_frames=self._offset_frames() or 0)
+            if not ok:
+                registro.aviso(f'Edición PRO: {mensaje}', 'edición pro')
+                return tr('La Edición PRO no se pudo colocar: {m}', m=str(mensaje)[:120])
+            registro.info(f'Edición PRO colocada: {mensaje}', 'edición pro')
+            return tr('con Edición PRO')
+        except Exception:
+            registro.excepcion(origen='edición PRO (colocar)')
+            return ''
+
     def _colocar_en_resolve(self, n_cues, langs):
         """Manda los subtitulos (y los SFX si toca) a Resolve, en un hilo.
 
@@ -11280,6 +11417,7 @@ class SubtitleApp(QWidget):
                     err = colocacion.frase_de_fallo(veredicto)
             self._efectos_atascado = False
             nota_fx = self._colocar_efectos() if ok else ''
+            nota_fx = ', '.join(x for x in (nota_fx, self._colocar_pro() if ok else '') if x)          # v5.4.49: Edición PRO
             if ok and getattr(self, '_efectos_atascado', False) and getattr(self, '_go_corriendo', False):          # v5.4.40: Resolve se colgó con los efectos: se rehace todo
                 self._efectos_atascado = False
                 if self._go_rearmar_en_resolve('efectos visuales'):
@@ -11292,6 +11430,7 @@ class SubtitleApp(QWidget):
                         pass
                     ok, err = resolve_bridge.ejecutar('subtitulos')
                     nota_fx = self._colocar_efectos() if ok else ''
+                    nota_fx = ', '.join(x for x in (nota_fx, self._colocar_pro() if ok else '') if x)
             if not ok and veredicto is None:
                 try:
                     if resolve_bridge.modo_actual() == 'manual':
@@ -12936,6 +13075,7 @@ class SubtitleApp(QWidget):
             except Exception:
                 pass
             self._efectos_plan = None
+            self._pro_plan = None
             cortes_fx = self._buscar_cortes_en_paralelo(media_path)           # v5.4.6: la página «Efectos» (si está activa) busca los cortes mientras se transcribe
             try:                                                              # v5.4.8: y deja listas las secuencias de los iconos (no hay que esperarlas al colocar)
                 import efectos_visuales as _fx
@@ -13171,6 +13311,7 @@ class SubtitleApp(QWidget):
                 hilo_fx.join(300)                                    # (ya suele estar hecho: corrió mientras la IA trabajaba)
             else:
                 self._planificar_efectos(media_path, words, cortes_fx)
+            self._planificar_pro(media_path, words, cortes_fx, base_lang)          # v5.4.49: la Edición PRO (si está activada)
             ev_tl = getattr(self, '_go_tl_listo', None)
             if ev_tl is not None and not ev_tl.is_set():
                 # GO con un video soltado: Resolve todavía está armando el timeline con él (los captions se colocan ahí)
