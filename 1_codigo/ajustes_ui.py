@@ -484,7 +484,7 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
-    ('5.4.52', [
+    ('5.5.0', [
         'Nuevo: Tema 6 «Editorial», con el estilo de los reels editoriales: captions en serif fina con la frase clave grande en lima o blanco, escenas melocotón con tarjetas blancas que entran con un destello, el visor de la cámara sobre tu cara, la barra de búsqueda con la palabra que hay que comentar, tu perfil con los seguidores que cuentan y la píldora del equipo.',
         'Tema 5: el fondo en blanco y negro con tu persona a color cuando dices algo fuerte, un icono que gira alrededor de tu cabeza (por detrás y por delante), el sticker congelado en el gancho, la sombra de tu persona sobre la palabra de detrás, tarjetas encima de la cabeza (mapa del país, gráfica del % que dices, la frase tachada, la lista que se marca), la pantalla final cuando pides que te sigan y transiciones con zoom en los cortes.',
         'Emojis animados (Noto de Google) en los acompañantes y en la órbita, 136 sonidos nuevos para que no se repitan, el borde de la persona recortada más suave y la caché de render activada para que la línea de tiempo vaya fluida.',
