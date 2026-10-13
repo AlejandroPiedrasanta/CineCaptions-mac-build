@@ -212,7 +212,7 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
     editorial = estilo == 'editorial'
     import edicion_pro_tema6 as T6
     acento = acento_de_video(video) if video else ACENTOS['azul']
-    velo = claro(video) if video else False
+    velo = False                                                          # v5.4.52: sin el velo oscuro ovalado detrás del caption (se veía como una sombra fea); las letras llevan su sombra fina
     import edicion_pro_tema5_video as VI                              # el video, mirado con ffmpeg: tomas, luz, tono, movimiento → el estilo
     analisis = VI.analizar(video) if video else {}
     est = T6.estilo_video() if editorial else VI.estilo(analisis, video)

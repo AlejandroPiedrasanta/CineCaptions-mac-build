@@ -107,24 +107,29 @@ export CINECAPTIONS_FUENTES="$OBRA/fuentes" CINECAPTIONS_RECURSOS="$RECURSOS" CI
 export CINECAPTIONS_ARQ="$ARQ" CINECAPTIONS_ICONO="$OBRA/CineCaptions.icns" CINECAPTIONS_FIRMA="${FIRMA_APP:-}"
 (cd "$AQUI" && "$VPY" -m PyInstaller --noconfirm --log-level ERROR --distpath "$DIST" --workpath "$OBRA/work" cinecaptions_mac.spec)
 [ -d "$APP" ] || falla "PyInstaller no dejo CineCaptions.app"
-# v5.4.52: el Chrome sin ventana de Remotion se copia TAL CUAL (PyInstaller no puede reescribir sus .dylib): en Contents/Resources (lo que no es
-# codigo no puede ir en Frameworks sin romper la firma) con un enlace desde Frameworks, donde lo busca el programa; luego se vuelve a sellar la app
-CHROME_ORG="$RECURSOS/edicion_pro/remotion/runtime/chrome"
-if [ -d "$CHROME_ORG" ]; then
-    REL="edicion_pro/remotion/runtime/chrome"
-    rm -rf "$APP/Contents/Resources/$REL" "$APP/Contents/Frameworks/$REL"
+# v5.4.52: el runtime de Remotion (node, compositor y Chrome sin ventana) se copia TAL CUAL (PyInstaller no puede reescribir sus .dylib): en
+# Contents/Resources (lo que no es codigo no puede ir en Frameworks sin romper la firma) con un enlace desde Frameworks, donde lo busca el
+# programa; sin node_modules/.remotion (la descarga original del Chrome, ya copiado en runtime/chrome). Luego se vuelve a sellar la app
+RT_ORG="$RECURSOS/edicion_pro/remotion/runtime"
+if [ -d "$RT_ORG" ]; then
+    REL="edicion_pro/remotion/runtime"
+    rm -rf "$APP/Contents/Resources/$REL"
+    [ -L "$APP/Contents/Frameworks/$REL" ] && rm -f "$APP/Contents/Frameworks/$REL"
+    [ -d "$APP/Contents/Frameworks/$REL" ] && rm -rf "$APP/Contents/Frameworks/$REL"
     mkdir -p "$APP/Contents/Resources/$REL"
-    ditto "$CHROME_ORG" "$APP/Contents/Resources/$REL"
+    ditto "$RT_ORG" "$APP/Contents/Resources/$REL"
+    rm -rf "$APP/Contents/Resources/$REL/node_modules/.remotion"
     if [ ! -e "$APP/Contents/Frameworks/$REL" ]; then
         mkdir -p "$(dirname "$APP/Contents/Frameworks/$REL")"
-        ln -s "../../../../Resources/$REL" "$APP/Contents/Frameworks/$REL"
+        ln -s "../../../Resources/$REL" "$APP/Contents/Frameworks/$REL"
     fi
+    [ -x "$APP/Contents/Frameworks/$REL/node" ] || falla "El runtime de Remotion no quedo accesible en la app"
     if [ -n "${FIRMA_APP:-}" ]; then
         codesign --force --options runtime --timestamp --entitlements "$AQUI/entitlements.plist" --sign "$FIRMA_APP" "$APP"
     else
         codesign --force --entitlements "$AQUI/entitlements.plist" --sign - "$APP"
     fi
-    echo "    Chrome sin ventana de Remotion copiado en la app (y la app sellada de nuevo)"
+    echo "    runtime de Remotion (node + Chrome sin ventana) copiado en la app (y la app sellada de nuevo)"
 fi
 
 # 5) autoprueba del compilado (la misma que corre el instalador de Windows) ------------------------------

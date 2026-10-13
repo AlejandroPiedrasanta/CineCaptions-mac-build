@@ -12,6 +12,8 @@
 import json
 from pathlib import Path
 
+VELO_CAPTIONS = False                                                     # v5.4.52: el velo ovalado detrás de los captions, apagado
+
 
 def _hex_a_rgb(h):
     h = h.lstrip('#')
@@ -46,7 +48,8 @@ def piezas(info, video, idioma, W, H, fps, mover, plan):
     subir = {round(int(m['ini']) / fps, 1): float(m.get('subir') or 0.0) for m in mover or []}     # mover va en fotogramas desde el inicio
     out = []
     # 1) legibilidad: velos (solo si el video es claro a la altura de los captions); bloques seguidos a la misma altura, un solo velo
-    if T5.claro(video):
+    # v5.4.52: APAGADO (el velo ovalado detrás del caption se veía como una sombra fea); las letras ya llevan su contorno y sombra
+    if VELO_CAPTIONS and T5.claro(video):
         velos = []
         for b in bloques:
             s = subir.get(round(b['ini'], 1), 0.0) / H
