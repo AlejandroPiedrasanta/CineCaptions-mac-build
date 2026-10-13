@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.5.0 (subtitulos)"
+local VERSION = "5.5.1 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -6087,6 +6087,13 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
                     trozos[#trozos + 1] = { c, seg }
                     pos = pos + seg
                 end
+                -- v5.5.1 (gemela del .py): un trozo que Resolve no conservo (clip muerto) se descarta; la salida animada va al ultimo vivo
+                local vivos = {}
+                for _, par_v in ipairs(trozos) do
+                    local ok_v, ini_v = pcall(function() return par_v[1]:GetStart() end)
+                    if ok_v and ini_v ~= nil then vivos[#vivos + 1] = par_v end
+                end
+                trozos = vivos
                 if #trozos > 0 then colocado = trozos[1][1] end
             else
                 colocado = colocar_medido(media_pool, timeline, item, 0,

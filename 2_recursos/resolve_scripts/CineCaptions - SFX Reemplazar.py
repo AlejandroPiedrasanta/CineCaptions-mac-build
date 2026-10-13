@@ -30,7 +30,7 @@ import os
 import time
 from pathlib import Path
 
-VERSION = "5.5.0 (sfx reemplazar)"
+VERSION = "5.5.1 (sfx reemplazar)"
 
 CARPETA_COMPARTIDA = Path.home() / "DaVinciSubtitles"
 ARCHIVO_PENDIENTE = CARPETA_COMPARTIDA / "sfx_reemplazo_pendiente.json"

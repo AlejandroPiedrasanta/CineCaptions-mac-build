@@ -5514,5 +5514,61 @@
   "fr": "Les vidéos téléchargées depuis Instagram, Pinterest ou TikTok ne sont plus muettes au rendu (leur audio HE-AAC est converti en AAC automatiquement), les effets sonores de l'intro restent sous votre voix, un faux avertissement d'emojis sans position a été supprimé et, si Resolve se fige au lancement de GO, il est fermé et rouvert automatiquement.",
   "de": "Von Instagram, Pinterest oder TikTok geladene Videos werden nicht mehr stumm gerendert (ihr HE-AAC-Ton wird automatisch zu AAC), die Soundeffekte im Intro bleiben unter deiner Stimme, eine falsche Warnung zu Emojis ohne Position ist weg, und wenn Resolve beim Start von GO hängt, wird es automatisch geschlossen und neu geöffnet.",
   "it": "I video scaricati da Instagram, Pinterest o TikTok non escono più muti nel render (il loro audio HE-AAC viene convertito in AAC da solo), gli effetti sonori dell'intro restano sotto la tua voce, è stato tolto un falso avviso di emoji senza posizione e, se Resolve si blocca all'avvio di GO, viene chiuso e riaperto da solo."
+ },
+ "GO se repara solo: si Resolve se congela, se cierra o se cae a mitad del trabajo, CineCaptions lo cierra a la fuerza si hace falta, lo vuelve a abrir, rearma tu proyecto con el video y termina sin mostrarte el error (Windows y Mac, Studio y Free).": {
+  "en": "GO repairs itself: if Resolve freezes, closes or crashes mid-job, CineCaptions force-closes it if needed, reopens it, rebuilds your project with the video and finishes without showing you the error (Windows and Mac, Studio and Free).",
+  "pt": "O GO se conserta sozinho: se o Resolve travar, fechar ou cair no meio do trabalho, o CineCaptions o fecha à força se precisar, abre de novo, remonta seu projeto com o vídeo e termina sem mostrar o erro (Windows e Mac, Studio e Free).",
+  "fr": "GO se répare tout seul : si Resolve se fige, se ferme ou plante en plein travail, CineCaptions le force à se fermer si besoin, le rouvre, reconstruit votre projet avec la vidéo et termine sans vous afficher l'erreur (Windows et Mac, Studio et Free).",
+  "de": "GO repariert sich selbst: Wenn Resolve mitten in der Arbeit einfriert, sich schließt oder abstürzt, beendet CineCaptions es bei Bedarf zwangsweise, öffnet es neu, baut dein Projekt mit dem Video wieder auf und macht fertig, ohne dir den Fehler zu zeigen (Windows und Mac, Studio und Free).",
+  "it": "GO si ripara da solo: se Resolve si blocca, si chiude o va in crash a metà lavoro, CineCaptions lo chiude forzatamente se serve, lo riapre, ricostruisce il tuo progetto con il video e finisce senza mostrarti l'errore (Windows e Mac, Studio e Free)."
+ },
+ "Los emojis animados ya no pierden su animación de salida ni dan el aviso «sin tamaño ni posición».": {
+  "en": "Animated emojis no longer lose their exit animation or show the “no size or position” warning.",
+  "pt": "Os emojis animados não perdem mais a animação de saída nem dão o aviso «sem tamanho nem posição».",
+  "fr": "Les emojis animés ne perdent plus leur animation de sortie et n'affichent plus l'avertissement « sans taille ni position ».",
+  "de": "Animierte Emojis verlieren ihre Ausblend-Animation nicht mehr und zeigen nicht mehr die Warnung „ohne Größe und Position“.",
+  "it": "Le emoji animate non perdono più l'animazione di uscita né danno l'avviso «senza dimensione né posizione»."
+ },
+ "Resolve se cerró solo ({m}): lo vuelvo a abrir y repito.": {
+  "en": "Resolve closed on its own ({m}): reopening it and trying again.",
+  "pt": "O Resolve fechou sozinho ({m}): vou abri-lo de novo e repetir.",
+  "fr": "Resolve s'est fermé tout seul ({m}) : je le rouvre et je recommence.",
+  "de": "Resolve hat sich selbst geschlossen ({m}): ich öffne es neu und wiederhole.",
+  "it": "Resolve si è chiuso da solo ({m}): lo riapro e riprovo."
+ },
+ "Resolve falló ({m}) pero contesta: repito el paso.": {
+  "en": "Resolve failed ({m}) but responds: repeating the step.",
+  "pt": "O Resolve falhou ({m}) mas responde: repito o passo.",
+  "fr": "Resolve a échoué ({m}) mais répond : je répète l'étape.",
+  "de": "Resolve ist fehlgeschlagen ({m}), antwortet aber: ich wiederhole den Schritt.",
+  "it": "Resolve ha fallito ({m}) ma risponde: ripeto il passaggio."
+ },
+ "Resolve falló armando tu proyecto: lo reparé y lo intento otra vez ({n} de 3).": {
+  "en": "Resolve failed building your project: I repaired it and I'm trying again ({n} of 3).",
+  "pt": "O Resolve falhou ao montar seu projeto: consertei e tento de novo ({n} de 3).",
+  "fr": "Resolve a échoué en créant votre projet : je l'ai réparé et je réessaie ({n} sur 3).",
+  "de": "Resolve ist beim Aufbau deines Projekts fehlgeschlagen: repariert, neuer Versuch ({n} von 3).",
+  "it": "Resolve ha fallito creando il tuo progetto: l'ho riparato e riprovo ({n} di 3)."
+ },
+ "Resolve se cerró o no contesta antes de colocar: lo reparo y vuelvo a armar tu proyecto.": {
+  "en": "Resolve closed or is not responding before placing: repairing it and rebuilding your project.",
+  "pt": "O Resolve fechou ou não responde antes de colocar: vou consertá-lo e remontar seu projeto.",
+  "fr": "Resolve s'est fermé ou ne répond pas avant le placement : je le répare et je reconstruis votre projet.",
+  "de": "Resolve ist vor dem Platzieren geschlossen oder antwortet nicht: ich repariere es und baue dein Projekt neu auf.",
+  "it": "Resolve si è chiuso o non risponde prima di posizionare: lo riparo e ricostruisco il tuo progetto."
+ },
+ "Resolve se cerró o no contesta": {
+  "en": "Resolve closed or is not responding",
+  "pt": "O Resolve fechou ou não responde",
+  "fr": "Resolve s'est fermé ou ne répond pas",
+  "de": "Resolve ist geschlossen oder antwortet nicht",
+  "it": "Resolve si è chiuso o non risponde"
+ },
+ "Resolve no terminó de armar el timeline con tu video": {
+  "en": "Resolve did not finish building the timeline with your video",
+  "pt": "O Resolve não terminou de montar a timeline com seu vídeo",
+  "fr": "Resolve n'a pas fini de créer la timeline avec votre vidéo",
+  "de": "Resolve hat die Timeline mit deinem Video nicht fertig aufgebaut",
+  "it": "Resolve non ha finito di creare la timeline con il tuo video"
  }
 }

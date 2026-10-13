@@ -430,6 +430,21 @@ def arrancar_resolve(decir=None, espera_s=240):
     return False, texto
 
 
+def se_cerro(err) -> bool:
+    """v5.5.1: ¿el error del MCP dice que Resolve no está abierto (se cerró o se cayó)?"""
+    t = str(err or '').lower()
+    return 'not running' in t or 'no está abierto' in t or 'está cerrado' in t
+
+
+def responde(timeout=20) -> bool:
+    """v5.5.1: ¿Resolve contesta a un script mínimo? (False = colgado o cerrado). Sirve en Windows y en Mac."""
+    try:
+        ok, r, _e = script('result = 1', timeout=timeout)
+        return bool(ok and r == 1)
+    except Exception:
+        return False
+
+
 def resolve_abierto():
     """True/False si Resolve esta corriendo (None si no hay MCP)."""
     c = cliente()
@@ -550,6 +565,12 @@ def preparar_resolve(abrir=True, al_estado=None, forzar_reciente=False, pagina='
         ok, r, err = script(codigo, timeout=60)
         if ok and isinstance(r, dict):
             break
+        if se_cerro(err) and abrir and intento < 5:                     # v5.5.1: Resolve se cerró entre medias: se vuelve a abrir
+            decir(tr('Abriendo DaVinci Resolve…'))
+            salida['lanzado'] = True
+            arrancar_resolve(decir, max(espera_s, 240))
+            codigo = f'PERMITIR_CAMBIO = True\nPAGINA = {pagina!r}\n' + _PREPARAR
+            continue
         time.sleep(2.5)
     else:
         salida['motivo'] = f'MCP: {err}'
@@ -939,12 +960,22 @@ def preparar_proyecto(nombre='CineCaptions', abrir=True, al_estado=None, espera_
     # 20 s de abrirse y los captions acabaron en OTRO timeline, sin el video ni su sonido). Se reintenta cada 5 s hasta que lo cree (tope 150 s).
     r, err, ok = None, '', False
     limite = time.time() + 150
+    relanzado = False
     while True:
         ok, r, err = script(codigo, timeout=60)
         if ok and isinstance(r, dict) and r.get('accion') == 'creado' and r.get('proyecto'):
             break
         if time.time() > limite:
             break
+        if not ok and se_cerro(err) and not relanzado:
+            # v5.5.1: Resolve se cerró (o se cayó) justo después de comprobar que estaba abierto: antes se insistía 150 s contra un Resolve muerto
+            # y GO paraba con «DaVinci Resolve is not running»; ahora se vuelve a abrir aquí mismo (una vez) y se sigue
+            relanzado = True
+            decir(tr('Abriendo DaVinci Resolve…'))
+            salida['lanzado'] = True
+            if arrancar_resolve(decir, max(espera_s, 240))[0]:
+                limite = time.time() + 150
+            continue
         decir(tr('Resolve termina de arrancar…'))
         time.sleep(5.0)
     if not (ok and isinstance(r, dict)):

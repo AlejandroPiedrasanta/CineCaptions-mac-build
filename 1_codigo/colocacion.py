@@ -1013,27 +1013,43 @@ def abrir_resolve_windows(decir=None, espera_s=240):
     return False
 
 
+def pids_resolve():
+    """v5.5.1: los PID de DaVinci Resolve en Windows (Resolve.exe) y en Mac (proceso «Resolve»); [] si no hay o no se pudo mirar."""
+    try:
+        if sys.platform == 'darwin':
+            import subprocess
+            r = subprocess.run(['pgrep', '-x', 'Resolve'], capture_output=True, text=True, errors='replace', timeout=8)
+            return [int(x) for x in r.stdout.split() if x.strip().isdigit()]
+        import resolve_bridge as b
+        return b._pids_de_resolve()
+    except Exception:
+        return []
+
+
 def cerrar_resolve_a_la_fuerza(decir=None, espera_s=30):
     """v5.4.40 (Windows): cierra Resolve AUNQUE esté colgado («No responde»: un cierre normal no le llega). Devuelve True si ya no queda ningún Resolve.exe. Nunca lanza.
     Solo se llama cuando el GO ya comprobó que Resolve dejó de contestar (resolve_bridge.estado_resolve); lo que Resolve tuviera sin guardar de ese proyecto de GO se pierde,
-    pero el GO lo vuelve a armar entero."""
-    if not sys.platform.startswith('win'):
+    pero el GO lo vuelve a armar entero.
+    v5.5.1: también en Mac (kill -9 del proceso «Resolve»)."""
+    if not (sys.platform.startswith('win') or sys.platform == 'darwin'):
         return False
     try:
         import subprocess
-        import resolve_bridge as b
-        if not b._pids_de_resolve():
+        if not pids_resolve():
             return True
         if decir:
             decir(tr('Cerrando Resolve…'))
-        subprocess.run(['taskkill', '/F', '/T', '/IM', 'Resolve.exe'], capture_output=True, creationflags=0x08000000, timeout=40)         # CREATE_NO_WINDOW
+        if sys.platform == 'darwin':
+            subprocess.run(['pkill', '-9', '-x', 'Resolve'], capture_output=True, timeout=20)
+        else:
+            subprocess.run(['taskkill', '/F', '/T', '/IM', 'Resolve.exe'], capture_output=True, creationflags=0x08000000, timeout=40)         # CREATE_NO_WINDOW
         t0 = time.time()
         while time.time() - t0 < espera_s:
-            if not b._pids_de_resolve():
+            if not pids_resolve():
                 time.sleep(3.0)                                        # (Resolve suelta su base de datos y sus archivos un instante después de morir)
                 return True
             time.sleep(0.5)
-        return not b._pids_de_resolve()
+        return not pids_resolve()
     except Exception:
         try:
             import registro
@@ -1047,13 +1063,13 @@ def preparar_resolve_para_go(decir=None):
     """v5.4.41 (Windows): revisión de Resolve ANTES de cada GO, para no descubrir minutos después que estaba mal (p. ej. tras salir el PC de suspensión, o con un Resolve cerrado por dentro).
     1) Resolve colgado, o con el proceso vivo y SIN ventana → se cierra y se reabre (recuperar_resolve). 2) Con el Puente latiendo, un «ping» real (acción «ping» de CineCaptions_Vista.lua,
     ~1 s): si no contesta, se relanza el Puente por el menú; si aun así no, se reinicia Resolve. Devuelve True si no hubo que tocar nada o si se arregló; False si no se pudo.
-    Nunca lanza."""
-    if not sys.platform.startswith('win'):
+    Nunca lanza. v5.5.1: también en Mac (ahí el «ping» del Puente es lo que dice si Resolve está colgado)."""
+    if not (sys.platform.startswith('win') or sys.platform == 'darwin'):
         return True
     try:
         import registro
         import resolve_bridge as b
-        if not b._pids_de_resolve():
+        if not pids_resolve():
             return True                                              # Resolve cerrado: lo abre el camino de siempre
         est = b.estado_resolve_ahora()
         if est != 'ok':
@@ -1090,8 +1106,8 @@ def preparar_resolve_para_go(decir=None):
 
 def recuperar_resolve(motivo='', decir=None):
     """v5.4.40 (Windows, Resolve Free): Resolve se colgó o se cerró solo a mitad del GO → se cierra del todo, se vuelve a abrir (proyecto u Organizador) y se relanza el Puente.
-    Devuelve True si el Puente late otra vez (el GO entonces re-arma el timeline y repite). Nunca lanza."""
-    if not sys.platform.startswith('win'):
+    Devuelve True si el Puente late otra vez (el GO entonces re-arma el timeline y repite). Nunca lanza. v5.5.1: también en Mac."""
+    if not (sys.platform.startswith('win') or sys.platform == 'darwin'):
         return False
     try:
         import registro

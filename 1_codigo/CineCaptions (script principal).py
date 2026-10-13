@@ -7858,6 +7858,7 @@ class SubtitleApp(QWidget):
         hay_mcp = resolve_mcp.ruta_exe() is not None
         self._go_tl_listo = None
         self._go_tl_error = None
+        self._go_tl_args = None                            # v5.5.1: el video de ESTE GO (nunca se rearma el de un GO anterior)
         try:                                              # v5.4.29: sin el chip «Idioma» en Inicio, GO SIEMPRE detecta el idioma al transcribir (un idioma elegido antes ya no se queda escondido)
             if 'auto' in NOMBRE_POR_CODIGO and LANG_CODE_BY_NAME.get(self.lang_var.get()) != 'auto':
                 self.lang_var.set(NOMBRE_POR_CODIGO['auto'])
@@ -8049,17 +8050,18 @@ class SubtitleApp(QWidget):
         """Hilo de GO con un video soltado: abre Resolve si hace falta y le arma un timeline NUEVO con ese video (orientación y fps del video),
         que queda como el actual: ahí caen los captions. Si algo falla, GO se detiene (`_abortar_si_fallo_el_timeline`) y no toca ningún otro timeline."""
         import resolve_mcp
+        self._go_tl_args, self._go_tl_libre = (archivo, medio), False      # v5.5.1: para volver a armarlo si Resolve se cuelga o se cae más adelante (también en Studio)
         try:
             self._esperar_vistas_reales()
             nombre_proyecto = self._go_proyecto()
             al_estado = lambda t: self.msg_queue.put(('status', t))
-            self._go_cerrar_resolve_colgado(al_estado, inmediato=True)        # v5.4.52: en Studio también se revisa Resolve ANTES de empezar
+            self._go_reparar_resolve(al_estado, inmediato=True)              # v5.4.52: en Studio también se revisa Resolve ANTES de empezar
             try:
                 import efectos_visuales as _fx
                 con_broll = bool(_fx.activado() and _fx.opciones_guardadas().get('fx_broll') and _fx.broll_clave(_fx.opciones_guardadas()))
             except Exception:
                 con_broll = False
-            for intento in (1, 2):
+            for intento in (1, 2, 3):
                 r = {}
                 if nombre_proyecto:
                     # v5.10: el video soltado vive en el proyecto «CineCaptions» (se abre Resolve, se abre o se crea el proyecto y se arma el timeline)
@@ -8076,8 +8078,10 @@ class SubtitleApp(QWidget):
                     if not r.get('error'):
                         break
                 # v5.4.52: Resolve 21.1 a veces se cuelga al crear el proyecto (sobre todo tras un render): «ResolveMCP no contestó a tools/call en 75 s».
-                # Si de verdad está colgado se cierra y se repite UNA vez (el proyecto de GO se vuelve a armar entero)
-                if intento == 1 and self._go_cerrar_resolve_colgado(al_estado):
+                # v5.5.1: CUALQUIER fallo aquí se repara solo y se repite (hasta 3 intentos): colgado → se cierra a la fuerza; cerrado o caído → se reabre;
+                # el MCP se reinicia. Solo si los tres fallan se avisa (el proyecto de GO se vuelve a armar entero cada vez)
+                if intento < 3 and self._go_reparar_resolve(al_estado, motivo=(r.get('error') if listo else prep.get('motivo')) or ''):
+                    registro.info(tr('Resolve falló armando tu proyecto: lo reparé y lo intento otra vez ({n} de 3).', n=intento + 1), 'GO · Resolve')
                     continue
                 break
             if not listo:
@@ -8107,27 +8111,78 @@ class SubtitleApp(QWidget):
             ev = getattr(self, '_go_tl_listo', None)
             if ev is not None:
                 ev.set()
-    def _go_cerrar_resolve_colgado(self, al_estado=None, inmediato=False):
-        """v5.4.52 (Studio, Windows): si Resolve está colgado («No responde» y su registro mudo), lo cierra a la fuerza y suelta la conexión MCP para que
-        preparar_proyecto lo vuelva a abrir. inmediato=True: mirada instantánea antes de empezar; si no, espera unos segundos a confirmarlo. True si lo cerró."""
+    def _go_resolve_vivo_antes_de_colocar(self):
+        """v5.5.1 (Studio por el MCP, Windows y Mac): justo antes de colocar, Resolve tiene que estar abierto y contestar. Si se cerró, se cayó o se colgó
+        mientras se transcribía (minutos), se repara y se vuelve a armar el proyecto con el video; antes la colocación caía al camino de Free y pedía
+        «un clic en Resolve». Nunca lanza."""
+        try:
+            if not (getattr(self, '_go_corriendo', False) and getattr(self, '_go_tl_args', None) and not getattr(self, '_go_tl_libre', True)):
+                return
+            import colocacion as _col
+            import resolve_mcp as _rm
+            if _col.pids_resolve() and (_rm.responde(timeout=30) or _rm.responde(timeout=30)):
+                return
+            registro.aviso(tr('Resolve se cerró o no contesta antes de colocar: lo reparo y vuelvo a armar tu proyecto.'), 'GO · Resolve')
+            if self._go_rearmar_en_resolve(tr('Resolve se cerró o no contesta')):
+                self.msg_queue.put(('status', tr('Vuelvo a colocar los subtítulos en Resolve…')))
+                try:
+                    import resolve_bridge as _rb
+                    _rb.limpiar_resultado_viejo()
+                except Exception:
+                    pass
+        except Exception:
+            registro.excepcion(origen='GO · Resolve antes de colocar')
+    def _es_fallo_de_resolve(self, err):
+        """v5.5.1: ¿el error viene de que Resolve se colgó, se cerró o no contestó? (Puente de Free, o MCP de Studio en Windows y Mac). Entonces GO lo
+        repara solo y repite el paso, en vez de mostrar el error."""
+        try:
+            import resolve_bridge
+            if resolve_bridge.es_resolve_atascado(err):
+                return True
+        except Exception:
+            pass
+        t = str(err or '').lower()
+        return any(x in t for x in ('mcp:', 'not running', 'no contestó', 'did not respond', 'timed out', 'timeout', 'se reinició mientras',
+                                    'no terminó en', 'resolvemcp', 'resolve no responde', 'dejó de responder'))
+    def _go_reparar_resolve(self, al_estado=None, motivo='', inmediato=False):
+        """v5.5.1 (Studio por el MCP; Windows y Mac): deja Resolve en condiciones de repetir el paso que falló. True = repetir.
+        · inmediato=True (antes de empezar GO): solo si Resolve está colgado de verdad («No responde» y su registro mudo, en Windows) se cierra a la fuerza.
+        · después de un fallo: la conexión MCP se reinicia; si Resolve no está abierto (se cayó) se repite y lo abre preparar_proyecto; si está abierto
+          pero NO contesta a un script mínimo (colgado; en Mac es la única forma de saberlo) se cierra a la fuerza y se repite; si contesta, se repite tal cual.
+        Lo que Resolve tuviera sin guardar del proyecto de GO se pierde, pero GO lo vuelve a armar entero (el proyecto anterior ya quedó guardado)."""
         try:
             import colocacion
-            import resolve_bridge as _rb
-            if not _rb._pids_de_resolve():
+            import resolve_mcp
+            if not colocacion.pids_resolve():
+                if inmediato:
+                    return False
+                resolve_mcp.cerrar()
+                registro.aviso(tr('Resolve se cerró solo ({m}): lo vuelvo a abrir y repito.', m=str(motivo or '—')[:160]), 'GO · Resolve')
+                if al_estado:
+                    al_estado(tr('Reabriendo Resolve…'))
+                return True
+            colgado = False
+            if sys.platform.startswith('win'):
+                import resolve_bridge as _rb
+                est = _rb.estado_resolve_ahora() if inmediato else _rb.esperar_estado_resolve(12.0)
+                colgado = est == 'colgado'
+            if inmediato and not colgado:
                 return False
-            est = _rb.estado_resolve_ahora() if inmediato else _rb.esperar_estado_resolve(12.0)
-            if est != 'colgado':
-                return False
-            registro.aviso(tr('Resolve dejó de responder ({m}): lo cierro y vuelvo a empezar.', m=est), 'GO · Resolve')
+            if not colgado:
+                resolve_mcp.cerrar()                                      # un MCP atascado también da «no contestó»: se arranca de nuevo
+                colgado = not resolve_mcp.responde(timeout=30) and not resolve_mcp.responde(timeout=30)
+            if not colgado:
+                registro.aviso(tr('Resolve falló ({m}) pero contesta: repito el paso.', m=str(motivo or '—')[:160]), 'GO · Resolve')
+                return True
+            registro.aviso(tr('Resolve dejó de responder ({m}): lo cierro y vuelvo a empezar.', m=str(motivo or 'colgado')[:160]), 'GO · Resolve')
             if not colocacion.cerrar_resolve_a_la_fuerza(al_estado):
                 return False
-            import resolve_mcp
             resolve_mcp.cerrar()
             if al_estado:
                 al_estado(tr('Reabriendo Resolve…'))
             return True
         except Exception:
-            registro.excepcion(origen='GO · Resolve colgado')
+            registro.excepcion(origen='GO · reparar Resolve')
             return False
     def _go_video_para_resolve(self, archivo, al_estado=None):
         """v5.4.52: el video que se lleva a Resolve. Si su audio es HE-AAC (videos bajados de Pinterest / Instagram / TikTok), Resolve lo renderiza MUDO:
@@ -8146,7 +8201,7 @@ class SubtitleApp(QWidget):
         """Hilo de GO con un video soltado en DaVinci Resolve FREE (sin MCP): le pide al Puente que cree el proyecto «CineCaptions» y arme el timeline con ese video
         (CineCaptions_ArmarVideo.lua, la gemela de lo que en Studio hace el MCP). Si algo falla, GO se detiene (`_abortar_si_fallo_el_timeline`)."""
         import resolve_bridge
-        self._go_tl_args = (archivo, medio)                     # (para volver a armar el timeline si Resolve se cuelga más adelante)
+        self._go_tl_args, self._go_tl_libre = (archivo, medio), True    # (para volver a armar el timeline si Resolve se cuelga más adelante)
         try:
             self._esperar_vistas_reales()
             al_estado = lambda t: self.msg_queue.put(('status', t))
@@ -8231,7 +8286,15 @@ class SubtitleApp(QWidget):
             args = getattr(self, '_go_tl_args', None)
             if not args:
                 return False
-            if not colocacion.recuperar_resolve(motivo, decir=lambda t: self.msg_queue.put(('status', t))):
+            decir = lambda t: self.msg_queue.put(('status', t))
+            if not getattr(self, '_go_tl_libre', True):
+                # v5.5.1: Studio (MCP, Windows y Mac): se repara (colgado → cierre forzado; caído → se reabre) y se vuelve a armar el proyecto con el video
+                if not self._go_reparar_resolve(decir, motivo=motivo):
+                    return False
+                self._go_tl_error = None
+                self._go_timeline_del_video(*args)
+                return not getattr(self, '_go_tl_error', None)
+            if not colocacion.recuperar_resolve(motivo, decir=decir):
                 return False
             self._go_tl_error = None
             self._go_timeline_del_video_libre(*args)
@@ -11334,7 +11397,7 @@ class SubtitleApp(QWidget):
                 registro.aviso(f'Efectos visuales: {mensaje}', 'efectos')
                 try:
                     import resolve_bridge
-                    self._efectos_atascado = resolve_bridge.es_resolve_atascado(mensaje)          # v5.4.40: Resolve se colgó colocando los efectos: el GO lo reinicia y repite
+                    self._efectos_atascado = self._es_fallo_de_resolve(mensaje)          # v5.4.40: Resolve se colgó colocando los efectos: el GO lo reinicia y repite (v5.5.1: también en Studio/Mac)
                 except Exception:
                     pass
                 return tr('Los efectos visuales no se pudieron colocar: {m}', m=str(mensaje)[:120])
@@ -11412,6 +11475,8 @@ class SubtitleApp(QWidget):
             ok, mensaje = edicion_pro.aplicar(plan, al_estado=lambda t: self.msg_queue.put(('status', tr(str(t)))), offset_frames=self._offset_frames() or 0)
             if not ok:
                 registro.aviso(f'Edición PRO: {mensaje}', 'edición pro')
+                if self._es_fallo_de_resolve(mensaje):
+                    self._efectos_atascado = True                       # v5.5.1: Resolve se colgó o se cayó con la Edición PRO (Magic Mask…): GO lo repara y rehace todo
                 return tr('La Edición PRO no se pudo colocar: {m}', m=str(mensaje)[:120])
             registro.info(f'Edición PRO colocada: {mensaje}', 'edición pro')
             return tr('con mejoras del tema') if plan.get('ligero') else tr('con Edición PRO')
@@ -11455,9 +11520,10 @@ class SubtitleApp(QWidget):
             inicio_total = empezo
             if colocacion:
                 colocacion.vista_en_manifiesto(st.SHARED_FOLDER / 'subtitles_manifest.json')
+            self._go_resolve_vivo_antes_de_colocar()
             ok, err = resolve_bridge.ejecutar('subtitulos')
             for _reintento in range(2):                              # v5.4.40: Resolve colgado o cerrado colocando los captions → se reinicia, se arma el timeline otra vez y se repite
-                if ok or not resolve_bridge.es_resolve_atascado(err) or not getattr(self, '_go_corriendo', False):
+                if ok or not self._es_fallo_de_resolve(err) or not getattr(self, '_go_corriendo', False):
                     break
                 if not self._go_rearmar_en_resolve(err):
                     break
@@ -13400,7 +13466,10 @@ class SubtitleApp(QWidget):
             if ev_tl is not None and not ev_tl.is_set():
                 # GO con un video soltado: Resolve todavía está armando el timeline con él (los captions se colocan ahí)
                 self.msg_queue.put(('status', tr('Esperando a que Resolve termine el timeline con tu video…')))
-                ev_tl.wait(240)
+                # v5.5.1: con la reparación automática (hasta 3 intentos, reabriendo Resolve) puede tardar más de 240 s; si aun así no termina, GO se
+                # detiene: NUNCA se colocan los captions en otro timeline
+                if not ev_tl.wait(900) and not getattr(self, '_go_tl_error', None):
+                    self._go_tl_error = tr('Resolve no terminó de armar el timeline con tu video')
             self._go_tl_listo = None
             self._abortar_si_fallo_el_timeline()
             self.msg_queue.put(('done', (n_bloques, langs, str(st.SHARED_FOLDER))))

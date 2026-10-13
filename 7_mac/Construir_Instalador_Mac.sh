@@ -215,7 +215,13 @@ TXT
 SALIDA="${CINECAPTIONS_SALIDA:-$RAIZ/INSTALADORES/Mac}"; mkdir -p "$SALIDA"
 rm -f "$SALIDA"/CineCaptions_Mac_${NOMBRE_ARQ}_*.dmg          # la version anterior de esta arquitectura se quita
 DMG="$SALIDA/CineCaptions_Mac_${NOMBRE_ARQ}_$VERSION.dmg"
-hdiutil create -volname "CineCaptions $VERSION" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
+# v5.5.0: en las Mac de GitHub hdiutil a veces falla con «Resource busy» (el disco lo está mirando el sistema): hasta 5 intentos
+for intento in 1 2 3 4 5; do
+    hdiutil create -volname "CineCaptions $VERSION" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null && break
+    [ "$intento" = 5 ] && falla "hdiutil no pudo crear la imagen de disco"
+    echo "    hdiutil ocupado (intento $intento de 5): reintento en 15 s"
+    sleep 15
+done
 [ -n "${FIRMA_APP:-}" ] && codesign --sign "$FIRMA_APP" "$DMG"
 if [ -n "${NOTARIO_PERFIL:-}" ] && [ -n "${FIRMA_APP:-}" ]; then
     xcrun notarytool submit "$DMG" --keychain-profile "$NOTARIO_PERFIL" --wait && xcrun stapler staple "$DMG"

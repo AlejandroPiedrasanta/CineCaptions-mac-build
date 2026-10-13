@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.5.0 (subtitulos)"
+VERSION = "5.5.1 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -5270,6 +5270,14 @@ def _comp_animacion_emoji(largo, entrada, salida):
             "\t\t\tViewInfo = OperatorInfo { Pos = { 400, 50 } },\n\t\t},\n\t},\n}\n") % (largo, largo, expr)
 
 
+def _clip_vivo(item):
+    """v5.5.1: ¿el clip sigue en el timeline? (Resolve a veces descarta un trozo recién puesto y el objeto queda muerto: GetStart/GetName dan None)."""
+    try:
+        return item.GetStart() is not None and item.GetName() is not None
+    except Exception:
+        return False
+
+
 def _props_puestas(item, props):
     """v5.4.52: Resolve 21.1 a veces aplica el valor y aun así SetProperty devuelve False (el aviso «emoji sin tamaño ni posición» salía con el emoji
     bien puesto): se mira lo que de verdad quedó en el clip."""
@@ -5376,6 +5384,8 @@ def colocar_emojis(timeline, media_pool, track_info, planes, fps):
                         break
                     trozos.append((c, seg))
                     pos += seg
+                # v5.5.1: un trozo que Resolve no conservó (clip muerto: sin inicio ni nombre) se descarta; la salida animada va al último vivo
+                trozos = [(c, l) for c, l in trozos if _clip_vivo(c)]
                 if trozos:
                     colocado = trozos[0][0]
             else:

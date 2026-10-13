@@ -248,6 +248,7 @@ def _rastrear(tl, items, idx_persona, decir):
             decir('Magic Mask: rastreando a la persona (%d de %d)…' % (k + 1, len(items)))
             mm.SetInput('TrackBidirectional', 1)
             t0, ultimo, quieto = time.time(), None, time.time()
+            relanzar = 1                                                   # v5.5.1: con Resolve recién abierto el rastreo a veces se para a medias: se relanza UNA vez
             while time.time() - t0 < RASTREO_MAX_S:
                 time.sleep(1.0)
                 lo, hi = mm.GetInput('ProcessedFramesLow'), mm.GetInput('ProcessedFramesHigh')
@@ -256,6 +257,12 @@ def _rastrear(tl, items, idx_persona, decir):
                 if (lo, hi) != ultimo:
                     ultimo, quieto = (lo, hi), time.time()
                 elif time.time() - quieto > 12:                            # sin avanzar 12 s: se deja como está (no se cancela: modal)
+                    if relanzar > 0:
+                        relanzar -= 1
+                        print('  Magic Mask: el rastreo se paró en %s-%s de %d fotogramas: lo relanzo' % (lo, hi, dur))
+                        mm.SetInput('TrackBidirectional', 1)
+                        quieto = time.time()
+                        continue
                     print('  Magic Mask: el rastreo se paró en %s-%s de %d fotogramas' % (lo, hi, dur))
                     break
     finally:

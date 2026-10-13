@@ -484,6 +484,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.5.1', [
+        'GO se repara solo: si Resolve se congela, se cierra o se cae a mitad del trabajo, CineCaptions lo cierra a la fuerza si hace falta, lo vuelve a abrir, rearma tu proyecto con el video y termina sin mostrarte el error (Windows y Mac, Studio y Free).',
+        'Los emojis animados ya no pierden su animación de salida ni dan el aviso «sin tamaño ni posición».',
+    ]),
     ('5.5.0', [
         'Nuevo: Tema 6 «Editorial», con el estilo de los reels editoriales: captions en serif fina con la frase clave grande en lima o blanco, escenas melocotón con tarjetas blancas que entran con un destello, el visor de la cámara sobre tu cara, la barra de búsqueda con la palabra que hay que comentar, tu perfil con los seguidores que cuentan y la píldora del equipo.',
         'Tema 5: el fondo en blanco y negro con tu persona a color cuando dices algo fuerte, un icono que gira alrededor de tu cabeza (por detrás y por delante), el sticker congelado en el gancho, la sombra de tu persona sobre la palabra de detrás, tarjetas encima de la cabeza (mapa del país, gráfica del % que dices, la frase tachada, la lista que se marca), la pantalla final cuando pides que te sigan y transiciones con zoom en los cortes.',
