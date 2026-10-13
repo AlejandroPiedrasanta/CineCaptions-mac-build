@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.4.50 (subtitulos)"
+local VERSION = "5.4.52 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -1300,9 +1300,12 @@ local function poner_props(item, props)
     end
     if una_vez() then return true end
     -- v5.4.16 (auto-reparacion, visto en Resolve Free: de vez en cuando un clip recien puesto rechaza su primera orden y quedaba sin tamano ni posicion):
-    -- una pausa corta y UN reintento. Solo se paga cuando falla.
-    pcall(function() if bmd and bmd.wait then bmd.wait(0.2) end end)
-    return una_vez()
+    -- una pausa corta y hasta DOS reintentos (v5.4.52, igual que el gemelo .py). Solo se paga cuando falla.
+    for _, espera in ipairs({ 0.2, 0.5 }) do
+        pcall(function() if bmd and bmd.wait then bmd.wait(espera) end end)
+        if una_vez() then return true end
+    end
+    return false
 end
 
 -- Las UNIDADES de Pan/Tilt, en un solo sitio (v3.3.1): fraccion del
@@ -5940,6 +5943,19 @@ local function comp_animacion_emoji(largo, entrada, salida)
         .. "\t\t\tViewInfo = OperatorInfo { Pos = { 400, 50 } },\n\t\t},\n\t},\n}\n", largo, largo, expr)
 end
 
+-- v5.4.52 (gemela de _props_puestas en .py): Resolve 21.1 a veces aplica el valor y aun asi SetProperty devuelve false (el aviso
+-- «emoji sin tamaño ni posición» salia con el emoji bien puesto): se mira lo que de verdad quedo en el clip.
+local function props_puestas(item, props)
+    for clave, valor in pairs(props) do
+        local ok, actual = pcall(function() return item:GetProperty(clave) end)
+        local a, v = tonumber(ok and actual or nil), tonumber(valor)
+        if a == nil or v == nil or math.abs(a - v) > 0.01 + 0.001 * math.abs(v) then
+            return false
+        end
+    end
+    return true
+end
+
 local function animar_emoji(colocado, largo, entrada, salida, comps)
     if not entrada and not salida then return false end
     if io == nil then
@@ -6057,6 +6073,12 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
             if es_secuencia then
                 -- secuencia animada: se repite (en bucle) hasta cubrir el bloque; la entrada va en el 1.o y la salida en el ultimo
                 local cuadros = math.max(2, math.floor(tonumber(sec.n) or 2))
+                -- v5.4.52 (gemela del .py): un ultimo trozo de 1-5 cuadros Resolve lo descarta (clip muerto: aviso falso y la salida animada caia en el):
+                -- el bucle termina con el ultimo trozo entero
+                local resto = largo_plan % cuadros
+                if largo_plan > cuadros and resto > 0 and resto < 6 then
+                    largo_plan = largo_plan - resto
+                end
                 local pos = 0
                 while pos < largo_plan do
                     local seg = math.min(cuadros, largo_plan - pos)
@@ -6127,9 +6149,10 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
             for k_t, par_t in ipairs(trozos) do
                 local c_t, largo_t = par_t[1], par_t[2]
                 poner_props(c_t, { Scaling = ajustar })
-                if not poner_props(c_t, { ZoomX = zoom, ZoomY = zoom,
-                                          Pan = pan_px(cx - 0.5 + (tonumber(p.dx_n) or 0), ancho) * k_pan,
-                                          Tilt = tilt_px(y + (tonumber(p.dy_n) or 0), alto) * k_tilt }) then
+                local props_t = { ZoomX = zoom, ZoomY = zoom,
+                                  Pan = pan_px(cx - 0.5 + (tonumber(p.dx_n) or 0), ancho) * k_pan,
+                                  Tilt = tilt_px(y + (tonumber(p.dy_n) or 0), alto) * k_tilt }
+                if not poner_props(c_t, props_t) and not props_puestas(c_t, props_t) then
                     bien = false
                 end
                 -- entrada (rebote) en el primero y salida en el ultimo: el icono no aparece ni desaparece de golpe

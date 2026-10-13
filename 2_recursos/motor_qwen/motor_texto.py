@@ -58,7 +58,8 @@ SISTEMA = (
     '(letras cambiadas, de más o de menos: «ablando» -> «hablando», «kiero» -> «quiero», '
     '«enpezamos» -> «empezamos», «proyeto» -> «proyecto», «jente» -> «gente», «tambien» -> «también»; '
     'revisa CADA palabra), nombres propios o marcas mal escritos. UNA palabra por UNA palabra: nunca juntes, partas, añadas ni quites '
-    'palabras. No cambies el estilo de quien habla: solo errores.\n'
+    'palabras. No cambies el estilo de quien habla: solo errores. Corrige en el MISMO idioma del texto: NUNCA traduzcas una palabra a otro '
+    'idioma (en un vídeo en inglés, «Number» y «effects» están bien: no son «Número» ni «efectos»).\n'
     '2) "frases": para CADA frase, sin saltarte ninguna:\n'
     '   "principal": la palabra que hace que alguien deje de deslizar: la cifra, el resultado, la '
     'emoción, el sustantivo que da el giro o el verbo de acción fuerte («duplicamos», «estalló», '
@@ -98,7 +99,7 @@ def frases_de(palabras, desde, hasta, largo_max=16):
 
 # v5.4: modo «ortografia»: una pasada que SOLO corrige faltas de ortografia y tildes (sin pesos ni emojis).
 SISTEMA_ORTO = (
-    'Eres un corrector ortográfico. Recibes una transcripción dividida en frases (F1, F2…); cada palabra lleva delante su '
+    'Eres un corrector ortográfico. Corriges en el MISMO idioma del texto y NUNCA traduces palabras a otro idioma. Recibes una transcripción dividida en frases (F1, F2…); cada palabra lleva delante su '
     'número entre corchetes. Devuelve SOLO un JSON {"correcciones": [[n, "palabra mal escrita", "palabra corregida"], ...]}. '
     'Corrige únicamente FALTAS DE ORTOGRAFÍA y tildes: letras cambiadas, de más o de menos (b/v, h, c/s/z, g/j, k/qu, m/n, '
     'rr/r), tildes que faltan o sobran («tambien» -> «también»). UNA palabra por UNA palabra: nunca juntes, partas, añadas ni '
@@ -144,6 +145,20 @@ def tramos(palabras):
 
 def _sin_tildes(t):
     return ''.join(c for c in unicodedata.normalize('NFD', t.lower()) if unicodedata.category(c)[0] in 'LN')
+
+
+LETRAS_PROPIAS = {'en': set(), 'es': set('áéíóúüñÁÉÍÓÚÜÑ'), 'pt': set('áâãàéêíóôõúçÁÂÃÀÉÊÍÓÔÕÚÇ'), 'fr': set('àâæçéèêëîïôœùûüÿÀÂÆÇÉÈÊËÎÏÔŒÙÛÜŸ'),
+                  'de': set('äöüßÄÖÜ'), 'it': set('àèéìíîòóùúÀÈÉÌÍÎÒÓÙÚ')}
+
+
+def traduce(original, nueva, idioma):
+    """v5.4.51: ¿la «corrección» mete letras que el idioma del texto no usa? (la IA, con instrucciones en español, «corregía» «Number» -> «Número»
+    en un vídeo en inglés). Entonces no es una corrección: es una traducción, y se descarta."""
+    propias = LETRAS_PROPIAS.get(str(idioma or '')[:2])
+    if propias is None:
+        return False
+    nuevas = {c for c in str(nueva) if ord(c) > 127 and c.isalpha()} - {c for c in str(original)}
+    return any(c not in propias for c in nuevas)
 
 
 def correccion_aceptable(original, nueva, umbral=0.55):
@@ -332,8 +347,11 @@ def analizar_con(tok, modelo, repo, dispositivo, entrada, salida):
     import torch
     t0 = time.time()
     datos = json.loads(open(entrada, encoding='utf-8').read())
+    if datos.get('modo') == 'escenas':                       # v5.4.51: el director de escenas del Tema 5
+        return analizar_escenas(tok, modelo, repo, dispositivo, datos, salida)
     palabras = [str(p) for p in datos.get('palabras') or []]
     idioma = IDIOMAS.get(str(datos.get('idioma') or 'es')[:2], 'el idioma del texto')
+    codigo = str(datos.get('idioma') or '')[:2]
     modo = str(datos.get('modo') or '')
     trozos = tramos(palabras)
     correcciones, pesos, emojis = {}, {}, {}
@@ -377,7 +395,8 @@ def analizar_con(tok, modelo, repo, dispositivo, entrada, salida):
                     g = next((j for j in range(desde, hasta) if _sin_tildes(palabras[j]) == objetivo), None)
                 else:
                     g = ubicar(palabras, desde, hasta, desde + i, vieja)
-                if g is not None and ' ' not in nueva.strip() and correccion_aceptable(palabras[g], nueva, 0.74 if modo == 'ortografia' else 0.55):
+                if g is not None and ' ' not in nueva.strip() and not traduce(palabras[g], nueva, codigo) \
+                        and correccion_aceptable(palabras[g], nueva, 0.74 if modo == 'ortografia' else 0.55):
                     correcciones[g] = con_puntuacion(palabras[g], nueva)
             for frase in r.get('frases') or []:
                 if not isinstance(frase, dict):
@@ -405,6 +424,87 @@ def analizar_con(tok, modelo, repo, dispositivo, entrada, salida):
                  'emojis': {str(k): v for k, v in emojis.items()}}
     with open(salida, 'w', encoding='utf-8') as f:
         json.dump(resultado, f, ensure_ascii=False)
+    decir('LISTO', salida)
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+# v5.4.51: el DIRECTOR DE ESCENAS del Tema 5 (modo 'escenas'). Recibe las frases de los captions (B1, B2…) y decide qué ilustrar, como el editor
+# del video de referencia de la skill «Edit VIRAL Reels with AI»: cada escena es UN objeto (o unos pocos) que dibuja lo que se dice y entra
+# justo cuando se nombra (las «anclas» son palabras literales de la frase). Sirve para cualquier tema: cocina, bodas, negocios, deporte…
+# in.json: {"modo": "escenas", "idioma": "es", "bloques": ["texto del bloque 1", ...]}  ->  out.json: {"escenas": [{"b", "tipo", "datos", "anclas"}]}
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+TIPOS_ESCENA = ('lista', 'fichas', 'comparacion', 'pregunta', 'cifra', 'precio', 'grafica', 'reloj', 'avatares', 'calendario', 'estado', 'muestras',
+                'app', 'ojo', 'icono')
+SISTEMA_ESCENAS = (
+    'Eres el mejor editor de motion graphics para reels virales. Recibes las frases de un vídeo, numeradas (B1, B2…). Elige las POCAS frases '
+    'que merecen una escena animada que ILUSTRE exactamente lo que se dice, y sus datos. Es mejor no poner escena que poner una que no encaja.\n'
+    'Reglas estrictas: (1) usa SOLO cosas que se dicen literalmente en la frase o en la siguiente; NUNCA inventes cifras, colores, preguntas, '
+    'nombres ni opciones; (2) como mucho una escena cada 3 frases y nunca en dos frases seguidas; (3) textos cortos (1–3 palabras) copiados de '
+    'lo que se dice; (4) si dudas, no pongas escena.\n'
+    'Tipos (UNO por escena):\n'
+    '  "lista": {"items": [...]}  — se enumeran 2–5 cosas («harina, azúcar y huevos»)\n'
+    '  "comparacion": {"a": "...", "b": "..."}  — dos opciones opuestas que se DICEN («de principiante a profesional», «antes y después»)\n'
+    '  "fichas": {"items": [...]}  — se nombran 2 o más nombres propios (marcas, apps, lugares, personas)\n'
+    '  "cifra": {"valor": "...", "etiqueta": "..."}  — se dice un número (el valor lleva el número tal cual: «25%», «3», «100»)\n'
+    '  "precio": {"valor": "...", "signo": "$"} — se dice una cantidad de dinero   "reloj": {"valor": "20", "unidad": "minutos"} — un tiempo\n'
+    '  "grafica": {"valor": "...", "signo": "%"} — algo que crece o aumenta     "avatares": {"etiqueta": "..."} — clientes, gente, seguidores\n'
+    '  "calendario": {"dia": "..."} — un día o una fecha   "estado": {"bien": true|false, "etiqueta": "..."} — un error / algo correcto\n'
+    '  "muestras": {"colores": [...]} — SOLO si se nombran colores (rojo, negro, azul…)\n'
+    '  "pregunta": {"pregunta": "...", "opciones": ["...", "..."]} — SOLO si quien habla le hace una pregunta al público\n'
+    '  "app": {} — vídeos, contenido, editar, redes sociales   "ojo": {} — lo visual, la atención\n'
+    '"anclas": la PALABRA EXACTA de la frase en la que aparece cada objeto (copiada tal cual).\n'
+    'Devuelve SOLO un JSON: {"escenas": [...]}\n'
+    'Ejemplo 1. Entrada:\n'
+    'B1: Hoy te enseño a preparar el mejor pastel\nB2: solo necesitas harina azúcar y huevos\nB3: y lo tienes listo en 20 minutos\n'
+    'B4: el error que todos cometen es el horno\nB5: así que guárdalo para después\n'
+    'Salida:\n{"escenas": [{"b": 2, "tipo": "lista", "datos": {"items": ["Harina", "Azúcar", "Huevos"]}, "anclas": ["harina", "azúcar", "huevos"]}, '
+    '{"b": 4, "tipo": "estado", "datos": {"bien": false, "etiqueta": "EL HORNO"}, "anclas": ["error"]}]}\n'
+    'Ejemplo 2. Entrada:\n'
+    'B1: We went from 0 to 10,000 followers\nB2: in just three months\nB3: and the secret was simple\nB4: we posted on TikTok and Instagram every day\n'
+    'Salida:\n{"escenas": [{"b": 1, "tipo": "grafica", "datos": {"valor": "10,000", "signo": ""}, "anclas": ["10,000"]}, '
+    '{"b": 4, "tipo": "fichas", "datos": {"items": ["TikTok", "Instagram"]}, "anclas": ["TikTok", "Instagram"]}]}'
+)
+BLOQUES_POR_CONSULTA = 18
+
+
+def analizar_escenas(tok, modelo, repo, dispositivo, datos, salida):
+    import torch
+    t0 = time.time()
+    bloques = [str(b) for b in datos.get('bloques') or []]
+    idioma = IDIOMAS.get(str(datos.get('idioma') or 'es')[:2], 'el idioma del texto')
+    tandas = [(k, bloques[k:k + BLOQUES_POR_CONSULTA]) for k in range(0, len(bloques), BLOQUES_POR_CONSULTA)]
+    escenas = []
+    decir('PROGRESO', '0.0')
+    for j in range(0, len(tandas), LOTE):
+        lote = tandas[j:j + LOTE]
+        mensajes = []
+        for desde, trozo in lote:
+            usuario = f'Idioma: {idioma}.\n' + '\n'.join(f'B{n + 1}: {t}' for n, t in enumerate(trozo))
+            conversacion = [{'role': 'system', 'content': SISTEMA_ESCENAS}, {'role': 'user', 'content': usuario}]
+            try:
+                texto = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+            except TypeError:
+                texto = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True)
+            mensajes.append(texto)
+        entradas = tok(mensajes, return_tensors='pt', padding=True).to(modelo.device)
+        with torch.inference_mode():
+            out = modelo.generate(**entradas, max_new_tokens=900, do_sample=False, pad_token_id=tok.pad_token_id or tok.eos_token_id)
+        for (desde, trozo), fila in zip(lote, out):
+            respuesta = tok.decode(fila[entradas['input_ids'].shape[1]:], skip_special_tokens=True)
+            if os.environ.get('CINECAPTIONS_DEPURAR_IA'):
+                sys.stderr.write('RESPUESTA ESCENAS:\n' + respuesta + '\n')
+            for e in (leer_json(respuesta).get('escenas') or []):
+                try:
+                    b = int(e.get('b')) - 1
+                    tipo = str(e.get('tipo') or '')
+                except Exception:
+                    continue
+                if 0 <= b < len(trozo) and tipo in TIPOS_ESCENA:
+                    escenas.append({'b': desde + b, 'tipo': tipo, 'datos': e.get('datos') if isinstance(e.get('datos'), dict) else {},
+                                    'anclas': [str(x) for x in (e.get('anclas') or []) if isinstance(x, (str, int, float))][:6]})
+        decir('PROGRESO', f'{min(1.0, (j + len(lote)) / max(1, len(tandas))):.3f}')
+    with open(salida, 'w', encoding='utf-8') as f:
+        json.dump({'modelo': repo, 'segundos': round(time.time() - t0, 1), 'escenas': escenas}, f, ensure_ascii=False)
     decir('LISTO', salida)
 
 

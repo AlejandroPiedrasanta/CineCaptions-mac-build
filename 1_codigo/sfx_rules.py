@@ -344,7 +344,48 @@ def nivel_de_audio(audio, sr):
     sirve = db >= max(float(db.max()) - 30.0, -70.0)
     rms_db = float(10 * np.log10(max(float(potencia[sirve].mean()), 1e-12)))
     return rms_db, float(20 * np.log10(max(pico, 1e-9)))
-def ganancia_de_normalizado_db(ruta):
+# v5.4.51: el objetivo fijo (-20 dB) dejaba los efectos casi tan fuertes como la voz: con «un toque por palabra» (Temas 2 y 4) abrumaba. Ahora,
+# si se conoce la voz del video (fijar_voz, lo llama GO al preparar los sonidos), cada efecto queda POR DEBAJO de ella: los de cada palabra
+# BAJO_LA_VOZ_PALABRA dB (una textura, no un golpe) y los demás (palabra principal, emojis, intro) BAJO_LA_VOZ_EFECTO dB. Nunca más fuerte que el
+# objetivo del usuario.
+BAJO_LA_VOZ_PALABRA, BAJO_LA_VOZ_EFECTO = 14.0, 9.0
+_VOZ = {'ruta': None, 'db': None}
+
+
+def fijar_voz(ruta_video):
+    """Mide (una vez por archivo) lo fuerte que suena la voz del video con la misma medida que los efectos (nivel_de_audio) y la recuerda. dB o None."""
+    try:
+        clave = str(Path(str(ruta_video)).resolve())
+    except Exception:
+        return None
+    if _VOZ['ruta'] == clave:
+        return _VOZ['db']
+    _VOZ.update(ruta=clave, db=None)
+    try:
+        import av
+        import numpy as np
+        trozos = []
+        with av.open(clave) as c:
+            rs = av.AudioResampler(format='flt', layout='mono', rate=16000)
+            for fr in c.decode(c.streams.audio[0]):
+                for g in rs.resample(fr):
+                    trozos.append(g.to_ndarray().ravel())
+        if trozos:
+            _VOZ['db'] = round(nivel_de_audio(np.concatenate(trozos), 16000)[0], 2)
+    except Exception:
+        _VOZ['db'] = None
+    return _VOZ['db']
+
+
+def objetivo_para(tope_s=None):
+    """El nivel al que se normaliza un efecto: el del usuario, y bajo la voz del video si se conoce (más bajo aún si es de cada palabra)."""
+    base = objetivo_db()
+    if _VOZ['db'] is None:
+        return base
+    return min(base, _VOZ['db'] - (BAJO_LA_VOZ_PALABRA if tope_s else BAJO_LA_VOZ_EFECTO))
+
+
+def ganancia_de_normalizado_db(ruta, objetivo=None):
     """Los dB que hay que sumarle a ese sonido para llegar al objetivo (0.0 si está apagado, si no se puede medir o si ya está en el nivel). Se mide una vez y se recuerda."""
     if not normalizar_activo():
         return 0.0
@@ -361,7 +402,7 @@ def ganancia_de_normalizado_db(ruta):
             g = [sello, round(rms_db, 2), round(pico_db, 2)]
             datos[clave] = g
             _escribir_dic(ARCHIVO_NIVELES, datos)
-        ganancia = max(-12.0, min(9.0, objetivo_db() - float(g[1])))
+        ganancia = max(-24.0, min(9.0, (objetivo_db() if objetivo is None else float(objetivo)) - float(g[1])))
         ganancia = min(ganancia, -1.0 - float(g[2]))               # el pico nunca pasa de -1 dBFS
         return 0.0 if abs(ganancia) < 0.3 else float(ganancia)
     except Exception:
@@ -417,7 +458,7 @@ def con_volumen(ruta, db_extra=0.0, tope_s=None, alinear=False):
     tiempo: Resolve no deja cambiar el volumen de un clip por script, así que el volumen y el recorte quedan dentro del archivo.
     v5.5 `alinear`: el WAV empieza `adelanto` s antes de su pico (adelanto_natural) y el nombre acaba en «_a<ms>.wav»; quien lo coloca lo pone ese tiempo ANTES de su instante (adelanto_de),
     así el PICO del sonido (el golpe del hit, lo más fuerte del whoosh) cae justo cuando entra la palabra y no medio segundo después."""
-    g_norm = ganancia_de_normalizado_db(ruta)
+    g_norm = ganancia_de_normalizado_db(ruta, objetivo_para(tope_s))
     factor = volumen_de(ruta) * (10 ** ((float(db_extra or 0.0) + g_norm) / 20.0))
     recorte = recorte_de(ruta)
     adelanto, tp = adelanto_natural(ruta, recorte) if alinear else (0.0, 0.0)

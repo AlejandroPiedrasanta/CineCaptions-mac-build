@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.4.50 (subtitulos)"
+VERSION = "5.4.52 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -1110,20 +1110,30 @@ def _prop_de(item, clave):
 
 def _poner_props(item, props):
     """21.1 trae SetProperties (y da SetProperty por forma vieja); las
-    versiones anteriores solo SetProperty. Se prueban las dos."""
-    try:
-        if item.SetProperties(props):
-            return True
-    except Exception:
-        pass
-    todo = True
-    for clave, valor in props.items():
+    versiones anteriores solo SetProperty. Se prueban las dos.
+    v5.4.52 (gemelo del .lua v5.4.16): un clip recién puesto a veces rechaza su
+    primera orden (el emoji se quedaba en el centro, sin tamaño): pausa corta y
+    hasta dos reintentos. Solo se paga cuando falla."""
+    def una_vez():
         try:
-            if not item.SetProperty(clave, valor):
-                todo = False
+            if item.SetProperties(props):
+                return True
         except Exception:
-            todo = False
-    return todo
+            pass
+        todo = True
+        for clave, valor in props.items():
+            try:
+                if not item.SetProperty(clave, valor):
+                    todo = False
+            except Exception:
+                todo = False
+        return todo
+    for espera in (0.0, 0.2, 0.5):
+        if espera:
+            _time.sleep(espera)
+        if una_vez():
+            return True
+    return False
 
 
 def _pan_px(x, ancho):
@@ -5260,6 +5270,18 @@ def _comp_animacion_emoji(largo, entrada, salida):
             "\t\t\tViewInfo = OperatorInfo { Pos = { 400, 50 } },\n\t\t},\n\t},\n}\n") % (largo, largo, expr)
 
 
+def _props_puestas(item, props):
+    """v5.4.52: Resolve 21.1 a veces aplica el valor y aun así SetProperty devuelve False (el aviso «emoji sin tamaño ni posición» salía con el emoji
+    bien puesto): se mira lo que de verdad quedó en el clip."""
+    try:
+        for clave, valor in props.items():
+            if abs(float(item.GetProperty(clave)) - float(valor)) > 0.01 + 0.001 * abs(float(valor)):
+                return False
+        return True
+    except Exception:
+        return False
+
+
 def _animar_emoji(colocado, largo, entrada, salida):
     """Le pone al clip del emoji su comp de entrada/salida. Si Resolve no la acepta, el emoji sigue ahi (sin rebote)."""
     try:
@@ -5341,6 +5363,11 @@ def colocar_emojis(timeline, media_pool, track_info, planes, fps):
             if es_secuencia:
                 # secuencia animada: se repite (en bucle) hasta cubrir el bloque; la entrada va en el 1.o y la salida en el ultimo
                 cuadros = max(2, int(sec.get("n") or 2))
+                # v5.4.52: un último trozo de 1–5 cuadros Resolve lo descarta (el clip queda muerto, sin nombre ni posición: salía el aviso «emoji sin tamaño
+                # ni posición» y la salida animada caía en él): el bucle termina con el último trozo entero
+                resto = largo_plan % cuadros
+                if largo_plan > cuadros and 0 < resto < 6:
+                    largo_plan -= resto
                 pos = 0
                 while pos < largo_plan:
                     seg = min(cuadros, largo_plan - pos)
@@ -5408,10 +5435,10 @@ def colocar_emojis(timeline, media_pool, track_info, planes, fps):
         bien = True
         for k_t, (c_t, largo_t) in enumerate(trozos):
             _poner_props(c_t, {"Scaling": ajustar})
-            if not _poner_props(c_t, {
-                    "ZoomX": zoom, "ZoomY": zoom,
-                    "Pan": _pan_px(cx - 0.5 + float(p.get("dx_n") or 0.0), ancho) * k_pan,
-                    "Tilt": _tilt_px(y + float(p.get("dy_n") or 0.0), alto) * k_tilt}):
+            props_t = {"ZoomX": zoom, "ZoomY": zoom,
+                       "Pan": _pan_px(cx - 0.5 + float(p.get("dx_n") or 0.0), ancho) * k_pan,
+                       "Tilt": _tilt_px(y + float(p.get("dy_n") or 0.0), alto) * k_tilt}
+            if not _poner_props(c_t, props_t) and not _props_puestas(c_t, props_t):
                 bien = False
             # entrada (rebote) en el primero y salida en el ultimo: el icono no aparece ni desaparece de golpe
             if _animar_emoji(c_t, max(2, int(largo_t)), k_t == 0, k_t == len(trozos) - 1):

@@ -217,7 +217,7 @@ def sin_encabezado():
     faltan = []
     for carpeta in ('1_codigo', '2_recursos/resolve_scripts', '2_recursos/motor_qwen', '3_compilar', '4_diseno', '5_licencias'):
         for p in (RAIZ / carpeta).rglob('*'):
-            if p.is_file() and p.suffix.lower() in COMENTARIO and '__pycache__' not in p.parts:
+            if p.is_file() and p.suffix.lower() in COMENTARIO and '__pycache__' not in p.parts and 'node_modules' not in p.parts:
                 rel = p.relative_to(RAIZ).as_posix()
                 if rel not in DESCRIPCIONES:
                     faltan.append(rel)

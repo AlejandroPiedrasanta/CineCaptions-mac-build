@@ -1,0 +1,2 @@
+Kenney · Interface Sounds y UI Audio (www.kenney.nl) — Creative Commons CC0 1.0 (dominio público).
+Pasados a WAV 48 kHz por CineCaptions; el nombre empieza por la familia (pop_, click_, ui_, error_).

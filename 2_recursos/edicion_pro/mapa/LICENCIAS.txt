@@ -1,0 +1,2 @@
+Mapa: Natural Earth 1:110m admin 0 countries (dominio público), https://www.naturalearthdata.com — github.com/nvkelso/natural-earth-vector
+Banderas: flag-icons de Panayiotis Lipiridis, licencia MIT (banderas/LICENSE-flag-icons.txt) — github.com/lipis/flag-icons

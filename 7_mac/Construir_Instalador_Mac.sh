@@ -93,6 +93,14 @@ for s in 16 32 128 256 512; do
 done
 iconutil -c icns "$ICONSET" -o "$OBRA/CineCaptions.icns"
 
+# 3b) Remotion (animaciones de la Edicion PRO): node + renderizador + Chrome sin ventana de ESTA Mac en 2_recursos ---------------------
+paso "Remotion: animaciones de la Edicion PRO"
+if command -v node >/dev/null 2>&1; then
+    "$VPY" "$RAIZ/3_compilar/preparar_remotion.py" || falla "No pude preparar Remotion"
+else
+    echo "    AVISO: no hay Node en esta Mac: la Edicion PRO saldra sin las animaciones de Remotion"
+fi
+
 # 4) PyInstaller ----------------------------------------------------------------------------------
 paso "Compilando CineCaptions.app (PyInstaller, 3-8 min)"
 export CINECAPTIONS_FUENTES="$OBRA/fuentes" CINECAPTIONS_RECURSOS="$RECURSOS" CINECAPTIONS_VERSION="$VERSION"

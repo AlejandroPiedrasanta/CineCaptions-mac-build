@@ -1,0 +1,48 @@
+{
+ "1": {
+  "nombre": "Blanco",
+  "color": "#FFFFFF",
+  "roles": {
+   "context": {
+    "f1": [
+     "Inter 24pt",
+     "Bold"
+    ],
+    "f2": [
+     "Inter 24pt",
+     "Bold"
+    ],
+    "tam": 0.14,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Inter 24pt",
+     "Bold"
+    ],
+    "f2": [
+     "Inter 24pt",
+     "Bold"
+    ],
+    "tam": 0.14,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Inter 24pt",
+     "Bold"
+    ],
+    "f2": [
+     "Inter 24pt",
+     "Bold"
+    ],
+    "tam": 0.14,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ }
+}

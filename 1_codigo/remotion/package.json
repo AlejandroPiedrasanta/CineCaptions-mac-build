@@ -1,0 +1,21 @@
+{
+  "name": "cinecaptions-pro-remotion",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CineCaptions · Edición PRO: animaciones en Remotion (se renderizan en el PC del usuario a ProRes 4444 con alfa).",
+  "type": "module",
+  "scripts": {
+    "estudio": "remotion studio src/index.ts",
+    "empaquetar": "node empaquetar.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.535",
+    "@remotion/cli": "4.0.535",
+    "@remotion/lottie": "4.0.535",
+    "@remotion/renderer": "4.0.535",
+    "lottie-web": "5.12.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.535"
+  }
+}

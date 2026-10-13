@@ -715,6 +715,19 @@ _ITEM_ADELANTE = ('Reproducir hacia adelante|Play Forward|Reproduzir para frente
 
 def cabezal_al_inicio_resolve():
     """v5.4.40: lleva el cabezal al primer fotograma del timeline actual por el Puente (acción «cabezal» de CineCaptions_Vista.lua). True si Resolve contestó que lo movió."""
+    try:                                                                  # v5.4.52: en Studio (MCP) directo: la acción «vista» no tiene gemelo .py y fallaba
+        import resolve_bridge                                             # siempre («Resolve no confirmó que lo llevara al inicio»)
+        if resolve_bridge._mcp_conectado():
+            import resolve_mcp
+            ok, r, _e = resolve_mcp.script("tl = project.GetCurrentTimeline() if project else None\n"
+                                           "tc = tl.GetStartTimecode() if tl else None\n"
+                                           "ok = bool(tc and tl.SetCurrentTimecode(tc))\n"
+                                           "try:\n    resolve.OpenPage('edit')\nexcept Exception:\n    pass\n"
+                                           "result = {'ok': ok}", timeout=20)
+            if ok and isinstance(r, dict):
+                return bool(r.get('ok'))
+    except Exception:
+        pass
     try:
         import archivos_seguros
         import resolve_bridge

@@ -52,6 +52,9 @@ def main():
         _extra = json.loads(os.environ.get('CINECAPTIONS_FX_OPC') or '{}')                  # p. ej. {"fx_zoom": "normal", "fx_cortes": "glitch"}: opciones sueltas solo en memoria
         ajustes_ui.leer_prefs = lambda: {**_leer_antes(), 'go_efectos_visuales': True, **_extra}
     ajustes_ui.guardar_prefs = lambda *a, **k: None                                       # NUNCA escribe las preferencias del usuario
+    if os.environ.get('CINECAPTIONS_PRO') in ('0', '1'):                                   # la Edición PRO apagada/encendida solo en memoria (p. ej. el pase ligero de los Temas 1–4)
+        import edicion_pro
+        edicion_pro.activado = (lambda: True) if os.environ['CINECAPTIONS_PRO'] == '1' else (lambda: False)
     import qt_kit
     dialogos = []
     def _dialogo(tipo, titulo, texto, parent=None, botones=None):          # un diálogo modal colgaría la prueba sin ventana: se anota y se sigue
@@ -82,7 +85,7 @@ def main():
         w._go_archivo = media
         w._go()
     t0 = time.time()
-    while getattr(w, '_go_corriendo', False) and time.time() - t0 < 420:
+    while getattr(w, '_go_corriendo', False) and time.time() - t0 < float(os.environ.get('GO_MAX_S', '420')):     # el Tema 5 (IA + Remotion + Magic Mask) tarda más
         app.processEvents()
         time.sleep(0.05)
     for _ in range(40):
@@ -93,8 +96,10 @@ def main():
         gp = w.go_panel
         print('PANEL titulo=%r · linea=%r · aviso_inicio=%r · estado=%s · paso_fallido=%r · eta=%r' % (getattr(gp.titulo, '_texto', ''), getattr(gp.linea, 'text', lambda: '')(), getattr(w.aviso_inicio, 'text', lambda: '')(), gp.boton.estado, gp.paso_fallido, gp.boton._eta_texto()), flush=True)
         import registro
-        for e in [e for e in registro.registro().lista() if e.nivel == 'error'][-3:]:
-            print('REGISTRO error · %s · %s' % (e.origen, str(e.mensaje)[:200]), flush=True)
+        for e in [e for e in registro.registro().lista() if e.nivel in ('error', 'aviso', 'advertencia', 'warning')][-5:]:
+            print('REGISTRO %s · %s · %s' % (e.nivel, e.origen, str(e.mensaje)[:200]), flush=True)
+            if getattr(e, 'detalle', ''):
+                print('REGISTRO detalle · %s' % str(e.detalle).replace('\n', ' | ')[-400:], flush=True)
     except Exception as exc:
         print('(no pude leer el panel)', exc, flush=True)
     faulthandler.cancel_dump_traceback_later()

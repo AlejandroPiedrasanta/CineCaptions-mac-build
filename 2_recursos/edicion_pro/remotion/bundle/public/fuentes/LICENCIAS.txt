@@ -1,0 +1,6 @@
+Fuentes de las plantillas OGraf de «Edición PRO». Todas con la SIL Open Font License 1.1 (https://openfontlicense.org): uso libre, también comercial, y se pueden incrustar.
+outfit-600.woff2, outfit-800.woff2 · Outfit (Rodrigo Fuenzalida)
+jbmono-500.woff2                   · JetBrains Mono (JetBrains)
+grotesk.woff2                      · Space Grotesk (Florian Karsten), variable 300–700
+serif-400.woff2, serif-400i.woff2  · Instrument Serif (Instrument)
+Subconjunto latino de Google Fonts.

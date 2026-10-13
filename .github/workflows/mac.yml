@@ -25,6 +25,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4          # Remotion (animaciones de la Edicion PRO): el node que viaja dentro de la app
+        with:
+          node-version: '24.11.0'
       - name: Compilar
         env:
           CINECAPTIONS_PYTHON: python3

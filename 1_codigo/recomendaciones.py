@@ -39,6 +39,16 @@ RECOMENDACIONES = {
                   'fx_cortes': 'fuga_de_luz', 'fx_cortes_cuanto': 'pocos', 'fx_sonido_corte': 'auto', 'fx_sonido_cortes': True, 'fx_sonido_gancho': True,
                   'fx_zoom': 'normal', 'fx_temblor': 'no', 'fx_iconos_activo': False},
     },
+    'Tema5': {
+        'resumen': 'sin toques por palabra: el diseño de sonido es de la Edición PRO (whoosh en cada escena, pop o clic en lo que aparece, riser al gancho)',
+        'sonido': {'donde': 'ninguna'},
+        'prefs': {'sfx_emojis': False, 'sfx_curva_energia': False},
+    },
+    'Tema6': {
+        'resumen': 'sin toques por palabra: el diseño de sonido es de la Edición PRO (destello y whoosh suave en cada escena, clics en lo que aparece)',
+        'sonido': {'donde': 'ninguna'},
+        'prefs': {'sfx_emojis': False, 'sfx_curva_energia': False},
+    },
     'Referencia': {
         'resumen': 'un toque por palabra (como escribir) · riser con destello y zoom suave en la intro · fuga de luz en las transiciones',
         'sonido': {'donde': 'todas'},

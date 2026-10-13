@@ -1023,7 +1023,15 @@ class Instalacion
                 }
             }
             if (!habiaAnterior)
+            {
+                // v5.4.51: DaVinci Resolve vigila las carpetas de los medios que importó; si alguno salió de la carpeta del programa (los sonidos de la
+                // Edición PRO de versiones anteriores), la retiene mientras esté abierto. Se dice claro qué cerrar.
+                bool resolveAbierto = false;
+                try { resolveAbierto = System.Diagnostics.Process.GetProcessesByName("Resolve").Length > 0; } catch { }
+                if (resolveAbierto)
+                    throw new Exception("DaVinci Resolve está usando archivos de la carpeta de CineCaptions (sonidos de una versión anterior). Cierra DaVinci Resolve y pulsa REINTENTAR.\r\n" + (ultimo != null ? ultimo.Message : ""));
                 throw new Exception("No puedo reemplazar la versión instalada (algún archivo está en uso: cierra CineCaptions y vuelve a intentarlo).\r\n" + (ultimo != null ? ultimo.Message : ""));
+            }
         }
         try
         {

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "nombre": "Tema6",
+  "formatos": {
+    "v": {
+      "drb": "Tema6 vertical.drb"
+    }
+  },
+  "guion": "tema6"
+}

@@ -157,6 +157,12 @@ def planificar(video, palabras, duracion, cortes=None, transicion=None, saltos=N
     op = opciones(prefs)
     eventos, resumen = [], []
     duracion = float(duracion or 0.0)
+    try:                                                                  # v5.4.52: el golpe del gancho y los de los cortes, bajo la voz de ESTE video
+        import sfx_rules
+        if video:
+            sfx_rules.fijar_voz(video)
+    except Exception:
+        pass
     t_gancho = palabra_del_gancho(palabras, duracion) if op['gancho'] else None
     hoyos = None
     if t_gancho is not None:

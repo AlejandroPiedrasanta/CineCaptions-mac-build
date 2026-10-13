@@ -356,7 +356,7 @@ def cargar(carpeta, incorporado=False):
 NOMBRE_INCORPORADO = 'Base títulos dinámicos'
 # v5.4.5: los packs de FÁBRICA (nombre interno -> nombre que ve el usuario). El nombre interno no cambia (preferencias, GO, carpetas y proyectos guardados
 # lo siguen usando); en pantalla se llaman «Tema 1/2/3» (v5.4.19; antes «Shine Kinetic», «Shine Referencia» y «VIRAL») y NO se pueden quitar de la lista.
-FABRICA = {'Kinetic': 'Tema 1', 'Referencia': 'Tema 2', 'VIRAL': 'Tema 3', 'Tema4': 'Tema 4'}
+FABRICA = {'Kinetic': 'Tema 1', 'Referencia': 'Tema 2', 'VIRAL': 'Tema 3', 'Tema4': 'Tema 4', 'Tema5': 'Tema 5', 'Tema6': 'Tema 6'}
 # v5.4.19 (pedido del usuario): SOLO existen esos tres temas en la interfaz: el slider de «Pack de estilos» y el chip «Estilo» de Inicio no enseñan nada más (ni packs importados, ni
 # «Viral · superior/inferior», ni «Añadir plantilla», ni «Crea tu estilo»). Los packs siguen en el disco; con False vuelve todo lo de antes.
 SOLO_TEMAS = True
@@ -366,6 +366,8 @@ TEMAS_INFO = {
     'Referencia': ('Captions palabra a palabra', 'Una línea fina con la palabra importante en negrita y en grande, al ritmo de la voz.'),
     'VIRAL': ('Subtítulos virales', 'Texto fino con negrita cursiva, efectos de impacto y emojis que aparecen con la voz.'),
     'Tema4': ('Captions limpios', 'Texto blanco que se arma palabra a palabra en un recuadro, con la palabra clave grande y las conectoras pequeñas.'),
+    'Tema5': ('Edición total', 'Lo edito todo con el sistema de los reels virales: captions sans + serif, pasos y deslizador en pantalla, escenas de papel, pantalla dividida y sonido.'),
+    'Tema6': ('Editorial', 'Edición elegante y cálida: captions en serif fina con la frase clave grande en lima, escenas melocotón con tarjetas blancas, visor de cámara, barra de búsqueda y perfil que cuenta.'),
 }
 
 
@@ -397,7 +399,7 @@ def es_de_fabrica(nombre):
 
 # v5.8: los packs que cambiaron de contenido llevan una «revisión»; los scripts de Resolve la suman al nombre del bin del pack
 # ('RCS · <pack> · <revisión> · v'), asi un bin viejo que ya estaba en el proyecto (con los clips anteriores) no se reutiliza.
-REVISION_BIN = {'Viral · superior': 'Luxe 2', 'Viral · inferior': 'Luxe 2', 'Referencia': 'Ref 2', 'Kinetic': 'Kin 3', 'VIRAL': 'Vir 2', 'Tema4': 'T4 2'}
+REVISION_BIN = {'Viral · superior': 'Luxe 2', 'Viral · inferior': 'Luxe 2', 'Referencia': 'Ref 2', 'Kinetic': 'Kin 3', 'VIRAL': 'Vir 2', 'Tema4': 'T4 2', 'Tema5': 'T5 1', 'Tema6': 'T6 1'}
 NOMBRE_BASICOS = 'Subtítulos básicos'
 POSICIONES_BASICOS = ('inferior', 'superior')
 _PISTAS_FORMATO = (('horizontal', 'h'), ('vertical', 'v'), ('cuadrado', 'c'), ('square', 'c'))
@@ -913,7 +915,7 @@ def para_manifiesto(nombre, formato_forzado=None):
                     return {'plantilla': plantilla}
 _MEMO_IMAGEN = {}
 # v5.4.37: packs sin bloque «imagen» cuyo emoji va ENCIMA del texto (el resto: debajo)
-EMOJI_ARRIBA = ('Tema4',)
+EMOJI_ARRIBA = ('Tema4', 'Tema5', 'Tema6')
 
 
 def bloque_imagen(nombre, formato=None):

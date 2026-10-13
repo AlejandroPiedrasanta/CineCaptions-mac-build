@@ -11,7 +11,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    edicion_pro\   (45 archivos)
+    edicion_pro\   (2474 archivos)
     efectos\   (148 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
@@ -87,7 +87,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
-    plantillas_incluidas\   (57 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    plantillas_incluidas\   (65 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
     resolve_scripts\   (25 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
         .cf\   (1 archivos)
         CineCaptions - Detectar Video.py
@@ -138,8 +138,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         sfx_rules.json
             cuándo suena cada efecto de sonido (editable sin tocar código)
     sfx_emoji\   (103 archivos)
-    sfx_library\   (158 archivos)  — los efectos de sonido, una carpeta por categoría
-    vistas_slider\   (10 archivos)
+    sfx_library\   (295 archivos)  — los efectos de sonido, una carpeta por categoría
+    vistas_slider\   (14 archivos)
         .cf\   (1 archivos)
         desktop.ini
         Kinetic.jpg
@@ -148,6 +148,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         Referencia.mp4
         Tema4.jpg
         Tema4.mp4
+        Tema5.jpg
+        Tema5.mp4
+        Tema6.jpg
+        Tema6.mp4
         VIRAL.jpg
         VIRAL.mp4
     desktop.ini

@@ -694,7 +694,12 @@ def preparar_riser(ruta, antes_s=SONIDO_INTRO_S, db=SONIDO_INTRO_DB, rate=48000,
     import numpy as np
     ruta = Path(ruta)
     try:
-        clave = hashlib.md5(f'{ruta.resolve()}|{ruta.stat().st_mtime_ns}|{antes_s}|{db}|{pico_dbfs}|{REVISION}|riser2'.encode('utf-8')).hexdigest()[:12]
+        import sfx_rules
+        voz_db = sfx_rules._VOZ.get('db')                                # v5.4.52: la voz de ESTE video (sfx_rules.fijar_voz), si se midió
+    except Exception:
+        voz_db = None
+    try:
+        clave = hashlib.md5(f'{ruta.resolve()}|{ruta.stat().st_mtime_ns}|{antes_s}|{db}|{pico_dbfs}|{REVISION}|riser3|{voz_db}'.encode('utf-8')).hexdigest()[:12]
     except OSError:
         return None, 0.0, 0.0
     for previo in sorted(CACHE.glob(f'riser_{clave}_*.wav')):                      # el nombre lleva el instante del pico en milisegundos
@@ -726,6 +731,19 @@ def preparar_riser(ruta, antes_s=SONIDO_INTRO_S, db=SONIDO_INTRO_DB, rate=48000,
     if f_out > 0:
         t[:, -f_out:] *= np.linspace(1.0, 0.0, f_out, dtype=np.float32)
     t *= (10.0 ** (pico_dbfs / 20.0)) / float(np.abs(t).max()) * (10.0 ** (db / 20.0))
+    if voz_db is not None:
+        # v5.4.52 (auditoría del render: el riser y el golpe del gancho sonaban hasta 10 dB POR ENCIMA de la voz): con la voz medida, lo más fuerte
+        # del riser (100 ms, la misma medida que la voz) queda BAJO_LA_VOZ_EFECTO dB por debajo, y el pico nunca pasa de -1 dBFS
+        try:
+            w = max(1, int(rate * 0.1))
+            m = t.mean(axis=0)
+            nw = len(m) // w
+            fuerte = float(np.sqrt((m[:nw * w].reshape(nw, w) ** 2).mean(axis=1)).max()) if nw else float(np.sqrt((m ** 2).mean()))
+            objetivo = float(voz_db) - sfx_rules.BAJO_LA_VOZ_EFECTO
+            g = 10.0 ** ((objetivo - 20.0 * np.log10(max(fuerte, 1e-6))) / 20.0)
+            t *= min(g, (10.0 ** (-1.0 / 20.0)) / max(float(np.abs(t).max()), 1e-6))
+        except Exception:
+            pass
     pcm = (np.clip(t, -1.0, 1.0) * 32767.0).astype('<i2').T.copy()          # (muestras, canales) intercalado
     CACHE.mkdir(parents=True, exist_ok=True)
     destino = CACHE / f'riser_{clave}_{int(round((pico_i - ini) * 1000.0 / rate))}.wav'
@@ -901,6 +919,12 @@ def planificar(video, palabras, duracion=None, opciones=None, al_estado=None, co
     op.update(opciones or {})
     eventos = []
     resumen = []
+    try:                                                                  # v5.4.52: el riser de la intro, bajo la voz de ESTE video
+        import sfx_rules
+        if video:
+            sfx_rules.fijar_voz(video)
+    except Exception:
+        pass
     if duracion is None:
         duracion = duracion_video(video) if video else 0.0
         if palabras:

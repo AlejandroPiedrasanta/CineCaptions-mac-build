@@ -5409,5 +5409,110 @@
   "fr": "(les effets visuels sont désactivés : le PRO fait l’intro, l’accroche et les motion graphics)",
   "de": "(die visuellen Effekte werden ausgeschaltet: PRO macht Intro, Hook und Motion Graphics)",
   "it": "(gli effetti visivi si spengono: il PRO fa l’intro, il gancio e i motion graphics)"
+ },
+ "{n} · edición total": {
+  "en": "{n} · full edit",
+  "pt": "{n} · edição total",
+  "fr": "{n} · montage complet",
+  "de": "{n} · Komplettschnitt",
+  "it": "{n} · montaggio completo"
+ },
+ "Animaciones con Remotion dentro del programa: mapa con bandera cuando nombras un país y 100 plantillas para bodas, XV años, eventos y sesiones de fotos («¡Hola amigos!», «Casa de la novia», «Save the date», «Comenta BODA»…) que salen solas cuando las dices.": {
+  "en": "Remotion animations built into the app: a map with the flag when you name a country and 100 templates for weddings, quinceañeras, events and photo sessions (“Hi friends!”, “The bride’s house”, “Save the date”, “Comment WEDDING”…) that appear on their own when you say them.",
+  "pt": "Animações com Remotion dentro do programa: mapa com bandeira quando você cita um país e 100 modelos para casamentos, 15 anos, eventos e sessões de fotos («Olá amigos!», «Casa da noiva», «Save the date», «Comente CASAMENTO»…) que aparecem sozinhos quando você os diz.",
+  "fr": "Animations Remotion intégrées : une carte avec le drapeau quand vous citez un pays et 100 modèles pour mariages, quinceañeras, événements et séances photo (« Salut les amis ! », « La maison de la mariée », « Save the date », « Commente MARIAGE »…) qui apparaissent d’eux-mêmes quand vous les dites.",
+  "de": "Remotion-Animationen im Programm: eine Karte mit Flagge, wenn du ein Land nennst, und 100 Vorlagen für Hochzeiten, Quinceañeras, Events und Fotoshootings („Hallo Freunde!“, „Das Haus der Braut“, „Save the date“, „Kommentiere HOCHZEIT“…), die von selbst erscheinen, wenn du sie sagst.",
+  "it": "Animazioni Remotion integrate: una mappa con la bandiera quando nomini un paese e 100 modelli per matrimoni, feste dei 15 anni, eventi e servizi fotografici («Ciao amici!», «La casa della sposa», «Save the date», «Commenta MATRIMONIO»…) che compaiono da soli quando li dici."
+ },
+ "Nuevo: Tema 5 «Edición total», con el sistema de los reels virales del curso «Edit VIRAL Reels with AI»: captions en sans pequeña con la frase clave en serif cursiva del color que va con tu video, el indicador de pasos cuando dices «tres errores… número uno», el deslizador «de principiante a profesional», escenas de papel con cifras e iconos, pantalla dividida con la persona abajo y la clave detrás de la persona de vez en cuando. Todo coherente, sin emojis ni brillos.": {
+  "en": "New: Theme 5 “Full edit”, built on the viral-reels system from the “Edit VIRAL Reels with AI” course: small sans captions with the key phrase in an italic serif in the color that suits your video, the step indicator when you say “three mistakes… number one”, the “from beginner to pro” slider, paper scenes with numbers and icons, split screen with the person below and, now and then, the key phrase behind the person. All consistent, no emojis or glows.",
+  "pt": "Novo: Tema 5 «Edição total», com o sistema dos reels virais do curso «Edit VIRAL Reels with AI»: legendas em sans pequena com a frase-chave em serif itálica na cor que combina com o seu vídeo, o indicador de passos quando você diz «três erros… número um», o controle deslizante «de iniciante a profissional», cenas de papel com números e ícones, tela dividida com a pessoa embaixo e, de vez em quando, a frase-chave atrás da pessoa. Tudo coerente, sem emojis nem brilhos.",
+  "fr": "Nouveau : Thème 5 « Montage complet », avec le système des reels viraux du cours « Edit VIRAL Reels with AI » : sous-titres en sans fine avec la phrase clé en serif italique dans la couleur qui va avec votre vidéo, l’indicateur d’étapes quand vous dites « trois erreurs… numéro un », le curseur « de débutant à pro », des scènes papier avec chiffres et icônes, l’écran partagé avec la personne en bas et, de temps en temps, la phrase clé derrière la personne. Tout est cohérent, sans emojis ni brillances.",
+  "de": "Neu: Thema 5 „Komplettschnitt“ mit dem Viral-Reel-System aus dem Kurs „Edit VIRAL Reels with AI“: kleine Sans-Untertitel mit dem Schlüsselsatz in kursiver Serif in der Farbe, die zu deinem Video passt, die Schrittanzeige bei „drei Fehler … Nummer eins“, der Regler „vom Anfänger zum Profi“, Papier-Szenen mit Zahlen und Icons, Split-Screen mit der Person unten und ab und zu der Schlüsselsatz hinter der Person. Alles stimmig, ohne Emojis und Glanzeffekte.",
+  "it": "Novità: Tema 5 «Montaggio completo», con il sistema dei reel virali del corso «Edit VIRAL Reels with AI»: sottotitoli in sans piccolo con la frase chiave in serif corsivo nel colore adatto al tuo video, l’indicatore dei passi quando dici «tre errori… numero uno», il cursore «da principiante a professionista», scene di carta con numeri e icone, schermo diviso con la persona sotto e, ogni tanto, la frase chiave dietro la persona. Tutto coerente, senza emoji né bagliori."
+ },
+ "Tema 5: además de las escenas, una animación pequeña bajo el caption que acompaña lo que dices (país con su bandera, «¡Hola amigos!», seguir o comentar, cifras, y el emoji 3D del tema: boda, fiesta, café…). La IA local dirige las escenas en cualquier tema, el video se analiza para variar el estilo, y los efectos de sonido de todos los temas quedan siempre por debajo de la voz.": {
+  "en": "Theme 5: besides the scenes, a small animation under the caption that goes with what you say (a country with its flag, “Hi friends!”, follow or comment, numbers, and the 3D emoji of the topic: wedding, party, coffee…). The local AI directs the scenes on any topic, the video is analysed to vary the style, and sound effects in every theme now always sit below the voice.",
+  "pt": "Tema 5: além das cenas, uma pequena animação sob a legenda que acompanha o que você diz (país com bandeira, «Olá amigos!», seguir ou comentar, números e o emoji 3D do tema: casamento, festa, café…). A IA local dirige as cenas em qualquer tema, o vídeo é analisado para variar o estilo e os efeitos sonoros de todos os temas ficam sempre abaixo da voz.",
+  "fr": "Thème 5 : en plus des scènes, une petite animation sous le sous-titre qui accompagne ce que vous dites (un pays avec son drapeau, « Salut les amis ! », s’abonner ou commenter, des chiffres et l’emoji 3D du sujet : mariage, fête, café…). L’IA locale dirige les scènes sur tous les sujets, la vidéo est analysée pour varier le style, et les effets sonores de tous les thèmes restent toujours sous la voix.",
+  "de": "Thema 5: zusätzlich zu den Szenen eine kleine Animation unter dem Untertitel, die das Gesagte begleitet (ein Land mit Flagge, „Hallo Freunde!“, folgen oder kommentieren, Zahlen und das 3D-Emoji des Themas: Hochzeit, Party, Kaffee…). Die lokale KI führt Regie bei den Szenen zu jedem Thema, das Video wird analysiert, um den Stil zu variieren, und die Soundeffekte aller Themen liegen jetzt immer unter der Stimme.",
+  "it": "Tema 5: oltre alle scene, una piccola animazione sotto il sottotitolo che accompagna ciò che dici (un paese con la sua bandiera, «Ciao amici!», segui o commenta, numeri e l’emoji 3D del tema: matrimonio, festa, caffè…). L’IA locale dirige le scene su qualsiasi tema, il video viene analizzato per variare lo stile e gli effetti sonori di tutti i temi restano sempre sotto la voce."
+ },
+ "con mejoras del tema": {
+  "en": "with theme enhancements",
+  "pt": "com melhorias do tema",
+  "fr": "avec les améliorations du thème",
+  "de": "mit Themen-Verbesserungen",
+  "it": "con i miglioramenti del tema"
+ },
+ "Temas 1–4 se ven mejor sin tocar su diseño: un velo suave detrás del texto en videos claros, la palabra destacada en el color que va con tu video, las animaciones pequeñas bajo el caption y nunca encima de una cara (aunque no uses la Edición PRO).": {
+  "en": "Themes 1–4 look better without changing their design: a soft backing behind the text on bright videos, the highlighted word in the colour that suits your video, the small animations under the caption, and never over a face (even without the PRO Edit).",
+  "pt": "Os Temas 1–4 ficam melhores sem mudar o design: um véu suave atrás do texto em vídeos claros, a palavra destacada na cor que combina com o seu vídeo, as pequenas animações sob a legenda e nunca sobre um rosto (mesmo sem a Edição PRO).",
+  "fr": "Les Thèmes 1–4 sont plus beaux sans changer leur design : un voile doux derrière le texte sur les vidéos claires, le mot mis en avant dans la couleur qui va avec votre vidéo, les petites animations sous le sous-titre, et jamais sur un visage (même sans l’Édition PRO).",
+  "de": "Die Themen 1–4 sehen besser aus, ohne ihr Design zu ändern: ein weicher Schleier hinter dem Text bei hellen Videos, das hervorgehobene Wort in der Farbe, die zu deinem Video passt, die kleinen Animationen unter dem Untertitel und nie über einem Gesicht (auch ohne PRO-Bearbeitung).",
+  "it": "I Temi 1–4 sono più belli senza cambiare il loro design: un velo morbido dietro il testo nei video chiari, la parola in evidenza nel colore adatto al tuo video, le piccole animazioni sotto il sottotitolo e mai sopra un volto (anche senza l’Edizione PRO)."
+ },
+ "Nuevo: Tema 6 «Editorial», con el estilo de los reels editoriales: captions en serif fina con la frase clave grande en lima o blanco, escenas melocotón con tarjetas blancas que entran con un destello, el visor de la cámara sobre tu cara, la barra de búsqueda con la palabra que hay que comentar, tu perfil con los seguidores que cuentan y la píldora del equipo.": {
+  "en": "New: Theme 6 “Editorial”, in the style of editorial reels: captions in a thin serif with the key phrase large in lime or white, peach scenes with white cards that come in with a flash, the camera viewfinder over your face, the search bar with the word to comment, your profile with followers counting up and the team pill.",
+  "pt": "Novo: Tema 6 «Editorial», no estilo dos reels editoriais: legendas em serifa fina com a frase-chave grande em lima ou branco, cenas pêssego com cartões brancos que entram com um flash, o visor da câmera no seu rosto, a barra de busca com a palavra para comentar, seu perfil com os seguidores contando e a pílula da equipe.",
+  "fr": "Nouveau : Thème 6 « Éditorial », dans le style des reels éditoriaux : sous-titres en serif fine avec la phrase clé en grand, en vert citron ou en blanc, scènes pêche aux cartes blanches qui entrent avec un flash, le viseur de la caméra sur votre visage, la barre de recherche avec le mot à commenter, votre profil avec les abonnés qui défilent et la pastille de l’équipe.",
+  "de": "Neu: Thema 6 „Editorial“ im Stil redaktioneller Reels: Untertitel in einer feinen Serifenschrift mit dem Schlüsselsatz groß in Limette oder Weiß, pfirsichfarbene Szenen mit weißen Karten, die mit einem Blitz erscheinen, der Kamerasucher über deinem Gesicht, die Suchleiste mit dem Wort zum Kommentieren, dein Profil mit hochzählenden Followern und die Team-Pille.",
+  "it": "Novità: Tema 6 «Editoriale», nello stile dei reel editoriali: sottotitoli in un serif sottile con la frase chiave grande in lime o bianco, scene color pesca con schede bianche che entrano con un flash, il mirino della fotocamera sul tuo viso, la barra di ricerca con la parola da commentare, il tuo profilo con i follower che salgono e la pillola del team."
+ },
+ "Tema 5: el fondo en blanco y negro con tu persona a color cuando dices algo fuerte, un icono que gira alrededor de tu cabeza (por detrás y por delante), el sticker congelado en el gancho, la sombra de tu persona sobre la palabra de detrás, tarjetas encima de la cabeza (mapa del país, gráfica del % que dices, la frase tachada, la lista que se marca), la pantalla final cuando pides que te sigan y transiciones con zoom en los cortes.": {
+  "en": "Theme 5: a black-and-white background with you in color when you say something strong, an icon orbiting your head (behind and in front), the frozen sticker in the hook, your shadow over the word behind you, cards above your head (the country map, a chart of the % you say, the crossed-out phrase, the checklist), the end screen when you ask people to follow and zoom transitions on the cuts.",
+  "pt": "Tema 5: o fundo em preto e branco com você em cores quando diz algo forte, um ícone girando em volta da sua cabeça (por trás e pela frente), o sticker congelado no gancho, a sua sombra sobre a palavra atrás de você, cartões acima da cabeça (mapa do país, gráfico do % que você diz, a frase riscada, a lista que se marca), a tela final quando você pede para seguir e transições com zoom nos cortes.",
+  "fr": "Thème 5 : le fond en noir et blanc avec vous en couleur quand vous dites quelque chose de fort, une icône qui tourne autour de votre tête (derrière et devant), le sticker figé dans l’accroche, votre ombre sur le mot derrière vous, des cartes au-dessus de la tête (la carte du pays, le graphique du % que vous dites, la phrase barrée, la liste qui se coche), l’écran de fin quand vous demandez qu’on vous suive et des transitions zoom sur les coupes.",
+  "de": "Thema 5: Schwarzweiß-Hintergrund mit dir in Farbe, wenn du etwas Starkes sagst, ein Icon, das um deinen Kopf kreist (hinter und vor dir), der eingefrorene Sticker im Hook, dein Schatten auf dem Wort hinter dir, Karten über deinem Kopf (die Landkarte, ein Diagramm mit dem genannten %, der durchgestrichene Satz, die Checkliste), der Abspann, wenn du um Follower bittest, und Zoom-Übergänge an den Schnitten.",
+  "it": "Tema 5: lo sfondo in bianco e nero con te a colori quando dici qualcosa di forte, un’icona che gira intorno alla tua testa (dietro e davanti), lo sticker congelato nel gancio, la tua ombra sulla parola dietro di te, schede sopra la testa (la mappa del paese, il grafico della % che dici, la frase barrata, la lista che si spunta), la schermata finale quando chiedi di seguirti e transizioni con zoom sui tagli."
+ },
+ "Emojis animados (Noto de Google) en los acompañantes y en la órbita, 136 sonidos nuevos para que no se repitan, el borde de la persona recortada más suave y la caché de render activada para que la línea de tiempo vaya fluida.": {
+  "en": "Animated emojis (Google Noto) in the companions and the orbit, 136 new sounds so they don’t repeat, a softer edge on the cut-out person and render cache turned on so the timeline plays smoothly.",
+  "pt": "Emojis animados (Noto do Google) nos acompanhantes e na órbita, 136 sons novos para não se repetirem, a borda da pessoa recortada mais suave e o cache de render ativado para a linha do tempo rodar fluida.",
+  "fr": "Emojis animés (Noto de Google) dans les compagnons et l’orbite, 136 nouveaux sons pour éviter les répétitions, un bord plus doux sur la personne détourée et le cache de rendu activé pour une timeline fluide.",
+  "de": "Animierte Emojis (Google Noto) in den Begleitern und im Orbit, 136 neue Sounds gegen Wiederholungen, eine weichere Kante an der freigestellten Person und aktivierter Render-Cache für eine flüssige Timeline.",
+  "it": "Emoji animate (Noto di Google) negli accompagnatori e nell’orbita, 136 nuovi suoni per non ripetersi, un bordo più morbido sulla persona ritagliata e la cache di render attivata per una timeline fluida."
+ },
+ "{n} · editorial": {
+  "en": "{n} · editorial",
+  "pt": "{n} · editorial",
+  "fr": "{n} · éditorial",
+  "de": "{n} · Editorial",
+  "it": "{n} · editoriale"
+ },
+ "Editorial": {
+  "en": "Editorial",
+  "pt": "Editorial",
+  "fr": "Éditorial",
+  "de": "Editorial",
+  "it": "Editoriale"
+ },
+ "Edición elegante y cálida: captions en serif fina con la frase clave grande en lima, escenas melocotón con tarjetas blancas, visor de cámara, barra de búsqueda y perfil que cuenta.": {
+  "en": "An elegant, warm edit: captions in a thin serif with the key phrase large in lime, peach scenes with white cards, a camera viewfinder, a search bar and a profile that counts up.",
+  "pt": "Edição elegante e calorosa: legendas em serifa fina com a frase-chave grande em lima, cenas pêssego com cartões brancos, visor de câmera, barra de busca e perfil que conta.",
+  "fr": "Un montage élégant et chaleureux : sous-titres en serif fine avec la phrase clé en grand en vert citron, scènes pêche aux cartes blanches, viseur de caméra, barre de recherche et profil qui compte.",
+  "de": "Ein eleganter, warmer Schnitt: Untertitel in feiner Serifenschrift mit großem Schlüsselsatz in Limette, pfirsichfarbene Szenen mit weißen Karten, Kamerasucher, Suchleiste und hochzählendes Profil.",
+  "it": "Un montaggio elegante e caldo: sottotitoli in serif sottile con la frase chiave grande in lime, scene color pesca con schede bianche, mirino della fotocamera, barra di ricerca e profilo che conta."
+ },
+ "Preparando el audio de tu video para Resolve (HE-AAC → AAC)…": {
+  "en": "Preparing your video's audio for Resolve (HE-AAC → AAC)…",
+  "pt": "Preparando o áudio do seu vídeo para o Resolve (HE-AAC → AAC)…",
+  "fr": "Préparation de l'audio de votre vidéo pour Resolve (HE-AAC → AAC)…",
+  "de": "Audio deines Videos wird für Resolve vorbereitet (HE-AAC → AAC)…",
+  "it": "Preparo l'audio del tuo video per Resolve (HE-AAC → AAC)…"
+ },
+ "El audio de tu video (HE-AAC) Resolve lo renderiza mudo: llevé a Resolve una copia con el mismo video y el audio en AAC ({r}).": {
+  "en": "Resolve renders your video's audio (HE-AAC) as silence: I brought Resolve a copy with the same video and the audio in AAC ({r}).",
+  "pt": "O Resolve renderiza o áudio do seu vídeo (HE-AAC) mudo: levei ao Resolve uma cópia com o mesmo vídeo e o áudio em AAC ({r}).",
+  "fr": "Resolve rend l'audio de votre vidéo (HE-AAC) muet : j'ai envoyé à Resolve une copie avec la même vidéo et l'audio en AAC ({r}).",
+  "de": "Resolve rendert den Ton deines Videos (HE-AAC) stumm: Ich habe Resolve eine Kopie mit demselben Bild und dem Ton in AAC gegeben ({r}).",
+  "it": "Resolve esporta muto l'audio del tuo video (HE-AAC): ho portato in Resolve una copia con lo stesso video e l'audio in AAC ({r})."
+ },
+ "Los videos bajados de Instagram, Pinterest o TikTok ya no salen mudos al renderizar (su audio HE-AAC se pasa solo a AAC), los efectos de sonido de la intro quedan bajo tu voz y se quitó un aviso falso de emojis sin posición.": {
+  "en": "Videos downloaded from Instagram, Pinterest or TikTok no longer render silent (their HE-AAC audio is converted to AAC automatically), the intro sound effects stay under your voice, and a false warning about unpositioned emojis is gone.",
+  "pt": "Os vídeos baixados do Instagram, Pinterest ou TikTok não saem mais mudos na renderização (o áudio HE-AAC é convertido para AAC sozinho), os efeitos sonoros da intro ficam abaixo da sua voz e foi removido um aviso falso de emojis sem posição.",
+  "fr": "Les vidéos téléchargées depuis Instagram, Pinterest ou TikTok ne sont plus muettes au rendu (leur audio HE-AAC est converti en AAC automatiquement), les effets sonores de l'intro restent sous votre voix et un faux avertissement d'emojis sans position a été supprimé.",
+  "de": "Von Instagram, Pinterest oder TikTok geladene Videos werden nicht mehr stumm gerendert (ihr HE-AAC-Ton wird automatisch zu AAC), die Soundeffekte im Intro bleiben unter deiner Stimme, und eine falsche Warnung zu Emojis ohne Position ist weg.",
+  "it": "I video scaricati da Instagram, Pinterest o TikTok non escono più muti nel render (il loro audio HE-AAC viene convertito in AAC da solo), gli effetti sonori dell'intro restano sotto la tua voce ed è stato tolto un falso avviso di emoji senza posizione."
  }
 }

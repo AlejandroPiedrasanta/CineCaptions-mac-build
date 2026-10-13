@@ -18,7 +18,9 @@ da otra paleta, otras tipografías, otras entradas y otro reparto. «Regenerar»
 from __future__ import annotations
 
 import hashlib
+import json
 import random
+from pathlib import Path
 import re
 import unicodedata
 
@@ -104,6 +106,34 @@ _ERROR = {'es': 'malo mala error errores equivoque equivocamos equivocacion peor
           'en': 'bad worst wrong mistake mistakes fail failed failure terrible horrible disaster oops sorry',
           'pt': 'ruim pior erro errei erros fracasso desastre terrivel horrivel falhei desculpa'}
 GRIS_MAX, GRIS_SEP = 2, 8.0
+# países nombrados («estamos en Guatemala») → escena con mapa + bandera (Remotion). Datos: 2_recursos/edicion_pro/mapa (Natural Earth + flag-icons)
+_ALIAS_PAIS = {'us': 'eeuu usa estadosunidos gringolandia', 'gb': 'inglaterra reinounido uk', 'mx': 'mejico', 'kr': 'corea', 'nl': 'holanda'}
+_PAISES = None
+
+
+def paises():
+    """{nombre plegado (una o varias palabras): (iso2, {'es','en','pt'})} de los países con bandera; se carga una vez."""
+    global _PAISES
+    if _PAISES is None:
+        _PAISES = {}
+        try:
+            try:
+                from sfx_rules import base_recursos
+                base = Path(base_recursos()) / 'edicion_pro' / 'mapa'
+            except Exception:
+                base = Path(__file__).resolve().parent.parent / '2_recursos' / 'edicion_pro' / 'mapa'
+            datos = json.loads((base / 'paises.json').read_text(encoding='utf-8'))['paises']
+            for iso, v in datos.items():
+                if not (base / 'banderas' / f'{iso}.svg').exists():
+                    continue
+                nombres = {'es': v.get('es') or '', 'en': v.get('en') or '', 'pt': v.get('pt') or ''}
+                for n in list(nombres.values()) + _ALIAS_PAIS.get(iso, '').split():
+                    k = plegar(n)
+                    if len(k) >= 4:
+                        _PAISES[k] = (iso, nombres)
+        except Exception:
+            _PAISES = {}
+    return _PAISES
 ICONO_LISTA = {'inmobiliaria': 'check', 'boda': 'corazon', 'xv': 'estrella', 'restaurante': 'punto', 'bts': 'numero', 'general': 'check'}
 
 # textos genéricos que pone la edición (en el idioma del video)
@@ -111,15 +141,15 @@ TEXTOS = {
     'es': {'seccion': {'inmobiliaria': 'Recorrido', 'boda': 'Momentos', 'xv': 'Recuerdos', 'restaurante': 'Sabores', 'bts': 'Detrás de cámara', 'general': 'Escena'},
            'cta': {'inmobiliaria': 'Agenda una visita', 'boda': 'Reserva tu fecha', 'xv': 'Reserva tu fecha', 'restaurante': 'Reserva tu mesa', 'bts': 'Míralo completo', 'general': 'Escríbenos'},
            'kicker_cta': {'inmobiliaria': 'Propiedad', 'boda': 'Nuestra historia', 'xv': 'Mis XV', 'restaurante': 'Te esperamos', 'bts': 'Producción', 'general': 'Siguiente paso'},
-           'ubicacion': 'Ubicación', 'escena': 'ESCENA', 'toma': 'TOMA'},
+           'ubicacion': 'Ubicación', 'estamos': 'Estamos en', 'escena': 'ESCENA', 'toma': 'TOMA'},
     'en': {'seccion': {'inmobiliaria': 'Tour', 'boda': 'Moments', 'xv': 'Memories', 'restaurante': 'Flavors', 'bts': 'Behind the scenes', 'general': 'Scene'},
            'cta': {'inmobiliaria': 'Book a tour', 'boda': 'Save your date', 'xv': 'Save your date', 'restaurante': 'Book a table', 'bts': 'Watch the full video', 'general': 'Get in touch'},
            'kicker_cta': {'inmobiliaria': 'Property', 'boda': 'Our story', 'xv': 'Sweet fifteen', 'restaurante': 'See you soon', 'bts': 'Production', 'general': 'Next step'},
-           'ubicacion': 'Location', 'escena': 'SCENE', 'toma': 'TAKE'},
+           'ubicacion': 'Location', 'estamos': 'We are in', 'escena': 'SCENE', 'toma': 'TAKE'},
     'pt': {'seccion': {'inmobiliaria': 'Tour', 'boda': 'Momentos', 'xv': 'Memórias', 'restaurante': 'Sabores', 'bts': 'Bastidores', 'general': 'Cena'},
            'cta': {'inmobiliaria': 'Agende uma visita', 'boda': 'Reserve sua data', 'xv': 'Reserve sua data', 'restaurante': 'Reserve sua mesa', 'bts': 'Veja completo', 'general': 'Fale conosco'},
            'kicker_cta': {'inmobiliaria': 'Imóvel', 'boda': 'Nossa história', 'xv': 'Meus 15', 'restaurante': 'Esperamos você', 'bts': 'Produção', 'general': 'Próximo passo'},
-           'ubicacion': 'Localização', 'escena': 'CENA', 'toma': 'TOMADA'},
+           'ubicacion': 'Localização', 'estamos': 'Estamos em', 'escena': 'CENA', 'toma': 'TOMADA'},
 }
 
 # palabra que se nombra → icono de la infografía (B-roll de motion graphics). Español, inglés y portugués.
@@ -428,6 +458,20 @@ def candidatos(palabras, frases, pesos=None, idioma='es'):
                 ini = fin - 1 if fin - 1 in cont and fin - 1 >= 0 and not ws[fin - 1].endswith(',') else fin
                 out.append({'tipo': 'fuerte', 'i': idx[ini], 'fin_i': idx[fin], 'frase': fi, 'puntos': 2.0 + 2.0 * pesos.get(idx[fin], 0.4),
                             'texto': ' '.join(w.strip(' .,;:!?') for w in ws[ini:fin + 1])})
+        # un país (una a tres palabras: «Guatemala», «Estados Unidos», «Costa Rica»)
+        tabla = paises()
+        for j in range(len(lw)):
+            hallado = None
+            for n in (3, 2, 1):
+                k = ''.join(lw[j:j + n]) if n > 1 else lw[j]
+                k2 = ' '.join(lw[j:j + n])
+                if j + n <= len(lw) and (k in tabla or k2 in tabla):
+                    hallado = (tabla.get(k) or tabla.get(k2), n)
+                    break
+            if hallado:
+                (iso, nombres), n = hallado
+                out.append({'tipo': 'pais', 'i': idx[j], 'fin_i': idx[j + n - 1], 'frase': fi, 'puntos': 4.2, 'iso': iso, 'nombres': nombres,
+                            'texto': ' '.join(ws[j:j + n]).strip(' .,;:!?¡¿"\''), 'estamos': j > 0 and lw[j - 1] in ('en', 'desde', 'in', 'from', 'em', 'de')})
         # concepto con icono: la primera palabra de la frase que está en el mapa
         for j, w in enumerate(lw):
             if w in CONCEPTOS and len(w) > 2:
@@ -546,13 +590,31 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
                 piezas.append({'pieza': 'velo', 'capa': 'velo', 'ini': a, 'fin': b, 'persona': True, 'motivo': 'velo de los nombres',
                                'valores': {'forma': 'vineta', 'color': '#000000', 'intensidad': d['veloIntensidad'], 'fundido': 0.45}})
                 datos_cta.append(c['texto'])
+    # --- 1b2) la biblioteca de plantillas Remotion (edicion_pro_catalogo): «hola amigos», «casa de la novia», «sesión fotográfica», «comenta
+    #          BODA»… Lo que se dice las dispara; van delante, sin tapar caras (aplicar las coloca). Una por frase, separadas, sin repetirse.
+    try:
+        import edicion_pro_catalogo as PC
+        plegadas = [plegar(_txt(w)) for w in palabras]
+        usadas = set()
+        for i, pl in PC.por_frase(plegadas):
+            if pl['id'] in usadas or (len(usadas) >= max(4, int(duracion // 4)) and pl['comp'] != 'Comentario'):   # la llamada a comentar, siempre
+                continue
+            a = max(0.05, st(i) - 0.12)
+            b = min(duracion - 0.1, a + pl['dur'])
+            if b - a < 1.4 or not libre(a, b, sep * 0.5):
+                continue
+            usadas.add(pl['id'])
+            poner({'pieza': 'plantilla', 'capa': 'delante', 'ini': a, 'fin': b, 'remotion': pl['comp'], 'plantilla': pl['id'], 'ajustar': True,
+                   'motivo': f"plantilla «{pl['id']}»", 'valores': dict(pl['props'])})
+    except Exception:
+        pass
     # --- 1c) el GANCHO con Magic Mask (skill: «iconos que le rodean»): los iconos de lo que se dice (y los del estilo) giran alrededor de la
     #         cabeza; la mitad de atrás pasa por DETRÁS de la persona recortada y la de delante, por delante. aplicar() la centra en su cabeza.
     if duracion >= 6.0:
         a, b = 0.15, min(duracion - 0.5, 0.15 + ORBITA_DUR)
-        primero = [st(c['i']) for c in cands if c['tipo'] in ('cifra', 'lista') and st(c['i']) < a + ORBITA_DUR + 0.4]
+        primero = [st(c['i']) for c in cands if c['tipo'] in ('cifra', 'lista', 'pais') and st(c['i']) < a + ORBITA_DUR + 0.4]
         if primero:                                                   # un dato en los primeros segundos manda: la órbita acaba antes
-            b = min(b, min(primero) - 0.45)
+            b = min(b, min(primero) - 0.45 - sep * 0.4)                  # con el aire que exige libre() entre dos gráficos grandes
         a, b = _ajustar_a_corte(a, b, cortes)
         if b - a >= 1.6 and libre(a, b, 0.0):
             iconos = []
@@ -580,6 +642,7 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
     ultima_escena = [-99.0]
     n_escenas = [0]
     iconos_usados = set()                 # una escena por concepto: «clientes» no sale dos veces en el mismo video
+    paises_usados = set()                 # un mapa por país
     cada_escena = ESCENA_CADA.get(densidad, 7.5)
 
     def escena(a, b, pieza, valores, motivo):
@@ -665,6 +728,18 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
                    'valores': {'linea1': l1, 'linea2': l2.upper(), 'acentoLinea': 2, 'tiempos': f"{ts2[0] if ts2 else 0},{ts2[min(corte, len(ts2) - 1)] if ts2 else 0.5}",
                                'fuente': d['fuenteTitular'], 'acento': d['acento'], 'colorTexto': d['colorTexto'], 'colorBloque': d['colorBloque'],
                                'escala': 1.0, 'x': 50, 'y': d['yApoyo'], 'inclinacion': 0}})
+        elif c['tipo'] == 'pais':
+            if c['iso'] in paises_usados or a < 1.0:
+                continue
+            paises_usados.add(c['iso'])
+            nombre = c['nombres'].get(lang) or c['nombres'].get('es') or c['texto']
+            poner({'pieza': 'ubicacion', 'capa': 'fondo', 'ini': a - 0.08, 'fin': max(b, a + 3.4), 'pantalla': True, 'remotion': 'Ubicacion',
+                   'motivo': f"mapa + bandera «{nombre}»",
+                   'valores': {'pais': c['iso'], 'nombre': nombre, 'kicker': T['estamos'] if c.get('estamos') else T['ubicacion'],
+                               'acento': d['acento'], 'fuente': d['fuenteTitular'] if d['fuenteTitular'] in ('grotesk', 'redonda', 'serif') else 'grotesk'}})
+            ultima_escena[0] = a
+        elif c['tipo'] == 'lugar' and (plegar(c['texto']) in paises() or plegar(c['texto']).replace(' ', '') in paises()):
+            continue                                                  # un país ya tiene su mapa
         elif c['tipo'] == 'lugar' and puede_escena(a) and (titulares >= 1 or con_captions):
             escena(a, b, 'icono', {'icono': 'pin', 'texto': c['texto'], 'kicker': T['ubicacion'], 'fuente': d['fuenteTitular'] if d['fuenteTitular'] != 'mono' else 'grotesk',
                                    'acento': d['acento'], 'colorTexto': d['colorTexto'], 'escala': 1.0, 'x': 50, 'y': Y_ESCENA['icono'] if vertical else 42,

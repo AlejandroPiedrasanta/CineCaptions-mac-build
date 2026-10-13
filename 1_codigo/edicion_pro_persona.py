@@ -204,6 +204,17 @@ def personas(video, t, max_personas=4):
             'izq': min(p['bbox'][0] for p in salida), 'der': max(p['bbox'][2] for p in salida)}
 
 
+def refinar_alfa(a, ancho, alto):
+    """El alfa del modelo (a ALTO_MODELO px) al tamaño final con el borde pulido (v5.4.52): escalado bicúbico (sin escalones), una curva suave
+    que quita el halo gris de fuera y los huecos claros de dentro, y menos de un píxel de desenfoque en el borde (pelo y hombros). uint8."""
+    from PIL import Image, ImageFilter
+    img = Image.fromarray((np.clip(a, 0.0, 1.0) * 255).astype(np.uint8), 'L').resize((int(ancho), int(alto)), Image.BICUBIC)
+    x = np.clip((np.asarray(img).astype(np.float32) / 255.0 - 0.12) / 0.76, 0.0, 1.0)
+    x = x * x * (3.0 - 2.0 * x)
+    img = Image.fromarray((x * 255).astype(np.uint8), 'L').filter(ImageFilter.GaussianBlur(max(0.6, int(ancho) / 1800.0)))
+    return np.asarray(img)
+
+
 def puntos_fusion(det):
     """Los puntos para PosStrokes del MagicMask de Fusion (y con el origen ABAJO)."""
     return [(x, round(1.0 - y, 5)) for p in (det or {}).get('personas') or [] for (x, y) in p['puntos']]
@@ -244,7 +255,7 @@ def recorte_prores(video, t0, t1, destino, al_progreso=None, lado_max=1920):
                     a = np.maximum(a, b.astype(np.float32) * 0.98)
                     a = a if previo is None else previo * 0.3 + a * 0.7          # suaviza el parpadeo del borde de un fotograma a otro
                     previo = a
-                    alfa = np.asarray(Image.fromarray((a * 255).astype(np.uint8)).resize((ow, oh), Image.BILINEAR))
+                    alfa = refinar_alfa(a, ow, oh)
                     img = rgb if (ow, oh) == (W, H) else np.asarray(Image.fromarray(rgb).resize((ow, oh), Image.BILINEAR))
                     fr = av.VideoFrame.from_ndarray(np.dstack([img, alfa]), format='rgba')
                     for pk in os_.encode(fr):

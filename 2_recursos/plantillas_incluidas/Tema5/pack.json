@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "nombre": "Tema5",
+  "formatos": {
+    "v": {
+      "drb": "Tema5 vertical.drb"
+    }
+  },
+  "guion": "tema5"
+}

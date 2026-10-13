@@ -227,6 +227,14 @@ def _tarea_verificar(estado):
         if icono is None or icono.isNull():
             raise RuntimeError('no cargaron las fuentes de iconos')
 
+    @prueba('Animaciones de la Edición PRO (Remotion)', critica=False)
+    def _():
+        # v5.4.50: Node + Chrome sin ventana + el renderizador; en la compilación de Mac (sin pantalla) también un render real de 1 s
+        import edicion_pro_remotion
+        falla = edicion_pro_remotion.comprobar(renderizar_prueba=os.environ.get('CINECAPTIONS_SIN_PANTALLA') == '1')
+        if falla:
+            raise RuntimeError(falla)
+
     @prueba('Licencia (Lemon Squeezy)')
     def _():
         # v5.2.1: la ventana «Activa tu licencia» se DIBUJA en memoria (sin mostrarla ni hablar con

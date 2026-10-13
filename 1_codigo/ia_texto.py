@@ -250,6 +250,29 @@ def _guardar_cache(clave, datos):
         pass
 
 
+def _sin_traducciones(textos, resultado, idioma):
+    """v5.4.51: la IA a veces «corrige» TRADUCIENDO (en un vídeo en inglés, «effects» -> «efectos»). Con el diccionario del idioma: si la palabra
+    original existe en ese idioma y la «corrección» no, no es una corrección y se descarta."""
+    if str(idioma or '')[:2] != 'en':                                # (los diccionarios con tildes no las traen todas: «como» -> «cómo» se perdería;
+        return resultado                                               #  ahí manda la barrera de letras del motor, motor_texto.traduce)
+    try:
+        import ortografia
+        corrector = ortografia._corrector(idioma)
+    except Exception:
+        corrector = None
+    if corrector is None or not resultado.get('correcciones'):
+        return resultado
+    limpia = lambda t: ''.join(c for c in str(t).lower() if c.isalpha() or c in "'")      # noqa: E731
+    buenas = {}
+    for i, nueva in resultado['correcciones'].items():
+        vieja = textos[i] if 0 <= i < len(textos) else ''
+        v, n = limpia(vieja), limpia(nueva)
+        if v and n and v != n and corrector.known([v]) and not corrector.known([n]):
+            continue
+        buenas[i] = nueva
+    return dict(resultado, correcciones=buenas)
+
+
 def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
     """Corre el modelo. Devuelve {'correcciones': {i: palabra}, 'pesos': {i: 0..1},
     'emojis': {i: glifo}}. Lanza RuntimeError si no se pudo."""
@@ -262,7 +285,7 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
             r0 = _reg()
             if r0:
                 r0.info('Resultado de la IA reutilizado (mismas palabras, mismo idioma): no se vuelve a correr el modelo.', 'IA de texto')
-            return guardado
+            return _sin_traducciones(textos, guardado, idioma)
     except Exception:
         clave = None
     fd, entrada = tempfile.mkstemp(prefix='cinecaptions_texto_', suffix='.json')
@@ -329,7 +352,67 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
         datos = json.loads(Path(salida).read_text(encoding='utf-8'))
         if clave:
             _guardar_cache(clave, datos)
-        return _resultado_de_datos(datos)
+        return _sin_traducciones(textos, _resultado_de_datos(datos), idioma)
+    finally:
+        for f in (entrada, salida):
+            try:
+                os.unlink(f)
+            except OSError:
+                pass
+
+
+def escenas(bloques, idioma='es', estado=None):
+    """v5.4.51, el director de escenas del Tema 5: la IA local lee las frases de los captions (una cadena por bloque) y propone qué ilustrar
+    [{'b': índice del bloque, 'tipo', 'datos', 'anclas'}] (motor_texto, modo 'escenas'). [] si no hay IA o falla (el Tema 5 sigue con sus reglas).
+    Con caché por huella, como analizar()."""
+    if not bloques or not disponible() or _FALLOS['n'] >= FALLOS_SEGUIDOS_MAX:
+        return []
+    textos = [str(b) for b in bloques]
+    modelo = (motor_voz.info_instalado() or {}).get('modelo_texto') or 'auto'
+    clave = _clave_cache(textos, idioma, 'escenas', modelo)
+    archivo = _carpeta_cache() / ('escenas_' + clave + '.json')
+    try:
+        import archivos_seguros
+        datos = archivos_seguros.leer_json(archivo, None)
+        if isinstance(datos, dict) and isinstance(datos.get('escenas'), list):
+            return datos['escenas']
+    except Exception:
+        pass
+    fd, entrada = tempfile.mkstemp(prefix='cinecaptions_escenas_', suffix='.json')
+    os.close(fd)
+    salida = entrada[:-5] + '.out.json'
+    Path(entrada).write_text(json.dumps({'modo': 'escenas', 'idioma': idioma, 'bloques': textos}, ensure_ascii=False), encoding='utf-8')
+    try:
+        with _LOCK:
+            s = _SRV['s']
+            if s is None or not s.vivo():
+                if estado:
+                    estado('Cargando la IA de texto para dirigir las escenas…')
+                s = _Servidor(_PREFERIDO['m'] or modelo)
+                _SRV['s'] = s
+            try:
+                ok, texto = s.pedir(entrada, salida, lambda tipo, t: estado(t) if (estado and tipo == 'ESTADO') else None, timeout=600)
+            except Exception as e:
+                ok, texto = False, f'{type(e).__name__}: {e}'
+            if not ok:
+                s.cerrar()
+                _SRV['s'] = None
+        r = _reg()
+        if not ok:
+            if r:
+                r.aviso(f'El director de escenas (IA) falló: {str(texto)[:200]}; sigo con las reglas.', 'IA de texto')
+            return []
+        datos = json.loads(Path(salida).read_text(encoding='utf-8'))
+        try:
+            import archivos_seguros
+            archivos_seguros.escribir_json(archivo, {'escenas': datos.get('escenas') or [], 'segundos': datos.get('segundos')})
+        except Exception:
+            pass
+        if r:
+            r.info(f"Director de escenas (IA): {len(datos.get('escenas') or [])} propuestas en {datos.get('segundos')} s.", 'IA de texto')
+        return datos.get('escenas') or []
+    except Exception:
+        return []
     finally:
         for f in (entrada, salida):
             try:
