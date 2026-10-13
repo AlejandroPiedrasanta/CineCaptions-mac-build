@@ -8053,27 +8053,38 @@ class SubtitleApp(QWidget):
             self._esperar_vistas_reales()
             nombre_proyecto = self._go_proyecto()
             al_estado = lambda t: self.msg_queue.put(('status', t))
-            if nombre_proyecto:
-                # v5.10: el video soltado vive en el proyecto «CineCaptions» (se abre Resolve, se abre o se crea el proyecto y se arma el timeline)
-                prep = resolve_mcp.preparar_proyecto(nombre_proyecto, abrir=True, al_estado=al_estado)
-                listo = bool(prep.get('ok'))
-            else:
-                # «Proyecto: el abierto»: se usa el que tenga Resolve (aunque esté vacío: ahí se arma el timeline)
-                prep = resolve_mcp.preparar_resolve(abrir=True, pagina=None, al_estado=al_estado)
-                listo = bool(prep.get('proyecto'))
-            if not listo:
-                self._go_tl_error = prep.get('motivo') or tr('Resolve no está listo')
-                registro.aviso(tr('No pude preparar Resolve para tu video ({m}): GO se detiene (no se toca ningún otro timeline).', m=self._go_tl_error),
-                               'GO · timeline del video')
-                return
-            self.msg_queue.put(('status', tr('Armando en Resolve un timeline con tu video…')))
+            self._go_cerrar_resolve_colgado(al_estado, inmediato=True)        # v5.4.52: en Studio también se revisa Resolve ANTES de empezar
             try:
                 import efectos_visuales as _fx
                 con_broll = bool(_fx.activado() and _fx.opciones_guardadas().get('fx_broll') and _fx.broll_clave(_fx.opciones_guardadas()))
             except Exception:
                 con_broll = False
-            r = resolve_mcp.crear_timeline_con_video(self._go_video_para_resolve(archivo, al_estado), ancho=medio['tl_ancho'], alto=medio['tl_alto'],
-                                                     fps=medio['tl_fps'], pista_broll=con_broll)
+            for intento in (1, 2):
+                r = {}
+                if nombre_proyecto:
+                    # v5.10: el video soltado vive en el proyecto «CineCaptions» (se abre Resolve, se abre o se crea el proyecto y se arma el timeline)
+                    prep = resolve_mcp.preparar_proyecto(nombre_proyecto, abrir=True, al_estado=al_estado)
+                    listo = bool(prep.get('ok'))
+                else:
+                    # «Proyecto: el abierto»: se usa el que tenga Resolve (aunque esté vacío: ahí se arma el timeline)
+                    prep = resolve_mcp.preparar_resolve(abrir=True, pagina=None, al_estado=al_estado)
+                    listo = bool(prep.get('proyecto'))
+                if listo:
+                    self.msg_queue.put(('status', tr('Armando en Resolve un timeline con tu video…')))
+                    r = resolve_mcp.crear_timeline_con_video(self._go_video_para_resolve(archivo, al_estado), ancho=medio['tl_ancho'], alto=medio['tl_alto'],
+                                                             fps=medio['tl_fps'], pista_broll=con_broll)
+                    if not r.get('error'):
+                        break
+                # v5.4.52: Resolve 21.1 a veces se cuelga al crear el proyecto (sobre todo tras un render): «ResolveMCP no contestó a tools/call en 75 s».
+                # Si de verdad está colgado se cierra y se repite UNA vez (el proyecto de GO se vuelve a armar entero)
+                if intento == 1 and self._go_cerrar_resolve_colgado(al_estado):
+                    continue
+                break
+            if not listo:
+                self._go_tl_error = prep.get('motivo') or tr('Resolve no está listo')
+                registro.aviso(tr('No pude preparar Resolve para tu video ({m}): GO se detiene (no se toca ningún otro timeline).', m=self._go_tl_error),
+                               'GO · timeline del video')
+                return
             if r.get('error'):
                 self._go_tl_error = r['error']
                 registro.aviso(tr('Resolve no armó el timeline con tu video ({m}): GO se detiene (no se toca ningún otro timeline).', m=r['error']),
@@ -8096,6 +8107,28 @@ class SubtitleApp(QWidget):
             ev = getattr(self, '_go_tl_listo', None)
             if ev is not None:
                 ev.set()
+    def _go_cerrar_resolve_colgado(self, al_estado=None, inmediato=False):
+        """v5.4.52 (Studio, Windows): si Resolve está colgado («No responde» y su registro mudo), lo cierra a la fuerza y suelta la conexión MCP para que
+        preparar_proyecto lo vuelva a abrir. inmediato=True: mirada instantánea antes de empezar; si no, espera unos segundos a confirmarlo. True si lo cerró."""
+        try:
+            import colocacion
+            import resolve_bridge as _rb
+            if not _rb._pids_de_resolve():
+                return False
+            est = _rb.estado_resolve_ahora() if inmediato else _rb.esperar_estado_resolve(12.0)
+            if est != 'colgado':
+                return False
+            registro.aviso(tr('Resolve dejó de responder ({m}): lo cierro y vuelvo a empezar.', m=est), 'GO · Resolve')
+            if not colocacion.cerrar_resolve_a_la_fuerza(al_estado):
+                return False
+            import resolve_mcp
+            resolve_mcp.cerrar()
+            if al_estado:
+                al_estado(tr('Reabriendo Resolve…'))
+            return True
+        except Exception:
+            registro.excepcion(origen='GO · Resolve colgado')
+            return False
     def _go_video_para_resolve(self, archivo, al_estado=None):
         """v5.4.52: el video que se lleva a Resolve. Si su audio es HE-AAC (videos bajados de Pinterest / Instagram / TikTok), Resolve lo renderiza MUDO:
         se usa una copia con la misma imagen y el audio en AAC-LC (audio_compatible). Si no hace falta o falla, el original."""

@@ -107,6 +107,25 @@ export CINECAPTIONS_FUENTES="$OBRA/fuentes" CINECAPTIONS_RECURSOS="$RECURSOS" CI
 export CINECAPTIONS_ARQ="$ARQ" CINECAPTIONS_ICONO="$OBRA/CineCaptions.icns" CINECAPTIONS_FIRMA="${FIRMA_APP:-}"
 (cd "$AQUI" && "$VPY" -m PyInstaller --noconfirm --log-level ERROR --distpath "$DIST" --workpath "$OBRA/work" cinecaptions_mac.spec)
 [ -d "$APP" ] || falla "PyInstaller no dejo CineCaptions.app"
+# v5.4.52: el Chrome sin ventana de Remotion se copia TAL CUAL (PyInstaller no puede reescribir sus .dylib): en Contents/Resources (lo que no es
+# codigo no puede ir en Frameworks sin romper la firma) con un enlace desde Frameworks, donde lo busca el programa; luego se vuelve a sellar la app
+CHROME_ORG="$RECURSOS/edicion_pro/remotion/runtime/chrome"
+if [ -d "$CHROME_ORG" ]; then
+    REL="edicion_pro/remotion/runtime/chrome"
+    rm -rf "$APP/Contents/Resources/$REL" "$APP/Contents/Frameworks/$REL"
+    mkdir -p "$APP/Contents/Resources/$REL"
+    ditto "$CHROME_ORG" "$APP/Contents/Resources/$REL"
+    if [ ! -e "$APP/Contents/Frameworks/$REL" ]; then
+        mkdir -p "$(dirname "$APP/Contents/Frameworks/$REL")"
+        ln -s "../../../../Resources/$REL" "$APP/Contents/Frameworks/$REL"
+    fi
+    if [ -n "${FIRMA_APP:-}" ]; then
+        codesign --force --options runtime --timestamp --entitlements "$AQUI/entitlements.plist" --sign "$FIRMA_APP" "$APP"
+    else
+        codesign --force --entitlements "$AQUI/entitlements.plist" --sign - "$APP"
+    fi
+    echo "    Chrome sin ventana de Remotion copiado en la app (y la app sellada de nuevo)"
+fi
 
 # 5) autoprueba del compilado (la misma que corre el instalador de Windows) ------------------------------
 paso "Autoprueba del programa compilado"

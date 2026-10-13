@@ -76,6 +76,10 @@ a = Analysis(
 # las traducciones de Qt sobran (los textos van por i18n.tr)
 def _sobra(nombre):
     n = nombre.replace('\\', '/').lower()
+    if n.startswith('edicion_pro/remotion/runtime/chrome/'):
+        # v5.4.52: el Chrome sin ventana de Remotion NO pasa por PyInstaller (sus .dylib no admiten el cambio de rutas: install_name_tool fallaba
+        # con libEGL.dylib y la compilación de Mac se cortaba); Construir_Instalador_Mac.sh lo copia tal cual en la app después
+        return True
     return n.startswith('pyside6/') and '/translations/' in n
 a.binaries = [x for x in a.binaries if not _sobra(x[0])]
 a.datas = [x for x in a.datas if not _sobra(x[0])]
