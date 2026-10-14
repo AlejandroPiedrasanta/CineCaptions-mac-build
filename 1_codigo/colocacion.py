@@ -571,89 +571,15 @@ def _ventana_principal(ventanas=None):
 
 # Resolve recién abierto muestra el «Organizador de proyectos» (la pantalla de proyectos): sin un proyecto abierto no hay menú de Scripts ni consola, y el Puente no puede arrancar. La app la pasa sola
 # con la accesibilidad de Windows (UI Automation): los botones de Resolve tienen ids fijos que NO cambian con el idioma (btnAddProject = «Crear proyecto», pushButton_Create = «Crear»).
-_PS_ORGANIZADOR = r'''
-$ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
-$AE = [System.Windows.Automation.AutomationElement]
-$TS = [System.Windows.Automation.TreeScope]
-$ids = @(Get-Process Resolve -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
-if (-not $ids) { 'NO_RESOLVE'; exit }
-function Ventanas {
-    $pm = $null; $dlg = $null
-    foreach ($id in $ids) {
-        $c = New-Object System.Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $id)
-        foreach ($v in $AE::RootElement.FindAll($TS::Children, $c)) {
-            $cn = $v.Current.ClassName
-            if ($cn -like '*NewProjectOptionsDlg*') { $dlg = $v } elseif ($cn -like '*UiProjectManagerDialog*') { $pm = $v }
-        }
-    }
-    return @($pm, $dlg)
-}
-function Buscar($raiz, $tipo, $fin) {
-    $c = New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, $tipo)
-    foreach ($e in $raiz.FindAll($TS::Descendants, $c)) { if ($e.Current.AutomationId -like $fin) { return $e } }
-    return $null
-}
-$pm, $dlg = Ventanas
-if (-not $dlg) {
-    if (-not $pm) { 'SIN_ORGANIZADOR'; exit }
-    $b = Buscar $pm ([System.Windows.Automation.ControlType]::Button) '*projActionBottomFrame.btnAddProject'
-    if (-not $b) { 'SIN_BOTON'; exit }
-    $b.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-    for ($i = 0; $i -lt 32 -and -not $dlg; $i++) { Start-Sleep -Milliseconds 250; $pm, $dlg = Ventanas }
-}
-if (-not $dlg) { 'SIN_DIALOGO'; exit }
-$ed = Buscar $dlg ([System.Windows.Automation.ControlType]::Edit) '*lineEdit_ProjectName'
-$nombre = ''
-if ($ed) {
-    $vp = $ed.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
-    if ($env:CC_NOMBRE) { try { $vp.SetValue($env:CC_NOMBRE) } catch {} }
-    $nombre = $vp.Current.Value
-}
-$ok = Buscar $dlg ([System.Windows.Automation.ControlType]::Button) '*pushButton_Create'
-if (-not $ok) { 'SIN_CREAR'; exit }
-$ok.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-'CREADO|' + $nombre
-'''
-
-_PS_EXPANDIR = r'''
-$ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
-$AE = [System.Windows.Automation.AutomationElement]
-$TS = [System.Windows.Automation.TreeScope]
-$ids = @(Get-Process Resolve -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
-if (-not $ids) { 'NO_RESOLVE'; exit }
-$main = $null
-foreach ($id in $ids) {
-    $c = New-Object System.Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $id)
-    foreach ($v in $AE::RootElement.FindAll($TS::Children, $c)) { if ($v.Current.ClassName -like '*UiMainWindow*') { $main = $v } }
-}
-if (-not $main) { 'SIN_VENTANA'; exit }
-$c = New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::CheckBox)
-$b = $null
-foreach ($e in $main.FindAll($TS::Descendants, $c)) { if ($e.Current.AutomationId -like '*btnEditExpandViewer') { $b = $e; break } }
-if (-not $b) { 'SIN_BOTON'; exit }
-$t = $b.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
-if ($t.Current.ToggleState -eq 'On') { 'YA_EXPANDIDA'; exit }
-$t.Toggle()
-Start-Sleep -Milliseconds 500
-if ($t.Current.ToggleState -eq 'On') { 'EXPANDIDA' } else { 'NO_CAMBIO' }
-'''
 
 
-def _ps_uia(codigo, env_extra=None, timeout=45):
-    """Corre un script de PowerShell con UI Automation (sin ventana) y devuelve su última línea de salida. Nunca lanza."""
+
+def _uia(accion, *args):
+    """v5.5.6: la UI Automation de Windows desde Python (uia_resolve), sin PowerShell: lanzar `powershell -ExecutionPolicy Bypass -EncodedCommand`
+    sin ventana hacía que antivirus como Avast lo bloquearan («IDP.HELU.PSE94») y el Puente de Resolve Free no arrancaba. Devuelve el código. Nunca lanza."""
     try:
-        import base64
-        import os
-        import subprocess
-        cod = base64.b64encode(codigo.encode('utf-16-le')).decode('ascii')
-        r = subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', cod], capture_output=True, text=True,
-                           encoding='utf-8', errors='replace', timeout=timeout, env={**os.environ, **(env_extra or {})}, creationflags=0x08000000, cwd=os.path.expanduser('~'))      # CREATE_NO_WINDOW
-        salida = (r.stdout or '').strip().splitlines()
-        return salida[-1].strip() if salida else ('ERROR ' + (r.stderr or '').strip()[:160])
+        import uia_resolve
+        return getattr(uia_resolve, accion)(pids_resolve(), *args)
     except Exception as e:
         return 'ERROR ' + str(e)[:160]
 
@@ -663,7 +589,7 @@ def expandir_vista_windows():
     Automation, sin mouse y sin foco. Idempotente. Devuelve (ok, texto)."""
     if not sys.platform.startswith('win'):
         return False, tr('Expandir vista solo se automatiza en Windows.')
-    res = _ps_uia(_PS_EXPANDIR)
+    res = _uia('expandir')
     if res in ('EXPANDIDA', 'YA_EXPANDIDA'):
         return True, tr('Vista expandida (visor a toda la altura).')
     return False, tr('No pude activar «Expandir vista» en Resolve ({r}).', r=res)
@@ -672,42 +598,6 @@ def expandir_vista_windows():
 # v5.4.40: reproducir desde el principio SIN teclas. Medido en Resolve Free 21.1: las teclas Inicio/Espacio mandadas con keybd_event no hacían nada (el foco queda en el Media Pool o en
 # la consola), así que el cabezal se queda donde está y no reproduce. Ahora: el cabezal al primer fotograma por la API (acción «cabezal» de CineCaptions_Vista.lua) y «Reproducir hacia
 # adelante» pulsado en el MENÚ de Resolve por UI Automation (sin foco ni mouse). OJO: la llamada del menú NO vuelve hasta que acaba la reproducción, por eso se lanza aparte y no se espera.
-_PS_REPRODUCIR = r'''
-$ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
-$AE = [System.Windows.Automation.AutomationElement]
-$TS = [System.Windows.Automation.TreeScope]
-$ids = @(Get-Process Resolve -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
-$main = $null
-foreach ($id in $ids) {
-    $c = New-Object System.Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $id)
-    foreach ($v in $AE::RootElement.FindAll($TS::Children, $c)) { if ($v.Current.ClassName -like '*UiMainWindow*') { $main = $v } }
-}
-if (-not $main) { 'SIN_VENTANA'; exit }
-$m = $null
-foreach ($n in @($env:CC_MENUS -split '\|')) {
-    $m = $main.FindFirst($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::NameProperty, $n)))
-    if ($m) { break }
-}
-if (-not $m) {
-    # sin el nombre (otro idioma): el menú «Reproducir» es el que va justo ANTES de «Fusion» en la barra
-    $barra = $main.FindAll($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::MenuItem)))
-    $ant = $null
-    foreach ($b in $barra) { if ($b.Current.Name -eq 'Fusion') { $m = $ant; break }; $ant = $b }
-}
-if (-not $m) { 'SIN_MENU'; exit }
-try { $m.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand() } catch { $m.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke() }
-$e = $null
-foreach ($n in @($env:CC_ITEMS -split '\|')) {
-    $e = $m.FindFirst($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::NameProperty, $n)))
-    if ($e) { break }
-}
-if (-not $e) { Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('{ESC}'); 'SIN_ITEM'; exit }
-'REPRODUCIENDO'
-[Console]::Out.Flush()
-$e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-'''
 
 _MENU_REPRODUCIR = 'Reproducir|Playback|Reprodução|Lecture|Wiedergabe|Riproduzione|Воспроизведение|再生|播放'
 _ITEM_ADELANTE = ('Reproducir hacia adelante|Play Forward|Reproduzir para frente|Reproduzir para a frente|Lire en avant|Vorwärts abspielen|Riproduci in avanti|Воспроизведение вперед|順再生|正向播放')
@@ -769,39 +659,13 @@ def _cerrar_menu_de_resolve():
 
 
 def reproducir_por_menu_windows(espera_s=20):
-    """v5.4.40 (Windows): pulsa «Reproducir > Reproducir hacia adelante» en el menú de Resolve por UI Automation. El proceso de PowerShell se queda vivo mientras dura la reproducción
-    (la llamada no vuelve antes), así que solo se espera su PRIMERA línea. Devuelve (ok, código)."""
-    try:
-        import base64
-        import os
-        import subprocess
-        import threading
-        cod = base64.b64encode(_PS_REPRODUCIR.encode('utf-16-le')).decode('ascii')
-        env = {**os.environ, 'CC_MENUS': _MENU_REPRODUCIR, 'CC_ITEMS': _ITEM_ADELANTE}
-        proc = subprocess.Popen(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', cod], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                text=True, encoding='utf-8', errors='replace', env=env, creationflags=0x08000000, cwd=os.path.expanduser('~'))
-        primera = []
-
-        def leer():
-            try:
-                primera.append((proc.stdout.readline() or '').strip())
-            except Exception:
-                primera.append('ERROR')
-        h = threading.Thread(target=leer, daemon=True, name='uia-reproducir')
-        h.start()
-        h.join(espera_s)
-        cod_res = primera[0] if primera else 'SIN_RESPUESTA'
-        if cod_res != 'REPRODUCIENDO':
-            try:
-                proc.kill()
-            except Exception:
-                pass
-        else:
-            time.sleep(1.0)                                       # (la reproducción ya empezó; el menú se queda dibujado encima del visor hasta que se cierre)
-            _cerrar_menu_de_resolve()
-        return cod_res == 'REPRODUCIENDO', cod_res
-    except Exception as e:
-        return False, 'ERROR ' + str(e)[:120]
+    """v5.4.40 (Windows): pulsa «Reproducir > Reproducir hacia adelante» en el menú de Resolve por UI Automation (v5.5.6: desde Python, uia_resolve; la
+    pulsación va en un hilo aparte porque no vuelve hasta que acaba la reproducción). Devuelve (ok, código)."""
+    cod_res = _uia('reproducir', _MENU_REPRODUCIR, _ITEM_ADELANTE)
+    if cod_res == 'REPRODUCIENDO':
+        time.sleep(1.0)                                           # (la reproducción ya empezó; el menú se queda dibujado encima del visor hasta que se cierre)
+        _cerrar_menu_de_resolve()
+    return cod_res == 'REPRODUCIENDO', cod_res
 
 
 PROYECTO_INICIAL = None                     # nombre del proyecto VACÍO que la app creó solo para pasar el Organizador de proyectos (ArmarVideo lo borra al crear el definitivo)
@@ -811,7 +675,7 @@ def pasar_organizador_windows(nombre):
     """Windows: si Resolve está en el Organizador de proyectos, pulsa «Crear proyecto» y «Crear» (con `nombre`). Devuelve 'CREADO|<nombre>', 'SIN_ORGANIZADOR' (todavía no está esa
     pantalla) u otro código de fallo. Nunca lanza."""
     global PROYECTO_INICIAL
-    res = _ps_uia(_PS_ORGANIZADOR, {'CC_NOMBRE': str(nombre)})
+    res = _uia('organizador', str(nombre))
     if res.startswith('CREADO|'):
         PROYECTO_INICIAL = res.split('|', 1)[1].strip() or None
     return res
@@ -1141,59 +1005,7 @@ def recuperar_resolve(motivo='', decir=None):
 
 # v5.4.41: arrancar el Puente por el MENÚ de Resolve (Área de trabajo > Scripts > CineCaptions_Puente) con UI Automation, igual que ya se reproduce: sin foco, sin teclear y sin depender del idioma
 # (el elemento se llama como el archivo del script). Escribir `dofile(...)` en la consola F6 necesita foco, el teclado libre y la consola en Lua, y se vio revuelto cuando dos hilos tecleaban.
-# La llamada Invoke del menú puede no volver mientras el Puente corra: se espera solo la 1.ª línea y el PowerShell se deja vivo (se cierra solo cuando Resolve cierra).
-_PS_PUENTE_MENU = r'''
-$ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
-$AE = [System.Windows.Automation.AutomationElement]
-$TS = [System.Windows.Automation.TreeScope]
-$ids = @(Get-Process Resolve -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
-$main = $null
-foreach ($id in $ids) {
-    $c = New-Object System.Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $id)
-    foreach ($v in $AE::RootElement.FindAll($TS::Children, $c)) { if ($v.Current.ClassName -like '*UiMainWindow*') { $main = $v } }
-}
-if (-not $main) { 'SIN_VENTANA'; exit }
-$nombre = $env:CC_SCRIPT
-function Buscar-Item { $AE::RootElement.FindFirst($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::NameProperty, $nombre))) }
-# 1) el menú «Área de trabajo» / «Workspace»: por nombre, o el que va justo DESPUÉS de «Fairlight» en la barra (sirve en cualquier idioma)
-$m = $null
-foreach ($n in @($env:CC_MENUS -split '\|')) {
-    $m = $main.FindFirst($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::NameProperty, $n)))
-    if ($m) { break }
-}
-if (-not $m) {
-    $barra = $main.FindAll($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::MenuItem)))
-    $ant = $null
-    foreach ($b in $barra) { if ($ant -and $ant.Current.Name -eq 'Fairlight') { $m = $b; break }; $ant = $b }
-}
-if (-not $m) { 'SIN_MENU'; exit }
-try { $m.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand() } catch { $m.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke() }
-Start-Sleep -Milliseconds 400
-# 2) el submenú «Scripts»/«Secuencias de comandos»: el que contiene el script (se prueban los submenús hasta verlo)
-$e = Buscar-Item
-if (-not $e) {
-    $subs = @($m.FindAll($TS::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::MenuItem))))
-    # primero los que se llaman «Scripts» / «Secuencias de comandos»…; después el resto de submenús
-    $primeros = @($env:CC_SUBS -split '\|')
-    $nombrados = @($subs | Where-Object { $primeros -contains $_.Current.Name })
-    $orden = if ($nombrados.Count -gt 0) { $nombrados } else { $subs }          # (si el menú se llama como se espera, no se pierde tiempo probando los demás)
-    foreach ($sm in $orden) {
-        try { $sm.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand() } catch { continue }
-        for ($k = 0; $k -lt 5; $k++) {                       # el submenú tarda en rellenarse (hasta ~1,5 s)
-            Start-Sleep -Milliseconds 300
-            $e = Buscar-Item
-            if ($e) { break }
-        }
-        if ($e) { break }
-    }
-}
-if (-not $e) { Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('{ESC}{ESC}{ESC}'); 'SIN_SCRIPT'; exit }
-'LANZANDO'
-[Console]::Out.Flush()
-$e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-'''
+# La llamada Invoke del menú puede no volver mientras el Puente corra: va en un hilo aparte (uia_resolve._pulsar_aparte). v5.5.6: sin PowerShell (los antivirus lo bloqueaban).
 
 _MENU_SCRIPTS = 'Scripts|Secuencias de comandos|Scripts de|Roteiros|Scripts (Python)|Skripte|Script|スクリプト|脚本'
 _MENU_AREA_TRABAJO = 'Área de trabajo|Workspace|Espaço de trabalho|Espace de travail|Arbeitsbereich|Area di lavoro|Рабочая область|ワークスペース|工作区'
@@ -1203,29 +1015,12 @@ def lanzar_puente_por_menu_windows(espera_s=20, version=None):
     """v5.4.41 (Windows): arranca el Puente pulsando CineCaptions_Puente en el menú de scripts de Resolve (UI Automation, sin teclas). Devuelve True si el Puente late al acabar la espera.
     Si el script no está en el menú (Resolve lo arma al abrirse: si se instalaron los scripts con Resolve ya abierto, aún no sale) devuelve False y se usa la consola como siempre."""
     try:
-        import base64
-        import os
-        import subprocess
-        import threading
         import resolve_bridge as b
-        cod = base64.b64encode(_PS_PUENTE_MENU.encode('utf-16-le')).decode('ascii')
-        env = {**os.environ, 'CC_SCRIPT': 'CineCaptions_Puente', 'CC_MENUS': _MENU_AREA_TRABAJO, 'CC_SUBS': _MENU_SCRIPTS}
-        proc = subprocess.Popen(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', cod], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
-                                encoding='utf-8', errors='replace', env=env, creationflags=0x08000000, cwd=os.path.expanduser('~'))
-        primera = []
-
-        def leer():
-            try:
-                primera.append((proc.stdout.readline() or '').strip())
-            except Exception:
-                primera.append('ERROR')
-        h = threading.Thread(target=leer, daemon=True, name='uia-puente')
-        h.start()
-        h.join(25)
-        cod_res = primera[0] if primera else 'SIN_RESPUESTA'
+        cod_res = _uia('lanzar_script', 'CineCaptions_Puente', _MENU_AREA_TRABAJO, _MENU_SCRIPTS)   # v5.5.6: sin PowerShell
         if cod_res != 'LANZANDO':
             try:
-                proc.kill()
+                import registro
+                registro.info(tr('No pude lanzar el Puente desde el menú de Resolve ({c}); pruebo por la consola.', c=cod_res), 'Puente · Windows')
             except Exception:
                 pass
             return False
@@ -1242,11 +1037,6 @@ def lanzar_puente_por_menu_windows(espera_s=20, version=None):
             try:
                 import registro
                 registro.info(tr('El Puente se lanzó solo desde el menú de scripts de Resolve.'), 'Puente · Windows')
-            except Exception:
-                pass
-        else:
-            try:
-                proc.kill()
             except Exception:
                 pass
         return vivo

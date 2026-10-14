@@ -484,6 +484,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.5.6', [
+        'Ya no se usa PowerShell: lanzar el Puente en Resolve Free, pasar la pantalla de proyectos, expandir la vista y reproducir van por la Accesibilidad de Windows desde CineCaptions. Antivirus como Avast bloqueaban PowerShell y con eso GO no podía colocar nada.',
+        'Si Windows 11 («Control inteligente de aplicaciones») o un antivirus bloquea una librería, ya no sale el cuadro «Bad Image»: el Registro dice qué pasó y cómo arreglarlo.',
+    ]),
     ('5.5.5', [
         'Resolve va fluido y ya no se cierra: las IA de CineCaptions dejan la tarjeta gráfica libre en cuanto terminan (antes ocupaban hasta 15 GB mientras Resolve reproducía) y los títulos, efectos y motions se pre-renderizan en segundo plano.',
         'La IA de texto elige su tamaño según la memoria que de verdad queda libre: con Resolve abierto ya no se queda colgada 100 s y los motions vuelven a ser de la IA.',

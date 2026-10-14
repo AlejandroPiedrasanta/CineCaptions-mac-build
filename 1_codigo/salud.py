@@ -53,6 +53,27 @@ def _version(mod):
         return None
 
 
+def smart_app_control():
+    """v5.5.6: el estado del «Control inteligente de aplicaciones» de Windows 11: 'activado', 'evaluacion', 'desactivado' o None (no es Windows 11 o
+    no se pudo leer). Activado (o en evaluación) bloquea librerías sin firma digital: error 0xc0e90002, «Bad Image»."""
+    import sys
+    if not sys.platform.startswith('win'):
+        return None
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'SYSTEM\CurrentControlSet\Control\CI\Policy') as k:
+            v, _t = winreg.QueryValueEx(k, 'VerifiedAndReputablePolicyState')
+        return {1: 'activado', 2: 'evaluacion', 0: 'desactivado'}.get(int(v))
+    except OSError:
+        return None
+
+
+def _bloqueo_de_windows(e):
+    """¿La librería no cargó porque Smart App Control la bloqueó? (un fallo al cargar su DLL con el control activado o en evaluación)"""
+    t = str(e)
+    return ('0xc0e90002' in t.lower() or 'DLL load failed' in t or isinstance(e, OSError)) and smart_app_control() in ('activado', 'evaluacion')
+
+
 def _compatible(v, fijada):
     """v5.5.4: la misma versión, o un parche más nuevo de la misma serie (4.8.3 con 4.8.2 fijada): eso no es una falla."""
     if v == fijada:
@@ -77,7 +98,10 @@ def comprobar():
             filas.append({'nombre': nombre, 'ok': ok, 'detalle': detalle,
                           'ms': round((time.perf_counter() - t) * 1000)})
         except Exception as e:
-            filas.append({'nombre': nombre, 'ok': False, 'detalle': f'no carga: {type(e).__name__}: {e}'[:160]})
+            detalle = f'no carga: {type(e).__name__}: {e}'[:160]
+            if _bloqueo_de_windows(e):
+                detalle = 'Windows la bloqueó (Control inteligente de aplicaciones / Smart App Control)'
+            filas.append({'nombre': nombre, 'ok': False, 'detalle': detalle})
     # el motor de IA (su propio Python)
     try:
         import motor_voz

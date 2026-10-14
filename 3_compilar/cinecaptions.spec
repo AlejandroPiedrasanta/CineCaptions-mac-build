@@ -13,6 +13,7 @@
 #     CINECAPTIONS_VERSION   la version (APP_VERSION de version.py), para el .exe
 # ============================================================================
 import os
+import sys
 from PyInstaller.utils.hooks import collect_data_files
 
 FUENTES = os.environ['CINECAPTIONS_FUENTES']
@@ -51,6 +52,12 @@ hiddenimports = propios + [
     'pynput.keyboard._win32', 'pynput.mouse._win32',
     'qtawesome', 'qtpy', 'qtpy.QtCore', 'qtpy.QtGui', 'qtpy.QtWidgets',
 ]
+# v5.5.6: UI Automation de Windows desde Python (uia_resolve), sin PowerShell (los antivirus lo bloqueaban). Los envoltorios de
+# UIAutomationCore.dll van YA generados (comtypes/gen): así no hay que escribirlos en tiempo de ejecución en una carpeta del usuario.
+if sys.platform.startswith('win'):
+    from PyInstaller.utils.hooks import collect_submodules
+    hiddenimports += collect_submodules('comtypes') + ['comtypes.gen.UIAutomationClient', 'comtypes.gen._944DE083_8FB8_45CF_BCB7_C477ACB2F897_0_1_0',
+                                                       'comtypes.gen.stdole', 'comtypes.gen._00020430_0000_0000_C000_000000000046_0_2_0']
 
 # Lo que NO va: stanza/spacy (los declara argostranslate, pero arrastran torch:
 # ~500 MB y arranque 6x mas lento; ver rthook_stanza_stub.py), las IA pesadas

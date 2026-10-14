@@ -317,6 +317,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         voz de prueba (Windows SAPI) → WAV: para probar los captions con un video SIN audio útil.
     ui_toast.py
         avisos que se cierran solos (toasts).
+    uia_resolve.py
+        la Accesibilidad de Windows (UI Automation) sobre DaVinci Resolve, DESDE PYTHON (v5.5.6)
     un_clic_ui.py
         la pantalla de Inicio: botón GO, pasos animados, cinta viral y vista previa.
     ventana_licencia.py

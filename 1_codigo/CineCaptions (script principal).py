@@ -40,6 +40,13 @@ if sys.platform.startswith('win'):
             sys.stderr = open(os.devnull, 'w', encoding='utf-8')
         except Exception:
             pass
+    # v5.5.6: sin las ventanas de error de Windows al cargar una librería («Bad Image» 0xc0e90002 cuando Smart App Control la bloquea): el
+    # programa sigue sin ella y lo explica en el Registro (salud._bloqueo_de_windows); el cuadro de Windows solo asustaba y no decía qué hacer
+    try:
+        import ctypes
+        ctypes.windll.kernel32.SetErrorMode(0x0001 | 0x8000)            # SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX
+    except Exception:
+        pass
 os.environ['HF_HUB_DISABLE_SYMLINKS'] = '1'
 import datetime
 import math
