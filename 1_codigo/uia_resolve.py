@@ -211,8 +211,8 @@ def _menu_de_barra(m, u, main, nombres, vecino, despues):
     return None
 
 
-def reproducir(pids, menus, items):
-    """«Reproducir > Reproducir hacia adelante» en el menú de Resolve (sin foco ni teclas)."""
+def _menu_reproducir(pids, menus, items, nombre_hilo):
+    """Un elemento del menú «Reproducir» (el que va antes de «Fusion» si no se encuentra por nombre). → 'PULSADO' o el código del fallo."""
     try:
         m, u = _api()
         main = _principal(u, pids)
@@ -226,10 +226,23 @@ def reproducir(pids, menus, items):
         if e is None:
             _escape()
             return 'SIN_ITEM'
-        _pulsar_aparte(e, 'uia-reproducir')
-        return 'REPRODUCIENDO'
+        _pulsar_aparte(e, nombre_hilo)
+        return 'PULSADO'
     except Exception as e:
         return 'ERROR ' + str(e)[:160]
+
+
+def reproducir(pids, menus, items):
+    """«Reproducir > Reproducir hacia adelante» en el menú de Resolve (sin foco ni teclas)."""
+    r = _menu_reproducir(pids, menus, items, 'uia-reproducir')
+    return 'REPRODUCIENDO' if r == 'PULSADO' else r
+
+
+def detener(pids, menus, items):
+    """v5.5.7: «Reproducir > Detener». La reproducción lanzada desde el menú deja a Resolve sin contestar a los scripts mientras dura (medido: el MCP
+    no contestaba 45 s justo después de cada GO); antes de volver a hablar con Resolve se detiene."""
+    r = _menu_reproducir(pids, menus, items, 'uia-detener')
+    return 'DETENIDO' if r == 'PULSADO' else r
 
 
 def lanzar_script(pids, script, menus, subs):

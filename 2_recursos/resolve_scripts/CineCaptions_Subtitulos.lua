@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.5.6 (subtitulos)"
+local VERSION = "5.5.7 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -5408,7 +5408,7 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
                 local ini_p = math.max(start_frame, start_frame + a_fotogramas(tonumber(cue.emoji_ini) or cue.start))
                 local fin_p = start_frame + a_fotogramas(cue["end"] + extra_fin)
                 if fin_p > ini_p + 1 then
-                    planes_emoji[#planes_emoji + 1] = { emoji = cue.emoji, ini = ini_p, fin = fin_p, y_arriba = arriba_y, y_abajo = abajo_y }
+                    planes_emoji[#planes_emoji + 1] = { emoji = cue.emoji, ini = ini_p, fin = fin_p, y_arriba = arriba_y, y_abajo = abajo_y, junto = true }
                 end
             end
         end
@@ -5682,7 +5682,7 @@ local function place_kinetic(timeline, media_pool, track, fps, start_frame, proj
                 local ini_p = math.max(start_frame, start_frame + a_fotogramas(tonumber(cue.emoji_ini) or cue.start))
                 local fin_p = start_frame + a_fotogramas(cue["end"] + extra_fin)
                 if fin_p > ini_p + 1 then
-                    planes_emoji[#planes_emoji + 1] = { emoji = cue.emoji, ini = ini_p, fin = fin_p, y_arriba = arriba_y, y_abajo = abajo_y }
+                    planes_emoji[#planes_emoji + 1] = { emoji = cue.emoji, ini = ini_p, fin = fin_p, y_arriba = arriba_y, y_abajo = abajo_y, junto = true }
                 end
             end
         end
@@ -6157,10 +6157,12 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
                 end
             end
             if y == nil then
+                -- v5.5.7 (gemela del .py): «junto» = la caja de la pila es la medida (guion, VIRAL): el emoji va pegado a ella
+                local margen = p.junto and ((f == "v") and 0.012 or 0.02) or EMOJI_MARGEN[f]
                 if arriba then
-                    y = (p.y_arriba or 0) + EMOJI_MARGEN[f] + lado / 2
+                    y = (p.y_arriba or 0) + margen + lado / 2
                 else
-                    y = (p.y_abajo or 0) - EMOJI_MARGEN[f] - lado / 2
+                    y = (p.y_abajo or 0) - margen - lado / 2
                 end
                 encima = encima + 1
             end

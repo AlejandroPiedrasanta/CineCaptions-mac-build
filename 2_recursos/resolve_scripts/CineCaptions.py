@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.5.6 (subtitulos)"
+VERSION = "5.5.7 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -3771,7 +3771,7 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
         except (TypeError, ValueError):
             continue
         if fin_p > ini_p + 1:
-            planes_emoji.append({"emoji": eid, "ini": ini_p, "fin": fin_p, "y_arriba": arriba_y, "y_abajo": abajo_y})
+            planes_emoji.append({"emoji": eid, "ini": ini_p, "fin": fin_p, "y_arriba": arriba_y, "y_abajo": abajo_y, "junto": True})
     try:
         colocar_emojis(timeline, media_pool, track_info, planes_emoji, fps)
     except Exception as exc:
@@ -4033,7 +4033,7 @@ def place_kinetic_track(timeline, media_pool, track_info, base_template,
         except (TypeError, ValueError):
             continue
         if fin_p > ini_p + 1:
-            planes_emoji.append({"emoji": eid, "ini": ini_p, "fin": fin_p, "y_arriba": arriba_y, "y_abajo": abajo_y})
+            planes_emoji.append({"emoji": eid, "ini": ini_p, "fin": fin_p, "y_arriba": arriba_y, "y_abajo": abajo_y, "junto": True})
     if planes_emoji:
         try:
             colocar_emojis(timeline, media_pool, track_info, planes_emoji, fps)
@@ -5456,10 +5456,11 @@ def colocar_emojis(timeline, media_pool, track_info, planes, fps):
                     lado, cx, y = lado_l, cx_l, float(p.get("y") or 0.0)
                     junto += 1
         if y is None:
+            margen = (0.012 if f == "v" else 0.02) if p.get("junto") else EMOJI_MARGEN[f]     # v5.5.7: «junto» = la caja de la pila es la medida (estilos guion y VIRAL): el emoji va pegado a ella, no a 0,065 del alto
             if arriba:
-                y = (p["y_arriba"] or 0.0) + EMOJI_MARGEN[f] + lado / 2
+                y = (p["y_arriba"] or 0.0) + margen + lado / 2
             else:
-                y = (p["y_abajo"] or 0.0) - EMOJI_MARGEN[f] - lado / 2
+                y = (p["y_abajo"] or 0.0) - margen - lado / 2
             encima += 1
         tope = 0.5 - lado / 2 - 0.01
         y = max(-tope, min(tope, y))

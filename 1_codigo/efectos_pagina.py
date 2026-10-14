@@ -347,11 +347,29 @@ class PaginaEfectos(QWidget):
         capa.setContentsMargins(0, 0, 0, 0)
         capa.setSpacing(18)
         op = F.opciones_guardadas()
+        # ---- v5.5.7: arriba, los motions de la Edición PRO (carrusel con todos; Automático o solo los elegidos)
+        from motions_ui import SeccionMotions
+        self._motions = SeccionMotions()
+        capa.addWidget(self._motions)
+        # ---- los efectos clásicos van en su propio bloque: con la Edición PRO activa NO se aplican (la PRO hace la intro, el gancho, los zooms y los
+        #      gráficos; sumarlos la estropeaba), así que se pliegan tras una línea que lo dice. «Ritmo: quitar pausas» sí vale con la PRO y queda fuera.
+        self._clasicos = QWidget()
+        cl = QVBoxLayout(self._clasicos)
+        cl.setContentsMargins(0, 0, 0, 0)
+        cl.setSpacing(18)
+        self._fila_pro = Tarjeta(espacio=10, margenes=(22, 14, 22, 14), horizontal=True)
+        cp = self._fila_pro.capa
+        self._lbl_pro = Etiqueta(tr('Edición PRO activa: ella pone la intro, el gancho, los zooms y los gráficos. Los efectos clásicos solo se usan sin la PRO.'),
+                                 13, color='#B4C0D6', envolver=True)
+        cp.addWidget(self._lbl_pro, 1)
+        self._b_clasicos = Boton(tr('Ver efectos clásicos'), self._plegar_clasicos, tipo='fantasma', alto=30, tam=12)
+        cp.addWidget(self._b_clasicos)
+        self._ver_clasicos = False
         # ---- v5.4.26: sin interruptor general; los efectos vienen activos y cada sección tiene su tarjeta «Sin …» (el chip «Visuales» de Inicio sigue apagándolos todos)
         fila_i, ci = caja_h(espacio=10)
         ci.addStretch(1)
         ci.addWidget(Boton(tr('Vista previa de 3 s'), self._abrir_vista_previa, alto=34, tam=12))
-        capa.addWidget(fila_i)
+        cl.addWidget(fila_i)
         # ---- intro (y su sonido)
         self._intro = op.get('fx_intro') or ''
         t1 = self._tarjeta(tr('Intro'), tr('Un destello de luz con su sonido: sube el riser (sus últimos 2 s) y, justo en su pico, el destello cubre la imagen y el cuadro se suelta con un golpe de zoom.'))
@@ -379,7 +397,7 @@ class PaginaEfectos(QWidget):
         self._f_zoom_intro = self._fila(t1.capa, 'zoomintro', tr('Zoom en la intro'), tr('El cuadro se acerca mientras sube el riser y se suelta de golpe, con el destello, justo en su pico.'),
                                         self._niveles(tr('Sin zoom'), tr('El cuadro no se acerca.'), tr('Un acercamiento discreto.'), tr('Un acercamiento claro.'), tr('Un acercamiento grande.')),
                                         op.get('fx_intro_zoom'), 'fx_intro_zoom')
-        capa.addWidget(t1)
+        cl.addWidget(t1)
         self._pintar_unico(self._c_intro, self._intro)
         self._refrescar_sonido()
         # ---- transiciones
@@ -403,7 +421,7 @@ class PaginaEfectos(QWidget):
             self._c_cortes[ident] = self._carta(ident, nombre, detalle, 'corte', c2)
         c2.addStretch(1)
         t2.capa.addWidget(fila2)
-        capa.addWidget(t2)
+        cl.addWidget(t2)
         self._pintar_unico(self._c_cortes, self._cortes)
         # ---- movimiento del video (Fusion)
         t4 = self._tarjeta(tr('Movimiento del video'), tr('Se aplica al propio video con una composición de Fusion: tu corrección de color sigue valiendo y no se duplica nada. Zoom lento todo el rato y, si el video no llena el cuadro, un fondo desenfocado.'))
@@ -412,7 +430,7 @@ class PaginaEfectos(QWidget):
         self._f_fondo = self._fila(t4.capa, 'fondo', tr('Si el video no llena el cuadro'), tr('Por ejemplo un video horizontal en un timeline vertical.'),
                                    [('no', tr('Barras negras'), tr('Se ven barras negras arriba y abajo.'), False), ('si', tr('Fondo desenfocado'), tr('Una copia desenfocada llena el cuadro.'), False)],
                                    'si' if bool(op.get('fx_fondo', True)) else 'no', None, guardar=lambda k: _guardar({'fx_fondo': k == 'si'}))
-        capa.addWidget(t4)
+        cl.addWidget(t4)
         # ---- ritmo: quitar pausas (jump cuts) y zoom alterno
         t5 = self._tarjeta(tr('Ritmo: quitar pausas'), tr('GO corta los silencios del video en Resolve (los tramos con voz quedan pegados) ANTES de poner los captions, que ya salen con los tiempos nuevos. Solo en el video que sueltas en Inicio: nunca toca un timeline tuyo.'))
         self._f_pausas = self._fila(t5.capa, 'pausas', tr('Quitar pausas'), tr('Los silencios se cortan y los tramos con voz quedan pegados (en el ejemplo, las pausas rojas de la línea de tiempo se cierran).'),
@@ -421,6 +439,8 @@ class PaginaEfectos(QWidget):
         self._f_saltos = self._fila(t5.capa, 'saltos', tr('Zoom alterno en cada corte'), tr('Con las pausas quitadas, el cuadro se acerca en un tramo sí y en el siguiente no, para que el corte seco parezca intencionado.'),
                                     self._niveles(tr('Sin zoom'), tr('Todos los tramos igual.'), tr('Un acercamiento discreto.'), tr('Un acercamiento claro.'), tr('Un acercamiento grande.')), op.get('fx_zoom_saltos'), 'fx_zoom_saltos')
         capa.addWidget(t5)
+        capa.addWidget(self._fila_pro)
+        capa.addWidget(self._clasicos)
         # ---- iconos
         self._iconos = set(op.get('fx_iconos') or [])
         t3 = self._tarjeta(tr('Iconos flotantes'), tr('Salen iconos animados cuando se dice una palabra que tú eliges (haz clic en un pack para escribirlas) y, si quieres, también en las frases importantes: un número, un aviso, una pregunta o el gancho.'))
@@ -445,7 +465,7 @@ class PaginaEfectos(QWidget):
             self._c_iconos[ident] = self._carta(ident, tr(nombre), tr(detalle), 'iconos', c3, pack=True)
         c3.addStretch(1)
         t3.capa.addWidget(fila3)
-        capa.addWidget(t3)
+        cl.addWidget(t3)
         for ident, c in self._c_iconos.items():
             c.poner_seleccionada(ident in self._iconos)
         self._aplicar_iconos_on()
@@ -453,11 +473,51 @@ class PaginaEfectos(QWidget):
         from efectos_extra_ui import SeccionExtras
         self._mas = SeccionExtras()                    # v5.4.23: siempre a la vista (antes plegado: había efectos activos que no se veían)
         self._tarjetas.extend(self._mas.tarjetas)
-        capa.addWidget(self._mas)
+        cl.addWidget(self._mas)
+        capa.addWidget(self._mas.tarjeta_sonido)          # v5.5.7: «Sonido extra» (música, riser del gancho) SÍ vale con la PRO: fuera del bloque plegable
         capa.addStretch(1)
         self._reloj = QTimer(self)
-        self._reloj.timeout.connect(self._tic)
-        self._reloj.start(self.TIC_MS)
+        self._reloj.setInterval(self.TIC_MS)
+        self._reloj.timeout.connect(self._tic)            # v5.5.7: solo mientras la página se ve (showEvent / hideEvent); antes corría siempre
+        self._aplicar_pro()
+
+    def showEvent(self, e):
+        super().showEvent(e)
+        if not self._reloj.isActive():
+            self._reloj.start()
+
+    def hideEvent(self, e):
+        super().hideEvent(e)
+        self._reloj.stop()
+        for c in self._tarjetas:
+            c.poner_visible(False)
+
+    def _aplicar_pro(self):
+        """Con la Edición PRO activa, los efectos clásicos se pliegan (no se aplican) tras la línea que lo explica; sin ella, se ven como siempre."""
+        try:
+            import edicion_pro
+            pro = bool(edicion_pro.en_juego())                  # el interruptor, o el Tema 5 / 6 (que siempre son la PRO)
+            t56 = edicion_pro.tema_actual() in edicion_pro.TEMAS_PRO
+        except Exception:
+            pro, t56 = False, False
+        visuales = bool(F.activado())                           # el chip «Visuales» de Inicio
+        if t56:                                                 # Temas 5 y 6: hacen TODA la edición; de esta página solo valen «Quitar pausas» y los motions
+            self._lbl_pro.setText(tr('Temas 5 y 6: el tema hace toda la edición (gráficos, transiciones y sonido). De esta página solo se aplican «Quitar pausas» y los motions de arriba.'))
+        elif pro:
+            self._lbl_pro.setText(tr('Edición PRO activa: ella pone la intro, el gancho, los zooms y los gráficos. Los efectos clásicos solo se usan sin la PRO.'))
+        else:
+            self._lbl_pro.setText(tr('«Visuales: no» en Inicio: los efectos visuales no se aplican. «Quitar pausas» y «Sonido extra» sí.'))
+        pliega = pro or not visuales
+        self._mas.tarjeta_sonido.setVisible(not t56)
+        self._fila_pro.setVisible(pliega)
+        self._clasicos.setVisible((not pliega) or self._ver_clasicos)
+        for w in [self._f_saltos] + list(getattr(self._f_saltos, 'etiquetas', [])):     # el zoom alterno es un efecto visual: con la PRO (o «Visuales: no») no se aplica
+            w.setVisible(not pliega)
+        self._b_clasicos.setText(tr('Ocultar') if self._ver_clasicos else tr('Ver efectos clásicos'))
+
+    def _plegar_clasicos(self):
+        self._ver_clasicos = not self._ver_clasicos
+        self._aplicar_pro()
 
     # -- construcción
     def _tarjeta(self, titulo, descripcion):
@@ -472,11 +532,14 @@ class PaginaEfectos(QWidget):
 
     def _fila(self, capa, tipo, titulo, ayuda, opciones, actual, pref, defecto='no', guardar=None):
         """Un ajuste con su ejemplo: título, una línea de ayuda y la fila de tarjetas animadas (una por opción). Lo que se toca se guarda en la preferencia `pref`."""
-        capa.addWidget(Etiqueta(titulo, 15, peso='medio', color='#E0EBFB'))
+        etiquetas = [Etiqueta(titulo, 15, peso='medio', color='#E0EBFB')]
         if ayuda:
-            capa.addWidget(Etiqueta(ayuda, 12, color=TEXT_MUTED, envolver=True))
+            etiquetas.append(Etiqueta(ayuda, 12, color=TEXT_MUTED, envolver=True))
+        for e in etiquetas:
+            capa.addWidget(e)
         validas = {o[0] for o in opciones}
         fila = FilaCartas(tipo, opciones, actual if actual in validas else defecto, guardar or (lambda k, p=pref: _guardar({p: k})))
+        fila.etiquetas = etiquetas                         # (para esconder el ajuste entero: título, ayuda y tarjetas)
         capa.addWidget(fila)
         self._tarjetas.extend(fila.tarjetas)
         return fila
@@ -531,6 +594,8 @@ class PaginaEfectos(QWidget):
             self._aplicar_iconos_on()
             self._refrescar_sonido()
             self._mas.refrescar()
+            self._motions.refrescar()
+            self._aplicar_pro()
         except Exception:
             pass
 

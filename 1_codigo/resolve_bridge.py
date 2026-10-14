@@ -878,6 +878,21 @@ def puente_activo():
             if (-5) <= edad <= LATIDO_MAXIMO_S:
                     return True
     return False
+def _puente_en_pausa():
+    """v5.5.7 (Free): mientras dura la reproducción que lanzó CineCaptions (menú «Reproducir» al final de GO), Resolve no corre scripts y el Puente
+    deja de latir: está EN PAUSA, no muerto (latía cuando empezó la reproducción). Así el estado no se pone en rojo ni se relanza el Puente encima;
+    el GO siguiente detiene la reproducción (colocacion.detener_reproduccion) y el Puente vuelve a latir solo."""
+    try:
+        import colocacion
+        t = float(colocacion._REPRODUCCION.get('t') or 0.0)
+        if not t or time.time() - t > 1800:
+            return False
+        edades = [e for e in edad_del_latido() if e is not None]
+        return bool(edades) and min(edades) <= (time.time() - t) + LATIDO_MAXIMO_S
+    except Exception:
+        return False
+
+
 def _podar_relevo():
     """Borra puente.relevo pasados RELEVO_MAXIMO_S (modo señales, v3.1.7).\n\n    El Puente que lo escribe no puede borrarlo, y su bucle lo toma por suyo\n    mientras exista: si nadie lo quita, el SIGUIENTE Puente que lo escriba no\n    se distingue y quedan dos vivos. Va aqui porque puente_activo() es lo que\n    la app consulta sin parar. Nunca lanza."""
     try:
@@ -1014,7 +1029,7 @@ def modo_actual(pasivo=False):
     if disponible(pasivo=pasivo):
         return 'studio'
     else:
-        if puente_activo():
+        if puente_activo() or _puente_en_pausa():
             return 'puente'
         else:
             return 'manual'
@@ -1190,6 +1205,11 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
             if ok or not str(mensaje).startswith('MCP:'):
                 return _con_motivo_real(ok, mensaje, empezo)
         puente_vivo = puente_activo() or _puente_trabajando()
+        if not puente_vivo and _reconectar_mcp():                   # v5.5.7: Resolve abierto con MCP que no contestó: se reconecta antes de caer a «falta un clic»
+            import resolve_mcp
+            ok, mensaje = resolve_mcp.ejecutar_py(str(ruta), timeout=max(timeout, 120), on_progreso=on_progreso)
+            if ok or not str(mensaje).startswith('MCP:'):
+                return _con_motivo_real(ok, mensaje, empezo)
         if puente_vivo and (not puente_incompatible()):
             if puente_no_conoce(accion):
                 # el Puente que quedo corriendo es de una version anterior: se le pide que se retire y, si no quedo otro en su lugar, se lanza el nuevo
@@ -1411,7 +1431,45 @@ def lanzar_puente_mac(espera_s=25, espera_abrir_s=180, forzar=False):
     return False
 
 
+def es_studio():
+    """v5.5.7: ¿el Resolve de este equipo es Studio? (instalador_scripts.edicion_de_resolve, que ya no confunde un Studio ocupado con Free)."""
+    try:
+        import instalador_scripts as ins
+        return ins.edicion_de_resolve() == 'studio'
+    except Exception:
+        return False
+
+
 def lanzar_puente_auto(espera_s=25, forzar=False):
+    if es_studio():
+        # v5.5.7: en Studio el Puente NO se lanza nunca: es un script en bucle dentro de Resolve y, mientras corre, Resolve no contesta a NINGÚN otro
+        # script (medido: MCP mudo y la ventana «No responde»). Studio va por su MCP: si no contestó, se reconecta.
+        try:
+            import registro
+            registro.info(tr('Resolve Studio no contestó: no lanzo el Puente (lo bloquearía); reconecto su MCP.'), 'GO · Resolve')
+        except Exception:
+            pass
+        return False
+    return _lanzar_puente_auto(espera_s, forzar)
+
+
+def relanzar_puente_tras_detener(espera_s=25):
+    """v5.5.7 (Free, pedido del usuario: «con el video ya en el timeline, o al cambiar de tema, GO da error en Free»): plan B cuando lanzar el Puente
+    falló. Lo normal es que Resolve siguiera REPRODUCIENDO (el GO anterior lo dejó así y, mientras reproduce, no corre scripts: ni late el Puente
+    que ya había ni arranca uno nuevo). Se detiene SIEMPRE la reproducción y, si el Puente no vuelve a latir solo, se lanza otra vez. True = latiendo."""
+    if es_studio():
+        return False
+    try:
+        import colocacion
+        colocacion.detener_reproduccion(siempre=True)
+        if puente_activo():
+            return True
+        return _lanzar_puente_auto(espera_s)
+    except Exception:
+        return False
+
+
+def _lanzar_puente_auto(espera_s=25, forzar=False):
     """Resolve Free sin Puente: lo lanza solo. Mac: por el menú (lanzar_puente_mac); Windows: por la consola de comandos de Resolve (colocacion.lanzar_puente_windows). False si no se pudo."""
     if sys.platform == 'darwin':
         return lanzar_puente_mac(espera_s, forzar=forzar)
@@ -1422,6 +1480,95 @@ def lanzar_puente_auto(espera_s=25, forzar=False):
         except Exception:
             return False
     return False
+
+
+def _reconectar_mcp(espera_s=45.0):
+    """v5.5.7: Resolve (con MCP: Studio 21.1+) está ABIERTO pero su MCP no contestó. Pasaba justo después de un GO: la reproducción lanzada desde el
+    menú deja a Resolve sin contestar a los scripts y el GO siguiente acababa en «Falta un clic en Resolve» (camino de Free) con Studio delante.
+    Se detiene la reproducción, se arranca de nuevo ResolveMCP y se espera a que conteste. True = conectado."""
+    try:
+        import colocacion
+        import resolve_mcp
+        if resolve_mcp.ruta_exe() is None or not colocacion.pids_resolve():
+            return False
+        colocacion.detener_reproduccion(siempre=True)
+        resolve_mcp.cerrar()
+        t0 = time.time()
+        while time.time() - t0 < espera_s:
+            if resolve_mcp.estado(refrescar=True).get('conectado'):
+                try:
+                    import registro
+                    registro.info(tr('Resolve no contestaba: lo volví a conectar y sigo.'), 'GO · Resolve')
+                except Exception:
+                    pass
+                return True
+            time.sleep(3.0)
+    except Exception:
+        pass
+    return False
+
+
+_AUTO = {'pids': frozenset(), 'ultimo': None, 'intentos': 0, 't': 0.0}
+
+
+def asegurar_conexion(go_corriendo=False):
+    """v5.5.7 (pedido del usuario: «las conexiones con el Puente deben hacerse solas al abrir CineCaptions, Free y Studio, Mac y Windows»).
+    Lo llama la vigilancia de la ventana cada ~15 s, en un hilo. Con Resolve abierto:
+      · Studio (o cualquiera con MCP): pregunta al MCP (lo arranca si hace falta);
+      · Free: si no hay Puente latiendo, lo lanza por el MENÚ de Resolve (Accesibilidad: sin teclas ni foco), UNA vez por sesión de Resolve y
+        solo si ya tiene un proyecto abierto (nunca abre Resolve ni crea proyectos por su cuenta).
+    Devuelve {'proceso': bool|None, 'conectado': bool, 'modo': 'mcp'|'studio'|'puente'|None} y si cambió respecto a la última vez ('cambio')."""
+    out = {'proceso': None, 'conectado': False, 'modo': None}
+    try:
+        import colocacion
+        out['proceso'] = colocacion.resolve_en_proceso()
+        if out['proceso']:
+            try:
+                import resolve_mcp
+                if resolve_mcp.ruta_exe() is not None and resolve_mcp.estado(refrescar=True).get('conectado'):
+                    out.update(conectado=True, modo='mcp')
+            except Exception:
+                pass
+            if not out['conectado'] and (puente_activo() or _puente_en_pausa()):
+                out.update(conectado=True, modo='puente')
+            if not out['conectado'] and disponible(pasivo=True):
+                out.update(conectado=True, modo='studio')
+            pids = frozenset(colocacion.pids_resolve()) if sys.platform.startswith('win') else frozenset({'mac'})
+            if pids != _AUTO['pids']:
+                _AUTO['intentos'] = 0                                  # Resolve nuevo (o reabierto): intentos desde cero
+            # Free sin Puente: hasta 3 intentos por sesión de Resolve, separados ≥ 60 s (no se abre su menú cada 15 s; si el 1.º falló, se reintenta)
+            if (not out['conectado'] and not go_corriendo and pids and not es_studio()            # (en Studio, nunca el Puente)
+                    and _AUTO['intentos'] < 3 and time.time() - _AUTO['t'] >= 60):
+                _AUTO['pids'] = pids
+                _AUTO['intentos'] += 1
+                _AUTO['t'] = time.time()
+                lanzado = False
+                if sys.platform.startswith('win'):
+                    if colocacion._ventana_principal() is not None:
+                        lanzado = colocacion.lanzar_puente_por_menu_windows(espera_s=15)
+                    else:
+                        _AUTO['intentos'] -= 1                         # (aún en la pantalla de proyectos: no cuenta; se vuelve a probar cuando abra uno)
+                        _AUTO['t'] = 0.0
+                elif sys.platform == 'darwin':
+                    codigo, salida, _err = _menu_puente_mac()
+                    if codigo == 0 and salida not in ('sin_resolve', 'sin_menu'):
+                        t0 = time.time()
+                        while time.time() - t0 < 15 and not puente_activo():
+                            time.sleep(0.5)
+                        lanzado = puente_activo()
+                    else:
+                        _AUTO['intentos'] -= 1
+                        _AUTO['t'] = 0.0
+                if lanzado:
+                    out.update(conectado=True, modo='puente')
+        else:
+            _AUTO['pids'] = frozenset()
+    except Exception:
+        pass
+    clave = (out['proceso'], out['conectado'], out['modo'])
+    out['cambio'] = clave != _AUTO['ultimo']
+    _AUTO['ultimo'] = clave
+    return out
 
 
 def traer_resolve_al_frente():

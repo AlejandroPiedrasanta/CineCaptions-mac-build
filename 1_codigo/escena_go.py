@@ -734,7 +734,13 @@ class EscenaGo(QWidget):
         dt = min(0.08, ahora - self._ult)
         self._ult = ahora
         if not self.isVisible() or self.window().isMinimized():
+            if self._ms_reloj != 250:                    # v5.5.7: minimizada u oculta, el reloj despierta 4 veces por segundo (no 60) solo para ver si vuelve
+                self._ms_reloj = 250
+                self._reloj.setInterval(250)
             return
+        if self._ms_reloj == 250:                        # vuelve a verse: el ritmo bueno (60 / 30 fps) ya, sin esperar a la política
+            self._ms_reloj = 0
+            self._politica()
         self.avanzar(dt)
         for f in self.al_tic:
             try:

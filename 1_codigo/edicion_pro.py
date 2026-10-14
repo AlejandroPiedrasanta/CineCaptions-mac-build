@@ -37,7 +37,12 @@ import edicion_pro_planificador as PL
 CARPETA = Path.home() / 'DaVinciSubtitles' / 'edicion_pro'
 PLAN_JSON = Path.home() / 'DaVinciSubtitles' / 'edicion_pro_plan.json'
 OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_mascara': 'auto', 'pro_sonidos': True, 'pro_ia_local': True, 'pro_variacion': 0,
-                        'pro_internet': True}          # v5.5.3: fotos de internet con licencia (fuentes_web) para las escenas
+                        'pro_internet': True,          # v5.5.3: fotos de internet con licencia (fuentes_web) para las escenas
+                        'pro_motions_modo': 'auto', 'pro_motions': [],     # v5.5.7: 'auto' (la IA elige entre todos) o 'elegidos' (solo los de la lista)
+                        'pro_sonidos_nivel': 'normal',  # v5.5.7 (página Sonido › Edición PRO): 'suave' | 'normal' | 'fuerte'
+                        'pro_sonidos_familias': {'whoosh': True, 'textura': True, 'riser': True}}   # movimiento · apariciones · riser + golpe
+NIVEL_SONIDOS_DB = {'suave': -5.0, 'normal': 0.0, 'fuerte': 3.0}
+FAMILIA_DE_PISTA = {'PRO-WHOOSH': 'whoosh', 'PRO-TEXTURA': 'textura', 'PRO-RISER': 'riser', 'PRO-HIT': 'riser'}
 NOMBRES_GENERO = {'auto': 'Automático', 'general': 'General', 'inmobiliaria': 'Inmobiliaria / venta de casas', 'boda': 'Bodas', 'xv': 'XV años',
                   'restaurante': 'Restaurantes', 'bts': 'Detrás de cámara'}
 MANIFIESTO = Path.home() / 'DaVinciSubtitles' / 'subtitles_manifest.json'
@@ -59,6 +64,20 @@ def _prefs():
 
 def activado():
     return bool(_prefs().get('go_edicion_pro', False))
+
+
+TEMAS_PRO = ('Tema5', 'Tema6')            # edicion_pro_tema5.activo: estos temas SON la Edición PRO completa, aunque su interruptor esté apagado
+
+
+def tema_actual():
+    """El tema elegido en el chip «Estilo» de Inicio (preferencia go_pack), o ''."""
+    return str(_prefs().get('go_pack') or '')
+
+
+def en_juego():
+    """v5.5.7: ¿la PRO actúa en el próximo GO? Su interruptor, o el tema elegido es el 5 o el 6 (la usan siempre). Las páginas Efectos y Sonido lo
+    miran para decir la verdad sobre lo que se aplica (antes, con el Tema 5 y el interruptor apagado, decían «PRO apagada»)."""
+    return activado() or tema_actual() in TEMAS_PRO
 
 
 def poner_activado(valor):
@@ -117,6 +136,11 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
     plan['opciones'] = op
     plan['idioma'] = idioma
     plan['ia_local'] = bool(pesos)
+    try:                                             # v5.5.7: solo los motions que el usuario permitió (el seguro final; la IA y las reglas ya no los proponen)
+        import motions_catalogo as MC
+        plan['piezas'] = MC.filtrar(plan.get('piezas') or [], op)
+    except Exception:
+        pass
     plan['broll'] = _broll_de(palabras, duracion or dur, idioma, op, plan)
     _referencias(plan)
     soltar_gpu()                                     # v5.5.4: la IA ya eligió: su VRAM, para Resolve (que en ese momento está armando el timeline)
@@ -679,7 +703,10 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     studio = 'studio' in str(info.get('producto') or '').lower() and info.get('via') == 'mcp'
     op = plan.get('opciones') or opciones_guardadas()
     modo_mascara = op.get('pro_mascara') or 'auto'
-    usar_magic = studio and modo_mascara in ('auto', 'magic')
+    # v5.5.7: en «auto» la persona la recorta SIEMPRE la IA local (clip ProRes con alfa), también en Studio: el rastreo del Magic Mask dentro de
+    # Resolve lo tumbó dos veces colocando la PRO (2026-10-13 y 14). Así Studio y Free hacen lo mismo y Resolve no calcula nada pesado. Magic Mask,
+    # solo si se elige a mano en el menú.
+    usar_magic = studio and modo_mascara == 'magic'
     usar_ia = modo_mascara in ('auto', 'ia') or (modo_mascara == 'magic' and not studio)
     video = plan.get('video') or ''
     t5 = bool(plan.get('tema5'))                     # Tema 5: la edición completa con el sistema de la skill (edicion_pro_tema5); los Text+ de GO, de respaldo
@@ -936,6 +963,11 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         except Exception:
             pass
     gris = [[int(round(a * fps)), int(round(b * fps))] for a, b in plan.get('gris') or []]
+    try:                                             # v5.5.7: también lo que se añadió al aplicar (Tema 5/6, acompañantes): solo motions permitidos
+        import motions_catalogo as MC
+        plan['piezas'] = MC.filtrar(plan.get('piezas') or [], op)
+    except Exception:
+        pass
     decir('Edición PRO: preparando los gráficos animados…')
     # las animaciones de Remotion (mapa + bandera…): todas en una tanda, con un solo navegador; sin Remotion, esas escenas no van
     rm_salida, rm_hechos = {}, {}
@@ -1031,14 +1063,26 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     if op.get('pro_sonidos', True):                                   # diseño de sonido profesional (edicion_pro_sonido): whooshes, texturas, risers + hits
         import edicion_pro_sonido as PS
         voz_db = PS.nivel_voz(video)                                  # los efectos, siempre bajo la voz de ESTE video
+        familias = dict(op.get('pro_sonidos_familias') or {})          # v5.5.7: lo que el usuario apagó en Sonido › Edición PRO
+        extra_db = NIVEL_SONIDOS_DB.get(str(op.get('pro_sonidos_nivel') or 'normal'), 0.0)
         for e in PS.disenar(plan, fps, rng, choques=[] if t5 else [(f - info['base']) / fps for f in info.get('sfx') or []],
                             cortes=[(int(f) - info['base']) / fps for f, _z in punch], voz_db=voz_db):
+            if familias.get(FAMILIA_DE_PISTA.get(str(e.get('pista')), 'textura'), True) is False:
+                continue
+            e['db'] = float(e.get('db') or 0.0) + extra_db
             try:                                                      # el volumen, DENTRO del archivo (Resolve 21 ignora el de clip por script)
                 e['archivo'] = str(OG.ruta_larga(_con_ganancia(e['archivo'], e.get('db', 0.0))))
                 e['db'] = 0.0
             except Exception:
                 e['archivo'] = str(OG.ruta_larga(_copia_de_usuario(e['archivo'])))     # nunca de la carpeta del programa: Resolve la retendría
             sonidos.append(e)
+    # v5.5.7 (el usuario, Tema 4: «emojis encima de los captions, iconos y motions juntos»): donde la PRO enseña algo (acompañante, órbita, cifra,
+    # escena, tarjeta, titular…), el emoji de GO se apaga: una sola cosa a la vez junto al caption
+    if not t5:
+        for p in plan['piezas']:
+            if p.get('quitar') or p.get('pieza') in ('subtitulo', 'velo', 'velo_caption', 'marco', 'fondo') or p.get('capa') == 'velo':
+                continue
+            sin_emoji.append([int(round(float(p['ini']) * fps)) - 3, int(round(float(p['fin']) * fps)) + 3])
     subs = [p for p in plan['piezas'] if p['pieza'] == 'subtitulo']
     subs_ok = sum(1 for p in subs if rm_hechos.get(str(rm_salida.get(id(p)))))
     datos = {'fps': fps, 'inicio': info['base'], 'graficos': graficos, 'persona': persona, 'sonidos': sonidos, 'cache': True,

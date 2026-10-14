@@ -484,6 +484,20 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.5.7', [
+        'Pulsar GO otra vez sobre el mismo timeline (el mismo tema u otro) ya funciona: la reproducción que deja GO bloqueaba a Resolve y el GO siguiente creía que estaba cerrado. Ahora se detiene antes y, si Resolve no contesta, se reconecta solo.',
+        'CineCaptions se conecta solo con Resolve al abrirse y cada pocos segundos (Studio por su conexión, Free lanzando el Puente desde el menú), en Windows y Mac. El estado ya no dice «cerrado» con Resolve abierto.',
+        'En Resolve Studio nunca se lanza el Puente (lo dejaba sin responder) y la Edición PRO recorta a la persona con la IA local también en Studio: la Magic Mask de Resolve llegó a cerrarlo. Studio y Free hacen lo mismo.',
+        'Emojis con sentido: cada emoji va con su palabra (🎓 beca, 🏆 premios, 🍽 comida, 🆓 gratis…). Y donde la Edición PRO enseña algo, el emoji del tema se apaga: una sola cosa a la vez junto al caption.',
+        'Registro: dos vistas, Errores e Información; los avisos ya no se enseñan.',
+        'Tema 2: las líneas de los captions van pegadas (sin hueco entre una y otra) y el emoji va arriba, junto a la pila (también en el Tema 3).',
+        'Cuando un caption se mueve para no tapar una cara, su emoji se mueve con él: antes se quedaba lejos o caía encima del texto.',
+        'Si Windows bloquea CineCaptions al abrirse (Control inteligente de aplicaciones), lo dice con los pasos para arreglarlo, sin texto técnico.',
+        'Resolve Free: GO con el video ya en el timeline, o al cambiar de tema, ya no falla. Si el Puente no responde porque Resolve sigue reproduciendo, CineCaptions para la reproducción y lo vuelve a lanzar solo.',
+        'Efectos: un carrusel con los 147 motions de la Edición PRO. En Automático la IA elige el adecuado; si marcas los tuyos, la IA usa SOLO esos. Con la PRO activa, los efectos clásicos (que no se aplican con ella) quedan plegados.',
+        'Sonido: nueva pestaña «Edición PRO» para encender, subir o bajar sus sonidos y elegir cuáles suenan (movimiento, apariciones, riser + golpe), con un ejemplo de cada uno.',
+        'Ortografía: el corrector ya no marca ni cambia palabras buenas («voy», «hay», «tiene»), corrige faltas típicas («aser», «kiero», «nesecito») también en GO sin IA, y los gráficos de la Edición PRO salen con el texto corregido.',
+    ]),
     ('5.5.6', [
         'Ya no se usa PowerShell: lanzar el Puente en Resolve Free, pasar la pantalla de proyectos, expandir la vista y reproducir van por la Accesibilidad de Windows desde CineCaptions. Antivirus como Avast bloqueaban PowerShell y con eso GO no podía colocar nada.',
         'Si Windows 11 («Control inteligente de aplicaciones») o un antivirus bloquea una librería, ya no sale el cuadro «Bad Image»: el Registro dice qué pasó y cómo arreglarlo.',

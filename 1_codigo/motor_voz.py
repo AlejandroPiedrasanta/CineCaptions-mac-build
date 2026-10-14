@@ -364,7 +364,7 @@ def resolve_abierto():
     si = True
     try:
         if sys.platform.startswith('win'):
-            r = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq Resolve.exe', '/NH'], capture_output=True, text=True, timeout=8,
+            r = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq Resolve.exe', '/NH'], capture_output=True, text=True, errors='replace', timeout=8,
                                creationflags=SIN_VENTANA)
             si = 'resolve.exe' in (r.stdout or '').lower()
     except Exception:

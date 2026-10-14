@@ -79,6 +79,13 @@ def detectar_resolve(estado=None, refrescar=False):
         return dict(edicion='Studio', camino='api', version=version, texto=tr('DaVinci Resolve Studio detectado · API directa'), tono='ok', listo=True, ayuda='')
     if modo == 'puente':
         return dict(edicion='Free', camino='puente', version=version, texto=tr('DaVinci Resolve Free detectado · Puente activo'), tono='ok', listo=True, ayuda='')
+    if mcp.get('mcp') and not mcp.get('conectado') and estado.get('proceso') is True and modo != 'puente':
+        # v5.5.7: Resolve ESTÁ abierto pero su MCP no contestó (arrancando, ocupado reproduciendo, o el MCP se reinició): antes salía «cerrado» con
+        # Resolve delante. La vigilancia de conexión (resolve_bridge.asegurar_conexion) lo vuelve a conectar sola en unos segundos.
+        ed = {'studio': 'Studio', 'free': 'Free'}.get(edicion_guardada)
+        cual = f' {ed}' if ed else ''
+        return dict(edicion=ed, camino='conectando', version=version, texto=tr('DaVinci Resolve{c} abierto · conectando…', c=cual), tono='aviso', listo=True,
+                    ayuda=tr('CineCaptions se conecta solo; si tarda, Resolve está ocupado (reproduciendo o con un cuadro de diálogo abierto).'))
     if mcp.get('mcp') and not mcp.get('conectado') and (edicion_guardada in ('studio', 'free', 'desconocida', None)):
         ed = {'studio': 'Studio', 'free': 'Free'}.get(edicion_guardada)
         cual = f' {ed}' if ed else ''
@@ -663,9 +670,43 @@ def reproducir_por_menu_windows(espera_s=20):
     pulsación va en un hilo aparte porque no vuelve hasta que acaba la reproducción). Devuelve (ok, código)."""
     cod_res = _uia('reproducir', _MENU_REPRODUCIR, _ITEM_ADELANTE)
     if cod_res == 'REPRODUCIENDO':
+        _REPRODUCCION['t'] = time.time()                          # v5.5.7: se recuerda para detenerla antes de volver a hablar con Resolve
         time.sleep(1.0)                                           # (la reproducción ya empezó; el menú se queda dibujado encima del visor hasta que se cierre)
         _cerrar_menu_de_resolve()
     return cod_res == 'REPRODUCIENDO', cod_res
+
+
+_REPRODUCCION = {'t': 0.0}
+_ITEM_DETENER = 'Detener|Stop|Parar|Arrêter|Arrêt|Anhalten|Stopp|Interrompi|Ferma|Стоп|停止'
+
+
+def detener_reproduccion(siempre=False):
+    """v5.5.7 (Windows): si CineCaptions lanzó la reproducción (o `siempre`), la detiene con «Reproducir > Detener». MEDIDO: mientras dura la
+    reproducción lanzada desde el menú, Resolve no contesta a los scripts (el MCP daba «no contestó en 45 s» justo después de cada GO y el GO
+    siguiente creía que Resolve estaba cerrado: «Falta un clic»). Detener cuando no reproduce no hace nada. Devuelve el código. Nunca lanza."""
+    if not sys.platform.startswith('win') or not (siempre or _REPRODUCCION['t']):
+        return 'NADA'
+    _REPRODUCCION['t'] = 0.0
+    if not pids_resolve():
+        return 'NO_RESOLVE'
+    res = _uia('detener', _MENU_REPRODUCIR, _ITEM_DETENER)
+    if res == 'DETENIDO':
+        time.sleep(0.6)
+        _cerrar_menu_de_resolve()
+        try:                                                      # Free: el Puente estaba parado por la reproducción; vuelve a latir en 1-2 s
+            import resolve_bridge as b
+            if not b.es_studio():
+                t0 = time.time()
+                while time.time() - t0 < 10.0 and not b.puente_activo():
+                    time.sleep(0.5)
+        except Exception:
+            pass
+    try:
+        import registro
+        registro.info(tr('Detuve la reproducción de Resolve antes de seguir ({r}).', r=res), 'GO · Resolve')
+    except Exception:
+        pass
+    return res
 
 
 PROYECTO_INICIAL = None                     # nombre del proyecto VACÍO que la app creó solo para pasar el Organizador de proyectos (ArmarVideo lo borra al crear el definitivo)

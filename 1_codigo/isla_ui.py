@@ -189,9 +189,14 @@ class IslaNav(QWidget):
 
     def _respirar(self):
         # el punto de Resolve respira (muy sutil); solo repinta si la isla se ve
+        quieta = not self.isVisible() or self.window().isMinimized()
+        ms = 500 if quieta else 33                      # v5.5.7: minimizada, 2 tics por segundo (no 30) solo para ver si vuelve
+        if self._reloj.interval() != ms:
+            self._reloj.setInterval(ms)
+        if quieta:
+            return
         self._pulso = 0.5 + 0.5 * math.sin((time.perf_counter() - self._t0) * 2.2)
-        if self.isVisible():
-            self.update(QRectF(self._rect_item('estado')).adjusted(-6, -6, 6, 6).toRect())
+        self.update(QRectF(self._rect_item('estado')).adjusted(-6, -6, 6, 6).toRect())
 
     def _rect_item(self, clave):
         for it in self._items:

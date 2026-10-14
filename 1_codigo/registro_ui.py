@@ -117,6 +117,8 @@ class SubtituloVivo(QWidget):
 
     # -- avisos
     def _nuevo(self, e):
+        if e.nivel == 'aviso':                    # v5.5.7 (pedido del usuario): los avisos no se enseñan; solo información y errores
+            return
         self._entrada = e
         self.setToolTip((e.mensaje + (f'\n{e.origen}' if e.origen else '') + '\n' + tr('Clic: abrir el registro')))
         self._animar_k(1.0, 280)
@@ -266,7 +268,7 @@ class BotonRegistro(QAbstractButton):
         self.update()
 
     def _nuevo(self, e):
-        if e.nivel in ('aviso', 'error') and not _quieto():
+        if e.nivel == 'error' and not _quieto():           # (v5.5.7: los avisos ya no se enseñan)
             self._a_s.stop()
             self._a_s.start()
         self.update()
@@ -306,9 +308,9 @@ class BotonRegistro(QAbstractButton):
             p.drawPoint(QPointF(10.5, y))
             p.drawLine(QPointF(14.5 + dx, y), QPointF(23.5 + dx - (i == 2) * 3.5, y))
         # insignia con el número
-        if errores or avisos:
-            n = errores or avisos
-            c = QColor('#FF6B6B' if errores else '#F5B84B')
+        if errores:                            # v5.5.7: la insignia solo cuenta ERRORES (los avisos ya no se enseñan en el Registro)
+            n = errores
+            c = QColor('#FF6B6B')
             esc = 1.0 + 0.35 * math.sin(s * math.pi) if s < 1.0 else 1.0
             p.setPen(QPen(QColor('#0A1224'), 1.6))
             p.setBrush(c)
@@ -453,7 +455,9 @@ class DialogoRegistro(Dialogo):
 
     def __init__(self, padre=None):
         super().__init__(padre, tr('Registro'), 900, 640, redimensionable=True, minimo=(680, 460))
-        self._nivel = None
+        # v5.5.7 (pedido del usuario: «elimina avisos, deja solo información y error»): dos vistas, Errores (la primera) e Información; los avisos
+        # no se enseñan (quedan en el archivo: «Abrir el archivo» / «Copiar informe»)
+        self._nivel = 'error'
         capa = QVBoxLayout(self)
         capa.setContentsMargins(24, 20, 24, 18)
         capa.setSpacing(12)
@@ -462,10 +466,9 @@ class DialogoRegistro(Dialogo):
         ct.addWidget(Etiqueta(tr('Registro'), 22, peso='extra', color='#FFFFFF'))
         ct.addWidget(Etiqueta(tr('Qué pasó en CineCaptions y qué hacer. Toca una tarjeta para ver los pasos.'), 13, color='#8D9BB5'))
         cc.addWidget(col, 1)
-        self._opciones = [tr('Todo'), tr('Avisos'), tr('Errores')]
+        self._opciones = [tr('Errores'), tr('Información')]
         self._var = StringVar(self._opciones[0])
-        seg = Segmentado(self._opciones, self._var, self._filtrar, alto=34, tam=13)
-        cc.addWidget(seg)
+        cc.addWidget(Segmentado(self._opciones, self._var, self._filtrar, alto=36, tam=14), 0, Qt.AlignmentFlag.AlignTop)
         capa.addWidget(cab)
         self._resumen = Etiqueta('', 13, peso='medio', color='#DCE6F5')
         capa.addWidget(self._resumen)
@@ -507,35 +510,33 @@ class DialogoRegistro(Dialogo):
                 pass
 
     def _filtrar(self, _v=None):
-        i = self._opciones.index(self._var.get())
-        self._nivel = (None, 'aviso', 'error')[i]
+        i = self._opciones.index(self._var.get()) if self._var.get() in self._opciones else 0
+        self._nivel = ('error', 'info')[i]
         self._refrescar()
 
     def _datos(self):
         reg = registro.registro()
-        if self._nivel == 'error':
-            return [e for e in reg.lista() if e.nivel == 'error']
-        if self._nivel == 'aviso':
-            return [e for e in reg.lista() if e.nivel in ('aviso', 'error')]
-        return reg.lista()
+        if self._nivel == 'info':
+            return [e for e in reg.lista() if e.nivel in ('info', 'ok')]
+        return [e for e in reg.lista() if e.nivel == 'error']
 
     def _refrescar(self, *_):
         datos = list(reversed(self._datos()))
         while self._cl.count() > 1:
             it = self._cl.takeAt(0)
             if it.widget() is not None:
+                it.widget().hide()                       # (se borra en el siguiente ciclo: oculta ya, para que no se vea debajo de la lista nueva)
                 it.widget().deleteLater()
         todos = registro.registro().lista()
         n_err = sum(1 for e in todos if e.nivel == 'error')
-        n_av = sum(1 for e in todos if e.nivel == 'aviso')
-        if n_err:
-            self._resumen.setText(tr('{n} errores y {m} avisos. Empieza por el más reciente.', n=n_err, m=n_av))
+        if n_err == 1:
+            self._resumen.setText(tr('1 error. Toca su tarjeta para ver qué hacer.'))
             self._resumen.poner_color('#FF8F8F')
-        elif n_av:
-            self._resumen.setText(tr('Sin errores. {m} avisos que puedes revisar.', m=n_av))
-            self._resumen.poner_color('#F5B84B')
+        elif n_err:
+            self._resumen.setText(tr('{n} errores. Empieza por el más reciente.', n=n_err))
+            self._resumen.poner_color('#FF8F8F')
         else:
-            self._resumen.setText(tr('Todo en orden: no hay errores ni avisos.'))
+            self._resumen.setText(tr('Todo en orden: no hay errores.'))
             self._resumen.poner_color('#24D18F')
         primero_error = True
         for e in datos[:self.MAXIMO]:
@@ -544,7 +545,7 @@ class DialogoRegistro(Dialogo):
                 primero_error = False
             self._cl.insertWidget(self._cl.count() - 1, TarjetaEntrada(e, abierta, self._copiar_una))
         if not datos:
-            vacio = Etiqueta(tr('Sin avisos ni errores.'), 14, color='#6C7B96', alineacion=Qt.AlignmentFlag.AlignCenter)
+            vacio = Etiqueta(tr('Sin errores.') if self._nivel == 'error' else tr('Sin información todavía.'), 14, color='#6C7B96', alineacion=Qt.AlignmentFlag.AlignCenter)
             self._cl.insertWidget(0, vacio)
         extra = ' · ' + tr('mostrando las {n} más recientes', n=self.MAXIMO) if len(datos) > self.MAXIMO else ''
         self._cuenta.setText(tr('{n} anotaciones', n=len(datos)) + extra)

@@ -419,6 +419,17 @@ def _guardar_edicion(edicion):
         return None
 _CACHE_EDICION = {'valor': None, 'cuando': 0.0}
 _EDICION_VALE_S = 60.0
+def _titulo_de_resolve():
+    """El título de la ventana principal de Resolve («DaVinci Resolve Studio - <proyecto>» / «DaVinci Resolve - <proyecto>»), '' si no se sabe (Windows)."""
+    try:
+        if sys.platform.startswith('win'):
+            import colocacion
+            return next((t for _h, t in colocacion._ventanas_de_resolve() if t.startswith('DaVinci Resolve')), '')
+    except Exception:
+        pass
+    return ''
+
+
 def edicion_de_resolve(refrescar=False):
     """\'studio\', \'free\' o \'desconocida\'.\n\n    La unica senal fiable es si la API externa conecta: eso solo pasa en\n    Studio. Pero con Resolve CERRADO tampoco conecta, y ahi no se puede\n    distinguir de Free. Por eso:\n\n      - API conecta                   -> studio  (y se recuerda)\n      - Resolve abierto y no conecta  -> free    (y se recuerda)\n      - Resolve cerrado               -> lo ultimo que vimos, o desconocida\n\n    Con \'desconocida\' se instala igual (ver instalar_scripts_en_resolve):\n    Free es el caso que se rompe si faltan los scripts, y si despues resulta\n    ser Studio la limpieza pasa sola en la siguiente pasada.\n\n    El import de resolve_bridge va adentro a proposito: resolve_bridge nos\n    importa a nosotros, y a nivel de modulo seria un ciclo.\n    """
     if not refrescar and _CACHE_EDICION['valor'] is not None and (time.time() - _CACHE_EDICION['cuando'] < _EDICION_VALE_S):
@@ -432,6 +443,12 @@ def edicion_de_resolve(refrescar=False):
         except Exception:
             pass
         if edicion is None and resolve_esta_corriendo():
+            # v5.5.7: «abierto pero sin API» NO prueba que sea Free: un Studio ocupado (reproduciendo) o colgado tampoco contesta, y pasaba a «free»
+            # (el GO lanzaba el Puente en Studio y lo bloqueaba). Se mira el título de su ventana; si no se sabe, se respeta lo guardado.
+            titulo = _titulo_de_resolve()
+            if 'DaVinci Resolve Studio' in titulo:
+                edicion = 'studio'
+            elif titulo.startswith('DaVinci Resolve') or _edicion_guardada() != 'studio':
                 edicion = 'free'
         if edicion is not None:
             _guardar_edicion(edicion)

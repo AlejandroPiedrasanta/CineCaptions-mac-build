@@ -251,6 +251,15 @@ _ENFASIS = ('increible', 'increíble', 'espectacular', 'impresionante', 'unico',
             'emocionante', 'locura', 'fiesta', 'gorgeous', 'epic', 'magical', 'wow')
 
 
+def _permitido(mid):
+    """v5.5.7: ¿el usuario permitió ese motion? (motions_catalogo; en modo automático, todos)."""
+    try:
+        import motions_catalogo as MC
+        return MC.permitido(mid)
+    except Exception:
+        return True
+
+
 def plegar(t):
     t = unicodedata.normalize('NFKD', str(t or '').lower())
     return ''.join(c for c in t if not unicodedata.combining(c)).strip(' .,;:!?¡¿"\'()[]«»…“”')
@@ -631,6 +640,8 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
         for i, pl in PC.por_frase(plegadas):
             if ramas is not None and pl['rama'] not in ramas:
                 continue                                              # v5.5.3: otra rama (bodas, XV…) que no es de este video
+            if not _permitido('plantilla:' + str(pl['id'])):
+                continue                                              # v5.5.7: el usuario no la permitió (Efectos > Motions de la PRO)
             if pl['id'] in usadas or (len(usadas) >= max(4, int(duracion // 4)) and pl['comp'] != 'Comentario'):   # la llamada a comentar, siempre
                 continue
             a = max(0.05, st(i) - 0.12)

@@ -453,15 +453,22 @@ def _poner_tilt(it, nuevo):
 
 
 def _subir_captions(tl, cues, base):
-    """Sube (Tilt) los clips de los captions que EMPIEZAN dentro de cada bloque y les deja la marca. Devuelve cuántos movió."""
-    clips = [(it.GetStart(), it) for i in _pistas_captions(tl) for it in tl.GetItemListInTrack('video', i) or []]
+    """Sube (Tilt) los clips de los captions que EMPIEZAN dentro de cada bloque y les deja la marca. Devuelve cuántos movió.
+    v5.5.7 (el usuario: «los emojis quedan separados del caption, o encima»): el Tilt de un PNG «Fit» (los emojis) solo se aplica ×min/alto
+    (medido en Free 21.1; 0,5625 en vertical) y se movía ~56 % de lo que se movía el texto: subidas de 500-700 px lo dejaban 250-300 px lejos (o
+    encima, al bajar). En las pistas EMOJI el desplazamiento va ×alto/min, como en colocar_emojis."""
+    W = float(tl.GetSetting('timelineResolutionWidth') or 1080)
+    H = float(tl.GetSetting('timelineResolutionHeight') or 1920)
+    k_emoji = H / max(1.0, min(W, H))
+    clips = [(it.GetStart(), it, 'EMOJI' in str(tl.GetTrackName('video', i) or '').upper())
+             for i in _pistas_captions(tl) for it in tl.GetItemListInTrack('video', i) or []]
     movidos = 0
     for c in cues:
         f0, f1, d = base + int(c['ini']), base + int(c['fin']), float(c['subir'])
         if abs(d) < 0.5:
             continue
-        for s, it in clips:
-            if f0 - 1 <= s < f1 and _poner_tilt(it, float(it.GetProperty('Tilt') or 0.0) + d):
+        for s, it, es_emoji in clips:
+            if f0 - 1 <= s < f1 and _poner_tilt(it, float(it.GetProperty('Tilt') or 0.0) + d * (k_emoji if es_emoji else 1.0)):
                 movidos += 1
     return movidos
 
@@ -471,6 +478,7 @@ def _emojis_sin_cara(tl, cues, base):
     la barbilla o suben encima de la cabeza (lo que quede más cerca dentro del cuadro). Devuelve cuántos apartó."""
     W = float(tl.GetSetting('timelineResolutionWidth') or 1080)
     H = float(tl.GetSetting('timelineResolutionHeight') or 1920)
+    k_pan, k_tilt = W / max(1.0, min(W, H)), H / max(1.0, min(W, H))      # v5.5.7: Pan/Tilt de un PNG «Fit» (ver _subir_captions)
     emojis = [(it.GetStart(), it) for i in _pistas_captions(tl) if 'EMOJI' in str(tl.GetTrackName('video', i) or '').upper()
               for it in tl.GetItemListInTrack('video', i) or []]
     r, aire, apartados = 0.045, 0.015, 0
@@ -483,8 +491,8 @@ def _emojis_sin_cara(tl, cues, base):
             if not (f0 - 1 <= s < f1):
                 continue
             try:
-                x = 0.5 + float(it.GetProperty('Pan') or 0.0) / W
-                y = 0.5 - float(it.GetProperty('Tilt') or 0.0) / H
+                x = 0.5 + float(it.GetProperty('Pan') or 0.0) / k_pan / W
+                y = 0.5 - float(it.GetProperty('Tilt') or 0.0) / k_tilt / H
             except Exception:
                 continue
             malas = [k for k in caras if k[0] - r < x < k[2] + r and k[1] - r < y < k[3] + r]
@@ -502,7 +510,7 @@ def _emojis_sin_cara(tl, cues, base):
                     return False
                 return not (caja and float(caja[0]) - r - aire < o < float(caja[1]) + r + aire)
             opciones = [o for o in opciones if _sirve(o)]
-            if opciones and _poner_tilt(it, (0.5 - min(opciones, key=lambda o: abs(o - y))) * H):
+            if opciones and _poner_tilt(it, (0.5 - min(opciones, key=lambda o: abs(o - y))) * H * k_tilt):
                 apartados += 1
     return apartados
 
@@ -1006,7 +1014,7 @@ def main():
     # 4b) el resto de los captions, fuera de las caras; y ningún emoji encima de una cara
     movidos += _subir_captions(tl, datos.get('mover') or [], base)
     emojis = _emojis_sin_cara(tl, [c for e in datos.get('encima') or [] for c in e.get('cues') or []] + list(datos.get('mover') or []), base)
-    cambiados = _apagar_emojis(tl, datos.get('sin_emoji') or [], base) if puestos.get('iconos') else 0
+    cambiados = _apagar_emojis(tl, datos.get('sin_emoji') or [], base) if datos.get('sin_emoji') else 0      # v5.5.7: donde la PRO enseña algo (antes solo junto a un icono 3D)
     respaldo = _apagar_captions(tl) if datos.get('captions_propios') and puestos.get('subs') else 0
     coloreados = _color_claves(tl, datos.get('color_claves'))
     if coloreados:

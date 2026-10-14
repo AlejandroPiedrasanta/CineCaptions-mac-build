@@ -152,6 +152,39 @@ Get-Content -LiteralPath $estado -Encoding UTF8 | Where-Object { $_ -notmatch '^
 if ($p.ExitCode -ne 0) { throw 'La autoprueba del compilado fallo: no se arma el instalador' }
 }
 
+# 4b) firma digital (v5.5.7): Smart App Control de Windows 11 y los antivirus bloquean librerias SIN FIRMA (en un cliente: av\format.pyd y
+#     numpy\random\_pcg64.pyd, "Bad Image" 0xc0e90002). Si existe 3_compilar\firma.json se firman todos los .exe/.dll/.pyd que no traen firma valida
+#     (unos 140; los de Python y Qt ya vienen firmados). Sin firma.json no se toca nada. Formatos de firma.json:
+#       {"tipo": "trusted_signing", "signtool": "C:\\...\\signtool.exe", "dlib": "C:\\...\\Azure.CodeSigning.Dlib.dll", "metadata": "C:\\...\\metadata.json"}
+#       {"tipo": "pfx", "archivo": "C:\\...\\certificado.pfx", "clave_env": "CC_FIRMA_CLAVE"}       (la clave, en esa variable de entorno; nunca en el archivo)
+function FirmarArchivos($rutas) {
+    $cfgRuta = Join-Path $aqui 'firma.json'
+    if (-not (Test-Path -LiteralPath $cfgRuta)) { return 0 }
+    $cfg = Get-Content -LiteralPath $cfgRuta -Raw -Encoding UTF8 | ConvertFrom-Json
+    $sinFirma = @($rutas | Where-Object { (Get-AuthenticodeSignature -FilePath $_).Status -ne 'Valid' })
+    if ($sinFirma.Count -eq 0) { return 0 }
+    if ($cfg.tipo -eq 'trusted_signing') {
+        for ($i = 0; $i -lt $sinFirma.Count; $i += 50) {
+            $lote = $sinFirma[$i..([Math]::Min($i + 49, $sinFirma.Count - 1))]
+            & $cfg.signtool sign /fd SHA256 /tr 'http://timestamp.acs.microsoft.com' /td SHA256 /dlib $cfg.dlib /dmdf $cfg.metadata @lote | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw 'La firma (Trusted Signing) fallo' }
+        }
+    } elseif ($cfg.tipo -eq 'pfx') {
+        $clave = [Environment]::GetEnvironmentVariable([string]$cfg.clave_env)
+        $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($cfg.archivo, $clave)
+        foreach ($f in $sinFirma) {
+            $r = Set-AuthenticodeSignature -FilePath $f -Certificate $cert -HashAlgorithm SHA256 -TimestampServer 'http://timestamp.digicert.com'
+            if ($r.Status -ne 'Valid') { throw "No se pudo firmar $f ($($r.StatusMessage))" }
+        }
+    } else { throw "firma.json: tipo desconocido ($($cfg.tipo))" }
+    return $sinFirma.Count
+}
+if (Test-Path -LiteralPath (Join-Path $aqui 'firma.json')) {
+    Paso 'Firmando el programa (firma digital)'
+    $pe = @(Get-ChildItem -LiteralPath $app -Recurse -File -Include *.exe, *.dll, *.pyd | ForEach-Object { $_.FullName })
+    Write-Host ("    firmados: {0} de {1}" -f (FirmarArchivos $pe), $pe.Count)
+}
+
 # 5) el instalador (C#) ----------------------------------------------------------------
 Paso 'Compilando el instalador'
 $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
@@ -171,6 +204,7 @@ $logo = Join-Path $recursos 'logo_cinecaptions.png'
     "/resource:$(Join-Path $aqui 'banner_capas\astro_runas.png'),astro_runas.png" "/resource:$(Join-Path $aqui 'banner_capas\astro_engr.png'),astro_engr.png" `
     "/resource:$(Join-Path $aqui 'banner_capas\astro_fili.png'),astro_fili.png" "/resource:$(Join-Path $aqui 'banner_capas\astro_nucleo.png'),astro_nucleo.png" "/reference:$fw\System.IO.Compression.dll" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll $cs
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $base)) { throw 'No se pudo compilar Instalador.cs' }
+[void](FirmarArchivos @($base))          # v5.5.7: el desinstalador/instalador base tambien (si hay firma.json)
 
 # 6) paquete: el programa compilado + el desinstalador, pegados al final del .exe ------------------
 Paso 'Empaquetando (1-3 min)'

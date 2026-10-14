@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
 ]]
 
-local VERSION = "5.5.6 (edicion pro)"
+local VERSION = "5.5.7 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -614,10 +614,16 @@ local function poner_tilt(it, nuevo)
     return false
 end
 
+-- v5.5.7 (gemela del .py): en las pistas EMOJI el desplazamiento va x alto/min (el Tilt de un PNG «Fit» solo se aplica x min/alto: el emoji se
+-- movia ~56 % de lo que se movia el texto y quedaba lejos del caption, o encima)
 local function subir_captions(tl, cues, base)
+    local W = tonumber(tl:GetSetting("timelineResolutionWidth")) or 1080
+    local H = tonumber(tl:GetSetting("timelineResolutionHeight")) or 1920
+    local k_emoji = H / math.max(1, math.min(W, H))
     local clips = {}
     for _, i in ipairs(pistas_captions(tl)) do
-        for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do clips[#clips + 1] = { it:GetStart(), it } end
+        local k = nombre_pista(tl, "video", i):upper():find("EMOJI", 1, true) and k_emoji or 1
+        for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do clips[#clips + 1] = { it:GetStart(), it, k } end
     end
     local movidos = 0
     for _, c in ipairs(cues or {}) do
@@ -627,7 +633,7 @@ local function subir_captions(tl, cues, base)
                 if par[1] >= f0 - 1 and par[1] < f1 then
                     local antes = 0
                     pcall(function() antes = tonumber(par[2]:GetProperty("Tilt")) or 0 end)
-                    if poner_tilt(par[2], antes + d) then movidos = movidos + 1 end
+                    if poner_tilt(par[2], antes + d * par[3]) then movidos = movidos + 1 end
                 end
             end
         end
@@ -640,6 +646,7 @@ end
 local function emojis_sin_cara(tl, cues, base)
     local W = tonumber(tl:GetSetting("timelineResolutionWidth")) or 1080
     local H = tonumber(tl:GetSetting("timelineResolutionHeight")) or 1920
+    local k_pan, k_tilt = W / math.max(1, math.min(W, H)), H / math.max(1, math.min(W, H))     -- v5.5.7: Pan/Tilt de un PNG «Fit»
     local emojis = {}
     for _, i in ipairs(pistas_captions(tl)) do
         if nombre_pista(tl, "video", i):upper():find("EMOJI", 1, true) then
@@ -654,7 +661,7 @@ local function emojis_sin_cara(tl, cues, base)
             for _, par in ipairs(emojis) do
                 if par[1] >= f0 - 1 and par[1] < f1 then
                     local it, x, y = par[2], 0.5, 0.5
-                    pcall(function() x = 0.5 + (tonumber(it:GetProperty("Pan")) or 0) / W; y = 0.5 - (tonumber(it:GetProperty("Tilt")) or 0) / H end)
+                    pcall(function() x = 0.5 + (tonumber(it:GetProperty("Pan")) or 0) / k_pan / W; y = 0.5 - (tonumber(it:GetProperty("Tilt")) or 0) / k_tilt / H end)
                     local abajo, arriba, pisa = -1, 2, false
                     for _, k in ipairs(caras) do
                         if k[1] - r < x and x < k[3] + r and k[2] - r < y and y < k[4] + r then
@@ -683,7 +690,7 @@ local function emojis_sin_cara(tl, cues, base)
                         for _, o in ipairs(opciones) do
                             if sirve(o) and (mejor == nil or math.abs(o - y) < math.abs(mejor - y)) then mejor = o end
                         end
-                        if mejor and poner_tilt(it, (0.5 - mejor) * H) then apartados = apartados + 1 end
+                        if mejor and poner_tilt(it, (0.5 - mejor) * H * k_tilt) then apartados = apartados + 1 end
                     end
                 end
             end
@@ -1143,7 +1150,8 @@ local function main()
     for _, e in ipairs(encima) do for _, c in ipairs((type(e.cues) == "table") and e.cues or {}) do todos[#todos + 1] = c end end
     for _, c in ipairs(mover) do todos[#todos + 1] = c end
     puestos.emojis = emojis_sin_cara(tl, todos, base)
-    if puestos.iconos > 0 then puestos.cambiados = apagar_emojis(tl, (type(datos.sin_emoji) == "table") and datos.sin_emoji or {}, base) end
+    -- v5.5.7: donde la PRO enseña algo, el emoji de GO se apaga (antes solo junto a un icono 3D); gemelo de colocar_pro.py
+    if type(datos.sin_emoji) == "table" and #datos.sin_emoji > 0 then puestos.cambiados = apagar_emojis(tl, datos.sin_emoji, base) end
     if datos.captions_propios and puestos.subs > 0 then puestos.respaldo = apagar_captions(tl) end
     local coloreados = color_claves(tl, datos.color_claves)
     if coloreados > 0 then print(string.format("Temas 1-4: %d palabras destacadas en el color del video.", coloreados)) end

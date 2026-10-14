@@ -78,6 +78,9 @@ def revisar(palabras, idioma):
                 desconocidas = corrector.unknown(candidatas)
             except Exception:
                 return set()
+            if desconocidas and _normalizar_codigo(idioma) == 'es':      # v5.5.7: el diccionario (es) trae casi solo lemas: «voy», «tiene», «gatos» no son faltas
+                import ortografia_es
+                desconocidas = {p for p in desconocidas if not ortografia_es.conocida(p, corrector)}
             return {i for i, p in zip(posiciones, candidatas) if p in desconocidas}
 def sugerencias_para(palabra, idioma, maximo=5):
     """Alternativas para UNA palabra, ordenadas por frecuencia de uso.\n\n    Esta es la parte cara (~330 ms). Se llama al hacer clic en una palabra\n    subrayada, nunca en bucle sobre el guion entero. Devuelve [] si no hay\n    nada razonable que proponer: marcar la palabra sirve igual, aunque no\n    sepamos por que cambiarla.\n    """
@@ -147,6 +150,25 @@ def _clave_fonetica(palabra):
     return p
 
 
+_CLAVES = {}
+
+
+def _por_clave(corrector):
+    """{clave fonética: [palabras frecuentes del diccionario]} (una vez, ~1 s, siempre en un hilo). El corrector solo propone lo que está a la
+    MENOR distancia: si hay algo a una letra («aser» → «asar»), lo que suena igual a dos («hacer») ni sale. Esto lo encuentra por cómo suena."""
+    if id(corrector) not in _CLAVES:
+        indice = {}
+        try:
+            for w, n in corrector.word_frequency.dictionary.items():
+                if n >= 8000 and len(w) >= 3:
+                    indice.setdefault(_clave_fonetica(w), []).append(w)
+        except Exception:
+            indice = {}
+        _CLAVES.clear()
+        _CLAVES[id(corrector)] = indice
+    return _CLAVES[id(corrector)]
+
+
 def corregir_fonetico(palabras, idioma):
     """{indice: palabra corregida} de las palabras que el diccionario no conoce y tienen una correccion clara. Solo español."""
     if _normalizar_codigo(idioma) != 'es':
@@ -159,14 +181,19 @@ def corregir_fonetico(palabras, idioma):
         texto = str(palabras[i].get('word', ''))
         orig = limpiar(texto)
         bajo = orig.lower()
+        import ortografia_es
+        if ortografia_es.ERRATAS.get(bajo, bajo) != bajo:            # v5.5.7: «kiero» → «quiero», «esque» → «es que» (inequívocas)
+            cambios[i] = aplicar(texto, _con_el_mismo_caso(orig, ortografia_es.ERRATAS[bajo]))
+            continue
+        clave = _clave_fonetica(bajo)
         try:
             candidatas = [c for c in (corrector.candidates(bajo) or set()) if c != bajo]
         except Exception:
-            continue
+            candidatas = []
+        candidatas += [c for c in _por_clave(corrector).get(clave, ()) if c != bajo]     # v5.5.7: «aser» → «hacer», «kiero» → «quiero» (a 2 letras)
         if not candidatas:
             continue
-        clave = _clave_fonetica(bajo)
-        elegidas = [c for c in candidatas if _clave_fonetica(c) == clave]
+        elegidas = [c for c in candidatas if _clave_fonetica(c) == clave and corrector.word_frequency[c] >= 8000]   # v5.5.7: nada de rarezas («Voy» → «Boy»)
         tenia_tilde = any(unicodedata.category(c) == 'Mn' for c in unicodedata.normalize('NFD', bajo) if c not in '̃')
         if tenia_tilde:         # nunca se QUITA una tilde («quedó» -> «quedo» seria un error nuevo)
             elegidas = [c for c in elegidas if any(unicodedata.category(x) == 'Mn' for x in unicodedata.normalize('NFD', c))]

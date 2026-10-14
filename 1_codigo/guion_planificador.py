@@ -37,7 +37,7 @@ BARRIDOS = {1: (1, 9, 13), 2: (2, 10, 14), 4: (4, 11, 15), 5: (5, 12, 16)}
 ESTILOS_NEGACION = (7,)
 AFINADO = {'adelanto': 0.03, 'hold': 0.22, 'min_bloque': 0.7, 'gap_minimo': 0.06, 'puntaje_min': 8.0, 'puntaje_2': 9.0, 'dist_mains': 4,
            'pausa_frase': 0.45, 'pausa_coma': 0.12, 'combinar_s': 2.0, 'cap_len': 10, 'bonus_det': 4.0, 'bonus_ultima': 4.0, 'bonus_gancho': 8.0,
-           'pen_verbo': 3.0, 'pen_pret': 6.0, 'pen_modifica': 2.0, 'bonus_adj': 3.0, 'bonus_cond': 5.0, 'hueco': 0.03, 'cabe': 0.96, 'alto_linea': 0.039,
+           'pen_verbo': 3.0, 'pen_pret': 6.0, 'pen_modifica': 2.0, 'bonus_adj': 3.0, 'bonus_cond': 5.0, 'hueco': 0.004, 'cabe': 0.96, 'alto_linea': 0.036,
            'pausa_oracion': 0.3}      # fin de oración sin signos: en la referencia los finales dejan ≥0,32 s y las comas ≤0,24 s
 
 _ES_STOP = set('''a al ante bajo cabe con contra de del desde durante en entre hacia hasta mediante para por segun sin so sobre tras

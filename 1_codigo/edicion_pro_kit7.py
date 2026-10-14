@@ -147,11 +147,18 @@ def menu_para_ia(genero='general', solo=None):
         menu.update(ES.menu())
     except Exception:
         pass
+    try:                                                   # v5.5.7: la IA solo conoce los motions que el usuario permitió (Efectos > Motions de la PRO)
+        import motions_catalogo as MC
+        menu = {k: v for k, v in menu.items() if k in MC.familias_permitidas(list(menu))}
+    except Exception:
+        MC = None
     if solo:
         return {k: v for k, v in menu.items() if k in solo}
     try:
         import catalogo_ia
         pl = catalogo_ia.menu_plantillas(genero)
+        if MC is not None:
+            pl = [(i, d) for i, d in pl or [] if MC.permitido('plantilla:' + str(i))]
         if pl:
             menu['plantilla'] = ['una plantilla de la biblioteca cuando se dice algo de su tema. Ids: ' + '; '.join(f'{i} ({d})' for i, d in pl),
                                  '{"id": "uno de los ids de la lista"}']
@@ -719,6 +726,12 @@ def planificar(textos, plegadas, tiempos, frases, idioma='es', video='', duracio
         if cuantos.get(m['fam'], 0) < CUANTOS_POR_VIDEO.get(m['fam'], 1) and all(abs(m['t'] - x['t']) > 3.0 for x in lista):
             lista.append(m)
             cuantos[m['fam']] = cuantos.get(m['fam'], 0) + 1
+    try:                                                   # v5.5.7: solo los motions que el usuario permitió (las reglas tampoco eligen otros)
+        import motions_catalogo as MC
+        lista = [m for m in lista if MC.permitido(('plantilla:' + str(m.get('id'))) if m.get('fam') == 'plantilla'
+                                                  else ('kit:' + m['fam']) if m.get('fam') in COMP else ('escena:' + m['fam']) if m.get('pantalla') else None)]
+    except Exception:
+        pass
     lista.sort(key=lambda m: m['t'])
     iconos_tema = [x for x in perfil.get('iconos') or [] if x]
     for m in lista:                                                       # los iconos del TEMA del video donde la pieza los admite y no los trae

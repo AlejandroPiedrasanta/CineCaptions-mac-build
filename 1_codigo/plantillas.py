@@ -914,8 +914,9 @@ def para_manifiesto(nombre, formato_forzado=None):
                         plantilla['formato_forzado'] = formato_forzado
                     return {'plantilla': plantilla}
 _MEMO_IMAGEN = {}
-# v5.4.37: packs sin bloque «imagen» cuyo emoji va ENCIMA del texto (el resto: debajo)
-EMOJI_ARRIBA = ('Tema4', 'Tema5', 'Tema6')
+# v5.4.37: packs sin bloque «imagen» cuyo emoji va ENCIMA del texto (el resto: debajo). v5.5.7 (pedido del usuario): también el Tema 2 (Referencia)
+# y el 3 (VIRAL): todos los temas con emoji lo llevan arriba, pegado a la pila
+EMOJI_ARRIBA = ('Referencia', 'VIRAL', 'Tema4', 'Tema5', 'Tema6')
 
 
 def bloque_imagen(nombre, formato=None):

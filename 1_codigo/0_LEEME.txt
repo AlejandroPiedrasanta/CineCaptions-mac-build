@@ -12,12 +12,14 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (13 archivos)
+    herramientas_dev\   (14 archivos)
         galeria_remotion.py
             la galería de las 100 plantillas Remotion de la Edición PRO: un fotograma de cada una sobre un
         generar_recortes.py
             los «recortes de revista» del motion RecorteK (Kit8.tsx): de cada emoji 3D (Fluent, MIT) saca
         generar_resortes.js
+        hacer_previas_motions.py
+            las miniaturas del carrusel «Motions de la Edición PRO» (página Efectos): un fotograma de cada
         importar_sonidos.py
             elige los mejores sonidos de la biblioteca del autor (E:\...\EFECTOS SONIDO y BODAS & XV) y los deja recortados en 2_recursos/sfx_library/<categoría>. SOLO desarrollo (no entra en el .exe).
         probar_ciclos_go.py
@@ -135,6 +137,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         emojis de las palabras clave: catálogo, biblioteca Fluent 3D, PNG propios y sugerencias por idioma.
     emojis_animados.py
         emojis ANIMADOS del selector: Noto Animated Emoji (Google, CC BY 4.0), bajados al pedirlos y cacheados.
+    emojis_conceptos.py
+        el emoji que de verdad va con una palabra (v5.5.7)
     emojis_sets.py
         SETS de emojis (estilos de imagen) que se bajan al pedirlos: Fluent 3D completo (Microsoft, MIT) y Noto de Google (Apache 2.0).
     emojis_sfx.py
@@ -218,6 +222,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         las vistas aproximadas (Pillow) de los looks de los TRES temas para «Crea tu estilo»: cada look se ve sobre una foto de muestra, dibujado con el plan REAL de su tema.
     mograf_ui.py
         Motion Graphics de la interfaz: entrada de tarjetas con marcas, título cinético, traza de luz, formas ambiente y HUD de Inicio.
+    motions_catalogo.py
+        TODOS los motions de la Edición PRO y cuáles puede usar (v5.5.7)
+    motions_ui.py
+        la sección «Motions de la Edición PRO» de la página Efectos: un carrusel con TODOS los motions (v5.5.7)
     motor_voz.py
         motor de voz e IA Qwen3 en su propio Python 3.12: instalar, detectar y transcribir.
     musica_go.py
@@ -227,6 +235,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         el botón GO como un astrolabio mecánico: anillo de runas, engranaje de bronce, filigrana y gema de esmeralda.
     ortografia.py
         revisión ortográfica del editor (marca y propone, nunca corrige solo).
+    ortografia_es.py
+        ¿es español de verdad aunque el diccionario no la traiga? (v5.5.7)
     packs_drt.py
         lee los packs .drt/.drb SIN abrir Resolve (sets, formatos, tipografías).
     pausas.py

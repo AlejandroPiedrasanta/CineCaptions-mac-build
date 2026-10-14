@@ -1250,27 +1250,64 @@ class SfxStudio(QWidget):
         _ENTRADA[0] = bool(animar)
         t = self.tarjeta_reglas.capa
         limpiar_capa(t)
-        ver_emojis = bool(getattr(self, '_ver_emojis', False))      # v5.8: segunda opción, el sonido de cada emoji
+        vista = getattr(self, '_vista_reglas', None)
+        if vista is None:                                            # v5.5.7: con la Edición PRO activa, la página abre en su pestaña
+            try:
+                import edicion_pro
+                vista = 'pro' if edicion_pro.en_juego() else 'simple'
+            except Exception:
+                vista = 'simple'
+            self._vista_reglas = vista
         cab, cc = caja_h(espacio=12)
         cc.addWidget(Etiqueta(tr('Reglas automáticas por palabra'), 20, peso='extra', color='#FFFFFF'))
-        self._modos_reglas = [tr('Simple'), tr('Emojis')]
-        var = StringVar(self._modos_reglas[1 if ver_emojis else 0])
+        claves = ['simple', 'emojis', 'pro']
+        self._modos_reglas = [tr('Simple'), tr('Emojis'), tr('Edición PRO')]
+        var = StringVar(self._modos_reglas[claves.index(vista) if vista in claves else 0])
 
         def elegir(_v=None):
-            self._ver_emojis = var.get() == self._modos_reglas[1]
+            self._vista_reglas = claves[self._modos_reglas.index(var.get())] if var.get() in self._modos_reglas else 'simple'
+            self._vista_a_mano = True
             despues(0, self._pintar_reglas, self)
         seg = Segmentado(self._modos_reglas, var, elegir, alto=34, tam=13)
-        Tooltip(seg, tr('Simple: los sonidos de la introducción, de las palabras y del final. Emojis: todos los emojis y el sonido de cada uno, para cambiarlo emoji por emoji.'))
+        Tooltip(seg, tr('Simple: los sonidos de la introducción, de las palabras y del final. Emojis: todos los emojis y el sonido de cada uno, para cambiarlo emoji por emoji. Edición PRO: los sonidos de sus gráficos.'))
         cc.addWidget(seg)
         cc.addStretch(1)
         self.resumen_reglas = Etiqueta('', 18, peso='medio', color='#FFFFFF')      # v5.5: la cifra se lee de lejos
         cc.addWidget(self.resumen_reglas)
         t.addWidget(cab)
         self.resumen_reglas.configure(text=tr('Se usa al generar (GO).'))
-        if ver_emojis:
+        self._firma = self._firma_reglas()
+        try:                                                         # v5.5.7: el chip «Sonido» de Inicio apagado: que la página lo diga
+            import ajustes_ui
+            if vista != 'pro' and ajustes_ui.leer_prefs().get('go_sfx', True) is False:
+                self.resumen_reglas.configure(text=tr('«Sonido: no» en Inicio: GO no los pone.'), text_color=ui.AMBAR)
+        except Exception:
+            pass
+        if vista == 'emojis':
             self._pintar_reglas_emojis(t)
+        elif vista == 'pro':
+            self._pintar_reglas_pro(t)
         else:
             self._pintar_reglas_simple(t)
+    @staticmethod
+    def _firma_reglas():
+        """Lo que, cambiado desde OTRA página (chips de Inicio, tema elegido), cambia lo que esta dice."""
+        try:
+            import ajustes_ui
+            import edicion_pro
+            p = ajustes_ui.leer_prefs()
+            return (p.get('go_sfx', True) is not False, bool(edicion_pro.en_juego()), str(p.get('go_pack') or ''))
+        except Exception:
+            return None
+
+    def refrescar_si_cambio(self):
+        """v5.5.7: al volver a la página: si en Inicio cambió el chip «Sonido», la PRO o el tema, se repinta (antes seguía diciendo lo de antes)."""
+        if self._firma_reglas() == getattr(self, '_firma', None):
+            return
+        if not getattr(self, '_vista_a_mano', False):
+            self._vista_reglas = None                                  # la pestaña por defecto vuelve a seguir a la PRO
+        self._pintar_reglas(animar=False)
+
     def _pintar_reglas_emojis(self, t):
         """La pestaña «Emojis»: todos los emojis y el sonido de cada uno (emojis_sfx_ui.PanelEmojis)."""
         import emojis_sfx_ui
@@ -1279,6 +1316,104 @@ class SfxStudio(QWidget):
         t.addWidget(panel, 1)
         _aparecer(panel)
         despues(0, lambda: self._acomodar(True), self)
+    FAMILIAS_PRO = (
+        ('whoosh', 'Movimiento', 'Un whoosh cuando algo entra deslizando, gira o cambia de sitio. Su pico cae en el fotograma más rápido.', 'whoosh', '#4589FF'),
+        ('textura', 'Apariciones', 'Un toque, un clic o un pop cuando aparece un icono, una cifra o cada punto de una lista.', 'pop', '#24D18F'),
+        ('riser', 'Riser + golpe', 'Antes de cada cambio grande (el gancho, una escena) sube un riser y acaba en un golpe justo en el corte.', 'riser', '#B388FF'),
+    )
+
+    def _pintar_reglas_pro(self, t):
+        """v5.5.7 (pedido: «la página de Sonido, más funcional, que se acople a los temas de la Edición PRO»): el diseño de sonido de la PRO
+        (edicion_pro_sonido) a la vista y con mando: encendido, volumen y las tres familias (movimiento, apariciones, riser + golpe), cada una con su
+        ejemplo. Se guarda en las opciones de la PRO (pro_sonidos, pro_sonidos_nivel, pro_sonidos_familias) y lo aplica edicion_pro.aplicar."""
+        import edicion_pro
+        op = edicion_pro.opciones_guardadas()
+        activa = edicion_pro.en_juego()                      # (los Temas 5 y 6 usan la PRO aunque su interruptor esté apagado)
+        encendido = bool(op.get('pro_sonidos', True))
+        familias = dict(op.get('pro_sonidos_familias') or {})
+
+        def guardar(cambios, aviso=None):
+            edicion_pro.guardar_opciones(cambios)
+            if aviso:
+                self.status.configure(text=aviso, text_color='#7EE0A8')
+            despues(0, lambda: self._pintar_reglas(animar=False), self)
+        caja, cv = self._tarjeta_regla(margenes=(18, 16, 18, 16), espacio=12)
+        cab, cc = caja_h(espacio=12)
+        cc.addWidget(Etiqueta(tr('Sonidos de la Edición PRO'), 17, peso='extra', color='#FFFFFF'), 1)
+        var_on = BooleanVar(encendido)
+        cc.addWidget(ui.Interruptor('', var=var_on, tam=13, comando=lambda: guardar(
+            {'pro_sonidos': bool(var_on.get())}, tr('Listo: se usará al generar (GO).') if var_on.get() else tr('Apagado: esa opción no sonará al generar (GO).'))))
+        cv.addWidget(cab)
+        cv.addWidget(_Nota(tr('Cada gráfico de la Edición PRO suena como lo haría un editor, siempre por debajo de tu voz y sin pisar los sonidos de los '
+                              'captions (los de «Simple» siguen sonando con el texto).'), 12, lineas=3, color='#9FB0CC'))
+        tema = ''
+        try:
+            import ajustes_ui
+            import plantillas
+            tema = plantillas.nombre_visible(str(ajustes_ui.leer_prefs().get('go_pack') or '')) if ajustes_ui.leer_prefs().get('go_pack') else ''
+        except Exception:
+            tema = ''
+        if not activa:
+            cv.addWidget(_Nota(tr('La Edición PRO está apagada: estos sonidos se usan cuando la actives en Inicio.'), 12, lineas=2, color=ui.AMBAR))
+        elif edicion_pro.tema_actual() in edicion_pro.TEMAS_PRO:
+            cv.addWidget(_Nota(tr('Tema actual: {t}. En este tema todo el sonido lo pone la Edición PRO (sin toques por palabra).', t=tema), 12, lineas=2, color='#8FC7FF'))
+        elif tema:
+            cv.addWidget(_Nota(tr('Tema actual: {t}. La PRO suena con sus gráficos; los captions, con lo que elijas en «Simple».', t=tema), 12, lineas=2, color='#8FC7FF'))
+        fila_n, cn = caja_h(espacio=12)
+        cn.addWidget(Etiqueta(tr('Volumen'), 14, peso='medio', color='#FFFFFF'))
+        niveles = [('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte'))]
+        var_n = StringVar(next((n for k, n in niveles if k == str(op.get('pro_sonidos_nivel') or 'normal')), niveles[1][1]))
+        cn.addWidget(Segmentado([n for _k, n in niveles], var_n, lambda _v=None: guardar(
+            {'pro_sonidos_nivel': next((k for k, n in niveles if n == var_n.get()), 'normal')}), alto=32, tam=13))
+        cn.addStretch(1)
+        cv.addWidget(fila_n)
+        fila = QWidget()
+        lay = QHBoxLayout(fila)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(12)
+        for idx, (clave, titulo, nota, carpeta, color) in enumerate(self.FAMILIAS_PRO):
+            on = familias.get(clave, True) is not False
+            tarj = _TarjetaViva(color, 14, '#0F1A30', '#12203A')
+            tv = QVBoxLayout(tarj)
+            tv.setContentsMargins(16, 14, 16, 14)
+            tv.setSpacing(10)
+            tarj.setMinimumWidth(230)
+            c1, cc1 = caja_h(espacio=10)
+            icono = _IconoSfx({'whoosh': 'inicio', 'textura': 'final', 'riser': 'intro'}[clave], color, 46, activo=on and encendido, retraso=idx * 3)
+            cc1.addWidget(icono, 0, Qt.AlignmentFlag.AlignVCenter)
+            cc1.addWidget(Etiqueta(tr(titulo), 15, peso='extra', color='#FFFFFF', envolver=True), 1)
+            var_f = BooleanVar(on)
+            cc1.addWidget(ui.Interruptor('', var=var_f, tam=12, comando=lambda c=clave, v=var_f: guardar(
+                {'pro_sonidos_familias': dict(familias, **{c: bool(v.get())})})), 0, Qt.AlignmentFlag.AlignVCenter)
+            tv.addWidget(c1)
+            tv.addWidget(_Nota(tr(nota), 12, lineas=3, color='#9FB0CC'))
+            tv.addWidget(Boton(tr('Oír un ejemplo'), lambda _=False, c=carpeta: self._oir_ejemplo_pro(c), tipo='fantasma', alto=30, tam=12))
+            tarj.enlazar(icono)
+            if not encendido:
+                tarj.setEnabled(False)
+            lay.addWidget(tarj, 1)
+            _aparecer(tarj, 90 * idx)
+        cv.addWidget(fila)
+        cv.addStretch(1)
+        t.addWidget(caja, 1)
+        despues(0, lambda: self._acomodar(True), self)
+
+    def _oir_ejemplo_pro(self, carpeta):
+        """Un sonido de esa familia de la biblioteca de la PRO (uno distinto en cada clic)."""
+        try:
+            import edicion_pro_sonido as PS
+            archivos = PS._archivos(carpeta)
+        except Exception:
+            archivos = []
+        if not archivos:
+            self.status.configure(text=tr('No encontré sonidos de esa familia en la biblioteca.'), text_color='#FFB86B')
+            return
+        vistos = dict(getattr(self, '_ejemplo_pro', {}) or {})
+        k = (vistos.get(carpeta, -1) + 1) % len(archivos)
+        vistos[carpeta] = k
+        self._ejemplo_pro = vistos
+        self._oir_ruta(archivos[k])
+
     def _tarjeta_regla(self, margenes=(14, 12, 14, 12), espacio=8):
         caja = QFrame()
         caja.setObjectName('filaSonidoSimple')

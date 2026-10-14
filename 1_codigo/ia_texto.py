@@ -628,52 +628,69 @@ def _sin_carga(texto):
 
 
 def emojis_de_ia(palabras, propuestos, idioma='es', roles=None):
-    """{indice: id_del_catalogo} a partir de los glifos que propuso la IA:
-    solo los que existen en el catalogo, nunca dos palabras seguidas, nunca
-    el mismo emoji a menos de 8 palabras, y nunca encima de uno puesto a mano
-    (w['emoji'] sin w['emoji_ia']). Un emoji que cae en una palabra sin
-    carga («este») pasa a la principal mas cercana de su frase."""
+    """{indice: id_del_catalogo} a partir de los glifos que propuso la IA: solo los que existen en el catalogo, nunca dos palabras seguidas,
+    nunca el mismo emoji a menos de 8 palabras, y nunca encima de uno puesto a mano (w['emoji'] sin w['emoji_ia']).
+    v5.5.7 (el usuario vio 💰 en «100 % gratuita», 💼 en «historias», 💬 en «premios»): el diccionario curado (emojis_conceptos) MANDA sobre la
+    IA; un emoji de la IA solo se acepta si va con SU palabra (el diccionario o las claves del catálogo lo confirman). Antes se MOVÍA a la palabra
+    destacada más cercana aunque no tuviera nada que ver; ahora solo si también va con ella. Las palabras destacadas que el diccionario conoce y
+    la IA dejó sin emoji reciben el suyo (separadas, como mucho uno cada ~6 palabras)."""
+    import emojis_conceptos as EC
+    try:
+        import emojis
+    except Exception:
+        emojis = None
     por_glifo = _por_glifo()
-    elegidos = {}
-    ultimo_por_id = {}
     frase, n_frase = [], 0                             # v5.4.25: a qué frase pertenece cada palabra (el emoji de «miedo» caía en «guitarra», la última palabra de la frase ANTERIOR)
     for w in palabras:
         frase.append(n_frase)
         if w.get('fin_frase'):
             n_frase += 1
+
+    def sugeridos(w):
+        try:
+            return emojis.sugerir(w, idioma, limite=12) if emojis else []
+        except Exception:
+            return []
+
+    candidatos = []                                    # (indice, id, de_la_ia)
     for i in sorted(propuestos or {}):
         if not 0 <= i < len(palabras):
             continue
-        destino = i
-        # en los virales el emoji acompaña a la palabra destacada (la principal), de SU frase
-        if _sin_carga(palabras[i].get('word')) or (roles is not None and roles[i] != 'main'):
-            cerca = [j for j in range(max(0, i - 4), min(len(palabras), i + 5))
-                     if roles is not None and roles[j] == 'main' and frase[j] == frase[i]]
-            if cerca:
-                destino = min(cerca, key=lambda j: abs(j - i))
-            elif _sin_carga(palabras[i].get('word')):
-                continue
-        glifo = propuestos[i]
-        i = destino
+        palabra = palabras[i].get('word', '')
+        eid = por_glifo.get(str(propuestos[i]).replace(VS16, '').strip())
+        curado = EC.concepto(palabra)
+        if curado is not None:
+            candidatos.append((i, curado, True))       # el diccionario manda (aunque la IA propusiera otro)
+            continue
+        if eid is not None and not _sin_carga(palabra) and EC.coherente(palabra, eid, sugeridos(palabra)):
+            candidatos.append((i, eid, True))
+            continue
+        if eid is None or roles is None:
+            continue
+        cerca = [k for k in range(max(0, i - 4), min(len(palabras), i + 5))
+                 if roles[k] == 'main' and frase[k] == frase[i] and EC.coherente(palabras[k].get('word', ''), eid, sugeridos(palabras[k].get('word', '')))]
+        if cerca:
+            candidatos.append((min(cerca, key=lambda k: abs(k - i)), eid, True))
+    if roles is not None:
+        con = {c[0] for c in candidatos}
+        for i, w in enumerate(palabras):
+            if roles[i] == 'main' and i not in con:
+                curado = EC.concepto(w.get('word', ''))
+                if curado is not None:
+                    candidatos.append((i, curado, False))
+    elegidos = {}
+    ultimo_por_id = {}
+    for i, eid, de_la_ia in sorted(candidatos):
         w = palabras[i]
         if w.get('emoji') and not w.get('emoji_ia'):
             continue
-        if i in elegidos:
-            continue
-        eid = por_glifo.get(str(glifo).replace(VS16, '').strip())
-        if eid is None:
-            # el glifo no esta: lo mas parecido para esa palabra (claves CLDR)
-            try:
-                import emojis
-                ids = emojis.sugerir(w.get('word', ''), idioma)
-                eid = ids[0] if ids else None
-            except Exception:
-                eid = None
-        if eid is None:
-            continue
-        if (i - 1) in elegidos or (i + 1) in elegidos:
+        if i in elegidos or (i - 1) in elegidos or (i + 1) in elegidos:
             continue
         if eid in ultimo_por_id and i - ultimo_por_id[eid] < 8:
+            continue
+        if not de_la_ia and any(abs(i - k) < 6 for k in elegidos):
+            continue
+        if emojis is not None and emojis.por_id(eid) is None:
             continue
         elegidos[i] = eid
         ultimo_por_id[eid] = i
@@ -874,9 +891,15 @@ def emojis_sin_ia(palabras, roles, idioma='es', cada=10):
     for i, w in enumerate(palabras):
         if roles[i] != 'main' or i - ultimo < cada:
             continue
-        ids = emojis.sugerir(w.get('word', ''), idioma)
-        if ids:
-            propuestos[i] = ids[0]
+        import emojis_conceptos as EC                  # v5.5.7: primero el diccionario curado; el catálogo solo si su sugerencia es la palabra misma
+        eid = EC.concepto(w.get('word', ''))
+        if eid is None:
+            ids = emojis.sugerir(w.get('word', ''), idioma, limite=1)
+            nucleo = EC.plegar(w.get('word', ''))
+            if ids and len(nucleo) >= 4 and nucleo[:4] in ids[0].replace('_', ''):
+                eid = ids[0]
+        if eid and emojis.por_id(eid) is not None:
+            propuestos[i] = eid
             ultimo = i
     return propuestos
 
@@ -902,6 +925,14 @@ def marcar_todo(palabras, idioma='es', progreso=None, estado=None, tamanos=None,
             r = _reg()
             if r:
                 r.aviso(f'La IA de texto no pudo: {str(e)[:200]}. Sigo con el motor de reglas (sin corrección por IA).', 'IA de texto')
+    try:        # v5.5.7: como «Asistencia» en Creativo: lo que la IA dejó y suena igual que otra palabra; sin IA, el diccionario (antes GO no corregía nada)
+        import ortografia
+        extra = ortografia.corregir_fonetico(palabras, idioma)
+        if extra:
+            palabras = aplicar_correcciones(palabras, extra)
+            resumen['cambios'] = int(resumen.get('cambios') or 0) + len(extra)
+    except Exception:
+        pass
     # los roles se eligen CON la puntuacion (las reglas de siempre miran los
     # finales de frase); despues se quitan los signos: los indices no cambian
     roles = roles_inteligentes(palabras, idioma, pesos, tamanos, peso_conector)

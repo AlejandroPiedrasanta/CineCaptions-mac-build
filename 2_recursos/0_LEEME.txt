@@ -11,7 +11,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    edicion_pro\   (4023 archivos)
+    edicion_pro\   (4153 archivos)
     efectos\   (148 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)

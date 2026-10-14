@@ -296,6 +296,7 @@ class SeccionExtras(QWidget):
         self._v_alinear = ui.BooleanVar(self._musica['alinear'])
         t6.capa.addWidget(Interruptor(tr('Alinear el pulso de la música con el golpe y los efectos'), self._v_alinear, lambda: self._guardar_musica(alinear=bool(self._v_alinear.get())), tam=14, color='#FFFFFF'))
         capa.addWidget(t6)
+        self.tarjeta_sonido = t6                           # v5.5.7: la página Efectos la saca del bloque de los clásicos (con la PRO sí se aplica)
 
     def _fila(self, capa, tipo, titulo, ayuda, opciones, actual, guardar):
         """Un ajuste con su ejemplo animado: título, ayuda y una fila de tarjetas (una por opción), como la intro."""
