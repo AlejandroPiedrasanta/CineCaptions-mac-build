@@ -1165,9 +1165,9 @@ class PanelGo(QWidget):
             if self.al_editar:
                 botones.append((tr('Editar palabras'), self.al_editar, 'neutro'))
             if n_av:
-                botones.append((tr('Ver el Registro'), self._abrir_registro, 'neutro'))
-        else:
-            botones.append((tr('Ver el Registro'), self._abrir_registro, 'primario'))
+                botones.append((tr('Refrescar'), self._refrescar, 'neutro'))
+        else:                                                    # v5.5.4 (pedido del usuario): «Refrescar» en vez de «Ver el Registro»
+            botones.append((tr('Refrescar'), self._refrescar, 'primario'))
             botones.append((tr('Intentar de nuevo'), self._pulsado, 'neutro'))
         self.salida.configurar(botones)
         if ok and stats:
@@ -1198,6 +1198,19 @@ class PanelGo(QWidget):
             registro_ui.abrir_registro(self.window())
         except Exception:
             pass
+
+    def _refrescar(self):
+        """v5.5.4: Inicio vuelve a su estado limpio (el orbe en reposo, sin el final de GO) y sin procesos: las IA locales sueltan la GPU (en un hilo:
+        cerrarlas puede tardar unos segundos). El Registro sigue en su sitio de la barra."""
+        def soltar():
+            try:
+                import edicion_pro
+                edicion_pro.soltar_gpu()
+            except Exception:
+                pass
+        import threading
+        threading.Thread(target=soltar, daemon=True, name='refrescar-soltar-gpu').start()
+        self.reposo(self._texto_reposo or tr('Pulsa GO para otro.'), forzar=True, tono=getattr(self, '_tono_reposo', None))
 
     def _volver_a_reposo(self, ficha):
         """Pasado un rato del final: el orbe vuelve solo al reposo (la palomita se desvanece mientras reaparece la gema)."""

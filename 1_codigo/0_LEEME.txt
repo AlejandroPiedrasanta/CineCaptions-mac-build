@@ -12,10 +12,14 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (11 archivos)
+    herramientas_dev\   (13 archivos)
         galeria_remotion.py
             la galería de las 100 plantillas Remotion de la Edición PRO: un fotograma de cada una sobre un
+        generar_recortes.py
+            los «recortes de revista» del motion RecorteK (Kit8.tsx): de cada emoji 3D (Fluent, MIT) saca
         generar_resortes.js
+        importar_sonidos.py
+            elige los mejores sonidos de la biblioteca del autor (E:\...\EFECTOS SONIDO y BODAS & XV) y los deja recortados en 2_recursos/sfx_library/<categoría>. SOLO desarrollo (no entra en el .exe).
         probar_ciclos_go.py
             repite el GO N veces seguidas con un pack y cuenta fallos/tiempos (cuelgues intermitentes de Resolve). SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
         probar_cuelgue_resolve.py
@@ -34,7 +38,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             mete en el motor OGraf de la Edición PRO las curvas de resorte de Motion (motion.dev).
         vista_tema5.py
             el Tema 5 SIN Resolve, para revisarlo y para la tarjeta del slider (2_recursos/vistas_slider/Tema5.mp4
-    remotion\   (14969 archivos)
+    remotion\   (15742 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -54,6 +58,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         B-roll de bancos de stock (Pexels) en las palabras que nombran cosas concretas (v5.4.8).
     cache_voz.py
         caché de transcripciones: el mismo video con el mismo motor e idioma no se vuelve a transcribir.
+    catalogo_ia.py
+        v5.5.2: EL CATÁLOGO ÚNICO de todo lo que la edición puede poner en un video — motion graphics (antiguos y nuevos),
     CineCaptions (script principal).py
         el programa: ventana principal (Inicio/GO, Proyecto, Editor, SFX Lab), editor de palabras, licencia, generar y colocar en Resolve, main().
     cola_trabajos.py
@@ -83,6 +89,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         «Edición PRO»: con un interruptor, GO edita el video en la línea de tiempo de Resolve (motion graphics, la persona
     edicion_pro_catalogo.py
         las 100 plantillas Remotion reutilizables de la Edición PRO, por ramas (bodas, XV y eventos sociales,
+    edicion_pro_escenas.py
+        v5.5.3: el director de las ESCENAS A PANTALLA COMPLETA (B-roll de motion graphics, remotion/src/Escenas9.tsx)
+    edicion_pro_kit7.py
+        v5.5.2: el kit de motion graphics de la skill (1_codigo/remotion/src/Kit7.tsx), EDITABLE para cualquier video:
     edicion_pro_ograf.py
         Edición PRO: los gráficos animados como plantillas OGraf (HTML) de DaVinci Resolve 21.1+.
     edicion_pro_persona.py
@@ -147,6 +157,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         el carrusel horizontal de «Pack de estilos»: tarjetas verticales sobre fotos de video con los captions de Resolve encima.
     fuentes_sistema.py
         encuentra en el disco el archivo .ttf/.otf de una familia y estilo.
+    fuentes_web.py
+        v5.5.3: FOTOS de internet con licencia para el B-roll de la Edición PRO (escena FotoE y fotos de tablero/polaroid).
     fusion_v1.py
     guion_captions.py
         estilo «guion»: la frase se arma palabra a palabra (cada palabra, su pista, su estilo, su sitio y su momento).
@@ -257,6 +269,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         recorrido visual por pasos: una capa sobre la ventana que ilumina cada zona de la interfaz y la explica (se desactiva en Ajustes).
     recortar_bucle_vistas.py
         recorta los clips de muestra de «Crea tu estilo» (texto sobre NEGRO) para que den la vuelta sin tiempo muerto.
+    rectificador.py
+        v5.5.2: el RECTIFICADOR. Lo último antes de tocar Resolve: junta lo que planearon los Efectos (efectos_visuales) y la
     registro.py
         el registro de avisos y errores: archivo de log, historial y señal para la interfaz.
     registro_ayuda.py

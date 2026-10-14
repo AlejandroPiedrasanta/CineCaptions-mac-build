@@ -490,8 +490,18 @@ def _emojis_sin_cara(tl, cues, base):
             malas = [k for k in caras if k[0] - r < x < k[2] + r and k[1] - r < y < k[3] + r]
             if not malas:
                 continue
+            caja = c.get('caja')                                       # v5.5.2 (regla oficial): al apartarse de la cara tampoco cae ENCIMA de su caption
             opciones = [max(k[3] for k in malas) + r + aire, min(k[1] for k in malas) - r - aire]
-            opciones = [o for o in opciones if 0.04 + r <= o <= 0.96 - r]
+            if caja:
+                opciones += [float(caja[0]) - r - aire, float(caja[1]) + r + aire]
+
+            def _sirve(o):
+                if not (0.04 + r <= o <= 0.96 - r):
+                    return False
+                if any(k[0] - r < x < k[2] + r and k[1] - r - aire < o < k[3] + r + aire for k in caras):
+                    return False
+                return not (caja and float(caja[0]) - r - aire < o < float(caja[1]) + r + aire)
+            opciones = [o for o in opciones if _sirve(o)]
             if opciones and _poner_tilt(it, (0.5 - min(opciones, key=lambda o: abs(o - y))) * H):
                 apartados += 1
     return apartados

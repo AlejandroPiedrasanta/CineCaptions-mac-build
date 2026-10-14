@@ -169,7 +169,8 @@ def _dibujar(glifo, fuente):
 def _tiene_color(img):
     """Si el dibujo lleva color de verdad: una fuente que Pillow no sabe
     dibujar a color sale en gris (R = G = B)."""
-    pixeles = list(img.getdata())
+    # (Pillow 12.3 marca getdata() como obsoleto y lo quita en Pillow 14: se usa get_flattened_data si existe)
+    pixeles = list(img.get_flattened_data() if hasattr(img, 'get_flattened_data') else img.getdata())
     for r, g, b, a in pixeles[::53]:
         if a > 128 and (abs(r - g) > 16 or abs(g - b) > 16):
             return True

@@ -5570,5 +5570,47 @@
   "fr": "Resolve n'a pas fini de créer la timeline avec votre vidéo",
   "de": "Resolve hat die Timeline mit deinem Video nicht fertig aufgebaut",
   "it": "Resolve non ha finito di creare la timeline con il tuo video"
+ },
+ "Rectificador: {n} ajustes para que Efectos y Edición PRO no se pisen.": {
+  "en": "Rectifier: {n} adjustments so Effects and PRO Edit don’t overlap.",
+  "pt": "Retificador: {n} ajustes para que Efeitos e Edição PRO não se sobreponham.",
+  "fr": "Rectificateur : {n} ajustements pour que les Effets et l’Édition PRO ne se chevauchent pas.",
+  "de": "Korrektur: {n} Anpassungen, damit Effekte und PRO-Schnitt sich nicht überlagern.",
+  "it": "Rettificatore: {n} ritocchi perché Effetti ed Editing PRO non si sovrappongano."
+ },
+ "Rectificador: {n} ajustes en la Edición PRO.": {
+  "en": "Rectifier: {n} adjustments in the PRO Edit.",
+  "pt": "Retificador: {n} ajustes na Edição PRO.",
+  "fr": "Rectificateur : {n} ajustements dans l’Édition PRO.",
+  "de": "Korrektur: {n} Anpassungen im PRO-Schnitt.",
+  "it": "Rettificatore: {n} ritocchi nell’Editing PRO."
+ },
+ "La IA entendió el video: {c} · {s} · tono {t}.": {
+  "en": "The AI understood the video: {c} · {s} · {t} tone.",
+  "pt": "A IA entendeu o vídeo: {c} · {s} · tom {t}.",
+  "fr": "L’IA a compris la vidéo : {c} · {s} · ton {t}.",
+  "de": "Die KI hat das Video verstanden: {c} · {s} · Ton {t}.",
+  "it": "L’IA ha capito il video: {c} · {s} · tono {t}."
+ },
+ "La IA local entiende de qué va tu video (tema, tono, a quién le hablas) y elige los motion graphics, los iconos y los colores que le van; los colores salen de tu propio video.": {
+  "en": "The local AI understands what your video is about (topic, tone, who you speak to) and picks the motion graphics, icons and colors that fit; the colors come from your own video.",
+  "pt": "A IA local entende do que trata o seu vídeo (tema, tom, para quem você fala) e escolhe os motion graphics, ícones e cores que combinam; as cores saem do seu próprio vídeo.",
+  "fr": "L’IA locale comprend le sujet de votre vidéo (thème, ton, public) et choisit les motion graphics, icônes et couleurs qui vont avec ; les couleurs viennent de votre propre vidéo.",
+  "de": "Die lokale KI versteht, worum es in deinem Video geht (Thema, Ton, Zielgruppe), und wählt passende Motion Graphics, Icons und Farben; die Farben stammen aus deinem eigenen Video.",
+  "it": "L’IA locale capisce di cosa parla il tuo video (tema, tono, a chi ti rivolgi) e sceglie motion graphics, icone e colori adatti; i colori vengono dal tuo video."
+ },
+ "Nuevo kit de motion graphics con 23 diseños que no se repiten de un video a otro: lista de razones, misterio, rueda de hooks, cartas en abanico, ruta numerada, título neón, tarjeta de concepto y tipografía mixta.": {
+  "en": "New motion graphics kit with 23 designs that don’t repeat from one video to the next: reasons list, mystery, hook wheel, card fan, numbered path, neon title, concept card and mixed typography.",
+  "pt": "Novo kit de motion graphics com 23 designs que não se repetem de um vídeo para outro: lista de motivos, mistério, roda de hooks, cartas em leque, rota numerada, título neon, cartão de conceito e tipografia mista.",
+  "fr": "Nouveau kit de motion graphics avec 23 designs qui ne se répètent pas d’une vidéo à l’autre : liste de raisons, mystère, roue de hooks, éventail de cartes, parcours numéroté, titre néon, carte concept et typographie mixte.",
+  "de": "Neues Motion-Graphics-Kit mit 23 Designs, die sich von Video zu Video nicht wiederholen: Gründe-Liste, Rätsel, Hook-Rad, Kartenfächer, nummerierter Pfad, Neon-Titel, Konzeptkarte und gemischte Typografie.",
+  "it": "Nuovo kit di motion graphics con 23 design che non si ripetono da un video all’altro: lista di motivi, mistero, ruota degli hook, ventaglio di carte, percorso numerato, titolo neon, scheda concetto e tipografia mista."
+ },
+ "Regla oficial: ningún gráfico ni emoji tapa una cara ni un caption, y un rectificador final quita lo que se pisa: zooms de más, risers a mitad del video, efectos encima de la Edición PRO y sonidos que no van con nada. Los captions ya no llevan sombra detrás.": {
+  "en": "Official rule: no graphic or emoji covers a face or a caption, and a final rectifier removes what overlaps: extra zooms, mid-video risers, effects on top of the PRO Edit and sounds that match nothing. Captions no longer have a shadow behind them.",
+  "pt": "Regra oficial: nenhum gráfico nem emoji cobre um rosto ou uma legenda, e um retificador final remove o que se sobrepõe: zooms a mais, risers no meio do vídeo, efeitos por cima da Edição PRO e sons que não combinam com nada. As legendas não têm mais sombra atrás.",
+  "fr": "Règle officielle : aucun graphique ni emoji ne couvre un visage ou un sous-titre, et un rectificateur final retire ce qui se chevauche : zooms en trop, risers au milieu de la vidéo, effets par-dessus l’Édition PRO et sons sans rapport. Les sous-titres n’ont plus d’ombre derrière.",
+  "de": "Offizielle Regel: Keine Grafik und kein Emoji verdeckt ein Gesicht oder einen Untertitel, und eine abschließende Korrektur entfernt Überlappungen: zu viele Zooms, Riser mitten im Video, Effekte über dem PRO-Schnitt und unpassende Sounds. Untertitel haben keinen Schatten mehr dahinter.",
+  "it": "Regola ufficiale: nessuna grafica né emoji copre un volto o un sottotitolo, e un rettificatore finale toglie ciò che si sovrappone: zoom di troppo, riser a metà video, effetti sopra l’Editing PRO e suoni fuori luogo. I sottotitoli non hanno più l’ombra dietro."
  }
 }

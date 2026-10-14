@@ -56,6 +56,7 @@ ES = {'es', 'is', 'era', 'was', 'e', 'son', 'are', 'sao'}
 FUERTES = {'best', 'worst', 'mejor', 'peor', 'secret', 'secreto', 'free', 'gratis', 'huge', 'enorme', 'important', 'importante', 'mistake', 'error',
            'errores', 'million', 'millones', 'nobody', 'nadie', 'everything', 'todo', 'nunca', 'never', 'increible', 'incredible', 'brutal'}
 Y = {'y', 'e', 'and', 'o', 'or', 'ou', 'ni', 'nor'}
+ENFASIS = DIR.ENFASIS
 ARTICULOS = {'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'the', 'a', 'an', 'os', 'as', 'um', 'uma', 'mi', 'mis', 'tu', 'tus', 'su', 'sus',
              'my', 'your', 'our', 'his', 'her', 'their', 'meu', 'minha', 'seu', 'sua'}
 CADA_DENSIDAD = {'sobria': 0.5, 'media': 1.0, 'espectaculo': 1.5}
@@ -70,7 +71,7 @@ def _limpio(t):
 
 
 def momentos(bl, dur, idioma='es', acento='#4C7DFF', libre=None, det_de=None, recorte_de=None, cara_de=None, densidad='media', usuario='',
-             iconos_3d=frozenset(), listas=()):
+             iconos_3d=frozenset(), listas=(), cortes=()):
     """Las piezas de las mejoras (ver arriba), sin pisarse entre ellas ni con lo que ya está (`libre(a, b)`). Cada pieza lleva 'mm' (su tipo)."""
     lang = (idioma or 'es')[:2]
     k = CADA_DENSIDAD.get(densidad or 'media', 1.0)
@@ -92,6 +93,10 @@ def momentos(bl, dur, idioma='es', acento='#4C7DFF', libre=None, det_de=None, re
             n += 1
             z = bl[n]['fin']
         return min(z, a + maximo)
+
+    def corta(a, z):
+        """v5.5.4: ¿hay un corte del video dentro? (la persona recortada no sigue a nadie a través de un corte: órbita y foco, en una sola toma)"""
+        return any(a + 0.15 < c < z - 0.15 for c in cortes or ())
 
     def hay_persona(t):
         if det_de is None:
@@ -152,7 +157,7 @@ def momentos(bl, dur, idioma='es', acento='#4C7DFF', libre=None, det_de=None, re
 
     def tarjeta(tipo, a, z, valores, motivo, alto):
         a, z = max(0.0, a), min(dur + 0.3, z)
-        if cupos.get(tipo, 0) <= 0 or z - a < 1.6 or a - ultima.get(tipo, -99) < 12.0 or not ok(a, z):
+        if cupos.get(tipo, 0) <= 0 or z - a < 1.6 or a - ultima.get(tipo, -99) < 12.0 or not ok(a, z) or not hay_persona((a + z) / 2):
             return False
         cupos[tipo] -= 1
         ultima[tipo] = a
@@ -183,6 +188,8 @@ def momentos(bl, dur, idioma='es', acento='#4C7DFF', libre=None, det_de=None, re
         if not signo and sig and (sig[0][1] in ('percent', 'porciento', 'percento') or (sig[0][1] == 'por' and len(sig) > 1 and sig[1][1] == 'ciento')):
             signo = '%'
         sube = 1 if any(x[1] in SUBIR for x in cerca) else (-1 if any(x[1] in BAJAR for x in cerca) else 0)
+        if not sube and (re.sub(r'\D', '', valor) == '100' or any(x[1] in ENFASIS for x in cerca)):
+            continue                                                     # v5.5.3: «100 % gratuita», «50 % de descuento»: no es crecimiento
         if (signo != '%' and not sube) or any(x[1] in DIR.TAMANO for x in cerca):
             continue                                                     # («25 % más pequeño»: eso lo cuenta la escena del icono que se encoge)
         if signo not in ('%', '$', '€', '£') and any(x[1] in DIR.DINERO for x in cerca):
@@ -314,7 +321,7 @@ def momentos(bl, dur, idioma='es', acento='#4C7DFF', libre=None, det_de=None, re
             continue
         a = b['ini'] + 0.05
         z = fin_frase(nb, 2.6, 3.6)
-        if z - a < 2.2 or not ok(a, z) or not hay_persona((a + z) / 2):
+        if z - a < 2.2 or not ok(a, z) or not hay_persona((a + z) / 2) or corta(a, z):
             continue
         valores = {'iconos': iconos, 'acento': acento, 'vuelta': 2.8 if len(iconos) == 1 else 3.2, 'inclinacion': -6}
         for lado, capa in (('atras', 'detras'), ('delante', 'delante')):
@@ -331,7 +338,7 @@ def momentos(bl, dur, idioma='es', acento='#4C7DFF', libre=None, det_de=None, re
             continue
         a = bl[nb]['ini']
         z = fin_frase(nb, 1.4, 3.2)
-        if z - a < 1.2 or not ok(a, z, 0.3) or not hay_persona((a + z) / 2):
+        if z - a < 1.2 or not ok(a, z, 0.3) or not hay_persona((a + z) / 2) or corta(a, z):
             continue
         out.append({'pieza': 'foco', 'mm': 'foco', 'capa': 'velo', 'persona': True, 'ini': round(a, 3), 'fin': round(z, 3),
                     'motivo': f'foco: «{" ".join(_limpio(x[2]) for x in todas[i:i + 3])}»', 'valores': {}})
@@ -342,7 +349,7 @@ def momentos(bl, dur, idioma='es', acento='#4C7DFF', libre=None, det_de=None, re
                 continue
             a = bl[nb]['ini']
             z = fin_frase(nb, 1.4, 3.0)
-            if z - a >= 1.2 and ok(a, z) and hay_persona((a + z) / 2):
+            if z - a >= 1.2 and ok(a, z) and hay_persona((a + z) / 2) and not corta(a, z):
                 out.append({'pieza': 'foco', 'mm': 'foco', 'capa': 'velo', 'persona': True, 'ini': round(a, 3), 'fin': round(z, 3),
                             'motivo': f'foco: «{_limpio(txt)}»', 'valores': {}})
                 break

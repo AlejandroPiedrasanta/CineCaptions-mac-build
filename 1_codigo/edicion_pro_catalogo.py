@@ -118,7 +118,7 @@ _t('listos', 'saludos', '¿Listos?', ['listos', 'estan listos'], 'VAMOS', estilo
 _t('empezamos', 'saludos', 'Empezamos', ['empezamos', 'comenzamos', 'arrancamos'], 'EPISODIO 1', estilo='blanco', letra='sans', adorno='lineas', sticker='emoji:clapper_board')
 _t('vamos_alla', 'saludos', '¡Vamos allá!', ['vamos alla', 'vamonos'], 'ACCION', estilo='esmeralda', letra='sans', adorno='destellos', sticker='emoji:rocket')
 _t('gracias', 'saludos', 'Gracias', ['gracias por ver', 'muchas gracias'], 'POR VER', estilo='dorado', sticker='emoji:folded_hands')
-_t('final', 'saludos', 'Nos vemos', ['nos vemos', 'hasta la proxima'], 'EN EL PROXIMO', estilo='blanco', letra='sans', sticker='emoji:waving_hand')
+_t('final', 'saludos', 'Nos vemos', ['nos vemos en el proximo', 'nos vemos en el siguiente', 'nos vemos en la proxima', 'hasta la proxima', 'nos vemos pronto'], 'EN EL PROXIMO', estilo='blanco', letra='sans', sticker='emoji:waving_hand')
 _p('encuesta_boda', 'saludos', 'Encuesta', {'pregunta': '¿Boda de día o de noche?', 'op1': 'De día', 'op2': 'De noche', 'pct1': 41}, ['dia o de noche'], 3.4)
 _p('encuesta_ninos', 'saludos', 'Encuesta', {'pregunta': '¿Niños en tu boda?', 'op1': 'Sí, todos', 'op2': 'Mejor no', 'pct1': 58}, ['ninos a tu boda', 'llevarias ninos'], 3.4)
 _p('encuesta_generica', 'saludos', 'Encuesta', {'pregunta': '¿Tú qué prefieres?', 'op1': 'Opción A', 'op2': 'Opción B', 'pct1': 64}, ['que prefieres'], 3.4)

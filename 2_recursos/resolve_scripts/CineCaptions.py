@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.5.1 (subtitulos)"
+VERSION = "5.5.5 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -1073,12 +1073,38 @@ def _color_sfx(categoria):
     return COLOR_SFX
 
 
+_CACHE = {"modo": False}
+
+
+def _cachear(item):
+    """v5.5.4 (gemelo del .lua, cachear): el clip se marca para la cache de
+    render (Render Cache Fusion Output) y, si la cache del proyecto esta en
+    «none», pasa a «user» (UNA vez): Resolve pre-renderiza los titulos en
+    segundo plano y la reproduccion va fluida (cientos de titulos de Fusion
+    calculados en vivo iban a tirones). Nunca falla."""
+    if item is None:
+        return
+    if not _CACHE["modo"]:
+        _CACHE["modo"] = True
+        try:
+            p = resolve.GetProjectManager().GetCurrentProject()
+            if str(p.GetSetting("perfRenderCacheMode") or "").lower() == "none":
+                p.SetSetting("perfRenderCacheMode", "user")
+        except Exception:
+            pass
+    try:
+        item.SetFusionOutputCache("enabled")
+    except Exception:
+        pass
+
+
 def colocar_medido(media_pool, timeline, plantilla, desde, duracion, pista,
                    record, fps=None, color=None):
     """_colocar_medido_base + el color del clip (texto naranja, emoji amarillo)."""
     item, puesto = _colocar_medido_base(media_pool, timeline, plantilla, desde,
                                         duracion, pista, record, fps)
     _pintar_clip(item, color)
+    _cachear(item)
     return item, puesto
 
 
@@ -2739,7 +2765,7 @@ def _preparar_pack_drt_nucleo(project, media_pool, nombre_pack, formato,
             print(f"  Pack '{nombre_pack}': recogí {entraron} clips que dejó "
                   "la importación y los moví al bin.")
         else:
-            print(f"  Peldaño 'importados': la importación no dejó clips "
+            print("  Peldaño 'importados': la importación no dejó clips "
                   "sueltos nuevos; pruebo GetMediaPoolItem.")
             entraron, metodo = _promover_a_media_pool(
                 media_pool, importado, items_por_nombre, carpeta_bin)

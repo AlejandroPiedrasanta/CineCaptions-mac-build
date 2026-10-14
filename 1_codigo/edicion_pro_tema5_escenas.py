@@ -68,7 +68,7 @@ PERSONAS = {'clients', 'customers', 'people', 'followers', 'students', 'team', '
 VIDEO = {'video', 'videos', 'content', 'reel', 'reels', 'edit', 'edits', 'editing', 'editor', 'editors', 'animation', 'animations', 'youtube', 'shorts', 'clip',
          'clips', 'film', 'contenido', 'edicion', 'ediciones', 'editar', 'editores', 'animacion', 'animaciones', 'conteudo', 'edicao', 'animacao'}
 TAMANO = {'smaller': -1, 'small': -1, 'tiny': -1, 'shrink': -1, 'reduce': -1, 'oversizing': 1, 'oversized': 1, 'huge': 1, 'bigger': 1, 'big': 1, 'giant': 1,
-          'pequeno': -1, 'pequenos': -1, 'pequenas': -1, 'mas pequeno': -1, 'reducir': -1, 'reduce': -1, 'enorme': 1, 'enormes': 1, 'gigante': 1,
+          'pequeno': -1, 'pequenos': -1, 'pequenas': -1, 'mas pequeno': -1, 'reducir': -1, 'enorme': 1, 'enormes': 1, 'gigante': 1,
           'gigantes': 1, 'grande': 1, 'grandes': 1, 'menor': -1, 'maior': 1}
 EFECTOS = {'effect', 'effects', 'efecto', 'efectos', 'efeito', 'efeitos', 'transitions', 'transiciones', 'filters', 'filtros'}
 VISUAL = {'visual', 'visuals', 'attention', 'eye', 'eyes', 'atencion', 'ojo', 'ojos', 'mirada', 'visuales', 'atencao', 'olho', 'olhos'}
@@ -77,6 +77,16 @@ BIEN = {'correct', 'perfect', 'professional', 'success', 'correcto', 'perfecto',
 DIAS = {'monday': 'L', 'tuesday': 'M', 'wednesday': 'X', 'thursday': 'J', 'friday': 'V', 'saturday': 'S', 'sunday': 'D', 'lunes': 'L', 'martes': 'M',
         'miercoles': 'X', 'jueves': 'J', 'viernes': 'V', 'sabado': 'S', 'domingo': 'D', 'segunda': 'L', 'terca': 'M', 'quarta': 'X', 'quinta': 'J',
         'sexta': 'V', 'calendar': '', 'calendario': '', 'agenda': '', 'fecha': '', 'date': ''}
+# v5.5.3: un % con estas palabras es un énfasis o una oferta («100 % gratuita», «50 % de descuento»), no una gráfica que crece
+ENFASIS = {'gratis', 'gratuita', 'gratuito', 'gratuitas', 'gratuitos', 'free', 'gratuite', 'kostenlos', 'descuento', 'descuentos', 'off', 'discount',
+           'desconto', 'rebaja', 'oferta', 'seguro', 'segura', 'garantizado', 'garantia', 'guaranteed', 'natural', 'real', 'original', 'puro', 'pura'}
+MESES = set('''enero febrero marzo abril mayo junio julio agosto septiembre setiembre octubre noviembre diciembre january february march april may
+june july august september october november december janeiro fevereiro marco maio junho julho setembro outubro novembro dezembro'''.split())
+APP = {'app', 'apps', 'aplicacion', 'aplicaciones', 'aplicativo', 'celular', 'telefono', 'movil', 'phone', 'smartphone', 'iphone', 'android', 'instagram',
+       'tiktok', 'youtube', 'whatsapp', 'facebook', 'notificacion', 'notificaciones', 'notification', 'notifications', 'telemovel', 'redes', 'social'}
+# v5.5.3: lo que tiene que DECIRSE para que el objeto de la IA venga a cuento (un ojo en «nos vemos en el festival» no)
+A_CUENTO = {'ojo': VISUAL, 'app': APP, 'avatares': PERSONAS | {'amigos', 'friends', 'comunidad', 'community', 'jovenes', 'seguidores', 'amigas'},
+            'calendario': set(DIAS) | MESES}
 CONECTORAS = set('''a al o u e y the and or of in on at to is it its as be by if so we my me i you your our de del la las el los lo un una unos unas en
 con por para que se su sus es son era fue muy mas más pero ya le les nos te tu tus mi mis esto este esta eso ese esa this that these those there here
 what how just more less do does did not no si an um uma os as do da dos das em na nos nas com pra ao from about into than always use'''.split())
@@ -181,7 +191,7 @@ def escenas(bloques, dur):
             ventana(t, tam[0], 'arriba', 'objeto', [{'tipo': 'app', '_t': t - 0.3, 'escala': round(1 - min(60.0, float(valor.replace(',', '.'))) / 100.0, 3)
                                                      if TAMANO[tam[1]] < 0 else 1.0, 'insignia': ('−' if TAMANO[tam[1]] < 0 else '+') + valor + '%',
                                                      't_escala': round(tam[0] - t + 0.3, 3)}], 3.8, f'tamaño: {valor}% {tam[2]}')
-        elif signo == '%' or cerca & CRECER:
+        elif (signo == '%' and re.sub(r'\D', '', valor) != '100' and not cerca & ENFASIS) or cerca & CRECER:
             ventana(t, t, 'arriba', 'objeto', [{'tipo': 'grafica', '_t': t - 0.1, 'valor': valor, 'signo': signo}], 3.4, f'crecimiento: {valor}{signo}')
         else:
             etiqueta = next((x[2].strip('.,') for x in sig[:2] if x[1] not in CONECTORAS), '')
@@ -214,7 +224,7 @@ def escenas(bloques, dur):
 
 # ------------------------------------------------------------------------------------------------------------------- lo que propone la IA local
 ICONO_IA = {'dinero': 'money-dynamic-premium', 'money': 'money-dynamic-premium', 'fuego': 'fire-front-color', 'fire': 'fire-front-color',
-            'calendario': 'calendar-dynamic-color', 'calendar': 'calendar-dynamic-color', 'campana': 'bell-dynamic-color', 'bell': 'bell-dynamic-color',
+            'calendario': 'calendar-dynamic-premium', 'calendar': 'calendar-dynamic-premium', 'campana': 'bell-dynamic-color', 'bell': 'bell-dynamic-color',
             'anuncio': 'megaphone-dynamic-color', 'megafono': 'megaphone-dynamic-color', 'corazon': 'notify-heart-front-color', 'heart': 'notify-heart-front-color',
             'candado': 'lock-front-premium', 'lock': 'lock-front-premium', 'llave': 'key-front-premium', 'key': 'key-front-premium',
             'corona': 'crown-dynamic-color', 'crown': 'crown-dynamic-color', 'bandera': 'flag-dynamic-color', 'flag': 'flag-dynamic-color',
@@ -239,7 +249,6 @@ def desde_ia(bloques, propuestas, dur):
         zona = bloques[b:b + 2]                                              # la frase y la siguiente
         pal = [(z['ini'] + w['t'], plegar(w['texto']), w['texto']) for z in zona for w in z['palabras']]
         dichas = {p for _t, p, _x in pal}
-        texto = ' '.join(p for _t, p, _x in pal)
 
         secuencia = [p for _t, p, _x in pal]
 
@@ -266,8 +275,8 @@ def desde_ia(bloques, propuestas, dur):
         if tipo in ('lista', 'fichas'):
             items = [str(x).strip()[:28] for x in datos.get('items') or [] if str(x).strip()]
             items = [x for x in items if dicho(x)]
-            if len(items) < 2:
-                continue
+            if len(items) < (3 if tipo == 'fichas' else 2):
+                continue                                                 # v5.5.3: dos fichas solas a pantalla completa = pantalla vacía
             if tipo == 'lista' and len(items) < 3 and not any(p in ('y', 'e', 'and', 'o', 'or', 'ou') for p in dichas):
                 continue                                                 # «la ceremonia preciosa» no es una lista: hace falta «y» u «o», o 3 cosas
             if tipo == 'fichas':
@@ -288,6 +297,10 @@ def desde_ia(bloques, propuestas, dur):
             num = re.sub(r'[^\d.,]', '', valor)
             if not num or not any(re.sub(r'[^\d]', '', num) == re.sub(r'[^\d]', '', x) for _t, _p, x in pal if re.search(r'\d', x)):
                 continue                                                     # la cifra tiene que DECIRSE (y con números: «three» lo cubren las reglas)
+            if tipo == 'precio' and ('%' in valor or not (dichas & DINERO or any(s in x for _t, _p, x in pal for s in '$€£'))):
+                continue                                                     # v5.5.3: «100 % gratuita» no es un precio de 100
+            if tipo == 'grafica' and not dichas & CRECER and (re.sub(r'\D', '', num) == '100' or dichas & ENFASIS):
+                continue                                                     # v5.5.3: ni una gráfica que crece
             o = {'tipo': tipo, '_t': momento(num, t0) - 0.1, 'valor': num}
             if tipo == 'cifra':
                 o['valor'] = valor if re.search(r'\d', valor) else num
@@ -329,7 +342,7 @@ def desde_ia(bloques, propuestas, dur):
                 continue
             objetos = [{'tipo': 'estado', '_t': momento(anclas[0], t0) - 0.1, 'bien': bool(datos.get('bien')), 'etiqueta': str(datos.get('etiqueta') or anclas[0]).upper()[:22]}]
         elif tipo in ('app', 'ojo', 'avatares', 'calendario'):
-            if not anclas or not any(dicho(a) for a in anclas):
+            if not anclas or not any(dicho(a) for a in anclas) or not (dichas & A_CUENTO[tipo]):
                 continue
             o = {'tipo': tipo, '_t': momento(anclas[0], t0) - 0.1}
             if tipo == 'avatares':

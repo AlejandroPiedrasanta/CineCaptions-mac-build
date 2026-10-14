@@ -28,7 +28,7 @@ LIBRERIAS = (
     ('numpy', 'NumPy', '2.5.4'),
     ('PIL', 'Pillow', '12.3.0'),
     ('av', 'PyAV (FFmpeg)', '19.0.1'),
-    ('ctranslate2', 'CTranslate2', '4.8.2'),
+    ('ctranslate2', 'CTranslate2', '4.8.3'),          # (la de 3_compilar/requirements.txt; v5.5.4: decía 4.8.2 y cada arranque salía «Falla al iniciar»)
     ('faster_whisper', 'faster-whisper', '1.2.1'),
     ('onnxruntime', 'ONNX Runtime', '1.31.0'),
     ('tokenizers', 'tokenizers', '0.23.3'),
@@ -53,6 +53,17 @@ def _version(mod):
         return None
 
 
+def _compatible(v, fijada):
+    """v5.5.4: la misma versión, o un parche más nuevo de la misma serie (4.8.3 con 4.8.2 fijada): eso no es una falla."""
+    if v == fijada:
+        return True
+    try:
+        a, b = [int(x) for x in v.split('.')[:3]], [int(x) for x in fijada.split('.')[:3]]
+        return len(a) == len(b) == 3 and a[:2] == b[:2] and a[2] >= b[2]
+    except ValueError:
+        return False
+
+
 def comprobar():
     """Carga cada libreria y compara su version. Tarda 1-3 s: llamar en un hilo."""
     filas = []
@@ -61,7 +72,7 @@ def comprobar():
         try:
             mod = importlib.import_module(modulo)
             v = _version(mod)
-            ok = fijada is None or v is None or str(v).split('+')[0] == fijada
+            ok = fijada is None or v is None or _compatible(str(v).split('+')[0], fijada)
             detalle = (v or '?') + ('' if ok else f' (esperada {fijada})')
             filas.append({'nombre': nombre, 'ok': ok, 'detalle': detalle,
                           'ms': round((time.perf_counter() - t) * 1000)})

@@ -484,6 +484,31 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.5.5', [
+        'Resolve va fluido y ya no se cierra: las IA de CineCaptions dejan la tarjeta gráfica libre en cuanto terminan (antes ocupaban hasta 15 GB mientras Resolve reproducía) y los títulos, efectos y motions se pre-renderizan en segundo plano.',
+        'La IA de texto elige su tamaño según la memoria que de verdad queda libre: con Resolve abierto ya no se queda colgada 100 s y los motions vuelven a ser de la IA.',
+        'Todos los temas empiezan con el gancho: la primera frase va DETRÁS de ti (Magic Mask en Studio; en Free, el recorte de la IA local).',
+        'Temas 1 a 4: también con la Edición PRO, hasta 3 animaciones debajo de los captions. Tema 5: los iconos van justo debajo de su caption y se van con él.',
+        'Más fotos de internet con licencia: de los lugares que nombras y de muchos más temas (festival, concierto, torneo, beca, empresa, charlas…), repartidas por el video.',
+        'Tema 3: un solo juego de colores en todo el video, como la referencia.',
+        'Inicio: «Refrescar» en vez de «Ver el Registro» (deja Inicio limpio y sin procesos). Si Resolve se reabre sin timeline, GO abre tu último proyecto y sigue.',
+        'Arreglos: el aviso falso «Falla al iniciar: CTranslate2»; listas de «3 razones» que nadie dijo; cifras como «10 DE LA».',
+    ]),
+    ('5.5.3', [
+        'Más de 320 sonidos nuevos: aplausos, ovación, pirotecnia, dinero, correcto y error, tiempo, cámara, latidos, papel, memes, teclado, naturaleza, ambientes, fiesta, cinemáticos, transiciones, explosiones, pop, intros y más whoosh, risers, golpes, clics y glitch.',
+        'Sonido por tema: cuando dices dinero, tiempo, felicidades, correcto, error, foto, corazón, idea, boom, fiesta o fuegos artificiales suena el efecto que le toca (modo Avanzado, ya encendido).',
+        'Cuatro motion graphics nuevos: recortes de revista (más de 220 iconos en trama de puntos, sticker a color o neón), la palabra clave seleccionada como en el iPhone, el calendario que arranca hojas («30 días») y la red de neón con el interruptor consumir → crear.',
+        'La IA de texto usa siempre el modelo más grande que tengas descargado.',
+        'La Edición PRO busca en internet fotos CON LICENCIA de lo que dices (perritos, comida, la ciudad, desnutrición…) y las pone como escenas a pantalla completa, con su crédito; en el Registro te deja los enlaces de Google Imágenes y Pinterest del tema de tu video para inspirarte. Se apaga en el menú de la Edición PRO.',
+        'Arreglo: los colores y los fotogramas de tu propio video ya llegan a los motions y escenas de la Edición PRO.',
+        'Edición PRO más coherente en los Temas 1 a 6: las escenas ya no tapan tu propio B-roll ni tus carteles, cada icono va con lo que dices (nada de un ojo al despedirte ni una gráfica para «100 % gratis»), el calendario no enseña otra fecha y el Tema 6 respeta su estilo.',
+        'Diez escenas nuevas a pantalla completa que ilustran lo que dices: personaje-pictograma, tablero de pistas, polaroid con una foto de tu video, cuaderno, calendario, icono de cristal, chat, collage de revista, móvil con tu perfil y tijeras que cortan clips. La IA las elige con variedad en la Edición PRO de los Temas 1 al 6, cada una con su sonido, y los captions bajan mientras se ven.',
+    ]),
+    ('5.5.2', [
+        'La IA local entiende de qué va tu video (tema, tono, a quién le hablas) y elige los motion graphics, los iconos y los colores que le van; los colores salen de tu propio video.',
+        'Nuevo kit de motion graphics con 23 diseños que no se repiten de un video a otro: lista de razones, misterio, rueda de hooks, cartas en abanico, ruta numerada, título neón, tarjeta de concepto y tipografía mixta.',
+        'Regla oficial: ningún gráfico ni emoji tapa una cara ni un caption, y un rectificador final quita lo que se pisa: zooms de más, risers a mitad del video, efectos encima de la Edición PRO y sonidos que no van con nada. Los captions ya no llevan sombra detrás.',
+    ]),
     ('5.5.1', [
         'GO se repara solo: si Resolve se congela, se cierra o se cae a mitad del trabajo, CineCaptions lo cierra a la fuerza si hace falta, lo vuelve a abrir, rearma tu proyecto con el video y termina sin mostrarte el error (Windows y Mac, Studio y Free).',
         'Los emojis animados ya no pierden su animación de salida ni dan el aviso «sin tamaño ni posición».',

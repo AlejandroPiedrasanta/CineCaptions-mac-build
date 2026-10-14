@@ -38,7 +38,20 @@ def _con_emoji():
         return []
 
 
-def piezas(info, video, idioma, W, H, fps, mover, plan):
+def piezas(info, video, idioma, W, H, fps, mover, plan, maximo=None):
+    """`maximo` (v5.5.4, Temas 1–4 CON la Edición PRO): como mucho tantos acompañantes, repartidos por el video (la PRO ya pone sus motions)."""
+    out = _piezas(info, video, idioma, W, H, fps, mover, plan)
+    if maximo is None:
+        return out
+    acomp = [p for p in out if p.get('pieza') != 'velo_caption']
+    if len(acomp) > maximo:
+        paso = len(acomp) / float(maximo)
+        elegidos = [acomp[int(k * paso + paso / 2)] for k in range(maximo)]
+        out = [p for p in out if p.get('pieza') == 'velo_caption' or p in elegidos]
+    return out
+
+
+def _piezas(info, video, idioma, W, H, fps, mover, plan):
     import edicion_pro as EP
     import edicion_pro_tema5 as T5
     import edicion_pro_tema5_acomp as AC
@@ -88,6 +101,8 @@ def piezas(info, video, idioma, W, H, fps, mover, plan):
             if y > 86.0:
                 continue                                                 # no cabe debajo sin salirse por abajo
             c['valores']['y'] = round(y, 1)
+            if c['fin'] > b['fin'] + 0.15 and b['fin'] + 0.15 - c['ini'] >= 1.2:
+                c['fin'] = round(b['fin'] + 0.15, 3)                     # v5.5.4: se va con SU caption
             out.append(c)
     except Exception:
         pass

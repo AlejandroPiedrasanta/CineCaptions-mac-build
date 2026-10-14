@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.5.1 (subtitulos)"
+local VERSION = "5.5.5 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -1098,6 +1098,25 @@ end
 -- AppendToTimeline con la duracion EXACTA en el timeline. Devuelve item,
 -- puesto (item nil si no se pudo colocar). Sin 'timeline' no se puede
 -- borrar y recolocar: se usa el factor conocido y no se calibra.
+-- v5.5.4 (gemelo del .py, _cachear): el clip se marca para la cache de render
+-- (Render Cache Fusion Output) y, si la cache del proyecto esta en «none»,
+-- pasa a «user» (UNA vez): Resolve pre-renderiza los titulos en segundo plano
+-- y la reproduccion va fluida. Nunca falla.
+-- (dentro de COLORES_CC: el bloque principal ya roza el limite de 200 locales de Lua)
+COLORES_CC.cachear = function(item)
+    if item == nil then return end
+    if not COLORES_CC.cache_hecho then
+        COLORES_CC.cache_hecho = true
+        pcall(function()
+            local p = resolve:GetProjectManager():GetCurrentProject()
+            if string.lower(tostring(p:GetSetting("perfRenderCacheMode") or "")) == "none" then
+                p:SetSetting("perfRenderCacheMode", "user")
+            end
+        end)
+    end
+    pcall(function() item:SetFusionOutputCache("enabled") end)
+end
+
 local function colocar_medido(media_pool, timeline, plantilla, desde,
                               duracion, pista, record, fps, color)
     local nombre = nombre_clip(plantilla)
@@ -1152,6 +1171,7 @@ local function colocar_medido(media_pool, timeline, plantilla, desde,
                 -- cuadraba): el factor vuelve; el clip queda como salio.
                 FACTORES[nombre] = k
                 COLORES_CC.pintar(item, color)
+                COLORES_CC.cachear(item)
                 return item, puesto
             end
             k, span = k2, span2
@@ -1177,6 +1197,7 @@ local function colocar_medido(media_pool, timeline, plantilla, desde,
         CALIBRADOS[nombre] = true
     end
     COLORES_CC.pintar(item, color)
+    COLORES_CC.cachear(item)
     return item, puesto
 end
 

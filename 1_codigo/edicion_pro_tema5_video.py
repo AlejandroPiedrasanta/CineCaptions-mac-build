@@ -58,8 +58,9 @@ def analizar(video, fps_analisis=4.0, lado=96):
     hs = [hist(f) for f in fotos]
     saltos = [0.0] + [float(np.abs(hs[i] - hs[i - 1]).sum()) for i in range(1, len(hs))]
     movs = [0.0] + [float(np.abs(fotos[i] - fotos[i - 1]).mean()) for i in range(1, len(fotos))]
-    umbral = max(0.55, float(np.percentile(saltos, 97)))
-    cortes = [tiempos[i] for i in range(1, len(saltos)) if saltos[i] > umbral and (i < 2 or saltos[i - 1] < umbral)]
+    # v5.5.3: antes el umbral era el percentil 97 (como mucho ~7 cortes por minuto: un reel con B-roll tiene 20+); ahora, 3 veces lo normal del video
+    umbral = max(0.55, float(np.percentile(saltos, 75)) * 3.0)
+    cortes = [tiempos[i] for i in range(1, len(saltos)) if saltos[i] > umbral and movs[i] > 0.06 and (i < 2 or saltos[i - 1] < umbral)]
     limites = [tiempos[0]] + cortes + [tiempos[-1] + 1.0 / fps_analisis]
     tomas = []
     for a, b in zip(limites, limites[1:]):
@@ -79,6 +80,16 @@ def analizar(video, fps_analisis=4.0, lado=96):
     brillo = float(np.mean([f.mean() for f in fotos]))
     return {'dur': round(tiempos[-1], 2), 'tomas': tomas, 'cortes': [round(t, 2) for t in cortes], 'brillo': round(brillo, 3),
             'oscuro': brillo < 0.33, 'movimiento': round(float(np.mean(movs[1:])), 4)}
+
+
+def antes_del_inserto(a, z, cortes, minimo=2.2, corto=2.5):
+    """v5.5.3: una escena no tapa un INSERTO del usuario (su B-roll: una toma de menos de `corto` s entre dos cortes): acaba justo antes.
+    -> el nuevo final (z si no hay inserto), o None si así no le quedan `minimo` segundos."""
+    cs = sorted(float(c) for c in cortes or [])
+    for c0, c1 in zip(cs, cs[1:]):
+        if c1 - c0 < corto and c0 < z - 0.15 and c1 > a + 0.15:
+            return round(c0 - 0.04, 3) if c0 - a >= minimo else None
+    return z
 
 
 def toma_en(analisis, t):

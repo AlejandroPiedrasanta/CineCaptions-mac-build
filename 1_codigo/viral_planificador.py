@@ -31,6 +31,7 @@ AFINADO = {'adelanto': 0.03, 'hold': 0.30, 'min_bloque': 0.9, 'gap_minimo': 0.10
 DURACION = {'v shatter': 1.1, 'v select': 1.35, 'v drag': 1.4}
 # lo MÍNIMO que tiene que verse cada efecto (s desde que entra la palabra) para llegar a su estado final con el tiempo comprimido al máximo (×2)
 MINIMO = {'v shatter': 0.60, 'v select': 0.70, 'v drag': 0.70}
+ROTAR_COLORES = False                                    # v5.5.4: un solo juego de colores por video (los que rotaban se veían feos)
 ROTACION = ('v select', 'v shatter', 'v drag')           # en este orden salen; si el que toca no cabe en el tiempo del bloque, se prueba el siguiente (antes se caía siempre a shatter)
 CAP = {'v fina': 0.0245, 'v negrita': 0.040, 'v shatter': 0.072, 'v select': 0.072, 'v drag': 0.072}
 # la palabra con efecto es más grande cuanto más corta
@@ -265,8 +266,10 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
             break
     # los COLORES de los efectos: la primera vez que sale cada efecto es el de siempre (shatter azul cielo, caja roja, drag blanco) y las siguientes rotan por rosa/lima/oro, azul/verde/naranja y
     # amarillo/cian/rosa (viral_captions.COLORES): el color no se repite seguido
+    # v5.5.4 (el usuario: «el Tema 3 tiene colores feos»): YA NO rotan; todo el video con los colores de la referencia (un solo juego, como el
+    # reel original). Las variantes siguen en el pack para quien las ponga a mano.
     veces = {}
-    for b in sorted(bloques, key=lambda x: x['t0']):
+    for b in sorted(bloques, key=lambda x: x['t0']) if ROTAR_COLORES else ():
         if b['tipo'] in VC.COLORES:
             k = veces.get(b['tipo'], 0)
             veces[b['tipo']] = k + 1

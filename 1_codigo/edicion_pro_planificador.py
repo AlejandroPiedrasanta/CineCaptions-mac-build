@@ -49,6 +49,8 @@ _FRASES_GENERO = {'bts': ('detras de camara', 'behind the scenes', 'making of', 
                   'inmobiliaria': ('bienes raices', 'real estate', 'en venta', 'for sale', 'square feet'), 'boda': ('nos casamos', 'el si', 'just married', 'save the date')}
 
 GENEROS = ('auto', 'general', 'inmobiliaria', 'boda', 'xv', 'restaurante', 'bts')
+# v5.5.2: la categoría que entiende la IA local (ia_texto.perfil) → el género de la edición
+GENERO_DE_CATEGORIA = {'boda': 'boda', 'xv': 'xv', 'fotografia': 'bts', 'inmobiliaria': 'inmobiliaria', 'restaurante': 'restaurante', 'cocina': 'restaurante'}
 
 # paletas por género (acento, texto, panel, bloque); varias por género: la semilla elige
 PALETAS = {
@@ -78,14 +80,20 @@ MARCOS = {'inmobiliaria': ['ventana', 'simple'], 'boda': ['elegante', 'brillo'],
           'bts': ['cinta', 'simple'], 'general': ['simple', 'ventana']}       # sin visor REC (al usuario no le gusta)
 ICONOS_ORBITA = {'inmobiliaria': ['casa', 'key', 'bed', 'waves', 'trees'], 'boda': ['anillos', 'corazon', 'camera', 'flower', 'wine'],
                  'xv': ['crown', 'gift', 'music', 'cake', 'camera'], 'restaurante': ['cubiertos', 'chefHat', 'wine', 'coffee', 'pizza'],
-                 'bts': ['camera', 'clapperboard', 'aperture', 'film', 'mic'], 'general': ['lightbulb', 'target', 'trendingUp', 'users', 'rocket']}
+                 'bts': ['camera', 'clapperboard', 'aperture', 'film', 'mic'], 'general': ['lightbulb', 'target', 'trendingUp', 'users', 'rocket'],
+                 'evento': ['music', 'mic', 'sparkles', 'calendarDays', 'users']}   # v5.5.3: festival, concierto, fiesta (no bombillas ni dianas)
+EVENTO = set('''festival festivales concierto conciertos fiesta fiestas evento eventos feria ferias show torneo carnaval desfile gala
+concert concerts party parties event events fair tournament parade festa festas evento show'''.split())
+# v5.5.3: palabras que dicen que se ESTÁ en un sitio o que algo PASA ahí (sin ellas, un lugar nombrado no se rotula «Ubicación»)
+PRESENCIA = set('''estamos estoy aqui aca desde llegamos llegue bienvenidos bienvenido bienvenidas vivimos vivo visitamos visitando ubicado ubicada
+ubicados queda sera seran evento festival lugar direccion esperamos vengan ven here welcome located visiting staying venue event'''.split())
 ORBITA_DUR = 2.8                          # el gancho: los iconos del tema giran alrededor de la cabeza en los primeros segundos
 # iconos 3D (3dicons, CC0; 2_recursos/edicion_pro/ograf/lib/iconos3d): de un icono de concepto al 3D que lo cuenta, y palabras que lo llaman
-ICONO_A_3D = {'coins': 'money-dynamic-premium', 'piggyBank': 'wallet-front-premium', 'shoppingCart': 'money-front-color', 'calendarDays': 'calendar-dynamic-color',
+ICONO_A_3D = {'coins': 'money-dynamic-premium', 'piggyBank': 'wallet-front-premium', 'shoppingCart': 'money-front-color', 'calendarDays': 'calendar-dynamic-premium',
               'camera': 'camera-dynamic-premium', 'image': 'picture-dynamic-premium', 'crown': 'crown-dynamic-color', 'key': 'key-front-premium',
               'shieldCheck': 'lock-front-premium', 'plane': 'travel-dynamic-color', 'gift': 'ribbon-dynamic-color', 'target': 'flag-dynamic-color',
               'messageSquare': 'notify-heart-front-color', 'bell': 'bell-dynamic-color', 'map': 'explorer-front-color', 'globe': 'explorer-front-color',
-              'zap': 'fire-front-color', 'trendingUp': 'fire-front-color', 'clock': 'calendar-dynamic-premium'}
+              'zap': 'fire-front-color', 'trendingUp': 'fire-front-color'}   # v5.5.3: el calendario SIN número (el rojo dice «25»); la hora no es un calendario
 _CONC3D = {
     'fire-front-color': 'viral fuego caliente hot fire trending tendencia increible brutal epico epica',
     'megaphone-dynamic-color': 'anuncio anuncios oferta ofertas promocion promo aviso noticia noticias atencion announcement offer news attention',
@@ -95,12 +103,13 @@ _CONC3D = {
     'lock-front-premium': 'privado privada secreto secret private candado',
 }
 CONCEPTOS3D = {w: n for n, t in _CONC3D.items() for w in t.split()}
-ORBITA_3D = {'inmobiliaria': ['key-front-premium', 'money-dynamic-premium', 'wallet-front-premium', 'lock-front-premium', 'calendar-dynamic-color'],
+ORBITA_3D = {'inmobiliaria': ['key-front-premium', 'money-dynamic-premium', 'wallet-front-premium', 'lock-front-premium', 'calendar-dynamic-premium'],
              'boda': ['notify-heart-front-color', 'ribbon-dynamic-color', 'bell-dynamic-color', 'camera-dynamic-premium', 'picture-dynamic-premium'],
              'xv': ['crown-dynamic-color', 'ribbon-dynamic-color', 'notify-heart-front-color', 'camera-dynamic-premium', 'bell-dynamic-color'],
-             'restaurante': ['fire-front-color', 'money-front-color', 'notify-heart-front-color', 'calendar-dynamic-color', 'megaphone-dynamic-color'],
+             'restaurante': ['fire-front-color', 'money-front-color', 'notify-heart-front-color', 'calendar-dynamic-premium', 'megaphone-dynamic-color'],
              'bts': ['camera-dynamic-premium', 'picture-dynamic-premium', 'flag-dynamic-color', 'fire-front-color', 'megaphone-dynamic-color'],
-             'general': ['fire-front-color', 'megaphone-dynamic-color', 'notify-heart-front-color', 'flag-dynamic-color', 'money-front-color']}
+             'general': ['fire-front-color', 'megaphone-dynamic-color', 'notify-heart-front-color', 'flag-dynamic-color', 'money-front-color'],
+             'evento': ['megaphone-dynamic-color', 'calendar-dynamic-premium', 'fire-front-color', 'notify-heart-front-color', 'flag-dynamic-color']}
 # «modo error»: cuando dice algo malo o se equivoca, el plano se pone en gris (con un sonido de apagón)
 _ERROR = {'es': 'malo mala error errores equivoque equivocamos equivocacion peor fracaso fracase desastre terrible horrible fatal falle fallo perdon ups',
           'en': 'bad worst wrong mistake mistakes fail failed failure terrible horrible disaster oops sorry',
@@ -217,7 +226,10 @@ STOP = set(('a al ante con contra de del desde el en entre es esta este esto hac
             'sobre su sus te tu tus un una unas uno unos y ya yo él ella ellos ellas eso esa ese aqui aquí alli allí como cómo cuando donde ser estar hay tiene tienen '
             'the a an and or of to in on at for with from by is are was were be been it its this that these those you your we our they their he she his her i me my '
             'so but if then than as just about into over up out do does did have has had will would can could not no yes very really '
-            'o os um uma e é de da do das dos em no na nos nas para por com sem que se seu sua'))
+            'o os um uma e é de da do das dos em no na nos nas para por com sem que se seu sua').split())   # v5.5.4: .split() (era un set de LETRAS)
+CIFRA_COLA = {'de', 'del', 'la', 'el', 'los', 'las', 'y', 'en', 'a', 'al', 'the', 'of', 'and', 'to', 'in', 'da', 'do', 'das', 'dos', 'e', 'em', 'des', 'du', 'le', 'les'}
+MESES = set('''enero febrero marzo abril mayo junio julio agosto septiembre setiembre octubre noviembre diciembre january february march april may june july
+august september october november december janeiro fevereiro marco maio junho julho setembro outubro novembro dezembro'''.split())
 NUM_PALABRAS = {
     'cero': 0, 'uno': 1, 'una': 1, 'un': 1, 'dos': 2, 'tres': 3, 'cuatro': 4, 'cinco': 5, 'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9, 'diez': 10,
     'once': 11, 'doce': 12, 'trece': 13, 'catorce': 14, 'quince': 15, 'veinte': 20, 'treinta': 30, 'cuarenta': 40, 'cincuenta': 50, 'cien': 100, 'mil': 1000,
@@ -368,6 +380,11 @@ def candidatos(palabras, frases, pesos=None, idioma='es'):
                     unidad.append(ws[k].strip(' .,;:!?'))
                     if len(unidad) == 1 and len(lw[k]) > 3:
                         break
+                while unidad and plegar(unidad[-1]) in CIFRA_COLA:
+                    unidad.pop()                                       # v5.5.4: «10 DE LA» no es una unidad
+                sig = lw[j + 1:j + 4]
+                if (j > 0 and lw[j - 1] in ('las', 'la', 'a', 'at')) or (sig[:1] == ['de'] and len(sig) > 1 and (sig[1] in MESES or sig[1:2] == ['la'])):
+                    continue                                           # v5.5.4: una hora («a las 10», «10 de la mañana») o una fecha (la escena de la fecha)
                 if not unidad and not re.search(r'[%$€£]', w):
                     continue
                 out.append({'tipo': 'cifra', 'i': idx[j], 'fin_i': idx[min(j + len(unidad), len(idx) - 1)], 'frase': fi, 'puntos': 6.0,
@@ -382,8 +399,9 @@ def candidatos(palabras, frases, pesos=None, idioma='es'):
                     k += 1
                 nombre = ' '.join(w.strip(' .,;:!?') for w in ws[j:k + 1])
                 prev = lw[j - 1] if j > 0 else ''
+                presencia = any(lw[m] in PRESENCIA for m in range(max(0, j - 10), j))   # v5.5.3: «estamos en…», «desde las 10 en…», «será en…»
                 out.append({'tipo': 'lugar' if prev in ('en', 'on', 'in', 'at', 'de', 'em', 'near', 'cerca') else 'nombre', 'i': idx[j], 'fin_i': idx[k],
-                            'frase': fi, 'puntos': 4.0 + (k - j), 'texto': nombre})
+                            'frase': fi, 'puntos': 4.0 + (k - j), 'texto': nombre, 'presencia': presencia})
                 j = k + 1
             else:
                 j += 1
@@ -543,9 +561,18 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
     duracion = float(duracion or (float(palabras[-1]['end']) + 1.0 if palabras else 0.0))
     lang = idioma_de(idioma)
     puntos_genero = {}
+    perfil = {}
     if genero in (None, '', 'auto'):
         genero, puntos_genero = detectar_genero(palabras)
-    rng = random.Random(semilla_de(video, palabras, semilla))
+        try:                                                          # v5.5.2: la IA local entiende de qué va el video (categoría, tono, iconos)
+            import ia_texto
+            perfil = ia_texto.perfil([_txt(w) for w in palabras], idioma) or {}
+            g_ia = GENERO_DE_CATEGORIA.get(perfil.get('categoria') or '')
+            if g_ia and genero in ('general', 'auto'):                # las palabras clave no lo vieron claro y la IA sí: manda la IA
+                genero = g_ia
+        except Exception:
+            perfil = {}
+    rng = random.Random(semilla_de(Path(str(video or '')).name, palabras, semilla))   # (v5.5.3: llega la RUTA del video; la semilla, por su nombre)
     d = direccion(genero, rng, tema)
     g = d['genero']
     T = TEXTOS[lang]
@@ -596,7 +623,14 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
         import edicion_pro_catalogo as PC
         plegadas = [plegar(_txt(w)) for w in palabras]
         usadas = set()
+        try:
+            import catalogo_ia
+            ramas = catalogo_ia.RAMAS_DE_GENERO.get(g, catalogo_ia.RAMAS_DE_GENERO['general'])
+        except Exception:
+            ramas = None
         for i, pl in PC.por_frase(plegadas):
+            if ramas is not None and pl['rama'] not in ramas:
+                continue                                              # v5.5.3: otra rama (bodas, XV…) que no es de este video
             if pl['id'] in usadas or (len(usadas) >= max(4, int(duracion // 4)) and pl['comp'] != 'Comentario'):   # la llamada a comentar, siempre
                 continue
             a = max(0.05, st(i) - 0.12)
@@ -608,26 +642,56 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
                    'motivo': f"plantilla «{pl['id']}»", 'valores': dict(pl['props'])})
     except Exception:
         pass
+    # --- 1b3) v5.5.2 el kit de la skill (edicion_pro_kit7 + remotion/src/Kit7.tsx): lo que se CUENTA («3 razones», «5 errores», «8 lecciones»,
+    #          «7 hooks») y los conceptos («éxito», «fracaso») tienen su gráfico. Van delante, sin tapar caras ni captions (aplicar), y separados.
+    #          Los elige la IA local del menú del kit (si está), con textos e iconos de lo que se dice; si no, las reglas. Cada uno con su variante
+    #          menos usada últimamente y los colores del video (edicion_pro_kit7.vestir).
+    escenas_kit = []                  # v5.5.3: las escenas a pantalla completa del director (edicion_pro_escenas + Escenas9.tsx)
+    try:
+        import edicion_pro_kit7 as K7
+        ya = {p.get('plantilla') for p in piezas if p.get('plantilla')}
+        for m in K7.planificar([_txt(w) for w in palabras], [plegar(_txt(w)) for w in palabras], [st(i) for i in range(len(palabras))],
+                               frases, lang, video, duracion, K7.tema_de(d.get('acento')), genero=g, perfil=perfil):
+            if m['id'] in ya:                                              # (esa plantilla ya la puso la biblioteca por su frase)
+                continue
+            if m.get('pantalla'):                                         # v5.5.3: escena a pantalla completa: se coloca con las escenas (abajo)
+                escenas_kit.append(m)
+                continue
+            a = max(0.05, m['t'] - 0.15)
+            b = min(duracion - 0.1, a + m['dur'])
+            if b - a < 1.6 or not libre(a, b, sep * 0.5):
+                continue
+            poner({'pieza': 'plantilla', 'capa': 'delante', 'ini': a, 'fin': b, 'remotion': m['comp'], 'plantilla': m['id'], 'ajustar': True,
+                   'alto': m['alto'], 'motivo': f"kit de la skill «{m['id']}»", 'valores': dict(m['props'])})
+    except Exception:
+        pass
     # --- 1c) el GANCHO con Magic Mask (skill: «iconos que le rodean»): los iconos de lo que se dice (y los del estilo) giran alrededor de la
     #         cabeza; la mitad de atrás pasa por DETRÁS de la persona recortada y la de delante, por delante. aplicar() la centra en su cabeza.
     if duracion >= 6.0:
         a, b = 0.15, min(duracion - 0.5, 0.15 + ORBITA_DUR)
+        if con_captions and frases and frases[0]:
+            # v5.5.4 (pedido del usuario: «todos los temas empiezan con un hook de captions con Magic Mask»): la primera frase la dicen los captions
+            # DETRÁS de la persona (aplicar: _captions_detras, el primero que vale entra siempre) y la órbita gira justo después
+            fin0 = min(float(palabras[frases[0][-1]]['end']), 4.5)
+            detras_pref.append((float(palabras[frases[0][0]]['start']), fin0))
+            a, b = fin0 + 0.2, min(duracion - 0.5, fin0 + 0.2 + ORBITA_DUR)
         primero = [st(c['i']) for c in cands if c['tipo'] in ('cifra', 'lista', 'pais') and st(c['i']) < a + ORBITA_DUR + 0.4]
         if primero:                                                   # un dato en los primeros segundos manda: la órbita acaba antes
             b = min(b, min(primero) - 0.45 - sep * 0.4)                  # con el aire que exige libre() entre dos gráficos grandes
         a, b = _ajustar_a_corte(a, b, cortes)
         if b - a >= 1.6 and libre(a, b, 0.0):
             iconos = []
-            for c in sorted((c for c in cands if c['tipo'] == 'concepto'), key=lambda c: st(c['i'])):
+            for c in sorted((c for c in cands if c['tipo'] == 'concepto' and st(c['i']) <= max(10.0, duracion * 0.35)), key=lambda c: st(c['i'])):
                 if c['icono'] not in iconos:
                     iconos.append(c['icono'])
-            for x in ICONOS_ORBITA[g]:
+            fam = 'evento' if g == 'general' and EVENTO & {plegar(_txt(w)) for w in palabras} else g   # v5.5.3: los iconos del tipo de video
+            for x in ICONOS_ORBITA.get(fam, ICONOS_ORBITA['general']):
                 if len(iconos) >= 5:
                     break
                 if x not in iconos:
                     iconos.append(x)
             imgs = []
-            for x in [ICONO_A_3D.get(i) for i in iconos] + ORBITA_3D[g]:
+            for x in [ICONO_A_3D.get(i) for i in iconos] + ORBITA_3D.get(fam, ORBITA_3D['general']):
                 if x and x not in imgs and len(imgs) < 5:
                     imgs.append(x)
             v = {'iconos': ','.join(iconos[:5]), 'imagenes': ','.join(imgs), 'acento': d['acento'], 'colorTexto': d['colorTexto'], 'x': 50, 'y': 30, 'rx': 22, 'ry': 4.5,
@@ -644,6 +708,7 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
     iconos_usados = set()                 # una escena por concepto: «clientes» no sale dos veces en el mismo video
     paises_usados = set()                 # un mapa por país
     cada_escena = ESCENA_CADA.get(densidad, 7.5)
+    escenas_t = []                        # v5.5.3: los inicios de TODAS las escenas (se separan entre sí, no solo de la última)
 
     def escena(a, b, pieza, valores, motivo):
         """Un B-roll de motion graphics. Se alternan dos formas (la primera, la del Magic Mask): «fondo sustituido» (el fondo animado tapa la
@@ -659,9 +724,36 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
         piezas.append({'pieza': pieza, 'capa': 'detras' if con_persona else 'delante', 'ini': a, 'fin': b, 'pantalla': True, 'persona': con_persona,
                        'ajustar': con_persona, 'motivo': motivo, 'valores': valores})
         ultima_escena[0] = a
+        escenas_t.append(a)
 
     def puede_escena(a):
-        return a >= 1.2 and a - ultima_escena[0] >= cada_escena
+        return a >= 1.2 and a - ultima_escena[0] >= cada_escena and all(abs(a - x) >= cada_escena for x in escenas_t)
+
+    # v5.5.3: primero las escenas del director (lo que se cuenta ilustrado a pantalla completa: pictograma, tablero, polaroid, fecha, chat…);
+    #         las de la PRO de siempre (icono, cifra, lista, lugar) llenan los huecos, separadas de estas. Los captions bajan (edicion_pro.aplicar).
+    try:
+        import edicion_pro_escenas as ES
+        escenas_kit.sort(key=lambda m: (-ES.PRIORIDAD.get(m['fam'], 1.0), m['t']))
+        cuantos = ES.CUANTOS
+    except Exception:
+        cuantos = {}
+    n_fam = {}                                                    # v5.5.4: cuántas de cada familia (las fotos de internet, hasta 3; las demás, 1)
+    for m in escenas_kit:
+        a = max(1.2, m['t'] - 0.25)
+        b = min(duracion - 0.15, a + m['dur'])
+        try:
+            import edicion_pro_tema5_video as VI
+            b = VI.antes_del_inserto(a, b, cortes) or a                  # v5.5.3: acaba antes de tu B-roll (una toma corta entre dos cortes)
+        except Exception:
+            pass
+        if b - a < 2.0 or not all(abs(a - x) >= cada_escena for x in escenas_t) or not libre(a, b, sep * 0.5) or (cta and b >= st(cta['i']) - 0.5):
+            continue
+        if n_fam.get(m['fam'], 0) >= cuantos.get(m['fam'], 1):
+            continue
+        n_fam[m['fam']] = n_fam.get(m['fam'], 0) + 1
+        poner({'pieza': 'plantilla', 'capa': 'fondo', 'pantalla': True, 'escena_mg': True, 'ini': round(a, 3), 'fin': round(b, 3), 'remotion': m['comp'],
+               'plantilla': m['id'], 'motivo': f"escena a pantalla completa «{m['fam']}»", 'valores': dict(m['props'])})
+        escenas_t.append(a)
 
     for c in orden:
         if c['tipo'] in ('cta', 'pareja', 'presentacion') and not (c['tipo'] == 'presentacion' and g not in ('boda', 'xv')):
@@ -740,6 +832,8 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
             ultima_escena[0] = a
         elif c['tipo'] == 'lugar' and (plegar(c['texto']) in paises() or plegar(c['texto']).replace(' ', '') in paises()):
             continue                                                  # un país ya tiene su mapa
+        elif c['tipo'] == 'lugar' and not c.get('presencia'):
+            continue                                                  # v5.5.3: «una beca en Europa» no es dónde se está
         elif c['tipo'] == 'lugar' and puede_escena(a) and (titulares >= 1 or con_captions):
             escena(a, b, 'icono', {'icono': 'pin', 'texto': c['texto'], 'kicker': T['ubicacion'], 'fuente': d['fuenteTitular'] if d['fuenteTitular'] != 'mono' else 'grotesk',
                                    'acento': d['acento'], 'colorTexto': d['colorTexto'], 'escala': 1.0, 'x': 50, 'y': Y_ESCENA['icono'] if vertical else 42,
@@ -865,6 +959,6 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
     for p in piezas:
         cuenta[p['pieza']] = cuenta.get(p['pieza'], 0) + 1
     resumen = ', '.join(f'{n} {k}' for k, n in sorted(cuenta.items()))
-    return {'version': 1, 'genero': g, 'genero_puntos': puntos_genero, 'idioma': lang, 'direccion': d, 'duracion': duracion,
+    return {'version': 1, 'genero': g, 'genero_puntos': puntos_genero, 'perfil': perfil, 'idioma': lang, 'direccion': d, 'duracion': duracion,
             'piezas': piezas, 'detras_pref': [(round(a, 3), round(b, 3)) for a, b in detras_pref], 'gris': gris,
             'resumen': f'estilo {g}: {resumen}' if piezas else f'estilo {g}: sin gráficos'}

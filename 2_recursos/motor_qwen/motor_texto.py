@@ -349,6 +349,10 @@ def analizar_con(tok, modelo, repo, dispositivo, entrada, salida):
     datos = json.loads(open(entrada, encoding='utf-8').read())
     if datos.get('modo') == 'escenas':                       # v5.4.51: el director de escenas del Tema 5
         return analizar_escenas(tok, modelo, repo, dispositivo, datos, salida)
+    if datos.get('modo') == 'motions':                       # v5.5.2: el director de motions del kit de la skill (cualquier tema)
+        return analizar_motions(tok, modelo, repo, dispositivo, datos, salida)
+    if datos.get('modo') == 'perfil':                        # v5.5.2: de qué va el video (categoría, tono, iconos)
+        return analizar_perfil(tok, modelo, repo, dispositivo, datos, salida)
     palabras = [str(p) for p in datos.get('palabras') or []]
     idioma = IDIOMAS.get(str(datos.get('idioma') or 'es')[:2], 'el idioma del texto')
     codigo = str(datos.get('idioma') or '')[:2]
@@ -505,6 +509,123 @@ def analizar_escenas(tok, modelo, repo, dispositivo, datos, salida):
         decir('PROGRESO', f'{min(1.0, (j + len(lote)) / max(1, len(tandas))):.3f}')
     with open(salida, 'w', encoding='utf-8') as f:
         json.dump({'modelo': repo, 'segundos': round(time.time() - t0, 1), 'escenas': escenas}, f, ensure_ascii=False)
+    decir('LISTO', salida)
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+# v5.5.2: el DIRECTOR DE MOTIONS (modo 'motions'), para el kit de la skill (1_codigo/edicion_pro_kit7.py + remotion/src/Kit7.tsx). Recibe las frases
+# (B1, B2…), el MENÚ de motions (qué es cada uno, cuándo va y qué datos lleva: lo manda el programa, así crece sin tocar este archivo) y los iconos
+# que existen, y elige los POCOS momentos que merecen un motion, con sus textos copiados de lo que se dice. El programa valida todo después.
+# in.json: {"modo": "motions", "idioma": "es", "bloques": [...], "menu": {"lista": ["cuándo", "datos"], ...}, "iconos": ["light_bulb", ...]}
+# out.json: {"motions": [{"b", "motion", "datos", "ancla"}]}
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+def sistema_motions(menu, iconos):
+    lineas = '\n'.join(f'  "{k}": {v[0]}. Datos: {v[1]}' for k, v in menu.items())
+    return (
+        'Eres el director de motion graphics de reels virales. Recibes las frases de un vídeo, numeradas (B1, B2…). Elige las POCAS frases que '
+        'merecen un motion del menú y rellena sus datos. Es mejor no poner nada que poner algo que no encaja.\n'
+        'Reglas estrictas: (1) los textos se COPIAN de lo que se dice en esa frase o en la siguiente; NUNCA inventes números, palabras ni datos; '
+        '(2) un motion de cada tipo como mucho y nunca en dos frases seguidas; (3) textos cortos (1–4 palabras); (4) "ancla": la palabra EXACTA '
+        'de la frase en la que debe aparecer (la del número o la clave); (5) "icono" solo de esta lista: ' + ', '.join(iconos[:120]) + '.\n'
+        'Menú:\n' + lineas + '\n'
+        'Devuelve SOLO un JSON: {"motions": [{"b": 2, "motion": "lista", "datos": {...}, "ancla": "razones"}]}\n'
+        'Ejemplo. Entrada:\nB1: Te voy a dar 3 razones para empezar hoy\nB2: la primera es la constancia\nB3: el éxito no es suerte\n'
+        'B4: no necesitas motivación, necesitas disciplina\n'
+        'Salida:\n{"motions": [{"b": 1, "motion": "lista", "datos": {"n": 3}, "ancla": "razones"}, '
+        '{"b": 3, "motion": "concepto", "datos": {"palabra": "éxito", "tendencia": "sube", "icono": "gem_stone"}, "ancla": "éxito"}, '
+        '{"b": 4, "motion": "mixto", "datos": {"linea1": "no necesitas motivación,", "linea2": "necesitas disciplina", "clave": "disciplina"}, "ancla": "disciplina"}]}'
+        + (('\nEjemplo 2 (v5.5.3, escenas a pantalla completa: ilustran lo que se cuenta). Entrada:\nB1: soy editor y trabajo todo el día\n'
+            'B2: al principio mi jefe me gritaba\nB3: el 17 de octubre lanzo mi curso\nB4: me encanta esto\nB5: todo está conectado: ideas, equipo y clientes\n'
+            'B6: hay que seguir\nB7: muchos me mandan un mensaje preguntando el precio\n'
+            'Salida:\n{"motions": [{"b": 1, "motion": "pictograma", "datos": {"pose": "trabajando", "texto": "editor"}, "ancla": "editor"}, '
+            '{"b": 3, "motion": "fecha", "datos": {"dia": 17, "mes": "octubre", "nota": "lanzo mi curso"}, "ancla": "17"}, '
+            '{"b": 5, "motion": "tablero", "datos": {"titulo": "conectado", "items": ["ideas", "equipo", "clientes"]}, "ancla": "conectado"}, '
+            '{"b": 7, "motion": "chat", "datos": {"mensaje": "preguntando el precio"}, "ancla": "mensaje"}]}')
+           if 'pictograma' in menu else '')
+    )
+
+
+def analizar_motions(tok, modelo, repo, dispositivo, datos, salida):
+    import torch
+    t0 = time.time()
+    bloques = [str(b) for b in datos.get('bloques') or []]
+    idioma = IDIOMAS.get(str(datos.get('idioma') or 'es')[:2], 'el idioma del texto')
+    menu = {str(k): list(v) for k, v in (datos.get('menu') or {}).items() if isinstance(v, (list, tuple)) and len(v) >= 2}
+    sistema = sistema_motions(menu, [str(x) for x in datos.get('iconos') or []])
+    tandas = [(k, bloques[k:k + BLOQUES_POR_CONSULTA]) for k in range(0, len(bloques), BLOQUES_POR_CONSULTA)]
+    motions = []
+    decir('PROGRESO', '0.0')
+    for j in range(0, len(tandas), LOTE):
+        lote = tandas[j:j + LOTE]
+        mensajes = []
+        for desde, trozo in lote:
+            contexto = str(datos.get('contexto') or '').strip()                # v5.5.2: de qué va el video (ia_texto.perfil)
+            usuario = f'Idioma: {idioma}.\n' + (f'El vídeo trata de: {contexto}.\n' if contexto else '') + '\n'.join(f'B{n + 1}: {t}' for n, t in enumerate(trozo))
+            conversacion = [{'role': 'system', 'content': sistema}, {'role': 'user', 'content': usuario}]
+            try:
+                texto = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+            except TypeError:
+                texto = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True)
+            mensajes.append(texto)
+        entradas = tok(mensajes, return_tensors='pt', padding=True).to(modelo.device)
+        with torch.inference_mode():
+            out = modelo.generate(**entradas, max_new_tokens=700, do_sample=False, pad_token_id=tok.pad_token_id or tok.eos_token_id)
+        for (desde, trozo), fila in zip(lote, out):
+            respuesta = tok.decode(fila[entradas['input_ids'].shape[1]:], skip_special_tokens=True)
+            if os.environ.get('CINECAPTIONS_DEPURAR_IA'):
+                sys.stderr.write('RESPUESTA MOTIONS:\n' + respuesta + '\n')
+            for e in (leer_json(respuesta).get('motions') or []):
+                try:
+                    b = int(e.get('b')) - 1
+                    tipo = str(e.get('motion') or '')
+                except Exception:
+                    continue
+                if 0 <= b < len(trozo) and tipo in menu:
+                    motions.append({'b': desde + b, 'motion': tipo, 'datos': e.get('datos') if isinstance(e.get('datos'), dict) else {},
+                                    'ancla': str(e.get('ancla') or '')[:40]})
+        decir('PROGRESO', f'{min(1.0, (j + len(lote)) / max(1, len(tandas))):.3f}')
+    with open(salida, 'w', encoding='utf-8') as f:
+        json.dump({'modelo': repo, 'segundos': round(time.time() - t0, 1), 'motions': motions}, f, ensure_ascii=False)
+    decir('LISTO', salida)
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+# v5.5.2: el PERFIL del video (modo 'perfil'): de qué va (categoría), cómo suena (tono) y qué iconos le van. La edición elige con esto el tipo de
+# video, los motions, los iconos y los colores. in.json: {"modo": "perfil", "idioma", "texto", "categorias": [...], "tonos": [...], "iconos": [...]}
+# out.json: {"perfil": {"categoria", "subtema", "tono", "iconos": [...], "publico"}}
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+def analizar_perfil(tok, modelo, repo, dispositivo, datos, salida):
+    import torch
+    t0 = time.time()
+    texto = str(datos.get('texto') or '')[:6000]
+    cats = [str(x) for x in datos.get('categorias') or []]
+    tonos = [str(x) for x in datos.get('tonos') or []]
+    iconos = [str(x) for x in datos.get('iconos') or []]
+    sistema = ('Eres editor de vídeo. Lee la transcripción de un vídeo corto y di de qué va, para elegir sus gráficos, iconos y colores.\n'
+               f'"categoria": UNA de: {", ".join(cats)}.\n"tono": UNO de: {", ".join(tonos)}.\n'
+               f'"iconos": 3 a 6 iconos que encajan con el tema, SOLO de esta lista: {", ".join(iconos[:120])}.\n'
+               '"subtema": 1–4 palabras (p. ej. «recetas fáciles», «boda en la playa»). "publico": a quién habla, 1–4 palabras.\n'
+               'Devuelve SOLO un JSON: {"categoria": "...", "subtema": "...", "tono": "...", "iconos": ["..."], "publico": "..."}')
+    conversacion = [{'role': 'system', 'content': sistema}, {'role': 'user', 'content': texto}]
+    try:
+        plantilla = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+    except TypeError:
+        plantilla = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True)
+    entradas = tok([plantilla], return_tensors='pt').to(modelo.device)
+    with torch.inference_mode():
+        out = modelo.generate(**entradas, max_new_tokens=220, do_sample=False, pad_token_id=tok.pad_token_id or tok.eos_token_id)
+    respuesta = tok.decode(out[0][entradas['input_ids'].shape[1]:], skip_special_tokens=True)
+    if os.environ.get('CINECAPTIONS_DEPURAR_IA'):
+        sys.stderr.write('RESPUESTA PERFIL:\n' + respuesta + '\n')
+    r = leer_json(respuesta)
+    perfil = {'categoria': str(r.get('categoria') or ''), 'subtema': str(r.get('subtema') or '')[:40], 'tono': str(r.get('tono') or ''),
+              'iconos': [str(x) for x in (r.get('iconos') or []) if str(x) in iconos][:6], 'publico': str(r.get('publico') or '')[:40]}
+    if perfil['categoria'] not in cats:
+        perfil['categoria'] = ''
+    if perfil['tono'] not in tonos:
+        perfil['tono'] = ''
+    with open(salida, 'w', encoding='utf-8') as f:
+        json.dump({'modelo': repo, 'segundos': round(time.time() - t0, 1), 'perfil': perfil}, f, ensure_ascii=False)
     decir('LISTO', salida)
 
 

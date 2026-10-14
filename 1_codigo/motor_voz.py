@@ -207,6 +207,17 @@ def asegurar_listo():
     return info
 
 
+def modelo_texto(info=None):
+    """v5.5.3: la IA de texto más grande que haya: 4B si ya está descargada (aunque listo.json diga 1.7B, p. ej. tras cambiar de GPU); si no, la
+    de listo.json. v5.5.4: la 4B solo si CABE en lo que de verdad queda libre (`vram_para_ia_gb` ≥ 10,5 GB: con Resolve abierto en una GPU de
+    16 GB no cabe y se va a la 1.7B, que sí; antes la 4B se desbordaba a la RAM y tardaba más de 100 s)."""
+    if modelo_descargado('Qwen/Qwen3-4B-Instruct-2507', 3_000_000_000):
+        if not vram_total_gb() or vram_para_ia_gb() >= 10.5 or not modelo_descargado('Qwen/Qwen3-1.7B', 1_000_000_000):
+            return '4B'
+        return '1.7B'
+    return ((info if info is not None else info_instalado()) or {}).get('modelo_texto') or 'auto'
+
+
 def soporta(codigo_idioma):
     return (codigo_idioma or '').lower() in ALINEABLES
 
@@ -325,13 +336,76 @@ def vram_total_gb():
     return _VRAM['gb']
 
 
+_LIBRE = {'t': 0.0, 'gb': None}
+_RESOLVE = {'t': 0.0, 'si': True}
+RESERVA_RESOLVE_GB = 7.0      # lo que Resolve necesita para un timeline vertical con Fusion y Magic Mask (medido: 8–10 GB con el proyecto abierto)
+
+
+def vram_libre_gb():
+    """VRAM libre AHORA en la primera GPU NVIDIA (lo que dejan Resolve, el navegador…), memorizada 5 s. None si no se sabe."""
+    if time.time() - _LIBRE['t'] < 5.0:
+        return _LIBRE['gb']
+    gb = None
+    try:
+        r = subprocess.run(['nvidia-smi', '--query-gpu=memory.free', '--format=csv,noheader,nounits'],
+                           capture_output=True, text=True, timeout=8, creationflags=SIN_VENTANA)
+        vals = [float(x) / 1024.0 for x in r.stdout.split() if x.strip().replace('.', '', 1).isdigit()]
+        gb = vals[0] if vals else None
+    except Exception:
+        gb = None
+    _LIBRE.update(t=time.time(), gb=gb)
+    return gb
+
+
+def resolve_abierto():
+    """¿Está DaVinci Resolve abierto? (memorizado 5 s; si no se sabe, sí: entonces su VRAM ya sale en lo que está ocupado)."""
+    if time.time() - _RESOLVE['t'] < 5.0:
+        return _RESOLVE['si']
+    si = True
+    try:
+        if sys.platform.startswith('win'):
+            r = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq Resolve.exe', '/NH'], capture_output=True, text=True, timeout=8,
+                               creationflags=SIN_VENTANA)
+            si = 'resolve.exe' in (r.stdout or '').lower()
+    except Exception:
+        si = True
+    _RESOLVE.update(t=time.time(), si=si)
+    return si
+
+
+def vram_para_ia_gb():
+    """v5.5.4: la VRAM que de verdad pueden usar las IA locales: la libre AHORA + la que ya ocupan nuestros motores (se pueden soltar), menos la
+    que Resolve va a necesitar si aún no está abierto (el GO lo abre). Antes se miraba la VRAM TOTAL (16 GB = «caben la voz y la IA 4B a la
+    vez») con Resolve ocupando 8–10 GB: la IA de texto tardaba más de 100 s y fallaba, Resolve reproducía a tirones y llegó a cerrarse."""
+    total = vram_total_gb()
+    if not total:
+        return 0.0
+    libre = vram_libre_gb()
+    if libre is None:
+        return total
+    s = _SRV_VOZ.get('s')
+    if s is not None and s.vivo():
+        libre += 6.0
+    try:
+        ia = sys.modules.get('ia_texto')
+        t = ia._SRV.get('s') if ia is not None else None
+        if t is not None and t.vivo():
+            libre += 9.5 if str(t.modelo).upper().startswith('4B') else 4.0
+    except Exception:
+        pass
+    if not resolve_abierto():
+        libre -= RESERVA_RESOLVE_GB
+    return max(0.0, min(total, libre))
+
+
 def modo_gpu():
-    """Como se reparte la GPU entre la voz (~6 GB) y la IA de texto (~9,5 GB):
+    """Como se reparte la GPU entre la voz (~6 GB) y la IA de texto (~9,5 GB), con lo que de verdad queda libre (`vram_para_ia_gb`, v5.5.4):
       'residente'  (>= 22 GB)   las dos cargadas a la vez;
-      'solapado'   (>= 14,5 GB) la IA de texto se carga MIENTRAS la voz trabaja y la voz se descarga al terminar;
-      'secuencial' (el resto)   de una en una, como hasta la v5.2."""
-    gb = vram_total_gb()
-    return 'residente' if gb >= 22 else 'solapado' if gb >= 14.5 else 'secuencial'
+      'solapado'   (>= 16 GB)   la IA de texto se carga MIENTRAS la voz trabaja y la voz se descarga al terminar;
+      'secuencial' (el resto)   de una en una, como hasta la v5.2.
+    Llama a nvidia-smi: nunca desde el hilo de la interfaz."""
+    gb = vram_para_ia_gb()
+    return 'residente' if gb >= 22 else 'solapado' if gb >= 16.0 else 'secuencial'
 
 
 class _ServidorVoz:

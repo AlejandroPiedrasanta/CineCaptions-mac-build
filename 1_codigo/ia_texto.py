@@ -189,7 +189,7 @@ def precargar():
             s = _SRV['s']
             if s is None or not s.vivo():
                 info = motor_voz.info_instalado() or {}
-                _SRV['s'] = _Servidor(info.get('modelo_texto') or 'auto')
+                _SRV['s'] = _Servidor(motor_voz.modelo_texto(info))
             return True
         finally:
             _LOCK.release()
@@ -279,7 +279,7 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
     textos = [str(p.get('word', '')).strip() for p in palabras]
     clave = None
     try:
-        clave = _clave_cache(textos, idioma, modo, (motor_voz.info_instalado() or {}).get('modelo_texto') or 'auto')
+        clave = _clave_cache(textos, idioma, modo, motor_voz.modelo_texto())
         guardado = _leer_cache(clave)
         if guardado is not None:
             r0 = _reg()
@@ -304,7 +304,7 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
 
     try:
         info = motor_voz.info_instalado() or {}
-        modelo = info.get('modelo_texto') or 'auto'
+        modelo = motor_voz.modelo_texto(info)
         r = _reg()
         if _FALLOS['n'] >= FALLOS_SEGUIDOS_MAX:
             # v5.11: dos fallos seguidos = no se vuelve a perder tiempo con la IA de texto en esta sesión (motor de reglas); reiniciar la reactiva
@@ -368,7 +368,7 @@ def escenas(bloques, idioma='es', estado=None):
     if not bloques or not disponible() or _FALLOS['n'] >= FALLOS_SEGUIDOS_MAX:
         return []
     textos = [str(b) for b in bloques]
-    modelo = (motor_voz.info_instalado() or {}).get('modelo_texto') or 'auto'
+    modelo = motor_voz.modelo_texto()
     clave = _clave_cache(textos, idioma, 'escenas', modelo)
     archivo = _carpeta_cache() / ('escenas_' + clave + '.json')
     try:
@@ -411,6 +411,140 @@ def escenas(bloques, idioma='es', estado=None):
         if r:
             r.info(f"Director de escenas (IA): {len(datos.get('escenas') or [])} propuestas en {datos.get('segundos')} s.", 'IA de texto')
         return datos.get('escenas') or []
+    except Exception:
+        return []
+    finally:
+        for f in (entrada, salida):
+            try:
+                os.unlink(f)
+            except OSError:
+                pass
+
+
+CATEGORIAS = ('boda', 'xv', 'fotografia', 'inmobiliaria', 'restaurante', 'cocina', 'negocios', 'finanzas', 'marketing', 'fitness', 'salud', 'belleza',
+              'moda', 'viajes', 'tecnologia', 'educacion', 'motivacion', 'humor', 'familia', 'deporte', 'musica', 'otro')
+TONOS = ('elegante', 'energico', 'divertido', 'calmado', 'serio', 'inspirador', 'tecnico')
+
+
+def perfil(palabras_texto, idioma='es', estado=None):
+    """v5.5.2: de qué va el video, para la edición: {'categoria', 'subtema', 'tono', 'iconos', 'publico'} (motor_texto, modo 'perfil'), o {} si no hay IA.
+    Con caché por huella del texto. La categoría y el tono son de CATEGORIAS / TONOS; los iconos, de los animados que existen."""
+    texto = ' '.join(str(w) for w in palabras_texto or []).strip()
+    if len(texto.split()) < 8 or not disponible() or _FALLOS['n'] >= FALLOS_SEGUIDOS_MAX:
+        return {}
+    import edicion_pro_kit7 as K7
+    iconos = K7.iconos_disponibles()
+    modelo = motor_voz.modelo_texto()
+    clave = _clave_cache([texto[:6000]], idioma, 'perfil', modelo)
+    archivo = _carpeta_cache() / ('perfil_' + clave + '.json')
+    try:
+        import archivos_seguros
+        datos = archivos_seguros.leer_json(archivo, None)
+        if isinstance(datos, dict) and isinstance(datos.get('perfil'), dict):
+            return datos['perfil']
+    except Exception:
+        pass
+    fd, entrada = tempfile.mkstemp(prefix='cinecaptions_perfil_', suffix='.json')
+    os.close(fd)
+    salida = entrada[:-5] + '.out.json'
+    Path(entrada).write_text(json.dumps({'modo': 'perfil', 'idioma': idioma, 'texto': texto[:6000], 'categorias': list(CATEGORIAS), 'tonos': list(TONOS),
+                                         'iconos': iconos}, ensure_ascii=False), encoding='utf-8')
+    try:
+        with _LOCK:
+            s = _SRV['s']
+            if s is None or not s.vivo():
+                if estado:
+                    estado('Cargando la IA de texto para entender el video…')
+                s = _Servidor(_PREFERIDO['m'] or modelo)
+                _SRV['s'] = s
+            try:
+                ok, texto_r = s.pedir(entrada, salida, lambda tipo, t: estado(t) if (estado and tipo == 'ESTADO') else None, timeout=300)
+            except Exception as e:
+                ok, texto_r = False, f'{type(e).__name__}: {e}'
+            if not ok:
+                s.cerrar()
+                _SRV['s'] = None
+        if not ok:
+            r = _reg()
+            if r:
+                r.aviso(f'La IA no pudo entender de qué va el video: {str(texto_r)[:200]}; sigo sin su perfil.', 'IA de texto')
+            return {}
+        datos = json.loads(Path(salida).read_text(encoding='utf-8'))
+        p = datos.get('perfil') or {}
+        try:
+            import archivos_seguros
+            archivos_seguros.escribir_json(archivo, {'perfil': p, 'segundos': datos.get('segundos')})
+        except Exception:
+            pass
+        r = _reg()
+        if r and p:
+            r.info(f"La IA entiende el video: {p.get('categoria') or '—'} · {p.get('subtema') or '—'} · tono {p.get('tono') or '—'} "
+                   f"({datos.get('segundos')} s).", 'IA de texto')
+        return p
+    except Exception:
+        return {}
+    finally:
+        for f in (entrada, salida):
+            try:
+                os.unlink(f)
+            except OSError:
+                pass
+
+
+def motions(bloques, idioma='es', estado=None, genero='general', contexto='', solo=None):
+    """v5.5.2, el director de motions del kit de la skill: la IA local lee las frases y elige del MENÚ (edicion_pro_kit7.MOTIONS) qué motion poner,
+    dónde y con qué textos e iconos → [{'b', 'motion', 'datos', 'ancla'}] (motor_texto, modo 'motions'). [] si no hay IA o falla (siguen las reglas).
+    edicion_pro_kit7.desde_ia lo valida. Con caché por huella (frases + menú), como escenas()."""
+    if not bloques or not disponible() or _FALLOS['n'] >= FALLOS_SEGUIDOS_MAX:
+        return []
+    import edicion_pro_kit7 as K7
+    textos = [str(b) for b in bloques]
+    menu = K7.menu_para_ia(genero, solo)                                # el kit + las escenas + las plantillas de este tipo de video (v5.5.3: `solo` = esas familias)
+    iconos = K7.iconos_disponibles()
+    modelo = motor_voz.modelo_texto()
+    clave = _clave_cache(textos + [json.dumps(menu, ensure_ascii=False, sort_keys=True), str(contexto or '')], idioma, 'motions', modelo)
+    archivo = _carpeta_cache() / ('motions_' + clave + '.json')
+    try:
+        import archivos_seguros
+        datos = archivos_seguros.leer_json(archivo, None)
+        if isinstance(datos, dict) and isinstance(datos.get('motions'), list):
+            return datos['motions']
+    except Exception:
+        pass
+    fd, entrada = tempfile.mkstemp(prefix='cinecaptions_motions_', suffix='.json')
+    os.close(fd)
+    salida = entrada[:-5] + '.out.json'
+    Path(entrada).write_text(json.dumps({'modo': 'motions', 'idioma': idioma, 'bloques': textos, 'menu': menu, 'iconos': iconos, 'contexto': str(contexto or '')},
+                                        ensure_ascii=False), encoding='utf-8')
+    try:
+        with _LOCK:
+            s = _SRV['s']
+            if s is None or not s.vivo():
+                if estado:
+                    estado('Cargando la IA de texto para elegir los motions…')
+                s = _Servidor(_PREFERIDO['m'] or modelo)
+                _SRV['s'] = s
+            try:
+                ok, texto = s.pedir(entrada, salida, lambda tipo, t: estado(t) if (estado and tipo == 'ESTADO') else None, timeout=600)
+            except Exception as e:
+                ok, texto = False, f'{type(e).__name__}: {e}'
+            if not ok:
+                s.cerrar()
+                _SRV['s'] = None
+        r = _reg()
+        if not ok:
+            if r:
+                r.aviso(f'El director de motions (IA) falló: {str(texto)[:200]}; sigo con las reglas.', 'IA de texto')
+            return []
+        datos = json.loads(Path(salida).read_text(encoding='utf-8'))
+        try:
+            import archivos_seguros
+            archivos_seguros.escribir_json(archivo, {'motions': datos.get('motions') or [], 'segundos': datos.get('segundos')})
+        except Exception:
+            pass
+        if r:
+            r.info(f"Director de motions (IA): {len(datos.get('motions') or [])} propuestas en {datos.get('segundos')} s.", 'IA de texto')
+        return datos.get('motions') or []
     except Exception:
         return []
     finally:

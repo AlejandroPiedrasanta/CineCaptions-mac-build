@@ -11,6 +11,10 @@ export const FAMILIA = {
   mono: "'CCMono', Consolas, monospace",
   inter: "'CCInter', 'Segoe UI', sans-serif",
   display: "'CCDisplay', Georgia, serif",
+  mano: "'CCMano', 'Segoe Print', cursive",              // v5.5.3 escenas: Caveat (OFL)
+  maquina: "'CCMaquina', 'Courier New', monospace",       // Special Elite (Apache 2.0)
+  estarcido: "'CCEstarcido', Impact, sans-serif",         // Black Ops One (OFL)
+  condensada: "'CCCondensada', Impact, sans-serif",       // Anton (OFL)
 } as const;
 export type Familia = keyof typeof FAMILIA;
 
@@ -25,6 +29,10 @@ const FUENTES: [string, string, FontFaceDescriptors][] = [
   ['CCInter', 'fuentes/inter-500.ttf', { weight: '500' }],
   ['CCInter', 'fuentes/inter-700.ttf', { weight: '700' }],
   ['CCDisplay', 'fuentes/dmserif-i.ttf', { weight: '400', style: 'italic' }],
+  ['CCMano', 'fuentes/caveat.ttf', { weight: '400 700' }],
+  ['CCMaquina', 'fuentes/especial.ttf', { weight: '400' }],
+  ['CCEstarcido', 'fuentes/estarcido.ttf', { weight: '400' }],
+  ['CCCondensada', 'fuentes/anton.ttf', { weight: '400' }],
 ];
 let cargadas: Promise<void> | null = null;
 

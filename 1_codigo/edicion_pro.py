@@ -36,7 +36,8 @@ import edicion_pro_planificador as PL
 
 CARPETA = Path.home() / 'DaVinciSubtitles' / 'edicion_pro'
 PLAN_JSON = Path.home() / 'DaVinciSubtitles' / 'edicion_pro_plan.json'
-OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_mascara': 'auto', 'pro_sonidos': True, 'pro_ia_local': True, 'pro_variacion': 0}
+OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_mascara': 'auto', 'pro_sonidos': True, 'pro_ia_local': True, 'pro_variacion': 0,
+                        'pro_internet': True}          # v5.5.3: fotos de internet con licencia (fuentes_web) para las escenas
 NOMBRES_GENERO = {'auto': 'Automático', 'general': 'General', 'inmobiliaria': 'Inmobiliaria / venta de casas', 'boda': 'Bodas', 'xv': 'XV años',
                   'restaurante': 'Restaurantes', 'bts': 'Detrás de cámara'}
 MANIFIESTO = Path.home() / 'DaVinciSubtitles' / 'subtitles_manifest.json'
@@ -111,15 +112,48 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
     w, h, dur, _fps = medir(video)
     pesos = _pesos_ia(palabras, idioma, al_estado) if op.get('pro_ia_local') else None
     plan = PL.planificar(palabras, duracion or dur, idioma=idioma, genero=op.get('pro_genero') or 'auto', densidad=op.get('pro_densidad') or 'media',
-                         cortes=cortes, vertical=bool(h and w and h > w), pesos=pesos, semilla=int(op.get('pro_variacion') or 0), video=Path(str(video)).name)
+                         cortes=cortes, vertical=bool(h and w and h > w), pesos=pesos, semilla=int(op.get('pro_variacion') or 0), video=str(video))   # v5.5.3: la RUTA (colores y fotogramas del video para el kit y las escenas)
     plan['video'] = str(video)
     plan['opciones'] = op
     plan['idioma'] = idioma
     plan['ia_local'] = bool(pesos)
     plan['broll'] = _broll_de(palabras, duracion or dur, idioma, op, plan)
+    _referencias(plan)
+    soltar_gpu()                                     # v5.5.4: la IA ya eligió: su VRAM, para Resolve (que en ese momento está armando el timeline)
     if plan['broll']:
         plan['resumen'] = plan.get('resumen', '') + f", {len(plan['broll'])} tomas de B-roll"
     return plan
+
+
+def soltar_gpu(voz=True, texto=True):
+    """v5.5.4: descarga las IA locales (voz ~6 GB, texto 4–9,5 GB de VRAM) para que Resolve tenga la GPU entera: con ellas cargadas Resolve
+    reproducía a tirones, el Magic Mask iba lento y llegó a cerrarse (16 GB no dan para las tres cosas). Se vuelven a cargar solas si hacen falta."""
+    try:
+        if voz:
+            import motor_voz
+            motor_voz.liberar()
+        if texto:
+            import ia_texto
+            ia_texto.liberar()
+    except Exception:
+        pass
+
+
+def _referencias(plan):
+    """v5.5.3: los enlaces para buscar REFERENCIAS del tema del video en Google Imágenes y Pinterest, en el Registro (los abre el usuario, para
+    inspirarse: el programa nunca baja de ahí, esas imágenes tienen derechos; las del video salen de bancos con licencia, fuentes_web)."""
+    try:
+        import urllib.parse
+        import registro
+        pf = plan.get('perfil') or {}
+        tema = ' '.join(str(pf.get('subtema') or pf.get('categoria') or '').split())[:60]
+        if not tema:
+            return
+        q = urllib.parse.quote(tema)
+        registro.info(f'Referencias de «{tema}» para inspirarte: Google Imágenes https://www.google.com/search?tbm=isch&q={q} · '
+                      f'Pinterest https://www.pinterest.com/search/pins/?q={q}', 'edición PRO')
+    except Exception:
+        pass
 
 
 def _broll_de(palabras, duracion, idioma, op, plan):
@@ -283,16 +317,43 @@ def _fuera_de_la_cara(y, medio, caras, x0=0.0, x1=1.0):
     return min(opciones, key=lambda o: abs(o - y)) if opciones else None
 
 
-def _ajustar_posiciones(pieza, det, vertical):
+MARGEN_EMOJI = 0.07                      # el emoji de un caption de los Temas 1–4 va justo encima o debajo de su pila (fracción del alto)
+
+
+def _caja_vertical(pieza):
+    """(arriba, abajo) en fracción del alto de una pieza ya colocada (su centro `y` y su alto por la escala), o None si no se sabe."""
+    v = pieza.get('valores') or {}
+    alto = pieza.get('alto') or ALTO_PIEZA.get(pieza['pieza'])
+    if not alto and pieza.get('remotion'):
+        import edicion_pro_catalogo as PC
+        alto = PC.ALTO.get(pieza['remotion'])
+    if not alto or pieza.get('pantalla') or v.get('y') is None:
+        return None
+    y, medio = float(v['y']) / 100.0, float(alto) * float(v.get('escala', 1) or 1) / 2.0
+    return (max(0.0, y - medio), min(1.0, y + medio))
+
+
+def _obstaculos(pieza, bloques_cap, puestos):
+    """v5.5.2 (regla oficial): las cajas que una pieza de delante NO puede pisar en su tramo: los captions de los Temas 1–4 (con el sitio de su emoji)
+    y lo ya colocado delante a la vez (los captions de la PRO de los Temas 5/6 y los demás gráficos). Cajas a todo el ancho: (x0, y0, x1, y1)."""
+    a, b = pieza['ini'], pieza['fin']
+    out = [(0.0, max(0.0, c['arriba'] - MARGEN_EMOJI), 1.0, min(1.0, c['abajo'] + MARGEN_EMOJI)) for c in bloques_cap or [] if c['ini'] < b and a < c['fin']]
+    out += [(0.0, max(0.0, y0 - 0.01), 1.0, min(1.0, y1 + 0.01)) for (i, f, y0, y1) in puestos if i < b and a < f]
+    return out
+
+
+def _ajustar_posiciones(pieza, det, vertical, extra=()):
     """Coloca cada gráfico SIN TAPAR NINGUNA CARA: los de delante, encima o debajo de la cara (o a un lado en horizontal, o más pequeños); el titular
     «detrás» un poco por debajo de la coronilla (la cabeza lo tapa a él, no al revés); la infografía de una escena con «fondo sustituido»,
     detrás de la persona y encima de su cabeza (si no cabe, la escena va a pantalla completa); la órbita, con la mitad de delante por el pecho.
-    `det` ya en fracciones del timeline."""
+    `det` ya en fracciones del timeline. `extra`: otras cajas que tampoco se pisan (v5.5.2: los captions, para las piezas del kit de la skill)."""
     v = pieza['valores']
     if not det or not det.get('personas'):
-        return
+        if not extra or not vertical:
+            return
+        det = {'personas': [], 'arriba': 1.0}
     arriba = float(det['arriba']) * 100.0
-    caras = _caras(det)
+    caras = _caras(det) + [tuple(c) for c in extra]
     if pieza['pieza'] == 'orbita':                                    # centrada en el cuello: atrás pasa por detrás de la cabeza, delante por el pecho
         y0, cab_x, _alto, cab = _cabeza(det)
         ancho = max((q.get('cabeza') or {}).get('ancho', 0) for q in det['personas']) or cab * 0.6
@@ -519,7 +580,8 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
         k = e['k']
         sig = bloques[k + 1]['ini'] if k + 1 < len(bloques) else e['fin'] + 0.3
         fin = max(e['ini'] + 0.3, min(e['fin'] + 0.2, sig))           # sin tapar el bloque siguiente (ese va normal, delante)
-        cue = {'ini': e['ini'], 'fin': e['fin'], 'subir': round(e['subir'], 4), 'caras': e['caras']}
+        cue = {'ini': e['ini'], 'fin': e['fin'], 'subir': round(e['subir'], 4), 'caras': e['caras'],
+               'caja': [round(e['arriba'] - e['subir'], 4), round(e['abajo'] - e['subir'], 4)]}     # v5.5.2: dónde queda el caption (sus emojis no lo pisan)
         t = tramos[-1] if tramos else None
         if t and t['k'] == k - 1 and t['clip'] is e['clip'] and fin - t['ini'] <= TRAMO_DETRAS_MAX_S:
             t.update(fin=fin, k=k)
@@ -554,7 +616,8 @@ def _captions_sin_cara(info, video, ocupado, detras, W, H):
             continue
         yc, medio = (b['arriba'] + b['abajo']) / 2.0, (b['abajo'] - b['arriba']) / 2.0
         y = _fuera_de_la_cara(yc, medio, caras, max(0.0, min(b['xs']) - 0.2), min(1.0, max(b['xs']) + 0.2))
-        out.append({'ini': a, 'fin': z, 'subir': round(yc - y, 4) if y is not None else 0.0, 'caras': caras})
+        caja = [round(y - medio, 4), round(y + medio, 4)] if y is not None else [round(b['arriba'], 4), round(b['abajo'], 4)]
+        out.append({'ini': a, 'fin': z, 'subir': round(yc - y, 4) if y is not None else 0.0, 'caras': caras, 'caja': caja})
     return out
 
 
@@ -620,7 +683,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     usar_ia = modo_mascara in ('auto', 'ia') or (modo_mascara == 'magic' and not studio)
     video = plan.get('video') or ''
     t5 = bool(plan.get('tema5'))                     # Tema 5: la edición completa con el sistema de la skill (edicion_pro_tema5); los Text+ de GO, de respaldo
-    ligero = bool(plan.get('ligero'))                # Temas 1–4 sin la PRO: solo legibilidad, acompañantes, color y la regla de la cara (edicion_pro_temas)
+    soltar_gpu(texto=not t5)                         # v5.5.4: la GPU para Resolve y el Magic Mask (el Tema 5 aún usa la IA de texto: la suelta él al acabar)
+    ligero = bool(plan.get('ligero'))              # Temas 1–4 sin la PRO: solo legibilidad, acompañantes, color y la regla de la cara (edicion_pro_temas)
     divididas = []
     # punch-in de 1,08 en V1 alterno cuando hay saltos (pausas quitadas): lo coloca colocar_pro y las cuentas de posición ya lo tienen en cuenta
     # (antes de planificar el Tema 5: el sticker congelado y la pantalla final copian el encuadre de su clip)
@@ -680,7 +744,12 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     graficos, persona = [], []
     ventanas, forzadas = {}, set()                 # forzadas: escenas «fondo sustituido» sin sitio encima de la cabeza → pantalla completa
     decir('Edición PRO: buscando a las personas del video…')
-    for p in plan['piezas']:
+    # v5.5.2 REGLA OFICIAL (usuario): nada tapa una CARA ni un CAPTION — ni los gráficos, ni las plantillas, ni el kit, ni los emojis — y todo queda
+    # repartido. Los captions de la PRO (Temas 5/6) se colocan PRIMERO; luego cada gráfico de delante esquiva las caras, los captions de ese momento
+    # (los de los Temas 1–4 del manifiesto, con sitio para su emoji arriba o abajo) y los demás gráficos que ya estén en pantalla a la vez.
+    bloques_cap = _bloques_captions()
+    puestos = []                                                       # [(ini, fin, arriba, abajo)] de lo ya colocado delante (fracción del alto)
+    for p in sorted(plan['piezas'], key=lambda q: 0 if q['pieza'] == 'subtitulo' else 1):
         det, clip = None, None
         p['_valores0'] = dict(p['valores'])
         if hay_ia and (p.get('ajustar') or p.get('persona')):
@@ -690,19 +759,43 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             except Exception:
                 det = None
         if p.get('ajustar'):
-            _ajustar_posiciones(p, _a_timeline(det, clip, W, H), vertical)
+            extra = _obstaculos(p, bloques_cap, puestos) if p['capa'] == 'delante' and p['pieza'] not in ('subtitulo', 'orbita') else []
+            det_tl = _a_timeline(det, clip, W, H)
+            _ajustar_posiciones(p, det_tl, vertical, extra)
+            if p['pieza'] == 'subtitulo' and det_tl and det_tl.get('personas'):
+                p['_caras'] = _caras(det_tl)                           # (T5.coordinar: el acompañante bajo este caption tampoco tapa estas caras)
             if p['pieza'] == 'orbita' and p.get('remotion') and det:     # los iconos de Remotion son algo más grandes: un poco más abajo del mentón
                 p['valores']['ry'] = round(float(p['valores'].get('ry', 5.0)) + 1.3, 2)
             if p['pieza'] == 'subtitulo' and p.pop('quitar', False):  # sin sitio libre de caras: abajo y más pequeño (un caption no se quita)
                 p['valores'].update(y=84.0 if vertical else 86.0, escala=0.8)
             if t5:
                 T5.subir_detras(p)
+            caja = _caja_vertical(p)                                    # (ya en su sitio final: lo que venga después lo esquiva)
+            if caja and not p.get('quitar') and (p['capa'] == 'delante' or p['pieza'] == 'subtitulo'):
+                puestos.append((p['ini'], p['fin']) + caja)
         if p.get('persona') and p['capa'] in ('detras', 'velo'):
             k = (p['ini'], p['fin'])
             if k not in ventanas:
                 ventanas[k] = det
             if p.get('forzar_pantalla'):
                 forzadas.add(k)
+    # v5.5.3: una escena a pantalla completa del director solo tapa a QUIEN HABLA: si en ese tramo el video ya enseña otra cosa (su propio B-roll,
+    #         un cartel, una foto: nadie en cuadro en al menos 2 de 3 fotogramas), se quita: no se tapa el material del usuario
+    if hay_ia and not t5:
+        for p in plan['piezas']:
+            if not p.get('escena_mg') or p.get('quitar'):
+                continue
+            vistos = 0
+            for t in (p['ini'] + 0.3, (p['ini'] + p['fin']) / 2.0, p['fin'] - 0.3):
+                try:
+                    ruta, t_src, _c = _fuente_de(info, video, t)
+                    dd = _personas(ruta, t_src)
+                    vistos += 1 if dd and dd.get('personas') else 0
+                except Exception:
+                    vistos += 1
+            if vistos < 2:
+                p['quitar'] = True
+                p['motivo'] = p.get('motivo', '') + ' · quitada: el video ya enseña otra toma'
     if t5:
         T5.coordinar(plan['piezas'])                 # el indicador de pasos / el deslizador, debajo de los captions ya colocados
     # la persona de cada ventana (si no hay nadie, el titular queda delante y sin velo)
@@ -758,12 +851,12 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                                       preferidos=[tuple(x) for x in plan.get('detras_pref') or []], W=W, H=H)
         except Exception:
             tramos = []
-        d = plan.get('direccion') or {}
         for t in tramos:
             f0, f1 = int(round(t['ini'] * fps)), int(round(t['fin'] * fps))
             ref = max(0, min(f1 - f0 - 1, int(round((t['t_det'] - t['ini']) * fps))))
             e = {'ini': f0, 'fin': f1, 'ref': ref, 'cues': [{'ini': int(round(c['ini'] * fps)), 'fin': int(round(c['fin'] * fps)),
-                                                            'subir': round(c['subir'] * H, 1), 'caras': _caras_redondas(c.get('caras'))}
+                                                            'subir': round(c['subir'] * H, 1), 'caras': _caras_redondas(c.get('caras')),
+                                                            'caja': c.get('caja')}
                                                            for c in t['cues']]}
             if usar_magic:
                 comp = _comp_magic(PE.puntos_fusion(t['det']), ref, carpeta / f'encima_{f0}_{f1}.comp', f'CCProMagicE{f0}')
@@ -780,11 +873,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                     continue
             else:
                 continue
-            try:                                                      # un velo suave detrás de los captions: el fondo baja y la persona (encima) sale
-                e['velo'] = str(OG.construir('velo', {'forma': d.get('velo') or 'arriba', 'color': '#000000', 'intensidad': 0.32, 'fundido': 0.3},
-                                             max(0.4, t['fin'] - t['ini']), carpeta, fps=fps, ancho=W, alto=H))
-            except Exception:
-                pass
+            # v5.5.2: SIN el velo oscuro detrás de estos captions (el usuario: «los captions tienen una sombra fea»); la persona encima ya los separa
             encima.append(e)
     # el resto de los bloques de captions: ninguno tapa una cara (y colocar_pro aparta sus emojis)
     mover = []
@@ -795,11 +884,29 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             sin_cara = _captions_sin_cara(info, video, pantallas, tramos, W, H)
             for c in sin_cara:
                 mover.append({'ini': int(round(c['ini'] * fps)), 'fin': int(round(c['fin'] * fps)), 'subir': round(c['subir'] * H, 1),
-                              'caras': _caras_redondas(c['caras'])})
+                              'caras': _caras_redondas(c['caras']), 'caja': c.get('caja')})
         except Exception:
             mover, sin_cara = [], []
     else:
         sin_cara = []
+    # v5.5.3: mientras dura una escena a pantalla completa del director (Escenas9), los captions de los Temas 1–4 bajan a la parte de abajo
+    if not t5:
+        try:
+            import edicion_pro_escenas as ES
+            esc = [(p['ini'], p['fin']) for p in plan['piezas'] if p.get('escena_mg') and not p.get('quitar')]
+            for bq in (_bloques_captions() if esc else []):
+                a, z = bq['ini'], bq['fin']
+                if not any(a < e1 - 0.1 and e0 + 0.1 < z for e0, e1 in esc):
+                    continue
+                yc, medio = (bq['arriba'] + bq['abajo']) / 2.0, (bq['abajo'] - bq['arriba']) / 2.0
+                y = min(ES.Y_CAPTIONS[vertical] / 100.0, 0.97 - medio)
+                if yc >= y - 0.02:
+                    continue                                          # ya iba abajo
+                clave = (int(round(a * fps)), int(round(z * fps)))
+                mover = [m for m in mover if (m['ini'], m['fin']) != clave]
+                mover.append({'ini': clave[0], 'fin': clave[1], 'subir': round((yc - y) * H, 1), 'caras': [], 'caja': [round(y - medio, 4), round(y + medio, 4)]})
+        except Exception:
+            pass
     # iconos 3D flotando junto a los captions (en vez del emoji de ese bloque)
     iconos3d, sin_emoji = [], []
     try:
@@ -818,11 +925,14 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         sin_emoji.append([int(round(c['ini'] * fps)) - 2, int(round(c['fin'] * fps))])
     plan['_iconos3d'] = iconos3d
     color_claves = None
-    if ligero:                                       # Temas 1–4: el velo de legibilidad y los acompañantes, YA con la regla de la cara aplicada (mover)
-        try:
+    if ligero or not t5:                             # Temas 1–4: el velo de legibilidad y los acompañantes, YA con la regla de la cara aplicada (mover)
+        try:                                         # v5.5.4: también CON la Edición PRO (pedido: «algún motion debajo de los captions, aunque sea 1 o 2»)
             import edicion_pro_temas as TM
-            plan['piezas'] = list(plan.get('piezas') or []) + TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan)
-            color_claves = TM.color_claves(info, video, fps)
+            extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None if ligero else 3)
+            extra = [p for p in extra if not any(p['ini'] < t['fin'] and t['ini'] < p['fin'] for t in tramos)]   # (no bajo un caption que va detrás)
+            plan['piezas'] = list(plan.get('piezas') or []) + extra
+            if ligero:
+                color_claves = TM.color_claves(info, video, fps)
         except Exception:
             pass
     gris = [[int(round(a * fps)), int(round(b * fps))] for a, b in plan.get('gris') or []]
@@ -939,6 +1049,14 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
              'broll': [{k: v for k, v in t.items() if k != '_s'} for t in tomas], 'encima': encima, 'mover': mover, 'punch': punch,
              'sin_emoji': sin_emoji, 'gris': gris, 'gris_foco': gris_foco, 'zoom': zoom,
              'resumen': plan.get('resumen', '')}
+    try:                                                              # v5.5.2, el rectificador: riser solo en la intro, cada sonido con su porqué, una cámara
+        import rectificador
+        motivos = rectificador.pro_final(datos, fps, {'eventos': plan.get('_fx_eventos') or []})
+        if motivos:
+            plan['_rectificado'] = motivos
+            decir(f'Edición PRO: el rectificador quitó {len(motivos)} cosas que no iban')
+    except Exception:
+        pass
     try:
         import archivos_seguros
         archivos_seguros.escribir_json(PLAN_JSON, datos, indent=1)

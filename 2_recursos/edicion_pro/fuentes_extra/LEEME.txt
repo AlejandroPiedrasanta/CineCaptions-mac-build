@@ -1,0 +1,6 @@
+Fuentes de las escenas a pantalla completa (Escenas9.tsx):
+  Caveat (manuscrita) — SIL Open Font License 1.1 (Caveat-OFL.txt)
+  Special Elite (máquina de escribir) — Apache License 2.0 (SpecialElite-LICENSE.txt)
+  Black Ops One (estarcido) — SIL Open Font License 1.1 (BlackOpsOne-OFL.txt)
+  Anton (condensada) — SIL Open Font License 1.1 (Anton-OFL.txt)
+Iconos planos (glifos.json): Tabler Icons — MIT (Tabler-icons-MIT-LICENSE.txt)

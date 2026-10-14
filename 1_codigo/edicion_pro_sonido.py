@@ -31,6 +31,9 @@ CARPETAS = {                        # (v5.4.52: + «Interfaz (CC0)», los packs 
     'error': ['Power Down', 'Interfaz (CC0):error_'],
     'riser': ['Riser'],
     'hit': ['Bass Hit', 'Hit', 'Slams'],
+    # v5.5.3: las escenas a pantalla completa (edicion_pro_escenas.sonidos), con la biblioteca nueva
+    'pin': ['Pop:pin drop', 'Pop:deep pop'], 'papel': ['Papel'], 'camara': ['Cámara', 'Shutter'], 'teclado': ['Teclado y texto:typ', 'Teclado y texto'],
+    'sello': ['Hit:pro ', 'Slams'], 'grito': ['Gritos y ovación'], 'correcto': ['Correcto'], 'tijera': ['Papel', 'Click:pro '],
 }
 CHOQUE_S = 0.12                     # una textura menor no suena a menos de esto de un sonido de los captions
 _CACHE = {}
@@ -260,6 +263,13 @@ def disenar(plan, fps, rng, choques=(), cortes=(), voz_db=None):
             tex('pop', a + 1.1, 'cae el pin')
             tex('ui', a + 1.3, 'entra la bandera')
             transiciones.append((a, 'video → mapa'))
+        elif pz == 'plantilla' and p.get('escena_mg'):              # v5.5.3: escena a pantalla completa del director (Escenas9)
+            import edicion_pro_escenas as ES
+            mov(a + 0.08, grande=True, largo=0.6, que=f"entra la escena {p.get('remotion')}")
+            for t_rel, clave, que in ES.sonidos(p.get('remotion'), p.get('valores') or {}, b - a):
+                tex(clave, a + t_rel, que)
+            mov(b - 0.12, largo=0.4, que='sale la escena')
+            transiciones.append((a, 'video → escena'))
         elif pz == 'plantilla':                                     # biblioteca Remotion: cada composición con su sonido
             c = p.get('remotion')
             if c == 'Sesion':

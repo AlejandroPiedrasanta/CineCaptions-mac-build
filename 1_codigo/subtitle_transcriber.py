@@ -57,7 +57,7 @@ def register_cuda_dlls():
                             try:
                                 os.add_dll_directory(str(lib_dir))
                                 print(f'[CUDA] Registrado directorio de DLLs de Nvidia: {lib_dir}')
-                            except Exception as e:
+                            except Exception:
                                 pass
 # v5.3 (bug de siempre): si CUDA falla en la primera transcripcion (faltan las DLL de cuBLAS...) se cae a CPU, pero un segundo
 # intento con CUDA en el MISMO proceso se CUELGA para siempre dentro de ctranslate2. Se recuerda el fallo y no se vuelve a intentar.

@@ -1054,9 +1054,6 @@ class EmojiPickerWindow(QFrame):
             mios = [e['id'] for e in emojis.catalogo()
                     if e.get('grupo') == emojis.GRUPO_USUARIO
                     and e['id'] not in self._sugeridos]
-            resto = [e['id'] for e in emojis.catalogo()
-                     if e['id'] not in self._sugeridos
-                     and e.get('grupo') != emojis.GRUPO_USUARIO]
             # v5.5: Recientes arriba y el resto POR CATEGORIA (caras, gestos, objetos...), no una lista de 1 400
             recientes = [r for r in self._recientes() if r not in self._sugeridos]
             por_grupo = {}
@@ -2410,7 +2407,6 @@ class PlantillasWindow(QWidget):
             packs = [p for p in packs if plantillas.pack_permitido(p.nombre)]                 # v5.4.22: los tres temas de fábrica + los packs del usuario
             _orden_temas = list(plantillas.FABRICA)
             packs.sort(key=lambda p: _orden_temas.index(p.nombre) if p.nombre in _orden_temas else len(_orden_temas))       # Tema 1, 2, 3, 4 en ese orden (después, los del usuario)
-            quitados = len(todos) - len(packs)
             self.ocultos_lnk.hide()                   # v5.4.5: sin «Mostrar los packs quitados» (se quitó el enlace de Proyecto)
             for pack in packs:
                 cartas.append(self._carta_pack(pack))
@@ -7393,6 +7389,8 @@ class SubtitleApp(QWidget):
             menu.agregar(marca + tr(nombre), lambda c=clave: self._poner_pro_go('pro_densidad', c))
         menu.separador()
         menu.agregar('      ' + tr('Otra combinación de colores y tipografías'), lambda: self._poner_pro_go('pro_variacion', int(op.get('pro_variacion') or 0) + 1))
+        internet = bool(op.get('pro_internet', True))         # v5.5.3: fotos de internet con licencia en las escenas (fuentes_web)
+        menu.agregar(('✓  ' if internet else '      ') + tr('Fotos de internet con licencia (B-roll)'), lambda: self._poner_pro_go('pro_internet', not internet))
         menu.mostrar(QCursor.pos())
     def _alternar_sfx_go(self):
         try:
@@ -8284,9 +8282,18 @@ class SubtitleApp(QWidget):
         try:
             import colocacion
             args = getattr(self, '_go_tl_args', None)
-            if not args:
-                return False
             decir = lambda t: self.msg_queue.put(('status', t))
+            if not args:
+                # v5.5.4: GO sobre el timeline de Resolve (sin video propio) y Resolve sin timeline abierto (se reabrió tras cerrarse): en Studio se abre el
+                # proyecto más reciente con su timeline y se repite, en vez de rendirse con «No hay ningún timeline activo»
+                import resolve_mcp
+                if 'timeline activo' not in str(motivo or '').lower() or resolve_mcp.cliente() is None:
+                    return False
+                decir(tr('Resolve no tenía ningún timeline abierto: abro tu proyecto más reciente…'))
+                r = resolve_mcp.preparar_resolve(abrir=True, al_estado=decir, forzar_reciente=True)
+                if r.get('timeline'):
+                    registro.aviso(tr('Resolve no tenía ningún timeline abierto: abrí «{p}» · «{t}» y repetí.', p=r.get('proyecto') or '—', t=r.get('timeline')), 'GO · Resolve')
+                return bool(r.get('timeline'))
             if not getattr(self, '_go_tl_libre', True):
                 # v5.5.1: Studio (MCP, Windows y Mac): se repara (colgado → cierre forzado; caído → se reabre) y se vuelve a armar el proyecto con el video
                 if not self._go_reparar_resolve(decir, motivo=motivo):
@@ -8311,11 +8318,13 @@ class SubtitleApp(QWidget):
             import motor_voz
             if ajustes_ui.leer_prefs().get('precargar_al_abrir', True) is False:
                 return
-            if getattr(self, '_go_corriendo', False) or motor_voz.modo_gpu() not in ('residente', 'solapado'):
+            if getattr(self, '_go_corriendo', False):
                 return
             codigo = LANG_CODE_BY_NAME.get(self.lang_var.get(), 'es')
             def trabajo():
                 try:                                           # SOLO la voz (~6 GB): la IA de texto (~9,5 GB) se carga al pulsar GO, no con Resolve abierto y la GPU compartida
+                    if motor_voz.modo_gpu() not in ('residente', 'solapado'):
+                        return                                 # v5.5.4: con lo que de verdad queda libre (Resolve abierto = no); nvidia-smi, fuera de la interfaz
                     if motor_voz.motor_para(codigo) == 'qwen3':
                         motor_voz.precargar()
                     else:
@@ -11372,6 +11381,21 @@ class SubtitleApp(QWidget):
             registro.info('Efectos: ' + plan.get('resumen', ''), 'efectos')
         except Exception:
             registro.excepcion(origen='efectos visuales (plan)')
+    def _rectificar_planes(self):
+        """v5.5.2, el RECTIFICADOR (rectificador.py): lo de los Efectos que choca con la Edición PRO (una sola cámara; nada encima de los gráficos
+        de la PRO; el riser solo en la intro) se quita aquí, y la PRO sabe qué dejaron los Efectos (para no repetir el riser de la intro).
+        Lo quitado va al Registro con su motivo. Nunca lanza."""
+        try:
+            import rectificador
+            fx, pro = getattr(self, '_efectos_plan', None), getattr(self, '_pro_plan', None)
+            motivos = rectificador.efectos_con_pro(fx, pro) if fx and pro else []
+            if pro is not None:
+                pro['_fx_eventos'] = [e for e in (fx or {}).get('eventos') or [] if e.get('tipo') == 'sonido']
+            if motivos:
+                registro.info(tr('Rectificador: {n} ajustes para que Efectos y Edición PRO no se pisen.', n=len(motivos)) + '\n· ' + '\n· '.join(motivos[:20]),
+                              'rectificador')
+        except Exception:
+            registro.excepcion(origen='rectificador')
     def _colocar_efectos(self):
         """Pone el plan de efectos en el timeline de Resolve (tras los captions). Devuelve un texto corto para el estado, o ''."""
         plan = getattr(self, '_efectos_plan', None)
@@ -11479,6 +11503,13 @@ class SubtitleApp(QWidget):
                     self._efectos_atascado = True                       # v5.5.1: Resolve se colgó o se cayó con la Edición PRO (Magic Mask…): GO lo repara y rehace todo
                 return tr('La Edición PRO no se pudo colocar: {m}', m=str(mensaje)[:120])
             registro.info(f'Edición PRO colocada: {mensaje}', 'edición pro')
+            if plan.get('_rectificado'):                                 # v5.5.2: lo que el rectificador quitó (y por qué)
+                registro.info(tr('Rectificador: {n} ajustes en la Edición PRO.', n=len(plan['_rectificado'])) + '\n· ' + '\n· '.join(plan['_rectificado'][:20]),
+                              'rectificador')
+            if (plan.get('perfil') or {}).get('categoria'):
+                p = plan['perfil']
+                registro.info(tr('La IA entendió el video: {c} · {s} · tono {t}.', c=p.get('categoria'), s=p.get('subtema') or '—', t=p.get('tono') or '—'),
+                              'edición pro')
             return tr('con mejoras del tema') if plan.get('ligero') else tr('con Edición PRO')
         except Exception:
             registro.excepcion(origen='edición PRO (colocar)')
@@ -11523,7 +11554,8 @@ class SubtitleApp(QWidget):
             self._go_resolve_vivo_antes_de_colocar()
             ok, err = resolve_bridge.ejecutar('subtitulos')
             for _reintento in range(2):                              # v5.4.40: Resolve colgado o cerrado colocando los captions → se reinicia, se arma el timeline otra vez y se repite
-                if ok or not self._es_fallo_de_resolve(err) or not getattr(self, '_go_corriendo', False):
+                sin_tl = 'timeline activo' in str(err or '').lower()  # v5.5.4: Resolve se reabrió sin timeline: también se arregla solo
+                if ok or not (self._es_fallo_de_resolve(err) or sin_tl) or not getattr(self, '_go_corriendo', False):
                     break
                 if not self._go_rearmar_en_resolve(err):
                     break
@@ -11562,6 +11594,8 @@ class SubtitleApp(QWidget):
                     ok = False                         # el script corrió pero NO colocó nada: ya no se dice «Listo»
                     err = colocacion.frase_de_fallo(veredicto)
             self._efectos_atascado = False
+            if ok:
+                self._rectificar_planes()                                # v5.5.2: Efectos y Edición PRO revisados JUNTOS antes de tocar Resolve
             nota_fx = self._colocar_efectos() if ok else ''
             nota_fx = ', '.join(x for x in (nota_fx, self._colocar_pro() if ok else '') if x)          # v5.4.49: Edición PRO
             if ok and getattr(self, '_efectos_atascado', False) and getattr(self, '_go_corriendo', False):          # v5.4.40: Resolve se colgó con los efectos: se rehace todo
@@ -11583,6 +11617,11 @@ class SubtitleApp(QWidget):
                         self._vigilar_clic_manual(empezo, n_cues, langs)
                 except Exception:
                     pass
+            try:                                       # v5.5.4: las IA locales sueltan la GPU: Resolve reproduce con toda la VRAM (con ellas cargadas iba a tirones)
+                import edicion_pro
+                edicion_pro.soltar_gpu()
+            except Exception:
+                pass
             if ok and colocacion and getattr(self, '_go_corriendo', False):
                 try:
                     import ajustes_ui
@@ -13634,7 +13673,8 @@ class SubtitleApp(QWidget):
                                 pass
                     else:
                         self.status_var.set(tr('Listo: {n_cues} bloques ({langs}). Falta correrlo en Resolve.', n_cues=n_cues, langs=langs))
-                        messagebox.showinfo(tr('Subtítulos listos'), tr('Se generaron {n_cues} bloques ({langs}).\n\n{err}', n_cues=n_cues, langs=langs, err=err), parent=self)
+                        if not era_go:                 # v5.5.4: en GO, sin cuadro encima (el resultado y qué hacer ya salen en su pantalla y en el Registro)
+                            messagebox.showinfo(tr('Subtítulos listos'), tr('Se generaron {n_cues} bloques ({langs}).\n\n{err}', n_cues=n_cues, langs=langs, err=err), parent=self)
                 elif kind == 'detect_ready':
                     exito, err = payload
                     self._parar_reloj()

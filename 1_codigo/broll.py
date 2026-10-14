@@ -68,6 +68,27 @@ for _q, _ps in {
     'desert': 'desierto desert deserto wuste', 'waterfall': 'cascada waterfall cachoeira cascade wasserfall', 'lake': 'lago lake lac see', 'river': 'rio river fleuve fluss fiume',
     'road trip': 'carretera road estrada route', 'skyscraper': 'rascacielos skyscraper gratte-ciel wolkenkratzer grattacielo', 'bridge': 'puente bridge ponte pont brucke',
     'construction': 'construccion construction construcao chantier bau costruzione', 'doctor': 'doctor medico medecin arzt dottore hospital', 'school classroom': 'escuela school escola ecole schule scuola',
+    # v5.5.3: más temas (también los usan las fotos de internet de la Edición PRO: fuentes_web / escena FotoE)
+    'puppies': 'perritos cachorros cachorritos puppies puppy filhotes chiots welpen cuccioli', 'kittens': 'gatitos kittens kitten gatinhos chatons',
+    'malnutrition': 'desnutricion desnutrido desnutridos desnutrida malnutrition desnutricao malnutrition', 'hunger': 'hambre hunger fome faim hunger fame',
+    'healthy food': 'saludable healthy nutricion nutrition verduras vegetales vegetables legumes', 'diet': 'dieta diet dieta regime diat', 'medicine': 'medicina medicamento medicamentos medicine pastillas pills',
+    'stress': 'estres stress ansiedad anxiety', 'sleeping': 'dormir sueno sleep sleeping dormindo', 'meditation': 'meditar meditacion meditation',
+    'farm': 'granja farm fazenda ferme bauernhof fattoria', 'cows': 'vaca vacas cow cows', 'vegetable garden': 'huerto huerta', 'church': 'iglesia church igreja eglise kirche chiesa',
+    'christmas': 'navidad christmas natal noel weihnachten', 'birthday cake': 'cumpleanos pastel birthday aniversario anniversaire geburtstag compleanno',
+    'pregnancy': 'embarazo embarazada pregnancy gravidez', 'elderly couple': 'abuelo abuela abuelos ancianos elderly grandparents avos', 'students': 'estudiantes students universidad university',
+    'teacher classroom': 'maestro maestra profesor profesora teacher professor', 'stock market': 'bolsa inversion invertir acciones inversiones stocks investing investment',
+    'cryptocurrency': 'bitcoin cripto criptomonedas crypto', 'artificial intelligence': 'inteligencia artificial ai chatgpt', 'social media phone': 'redes instagram tiktok facebook youtube',
+    'coding laptop': 'programar programacion codigo coding programming', 'storm': 'tormenta storm tempestade', 'volcano': 'volcan volcano vulcao', 'space galaxy': 'espacio universo galaxia space universe galaxy',
+    'moon': 'luna moon lua lune mond', 'sea turtle': 'tortuga tortugas turtle', 'lion': 'leon leones lion', 'bees': 'abeja abejas bee bees', 'horse riding': 'cabalgar',
+    'grocery store': 'supermercado supermarket groceries', 'restaurant': 'restaurante restaurant restaurantes', 'chef cooking': 'chef cocinero', 'bakery bread': 'pan panaderia bread bakery',
+    # v5.5.4: eventos, jóvenes, estudios y negocio (un video de un festival solo encontraba «comida»)
+    'music festival': 'festival festivales festivals', 'concert crowd': 'conciertos concerts recital recitales', 'rock band': 'banda bandas band bands grupo musical',
+    'dj party': 'dj djs', 'video game tournament': 'gamers gamer videojuegos videojuego torneo torneos esports gaming', 'trophy': 'premio premios trofeo trofeos award awards',
+    'scholarship graduation': 'beca becas maestria maestrias scholarship graduacion graduation posgrado', 'startup business': 'empresa empresas emprendimiento emprendimientos emprendedor emprendedores startup negocio negocios',
+    'conference talk': 'charla charlas conferencia conferencias conference talks taller talleres', 'networking event': 'networking',
+    'young people friends': 'jovenes youth adolescentes teens', 'influencer phone': 'influencer influencers creadores',
+    'gift surprise': 'sorpresa sorpresas regalo regalos gift gifts', 'friends group': 'amigos amigas friends', 'crowd': 'multitud publico crowd',
+    'hiking': 'senderismo caminar hiking trekking', 'camping': 'acampar camping', 'surfing': 'surf surfear surfing', 'skateboarding': 'patineta skate skateboard',
 }.items():
     for _p in _ps.split():
         SUSTANTIVOS.setdefault(_p, _q)
@@ -100,8 +121,35 @@ def elegir_momentos(palabras, duracion, idioma, cuanto='normal', margen_ini=2.0,
     return salida
 
 
+def _pixabay(consulta, formato, clave, timeout):
+    """v5.5.3: la toma de Pixabay (si la clave del B-roll es de Pixabay: «12345678-0a1b…»)."""
+    import fuentes_web as FW
+    d = FW._json('https://pixabay.com/api/videos/?' + urllib.parse.urlencode({'key': clave, 'q': consulta, 'safesearch': 'true', 'per_page': 20}), timeout=timeout)
+    mejor, mejor_puntos = None, -1e9
+    for v in d.get('hits') or []:
+        dur = float(v.get('duration') or 0)
+        if dur < 3.0 or dur > 40.0:
+            continue
+        for tam in ('large', 'medium'):
+            f = (v.get('videos') or {}).get(tam) or {}
+            w, h = int(f.get('width') or 0), int(f.get('height') or 0)
+            if not f.get('url') or min(w, h) < 480:
+                continue
+            puntos = (2000 if (formato == 'v') == (h > w) else 0) - abs(max(w, h) - 1920) / 10.0
+            if puntos > mejor_puntos:
+                mejor_puntos = puntos
+                mejor = {'id': 'pb' + str(v.get('id')), 'url': f['url'], 'ancho': w, 'alto': h, 'dur': dur}
+    return mejor
+
+
 def buscar(consulta, formato, clave, timeout=20):
-    """La mejor toma de Pexels para esa consulta (vertical para 'v', horizontal para 'h'). None si no hay o falla la red/clave."""
+    """La mejor toma de Pexels para esa consulta (vertical para 'v', horizontal para 'h'). None si no hay o falla la red/clave.
+    v5.5.3: si la clave es de Pixabay, la busca en Pixabay."""
+    if re.fullmatch(r'\d{5,10}-[0-9a-f]{20,40}', str(clave or '').strip()):
+        try:
+            return _pixabay(consulta, formato, str(clave).strip(), timeout)
+        except Exception:
+            return None
     orient = {'v': 'portrait', 'h': 'landscape'}.get(formato, 'square')
     url = f"{url_api()}?query={urllib.parse.quote(consulta)}&orientation={orient}&per_page=10&size=medium"
     try:

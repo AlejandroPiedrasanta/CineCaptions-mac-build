@@ -70,6 +70,23 @@ def _plegar(t):
     return re.sub(r'[^a-z0-9%$]', '', ''.join(c for c in t if unicodedata.category(c) != 'Mn'))
 
 
+def _prioridad_es(fam):
+    try:
+        import edicion_pro_escenas as ES
+        return float(ES.PRIORIDAD.get(fam, 1.0))
+    except Exception:
+        return 1.0
+
+
+def _nadie(det_de, t):
+    """¿Seguro que no hay nadie en cuadro en t? (sin detección, o si falla, se da por que sí hay alguien)"""
+    try:
+        d = det_de(t)
+    except Exception:
+        return False
+    return isinstance(d, dict) and not d.get('personas')
+
+
 def _numero(t):
     p = _plegar(t)
     if p in NUMEROS:
@@ -295,9 +312,29 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
         try:
             import ia_texto
             propuestas = ia_texto.escenas([' '.join(w['texto'] for w in b['palabras']) for b in bl], idioma, estado)
-            ia_texto.liberar()                                           # la GPU, entera para el Magic Mask y Resolve
         except Exception:
             propuestas = []
+    # v5.5.3: las escenas a pantalla completa del director (edicion_pro_escenas + Escenas9.tsx): pictograma, tablero, polaroid, fecha, chat…
+    #         la IA las elige con el mismo menú que en la PRO de los Temas 1–4 (solo esas familias); sin IA, sus reglas
+    escenas_mg = []
+    try:
+        import edicion_pro_kit7 as K7
+        txs = [w['texto'] for b in bl for w in b['palabras']]
+        tms = [b['ini'] + w['t'] for b in bl for w in b['palabras']]
+        frs, k0 = [], 0
+        for b in bl:
+            frs.append(list(range(k0, k0 + len(b['palabras']))))
+            k0 += len(b['palabras'])
+        escenas_mg = [m for m in K7.planificar(txs, [K7._plegar(x) for x in txs], tms, frs, idioma, video, dur, ia=ia, estado=estado, solo_escenas=True)
+                      if m.get('pantalla')]
+    except Exception:
+        escenas_mg = []
+    if ia:
+        try:
+            import ia_texto
+            ia_texto.liberar()                                           # la GPU, entera para el Magic Mask y Resolve
+        except Exception:
+            pass
     de_ia = DIR.desde_ia(bl, propuestas, dur)                           # validadas contra lo que se dice
 
     # --- 1b) las mejoras de v5.4.52 (edicion_pro_tema5_mm): la pantalla final, el sticker del gancho, las tarjetas encima de la cabeza (mapa,
@@ -310,9 +347,13 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
             disp3d = frozenset(OG3.iconos3d())
         except Exception:
             disp3d = frozenset()
-        extra = MM.momentos(bl, dur, idioma, acento, libre=lambda a, b: libre(a, b, [(e['ini'], e['fin']) for e in elementos]), det_de=det_de,
+        # v5.5.4: el hueco de las FOTOS de internet se reserva (la órbita o una tarjeta ya no se lo quitan: el usuario no veía ninguna)
+        cortes_v = (analisis or {}).get('cortes')
+        reservas = [(m['t'] - 0.6, m['t'] + m['dur'] + 0.3) for m in escenas_mg if m.get('fam') == 'foto' and m['props'].get('foto') and m['t'] >= 1.8
+                    and (VI.antes_del_inserto(m['t'] - 0.2, m['t'] + m['dur'], cortes_v) or 0) >= m['t'] + 1.8]
+        extra = MM.momentos(bl, dur, idioma, acento, libre=lambda a, b: libre(a, b, [(e['ini'], e['fin']) for e in elementos] + reservas), det_de=det_de,
                             recorte_de=recorte_de, cara_de=cara_de, densidad=densidad, usuario=usuario, iconos_3d=disp3d,
-                            listas=[e for e in de_ia if (e['objetos'] or [{}])[0].get('tipo') == 'lista'])
+                            listas=[e for e in de_ia if (e['objetos'] or [{}])[0].get('tipo') == 'lista'], cortes=cortes_v)
     except Exception:
         extra = []
     if editorial:                                                        # Tema 6: el visor, la barra de búsqueda, el perfil, el equipo
@@ -346,6 +387,11 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
         if e['ini'] >= 1.8:
             candidatas.append((e['prioridad'], e['ini'], e['fin'], {'variante': 'objetos', 'mitad': e['mitad'], 'disposicion': e['disposicion'],
                                                                      'objetos': e['objetos'], '_ancla': e['ini'] + min(o['t'] for o in e['objetos'])}, e['motivo']))
+    for m in escenas_mg:                                                 # por delante de las de la IA (3,0), pero como mucho una cada ~25 s (cupo)
+        if m['t'] >= 1.8:
+            candidatas.append((3.1, m['t'] - 0.2, m['t'] + m['dur'], dict(m['props'], mitad='completa', _comp=m['comp'], familia_mg=m['fam'], _ancla=m['t'] - 0.2,
+                                                                         _orden=_prioridad_es(m['fam'])),
+                               f"a pantalla completa «{m['fam']}»"))
     for nb, b in enumerate(bl):
         a, z = b['ini'], b['fin']
         if a < 2.5:
@@ -391,14 +437,23 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
         return a2, z2
 
     hueco = max(2.0, cada - 3.0)                                         # segundos de video limpio entre dos escenas
-    cupo = {1.0: max(1, int(dur // 30)), 0.5: max(1, int(dur // 45))}
-    for pri, a, z, valores, motivo in sorted(candidatas, key=lambda c: (-c[0], c[1])):
+    cupo = {1.0: max(1, int(dur // 30)), 0.5: max(1, int(dur // 45)), 3.1: max(1, int(dur // 25))}
+    for pri, a, z, valores, motivo in sorted(candidatas, key=lambda c: (-c[0], -c[3].get('_orden', 0.0), c[1])):   # v5.5.4: a igual prioridad, la familia más importante (la foto de internet, la fecha)
+        valores.pop('_orden', None)
         a2, z2 = ajustar_a_frases(valores.pop('_ancla', a), z)
+        if valores.get('_comp'):
+            z2 = min(z2, max(z, a2 + 2.4) + 0.8)                          # v5.5.4: una escena del director dura lo suyo (no la frase entera: 5,5 s de foto)
+        ult_obj = a + max([float(o.get('t') or 0.0) for o in valores.get('objetos') or []] or [0.0]) + 1.0
+        z2 = VI.antes_del_inserto(a2, z2, analisis.get('cortes'), minimo=max(2.2, ult_obj - a2)) or a2   # v5.5.3: tu B-roll no se tapa
+        if z2 - a2 >= 1.4 and not libre(a2 + 0.02, z2 - 0.02, ocupado_elem):
+            tope = min([o0 for o0, o1 in list(ocupado) + ocupado_elem if a2 + 0.02 < o1 and o0 < z2 - 0.02] or [a2])
+            if tope - 0.05 - a2 >= max(2.2, ult_obj - a2) and libre(a2 + 0.02, tope - 0.07, ocupado_elem):
+                z2 = tope - 0.05                                         # v5.5.4: se acorta antes de lo siguiente en vez de perderse
         if z2 - a2 < 1.4 or cupo.get(pri, 99) <= 0 or not libre(a2 + 0.02, z2 - 0.02, ocupado_elem):
             continue
         if any(a2 < e['fin'] - 0.02 and e['ini'] + 0.02 < z2 for e in escenas):
             continue                                                     # no se pisan
-        tipo_de = lambda vv: (vv.get('objetos') or [{}])[0].get('tipo') or vv.get('variante')    # noqa: E731
+        tipo_de = lambda vv: vv.get('familia_mg') or (vv.get('objetos') or [{}])[0].get('tipo') or vv.get('variante')    # noqa: E731
         if any(tipo_de(e['valores']) == tipo_de(valores) and (abs(e['ini'] - z2) < 12 or abs(a2 - e['fin']) < 12) for e in escenas):
             continue                                                     # dos escenas iguales seguidas, no (dos frases en tinta, dos fotos…)
         pegadas = [e for e in escenas if abs(e['ini'] - z2) < 0.6 or abs(a2 - e['fin']) < 0.6]
@@ -406,7 +461,15 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
             continue                                                     # o pegadas (escena tras escena, como colores → marcas) o con video limpio entre medias
         if pegadas and (z2 - a2) + sum(e['fin'] - e['ini'] for e in pegadas) > 10.5:
             continue
+        if pegadas and (editorial or valores.get('variante') == 'tarjeta' or valores.get('_comp')
+                        or any(e.get('escena_mg') or e['valores'].get('variante') == 'tarjeta' for e in pegadas)):
+            continue                                                     # v5.5.3: pegadas solo las del Tema 5 que flotan; ni tras el tablero ni a pantalla completa en el 6
+        if det_de is not None and sum(1 for t in (a2 + 0.3, (a2 + z2) / 2.0, z2 - 0.3) if _nadie(det_de, t)) >= 2:
+            continue                                                     # v5.5.3: ahí el video enseña otra cosa (tu B-roll, un cartel): no se tapa
         if valores['variante'] == 'tarjeta':
+            toma = VI.toma_en(analisis, (a2 + z2) / 2.0) or {}
+            if any(a2 + 0.2 < c < z2 - 0.2 for c in analisis.get('cortes') or []) or (toma and toma['fin'] - toma['ini'] < 5.0) or z2 > dur - 3.0 or a2 < 6.0:
+                continue                                                 # v5.5.3: en tus tomas cortas (tu B-roll), con un corte, en el gancho o en la despedida, la foto de relleno sobra
             img = foto_de(min(dur - 0.5, a2 + dur * 0.35) if a2 < dur * 0.5 else max(0.5, a2 - dur * 0.35))
             if not img:
                 continue
@@ -420,6 +483,13 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
                     o['t'] = min(o['t'], 0.2)
             valores = dict(valores, objetos=objs)
         cupo[pri] = cupo.get(pri, 99) - 1
+        comp = valores.pop('_comp', None)
+        if comp:                                                         # v5.5.3: escena del director (Escenas9): su color, salvo las que tienen el suyo
+            import edicion_pro_escenas as ES
+            escenas.append({'pieza': 'plantilla', 'remotion': comp, 'escena_mg': True, 'pantalla': True, 'capa': 'fondo', 'ini': round(a2, 3), 'fin': round(z2, 3),
+                            'plantilla': f"escena_{valores.get('familia_mg')}", 'motivo': f"escena: {motivo}",
+                            'valores': valores if comp in ES.SIN_ACENTO else dict(valores, acento=acento)})
+            continue
         escenas.append({'pieza': 'skill', 'remotion': 'EscenaT5', 'capa': 'fondo', 'ini': round(a2, 3), 'fin': round(z2, 3),
                         'motivo': f"escena: {motivo}", 'valores': dict(valores, acento=acento)})
     escenas.sort(key=lambda e: e['ini'])
@@ -431,8 +501,8 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
         toma = VI.toma_en(analisis, (e['ini'] + e['fin']) / 2.0) or {}
         se_mueve = float(toma.get('movimiento') or 0.0) > 0.06 or not est.get('partir', True)
         if v['mitad'] == 'arriba' and se_mueve:                          # la cámara se mueve: no se parte (la persona se saldría de su mitad)
-            v['mitad'] = 'encima' if uno else 'completa'
-        elif uno and v.get('variante') == 'objetos':                     # un objeto solo: dónde va rota según el estilo del video, sin repetir
+            v['mitad'] = 'encima' if uno and est.get('encima', True) else 'completa'   # v5.5.3: el Tema 6 no flota objetos (su estilo)
+        elif uno and v.get('variante') == 'objetos':                   # un objeto solo: dónde va rota según el estilo del video, sin repetir
             opciones = [m for m in est['orden'] if m != previa] or est['orden']
             v['mitad'] = opciones[0] if not (opciones[0] == 'arriba' and se_mueve) else opciones[1 % len(opciones)]
         if v['mitad'] == 'encima':
@@ -486,6 +556,12 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
         if pant is not None:                                             # sobre el sticker o la pantalla final: arriba, claro, sin velo
             ajustar = False
             valores.update(velo=False, tinta='clara', y=Y_PAPEL, escala=1.1)
+        if esc is not None and esc.get('escena_mg'):                     # v5.5.3: sobre una escena del director, abajo y en la tinta de su fondo
+            import edicion_pro_escenas as ES
+            claro_mg = (esc['remotion'], esc['valores'].get('variante')) in ES.CLAROS
+            ajustar = False
+            valores.update(velo=False, tinta='oscura' if claro_mg else 'clara', y=ES.Y_CAPTIONS[bool(vertical)], escala=0.95)
+            esc = None
         if esc is not None and editorial and esc['valores'].get('variante') != 'texto':
             ajustar = False                                              # Tema 6: sobre la escena melocotón, la frase pequeña y en tinta, abajo
             valores.update(velo=False, tinta='oscura', y=T6.Y_ESCENA, escala=0.95)
@@ -543,6 +619,14 @@ def subir_detras(p):
         p['valores']['y'] = round(max(8.0, float(p['valores'].get('y', 30.0)) - 3.5), 1)
 
 
+MEDIO_ACOMP = 4.5                       # media altura de un acompañante (% del alto)
+
+
+def _pisa_cara(y, medio, caras):
+    """v5.5.2: ¿algo centrado en `y` (% del alto) con media altura `medio` (%) pisa alguna de las `caras` (cajas en fracción, y desde arriba)?"""
+    return any(y - medio < (k[3] + 0.02) * 100.0 and y + medio > (k[1] - 0.02) * 100.0 for k in caras or [])
+
+
 def coordinar(piezas):
     """Tras la regla de la cara: si un caption bajó hasta el indicador de pasos o el deslizador, estos bajan un poco más; y cada acompañante va
     justo debajo de SU caption (si el caption quedó muy abajo, el acompañante no cabe y se quita)."""
@@ -553,11 +637,17 @@ def coordinar(piezas):
             continue
         v = cap['valores']
         dos = any(w.get('clave') for w in v.get('palabras') or []) and any(not w.get('clave') for w in v.get('palabras') or [])
-        y = float(v.get('y', Y_NORMAL[True])) + (8.2 if dos else 6.2) * float(v.get('escala', 1.0))
-        if y > 86.0:
+        yc, esc = float(v.get('y', Y_NORMAL[True])), float(v.get('escala', 1.0))
+        y = yc + (8.2 if dos else 6.2) * esc
+        caras = cap.get('_caras') or []
+        if y > 86.0 or _pisa_cara(y, MEDIO_ACOMP, caras):
+            # v5.5.2 (regla oficial: ni cara ni caption): debajo no cabe o tapa una cara → sin acompañante. v5.5.4: ya NO se sube encima de su
+            # caption (el usuario: «los iconos están muy arriba de los captions»)
             c['quitar'] = True
         else:
             c['valores']['y'] = round(y, 1)
+            if c['fin'] > cap['fin'] + 0.15 and cap['fin'] + 0.15 - c['ini'] >= 1.2:
+                c['fin'] = round(cap['fin'] + 0.15, 3)                   # v5.5.4: se va con SU caption («Comida» seguía bajo «y sorpresas»)
     for t in [p for p in piezas if p.get('pieza') == 'tarjeta' and not p.get('quitar')]:   # la tarjeta (encima de la cabeza) no pisa su caption
         v = t['valores']
         h = float(t.get('alto') or 0.2) * 100.0 * float(v.get('escala', 1.0))

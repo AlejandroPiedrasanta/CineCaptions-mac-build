@@ -17,7 +17,8 @@ import wave
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RECURSOS = os.path.abspath(os.path.join(AQUI, '..'))
 sys.path.insert(0, os.path.join(RECURSOS, '..', '1_codigo'))
-ORIGEN = r'E:\VFX-EDICION VIDEOS\PREMIER PRO\GANCHOS VIRALES\GANCHO VIRALES\6-SONIDOS'
+# (herramienta del autor, no del programa: la carpeta de origen de los sonidos se cambia con CINECAPTIONS_ORIGEN_SONIDOS)
+ORIGEN = os.environ.get('CINECAPTIONS_ORIGEN_SONIDOS') or r'E:\VFX-EDICION VIDEOS\PREMIER PRO\GANCHOS VIRALES\GANCHO VIRALES\6-SONIDOS'
 RATE = 48000
 
 

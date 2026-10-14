@@ -22,7 +22,7 @@ Se sube A MANO al publicar (y se anota en REGISTRO_DE_CAMBIOS.txt). Al subirla h
 las líneas VERSION = "x.y.z (...)" de 2_recursos/resolve_scripts (ver LEEME, «Compilar»).
 """
 
-APP_VERSION = '5.5.1'
+APP_VERSION = '5.5.5'
 APP_NOMBRE = 'CineCaptions'
 APP_AUTOR = 'Cinema Productions'
 APP_CREDITO = 'CineCaptions · By Cinema Productions'

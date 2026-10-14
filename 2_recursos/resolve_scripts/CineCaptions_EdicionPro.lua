@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
 ]]
 
-local VERSION = "5.5.1 (edicion pro)"
+local VERSION = "5.5.5 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -664,9 +664,24 @@ local function emojis_sin_cara(tl, cues, base)
                         end
                     end
                     if pisa then
+                        -- v5.5.2 (regla oficial, gemela del .py): al apartarse de la cara tampoco cae ENCIMA de su caption
+                        local caja = (type(c.caja) == "table" and #c.caja == 2) and c.caja or nil
+                        local opciones = { abajo, arriba }
+                        if caja then
+                            opciones[#opciones + 1] = (tonumber(caja[1]) or 0) - r - aire
+                            opciones[#opciones + 1] = (tonumber(caja[2]) or 0) + r + aire
+                        end
+                        local function sirve(o)
+                            if o < 0.04 + r or o > 0.96 - r then return false end
+                            for _, k in ipairs(caras) do
+                                if k[1] - r < x and x < k[3] + r and k[2] - r - aire < o and o < k[4] + r + aire then return false end
+                            end
+                            if caja and (tonumber(caja[1]) or 0) - r - aire < o and o < (tonumber(caja[2]) or 0) + r + aire then return false end
+                            return true
+                        end
                         local mejor = nil
-                        for _, o in ipairs({ abajo, arriba }) do
-                            if o >= 0.04 + r and o <= 0.96 - r and (mejor == nil or math.abs(o - y) < math.abs(mejor - y)) then mejor = o end
+                        for _, o in ipairs(opciones) do
+                            if sirve(o) and (mejor == nil or math.abs(o - y) < math.abs(mejor - y)) then mejor = o end
                         end
                         if mejor and poner_tilt(it, (0.5 - mejor) * H) then apartados = apartados + 1 end
                     end

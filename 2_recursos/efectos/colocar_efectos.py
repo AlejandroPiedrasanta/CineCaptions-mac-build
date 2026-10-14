@@ -151,6 +151,10 @@ def _poner_movimiento(tl, entradas):
                     it.LoadFusionCompByName(NOMBRE_COMP)
                 except Exception:
                     pass
+            try:
+                it.SetFusionOutputCache('enabled')                     # v5.5.4: se pre-renderiza en segundo plano (la reproducción, fluida)
+            except Exception:
+                pass
             puestas += 1
         except Exception as ex:
             print('  (movimiento sobre V1: %s)' % ex)

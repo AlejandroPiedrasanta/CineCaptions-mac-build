@@ -1,0 +1,1731 @@
+{
+ "motions": [
+  {
+   "id": "kit_lista",
+   "grupo": "Kit de la skill (v5.5.2)",
+   "nombre": "ListaRazonesK",
+   "que": "lista",
+   "cuando": "se anuncian N razones, motivos, beneficios o señales, o se enumeran 2–5 cosas",
+   "editable": "{\"n\": 3, \"items\": [\"…\"] (opcional, 1–3 palabras DICHAS)}",
+   "variantes": [
+    "pildora",
+    "cristal",
+    "linea",
+    "tarjeta"
+   ],
+   "colores": "los del video (o tema neón / rojo / azul / oro / editorial)"
+  },
+  {
+   "id": "kit_ruta",
+   "grupo": "Kit de la skill (v5.5.2)",
+   "nombre": "RutaK",
+   "que": "ruta",
+   "cuando": "errores o fallos que se cometen, o los pasos de un camino",
+   "editable": "{\"n\": 4, \"titulo\": \"ERRORES\", \"subtitulo\": \"…\" (opcional, palabras dichas)}",
+   "variantes": [
+    "ola",
+    "subida",
+    "escalera",
+    "gancho"
+   ],
+   "colores": "los del video (o tema neón / rojo / azul / oro / editorial)"
+  },
+  {
+   "id": "kit_misterio",
+   "grupo": "Kit de la skill (v5.5.2)",
+   "nombre": "MisterioK",
+   "que": "misterio",
+   "cuando": "secretos, preguntas o cosas que aún no se revelan",
+   "editable": "{\"n\": 3}",
+   "variantes": [
+    "esferas",
+    "cajas",
+    "contorno"
+   ],
+   "colores": "los del video (o tema neón / rojo / azul / oro / editorial)"
+  },
+  {
+   "id": "kit_abanico",
+   "grupo": "Kit de la skill (v5.5.2)",
+   "nombre": "AbanicoK",
+   "que": "abanico",
+   "cuando": "N lecciones, ideas, tips, consejos, trucos, reglas, hábitos o herramientas",
+   "editable": "{\"n\": 5, \"titulo\": \"LECCIONES\", \"subtitulo\": \"…\", \"icono\": \"light_bulb\"}",
+   "variantes": [
+    "abanico",
+    "fila",
+    "pila"
+   ],
+   "colores": "los del video (o tema neón / rojo / azul / oro / editorial)"
+  },
+  {
+   "id": "kit_rueda",
+   "grupo": "Kit de la skill (v5.5.2)",
+   "nombre": "RuedaK",
+   "que": "rueda",
+   "cuando": "convertir 1 cosa en N, o N formas / maneras / hooks",
+   "editable": "{\"n\": 7, \"titulo\": \"1 IDEA\", \"subtitulo\": \"7 HOOKS\"}",
+   "variantes": [
+    "rueda",
+    "arco"
+   ],
+   "colores": "los del video (o tema neón / rojo / azul / oro / editorial)"
+  },
+  {
+   "id": "kit_titulo",
+   "grupo": "Kit de la skill (v5.5.2)",
+   "nombre": "TituloNeonK",
+   "que": "titulo",
+   "cuando": "un titular con número que resume de qué va el video",
+   "editable": "{\"numero\": \"8\", \"titulo\": \"…\", \"subtitulo\": \"…\"}",
+   "variantes": [
+    "neon",
+    "limpio"
+   ],
+   "colores": "los del video (o tema neón / rojo / azul / oro / editorial)"
+  },
+  {
+   "id": "kit_concepto",
+   "grupo": "Kit de la skill (v5.5.2)",
+   "nombre": "ConceptoK",
+   "que": "concepto",
+   "cuando": "UNA palabra clave con peso: éxito, fracaso, proceso, disciplina, equipo, dinero, tiempo, crecimiento",
+   "editable": "{\"palabra\": \"ÉXITO\", \"tendencia\": \"sube|baja|ninguna\", \"icono\": \"gem_stone\"}",
+   "variantes": [
+    "tarjeta",
+    "flotante",
+    "linea"
+   ],
+   "colores": "los del video (o tema neón / rojo / azul / oro / editorial)"
+  },
+  {
+   "id": "kit_mixto",
+   "grupo": "Kit de la skill (v5.5.2)",
+   "nombre": "MixtoK",
+   "que": "mixto",
+   "cuando": "una frase contundente en dos partes («no es X, es Y», «no necesitas X, necesitas Y»)",
+   "editable": "{\"linea1\": \"…\", \"linea2\": \"…\", \"clave\": \"palabra\"}",
+   "variantes": [
+    "glitch",
+    "rotulador"
+   ],
+   "colores": "los del video (o tema neón / rojo / azul / oro / editorial)"
+  },
+  {
+   "id": "boda_casa_novia",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Casa de la novia",
+   "cuando": "casa de la novia",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_casa_novio",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Casa del novio",
+   "cuando": "casa del novio",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "boda_vestido",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "El vestido",
+   "cuando": "el vestido, vestido de novia",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_maquillaje",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Maquillaje",
+   "cuando": "maquillaje, peinado",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_anillos",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Los anillos",
+   "cuando": "los anillos, anillo, anillos",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_ceremonia",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "La ceremonia",
+   "cuando": "la ceremonia, ceremonia",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_acepto",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Sí, acepto",
+   "cuando": "acepto, si acepto",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_votos",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Los votos",
+   "cuando": "los votos, votos",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "boda_beso",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "El primer beso",
+   "cuando": "primer beso, el beso",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_iglesia",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "La iglesia",
+   "cuando": "la iglesia, iglesia",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_civil",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Boda civil",
+   "cuando": "boda civil, el civil",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "editorial"
+  },
+  {
+   "id": "boda_brindis",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "El brindis",
+   "cuando": "el brindis, brindis, salud",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_baile",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "El primer baile",
+   "cuando": "primer baile",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "lila"
+  },
+  {
+   "id": "boda_vals",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "El vals",
+   "cuando": "el vals, vals",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_fiesta",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "La fiesta",
+   "cuando": "la fiesta, fiesta",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "noche"
+  },
+  {
+   "id": "boda_recepcion",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "La recepción",
+   "cuando": "recepcion, el banquete",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_pastel",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "El pastel",
+   "cuando": "el pastel, pastel, la torta",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_ramo",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "El ramo",
+   "cuando": "el ramo, ramo",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_liga",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "La liga",
+   "cuando": "la liga",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "boda_padrinos",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Los padrinos",
+   "cuando": "padrinos, los padrinos",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_damas",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Damas de honor",
+   "cuando": "damas de honor, las damas",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_familia",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Fotos familiares",
+   "cuando": "fotos familiares, la familia",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "boda_salida",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "La salida",
+   "cuando": "la salida, salida de los novios",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_historia",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Nuestra historia",
+   "cuando": "nuestra historia, como se conocieron",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "editorial"
+  },
+  {
+   "id": "boda_preboda",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Sesión preboda",
+   "cuando": "preboda, pre boda",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_recien",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Titulo",
+   "que": "Recién casados",
+   "cuando": "recien casados",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "boda_pareja",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Pareja",
+   "que": "nuestra boda",
+   "cuando": "(lo elige el plan)",
+   "editable": "nombre1, nombre2, texto, estilo",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_pareja_rosa",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Pareja",
+   "que": "para siempre",
+   "cuando": "(lo elige el plan)",
+   "editable": "nombre1, nombre2, texto, estilo",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_fecha",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Fecha",
+   "que": "Save the date",
+   "cuando": "save the date, reserva la fecha, nuestra fecha",
+   "editable": "dia, mes, anio, texto, estilo",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_momento",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Pastilla",
+   "que": "MOMENTO DEL DÍA",
+   "cuando": "momento del dia, el mejor momento",
+   "editable": "texto, estilo",
+   "estilo": "dorado"
+  },
+  {
+   "id": "boda_esperado",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Pastilla",
+   "que": "EL MOMENTO MÁS ESPERADO",
+   "cuando": "mas esperado, momento mas esperado",
+   "editable": "texto, estilo",
+   "estilo": "rosa"
+  },
+  {
+   "id": "boda_capitulos",
+   "grupo": "Biblioteca · bodas",
+   "nombre": "Capitulos",
+   "que": "",
+   "cuando": "(lo elige el plan)",
+   "editable": "capitulos, actual, estilo",
+   "estilo": "dorado"
+  },
+  {
+   "id": "xv_mis_xv",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "Mis XV",
+   "cuando": "mis xv, mis quince, xv anos",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "lila"
+  },
+  {
+   "id": "xv_quinceanera",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "La quinceañera",
+   "cuando": "la quinceanera, quinceanera",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "xv_vals",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "El vals",
+   "cuando": "vals de xv, el vals",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "lila"
+  },
+  {
+   "id": "xv_entrada",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "La entrada",
+   "cuando": "la entrada, entrada",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "xv_sorpresa",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "La sorpresa",
+   "cuando": "la sorpresa, sorpresa",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "noche"
+  },
+  {
+   "id": "xv_zapatillas",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "Cambio de zapatillas",
+   "cuando": "zapatillas, cambio de zapato",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "xv_muneca",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "La última muñeca",
+   "cuando": "ultima muneca, la muneca",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "xv_corte",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "La corte de honor",
+   "cuando": "corte de honor, chambelanes",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "xv_hora_loca",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "La hora loca",
+   "cuando": "hora loca",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "noche"
+  },
+  {
+   "id": "xv_show",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "El show",
+   "cuando": "el show, show",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "noche"
+  },
+  {
+   "id": "ev_baby_shower",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "Baby shower",
+   "cuando": "baby shower",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "lila"
+  },
+  {
+   "id": "ev_bautizo",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "El bautizo",
+   "cuando": "bautizo, bautismo",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "ev_comunion",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "Primera comunión",
+   "cuando": "primera comunion",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "ev_cumple",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "¡Feliz cumpleaños!",
+   "cuando": "cumpleanos, feliz cumple",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "noche"
+  },
+  {
+   "id": "ev_graduacion",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "Graduación",
+   "cuando": "graduacion, me gradue, graduados",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "ev_aniversario",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "Aniversario",
+   "cuando": "aniversario",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "ev_despedida",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "Despedida de soltera",
+   "cuando": "despedida de soltera",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "rosa"
+  },
+  {
+   "id": "ev_posada",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Titulo",
+   "que": "La posada",
+   "cuando": "posada, navidad",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "ev_ninas",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Ninas",
+   "que": "Las niñas",
+   "cuando": "las ninas, ninas",
+   "editable": "texto, estilo",
+   "estilo": "lila"
+  },
+  {
+   "id": "ev_ninos",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Ninas",
+   "que": "Los niños",
+   "cuando": "los ninos, ninos",
+   "editable": "texto, estilo",
+   "estilo": "esmeralda"
+  },
+  {
+   "id": "ev_amigas",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Ninas",
+   "que": "Mis amigas",
+   "cuando": "mis amigas, las amigas",
+   "editable": "texto, sub, estilo",
+   "estilo": "rosa"
+  },
+  {
+   "id": "ev_damitas",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Ninas",
+   "que": "Las damitas",
+   "cuando": "damitas",
+   "editable": "texto, estilo",
+   "estilo": "rosa"
+  },
+  {
+   "id": "xv_capitulos",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Capitulos",
+   "que": "",
+   "cuando": "(lo elige el plan)",
+   "editable": "capitulos, actual, estilo",
+   "estilo": "blanco"
+  },
+  {
+   "id": "xv_momento",
+   "grupo": "Biblioteca · eventos",
+   "nombre": "Pastilla",
+   "que": "NO TE LO PIERDAS",
+   "cuando": "no te lo pierdas, atentos",
+   "editable": "texto, estilo",
+   "estilo": "lila"
+  },
+  {
+   "id": "foto_sesion",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Sesion",
+   "que": "Sesión fotográfica",
+   "cuando": "sesion fotografica, sesion de fotos",
+   "editable": "titulo, kicker",
+   "estilo": ""
+  },
+  {
+   "id": "foto_bts",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Sesion",
+   "que": "Detrás de cámaras",
+   "cuando": "detras de camaras, detras de camara, behind the scenes",
+   "editable": "titulo, kicker",
+   "estilo": ""
+  },
+  {
+   "id": "foto_estudio",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Sesion",
+   "que": "Sesión de estudio",
+   "cuando": "estudio, sesion de estudio",
+   "editable": "titulo, kicker",
+   "estilo": ""
+  },
+  {
+   "id": "foto_preboda",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Sesion",
+   "que": "Sesión preboda",
+   "cuando": "sesion preboda",
+   "editable": "titulo, kicker, estilo",
+   "estilo": "rosa"
+  },
+  {
+   "id": "foto_xv",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Sesion",
+   "que": "Sesión de XV",
+   "cuando": "sesion de xv, sesion de quince",
+   "editable": "titulo, kicker, estilo",
+   "estilo": "lila"
+  },
+  {
+   "id": "foto_locacion",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Sesion",
+   "que": "La locación",
+   "cuando": "la locacion, locacion, el lugar",
+   "editable": "titulo, kicker",
+   "estilo": ""
+  },
+  {
+   "id": "foto_equipo",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Sesion",
+   "que": "El equipo",
+   "cuando": "el equipo, equipo",
+   "editable": "titulo, kicker",
+   "estilo": ""
+  },
+  {
+   "id": "foto_edicion",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Sesion",
+   "que": "La edición",
+   "cuando": "edicion, editar, postproduccion",
+   "editable": "titulo, kicker",
+   "estilo": ""
+  },
+  {
+   "id": "foto_paquete_boda",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Tarjeta",
+   "que": "Boda completa",
+   "cuando": "paquete, paquetes, precio",
+   "editable": "kicker, titulo, texto, boton, acento, icono3d",
+   "estilo": ""
+  },
+  {
+   "id": "foto_paquete_xv",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Tarjeta",
+   "que": "XV Premium",
+   "cuando": "paquete de xv, xv premium",
+   "editable": "kicker, titulo, texto, boton, acento, icono3d",
+   "estilo": ""
+  },
+  {
+   "id": "foto_express",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Tarjeta",
+   "que": "30 minutos",
+   "cuando": "sesion express, express",
+   "editable": "kicker, titulo, texto, boton, acento, icono3d",
+   "estilo": ""
+  },
+  {
+   "id": "foto_reserva",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Tarjeta",
+   "que": "Reserva tu fecha",
+   "cuando": "reserva tu fecha, agenda, reservar",
+   "editable": "kicker, titulo, texto, progreso, boton, acento, icono3d",
+   "estilo": ""
+  },
+  {
+   "id": "foto_pasos",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Pasos",
+   "que": "Así trabajamos",
+   "cuando": "asi trabajamos, como trabajamos, el proceso",
+   "editable": "pasos, titulo, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_pasos_boda",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Pasos",
+   "que": "Tu boda en 4 pasos",
+   "cuando": "pasos",
+   "editable": "pasos, titulo, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_noti_reserva",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Notificacion",
+   "que": "¡Nueva reserva!",
+   "cuando": "nueva reserva, reservaron",
+   "editable": "titulo, texto, icono3d, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_noti_fotos",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Notificacion",
+   "que": "Tus fotos están listas",
+   "cuando": "fotos estan listas, entrega de fotos, entregamos",
+   "editable": "titulo, texto, icono3d, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_noti_fecha",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Notificacion",
+   "que": "Fecha confirmada",
+   "cuando": "fecha confirmada, confirmado",
+   "editable": "titulo, texto, icono3d, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_clientes",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Grafica",
+   "que": "Parejas felices",
+   "cuando": "parejas felices, clientes felices",
+   "editable": "titulo, valor, subtitulo, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_reservas",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Grafica",
+   "que": "Reservas",
+   "cuando": "crecimos, reservas",
+   "editable": "titulo, valor, subtitulo, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_modo_boda",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Interruptor",
+   "que": "Modo boda",
+   "cuando": "modo boda",
+   "editable": "texto, sub, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_modo_fiesta",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Interruptor",
+   "que": "Modo fiesta",
+   "cuando": "modo fiesta",
+   "editable": "texto, sub, acento",
+   "estilo": ""
+  },
+  {
+   "id": "foto_capitulos",
+   "grupo": "Biblioteca · fotografia",
+   "nombre": "Capitulos",
+   "que": "",
+   "cuando": "(lo elige el plan)",
+   "editable": "capitulos, actual, estilo",
+   "estilo": "blanco"
+  },
+  {
+   "id": "hola_amigos",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Saludo",
+   "que": "",
+   "cuando": "hola amigos, hola amigas",
+   "editable": "linea1, linea2, estilo",
+   "estilo": "rosa"
+  },
+  {
+   "id": "hola_todos",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Saludo",
+   "que": "",
+   "cuando": "hola a todos, hola todos",
+   "editable": "linea1, linea2, estilo",
+   "estilo": "dorado"
+  },
+  {
+   "id": "hola_familia",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Saludo",
+   "que": "",
+   "cuando": "hola familia",
+   "editable": "linea1, linea2, estilo",
+   "estilo": "lila"
+  },
+  {
+   "id": "bienvenidos",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Saludo",
+   "que": "",
+   "cuando": "bienvenidos, bienvenidas",
+   "editable": "linea1, linea2, estilo",
+   "estilo": "noche"
+  },
+  {
+   "id": "que_onda",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Saludo",
+   "que": "",
+   "cuando": "que onda, que tal gente",
+   "editable": "linea1, linea2, estilo",
+   "estilo": "esmeralda"
+  },
+  {
+   "id": "hello",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Saludo",
+   "que": "",
+   "cuando": "hey friends, hello everyone, hi guys",
+   "editable": "linea1, linea2, estilo",
+   "estilo": "rosa"
+  },
+  {
+   "id": "hoy_estamos",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Titulo",
+   "que": "Hoy estamos aquí",
+   "cuando": "hoy estamos, estamos aqui",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "listos",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Titulo",
+   "que": "¿Listos?",
+   "cuando": "listos, estan listos",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "noche"
+  },
+  {
+   "id": "empezamos",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Titulo",
+   "que": "Empezamos",
+   "cuando": "empezamos, comenzamos, arrancamos",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "vamos_alla",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Titulo",
+   "que": "¡Vamos allá!",
+   "cuando": "vamos alla, vamonos",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "esmeralda"
+  },
+  {
+   "id": "gracias",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Titulo",
+   "que": "Gracias",
+   "cuando": "gracias por ver, muchas gracias",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "dorado"
+  },
+  {
+   "id": "final",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Titulo",
+   "que": "Nos vemos",
+   "cuando": "nos vemos, hasta la proxima",
+   "editable": "titulo, kicker, subtitulo, estilo, letra, adorno, tarjeta",
+   "estilo": "blanco"
+  },
+  {
+   "id": "encuesta_boda",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Encuesta",
+   "que": "¿Boda de día o de noche?",
+   "cuando": "dia o de noche",
+   "editable": "pregunta, op1, op2, pct1",
+   "estilo": ""
+  },
+  {
+   "id": "encuesta_ninos",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Encuesta",
+   "que": "¿Niños en tu boda?",
+   "cuando": "ninos a tu boda, llevarias ninos",
+   "editable": "pregunta, op1, op2, pct1",
+   "estilo": ""
+  },
+  {
+   "id": "encuesta_generica",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Encuesta",
+   "que": "¿Tú qué prefieres?",
+   "cuando": "que prefieres",
+   "editable": "pregunta, op1, op2, pct1",
+   "estilo": ""
+  },
+  {
+   "id": "comenta_boda",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Comentario",
+   "que": "Comenta",
+   "cuando": "comenta boda",
+   "editable": "palabra, texto, hecho",
+   "estilo": ""
+  },
+  {
+   "id": "comenta_xv",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Comentario",
+   "que": "Comenta",
+   "cuando": "comenta xv",
+   "editable": "palabra, texto, hecho",
+   "estilo": ""
+  },
+  {
+   "id": "comenta_info",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Comentario",
+   "que": "Comenta",
+   "cuando": "comenta info, comenta",
+   "editable": "palabra, texto, hecho",
+   "estilo": ""
+  },
+  {
+   "id": "comenta_fotos",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Comentario",
+   "que": "Comenta",
+   "cuando": "comenta fotos",
+   "editable": "palabra, texto, hecho",
+   "estilo": ""
+  },
+  {
+   "id": "sigueme",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Pastilla",
+   "que": "SÍGUEME PARA MÁS",
+   "cuando": "sigueme, siguenos, suscribete",
+   "editable": "texto, estilo",
+   "estilo": "noche"
+  },
+  {
+   "id": "guarda",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Pastilla",
+   "que": "GUÁRDALO PARA DESPUÉS",
+   "cuando": "guardalo, guarda este video",
+   "editable": "texto, estilo",
+   "estilo": "blanco"
+  },
+  {
+   "id": "comparte",
+   "grupo": "Biblioteca · saludos",
+   "nombre": "Pastilla",
+   "que": "COMPÁRTELO CON TU PAREJA",
+   "cuando": "compartelo, comparte",
+   "editable": "texto, estilo",
+   "estilo": "rosa"
+  },
+  {
+   "id": "ograf_titular",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Titular",
+   "que": "titular",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "linea1, linea2, linea3, tamanos, acentoLinea, tiempos, fuente, mayusculas, acento, colorTexto, entrada, escala, x, y, ancho, sombra"
+  },
+  {
+   "id": "ograf_rotulo",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Rótulo",
+   "que": "rotulo",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "linea1, linea2, acentoLinea, tiempos, fuente, acento, colorTexto, colorBloque, escala, x, y, inclinacion"
+  },
+  {
+   "id": "ograf_cifra",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Cifra",
+   "que": "cifra",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "numero, unidad, etiqueta, tiempos, fuente, acento, colorTexto, estilo, escala, x, y"
+  },
+  {
+   "id": "ograf_lista",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Lista",
+   "que": "lista",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "titulo, item1, item2, item3, item4, tiempos, icono, disposicion, fuente, acento, colorTexto, colorPanel, escala, x, y"
+  },
+  {
+   "id": "ograf_etiqueta",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Etiqueta",
+   "que": "etiqueta",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "kicker, texto, indice, icono, alinear, fuente, acento, colorTexto, escala, x, y, tiempos"
+  },
+  {
+   "id": "ograf_cta",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Llamada a la acción",
+   "que": "cta",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "kicker, titulo, fila1, fila2, fila3, boton, tiempos, fuente, acento, colorTexto, colorPanel, escala, x, y, icono"
+  },
+  {
+   "id": "ograf_marco",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Marco",
+   "que": "marco",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "estilo, texto, acento, colorTexto, margen, grosor, tiempos, tcInicio, fps"
+  },
+  {
+   "id": "ograf_velo",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Velo",
+   "que": "velo",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "forma, color, intensidad, fundido"
+  },
+  {
+   "id": "ograf_nombres",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Nombres",
+   "que": "nombres",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "nombre1, conector, nombre2, subtitulo, tiempos, fuente, acento, colorTexto, adorno, escala, x, y"
+  },
+  {
+   "id": "ograf_fondo",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Fondo animado (B-roll)",
+   "que": "fondo",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "estilo, entrada, color1, color2, color3, intensidad"
+  },
+  {
+   "id": "ograf_icono",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Concepto con icono",
+   "que": "icono",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "icono, imagen, texto, kicker, fuente, acento, colorTexto, escala, x, y, tiempos"
+  },
+  {
+   "id": "ograf_icono3d",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Icono 3D flotante",
+   "que": "icono3d",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "imagen, tamano, brillo, acento, flotar, giro, x, y, tiempos"
+  },
+  {
+   "id": "ograf_orbita",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Órbita de iconos (gancho)",
+   "que": "orbita",
+   "cuando": "el planificador PRO (gancho, cifras, listas, nombres, CTA, escenas)",
+   "editable": "iconos, imagenes, mitad, acento, colorTexto, rx, ry, inclinacion, vueltas, escala, x, y, tiempos"
+  },
+  {
+   "id": "pro_ubicacion",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Mapa + bandera del país",
+   "que": "ubicacion",
+   "cuando": "se nombra un país o ciudad",
+   "editable": ""
+  },
+  {
+   "id": "pro_fondo",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Escena con el fondo sustituido (persona delante de un fondo animado)",
+   "que": "fondo",
+   "cuando": "una idea larga",
+   "editable": ""
+  },
+  {
+   "id": "pro_punch",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Punch-in (zoom de cámara)",
+   "que": "punch",
+   "cuando": "énfasis en una frase",
+   "editable": ""
+  },
+  {
+   "id": "pro_gris",
+   "grupo": "Piezas PRO (Temas 1–4)",
+   "nombre": "Tramo en gris",
+   "que": "gris",
+   "cuando": "contraste dramático",
+   "editable": ""
+  },
+  {
+   "id": "t5_pasos",
+   "grupo": "Tema 5",
+   "nombre": "PasosT5",
+   "que": "indicador 1–2–3",
+   "cuando": "se anuncian N cosas / el paso en que va",
+   "editable": "n, actual"
+  },
+  {
+   "id": "t5_deslizador",
+   "grupo": "Tema 5",
+   "nombre": "DeslizadorT5",
+   "que": "«Principiante ●── Profesional»",
+   "cuando": "«de A a B»",
+   "editable": "a, b"
+  },
+  {
+   "id": "t5_escena_lista",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "lista",
+   "cuando": "se enumeran 2–5 cosas",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_fichas",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "fichas",
+   "cuando": "se nombran marcas, apps, lugares o personas",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_comparacion",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "comparacion",
+   "cuando": "dos opciones opuestas (antes/después)",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_pregunta",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "pregunta",
+   "cuando": "quien habla le pregunta al público (con opciones)",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_cifra",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "cifra",
+   "cuando": "se dice un número",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_precio",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "precio",
+   "cuando": "una cantidad de dinero",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_grafica",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "grafica",
+   "cuando": "algo que crece",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_reloj",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "reloj",
+   "cuando": "un tiempo («en 20 minutos»)",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_avatares",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "avatares",
+   "cuando": "clientes, gente, seguidores",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_calendario",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "calendario",
+   "cuando": "un día o una fecha",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_estado",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "estado",
+   "cuando": "un error o algo correcto (✓/✗)",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_muestras",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "muestras",
+   "cuando": "se nombran colores",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_app",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "app",
+   "cuando": "vídeos, contenido, editar, redes",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_ojo",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "ojo",
+   "cuando": "lo visual, la atención",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_escena_icono",
+   "grupo": "Tema 5 · escenas (la IA las dirige)",
+   "nombre": "EscenaT5",
+   "que": "icono",
+   "cuando": "un objeto con su icono 3D",
+   "editable": "datos de lo que se dice"
+  },
+  {
+   "id": "t5_acomp_lugar",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "lugar",
+   "cuando": "un país o ciudad (con su bandera)",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_acomp_saludo",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "saludo",
+   "cuando": "«¡Hola amigos!»",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_acomp_redes",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "redes",
+   "cuando": "seguir, comentar, compartir",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_acomp_cifra",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "cifra",
+   "cuando": "un número",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_acomp_dinero",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "dinero",
+   "cuando": "una cantidad de dinero",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_acomp_tiempo",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "tiempo",
+   "cuando": "un tiempo",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_acomp_barra",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "barra",
+   "cuando": "un progreso / porcentaje",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_acomp_emoji",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "emoji",
+   "cuando": "el emoji 3D del concepto o del tema del video",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_acomp_sticker",
+   "grupo": "Tema 5/6 · acompañantes bajo el caption",
+   "nombre": "AcompananteT5",
+   "que": "sticker",
+   "cuando": "un sticker del concepto",
+   "editable": "texto, icono"
+  },
+  {
+   "id": "t5_mm_foco",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Fondo en blanco y negro con la persona a color",
+   "que": "foco",
+   "cuando": "algo fuerte o importante (la persona recortada con Magic Mask)",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_orbita",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Iconos girando alrededor de la cabeza",
+   "que": "orbita",
+   "cuando": "el gancho: los conceptos del video pasan por detrás y por delante",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_sticker",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Sticker congelado de la persona",
+   "que": "sticker",
+   "cuando": "el gancho: la persona recortada como pegatina con borde blanco",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_sombra",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Sombra de la persona sobre la palabra de detrás",
+   "que": "sombra",
+   "cuando": "la palabra clave detrás de la persona",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_final",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Pantalla final con avatar y botón",
+   "que": "final",
+   "cuando": "cuando pide que le sigan",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_tarjeta_mapa",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Tarjeta del país (mapa)",
+   "que": "tarjeta_mapa",
+   "cuando": "se nombra un país",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_tarjeta_grafica",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Tarjeta con la gráfica del %",
+   "que": "tarjeta_grafica",
+   "cuando": "se dice un porcentaje",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_tarjeta_tachado",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "La frase tachada",
+   "que": "tarjeta_tachado",
+   "cuando": "«no es X» / lo que NO hay que hacer",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_tarjeta_lista",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "La lista que se va marcando",
+   "que": "tarjeta_lista",
+   "cuando": "se enumeran cosas",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_zoom",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Transición con zoom en los cortes",
+   "que": "zoom",
+   "cuando": "en los cortes del video",
+   "editable": ""
+  },
+  {
+   "id": "t5_mm_dividida",
+   "grupo": "Tema 5 · Magic Mask y efectos",
+   "nombre": "Pantalla dividida (papel arriba, persona abajo)",
+   "que": "dividida",
+   "cuando": "una escena larga",
+   "editable": ""
+  },
+  {
+   "id": "t6_visor",
+   "grupo": "Tema 6 · editorial",
+   "nombre": "Visor de cámara sobre la cara",
+   "que": "visor",
+   "cuando": "cuando habla de grabar, la cámara, el contenido",
+   "editable": "texto, valor"
+  },
+  {
+   "id": "t6_buscar",
+   "grupo": "Tema 6 · editorial",
+   "nombre": "Barra de búsqueda que se escribe",
+   "que": "buscar",
+   "cuando": "cuando pide comentar una palabra",
+   "editable": "texto, valor"
+  },
+  {
+   "id": "t6_perfil",
+   "grupo": "Tema 6 · editorial",
+   "nombre": "Perfil con seguidores que cuentan",
+   "que": "perfil",
+   "cuando": "seguidores, comunidad, «mil»",
+   "editable": "texto, valor"
+  },
+  {
+   "id": "t6_equipo",
+   "grupo": "Tema 6 · editorial",
+   "nombre": "Píldora del equipo (3 caras)",
+   "que": "equipo",
+   "cuando": "el equipo, «nosotros»",
+   "editable": "texto, valor"
+  },
+  {
+   "id": "t6_escena",
+   "grupo": "Tema 6 · editorial",
+   "nombre": "Escena melocotón con tarjetas blancas",
+   "que": "escena",
+   "cuando": "frases largas y clave",
+   "editable": "texto, valor"
+  }
+ ],
+ "broll": [
+  {
+   "id": "broll_stock",
+   "grupo": "B-roll de stock",
+   "nombre": "Tomas de Pexels",
+   "que": "video real de lo que se nombra",
+   "cuando": "palabras que nombran cosas filmables (necesita tu clave gratuita de Pexels)",
+   "editable": "cuántas: pocos / normal / muchos"
+  },
+  {
+   "id": "broll_escena_papel",
+   "grupo": "B-roll animado (motion)",
+   "nombre": "Escena de papel (completa o media pantalla)",
+   "que": "escena_papel",
+   "cuando": "Tema 5: cifras, listas, iconos 3D, comparaciones",
+   "editable": "textos, colores"
+  },
+  {
+   "id": "broll_escena_melocoton",
+   "grupo": "B-roll animado (motion)",
+   "nombre": "Escena melocotón",
+   "que": "escena_melocoton",
+   "cuando": "Tema 6",
+   "editable": "textos, colores"
+  },
+  {
+   "id": "broll_fondo_sustituido",
+   "grupo": "B-roll animado (motion)",
+   "nombre": "Fondo animado detrás de la persona",
+   "que": "fondo_sustituido",
+   "cuando": "Temas 1–4 PRO",
+   "editable": "textos, colores"
+  },
+  {
+   "id": "broll_concepto",
+   "grupo": "B-roll animado (motion)",
+   "nombre": "Tarjeta de concepto (ConceptoK)",
+   "que": "concepto",
+   "cuando": "«éxito», «fracaso», «proceso», «equipo»",
+   "editable": "textos, colores"
+  },
+  {
+   "id": "broll_ubicacion",
+   "grupo": "B-roll animado (motion)",
+   "nombre": "Mapa + bandera",
+   "que": "ubicacion",
+   "cuando": "un país o ciudad",
+   "editable": "textos, colores"
+  },
+  {
+   "id": "broll_sticker",
+   "grupo": "B-roll animado (motion)",
+   "nombre": "Sticker congelado",
+   "que": "sticker",
+   "cuando": "gancho",
+   "editable": "textos, colores"
+  },
+  {
+   "id": "broll_final",
+   "grupo": "B-roll animado (motion)",
+   "nombre": "Pantalla final",
+   "que": "final",
+   "cuando": "cierre",
+   "editable": "textos, colores"
+  }
+ ],
+ "captions": [
+  {
+   "id": "tema_Kinetic",
+   "grupo": "Temas de captions",
+   "nombre": "Títulos de gancho",
+   "que": "Kinetic",
+   "cuando": "Títulos enormes con cintas y anillos animados en las frases clave, con un golpe de sonido.",
+   "editable": "colores, posición, emojis"
+  },
+  {
+   "id": "tema_Referencia",
+   "grupo": "Temas de captions",
+   "nombre": "Captions palabra a palabra",
+   "que": "Referencia",
+   "cuando": "Una línea fina con la palabra importante en negrita y en grande, al ritmo de la voz.",
+   "editable": "colores, posición, emojis"
+  },
+  {
+   "id": "tema_VIRAL",
+   "grupo": "Temas de captions",
+   "nombre": "Subtítulos virales",
+   "que": "VIRAL",
+   "cuando": "Texto fino con negrita cursiva, efectos de impacto y emojis que aparecen con la voz.",
+   "editable": "colores, posición, emojis"
+  },
+  {
+   "id": "tema_Tema4",
+   "grupo": "Temas de captions",
+   "nombre": "Captions limpios",
+   "que": "Tema4",
+   "cuando": "Texto blanco que se arma palabra a palabra en un recuadro, con la palabra clave grande y las conectoras pequeñas.",
+   "editable": "colores, posición, emojis"
+  },
+  {
+   "id": "tema_Tema5",
+   "grupo": "Temas de captions",
+   "nombre": "Edición total",
+   "que": "Tema5",
+   "cuando": "Lo edito todo con el sistema de los reels virales: captions sans + serif, pasos y deslizador en pantalla, escenas de papel, pantalla dividida y sonido.",
+   "editable": "colores, posición, emojis"
+  },
+  {
+   "id": "tema_Tema6",
+   "grupo": "Temas de captions",
+   "nombre": "Editorial",
+   "que": "Tema6",
+   "cuando": "Edición elegante y cálida: captions en serif fina con la frase clave grande en lima, escenas melocotón con tarjetas blancas, visor de cámara, barra de búsqueda y perfil que cuenta.",
+   "editable": "colores, posición, emojis"
+  },
+  {
+   "id": "pack_viral_superior",
+   "grupo": "Packs de captions",
+   "nombre": "Viral Superior",
+   "que": "Viral Superior",
+   "cuando": "variantes del VIRAL (arriba / abajo)",
+   "editable": "colores, posición"
+  },
+  {
+   "id": "pack_viral_inferior",
+   "grupo": "Packs de captions",
+   "nombre": "Viral Inferior",
+   "que": "Viral Inferior",
+   "cuando": "variantes del VIRAL (arriba / abajo)",
+   "editable": "colores, posición"
+  },
+  {
+   "id": "modo_normal",
+   "grupo": "Modos de caption (PRO)",
+   "nombre": "normal",
+   "que": "normal",
+   "cuando": "el caption palabra a palabra en el centro-abajo",
+   "editable": ""
+  },
+  {
+   "id": "modo_detras",
+   "grupo": "Modos de caption (PRO)",
+   "nombre": "detras",
+   "que": "detras",
+   "cuando": "la palabra clave grande DETRÁS de la persona (Magic Mask) — gancho",
+   "editable": ""
+  },
+  {
+   "id": "modo_editorial",
+   "grupo": "Modos de caption (PRO)",
+   "nombre": "editorial",
+   "que": "editorial",
+   "cuando": "serif fina con la frase clave grande en lima o blanco (Tema 6)",
+   "editable": ""
+  },
+  {
+   "id": "modo_arriba",
+   "grupo": "Modos de caption (PRO)",
+   "nombre": "arriba",
+   "que": "arriba",
+   "cuando": "sobre el sticker o la pantalla final, arriba",
+   "editable": ""
+  },
+  {
+   "id": "modo_escena",
+   "grupo": "Modos de caption (PRO)",
+   "nombre": "escena",
+   "que": "escena",
+   "cuando": "en tinta oscura dentro de la escena de papel / melocotón",
+   "editable": ""
+  },
+  {
+   "id": "gancho_kinetic",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Títulos de gancho (Kinetic)",
+   "que": "kinetic",
+   "cuando": "héroe enorme + cinta + anillo animado y golpe de sonido; recetas: lima, blanco-rojo, magenta, amarillo, serif, blanco-cian",
+   "editable": ""
+  },
+  {
+   "id": "gancho_detras",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Caption detrás de la persona",
+   "que": "detras",
+   "cuando": "la palabra fuerte del gancho detrás de la cabeza (Temas 5/6)",
+   "editable": ""
+  },
+  {
+   "id": "gancho_pasos_gancho",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Indicador 1–2–3 en rojo",
+   "que": "pasos_gancho",
+   "cuando": "«te doy 3 cosas» en los primeros segundos (Tema 5)",
+   "editable": ""
+  },
+  {
+   "id": "gancho_orbita",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Órbita de iconos",
+   "que": "orbita",
+   "cuando": "los conceptos del video girando alrededor de la cabeza",
+   "editable": ""
+  },
+  {
+   "id": "gancho_sticker",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Sticker congelado",
+   "que": "sticker",
+   "cuando": "la persona como pegatina en el gancho",
+   "editable": ""
+  },
+  {
+   "id": "gancho_titulo_neon",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Título neón con número",
+   "que": "titulo_neon",
+   "cuando": "TituloNeonK: «8 LECCIONES…» en el gancho",
+   "editable": ""
+  },
+  {
+   "id": "gancho_rueda",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Rueda de hooks",
+   "que": "rueda",
+   "cuando": "RuedaK: «CONVIERTE 1 IDEA / EN 7 HOOKS»",
+   "editable": ""
+  },
+  {
+   "id": "gancho_misterio",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Misterio numerado",
+   "que": "misterio",
+   "cuando": "MisterioK: «3 secretos» sin revelar",
+   "editable": ""
+  },
+  {
+   "id": "gancho_sonido",
+   "grupo": "Captions y gráficos de GANCHO (hook)",
+   "nombre": "Riser + golpe del gancho",
+   "que": "sonido",
+   "cuando": "el riser de la intro y el golpe bajo la voz del video",
+   "editable": ""
+  }
+ ]
+}

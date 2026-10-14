@@ -11,7 +11,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    edicion_pro\   (2474 archivos)
+    edicion_pro\   (4023 archivos)
     efectos\   (148 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
@@ -138,7 +138,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         sfx_rules.json
             cuándo suena cada efecto de sonido (editable sin tocar código)
     sfx_emoji\   (103 archivos)
-    sfx_library\   (295 archivos)  — los efectos de sonido, una carpeta por categoría
+    sfx_library\   (621 archivos)  — los efectos de sonido, una carpeta por categoría
     vistas_slider\   (14 archivos)
         .cf\   (1 archivos)
         desktop.ini

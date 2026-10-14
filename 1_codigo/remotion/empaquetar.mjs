@@ -24,6 +24,12 @@ cpSync(path.join(PRO, 'ograf', 'lib', 'iconos3d'), path.join(PUBLICO, 'iconos3d'
 cpSync(path.join(RAIZ, '2_recursos', 'emojis', 'png'), path.join(PUBLICO, 'stickers'), { recursive: true, filter: f => !f.endsWith('desktop.ini') });
 // v5.4.52: emojis ANIMADOS (Noto Emoji Animation de Google, Lottie, CC BY 4.0): los usa Emoji.tsx (si no hay, el PNG de stickers/)
 cpSync(path.join(PRO, 'lottie'), path.join(PUBLICO, 'lottie'), { recursive: true });
+// v5.5.3: los «recortes de revista» del RecorteK (trama / color / línea de neón), sacados de Fluent con herramientas_dev/generar_recortes.py
+cpSync(path.join(PRO, 'recortes'), path.join(PUBLICO, 'recortes'), { recursive: true });
+// v5.5.3: las escenas a pantalla completa (Escenas9.tsx): más Fluent 3D (MIT) y fuentes manuscrita / máquina / estarcido / condensada (OFL, Apache)
+cpSync(path.join(PRO, 'fluent_extra'), path.join(PUBLICO, 'fluent'), { recursive: true, filter: f => !f.endsWith('desktop.ini') });
+for (const [o, d] of [['Caveat.ttf', 'caveat.ttf'], ['SpecialElite-Regular.ttf', 'especial.ttf'], ['BlackOpsOne-Regular.ttf', 'estarcido.ttf'], ['Anton-Regular.ttf', 'anton.ttf']])
+  cpSync(path.join(PRO, 'fuentes_extra', o), path.join(PUBLICO, 'fuentes', d));
 if (existsSync(SALIDA)) rmSync(SALIDA, { recursive: true, force: true });
 const t0 = Date.now();
 const serve = await bundle({ entryPoint: path.join(AQUI, 'src', 'index.ts'), publicDir: PUBLICO, outDir: SALIDA, enableCaching: false,
