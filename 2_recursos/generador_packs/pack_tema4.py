@@ -41,12 +41,13 @@ def combinaciones():
     return [c]
 
 
-def construir(carpeta_salida, nombre='Tema4', contenedor=None):
-    """Genera <carpeta_salida>/<nombre> vertical.drb (+ .variantes.json, pack.json y .posiciones.json). Devuelve la ruta del .drb."""
+def construir(carpeta_salida, nombre='Tema4', contenedor=None, combos=None, guion='tema4'):
+    """Genera <carpeta_salida>/<nombre> vertical.drb (+ .variantes.json, pack.json y .posiciones.json). Devuelve la ruta del .drb.
+    combos/guion: los de otro pack con este mismo armado (pack_tema5.py: Temas 5 y 6)."""
     import plantillas
     incluidas = plantillas.carpeta_incluida()
     contenedor = contenedor or str(incluidas / 'Viral Superior' / 'Viral Superior vertical.drb')
-    combos = combinaciones()
+    combos = combos or combinaciones()
     os.makedirs(carpeta_salida, exist_ok=True)
     destino = os.path.join(carpeta_salida, f'{nombre} vertical.drb')
     guardadas = {k: g.COMBINACIONES.get(k) for k in range(1, len(combos) + 1)}
@@ -69,7 +70,7 @@ def construir(carpeta_salida, nombre='Tema4', contenedor=None):
     except Exception:
         pass
     with open(os.path.join(carpeta_salida, 'pack.json'), 'w', encoding='utf-8') as fh:
-        json.dump({'version': 2, 'nombre': nombre, 'formatos': {'v': {'drb': os.path.basename(destino)}}, 'guion': 'tema4'}, fh, ensure_ascii=False, indent=2)
+        json.dump({'version': 2, 'nombre': nombre, 'formatos': {'v': {'drb': os.path.basename(destino)}}, 'guion': guion}, fh, ensure_ascii=False, indent=2)
     return destino
 
 

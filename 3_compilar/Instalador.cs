@@ -998,6 +998,27 @@ class Instalacion
         return Directory.GetFileSystemEntries(dir).Length == 0;
     }
 
+    // v5.5.7: abre `destino` para escribirlo; si está ocupado (el antivirus revisa los .exe grandes recién creados, como chrome-headless-shell.exe de
+    // 217 MB, o un proceso que acaba de cerrarse aún lo suelta) se reintenta ~25 s, y a mitad se cierra lo que corra desde esa carpeta.
+    FileStream AbrirParaEscribir(string destino)
+    {
+        for (int intento = 1; ; intento++)
+        {
+            try { return new FileStream(destino, FileMode.Create, FileAccess.Write, FileShare.None); }
+            catch (Exception ex)
+            {
+                if (!(ex is IOException || ex is UnauthorizedAccessException) || intento >= 24) throw;
+                if (intento == 1 || intento % 6 == 0)
+                    Log("Archivo ocupado (antivirus u otro proceso), reintento " + intento + ": " + Path.GetFileName(destino) + " - " + ex.Message);
+                if (intento == 6)
+                {
+                    try { Borrado.CerrarEn(new List<string> { Path.GetDirectoryName(destino) }, Log, Application.ExecutablePath); } catch { }
+                }
+                Thread.Sleep(Math.Min(2000, 300 + 150 * intento));
+            }
+        }
+    }
+
     void CopiarPrograma(long total)
     {
         string dir = Path.GetFullPath(op.Dir).TrimEnd('\\');
@@ -1053,8 +1074,8 @@ class Instalacion
                     if (!destino.StartsWith(dir + "\\", StringComparison.OrdinalIgnoreCase)) continue;
                     if (rel.EndsWith("/")) { Directory.CreateDirectory(destino); continue; }
                     Directory.CreateDirectory(Path.GetDirectoryName(destino));
+                    using (FileStream b = AbrirParaEscribir(destino))
                     using (Stream a = e.Open())
-                    using (FileStream b = new FileStream(destino, FileMode.Create, FileAccess.Write))
                     {
                         byte[] buf = new byte[1 << 20];
                         int n;

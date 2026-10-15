@@ -28,8 +28,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_09.jpg
         fondo_10.jpg
         fondo_11.jpg
-    fonts\   (46 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
-    generador_packs\   (20 archivos)
+    fonts\   (47 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
+    generador_packs\   (21 archivos)
         .cf\   (1 archivos)
         construir_pack.py
             arma los .drb (bin de Resolve) de los packs nuevos con los macros reales Luxe Shine / Luxe Slide (luxe_macro.py).
@@ -55,6 +55,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             arma el pack «Referencia»: 8 estilos de principal (Luxe Shine y presets de Amro) con las líneas pequeñas en dos pesos.
         pack_tema4.py
             arma el pack «Tema4» (Tema 4): captions blancos de una sola tipografía que se arman palabra a palabra en un recuadro.
+        pack_tema5.py
+            arma los packs «Tema5» y «Tema6»: los captions Text+ EDITABLES con el diseño de sus captions de Remotion.
         pack_viral.py
             arma el pack «VIRAL»: los elementos del estilo de subtítulos virales (línea fina, negrita, shatter, select, drag).
         viral_comps.py

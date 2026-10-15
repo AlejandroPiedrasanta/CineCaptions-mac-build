@@ -1,44 +1,182 @@
 {
  "1": {
-  "nombre": "Blanco",
-  "color": "#FFFFFF",
+  "nombre": "Azul",
+  "color": "#4C7DFF",
   "roles": {
    "context": {
     "f1": [
-     "Inter 24pt",
-     "Bold"
+     "Inter 18pt",
+     "Medium"
     ],
     "f2": [
-     "Inter 24pt",
-     "Bold"
+     "Inter 18pt",
+     "Medium"
     ],
-    "tam": 0.14,
+    "tam": 0.065,
     "color": "#FFFFFF",
     "mayus": false
    },
    "main": {
     "f1": [
-     "Inter 24pt",
-     "Bold"
+     "DM Serif Text",
+     "Italic"
     ],
     "f2": [
-     "Inter 24pt",
-     "Bold"
+     "DM Serif Text",
+     "Italic"
     ],
-    "tam": 0.14,
-    "color": "#FFFFFF",
+    "tam": 0.15,
+    "color": "#4C7DFF",
     "mayus": false
    },
    "complement": {
     "f1": [
-     "Inter 24pt",
-     "Bold"
+     "Inter 18pt",
+     "Medium"
     ],
     "f2": [
-     "Inter 24pt",
-     "Bold"
+     "Inter 18pt",
+     "Medium"
     ],
-    "tam": 0.14,
+    "tam": 0.065,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "2": {
+  "nombre": "Ámbar",
+  "color": "#F5A524",
+  "roles": {
+   "context": {
+    "f1": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "tam": 0.065,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.15,
+    "color": "#F5A524",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "tam": 0.065,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "3": {
+  "nombre": "Lima",
+  "color": "#B9E25B",
+  "roles": {
+   "context": {
+    "f1": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "tam": 0.065,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.15,
+    "color": "#B9E25B",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "tam": 0.065,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "4": {
+  "nombre": "Lila",
+  "color": "#A98BFF",
+  "roles": {
+   "context": {
+    "f1": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "tam": 0.065,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "f2": [
+     "DM Serif Text",
+     "Italic"
+    ],
+    "tam": 0.15,
+    "color": "#A98BFF",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "f2": [
+     "Inter 18pt",
+     "Medium"
+    ],
+    "tam": 0.065,
     "color": "#FFFFFF",
     "mayus": false
    }

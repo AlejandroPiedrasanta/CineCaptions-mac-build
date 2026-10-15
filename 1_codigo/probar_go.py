@@ -51,6 +51,10 @@ def main():
         _leer_antes = ajustes_ui.leer_prefs
         _extra = json.loads(os.environ.get('CINECAPTIONS_FX_OPC') or '{}')                  # p. ej. {"fx_zoom": "normal", "fx_cortes": "glitch"}: opciones sueltas solo en memoria
         ajustes_ui.leer_prefs = lambda: {**_leer_antes(), 'go_efectos_visuales': True, **_extra}
+    if os.environ.get('CINECAPTIONS_PREFS'):                                               # v5.5.8: cualquier preferencia suelta SOLO en memoria (p. ej. las opciones de la PRO
+        _leer_p = ajustes_ui.leer_prefs                                                    # para los videos de ejemplo: motions, sin escenas a pantalla completa…)
+        _prefs_extra = json.loads(os.environ['CINECAPTIONS_PREFS'])
+        ajustes_ui.leer_prefs = lambda: {**_leer_p(), **_prefs_extra}
     ajustes_ui.guardar_prefs = lambda *a, **k: None                                       # NUNCA escribe las preferencias del usuario
     if os.environ.get('CINECAPTIONS_PRO') in ('0', '1'):                                   # la Edición PRO apagada/encendida solo en memoria (p. ej. el pase ligero de los Temas 1–4)
         import edicion_pro

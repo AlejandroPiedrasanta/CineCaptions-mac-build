@@ -1,7 +1,7 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/herramientas_dev/probar_go_sin_resolve.py — GO de punta a punta SIN Resolve (CINECAPTIONS_SIN_RESOLVE=1), sin pantalla, sobre una copia del video.
 """
-    6_compilacion/venv314/Scripts/python.exe 1_codigo/herramientas_dev/probar_go_sin_resolve.py <video> [--por-ajuste]
+    6_compilacion/venv314/Scripts/python.exe 1_codigo/herramientas_dev/probar_go_sin_resolve.py <video> [--por-ajuste] [--tema Kinetic|Referencia|VIRAL|Tema4|Tema5|Tema6 (en memoria)]
 
 --por-ajuste: en vez de CINECAPTIONS_SIN_RESOLVE=1, enciende en memoria el interruptor de Ajustes «Video MP4 en lugar de Resolve».
 
@@ -44,6 +44,10 @@ def main():
     if por_ajuste:
         _leer = ajustes_ui.leer_prefs
         ajustes_ui.leer_prefs = lambda: {**_leer(), 'go_salida_mp4': True}
+    tema = sys.argv[sys.argv.index('--tema') + 1] if '--tema' in sys.argv else None     # v5.5.8: el tema de GO (nombre interno: Kinetic, Referencia, VIRAL, Tema4…), en memoria
+    if tema:
+        _leer_t = ajustes_ui.leer_prefs
+        ajustes_ui.leer_prefs = lambda: {**_leer_t(), 'go_pack': tema}
     if hasattr(ajustes_ui, 'mezclar_prefs'):
         ajustes_ui.mezclar_prefs = lambda *a, **k: None
     proyectos.guardar = lambda *a, **k: None
@@ -55,6 +59,8 @@ def main():
     app = M.ui.crear_app(['go'], carpeta_fuentes=M.BASE_RECURSOS / 'fonts')
     w = M.SubtitleApp()
     w._guardar_preferencias = lambda *a, **k: None
+    if tema:
+        w.plantilla_sel = tema
     w.move(-5000, -5000)
     w.show()
     faulthandler.dump_traceback_later(600, exit=True)

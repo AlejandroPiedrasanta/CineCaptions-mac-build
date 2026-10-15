@@ -217,6 +217,25 @@ def _marcar_claves(ps):
     return sel
 
 
+def marcar_claves(ps, editorial=False):
+    """`_marcar_claves` y, en el Tema 6 (editorial), cada bloque con su línea grande (como la referencia): sin clave, el bloque corto entero o la
+    última palabra de contenido (con su vecina). La usan estos captions de Remotion y los Text+ editables (tema4_planificador)."""
+    _marcar_claves(ps)
+    if not editorial or any(w.get('clave') for w in ps):
+        return
+    if len(ps) <= 2 and sum(len(w['texto']) for w in ps) <= 16:
+        for w in ps:
+            w['clave'] = True
+        return
+    k = next((i for i in range(len(ps) - 1, -1, -1) if len(_plegar(ps[i]['texto'])) >= 4 and _plegar(ps[i]['texto']) not in CONECTORAS
+              and _plegar(ps[i]['texto']) not in DEBILES), None)
+    if k is not None:
+        ps[k]['clave'] = True
+        if (k > 0 and _plegar(ps[k - 1]['texto']) not in CONECTORAS and _plegar(ps[k - 1]['texto']) not in DEBILES
+                and len(ps[k - 1]['texto']) + len(ps[k]['texto']) <= 17):
+            ps[k - 1]['clave'] = True
+
+
 def planificar(plan, vertical=True, densidad='media', video='', det_de=None, foto_de=None, ia=True, idioma='es', estado=None,
                recorte_de=None, cara_de=None, usuario='', estilo='skill'):
     """Todas las piezas del Tema 5 (captions, elementos en pantalla, escenas) y las ventanas de pantalla dividida [{'ini', 'fin', 'bajar'}]
@@ -238,19 +257,7 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
         _marcar_claves(b['palabras'])
     temas = T6.temas_del_video(bl, frozenset(DEBILES)) if editorial else set()   # el tema del video: las claves de verdad que se repiten
     for b in bl:
-        if editorial and not any(w.get('clave') for w in b['palabras']):     # Tema 6: cada bloque con su línea grande (como la referencia)
-            ps = b['palabras']
-            if len(ps) <= 2 and sum(len(w['texto']) for w in ps) <= 16:
-                for w in ps:
-                    w['clave'] = True
-            else:
-                k = next((i for i in range(len(ps) - 1, -1, -1) if len(_plegar(ps[i]['texto'])) >= 4 and _plegar(ps[i]['texto']) not in CONECTORAS
-                          and _plegar(ps[i]['texto']) not in DEBILES), None)
-                if k is not None:
-                    ps[k]['clave'] = True
-                    if (k > 0 and _plegar(ps[k - 1]['texto']) not in CONECTORAS and _plegar(ps[k - 1]['texto']) not in DEBILES
-                            and len(ps[k - 1]['texto']) + len(ps[k]['texto']) <= 17):
-                        ps[k - 1]['clave'] = True
+        marcar_claves(b['palabras'], editorial)                            # Tema 6: cada bloque con su línea grande (como la referencia)
     todas = [(b['ini'] + w['t'], _plegar(w['texto']), w['texto'], n, j) for n, b in enumerate(bl) for j, w in enumerate(b['palabras'])]
     dur = max(b['fin'] for b in bl)
     ocupado = [(float(m.get('ini', 0)) - 0.3, float(m.get('ini', 0)) + float(m.get('dur', 0)) + 0.3) for m in plan.get('broll') or []]

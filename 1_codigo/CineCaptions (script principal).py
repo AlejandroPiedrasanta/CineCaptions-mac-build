@@ -7216,7 +7216,7 @@ class SubtitleApp(QWidget):
         txt_pro = tr('sí') if self._go_pro() else (tr('la del tema') if pro_tema else tr('no'))
         txt_vis = (tr('los de la PRO') if (self._go_pro() or pro_tema) else tr('sí')) if self._go_visuales() else tr('no')
         chips = [(tr('Estilo: {p}', p=nombre_pack), self._menu_estilo_go,
-                  tr('Clic: elegir el tema de GO (Tema 1 = títulos de gancho, Tema 2 = captions palabra a palabra, Tema 3 = subtítulos virales).') if plantillas.SOLO_TEMAS
+                  tr('Clic: elegir el tema de GO (Tema 1 a Tema 6).') if plantillas.SOLO_TEMAS
                   else tr('Clic: elegir el estilo de GO (Referencia = captions palabra a palabra, línea fina y negrita + palabra grande; Diseño automático = 3 líneas).')),
                  (tr('Emojis: {v}', v=tr('sí') if self._go_emojis() else tr('no')), self._alternar_emojis_go,
                   tr('Clic: con o sin emojis en los subtítulos.')),
@@ -7280,12 +7280,7 @@ class SubtitleApp(QWidget):
         for p in guion:
             marca = '✓  ' if p.nombre == actual else '      '
             extra = '' if plantillas.sirve_en_go(p, formato) else tr('  (solo vertical)')
-            etiqueta = (tr('{n} · subtítulos virales', n=plantillas.nombre_visible(p.nombre)) if getattr(p, 'viral', False)
-                        else tr('{n} · títulos de gancho', n=plantillas.nombre_visible(p.nombre)) if getattr(p, 'kinetic', False)
-                        else tr('{n} · captions limpios', n=plantillas.nombre_visible(p.nombre)) if p.nombre == 'Tema4'
-                        else tr('{n} · edición total', n=plantillas.nombre_visible(p.nombre)) if p.nombre == 'Tema5'
-                        else tr('{n} · editorial', n=plantillas.nombre_visible(p.nombre)) if p.nombre == 'Tema6'
-                        else tr('{n} · captions palabra a palabra', n=plantillas.nombre_visible(p.nombre)))
+            etiqueta = plantillas.nombre_visible(p.nombre)              # v5.5.8 (pedido del usuario): solo «Tema 1» … «Tema 6», sin apodo
             menu.agregar(marca + etiqueta + extra, lambda n=p.nombre: self._poner_go_pack(n))
         if not plantillas.SOLO_TEMAS:
             marca = '✓  ' if actual in (base, 'dinamico', 'auto') else '      '
@@ -7826,7 +7821,7 @@ class SubtitleApp(QWidget):
         (si es de verdad un pack) y, si no, Referencia. Los packs sin formato vertical (Referencia lo es) no valen para un video horizontal."""
         forzado = getattr(self, '_go_pack_forzado', None)
         if forzado and getattr(self, '_un_clic', False):
-            return forzado                    # v5.4.47: GO sin Resolve graba Tema 4 (el único estilo que se dibuja fuera de Resolve)
+            return forzado                    # v5.4.47: GO sin Resolve con un pack que no se sabe dibujar fuera de Resolve: Tema 4
         actual = getattr(self, 'plantilla_sel', '') or ''
         formato = self._formato_para_temas()
         try:
@@ -7855,6 +7850,9 @@ class SubtitleApp(QWidget):
     def _go(self):
         if getattr(self, '_go_corriendo', False) or self._editor_abierto():
             return
+        if getattr(self, '_cancelando', False):       # v5.5.8: aún cerrando lo del GO cancelado: no se mezclan dos GO
+            self.status_var.set(tr('Terminando de cancelar el GO anterior: un momento…'))
+            return
         if getattr(self, '_caducada', False):
             messagebox.showwarning(tr('Versión de prueba'), MENSAJE_CADUCADA, parent=self)
             return
@@ -7878,8 +7876,16 @@ class SubtitleApp(QWidget):
         self._ultimos_bloques = None
         # v5.4.47: sin DaVinci Resolve en el equipo GO entrega el video con los subtítulos grabados (render_sin_resolve.py, estilo Tema 4)
         self._go_sin_resolve = self._resolve_no_instalado()
-        self._go_pack_forzado = 'Tema4' if self._go_sin_resolve else None
+        self._go_pack_forzado = None
+        if self._go_sin_resolve:                       # v5.5.8: el tema elegido (render_temas.py dibuja los 6); un pack propio o una mezcla, con el Tema 4
+            try:
+                elegido = self._plantilla_un_clic()
+            except Exception:
+                elegido = None
+            if elegido not in plantillas.FABRICA:
+                self._go_pack_forzado = 'Tema4'
         self._go_cues_render = None
+        self._go_render_estilo = None
         self._textos_pasos_go()
         self.go_panel.empezar()
         self.go_panel.paso('timeline')
@@ -8469,18 +8475,36 @@ class SubtitleApp(QWidget):
         self.go_panel.poner_pausa(self._pausa_go)
         self.status_var.set(tr('GO en pausa: pulsa «Reanudar» para seguir.') if self._pausa_go else tr('Sigo con GO…'))
     def _go_cancelar(self):
+        """v5.5.8 (pedido del usuario: «solo Cancelar, grande y en rojo; que cierre todo lo que está haciendo, que cierre Resolve y sus procesos en
+        automático y que vuelva a Inicio para empezar de 0»). La doble pulsación ya la pidió el panel (sin cuadros). Corta el trabajo, cierra a la
+        fuerza Resolve y los procesos de CineCaptions (colocacion.parar_todo) en un hilo y, cuando el trabajo se detiene (o a los 25 s), Inicio
+        queda como recién abierto."""
         if getattr(self, '_cancelar_go', False):
             return
-        if not messagebox.askyesno(tr('Cancelar GO'), tr('¿Cancelo GO? Lo ya hecho se conserva (la voz transcrita no se repite) y puedes reanudarlo.'), parent=self):
-            return
         self._cancelar_go = True
+        self._cancelando = True
         self._pausa_go = False
         try:
             import motor_voz
             motor_voz.abortar()                       # la voz de Qwen (otro proceso) se corta ya; Whisper para al siguiente avance
         except Exception:
             pass
-        self.go_panel.linea.configure(text=tr('Cancelando…'))
+        self.go_panel.linea.configure(text=tr('Cancelando: cierro DaVinci Resolve y lo que estaba haciendo…'))
+        trabajador = getattr(self, 'worker', None)
+
+        def cerrar_todo():
+            import colocacion
+            colocacion.parar_todo(decir=lambda t: self.msg_queue.put(('status', t)))
+            t0 = time.time()
+            while trabajador is not None and trabajador.is_alive() and time.time() - t0 < 25:
+                time.sleep(0.25)
+            return True
+
+        def fin(_r, _e):
+            self._cancelando = False
+            if getattr(self, '_cancelar_go', False) or getattr(self, '_go_corriendo', False):
+                self._go_cancelado()
+        _correr_en_hilo(self, cerrar_todo, fin)
     def _punto_control_go(self):
         """Lo llama el HILO de trabajo en cada avance: si GO está en pausa espera; si se canceló, termina (SystemExit llega al manejo de errores de siempre)."""
         if not getattr(self, '_un_clic', False):
@@ -8490,7 +8514,12 @@ class SubtitleApp(QWidget):
         if getattr(self, '_cancelar_go', False):
             raise SystemExit(tr('GO cancelado.'))
     def _go_cancelado(self):
-        """El trabajo paró por la cancelación del usuario: el panel lo dice sin alarma y ofrece «Reanudar»."""
+        """El trabajo paró por la cancelación del usuario. v5.5.8: se vuelve a Inicio DE CERO (sin «Reanudar»: el usuario lo pidió así); si
+        el hilo de cancelar aún está cerrando Resolve, él lo termina al acabar."""
+        if getattr(self, '_cancelando', False):
+            return                                                # (lo remata _go_cancelar cuando haya cerrado todo)
+        if not getattr(self, '_go_corriendo', False) and not getattr(self, '_cancelar_go', False):
+            return                                                # (ya se hizo)
         registro.info('GO cancelado por el usuario', 'GO')
         self._fin_tarea(False, tr('GO cancelado'))
         self._borrar_go_en_curso()
@@ -8499,9 +8528,17 @@ class SubtitleApp(QWidget):
         self._cancelar_go = False
         self._pausa_go = False
         self._set_inputs_enabled(True)
-        if getattr(self, '_ultimo_go_archivo', None):
-            self._go_archivo = self._ultimo_go_archivo           # «Reanudar» (el orbe) vuelve a lanzar GO con ese mismo video
-        self.go_panel.cancelado(tr('Lo ya hecho se conserva: al reanudar, la voz no se transcribe otra vez.'))
+        self._go_archivo = None
+        self._ultimo_go_archivo = None
+        try:
+            self.go_panel.reposo(tr('GO cancelado: todo parado. Suelta un video o pulsa GO para empezar de nuevo.'), listo=True, forzar=True)
+        except Exception:
+            self.go_panel.cancelado(tr('GO cancelado.'))
+        try:
+            self.ir_a('inicio')
+        except Exception:
+            pass
+        self.status_var.set(tr('GO cancelado: cerré DaVinci Resolve y todo lo que estaba haciendo.'))
     def _ruta_go_en_curso(self):
         return Path.home() / 'DaVinciSubtitles' / 'go_en_curso.json'
     def _marcar_go_en_curso(self, archivo):
@@ -8531,6 +8568,9 @@ class SubtitleApp(QWidget):
         except Exception:
             pass
     def _go_fallo(self, clave, mensaje):
+        if getattr(self, '_cancelar_go', False) or getattr(self, '_cancelando', False):
+            self._go_cancelado()                      # v5.5.8: lo que falla porque se cerró Resolve al cancelar no es un error
+            return
         self._borrar_go_en_curso()
         registro.error(str(mensaje).splitlines()[0][:200] if mensaje else tr('GO no pudo terminar'), f'GO · {clave}', detalle=str(mensaje or ''))
         self._fin_tarea(False, str(mensaje).splitlines()[0][:160] if mensaje else '')
@@ -8656,12 +8696,14 @@ class SubtitleApp(QWidget):
         except Exception:
             pass
     def _go_grabar_video(self):
-        """v5.4.47, GO sin DaVinci Resolve: graba los subtítulos de Tema 4 (con sus sonidos y emojis) en una copia MP4 del video, junto al original.
+        """v5.4.47, GO sin DaVinci Resolve: graba los subtítulos (con sus sonidos y emojis) en una copia MP4 del video, junto al original.
+        v5.5.8: con el tema elegido (render_temas.py dibuja los 6; antes solo el Tema 4).
         El render corre en un hilo (render_sin_resolve.renderizar); la interfaz solo lee su avance."""
         video = self.video_var.get().strip().strip('"')
         cues = getattr(self, '_go_cues_render', None)
+        estilo = getattr(self, '_go_render_estilo', None)
         if not cues or not video or not Path(video).is_file():
-            self._go_fallo('resolve', tr('No pude preparar los subtítulos de Tema 4 para grabarlos en el video (¿el video tiene voz?).'))
+            self._go_fallo('resolve', tr('No pude preparar los subtítulos para grabarlos en el video (¿el video tiene voz?).'))
             return
         try:
             proyectos.guardar(video, project_name=Path(video).expanduser().stem, idioma=self._codigo_idioma(), traducir_ingles=False)
@@ -8671,7 +8713,7 @@ class SubtitleApp(QWidget):
             pass
         try:
             import ajustes_ui
-            emoji_arriba = str(ajustes_ui.leer_prefs().get('emoji_posicion') or '') != 'abajo'     # Tema 4: arriba, salvo que se eligiera «Abajo»
+            emoji_arriba = str(ajustes_ui.leer_prefs().get('emoji_posicion') or '') != 'abajo'     # arriba, salvo que se eligiera «Abajo»
         except Exception:
             emoji_arriba = True
         self.go_panel.linea.configure(text=tr('Grabando los subtítulos en el video…'))
@@ -8687,7 +8729,7 @@ class SubtitleApp(QWidget):
             import render_sin_resolve
             try:
                 est['r'] = render_sin_resolve.renderizar(video, cues, progreso=lambda f, t: est.update(f=f, texto=t),
-                                                         cancelado=parar, emoji_arriba=emoji_arriba)
+                                                         cancelado=parar, emoji_arriba=emoji_arriba, estilo=estilo)
             except BaseException as e:
                 est['error'] = f'{type(e).__name__}: {e}'
                 registro.excepcion(origen='GO sin Resolve · render')
@@ -13021,8 +13063,12 @@ class SubtitleApp(QWidget):
         # y el estilo que dejó en cada bloque. v5.10: es la MISMA función que usa el editor para «Así se verá este bloque» (guion_editor.planear):
         # lo que se ve ahí es, por construcción, lo que se escribe aquí para Resolve.
         import guion_editor
+        try:
+            video_g = self.video_var.get().strip().strip('"') or None     # v5.5.8: el Tema 5 saca de él el color de la frase clave
+        except Exception:
+            video_g = None
         res_plan = guion_editor.planear(palabras_finales, roles_finales, pack.nombre, ancla=ancla, fin_video=self._fin_video(), idioma=base_lang,
-                                        automatico=bool(getattr(self, '_un_clic', False)))
+                                        automatico=bool(getattr(self, '_un_clic', False)), video=video_g)
         cues, plan = res_plan['cues'], res_plan['plan']
         if not cues:
             avisar(tr('No encontré palabras para armar el estilo «{p}»: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
@@ -13055,6 +13101,7 @@ class SubtitleApp(QWidget):
         json_path = gc.escribir(cues, st.SHARED_FOLDER / f'{project_name}.{base_lang}.guion.json', base_lang)
         if sin_resolve:
             self._go_cues_render = cues                              # GO sin Resolve: render_sin_resolve los graba en el video
+            self._go_render_estilo = {'tipo': 'guion', 'pack': pack.nombre}
         srt_path = st.SHARED_FOLDER / f'{project_name}.{base_lang}.srt'
         try:
             st.write_srt([st.Cue(start=b['start'], end=b['end'], text=' '.join(l['text'] for l in b['lines'])) for b in bloques], 42, 2, srt_path)
@@ -13072,7 +13119,8 @@ class SubtitleApp(QWidget):
         coloca cada elemento como su propio clip del pack. Con el editor mandan las palabras marcadas como Principal (héroes forzados); GO decide solo.
         Sonidos: el mismo modo de Sonido (un golpe cuando entra la palabra héroe). Sin emojis (no forman parte de este estilo).
         Devuelve (bloques, track, pista_sfx) con el .json ya escrito (el mismo contrato que _generar_con_guion), o None si no se puede."""
-        formato = self._formato_forzado() or self._formato_en_juego() or 'v'
+        sin_resolve = bool(getattr(self, '_go_sin_resolve', False))     # v5.5.8: GO sin Resolve dibuja el diseño vertical (render_temas.py) en cualquier video
+        formato = 'v' if sin_resolve else (self._formato_forzado() or self._formato_en_juego() or 'v')
         es_viral = bool(getattr(pack, 'viral', False))
         if formato not in (('v', 'h') if es_viral else ('v',)) or formato not in pack.formatos:
             avisar(tr('El estilo «{p}» es para vídeo vertical u horizontal: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)) if es_viral
@@ -13097,7 +13145,7 @@ class SubtitleApp(QWidget):
             except Exception:
                 mains = None
         if es_viral:
-            ancho_tl, alto_tl = int(getattr(self, '_ancho_timeline', 0) or 0), int(getattr(self, '_alto_timeline', 0) or 0)
+            ancho_tl, alto_tl = (0, 0) if sin_resolve else (int(getattr(self, '_ancho_timeline', 0) or 0), int(getattr(self, '_alto_timeline', 0) or 0))
             if not (ancho_tl > 0 and alto_tl > 0):
                 ancho_tl, alto_tl = (1920, 1080) if formato == 'h' else (1080, 1920)
             res = kp.planificar(palabras_finales, idioma=base_lang, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=ancla, mains=mains, fin_video=self._fin_video())
@@ -13128,6 +13176,9 @@ class SubtitleApp(QWidget):
                 if k in b:
                     c[k] = b[k]
         json_path = kc.escribir(cues, st.SHARED_FOLDER / f'{project_name}.{base_lang}.kinetic.json', base_lang)
+        if sin_resolve:
+            self._go_cues_render = cues                              # GO sin Resolve: render_sin_resolve los graba en el video (render_temas.py)
+            self._go_render_estilo = {'tipo': 'viral' if es_viral else 'kinetic', 'pack': pack.nombre}
         srt_path = st.SHARED_FOLDER / f'{project_name}.{base_lang}.srt'
         try:
             st.write_srt([st.Cue(start=b['start'], end=b['end'], text=' '.join(l['text'] for l in b['lines'])) for b in bloques], 42, 2, srt_path)
@@ -13409,7 +13460,9 @@ class SubtitleApp(QWidget):
                 base_lang = st.idioma_detectado(words) or 'es'
                 registro.info(f'Idioma detectado: {base_lang}', 'voz')
                 self.msg_queue.put(('idioma', base_lang))
-            manifest = {'project': project_name, 'tracks': []}
+            # v5.5.8: con GO, la Edición PRO (o su pase ligero) mueve los captions DESPUÉS de colocarlos: la caché de render la marca ella al final
+            # (marcarla antes, con los clips aún moviéndose, hacía caer a Resolve)
+            manifest = {'project': project_name, 'tracks': [], 'cache_captions': not getattr(self, '_un_clic', False)}
             if modo == 'destacados':
                 import dynamic_subtitles as dyn
                 palabras = [w for w in words if w['word'].strip()]

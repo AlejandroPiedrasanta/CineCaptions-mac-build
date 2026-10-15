@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.5.7 (subtitulos)"
+local VERSION = "5.5.8 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -1103,8 +1103,16 @@ end
 -- pasa a «user» (UNA vez): Resolve pre-renderiza los titulos en segundo plano
 -- y la reproduccion va fluida. Nunca falla.
 -- (dentro de COLORES_CC: el bloque principal ya roza el limite de 200 locales de Lua)
+-- v5.5.8 (gemelo del .py): NO al colocarlo: se apunta y se marca al FINAL (cachear_pendientes), con el clip ya en su sitio
 COLORES_CC.cachear = function(item)
     if item == nil then return end
+    COLORES_CC.pendientes = COLORES_CC.pendientes or {}
+    table.insert(COLORES_CC.pendientes, item)
+end
+COLORES_CC.cachear_pendientes = function(manifest)
+    local pendientes = COLORES_CC.pendientes or {}
+    COLORES_CC.pendientes = {}
+    if #pendientes == 0 or (type(manifest) == "table" and manifest.cache_captions == false) then return end
     if not COLORES_CC.cache_hecho then
         COLORES_CC.cache_hecho = true
         pcall(function()
@@ -1114,7 +1122,7 @@ COLORES_CC.cachear = function(item)
             end
         end)
     end
-    pcall(function() item:SetFusionOutputCache("enabled") end)
+    for _, item in ipairs(pendientes) do pcall(function() item:SetFusionOutputCache("enabled") end) end
 end
 
 local function colocar_medido(media_pool, timeline, plantilla, desde,
@@ -7517,6 +7525,7 @@ local function main()
         resumen = resumen .. string.format(" y %d efectos", total_efectos)
     end
     resumen = resumen .. "  ·  v" .. (VERSION:match("^[%d%.]+") or VERSION)
+    COLORES_CC.cachear_pendientes(manifest)     -- v5.5.8: la cache de render, AL FINAL (gemelo del .py)
     -- v5.5: la disposicion de pantalla y el cabezal al inicio (gemelo de vista_final de CineCaptions.py)
     vista_final(timeline, manifest, (total_lineas or 0) == 0)
     return resumen, total_lineas

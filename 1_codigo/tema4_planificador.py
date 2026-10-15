@@ -31,29 +31,76 @@ EM_MIN = 38.0                             # por debajo de esto una línea se lee
 EM_BASE = 0.14 * GC.K_PX                  # el «Size» del pack × 640 px: lo que mide la letra a zoom 1
 F_CLAVE, F_NORMAL, F_PEQ = 1.4, 1.0, 0.62  # tamaño relativo de cada clase
 ESPACIADO = 0.95                          # CharacterSpacing del pack
-HUECO = 0.12                              # hueco entre palabras (× la letra de la palabra anterior)
+HUECO = 0.28                              # hueco entre palabras (× la letra normal de la línea). v5.5.8: era 0,12; MEDIDO en el render a 1080 de Resolve: 7 px con letra de 58 px y se leían pegadas («Numberone», «stopoversizing»)
 INTERLINEA = 0.92                         # de línea de base a línea de base (× la letra mayor de las dos líneas)
 CENTRO_CAP = 0.364                        # el centro del texto está medio «alto de mayúscula» por encima de la línea de base
 MAX_PESO = 5.5                            # un bloque pesa lo que sus palabras: normal 1, conectora 0,5 (la referencia parte «paquete de redes sociales más | vendido»)
 MAX_PALABRAS = 7
 MAX_CARACTERES = 38
 MIN_LETRAS_CLAVE = 4                      # la palabra clave (la primera de la oración) tiene al menos tantas letras
-AFINADO = {'adelanto': 0.03, 'hold': 0.25, 'gap_minimo': 0.06, 'min_bloque': 0.6, 'ancho': 1.0}
+AFINADO = {'adelanto': 0.03, 'hold': 0.25, 'gap_minimo': 0.06, 'min_bloque': 0.6, 'ancho': 1.08}   # v5.5.8 'ancho' 1,0 → 1,08: MEDIDO en el render de Resolve (Tema 5, 1080 px), cada palabra sale un 5–13 % más ancha que lo que mide Pillow
 PEQ = set('''es lo de del y e o u un una el la los las en se'''.split())
 PEQ_EN = set('''a an the and or of in on at to is it its as be by if so we my'''.split())
 PEQ = PEQ | PEQ_EN
+
+# v5.5.8 — los Temas 5 y 6 con captions Text+ EDITABLES: los mismos bloques y tiempos que el Tema 4, pero con el diseño de sus captions de Remotion
+# (remotion/src/Subtitulo.tsx): lo que se dice en una letra pequeña blanca y la FRASE CLAVE grande en otra letra y otro color, en su propia línea
+# (o en la de las 1-2 palabras cortas de delante), todas las líneas centradas alrededor de `y`. Los packs «Tema5»/«Tema6» (pack_tema5.py) llevan
+# una variante por color de la clave: el bloque elige la suya (`estilo` del cue). 'S' y 'K' son los de Subtitulo.tsx (fracción del lado corto).
+DISENOS = {
+    'Tema5': {'estilo': 'skill', 'sans': ('Inter 18pt', 'Medium'), 'serif': ('DM Serif Text', 'Italic'), 'S': 0.035, 'K': 2.4, 'y': 0.56,
+              'alto_serif': 0.98, 'alto_sans': 1.32, 'tam_sans': 0.065, 'tam_serif': 0.15, 'esp_sans': 0.995, 'esp_serif': 0.99,
+              'variantes': ('azul', 'ambar', 'lima', 'lila')},              # = edicion_pro_tema5.ACENTOS (el de acento_de_video)
+    'Tema6': {'estilo': 'editorial', 'sans': ('Instrument Serif', 'Regular'), 'serif': ('Instrument Serif', 'Regular'), 'S': 0.048, 'K': 2.3,
+              'y': 0.52, 'alto_serif': 0.9, 'alto_sans': 1.18, 'tam_sans': 0.085, 'tam_serif': 0.19, 'esp_sans': 0.985, 'esp_serif': 0.985,
+              'variantes': ('lima', 'blanco')},                             # = edicion_pro_tema6.LIMA / BLANCO (color_clave)
+}
+HUECO_SKILL = 0.27                        # hueco entre palabras (× la letra de la palabra que sigue), como Subtitulo.tsx
+MAX_ANCHO_SKILL = 0.86                    # la línea más ancha cabe en el 86 % del ancho
+LETRAS_SANS = 34                          # una línea de la letra pequeña lleva ~34 letras
+AIRE_SKILL = 0.12                         # aire mínimo entre las letras de dos líneas (× la letra pequeña)
+# Lo que mide de verdad cada tipografía en el render de Resolve frente a Pillow: 'em' (la letra que pinta Fusion por unidad de «Size» × K_PX) y
+# 'ancho' (lo que queda: ancho de la palabra a esa letra). Fusion escala cada tipografía por su alto de línea (ascendente + descendente de hhea):
+# em ≈ 1,30 / (asc + desc). MEDIDO (v5.5.8, render a 1080 de Resolve Studio): Instrument Serif (1,30) sale con el ancho de Pillow (tinta = 0,955 del
+# avance × 0,985 de espaciado: las letras justas) y los centros a ±4 px. Inter 24pt Bold: el 1,08 del Tema 4 (con su ESPACIADO 0,95; em sin tocar).
+CALIBRADO = {('Inter 24pt', 'Bold'): {'ancho': 1.08, 'em': 1.0},
+             ('Instrument Serif', 'Regular'): {'ancho': 1.0, 'em': 1.0},
+             ('Inter 18pt', 'Medium'): {'ancho': 1.0, 'em': 1.074},       # 1,30 / 1,21 (el Inter Bold del Tema 4 midió 1,06–1,08)
+             ('DM Serif Text', 'Italic'): {'ancho': 1.0, 'em': 0.948}}    # 1,30 / 1,371 (medido: alto 94 px / 91 previstos)
+
+
+def _calibrado(fuente):
+    return CALIBRADO.get(tuple(fuente)) or {'ancho': AFINADO['ancho'], 'em': 1.0}
+
+
+def _metricas(fuente):
+    """(línea de base dentro de una línea de alto 1 em —como el navegador—, centro vertical del Text+ sobre la línea de base), en em."""
+    try:
+        asc, desc = (v / 200.0 for v in GC._fuente(tuple(fuente), 200).getmetrics())     # (Pillow: ascender y descender de hhea, en px)
+    except Exception:
+        asc, desc = 0.969, 0.241
+    return (1.0 + asc - desc) / 2.0, (asc - desc) / 2.0              # Inter: 0,864 y 0,364 (= CENTRO_CAP, medido en Resolve)
+
+
+def _tinta(texto, fuente):
+    """(arriba, abajo) de las letras de `texto` respecto a su línea de base, en em (arriba < 0)."""
+    try:
+        b = GC._fuente(tuple(fuente), 200).getbbox(texto, anchor='ls')
+        return b[1] / 200.0, b[3] / 200.0
+    except Exception:
+        return -0.75, 0.2
 
 
 def _plano(t):
     return GP._plano(t)
 
 
-def _ancho_em(texto):
-    """Ancho de `texto` en «em» (1 = el tamaño de la letra) con la tipografía y el espaciado del pack."""
-    f = GC._fuente(FUENTE, 200)
+def _ancho_em(texto, fuente=FUENTE, espaciado=ESPACIADO):
+    """Ancho de `texto` en «em» (1 = el tamaño de la letra) con la tipografía y el espaciado del pack (v5.5.8: la de cada clase de palabra)."""
+    f = GC._fuente(tuple(fuente), 200)
     if f is None:
-        return len(texto) * 0.58 * ESPACIADO
-    return f.getlength(texto) / 200.0 * ESPACIADO * AFINADO['ancho']
+        return len(texto) * 0.58 * espaciado
+    return f.getlength(texto) / 200.0 * espaciado * _calibrado(fuente)['ancho']
 
 
 def _clase(pal, k, clave, pesos_orig):
@@ -186,8 +233,28 @@ def _disponer(palabras):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------- el plan
-def planificar(palabras, idioma='es', pack=PACK, ancho_tl=1080, ancla='medio', mains=None, estilos=None, fin_video=None, pesos=None, estilos_palabra=None, **_):
-    """palabras [{'word','start','end'}] -> (cues, plan). La misma firma que guion_planificador.planificar (los parámetros que no aplican a este estilo se ignoran)."""
+def _tiempos(pal, bloques, n, fin_video):
+    """(t0, t1) del bloque n: entra con su primera palabra y se queda hasta que entra el siguiente (o un poco tras su última palabra)."""
+    A = AFINADO
+    idx_b = bloques[n][1]
+    t0 = pal[idx_b[0]]['t'] - A['adelanto']
+    sig_t0 = (pal[bloques[n + 1][1][0]]['t'] - A['adelanto']) if n + 1 < len(bloques) else None
+    ultimo_fin = pal[idx_b[-1]]['fin']
+    t1 = ultimo_fin + A['hold']
+    if sig_t0 is not None:
+        t1 = min(t1, sig_t0 - A['gap_minimo'])
+    elif fin_video:
+        t1 = max(t1, min(float(fin_video), ultimo_fin + 1.0))
+    t1 = max(t1, t0 + A['min_bloque'])
+    if sig_t0 is not None and t1 > sig_t0 - 0.02:
+        t1 = max(t0 + 0.3, sig_t0 - 0.02)
+    return t0, t1
+
+
+def planificar(palabras, idioma='es', pack=PACK, ancho_tl=1080, ancla='medio', mains=None, estilos=None, fin_video=None, pesos=None, estilos_palabra=None,
+               video=None, **_):
+    """palabras [{'word','start','end'}] -> (cues, plan). La misma firma que guion_planificador.planificar (los parámetros que no aplican a este estilo se ignoran).
+    `video` (Tema 5): de él sale el color de la frase clave (edicion_pro_tema5.acento_de_video); sin él, el azul."""
     A = AFINADO
     pal = GP._preparar(palabras)
     if not pal:
@@ -205,6 +272,8 @@ def planificar(palabras, idioma='es', pack=PACK, ancho_tl=1080, ancla='medio', m
     for n_frase, frase in enumerate(GP.frases(pal)):
         for b in _bloques(pal, frase):
             bloques.append((n_frase, b))
+    if pack in DISENOS:                                          # v5.5.8: Temas 5 y 6 (Text+ editables con el diseño de sus captions de Remotion)
+        return _planificar_skill(pal, bloques, DISENOS[pack], forzados, fin_video, video)
     sin_clave = 0
     for n, (n_frase, idx_b) in enumerate(bloques):
         if forzados is not None:
@@ -228,17 +297,7 @@ def planificar(palabras, idioma='es', pack=PACK, ancho_tl=1080, ancla='medio', m
         if textos:
             textos[0] = textos[0][:1].upper() + textos[0][1:]
         disp, caja = _disponer(list(zip(textos, clases)))
-        t0 = pal[idx_b[0]]['t'] - A['adelanto']
-        sig_t0 = (pal[bloques[n + 1][1][0]]['t'] - A['adelanto']) if n + 1 < len(bloques) else None
-        ultimo_fin = pal[idx_b[-1]]['fin']
-        t1 = ultimo_fin + A['hold']
-        if sig_t0 is not None:
-            t1 = min(t1, sig_t0 - A['gap_minimo'])
-        elif fin_video:
-            t1 = max(t1, min(float(fin_video), ultimo_fin + 1.0))
-        t1 = max(t1, t0 + A['min_bloque'])
-        if sig_t0 is not None and t1 > sig_t0 - 0.02:
-            t1 = max(t0 + 0.3, sig_t0 - 0.02)
+        t0, t1 = _tiempos(pal, bloques, n, fin_video)
         runs = []
         for k, texto, clase, d in zip(idx_b, textos, clases, disp):
             r = {'rol': {'L': 'main', 'M': 'complement', 'S': 'context'}[clase], 'texto': texto, 't': round(max(0.0, pal[k]['t'] - A['adelanto']), 3),
@@ -254,6 +313,147 @@ def planificar(palabras, idioma='es', pack=PACK, ancho_tl=1080, ancla='medio', m
                      't0': cue['start'], 't1': cue['end'], 'estilos': [1] if clave is not None else [], 'estilo_bloque': 1,
                      'grandes': sorted(o for o in pal[clave]['orig']) if clave is not None else [],
                      'pesos': {o: ('B' if c == 'M' else 'L') for k, c in zip(idx_b, clases) if c != 'L' for o in pal[k]['orig']}})
+    return cues, plan
+
+
+# ----------------------------------------------------------------------------------------------------------------------------- Temas 5 y 6
+def _lineas_skill(ps):
+    """Las líneas de Subtitulo.tsx: [antes] [frase clave] [después]; lo de antes sube a la línea de la clave si son 1-2 palabras cortas.
+    -> [(índices, es_la_de_la_clave)]"""
+    def sans(desde, hasta):
+        ls, letras = [], 0
+        for i in range(desde, hasta):
+            if not ls or letras + len(ps[i]['texto']) > LETRAS_SANS:
+                ls.append(([], False))
+                letras = 0
+            ls[-1][0].append(i)
+            letras += len(ps[i]['texto']) + 1
+        return ls
+    claves = [i for i, w in enumerate(ps) if w.get('clave')]
+    if not claves:
+        return sans(0, len(ps))
+    k0, k1 = claves[0], claves[-1]
+    antes, despues = sans(0, k0), sans(k1 + 1, len(ps))
+    clave = list(range(k0, k1 + 1))
+    if 0 < k0 <= 2 and sum(len(ps[i]['texto']) + 1 for i in range(k0)) <= 10:
+        return [(antes[0][0] + clave, True)] + despues
+    return antes + [(clave, True)] + despues
+
+
+def _disponer_skill(ps, D):
+    """Posición y tamaño de cada palabra como en Subtitulo.tsx (px de 1080×1920; x, y = centro del Text+): [{'x','y','em','clave'}] y la caja
+    (arriba, abajo) en px. Cada palabra se mide con SU tipografía (la pequeña o la de la clave)."""
+    S = D['S'] * min(ANCHO, ALTO)
+    lineas = _lineas_skill(ps)
+    fuente = [D['serif'] if w.get('clave') else D['sans'] for w in ps]
+    rel = [D['K'] if w.get('clave') else 1.0 for w in ps]
+    anchos = [_ancho_em(w['texto'], fuente[i], D['esp_serif'] if w.get('clave') else D['esp_sans']) for i, w in enumerate(ps)]
+
+    def ancho_linea(idx, s):
+        return sum(anchos[i] * rel[i] * s + (HUECO_SKILL * rel[i] * s if n else 0.0) for n, i in enumerate(idx))
+    mayor = max(ancho_linea(idx, S) for idx, _c in lineas)
+    if mayor > MAX_ANCHO_SKILL * ANCHO:
+        S *= MAX_ANCHO_SKILL * ANCHO / mayor
+    altos = [max(rel[i] for i in idx) * S * D['alto_serif'] if es_clave else S * D['alto_sans'] for idx, es_clave in lineas]
+    sal = [None] * len(ps)
+    top, tinta_prev = 0.0, None
+    for (idx, _c), h in zip(lineas, altos):
+        base = top + max(_metricas(fuente[i])[0] * rel[i] * S for i in idx)   # las palabras de la línea comparten la línea de base
+        tintas = [_tinta(ps[i]['texto'], fuente[i]) for i in idx]
+        if tinta_prev is not None:                                # en Remotion la serif y la sans se tocan: aquí no se pisan (descendentes de la clave)
+            pisa = tinta_prev + AIRE_SKILL * S - (base + min(t[0] * rel[i] * S for t, i in zip(tintas, idx)))
+            if pisa > 0:
+                base += pisa
+                top += pisa
+        x = (ANCHO - ancho_linea(idx, S)) / 2.0
+        for n, i in enumerate(idx):
+            em = rel[i] * S
+            if n:
+                x += HUECO_SKILL * em
+            w = anchos[i] * em
+            sal[i] = {'x': x + w / 2.0, 'y': base - _metricas(fuente[i])[1] * em, 'em': em, 'clave': bool(ps[i].get('clave'))}
+            x += w
+        tinta_prev = base + max(t[1] * rel[i] * S for t, i in zip(tintas, idx))
+        top += h
+    arriba = D['y'] * ALTO - top / 2.0                            # el bloque, centrado en `y`
+    for s in sal:
+        s['y'] += arriba
+    return sal, (arriba, arriba + top)
+
+
+_ACENTO_CACHE = {}
+
+
+def _variante_acento(D, video):
+    """Tema 5: la variante del pack con el color de acento del video (edicion_pro_tema5.acento_de_video; sin video, la del azul)."""
+    import edicion_pro_tema5 as T5
+    clave = None
+    if video:
+        try:
+            from pathlib import Path
+            clave = (str(video), Path(video).stat().st_mtime)
+        except OSError:
+            clave = None
+    if clave is not None and clave not in _ACENTO_CACHE:
+        _ACENTO_CACHE[clave] = T5.acento_de_video(video)
+    hexa = _ACENTO_CACHE.get(clave) or T5.ACENTOS['azul']
+    nombre = next((k for k, v in T5.ACENTOS.items() if v == hexa), 'azul')
+    return D['variantes'].index(nombre) + 1 if nombre in D['variantes'] else 1
+
+
+def _planificar_skill(pal, bloques, D, forzados, fin_video, video):
+    """Los cues de los Temas 5 y 6 (mismos bloques y tiempos que el Tema 4): la frase clave de cada bloque como la eligen sus captions de Remotion
+    (edicion_pro_tema5.marcar_claves; con marcas de Creativo, las palabras marcadas «Principal»), rol 'main' = la clave (variante del color) y
+    'complement' = lo demás."""
+    import edicion_pro_tema5 as T5
+    editorial = D['estilo'] == 'editorial'
+    A = AFINADO
+    grupos = []
+    for n, (n_frase, idx_b) in enumerate(bloques):
+        inicio = n == 0 or bloques[n - 1][0] != n_frase              # a mitad de frase el bloque sigue en minúscula (como Remotion)
+        ps = []
+        for j, k in enumerate(idx_b):
+            texto = pal[k]['texto']
+            if j == 0 and inicio:
+                texto = texto[:1].upper() + texto[1:]
+            ps.append({'texto': texto, 'k': k})
+        if forzados is not None:
+            for w in ps:
+                w['clave'] = w['k'] in forzados
+        else:
+            T5._marcar_claves(ps)
+        grupos.append(ps)
+    if editorial:
+        import edicion_pro_tema6 as T6
+        temas = T6.temas_del_video([{'palabras': ps} for ps in grupos], frozenset(T5.DEBILES)) if forzados is None else set()
+        if forzados is None:
+            for ps in grupos:
+                T5.marcar_claves(ps, editorial=True)              # cada bloque con su línea grande
+        variantes = [D['variantes'].index('lima' if T6.color_clave(ps, temas, frozenset(T5.ENFASIS)) == T6.LIMA else 'blanco') + 1 for ps in grupos]
+    else:
+        variantes = [_variante_acento(D, video)] * len(grupos)
+    cues, plan = [], []
+    for n, ((n_frase, idx_b), ps, estilo) in enumerate(zip(bloques, grupos, variantes)):
+        disp, caja = _disponer_skill(ps, D)
+        t0, t1 = _tiempos(pal, bloques, n, fin_video)
+        runs = []
+        for w, d in zip(ps, disp):
+            clave = d['clave']
+            r = {'rol': 'main' if clave else 'complement', 'texto': w['texto'], 't': round(max(0.0, pal[w['k']]['t'] - A['adelanto']), 3),
+                 'x': round(d['x'] / ANCHO, 4), 'y': round(d['y'] / ALTO, 4)}
+            fuente = D['serif'] if clave else D['sans']
+            z = d['em'] / ((D['tam_serif'] if clave else D['tam_sans']) * GC.K_PX * _calibrado(fuente)['em'])
+            if abs(z - 1.0) > 0.005:
+                r['zoom'] = round(z, 3)
+            runs.append(r)
+        cue = {'start': round(max(0.0, t0), 3), 'end': round(t1, 3), 'estilo': estilo, 'runs': runs, 'caja': [round(caja[0] / ALTO, 4), round(caja[1] / ALTO, 4)]}
+        cues.append(cue)
+        claves = [w['k'] for w in ps if w.get('clave')]
+        plan.append({'frase': n_frase, 'palabras': list(idx_b), 'mains': claves, 'grupos': {}, 'miembros': set(),
+                     'orig': sorted(o for k in idx_b for o in pal[k]['orig']), 't0': cue['start'], 't1': cue['end'],
+                     'estilos': [estilo] if claves else [], 'estilo_bloque': estilo,
+                     'grandes': sorted(o for k in claves for o in pal[k]['orig']),
+                     'pesos': {o: 'B' for w in ps if not w.get('clave') for o in pal[w['k']]['orig']}})
     return cues, plan
 
 

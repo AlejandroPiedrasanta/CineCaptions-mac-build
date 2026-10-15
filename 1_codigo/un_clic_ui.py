@@ -689,7 +689,9 @@ class SalidaGo(QWidget):
             if it.widget() is not None:
                 it.widget().deleteLater()
         for texto, fn, tipo in botones:
-            self.capa.addWidget(Boton(texto, fn, tipo=tipo, alto=42, ancho=190, tam=14, negrita=(tipo == 'primario')))
+            grande = tipo == 'cancelar_go'                   # v5.5.8: «Cancelar» de GO, grande y en rojo
+            self.capa.addWidget(Boton(texto, fn, tipo=tipo, alto=52 if grande else 42, ancho=340 if grande else 190, tam=16 if grande else 14,
+                                      negrita=(tipo == 'primario' or grande)))
 
     def mostrar(self):
         self.show()
@@ -702,7 +704,7 @@ class SalidaGo(QWidget):
         self.hide()
 
     def _paso(self, v):
-        self.setFixedHeight(max(0, int(46 * float(v))))
+        self.setFixedHeight(max(0, int(56 * float(v))))
 
 
 _PERFIL = {'v': None}
@@ -1036,13 +1038,13 @@ class PanelGo(QWidget):
         self.opciones.hide()
         self.linea.poner_color('#D3E0F5')           # se lee aunque la esfera brille detrás
         self.pasos.entrar()
-        botones = []
-        if self.al_pausar:
-            botones.append((tr('Pausar'), self.al_pausar, 'neutro'))
-        if self.al_cancelar:
-            botones.append((tr('Cancelar'), self.al_cancelar, 'fantasma'))
+        # v5.5.8 (pedido del usuario): SOLO «Cancelar», grande y en rojo, todo el GO (también mientras coloca en Resolve). Para no cancelar
+        # sin querer, sin cuadros: el primer toque lo arma («¿Cancelar todo? Pulsa otra vez») y el segundo lo hace; a los 4 s se desarma.
+        botones = [(tr('Cancelar'), self._tocar_cancelar, 'cancelar_go')] if self.al_cancelar else []
         self.salida.configurar(botones)
-        self._b_pausa = self.salida.capa.itemAt(0).widget() if (botones and self.al_pausar) else None
+        self._b_pausa = None
+        self._b_cancelar = self.salida.capa.itemAt(0).widget() if botones else None
+        self._cancelar_armado = False
         if botones:
             self.salida.mostrar()
             self._reserva_final = 52
@@ -1050,6 +1052,28 @@ class PanelGo(QWidget):
         if self.escena is not None:
             self.escena.empezar()
         self._relayout()
+
+    def _tocar_cancelar(self):
+        b = getattr(self, '_b_cancelar', None)
+        if not getattr(self, '_cancelar_armado', False):
+            self._cancelar_armado = True
+            if b is not None and ui.vivo(b):
+                b.setText(tr('¿Cancelar todo? Pulsa otra vez'))
+            ficha = self._ficha
+            ui.despues(4000, lambda: self._desarmar_cancelar(ficha), self)
+            return
+        self._cancelar_armado = False
+        if b is not None and ui.vivo(b):
+            b.setText(tr('Cancelando…'))
+            b.setEnabled(False)
+        if self.al_cancelar:
+            self.al_cancelar()
+
+    def _desarmar_cancelar(self, ficha):
+        b = getattr(self, '_b_cancelar', None)
+        if ficha == self._ficha and getattr(self, '_cancelar_armado', False) and b is not None and ui.vivo(b):
+            self._cancelar_armado = False
+            b.setText(tr('Cancelar'))
 
     def poner_pausa(self, en_pausa):
         """«Pausar» ↔ «Reanudar» (y el título lo dice)."""
@@ -1079,10 +1103,7 @@ class PanelGo(QWidget):
         self._relayout()
 
     def paso(self, clave, estado='activo', detalle=None):
-        if clave == 'resolve' and estado == 'activo' and self._reserva_final and not self.final_cancelable:   # colocando en Resolve ya no se puede parar: fuera «Pausar / Cancelar»
-            self.salida.ocultar()
-            self._reserva_final = 0
-            self._relayout()
+        # (v5.5.8: «Cancelar» sigue a la vista también mientras coloca en Resolve: cancelar cierra Resolve y vuelve a empezar de cero)
         self.pasos.marcar(clave, estado, detalle)
         self.estimador.paso(clave, estado)
         if self.escena is not None:

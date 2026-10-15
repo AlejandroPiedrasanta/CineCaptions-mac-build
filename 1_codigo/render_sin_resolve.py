@@ -92,15 +92,57 @@ def _sprite_emoji(ruta, lado):
         return None
 
 
-def preparar(cues, ancho, alto, emoji_arriba=True):
-    """Todo lo que se dibuja, ya rasterizado: [{'rgb','a','x','y','t0','t1','entrada'}] (x, y = esquina superior izquierda)."""
+def _tinta(capas):
+    """(x0, y0, x1, y1) de lo que se VE de unas capas (sin el margen transparente de cada sprite), o None."""
+    cajas = []
+    for c in capas:
+        filas = np.where(c['a'][..., 0].max(axis=1) > 0.03)[0]
+        cols = np.where(c['a'][..., 0].max(axis=0) > 0.03)[0]
+        if len(filas) and len(cols):
+            cajas.append((c['x'] + cols[0], c['y'] + filas[0], c['x'] + cols[-1] + 1, c['y'] + filas[-1] + 1))
+    if not cajas:
+        return None
+    return min(b[0] for b in cajas), min(b[1] for b in cajas), max(b[2] for b in cajas), max(b[3] for b in cajas)
+
+
+def _encajar(hacer, s, dx, dy, ancho, alto, margen=0.03):
+    """v5.5.8 (otros temas): las capas de un bloque, reducidas alrededor de su centro si no caben en el cuadro y metidas dentro (en un video
+    horizontal una pila alta de Kinetic o VIRAL se salía por abajo). hacer(s, dx, dy) -> capas."""
+    capas = hacer(s, dx, dy)
+    caja = _tinta(capas)
+    if caja is None:
+        return capas
+    x0, y0, x1, y1 = caja
+    mx, my = margen * ancho, margen * alto
+    f = min(1.0, (ancho - 2 * mx) / max(1.0, x1 - x0), (alto - 2 * my) / max(1.0, y1 - y0))
+    if f < 0.995:
+        cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+        capas = hacer(s * f, cx - (cx - dx) * f, cy - (cy - dy) * f)
+        caja = _tinta(capas) or caja
+        x0, y0, x1, y1 = caja
+    mover_x = (mx - x0) if x0 < mx else ((ancho - mx) - x1 if x1 > ancho - mx else 0.0)
+    mover_y = (my - y0) if y0 < my else ((alto - my) - y1 if y1 > alto - my else 0.0)
+    if mover_x or mover_y:
+        for c in capas:
+            c['x'] += int(round(mover_x))
+            c['y'] += int(round(mover_y))
+    return capas
+
+
+def preparar(cues, ancho, alto, emoji_arriba=True, estilo=None):
+    """Todo lo que se dibuja, ya rasterizado: [{'rgb','a','x','y','t0','t1','entrada'}] (x, y = esquina superior izquierda).
+    estilo (v5.5.8): {'tipo': 'guion'|'kinetic'|'viral', 'pack'}: cualquier tema (render_temas.py); sin él (o con el pack «Tema4»), el Tema 4 de siempre."""
     s, dx, dy = encaje(ancho, alto)
     capas = []
+    otro_tema = bool(estilo) and not (estilo.get('tipo', 'guion') == 'guion' and estilo.get('pack', 'Tema4') == 'Tema4')
     for cue in cues or []:
         ini, fin = float(cue.get('start') or 0.0), float(cue.get('end') or 0.0)
         if fin <= ini:
             continue
-        for r in cue.get('runs') or []:
+        if otro_tema:
+            import render_temas
+            capas += _encajar(lambda s_, dx_, dy_, c=cue: render_temas.capas_de_cue(estilo, c, s_, dx_, dy_), s, dx, dy, ancho, alto)
+        for r in ([] if otro_tema else cue.get('runs') or []):
             texto = str(r.get('texto') or '').strip()
             if not texto:
                 continue
@@ -160,11 +202,15 @@ def componer(arr, capas, t):
         if k <= 0.0:
             continue
         h, w = c['a'].shape[:2]
-        x0, y0 = max(0, c['x']), max(0, c['y'])
-        x1, y1 = min(ancho, c['x'] + w), min(alto, c['y'] + h)
+        cy = c['y']
+        if c.get('sube') and c['entrada'] > 0 and t - c['t0'] < c['entrada']:     # (otros temas) entra subiendo un poco
+            q = max(0.0, min(1.0, (t - c['t0']) / c['entrada']))
+            cy += int(round(c['sube'] * (1.0 - q) ** 2))
+        x0, y0 = max(0, c['x']), max(0, cy)
+        x1, y1 = min(ancho, c['x'] + w), min(alto, cy + h)
         if x1 <= x0 or y1 <= y0:
             continue
-        sx, sy = x0 - c['x'], y0 - c['y']
+        sx, sy = x0 - c['x'], y0 - cy
         a = c['a'][sy:sy + (y1 - y0), sx:sx + (x1 - x0)] * k
         reg = arr[y0:y1, x0:x1].astype(np.float32)
         reg += (c['rgb'][sy:sy + (y1 - y0), sx:sx + (x1 - x0)] - reg) * a
@@ -275,8 +321,9 @@ def _carpeta_escribible(destino):
         return False
 
 
-def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_arriba=True):
-    """El MP4 con los subtítulos grabados. `progreso(fraccion, texto)` y `cancelado()` se llaman desde ESTE hilo (correr fuera de la interfaz)."""
+def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_arriba=True, estilo=None):
+    """El MP4 con los subtítulos grabados. `progreso(fraccion, texto)` y `cancelado()` se llaman desde ESTE hilo (correr fuera de la interfaz).
+    estilo: el tema (ver preparar); sin él, Tema 4."""
     import av
     t_inicio = time.time()
     video = Path(video)
@@ -365,7 +412,7 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
                     vs.codec_context.time_base = tb
                 except Exception:
                     pass
-                capas = preparar(cues, ancho, alto, emoji_arriba=emoji_arriba)
+                capas = preparar(cues, ancho, alto, emoji_arriba=emoji_arriba, estilo=estilo)
             pts = (fr.pts - inicio_pts) if fr.pts is not None else None
             t = float(pts * tb) if pts is not None else n / float(fps)
             componer(arr, capas, t)

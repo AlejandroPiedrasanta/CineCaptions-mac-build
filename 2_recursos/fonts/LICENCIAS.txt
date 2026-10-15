@@ -191,3 +191,10 @@ Inter-Black.ttf   (337 KB)
   Nota      : es Inter_28pt-Black con la tabla de nombres reescrita (familia "Inter", estilo "Black") para que
               Resolve y el instalador de tipografias la reconozcan con el nombre que usan los Text+ de Amro.
 ------------------------------------------------------------------
+InstrumentSerif-Regular.ttf   (48 KB)  — la serif alta y fina de los captions del Tema 6 (pack «Tema6»)
+  Copyright: Copyright 2022 The Instrument Serif Project Authors (https://github.com/Instrument/instrument-serif)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+  Nota      : convertida a TTF (fontTools, sin tocar los contornos) desde el serif-400.woff2 de Remotion (subconjunto latino de
+              Google Fonts); se le añadió a la tabla de nombres la línea de licencia (nameID 13/14).
+------------------------------------------------------------------

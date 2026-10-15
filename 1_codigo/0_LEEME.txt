@@ -289,6 +289,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         el aviso en la barra de título, el botón del registro con contador y la ventana Registro.
     render_sin_resolve.py
         GO SIN DaVinci Resolve (v5.4.47): el video con los subtítulos de Tema 4 grabados, sus sonidos y emojis, en un MP4.
+    render_temas.py
+        GO sin DaVinci Resolve con CUALQUIER tema (v5.5.8): cómo se dibuja cada uno con Pillow a partir de los mismos datos que lee Resolve.
     resolve_bridge.py
         conexión con Resolve: API externa (Studio), Puente (Free) o paso manual; ejecuta los scripts.
     resolve_mcp.py

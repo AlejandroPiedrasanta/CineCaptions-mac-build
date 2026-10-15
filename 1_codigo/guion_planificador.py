@@ -35,6 +35,10 @@ ESTILOS_FUEGO = (6,)
 # {estilo base: (original, screen, sólido)}; las palabras grandes los van alternando para que el barrido (y su color) no se repita. Sólo cuando el pack trae esas variantes (9-16).
 BARRIDOS = {1: (1, 9, 13), 2: (2, 10, 14), 4: (4, 11, 15), 5: (5, 12, 16)}
 ESTILOS_NEGACION = (7,)
+# v5.5.8: con las líneas juntas (hueco 0,004) las palabras grandes en letra editorial / de pincel (2 rosa, 5 azul y sus barridos) pisaban la
+# línea de al lado: sus trazos suben y bajan más que la caja medida. Llevan un poco de aire arriba y abajo.
+ESTILOS_EDITORIAL = (2, 5, 10, 12, 14, 16)
+AIRE_EDITORIAL = 0.012
 AFINADO = {'adelanto': 0.03, 'hold': 0.22, 'min_bloque': 0.7, 'gap_minimo': 0.06, 'puntaje_min': 8.0, 'puntaje_2': 9.0, 'dist_mains': 4,
            'pausa_frase': 0.45, 'pausa_coma': 0.12, 'combinar_s': 2.0, 'cap_len': 10, 'bonus_det': 4.0, 'bonus_ultima': 4.0, 'bonus_gancho': 8.0,
            'pen_verbo': 3.0, 'pen_pret': 6.0, 'pen_modifica': 2.0, 'bonus_adj': 3.0, 'bonus_cond': 5.0, 'hueco': 0.004, 'cabe': 0.96, 'alto_linea': 0.036,
@@ -480,11 +484,13 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
                 est.append(e)
         b['estilos'] = est
         # alturas
-        alturas, anchos = [], {}
+        alturas, anchos, m_a = [], {}, 0
         for j, (tipo, ks) in enumerate(segs):
             if tipo == 'M':
                 anchos[j] = _ancho_objetivo_main(texto_de(ks))
-                alturas.append(_alto_main(texto_de(ks), anchos[j], ancho_tl))
+                aire = 2 * AIRE_EDITORIAL if (m_a < len(est) and est[m_a] in ESTILOS_EDITORIAL) else 0.0
+                alturas.append(_alto_main(texto_de(ks), anchos[j], ancho_tl) + aire)
+                m_a += 1
             else:
                 alturas.append(A['alto_linea'])
         total = sum(alturas) + A['hueco'] * (len(alturas) - 1)
@@ -517,9 +523,10 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
 def cues_de(palabras, idioma='es', pack='Referencia', ancho_tl=1080, **kw):
     """Atajo: planifica y deja los bloques listos para el JSON de place_guion_track. El pack «Tema4» (Tema 4) arma sus bloques con su propio planificador (tema4_planificador.py:
     recuadro, tres tamaños de letra, palabras que aparecen una a una) pero usa el mismo colocador de Resolve."""
-    if pack in ('Tema4', 'Tema5', 'Tema6'):                   # el Tema 5 usa los bloques del Tema 4 (sus captions Text+ son el respaldo de los de Remotion)
+    if pack in ('Tema4', 'Tema5', 'Tema6'):                   # los Temas 5 y 6: los bloques del Tema 4 con el diseño de sus captions (v5.5.8, tema4_planificador.DISENOS)
         import tema4_planificador
         return tema4_planificador.cues_de(palabras, idioma, pack, ancho_tl, **kw)
+    kw.pop('video', None)                                      # (solo lo usa el Tema 5: el color de la frase clave)
     bloques, plan = planificar(palabras, idioma, pack, ancho_tl, **kw)
     return G.construir_cues(bloques, pack, ancho_tl), plan
 

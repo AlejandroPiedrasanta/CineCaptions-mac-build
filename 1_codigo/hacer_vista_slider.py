@@ -32,7 +32,25 @@ def _ffmpeg():
     return shutil.which('ffmpeg') or 'ffmpeg'
 
 
-def generar(media, pack, salida, ancho=486, crf=27, timeout=900):
+def _fin_sin_negro(render):
+    """v5.5.8: el segundo donde empieza el negro del FINAL del render (el timeline sigue unos segundos tras el video por los sonidos del cierre:
+    los ejemplos acababan con 2,5–4 s en negro y el slider los repite en bucle). None si no acaba en negro."""
+    try:
+        r = subprocess.run([_ffmpeg(), '-hide_banner', '-i', str(render), '-an', '-vf', 'blackdetect=d=0.3:pix_th=0.08', '-f', 'null', '-'],
+                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300)
+        import re
+        tramos = re.findall(r'black_start:([0-9.]+) black_end:([0-9.]+)', r.stderr)
+        dur = re.search(r'Duration: (\d+):(\d+):([0-9.]+)', r.stderr)
+        if not tramos or not dur:
+            return None
+        total = int(dur.group(1)) * 3600 + int(dur.group(2)) * 60 + float(dur.group(3))
+        ini, fin = (float(x) for x in tramos[-1])
+        return ini if ini > 1.0 and fin >= total - 0.15 else None
+    except Exception:
+        return None
+
+
+def generar(media, pack, salida, ancho=486, crf=27, timeout=900, conservar=False, verificar=None):
     import banco_pruebas as b
     import mcp_cinecaptions as m
     import resolve_mcp
@@ -55,21 +73,30 @@ def generar(media, pack, salida, ancho=486, crf=27, timeout=900):
             raise RuntimeError(f'GO no terminó (código {r.returncode})')
         ok_v, estado_tl, _e = resolve_mcp.script(m._VERIFICAR_TL, timeout=30)
         print('timeline:', json.dumps(estado_tl, ensure_ascii=False)[:600], flush=True)
+        if verificar is not None:                     # v5.5.8: p. ej. que los captions se puedan editar en el Inspector
+            try:
+                print('verificación:', json.dumps(verificar(), ensure_ascii=False)[:900], flush=True)
+            except Exception as e:
+                print('verificación falló:', e, flush=True)
         render = b.renderizar('slider_' + pack.replace(' ', '_'), tope_s=timeout)
         if not render:
             raise RuntimeError('el render no terminó')
         print('render:', render, flush=True)
         alto = int(round(ancho * 16 / 9 / 2.0)) * 2
         salida.parent.mkdir(parents=True, exist_ok=True)
-        cmd = [_ffmpeg(), '-hide_banner', '-loglevel', 'error', '-y', '-i', render, '-an', '-vf', f'scale={ancho}:{alto}:flags=lanczos,fps=30',
+        fin = _fin_sin_negro(render)
+        cmd = [_ffmpeg(), '-hide_banner', '-loglevel', 'error', '-y', '-i', render] + (['-t', '%.3f' % fin] if fin else []) + ['-an', '-vf', f'scale={ancho}:{alto}:flags=lanczos,fps=30',
                '-c:v', 'libx264', '-preset', 'slow', '-crf', str(crf), '-maxrate', '1800k', '-bufsize', '3600k', '-pix_fmt', 'yuv420p', '-g', '60',
                '-movflags', '+faststart', str(salida)]
         subprocess.run(cmd, check=True)
         print(f'LISTO {salida} ({salida.stat().st_size / 1e6:.1f} MB)', flush=True)
     finally:
-        ok, limpieza, err = resolve_mcp.script(m._LIMPIAR_ARRASTRE % {'stem': stem, 'previo_p': previo.get('proyecto'), 'previo_tl': previo.get('timeline'),
-                                                                      'borrar': bool(previo.get('proyecto'))}, timeout=60)
-        print('limpieza:', json.dumps(limpieza, ensure_ascii=False) if ok else f'no pude limpiar: {err}', flush=True)
+        if conservar:                                 # v5.5.8: el proyecto se queda (para revisar el timeline a mano)
+            print('proyecto conservado para revisarlo', flush=True)
+        else:
+            ok, limpieza, err = resolve_mcp.script(m._LIMPIAR_ARRASTRE % {'stem': stem, 'previo_p': previo.get('proyecto'), 'previo_tl': previo.get('timeline'),
+                                                                          'borrar': bool(previo.get('proyecto'))}, timeout=60)
+            print('limpieza:', json.dumps(limpieza, ensure_ascii=False) if ok else f'no pude limpiar: {err}', flush=True)
     return render
 
 

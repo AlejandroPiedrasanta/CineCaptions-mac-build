@@ -54,18 +54,19 @@ def parametros_de_marcas(palabras, roles):
     return (mains or None), pesos, estilos
 
 
-def planear(palabras, roles, pack, ancla='medio', fin_video=None, ancho_tl=1080, idioma='es', automatico=False):
+def planear(palabras, roles, pack, ancla='medio', fin_video=None, ancho_tl=1080, idioma='es', automatico=False, video=None):
     """El plan completo de bloques para esas palabras y esas marcas.
 
     Devuelve {'cues': [...] (lo que se escribe en el .json de Resolve), 'plan': [...] (uno por bloque, con 'orig', 'grandes', 'pesos', 'estilos'),
               'indice': [k de bloque de cada palabra (las que no entran, el del bloque anterior)]}.
-    automatico=True ignora las marcas de Principal / Arriba / Abajo (lo que haría GO solo); los estilos elegidos a mano se respetan igual."""
+    automatico=True ignora las marcas de Principal / Arriba / Abajo (lo que haría GO solo); los estilos elegidos a mano se respetan igual.
+    video (v5.5.8, Tema 5): el color de la frase clave sale de él."""
     if automatico:
         _m, _p, estilos = parametros_de_marcas(palabras, [])
         mains, pesos = None, {}
     else:
         mains, pesos, estilos = parametros_de_marcas(palabras, roles)
-    cues, plan = P.cues_de(palabras, idioma, pack, ancho_tl, ancla=ancla, mains=mains, pesos=pesos, estilos_palabra=estilos, fin_video=fin_video)
+    cues, plan = P.cues_de(palabras, idioma, pack, ancho_tl, ancla=ancla, mains=mains, pesos=pesos, estilos_palabra=estilos, fin_video=fin_video, video=video)
     indice = [-1] * len(palabras)
     for k, b in enumerate(plan):
         for o in b.get('orig', ()):

@@ -484,6 +484,15 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.5.8', [
+        'Temas 4, 5 y 6 con la Edición PRO ya no cierran DaVinci Resolve: lo que la PRO va a poner se importa todo de una vez antes de tocar el timeline (Studio y Free).',
+        'Temas 5 y 6: los captions son textos de Fusion editables (Inspector › Texto) para corregir cualquier falta, con el diseño de cada tema: la frase clave en serif y en color; el gancho del principio va con Magic Mask en Studio.',
+        'Video MP4 sin Resolve (Ajustes › General): ahora graba cualquiera de los 6 temas, no solo el Tema 4.',
+        'Temas 4, 5 y 6: las palabras de los captions ya no salen pegadas ni encimadas.',
+        'Cancelar, grande y en rojo: para todo lo que estaba haciendo, cierra Resolve y sus procesos y vuelve a Inicio para empezar de cero.',
+        'Estilos: ejemplos nuevos de los 6 temas, hechos con GO y la Edición PRO reales en Resolve (motions que acompañan a los captions).',
+        'Inglés y los demás idiomas: la interfaz sale entera en el idioma elegido.',
+    ]),
     ('5.5.7', [
         'Pulsar GO otra vez sobre el mismo timeline (el mismo tema u otro) ya funciona: la reproducción que deja GO bloqueaba a Resolve y el GO siguiente creía que estaba cerrado. Ahora se detiene antes y, si Resolve no contesta, se reconecta solo.',
         'CineCaptions se conecta solo con Resolve al abrirse y cada pocos segundos (Studio por su conexión, Free lanzando el Puente desde el menú), en Windows y Mac. El estado ya no dice «cerrado» con Resolve abierto.',
@@ -2021,7 +2030,7 @@ class VentanaAjustes(_Panel):
         # v5.4.48: GO sin Resolve también a petición (render_sin_resolve.py): sin Resolve instalado ya lo hace solo
         mp4_var = BooleanVar(bool(leer_prefs().get('go_salida_mp4', False)))
         f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
-                      tr('GO graba los subtítulos (Tema 4, con sus sonidos y emojis) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
+                      tr('GO graba los subtítulos del tema elegido (con sus sonidos y emojis) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
                          'Si Resolve no está instalado lo hace siempre.'),
                       Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})))
         # v5.5: lo que pasa en Resolve cuando GO termina

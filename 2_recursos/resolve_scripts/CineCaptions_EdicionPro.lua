@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
 ]]
 
-local VERSION = "5.5.7 (edicion pro)"
+local VERSION = "5.5.8 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -336,6 +336,9 @@ local NOMBRE_ZOOM = "CineCaptions PRO · zoom"
 local CAPA = { fondo = "PRO-FONDO", velo = "PRO-VELO", detras = "PRO-DETRAS", delante = "PRO-DELANTE", iconos = "PRO-ICONOS", subs = "PRO-SUBS" }
 local PISTA_ENCIMA = "PRO-ENCIMA"
 local PISTA_ICONOS = "PRO-ICONOS"        -- los iconos 3D junto a los captions: encima de ellos (y debajo de PRO-ENCIMA)
+-- v5.5.8: lo que va a la caché de render se apunta y se marca AL FINAL (cachear_al_final): marcarlo al colocarlo, con el script aún moviendo
+-- clips, hacía caer a Resolve (gemelo de colocar_pro.py)
+local PEND_CACHE = { fusion = {}, color = {} }
 local MARCA_EMOJI = "ccpro-emoji-off"    -- el emoji del tema que se apago porque en ese bloque va un icono 3D
 local MARCA = "ccpro-subir"              -- marca en cada clip de captions que se subio: "ccpro-subir:<Tilt antes>:<Tilt despues>"
 local PISTA_SONIDO = "PRO-SONIDO"
@@ -384,6 +387,72 @@ local function importar(mp, caja, ruta)
     if previa ~= nil then pcall(function() mp:SetCurrentFolder(previa) end) end
     if ok and type(nuevos) == "table" then return nuevos[1] end
     return nil
+end
+
+-- v5.5.8 (gemelo de _preimportar de colocar_pro.py): TODO lo que se va a colocar se importa de UNA vez y ANTES de tocar el timeline. MEDIDO
+-- (Tema 6, Studio 21.1.1): Resolve se caia (excepcion C++ en su hilo principal) al importar el segundo .mov justo despues de poner el primero
+-- en el timeline y cambiarle el modo alfa.
+local PRE = {}
+PRE.rutas_del_pool = function(carpeta, salida)
+    for _, clip in ipairs(lista_api(carpeta:GetClipList())) do
+        local ok, r = pcall(function() return clip:GetClipProperty("File Path") end)
+        if ok and r and r ~= "" then salida[norm(r)] = true end
+    end
+    for _, sub in ipairs(lista_api(carpeta:GetSubFolderList())) do PRE.rutas_del_pool(sub, salida) end
+    return salida
+end
+PRE.alfa_recto = function(clip)
+    pcall(function()
+        if tostring(clip:GetClipProperty("Alpha mode") or "") ~= "Straight" then clip:SetClipProperty("Alpha mode", "Straight") end
+    end)
+end
+PRE.existe = function(r)
+    local f = io and io.open and io.open(tostring(r), "rb")
+    if f then f:close() return true end
+    return io == nil or io.open == nil                    -- (Free sin io: se intenta y ImportMedia descarta lo que no existe)
+end
+PRE.importar_todo = function(mp, caja, datos)
+    local rutas, alfa = {}, {}
+    local function lista(x) return (type(x) == "table") and x or {} end
+    for _, g in ipairs(lista(datos.graficos)) do
+        if g.archivo then
+            table.insert(rutas, g.archivo)
+            if g.alfa then alfa[norm(g.archivo)] = true end
+            local a = tostring(g.archivo)
+            if a:sub(-11) == "_sombra.mov" then table.insert(rutas, a:sub(1, -12) .. ".mov") end
+        end
+    end
+    for _, grupo in ipairs({ lista(datos.persona), lista(datos.encima) }) do
+        for _, p in ipairs(grupo) do
+            if p.modo == "clip" and p.archivo then table.insert(rutas, p.archivo); alfa[norm(p.archivo)] = true end
+            if p.velo then table.insert(rutas, p.velo) end
+        end
+    end
+    for _, grupo in ipairs({ lista(datos.broll), lista(datos.sonidos) }) do
+        for _, ev in ipairs(grupo) do if ev.archivo then table.insert(rutas, ev.archivo) end end
+    end
+    local ya = PRE.rutas_del_pool(mp:GetRootFolder(), {})
+    local faltan = {}
+    for _, r in ipairs(rutas) do
+        if not ya[norm(r)] and PRE.existe(r) then ya[norm(r)] = true; table.insert(faltan, tostring(r)) end
+    end
+    if #faltan == 0 then return 0 end
+    local previa = nil
+    pcall(function() previa = mp:GetCurrentFolder() end)
+    pcall(function() mp:SetCurrentFolder(caja) end)
+    local ok, nuevos = pcall(function() return mp:ImportMedia(faltan) end)
+    if previa ~= nil then pcall(function() mp:SetCurrentFolder(previa) end) end
+    local n = 0
+    for _, c in ipairs((ok and type(nuevos) == "table") and nuevos or {}) do
+        n = n + 1
+        local okr, r = pcall(function() return c:GetClipProperty("File Path") end)
+        if okr and r and alfa[norm(r)] then PRE.alfa_recto(c) end
+    end
+    pcall(function()                                       -- (que Resolve termine de leerlos antes de empezar a colocar)
+        local t0 = os.clock()
+        while os.clock() - t0 < 1.0 do end
+    end)
+    return n
 end
 
 local function nombre_pista(tl, tipo, i)
@@ -513,7 +582,7 @@ local function poner_clip_persona(tl, mp, caja, p, f0, f1, pista)
     end
     local clip = importar(mp, caja, p.archivo)
     if clip == nil then return nil end
-    pcall(function() clip:SetClipProperty("Alpha mode", "Straight") end)
+    PRE.alfa_recto(clip)
     pcall(function() f1 = math.min(f1, f0 + math.floor(tonumber(clip:GetClipProperty("Frames")) or (f1 - f0))) end)
     local it = append(mp, { mediaPoolItem = clip, startFrame = 0, endFrame = f1 - f0 - 1, recordFrame = f0, trackIndex = pista, mediaType = 1 })
     if it ~= nil and v1 ~= nil then copiar_transformacion(v1, it) end
@@ -559,6 +628,24 @@ local function pistas_captions(tl)
         if nm:sub(1, 4) ~= "PRO-" and nm:sub(1, 3) ~= "FX-" then out[#out + 1] = i end
     end
     return out
+end
+
+-- v5.5.8: con TODO ya colocado y movido: la caché del proyecto a «user» (si estaba en «none»), los gráficos de la PRO y los captions de GO
+-- (que GO dejó sin marcar porque la PRO los iba a mover). Gemelo de _cachear_al_final de colocar_pro.py
+local function cachear_al_final(tl, project)
+    pcall(function()
+        if string.lower(tostring(project:GetSetting("perfRenderCacheMode") or "")) == "none" and project:SetSetting("perfRenderCacheMode", "user") then
+            print("Cache de render: «user» (la Edicion PRO se pre-renderiza en segundo plano).")
+        end
+    end)
+    for _, it in ipairs(PEND_CACHE.fusion) do pcall(function() it:SetFusionOutputCache("enabled") end) end
+    for _, it in ipairs(PEND_CACHE.color) do pcall(function() it:SetColorOutputCache(true) end) end
+    PEND_CACHE.fusion, PEND_CACHE.color = {}, {}
+    for _, i in ipairs(pistas_captions(tl)) do
+        if not nombre_pista(tl, "video", i):upper():find("EMOJI", 1, true) then
+            for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do pcall(function() it:SetFusionOutputCache("enabled") end) end
+        end
+    end
 end
 
 -- Re-aplicar no apila: los captions que subio una corrida anterior (llevan la marca) vuelven a su sitio si siguen donde se dejaron.
@@ -886,7 +973,7 @@ local function poner_gris(tl, mp, tramos, base, pista, nombre, luz)
                 if ok and r then
                     pcall(function() it:SetName(nombre) end)
                     pcall(function() it:SetClipColor("Chocolate") end)
-                    pcall(function() it:SetColorOutputCache(true) end)
+                    table.insert(PEND_CACHE.color, it)
                     puestos = puestos + 1
                 else
                     pcall(function() tl:DeleteClips({ it }, false) end)
@@ -1028,7 +1115,7 @@ local function poner_zoom(tl, mp, cortes, base, pista)
                         end)
                         pcall(function() it:SetName("PRO · transición con zoom") end)
                         pcall(function() it:SetClipColor("Purple") end)
-                        pcall(function() it:SetFusionOutputCache("enabled") end)
+                        table.insert(PEND_CACHE.fusion, it)
                         puestas = puestas + 1
                     else
                         pcall(function() tl:DeleteClips({ it }, false) end)
@@ -1063,16 +1150,12 @@ local function main()
     local tl = project:GetCurrentTimeline()
     if tl == nil then fail("No hay un timeline activo en Resolve.") end
     local mp = project:GetMediaPool()
-    -- la caché de render en «none» no guarda nada: se pasa a «user» (solo los clips marcados de la Edición PRO, en segundo plano)
-    pcall(function()
-        if string.lower(tostring(project:GetSetting("perfRenderCacheMode") or "")) == "none" and project:SetSetting("perfRenderCacheMode", "user") then
-            print("Cache de render: «user» (la Edicion PRO se pre-renderiza en segundo plano).")
-        end
-    end)
+    -- (v5.5.8: la caché de render se pone AL FINAL, cachear_al_final; gemelo de colocar_pro.py)
     local fps = tonumber(datos.fps) or tonumber(tl:GetSetting("timelineFrameRate")) or 30
     local base = math.floor(tonumber(datos.inicio) or tonumber(tl:GetStartFrame()) or 0)
     local caja = caja_pro(mp)
     local v1_antes = #lista_api(tl:GetItemListInTrack("video", 1))
+    PRE.importar_todo(mp, caja, datos)            -- v5.5.8: todo de una vez, ANTES de tocar el timeline (gemelo de colocar_pro.py)
     local idx = pistas_pro(tl)
     local hay_iconos = false
     for _, g in ipairs((type(datos.graficos) == "table") and datos.graficos or {}) do if g.capa == "iconos" then hay_iconos = true end end
@@ -1094,7 +1177,7 @@ local function main()
         else
             local item
             if g.alfa then                         -- animacion de Remotion: ProRes 4444 con alfa recto, solo video
-                pcall(function() clip:SetClipProperty("Alpha mode", "Straight") end)
+                PRE.alfa_recto(clip)
                 item = append(mp, { mediaPoolItem = clip, trackIndex = idx[nombre], recordFrame = ini, mediaType = 1 })
             else
                 item = append(mp, { mediaPoolItem = clip, trackIndex = idx[nombre], recordFrame = ini })
@@ -1104,7 +1187,7 @@ local function main()
             else
                 fin_pista[nombre] = item:GetEnd()
                 pcall(function() item:SetName(tostring(g.nombre or "PRO")) end)
-                pcall(function() item:SetFusionOutputCache("enabled") end)
+                table.insert(PEND_CACHE.fusion, item)
                 local c = (g.capa == "velo" or g.capa == "detras" or g.capa == "fondo" or g.capa == "iconos" or g.capa == "subs") and g.capa or "delante"
                 puestos[c] = puestos[c] + 1
             end
@@ -1200,6 +1283,7 @@ local function main()
         end
     end
     quitar_vacias(tl)
+    if datos.cache ~= false then cachear_al_final(tl, project) end     -- v5.5.8: la caché de render, AL FINAL (gemelo de colocar_pro.py)
     local total = puestos.fondo + puestos.velo + puestos.detras + puestos.delante + puestos.iconos + puestos.subs
     if puestos.subs > 0 then print(string.format("Tema 5: %d captions animados (%d Text+ de respaldo apagados).", puestos.subs, puestos.respaldo)) end
     RESUMEN = string.format("Edicion PRO: %d graficos (%d detras, %d delante, %d escenas, %d velos), %d recortes de persona, captions detras de la persona en %d tramos (%d clips movidos, %d emojis apartados de la cara), %d iconos 3D (%d emojis cambiados), %d tramos en gris, %d tomas de B-roll, %d punch-ins, %d sonidos%s.",

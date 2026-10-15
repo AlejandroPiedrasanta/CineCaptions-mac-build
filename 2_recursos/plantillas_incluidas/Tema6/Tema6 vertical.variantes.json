@@ -1,44 +1,90 @@
 {
  "1": {
-  "nombre": "Blanco",
-  "color": "#FFFFFF",
+  "nombre": "Lima",
+  "color": "#DDF25E",
   "roles": {
    "context": {
     "f1": [
-     "Inter 24pt",
-     "Bold"
+     "Instrument Serif",
+     "Regular"
     ],
     "f2": [
-     "Inter 24pt",
-     "Bold"
+     "Instrument Serif",
+     "Regular"
     ],
-    "tam": 0.14,
+    "tam": 0.085,
     "color": "#FFFFFF",
     "mayus": false
    },
    "main": {
     "f1": [
-     "Inter 24pt",
-     "Bold"
+     "Instrument Serif",
+     "Regular"
     ],
     "f2": [
-     "Inter 24pt",
-     "Bold"
+     "Instrument Serif",
+     "Regular"
     ],
-    "tam": 0.14,
+    "tam": 0.19,
+    "color": "#DDF25E",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Instrument Serif",
+     "Regular"
+    ],
+    "f2": [
+     "Instrument Serif",
+     "Regular"
+    ],
+    "tam": 0.085,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "2": {
+  "nombre": "Blanco",
+  "color": "#FFFFFF",
+  "roles": {
+   "context": {
+    "f1": [
+     "Instrument Serif",
+     "Regular"
+    ],
+    "f2": [
+     "Instrument Serif",
+     "Regular"
+    ],
+    "tam": 0.085,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Instrument Serif",
+     "Regular"
+    ],
+    "f2": [
+     "Instrument Serif",
+     "Regular"
+    ],
+    "tam": 0.19,
     "color": "#FFFFFF",
     "mayus": false
    },
    "complement": {
     "f1": [
-     "Inter 24pt",
-     "Bold"
+     "Instrument Serif",
+     "Regular"
     ],
     "f2": [
-     "Inter 24pt",
-     "Bold"
+     "Instrument Serif",
+     "Regular"
     ],
-    "tam": 0.14,
+    "tam": 0.085,
     "color": "#FFFFFF",
     "mayus": false
    }

@@ -399,7 +399,7 @@ def es_de_fabrica(nombre):
 
 # v5.8: los packs que cambiaron de contenido llevan una «revisión»; los scripts de Resolve la suman al nombre del bin del pack
 # ('RCS · <pack> · <revisión> · v'), asi un bin viejo que ya estaba en el proyecto (con los clips anteriores) no se reutiliza.
-REVISION_BIN = {'Viral · superior': 'Luxe 2', 'Viral · inferior': 'Luxe 2', 'Referencia': 'Ref 2', 'Kinetic': 'Kin 3', 'VIRAL': 'Vir 2', 'Tema4': 'T4 2', 'Tema5': 'T5 1', 'Tema6': 'T6 1'}
+REVISION_BIN = {'Viral · superior': 'Luxe 2', 'Viral · inferior': 'Luxe 2', 'Referencia': 'Ref 2', 'Kinetic': 'Kin 3', 'VIRAL': 'Vir 2', 'Tema4': 'T4 2', 'Tema5': 'T5 2', 'Tema6': 'T6 2'}   # v5.5.8: T5/T6 2 = su diseño propio (pack_tema5.py)
 NOMBRE_BASICOS = 'Subtítulos básicos'
 POSICIONES_BASICOS = ('inferior', 'superior')
 _PISTAS_FORMATO = (('horizontal', 'h'), ('vertical', 'v'), ('cuadrado', 'c'), ('square', 'c'))

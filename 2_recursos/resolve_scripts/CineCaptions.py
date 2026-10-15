@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.5.7 (subtitulos)"
+VERSION = "5.5.8 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -1078,11 +1078,19 @@ _CACHE = {"modo": False}
 
 def _cachear(item):
     """v5.5.4 (gemelo del .lua, cachear): el clip se marca para la cache de
-    render (Render Cache Fusion Output) y, si la cache del proyecto esta en
-    «none», pasa a «user» (UNA vez): Resolve pre-renderiza los titulos en
-    segundo plano y la reproduccion va fluida (cientos de titulos de Fusion
-    calculados en vivo iban a tirones). Nunca falla."""
-    if item is None:
+    render (Render Cache Fusion Output). v5.5.8: NO al colocarlo: se apunta y
+    se marca al FINAL (_cachear_pendientes), cuando ya tiene su texto y su
+    sitio: marcarlo mientras el script lo seguía tocando hacía caer a Resolve."""
+    if item is not None:
+        _CACHE.setdefault("pendientes", []).append(item)
+
+
+def _cachear_pendientes(manifest):
+    """v5.5.8: marca para la cache de render los clips colocados en esta corrida.
+    Con la Edicion PRO detras (manifest.cache_captions = False: GO) no se marcan
+    aqui: la PRO aun los va a mover; los marca ella al terminar."""
+    pendientes = _CACHE.pop("pendientes", [])
+    if not pendientes or (isinstance(manifest, dict) and manifest.get("cache_captions") is False):
         return
     if not _CACHE["modo"]:
         _CACHE["modo"] = True
@@ -1092,10 +1100,11 @@ def _cachear(item):
                 p.SetSetting("perfRenderCacheMode", "user")
         except Exception:
             pass
-    try:
-        item.SetFusionOutputCache("enabled")
-    except Exception:
-        pass
+    for item in pendientes:
+        try:
+            item.SetFusionOutputCache("enabled")
+        except Exception:
+            pass
 
 
 def colocar_medido(media_pool, timeline, plantilla, desde, duracion, pista,
@@ -7186,6 +7195,7 @@ def main():
         # ultimo_resultado.*, y la app le enseñaba al usuario el FALLO de
         # dias atras como si fuera el de hoy (paso en el Mac del cliente
         # con uno del 25/08 leido el 31/08). El gemelo Lua siempre lo hizo.
+        _cachear_pendientes(manifest)            # v5.5.8: la cache de render, AL FINAL (con todo ya en su sitio)
         vista_final(timeline, manifest)          # antes de guardar: sus líneas (y avisos) tienen que quedar en ultimo_resultado.txt
         guardar_resultado(True, f"{_TOTAL[0]} líneas colocadas · v" + VERSION)
     else:

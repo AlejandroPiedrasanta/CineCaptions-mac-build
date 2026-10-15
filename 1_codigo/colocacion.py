@@ -18,6 +18,7 @@ Prefs: go_reproducir (sí), go_vista_resolve (sí), go_vista_nombre («CineCapti
 """
 import json
 import re
+import os
 import sys
 import time
 
@@ -929,6 +930,79 @@ def pids_resolve():
         return b._pids_de_resolve()
     except Exception:
         return []
+
+
+def _procesos_hijos(pid):
+    """Los pid de todos los descendientes de `pid` (Windows: instantánea Toolhelp32, sin PowerShell ni psutil). [] si no se puede."""
+    if not sys.platform.startswith('win'):
+        return []
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        class PE32(ctypes.Structure):
+            _fields_ = [('dwSize', wintypes.DWORD), ('cntUsage', wintypes.DWORD), ('th32ProcessID', wintypes.DWORD),
+                        ('th32DefaultHeapID', ctypes.c_size_t), ('th32ModuleID', wintypes.DWORD), ('cntThreads', wintypes.DWORD),
+                        ('th32ParentProcessID', wintypes.DWORD), ('pcPriClassBase', ctypes.c_long), ('dwFlags', wintypes.DWORD),
+                        ('szExeFile', ctypes.c_wchar * 260)]
+        k32 = ctypes.windll.kernel32
+        k32.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+        snap = k32.CreateToolhelp32Snapshot(0x00000002, 0)          # TH32CS_SNAPPROCESS
+        if not snap or snap == wintypes.HANDLE(-1).value:
+            return []
+        padres = {}
+        try:
+            e = PE32()
+            e.dwSize = ctypes.sizeof(PE32)
+            ok = k32.Process32FirstW(snap, ctypes.byref(e))
+            while ok:
+                padres.setdefault(int(e.th32ParentProcessID), []).append(int(e.th32ProcessID))
+                ok = k32.Process32NextW(snap, ctypes.byref(e))
+        finally:
+            k32.CloseHandle(snap)
+        out, pila = [], [int(pid)]
+        while pila:
+            for h in padres.get(pila.pop(), []):
+                if h not in out and h != int(pid):
+                    out.append(h)
+                    pila.append(h)
+        return out
+    except Exception:
+        return []
+
+
+def parar_todo(decir=None):
+    """v5.5.8 (el usuario: «Cancelar debe cerrar todo lo que está haciendo, cerrar Resolve y sus procesos en automático»): cierra a la fuerza
+    DaVinci Resolve (y sus procesos hijos) y TODOS los procesos que lanzó CineCaptions (el motor de voz, Remotion: node y su Chrome sin ventana,
+    ffmpeg, el MCP de Resolve…). La ventana de CineCaptions sigue abierta. Lo sin guardar del proyecto de GO en Resolve se pierde (Resolve guarda
+    copias automáticas). Devuelve {'resolve': bool cerrado, 'procesos': n}. Nunca lanza; NO llamar desde el hilo de la interfaz."""
+    out = {'resolve': True, 'procesos': 0}
+    try:
+        import subprocess
+        try:
+            import resolve_mcp
+            resolve_mcp.cerrar()                                       # (el cliente MCP: sin él no se queda esperando a un Resolve muerto)
+        except Exception:
+            pass
+        out['resolve'] = cerrar_resolve_a_la_fuerza(decir, espera_s=20)
+        if sys.platform.startswith('win'):
+            for h in _procesos_hijos(os.getpid()):
+                r = subprocess.run(['taskkill', '/F', '/T', '/PID', str(h)], capture_output=True, creationflags=0x08000000, timeout=20)
+                out['procesos'] += 1 if r.returncode == 0 else 0
+        elif sys.platform == 'darwin':
+            subprocess.run(['pkill', '-9', '-P', str(os.getpid())], capture_output=True, timeout=20)
+        try:
+            import registro
+            registro.info(tr('Cancelado: cerré DaVinci Resolve y {n} proceso(s) de CineCaptions.', n=out['procesos']), 'GO')
+        except Exception:
+            pass
+    except Exception:
+        try:
+            import registro
+            registro.excepcion(origen='GO · cancelar y cerrar todo')
+        except Exception:
+            pass
+    return out
 
 
 def cerrar_resolve_a_la_fuerza(decir=None, espera_s=30):

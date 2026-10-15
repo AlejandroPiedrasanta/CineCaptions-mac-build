@@ -29,6 +29,7 @@ import hashlib
 import json
 import shutil
 import random
+import os
 from pathlib import Path
 
 import edicion_pro_ograf as OG
@@ -40,7 +41,11 @@ OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_masc
                         'pro_internet': True,          # v5.5.3: fotos de internet con licencia (fuentes_web) para las escenas
                         'pro_motions_modo': 'auto', 'pro_motions': [],     # v5.5.7: 'auto' (la IA elige entre todos) o 'elegidos' (solo los de la lista)
                         'pro_sonidos_nivel': 'normal',  # v5.5.7 (página Sonido › Edición PRO): 'suave' | 'normal' | 'fuerte'
-                        'pro_sonidos_familias': {'whoosh': True, 'textura': True, 'riser': True}}   # movimiento · apariciones · riser + golpe
+                        'pro_sonidos_familias': {'whoosh': True, 'textura': True, 'riser': True},   # movimiento · apariciones · riser + golpe
+                        # v5.5.8: Temas 5 y 6 con captions de Fusion EDITABLES (Inspector › texto) en vez de las animaciones de Remotion
+                        'pro_captions_editables': True,
+                        # v5.5.8: en Studio, el gancho del principio (captions detrás de la persona) con Magic Mask aunque el modo sea «auto»
+                        'pro_magic_gancho': True}
 NIVEL_SONIDOS_DB = {'suave': -5.0, 'normal': 0.0, 'fuerte': 3.0}
 FAMILIA_DE_PISTA = {'PRO-WHOOSH': 'whoosh', 'PRO-TEXTURA': 'textura', 'PRO-RISER': 'riser', 'PRO-HIT': 'riser'}
 NOMBRES_GENERO = {'auto': 'Automático', 'general': 'General', 'inmobiliaria': 'Inmobiliaria / venta de casas', 'boda': 'Bodas', 'xv': 'XV años',
@@ -708,8 +713,15 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     # solo si se elige a mano en el menú.
     usar_magic = studio and modo_mascara == 'magic'
     usar_ia = modo_mascara in ('auto', 'ia') or (modo_mascara == 'magic' and not studio)
+    # v5.5.8 (pedido del usuario): el GANCHO (el primer tramo de captions detrás de la persona, en los primeros segundos) con Magic Mask en Studio
+    # también en «auto»; el resto sigue con el recorte de la IA local (Magic Mask en todo el video llegó a cerrar Resolve)
+    magic_gancho = studio and modo_mascara == 'auto' and op.get('pro_magic_gancho', True) is not False
     video = plan.get('video') or ''
     t5 = bool(plan.get('tema5'))                     # Tema 5: la edición completa con el sistema de la skill (edicion_pro_tema5); los Text+ de GO, de respaldo
+    # v5.5.8: con captions editables (por defecto) los Temas 5 y 6 dejan los Text+ de GO como captions DE VERDAD (Inspector › editar texto) y usan
+    # las mismas mecánicas de captions que los Temas 1–4 (detrás de la persona, sin tapar caras, abajo en las escenas); sus gráficos siguen igual.
+    # `cap_t5` = el Tema 5/6 con sus captions de Remotion (no editables), solo si el usuario lo apaga.
+    cap_t5 = t5 and (plan.get('opciones') or {}).get('pro_captions_editables', True) is False
     soltar_gpu(texto=not t5)                         # v5.5.4: la GPU para Resolve y el Magic Mask (el Tema 5 aún usa la IA de texto: la suelta él al acabar)
     ligero = bool(plan.get('ligero'))              # Temas 1–4 sin la PRO: solo legibilidad, acompañantes, color y la regla de la cara (edicion_pro_temas)
     divididas = []
@@ -762,6 +774,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                                           ia=op.get('pro_ia_local', True) is not False, idioma=plan.get('idioma') or 'es', estado=decir,
                                           recorte_de=recorte5, cara_de=cara5, usuario=str(op.get('pro_usuario') or ''),
                                           estilo=plan.get('estilo_t5') or 'skill')
+        if not cap_t5:                               # captions editables: fuera los captions de Remotion (y sus velos); los Text+ de GO se quedan
+            nuevas = [q for q in nuevas if q.get('pieza') not in ('subtitulo', 'velo_caption')]
         plan['piezas'] = quedan + nuevas
     clave = hashlib.sha1(f'{video}|{W}x{H}@{fps}'.encode('utf-8')).hexdigest()[:10]
     carpeta = OG.ruta_larga(CARPETA / clave)
@@ -869,7 +883,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     plan['_broll_puesto'] = [{'ini': t['_s']} for t in tomas]
     # captions DETRÁS de la persona (lo que hace que valga la pena el Magic Mask)
     encima, tramos = [], []
-    if hay_ia and modo_mascara != 'no' and not t5 and not ligero:
+    if hay_ia and modo_mascara != 'no' and not cap_t5 and not ligero:
         ocupado = [(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p['pieza'] != 'marco']
         ocupado += [(t['_s'] - 0.1, t['_s'] + t['dur'] + 0.1) for t in tomas]
         ocupado += [((a - info['base']) / fps, (b - info['base']) / fps) for a, b in info.get('ocupado') or []]
@@ -885,7 +899,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                                                             'subir': round(c['subir'] * H, 1), 'caras': _caras_redondas(c.get('caras')),
                                                             'caja': c.get('caja')}
                                                            for c in t['cues']]}
-            if usar_magic:
+            gancho = magic_gancho and t is tramos[0] and t['ini'] < 6.0           # (el primero que vale es el gancho: _captions_detras lo mete siempre)
+            if usar_magic or gancho:
                 comp = _comp_magic(PE.puntos_fusion(t['det']), ref, carpeta / f'encima_{f0}_{f1}.comp', f'CCProMagicE{f0}')
                 e.update(modo='magic', comp=str(OG.ruta_larga(comp)), herramienta=f'CCProMagicE{f0}')
             elif usar_ia:
@@ -904,7 +919,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             encima.append(e)
     # el resto de los bloques de captions: ninguno tapa una cara (y colocar_pro aparta sus emojis)
     mover = []
-    if hay_ia and not t5:
+    if hay_ia and not cap_t5:
         try:
             pantallas = [(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p.get('pantalla') and (p['ini'], p['fin']) not in ventanas]
             pantallas += [(t['_s'] - 0.1, t['_s'] + t['dur'] + 0.1) for t in tomas]
@@ -917,7 +932,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     else:
         sin_cara = []
     # v5.5.3: mientras dura una escena a pantalla completa del director (Escenas9), los captions de los Temas 1–4 bajan a la parte de abajo
-    if not t5:
+    if not cap_t5:
         try:
             import edicion_pro_escenas as ES
             esc = [(p['ini'], p['fin']) for p in plan['piezas'] if p.get('escena_mg') and not p.get('quitar')]
@@ -1065,7 +1080,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         voz_db = PS.nivel_voz(video)                                  # los efectos, siempre bajo la voz de ESTE video
         familias = dict(op.get('pro_sonidos_familias') or {})          # v5.5.7: lo que el usuario apagó en Sonido › Edición PRO
         extra_db = NIVEL_SONIDOS_DB.get(str(op.get('pro_sonidos_nivel') or 'normal'), 0.0)
-        for e in PS.disenar(plan, fps, rng, choques=[] if t5 else [(f - info['base']) / fps for f in info.get('sfx') or []],
+        for e in PS.disenar(plan, fps, rng, choques=[] if cap_t5 else [(f - info['base']) / fps for f in info.get('sfx') or []],
                             cortes=[(int(f) - info['base']) / fps for f, _z in punch], voz_db=voz_db):
             if familias.get(FAMILIA_DE_PISTA.get(str(e.get('pista')), 'textura'), True) is False:
                 continue
@@ -1078,7 +1093,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             sonidos.append(e)
     # v5.5.7 (el usuario, Tema 4: «emojis encima de los captions, iconos y motions juntos»): donde la PRO enseña algo (acompañante, órbita, cifra,
     # escena, tarjeta, titular…), el emoji de GO se apaga: una sola cosa a la vez junto al caption
-    if not t5:
+    if not cap_t5:
         for p in plan['piezas']:
             if p.get('quitar') or p.get('pieza') in ('subtitulo', 'velo', 'velo_caption', 'marco', 'fondo') or p.get('capa') == 'velo':
                 continue
@@ -1086,7 +1101,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     subs = [p for p in plan['piezas'] if p['pieza'] == 'subtitulo']
     subs_ok = sum(1 for p in subs if rm_hechos.get(str(rm_salida.get(id(p)))))
     datos = {'fps': fps, 'inicio': info['base'], 'graficos': graficos, 'persona': persona, 'sonidos': sonidos, 'cache': True,
-             'captions_propios': bool(t5 and subs and subs_ok >= 0.9 * len(subs)), 'color_claves': color_claves,
+             'captions_propios': bool(cap_t5 and subs and subs_ok >= 0.9 * len(subs)), 'color_claves': color_claves,
              'dividida': [[int(round(d['ini'] * fps)), int(round(d['fin'] * fps)), round(d['bajar'] * H, 1)] for d in divididas
                           if any(p.get('remotion') == 'EscenaT5' and abs(p['ini'] - d['ini']) < 1e-3 and rm_hechos.get(str(rm_salida.get(id(p))))
                                  for p in plan['piezas'])],
@@ -1117,6 +1132,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     if info.get('via') == 'mcp':
         import resolve_mcp
         script = carpeta_recursos() / 'colocar_pro.py'
+        if os.environ.get('CINECAPTIONS_TRAZA_PRO'):                    # (pruebas: un envoltorio que anota cada paso en un archivo)
+            script = Path(os.environ['CINECAPTIONS_TRAZA_PRO'])
         ok, mensaje = resolve_mcp.ejecutar_py(script, timeout=600)
     else:
         import resolve_bridge

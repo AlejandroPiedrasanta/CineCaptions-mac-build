@@ -612,9 +612,24 @@ if est is None:
     est = types.ModuleType('_cinecaptions_mcp')
     est.trabajos = {}
     sys.modules['_cinecaptions_mcp'] = est
-JOB, RUTA, NOMBRE = %r, %r, %r
+JOB, RUTA, NOMBRE, ESTADO = %r, %r, %r, %r
+
+def _dejar(d):
+    est.trabajos[JOB] = d
+    try:                                                # v5.5.8: el resultado también a un archivo: la app lo lee SIN llamar al MCP
+        import json, os
+        tmp = ESTADO + '.tmp'
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump(d, f, ensure_ascii=False, default=str)
+        os.replace(tmp, ESTADO)
+    except Exception:
+        pass
 
 def _correr(res, proy):
+    try:
+        open(ESTADO + '.vivo', 'w').close()
+    except Exception:
+        pass
     registro = []
     def _print(*a, **k):
         registro.append(' '.join(str(x) for x in a))
@@ -628,14 +643,16 @@ def _correr(res, proy):
         spec.loader.exec_module(mod)
         if hasattr(mod, 'main'):
             mod.main()
-        est.trabajos[JOB] = {'ok': True, 'mensaje': '', 'registro': registro[-60:]}
+        _dejar({'ok': True, 'mensaje': '', 'registro': registro[-60:]})
     except SystemExit as e:
         texto = '' if (e.code in (None, 0)) else str(e.code)
-        est.trabajos[JOB] = {'ok': e.code in (None, 0), 'mensaje': texto, 'registro': registro[-60:]}
+        _dejar({'ok': e.code in (None, 0), 'mensaje': texto, 'registro': registro[-60:]})
     except BaseException as e:
-        est.trabajos[JOB] = {'ok': False, 'mensaje': type(e).__name__ + ': ' + str(e),
-                             'traza': traceback.format_exc()[-3000:], 'registro': registro[-60:]}
+        _dejar({'ok': False, 'mensaje': type(e).__name__ + ': ' + str(e),
+                'traza': traceback.format_exc()[-3000:], 'registro': registro[-60:]})
 
+for _k in [k for k, v in list(est.trabajos.items()) if v is not None]:     # (los ya leídos por archivo: v5.5.8)
+    est.trabajos.pop(_k, None)
 est.trabajos[JOB] = None
 threading.Thread(target=_correr, args=(resolve, project), daemon=True, name=JOB).start()
 result = 'lanzado'
@@ -667,20 +684,59 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None):
     with _TRABAJO:
         job = f'job{int(time.time() * 1000)}'
         nombre = '_cinecaptions_' + ruta.stem.replace(' ', '_').replace('-', '_')
-        ok, _, err = script(_LANZAR % (job, str(ruta), nombre), timeout=20)
+        import tempfile
+        carpeta = Path(tempfile.gettempdir()) / 'cinecaptions_trabajos'
+        try:
+            carpeta.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
+        estado = carpeta / f'{job}.json'
+        vivo = carpeta / f'{job}.json.vivo'
+        ok, _, err = script(_LANZAR % (job, str(ruta), nombre, str(estado)), timeout=20)
         if not ok:
             return False, f'MCP: {err}'
         inicio = time.time()
+        ultima_pregunta = inicio
+        # v5.5.8: mientras el trabajo corre NO se llama al MCP. MEDIDO (Tema 6, traza): cada llamada al MCP hace que Resolve guarde el proyecto;
+        # coincidiendo con MediaPool.ImportMedia en el hilo del trabajo, Resolve se quedaba bloqueado (el sondeo no contestaba en 25 s y GO lo
+        # cerraba). El trabajo deja su resultado en un archivo; aquí solo se mira ese archivo y que Resolve.exe siga vivo. El MCP solo se usa
+        # si el trabajo no pudo escribir su archivo «vivo» al empezar.
         while time.time() - inicio < timeout:
-            time.sleep(0.15)
-            ok, r, err = script(_PREGUNTAR % {'job': job}, timeout=10)
-            if not ok:
-                return False, f'MCP: {err}'
-            if r.get('estado') == 'hecho':
-                _anotar_registro(ruta.name, r)
-                return bool(r.get('ok')), (r.get('mensaje') or '')
-            if r.get('estado') == 'perdido':
-                return False, 'Resolve se reinició mientras trabajaba'
+            time.sleep(0.5)
+            r = None
+            if estado.exists():
+                try:
+                    r = dict(json.loads(estado.read_text(encoding='utf-8')), estado='hecho')
+                except (OSError, ValueError):
+                    r = None
+                if r is not None:
+                    for f in (estado, vivo):
+                        try:
+                            f.unlink()
+                        except OSError:
+                            pass
+            if r is None and sys.platform.startswith('win'):
+                try:
+                    import resolve_bridge
+                    if resolve_bridge._listar_pids_resolve() == []:
+                        return False, 'Resolve se cerró mientras trabajaba'
+                    if resolve_bridge.resolve_colgado(120) and resolve_bridge._registro_resolve_callado_s() > 120:
+                        return False, 'Resolve dejó de responder mientras trabajaba (2 min «No responde» y sin escribir en su registro)'
+                except Exception:
+                    pass
+            if r is None and not vivo.exists() and time.time() - inicio > 8 and time.time() - ultima_pregunta > 1.5:
+                ultima_pregunta = time.time()                          # (sin archivo «vivo»: el trabajo no puede escribir ahí; se pregunta como antes, despacio)
+                ok, r, err = script(_PREGUNTAR % {'job': job}, timeout=10)
+                if not ok:
+                    return False, f'MCP: {err}'
+                if r.get('estado') == 'corriendo':
+                    r = None
+            if r is not None:
+                if r.get('estado') == 'hecho':
+                    _anotar_registro(ruta.name, r)
+                    return bool(r.get('ok')), (r.get('mensaje') or '')
+                if r.get('estado') == 'perdido':
+                    return False, 'Resolve se reinició mientras trabajaba'
             if on_progreso:
                 try:
                     on_progreso(time.time() - inicio)

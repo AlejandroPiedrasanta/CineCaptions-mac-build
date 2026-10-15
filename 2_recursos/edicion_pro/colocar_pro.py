@@ -90,6 +90,70 @@ def _importar(mp, caja, ruta):
     return nuevos[0] if nuevos else None
 
 
+def _rutas_del_pool(carpeta, salida):
+    for c in carpeta.GetClipList() or []:
+        try:
+            salida.add(_norm(c.GetClipProperty('File Path') or ''))
+        except Exception:
+            pass
+    for sub in carpeta.GetSubFolderList() or []:
+        _rutas_del_pool(sub, salida)
+    return salida
+
+
+def _alfa_recto(clip):
+    try:
+        if str(clip.GetClipProperty('Alpha mode') or '') != 'Straight':
+            clip.SetClipProperty('Alpha mode', 'Straight')
+    except Exception:
+        pass
+
+
+def _preimportar(mp, caja, datos):
+    """v5.5.8: TODO lo que se va a colocar se importa de UNA vez y ANTES de tocar el timeline. MEDIDO (Tema 6, 3 de 3, volcado de Resolve
+    Studio 21.1.1): se caía con una excepción C++ en su hilo principal al importar el segundo .mov de Remotion justo después de poner el
+    primero en el timeline y cambiarle el modo alfa (importar mientras la interfaz dibuja el clip recién puesto). Devuelve cuántos importó."""
+    rutas, alfa = [], set()
+    for g in datos.get('graficos') or []:
+        rutas.append(g.get('archivo'))
+        if g.get('alfa'):
+            alfa.add(_norm(g.get('archivo') or ''))
+        if str(g.get('archivo') or '').endswith('_sombra.mov'):           # (la clave sin sombra, por si la persona no se puede recortar)
+            rutas.append(str(g['archivo'])[:-len('_sombra.mov')] + '.mov')
+    for p in (datos.get('persona') or []) + (datos.get('encima') or []):
+        if p.get('modo') == 'clip':
+            rutas.append(p.get('archivo'))
+            alfa.add(_norm(p.get('archivo') or ''))
+        rutas.append(p.get('velo'))
+    for ev in (datos.get('broll') or []) + (datos.get('sonidos') or []):
+        rutas.append(ev.get('archivo'))
+    ya = _rutas_del_pool(mp.GetRootFolder(), set())
+    faltan = []
+    for r in rutas:
+        if r and os.path.isfile(str(r)) and _norm(r) not in ya:
+            ya.add(_norm(r))
+            faltan.append(str(r))
+    if not faltan:
+        return 0
+    previa = mp.GetCurrentFolder()
+    try:
+        mp.SetCurrentFolder(caja)
+        nuevos = mp.ImportMedia(faltan) or []
+    finally:
+        try:
+            mp.SetCurrentFolder(previa)
+        except Exception:
+            pass
+    for c in nuevos:
+        try:
+            if _norm(c.GetClipProperty('File Path') or '') in alfa:
+                _alfa_recto(c)
+        except Exception:
+            pass
+    time.sleep(1.0)                                                        # (que Resolve termine de leerlos antes de empezar a colocar)
+    return len(nuevos)
+
+
 def _indice(tl, nombre, tipo='video'):
     for i in range(1, int(tl.GetTrackCount(tipo) or 0) + 1):
         if tl.GetTrackName(tipo, i) == nombre:
@@ -153,18 +217,44 @@ def _tc(tl, f):
     return '%02d:%02d:%02d:%02d' % (s // 3600, s // 60 % 60, s % 60, f % e)
 
 
+_PEND_CACHE = {'fusion': [], 'color': []}
+
+
 def _cache(item):
-    try:
-        item.SetFusionOutputCache('enabled')                               # «Render Cache Fusion Output»: Resolve lo pre-renderiza en segundo plano
-    except Exception:
-        pass
+    """«Render Cache Fusion Output». v5.5.8: se apunta y se marca AL FINAL (_cachear_al_final): marcarlo al colocarlo, con el script aún moviendo
+    clips, hacía caer a Resolve."""
+    if item is not None:
+        _PEND_CACHE['fusion'].append(item)
 
 
 def _cache_color(item):
-    try:
-        item.SetColorOutputCache(True)                                     # «Render Cache Color Output» (las copias en gris del foco / modo error)
-    except Exception:
-        pass
+    if item is not None:                                                   # «Render Cache Color Output» (las copias en gris del foco / modo error)
+        _PEND_CACHE['color'].append(item)
+
+
+def _cachear_al_final(tl):
+    """v5.5.8: con TODO ya colocado y movido: la caché del proyecto a «user» (si estaba en «none»), los gráficos de la PRO y los captions de GO
+    (que GO dejó sin marcar porque la PRO los iba a mover)."""
+    _modo_cache()
+    for it in _PEND_CACHE['fusion']:
+        try:
+            it.SetFusionOutputCache('enabled')
+        except Exception:
+            pass
+    for it in _PEND_CACHE['color']:
+        try:
+            it.SetColorOutputCache(True)
+        except Exception:
+            pass
+    _PEND_CACHE['fusion'], _PEND_CACHE['color'] = [], []
+    for i in _pistas_captions(tl):
+        if 'EMOJI' in str(tl.GetTrackName('video', i) or '').upper():
+            continue
+        for it in tl.GetItemListInTrack('video', i) or []:
+            try:
+                it.SetFusionOutputCache('enabled')
+            except Exception:
+                pass
 
 
 def _modo_cache():
@@ -330,7 +420,7 @@ def _poner_persona(tl, mp, caja, p, f0, f1, pista):
         if clip is None:
             return None
         try:
-            clip.SetClipProperty('Alpha mode', 'Straight')
+            _alfa_recto(clip)
             f1 = min(f1, f0 + int(float(clip.GetClipProperty('Frames') or (f1 - f0))))
         except Exception:
             pass
@@ -922,8 +1012,7 @@ def main():
     v1_antes = len(tl.GetItemListInTrack('video', 1) or [])
     decir = lambda t: print(t)
     resolve.OpenPage('edit')
-    if datos.get('cache', True):
-        _modo_cache()
+    _preimportar(mp, caja, datos)                                          # v5.5.8: todo de una vez, ANTES de tocar el timeline
     idx = _pistas(tl)
     idx[PISTA_ICONOS] = _pista_iconos(tl, any(g.get('capa') == 'iconos' for g in datos.get('graficos') or []))
     puestos = {'fondo': 0, 'velo': 0, 'detras': 0, 'delante': 0, 'persona': 0, 'iconos': 0, 'subs': 0}
@@ -945,10 +1034,7 @@ def main():
             sin_poner += 1
             continue
         if g.get('alfa'):                                                  # animación de Remotion: ProRes 4444 con alfa recto, solo video
-            try:
-                clip.SetClipProperty('Alpha mode', 'Straight')
-            except Exception:
-                pass
+            _alfa_recto(clip)
             r = mp.AppendToTimeline([{'mediaPoolItem': clip, 'trackIndex': idx[pista], 'recordFrame': ini, 'mediaType': 1}]) or []
         else:
             r = mp.AppendToTimeline([{'mediaPoolItem': clip, 'trackIndex': idx[pista], 'recordFrame': ini}]) or []
@@ -1022,6 +1108,8 @@ def main():
     # 5) los sonidos de los gráficos
     sonidos = _sonidos(tl, mp, caja, datos.get('sonidos') or [], base)
     _quitar_vacias(tl)
+    if datos.get('cache', True):
+        _cachear_al_final(tl)                                              # v5.5.8: la caché de render, AL FINAL
     try:
         tl.SetCurrentTimecode(_tc(tl, tl.GetStartFrame()))
     except Exception:
