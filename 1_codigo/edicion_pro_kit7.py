@@ -740,7 +740,7 @@ def planificar(textos, plegadas, tiempos, frases, idioma='es', video='', duracio
     lista = vestir(lista, video, tema_estilo, perfil.get('tono'))
     try:
         import edicion_pro_escenas as ES
-        ES.completar(lista, video, duracion)                        # polaroid, tablero y móvil con fotogramas del propio video
+        ES.completar(lista, video, duracion, perfil)                # polaroid, tablero y móvil: fotos de internet del tema (o del video)
     except Exception:
         pass
     return lista

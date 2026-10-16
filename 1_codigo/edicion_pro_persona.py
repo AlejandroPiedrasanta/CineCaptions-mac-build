@@ -99,7 +99,10 @@ def fotograma(video, t):
                 ultimo = f
                 if ts >= t - 0.5 / float(vs.average_rate or 30):
                     break
-            return ultimo.to_ndarray(format='rgb24') if ultimo is not None else None
+            if ultimo is None:
+                return None
+            import rotacion_video as RV                                   # v5.5.8: derecho, como lo muestra Resolve (videos del celular)
+            return RV.derecho_nd(ultimo.to_ndarray(format='rgb24'), RV.cuartos(ultimo))
     except Exception:
         return None
 
@@ -234,7 +237,9 @@ def recorte_prores(video, t0, t1, destino, al_progreso=None, lado_max=1920):
             vs.thread_type = 'AUTO'
             tb = float(vs.time_base)
             fps = vs.average_rate or 30
-            W, H = vs.codec_context.width, vs.codec_context.height
+            import rotacion_video as RV                                   # v5.5.8: el recorte sale derecho, como el clip en Resolve
+            k = RV.giro(video)
+            W, H = RV.medidas(vs.codec_context.width, vs.codec_context.height, k)
             esc = min(1.0, lado_max / max(W, H))
             ow, oh = int(W * esc) // 2 * 2, int(H * esc) // 2 * 2
             with av.open(str(tmp), 'w') as o:
@@ -249,7 +254,7 @@ def recorte_prores(video, t0, t1, destino, al_progreso=None, lado_max=1920):
                         continue
                     if ts >= t1:
                         break
-                    rgb = f.to_ndarray(format='rgb24')
+                    rgb = RV.derecho_nd(f.to_ndarray(format='rgb24'), k)
                     a = mate(rgb)
                     b = rellenar_huecos(a > 0.5)
                     a = np.maximum(a, b.astype(np.float32) * 0.98)

@@ -7226,6 +7226,9 @@ class SubtitleApp(QWidget):
                   tr('Clic: con o sin efectos visuales (intro, transiciones en los cortes e iconos flotantes). Se eligen en la página «Efectos».')),
                  (tr('Edición PRO: {v}', v=txt_pro), self._menu_pro_go,
                   tr('Edición PRO: GO edita el video en la línea de tiempo de Resolve (titulares detrás de la persona con Magic Mask, cifras, listas, marcos, ficha final y sonidos), con un estilo propio para cada video. Clic: activar y elegir el estilo.')),
+                 # v5.5.8 (pedido: «a la par de Edición PRO un botón que diga Motions completo»): el último paso de GO
+                 (tr('Motions completo: {v}', v=tr('sí') if self._go_motions_completo() else tr('no')), self._alternar_motions_completo_go,
+                  tr('Motions completo: al final de GO, un video de motions de todo el video (una escena por frase: tipografía, fotos del tema, iconos, cifras, listas) en la pista de más arriba, encima de captions y efectos, para que lo cortes donde quieras ver tu video. Clic: sí o no.')),
                  (tr('Proyecto: {p}', p=self._go_proyecto() or tr('el abierto')), self._alternar_proyecto_go,
                   tr('Al soltar un video en Inicio: se arma en el proyecto «CineCaptions» de Resolve (se abre o se crea solo) o en el proyecto que tengas abierto. Clic: cambiar.'))]
         chips = [(t, f, a, ui.ACCENT_CLARO) for t, f, a in chips]
@@ -7387,6 +7390,21 @@ class SubtitleApp(QWidget):
         try:
             import edicion_pro
             edicion_pro.poner_activado(not edicion_pro.activado())
+        except Exception:
+            pass
+        self._pintar_opciones_go()
+    def _go_motions_completo(self):
+        """v5.5.8: ¿GO termina con «Motions completo» (motions_completo.py, el video de motions encima de todo)?"""
+        try:
+            import edicion_pro
+            return bool(edicion_pro.opciones_guardadas().get('pro_motions_completo'))
+        except Exception:
+            return False
+    def _alternar_motions_completo_go(self):
+        """El chip «Motions completo» de Inicio: sí / no (no enciende la Edición PRO: va también solo, sobre los captions)."""
+        try:
+            import edicion_pro
+            edicion_pro.guardar_opciones({'pro_motions_completo': not self._go_motions_completo()})
         except Exception:
             pass
         self._pintar_opciones_go()
@@ -11578,6 +11596,8 @@ class SubtitleApp(QWidget):
                 try:
                     import ajustes_ui
                     if ajustes_ui.leer_prefs().get('temas_mejoras', True) is False:
+                        if edicion_pro.opciones_guardadas().get('pro_motions_completo'):     # v5.5.8: solo «Motions completo»
+                            self._pro_plan = {'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es', 'opciones': edicion_pro.opciones_guardadas()}
                         return
                 except Exception:
                     pass

@@ -25,9 +25,19 @@ const trabajador = async () => {
     try {
       mkdirSync(path.dirname(t.salida), { recursive: true });
       const composition = await selectComposition({ serveUrl, id: t.id, inputProps: t.props, puppeteerInstance: navegador });
-      await renderMedia({ composition, serveUrl, codec: 'prores', proResProfile: '4444', imageFormat: 'png', pixelFormat: 'yuva444p10le',
-                          outputLocation: t.salida, inputProps: t.props, puppeteerInstance: navegador, concurrency: hilos, overwrite: true,
-                          chromiumOptions: { gl: 'angle' }, logLevel: 'error' });
+      if (t.opaco) {
+        // v5.5.8, «Motions completo»: un video ENTERO y opaco (va encima de todo): H.264 de alta calidad (ProRes 4444 pesaría varios GB),
+        // con todos los hilos para él y su avance (una línea {"progreso"} cada ~5 %)
+        let ultimo = -1;
+        await renderMedia({ composition, serveUrl, codec: 'h264', crf: 16, imageFormat: 'jpeg', jpegQuality: 92, pixelFormat: 'yuv420p', muted: true,
+                            outputLocation: t.salida, inputProps: t.props, puppeteerInstance: navegador, concurrency: Math.max(2, Math.min(16, Math.floor(nucleos / 2))),
+                            overwrite: true, chromiumOptions: { gl: 'angle' }, logLevel: 'error',
+                            onProgress: ({ progress }) => { const p = Math.floor(progress * 20); if (p > ultimo) { ultimo = p; console.log(JSON.stringify({ progreso: progress, salida: t.salida })); } } });
+      } else {
+        await renderMedia({ composition, serveUrl, codec: 'prores', proResProfile: '4444', imageFormat: 'png', pixelFormat: 'yuva444p10le',
+                            outputLocation: t.salida, inputProps: t.props, puppeteerInstance: navegador, concurrency: hilos, overwrite: true,
+                            chromiumOptions: { gl: 'angle' }, logLevel: 'error' });
+      }
       console.log(JSON.stringify({ hecho: t.salida, s: (Date.now() - t0) / 1000 }));
     } catch (e) {
       console.log(JSON.stringify({ error: String(e && e.message || e).slice(0, 400), salida: t.salida }));

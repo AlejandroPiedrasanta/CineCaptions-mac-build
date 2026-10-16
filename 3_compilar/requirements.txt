@@ -17,7 +17,7 @@ av==19.0.1
 pyspellchecker==0.9.1
 certifi==2026.7.22
 pynput==1.8.2
-comtypes==1.4.12; sys_platform == "win32"   # v5.5.6: UI Automation sin PowerShell (uia_resolve)
+comtypes==1.4.17; sys_platform == "win32"   # v5.5.6: UI Automation sin PowerShell (uia_resolve)
 six==1.17.0
 ctranslate2==4.8.3
 faster-whisper==1.2.1

@@ -5612,5 +5612,68 @@
   "fr": "Règle officielle : aucun graphique ni emoji ne couvre un visage ou un sous-titre, et un rectificateur final retire ce qui se chevauche : zooms en trop, risers au milieu de la vidéo, effets par-dessus l’Édition PRO et sons sans rapport. Les sous-titres n’ont plus d’ombre derrière.",
   "de": "Offizielle Regel: Keine Grafik und kein Emoji verdeckt ein Gesicht oder einen Untertitel, und eine abschließende Korrektur entfernt Überlappungen: zu viele Zooms, Riser mitten im Video, Effekte über dem PRO-Schnitt und unpassende Sounds. Untertitel haben keinen Schatten mehr dahinter.",
   "it": "Regola ufficiale: nessuna grafica né emoji copre un volto o un sottotitolo, e un rettificatore finale toglie ciò che si sovrappone: zoom di troppo, riser a metà video, effetti sopra l’Editing PRO e suoni fuori luogo. I sottotitoli non hanno più l’ombra dietro."
+ },
+ "Orbe": {
+  "en": "Orb",
+  "pt": "Orbe",
+  "fr": "Orbe",
+  "de": "Orb",
+  "it": "Orbe"
+ },
+ "El orbe de luz de React Bits: un anillo morado y cian que fluye, se ondula al pasar el ratón y se enciende al trabajar.": {
+  "en": "The React Bits light orb: a flowing purple and cyan ring that ripples when you hover and lights up while working.",
+  "pt": "O orbe de luz do React Bits: um anel roxo e ciano que flui, ondula ao passar o mouse e acende ao trabalhar.",
+  "fr": "L'orbe lumineux de React Bits : un anneau violet et cyan qui ondule au survol de la souris et s'allume pendant le travail.",
+  "de": "Der Licht-Orb von React Bits: ein fließender lila-cyanfarbener Ring, der sich beim Überfahren mit der Maus kräuselt und beim Arbeiten aufleuchtet.",
+  "it": "L'orbe di luce di React Bits: un anello viola e ciano che scorre, si increspa al passaggio del mouse e si accende mentre lavora."
+ },
+ "Inicio nuevo: un orbe de luz que fluye y se enciende al trabajar, y el título entra letra a letra.": {
+  "en": "New Home screen: a flowing light orb that lights up while working, and the title comes in letter by letter.",
+  "pt": "Novo Início: um orbe de luz que flui e acende ao trabalhar, e o título entra letra por letra.",
+  "fr": "Nouvel Accueil : un orbe lumineux qui ondule et s'allume pendant le travail, et le titre apparaît lettre par lettre.",
+  "de": "Neuer Start: ein fließender Licht-Orb, der beim Arbeiten aufleuchtet, und der Titel erscheint Buchstabe für Buchstabe.",
+  "it": "Nuova Home: un orbe di luce che scorre e si accende mentre lavora, e il titolo entra lettera per lettera."
+ },
+ "Motions completo (al lado de Edición PRO): al final crea un video de solo motions del tema, en la pista de más arriba, para que lo cortes donde quieras ver el video.": {
+  "en": "Full motions (next to PRO Edit): at the end it creates a motions-only video about the topic, on the top track, so you can cut it wherever you want the video to show.",
+  "pt": "Motions completo (ao lado de Edição PRO): no fim cria um vídeo só de motions do tema, na faixa mais alta, para você cortar onde quiser ver o vídeo.",
+  "fr": "Motions complet (à côté d'Édition PRO) : à la fin, crée une vidéo uniquement de motions sur le sujet, sur la piste la plus haute, à couper là où vous voulez voir la vidéo.",
+  "de": "Komplette Motions (neben PRO-Bearbeitung): am Ende entsteht ein Video nur aus Motions zum Thema auf der obersten Spur, das du schneidest, wo das Video zu sehen sein soll.",
+  "it": "Motions completo (accanto a Edizione PRO): alla fine crea un video di soli motions sul tema, sulla traccia più alta, da tagliare dove vuoi vedere il video."
+ },
+ "Inspector de Resolve: cada caption lleva arriba de todo el banner de CineCaptions, y los gráficos de precios, cifras y gráficas se editan ahí (texto, colores y posición) sin romper la animación.": {
+  "en": "Resolve Inspector: every caption has the CineCaptions banner at the very top, and the price, number and chart graphics are edited there (text, colors and position) without breaking the animation.",
+  "pt": "Inspector do Resolve: cada legenda tem o banner do CineCaptions no topo, e os gráficos de preços, números e gráficos são editados ali (texto, cores e posição) sem quebrar a animação.",
+  "fr": "Inspecteur de Resolve : chaque sous-titre porte la bannière CineCaptions tout en haut, et les graphiques de prix, de chiffres et de courbes s'y modifient (texte, couleurs et position) sans casser l'animation.",
+  "de": "Resolve-Inspektor: Jede Caption hat ganz oben das CineCaptions-Banner, und Preis-, Zahlen- und Diagrammgrafiken werden dort bearbeitet (Text, Farben und Position), ohne die Animation zu zerstören.",
+  "it": "Inspector di Resolve: ogni didascalia ha in cima il banner di CineCaptions, e le grafiche di prezzi, cifre e grafici si modificano lì (testo, colori e posizione) senza rompere l'animazione."
+ },
+ "Vigilante de la Edición PRO: la IA local y una revisión de cada clip quitan los gráficos que no encajan con lo que se dice o salen rotos.": {
+  "en": "PRO Edit watchdog: the local AI and a check of every clip remove graphics that do not match what is said or come out broken.",
+  "pt": "Vigia da Edição PRO: a IA local e uma revisão de cada clipe removem os gráficos que não combinam com o que se diz ou saem quebrados.",
+  "fr": "Gardien de l'Édition PRO : l'IA locale et une vérification de chaque clip retirent les graphiques qui ne correspondent pas à ce qui est dit ou qui sont cassés.",
+  "de": "Wächter der PRO-Bearbeitung: Die lokale KI und eine Prüfung jedes Clips entfernen Grafiken, die nicht zum Gesagten passen oder kaputt sind.",
+  "it": "Guardiano dell'Edizione PRO: l'IA locale e un controllo di ogni clip tolgono le grafiche che non corrispondono a ciò che si dice o che escono rotte."
+ },
+ "Los motions usan fotos de internet del tema que se habla, ya no el mismo fotograma del video.": {
+  "en": "Motions use internet photos of the topic being discussed, no longer the same frame of the video.",
+  "pt": "Os motions usam fotos da internet do tema de que se fala, não mais o mesmo quadro do vídeo.",
+  "fr": "Les motions utilisent des photos internet du sujet abordé, et non plus la même image de la vidéo.",
+  "de": "Die Motions nutzen Internetfotos zum besprochenen Thema statt immer desselben Videobilds.",
+  "it": "I motions usano foto da internet del tema di cui si parla, non più lo stesso fotogramma del video."
+ },
+ "Videos grabados con el móvil: la foto ya no sale girada. Y la moneda es la que se dice (naira ₦, euro €, quetzal Q…).": {
+  "en": "Videos shot on a phone: the photo no longer comes out rotated. And the currency is the one that is said (naira ₦, euro €, quetzal Q…).",
+  "pt": "Vídeos gravados no celular: a foto não sai mais girada. E a moeda é a que se diz (naira ₦, euro €, quetzal Q…).",
+  "fr": "Vidéos filmées au téléphone : la photo ne sort plus pivotée. Et la devise est celle qui est dite (naira ₦, euro €, quetzal Q…).",
+  "de": "Mit dem Handy gedrehte Videos: Das Foto ist nicht mehr verdreht. Und die Währung ist die gesagte (Naira ₦, Euro €, Quetzal Q…).",
+  "it": "Video girati col telefono: la foto non esce più ruotata. E la valuta è quella che si dice (naira ₦, euro €, quetzal Q…)."
+ },
+ "Los captions que esquivan una cara se quedan todos a la misma altura en todo el video.": {
+  "en": "Captions that dodge a face all stay at the same height throughout the video.",
+  "pt": "As legendas que desviam de um rosto ficam todas na mesma altura no vídeo inteiro.",
+  "fr": "Les sous-titres qui évitent un visage restent tous à la même hauteur dans toute la vidéo.",
+  "de": "Captions, die einem Gesicht ausweichen, bleiben im ganzen Video auf derselben Höhe.",
+  "it": "Le didascalie che evitano un volto restano tutte alla stessa altezza per tutto il video."
  }
 }

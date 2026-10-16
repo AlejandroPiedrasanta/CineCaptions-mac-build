@@ -117,7 +117,7 @@ export const TarjetaT5: React.FC<TarjetaProps> = ({ tipo = 'grafica', x = 50, y 
     const v = parseFloat(limpio), dec = (limpio.split('.')[1] || '').length;
     const q = easeOut((t - 0.35) / 1.1);
     const n = isFinite(v) ? (v * q).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : valor;
-    const pre = (sube > 0 ? '+' : sube < 0 ? '−' : '') + (['$', '€', '£'].includes(signo) ? signo : ''), post = signo === '%' ? '%' : '';
+    const pre = (sube > 0 ? '+' : sube < 0 ? '−' : '') + (signo && signo !== '%' ? signo : ''), post = signo === '%' ? '%' : '';   // v5.5.8: cualquier moneda (₦, Q, R$…)
     const alturas = sube < 0 ? [1, 0.82, 0.7, 0.52, 0.34] : [0.34, 0.46, 0.58, 0.76, 1];
     const altoG = 210 * U, anchoB = 92 * U, hueco = (ancho - 2 * pad - 5 * anchoB) / 4;
     const puntos = alturas.map((h, i) => [i * (anchoB + hueco) + anchoB / 2, altoG - h * altoG * easeOut((t - 0.25 - i * 0.12) / 0.6) - 18 * U]);

@@ -419,7 +419,7 @@ def _tarea_modelo(estado):
 
 # ---------------------------------------------------------------------------
 # motor_ia (v5.1): Qwen3-ASR + alineador + la IA de texto (Qwen3), en su propio
-# Python 3.12 (motor_voz.instalar). Pesa de 4 a 15 GB segun la tarjeta: si
+# Python 3.14 (motor_voz.instalar). Pesa de 4 a 15 GB segun la tarjeta: si
 # falla, el programa funciona igual con Whisper y se reintenta desde Ajustes.
 # ---------------------------------------------------------------------------
 def _tarea_motor_ia(estado):
@@ -430,8 +430,16 @@ def _tarea_motor_ia(estado):
     # v5.2: mirando los archivos (no solo listo.json), en un segundo
     info = motor_voz.asegurar_listo()
     if info and info.get('modelo_texto'):
+        # v5.5.8: ya instalado, solo se ponen al dia las librerias que cambiaron en los requisitos (sin torch ni modelos)
+        ya = f"Ya estaba instalado (Qwen3-ASR {info.get('modelo')} + IA de texto)"
+        try:
+            puestas = motor_voz.completar_requisitos(aviso=estado.info)
+        except Exception as e:
+            estado.progreso(100)
+            estado.error(f'{ya}; no pude poner al día sus librerías ({e}): sigue con las que tenía')
+            return
         estado.progreso(100)
-        estado.ok(f"Ya estaba instalado (Qwen3-ASR {info.get('modelo')} + IA de texto)")
+        estado.ok(ya + (f'; {len(puestas)} librería(s) al día' if puestas else ''))
         return
     modelo = motor_voz.instalar(progreso=lambda f, texto: estado.progreso(100 * f, texto),
                                 aviso=estado.info)

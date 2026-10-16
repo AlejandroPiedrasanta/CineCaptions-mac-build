@@ -92,7 +92,7 @@ class _Servidor:
         entorno['PYTHONUNBUFFERED'] = '1'
         entorno.pop('PYTHONPATH', None)
         entorno.pop('PYTHONHOME', None)
-        self.p = subprocess.Popen([str(motor_voz.python_motor()), '-u', str(script()), '--servidor',
+        self.p = subprocess.Popen([str(motor_voz.python_motor()), '-s', '-u', str(script()), '--servidor',
                                    '--modelo', modelo, '--inactivo', str(INACTIVO_S)],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   env=entorno, creationflags=motor_voz.SIN_VENTANA, cwd=str(motor_voz.carpeta()))
@@ -426,6 +426,52 @@ CATEGORIAS = ('boda', 'xv', 'fotografia', 'inmobiliaria', 'restaurante', 'cocina
 TONOS = ('elegante', 'energico', 'divertido', 'calmado', 'serio', 'inspirador', 'tecnico')
 
 
+def revisar(items, idioma='es', estado=None):
+    """v5.5.8, el VIGILANTE de la Edición PRO (vigilante_pro.revisar_ia): items [{'i', 'dicho', 'muestra'}] → [(i, motivo)] de los gráficos cuyo
+    texto no encaja con lo que se dice (motor_texto, modo 'revisar'). [] si no hay IA o falla: el vigilante sigue con sus reglas."""
+    if not items or not disponible() or _FALLOS['n'] >= FALLOS_SEGUIDOS_MAX:
+        return []
+    modelo = motor_voz.modelo_texto()
+    fd, entrada = tempfile.mkstemp(prefix='cinecaptions_revisar_', suffix='.json')
+    os.close(fd)
+    salida = entrada[:-5] + '.out.json'
+    Path(entrada).write_text(json.dumps({'modo': 'revisar', 'idioma': idioma, 'items': items}, ensure_ascii=False), encoding='utf-8')
+    try:
+        with _LOCK:
+            s = _SRV['s']
+            if s is None or not s.vivo():
+                if estado:
+                    estado('Cargando la IA de texto para revisar los gráficos…')
+                s = _Servidor(_PREFERIDO['m'] or modelo)
+                _SRV['s'] = s
+            try:
+                ok, texto_r = s.pedir(entrada, salida, lambda tipo, t: estado(t) if (estado and tipo == 'ESTADO') else None, timeout=240)
+            except Exception as e:
+                ok, texto_r = False, f'{type(e).__name__}: {e}'
+            if not ok:
+                s.cerrar()
+                _SRV['s'] = None
+        if not ok:
+            r = _reg()
+            if r:
+                r.aviso(f'La IA no pudo revisar los gráficos: {str(texto_r)[:200]}; el vigilante sigue con sus reglas.', 'IA de texto')
+            return []
+        datos = json.loads(Path(salida).read_text(encoding='utf-8'))
+        malos = [(int(x['i']), str(x.get('motivo') or '')) for x in datos.get('malos') or [] if isinstance(x, dict) and 'i' in x]
+        r = _reg()
+        if r:
+            r.info(f"Vigilante (IA): revisó {len(items)} gráficos en {datos.get('segundos')} s; {len(malos)} no encajan con lo que se dice.", 'IA de texto')
+        return malos
+    except Exception:
+        return []
+    finally:
+        for f in (entrada, salida):
+            try:
+                os.unlink(f)
+            except OSError:
+                pass
+
+
 def perfil(palabras_texto, idioma='es', estado=None):
     """v5.5.2: de qué va el video, para la edición: {'categoria', 'subtema', 'tono', 'iconos', 'publico'} (motor_texto, modo 'perfil'), o {} si no hay IA.
     Con caché por huella del texto. La categoría y el tono son de CATEGORIAS / TONOS; los iconos, de los animados que existen."""
@@ -435,7 +481,7 @@ def perfil(palabras_texto, idioma='es', estado=None):
     import edicion_pro_kit7 as K7
     iconos = K7.iconos_disponibles()
     modelo = motor_voz.modelo_texto()
-    clave = _clave_cache([texto[:6000]], idioma, 'perfil', modelo)
+    clave = _clave_cache([texto[:6000]], idioma, 'perfil2', modelo)     # v5.5.8: + 'fotos'
     archivo = _carpeta_cache() / ('perfil_' + clave + '.json')
     try:
         import archivos_seguros

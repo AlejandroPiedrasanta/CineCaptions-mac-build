@@ -1407,7 +1407,9 @@
     "Motor Qwen3-ASR listo": "Qwen3-ASR-Engine bereit",
     "Preparando el audio para Qwen3-ASR…": "Audio wird für Qwen3-ASR vorbereitet…",
     "El motor Qwen3-ASR por ahora solo está para Windows.": "Die Qwen3-ASR-Engine gibt es vorerst nur für Windows.",
-    "Descargando Python 3.12": "Python 3.12 wird heruntergeladen",
+    "Descargando Python 3.14": "Python 3.14 wird heruntergeladen",
+    "Actualizando el motor de voz": "Sprach-Engine wird aktualisiert",
+    "Preparando la GPU para Whisper": "GPU für Whisper wird vorbereitet",
     "Preparando pip": "pip wird vorbereitet",
     "Qwen3-ASR no devolvió palabras; pruebo con Whisper.": "Qwen3-ASR lieferte keine Wörter; versuche es mit Whisper.",
     "El motor Qwen3-ASR falló ({e}); sigo con Whisper.": "Die Qwen3-ASR-Engine ist fehlgeschlagen ({e}); weiter mit Whisper.",
@@ -2931,6 +2933,8 @@
     "La Edición PRO no se pudo colocar: {m}": "Der PRO-Schnitt konnte nicht angelegt werden: {m}",
     "con Edición PRO": "mit PRO-Schnitt",
     "Edición PRO: {v}": "PRO-Schnitt: {v}",
+    "Motions completo: {v}": "Komplette Motions: {v}",
+    "Motions completo: al final de GO, un video de motions de todo el video (una escena por frase: tipografía, fotos del tema, iconos, cifras, listas) en la pista de más arriba, encima de captions y efectos, para que lo cortes donde quieras ver tu video. Clic: sí o no.": "Komplette Motions: am Ende von GO ein Motion-Video für das ganze Video (eine Szene pro Satz: Typografie, Themenfotos, Icons, Zahlen, Listen) auf der obersten Spur, über Untertiteln und Effekten, zum Schneiden, wo dein Video zu sehen sein soll. Klick: ja oder nein.",
     "Edición PRO: GO edita el video en la línea de tiempo de Resolve (titulares detrás de la persona con Magic Mask, cifras, listas, marcos, ficha final y sonidos), con un estilo propio para cada video. Clic: activar y elegir el estilo.": "PRO-Schnitt: GO schneidet das Video in der Resolve-Timeline (Schlagzeilen hinter der Person mit Magic Mask, Zahlen, Listen, Rahmen, Abspann und Sounds), mit eigenem Stil für jedes Video. Klick: einschalten und Stil wählen.",
     "Edición PRO activada · desactivar": "PRO-Schnitt an · ausschalten",
     "Activar la Edición PRO": "PRO-Schnitt einschalten",
@@ -3493,6 +3497,15 @@
     "Temas 4, 5 y 6: las palabras de los captions ya no salen pegadas ni encimadas.": "Themen 4, 5 und 6: Die Wörter der Untertitel kleben nicht mehr aneinander und überlappen sich nicht mehr.",
     "Cancelar, grande y en rojo: para todo lo que estaba haciendo, cierra Resolve y sus procesos y vuelve a Inicio para empezar de cero.": "Abbrechen, groß und rot: stoppt alles Laufende, schließt Resolve und seine Prozesse und kehrt zum Start zurück, um von vorne zu beginnen.",
     "Estilos: ejemplos nuevos de los 6 temas, hechos con GO y la Edición PRO reales en Resolve (motions que acompañan a los captions).": "Stile: neue Beispiele der 6 Themen, erstellt mit echtem GO und PRO-Bearbeitung in Resolve (Motions, die die Untertitel begleiten).",
-    "Inglés y los demás idiomas: la interfaz sale entera en el idioma elegido.": "Englisch und die anderen Sprachen: Die gesamte Oberfläche erscheint in der gewählten Sprache."
+    "Inglés y los demás idiomas: la interfaz sale entera en el idioma elegido.": "Englisch und die anderen Sprachen: Die gesamte Oberfläche erscheint in der gewählten Sprache.",
+    "Orbe": "Orb",
+    "El orbe de luz de React Bits: un anillo morado y cian que fluye, se ondula al pasar el ratón y se enciende al trabajar.": "Der Licht-Orb von React Bits: ein fließender lila-cyanfarbener Ring, der sich beim Überfahren mit der Maus kräuselt und beim Arbeiten aufleuchtet.",
+    "Inicio nuevo: un orbe de luz que fluye y se enciende al trabajar, y el título entra letra a letra.": "Neuer Start: ein fließender Licht-Orb, der beim Arbeiten aufleuchtet, und der Titel erscheint Buchstabe für Buchstabe.",
+    "Motions completo (al lado de Edición PRO): al final crea un video de solo motions del tema, en la pista de más arriba, para que lo cortes donde quieras ver el video.": "Komplette Motions (neben PRO-Bearbeitung): am Ende entsteht ein Video nur aus Motions zum Thema auf der obersten Spur, das du schneidest, wo das Video zu sehen sein soll.",
+    "Inspector de Resolve: cada caption lleva arriba de todo el banner de CineCaptions, y los gráficos de precios, cifras y gráficas se editan ahí (texto, colores y posición) sin romper la animación.": "Resolve-Inspektor: Jede Caption hat ganz oben das CineCaptions-Banner, und Preis-, Zahlen- und Diagrammgrafiken werden dort bearbeitet (Text, Farben und Position), ohne die Animation zu zerstören.",
+    "Vigilante de la Edición PRO: la IA local y una revisión de cada clip quitan los gráficos que no encajan con lo que se dice o salen rotos.": "Wächter der PRO-Bearbeitung: Die lokale KI und eine Prüfung jedes Clips entfernen Grafiken, die nicht zum Gesagten passen oder kaputt sind.",
+    "Los motions usan fotos de internet del tema que se habla, ya no el mismo fotograma del video.": "Die Motions nutzen Internetfotos zum besprochenen Thema statt immer desselben Videobilds.",
+    "Videos grabados con el móvil: la foto ya no sale girada. Y la moneda es la que se dice (naira ₦, euro €, quetzal Q…).": "Mit dem Handy gedrehte Videos: Das Foto ist nicht mehr verdreht. Und die Währung ist die gesagte (Naira ₦, Euro €, Quetzal Q…).",
+    "Los captions que esquivan una cara se quedan todos a la misma altura en todo el video.": "Captions, die einem Gesicht ausweichen, bleiben im ganzen Video auf derselben Höhe."
   }
 }

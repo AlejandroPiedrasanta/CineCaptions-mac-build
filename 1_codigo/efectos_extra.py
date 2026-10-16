@@ -828,7 +828,9 @@ def detectar_cara(video, muestras=8):
                 fr = next(c.decode(flujo), None)
                 if fr is None:
                     continue
-                a = fr.reformat(width=96, height=int(96 * fr.height / max(1, fr.width)), format='rgb24').to_ndarray().astype(np.float32)
+                import rotacion_video as RV                               # v5.5.8: derecho (la cara «arriba» de un video del celular)
+                a = RV.derecho_nd(fr.reformat(width=96, height=int(96 * fr.height / max(1, fr.width)), format='rgb24').to_ndarray(),
+                                  RV.cuartos(fr)).astype(np.float32)
                 r, g, b = a[..., 0], a[..., 1], a[..., 2]
                 cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b
                 cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b

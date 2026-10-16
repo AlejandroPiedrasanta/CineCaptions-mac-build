@@ -455,6 +455,36 @@ def _formato(video):
         return 'v'
 
 
+def foto_del_tema(textos, perfil=None, formato='v', evitar=(), lado=900):
+    """v5.5.8 (pedido: «que busque imágenes de referencia en internet del tema que se está hablando, para que el motion no capture siempre la
+    misma imagen del video»): una foto de internet con licencia de lo que se dice en `textos` (una cosa concreta: broll.SUSTANTIVOS) o, si no, del
+    TEMA del video (las búsquedas en inglés que da la IA local en su perfil: `perfil['fotos']`). Solo las que no piden el crédito en pantalla
+    (va a creditos_broll.txt). Devuelve (data URI, info de fuentes_web) o None (sin internet, apagado en Ajustes o sin resultados)."""
+    if not _internet_activo():
+        return None
+    try:
+        import broll
+        import fuentes_web as FW
+    except Exception:
+        return None
+    consultas = []
+    for w in textos or []:
+        q = broll.SUSTANTIVOS.get(plegar(str(w)))
+        if q and q not in consultas:
+            consultas.append(q)
+    consultas += [q for q in (perfil or {}).get('fotos') or [] if q and q not in consultas]
+    for q in consultas[:4]:
+        try:
+            r = FW.buscar_foto(q, formato, evitar=evitar, sin_atribucion=True, sin_texto=True)
+        except Exception:
+            r = None
+        if r:
+            uri = FW.foto_data_uri(r, lado=lado)
+            if uri:
+                return uri, r
+    return None
+
+
 def fotos_de_internet(momentos, video):
     """v5.5.3: FotoE con su foto y el tablero con fotos de lo que nombra (si son cosas concretas), de internet y con licencia (fuentes_web),
     todas a la vez. La FotoE que no encuentra foto se quita. Créditos en creditos_broll.txt y en el Registro."""
@@ -506,8 +536,10 @@ def fotos_de_internet(momentos, video):
     return momentos
 
 
-def completar(momentos, video, duracion):
-    """Las fotos de internet (fotos_de_internet) y polaroid, tablero y móvil con FOTOGRAMAS del propio video (de otro momento, como un recuerdo)."""
+def completar(momentos, video, duracion, perfil=None):
+    """Las fotos de internet (fotos_de_internet) y polaroid, tablero y móvil: v5.5.8, primero con fotos de internet DEL TEMA (lo que se nombra
+    en esa escena o el tema del video según la IA local: `foto_del_tema`), distintas entre sí; si no hay internet o no aparece nada, con
+    FOTOGRAMAS del propio video (de otro momento, como un recuerdo)."""
     fotos_de_internet(momentos, video)
     if not video or not Path(str(video)).exists():
         return momentos
@@ -516,12 +548,23 @@ def completar(momentos, video, duracion):
     except Exception:
         return momentos
     dur = float(duracion or 0) or 30.0
+    formato, usadas = _formato(video), []
     for m in momentos:
-        if m.get('comp') not in ('PolaroidE', 'TableroE', 'MovilE'):
+        if m.get('comp') not in ('PolaroidE', 'TableroE', 'MovilE') or (m['comp'] == 'TableroE' and m['props'].get('imagenes')):
             continue
-        t0 = float(m['t'])
-        otros = [x for x in (dur * 0.12, dur * 0.3, dur * 0.5, dur * 0.7, dur * 0.88) if abs(x - t0) > 2.0][:4]
-        fotos = [f for f in (T5.foto(video, x, ancho=480) for x in otros) if f]
+        textos = ' '.join(str(v) for k, v in (m.get('props') or {}).items() if k in ('palabra', 'pie', 'titulo', 'clave', 'items')).replace('|', ' ').split()
+        cuantas = 1 if m['comp'] == 'PolaroidE' else 3
+        fotos = []
+        for _ in range(cuantas):
+            r = foto_del_tema(textos, perfil, formato, evitar=[u['id'] for u in usadas], lado=600)
+            if not r:
+                break
+            fotos.append(r[0])
+            usadas.append(r[1])
+        if len(fotos) < cuantas:                                            # sin internet o sin bastantes: lo que falte, del propio video
+            t0 = float(m['t'])
+            otros = [x for x in (dur * 0.12, dur * 0.3, dur * 0.5, dur * 0.7, dur * 0.88) if abs(x - t0) > 2.0][:4]
+            fotos += [f for f in (T5.foto(video, x, ancho=480) for x in otros) if f][:cuantas - len(fotos)]
         if not fotos:
             continue
         if m['comp'] == 'PolaroidE':
@@ -530,6 +573,12 @@ def completar(momentos, video, duracion):
             m['props']['imagenes'] = '|'.join(fotos)
         elif m['comp'] == 'MovilE':
             m['props']['imagenes'] = '|'.join(fotos)
+    if usadas:
+        try:
+            import fuentes_web as FW
+            FW.anotar_creditos(usadas, video)
+        except Exception:
+            pass
     return momentos
 
 

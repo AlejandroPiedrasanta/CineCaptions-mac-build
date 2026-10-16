@@ -35,6 +35,7 @@ ORDEN = ['PRO-BROLL', 'PRO-ZOOM', 'PRO-GRIS', 'PRO-FONDO', 'PRO-VELO', 'PRO-DETR
 CAPA = {'fondo': 'PRO-FONDO', 'velo': 'PRO-VELO', 'detras': 'PRO-DETRAS', 'delante': 'PRO-DELANTE', 'iconos': 'PRO-ICONOS', 'subs': 'PRO-SUBS'}
 PISTA_ENCIMA = 'PRO-ENCIMA'
 PISTA_ICONOS = 'PRO-ICONOS'              # los iconos 3D junto a los captions: encima de ellos (y debajo de PRO-ENCIMA)
+PISTA_MOTIONS = 'PRO-MOTIONS'            # v5.5.8: «Motions completo», el video entero de motions ENCIMA DE TODO (el usuario lo corta)
 MARCA_EMOJI = 'ccpro-emoji-off'          # el emoji del tema que se apagó porque en ese bloque va un icono 3D
 TRANSFORMACION = ('Scaling', 'ZoomX', 'ZoomY', 'Pan', 'Tilt', 'RotationAngle', 'AnchorPointX', 'AnchorPointY', 'Pitch', 'Yaw', 'FlipX', 'FlipY',
                   'CropLeft', 'CropRight', 'CropTop', 'CropBottom', 'CropSoftness')
@@ -200,7 +201,7 @@ def _pistas(tl):
 
 
 def _quitar_vacias(tl):
-    for n in ORDEN + [PISTA_ENCIMA, PISTA_ICONOS]:
+    for n in ORDEN + [PISTA_ENCIMA, PISTA_ICONOS, PISTA_MOTIONS]:
         i = _indice(tl, n)
         if i is not None and not (tl.GetItemListInTrack('video', i) or []):
             try:
@@ -663,6 +664,37 @@ def _encima(tl, mp, caja, tramos, base, decir, cache):
     return hechos, movidos
 
 
+def _motions(tl, mp, caja, graficos, base):
+    """v5.5.8, «Motions completo»: el video de motions de todo el video en PRO-MOTIONS, la pista de MÁS ARRIBA (encima de los captions, los
+    efectos y PRO-ENCIMA: se pone lo último). Re-aplicar la vacía; sin motions, se borra. Devuelve cuántos clips puso."""
+    i = _indice(tl, PISTA_MOTIONS)
+    if i is not None:
+        _vaciar(tl, i)
+        if i != int(tl.GetTrackCount('video')) or not graficos:
+            tl.DeleteTrack('video', i)
+            i = None
+    if not graficos:
+        return 0
+    if i is None:
+        tl.AddTrack('video')
+        i = int(tl.GetTrackCount('video'))
+        tl.SetTrackName('video', i, PISTA_MOTIONS)
+    puestos = 0
+    for g in sorted(graficos, key=lambda g: int(g['ini'])):
+        clip = _importar(mp, caja, g['archivo'])
+        if clip is None:
+            print('  no pude importar %s' % os.path.basename(g['archivo']))
+            continue
+        r = mp.AppendToTimeline([{'mediaPoolItem': clip, 'trackIndex': i, 'recordFrame': base + int(g['ini']), 'mediaType': 1}]) or []
+        if r:
+            puestos += 1
+            try:
+                r[0].SetName(g.get('nombre') or 'PRO · Motions completo')
+            except Exception:
+                pass
+    return puestos
+
+
 def _pista_iconos(tl, hace_falta):
     """PRO-ICONOS, vacía, encima de los captions (se crea al final; PRO-ENCIMA, si hace falta, va después y queda por encima)."""
     i = _indice(tl, PISTA_ICONOS)
@@ -1020,6 +1052,8 @@ def main():
     fin_pista = {n: -1 for n in ORDEN + [PISTA_ICONOS]}
     # 1) los gráficos OGraf
     for g in sorted(datos.get('graficos') or [], key=lambda g: int(g['ini'])):
+        if g.get('capa') == 'motions':
+            continue                                                       # «Motions completo»: va al final, en la pista de más arriba
         pista = CAPA.get(g.get('capa'), 'PRO-DELANTE')
         if idx.get(pista) is None:
             sin_poner += 1
@@ -1107,6 +1141,10 @@ def main():
         print('Temas 1–4: %d palabras destacadas en el color del video.' % coloreados)
     # 5) los sonidos de los gráficos
     sonidos = _sonidos(tl, mp, caja, datos.get('sonidos') or [], base)
+    # 6) v5.5.8: «Motions completo», lo último y en la pista de más arriba
+    motions = _motions(tl, mp, caja, [g for g in datos.get('graficos') or [] if g.get('capa') == 'motions'], base)
+    if motions:
+        print('Motions completo: %d clip(s) en %s, encima de todo.' % (motions, PISTA_MOTIONS))
     _quitar_vacias(tl)
     if datos.get('cache', True):
         _cachear_al_final(tl)                                              # v5.5.8: la caché de render, AL FINAL
@@ -1124,5 +1162,5 @@ def main():
               (' (%d con Magic Mask)' % rastreados) if magic else '', detras, movidos, emojis, puestos['iconos'], cambiados, grises, tomas, punch, sonidos, (', %d sin poner' % sin_poner) if sin_poner else ''))
     if len(tl.GetItemListInTrack('video', 1) or []) < v1_antes:
         raise SystemExit('ATENCION: V1 perdió clips al colocar la Edición PRO')
-    if total == 0 and datos.get('graficos'):
+    if total == 0 and not motions and datos.get('graficos'):
         raise SystemExit('Resolve no colocó ningún gráfico de la Edición PRO')

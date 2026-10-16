@@ -24,7 +24,7 @@ import zipfile
 from pathlib import Path
 
 SCHEMA_URL = 'https://ograf.ebu.io/v1/specification/json-schemas/graphics/schema.json'
-VERSION_PIEZAS = '1.1.0'
+VERSION_PIEZAS = '1.2.0'
 
 
 def carpeta_ograf() -> Path:
@@ -105,6 +105,14 @@ ESQUEMAS = {
         ('subtitulo', _texto('Subtítulo')), ('tiempos', _texto('Tiempos (s)', '0,0.5,0.9,1.4')), ('fuente', _sel('Tipografía', 'serif', FUENTES)),
         ('acento', _color('Acento', '#d8b67a')), ('colorTexto', _color('Texto', '#ffffff')),
         ('adorno', _sel('Adorno', 'lineas', {'lineas': 'Líneas', 'ninguno': 'Ninguno'})), *_POS(50, 30)]},
+    # v5.5.8: la tarjeta de precio / cifra / gráfica del Tema 5 y 6, editable en el Inspector (antes un video de Remotion)
+    'dato': {'nombre': 'Dato', 'salida_ms': 350, 'props': [
+        ('tipo', _sel('Tipo', 'precio', {'precio': 'Precio', 'grafica': 'Gráfica', 'cifra': 'Cifra'})),
+        ('valor', _texto('Valor', '80')), ('signo', _texto('Moneda o signo ($, ₦, €, %…)', '$')), ('etiqueta', _texto('Etiqueta', 'TOTAL')),
+        ('tendencia', _sel('Tendencia', 'sube', {'sube': 'Sube', 'baja': 'Baja', 'plana': 'Sin signo'})),
+        ('tema', _sel('Aspecto', 'oscuro', {'oscuro': 'Cristal oscuro', 'claro': 'Carta blanca'})), ('acento', _color('Acento', '#4c7dff')),
+        ('colorTexto', _color('Texto', '#f4f5f9')), ('fuente', _sel('Tipografía', 'grotesk', FUENTES)), ('tiempos', _texto('Entrada (s)', '0.1')),
+        *_POS(50, 73)]},
 }
 ICONOS_CONCEPTO = {'camera': 'Cámara', 'clapperboard': 'Claqueta', 'film': 'Película', 'video': 'Video', 'mic': 'Micrófono', 'music': 'Música',
                    'gift': 'Regalo', 'calendarDays': 'Calendario', 'clock': 'Reloj', 'sun': 'Sol', 'sunrise': 'Amanecer', 'moon': 'Luna', 'users': 'Personas',
@@ -180,7 +188,9 @@ def manifiesto(pieza, valores=None, duracion_s=5.0, ident=None, fps=30.0, ancho=
     (en vertical lo dejaba a 0,56 en una esquina; el motor también lo compensa, pero así no hay ni que compensar)."""
     esq = ESQUEMAS[pieza]
     vals = _normalizar(pieza, valores or {})
-    props = {}
+    # v5.5.8 (pedido: «un banner de CineCaptions en el Inspector para personalizar todo lo que se puso en la línea de tiempo»): el primer campo
+    # del Inspector es el banner (la pieza no lo usa; el texto dice qué se puede cambiar debajo)
+    props = {'cinecaptions': {'type': 'string', 'title': '✦  CINECAPTIONS  ✦', 'default': f'Personaliza este {esq["nombre"].lower()}: texto, colores y posición aquí abajo'}}
     for clave, spec in esq['props']:
         p = dict(spec)
         p['default'] = vals[clave]

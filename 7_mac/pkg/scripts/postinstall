@@ -1,7 +1,8 @@
 #!/bin/bash
 # CineCaptions · By Cinema Productions
 # 7_mac/pkg/scripts/postinstall — corre al terminar de copiar la app: deja los scripts en el menu de
-# DaVinci Resolve y las tipografias del usuario (lo mismo que hace el instalador de Windows).
+# DaVinci Resolve, las tipografias del usuario y (v5.5.8) el modelo de voz Whisper ya descargado, para que
+# la primera transcripcion no tenga que bajarlo (lo mismo que hace el instalador de Windows).
 # Corre como root: las tareas se lanzan como el usuario que esta frente a la Mac.
 # Nunca falla la instalacion: si algo no se pudo, el programa lo reintenta al abrirse.
 
@@ -21,7 +22,7 @@ mkdir -p "$CARPETA" && chown "$USUARIO" "$CARPETA"
 LOG="$CARPETA/instalacion_mac.log"
 echo "== $(date '+%Y-%m-%d %H:%M:%S')  CineCaptions: tareas de instalacion" >> "$LOG"
 
-for TAREA in scripts fuentes; do
+for TAREA in scripts fuentes modelo; do
     ESTADO="/tmp/cinecaptions_$TAREA.$$.txt"
     : > "$ESTADO"; chmod 666 "$ESTADO"
     launchctl asuser "$UID_U" sudo -u "$USUARIO" -H env -i \

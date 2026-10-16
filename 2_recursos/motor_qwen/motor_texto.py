@@ -2,7 +2,7 @@
 # 2_recursos/motor_qwen/motor_texto.py — IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
 """IA de texto de CineCaptions (Qwen3 Instruct, local, sin coste por uso).
 
-Corre en el MISMO Python 3.12 del motor de voz (motor_qwen.py). Recibe la
+Corre en el MISMO Python 3.14 del motor de voz (motor_qwen.py). Recibe la
 transcripcion palabra por palabra y devuelve:
 
   * correcciones: errores claros de la transcripcion (palabra mal oida,
@@ -353,6 +353,8 @@ def analizar_con(tok, modelo, repo, dispositivo, entrada, salida):
         return analizar_motions(tok, modelo, repo, dispositivo, datos, salida)
     if datos.get('modo') == 'perfil':                        # v5.5.2: de qué va el video (categoría, tono, iconos)
         return analizar_perfil(tok, modelo, repo, dispositivo, datos, salida)
+    if datos.get('modo') == 'revisar':                       # v5.5.8: el vigilante: ¿lo que muestra cada gráfico encaja con lo que se dice?
+        return revisar_graficos(tok, modelo, repo, dispositivo, datos, salida)
     palabras = [str(p) for p in datos.get('palabras') or []]
     idioma = IDIOMAS.get(str(datos.get('idioma') or 'es')[:2], 'el idioma del texto')
     codigo = str(datos.get('idioma') or '')[:2]
@@ -594,6 +596,52 @@ def analizar_motions(tok, modelo, repo, dispositivo, datos, salida):
 # video, los motions, los iconos y los colores. in.json: {"modo": "perfil", "idioma", "texto", "categorias": [...], "tonos": [...], "iconos": [...]}
 # out.json: {"perfil": {"categoria", "subtema", "tono", "iconos": [...], "publico"}}
 # ---------------------------------------------------------------------------------------------------------------------------------------------
+def revisar_graficos(tok, modelo, repo, dispositivo, datos, salida):
+    """v5.5.8, el VIGILANTE: in.json {"modo": "revisar", "idioma", "items": [{"i", "dicho", "muestra"}]} → out.json {"malos": [{"i", "motivo"}]}:
+    los gráficos cuyo texto contradice o no tiene que ver con lo que se dice en ese momento (otra cifra, otra moneda, otro tema)."""
+    import torch
+    t0 = time.time()
+    items = [it for it in datos.get('items') or [] if isinstance(it, dict)][:40]
+    # un veredicto POR gráfico (encaja sí/no) con un ejemplo: con «dame la lista de los malos» el modelo ligero (1.7B) contestaba siempre
+    # la lista vacía (medido: «Bitcoin a 50.000 dólares» sobre una receta de paella pasaba)
+    sistema = ('Eres el control de calidad de un editor de vídeo. Para cada gráfico tienes lo que se DICE en ese momento y lo que el gráfico '
+               'MUESTRA en pantalla. Un gráfico NO encaja si lo que muestra contradice lo que se dice o no tiene nada que ver: otra cifra, '
+               'otra moneda, otro tema, un nombre o una palabra que no se dijo. Si lo ilustra, lo resume o lo destaca, SÍ encaja.\n'
+               'Ejemplo: DICE «vamos a hablar del partido de fútbol de ayer» — MUESTRA «Receta de pasta» → no encaja (otro tema). '
+               'DICE «cuesta unos veinte dólares» — MUESTRA «$20» → encaja.\n'
+               'Contesta TODOS los gráficos, en orden. Devuelve SOLO un JSON: '
+               '{"veredictos": [{"i": 0, "encaja": false, "motivo": "pocas palabras"}, {"i": 1, "encaja": true}]}')
+    usuario = '\n'.join(f'{it.get("i")}. DICE: «{str(it.get("dicho") or "")[:300]}» — MUESTRA: «{str(it.get("muestra") or "")[:160]}»' for it in items)
+    conversacion = [{'role': 'system', 'content': sistema}, {'role': 'user', 'content': usuario}]
+    try:
+        plantilla = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+    except TypeError:
+        plantilla = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True)
+    entradas = tok([plantilla], return_tensors='pt').to(modelo.device)
+    with torch.inference_mode():
+        out = modelo.generate(**entradas, max_new_tokens=500, do_sample=False, pad_token_id=tok.pad_token_id or tok.eos_token_id)
+    respuesta = tok.decode(out[0][entradas['input_ids'].shape[1]:], skip_special_tokens=True)
+    if os.environ.get('CINECAPTIONS_DEPURAR_IA'):
+        sys.stderr.write('RESPUESTA REVISAR:\n' + respuesta + '\n')
+    r = leer_json(respuesta)
+    validos = {int(it.get('i')) for it in items if str(it.get('i')).isdigit()}
+    malos = []
+    lista = []
+    if isinstance(r, dict):
+        lista = [x for x in r.get('veredictos') or [] if isinstance(x, dict) and x.get('encaja') in (False, 'false', 'no', 0)]
+        lista += [x for x in r.get('malos') or [] if isinstance(x, dict)]           # (el formato de antes, por si el modelo lo usa)
+    for x in lista:
+        try:
+            i = int(x.get('i'))
+        except (TypeError, ValueError, AttributeError):
+            continue
+        if i in validos and all(m['i'] != i for m in malos):
+            malos.append({'i': i, 'motivo': str(x.get('motivo') or '')[:120]})
+    with open(salida, 'w', encoding='utf-8') as f:
+        json.dump({'modelo': repo, 'segundos': round(time.time() - t0, 1), 'malos': malos}, f, ensure_ascii=False)
+    decir('LISTO', salida)
+
+
 def analizar_perfil(tok, modelo, repo, dispositivo, datos, salida):
     import torch
     t0 = time.time()
@@ -605,7 +653,9 @@ def analizar_perfil(tok, modelo, repo, dispositivo, datos, salida):
                f'"categoria": UNA de: {", ".join(cats)}.\n"tono": UNO de: {", ".join(tonos)}.\n'
                f'"iconos": 3 a 6 iconos que encajan con el tema, SOLO de esta lista: {", ".join(iconos[:120])}.\n'
                '"subtema": 1–4 palabras (p. ej. «recetas fáciles», «boda en la playa»). "publico": a quién habla, 1–4 palabras.\n'
-               'Devuelve SOLO un JSON: {"categoria": "...", "subtema": "...", "tono": "...", "iconos": ["..."], "publico": "..."}')
+               '"fotos": 2 a 4 búsquedas EN INGLÉS (2–4 palabras cada una) de fotos de banco que ilustren el tema con cosas concretas que se ven '
+               '(p. ej. "street food lagos", "naira banknotes", "wedding beach sunset"); nada de personas famosas ni marcas.\n'
+               'Devuelve SOLO un JSON: {"categoria": "...", "subtema": "...", "tono": "...", "iconos": ["..."], "publico": "...", "fotos": ["..."]}')
     conversacion = [{'role': 'system', 'content': sistema}, {'role': 'user', 'content': texto}]
     try:
         plantilla = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True, enable_thinking=False)
@@ -613,13 +663,16 @@ def analizar_perfil(tok, modelo, repo, dispositivo, datos, salida):
         plantilla = tok.apply_chat_template(conversacion, tokenize=False, add_generation_prompt=True)
     entradas = tok([plantilla], return_tensors='pt').to(modelo.device)
     with torch.inference_mode():
-        out = modelo.generate(**entradas, max_new_tokens=220, do_sample=False, pad_token_id=tok.pad_token_id or tok.eos_token_id)
+        out = modelo.generate(**entradas, max_new_tokens=320, do_sample=False, pad_token_id=tok.pad_token_id or tok.eos_token_id)
     respuesta = tok.decode(out[0][entradas['input_ids'].shape[1]:], skip_special_tokens=True)
     if os.environ.get('CINECAPTIONS_DEPURAR_IA'):
         sys.stderr.write('RESPUESTA PERFIL:\n' + respuesta + '\n')
     r = leer_json(respuesta)
     perfil = {'categoria': str(r.get('categoria') or ''), 'subtema': str(r.get('subtema') or '')[:40], 'tono': str(r.get('tono') or ''),
-              'iconos': [str(x) for x in (r.get('iconos') or []) if str(x) in iconos][:6], 'publico': str(r.get('publico') or '')[:40]}
+              'iconos': [str(x) for x in (r.get('iconos') or []) if str(x) in iconos][:6], 'publico': str(r.get('publico') or '')[:40],
+              # v5.5.8: qué fotos de internet ilustran el tema (en inglés: los bancos de fotos buscan en inglés); solo letras y espacios
+              'fotos': [q for q in (' '.join(re.sub(r'[^a-z ]', ' ', str(x).lower()).split()[:4]) for x in (r.get('fotos') or []) if isinstance(x, str))
+                        if len(q) >= 3][:4]}
     if perfil['categoria'] not in cats:
         perfil['categoria'] = ''
     if perfil['tono'] not in tonos:

@@ -11,7 +11,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    edicion_pro\   (4153 archivos)
+    edicion_pro\   (4152 archivos)
     efectos\   (148 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
@@ -29,8 +29,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_10.jpg
         fondo_11.jpg
     fonts\   (47 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
-    generador_packs\   (21 archivos)
+    generador_packs\   (22 archivos)
         .cf\   (1 archivos)
+        banner_inspector.py
+            el BANNER de CineCaptions arriba de los controles de cada caption en el Inspector de Resolve.
         construir_pack.py
             arma los .drb (bin de Resolve) de los packs nuevos con los macros reales Luxe Shine / Luxe Slide (luxe_macro.py).
         desktop.ini

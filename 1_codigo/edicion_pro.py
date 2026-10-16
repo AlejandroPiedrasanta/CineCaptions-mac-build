@@ -39,6 +39,7 @@ CARPETA = Path.home() / 'DaVinciSubtitles' / 'edicion_pro'
 PLAN_JSON = Path.home() / 'DaVinciSubtitles' / 'edicion_pro_plan.json'
 OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_mascara': 'auto', 'pro_sonidos': True, 'pro_ia_local': True, 'pro_variacion': 0,
                         'pro_internet': True,          # v5.5.3: fotos de internet con licencia (fuentes_web) para las escenas
+                        'pro_motions_completo': False,  # v5.5.8: «Motions completo» (motions_completo.py): un video de motions encima de todo, al final
                         'pro_motions_modo': 'auto', 'pro_motions': [],     # v5.5.7: 'auto' (la IA elige entre todos) o 'elegidos' (solo los de la lista)
                         'pro_sonidos_nivel': 'normal',  # v5.5.7 (página Sonido › Edición PRO): 'suave' | 'normal' | 'fuerte'
                         'pro_sonidos_familias': {'whoosh': True, 'textura': True, 'riser': True},   # movimiento · apariciones · riser + golpe
@@ -112,7 +113,9 @@ def medir(video):
         with av.open(str(video)) as c:
             vs = c.streams.video[0]
             dur = float(c.duration / 1e6) if c.duration else float(vs.duration * vs.time_base) if vs.duration else None
-            return vs.codec_context.width, vs.codec_context.height, dur, float(vs.average_rate or 30)
+            import rotacion_video as RV                                   # v5.5.8: como lo ve Resolve (videos del celular giran 90°)
+            w, h = RV.medidas(vs.codec_context.width, vs.codec_context.height, RV.giro(video))
+            return w, h, dur, float(vs.average_rate or 30)
     except Exception:
         return None, None, None, None
 
@@ -625,11 +628,14 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
 
 def _captions_sin_cara(info, video, ocupado, detras, W, H):
     """REGLA DEL USUARIO: ningún caption tapa una cara. Los bloques que no van detrás de la persona y caerían sobre una cara (al principio o al
-    final del bloque) suben encima de la cabeza o bajan debajo de la barbilla, lo que quede más cerca (si no cabe en ningún lado, se quedan).
+    final del bloque) suben encima de la cabeza o bajan debajo de la barbilla (si no cabe en ningún lado, se quedan).
+    v5.5.8 (pedido: «some text stay up some stay down… necesito más coherencia»): antes cada bloque iba a lo MÁS CERCANO y en un mismo video
+    unos subían a la frente y otros bajaban al pecho. Ahora se elige UN lado para todo el video (debajo de la barbilla, salvo que arriba quepa
+    en más bloques) y los bloques seguidos que se mueven comparten la MISMA altura (`_lado_coherente`).
     Devuelve [{'ini', 'fin' (s), 'subir' (fracción, + arriba; 0 si no tapaban), 'caras'}] de los bloques con alguna cara: colocar_pro revisa
     con 'caras' también sus emojis."""
     ya = {round(c['ini'], 3) for t in detras for c in t['cues']}
-    out = []
+    filas = []
     for b in _bloques_captions():
         a, z = b['ini'], b['fin']
         if round(a, 3) in ya or any(a < o1 and o0 < z for o0, o1 in ocupado):
@@ -644,10 +650,108 @@ def _captions_sin_cara(info, video, ocupado, detras, W, H):
         if not caras:
             continue
         yc, medio = (b['arriba'] + b['abajo']) / 2.0, (b['abajo'] - b['arriba']) / 2.0
-        y = _fuera_de_la_cara(yc, medio, caras, max(0.0, min(b['xs']) - 0.2), min(1.0, max(b['xs']) + 0.2))
-        caja = [round(y - medio, 4), round(y + medio, 4)] if y is not None else [round(b['arriba'], 4), round(b['abajo'], 4)]
-        out.append({'ini': a, 'fin': z, 'subir': round(yc - y, 4) if y is not None else 0.0, 'caras': caras, 'caja': caja})
+        filas.append({'ini': a, 'fin': z, 'yc': yc, 'medio': medio, 'caras': caras,
+                      'x0': max(0.0, min(b['xs']) - 0.2), 'x1': min(1.0, max(b['xs']) + 0.2)})
+    out = []
+    for f, y in zip(filas, _lado_coherente(filas)):
+        yc, medio = f['yc'], f['medio']
+        caja = [round(y - medio, 4), round(y + medio, 4)] if y is not None else [round(yc - medio, 4), round(yc + medio, 4)]
+        out.append({'ini': f['ini'], 'fin': f['fin'], 'subir': round(yc - y, 4) if y is not None else 0.0, 'caras': f['caras'], 'caja': caja})
     return out
+
+
+DATOS_OGRAF = {'precio': 1.15, 'grafica': 1.1, 'cifra': 1.0}           # tipo de objeto → su escala en EscenaT5 (ESCALA_OBJ de Skill.tsx)
+
+
+def _motions_a_ograf(piezas, W, H):
+    """v5.5.8 (pedido: «los motions que el usuario pueda retocarlos en el Inspector sin afectar el motion»): las tarjetas de dato de los Temas
+    5/6 (precio, cifra, gráfica) van como la pieza OGraf «dato» —valor, moneda, etiqueta, colores, tipografía, posición y tamaño editables en el
+    Inspector, la animación se recalcula sola— en vez de un video de Remotion, en el MISMO sitio y tamaño:
+      · TarjetaT5 de gráfica (encima de la cabeza): pasa entera a OGraf (su `y` era el borde de arriba; la del dato, el centro);
+      · EscenaT5 con un solo objeto de dato: la escena se queda de fondo (Remotion, sin el objeto) y la tarjeta va encima como OGraf, en
+        PRO-DELANTE, o en PRO-ICONOS si esa pista ya está ocupada a esa hora (dos clips a la vez en una pista no se colocan)."""
+    U = min(W, H) / 1080.0
+    ocupado = [(p['ini'], p['fin']) for p in piezas if p.get('capa') == 'delante' and not p.get('quitar')]
+    nuevas = []
+    for p in piezas:
+        v = p.get('valores') or {}
+        if p.get('quitar'):
+            continue
+        if p.get('remotion') == 'TarjetaT5' and v.get('tipo') == 'grafica':
+            esc = float(v.get('escala') or 1.0)
+            alto = 392 * U * esc / H * 100.0                                # alto de la carta de gráfica de TarjetaT5, en % del cuadro
+            sube = float(v.get('sube') or 0)
+            p.pop('remotion', None)
+            p['pieza'] = 'dato'
+            p['valores'] = {'tipo': 'grafica', 'valor': str(v.get('valor') or ''), 'signo': str(v.get('signo') or ''),
+                            'etiqueta': str(v.get('etiqueta') or '').upper()[:28], 'tendencia': 'baja' if sube < 0 else 'sube' if sube > 0 else 'plana',
+                            'tema': 'claro' if v.get('aspecto') == 'blanco' else 'oscuro', 'acento': v.get('acento') or '#4c7dff',
+                            'tiempos': '0.1', 'escala': round(esc * min(W * 0.88, 920 * U) / (700 * U), 3),
+                            'x': float(v.get('x', 50)), 'y': round(float(v.get('y', 20)) + alto / 2.0, 2)}
+            continue
+        objs = v.get('objetos') or []
+        if not (p.get('remotion') == 'EscenaT5' and v.get('disposicion', 'objeto') == 'objeto' and len(objs) == 1 and objs[0].get('tipo') in DATOS_OGRAF):
+            continue
+        o, mitad = objs[0], v.get('mitad', 'completa')
+        encima, arriba = mitad == 'encima', mitad == 'arriba'
+        tipo = o['tipo']
+        k = DATOS_OGRAF[tipo] * (0.8 if (arriba or encima) and tipo != 'cifra' else 1.0) * (0.86 if encima else 1.0)
+        ini, fin = round(p['ini'] + max(0.0, float(o.get('t', 0.2)) - 0.1), 3), round(p['fin'] - 0.05, 3)
+        if fin - ini < 0.6:
+            continue
+        sube = float(o.get('sube', 1) or 0)
+        nuevas.append({'pieza': 'dato', 'capa': 'iconos' if any(ini < b and a < fin for a, b in ocupado) else 'delante', 'ini': ini, 'fin': fin,
+                       'motivo': f'dato editable: {tipo} {o.get("signo", "")}{o.get("valor", "")}',
+                       'valores': {'tipo': tipo, 'valor': str(o.get('valor') or ''), 'signo': str(o.get('signo') or ''),
+                                   'etiqueta': str(o.get('etiqueta') or ('TOTAL' if tipo == 'precio' else 'GROWTH' if tipo == 'grafica' else '')),
+                                   'tendencia': 'baja' if sube < 0 else 'sube', 'tema': 'oscuro' if (encima or v.get('fondo') == 'cristal') else 'claro',
+                                   'fuente': 'serif' if v.get('fondo') == 'melocoton' else 'grotesk', 'acento': v.get('acento') or '#4c7dff',
+                                   'tiempos': '0.1', 'escala': round(k, 3), 'x': 50.0,
+                                   'y': float(v.get('y', 68)) if encima else 29.0 if arriba else 56.0}})
+        p['valores'] = dict(v, objetos=[])                                  # la escena, solo de fondo
+    piezas.extend(nuevas)
+    return len(nuevas)
+
+
+def _opciones_fuera(yc, medio, caras, x0=0.0, x1=1.0):
+    """{'queda': y si no pisa ninguna cara, 'abajo': centro justo debajo de la barbilla más baja, 'arriba': justo encima de la coronilla más
+    alta} (None el que no quepa): lo que `_fuera_de_la_cara` elegía por cercanía, por separado."""
+    malas = [c for c in caras if c[0] < x1 and x0 < c[2]]
+
+    def libre(yy):
+        return 0.04 + medio <= yy <= 0.96 - medio and all(yy + medio + MARGEN_CARA <= c[1] or yy - medio - MARGEN_CARA >= c[3] for c in malas)
+    if not malas or libre(yc):
+        return {'queda': yc, 'abajo': None, 'arriba': None}
+    abajo = max(c[3] for c in malas) + MARGEN_CARA + medio
+    arriba = min(c[1] for c in malas) - MARGEN_CARA - medio
+    return {'queda': None, 'abajo': abajo if libre(abajo) else None, 'arriba': arriba if libre(arriba) else None}
+
+
+def _lado_coherente(filas, hueco_s=1.2):
+    """El centro final de cada fila ({'yc', 'medio', 'caras', 'x0', 'x1', 'ini', 'fin'}) o None si no cabe: UN lado para todo el video (abajo
+    salvo que arriba quepa en más bloques) y una misma altura para los bloques seguidos (a menos de `hueco_s`) que se mueven al mismo lado."""
+    ops = [_opciones_fuera(f['yc'], f['medio'], f['caras'], f['x0'], f['x1']) for f in filas]
+    n_abajo = sum(1 for o in ops if o['queda'] is None and o['abajo'] is not None)
+    n_arriba = sum(1 for o in ops if o['queda'] is None and o['arriba'] is not None)
+    lado, otro = ('abajo', 'arriba') if n_abajo >= n_arriba else ('arriba', 'abajo')
+    ys, lados = [], []
+    for o in ops:
+        elegido = None if o['queda'] is not None else lado if o[lado] is not None else otro if o[otro] is not None else None
+        ys.append(o['queda'] if elegido is None and o['queda'] is not None else o[elegido] if elegido else None)
+        lados.append(elegido)
+    # misma altura en las rachas de bloques seguidos movidos al mismo lado (la más baja si van abajo, la más alta si van arriba), si les cabe a todos
+    i = 0
+    while i < len(filas):
+        j = i
+        while j + 1 < len(filas) and lados[j + 1] and lados[j + 1] == lados[i] and filas[j + 1]['ini'] - filas[j]['fin'] <= hueco_s:
+            j += 1
+        if lados[i] and j > i:
+            comun = (max if lados[i] == 'abajo' else min)(ys[i:j + 1])
+            if all(_opciones_fuera(comun, filas[k]['medio'], filas[k]['caras'], filas[k]['x0'], filas[k]['x1'])['queda'] is not None
+                   for k in range(i, j + 1)):
+                ys[i:j + 1] = [comun] * (j + 1 - i)
+        i = j + 1
+    return ys
 
 
 def _iconos3d_captions(info, ocupado, subidas, caras_de, W, H, densidad):
@@ -697,7 +801,8 @@ def _caras_redondas(caras):
 def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     """Pone la Edición PRO en el timeline actual. Devuelve (ok, mensaje)."""
     decir = al_estado or (lambda t: None)
-    if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero')):
+    if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero')
+                        or (plan.get('opciones') or opciones_guardadas()).get('pro_motions_completo')):        # v5.5.8: también solo motions
         return True, ''
     info = info or _info_timeline()
     if not info:
@@ -984,6 +1089,19 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     except Exception:
         pass
     decir('Edición PRO: preparando los gráficos animados…')
+    try:
+        _motions_a_ograf(plan['piezas'], W, H)                     # v5.5.8: las tarjetas de dato, editables en el Inspector (OGraf)
+    except Exception:
+        pass
+    try:                                                           # v5.5.8: el VIGILANTE (reglas + IA local) antes de renderizar nada
+        import vigilante_pro as VG
+        dichas = [(float(t), str(x)) for b in _bloques_captions() for x, t in b.get('palabras') or []]
+        VG.revisar_plan(plan['piezas'], dichas)
+        if op.get('pro_ia_local', True):
+            decir('Edición PRO: la IA revisa que cada gráfico encaje con lo que se dice…')
+            VG.revisar_ia(plan['piezas'], dichas, plan.get('idioma') or 'es', estado=decir)
+    except Exception:
+        pass
     # las animaciones de Remotion (mapa + bandera…): todas en una tanda, con un solo navegador; sin Remotion, esas escenas no van
     rm_salida, rm_hechos = {}, {}
     try:
@@ -1035,6 +1153,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                     decir('Edición PRO: la sombra de la persona sobre la palabra de detrás…')
                     sal = con_sombra(p, sal) or sal
                 graficos.append({'capa': p['capa'], 'ini': int(round(p['ini'] * fps)), 'archivo': str(OG.ruta_larga(sal)), 'alfa': True,
+                                 'dur': round(p['fin'] - p['ini'], 3),             # v5.5.8: el vigilante comprueba que el clip dure lo que debe
                                  'nombre': 'PRO · ' + ({'Ubicacion': 'Mapa + bandera', 'Subtitulo': 'Caption', 'PasosT5': 'Pasos', 'DeslizadorT5': 'Deslizador',
                                                          'EscenaT5': 'Escena', 'AcompananteT5': 'Acompañante', 'VeloCaptionT': 'Velo de legibilidad',
                                                          'TarjetaT5': 'Tarjeta', 'OrbitaT5': 'Órbita', 'StickerT5': 'Sticker',
@@ -1100,6 +1219,28 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             sin_emoji.append([int(round(float(p['ini']) * fps)) - 3, int(round(float(p['fin']) * fps)) + 3])
     subs = [p for p in plan['piezas'] if p['pieza'] == 'subtitulo']
     subs_ok = sum(1 for p in subs if rm_hechos.get(str(rm_salida.get(id(p)))))
+    if op.get('pro_motions_completo'):                             # v5.5.8: «Motions completo», el ÚLTIMO paso: un video de motions encima de todo
+        try:
+            import motions_completo as MCO
+            bl = [{'ini': b['ini'], 'fin': b['fin'], 'palabras': [{'texto': x, 't': round(max(0.0, float(t) - b['ini']), 3)} for x, t in b.get('palabras') or []]}
+                  for b in _bloques_captions()]
+            dur_mc = float(plan.get('duracion') or 0) or (max(b['fin'] for b in bl) + 0.5 if bl else 0.0)
+            mc = MCO.crear(bl, dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', plan.get('perfil') or {}, video, decir,
+                           ia=op.get('pro_ia_local', True)) if bl and dur_mc > 1.0 else None
+            if mc:
+                graficos.append({'capa': 'motions', 'ini': 0, 'archivo': str(OG.ruta_larga(mc)), 'nombre': 'PRO · Motions completo', 'dur': round(dur_mc, 3),
+                                 'opaco': True})
+        except Exception as e:
+            try:
+                import registro
+                registro.aviso(f'Motions completo no se pudo hacer: {type(e).__name__}: {e}', 'motions')
+            except Exception:
+                pass
+    try:                                                           # v5.5.8: el vigilante con ffmpeg: nada roto, vacío ni incompleto llega a Resolve
+        import vigilante_pro as VG
+        VG.revisar_clips(graficos, fps)
+    except Exception:
+        pass
     datos = {'fps': fps, 'inicio': info['base'], 'graficos': graficos, 'persona': persona, 'sonidos': sonidos, 'cache': True,
              'captions_propios': bool(cap_t5 and subs and subs_ok >= 0.9 * len(subs)), 'color_claves': color_claves,
              'dividida': [[int(round(d['ini'] * fps)), int(round(d['fin'] * fps)), round(d['bajar'] * H, 1)] for d in divididas

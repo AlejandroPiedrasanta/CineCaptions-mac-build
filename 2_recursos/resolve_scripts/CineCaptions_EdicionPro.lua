@@ -336,6 +336,7 @@ local NOMBRE_ZOOM = "CineCaptions PRO · zoom"
 local CAPA = { fondo = "PRO-FONDO", velo = "PRO-VELO", detras = "PRO-DETRAS", delante = "PRO-DELANTE", iconos = "PRO-ICONOS", subs = "PRO-SUBS" }
 local PISTA_ENCIMA = "PRO-ENCIMA"
 local PISTA_ICONOS = "PRO-ICONOS"        -- los iconos 3D junto a los captions: encima de ellos (y debajo de PRO-ENCIMA)
+local PISTA_MOTIONS = "PRO-MOTIONS"      -- v5.5.8: «Motions completo», el video entero de motions ENCIMA DE TODO (gemelo de colocar_pro.py)
 -- v5.5.8: lo que va a la caché de render se apunta y se marca AL FINAL (cachear_al_final): marcarlo al colocarlo, con el script aún moviendo
 -- clips, hacía caer a Resolve (gemelo de colocar_pro.py)
 local PEND_CACHE = { fusion = {}, color = {} }
@@ -504,7 +505,7 @@ local function pistas_pro(tl)
 end
 
 local function quitar_vacias(tl)
-    local todas = { PISTA_ENCIMA, PISTA_ICONOS }
+    local todas = { PISTA_ENCIMA, PISTA_ICONOS, PISTA_MOTIONS }
     for _, n in ipairs(ORDEN) do todas[#todas + 1] = n end
     for _, n in ipairs(todas) do
         local i = indice(tl, n)
@@ -849,6 +850,39 @@ local function pista_iconos(tl, hace_falta)
     return i
 end
 
+-- v5.5.8, «Motions completo»: el video de motions en PRO-MOTIONS, la pista de MAS ARRIBA (encima de captions, efectos y PRO-ENCIMA: se pone lo
+-- ultimo). Re-aplicar la vacia; sin motions, se borra. Devuelve cuantos clips puso (gemelo de _motions de colocar_pro.py).
+local function poner_motions(tl, mp, caja, graficos, base)
+    local mios = {}
+    for _, g in ipairs(graficos or {}) do if g.capa == "motions" then mios[#mios + 1] = g end end
+    local i = indice(tl, PISTA_MOTIONS)
+    if i then
+        vaciar(tl, i)
+        if i ~= math.floor(tonumber(tl:GetTrackCount("video")) or 0) or #mios == 0 then
+            pcall(function() tl:DeleteTrack("video", i) end)
+            i = nil
+        end
+    end
+    if #mios == 0 then return 0 end
+    if not i then
+        pcall(function() tl:AddTrack("video") end)
+        i = math.floor(tonumber(tl:GetTrackCount("video")) or 1)
+        tl:SetTrackName("video", i, PISTA_MOTIONS)
+    end
+    local puestos = 0
+    for _, g in ipairs(mios) do
+        local clip = importar(mp, caja, g.archivo)
+        if clip ~= nil then
+            local item = append(mp, { mediaPoolItem = clip, trackIndex = i, recordFrame = base + math.floor(tonumber(g.ini) or 0), mediaType = 1 })
+            if item ~= nil then
+                puestos = puestos + 1
+                pcall(function() item:SetName(tostring(g.nombre or "PRO · Motions completo")) end)
+            end
+        end
+    end
+    return puestos
+end
+
 -- Apaga (con marca, para re-aplicar) el emoji del tema en los bloques donde va un icono 3D: uno solo, el 3D.
 local function apagar_emojis(tl, ventanas, base)
     local apagados = 0
@@ -1169,6 +1203,7 @@ local function main()
     local graficos = (type(datos.graficos) == "table") and datos.graficos or {}
     table.sort(graficos, function(a, b) return (tonumber(a.ini) or 0) < (tonumber(b.ini) or 0) end)
     for _, g in ipairs(graficos) do
+        if g.capa ~= "motions" then                -- v5.5.8: «Motions completo» va al final, en la pista de mas arriba
         local nombre = CAPA[g.capa] or "PRO-DELANTE"
         local clip = importar(mp, caja, g.archivo)
         local ini = base + math.floor(tonumber(g.ini) or 0)
@@ -1191,6 +1226,7 @@ local function main()
                 local c = (g.capa == "velo" or g.capa == "detras" or g.capa == "fondo" or g.capa == "iconos" or g.capa == "subs") and g.capa or "delante"
                 puestos[c] = puestos[c] + 1
             end
+        end
         end
     end
     -- 2) el B-roll de stock, debajo de todo
@@ -1282,6 +1318,9 @@ local function main()
             end
         end
     end
+    -- 6) v5.5.8: «Motions completo», lo ultimo y en la pista de mas arriba
+    local motions = poner_motions(tl, mp, caja, graficos, base)
+    if motions > 0 then print(string.format("Motions completo: %d clip(s) en %s, encima de todo.", motions, PISTA_MOTIONS)) end
     quitar_vacias(tl)
     if datos.cache ~= false then cachear_al_final(tl, project) end     -- v5.5.8: la caché de render, AL FINAL (gemelo de colocar_pro.py)
     local total = puestos.fondo + puestos.velo + puestos.detras + puestos.delante + puestos.iconos + puestos.subs
@@ -1292,7 +1331,7 @@ local function main()
         sin_poner > 0 and string.format(", %d sin poner", sin_poner) or "")
     print(RESUMEN)
     if #lista_api(tl:GetItemListInTrack("video", 1)) < v1_antes then fail("ATENCION: V1 perdio clips al colocar la Edicion PRO") end
-    if total == 0 and #graficos > 0 then fail("Resolve no coloco ningun grafico de la Edicion PRO") end
+    if total == 0 and motions == 0 and #graficos > 0 then fail("Resolve no coloco ningun grafico de la Edicion PRO") end
 end
 
 local ok, err = pcall(main)

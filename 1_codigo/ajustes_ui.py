@@ -492,6 +492,13 @@ NOTAS_VERSION = [
         'Cancelar, grande y en rojo: para todo lo que estaba haciendo, cierra Resolve y sus procesos y vuelve a Inicio para empezar de cero.',
         'Estilos: ejemplos nuevos de los 6 temas, hechos con GO y la Edición PRO reales en Resolve (motions que acompañan a los captions).',
         'Inglés y los demás idiomas: la interfaz sale entera en el idioma elegido.',
+        'Inicio nuevo: un orbe de luz que fluye y se enciende al trabajar, y el título entra letra a letra.',
+        'Motions completo (al lado de Edición PRO): al final crea un video de solo motions del tema, en la pista de más arriba, para que lo cortes donde quieras ver el video.',
+        'Inspector de Resolve: cada caption lleva arriba de todo el banner de CineCaptions, y los gráficos de precios, cifras y gráficas se editan ahí (texto, colores y posición) sin romper la animación.',
+        'Vigilante de la Edición PRO: la IA local y una revisión de cada clip quitan los gráficos que no encajan con lo que se dice o salen rotos.',
+        'Los motions usan fotos de internet del tema que se habla, ya no el mismo fotograma del video.',
+        'Videos grabados con el móvil: la foto ya no sale girada. Y la moneda es la que se dice (naira ₦, euro €, quetzal Q…).',
+        'Los captions que esquivan una cara se quedan todos a la misma altura en todo el video.',
     ]),
     ('5.5.7', [
         'Pulsar GO otra vez sobre el mismo timeline (el mismo tema u otro) ya funciona: la reproducción que deja GO bloqueaba a Resolve y el GO siguiente creía que estaba cerrado. Ahora se detiene antes y, si Resolve no contesta, se reconecta solo.',
@@ -1894,7 +1901,7 @@ class VentanaAjustes(_Panel):
                               actualizaciones_auto=prefs.get('actualizaciones_auto', True) is not False,
                               ventana_encima=bool(prefs.get('ventana_encima')),
                               avisos_sistema=prefs.get('avisos_sistema', True) is not False,
-                              go_estilo=str(prefs.get('go_estilo') or 'astrolabio'))
+                              go_estilo=str(prefs.get('go_estilo') or 'orbe'))           # v5.5.8: el orbe de React Bits, de fábrica
         self._inicial = dict(self._borrador)
         self._idioma_inicial = self._idioma_actual()
         self._borrador['idioma_ui'] = self._idioma_inicial

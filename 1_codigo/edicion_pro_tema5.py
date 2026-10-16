@@ -267,6 +267,7 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
         return not any(a < o1 and o0 < b for o0, o1 in list(ocupado) + list(extra))
 
     piezas, divididas, elementos, escenas = [], [], [], []
+    fotos_web_usadas, fotos_web = [], []                               # v5.5.8: las fotos de internet de las tarjetas (sin repetir; créditos)
 
     def elemento(comp, a, b, valores, motivo):
         a, b = max(0.0, a), min(dur + 0.4, b)
@@ -477,7 +478,20 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
             toma = VI.toma_en(analisis, (a2 + z2) / 2.0) or {}
             if any(a2 + 0.2 < c < z2 - 0.2 for c in analisis.get('cortes') or []) or (toma and toma['fin'] - toma['ini'] < 5.0) or z2 > dur - 3.0 or a2 < 6.0:
                 continue                                                 # v5.5.3: en tus tomas cortas (tu B-roll), con un corte, en el gancho o en la despedida, la foto de relleno sobra
-            img = foto_de(min(dur - 0.5, a2 + dur * 0.35) if a2 < dur * 0.5 else max(0.5, a2 - dur * 0.35))
+            # v5.5.8 (pedido: «que busque imágenes de internet del tema que se habla, para que el motion no capture siempre la misma imagen»):
+            # primero una foto de internet de lo que se dice ahí o del tema del video (IA local); si no hay, un fotograma de otro momento
+            img = None
+            try:
+                import edicion_pro_escenas as ES
+                dicho = [w['texto'] for b in bl if b['ini'] < z2 and a2 < b['fin'] for w in b['palabras']]
+                web = ES.foto_del_tema(dicho, (plan or {}).get('perfil') or {}, 'v' if vertical else 'h', evitar=fotos_web_usadas)
+                if web:
+                    img = web[0]
+                    fotos_web_usadas.append(web[1]['id'])
+                    fotos_web.append(web[1])
+            except Exception:
+                img = None
+            img = img or foto_de(min(dur - 0.5, a2 + dur * 0.35) if a2 < dur * 0.5 else max(0.5, a2 - dur * 0.35))
             if not img:
                 continue
             valores = dict(valores, imagen=img)
@@ -499,6 +513,12 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
             continue
         escenas.append({'pieza': 'skill', 'remotion': 'EscenaT5', 'capa': 'fondo', 'ini': round(a2, 3), 'fin': round(z2, 3),
                         'motivo': f"escena: {motivo}", 'valores': dict(valores, acento=acento)})
+    if fotos_web:
+        try:
+            import fuentes_web as FW
+            FW.anotar_creditos(fotos_web, video)
+        except Exception:
+            pass
     escenas.sort(key=lambda e: e['ini'])
     previa, n_fondo = None, 0
     for e in escenas:
@@ -610,7 +630,9 @@ def foto(video, t, ancho=540):
         with av.open(str(video)) as c:
             s = c.streams.video[0]
             c.seek(int(max(0.0, t) * 1e6))
-            img = next(c.decode(s)).to_image().convert('RGB')
+            fr = next(c.decode(s))
+            import rotacion_video as RV                                   # v5.5.8: la foto de la tarjeta salía de lado con videos del celular
+            img = RV.derecho_img(fr.to_image().convert('RGB'), RV.cuartos(fr))
         img.thumbnail((ancho, ancho * 2))
         buf = io.BytesIO()
         img.save(buf, 'JPEG', quality=84)

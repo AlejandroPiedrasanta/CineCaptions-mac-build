@@ -10,12 +10,11 @@ large-v3-turbo queda de respaldo.
 Por que va APARTE del programa
 ==============================
 Qwen3-ASR solo da tiempos por palabra con su alineador, y el alineador solo
-corre con PyTorch + transformers: varios GB que no caben en el .exe (y que
-ademas piden Python 3.12, no el 3.14 del programa). Asi que el motor vive
-en su propia carpeta, con su propio Python 3.12 embebido:
+corre con PyTorch + transformers: varios GB que no caben en el .exe. Asi que
+el motor vive en su propia carpeta, con su propio Python embebido:
 
     %LOCALAPPDATA%\\CineCaptions\\motor_qwen\\
-        python\\              Python 3.12.10 embebido + torch + qwen-asr
+        python\\              Python 3.14.8 embebido + torch + transformers 5 (v5.5.8; antes 3.12 + qwen-asr)
         listo.json           se escribe al final: si no esta, no se usa
 
 Lo instala el paso "Motor de voz" del instalador (o Ajustes > General >
@@ -31,6 +30,7 @@ Cuando NO se usa (y se usa Whisper sin que el usuario tenga que hacer nada):
 import json
 import os
 import queue
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -42,12 +42,19 @@ from pathlib import Path
 
 from i18n import tr
 
-VERSION_ENTORNO = '1.0.0'
-PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip'
+# v5.5.8 (motor 2.0): Python 3.14 + Qwen3-ASR NATIVO de Transformers 5 (modelos «-hf»); un motor 1.x (Python 3.12 + qwen-asr)
+# ya no cuenta como instalado y el instalador lo rehace solo
+VERSION_ENTORNO = '2.0.0'
+PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.14.8/python-3.14.8-embed-amd64.zip'
+PYTHON_DLL = 'python314.dll'
 GET_PIP = 'https://bootstrap.pypa.io/get-pip.py'
-TORCH = 'torch==2.10.0'
-INDICE_TORCH = {'cuda': 'https://download.pytorch.org/whl/cu128',
-                'cpu': 'https://download.pytorch.org/whl/cpu'}
+# torch según la tarjeta: CUDA 13 (torch 2.14) pide driver NVIDIA 580 o más nuevo; con uno anterior va la última de CUDA 12.8
+TORCH = {'cu130': '2.14.1', 'cu128': '2.11.0', 'cpu': '2.14.1'}
+INDICE_TORCH = {k: f'https://download.pytorch.org/whl/{k}' for k in TORCH}
+DRIVER_CUDA13 = 580
+REPOS_ASR = {'1.7B': ('Qwen/Qwen3-ASR-1.7B-hf', 1_000_000_000), '0.6B': ('Qwen/Qwen3-ASR-0.6B-hf', 400_000_000)}
+REPO_ALINEADOR = ('Qwen/Qwen3-ForcedAligner-0.6B-hf', 400_000_000)
+REPOS_VIEJOS = ('Qwen/Qwen3-ASR-1.7B', 'Qwen/Qwen3-ASR-0.6B', 'Qwen/Qwen3-ForcedAligner-0.6B')   # los del motor 1.x (~6 GB)
 SIN_VENTANA = 0x08000000 if sys.platform == 'win32' else 0
 
 # codigo ISO del programa -> nombre que entiende Qwen3-ASR
@@ -95,8 +102,8 @@ def info_instalado():
         datos = json.loads((carpeta() / 'listo.json').read_text(encoding='utf-8'))
     except Exception:
         return None
-    if not python_motor().exists():
-        return None
+    if not python_motor().exists() or datos.get('version') != VERSION_ENTORNO:
+        return None                                                        # v5.5.8: un motor 1.x se reinstala (no se usa)
     return datos
 
 
@@ -149,6 +156,20 @@ def _faltan_requisitos():
     return [f'{n}=={v}' for n, v in _requisitos_fijados() if _dist_instalada(n, v) is None]
 
 
+def completar_requisitos(aviso=None):
+    """v5.5.8: un motor YA instalado se pone al dia con requisitos_motor_qwen.txt: SOLO las librerias que no estan en su
+    version fijada (--no-deps; ni torch ni modelos: segundos). Lo llama la tarea motor_ia del instalador, con el programa
+    y sus motores ya cerrados (nada tiene abiertos sus archivos). Devuelve lo instalado ([] si ya estaba al dia)."""
+    if sys.platform != 'win32' or not python_motor().exists() or not _python_al_dia():
+        return []
+    if not _torch_valido(_dist_instalada('torch')):
+        return []                                                          # otro torch: eso lo rehace instalar() entero
+    faltan = _faltan_requisitos()
+    if faltan:
+        _pip(['--no-deps', *faltan], aviso)
+    return faltan
+
+
 def _cache_hf():
     hub = os.environ.get('HF_HUB_CACHE')
     if not hub:
@@ -172,18 +193,13 @@ def modelo_descargado(repo, minimo=0):
 
 def detectar_por_archivos():
     """Lo que habria en listo.json si todo esta en su sitio, o None."""
-    if sys.platform != 'win32' or not python_motor().exists():
+    if sys.platform != 'win32' or not python_motor().exists() or not _python_al_dia():
         return None
     torch_v = _dist_instalada('torch')
-    if not torch_v or torch_v.split('+')[0] != TORCH.split('==')[1] or _faltan_requisitos():
+    if not _torch_valido(torch_v) or _faltan_requisitos():
         return None
-    if modelo_descargado('Qwen/Qwen3-ASR-1.7B', 1_000_000_000):
-        modelo = '1.7B'
-    elif modelo_descargado('Qwen/Qwen3-ASR-0.6B', 400_000_000):
-        modelo = '0.6B'
-    else:
-        return None
-    if not modelo_descargado('Qwen/Qwen3-ForcedAligner-0.6B', 400_000_000):
+    modelo = next((m for m, (repo, minimo) in REPOS_ASR.items() if modelo_descargado(repo, minimo)), None)
+    if modelo is None or not modelo_descargado(*REPO_ALINEADOR):
         return None
     texto = ('4B' if modelo_descargado('Qwen/Qwen3-4B-Instruct-2507', 3_000_000_000)
              else '1.7B' if modelo_descargado('Qwen/Qwen3-1.7B', 1_000_000_000) else None)
@@ -235,6 +251,42 @@ def hay_gpu_nvidia():
         return r.returncode == 0 and 'GPU' in r.stdout
     except Exception:
         return False
+
+
+def _driver_nvidia():
+    """v5.5.8: la versión principal del driver NVIDIA (617 de «617.42»), o 0 si no se sabe."""
+    try:
+        r = subprocess.run(['nvidia-smi', '--query-gpu=driver_version', '--format=csv,noheader'], capture_output=True,
+                           text=True, timeout=10, creationflags=SIN_VENTANA)
+        return int(r.stdout.split()[0].split('.')[0]) if r.returncode == 0 and r.stdout.strip() else 0
+    except Exception:
+        return 0
+
+
+def torch_para_este_equipo():
+    """v5.5.8: (variante, versión) de torch que toca aquí: 'cu130' (torch 2.14) con driver ≥ 580, 'cu128' (2.11) con uno
+    anterior o si no se sabe, 'cpu' sin NVIDIA. Así nadie se queda sin GPU por el driver."""
+    if not hay_gpu_nvidia():
+        return 'cpu', TORCH['cpu']
+    variante = 'cu130' if _driver_nvidia() >= DRIVER_CUDA13 else 'cu128'
+    return variante, TORCH[variante]
+
+
+def _torch_valido(version):
+    """True si el torch instalado ('2.14.1+cu130') es uno de los que pone el instalador."""
+    base, _, variante = (version or '').partition('+')
+    return bool(base) and TORCH.get(variante or 'cpu') == base
+
+
+def _python_al_dia():
+    """El Python del motor es el de esta versión (3.14), no el 3.12 del motor 1.x."""
+    return (carpeta() / 'python' / PYTHON_DLL).exists()
+
+
+def _borrar_modelos_viejos():
+    """v5.5.8: los modelos del motor 1.x (qwen-asr, ~6 GB) no los usa el 2.x (los «-hf»): fuera, ya con el nuevo listo."""
+    for repo in REPOS_VIEJOS:
+        shutil.rmtree(_cache_hf() / ('models--' + repo.replace('/', '--')), ignore_errors=True)
 
 
 def _leer_preferencia():
@@ -418,7 +470,7 @@ class _ServidorVoz:
         entorno.pop('PYTHONPATH', None)
         entorno.pop('PYTHONHOME', None)
         self.modelo = modelo
-        self.p = subprocess.Popen([str(python_motor()), '-u', str(script_motor()), '--servidor',
+        self.p = subprocess.Popen([str(python_motor()), '-s', '-u', str(script_motor()), '--servidor',
                                    '--inactivo', str(INACTIVO_VOZ_S)] + (['--modelo', modelo] if modelo else []),
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   env=entorno, creationflags=SIN_VENTANA, cwd=str(carpeta()))
@@ -553,7 +605,9 @@ def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None):
     entorno['PYTHONUNBUFFERED'] = '1'
     entorno.pop('PYTHONPATH', None)
     entorno.pop('PYTHONHOME', None)
-    p = subprocess.Popen([str(python_motor()), '-u', str(script), *argumentos],
+    # v5.5.8: -s = sin la carpeta de paquetes del USUARIO (%APPDATA%\Python\Python314): con el Python 3.14 del motor, lo que otro
+    # programa dejara ahí (otro torchaudio, numpy…) se mezclaba con el motor, y pip daba por instalado lo que solo estaba ahí
+    p = subprocess.Popen([str(python_motor()), '-s', '-u', str(script), *argumentos],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=entorno,
                          creationflags=SIN_VENTANA, cwd=str(carpeta()))
     errores = []
@@ -742,7 +796,7 @@ def _pip(argumentos, aviso):
     entorno.pop('PYTHONPATH', None)
     entorno.pop('PYTHONHOME', None)
     try:
-        p = subprocess.run([str(python_motor()), '-m', 'pip', 'install', '--no-warn-script-location',
+        p = subprocess.run([str(python_motor()), '-s', '-m', 'pip', 'install', '--no-warn-script-location',
                             '--progress-bar', 'off', '--disable-pip-version-check', *argumentos],
                            capture_output=True, text=True, encoding='utf-8', errors='replace',
                            env=entorno, creationflags=SIN_VENTANA, timeout=TIEMPO_MAX_PIP_S)
@@ -770,20 +824,31 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
     # el motor entero sin su marca y la siguiente lo reinstalaba todo); se
     # reescribe al final
     py = python_motor()
+    if py.exists() and not _python_al_dia():
+        # v5.5.8: motor 1.x (Python 3.12 + qwen-asr): se quita entero y se monta el 2.x (sus modelos viejos se borran al final)
+        pr(0.01, tr('Actualizando el motor de voz'))
+        liberar()
+        try:
+            import ia_texto
+            ia_texto.liberar()
+        except Exception:
+            pass
+        (base / 'listo.json').unlink(missing_ok=True)
+        shutil.rmtree(base / 'python')
     if not py.exists():
-        pr(0.01, tr('Descargando Python 3.12'))
-        zip_py = base / 'python312.zip'
+        pr(0.01, tr('Descargando Python 3.14'))
+        zip_py = base / 'python_embebido.zip'
         _bajar(PYTHON_EMBEBIDO, zip_py)
         with zipfile.ZipFile(zip_py) as z:
             z.extractall(base / 'python')
         zip_py.unlink()
         pth = next((base / 'python').glob('python*._pth'))
-        pth.write_text('python312.zip\n.\nLib\\site-packages\nimport site\n', encoding='ascii')
+        pth.write_text(pth.stem + '.zip\n.\nLib\\site-packages\nimport site\n', encoding='ascii')
         pr(0.03, tr('Preparando pip'))
         get_pip = base / 'get-pip.py'
         _bajar(GET_PIP, get_pip)
         try:
-            r = subprocess.run([str(py), str(get_pip), '--no-warn-script-location', '-q'],
+            r = subprocess.run([str(py), '-s', str(get_pip), '--no-warn-script-location', '-q'],
                                capture_output=True, text=True, creationflags=SIN_VENTANA, timeout=TIEMPO_MAX_GET_PIP_S)
         except subprocess.TimeoutExpired:
             get_pip.unlink(missing_ok=True)
@@ -791,14 +856,16 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
         get_pip.unlink()
         if r.returncode != 0:
             raise RuntimeError('get-pip: ' + (r.stderr or r.stdout)[-400:])
-    gpu = hay_gpu_nvidia()
-    torch_v = _dist_instalada('torch', TORCH.split('==')[1])
-    if torch_v and (('+cu' in torch_v) == gpu):
+    variante, version_torch = torch_para_este_equipo()
+    torch_v = _dist_instalada('torch')
+    gpu = variante != 'cpu'
+    if torch_v == f'{version_torch}+{variante}':
         pr(0.35, tr('PyTorch ya estaba instalado ({v})', v=torch_v))
     else:
         pr(0.05, tr('Descargando PyTorch ({tipo}, ~{peso})', tipo='CUDA' if gpu else 'CPU',
                     peso='2,5 GB' if gpu else '200 MB'))
-        _pip([TORCH, '--index-url', INDICE_TORCH['cuda' if gpu else 'cpu']], aviso)
+        # con la etiqueta (+cu130…): sin ella pip daría por buena la de otra variante ya instalada
+        _pip([f'torch=={version_torch}+{variante}', '--index-url', INDICE_TORCH[variante]], aviso)
     if _faltan_requisitos():
         pr(0.35, tr('Instalando Qwen3-ASR'))
         _pip(['--no-deps', '-r', str(requisitos())], aviso)
@@ -851,10 +918,23 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
     except Exception as e:
         if aviso:
             aviso(f'IA de texto: {e}')
+    if gpu:
+        # v5.5.8: Whisper (el respaldo) va en la GPU con cuBLAS/cuDNN de CUDA 12; el torch de CUDA 13 ya no las trae (cuda_libs las
+        # tomaba de aquí): se bajan las oficiales a ~/DaVinciSubtitles/cuda_libs. Con el torch de CUDA 12.8 ya están y no baja nada.
+        pr(0.9, tr('Preparando la GPU para Whisper'))
+        try:
+            import cuda_libs
+            _ok, msg = cuda_libs.reparar(aviso=aviso, permitir_descarga=True)
+            if aviso:
+                aviso(msg)
+        except Exception as e:
+            if aviso:
+                aviso(f'GPU para Whisper: {e}')
     (base / 'listo.json').write_text(json.dumps({
         'version': VERSION_ENTORNO, 'modelo': eleccion, 'modelo_texto': texto_listo.get('modelo'),
         'torch': info.get('torch'), 'cuda': info.get('cuda'), 'gpu': info.get('gpu'),
         'instalado': time.strftime('%Y-%m-%d %H:%M'),
     }, ensure_ascii=False, indent=1), encoding='utf-8')
+    _borrar_modelos_viejos()
     pr(1.0, tr('Motor Qwen3-ASR listo'))
     return eleccion

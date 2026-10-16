@@ -1068,6 +1068,9 @@ def medir_medio(ruta):
                 try:
                     if int(float((s.metadata or {}).get('rotate', 0))) % 180 == 90:
                         w, h = h, w
+                    else:                                                  # v5.5.8: el ffmpeg nuevo ya no da 'rotate': el giro va en la display matrix
+                        import rotacion_video as RV
+                        w, h = RV.medidas(w, h, RV.giro(ruta))
                 except (TypeError, ValueError):
                     pass
                 f = float(s.average_rate)

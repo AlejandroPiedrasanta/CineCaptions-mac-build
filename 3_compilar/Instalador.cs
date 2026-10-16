@@ -783,7 +783,7 @@ class Instalacion
         }
 
         // 6b) v5.1: el motor de voz e IA (Qwen3-ASR + IA de texto) -----------------------
-        // va en su propio Python 3.12 (lo instala el programa: --tarea motor_ia). Si
+        // va en su propio Python 3.14 (lo instala el programa: --tarea motor_ia). Si
         // falla o se omite, CineCaptions funciona igual con Whisper.
         if (op.SinModelo)
         {
@@ -792,13 +792,17 @@ class Instalacion
         else if (MotorIAYaInstalado())
         {
             // v5.2 (pedido: «que revise si las IAs ya están instaladas y no haga ese paso»)
+            // v5.5.8: ya instalado, la tarea solo pone al día las librerías que cambiaron en requisitos_motor_qwen.txt
+            // (sin torch ni modelos: segundos); si falla, el motor sigue con las que tenía
             pMotorIA.Titulo = "Motor de voz e IA: Qwen3";
-            Terminar(pMotorIA, EstadoPaso.Hecho, "Ya estaba instalado en este equipo");
+            omitirModelo = false;
+            Empezar(pMotorIA, "Ya estaba instalado: revisando sus librerías");
+            Tarea(pMotorIA, "motor_ia", 30 * 60, EstadoPaso.Aviso);
         }
         else
         {
             omitirModelo = false;
-            Empezar(pMotorIA, "Preparando el motor (Python 3.12 + PyTorch)");
+            Empezar(pMotorIA, "Preparando el motor (Python 3.14 + PyTorch)");
             if (ventana != null) ventana.MostrarOmitir(true);
             Tarea(pMotorIA, "motor_ia", 6 * 3600, EstadoPaso.Aviso);
             if (ventana != null) ventana.MostrarOmitir(false);
@@ -916,19 +920,23 @@ class Instalacion
         return false;
     }
 
+    const string VersionMotorIA = "2.0.0";                                  // = motor_voz.VERSION_ENTORNO
+
     public static bool MotorIAYaInstalado()
     {
         try
         {
             string m = CarpetaMotorIA();
             string listo = Path.Combine(m, "listo.json");
-            if (!File.Exists(listo) || !File.Exists(Path.Combine(m, @"python\python.exe"))) return false;
+            // v5.5.8: el motor 2.0 (Python 3.14 + Transformers 5 nativo, modelos «-hf»); un 1.x (Python 3.12 + qwen-asr) se reinstala
+            if (!File.Exists(listo) || !File.Exists(Path.Combine(m, @"python\python314.dll"))) return false;
             string txt = File.ReadAllText(listo);
+            if (txt.IndexOf("\"version\": \"" + VersionMotorIA + "\"") < 0) return false;
             if (txt.IndexOf("\"modelo_texto\"") < 0 || txt.IndexOf("\"modelo_texto\": null") >= 0) return false;
             string hub = Path.GetDirectoryName(CarpetaModelo());
-            bool voz = TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ASR-1.7B"), 1000000000L)
-                    || TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ASR-0.6B"), 400000000L);
-            bool alineador = TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ForcedAligner-0.6B"), 400000000L);
+            bool voz = TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ASR-1.7B-hf"), 1000000000L)
+                    || TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ASR-0.6B-hf"), 400000000L);
+            bool alineador = TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-ForcedAligner-0.6B-hf"), 400000000L);
             bool texto = TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-4B-Instruct-2507"), 3000000000L)
                       || TieneSnapshot(Path.Combine(hub, "models--Qwen--Qwen3-1.7B"), 1000000000L);
             return voz && alineador && texto;
@@ -1430,6 +1438,7 @@ class Instalacion
         "models--mobiuslabsgmbh--faster-whisper-large-v3-turbo", "models--Systran--faster-whisper-large-v3", "models--Systran--faster-whisper-medium",
         "models--Systran--faster-whisper-small", "models--Systran--faster-whisper-base", "models--Systran--faster-whisper-tiny",
         "models--Qwen--Qwen3-ASR-1.7B", "models--Qwen--Qwen3-ASR-0.6B", "models--Qwen--Qwen3-ForcedAligner-0.6B",
+        "models--Qwen--Qwen3-ASR-1.7B-hf", "models--Qwen--Qwen3-ASR-0.6B-hf", "models--Qwen--Qwen3-ForcedAligner-0.6B-hf",
         "models--Qwen--Qwen3-4B-Instruct-2507", "models--Qwen--Qwen3-1.7B" };
 
     public static List<string> RutasDeModelos()

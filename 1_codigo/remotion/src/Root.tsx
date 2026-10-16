@@ -13,8 +13,9 @@ import { EditorialT6 } from './Editorial6';
 import { AbanicoK, ConceptoK, ListaRazonesK, MisterioK, MixtoK, RuedaK, RutaK, TituloNeonK } from './Kit7';
 import { CalendarioK, RecorteK, RedNeonK, SeleccionK } from './Kit8';
 import { ChatE, CollageE, CuadernoE, FechaE, FotoE, MovilE, PictogramaE, PolaroidE, TableroE, TijerasE, VidrioE } from './Escenas9';
+import { MotionsCompleto } from './MotionsCompleto';
 
-const PLANTILLAS: Record<string, React.FC<any>> = { ListaRazonesK, MisterioK, RuedaK, AbanicoK, RutaK, TituloNeonK, ConceptoK, MixtoK, RecorteK, SeleccionK, CalendarioK, RedNeonK, PictogramaE, TableroE, PolaroidE, CuadernoE, FechaE, VidrioE, ChatE, CollageE, MovilE, TijerasE, FotoE, PasosT5,DeslizadorT5, EscenaT5, AcompananteT5, VeloCaptionT, TarjetaT5, OrbitaT5, StickerT5, FinalT5, EditorialT6, Titulo, Saludo, Capitulos, Fecha, Pareja, Pastilla, Encuesta, Comentario, Sesion, Ninas, Notificacion, Tarjeta, Grafica, Pasos, Interruptor };
+const PLANTILLAS: Record<string, React.FC<any>> = { MotionsCompleto, ListaRazonesK, MisterioK, RuedaK, AbanicoK, RutaK, TituloNeonK, ConceptoK, MixtoK, RecorteK, SeleccionK, CalendarioK, RedNeonK, PictogramaE, TableroE, PolaroidE, CuadernoE, FechaE, VidrioE, ChatE, CollageE, MovilE, TijerasE, FotoE, PasosT5,DeslizadorT5, EscenaT5, AcompananteT5, VeloCaptionT, TarjetaT5, OrbitaT5, StickerT5, FinalT5, EditorialT6, Titulo, Saludo, Capitulos, Fecha, Pareja, Pastilla, Encuesta, Comentario, Sesion, Ninas, Notificacion, Tarjeta, Grafica, Pasos, Interruptor };
 
 type Meta = { _ancho?: number; _alto?: number; _fps?: number; _dur?: number };
 const medida = ({ props }: { props: Record<string, unknown> & Meta }) => {

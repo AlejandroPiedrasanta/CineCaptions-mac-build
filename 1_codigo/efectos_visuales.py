@@ -417,6 +417,9 @@ def resolucion_de_timeline(video):
             rot = 0
         if rot in (90, 270):
             w, h = h, w
+        elif not rot:                                                      # v5.5.8: el giro del celular ahora va en la display matrix
+            import rotacion_video as RV
+            w, h = RV.medidas(w, h, RV.giro(video))
         if h > w * 1.2:
             return 1080, 1920
         if w > h * 1.2:

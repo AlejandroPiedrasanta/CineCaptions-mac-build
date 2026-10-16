@@ -11,7 +11,7 @@ Mira, para cada pieza:
   * que la libreria cargue y que su version sea la FIJADA en
     3_compilar/requirements.txt (las versiones van fijas a proposito: PyAV 19
     rompe faster-whisper 1.2.1; una mas nueva no es mejor si rompe);
-  * el motor de IA (Python 3.12 propio): torch, las librerias del lock y los
+  * el motor de IA (Python 3.14 propio): torch, las librerias del lock y los
     modelos de Qwen3 en la cache;
   * el MCP oficial de Resolve (21.1+).
 

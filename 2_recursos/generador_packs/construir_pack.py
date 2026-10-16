@@ -114,6 +114,8 @@ def blob_de_comp(texto_comp, hex_plantilla):
     abre = texto_comp.index('{', k)
     cierra = _cerrar_llave(texto_comp, abre)
     tools = texto_comp[abre:cierra + 1]
+    import banner_inspector                                                # v5.5.8: el banner de CineCaptions arriba de los controles del Inspector
+    tools = banner_inspector.con_banner(tools)
     resto = texto_comp[:k] + texto_comp[cierra + 1:].lstrip(',')
     cabecera = re.sub(r'\s+', ' ', resto).strip()
     cabecera = re.sub(r',\s*}$', ' }', cabecera) if False else cabecera

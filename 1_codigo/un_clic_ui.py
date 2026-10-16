@@ -336,45 +336,115 @@ class BotonGo(QAbstractButton):
 
 class TituloGo(QWidget):
     """v5.4: el titulo de Inicio («Un clic y listo»): texto vectorial con degradado blanco->celeste, un halo suave
-    detras y una linea de luz bajo el. Misma interfaz que Etiqueta para lo que usa la app (configure(text=...))."""
+    detras y una linea de luz bajo el. Misma interfaz que Etiqueta para lo que usa la app (configure(text=...)).
+    v5.5.8: entra como el SplitText de React Bits (@react-bits/SplitText): letra a letra, cada una sube y aparece (power3.out,
+    escalonadas) al mostrarse Inicio y cada vez que cambia el texto («Trabajando…», «¡Listo!»); la linea de luz se abre desde el centro.
+    Con «Reducir animaciones» sale quieto."""
+    ESCALON, DURACION, SUBIDA = 0.045, 0.6, 0.62          # s entre letras · s de cada letra · cuanto sube (en altos de letra)
+    MARGEN = 10                                           # px alrededor de cada letra suelta: su halo
+
     def __init__(self, texto, padre=None):
         super().__init__(padre)
         self._texto = texto
+        self._k = 1.0                                     # avance de la entrada (1 = quieto, se pinta el pixmap entero)
+        self._anim = None
         self.setFixedHeight(64)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
     def configure(self, text=None, **_kw):
         if text is not None and text != self._texto:
             self._texto = text
+            self._entrar()
             self.update()
 
+    def showEvent(self, e):
+        super().showEvent(e)
+        self._entrar()
+
+    def _entrar(self):
+        import mograf_ui
+        if mograf_ui.quieto() or not self.isVisible() or not self._texto:
+            self._k = 1.0
+            return
+        if self._anim is None:
+            self._anim = _anim(self, 1000, self._paso)
+            self._anim.finished.connect(lambda: self._paso(1.0))
+        self._anim.stop()
+        self._anim.setDuration(int(1000 * self._total()))
+        self._k = 0.0
+        self._anim.start()
+
+    def _total(self):
+        return max(0, len(self._texto) - 1) * self.ESCALON + self.DURACION
+
+    def _paso(self, v):
+        self._k = float(v)
+        self.update()
+
     def paintEvent(self, _e):
-        # el titulo se repinta cada vez que la escena de detras avanza un cuadro (60 por segundo): se dibuja UNA vez a un pixmap
+        # el titulo se repinta cada vez que la escena de detras avanza un cuadro (60 por segundo): se dibuja UNA vez a pixmaps (el entero y
+        # cada letra suelta) y la entrada solo los mueve
         w, h = self.width(), self.height()
         dpr = self.devicePixelRatioF()
         clave = (self._texto, w, h, round(dpr, 2))
         if getattr(self, '_clave_pm', None) != clave:
-            pm = QPixmap(max(1, int(w * dpr)), max(1, int(h * dpr)))
-            pm.setDevicePixelRatio(dpr)
-            pm.fill(Qt.GlobalColor.transparent)
-            self._dibujar_texto(pm)
-            self._pm, self._clave_pm = pm, clave
+            self._preparar(w, h, dpr)
+            self._clave_pm = clave
         q = QPainter(self)
-        q.drawPixmap(0, 0, self._pm)
+        if self._k >= 1.0:
+            q.drawPixmap(0, 0, self._pm)
+        else:
+            t = self._k * self._total()
+            for i, x, letra in self._letras:
+                u = min(1.0, max(0.0, (t - i * self.ESCALON) / self.DURACION))
+                if u <= 0.0:
+                    continue
+                e = 1.0 - (1.0 - u) ** 3                  # power3.out
+                q.setOpacity(e)
+                q.drawPixmap(QPointF(x, (1.0 - e) * self.SUBIDA * self._alto), letra)
+            q.setOpacity(1.0)
+            q.setRenderHint(QPainter.RenderHint.Antialiasing)
+            self._linea(q, w, h, self._ancho, 1.0 - (1.0 - self._k) ** 3)
         q.end()
 
-    def _dibujar_texto(self, destino):
-        from PySide6.QtGui import QPainterPath, QLinearGradient
-        w, h = self.width(), self.height()
+    @staticmethod
+    def _lienzo(w, h, dpr):
+        pm = QPixmap(max(1, int(w * dpr)), max(1, int(h * dpr)))
+        pm.setDevicePixelRatio(dpr)
+        pm.fill(Qt.GlobalColor.transparent)
+        return pm
+
+    def _preparar(self, w, h, dpr):
         f = fuente(34, peso='extra')
         f.setLetterSpacing(QFont.SpacingType.PercentageSpacing, 102)
         fm = QFontMetricsF(f)
-        ancho = fm.horizontalAdvance(self._texto)
-        x, y = (w - ancho) / 2, h * 0.62
-        ruta = QPainterPath()
-        ruta.addText(QPointF(x, y), f, self._texto)
-        p = QPainter(destino)
+        texto = self._texto
+        self._ancho, self._alto = fm.horizontalAdvance(texto), fm.height()
+        x, y = (w - self._ancho) / 2, h * 0.62
+        self._pm = self._lienzo(w, h, dpr)
+        p = QPainter(self._pm)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        ruta = QPainterPath()
+        ruta.addText(QPointF(x, y), f, texto)
+        self._relleno(p, ruta, y, fm)
+        self._linea(p, w, h, self._ancho, 1.0)
+        p.end()
+        self._letras = []
+        m = self.MARGEN
+        for i, ch in enumerate(texto):
+            if not ch.strip():
+                continue
+            letra = self._lienzo(fm.horizontalAdvance(ch) + 2 * m, h, dpr)
+            p = QPainter(letra)
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+            ruta = QPainterPath()
+            ruta.addText(QPointF(m, y), f, ch)
+            self._relleno(p, ruta, y, fm)
+            p.end()
+            self._letras.append((i, x + fm.horizontalAdvance(texto[:i]) - m, letra))
+
+    @staticmethod
+    def _relleno(p, ruta, y, fm):
         for grosor, alfa in ((9, 14), (5, 22), (2.5, 34)):          # halo
             p.setPen(QPen(QColorReal(90, 190, 255, alfa), grosor, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             p.setBrush(Qt.BrushStyle.NoBrush)
@@ -390,14 +460,20 @@ class TituloGo(QWidget):
         g.setColorAt(1.0, QColorReal(140, 205, 255))
         p.setBrush(g)
         p.drawPath(ruta)
-        yl = h - 7                                                   # linea de luz
-        lg = QLinearGradient(w / 2 - ancho / 2, 0, w / 2 + ancho / 2, 0)
+
+    @staticmethod
+    def _linea(p, w, h, ancho, k):
+        """La linea de luz bajo el titulo; k = cuanto se ha abierto desde el centro (0..1)."""
+        a = ancho * k
+        if a < 1:
+            return
+        lg = QLinearGradient(w / 2 - a / 2, 0, w / 2 + a / 2, 0)
         lg.setColorAt(0.0, QColorReal(80, 200, 255, 0))
         lg.setColorAt(0.5, QColorReal(120, 220, 255, 190))
         lg.setColorAt(1.0, QColorReal(80, 200, 255, 0))
+        p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(lg)
-        p.drawRoundedRect(QRectF(w / 2 - ancho / 2, yl, ancho, 2), 1, 1)
-        p.end()
+        p.drawRoundedRect(QRectF(w / 2 - a / 2, h - 7, a, 2), 1, 1)
 
 
 class CintaViral(QWidget):

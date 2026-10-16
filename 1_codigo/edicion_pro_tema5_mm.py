@@ -192,8 +192,8 @@ def momentos(bl, dur, idioma='es', acento='#4C7DFF', libre=None, det_de=None, re
             continue                                                     # v5.5.3: «100 % gratuita», «50 % de descuento»: no es crecimiento
         if (signo != '%' and not sube) or any(x[1] in DIR.TAMANO for x in cerca):
             continue                                                     # («25 % más pequeño»: eso lo cuenta la escena del icono que se encoge)
-        if signo not in ('%', '$', '€', '£') and any(x[1] in DIR.DINERO for x in cerca):
-            signo = '$'
+        if signo != '%' and any(x[1] in DIR.DINERO for x in cerca):     # v5.5.8: la moneda que se nombra («80 naira» → ₦), «$» si no se nombra
+            signo = DIR.M.signo([x[2] for x in sig] + [x[2] for x in reversed(todas[max(0, i - 4):i])], signo) or '$'
         etiqueta = next((_limpio(x[2]) for x in reversed(todas[max(0, i - 4):i]) if len(x[1]) >= 4 and x[1] not in DIR.CONECTORAS
                          and x[1] not in SUBIR and x[1] not in BAJAR and not DIR._cifra(x[2])), '')
         tarjeta('grafica', t - 0.35, max(fin_frase(nb, 2.8, 3.6), t + 2.6), {'valor': valor, 'signo': signo, 'sube': sube, 'etiqueta': etiqueta},

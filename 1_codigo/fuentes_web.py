@@ -215,15 +215,38 @@ def candidatos(consulta, formato='v', claves_=None):
     return todos[:24]
 
 
-def buscar_foto(consulta, formato='v', claves_=None, evitar=(), exigir=''):
+# v5.5.8: fotos que no se ponen nunca en el video de un cliente (título o etiquetas de la foto): tragedias, violencia, muerte, desnudos, política
+VETADAS = frozenset('''crush memorial memorials death dead deaths died dying funeral funerals grave graves cemetery corpse corpses killed killing kill
+murder murdered victim victims tragedy tragic disaster disasters accident accidents crash crashed wreck explosion bombing bomb bombs war wars warfare
+battle soldier soldiers military army weapon weapons gun guns rifle shooting shooter terror terrorist terrorism attack attacks riot riots protest
+protests protesters police arrest arrested prison jail blood bloody injury injured wound wounded burning burned flood flooding
+earthquake hurricane refugee refugees starvation poverty nude nudity naked sex sexual erotic lingerie drug drugs cocaine smoking cigarette nazi
+swastika genocide holocaust execution hanging suicide abuse riotpolice demonstration election campaign politician president minister'''.split())
+
+
+# v5.5.8: fotos que casi siempre son un cartel, una pancarta o una captura con texto (a pantalla completa se ven feas): fuera con `sin_texto`
+CON_TEXTO = frozenset('''summit conference conclave ceremony award awards seminar meeting forum expo exhibition banner poster posters flyer leaflet
+logo logos sign signs signage billboard advertisement advert screenshot diagram chart graph map infographic certificate document documents
+newspaper magazine cover album label brochure slide slides presentation keynote convention congress'''.split())
+
+
+def buscar_foto(consulta, formato='v', claves_=None, evitar=(), exigir='', sin_atribucion=False, sin_texto=False):
     """La mejor foto para `consulta` (en inglés), DESCARGADA en la caché, o None (sin red, sin resultados o todas fallan). `exigir` (v5.5.4): una
-    palabra que tiene que estar en el título o las etiquetas de la foto (la de un LUGAR que se nombra: que sea de verdad de ese sitio)."""
+    palabra que tiene que estar en el título o las etiquetas de la foto (la de un LUGAR que se nombra: que sea de verdad de ese sitio).
+    `sin_atribucion` (v5.5.8): solo las que no piden el crédito EN el video (CC0, dominio público, Pexels, Pixabay): para las tarjetas,
+    polaroids y tableros, que no lo enseñan (el crédito va igual a creditos_broll.txt)."""
     if not hay_red():
         return None
     exigir = _plegar_simple(exigir)
     for c in candidatos(consulta, formato, claves_):
         if c['id'] in evitar or (exigir and exigir not in _plegar_simple(c.get('titulo'))):
             continue
+        if sin_atribucion and str(c.get('licencia') or '').startswith('CC BY'):
+            continue
+        if VETADAS & set(_plegar_simple(c.get('titulo')).split()):
+            continue                                                       # v5.5.8: «festival» devolvía el memorial de una tragedia
+        if sin_texto and CON_TEXTO & set(_plegar_simple(c.get('titulo')).split()):
+            continue                                                       # v5.5.8: «emprendimientos» devolvía la pancarta de un congreso
         destino = CACHE / (re.sub(r'[^\w.-]', '_', c['id']) + '.jpg')
         try:
             if not destino.exists() or destino.stat().st_size < 10000:

@@ -214,10 +214,10 @@ def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cr
                 valor, signo = c
                 sig = [q for q in ps[k + 1:k + 3]]
                 unidad = next((q for q in sig if q[1] in DIR.TIEMPO), None)
-                if unidad:
+                if unidad and not (signo in DIR.M.SIGNOS or DIR.M.signo([q[2] for q in sig])):    # v5.5.8: con moneda manda el dinero
                     prop = ('tiempo', t, {'valor': valor, 'unidad': unidad[2].lower()})
-                elif signo in ('$', '€', '£') or any(q[1] in DIR.DINERO for q in sig):
-                    prop = ('dinero', t, {'valor': valor, 'signo': signo if signo in ('$', '€', '£') else '$'})
+                elif signo in DIR.M.SIGNOS or any(q[1] in DIR.DINERO for q in sig):        # v5.5.8: la moneda que se nombra («80 naira» → ₦)
+                    prop = ('dinero', t, {'valor': valor, 'signo': DIR.M.signo([q[2] for q in sig] + [q[2] for q in reversed(ps[max(0, k - 3):k])], signo) or '$'})
                 elif signo == '%' or (sig and sig[0][1] in ('percent', 'porciento')):
                     prop = ('cifra', t, {'valor': valor, 'signo': '%'})
                 else:

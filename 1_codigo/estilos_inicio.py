@@ -1167,10 +1167,107 @@ class Matrix(Estilo):
         p.restore()
 
 
+# =================================================================================================== 11 · ORBE (React Bits «Orb»)
+class Orbe(Estilo):
+    """v5.5.8 (pedido: «incorpora el efecto Orb de React Bits en Inicio»): el shader de Orb —un anillo de luz morado / cian sobre azul profundo,
+    de radio ondulado por ruido, con una luz que lo recorre y el resplandor del borde— calculado con numpy a N×N y escalado suave (como Plasma).
+    Al pasar el ratón el anillo se ondula y gira más rápido (el «hover intensity» de Orb); al trabajar se enciende con el progreso."""
+    clave = 'orbe'
+    nombre = tr('Orbe')
+    descr = tr('El orbe de luz de React Bits: un anillo morado y cian que fluye, se ondula al pasar el ratón y se enciende al trabajar.')
+    tema = 'negro'
+    acento = '#9C43FE'
+    aurora = ('#9C43FE', '#4CC2E9', '#101499')
+    pal = ('#C69BFF', '#9C43FE', '#4CC2E9', '#8AE4FF', '#FFFFFF')
+    modo = 'orbita'
+    trazo = False
+    cabeza = 2.2
+    N = 112
+    C1, C2, C3 = (np.array([0.611765, 0.262745, 0.996078], np.float32), np.array([0.298039, 0.760784, 0.913725], np.float32),
+                  np.array([0.062745, 0.078431, 0.600000], np.float32))
+    INTERIOR, ESCALA_RUIDO = 0.6, 0.65
+
+    def __init__(self):
+        super().__init__()
+        n = self.N
+        yy, xx = np.mgrid[-1.25:1.25:complex(n), -1.25:1.25:complex(n)]
+        self._xx, self._yy = xx.astype(np.float32), yy.astype(np.float32)
+        self._buf = None
+        self._fase = 0.0
+        self._hover = 0.0
+
+    def avanzar(self, dt, vel):
+        super().avanzar(dt, vel)
+        self._fase += dt * (1.0 + 0.6 * min(6.0, vel))
+
+    @staticmethod
+    def _ruido(x, y, t):
+        """Ruido suave en [0, 1] (sumas de senos desfasados: lo que hace el simplex 3D del shader, más barato)."""
+        return 0.5 + 0.125 * (np.sin(x * 3.1 + t * 1.7) + np.sin(y * 2.7 - t * 1.3) + np.sin((x + y) * 2.2 + t * 0.9)
+                              + np.sin(np.hypot(x - 0.3, y + 0.2) * 3.4 - t * 1.1))
+
+    def heroe(self, p, R, ctx):
+        a = self.atenuar(ctx)
+        p.setOpacity(a)
+        self._hover += (ctx.hover - self._hover) * 0.12
+        t = self._fase * 0.5
+        trab = ctx.estado == 'trabajando'
+        brillo = 1.0 + (0.5 * ctx.progreso if trab else 0.25 if ctx.estado == 'hecho' else 0.0)
+        x, y = self._xx, self._yy
+        h = self._hover
+        if h > 0.01:                                          # la onda del «hover» de Orb
+            x = x + h * 0.08 * np.sin(y * 10.0 + t * 2.0)
+            y = y + h * 0.08 * np.sin(x * 10.0 + t * 2.0)
+        giro = t * (0.3 + 0.9 * h)
+        cg, sg = math.cos(giro), math.sin(giro)
+        x, y = x * cg - y * sg, x * sg + y * cg
+        ln = np.sqrt(x * x + y * y) + 1e-6
+        ang = np.arctan2(y, x)
+        n0 = self._ruido(x * self.ESCALA_RUIDO, y * self.ESCALA_RUIDO, t)
+        ri = self.INTERIOR
+        r0 = (ri + (1.0 - ri) * 0.4) + ((ri + (1.0 - ri) * 0.6) - (ri + (1.0 - ri) * 0.4)) * n0
+        d0 = np.abs(ln - r0)                                    # distancia al anillo
+        v0 = 1.0 / (1.0 + d0 * 10.0)
+        v0 = v0 * np.clip((r0 * 1.05 - ln) / (r0 * 0.05), 0.0, 1.0)
+        cl = np.cos(ang + t * 2.0) * 0.5 + 0.5
+        pa = -t
+        px, py = math.cos(pa), math.sin(pa)
+        d = np.hypot(x - px * r0, y - py * r0)
+        v1 = (1.5 / (1.0 + d * d * 5.0)) * (1.0 / (1.0 + d0 * 50.0))
+        v2 = np.clip((1.0 - ln) / np.maximum(1e-3, 1.0 - (ri + (1.0 - ri) * n0 * 0.5)), 0.0, 1.0)
+        v3 = np.clip((ln - ri) / ((1.0 - ri) * 0.5), 0.0, 1.0)
+        col = self.C1[None, None, :] * (1.0 - cl[..., None]) + self.C2[None, None, :] * cl[..., None]
+        col = self.C3[None, None, :] * (1.0 - v0[..., None]) + col * v0[..., None]
+        col = np.clip((col + v1[..., None]) * (v2 * v3)[..., None] * brillo, 0.0, 1.0)
+        alfa = col.max(axis=2)
+        rgb = col / np.maximum(alfa, 1e-4)[..., None]
+        img = np.empty((self.N, self.N, 4), np.uint8)
+        img[..., :3] = (rgb * 255.0).astype(np.uint8)
+        img[..., 3] = (alfa * 255.0 * a).astype(np.uint8)
+        self._buf = np.ascontiguousarray(img)
+        qi = QImage(self._buf.data, self.N, self.N, self.N * 4, QImage.Format.Format_RGBA8888)
+        rs = R * 1.05
+        self.halo(p, R, QColor('#9C43FE'), 40 + 40 * brillo * (0.6 + 0.4 * h), 1.25)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
+        p.drawImage(QRectF(-rs * 1.25, -rs * 1.25, rs * 2.5, rs * 2.5), qi)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+        if trab:
+            arco_prog(p, R * 0.94, R * 0.014, ctx.progreso, QColor('#4CC2E9'), QColor('#E9D8FF'))
+        centro_estado(p, ctx, R, R * 0.40, QColor('#E9D8FF'), emblema=lambda: play(p, R * 0.28, QColor('#FFFFFF')))
+        p.setOpacity(1.0)
+
+    def fondo(self, q, W, H, c, e, t, estado):
+        g = QRadialGradient(c, max(W, H) * 0.8)
+        g.setColorAt(0.0, QColor(26 + int(20 * e), 14, 52 + int(30 * e)))
+        g.setColorAt(0.45, QColor(9, 7, 22))
+        g.setColorAt(1.0, QColor(2, 2, 6))
+        q.fillRect(QRectF(0, 0, W, H), g)
+
+
 # --------------------------------------------------------------------------------------------------- registro
-ESTILOS = {c.clave: c for c in (Astrolabio, Synthwave, Reactor, Agujero, Liquido, Prisma, Ecualizador, Plasma, Carrete, Matrix)}
+ESTILOS = {c.clave: c for c in (Orbe, Astrolabio, Synthwave, Reactor, Agujero, Liquido, Prisma, Ecualizador, Plasma, Carrete, Matrix)}
 ORDEN = tuple(ESTILOS.keys())
-POR_DEFECTO = 'astrolabio'
+POR_DEFECTO = 'orbe'                     # v5.5.8: el orbe de React Bits es el Inicio de fábrica (el elegido en Ajustes › Interfaz se respeta)
 
 
 def crear(clave):

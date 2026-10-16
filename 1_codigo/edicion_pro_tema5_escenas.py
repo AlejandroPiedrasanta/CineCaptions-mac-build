@@ -15,6 +15,8 @@ edicion_pro_tema5.planificar (prioridad, huecos, que no pisen los elementos en p
 import re
 import unicodedata
 
+import monedas as M
+
 # ------------------------------------------------------------------------------------------------------------------- vocabulario
 COLORES = {  # palabra plegada -> (nombre de muestra, color vivo, color apagado)
     'black': ('BLACK', '#0B0B0D', '#2B2B30'), 'blacks': ('BLACK', '#0B0B0D', '#2B2B30'), 'negro': ('NEGRO', '#0B0B0D', '#2B2B30'),
@@ -55,7 +57,7 @@ LUJO = {'luxury', 'luxurious', 'lujo', 'lujosas', 'lujosos', 'luxo', 'luxuosas',
 MARCAS_LUJO = ['rolex', 'chanel', 'dior', 'prada', 'cartier', 'tiffany']
 DINERO = {'money', 'dollars', 'dollar', 'price', 'prices', 'cost', 'costs', 'revenue', 'sales', 'profit', 'income', 'salary', 'budget', 'paid', 'pay',
           'dinero', 'dolares', 'dolar', 'precio', 'precios', 'costo', 'costos', 'cuesta', 'ventas', 'ganancia', 'ganancias', 'ingresos', 'sueldo', 'salario',
-          'presupuesto', 'pagar', 'pago', 'quetzales', 'pesos', 'euros', 'dinheiro', 'reais', 'preco', 'custo', 'vendas', 'lucro', 'renda'}
+          'presupuesto', 'pagar', 'pago', 'quetzales', 'pesos', 'euros', 'dinheiro', 'reais', 'preco', 'custo', 'vendas', 'lucro', 'renda'} | M.PALABRAS
 CRECER = {'grow', 'growth', 'grew', 'increase', 'increased', 'double', 'doubled', 'triple', 'followers', 'subscribers', 'scale', 'boost',
           'crecer', 'crecimiento', 'crece', 'crecio', 'aumentar', 'aumento', 'duplicar', 'duplique', 'triplicar', 'seguidores', 'suscriptores',
           'escalar', 'resultados', 'crescer', 'crescimento', 'aumentar', 'dobrar', 'visualizacoes', 'inscritos'}
@@ -99,7 +101,7 @@ def plegar(t):
 
 def _cifra(texto):
     """'25%' -> ('25', '%') · '$1,200' -> ('1,200', '$') · '100' -> ('100', '') · None si no es una cifra."""
-    m = re.match(r'^([$€£]?)(\d[\d.,]*)(%|k|K|M|x)?[.,!?]*$', str(texto).strip())
+    m = re.match(r'^(' + M.RE_SIGNO + r')?(\d[\d.,]*)(%|k|K|M|x)?[.,!?]*$', str(texto).strip())       # v5.5.8: ₦, Q, R$, ¥…
     if not m:
         return None
     return m.group(2).rstrip('.,'), (m.group(1) or m.group(3) or '')
@@ -181,12 +183,15 @@ def escenas(bloques, dur):
             signo = '%'                                                  # «25 percent», «25 por ciento»
         if not signo and tam and sig and sig[0][1] in TAMANO:
             signo = '%'                                                  # «25 smaller» (el % se perdió al transcribir)
-        if unidad:
+        # v5.5.8 (coherencia): con moneda escrita o nombrada junto a la cifra manda el dinero («$1,200 este mes» no es un reloj de 1.200 meses)
+        moneda_pegada = signo in M.SIGNOS or bool(M.signo([x[2] for x in sig[:2]]))
+        if unidad and not moneda_pegada:
             ventana(t, unidad[0], 'arriba', 'objeto', [{'tipo': 'reloj', '_t': t - 0.1, 'valor': valor, 'unidad': unidad[2].strip('.,').lower()}], 3.6,
                     f'tiempo: {valor} {unidad[2]}')
-        elif signo in ('$', '€', '£') or cerca & DINERO:
-            ventana(t, t, 'arriba', 'objeto', [{'tipo': 'precio', '_t': t - 0.1, 'valor': valor, 'signo': signo if signo in ('$', '€', '£') else '$'}], 3.6,
-                    f'dinero: {signo}{valor}')
+        elif moneda_pegada or cerca & DINERO:
+            moneda = M.signo([x[2] for x in sig + list(reversed(ant))], signo) or '$'          # v5.5.8: la moneda que se NOMBRA («80 naira» → ₦)
+            ventana(t, t, 'arriba', 'objeto', [{'tipo': 'precio', '_t': t - 0.1, 'valor': valor, 'signo': moneda}], 3.6,
+                    f'dinero: {moneda}{valor}')
         elif signo == '%' and tam:
             ventana(t, tam[0], 'arriba', 'objeto', [{'tipo': 'app', '_t': t - 0.3, 'escala': round(1 - min(60.0, float(valor.replace(',', '.'))) / 100.0, 3)
                                                      if TAMANO[tam[1]] < 0 else 1.0, 'insignia': ('−' if TAMANO[tam[1]] < 0 else '+') + valor + '%',
@@ -297,7 +302,7 @@ def desde_ia(bloques, propuestas, dur):
             num = re.sub(r'[^\d.,]', '', valor)
             if not num or not any(re.sub(r'[^\d]', '', num) == re.sub(r'[^\d]', '', x) for _t, _p, x in pal if re.search(r'\d', x)):
                 continue                                                     # la cifra tiene que DECIRSE (y con números: «three» lo cubren las reglas)
-            if tipo == 'precio' and ('%' in valor or not (dichas & DINERO or any(s in x for _t, _p, x in pal for s in '$€£'))):
+            if tipo == 'precio' and ('%' in valor or not (dichas & DINERO or any(s in x for _t, _p, x in pal for s in M.SIGNOS))):
                 continue                                                     # v5.5.3: «100 % gratuita» no es un precio de 100
             if tipo == 'grafica' and not dichas & CRECER and (re.sub(r'\D', '', num) == '100' or dichas & ENFASIS):
                 continue                                                     # v5.5.3: ni una gráfica que crece
@@ -305,8 +310,9 @@ def desde_ia(bloques, propuestas, dur):
             if tipo == 'cifra':
                 o['valor'] = valor if re.search(r'\d', valor) else num
                 o['etiqueta'] = str(datos.get('etiqueta') or '')[:24] if dicho(datos.get('etiqueta') or '') else ''
-            elif tipo == 'precio':
-                o['signo'] = str(datos.get('signo') or '$')[:2]
+            elif tipo == 'precio':                                           # v5.5.8: manda la moneda que se DICE; la IA ponía «$» a todo
+                escrito = next((s for _t, _p, x in pal for s in M.SIGNOS if s in x), '')
+                o['signo'] = M.signo([x for _t, _p, x in pal], escrito) or M.signo([], str(datos.get('signo') or '')) or '$'
             elif tipo == 'grafica':
                 o['signo'] = '%' if '%' in valor or str(datos.get('signo') or '') == '%' else ''
             else:
