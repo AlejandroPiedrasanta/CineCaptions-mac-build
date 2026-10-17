@@ -3572,6 +3572,15 @@
     "Proyecto y Sonido más limpios: sin la barra de título; «Crea tu estilo» va junto a Whisper; el slider va sin flechas ni puntos, con arrastre elástico en los extremos, y su píldora es «Solo captions | Con PRO».": "Projeto e Som mais limpos: sem a barra de título; «Crie o seu estilo» fica ao lado do Whisper; o slider não tem setas nem pontos, com arraste elástico nas pontas, e sua pílula é «Só legendas | Com PRO».",
     "Librerías al día: Pillow 13, Remotion 4.0.536 y three.js 0.186.": "Bibliotecas atualizadas: Pillow 13, Remotion 4.0.536 e three.js 0.186.",
     "Cerrar el programa ya no puede dar un error aunque quede trabajo en segundo plano.": "Fechar o programa já não pode dar erro, mesmo com trabalho em segundo plano.",
-    "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": "O Início já não congela ao mudar o tamanho da janela ou maximizá-la, e se o DaVinci Resolve travar, a janela do CineCaptions continua respondendo."
+    "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": "O Início já não congela ao mudar o tamanho da janela ou maximizá-la, e se o DaVinci Resolve travar, a janela do CineCaptions continua respondendo.",
+    "Abre la biblioteca de sonidos (o un archivo de tu computadora) para este emoji.": "Abre a biblioteca de sons (ou um arquivo do seu computador) para este emoji.",
+    "Abre la biblioteca de sonidos (o un archivo de tu computadora) para cambiar este sonido.": "Abre a biblioteca de sons (ou um arquivo do seu computador) para trocar este som.",
+    "Emoji {nombre}": "Emoji {nombre}",
+    "Desde mi computadora…": "Do meu computador…",
+    "Usar este sonido": "Usar este som",
+    "Toca un sonido para oírlo y elegirlo": "Toque em um som para ouvi-lo e escolhê-lo",
+    "{t} · sonido {n}": "{t} · som {n}",
+    "Sonido más limpio: la biblioteca de sonidos ya no ocupa la página; sale en una ventana al pulsar «Buscar archivo…» en cada sonido (y en cada emoji), con el buscador, las categorías y «Desde mi computadora…».": "Página Som mais limpa: a biblioteca de sons já não ocupa a página; abre numa janela ao clicar em «Procurar arquivo…» em cada som (e em cada emoji), com a busca, as categorias e «Do meu computador…».",
+    "Inicio: el botón del Registro va junto a minimizar, igual que en el resto de páginas.": "Início: o botão do Registo fica ao lado de minimizar, como nas outras páginas."
   }
 }

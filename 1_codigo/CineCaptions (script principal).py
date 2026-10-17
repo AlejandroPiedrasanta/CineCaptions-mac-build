@@ -6780,9 +6780,10 @@ class SubtitleApp(QWidget):
         self.marca_cinema = isla_ui.MarcaCinema(self, LOGO_MARCA_PATH if LOGO_MARCA_PATH.exists() else None)       # el logo, arriba a la izquierda de Inicio
         self.marca_cinema.poner_en_inicio(getattr(self, '_pagina_actual', 'inicio') == 'inicio')
         # v5.5.10: las páginas ya no llevan barra de título (el usuario las quitó una a una): el botón del Registro (avisos y errores) queda
-        # flotando arriba a la derecha, junto a los controles de la ventana, en todas menos Inicio (que tiene el suyo en su fila de avisos)
+        # flotando arriba a la derecha, junto a los controles de la ventana, en TODAS las páginas (5.5.11: también en Inicio, que antes
+        # lo llevaba en su fila de avisos)
         self.registro_flotante = registro_ui.BotonRegistro(self)
-        self.registro_flotante.setVisible(getattr(self, '_pagina_actual', 'inicio') != 'inicio')
+        self.registro_flotante.show()
         self.marco_ventana = isla_ui.MarcoVentana(self)
         self.marco_ventana.setGeometry(self.rect())
         # el estado de Resolve (la tarjeta de antes) sale debajo del punto de la isla
@@ -7086,9 +7087,8 @@ class SubtitleApp(QWidget):
         if hasattr(self, 'marca_cinema'):
             self.marca_cinema.poner_en_inicio(clave == 'inicio')
         if hasattr(self, 'registro_flotante'):
-            self.registro_flotante.setVisible(clave != 'inicio')
-            if clave != 'inicio':
-                self.registro_flotante.raise_()
+            self.registro_flotante.show()
+            self.registro_flotante.raise_()
         if clave == 'editor':
             self._al_entrar_en_creativo()          # v5.3.2: detecta el audio / la línea de tiempo de Proyecto (y abre el editor si ya hay palabras)
     def _marcar_nav(self, clave):
@@ -7207,11 +7207,12 @@ class SubtitleApp(QWidget):
         t_cab.hide()
         s_cab.hide()
         import un_clic_ui
-        # v5.2.1: en Inicio (sin barra de título) los avisos y errores salen en esta fila, con el botón del registro
+        # v5.2.1: en Inicio (sin barra de título) los avisos y errores salen en esta fila. 5.5.11: el botón del registro ya no va aquí
+        # sino flotando junto a minimizar, como en el resto de páginas (registro_flotante); la fila guarda su alto para que el GO no salte
         fila_reg, cfr = caja_h(espacio=10)
+        fila_reg.setMinimumHeight(34)
         self.aviso_inicio = registro_ui.SubtituloVivo('', 13, TEXT_MUTED)
         cfr.addWidget(self.aviso_inicio, 1)
-        cfr.addWidget(registro_ui.BotonRegistro())
         capa.addWidget(fila_reg)
         self.go_panel = un_clic_ui.PanelGo()                 # v5.5.8: sin el enlace «Detalles y estado del sistema» (el usuario: «elimina esto»)
         self.go_panel.al_ver_resolve = self._go_ver_en_resolve

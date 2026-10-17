@@ -7,7 +7,7 @@ Version en Lua para Resolve FREE (el Puente la corre con dofile) de pausas._CORT
 que se quedan pegados uno tras otro. Solo toca un timeline con UN unico clip en V1 (el que GO armo con el video soltado).
 ]]
 
-local VERSION = "5.5.10 (pausas)"
+local VERSION = "5.5.11 (pausas)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]

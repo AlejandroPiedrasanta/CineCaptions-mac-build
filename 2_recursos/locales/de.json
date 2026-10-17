@@ -3572,6 +3572,15 @@
     "Proyecto y Sonido más limpios: sin la barra de título; «Crea tu estilo» va junto a Whisper; el slider va sin flechas ni puntos, con arrastre elástico en los extremos, y su píldora es «Solo captions | Con PRO».": "Projekt und Sound aufgeräumter: ohne Titelleiste; «Erstelle deinen Stil» steht neben Whisper; der Slider hat keine Pfeile oder Punkte mehr, zieht an den Enden elastisch, und seine Pille ist «Nur Untertitel | Mit PRO».",
     "Librerías al día: Pillow 13, Remotion 4.0.536 y three.js 0.186.": "Bibliotheken aktuell: Pillow 13, Remotion 4.0.536 und three.js 0.186.",
     "Cerrar el programa ya no puede dar un error aunque quede trabajo en segundo plano.": "Das Schließen des Programms kann keinen Fehler mehr auslösen, auch wenn im Hintergrund noch gearbeitet wird.",
-    "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": "Der Start friert nicht mehr ein, wenn du die Fenstergröße änderst oder es maximierst, und wenn DaVinci Resolve hängt, reagiert das CineCaptions-Fenster weiter."
+    "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": "Der Start friert nicht mehr ein, wenn du die Fenstergröße änderst oder es maximierst, und wenn DaVinci Resolve hängt, reagiert das CineCaptions-Fenster weiter.",
+    "Abre la biblioteca de sonidos (o un archivo de tu computadora) para este emoji.": "Öffnet die Soundbibliothek (oder eine Datei von deinem Computer) für dieses Emoji.",
+    "Abre la biblioteca de sonidos (o un archivo de tu computadora) para cambiar este sonido.": "Öffnet die Soundbibliothek (oder eine Datei von deinem Computer), um diesen Sound zu ändern.",
+    "Emoji {nombre}": "Emoji {nombre}",
+    "Desde mi computadora…": "Von meinem Computer…",
+    "Usar este sonido": "Diesen Sound verwenden",
+    "Toca un sonido para oírlo y elegirlo": "Tippe auf einen Sound, um ihn zu hören und auszuwählen",
+    "{t} · sonido {n}": "{t} · Sound {n}",
+    "Sonido más limpio: la biblioteca de sonidos ya no ocupa la página; sale en una ventana al pulsar «Buscar archivo…» en cada sonido (y en cada emoji), con el buscador, las categorías y «Desde mi computadora…».": "Aufgeräumtere Sound-Seite: Die Soundbibliothek nimmt keinen Platz mehr auf der Seite ein; sie öffnet sich in einem Fenster, wenn du bei einem Sound (oder Emoji) auf „Datei suchen…“ klickst – mit Suche, Kategorien und „Von meinem Computer…“.",
+    "Inicio: el botón del Registro va junto a minimizar, igual que en el resto de páginas.": "Start: Die Protokoll-Schaltfläche sitzt neben Minimieren, wie auf den anderen Seiten."
   }
 }

@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QBoxLayout, QFrame, QGraphicsO
                                QSizePolicy, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 
 import qt_kit as ui
-from qt_kit import (BooleanVar, Boton, Casilla, Chip, Combo, Deslizador, Desplazable, Enlace, Entrada,
+from qt_kit import (BooleanVar, Boton, Casilla, Chip, Combo, Deslizador, Desplazable, Dialogo, Enlace, Entrada,
                     Etiqueta, Onda, Punto, Segmentado, StringVar, Tarjeta, Tooltip, caja_h, caja_v,
                     cancelar, despues, ejecutar_en_ui, filedialog, limpiar_capa, messagebox)
 from qt_kit import QColor  # v5.1: el QColor que sigue al tema (Ajustes > Interfaz)
@@ -822,6 +822,93 @@ class _PadXY(QWidget):
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
             self._lab._pad_release(None)
+class _DialogoBiblioteca(Dialogo):
+    """(5.5.10) La biblioteca de sonidos en un popup: la abre «Buscar archivo…» de cada sonido (y de cada emoji). Toma
+    prestada la barra del Lab (buscador, categorías, chips de sonidos, «+ Mi carpeta», atajo), que ya no vive en la
+    página. Tocar un chip elige el sonido y lo suena; «Usar este sonido» llama a al_usar(Path). Al cerrarse, la barra
+    vuelve oculta al Lab (si no, se borraría con el diálogo)."""
+    def __init__(self, lab, subtitulo, al_usar):
+        super().__init__(lab, tr('Elige un sonido'), 780, 560, redimensionable=True, minimo=(560, 420))
+        self.setModal(True)
+        self._lab = lab
+        self._al_usar = al_usar
+        self._devuelto = False
+        sel = lab.sonido_seleccionado
+        self._ruta = Path(sel) if sel and Path(sel).is_file() else None
+        capa = QVBoxLayout(self)
+        capa.setContentsMargins(24, 20, 24, 18)
+        capa.setSpacing(12)
+        cab, cc = caja_v(espacio=2)
+        cc.addWidget(Etiqueta(tr('Elige un sonido'), 19, peso='extra', color='#FFFFFF'))
+        cc.addWidget(ui.Elidida(subtitulo, 12, color='#8D9BB5'))
+        capa.addWidget(cab)
+        self._zona = Desplazable(margenes=(0, 0, 6, 0), espacio=0, estirar_final=True)
+        riel = lab._riel
+        riel.setMinimumHeight(0)
+        self._zona.agregar(riel)
+        riel.show()
+        capa.addWidget(self._zona, 1)
+        fila, cf = caja_h(espacio=10)
+        self._nombre = ui.Elidida('', 14, peso='medio', color='#FFFFFF')
+        cf.addWidget(self._nombre, 1)
+        self._oir = Boton('▶', self._escuchar, tipo='icono', alto=32, ancho=36, tam=12)
+        self._oir.setFixedWidth(36)
+        cf.addWidget(self._oir)
+        capa.addWidget(fila)
+        pie, cp = caja_h(espacio=10)
+        cp.addWidget(Enlace(tr('Desde mi computadora…'), self._desde_archivo, 12, color=TEXT_MUTED, color_hover=ui.ACCENT_CLARO))
+        cp.addStretch(1)
+        cp.addWidget(Boton(tr('Cancelar'), self.cerrar, alto=36, tam=13))
+        self._usar = Boton(tr('Usar este sonido'), self._usar_este, tipo='primario', alto=36, tam=13)
+        cp.addWidget(self._usar)
+        capa.addWidget(pie)
+        self.finished.connect(lambda _r: self._devolver())
+        lab._al_cargar_dialogo = self._al_cargar
+        self._pintar()
+        despues(0, lab.filtro_entry.setFocus, self)
+    def _al_cargar(self, ruta):
+        self._ruta = Path(ruta)
+        self._pintar()
+    def _pintar(self):
+        r = self._ruta
+        self._nombre.configure(text=r.name if r else tr('Toca un sonido para oírlo y elegirlo'))
+        self._oir.setEnabled(r is not None)
+        self._usar.setEnabled(r is not None)
+    def _escuchar(self):
+        if self._ruta is not None:
+            self._lab._oir_ruta(self._ruta)
+    def _terminar(self, ruta):
+        al_usar = self._al_usar
+        self.cerrar()
+        al_usar(Path(ruta))
+    def _usar_este(self):
+        if self._ruta is not None:
+            self._terminar(self._ruta)
+    def _desde_archivo(self):
+        ruta = filedialog.askopenfilename(parent=self, title=tr('Elige un sonido'),
+                                          filetypes=[(tr('Audio'), '*.wav *.mp3 *.flac *.ogg *.m4a *.aif *.aiff')])
+        if ruta:
+            self._terminar(ruta)
+    def _devolver(self):
+        if self._devuelto:
+            return
+        self._devuelto = True
+        lab = self._lab
+        try:
+            lab._al_cargar_dialogo = None
+            lab.reproductor.detener()
+        except Exception:
+            pass
+        try:
+            riel = lab._riel
+            riel.hide()
+            riel.setParent(lab)
+        except Exception:
+            pass
+    def hideEvent(self, e):
+        if not e.spontaneous():                  # minimizar la ventana del programa no cierra el popup
+            self._devolver()
+        super().hideEvent(e)
 class _EntradaAtajo(Entrada):
     """El campo del atajo global: se escribe pulsando la combinacion."""
     def __init__(self, lab, var):
@@ -930,9 +1017,9 @@ class SfxStudio(QWidget):
             self.carpeta_destino = Path.home() / 'Downloads' / 'SFX Modificado por CineCaptions'
     # -- armado --------------------------------------------------------------
     def _build_ui(self):
-        # Diseño «C»: arriba la barra de la biblioteca (buscador + categorías), al centro el estudio (sin pad XY ni
-        # onda: tarjetas de Tono / Velocidad / Volumen) y a la derecha las reglas y los marcadores. Si la
-        # pantalla es angosta, la columna de la derecha pasa debajo (_acomodar).
+        # Diseño «C»: al centro las reglas de sonido y a la derecha los marcadores. Si la pantalla es angosta, la columna
+        # de la derecha pasa debajo (_acomodar). La barra de la biblioteca (buscador + categorías) ya no está en la
+        # página: vive oculta y la muestra el popup de «Buscar archivo…» (_DialogoBiblioteca).
         self._rejilla = QGridLayout(self)
         self._rejilla.setContentsMargins(0, 0, 12, 0)
         self._rejilla.setSpacing(20)
@@ -941,8 +1028,10 @@ class SfxStudio(QWidget):
         self._sig_chips = None
         self._recientes = [x for x in _leer_lista(ARCHIVO_RECIENTES) if Path(x).is_file()][:10]
         # --- barra de la biblioteca
-        riel = Tarjeta(margenes=(16, 12, 16, 12), espacio=10)
+        riel = Tarjeta(self, margenes=(16, 12, 16, 12), espacio=10)
+        riel.hide()
         self._riel = riel
+        self._al_cargar_dialogo = None
         fila_riel, crl = caja_h(espacio=10)
         self.filtro_var = StringVar('')
         self.filtro_entry = Entrada(self.filtro_var, placeholder=tr('Buscar sonido…'), alto=38, tam=13)
@@ -1182,8 +1271,8 @@ class SfxStudio(QWidget):
     ANCHO_TRES_COLUMNAS = 1120
     ANCHO_MARCADORES = 380
     def _acomodar(self, forzar=False):
-        """Barra de la biblioteca arriba; abajo, el estudio y, a su derecha, reglas y marcadores. Si la
-        pantalla es angosta, reglas y marcadores van debajo del estudio, uno al lado del otro."""
+        """Las reglas de sonido y, a su derecha, los marcadores. Si la pantalla es angosta, los marcadores van debajo.
+        (La barra de la biblioteca ya no va en la página: sale en el popup de «Buscar archivo…».)"""
         # (5.3) el ancho mínimo ya no es fijo: son las tarjetas del centro las que mandan (si no caben las tres columnas, los
         # marcadores bajan debajo en vez de salirse de la ventana)
         r = self._rejilla
@@ -1193,39 +1282,39 @@ class SfxStudio(QWidget):
             return
         self._angosto = angosto
         r = self._rejilla
-        for w in (self._riel, self._centro, self._der):
+        for w in (self._centro, self._der):
             r.removeWidget(w)
-        r.addWidget(self._riel, 0, 0, 1, 2)
-        r.addWidget(self._centro, 1, 0)
+        r.addWidget(self._centro, 0, 0)
         if angosto:
             self._der_capa.setDirection(QBoxLayout.Direction.LeftToRight)
             self._der.setMinimumSize(0, 440)
             self._der.setMaximumSize(16777215, 16777215)
-            r.addWidget(self._der, 2, 0, 1, 2)
+            r.addWidget(self._der, 1, 0, 1, 2)
         else:
             self._der_capa.setDirection(QBoxLayout.Direction.TopToBottom)
             self._der.setMinimumSize(0, 0)
             self._der.setFixedWidth(self.ANCHO_MARCADORES)
-            r.addWidget(self._der, 1, 1)
+            r.addWidget(self._der, 0, 1)
         r.setColumnStretch(0, 1)
         r.setColumnStretch(1, 0)
-        r.setRowStretch(0, 0)
-        r.setRowStretch(1, 1)
+        r.setRowStretch(0, 1)
+        r.setRowStretch(1, 0)
         r.setRowStretch(2, 0)
-    def _ajustar_riel(self):
-        """La barra de arriba (buscador + categorías) crece cuando los chips saltan de línea; el alto mínimo de la pantalla tiene
-        que saberlo o las tarjetas de abajo se montan encima."""
-        r = self._riel
-        try:
-            if r.hasHeightForWidth() and r.width() > 100:
-                h = r.heightForWidth(r.width())
-                if h > 0 and h != r.minimumHeight():
-                    r.setMinimumHeight(h)
-        except Exception:
-            pass
+    def abrir_biblioteca(self, subtitulo, al_usar):
+        """El popup de la biblioteca (_DialogoBiblioteca); al_usar(Path) recibe el sonido elegido."""
+        d = getattr(self, '_dlg_biblioteca', None)
+        if d is not None and ui.vivo(d) and d.isVisible():
+            d.traer()
+            return
+        self._dlg_biblioteca = _DialogoBiblioteca(self, subtitulo, al_usar)
+        self._dlg_biblioteca.show()
+    def _buscar_sonido(self, seccion, indice):
+        """«Buscar archivo…» de un sonido de las reglas: la biblioteca en popup; lo elegido va a ese hueco."""
+        titulo = next((t for s, t, _n, _c in self.SECCIONES_UI if s == seccion), '')
+        sub = tr(titulo) if seccion == 'principal' else tr('{t} · sonido {n}', t=tr(titulo), n=indice + 1)
+        self.abrir_biblioteca(sub, lambda ruta, sc=seccion, k=indice: self._guardar_sonido_simple(sc, k, ruta))
     def resizeEvent(self, e):
         super().resizeEvent(e)
-        self._ajustar_riel()
         self._acomodar()
     def hasHeightForWidth(self):
         # Dentro de la pantalla con desplazamiento, un «alto segun el ancho»
@@ -1311,7 +1400,7 @@ class SfxStudio(QWidget):
     def _pintar_reglas_emojis(self, t):
         """La pestaña «Emojis»: todos los emojis y el sonido de cada uno (emojis_sfx_ui.PanelEmojis)."""
         import emojis_sfx_ui
-        panel = emojis_sfx_ui.PanelEmojis(self._oir_ruta, lambda: self.sonido_seleccionado,
+        panel = emojis_sfx_ui.PanelEmojis(self._oir_ruta, self.abrir_biblioteca,
                                           lambda texto, color='#8FC7FF': self.status.configure(text=texto, text_color=color))
         t.addWidget(panel, 1)
         _aparecer(panel)
@@ -1542,14 +1631,9 @@ class SfxStudio(QWidget):
                     Tooltip(editar, tr('Elige la parte del sonido que se usa y baja o sube su volumen.'))
                     cf.addWidget(editar)
                     sl.addWidget(f1)
-                    f2, cf2 = caja_h(espacio=6)
-                    usar = Boton(tr('Usar el elegido'), lambda _=False, sc=seccion, k=i: self._sonido_simple_elegido(sc, k), alto=30, tam=12)
-                    Tooltip(usar, tr('Cambia este sonido por el que elegiste arriba (busca o toca una categoría).'))
-                    cf2.addWidget(usar, 1)
-                    otro = Boton(tr('Archivo…'), lambda _=False, sc=seccion, k=i: self._sonido_simple_archivo(sc, k), alto=30, tam=12)
-                    Tooltip(otro, tr('Elige un archivo de audio de tu computadora.'))
-                    cf2.addWidget(otro, 1)
-                    sl.addWidget(f2)
+                    buscar = Boton(tr('Buscar archivo…'), lambda _=False, sc=seccion, k=i: self._buscar_sonido(sc, k), alto=30, tam=12)
+                    Tooltip(buscar, tr('Abre la biblioteca de sonidos (o un archivo de tu computadora) para cambiar este sonido.'))
+                    sl.addWidget(buscar)
                     cb.addWidget(sub)
                     if flash == (seccion, i):
                         despues(140, sub.destello, sub)
@@ -1596,12 +1680,7 @@ class SfxStudio(QWidget):
         editar.setEnabled(bool(elegido))
         cf.addWidget(editar)
         sl.addWidget(f1)
-        f2, cf2 = caja_h(espacio=6)
-        usar = Boton(tr('Usar el elegido'), lambda _=False: self._sonido_simple_elegido('principal', 0), alto=30, tam=12)
-        cf2.addWidget(usar, 1)
-        otro = Boton(tr('Archivo…'), lambda _=False: self._sonido_simple_archivo('principal', 0), alto=30, tam=12)
-        cf2.addWidget(otro, 1)
-        sl.addWidget(f2)
+        sl.addWidget(Boton(tr('Buscar archivo…'), lambda _=False: self._buscar_sonido('principal', 0), alto=30, tam=12))
         cb.addWidget(sub)
         if flash == ('principal', 0):
             despues(140, sub.destello, sub)
@@ -1625,16 +1704,6 @@ class SfxStudio(QWidget):
         self.status.configure(text=tr('Sonido {n} guardado: {name}', n=indice + 1, name=Path(ruta).name), text_color='#8FC7FF')
         self._flash_slot = (seccion, indice)
         self._pintar_reglas(animar=False)
-    def _sonido_simple_elegido(self, seccion, indice):
-        if not self.sonido_seleccionado:
-            self.status.configure(text=tr('Elige primero un sonido arriba (busca o toca una categoría).'), text_color='#E0A030')
-            return
-        self._guardar_sonido_simple(seccion, indice, self.sonido_seleccionado)
-    def _sonido_simple_archivo(self, seccion, indice):
-        ruta = filedialog.askopenfilename(parent=self, title=tr('Elige un sonido'),
-                                          filetypes=[(tr('Audio'), '*.wav *.mp3 *.flac *.ogg *.m4a *.aif *.aiff')])
-        if ruta:
-            self._guardar_sonido_simple(seccion, indice, ruta)
     def _sonidos_simples_de_fabrica(self, seccion='inicio'):
         import sfx_rules
         if seccion == 'principal':
@@ -2302,6 +2371,8 @@ class SfxStudio(QWidget):
         self._anotar_reciente(ruta)
         despues(0, self._recargar_arbol, self)      # el chip del sonido elegido se resalta
         self.status.configure(text=tr('{name} · {dur:.2f} s · listo', name=ruta.name, dur=dur), text_color='gray60')
+        if self._al_cargar_dialogo is not None:          # el popup de la biblioteca muestra el elegido
+            self._al_cargar_dialogo(ruta)
         self._reproducir()
     def _anotar_reciente(self, ruta):
         """Los últimos sonidos que abriste (los 10 más recientes, sin repetir)."""

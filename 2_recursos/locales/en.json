@@ -3572,6 +3572,15 @@
     "Proyecto y Sonido más limpios: sin la barra de título; «Crea tu estilo» va junto a Whisper; el slider va sin flechas ni puntos, con arrastre elástico en los extremos, y su píldora es «Solo captions | Con PRO».": "Cleaner Project and Sound pages: no title bar; «Create your style» sits next to Whisper; the slider has no arrows or dots, with elastic dragging at the ends, and its pill is «Captions only | With PRO».",
     "Librerías al día: Pillow 13, Remotion 4.0.536 y three.js 0.186.": "Libraries up to date: Pillow 13, Remotion 4.0.536 and three.js 0.186.",
     "Cerrar el programa ya no puede dar un error aunque quede trabajo en segundo plano.": "Closing the program can no longer cause an error, even with work still running in the background.",
-    "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": "Home no longer freezes when you resize or maximize the window, and if DaVinci Resolve hangs, the CineCaptions window keeps responding."
+    "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": "Home no longer freezes when you resize or maximize the window, and if DaVinci Resolve hangs, the CineCaptions window keeps responding.",
+    "Abre la biblioteca de sonidos (o un archivo de tu computadora) para este emoji.": "Opens the sound library (or a file from your computer) for this emoji.",
+    "Abre la biblioteca de sonidos (o un archivo de tu computadora) para cambiar este sonido.": "Opens the sound library (or a file from your computer) to change this sound.",
+    "Emoji {nombre}": "Emoji {nombre}",
+    "Desde mi computadora…": "From my computer…",
+    "Usar este sonido": "Use this sound",
+    "Toca un sonido para oírlo y elegirlo": "Tap a sound to hear it and pick it",
+    "{t} · sonido {n}": "{t} · sound {n}",
+    "Sonido más limpio: la biblioteca de sonidos ya no ocupa la página; sale en una ventana al pulsar «Buscar archivo…» en cada sonido (y en cada emoji), con el buscador, las categorías y «Desde mi computadora…».": "Cleaner Sound page: the sound library no longer takes up the page; it opens in a window when you press “Browse file…” on each sound (and each emoji), with the search box, the categories and “From my computer…”.",
+    "Inicio: el botón del Registro va junto a minimizar, igual que en el resto de páginas.": "Home: the Log button sits next to minimize, just like on the other pages."
   }
 }

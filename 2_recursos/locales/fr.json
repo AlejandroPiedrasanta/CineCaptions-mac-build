@@ -3572,6 +3572,15 @@
     "Proyecto y Sonido más limpios: sin la barra de título; «Crea tu estilo» va junto a Whisper; el slider va sin flechas ni puntos, con arrastre elástico en los extremos, y su píldora es «Solo captions | Con PRO».": "Projet et Son plus épurés : sans barre de titre ; « Créez votre style » est à côté de Whisper ; le slider n’a plus de flèches ni de points, avec un glissement élastique aux extrémités, et sa pastille est « Sous-titres seuls | Avec PRO ».",
     "Librerías al día: Pillow 13, Remotion 4.0.536 y three.js 0.186.": "Bibliothèques à jour : Pillow 13, Remotion 4.0.536 et three.js 0.186.",
     "Cerrar el programa ya no puede dar un error aunque quede trabajo en segundo plano.": "Fermer le programme ne peut plus provoquer d’erreur, même s’il reste du travail en arrière-plan.",
-    "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": "L’accueil ne se fige plus quand vous redimensionnez ou agrandissez la fenêtre, et si DaVinci Resolve se bloque, la fenêtre de CineCaptions continue de répondre."
+    "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": "L’accueil ne se fige plus quand vous redimensionnez ou agrandissez la fenêtre, et si DaVinci Resolve se bloque, la fenêtre de CineCaptions continue de répondre.",
+    "Abre la biblioteca de sonidos (o un archivo de tu computadora) para este emoji.": "Ouvre la bibliothèque de sons (ou un fichier de votre ordinateur) pour cet emoji.",
+    "Abre la biblioteca de sonidos (o un archivo de tu computadora) para cambiar este sonido.": "Ouvre la bibliothèque de sons (ou un fichier de votre ordinateur) pour changer ce son.",
+    "Emoji {nombre}": "Emoji {nombre}",
+    "Desde mi computadora…": "Depuis mon ordinateur…",
+    "Usar este sonido": "Utiliser ce son",
+    "Toca un sonido para oírlo y elegirlo": "Touchez un son pour l’écouter et le choisir",
+    "{t} · sonido {n}": "{t} · son {n}",
+    "Sonido más limpio: la biblioteca de sonidos ya no ocupa la página; sale en una ventana al pulsar «Buscar archivo…» en cada sonido (y en cada emoji), con el buscador, las categorías y «Desde mi computadora…».": "Page Son plus épurée : la bibliothèque de sons n’occupe plus la page ; elle s’ouvre dans une fenêtre quand vous appuyez sur « Parcourir… » sur chaque son (et chaque emoji), avec la recherche, les catégories et « Depuis mon ordinateur… ».",
+    "Inicio: el botón del Registro va junto a minimizar, igual que en el resto de páginas.": "Accueil : le bouton du Journal se trouve à côté de réduire, comme sur les autres pages."
   }
 }

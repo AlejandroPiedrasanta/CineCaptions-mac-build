@@ -6,7 +6,7 @@ Tercera opción de «Reglas automáticas por palabra» (Simple · Avanzado · Em
   * Izquierda: los ~1 400 emojis por categoría (o los que casen con lo que escribas). Un punto amarillo marca los que cambiaste y uno
     rojo los que apagaste. Tocar un emoji lo selecciona y suena.
   * Derecha: el sonido de ese emoji (de qué familia es, o el que elegiste) y cómo cambiarlo: otra familia de la lista, el sonido que
-    tengas elegido en la biblioteca, un archivo tuyo, «sin sonido» o volver al original.
+    elijas en la biblioteca («Buscar archivo…» abre su popup, que también acepta un archivo tuyo), «sin sonido» o volver al original.
 
 Lo elegido se guarda en preferencias (emojis_sfx.PREF_SONIDOS) y se usa al generar: GO, Generar del editor y las regeneraciones.
 La rejilla es UN solo widget que pinta únicamente las celdas a la vista (con 1 400 widgets sueltos la pantalla se arrastraba).
@@ -20,7 +20,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLay
 import emojis
 import emojis_sfx
 import qt_kit as ui
-from qt_kit import (BooleanVar, Boton, Chip, Desplazable, Entrada, Etiqueta, Tooltip, caja_h, caja_v, ejecutar_en_ui, filedialog, messagebox)
+from qt_kit import (BooleanVar, Boton, Chip, Desplazable, Entrada, Etiqueta, Tooltip, caja_h, caja_v, ejecutar_en_ui, messagebox)
 from qt_kit import QColor
 from i18n import tr
 
@@ -187,14 +187,14 @@ class PanelEmojis(QWidget):
     """La pestaña «Emojis»: rejilla a la izquierda y el sonido del emoji elegido a la derecha.
 
     oir(ruta)   : suena un audio (el reproductor del SFX Lab).
-    elegido()   : la ruta del sonido que hay elegido en la biblioteca, o None.
+    buscar(subtitulo, al_usar) : abre la biblioteca del SFX Lab en un popup; al_usar(Path) recibe el sonido elegido.
     aviso(txt)  : escribe en la barra de estado del SFX Lab.
     """
 
-    def __init__(self, oir, elegido, aviso, padre=None):
+    def __init__(self, oir, buscar, aviso, padre=None):
         super().__init__(padre)
         self._oir = oir
-        self._elegido = elegido
+        self._abrir_biblioteca = buscar
         self._aviso = aviso
         self.asignados = emojis_sfx.asignados()
         self.eid = None
@@ -332,14 +332,9 @@ class PanelEmojis(QWidget):
         self._lista = Desplazable(margenes=(0, 0, 6, 0), espacio=4, estirar_final=True)
         self._armar_lista()
         v.addWidget(self._lista, 1)
-        pie, cp = caja_h(espacio=6)
-        usar = Boton(tr('Usar el elegido'), self._usar_elegido, alto=32, tam=12)
-        Tooltip(usar, tr('Pone en este emoji el sonido que tengas elegido arriba, en la biblioteca (busca o toca una categoría).'))
-        cp.addWidget(usar, 1)
-        otro = Boton(tr('Archivo…'), self._usar_archivo, alto=32, tam=12)
-        Tooltip(otro, tr('Elige un archivo de audio de tu computadora para este emoji.'))
-        cp.addWidget(otro, 1)
-        v.addWidget(pie)
+        buscar = Boton(tr('Buscar archivo…'), self._buscar_archivo, alto=32, tam=12)
+        Tooltip(buscar, tr('Abre la biblioteca de sonidos (o un archivo de tu computadora) para este emoji.'))
+        v.addWidget(buscar)
         self._restablecer = ui.Enlace(tr('Quitar todos mis cambios'), self._restablecer_todos, 11, color=TEXT_MUTED, color_hover=ui.ACCENT_CLARO)
         v.addWidget(self._restablecer, 0, Qt.AlignmentFlag.AlignLeft)
         return tarjeta
@@ -471,17 +466,10 @@ class PanelEmojis(QWidget):
         if self._solo_var.get():
             self._pintar_rejilla()
 
-    def _usar_elegido(self):
-        ruta = self._elegido()
-        if not ruta:
-            self._aviso(tr('Elige primero un sonido arriba (busca o toca una categoría).'), '#E0A030')
+    def _buscar_archivo(self):
+        if not self.eid:
             return
-        self._poner(str(ruta))
-
-    def _usar_archivo(self):
-        ruta = filedialog.askopenfilename(parent=self, title=tr('Elige un sonido'), filetypes=[(tr('Audio'), EXTENSIONES_AUDIO)])
-        if ruta:
-            self._poner(str(Path(ruta).resolve()))
+        self._abrir_biblioteca(tr('Emoji {nombre}', nombre=nombre_de(self.eid)), lambda ruta: self._poner(str(Path(ruta).resolve())))
 
     def _restablecer_todos(self):
         if not self.asignados:
