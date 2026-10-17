@@ -136,7 +136,10 @@ def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, e
     t1 = re.sub(r'CharacterSpacing = Input \{ Value = [^,]*,', f'CharacterSpacing = Input {{ Value = {_n(esp)},', t1, count=1)
     t1 = re.sub(r'(Center = Input \{ Value = \{ )[^}]*( \},)', lambda m: f'{m.group(1)}0.5, {_n(y)}{m.group(2)}', t1, count=1)
     colores = f'Red1 = Input {{ Value = {_n(color[0])}, }}, Green1 = Input {{ Value = {_n(color[1])}, }}, Blue1 = Input {{ Value = {_n(color[2])}, }}, '
-    t1 = t1.replace('UseFrameFormatSettings = Input { Value = 1, }, ', 'UseFrameFormatSettings = Input { Value = 1, }, ' + colores, 1)
+    # v5.5.10: sombra oscura suave (elemento 4, forma de LETRA) para que el texto claro se lea sobre fondos claros; el halo del macro solo no basta.
+    import kinetic_elementos as E
+    sombra = ' '.join(E._sombra(4, 0.55, -0.006, 12) + ['ElementShape4 = Input { Value = 0, },']) + ' '
+    t1 = t1.replace('UseFrameFormatSettings = Input { Value = 1, }, ', 'UseFrameFormatSettings = Input { Value = 1, }, ' + colores + sombra, 1)
     tools = tools[:i] + t1 + tools[j:]
     # el tamaño se reduce solo si el texto (varias palabras principales) no cabe en el 90 % del ancho
     # ancho aproximado por numero de letras (el DataWindow de un Text+ suelto no llega dentro del macro): 0,80 em por letra

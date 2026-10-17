@@ -484,6 +484,25 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.5.10', [
+        'Creativo: a la derecha, un móvil grande con una foto de fondo y los captions encima, como quedará en el reel; el play va dentro del móvil.',
+        'Creativo: el móvil enseña exactamente el tema que elegiste en Proyecto (los 6 temas), también al dar play, y cambia en tiempo real al marcar otra palabra como Principal.',
+        'Creativo: el móvil es más realista (barra de estado, sombra, reflejo del cristal y barrita de avance al reproducir).',
+        'Creativo: los captions entran ANIMADOS como en cada tema (pop con rebote, cintas que se deslizan, subrayados que se dibujan, destellos…) y el bloque elegido se repite en bucle; play nuevo con el avance en un anillo, botón para silenciar al pasar el ratón y un resplandor bajo el móvil.',
+        'Tema 1: la palabra que marcas como Principal en Creativo es la que sale grande en Resolve (antes a veces salía la de al lado).',
+        'Creativo más limpio: sin la barra de abajo; el tamaño del texto y el botón «Generar» van junto a «Más herramientas».',
+        '«Generar» en Creativo te lleva a Inicio y el avance sale en el orbe, como con GO, con las correcciones que hiciste.',
+        'Inicio: solo quedan los chips Estilo, Edición PRO y Motions completo.',
+        'Proyecto: el slider de temas se adapta a cualquier tamaño de ventana sin desbordarse, y sus tarjetas ya no repiten el nombre del tema: solo llevan la píldora «Con PRO / Solo captions».',
+        'Videos a 29,97 fps: el timeline se crea con sus fps (antes quedaba a 24).',
+        'Temas 4, 5, 6 y Referencia: los captions llevan una sombra suave para leerse sobre fondos claros.',
+        'Tema 5: la palabra grande «detrás de la persona» ya no queda tapada cuando la persona ocupa su sitio: se pone delante.',
+        'Proyecto con la Edición PRO: a la derecha, una barra con los motions que pondrá GO (píldora bajo los captions, B-roll, captions detrás de ti, Motions completo, gancho del inicio, escenas, kit, gráficos y plantillas); un clic los enciende o apaga y a la izquierda un móvil enseña el ejemplo real de cada uno. Va de la mano con la página Efectos.',
+        'Proyecto y Sonido más limpios: sin la barra de título; «Crea tu estilo» va junto a Whisper; el slider va sin flechas ni puntos, con arrastre elástico en los extremos, y su píldora es «Solo captions | Con PRO».',
+        'Librerías al día: Pillow 13, Remotion 4.0.536 y three.js 0.186.',
+        'Cerrar el programa ya no puede dar un error aunque quede trabajo en segundo plano.',
+        'Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.',
+    ]),
     ('5.5.9', [
         'Motions completo con el estilo de los mejores reels: ya no repite los captions; arriba, un titular que aparece palabra a palabra (la idea clave en cursiva azul, tachada, en gris o en píldora) y debajo una tarjeta que explica lo que se dice (grabar, horas, material, encontrar, cortar, versiones, ideas, fechas, lugares, entradas, música, premios, compartir…), con el cursor que hace clic y transiciones fluidas sobre un mismo fondo claro. Sin muñecos ni fotos de internet.',
         'Proyecto: el slider de temas es más grande y cada tema enseña su ejemplo con o sin Edición PRO (la píldora «Con PRO / Solo captions» de la tarjeta), el botón de la Edición PRO va al lado de «Usar este tema», el nombre del tema entra letra a letra y elegir un tema tiene su animación (pulso, anillo y destellos). Las tarjetas ya no llevan la «V».',

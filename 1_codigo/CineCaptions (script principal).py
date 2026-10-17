@@ -1901,7 +1901,8 @@ class PlantillasWindow(QWidget):
             separador.setStyleSheet(ui.traducir_hoja('QFrame { background-color: #1E2A42; border: none; }'))
             self.tarjeta.capa.addWidget(separador)
         cab, ch = caja_h(espacio=12)
-        ch.addWidget(Etiqueta(tr('Temas') if plantillas.SOLO_TEMAS else tr('Pack de estilos'), 18, peso='medio', color='#FFFFFF'))
+        if not plantillas.SOLO_TEMAS:                 # v5.5.10: con los temas, sin el título «Temas» (lo pidió el usuario)
+            ch.addWidget(Etiqueta(tr('Pack de estilos'), 18, peso='medio', color='#FFFFFF'))
         self.cuenta_lbl = Etiqueta('', 13, color=TEXT_MUTED)
         ch.addWidget(self.cuenta_lbl)
         ch.addStretch(1)
@@ -1914,8 +1915,16 @@ class PlantillasWindow(QWidget):
             self.crear_btn.setIcon(icono_crear)
             self.crear_btn.setIconSize(QSize(15, 15))
         Tooltip(self.crear_btn, tr('Elige hasta 3 estilos de una galería y crea tu propio pack en un clic.'))
-        ch.addWidget(self.crear_btn)
+        capa_audio = getattr(master, '_capa_franja_audio', None) if franja is not None else None
+        if capa_audio is not None:                    # v5.5.10 (el usuario: «sube Crea tu estilo, a la par de Whisper»): a la franja del audio
+            capa_audio.addSpacing(4)
+            capa_audio.addWidget(self.crear_btn)
+        else:
+            ch.addWidget(self.crear_btn)
         self.tarjeta.capa.addWidget(cab)
+        self._cab = cab
+        self._cab_vacia = capa_audio is not None and plantillas.SOLO_TEMAS     # sin título ni botón: solo sale si hay aviso (vistas reales)
+        cab.setVisible(not self._cab_vacia)
         self.nota_modo = Etiqueta('', 13, color=ui.AMBAR, envolver=True)
         self.nota_modo.hide()
         self.tarjeta.capa.addWidget(self.nota_modo)
@@ -1930,7 +1939,12 @@ class PlantillasWindow(QWidget):
         self.carrusel.elegida.connect(self._elegir)
         self.carrusel.centrada.connect(self._pintar_info)
         self.carrusel.anadir.connect(self._importar_drt)
-        self.tarjeta.capa.addWidget(self.carrusel, 1)
+        # v5.5.10: con la PRO en juego, a los lados del slider: el ejemplo real (izquierda) y los motions que pondrá GO (derecha), en las mismas
+        # preferencias que la página Efectos (pro_lateral_ui)
+        import pro_lateral_ui
+        self.lateral_pro = pro_lateral_ui.FilaPro(self.carrusel, ir_efectos=lambda: self.app.ir_a('efectos'))
+        self.lateral_pro.cambiado.connect(self._cambio_lateral_pro)
+        self.tarjeta.capa.addWidget(self.lateral_pro, 1)
         # el panel del estilo que está al centro: nombre, aviso de tipografías, nota, estructura y botones
         self._carta_actual = None
         self.info_w = QWidget()
@@ -2083,6 +2097,7 @@ class PlantillasWindow(QWidget):
         self._realzar()
         if self.on_elegir:
             self.on_elegir(valor)
+        self.lateral_pro.refrescar()                  # v5.5.10: los Temas 5 y 6 son siempre la PRO: sus lados aparecen solos
     def _valor_actual(self):
         """El valor que está en uso (el de la tarjeta con «En uso»)."""
         if self.modo == 'normal':
@@ -2165,6 +2180,24 @@ class PlantillasWindow(QWidget):
         except Exception:
             pass
         self._pintar_info()
+        self.lateral_pro.refrescar()                                                  # v5.5.10: los lados (ejemplo y motions) entran o salen
+        try:
+            self.app._pintar_opciones_go()
+        except Exception:
+            pass
+
+    def _poner_cuenta(self, texto, silencioso=False):
+        """El aviso de la cabecera del slider (vistas reales de Resolve, cuántos packs). v5.5.10: con «Crea tu estilo» en la franja del audio la
+        cabecera queda vacía y solo se ve mientras hay un aviso. El avance de un render SILENCIOSO (el que se pide solo al conectar Resolve) no
+        la abre: si no, la fila aparecía y desaparecía y el slider daba saltos mientras el usuario lo miraba."""
+        if getattr(self, '_cab_vacia', False):
+            if silencioso:
+                return
+            self._cab.setVisible(bool(texto))
+        self.cuenta_lbl.configure(text=texto)
+
+    def _cambio_lateral_pro(self):
+        """Un interruptor de los motions de la PRO (lado derecho): Inicio repinta sus chips (p. ej. «Motions completo»)."""
         try:
             self.app._pintar_opciones_go()
         except Exception:
@@ -2295,7 +2328,7 @@ class PlantillasWindow(QWidget):
                     packs.append(p)
         if not packs:
             if not silencioso:
-                self.cuenta_lbl.configure(text=tr('Todas las vistas reales están al día'))
+                self._poner_cuenta(tr('Todas las vistas reales están al día'))
             return
         self._renderizando = True
         estado = {'texto': tr('Abriendo Resolve…'), 'hechos': 0, 'errores': []}
@@ -2313,7 +2346,7 @@ class PlantillasWindow(QWidget):
                 estado['hechos'] += 1
         def avance():
             if getattr(self, '_renderizando', False) and vivo(self):
-                self.cuenta_lbl.configure(text=estado['texto'])
+                self._poner_cuenta(estado['texto'], silencioso=silencioso)
                 despues(300, avance, self)
         def fin(_r, _e):
             self._renderizando = False
@@ -2376,7 +2409,7 @@ class PlantillasWindow(QWidget):
             self.nota_modo.configure(text=tr('No hay plantillas de básicos: añade un .drb con clips \'basico inferior 1\', \'traducion inferior 1\'… (botón de arriba), o queda la clásica.'), text_color='#E0A030')
             self.nota_modo.show()
         try:
-            self.cuenta_lbl.configure(text=tr('{len} de básicos', len=len(packs)) if packs else '')
+            self._poner_cuenta(tr('{len} de básicos', len=len(packs)) if packs else '')
         except Exception:
             pass
         return cartas
@@ -2453,7 +2486,7 @@ class PlantillasWindow(QWidget):
             cartas.append(estilos_slider.Carta('__anadir__', tr('Añadir plantilla (.drb)'), tipo='anadir', detalle=tr('Exporta una bandeja desde Resolve y súbela aquí: queda guardada como un estilo más.')))
             self.carrusel.poner_cartas(cartas, self._valor_actual())
             try:
-                self.cuenta_lbl.configure(text='' if plantillas.SOLO_TEMAS else (tr('1 pack') if len(packs) == 1 else tr('{n} packs', n=len(packs))))
+                self._poner_cuenta('' if plantillas.SOLO_TEMAS else (tr('1 pack') if len(packs) == 1 else tr('{n} packs', n=len(packs))))
             except Exception:
                 pass
             self._realzar()
@@ -3631,9 +3664,14 @@ class WordTagWindow(QWidget):
             w.setVisible(not minimo)
         barra = getattr(self, 'herr_barra', None)
         if barra is not None:
-            barra.mostrar_herramientas(not minimo)          # el tamaño del párrafo y «Generar» se quedan siempre
+            barra.mostrar_herramientas(not minimo)
+            barra.setVisible(not minimo)                    # v5.5.10: sin herramientas no hay barra (el tamaño y «Generar» viven en la columna derecha)
         if hasattr(self, 'mas_btn'):
             self.mas_btn.configure(text=tr('Más herramientas') if minimo else tr('Menos herramientas'))
+    def showEvent(self, e):
+        super().showEvent(e)
+        # v5.5.10: al volver a Creativo (quizá con otro tema elegido en Proyecto) la vista del móvil se rehace con el tema de AHORA
+        self._vt_al_cambiar_tamano()
     def ajustar_densidad(self, nivel):
         """v5.2: en pantallas chicas la columna de la derecha cede sitio a las palabras."""
         try:
@@ -3808,12 +3846,16 @@ class WordTagWindow(QWidget):
             casilla_cap.setFixedHeight(34)
             Tooltip(casilla_cap, tr('Encendida: cada palabra importante del contexto, la principal y el complemento empieza con mayúscula. Apagada: el texto sale tal cual lo dejaste en la ventana de selección.'))
             ch.addWidget(casilla_cap)
+        # v5.5.10 (pedido: «la barra elimínala; el tamaño y el botón Generar a la par de Más herramientas»): van en la fila de arriba, junto a
+        # «Más herramientas»; la barra solo aparece con «Más herramientas» (_poner_editor_minimo)
         self.control_tamano = editor_ui.ControlTamano(self.tam_letra, self.TAM_LETRA_RANGO[0], self.TAM_LETRA_RANGO[1], self.TAM_LETRA_DEFECTO, self._poner_tam_letra)
         Tooltip(self.control_tamano, tr('Tamaño de las palabras del párrafo: arrastra para agrandar o achicar.'))
-        herr.agregar_fijo(self.control_tamano)
-        self.generar_btn = Boton(tr('Generar'), self._continuar, tipo='primario', alto=34, tam=13, negrita=True, ancho=118)
+        self.generar_btn = Boton(tr('Generar'), self._continuar, tipo='primario', alto=36, tam=15, negrita=True, ancho=150)
         Tooltip(self.generar_btn, tr('Sigue con tus marcas y genera los subtítulos.'))
-        herr.agregar_fijo(self.generar_btn)
+        cch.addSpacing(8)
+        cch.addWidget(self.control_tamano)
+        cch.addSpacing(4)
+        cch.addWidget(self.generar_btn)
         self.herr_barra = herr
         capa.addWidget(herr)
         cuerpo, cc = caja_h(espacio=20)
@@ -3849,39 +3891,56 @@ class WordTagWindow(QWidget):
         cl.addWidget(self.atajos_label)
         self.ayuda_label = self.atajos_label
         cc.addWidget(lienzo_card, 1)
-        derecha = Desplazable(espacio=16, margenes=(0, 0, 8, 0))
+        # v5.5.10 (pedido: «elimina "Así se verá este bloque" y todo lo de abajo; solo el mockup en grande, con el play dentro»): la columna
+        # derecha es SOLO el móvil, a todo el alto. El resto de la tarjeta (título, tiempo, SFX, estilo del bloque, «Comprobar en Resolve») se
+        # sigue creando —el código lo actualiza— pero vive en un contenedor que nunca se enseña.
+        derecha = QWidget()
+        dcapa = QVBoxLayout(derecha)
+        dcapa.setContentsMargins(0, 0, 0, 0)
+        dcapa.setSpacing(12)
         derecha.setFixedWidth(400)
         self._derecha = derecha
+        self._piezas_ocultas = QWidget(self)
+        self._piezas_ocultas.hide()
         self.tarjeta_bloque = Tarjeta(margenes=(18, 14, 18, 14), espacio=8)
+        self.tarjeta_bloque.setParent(self._piezas_ocultas)
         cab, ccab = caja_h(espacio=8)
         self.tarjeta_bloque.titulo = Etiqueta(tr('Así se verá este bloque'), 16, peso='medio', color='#FFFFFF')
         ccab.addWidget(self.tarjeta_bloque.titulo)
         ccab.addStretch(1)
         self.reproduccion_lbl = Etiqueta('', 12, color=TEXT_MUTED)
         ccab.addWidget(self.reproduccion_lbl)
-        self.reproducir_btn = editor_ui.BotonPlay(tr('Reproducir todo'), tr('Detener'), lado=36)
-        self.reproducir_btn.clicked.connect(lambda _=False: self._alternar_reproduccion())
-        ccab.addWidget(self.reproducir_btn)
         self.tarjeta_bloque.capa.addWidget(cab)
         if getattr(self, '_guion', False):
             import guion_vista
-            self.vista_bloque = guion_vista.MarcoVistaGuion(alto_min=200)      # v5.10: el bloque con la geometría real de Resolve
-            self.vista_bloque.setFixedHeight(210)
+            self.vista_bloque = guion_vista.MarcoVistaGuion(alto_min=200, movil=True)      # v5.10: el bloque con la geometría real de Resolve
         else:
-            self.vista_bloque = MarcoVista(alto_min=150)
-            self.vista_bloque.setFixedHeight(156)
+            self.vista_bloque = MarcoVista(alto_min=150, movil=True)
+        self.vista_bloque.setMinimumHeight(360)
+        self.vista_bloque.al_cambiar_tamano = self._vt_al_cambiar_tamano      # (los cuadros del tema se rehacen al tamaño nuevo)
+        dcapa.addWidget(self.vista_bloque, 1)
+        self.reproducir_btn = editor_ui.BotonPlay(tr('Reproducir todo'), tr('Detener'), lado=62)
+        self.reproducir_btn.clicked.connect(lambda _=False: self._alternar_reproduccion())
+        self.vista_bloque.poner_boton_en_pantalla(self.reproducir_btn)          # el play, dentro de la pantalla del móvil
+        try:                                                                      # v5.5.10: silenciar, al pasar el ratón por el play (se recuerda)
+            import ajustes_ui
+            mudo = bool(ajustes_ui.leer_prefs().get('creativo_mudo', False))
+        except Exception:
+            mudo = False
+        self.sonido_btn = editor_ui.BotonSonido(mudo=mudo, lado=40)
+        self.sonido_btn.clicked.connect(lambda _=False: self._guardar_mudo())
+        self.vista_bloque.poner_boton_secundario(self.sonido_btn)
         fila_v, cfv = caja_h(espacio=8)
-        cfv.addWidget(self.vista_bloque, 1)
         self.mini_pos = editor_ui.MiniPosicion()          # v5.8: dónde cae el bloque en el cuadro del video (arriba / centro / abajo)
         self.mini_pos.setFixedHeight(156)
         self.mini_pos.hide()
         Tooltip(self.mini_pos, tr('Dónde cae este estilo en el cuadro del video. La posición la pone el estilo que elegiste en Proyecto (aproximada).'))
         cfv.addWidget(self.mini_pos)
         self.tarjeta_bloque.capa.addWidget(fila_v)
-        fila_b, cfb = caja_h(espacio=8)
+        fila_b = QWidget()                     # v5.5.10: salta de línea (el tiempo + «SFX: …» largo desbordaba la columna de 400 px)
+        cfb = ui.FlujoCapa(fila_b, 8, 6)
         self.tiempo_bloque = Etiqueta('', 13, color=TEXT_MUTED)
         cfb.addWidget(self.tiempo_bloque)
-        cfb.addStretch(1)
         self.sfx_bloque = Chip('', ui.ACCENT_CLARO, alto=26, tam=12)
         self.sfx_bloque.hide()
         cfb.addWidget(self.sfx_bloque)
@@ -3908,7 +3967,6 @@ class WordTagWindow(QWidget):
         self._cache_estilos_pack = None
         self.blocks_label = Etiqueta('', 12, color='#5A6B87')
         self.tarjeta_bloque.capa.addWidget(self.blocks_label)
-        derecha.agregar(self.tarjeta_bloque)
         self.tarjeta_orto = Tarjeta(titulo=tr('Revisión de ortografía'), espacio=10)
         fila_o, cfo = caja_h(espacio=8)
         self.orto_estado = Etiqueta('', 13, color=TEXT_MUTED, envolver=True)
@@ -3955,10 +4013,14 @@ class WordTagWindow(QWidget):
         cfe.setHorizontalSpacing(10)
         cfe.setVerticalSpacing(4)
         self._selector_espacio(cfe)         # se crean (guardan las preferencias) pero no se ponen en pantalla
-        derecha.agregar(self.tarjeta_ajustes)
+        # (los ajustes del bloque solo con «Más herramientas»: debajo del móvil, con su propio desplazamiento)
+        ajustes_extra = Desplazable(espacio=12, margenes=(0, 0, 8, 0))
+        ajustes_extra.agregar(self.tarjeta_ajustes)
+        ajustes_extra.setMaximumHeight(330)
+        dcapa.addWidget(ajustes_extra)
         cc.addWidget(derecha)
         capa.addWidget(cuerpo, 1)
-        self._avanzado_editor = [w_ for w_ in (self.guardado_chip, self.tarjeta_ajustes, self.atajos_label) if w_ is not None]
+        self._avanzado_editor = [w_ for w_ in (self.guardado_chip, ajustes_extra, self.atajos_label) if w_ is not None]
         try:
             import ajustes_ui
             minimo = ajustes_ui.leer_prefs().get('editor_minimo', True) is not False
@@ -5303,7 +5365,7 @@ class WordTagWindow(QWidget):
         except Exception:
             formato = 'v'
         comp = composicion.valida(getattr(self.master, 'composicion', None))
-        if actual.get('y') and not getattr(self, '_guion', False):          # (el estilo «guion» ya enseña su posición real en la propia vista)
+        if actual.get('y') and not getattr(self, '_guion', False) and not getattr(self.vista_bloque, '_movil', False):   # (el estilo «guion» ya enseña su posición real en la propia vista; v5.5.10: el móvil también)
             self.mini_pos.poner(formato, actual['y'], _color_de_variante(actual.get('color'), '#F5B84B'), comp)
             self.mini_pos.show()
         else:
@@ -5374,6 +5436,102 @@ class WordTagWindow(QWidget):
             self.sfx_bloque.show()
         else:
             self.sfx_bloque.hide()
+        self._vt_quieto(idx)
+    # -- v5.5.10 (pedido: «en Creativo la vista previa REAL de cómo se verá en Resolve, del tema que estoy usando, y en tiempo real»): los cues del
+    #    planificador del TEMA ELEGIDO (con las marcas de ahora) dibujados como GO sin Resolve (vista_tema.py). Se replanifica en un hilo cuando cambian
+    #    las marcas (_version), el tema o el tamaño del móvil; mientras tanto se ve el cuadro anterior (o, la primera vez, la vista aproximada).
+    def _vt_estilo(self):
+        pack = getattr(self.master, 'plantilla_sel', '') or ''
+        if self.modo != self.MODO_MARCAS:
+            return pack, None
+        try:
+            import vista_tema
+            try:
+                formato = self.master._formato_en_juego() or 'v'
+            except Exception:
+                formato = 'v'
+            return pack, vista_tema.estilo_de_pack(pack, formato)
+        except Exception:
+            registro.excepcion(origen='Creativo · vista del tema')
+            return pack, None
+
+    def _vt_preparar(self):
+        """Pide (si hace falta) los cuadros del tema para las marcas de ahora. Devuelve False si este tema no tiene vista exacta."""
+        pack, estilo = self._vt_estilo()
+        if estilo is None:
+            self._vt = None
+            self.vista_bloque.esperando_tema = False
+            return False
+        # (mientras llega la primera vista exacta, el móvil enseña la foto limpia, no la maqueta aproximada con otro estilo)
+        self.vista_bloque.esperando_tema = (getattr(self, '_vt', None) or {}).get('cuadros') is None
+        w, h = self.vista_bloque.tamano_pantalla()
+        if w < 60 or h < 120:
+            return True
+        clave = (self._version, pack, w, h)
+        vt = getattr(self, '_vt', None) or {}
+        if vt.get('clave') == clave or vt.get('pidiendo') == clave:
+            return True
+        self._vt = dict(vt, pidiendo=clave)
+        palabras, roles = [dict(p) for p in self.palabras], list(self.roles)
+        idioma, fin_video, ancla = self.idioma, self._fin_video_guion(), self._ancla_guion()
+        try:
+            video = self.master.video_var.get().strip().strip('"') or None       # (el Tema 5 saca de él el color de la frase clave, como Generar)
+        except Exception:
+            video = None
+
+        def trabajo():
+            import vista_tema
+            cues = vista_tema.planificar(palabras, roles, pack, estilo, idioma=idioma, fin_video=fin_video, ancla_guion=ancla, video=video)
+            return vista_tema.Cuadros(cues, estilo, w, h)
+
+        def fin(cuadros, error):
+            actual = getattr(self, '_vt', None) or {}
+            if actual.get('pidiendo') != clave:
+                return                                          # llegó otra petición después: esta ya no vale
+            self.vista_bloque.esperando_tema = False
+            if error is not None or cuadros is None:
+                registro.aviso(tr('Creativo: no pude dibujar la vista exacta del tema; uso la aproximada.'), 'creativo', detalle=str(error or ''))
+                self._vt = {'clave': clave, 'cuadros': None}
+                self.vista_bloque.poner_animador(None)
+                self.vista_bloque.poner_cuadro(None)
+                return
+            self._vt = {'clave': clave, 'cuadros': cuadros}
+            if getattr(self, '_repro', None) is None:
+                self._vt_quieto(getattr(self, '_ultimo_idx', 0) or 0)
+        correr_en_hilo(self, trabajo, fin)
+        return True
+
+    def _vt_quieto(self, idx):
+        """Vista quieta: el bloque del tema donde cae la palabra idx, con todos sus elementos ya dentro."""
+        if not self._vt_preparar():
+            self.vista_bloque.poner_animador(None)
+            self.vista_bloque.poner_cuadro(None)
+            return
+        cu = (getattr(self, '_vt', None) or {}).get('cuadros')
+        if cu is None or not cu.cues:
+            return
+        try:
+            w = self.palabras[idx] if 0 <= idx < len(self.palabras) else {}
+            t = float(w.get('start') or 0.0)
+            # v5.5.10 (pedido: «faltan las animaciones, están muy fijos»): el bloque se repite ANIMADO en bucle (entra, se queda, se va)
+            self.vista_bloque.poner_animador(cu, k=cu.cue_de_palabra(w.get('word'), t))
+        except Exception:
+            registro.excepcion(origen='Creativo · vista del tema')
+
+    def _guardar_mudo(self):
+        try:
+            import ajustes_ui
+            ajustes_ui.guardar_prefs({'creativo_mudo': bool(self.sonido_btn.mudo)})
+        except Exception:
+            pass
+
+    def _vt_al_cambiar_tamano(self):
+        if getattr(self, '_repro', None) is not None or not hasattr(self, 'reproducir_btn'):
+            return                                              # (aún construyendo la ventana, o reproduciendo: el reloj ya pinta)
+        try:
+            self._vt_quieto(getattr(self, '_ultimo_idx', 0) or 0)
+        except Exception:
+            registro.excepcion(origen='Creativo · vista del tema')
     # -- v5.4: la vista REAL: reproduce todo el parrafo, bloque a bloque, con sus animaciones, el emoji animado y sus sonidos --
     def _glifo_emoji_de(self, eid):
         try:
@@ -5418,6 +5576,7 @@ class WordTagWindow(QWidget):
         self._repro = None
         try:
             self._reloj_repro.stop()
+            self.vista_bloque.poner_progreso(None)
             self.vista_bloque.animar(None)
             self.lienzo.sonando(None)
             self.reproducir_btn.poner_activo(False)
@@ -5493,8 +5652,15 @@ class WordTagWindow(QWidget):
         else:
             self.vista_bloque.poner(r['lineas'], imagen=imagen)
         self.vista_bloque.animar(max(0.0, t - float(b['start'])), salida=max(0.0, min(1.0, (t - (fin_b - 0.12)) / 0.12)))
-        for seg, ruta in r['sonidos']:                  # los sonidos que pasaron desde el tic anterior
-            if r['ultimo_t'] < seg <= t:
+        cu = (getattr(self, '_vt', None) or {}).get('cuadros')           # v5.5.10: el tema elegido, exacto y animado, en el instante t
+        if cu is not None and cu.cues:
+            self.vista_bloque.poner_animador(cu, t=t)
+        avance = (t - r['ini']) / max(0.1, fin - r['ini'])
+        self.vista_bloque.poner_progreso(avance)
+        self.reproducir_btn.poner_progreso(avance)
+        mudo = bool(getattr(getattr(self, 'sonido_btn', None), 'mudo', False))
+        for seg, ruta in r['sonidos']:                  # los sonidos que pasaron desde el tic anterior (no, si se silenció)
+            if r['ultimo_t'] < seg <= t and not mudo:
                 self._escuchar_sfx(ruta)
         r['ultimo_t'] = t
 
@@ -6613,6 +6779,10 @@ class SubtitleApp(QWidget):
         self.ctrl_ventana.accion.connect(self._accion_isla)
         self.marca_cinema = isla_ui.MarcaCinema(self, LOGO_MARCA_PATH if LOGO_MARCA_PATH.exists() else None)       # el logo, arriba a la izquierda de Inicio
         self.marca_cinema.poner_en_inicio(getattr(self, '_pagina_actual', 'inicio') == 'inicio')
+        # v5.5.10: las páginas ya no llevan barra de título (el usuario las quitó una a una): el botón del Registro (avisos y errores) queda
+        # flotando arriba a la derecha, junto a los controles de la ventana, en todas menos Inicio (que tiene el suyo en su fila de avisos)
+        self.registro_flotante = registro_ui.BotonRegistro(self)
+        self.registro_flotante.setVisible(getattr(self, '_pagina_actual', 'inicio') != 'inicio')
         self.marco_ventana = isla_ui.MarcoVentana(self)
         self.marco_ventana.setGeometry(self.rect())
         # el estado de Resolve (la tarjeta de antes) sale debajo del punto de la isla
@@ -6629,11 +6799,18 @@ class SubtitleApp(QWidget):
         marca = getattr(self, 'marca_cinema', None)
         if marca is not None and marca.isVisible():
             marca.raise_()
+        rf = getattr(self, 'registro_flotante', None)
+        if rf is not None and rf.isVisible():
+            rf.raise_()
     def _reposicionar_isla(self):
         if not hasattr(self, 'isla'):
             return
         self.isla.reposicionar()
         self.ctrl_ventana.reposicionar()
+        rf = getattr(self, 'registro_flotante', None)
+        if rf is not None:                                                    # a la izquierda de los controles de la ventana, a su altura
+            c = self.ctrl_ventana
+            rf.move(c.x() - rf.width() - 10, c.y() + (c.height() - rf.height()) // 2)
         if hasattr(self, 'marca_cinema'):
             self.marca_cinema.reposicionar(self.isla)
         self.marco_ventana.setGeometry(self.rect())
@@ -6813,7 +6990,7 @@ class SubtitleApp(QWidget):
         flags = 0x00000008 | 0x00000200 if sys.platform.startswith('win') else 0
         subprocess.Popen(orden, creationflags=flags, close_fds=True)
         QApplication.instance().quit()
-    def _nueva_pagina(self, clave, titulo, subtitulo, desplazable=True):
+    def _nueva_pagina(self, clave, titulo, subtitulo, desplazable=True, con_barra=True):
         pag = QWidget()
         capa = QVBoxLayout(pag)
         capa.setContentsMargins(40, 86, 28, 22)
@@ -6822,6 +6999,7 @@ class SubtitleApp(QWidget):
             barra = BarraTitulo(NUMERO_PAGINA[clave], titulo, subtitulo)
             t, s = barra.titulo, barra.sub
             capa.addWidget(barra)
+            barra.setVisible(con_barra)                # v5.5.10: Proyecto va sin su barra de título (lo pidió el usuario); existe, oculta, por las referencias
         else:
             cab, cc = caja_v(espacio=6)
             import mograf_ui
@@ -6897,7 +7075,8 @@ class SubtitleApp(QWidget):
                 import mograf_ui
                 despues(10, lambda p=pagina: mograf_ui.entrada_escalonada(efectos_ui.tarjetas_de(p)), self)
                 titulo_pagina = self._cabeceras.get(clave, (None, None))[0]
-                if hasattr(titulo_pagina, 'revelar'):
+                barra = titulo_pagina.parentWidget() if titulo_pagina is not None else None
+                if hasattr(titulo_pagina, 'revelar') and not (barra is not None and barra.isHidden()):     # (Proyecto y Sonido: barra oculta)
                     despues(40, titulo_pagina.revelar, self)
         except Exception:
             pass
@@ -6906,6 +7085,10 @@ class SubtitleApp(QWidget):
             self._pintar_go_reposo()
         if hasattr(self, 'marca_cinema'):
             self.marca_cinema.poner_en_inicio(clave == 'inicio')
+        if hasattr(self, 'registro_flotante'):
+            self.registro_flotante.setVisible(clave != 'inicio')
+            if clave != 'inicio':
+                self.registro_flotante.raise_()
         if clave == 'editor':
             self._al_entrar_en_creativo()          # v5.3.2: detecta el audio / la línea de tiempo de Proyecto (y abre el editor si ya hay palabras)
     def _marcar_nav(self, clave):
@@ -7222,23 +7405,16 @@ class SubtitleApp(QWidget):
         except Exception:
             pro_tema = False
         txt_pro = tr('sí') if self._go_pro() else (tr('la del tema') if pro_tema else tr('no'))
-        txt_vis = (tr('los de la PRO') if (self._go_pro() or pro_tema) else tr('sí')) if self._go_visuales() else tr('no')
         chips = [(tr('Estilo: {p}', p=nombre_pack), self._menu_estilo_go,
                   tr('Clic: elegir el tema de GO (Tema 1 a Tema 6).') if plantillas.SOLO_TEMAS
                   else tr('Clic: elegir el estilo de GO (Referencia = captions palabra a palabra, línea fina y negrita + palabra grande; Diseño automático = 3 líneas).')),
-                 (tr('Emojis: {v}', v=tr('sí') if self._go_emojis() else tr('no')), self._alternar_emojis_go,
-                  tr('Clic: con o sin emojis en los subtítulos.')),
-                 (tr('Sonido: {v}', v=tr('sí') if self._go_sfx() else tr('no')), self._alternar_sfx_go,
-                  tr('Clic: con o sin efectos de sonido por palabra.')),
-                 (tr('Visuales: {v}', v=txt_vis), self._alternar_visuales_go,
-                  tr('Clic: con o sin efectos visuales (intro, transiciones en los cortes e iconos flotantes). Se eligen en la página «Efectos».')),
+                 # v5.5.10 (pedido: «en Inicio deja estilo de tema, Edición PRO y Motions completo»): sin los chips Emojis, Sonido, Visuales
+                 # y Proyecto; sus ajustes guardados siguen valiendo
                  (tr('Edición PRO: {v}', v=txt_pro), self._menu_pro_go,
                   tr('Edición PRO: GO edita el video en la línea de tiempo de Resolve (titulares detrás de la persona con Magic Mask, cifras, listas, marcos, ficha final y sonidos), con un estilo propio para cada video. Clic: activar y elegir el estilo.')),
                  # v5.5.8 (pedido: «a la par de Edición PRO un botón que diga Motions completo»): el último paso de GO
                  (tr('Motions completo: {v}', v=tr('sí') if self._go_motions_completo() else tr('no')), self._alternar_motions_completo_go,
-                  tr('Motions completo: al final de GO, un video de solo motions de todo el video en el estilo de los mejores reels (un titular arriba y una tarjeta que explica lo que se dice; sin captions) en la pista de más arriba, encima de captions y efectos, para que lo cortes donde quieras ver tu video. Clic: sí o no.')),
-                 (tr('Proyecto: {p}', p=self._go_proyecto() or tr('el abierto')), self._alternar_proyecto_go,
-                  tr('Al soltar un video en Inicio: se arma en el proyecto «CineCaptions» de Resolve (se abre o se crea solo) o en el proyecto que tengas abierto. Clic: cambiar.'))]
+                  tr('Motions completo: al final de GO, un video de solo motions de todo el video en el estilo de los mejores reels (un titular arriba y una tarjeta que explica lo que se dice; sin captions) en la pista de más arriba, encima de captions y efectos, para que lo cortes donde quieras ver tu video. Clic: sí o no.'))]
         chips = [(t, f, a, ui.ACCENT_CLARO) for t, f, a in chips]
         act = getattr(self, '_actualizacion', None)
         if isinstance(act, dict) and act.get('version'):
@@ -9452,6 +9628,7 @@ class SubtitleApp(QWidget):
         self.motor_seg = Segmentado(list(self._motores_voz.keys()), self.motor_var, self._cambio_motor_voz, alto=32, tam=12)
         Tooltip(self.motor_seg, tr('Qué motor convierte la voz en palabras con su tiempo. La IA (Qwen3-ASR) usa la GPU y es la más fina; Whisper large-v3-turbo es el de respaldo y entiende 99 idiomas.'))
         cf.addWidget(self.motor_seg)
+        self._capa_franja_audio = cf                 # v5.5.10: Proyecto pone aquí, a la par de Whisper, su botón «Crea tu estilo»
         self.motor_nota = Etiqueta('', 12, color=TEXT_MUTED, envolver=True)
         self.motor_nota.hide()                       # (el detalle de GPU/modelo queda en el tooltip del selector)
         t.capa.addWidget(fila)
@@ -9948,7 +10125,8 @@ class SubtitleApp(QWidget):
         self._refrescar_pasos()
     # -- Editor de palabras ----------------------------------------------------
     def _pagina_editor(self):
-        _pag, capa = self._nueva_pagina('editor', tr('Retocar las palabras'), tr('Pinta cada palabra con su rol; el bloque se arma solo'), desplazable=False)
+        _pag, capa = self._nueva_pagina('editor', tr('Retocar las palabras'), tr('Pinta cada palabra con su rol; el bloque se arma solo'), desplazable=False,
+                                        con_barra=False)         # v5.5.10: sin barra de título, como Proyecto y Sonido (lo pidió el usuario)
         self._editor_capa = capa
         self._editor_vacio = QWidget()
         cv = QVBoxLayout(self._editor_vacio)
@@ -10081,6 +10259,7 @@ class SubtitleApp(QWidget):
         s.configure(text=ventana.subtitulo())
         self.ir_a('editor')
         elegido = None
+        resultado = None
         try:
             resultado = ventana.esperar()
             elegido = getattr(ventana, '_proyecto_elegido', None)
@@ -10097,7 +10276,8 @@ class SubtitleApp(QWidget):
             t.configure(text=tr('Retocar las palabras'))
             s.configure(text=tr('Pinta cada palabra con su rol; el bloque se arma solo'))
             if vivo(self) and self.isVisible():
-                self.ir_a(volver)
+                # v5.5.10 (pedido: «al dar Generar pasa a Inicio y empieza el proceso con las correcciones de Creativo»)
+                self.ir_a('inicio' if resultado is not None else volver)
         if elegido:
             self._cargar_proyecto(elegido)
             self.status_var.set(tr('Proyecto cargado: {nombre}', nombre=Path(elegido).name))
@@ -10127,43 +10307,50 @@ class SubtitleApp(QWidget):
         except Exception:
             pass
         self._guardar_preferencias()
+    # v5.5.10 (pedido: «al dar Generar pasa a la página de Inicio y empieza el proceso con las correcciones de Creativo»): sin el popup; el avance
+    # sale en el orbe de Inicio, con los pasos de GO (la voz y la IA ya están hechas: las palabras son las de Creativo)
+    _GEN_A_PASO_GO = {'armar': 'diseno', 'emojis': 'diseno', 'sfx': 'sfx', 'colocar': 'resolve'}
     def _gen_abrir(self):
-        import editor_ui
         self._gen_fin(False)
-        claves = {'dinamico': ['armar', 'sfx', 'emojis', 'colocar'], 'destacados': ['armar', 'sfx', 'colocar']}.get(self._modo(), ['armar', 'colocar'])
-        nombres = {'armar': tr('Armar los bloques con tus marcas'), 'sfx': tr('Elegir los efectos de sonido'), 'emojis': tr('Preparar los emojis'),
-                   'colocar': tr('Colocar todo en tu timeline')}
-        try:
-            dlg = Dialogo(self, tr('Generando'), 500, 430, redimensionable=False)
-            capa = _capa_dialogo(dlg, (0, 0, 0, 0), 0)
-            panel = editor_ui.PanelAsistencia(tr('Generando tus subtítulos'), tr('Todo listo'), tr('Preparando…'), [nombres[c] for c in claves], '',
-                                              tr('Subtítulos, sonidos y emojis, directo a tu timeline'))
-            capa.addWidget(panel, 1)
-            dlg.show()
-        except Exception:
-            registro.excepcion(origen='Generar · popup')
-            return
-        g = {'dlg': dlg, 'panel': panel, 'claves': claves}
+        self.ir_a('inicio')
+        panel = getattr(self, 'go_panel', None)
+        if panel is None or getattr(self, '_go_corriendo', False) or panel.boton.estado == 'trabajando':
+            return                                     # dentro de GO, Inicio ya enseña el avance de GO
+        panel.al_cancelar = None                       # (sin «Cancelar»: ese botón es el de GO, que cierra Resolve)
+        panel.al_pausar = None
+        panel.empezar()
+        for k in ('timeline', 'voz', 'ia'):
+            panel.paso(k, 'saltado')
+        g = {'go': panel, 'fase': None}
         self._gen = g
-        despues(300000, lambda: self._gen_fin(False) if getattr(self, '_gen', None) is g else None, self)      # por si algo no avisa nunca
+        self._gen_fase('armar')
+        # por si algo no avisa nunca (colocar en Resolve puede tardar varios minutos)
+        despues(900000, lambda: self._gen_fin(False, tr('Generar no avisó de que terminara: mira tu timeline y el Registro.')) if getattr(self, '_gen', None) is g else None, self)
     def _gen_fase(self, clave):
         g = getattr(self, '_gen', None)
-        if g and vivo(g['dlg']) and clave in g['claves']:
-            g['panel'].poner_fase(g['claves'].index(clave))
+        if not g or not vivo(g['go']):
+            return
+        k = self._GEN_A_PASO_GO.get(clave)
+        if k and k != g['fase']:
+            if g['fase']:
+                g['go'].paso(g['fase'], 'hecho')
+            g['fase'] = k
+            g['go'].paso(k)
     def _gen_detalle(self, texto):
         g = getattr(self, '_gen', None)
-        if g and vivo(g['dlg']):
-            g['panel'].poner_detalle(str(texto).strip()[:150])
+        if g and vivo(g['go']) and str(texto).strip():
+            g['go'].linea.configure(text=str(texto).strip()[:150])
     def _gen_fin(self, ok, detalle=''):
         g = getattr(self, '_gen', None)
         self._gen = None
-        if not g or not vivo(g['dlg']):
+        if not g or not vivo(g['go']):
             return
-        if ok:
-            g['panel'].terminar(detalle)
-            despues(1300, g['dlg'].cerrar, self)
-        else:
-            g['dlg'].cerrar()
+        panel = g['go']
+        if g['fase']:
+            if not ok:
+                panel.paso_fallido = g['fase']
+            panel.paso(g['fase'], 'hecho' if ok else 'error')
+        panel.terminar(ok, detalle or (tr('Ya está en tu timeline.') if ok else tr('No se pudo generar: mira el Registro.')))
     def _editor_abierto(self):
         """Una sola sesion del editor a la vez (la v4 lo garantizaba con el
         modal; ahora el resto de pantallas sigue a mano)."""
@@ -10176,7 +10363,8 @@ class SubtitleApp(QWidget):
     def _pagina_estilos(self):
         _pag, capa = self._nueva_pagina('estilos', tr('Elegir audio y tema') if plantillas.SOLO_TEMAS else tr('Elegir audio y estilo'),
                                         tr('Obtén el audio de tu timeline, elige un tema y mira cómo queda') if plantillas.SOLO_TEMAS
-                                        else tr('Obtén el audio de tu timeline, elige el pack de estilos y mira cómo queda cada estilo en tu bloque'), desplazable=False)
+                                        else tr('Obtén el audio de tu timeline, elige el pack de estilos y mira cómo queda cada estilo en tu bloque'), desplazable=False,
+                                        con_barra=False)
         self._estilos_capa = capa                     # v5.4.3: la página NO se desplaza: todo cabe y el slider se lleva el alto que sobra
         # el audio («Fuente», se construye en _pagina_nuevo) va dentro de la tarjeta de «Pack de estilos» (ver _asegurar_estilos)
     def _cambio_motor_voz(self, _v=None):
@@ -10316,11 +10504,13 @@ class SubtitleApp(QWidget):
         self._refrescar_receta()
     # -- SFX Lab ---------------------------------------------------------------
     def _pagina_sfx(self):
-        _pag, capa = self._nueva_pagina('sfx', tr('Elegir y retocar sonidos'), tr('Elige el sonido de cada momento, recórtalo y ajusta su volumen · se aplica al generar con GO'))
+        _pag, capa = self._nueva_pagina('sfx', tr('Elegir y retocar sonidos'), tr('Elige el sonido de cada momento, recórtalo y ajusta su volumen · se aplica al generar con GO'),
+                                        con_barra=False)         # v5.5.10: sin barra de título, como Proyecto (lo pidió el usuario)
         self._sfx_capa = capa
     # -- Efectos visuales (v5.4.6): intro, transiciones en los cortes e iconos flotantes -------------------------------------------------------------------
     def _pagina_efectos(self):
-        _pag, capa = self._nueva_pagina('efectos', tr('Efectos visuales'), tr('Intro, transiciones en los cortes e iconos flotantes que acompañan a los captions · se aplican al generar con GO'))
+        _pag, capa = self._nueva_pagina('efectos', tr('Efectos visuales'), tr('Intro, transiciones en los cortes e iconos flotantes que acompañan a los captions · se aplican al generar con GO'),
+                                        con_barra=False)         # v5.5.10: sin barra de título, como las demás (el Registro va flotando arriba a la derecha)
         self._efectos_capa = capa
         self._efectos_widget = None
     def _asegurar_efectos(self):
@@ -11250,7 +11440,13 @@ class SubtitleApp(QWidget):
             except OSError:
                 pass
         import resolve_bridge
-        ok, mensaje = resolve_bridge.ejecutar('importar_estilos')
+        # v5.5.10: Resolve trabaja en un HILO (antes en el de la ventana: con Resolve colgado la interfaz se quedaba congelada hasta el
+        # tiempo límite del script); el resto sigue al terminar, en la ventana
+        _correr_en_hilo(self, lambda: resolve_bridge.ejecutar('importar_estilos'),
+                        lambda r, e: self._importar_estilos_fin(r, e, nombre, cuando_termine))
+
+    def _importar_estilos_fin(self, resultado, error_hilo, nombre, cuando_termine):
+        ok, mensaje = resultado if (error_hilo is None and resultado) else (False, str(error_hilo or ''))
         if not ok:
             messagebox.showerror(tr('No pude importar los estilos'), mensaje or tr('Resolve no respondió.'), parent=self)
             return
@@ -14253,6 +14449,21 @@ def main():
         resolve_mcp.cerrar()
     except Exception:
         pass
+    # v5.5.10: salida limpia. Al volver de app.exec() siguen vivos hilos de fondo (la vista de Creativo, los emojis animados, el vigía de
+    # Resolve) que usan numpy/Qt sin el GIL: mientras Python se desmonta podían tocar memoria ya liberada («access violation» al cerrar,
+    # visto en el humo de ventanas). Se corren los atexit (la marca de sesión «cerrada bien»), se vacían los registros y se sale ya.
+    try:
+        import atexit
+        import logging
+        atexit._run_exitfuncs()
+        logging.shutdown()
+        for flujo in (sys.stdout, sys.stderr):
+            try:
+                flujo.flush()
+            except Exception:
+                pass
+    finally:
+        os._exit(0)
 if __name__ == '__main__':
     try:
         main()

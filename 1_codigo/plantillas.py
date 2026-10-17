@@ -399,7 +399,7 @@ def es_de_fabrica(nombre):
 
 # v5.8: los packs que cambiaron de contenido llevan una «revisión»; los scripts de Resolve la suman al nombre del bin del pack
 # ('RCS · <pack> · <revisión> · v'), asi un bin viejo que ya estaba en el proyecto (con los clips anteriores) no se reutiliza.
-REVISION_BIN = {'Viral · superior': 'Luxe 5', 'Viral · inferior': 'Luxe 5', 'Referencia': 'Ref 5', 'Kinetic': 'Kin 6', 'VIRAL': 'Vir 5', 'Tema4': 'T4 5', 'Tema5': 'T5 5', 'Tema6': 'T6 5'}   # v5.5.8: T5/T6 2 = su diseño propio (pack_tema5.py); 3 = el banner de CineCaptions en el Inspector (banner_inspector.py); 4 = el banner arriba de todo (encima de las pestañas); 5 = el banner con el LOGO en el Text+ «Template» (el que enseña el Inspector)
+REVISION_BIN = {'Viral · superior': 'Luxe 5', 'Viral · inferior': 'Luxe 5', 'Referencia': 'Ref 6', 'Kinetic': 'Kin 6', 'VIRAL': 'Vir 5', 'Tema4': 'T4 6', 'Tema5': 'T5 6', 'Tema6': 'T6 6'}   # v5.5.8: T5/T6 2 = su diseño propio (pack_tema5.py); 3 = el banner de CineCaptions en el Inspector (banner_inspector.py); 4 = el banner arriba de todo (encima de las pestañas); 5 = el banner con el LOGO en el Text+ «Template» (el que enseña el Inspector); 6 = sombra oscura para leerse sobre fondos claros (v5.5.10)
 NOMBRE_BASICOS = 'Subtítulos básicos'
 POSICIONES_BASICOS = ('inferior', 'superior')
 _PISTAS_FORMATO = (('horizontal', 'h'), ('vertical', 'v'), ('cuadrado', 'c'), ('square', 'c'))

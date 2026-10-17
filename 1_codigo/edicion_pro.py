@@ -953,6 +953,13 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 p['valores'].update(y=84.0 if vertical else 86.0, escala=0.8)
             if t5:
                 T5.subir_detras(p)
+                # v5.5.10: la clave «detrás» solo se lee si va POR ENCIMA de la cabeza; si la persona está tan arriba que el centro del texto
+                # cae a media cabeza o más abajo (p. ej. alguien de cuerpo entero caminando: «Europa» quedó tapado), va delante, normal.
+                if p['pieza'] == 'subtitulo' and p['capa'] == 'detras' and det_tl and det_tl.get('personas'):
+                    yc = float(p['valores'].get('y', 30.0)) / 100.0
+                    if any(yc > k['bbox'][1] + 0.5 * (k.get('cabeza') or {}).get('alto', 0.0) for k in det_tl['personas']):
+                        p['valores'] = dict(p['_valores0'], modo='normal', y=T5.Y_NORMAL[vertical]) if p.get('_valores0') else dict(p['valores'], modo='normal', y=T5.Y_NORMAL[vertical])
+                        p['capa'], p['persona'] = 'subs', False
             caja = _caja_vertical(p)                                    # (ya en su sitio final: lo que venga después lo esquiva)
             if caja and not p.get('quitar') and (p['capa'] == 'delante' or p['pieza'] == 'subtitulo'):
                 puestos.append((p['ini'], p['fin']) + caja)

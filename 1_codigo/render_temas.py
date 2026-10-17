@@ -358,5 +358,8 @@ def capas_de_cue(estilo, cue, s, dx, dy):
         t0 = max(ini, float(r.get('t', ini)))
         t1 = float(r['fin']) if isinstance(r.get('fin'), (int, float)) and float(r['fin']) > t0 else fin
         capas.append({'rgb': rgb, 'a': a, 'x': int(round(cx - W / 2.0)), 'y': int(round(cy - H / 2.0)), 't0': t0, 't1': max(t0 + 0.05, t1),
-                      'entrada': ENTRADA_S, 'sube': SUBE_EM * em * s})
+                      'entrada': ENTRADA_S, 'sube': SUBE_EM * em * s,
+                      # v5.5.10: qué es cada capa, para que la vista de Creativo (vista_tema.py) la anime como su macro (el MP4 no lo usa)
+                      'tipo': tipo, 'k': str(r.get('k') or ''), 'rol': r.get('rol'), 'pack': (estilo or {}).get('pack'), 'em': em * s,
+                      'cue_t0': ini})
     return capas

@@ -16,6 +16,8 @@ domo) · hecho (la gema se vuelve una palomita) · error (tinte rojo y «!») ·
 """
 import math
 import random
+import threading
+import time
 
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
@@ -127,7 +129,7 @@ def _capa_runas(lado):
                 p.drawLine(QPointF(x0, y0), QPointF(x1, y1))
         p.restore()
     p.end()
-    return QPixmap.fromImage(img)
+    return img                                  # (QImage: se puede hacer en un hilo de fondo; OrbeMecanica la pasa a QPixmap)
 
 
 def _capa_engranaje(lado):
@@ -182,7 +184,7 @@ def _capa_engranaje(lado):
         p.setBrush(QBrush(rg))
         p.drawEllipse(QPointF(x, y), 24, 24)
     p.end()
-    return QPixmap.fromImage(img)
+    return img                                  # (QImage: se puede hacer en un hilo de fondo; OrbeMecanica la pasa a QPixmap)
 
 
 def _capa_filigrana(lado):
@@ -231,7 +233,7 @@ def _capa_filigrana(lado):
         p.setPen(QPen(QColor(255, 232, 190, 130), 3))
         p.drawEllipse(QPointF(0, 0), r - ancho / 2 + 2, r - ancho / 2 + 2)
     p.end()
-    return QPixmap.fromImage(img)
+    return img                                  # (QImage: se puede hacer en un hilo de fondo; OrbeMecanica la pasa a QPixmap)
 
 
 def _capa_domo(lado):
@@ -256,7 +258,7 @@ def _capa_domo(lado):
     p.setPen(QPen(QColor(0, 0, 0, 160), 5))
     p.drawEllipse(QPointF(0, 0), 441, 441)
     p.end()
-    return QPixmap.fromImage(img)
+    return img                                  # (QImage: se puede hacer en un hilo de fondo; OrbeMecanica la pasa a QPixmap)
 
 
 def _capa_vidrio(lado):
@@ -285,7 +287,7 @@ def _capa_vidrio(lado):
     p.fillRect(QRectF(-420, -420, 840, 840), QBrush(rg))
     p.restore()
     p.end()
-    return QPixmap.fromImage(img)
+    return img                                  # (QImage: se puede hacer en un hilo de fondo; OrbeMecanica la pasa a QPixmap)
 
 
 def _capa_botones(lado):
@@ -347,7 +349,7 @@ def _capa_botones(lado):
         p.setPen(Qt.PenStyle.NoPen)
         p.drawEllipse(QPointF(x, y), 11, 11)
     p.end()
-    return QPixmap.fromImage(img)
+    return img                                  # (QImage: se puede hacer en un hilo de fondo; OrbeMecanica la pasa a QPixmap)
 
 
 class OrbeMecanica:
@@ -357,16 +359,47 @@ class OrbeMecanica:
     def __init__(self):
         self._capas = {}
         self._clave = None
+        self._pedido = None                  # (lado, desde cuándo) el tamaño que se pide ahora
+        self._hilo = None
+        self._nuevas = None                  # (lado, {capa: QImage}) que dejó listas el hilo de fondo
         self.rot = {'runas': 0.0, 'engr': 0.0, 'fili': 0.0, 'rayos': 0.0}
 
+    @staticmethod
+    def _hacer(pix):
+        return {'runas': _capa_runas(pix), 'engr': _capa_engranaje(pix), 'fili': _capa_filigrana(pix),
+                'domo': _capa_domo(pix), 'vidrio': _capa_vidrio(pix), 'botones': _capa_botones(pix)}
+
     def _asegurar(self, R, dpr):
+        """Las capas del tamaño que toca. v5.5.10 (el usuario: «la página de inicio tiene fallas con la animación, se queda congelado»):
+        antes, cada vez que el tamaño cambiaba un poco (redimensionar, maximizar, otra pantalla) se rehacían LAS SEIS capas aquí mismo, en el
+        hilo de la interfaz: ~2,5 s con la animación quieta (el vigía de congelaciones lo anotó en _capa_filigrana). Ahora: la primera vez se
+        hacen rápido a baja resolución; las buenas se hacen en un hilo de fondo (QImage) cuando el tamaño se queda quieto 0,25 s y, mientras,
+        se dibujan las que había (escaladas: se ven igual). Si las que hay sirven (no son más pequeñas ni el doble de grandes), no se rehacen."""
         pix = max(256, int(round(2.3 * R * dpr * 1.25 / 64.0)) * 64)        # 1,25x los pixeles reales: nitidez al girar sin pasarse de coste
         pix = min(pix, 3072)
-        clave = pix
-        if clave != self._clave:
-            self._capas = {'runas': _capa_runas(pix), 'engr': _capa_engranaje(pix), 'fili': _capa_filigrana(pix),
-                           'domo': _capa_domo(pix), 'vidrio': _capa_vidrio(pix), 'botones': _capa_botones(pix)}
-            self._clave = clave
+        listas = self._nuevas
+        if listas is not None:                                               # el hilo terminó: a QPixmap (en el hilo de la interfaz) y se cambian
+            self._nuevas = None
+            self._capas = {k: QPixmap.fromImage(v) for k, v in listas[1].items()}
+            self._clave = listas[0]
+        if not self._capas:                                                  # la primera vez no hay nada que enseñar: rápido, a baja resolución
+            rapido = min(pix, 768)
+            self._capas = {k: QPixmap.fromImage(v) for k, v in self._hacer(rapido).items()}
+            self._clave = rapido
+        if self._clave / 1.8 <= pix <= self._clave * 1.06:
+            self._pedido = None
+            return self._capas
+        ahora = time.monotonic()
+        if self._pedido is None or self._pedido[0] != pix:
+            self._pedido = (pix, ahora)                                      # (arrastrando el borde de la ventana cambia en cada cuadro)
+        elif ahora - self._pedido[1] >= 0.25 and (self._hilo is None or not self._hilo.is_alive()):
+            def trabajo(lado=pix):
+                try:
+                    self._nuevas = (lado, self._hacer(lado))
+                except Exception:
+                    pass
+            self._hilo = threading.Thread(target=trabajo, name='orbe-capas', daemon=True)
+            self._hilo.start()
         return self._capas
 
     def avanzar(self, dt, velocidad):

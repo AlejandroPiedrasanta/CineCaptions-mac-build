@@ -8,7 +8,7 @@ crea un proyecto NUEVO «CineCaptions» (guardando y cerrando el que hubiera abi
 que su audio suena en A1 y reserva la pista FX-BROLL si hace falta. Sin esto, en Free los captions de un video soltado caian en el timeline que hubiera abierto.
 ]]
 
-local VERSION = "5.5.9 (armar video)"
+local VERSION = "5.5.10 (armar video)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -495,6 +495,8 @@ local function main()
         nombre = string.format("%s %d", base, k)
         k = k + 1
     end
+    -- v5.5.10: con 29,97 el timeline quedaba a 24 fps; los fps se ponen antes en el PROYECTO (solo si aun no tiene timelines)
+    if (tonumber(project:GetTimelineCount()) or 0) == 0 then pcall(function() project:SetSetting("timelineFrameRate", string.format("%g", FPS)) end) end
     local tl = mp:CreateEmptyTimeline(nombre)
     if not tl then fail("Resolve no creo el timeline «" .. nombre .. "».") end
     res.timeline = nombre

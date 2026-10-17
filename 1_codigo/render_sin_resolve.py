@@ -156,7 +156,8 @@ def preparar(cues, ancho, alto, emoji_arriba=True, estilo=None):
             izq = cx - total / 2.0 - x_ini
             arriba = cy + T.CENTRO_CAP * em - base
             capas.append({'rgb': rgb, 'a': a, 'x': int(round(izq)), 'y': int(round(arriba)),
-                          't0': max(ini, float(r.get('t', ini))), 't1': fin, 'entrada': ENTRADA_S})
+                          't0': max(ini, float(r.get('t', ini))), 't1': fin, 'entrada': ENTRADA_S,
+                          'tipo': 'tema4', 'rol': r.get('rol'), 'em': em, 'cue_t0': ini})          # (v5.5.10: para animarla en Creativo)
         if cue.get('emoji'):
             try:
                 import emojis
@@ -175,7 +176,8 @@ def preparar(cues, ancho, alto, emoji_arriba=True, estilo=None):
                     cy = dy + float(caja[1]) * 1920.0 * s + EMOJI_HUECO * s + hh / 2.0
                 cx = dx + 540.0 * s
                 capas.append({'rgb': rgb, 'a': a, 'x': int(round(cx - ww / 2.0)), 'y': int(round(cy - hh / 2.0)),
-                              't0': max(ini, float(cue.get('emoji_ini') or ini)), 't1': fin, 'entrada': EMOJI_ENTRADA_S})
+                              't0': max(ini, float(cue.get('emoji_ini') or ini)), 't1': fin, 'entrada': EMOJI_ENTRADA_S,
+                              'tipo': 'emoji', 'em': lado, 'cue_t0': ini})
     capas.sort(key=lambda c: c['t0'])
     return capas
 

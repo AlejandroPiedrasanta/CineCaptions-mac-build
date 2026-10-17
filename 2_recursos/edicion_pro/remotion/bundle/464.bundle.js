@@ -1,7 +1,7 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[982],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[464],{
 
-/***/ 7601
+/***/ 2464
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -14204,6 +14204,36 @@ var require_lib = __commonJS(function(exports) {
   exports.tokTypes = tokTypes;
 });
 var import_parser = __toESM(require_lib(), 1);
+var getInteractiveComponent = ({
+  ast,
+  declaration
+}) => {
+  let expression = declaration.type === "VariableDeclarator" ? declaration.init : declaration;
+  while (expression && (expression.type === "TSAsExpression" || expression.type === "TSSatisfiesExpression" || expression.type === "TypeCastExpression" || expression.type === "ParenthesizedExpression")) {
+    expression = expression.expression;
+  }
+  if (expression?.type !== "CallExpression" || expression.callee.type !== "MemberExpression" || expression.callee.computed || expression.callee.property.type !== "Identifier" || !["create", "withSchema"].includes(expression.callee.property.name)) {
+    return null;
+  }
+  const { object } = expression.callee;
+  const isInteractive = ast.program.body.some((statement) => {
+    if (statement.type !== "ImportDeclaration" || statement.source.value !== "remotion" || statement.importKind === "type") {
+      return false;
+    }
+    return statement.specifiers.some((specifier) => {
+      if (object.type === "Identifier") {
+        return specifier.type === "ImportSpecifier" && specifier.imported.type === "Identifier" && specifier.imported.name === "Interactive" && specifier.local.name === object.name;
+      }
+      return object.type === "MemberExpression" && !object.computed && object.object.type === "Identifier" && object.property.type === "Identifier" && object.property.name === "Interactive" && specifier.type === "ImportNamespaceSpecifier" && specifier.local.name === object.object.name;
+    });
+  });
+  const options = expression.arguments[0];
+  if (!isInteractive || options?.type !== "ObjectExpression") {
+    return null;
+  }
+  const component = options.properties.find((property) => property.type === "ObjectProperty" && !property.computed && (property.key.type === "Identifier" && property.key.name === "Component" || property.key.type === "StringLiteral" && property.key.value === "Component"));
+  return component?.type === "ObjectProperty" ? component.value : null;
+};
 var parseSource = (source) => {
   return import_parser.parse(source, {
     errorRecovery: false,
@@ -14413,22 +14443,44 @@ var resolveDeclaration = ({
     throw new Error(`Could not read source file "${filePath}"`);
   }
   const file = parseSource(source);
+  let localName = exportName;
   if (exportName === "default") {
     const defaultExport = file.program.body.find((statement) => statement.type === "ExportDefaultDeclaration");
     if (defaultExport?.type === "ExportDefaultDeclaration" && defaultExport.declaration.type === "Identifier") {
-      for (const statement of file.program.body) {
-        const declaration = getDeclaration(statement, defaultExport.declaration.name);
-        if (declaration) {
-          return { declaration, exportName, filePath, source };
-        }
-      }
+      localName = defaultExport.declaration.name;
     }
   }
   for (const statement of file.program.body) {
-    const declaration = getDeclaration(statement, exportName);
+    let declaration = getDeclaration(statement, localName);
     if (declaration) {
+      let component = getInteractiveComponent({ ast: file, declaration });
+      while (component) {
+        if (component.type === "Identifier") {
+          return resolveDeclaration({
+            filePath,
+            exportName: component.name,
+            project,
+            visited
+          });
+        }
+        declaration = component;
+        component = getInteractiveComponent({ ast: file, declaration });
+      }
       return { declaration, exportName, filePath, source };
     }
+  }
+  const importedComponent = findImportedComponent(file, localName);
+  if (importedComponent) {
+    return resolveDeclaration({
+      filePath: resolveImport({
+        fromFile: filePath,
+        importPath: importedComponent.path,
+        project
+      }),
+      exportName: importedComponent.exportName,
+      project,
+      visited
+    });
   }
   if (exportName !== "default") {
     for (const statement of file.program.body) {
@@ -14565,4 +14617,4 @@ var resolveCompositionComponentLocation = ({
 /***/ }
 
 }]);
-//# sourceMappingURL=982.bundle.js.map
+//# sourceMappingURL=464.bundle.js.map

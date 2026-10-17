@@ -63,20 +63,29 @@ class BarraHerramientas(QFrame):
 
 
 class BotonPlay(QAbstractButton):
-    """El botón redondo de reproducir (▶) que pasa a detener (■) mientras suena. configure(text=...) se acepta por compatibilidad."""
+    """El botón redondo de reproducir (▶) que pasa a pausa (❚❚) mientras suena. configure(text=...) se acepta por compatibilidad.
+    v5.5.10 (pedido: «mejora el botón de play»): de cristal con el disco verde brillante, anillo con el avance mientras suena, crece un poco al
+    pasar el ratón y, sonando, se queda tenue (no tapa los captions) hasta que el ratón vuelve."""
 
     def __init__(self, tip_play='', tip_stop='', lado=36, padre=None):
         super().__init__(padre)
         self._tips = (tip_play, tip_stop)
         self._activo = False
         self._hover = False
+        self._progreso = 0.0
         self.setFixedSize(lado, lado)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip(tip_play)
 
     def poner_activo(self, si):
         self._activo = bool(si)
+        if not self._activo:
+            self._progreso = 0.0
         self.setToolTip(self._tips[1] if self._activo else self._tips[0])
+        self.update()
+
+    def poner_progreso(self, fraccion):
+        self._progreso = max(0.0, min(1.0, float(fraccion or 0.0)))
         self.update()
 
     def configure(self, text=None, **_):
@@ -96,25 +105,130 @@ class BotonPlay(QAbstractButton):
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        r = QRectF(self.rect()).adjusted(1, 1, -1, -1)
-        base = QColor(ui.ACCENT)
+        lado = float(min(self.width(), self.height()))
+        if self._activo and not self._hover:
+            p.setOpacity(0.5)                                        # sonando: tenue, para ver los captions de abajo
+        c = QPointF(self.width() / 2.0, self.height() / 2.0)
+        p.translate(c)
+        if self._hover:
+            p.scale(1.06, 1.06)
+        R = lado / 2.0 - 2.0
+        # halo verde (más fuerte al pasar el ratón) y cristal
+        halo = QRadialGradient(QPointF(0, 0), R * 1.05)
+        verde = ui.QColorReal(ui.VERDE)
+        h0 = ui.QColorReal(verde)
+        h0.setAlpha(120 if self._hover else 70)
+        halo.setColorAt(0.70, h0)
+        halo.setColorAt(1.0, ui.QColorReal(verde.red(), verde.green(), verde.blue(), 0))
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(base.lighter(112) if self._hover else base)
-        p.drawEllipse(r)
-        c = r.center()
-        blanco = QColor('#FFFFFF')
-        p.setBrush(blanco)
+        p.setBrush(QBrush(halo))
+        p.drawEllipse(QPointF(0, 0), R, R)
+        p.setBrush(ui.QColorReal(255, 255, 255, 38))
+        p.setPen(QPen(ui.QColorReal(255, 255, 255, 120), 1.0))
+        p.drawEllipse(QPointF(0, 0), R * 0.86, R * 0.86)
+        # el disco verde con brillo arriba
+        r_in = R * 0.70
+        disco = QLinearGradient(QPointF(0, -r_in), QPointF(0, r_in))
+        disco.setColorAt(0.0, verde.lighter(125))
+        disco.setColorAt(1.0, verde.darker(130))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(disco))
+        p.drawEllipse(QPointF(0, 0), r_in, r_in)
+        brillo = QLinearGradient(QPointF(0, -r_in), QPointF(0, 0))
+        brillo.setColorAt(0.0, ui.QColorReal(255, 255, 255, 110))
+        brillo.setColorAt(1.0, ui.QColorReal(255, 255, 255, 0))
+        p.setBrush(QBrush(brillo))
+        p.drawEllipse(QRectF(-r_in * 0.82, -r_in * 0.95, r_in * 1.64, r_in * 1.1))
+        # el anillo del avance mientras suena
         if self._activo:
-            p.setPen(QPen(blanco, 1.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-            p.drawRoundedRect(QRectF(c.x() - 5, c.y() - 5, 10, 10), 2.0, 2.0)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(ui.QColorReal(255, 255, 255, 55), max(2.0, R * 0.09)))
+            p.drawEllipse(QPointF(0, 0), R * 0.93, R * 0.93)
+            if self._progreso > 0.001:
+                p.setPen(QPen(ui.QColorReal(255, 255, 255, 235), max(2.0, R * 0.09), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                rr = R * 0.93
+                p.drawArc(QRectF(-rr, -rr, 2 * rr, 2 * rr), 90 * 16, -int(360 * 16 * self._progreso))
+        # el icono: ▶ redondeado o ❚❚
+        blanco = ui.QColorReal('#FFFFFF')
+        p.setPen(QPen(blanco, max(1.4, r_in * 0.10), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        p.setBrush(blanco)
+        u = r_in * 0.42
+        if self._activo:
+            for dx in (-0.45, 0.45):
+                p.drawRoundedRect(QRectF(dx * u - 0.18 * u, -0.72 * u, 0.36 * u, 1.44 * u), 0.12 * u, 0.12 * u)
         else:
-            p.setPen(QPen(blanco, 1.6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             tri = QPainterPath()
-            tri.moveTo(c.x() - 3.6, c.y() - 6.2)
-            tri.lineTo(c.x() - 3.6, c.y() + 6.2)
-            tri.lineTo(c.x() + 6.4, c.y())
+            tri.moveTo(-0.55 * u, -0.85 * u)
+            tri.lineTo(-0.55 * u, 0.85 * u)
+            tri.lineTo(0.95 * u, 0.0)
             tri.closeSubpath()
             p.drawPath(tri)
+        p.end()
+
+
+class BotonSonido(QAbstractButton):
+    """v5.5.10 (pedido: «al pasar el mouse por el play, que salga un icono de mutear sonido»): el altavoz junto al play. Un clic silencia (o
+    devuelve) los sonidos de la reproducción; `mudo` dice cómo está."""
+
+    def __init__(self, mudo=False, lado=38, padre=None):
+        super().__init__(padre)
+        self.mudo = bool(mudo)
+        self._hover = False
+        self.setFixedSize(lado, lado)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.clicked.connect(self._alternar)
+        self._tip()
+
+    def _tip(self):
+        self.setToolTip(tr('Activar el sonido') if self.mudo else tr('Silenciar el sonido'))
+
+    def _alternar(self):
+        self.mudo = not self.mudo
+        self._tip()
+        self.update()
+
+    def enterEvent(self, e):
+        self._hover = True
+        self.update()
+        super().enterEvent(e)
+
+    def leaveEvent(self, e):
+        self._hover = False
+        self.update()
+        super().leaveEvent(e)
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        lado = float(min(self.width(), self.height()))
+        p.translate(self.width() / 2.0, self.height() / 2.0)
+        R = lado / 2.0 - 1.5
+        p.setPen(QPen(ui.QColorReal(255, 255, 255, 150 if self._hover else 95), 1.0))
+        p.setBrush(ui.QColorReal(10, 14, 24, 200 if self._hover else 165))
+        p.drawEllipse(QPointF(0, 0), R, R)
+        u = R * 0.5
+        blanco = ui.QColorReal(255, 255, 255, 240)
+        cuerpo = QPainterPath()                                         # el altavoz
+        cuerpo.moveTo(-0.95 * u, -0.38 * u)
+        cuerpo.lineTo(-0.45 * u, -0.38 * u)
+        cuerpo.lineTo(0.12 * u, -0.85 * u)
+        cuerpo.lineTo(0.12 * u, 0.85 * u)
+        cuerpo.lineTo(-0.45 * u, 0.38 * u)
+        cuerpo.lineTo(-0.95 * u, 0.38 * u)
+        cuerpo.closeSubpath()
+        p.setPen(QPen(blanco, max(1.0, 0.12 * u), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        p.setBrush(blanco)
+        p.drawPath(cuerpo)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        if self.mudo:                                                   # una X
+            p.setPen(QPen(ui.QColorReal('#FF6B6B'), max(1.4, 0.18 * u), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawLine(QPointF(0.42 * u, -0.38 * u), QPointF(1.1 * u, 0.38 * u))
+            p.drawLine(QPointF(0.42 * u, 0.38 * u), QPointF(1.1 * u, -0.38 * u))
+        else:                                                           # dos ondas
+            p.setPen(QPen(blanco, max(1.2, 0.15 * u), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            for r_o in (0.55, 0.95):
+                rr = r_o * u
+                p.drawArc(QRectF(0.2 * u - rr, -rr, 2 * rr, 2 * rr), -45 * 16, 90 * 16)
         p.end()
 
 
@@ -313,22 +427,24 @@ class PistaPincel(QWidget):
 class ControlTamano(QWidget):
     """«A ──●── A  100 %»: agranda o achica las palabras del párrafo. comando(n) con el tamaño (puntos) mientras se arrastra."""
 
-    def __init__(self, valor, minimo, maximo, referencia, comando, padre=None):
+    def __init__(self, valor, minimo, maximo, referencia, comando, padre=None, grande=False):
         super().__init__(padre)
         self._ref = float(referencia)
         self._comando = comando
         h = QHBoxLayout(self)
         h.setContentsMargins(4, 0, 4, 0)
-        h.setSpacing(8)
-        chica = Etiqueta('A', 11, color='#8D9BB5')
-        grande = Etiqueta('A', 18, peso='negrita', color='#C9D6EC')
+        h.setSpacing(10 if grande else 8)
+        # v5.5.10 (pedido: «quita la barra; sube el tamaño de texto y el botón Generar»): versión grande, a lo ancho de la columna derecha
+        chica = Etiqueta('A', 14 if grande else 11, color='#8D9BB5')
+        grande_a = Etiqueta('A', 26 if grande else 18, peso='negrita', color='#C9D6EC')
         self.deslizador = ui.Deslizador(minimo, maximo, maximo - minimo, comando=self._cambio, inicial=valor)
-        self.deslizador.setFixedWidth(132)
-        self.porcentaje = Etiqueta('', 12, color='#C9D6EC', alineacion=Qt.AlignmentFlag.AlignCenter)
-        self.porcentaje.setFixedWidth(44)
-        for w in (chica, self.deslizador, grande, self.porcentaje):
-            h.addWidget(w, 0, Qt.AlignmentFlag.AlignVCenter)
-        self.setFixedHeight(34)
+        if not grande:
+            self.deslizador.setFixedWidth(132)
+        self.porcentaje = Etiqueta('', 15 if grande else 12, peso='medio' if grande else None, color='#C9D6EC', alineacion=Qt.AlignmentFlag.AlignCenter)
+        self.porcentaje.setFixedWidth(58 if grande else 44)
+        for w in (chica, self.deslizador, grande_a, self.porcentaje):
+            h.addWidget(w, 1 if (grande and w is self.deslizador) else 0, Qt.AlignmentFlag.AlignVCenter)
+        self.setFixedHeight(46 if grande else 34)
         self._texto(valor)
 
     def _texto(self, n):

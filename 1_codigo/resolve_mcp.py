@@ -40,6 +40,36 @@ PROTOCOLO = '2024-11-05'
 SIN_VENTANA = 0x08000000 if sys.platform == 'win32' else 0
 REINTENTO_TRAS_FALLO_S = 10.0
 CACHE_ESTADO_S = 3.0
+TOPE_HILO_UI_S = 8.0          # v5.5.10: lo más que una llamada desde el hilo de la ventana espera a ResolveMCP (antes, hasta 45–75 s congelada)
+_LLAMADAS_UI = set()
+
+
+def _en_hilo_de_ventana():
+    """¿Esta llamada viene del hilo de la interfaz? (hilo principal CON una QApplication viva: las herramientas de desarrollo y el MCP de
+    pruebas también corren en el hilo principal, pero sin ventana, y necesitan sus esperas largas)."""
+    if threading.current_thread() is not threading.main_thread() or 'PySide6.QtWidgets' not in sys.modules:
+        return False
+    try:
+        from PySide6.QtWidgets import QApplication
+        return QApplication.instance() is not None
+    except Exception:
+        return False
+
+
+def _anotar_llamada_desde_ui(metodo):
+    """Una vez por sitio: anota en el Registro qué código llamó a ResolveMCP desde el hilo de la ventana (no debe: congela la interfaz)."""
+    try:
+        import traceback
+        pila = traceback.format_stack()[:-3][-5:]
+        sitio = pila[-1].strip().splitlines()[0] if pila else '?'
+        if sitio in _LLAMADAS_UI:
+            return
+        _LLAMADAS_UI.add(sitio)
+        import registro
+        registro.aviso(f'ResolveMCP se llamó desde la ventana ({metodo}): la espera se acota a {TOPE_HILO_UI_S:.0f} s para no congelarla.',
+                       'Resolve', detalle=''.join(pila))
+    except Exception:
+        pass
 
 
 def ruta_exe():
@@ -132,12 +162,23 @@ class _Cliente:
         self.p.stdin.flush()
 
     def pedir(self, metodo, params=None, timeout=30):
-        with self.lock:
+        # v5.5.10: el registro de congelaciones mostró la interfaz parada 35–52 s justo hasta «ResolveMCP no contestó… en 45 s»: con Resolve
+        # colgado, (1) una llamada desde el hilo de la ventana esperaba el tiempo entero y (2) el candado se esperaba SIN límite (quien escribía
+        # podía quedarse bloqueado si ResolveMCP no lee). Ahora el candado tiene límite y, desde la ventana, la espera se acota y se anota
+        # quién llamó (para quitar esa llamada de la ventana: la regla es usar correr_en_hilo).
+        if timeout > TOPE_HILO_UI_S and _en_hilo_de_ventana():
+            _anotar_llamada_desde_ui(metodo)
+            timeout = TOPE_HILO_UI_S
+        if not self.lock.acquire(timeout=timeout):
+            raise TimeoutError(f'ResolveMCP está ocupado con otra llamada (esperé {timeout} s para {metodo})')
+        try:
             self.n += 1
             i = self.n
             ev = [threading.Event(), None]
             self.esperas[i] = ev
             self._escribir({'jsonrpc': '2.0', 'id': i, 'method': metodo, 'params': params or {}})
+        finally:
+            self.lock.release()
         if not ev[0].wait(timeout):
             self.esperas.pop(i, None)
             raise TimeoutError(f'ResolveMCP no contestó a {metodo} en {timeout} s')
@@ -860,12 +901,20 @@ if clip:
     while nombre in existentes:
         nombre = '%%s %%d' %% (BASE, k)
         k += 1
+    # v5.5.10: con 29,97 el timeline quedaba a 24 fps (SetSetting del timeline devolvía False): los fps del TIMELINE solo se aceptan bien si
+    # el PROYECTO ya los tiene antes de crearlo (el proyecto aún no tiene timelines). FPS ya llega como texto «30» / «29.97» (crear_timeline_con_video).
+    fps_txt = str(FPS)
+    try:
+        if not int(project.GetTimelineCount() or 0):
+            res['fps_proyecto'] = bool(project.SetSetting('timelineFrameRate', fps_txt))
+    except Exception as e:
+        res['fps_proyecto'] = repr(e)
     tl = mp.CreateEmptyTimeline(nombre)
     res['timeline'] = nombre if tl else None
     if tl:
         ajustes = {}
         for clave, valor in (('useCustomSettings', '1'), ('timelineResolutionWidth', str(ANCHO)), ('timelineResolutionHeight', str(ALTO)),
-                             ('timelineOutputResolutionWidth', str(ANCHO)), ('timelineOutputResolutionHeight', str(ALTO)), ('timelineFrameRate', str(FPS))):
+                             ('timelineOutputResolutionWidth', str(ANCHO)), ('timelineOutputResolutionHeight', str(ALTO)), ('timelineFrameRate', fps_txt)):
             try:
                 ajustes[clave] = bool(tl.SetSetting(clave, valor))
             except Exception as e:

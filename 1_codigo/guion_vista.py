@@ -69,8 +69,8 @@ def _color(h, por_defecto='#FFFFFF'):
 class MarcoVistaGuion(qt_kit.MarcoVista):
     """El marco de «Así se verá este bloque» para el estilo «guion». Sin bloque (poner_cue(None)) se comporta como el MarcoVista de siempre."""
 
-    def __init__(self, padre=None, alto_min=160, aprox=True):
-        super().__init__(padre, alto_min, aprox)
+    def __init__(self, padre=None, alto_min=160, aprox=True, movil=False):
+        super().__init__(padre, alto_min, aprox, movil)
         self._cue = None
         self._pack = 'Referencia'
         self._real_img = None
@@ -136,9 +136,47 @@ class MarcoVistaGuion(qt_kit.MarcoVista):
     def _emoji_arriba(self):
         return bool(self._imagen and self._imagen.get('donde') == 'arriba')
 
+    # -- v5.5.10: dentro del móvil, el cuadro 9:16 entero a lo ancho de la pantalla (las palabras en su sitio REAL del video) ----------
+    def _imagen_en_pantalla(self):
+        if self._real_img is not None:
+            return self._real_img, True
+        return super()._imagen_en_pantalla()
+
+    def _pintar_en_pantalla(self, p, pant):
+        if self._cue is None:
+            return super()._pintar_en_pantalla(p, pant)
+        s = pant.width() / ANCHO_CUADRO
+        self._pintar_corridas(p, s, pant.left(), pant.center().y() - ALTO_CUADRO * s / 2.0)
+
+    def _pintar_corridas(self, p, s, x0, y0):
+        """Cada palabra del bloque (con su entrada si se está animando) y el emoji, en el cuadro de escala s con origen (x0, y0)."""
+        c = self._cue
+        t = self._t_anim
+        t_ini = float(c.get('start') or 0.0)
+        corridas = sorted(c.get('runs') or [], key=lambda r: float(r.get('t') or t_ini))
+        salida = max(0.0, min(1.0, float(self._salida or 0.0)))
+        for run in corridas:
+            texto = str(run.get('texto') or '')
+            if not texto:
+                continue
+            entra = float(run.get('t') or t_ini) - t_ini
+            alfa, escala_extra, sube = 1.0, 1.0, 0.0
+            if t is not None:
+                if t < entra:
+                    continue
+                k = max(0.0, min(1.0, (t - entra) / 0.24))
+                alfa = k
+                escala_extra = 0.88 + 0.12 * self._rebote(k)
+                sube = (1.0 - k) * 14.0 * s
+            alfa *= (1.0 - salida)
+            if alfa <= 0.01:
+                continue
+            self._dibujar_palabra(p, run, c, s, x0, y0, alfa, escala_extra, sube)
+        self._dibujar_emoji(p, s, x0, y0, t, c)
+
     # -- dibujo ------------------------------------------------------------------------------------------------------
     def paintEvent(self, e):
-        if self._cue is None or (getattr(self, '_real', False) and self._fondo is not None):
+        if self._movil or self._cue is None or (getattr(self, '_real', False) and self._fondo is not None):
             return super().paintEvent(e)
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -170,29 +208,7 @@ class MarcoVistaGuion(qt_kit.MarcoVista):
         p.setPen(QPen(QColor(255, 255, 255, 38), 1, Qt.PenStyle.DashLine))
         p.drawLine(QPointF(x0, dentro.top()), QPointF(x0, dentro.bottom()))
         p.drawLine(QPointF(x0 + ANCHO_CUADRO * s, dentro.top()), QPointF(x0 + ANCHO_CUADRO * s, dentro.bottom()))
-        c = self._cue
-        t = self._t_anim
-        t_ini = float(c.get('start') or 0.0)
-        corridas = sorted(c.get('runs') or [], key=lambda r: float(r.get('t') or t_ini))
-        salida = max(0.0, min(1.0, float(self._salida or 0.0)))
-        for run in corridas:
-            texto = str(run.get('texto') or '')
-            if not texto:
-                continue
-            entra = float(run.get('t') or t_ini) - t_ini
-            alfa, escala_extra, sube = 1.0, 1.0, 0.0
-            if t is not None:
-                if t < entra:
-                    continue
-                k = max(0.0, min(1.0, (t - entra) / 0.24))
-                alfa = k
-                escala_extra = 0.88 + 0.12 * self._rebote(k)
-                sube = (1.0 - k) * 14.0 * s
-            alfa *= (1.0 - salida)
-            if alfa <= 0.01:
-                continue
-            self._dibujar_palabra(p, run, c, s, x0, y0, alfa, escala_extra, sube)
-        self._dibujar_emoji(p, s, x0, y0, t, c)
+        self._pintar_corridas(p, s, x0, y0)
         p.restore()
         if self._aprox:
             p.setFont(qt_kit.fuente(10))

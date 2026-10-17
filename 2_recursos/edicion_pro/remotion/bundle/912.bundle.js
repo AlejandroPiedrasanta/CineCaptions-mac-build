@@ -1,62 +1,20 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[402],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[912],{
 
-/***/ 2402
+/***/ 8912
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ SyntaxHighlightedSource_default)
 /* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6540);
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4848);
-var __create = Object.create;
-var __getProtoOf = Object.getPrototypeOf;
-var __defProp = Object.defineProperty;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-function __accessProp(key) {
-  return this[key];
-}
-var __toESMCache_node;
-var __toESMCache_esm;
-var __toESM = (mod, isNodeMode, target) => {
-  var canCache = mod != null && typeof mod === "object";
-  if (canCache) {
-    var cache = isNodeMode ? __toESMCache_node ??= new WeakMap : __toESMCache_esm ??= new WeakMap;
-    var cached = cache.get(mod);
-    if (cached)
-      return cached;
-  }
-  target = mod != null ? __create(__getProtoOf(mod)) : {};
-  const to = isNodeMode || !mod || !mod.__esModule || !__hasOwnProp.call(mod, "default") ? __defProp(target, "default", { value: mod, enumerable: true }) : target;
-  if (mod && typeof mod === "object" || typeof mod === "function") {
-    for (let key of __getOwnPropNames(mod))
-      if (!__hasOwnProp.call(to, key))
-        __defProp(to, key, {
-          get: __accessProp.bind(mod, key),
-          enumerable: true
-        });
-  }
-  if (canCache)
-    cache.set(mod, to);
-  return to;
-};
-var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
-var __esm = (fn, res, err) => () => {
-  if (fn)
-    try {
-      res = fn(fn = 0);
-    } catch (e) {
-      err = [e];
-    }
-  if (err)
-    throw err[0];
-  return res;
-};
+/* harmony import */ var _index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2690);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6540);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4848);
+
 
 // ../../node_modules/.bun/prismjs@1.30.0/node_modules/prismjs/prism.js
-var require_prism = __commonJS(function(exports, module) {
+var require_prism = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__commonJS */ .P$)(function(exports, module) {
   var _self = typeof window !== "undefined" ? window : typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope ? self : {};
   var Prism2 = function(_self) {
     var lang = /(?:^|\s)lang(?:uage)?-([\w-]+)(?=\s|$)/i;
@@ -1062,7 +1020,7 @@ var require_prism = __commonJS(function(exports, module) {
 });
 
 // ../../node_modules/.bun/prismjs@1.30.0/node_modules/prismjs/components/prism-jsx.js
-var init_prism_jsx = __esm(() => {
+var init_prism_jsx = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__esm */ .E)(() => {
   (function(Prism2) {
     var javascript = Prism2.util.clone(Prism2.languages.javascript);
     var space = /(?:\s|\/\/.*(?!.)|\/\*(?:[^*]|\*(?!\/))\*\/)/.source;
@@ -1173,7 +1131,7 @@ var init_prism_jsx = __esm(() => {
 });
 
 // ../../node_modules/.bun/prismjs@1.30.0/node_modules/prismjs/components/prism-typescript.js
-var init_prism_typescript = __esm(() => {
+var init_prism_typescript = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__esm */ .E)(() => {
   (function(Prism2) {
     Prism2.languages.typescript = Prism2.languages.extend("javascript", {
       "class-name": {
@@ -1219,7 +1177,7 @@ var init_prism_typescript = __esm(() => {
 });
 
 // ../../node_modules/.bun/prismjs@1.30.0/node_modules/prismjs/components/prism-tsx.js
-var init_prism_tsx = __esm(() => {
+var init_prism_tsx = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__esm */ .E)(() => {
   (function(Prism2) {
     var typescript = Prism2.util.clone(Prism2.languages.typescript);
     Prism2.languages.tsx = Prism2.languages.extend("jsx", typescript);
@@ -1232,7 +1190,7 @@ var init_prism_tsx = __esm(() => {
 });
 
 // src/components/SyntaxHighlightedSource.tsx
-var import_prismjs = __toESM(require_prism());
+var import_prismjs = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_prism());
 
 
 import_prismjs.default.manual = true;
@@ -1253,12 +1211,12 @@ var renderTokens = (tokens) => {
     return tokens.map((token) => {
       const key = offset;
       offset += token.length;
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(react__WEBPACK_IMPORTED_MODULE_1__.Fragment, {
         children: renderTokens(token)
       }, key);
     });
   }
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("span", {
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("span", {
     className: [
       "token",
       tokens.type,
@@ -1271,8 +1229,8 @@ var renderTokens = (tokens) => {
 var SyntaxHighlightedSource = ({
   source
 }) => {
-  const tokens = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => import_prismjs.default.tokenize(source, import_prismjs.default.languages.tsx), [source]);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("span", {
+  const tokens = (0,react__WEBPACK_IMPORTED_MODULE_1__.useMemo)(() => import_prismjs.default.tokenize(source, import_prismjs.default.languages.tsx), [source]);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("span", {
     style: { ...tokenStyle, color: "inherit" },
     children: renderTokens(tokens)
   });
@@ -1281,7 +1239,106 @@ var SyntaxHighlightedSource_default = SyntaxHighlightedSource;
 
 
 
+/***/ },
+
+/***/ 2690
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   E: () => (/* binding */ __esm),
+/* harmony export */   P$: () => (/* binding */ __commonJS),
+/* harmony export */   VA: () => (/* binding */ __export),
+/* harmony export */   Yp: () => (/* binding */ __toCommonJS),
+/* harmony export */   f1: () => (/* binding */ __toESM)
+/* harmony export */ });
+/* unused harmony export __require */
+var __create = Object.create;
+var __getProtoOf = Object.getPrototypeOf;
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+function __accessProp(key) {
+  return this[key];
+}
+var __toESMCache_node;
+var __toESMCache_esm;
+var __toESM = (mod, isNodeMode, target) => {
+  var canCache = mod != null && typeof mod === "object";
+  if (canCache) {
+    var cache = isNodeMode ? __toESMCache_node ??= new WeakMap : __toESMCache_esm ??= new WeakMap;
+    var cached = cache.get(mod);
+    if (cached)
+      return cached;
+  }
+  target = mod != null ? __create(__getProtoOf(mod)) : {};
+  const to = isNodeMode || !mod || !mod.__esModule || !__hasOwnProp.call(mod, "default") ? __defProp(target, "default", { value: mod, enumerable: true }) : target;
+  if (mod && typeof mod === "object" || typeof mod === "function") {
+    for (let key of __getOwnPropNames(mod))
+      if (!__hasOwnProp.call(to, key))
+        __defProp(to, key, {
+          get: __accessProp.bind(mod, key),
+          enumerable: true
+        });
+  }
+  if (canCache)
+    cache.set(mod, to);
+  return to;
+};
+var __toCommonJS = (from) => {
+  var entry = (__moduleCache ??= new WeakMap).get(from), desc;
+  if (entry)
+    return entry;
+  entry = __defProp({}, "__esModule", { value: true });
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (var key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(entry, key))
+        __defProp(entry, key, {
+          get: __accessProp.bind(from, key),
+          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+        });
+  }
+  __moduleCache.set(from, entry);
+  return entry;
+};
+var __moduleCache;
+var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
+var __returnValue = (v) => v;
+function __exportSetter(name, newValue) {
+  this[name] = __returnValue.bind(null, newValue);
+}
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {
+      get: all[name],
+      enumerable: true,
+      configurable: true,
+      set: __exportSetter.bind(all, name)
+    });
+};
+var __esm = (fn, res, err) => () => {
+  if (fn)
+    try {
+      res = fn(fn = 0);
+    } catch (e) {
+      err = [e];
+    }
+  if (err)
+    throw err[0];
+  return res;
+};
+var __require = /* @__PURE__ */ (/* unused pure expression or super */ null && (((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined")
+    return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+})));
+
+
+
+
 /***/ }
 
 }]);
-//# sourceMappingURL=402.bundle.js.map
+//# sourceMappingURL=912.bundle.js.map

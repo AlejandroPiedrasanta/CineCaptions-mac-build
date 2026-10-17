@@ -26,7 +26,7 @@ LIBRERIAS = (
     ('PySide6', 'Qt (PySide6)', '6.12.0'),
     ('qtawesome', 'Iconos (QtAwesome)', '1.4.2'),
     ('numpy', 'NumPy', '2.5.4'),
-    ('PIL', 'Pillow', '12.3.0'),
+    ('PIL', 'Pillow', '13.0.0'),                      # (v5.5.10: subió con 3_compilar/requirements.txt; las dos van juntas)
     ('av', 'PyAV (FFmpeg)', '19.0.1'),
     ('ctranslate2', 'CTranslate2', '4.8.3'),          # (la de 3_compilar/requirements.txt; v5.5.4: decía 4.8.2 y cada arranque salía «Falla al iniciar»)
     ('faster_whisper', 'faster-whisper', '1.2.1'),

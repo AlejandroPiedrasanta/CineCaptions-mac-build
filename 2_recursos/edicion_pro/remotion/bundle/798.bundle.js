@@ -1,7 +1,7 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[477],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[798],{
 
-/***/ 2477
+/***/ 1798
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 
@@ -10,18 +10,18 @@ __webpack_require__.d(__webpack_exports__, {
   CaptionQueueProcessor: () => (/* binding */ CaptionQueueProcessor)
 });
 
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-s6qfsgvd.mjs
-var index_s6qfsgvd = __webpack_require__(5825);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-dad83ky0.mjs + 6 modules
-var index_dad83ky0 = __webpack_require__(8866);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-a94vwgt9.mjs
+var index_a94vwgt9 = __webpack_require__(6692);
 // EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-ts7drhwc.mjs
 var index_ts7drhwc = __webpack_require__(7449);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-zw34myr8.mjs + 2 modules
-var index_zw34myr8 = __webpack_require__(9630);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-swet14kx.mjs + 2 modules
+var index_swet14kx = __webpack_require__(8698);
 // EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-7shemw90.mjs
 var index_7shemw90 = __webpack_require__(8335);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-peb6gggm.mjs
-var index_peb6gggm = __webpack_require__(9228);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-00qdn7kw.mjs + 7 modules
+var index_00qdn7kw = __webpack_require__(5173);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-gbgac2ar.mjs
+var index_gbgac2ar = __webpack_require__(6834);
 // EXTERNAL MODULE: ./node_modules/react/index.js
 var react = __webpack_require__(6540);
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/input.js
@@ -1792,7 +1792,7 @@ class TrackSynchronizer {
     }
 }
 
-;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-qnmf1rtg.mjs
+;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-a8dceter.mjs
 Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 
 
@@ -1915,7 +1915,7 @@ var CaptionQueueProcessor = () => {
     markCaptionJobSaving,
     getAbortController,
     setProcessCaptionJobCallback
-  } = (0,react.useContext)(index_zw34myr8/* RenderQueueContext */.x7);
+  } = (0,react.useContext)(index_swet14kx/* RenderQueueContext */.x7);
   const processJob = (0,react.useCallback)(async (job) => {
     const { signal } = getAbortController(job.id);
     let captionCount = null;
@@ -1998,7 +1998,7 @@ var CaptionQueueProcessor = () => {
           message: `Saving ${job.outName}...`,
           value: 0.95
         });
-        await (0,index_peb6gggm/* writeStaticFile2 */.g4)({
+        await (0,index_gbgac2ar/* writeStaticFile2 */.g4)({
           contents: JSON.stringify(captions, null, 2),
           filePath: job.outName
         });
@@ -2015,7 +2015,7 @@ var CaptionQueueProcessor = () => {
         for (let index = 0;index < 1000; index++) {
           signal.throwIfAborted();
           const installationName = `${baseName}${index === 0 ? "" : `-copy${index === 1 ? "" : `-${index}`}`}`;
-          const preflight = await (0,index_dad83ky0/* prepareElementInstall */.Rl)({
+          const preflight = await (0,index_00qdn7kw/* prepareElementInstall */.Rl)({
             installationName,
             destination: {
               type: "selected-media",
@@ -2030,11 +2030,11 @@ var CaptionQueueProcessor = () => {
           if (expectedFileState.exists && expectedFileState.sourceHash !== sourceHash) {
             continue;
           }
-          if ((0,index_s6qfsgvd/* getBrowserStudioOperations */.P3)() === null) {
-            await (0,index_dad83ky0/* installRequiredPackages */.oX)(element.dependencies);
+          if ((0,index_a94vwgt9/* getBrowserStudioOperations */.P3)() === null) {
+            await (0,index_a94vwgt9/* installRequiredPackages */.oX)(element.dependencies);
           }
           signal.throwIfAborted();
-          const response = await (0,index_dad83ky0/* installElement */.iW)({
+          const response = await (0,index_00qdn7kw/* installElement */.iW)({
             installationName,
             compositionFile: null,
             compositionId: null,
@@ -2042,13 +2042,11 @@ var CaptionQueueProcessor = () => {
               fileName: job.target.fileName,
               nodePath: job.target.nodePath.nodePath,
               durationInFrames: job.target.durationInFrames,
-              premountFor: job.target.premountFor,
               captions
             },
             element,
             expectedFileState,
             from: null,
-            premountFor: job.target.premountFor,
             position: null,
             overwriteExisting: expectedFileState.exists,
             undoRedoNavigation: null,
@@ -2068,18 +2066,17 @@ var CaptionQueueProcessor = () => {
           message: "Adding Basic captions...",
           value: 0.95
         });
-        await (0,index_dad83ky0/* installRequiredPackages */.oX)([
+        await (0,index_a94vwgt9/* installRequiredPackages */.oX)([
           { name: "@remotion/captions", version: null }
         ]);
         const request = {
           fileName: job.target.fileName,
           nodePath: job.target.nodePath.nodePath,
           durationInFrames: job.target.durationInFrames,
-          premountFor: job.target.premountFor,
           captions
         };
-        const browserStudioOperations = (0,index_s6qfsgvd/* getBrowserStudioOperations */.P3)();
-        const response = browserStudioOperations ? await browserStudioOperations.insertBasicCaptions(request) : await (0,index_s6qfsgvd/* callApi */.px)("/api/insert-basic-captions", request);
+        const browserStudioOperations = (0,index_a94vwgt9/* getBrowserStudioOperations */.P3)();
+        const response = browserStudioOperations ? await browserStudioOperations.insertBasicCaptions(request) : await (0,index_a94vwgt9/* callApi */.px)("/api/insert-basic-captions", request);
         if (!response.success) {
           throw new Error(response.reason);
         }
@@ -2153,4 +2150,4 @@ var loadModelForJob = async ({
 /***/ }
 
 }]);
-//# sourceMappingURL=477.bundle.js.map
+//# sourceMappingURL=798.bundle.js.map

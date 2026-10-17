@@ -201,8 +201,10 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
     y_ancla = ANCLAS.get(ancla, ANCLAS['bajo']) if not isinstance(ancla, (int, float)) else float(ancla)
     forzados = set()
     for m in (mains or []):
-        if isinstance(m, int) and 0 <= m < len(pal):
-            forzados.add(m)
+        if isinstance(m, int):
+            # v5.5.10: índices de la lista ENTREGADA (las marcas de Creativo), no de `pal`, que quita vacías y junta tartamudeos: antes, tras una palabra
+            # quitada, la Principal marcada caía en la palabra de al lado (marcar «licensed» hacía héroe a «FULL-TIME»), en la vista y en Resolve
+            forzados.update(k for k, w in enumerate(pal) if m in w['orig'])
         else:
             forzados.update(k for k, w in enumerate(pal) if w['plano'] == G._plano(str(m)))
     bloques_idx = []

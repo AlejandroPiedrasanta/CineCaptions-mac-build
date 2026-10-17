@@ -1,18 +1,20 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[866],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[990],{
 
-/***/ 6485
+/***/ 2990
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   VideoMattingQueueProcessor: () => (/* binding */ VideoMattingQueueProcessor)
 /* harmony export */ });
-/* harmony import */ var _index_s6qfsgvd_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5825);
-/* harmony import */ var _index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9630);
-/* harmony import */ var _index_7shemw90_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8335);
-/* harmony import */ var _index_peb6gggm_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9228);
+/* harmony import */ var _index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6692);
+/* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7449);
+/* harmony import */ var _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8698);
+/* harmony import */ var _index_7shemw90_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8335);
+/* harmony import */ var _index_gbgac2ar_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6834);
 Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(6540);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(6540);
+
 
 
 
@@ -30,8 +32,8 @@ var VideoMattingQueueProcessor = () => {
     getAbortController,
     setProcessVideoMattingJobCallback,
     updateVideoMattingJobProgress
-  } = (0,react__WEBPACK_IMPORTED_MODULE_5__.useContext)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_1__/* .RenderQueueContext */ .x7);
-  const processJob = (0,react__WEBPACK_IMPORTED_MODULE_5__.useCallback)(async (job) => {
+  } = (0,react__WEBPACK_IMPORTED_MODULE_6__.useContext)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderQueueContext */ .x7);
+  const processJob = (0,react__WEBPACK_IMPORTED_MODULE_6__.useCallback)(async (job) => {
     const { signal } = getAbortController(job.id);
     let output = null;
     let processingError = null;
@@ -47,7 +49,7 @@ var VideoMattingQueueProcessor = () => {
       if (!support.supported) {
         throw new Error(support.detailedReason);
       }
-      await (0,_index_7shemw90_mjs__WEBPACK_IMPORTED_MODULE_2__/* .loadModelForJob */ .k)({
+      await (0,_index_7shemw90_mjs__WEBPACK_IMPORTED_MODULE_3__/* .loadModelForJob */ .k)({
         signal,
         model: job.model,
         progressStart: 0,
@@ -95,14 +97,14 @@ var VideoMattingQueueProcessor = () => {
       const video = await output.video.getBlob();
       signal.throwIfAborted();
       markVideoMattingJobSaving(job.id);
-      await video.arrayBuffer().then((contents) => (0,_index_peb6gggm_mjs__WEBPACK_IMPORTED_MODULE_3__/* .writeStaticFile2 */ .g4)({ contents, filePath: job.outName }));
+      await video.arrayBuffer().then((contents) => (0,_index_gbgac2ar_mjs__WEBPACK_IMPORTED_MODULE_4__/* .writeStaticFile2 */ .g4)({ contents, filePath: job.outName }));
       if (job.target !== null) {
         updateVideoMattingJobProgress(job.id, {
           detail: null,
           message: "Replacing video source...",
           value: 0.97
         });
-        const browserStudioOperations = (0,_index_s6qfsgvd_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)();
+        const browserStudioOperations = (0,_index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)();
         const request = {
           fileName: job.target.fileName,
           nodePath: job.target.nodePath.nodePath,
@@ -112,7 +114,7 @@ var VideoMattingQueueProcessor = () => {
         if (browserStudioOperations && !replaceSource) {
           throw new Error("Browser Studio cannot replace the video source.");
         }
-        const response = replaceSource ? await replaceSource(request) : await (0,_index_s6qfsgvd_mjs__WEBPACK_IMPORTED_MODULE_0__/* .callApi */ .px)("/api/replace-video-source", request);
+        const response = replaceSource ? await replaceSource(request) : await (0,_index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_0__/* .callApi */ .px)("/api/replace-video-source", request);
         if (!response.success) {
           throw new Error(response.reason);
         }
@@ -141,7 +143,7 @@ var VideoMattingQueueProcessor = () => {
     markVideoMattingJobFailed,
     updateVideoMattingJobProgress
   ]);
-  (0,react__WEBPACK_IMPORTED_MODULE_5__.useEffect)(() => {
+  (0,react__WEBPACK_IMPORTED_MODULE_6__.useEffect)(() => {
     setProcessVideoMattingJobCallback(processJob);
     return () => setProcessVideoMattingJobCallback(null);
   }, [processJob, setProcessVideoMattingJobCallback]);
@@ -188,4 +190,4 @@ var loadModelForJob = async ({
 /***/ }
 
 }]);
-//# sourceMappingURL=866.bundle.js.map
+//# sourceMappingURL=990.bundle.js.map

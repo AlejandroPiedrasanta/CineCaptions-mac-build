@@ -9,7 +9,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   VideoTexture: () => (/* binding */ VideoTexture)
 /* harmony export */ });
 /* harmony import */ var _constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9128);
-/* harmony import */ var _Texture_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8280);
+/* harmony import */ var _Texture_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5805);
 
 
 
@@ -125,6 +125,8 @@ class VideoTexture extends _Texture_js__WEBPACK_IMPORTED_MODULE_1__/* .Texture *
 		if ( this._requestVideoFrameCallbackId !== 0 ) {
 
 			this.source.data.cancelVideoFrameCallback( this._requestVideoFrameCallbackId );
+
+			this._requestVideoFrameCallbackId = 0;
 
 		}
 

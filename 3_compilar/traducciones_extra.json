@@ -5787,5 +5787,222 @@
   "fr": "Montage PRO plus rapide : « Motions complet » et le téléchargement du B-roll se font en même temps que le reste (avant, à la fin, l’un après l’autre), « Motions complet » n’attend plus l’IA de texte et sa vidéo s’encode plus vite.",
   "de": "Schnellerer PRO-Schnitt: «Komplette Motions» und der B-Roll-Download laufen jetzt parallel zum Rest (vorher am Ende, nacheinander), «Komplette Motions» wartet nicht mehr auf die Text-KI und ihr Video wird schneller kodiert.",
   "it": "Montaggio PRO più veloce: «Motions completo» e il download del B-roll ora avvengono insieme al resto (prima alla fine, uno dopo l’altro), «Motions completo» non aspetta più l’IA di testo e il suo video si codifica più in fretta."
+ },
+ "Motions de la PRO": {
+  "en": "PRO motions",
+  "pt": "Motions da PRO",
+  "fr": "Motions de la PRO",
+  "de": "PRO-Motions",
+  "it": "Motion della PRO"
+ },
+ "Lo que GO añade a este tema. Pasa el ratón para ver el ejemplo.": {
+  "en": "What GO adds to this theme. Hover to see the example.",
+  "pt": "O que o GO acrescenta a este tema. Passe o mouse para ver o exemplo.",
+  "fr": "Ce que GO ajoute à ce thème. Survolez pour voir l’exemple.",
+  "de": "Was GO zu diesem Thema hinzufügt. Fahr mit der Maus darüber, um das Beispiel zu sehen.",
+  "it": "Cosa aggiunge GO a questo tema. Passa il mouse per vedere l’esempio."
+ },
+ "Elegir uno por uno en Efectos  →": {
+  "en": "Pick them one by one in Effects  →",
+  "pt": "Escolher um por um em Efeitos  →",
+  "fr": "Choisir un par un dans Effets  →",
+  "de": "Einzeln in Effekte auswählen  →",
+  "it": "Scegli uno per uno in Effetti  →"
+ },
+ "La Edición PRO necesita al menos un tipo de motion. Para no poner ninguno, apaga la Edición PRO.": {
+  "en": "PRO Edit needs at least one kind of motion. To add none, turn PRO Edit off.",
+  "pt": "A Edição PRO precisa de pelo menos um tipo de motion. Para não colocar nenhum, desative a Edição PRO.",
+  "fr": "Le Montage PRO a besoin d’au moins un type de motion. Pour n’en mettre aucun, désactivez le Montage PRO.",
+  "de": "Der PRO-Schnitt braucht mindestens eine Art von Motion. Um keine zu setzen, schalte den PRO-Schnitt aus.",
+  "it": "Il Montaggio PRO ha bisogno di almeno un tipo di motion. Per non metterne nessuno, disattiva il Montaggio PRO."
+ },
+ "Ejemplo real": {
+  "en": "Real example",
+  "pt": "Exemplo real",
+  "fr": "Exemple réel",
+  "de": "Echtes Beispiel",
+  "it": "Esempio reale"
+ },
+ "Apagado: GO no lo pondrá": {
+  "en": "Off: GO won’t add it",
+  "pt": "Desligado: o GO não vai colocar",
+  "fr": "Désactivé : GO ne l’ajoutera pas",
+  "de": "Aus: GO fügt es nicht hinzu",
+  "it": "Spento: GO non lo aggiungerà"
+ },
+ "GO lo pondrá en tu video": {
+  "en": "GO will add it to your video",
+  "pt": "O GO vai colocar no seu vídeo",
+  "fr": "GO l’ajoutera à votre vidéo",
+  "de": "GO fügt es deinem Video hinzu",
+  "it": "GO lo aggiungerà al tuo video"
+ },
+ "Píldora bajo captions": {
+  "en": "Pill under captions",
+  "pt": "Pílula sob as legendas",
+  "fr": "Pastille sous les sous-titres",
+  "de": "Pille unter den Untertiteln",
+  "it": "Pillola sotto i sottotitoli"
+ },
+ "B-roll con fotos": {
+  "en": "B-roll with photos",
+  "pt": "B-roll com fotos",
+  "fr": "B-roll avec photos",
+  "de": "B-Roll mit Fotos",
+  "it": "B-roll con foto"
+ },
+ "Captions detrás de ti": {
+  "en": "Captions behind you",
+  "pt": "Legendas atrás de você",
+  "fr": "Sous-titres derrière vous",
+  "de": "Untertitel hinter dir",
+  "it": "Sottotitoli dietro di te"
+ },
+ "Motions completo": {
+  "en": "Full motions",
+  "pt": "Motions completo",
+  "fr": "Motions complet",
+  "de": "Komplette Motions",
+  "it": "Motions completo"
+ },
+ "Gancho del inicio": {
+  "en": "Opening hook",
+  "pt": "Gancho do início",
+  "fr": "Accroche du début",
+  "de": "Hook am Anfang",
+  "it": "Gancio iniziale"
+ },
+ "Escenas completas": {
+  "en": "Full-screen scenes",
+  "pt": "Cenas em tela cheia",
+  "fr": "Scènes plein écran",
+  "de": "Vollbild-Szenen",
+  "it": "Scene a schermo intero"
+ },
+ "Kit de motions": {
+  "en": "Motion kit",
+  "pt": "Kit de motions",
+  "fr": "Kit de motions",
+  "de": "Motion-Kit",
+  "it": "Kit di motion"
+ },
+ "Plantillas por frase": {
+  "en": "Phrase templates",
+  "pt": "Modelos por frase",
+  "fr": "Modèles par phrase",
+  "de": "Vorlagen pro Satz",
+  "it": "Modelli per frase"
+ },
+ "Una píldora animada justo debajo del texto con el lugar, la cifra o el emoji de lo que dices.": {
+  "en": "An animated pill right under the text with the place, number or emoji of what you say.",
+  "pt": "Uma pílula animada logo abaixo do texto com o lugar, o número ou o emoji do que você diz.",
+  "fr": "Une pastille animée juste sous le texte avec le lieu, le chiffre ou l’emoji de ce que vous dites.",
+  "de": "Eine animierte Pille direkt unter dem Text mit dem Ort, der Zahl oder dem Emoji dessen, was du sagst.",
+  "it": "Una pillola animata subito sotto il testo con il luogo, il numero o l’emoji di ciò che dici."
+ },
+ "Fotos de internet con licencia a pantalla completa cuando nombras algo.": {
+  "en": "Licensed internet photos, full screen, when you name something.",
+  "pt": "Fotos da internet com licença em tela cheia quando você cita algo.",
+  "fr": "Des photos d’internet sous licence en plein écran quand vous nommez quelque chose.",
+  "de": "Lizenzierte Fotos aus dem Internet im Vollbild, wenn du etwas nennst.",
+  "it": "Foto da internet con licenza a schermo intero quando nomini qualcosa."
+ },
+ "Se recorta a la persona (IA local o Magic Mask) y el texto pasa por detrás.": {
+  "en": "The person is cut out (local AI or Magic Mask) and the text goes behind.",
+  "pt": "A pessoa é recortada (IA local ou Magic Mask) e o texto passa por trás.",
+  "fr": "La personne est détourée (IA locale ou Magic Mask) et le texte passe derrière.",
+  "de": "Die Person wird freigestellt (lokale KI oder Magic Mask) und der Text läuft dahinter.",
+  "it": "La persona viene scontornata (IA locale o Magic Mask) e il testo passa dietro."
+ },
+ "Un video de motions encima de todo: el titular palabra a palabra y una tarjeta por idea.": {
+  "en": "A motions video on top of everything: the headline word by word and one card per idea.",
+  "pt": "Um vídeo de motions por cima de tudo: o título palavra por palavra e um cartão por ideia.",
+  "fr": "Une vidéo de motions par-dessus tout : le titre mot à mot et une carte par idée.",
+  "de": "Ein Motions-Video über allem: die Schlagzeile Wort für Wort und eine Karte pro Idee.",
+  "it": "Un video di motion sopra tutto: il titolo parola per parola e una scheda per idea."
+ },
+ "Los primeros segundos: un titular detrás de ti e iconos que giran alrededor de tu cabeza.": {
+  "en": "The first seconds: a headline behind you and icons spinning around your head.",
+  "pt": "Os primeiros segundos: um título atrás de você e ícones girando ao redor da sua cabeça.",
+  "fr": "Les premières secondes : un titre derrière vous et des icônes qui tournent autour de votre tête.",
+  "de": "Die ersten Sekunden: eine Schlagzeile hinter dir und Icons, die um deinen Kopf kreisen.",
+  "it": "I primi secondi: un titolo dietro di te e icone che girano intorno alla tua testa."
+ },
+ "Cuaderno, chat, polaroid, calendario… a pantalla completa cuando cuentas algo.": {
+  "en": "Notebook, chat, polaroid, calendar… full screen when you tell something.",
+  "pt": "Caderno, chat, polaroid, calendário… em tela cheia quando você conta algo.",
+  "fr": "Carnet, chat, polaroid, calendrier… en plein écran quand vous racontez quelque chose.",
+  "de": "Notizbuch, Chat, Polaroid, Kalender… im Vollbild, wenn du etwas erzählst.",
+  "it": "Quaderno, chat, polaroid, calendario… a schermo intero quando racconti qualcosa."
+ },
+ "Listas, ruletas, títulos neón y cajas misterio sobre el video.": {
+  "en": "Lists, wheels, neon titles and mystery boxes over the video.",
+  "pt": "Listas, roletas, títulos neon e caixas misteriosas sobre o vídeo.",
+  "fr": "Listes, roues, titres néon et boîtes mystère sur la vidéo.",
+  "de": "Listen, Glücksräder, Neon-Titel und Mystery-Boxen über dem Video.",
+  "it": "Liste, ruote, titoli al neon e scatole misteriose sopra il video."
+ },
+ "Cifras, mapas con bandera, marcos de cámara y llamadas a la acción.": {
+  "en": "Numbers, maps with flags, camera frames and calls to action.",
+  "pt": "Números, mapas com bandeira, molduras de câmera e chamadas para ação.",
+  "fr": "Chiffres, cartes avec drapeau, cadres de caméra et appels à l’action.",
+  "de": "Zahlen, Karten mit Flagge, Kamerarahmen und Handlungsaufrufe.",
+  "it": "Cifre, mappe con bandiera, cornici di camera e inviti all’azione."
+ },
+ "«¡Hola amigos!», «Guárdalo», encuestas… justo cuando dices esa frase.": {
+  "en": "«Hi friends!», «Save it», polls… right when you say that phrase.",
+  "pt": "«Olá, amigos!», «Salve», enquetes… bem quando você diz essa frase.",
+  "fr": "« Salut les amis ! », « Enregistrez-la », sondages… au moment où vous dites cette phrase.",
+  "de": "«Hallo Freunde!», «Speichern», Umfragen… genau wenn du diesen Satz sagst.",
+  "it": "«Ciao amici!», «Salvalo», sondaggi… proprio quando dici quella frase."
+ },
+ "Encendido · clic para apagar": {
+  "en": "On · click to turn off",
+  "pt": "Ligado · clique para desligar",
+  "fr": "Activé · cliquez pour désactiver",
+  "de": "An · klicken zum Ausschalten",
+  "it": "Acceso · clic per spegnere"
+ },
+ "Apagado · clic para encender": {
+  "en": "Off · click to turn on",
+  "pt": "Desligado · clique para ligar",
+  "fr": "Désactivé · cliquez pour activer",
+  "de": "Aus · klicken zum Einschalten",
+  "it": "Spento · clic per accendere"
+ },
+ "Proyecto con la Edición PRO: a la derecha, una barra con los motions que pondrá GO (píldora bajo los captions, B-roll, captions detrás de ti, Motions completo, gancho del inicio, escenas, kit, gráficos y plantillas); un clic los enciende o apaga y a la izquierda un móvil enseña el ejemplo real de cada uno. Va de la mano con la página Efectos.": {
+  "en": "Project with PRO Edit: on the right, a bar with the motions GO will add (pill under the captions, B-roll, captions behind you, Full motions, opening hook, scenes, kit, graphics and templates); one click turns them on or off, and on the left a phone shows the real example of each one. It stays in sync with the Effects page.",
+  "pt": "Projeto com a Edição PRO: à direita, uma barra com os motions que o GO vai colocar (pílula sob as legendas, B-roll, legendas atrás de você, Motions completo, gancho do início, cenas, kit, gráficos e modelos); um clique liga ou desliga e, à esquerda, um celular mostra o exemplo real de cada um. Fica em sintonia com a página Efeitos.",
+  "fr": "Projet avec le Montage PRO : à droite, une barre avec les motions que GO ajoutera (pastille sous les sous-titres, B-roll, sous-titres derrière vous, Motions complet, accroche du début, scènes, kit, graphiques et modèles) ; un clic les active ou désactive, et à gauche un téléphone montre l’exemple réel de chacun. Tout reste synchronisé avec la page Effets.",
+  "de": "Projekt mit PRO-Schnitt: rechts eine Leiste mit den Motions, die GO setzt (Pille unter den Untertiteln, B-Roll, Untertitel hinter dir, Komplette Motions, Hook am Anfang, Szenen, Kit, Grafiken und Vorlagen); ein Klick schaltet sie an oder aus, und links zeigt ein Handy das echte Beispiel von jedem. Alles bleibt mit der Seite Effekte abgestimmt.",
+  "it": "Progetto con il Montaggio PRO: a destra, una barra con i motion che GO aggiungerà (pillola sotto i sottotitoli, B-roll, sottotitoli dietro di te, Motions completo, gancio iniziale, scene, kit, grafiche e modelli); un clic li accende o spegne e a sinistra un telefono mostra l’esempio reale di ognuno. Resta in sintonia con la pagina Effetti."
+ },
+ "Proyecto y Sonido más limpios: sin la barra de título; «Crea tu estilo» va junto a Whisper; el slider va sin flechas ni puntos, con arrastre elástico en los extremos, y su píldora es «Solo captions | Con PRO».": {
+  "en": "Cleaner Project and Sound pages: no title bar; «Create your style» sits next to Whisper; the slider has no arrows or dots, with elastic dragging at the ends, and its pill is «Captions only | With PRO».",
+  "pt": "Projeto e Som mais limpos: sem a barra de título; «Crie o seu estilo» fica ao lado do Whisper; o slider não tem setas nem pontos, com arraste elástico nas pontas, e sua pílula é «Só legendas | Com PRO».",
+  "fr": "Projet et Son plus épurés : sans barre de titre ; « Créez votre style » est à côté de Whisper ; le slider n’a plus de flèches ni de points, avec un glissement élastique aux extrémités, et sa pastille est « Sous-titres seuls | Avec PRO ».",
+  "de": "Projekt und Sound aufgeräumter: ohne Titelleiste; «Erstelle deinen Stil» steht neben Whisper; der Slider hat keine Pfeile oder Punkte mehr, zieht an den Enden elastisch, und seine Pille ist «Nur Untertitel | Mit PRO».",
+  "it": "Progetto e Suono più puliti: senza barra del titolo; «Crea il tuo stile» è accanto a Whisper; lo slider è senza frecce né punti, con trascinamento elastico alle estremità, e la sua pillola è «Solo sottotitoli | Con PRO»."
+ },
+ "Librerías al día: Pillow 13, Remotion 4.0.536 y three.js 0.186.": {
+  "en": "Libraries up to date: Pillow 13, Remotion 4.0.536 and three.js 0.186.",
+  "pt": "Bibliotecas atualizadas: Pillow 13, Remotion 4.0.536 e three.js 0.186.",
+  "fr": "Bibliothèques à jour : Pillow 13, Remotion 4.0.536 et three.js 0.186.",
+  "de": "Bibliotheken aktuell: Pillow 13, Remotion 4.0.536 und three.js 0.186.",
+  "it": "Librerie aggiornate: Pillow 13, Remotion 4.0.536 e three.js 0.186."
+ },
+ "Cerrar el programa ya no puede dar un error aunque quede trabajo en segundo plano.": {
+  "en": "Closing the program can no longer cause an error, even with work still running in the background.",
+  "pt": "Fechar o programa já não pode dar erro, mesmo com trabalho em segundo plano.",
+  "fr": "Fermer le programme ne peut plus provoquer d’erreur, même s’il reste du travail en arrière-plan.",
+  "de": "Das Schließen des Programms kann keinen Fehler mehr auslösen, auch wenn im Hintergrund noch gearbeitet wird.",
+  "it": "Chiudere il programma non può più dare un errore, anche se resta lavoro in background."
+ },
+ "Inicio ya no se queda congelado al cambiar el tamaño de la ventana o maximizarla, y si DaVinci Resolve se cuelga la ventana de CineCaptions sigue respondiendo.": {
+  "en": "Home no longer freezes when you resize or maximize the window, and if DaVinci Resolve hangs, the CineCaptions window keeps responding.",
+  "pt": "O Início já não congela ao mudar o tamanho da janela ou maximizá-la, e se o DaVinci Resolve travar, a janela do CineCaptions continua respondendo.",
+  "fr": "L’accueil ne se fige plus quand vous redimensionnez ou agrandissez la fenêtre, et si DaVinci Resolve se bloque, la fenêtre de CineCaptions continue de répondre.",
+  "de": "Der Start friert nicht mehr ein, wenn du die Fenstergröße änderst oder es maximierst, und wenn DaVinci Resolve hängt, reagiert das CineCaptions-Fenster weiter.",
+  "it": "La Home non si blocca più quando ridimensioni o ingrandisci la finestra, e se DaVinci Resolve si blocca, la finestra di CineCaptions continua a rispondere."
  }
 }

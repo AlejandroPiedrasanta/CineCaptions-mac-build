@@ -1,19 +1,19 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[66],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[906],{
 
-/***/ 7066
+/***/ 5906
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   TranscriptionModal: () => (/* binding */ TranscriptionModal)
 /* harmony export */ });
-/* harmony import */ var _index_s6qfsgvd_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5825);
+/* harmony import */ var _index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6692);
 /* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7449);
-/* harmony import */ var _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8866);
-/* harmony import */ var _index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9630);
+/* harmony import */ var _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5173);
+/* harmony import */ var _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8698);
 /* harmony import */ var _index_zpf6xem0_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3731);
-/* harmony import */ var _index_kx5rzpg7_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(5335);
-/* harmony import */ var _index_r4vq26h2_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(924);
+/* harmony import */ var _index_2c9r9533_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(211);
+/* harmony import */ var _index_a0vnj1t4_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(459);
 /* harmony import */ var _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(3872);
 Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(6540);
@@ -150,7 +150,7 @@ var MAX_CHUNK_LENGTH_IN_SECONDS = 30;
 var REMOTION_CAPTION_STYLES_URL = "https://www.remotion.dev/elements/captions";
 var AVAILABLE_MODELS = Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
 var settingsPanel = {
-  ..._index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsPanel */ .Z6,
+  ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsPanel */ .Z6,
   flexDirection: "column",
   paddingTop: 16
 };
@@ -159,11 +159,11 @@ var advancedPanel = {
   paddingTop: 0
 };
 var transcriptionModalStyle = {
-  ..._index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .outerModalStyle */ .uT,
+  ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .outerModalStyle */ .uT,
   outline: "none"
 };
 var transcriptionLayout = {
-  ..._index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalLayout */ .D6,
+  ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalLayout */ .D6,
   flex: "1 1 auto"
 };
 var controlStyle = {
@@ -236,17 +236,17 @@ var openIconStyle = {
 };
 var TranscriptionSettingLabel = ({ children, inputId, name }) => {
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-    style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
+    style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
     children: [
       inputId === null ? name : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("label", {
         htmlFor: inputId,
         style: nestedLabelStyle,
         children: name
       }),
-      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Spacing */ .Kz, {
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Spacing */ .Kz, {
         x: 0.5
       }),
-      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .InfoBubble */ .Di, {
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .InfoBubble */ .Di, {
         "aria-label": `Learn more about ${name}`,
         children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
           style: tooltipContent,
@@ -277,7 +277,7 @@ var ModelSettings = ({
         id: model.name,
         value: model.name,
         label: `${model.name} · ${(0,_remotion_studio_shared__WEBPACK_IMPORTED_MODULE_7__/* .formatBytes */ .z3)(model.webGpuDownloadSize)}${cachedModels.has(model.name) ? " · Downloaded" : ""}`,
-        leftItem: model.name === selectedModel ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Checkmark */ .MG, {}) : null,
+        leftItem: model.name === selectedModel ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Checkmark */ .MG, {}) : null,
         keyHint: null,
         quickSwitcherLabel: null,
         subMenu: null,
@@ -292,7 +292,7 @@ var ModelSettings = ({
       id: languageCode,
       value: languageCode,
       label: languageName,
-      leftItem: languageCode === selectedLanguage ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Checkmark */ .MG, {}) : null,
+      leftItem: languageCode === selectedLanguage ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Checkmark */ .MG, {}) : null,
       keyHint: null,
       quickSwitcherLabel: null,
       subMenu: null,
@@ -320,7 +320,7 @@ var ModelSettings = ({
             })
           ]
         }),
-        leftItem: effectiveTask === "transcribe" ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Checkmark */ .MG, {}) : null,
+        leftItem: effectiveTask === "transcribe" ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Checkmark */ .MG, {}) : null,
         keyHint: null,
         quickSwitcherLabel: null,
         subMenu: null,
@@ -344,7 +344,7 @@ var ModelSettings = ({
             })
           ]
         }),
-        leftItem: effectiveTask === "translate" ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Checkmark */ .MG, {}) : null,
+        leftItem: effectiveTask === "translate" ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Checkmark */ .MG, {}) : null,
         keyHint: null,
         quickSwitcherLabel: null,
         subMenu: null,
@@ -361,15 +361,15 @@ var ModelSettings = ({
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.Fragment, {
     children: [
       /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-        style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
+        style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
         children: [
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-            style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
+            style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
             children: "Whisper model"
           }),
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-            style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
-            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
+            style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
+            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
               values: modelOptions,
               selectedId: selectedModel,
               "aria-label": "Whisper model",
@@ -379,15 +379,15 @@ var ModelSettings = ({
         ]
       }),
       selectedModelInfo.multilingual ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-        style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
+        style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
         children: [
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-            style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
+            style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
             children: "Spoken language"
           }),
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-            style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
-            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
+            style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
+            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
               values: languageOptions,
               selectedId: selectedLanguage,
               "aria-label": "Spoken language",
@@ -397,15 +397,15 @@ var ModelSettings = ({
         ]
       }) : null,
       selectedModelInfo.supportsTranslation ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-        style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
+        style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
         children: [
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-            style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
+            style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
             children: "Task"
           }),
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-            style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
-            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
+            style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
+            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
               values: taskOptions,
               selectedId: effectiveTask,
               "aria-label": "Task",
@@ -418,7 +418,7 @@ var ModelSettings = ({
         id: TRANSCRIPTION_TASK_MESSAGE_ID,
         "aria-live": "polite",
         style: taskMessageRow,
-        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
           align: "flex-end",
           message: "Word timings may be less accurate when translating to English.",
           type: "warning"
@@ -426,7 +426,7 @@ var ModelSettings = ({
       }) : null,
       supportState.type === "unsupported" ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
         style: { padding: "0 16px" },
-        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
           align: "flex-end",
           message: supportState.message,
           type: "error"
@@ -438,23 +438,23 @@ var ModelSettings = ({
 var OutputSettings = ({ exists, onOutNameChange, outName, validationMessage }) => {
   const openExistingOutput = (0,react__WEBPACK_IMPORTED_MODULE_9__.useCallback)(() => {
     if (!window.remotion_publicFolderExists) {
-      (0,_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .showNotification */ .Ds)("Could not find the public folder", 2000);
+      (0,_index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_0__/* .showNotification */ .Ds)("Could not find the public folder", 2000);
       return;
     }
-    (0,_index_s6qfsgvd_mjs__WEBPACK_IMPORTED_MODULE_0__/* .openInFileExplorer */ .dP)({
+    (0,_index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_0__/* .openInFileExplorer */ .dP)({
       directory: `${window.remotion_publicFolderExists}/${outName}`
     }).catch((err) => {
-      (0,_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .showNotification */ .Ds)(`Could not open file: ${err.message}`, 2000);
+      (0,_index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_0__/* .showNotification */ .Ds)(`Could not open file: ${err.message}`, 2000);
     });
   }, [outName]);
   const renderOpenIcon = (0,react__WEBPACK_IMPORTED_MODULE_9__.useCallback)((color) => {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ExpandedFolderIconSolid */ .Se, {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ExpandedFolderIconSolid */ .Se, {
       style: openIconStyle,
       color
     });
   }, []);
-  const fileManagerName = (0,_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .getFileManagerName */ .L6)(window.remotion_fileSystemPlatform);
-  const isBrowserStudio = (0,_index_s6qfsgvd_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)() !== null;
+  const fileManagerName = (0,_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .getFileManagerName */ .L6)(window.remotion_fileSystemPlatform);
+  const isBrowserStudio = (0,_index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)() !== null;
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
     style: outputRow,
     children: [
@@ -481,12 +481,12 @@ var OutputSettings = ({ exists, onOutNameChange, outName, validationMessage }) =
         children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
           style: controlStyle,
           children: [
-            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RemotionInput */ .Wt, {
+            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RemotionInput */ .Wt, {
               "aria-label": "Caption output file",
               "aria-describedby": validationMessage || exists ? TRANSCRIPTION_OUTPUT_MESSAGE_ID : undefined,
               "aria-invalid": validationMessage ? true : undefined,
               status: validationMessage ? "error" : exists ? "warning" : "ok",
-              style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .input */ .hF,
+              style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .input */ .hF,
               type: "text",
               value: outName,
               onChange: onOutNameChange,
@@ -496,16 +496,16 @@ var OutputSettings = ({ exists, onOutNameChange, outName, validationMessage }) =
               id: TRANSCRIPTION_OUTPUT_MESSAGE_ID,
               "aria-live": "polite",
               children: [
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Spacing */ .Kz, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Spacing */ .Kz, {
                   y: 1,
                   block: true
                 }),
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
                   align: "flex-end",
                   message: validationMessage ?? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("span", {
                     style: existsMessageStyle,
                     children: [
-                      isBrowserStudio ? null : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .InlineAction */ .gs, {
+                      isBrowserStudio ? null : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .InlineAction */ .gs, {
                         onClick: openExistingOutput,
                         renderAction: renderOpenIcon,
                         "aria-label": `Open in ${fileManagerName}`,
@@ -554,7 +554,7 @@ var AdvancedSettings = ({
         "aria-label": "Chunk settings",
         role: "group",
         children: [
-          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
+          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
             formatter: (value) => `${value}s`,
             hint: {
               content: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
@@ -570,7 +570,7 @@ var AdvancedSettings = ({
             step: 1,
             value: chunkLengthInSeconds
           }),
-          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
+          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
             formatter: (value) => `${value}s`,
             hint: {
               content: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
@@ -591,7 +591,7 @@ var AdvancedSettings = ({
         id: TRANSCRIPTION_CHUNK_MESSAGE_ID,
         "aria-live": "polite",
         style: { padding: "0 16px" },
-        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
           align: "flex-end",
           message: validationMessage,
           type: "error"
@@ -603,9 +603,9 @@ var AdvancedSettings = ({
         "aria-label": "Decoding settings",
         role: "group",
         children: [
-          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalHr */ .Yb, {}),
+          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalHr */ .Yb, {}),
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-            style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
+            style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
             children: [
               /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(TranscriptionSettingLabel, {
                 inputId: "force-full-sequences",
@@ -613,8 +613,8 @@ var AdvancedSettings = ({
                 children: "Makes the job fail if Whisper leaves an incomplete timestamp sequence."
               }),
               /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
-                children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Checkbox */ .Sc, {
+                style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
+                children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Checkbox */ .Sc, {
                   checked: forceFullSequences,
                   inputId: "force-full-sequences",
                   name: "force-full-sequences",
@@ -623,9 +623,9 @@ var AdvancedSettings = ({
               })
             ]
           }),
-          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalHr */ .Yb, {}),
+          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalHr */ .Yb, {}),
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-            style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
+            style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
             children: [
               /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(TranscriptionSettingLabel, {
                 inputId: "use-sampling",
@@ -633,8 +633,8 @@ var AdvancedSettings = ({
                 children: "Makes decoding nondeterministic."
               }),
               /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
-                children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Checkbox */ .Sc, {
+                style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
+                children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Checkbox */ .Sc, {
                   checked: doSample,
                   inputId: "use-sampling",
                   name: "use-sampling",
@@ -645,7 +645,7 @@ var AdvancedSettings = ({
           }),
           doSample ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.Fragment, {
             children: [
-              /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
+              /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
                 hint: {
                   content: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
                     style: tooltipContent,
@@ -659,7 +659,7 @@ var AdvancedSettings = ({
                 step: 0.1,
                 value: temperature
               }),
-              /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
+              /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
                 hint: {
                   content: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
                     style: tooltipContent,
@@ -675,7 +675,7 @@ var AdvancedSettings = ({
               })
             ]
           }) : null,
-          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
+          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
             hint: {
               content: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
                 style: tooltipContent,
@@ -689,7 +689,7 @@ var AdvancedSettings = ({
             step: 0.1,
             value: repetitionPenalty
           }),
-          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
+          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .NumberSetting */ .ey, {
             hint: {
               content: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
                 style: tooltipContent,
@@ -709,7 +709,7 @@ var AdvancedSettings = ({
         id: TRANSCRIPTION_DECODING_MESSAGE_ID,
         "aria-live": "polite",
         style: { padding: "0 16px" },
-        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
           align: "flex-end",
           message: decodingValidationMessage,
           type: "error"
@@ -736,7 +736,7 @@ var TranscriptionModal = ({
     };
   }, [captionStyle]);
   const [libraryUrl, setLibraryUrl] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)(REMOTION_CAPTION_STYLES_URL);
-  const { studioRuntimeConfig } = (0,_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .useSettings */ .t0)();
+  const { studioRuntimeConfig } = (0,_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .useSettings */ .t0)();
   const libraryOptions = [
     { url: REMOTION_CAPTION_STYLES_URL, displayName: "Remotion Elements" },
     ...(studioRuntimeConfig?.elementLibraries ?? []).flatMap(({ captionStylesUrl, displayName: libraryName }) => captionStylesUrl === null || captionStylesUrl === REMOTION_CAPTION_STYLES_URL ? [] : [{ url: captionStylesUrl, displayName: libraryName }])
@@ -767,11 +767,11 @@ var TranscriptionModal = ({
   const [supportState, setSupportState] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)({
     type: "checking"
   });
-  const [outName, setOutName] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)(() => (0,_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .getDefaultCaptionOutputName */ .wl)(src, displayName));
-  const { addCaptionJob, captionJobs } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .RenderQueueContext */ .x7);
-  const { setSelectedModal } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .SetSelectedModalContext */ .Mq);
-  const { setSidebarCollapsedState } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .SidebarContext */ .I0);
-  const staticFiles = (0,_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .useStaticFiles */ .JM)();
+  const [outName, setOutName] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)(() => (0,_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .getDefaultCaptionOutputName */ .wl)(src, displayName));
+  const { addCaptionJob, captionJobs } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .RenderQueueContext */ .x7);
+  const { setSelectedModal } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .SetSelectedModalContext */ .Mq);
+  const { setSidebarCollapsedState } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .SidebarContext */ .I0);
+  const staticFiles = (0,_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .useStaticFiles */ .JM)();
   (0,react__WEBPACK_IMPORTED_MODULE_9__.useEffect)(() => {
     let cancelled = false;
     Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())().then((result) => {
@@ -786,7 +786,7 @@ var TranscriptionModal = ({
   }, []);
   const normalizedOutName = outName.normalize("NFC").toLowerCase();
   const queuedOutputExists = captionJobs.some((job) => job.target === null && (job.status === "idle" || job.status === "running" || job.status === "saving") && job.outName.normalize("NFC").toLowerCase() === normalizedOutName);
-  const outputValidationMessage = target === null ? (0,_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .validateCaptionOutputName */ .vh)(outName) ?? (queuedOutputExists ? "Another caption job is already using this output file" : null) : null;
+  const outputValidationMessage = target === null ? (0,_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .validateCaptionOutputName */ .vh)(outName) ?? (queuedOutputExists ? "Another caption job is already using this output file" : null) : null;
   const exists = staticFiles.some((file) => file.name.normalize("NFC").toLowerCase() === normalizedOutName);
   const chunkValidationMessage = strideLengthInSeconds * 2 >= chunkLengthInSeconds ? "Stride length must be less than half of chunk length" : null;
   const decodingValidationMessage = !Number.isFinite(temperature) ? "Temperature must be a finite number greater than 0" : temperature <= 0 ? "Temperature must be greater than 0" : !Number.isInteger(topK) || topK < 0 ? "Top K must be a non-negative integer" : !Number.isFinite(repetitionPenalty) ? "Repetition penalty must be a finite number greater than 0" : repetitionPenalty <= 0 ? "Repetition penalty must be greater than 0" : !Number.isInteger(noRepeatNgramSize) || noRepeatNgramSize < 0 ? "No-repeat n-gram size must be a non-negative integer" : null;
@@ -824,8 +824,8 @@ var TranscriptionModal = ({
       noRepeatNgramSize
     });
     setSidebarCollapsedState({ left: null, right: "expanded" });
-    (0,_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .persistSelectedOptionsSidebarPanel */ .Gd)("renders");
-    _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsSidebarTabs */ .nm.current?.selectRendersPanel();
+    (0,_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .persistSelectedOptionsSidebarPanel */ .Gd)("renders");
+    _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsSidebarTabs */ .nm.current?.selectRendersPanel();
     setSelectedModal(null);
   }, [
     addCaptionJob,
@@ -852,28 +852,28 @@ var TranscriptionModal = ({
     topK
   ]);
   const title = target === null ? `Transcribe ${displayName}` : "Generate captions";
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .DismissableModal */ .sb, {
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .DismissableModal */ .sb, {
     ariaLabel: title,
     children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
       style: transcriptionModalStyle,
       children: [
-        /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ModalHeader */ .rQ, {
+        /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ModalHeader */ .rQ, {
           title
         }),
         /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-          style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .container */ .kL,
+          style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .container */ .kL,
           children: [
             /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-              style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .flexer */ .lw
+              style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .flexer */ .lw
             }),
-            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Button */ .$n, {
+            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .Button */ .$n, {
               onClick: onAddToQueue,
               disabled: !canTranscribe,
               "aria-label": transcribeDisabledReason,
               style: {
-                ..._index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .buttonStyle */ .i9,
+                ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .buttonStyle */ .i9,
                 flexShrink: 0,
-                backgroundColor: canTranscribe ? _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .buttonStyle */ .i9.backgroundColor : _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_1__/* .BLUE_DISABLED */ .er
+                backgroundColor: canTranscribe ? _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .buttonStyle */ .i9.backgroundColor : _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_1__/* .BLUE_DISABLED */ .er
               },
               children: target === null ? "Transcribe" : "Generate captions"
             })
@@ -883,57 +883,57 @@ var TranscriptionModal = ({
           style: transcriptionLayout,
           children: [
             /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-              style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .leftSidebar */ .K8,
+              style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .leftSidebar */ .K8,
               children: [
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
                   autoFocus: true,
-                  style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
+                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
                   selected: tab === "transcribe",
                   onClick: () => setTab("transcribe"),
                   renderIcon: (color) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                    style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
-                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .TranscriptionIcon */ .SL, {
+                    style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
+                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .TranscriptionIcon */ .SL, {
                       color,
-                      style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
+                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
                     })
                   }),
                   children: "Transcribe"
                 }),
-                target === null ? null : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
-                  style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
+                target === null ? null : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
+                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
                   selected: tab === "styles",
                   onClick: () => setTab("styles"),
                   renderIcon: (color) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                    style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
-                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .BrowseElementsIcon */ .ZL, {
+                    style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
+                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .BrowseElementsIcon */ .ZL, {
                       color,
-                      style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
+                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
                     })
                   }),
                   children: "Styles"
                 }),
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
-                  style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
+                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
                   selected: tab === "models",
                   onClick: () => setTab("models"),
                   renderIcon: (color) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                    style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
-                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ModelsIcon */ .oi, {
+                    style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
+                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ModelsIcon */ .oi, {
                       color,
-                      style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
+                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
                     })
                   }),
                   children: "Models"
                 }),
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
-                  style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
+                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
                   selected: tab === "advanced",
                   onClick: () => setTab("advanced"),
                   renderIcon: (color) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                    style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
-                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .GearIcon */ .L6, {
+                    style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
+                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .GearIcon */ .L6, {
                       color,
-                      style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
+                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
                     })
                   }),
                   children: "Advanced"
@@ -942,7 +942,7 @@ var TranscriptionModal = ({
             }),
             /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
               style: tab === "transcribe" ? settingsPanel : hiddenPanel,
-              className: _index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
+              className: _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
               children: [
                 target === null ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(OutputSettings, {
                   exists,
@@ -950,7 +950,7 @@ var TranscriptionModal = ({
                   outName,
                   validationMessage: outputValidationMessage
                 }) : null,
-                target === null ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalHr */ .Yb, {}) : null,
+                target === null ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalHr */ .Yb, {}) : null,
                 /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(ModelSettings, {
                   cachedModels,
                   selectedLanguage,
@@ -965,7 +965,7 @@ var TranscriptionModal = ({
             }),
             /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
               style: tab === "advanced" ? advancedPanel : hiddenPanel,
-              className: _index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_3__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
+              className: _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_3__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
               children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(AdvancedSettings, {
                 chunkLengthInSeconds,
                 decodingValidationMessage,
@@ -989,7 +989,7 @@ var TranscriptionModal = ({
             }),
             tab === "styles" && target !== null ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
               style: {
-                ..._index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsPanel */ .Z6,
+                ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsPanel */ .Z6,
                 flexDirection: "column",
                 overflow: "hidden"
               },
@@ -1008,14 +1008,14 @@ var TranscriptionModal = ({
                       role: "group",
                       "aria-label": "Caption style library",
                       style: { display: "flex", flexShrink: 0 },
-                      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .SegmentedControl */ .Iz, {
+                      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .SegmentedControl */ .Iz, {
                         items: libraryOptions,
                         needsWrapping: false,
                         size: "medium"
                       })
                     }) : null,
                     /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                      style: _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .flexer */ .lw
+                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .flexer */ .lw
                     }),
                     captionStyle === null ? null : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
                       style: {
@@ -1038,7 +1038,7 @@ var TranscriptionModal = ({
                           role: "status",
                           children: captionStyle.element.displayName
                         }),
-                        /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .InfoBubble */ .Di, {
+                        /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .InfoBubble */ .Di, {
                           "aria-label": "Installation details",
                           horizontalAlignment: "right",
                           children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
@@ -1067,7 +1067,7 @@ var TranscriptionModal = ({
                             ]
                           })
                         }),
-                        /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .CancelButton */ .Zb, {
+                        /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .CancelButton */ .Zb, {
                           "aria-label": "Reset caption style",
                           style: { width: 14, height: 14 },
                           onPress: () => setSelectedModal((modal) => modal?.type === "transcribe" ? { ...modal, captionStyle: null } : modal)
@@ -1076,7 +1076,7 @@ var TranscriptionModal = ({
                     })
                   ]
                 }),
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ElementLibraryFrame */ .dD, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ElementLibraryFrame */ .dD, {
                   name: "Caption styles",
                   url: libraryUrl,
                   context: "captions",
@@ -1084,7 +1084,7 @@ var TranscriptionModal = ({
                 })
               ]
             }) : null,
-            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_r4vq26h2_mjs__WEBPACK_IMPORTED_MODULE_6__/* .Models2 */ .N, {
+            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_a0vnj1t4_mjs__WEBPACK_IMPORTED_MODULE_6__/* .Models */ .B, {
               description: `Models are downloaded automatically when needed.
 You can also manage the browser cache here.`,
               indent: true,
@@ -1101,15 +1101,15 @@ You can also manage the browser cache here.`,
 
 /***/ },
 
-/***/ 5335
+/***/ 211
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   P: () => (/* binding */ ModelManager)
 /* harmony export */ });
 /* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7449);
-/* harmony import */ var _index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8866);
-/* harmony import */ var _index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9630);
+/* harmony import */ var _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5173);
+/* harmony import */ var _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8698);
 /* harmony import */ var _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3872);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6540);
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(4848);
@@ -1122,7 +1122,7 @@ You can also manage the browser cache here.`,
 
 
 var modelPanel = {
-  ..._index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .optionsPanel */ .Z6,
+  ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .optionsPanel */ .Z6,
   flexDirection: "column"
 };
 var hiddenPanel = { display: "none" };
@@ -1278,13 +1278,13 @@ var ModelManager = ({
     });
   }, [removeModel]);
   const renderDownloadIcon = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((color) => {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CloudDownloadIcon */ .$w, {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CloudDownloadIcon */ .$w, {
       color,
       style: actionIcon
     });
   }, []);
   const renderRemoveIcon = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((color) => {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .TrashIcon */ .uc, {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .TrashIcon */ .uc, {
       color,
       style: actionIcon
     });
@@ -1292,7 +1292,7 @@ var ModelManager = ({
   const actionInProgress = actionState.type === "downloading" || actionState.type === "removing";
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {
     style: visible ? modelPanel : hiddenPanel,
-    className: _index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
+    className: _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
     children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
       style: indent ? container : flushContainer,
       children: [
@@ -1300,7 +1300,7 @@ var ModelManager = ({
           style: descriptionStyle,
           children: description
         }),
-        cacheCheckError ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ValidationMessage */ .Xl, {
+        cacheCheckError ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ValidationMessage */ .Xl, {
           align: "flex-start",
           message: cacheCheckError,
           type: "error"
@@ -1318,7 +1318,7 @@ var ModelManager = ({
               role: "listitem",
               style: modelRow,
               children: [
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ModelsIcon */ .oi, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ModelsIcon */ .oi, {
                   "aria-hidden": true,
                   color: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .LIGHT_TEXT */ .hf,
                   style: modelIcon
@@ -1333,34 +1333,34 @@ var ModelManager = ({
                   "aria-label": modelStatus,
                   children: modelStatus
                 }),
-                cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CheckCircleFilled */ .Pk, {
+                cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CheckCircleFilled */ .Pk, {
                   "aria-hidden": true,
                   style: { ...statusIcon, fill: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .BLUE */ .ft }
                 }) : null,
                 processingThisModel ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("span", {
                   style: actionSlot,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Spinner */ .y$, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Spinner */ .y$, {
                     duration: 0.5,
                     size: 14
                   })
-                }) : cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ActionTooltip */ .mT, {
+                }) : cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ActionTooltip */ .mT, {
                   label: "Uninstall",
                   shortcut: null,
                   delay: 800,
                   dismissOnClick: true,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
                     "aria-label": `Remove ${model.name}`,
                     disabled: actionInProgress,
                     onClick: () => remove(model.name),
                     renderAction: renderRemoveIcon,
                     variant: null
                   })
-                }) : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_zw34myr8_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ActionTooltip */ .mT, {
+                }) : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ActionTooltip */ .mT, {
                   label: "Install",
                   shortcut: null,
                   delay: 800,
                   dismissOnClick: true,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_dad83ky0_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
                     "aria-label": `Download ${model.name}`,
                     disabled: cachedModels === null || actionInProgress,
                     onClick: () => downloadModel(model.name),
@@ -1382,13 +1382,13 @@ var ModelManager = ({
 
 /***/ },
 
-/***/ 924
+/***/ 459
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   N: () => (/* binding */ Models2)
+/* harmony export */   B: () => (/* binding */ Models)
 /* harmony export */ });
-/* harmony import */ var _index_kx5rzpg7_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5335);
+/* harmony import */ var _index_2c9r9533_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(211);
 Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4848);
@@ -1399,14 +1399,14 @@ Object(function webpackMissingModule() { var e = new Error("Cannot find module '
 
 
 var AVAILABLE_MODELS = Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
-var Models2 = ({ description, indent, visible }) => {
+var Models = ({ description, indent, visible }) => {
   const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
   const loadModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model, onProgress) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
     model,
     onProgress: (progress) => onProgress(progress.progress)
   }), []);
   const removeModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_index_kx5rzpg7_mjs__WEBPACK_IMPORTED_MODULE_0__/* .ModelManager */ .P, {
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_index_2c9r9533_mjs__WEBPACK_IMPORTED_MODULE_0__/* .ModelManager */ .P, {
     ariaLabel: "Whisper models",
     availableModels: AVAILABLE_MODELS,
     description,
@@ -1472,4 +1472,4 @@ var useModelCacheStatus = ({
 /***/ }
 
 }]);
-//# sourceMappingURL=66.bundle.js.map
+//# sourceMappingURL=906.bundle.js.map

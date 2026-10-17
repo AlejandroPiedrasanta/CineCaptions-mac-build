@@ -2557,11 +2557,21 @@ class MarcoVista(QWidget):
     """El marco negro de las vistas previas: hasta tres lineas con su
     tipografia, tamaño relativo y color. Es APROXIMADO (pedido: «dibujarlas y
     marcarlas aprox.»): Resolve es quien manda; aqui se ve la intencion."""
-    def __init__(self, padre=None, alto_min=160, aprox=True):
+    _MOVIL = None                    # (marco QImage, info, fondo QImage) de 2_recursos/creativo, cargado una vez
+
+    def __init__(self, padre=None, alto_min=160, aprox=True, movil=False):
         super().__init__(padre)
         self._lineas = []
         self._imagen = None
-        self._aprox = bool(aprox)
+        self._movil = bool(movil)    # v5.5.10: dentro de un móvil, sobre una foto de muestra (Creativo › «Así se verá este bloque»)
+        self._aprox = bool(aprox) and not self._movil
+        self._cuadro = None          # v5.5.10: el cuadro EXACTO del tema (vista_tema.py), ya con foto y captions: se ve tal cual en la pantalla
+        self._progreso = None        # 0..1 mientras se reproduce (la barrita de abajo, como en un reel)
+        self.al_cambiar_tamano = None
+        self._animador = None        # v5.5.10: {'cu': vista_tema.Cuadros, 'k': cue en bucle, 't': instante fijo} -> los captions ANIMADOS
+        self._t0_bucle = 0.0
+        self._reloj_anim = None
+        self._boton_sec = None
         self._pie = ''
         self._fondo = None
         self._t_anim = None          # v5.4: segundos desde que entro el bloque (None = quieto, como siempre)
@@ -2658,11 +2668,335 @@ class MarcoVista(QWidget):
     def tiene_fondo(self):
         return self._fondo is not None
 
+    # -- v5.5.10 (pedido: «un mockup de móvil con el fondo dentro y encima los captions»): el modo móvil ----------------------------
+    @classmethod
+    def _recursos_movil(cls):
+        """El marco del móvil (PNG con la pantalla transparente), dónde está su pantalla (fracciones del PNG) y la foto de muestra."""
+        if cls._MOVIL is None:
+            try:
+                import instalador_scripts
+                base = Path(instalador_scripts.BASE_RECURSOS) / 'creativo'
+            except Exception:
+                base = Path(__file__).resolve().parent.parent / '2_recursos' / 'creativo'
+            info = {'pantalla': [0.0625, 0.0272, 0.9363, 0.9728], 'radio': 0.127, 'aspecto': 0.499}
+            try:
+                import json
+                info.update(json.loads((base / 'movil.json').read_text(encoding='utf-8')))
+            except Exception:
+                pass
+            cls._MOVIL = (QImage(str(base / 'movil_marco.png')), info, QImage(str(base / 'movil_fondo.jpg')))
+        return cls._MOVIL
+
+    def geometria_movil(self):
+        """(caja del móvil, su pantalla, radio de la pantalla): el móvil entero cabe en el widget, centrado."""
+        _marco, info, _fondo = self._recursos_movil()
+        r = QRectF(self.rect()).adjusted(18, 8, -18, -46)               # (sitio para la sombra y el resplandor de abajo)
+        asp = float(info.get('aspecto') or 0.5)
+        h = r.height()
+        w = h * asp
+        if w > r.width():
+            w = r.width()
+            h = w / asp
+        caja = QRectF(r.center().x() - w / 2, r.center().y() - h / 2, w, h)
+        a = info.get('pantalla') or [0.0625, 0.0272, 0.9363, 0.9728]
+        pant = QRectF(caja.left() + a[0] * w, caja.top() + a[1] * h, (a[2] - a[0]) * w, (a[3] - a[1]) * h)
+        return caja, pant, float(info.get('radio') or 0.127) * pant.width()
+
+    def poner_boton_en_pantalla(self, boton):
+        """Un botón (el play de Creativo) DENTRO de la pantalla del móvil, abajo al centro; se recoloca al cambiar de tamaño."""
+        self._boton_pantalla = boton
+        boton.setParent(self)
+        boton.show()
+        self._colocar_boton_pantalla()
+
+    def _colocar_boton_pantalla(self):
+        b = getattr(self, '_boton_pantalla', None)
+        if b is None:
+            return
+        if self._movil:
+            _caja, pant, _r = self.geometria_movil()
+            x, y = pant.center().x() - b.width() / 2, pant.bottom() - b.height() - pant.height() * 0.045
+        else:
+            x, y = self.width() - b.width() - 14, self.height() - b.height() - 14
+        b.move(int(x), int(y))
+        b.raise_()
+        s = self._boton_sec
+        if s is not None:                                               # el secundario (silenciar), a la derecha del play
+            s.move(int(x + b.width() + 10), int(y + (b.height() - s.height()) / 2))
+            s.raise_()
+
+    def poner_boton_secundario(self, boton):
+        """v5.5.10 (pedido: «al pasar el mouse por el play, que salga un icono de mutear sonido»): un botón pequeño junto al play que solo se ve
+        mientras el ratón está sobre el play o sobre él."""
+        self._boton_sec = boton
+        boton.setParent(self)
+        boton.hide()
+        for w in (getattr(self, '_boton_pantalla', None), boton):
+            if w is not None:
+                w.installEventFilter(self)
+        self._colocar_boton_pantalla()
+
+    def eventFilter(self, obj, ev):
+        s = self._boton_sec
+        if s is not None and obj in (s, getattr(self, '_boton_pantalla', None)):
+            if ev.type() == QEvent.Type.Enter:
+                s.show()
+                s.raise_()
+            elif ev.type() == QEvent.Type.Leave:
+                QTimer.singleShot(650, self._quizas_ocultar_secundario)
+        return super().eventFilter(obj, ev)
+
+    def _quizas_ocultar_secundario(self):
+        s, b = self._boton_sec, getattr(self, '_boton_pantalla', None)
+        if s is not None and vivo(s) and not s.underMouse() and not (b is not None and b.underMouse()):
+            s.hide()
+
+    # -- v5.5.10: los captions ANIMADOS del tema (vista_tema.Cuadros.pintar) --------------------------------------------------------------
+    def poner_animador(self, cuadros, k=None, t=None):
+        """cuadros = vista_tema.Cuadros (None: sin vista exacta). k: el cue que se repite en bucle (vista quieta, con su propio reloj);
+        t: un instante fijo (lo marca el play en cada tic)."""
+        anterior = self._animador
+        self._animador = None if cuadros is None else {'cu': cuadros, 'k': k, 't': t}
+        if cuadros is not None and k is not None:
+            if anterior is None or anterior.get('cu') is not cuadros or anterior.get('k') != k or anterior.get('t') is not None:
+                self._t0_bucle = time.perf_counter()
+            if self._reloj_anim is None:
+                self._reloj_anim = QTimer(self)
+                self._reloj_anim.timeout.connect(self._tic_anim)
+                try:
+                    import ritmo_ui
+                    ritmo_ui.ritmo.poner(self._reloj_anim, 16)
+                except Exception:
+                    self._reloj_anim.setInterval(16)
+            if not self._reloj_anim.isActive():
+                self._reloj_anim.start()
+        elif self._reloj_anim is not None:
+            self._reloj_anim.stop()
+        self.update()
+
+    def _tic_anim(self):
+        if self._animador is None or self._animador.get('k') is None or not self.isVisible():
+            self._reloj_anim.stop()
+            return
+        self.update()
+
+    def _t_animador(self):
+        a = self._animador
+        if a.get('t') is not None:
+            return float(a['t'])
+        ini, fin = a['cu'].tramo(a['k'])
+        ciclo = max(0.8, fin - ini) + 0.75                              # el bloque entero (entra, se queda, se va) y una pausa corta
+        return ini - 0.05 + (time.perf_counter() - self._t0_bucle) % ciclo
+
+    def showEvent(self, e):
+        super().showEvent(e)
+        if self._animador is not None and self._animador.get('k') is not None and self._reloj_anim is not None:
+            self._reloj_anim.start()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._colocar_boton_pantalla()
+        if callable(self.al_cambiar_tamano):
+            self.al_cambiar_tamano()
+
+    def poner_cuadro(self, imagen):
+        """El cuadro exacto del tema (QImage del tamaño de tamano_pantalla()) o None para volver al dibujo aproximado."""
+        self._cuadro = imagen if imagen is not None and not imagen.isNull() else None
+        self.update()
+
+    def poner_progreso(self, fraccion):
+        self._progreso = None if fraccion is None else max(0.0, min(1.0, float(fraccion)))
+        self.update()
+
+    def tamano_pantalla(self):
+        """(ancho, alto) en píxeles REALES de la pantalla del móvil: a ese tamaño se rasterizan los cuadros del tema (nítidos en pantallas HiDPI)."""
+        _caja, pant, _r = self.geometria_movil()
+        dpr = max(1.0, float(self.devicePixelRatioF() or 1.0))
+        return int(round(pant.width() * dpr)), int(round(pant.height() * dpr))
+
+    def _imagen_en_pantalla(self):
+        """(QImage, es_render_real) que se ve dentro de la pantalla: el render real de Resolve si lo hay; si no, la foto de muestra."""
+        if getattr(self, '_real', False) and self._fondo is not None:
+            return self._fondo, True
+        return self._recursos_movil()[2], False
+
+    def _pintar_en_pantalla(self, p, pant):
+        """Los captions sobre la pantalla: en la franja de abajo-centro, donde los ponen los reels (el tamaño relativo de siempre)."""
+        alto = pant.width() * 0.62
+        zona = QRectF(pant.left() + pant.width() * 0.02, pant.top() + pant.height() * 0.64 - alto / 2, pant.width() * 0.96, alto)
+        self._pintar_contenido(p, zona)
+
+    def _sombra_movil(self, p, caja):
+        """Sombra suave alrededor del móvil (capas cada vez más grandes y tenues; un poco hacia abajo, como si flotara sobre la página)."""
+        rad = caja.width() * 0.165
+        p.save()
+        p.setPen(Qt.PenStyle.NoPen)
+        for i in range(10, 0, -1):
+            g = i * 1.6
+            p.setBrush(QColorReal(0, 0, 0, int(7 + (10 - i) * 1.6)))
+            p.drawRoundedRect(caja.adjusted(-g, -g * 0.6 + 4, g, g + 8), rad + g, rad + g)
+        p.restore()
+
+    def _barra_estado(self, p, pant):
+        """La barra de estado del teléfono (hora, cobertura, wifi y batería) a los lados de la isla, y el indicador de inicio abajo."""
+        u = pant.width() / 100.0
+        cy = pant.top() + pant.height() * 0.032
+        blanco = QColorReal(255, 255, 255, 235)
+        p.save()
+        p.setPen(blanco)
+        f = fuente(max(6.0, 4.3 * u), peso='negrita')
+        p.setFont(f)
+        p.drawText(QRectF(pant.left() + 6 * u, cy - 4 * u, 20 * u, 8 * u), int(Qt.AlignmentFlag.AlignCenter), '9:41')
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(blanco)
+        x = pant.right() - 27 * u                                        # cobertura: 4 barras
+        for i in range(4):
+            h = (1.3 + i * 0.75) * u
+            p.drawRoundedRect(QRectF(x + i * 1.55 * u, cy + 1.6 * u - h, 1.05 * u, h), 0.3 * u, 0.3 * u)
+        x += 7.6 * u                                                     # wifi: tres arcos
+        pen = QPen(blanco, max(1.0, 0.75 * u), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+        p.setPen(pen)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        for i, r in enumerate((3.2, 2.1, 1.0)):
+            rr = r * u
+            p.drawArc(QRectF(x + 2.4 * u - rr, cy + 1.4 * u - rr, 2 * rr, 2 * rr), 50 * 16, 80 * 16)
+        x += 6.2 * u                                                     # batería
+        p.setPen(QPen(QColorReal(255, 255, 255, 150), max(1.0, 0.4 * u)))
+        cuerpo = QRectF(x, cy - 1.45 * u, 6.6 * u, 3.1 * u)
+        p.drawRoundedRect(cuerpo, 0.9 * u, 0.9 * u)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(blanco)
+        p.drawRoundedRect(cuerpo.adjusted(0.55 * u, 0.55 * u, -1.6 * u, -0.55 * u), 0.5 * u, 0.5 * u)
+        p.setBrush(QColorReal(255, 255, 255, 150))
+        p.drawRoundedRect(QRectF(cuerpo.right() + 0.35 * u, cy - 0.55 * u, 0.55 * u, 1.1 * u), 0.2 * u, 0.2 * u)
+        p.setBrush(QColorReal(255, 255, 255, 215))                       # indicador de inicio
+        p.drawRoundedRect(QRectF(pant.center().x() - 18 * u, pant.bottom() - 2.6 * u, 36 * u, 1.25 * u), 0.62 * u, 0.62 * u)
+        p.restore()
+
+    def _brillo_cristal(self, p, pant):
+        """El reflejo del cristal: una franja diagonal muy tenue (el móvil deja de parecer una foto pegada)."""
+        g = QLinearGradient(pant.topLeft(), QPointF(pant.left() + pant.width() * 0.9, pant.top() + pant.height() * 0.55))
+        g.setColorAt(0.0, QColorReal(255, 255, 255, 26))
+        g.setColorAt(0.38, QColorReal(255, 255, 255, 8))
+        g.setColorAt(0.40, QColorReal(255, 255, 255, 0))
+        g.setColorAt(1.0, QColorReal(255, 255, 255, 0))
+        p.fillRect(pant, QBrush(g))
+
+    def _resplandor(self, p, caja):
+        """v5.5.10 (pedido: «abajo del mockup un resplandor para decorar»): un halo de color bajo el móvil (y un aura muy suave detrás) que late
+        despacio mientras se reproduce."""
+        latido = 1.0
+        if self._progreso is not None:
+            latido = 1.0 + 0.22 * math.sin(time.perf_counter() * 3.2)
+        base = QColorReal(VERDE)
+        p.save()
+        p.setPen(Qt.PenStyle.NoPen)
+        aura = QRadialGradient(caja.center(), caja.height() * 0.62)
+        c0 = QColorReal(base)
+        c0.setAlpha(int(34 * latido))
+        aura.setColorAt(0.0, c0)
+        aura.setColorAt(1.0, QColorReal(base.red(), base.green(), base.blue(), 0))
+        p.setBrush(QBrush(aura))
+        p.drawEllipse(caja.center(), caja.width() * 1.05, caja.height() * 0.62)
+        centro = QPointF(caja.center().x(), caja.bottom() + 10.0)
+        for ancho_f, alto_px, a0, a1 in ((1.05, 46.0, 150, 70), (0.55, 16.0, 235, 120)):      # halo ancho y núcleo brillante
+            rx, ry = caja.width() * ancho_f, alto_px
+            halo = QRadialGradient(QPointF(0, 0), rx)
+            c1 = QColorReal(base)
+            c1.setAlpha(min(255, int(a0 * latido)))
+            c2 = QColorReal(ACCENT_CLARO)
+            c2.setAlpha(min(255, int(a1 * latido)))
+            halo.setColorAt(0.0, c1)
+            halo.setColorAt(0.5, c2)
+            halo.setColorAt(1.0, QColorReal(base.red(), base.green(), base.blue(), 0))
+            p.save()
+            p.translate(centro)
+            p.scale(1.0, ry / rx)
+            p.setBrush(QBrush(halo))
+            p.drawEllipse(QPointF(0, 0), rx, rx)
+            p.restore()
+        p.restore()
+        # y una línea de luz fina justo bajo el móvil (el «suelo» brillante)
+        p.save()
+        linea = QLinearGradient(QPointF(caja.left(), 0), QPointF(caja.right(), 0))
+        for x, a in ((0.0, 0), (0.5, int(200 * min(1.0, latido))), (1.0, 0)):
+            cl = QColorReal(base)
+            cl.setAlpha(a)
+            linea.setColorAt(x, cl)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(linea))
+        p.drawRoundedRect(QRectF(caja.left() + caja.width() * 0.08, caja.bottom() + 6.0, caja.width() * 0.84, 2.2), 1.1, 1.1)
+        p.restore()
+
+    def _pintar_movil(self, p):
+        marco, _info, _fondo = self._recursos_movil()
+        caja, pant, radio = self.geometria_movil()
+        self._resplandor(p, caja)
+        self._sombra_movil(p, caja)
+        camino = QPainterPath()
+        camino.addRoundedRect(pant, radio, radio)
+        p.save()
+        p.setClipPath(camino)
+        p.fillRect(pant, QColorReal('#05080F'))
+        img, real = self._imagen_en_pantalla()
+        if not real and self._animador is not None:
+            # v5.5.10: los captions del tema ANIMADOS (cada capa entra como su macro), sobre la foto
+            try:
+                self._animador['cu'].pintar(p, pant, self._t_animador())
+            except Exception:
+                pass
+            img = None
+        elif not real and self._cuadro is not None:
+            # v5.5.10: el cuadro exacto del tema (foto + captions de render_sin_resolve), ya del tamaño de la pantalla
+            p.drawImage(pant, self._cuadro)
+            img = None
+        if img is not None and not img.isNull():
+            iw, ih = max(1, img.width()), max(1, img.height())
+            # la foto «cubre» la pantalla; un render real se ve ENTERO (a lo ancho) para no cortar los captions
+            esc = (pant.width() / iw) if real else max(pant.width() / iw, pant.height() / ih)
+            w, h = iw * esc, ih * esc
+            p.drawImage(QRectF(pant.center().x() - w / 2, pant.center().y() - h / 2, w, h), img)
+        if not real and self._cuadro is None and self._animador is None and not getattr(self, 'esperando_tema', False):
+            # velo suave abajo para que los captions se lean como en un reel
+            # (v5.5.10: con un tema que tendrá su vista exacta, mientras se prepara se ve la foto limpia: antes salía un instante la maqueta
+            #  aproximada, con otro estilo, y luego saltaba al tema real)
+            velo = QLinearGradient(QPointF(0, pant.top() + pant.height() * 0.40), QPointF(0, pant.bottom()))
+            velo.setColorAt(0.0, QColorReal(0, 0, 0, 0))
+            velo.setColorAt(1.0, QColorReal(0, 0, 0, 120))
+            p.fillRect(pant, QBrush(velo))
+            self._pintar_en_pantalla(p, pant)
+        # arriba, un degradado oscuro fino para que la barra de estado se lea sobre cualquier foto
+        arriba = QLinearGradient(QPointF(0, pant.top()), QPointF(0, pant.top() + pant.height() * 0.09))
+        arriba.setColorAt(0.0, QColorReal(0, 0, 0, 90))
+        arriba.setColorAt(1.0, QColorReal(0, 0, 0, 0))
+        p.fillRect(pant, QBrush(arriba))
+        if self._progreso is not None:                                   # la barrita de avance del reel
+            u = pant.width() / 100.0
+            barra = QRectF(pant.left() + 5 * u, pant.bottom() - 6.2 * u, pant.width() - 10 * u, 0.7 * u)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColorReal(255, 255, 255, 70))
+            p.drawRoundedRect(barra, 0.35 * u, 0.35 * u)
+            p.setBrush(QColorReal(255, 255, 255, 230))
+            p.drawRoundedRect(QRectF(barra.left(), barra.top(), barra.width() * self._progreso, barra.height()), 0.35 * u, 0.35 * u)
+        self._barra_estado(p, pant)
+        self._brillo_cristal(p, pant)
+        p.restore()
+        if marco is not None and not marco.isNull():
+            p.drawImage(caja, marco)
+        if real:
+            p.setFont(fuente(10, peso='negrita'))
+            p.setPen(QColor(ACCENT_CLARO))
+            p.drawText(pant.adjusted(0, 0, -12, -12), int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom), tr('Render real · Resolve'))
+
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
         p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        if self._movil:
+            self._pintar_movil(p)
+            p.end()
+            return
         r = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
         p.setPen(QPen(QColor(BORDER_COLOR), 1))
         p.setBrush(QColor('#0B1220'))

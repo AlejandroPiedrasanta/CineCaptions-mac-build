@@ -12,12 +12,14 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (15 archivos)
+    herramientas_dev\   (17 archivos)
         galeria_remotion.py
             la galería de las 100 plantillas Remotion de la Edición PRO: un fotograma de cada una sobre un
         generar_recortes.py
             los «recortes de revista» del motion RecorteK (Kit8.tsx): de cada emoji 3D (Fluent, MIT) saca
         generar_resortes.js
+        hacer_ejemplos_pro.py
+            los EJEMPLOS REALES de los interruptores de la Edición PRO en Proyecto (pro_lateral_ui): un clip
         hacer_previas_motions.py
             las miniaturas del carrusel «Motions de la Edición PRO» (página Efectos): un fotograma de cada
         importar_sonidos.py
@@ -36,13 +38,15 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             suspende Resolve ANTES de pulsar GO: la revisión previa (colocacion.preparar_resolve_para_go) debe reiniciarlo y terminar bien. SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
         probar_ventanas_humo.py
             humo de TODAS las ventanas sin pantalla ni Resolve: crea la app, recorre sus páginas, abre cada ventana y escribe una «huella» de widgets y textos para comparar antes/después de mover código entre módulos.
+        probar_vista_creativo.py
+            banco de la vista EXACTA del tema en Creativo (vista_tema.py) contra lo que recibió y pintó Resolve.
         resortes_motion.py
             mete en el motor OGraf de la Edición PRO las curvas de resorte de Motion (motion.dev).
         vista_ograf.py
             ver una pieza OGraf SIN Resolve: la abre en el Chrome sin ventana del runtime de Remotion (servidor local)
         vista_tema5.py
             el Tema 5 SIN Resolve, para revisarlo y para la tarjeta del slider (2_recursos/vistas_slider/Tema5.mp4
-    remotion\   (17355 archivos)
+    remotion\   (17376 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -251,6 +255,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         packs de estilos: leer, guardar, elegir y preparar el pack que se aplica.
     preparar_efectos.py
         herramienta de desarrollo: convierte las imágenes de iconos sobre fondo blanco en SPRITES con transparencia (uno por icono).
+    pro_lateral_ui.py
+        Proyecto con la Edición PRO: a la DERECHA del slider, los motions que GO pondrá (interruptores) y, a la IZQUIERDA,
     probar_barrido.py
         prueba en el banco zz_BANCO (Resolve) del BARRIDO DE LUZ de las palabras grandes del pack «Referencia»: ¿llega hasta el final de la palabra, en cuánto tiempo?
     probar_efectos.py
@@ -355,6 +361,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         del texto con tiempos (ASR) a los bloques del estilo «VIRAL»: frases, palabra con efecto, líneas finas y negritas, y momentos.
     vista_previa_fx.py
         la vista previa de 3 segundos de la página «Efectos» (v5.4.8): TODO lo que está encendido, sobre fotos de muestra, sin abrir Resolve.
+    vista_tema.py
+        la vista previa EXACTA del tema elegido en Creativo (v5.5.10): los cues del planificador del tema y el mismo dibujo que GO sin Resolve.
     vistas_guia.py
         las vistas REALES (renderizadas por Resolve) de los ejemplos de «Crea tu estilo»: se piden, se reducen y se guardan en caché.
     vistas_reales.py

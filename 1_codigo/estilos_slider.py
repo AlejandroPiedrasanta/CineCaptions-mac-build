@@ -4,7 +4,7 @@
 estilos_slider.py  (v5.3.6)
 ---------------------------
 La pantalla Proyecto muestra los packs como un slider horizontal (como las galerías de referencia): la tarjeta del centro grande y con sus
-captions en movimiento, las de los lados más chicas y apagadas, y todo se desliza con un resorte (arrastrar, rueda lateral, flechas, puntos).
+captions en movimiento, las de los lados más chicas y apagadas, y todo se desliza con un resorte (arrastrar, rueda lateral, ← →, clic en la vecina).
 
 Cada tarjeta es VERTICAL (9:16) y lleva de fondo una foto de video real (2_recursos/fondos_estilos/fondo_NN.jpg) para que se vea cómo queda un
 caption de verdad sobre un video:
@@ -25,7 +25,7 @@ import time
 import zlib
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QBrush, QColor, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
                            QRadialGradient, QTransform)
 from PySide6.QtWidgets import QFrame, QSizePolicy, QWidget
@@ -148,7 +148,8 @@ class CarruselPacks(QWidget):
 
     GIRO = 24.0                                   # grados de giro de las tarjetas vecinas
     PASO = 0.94                                   # separación de las tarjetas vecinas, en anchos de tarjeta
-    ALTO_CONTROLES = 58
+    ALTO_CONTROLES = 0                            # v5.5.10: sin flechas ni puntos debajo (lo pidió el usuario); se mueve arrastrando, con la rueda,
+                                                  # con ← → o con un clic en la vecina
 
     def __init__(self, alto=600, padre=None, flexible=False):
         super().__init__(padre)
@@ -160,7 +161,7 @@ class CarruselPacks(QWidget):
         self._t0_centro = time.perf_counter()
         self._ultimo = time.perf_counter()
         self._arrastre = None
-        self._hover = None                       # ('flecha', -1|1) | ('punto', i) | ('carta', i)
+        self._hover = None                       # ('pildora', 'pro'|'sin') | ('carta', i)
         self._entrada_t0 = None
         self._entro = False
         self._rueda = 0
@@ -180,7 +181,9 @@ class CarruselPacks(QWidget):
         self._tilt = [0.0, 0.0]                  # la del centro se inclina un poco hacia el ratón
         self._tilt_obj = [0.0, 0.0]
         self._motas = [((i * 0.6180339) % 1.0, (i * 0.3819660 + 0.13) % 1.0, 0.6 + (i % 5) * 0.35, 1.4 + (i % 4) * 0.9) for i in range(26)]
-        self.setMinimumHeight(int(alto))
+        # v5.5.10: con `flexible` el alto pedido es solo el preferido: el mínimo baja para que la página quepa en pantallas pequeñas
+        self.setMinimumHeight(int(min(alto, 300)) if flexible else int(alto))
+        self._alto_pref = int(alto)
         if flexible:                                  # Proyecto: ocupa todo el alto que sobra (las tarjetas se escalan con él)
             self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         else:
@@ -368,9 +371,17 @@ class CarruselPacks(QWidget):
                             int(ca.blue() + (cb.blue() - ca.blue()) * f))
 
     # -- geometría ------------------------------------------------------------------------------------------------------
+    def sizeHint(self):
+        return QSize(900, getattr(self, '_alto_pref', 540))
+
     def _medidas(self):
-        h_carta = max(260.0, min(1040.0, self.height() - self.ALTO_CONTROLES - 16.0))                # v5.4.22: crecen con la ventana; v5.5.9: más grandes (tope 1040)
-        return h_carta * ASPECTO, h_carta, self.width() / 2.0, 14.0 + h_carta / 2.0
+        # v5.4.22: crecen con la ventana; v5.5.9: más grandes (tope 1040). v5.5.10: también caben a lo ANCHO (la del centro y sus dos vecinas
+        # enteras: 2,76 anchos de tarjeta) y el grupo se centra en el alto que sobra; antes en ventanas estrechas se pisaban y desbordaban.
+        disponible = self.height() - self.ALTO_CONTROLES - 16.0
+        por_ancho = max(0.0, self.width() - 32.0) / (0.88 + 2.0 * self.PASO) / ASPECTO
+        h_carta = max(180.0, min(1040.0, disponible, por_ancho))
+        arriba = 14.0 + max(0.0, (disponible - h_carta) / 2.0)
+        return h_carta * ASPECTO, h_carta, self.width() / 2.0, arriba + h_carta / 2.0
 
     def _transformar(self, d, w, h, cx, cy):
         """(rect, escala, opacidad) de la tarjeta a la distancia `d` del centro (en tarjetas)."""
@@ -438,7 +449,6 @@ class CarruselPacks(QWidget):
         orden = sorted((k for k in range(n) if abs(k - self._pos) <= 3.2), key=lambda k: -abs(k - self._pos))
         for k in orden:
             self._dibujar_carta(p, self._cartas[k], k - self._pos, w, h, cx, cy, entrada)
-        self._dibujar_controles(p, cx, cy + h / 2 + 30)
         p.end()
 
     def _dibujar_carta(self, p, carta, d, w, h, cx, cy, entrada):
@@ -638,8 +648,10 @@ class CarruselPacks(QWidget):
     def _dibujar_textos(self, p, carta, rect, esc, centro=False):
         pad = 16.0 * esc
         # (v5.5.9: sin la «V» del formato arriba: el usuario la quitó) · la píldora «Con PRO / Solo captions» en la del centro
-        if centro and getattr(carta, 'video_sin', None) and getattr(carta, 'video', None):          # abajo, encima del nombre (arriba va «En uso»)
-            self._dibujar_pildora(p, rect, esc, rect.bottom() - pad - (18 * esc if carta.meta else 0) - 17.5 * esc - 12 * esc)
+        # v5.5.10 (pedido: «quita el título y el subtítulo de la tarjeta: abajo ya dice el tema; solo las píldoras, más abajo»): la píldora va
+        # al pie, centrada, y la tarjeta no lleva textos (arriba solo «✓ En uso» si es el tema elegido)
+        if centro and getattr(carta, 'video_sin', None) and getattr(carta, 'video', None):
+            self._dibujar_pildora(p, rect, esc, rect.bottom() - pad)
         if carta.valor == self._elegido:
             f = ui.fuente(11.5 * esc, peso='negrita')
             p.setFont(f)
@@ -660,20 +672,6 @@ class CarruselPacks(QWidget):
             p.drawRoundedRect(pill, 11 * esc, 11 * esc)
             p.setPen(QColor('#06251A'))
             p.drawText(pill, int(Qt.AlignmentFlag.AlignCenter), texto)
-        # nombre y datos abajo
-        ft = ui.fuente(17.5 * esc, peso='negrita')
-        p.setFont(ft)
-        fmt = QFontMetricsF(ft)
-        ancho = rect.width() - 2 * pad
-        nombre = fmt.elidedText(carta.titulo, Qt.TextElideMode.ElideRight, ancho)
-        y_base = rect.bottom() - pad - (18 * esc if carta.meta else 0)
-        p.setPen(QColor(255, 255, 255, 245))
-        p.drawText(QPointF(rect.left() + pad, y_base), nombre)
-        if carta.meta:
-            fm2 = ui.fuente(12 * esc)
-            p.setFont(fm2)
-            p.setPen(QColor(220, 230, 245, 190))
-            p.drawText(QPointF(rect.left() + pad, rect.bottom() - pad), QFontMetricsF(fm2).elidedText(carta.meta, Qt.TextElideMode.ElideRight, ancho))
 
     def _dibujar_anadir(self, p, carta, rect, esc, camino, ad):
         fondo = QLinearGradient(rect.topLeft(), rect.bottomRight())
@@ -697,14 +695,19 @@ class CarruselPacks(QWidget):
         p.drawLine(QPointF(c.x() - 11 * esc, c.y() - 26 * esc), QPointF(c.x() + 11 * esc, c.y() - 26 * esc))
         p.drawLine(QPointF(c.x(), c.y() - 37 * esc), QPointF(c.x(), c.y() - 15 * esc))
         p.setPen(QColor(255, 255, 255, 235))
-        p.setFont(ui.fuente(16 * esc, peso='negrita'))
-        p.drawText(QRectF(rect.left() + 14, c.y() + 18 * esc, rect.width() - 28, 26 * esc), int(Qt.AlignmentFlag.AlignCenter), tr('Añadir plantilla (.drb)'))
+        # v5.5.10: el título se achica hasta caber en la tarjeta (en pantallas pequeñas se salía por los lados)
+        titulo, tam = tr('Añadir plantilla (.drb)'), 16 * esc
+        p.setFont(ui.fuente(tam, peso='negrita'))
+        while tam > 8 and p.fontMetrics().horizontalAdvance(titulo) > rect.width() - 28:
+            tam -= 0.5
+            p.setFont(ui.fuente(tam, peso='negrita'))
+        p.drawText(QRectF(rect.left() + 14, c.y() + 18 * esc, rect.width() - 28, 26 * esc), int(Qt.AlignmentFlag.AlignCenter), titulo)
         p.setPen(QColor(ui.TEXT_MUTED))
-        p.setFont(ui.fuente(12 * esc))
+        p.setFont(ui.fuente(min(12 * esc, tam * 0.78)))
         p.drawText(QRectF(rect.left() + 22, c.y() + 48 * esc, rect.width() - 44, 70 * esc),
                    int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop) | int(Qt.TextFlag.TextWordWrap), tr('En Resolve: clic derecho sobre el bin > Exportar bandeja…'))
 
-    # -- controles (flechas y puntos) -----------------------------------------------------------------------------------
+    # -- elegir (la animación) y la píldora ------------------------------------------------------------------------------
     def _progreso_sel(self, carta):
         """0→1 durante la animación de «elegir este tema» de esa tarjeta; None si no está animando."""
         if self._sel_t0 is None or carta.valor != self._sel_valor:
@@ -763,17 +766,19 @@ class CarruselPacks(QWidget):
         p.restore()
 
     def _dibujar_pildora(self, p, rect, esc, y_pie):
-        """v5.5.9: «✦ Con PRO | Solo captions» arriba de la tarjeta del centro: qué ejemplo se ve (quizá el usuario solo quiere captions)."""
+        """v5.5.9: «Solo captions | ✦ Con PRO» al pie de la tarjeta del centro: qué ejemplo se ve (quizá el usuario solo quiere captions).
+        v5.5.10: «Con PRO» a la DERECHA, para que cuadre con los botones de abajo («En uso» | «Edición PRO»)."""
         pad = 14.0 * esc
         f = ui.fuente(12.0 * esc, peso='negrita')
         fm = QFontMetricsF(f)
         textos = ('✦ ' + tr('Con PRO'), tr('Solo captions'))
         anchos = [fm.horizontalAdvance(t) + 26.0 * esc for t in textos]
         alto = 32.0 * esc
-        x0, y0 = rect.left() + pad, y_pie - alto
-        toda = QRectF(x0, y0, anchos[0] + anchos[1] + 6.0 * esc, alto)
-        r_pro = QRectF(x0 + 3.0 * esc, y0 + 3.0 * esc, anchos[0], alto - 6.0 * esc)
-        r_sin = QRectF(r_pro.right(), y0 + 3.0 * esc, anchos[1], alto - 6.0 * esc)
+        total = anchos[0] + anchos[1] + 6.0 * esc
+        x0, y0 = max(rect.left() + pad * 0.5, rect.center().x() - total / 2.0), y_pie - alto          # v5.5.10: centrada al pie
+        toda = QRectF(x0, y0, total, alto)
+        r_sin = QRectF(x0 + 3.0 * esc, y0 + 3.0 * esc, anchos[1], alto - 6.0 * esc)
+        r_pro = QRectF(r_sin.right(), y0 + 3.0 * esc, anchos[0], alto - 6.0 * esc)
         self._pill_geo = (toda, r_pro, r_sin)
         k = max(0.0, min(1.0, self._pill_k))
         p.save()
@@ -813,46 +818,6 @@ class CarruselPacks(QWidget):
             p.drawEllipse(QPointF(x, y), r, r)
         p.restore()
 
-    def _geom_controles(self, cx, y):
-        n = len(self._cartas)
-        sep = 16.0 if n <= 12 else 0.0
-        ancho_puntos = (n - 1) * sep + 26 if sep else 90.0
-        izq = QPointF(cx - ancho_puntos / 2 - 34, y)
-        der = QPointF(cx + ancho_puntos / 2 + 34, y)
-        return izq, der, sep, ancho_puntos
-
-    def _dibujar_controles(self, p, cx, y):
-        n = len(self._cartas)
-        izq, der, sep, ancho_puntos = self._geom_controles(cx, y)
-        for lado, centro in ((-1, izq), (1, der)):
-            activo = (self._hover == ('flecha', lado))
-            habil = (self._obj + lado) in range(n)
-            col = QColor(ui.ACCENT_CLARO if activo and habil else '#5B6B8C')
-            col.setAlpha(255 if habil else 90)
-            p.setPen(QPen(col, 1.6))
-            relleno = QColor(col)
-            relleno.setAlpha(46 if activo and habil else 0)
-            p.setBrush(relleno)
-            p.drawEllipse(centro, 17, 17)
-            p.setPen(QPen(col, 2.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-            s = -lado
-            p.drawLine(QPointF(centro.x() + 5 * s, centro.y() - 6), QPointF(centro.x() - 1 * s, centro.y()))
-            p.drawLine(QPointF(centro.x() - 1 * s, centro.y()), QPointF(centro.x() + 5 * s, centro.y() + 6))
-        if sep:
-            x0 = cx - (n - 1) * sep / 2
-            for i in range(n):
-                cerca = max(0.0, 1.0 - abs(i - self._pos))
-                ancho = 6.0 + 14.0 * cerca
-                col = QColor(ui.VERDE if cerca > 0.5 else '#3A4A6B')
-                col.setAlpha(int(110 + 145 * cerca) if self._hover != ('punto', i) else 255)
-                p.setPen(Qt.PenStyle.NoPen)
-                p.setBrush(col)
-                p.drawRoundedRect(QRectF(x0 + i * sep - ancho / 2, y - 3, ancho, 6), 3, 3)
-        else:
-            p.setPen(QColor(ui.TEXT_MUTED))
-            p.setFont(ui.fuente(13, peso='medio'))
-            p.drawText(QRectF(cx - 45, y - 12, 90, 24), int(Qt.AlignmentFlag.AlignCenter), f'{self._obj + 1} / {n}')
-
     # -- ratón y teclado ------------------------------------------------------------------------------------------------
     def _en_carta(self, x, y):
         w, h, cx, cy = self._medidas()
@@ -867,17 +832,6 @@ class CarruselPacks(QWidget):
     def _en_control(self, x, y):
         if self._pill_geo is not None and self._pill_geo[0].contains(x, y):
             return ('pildora', 'pro' if self._pill_geo[1].contains(x, y) else 'sin')
-        w, h, cx, cy = self._medidas()
-        yc = cy + h / 2 + 30
-        izq, der, sep, ancho_puntos = self._geom_controles(cx, yc)
-        for lado, c in ((-1, izq), (1, der)):
-            if (x - c.x()) ** 2 + (y - c.y()) ** 2 <= 22 ** 2:
-                return ('flecha', lado)
-        if sep and abs(y - yc) <= 11:
-            x0 = cx - (len(self._cartas) - 1) * sep / 2
-            i = int(round((x - x0) / sep))
-            if 0 <= i < len(self._cartas) and abs(x - (x0 + i * sep)) <= sep / 2:
-                return ('punto', i)
         return None
 
     def mouseMoveEvent(self, e):
@@ -885,11 +839,15 @@ class CarruselPacks(QWidget):
         if self._arrastre is not None:
             a = self._arrastre
             w = self._medidas()[0]
-            dx = x - a['x']
             if abs(x - a['x0']) > 6:
                 a['mov'] = True
-            self._pos = a['pos0'] - (x - a['x0']) / (w * self.PASO)
-            self._pos = max(-0.4, min(len(self._cartas) - 0.6, self._pos))
+            crudo = a['pos0'] - (x - a['x0']) / (w * self.PASO)
+            ultimo = max(0, len(self._cartas) - 1)
+            if crudo < 0:                                 # v5.5.10: pasado el borde, resistencia elástica (como iOS) en vez de un tope seco
+                crudo = -0.45 * (1.0 - 1.0 / (1.0 + 0.9 * -crudo))
+            elif crudo > ultimo:
+                crudo = ultimo + 0.45 * (1.0 - 1.0 / (1.0 + 0.9 * (crudo - ultimo)))
+            self._pos = crudo
             ahora = time.perf_counter()
             a['muestras'].append((ahora, x))
             a['muestras'] = [m for m in a['muestras'] if ahora - m[0] < 0.12]
@@ -905,14 +863,8 @@ class CarruselPacks(QWidget):
             self._hover = c
             self.setCursor(Qt.CursorShape.PointingHandCursor if c else Qt.CursorShape.ArrowCursor)
             self.update()
-        if c == ('carta', self._obj):                                            # v5.5.9: la del centro mira un poco hacia el ratón
-            w, h, cx, cy = self._medidas()
-            nx = max(-1.0, min(1.0, (x - cx) / (w / 2.0)))
-            ny = max(-1.0, min(1.0, (y - cy) / (h / 2.0)))
-            self._tilt_obj = [-ny * 3.0, nx * 4.0]
-        else:
-            self._tilt_obj = [0.0, 0.0]
-        self._arrancar()
+            self._arrancar()
+        # v5.5.10: la del centro YA NO se inclina hacia el ratón (al usuario no le gustaba que el slider se moviera al pasar por encima)
         super().mouseMoveEvent(e)
 
     def leaveEvent(self, e):
@@ -948,10 +900,6 @@ class CarruselPacks(QWidget):
                 if quiere != self.modo_pro:
                     self.poner_vista_pro(quiere)
                     self.vista_pro.emit(quiere)
-            elif c and c[0] == 'flecha':
-                self._ir_a(self._obj + c[1])
-            elif c and c[0] == 'punto':
-                self._ir_a(c[1])
             elif a['carta'] is not None:
                 k = a['carta']
                 if k == self._obj:
