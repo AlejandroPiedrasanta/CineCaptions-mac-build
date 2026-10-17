@@ -30,6 +30,7 @@ import json
 import shutil
 import random
 import os
+import threading
 from pathlib import Path
 
 import edicion_pro_ograf as OG
@@ -885,6 +886,42 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     clave = hashlib.sha1(f'{video}|{W}x{H}@{fps}'.encode('utf-8')).hexdigest()[:10]
     carpeta = OG.ruta_larga(CARPETA / clave)
     carpeta.mkdir(parents=True, exist_ok=True)
+    # v5.5.9 (el usuario: «más tareas en paralelo, más rapidez»): lo que no depende de nada de lo de abajo arranca YA, en otro hilo, y se recoge
+    # donde antes se hacía: «Motions completo» (su render de Remotion corre mientras se buscan las personas, se recortan y se revisan los
+    # gráficos) y la descarga del B-roll de stock (la red, mientras la GPU trabaja)
+    fondo = {}
+
+    def _motions_completo():
+        try:
+            import motions_completo as MCO
+            bl = [{'ini': b['ini'], 'fin': b['fin'], 'palabras': [{'texto': x, 't': round(max(0.0, float(t) - b['ini']), 3)} for x, t in b.get('palabras') or []]}
+                  for b in _bloques_captions()]
+            dur_mc = float(plan.get('duracion') or 0) or (max(b['fin'] for b in bl) + 0.5 if bl else 0.0)
+            fondo['mc_dur'] = dur_mc
+            # sin la IA de texto: con ella el plan tardaba ~110 s (y volvía a cargar en la GPU el modelo que la PRO suelta para Resolve) para
+            # unas pocas propuestas que ya pesan menos que las reglas
+            fondo['mc'] = MCO.crear(bl, dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', plan.get('perfil') or {}, video, decir,
+                                    ia=bool(op.get('pro_motions_ia', False))) if bl and dur_mc > 1.0 else None
+        except Exception as e:
+            fondo['mc_error'] = e
+
+    def _broll():
+        try:
+            import broll
+            import efectos_visuales
+            clave_b = broll.clave_guardada(efectos_visuales.opciones_guardadas())
+            fondo['broll'] = list(broll.preparar(plan['broll'], 'v' if vertical else 'h', clave_b, decir))
+        except Exception as e:
+            fondo['broll_error'] = e
+
+    hilos_fondo = {}
+    if op.get('pro_motions_completo'):
+        hilos_fondo['mc'] = threading.Thread(target=_motions_completo, name='pro-motions-completo', daemon=True)
+    if plan.get('broll'):
+        decir('Edición PRO: buscando las tomas de B-roll…')
+        hilos_fondo['broll'] = threading.Thread(target=_broll, name='pro-broll', daemon=True)
+    for h in hilos_fondo.values():
+        h.start()
     import edicion_pro_persona as PE
     hay_ia = PE.disponible()
     graficos, persona = [], []
@@ -974,13 +1011,10 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             sin_persona.add((a, b))
     # B-roll de stock (se descarga ahora: tras los captions, así GO no espera la red antes)
     tomas = []
-    if plan.get('broll'):
+    if 'broll' in hilos_fondo:                                         # (se descargaba en paralelo desde el principio)
+        hilos_fondo['broll'].join()
         try:
-            import broll
-            import efectos_visuales
-            clave = broll.clave_guardada(efectos_visuales.opciones_guardadas())
-            decir('Edición PRO: buscando las tomas de B-roll…')
-            for ev in broll.preparar(plan['broll'], 'v' if vertical else 'h', clave, decir):
+            for ev in fondo.get('broll') or []:
                 tomas.append({'ini': int(round(float(ev['ini']) * fps)), 'dur': float(ev['dur']), 'archivo': str(OG.ruta_larga(ev['archivo'])),
                               'palabra': ev.get('palabra', ''), '_s': float(ev['ini'])})
         except Exception:
@@ -1194,6 +1228,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             zoom = []
     rng = random.Random(PL.semilla_de(video, [], int(op.get('pro_variacion') or 0)))
     sonidos = []
+    voz_db = None
     if op.get('pro_sonidos', True):                                   # diseño de sonido profesional (edicion_pro_sonido): whooshes, texturas, risers + hits
         import edicion_pro_sonido as PS
         voz_db = PS.nivel_voz(video)                                  # los efectos, siempre bajo la voz de ESTE video
@@ -1219,17 +1254,32 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             sin_emoji.append([int(round(float(p['ini']) * fps)) - 3, int(round(float(p['fin']) * fps)) + 3])
     subs = [p for p in plan['piezas'] if p['pieza'] == 'subtitulo']
     subs_ok = sum(1 for p in subs if rm_hechos.get(str(rm_salida.get(id(p)))))
-    if op.get('pro_motions_completo'):                             # v5.5.8: «Motions completo», el ÚLTIMO paso: un video de motions encima de todo
+    if 'mc' in hilos_fondo:                                        # v5.5.8: «Motions completo», encima de todo (v5.5.9: se hacía en paralelo)
         try:
             import motions_completo as MCO
-            bl = [{'ini': b['ini'], 'fin': b['fin'], 'palabras': [{'texto': x, 't': round(max(0.0, float(t) - b['ini']), 3)} for x, t in b.get('palabras') or []]}
-                  for b in _bloques_captions()]
-            dur_mc = float(plan.get('duracion') or 0) or (max(b['fin'] for b in bl) + 0.5 if bl else 0.0)
-            mc = MCO.crear(bl, dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', plan.get('perfil') or {}, video, decir,
-                           ia=op.get('pro_ia_local', True)) if bl and dur_mc > 1.0 else None
+            if hilos_fondo['mc'].is_alive():
+                decir('Edición PRO: terminando «Motions completo»…')
+            hilos_fondo['mc'].join()
+            if fondo.get('mc_error') is not None:
+                raise fondo['mc_error']
+            mc, dur_mc = fondo.get('mc'), float(fondo.get('mc_dur') or 0.0)
             if mc:
                 graficos.append({'capa': 'motions', 'ini': 0, 'archivo': str(OG.ruta_larga(mc)), 'nombre': 'PRO · Motions completo', 'dur': round(dur_mc, 3),
                                  'opaco': True})
+                if op.get('pro_sonidos', True):                           # v5.5.9: sus sonidos (whoosh al entrar cada tarjeta, clics, pops…), bajo la voz
+                    import edicion_pro_sonido as PS
+                    familias = dict(op.get('pro_sonidos_familias') or {})
+                    extra_db = NIVEL_SONIDOS_DB.get(str(op.get('pro_sonidos_nivel') or 'normal'), 0.0)
+                    for e in MCO.sonidos(mc, fps, rng, voz_db if voz_db is not None else PS.nivel_voz(video)):
+                        if familias.get(FAMILIA_DE_PISTA.get(str(e.get('pista')), 'textura'), True) is False:
+                            continue
+                        e['db'] = float(e.get('db') or 0.0) + extra_db
+                        try:
+                            e['archivo'] = str(OG.ruta_larga(_con_ganancia(e['archivo'], e.get('db', 0.0))))
+                            e['db'] = 0.0
+                        except Exception:
+                            e['archivo'] = str(OG.ruta_larga(_copia_de_usuario(e['archivo'])))
+                        sonidos.append(e)
         except Exception as e:
             try:
                 import registro

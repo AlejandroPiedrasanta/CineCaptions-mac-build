@@ -42,6 +42,15 @@ def ruta_poster(nombre):
     return _archivo(nombre, '.jpg')
 
 
+def ruta_video_captions(nombre):
+    """v5.5.9: el mismo ejemplo SOLO con los captions (sin la Edición PRO): la píldora «Solo captions» de la tarjeta."""
+    return _archivo(nombre, '_captions.mp4')
+
+
+def ruta_poster_captions(nombre):
+    return _archivo(nombre, '_captions.jpg')
+
+
 class Reproductor:
     """Reproduce un mp4 en bucle en un hilo y guarda el cuadro actual (QImage RGB32). Sin audio."""
     PAUSA_BUCLE_S = 0.8

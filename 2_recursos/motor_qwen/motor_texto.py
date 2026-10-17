@@ -521,13 +521,22 @@ def analizar_escenas(tok, modelo, repo, dispositivo, datos, salida):
 # in.json: {"modo": "motions", "idioma": "es", "bloques": [...], "menu": {"lista": ["cuándo", "datos"], ...}, "iconos": ["light_bulb", ...]}
 # out.json: {"motions": [{"b", "motion", "datos", "ancla"}]}
 # ---------------------------------------------------------------------------------------------------------------------------------------------
-def sistema_motions(menu, iconos):
+def sistema_motions(menu, iconos, denso=False):
     lineas = '\n'.join(f'  "{k}": {v[0]}. Datos: {v[1]}' for k, v in menu.items())
+    if denso:       # v5.5.8, «Motions completo»: un video de SOLO motions encima de todo: cada frase necesita su motion (nada de captions)
+        cabeza = ('Eres el director de un vídeo explicativo hecho SOLO de motion graphics (como los de las cuentas de divulgación). Recibes las frases '
+                  'de un vídeo, numeradas (B1, B2…). Para CADA frase elige el motion del menú que mejor ILUSTRA lo que se dice (escenas, iconos, '
+                  'datos, fotos o vídeos del tema) y rellena sus datos. No repitas la frase como texto: muéstrala con imágenes.\n'
+                  'Reglas estrictas: (1) los textos se COPIAN de lo que se dice en esa frase o en la siguiente; NUNCA inventes números, palabras ni '
+                  'datos (las búsquedas "buscar" van en INGLÉS: lo que se ve); (2) un motion en cada frase; nunca el mismo tipo en dos frases '
+                  'seguidas y cada tipo como mucho una de cada cuatro frases; ')
+    else:
+        cabeza = ('Eres el director de motion graphics de reels virales. Recibes las frases de un vídeo, numeradas (B1, B2…). Elige las POCAS frases que '
+                  'merecen un motion del menú y rellena sus datos. Es mejor no poner nada que poner algo que no encaja.\n'
+                  'Reglas estrictas: (1) los textos se COPIAN de lo que se dice en esa frase o en la siguiente; NUNCA inventes números, palabras ni datos; '
+                  '(2) un motion de cada tipo como mucho y nunca en dos frases seguidas; ')
     return (
-        'Eres el director de motion graphics de reels virales. Recibes las frases de un vídeo, numeradas (B1, B2…). Elige las POCAS frases que '
-        'merecen un motion del menú y rellena sus datos. Es mejor no poner nada que poner algo que no encaja.\n'
-        'Reglas estrictas: (1) los textos se COPIAN de lo que se dice en esa frase o en la siguiente; NUNCA inventes números, palabras ni datos; '
-        '(2) un motion de cada tipo como mucho y nunca en dos frases seguidas; (3) textos cortos (1–4 palabras); (4) "ancla": la palabra EXACTA '
+        cabeza + '(3) textos cortos (1–4 palabras); (4) "ancla": la palabra EXACTA '
         'de la frase en la que debe aparecer (la del número o la clave); (5) "icono" solo de esta lista: ' + ', '.join(iconos[:120]) + '.\n'
         'Menú:\n' + lineas + '\n'
         'Devuelve SOLO un JSON: {"motions": [{"b": 2, "motion": "lista", "datos": {...}, "ancla": "razones"}]}\n'
@@ -553,7 +562,8 @@ def analizar_motions(tok, modelo, repo, dispositivo, datos, salida):
     bloques = [str(b) for b in datos.get('bloques') or []]
     idioma = IDIOMAS.get(str(datos.get('idioma') or 'es')[:2], 'el idioma del texto')
     menu = {str(k): list(v) for k, v in (datos.get('menu') or {}).items() if isinstance(v, (list, tuple)) and len(v) >= 2}
-    sistema = sistema_motions(menu, [str(x) for x in datos.get('iconos') or []])
+    denso = bool(datos.get('denso'))
+    sistema = sistema_motions(menu, [str(x) for x in datos.get('iconos') or []], denso)
     tandas = [(k, bloques[k:k + BLOQUES_POR_CONSULTA]) for k in range(0, len(bloques), BLOQUES_POR_CONSULTA)]
     motions = []
     decir('PROGRESO', '0.0')
@@ -571,7 +581,7 @@ def analizar_motions(tok, modelo, repo, dispositivo, datos, salida):
             mensajes.append(texto)
         entradas = tok(mensajes, return_tensors='pt', padding=True).to(modelo.device)
         with torch.inference_mode():
-            out = modelo.generate(**entradas, max_new_tokens=700, do_sample=False, pad_token_id=tok.pad_token_id or tok.eos_token_id)
+            out = modelo.generate(**entradas, max_new_tokens=1500 if denso else 700, do_sample=False, pad_token_id=tok.pad_token_id or tok.eos_token_id)
         for (desde, trozo), fila in zip(lote, out):
             respuesta = tok.decode(fila[entradas['input_ids'].shape[1]:], skip_special_tokens=True)
             if os.environ.get('CINECAPTIONS_DEPURAR_IA'):

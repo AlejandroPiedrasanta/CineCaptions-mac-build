@@ -42,7 +42,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             ver una pieza OGraf SIN Resolve: la abre en el Chrome sin ventana del runtime de Remotion (servidor local)
         vista_tema5.py
             el Tema 5 SIN Resolve, para revisarlo y para la tarjeta del slider (2_recursos/vistas_slider/Tema5.mp4
-    remotion\   (15748 archivos)
+    remotion\   (17355 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -229,7 +229,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     motions_catalogo.py
         TODOS los motions de la Edición PRO y cuáles puede usar (v5.5.7)
     motions_completo.py
-        v5.5.8 «Motions completo»: un video de motions a pantalla completa para TODO el video, frase a frase, que va en
+        v5.5.8 «Motions completo»: un video de SOLO motions a pantalla completa para TODO el video, tramo a tramo, que va
     motions_ui.py
         la sección «Motions de la Edición PRO» de la página Efectos: un carrusel con TODOS los motions (v5.5.7)
     motor_voz.py

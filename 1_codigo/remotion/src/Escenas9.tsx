@@ -82,28 +82,83 @@ const mezclaPose = (A: Pose, B: Pose, q: number): Pose => ({
   bL: [entre(A.bL[0], B.bL[0], q), entre(A.bL[1], B.bL[1], q)], bR: [entre(A.bR[0], B.bR[0], q), entre(A.bR[1], B.bR[1], q)],
   pL: [entre(A.pL[0], B.pL[0], q), entre(A.pL[1], B.pL[1], q)], pR: [entre(A.pR[0], B.pR[0], q), entre(A.pR[1], B.pR[1], q)],
 });
-/** El pictograma: tronco-cápsula, cabeza redonda, brazos y piernas gruesos con puntas redondas (estilo señalética). */
-const Monigote: React.FC<{ pose: Pose; F: number; color: string; x: number; y: number; boca?: boolean; gafas?: boolean }> = ({ pose, F, color, x, y, boca, gafas }) => {
-  const Lt = 0.36 * F, Lu = 0.17 * F, Lf = 0.16 * F, Lm = 0.21 * F, Ls = 0.21 * F, r = 0.088 * F;
+/** El muñeco (v5.5.9, pedido del usuario: «mejores bocetos de los muñecos, que se vea mejor, más visible y bonito»): un personaje ILUSTRADO
+ *  plano con volumen —cabeza con piel, pelo y cara (ojos, mejillas, sonrisa), camiseta del color de acento, pantalón, manos y zapatos— con un
+ *  contorno blanco de pegatina que lo despega de cualquier fondo y su sombra en el suelo. Mismo esqueleto y poses que el pictograma de antes. */
+const PIEL = '#F4C6A0', PIEL_SOMBRA = '#E0A27C', PELO = '#2A1D16', PANTALON = '#2E3A5C', ZAPATO = '#14161E';
+const Monigote: React.FC<{ pose: Pose; F: number; color: string; x: number; y: number; boca?: boolean; gafas?: boolean; ropa?: string; contorno?: string }> =
+  ({ pose, F, x, y, boca, gafas, ropa = '#4C7DFF', contorno = '#FFFFFF' }) => {
+  const Lt = 0.3 * F, Lu = 0.16 * F, Lf = 0.15 * F, Lm = 0.225 * F, Ls = 0.22 * F, r = 0.108 * F;
   const td: [number, number] = [Math.sin((pose.inc * Math.PI) / 180), -Math.cos((pose.inc * Math.PI) / 180)];
   const cuello: [number, number] = [x + td[0] * Lt, y + td[1] * Lt];
-  const hombro: [number, number] = [x + td[0] * Lt * 0.9, y + td[1] * Lt * 0.9];
+  const hombro: [number, number] = [x + td[0] * Lt * 0.86, y + td[1] * Lt * 0.86];
   const ca = ((pose.inc + (pose.cab || 0)) * Math.PI) / 180;
-  const cabeza: [number, number] = [cuello[0] + Math.sin(ca) * r * 1.45, cuello[1] - Math.cos(ca) * r * 1.45];
+  const cabeza: [number, number] = [cuello[0] + Math.sin(ca) * r * 1.25, cuello[1] - Math.cos(ca) * r * 1.25];
   const seg = (o: [number, number], a: number, L: number): [number, number] => { const d = dir(a); return [o[0] + d[0] * L, o[1] + d[1] * L]; };
   const brazo = (b: [number, number]) => { const c = seg(hombro, b[0], Lu); return [hombro, c, seg(c, b[1], Lf)]; };
   const pierna = (p: [number, number]) => { const c = seg([x, y], p[0], Lm); return [[x, y] as [number, number], c, seg(c, p[1], Ls)]; };
-  const linea = (pts: [number, number][], w: number, k: string) => (
-    <polyline key={k} points={pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+  const pts = (q: [number, number][]) => q.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const linea = (q: [number, number][], w: number, c: string, k: string, extra: React.SVGProps<SVGPolylineElement> = {}) => (
+    <polyline key={k} points={pts(q)} fill="none" stroke={c} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" {...extra} />
   );
+  const pL = pierna(pose.pL), pR = pierna(pose.pR), bL = brazo(pose.bL), bR = brazo(pose.bR);
+  const o = 0.032 * F;                                                      // grosor del contorno de pegatina
+  const zapato = (q: [number, number][], k: string, borde = 0) => {
+    const [px, py] = q[2], [ax, ay] = q[1];
+    const ang = Math.atan2(py - ay, px - ax) * 180 / Math.PI - 90;
+    return <ellipse key={k} cx={px + 0.02 * F} cy={py + 0.008 * F} rx={0.06 * F + borde} ry={0.034 * F + borde} fill={borde ? contorno : ZAPATO}
+                    transform={`rotate(${(ang * 0.35).toFixed(1)} ${px.toFixed(1)} ${py.toFixed(1)})`} />;
+  };
+  const mano = (q: [number, number][], k: string, borde = 0) => <circle key={k} cx={q[2][0]} cy={q[2][1]} r={0.04 * F + borde} fill={borde ? contorno : PIEL} />;
+  const codo = (q: [number, number][]): [number, number][] => [q[0], q[1]];            // la manga (camiseta) hasta el codo
+  const antebrazo = (q: [number, number][]): [number, number][] => [q[1], q[2]];
+  const grados = (ca * 180) / Math.PI;
+  const suelo = Math.max(pL[2][1], pR[2][1]) + 0.035 * F;
   return (
     <g>
-      {linea(pierna(pose.pL), 0.095 * F, 'pl')}{linea(pierna(pose.pR), 0.095 * F, 'pr')}
-      {linea([[x, y], cuello], 0.2 * F, 't')}
-      {linea(brazo(pose.bL), 0.075 * F, 'bl')}{linea(brazo(pose.bR), 0.075 * F, 'br')}
-      <circle cx={cabeza[0]} cy={cabeza[1]} r={r} fill={color} />
-      {boca && <ellipse cx={cabeza[0] + r * 0.15} cy={cabeza[1] + r * 0.25} rx={r * 0.32} ry={r * 0.4} fill="#000" opacity={0.85} />}
-      {gafas && <g fill="none" stroke="#000" strokeWidth={r * 0.12} opacity={0.85}><circle cx={cabeza[0] - r * 0.3} cy={cabeza[1] - r * 0.05} r={r * 0.28} /><circle cx={cabeza[0] + r * 0.32} cy={cabeza[1] - r * 0.05} r={r * 0.28} /></g>}
+      {/* la sombra en el suelo */}
+      <ellipse cx={(pL[2][0] + pR[2][0]) / 2} cy={suelo} rx={0.26 * F} ry={0.035 * F} fill="#000" opacity={0.28} />
+      {/* 1) el contorno blanco de pegatina (todo, un poco más grueso) */}
+      <g>
+        {linea(pL, 0.12 * F + 2 * o, contorno, 'opl')}{linea(pR, 0.12 * F + 2 * o, contorno, 'opr')}
+        {zapato(pL, 'ozl', o)}{zapato(pR, 'ozr', o)}
+        {linea([[x, y], cuello], 0.27 * F + 2 * o, contorno, 'ot')}
+        {linea(bL, 0.08 * F + 2 * o, contorno, 'obl')}{linea(bR, 0.08 * F + 2 * o, contorno, 'obr')}
+        {mano(bL, 'oml', o)}{mano(bR, 'omr', o)}
+        <circle cx={cabeza[0]} cy={cabeza[1]} r={r + o} fill={contorno} />
+      </g>
+      {/* 2) piernas (pantalón) y zapatos */}
+      {linea(pL, 0.12 * F, PANTALON, 'pl')}{linea(pR, 0.12 * F, PANTALON, 'pr')}
+      {zapato(pL, 'zl')}{zapato(pR, 'zr')}
+      {/* 3) el cuerpo: camiseta del color de acento, con un brillo a un lado */}
+      {linea([[x, y], cuello], 0.27 * F, ropa, 't')}
+      {linea([[x - 0.045 * F, y - 0.04 * F], [cuello[0] - 0.045 * F, cuello[1] + 0.05 * F]], 0.045 * F, '#FFFFFF', 'tb', { strokeOpacity: 0.22 })}
+      {linea([[x - 0.135 * F, y + 0.005 * F], [x + 0.135 * F, y + 0.005 * F]], 0.05 * F, PANTALON, 'cint')}
+      {/* 4) brazos: manga del color de la camiseta, antebrazo y mano de piel */}
+      {linea(antebrazo(bL), 0.07 * F, PIEL, 'al')}{linea(antebrazo(bR), 0.07 * F, PIEL, 'ar')}
+      {linea(codo(bL), 0.085 * F, ropa, 'ml')}{linea(codo(bR), 0.085 * F, ropa, 'mr')}
+      {mano(bL, 'hl')}{mano(bR, 'hr')}
+      {/* 5) la cabeza: piel con sombra, pelo, ojos, mejillas y boca */}
+      <g transform={`rotate(${grados.toFixed(2)} ${cabeza[0].toFixed(1)} ${cabeza[1].toFixed(1)})`}>
+        <circle cx={cabeza[0]} cy={cabeza[1]} r={r} fill={PIEL} />
+        <path d={`M ${cabeza[0] + r * 0.2} ${cabeza[1] + r * 0.98} A ${r} ${r} 0 0 0 ${cabeza[0] + r * 0.98} ${cabeza[1] + r * 0.2} A ${r * 1.3} ${r * 1.3} 0 0 1 ${cabeza[0] + r * 0.2} ${cabeza[1] + r * 0.98} z`}
+              fill={PIEL_SOMBRA} opacity={0.55} />
+        <path d={`M ${cabeza[0] - r * 1.02} ${cabeza[1] + r * 0.05} A ${r * 1.02} ${r * 1.02} 0 0 1 ${cabeza[0] + r * 1.02} ${cabeza[1] - r * 0.05}
+                  Q ${cabeza[0] + r * 0.55} ${cabeza[1] - r * 0.55} ${cabeza[0] + r * 0.05} ${cabeza[1] - r * 0.42} Q ${cabeza[0] - r * 0.6} ${cabeza[1] - r * 0.3} ${cabeza[0] - r * 1.02} ${cabeza[1] + r * 0.05} z`}
+              fill={PELO} />
+        <circle cx={cabeza[0] - r * 0.34} cy={cabeza[1] + r * 0.05} r={r * 0.11} fill="#1B1B1F" />
+        <circle cx={cabeza[0] + r * 0.34} cy={cabeza[1] + r * 0.05} r={r * 0.11} fill="#1B1B1F" />
+        <circle cx={cabeza[0] - r * 0.31} cy={cabeza[1] + r * 0.01} r={r * 0.04} fill="#FFFFFF" />
+        <circle cx={cabeza[0] + r * 0.37} cy={cabeza[1] + r * 0.01} r={r * 0.04} fill="#FFFFFF" />
+        <circle cx={cabeza[0] - r * 0.58} cy={cabeza[1] + r * 0.35} r={r * 0.14} fill="#FF7A8A" opacity={0.45} />
+        <circle cx={cabeza[0] + r * 0.58} cy={cabeza[1] + r * 0.35} r={r * 0.14} fill="#FF7A8A" opacity={0.45} />
+        {boca
+          ? <ellipse cx={cabeza[0]} cy={cabeza[1] + r * 0.45} rx={r * 0.24} ry={r * 0.3} fill="#5A1A22" />
+          : <path d={`M ${cabeza[0] - r * 0.26} ${cabeza[1] + r * 0.38} Q ${cabeza[0]} ${cabeza[1] + r * 0.62} ${cabeza[0] + r * 0.26} ${cabeza[1] + r * 0.38}`}
+                  fill="none" stroke="#5A1A22" strokeWidth={r * 0.1} strokeLinecap="round" />}
+        {gafas && <g fill="none" stroke="#1B1B1F" strokeWidth={r * 0.09}><circle cx={cabeza[0] - r * 0.34} cy={cabeza[1] + r * 0.05} r={r * 0.26} />
+          <circle cx={cabeza[0] + r * 0.34} cy={cabeza[1] + r * 0.05} r={r * 0.26} /><path d={`M ${cabeza[0] - r * 0.08} ${cabeza[1] + r * 0.05} h ${r * 0.16}`} /></g>}
+      </g>
     </g>
   );
 };
@@ -119,14 +174,16 @@ export const PictogramaE: React.FC<PictogramaProps> = ({ pose = 'trabajando', te
   const tinta = claro ? '#141414' : '#FFFFFF';
   const fondo = claro ? 'radial-gradient(ellipse at 50% 40%, #F2F2F0 0%, #DCDCDA 75%)' : neon ? '#050505' : 'radial-gradient(ellipse at 50% 32%, #101010 0%, #000 70%)';
   const ac = hex(acento, neon ? '#FF2A2A' : '#FFFFFF');
-  const F = (vert ? 640 : 560) * U;
+  const claridad = (h: string) => { const n = parseInt(h.slice(1), 16); return (0.3 * (n >> 16) + 0.59 * ((n >> 8) & 255) + 0.11 * (n & 255)) / 255; };
+  const ropa = claridad(ac) > 0.82 ? '#4C7DFF' : ac;
+  const F = (vert ? 740 : 600) * U;                                     // v5.5.9: el muñeco nuevo, más grande
   const cx = vert ? W / 2 : W * 0.34, cy = vert ? H * 0.43 : H * 0.6;
   const q = easeOut((t - 0.15) / 0.5);
   const fase = t * Math.PI * 2 * 1.7;
   let figura: React.ReactNode = null;
   const base = POSES.parado;
   const conTexto = !!texto;
-  if (!neon) {
+  {
     const nombre = pose === 'trabajando' || pose === 'gritando' ? 'sentado' : pose in POSES ? pose : 'parado';   // al que le gritan, sentado a su mesa
     let P = mezclaPose(base, POSES[nombre], q);
     let dy = 0;
@@ -147,7 +204,8 @@ export const PictogramaE: React.FC<PictogramaProps> = ({ pose = 'trabajando', te
     const hx = sentado ? cx + (pose === 'gritando' ? 0.25 * F : -0.1 * F) : cx, hy = sentado ? cy + 0.12 * F : cy + 0.18 * F + dy;
     const pc = sentado ? S(0.05, { damping: 16 }) : 1;
     figura = (
-      <svg width={W} height={H} style={{ position: 'absolute', inset: 0, overflow: 'visible', filter: claro ? 'none' : `drop-shadow(0 0 ${18 * U}px rgba(255,255,255,.45))` }}>
+      <svg width={W} height={H} style={{ position: 'absolute', inset: 0, overflow: 'visible',
+                                         filter: claro ? `drop-shadow(0 ${14 * U}px ${22 * U}px rgba(0,0,0,.18))` : neon ? `drop-shadow(0 0 ${30 * U}px ${ac})` : `drop-shadow(0 0 ${22 * U}px rgba(255,255,255,.25))` }}>
         {sentado && (
           <g opacity={clamp(pc * 2)} transform={`translate(0 ${((1 - clamp(pc)) * 60 * U).toFixed(1)})`}>
             {/* silla, mesa y portátil */}
@@ -162,10 +220,10 @@ export const PictogramaE: React.FC<PictogramaProps> = ({ pose = 'trabajando', te
             <circle cx={hx + 0.62 * F} cy={hy - 0.2 * F} r={0.012 * F} fill={claro ? '#DCDCDA' : '#000'} />
           </g>
         )}
-        <Monigote pose={P} F={F} color={tinta} x={hx} y={hy} gafas={sentado} />
+        <Monigote pose={P} F={F} color={tinta} x={hx} y={hy} gafas={sentado} ropa={ropa} />
         {pose === 'gritando' && (
           <g opacity={clamp((t - 0.25) / 0.2)}>
-            <Monigote pose={mezclaPose(base, POSES.gritando, q)} F={F * 1.02} color={tinta} x={hx - 0.62 * F} y={cy + 0.18 * F + Math.sin(t * 22) * 0.008 * F} boca />
+            <Monigote pose={mezclaPose(base, POSES.gritando, q)} F={F * 1.02} color={tinta} x={hx - 0.62 * F} y={cy + 0.18 * F + Math.sin(t * 22) * 0.008 * F} boca ropa="#E8505B" />
             {[0, 1, 2].map(k => (
               <line key={k} x1={hx - 0.5 * F + k * 0.06 * F} y1={hy - 0.6 * F} x2={hx - 0.46 * F + k * 0.1 * F} y2={hy - 0.7 * F - (k === 1 ? 0.05 * F : 0)}
                     stroke={tinta} strokeWidth={0.02 * F} strokeLinecap="round" opacity={0.5 + 0.5 * Math.sin(t * 18 + k)} />
@@ -196,21 +254,6 @@ export const PictogramaE: React.FC<PictogramaProps> = ({ pose = 'trabajando', te
           </g>
         )}
       </svg>
-    );
-  } else {
-    // el personaje de luz: cabeza y cuerpo en óvalo, rojo brillante, ojos que parpadean, sobre una rejilla que ondula
-    const parp = (t % 2.4) > 2.25 ? 0.12 : 1;
-    const bob = Math.sin(t * 2.2) * 8 * U;
-    const pe = S(0.1, { damping: 13 });
-    figura = (
-      <div style={{ position: 'absolute', left: cx - 260 * U, top: cy - 300 * U + bob, width: 520 * U, height: 900 * U, transform: `scale(${Math.max(0.001, pe).toFixed(4)})`,
-                    filter: `drop-shadow(0 0 ${40 * U}px ${ac}) drop-shadow(0 0 ${90 * U}px ${ac})` }}>
-        <div style={{ position: 'absolute', left: 150 * U, top: 0, width: 220 * U, height: 220 * U, borderRadius: '50%', background: `radial-gradient(circle at 40% 35%, ${mezcla(ac, [255, 255, 255], 0.35)}, ${ac} 70%)` }}>
-          {[0, 1].map(k => <div key={k} style={{ position: 'absolute', left: (78 + k * 46) * U, top: 92 * U, width: 16 * U, height: 34 * U, borderRadius: 8 * U, background: '#FFF', transform: `scaleY(${parp})` }} />)}
-        </div>
-        <div style={{ position: 'absolute', left: 60 * U, top: 240 * U, width: 400 * U, height: 640 * U, borderRadius: '50% 50% 46% 46% / 42% 42% 58% 58%',
-                      background: `radial-gradient(ellipse at 50% 30%, ${mezcla(ac, [255, 255, 255], 0.25)}, ${ac} 60%, ${mezcla(ac, [0, 0, 0], 0.25)} 100%)` }} />
-      </div>
     );
   }
   // la línea que baja hasta el icono 3D (o de lado en horizontal)

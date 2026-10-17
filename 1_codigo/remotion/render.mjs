@@ -29,7 +29,8 @@ const trabajador = async () => {
         // v5.5.8, «Motions completo»: un video ENTERO y opaco (va encima de todo): H.264 de alta calidad (ProRes 4444 pesaría varios GB),
         // con todos los hilos para él y su avance (una línea {"progreso"} cada ~5 %)
         let ultimo = -1;
-        await renderMedia({ composition, serveUrl, codec: 'h264', crf: 16, imageFormat: 'jpeg', jpegQuality: 92, pixelFormat: 'yuv420p', muted: true,
+        await renderMedia({ composition, serveUrl, codec: 'h264', crf: 16, x264Preset: 'veryfast', imageFormat: 'jpeg', jpegQuality: 92,
+                            pixelFormat: 'yuv420p', muted: true,   // v5.5.9: «veryfast» = misma calidad (CRF 16), menos espera
                             outputLocation: t.salida, inputProps: t.props, puppeteerInstance: navegador, concurrency: Math.max(2, Math.min(16, Math.floor(nucleos / 2))),
                             overwrite: true, chromiumOptions: { gl: 'angle' }, logLevel: 'error',
                             onProgress: ({ progress }) => { const p = Math.floor(progress * 20); if (p > ultimo) { ultimo = p; console.log(JSON.stringify({ progreso: progress, salida: t.salida })); } } });

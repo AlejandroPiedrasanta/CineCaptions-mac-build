@@ -874,6 +874,18 @@ if clip:
         project.SetCurrentTimeline(tl)
         puestos = mp.AppendToTimeline([clip])
         res['anadido'] = len(puestos or [])
+        # v5.5.9: la IMAGEN del video tiene que estar en V1. MEDIDO (Studio 21.1.1): justo después de un GO con efectos visuales, el primer
+        # AppendToTimeline([clip]) del proyecto nuevo devolvía SOLO el clip de audio (V1 vacío, A1 con el audio) y repetirlo no servía; la imagen
+        # entra pidiéndola aparte (mediaType 1). Sin esto GO seguía con V1 vacío: la Edición PRO salía con la persona sobre negro.
+        def _v1():
+            return [x for x in (tl.GetItemListInTrack('video', 1) or []) if x]
+        try:
+            res['clip_con_video'] = bool(str(clip.GetClipProperty('Resolution') or '').strip()) or 'video' in str(clip.GetClipProperty('Type') or '').lower()
+            if res['clip_con_video'] and not _v1():
+                mp.AppendToTimeline([{'mediaPoolItem': clip, 'mediaType': 1, 'trackIndex': 1, 'recordFrame': tl.GetStartFrame()}])
+                res['video_repuesto'] = len(_v1())
+        except Exception as e:
+            res['video_error'] = repr(e)
         # el audio ORIGINAL del video tiene que estar en A1 y sonar: se comprueba y, si Resolve solo metió la imagen, se añade el audio aparte
         try:
             def _a1():
@@ -896,6 +908,12 @@ if clip:
                 pass
         except Exception as e:
             res['audio_error'] = repr(e)
+        if res.get('video_repuesto') or res.get('audio_repuesto'):
+            try:                                               # imagen y audio puestos por separado: se enlazan (se mueven juntos, como al arrastrar el clip)
+                res['enlazados'] = bool(tl.SetClipsLinked(_v1() + list(tl.GetItemListInTrack('audio', 1) or []), True))
+            except Exception:
+                pass
+        res['v1_clips'] = len(_v1())
         for it in (tl.GetItemListInTrack('video', 1) or []):
             try:
                 it.SetProperty('Scaling', resolve.SCALE_FIT)
@@ -1109,6 +1127,8 @@ def crear_timeline_con_video(ruta, nombre=None, ancho=1080, alto=1920, fps=30.0,
         return {'error': 'Resolve no pudo importar el archivo', **r}
     if not r.get('timeline'):
         return {'error': 'Resolve no pudo crear el timeline', **r}
+    if r.get('clip_con_video') and not r.get('v1_clips'):                    # v5.5.9: nunca seguir con V1 vacío (GO repara y repite)
+        return {'error': 'Resolve puso solo el audio del video en el timeline (V1 quedó vacío)', **r}
     return r
 
 

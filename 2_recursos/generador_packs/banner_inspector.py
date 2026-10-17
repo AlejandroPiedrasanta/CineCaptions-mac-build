@@ -1,19 +1,22 @@
 # CineCaptions · By Cinema Productions
-# 2_recursos/generador_packs/banner_inspector.py — el BANNER de CineCaptions arriba de los controles de cada caption en el Inspector de Resolve.
+# 2_recursos/generador_packs/banner_inspector.py — el BANNER de CineCaptions (con su logo) arriba de los controles de cada caption en el Inspector.
 """
 v5.5.8 (pedido: «coloca un banner de CineCaptions para personalizar todo lo que se puso en la línea de tiempo en el Inspector, que quede bien
-bonito; aplica para captions y todo»). Cada caption de los packs es una comp de Fusion; el banner es un LabelControl (texto con HTML, como los
-«DROP SHADOW» / «GLOW CONTROLS» que ya trae el macro Luxe):
-  · con macro (Luxe Shine / Slide): el label va en la herramienta de texto de DENTRO del macro y se publica como su PRIMER control (InstanceInput);
-  · sin macro (Kinetic, VIRAL): el label va en el Text+ «Template» (el que GO rellena).
-Va ARRIBA DE TODO (pedido: «el banner arriba de todo»): IC_ControlPage = -1 = encima de la fila de pestañas (Texto, Distribución…), visible en
-todas; el Inspector de Resolve 21 enseña las pestañas del Text+ aunque el caption sea un macro Luxe. No cambia nada más de la comp (ni el diseño
-ni la animación). Idempotente: si ya lleva el banner, lo deja al día (el de antes iba en la página Text, abajo del todo).
+bonito») y v5.5.9 («en DaVinci Resolve aún no tiene un banner y mi logo»). PROBADO en Resolve Studio 21.1.1: en una comp de caption de los packs
+el PRIMER tool es el Text+ «Template» (el macro Luxe lee su texto con la expresión `Template.StyledText`), y el Inspector del Edit enseña ESE tool
+(sus pestañas Texto, Distribución…), NO el macro: por eso el banner de la 5.5.8 (dentro del macro) no se veía. Ahora:
+  · Text+ «Template» (o el primer Text+ si no hay): un LabelControl con el LOGO (PNG en base64, como la cabecera del macro Luxe) y una línea de
+    ayuda, con IC_ControlPage = -1 = ENCIMA de la fila de pestañas, visible en todas;
+  · con macro (Luxe Shine / Slide): además, un banner de solo texto dentro de su Text+ y publicado como PRIMER control del macro (por si se abre
+    el macro en la página Fusion).
+No cambia nada más de la comp (ni el diseño ni la animación). Idempotente: si ya lleva el banner, lo deja al día.
 
-    con_banner(tools) -> tools            la comp (texto de Tools) con el banner
+    banner_png() -> ruta             el PNG del banner (icono + «CINECAPTIONS» + «By Cinema Productions»), hecho una vez desde el logo
+    con_banner(tools) -> tools       la comp (texto de Tools) con el banner
     parchear_drb(ruta) -> clips cambiados   reescribe el .drb (cada CompositionBA con el MISMO prefijo y longitudes, como lo guarda Resolve)
     python banner_inspector.py <carpeta o .drb>...
 """
+import base64
 import binascii
 import re
 import struct
@@ -22,11 +25,52 @@ import zipfile
 import zlib
 from pathlib import Path
 
+AQUI = Path(__file__).resolve().parent
+RECURSOS = AQUI.parent
+PNG = AQUI / 'banner_cinecaptions.png'
 NOMBRE = 'CCBanner'
-HTML = ("<center><font color='#E8C27A' size='5'><b>CINECAPTIONS</b></font><br>"
-        "<font color='#C9CDD8'>Personaliza aquí tu caption: texto, fuente, tamaño, color y animación</font></center>")
-LABEL = (f'{NOMBRE} = {{ LINKS_Name = "{HTML}", LINKID_DataType = "Number", INPID_InputControl = "LabelControl", LBLC_MultiLine = true, '
-         'INP_External = false, INP_Passive = true, IC_NoLabel = true, IC_NoReset = true, IC_ControlPage = -1, }, ')
+AYUDA = 'Personaliza aquí tu caption: texto, fuente, tamaño y color'
+
+
+def banner_png(rehacer=False):
+    """El banner (600×150, se ve a 300 px de ancho: nítido en pantallas con escala): tarjeta oscura con el borde en los colores del logo, el
+    icono de CineCaptions, «CINECAPTIONS» y «By Cinema Productions». Paleta de 128 colores: pocos KB dentro de cada caption."""
+    if PNG.exists() and not rehacer:
+        return PNG
+    from PIL import Image, ImageDraw, ImageFont
+    W, H, R = 600, 150, 30
+    im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    borde = Image.new('RGBA', (W, H))
+    colores = [(47, 99, 214), (0, 214, 236), (230, 74, 25), (150, 50, 214)]
+    for x in range(W):                                                   # el degradado del borde: azul → cian → naranja → morado
+        u = x / (W - 1) * (len(colores) - 1)
+        a, z = colores[int(u)], colores[min(len(colores) - 1, int(u) + 1)]
+        f = u - int(u)
+        ImageDraw.Draw(borde).line([(x, 0), (x, H)], fill=tuple(int(a[k] + (z[k] - a[k]) * f) for k in range(3)) + (255,))
+    mascara = Image.new('L', (W, H), 0)
+    ImageDraw.Draw(mascara).rounded_rectangle([0, 0, W - 1, H - 1], R, fill=255)
+    im.paste(borde, (0, 0), mascara)
+    ImageDraw.Draw(im).rounded_rectangle([4, 4, W - 5, H - 5], R - 4, fill=(14, 16, 24, 255))
+    logo = Image.open(RECURSOS / 'logo_cinecaptions.png').convert('RGBA').resize((112, 112), Image.LANCZOS)
+    im.alpha_composite(logo, (20, 19))
+    fuentes = RECURSOS / 'fonts'
+    titulo = ImageFont.truetype(str(fuentes / 'Montserrat-ExtraBold.ttf'), 50)
+    sub = ImageFont.truetype(str(fuentes / 'Inter_18pt-Medium.ttf'), 25)
+    d = ImageDraw.Draw(im)
+    d.text((152, 26), 'CINECAPTIONS', font=titulo, fill=(255, 255, 255, 255))
+    d.text((155, 90), 'By Cinema Productions', font=sub, fill=(154, 163, 181, 255))
+    im.quantize(colors=128, method=Image.Quantize.FASTOCTREE).save(PNG, optimize=True)
+    return PNG
+
+
+def _label(html):
+    return (f'{NOMBRE} = {{ LINKS_Name = "{html}", LINKID_DataType = "Number", INPID_InputControl = "LabelControl", LBLC_MultiLine = true, '
+            'INP_External = false, INP_Passive = true, IC_NoLabel = true, IC_NoReset = true, IC_ControlPage = -1, }, ')
+
+
+_B64 = base64.b64encode(banner_png().read_bytes()).decode('ascii')
+LABEL = _label(f"<center><img src='data:image/png;base64,{_B64}' width='300'><br><font color='#9AA3B5'>{AYUDA}</font></center>")
+LABEL_TEXTO = _label(f"<center><font color='#E8C27A' size='5'><b>CINECAPTIONS</b></font><br><font color='#9AA3B5'>{AYUDA}</font></center>")
 _VIEJO = re.compile(NOMBRE + r' = \{ LINKS_Name = ".*?", LINKID_DataType = "Number", INPID_InputControl = "LabelControl".*?IC_NoReset = true, '
                     r'(?:ICS_ControlPage = "\w+", |IC_ControlPage = -?\d+, )?\}, ')
 
@@ -54,10 +98,9 @@ def _cerrar(texto, abre):
     raise ValueError('llave sin cerrar')
 
 
-def _con_label(tools, ini, fin):
+def _con_label(tools, ini, fin, label):
     """El label en la herramienta tools[ini:fin] (bloque «X = TextPlus { ... }»): dentro de su UserControls si ya tiene, si no uno nuevo."""
     bloque = tools[ini:fin + 1]
-    label = LABEL
     m = re.search(r'UserControls = ordered\(\) \{ ?', bloque)
     if m:
         bloque = bloque[:m.end()] + label + bloque[m.end():]
@@ -68,25 +111,32 @@ def _con_label(tools, ini, fin):
 
 
 def con_banner(tools):
-    if NOMBRE in tools:
-        return _VIEJO.sub(lambda m: LABEL, tools)
+    tools = _VIEJO.sub(lambda m: LABEL_TEXTO, tools)                      # los que ya había, al día (de texto; el del Template, abajo)
+    # 1) el Text+ que enseña el Inspector del Edit: «Template» (o el primero si no hay): el banner con el LOGO
+    t = re.search(r'(?m)^\s*Template = TextPlus \{', tools) or re.search(r'\w+ = TextPlus \{', tools)
+    if t:
+        ini = t.start() + len(t.group(0)) - len(t.group(0).lstrip())
+        fin = _cerrar(tools, tools.index('{', ini))
+        bloque = tools[ini:fin + 1]
+        if LABEL_TEXTO in bloque:
+            tools = tools[:ini] + bloque.replace(LABEL_TEXTO, LABEL) + tools[fin + 1:]
+        elif NOMBRE not in bloque:
+            tools = _con_label(tools, ini, fin, LABEL)
+    # 2) con macro: también dentro de su Text+ (de texto) y publicado como su primer control
     m = re.search(r'(\w+) = MacroOperator \{', tools)
     if m:
         abre = tools.index('{', m.start())
         fin_macro = _cerrar(tools, abre)
-        t = re.search(r'(\w+) = TextPlus \{', tools[abre:fin_macro])
-        if t:
-            nombre_t = t.group(1)
-            ini_t = abre + t.start()
-            fin_t = _cerrar(tools, tools.index('{', ini_t))
-            tools = _con_label(tools, ini_t, fin_t)
-            k = tools.index('Inputs = ordered() {', abre) + len('Inputs = ordered() {')
-            return tools[:k] + f' {NOMBRE} = InstanceInput {{ SourceOp = "{nombre_t}", Source = "{NOMBRE}", }},' + tools[k:]
-    t = re.search(r'Template = TextPlus \{', tools) or re.search(r'\w+ = TextPlus \{', tools)
-    if not t:
-        return tools
-    fin_t = _cerrar(tools, tools.index('{', t.start()))
-    return _con_label(tools, t.start(), fin_t)
+        if NOMBRE not in tools[abre:fin_macro]:
+            tt = re.search(r'(\w+) = TextPlus \{', tools[abre:fin_macro])
+            if tt:
+                nombre_t = tt.group(1)
+                ini_t = abre + tt.start()
+                fin_t = _cerrar(tools, tools.index('{', ini_t))
+                tools = _con_label(tools, ini_t, fin_t, LABEL_TEXTO)
+                k = tools.index('Inputs = ordered() {', abre) + len('Inputs = ordered() {')
+                tools = tools[:k] + f' {NOMBRE} = InstanceInput {{ SourceOp = "{nombre_t}", Source = "{NOMBRE}", }},' + tools[k:]
+    return tools
 
 
 # ------------------------------------------------------------------------------------------------------------------------------- .drb

@@ -56,6 +56,8 @@ REPOS_ASR = {'1.7B': ('Qwen/Qwen3-ASR-1.7B-hf', 1_000_000_000), '0.6B': ('Qwen/Q
 REPO_ALINEADOR = ('Qwen/Qwen3-ForcedAligner-0.6B-hf', 400_000_000)
 REPOS_VIEJOS = ('Qwen/Qwen3-ASR-1.7B', 'Qwen/Qwen3-ASR-0.6B', 'Qwen/Qwen3-ForcedAligner-0.6B')   # los del motor 1.x (~6 GB)
 SIN_VENTANA = 0x08000000 if sys.platform == 'win32' else 0
+# v5.5.8: los servidores de IA (voz y texto) con prioridad BAJA: la interfaz no se traba mientras trabajan (sin competencia van igual)
+SERVIDOR = SIN_VENTANA | (0x00004000 if sys.platform == 'win32' else 0)          # + BELOW_NORMAL_PRIORITY_CLASS
 
 # codigo ISO del programa -> nombre que entiende Qwen3-ASR
 IDIOMAS_QWEN = {
@@ -473,7 +475,7 @@ class _ServidorVoz:
         self.p = subprocess.Popen([str(python_motor()), '-s', '-u', str(script_motor()), '--servidor',
                                    '--inactivo', str(INACTIVO_VOZ_S)] + (['--modelo', modelo] if modelo else []),
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                  env=entorno, creationflags=SIN_VENTANA, cwd=str(carpeta()))
+                                  env=entorno, creationflags=SERVIDOR, cwd=str(carpeta()))
         self.lineas = queue.Queue()
         self.errores = []
         self.pedido = threading.Lock()

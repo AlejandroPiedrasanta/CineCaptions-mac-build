@@ -484,6 +484,16 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.5.9', [
+        'Motions completo con el estilo de los mejores reels: ya no repite los captions; arriba, un titular que aparece palabra a palabra (la idea clave en cursiva azul, tachada, en gris o en píldora) y debajo una tarjeta que explica lo que se dice (grabar, horas, material, encontrar, cortar, versiones, ideas, fechas, lugares, entradas, música, premios, compartir…), con el cursor que hace clic y transiciones fluidas sobre un mismo fondo claro. Sin muñecos ni fotos de internet.',
+        'Proyecto: el slider de temas es más grande y cada tema enseña su ejemplo con o sin Edición PRO (la píldora «Con PRO / Solo captions» de la tarjeta), el botón de la Edición PRO va al lado de «Usar este tema», el nombre del tema entra letra a letra y elegir un tema tiene su animación (pulso, anillo y destellos). Las tarjetas ya no llevan la «V».',
+        'Motions completo ya no se repite: más tarjetas (lista, buscador, publicación, encuesta, carga, nota, antes/después, cuenta atrás, gráfica y el «golpe» con la palabra enorme), cada una con su color y su lado, con fotogramas de tu propio video dentro y con sonido sincronizado (whoosh al entrar, clics y pops).',
+        'Edición PRO más rápida: «Motions completo» y la descarga del B-roll se hacen a la vez que lo demás (antes iban al final, uno tras otro), «Motions completo» ya no espera a la IA de texto y su video se codifica más rápido.',
+        'Inicio va fluido: se quitó una pausa que congelaba las animaciones al abrir, y si el equipo no llega a 60 fps se queda en 30 parejos, sin tirones. Mientras GO anima o la IA trabaja, la interfaz sigue suave.',
+        'Inicio más limpio: sin el enlace «Detalles y estado del sistema».',
+        'DaVinci Resolve: cada caption lleva arriba de todo, en el Inspector, el banner con el logo de CineCaptions.',
+        'Motions editables en Resolve: Efectos › Títulos › CineCaptions trae 6 motions (titular, píldoras, tercio inferior, cifra que cuenta, lista y llamada) con su texto, colores, posición y tamaño en el Inspector; para cambiar uno, arrastra otro encima. También van en un .drfx para pasarlos a otro equipo.',
+    ]),
     ('5.5.8', [
         'Temas 4, 5 y 6 con la Edición PRO ya no cierran DaVinci Resolve: lo que la PRO va a poner se importa todo de una vez antes de tocar el timeline (Studio y Free).',
         'Temas 5 y 6: los captions son textos de Fusion editables (Inspector › Texto) para corregir cualquier falta, con el diseño de cada tema: la frase clave en serif y en color; el gancho del principio va con Magic Mask en Studio.',

@@ -25,7 +25,8 @@ NOMBRES_KIT = {'lista': 'Lista de razones', 'ruta': 'Ruta de errores', 'misterio
                'red': 'Red neón con interruptor'}
 NOMBRES_ESCENA = {'pictograma': 'Pictograma (personaje)', 'tablero': 'Tablero de pistas', 'polaroid': 'Polaroid colgada',
                   'cuaderno': 'Cuaderno con sello', 'fecha': 'Fecha en calendario', 'vidrio': 'Icono de cristal', 'chat': 'Chat de mensajes',
-                  'collage': 'Collage de revista', 'movil': 'Móvil con perfil', 'tijeras': 'Tijeras que cortan', 'foto': 'Foto de internet'}
+                  'collage': 'Collage de revista', 'movil': 'Móvil con perfil', 'tijeras': 'Tijeras que cortan', 'foto': 'Foto de internet',
+                  'personajes': 'Personajes 3D que explican'}
 # piezas OGraf de los Temas 1–4 (edicion_pro_planificador) y del mapa
 GRAFICOS = [('ograf:titular', 'Titular detrás de la persona'), ('ograf:rotulo', 'Rótulo en bloques'), ('ograf:cifra', 'Cifra grande'),
             ('ograf:lista', 'Lista de puntos'), ('ograf:icono', 'Concepto con icono 3D'), ('ograf:etiqueta', 'Etiqueta y ubicación'),
@@ -52,7 +53,7 @@ def _kit():
 def _escenas():
     try:
         import edicion_pro_escenas as ES
-        return dict(ES.COMP)
+        return {k: v for k, v in ES.COMP.items() if k not in getattr(ES, 'RETIRADAS', ())}   # v5.5.9: sin muñecos
     except Exception:
         return {}
 

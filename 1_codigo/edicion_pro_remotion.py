@@ -41,6 +41,14 @@ def bundle() -> Path:
     return _recursos() / 'bundle'
 
 
+def opciones_proceso():
+    """v5.5.8: Remotion (node + varias pestañas de Chrome + ffmpeg) corre con prioridad BAJA: con todos los núcleos ocupados, la interfaz
+    (Inicio y sus animaciones) se trababa mientras GO animaba. Los procesos hijos heredan la prioridad; sin competencia, va igual de rápido."""
+    if sys.platform == 'win32':
+        return {'creationflags': getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)}
+    return {'preexec_fn': lambda: os.nice(5)}
+
+
 def _node():
     rt = _recursos() / 'runtime' / ('node.exe' if sys.platform == 'win32' else 'node')
     if rt.exists():
@@ -131,7 +139,7 @@ def renderizar(trabajos, al_estado=None, timeout=900):
     try:
         mjs = _render_mjs()
         p = subprocess.run([_node(), str(mjs), ruta], cwd=str(mjs.parent), capture_output=True, text=True, encoding='utf-8', errors='replace',
-                           timeout=timeout, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+                           timeout=timeout, **opciones_proceso())
         for linea in p.stdout.splitlines():
             try:
                 r = json.loads(linea)

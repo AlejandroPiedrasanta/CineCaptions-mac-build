@@ -109,6 +109,9 @@ def pro_final(datos, fps, fx_plan=None):
     con_razon = []
     for s in sonidos:
         t = int(s['ini']) / fps
+        if s.get('sinc'):                                             # v5.5.9: los de «Motions completo» ya van con lo que entra en SU video
+            con_razon.append(s)
+            continue
         if s.get('pista') in ('PRO-WHOOSH', 'PRO-TEXTURA') and anclas and not any(abs(t - a) < 0.4 or (a - 0.6 < t < a + 0.15) for a in anclas):
             motivos.append(f"PRO: fuera el sonido «{s.get('que', '')}» de {t:.1f} s (no entra nada en pantalla a la vez)")
             continue

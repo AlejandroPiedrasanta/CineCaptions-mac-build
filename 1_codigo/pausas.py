@@ -108,6 +108,20 @@ SEGS = %(segs)r
 tl = project.GetCurrentTimeline()
 mp = project.GetMediaPool()
 res = {'ok': False}
+
+def _poner(d):
+    # v5.5.9: sin mediaType, Resolve a veces mete SOLO el audio (ver resolve_mcp._CREAR_TIMELINE): si falta la imagen, se pide aparte y se enlazan
+    r = list(mp.AppendToTimeline([d]) or [])
+    if r and not any(x.GetTrackTypeAndIndex()[0] == 'video' for x in r):
+        v = list(mp.AppendToTimeline([dict(d, mediaType=1)]) or [])
+        if v:
+            try:
+                tl.SetClipsLinked(r + v, True)
+            except Exception:
+                pass
+            r += v
+    return r
+
 v1 = [it for it in (tl.GetItemListInTrack('video', 1) or []) if it]
 a1 = [it for it in (tl.GetItemListInTrack('audio', 1) or []) if it]
 if len(v1) != 1:
@@ -136,7 +150,7 @@ else:
                 ef = min(ef, total - 1)
             if ef < sf:
                 continue
-            nuevos = mp.AppendToTimeline([{'mediaPoolItem': mpi, 'startFrame': sf, 'endFrame': ef, 'recordFrame': pos, 'trackIndex': 1}])
+            nuevos = _poner({'mediaPoolItem': mpi, 'startFrame': sf, 'endFrame': ef, 'recordFrame': pos, 'trackIndex': 1})
             if not nuevos:
                 res['error'] = 'Resolve no colocó el tramo %%d' %% puestos
                 break
@@ -159,7 +173,7 @@ else:
             # a medias: se intenta dejar el video entero como estaba
             try:
                 tl.DeleteClips(v1n + a1n, False)
-                mp.AppendToTimeline([{'mediaPoolItem': mpi, 'recordFrame': inicio, 'trackIndex': 1}])
+                _poner({'mediaPoolItem': mpi, 'recordFrame': inicio, 'trackIndex': 1})
                 res['restaurado'] = len(tl.GetItemListInTrack('video', 1) or [])
             except Exception as e:
                 res['restaurado'] = repr(e)

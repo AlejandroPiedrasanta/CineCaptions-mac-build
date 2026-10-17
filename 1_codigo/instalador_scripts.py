@@ -514,6 +514,33 @@ def _limpiar_instalaciones_viejas(carpetas_activas):
                                     (carpeta / nombre).unlink(missing_ok=True)
                                 except Exception as exc:
                                     _FALLOS_LIMPIEZA.append(f'{carpeta / nombre}: {exc}')
+def carpetas_templates_resolve():
+    """v5.5.9: la carpeta Fusion/Templates del usuario (de ahí saca Resolve los títulos de Efectos › Títulos)."""
+    if sys.platform == 'darwin':
+        return [Path.home() / 'Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Templates']
+    if sys.platform.startswith('win'):
+        appdata = Path(os.environ.get('APPDATA', Path.home() / 'AppData/Roaming'))
+        return [appdata / 'Blackmagic Design/DaVinci Resolve/Support/Fusion/Templates']
+    return [Path.home() / '.local/share/DaVinciResolve/Fusion/Templates']
+
+
+def instalar_motions_en_resolve(forzar=False):
+    """v5.5.9 (pedido: «no se crea .drfx para personalizar; los motions en el Inspector tienen que ser para editar»): los motions editables de
+    CineCaptions (2_recursos/motions_resolve, hechos con generador_packs/drfx_motions.py: títulos de Fusion con el banner y el logo arriba y sus
+    textos, colores, posición y tamaño publicados) en Efectos › Títulos › CineCaptions. Copia solo lo que cambió; Resolve los lee al abrirse.
+    Devuelve (copiados, error)."""
+    origen = BASE_RECURSOS / 'motions_resolve' / 'Edit' / 'Titles' / 'CineCaptions'
+    if not origen.is_dir():
+        return [], 'no están los motions dentro del programa'
+    archivos = sorted(p for p in origen.iterdir() if p.suffix in ('.setting', '.png'))
+    copiados, error = [], None
+    for raiz in carpetas_templates_resolve():
+        c, err = _instalar_en_una_carpeta(raiz / 'Edit' / 'Titles' / 'CineCaptions', archivos, forzar)
+        copiados += c
+        error = err or error
+    return copiados, error
+
+
 def instalar_scripts_en_resolve(destino=None, forzar=False):
     """Copia nuestros .lua a UNA carpeta de scripts de Resolve.
 
@@ -534,6 +561,10 @@ def instalar_scripts_en_resolve(destino=None, forzar=False):
     Ademas, siempre se limpian las OTRAS carpetas para que no queden
     copias viejas que Resolve tambien liste.
     """
+    try:                                                              # v5.5.9: y los motions editables (Efectos › Títulos › CineCaptions), en Studio y Free
+        instalar_motions_en_resolve(forzar)
+    except Exception:
+        pass
     origen = BASE_RECURSOS / 'resolve_scripts'
     if not origen.is_dir():
         err = tr('No encuentro los scripts dentro del programa: {origen}',

@@ -11,7 +11,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    edicion_pro\   (4152 archivos)
+    edicion_pro\   (4183 archivos)
     efectos\   (148 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
@@ -29,13 +29,16 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_10.jpg
         fondo_11.jpg
     fonts\   (47 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
-    generador_packs\   (22 archivos)
+    generador_packs\   (24 archivos)
         .cf\   (1 archivos)
+        banner_cinecaptions.png
         banner_inspector.py
-            el BANNER de CineCaptions arriba de los controles de cada caption en el Inspector de Resolve.
+            el BANNER de CineCaptions (con su logo) arriba de los controles de cada caption en el Inspector.
         construir_pack.py
             arma los .drb (bin de Resolve) de los packs nuevos con los macros reales Luxe Shine / Luxe Slide (luxe_macro.py).
         desktop.ini
+        drfx_motions.py
+            «CineCaptions Motions.drfx»: motions EDITABLES en el Inspector de Resolve (Efectos › Títulos ›
         generar_comps.py
         kinetic_comps.py
             escribe las comps de Fusion (.comp) de los elementos del estilo «Kinetic» (héroe, serie, cinta, anillo, subrayado…).
@@ -82,6 +85,9 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fr.json
         it.json
         pt.json
+    motions_resolve\   (13 archivos)
+        Edit\   (12 archivos)
+        CineCaptions Motions.drfx
     motor_qwen\   (5 archivos)  — motor de voz e IA (corren en su propio Python 3.12) y sus versiones fijas
         .cf\   (1 archivos)
         desktop.ini
@@ -143,21 +149,33 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             cuándo suena cada efecto de sonido (editable sin tocar código)
     sfx_emoji\   (103 archivos)
     sfx_library\   (621 archivos)  — los efectos de sonido, una carpeta por categoría
-    vistas_slider\   (14 archivos)
+    vistas_slider\   (26 archivos)
         .cf\   (1 archivos)
         desktop.ini
         Kinetic.jpg
         Kinetic.mp4
+        Kinetic_captions.jpg
+        Kinetic_captions.mp4
         Referencia.jpg
         Referencia.mp4
+        Referencia_captions.jpg
+        Referencia_captions.mp4
         Tema4.jpg
         Tema4.mp4
+        Tema4_captions.jpg
+        Tema4_captions.mp4
         Tema5.jpg
         Tema5.mp4
+        Tema5_captions.jpg
+        Tema5_captions.mp4
         Tema6.jpg
         Tema6.mp4
+        Tema6_captions.jpg
+        Tema6_captions.mp4
         VIRAL.jpg
         VIRAL.mp4
+        VIRAL_captions.jpg
+        VIRAL_captions.mp4
     desktop.ini
     fondo_esfera.jpg
     logo_cinecaptions.ico

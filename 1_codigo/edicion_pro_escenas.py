@@ -22,23 +22,41 @@ import unicodedata
 from pathlib import Path
 
 COMP = {'pictograma': 'PictogramaE', 'tablero': 'TableroE', 'polaroid': 'PolaroidE', 'cuaderno': 'CuadernoE', 'fecha': 'FechaE', 'vidrio': 'VidrioE',
-        'chat': 'ChatE', 'collage': 'CollageE', 'movil': 'MovilE', 'tijeras': 'TijerasE', 'foto': 'FotoE'}
+        'chat': 'ChatE', 'collage': 'CollageE', 'movil': 'MovilE', 'tijeras': 'TijerasE', 'foto': 'FotoE', 'personajes': 'Pictos3DE'}
+# v5.5.9, el usuario: «no quiero muñecos raros… ya no usas nada de muñecos»: el pictograma y los personajes 3D ya no se eligen solos (ni la IA
+# ni las reglas); siguen en el paquete para los proyectos viejos que los tengan
+RETIRADAS = {'pictograma', 'personajes'}
 FAMILIAS = tuple(COMP)
 COMPS = frozenset(COMP.values())
-DUR = {'pictograma': 3.2, 'tablero': 3.6, 'polaroid': 3.4, 'cuaderno': 3.6, 'fecha': 3.2, 'vidrio': 3.0, 'chat': 3.4, 'collage': 3.2, 'movil': 3.6, 'tijeras': 3.2, 'foto': 3.0}
+DUR = {'pictograma': 3.2, 'tablero': 3.6, 'polaroid': 3.4, 'cuaderno': 3.6, 'fecha': 3.2, 'vidrio': 3.0, 'chat': 3.4, 'collage': 3.2, 'movil': 3.6, 'tijeras': 3.2, 'foto': 3.0,
+       'personajes': 4.2}
+# v5.5.9 (pedido: «que este muñeco pueda explicar mis motions en cualquier video»): los PERSONAJES 3D (remotion/src/Pictos3D.tsx: el morado = la
+# marca / la agencia que ayuda; el blanco = el cliente). Qué hacen según lo que se dice (plegado → acción):
+_ACCION_3D = {
+    'ayudar': 'ayuda ayudar ayudamos ayudo ayudarte ayudarle apoyo apoyar apoyamos impulsar impulsamos impulso acompanar acompanamos rescatar help helping '
+              'support supporting',
+    'apreton': 'colaboracion colaborar colaboramos alianza alianzas socio socios acuerdo trato juntos equipo partner partners deal collaboration together '
+               'contrato clientes cliente',
+    'hombro': 'confianza respaldo respaldamos contigo acompanamiento cerca familia comunidad trust',
+    'crecer': 'crecer crecimiento crece crecemos escalar resultados ventas facturacion ganancias growth grow results sales',
+    'levantar': 'marca marcas branding posicionar posicionamiento visibilidad brand brands marketing publicidad anuncios ads',
+    'celebrar': 'exito exitos logro logros lograr lograste meta metas ganar ganamos victoria success win goal celebrar celebramos',
+    'explicar': 'explicar explico explicamos aprende aprender aprenderas estrategia estrategias secreto metodo tips consejo consejos learn strategy method',
+}
+ACCION_3D = {w: a for a, ws in _ACCION_3D.items() for w in ws.split()}
 VARIANTES = {'PictogramaE': ['oscuro', 'claro', 'neon'], 'TableroE': ['gris', 'corcho', 'oscuro'], 'PolaroidE': ['rojo', 'crema', 'azul'],
              'CuadernoE': ['verde', 'madera', 'gris'], 'FechaE': ['naranja', 'dorado', 'rojo'], 'VidrioE': ['morado', 'azul', 'negro'],
              'ChatE': ['morado', 'whatsapp', 'oscuro'], 'CollageE': ['claro', 'oscuro', 'menta'], 'MovilE': ['oscuro', 'claro', 'rojo'], 'TijerasE': ['neon', 'claro'],
-             'FotoE': ['completa', 'marco', 'circulo']}
+             'FotoE': ['completa', 'marco', 'circulo'], 'Pictos3DE': ['estudio']}
 # las de fondo claro (los captions encima van en tinta oscura en los Temas 5/6)
 CLAROS = {('PictogramaE', 'claro'), ('TableroE', 'gris'), ('TableroE', 'corcho'), ('PolaroidE', 'crema'), ('CollageE', 'claro'), ('CollageE', 'menta'),
           ('MovilE', 'claro'), ('TijerasE', 'claro')}
 # las que no se pintan con el color del video (su color dice algo: el hilo rojo, el calendario, WhatsApp…)
-SIN_ACENTO = {'TableroE', 'PolaroidE', 'CuadernoE', 'FechaE', 'ChatE', 'TijerasE'}
+SIN_ACENTO = {'TableroE', 'PolaroidE', 'CuadernoE', 'FechaE', 'ChatE', 'TijerasE', 'Pictos3DE'}   # (los personajes 3D: el morado es su identidad)
 Y_CAPTIONS = {True: 86.0, False: 86.0}
 CUANTOS = {'foto': 3}                             # cuántas de una misma familia por video (las demás, una: variedad)
 # lo concreto manda: una fecha dicha pesa más que un concepto suelto (se resta a las veces que salió esa escena en los últimos videos)
-PRIORIDAD = {'fecha': 3.5, 'tablero': 2.0, 'chat': 2.0, 'movil': 2.0, 'tijeras': 2.0, 'cuaderno': 2.0, 'polaroid': 1.5, 'pictograma': 1.5, 'vidrio': 1.0, 'collage': 1.0, 'foto': 3.2}   # v5.5.4: la foto de internet, primero (el usuario no veía ninguna)           # dónde van los captions mientras dura una escena (centro, % del alto)
+PRIORIDAD = {'personajes': 2.6, 'fecha': 3.5, 'tablero': 2.0, 'chat': 2.0, 'movil': 2.0, 'tijeras': 2.0, 'cuaderno': 2.0, 'polaroid': 1.5, 'pictograma': 1.5, 'vidrio': 1.0, 'collage': 1.0, 'foto': 3.2}   # v5.5.4: la foto de internet, primero (el usuario no veía ninguna)           # dónde van los captions mientras dura una escena (centro, % del alto)
 
 NUM = {'dos': 2, 'tres': 3, 'cuatro': 4, 'cinco': 5, 'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9, 'diez': 10, 'two': 2, 'three': 3, 'four': 4, 'five': 5}
 VACIAS = set('''a al ante con de del desde el en es esta este esto la las le lo los mas me mi mis muy no nos o para pero por que se si sin su sus te tu tus un una
@@ -163,7 +181,7 @@ def _momento(fam, i, t, props):
 # ------------------------------------------------------------------------------------------------------------------------------------ menú (IA)
 def menu():
     gl = ', '.join(sorted(set(GLIFO_DE.values())))
-    return {
+    m = {
         'pictograma': ['ESCENA A PANTALLA COMPLETA: un personaje-pictograma HACIENDO lo que se cuenta (trabajar, pensar, correr, celebrar, caer, subir, '
                        'señalar, que le griten) o la persona de la que se habla (editor, cliente, jefe…)',
                        '{"pose": "trabajando|pensando|corriendo|celebrando|cayendo|subiendo|senalando|gritando|parado", "texto": "EDITOR" (1–2 palabras DICHAS), '
@@ -183,10 +201,15 @@ def menu():
                     '{"icono": "money_bag", "linea1": "…", "clave": "…", "linea2": "…"} (todo dicho)'],
         'movil': ['ESCENA A PANTALLA COMPLETA: perfil, seguidores, Instagram/TikTok, publicaciones, likes', '{"titulo": "…" (dicho, ≤ 6 palabras), "clave": "perfil"}'],
         'tijeras': ['ESCENA A PANTALLA COMPLETA: editar, edición, cortar, recortar clips, montaje', '{"titulo": "EDICIÓN" (opcional, dicho)}'],
+        'personajes': ['ESCENA A PANTALLA COMPLETA EN 3D: dos personajes —el MORADO (la marca o la agencia que ayuda) y el BLANCO (el cliente)— que '
+                       'EXPLICAN lo que se dice: ayudar a subir, colaborar (apretón de manos), apoyo (mano en el hombro), crecer (gráfica que sube), levantar '
+                       'la marca, celebrar un éxito o explicar una idea, un método o un consejo',
+                       '{"accion": "ayudar|apreton|hombro|crecer|levantar|celebrar|explicar", "texto": "…" (opcional, 1–3 palabras DICHAS: la idea)}'],
         'foto': ['ESCENA A PANTALLA COMPLETA con una FOTO REAL de internet de algo concreto y visible que se nombra (perritos, comida, la ciudad, la playa, '
                  'desnutrición, el gimnasio, un bebé…): la mejor para ilustrar un tema', '{"buscar": "puppies" (EN INGLÉS, 1–4 palabras: lo que se VE en la foto), '
                  '"palabra": "perritos" (la palabra DICHA)}'],
     }
+    return {k: v for k, v in m.items() if k not in RETIRADAS}
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------ reglas
@@ -241,6 +264,8 @@ def reglas(textos, plegadas, tiempos, idioma='es', recortes=None, ya=()):
     usadas = set(ya)
 
     def poner(fam, i, props):
+        if fam in RETIRADAS:
+            return
         n = sum(1 for m in out if m['fam'] == fam)
         if (fam not in usadas or n < (8 if fam == 'foto' else CUANTOS.get(fam, 1))) and not (fam == 'foto' and any(m['props'].get('buscar') == props.get('buscar') for m in out)):
             out.append(_momento(fam, i, tiempos[i], props))
@@ -305,6 +330,9 @@ def reglas(textos, plegadas, tiempos, idioma='es', recortes=None, ya=()):
                 imgs = [f'recortes/color/{K7.RECORTES[plegar(c)]}.webp' for c in cosas if K7.RECORTES.get(plegar(c)) in recortes]
                 poner('tablero', i, {'titulo': _sin_signos(textos[i]).upper()[:12], 'items': '|'.join(cosas[:4]), 'imagenes': '|'.join(imgs)})
             continue
+        if p in ACCION_3D:                                              # v5.5.9: los personajes 3D explican la idea
+            poner('personajes', i, {'accion': ACCION_3D[p], 'texto': _sin_signos(textos[i]).upper()[:18]})
+            continue
         if p in POSES:
             fr = _frase_de(textos, i, 5, 5)
             quien = next((_sin_signos(textos[k]).upper() for k in fr if plegar(textos[k]) in PERSONAJES), '')
@@ -336,7 +364,7 @@ def desde_ia_uno(pr, frases, plegadas, textos, tiempos, idioma='es', recortes=No
         b = int(pr.get('b'))
     except Exception:
         return None
-    if fam not in COMP or not 0 <= b < len(frases):
+    if fam not in COMP or fam in RETIRADAS or not 0 <= b < len(frases):
         return None
     datos = pr.get('datos') if isinstance(pr.get('datos'), dict) else {}
     idx = list(frases[b])
@@ -423,6 +451,13 @@ def desde_ia_uno(pr, frases, plegadas, textos, tiempos, idioma='es', recortes=No
         props = {'titulo': tit, 'clave': clave, 'idioma': idioma}
     elif fam == 'tijeras':
         props = {'titulo': dicho_o(datos.get('titulo'), 14).upper()}
+    elif fam == 'personajes':
+        accion = str(datos.get('accion') or '')
+        if accion not in _ACCION_3D:
+            accion = next((ACCION_3D[plegadas[j]] for j in idx + sig if plegadas[j] in ACCION_3D), '')
+        if not accion:
+            return None
+        props = {'accion': accion, 'texto': dicho_o(datos.get('texto'), 18).upper()}
     elif fam == 'foto':
         import broll
         palabra = dicho_o(datos.get('palabra'), 16)
@@ -455,11 +490,13 @@ def _formato(video):
         return 'v'
 
 
-def foto_del_tema(textos, perfil=None, formato='v', evitar=(), lado=900):
+def foto_del_tema(textos, perfil=None, formato='v', evitar=(), lado=900, atribucion=False):
     """v5.5.8 (pedido: «que busque imágenes de referencia en internet del tema que se está hablando, para que el motion no capture siempre la
     misma imagen del video»): una foto de internet con licencia de lo que se dice en `textos` (una cosa concreta: broll.SUSTANTIVOS) o, si no, del
     TEMA del video (las búsquedas en inglés que da la IA local en su perfil: `perfil['fotos']`). Solo las que no piden el crédito en pantalla
-    (va a creditos_broll.txt). Devuelve (data URI, info de fuentes_web) o None (sin internet, apagado en Ajustes o sin resultados)."""
+    (va a creditos_broll.txt). Devuelve (data URI, info de fuentes_web) o None (sin internet, apagado en Ajustes o sin resultados).
+    `atribucion=True` («Motions completo»): también CC BY (el crédito va a creditos_broll.txt, para la descripción): de solo dominio público
+    casi no hay fotos («music festival»: ninguna) y cada búsqueda tarda ~10 s."""
     if not _internet_activo():
         return None
     try:
@@ -475,7 +512,7 @@ def foto_del_tema(textos, perfil=None, formato='v', evitar=(), lado=900):
     consultas += [q for q in (perfil or {}).get('fotos') or [] if q and q not in consultas]
     for q in consultas[:4]:
         try:
-            r = FW.buscar_foto(q, formato, evitar=evitar, sin_atribucion=True, sin_texto=True)
+            r = FW.buscar_foto(q, formato, evitar=evitar, sin_atribucion=not atribucion, sin_texto=True)
         except Exception:
             r = None
         if r:

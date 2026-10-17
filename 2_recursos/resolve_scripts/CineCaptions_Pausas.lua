@@ -7,7 +7,7 @@ Version en Lua para Resolve FREE (el Puente la corre con dofile) de pausas._CORT
 que se quedan pegados uno tras otro. Solo toca un timeline con UN unico clip en V1 (el que GO armo con el video soltado).
 ]]
 
-local VERSION = "5.5.8 (pausas)"
+local VERSION = "5.5.9 (pausas)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -375,16 +375,32 @@ local function main()
             for _, x in ipairs(v1) do viejos[#viejos + 1] = x end
             for _, x in ipairs(a1) do viejos[#viejos + 1] = x end
             tl:DeleteClips(viejos, false)
+            -- v5.5.9: sin mediaType, Resolve a veces mete SOLO el audio (gemela de pausas._CORTAR): si V1 no crece, se pide la imagen aparte y se enlazan
+            local function poner(d)
+                local antes = #lista_api(tl:GetItemListInTrack("video", 1))
+                local ok, r = pcall(function() return mp:AppendToTimeline({ d }) end)
+                if not (ok and type(r) == "table" and #r > 0) then return nil end
+                if #lista_api(tl:GetItemListInTrack("video", 1)) <= antes then
+                    d.mediaType = 1
+                    local ok_v, v = pcall(function() return mp:AppendToTimeline({ d }) end)
+                    if ok_v and type(v) == "table" and #v > 0 then
+                        pcall(function()
+                            local todos = lista_api(r)
+                            for _, x in ipairs(lista_api(v)) do todos[#todos + 1] = x end
+                            tl:SetClipsLinked(todos, true)
+                        end)
+                    end
+                end
+                return r
+            end
             local pos, puestos = inicio, 0
             for _, seg in ipairs(SEGS) do
                 local sf = redondear((tonumber(seg[1]) or 0) * fps_clip)
                 local ef = redondear((tonumber(seg[2]) or 0) * fps_clip) - 1
                 if total > 0 then ef = math.min(ef, total - 1) end
                 if ef >= sf then
-                    local ok, nuevos = pcall(function()
-                        return mp:AppendToTimeline({ { mediaPoolItem = mpi, startFrame = sf, endFrame = ef, recordFrame = pos, trackIndex = 1 } })
-                    end)
-                    if not (ok and type(nuevos) == "table" and #nuevos > 0) then
+                    local nuevos = poner({ mediaPoolItem = mpi, startFrame = sf, endFrame = ef, recordFrame = pos, trackIndex = 1 })
+                    if nuevos == nil then
                         res.error = string.format("Resolve no coloco el tramo %d", puestos)
                         break
                     end
@@ -408,8 +424,8 @@ local function main()
                 for _, x in ipairs(v1n) do rest[#rest + 1] = x end
                 for _, x in ipairs(a1n) do rest[#rest + 1] = x end
                 pcall(function() tl:DeleteClips(rest, false) end)
-                local ok2, n2 = pcall(function() return mp:AppendToTimeline({ { mediaPoolItem = mpi, recordFrame = inicio, trackIndex = 1 } }) end)
-                res.restaurado = (ok2 and type(n2) == "table") and #lista_api(tl:GetItemListInTrack("video", 1)) or 0
+                local n2 = poner({ mediaPoolItem = mpi, recordFrame = inicio, trackIndex = 1 })
+                res.restaurado = n2 and #lista_api(tl:GetItemListInTrack("video", 1)) or 0
             end
         end
     end

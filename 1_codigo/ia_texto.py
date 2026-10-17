@@ -95,7 +95,7 @@ class _Servidor:
         self.p = subprocess.Popen([str(motor_voz.python_motor()), '-s', '-u', str(script()), '--servidor',
                                    '--modelo', modelo, '--inactivo', str(INACTIVO_S)],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                  env=entorno, creationflags=motor_voz.SIN_VENTANA, cwd=str(motor_voz.carpeta()))
+                                  env=entorno, creationflags=getattr(motor_voz, 'SERVIDOR', motor_voz.SIN_VENTANA), cwd=str(motor_voz.carpeta()))
         self.lineas = queue.Queue()
         self.errores = []
         threading.Thread(target=self._leer, daemon=True, name='ia-texto-out').start()
@@ -537,18 +537,21 @@ def perfil(palabras_texto, idioma='es', estado=None):
                 pass
 
 
-def motions(bloques, idioma='es', estado=None, genero='general', contexto='', solo=None):
+def motions(bloques, idioma='es', estado=None, genero='general', contexto='', solo=None, denso=False, extra=None):
     """v5.5.2, el director de motions del kit de la skill: la IA local lee las frases y elige del MENÚ (edicion_pro_kit7.MOTIONS) qué motion poner,
     dónde y con qué textos e iconos → [{'b', 'motion', 'datos', 'ancla'}] (motor_texto, modo 'motions'). [] si no hay IA o falla (siguen las reglas).
-    edicion_pro_kit7.desde_ia lo valida. Con caché por huella (frases + menú), como escenas()."""
+    edicion_pro_kit7.desde_ia lo valida. Con caché por huella (frases + menú), como escenas().
+    v5.5.8: `denso` = un motion en CADA frase («Motions completo»: un video de solo motions); `extra` = más entradas para su menú."""
     if not bloques or not disponible() or _FALLOS['n'] >= FALLOS_SEGUIDOS_MAX:
         return []
     import edicion_pro_kit7 as K7
     textos = [str(b) for b in bloques]
     menu = K7.menu_para_ia(genero, solo)                                # el kit + las escenas + las plantillas de este tipo de video (v5.5.3: `solo` = esas familias)
+    if extra:
+        menu.update({str(k): list(v) for k, v in extra.items()})
     iconos = K7.iconos_disponibles()
     modelo = motor_voz.modelo_texto()
-    clave = _clave_cache(textos + [json.dumps(menu, ensure_ascii=False, sort_keys=True), str(contexto or '')], idioma, 'motions', modelo)
+    clave = _clave_cache(textos + [json.dumps(menu, ensure_ascii=False, sort_keys=True), str(contexto or '')], idioma, 'motions_denso' if denso else 'motions', modelo)
     archivo = _carpeta_cache() / ('motions_' + clave + '.json')
     try:
         import archivos_seguros
@@ -560,7 +563,8 @@ def motions(bloques, idioma='es', estado=None, genero='general', contexto='', so
     fd, entrada = tempfile.mkstemp(prefix='cinecaptions_motions_', suffix='.json')
     os.close(fd)
     salida = entrada[:-5] + '.out.json'
-    Path(entrada).write_text(json.dumps({'modo': 'motions', 'idioma': idioma, 'bloques': textos, 'menu': menu, 'iconos': iconos, 'contexto': str(contexto or '')},
+    Path(entrada).write_text(json.dumps({'modo': 'motions', 'idioma': idioma, 'bloques': textos, 'menu': menu, 'iconos': iconos, 'contexto': str(contexto or ''),
+                                         'denso': bool(denso)},
                                         ensure_ascii=False), encoding='utf-8')
     try:
         with _LOCK:

@@ -392,6 +392,9 @@ class EscenaGo(QWidget):
         self._lut_e = -1.0
         self._lut = self._luts[0]
         self._ms_cuadro = 12.0
+        self._dt_med = 0.016               # v5.5.8: el intervalo REAL entre cuadros (si no llega a 60 fps, 30 parejos: se ven mejor que 40 a saltos)
+        self._lento_hasta = 0.0
+        self._lento_n = 0
         self._esc_cuadro = 1.0                  # escala de resolución interna de la escena (adaptativa, 0,62..1)
         self._cuadros = 0
         self._cuadro = None                     # el ultimo cuadro dibujado (QPixmap) y cuando: ver paintEvent
@@ -733,6 +736,7 @@ class EscenaGo(QWidget):
         ahora = time.perf_counter()
         dt = min(0.08, ahora - self._ult)
         self._ult = ahora
+        self._dt_med += (dt - self._dt_med) * 0.08
         if not self.isVisible() or self.window().isMinimized():
             if self._ms_reloj != 250:                    # v5.5.7: minimizada u oculta, el reloj despierta 4 veces por segundo (no 60) solo para ver si vuelve
                 self._ms_reloj = 250
@@ -780,7 +784,16 @@ class EscenaGo(QWidget):
             self._inactiva = not self.window().isActiveWindow()
         except Exception:
             self._inactiva = False
-        ms = 160 if self._quieto else (33 if (self.modo == 'suave' or self._inactiva or self.calidad < 0.5) else 16)
+        if self._ms_reloj == 16 and self._dt_med > 0.0205 and ahora >= self._lento_hasta:
+            # no llega a 60 fps (pantalla con escala alta, GO trabajando, equipo justo): 30 parejos un rato (8 s, 16 s… hasta 2 min) y vuelve a probar
+            self._lento_n = min(self._lento_n + 1, 5)
+            self._lento_hasta = ahora + 8.0 * 2 ** (self._lento_n - 1)
+        elif self._ms_reloj == 16 and self._dt_med < 0.0185 and ahora > self._lento_hasta + 6.0:
+            self._lento_n = 0
+        lento = ahora < self._lento_hasta
+        ms = 160 if self._quieto else (33 if (self.modo == 'suave' or self._inactiva or self.calidad < 0.5 or lento) else 16)
+        if ms != self._ms_reloj:
+            self._dt_med = ms / 1000.0
         if ms != self._ms_reloj and self._reloj.isActive():
             self._ms_reloj = ms
             self._reloj.setInterval(ms)

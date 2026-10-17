@@ -8,7 +8,7 @@ crea un proyecto NUEVO «CineCaptions» (guardando y cerrando el que hubiera abi
 que su audio suena en A1 y reserva la pista FX-BROLL si hace falta. Sin esto, en Free los captions de un video soltado caian en el timeline que hubiera abierto.
 ]]
 
-local VERSION = "5.5.8 (armar video)"
+local VERSION = "5.5.9 (armar video)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -510,6 +510,20 @@ local function main()
     local ok_ap, puestos = pcall(function() return mp:AppendToTimeline({ clip }) end)
     res.anadido = (ok_ap and type(puestos) == "table") and #puestos or 0
     if res.anadido == 0 then fail("Resolve no puso el video en el timeline.") end
+    -- v5.5.9: la IMAGEN del video tiene que estar en V1 (gemela de resolve_mcp._CREAR_TIMELINE). MEDIDO en Studio 21.1.1: tras un GO con efectos visuales,
+    -- el primer AppendToTimeline({ clip }) del proyecto nuevo devolvia SOLO el audio (V1 vacio) y repetirlo no servia; la imagen entra pidiendola aparte.
+    local function v1_items() return lista_api(tl:GetItemListInTrack("video", 1)) end
+    res.clip_con_video = false
+    pcall(function()
+        res.clip_con_video = (tostring(clip:GetClipProperty("Resolution") or ""):match("%S") ~= nil)
+            or (tostring(clip:GetClipProperty("Type") or ""):lower():find("video", 1, true) ~= nil)
+    end)
+    res.video_repuesto = 0
+    if res.clip_con_video and #v1_items() == 0 then
+        pcall(function() mp:AppendToTimeline({ { mediaPoolItem = clip, mediaType = 1, trackIndex = 1, recordFrame = tl:GetStartFrame() } }) end)
+        res.video_repuesto = #v1_items()
+        if res.video_repuesto == 0 then fail("Resolve puso solo el audio del video en el timeline (V1 quedo vacio).") end
+    end
 
     -- el audio ORIGINAL del video tiene que estar en A1 y sonar: se comprueba y, si Resolve solo metio la imagen, se anade el audio aparte
     local function a1() return lista_api(tl:GetItemListInTrack("audio", 1)) end
@@ -528,6 +542,13 @@ local function main()
         tl:SetTrackEnable("audio", 1, true)
         for _, it in ipairs(a1()) do it:SetClipEnabled(true) end
     end)
+    if res.video_repuesto > 0 or res.audio_repuesto > 0 then
+        pcall(function()                                -- imagen y audio puestos por separado: se enlazan (se mueven juntos, como al arrastrar el clip)
+            local todos = v1_items()
+            for _, it in ipairs(a1()) do todos[#todos + 1] = it end
+            tl:SetClipsLinked(todos, true)
+        end)
+    end
     local ESCALA = 1
     pcall(function() ESCALA = resolve.SCALE_FIT or 1 end)
     local v1 = lista_api(tl:GetItemListInTrack("video", 1))

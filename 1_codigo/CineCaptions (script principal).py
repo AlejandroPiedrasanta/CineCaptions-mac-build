@@ -1920,7 +1920,13 @@ class PlantillasWindow(QWidget):
         self.nota_modo.hide()
         self.tarjeta.capa.addWidget(self.nota_modo)
         self.filtro = StringVar(tr('Todos'))             # (sin filtro de formato: _formato_del_filtro() siempre es None)
-        self.carrusel = estilos_slider.CarruselPacks(alto=480, flexible=True)
+        self.carrusel = estilos_slider.CarruselPacks(alto=540, flexible=True)          # v5.5.9: más grande
+        try:                                                                          # la píldora «Con PRO / Solo captions» empieza como la PRO
+            import edicion_pro
+            self.carrusel.poner_vista_pro(edicion_pro.activado(), animar=False)
+            self.carrusel.al_mostrar = lambda: self.carrusel.poner_vista_pro(edicion_pro.activado(), animar=False)
+        except Exception:
+            pass
         self.carrusel.elegida.connect(self._elegir)
         self.carrusel.centrada.connect(self._pintar_info)
         self.carrusel.anadir.connect(self._importar_drt)
@@ -1931,10 +1937,12 @@ class PlantillasWindow(QWidget):
         iv = QVBoxLayout(self.info_w)
         iv.setContentsMargins(6, 0, 6, 0)
         iv.setSpacing(4)
+        import un_clic_ui
+        self.info_nombre = un_clic_ui.TituloGo('')      # v5.5.9: el nombre del tema entra letra a letra cada vez que llega otro al centro
+        self.info_nombre.setFixedHeight(54)
+        iv.addWidget(self.info_nombre)
         fila_n, cn = caja_h(espacio=12)
         cn.addStretch(1)
-        self.info_nombre = Etiqueta('', 28, peso='extra', color='#FFFFFF')
-        cn.addWidget(self.info_nombre)
         self.info_fuentes = ui.Enlace('', self._instalar_fuentes_central, 12, color=ui.AMBAR, color_hover=ui.NARANJA)
         self.info_fuentes.hide()
         cn.addWidget(self.info_fuentes)
@@ -2111,8 +2119,9 @@ class PlantillasWindow(QWidget):
             self.info_extra.addWidget(e, 0, Qt.AlignmentFlag.AlignHCenter)
         if carta.extra is not None:
             self.info_extra.addWidget(carta.extra(), 0, Qt.AlignmentFlag.AlignHCenter)
-        if carta.pack is not None and plantillas.es_de_fabrica(carta.pack.nombre):          # v5.4.49: Temas 1–4 → la Edición PRO (el mismo interruptor que el chip de Inicio)
-            self.info_extra.addWidget(self._boton_pro(), 0, Qt.AlignmentFlag.AlignHCenter)
+        con_pro = carta.pack is not None and plantillas.es_de_fabrica(carta.pack.nombre)   # v5.4.49: los temas → la Edición PRO (el mismo interruptor que el chip de Inicio)
+        if con_pro:                                                                     # v5.5.9: AL LADO de «Usar este tema» (antes, encima)
+            self.info_acciones.addWidget(self._boton_pro())
         for icono, glifo, ayuda, fn in ([] if solo_temas else carta.acciones):         # v5.8: ✎ editar en Resolve y 🗑 quitar
             ic = ui.icono_linea(icono, '#C9D6EC')
             b = Boton('' if ic is not None else glifo, lambda _=False, f=fn: f(), tipo='fantasma', alto=36, ancho=40, tam=14, icono=ic)
@@ -2124,7 +2133,7 @@ class PlantillasWindow(QWidget):
             m = Boton('⋯', lambda menu=menu_carta: self._menu_carta(menu), tipo='fantasma', alto=36, ancho=40, tam=16)
             m.setFixedWidth(42)
             self.info_acciones.addWidget(m)
-        self.info_izq.setVisible(self.info_acciones.count() > 0)
+        self.info_izq.setVisible(self.info_acciones.count() > 0 and not con_pro)     # con la PRO, la pareja va centrada
         self.info_izq.setFixedWidth(max(0, self.info_acciones.count() * 48 - 6))
         self._pintar_boton_usar()
     def _menu_carta(self, opciones):
@@ -2140,7 +2149,7 @@ class PlantillasWindow(QWidget):
         except Exception:
             activa = False
         b = Boton(('✓ ' + tr('Edición PRO activada')) if activa else ('✦ ' + tr('Activar edición PRO')), self._alternar_pro,
-                  tipo='fantasma' if activa else 'primario', alto=38, ancho=260, tam=13, negrita=True)
+                  tipo='fantasma' if activa else 'primario', alto=40, ancho=240, tam=14, negrita=True)
         if activa:
             b.setStyleSheet(ui.traducir_hoja('QPushButton { background-color: #2A2310; border: 1px solid #C9A46A; color: #F2D9A6; }'))
         Tooltip(b, tr('Además de los captions de este tema, GO edita el video en Resolve: los captions y titulares DETRÁS de la persona (Magic Mask), '
@@ -2152,6 +2161,7 @@ class PlantillasWindow(QWidget):
         try:
             import edicion_pro
             edicion_pro.poner_activado(not edicion_pro.activado())
+            self.carrusel.poner_vista_pro(edicion_pro.activado())                     # v5.5.9: la tarjeta enseña lo que hará GO
         except Exception:
             pass
         self._pintar_info()
@@ -2465,6 +2475,7 @@ class PlantillasWindow(QWidget):
         import vistas_slider
         return estilos_slider.Carta(pack.nombre, plantillas.nombre_visible(pack.nombre), lineas=lineas_de_vista(pack.nombre, self._formato_vista(pack)),
                                     video=vistas_slider.ruta_video(pack.nombre), poster=vistas_slider.ruta_poster(pack.nombre) or self._poster_mezcla(pack),
+                                    video_sin=vistas_slider.ruta_video_captions(pack.nombre), poster_sin=vistas_slider.ruta_poster_captions(pack.nombre),
                                     real=self._real_de(pack), formatos=self._texto_formatos(pack) or '', meta=self._meta_de(est),
                                     estado=estado, color_estado=color, nota=plantillas.leer_descripciones().get(pack.nombre, '') or self._nota_mezcla(pack),
                                     aviso=aviso, acciones=self._acciones_de(pack, quitable=not plantillas.es_de_fabrica(pack.nombre)), menu=menu, estructura=est, pack=pack)
@@ -6266,15 +6277,19 @@ class SubtitleApp(QWidget):
                 resolve_mcp.cliente(arrancar=True)
         _correr_en_hilo(self, trabajo, lambda _r, _e: None)
     def _precalentar_ondas_sfx(self):
-        """v5.5: la onda de los primeros sonidos de cada categoria de la biblioteca, en un hilo: al abrir Sonido ya estan."""
-        try:
+        """v5.5: la onda de los primeros sonidos de cada categoria de la biblioteca, en un hilo: al abrir Sonido ya estan.
+        v5.5.8: tambien la LISTA de sonidos va en el hilo (leia las reglas y miraba cientos de archivos en el de la interfaz: Inicio se
+        congelaba ~250 ms a los 12 s de abrir)."""
+        def trabajo():
             import sfx_rules
             import sfx_studio
             rutas = []
             for cat in sfx_rules.categorias_disponibles():
                 rutas += [str(r) for r in sfx_rules._rutas_de(cat)[:3]]
+            sfx_studio.precalentar_picos(rutas)
+        try:
             import cola_trabajos
-            cola_trabajos.lanzar_bajo(lambda: sfx_studio.precalentar_picos(rutas), 'ondas-sfx')
+            cola_trabajos.lanzar_bajo(trabajo, 'ondas-sfx')
         except Exception:
             pass
     def _precalentar_secuencias_emoji(self):
@@ -6309,7 +6324,7 @@ class SubtitleApp(QWidget):
         _correr_en_hilo(self, trabajo, lambda _r, _e: None, baja=True)
     def _descargar_emojis_animados(self):
         """v5.4: baja en segundo plano todos los emojis animados del catalogo (Noto Animated Emoji) para que el selector los
-        muestre moviéndose al instante; el progreso se ve en «Detalles y estado del sistema»."""
+        muestre moviéndose al instante; el resultado va al Registro."""
         try:
             import emojis
             glifos = [(e.get('glifo') or '') for e in emojis.catalogo()]
@@ -6359,9 +6374,8 @@ class SubtitleApp(QWidget):
                     pass
                 valor.configure(text=texto)
                 Tooltip(valor, salud.informe(filas))
-            if ok is False:
-                import ui_toast
-                ui_toast.mostrar(self, tr('Chequeo de librerías: {t}. Detalles y estado del sistema tiene el informe.', t=texto), duracion_ms=7000)
+            if ok is False:                       # v5.5.8: al Registro (ya no hay «Detalles y estado del sistema» en Inicio, ni globos)
+                registro.aviso(f'Chequeo de librerías: {texto}.\n{salud.informe(filas)}', 'salud')
         _correr_en_hilo(self, trabajo, fin)
     def _colocar_ventana(self):
         """1440 x 900 si cabe; minimo 1100 x 700 (o lo que deje la pantalla)."""
@@ -7016,7 +7030,7 @@ class SubtitleApp(QWidget):
         cfr.addWidget(self.aviso_inicio, 1)
         cfr.addWidget(registro_ui.BotonRegistro())
         capa.addWidget(fila_reg)
-        self.go_panel = un_clic_ui.PanelGo(self._alternar_detalles_inicio)
+        self.go_panel = un_clic_ui.PanelGo()                 # v5.5.8: sin el enlace «Detalles y estado del sistema» (el usuario: «elimina esto»)
         self.go_panel.al_ver_resolve = self._go_ver_en_resolve
         self.go_panel.al_editar = lambda: self.ir_a('editor')
         self.go_panel.go.connect(self._go)
@@ -7125,12 +7139,6 @@ class SubtitleApp(QWidget):
         self.ir_a('estilos')
         self._detectar_desde_resolve(silencioso=False)
     # -- v5.1: GO, todo con un clic ------------------------------------------------
-    def _alternar_detalles_inicio(self):
-        ver = not self._inicio_detalles.isVisible()
-        self._inicio_detalles.setVisible(ver)
-        self.go_panel.detalles.configure(text=tr('Ocultar detalles') if ver else tr('Detalles y estado del sistema'))
-        if ver:
-            self._refrescar_recientes()
     def _pintar_go_reposo(self):
         """La linea bajo el GO: con que va a trabajar si lo pulsas ahora."""
         panel = getattr(self, 'go_panel', None)
@@ -7228,7 +7236,7 @@ class SubtitleApp(QWidget):
                   tr('Edición PRO: GO edita el video en la línea de tiempo de Resolve (titulares detrás de la persona con Magic Mask, cifras, listas, marcos, ficha final y sonidos), con un estilo propio para cada video. Clic: activar y elegir el estilo.')),
                  # v5.5.8 (pedido: «a la par de Edición PRO un botón que diga Motions completo»): el último paso de GO
                  (tr('Motions completo: {v}', v=tr('sí') if self._go_motions_completo() else tr('no')), self._alternar_motions_completo_go,
-                  tr('Motions completo: al final de GO, un video de motions de todo el video (una escena por frase: tipografía, fotos del tema, iconos, cifras, listas) en la pista de más arriba, encima de captions y efectos, para que lo cortes donde quieras ver tu video. Clic: sí o no.')),
+                  tr('Motions completo: al final de GO, un video de solo motions de todo el video en el estilo de los mejores reels (un titular arriba y una tarjeta que explica lo que se dice; sin captions) en la pista de más arriba, encima de captions y efectos, para que lo cortes donde quieras ver tu video. Clic: sí o no.')),
                  (tr('Proyecto: {p}', p=self._go_proyecto() or tr('el abierto')), self._alternar_proyecto_go,
                   tr('Al soltar un video en Inicio: se arma en el proyecto «CineCaptions» de Resolve (se abre o se crea solo) o en el proyecto que tengas abierto. Clic: cambiar.'))]
         chips = [(t, f, a, ui.ACCENT_CLARO) for t, f, a in chips]
@@ -11622,7 +11630,8 @@ class SubtitleApp(QWidget):
             plan['tema5'] = tema5
             if tema5 and (getattr(self, 'plantilla_sel', '') or '') == 'Tema6':
                 plan['estilo_t5'] = 'editorial'        # Tema 6: el mismo motor, con el estilo editorial (serif fina, melocotón, visor, búsqueda…)
-            if plan.get('piezas') or tema5:
+            solo_motions = bool((plan.get('opciones') or edicion_pro.opciones_guardadas()).get('pro_motions_completo'))
+            if plan.get('piezas') or tema5 or solo_motions:   # v5.5.9: con «Motions completo», aunque la PRO no tenga gráficos para este video
                 self._pro_plan = plan
             registro.info('Edición PRO: ' + plan.get('resumen', '') + (' · Tema 5 (captions propios)' if tema5 else ''), 'edición pro')
         except Exception:
@@ -11639,7 +11648,12 @@ class SubtitleApp(QWidget):
     def _colocar_pro(self):
         """Pone la Edición PRO en el timeline de Resolve (tras los captions y los efectos). Devuelve un texto corto para el estado, o ''."""
         plan = getattr(self, '_pro_plan', None)
-        if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero')):
+        try:
+            import edicion_pro as _ep
+            solo_motions = bool(plan and (plan.get('opciones') or _ep.opciones_guardadas()).get('pro_motions_completo'))
+        except Exception:
+            solo_motions = False
+        if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or solo_motions):   # (v5.5.9: «Motions completo» también)
             return ''
         try:                                   # el plan es de un video: si ahora hay otro cargado (regenerar), no se aplica el de antes
             actual = self.video_var.get().strip().strip('"')

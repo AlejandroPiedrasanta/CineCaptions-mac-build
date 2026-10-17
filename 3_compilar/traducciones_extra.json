@@ -5675,5 +5675,117 @@
   "fr": "Les sous-titres qui évitent un visage restent tous à la même hauteur dans toute la vidéo.",
   "de": "Captions, die einem Gesicht ausweichen, bleiben im ganzen Video auf derselben Höhe.",
   "it": "Le didascalie che evitano un volto restano tutte alla stessa altezza per tutto il video."
+ },
+ "Motions completo, rehecho: ya no repite los captions. Cada momento es un motion del tema: gráficos, píldoras con iconos animados, diagramas, datos, escenas del kit y fotos del tema (y videos del tema si pones tu clave gratuita de Pexels en Efectos › B-roll).": {
+  "en": "Full motions, rebuilt: it no longer repeats the captions. Every moment is a motion about the topic: graphics, pills with animated icons, diagrams, data, kit scenes and topic photos (and topic videos if you add your free Pexels key in Effects › B-roll).",
+  "pt": "Motions completo, refeito: não repete mais as legendas. Cada momento é um motion do tema: gráficos, pílulas com ícones animados, diagramas, dados, cenas do kit e fotos do tema (e vídeos do tema se você colocar sua chave gratuita do Pexels em Efeitos › B-roll).",
+  "fr": "Motions complet, refait : il ne répète plus les sous-titres. Chaque moment est un motion sur le sujet : graphiques, pastilles avec icônes animées, schémas, données, scènes du kit et photos du sujet (et vidéos du sujet si vous ajoutez votre clé Pexels gratuite dans Effets › B-roll).",
+  "de": "Komplette Motions, neu gemacht: wiederholt die Untertitel nicht mehr. Jeder Moment ist eine Motion zum Thema: Grafiken, Pillen mit animierten Icons, Diagramme, Daten, Kit-Szenen und Themenfotos (und Themenvideos, wenn du deinen kostenlosen Pexels-Schlüssel unter Effekte › B-Roll einträgst).",
+  "it": "Motions completo, rifatto: non ripete più i sottotitoli. Ogni momento è un motion sul tema: grafiche, pillole con icone animate, diagrammi, dati, scene del kit e foto del tema (e video del tema se inserisci la tua chiave gratuita di Pexels in Effetti › B-roll)."
+ },
+ "Inicio va fluido: se quitó una pausa que congelaba las animaciones al abrir, y si el equipo no llega a 60 fps se queda en 30 parejos, sin tirones. Mientras GO anima o la IA trabaja, la interfaz sigue suave.": {
+  "en": "Home runs smoothly: a pause that froze the animations after opening is gone, and if the computer cannot reach 60 fps it stays at a steady 30, without stutters. While GO animates or the AI works, the interface stays smooth.",
+  "pt": "O Início fica fluido: foi removida uma pausa que congelava as animações ao abrir, e se o computador não chega a 60 fps ele fica em 30 estáveis, sem travadas. Enquanto o GO anima ou a IA trabalha, a interface continua suave.",
+  "fr": "L'Accueil est fluide : une pause qui figeait les animations à l'ouverture a été supprimée, et si l'ordinateur n'atteint pas 60 fps il reste à 30 réguliers, sans saccades. Pendant que GO anime ou que l'IA travaille, l'interface reste fluide.",
+  "de": "Der Start läuft flüssig: Eine Pause, die die Animationen nach dem Öffnen einfror, ist weg, und schafft der Computer keine 60 fps, bleibt er bei gleichmäßigen 30, ohne Ruckeln. Während GO animiert oder die KI arbeitet, bleibt die Oberfläche flüssig.",
+  "it": "La Home è fluida: è stata tolta una pausa che bloccava le animazioni all'apertura, e se il computer non arriva a 60 fps resta a 30 costanti, senza scatti. Mentre GO anima o l'IA lavora, l'interfaccia resta fluida."
+ },
+ "Inicio más limpio: sin el enlace «Detalles y estado del sistema».": {
+  "en": "Cleaner Home: without the «System details and status» link.",
+  "pt": "Início mais limpo: sem o link «Detalhes e estado do sistema».",
+  "fr": "Accueil plus épuré : sans le lien « Détails et état du système ».",
+  "de": "Aufgeräumterer Start: ohne den Link „Details und Systemstatus“.",
+  "it": "Home più pulita: senza il link «Dettagli e stato del sistema»."
+ },
+ "DaVinci Resolve: cada caption lleva arriba de todo, en el Inspector, el banner con el logo de CineCaptions.": {
+  "en": "DaVinci Resolve: every caption shows the CineCaptions logo banner at the very top of the Inspector.",
+  "pt": "DaVinci Resolve: cada legenda mostra no topo do Inspector o banner com o logo do CineCaptions.",
+  "fr": "DaVinci Resolve : chaque sous-titre affiche tout en haut de l'Inspecteur la bannière avec le logo de CineCaptions.",
+  "de": "DaVinci Resolve: Jede Caption zeigt ganz oben im Inspektor das Banner mit dem CineCaptions-Logo.",
+  "it": "DaVinci Resolve: ogni didascalia mostra in cima all'Inspector il banner con il logo di CineCaptions."
+ },
+ "Motions editables en Resolve: Efectos › Títulos › CineCaptions trae 6 motions (titular, píldoras, tercio inferior, cifra que cuenta, lista y llamada) con su texto, colores, posición y tamaño en el Inspector; para cambiar uno, arrastra otro encima. También van en un .drfx para pasarlos a otro equipo.": {
+  "en": "Editable motions in Resolve: Effects › Titles › CineCaptions has 6 motions (headline, pills, lower third, counting number, list and callout) with their text, colors, position and size in the Inspector; to swap one, drag another on top. They also come as a .drfx to take them to another computer.",
+  "pt": "Motions editáveis no Resolve: Efeitos › Títulos › CineCaptions traz 6 motions (título, pílulas, terço inferior, número que conta, lista e chamada) com texto, cores, posição e tamanho no Inspector; para trocar um, arraste outro por cima. Também vêm em um .drfx para levá-los a outro computador.",
+  "fr": "Motions modifiables dans Resolve : Effets › Titres › CineCaptions propose 6 motions (titre, pastilles, tiers inférieur, chiffre qui compte, liste et légende) avec leur texte, couleurs, position et taille dans l'Inspecteur ; pour en changer un, glissez-en un autre par-dessus. Ils existent aussi en .drfx pour les emporter sur un autre ordinateur.",
+  "de": "Bearbeitbare Motions in Resolve: Effekte › Titel › CineCaptions enthält 6 Motions (Titel, Pillen, Bauchbinde, zählende Zahl, Liste und Hinweis) mit Text, Farben, Position und Größe im Inspektor; zum Austauschen einfach einen anderen darüberziehen. Sie liegen auch als .drfx bei, um sie auf einen anderen Rechner mitzunehmen.",
+  "it": "Motions modificabili in Resolve: Effetti › Titoli › CineCaptions offre 6 motions (titolo, pillole, terzo inferiore, numero che conta, elenco e richiamo) con testo, colori, posizione e dimensione nell'Inspector; per cambiarne uno, trascinane un altro sopra. Sono anche in un .drfx per portarli su un altro computer."
+ },
+ "Personajes 3D que explican tus motions: el morado (tu marca) y el blanco (tu cliente) ayudan a subir, se dan la mano, crecen, levantan la marca, celebran o explican la idea, en cualquier video, cuando lo que se dice encaja.": {
+  "en": "3D characters that explain your motions: the purple one (your brand) and the white one (your client) help each other up, shake hands, grow, lift the brand, celebrate or explain the idea, in any video, whenever it fits what is said.",
+  "pt": "Personagens 3D que explicam seus motions: o roxo (sua marca) e o branco (seu cliente) ajudam a subir, apertam as mãos, crescem, levantam a marca, comemoram ou explicam a ideia, em qualquer vídeo, quando combina com o que se diz.",
+  "fr": "Personnages 3D qui expliquent vos motions : le violet (votre marque) et le blanc (votre client) s'aident à monter, se serrent la main, grandissent, élèvent la marque, célèbrent ou expliquent l'idée, dans n'importe quelle vidéo, quand cela correspond à ce qui est dit.",
+  "de": "3D-Figuren, die deine Motions erklären: die lila (deine Marke) und die weiße (dein Kunde) helfen sich hoch, geben sich die Hand, wachsen, heben die Marke, feiern oder erklären die Idee – in jedem Video, wenn es zum Gesagten passt.",
+  "it": "Personaggi 3D che spiegano i tuoi motions: il viola (il tuo brand) e il bianco (il tuo cliente) si aiutano a salire, si stringono la mano, crescono, sollevano il brand, festeggiano o spiegano l'idea, in qualsiasi video, quando si adatta a ciò che si dice."
+ },
+ "Motions completo: la cámara viaja de una escena a la siguiente en 3D por una línea de luz que las une, y los muñecos ahora son personajes con color y contorno, más visibles.": {
+  "en": "Full motions: the camera travels from one scene to the next in 3D along a line of light that connects them, and the stick figures are now characters with color and outline, easier to see.",
+  "pt": "Motions completo: a câmera viaja de uma cena para a outra em 3D por uma linha de luz que as une, e os bonecos agora são personagens com cor e contorno, mais visíveis.",
+  "fr": "Motions complet : la caméra voyage d'une scène à la suivante en 3D le long d'une ligne de lumière qui les relie, et les bonshommes sont maintenant des personnages en couleur avec contour, plus visibles.",
+  "de": "Komplette Motions: Die Kamera fliegt in 3D entlang einer Lichtlinie von einer Szene zur nächsten, und die Strichmännchen sind jetzt farbige Figuren mit Kontur, besser sichtbar.",
+  "it": "Motions completo: la camera viaggia in 3D da una scena all'altra lungo una linea di luce che le unisce, e gli omini ora sono personaggi a colori con contorno, più visibili."
+ },
+ "Personajes 3D que explican": {
+  "en": "3D characters that explain",
+  "pt": "Personagens 3D que explicam",
+  "fr": "Personnages 3D qui expliquent",
+  "de": "3D-Figuren, die erklären",
+  "it": "Personaggi 3D che spiegano"
+ },
+ "Motions completo con el estilo de los mejores reels: un titular arriba que aparece palabra a palabra con la idea clave en cursiva, widgets que explican lo que se dice (iconos en órbita, ruta, conectores, contador, versiones) y transiciones fluidas: lo que sale se desvanece y lo nuevo sube con rebote, sobre un mismo fondo. Los muñecos ahora son personajes con color y contorno, más visibles.": {
+  "en": "Full motions in the style of the best reels: a headline at the top that appears word by word with the key idea in italics, widgets that explain what is said (orbiting icons, route, connectors, counter, versions) and fluid transitions: what leaves fades away and the new comes up with a bounce, over one same background. The stick figures are now characters with color and outline, easier to see.",
+  "pt": "Motions completo no estilo dos melhores reels: um título no topo que aparece palavra por palavra com a ideia-chave em itálico, widgets que explicam o que se diz (ícones em órbita, rota, conectores, contador, versões) e transições fluidas: o que sai se desfaz e o novo sobe com um quique, sobre o mesmo fundo. Os bonecos agora são personagens com cor e contorno, mais visíveis.",
+  "fr": "Motions complet dans le style des meilleurs reels : un titre en haut qui apparaît mot par mot avec l'idée clé en italique, des widgets qui expliquent ce qui est dit (icônes en orbite, trajet, connecteurs, compteur, versions) et des transitions fluides : ce qui part s'efface et le nouveau monte avec un rebond, sur le même fond. Les bonshommes sont maintenant des personnages en couleur avec contour, plus visibles.",
+  "de": "Komplette Motions im Stil der besten Reels: oben eine Überschrift, die Wort für Wort erscheint, mit der Kernidee kursiv, Widgets, die das Gesagte erklären (kreisende Icons, Route, Verbindungen, Zähler, Versionen), und flüssige Übergänge: Was geht, verblasst, das Neue kommt federnd von unten, auf demselben Hintergrund. Die Strichmännchen sind jetzt farbige Figuren mit Kontur, besser sichtbar.",
+  "it": "Motions completo nello stile dei migliori reel: un titolo in alto che appare parola per parola con l'idea chiave in corsivo, widget che spiegano ciò che si dice (icone in orbita, percorso, connettori, contatore, versioni) e transizioni fluide: ciò che esce svanisce e il nuovo sale con un rimbalzo, sullo stesso sfondo. Gli omini ora sono personaggi a colori con contorno, più visibili."
+ },
+ "Motions completo con el estilo de los mejores reels: ya no repite los captions; arriba, un titular que aparece palabra a palabra (la idea clave en cursiva azul, tachada, en gris o en píldora) y debajo una tarjeta que explica lo que se dice (grabar, horas, material, encontrar, cortar, versiones, ideas, fechas, lugares, entradas, música, premios, compartir…), con el cursor que hace clic y transiciones fluidas sobre un mismo fondo claro. Sin muñecos ni fotos de internet.": {
+  "en": "Full motions in the style of the best reels: captions are no longer repeated; at the top, a headline that appears word by word (the key idea in blue italics, struck through, in grey or in a pill) and below it a card that explains what is said (recording, hours, footage, finding, cutting, versions, ideas, dates, places, tickets, music, prizes, sharing…), with a cursor that clicks and fluid transitions over one same light background. No stick figures and no internet photos.",
+  "pt": "Motions completo no estilo dos melhores reels: as legendas já não se repetem; em cima, um título que aparece palavra por palavra (a ideia-chave em itálico azul, riscada, em cinza ou numa pílula) e embaixo um cartão que explica o que se diz (gravar, horas, material, encontrar, cortar, versões, ideias, datas, lugares, ingressos, música, prêmios, compartilhar…), com o cursor que clica e transições fluidas sobre o mesmo fundo claro. Sem bonecos nem fotos da internet.",
+  "fr": "Motions complet dans le style des meilleurs reels : les sous-titres ne se répètent plus ; en haut, un titre qui apparaît mot par mot (l'idée clé en italique bleu, barrée, en gris ou dans une pastille) et dessous une carte qui explique ce qui est dit (filmer, heures, rushes, trouver, couper, versions, idées, dates, lieux, billets, musique, prix, partager…), avec le curseur qui clique et des transitions fluides sur un même fond clair. Sans bonshommes ni photos d'internet.",
+  "de": "Komplette Motions im Stil der besten Reels: Untertitel werden nicht mehr wiederholt; oben eine Überschrift, die Wort für Wort erscheint (die Kernidee blau kursiv, durchgestrichen, grau oder in einer Pille), darunter eine Karte, die das Gesagte erklärt (Aufnehmen, Stunden, Material, Finden, Schneiden, Versionen, Ideen, Termine, Orte, Tickets, Musik, Preise, Teilen…), mit klickendem Cursor und flüssigen Übergängen auf demselben hellen Hintergrund. Ohne Strichmännchen und ohne Internetfotos.",
+  "it": "Motions completo nello stile dei migliori reel: i sottotitoli non si ripetono più; in alto un titolo che appare parola per parola (l'idea chiave in corsivo blu, barrata, in grigio o in una pillola) e sotto una scheda che spiega ciò che si dice (registrare, ore, girato, trovare, tagliare, versioni, idee, date, luoghi, biglietti, musica, premi, condividere…), con il cursore che clicca e transizioni fluide sullo stesso sfondo chiaro. Senza omini né foto da internet."
+ },
+ "Motions completo: al final de GO, un video de solo motions de todo el video en el estilo de los mejores reels (un titular arriba y una tarjeta que explica lo que se dice; sin captions) en la pista de más arriba, encima de captions y efectos, para que lo cortes donde quieras ver tu video. Clic: sí o no.": {
+  "en": "Full motions: at the end of GO, a motions-only video of the whole video in the style of the best reels (a headline at the top and a card that explains what is said; no captions) on the top track, above captions and effects, so you can cut it wherever you want to see your video. Click: yes or no.",
+  "pt": "Motions completo: no fim do GO, um vídeo só de motions do vídeo inteiro no estilo dos melhores reels (um título em cima e um cartão que explica o que se diz; sem legendas) na faixa mais alta, acima das legendas e efeitos, para você cortar onde quiser ver seu vídeo. Clique: sim ou não.",
+  "fr": "Motions complet : à la fin de GO, une vidéo uniquement de motions de toute la vidéo dans le style des meilleurs reels (un titre en haut et une carte qui explique ce qui est dit ; sans sous-titres) sur la piste la plus haute, au-dessus des sous-titres et des effets, pour que tu la coupes où tu veux voir ta vidéo. Clic : oui ou non.",
+  "de": "Komplette Motions: am Ende von GO ein reines Motions-Video über das ganze Video im Stil der besten Reels (oben eine Überschrift und eine Karte, die das Gesagte erklärt; ohne Untertitel) auf der obersten Spur, über Untertiteln und Effekten, damit du es schneidest, wo du dein Video sehen willst. Klick: ja oder nein.",
+  "it": "Motions completo: alla fine di GO, un video di soli motions di tutto il video nello stile dei migliori reel (un titolo in alto e una scheda che spiega ciò che si dice; senza sottotitoli) sulla traccia più in alto, sopra sottotitoli ed effetti, così lo tagli dove vuoi vedere il tuo video. Clic: sì o no."
+ },
+ "Proyecto: el slider de temas es más grande y cada tema enseña su ejemplo con o sin Edición PRO (la píldora «Con PRO / Solo captions» de la tarjeta), el botón de la Edición PRO va al lado de «Usar este tema», el nombre del tema entra letra a letra y elegir un tema tiene su animación (pulso, anillo y destellos). Las tarjetas ya no llevan la «V».": {
+  "en": "Project: the theme slider is bigger and each theme shows its example with or without PRO Editing (the card’s «With PRO / Captions only» pill), the PRO Editing button sits next to «Use this theme», the theme name comes in letter by letter and choosing a theme has its own animation (pulse, ring and sparkles). The cards no longer show the «V».",
+  "pt": "Projeto: o slider de temas é maior e cada tema mostra o exemplo com ou sem Edição PRO (a pílula «Com PRO / Só legendas» do cartão), o botão da Edição PRO fica ao lado de «Usar este tema», o nome do tema entra letra por letra e escolher um tema tem sua animação (pulso, anel e brilhos). Os cartões não mostram mais o «V».",
+  "fr": "Projet : le slider des thèmes est plus grand et chaque thème montre son exemple avec ou sans Montage PRO (la pastille « Avec PRO / Sous-titres seuls » de la carte), le bouton du Montage PRO est à côté de « Utiliser ce thème », le nom du thème arrive lettre par lettre et choisir un thème a son animation (pulsation, anneau et éclats). Les cartes n’affichent plus le « V ».",
+  "de": "Projekt: Der Themen-Slider ist größer und jedes Thema zeigt sein Beispiel mit oder ohne PRO-Schnitt (die Pille «Mit PRO / Nur Untertitel» der Karte), der PRO-Schnitt-Knopf steht neben «Dieses Thema verwenden», der Themenname erscheint Buchstabe für Buchstabe und die Themenwahl hat ihre Animation (Puls, Ring und Funken). Die Karten zeigen kein «V» mehr.",
+  "it": "Progetto: lo slider dei temi è più grande e ogni tema mostra il suo esempio con o senza Montaggio PRO (la pillola «Con PRO / Solo sottotitoli» della scheda), il pulsante del Montaggio PRO è accanto a «Usa questo tema», il nome del tema entra lettera per lettera e scegliere un tema ha la sua animazione (pulsazione, anello e scintille). Le schede non mostrano più la «V»."
+ },
+ "Motions completo ya no se repite: más tarjetas (lista, buscador, publicación, encuesta, carga, nota, antes/después, cuenta atrás, gráfica y el «golpe» con la palabra enorme), cada una con su color y su lado, con fotogramas de tu propio video dentro y con sonido sincronizado (whoosh al entrar, clics y pops).": {
+  "en": "Full motions no longer repeat: more cards (list, search, post, poll, loading, note, before/after, countdown, chart and the «punch» with the huge word), each with its own color and side, with frames of your own video inside and with synced sound (whoosh on entry, clicks and pops).",
+  "pt": "Motions completo já não se repete: mais cartões (lista, busca, publicação, enquete, carregamento, nota, antes/depois, contagem regressiva, gráfico e o «golpe» com a palavra enorme), cada um com sua cor e seu lado, com quadros do seu próprio vídeo dentro e som sincronizado (whoosh ao entrar, cliques e pops).",
+  "fr": "Motions complet ne se répète plus : plus de cartes (liste, recherche, publication, sondage, chargement, note, avant/après, compte à rebours, graphique et le « coup » avec le mot énorme), chacune avec sa couleur et son côté, avec des images de ta propre vidéo dedans et un son synchronisé (whoosh à l’entrée, clics et pops).",
+  "de": "Komplette Motions wiederholen sich nicht mehr: mehr Karten (Liste, Suche, Beitrag, Umfrage, Laden, Notiz, Vorher/Nachher, Countdown, Diagramm und der «Schlag» mit dem riesigen Wort), jede mit eigener Farbe und Seite, mit Bildern aus deinem eigenen Video und synchronem Ton (Whoosh beim Erscheinen, Klicks und Pops).",
+  "it": "Motions completo non si ripete più: più schede (lista, ricerca, post, sondaggio, caricamento, nota, prima/dopo, conto alla rovescia, grafico e il «colpo» con la parola enorme), ognuna col suo colore e il suo lato, con fotogrammi del tuo video dentro e con suono sincronizzato (whoosh all’entrata, clic e pop)."
+ },
+ "Con PRO": {
+  "en": "With PRO",
+  "pt": "Com PRO",
+  "fr": "Avec PRO",
+  "de": "Mit PRO",
+  "it": "Con PRO"
+ },
+ "Solo captions": {
+  "en": "Captions only",
+  "pt": "Só legendas",
+  "fr": "Sous-titres seuls",
+  "de": "Nur Untertitel",
+  "it": "Solo sottotitoli"
+ },
+ "Edición PRO más rápida: «Motions completo» y la descarga del B-roll se hacen a la vez que lo demás (antes iban al final, uno tras otro), «Motions completo» ya no espera a la IA de texto y su video se codifica más rápido.": {
+  "en": "Faster PRO Editing: «Full motions» and the B-roll download now run alongside everything else (before, they ran at the end, one after the other), «Full motions» no longer waits for the text AI and its video encodes faster.",
+  "pt": "Edição PRO mais rápida: «Motions completo» e o download do B-roll acontecem junto com o resto (antes ficavam para o fim, um depois do outro), «Motions completo» já não espera a IA de texto e o vídeo dele é codificado mais rápido.",
+  "fr": "Montage PRO plus rapide : « Motions complet » et le téléchargement du B-roll se font en même temps que le reste (avant, à la fin, l’un après l’autre), « Motions complet » n’attend plus l’IA de texte et sa vidéo s’encode plus vite.",
+  "de": "Schnellerer PRO-Schnitt: «Komplette Motions» und der B-Roll-Download laufen jetzt parallel zum Rest (vorher am Ende, nacheinander), «Komplette Motions» wartet nicht mehr auf die Text-KI und ihr Video wird schneller kodiert.",
+  "it": "Montaggio PRO più veloce: «Motions completo» e il download del B-roll ora avvengono insieme al resto (prima alla fine, uno dopo l’altro), «Motions completo» non aspetta più l’IA di testo e il suo video si codifica più in fretta."
  }
 }

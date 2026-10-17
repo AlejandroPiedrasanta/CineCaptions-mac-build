@@ -357,6 +357,9 @@ class TituloGo(QWidget):
             self._entrar()
             self.update()
 
+    def setText(self, texto):                             # v5.5.9: también hace de nombre del tema en Proyecto (entra letra a letra)
+        self.configure(text=texto)
+
     def showEvent(self, e):
         super().showEvent(e)
         self._entrar()

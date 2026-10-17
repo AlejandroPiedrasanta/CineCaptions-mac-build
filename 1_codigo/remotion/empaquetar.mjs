@@ -33,5 +33,7 @@ for (const [o, d] of [['Caveat.ttf', 'caveat.ttf'], ['SpecialElite-Regular.ttf',
 if (existsSync(SALIDA)) rmSync(SALIDA, { recursive: true, force: true });
 const t0 = Date.now();
 const serve = await bundle({ entryPoint: path.join(AQUI, 'src', 'index.ts'), publicDir: PUBLICO, outDir: SALIDA, enableCaching: false,
-                            webpackOverride: (c) => ({ ...c, devtool: false }) });   // sin mapas de fuente: el bundle va en el instalador
+                            webpackOverride: (c) => ({ ...c, devtool: 'source-map' }) });
+// v5.5.9: CON mapas de fuente (21 MB). Sin ellos, cualquier aviso de la página al renderizar (desde que va Three.js para los personajes 3D)
+// hacía que Remotion buscara bundle/index.js.map para traducirlo y, al no estar, el render FALLABA entero (todas las animaciones de la PRO).
 console.log(JSON.stringify({ bundle: serve, s: (Date.now() - t0) / 1000 }));

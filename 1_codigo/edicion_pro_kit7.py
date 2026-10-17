@@ -432,12 +432,16 @@ def _plantilla_de_ia(pr, frases, plegadas, tiempos, genero):
         return None
 
 
-def desde_ia(propuestas, frases, plegadas, textos, tiempos, duracion=None, iconos=None, idioma='es', genero='general'):
+def desde_ia(propuestas, frases, plegadas, textos, tiempos, duracion=None, iconos=None, idioma='es', genero='general', denso=False):
     """Lo que propuso la IA ({'b', 'motion', 'datos', 'ancla'}), VALIDADO: la frase existe, el ancla se dice en ella, los textos se dicen (o son la
-    etiqueta del tipo), los números caben, los iconos existen. Lo que no pasa, se descarta (sin inventar nada)."""
+    etiqueta del tipo), los números caben, los iconos existen. Lo que no pasa, se descarta (sin inventar nada).
+    v5.5.8 `denso` («Motions completo», un video de SOLO motions): sin los topes de «pocos por video»; cada tipo, como mucho uno de cada ~4 frases."""
     iconos = set(iconos if iconos is not None else iconos_disponibles())
     out, usados = [], set()
     tope_total = max(2, int((duracion or (tiempos[-1] if tiempos else 0) or 0) // 12))
+    por_tipo = max(2, (len(frases) + 5) // 8) if denso else None
+    if denso:
+        tope_total = len(frases) + 1
     for pr in propuestas or []:
         try:
             b, fam, datos = int(pr.get('b')), str(pr.get('motion') or ''), pr.get('datos') if isinstance(pr.get('datos'), dict) else {}
@@ -449,7 +453,8 @@ def desde_ia(propuestas, frases, plegadas, textos, tiempos, duracion=None, icono
                 out.append(m)
             continue
         if fam in ESCENAS_FAM and 0 <= b < len(frases):                    # v5.5.3: escena a pantalla completa (edicion_pro_escenas)
-            if sum(1 for x in out if x.get('pantalla')) >= max(1, int((duracion or 30) // 10)) or sum(1 for x in out if x['fam'] == fam) >= _ES.CUANTOS.get(fam, 1):
+            if (not denso and sum(1 for x in out if x.get('pantalla')) >= max(1, int((duracion or 30) // 10))) \
+                    or sum(1 for x in out if x['fam'] == fam) >= (por_tipo if denso else _ES.CUANTOS.get(fam, 1)):
                 continue
             import edicion_pro_escenas as ES
             m = ES.desde_ia_uno(pr, frases, plegadas, textos, tiempos, idioma)
@@ -458,7 +463,7 @@ def desde_ia(propuestas, frases, plegadas, textos, tiempos, duracion=None, icono
             continue
         if fam not in COMP or not (0 <= b < len(frases)) or len(out) >= tope_total:
             continue
-        if sum(1 for x in out if x['fam'] == fam) >= CUANTOS_POR_VIDEO.get(fam, 1):
+        if sum(1 for x in out if x['fam'] == fam) >= (por_tipo if denso else CUANTOS_POR_VIDEO.get(fam, 1)):
             continue
         idx = list(frases[b])
         sig = list(frases[b + 1]) if b + 1 < len(frases) else []
