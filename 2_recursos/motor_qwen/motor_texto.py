@@ -78,8 +78,8 @@ SISTEMA = (
     '{"correcciones": [[15, "boy", "voy"]], "frases": [{"f": 1, "principal": [2, "10.000"], "secundaria": [1, "ganamos"], '
     '"emoji": "💰"}, {"f": 2, "principal": [12, "error"], "secundaria": [8, "nadie"], "emoji": "❌"}, '
     '{"f": 3, "principal": [18, "paso"], "secundaria": null, "emoji": null}]}\n'
-    'Copia el número Y la palabra exactamente como aparecen.'
-).replace('__PALETA__', PALETA)
+    'Copia el número Y la palabra exactamente como aparecen. Escribe el JSON compacto, en UNA sola línea, sin saltos de línea ni sangría.'
+).replace('__PALETA__', PALETA)                     # (v5.5.17: «compacto»: el 1.7B lo sangraba = 2–3 veces más tokens y más espera)
 
 
 def frases_de(palabras, desde, hasta, largo_max=16):

@@ -317,8 +317,13 @@ def direccion(genero, rng, tema=None):
         'mayusculas': rng.random() < (0.35 if tit == 'serif' and g in ('boda', 'xv') else 0.8),
         'yTitular': round(rng.uniform(24, 31), 1), 'yApoyo': round(rng.uniform(15, 20), 1),
         'etiquetaLado': rng.choice(['izq', 'izq', 'der']),
-        'fondoEstilo': rng.choice(FONDO_GENERO[g]), 'fondoEntrada': rng.choice(['iris', 'iris', 'cortina']),
-    }
+        'fondoEstilo': rng.choice(FONDO_GENERO[g]) if tema != 'neon' else 'aurora', 'fondoEntrada': rng.choice(['iris', 'iris', 'cortina']),
+    } | (NEON_DIRECCION if tema == 'neon' else {})
+
+
+# v5.5.13: el Tema 1 lleva la PRO en neón (los colores de edicion_pro.NEON): magenta, texto blanco y paneles morados; el resto (tipografías,
+# entradas, marcos) sigue el tipo de video
+NEON_DIRECCION = {'acento': '#FF2DCB', 'colorTexto': '#FFFFFF', 'colorPanel': '#14101E', 'colorBloque': '#2A1258'}
 
 
 # ------------------------------------------------------------------------------------------------------------------- frases y momentos
@@ -426,9 +431,12 @@ def candidatos(palabras, frases, pesos=None, idioma='es'):
         items = []
         for n_parte, parte in enumerate(partes):
             cont = [j for j in parte if lw[j] not in STOP]
-            if len(cont) > 3 and n_parte > 0:                  # un trozo largo en medio no es un elemento: es otra frase («summer sunsets on your pontoon boat,»)
-                items = []
-                break
+            if len(cont) > 3 and n_parte > 0:
+                if len(items) >= 2:                            # un trozo largo DESPUÉS de varios elementos: es otra frase («summer sunsets on your pontoon boat,»)
+                    items = []
+                    break
+                items = []                                     # v5.5.13: antes de la lista (GO trae «Además, habrán gamers… con premios, charlas y
+                                                               # networking»): la lista empieza en la cola de ese trozo, como con el primero
             if len(cont) > 3:                                  # «Nuestro chef prepara tacos de pescado,» → «tacos de pescado»
                 cola = parte[-3:]
                 while cola and lw[cola[0]] in STOP:
@@ -559,7 +567,7 @@ DENSIDAD = {'sobria': 6.5, 'media': 3.6, 'espectaculo': 2.0}        # segundos m
 
 
 def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media', cortes=None, vertical=True, pesos=None, semilla=0, tema=None, video='',
-               con_captions=True):
+               con_captions=True, bloqueado=None):
     """`con_captions` (GO con los Temas 1–4: siempre): los captions ya escriben lo que se dice, así que la PRO NO lo repite (ni titulares ni rótulos
     con las mismas palabras; esos momentos fuertes pasan a `plan['detras_pref']`: ahí los captions van detrás de la persona) y pone lo que los
     captions no dan: escenas de motion graphics e infografía (iconos, cifras, listas, lugares), con la persona recortada delante del fondo
@@ -588,7 +596,8 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
     sep = DENSIDAD.get(densidad, 3.6)
     frases = frases_de(palabras)
     cands = candidatos(palabras, frases, pesos, lang)
-    piezas, ocupado = [], []          # ocupado: [(ini, fin)] de los gráficos «grandes» (nunca dos a la vez)
+    piezas, ocupado = [], [tuple(x) for x in bloqueado or []]     # ocupado: [(ini, fin)] de los gráficos «grandes» (nunca dos a la vez)
+    # (v5.5.13, `bloqueado`: los tramos de los motions del kit del Tema 1: lo que el usuario encendió en el menú busca OTROS momentos)
     detras_pref = []                  # con captions: momentos fuertes (palabra remarcada, pregunta) en los que los captions van DETRÁS de la persona
 
     def libre(a, b, holgura=sep):

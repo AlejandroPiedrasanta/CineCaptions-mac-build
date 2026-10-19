@@ -30,6 +30,8 @@ cpSync(path.join(PRO, 'recortes'), path.join(PUBLICO, 'recortes'), { recursive: 
 cpSync(path.join(PRO, 'fluent_extra'), path.join(PUBLICO, 'fluent'), { recursive: true, filter: f => !f.endsWith('desktop.ini') });
 for (const [o, d] of [['Caveat.ttf', 'caveat.ttf'], ['SpecialElite-Regular.ttf', 'especial.ttf'], ['BlackOpsOne-Regular.ttf', 'estarcido.ttf'], ['Anton-Regular.ttf', 'anton.ttf']])
   cpSync(path.join(PRO, 'fuentes_extra', o), path.join(PUBLICO, 'fuentes', d));
+// v5.5.13: el Tema 1 neón (KitNeon.tsx) usa las fuentes del kit «TEMA 1» del usuario: Cond, Thin, Inter variable, Script (Yellowtail), Serif
+cpSync(path.join(PRO, 'kit_neon', 'fuentes'), path.join(PUBLICO, 'fuentes', 'kit'), { recursive: true });
 if (existsSync(SALIDA)) rmSync(SALIDA, { recursive: true, force: true });
 const t0 = Date.now();
 const serve = await bundle({ entryPoint: path.join(AQUI, 'src', 'index.ts'), publicDir: PUBLICO, outDir: SALIDA, enableCaching: false,

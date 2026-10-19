@@ -22,26 +22,28 @@ RAIZ = Path(__file__).resolve().parent.parent
 VERSION_PY = RAIZ / '1_codigo' / 'version.py'
 SCRIPTS = RAIZ / '2_recursos' / 'resolve_scripts'
 
-PATRON_VERSION = re.compile(r'''(?m)^(?P<antes>\s*(?:local\s+)?VERSION\s*=\s*["'])(?P<num>\d+\.\d+\.\d+)(?P<despues>\s\([^"']*\)["'])''')
-PATRON_PAQUETE = re.compile(r'''(?m)^(?P<antes>\s*(?:local\s+)?PAQUETE\s*=\s*["'])(?P<num>\d+\.\d+\.\d+)(?P<despues>["'])''')
-PATRON_APP = re.compile(r"""(?m)^(APP_VERSION\s*=\s*')(\d+)\.(\d+)\.(\d+)(')""")
+# v5.20: versiones de DOS números (5.20, 5.21…) o de tres (las viejas 5.5.x): las dos formas valen
+PATRON_VERSION = re.compile(r'''(?m)^(?P<antes>\s*(?:local\s+)?VERSION\s*=\s*["'])(?P<num>\d+\.\d+(?:\.\d+)?)(?P<despues>\s\([^"']*\)["'])''')
+PATRON_PAQUETE = re.compile(r'''(?m)^(?P<antes>\s*(?:local\s+)?PAQUETE\s*=\s*["'])(?P<num>\d+\.\d+(?:\.\d+)?)(?P<despues>["'])''')
+PATRON_APP = re.compile(r"""(?m)^(APP_VERSION\s*=\s*')(\d+(?:\.\d+){1,2})(')""")
 
 
 def leer_version():
     m = PATRON_APP.search(VERSION_PY.read_text(encoding='utf-8'))
     if not m:
         raise SystemExit('No encontré APP_VERSION en 1_codigo/version.py')
-    return f'{m.group(2)}.{m.group(3)}.{m.group(4)}'
+    return m.group(2)
 
 
 def subir():
-    """5.3.1 -> 5.3.2 (escribe version.py). Devuelve la nueva."""
+    """5.20 -> 5.21 (o 5.3.1 -> 5.3.2): sube el ÚLTIMO número (escribe version.py). Devuelve la nueva."""
     texto = VERSION_PY.read_text(encoding='utf-8', newline='')
     m = PATRON_APP.search(texto)
     if not m:
         raise SystemExit('No encontré APP_VERSION en 1_codigo/version.py')
-    nueva = f'{m.group(2)}.{m.group(3)}.{int(m.group(4)) + 1}'
-    texto = texto[:m.start()] + f"{m.group(1)}{nueva}{m.group(5)}" + texto[m.end():]
+    partes = m.group(2).split('.')
+    nueva = '.'.join(partes[:-1] + [str(int(partes[-1]) + 1)])
+    texto = texto[:m.start()] + f"{m.group(1)}{nueva}{m.group(3)}" + texto[m.end():]
     VERSION_PY.write_text(texto, encoding='utf-8', newline='')
     return nueva
 

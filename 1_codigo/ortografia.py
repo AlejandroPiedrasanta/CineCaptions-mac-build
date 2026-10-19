@@ -169,6 +169,48 @@ def _por_clave(corrector):
     return _CLAVES[id(corrector)]
 
 
+_SUENAN = [('ce', 'se'), ('ci', 'si'), ('se', 'ce'), ('si', 'ci'), ('za', 'sa'), ('zo', 'so'), ('zu', 'su'), ('sa', 'za'), ('so', 'zo'),
+           ('ze', 'ce'), ('zi', 'ci'), ('b', 'v'), ('v', 'b'), ('y', 'll'), ('ll', 'y'), ('j', 'g'), ('g', 'j'), ('x', 's')]
+
+
+def _variante_que_suena_igual(bajo, idioma):
+    """v5.5.17: la ÚNICA palabra válida que suena igual cambiando una grafía (c/s/z, b/v, y/ll, g/j) y, si hace falta, una tilde («envíácelo»
+    → «envíaselo»; el diccionario de lemas no la propone porque lleva pronombres pegados). Con dos o más posibles, ninguna (no se adivina)."""
+    if len(bajo) < 5 or not bajo.isalpha():
+        return None
+    nfd = unicodedata.normalize('NFD', bajo)
+    tildes = [k for k, c in enumerate(nfd) if c == '́']
+    bases = {bajo}
+    if tildes:                                         # quitar UNA de las tildes (una palabra no lleva dos) o todas
+        for k in tildes:
+            bases.add(unicodedata.normalize('NFC', nfd[:k] + nfd[k + 1:]))
+        bases.add(unicodedata.normalize('NFC', nfd.replace('́', '')))
+    variantes = set()
+    for b in bases:
+        for a, c in _SUENAN:
+            ini = 0
+            while True:
+                k = b.find(a, ini)
+                if k < 0:
+                    break
+                variantes.add(b[:k] + c + b[k + len(a):])
+                ini = k + 1
+        variantes.add(b)
+    variantes.discard(bajo)
+    if 0 not in revisar([{'word': bajo}], idioma):
+        return None                                    # (ya es válida)
+    validas = [v for v in variantes if unicodedata.normalize('NFD', v).count('́') <= 1          # (nunca dos tildes en una palabra)
+               and _clave_fonetica(v) == _clave_fonetica(bajo) and 0 not in revisar([{'word': v}], idioma)]
+    if not validas:
+        return None
+    con_tilde = [v for v in validas if '́' in unicodedata.normalize('NFD', v)]
+    if tildes and len(con_tilde) > 1:                  # (la tilde que se oyó primero manda: «envíácelo» → «envíaselo», no «enviáselo»)
+        misma = [v for v in con_tilde if unicodedata.normalize('NFD', v).find('́') == tildes[0]]
+        con_tilde = misma or con_tilde
+    elegidas = con_tilde or validas                    # (con pronombres pegados la tilde va: «envíaselo», no «enviaselo»)
+    return elegidas[0] if len(elegidas) == 1 else None
+
+
 def corregir_fonetico(palabras, idioma):
     """{indice: palabra corregida} de las palabras que el diccionario no conoce y tienen una correccion clara. Solo español."""
     if _normalizar_codigo(idioma) != 'es':
@@ -192,6 +234,9 @@ def corregir_fonetico(palabras, idioma):
             candidatas = []
         candidatas += [c for c in _por_clave(corrector).get(clave, ()) if c != bajo]     # v5.5.7: «aser» → «hacer», «kiero» → «quiero» (a 2 letras)
         if not candidatas:
+            mejor = _variante_que_suena_igual(bajo, idioma)              # v5.5.17: «envíácelo» → «envíaselo» (verbos con pronombres pegados)
+            if mejor:
+                cambios[i] = aplicar(texto, _con_el_mismo_caso(orig, mejor))
             continue
         elegidas = [c for c in candidatas if _clave_fonetica(c) == clave and corrector.word_frequency[c] >= 8000]   # v5.5.7: nada de rarezas («Voy» → «Boy»)
         tenia_tilde = any(unicodedata.category(c) == 'Mn' for c in unicodedata.normalize('NFD', bajo) if c not in '̃')

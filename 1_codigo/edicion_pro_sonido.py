@@ -174,6 +174,33 @@ def disenar(plan, fps, rng, choques=(), cortes=(), voz_db=None):
             continue                                                 # no se puso (no cabía sin tapar una cara): no suena
         if pz == 'orbita' and p.get('capa') == 'delante':
             continue
+        if pz == 'neon':                                              # v5.5.13: los captions del Tema 1 neón suenan con el modo de Sonido de GO
+            continue
+        if pz == 'neon_motion':                                       # v5.5.13: los motions del kit «TEMA 1», con los sonidos de su proyecto.json
+            ll = ((p.get('valores') or {}).get('escena') or [{}])[0]
+            fn, v, args = ll.get('fn'), ll.get('a') or {}, ll.get('args') or []
+            if fn == 'barrido' and args:                              # «aire» en cada cortinilla; el panel final, más grande
+                mov(float(args[0]) - 0.05, grande=True, largo=0.8, que='cortinilla')
+            elif fn == 'notificacion':
+                tex('ui', float(v.get('tin', a)) + 0.05, 'notificación')
+            elif fn == 'orbita':
+                mov(float(v.get('tin', a)), grande=True, largo=0.8, que='órbita')
+            elif fn == 'interruptores':
+                for fila in v.get('filas') or []:
+                    tex('click', float(fila[2]), 'interruptor')
+            elif fn == 'checks':
+                for it in v.get('items') or []:
+                    tex('pop', float(it[1]) + 0.1, 'check')
+            elif fn == 'filaEtiqueta':
+                for pl in v.get('pills') or []:
+                    tex('pop', float(pl[2]), 'píldora')
+            elif fn == 'tarjetaRuta':
+                mov(float(v.get('tin', a)), largo=0.7, que='tarjeta de ruta')
+                if v.get('hitos'):
+                    tex('pin', float(v['hitos'][0][1]), 'chincheta')
+            elif fn == 'avion':
+                mov(float(v.get('t0', a)) + 0.4, largo=0.95, que='avión de papel')
+            continue
         if pz == 'subtitulo':                                         # Tema 5: los bloques normales ya suenan con el modo de Sonido de GO
             if (p.get('valores') or {}).get('modo') == 'detras':
                 mov(a + 0.08, largo=0.5, que='la clave detrás de la persona')

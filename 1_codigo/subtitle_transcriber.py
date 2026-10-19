@@ -272,7 +272,8 @@ def idioma_detectado(palabras=None):
     return _IDIOMA_DETECTADO.get('v') or _idioma_por_palabras(palabras)
 
 
-def transcribe(media_path: str, source_lang: str, model_size: str, progress_callback=None, model_loaded_callback=None, status_callback=None):
+def transcribe(media_path: str, source_lang: str, model_size: str, progress_callback=None, model_loaded_callback=None, status_callback=None,
+               contexto: str = ''):
     """Transcribe el audio y devuelve una lista de palabras con timestamps.
 
     progress_callback(fraccion) se llama con un valor 0.0-1.0 a medida que
@@ -306,7 +307,7 @@ def transcribe(media_path: str, source_lang: str, model_size: str, progress_call
         try:
             palabras = motor_voz.transcribir(media_path, source_lang, progress_callback=progress_callback,
                                              model_loaded_callback=model_loaded_callback,
-                                             status_callback=status_callback)
+                                             status_callback=status_callback, contexto=contexto)
             if palabras:
                 return palabras
             _avisar(tr('Qwen3-ASR no devolvió palabras; pruebo con Whisper.'))
@@ -334,18 +335,19 @@ def transcribe(media_path: str, source_lang: str, model_size: str, progress_call
         model = _modelo_whisper(tamano, device, compute_type, local_only, aviso=_avisar)
         print('Transcribiendo... esto puede tardar según la duración del video.')
         idioma_w = source_lang if source_lang != 'auto' else None
+        pistas = {'hotwords': contexto[:600]} if contexto else {}           # v5.5.17: el vocabulario del usuario (faster-whisper ≥ 1.0)
         if device == 'cuda' and _duracion_segundos(media_path) > LARGO_PARA_LOTES_S:
             try:                                           # audios largos: varios tramos a la vez en la GPU
                 import compat_av
                 compat_av.aplicar()
                 from faster_whisper import BatchedInferencePipeline
                 segments, info = BatchedInferencePipeline(model=model).transcribe(
-                    media_path, language=idioma_w, word_timestamps=True, vad_filter=True, batch_size=8)
+                    media_path, language=idioma_w, word_timestamps=True, vad_filter=True, batch_size=8, **pistas)
             except Exception as e:
                 print(f'Lotes no disponibles ({e}); sigo tramo a tramo.')
-                segments, info = model.transcribe(media_path, language=idioma_w, word_timestamps=True, vad_filter=True)
+                segments, info = model.transcribe(media_path, language=idioma_w, word_timestamps=True, vad_filter=True, **pistas)
         else:
-            segments, info = model.transcribe(media_path, language=idioma_w, word_timestamps=True, vad_filter=True)
+            segments, info = model.transcribe(media_path, language=idioma_w, word_timestamps=True, vad_filter=True, **pistas)
         if model_loaded_callback and not ya_aviso['modelo']:
             ya_aviso['modelo'] = True
             model_loaded_callback()

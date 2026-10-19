@@ -24,6 +24,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
@@ -119,8 +121,23 @@ def comprobar(renderizar_prueba=False) -> str:
         return '' if ok else 'el render de prueba no salió'
 
 
+_HUELLA_BUNDLE = {}
+
+
+def _huella_bundle():
+    """v5.5.17: la generación de las animaciones (hash del bundle): con un bundle nuevo (un arreglo del motor) no se reutilizan los clips
+    viejos de la caché (el aro suelto del Tema 1 seguía en los .mov ya hechos). Una vez por proceso."""
+    if 'h' not in _HUELLA_BUNDLE:
+        try:
+            _HUELLA_BUNDLE['h'] = hashlib.sha1((Path(bundle()) / 'bundle.js').read_bytes()).hexdigest()[:8]
+        except Exception:
+            _HUELLA_BUNDLE['h'] = ''
+    return _HUELLA_BUNDLE['h']
+
+
 def salida_para(ident, props, carpeta) -> Path:
-    h = hashlib.sha1(json.dumps([ident, props], sort_keys=True, ensure_ascii=False).encode('utf-8')).hexdigest()[:12]
+    clave = [ident, props] + ([_huella_bundle()] if _huella_bundle() else [])
+    h = hashlib.sha1(json.dumps(clave, sort_keys=True, ensure_ascii=False).encode('utf-8')).hexdigest()[:12]
     return Path(carpeta) / f'rm_{ident}_{h}.mov'
 
 
@@ -136,17 +153,36 @@ def renderizar(trabajos, al_estado=None, timeout=900):
     with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False, encoding='utf-8') as f:
         json.dump({'bundle': str(bundle()), 'navegador': _chrome(), 'trabajos': [{**t, 'salida': str(t['salida'])} for t in pendientes]}, f, ensure_ascii=False)
         ruta = f.name
+    # v5.5.13: las piezas se leen AL TERMINAR cada una y se avisa «k de N»: el Tema 1 neón anima ~30 clips (más de 4 min) y, sin señales, el
+    # vigilante de GO lo daba por atascado y cerraba la conexión con Resolve. El tope de tiempo crece con las piezas (~10 s cada una).
     try:
         mjs = _render_mjs()
-        p = subprocess.run([_node(), str(mjs), ruta], cwd=str(mjs.parent), capture_output=True, text=True, encoding='utf-8', errors='replace',
-                           timeout=timeout, **opciones_proceso())
-        for linea in p.stdout.splitlines():
-            try:
-                r = json.loads(linea)
-            except ValueError:
-                continue
-            if r.get('hecho'):
-                hechos[str(Path(r['hecho']))] = True
+        p = subprocess.Popen([_node(), str(mjs), ruta], cwd=str(mjs.parent), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+                             encoding='utf-8', errors='replace', **opciones_proceso())
+        tope = threading.Timer(max(float(timeout), 45.0 * len(pendientes)), p.kill)
+        tope.daemon = True
+        tope.start()
+        n, t_aviso = 0, time.time()
+        try:
+            for linea in p.stdout:
+                try:
+                    r = json.loads(linea)
+                except ValueError:
+                    continue
+                if r.get('hecho'):
+                    hechos[str(Path(r['hecho']))] = True
+                    n += 1
+                    if al_estado and len(pendientes) > 1:
+                        al_estado(f'Edición PRO: animando con Remotion ({n} de {len(pendientes)})…')
+                        t_aviso = time.time()
+                elif r.get('progreso') is not None and al_estado and time.time() - t_aviso > 20:     # (una pieza larga: también da señales)
+                    al_estado(f'Edición PRO: animando con Remotion ({n} de {len(pendientes)}, {int(float(r["progreso"]) * 100)} %)…')
+                    t_aviso = time.time()
+            p.wait(timeout=30)
+        finally:
+            tope.cancel()
+            if p.poll() is None:
+                p.kill()
     except (OSError, subprocess.SubprocessError):
         pass
     finally:

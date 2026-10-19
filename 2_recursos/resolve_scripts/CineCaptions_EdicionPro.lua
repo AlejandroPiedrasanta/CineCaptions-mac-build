@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
 ]]
 
-local VERSION = "5.5.11 (edicion pro)"
+local VERSION = "5.20 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -330,10 +330,10 @@ end
 -- captions. Nunca toca V1/A1 ni las pistas de los captions. Nada de InsertFusionTitleIntoTimeline: solo ImportMedia + AppendToTimeline.
 -- El plan lo deja la app en ~/DaVinciSubtitles/edicion_pro_plan.json (y su sidecar .lua, que es lo que lee Free 21.1: sin io).
 -- ---------------------------------------------------------------------
-local ORDEN = { "PRO-BROLL", "PRO-ZOOM", "PRO-GRIS", "PRO-FONDO", "PRO-VELO", "PRO-DETRAS", "PRO-PERSONA", "PRO-DELANTE", "PRO-SUBS" }
+local ORDEN = { "PRO-BROLL", "PRO-ZOOM", "PRO-GRIS", "PRO-FONDO", "PRO-VELO", "PRO-DETRAS", "PRO-PERSONA", "PRO-DELANTE", "PRO-SUBS", "PRO-SUBS2" }   -- v5.5.13: SUBS2 (Tema 1 neon)
 local NOMBRE_FOCO = "PRO · fondo en blanco y negro"
 local NOMBRE_ZOOM = "CineCaptions PRO · zoom"
-local CAPA = { fondo = "PRO-FONDO", velo = "PRO-VELO", detras = "PRO-DETRAS", delante = "PRO-DELANTE", iconos = "PRO-ICONOS", subs = "PRO-SUBS" }
+local CAPA = { fondo = "PRO-FONDO", velo = "PRO-VELO", detras = "PRO-DETRAS", delante = "PRO-DELANTE", iconos = "PRO-ICONOS", subs = "PRO-SUBS", subs2 = "PRO-SUBS2", placa = "PRO-ZOOM" }
 local PISTA_ENCIMA = "PRO-ENCIMA"
 local PISTA_ICONOS = "PRO-ICONOS"        -- los iconos 3D junto a los captions: encima de ellos (y debajo de PRO-ENCIMA)
 local PISTA_MOTIONS = "PRO-MOTIONS"      -- v5.5.8: «Motions completo», el video entero de motions ENCIMA DE TODO (gemelo de colocar_pro.py)
@@ -939,7 +939,7 @@ local function color_claves(tl, cc)
 end
 
 -- Tema 5: los captions de verdad son las animaciones de PRO-SUBS; los Text+ (y emojis) que GO dejo de respaldo se apagan.
-local function apagar_captions(tl)
+local function apagar_captions(tl, sonidos)
     local apagados = 0
     for _, i in ipairs(pistas_captions(tl)) do
         for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do
@@ -948,7 +948,7 @@ local function apagar_captions(tl)
         end
     end
     -- y sus sonidos (pistas de audio «SFX…»: un toque por palabra y el de cada emoji, que ya no se ven)
-    for i = 1, math.floor(tonumber(tl:GetTrackCount("audio")) or 0) do
+    for i = 1, (sonidos ~= false) and math.floor(tonumber(tl:GetTrackCount("audio")) or 0) or 0 do
         if nombre_pista(tl, "audio", i):upper():sub(1, 3) == "SFX" then
             for _, it in ipairs(lista_api(tl:GetItemListInTrack("audio", i))) do
                 local ok, r = pcall(function() return it:GetClipEnabled() and it:SetClipEnabled(false) end)
@@ -1197,7 +1197,7 @@ local function main()
     local fin_pista = { [PISTA_ICONOS] = -1 }
     for _, n in ipairs(ORDEN) do fin_pista[n] = -1 end
     local puestos = { fondo = 0, velo = 0, detras = 0, delante = 0, iconos = 0, persona = 0, sonido = 0, broll = 0, encima = 0, movidos = 0, punch = 0,
-                      emojis = 0, cambiados = 0, gris = 0, subs = 0, respaldo = 0 }
+                      emojis = 0, cambiados = 0, gris = 0, subs = 0, subs2 = 0, placa = 0, respaldo = 0 }
     local sin_poner = 0
     -- 1) los graficos OGraf
     local graficos = (type(datos.graficos) == "table") and datos.graficos or {}
@@ -1271,7 +1271,7 @@ local function main()
     puestos.emojis = emojis_sin_cara(tl, todos, base)
     -- v5.5.7: donde la PRO enseña algo, el emoji de GO se apaga (antes solo junto a un icono 3D); gemelo de colocar_pro.py
     if type(datos.sin_emoji) == "table" and #datos.sin_emoji > 0 then puestos.cambiados = apagar_emojis(tl, datos.sin_emoji, base) end
-    if datos.captions_propios and puestos.subs > 0 then puestos.respaldo = apagar_captions(tl) end
+    if datos.captions_propios and (puestos.subs + puestos.subs2) > 0 then puestos.respaldo = apagar_captions(tl, datos.captions_sonidos ~= true) end
     local coloreados = color_claves(tl, datos.color_claves)
     if coloreados > 0 then print(string.format("Temas 1-4: %d palabras destacadas en el color del video.", coloreados)) end
     -- 5) el diseno de sonido: cada familia en su pista (PRO-WHOOSH, PRO-TEXTURA, PRO-RISER, PRO-HIT), clips enteros con su nivel
@@ -1323,8 +1323,8 @@ local function main()
     if motions > 0 then print(string.format("Motions completo: %d clip(s) en %s, encima de todo.", motions, PISTA_MOTIONS)) end
     quitar_vacias(tl)
     if datos.cache ~= false then cachear_al_final(tl, project) end     -- v5.5.8: la caché de render, AL FINAL (gemelo de colocar_pro.py)
-    local total = puestos.fondo + puestos.velo + puestos.detras + puestos.delante + puestos.iconos + puestos.subs
-    if puestos.subs > 0 then print(string.format("Tema 5: %d captions animados (%d Text+ de respaldo apagados).", puestos.subs, puestos.respaldo)) end
+    local total = puestos.fondo + puestos.velo + puestos.detras + puestos.delante + puestos.iconos + puestos.subs + puestos.subs2
+    if puestos.subs > 0 then print(string.format("Captions animados: %d (%d captions de respaldo apagados).", puestos.subs, puestos.respaldo)) end
     RESUMEN = string.format("Edicion PRO: %d graficos (%d detras, %d delante, %d escenas, %d velos), %d recortes de persona, captions detras de la persona en %d tramos (%d clips movidos, %d emojis apartados de la cara), %d iconos 3D (%d emojis cambiados), %d tramos en gris, %d tomas de B-roll, %d punch-ins, %d sonidos%s.",
         total, puestos.detras, puestos.delante, puestos.fondo, puestos.velo, puestos.persona, puestos.encima, puestos.movidos, puestos.emojis, puestos.iconos,
         puestos.cambiados, puestos.gris, puestos.broll, puestos.punch, puestos.sonido,

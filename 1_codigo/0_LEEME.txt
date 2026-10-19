@@ -12,7 +12,14 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (17 archivos)
+    herramientas_dev\   (23 archivos)
+        banco_voz\   (1 archivos)
+        banco_voz.py
+            v5.5.17: mide la transcripción (WER y la lista de errores) contra un texto CORRECTO, para comparar
+        comparar_kitneon.py
+            v5.5.13: compara el Tema 1 neón (composición KitNeon de Remotion) con el video de referencia del kit
+        comparar_ref_neon.py
+            v5.5.13: el Tema 1 neón contra REFERENCIA.mp4 (entregas/3_neon_kinetic_hook.mp4) fotograma a
         galeria_remotion.py
             la galería de las 100 plantillas Remotion de la Edición PRO: un fotograma de cada una sobre un
         generar_recortes.py
@@ -36,17 +43,21 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             GO de punta a punta SIN Resolve (CINECAPTIONS_SIN_RESOLVE=1), sin pantalla, sobre una copia del video.
         probar_previo_resolve.py
             suspende Resolve ANTES de pulsar GO: la revisión previa (colocacion.preparar_resolve_para_go) debe reiniciarlo y terminar bien. SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
+        probar_pro_lateral.py
+            v5.5.17: prueba el módulo DERECHO de la Edición PRO en Proyecto (pro_lateral_ui: la barra con
         probar_ventanas_humo.py
             humo de TODAS las ventanas sin pantalla ni Resolve: crea la app, recorre sus páginas, abre cada ventana y escribe una «huella» de widgets y textos para comparar antes/después de mover código entre módulos.
         probar_vista_creativo.py
             banco de la vista EXACTA del tema en Creativo (vista_tema.py) contra lo que recibió y pintó Resolve.
         resortes_motion.py
             mete en el motor OGraf de la Edición PRO las curvas de resorte de Motion (motion.dev).
+        vista_kitneon.py
+            v5.5.13: el Tema 1 neón de CUALQUIER video sin Resolve: planifica captions + motions + placa como GO
         vista_ograf.py
             ver una pieza OGraf SIN Resolve: la abre en el Chrome sin ventana del runtime de Remotion (servidor local)
         vista_tema5.py
             el Tema 5 SIN Resolve, para revisarlo y para la tarjeta del slider (2_recursos/vistas_slider/Tema5.mp4
-    remotion\   (17376 archivos)
+    remotion\   (17385 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -165,6 +176,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         los 10 estilos de la pantalla de Inicio: cada uno es un rediseño completo (héroe, fondo, partículas).
     estilos_slider.py
         el carrusel horizontal de «Pack de estilos»: tarjetas verticales sobre fotos de video con los captions de Resolve encima.
+    fuente_usuario.py
+        v5.5.12: la tipografía que el usuario elige en «Crea tu estilo» para los Temas (texto principal y, aparte, el de
     fuentes_sistema.py
         encuentra en el disco el archivo .ttf/.otf de una familia y estilo.
     fuentes_web.py
@@ -206,10 +219,22 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         la «isla dinámica»: el menú de navegación flotante de arriba, los controles de la ventana y el borde.
     kinetic_captions.py
         estilo «Kinetic»: la geometría de la pila de elementos (tamaños con la tipografía real, posiciones, giros, tiempos) y el .json para Resolve.
+    kinetic_paleta.py
+        v5.5.13: los colores del Tema 1 (Kinetic) en UN solo sitio: el pack (generador_packs/kinetic_elementos.py), la vista
     kinetic_planificador.py
         del texto con tiempos (ASR) a los bloques del estilo «Kinetic»: frases, palabra héroe, receta (plantilla), elementos y momentos.
     kinetic_vista.py
         vista aproximada (Pillow) de un bloque del estilo «Kinetic»: la pila ya armada, dibujada sin pasar por Resolve.
+    kit_neon.py
+        v5.5.13: el Tema 1 NEÓN para CUALQUIER video, con el motor del kit «TEMA 1» del usuario (Remotion: KitNeon.tsx).
+    kit_neon_completo.py
+        v5.5.17: «Motions completo» del Tema 1 (el usuario: «si se activa Motions completo, utilizar los ejemplos del
+    kit_neon_motions.py
+        v5.5.13: los MOTIONS del Tema 1 neón (modo PRO) para cualquier video, con las piezas del kit «TEMA 1» del usuario.
+    kit_neon_mp4.py
+        v5.5.16: el Tema 1 neón SIN DaVinci Resolve (GO «Video MP4»): los MISMOS clips que la Edición PRO pone en Resolve
+    kit_neon_placa.py
+        v5.5.13: la PLACA de video del Tema 1 neón: el motor/plate.py del kit «TEMA 1» del usuario, portado a Pillow + numpy +
     licencia.py
         la licencia (Lemon Squeezy / Gumroad): activar, verificar, desactivar, estado firmado, 7 días sin internet.
     mantenimiento.py
@@ -369,3 +394,5 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         vistas previas renderizadas DE VERDAD por Resolve (packs y bloques de GO).
     vistas_slider.py
         los VIDEOS que se reproducen dentro de las tarjetas del slider «Pack de estilos» (captions reales de Resolve, no imágenes fijas).
+    vocabulario.py
+        v5.5.17: el vocabulario del usuario para la voz: los nombres que corrige en Creativo (lugares, marcas, personas,

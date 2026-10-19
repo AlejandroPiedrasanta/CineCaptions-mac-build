@@ -15,6 +15,7 @@ from PySide6.QtGui import QPainter, QPen
 from PySide6.QtWidgets import QFrame, QGridLayout, QSizePolicy, QVBoxLayout, QWidget
 
 import ejemplos_estilo as E
+import fuente_usuario
 import mezcla_planificador as MP
 import qt_kit as ui
 from qt_kit import Boton, Desplazable, Dialogo, Entrada, Etiqueta, Segmentado, StringVar, Tooltip, caja_h, despues
@@ -294,6 +295,77 @@ class _TarjetaLook(_Tarjeta):
         return True
 
 
+class _FichaFuente(QFrame):
+    """Una ficha de la tira: «Aa» dibujado con esa fuente + su nombre. Marcada = borde verde."""
+    def __init__(self, familia, estilo, etiqueta, al_tocar):
+        super().__init__()
+        from PySide6.QtGui import QFont
+        self.valor = fuente_usuario.a_texto(familia, estilo)
+        self._al_tocar = al_tocar
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedSize(84, 58)
+        v = QVBoxLayout(self)
+        v.setContentsMargins(4, 4, 4, 4)
+        v.setSpacing(0)
+        aa = Etiqueta('Aa', 18, color='#FFFFFF')
+        if familia:
+            f = QFont(familia)
+            f.setPointSize(18)
+            f.setStyleName(estilo)
+            aa.setFont(f)
+        aa.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        nom = Etiqueta(etiqueta, 11, color='#8AA0C2')
+        nom.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        v.addWidget(aa)
+        v.addWidget(nom)
+        self.marcar(False)
+
+    def marcar(self, si):
+        borde = '2px solid ' + VERDE if si else '1px solid #22314F'
+        self.setObjectName('fichaFuente')
+        self.setStyleSheet(_hoja('QFrame#fichaFuente { background-color: #111C33; border: %s; border-radius: 10px; }' % borde))
+
+    def mousePressEvent(self, ev):
+        self._al_tocar(self.valor)
+
+
+class _TiraFuentes(QFrame):
+    """v5.5.12 — debajo de la galería: la tipografía del texto principal y, aparte, la de arriba y abajo, para los Temas. Se guarda al tocar
+    (prefs 'fuente_principal' / 'fuente_secundaria'); «Del tema» = la de su pack. Solo salen las fuentes que el equipo tiene."""
+    def __init__(self):
+        super().__init__()
+        from PySide6.QtGui import QFontDatabase
+        import ajustes_ui
+        hay = {f.lower() for f in QFontDatabase.families()}
+        opciones = [('', '', tr('Del tema'))] + [o for o in fuente_usuario.OPCIONES if o[0].lower() in hay]
+        prefs = ajustes_ui.leer_prefs()
+        v = QVBoxLayout(self)
+        v.setContentsMargins(0, 2, 0, 0)
+        v.setSpacing(6)
+        self._fichas = {}
+        for pref, titulo in ((fuente_usuario.PREF_PRINCIPAL, tr('Tipografía del texto principal')),
+                             (fuente_usuario.PREF_SECUNDARIA, tr('Tipografía de arriba y abajo'))):
+            v.addWidget(Etiqueta(titulo, 12, color='#8AA0C2'))
+            fila, cf = caja_h(espacio=6)
+            self._fichas[pref] = []
+            for familia, estilo, etiqueta in opciones:
+                ficha = _FichaFuente(familia, estilo, etiqueta, lambda val, p=pref: self._elegir(p, val))
+                self._fichas[pref].append(ficha)
+                cf.addWidget(ficha)
+            cf.addStretch(1)
+            v.addWidget(fila)
+            self._marcar(pref, str(prefs.get(pref) or ''))
+
+    def _marcar(self, pref, valor):
+        for f in self._fichas[pref]:
+            f.marcar(f.valor == valor)
+
+    def _elegir(self, pref, valor):
+        import ajustes_ui
+        self._marcar(pref, valor)
+        ajustes_ui.guardar_prefs({pref: valor})
+
+
 class CreaEstiloDialogo(Dialogo):
     """«Crea tu estilo», simple: una galería con los ejemplos (fondo de muestra y animación completa), tres botones «Texto alto / medio / bajo» para ordenarlos,
     se tocan hasta 3, se le pone nombre y «Crear mi pack» lo arma. al_crear(nombre, ids, terminado) arma el pack. al_resolve / al_ayuda / al_resolve_uno ya
@@ -335,6 +407,7 @@ class CreaEstiloDialogo(Dialogo):
         self._rejilla.setVerticalSpacing(10)
         self._desp.agregar(self._rejilla_w)
         capa.addWidget(self._desp, 1)
+        capa.addWidget(_TiraFuentes())                  # v5.5.12: la tipografía de los Temas (principal y arriba/abajo)
         for ej in E.EJEMPLOS:
             self._tarjetas[ej['id']] = _Tarjeta(ej, self._tocar)
         self._looks = MP.catalogo()

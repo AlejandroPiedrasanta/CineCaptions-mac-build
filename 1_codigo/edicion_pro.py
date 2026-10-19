@@ -47,13 +47,24 @@ OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_masc
                         # v5.5.8: Temas 5 y 6 con captions de Fusion EDITABLES (Inspector › texto) en vez de las animaciones de Remotion
                         'pro_captions_editables': True,
                         # v5.5.8: en Studio, el gancho del principio (captions detrás de la persona) con Magic Mask aunque el modo sea «auto»
-                        'pro_magic_gancho': True}
+                        'pro_magic_gancho': True,
+                        # v5.5.20: «Captions detrás de ti» (solo Studio): 'suave' | 'media' | 'fuerte' (menú lateral de Proyecto)
+                        'pro_detras_intensidad': 'media',
+                        # v5.5.13: el Tema 1 (neón): lo que el usuario encendió en el menú lateral de Proyecto (pro_lateral_ui); vacío = como la referencia
+                        'pro_neon_extras': []}
 NIVEL_SONIDOS_DB = {'suave': -5.0, 'normal': 0.0, 'fuerte': 3.0}
 FAMILIA_DE_PISTA = {'PRO-WHOOSH': 'whoosh', 'PRO-TEXTURA': 'textura', 'PRO-RISER': 'riser', 'PRO-HIT': 'riser'}
 NOMBRES_GENERO = {'auto': 'Automático', 'general': 'General', 'inmobiliaria': 'Inmobiliaria / venta de casas', 'boda': 'Bodas', 'xv': 'XV años',
                   'restaurante': 'Restaurantes', 'bts': 'Detrás de cámara'}
 MANIFIESTO = Path.home() / 'DaVinciSubtitles' / 'subtitles_manifest.json'
 DETRAS_CAPTIONS = {'sobria': 0.35, 'media': 0.55, 'espectaculo': 0.8}       # de los bloques de captions donde se puede, cuántos van DETRÁS de la persona
+# v5.5.20 (el usuario: «que exista en el menú la intensidad… que se aprecien los captions, que no los tape tanto la Magic Mask»): de los momentos
+# que valen, cuántos van detrás (frac); cuánto de la palabra GRANDE de abajo puede tapar la cabeza (tapa, fracción de su alto; tapa_max, del
+# cuadro) y cuántos tramos de Magic Mask como mucho (cada uno se rastrea en Resolve: pocos y cortos = Resolve estable)
+INTENSIDAD_DETRAS = {'suave': {'frac': 0.25, 'tapa': 0.2, 'tapa_max': 0.035, 'tramos': 3},
+                     'media': {'frac': 0.45, 'tapa': 0.3, 'tapa_max': 0.045, 'tramos': 5},
+                     'fuerte': {'frac': 0.7, 'tapa': 0.4, 'tapa_max': 0.06, 'tramos': 8}}
+NIVELES_DETRAS = ('suave', 'media', 'fuerte')
 TRAMO_DETRAS_MAX_S = 12.0                                                    # un recorte de la persona no pasa de esto (el rastreo del Magic Mask va por tramos)
 PUNCH_IN = 1.08                                                              # el «punch-in» que alterna en cada salto de V1 (pausas quitadas), como en la skill
 MARGEN_RECORTE_S = 0.8
@@ -85,6 +96,42 @@ def en_juego():
     """v5.5.7: ¿la PRO actúa en el próximo GO? Su interruptor, o el tema elegido es el 5 o el 6 (la usan siempre). Las páginas Efectos y Sonido lo
     miran para decir la verdad sobre lo que se aplica (antes, con el Tema 5 y el interruptor apagado, decían «PRO apagada»)."""
     return activado() or tema_actual() in TEMAS_PRO
+
+
+def neon_elegido():
+    """v5.5.13: ¿el tema elegido es el Tema 1 (pack «Kinetic»: su PRO es el estilo neón del kit)?"""
+    p = _prefs()
+    return str(p.get('go_pack') or p.get('plantilla') or '') == 'Kinetic'
+
+
+# v5.5.13 (el usuario: «si solo es captions, solo captions; si activo el modo PRO lo hará como el de referencia y si activo cosas del menú
+# también lo aplicará; pero el tema por defecto será como la referencia»): con el Tema 1, los interruptores del menú lateral de Proyecto
+# (pro_lateral_ui) son SUYOS: 'pro_neon_extras', por defecto ninguno = la referencia exacta; los de los demás temas no cambian.
+NEON_EXTRAS = ('pildora', 'broll', 'detras', 'motions_completo', 'gancho', 'escenas', 'kit', 'graficos', 'plantillas')
+
+
+def neon_extras(op=None):
+    op = opciones_guardadas() if op is None else op
+    return [c for c in op.get('pro_neon_extras') or [] if c in NEON_EXTRAS]
+
+
+def poner_neon_extra(clave, si):
+    guardar_opciones({'pro_neon_extras': [c for c in neon_extras() if c != clave] + ([clave] if si else [])})
+
+
+def opciones_neon(op):
+    """Las opciones de la PRO del Tema 1: las del usuario, con lo del menú lateral sacado de SUS interruptores ('_neon_extras')."""
+    import pro_lateral_ui as LAT
+    ex = set(neon_extras(op))
+    op = dict(op)
+    antes = str(op.get('pro_mascara') or 'auto')
+    op['pro_mascara'] = (antes if antes != 'no' else 'auto') if 'detras' in ex else 'no'
+    op['pro_internet'] = 'broll' in ex
+    op['pro_motions_completo'] = 'motions_completo' in ex
+    ids = [i for c in sorted(ex) for i in LAT.ids_de(c)]
+    op['pro_motions_modo'], op['pro_motions'] = 'elegidos', ids or ['-']      # ('-': ninguno; una lista vacía sería «todos»)
+    op['_neon_extras'] = sorted(ex)
+    return op
 
 
 def poner_activado(valor):
@@ -135,12 +182,42 @@ def _pesos_ia(palabras, idioma, al_estado=None):
         return None
 
 
-def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opciones=None, al_estado=None):
+def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opciones=None, al_estado=None, tema=None):
     op = dict(OPCIONES_POR_DEFECTO, **(opciones or opciones_guardadas()))
+    if tema == 'neon':
+        op = opciones_neon(op)
     w, h, dur, _fps = medir(video)
     pesos = _pesos_ia(palabras, idioma, al_estado) if op.get('pro_ia_local') else None
-    plan = PL.planificar(palabras, duracion or dur, idioma=idioma, genero=op.get('pro_genero') or 'auto', densidad=op.get('pro_densidad') or 'media',
-                         cortes=cortes, vertical=bool(h and w and h > w), pesos=pesos, semilla=int(op.get('pro_variacion') or 0), video=str(video))   # v5.5.3: la RUTA (colores y fotogramas del video para el kit y las escenas)
+    neon_mot = None
+    if tema == 'neon':
+        try:                                         # v5.5.13: la PRO del Tema 1 = los motions del kit «TEMA 1» (kit_neon_motions), no los gráficos genéricos
+            import kit_neon_motions as KM
+            neon_mot = KM.escena_motions(palabras, idioma, duracion or dur, cortes=cortes, video=str(video),
+                                         usuario=str(op.get('pro_usuario') or '') or None)
+        except Exception:
+            neon_mot = []
+    ocup_neon = [(m['ini'] - 0.3, m['fin'] + 0.3) for m in neon_mot or [] if m.get('capa') != 'iconos']
+    densidad = op.get('pro_densidad') or 'media'
+    grupos_neon = [c for c in op.get('_neon_extras') or [] if c not in ('detras', 'motions_completo', 'pildora')] if tema == 'neon' else []
+    if grupos_neon:                                  # v5.5.17: con el Tema 1 solo quedan los HUECOS entre los motions del kit: más densidad, o no cabía
+        densidad = 'espectaculo'                     # nada y lo encendido en el menú «no hacía nada» (probar_pro_lateral.py)
+    plan = PL.planificar(palabras, duracion or dur, idioma=idioma, genero=op.get('pro_genero') or 'auto', densidad=densidad,
+                         cortes=cortes, vertical=bool(h and w and h > w), pesos=pesos, semilla=int(op.get('pro_variacion') or 0), video=str(video),   # v5.5.3: la RUTA (colores y fotogramas del video para el kit y las escenas)
+                         tema=tema, bloqueado=ocup_neon)
+    plan['tema'] = tema
+    plan['_cortes'] = list(cortes or [])
+    if tema == 'neon':
+        neonizar(plan)
+        plan['kitneon_motions'] = neon_mot
+        plan['_palabras'] = [{k: p.get(k) for k in ('word', 'start', 'end')} for p in palabras or [] if p.get('start') is not None]
+        extras = [c for c in op['_neon_extras'] if c not in ('detras', 'motions_completo', 'pildora')]
+        if extras:                                   # lo encendido en el menú lateral: los motions de siempre, SOLO donde no hay uno del kit
+            plan['piezas'] = [p for p in plan.get('piezas') or [] if not any(p['ini'] < b and a < p['fin'] for a, b in ocup_neon)]
+        else:
+            plan['piezas'] = []
+        plan['resumen'] = 'Tema 1 neón: ' + ', '.join(m['fn'] for m in neon_mot)
+        if op['_neon_extras']:
+            plan['resumen'] += ' + menú: ' + ', '.join(op['_neon_extras'])
     plan['video'] = str(video)
     plan['opciones'] = op
     plan['idioma'] = idioma
@@ -148,13 +225,63 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
     try:                                             # v5.5.7: solo los motions que el usuario permitió (el seguro final; la IA y las reglas ya no los proponen)
         import motions_catalogo as MC
         plan['piezas'] = MC.filtrar(plan.get('piezas') or [], op)
+        if grupos_neon:                              # v5.5.17: cuánto puso cada grupo del menú (al Registro): sin momentos para él, dicho, no «falla»
+            import pro_lateral_ui as LAT
+            cuenta = {c: sum(1 for p in plan['piezas'] if MC.id_de_pieza(p) in set(LAT.ids_de(c))) for c in grupos_neon}
+            plan['_neon_extras_puestos'] = cuenta
+            nombres = {o['clave']: o['nombre'] for o in LAT.OPCIONES}
+            plan['resumen'] += ' · del menú: ' + ', '.join(f'{nombres.get(c, c)} {n}' if n else f'{nombres.get(c, c)} 0 (este video no tiene un momento '
+                                                           'libre para eso)' for c, n in cuenta.items())
     except Exception:
         pass
-    plan['broll'] = _broll_de(palabras, duracion or dur, idioma, op, plan)
+    plan['broll'] = _broll_de(palabras, duracion or dur, idioma, op, plan) if (tema != 'neon' or op.get('pro_internet')) else []
+    if tema == 'neon' and plan['broll']:            # (Tema 1: el B-roll del menú, nunca encima de un motion del kit)
+        plan['broll'] = [m for m in plan['broll'] if not any(m['ini'] < b and a < m['ini'] + m['dur'] for a, b in ocup_neon)]
     _referencias(plan)
     soltar_gpu()                                     # v5.5.4: la IA ya eligió: su VRAM, para Resolve (que en ese momento está armando el timeline)
     if plan['broll']:
         plan['resumen'] = plan.get('resumen', '') + f", {len(plan['broll'])} tomas de B-roll"
+    return plan
+
+
+# v5.5.13 — TEMA NEÓN (pedido: «aplica el tema-neon al Tema 1… las opciones de captions y las de la PRO»; kit Escritorio/TEMA 1/graficos/tema-neon.css):
+# con el Tema 1 la PRO no saca los colores del video: magenta de acento, lima de segundo acento, texto blanco y paneles morados oscuros
+NEON = {'acento': '#FF2DCB', 'acento2': '#D6FF3B', 'colorTexto': '#FFFFFF', 'colorPanel': '#14101E', 'colorBloque': '#2A1258'}
+
+
+def neonizar(plan):
+    """Pone la paleta neón en TODOS los acentos del plan (dirección de arte, kit de la skill, plantillas del catálogo, escenas): un solo paso al final,
+    así ninguna pieza se queda con el color del video o el suyo de fábrica. Respeta las que guardan su color a propósito (edicion_pro_kit7.SIN_ACENTO,
+    ConceptoK) y los colores que no son de acento (velos negros, textos)."""
+    try:
+        import edicion_pro_kit7 as K7
+        propios = set(K7.SIN_ACENTO) | {'ConceptoK'}
+    except Exception:
+        propios = {'ConceptoK'}
+
+    def pintar(d):
+        if isinstance(d, dict):
+            for k, v in list(d.items()):
+                if isinstance(v, str) and v.startswith('#') and k in NEON:
+                    d[k] = NEON[k]
+                elif isinstance(v, (dict, list)):
+                    pintar(v)
+        elif isinstance(d, list):
+            for x in d:
+                pintar(x)
+
+    if isinstance(plan.get('direccion'), dict):
+        plan['direccion'].update({k: v for k, v in NEON.items() if k != 'acento2'})
+    for p in plan.get('piezas') or []:
+        if p.get('remotion') in propios:
+            continue
+        v = p.get('valores')
+        if isinstance(v, dict) and p.get('pieza') == 'fondo':           # el fondo de las escenas: el morado del kit (#7A35F5 → #140A28) con brillo magenta
+            v.update(color1=NEON['acento'], color2='#140A28', color3='#7A35F5')        # (aurora: color3 → color2 de base, color1 los brillos)
+        if isinstance(v, dict):
+            pintar(v)
+            if p.get('remotion') and str(p['remotion']).endswith('K') and v.get('tema') != 'editorial':
+                v.update(acento=NEON['acento'], acento2=NEON['acento2'], tema='neoncc')   # el kit (Kit7.tsx): su paleta «neoncc», magenta + lima
     return plan
 
 
@@ -316,6 +443,23 @@ def _a_timeline(det, clip, W, H):
         ps.append(n)
     return {'personas': ps, 'arriba': min(q['bbox'][1] for q in ps), 'abajo': max(q['bbox'][3] for q in ps),
             'izq': min(q['bbox'][0] for q in ps), 'der': max(q['bbox'][2] for q in ps)}
+
+
+def _y_en_fuente(y_tl, clip, W, H):
+    """v5.5.20: la inversa de _a_timeline para una ALTURA: (fracción del alto de la fuente del clip de V1, alto de la fuente en píxeles)."""
+    if not clip:
+        return y_tl, float(H)
+    try:
+        w, h = (int(x) for x in str(clip.get('res') or '').lower().replace(' ', '').split('x')[:2])
+    except (TypeError, ValueError):
+        w, h = W, H
+    if w <= 0 or h <= 0:
+        w, h = W, H
+    s = min(W / float(w), H / float(h))
+    sy = h * s / H
+    zy = float(clip.get('zy') or 1.0)
+    tilt = float(clip.get('tilt') or 0.0)
+    return ((y_tl - 0.5 + tilt / H) / zy + sy / 2.0) / sy, float(h)
 
 
 ALTO_PIEZA = {'cifra': 0.17, 'rotulo': 0.12, 'lista': 0.25, 'etiqueta': 0.08, 'cta': 0.30, 'icono': 0.29, 'titular': 0.15, 'nombres': 0.17}
@@ -492,6 +636,32 @@ def _comp_magic(puntos, ref, ruta, herramienta='CCProMagic'):
     return Path(ruta)
 
 
+def intensidad_detras(op=None):
+    """v5.5.20: la intensidad de «Captions detrás de ti» ('suave' | 'media' | 'fuerte')."""
+    op = opciones_guardadas() if op is None else op
+    v = str(op.get('pro_detras_intensidad') or 'media')
+    return v if v in INTENSIDAD_DETRAS else 'media'
+
+
+def detras_disponible():
+    """v5.5.20 (el usuario: «que sirva para DaVinci Resolve Studio; en la versión Free no aparece la opción»): «Captions detrás de ti» va SOLO
+    con Studio (Magic Mask); ni en Free ni en el video MP4 sin Resolve. Barato y sin preguntar a Resolve (se llama desde la interfaz): lo último
+    que se supo de la edición instalada (instalador_scripts la detecta y la guarda)."""
+    if os.environ.get('CINECAPTIONS_SIN_RESOLVE') == '1':
+        return False
+    try:
+        import ajustes_ui
+        if ajustes_ui.leer_prefs().get('go_salida_mp4'):
+            return False
+    except Exception:
+        pass
+    try:
+        import instalador_scripts as ins
+        return (ins._CACHE_EDICION.get('valor') or ins._edicion_guardada()) == 'studio'
+    except Exception:
+        return False
+
+
 def _bloques_captions():
     """Los bloques de captions de los Temas 1–4 que GO acaba de colocar (estilos «guion» y «kinetic»/VIRAL del manifiesto, del idioma base):
     [{'ini', 'fin' (s), 'arriba', 'abajo' (la caja de la pila, fracción del alto desde ARRIBA), 'linea' (alto de su línea de abajo),
@@ -559,18 +729,21 @@ def _cabeza(det):
     return y0, (p['puntos'][0][0] if p.get('puntos') else (x0 + x1) / 2.0), y1 - y0, cab
 
 
-def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), W=1080, H=1920):
+def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), W=1080, H=1920, intensidad=None, bloques=None, a_cuadro=None):
     """Qué bloques de captions van DETRÁS de la persona y cuánto suben. Un bloque vale si la persona es grande, su cabeza no se sale por arriba,
     está quieta en todo el bloque (misma toma), la pila le cae encima en horizontal y no hay otro gráfico ni B-roll en ese momento. La pila sube (o
     baja) hasta que su borde de abajo queda un poco por debajo de la coronilla: la cabeza tapa la parte de abajo de la palabra grande y el resto se lee.
     El primero que vale entra siempre (el gancho), también los de `preferidos` (las palabras fuertes y las preguntas que la PRO ya no repite en un
     titular) y el resto se alternan (`DETRAS_CAPTIONS`): el contraste también retiene.
-    Devuelve los tramos [{'ini', 'fin' (s), 'det', 't_det', 'cues': [{'ini', 'fin', 'subir' (fracción del alto, + = arriba)}]}]."""
-    bloques = _bloques_captions()
+    Devuelve los tramos [{'ini', 'fin' (s), 'det', 't_det', 'cues': [{'ini', 'fin', 'subir' (fracción del alto, + = arriba)}]}].
+    v5.5.20: `intensidad` (INTENSIDAD_DETRAS) manda en cuántos y cuánto tapa; `bloques` = los del tema (el Tema 1 da los suyos, kit_neon.bloques_pro)
+    y `a_cuadro(det, t)` pasa la detección de la fuente a lo que se VE (el Tema 1: la placa con sus zooms; None = ahí no se puede)."""
+    bloques = _bloques_captions() if bloques is None else bloques
     if not bloques:
         return []
     decir('Edición PRO: buscando dónde los captions van detrás de la persona…')
-    frac = DETRAS_CAPTIONS.get(densidad, 0.55)
+    cfg = INTENSIDAD_DETRAS.get(intensidad) if intensidad else None
+    frac = cfg['frac'] if cfg else DETRAS_CAPTIONS.get(densidad, 0.55)
     elegidos, acum = [], 1.0 - frac
     for k, b in enumerate(bloques):
         a, z = b['ini'], b['fin']
@@ -580,50 +753,74 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
         pref = any(a < p1 and p0 < z for p0, p1 in preferidos)
         if acum < 0.999 and not pref:
             continue
+        if b.get('grande_abajo') is False:
+            continue                                                  # (v5.5.20: la cabeza solo tapa la palabra GRANDE; nunca una línea pequeña)
+        if z - a < 1.0:
+            continue                                                  # (v5.5.20: un caption de medio segundo que salta arriba y vuelve se ve forzado)
         r0, t0, c0 = _fuente_de(info, video, a + 0.12)
         r1, t1, c1 = _fuente_de(info, video, max(a + 0.12, z - 0.15))
         if c0 is not c1:
             continue                                                  # cruza un corte de V1: el recorte no seguiría a la persona
         try:
             d0, d1 = _personas(r0, t0), _personas(r1, t1)
-            h0, h1 = _cabeza(_a_timeline(d0, c0, W, H)), _cabeza(_a_timeline(d1, c1, W, H))
+            if a_cuadro is not None:
+                v0, v1_ = a_cuadro(d0, a + 0.12), a_cuadro(d1, max(a + 0.12, z - 0.15))
+                if v0 is None or v1_ is None:
+                    continue
+            else:
+                v0, v1_ = _a_timeline(d0, c0, W, H), _a_timeline(d1, c1, W, H)
+            h0, h1 = _cabeza(v0), _cabeza(v1_)
         except Exception:
             continue
         if not h0 or not h1 or abs(h0[0] - h1[0]) > 0.05 or abs(h0[1] - h1[1]) > 0.08:
             continue
-        coronilla, cab_x, alto_p, cab = (h0[0] + h1[0]) / 2.0, (h0[1] + h1[1]) / 2.0, min(h0[2], h1[2]), min(h0[3], h1[3])
+        coronilla, cab_x, alto_p, cab = min(h0[0], h1[0]), (h0[1] + h1[1]) / 2.0, min(h0[2], h1[2]), min(h0[3], h1[3])   # (v5.5.20: la cabeza en su punto MÁS ALTO: nunca tapa más de lo que deja la intensidad)
         if coronilla < 0.08 or coronilla > 0.62 or alto_p < 0.3:
             continue
         if not (min(b['xs']) - 0.16 <= cab_x <= max(b['xs']) + 0.16):
             continue
         # cuánto de la pila tapa la cabeza: hasta la frente (~40 % de la cabeza), sin pasar del 45 % de la línea de abajo (la palabra se sigue
         # leyendo); en un plano entero (cabeza pequeña) tapa poco y en un primer plano mucho más
-        tapa = max(0.012, min(0.055, 0.4 * cab, 0.45 * b['linea']))
+        tapa = max(0.012, min(cfg['tapa_max'] if cfg else 0.055, 0.4 * cab, (cfg['tapa'] if cfg else 0.45) * b['linea']))
         dy = coronilla + tapa - b['abajo']
-        if b['arriba'] + dy < 0.06:
-            dy = 0.06 - b['arriba']
-        if b['abajo'] + dy < coronilla + 0.012 or b['abajo'] + dy > 0.9:
+        if b['arriba'] + dy < 0.08:
+            continue                                                  # (v5.5.20: no sube al borde de arriba del cuadro —«EMPRESA» pegado arriba—)
+        if b['abajo'] + dy < coronilla + 0.012 or b['abajo'] + dy > 0.9 or b['abajo'] + dy - coronilla > tapa + 0.004:
             continue
+        # (v5.5.20: si la pila no puede subir más —choca arriba— la cabeza taparía más de lo que deja la intensidad: ese bloque no va detrás)
         acum = max(0.0, acum - 1.0)
-        caras = _caras(_a_timeline(d0, c0, W, H)) + _caras(_a_timeline(d1, c1, W, H))
-        elegidos.append(dict(b, k=k, subir=-dy, clip=c0, det=d0, t_det=a + 0.12, caras=caras))
+        caras = _caras(v0) + _caras(v1_)
+        elegidos.append(dict(b, k=k, subir=-dy, clip=c0, det=v0 if a_cuadro is not None else d0, t_det=a + 0.12, caras=caras))
     # los bloques seguidos (de la misma toma) comparten un solo recorte de la persona: menos rastreos de Magic Mask
     tramos = []
     for e in elegidos:
         k = e['k']
-        sig = bloques[k + 1]['ini'] if k + 1 < len(bloques) else e['fin'] + 0.3
-        fin = max(e['ini'] + 0.3, min(e['fin'] + 0.2, sig))           # sin tapar el bloque siguiente (ese va normal, delante)
-        cue = {'ini': e['ini'], 'fin': e['fin'], 'subir': round(e['subir'], 4), 'caras': e['caras'],
+        # v5.5.20: por debajo de `corte` la persona recortada no hace falta (es idéntica a lo que tiene debajo): colocar_pro recorta ahí su
+        # capa. Así puede quedarse hasta que el caption termina de SALIR (antes se iba a media salida y el texto saltaba delante de la cabeza)
+        # sin tapar el bloque siguiente, que va en su sitio, más abajo
+        corte = min(1.0, e['abajo'] - e['subir'] + 0.08)
+        sig_b = bloques[k + 1] if k + 1 < len(bloques) else None
+        sig = sig_b['ini'] if sig_b else e['fin'] + 0.3
+        if sig_b is None or sig_b['arriba'] > corte + 0.01:
+            fin = max(e['ini'] + 0.3, e['fin'] + float(e.get('salida', 0.35)))
+        else:
+            fin = max(e['ini'] + 0.3, min(e['fin'] + 0.2, sig))       # sin tapar el bloque siguiente (ese va normal, delante)
+        cue = {'ini': e.get('ini_clip', e['ini']), 'fin': e['fin'], 'subir': round(e['subir'], 4), 'caras': e['caras'],
                'caja': [round(e['arriba'] - e['subir'], 4), round(e['abajo'] - e['subir'], 4)]}     # v5.5.2: dónde queda el caption (sus emojis no lo pisan)
         t = tramos[-1] if tramos else None
         if t and t['k'] == k - 1 and t['clip'] is e['clip'] and fin - t['ini'] <= TRAMO_DETRAS_MAX_S:
-            t.update(fin=fin, k=k)
+            t.update(fin=fin, k=k, corte=max(t.get('corte', 0.0), corte))
             t['cues'].append(cue)
             continue
         ini = e['ini']
         if k > 0 and bloques[k - 1]['fin'] > ini:
             ini = min(bloques[k - 1]['fin'], fin - 0.3)               # el bloque anterior aún sale: la persona entra cuando se va
-        tramos.append({'ini': ini, 'fin': fin, 'k': k, 'clip': e['clip'], 'det': e['det'], 't_det': e['t_det'], 'cues': [cue]})
+        tramos.append({'ini': ini, 'fin': fin, 'k': k, 'clip': e['clip'], 'det': e['det'], 't_det': e['t_det'], 'cues': [cue], 'corte': corte})
+    for a_, b_ in zip(tramos, tramos[1:]):                           # (dos recortes no se pisan en PRO-ENCIMA: colocar_pro quitaría el 2.º)
+        a_['fin'] = max(a_['ini'] + 0.2, min(a_['fin'], b_['ini']))
+    if cfg and len(tramos) > cfg['tramos']:
+        tramos = tramos[:1] + sorted(tramos[1:], key=lambda t: -(t['fin'] - t['ini']))[:cfg['tramos'] - 1]   # el gancho y los más largos
+        tramos.sort(key=lambda t: t['ini'])
     return tramos
 
 
@@ -802,7 +999,7 @@ def _caras_redondas(caras):
 def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     """Pone la Edición PRO en el timeline actual. Devuelve (ok, mensaje)."""
     decir = al_estado or (lambda t: None)
-    if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero')
+    if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or plan.get('kitneon')
                         or (plan.get('opciones') or opciones_guardadas()).get('pro_motions_completo')):        # v5.5.8: también solo motions
         return True, ''
     info = info or _info_timeline()
@@ -830,12 +1027,18 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     cap_t5 = t5 and (plan.get('opciones') or {}).get('pro_captions_editables', True) is False
     soltar_gpu(texto=not t5)                         # v5.5.4: la GPU para Resolve y el Magic Mask (el Tema 5 aún usa la IA de texto: la suelta él al acabar)
     ligero = bool(plan.get('ligero'))              # Temas 1–4 sin la PRO: solo legibilidad, acompañantes, color y la regla de la cara (edicion_pro_temas)
+    neon_tema = bool(plan.get('kitneon'))          # v5.5.13: Tema 1 neón = el estilo del kit: sin persona encima, iconos 3D, acompañantes ni punch-in alterno
+    ex_neon = set(op.get('_neon_extras') or []) if neon_tema and not ligero else set()   # …salvo lo que el usuario encendió en el menú lateral
+    if neon_tema and plan.get('kitneon_motions') and not plan.get('_neon_ajustado'):
+        import kit_neon_motions as KM            # donde hay un motion de abajo, ese caption sobra (el motion ya lo dice); antes de lo del menú
+        plan['kitneon'] = KM.ajustar_captions(plan['kitneon'], plan['kitneon_motions'])
+        plan['_neon_ajustado'] = True
     divididas = []
     # punch-in de 1,08 en V1 alterno cuando hay saltos (pausas quitadas): lo coloca colocar_pro y las cuentas de posición ya lo tienen en cuenta
     # (antes de planificar el Tema 5: el sticker congelado y la pantalla final copian el encuadre de su clip)
     punch = []
     v1 = sorted(info.get('v1') or [], key=lambda c: c['ini'])
-    if len(v1) >= 2 and not any(c.get('fx') for c in v1) and not ligero:
+    if len(v1) >= 2 and not any(c.get('fx') for c in v1) and not ligero and not neon_tema:
         for n, c in enumerate(v1):
             if n % 2 == 1 and abs(float(c.get('zx') or 1.0) - 1.0) < 1e-3 and abs(float(c.get('zy') or 1.0) - 1.0) < 1e-3:
                 c['zx'] = c['zy'] = PUNCH_IN
@@ -886,6 +1089,20 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     clave = hashlib.sha1(f'{video}|{W}x{H}@{fps}'.encode('utf-8')).hexdigest()[:10]
     carpeta = OG.ruta_larga(CARPETA / clave)
     carpeta.mkdir(parents=True, exist_ok=True)
+    # v5.5.13: Tema 1 neón con la PRO: la PLACA del kit (cámara con muelle, deriva, desenfoques) renderizada en otro hilo mientras va lo demás;
+    # solo si V1 es el video entero (con pausas quitadas no cuadraría con la fuente)
+    hilo_placa, placa_res = None, {}
+    v1_neon = sorted(info.get('v1') or [], key=lambda c: c['ini'])
+    if neon_tema and not ligero and plan.get('kitneon_motions') is not None and len(v1_neon) == 1 and not int(v1_neon[0].get('izq') or 0):
+        # (v5.5.14: SIN «import threading» aquí: lo volvía local en toda la función y, sin este tramo, «Motions completo» caía con UnboundLocalError)
+        def _placa():
+            try:
+                import kit_neon_placa as PLA
+                placa_res['ruta'] = PLA.para_pro(video, plan, carpeta, W, H, fps, progreso=lambda f: placa_res.update(f=float(f)))
+            except Exception:
+                placa_res['ruta'] = None
+        hilo_placa = threading.Thread(target=_placa, daemon=True, name='placa-neon')
+        hilo_placa.start()
     # v5.5.9 (el usuario: «más tareas en paralelo, más rapidez»): lo que no depende de nada de lo de abajo arranca YA, en otro hilo, y se recoge
     # donde antes se hacía: «Motions completo» (su render de Remotion corre mientras se buscan las personas, se recortan y se revisan los
     # gráficos) y la descarga del B-roll de stock (la red, mientras la GPU trabaja)
@@ -900,8 +1117,13 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             fondo['mc_dur'] = dur_mc
             # sin la IA de texto: con ella el plan tardaba ~110 s (y volvía a cargar en la GPU el modelo que la PRO suelta para Resolve) para
             # unas pocas propuestas que ya pesan menos que las reglas
-            fondo['mc'] = MCO.crear(bl, dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', plan.get('perfil') or {}, video, decir,
-                                    ia=bool(op.get('pro_motions_ia', False))) if bl and dur_mc > 1.0 else None
+            if plan.get('tema') == 'neon' and plan.get('_palabras'):     # v5.5.17: el Tema 1: con las piezas del kit «TEMA 1» (kit_neon_completo)
+                import kit_neon_completo as KC
+                fondo['mc'] = KC.crear(plan['_palabras'], dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', video, decir) if dur_mc > 1.0 else None
+                fondo['mc_neon'] = True
+            else:
+                fondo['mc'] = MCO.crear(bl, dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', plan.get('perfil') or {}, video, decir,
+                                        ia=bool(op.get('pro_motions_ia', False))) if bl and dur_mc > 1.0 else None
         except Exception as e:
             fondo['mc_error'] = e
 
@@ -1029,13 +1251,29 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     plan['_broll_puesto'] = [{'ini': t['_s']} for t in tomas]
     # captions DETRÁS de la persona (lo que hace que valga la pena el Magic Mask)
     encima, tramos = [], []
-    if hay_ia and modo_mascara != 'no' and not cap_t5 and not ligero:
+    # v5.5.20 (el usuario: «más inteligente, con Magic Mask… igual en los Temas 1 a 6… solo Studio; en Free no aparece»): SOLO en Resolve Studio y
+    # SIEMPRE con Magic Mask (puntos solo sobre PERSONAS: la IA local los pone; nunca objetos), con su salida cacheada (colocar_pro: render cache
+    # de Fusion = el matte con alfa ya calculado); en Free ni en el MP4 hay «detrás de ti». La intensidad del menú dice cuántos y cuánto tapan.
+    # El Tema 1 da sus bloques (los clips neón) y, con la placa, la detección y el recorte salen de la PLACA (lo que se ve, con sus zooms).
+    if hay_ia and studio and modo_mascara != 'no' and not cap_t5 and not ligero and (not neon_tema or 'detras' in ex_neon):
         ocupado = [(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p['pieza'] != 'marco']
+        ocupado += [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan.get('kitneon_motions') or [] if neon_tema]   # (Tema 1: nunca tapa un motion del kit)
         ocupado += [(t['_s'] - 0.1, t['_s'] + t['dur'] + 0.1) for t in tomas]
         ocupado += [((a - info['base']) / fps, (b - info['base']) / fps) for a, b in info.get('ocupado') or []]
+        bloques_tema, a_cuadro = None, None
+        if neon_tema:
+            import kit_neon as KN
+            bloques_tema = KN.bloques_pro(plan.get('kitneon') or [])
+            if hilo_placa is not None:
+                try:
+                    import kit_neon_placa as PLA
+                    a_cuadro = PLA.mapa_camara(video, plan, W, H)
+                except Exception:
+                    bloques_tema = []                                    # sin saber dónde queda la persona en la placa, nada detrás
         try:
             tramos = _captions_detras(info, video, fps, ocupado, op.get('pro_densidad') or 'media', decir,
-                                      preferidos=[tuple(x) for x in plan.get('detras_pref') or []], W=W, H=H)
+                                      preferidos=[tuple(x) for x in plan.get('detras_pref') or []], W=W, H=H,
+                                      intensidad=intensidad_detras(op), bloques=bloques_tema, a_cuadro=a_cuadro)
         except Exception:
             tramos = []
         for t in tramos:
@@ -1045,27 +1283,24 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                                                             'subir': round(c['subir'] * H, 1), 'caras': _caras_redondas(c.get('caras')),
                                                             'caja': c.get('caja')}
                                                            for c in t['cues']]}
-            gancho = magic_gancho and t is tramos[0] and t['ini'] < 6.0           # (el primero que vale es el gancho: _captions_detras lo mete siempre)
-            if usar_magic or gancho:
-                comp = _comp_magic(PE.puntos_fusion(t['det']), ref, carpeta / f'encima_{f0}_{f1}.comp', f'CCProMagicE{f0}')
-                e.update(modo='magic', comp=str(OG.ruta_larga(comp)), herramienta=f'CCProMagicE{f0}')
-            elif usar_ia:
-                decir('Edición PRO: recortando a la persona con IA local…')
-                ruta, t_src, _c = _fuente_de(info, video, t['ini'])
-                destino = carpeta / f'encima_{f0}_{f1}.mov'
-                try:
-                    if not destino.exists():
-                        PE.recorte_prores(ruta, t_src, t_src + (t['fin'] - t['ini']), destino)
-                    e.update(modo='clip', archivo=str(OG.ruta_larga(destino)))
-                except Exception:
-                    continue
-            else:
-                continue
+            comp = _comp_magic(PE.puntos_fusion(t['det']), ref, carpeta / f'encima_{f0}_{f1}.comp', f'CCProMagicE{f0}')
+            e.update(modo='magic', comp=str(OG.ruta_larga(comp)), herramienta=f'CCProMagicE{f0}')
+            corte = float(t.get('corte') or 1.0)
+            if corte < 0.995:
+                if a_cuadro is not None:
+                    e['recorte_px'] = int(round((1.0 - corte) * H))       # (la placa va a la resolución del timeline)
+                else:
+                    y_src, alto_src = _y_en_fuente(corte, t.get('clip'), W, H)
+                    e['recorte_px'] = int(round(max(0.0, (1.0 - y_src) * alto_src)))
+            if a_cuadro is not None:
+                e['fuente'] = 'placa'                                    # (colocar_pro: la copia sale del clip de la placa, PRO-ZOOM)
+            if neon_tema:
+                e['subs_pro'] = True                                     # (los captions del Tema 1 son clips en PRO-SUBS / PRO-SUBS2)
             # v5.5.2: SIN el velo oscuro detrás de estos captions (el usuario: «los captions tienen una sombra fea»); la persona encima ya los separa
             encima.append(e)
     # el resto de los bloques de captions: ninguno tapa una cara (y colocar_pro aparta sus emojis)
     mover = []
-    if hay_ia and not cap_t5:
+    if hay_ia and not cap_t5 and not neon_tema:
         try:
             pantallas = [(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p.get('pantalla') and (p['ini'], p['fin']) not in ventanas]
             pantallas += [(t['_s'] - 0.1, t['_s'] + t['dur'] + 0.1) for t in tomas]
@@ -1103,7 +1338,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         caras_de = {round(c['ini'], 2): c.get('caras') or [] for t in tramos for c in t['cues']}
         caras_de.update({round(c['ini'], 2): c['caras'] for c in sin_cara})
         ocupado3d = [(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p.get('pantalla')] + [(t['_s'], t['_s'] + t['dur']) for t in tomas]
-        iconos3d = [] if (t5 or ligero) else _iconos3d_captions(info, ocupado3d, subidas, caras_de, W, H, op.get('pro_densidad') or 'media')
+        iconos3d = [] if (t5 or ligero or neon_tema) else _iconos3d_captions(info, ocupado3d, subidas, caras_de, W, H, op.get('pro_densidad') or 'media')
     except Exception:
         iconos3d = []
     acento = (plan.get('direccion') or {}).get('acento') or '#ffb020'
@@ -1113,10 +1348,17 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         sin_emoji.append([int(round(c['ini'] * fps)) - 2, int(round(c['fin'] * fps))])
     plan['_iconos3d'] = iconos3d
     color_claves = None
-    if ligero or not t5:                             # Temas 1–4: el velo de legibilidad y los acompañantes, YA con la regla de la cara aplicada (mover)
+    if (ligero or not t5) and not plan.get('solo_captions') and (not neon_tema or 'pildora' in ex_neon):   # Temas 1–4: el velo de legibilidad y los acompañantes, YA con la regla de la cara aplicada (mover)
         try:                                         # v5.5.4: también CON la Edición PRO (pedido: «algún motion debajo de los captions, aunque sea 1 o 2»)
             import edicion_pro_temas as TM
-            extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None if ligero else 3)
+            if neon_tema:                            # v5.5.13: Tema 1 con «Píldora» en el menú: bajo SUS captions neón y nunca con un motion del kit
+                import kit_neon as KN
+                import kit_neon_motions as KM
+                extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, [],
+                                  dict(plan, piezas=list(plan.get('piezas') or []) + KM.piezas(plan.get('kitneon_motions') or [])),
+                                  maximo=3, bloques=KN.bloques_pro(plan['kitneon']))
+            else:
+                extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None if ligero else 3)
             extra = [p for p in extra if not any(p['ini'] < t['fin'] and t['ini'] < p['fin'] for t in tramos)]   # (no bajo un caption que va detrás)
             plan['piezas'] = list(plan.get('piezas') or []) + extra
             if ligero:
@@ -1143,6 +1385,14 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             VG.revisar_ia(plan['piezas'], dichas, plan.get('idioma') or 'es', estado=decir)
     except Exception:
         pass
+    neon = []
+    if plan.get('kitneon'):                         # v5.5.13: el Tema 1 neón: sus captions con el motor del kit (KitNeon) en PRO-SUBS / PRO-SUBS2
+        import kit_neon as KN
+        if plan.get('kitneon_motions'):              # con la PRO: los motions del kit (los captions ya se ajustaron a ellos arriba)
+            import kit_neon_motions as KM
+            plan['piezas'] = list(plan.get('piezas') or []) + KM.piezas(plan['kitneon_motions'])
+        neon = KN.piezas(plan['kitneon'])
+        plan['piezas'] = list(plan.get('piezas') or []) + neon
     # las animaciones de Remotion (mapa + bandera…): todas en una tanda, con un solo navegador; sin Remotion, esas escenas no van
     rm_salida, rm_hechos = {}, {}
     try:
@@ -1195,10 +1445,13 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                     sal = con_sombra(p, sal) or sal
                 graficos.append({'capa': p['capa'], 'ini': int(round(p['ini'] * fps)), 'archivo': str(OG.ruta_larga(sal)), 'alfa': True,
                                  'dur': round(p['fin'] - p['ini'], 3),             # v5.5.8: el vigilante comprueba que el clip dure lo que debe
-                                 'nombre': 'PRO · ' + ({'Ubicacion': 'Mapa + bandera', 'Subtitulo': 'Caption', 'PasosT5': 'Pasos', 'DeslizadorT5': 'Deslizador',
+                                 # v5.5.13: los motions del Tema 1 NO se llaman «Caption…»: colocar_pro._revisar_persona pasaba los «PRO · Caption» de
+                                 # PRO-DETRAS sin persona encima a PRO-DELANTE y, si allí no cabían, los BORRABA (se perdían las pantallas divididas)
+                                 'nombre': 'PRO · ' + ('Motion neón' if p['pieza'] == 'neon_motion' else
+                                                       {'Ubicacion': 'Mapa + bandera', 'Subtitulo': 'Caption', 'PasosT5': 'Pasos', 'DeslizadorT5': 'Deslizador',
                                                          'EscenaT5': 'Escena', 'AcompananteT5': 'Acompañante', 'VeloCaptionT': 'Velo de legibilidad',
                                                          'TarjetaT5': 'Tarjeta', 'OrbitaT5': 'Órbita', 'StickerT5': 'Sticker',
-                                                         'FinalT5': 'Pantalla final', 'EditorialT6': 'Editorial'}.get(p['remotion'])
+                                                         'FinalT5': 'Pantalla final', 'EditorialT6': 'Editorial', 'KitNeon': 'Caption neón'}.get(p['remotion'])
                                                         or p.get('plantilla') or p['remotion'])})
             continue
         if (p['ini'], p['fin']) in sin_persona:
@@ -1261,6 +1514,18 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             sin_emoji.append([int(round(float(p['ini']) * fps)) - 3, int(round(float(p['fin']) * fps)) + 3])
     subs = [p for p in plan['piezas'] if p['pieza'] == 'subtitulo']
     subs_ok = sum(1 for p in subs if rm_hechos.get(str(rm_salida.get(id(p)))))
+    neon_ok = sum(1 for p in neon if rm_hechos.get(str(rm_salida.get(id(p)))))
+    if hilo_placa is not None:
+        decir('Edición PRO: terminando la placa del Tema 1 neón (cámara y desenfoques)…')
+        import time as _t
+        hasta = _t.time() + 1800
+        while hilo_placa.is_alive() and _t.time() < hasta:     # v5.5.13: con señales (el vigilante de GO la daba por atascada a los 4 min)
+            hilo_placa.join(15)
+            if hilo_placa.is_alive():
+                decir(f"Edición PRO: terminando la placa del Tema 1 neón ({int(100 * placa_res.get('f', 0.0))} %)…")
+        if placa_res.get('ruta'):
+            graficos.append({'capa': 'placa', 'ini': 0, 'archivo': str(OG.ruta_larga(placa_res['ruta'])), 'alfa': False,
+                             'dur': round(float(plan.get('duracion') or 0), 3), 'nombre': 'PRO · Placa neón (cámara)'})
     if 'mc' in hilos_fondo:                                        # v5.5.8: «Motions completo», encima de todo (v5.5.9: se hacía en paralelo)
         try:
             import motions_completo as MCO
@@ -1277,7 +1542,12 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                     import edicion_pro_sonido as PS
                     familias = dict(op.get('pro_sonidos_familias') or {})
                     extra_db = NIVEL_SONIDOS_DB.get(str(op.get('pro_sonidos_nivel') or 'normal'), 0.0)
-                    for e in MCO.sonidos(mc, fps, rng, voz_db if voz_db is not None else PS.nivel_voz(video)):
+                    if fondo.get('mc_neon'):
+                        import kit_neon_completo as KC
+                        eventos_mc = KC.sonidos(KC.plan_de(mc), fps, voz_db if voz_db is not None else PS.nivel_voz(video))
+                    else:
+                        eventos_mc = MCO.sonidos(mc, fps, rng, voz_db if voz_db is not None else PS.nivel_voz(video))
+                    for e in eventos_mc:
                         if familias.get(FAMILIA_DE_PISTA.get(str(e.get('pista')), 'textura'), True) is False:
                             continue
                         e['db'] = float(e.get('db') or 0.0) + extra_db
@@ -1299,7 +1569,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     except Exception:
         pass
     datos = {'fps': fps, 'inicio': info['base'], 'graficos': graficos, 'persona': persona, 'sonidos': sonidos, 'cache': True,
-             'captions_propios': bool(cap_t5 and subs and subs_ok >= 0.9 * len(subs)), 'color_claves': color_claves,
+             'captions_propios': bool((cap_t5 and subs and subs_ok >= 0.9 * len(subs)) or (neon and neon_ok >= 0.9 * len(neon))),
+             'captions_sonidos': bool(neon), 'color_claves': color_claves,
              'dividida': [[int(round(d['ini'] * fps)), int(round(d['fin'] * fps)), round(d['bajar'] * H, 1)] for d in divididas
                           if any(p.get('remotion') == 'EscenaT5' and abs(p['ini'] - d['ini']) < 1e-3 and rm_hechos.get(str(rm_salida.get(id(p))))
                                  for p in plan['piezas'])],
@@ -1326,7 +1597,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         pass
     instalar_plantillas_una_vez()
     limpiar_cache(conservar=carpeta)
-    decir('Edición PRO: colocando la edición en Resolve' + (' (Magic Mask)…' if (persona or encima) and usar_magic else '…'))
+    decir('Edición PRO: colocando la edición en Resolve' + (' (Magic Mask)…' if (persona and usar_magic) or encima else '…'))
     if info.get('via') == 'mcp':
         import resolve_mcp
         script = carpeta_recursos() / 'colocar_pro.py'

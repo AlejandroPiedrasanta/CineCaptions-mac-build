@@ -59,6 +59,10 @@ def main():
     ap.add_argument('--variacion', type=int, default=0)
     ap.add_argument('--render', default='')
     ap.add_argument('--sin-salir', action='store_true')
+    ap.add_argument('--neon', action='store_true', help='v5.5.13: Tema 1 neón (captions con el motor del kit, KitNeon) + la PRO en neón')
+    ap.add_argument('--extras', default='', help='v5.5.20: los interruptores del menú lateral del Tema 1, separados por comas (p. ej. detras)')
+    ap.add_argument('--intensidad', default='media', help='v5.5.20: la de «Captions detrás de ti»: suave | media | fuerte')
+    ap.add_argument('--solo-captions', action='store_true', help='v5.5.13: solo los captions del Tema 1 neón (como GO con la PRO apagada)')
     a = ap.parse_args()
     video = str(Path(a.video).resolve())
     if a.palabras:
@@ -72,9 +76,19 @@ def main():
         cortes = efectos_visuales.detectar_cortes(video) or []
     except Exception:
         cortes = []
-    op = dict(edicion_pro.OPCIONES_POR_DEFECTO, pro_genero=a.genero, pro_mascara=a.mascara, pro_variacion=a.variacion, pro_ia_local=False)
+    op = dict(edicion_pro.OPCIONES_POR_DEFECTO, pro_genero=a.genero, pro_mascara=a.mascara, pro_variacion=a.variacion, pro_ia_local=False,
+              pro_neon_extras=[x for x in a.extras.split(',') if x], pro_detras_intensidad=a.intensidad)
     t0 = time.time()
-    plan = edicion_pro.planificar(video, palabras, dur, cortes=cortes, idioma=a.idioma, opciones=op)
+    neon = a.neon or a.solo_captions
+    if a.solo_captions:
+        plan = {'ligero': True, 'solo_captions': True, 'video': video, 'piezas': [], 'idioma': a.idioma, 'opciones': op, 'tema': 'neon',
+                'resumen': 'solo captions neón', 'direccion': {'acento': '#FF2DCB', 'fuenteTitular': '-', 'fuenteTexto': '-'}}
+    else:
+        plan = edicion_pro.planificar(video, palabras, dur, cortes=cortes, idioma=a.idioma, opciones=op, tema='neon' if neon else None)
+    if neon:
+        import kit_neon
+        plan['kitneon'] = kit_neon.escena_captions(palabras, a.idioma, fin_video=dur)
+        print(f"captions neón: {len(plan['kitneon'])} bloques")
     print(f'plan ({time.time() - t0:.1f} s): {plan["resumen"]} · acento {plan["direccion"]["acento"]} · {plan["direccion"]["fuenteTitular"]}/{plan["direccion"]["fuenteTexto"]}')
     for p in plan['piezas']:
         v = p['valores']

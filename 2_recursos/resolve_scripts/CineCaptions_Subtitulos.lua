@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.5.11 (subtitulos)"
+local VERSION = "5.20 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -1085,6 +1085,17 @@ function COLORES_CC.pintar(item, color)
     if item ~= nil and color ~= nil then
         pcall(function() item:SetClipColor(color) end)
     end
+end
+-- v5.5.12: la tipografia elegida en «Crea tu estilo» (track.fuente_usuario =
+-- {main = {familia, estilo}, extra = {...}}). DESPUES del texto. En esta
+-- tabla y no como local suelta: el archivo esta al limite de 200 locales.
+function COLORES_CC.fuente(tool, track, principal)
+    local fu = type(track) == "table" and track.fuente_usuario or nil
+    local f = type(fu) == "table" and fu[principal and "main" or "extra"] or nil
+    if tool == nil or type(f) ~= "table" or not f[1] then return false end
+    local ok = set_input(tool, "Font", f[1])
+    if ok and f[2] then set_input(tool, "Style", f[2]) end
+    return ok
 end
 function COLORES_CC.de_sfx(categoria)
     local c = tostring(categoria or "")
@@ -5386,6 +5397,7 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
                         props.ZoomY = run.zoom
                     end
                     if next(props) ~= nil then poner_props(item, props) end
+                    COLORES_CC.fuente(tool, track, rol == "main")
                     if rol == "main" then ajustar_barrido(item, (fin - ini) / fps, salto, run.ancho_rel) end
                     colocados = colocados + 1
                 end
@@ -5651,8 +5663,9 @@ local function place_kinetic(timeline, media_pool, track, fps, start_frame, proj
                     if tool == nil or not set_input(tool, "StyledText", tostring(run.texto)) then
                         ok_texto = false
                         sin_texto = sin_texto + 1
-                    elseif type(run.size) == "number" then
-                        set_input(tool, "Size", run.size)
+                    else
+                        if type(run.size) == "number" then set_input(tool, "Size", run.size) end
+                        COLORES_CC.fuente(tool, track, run.fu == "main")
                     end
                 end
                 if ok_texto then

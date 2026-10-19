@@ -32,8 +32,8 @@ OPCIONES = [
      'detalle': 'Una píldora animada justo debajo del texto con el lugar, la cifra o el emoji de lo que dices.'},
     {'clave': 'broll', 'nombre': 'B-roll con fotos', 'icono': 'ph.image-square', 'motions': ['escena:foto'], 'pref': 'pro_internet',
      'detalle': 'Fotos de internet con licencia a pantalla completa cuando nombras algo.'},
-    {'clave': 'detras', 'nombre': 'Captions detrás de ti', 'icono': 'ph.user-focus', 'mascara': True,
-     'detalle': 'Se recorta a la persona (IA local o Magic Mask) y el texto pasa por detrás.'},
+    {'clave': 'detras', 'nombre': 'Captions detrás de ti', 'icono': 'ph.user-focus', 'mascara': True, 'solo_studio': True,
+     'detalle': 'Solo con DaVinci Resolve Studio: Magic Mask recorta a la persona (solo personas) y el texto pasa por detrás.'},
     {'clave': 'motions_completo', 'nombre': 'Motions completo', 'icono': 'ph.film-strip', 'pref': 'pro_motions_completo',
      'detalle': 'Un video de motions encima de todo: el titular palabra a palabra y una tarjeta por idea.'},
     {'clave': 'gancho', 'nombre': 'Gancho del inicio', 'icono': 'ph.lightning', 'motions': ['ograf:titular', 'ograf:orbita', 't5:orbita', 't5:sticker'],
@@ -48,6 +48,37 @@ OPCIONES = [
      'detalle': '«¡Hola amigos!», «Guárdalo», encuestas… justo cuando dices esa frase.'},
 ]
 _POR_CLAVE = {o['clave']: o for o in OPCIONES}
+# v5.5.20: la intensidad de «Captions detrás de ti» (edicion_pro.INTENSIDAD_DETRAS), en la píldora del nombre
+NIVELES = (('suave', 'Suave'), ('media', 'Media'), ('fuerte', 'Fuerte'))
+
+
+def _studio():
+    try:
+        import edicion_pro
+        return bool(edicion_pro.detras_disponible())
+    except Exception:
+        return False
+
+
+def opciones_visibles():
+    """v5.5.20 (el usuario: «en la versión Free no aparece la opción, para evitar que el usuario la active»): las que se enseñan; «Captions
+    detrás de ti» solo con Resolve Studio (en Free y en el MP4 sin Resolve no hay Magic Mask)."""
+    st = _studio()
+    return [o for o in OPCIONES if st or not o.get('solo_studio')]
+
+
+def intensidad():
+    try:
+        import edicion_pro
+        return edicion_pro.intensidad_detras()
+    except Exception:
+        return 'media'
+
+
+def poner_intensidad(nivel):
+    import edicion_pro
+    if nivel in dict(NIVELES):
+        edicion_pro.guardar_opciones({'pro_detras_intensidad': nivel})
 
 
 def icono_de(o, relleno=True):
@@ -111,9 +142,22 @@ def _op():
         return {}
 
 
+def _neon():
+    """v5.5.13: con el Tema 1 los interruptores son SUYOS (edicion_pro.pro_neon_extras; ninguno = como la referencia del kit)."""
+    try:
+        import edicion_pro
+        return edicion_pro.neon_elegido()
+    except Exception:
+        return False
+
+
 def estado(clave, op=None):
     o = _POR_CLAVE[clave]
+    if o.get('solo_studio') and not _studio():
+        return False                                    # (v5.5.20: sin Studio no va, aunque estuviera guardada encendida)
     op = _op() if op is None else op
+    if _neon():
+        return clave in (op.get('pro_neon_extras') or [])
     if o.get('mascara'):
         return str(op.get('pro_mascara') or 'auto') != 'no'
     ids = ids_de(clave) if o.get('motions') is not None or 'pref' not in o else []
@@ -131,6 +175,9 @@ def poner(clave, si):
     """Guarda el interruptor. Devuelve False si no se pudo (apagar el último grupo de motions dejaría la lista vacía = «todos»)."""
     import edicion_pro
     import motions_catalogo as MC
+    if _neon():
+        edicion_pro.poner_neon_extra(clave, si)
+        return True
     o = _POR_CLAVE[clave]
     op = edicion_pro.opciones_guardadas()
     cambios = {}
@@ -302,7 +349,11 @@ class PanelMotionsPro(QWidget):
         self._k = {o['clave']: ui.Resorte(1.0, 420.0, 17.0) for o in OPCIONES}      # 0 apagado → 1 encendido (rebota un poco al llegar)
         self._hov = {o['clave']: ui.Resorte(0.0, 520.0, 30.0) for o in OPCIONES}
         self._hov['efectos'] = ui.Resorte(0.0, 520.0, 30.0)
-        self.activa = OPCIONES[0]['clave']
+        self._ops = opciones_visibles()
+        self._nivel = 'media'
+        self._et_rect = None                             # dónde quedó la píldora del nombre y sus botones de intensidad (para los clics)
+        self._niveles_rects = []
+        self.activa = self._ops[0]['clave']
         self._res = ui.Resorte(0.0, 300.0, 22.0)        # la CABEZA de la gota (índice float): rápida, se pasa un poco y vuelve
         self._cola = ui.Resorte(0.0, 95.0, 19.0)        # la COLA: va detrás, más lenta (de ahí el estiramiento líquido)
         self._pop = ui.Resorte(1.0, 560.0, 15.0)        # el salto del icono señalado
@@ -350,6 +401,14 @@ class PanelMotionsPro(QWidget):
 
     def refrescar(self, animar=True):
         op = _op()
+        self._ops = opciones_visibles()
+        if self.activa not in [o['clave'] for o in self._ops]:
+            self.activa = self._ops[0]['clave']
+        try:
+            import edicion_pro
+            self._nivel = edicion_pro.intensidad_detras(op)
+        except Exception:
+            self._nivel = 'media'
         for o in OPCIONES:
             k = o['clave']
             self._on[k] = estado(k, op)
@@ -365,19 +424,29 @@ class PanelMotionsPro(QWidget):
         se = min(self._s, 1.25)
         return ui.fuente(13 * se, peso='medio'), ui.fuente(10 * se), se
 
+    def _con_niveles(self):
+        """v5.5.20: la píldora de «Captions detrás de ti» encendido lleva debajo «Suave · Media · Fuerte»."""
+        return self.activa == 'detras' and self.encendido('detras')
+
     def _ancho_etiqueta(self, nombre, sub):
         f1, f2, se = self._fuentes()
-        return max(QFontMetricsF(f1).horizontalAdvance(nombre), QFontMetricsF(f2).horizontalAdvance(sub)) + 44 * se
+        w = max(QFontMetricsF(f1).horizontalAdvance(nombre), QFontMetricsF(f2).horizontalAdvance(sub)) + 44 * se
+        if self._con_niveles():
+            fm = QFontMetricsF(f2)
+            w = max(w, sum(fm.horizontalAdvance(tr(n)) + 18 * se for _k, n in NIVELES) + 8 * se * (len(NIVELES) - 1) + 44 * se)
+        return w
 
     def _texto_etiqueta(self):
         o = _POR_CLAVE[self.activa]
         si = self.encendido(self.activa)
-        return tr(o['nombre']), (tr('Encendido · clic para apagar') if si else tr('Apagado · clic para encender')), si
+        if si and self.activa == 'detras':
+            return tr(o['nombre']), tr('Encendido · intensidad'), si, True     # (el nivel elegido se lee al pintar)
+        return tr(o['nombre']), (tr('Encendido · clic para apagar') if si else tr('Apagado · clic para encender')), si, None
 
     def senalar(self, clave, animar=True):
         cambia = clave != self.activa
         self.activa = clave
-        i = [o['clave'] for o in OPCIONES].index(clave)
+        i = [o['clave'] for o in self._ops].index(clave)
         nuevo = self._texto_etiqueta()
         if nuevo != self._et_txt:
             self._et_prev, self._et_txt = self._et_txt, nuevo
@@ -427,7 +496,7 @@ class PanelMotionsPro(QWidget):
     # -- geometría
     def _geo(self):
         """(cápsula, paso entre iconos, y del primer icono)."""
-        n, s = len(OPCIONES), self._s
+        n, s = len(self._ops), self._s
         arriba, abajo = self.ARRIBA * s, self.ABAJO * s
         paso = max(30.0 * s, min(self.PASO_MAX * s, (self.height() - arriba - abajo - 24) / n))
         alto = arriba + abajo + n * paso
@@ -442,7 +511,7 @@ class PanelMotionsPro(QWidget):
         if pos.y() >= barra.bottom() - self.ABAJO * self._s + 8:
             return 'efectos'
         i = int((pos.y() - y0) // paso)
-        return OPCIONES[i]['clave'] if 0 <= i < len(OPCIONES) else None
+        return self._ops[i]['clave'] if 0 <= i < len(self._ops) else None
 
     # -- ratón
     def _poner_encima(self, k):
@@ -455,8 +524,24 @@ class PanelMotionsPro(QWidget):
             self._hov[k].objetivo = 1.0
         ui.motor_resortes.pedir(self)
 
+    def _nivel_en(self, pos):
+        """v5.5.20: el nivel de intensidad bajo el ratón (en la píldora de «Captions detrás de ti»), o None."""
+        if self._info.x < 0.6 or not self._con_niveles():
+            return None
+        return next((n for r, n in self._niveles_rects if r.adjusted(-3, -4, 3, 4).contains(pos)), None)
+
+    def _sobre_etiqueta(self, pos):
+        return self._info.x > 0.6 and self._con_niveles() and self._et_rect is not None and self._et_rect.adjusted(-4, -4, 14, 4).contains(pos)
+
     def mouseMoveEvent(self, e):
         k = self._icono_en(e.position())
+        if k is None and self._sobre_etiqueta(e.position()):
+            self._recoger.stop()                         # (v5.5.20: la píldora con la intensidad no se recoge mientras el ratón está en ella)
+            self._dentro = True
+            self.setCursor(Qt.CursorShape.PointingHandCursor if self._nivel_en(e.position()) else Qt.CursorShape.ArrowCursor)
+            self._poner_encima(None)
+            super().mouseMoveEvent(e)
+            return
         self.setCursor(Qt.CursorShape.PointingHandCursor if k else Qt.CursorShape.ArrowCursor)
         sobre_barra = k is not None and k != 'efectos'
         if sobre_barra and not self._dentro:             # entra en los iconos: el nombre sale de la burbuja
@@ -487,6 +572,18 @@ class PanelMotionsPro(QWidget):
         super().mousePressEvent(e)
 
     def mouseReleaseEvent(self, e):
+        nivel = self._nivel_en(e.position()) if e.button() == Qt.MouseButton.LeftButton else None
+        if nivel:
+            if nivel != self._nivel:
+                try:
+                    poner_intensidad(nivel)
+                except Exception:
+                    import registro
+                    registro.excepcion(origen='Proyecto · intensidad de «Captions detrás de ti»')
+                self.refrescar()
+                self.cambiado.emit()
+            super().mouseReleaseEvent(e)
+            return
         if e.button() == Qt.MouseButton.LeftButton:
             self._apriete.objetivo = 1.0                 # y rebota al soltar
             k = self._icono_en(e.position())
@@ -526,7 +623,7 @@ class PanelMotionsPro(QWidget):
         cola = y0 + self._cola.x * paso + paso / 2
         rapidez = min(1.0, abs(self._res.v) * 0.09)
         # el brillo suave detrás del icono que tiene el ratón encima
-        for i, o in enumerate(OPCIONES):
+        for i, o in enumerate(self._ops):
             h = max(0.0, self._hov[o['clave']].x)
             if h > 0.02 and o['clave'] != self.activa:
                 cy = y0 + i * paso + paso / 2
@@ -534,7 +631,7 @@ class PanelMotionsPro(QWidget):
                 p.setBrush(QColor(255, 255, 255, int(20 * h)))
                 p.drawEllipse(QRectF(cx - r, cy - r, 2 * r, 2 * r))
         # los iconos 3D (a color = encendido, gris = apagado); los que la gota va rozando se hinchan un poco (una ola)
-        for i, o in enumerate(OPCIONES):
+        for i, o in enumerate(self._ops):
             k = o['clave']
             if k == self.activa and abs(cabeza - (y0 + i * paso + paso / 2)) < paso * 0.5:
                 continue
@@ -550,7 +647,7 @@ class PanelMotionsPro(QWidget):
         # la onda del clic: un anillo que se abre y se apaga
         o_ = max(0.0, min(1.0, self._onda.x))
         if self._onda_en in _POR_CLAVE and o_ < 0.995:
-            i = [o['clave'] for o in OPCIONES].index(self._onda_en)
+            i = [o['clave'] for o in self._ops].index(self._onda_en) if self._onda_en in [o['clave'] for o in self._ops] else 0
             cy = y0 + i * paso + paso / 2
             r = 22 * s * (1.0 + 1.1 * o_)
             p.setBrush(Qt.BrushStyle.NoBrush)
@@ -599,7 +696,8 @@ class PanelMotionsPro(QWidget):
         hasta su ancho; el texto aparece cuando ya está fuera."""
         s = self._s
         f1, f2, se = self._fuentes()
-        alto = 44 * se
+        niveles = self._et_txt is not None and len(self._et_txt) > 3 and self._et_txt[3] is not None
+        alto = (68 if niveles else 44) * se
         cx = barra.center().x()
         sale = 1.0 - (1.0 - min(1.0, info / 0.55)) ** 3                  # 0 → 1: de detrás de la burbuja a su sitio
         crece = max(0.0, min(1.0, (info - 0.3) / 0.7))
@@ -615,7 +713,9 @@ class PanelMotionsPro(QWidget):
         if corte < 0.999:
             alto_c = alto * 0.62 * (1.0 - corte)
             _cuello(p, et.right() - alto * 0.3, cx - rb * 0.4, cabeza, alto_c, min(2 * rb, alto_c * 1.25), 0.35 + 0.5 * corte)
-        p.drawRoundedRect(et, alto / 2, alto / 2)
+        p.drawRoundedRect(et, min(alto / 2, 22 * se), min(alto / 2, 22 * se))
+        self._et_rect = QRectF(et)
+        self._niveles_rects = []
         if crece > 0.15:
             p.setClipRect(et.adjusted(4, 2, -4, -2))
             f = max(0.0, min(1.0, self._et_f.x))
@@ -624,7 +724,10 @@ class PanelMotionsPro(QWidget):
             for txt, op, dy in ((self._et_prev, 1.0 - f, -6.0 * f), (self._et_txt, f, 6.0 * (1.0 - f))):
                 if txt is None or op <= 0.01:
                     continue
-                nombre, sub, si = txt
+                nombre, sub, si = txt[:3]
+                nivel = txt[3] if len(txt) > 3 else None
+                if nivel and txt is self._et_txt:
+                    self._pintar_niveles(p, et, se, self._nivel, op * vis)
                 p.setOpacity(op * vis * (self._entrada.x if self._entrada.x < 0.999 else 1.0))
                 p.setBrush(QColor('#24D18F') if si else QColor('#9AA7BF'))
                 p.drawEllipse(QRectF(izq0 + 16 * se, et.center().y() - 4 * se + dy, 8 * se, 8 * se))
@@ -636,6 +739,29 @@ class PanelMotionsPro(QWidget):
                 p.setPen(QColor('#1E7A56' if si else '#6F7C96'))
                 p.drawText(QRectF(izq, et.top() + 22 * se + dy, 400, 16 * se), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, sub)
                 p.setPen(Qt.PenStyle.NoPen)
+        p.restore()
+
+    def _pintar_niveles(self, p, et, se, nivel, opacidad):
+        """v5.5.20: «Suave · Media · Fuerte» (la intensidad de «Captions detrás de ti»): el elegido en verde; clic = elegir."""
+        _f1, f2, _se = self._fuentes()
+        fm = QFontMetricsF(f2)
+        x = et.left() + 32 * se
+        y = et.bottom() - 26 * se
+        p.save()
+        p.setOpacity(opacidad)
+        p.setFont(f2)
+        for clave, nombre in NIVELES:
+            txt = tr(nombre)
+            w = fm.horizontalAdvance(txt) + 18 * se
+            r = QRectF(x, y, w, 19 * se)
+            elegido = clave == nivel
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor('#24D18F') if elegido else QColor('#EEF1F6'))
+            p.drawRoundedRect(r, r.height() / 2, r.height() / 2)
+            p.setPen(QColor('#FFFFFF') if elegido else QColor('#4A5568'))
+            p.drawText(r, Qt.AlignmentFlag.AlignCenter, txt)
+            self._niveles_rects.append((QRectF(r), clave))
+            x += w + 8 * se
         p.restore()
 
 

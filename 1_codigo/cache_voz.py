@@ -33,13 +33,36 @@ def _motor():
         return 'qwen3'
 
 
+_GENERACION = {}
+
+
+def _generacion(motor):
+    """v5.5.17: la GENERACIÓN del motor Qwen (sus requisitos y su script, que viajan con el programa): al mejorar el motor cambia y cada video se
+    vuelve a transcribir UNA vez con el nuevo. Antes la huella solo decía «qwen3»: tras el motor 2.0 (Transformers nativo, mucho mejor: «Xela»,
+    «FIFA», «Glass Collective») GO seguía sirviendo lo del motor viejo («Shela», «cifas», «Glasgow»)."""
+    if motor != 'qwen3':
+        return ''
+    if motor not in _GENERACION:
+        try:
+            import motor_voz
+            base = motor_voz._base_recursos() / 'motor_qwen'
+            h = hashlib.sha1()
+            for n in ('requisitos_motor_qwen.txt', 'motor_qwen.py'):
+                h.update((base / n).read_bytes())
+            _GENERACION[motor] = h.hexdigest()[:10]
+        except Exception:
+            _GENERACION[motor] = ''
+    return _GENERACION[motor]
+
+
 def huella(ruta, idioma, modelo=''):
-    """La huella corta (24 hex) del video + idioma + motor + modelo; None si no se puede leer el archivo."""
+    """La huella corta (24 hex) del video + idioma + motor (y su generación) + modelo; None si no se puede leer el archivo."""
     try:
         r = Path(ruta)
         st = r.stat()
         h = hashlib.sha1()
-        h.update(f'{VERSION}|{st.st_size}|{st.st_mtime_ns}|{idioma}|{_motor()}|{modelo}'.encode('utf-8'))
+        motor = _motor()
+        h.update(f'{VERSION}|{st.st_size}|{st.st_mtime_ns}|{idioma}|{motor}|{modelo}|{_generacion(motor)}'.encode('utf-8'))
         with open(r, 'rb') as f:
             h.update(f.read(TROZO))
             if st.st_size > TROZO * 2:

@@ -1,0 +1,7 @@
+Fuentes usadas por el kit (copiadas de las fuentes instaladas en este equipo; solo para uso local):
+- cond.ttf   Helvetica Neue LT Std 107 Extra Black Condensed (Linotype, comercial: necesitas tu licencia para publicar)
+- thin.otf   Helvetica Neue Thin (comercial)
+- inter.ttf  Inter (SIL Open Font License)
+- script.ttf Yellowtail (Apache License 2.0)
+- serif.ttf  DM Serif Text Italic (SIL Open Font License)
+Para cambiar una fuente, sustituye el archivo con el mismo nombre (o edita motor/pagina.mjs).

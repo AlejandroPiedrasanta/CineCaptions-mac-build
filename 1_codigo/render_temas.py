@@ -31,20 +31,12 @@ ENTRADA_S = 0.12               # el fundido de entrada de cada elemento
 SUBE_EM = 0.10                 # y lo que sube mientras entra (× su letra)
 
 # --- Kinetic: deben coincidir con 2_recursos/generador_packs/kinetic_elementos.py (los colores de cada clip del pack) --------------------------------
-GRADIENTES_K = {
-    'blanco': [(0.0, (0.68, 0.68, 0.76)), (0.45, (0.96, 0.96, 0.99)), (1.0, (1.0, 1.0, 1.0))],
-    'lima': [(0.0, (0.50, 0.84, 0.10)), (0.5, (0.84, 1.0, 0.10)), (1.0, (0.93, 1.0, 0.22))],
-    'amarillo': [(0.0, (1.0, 0.52, 0.08)), (0.55, (1.0, 0.84, 0.10)), (1.0, (1.0, 0.93, 0.22))],
-    'magenta': [(0.0, (0.50, 0.32, 1.0)), (0.55, (0.84, 0.36, 0.96)), (1.0, (0.98, 0.46, 0.92))],
-    'rojo': [(0.0, (0.88, 0.14, 0.08)), (1.0, (1.0, 0.30, 0.20))],
-    'serif': [(0.0, (0.90, 0.90, 0.94)), (0.5, (1.0, 1.0, 1.0)), (1.0, (1.0, 1.0, 1.0))],
-}
-CINTA_K = {'amarillo': ((1.0, 0.90, 0.04), (0.04, 0.04, 0.05)), 'lima': ((0.78, 1.0, 0.10), (0.05, 0.06, 0.02)), 'rojo': ((0.93, 0.18, 0.10), (1.0, 1.0, 1.0)),
-           'blanco': ((0.96, 0.96, 0.97), (0.06, 0.06, 0.08)), 'magenta': ((0.83, 0.24, 0.92), (1.0, 1.0, 1.0))}
-GUION_K = {'amarillo': [(0.0, (1.0, 0.55, 0.10)), (0.6, (1.0, 0.86, 0.12)), (1.0, (1.0, 0.93, 0.25))],
-           'cian': [(0.0, (0.15, 0.62, 1.0)), (1.0, (0.35, 0.95, 1.0))], 'rosa': [(0.0, (0.95, 0.30, 0.75)), (1.0, (1.0, 0.55, 0.85))]}
-ANILLO_K = {'naranja': (1.0, 0.45, 0.15), 'amarillo': (1.0, 0.92, 0.10), 'rosa': (0.95, 0.30, 0.65)}
-LINEA_K = {'amarillo': (1.0, 0.90, 0.05), 'magenta': (0.85, 0.30, 0.95), 'lima': (0.80, 1.0, 0.10)}
+import kinetic_paleta as PAL_K                  # v5.5.13: los colores del Tema 1 (neón) salen de la misma paleta que el pack
+GRADIENTES_K = PAL_K.GRADIENTES
+CINTA_K = PAL_K.CINTA
+GUION_K = PAL_K.GUION
+ANILLO_K = PAL_K.ANILLO
+LINEA_K = PAL_K.LINEA
 ANILLO_GEO = (0.42, 0.16, 0.012)       # ancho (× ancho del cuadro), alto (× alto del cuadro), grosor (× ancho) a zoom 1
 LINEA_GEO = (0.34, 0.0075)             # ancho (× ancho), alto (× ancho)
 
@@ -199,6 +191,20 @@ def anillo(color, ancho_px, alto_px, grosor_px):
     return Sprite(_lienzo_centrado(img, W / 2.0, H / 2.0))
 
 
+def trazo_a_mano(color, puntos, ancho_px, alto_px, nominal, grosor_px):
+    """v5.5.13 (neón): el círculo, el lazo o el subrayado a mano (kinetic_paleta.puntos_*), escalado a ancho_px × alto_px como lo escala Resolve (zx, zy)."""
+    nw, nh = nominal
+    fx, fy = ancho_px / max(1e-6, nw), alto_px / max(1e-6, nh)
+    xs = [p[0] * fx for p in puntos]
+    ys = [p[1] * fy for p in puntos]
+    m = grosor_px + 4
+    W, H = int(max(xs) - min(xs) + 2 * m), int(max(ys) - min(ys) + 2 * m)
+    img = Image.new('RGBA', (max(2, W), max(2, H)), (0, 0, 0, 0))
+    pts = [(x - min(xs) + m, y - min(ys) + m) for x, y in zip(xs, ys)]
+    ImageDraw.Draw(img).line(pts, fill=_rgb255(color) + (255,), width=max(1, int(grosor_px)), joint='curve')
+    return Sprite(_lienzo_centrado(img, -min(xs) + m, -min(ys) + m))
+
+
 def raya(color, ancho_px, alto_px):
     W, H = int(ancho_px) + 4, int(max(2, alto_px)) + 4
     img = Image.new('RGBA', (W, H), (0, 0, 0, 0))
@@ -274,6 +280,14 @@ def _elemento_kinetic(r, s):
     var = k.split(' ')[-1] if ' ' in k else ''
     tipo = e.get('tipo')
     zx, zy = float(r.get('zx') or 1.0), float(r.get('zy') or 1.0)
+    if tipo == 'trazo':
+        nw, nh = PAL_K.TRAZO_NOMINAL
+        return trazo_a_mano(ANILLO_K.get(var, PAL_K.LIMA), PAL_K.puntos_circulo(lazo='lazo' in k), nw * 1080 * zx * s, nh * 1080 * zy * s,
+                            (nw, nh), PAL_K.TRAZO_GROSOR * 1080 * s * (zx + zy) / 2.0), 0.0, 0.0
+    if tipo == 'linea' and e.get('curva'):
+        nw = PAL_K.SUBRAYADO_NOMINAL
+        return trazo_a_mano(LINEA_K.get(var, PAL_K.LIMA), PAL_K.puntos_subrayado(), nw * 1080 * zx * s, nw * 1080 * zy * s, (nw, nw),
+                            PAL_K.TRAZO_GROSOR * 1080 * s * zx), 0.0, 0.0
     if tipo == 'anillo':
         w, h, g = ANILLO_GEO
         return anillo(ANILLO_K.get(var, (1.0, 0.45, 0.15)), w * 1080 * zx * s, h * 1920 * zy * s, g * 1080 * s), 0.0, 0.0
@@ -296,7 +310,7 @@ def _elemento_kinetic(r, s):
     elif k.startswith('k serif'):
         sp = texto(txt, par, em * s, degradado=GRADIENTES_K['serif'], contorno=0.03, sombra=(0.8, 0.03, 0.05))
     elif k.startswith('k script'):
-        sp = texto(txt, par, em * s, degradado=GUION_K.get(var, GUION_K['amarillo']), contorno=0.03, sombra=(0.8, 0.03, 0.05))
+        sp = texto(txt, par, em * s, degradado=GUION_K.get(var, GUION_K['amarillo']), contorno=0.0 if k.startswith('k script yt') else 0.03, sombra=(0.8, 0.03, 0.05))
     else:                                                          # k sup / k label: blanco con contorno oscuro
         sp = texto(txt, par, em * s, color=(1, 1, 1), esp=e.get('esp', 1.0), contorno=0.04, sombra=(0.8, 0.03, 0.05))
     return sp, em, _centro(par)

@@ -427,6 +427,15 @@ def resolve_abierto():
     return si
 
 
+_SIN_RESOLVE = {'v': False}
+
+
+def sin_resolve(activo):
+    """v5.5.17: GO «Video MP4» (sin Resolve) no va a abrir Resolve: no hay que guardarle GPU. Con la reserva, la IA de texto bajaba a la
+    1.7B (menos lista) en una GPU de 16 GB libre del todo."""
+    _SIN_RESOLVE['v'] = bool(activo)
+
+
 def vram_para_ia_gb():
     """v5.5.4: la VRAM que de verdad pueden usar las IA locales: la libre AHORA + la que ya ocupan nuestros motores (se pueden soltar), menos la
     que Resolve va a necesitar si aún no está abierto (el GO lo abre). Antes se miraba la VRAM TOTAL (16 GB = «caben la voz y la IA 4B a la
@@ -447,7 +456,7 @@ def vram_para_ia_gb():
             libre += 9.5 if str(t.modelo).upper().startswith('4B') else 4.0
     except Exception:
         pass
-    if not resolve_abierto():
+    if not _SIN_RESOLVE['v'] and not resolve_abierto():
         libre -= RESERVA_RESOLVE_GB
     return max(0.0, min(total, libre))
 
@@ -495,12 +504,12 @@ class _ServidorVoz:
     def vivo(self):
         return self.p.poll() is None
 
-    def pedir(self, wav, idioma, salida, on_linea, timeout=1800, sin_senal=SIN_SENAL_VOZ_S):
+    def pedir(self, wav, idioma, salida, on_linea, timeout=1800, sin_senal=SIN_SENAL_VOZ_S, contexto=''):
         """Manda un audio y espera el LISTO. Devuelve (ok, motivo). Si el motor aun esta cargando, espera (y cuenta).
         v5.11: si pasa `sin_senal` segundos sin NINGUNA linea del motor (ni progreso ni estado) se da por colgado, se mata el proceso y se devuelve el
         fallo: el llamador pasa solo al motor de respaldo en vez de esperar media hora."""
         with self.pedido:
-            self.p.stdin.write((json.dumps({'audio': wav, 'idioma': idioma, 'salida': salida}) + '\n').encode('utf-8'))
+            self.p.stdin.write((json.dumps({'audio': wav, 'idioma': idioma, 'salida': salida, 'contexto': contexto or ''}) + '\n').encode('utf-8'))
             self.p.stdin.flush()
             inicio = ultima = time.time()
             while time.time() - inicio < timeout:
@@ -536,6 +545,10 @@ class _ServidorVoz:
                 self.p.kill()
             except Exception:
                 pass
+        try:                                   # (v5.5.17: cerrada aquí; si no, al recogerla salía «Exception ignored… Errno 22» en la consola)
+            self.p.stdin.close()
+        except Exception:
+            pass
 
 
 _SRV_VOZ = {'s': None}
@@ -653,7 +666,7 @@ def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None):
 
 
 def transcribir(media_path, codigo_idioma, progress_callback=None, model_loaded_callback=None,
-                status_callback=None):
+                status_callback=None, contexto=''):
     """Igual que subtitle_transcriber.transcribe: [{'start','end','word'}, ...].
     Lanza RuntimeError si el motor falla (el llamador sigue con Whisper)."""
     idioma = IDIOMAS_QWEN.get((codigo_idioma or '').lower(), '') if codigo_idioma != 'auto' else ''
@@ -697,7 +710,7 @@ def transcribir(media_path, codigo_idioma, progress_callback=None, model_loaded_
                 srv = _SRV_VOZ['s']
                 if srv is None or not srv.vivo():
                     _SRV_VOZ['s'] = srv = _ServidorVoz()
-            ok_servidor, motivo_servidor = srv.pedir(wav, idioma, salida, linea)
+            ok_servidor, motivo_servidor = srv.pedir(wav, idioma, salida, linea, contexto=contexto)     # v5.5.17: el vocabulario del usuario
         except Exception as e:
             motivo_servidor = f'{type(e).__name__}: {e}'
         if not ok_servidor:
@@ -714,7 +727,8 @@ def transcribir(media_path, codigo_idioma, progress_callback=None, model_loaded_
             motivo = motivo_servidor
             for extra, nombre in intentos:
                 estado.update(listo=None, error=None)
-                codigo, errores = _lanzar(['--audio', wav, '--idioma', idioma, '--salida', salida] + extra, linea, sin_senal=SIN_SENAL_VOZ_S)
+                codigo, errores = _lanzar(['--audio', wav, '--idioma', idioma, '--salida', salida] + extra + (['--contexto', contexto] if contexto else []),
+                                          linea, sin_senal=SIN_SENAL_VOZ_S)
                 if codigo == 0 and estado['listo']:
                     if extra and r:
                         r.ok(f'Qwen3-ASR funcionó con {nombre}.', 'motor de voz')

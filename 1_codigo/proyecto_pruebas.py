@@ -27,7 +27,7 @@ pm = resolve.GetProjectManager()
 cur = pm.GetCurrentProject()
 previo = cur.GetName() if cur else None
 if previo != %(temp)r:
-    if cur:
+    if cur and previo != 'Untitled Project':     # (v5.5.20: guardar el «Untitled Project» vacío de un Resolve recién abierto saca un diálogo que lo bloquea todo)
         pm.SaveProject()
         pm.CloseProject(cur)
     p = pm.CreateProject(%(temp)r) or pm.LoadProject(%(temp)r)

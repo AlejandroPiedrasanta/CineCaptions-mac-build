@@ -960,12 +960,31 @@ def _procesos_hijos(pid):
                 ok = k32.Process32NextW(snap, ctypes.byref(e))
         finally:
             k32.CloseHandle(snap)
-        out, pila = [], [int(pid)]
+        # v5.5.12: Windows reutiliza los pid; un proceso cuyo «padre» murió puede parecer hijo de otro nacido DESPUÉS. Solo cuentan los hijos
+        # nacidos tras su padre (si no, Cancelar cerraba el propio CineCaptions: su lanzador había muerto y un hijo heredó ese pid)
+        def nacido(p):
+            h = k32.OpenProcess(0x1000, False, p)                    # PROCESS_QUERY_LIMITED_INFORMATION
+            if not h:
+                return None
+            try:
+                c, x, k, u = (wintypes.FILETIME() for _ in range(4))
+                if not k32.GetProcessTimes(h, ctypes.byref(c), ctypes.byref(x), ctypes.byref(k), ctypes.byref(u)):
+                    return None
+                return (c.dwHighDateTime << 32) | c.dwLowDateTime
+            finally:
+                k32.CloseHandle(h)
+        k32.OpenProcess.restype = wintypes.HANDLE
+        out, pila = [], [(int(pid), nacido(int(pid)))]
         while pila:
-            for h in padres.get(pila.pop(), []):
-                if h not in out and h != int(pid):
-                    out.append(h)
-                    pila.append(h)
+            padre, t_padre = pila.pop()
+            for h in padres.get(padre, []):
+                if h in out or h == int(pid):
+                    continue
+                t_h = nacido(h)
+                if t_padre is not None and (t_h is None or t_h < t_padre):
+                    continue
+                out.append(h)
+                pila.append((h, t_h))
         return out
     except Exception:
         return []
@@ -987,7 +1006,7 @@ def parar_todo(decir=None):
         out['resolve'] = cerrar_resolve_a_la_fuerza(decir, espera_s=20)
         if sys.platform.startswith('win'):
             for h in _procesos_hijos(os.getpid()):
-                r = subprocess.run(['taskkill', '/F', '/T', '/PID', str(h)], capture_output=True, creationflags=0x08000000, timeout=20)
+                r = subprocess.run(['taskkill', '/F', '/PID', str(h)], capture_output=True, creationflags=0x08000000, timeout=20)   # (sin /T: el árbol ya va filtrado; /T podía alcanzar a CineCaptions)
                 out['procesos'] += 1 if r.returncode == 0 else 0
         elif sys.platform == 'darwin':
             subprocess.run(['pkill', '-9', '-P', str(os.getpid())], capture_output=True, timeout=20)

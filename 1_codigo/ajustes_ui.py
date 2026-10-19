@@ -484,6 +484,41 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.20', [
+        '«Captions detrás de ti» más inteligente: Magic Mask (solo personas) con su resultado guardado en la caché, igual en los Temas 1 a 6.',
+        'Elige la intensidad en el menú de Proyecto (Suave, Media o Fuerte): la cabeza nunca tapa tanto que no se lea el caption.',
+        'Solo con DaVinci Resolve Studio: en la versión Free la opción no aparece.',
+    ]),
+    ('5.5.19', [
+        'Tema 1: captions más pulidos: las sombras ya no parpadean, las letras no tiemblan al quedarse quietas y las animaciones van fluidas, sin tirones.',
+    ]),
+    ('5.5.18', [
+        'Tema 1: ya no aparecen aros ni rayas sueltas al salir cada caption (solo captions y con la Edición PRO).',
+        'Tema 1 más parecido a la referencia: «¿» al empezar las preguntas, «3 JÓVENES» con la cifra en color y la siguiente palabra en cinta, «100% / GRATUITA».',
+    ]),
+    ('5.5.17', [
+        'Transcripción más precisa: aprende los nombres que corriges en Creativo y los usa para oír mejor el siguiente video; la IA de texto ya no cambia palabras correctas.',
+        'Tema 1 sin DaVinci Resolve (GO «Video MP4»): ahora sí sale con el estilo neón (antes ponía los captions de siempre).',
+        'Tema 1 con «Motions completo»: usa las piezas del propio Tema 1 (interruptores, etiquetas, ruta, órbita…).',
+        'Píldoras más útiles: fechas, horas y lugares escritos con su icono, sin repetir lo que ya sale en grande; si no caben debajo, van encima.',
+        'Más rápido: la placa del Tema 1 se pinta casi 3 veces más rápido y el video MP4 sin Resolve casi el doble.',
+    ]),
+    ('5.5.16', [
+        'Tema 1 sin DaVinci Resolve (GO «Video MP4»): el video sale con el estilo neón de verdad, igual que en Resolve; con la Edición PRO, también con sus motions, la cámara y los sonidos.',
+        'Tema 1 con la Edición PRO en Resolve Free: revisado de punta a punta.',
+        'Proyecto: los ejemplos del Tema 1 («Solo captions» y «Con PRO») enseñan el nuevo estilo neón.',
+    ]),
+    ('5.5.15', [
+        'Tema 1: en el programa instalado ya sale el estilo neón (antes no encontraba sus tipografías y ponía los captions de antes).',
+        'Tema 1 con «Motions completo» encendido: la Edición PRO ya no falla al colocarse.',
+    ]),
+    ('5.5.14', [
+        'Tema 1 en NEÓN: captions «hook» como el reel de referencia (versalitas, mayúsculas con textura de puntos, cursiva, palabra escrita a mano, pegatinas y trazos que se dibujan), con desenfoque de movimiento.',
+        'Tema 1 con la Edición PRO: la edición del reel de referencia en cualquier video: notificación con el logo del cartel, pantalla dividida, órbita, avatares, interruptores, tarjeta de ruta con fecha y lugar, pantalla de 4 tarjetas, checks, cortinillas y panel de cierre con el cartel; cámara con punch-ins y desenfoques.',
+        'Tema 1 sin la PRO: solo sus captions neón.',
+        'Proyecto con el Tema 1: la barra de la PRO tiene sus propios interruptores (de inicio todo apagado, igual que la referencia); lo que enciendas se suma sin tapar los motions del tema.',
+        'La Edición PRO avisa de su avance mientras anima muchos clips: ya no se da por atascada ni corta la conexión con Resolve.',
+    ]),
     ('5.5.11', [
         'Sonido más limpio: la biblioteca de sonidos ya no ocupa la página; sale en una ventana al pulsar «Buscar archivo…» en cada sonido (y en cada emoji), con el buscador, las categorías y «Desde mi computadora…».',
         'Inicio: el botón del Registro va junto a minimizar, igual que en el resto de páginas.',

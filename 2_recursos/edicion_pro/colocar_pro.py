@@ -31,8 +31,8 @@ import tempfile
 import time
 
 RUTA_JSON = os.path.join(os.path.expanduser('~'), 'DaVinciSubtitles', 'edicion_pro_plan.json')
-ORDEN = ['PRO-BROLL', 'PRO-ZOOM', 'PRO-GRIS', 'PRO-FONDO', 'PRO-VELO', 'PRO-DETRAS', 'PRO-PERSONA', 'PRO-DELANTE', 'PRO-SUBS']
-CAPA = {'fondo': 'PRO-FONDO', 'velo': 'PRO-VELO', 'detras': 'PRO-DETRAS', 'delante': 'PRO-DELANTE', 'iconos': 'PRO-ICONOS', 'subs': 'PRO-SUBS'}
+ORDEN = ['PRO-BROLL', 'PRO-ZOOM', 'PRO-GRIS', 'PRO-FONDO', 'PRO-VELO', 'PRO-DETRAS', 'PRO-PERSONA', 'PRO-DELANTE', 'PRO-SUBS', 'PRO-SUBS2']   # v5.5.13: SUBS2 = 2.ª pista de captions (Tema 1 neón: un bloque sale mientras entra el siguiente)
+CAPA = {'fondo': 'PRO-FONDO', 'velo': 'PRO-VELO', 'detras': 'PRO-DETRAS', 'delante': 'PRO-DELANTE', 'iconos': 'PRO-ICONOS', 'subs': 'PRO-SUBS', 'subs2': 'PRO-SUBS2', 'placa': 'PRO-ZOOM'}
 PISTA_ENCIMA = 'PRO-ENCIMA'
 PISTA_ICONOS = 'PRO-ICONOS'              # los iconos 3D junto a los captions: encima de ellos (y debajo de PRO-ENCIMA)
 PISTA_MOTIONS = 'PRO-MOTIONS'            # v5.5.8: «Motions completo», el video entero de motions ENCIMA DE TODO (el usuario lo corta)
@@ -278,6 +278,17 @@ def _clip_v1(tl, f0, f1):
     return None
 
 
+def _clip_en_pista(tl, nombre, f0, f1):
+    """v5.5.20: el clip de la pista `nombre` que contiene [f0, f1) (None si no hay)."""
+    i = _indice(tl, nombre)
+    if i is None:
+        return None
+    for it in tl.GetItemListInTrack('video', i) or []:
+        if it.GetStart() <= f0 and f1 <= it.GetEnd():
+            return it
+    return None
+
+
 def _rastreo_completo(it):
     """¿El Magic Mask del clip está rastreado de punta a punta? Se lee en su composición EXPORTADA (ProcessedFramesLow/High): la API no deja
     leerla sin abrir la página Fusion. Un clip sin rastrear sale entero (opaco) y TAPARÍA los captions y los titulares: no se deja."""
@@ -413,7 +424,14 @@ def _poner_persona(tl, mp, caja, p, f0, f1, pista):
     """El recorte de la persona de f0 a f1 en `pista`: el ProRes con alfa de la IA local ('clip') o el mismo clip de V1 con la composición del
     Magic Mask; con la transformación del clip de V1 que tiene debajo. Nunca sobre un clip de V1 con el movimiento de Efectos (no casaría)."""
     v1 = _clip_v1(tl, f0, f1)
-    if v1 is not None and 'CineCaptions FX' in (v1.GetFusionCompNameList() or []):
+    if p.get('fuente') == 'placa':
+        # v5.5.20 (Tema 1 con la PRO): lo que se ve es la PLACA (PRO-ZOOM, con sus zooms hacia la cara): la persona se recorta de ella, si no
+        # el recorte no caería sobre la persona que se ve
+        v1 = _clip_en_pista(tl, 'PRO-ZOOM', f0, f1)
+        if v1 is None:
+            print('  la persona de %d a %d: no encuentro la placa del Tema 1 en PRO-ZOOM' % (f0, f1))
+            return None
+    elif v1 is not None and 'CineCaptions FX' in (v1.GetFusionCompNameList() or []):
         print('  la persona de %d a %d va sobre un clip con el movimiento de Efectos: no se recorta' % (f0, f1))
         return None
     if p.get('modo') == 'clip':
@@ -543,7 +561,7 @@ def _poner_tilt(it, nuevo):
     return False
 
 
-def _subir_captions(tl, cues, base):
+def _subir_captions(tl, cues, base, subs_pro=False):
     """Sube (Tilt) los clips de los captions que EMPIEZAN dentro de cada bloque y les deja la marca. Devuelve cuántos movió.
     v5.5.7 (el usuario: «los emojis quedan separados del caption, o encima»): el Tilt de un PNG «Fit» (los emojis) solo se aplica ×min/alto
     (medido en Free 21.1; 0,5625 en vertical) y se movía ~56 % de lo que se movía el texto: subidas de 500-700 px lo dejaban 250-300 px lejos (o
@@ -551,15 +569,20 @@ def _subir_captions(tl, cues, base):
     W = float(tl.GetSetting('timelineResolutionWidth') or 1080)
     H = float(tl.GetSetting('timelineResolutionHeight') or 1920)
     k_emoji = H / max(1.0, min(W, H))
-    clips = [(it.GetStart(), it, 'EMOJI' in str(tl.GetTrackName('video', i) or '').upper())
+    clips = [(it.GetStart(), it, 'EMOJI' in str(tl.GetTrackName('video', i) or '').upper(), False)
              for i in _pistas_captions(tl) for it in tl.GetItemListInTrack('video', i) or []]
+    if subs_pro:                                                       # v5.5.20: el Tema 1: sus captions son los clips neón de PRO-SUBS / PRO-SUBS2
+        clips += [(it.GetStart(), it, False, True) for i in (_indice(tl, 'PRO-SUBS'), _indice(tl, 'PRO-SUBS2')) if i is not None
+                  for it in tl.GetItemListInTrack('video', i) or []]
     movidos = 0
     for c in cues:
         f0, f1, d = base + int(c['ini']), base + int(c['fin']), float(c['subir'])
         if abs(d) < 0.5:
             continue
-        for s, it, es_emoji in clips:
-            if f0 - 1 <= s < f1 and _poner_tilt(it, float(it.GetProperty('Tilt') or 0.0) + d * (k_emoji if es_emoji else 1.0)):
+        for s, it, es_emoji, neon in clips:
+            # (un clip neón por bloque: SOLO el que empieza con el bloque; el siguiente empieza 0,15 s antes de que este acabe y también subía)
+            dentro = (f0 - 2 <= s <= f0 + 6) if neon else (f0 - 1 <= s < f1)
+            if dentro and _poner_tilt(it, float(it.GetProperty('Tilt') or 0.0) + d * (k_emoji if es_emoji else 1.0)):
                 movidos += 1
     return movidos
 
@@ -630,6 +653,13 @@ def _encima(tl, mp, caja, tramos, base, decir, cache):
         it = _poner_persona(tl, mp, caja, t, f0, f1, i)
         if it is None:
             continue
+        if t.get('recorte_px'):
+            # v5.5.20: la persona solo hace falta a la altura del caption: por debajo se recorta (es idéntica a lo de debajo, no se nota) y así
+            # puede quedarse hasta que el caption sale sin tapar los captions que van en su sitio, más abajo
+            try:
+                it.SetProperty('CropBottom', float(it.GetProperty('CropBottom') or 0.0) + float(t['recorte_px']))
+            except Exception:
+                pass
         fin = it.GetEnd()
         try:
             it.SetName('PRO · persona encima')
@@ -649,7 +679,7 @@ def _encima(tl, mp, caja, tramos, base, decir, cache):
         if k in fallidos:
             tl.DeleteClips([it], False)                                 # sin la persona bien recortada, los captions se quedan donde estaban
             continue
-        movidos += _subir_captions(tl, t.get('cues') or [], base)
+        movidos += _subir_captions(tl, t.get('cues') or [], base, subs_pro=bool(t.get('subs_pro')))
         hechos += 1
         f0, f1 = it.GetStart(), it.GetEnd()
         if t.get('velo') and idx_velo and not any(a < f1 and f0 < b for a, b in velos):
@@ -755,7 +785,7 @@ def _color_claves(tl, cc):
     return hechos
 
 
-def _apagar_captions(tl):
+def _apagar_captions(tl, sonidos=True):
     """Tema 5: los captions de verdad son las animaciones de PRO-SUBS; los Text+ (y emojis) que GO dejó de respaldo se apagan (siguen ahí, para
     encenderlos a mano si se prefieren), y también SUS sonidos (pistas de audio «SFX…»: un toque por palabra y el de cada emoji, que ya no se ven).
     Un GO nuevo los vuelve a poner."""
@@ -767,7 +797,7 @@ def _apagar_captions(tl):
                     apagados += 1
             except Exception:
                 pass
-    for i in range(1, int(tl.GetTrackCount('audio') or 0) + 1):
+    for i in range(1, int(tl.GetTrackCount('audio') or 0) + 1) if sonidos else []:
         if not str(tl.GetTrackName('audio', i) or '').upper().startswith('SFX'):
             continue
         for it in tl.GetItemListInTrack('audio', i) or []:
@@ -1047,7 +1077,7 @@ def main():
     _preimportar(mp, caja, datos)                                          # v5.5.8: todo de una vez, ANTES de tocar el timeline
     idx = _pistas(tl)
     idx[PISTA_ICONOS] = _pista_iconos(tl, any(g.get('capa') == 'iconos' for g in datos.get('graficos') or []))
-    puestos = {'fondo': 0, 'velo': 0, 'detras': 0, 'delante': 0, 'persona': 0, 'iconos': 0, 'subs': 0}
+    puestos = {'fondo': 0, 'velo': 0, 'detras': 0, 'delante': 0, 'persona': 0, 'iconos': 0, 'subs': 0, 'subs2': 0, 'placa': 0}
     sin_poner = 0
     fin_pista = {n: -1 for n in ORDEN + [PISTA_ICONOS]}
     # 1) los gráficos OGraf
@@ -1135,7 +1165,8 @@ def main():
     movidos += _subir_captions(tl, datos.get('mover') or [], base)
     emojis = _emojis_sin_cara(tl, [c for e in datos.get('encima') or [] for c in e.get('cues') or []] + list(datos.get('mover') or []), base)
     cambiados = _apagar_emojis(tl, datos.get('sin_emoji') or [], base) if datos.get('sin_emoji') else 0      # v5.5.7: donde la PRO enseña algo (antes solo junto a un icono 3D)
-    respaldo = _apagar_captions(tl) if datos.get('captions_propios') and puestos.get('subs') else 0
+    respaldo = (_apagar_captions(tl, sonidos=datos.get('captions_sonidos') is not True) if datos.get('captions_propios') and (puestos.get('subs') or puestos.get('subs2'))
+                else 0)            # (v5.5.13: el Tema 1 neón deja sus sonidos: un toque por palabra, como el kit)
     coloreados = _color_claves(tl, datos.get('color_claves'))
     if coloreados:
         print('Temas 1–4: %d palabras destacadas en el color del video.' % coloreados)
@@ -1152,9 +1183,9 @@ def main():
         tl.SetCurrentTimecode(_tc(tl, tl.GetStartFrame()))
     except Exception:
         pass
-    total = puestos['fondo'] + puestos['velo'] + puestos['detras'] + puestos['delante'] + puestos['iconos'] + puestos['subs']
+    total = puestos['fondo'] + puestos['velo'] + puestos['detras'] + puestos['delante'] + puestos['iconos'] + puestos['subs'] + puestos['subs2']
     if puestos['subs']:
-        print('Tema 5: %d captions animados (%d Text+ de respaldo apagados).' % (puestos['subs'], respaldo))
+        print('Captions animados: %d (%d captions de respaldo apagados).' % (puestos['subs'], respaldo))
     print('Edición PRO: %d gráficos (%d detrás, %d delante, %d escenas, %d velos), %d recortes de persona%s, captions detrás de la persona en %d tramos '
           '(%d clips movidos, %d emojis apartados de la cara), %d iconos 3D (%d emojis cambiados), %d tramos en gris, %d tomas de B-roll, '
           '%d punch-ins, %d sonidos%s.' % (

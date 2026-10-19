@@ -3582,5 +3582,10 @@
     "{t} · sonido {n}": "{t} · son {n}",
     "Sonido más limpio: la biblioteca de sonidos ya no ocupa la página; sale en una ventana al pulsar «Buscar archivo…» en cada sonido (y en cada emoji), con el buscador, las categorías y «Desde mi computadora…».": "Page Son plus épurée : la bibliothèque de sons n’occupe plus la page ; elle s’ouvre dans une fenêtre quand vous appuyez sur « Parcourir… » sur chaque son (et chaque emoji), avec la recherche, les catégories et « Depuis mon ordinateur… ».",
     "Inicio: el botón del Registro va junto a minimizar, igual que en el resto de páginas.": "Accueil : le bouton du Journal se trouve à côté de réduire, comme sur les autres pages."
-  }
+  },
+  "Suave": "Léger",
+  "Media": "Moyen",
+  "Fuerte": "Fort",
+  "Solo con DaVinci Resolve Studio: Magic Mask recorta a la persona (solo personas) y el texto pasa por detrás.": "Uniquement avec DaVinci Resolve Studio : Magic Mask détoure la personne (personnes uniquement) et le texte passe derrière.",
+  "Encendido · intensidad": "Activé · intensité"
 }

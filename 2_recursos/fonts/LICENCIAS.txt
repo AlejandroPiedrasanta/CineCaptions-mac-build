@@ -198,3 +198,8 @@ InstrumentSerif-Regular.ttf   (48 KB)  — la serif alta y fina de los captions 
   Nota      : convertida a TTF (fontTools, sin tocar los contornos) desde el serif-400.woff2 de Remotion (subconjunto latino de
               Google Fonts); se le añadió a la tabla de nombres la línea de licencia (nameID 13/14).
 ------------------------------------------------------------------
+Yellowtail-Regular.ttf   (62 KB)  — la palabra escrita a mano del Tema 1 neón (pack «Kinetic», clips «k script yt …»)
+  Copyright: Copyright (c) 2010 by Brian J. Bonislawsky DBA Astigmatic (AOETI). All rights reserved.
+  Licencia  : Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+  Nota      : la misma de Google Fonts; copiada del kit «TEMA 1» del usuario (recursos/fuentes/script.ttf).
+------------------------------------------------------------------

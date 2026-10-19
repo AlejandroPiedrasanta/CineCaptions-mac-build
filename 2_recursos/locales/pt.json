@@ -3582,5 +3582,10 @@
     "{t} · sonido {n}": "{t} · som {n}",
     "Sonido más limpio: la biblioteca de sonidos ya no ocupa la página; sale en una ventana al pulsar «Buscar archivo…» en cada sonido (y en cada emoji), con el buscador, las categorías y «Desde mi computadora…».": "Página Som mais limpa: a biblioteca de sons já não ocupa a página; abre numa janela ao clicar em «Procurar arquivo…» em cada som (e em cada emoji), com a busca, as categorias e «Do meu computador…».",
     "Inicio: el botón del Registro va junto a minimizar, igual que en el resto de páginas.": "Início: o botão do Registo fica ao lado de minimizar, como nas outras páginas."
-  }
+  },
+  "Suave": "Suave",
+  "Media": "Média",
+  "Fuerte": "Forte",
+  "Solo con DaVinci Resolve Studio: Magic Mask recorta a la persona (solo personas) y el texto pasa por detrás.": "Só com DaVinci Resolve Studio: o Magic Mask recorta a pessoa (só pessoas) e o texto passa por trás.",
+  "Encendido · intensidad": "Ligado · intensidade"
 }

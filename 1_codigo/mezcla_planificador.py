@@ -31,7 +31,7 @@ MIN_SEGUNDOS_TRAMO = 2.6
 GAP = 0.03                          # lo mínimo que separa el final de un bloque del principio del siguiente (s)
 
 # ----------------------------------------------------------------------------------------------------------------------------- el catálogo de looks
-NOMBRES_T1 = {'lima': 'Héroe lima', 'blanco-rojo': 'Blanco y anillo', 'magenta': 'Héroe magenta', 'amarillo': 'Héroe amarillo', 'serif': 'Serif cursiva', 'blanco-cian': 'Blanco y cian'}
+NOMBRES_T1 = {'lima': 'Círculo lima', 'blanco-rojo': 'Pegatina roja', 'magenta': 'Magenta subrayado', 'amarillo': 'A mano y pegatina', 'serif': 'Lazo magenta', 'blanco-cian': 'A mano subrayada'}   # v5.5.13: tema neón
 NOMBRES_T3 = {'pila': 'Pila y negrita', 'v shatter': 'Shatter (cristal)', 'v select': 'Select (caja)', 'v drag': 'Drag (mano)'}
 
 

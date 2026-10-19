@@ -4757,6 +4757,12 @@ class WordTagWindow(QWidget):
             nuevo = var.get().strip()
             cerrar()
             if nuevo and nuevo != self.palabras[idx]['word'].strip():
+                anterior = self.palabras[idx]['word'].strip()
+                try:                                     # v5.5.17: un nombre propio corregido a mano se aprende (vocabulario.py; fuera de la interfaz)
+                    import vocabulario
+                    threading.Thread(target=vocabulario.aprender_par, args=(anterior, nuevo), daemon=True, name='vocabulario').start()
+                except Exception:
+                    pass
                 self._guardar_para_deshacer()
                 self.palabras[idx]['orig'] = nuevo
                 self.palabras[idx]['word'] = self._texto_con_caso(nuevo)
@@ -7582,6 +7588,8 @@ class SubtitleApp(QWidget):
         """v5.5.8: ¿GO termina con «Motions completo» (motions_completo.py, el video de motions encima de todo)?"""
         try:
             import edicion_pro
+            if edicion_pro.neon_elegido():             # v5.5.13: el Tema 1 tiene sus propios interruptores (los del menú lateral de Proyecto)
+                return 'motions_completo' in edicion_pro.neon_extras()
             return bool(edicion_pro.opciones_guardadas().get('pro_motions_completo'))
         except Exception:
             return False
@@ -7589,7 +7597,10 @@ class SubtitleApp(QWidget):
         """El chip «Motions completo» de Inicio: sí / no (no enciende la Edición PRO: va también solo, sobre los captions)."""
         try:
             import edicion_pro
-            edicion_pro.guardar_opciones({'pro_motions_completo': not self._go_motions_completo()})
+            if edicion_pro.neon_elegido():
+                edicion_pro.poner_neon_extra('motions_completo', not self._go_motions_completo())
+            else:
+                edicion_pro.guardar_opciones({'pro_motions_completo': not self._go_motions_completo()})
         except Exception:
             pass
         self._pintar_opciones_go()
@@ -7618,8 +7629,11 @@ class SubtitleApp(QWidget):
             marca = '✓  ' if op.get('pro_genero', 'auto') == clave else '      '
             menu.agregar(marca + tr('Estilo de video: {n}', n=tr(nombre)), lambda c=clave: self._poner_pro_go('pro_genero', c))
         menu.separador()
+        studio = edicion_pro.detras_disponible()        # v5.5.20: Magic Mask solo existe en Studio: en Free (o el MP4) esa opción no se enseña
         for clave, nombre in (('auto', 'Persona: recorte con IA local (recomendado)'), ('magic', 'Persona: Magic Mask de Resolve Studio (más pesado)'),
                               ('no', 'Persona: sin recortar')):
+            if clave == 'magic' and not studio:
+                continue
             marca = '✓  ' if op.get('pro_mascara', 'auto') in ((clave, 'ia') if clave == 'auto' else (clave,)) else '      '
             menu.agregar(marca + tr(nombre), lambda c=clave: self._poner_pro_go('pro_mascara', c))
         menu.separador()
@@ -8079,6 +8093,11 @@ class SubtitleApp(QWidget):
         self._ultimos_bloques = None
         # v5.4.47: sin DaVinci Resolve en el equipo GO entrega el video con los subtítulos grabados (render_sin_resolve.py, estilo Tema 4)
         self._go_sin_resolve = self._resolve_no_instalado()
+        try:
+            import motor_voz
+            motor_voz.sin_resolve(self._go_sin_resolve)     # v5.5.17: sin Resolve no se le guarda GPU (la IA de texto 4B cabe)
+        except Exception:
+            pass
         self._go_pack_forzado = None
         if self._go_sin_resolve:                       # v5.5.8: el tema elegido (render_temas.py dibuja los 6); un pack propio o una mezcla, con el Tema 4
             try:
@@ -8928,11 +8947,26 @@ class SubtitleApp(QWidget):
                 time.sleep(0.2)
             return bool(getattr(self, '_cancelar_go', False))
 
+        neon = getattr(self, '_kitneon', None)                 # v5.5.16: el Tema 1 neón sin Resolve = los MISMOS clips que la PRO pone en Resolve
+        es_neon = bool(neon and neon.get('escena') and (estilo or {}).get('tipo') == 'kinetic')
+        plan_pro = getattr(self, '_pro_plan', None)
+
         def trabajo():
             import render_sin_resolve
             try:
-                est['r'] = render_sin_resolve.renderizar(video, cues, progreso=lambda f, t: est.update(f=f, texto=t),
-                                                         cancelado=parar, emoji_arriba=emoji_arriba, estilo=estilo)
+                if es_neon:
+                    import kit_neon_mp4
+                    try:
+                        est['r'] = kit_neon_mp4.renderizar(video, neon['escena'], plan=plan_pro, cues=cues, cancelado=parar,
+                                                           progreso=lambda f, t: est.update(f=f, texto=t))
+                    except kit_neon_mp4.NoVertical:
+                        est['r'] = None                                   # (apaisado: el Tema 1 neón es vertical; va el render de siempre)
+                    except Exception:
+                        registro.excepcion(origen='GO sin Resolve · Tema 1 neón')
+                        est['r'] = None
+                if est['r'] is None:
+                    est['r'] = render_sin_resolve.renderizar(video, cues, progreso=lambda f, t: est.update(f=f, texto=t),
+                                                             cancelado=parar, emoji_arriba=emoji_arriba, estilo=estilo)
             except BaseException as e:
                 est['error'] = f'{type(e).__name__}: {e}'
                 registro.excepcion(origen='GO sin Resolve · render')
@@ -11793,21 +11827,29 @@ class SubtitleApp(QWidget):
         try:
             import edicion_pro
             tema5 = self._es_tema5()                   # el Tema 5 es la Edición PRO completa (captions incluidos): va aunque el interruptor esté apagado
+            tema_pro = 'neon' if (getattr(self, 'plantilla_sel', '') or '') == 'Kinetic' else None    # v5.5.13: con el Tema 1 la PRO va en neón
             if not words:
                 return
             if not (edicion_pro.activado() or tema5):
                 # v5.4.51: los Temas 1–4 sin la PRO llevan un pase LIGERO (edicion_pro_temas): velo de legibilidad en videos claros, acompañantes
                 # bajo el caption, la palabra destacada en el color del video y la regla de la cara. Se apaga con la preferencia 'temas_mejoras'.
+                # v5.5.13: el Tema 1 sin la PRO = SOLO sus captions neón («si solo es captions, solo captions»); «Motions completo» solo si lo encendió
+                op_go = edicion_pro.opciones_guardadas()
+                if tema_pro == 'neon':
+                    op_go = edicion_pro.opciones_neon(op_go)
                 try:
                     import ajustes_ui
-                    if ajustes_ui.leer_prefs().get('temas_mejoras', True) is False:
-                        if edicion_pro.opciones_guardadas().get('pro_motions_completo'):     # v5.5.8: solo «Motions completo»
-                            self._pro_plan = {'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es', 'opciones': edicion_pro.opciones_guardadas()}
+                    if ajustes_ui.leer_prefs().get('temas_mejoras', True) is False or tema_pro == 'neon':
+                        if tema_pro == 'neon':                       # v5.5.13: el Tema 1 neón pone sus captions aunque no haya mejoras
+                            self._pro_plan = {'ligero': True, 'solo_captions': True, 'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es',
+                                              'opciones': op_go, 'tema': tema_pro}
+                        elif op_go.get('pro_motions_completo'):      # v5.5.8: solo «Motions completo»
+                            self._pro_plan = {'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es', 'opciones': op_go}
                         return
                 except Exception:
                     pass
                 self._pro_plan = {'ligero': True, 'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es',
-                                  'opciones': edicion_pro.opciones_guardadas()}
+                                  'opciones': op_go, 'tema': tema_pro}
                 return
             self.msg_queue.put(('status', tr('Edición PRO: pensando la edición de este video…')))
             cortes = None
@@ -11823,12 +11865,13 @@ class SubtitleApp(QWidget):
                 cortes = list(cortes) + [(float(t), 1.0) for t in (recorte.get('saltos') or [])]
                 duracion = recorte['duracion_nueva']
             plan = edicion_pro.planificar(str(media_path), words, duracion, cortes=cortes, idioma=idioma or 'es',
-                                          al_estado=lambda t: self.msg_queue.put(('status', tr(t))))
+                                          al_estado=lambda t: self.msg_queue.put(('status', tr(t))), tema=tema_pro)
             plan['tema5'] = tema5
             if tema5 and (getattr(self, 'plantilla_sel', '') or '') == 'Tema6':
                 plan['estilo_t5'] = 'editorial'        # Tema 6: el mismo motor, con el estilo editorial (serif fina, melocotón, visor, búsqueda…)
             solo_motions = bool((plan.get('opciones') or edicion_pro.opciones_guardadas()).get('pro_motions_completo'))
-            if plan.get('piezas') or tema5 or solo_motions:   # v5.5.9: con «Motions completo», aunque la PRO no tenga gráficos para este video
+            # v5.5.13: el Tema 1 neón también sin piezas genéricas (sus motions del kit y sus captions se suman al aplicar)
+            if plan.get('piezas') or tema5 or solo_motions or plan.get('tema') == 'neon':   # v5.5.9: con «Motions completo», aunque la PRO no tenga gráficos para este video
                 self._pro_plan = plan
             registro.info('Edición PRO: ' + plan.get('resumen', '') + (' · Tema 5 (captions propios)' if tema5 else ''), 'edición pro')
         except Exception:
@@ -11850,7 +11893,10 @@ class SubtitleApp(QWidget):
             solo_motions = bool(plan and (plan.get('opciones') or _ep.opciones_guardadas()).get('pro_motions_completo'))
         except Exception:
             solo_motions = False
-        if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or solo_motions):   # (v5.5.9: «Motions completo» también)
+        neon = getattr(self, '_kitneon', None)          # v5.5.13: los captions del Tema 1 neón (los armó _generar_con_kinetic para ESTE video)
+        if plan and plan.get('tema') == 'neon' and neon and neon.get('escena'):
+            plan['kitneon'] = neon['escena']
+        if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or solo_motions or plan.get('kitneon')):   # (v5.5.9: «Motions completo» también)
             return ''
         try:                                   # el plan es de un video: si ahora hay otro cargado (regenerar), no se aplica el de antes
             actual = self.video_var.get().strip().strip('"')
@@ -13351,6 +13397,7 @@ class SubtitleApp(QWidget):
         Sonidos: el mismo modo de Sonido (un golpe cuando entra la palabra héroe). Sin emojis (no forman parte de este estilo).
         Devuelve (bloques, track, pista_sfx) con el .json ya escrito (el mismo contrato que _generar_con_guion), o None si no se puede."""
         sin_resolve = bool(getattr(self, '_go_sin_resolve', False))     # v5.5.8: GO sin Resolve dibuja el diseño vertical (render_temas.py) en cualquier video
+        self._kitneon = None                                             # v5.5.13: (los del Tema 1 neón, de ESTA generación)
         formato = 'v' if sin_resolve else (self._formato_forzado() or self._formato_en_juego() or 'v')
         es_viral = bool(getattr(pack, 'viral', False))
         if formato not in (('v', 'h') if es_viral else ('v',)) or formato not in pack.formatos:
@@ -13386,6 +13433,12 @@ class SubtitleApp(QWidget):
         if not cues:
             avisar(tr('No encontré palabras para armar el estilo «{p}»: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
             return None
+        if not es_viral:                                       # (v5.5.17: también sin Resolve: kit_neon_mp4 graba ESTOS clips; antes caía al render genérico)
+            try:                       # v5.5.13: el Tema 1 neón: los MISMOS bloques con el motor del kit (KitNeon); la Edición PRO los pone y apaga estos de respaldo
+                import kit_neon
+                self._kitneon = {'escena': kit_neon.escena_captions(palabras_finales, base_lang, fin_video=self._fin_video(), mains=mains)}
+            except Exception:
+                registro.excepcion(origen='Tema 1 neón (bloques)')
         bloques = [{'start': c['start'], 'end': c['end'], 'fin_hablado': c['end'],
                     'lines': [{'role': l['role'], 'text': l['text'], 'start': l['start']} for l in c['lines']]} for c in cues]
         pista_sfx, pista_emojis = {}, {}
@@ -13526,6 +13579,14 @@ class SubtitleApp(QWidget):
         """Mete en el manifiesto la pista del generador (y, en un estilo mezclado, las demás: track['mezcla_pistas'], marcando manifest['mezcla'] para que Resolve limpie una sola vez)."""
         extra = track_motor.pop('mezcla_pistas', None)
         pistas = [track_motor] + list(extra or [])
+        try:
+            import fuente_usuario                                  # v5.5.12: la tipografía elegida en «Crea tu estilo» (principal / arriba y abajo)
+            import ajustes_ui as _aj
+            prefs = _aj.leer_prefs()
+            for p in pistas:
+                fuente_usuario.aplicar_a_pista(p, prefs)
+        except Exception:
+            registro.excepcion(origen='tipografía elegida')
         if extra is not None:
             manifest['mezcla'] = True
         if posicion is None:
@@ -13659,9 +13720,17 @@ class SubtitleApp(QWidget):
             else:
                 # v5.4.8: la misma voz (mismo video, idioma, motor y modelo) no se transcribe dos veces
                 words = None
+                contexto_voz, modelo_cache = '', MODEL_SIZE
+                try:                                     # v5.5.17: los nombres que el usuario ya corrigió guían a la voz («Xela», «FIFA»…)
+                    import vocabulario
+                    contexto_voz = vocabulario.contexto()
+                    if contexto_voz:
+                        modelo_cache = f'{MODEL_SIZE}|{vocabulario.huella_contexto(contexto_voz)}'
+                except Exception:
+                    contexto_voz, modelo_cache = '', MODEL_SIZE
                 try:
                     import cache_voz
-                    words = cache_voz.leer(media_path, source_lang, MODEL_SIZE)
+                    words = cache_voz.leer(media_path, source_lang, modelo_cache)
                 except Exception:
                     words = None
                 if words:
@@ -13669,14 +13738,24 @@ class SubtitleApp(QWidget):
                     self.msg_queue.put(('status', tr('Este video ya estaba transcrito: uso esa transcripción.')))
                     self.msg_queue.put(('progress', transcribe_share))
                 else:
-                    words = st.transcribe(str(media_path), source_lang, MODEL_SIZE, progress_callback=on_transcribe_progress, model_loaded_callback=on_model_loaded, status_callback=lambda t: self.msg_queue.put(('status', t)))
+                    words = st.transcribe(str(media_path), source_lang, MODEL_SIZE, contexto=contexto_voz, progress_callback=on_transcribe_progress, model_loaded_callback=on_model_loaded, status_callback=lambda t: self.msg_queue.put(('status', t)))
                     try:
                         import cache_voz
-                        cache_voz.guardar(media_path, source_lang, MODEL_SIZE, words)
+                        cache_voz.guardar(media_path, source_lang, modelo_cache, words)
                     except Exception:
                         pass
+            try:                                         # v5.5.17: las variantes ya corregidas («Shela» → «Xela») y un nombre escrito de dos formas, a una
+                import vocabulario
+                words, n_vocab = vocabulario.aplicar(words or [])
+                words, n_unif = vocabulario.unificar(words)
+                if n_vocab or n_unif:
+                    registro.info(f'Vocabulario: {n_vocab} palabra(s) con tu vocabulario y {n_unif} nombre(s) unificados.', 'voz')
+            except Exception:
+                pass
             self._punto_control_go()
-            if not words:
+            # v5.5.13: con música sin voz la IA puede devolver solo signos («♪», «…»): quitados los signos no quedaba ningún bloque y GO llegaba a Resolve
+            # para decir «no tiene bloques». Sin una palabra con letras o cifras se para aquí, como sin palabras
+            if not any(any(c.isalnum() for c in str(w.get('word') or '')) for w in (words or [])):
                 raise SystemExit(self._sin_palabras_mensaje())
             self._abortar_si_fallo_el_timeline()          # un video soltado sin su timeline en Resolve: no se sigue (ni se gastan los minutos de la IA)
             words = self._recortar_pausas(words, media_path)         # v5.4.8: «Quitar pausas» (si el usuario lo pidió): los tiempos de las palabras pasan a ser los del video recortado
@@ -13843,6 +13922,8 @@ class SubtitleApp(QWidget):
                     st.write_srt(base_cues, 42, 2, base_srt)
                     manifest['tracks'].append({'language': base_lang, 'srt_path': str(base_srt), 'offset_frames': self._offset_frames(), **self._pista_basicos()})
                     n_bloques = len(base_cues)
+            if not n_bloques:                                     # v5.5.13: 0 bloques (la IA o el estilo no dejaron texto): no se manda nada a Resolve
+                raise SystemExit(self._sin_palabras_mensaje())
             if translate:
                 destino = self._idioma_destino()
                 nombre_destino = NOMBRE_POR_CODIGO.get(destino, destino)
@@ -13877,7 +13958,10 @@ class SubtitleApp(QWidget):
             hilo_fx = getattr(self, '_efectos_hilo', None)
             self._efectos_hilo = None
             if hilo_fx is not None:
-                hilo_fx.join(300)                                    # (ya suele estar hecho: corrió mientras la IA trabajaba)
+                t_fx = time.time()                                   # (ya suele estar hecho: corrió mientras la IA trabajaba)
+                while hilo_fx.is_alive() and time.time() - t_fx < 300:
+                    hilo_fx.join(0.25)
+                    self._punto_control_go()                         # v5.5.12: Cancelar corta aquí al momento (antes esperaba al hilo)
             else:
                 self._planificar_efectos(media_path, words, cortes_fx)
             self._planificar_pro(media_path, getattr(self, '_words_corregidas', None) or words, cortes_fx, base_lang)   # v5.4.49: la Edición PRO (si está activada); v5.5.7: con el texto corregido
@@ -13887,13 +13971,17 @@ class SubtitleApp(QWidget):
                 self.msg_queue.put(('status', tr('Esperando a que Resolve termine el timeline con tu video…')))
                 # v5.5.1: con la reparación automática (hasta 3 intentos, reabriendo Resolve) puede tardar más de 240 s; si aun así no termina, GO se
                 # detiene: NUNCA se colocan los captions en otro timeline
-                if not ev_tl.wait(900) and not getattr(self, '_go_tl_error', None):
+                t_tl = time.time()
+                while not ev_tl.wait(0.25) and time.time() - t_tl < 900:
+                    self._punto_control_go()
+                if not ev_tl.is_set() and not getattr(self, '_go_tl_error', None):
                     self._go_tl_error = tr('Resolve no terminó de armar el timeline con tu video')
             self._go_tl_listo = None
             self._abortar_si_fallo_el_timeline()
             self.msg_queue.put(('done', (n_bloques, langs, str(st.SHARED_FOLDER))))
         except SystemExit as e:
-            guardar_log_de_error(traceback.format_exc())
+            if not getattr(self, '_cancelar_go', False):         # v5.5.12: cancelar no es un fallo (salía «Fallo inesperado» en el Registro)
+                guardar_log_de_error(traceback.format_exc())
             self.msg_queue.put(('error', str(e)))
             return None
         except Exception as e:

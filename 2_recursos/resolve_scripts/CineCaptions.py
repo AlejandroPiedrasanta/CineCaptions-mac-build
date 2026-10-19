@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.5.11 (subtitulos)"
+VERSION = "5.20 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -860,6 +860,19 @@ def set_input_safe(tool, nombre, valor):
 # que la banda vaya de antes de la primera letra a después de la última: ancho de la palabra + 0,16.
 BARRIDO_K = 2.17
 BARRIDO_BASE = 0.193
+
+
+def poner_fuente_usuario(tool, track_info, principal):
+    """v5.5.12 — la tipografía elegida en «Crea tu estilo» (track_info["fuente_usuario"] = {"main": [familia, estilo], "extra": [...]}).
+    DESPUÉS del texto. Gemela de COLORES_CC.fuente del .lua."""
+    fu = track_info.get("fuente_usuario") if isinstance(track_info, dict) else None
+    f = fu.get("main" if principal else "extra") if isinstance(fu, dict) else None
+    if tool is None or not isinstance(f, (list, tuple)) or not f or not f[0]:
+        return False
+    ok = set_input_safe(tool, "Font", f[0])
+    if ok and len(f) > 1 and f[1]:
+        set_input_safe(tool, "Style", f[1])
+    return ok
 
 
 def ajustar_barrido(item, visible_s, salto_s=0.0, ancho_rel=None):
@@ -3753,6 +3766,7 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
             props["ZoomX"] = props["ZoomY"] = float(run["zoom"])
         if props:
             _poner_props(item, props)
+        poner_fuente_usuario(tool, track_info, rol == "main")
         if rol == "main":
             ajustar_barrido(item, (fin - ini) / float(fps), salto, run.get("ancho_rel"))
         colocados += 1
@@ -4006,6 +4020,7 @@ def place_kinetic_track(timeline, media_pool, track_info, base_template,
                 continue
             if isinstance(run.get("size"), (int, float)):
                 set_input_safe(tool, "Size", float(run["size"]))
+            poner_fuente_usuario(tool, track_info, run.get("fu") == "main")
         props = {}
         if isinstance(run.get("x"), (int, float)):
             props["Pan"] = _pan_px(float(run["x"]) - 0.5, ancho_tl)

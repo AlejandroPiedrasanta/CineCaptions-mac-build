@@ -15,7 +15,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         movil.json
         movil_fondo.jpg
         movil_marco.png
-    edicion_pro\   (4199 archivos)
+    edicion_pro\   (4211 archivos)
     efectos\   (148 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
@@ -32,7 +32,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_09.jpg
         fondo_10.jpg
         fondo_11.jpg
-    fonts\   (47 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
+    fonts\   (48 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
     generador_packs\   (24 archivos)
         .cf\   (1 archivos)
         banner_cinecaptions.png

@@ -48,12 +48,21 @@ INTERVALO_SIN_RED_S = 60              # tras varios fallos seguidos (sin interne
 
 
 def _partes(v):
-    """'5.2.0-beta.3' -> (5, 2, 0, 0, 3): una beta va antes que su estable."""
-    m = re.match(r'(\d+)\.(\d+)\.(\d+)(?:-beta\.?(\d+))?', str(v or '').strip())
+    """'5.2.0-beta.3' -> (5, 2, 0, 0, 3): una beta va antes que su estable. v5.20: también de DOS números ('5.20' = 5.20.0; desde la 5.20 las
+    versiones son 5.20, 5.21… en vez de 5.5.x)."""
+    m = re.match(r'(\d+)\.(\d+)(?:\.(\d+))?(?:-beta\.?(\d+))?', str(v or '').strip())
     if not m:
         return (0, 0, 0, 1, 0)
     a, b, c, beta = m.groups()
-    return (int(a), int(b), int(c), 0 if beta is not None else 1, int(beta or 0))
+    return (int(a), int(b), int(c or 0), 0 if beta is not None else 1, int(beta or 0))
+
+
+def corta(v):
+    """v5.20: como se ENSEÑA una versión: el manifiesto publica «5.20.0» (los 5.5.x instalados solo entienden x.y.z) y aquí se ve «5.20»."""
+    m = re.fullmatch(r'(\d+)\.(\d+)\.0((?:-beta\.?\d+)?)', str(v or '').strip())
+    if m and int(m.group(2)) >= 20:
+        return f'{m.group(1)}.{m.group(2)}{m.group(3)}'
+    return str(v or '')
 
 
 def es_mas_nueva(remota, local):
@@ -167,7 +176,7 @@ def _interpretar(datos, version_local, canal_beta=False):
     mejor = max((c for c in candidatos if c.get('version')), key=lambda c: _partes(c['version']), default=None)
     if mejor and es_mas_nueva(mejor['version'], version_local):
         archivo = (mejor.get('archivos') or {}).get(clave_plataforma())
-        return {'estado': 'nueva', 'version': mejor['version'], 'url': (archivo or {}).get('url') or mejor.get('url') or '',
+        return {'estado': 'nueva', 'version': corta(mejor['version']), 'url': (archivo or {}).get('url') or mejor.get('url') or '',
                 'notas': mejor.get('notas') or '', 'fecha': mejor.get('fecha') or '', 'archivo': archivo if isinstance(archivo, dict) and archivo.get('url') else None}
     return {'estado': 'al_dia', 'version': version_local}
 

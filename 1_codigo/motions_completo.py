@@ -1149,13 +1149,13 @@ def crear(bloques, dur, W, H, fps, carpeta, idioma='es', perfil=None, video='', 
     return salida if ok else None
 
 
-def _renderizar(RM, props, salida, dur, decir):
+def _renderizar(RM, props, salida, dur, decir, comp='MotionsCompleto'):
     """Una llamada a render.mjs (modo opaco) leyendo su avance línea a línea."""
     salida.parent.mkdir(parents=True, exist_ok=True)
     RM._permisos()
     with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False, encoding='utf-8') as f:
         json.dump({'bundle': str(RM.bundle()), 'navegador': RM._chrome(),
-                   'trabajos': [{'id': 'MotionsCompleto', 'props': props, 'salida': str(salida), 'opaco': True}]}, f, ensure_ascii=False)
+                   'trabajos': [{'id': comp, 'props': props, 'salida': str(salida), 'opaco': True}]}, f, ensure_ascii=False)     # (v5.5.17: el Tema 1, KitNeon)
         ruta = f.name
     hecho = False
     try:

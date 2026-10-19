@@ -166,12 +166,18 @@ class Motor:
                                                                          device_map=self.dispositivo).eval()
         decir('ESTADO', f'Modelo listo en {time.time() - t0:.1f} s')
 
-    def transcribir(self, audios, idioma):
-        """audios: [np.float32 a 16 kHz]. Devuelve [(texto, idioma, [items del alineador])] en el mismo orden."""
+    def transcribir(self, audios, idioma, contexto=''):
+        """audios: [np.float32 a 16 kHz]. Devuelve [(texto, idioma, [items del alineador])] en el mismo orden.
+        contexto (v5.5.17): vocabulario del video (nombres que el usuario ya corrigió, texto que aparece en pantalla) como «system prompt» de
+        Qwen3-ASR (contextual biasing: «Xela», «FIFA», «Glass Collective» se oyen bien desde el principio)."""
         import torch
         n = len(audios)
         with torch.inference_mode():
-            ent = self.proc.apply_transcription_request(audio=list(audios), language=[idioma or None] * n)
+            try:
+                ent = self.proc.apply_transcription_request(audio=list(audios), language=[idioma or None] * n,
+                                                            **({'prompt': [contexto] * n} if contexto else {}))
+            except TypeError:                             # (un Transformers sin «prompt»: sin vocabulario, como siempre)
+                ent = self.proc.apply_transcription_request(audio=list(audios), language=[idioma or None] * n)
             ent = ent.to(self.asr.device, self.asr.dtype)
             ids = self.asr.generate(**ent, max_new_tokens=1024, do_sample=False)
             leidos = self.proc.decode(ids[:, ent['input_ids'].shape[1]:], return_format='parsed')
@@ -217,7 +223,7 @@ def calentar(motor, dispositivo):
         decir('ESTADO', f'Calentamiento omitido ({type(e).__name__})')
 
 
-def transcribir_con(motor, ruta_audio, idioma, salida, dispositivo, modelo, t0=None):
+def transcribir_con(motor, ruta_audio, idioma, salida, dispositivo, modelo, t0=None, contexto=''):
     """Transcribe con el modelo YA cargado y escribe el json. Los tramos van en lote."""
     import numpy as np
     import soundfile as sf
@@ -236,7 +242,7 @@ def transcribir_con(motor, ruta_audio, idioma, salida, dispositivo, modelo, t0=N
     lote = max(1, int(getattr(motor, 'lote', 1) or 1))
     for k in range(0, len(partes), lote):
         grupo = partes[k:k + lote]
-        resultados = motor.transcribir([trozo for trozo, _ in grupo], idioma or None)
+        resultados = motor.transcribir([trozo for trozo, _ in grupo], idioma or None, contexto)
         for (trozo, offset), (texto, idioma_res, items) in zip(grupo, resultados):
             if idioma_res:
                 idiomas.append(idioma_res)
@@ -246,17 +252,17 @@ def transcribir_con(motor, ruta_audio, idioma, salida, dispositivo, modelo, t0=N
         decir('PROGRESO', f'{min(1.0, (off + len(ultimo) / sr) / total):.3f}')
     resultado = {'motor': 'qwen3-asr', 'version_motor': VERSION_MOTOR, 'modelo': REPO_ASR[modelo],
                  'dispositivo': dispositivo, 'idioma': idioma or (max(set(idiomas), key=idiomas.count) if idiomas else ''),
-                 'segundos': round(time.time() - t0, 1), 'palabras': palabras}
+                 'segundos': round(time.time() - t0, 1), 'contexto': contexto, 'palabras': palabras}
     with open(salida, 'w', encoding='utf-8') as f:
         json.dump(resultado, f, ensure_ascii=False)
     decir('LISTO', salida)
 
 
-def transcribir(ruta_audio, idioma, salida, modelo_pedido, dispositivo_pedido):
+def transcribir(ruta_audio, idioma, salida, modelo_pedido, dispositivo_pedido, contexto=''):
     """Una sola pasada (sin servidor): carga, transcribe y termina."""
     t0 = time.time()
     motor, dispositivo, modelo = cargar_modelo(modelo_pedido, dispositivo_pedido)
-    transcribir_con(motor, ruta_audio, idioma, salida, dispositivo, modelo, t0)
+    transcribir_con(motor, ruta_audio, idioma, salida, dispositivo, modelo, t0, contexto)
 
 
 def servidor(modelo_pedido, dispositivo_pedido, inactivo):
@@ -285,7 +291,8 @@ def servidor(modelo_pedido, dispositivo_pedido, inactivo):
             continue
         try:
             orden = json.loads(linea)
-            transcribir_con(motor, orden['audio'], orden.get('idioma') or '', orden['salida'], dispositivo, modelo)
+            transcribir_con(motor, orden['audio'], orden.get('idioma') or '', orden['salida'], dispositivo, modelo,
+                            contexto=str(orden.get('contexto') or '')[:2000])
         except Exception as e:
             import traceback
             traceback.print_exc(file=sys.stderr)
@@ -315,6 +322,7 @@ def main():
     ap.add_argument('--comprobar', action='store_true')
     ap.add_argument('--servidor', action='store_true')
     ap.add_argument('--inactivo', type=float, default=120.0)
+    ap.add_argument('--contexto', default='')
     a = ap.parse_args()
     try:
         if a.servidor:
@@ -328,7 +336,7 @@ def main():
             descargar(a.modelo)
             decir('LISTO', a.modelo)
         else:
-            transcribir(a.audio, a.idioma, a.salida, a.modelo, a.dispositivo)
+            transcribir(a.audio, a.idioma, a.salida, a.modelo, a.dispositivo, a.contexto)
     except Exception as e:  # el programa necesita el motivo en una linea
         import traceback
         traceback.print_exc(file=sys.stderr)

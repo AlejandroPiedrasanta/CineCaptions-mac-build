@@ -17,15 +17,18 @@ mide cada una con su tipografía real (Pillow), las apila centradas en un ancla 
 import json
 from pathlib import Path
 
-K_PX = 640.0                         # px del em por unidad de «Size» de Text+ a 1080 px de ancho (medido contra Resolve)
+import kinetic_paleta as PAL
+
+K_PX = 640.0                        # px del em por unidad de «Size» de Text+ a 1080 px de ancho (medido contra Resolve)
 TINTA = 0.955                        # lo que se ve de una palabra respecto a su avance tipográfico (Pillow mide el avance)
 HEROE = ('Owners Narrow', 'Black')
 SERIF = ('DM Serif Text', 'Italic')
 GUION = ('Antagon', 'Regular')
+PLUMA = ('Yellowtail', 'Regular')    # v5.5.13 (neón): la palabra escrita a mano («k script yt …»)
 ETIQUETA = ('Montserrat', 'ExtraBold')
-CAP = {'Owners Narrow': 0.700, 'DM Serif Text': 0.661, 'Antagon': 0.854, 'Montserrat': 0.700}      # mayúsculas / em
+CAP = {'Owners Narrow': 0.700, 'DM Serif Text': 0.661, 'Antagon': 0.854, 'Montserrat': 0.700, 'Yellowtail': 0.729}      # mayúsculas / em
 # la tinta de las mayúsculas queda por ENCIMA del centro del Text+ (medido contra el render de Resolve): se baja el clip esta fracción del em
-DY_EM = {'Owners Narrow': 0.03, 'DM Serif Text': 0.03, 'Antagon': 0.0, 'Montserrat': 0.0}
+DY_EM = {'Owners Narrow': 0.03, 'DM Serif Text': 0.03, 'Antagon': 0.0, 'Montserrat': 0.0, 'Yellowtail': 0.04}
 
 # lo que sabe la geometría de cada clip del pack (debe coincidir con generador_packs/kinetic_elementos.py)
 def _espec(clave):
@@ -35,10 +38,16 @@ def _espec(clave):
         return dict(par=HEROE, mayus=True, esp=1.04, tipo='texto')
     if clave.startswith('k serif'):
         return dict(par=SERIF, mayus=False, esp=1.0, tipo='texto')
+    if clave.startswith('k script yt'):
+        return dict(par=PLUMA, mayus=False, esp=1.0, tipo='texto')
     if clave.startswith('k script'):
         return dict(par=GUION, mayus=False, esp=1.0, tipo='texto')
     if clave == 'k label':
-        return dict(par=ETIQUETA, mayus=True, esp=1.3, tipo='texto')
+        return dict(par=ETIQUETA, mayus=True, esp=1.42, tipo='texto')
+    if clave.startswith('k ring trazo') or clave.startswith('k ring lazo'):
+        return dict(tipo='trazo')
+    if clave.startswith('k line trazo'):
+        return dict(tipo='linea', curva=True)
     if clave.startswith('k tapes'):
         return dict(par=SERIF, mayus=True, esp=1.0, tipo='cinta', caja=(1.6, 0.4))
     if clave.startswith('k tape'):
@@ -99,7 +108,7 @@ def _medir(linea, ancho_tl, alto_tl):
     clave = linea['k']
     e = _espec(clave)
     cap_px = float(linea['cap']) * alto_tl
-    if e['tipo'] in ('anillo', 'linea'):
+    if e['tipo'] in ('anillo', 'linea', 'trazo'):
         linea.update(size=None, w=0.0, h=0.0, ocup=0.0)
         return linea
     size = size_para_cap(clave, cap_px, ancho_tl)
@@ -126,12 +135,40 @@ def _medir(linea, ancho_tl, alto_tl):
     return linea
 
 
+def _refs(trazo, textos):
+    """Las líneas de texto a las que va pegado un trazo: 'sobre' = un índice o una lista de índices (dentro de `textos`, por orden de aparición)."""
+    s = trazo.get('sobre', 0)
+    idx = s if isinstance(s, (list, tuple)) else [s]
+    refs = [textos[min(len(textos) - 1, max(0, int(i)))] for i in idx] or [textos[0]]
+    return sorted({id(r): r for r in refs}.values(), key=textos.index)
+
+
+def _pads_trazo(trazo, refs, ancho_tl, alto_tl):
+    """(px, py) que el círculo o el lazo sobresale de sus líneas (kit: rx + 30 / ry + 14 px el círculo, + 44 / + 26 el lazo, a 1080)."""
+    h = max(r.get('h_vis', r['h']) for r in refs)
+    lazo = 'lazo' in str(trazo.get('k') or '')
+    return (0.045 if lazo else 0.032) * ancho_tl, (0.016 if lazo else 0.012) * alto_tl + (0.18 if lazo else 0.15) * h
+
+
 def apilar(lineas, ancla_y, ancho_tl=1080, alto_tl=1920):
     """lineas -> las mismas con 'x', 'y' (centro, fracción del cuadro) y la caja [arriba, abajo] de la pila (fracción del alto, desde arriba)."""
     ls = [_medir(dict(l), ancho_tl, alto_tl) for l in lineas]
     textos = [l for l in ls if _espec(l['k'])['tipo'] in ('texto', 'cinta')]
     if not textos:
         return ls, (ancla_y, ancla_y)
+    # v5.5.13 (neón): un trazo a mano (círculo / lazo alrededor de una o varias líneas, subrayado debajo) pide su sitio en la pila: hueco encima de
+    # la primera línea que rodea y debajo de la última (o debajo de la subrayada), para no pisar a las vecinas
+    for l in ls:
+        e = _espec(l['k'])
+        if e['tipo'] == 'trazo':
+            refs = _refs(l, textos)
+            pad = _pads_trazo(l, refs, ancho_tl, alto_tl)[1] + PAL.TRAZO_GROSOR * ancho_tl
+            refs[0]['_pad_arriba'] = max(refs[0].get('_pad_arriba', 0.0), pad)
+            refs[-1]['_pad_abajo'] = max(refs[-1].get('_pad_abajo', 0.0), pad)
+        elif e['tipo'] == 'linea' and e.get('curva'):
+            ref = _refs(l, textos)[-1]
+            if ref is not textos[-1]:
+                ref['_pad_abajo'] = max(ref.get('_pad_abajo', 0.0), (float(l.get('sep', 0.012)) + 0.022) * alto_tl)
     # posiciones verticales (px desde arriba, relativas al inicio de la pila)
     y = 0.0
     previo = None
@@ -146,9 +183,9 @@ def apilar(lineas, ancla_y, ancho_tl=1080, alto_tl=1920):
         extra = (l.get('h_vis', l['h']) - l['h']) / 2.0
         y += extra if not (l.get('heroe') or (previo or {}).get('heroe')) else 0.0
         hueco_anillo = 0.42 * l['h'] if l.get('anillo') else 0.0          # un anillo sobresale por arriba y por abajo de su línea
-        y += hueco_anillo
+        y += hueco_anillo + float(l.get('_pad_arriba', 0.0))
         l['_y0'] = y
-        y += l['h'] + hueco_anillo + (extra if not (l.get('heroe') or (previo or {}).get('heroe')) else 0.0)
+        y += l['h'] + hueco_anillo + float(l.get('_pad_abajo', 0.0)) + (extra if not (l.get('heroe') or (previo or {}).get('heroe')) else 0.0)
         previo = l
     total = y
     arriba = ancla_y * alto_tl - total / 2.0
@@ -160,9 +197,22 @@ def apilar(lineas, ancla_y, ancho_tl=1080, alto_tl=1920):
     # los trazos se colocan respecto a su línea de referencia ('sobre': índice de la línea dentro de `textos` ordenados por aparición)
     for l in ls:
         e = _espec(l['k'])
+        if e['tipo'] == 'trazo':                                    # v5.5.13: círculo o lazo a mano alrededor de sus líneas
+            refs = _refs(l, textos)
+            x0 = min(r['x'] * ancho_tl - r['w'] / 2.0 for r in refs)
+            x1 = max(r['x'] * ancho_tl + r['w'] / 2.0 for r in refs)
+            y0 = min(r['y'] * alto_tl - r.get('h_vis', r['h']) / 2.0 for r in refs)
+            y1 = max(r['y'] * alto_tl + r.get('h_vis', r['h']) / 2.0 for r in refs)
+            px, py = _pads_trazo(l, refs, ancho_tl, alto_tl)
+            ancho = min(x1 - x0 + 2 * px, 0.96 * ancho_tl)
+            alto = y1 - y0 + 2 * py
+            nw, nh = PAL.TRAZO_NOMINAL
+            l.update(x=round((x0 + x1) / 2.0 / ancho_tl, 4), y=round((y0 + y1) / 2.0 / alto_tl, 4),
+                     zx=round(ancho / (nw * ancho_tl), 3), zy=round(alto / (nh * ancho_tl), 3))
+            continue
         if e['tipo'] not in ('anillo', 'linea'):
             continue
-        ref = textos[min(len(textos) - 1, int(l.get('sobre', 0)))]
+        ref = _refs(l, textos)[-1]
         if e['tipo'] == 'anillo':
             nw, nh = AFINADO['nominal_anillo']
             ancho = min(ref['w'] * 1.22 + 0.04 * ancho_tl, 0.9 * ancho_tl)             # nunca más ancho que el cuadro

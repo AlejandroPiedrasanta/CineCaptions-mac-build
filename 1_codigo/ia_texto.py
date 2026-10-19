@@ -161,6 +161,10 @@ class _Servidor:
                 self.p.kill()
             except Exception:
                 pass
+        try:                                   # (v5.5.17: como motor_voz: sin «Exception ignored… Errno 22» al recoger la tubería)
+            self.p.stdin.close()
+        except Exception:
+            pass
 
 
 _SRV = {'s': None}
@@ -187,9 +191,13 @@ def precargar():
             return True
         try:
             s = _SRV['s']
+            info = motor_voz.info_instalado() or {}
+            quiero = motor_voz.modelo_texto(info)
+            if s is not None and s.vivo() and str(s.modelo).upper() != '4B' and str(quiero).upper() == '4B':
+                s.cerrar()                         # v5.5.17: ahora cabe la 4B (más lista; p. ej. GO sin Resolve): se cambia mientras la voz trabaja
+                s = None
             if s is None or not s.vivo():
-                info = motor_voz.info_instalado() or {}
-                _SRV['s'] = _Servidor(motor_voz.modelo_texto(info))
+                _SRV['s'] = _Servidor(quiero)
             return True
         finally:
             _LOCK.release()
@@ -605,6 +613,63 @@ def motions(bloques, idioma='es', estado=None, genero='general', contexto='', so
                 pass
 
 
+def filtrar_correcciones(palabras, correcciones, idioma='es'):
+    """v5.5.17: solo las correcciones de la IA que ARREGLAN algo. Medido con PRUEBA ESPAÑOL (banco_voz.py): la IA de texto subía el WER de
+    3,3 % a 4,9 % cambiando palabras BIEN escritas («Quetzaltenango» → «Quetzalánago», «otros» → «otras», «disfrutaremos» → «disfrutamos»,
+    «envíácelo» → «envíalo», «del» → «de»). Reglas:
+      · solo tildes o mayúsculas: sí, salvo que la nueva no exista («como» → «cómo», «despues» → «después»);
+      · una palabra que el diccionario CONOCE no se cambia por otra (eso es reescribir, no corregir);
+      · un nombre propio a mitad de frase no se toca, salvo para ponerlo como en el vocabulario del usuario;
+      · una dudosa sí, por una palabra que existe, que SUENA casi igual y no pierde sílabas («bentas» → «ventas», «ablando» → «hablando»)."""
+    if not correcciones:
+        return {}
+    import difflib
+    import re
+    try:
+        import ortografia
+        import vocabulario
+        vocab = {vocabulario.plano(t): t for t in vocabulario.terminos()}
+        clave = vocabulario.clave_fonetica if str(idioma or '')[:2] == 'es' else vocabulario.plano
+    except Exception:
+        return dict(correcciones)
+
+    def conocida(t):
+        t = ortografia.limpiar(t)
+        if not t:
+            return False
+        try:
+            return 0 not in ortografia.revisar([{'word': t}], idioma)
+        except Exception:
+            return True
+
+    buenas = {}
+    for i, nueva in correcciones.items():
+        if not (0 <= int(i) < len(palabras)):
+            continue
+        vieja = str(palabras[i].get('word', ''))
+        v, n = ortografia.limpiar(vieja), ortografia.limpiar(str(nueva))
+        if not n or v == n:
+            continue
+        en_vocab = vocabulario.plano(n) in vocab
+        if vocabulario.plano(v) == vocabulario.plano(n):                       # solo tildes / mayúsculas
+            if en_vocab or conocida(n):
+                buenas[i] = nueva
+            continue
+        antes = str(palabras[i - 1].get('word', '')).strip() if i else ''
+        propio = v[:1].isupper() and bool(antes) and not re.search(r'[.!?…]$', antes)
+        if propio and not en_vocab:
+            continue
+        if conocida(v) and not en_vocab and clave(v) != clave(n):
+            continue                                                          # (entre dos que existen, solo homófonos: «ablando» → «hablando»)
+        if not (en_vocab or conocida(n)):
+            continue
+        kv, kn = clave(v), clave(n)
+        if len(kn) < len(kv) - 1 or difflib.SequenceMatcher(None, kv, kn).ratio() < 0.75:
+            continue
+        buenas[i] = nueva
+    return buenas
+
+
 def aplicar_correcciones(palabras, correcciones):
     """Copia de las palabras con las correcciones puestas (mismos tiempos)."""
     nuevas = [dict(p) for p in palabras]
@@ -966,10 +1031,11 @@ def marcar_todo(palabras, idioma='es', progreso=None, estado=None, tamanos=None,
     if disponible():
         try:
             r = analizar(palabras, idioma, progreso=progreso, estado=estado)
-            palabras = aplicar_correcciones(palabras, r['correcciones'])
+            buenas = filtrar_correcciones(palabras, r['correcciones'], idioma)      # v5.5.17: nada de «corregir» lo que estaba bien
+            palabras = aplicar_correcciones(palabras, buenas)
             pesos = r['pesos']
             propuestos = r.get('emojis') or {}
-            resumen.update(ia=True, cambios=len(r['correcciones']), modelo=r.get('modelo'))
+            resumen.update(ia=True, cambios=len(buenas), descartadas=len(r['correcciones']) - len(buenas), modelo=r.get('modelo'))
         except Exception as e:
             resumen['error'] = str(e)[:200]
             r = _reg()

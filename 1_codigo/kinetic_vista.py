@@ -9,17 +9,33 @@ from PIL import Image, ImageDraw, ImageFilter
 
 import kinetic_captions as KC
 
-COLORES = {
-    'k hero blanco': ((0.68, 0.68, 0.76), (1, 1, 1)), 'k hero lima': ((0.50, 0.84, 0.10), (0.93, 1.0, 0.22)),
-    'k hero amarillo': ((1.0, 0.52, 0.08), (1.0, 0.93, 0.22)), 'k hero magenta': ((0.50, 0.32, 1.0), (0.98, 0.46, 0.92)),
-    'k hero rojo': ((0.88, 0.14, 0.08), (1.0, 0.30, 0.20)), 'k sup': ((1, 1, 1), (1, 1, 1)), 'k serif blanco': ((0.9, 0.9, 0.94), (1, 1, 1)),
-    'k script amarillo': ((1.0, 0.55, 0.10), (1.0, 0.93, 0.25)), 'k script cian': ((0.15, 0.62, 1.0), (0.35, 0.95, 1.0)),
-    'k script rosa': ((0.95, 0.30, 0.75), (1.0, 0.55, 0.85)), 'k label': ((1, 1, 1), (1, 1, 1)),
-}
-CAJAS = {'amarillo': ((1.0, 0.90, 0.04), (0.04, 0.04, 0.05)), 'lima': ((0.78, 1.0, 0.10), (0.05, 0.06, 0.02)), 'rojo': ((0.93, 0.18, 0.10), (1, 1, 1)),
-         'blanco': ((0.96, 0.96, 0.97), (0.06, 0.06, 0.08)), 'magenta': ((0.83, 0.24, 0.92), (1, 1, 1))}
-ANILLOS = {'naranja': (1.0, 0.45, 0.15), 'amarillo': (1.0, 0.92, 0.10), 'rosa': (0.95, 0.30, 0.65)}
-LINEAS = {'amarillo': (1.0, 0.90, 0.05), 'magenta': (0.85, 0.30, 0.95), 'lima': (0.80, 1.0, 0.10)}
+import kinetic_paleta as PAL                      # v5.5.13: los colores del Tema 1 (neón), los mismos del pack
+
+
+def _colores(k):
+    """(abajo, arriba) del relleno del elemento `k`."""
+    var = k.split()[-1]
+    g = None
+    if k.startswith('k hero'):
+        g = PAL.GRADIENTES.get(var)
+    elif k.startswith('k serif'):
+        g = PAL.GRADIENTES['serif']
+    elif k.startswith('k script'):
+        g = PAL.GUION.get(var)
+    return (g[0][1], g[-1][1]) if g else ((1, 1, 1), (1, 1, 1))
+
+
+CAJAS = PAL.CINTA
+ANILLOS = PAL.ANILLO
+LINEAS = PAL.LINEA
+
+
+def _trazo(puntos, color, fx, fy, grosor):
+    xs, ys = [p[0] * fx for p in puntos], [p[1] * fy for p in puntos]
+    m = grosor + 4
+    im = Image.new('RGBA', (int(max(xs) - min(xs) + 2 * m), int(max(ys) - min(ys) + 2 * m)), (0, 0, 0, 0))
+    ImageDraw.Draw(im).line([(x - min(xs) + m, y - min(ys) + m) for x, y in zip(xs, ys)], fill=_rgb(color) + (255,), width=max(2, int(grosor)), joint='curve')
+    return im, (-min(xs) + m) - im.width / 2.0, (-min(ys) + m) - im.height / 2.0
 
 
 def _rgb(c):
@@ -61,7 +77,7 @@ def dibujar_cue(cue, ancho=1080, alto=1920, fondo=(40, 40, 46)):
         cx, cy = r['x'] * ancho, r['y'] * alto
         if e['tipo'] == 'texto':
             px = r['size'] * KC.K_PX * escala
-            ab, ar = COLORES.get(k, ((1, 1, 1), (1, 1, 1)))
+            ab, ar = _colores(k)
             im = _texto_img(r['texto'], e['par'], px, ab, ar, e['esp'])
             _pegar(lienzo, im, cx, cy + px * 0.12, r.get('rot', 0.0))
         elif e['tipo'] == 'cinta':
@@ -75,9 +91,16 @@ def dibujar_cue(cue, ancho=1080, alto=1920, fondo=(40, 40, 46)):
             w, h = int(tw + 2 * cap * pad_k), int(cap * alto_k)
             im = Image.new('RGBA', (w + 8, h + 8), (0, 0, 0, 0))
             d = ImageDraw.Draw(im)
-            d.rectangle((4, 4, 4 + w, 4 + h), fill=_rgb(caja) + (255,))
+            d.rounded_rectangle((4, 4, 4 + w, 4 + h), radius=max(2, int(h * 0.08)), fill=_rgb(caja) + (255,))
             d.text((4 + w / 2, 4 + h / 2 + px * 0.02), txt, font=f, fill=_rgb(tinta) + (255,), anchor='mm')
             _pegar(lienzo, im, cx, cy, r.get('rot', 0.0), 0.4)
+        elif e['tipo'] == 'trazo' or (e['tipo'] == 'linea' and e.get('curva')):        # v5.5.13: trazos a mano del neón
+            if e['tipo'] == 'trazo':
+                im, ox, oy = _trazo(PAL.puntos_circulo(lazo='lazo' in k), ANILLOS.get(k.split()[-1], PAL.LIMA), ancho * r['zx'], ancho * r['zy'],
+                                    PAL.TRAZO_GROSOR * ancho * (r['zx'] + r['zy']) / 2)
+            else:
+                im, ox, oy = _trazo(PAL.puntos_subrayado(), LINEAS.get(k.split()[-1], PAL.LIMA), ancho * r['zx'], ancho * r['zy'], PAL.TRAZO_GROSOR * ancho * r['zx'])
+            _pegar(lienzo, im, cx - ox, cy - oy, 0.0, 0)
         elif e['tipo'] == 'anillo':
             nw, nh = KC.AFINADO['nominal_anillo']
             w, h = int(nw * ancho * r['zx']), int(nh * ancho * r['zy'])

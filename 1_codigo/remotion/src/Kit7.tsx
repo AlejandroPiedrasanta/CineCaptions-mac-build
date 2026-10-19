@@ -22,6 +22,8 @@ const PALETAS: Record<string, Paleta> = {
   azul: { a: '#2EA8FF', b: '#8BE6FF', glow: '46,168,255', texto: '#FFFFFF', punto: '#2EA8FF', carta: ['#0B2E66', '#1F7BE0'], placa: 'rgba(6,14,28,.94)', suave: 'rgba(255,255,255,.72)' },
   oro: { a: '#E9B949', b: '#FFE7A3', glow: '233,185,73', texto: '#FFFFFF', punto: '#E9B949', carta: ['#4A330A', '#B9851B'], placa: 'rgba(22,16,6,.94)', suave: 'rgba(255,255,255,.75)' },
   editorial: { a: '#1D1D21', b: '#B8894A', glow: '0,0,0', texto: '#1D1D21', punto: '#E2483D', carta: ['#F2F1EC', '#E4DFD2'], placa: 'rgba(242,241,236,.97)', suave: 'rgba(29,29,33,.65)' },
+  // v5.5.13: el neón del Tema 1 (kit TEMA 1/graficos/tema-neon.css): magenta, lima y cartas moradas; fijo, no se rehace con el acento del video
+  neoncc: { a: '#FF2DCB', b: '#D6FF3B', glow: '255,45,203', texto: '#FFFFFF', punto: '#D6FF3B', carta: ['#2A1258', '#7A35F5'], placa: 'rgba(20,16,30,.94)', suave: 'rgba(255,255,255,.74)' },
 };
 const esHex = (h?: string) => /^#?[0-9a-fA-F]{6}$/.test(String(h || ''));
 const hexRgb = (h: string): [number, number, number] => {
@@ -34,7 +36,7 @@ export const mezcla = (h: string, con: [number, number, number], t: number) =>
  *  oscuro y brillo del mismo color); si no, la del `tema`. El tema «editorial» (papel claro) se respeta siempre. */
 export const pal = (t?: string, acento?: string, acento2?: string): Paleta => {
   const base = PALETAS[String(t || 'neon')] || PALETAS.neon;
-  if (!esHex(acento) || String(t) === 'editorial') return base;
+  if (!esHex(acento) || String(t) === 'editorial' || String(t) === 'neoncc') return base;
   const a = '#' + String(acento).replace('#', '');
   const b = esHex(acento2) ? '#' + String(acento2).replace('#', '') : mezcla(a, [255, 255, 255], 0.45);
   const [r, g, bb] = hexRgb(a);

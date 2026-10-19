@@ -23,37 +23,23 @@ import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
+sys.path.insert(0, os.path.join(AQUI, '..', '..', '1_codigo'))
 import kinetic_comps as K
+import kinetic_paleta as PAL
 from kinetic_comps import degradado, enlace, herramienta, media_out, n, punto, texto_plus
 
 HEROE = ('Owners Narrow', 'Black')
 SERIF = ('DM Serif Text', 'Italic')
 GUION = ('Antagon', 'Regular')
+PLUMA = ('Yellowtail', 'Regular')          # v5.5.13 (neón): la palabra escrita a mano del kit («trae a», «en vivo»)
 ETIQUETA = ('Montserrat', 'ExtraBold')
 
-# degradados de los héroes: la parada 0 es la BASE de la letra y la 1 su parte de arriba (así lo dibuja Text+)
-GRADIENTES = {
-    'blanco': [(0.0, (0.68, 0.68, 0.76)), (0.45, (0.96, 0.96, 0.99)), (1.0, (1.0, 1.0, 1.0))],
-    'lima': [(0.0, (0.50, 0.84, 0.10)), (0.5, (0.84, 1.0, 0.10)), (1.0, (0.93, 1.0, 0.22))],
-    'amarillo': [(0.0, (1.0, 0.52, 0.08)), (0.55, (1.0, 0.84, 0.10)), (1.0, (1.0, 0.93, 0.22))],
-    'magenta': [(0.0, (0.50, 0.32, 1.0)), (0.55, (0.84, 0.36, 0.96)), (1.0, (0.98, 0.46, 0.92))],
-    'rojo': [(0.0, (0.88, 0.14, 0.08)), (1.0, (1.0, 0.30, 0.20))],
-    'serif': [(0.0, (0.90, 0.90, 0.94)), (0.5, (1.0, 1.0, 1.0)), (1.0, (1.0, 1.0, 1.0))],
-}
-COLOR_CINTA = {
-    'amarillo': ((1.0, 0.90, 0.04), (0.04, 0.04, 0.05)),       # (caja, texto)
-    'lima': ((0.78, 1.0, 0.10), (0.05, 0.06, 0.02)),
-    'rojo': ((0.93, 0.18, 0.10), (1.0, 1.0, 1.0)),
-    'blanco': ((0.96, 0.96, 0.97), (0.06, 0.06, 0.08)),
-    'magenta': ((0.83, 0.24, 0.92), (1.0, 1.0, 1.0)),
-}
-COLOR_GUION = {
-    'amarillo': [(0.0, (1.0, 0.55, 0.10)), (0.6, (1.0, 0.86, 0.12)), (1.0, (1.0, 0.93, 0.25))],
-    'cian': [(0.0, (0.15, 0.62, 1.0)), (1.0, (0.35, 0.95, 1.0))],
-    'rosa': [(0.0, (0.95, 0.30, 0.75)), (1.0, (1.0, 0.55, 0.85))],
-}
-COLOR_ANILLO = {'naranja': (1.0, 0.45, 0.15), 'amarillo': (1.0, 0.92, 0.10), 'rosa': (0.95, 0.30, 0.65)}
-COLOR_LINEA = {'amarillo': (1.0, 0.90, 0.05), 'magenta': (0.85, 0.30, 0.95), 'lima': (0.80, 1.0, 0.10)}
+# v5.5.13: los colores salen de 1_codigo/kinetic_paleta.py (tema NEÓN; la vista y GO sin Resolve leen los mismos)
+GRADIENTES = PAL.GRADIENTES
+COLOR_CINTA = PAL.CINTA
+COLOR_GUION = PAL.GUION
+COLOR_ANILLO = PAL.ANILLO
+COLOR_LINEA = PAL.LINEA
 
 
 # ------------------------------------------------------------------------------------------------------------------ animación
@@ -114,13 +100,13 @@ def _cadena(origen, anim, x0=140, y0=40):
 
 
 # ------------------------------------------------------------------------------------------------------------------ elementos de texto
-def _sombra(num, opacidad=0.72, dy=-0.0065, blur=10):
-    """Los 8 campos de un elemento de sombreado que hace de sombra suave (negro, desplazado hacia abajo)."""
+def _sombra(num, opacidad=0.72, dy=-0.0065, blur=10, color=PAL.SOMBRA):
+    """Los 8 campos de un elemento de sombreado que hace de sombra suave (morado casi negro del neón, desplazado hacia abajo)."""
     return [
         f'Enabled{num} = Input {{ Value = 1, }},',
-        f'Red{num} = Input {{ Value = Number {{ Value = 0 }}, }},',
-        f'Green{num} = Input {{ Value = Number {{ Value = 0 }}, }},',
-        f'Blue{num} = Input {{ Value = Number {{ Value = 0 }}, }},',
+        f'Red{num} = Input {{ Value = Number {{ Value = {n(color[0])} }}, }},',
+        f'Green{num} = Input {{ Value = Number {{ Value = {n(color[1])} }}, }},',
+        f'Blue{num} = Input {{ Value = Number {{ Value = {n(color[2])} }}, }},',
         f'Opacity{num} = Input {{ Value = Number {{ Value = {n(opacidad)} }}, }},',
         f'Offset{num} = Input {{ Value = {punto(0, dy)}, }},',
         f'Softness{num} = Input {{ Value = Number {{ Value = 1 }}, }},',
@@ -136,9 +122,9 @@ def _contorno(num, grosor, opacidad=0.9):
         f'Enabled{num} = Input {{ Value = 1, }},',
         f'ElementShape{num} = Input {{ Value = 1, }},',
         f'Thickness{num} = Input {{ Value = Number {{ Value = {n(grosor)} }}, }},',
-        f'Red{num} = Input {{ Value = Number {{ Value = 0 }}, }},',
-        f'Green{num} = Input {{ Value = Number {{ Value = 0 }}, }},',
-        f'Blue{num} = Input {{ Value = Number {{ Value = 0 }}, }},',
+        f'Red{num} = Input {{ Value = Number {{ Value = {n(PAL.SOMBRA[0])} }}, }},',
+        f'Green{num} = Input {{ Value = Number {{ Value = {n(PAL.SOMBRA[1])} }}, }},',
+        f'Blue{num} = Input {{ Value = Number {{ Value = {n(PAL.SOMBRA[2])} }}, }},',
         f'Opacity{num} = Input {{ Value = Number {{ Value = {n(opacidad)} }}, }},',
     ]
 
@@ -162,12 +148,12 @@ def comp_texto(nombre, texto, fuente, tam, relleno, esp=1.0, entrada='pop', reta
     return K.armar_comp(t, f'CineCaptions Kinetic - {nombre}')
 
 
-CAP = {'Owners Narrow': 0.700, 'DM Serif Text': 0.661, 'Antagon': 0.854, 'Montserrat': 0.700}     # altura de las mayúsculas / em (medida con Pillow)
+CAP = {'Owners Narrow': 0.700, 'DM Serif Text': 0.661, 'Antagon': 0.854, 'Montserrat': 0.700, 'Yellowtail': 0.729}     # altura de las mayúsculas / em (Pillow)
 ASPECTO = 1080.0 / 1920.0                                                                       # ancho/alto del cuadro vertical
 EM = 640.0 / 1080.0                                                                              # el em de «Size = 1» en fracciones del ancho del cuadro
 
 
-def comp_cinta(nombre, texto, fuente, tam, caja, color_texto, entrada='giro', retardo=0, esp=1.0, alto_k=1.55, pad_k=0.5, dy_k=0.03, sombra_caja=0.5):
+def comp_cinta(nombre, texto, fuente, tam, caja, color_texto, entrada='giro', retardo=0, esp=1.0, alto_k=1.55, pad_k=0.5, dy_k=0.03, sombra_caja=0.5, radio=0.15):
     """Texto sobre una caja de color que SE AJUSTA AL TEXTO: un RectangleMask cuyo ancho sale del DataWindow del Text+ «Template» más el relleno y cuyo alto
     sale de su Size (alto_k × la altura de las mayúsculas; pad_k × esa altura a cada lado). Así la caja sigue al texto aunque la app cambie el Size o el
     texto, y una cinta de varias palabras es UNA sola caja (la forma «caja por carácter» de Text+ dejaba un hueco en cada espacio)."""
@@ -183,7 +169,7 @@ def comp_cinta(nombre, texto, fuente, tam, caja, color_texto, entrada='giro', re
         f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5, 0.5 + {K.lua(em)} * {n(dy_k * ASPECTO)})", }},',
         f'Width = Input {{ Value = 0.3, Expression = "{K.lua(ancho)}", }},',
         f'Height = Input {{ Value = 0.05, Expression = "{K.lua(alto)}", }},',
-        'CornerRadius = Input { Value = 0, },'])
+        f'CornerRadius = Input {{ Value = {n(radio)}, }},'])                  # v5.5.13: las pegatinas del neón tienen las esquinas algo redondeadas
     t += K._fondo('Caja', -60, 120, caja, 'Rec')
     t += herramienta('Merge', 'Juntas', 40, 80, [enlace('Background', 'Caja'), enlace('Foreground', 'Template')])
     # sombra suave de toda la cinta (el mismo recurso que las comps viejas: silueta negra, difuminada y un poco más abajo)
@@ -225,6 +211,44 @@ def comp_linea(nombre, color, ancho=0.34, alto=0.0075, retardo=0):
     return K.armar_comp(t, f'CineCaptions Kinetic - {nombre}')
 
 
+def _polilinea_abierta(nombre, puntos, grosor, x=-220, y=40, dur=13):
+    """v5.5.13 (neón) — un trazo a mano que SE DIBUJA: PolylineMask ABIERTA (la sintaxis probada de viral_comps.poligono: la Polyline sale de un
+    BezierSpline) con borde y sin relleno, y su WriteOnEnd de 0 a 1 en `dur` fotogramas con frenada (kit: 0,45 s, 1 − (1 − p)^2,4).
+    `puntos` = [(x, y)] en fracciones del ANCHO, centro (0, 0) e y hacia ABAJO; aquí se pasan al espacio de la máscara (Y en fracción del ALTO, hacia arriba)."""
+    k = len(puntos)
+    asp = K.ANCHO / float(K.ALTO)
+    pm = [(px, -py * asp) for px, py in puntos]
+    filas = []
+    for i, (px, py) in enumerate(pm):
+        ax, ay = pm[max(0, i - 1)]
+        bx, by = pm[min(k - 1, i + 1)]
+        filas.append(f'\t\t\t\t\t\t{{ Linear = true, X = {n(px)}, Y = {n(py)}, LX = {n((ax - px) / 3)}, LY = {n((ay - py) / 3)}, RX = {n((bx - px) / 3)}, RY = {n((by - py) / 3)} }}')
+    pts = ',\n'.join(filas)
+    avance = f'1 - (1 - math.min(1, math.max(0, time / {dur})))^2.4'
+    return (f'\t\t{nombre} = PolylineMask {{\n\t\t\tDrawMode = "InsertAndModify",\n\t\t\tDrawMode2 = "InsertAndModify",\n\t\t\tCtrlWShown = false,\n\t\t\tInputs = {{\n'
+            f'\t\t\t\tFilter = Input {{ Value = FuID {{ "Fast Gaussian" }}, }},\n\t\t\t\tMaskWidth = Input {{ Value = {K.ANCHO}, }},\n\t\t\t\tMaskHeight = Input {{ Value = {K.ALTO}, }},\n'
+            f'\t\t\t\tPixelAspect = Input {{ Value = {{ 1, 1 }}, }},\n\t\t\t\tUseFrameFormatSettings = Input {{ Value = 1, }},\n\t\t\t\tClippingMode = Input {{ Value = FuID {{ "None" }}, }},\n'
+            f'\t\t\t\tSolid = Input {{ Value = 0, }},\n\t\t\t\tBorderWidth = Input {{ Value = {n(grosor)}, }},\n'
+            f'\t\t\t\tWriteOnEnd = Input {{ Value = 1, Expression = "{K.lua(avance)}", }},\n'
+            f'\t\t\t\tPolyline = Input {{ SourceOp = "{nombre}Poly", Source = "Value", }},\n\t\t\t\tPolyline2 = Input {{ Value = Polyline {{ }}, Disabled = true, }},\n\t\t\t}},\n'
+            f'\t\t\tViewInfo = OperatorInfo {{ Pos = {{ {x}, {y} }} }},\n\t\t}},\n'
+            f'\t\t{nombre}Poly = BezierSpline {{\n\t\t\tSplineColor = {{ Red = 160, Green = 252, Blue = 4 }},\n\t\t\tCtrlWZoom = false,\n\t\t\tNameSet = true,\n\t\t\tKeyFrames = {{\n'
+            f'\t\t\t\t[0] = {{ 0, Flags = {{ Linear = true, LockedY = true }}, Value = Polyline {{\n\t\t\t\t\tClosed = false,\n\t\t\t\t\tPoints = {{\n{pts}\n\t\t\t\t\t}}\n\t\t\t\t}} }}\n'
+            f'\t\t\t}}\n\t\t}},\n')
+
+
+def comp_trazo(nombre, color, puntos, grosor=PAL.TRAZO_GROSOR):
+    """v5.5.13 (neón) — círculo, lazo o subrayado a mano que se dibuja (kit TEMA 1: `hook()` deco). Sin rebote: el trazo aparece al dibujarse y se va
+    con la pila (los 5 últimos fotogramas)."""
+    t = _polilinea_abierta('Trazo', puntos, grosor)
+    t += texto_plus('Template', -220, 200, ' ', HEROE[0], HEROE[1], 0.05)       # sin conectar: solo para que la app reconozca el clip como suyo
+    t += K._fondo('Tinta', -60, 40, color, 'Trazo')
+    t += _vacio(140, 130)
+    t += herramienta('Merge', 'Salida', 140, 40, [enlace('Background', 'Vacio'), enlace('Foreground', 'Tinta'), f'Blend = Input {{ Value = 1, Expression = "{K.lua(SALIDA)}", }},'])
+    t += media_out('Salida', 300, 40)
+    return K.armar_comp(t, f'CineCaptions Kinetic - {nombre}')
+
+
 # ------------------------------------------------------------------------------------------------------------------ el catálogo
 def todos():
     """{nombre del clip: texto de la comp}. Los tamaños (Size) son los de partida: la app fija el real por clip."""
@@ -235,7 +259,9 @@ def todos():
     c['k serif blanco'] = comp_texto('serif', 'Serif', SERIF, 0.20, GRADIENTES['serif'], esp=1.0, entrada='abre', contorno=0.012)
     for var, grad in COLOR_GUION.items():
         c[f'k script {var}'] = comp_texto(f'guion {var}', 'script', GUION, 0.22, grad, esp=1.0, entrada='giro', contorno=0.012)
-    c['k label'] = comp_texto('etiqueta', 'LABEL', ETIQUETA, 0.07, (1.0, 1.0, 1.0), esp=1.3, entrada='sube', sombra=True, contorno=0.008)
+    for var in ('lima', 'magenta'):                     # v5.5.13 (neón): la palabra a mano del kit, en Yellowtail y color liso
+        c[f'k script yt {var}'] = comp_texto(f'pluma {var}', 'script', PLUMA, 0.22, COLOR_GUION[var], esp=1.0, entrada='giro', contorno=0.0)
+    c['k label'] = comp_texto('etiqueta', 'LABEL', ETIQUETA, 0.07, (1.0, 1.0, 1.0), esp=1.42, entrada='sube', sombra=True, contorno=0.008)   # versalitas espaciadas (kit: .42em)
     for var, (caja, texto) in COLOR_CINTA.items():
         c[f'k tape {var}'] = comp_cinta(f'cinta {var}', 'TAPE', HEROE, 0.10, caja, texto, entrada='giro')
     for var in ('amarillo', 'magenta', 'blanco'):
@@ -245,6 +271,10 @@ def todos():
         c[f'k ring {var}'] = comp_anillo(f'anillo {var}', col)
     for var, col in COLOR_LINEA.items():
         c[f'k line {var}'] = comp_linea(f'línea {var}', col)
+    for var in ('lima', 'magenta'):                     # v5.5.13 (neón): los trazos a mano que se dibujan («k ring …» / «k line …»: misma capa en Resolve)
+        c[f'k ring trazo {var}'] = comp_trazo(f'círculo {var}', PAL.ANILLO[var], PAL.puntos_circulo())
+        c[f'k ring lazo {var}'] = comp_trazo(f'lazo {var}', PAL.ANILLO[var], PAL.puntos_circulo(lazo=True))
+        c[f'k line trazo {var}'] = comp_trazo(f'subrayado {var}', PAL.LINEA[var], PAL.puntos_subrayado())
     return c
 
 

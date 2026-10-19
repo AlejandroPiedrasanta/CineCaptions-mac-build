@@ -145,6 +145,69 @@ _GRUPOS = {
 CONCEPTOS_ACOMP = {w: eid for eid, ws in _GRUPOS.items() for w in ws.split()}
 
 
+MESES_P = {'enero': 'enero', 'febrero': 'febrero', 'marzo': 'marzo', 'abril': 'abril', 'mayo': 'mayo', 'junio': 'junio', 'julio': 'julio',
+           'agosto': 'agosto', 'septiembre': 'septiembre', 'setiembre': 'septiembre', 'octubre': 'octubre', 'noviembre': 'noviembre',
+           'diciembre': 'diciembre', 'january': 'January', 'february': 'February', 'march': 'March', 'april': 'April', 'may': 'May',
+           'june': 'June', 'july': 'July', 'august': 'August', 'september': 'September', 'october': 'October', 'november': 'November',
+           'december': 'December'}
+DIAS_P = {'lunes': 'Lunes', 'martes': 'Martes', 'miercoles': 'Miércoles', 'jueves': 'Jueves', 'viernes': 'Viernes', 'sabado': 'Sábado',
+          'domingo': 'Domingo', 'monday': 'Monday', 'tuesday': 'Tuesday', 'wednesday': 'Wednesday', 'thursday': 'Thursday', 'friday': 'Friday',
+          'saturday': 'Saturday', 'sunday': 'Sunday'}
+KICKER_DATO = {'es': ('Fecha', 'Hora', 'Lugar'), 'en': ('Date', 'Time', 'Place'), 'pt': ('Data', 'Hora', 'Local')}
+ANTES_LUGAR = {'en', 'desde', 'in', 'at', 'from', 'em', 'no', 'na'}
+ARTICULOS = {'el', 'la', 'los', 'las', 'the', 'o', 'a', 'os', 'as'}
+
+
+def _dato(ps, lang):
+    """v5.5.17 (el usuario: «mejora las píldoras… relacionado»): lo ÚTIL que se dice y conviene ver escrito: la fecha («sábado 10 de
+    octubre» → 📅 «Sábado 10 de octubre»), la hora («a las 10 de la mañana» → 🕙 «10:00 a. m.») o el sitio («en el Centro Intercultural»
+    → 📍 «Centro Intercultural»). (tipo, t, valores) o None."""
+    import re
+    kf, kh, kl = KICKER_DATO.get(lang, KICKER_DATO['en'])
+    planos = [p for _t, p, _x in ps]
+    for k in range(len(ps)):                                   # la fecha: [día] N de MES · MONTH N · N MONTH
+        n = ps[k][1]
+        if not re.fullmatch(r'\d{1,2}', n):
+            continue
+        mes = None
+        if k + 2 < len(ps) and planos[k + 1] == 'de' and planos[k + 2] in MESES_P:
+            mes = MESES_P[planos[k + 2]]
+        elif k + 1 < len(ps) and planos[k + 1] in MESES_P:
+            mes = MESES_P[planos[k + 1]]
+        elif k > 0 and planos[k - 1] in MESES_P:
+            mes = MESES_P[planos[k - 1]]
+        if mes:
+            dia = next((DIAS_P[planos[j]] for j in range(max(0, k - 3), k) if planos[j] in DIAS_P), '')
+            texto = (f'{dia} {int(n)} de {mes}' if lang == 'es' else f'{dia} {mes} {int(n)}' if lang == 'en' else f'{dia} {int(n)} de {mes}').strip()
+            return ('sticker', ps[max(0, k - (1 if dia else 0))][0], {'sticker': 'rcs_emoji_calendar.png', 'kicker': kf, 'texto': texto})
+    for k in range(len(ps)):                                   # la hora: «las 10 [y media] de la mañana», «10:30», «10 am»
+        m = re.fullmatch(r'(\d{1,2})(?::(\d{2}))?', ps[k][2]) or re.fullmatch(r'(\d{1,2})', ps[k][1])     # («8:30»: el texto, con sus dos puntos)
+        if not m:
+            continue
+        h, mm = int(m.group(1)), m.group(2) or '00'
+        antes = planos[max(0, k - 2):k]
+        despues = ' '.join(planos[k + 1:k + 5])
+        sufijo = ''
+        if re.match(r'(de la )?(manana|madrugada)|am\b|a m\b', despues):
+            sufijo = ' a. m.' if lang == 'es' else ' am'
+        elif re.match(r'(de la )?(tarde|noche)|pm\b|p m\b', despues):
+            sufijo = ' p. m.' if lang == 'es' else ' pm'
+        if not (sufijo or 'las' in antes or 'at' in antes or m.group(2)) or h > 23:
+            continue
+        return ('sticker', ps[k][0], {'sticker': 'rcs_emoji_alarm_clock.png', 'kicker': kh, 'texto': f'{h}:{mm}{sufijo}'})
+    for k in range(len(ps) - 1):                               # el sitio: «en el Centro Intercultural», «in Central Park»
+        if planos[k] not in ANTES_LUGAR:
+            continue
+        j = k + 1 + (1 if planos[k + 1] in ARTICULOS else 0)
+        nombre = []
+        while j < len(ps) and len(nombre) < 4 and ps[j][2][:1].isupper():
+            nombre.append(ps[j][2])
+            j += 1
+        if nombre and len(' '.join(nombre)) >= 4:
+            return ('sticker', ps[k][0], {'sticker': 'rcs_emoji_round_pushpin.png', 'kicker': kl, 'texto': ' '.join(nombre)[:28]})
+    return None
+
+
 def _sticker(palabra, idioma, usados):
     """El emoji 3D de esa palabra (exacta o su singular) si está en el mapa curado, existe su PNG y no se usó: (id, archivo) o (None, None)."""
     w = plegar(palabra)
@@ -160,6 +223,24 @@ def _sticker(palabra, idioma, usados):
     return None, None
 
 
+def _tramo_libre(a, z, ocupado):
+    """v5.5.17: el tramo LIBRE más largo de [a, z] sin lo ocupado (antes, si un motion tocaba el caption 0,1 s, ese caption se quedaba
+    sin píldora: con el Tema 1, que reparte sus motions por todo el video, no salía ninguna). (ini, fin) o None."""
+    tramos = [(a, z)]
+    for o0, o1 in ocupado:
+        nuevos = []
+        for x, y in tramos:
+            if o1 <= x or o0 >= y:
+                nuevos.append((x, y))
+                continue
+            if o0 > x:
+                nuevos.append((x, o0))
+            if o1 < y:
+                nuevos.append((o1, y))
+        tramos = nuevos
+    return max(tramos, key=lambda r: r[1] - r[0], default=None)
+
+
 def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cristal', dur=0.0, debiles=frozenset()):
     try:
         import edicion_pro_planificador as PL
@@ -170,12 +251,17 @@ def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cr
     lang = (idioma or 'es')[:2]
     out, usados, ultimo_tipo, ultimo_bloque, ultimo_fin = [], set(), None, -9, -99.0
     for nb, b in enumerate(bloques):
-        a, z = b['ini'], b['fin']
+        a0, z0 = b['ini'], b['fin']
+        libre = _tramo_libre(a0, z0, ocupado)
+        if libre is None:
+            continue
+        a, z = libre                                                     # (v5.5.17: el trozo del caption que no pisa ningún motion)
         if nb - ultimo_bloque < 2 or a - ultimo_fin < 1.2 or z - a < 0.9:
             continue
-        if any(a < o1 and o0 < z for o0, o1 in ocupado):
+        palabras = [w for w in b['palabras'] if (a0, z0) == (a, z) or a - 0.45 <= a0 + w['t'] <= z - 0.5]     # (lo dicho justo antes del tramo, también)
+        if not palabras:
             continue
-        ps = [(a + w['t'], plegar(w['texto']), w['texto'].strip('.,!?¡¿')) for w in b['palabras']]
+        ps = [(a0 + w['t'], plegar(w['texto']), w['texto'].strip('.,!?¡¿')) for w in palabras]
         prop = None
         # 1) un país
         for k in range(len(ps)):
@@ -205,6 +291,9 @@ def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cr
                 if accion:
                     prop = ('redes', t, {'accion': accion})
                     break
+        # 3b) v5.5.17: fecha, hora o sitio (antes que la cifra suelta: «10 de octubre» es una fecha, no «10»)
+        if prop is None:
+            prop = _dato(ps, lang)
         # 4) una cifra con su unidad
         if prop is None:
             for k, (t, p, x) in enumerate(ps):
@@ -226,10 +315,11 @@ def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cr
                 break
         # 5) el concepto, como emoji 3D (primero la frase clave del caption, luego el resto)
         if prop is None:
-            orden = sorted(range(len(ps)), key=lambda k: (not b['palabras'][k].get('clave'), -len(ps[k][1])))
+            # v5.5.17: nunca la palabra que el caption ya enseña EN GRANDE (la píldora diría lo mismo dos veces)
+            orden = sorted(range(len(ps)), key=lambda k: (bool(palabras[k].get('grande')), not palabras[k].get('clave'), -len(ps[k][1])))
             for k in orden:
                 t, p, x = ps[k]
-                if len(p) < 4 or p in DIR.CONECTORAS or p in debiles:
+                if len(p) < 4 or p in DIR.CONECTORAS or p in debiles or palabras[k].get('grande'):
                     continue
                 if any(q in NEGACION for _t, q, _x in ps[max(0, k - 2):k]):
                     continue                                             # «no estoy FELIZ»: la carita feliz diría lo contrario
@@ -244,13 +334,14 @@ def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cr
         if tipo == ultimo_tipo and a - ultimo_fin < 3.0:
             continue                                                     # variedad: dos del mismo tipo, solo bien separados
         ini = max(a, t - 0.12)
-        pegado = nb + 1 < len(bloques) and bloques[nb + 1]['ini'] - z < 0.35
+        pegado = z == z0 and nb + 1 < len(bloques) and bloques[nb + 1]['ini'] - z < 0.35
         fin = min(ini + 2.6, max(z + 0.25, bloques[nb + 1]['fin'] if pegado else z + 0.25))   # la palabra al final de la frase: sigue en la siguiente
+        fin = min([fin] + [o0 for o0, _o1 in ocupado if o0 >= ini])    # (v5.5.17: y nunca hasta el motion que viene)
         if fin - ini < 0.9:
             continue
         sigue = pegado and fin > z + 0.3
         out.append({'pieza': 'acomp', 'remotion': 'AcompananteT5', 'capa': 'delante', 'ini': round(ini, 3), 'fin': round(fin, 3),
                     'motivo': f'acompañante {tipo}: ' + str(valores.get('texto') or valores.get('valor') or valores.get('accion') or ''),
-                    'valores': dict(valores, tipo=tipo, aspecto=aspecto, acento=acento, y=66.0, escala=1.15), '_bajo': (a, z)})
+                    'valores': dict(valores, tipo=tipo, aspecto=aspecto, acento=acento, y=66.0, escala=1.15), '_bajo': (a0, z0)})
         ultimo_tipo, ultimo_bloque, ultimo_fin = tipo, nb + (1 if sigue else 0), fin
     return out

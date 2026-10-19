@@ -38,9 +38,10 @@ def _con_emoji():
         return []
 
 
-def piezas(info, video, idioma, W, H, fps, mover, plan, maximo=None):
-    """`maximo` (v5.5.4, Temas 1–4 CON la Edición PRO): como mucho tantos acompañantes, repartidos por el video (la PRO ya pone sus motions)."""
-    out = _piezas(info, video, idioma, W, H, fps, mover, plan)
+def piezas(info, video, idioma, W, H, fps, mover, plan, maximo=None, bloques=None):
+    """`maximo` (v5.5.4, Temas 1–4 CON la Edición PRO): como mucho tantos acompañantes, repartidos por el video (la PRO ya pone sus motions).
+    `bloques` (v5.5.13): los de los captions neón del Tema 1 (kit_neon.bloques_pro) en vez de los del manifiesto."""
+    out = _piezas(info, video, idioma, W, H, fps, mover, plan, bloques)
     if maximo is None:
         return out
     acomp = [p for p in out if p.get('pieza') != 'velo_caption']
@@ -51,11 +52,11 @@ def piezas(info, video, idioma, W, H, fps, mover, plan, maximo=None):
     return out
 
 
-def _piezas(info, video, idioma, W, H, fps, mover, plan):
+def _piezas(info, video, idioma, W, H, fps, mover, plan, bloques=None):
     import edicion_pro as EP
     import edicion_pro_tema5 as T5
     import edicion_pro_tema5_acomp as AC
-    bloques = EP._bloques_captions()
+    bloques = EP._bloques_captions() if bloques is None else bloques
     if not bloques:
         return []
     subir = {round(int(m['ini']) / fps, 1): float(m.get('subir') or 0.0) for m in mover or []}     # mover va en fotogramas desde el inicio
@@ -84,13 +85,15 @@ def _piezas(info, video, idioma, W, H, fps, mover, plan):
     try:
         conv = []
         for b in bloques:
-            ps = [{'texto': str(x), 't': round(max(0.0, float(t) - b['ini']), 3)} for x, t in b.get('palabras') or [] if str(x).strip()]
+            ps = [{'texto': str(x), 't': round(max(0.0, float(t) - b['ini']), 3), 'grande': bool(resto and resto[0])}
+                  for x, t, *resto in b.get('palabras') or [] if str(x).strip()]
             if ps:
                 conv.append({'ini': b['ini'], 'fin': b['fin'], 'palabras': ps, '_b': b})
-        acento = T5.acento_de_video(video)
+        acento = EP.NEON['acento'] if (plan or {}).get('tema') == 'neon' else T5.acento_de_video(video)      # v5.5.13: el Tema 1 va en neón
         aspecto = 'cristal'
         dur = max(b['fin'] for b in bloques)
-        ocupado = [(p['ini'] - 0.2, p['fin'] + 0.2) for p in plan.get('piezas') or [] if p.get('capa') in ('delante', 'fondo')]
+        ocupado = [(p['ini'] - 0.2, p['fin'] + 0.2) for p in plan.get('piezas') or [] if p.get('capa') in ('delante', 'fondo')
+                   or (p.get('pieza') == 'neon_motion' and p.get('capa') != 'iconos')]      # v5.5.17: el Tema 1 reparte sus motions en velo/detrás/delante
         ocupado += _con_emoji()                                          # donde el tema ya enseña su emoji, no: serían dos cosas a la vez
         for c in AC.acompanantes(conv, idioma, ocupado, acento, aspecto, dur, frozenset(T5.DEBILES)):
             b = next((x['_b'] for x in conv if abs(x['ini'] - c['_bajo'][0]) < 0.05), None)
@@ -98,8 +101,10 @@ def _piezas(info, video, idioma, W, H, fps, mover, plan):
                 continue
             s = subir.get(round(b['ini'], 1), 0.0) / H
             y = (b['abajo'] - s) * 100.0 + 5.5
-            if y > 86.0:
-                continue                                                 # no cabe debajo sin salirse por abajo
+            if y > 86.0:                                                 # no cabe debajo sin salirse por abajo: ENCIMA del caption, si cabe (v5.5.17)
+                y = (b['arriba'] - s) * 100.0 - 7.5
+                if y < 14.0:
+                    continue
             c['valores']['y'] = round(y, 1)
             if c['fin'] > b['fin'] + 0.15 and b['fin'] + 0.15 - c['ini'] >= 1.2:
                 c['fin'] = round(b['fin'] + 0.15, 3)                     # v5.5.4: se va con SU caption
