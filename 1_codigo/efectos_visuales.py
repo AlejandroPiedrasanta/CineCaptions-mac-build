@@ -435,7 +435,7 @@ def precalentar_secuencias(video, opciones=None):
     op = dict(opciones_guardadas())
     op.update(opciones or {})
     packs = [p for p in (op.get('fx_iconos') or []) if p in {x[0] for x in PACKS_ICONOS}]
-    if not (activado() and op.get('fx_iconos_activo', True) and packs):
+    if True:                                           # v5.20: iconos flotantes quitados: nada que precalentar
         return None
 
     def trabajo():
@@ -917,6 +917,9 @@ def broll_clave(op):
 
 
 def planificar(video, palabras, duracion=None, opciones=None, al_estado=None, cortes=None, saltos=None):
+    # v5.21: «Intro», «Transiciones en los cortes» y «Movimiento del video» quitadas de Efectos (pedido): ni destello, ni riser, ni zoom de intro,
+    # ni transición en los cortes, ni zoom lento; si el video no llena el cuadro, SIEMPRE el fondo desenfocado (lo que tenía elegido)
+    opciones = dict(opciones or {}, fx_intro='', fx_intro_zoom='no', fx_intro_sonido='ninguno', fx_cortes='', fx_zoom='no', fx_fondo=True)
     """Qué efecto va dónde. `palabras`: [{'word','start','end'}]. Devuelve {'eventos': [{'tipo','ini','asset'…}], 'duracion', 'resumen'}."""
     op = dict(opciones_guardadas())
     op.update(opciones or {})
@@ -985,7 +988,7 @@ def planificar(video, palabras, duracion=None, opciones=None, al_estado=None, co
     if v1['zoom'] or v1['temblor'] or v1['transicion'] or v1['fondo'] or v1['zoom_saltos'] or v1['zoom_intro']:
         eventos.append(v1)
     packs = [p for p in (op.get('fx_iconos') or []) if p in {x[0] for x in PACKS_ICONOS}]
-    if op.get('fx_iconos_activo', True) and packs and palabras:
+    if False and packs and palabras:                  # v5.20: «Iconos flotantes» quitados (el usuario lo pidió)
         sep, tope = CANTIDAD_ICONOS.get(desplazar(('pocos', 'normal', 'muchos'), op.get('fx_iconos_cuanto', 'normal'), delta), CANTIDAD_ICONOS['normal'])
         cuantas = max(1, min(tope, int(round((duracion or 0.0) / sep)) if duracion else tope))
         margen_ini, margen_fin = 1.0, 3.2

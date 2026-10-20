@@ -739,7 +739,7 @@ def planificar_extra(video, palabras, duracion, op, delta=0, cortes_elegidos=Non
         if any(e.get('tipo') == 'propio' and e.get('asset') == base['asset'] for e in eventos):
             resumen.append('efecto propio «' + base['asset'] + '»')
     # --- outro
-    if op.get('fx_outro') in DUR_OUTRO_S and duracion > DUR_OUTRO_S[op['fx_outro']] + 2.0:
+    if False and op.get('fx_outro') in DUR_OUTRO_S and duracion > DUR_OUTRO_S[op['fx_outro']] + 2.0:
         d = DUR_OUTRO_S[op['fx_outro']]
         eventos.append({'tipo': 'outro', 'ini': round(duracion - d - 0.1, 3), 'asset': op['fx_outro'], 'dur': d, 'texto': op.get('fx_outro_texto') or '', 'logo': op.get('fx_outro_logo') or ''})
         if op.get('fx_outro_sonido', True):

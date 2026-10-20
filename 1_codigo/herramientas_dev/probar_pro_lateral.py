@@ -170,7 +170,7 @@ def main():
                 print(f"          píldora {p['ini']:.1f}-{p['fin']:.1f}s y={p['valores'].get('y')} «{p['valores'].get('texto') or p['valores'].get('emoji') or ''}»")
     # Tema 2: cada grupo solo (los globales, en memoria)
     PREFS.update(go_pack='Referencia', plantilla='Referencia')
-    for clave in ('gancho', 'escenas', 'kit', 'graficos', 'plantillas'):
+    for clave in ('gancho', 'escenas', 'kit', 'graficos'):                # (v5.20: sin «Plantillas por frase», quitada del menú)
         ids = LAT.ids_de(clave)
         PREFS.update(pro_motions_modo='elegidos', pro_motions=ids)
         plan = EP.planificar(a.video, w, dur, cortes=cortes, idioma='es', opciones=EP.opciones_guardadas(), tema=None)

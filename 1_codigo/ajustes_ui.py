@@ -484,6 +484,17 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.22', [
+        'Efectos más simple: los estilos de la Edición PRO salen desplegados, cada uno en su slider.',
+        'Fuera de Efectos (y de GO): Intro, Transiciones en los cortes, Movimiento del video y el carrusel de motions (los motions vuelven a Automático).',
+        'Ajustes sin la tarjeta «Conexión con DaVinci Resolve»: GO se conecta solo.',
+    ]),
+    ('5.21', [
+        'Efectos › Edición PRO: cada función (píldora, detrás de ti, gancho, escenas, kit, gráficos, B-roll y Motions completo) con 10 estilos y su ejemplo animado.',
+        'Elige tus colores en cada una (por ejemplo, la píldora blanca aunque el tema sea rosado); el contenido se sigue adaptando a tu video.',
+        'Detrás de ti: tu silueta con sombra, orilla blanca o de color, resplandor, neón o efecto sticker.',
+        'Fuera de Efectos: «Sonido extra», «Cierre del video», «Iconos flotantes» y «Plantillas por frase».',
+    ]),
     ('5.20', [
         '«Captions detrás de ti» más inteligente: Magic Mask (solo personas) con su resultado guardado en la caché, igual en los Temas 1 a 6.',
         'Elige la intensidad en el menú de Proyecto (Suave, Media o Fuerte): la cabeza nunca tapa tanto que no se lea el caption.',
@@ -2092,7 +2103,8 @@ class VentanaAjustes(_Panel):
                       tr('Con Resolve 21.1 o más nuevo CineCaptions usa su servidor MCP oficial: no hace falta '
                          'lanzar el Puente y cada orden tarda milésimas. Con versiones anteriores se usa la API '
                          'de Studio o el Puente, como siempre.'), caja_con, 340)
-        self._comprobar_conexion()
+        f_con.setParent(self)                            # v5.21: «Conexión con DaVinci Resolve» quitada de Ajustes (el usuario lo pidió); GO se conecta solo
+        f_con.hide()
         # encima
         encima_var = BooleanVar(self._borrador['ventana_encima'])
         f_encima = _Fila(tr('Mantener CineCaptions encima'),
@@ -2140,7 +2152,7 @@ class VentanaAjustes(_Panel):
                          'packs de estilos, en Documentos > CineCaptions > Copias de seguridad.'), caja_cop, 340,
                       ultima=True)
         self._pintar_copias()
-        capa.addWidget(_grupo(f_motor, f_gpu, f_cache, f_con, f_encima, f_avisos, f_mp4, f_repro, f_vert, f_vista, f_cop))
+        capa.addWidget(_grupo(f_motor, f_gpu, f_cache, f_encima, f_avisos, f_mp4, f_repro, f_vert, f_vista, f_cop))
 
     def _pintar_motor(self):
         import motor_voz

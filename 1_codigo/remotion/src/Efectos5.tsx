@@ -201,14 +201,17 @@ export const TarjetaT5: React.FC<TarjetaProps> = ({ tipo = 'grafica', x = 50, y 
 };
 
 /* ------------------------------------------------------------------------------------------------ la órbita (detrás / delante) */
+// v5.20 (página Efectos › Gancho del inicio: 10 estilos; estilos_pro.py): `estilo` = rastro (el de siempre) · anillo · neon · chips · limpio ·
+// cometa · doble · puntos · halo · cinta; `acento2` (el segundo color del halo) y `tinta` (el color del anillo) los puede poner el usuario.
 export type OrbitaProps = { lado?: 'atras' | 'delante'; x?: number; y?: number; rx?: number; ry?: number; iconos?: string[]; vuelta?: number;
-  inclinacion?: number; acento?: string; escala?: number };
+  inclinacion?: number; acento?: string; escala?: number; estilo?: string; acento2?: string; tinta?: string };
 
 export const OrbitaT5: React.FC<OrbitaProps> = ({ lado = 'delante', x: cx = 50, y: cy = 30, rx = 30, ry = 5, iconos = [], vuelta = 2.8, inclinacion = -6,
-                                                   acento = '#4C7DFF', escala = 1 }) => {
+                                                   acento = '#4C7DFF', escala = 1, estilo = 'rastro', acento2 = '#FF7A1A', tinta = '#FFFFFF' }) => {
   const { t, fin, W, H } = useTiempo();
   const U = (Math.min(W, H) / 1080) * escala;
   const [r, g, b] = rgb(acento);
+  const [tr, tg, tb] = rgb(tinta);
   const X = (cx / 100) * W, Y = (cy / 100) * H, RX = (rx / 100) * W, RY = (ry / 100) * H;
   const inc = (inclinacion * Math.PI) / 180;
   const punto = (th: number) => {
@@ -223,13 +226,51 @@ export const OrbitaT5: React.FC<OrbitaProps> = ({ lado = 'delante', x: cx = 50, 
     .map(([x, yy], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${yy.toFixed(1)}`).join(' ');
   const lista = (iconos.length ? iconos : ['3d:star-dynamic-color']).slice(0, 2);
   const th0 = Math.PI * 0.62;                                                 // empieza a la izquierda, un poco por delante
+  const dibuja = (1 - entra).toFixed(4);
+  const anillo = (d: string, k: string) => {                                  // el trazo de la órbita según el estilo
+    if (estilo === 'limpio' || estilo === 'chips' || estilo === 'cometa') return null;
+    if (estilo === 'anillo') return <path key={k} d={d} fill="none" stroke={`rgba(${tr},${tg},${tb},.9)`} strokeWidth={3 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} />;
+    if (estilo === 'neon') return (
+      <g key={k}>
+        <path d={d} fill="none" stroke={`rgb(${r},${g},${b})`} strokeWidth={14 * U} strokeLinecap="round" opacity={0.55} pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} style={{ filter: `blur(${10 * U}px)` }} />
+        <path d={d} fill="none" stroke={`rgb(${r},${g},${b})`} strokeWidth={4.5 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} />
+        <path d={d} fill="none" stroke="rgba(255,255,255,.85)" strokeWidth={1.6 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} />
+      </g>
+    );
+    if (estilo === 'puntos') return <path key={k} d={d} fill="none" stroke={`rgba(${tr},${tg},${tb},.95)`} strokeWidth={8 * U} strokeLinecap="round" strokeDasharray={`0 ${20 * U}`} strokeDashoffset={-t * 40 * U} opacity={entra} />;
+    if (estilo === 'halo') return (
+      <g key={k}>
+        <defs><linearGradient id={`og${k}`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor={acento2} /><stop offset="1" stopColor={acento} /></linearGradient></defs>
+        <path d={d} fill="none" stroke={`url(#og${k})`} strokeWidth={16 * U} strokeLinecap="round" opacity={0.5} pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} style={{ filter: `blur(${12 * U}px)` }} />
+        <path d={d} fill="none" stroke={`url(#og${k})`} strokeWidth={5 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} />
+      </g>
+    );
+    if (estilo === 'cinta') return (
+      <g key={k}>
+        <path d={d} fill="none" stroke={`rgba(${tr},${tg},${tb},.16)`} strokeWidth={42 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} />
+        <path d={d} fill="none" stroke={`rgba(${tr},${tg},${tb},.7)`} strokeWidth={2 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} />
+      </g>
+    );
+    return (                                                                    // 'rastro' (y 'doble'): el de siempre
+      <g key={k}>
+        <path d={d} fill="none" stroke={`rgba(${r},${g},${b},.35)`} strokeWidth={12 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1"
+              strokeDashoffset={dibuja} style={{ filter: `blur(${6 * U}px)` }} />
+        <path d={d} fill="none" stroke={`rgba(${tr},${tg},${tb},.85)`} strokeWidth={3.5 * U} strokeLinecap="round" strokeDasharray={`${14 * U} ${12 * U}`}
+              strokeDashoffset={-t * 60 * U} opacity={entra} />
+      </g>
+    );
+  };
+  const ruta2 = estilo === 'doble' ? Array.from({ length: pasos + 1 }, (_, i) => {           // la segunda órbita, más ancha y con otra inclinación
+    const th = (atras ? Math.PI : 0) + (Math.PI * i) / pasos, inc2 = inc + 0.2;
+    const x = RX * 1.22 * Math.cos(th), yy = RY * 1.5 * Math.sin(th);
+    return [X + x * Math.cos(inc2) - yy * Math.sin(inc2), Y + x * Math.sin(inc2) + yy * Math.cos(inc2)];
+  }).map(([x, yy], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${yy.toFixed(1)}`).join(' ') : '';
+  const nFantasmas = estilo === 'cometa' ? [0.04, 0.08, 0.12, 0.16, 0.2] : estilo === 'limpio' || estilo === 'chips' ? [] : [0.08, 0.16];
   return (
     <AbsoluteFill style={{ opacity: 1 - sale }}>
       <svg width={W} height={H} style={{ position: 'absolute', inset: 0 }}>
-        <path d={ruta} fill="none" stroke={`rgba(${r},${g},${b},.35)`} strokeWidth={12 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1"
-              strokeDashoffset={(1 - entra).toFixed(4)} style={{ filter: `blur(${6 * U}px)` }} />
-        <path d={ruta} fill="none" stroke="rgba(255,255,255,.85)" strokeWidth={3.5 * U} strokeLinecap="round" strokeDasharray={`${14 * U} ${12 * U}`}
-              strokeDashoffset={-t * 60 * U} opacity={entra} />
+        {anillo(ruta, 'a')}
+        {ruta2 && <path d={ruta2} fill="none" stroke={`rgba(${tr},${tg},${tb},.55)`} strokeWidth={2 * U} strokeLinecap="round" pathLength={1} strokeDasharray="1" strokeDashoffset={dibuja} />}
       </svg>
       {lista.map((ic, i) => {
         const th = th0 + (2 * Math.PI * Math.max(0, t - 0.1)) / vuelta + i * Math.PI;
@@ -239,12 +280,17 @@ export const OrbitaT5: React.FC<OrbitaProps> = ({ lado = 'delante', x: cx = 50, 
         const pop = resorte((t - 0.08 - i * 0.18) / 0.5);
         const lado2 = 160 * U * prof * clamp(pop, 0, 1.15);
         const [x, yy] = punto(th);
-        const fantasmas = [0.08, 0.16].map(d => punto(th - (2 * Math.PI * d) / vuelta));
+        const fantasmas = nFantasmas.map(d => punto(th - (2 * Math.PI * d) / vuelta));
         return (
           <div key={i}>
+            {estilo === 'chips' && (
+              <div style={{ position: 'absolute', left: x - lado2 * 0.62, top: yy - lado2 * 0.62, width: lado2 * 1.24, height: lado2 * 1.24, borderRadius: '50%',
+                            background: 'linear-gradient(160deg, rgba(255,255,255,.3), rgba(255,255,255,.08))', border: `${2 * U}px solid rgba(255,255,255,.5)`,
+                            boxShadow: `0 ${14 * U}px ${30 * U}px rgba(0,0,0,.35), 0 0 ${24 * U}px rgba(${r},${g},${b},.45)` }} />
+            )}
             {fantasmas.map(([fx, fy], k) => (
               <Img key={k} src={urlIcono(ic)} style={{ position: 'absolute', left: fx - lado2 / 2, top: fy - lado2 / 2, width: lado2, height: lado2,
-                                                       opacity: 0.22 - k * 0.1, filter: `blur(${(4 + 4 * k) * U}px)` }} />
+                                                       opacity: estilo === 'cometa' ? 0.32 - k * 0.06 : 0.22 - k * 0.1, filter: `blur(${(4 + 4 * k) * U}px)` }} />
             ))}
             {ic.startsWith('emoji:') ? (
               <EmojiAnimado id={ic} lado={lado2} style={{ position: 'absolute', left: x - lado2 / 2, top: yy - lado2 / 2, transform: `rotate(${(Math.cos(th) * 12).toFixed(1)}deg)`,

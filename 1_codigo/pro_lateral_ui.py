@@ -64,7 +64,7 @@ def opciones_visibles():
     """v5.5.20 (el usuario: «en la versión Free no aparece la opción, para evitar que el usuario la active»): las que se enseñan; «Captions
     detrás de ti» solo con Resolve Studio (en Free y en el MP4 sin Resolve no hay Magic Mask)."""
     st = _studio()
-    return [o for o in OPCIONES if st or not o.get('solo_studio')]
+    return [o for o in OPCIONES if (st or not o.get('solo_studio')) and o['clave'] != 'plantillas']   # v5.20: «Plantillas por frase» quitado (el usuario lo pidió)
 
 
 def intensidad():
@@ -153,6 +153,8 @@ def _neon():
 
 def estado(clave, op=None):
     o = _POR_CLAVE[clave]
+    if clave == 'plantillas':
+        return False                                    # v5.20: «Plantillas por frase» quitado: siempre apagado
     if o.get('solo_studio') and not _studio():
         return False                                    # (v5.5.20: sin Studio no va, aunque estuviera guardada encendida)
     op = _op() if op is None else op

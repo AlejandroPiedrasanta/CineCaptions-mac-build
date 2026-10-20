@@ -2377,6 +2377,86 @@ const resorte = (q) => {
   const x = clamp(q);
   return 1 - Math.exp(-6 * x) * Math.cos(9 * x);
 };
+const HEX = /^#?[0-9a-fA-F]{6}$/;
+const hex = (h) => h && HEX.test(h) ? "#" + h.replace("#", "") : "";
+const claroDe = (h) => {
+  const [r, g, b] = rgb(h);
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150;
+};
+const vestido = (variante, U, acento, acento2, fondoU, tintaU) => {
+  const [r, g, b] = rgb(acento);
+  const [r2, g2, b2] = rgb(acento2);
+  const sombra = `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.45)`;
+  let v = {
+    fondo: "linear-gradient(180deg, rgba(38,42,58,.86), rgba(18,20,30,.86))",
+    borde: `${1.3 * U}px solid rgba(255,255,255,.12)`,
+    sombra: `${sombra}, 0 0 ${30 * U}px rgba(${r},${g},${b},.18)`,
+    radio: 999,
+    oscuro: true
+  };
+  if (variante === "blanca") v = { fondo: "rgba(255,255,255,.96)", borde: `${1.3 * U}px solid rgba(0,0,0,.04)`, sombra: `0 ${16 * U}px ${40 * U}px rgba(20,30,60,.22)`, radio: 999, oscuro: false };
+  else if (variante === "transparente") v = {
+    fondo: "rgba(0,0,0,0)",
+    borde: `${2.4 * U}px solid rgba(255,255,255,.9)`,
+    sombra: "none",
+    radio: 999,
+    oscuro: true,
+    textoSombra: `0 ${2 * U}px ${8 * U}px rgba(0,0,0,.7)`
+  };
+  else if (variante === "vidrio") v = {
+    fondo: "linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16))",
+    borde: `${1.6 * U}px solid rgba(255,255,255,.55)`,
+    sombra: `0 ${14 * U}px ${36 * U}px rgba(0,0,0,.28), inset 0 ${1.5 * U}px 0 rgba(255,255,255,.6)`,
+    radio: 999,
+    oscuro: true,
+    textoSombra: `0 ${1.5 * U}px ${6 * U}px rgba(0,0,0,.45)`
+  };
+  else if (variante === "neon") v = {
+    fondo: "rgba(8,8,16,.82)",
+    borde: `${2.6 * U}px solid rgb(${r},${g},${b})`,
+    radio: 999,
+    oscuro: true,
+    sombra: `0 0 ${18 * U}px rgba(${r},${g},${b},.85), 0 0 ${50 * U}px rgba(${r},${g},${b},.45), inset 0 0 ${16 * U}px rgba(${r},${g},${b},.35)`
+  };
+  else if (variante === "solida") v = {
+    fondo: `rgb(${r},${g},${b})`,
+    borde: `${1.3 * U}px solid rgba(255,255,255,.18)`,
+    sombra: `0 ${14 * U}px ${36 * U}px rgba(${r},${g},${b},.45)`,
+    radio: 999,
+    oscuro: !claroDe(acento)
+  };
+  else if (variante === "halo") v = {
+    fondo: `linear-gradient(#0B0C12, #0B0C12) padding-box, linear-gradient(90deg, rgb(${r2},${g2},${b2}), rgb(${r},${g},${b})) border-box`,
+    borde: `${2.6 * U}px solid transparent`,
+    radio: 999,
+    oscuro: true,
+    sombra: `-${14 * U}px 0 ${36 * U}px rgba(${r2},${g2},${b2},.45), ${14 * U}px 0 ${36 * U}px rgba(${r},${g},${b},.45)`
+  };
+  else if (variante === "etiqueta") v = {
+    fondo: "rgba(255,255,255,.97)",
+    borde: "none",
+    sombra: `inset ${9 * U}px 0 0 rgb(${r},${g},${b}), 0 ${12 * U}px ${30 * U}px rgba(20,30,60,.28)`,
+    radio: 14 * U,
+    oscuro: false,
+    barra: true
+  };
+  else if (variante === "sticker") v = { fondo: "#FFFFFF", borde: `${6 * U}px solid #FFFFFF`, sombra: `${6 * U}px ${8 * U}px 0 rgba(0,0,0,.35)`, radio: 999, oscuro: false, giro: -3 };
+  else if (variante === "degradado") v = {
+    fondo: `linear-gradient(100deg, rgb(${r},${g},${b}), rgb(${r2},${g2},${b2}))`,
+    borde: `${1.3 * U}px solid rgba(255,255,255,.22)`,
+    sombra: `0 ${14 * U}px ${40 * U}px rgba(${r},${g},${b},.4)`,
+    radio: 999,
+    oscuro: !(claroDe(acento) && claroDe(acento2))
+  };
+  if (fondoU) {
+    v.fondo = variante === "halo" ? `linear-gradient(${fondoU}, ${fondoU}) padding-box, linear-gradient(90deg, rgb(${r2},${g2},${b2}), rgb(${r},${g},${b})) border-box` : variante === "transparente" ? "rgba(0,0,0,0)" : fondoU;
+    if (variante !== "transparente") v.oscuro = !claroDe(fondoU);
+    if (variante === "transparente") v.borde = `${2.4 * U}px solid ${fondoU}`;
+  }
+  const tinta = tintaU || (v.oscuro ? "#F5F6FA" : "#1D1D21");
+  const gris = tintaU ? tintaU : v.oscuro ? "rgba(255,255,255,.66)" : "#8B8B95";
+  return { ...v, tinta, gris };
+};
 const AcompananteT5 = ({
   tipo = "sticker",
   texto = "",
@@ -2390,7 +2470,11 @@ const AcompananteT5 = ({
   aspecto = "cristal",
   y = 66,
   acento = "#4C7DFF",
-  escala = 1
+  escala = 1,
+  variante = "",
+  fondo = "",
+  tinta: tintaU = "",
+  acento2 = ""
 }) => {
   useFuentes();
   const frame = (0,esm.useCurrentFrame)();
@@ -2399,23 +2483,30 @@ const AcompananteT5 = ({
   const U = Math.min(width, height) / 1080 * escala;
   const e = resorte(t / 0.5), s = Acompanantes_easeOut((t - (fin - 0.28)) / 0.28);
   const vis = clamp(t / 0.18) * (1 - s);
-  const oscuro = aspecto === "cristal";
-  const [r, g, b] = rgb(acento);
-  const tinta = oscuro ? "#F5F6FA" : "#1D1D21", gris = oscuro ? "rgba(255,255,255,.62)" : "#8B8B95";
+  const acentoH = hex(acento) || "#4C7DFF";
+  const V = vestido(variante || (aspecto === "blanco" ? "blanca" : "cristal"), U, acentoH, hex(acento2) || "#FF7A1A", hex(fondo), hex(tintaU));
+  const oscuro = V.oscuro;
+  const [r, g, b] = rgb(acentoH);
+  const tinta = V.tinta, gris = V.gris;
+  const marca = variante === "solida" || variante === "degradado" ? tinta : `rgb(${r},${g},${b})`;
   const carta = {
-    background: oscuro ? "linear-gradient(180deg, rgba(38,42,58,.86), rgba(18,20,30,.86))" : "rgba(255,255,255,.96)",
-    border: `${1.3 * U}px solid ${oscuro ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.04)"}`,
-    boxShadow: oscuro ? `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.45), 0 0 ${30 * U}px rgba(${r},${g},${b},.18)` : `0 ${16 * U}px ${40 * U}px rgba(20,30,60,.22)`,
-    borderRadius: 999,
+    background: V.fondo,
+    border: V.borde,
+    boxShadow: V.sombra,
+    borderRadius: V.radio,
     display: "flex",
     alignItems: "center",
     gap: 18 * U,
-    padding: `${14 * U}px ${30 * U}px ${14 * U}px ${16 * U}px`,
-    whiteSpace: "nowrap"
+    padding: `${14 * U}px ${30 * U}px ${14 * U}px ${(V.barra ? 26 : 16) * U}px`,
+    whiteSpace: "nowrap",
+    position: "relative",
+    overflow: V.barra ? "hidden" : void 0,
+    textShadow: V.textoSombra,
+    transform: V.giro ? `rotate(${V.giro}deg)` : void 0
   };
   const flota = Math.sin(t * 2.1) * 4 * U;
   const pop = (t0) => resorte((t - t0) / 0.45);
-  const icono = (lado, contenido, fondo = `rgba(${r},${g},${b},.16)`) => /* @__PURE__ */ React.createElement("div", { style: { width: lado, height: lado, borderRadius: lado / 2, background: fondo, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, contenido);
+  const icono = (lado, contenido, fondo2 = `rgba(${r},${g},${b},.16)`) => /* @__PURE__ */ React.createElement("div", { style: { width: lado, height: lado, borderRadius: lado / 2, background: fondo2, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, contenido);
   const textos = (arriba, abajo, grande = 40) => /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.05 } }, arriba && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 15 * U, letterSpacing: "0.14em", color: gris, textTransform: "uppercase" } }, arriba), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: grande * U, letterSpacing: "-0.01em", color: tinta } }, abajo));
   let cuerpo = null;
   if (tipo === "lugar") {
@@ -2458,7 +2549,7 @@ const AcompananteT5 = ({
         width: 10 * U,
         height: 10 * U,
         borderRadius: "50%",
-        background: `rgb(${r},${g},${b})`,
+        background: marca,
         opacity: Math.sin(q * Math.PI),
         transform: `scale(${(0.5 + q).toFixed(2)})`
       } });
@@ -2510,8 +2601,8 @@ const AcompananteT5 = ({
     ))), /* @__PURE__ */ React.createElement("div", { style: {
       padding: `${12 * U}px ${26 * U}px`,
       borderRadius: 999,
-      background: hecho ? oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" : `rgb(${r},${g},${b})`,
-      color: hecho ? tinta : "#fff",
+      background: hecho ? oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" : marca,
+      color: hecho ? tinta : marca === tinta ? `rgb(${r},${g},${b})` : "#fff",
       fontFamily: FAMILIA.inter,
       fontWeight: 700,
       fontSize: 30 * U,
@@ -2531,7 +2622,7 @@ const AcompananteT5 = ({
     const q = Acompanantes_easeOut((t - 0.15) / 0.9);
     const n = isFinite(v) ? (v * q).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec }) : valor;
     const pre = tipo === "dinero" ? signo || "$" : "", post = tipo === "cifra" && signo === "%" ? "%" : "";
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, icono(64 * U, tipo === "tiempo" ? /* @__PURE__ */ React.createElement("svg", { width: 36 * U, height: 36 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "9", fill: "none", stroke: `rgb(${r},${g},${b})`, strokeWidth: "2.2" }), /* @__PURE__ */ React.createElement("path", { d: `M12 12 L${(12 + 6 * Math.sin(t * 4)).toFixed(2)} ${(12 - 6 * Math.cos(t * 4)).toFixed(2)}`, stroke: `rgb(${r},${g},${b})`, strokeWidth: "2.2", strokeLinecap: "round" })) : /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 30 * U, color: `rgb(${r},${g},${b})` } }, tipo === "dinero" ? signo || "$" : "#")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 * U } }, textos(kicker, /* @__PURE__ */ React.createElement(React.Fragment, null, pre, n, post, unidad ? /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 500, fontSize: 28 * U, color: gris } }, " ", unidad) : null), 46), tipo === "cifra" && signo === "%" && isFinite(v) && /* @__PURE__ */ React.createElement("div", { style: { width: 200 * U, height: 8 * U, borderRadius: 4 * U, background: oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.min(100, v * q)}%`, height: "100%", borderRadius: 4 * U, background: `rgb(${r},${g},${b})` } }))));
+    cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, icono(64 * U, tipo === "tiempo" ? /* @__PURE__ */ React.createElement("svg", { width: 36 * U, height: 36 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "9", fill: "none", stroke: marca, strokeWidth: "2.2" }), /* @__PURE__ */ React.createElement("path", { d: `M12 12 L${(12 + 6 * Math.sin(t * 4)).toFixed(2)} ${(12 - 6 * Math.cos(t * 4)).toFixed(2)}`, stroke: marca, strokeWidth: "2.2", strokeLinecap: "round" })) : /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 30 * U, color: marca } }, tipo === "dinero" ? signo || "$" : "#")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 * U } }, textos(kicker, /* @__PURE__ */ React.createElement(React.Fragment, null, pre, n, post, unidad ? /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 500, fontSize: 28 * U, color: gris } }, " ", unidad) : null), 46), tipo === "cifra" && signo === "%" && isFinite(v) && /* @__PURE__ */ React.createElement("div", { style: { width: 200 * U, height: 8 * U, borderRadius: 4 * U, background: oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.min(100, v * q)}%`, height: "100%", borderRadius: 4 * U, background: marca } }))));
   }
   return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
@@ -2794,11 +2885,15 @@ const OrbitaT5 = ({
   vuelta = 2.8,
   inclinacion = -6,
   acento = "#4C7DFF",
-  escala = 1
+  escala = 1,
+  estilo = "rastro",
+  acento2 = "#FF7A1A",
+  tinta = "#FFFFFF"
 }) => {
   const { t, fin, W, H } = useTiempo();
   const U = Math.min(W, H) / 1080 * escala;
   const [r, g, b] = rgb(acento);
+  const [tr, tg, tb] = rgb(tinta);
   const X = cx / 100 * W, Y = cy / 100 * H, RX = rx / 100 * W, RY = ry / 100 * H;
   const inc = inclinacion * Math.PI / 180;
   const punto = (th) => {
@@ -2811,32 +2906,51 @@ const OrbitaT5 = ({
   const ruta = Array.from({ length: pasos + 1 }, (_, i) => punto((atras ? Math.PI : 0) + Math.PI * i / pasos)).map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${yy.toFixed(1)}`).join(" ");
   const lista = (iconos.length ? iconos : ["3d:star-dynamic-color"]).slice(0, 2);
   const th0 = Math.PI * 0.62;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - sale } }, /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ React.createElement(
-    "path",
-    {
-      d: ruta,
-      fill: "none",
-      stroke: `rgba(${r},${g},${b},.35)`,
-      strokeWidth: 12 * U,
-      strokeLinecap: "round",
-      pathLength: 1,
-      strokeDasharray: "1",
-      strokeDashoffset: (1 - entra).toFixed(4),
-      style: { filter: `blur(${6 * U}px)` }
-    }
-  ), /* @__PURE__ */ React.createElement(
-    "path",
-    {
-      d: ruta,
-      fill: "none",
-      stroke: "rgba(255,255,255,.85)",
-      strokeWidth: 3.5 * U,
-      strokeLinecap: "round",
-      strokeDasharray: `${14 * U} ${12 * U}`,
-      strokeDashoffset: -t * 60 * U,
-      opacity: entra
-    }
-  )), lista.map((ic, i) => {
+  const dibuja = (1 - entra).toFixed(4);
+  const anillo = (d, k) => {
+    if (estilo === "limpio" || estilo === "chips" || estilo === "cometa") return null;
+    if (estilo === "anillo") return /* @__PURE__ */ React.createElement("path", { key: k, d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.9)`, strokeWidth: 3 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja });
+    if (estilo === "neon") return /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `rgb(${r},${g},${b})`, strokeWidth: 14 * U, strokeLinecap: "round", opacity: 0.55, pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja, style: { filter: `blur(${10 * U}px)` } }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `rgb(${r},${g},${b})`, strokeWidth: 4.5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: "rgba(255,255,255,.85)", strokeWidth: 1.6 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }));
+    if (estilo === "puntos") return /* @__PURE__ */ React.createElement("path", { key: k, d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.95)`, strokeWidth: 8 * U, strokeLinecap: "round", strokeDasharray: `0 ${20 * U}`, strokeDashoffset: -t * 40 * U, opacity: entra });
+    if (estilo === "halo") return /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: `og${k}`, x1: "0", y1: "0", x2: "1", y2: "0" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: acento2 }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: acento }))), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `url(#og${k})`, strokeWidth: 16 * U, strokeLinecap: "round", opacity: 0.5, pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja, style: { filter: `blur(${12 * U}px)` } }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `url(#og${k})`, strokeWidth: 5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }));
+    if (estilo === "cinta") return /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.16)`, strokeWidth: 42 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.7)`, strokeWidth: 2 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }));
+    return (
+      // 'rastro' (y 'doble'): el de siempre
+      /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement(
+        "path",
+        {
+          d,
+          fill: "none",
+          stroke: `rgba(${r},${g},${b},.35)`,
+          strokeWidth: 12 * U,
+          strokeLinecap: "round",
+          pathLength: 1,
+          strokeDasharray: "1",
+          strokeDashoffset: dibuja,
+          style: { filter: `blur(${6 * U}px)` }
+        }
+      ), /* @__PURE__ */ React.createElement(
+        "path",
+        {
+          d,
+          fill: "none",
+          stroke: `rgba(${tr},${tg},${tb},.85)`,
+          strokeWidth: 3.5 * U,
+          strokeLinecap: "round",
+          strokeDasharray: `${14 * U} ${12 * U}`,
+          strokeDashoffset: -t * 60 * U,
+          opacity: entra
+        }
+      ))
+    );
+  };
+  const ruta2 = estilo === "doble" ? Array.from({ length: pasos + 1 }, (_, i) => {
+    const th = (atras ? Math.PI : 0) + Math.PI * i / pasos, inc2 = inc + 0.2;
+    const x = RX * 1.22 * Math.cos(th), yy = RY * 1.5 * Math.sin(th);
+    return [X + x * Math.cos(inc2) - yy * Math.sin(inc2), Y + x * Math.sin(inc2) + yy * Math.cos(inc2)];
+  }).map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${yy.toFixed(1)}`).join(" ") : "";
+  const nFantasmas = estilo === "cometa" ? [0.04, 0.08, 0.12, 0.16, 0.2] : estilo === "limpio" || estilo === "chips" ? [] : [0.08, 0.16];
+  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - sale } }, /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", inset: 0 } }, anillo(ruta, "a"), ruta2 && /* @__PURE__ */ React.createElement("path", { d: ruta2, fill: "none", stroke: `rgba(${tr},${tg},${tb},.55)`, strokeWidth: 2 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja })), lista.map((ic, i) => {
     const th = th0 + 2 * Math.PI * Math.max(0, t - 0.1) / vuelta + i * Math.PI;
     const detras = Math.sin(th) < 0;
     if (detras !== atras) return null;
@@ -2844,14 +2958,24 @@ const OrbitaT5 = ({
     const pop = Efectos5_resorte((t - 0.08 - i * 0.18) / 0.5);
     const lado2 = 160 * U * prof * clamp(pop, 0, 1.15);
     const [x, yy] = punto(th);
-    const fantasmas = [0.08, 0.16].map((d) => punto(th - 2 * Math.PI * d / vuelta));
-    return /* @__PURE__ */ React.createElement("div", { key: i }, fantasmas.map(([fx, fy], k) => /* @__PURE__ */ React.createElement(esm.Img, { key: k, src: urlIcono(ic), style: {
+    const fantasmas = nFantasmas.map((d) => punto(th - 2 * Math.PI * d / vuelta));
+    return /* @__PURE__ */ React.createElement("div", { key: i }, estilo === "chips" && /* @__PURE__ */ React.createElement("div", { style: {
+      position: "absolute",
+      left: x - lado2 * 0.62,
+      top: yy - lado2 * 0.62,
+      width: lado2 * 1.24,
+      height: lado2 * 1.24,
+      borderRadius: "50%",
+      background: "linear-gradient(160deg, rgba(255,255,255,.3), rgba(255,255,255,.08))",
+      border: `${2 * U}px solid rgba(255,255,255,.5)`,
+      boxShadow: `0 ${14 * U}px ${30 * U}px rgba(0,0,0,.35), 0 0 ${24 * U}px rgba(${r},${g},${b},.45)`
+    } }), fantasmas.map(([fx, fy], k) => /* @__PURE__ */ React.createElement(esm.Img, { key: k, src: urlIcono(ic), style: {
       position: "absolute",
       left: fx - lado2 / 2,
       top: fy - lado2 / 2,
       width: lado2,
       height: lado2,
-      opacity: 0.22 - k * 0.1,
+      opacity: estilo === "cometa" ? 0.32 - k * 0.06 : 0.22 - k * 0.1,
       filter: `blur(${(4 + 4 * k) * U}px)`
     } })), ic.startsWith("emoji:") ? /* @__PURE__ */ React.createElement(EmojiAnimado, { id: ic, lado: lado2, style: {
       position: "absolute",
@@ -3892,7 +4016,7 @@ const MixtoK = ({
 
 
 const Kit8_esHex = (h) => /^#?[0-9a-fA-F]{6}$/.test(String(h || ""));
-const hex = (h, def) => Kit8_esHex(h) ? "#" + String(h).replace("#", "") : def;
+const Kit8_hex = (h, def) => Kit8_esHex(h) ? "#" + String(h).replace("#", "") : def;
 const rgba = (h, a) => {
   const n = parseInt(h.replace("#", ""), 16) || 0;
   return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
@@ -3904,7 +4028,7 @@ const RecorteK = ({ icono = "light_bulb", palabra = "", x = 50, y = 40, escala =
   const { t, q } = Kit7_useVida(salida);
   const cx = W * x / 100, cy = H * y / 100, lado = 430 * U;
   const neon = variante === "neon", conColor = variante === "color";
-  const brilloNeon = hex(acento, "#3DFF8B");
+  const brilloNeon = Kit8_hex(acento, "#3DFF8B");
   const p = S(0.02, { damping: 10, stiffness: 190 });
   const giroFinal = conColor ? 5 : -6;
   const vaiven = Math.sin(t * 1.6) * 1.3, flota = Math.sin(t * 1.25) * 4 * U;
@@ -4019,8 +4143,8 @@ const SeleccionK = ({
   const U = useU() * escala, S = useResorte();
   const { t, q } = Kit7_useVida(salida);
   const rosa = variante === "rosa", oscuro = variante === "oscuro";
-  const tirador = rosa ? "#E06FA6" : oscuro ? hex(acento, "#FFD60A") : "#0A84FF";
-  const resalte = rosa ? "rgba(240,168,204,.6)" : oscuro ? rgba(hex(acento, "#FFD60A"), 0.3) : "rgba(10,132,255,.36)";
+  const tirador = rosa ? "#E06FA6" : oscuro ? Kit8_hex(acento, "#FFD60A") : "#0A84FF";
+  const resalte = rosa ? "rgba(240,168,204,.6)" : oscuro ? rgba(Kit8_hex(acento, "#FFD60A"), 0.3) : "rgba(10,132,255,.36)";
   const tinta = rosa ? "#232326" : "#FFFFFF";
   const sombraTexto = rosa ? "none" : `0 ${3 * U}px ${16 * U}px rgba(0,0,0,.55)`;
   const cx = W * x / 100, cy = H * y / 100;
@@ -4141,7 +4265,7 @@ const CalendarioK = ({
   const U = useU() * escala, S = useResorte();
   const { t, fin, q } = Kit7_useVida(salida);
   const E = { ...ESTILO_CAL[variante] || ESTILO_CAL.rojo };
-  if (variante === "oscuro" && Kit8_esHex(acento)) E.cabeza = hex(acento, E.cabeza);
+  if (variante === "oscuro" && Kit8_esHex(acento)) E.cabeza = Kit8_hex(acento, E.cabeza);
   const a = Math.round(Number(desde) || 1), b = Math.round(Number(hasta) || 1);
   const pasos = Math.abs(b - a);
   const cuantos = Math.min(pasos, 9);
@@ -4393,7 +4517,11 @@ const Glifo = ({ nombre, lado, color, relleno = true, grosor = 2, style }) => {
   );
 };
 const Grano = ({ op = 0.08, frec = 0.85, id }) => /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: "100%", height: "100%", opacity: op, mixBlendMode: "multiply" } }, /* @__PURE__ */ react.createElement("filter", { id }, /* @__PURE__ */ react.createElement("feTurbulence", { type: "fractalNoise", baseFrequency: frec, numOctaves: 2, stitchTiles: "stitch" }), /* @__PURE__ */ react.createElement("feColorMatrix", { type: "saturate", values: "0" })), /* @__PURE__ */ react.createElement("rect", { width: "100%", height: "100%", filter: `url(#${id})` }));
-const Escena = ({ fondo, salida = 0.3, ox = 50, oy = 55, children }) => {
+const FondoEscena = react.createContext("");
+const conFondo = (C) => (props) => /* @__PURE__ */ react.createElement(FondoEscena.Provider, { value: Escenas9_esHex(props.fondoEscena) ? Escenas9_hex(props.fondoEscena, "#000000") : "" }, /* @__PURE__ */ react.createElement(C, { ...props }));
+const Escena = ({ fondo: fondoDiseno, salida = 0.3, ox = 50, oy = 55, children }) => {
+  const propio = react.useContext(FondoEscena);
+  const fondo = propio ? `radial-gradient(120% 85% at 50% 35%, ${mezcla(propio, [255, 255, 255], 0.1)} 0%, ${propio} 72%)` : fondoDiseno;
   const { t, q } = Kit7_useVida(salida);
   const r = Kit7_easeOut(t / 0.32) * 150;
   return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: {
@@ -5544,13 +5672,14 @@ const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
     }
   ))), tijera(cx - CW / 6, corte1, true, "a"), tijera(cx + CW / 6, corte2, false, "b"));
 };
-const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", acento, salida = 0.3 }) => {
+const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", acento, salida = 0.3, fondo = "" }) => {
   useFuentes();
   const { width: W, height: H } = (0,esm.useVideoConfig)();
   const U = useU(), S = useResorte();
   const { t, fin } = Kit7_useVida(salida);
   const vert = H >= W;
   const ac = Escenas9_hex(acento, "#FFD23F");
+  const fondoU = Escenas9_esHex(fondo) ? Escenas9_hex(fondo, "#0B0B0D") : "";
   const q = clamp(t / Math.max(1, fin));
   const zoom = 1.16 - 0.12 * suave(q), dx = (azar(palabra.length) - 0.5) * 60 * U * q, dy = -30 * U * q;
   const pp = Kit7_easeOut((t - 0.25) / 0.45);
@@ -5577,19 +5706,199 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
     color: "rgba(255,255,255,.72)",
     textShadow: `0 ${1 * U}px ${4 * U}px rgba(0,0,0,.8)`
   } }, credito);
+  const imagen = (extra) => foto ? /* @__PURE__ */ react.createElement(esm.Img, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, ...extra } }) : null;
+  const detras = fondoU ? /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: `radial-gradient(120% 80% at 50% 40%, ${mezcla(fondoU, [255, 255, 255], 0.1)} 0%, ${fondoU} 70%)` } }) : foto ? /* @__PURE__ */ react.createElement(esm.Img, { src: src(foto), style: {
+    position: "absolute",
+    inset: -60 * U,
+    width: W + 120 * U,
+    height: H + 120 * U,
+    objectFit: "cover",
+    filter: `blur(${36 * U}px) brightness(.5) saturate(1.2)`,
+    transform: `scale(${zoom.toFixed(4)})`
+  } }) : null;
+  const pc = S(0.08, { damping: 13, stiffness: 150 });
+  const cy = H * (vert ? 0.54 : 0.52);
+  if (variante === "polaroid" || variante === "cristal" || variante === "neon" || variante === "inclinada") {
+    const Lw = Math.min(W * 0.8, H * 0.46), Lh = Lw * (variante === "polaroid" ? 1 : 1.22);
+    const base = {
+      position: "absolute",
+      left: W / 2 - Lw / 2,
+      top: cy - Lh / 2,
+      width: Lw,
+      height: Lh,
+      overflow: "hidden",
+      boxSizing: "border-box",
+      opacity: clamp(pc * 2)
+    };
+    let marco = {}, fuera = null;
+    if (variante === "polaroid") {
+      fuera = {
+        position: "absolute",
+        left: W / 2 - Lw / 2 - 26 * U,
+        top: cy - Lh / 2 - 26 * U,
+        width: Lw + 52 * U,
+        height: Lh + 160 * U,
+        background: "#FBFAF6",
+        boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.55)`,
+        borderRadius: 6 * U,
+        opacity: clamp(pc * 2),
+        transformOrigin: `${Lw / 2 + 26 * U}px ${Lh / 2 + 26 * U}px`,
+        // (gira con la foto, alrededor de su centro)
+        transform: `rotate(${(-4 + (1 - clamp(pc)) * -12).toFixed(2)}deg) scale(${(0.82 + 0.18 * clamp(pc)).toFixed(4)})`
+      };
+      marco = { transform: fuera.transform, borderRadius: 2 * U };
+    } else if (variante === "cristal") {
+      fuera = {
+        position: "absolute",
+        left: W / 2 - Lw / 2 - 24 * U,
+        top: cy - Lh / 2 - 24 * U,
+        width: Lw + 48 * U,
+        height: Lh + 48 * U,
+        borderRadius: 56 * U,
+        background: "linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.08))",
+        border: `${2 * U}px solid rgba(255,255,255,.4)`,
+        boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.45), inset 0 ${2 * U}px 0 rgba(255,255,255,.5)`,
+        opacity: clamp(pc * 2),
+        transform: `translateY(${((1 - clamp(pc)) * 80 * U).toFixed(1)}px)`
+      };
+      marco = { borderRadius: 36 * U, transform: fuera.transform };
+    } else if (variante === "neon") {
+      marco = {
+        borderRadius: 44 * U,
+        border: `${6 * U}px solid ${ac}`,
+        boxShadow: `0 0 ${24 * U}px ${ac}, 0 0 ${70 * U}px ${ac}88, 0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
+        transform: `scale(${(0.86 + 0.14 * clamp(pc)).toFixed(4)})`
+      };
+    } else {
+      const giro = -18 + 10 * suave(clamp(t / Math.max(1, fin)));
+      marco = {
+        borderRadius: 28 * U,
+        border: `${10 * U}px solid #FFFFFF`,
+        boxShadow: `${-30 * U}px ${40 * U}px ${80 * U}px rgba(0,0,0,.55)`,
+        transform: `perspective(${1400 * U}px) rotateY(${giro.toFixed(2)}deg) rotateX(${5 .toFixed(1)}deg) scale(${(0.86 + 0.14 * clamp(pc)).toFixed(4)})`
+      };
+    }
+    return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, variante === "neon" && /* @__PURE__ */ react.createElement("div", { style: {
+      position: "absolute",
+      left: W / 2 - Lw,
+      top: cy - Lh * 0.7,
+      width: Lw * 2,
+      height: Lh * 1.4,
+      borderRadius: "50%",
+      background: `radial-gradient(closest-side, ${ac}55, transparent)`
+    } }), fuera && /* @__PURE__ */ react.createElement("div", { style: fuera }), /* @__PURE__ */ react.createElement("div", { style: { ...base, ...marco } }, imagen()), variante === "polaroid" && palabra && /* @__PURE__ */ react.createElement("div", { style: {
+      position: "absolute",
+      left: W / 2 - Lw / 2,
+      top: cy + Lh / 2 + 22 * U,
+      width: Lw,
+      textAlign: "center",
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 700,
+      fontSize: Math.min(70, 900 / Math.max(5, palabra.length)) * U,
+      color: "#22252B",
+      opacity: Kit7_easeOut((t - 0.35) / 0.4),
+      transform: fuera ? fuera.transform : void 0,
+      transformOrigin: `${Lw / 2}px ${-(Lh / 2 + 22 * U)}px`
+    } }, palabra), variante !== "polaroid" && etiqueta, pie);
+  }
+  if (variante === "ventana" || variante === "dividida" || variante === "cinta") {
+    const pe = Kit7_easeOut((t - 0.05) / 0.5);
+    if (variante === "dividida") {
+      const alto = H * (vert ? 0.56 : 0.62) * (0.4 + 0.6 * pe);
+      return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0C12", salida, oy: 20 }, /* @__PURE__ */ react.createElement("div", { style: {
+        position: "absolute",
+        left: 0,
+        top: 0,
+        width: W,
+        height: alto,
+        overflow: "hidden",
+        borderRadius: `0 0 ${56 * U}px ${56 * U}px`,
+        boxShadow: `0 ${20 * U}px ${60 * U}px rgba(0,0,0,.5)`
+      } }, imagen()), /* @__PURE__ */ react.createElement("div", { style: {
+        position: "absolute",
+        left: W * 0.1,
+        top: alto + 40 * U,
+        width: W * 0.8,
+        height: 8 * U,
+        borderRadius: 4 * U,
+        background: ac,
+        transform: `scaleX(${Kit7_easeOut((t - 0.3) / 0.5).toFixed(4)})`,
+        transformOrigin: "left",
+        boxShadow: `0 0 ${20 * U}px ${ac}`
+      } }), palabra && /* @__PURE__ */ react.createElement("div", { style: {
+        position: "absolute",
+        left: W * 0.1,
+        top: alto + 70 * U,
+        width: W * 0.8,
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        color: "#FFFFFF",
+        fontSize: Math.min(140, 1300 / Math.max(5, palabra.length)) * U,
+        textTransform: "uppercase",
+        lineHeight: 1,
+        opacity: Kit7_easeOut((t - 0.35) / 0.4),
+        transform: `translateY(${((1 - Kit7_easeOut((t - 0.35) / 0.4)) * 30 * U).toFixed(1)}px)`
+      } }, palabra), pie);
+    }
+    if (variante === "ventana") {
+      const Lw2 = W * 0.86, Lh2 = Math.min(H * 0.56, Lw2 * 1.25), barra = 74 * U;
+      return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0D14", salida }, detras, /* @__PURE__ */ react.createElement("div", { style: {
+        position: "absolute",
+        left: W / 2 - Lw2 * 0.7,
+        top: cy - Lh2 * 0.6,
+        width: Lw2 * 1.4,
+        height: Lh2 * 1.2,
+        borderRadius: "50%",
+        background: `radial-gradient(closest-side, ${ac}44, transparent)`
+      } }), /* @__PURE__ */ react.createElement("div", { style: {
+        position: "absolute",
+        left: W / 2 - Lw2 / 2,
+        top: cy - Lh2 / 2,
+        width: Lw2,
+        height: Lh2 + barra,
+        borderRadius: 34 * U,
+        overflow: "hidden",
+        background: "rgba(20,22,30,.86)",
+        border: `${1.5 * U}px solid rgba(255,255,255,.18)`,
+        boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.55)`,
+        opacity: clamp(pc * 2),
+        transform: `translateY(${((1 - clamp(pc)) * 90 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * clamp(pc)).toFixed(4)})`
+      } }, /* @__PURE__ */ react.createElement("div", { style: { height: barra, display: "flex", alignItems: "center", gap: 14 * U, padding: `0 ${26 * U}px`, borderBottom: `${1.5 * U}px solid rgba(255,255,255,.1)` } }, ["#FF5F57", "#FEBC2E", "#28C840"].map((c) => /* @__PURE__ */ react.createElement("div", { key: c, style: { width: 20 * U, height: 20 * U, borderRadius: "50%", background: c } })), /* @__PURE__ */ react.createElement("div", { style: {
+        marginLeft: 16 * U,
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 28 * U,
+        color: "rgba(255,255,255,.85)",
+        letterSpacing: "0.04em",
+        textTransform: "uppercase"
+      } }, palabra)), /* @__PURE__ */ react.createElement("div", { style: { width: Lw2, height: Lh2, overflow: "hidden" } }, imagen())), pie);
+    }
+    const Lw = W * 1.08, Lh = Math.min(H * 0.42, W * 0.82), hueco = 40 * U;
+    return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, /* @__PURE__ */ react.createElement("div", { style: {
+      position: "absolute",
+      left: W / 2 - Lw / 2,
+      top: cy - Lh / 2 - hueco,
+      width: Lw,
+      height: Lh + 2 * hueco,
+      background: "#111214",
+      boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
+      transform: `rotate(-3deg) translateX(${((1 - pe) * -W * 0.6).toFixed(1)}px)`
+    } }, [0, 1].map((fila) => /* @__PURE__ */ react.createElement("div", { key: fila, style: {
+      position: "absolute",
+      left: 0,
+      top: fila ? Lh + hueco + 10 * U : 10 * U,
+      width: Lw,
+      height: hueco - 20 * U,
+      display: "flex",
+      gap: 26 * U,
+      paddingLeft: t * 120 % (52 * U),
+      overflow: "hidden"
+    } }, Array.from({ length: 30 }).map((_, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: { flex: "none", width: 26 * U, height: "100%", borderRadius: 5 * U, background: "#E9E6DE" } })))), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 30 * U, top: hueco, width: Lw - 60 * U, height: Lh, overflow: "hidden" } }, imagen({ filter: "saturate(1.1) contrast(1.05)" }))), etiqueta, pie);
+  }
   if (variante === "marco" || variante === "circulo") {
     const circ = variante === "circulo";
     const L = circ ? Math.min(W, H) * 0.78 : Math.min(W * 0.84, H * 0.5);
-    const pc = S(0.08, { damping: 13, stiffness: 150 });
-    return /* @__PURE__ */ react.createElement(Escena, { fondo: "#0B0B0D", salida }, foto && /* @__PURE__ */ react.createElement(esm.Img, { src: src(foto), style: {
-      position: "absolute",
-      inset: -60 * U,
-      width: W + 120 * U,
-      height: H + 120 * U,
-      objectFit: "cover",
-      filter: `blur(${36 * U}px) brightness(.55) saturate(1.2)`,
-      transform: `scale(${zoom.toFixed(4)})`
-    } }), circ && /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ react.createElement(
+    return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, circ && /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ react.createElement(
       "circle",
       {
         cx: W / 2,
@@ -97193,7 +97502,7 @@ const RTitular = ({ palabras, arriba, top, claro = true }) => {
       transform: `translateY(${((1 - q) * tam * 0.3).toFixed(1)}px)`,
       filter: q < 1 ? `blur(${((1 - q) * 9).toFixed(1)}px)` : void 0
     };
-    const azul = claro ? AZUL : "#9DB4FF";
+    const azul = claro ? AZUL : "var(--cc-azul-claro, #9DB4FF)";
     if (e === "clave") Object.assign(base, { fontFamily: FAMILIA.display, fontStyle: "italic", fontWeight: 400, color: azul, fontSize: tam * 1.1, letterSpacing: "0" });
     if (e === "azul") Object.assign(base, { color: azul });
     if (e === "gris") Object.assign(base, { color: "#9A9CA8", fontWeight: 600, opacity: clamp(q * 1.3) * (0.55 + 0.45 * (1 - Reel_easeOut((t - p.t - 0.5) / 0.6))) });
@@ -98512,6 +98821,8 @@ const GolpeW = ({ cy, palabra = "", antes = "" }) => {
 
 
 
+const HEXMC = /^#?[0-9a-fA-F]{6}$/;
+const mezclaMC = (h, con, q) => "#" + rgb(h).map((v) => Math.round(v + (con - v) * q).toString(16).padStart(2, "0")).join("");
 const COMPS = {
   ListaRazonesK: ListaRazonesK,
   MisterioK: MisterioK,
@@ -98903,7 +99214,7 @@ const ObjetoMC = ({ e, c, acento }) => {
   return /* @__PURE__ */ react.createElement(TemaCtx.Provider, { value: c.oscuro ? TEMA_OSCURO : TEMA_CLARO }, /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement("div", { style: { transform: `scale(${o && ESCALA_MC[o.tipo] || 1.18})` } }, o ? C[o.tipo] || null : null)));
 };
 const SAL = 0.3;
-const FondoTema = ({ claro, acento }) => {
+const FondoTema = ({ claro, acento, fondo }) => {
   const frame = (0,esm.useCurrentFrame)();
   const { fps, width, height } = (0,esm.useVideoConfig)();
   const t = frame / fps;
@@ -98911,7 +99222,7 @@ const FondoTema = ({ claro, acento }) => {
   const [r, g, b] = rgb(acento);
   const m = Math.min(width, height);
   const mancha = (x, y, s, c) => /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x - s / 2, top: y - s / 2, width: s, height: s, borderRadius: "50%", background: `radial-gradient(circle, ${c} 0%, rgba(0,0,0,0) 68%)` } });
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: claro ? "radial-gradient(130% 90% at 50% 18%, #FFFFFF 0%, #F3F2FA 46%, #E6E3F4 100%)" : "radial-gradient(120% 85% at 50% 30%, #17142A 0%, #0A0912 60%, #050409 100%)", overflow: "hidden" } }, mancha(width * (0.5 + 0.05 * Math.sin(t * 0.3)), height * (0.5 + 0.03 * Math.cos(t * 0.25)), m * 1.25, `rgba(${r},${g},${b},${claro ? 0.13 : 0.22})`), mancha(width * (0.15 + 0.04 * Math.cos(t * 0.27)), height * (0.12 + 0.03 * Math.sin(t * 0.31)), m * 1.1, claro ? "rgba(190,175,255,.22)" : "rgba(120,80,255,.16)"), mancha(width * (0.88 + 0.03 * Math.sin(t * 0.22)), height * (0.86 + 0.03 * Math.cos(t * 0.29)), m * 1.1, claro ? "rgba(170,190,255,.2)" : "rgba(60,90,255,.14)"), /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: {
+  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: fondo && HEXMC.test(fondo) ? `radial-gradient(125% 88% at 50% 22%, ${mezclaMC(fondo, claro ? 255 : 0, claro ? 0.55 : 0)} 0%, ${fondo} 52%, ${mezclaMC(fondo, 0, claro ? 0.08 : 0.55)} 100%)` : claro ? "radial-gradient(130% 90% at 50% 18%, #FFFFFF 0%, #F3F2FA 46%, #E6E3F4 100%)" : "radial-gradient(120% 85% at 50% 30%, #17142A 0%, #0A0912 60%, #050409 100%)", overflow: "hidden" } }, mancha(width * (0.5 + 0.05 * Math.sin(t * 0.3)), height * (0.5 + 0.03 * Math.cos(t * 0.25)), m * 1.25, `rgba(${r},${g},${b},${claro ? 0.13 : 0.22})`), mancha(width * (0.15 + 0.04 * Math.cos(t * 0.27)), height * (0.12 + 0.03 * Math.sin(t * 0.31)), m * 1.1, claro ? "rgba(190,175,255,.22)" : "rgba(120,80,255,.16)"), mancha(width * (0.88 + 0.03 * Math.sin(t * 0.22)), height * (0.86 + 0.03 * Math.cos(t * 0.29)), m * 1.1, claro ? "rgba(170,190,255,.2)" : "rgba(60,90,255,.14)"), /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: {
     backgroundImage: `radial-gradient(${claro ? "rgba(70,80,140,.13)" : "rgba(255,255,255,.07)"} ${2 * U}px, transparent ${2.2 * U}px)`,
     backgroundSize: `${34 * U}px ${34 * U}px`,
     backgroundPosition: `0 ${(-t * 6 * U).toFixed(1)}px`
@@ -99001,7 +99312,7 @@ const MotionsCompleto_PALETAS = {
   verde: ["#1FAF62", "#5BD68E", "#E7F8EE"],
   rosa: ["#E64B8B", "#FF8FB8", "#FDEBF1"]
 };
-const MotionsCompleto_Escena = ({ e, acento, fotos, n, claro }) => {
+const MotionsCompleto_Escena = ({ e, acento, fotos, n, claro, fija }) => {
   const { height: H, width: W } = (0,esm.useVideoConfig)();
   const T = tema(claro);
   const c = colores(claro ? "claro" : "oscuro", acento);
@@ -99016,7 +99327,7 @@ const MotionsCompleto_Escena = ({ e, acento, fotos, n, claro }) => {
   if (W5[e.tipo]) return /* @__PURE__ */ react.createElement(react.Fragment, null, W5[e.tipo]());
   if (e.tipo === "reel" && e.reel && REEL[e.reel]) {
     const R = REEL[e.reel];
-    const [a, b, c2] = MotionsCompleto_PALETAS[e.paleta || "azul"] || MotionsCompleto_PALETAS.azul;
+    const [a, b, c2] = fija && HEXMC.test(acento) ? [acento, mezclaMC(acento, 255, 0.35), mezclaMC(acento, 255, 0.9)] : MotionsCompleto_PALETAS[e.paleta || "azul"] || MotionsCompleto_PALETAS.azul;
     const foto = typeof e.img === "number" ? fotos[e.img] : void 0;
     return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { ["--cc-azul"]: a, ["--cc-lila"]: b, ["--cc-lilaf"]: c2, transform: `translateX(${((e.lado || 0) * W * 0.035).toFixed(1)}px)` } }, /* @__PURE__ */ react.createElement(R, { cy: H * (H > W ? 0.63 : 0.6), ...e.wp || {}, foto }));
   }
@@ -99036,15 +99347,21 @@ const MotionsCompleto_Escena = ({ e, acento, fotos, n, claro }) => {
   else if (e.tipo === "icono" && e.icono) cuerpo = /* @__PURE__ */ react.createElement(IconoMC, { e, c, acento });
   return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { transform: `translateY(${(H * 0.09).toFixed(1)}px)` } }, cuerpo);
 };
-const MotionsCompleto = ({ escenas = [], fotos = [], acento = "#4C7DFF", tema = "claro", titulares }) => {
+const MotionsCompleto = ({ escenas = [], fotos = [], acento = "#4C7DFF", tema = "claro", titulares, fondo = "", fija = false }) => {
   useFuentes();
   const { fps } = (0,esm.useVideoConfig)();
   const claro = tema !== "oscuro";
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement(FondoTema, { claro, acento }), escenas.map((e, i) => {
+  const vars = fija && HEXMC.test(acento) ? {
+    ["--cc-azul"]: acento,
+    ["--cc-lila"]: mezclaMC(acento, 255, 0.35),
+    ["--cc-lilaf"]: mezclaMC(acento, 255, 0.9),
+    ["--cc-azul-claro"]: mezclaMC(acento, 255, 0.4)
+  } : void 0;
+  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: vars }, /* @__PURE__ */ react.createElement(FondoTema, { claro, acento, fondo: fondo ? "#" + fondo.replace("#", "") : "" }), escenas.map((e, i) => {
     const ultimo = i === escenas.length - 1;
     const desde = Math.round(e.ini * fps);
     const largo = Math.max(1, Math.round((e.fin - e.ini + (ultimo ? 0 : SAL)) * fps));
-    return /* @__PURE__ */ react.createElement(esm.Sequence, { key: i, from: desde, durationInFrames: largo }, /* @__PURE__ */ react.createElement(Vida, { dur: ultimo ? 1e9 : e.fin - e.ini, lado: e.lado || 0, empuje: e.empuje }, /* @__PURE__ */ react.createElement(MotionsCompleto_Escena, { e, acento, fotos, n: i, claro })));
+    return /* @__PURE__ */ react.createElement(esm.Sequence, { key: i, from: desde, durationInFrames: largo }, /* @__PURE__ */ react.createElement(Vida, { dur: ultimo ? 1e9 : e.fin - e.ini, lado: e.lado || 0, empuje: e.empuje }, /* @__PURE__ */ react.createElement(MotionsCompleto_Escena, { e, acento, fotos, n: i, claro, fija })));
   }), (titulares && titulares.length ? titulares : escenas).map((e, i) => e.titular && e.titular.length || e.arriba ? /* @__PURE__ */ react.createElement(esm.Sequence, { key: `t${i}`, from: Math.round(e.ini * fps), durationInFrames: Math.max(1, Math.round((e.fin - e.ini + 0.25) * fps)) }, /* @__PURE__ */ react.createElement(TitularVida, { palabras: e.titular || [], arriba: e.arriba, dur: e.fin - e.ini, claro })) : null));
 };
 
@@ -99993,6 +100310,7 @@ const KitNeon = ({ escena = [], codigo = "", L = {}, imagenes = {}, t0 = 0, tema
 
 
 const PLANTILLAS = { KitNeon: KitNeon, MotionsCompleto: MotionsCompleto, Pictos3DE: Pictos3DE, ListaRazonesK: ListaRazonesK, MisterioK: MisterioK, RuedaK: RuedaK, AbanicoK: AbanicoK, RutaK: RutaK, TituloNeonK: TituloNeonK, ConceptoK: ConceptoK, MixtoK: MixtoK, RecorteK: RecorteK, SeleccionK: SeleccionK, CalendarioK: CalendarioK, RedNeonK: RedNeonK, PictogramaE: PictogramaE, TableroE: TableroE, PolaroidE: PolaroidE, CuadernoE: CuadernoE, FechaE: FechaE, VidrioE: VidrioE, ChatE: ChatE, CollageE: CollageE, MovilE: MovilE, TijerasE: TijerasE, FotoE: FotoE, PasosT5: PasosT5, DeslizadorT5: DeslizadorT5, EscenaT5: EscenaT5, AcompananteT5: AcompananteT5, VeloCaptionT: VeloCaptionT, TarjetaT5: TarjetaT5, OrbitaT5: OrbitaT5, StickerT5: StickerT5, FinalT5: FinalT5, EditorialT6: EditorialT6, Titulo: Titulo, Saludo: Saludo, Capitulos: Capitulos, Fecha: Fecha, Pareja: Pareja, Pastilla: Pastilla, Encuesta: Encuesta, Comentario: Comentario, Sesion: Sesion, Ninas: Ninas, Notificacion: Notificacion, Tarjeta: Tarjeta, Grafica: Grafica, Pasos: Pasos, Interruptor: Interruptor };
+for (const id of ["PictogramaE", "TableroE", "PolaroidE", "CuadernoE", "FechaE", "VidrioE", "ChatE", "CollageE", "MovilE", "TijerasE"]) PLANTILLAS[id] = conFondo(PLANTILLAS[id]);
 const medida = ({ props }) => {
   const fps = Number(props._fps) || 30;
   return { width: Number(props._ancho) || 1080, height: Number(props._alto) || 1920, fps, durationInFrames: Math.max(2, Math.round((Number(props._dur) || 3.5) * fps)) };

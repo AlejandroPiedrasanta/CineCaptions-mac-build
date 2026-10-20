@@ -151,6 +151,10 @@ ESQUEMAS['orbita'] = {'nombre': 'Órbita de iconos (gancho)', 'salida_ms': 350, 
     ('iconos', _texto('Iconos (separados por comas)', 'casa,key,bed,waves')), ('imagenes', _texto('Iconos 3D (separados por comas)')),
     ('mitad', _sel('Mitad', 'todo', {'todo': 'Toda la órbita', 'atras': 'Solo la de atrás (debajo de la persona)', 'delante': 'Solo la de delante'})),
     ('acento', _color('Acento', '#c9a46a')), ('colorTexto', _color('Iconos', '#ffffff')),
+    # v5.20 (página Efectos › Gancho del inicio, estilos_pro.py): el trazo de la órbita
+    ('estilo', _sel('Anillo', 'limpio', {'limpio': 'Solo iconos', 'rastro': 'Rastro de luz', 'anillo': 'Anillo fino', 'neon': 'Neón', 'chips': 'Burbujas de cristal',
+                                         'cometa': 'Cometa', 'doble': 'Doble órbita', 'puntos': 'Puntos', 'halo': 'Halo', 'cinta': 'Cinta'})),
+    ('acento2', _color('Segundo color (halo)', '#ff7a1a')), ('colorAnillo', _color('Color del anillo', '#ffffff')),
     ('rx', _num('Radio horizontal (%)', 22, 3, 50)), ('ry', _num('Radio vertical (%)', 4.5, 0.5, 20)), ('inclinacion', _num('Inclinación (°)', -8, -45, 45)),
     ('vueltas', _num('Vueltas por segundo', 0.32, 0.05, 2)), *_POS(50, 30), ('tiempos', _texto('Tiempos (s)', '0'))]}
 FUENTES_DE = {'velo': [], 'fondo': [], 'orbita': [], 'icono3d': []}           # las que no usan texto no llevan fuentes (paquete más ligero)

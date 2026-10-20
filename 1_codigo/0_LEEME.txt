@@ -12,7 +12,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (23 archivos)
+    herramientas_dev\   (24 archivos)
         banco_voz\   (1 archivos)
         banco_voz.py
             v5.5.17: mide la transcripción (WER y la lista de errores) contra un texto CORRECTO, para comparar
@@ -27,6 +27,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         generar_resortes.js
         hacer_ejemplos_pro.py
             los EJEMPLOS REALES de los interruptores de la Edición PRO en Proyecto (pro_lateral_ui): un clip
+        hacer_estilos_pro.py
+            v5.20: los EJEMPLOS de cada estilo de la página Efectos › Edición PRO (estilos_pro.SECCIONES):
         hacer_previas_motions.py
             las miniaturas del carrusel «Motions de la Edición PRO» (página Efectos): un fotograma de cada
         importar_sonidos.py
@@ -144,6 +146,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         la sección «Más efectos» de la página Efectos: números, pegatinas, énfasis, ambiente, mis efectos y el cierre (outro).
     efectos_pagina.py
         la página «Efectos»: elegir la intro (con su sonido), las transiciones de los cortes y los iconos flotantes (y en qué palabras salen).
+    efectos_pro_ui.py
+        v5.20: la página Efectos › «Edición PRO»: una sección por función de la PRO (las del menú lateral de Proyecto) con
     efectos_ui.py
         animaciones de la interfaz: fondo vivo, vistas reales animadas, entrada escalonada de tarjetas.
     efectos_visuales.py
@@ -174,6 +178,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         qué estilo (variante del pack) lleva CADA bloque: lo decide la app y lo enseña Creativo, ya no el azar de Resolve.
     estilos_inicio.py
         los 10 estilos de la pantalla de Inicio: cada uno es un rediseño completo (héroe, fondo, partículas).
+    estilos_pro.py
+        v5.20: los ESTILOS y COLORES de cada función de la Edición PRO (página Efectos › Edición PRO), en un solo sitio.
     estilos_slider.py
         el carrusel horizontal de «Pack de estilos»: tarjetas verticales sobre fotos de video con los captions de Resolve encima.
     fuente_usuario.py

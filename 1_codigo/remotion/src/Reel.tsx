@@ -89,7 +89,7 @@ export const RTitular: React.FC<{ palabras: PalabraR[]; arriba?: string; top: nu
             fontFamily: FAMILIA.inter, fontWeight: 800, color: claro ? TINTA : '#FFFFFF', letterSpacing: '-0.03em',
             opacity: clamp(q * 1.3), transform: `translateY(${((1 - q) * tam * 0.3).toFixed(1)}px)`, filter: q < 1 ? `blur(${((1 - q) * 9).toFixed(1)}px)` : undefined,
           };
-          const azul = claro ? AZUL : '#9DB4FF';
+          const azul = claro ? AZUL : 'var(--cc-azul-claro, #9DB4FF)';           // (v5.20: con un color fijo de Efectos, el suyo)
           if (e === 'clave') Object.assign(base, { fontFamily: FAMILIA.display, fontStyle: 'italic', fontWeight: 400, color: azul, fontSize: tam * 1.1, letterSpacing: '0' });
           if (e === 'azul') Object.assign(base, { color: azul });
           if (e === 'gris') Object.assign(base, { color: '#9A9CA8', fontWeight: 600, opacity: clamp(q * 1.3) * (0.55 + 0.45 * (1 - easeOut((t - p.t - 0.5) / 0.6))) });

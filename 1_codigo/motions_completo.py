@@ -1107,8 +1107,9 @@ def sonidos(mp4, fps, rng=None, voz_db=None):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------- render
-def crear(bloques, dur, W, H, fps, carpeta, idioma='es', perfil=None, video='', decir=None, ia=True):
-    """Planifica y renderiza el video de motions (H.264 opaco, del largo del video). Devuelve su ruta o None. Con caché por contenido."""
+def crear(bloques, dur, W, H, fps, carpeta, idioma='es', perfil=None, video='', decir=None, ia=True, estilo=None):
+    """Planifica y renderiza el video de motions (H.264 opaco, del largo del video). Devuelve su ruta o None. Con caché por contenido.
+    v5.20: `estilo` (estilos_pro.motions_completo: fondo, tema, acento, paleta fija) = el que el usuario eligió en Efectos."""
     decir = decir or (lambda t: None)
     try:
         import edicion_pro_remotion as RM
@@ -1121,6 +1122,7 @@ def crear(bloques, dur, W, H, fps, carpeta, idioma='es', perfil=None, video='', 
     props = planificar(bloques, dur, idioma, perfil, video, H > W, ia, decir)
     if not props or not props['escenas']:
         return None
+    props.update(estilo or {})
     props.update(_ancho=int(W), _alto=int(H), _fps=float(fps), _dur=round(float(dur), 3))
     huella = hashlib.sha1(json.dumps(props, sort_keys=True, ensure_ascii=False).encode('utf-8')).hexdigest()[:14]
     salida = Path(carpeta) / f'motions_completo_{huella}.mp4'

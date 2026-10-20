@@ -51,7 +51,9 @@ OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_masc
                         # v5.5.20: «Captions detrás de ti» (solo Studio): 'suave' | 'media' | 'fuerte' (menú lateral de Proyecto)
                         'pro_detras_intensidad': 'media',
                         # v5.5.13: el Tema 1 (neón): lo que el usuario encendió en el menú lateral de Proyecto (pro_lateral_ui); vacío = como la referencia
-                        'pro_neon_extras': []}
+                        'pro_neon_extras': [],
+                        # v5.20: el estilo y los colores de cada función (página Efectos › Edición PRO; estilos_pro.py): {clave: {'v': id, 'c': {hueco: hex}}}
+                        'pro_estilos': {}}
 NIVEL_SONIDOS_DB = {'suave': -5.0, 'normal': 0.0, 'fuerte': 3.0}
 FAMILIA_DE_PISTA = {'PRO-WHOOSH': 'whoosh', 'PRO-TEXTURA': 'textura', 'PRO-RISER': 'riser', 'PRO-HIT': 'riser'}
 NOMBRES_GENERO = {'auto': 'Automático', 'general': 'General', 'inmobiliaria': 'Inmobiliaria / venta de casas', 'boda': 'Bodas', 'xv': 'XV años',
@@ -107,7 +109,7 @@ def neon_elegido():
 # v5.5.13 (el usuario: «si solo es captions, solo captions; si activo el modo PRO lo hará como el de referencia y si activo cosas del menú
 # también lo aplicará; pero el tema por defecto será como la referencia»): con el Tema 1, los interruptores del menú lateral de Proyecto
 # (pro_lateral_ui) son SUYOS: 'pro_neon_extras', por defecto ninguno = la referencia exacta; los de los demás temas no cambian.
-NEON_EXTRAS = ('pildora', 'broll', 'detras', 'motions_completo', 'gancho', 'escenas', 'kit', 'graficos', 'plantillas')
+NEON_EXTRAS = ('pildora', 'broll', 'detras', 'motions_completo', 'gancho', 'escenas', 'kit', 'graficos')   # v5.20: sin 'plantillas' (quitado)
 
 
 def neon_extras(op=None):
@@ -586,10 +588,83 @@ def _ajustar_posiciones(pieza, det, vertical, extra=()):
     pieza['quitar'] = True                                            # no cabe en ningún sitio sin tapar la cara: mejor sin él
 
 
-def _comp_magic(puntos, ref, ruta, herramienta='CCProMagic'):
+def _fx_persona(efecto, fuente):
+    """v5.20 (página Efectos › Captions detrás de ti, estilos_pro.EFECTOS_PERSONA): los nodos de Fusion que le ponen a la silueta recortada una
+    sombra, orillas de color o un resplandor. SOLO herramientas y entradas sacadas de las plantillas de Blackmagic (Templates.drfx de Resolve 21:
+    ErodeDilate XAmount, BrightnessContrast Gain/Brightness/PreDividePostMultiply/Alpha, ColorGain Gain*, Blur XBlurSize/Filter, Transform Center,
+    Merge Background/Foreground): un nombre adivinado tumbó Resolve una vez. La silueta de color = la del recorte (ensanchada) con el RGB a 1
+    (pre-dividido y vuelto a multiplicar: queda en su alfa) y teñida con ColorGain; todo sale del mismo MediaIn (misma resolución).
+    Devuelve (texto de las herramientas, nombre de la última)."""
+    herramientas, n = [], [0]
+
+    def nombre(base):
+        n[0] += 1
+        return f'CCFx{base}{n[0]}'
+
+    def num(k, v):
+        return f'{k} = Input {{ Value = {float(v):.6g}, }},'
+
+    def enlace(entrada, op):
+        return f'{entrada} = Input {{ SourceOp = "{op}", Source = "Output", }},'
+
+    def herr(tipo, nom, entradas):
+        herramientas.append('\t\t%s = %s {\n\t\t\tInputs = {\n%s\t\t\t},\n\t\t},\n' % (nom, tipo, ''.join('\t\t\t\t%s\n' % e for e in entradas)))
+        return nom
+
+    def rgb(color):
+        c = str(color or '#FFFFFF').lstrip('#')[:6].ljust(6, 'F')
+        return [int(c[i:i + 2], 16) / 255.0 for i in (0, 2, 4)]
+
+    def silueta(origen, color, ancho=0.0):                     # color None = negra
+        src = origen
+        if ancho > 0:
+            src = herr('ErodeDilate', nombre('Ensancha'), [num('XAmount', ancho), enlace('Input', src)])
+        plano = herr('BrightnessContrast', nombre('Plano'), [num('Gain', 0), num('Brightness', 1 if color else 0), num('PreDividePostMultiply', 1),
+                                                             num('Alpha', 0), enlace('Input', src)])
+        r, g, b = rgb(color) if color else (1.0, 1.0, 1.0)
+        if not color or min(r, g, b) > 0.995:
+            return plano
+        return herr('ColorGain', nombre('Tinte'), [num('LockRGB', 0), num('GainRed', r), num('GainGreen', g), num('GainBlue', b), enlace('Input', plano)])
+
+    def junta(fondo, frente):
+        return herr('Merge', nombre('Junta'), [enlace('Background', fondo), enlace('Foreground', frente)])
+
+    def difumina(origen, blur):
+        return herr('Blur', nombre('Difumina'), [num('XBlurSize', max(0.5, blur * 1000.0)), 'Filter = Input { Value = FuID { "Gaussian" }, },',
+                                                 enlace('Input', origen)])
+
+    # Probado en Resolve 21.1.1 (2026-10-19): el MagicMask NO premultiplica (fuera de la persona el RGB sigue siendo la imagen con alfa 0) y un
+    # Merge lo SUMA: la orilla y el resplandor se veían (suman luz) pero la sombra no (negro + imagen = imagen). AlphaMultiply (de las plantillas
+    # de Blackmagic) lo premultiplica antes de nada.
+    fuente = herr('AlphaMultiply', nombre('Premultiplica'), [enlace('Input', fuente)])
+    debajo = []                                                # las capas bajo la persona, de abajo arriba
+    if efecto.get('brillo'):                                   # el resplandor: la silueta de color, difuminada
+        b = efecto['brillo']
+        brillo = difumina(silueta(fuente, b.get('color') or '#FFFFFF', float(b.get('ancho') or 0.0)), float(b.get('blur') or 0.02))
+        if float(b.get('fuerza') or 1.0) != 1.0:
+            brillo = herr('BrightnessContrast', nombre('Fuerza'), [num('Gain', float(b['fuerza'])), num('Alpha', 1), enlace('Input', brillo)])
+        debajo.append(brillo)
+    for o in sorted(efecto.get('orillas') or [], key=lambda o: -float(o.get('ancho') or 0)):     # de la más ancha (fuera) a la más fina
+        debajo.append(silueta(fuente, o.get('color') or '#FFFFFF', float(o.get('ancho') or 0.004)))
+    capa = None
+    for c in debajo:
+        capa = c if capa is None else junta(capa, c)
+    capa = junta(capa, fuente) if capa else fuente             # la persona, encima de todo
+    if efecto.get('sombra'):                                   # la sombra de todo lo anterior, difuminada y desplazada
+        sh = efecto['sombra']
+        negra = herr('ColorGain', nombre('Opacidad'), [num('GainAlpha', float(sh.get('opacidad') or 0.6)), enlace('Input', silueta(capa, None))])
+        movida = herr('Transform', nombre('Desplaza'), ['Center = Input { Value = { %.5f, %.5f }, },' % (0.5 + float(sh.get('dx') or 0), 0.5 + float(sh.get('dy') or 0)),
+                                                        enlace('Input', difumina(negra, float(sh.get('blur') or 0.01)))])
+        capa = junta(movida, capa)
+    return ''.join(herramientas), capa
+
+
+def _comp_magic(puntos, ref, ruta, herramienta='CCProMagic', efecto=None):
     """La composición del Magic Mask (MediaIn → MagicMask → MediaOut) con los puntos de cada persona en el fotograma `ref` del clip.
     `herramienta`: el nombre del MagicMask, DISTINTO en cada clip: así colocar_pro sabe que la página Fusion abrió la composición de ESE clip
-    (si se queda con la del anterior, ya rastreada, el rastreo se daba por bueno y el clip quedaba sin recortar, tapando los captions)."""
+    (si se queda con la del anterior, ya rastreada, el rastreo se daba por bueno y el clip quedaba sin recortar, tapando los captions).
+    v5.20: `efecto` (estilos_pro.efecto_persona) = sombra / orillas / resplandor de la silueta, entre el MagicMask y el MediaOut."""
+    fx, ultimo = _fx_persona(efecto, herramienta) if efecto else ('', herramienta)
     lineas = ',\n'.join('\t\t\t\t\t\t\t{ %.5f, %.5f }' % (x, y) for x, y in puntos)
     texto = '''Composition {
 	CurrentTime = 0,
@@ -622,16 +697,16 @@ def _comp_magic(puntos, ref, ruta, herramienta='CCProMagic'):
 					} }
 			}
 		},
-		MediaOut1 = MediaOut {
+%(fx)s		MediaOut1 = MediaOut {
 			Inputs = {
 				Index = Input { Value = "0", },
-				Input = Input { SourceOp = "%(h)s", Source = "Output", },
+				Input = Input { SourceOp = "%(u)s", Source = "Output", },
 			},
 			ViewInfo = OperatorInfo { Pos = { 220, 50 } },
 		},
 	},
 }
-''' % {'ref': int(ref), 'lineas': lineas, 'h': herramienta}
+''' % {'ref': int(ref), 'lineas': lineas, 'h': herramienta, 'fx': fx, 'u': ultimo}
     Path(ruta).write_text(texto, encoding='utf-8')
     return Path(ruta)
 
@@ -1011,6 +1086,11 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     studio = 'studio' in str(info.get('producto') or '').lower() and info.get('via') == 'mcp'
     op = plan.get('opciones') or opciones_guardadas()
     modo_mascara = op.get('pro_mascara') or 'auto'
+    try:                                             # v5.20: la sombra / orilla / resplandor de la silueta (página Efectos › Captions detrás de ti)
+        import estilos_pro as EST
+        fx_persona = EST.efecto_persona(op)
+    except Exception:
+        fx_persona = None
     # v5.5.7: en «auto» la persona la recorta SIEMPRE la IA local (clip ProRes con alfa), también en Studio: el rastreo del Magic Mask dentro de
     # Resolve lo tumbó dos veces colocando la PRO (2026-10-13 y 14). Así Studio y Free hacen lo mismo y Resolve no calcula nada pesado. Magic Mask,
     # solo si se elige a mano en el menú.
@@ -1117,13 +1197,18 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             fondo['mc_dur'] = dur_mc
             # sin la IA de texto: con ella el plan tardaba ~110 s (y volvía a cargar en la GPU el modelo que la PRO suelta para Resolve) para
             # unas pocas propuestas que ya pesan menos que las reglas
-            if plan.get('tema') == 'neon' and plan.get('_palabras'):     # v5.5.17: el Tema 1: con las piezas del kit «TEMA 1» (kit_neon_completo)
+            try:                                                         # v5.20: el estilo elegido en Efectos › Motions completo
+                import estilos_pro as EST
+                estilo_mc = EST.motions_completo(op)
+            except Exception:
+                estilo_mc = {}
+            if plan.get('tema') == 'neon' and plan.get('_palabras') and not estilo_mc:     # v5.5.17: el Tema 1: con las piezas del kit «TEMA 1» (kit_neon_completo); con un estilo elegido, el del usuario
                 import kit_neon_completo as KC
                 fondo['mc'] = KC.crear(plan['_palabras'], dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', video, decir) if dur_mc > 1.0 else None
                 fondo['mc_neon'] = True
             else:
                 fondo['mc'] = MCO.crear(bl, dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', plan.get('perfil') or {}, video, decir,
-                                        ia=bool(op.get('pro_motions_ia', False))) if bl and dur_mc > 1.0 else None
+                                        ia=bool(op.get('pro_motions_ia', False)), estilo=estilo_mc) if bl and dur_mc > 1.0 else None
         except Exception as e:
             fondo['mc_error'] = e
 
@@ -1225,7 +1310,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         ref = int(round(((a + b) / 2.0 - a) * fps))
         if usar_magic:
             puntos = PE.puntos_fusion(det)
-            comp = _comp_magic(puntos, ref, carpeta / f'magic_{f0}_{f1}.comp', f'CCProMagic{f0}')
+            comp = _comp_magic(puntos, ref, carpeta / f'magic_{f0}_{f1}.comp', f'CCProMagic{f0}', efecto=fx_persona)
             persona.append({'ini': f0, 'fin': f1, 'modo': 'magic', 'comp': str(OG.ruta_larga(comp)), 'ref': ref, 'herramienta': f'CCProMagic{f0}'})
         elif usar_ia:
             decir('Edición PRO: recortando a la persona con IA local…')
@@ -1283,7 +1368,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                                                             'subir': round(c['subir'] * H, 1), 'caras': _caras_redondas(c.get('caras')),
                                                             'caja': c.get('caja')}
                                                            for c in t['cues']]}
-            comp = _comp_magic(PE.puntos_fusion(t['det']), ref, carpeta / f'encima_{f0}_{f1}.comp', f'CCProMagicE{f0}')
+            comp = _comp_magic(PE.puntos_fusion(t['det']), ref, carpeta / f'encima_{f0}_{f1}.comp', f'CCProMagicE{f0}', efecto=fx_persona)
             e.update(modo='magic', comp=str(OG.ruta_larga(comp)), herramienta=f'CCProMagicE{f0}')
             corte = float(t.get('corte') or 1.0)
             if corte < 0.995:
@@ -1393,6 +1478,14 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             plan['piezas'] = list(plan.get('piezas') or []) + KM.piezas(plan['kitneon_motions'])
         neon = KN.piezas(plan['kitneon'])
         plan['piezas'] = list(plan.get('piezas') or []) + neon
+    try:                                             # v5.20: el estilo y los colores elegidos en Efectos › Edición PRO (mandan sobre el color del video y el neón)
+        import estilos_pro as EST
+        vestidas = EST.vestir(plan, op, t56=bool(t5))
+        plan['_estilos'] = vestidas
+        if vestidas:
+            decir('Edición PRO: con tus estilos de Efectos (' + ', '.join(f"{(EST.seccion(k) or {}).get('titulo', k)}: {n}" for k, n in vestidas.items()) + ')')
+    except Exception:
+        pass
     # las animaciones de Remotion (mapa + bandera…): todas en una tanda, con un solo navegador; sin Remotion, esas escenas no van
     rm_salida, rm_hechos = {}, {}
     try:

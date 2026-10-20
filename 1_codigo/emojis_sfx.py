@@ -319,7 +319,8 @@ def sonido_de(eid, propios=None, grupo=None, contexto=0):
 
 
 def contexto_activo():
-    """Interruptor «Sonido según el contexto»: por defecto encendido."""
+    """Interruptor «Sonido según el contexto»: v5.20 siempre apagado (se quitó «Sonido extra» de Efectos)."""
+    return False
     try:
         datos = json.loads((sfx_rules.CARPETA_USUARIO / 'preferencias.json').read_text(encoding='utf-8'))
         return datos.get('sfx_emoji_contexto', True) is not False

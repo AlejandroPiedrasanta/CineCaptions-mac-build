@@ -38,7 +38,9 @@ def opciones(prefs=None):
         except Exception:
             prefs = {}
     import musica_go
-    return {'musica': musica_go.config(prefs), 'cortes': prefs.get('fx_sonido_cortes', True) is not False, 'gancho': prefs.get('fx_sonido_gancho', True) is not False,
+    musica = dict(musica_go.config(prefs) or {})
+    musica['activo'] = False                           # v5.20: «Sonido extra» quitado de la página Efectos: GO ya no pone música, ni sonido de corte, ni riser del gancho
+    return {'musica': musica, 'cortes': False, 'gancho': False,
             'corte_sonido': prefs.get('fx_sonido_corte') or 'auto'}
 
 

@@ -63,7 +63,20 @@ def main():
     ap.add_argument('--extras', default='', help='v5.5.20: los interruptores del menú lateral del Tema 1, separados por comas (p. ej. detras)')
     ap.add_argument('--intensidad', default='media', help='v5.5.20: la de «Captions detrás de ti»: suave | media | fuerte')
     ap.add_argument('--solo-captions', action='store_true', help='v5.5.13: solo los captions del Tema 1 neón (como GO con la PRO apagada)')
+    ap.add_argument('--efectos', default='', help='v5.20: efectos de la silueta (estilos_pro.EFECTOS_PERSONA, p. ej. sombra,orilla,resplandor): '
+                                                  'uno por tramo de Magic Mask, rotando; con --render auto se renderizan esos tramos')
     a = ap.parse_args()
+    if a.efectos:
+        import estilos_pro as EST
+        lista = [x for x in a.efectos.split(',') if x]
+        original, cuenta = edicion_pro._comp_magic, [0]
+
+        def rotando(puntos, ref, ruta, herramienta='CCProMagic', efecto=None):
+            ident = lista[cuenta[0] % len(lista)]
+            cuenta[0] += 1
+            print(f'  silueta {Path(ruta).name}: {ident}', flush=True)
+            return original(puntos, ref, ruta, herramienta, efecto=EST.efecto_persona(ident=ident))
+        edicion_pro._comp_magic = rotando
     video = str(Path(a.video).resolve())
     if a.palabras:
         palabras = json.loads(Path(a.palabras).read_text(encoding='utf-8'))
@@ -102,6 +115,16 @@ def main():
         t0 = time.time()
         ok, msg = edicion_pro.aplicar(plan, al_estado=print)
         print(f'aplicar ({time.time() - t0:.1f} s): ok={ok} {msg}')
+        try:                                                                # (v5.20) los tramos de la persona encima, en segundos
+            datos = json.loads(edicion_pro.PLAN_JSON.read_text(encoding='utf-8'))
+            fps_tl = float(datos.get('fps') or fps or 30)
+            encima = [(round(e['ini'] / fps_tl, 2), round(e['fin'] / fps_tl, 2), e.get('modo')) for e in datos.get('encima') or []]
+        except Exception:
+            encima = []
+        print('persona encima (s):', encima)
+        if a.render == 'auto':
+            a.render = f'{max(0.0, encima[0][0] - 0.5)}-{min(encima[0][0] + 24.0, encima[-1][1] + 0.5)}' if encima else ''
+            print('render auto:', a.render or '(no hay tramos)')
         if a.render:
             ini, fin = (float(x) for x in a.render.split('-'))
             carpeta = Path.home() / 'DaVinciSubtitles' / 'edicion_pro' / 'pruebas'

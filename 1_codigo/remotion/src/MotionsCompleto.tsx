@@ -41,7 +41,11 @@ type EscenaMC = {
   valor?: number; sufijo?: string; prefijo?: string; etiqueta?: string;
 };
 export type TitularMC = { ini: number; fin: number; titular?: (PalabraT & { estilo?: PalabraR['estilo'] })[]; arriba?: string };
-export type MotionsProps = { escenas?: EscenaMC[]; fotos?: string[]; acento?: string; tema?: 'claro' | 'oscuro'; titulares?: TitularMC[] };
+// v5.20 (página Efectos › Motions completo, estilos_pro.py): `fondo` = el color de base del fondo (si no, lavanda o noche) y `fija` = todas las
+// tarjetas en el color de `acento` (si no, cada tarjeta lleva una paleta distinta).
+export type MotionsProps = { escenas?: EscenaMC[]; fotos?: string[]; acento?: string; tema?: 'claro' | 'oscuro'; titulares?: TitularMC[]; fondo?: string; fija?: boolean };
+const HEXMC = /^#?[0-9a-fA-F]{6}$/;
+const mezclaMC = (h: string, con: number, q: number) => '#' + rgb(h).map(v => Math.round(v + (con - v) * q).toString(16).padStart(2, '0')).join('');
 
 // las piezas que se pueden incrustar a pantalla completa (mismos nombres que en Root.tsx)
 const COMPS: Record<string, React.FC<any>> = {
@@ -336,7 +340,7 @@ const ObjetoMC: React.FC<{ e: EscenaMC; c: Colores; acento: string }> = ({ e, c,
    · todo es una TARJETA sobre ese fondo (las fotos, los videos y las piezas de pantalla completa también) y, dentro del tramo, flota. */
 const SAL = 0.3;
 
-const FondoTema: React.FC<{ claro: boolean; acento: string }> = ({ claro, acento }) => {
+const FondoTema: React.FC<{ claro: boolean; acento: string; fondo?: string }> = ({ claro, acento, fondo }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   const t = frame / fps;
@@ -347,8 +351,10 @@ const FondoTema: React.FC<{ claro: boolean; acento: string }> = ({ claro, acento
     <div style={{ position: 'absolute', left: x - s / 2, top: y - s / 2, width: s, height: s, borderRadius: '50%', background: `radial-gradient(circle, ${c} 0%, rgba(0,0,0,0) 68%)` }} />
   );
   return (
-    <AbsoluteFill style={{ background: claro ? 'radial-gradient(130% 90% at 50% 18%, #FFFFFF 0%, #F3F2FA 46%, #E6E3F4 100%)'
-                                             : 'radial-gradient(120% 85% at 50% 30%, #17142A 0%, #0A0912 60%, #050409 100%)', overflow: 'hidden' }}>
+    <AbsoluteFill style={{ background: fondo && HEXMC.test(fondo)
+                             ? `radial-gradient(125% 88% at 50% 22%, ${mezclaMC(fondo, claro ? 255 : 0, claro ? 0.55 : 0.0)} 0%, ${fondo} 52%, ${mezclaMC(fondo, 0, claro ? 0.08 : 0.55)} 100%)`
+                             : claro ? 'radial-gradient(130% 90% at 50% 18%, #FFFFFF 0%, #F3F2FA 46%, #E6E3F4 100%)'
+                                     : 'radial-gradient(120% 85% at 50% 30%, #17142A 0%, #0A0912 60%, #050409 100%)', overflow: 'hidden' }}>
       {mancha(width * (0.5 + 0.05 * Math.sin(t * 0.3)), height * (0.5 + 0.03 * Math.cos(t * 0.25)), m * 1.25, `rgba(${r},${g},${b},${claro ? 0.13 : 0.22})`)}
       {mancha(width * (0.15 + 0.04 * Math.cos(t * 0.27)), height * (0.12 + 0.03 * Math.sin(t * 0.31)), m * 1.1, claro ? 'rgba(190,175,255,.22)' : 'rgba(120,80,255,.16)')}
       {mancha(width * (0.88 + 0.03 * Math.sin(t * 0.22)), height * (0.86 + 0.03 * Math.cos(t * 0.29)), m * 1.1, claro ? 'rgba(170,190,255,.2)' : 'rgba(60,90,255,.14)')}
@@ -422,7 +428,7 @@ const PALETAS: Record<string, [string, string, string]> = {
   azul: ['#2F5BE7', '#7B5CF5', '#ECE8FF'], naranja: ['#F26B1D', '#FF9A62', '#FFF0E6'], morado: ['#7B5CF5', '#B79CFF', '#F0EBFF'],
   verde: ['#1FAF62', '#5BD68E', '#E7F8EE'], rosa: ['#E64B8B', '#FF8FB8', '#FDEBF1'] };
 
-const Escena: React.FC<{ e: EscenaMC; acento: string; fotos: string[]; n: number; claro: boolean }> = ({ e, acento, fotos, n, claro }) => {
+const Escena: React.FC<{ e: EscenaMC; acento: string; fotos: string[]; n: number; claro: boolean; fija?: boolean }> = ({ e, acento, fotos, n, claro, fija }) => {
   const { height: H, width: W } = useVideoConfig();
   const T = temaW(claro);
   const c = colores(claro ? 'claro' : 'oscuro', acento);
@@ -437,7 +443,7 @@ const Escena: React.FC<{ e: EscenaMC; acento: string; fotos: string[]; n: number
   if (W5[e.tipo]) return <>{W5[e.tipo]()}</>;
   if (e.tipo === 'reel' && e.reel && REEL[e.reel]) {
     const R = REEL[e.reel];
-    const [a, b, c2] = PALETAS[e.paleta || 'azul'] || PALETAS.azul;
+    const [a, b, c2] = fija && HEXMC.test(acento) ? [acento, mezclaMC(acento, 255, 0.35), mezclaMC(acento, 255, 0.9)] : PALETAS[e.paleta || 'azul'] || PALETAS.azul;
     const foto = typeof e.img === 'number' ? fotos[e.img] : undefined;
     return (
       <AbsoluteFill style={{ ['--cc-azul' as any]: a, ['--cc-lila' as any]: b, ['--cc-lilaf' as any]: c2, transform: `translateX(${((e.lado || 0) * W * 0.035).toFixed(1)}px)` }}>
@@ -467,20 +473,23 @@ const Escena: React.FC<{ e: EscenaMC; acento: string; fotos: string[]; n: number
   return <AbsoluteFill style={{ transform: `translateY(${(H * 0.09).toFixed(1)}px)` }}>{cuerpo}</AbsoluteFill>;
 };
 
-export const MotionsCompleto: React.FC<MotionsProps> = ({ escenas = [], fotos = [], acento = '#4C7DFF', tema = 'claro', titulares }) => {
+export const MotionsCompleto: React.FC<MotionsProps> = ({ escenas = [], fotos = [], acento = '#4C7DFF', tema = 'claro', titulares, fondo = '', fija = false }) => {
   useFuentes();
   const { fps } = useVideoConfig();
   const claro = tema !== 'oscuro';
+  const vars = fija && HEXMC.test(acento)                                   // (con un color fijo, también la palabra clave del titular)
+    ? { ['--cc-azul' as any]: acento, ['--cc-lila' as any]: mezclaMC(acento, 255, 0.35), ['--cc-lilaf' as any]: mezclaMC(acento, 255, 0.9),
+        ['--cc-azul-claro' as any]: mezclaMC(acento, 255, 0.4) } : undefined;
   return (
-    <AbsoluteFill>
-      <FondoTema claro={claro} acento={acento} />
+    <AbsoluteFill style={vars}>
+      <FondoTema claro={claro} acento={acento} fondo={fondo ? '#' + fondo.replace('#', '') : ''} />
       {escenas.map((e, i) => {
         const ultimo = i === escenas.length - 1;
         const desde = Math.round(e.ini * fps);
         const largo = Math.max(1, Math.round((e.fin - e.ini + (ultimo ? 0 : SAL)) * fps));
         return (
           <Sequence key={i} from={desde} durationInFrames={largo}>
-            <Vida dur={ultimo ? 1e9 : e.fin - e.ini} lado={e.lado || 0} empuje={e.empuje}><Escena e={e} acento={acento} fotos={fotos} n={i} claro={claro} /></Vida>
+            <Vida dur={ultimo ? 1e9 : e.fin - e.ini} lado={e.lado || 0} empuje={e.empuje}><Escena e={e} acento={acento} fotos={fotos} n={i} claro={claro} fija={fija} /></Vida>
           </Sequence>
         );
       })}

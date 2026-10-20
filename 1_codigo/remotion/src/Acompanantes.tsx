@@ -19,10 +19,54 @@ export type AcompananteProps = {
   tipo?: 'lugar' | 'saludo' | 'sticker' | 'redes' | 'cifra' | 'tiempo' | 'dinero';
   texto?: string; kicker?: string; valor?: string; unidad?: string; signo?: string; pais?: string; sticker?: string; accion?: string;
   aspecto?: 'cristal' | 'blanco'; y?: number; acento?: string; escala?: number;
+  // v5.20 (página Efectos › Píldora bajo captions: 10 estilos y los colores del usuario; estilos_pro.py). Sin `variante`, la de `aspecto`.
+  variante?: string; fondo?: string; tinta?: string; acento2?: string;
+};
+
+const HEX = /^#?[0-9a-fA-F]{6}$/;
+const hex = (h?: string) => (h && HEX.test(h) ? '#' + h.replace('#', '') : '');
+const claroDe = (h: string) => { const [r, g, b] = rgb(h); return 0.299 * r + 0.587 * g + 0.114 * b > 150; };
+
+/** El aspecto de la píldora (v5.20): fondo, borde, sombra, radio, tinta y si es oscura (los iconos de dentro). `fondo`/`tinta` del usuario mandan. */
+const vestido = (variante: string, U: number, acento: string, acento2: string, fondoU: string, tintaU: string) => {
+  const [r, g, b] = rgb(acento);
+  const [r2, g2, b2] = rgb(acento2);
+  const sombra = `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.45)`;
+  let v: { fondo: string; borde: string; sombra: string; radio: number; oscuro: boolean; giro?: number; barra?: boolean; textoSombra?: string } =
+    { fondo: 'linear-gradient(180deg, rgba(38,42,58,.86), rgba(18,20,30,.86))', borde: `${1.3 * U}px solid rgba(255,255,255,.12)`,
+      sombra: `${sombra}, 0 0 ${30 * U}px rgba(${r},${g},${b},.18)`, radio: 999, oscuro: true };
+  if (variante === 'blanca') v = { fondo: 'rgba(255,255,255,.96)', borde: `${1.3 * U}px solid rgba(0,0,0,.04)`, sombra: `0 ${16 * U}px ${40 * U}px rgba(20,30,60,.22)`, radio: 999, oscuro: false };
+  else if (variante === 'transparente') v = { fondo: 'rgba(0,0,0,0)', borde: `${2.4 * U}px solid rgba(255,255,255,.9)`, sombra: 'none', radio: 999, oscuro: true,
+                                              textoSombra: `0 ${2 * U}px ${8 * U}px rgba(0,0,0,.7)` };
+  else if (variante === 'vidrio') v = { fondo: 'linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16))', borde: `${1.6 * U}px solid rgba(255,255,255,.55)`,
+                                        sombra: `0 ${14 * U}px ${36 * U}px rgba(0,0,0,.28), inset 0 ${1.5 * U}px 0 rgba(255,255,255,.6)`, radio: 999, oscuro: true,
+                                        textoSombra: `0 ${1.5 * U}px ${6 * U}px rgba(0,0,0,.45)` };
+  else if (variante === 'neon') v = { fondo: 'rgba(8,8,16,.82)', borde: `${2.6 * U}px solid rgb(${r},${g},${b})`, radio: 999, oscuro: true,
+                                      sombra: `0 0 ${18 * U}px rgba(${r},${g},${b},.85), 0 0 ${50 * U}px rgba(${r},${g},${b},.45), inset 0 0 ${16 * U}px rgba(${r},${g},${b},.35)` };
+  else if (variante === 'solida') v = { fondo: `rgb(${r},${g},${b})`, borde: `${1.3 * U}px solid rgba(255,255,255,.18)`, sombra: `0 ${14 * U}px ${36 * U}px rgba(${r},${g},${b},.45)`,
+                                        radio: 999, oscuro: !claroDe(acento) };
+  else if (variante === 'halo') v = { fondo: `linear-gradient(#0B0C12, #0B0C12) padding-box, linear-gradient(90deg, rgb(${r2},${g2},${b2}), rgb(${r},${g},${b})) border-box`,
+                                      borde: `${2.6 * U}px solid transparent`, radio: 999, oscuro: true,
+                                      sombra: `-${14 * U}px 0 ${36 * U}px rgba(${r2},${g2},${b2},.45), ${14 * U}px 0 ${36 * U}px rgba(${r},${g},${b},.45)` };
+  else if (variante === 'etiqueta') v = { fondo: 'rgba(255,255,255,.97)', borde: 'none', sombra: `inset ${9 * U}px 0 0 rgb(${r},${g},${b}), 0 ${12 * U}px ${30 * U}px rgba(20,30,60,.28)`,
+                                          radio: 14 * U, oscuro: false, barra: true };
+  else if (variante === 'sticker') v = { fondo: '#FFFFFF', borde: `${6 * U}px solid #FFFFFF`, sombra: `${6 * U}px ${8 * U}px 0 rgba(0,0,0,.35)`, radio: 999, oscuro: false, giro: -3 };
+  else if (variante === 'degradado') v = { fondo: `linear-gradient(100deg, rgb(${r},${g},${b}), rgb(${r2},${g2},${b2}))`, borde: `${1.3 * U}px solid rgba(255,255,255,.22)`,
+                                           sombra: `0 ${14 * U}px ${40 * U}px rgba(${r},${g},${b},.4)`, radio: 999, oscuro: !(claroDe(acento) && claroDe(acento2)) };
+  if (fondoU) {
+    v.fondo = variante === 'halo' ? `linear-gradient(${fondoU}, ${fondoU}) padding-box, linear-gradient(90deg, rgb(${r2},${g2},${b2}), rgb(${r},${g},${b})) border-box`
+            : variante === 'transparente' ? 'rgba(0,0,0,0)' : fondoU;
+    if (variante !== 'transparente') v.oscuro = !claroDe(fondoU);
+    if (variante === 'transparente') v.borde = `${2.4 * U}px solid ${fondoU}`;
+  }
+  const tinta = tintaU || (v.oscuro ? '#F5F6FA' : '#1D1D21');
+  const gris = tintaU ? tintaU : v.oscuro ? 'rgba(255,255,255,.66)' : '#8B8B95';
+  return { ...v, tinta, gris };
 };
 
 export const AcompananteT5: React.FC<AcompananteProps> = ({ tipo = 'sticker', texto = '', kicker = '', valor = '', unidad = '', signo = '', pais = '', sticker = '',
-                                                             accion = 'seguir', aspecto = 'cristal', y = 66, acento = '#4C7DFF', escala = 1 }) => {
+                                                             accion = 'seguir', aspecto = 'cristal', y = 66, acento = '#4C7DFF', escala = 1,
+                                                             variante = '', fondo = '', tinta: tintaU = '', acento2 = '' }) => {
   useFuentes();
   const frame = useCurrentFrame();
   const { fps, width, height, durationInFrames } = useVideoConfig();
@@ -30,14 +74,17 @@ export const AcompananteT5: React.FC<AcompananteProps> = ({ tipo = 'sticker', te
   const U = (Math.min(width, height) / 1080) * escala;
   const e = resorte(t / 0.5), s = easeOut((t - (fin - 0.28)) / 0.28);
   const vis = clamp(t / 0.18) * (1 - s);
-  const oscuro = aspecto === 'cristal';
-  const [r, g, b] = rgb(acento);
-  const tinta = oscuro ? '#F5F6FA' : '#1D1D21', gris = oscuro ? 'rgba(255,255,255,.62)' : '#8B8B95';
+  const acentoH = hex(acento) || '#4C7DFF';
+  const V = vestido(variante || (aspecto === 'blanco' ? 'blanca' : 'cristal'), U, acentoH, hex(acento2) || '#FF7A1A', hex(fondo), hex(tintaU));
+  const oscuro = V.oscuro;
+  const [r, g, b] = rgb(acentoH);
+  const tinta = V.tinta, gris = V.gris;
+  const marca = variante === 'solida' || variante === 'degradado' ? tinta : `rgb(${r},${g},${b})`;   // (sobre un fondo del acento, la tinta)
   const carta: React.CSSProperties = {
-    background: oscuro ? 'linear-gradient(180deg, rgba(38,42,58,.86), rgba(18,20,30,.86))' : 'rgba(255,255,255,.96)',
-    border: `${1.3 * U}px solid ${oscuro ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.04)'}`,
-    boxShadow: oscuro ? `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.45), 0 0 ${30 * U}px rgba(${r},${g},${b},.18)` : `0 ${16 * U}px ${40 * U}px rgba(20,30,60,.22)`,
-    borderRadius: 999, display: 'flex', alignItems: 'center', gap: 18 * U, padding: `${14 * U}px ${30 * U}px ${14 * U}px ${16 * U}px`, whiteSpace: 'nowrap',
+    background: V.fondo, border: V.borde, boxShadow: V.sombra, borderRadius: V.radio,
+    display: 'flex', alignItems: 'center', gap: 18 * U, padding: `${14 * U}px ${30 * U}px ${14 * U}px ${(V.barra ? 26 : 16) * U}px`, whiteSpace: 'nowrap',
+    position: 'relative', overflow: V.barra ? 'hidden' : undefined, textShadow: V.textoSombra,
+    transform: V.giro ? `rotate(${V.giro}deg)` : undefined,
   };
   const flota = Math.sin(t * 2.1) * 4 * U;
   const pop = (t0: number) => resorte((t - t0) / 0.45);
@@ -86,7 +133,7 @@ export const AcompananteT5: React.FC<AcompananteProps> = ({ tipo = 'sticker', te
         {[0, 1, 2].map(i => {
           const q = clamp((t - 0.45 - i * 0.12) / 0.6);
           return <div key={i} style={{ position: 'absolute', right: (10 + i * 18) * U, top: (-8 - i * 10) * U, width: 10 * U, height: 10 * U, borderRadius: '50%',
-                                       background: `rgb(${r},${g},${b})`, opacity: Math.sin(q * Math.PI), transform: `scale(${(0.5 + q).toFixed(2)})` }} />;
+                                       background: marca, opacity: Math.sin(q * Math.PI), transform: `scale(${(0.5 + q).toFixed(2)})` }} />;
         })}
       </div>
     );
@@ -120,8 +167,8 @@ export const AcompananteT5: React.FC<AcompananteProps> = ({ tipo = 'sticker', te
           <svg width={34 * U} height={34 * U} viewBox="0 0 24 24"><path d={accion.startsWith('coment') || accion === 'comment' ? 'M4 5 H20 V16 H9 L4 20 Z' : accion.startsWith('compart') || accion === 'share' ? 'M14 4 L20 10 L14 16 M20 10 H9 A5 5 0 0 0 4 15 V19' : accion.startsWith('guard') || accion === 'save' ? 'M6 3 H18 V21 L12 16 L6 21 Z' : 'M12 5 V19 M5 12 H19'}
             fill="none" stroke={tinta} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /></svg>
         ))}
-        <div style={{ padding: `${12 * U}px ${26 * U}px`, borderRadius: 999, background: hecho ? (oscuro ? 'rgba(255,255,255,.12)' : '#EEF0F4') : `rgb(${r},${g},${b})`,
-                      color: hecho ? tinta : '#fff', fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, transform: `scale(${(1 - 0.08 * Math.sin(clic * Math.PI)).toFixed(3)})` }}>
+        <div style={{ padding: `${12 * U}px ${26 * U}px`, borderRadius: 999, background: hecho ? (oscuro ? 'rgba(255,255,255,.12)' : '#EEF0F4') : marca,
+                      color: hecho ? tinta : (marca === tinta ? `rgb(${r},${g},${b})` : '#fff'), fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, transform: `scale(${(1 - 0.08 * Math.sin(clic * Math.PI)).toFixed(3)})` }}>
           {hecho ? despues : antes}
         </div>
         <svg width={36 * U} height={44 * U} viewBox="0 0 36 44" style={{ position: 'absolute', left: (120 + (1 - cursor) * 160) * U, top: (40 + (1 - cursor) * 60) * U, opacity: clamp(t / 0.2) * (1 - clamp((t - 1.2) / 0.3)),
@@ -140,16 +187,16 @@ export const AcompananteT5: React.FC<AcompananteProps> = ({ tipo = 'sticker', te
     cuerpo = (
       <div style={carta}>
         {icono(64 * U, tipo === 'tiempo' ? (
-          <svg width={36 * U} height={36 * U} viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke={`rgb(${r},${g},${b})`} strokeWidth="2.2" />
-            <path d={`M12 12 L${(12 + 6 * Math.sin(t * 4)).toFixed(2)} ${(12 - 6 * Math.cos(t * 4)).toFixed(2)}`} stroke={`rgb(${r},${g},${b})`} strokeWidth="2.2" strokeLinecap="round" /></svg>
+          <svg width={36 * U} height={36 * U} viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke={marca} strokeWidth="2.2" />
+            <path d={`M12 12 L${(12 + 6 * Math.sin(t * 4)).toFixed(2)} ${(12 - 6 * Math.cos(t * 4)).toFixed(2)}`} stroke={marca} strokeWidth="2.2" strokeLinecap="round" /></svg>
         ) : (
-          <span style={{ fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 30 * U, color: `rgb(${r},${g},${b})` }}>{tipo === 'dinero' ? (signo || '$') : '#'}</span>
+          <span style={{ fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 30 * U, color: marca }}>{tipo === 'dinero' ? (signo || '$') : '#'}</span>
         ))}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 * U }}>
           {textos(kicker, <>{pre}{n}{post}{unidad ? <span style={{ fontWeight: 500, fontSize: 28 * U, color: gris }}> {unidad}</span> : null}</>, 46)}
           {tipo === 'cifra' && signo === '%' && isFinite(v) && (
             <div style={{ width: 200 * U, height: 8 * U, borderRadius: 4 * U, background: oscuro ? 'rgba(255,255,255,.12)' : '#EEF0F4' }}>
-              <div style={{ width: `${Math.min(100, v * q)}%`, height: '100%', borderRadius: 4 * U, background: `rgb(${r},${g},${b})` }} />
+              <div style={{ width: `${Math.min(100, v * q)}%`, height: '100%', borderRadius: 4 * U, background: marca }} />
             </div>
           )}
         </div>

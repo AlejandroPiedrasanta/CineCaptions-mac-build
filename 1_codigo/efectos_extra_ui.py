@@ -268,7 +268,8 @@ class SeccionExtras(QWidget):
         t3.capa.addWidget(fila_l)
         self._v_snd = ui.BooleanVar(bool(op.get('fx_outro_sonido', True)))
         t3.capa.addWidget(Interruptor(tr('Sonido en el cierre'), self._v_snd, lambda: _guardar({'fx_outro_sonido': bool(self._v_snd.get())}), tam=14, color='#FFFFFF'))
-        capa.addWidget(t3)
+        t3.setParent(self)
+        t3.hide()                                        # v5.20: «Cierre del video» quitado de la página (GO tampoco lo pone)
         # ---- sonido extra: sonidos de corte y de gancho, música de fondo, normalizar
         try:
             import ajustes_ui

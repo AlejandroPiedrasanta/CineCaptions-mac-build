@@ -50,8 +50,17 @@ const Grano: React.FC<{ op?: number; frec?: number; id: string }> = ({ op = 0.08
   </svg>
 );
 
+/** v5.20 (página Efectos › Escenas completas, estilos_pro.py): el color de fondo que eligió el usuario o trae el estilo (`fondoEscena`, lo pone
+ *  conFondo en Root.tsx); el programa solo lo manda si es igual de claro u oscuro que el diseño de la escena (la letra se sigue leyendo). */
+export const FondoEscena = React.createContext<string>('');
+export const conFondo = (C: React.FC<any>): React.FC<any> => (props: any) => (
+  <FondoEscena.Provider value={esHex(props.fondoEscena) ? hex(props.fondoEscena, '#000000') : ''}><C {...props} /></FondoEscena.Provider>
+);
+
 /** Entrada en iris (círculo que crece desde `ox, oy` en %) y salida con fundido. Todas las escenas van dentro. */
-const Escena: React.FC<{ fondo: string; salida?: number; ox?: number; oy?: number; children: React.ReactNode }> = ({ fondo, salida = 0.3, ox = 50, oy = 55, children }) => {
+const Escena: React.FC<{ fondo: string; salida?: number; ox?: number; oy?: number; children: React.ReactNode }> = ({ fondo: fondoDiseno, salida = 0.3, ox = 50, oy = 55, children }) => {
+  const propio = React.useContext(FondoEscena);
+  const fondo = propio ? `radial-gradient(120% 85% at 50% 35%, ${mezcla(propio, [255, 255, 255], 0.1)} 0%, ${propio} 72%)` : fondoDiseno;
   const { t, q } = useVida(salida);
   const r = easeOut(t / 0.32) * 150;
   return (
@@ -955,14 +964,17 @@ export const TijerasE: React.FC<TijerasProps> = ({ titulo = '', variante = 'neon
 // La foto que se busca en internet (fuentes_web.py: Openverse, Wikimedia Commons, Pexels, Pixabay) para lo que se nombra: a pantalla completa con
 // un movimiento lento de cámara (Ken Burns), enmarcada sobre su propia versión desenfocada, o en un círculo. La palabra dicha encima y el crédito
 // (obligatorio en las CC BY) en letra pequeña abajo a la izquierda.
-export type FotoProps = Base & { foto?: string; palabra?: string; credito?: string };
-export const FotoE: React.FC<FotoProps> = ({ foto = '', palabra = '', credito = '', variante = 'completa', acento, salida = 0.3 }) => {
+// v5.20 (página Efectos › B-roll con fotos: 10 formas; estilos_pro.py): además de completa / marco / círculo, polaroid, ventana, dividida,
+// inclinada, neón, cinta y cristal; `fondo` (color del usuario) sustituye la foto desenfocada de detrás en las enmarcadas.
+export type FotoProps = Base & { foto?: string; palabra?: string; credito?: string; fondo?: string };
+export const FotoE: React.FC<FotoProps> = ({ foto = '', palabra = '', credito = '', variante = 'completa', acento, salida = 0.3, fondo = '' }) => {
   useFuentes();
   const { width: W, height: H } = useVideoConfig();
   const U = useU(), S = useResorte();
   const { t, fin } = useVida(salida);
   const vert = H >= W;
   const ac = hex(acento, '#FFD23F');
+  const fondoU = esHex(fondo) ? hex(fondo, '#0B0B0D') : '';
   const q = clamp(t / Math.max(1, fin));
   const zoom = 1.16 - 0.12 * suave(q), dx = (azar(palabra.length) - 0.5) * 60 * U * q, dy = -30 * U * q;
   const pp = easeOut((t - 0.25) / 0.45);
@@ -977,14 +989,126 @@ export const FotoE: React.FC<FotoProps> = ({ foto = '', palabra = '', credito = 
     <div style={{ position: 'absolute', left: 28 * U, bottom: 26 * U, maxWidth: W * 0.8, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 20 * U, color: 'rgba(255,255,255,.72)',
                   textShadow: `0 ${1 * U}px ${4 * U}px rgba(0,0,0,.8)` }}>{credito}</div>
   );
+  const imagen = (extra?: React.CSSProperties) => foto ? (
+    <Img src={src(foto)} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, ...extra }} />
+  ) : null;
+  const detras = fondoU ? (
+    <AbsoluteFill style={{ background: `radial-gradient(120% 80% at 50% 40%, ${mezcla(fondoU, [255, 255, 255], 0.1)} 0%, ${fondoU} 70%)` }} />
+  ) : foto ? (
+    <Img src={src(foto)} style={{ position: 'absolute', inset: -60 * U, width: W + 120 * U, height: H + 120 * U, objectFit: 'cover', filter: `blur(${36 * U}px) brightness(.5) saturate(1.2)`,
+                                  transform: `scale(${zoom.toFixed(4)})` }} />
+  ) : null;
+  const pc = S(0.08, { damping: 13, stiffness: 150 });
+  const cy = H * (vert ? 0.54 : 0.52);                                // (un poco abajo: la palabra va arriba)
+  if (variante === 'polaroid' || variante === 'cristal' || variante === 'neon' || variante === 'inclinada') {
+    const Lw = Math.min(W * 0.8, H * 0.46), Lh = Lw * (variante === 'polaroid' ? 1.0 : 1.22);
+    const base: React.CSSProperties = { position: 'absolute', left: W / 2 - Lw / 2, top: cy - Lh / 2, width: Lw, height: Lh, overflow: 'hidden', boxSizing: 'border-box',
+                                        opacity: clamp(pc * 2) };
+    let marco: React.CSSProperties = {}, fuera: React.CSSProperties | null = null;
+    if (variante === 'polaroid') {                                      // marco blanco con el pie ancho, girado, y la palabra escrita en el pie
+      fuera = { position: 'absolute', left: W / 2 - Lw / 2 - 26 * U, top: cy - Lh / 2 - 26 * U, width: Lw + 52 * U, height: Lh + 160 * U, background: '#FBFAF6',
+                boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.55)`, borderRadius: 6 * U, opacity: clamp(pc * 2),
+                transformOrigin: `${Lw / 2 + 26 * U}px ${Lh / 2 + 26 * U}px`,              // (gira con la foto, alrededor de su centro)
+                transform: `rotate(${(-4 + (1 - clamp(pc)) * -12).toFixed(2)}deg) scale(${(0.82 + 0.18 * clamp(pc)).toFixed(4)})` };
+      marco = { transform: fuera.transform, borderRadius: 2 * U };
+    } else if (variante === 'cristal') {                                // la foto dentro de un panel de cristal sobre su copia desenfocada
+      fuera = { position: 'absolute', left: W / 2 - Lw / 2 - 24 * U, top: cy - Lh / 2 - 24 * U, width: Lw + 48 * U, height: Lh + 48 * U, borderRadius: 56 * U,
+                background: 'linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.08))', border: `${2 * U}px solid rgba(255,255,255,.4)`,
+                boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.45), inset 0 ${2 * U}px 0 rgba(255,255,255,.5)`, opacity: clamp(pc * 2),
+                transform: `translateY(${((1 - clamp(pc)) * 80 * U).toFixed(1)}px)` };
+      marco = { borderRadius: 36 * U, transform: fuera.transform };
+    } else if (variante === 'neon') {                                   // bordes redondeados y un borde del acento que brilla
+      marco = { borderRadius: 44 * U, border: `${6 * U}px solid ${ac}`, boxShadow: `0 0 ${24 * U}px ${ac}, 0 0 ${70 * U}px ${ac}88, 0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
+                transform: `scale(${(0.86 + 0.14 * clamp(pc)).toFixed(4)})` };
+    } else {                                                            // inclinada: una tarjeta en perspectiva que se endereza poco a poco
+      const giro = -18 + 10 * suave(clamp(t / Math.max(1, fin)));
+      marco = { borderRadius: 28 * U, border: `${10 * U}px solid #FFFFFF`, boxShadow: `${-30 * U}px ${40 * U}px ${80 * U}px rgba(0,0,0,.55)`,
+                transform: `perspective(${1400 * U}px) rotateY(${giro.toFixed(2)}deg) rotateX(${(5).toFixed(1)}deg) scale(${(0.86 + 0.14 * clamp(pc)).toFixed(4)})` };
+    }
+    return (
+      <Escena fondo={fondoU || '#0B0B0D'} salida={salida}>
+        {detras}
+        {variante === 'neon' && <div style={{ position: 'absolute', left: W / 2 - Lw, top: cy - Lh * 0.7, width: Lw * 2, height: Lh * 1.4, borderRadius: '50%',
+                                             background: `radial-gradient(closest-side, ${ac}55, transparent)` }} />}
+        {fuera && <div style={fuera} />}
+        <div style={{ ...base, ...marco }}>{imagen()}</div>
+        {variante === 'polaroid' && palabra && (
+          <div style={{ position: 'absolute', left: W / 2 - Lw / 2, top: cy + Lh / 2 + 22 * U, width: Lw, textAlign: 'center', fontFamily: FAMILIA.redonda, fontWeight: 700,
+                        fontSize: Math.min(70, 900 / Math.max(5, palabra.length)) * U, color: '#22252B', opacity: easeOut((t - 0.35) / 0.4), transform: fuera ? fuera.transform : undefined,
+                        transformOrigin: `${Lw / 2}px ${-(Lh / 2 + 22 * U)}px` }}>
+            {palabra}
+          </div>
+        )}
+        {variante !== 'polaroid' && etiqueta}
+        {pie}
+      </Escena>
+    );
+  }
+  if (variante === 'ventana' || variante === 'dividida' || variante === 'cinta') {
+    const pe = easeOut((t - 0.05) / 0.5);
+    if (variante === 'dividida') {                                      // la foto arriba (con sus esquinas de abajo redondeadas) y la palabra abajo, grande
+      const alto = H * (vert ? 0.56 : 0.62) * (0.4 + 0.6 * pe);
+      return (
+        <Escena fondo={fondoU || '#0B0C12'} salida={salida} oy={20}>
+          <div style={{ position: 'absolute', left: 0, top: 0, width: W, height: alto, overflow: 'hidden', borderRadius: `0 0 ${56 * U}px ${56 * U}px`,
+                        boxShadow: `0 ${20 * U}px ${60 * U}px rgba(0,0,0,.5)` }}>{imagen()}</div>
+          <div style={{ position: 'absolute', left: W * 0.1, top: alto + 40 * U, width: W * 0.8, height: 8 * U, borderRadius: 4 * U, background: ac,
+                        transform: `scaleX(${easeOut((t - 0.3) / 0.5).toFixed(4)})`, transformOrigin: 'left', boxShadow: `0 0 ${20 * U}px ${ac}` }} />
+          {palabra && (
+            <div style={{ position: 'absolute', left: W * 0.1, top: alto + 70 * U, width: W * 0.8, fontFamily: FAMILIA.redonda, fontWeight: 800, color: '#FFFFFF',
+                          fontSize: Math.min(140, 1300 / Math.max(5, palabra.length)) * U, textTransform: 'uppercase', lineHeight: 1,
+                          opacity: easeOut((t - 0.35) / 0.4), transform: `translateY(${((1 - easeOut((t - 0.35) / 0.4)) * 30 * U).toFixed(1)}px)` }}>{palabra}</div>
+          )}
+          {pie}
+        </Escena>
+      );
+    }
+    if (variante === 'ventana') {                                       // una ventana de app: barra de cristal con los tres puntos y la palabra de título
+      const Lw = W * 0.86, Lh = Math.min(H * 0.56, Lw * 1.25), barra = 74 * U;
+      return (
+        <Escena fondo={fondoU || '#0B0D14'} salida={salida}>
+          {detras}
+          <div style={{ position: 'absolute', left: W / 2 - Lw * 0.7, top: cy - Lh * 0.6, width: Lw * 1.4, height: Lh * 1.2, borderRadius: '50%',
+                        background: `radial-gradient(closest-side, ${ac}44, transparent)` }} />
+          <div style={{ position: 'absolute', left: W / 2 - Lw / 2, top: cy - Lh / 2, width: Lw, height: Lh + barra, borderRadius: 34 * U, overflow: 'hidden',
+                        background: 'rgba(20,22,30,.86)', border: `${1.5 * U}px solid rgba(255,255,255,.18)`, boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.55)`,
+                        opacity: clamp(pc * 2), transform: `translateY(${((1 - clamp(pc)) * 90 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * clamp(pc)).toFixed(4)})` }}>
+            <div style={{ height: barra, display: 'flex', alignItems: 'center', gap: 14 * U, padding: `0 ${26 * U}px`, borderBottom: `${1.5 * U}px solid rgba(255,255,255,.1)` }}>
+              {['#FF5F57', '#FEBC2E', '#28C840'].map(c => <div key={c} style={{ width: 20 * U, height: 20 * U, borderRadius: '50%', background: c }} />)}
+              <div style={{ marginLeft: 16 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 28 * U, color: 'rgba(255,255,255,.85)', letterSpacing: '0.04em',
+                            textTransform: 'uppercase' }}>{palabra}</div>
+            </div>
+            <div style={{ width: Lw, height: Lh, overflow: 'hidden' }}>{imagen()}</div>
+          </div>
+          {pie}
+        </Escena>
+      );
+    }
+    const Lw = W * 1.08, Lh = Math.min(H * 0.42, W * 0.82), hueco = 40 * U;        // cinta de película: los agujeros arriba y abajo
+    return (
+      <Escena fondo={fondoU || '#0B0B0D'} salida={salida}>
+        {detras}
+        <div style={{ position: 'absolute', left: W / 2 - Lw / 2, top: cy - Lh / 2 - hueco, width: Lw, height: Lh + 2 * hueco, background: '#111214',
+                      boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`, transform: `rotate(-3deg) translateX(${((1 - pe) * -W * 0.6).toFixed(1)}px)` }}>
+          {[0, 1].map(fila => (
+            <div key={fila} style={{ position: 'absolute', left: 0, top: fila ? Lh + hueco + 10 * U : 10 * U, width: Lw, height: hueco - 20 * U, display: 'flex',
+                                     gap: 26 * U, paddingLeft: ((t * 120) % (52 * U)), overflow: 'hidden' }}>
+              {Array.from({ length: 30 }).map((_, i) => <div key={i} style={{ flex: 'none', width: 26 * U, height: '100%', borderRadius: 5 * U, background: '#E9E6DE' }} />)}
+            </div>
+          ))}
+          <div style={{ position: 'absolute', left: 30 * U, top: hueco, width: Lw - 60 * U, height: Lh, overflow: 'hidden' }}>{imagen({ filter: 'saturate(1.1) contrast(1.05)' })}</div>
+        </div>
+        {etiqueta}
+        {pie}
+      </Escena>
+    );
+  }
   if (variante === 'marco' || variante === 'circulo') {
     const circ = variante === 'circulo';
     const L = circ ? Math.min(W, H) * 0.78 : Math.min(W * 0.84, H * 0.5);
-    const pc = S(0.08, { damping: 13, stiffness: 150 });
     return (
-      <Escena fondo="#0B0B0D" salida={salida}>
-        {foto && <Img src={src(foto)} style={{ position: 'absolute', inset: -60 * U, width: W + 120 * U, height: H + 120 * U, objectFit: 'cover', filter: `blur(${36 * U}px) brightness(.55) saturate(1.2)`,
-                                               transform: `scale(${zoom.toFixed(4)})` }} />}
+      <Escena fondo={fondoU || '#0B0B0D'} salida={salida}>
+        {detras}
         {circ && (
           <svg style={{ position: 'absolute', inset: 0, width: W, height: H }}>
             <circle cx={W / 2} cy={H * (vert ? 0.46 : 0.5)} r={L / 2 + 22 * U} fill="none" stroke={ac} strokeWidth={8 * U} pathLength={1} strokeDasharray="1"
