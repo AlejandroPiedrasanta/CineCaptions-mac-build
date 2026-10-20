@@ -1863,7 +1863,9 @@ class SegmentedInputInputTrackBacking {
             }
             const firstPacket = await nextTrack._backing.getFirstPacket(options);
             if (!firstPacket) {
-                return null;
+                // Segments may contain zero packets for a track, so, move on
+                currentSegment = nextSegment;
+                continue;
             }
             return this.createAdjustedPacket(firstPacket, nextSegment, nextTrack);
         }
@@ -2623,7 +2625,7 @@ class HlsSegmentedInput extends SegmentedInput {
         return input;
     }
     async getLiveRefreshInterval() {
-        if (this.getRemainingWaitTimeMs() === 0) {
+        if (!this.streamHasEnded && this.getRemainingWaitTimeMs() === 0) {
             await this.runUpdateSegments();
         }
         return this.streamHasEnded ? null : this.refreshInterval;
@@ -4863,6 +4865,10 @@ class Input extends _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .EventEmitter */ .bk
         }
         const promise = (async () => {
             const sourceRef = await this._getSourceUncached(request);
+            if (this._disposed) {
+                sourceRef.free();
+                throw new InputDisposedError();
+            }
             const MAX_SOURCE_CACHE_SIZE = 4;
             const count = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .arrayCount */ .v$)(this._sourceCache, x => x.cacheGroup === cacheGroup && x.sourceRef.source._refCount === 1);
             if (count >= MAX_SOURCE_CACHE_SIZE) {
@@ -6377,29 +6383,7 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                         break;
                     }
                     slice.skip(4); // Version + flags
-                    const tag = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(tag === 0x03); // ES Descriptor
-                    (0,_isobmff_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .readIsomVariableInteger */ .hs)(slice); // Length
-                    slice.skip(2); // ES ID
-                    const mixed = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
-                    const streamDependenceFlag = (mixed & 0x80) !== 0;
-                    const urlFlag = (mixed & 0x40) !== 0;
-                    const ocrStreamFlag = (mixed & 0x20) !== 0;
-                    if (streamDependenceFlag) {
-                        slice.skip(2);
-                    }
-                    if (urlFlag) {
-                        const urlLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
-                        slice.skip(urlLength);
-                    }
-                    if (ocrStreamFlag) {
-                        slice.skip(2);
-                    }
-                    const decoderConfigTag = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(decoderConfigTag === 0x04); // DecoderConfigDescriptor
-                    const decoderConfigDescriptorLength = (0,_isobmff_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .readIsomVariableInteger */ .hs)(slice); // Length
-                    const payloadStart = slice.filePos;
-                    const objectTypeIndication = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
+                    const { objectTypeIndication, decoderSpecificInfo } = (0,_isobmff_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .readEsDescriptor */ .m)(slice);
                     if (objectTypeIndication === 0x40 || objectTypeIndication === 0x67) {
                         track.info.codec = 'aac';
                         track.info.aacCodecInfo = {
@@ -6419,13 +6403,8 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     else {
                         _logging_js__WEBPACK_IMPORTED_MODULE_13__/* .Logging */ .y._warn(`Unsupported audio codec (objectTypeIndication ${objectTypeIndication}) - discarding track.`);
                     }
-                    slice.skip(1 + 3 + 4 + 4);
-                    if (decoderConfigDescriptorLength > slice.filePos - payloadStart) {
-                        // There's a DecoderSpecificInfo at the end, let's read it
-                        const decoderSpecificInfoTag = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
-                        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(decoderSpecificInfoTag === 0x05); // DecoderSpecificInfo
-                        const decoderSpecificInfoLength = (0,_isobmff_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .readIsomVariableInteger */ .hs)(slice);
-                        track.info.codecDescription = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, decoderSpecificInfoLength);
+                    if (decoderSpecificInfo) {
+                        track.info.codecDescription = decoderSpecificInfo;
                         if (track.info.codec === 'aac') {
                             // Let's try to deduce more accurate values directly from the AudioSpecificConfig:
                             const audioSpecificConfig = (0,_shared_aac_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .parseAacAudioSpecificConfig */ .zF)(track.info.codecDescription);
@@ -8635,9 +8614,10 @@ const psshBoxesAreEqual = (a, b) => (a.systemId === b.systemId
 /* harmony export */   Vl: () => (/* binding */ readBoxHeader),
 /* harmony export */   Xk: () => (/* binding */ MAX_BOX_HEADER_SIZE),
 /* harmony export */   ZM: () => (/* binding */ MIN_BOX_HEADER_SIZE),
-/* harmony export */   hs: () => (/* binding */ readIsomVariableInteger),
+/* harmony export */   m: () => (/* binding */ readEsDescriptor),
 /* harmony export */   vX: () => (/* binding */ readFixed_16_16)
 /* harmony export */ });
+/* unused harmony export readIsomVariableInteger */
 /* harmony import */ var _metadata_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5165);
 /* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3912);
 /* harmony import */ var _reader_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7735);
@@ -8685,6 +8665,50 @@ const readIsomVariableInteger = (slice) => {
         }
     }
     return result;
+};
+const readEsDescriptor = (slice) => {
+    const tag = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU8 */ .eo)(slice);
+    if (tag !== 0x03) {
+        throw new Error('Invalid esds: expected ES_Descriptor.');
+    }
+    readIsomVariableInteger(slice); // Length
+    slice.skip(2); // ES ID
+    const mixed = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU8 */ .eo)(slice);
+    const streamDependenceFlag = (mixed & 0x80) !== 0;
+    const urlFlag = (mixed & 0x40) !== 0;
+    const ocrStreamFlag = (mixed & 0x20) !== 0;
+    if (streamDependenceFlag) {
+        slice.skip(2);
+    }
+    if (urlFlag) {
+        const urlLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU8 */ .eo)(slice);
+        slice.skip(urlLength);
+    }
+    if (ocrStreamFlag) {
+        slice.skip(2);
+    }
+    const decoderConfigTag = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU8 */ .eo)(slice);
+    if (decoderConfigTag !== 0x04) {
+        throw new Error('Invalid esds: expected DecoderConfigDescriptor.');
+    }
+    const decoderConfigDescriptorLength = readIsomVariableInteger(slice); // Length
+    const payloadStart = slice.filePos;
+    const objectTypeIndication = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU8 */ .eo)(slice);
+    slice.skip(1 + 3 + 4 + 4);
+    let decoderSpecificInfo = null;
+    if (decoderConfigDescriptorLength > slice.filePos - payloadStart) {
+        // There's a DecoderSpecificInfo at the end, let's read it
+        const decoderSpecificInfoTag = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU8 */ .eo)(slice);
+        if (decoderSpecificInfoTag !== 0x05) {
+            throw new Error('Invalid esds: expected DecoderSpecificInfo.');
+        }
+        const decoderSpecificInfoLength = readIsomVariableInteger(slice);
+        decoderSpecificInfo = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readBytes */ .io)(slice, decoderSpecificInfoLength);
+    }
+    return {
+        objectTypeIndication,
+        decoderSpecificInfo,
+    };
 };
 const readMetadataStringShort = (slice) => {
     let stringLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU16Be */ .mH)(slice);
@@ -13169,6 +13193,16 @@ class PacketReadingContext {
         this.currentPesPacketPos += this.getCurrentPesPacket().data.byteLength;
         this.currentPesPacketIndex++;
     }
+    getPesPacketAt(pos) {
+        (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(pos <= this.currentPos);
+        let pesPacketIndex = this.currentPesPacketIndex;
+        let pesPacketPos = this.currentPesPacketPos;
+        while (pos < pesPacketPos) {
+            pesPacketIndex--;
+            pesPacketPos -= this.pesPackets[pesPacketIndex].data.byteLength;
+        }
+        return this.pesPackets[pesPacketIndex];
+    }
     async markNextPacket() {
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(!this.suppliedPacket);
         const elementaryStream = this.elementaryStream;
@@ -13183,6 +13217,7 @@ class PacketReadingContext {
             const nalHeaderSize = codec === 'avc' ? 1 : 2;
             let packetStartPos = null;
             let frameStartFound = false;
+            let slicePts = null;
             let lastFirstMacroblockInSlice = 0;
             while (true) {
                 let remaining = this.ensureBuffered(CHUNK_SIZE);
@@ -13289,6 +13324,10 @@ class PacketReadingContext {
                             }
                             else {
                                 frameStartFound = true;
+                                // When we find a slice, we prefer the timestamp of the PES packet containing that slice
+                                // instead of the one at the start of the access unit. This is almost almost the same
+                                // PES packet anyways, but some malformed streams can have weird packetization
+                                slicePts = this.getPesPacketAt(chunkStartPos + nalHeaderStart).pts;
                             }
                         }
                     }
@@ -13299,7 +13338,7 @@ class PacketReadingContext {
                         // End the packet at this start code (the next frame begins here)
                         const packetLength = startCodePos - packetStartPos;
                         this.seekTo(packetStartPos);
-                        return this.supplyPacket(packetLength, 0);
+                        return this.supplyPacket(packetLength, 0, slicePts);
                     }
                     i += startCodeLength;
                 }
@@ -13312,7 +13351,7 @@ class PacketReadingContext {
             if (packetStartPos !== null && this.endPos > packetStartPos) {
                 const packetLength = this.endPos - packetStartPos;
                 this.seekTo(packetStartPos);
-                return this.supplyPacket(packetLength, 0);
+                return this.supplyPacket(packetLength, 0, slicePts);
             }
         }
         else {
@@ -13522,10 +13561,13 @@ class PacketReadingContext {
         }
     }
     /** Supplies the context with a new encoded packet, beginning at the current position. */
-    supplyPacket(packetLength, intrinsicDuration) {
+    supplyPacket(packetLength, intrinsicDuration, timestampOverride = null) {
         const currentPesPacket = this.getCurrentPesPacket();
         let pts;
-        if (this.lastSuppliedPesPacket === currentPesPacket) {
+        if (timestampOverride !== null) {
+            pts = timestampOverride;
+        }
+        else if (this.lastSuppliedPesPacket === currentPesPacket) {
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(this.nextPts !== null);
             pts = this.nextPts;
         }

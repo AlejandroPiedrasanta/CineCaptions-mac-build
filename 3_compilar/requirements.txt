@@ -15,7 +15,7 @@ pillow==13.0.0
 numpy==2.5.4
 av==19.0.1
 pyspellchecker==0.9.1
-certifi==2026.10.18
+certifi==2026.10.19
 pynput==1.8.2
 comtypes==1.4.17; sys_platform == "win32"   # v5.5.6: UI Automation sin PowerShell (uia_resolve)
 six==1.17.0

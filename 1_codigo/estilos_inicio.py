@@ -17,8 +17,8 @@ import random
 
 import numpy as np
 from PySide6.QtCore import QLineF, QPointF, QRectF, Qt
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
-                           QPolygonF, QRadialGradient)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QFont, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath,
+                           QPen, QPixmap, QPolygonF, QRadialGradient)
 
 from i18n import tr
 from qt_kit import fuente
@@ -39,7 +39,7 @@ def _pen(col, ancho, cap=Qt.PenCapStyle.RoundCap):
 class Ctx:
     """Lo que el botón le cuenta al estilo en cada cuadro."""
     __slots__ = ('estado', 't', 'progreso', 'marca', 'flare', 'hover', 'presion', 'fase', 'fase_t', 'tono', 'vibra', 'apagon',
-                 'residuo', 'eta', 'texto', 'entrada', 'vel', 'quieto', 'cierre')
+                 'residuo', 'eta', 'texto', 'entrada', 'vel', 'quieto', 'cierre', 'cortes')
 
     def __init__(self):
         self.estado = 'listo'
@@ -61,27 +61,79 @@ class Ctx:
         self.vel = 1.0
         self.quieto = False
         self.cierre = -1.0
+        self.cortes = ()                 # v5.22: dónde acaba cada paso de GO (0..1): el anillo de progreso los marca
 
 
 # --------------------------------------------------------------------------------------------------- piezas comunes
-def arco_prog(p, rad, ancho, prog, col, col2=None):
-    """Un arco de progreso con resplandor (de las 12 en punto, en sentido horario) y una cabeza brillante."""
+def cifras(f):
+    """v5.22: cifras de ancho fijo (tnum): el porcentaje no baila de lado a lado mientras cuenta."""
+    try:
+        f.setFeature(QFont.Tag('tnum'), 1)
+    except Exception:
+        pass
+    return f
+
+
+_CABE = {}
+
+
+def fuente_que_cabe(texto, ancho, tam, minimo=10, peso='medio', tnum=False):
+    """v5.22: la fuente más grande (de `tam` a `minimo` px) con la que `texto` cabe en `ancho` px en UNA línea, o None si ni así cabe
+    (el centro del botón la omite: la barra de abajo de Inicio ya lo dice). Con caché: se pide en cada cuadro."""
+    clave = (texto, int(ancho), int(tam), int(minimo), peso, tnum)
+    if clave in _CABE:
+        return _CABE[clave]
+    elegida = None
+    for t in range(int(tam), int(minimo) - 1, -1):
+        f = fuente(t, peso=peso)
+        if tnum:
+            f = cifras(f)
+        if QFontMetricsF(f).horizontalAdvance(texto) <= ancho:
+            elegida = f
+            break
+    if len(_CABE) > 400:
+        _CABE.clear()
+    _CABE[clave] = elegida
+    return elegida
+
+
+def arco_prog(p, rad, ancho, prog, col, col2=None, cortes=()):
+    """Un arco de progreso con resplandor (de las 12 en punto, en sentido horario) y una cabeza brillante.
+    v5.22 (el usuario: «mejora su barra de progreso»): va sobre una pista del anillo entero (se ve lo que falta), el trazo es más
+    grueso y se aclara hacia la cabeza, y unos cortes marcan dónde acaba cada paso de GO (`cortes`: los mismos tramos que la barra
+    de abajo de la escena, así las dos cuentan lo mismo)."""
     prog = max(0.004, min(1.0, prog))
     caja = QRectF(-rad, -rad, 2 * rad, 2 * rad)
     p.setBrush(Qt.BrushStyle.NoBrush)
-    for k, al in ((3.2, 26), (1.8, 70), (0.8, 255)):
-        c = col if k > 1.0 else (col2 or QColor(255, 255, 255))
-        p.setPen(_pen(_c(c.name(), al), ancho * k))
+    p.setPen(_pen(QColor(0, 0, 0, 95), ancho * 2.6))                 # la pista: oscura, con un filo del color
+    p.drawEllipse(QPointF(0, 0), rad, rad)
+    p.setPen(_pen(_c(col.name(), 46), ancho * 1.1))
+    p.drawEllipse(QPointF(0, 0), rad, rad)
+    for k, al in ((3.6, 26), (2.1, 72)):                             # el resplandor
+        p.setPen(_pen(_c(col.name(), al), ancho * k))
         p.drawArc(caja, 90 * 16, -int(360 * 16 * prog))
+    claro = col2 or QColor(255, 255, 255)
+    g = QConicalGradient(QPointF(0, 0), 90)                          # el trazo: del color (inicio) al claro (cabeza)
+    g.setColorAt(0.0, _c(col.name(), 255))
+    g.setColorAt(max(0.0005, 1.0 - prog), claro)
+    g.setColorAt(1.0, _c(col.name(), 255))
+    p.setPen(QPen(QBrush(g), max(0.8, ancho * 1.3), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+    p.drawArc(caja, 90 * 16, -int(360 * 16 * prog))
+    if cortes:                                                       # dónde acaba cada paso
+        p.setPen(_pen(QColor(4, 10, 18, 235), max(1.4, ancho * 0.75), Qt.PenCapStyle.FlatCap))
+        for f in cortes:
+            a = math.radians(90 - 360 * f)
+            u = QPointF(math.cos(a), -math.sin(a))
+            p.drawLine(u * (rad - ancho * 2.1), u * (rad + ancho * 2.1))
     ang = math.radians(90 - 360 * prog)
     cab = QPointF(rad * math.cos(ang), -rad * math.sin(ang))
-    g = QRadialGradient(cab, ancho * 2.6)
+    g = QRadialGradient(cab, ancho * 3.0)
     g.setColorAt(0, QColor(255, 255, 255, 255))
     g.setColorAt(0.4, _c(col.name(), 170))
     g.setColorAt(1, _c(col.name(), 0))
     p.setPen(Qt.PenStyle.NoPen)
     p.setBrush(QBrush(g))
-    p.drawEllipse(cab, ancho * 2.6, ancho * 2.6)
+    p.drawEllipse(cab, ancho * 3.0, ancho * 3.0)
 
 
 def palomita(p, rd, marca, col, alfa=1.0):
@@ -127,17 +179,28 @@ def centro_estado(p, ctx, R, rd, col, col2=None, emblema=None, fam='extra'):
     """El contenido del centro según el estado: porcentaje + paso + tiempo restante, palomita, «!» o el emblema en reposo."""
     est = ctx.estado
     if est == 'trabajando':
+        # v5.22: un velo oscuro detrás del texto (se lee sobre cualquier estilo), cifras de ancho fijo y nada por debajo de 12 px
+        velo = QRadialGradient(QPointF(0, rd * 0.12), rd * 1.1)
+        velo.setColorAt(0.0, QColor(2, 6, 14, 105))
+        velo.setColorAt(1.0, QColor(2, 6, 14, 0))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(velo))
+        p.drawEllipse(QPointF(0, rd * 0.12), rd * 1.1, rd * 1.1)
         p.setPen(QColor(255, 255, 255))
-        p.setFont(fuente(max(20, int(rd * 0.78)), peso=fam))
+        p.setFont(cifras(fuente(max(20, int(rd * 0.78)), peso=fam)))
         p.drawText(QRectF(-rd, -rd * 0.78, 2 * rd, rd * 1.2), int(Qt.AlignmentFlag.AlignCenter), f'{int(round(ctx.progreso * 100))}%')
-        # justo debajo del porcentaje: cuánto falta; debajo, qué se está haciendo (paso n/N)
-        if ctx.eta:
-            p.setPen(QColor(255, 236, 170, 245))
-            p.setFont(fuente(max(10, int(rd * 0.22)), peso='extra'))
-            p.drawText(QRectF(-rd, rd * 0.36, 2 * rd, rd * 0.3), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop), ctx.eta)
-        p.setPen(_c(col.name(), 235))
-        p.setFont(fuente(max(9, int(rd * 0.17)), peso='medio'))
-        p.drawText(QRectF(-rd * 0.95, rd * (0.7 if ctx.eta else 0.34), 1.9 * rd, rd * 0.5), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop | Qt.TextFlag.TextWordWrap), ctx.texto)
+        # justo debajo del porcentaje: cuánto falta; debajo, qué se está haciendo. Cada uno en UNA línea que quepa; si no cabe ni a
+        # 10 px se omite (la barra de abajo lo dice): antes se partía o se salía del círculo en ventanas pequeñas
+        f_eta = fuente_que_cabe(ctx.eta, rd * 1.8, max(12, int(rd * 0.23)), 10, 'extra', True) if ctx.eta else None
+        if f_eta is not None:
+            p.setPen(QColor(255, 236, 170, 250))
+            p.setFont(f_eta)
+            p.drawText(QRectF(-rd, rd * 0.36, 2 * rd, rd * 0.32), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop), ctx.eta)
+        f_txt = fuente_que_cabe(ctx.texto, rd * 1.75, max(12, int(rd * 0.19)), 10, 'medio') if ctx.texto else None
+        if f_txt is not None:
+            p.setPen(QColor(min(255, col.red() + 70), min(255, col.green() + 70), min(255, col.blue() + 70), 245))
+            p.setFont(f_txt)
+            p.drawText(QRectF(-rd, rd * (0.7 if f_eta is not None else 0.36), 2 * rd, rd * 0.32), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop), ctx.texto)
     elif est == 'hecho':
         palomita(p, rd, ctx.marca, QColor('#FFC857') if ctx.tono == 'aviso' else col)
     elif est == 'error':
@@ -249,7 +312,7 @@ class Astrolabio(Estilo):
     def dibujar(self, p, c, R, ctx, R_base=None):
         self._orb.dibujar(p, c, R, ctx.t, ctx.estado, ctx.hover, ctx.presion, ctx.progreso, ctx.marca, ctx.texto,
                           1.0 if ctx.apagon > 0 else 0.0, ctx.quieto, ctx.flare, R_base, ctx.fase, ctx.fase_t, ctx.tono, ctx.entrada,
-                          ctx.vibra, (0.0, 0.0), ctx.residuo, ctx.apagon, ctx.eta)
+                          ctx.vibra, (0.0, 0.0), ctx.residuo, ctx.apagon, ctx.eta, cortes=ctx.cortes)
 
     def fondo(self, q, W, H, c, e, t, estado):
         g = QRadialGradient(c, max(W, H) * 0.8)
@@ -339,7 +402,7 @@ class Synthwave(Estilo):
             p.setBrush(_c('#FFFFFF', 255))
             p.drawEllipse(QPointF(R * 0.93 * math.cos(ang), R * 0.93 * math.sin(ang)), R * 0.028, R * 0.028)
         if ctx.estado == 'trabajando':
-            arco_prog(p, R * 0.93, R * 0.016, ctx.progreso, cian)
+            arco_prog(p, R * 0.93, R * 0.016, ctx.progreso, cian, cortes=ctx.cortes)
         centro_estado(p, ctx, R, R * 0.42, cian, emblema=lambda: play(p, R * 0.30, QColor('#FFFFFF')))
         p.setOpacity(1.0)
 
@@ -523,7 +586,7 @@ class Agujero(Estilo):
         p.drawEllipse(QPointF(0, 0), rh * 1.04, rh * 1.04)
         disco(True)
         if ctx.estado == 'trabajando':
-            arco_prog(p, rh * 1.04, R * 0.018, ctx.progreso, QColor('#FFC070'))
+            arco_prog(p, rh * 1.04, R * 0.018, ctx.progreso, QColor('#FFC070'), cortes=ctx.cortes)
         centro_estado(p, ctx, R, rh * 0.82, QColor('#FFC070'), emblema=lambda: play(p, rh * 0.62, QColor('#FFC070')))
         p.setOpacity(1.0)
 
@@ -633,7 +696,7 @@ class Liquido(Estilo):
             p.setBrush(QColor(255, 255, 255, 60))
             p.drawEllipse(QPointF(rr * math.cos(ang), rr * 0.9 * math.sin(ang)), R * 0.032, R * 0.032)
         if trab:
-            arco_prog(p, R * 0.98, R * 0.012, ctx.progreso, QColor('#E9D5FF'))
+            arco_prog(p, R * 0.98, R * 0.012, ctx.progreso, QColor('#E9D5FF'), cortes=ctx.cortes)
         centro_estado(p, ctx, R, R * 0.40, QColor('#FFFFFF'), emblema=lambda: play(p, R * 0.28, QColor('#FFFFFF'), False))
         p.setOpacity(1.0)
 
@@ -728,7 +791,7 @@ class Prisma(Estilo):
             p.drawEllipse(QPointF(x, -R * 0.25), R * 0.2, R * 0.2)
         if ctx.estado == 'trabajando':
             cg = QConicalGradient(QPointF(0, 0), 90)
-            arco_prog(p, R * 0.98, R * 0.014, ctx.progreso, QColor('#C4B5FD'))
+            arco_prog(p, R * 0.98, R * 0.014, ctx.progreso, QColor('#C4B5FD'), cortes=ctx.cortes)
         centro_estado(p, ctx, R, R * 0.34, QColor('#E9D5FF'), emblema=lambda: None)
         p.setOpacity(1.0)
 
@@ -926,7 +989,7 @@ class Plasma(Estilo):
                     p.setPen(_pen(_c('#FFE9B8', al), R * 0.012 * k))
                     p.drawPolyline(QPolygonF(pts))
         if trab:
-            arco_prog(p, R * 0.94, R * 0.014, ctx.progreso, QColor('#FFC070'))
+            arco_prog(p, R * 0.94, R * 0.014, ctx.progreso, QColor('#FFC070'), cortes=ctx.cortes)
         centro_estado(p, ctx, R, R * 0.40, QColor('#FFE9B8'), emblema=lambda: play(p, R * 0.28, QColor('#FFFFFF')))
         p.setOpacity(1.0)
 
@@ -1010,7 +1073,7 @@ class Carrete(Estilo):
             p.drawEllipse(QPointF(R * 0.10 * math.cos(ang), R * 0.10 * math.sin(ang)), R * 0.035, R * 0.035)
         p.restore()
         if trab:
-            arco_prog(p, R * 0.855, R * 0.012, ctx.progreso, ambar)
+            arco_prog(p, R * 0.855, R * 0.012, ctx.progreso, ambar, cortes=ctx.cortes)
         centro_estado(p, ctx, R, R * 0.26, ambar, emblema=lambda: None)
         p.setOpacity(1.0)
 
@@ -1123,7 +1186,7 @@ class Matrix(Estilo):
         p.setPen(QPen(_c('#7CFF9B', 70), 1.4))
         p.drawLine(QPointF(-rc, y), QPointF(rc, y))
         if trab:
-            arco_prog(p, R * 0.985, R * 0.012, ctx.progreso, verde)
+            arco_prog(p, R * 0.985, R * 0.012, ctx.progreso, verde, cortes=ctx.cortes)
         centro_estado(p, ctx, R, rc * 0.80, verde, emblema=lambda: play(p, rc * 0.46, QColor('#7CFF9B')))
         p.setOpacity(1.0)
 
@@ -1252,7 +1315,7 @@ class Orbe(Estilo):
         p.drawImage(QRectF(-rs * 1.25, -rs * 1.25, rs * 2.5, rs * 2.5), qi)
         p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
         if trab:
-            arco_prog(p, R * 0.94, R * 0.014, ctx.progreso, QColor('#4CC2E9'), QColor('#E9D8FF'))
+            arco_prog(p, R * 0.94, R * 0.014, ctx.progreso, QColor('#4CC2E9'), QColor('#E9D8FF'), cortes=ctx.cortes)
         centro_estado(p, ctx, R, R * 0.40, QColor('#E9D8FF'), emblema=lambda: play(p, R * 0.28, QColor('#FFFFFF')))
         p.setOpacity(1.0)
 

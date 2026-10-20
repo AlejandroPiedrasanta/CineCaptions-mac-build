@@ -52,6 +52,7 @@ class BotonGo(QAbstractButton):
         self.estado = 'listo'
         self.progreso = 0.0
         self._prog_visto = 0.0
+        self.cortes = ()                 # v5.22: dónde acaba cada paso (0..1): el anillo los marca como la barra de abajo
         self.texto_centro = ''
         self.texto_bajo = ''
         self.fase = ''
@@ -158,10 +159,13 @@ class BotonGo(QAbstractButton):
         self._hover += (self._hover_obj - self._hover) * k
         self._presion += (self._presion_obj - self._presion) * min(1.0, dt * 22)
         self._iman = self._iman + (self._iman_obj - self._iman) * min(1.0, dt * 8)
-        if self._suave_t < 1.0:
-            self._suave_t = min(1.0, self._suave_t + dt / 0.35)
-            f = 1 - (1 - self._suave_t) ** 3
-            self._prog_visto = self._desde + (self.progreso - self._desde) * f
+        # v5.22: el % que se ve sigue al estimador SIN escalones (antes: una curva de 0,35 s cada medio segundo y quieto el resto, a
+        # saltos) y nunca retrocede mientras trabaja. Es el mismo valor que pinta la barra de abajo de la escena (PanelGo._datos_barra).
+        d = self.progreso - self._prog_visto
+        if d > 0.0:
+            self._prog_visto += d * min(1.0, dt * 3.4) if d > 0.0015 else d
+        elif est != 'trabajando':
+            self._prog_visto = self.progreso
         # el cierre en tres tiempos
         if self._cierre >= 0.0:
             self._cierre += dt
@@ -271,9 +275,9 @@ class BotonGo(QAbstractButton):
 
     def poner_progreso(self, f):
         f = max(0.0, min(1.0, float(f)))
-        self._desde = self._prog_visto
+        if f < self._prog_visto - 0.05:                  # un GO nuevo (o un retroceso grande): se ve ya, sin deslizar hacia atrás
+            self._prog_visto = f
         self.progreso = f
-        self._suave_t = 0.0
         # tiempo restante: se estima con el ritmo hasta ahora y se suaviza (no salta)
         if self.estado == 'trabajando' and self._t_ini is not None and f > 0.08:
             ahora = self._time.perf_counter()
@@ -326,6 +330,7 @@ class BotonGo(QAbstractButton):
         cx.hover, cx.presion, cx.fase, cx.fase_t, cx.tono = self._hover, self._presion, (self.fase if self.estado == 'trabajando' else ''), self._t - self._fase_t0, self.tono
         cx.vibra, cx.apagon, cx.residuo, cx.eta, cx.texto = vibra, self._apagon, self._residuo, self._eta_texto(), texto
         cx.entrada, cx.vel, cx.quieto, cx.cierre = self._ent, self._vel, self._quieto, self._cierre
+        cx.cortes = self.cortes if estado == 'trabajando' else ()
         if self._estilo_clave != 'astrolabio' and self._ent < 1.2:                # entrada: aparece creciendo (el astrolabio se ensambla pieza a pieza)
             e = min(1.0, self._ent / 0.8)
             p.setOpacity(e)
@@ -362,7 +367,9 @@ class TituloGo(QWidget):
 
     def showEvent(self, e):
         super().showEvent(e)
-        self._entrar()
+        if not getattr(self, '_ya_entro', False):         # v5.22: solo la primera vez; al volver a Inicio repetirla parecía que se reiniciaba
+            self._ya_entro = True
+            self._entrar()
 
     def _entrar(self):
         import mograf_ui
@@ -932,6 +939,19 @@ class EstimadorGo:
         pend = [k for k in self.ORDEN if k not in self.saltados]
         return (pend.index(clave) + 1, len(pend)) if clave in pend else (0, len(pend))
 
+    def tramos(self):
+        """v5.22: [(clave, inicio, fin, estado)] en fracciones 0..1 del total, cada paso con el peso de lo que se espera que tarde (las
+        mismas cuentas que fraccion(): la barra de abajo y el anillo del centro parten los pasos en el mismo sitio que el %).
+        estado: hecho | activo | pendiente | saltado (un saltado mide 0)."""
+        total = sum(self.esperado(k) for k in self.ORDEN) or 1.0
+        x, salida = 0.0, []
+        for k in self.ORDEN:
+            ancho = self.esperado(k) / total
+            est = ('saltado' if k in self.saltados else 'hecho' if k in self.hechos else 'activo' if k == self.actual else 'pendiente')
+            salida.append((k, x, min(1.0, x + ancho), est))
+            x += ancho
+        return salida
+
     def guardar(self):
         """Aprende: cuánto tardó cada paso respecto a lo esperado sin escalar (media móvil) y lo guarda."""
         try:
@@ -1053,7 +1073,35 @@ class PanelGo(QWidget):
         escena.poner_pasos(self.PASOS)
         escena.proveedor = self.geometria_escena
         escena.etiquetas_ocultas.connect(self._quitar_reserva)
+        escena.datos_barra = self._datos_barra
         self.boton.seguir_a(escena)
+
+    def _datos_barra(self):
+        """v5.22: lo que pinta la barra de progreso de abajo (EscenaGo._dibujar_barra): el MISMO % que el centro del botón, ya suavizado
+        (antes la barra iba con la energía de la esfera y no coincidía), los tramos por paso y sus dos textos. None = sin barra."""
+        b = self.boton
+        if b.estado == 'trabajando':
+            prog = b._prog_visto
+        elif b.estado in ('hecho', 'error') and 0.0 <= b._cierre < 2.6:          # al terminar: se llena (o se pone roja) y se va
+            prog = 1.0 if b.estado == 'hecho' else b._prog_visto
+        else:
+            return None
+        est = self.estimador
+        izq = der = ''
+        if b.estado == 'trabajando':
+            if est.actual:
+                n, total = est.numero_de_paso(est.actual)
+                izq = f'{n}/{total} · {self.CORTO.get(est.actual, "")}' if n else self.CORTO.get(est.actual, '')
+            eta = b._eta_texto()
+            der = f'{int(round(prog * 100))}%' + (f' · {eta}' if eta else '')
+        elif b.estado == 'hecho':
+            der = '100%'
+        return {'prog': prog, 'tramos': est.tramos(), 'estado': b.estado, 'cierre': b._cierre, 'izq': izq, 'der': der}
+
+    def _cortes(self):
+        """Dónde acaba cada paso (0..1) para el anillo; sin los pasos que casi no duran (sus cortes quedaban pegados), como la barra."""
+        anchos = [(fin - ini, fin) for _k, ini, fin, _e in self.estimador.tramos() if fin - ini > 0.001]
+        return tuple(fin for (w1, fin), (w2, _f) in zip(anchos, anchos[1:]) if w1 >= 0.03 and w2 >= 0.03)
 
     def geometria_escena(self):
         """(centro de la esfera, radio, rectángulo de las etiquetas) en coordenadas de la escena."""
@@ -1112,6 +1160,7 @@ class PanelGo(QWidget):
         self.estimador.empezar()
         self.boton.poner_estado('trabajando', centro=tr('Preparando'))
         self.boton.poner_progreso(0.0)
+        self.boton.cortes = self._cortes()
         self.boton.poner_eta(self.estimador.eta_texto())
         self._reloj_eta.start()
         self.opciones.hide()
@@ -1188,9 +1237,8 @@ class PanelGo(QWidget):
         if self.escena is not None:
             self.escena.paso(clave, estado, detalle)
         if estado == 'activo':
-            n, total = self.estimador.numero_de_paso(clave)
             nombre = self.CORTO.get(clave) or dict(self.PASOS).get(clave, '')
-            self.boton.poner_estado('trabajando', centro=(f'{nombre} · {n}/{total}' if n else nombre))
+            self.boton.poner_estado('trabajando', centro=nombre)        # v5.22: el «n/N» va en la barra de abajo (en el centro partía la línea)
             self.boton.poner_fase(clave)
             if self.escena is not None:
                 self.escena.poner_fase(clave)
@@ -1215,6 +1263,7 @@ class PanelGo(QWidget):
             return
         f = self.estimador.fraccion()
         self.boton.poner_progreso(f)
+        self.boton.cortes = self._cortes()
         self.boton.poner_eta(self.estimador.eta_texto())
         if self.escena is not None:
             self.escena.progreso(f)

@@ -138747,6 +138747,7 @@ __export(exports_timeline_position_state, {
   usePlaying: () => usePlaying,
   useTimelineContext: () => useTimelineContext,
   useTimelinePosition: () => useTimelinePosition,
+  useTimelinePositionWithOptionalSubscription: () => useTimelinePositionWithOptionalSubscription,
   useTimelineSeekFrame: () => useTimelineSeekFrame,
   useTimelineSetFrameWithoutSeek: () => useTimelineSetFrameWithoutSeek
 });
@@ -138991,13 +138992,15 @@ class CompositionErrorBoundary extends react__WEBPACK_IMPORTED_MODULE_0__.Compon
 // src/CompositionManagerContext.tsx
 
 var getAssetPreviewCompositionId = (asset) => `asset:${asset}`;
-var CompositionManager = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)({
+var defaultCompositionManagerContext = {
   compositions: [],
   folders: [],
   currentCompositionMetadata: null,
   currentAssetMetadata: null,
   canvasContent: null
-});
+};
+var CompositionManager = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(defaultCompositionManagerContext);
+var CompositionManagerRefContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)({ current: defaultCompositionManagerContext });
 var CompositionSetters = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)({
   setCanvasContent: () => {
     return;
@@ -139468,11 +139471,11 @@ function validateDurationInFrames(durationInFrames, options) {
   if (durationInFrames <= 0) {
     throw new TypeError(`The "durationInFrames" prop ${component} must be positive, but got ${durationInFrames}.`);
   }
-  if (!allowFloats && durationInFrames % 1 !== 0) {
-    throw new TypeError(`The "durationInFrames" prop ${component} must be an integer, but got ${durationInFrames}.`);
-  }
   if (!Number.isFinite(durationInFrames)) {
     throw new TypeError(`The "durationInFrames" prop ${component} must be finite, but got ${durationInFrames}.`);
+  }
+  if (!allowFloats && durationInFrames % 1 !== 0) {
+    throw new TypeError(`The "durationInFrames" prop ${component} must be an integer, but got ${durationInFrames}.`);
   }
 }
 
@@ -140449,7 +140452,7 @@ var getStackForControls = (controls) => {
 };
 
 // src/version.ts
-var VERSION = "4.0.536";
+var VERSION = "4.0.537";
 
 // src/multiple-versions-warning.ts
 var checkMultipleRemotionVersions = () => {
@@ -140712,6 +140715,7 @@ var useBuffering = () => {
 };
 
 // src/timeline-position-state.ts
+var UnsubscribedTimelineContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(null);
 var makeKey = () => {
   return `remotion.time-all`;
 };
@@ -140741,6 +140745,9 @@ var useTimelinePositionFromContext = (state) => {
   const videoConfig = useVideo();
   const env = useRemotionEnvironment();
   const dormant = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceActivityDormantContext);
+  if (state === null) {
+    return 0;
+  }
   if (!videoConfig) {
     return typeof window === "undefined" ? 0 : window.remotion_initialFrame ?? 0;
   }
@@ -140766,6 +140773,15 @@ var useTimelinePosition = () => {
   const state = useTimelineContext();
   return useTimelinePositionFromContext(state);
 };
+var useTimelinePositionWithOptionalSubscription = (subscribe) => {
+  const dormant = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceActivityDormantContext);
+  const state = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(subscribe ? dormant ? SequenceActivityTimelineContext : TimelineContext : UnsubscribedTimelineContext);
+  const frame = useTimelinePositionFromContext(state);
+  if (subscribe && state === null) {
+    throw new Error("TimelineContext is not available. This hook must be used inside a <Player> or the Remotion Studio.");
+  }
+  return frame;
+};
 var useIsInsideFreeze = () => {
   return useTimelineContext().isInsideFreeze;
 };
@@ -140788,7 +140804,7 @@ var useTimelineSeekFrame = () => {
 
 // src/use-current-frame.ts
 
-var useCurrentFrame = () => {
+var useCurrentFrameWithOptionalSubscription = (subscribe) => {
   const canUseRemotionHooks = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(CanUseRemotionHooks);
   const env = useRemotionEnvironment();
   if (!canUseRemotionHooks) {
@@ -140797,10 +140813,16 @@ var useCurrentFrame = () => {
     }
     throw new Error(`useCurrentFrame() can only be called inside a component that was registered as a composition. See https://www.remotion.dev/docs/the-fundamentals#defining-compositions`);
   }
-  const frame = useTimelinePosition();
+  const frame = useTimelinePositionWithOptionalSubscription(subscribe);
   const context = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceContext);
+  if (!subscribe) {
+    return 0;
+  }
   const contextOffset = context ? context.cumulatedFrom + context.relativeFrom : 0;
   return (frame - contextOffset) * (context?.playbackRate ?? 1);
+};
+var useCurrentFrame = () => {
+  return useCurrentFrameWithOptionalSubscription(true);
 };
 
 // src/use-video-config.ts
@@ -144668,6 +144690,15 @@ var OverrideIdsToNodePathsSettersContext = (0,react__WEBPACK_IMPORTED_MODULE_0__
 // src/effects/use-memoized-effects.ts
 var emptyDragOverrides2 = {};
 var useCacheCommitEffect = react__WEBPACK_IMPORTED_MODULE_0__.useInsertionEffect ?? react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect;
+var areEffectParamsEqual = (previous, next) => {
+  if (Object.is(previous, next)) {
+    return true;
+  }
+  if (previous === null || next === null || typeof previous !== "object" || typeof next !== "object" || Object.getPrototypeOf(previous) !== Object.prototype || Object.getPrototypeOf(next) !== Object.prototype) {
+    return false;
+  }
+  return areRegistryEntriesEqual(previous, next);
+};
 var mergeOverrides = ({
   descriptor,
   propStatusOverrides,
@@ -144732,16 +144763,18 @@ var resolvePropStatusOverrides = (propStatus, frame) => {
 var useMemoizedEffectDefinitions = (effects) => {
   const activityDormant = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceActivityDormantContext);
   const previousRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
-  const definitions = effects.map((descriptor) => descriptor.definition);
   const previous = previousRef.current;
-  const isSame = previous !== null && previous.definitions.length === definitions.length && previous.definitions.every((definition, i) => definition === definitions[i]);
+  const isSame = previous !== null && previous.definitions.length === effects.length && previous.definitions.every((definition, i) => definition === effects[i].definition);
   const controllers = isSame ? previous.controllers : effects.map((effect) => createRuntimeValueStore(effect.params));
-  const stableDefinitions = isSame ? previous.definitions : Object.assign(definitions, {
+  const stableDefinitions = isSame ? previous.definitions : Object.assign(effects.map((descriptor) => descriptor.definition), {
     runtimeValues: controllers.map((controller) => controller.store)
   });
   useCacheCommitEffect(() => {
     previousRef.current = { definitions: stableDefinitions, controllers };
     if (!activityDormant || controllers.length === 0) {
+      return;
+    }
+    if (controllers.every((controller, index) => areEffectParamsEqual(controller.store.getSnapshot(), effects[index]?.params))) {
       return;
     }
     let cancelled = false;
@@ -144752,14 +144785,8 @@ var useMemoizedEffectDefinitions = (effects) => {
       controllers.forEach((controller, index) => {
         const snapshot = effects[index]?.params;
         const currentSnapshot = controller.store.getSnapshot();
-        if (Object.is(snapshot, currentSnapshot)) {
+        if (areEffectParamsEqual(snapshot, currentSnapshot)) {
           return;
-        }
-        if (snapshot !== null && currentSnapshot !== null && typeof snapshot === "object" && typeof currentSnapshot === "object") {
-          const keys = Object.keys(snapshot);
-          if (keys.length === Object.keys(currentSnapshot).length && keys.every((key) => Object.prototype.hasOwnProperty.call(currentSnapshot, key) && Object.is(snapshot[key], currentSnapshot[key]))) {
-            return;
-          }
         }
         controller.setSnapshot(snapshot);
       });
@@ -144771,7 +144798,9 @@ var useMemoizedEffectDefinitions = (effects) => {
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
     stableDefinitions.forEach((_definition, index) => {
       const snapshot = effects[index]?.params;
-      controllers[index].setSnapshot(snapshot);
+      if (!areEffectParamsEqual(controllers[index].store.getSnapshot(), snapshot)) {
+        controllers[index].setSnapshot(snapshot);
+      }
     });
   }, [controllers, effects, stableDefinitions]);
   return stableDefinitions;
@@ -144817,45 +144846,59 @@ var useMemoizedEffects = ({
 }) => {
   const previousRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const { propStatuses } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(VisualModePropStatusesContext);
-  const frame = useCurrentFrame();
   const { overrideIdToNodePathMappings } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(OverrideIdsToNodePathsGettersContext);
   const previous = previousRef.current;
   const nodePath = overrideId ? overrideIdToNodePathMappings[overrideId] ?? null : null;
   const effectDragOverrides = useEffectDragOverridesForNodePath(nodePath);
-  const resolved = effects.map((descriptor, index) => {
+  const effectPropStatuses = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => Array.from({ length: effects.length }, (_, effectIndex) => {
     if (nodePath === null) {
-      return {
-        descriptor,
-        params: descriptor.params,
-        effectKey: descriptor.effectKey
-      };
+      return null;
     }
-    const effectStatus = getEffectPropStatusesCtx({
+    const status = getEffectPropStatusesCtx({
       propStatuses,
       nodePath: { ...nodePath, videoConfigValues },
-      effectIndex: index
+      effectIndex
     });
-    const propStatusOverrides = effectStatus.type === "can-update-effect" ? resolvePropStatusOverrides(effectStatus.props, frame) : null;
+    return status.type === "can-update-effect" ? status.props : null;
+  }), [effects.length, nodePath, propStatuses, videoConfigValues]);
+  const animatedEffects = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => effectPropStatuses.map((status, index) => Object.values(status ?? {}).some((prop) => prop.status === "keyframed") || Object.values(effectDragOverrides[index] ?? emptyDragOverrides2).some((override) => override.type === "keyframed")), [effectDragOverrides, effectPropStatuses]);
+  const frame = useCurrentFrameWithOptionalSubscription(animatedEffects.some(Boolean));
+  const prepared = effects.map((descriptor, index) => {
+    const propStatus = effectPropStatuses[index];
     const dragOverridesMap = effectDragOverrides[index] ?? emptyDragOverrides2;
     const dragOverrides = Object.keys(dragOverridesMap).length === 0 ? null : dragOverridesMap;
+    const effectFrame = animatedEffects[index] ? frame : null;
+    const cached = previous?.prepared[index];
+    if (cached && cached.definition === descriptor.definition && cached.sourceKey === descriptor.effectKey && areEffectParamsEqual(cached.params, descriptor.params) && cached.propStatus === propStatus && cached.dragOverrides === dragOverrides && cached.frame === effectFrame) {
+      return cached;
+    }
+    const propStatusOverrides = resolvePropStatusOverrides(propStatus ?? undefined, frame);
     const { params, effectKey } = mergeOverrides({
       descriptor,
       propStatusOverrides,
       dragOverrides,
       frame
     });
-    return { descriptor, params, effectKey };
+    return {
+      definition: descriptor.definition,
+      sourceKey: descriptor.effectKey,
+      params: descriptor.params !== null && typeof descriptor.params === "object" && Object.getPrototypeOf(descriptor.params) === Object.prototype ? { ...descriptor.params } : descriptor.params,
+      propStatus,
+      dragOverrides,
+      frame: effectFrame,
+      value: cached?.value.definition === descriptor.definition && cached.value.effectKey === effectKey ? cached.value : {
+        definition: descriptor.definition,
+        effectKey,
+        params,
+        memoized: true
+      }
+    };
   });
-  const isSame = previous !== null && previous.length === resolved.length && previous.every((p, i) => p.definition === resolved[i].descriptor.definition && p.effectKey === resolved[i].effectKey);
-  const next = isSame ? previous : resolved.map(({ descriptor, params, effectKey }) => ({
-    definition: descriptor.definition,
-    effectKey,
-    params,
-    memoized: true
-  }));
+  const isSame = previous !== null && previous.effects.length === prepared.length && previous.effects.every((effect, i) => effect === prepared[i].value);
+  const next = isSame ? previous.effects : prepared.map((effect) => effect.value);
   useCacheCommitEffect(() => {
-    previousRef.current = next;
-  }, [next]);
+    previousRef.current = { prepared, effects: next };
+  }, [next, prepared]);
   return next;
 };
 
@@ -145295,7 +145338,6 @@ var withInteractivitySchema = ({
     }
     const { propStatuses } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(VisualModePropStatusesContext);
     const nodePathMapping = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(OverrideIdsToNodePathsGettersContext);
-    const frame = useCurrentFrame();
     const videoConfig = useUnsafeVideoConfig();
     const durationInFrames = videoConfig?.durationInFrames;
     const fps = videoConfig?.fps;
@@ -145337,6 +145379,12 @@ var withInteractivitySchema = ({
     });
     const nodePath = env.isReadOnlyStudio ? null : nodePathMapping.overrideIdToNodePathMappings[overrideId] ?? null;
     const dragOverrides = useDragOverridesForNodePath(nodePath);
+    const propStatus = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => nodePath === null ? undefined : getPropStatusesCtx(propStatuses, {
+      ...nodePath,
+      videoConfigValues
+    }), [nodePath, propStatuses, videoConfigValues]);
+    const needsFrame = flatKeys.some((key) => propStatus?.[key]?.status === "keyframed" || dragOverrides[key]?.type === "keyframed");
+    const frame = useCurrentFrameWithOptionalSubscription(needsFrame);
     const runtimeValues = flatKeys.map((key) => getRuntimeValueForSchemaKey({
       flatSchema,
       key,
@@ -145375,20 +145423,10 @@ var withInteractivitySchema = ({
         schema: schemaWithSequenceName,
         currentValue: currentRuntimeValueDotNotation,
         overrideValues: dragOverrides,
-        propStatus: nodePath === null ? undefined : getPropStatusesCtx(propStatuses, {
-          ...nodePath,
-          videoConfigValues
-        }),
+        propStatus,
         frame
       });
-    }, [
-      currentRuntimeValueDotNotation,
-      dragOverrides,
-      nodePath,
-      propStatuses,
-      videoConfigValues,
-      frame
-    ]);
+    }, [currentRuntimeValueDotNotation, dragOverrides, propStatus, frame]);
     const activeKeys = selectActiveKeys(schemaWithSequenceName, valuesDotNotation);
     const mergedProps = mergeValues({
       flatSchema,
@@ -146951,6 +146989,7 @@ var AnimatedImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const resolvedSrc = resolveAnimatedImageSource(src);
   const [decodedImage, setDecodedImage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const imageDecoder = decodedImage?.decoder ?? null;
+  const activeDecoderRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -146979,6 +147018,7 @@ var AnimatedImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
     const controller = new AbortController;
     let cancelled = false;
     let continued = false;
+    let decoder = null;
     const continueRenderOnce = () => {
       if (continued) {
         return;
@@ -146997,6 +147037,8 @@ var AnimatedImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
         d.close();
         return;
       }
+      decoder = d;
+      activeDecoderRef.current = d;
       setDecodedImage({ decoder: d, handle: decodeHandle });
     }).catch((err) => {
       if (cancelled) {
@@ -147015,6 +147057,8 @@ var AnimatedImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
     });
     return () => {
       cancelled = true;
+      activeDecoderRef.current = null;
+      decoder?.close();
       controller.abort();
       continueRenderOnce();
     };
@@ -147027,13 +147071,8 @@ var AnimatedImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
     delayRender,
     cancelRender
   ]);
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    return () => {
-      imageDecoder?.close();
-    };
-  }, [imageDecoder]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
-    if (!imageDecoder || !decodedImage) {
+    if (!imageDecoder || !decodedImage || activeDecoderRef.current !== imageDecoder) {
       return;
     }
     const delay = delayRender(`Rendering frame at ${currentTime} of <AnimatedImage src="${src}"/>`);
@@ -151142,7 +151181,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const { isClientSideRendering, isRendering } = useRemotionEnvironment();
   const canRetryMissingPaintRecord = !isRendering || isClientSideRendering;
   const usesDirectLayoutCanvas = onPaint === undefined && onInit === undefined;
-  const paintTargetMode = usesDirectLayoutCanvas ? "direct" : isRendering ? "copied" : "transferred";
+  const paintTargetMode = ancestorPaintState ? "copied" : usesDirectLayoutCanvas ? "direct" : isRendering ? "copied" : "transferred";
   if (!isHtmlInCanvasSupported()) {
     cancelRender(new Error(getHtmlInCanvasUnsupportedMessage()));
   }
@@ -151209,6 +151248,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const initializedRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
   const onInitCleanupRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const unmountedRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
+  const effectScratchCanvasesRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const paintingTargets = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(new WeakMap);
   const onPaintCb = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async () => {
     if (isRendering && paintState.pendingChildren > 0) {
@@ -151304,6 +151344,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
         }
         throw error;
       }
+      let effectSourceCanvas = null;
       try {
         const currentOnPaint = onPaintRef.current;
         if (currentOnPaint) {
@@ -151319,6 +151360,41 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
           if (paintResult) {
             await paintResult;
           }
+        } else if (paintTarget instanceof HTMLCanvasElement && effectsRef.current.some((effect) => !effect.params.disabled)) {
+          effectScratchCanvasesRef.current ??= {
+            source: document.createElement("canvas"),
+            previousOutput: document.createElement("canvas")
+          };
+          const { source: effectSource, previousOutput } = effectScratchCanvasesRef.current;
+          resizePaintTarget({
+            target: effectSource,
+            width: canvasWidth,
+            height: canvasHeight
+          });
+          resizePaintTarget({
+            target: previousOutput,
+            width: canvasWidth,
+            height: canvasHeight
+          });
+          const effectSourceCtx = effectSource.getContext("2d");
+          const previousOutputCtx = previousOutput.getContext("2d");
+          const paintTargetCtx = paintTarget.getContext("2d");
+          if (!effectSourceCtx || !previousOutputCtx || !paintTargetCtx) {
+            throw new Error("Failed to acquire 2D context for <HtmlInCanvas> canvas");
+          }
+          previousOutputCtx.reset();
+          previousOutputCtx.drawImage(paintTarget, 0, 0);
+          defaultOnPaint({
+            canvas: paintTarget,
+            element,
+            elementImage: elImage,
+            pixelDensity: resolvedPixelDensity
+          });
+          effectSourceCtx.reset();
+          effectSourceCtx.drawImage(paintTarget, 0, 0);
+          paintTargetCtx.reset();
+          paintTargetCtx.drawImage(previousOutput, 0, 0);
+          effectSourceCanvas = effectSource;
         } else {
           defaultOnPaint({
             canvas: paintTarget,
@@ -151331,7 +151407,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
         if (state) {
           await runEffectChain({
             state,
-            source: paintTarget,
+            source: effectSourceCanvas ?? paintTarget,
             effects: effectsRef.current,
             output: paintTarget,
             width: canvasWidth,
@@ -151467,7 +151543,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(HtmlInCanvasAncestorContext.Provider, {
     value: paintState,
     children: [
-      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("canvas", {
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("canvas", {
         ref: paintTargetMode === "copied" ? canvas2dRef : setVisibleCanvasRef,
         width: canvasWidth,
         height: canvasHeight,
@@ -151477,14 +151553,17 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
           visibility: "hidden",
           pointerEvents: "none"
         } : canvasStyle,
-        children: [
-          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
-            ref: divRef,
-            style: paintTargetMode === "copied" ? { ...innerStyle, visibility: "visible" } : innerStyle,
-            children
-          }),
-          canvasSiblings
-        ]
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(DefaultPremountContext.Provider, {
+          value: 0,
+          children: [
+            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
+              ref: divRef,
+              style: paintTargetMode === "copied" ? { ...innerStyle, visibility: "visible" } : innerStyle,
+              children
+            }),
+            canvasSiblings
+          ]
+        })
       }, canvasSizeKey),
       paintTargetMode === "copied" ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("canvas", {
         ref: setVisibleCanvasRef,
@@ -153261,6 +153340,8 @@ var CompositionManagerProvider = ({
     currentAssetMetadata,
     canvasContent
   ]);
+  const compositionManagerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(compositionManagerContextValue);
+  compositionManagerRef.current = compositionManagerContextValue;
   if (registrationError !== null) {
     throw registrationError;
   }
@@ -153269,9 +153350,12 @@ var CompositionManagerProvider = ({
     onSnapshot: onCommitRegistrations,
     children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(CompositionManager.Provider, {
       value: compositionManagerContextValue,
-      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(CompositionSetters.Provider, {
-        value: compositionManagerSetters,
-        children
+      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(CompositionManagerRefContext.Provider, {
+        value: compositionManagerRef,
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(CompositionSetters.Provider, {
+          value: compositionManagerSetters,
+          children
+        })
       })
     })
   });
@@ -154920,6 +155004,7 @@ var Internals = {
   resolveTrimProps,
   VideoForPreview,
   CompositionManager,
+  CompositionManagerRefContext,
   CompositionSetters,
   VisualModePropStatusesContext,
   VisualModePropStatusesRefContext,
@@ -158422,11 +158507,11 @@ function validateDurationInFrames(durationInFrames, options) {
   if (durationInFrames <= 0) {
     throw new TypeError(`The "durationInFrames" prop ${component} must be positive, but got ${durationInFrames}.`);
   }
-  if (!allowFloats && durationInFrames % 1 !== 0) {
-    throw new TypeError(`The "durationInFrames" prop ${component} must be an integer, but got ${durationInFrames}.`);
-  }
   if (!Number.isFinite(durationInFrames)) {
     throw new TypeError(`The "durationInFrames" prop ${component} must be finite, but got ${durationInFrames}.`);
+  }
+  if (!allowFloats && durationInFrames % 1 !== 0) {
+    throw new TypeError(`The "durationInFrames" prop ${component} must be an integer, but got ${durationInFrames}.`);
   }
 }
 

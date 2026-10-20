@@ -5,11 +5,12 @@
 # (-s: sin la carpeta de paquetes del usuario, que se mezclaba con el motor).
 # Qwen3-ASR va NATIVO en transformers 5 (ya sin el paquete qwen-asr, que fijaba transformers 4.57.6).
 # nagisa y soynlp: el alineador los usa para japones y coreano.
+# 2026-10-19: parches menores (certifi, filelock, httpx2/httpcore2, platformdirs, setuptools, transformers 5.20.2).
 # mpmath 1.4.1 aunque sympy 1.14.0 pide <1.4 (pedido: «todo sin excepciones»; probado con el motor de voz y la IA de texto).
 accelerate==1.15.0
 annotated-doc==0.0.5
 anyio==4.15.1
-certifi==2026.10.18
+certifi==2026.10.19
 cffi==2.1.1
 charset-normalizer==3.5.2
 click==8.5.0
@@ -18,12 +19,12 @@ colorama==0.4.6
 Cython==3.3.0
 decorator==5.3.1
 dyNET38==2.2
-filelock==4.2.2
+filelock==4.2.4
 fsspec==2026.9.0
 h11==0.16.0
 hf-xet==1.7.0
-httpcore2==2.14.0
-httpx2==2.14.0
+httpcore2==2.15.1
+httpx2==2.15.1
 huggingface_hub==2.2.0
 idna==3.20
 Jinja2==3.1.6
@@ -42,7 +43,7 @@ networkx==3.7
 numba==0.68.0
 numpy==2.5.4
 packaging==26.3
-platformdirs==4.13.4
+platformdirs==4.13.5
 pooch==1.9.0
 psutil==7.2.2
 pycparser==3.11
@@ -54,7 +55,7 @@ rich==15.0.0
 safetensors==0.8.0
 scikit-learn==1.9.1
 scipy==1.18.1
-setuptools==84.0.0
+setuptools==84.2.0
 shellingham==1.5.4
 six==1.17.0
 soundfile==0.14.0
@@ -64,7 +65,7 @@ sympy==1.14.0
 threadpoolctl==3.7.0
 tokenizers==0.23.3
 tqdm==4.70.1
-transformers==5.20.1
+transformers==5.20.2
 truststore==0.10.5
 typer==0.27.3
 typing_extensions==4.16.0

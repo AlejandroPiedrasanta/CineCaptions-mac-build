@@ -715,7 +715,11 @@ def _motions(tl, mp, caja, graficos, base):
         if clip is None:
             print('  no pude importar %s' % os.path.basename(g['archivo']))
             continue
-        r = mp.AppendToTimeline([{'mediaPoolItem': clip, 'trackIndex': i, 'recordFrame': base + int(g['ini']), 'mediaType': 1}]) or []
+        item = {'mediaPoolItem': clip, 'trackIndex': i, 'recordFrame': base + int(g['ini']), 'mediaType': 1}
+        if g.get('frames'):                                                # v5.22: solo un TRAMO del video (las posiciones marcadas en Efectos)
+            desde = int(g.get('desde') or 0)
+            item.update(startFrame=desde, endFrame=desde + int(g['frames']) - 1)
+        r = mp.AppendToTimeline([item]) or []
         if r:
             puestos += 1
             try:

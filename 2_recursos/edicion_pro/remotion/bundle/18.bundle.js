@@ -7830,10 +7830,12 @@ class EncodedPacketSink {
         };
     }
 }
+const MAX_QUEUE_SIZE = 4;
 class DecoderWrapper {
     constructor(onSample, onError) {
         this.onSample = onSample;
         this.onError = onError;
+        this.onDequeue = null;
     }
 }
 /**
@@ -7905,6 +7907,7 @@ class BaseMediaSampleSink {
                     onQueueNotEmpty();
                 }
             });
+            decoder.onDequeue = () => onQueueDequeue();
             const packetSink = this._createPacketSink();
             const keyPacket = await packetSink.getKeyPacket(startTimestamp, packetRetrievalOptions)
                 ?? await packetSink.getFirstKeyPacket(packetRetrievalOptions);
@@ -7919,8 +7922,7 @@ class BaseMediaSampleSink {
             const packets = packetSink.packets(keyPacket ?? undefined, endPacket, packetRetrievalOptions);
             await packets.next(); // Skip the start packet as we already have it
             while (currentPacket && !ended && !this._track.input._disposed) {
-                const maxQueueSize = computeMaxQueueSize(sampleQueue.length);
-                if (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize) {
+                if (sampleQueue.length + decoder.getDecodeQueueSize() >= MAX_QUEUE_SIZE) {
                     ({ promise: queueDequeue, resolve: onQueueDequeue } = (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .promiseWithResolvers */ .nJ)());
                     await queueDequeue;
                     continue;
@@ -7938,6 +7940,7 @@ class BaseMediaSampleSink {
             }
             if (!firstSampleQueued && lastSample) {
                 sampleQueue.push(lastSample);
+                lastSample = null;
             }
             decoderIsFlushed = true;
             onQueueNotEmpty(); // To unstuck (unstick?) the generator
@@ -8064,6 +8067,7 @@ class BaseMediaSampleSink {
                     onQueueNotEmpty();
                 }
             });
+            decoder.onDequeue = () => onQueueDequeue();
             const packetSink = this._createPacketSink();
             let lastPacket = null;
             let lastKeyPacket = null;
@@ -8077,8 +8081,7 @@ class BaseMediaSampleSink {
                 let currentPacket = lastKeyPacket;
                 decoder.decode(currentPacket);
                 while (currentPacket.sequenceNumber < maxSequenceNumber) {
-                    const maxQueueSize = computeMaxQueueSize(sampleQueue.length);
-                    while (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize && !terminated) {
+                    while (sampleQueue.length + decoder.getDecodeQueueSize() >= MAX_QUEUE_SIZE && !terminated) {
                         ({ promise: queueDequeue, resolve: onQueueDequeue } = (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .promiseWithResolvers */ .nJ)());
                         await queueDequeue;
                     }
@@ -8203,12 +8206,6 @@ class BaseMediaSampleSink {
         };
     }
 }
-const computeMaxQueueSize = (decodedSampleQueueSize) => {
-    // If we have decoded samples lying around, limit the total queue size to a small value (decoded samples can use up
-    // a lot of memory). If not, we're fine with a much bigger queue of encoded packets waiting to be decoded. In fact,
-    // some decoders only start flushing out decoded chunks when the packet queue is large enough.
-    return decodedSampleQueueSize === 0 ? 40 : 8;
-};
 class VideoDecoderWrapper extends DecoderWrapper {
     constructor(onSample, onError, codec, decoderConfig, rotation, flip, timeResolution) {
         super(onSample, onError);
@@ -8334,6 +8331,9 @@ class VideoDecoderWrapper extends DecoderWrapper {
                     this.onError(error);
                 },
             });
+            this.decoder.addEventListener('dequeue', () => {
+                this.onDequeue?.();
+            });
             this.decoder.configure(this.decoderConfig);
         }
     }
@@ -8358,7 +8358,10 @@ class VideoDecoderWrapper extends DecoderWrapper {
             void this.customDecoderCallSerializer
                 .call(() => this.customDecoder.decode(packet))
                 .catch(error => this.onError(error))
-                .finally(() => this.customDecoderQueueSize--);
+                .finally(() => {
+                this.customDecoderQueueSize--;
+                this.onDequeue?.();
+            });
         }
         else {
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(this.decoder);
@@ -8470,6 +8473,9 @@ class VideoDecoderWrapper extends DecoderWrapper {
                     error.stack = stack; // Provide a more useful stack trace, the default one sucks
                     this.onError(error);
                 },
+            });
+            this.alphaDecoder.addEventListener('dequeue', () => {
+                this.onDequeue?.();
             });
             this.alphaDecoder.configure({
                 ...this.decoderConfig,
@@ -9282,6 +9288,9 @@ class AudioDecoderWrapper extends DecoderWrapper {
                     this.onError(error);
                 },
             });
+            this.decoder.addEventListener('dequeue', () => {
+                this.onDequeue?.();
+            });
             this.decoder.configure(decoderConfig);
         }
     }
@@ -9300,7 +9309,10 @@ class AudioDecoderWrapper extends DecoderWrapper {
             void this.customDecoderCallSerializer
                 .call(() => this.customDecoder.decode(packet))
                 .catch(error => this.onError(error))
-                .finally(() => this.customDecoderQueueSize--);
+                .finally(() => {
+                this.customDecoderQueueSize--;
+                this.onDequeue?.();
+            });
         }
         else {
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(this.decoder);
@@ -11749,7 +11761,15 @@ class VideoSample {
             this.squarePixelHeight = data.displayHeight;
             this.timestamp = init?.timestamp ?? data.timestamp / 1e6;
             this.duration = init?.duration ?? (data.duration ?? 0) / 1e6;
-            this.colorSpace = new VideoSampleColorSpace(data.colorSpace);
+            // Sanitize the inputs we pass in so that out-of-spec values don't throw
+            // See https://github.com/Vanilagy/mediabunny/issues/555
+            const { primaries, transfer, matrix, fullRange } = data.colorSpace;
+            this.colorSpace = new VideoSampleColorSpace({
+                primaries: primaries !== null && primaries in _misc_js__WEBPACK_IMPORTED_MODULE_0__/* .COLOR_PRIMARIES_MAP */ .wd ? primaries : null,
+                transfer: transfer !== null && transfer in _misc_js__WEBPACK_IMPORTED_MODULE_0__/* .TRANSFER_CHARACTERISTICS_MAP */ .uN ? transfer : null,
+                matrix: matrix !== null && matrix in _misc_js__WEBPACK_IMPORTED_MODULE_0__/* .MATRIX_COEFFICIENTS_MAP */ .Au ? matrix : null,
+                fullRange,
+            });
         }
         else if ((typeof HTMLImageElement !== 'undefined' && data instanceof HTMLImageElement)
             || (typeof SVGImageElement !== 'undefined' && data instanceof SVGImageElement)
@@ -14230,7 +14250,8 @@ class CustomPathedSource extends PathedSource {
         }
         else if (this._rootRequest) {
             void this._rootRequest
-                .then(ref => ref.free());
+                .then(ref => ref.free())
+                .catch(() => { });
         }
     }
 }

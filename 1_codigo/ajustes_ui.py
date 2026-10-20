@@ -25,14 +25,14 @@ import webbrowser
 from pathlib import Path
 
 from PySide6.QtCore import QEasingCurve, QEvent, QPointF, QRect, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal
-from PySide6.QtGui import QFontMetricsF, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import (QAbstractButton, QFrame, QGraphicsOpacityEffect, QGridLayout,
+from PySide6.QtGui import QConicalGradient, QFontMetricsF, QPainter, QPainterPath, QPen
+from PySide6.QtWidgets import (QAbstractButton, QFrame, QGraphicsOpacityEffect,
                                QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget)
 
 import qt_kit as ui
 from qt_kit import (BooleanVar, Boton, Combo, Desplazable, Segmentado, Enlace, Etiqueta, Interruptor, Punto,
                     Separador, StringVar, Tooltip, caja_h, caja_v, correr_en_hilo, ejecutar_en_ui,
-                    filedialog, fuente, messagebox)
+                    fuente, messagebox)
 from qt_kit import QColor, QColorReal
 from i18n import tr
 import tema
@@ -484,6 +484,17 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.24', [
+        'Efectos › «Posición» con el audio que trae «Obtener»: se ven los fotogramas del video de tu timeline, en el segundo justo aunque el clip esté recortado o haya zona marcada.',
+        'Efectos en el mismo orden que el menú de la Edición PRO.',
+    ]),
+    ('5.23', [
+        'Efectos › «Posición»: en cada efecto de la Edición PRO, marca en la línea de tiempo de tu video (con sus fotogramas) los segundos donde lo quieres. Elige «Solo mis marcas» o «Mis marcas + automático».',
+        'Inicio más fluido: las animaciones ya no se traban ni se reinician al volver de otra página o tras un rato sin usar el programa.',
+        'Inicio: las barras de progreso del centro y de abajo, más claras y siempre con el mismo porcentaje.',
+        'Proyecto: «Captions detrás de ti» y «Gancho del inicio», primeros en el menú de la Edición PRO.',
+        'Ajustes más simple: el color de resaltado en una fila de colores (verde de fábrica); fuera «Mantener encima» y «Copias de seguridad».',
+    ]),
     ('5.22', [
         'Efectos más simple: los estilos de la Edición PRO salen desplegados, cada uno en su slider.',
         'Fuera de Efectos (y de GO): Intro, Transiciones en los cortes, Movimiento del video y el carrusel de motions (los motions vuelven a Automático).',
@@ -1921,47 +1932,119 @@ class _CarruselEstilos(QWidget):
         return super().eventFilter(obj, ev)
 
 
-class _ChipAcento(QAbstractButton):
-    """Un color de resaltado: circulo + nombre, en su pastilla."""
+class _MuestrasAcento(QWidget):
+    """v5.22 (el usuario: «mejora esto»): el color de resaltado como UNA fila de muestras redondas (antes 7 tarjetas grandes y un botón).
+    Los perfiles y, al final, «Mi color» (aro de arcoíris; un clic abre el selector). El elegido lleva su aro y una marca; debajo, el nombre
+    del que está bajo el ratón o, si no, el del elegido. El ratón las hincha con resorte (motor_resortes; sin efectos Qt)."""
+    PASO, RADIO = 42, 13
 
-    def __init__(self, clave, nombre, color):
+    def __init__(self, actual, personal, al_elegir, al_personal):
         super().__init__()
-        self.clave = clave
-        self._nombre = nombre
-        self.color = color
-        self._hover = False
-        self.setCheckable(True)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFixedHeight(64)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self._claves = list(tema.ACENTOS) + ['personal']
+        self._nombres = [n for n, _c in tema.ACENTOS.values()] + [tr('Mi color')]
+        self._colores = [c for _n, c in tema.ACENTOS.values()] + [personal]
+        self.actual = actual
+        self._al_elegir, self._al_personal = al_elegir, al_personal
+        self._sobre = self._pulsado = -1
+        self._h = [ui.Resorte(0.0, 420.0, 26.0) for _ in self._claves]
+        self.setMouseTracking(True)
+        self.setFixedSize(self.PASO * len(self._claves), self.PASO + 22)
 
-    def enterEvent(self, e):
-        self._hover = True
+    def poner(self, clave, personal=None):
+        if personal:
+            self._colores[-1] = personal
+        self.actual = clave
         self.update()
+
+    def _indice(self, pos):
+        i = int(pos.x() // self.PASO)
+        return i if 0 <= i < len(self._claves) and 0 <= pos.y() <= self.PASO else -1
+
+    def _sobre_en(self, i):
+        if i == self._sobre:
+            return
+        self._sobre = i
+        for k, r in enumerate(self._h):
+            r.objetivo = 1.0 if k == i else 0.0
+        self.setCursor(Qt.CursorShape.PointingHandCursor if i >= 0 else Qt.CursorShape.ArrowCursor)
+        ui.motor_resortes.pedir(self)
+        self.update()
+
+    def paso_resorte(self, dt):
+        sigue = False
+        for r in self._h:
+            sigue = r.paso(dt) or sigue
+        self.update()
+        return sigue
+
+    def mouseMoveEvent(self, e):
+        self._sobre_en(self._indice(e.position()))
 
     def leaveEvent(self, e):
-        self._hover = False
-        self.update()
+        self._sobre_en(-1)
 
-    def sizeHint(self):
-        return QSize(220, 64)
+    def mousePressEvent(self, e):
+        self._pulsado = self._indice(e.position()) if e.button() == Qt.MouseButton.LeftButton else -1
+
+    def mouseReleaseEvent(self, e):
+        i, self._pulsado = self._pulsado, -1
+        if i < 0 or i != self._indice(e.position()):
+            return
+        if self._claves[i] == 'personal':
+            self._al_personal()
+        else:
+            self.actual = self._claves[i]
+            self.update()
+            self._al_elegir(self._claves[i])
 
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        r = QRectF(self.rect()).adjusted(1, 1, -1, -1)
-        c = QColorReal(self.color)
-        elegido = self.isChecked()
-        p.setBrush(QColorReal(c.red(), c.green(), c.blue(), 30) if elegido else QColor('#0B1220'))
-        p.setPen(QPen(c if elegido else QColor('#34507F' if self._hover else '#1E2A42'), 1.6 if elegido else 1))
-        p.drawRoundedRect(r, 12, 12)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(c)
-        p.drawEllipse(QPointF(r.left() + 34, r.center().y()), 14, 14)
-        p.setPen(QColor('#FFFFFF'))
-        p.setFont(fuente(15, peso='negrita'))
-        p.drawText(QRectF(r.left() + 62, r.top(), r.width() - 70, r.height()),
-                   int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), self._nombre)
+        for i, clave in enumerate(self._claves):
+            c = QColorReal(self._colores[i])
+            centro = QPointF(i * self.PASO + self.PASO / 2, self.PASO / 2)
+            h = self._h[i].x
+            elegido = clave == self.actual
+            r = self.RADIO * (1.0 + 0.12 * h)
+            if elegido:                                   # su aro, separado del círculo
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(c, 2.0))
+                p.drawEllipse(centro, self.RADIO + 6, self.RADIO + 6)
+            elif h > 0.01:
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(QColorReal(255, 255, 255, int(60 * h)), 1.2))
+                p.drawEllipse(centro, self.RADIO + 6, self.RADIO + 6)
+            p.setPen(Qt.PenStyle.NoPen)
+            if clave == 'personal':                       # «Mi color»: aro de arcoíris con su color dentro
+                g = QConicalGradient(centro, 90)
+                for t, col in ((0, '#FF4D4D'), (1 / 6, '#FFB23F'), (2 / 6, '#F5E663'), (3 / 6, '#3DDC84'), (4 / 6, '#3AA0FF'), (5 / 6, '#B26BFF'), (1, '#FF4D4D')):
+                    g.setColorAt(t, QColorReal(col))
+                p.setBrush(g)
+                p.drawEllipse(centro, r, r)
+                p.setBrush(QColorReal('#0B1220'))
+                p.drawEllipse(centro, r - 3.2, r - 3.2)
+                p.setBrush(c)
+                p.drawEllipse(centro, r - 5, r - 5)
+            else:
+                p.setBrush(c)
+                p.drawEllipse(centro, r, r)
+            if elegido:                                   # la marca, en blanco o en oscuro según lo claro del color
+                tinta = QColorReal('#0B1220') if c.lightnessF() > 0.72 else QColorReal('#FFFFFF')
+                s = 0.42 * (r - (5 if clave == 'personal' else 0))
+                marca = QPainterPath(QPointF(centro.x() - 1.0 * s, centro.y() + 0.05 * s))
+                marca.lineTo(centro.x() - 0.3 * s, centro.y() + 0.75 * s)
+                marca.lineTo(centro.x() + 1.05 * s, centro.y() - 0.7 * s)
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(tinta, 2.2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+                p.drawPath(marca)
+                p.setPen(Qt.PenStyle.NoPen)
+        i = self._sobre if self._sobre >= 0 else (self._claves.index(self.actual) if self.actual in self._claves else -1)
+        if i >= 0:
+            p.setPen(QColor('#FFFFFF') if i != self._sobre or self._claves[i] == self.actual else QColor('#8D9BB5'))
+            p.setFont(fuente(12, peso='medio'))
+            ancho = QFontMetricsF(p.font()).horizontalAdvance(self._nombres[i]) + 8          # debajo de SU muestra, sin salirse
+            x = min(max(0.0, i * self.PASO + self.PASO / 2 - ancho / 2), self.width() - ancho)
+            p.drawText(QRectF(x, self.PASO + 2, ancho, 20), int(Qt.AlignmentFlag.AlignCenter), self._nombres[i])
         p.end()
 
 
@@ -2105,11 +2188,7 @@ class VentanaAjustes(_Panel):
                          'de Studio o el Puente, como siempre.'), caja_con, 340)
         f_con.setParent(self)                            # v5.21: «Conexión con DaVinci Resolve» quitada de Ajustes (el usuario lo pidió); GO se conecta solo
         f_con.hide()
-        # encima
-        encima_var = BooleanVar(self._borrador['ventana_encima'])
-        f_encima = _Fila(tr('Mantener CineCaptions encima'),
-                         tr('La ventana queda por delante de Resolve (también con el alfiler del menú lateral).'),
-                         Interruptor('', var=encima_var, comando=lambda: self._cambio('ventana_encima', bool(encima_var.get()))))
+        # v5.22: «Mantener CineCaptions encima» quitada de Ajustes (el usuario lo pidió); sigue el alfiler del menú lateral
         avisos_var = BooleanVar(self._borrador['avisos_sistema'])
         f_avisos = _Fila(tr('Avisarme al terminar'),
                          tr('Cuando GO termina y CineCaptions no está al frente (estás en Resolve u otro programa), sale un aviso del sistema.'),
@@ -2137,22 +2216,9 @@ class VentanaAjustes(_Panel):
         cvi.addWidget(Boton(tr('Guardar la vista actual de Resolve'), self._guardar_vista_resolve, tipo='neutro', alto=42, tam=14))
         f_vista = _Fila(tr('Vista de Resolve al terminar'),
                         tr('Deja Resolve en la página Edit con TU disposición de pantalla (vertical y con la vista expandida). Ponla como la quieres en Resolve y pulsa «Guardar la vista actual»: '
-                           'desde entonces GO la aplica cada vez que termina.'), caja_vista, 340)
-        # copias
-        caja_cop, cco = caja_v(espacio=10)
-        self.copias_texto = Etiqueta('', 13, color=ui.TEXT_MUTED)
-        cco.addWidget(self.copias_texto)
-        fb, cfb = caja_h(espacio=10)
-        cfb.addWidget(Boton(tr('Crear copia'), self._crear_copia, tipo='neutro', alto=42, tam=14))
-        cfb.addWidget(Boton(tr('Restaurar…'), self._restaurar_copia, tipo='neutro', alto=42, tam=14))
-        cfb.addWidget(Boton(tr('Abrir carpeta'), self._abrir_copias, tipo='fantasma', alto=42, tam=14))
-        cco.addWidget(fb)
-        f_cop = _Fila(tr('Copias de seguridad'),
-                      tr('Guarda en un .zip tus proyectos, marcas del editor, recetas, ajustes, reglas de SFX y tus '
-                         'packs de estilos, en Documentos > CineCaptions > Copias de seguridad.'), caja_cop, 340,
-                      ultima=True)
-        self._pintar_copias()
-        capa.addWidget(_grupo(f_motor, f_gpu, f_cache, f_encima, f_avisos, f_mp4, f_repro, f_vert, f_vista, f_cop))
+                           'desde entonces GO la aplica cada vez que termina.'), caja_vista, 340, ultima=True)
+        # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
+        capa.addWidget(_grupo(f_motor, f_gpu, f_cache, f_avisos, f_mp4, f_repro, f_vert, f_vista))
 
     def _pintar_motor(self):
         import motor_voz
@@ -2351,47 +2417,6 @@ class VentanaAjustes(_Panel):
                 raise RuntimeError(texto)
         correr_en_hilo(self.app, trabajo, lambda _r, _e: self._comprobar_conexion())
 
-    def _pintar_copias(self):
-        import copias
-        ult = copias.ultima()
-        n = len(copias.listar())
-        self.copias_texto.configure(text=(tr('Última copia: {cuando} · {n} guardadas', cuando=hace_cuanto(ult), n=n)
-                                          if ult else tr('Todavía no hay copias.')))
-
-    def _crear_copia(self):
-        crear_copia(self.app, lambda: self._pintar_copias() if ui.vivo(self.copias_texto) else None)
-
-    def _restaurar_copia(self):
-        import copias
-        ruta = filedialog.askopenfilename(parent=self.app, title=tr('Elige la copia a restaurar'),
-                                          initialdir=str(copias.carpeta_copias()),
-                                          filetypes=[(tr('Copias de CineCaptions'), '*.zip')])
-        if not ruta:
-            return
-        if not copias.es_copia(ruta):
-            messagebox.showerror(tr('Restaurar copia'), tr('Ese archivo no es una copia de CineCaptions.'), parent=self.app)
-            return
-        if not messagebox.askyesno(tr('Restaurar copia'),
-                                   tr('Se reemplazan tus proyectos y ajustes por los de esa copia. Antes guardo una copia '
-                                      'de lo que tienes ahora, por si acaso.\n\n¿Restaurar?'), parent=self.app):
-            return
-
-        def fin(previa, error):
-            if error is not None:
-                messagebox.showerror(tr('Restaurar copia'), str(error), parent=self.app)
-                return
-            messagebox.showinfo(tr('Copia restaurada'),
-                                tr('Listo. Lo que tenías antes quedó en:\n{ruta}\n\nReinicia CineCaptions para verlo todo.',
-                                   ruta=previa), parent=self.app)
-            self._pintar_copias()
-        correr_en_hilo(self.app, lambda: copias.restaurar(ruta), fin)
-
-    def _abrir_copias(self):
-        import copias
-        d = copias.carpeta_copias()
-        d.mkdir(parents=True, exist_ok=True)
-        abrir_carpeta(d)
-
     # -- Interfaz -------------------------------------------------------------
     def _pag_interfaz(self, capa):
         self._cabeza_pagina(capa, tr('Preferencias de interfaz'), tr('Interfaz'),
@@ -2425,37 +2450,13 @@ class VentanaAjustes(_Panel):
                           tr('Diez diseños completamente distintos para Inicio, con sus propias animaciones. Cada uno cambia también las '
                              'superficies, el color de resaltado y la luz de fondo de TODAS las páginas. Pasa el ratón por una tarjeta para verla en movimiento.'),
                           caja_est, vertical=True, expandir=True)
-        # acentos
-        col_a, cca = caja_v(espacio=12)
-        cca.addWidget(_etiqueta_seccion(tr('Perfiles rápidos')))
-        rejilla = QWidget()
-        cg = QGridLayout(rejilla)
-        cg.setContentsMargins(0, 0, 0, 0)
-        cg.setHorizontalSpacing(14)
-        cg.setVerticalSpacing(14)
-        self._chips_acento = []
-        for i, (clave, (nombre, color)) in enumerate(tema.ACENTOS.items()):
-            chip = _ChipAcento(clave, nombre, color)
-            chip.setChecked(clave == self._borrador['acento'])
-            chip.clicked.connect(lambda _=False, k=clave: self._elegir_acento(k))
-            cg.addWidget(chip, i // 3, i % 3)
-            self._chips_acento.append(chip)
-        cca.addWidget(rejilla)
-        cca.addSpacing(6)
-        cca.addWidget(_etiqueta_seccion(tr('Color personalizado')))
-        fila_p, cfp = caja_h(espacio=12)
-        self.chip_personal = _ChipAcento('personal', tr('Mi color'), self._borrador['acento_personal'])
-        self.chip_personal.setChecked(self._borrador['acento'] == 'personal')
-        self.chip_personal.setFixedWidth(260)
-        self.chip_personal.clicked.connect(self._elegir_personal)
-        cfp.addWidget(self.chip_personal)
-        cfp.addWidget(Boton(tr('Elegir color…'), self._elegir_personal, tipo='neutro', alto=48, tam=15))
-        cfp.addStretch(1)
-        cca.addWidget(fila_p)
+        # acentos (v5.22: una fila de muestras a la derecha, como los demás ajustes)
+        self._muestras = _MuestrasAcento(self._borrador['acento'], self._borrador['acento_personal'],
+                                         self._elegir_acento, self._elegir_personal)
         f_acento = _Fila(tr('Color de resaltado'),
                          tr('Se usa en acciones principales, controles seleccionados y navegación activa. '
                             'Los colores de estado y de los roles del editor no cambian.'),
-                         col_a, vertical=True, ultima=True)
+                         self._muestras, ultima=True)
         # v5.2: el movimiento de la interfaz (fondo vivo, particulas, confeti)
         anim_var = BooleanVar(not bool(leer_prefs().get('reducir_animaciones')))
         f_anim = _Fila(tr('Animaciones'), tr('El fondo vivo, las partículas, el confeti de GO y las transiciones. '
@@ -2493,12 +2494,8 @@ class VentanaAjustes(_Panel):
         if clave_acento:
             self._elegir_acento(clave_acento)
         else:
-            self.chip_personal.color = QColorReal(est.acento)
-            for c in self._chips_acento:
-                c.setChecked(False)
-            self.chip_personal.setChecked(True)
-            self.chip_personal.update()
             self._borrador['acento_personal'] = est.acento.upper()
+            self._muestras.poner('personal', est.acento.upper())
             self._cambio('acento', 'personal')
 
     def _elegir_tema(self, clave):
@@ -2507,22 +2504,15 @@ class VentanaAjustes(_Panel):
         self._cambio('tema', clave)
 
     def _elegir_acento(self, clave):
-        for c in self._chips_acento:
-            c.setChecked(c.clave == clave)
-        self.chip_personal.setChecked(False)
+        self._muestras.poner(clave)
         self._cambio('acento', clave)
 
     def _elegir_personal(self):
         _rgb, color = ui.elegir_color(self.app, self._borrador['acento_personal'], tr('Color de resaltado'))
         if not color:
-            self.chip_personal.setChecked(self._borrador['acento'] == 'personal')
             return
-        self.chip_personal.color = color
-        for c in self._chips_acento:
-            c.setChecked(False)
-        self.chip_personal.setChecked(True)
-        self.chip_personal.update()
         self._borrador['acento_personal'] = color.upper()
+        self._muestras.poner('personal', color.upper())
         self._cambio('acento', 'personal')
 
     # -- Atajos ---------------------------------------------------------------
@@ -2766,21 +2756,3 @@ def abrir_carpeta(ruta):
         pass
 
 
-def crear_copia(app, al_terminar=None, boton=None):
-    """La copia de seguridad, en un hilo, con el aviso al final."""
-    import copias
-    import ui_toast
-    if boton is not None:
-        boton.setEnabled(False)
-
-    def fin(r, error):
-        if boton is not None and ui.vivo(boton):
-            boton.setEnabled(True)
-        if error is not None:
-            messagebox.showerror(tr('Copia de seguridad'), tr('No pude crear la copia: {e}', e=error), parent=app)
-        else:
-            ruta, n = r
-            ui_toast.mostrar(app, tr('Copia creada: {n} archivos en {nombre}', n=n, nombre=ruta.name), duracion_ms=4500)
-        if al_terminar:
-            al_terminar()
-    correr_en_hilo(app, copias.crear, fin)

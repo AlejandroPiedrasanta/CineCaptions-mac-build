@@ -1,7 +1,7 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[798],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[541],{
 
-/***/ 1798
+/***/ 4541
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 
@@ -10,18 +10,18 @@ __webpack_require__.d(__webpack_exports__, {
   CaptionQueueProcessor: () => (/* binding */ CaptionQueueProcessor)
 });
 
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-a94vwgt9.mjs
-var index_a94vwgt9 = __webpack_require__(6692);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-fp21v3v3.mjs
+var index_fp21v3v3 = __webpack_require__(8614);
 // EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-ts7drhwc.mjs
 var index_ts7drhwc = __webpack_require__(7449);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-swet14kx.mjs + 2 modules
-var index_swet14kx = __webpack_require__(8698);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-w5yee38t.mjs
+var index_w5yee38t = __webpack_require__(8557);
 // EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-7shemw90.mjs
 var index_7shemw90 = __webpack_require__(8335);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-00qdn7kw.mjs + 7 modules
-var index_00qdn7kw = __webpack_require__(5173);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-gbgac2ar.mjs
-var index_gbgac2ar = __webpack_require__(6834);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-j19a8yz6.mjs + 7 modules
+var index_j19a8yz6 = __webpack_require__(17);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-r4fxez7r.mjs
+var index_r4fxez7r = __webpack_require__(7529);
 // EXTERNAL MODULE: ./node_modules/react/index.js
 var react = __webpack_require__(6540);
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/input.js
@@ -342,6 +342,8 @@ class Conversion {
         this._computeProgress = false;
         /** @internal */
         this._lastProgress = 0;
+        /** @internal */
+        this._lastProcessedTime = 0;
         /**
          * Whether this conversion, as it has been configured, is valid and can be executed. If this field is `false`, check
          * the `discardedTracks` field for reasons. Composable conversions are always valid, even if they utilize
@@ -871,8 +873,9 @@ class Conversion {
                 await this.output.finalize();
             }
             if (this._computeProgress) {
-                const minTimestamp = Math.min(...this._maxTimestamps.values());
-                this.onProgress?.(1, minTimestamp);
+                // By this point, all tracks have closed and removed themselves from _maxTimestamps, so we use the last
+                // processed time we saw while they were still open
+                this.onProgress?.(1, this._lastProcessedTime);
             }
         }
     }
@@ -1108,7 +1111,7 @@ class Conversion {
                                 : packet.sideData,
                             type: packetType,
                         });
-                        this._reportProgress(outputTrackId, modifiedPacket.timestamp + modifiedPacket.duration);
+                        this._updateProgress(outputTrackId, modifiedPacket.timestamp + modifiedPacket.duration);
                         await source.add(modifiedPacket, meta);
                         if (this._synchronizer.shouldWait(outputTrackId, modifiedPacket.timestamp)) {
                             await this._synchronizer.wait(modifiedPacket.timestamp);
@@ -1116,7 +1119,7 @@ class Conversion {
                         await this._checkpoint(pump, modifiedPacket.timestamp);
                     }
                 source.close();
-                this._synchronizer.closeTrack(outputTrackId);
+                this._closeTrack(outputTrackId);
             });
         }
         else {
@@ -1260,7 +1263,7 @@ class Conversion {
                         }
                         sample.setTimestamp(clampedStartTimestamp + this._timestampOffset);
                         sample.setDuration(clampedEndTimestamp - clampedStartTimestamp);
-                        this._reportProgress(outputTrackId, sample.timestamp + sample.duration);
+                        this._updateProgress(outputTrackId, sample.timestamp + sample.duration);
                         await source.add(sample);
                         sample.close();
                         if (lastSampleTimestamp !== null) {
@@ -1279,7 +1282,7 @@ class Conversion {
                     }
                 }
                 source.close();
-                this._synchronizer.closeTrack(outputTrackId);
+                this._closeTrack(outputTrackId);
             });
         }
         let ownGroup = null;
@@ -1452,7 +1455,7 @@ class Conversion {
                             timestamp: packetTimestamp,
                             duration: packet.duration,
                         });
-                        this._reportProgress(outputTrackId, modifiedPacket.timestamp + modifiedPacket.duration);
+                        this._updateProgress(outputTrackId, modifiedPacket.timestamp + modifiedPacket.duration);
                         await source.add(modifiedPacket, meta);
                         if (this._synchronizer.shouldWait(outputTrackId, modifiedPacket.timestamp)) {
                             await this._synchronizer.wait(modifiedPacket.timestamp);
@@ -1460,7 +1463,7 @@ class Conversion {
                         await this._checkpoint(pump, modifiedPacket.timestamp);
                     }
                 source.close();
-                this._synchronizer.closeTrack(outputTrackId);
+                this._closeTrack(outputTrackId);
             });
         }
         else {
@@ -1628,7 +1631,7 @@ class Conversion {
                     }
                 }
                 source.close();
-                this._synchronizer.closeTrack(outputTrackId);
+                this._closeTrack(outputTrackId);
             });
         }
         let ownGroup = null;
@@ -1660,7 +1663,7 @@ class Conversion {
     }
     /** @internal */
     async _registerAudioSample(pump, sample, source, outputTrackId, getLastSampleTimestamp) {
-        this._reportProgress(outputTrackId, sample.timestamp + sample.duration);
+        this._updateProgress(outputTrackId, sample.timestamp + sample.duration);
         await source.add(sample);
         sample.close();
         const lastSampleTimestamp = getLastSampleTimestamp();
@@ -1699,14 +1702,28 @@ class Conversion {
         }
     }
     /** @internal */
-    _reportProgress(trackId, endTimestamp) {
+    _closeTrack(id) {
+        this._synchronizer.closeTrack(id);
+        this._maxTimestamps.delete(id);
+        this._reportProgress();
+    }
+    /** @internal */
+    _updateProgress(trackId, endTimestamp) {
         if (!this._computeProgress) {
             return;
         }
-        (0,misc/* assert */.vA)(this._totalDuration !== null);
         this._maxTimestamps.set(trackId, Math.max(endTimestamp, this._maxTimestamps.get(trackId)));
+        this._reportProgress();
+    }
+    /** @internal */
+    _reportProgress() {
+        if (!this._computeProgress || this._maxTimestamps.size === 0) {
+            return;
+        }
+        (0,misc/* assert */.vA)(this._totalDuration !== null);
         const minTimestamp = Math.min(...this._maxTimestamps.values());
         const newProgress = (0,misc/* clamp */.qE)(minTimestamp / this._totalDuration, 0, 1);
+        this._lastProcessedTime = minTimestamp;
         if (newProgress !== this._lastProgress) {
             this._lastProgress = newProgress;
             this.onProgress?.(newProgress, minTimestamp);
@@ -1792,7 +1809,7 @@ class TrackSynchronizer {
     }
 }
 
-;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-a8dceter.mjs
+;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-c6ksy867.mjs
 Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 
 
@@ -1915,7 +1932,7 @@ var CaptionQueueProcessor = () => {
     markCaptionJobSaving,
     getAbortController,
     setProcessCaptionJobCallback
-  } = (0,react.useContext)(index_swet14kx/* RenderQueueContext */.x7);
+  } = (0,react.useContext)(index_w5yee38t/* RenderQueueContext */.x7);
   const processJob = (0,react.useCallback)(async (job) => {
     const { signal } = getAbortController(job.id);
     let captionCount = null;
@@ -1998,7 +2015,7 @@ var CaptionQueueProcessor = () => {
           message: `Saving ${job.outName}...`,
           value: 0.95
         });
-        await (0,index_gbgac2ar/* writeStaticFile2 */.g4)({
+        await (0,index_r4fxez7r/* writeStaticFile2 */.g4)({
           contents: JSON.stringify(captions, null, 2),
           filePath: job.outName
         });
@@ -2015,7 +2032,7 @@ var CaptionQueueProcessor = () => {
         for (let index = 0;index < 1000; index++) {
           signal.throwIfAborted();
           const installationName = `${baseName}${index === 0 ? "" : `-copy${index === 1 ? "" : `-${index}`}`}`;
-          const preflight = await (0,index_00qdn7kw/* prepareElementInstall */.Rl)({
+          const preflight = await (0,index_j19a8yz6/* prepareElementInstall */.Rl)({
             installationName,
             destination: {
               type: "selected-media",
@@ -2030,11 +2047,11 @@ var CaptionQueueProcessor = () => {
           if (expectedFileState.exists && expectedFileState.sourceHash !== sourceHash) {
             continue;
           }
-          if ((0,index_a94vwgt9/* getBrowserStudioOperations */.P3)() === null) {
-            await (0,index_a94vwgt9/* installRequiredPackages */.oX)(element.dependencies);
+          if ((0,index_fp21v3v3/* getBrowserStudioOperations */.P3)() === null) {
+            await (0,index_fp21v3v3/* installRequiredPackages */.oX)(element.dependencies);
           }
           signal.throwIfAborted();
-          const response = await (0,index_00qdn7kw/* installElement */.iW)({
+          const response = await (0,index_j19a8yz6/* installElement */.iW)({
             installationName,
             compositionFile: null,
             compositionId: null,
@@ -2066,7 +2083,7 @@ var CaptionQueueProcessor = () => {
           message: "Adding Basic captions...",
           value: 0.95
         });
-        await (0,index_a94vwgt9/* installRequiredPackages */.oX)([
+        await (0,index_fp21v3v3/* installRequiredPackages */.oX)([
           { name: "@remotion/captions", version: null }
         ]);
         const request = {
@@ -2075,8 +2092,8 @@ var CaptionQueueProcessor = () => {
           durationInFrames: job.target.durationInFrames,
           captions
         };
-        const browserStudioOperations = (0,index_a94vwgt9/* getBrowserStudioOperations */.P3)();
-        const response = browserStudioOperations ? await browserStudioOperations.insertBasicCaptions(request) : await (0,index_a94vwgt9/* callApi */.px)("/api/insert-basic-captions", request);
+        const browserStudioOperations = (0,index_fp21v3v3/* getBrowserStudioOperations */.P3)();
+        const response = browserStudioOperations ? await browserStudioOperations.insertBasicCaptions(request) : await (0,index_fp21v3v3/* callApi */.px)("/api/insert-basic-captions", request);
         if (!response.success) {
           throw new Error(response.reason);
         }
@@ -2150,4 +2167,4 @@ var loadModelForJob = async ({
 /***/ }
 
 }]);
-//# sourceMappingURL=798.bundle.js.map
+//# sourceMappingURL=541.bundle.js.map

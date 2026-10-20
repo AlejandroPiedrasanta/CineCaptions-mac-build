@@ -59,7 +59,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             ver una pieza OGraf SIN Resolve: la abre en el Chrome sin ventana del runtime de Remotion (servidor local)
         vista_tema5.py
             el Tema 5 SIN Resolve, para revisarlo y para la tarjeta del slider (2_recursos/vistas_slider/Tema5.mp4
-    remotion\   (17385 archivos)
+    remotion\   (17400 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -284,6 +284,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         «Quitar pausas» (jump cuts en los silencios) para GO (v5.4.8).
     plantillas.py
         packs de estilos: leer, guardar, elegir y preparar el pack que se aplica.
+    posiciones_pro.py
+        «Posición» de cada efecto de la Edición PRO: el usuario marca en la línea de tiempo de SU video (con sus
     preparar_efectos.py
         herramienta de desarrollo: convierte las imágenes de iconos sobre fondo blanco en SPRITES con transparencia (uno por icono).
     pro_lateral_ui.py

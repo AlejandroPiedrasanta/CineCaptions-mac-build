@@ -25,6 +25,7 @@ pro_mascara ('auto' | 'magic' | 'ia' | 'no'), pro_sonidos, pro_ia_local, pro_var
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import shutil
@@ -184,7 +185,9 @@ def _pesos_ia(palabras, idioma, al_estado=None):
         return None
 
 
-def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opciones=None, al_estado=None, tema=None):
+def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opciones=None, al_estado=None, tema=None, marcas=None):
+    """v5.22: `marcas` = posiciones_pro.para_plan (Efectos › «Posición»): van a plan['_marcas'] y, si hacen falta, se arma también el plan
+    MÁS DENSO (`_pool`, `_pool_broll`) del que aplicar() saca la pieza de cada marca."""
     op = dict(OPCIONES_POR_DEFECTO, **(opciones or opciones_guardadas()))
     if tema == 'neon':
         op = opciones_neon(op)
@@ -239,6 +242,24 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
     plan['broll'] = _broll_de(palabras, duracion or dur, idioma, op, plan) if (tema != 'neon' or op.get('pro_internet')) else []
     if tema == 'neon' and plan['broll']:            # (Tema 1: el B-roll del menú, nunca encima de un motion del kit)
         plan['broll'] = [m for m in plan['broll'] if not any(m['ini'] < b and a < m['ini'] + m['dur'] for a, b in ocup_neon)]
+    plan['_marcas'] = {k: v for k, v in (marcas or {}).items() if v and v.get('ts')}
+    if any(s in plan['_marcas'] for s in LIBRES):    # v5.22: de dónde sacar la pieza de cada marca (lo que se dice en ESE momento)
+        try:
+            denso = PL.planificar(palabras, duracion or dur, idioma=idioma, genero=plan.get('genero') or op.get('pro_genero') or 'auto',
+                                  densidad='espectaculo', cortes=cortes, vertical=bool(h and w and h > w), pesos=pesos,
+                                  semilla=int(op.get('pro_variacion') or 0) + 1, video=str(video), tema=tema)
+            plan['_pool'] = denso.get('piezas') or []
+        except Exception:
+            plan['_pool'] = []
+    if 'broll' in plan['_marcas']:
+        try:
+            import broll
+            import efectos_visuales
+            ef = efectos_visuales.opciones_guardadas()
+            if broll.clave_guardada(ef) and not ef.get('fx_broll'):
+                plan['_pool_broll'] = broll.elegir_momentos(palabras, duracion or dur, idioma, 'muchos', margen_ini=0.3, margen_fin=0.5)
+        except Exception:
+            plan['_pool_broll'] = []
     _referencias(plan)
     soltar_gpu()                                     # v5.5.4: la IA ya eligió: su VRAM, para Resolve (que en ese momento está armando el timeline)
     if plan['broll']:
@@ -344,6 +365,144 @@ def _broll_de(palabras, duracion, idioma, op, plan):
                     p['capa'], p['persona'] = 'delante', False
     plan['piezas'] = [p for k, p in enumerate(plan['piezas']) if k not in quitar]
     return momentos
+
+
+# ----------------------------------------------------------------------------------------------------------------------- posiciones (v5.22)
+# Efectos › «Posición» (posiciones_pro): el usuario marca en qué segundos va cada efecto. plan['_marcas'] = {sección: {'modo': 'solo'|'suma',
+# 'ts': [s del timeline]}} (solo las secciones encendidas). «solo» = únicamente en sus marcas; «suma» = sus marcas y además lo automático.
+LIBRES = ('gancho', 'escenas', 'kit', 'graficos')       # la pieza EMPIEZA en la marca (las ligadas a un caption eligen el bloque de ese segundo)
+
+
+def _seccion(p):
+    try:
+        import estilos_pro as EST
+        return EST.seccion_de_pieza(p)
+    except Exception:
+        return None
+
+
+def _marca(plan, seccion):
+    m = (plan.get('_marcas') or {}).get(seccion)
+    return m if m and m.get('ts') else None
+
+
+def _avisar_marcas(avisos):
+    if avisos:
+        try:
+            import registro
+            registro.aviso('Posiciones de Efectos: ' + ' · '.join(avisos), 'edición pro')
+        except Exception:
+            pass
+
+
+def _grande(p):
+    return bool(p.get('pantalla')) or (p.get('capa') in ('detras', 'delante', 'fondo') and _seccion(p) != 'pildora')
+
+
+def _marcas_libres(plan, duracion, pool=(), secciones=LIBRES):
+    """Cada marca de una sección «libre» = una pieza de esa sección que empieza en ese segundo: la del plan (o del plan más denso, `pool`)
+    más cercana a ese momento, así lo que enseña es de lo que se habla ahí. Con «solo» se van las automáticas de esa sección. Lo grande que
+    se pise con una pieza marcada se quita: manda lo que eligió el usuario. Devuelve las piezas puestas."""
+    avisos, puestas = [], []
+    for sec in secciones:
+        m = _marca(plan, sec)
+        if not m:
+            continue
+        propias = [p for p in plan.get('piezas') or [] if _seccion(p) == sec]
+        cands = propias + [p for p in pool or [] if _seccion(p) == sec]
+        if m.get('modo') != 'suma':
+            plan['piezas'] = [p for p in plan.get('piezas') or [] if _seccion(p) != sec]
+        usadas = set()
+        for t in m['ts']:
+            if m.get('modo') == 'suma' and any(abs(float(p['ini']) - t) < 1.0 for p in propias):
+                continue                                                  # (ya había una suya ahí)
+            if not cands:
+                avisos.append(f'«{sec}» en {t:.1f} s: este video no tiene nada de esa sección')
+                continue
+            base = min(cands, key=lambda p: (id(p) in usadas, abs(float(p['ini']) - t)))
+            usadas.add(id(base))
+            dur = max(0.8, float(base['fin']) - float(base['ini']))
+            a = max(0.05, min(float(t), float(duracion or (t + dur + 0.1)) - dur - 0.05))
+            nueva = copy.deepcopy(base)
+            nueva.update(ini=round(a, 3), fin=round(a + dur, 3), _marca=True,
+                         motivo=f'posición elegida ({t:.1f} s) · ' + str(base.get('motivo') or ''))
+            if _grande(nueva):
+                plan['piezas'] = [p for p in plan.get('piezas') or []
+                                  if p.get('_marca') or not (_grande(p) and p['ini'] < nueva['fin'] + 0.1 and nueva['ini'] - 0.1 < p['fin'])]
+            plan['piezas'] = list(plan.get('piezas') or []) + [nueva]
+            puestas.append(nueva)
+    _avisar_marcas(avisos)
+    return puestas
+
+
+def _ligadas(piezas, m, nombre):
+    """De las piezas ligadas a un caption (la píldora), la que suena en cada marca (o la más cercana, a 2 s como mucho)."""
+    elegidas, avisos = [], []
+    for t in m['ts']:
+        dentro = [p for p in piezas if p['ini'] - 0.15 <= t <= p['fin'] + 0.15]
+        if not dentro and piezas:
+            q = min(piezas, key=lambda p: min(abs(p['ini'] - t), abs(p['fin'] - t)))
+            dentro = [q] if min(abs(q['ini'] - t), abs(q['fin'] - t)) <= 2.0 else []
+        if not dentro:
+            avisos.append(f'«{nombre}» en {t:.1f} s: ahí no hay un caption con algo que poner debajo')
+            continue
+        if all(dentro[0] is not e for e in elegidas):
+            elegidas.append(dentro[0])
+    _avisar_marcas(avisos)
+    return elegidas
+
+
+def _marcas_broll(plan, duracion):
+    """El B-roll en las marcas: la toma (palabra y consulta) más cercana a cada segundo, empezando ahí. Lo que iba DETRÁS de la persona en
+    ese tramo pasa delante (la toma la tapa) y su velo sobra, como en _broll_de."""
+    m = _marca(plan, 'broll')
+    if not m:
+        return
+    pool = list(plan.get('broll') or []) + list(plan.get('_pool_broll') or [])
+    if not pool:
+        _avisar_marcas(['«B-roll» necesita la clave de Pexels (Efectos) y alguna palabra que se pueda filmar en este video'])
+        return
+    lista = [] if m.get('modo') != 'suma' else list(plan.get('broll') or [])
+    usadas = set()
+    for t in m['ts']:
+        if any(abs(float(x['ini']) - t) < 1.0 for x in lista):
+            continue
+        base = min(pool, key=lambda x: (id(x) in usadas, abs(float(x['ini']) - t)))
+        usadas.add(id(base))
+        dur = float(base.get('dur') or 2.5)
+        nueva = dict(base, ini=round(max(0.05, min(float(t), float(duracion or t + dur) - dur - 0.05)), 3), _marca=True)
+        lista.append(nueva)
+        a, b = nueva['ini'], nueva['ini'] + dur
+        quitar = set()
+        for k, p in enumerate(plan.get('piezas') or []):
+            if p['ini'] < b and a < p['fin'] and p.get('capa') in ('detras', 'velo'):
+                if p['capa'] == 'velo':
+                    quitar.add(k)
+                else:
+                    p['capa'], p['persona'] = 'delante', False
+        plan['piezas'] = [p for k, p in enumerate(plan.get('piezas') or []) if k not in quitar]
+    plan['broll'] = sorted(lista, key=lambda x: float(x['ini']))
+
+
+def _tramos_motions(mc, m, dur):
+    """«Motions completo» con «solo mis marcas»: los tramos (s) del video de motions que se ven = las escenas que suenan en cada marca."""
+    try:
+        escenas = json.loads(Path(mc).with_suffix('.json').read_text(encoding='utf-8')).get('escenas') or []
+    except Exception:
+        escenas = []
+    tramos = []
+    for t in m['ts']:
+        e = next((e for e in escenas if float(e['ini']) - 0.05 <= t < float(e['fin'])), None)
+        a, b = (float(e['ini']), float(e['fin'])) if e else (max(0.0, t - 0.2), min(float(dur), t + 4.0))
+        tramos.append([max(0.0, a), min(float(dur), b)])
+    tramos.sort()
+    unidos = []
+    for a, b in tramos:
+        if unidos and a <= unidos[-1][1] + 0.05:
+            unidos[-1][1] = max(unidos[-1][1], b)
+        elif b - a > 0.2:
+            unidos.append([a, b])
+    return unidos
 
 
 # ----------------------------------------------------------------------------------------------------------------------- Resolve
@@ -804,7 +963,8 @@ def _cabeza(det):
     return y0, (p['puntos'][0][0] if p.get('puntos') else (x0 + x1) / 2.0), y1 - y0, cab
 
 
-def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), W=1080, H=1920, intensidad=None, bloques=None, a_cuadro=None):
+def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), W=1080, H=1920, intensidad=None, bloques=None, a_cuadro=None,
+                     marcas=None):
     """Qué bloques de captions van DETRÁS de la persona y cuánto suben. Un bloque vale si la persona es grande, su cabeza no se sale por arriba,
     está quieta en todo el bloque (misma toma), la pila le cae encima en horizontal y no hay otro gráfico ni B-roll en ese momento. La pila sube (o
     baja) hasta que su borde de abajo queda un poco por debajo de la coronilla: la cabeza tapa la parte de abajo de la palabra grande y el resto se lee.
@@ -812,25 +972,43 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
     titular) y el resto se alternan (`DETRAS_CAPTIONS`): el contraste también retiene.
     Devuelve los tramos [{'ini', 'fin' (s), 'det', 't_det', 'cues': [{'ini', 'fin', 'subir' (fracción del alto, + = arriba)}]}].
     v5.5.20: `intensidad` (INTENSIDAD_DETRAS) manda en cuántos y cuánto tapa; `bloques` = los del tema (el Tema 1 da los suyos, kit_neon.bloques_pro)
-    y `a_cuadro(det, t)` pasa la detección de la fuente a lo que se VE (el Tema 1: la placa con sus zooms; None = ahí no se puede)."""
+    y `a_cuadro(det, t)` pasa la detección de la fuente a lo que se VE (el Tema 1: la placa con sus zooms; None = ahí no se puede).
+    v5.22: `marcas` = {'modo', 'ts'} de Efectos › «Posición»: el bloque que suena en cada segundo marcado va detrás SIEMPRE que la persona
+    lo permita (aunque haya otro gráfico o le toque descansar); con 'solo', ninguno más. Lo que no se pudo queda en el Registro."""
     bloques = _bloques_captions() if bloques is None else bloques
     if not bloques:
         return []
     decir('Edición PRO: buscando dónde los captions van detrás de la persona…')
     cfg = INTENSIDAD_DETRAS.get(intensidad) if intensidad else None
     frac = cfg['frac'] if cfg else DETRAS_CAPTIONS.get(densidad, 0.55)
+    forz = {}                                                         # bloque → segundo marcado
+    for t in (marcas or {}).get('ts') or []:
+        k = next((k for k, b in enumerate(bloques) if b['ini'] - 0.15 <= t <= b['fin'] + 0.15), None)
+        if k is None:
+            k = min(range(len(bloques)), key=lambda k: min(abs(bloques[k]['ini'] - t), abs(bloques[k]['fin'] - t)))
+            if min(abs(bloques[k]['ini'] - t), abs(bloques[k]['fin'] - t)) > 2.0:
+                k = None
+        if k is not None:
+            forz.setdefault(k, t)
+        else:
+            _avisar_marcas([f'«detrás de ti» en {t:.1f} s: ahí no hay captions'])
+    solo = bool(marcas) and marcas.get('modo') != 'suma'
     elegidos, acum = [], 1.0 - frac
     for k, b in enumerate(bloques):
         a, z = b['ini'], b['fin']
-        if any(a < o1 and o0 < z for o0, o1 in ocupado):
+        forzado = k in forz
+        if solo and not forzado:
             continue
-        acum += frac
-        pref = any(a < p1 and p0 < z for p0, p1 in preferidos)
-        if acum < 0.999 and not pref:
-            continue
+        if not forzado:
+            if any(a < o1 and o0 < z for o0, o1 in ocupado):
+                continue
+            acum += frac
+            pref = any(a < p1 and p0 < z for p0, p1 in preferidos)
+            if acum < 0.999 and not pref:
+                continue
         if b.get('grande_abajo') is False:
             continue                                                  # (v5.5.20: la cabeza solo tapa la palabra GRANDE; nunca una línea pequeña)
-        if z - a < 1.0:
+        if z - a < (0.6 if forzado else 1.0):
             continue                                                  # (v5.5.20: un caption de medio segundo que salta arriba y vuelve se ve forzado)
         r0, t0, c0 = _fuente_de(info, video, a + 0.12)
         r1, t1, c1 = _fuente_de(info, video, max(a + 0.12, z - 0.15))
@@ -863,9 +1041,14 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
         if b['abajo'] + dy < coronilla + 0.012 or b['abajo'] + dy > 0.9 or b['abajo'] + dy - coronilla > tapa + 0.004:
             continue
         # (v5.5.20: si la pila no puede subir más —choca arriba— la cabeza taparía más de lo que deja la intensidad: ese bloque no va detrás)
-        acum = max(0.0, acum - 1.0)
+        if not forzado:
+            acum = max(0.0, acum - 1.0)
         caras = _caras(v0) + _caras(v1_)
-        elegidos.append(dict(b, k=k, subir=-dy, clip=c0, det=v0 if a_cuadro is not None else d0, t_det=a + 0.12, caras=caras))
+        elegidos.append(dict(b, k=k, subir=-dy, clip=c0, det=v0 if a_cuadro is not None else d0, t_det=a + 0.12, caras=caras, forzado=forzado))
+    fallidos = [t for k, t in sorted(forz.items(), key=lambda x: x[1]) if not any(e['k'] == k for e in elegidos)]
+    if fallidos:
+        _avisar_marcas([f'«detrás de ti» en {t:.1f} s: ahí no se puede (la persona no está quieta en todo el caption, no se ve su cabeza '
+                        f'o el caption no le pasa por encima)' for t in fallidos])
     # los bloques seguidos (de la misma toma) comparten un solo recorte de la persona: menos rastreos de Magic Mask
     tramos = []
     for e in elegidos:
@@ -884,18 +1067,22 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
                'caja': [round(e['arriba'] - e['subir'], 4), round(e['abajo'] - e['subir'], 4)]}     # v5.5.2: dónde queda el caption (sus emojis no lo pisan)
         t = tramos[-1] if tramos else None
         if t and t['k'] == k - 1 and t['clip'] is e['clip'] and fin - t['ini'] <= TRAMO_DETRAS_MAX_S:
-            t.update(fin=fin, k=k, corte=max(t.get('corte', 0.0), corte))
+            t.update(fin=fin, k=k, corte=max(t.get('corte', 0.0), corte), forzado=t.get('forzado') or e.get('forzado'))
             t['cues'].append(cue)
             continue
         ini = e['ini']
         if k > 0 and bloques[k - 1]['fin'] > ini:
             ini = min(bloques[k - 1]['fin'], fin - 0.3)               # el bloque anterior aún sale: la persona entra cuando se va
-        tramos.append({'ini': ini, 'fin': fin, 'k': k, 'clip': e['clip'], 'det': e['det'], 't_det': e['t_det'], 'cues': [cue], 'corte': corte})
+        tramos.append({'ini': ini, 'fin': fin, 'k': k, 'clip': e['clip'], 'det': e['det'], 't_det': e['t_det'], 'cues': [cue], 'corte': corte,
+                       'forzado': bool(e.get('forzado'))})
     for a_, b_ in zip(tramos, tramos[1:]):                           # (dos recortes no se pisan en PRO-ENCIMA: colocar_pro quitaría el 2.º)
         a_['fin'] = max(a_['ini'] + 0.2, min(a_['fin'], b_['ini']))
     if cfg and len(tramos) > cfg['tramos']:
-        tramos = tramos[:1] + sorted(tramos[1:], key=lambda t: -(t['fin'] - t['ini']))[:cfg['tramos'] - 1]   # el gancho y los más largos
-        tramos.sort(key=lambda t: t['ini'])
+        marcados = [t for t in tramos if t.get('forzado')]                # (v5.22: los que marcó el usuario no se recortan nunca)
+        libres = [t for t in tramos if not t.get('forzado')]
+        cupo = max(0, cfg['tramos'] - len(marcados))
+        tramos = marcados + (libres[:1] + sorted(libres[1:], key=lambda t: -(t['fin'] - t['ini']))[:max(0, cupo - 1)] if cupo else [])
+        tramos.sort(key=lambda t: t['ini'])                               # el gancho y los más largos
     return tramos
 
 
@@ -1166,6 +1353,28 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         if not cap_t5:                               # captions editables: fuera los captions de Remotion (y sus velos); los Text+ de GO se quedan
             nuevas = [q for q in nuevas if q.get('pieza') not in ('subtitulo', 'velo_caption')]
         plan['piezas'] = quedan + nuevas
+    if plan.get('_marcas'):                          # v5.22: Efectos › «Posición»: lo que el usuario marcó manda (antes de vestir, colocar y renderizar)
+        try:
+            dur_m = float(plan.get('duracion') or 0) or None
+            pool = list(plan.get('_pool') or [])
+            if t5:                                   # (Temas 5/6: solo piezas de SU sistema; del plan general, las que quedan)
+                pool = [p for p in pool if p.get('pieza') in T5.PIEZAS_QUE_QUEDAN]
+            puestas = _marcas_libres(plan, dur_m, pool)
+            m_pil = _marca(plan, 'pildora')
+            if t5 and m_pil:                         # la píldora de los Temas 5/6 viene en sus piezas: la de cada marca
+                propias = [p for p in plan['piezas'] if _seccion(p) == 'pildora']
+                elegidas = _ligadas(propias, m_pil, 'píldora')
+                if m_pil.get('modo') != 'suma':
+                    plan['piezas'] = [p for p in plan['piezas'] if _seccion(p) != 'pildora' or any(p is e for e in elegidas)]
+            _marcas_broll(plan, dur_m)
+            if puestas:
+                decir(f'Edición PRO: {len(puestas)} efecto(s) en las posiciones que elegiste…')
+        except Exception:
+            try:
+                import registro
+                registro.excepcion(origen='edición PRO (posiciones)')
+            except Exception:
+                pass
     clave = hashlib.sha1(f'{video}|{W}x{H}@{fps}'.encode('utf-8')).hexdigest()[:10]
     carpeta = OG.ruta_larga(CARPETA / clave)
     carpeta.mkdir(parents=True, exist_ok=True)
@@ -1358,7 +1567,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         try:
             tramos = _captions_detras(info, video, fps, ocupado, op.get('pro_densidad') or 'media', decir,
                                       preferidos=[tuple(x) for x in plan.get('detras_pref') or []], W=W, H=H,
-                                      intensidad=intensidad_detras(op), bloques=bloques_tema, a_cuadro=a_cuadro)
+                                      intensidad=intensidad_detras(op), bloques=bloques_tema, a_cuadro=a_cuadro,
+                                      marcas=_marca(plan, 'detras'))
         except Exception:
             tramos = []
         for t in tramos:
@@ -1444,7 +1654,17 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                                   maximo=3, bloques=KN.bloques_pro(plan['kitneon']))
             else:
                 extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None if ligero else 3)
-            extra = [p for p in extra if not any(p['ini'] < t['fin'] and t['ini'] < p['fin'] for t in tramos)]   # (no bajo un caption que va detrás)
+            m_pil = _marca(plan, 'pildora') if not neon_tema else None
+            if m_pil:                                # v5.22: Efectos › «Posición»: la píldora de los captions que suenan en cada marca
+                todas = extra if ligero else TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None)
+                elegidas = _ligadas([p for p in todas if _seccion(p) == 'pildora'], m_pil, 'píldora')
+                for e in elegidas:
+                    e['_marca'] = True
+                if m_pil.get('modo') != 'suma':
+                    extra = [p for p in extra if _seccion(p) != 'pildora'] + elegidas
+                else:
+                    extra = extra + [e for e in elegidas if not any(abs(p['ini'] - e['ini']) < 0.05 for p in extra)]
+            extra = [p for p in extra if p.get('_marca') or not any(p['ini'] < t['fin'] and t['ini'] < p['fin'] for t in tramos)]   # (no bajo un caption que va detrás; la marcada, sí)
             plan['piezas'] = list(plan.get('piezas') or []) + extra
             if ligero:
                 color_claves = TM.color_claves(info, video, fps)
@@ -1628,9 +1848,17 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             if fondo.get('mc_error') is not None:
                 raise fondo['mc_error']
             mc, dur_mc = fondo.get('mc'), float(fondo.get('mc_dur') or 0.0)
-            if mc:
+            m_mc = _marca(plan, 'motions_completo')
+            tramos_mc = _tramos_motions(mc, m_mc, dur_mc) if (mc and m_mc and m_mc.get('modo') != 'suma') else None
+            if mc and tramos_mc:                      # v5.22: «solo mis marcas»: el video de motions solo en los tramos marcados (colocar_pro: desde/frames)
+                for a, b in tramos_mc:
+                    f0 = int(round(a * fps))
+                    graficos.append({'capa': 'motions', 'ini': f0, 'desde': f0, 'frames': max(2, int(round(b * fps)) - f0), 'archivo': str(OG.ruta_larga(mc)),
+                                     'nombre': 'PRO · Motions completo', 'dur': round(dur_mc, 3), 'opaco': True})
+            elif mc:
                 graficos.append({'capa': 'motions', 'ini': 0, 'archivo': str(OG.ruta_larga(mc)), 'nombre': 'PRO · Motions completo', 'dur': round(dur_mc, 3),
                                  'opaco': True})
+            if mc:
                 if op.get('pro_sonidos', True):                           # v5.5.9: sus sonidos (whoosh al entrar cada tarjeta, clics, pops…), bajo la voz
                     import edicion_pro_sonido as PS
                     familias = dict(op.get('pro_sonidos_familias') or {})
@@ -1643,6 +1871,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                     for e in eventos_mc:
                         if familias.get(FAMILIA_DE_PISTA.get(str(e.get('pista')), 'textura'), True) is False:
                             continue
+                        if tramos_mc and not any(a * fps - 1 <= float(e.get('ini') or 0) < b * fps for a, b in tramos_mc):
+                            continue                                      # (v5.22: solo los sonidos de los tramos marcados)
                         e['db'] = float(e.get('db') or 0.0) + extra_db
                         try:
                             e['archivo'] = str(OG.ruta_larga(_con_ganancia(e['archivo'], e.get('db', 0.0))))

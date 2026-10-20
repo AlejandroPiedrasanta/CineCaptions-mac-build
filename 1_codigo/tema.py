@@ -34,10 +34,11 @@ PERFILES = {
     'negro': (tr('Negro profundo'), tr('Negros neutros en capas que realzan el color de resaltado.')),
     'grafito': (tr('Grafito'), tr('Gris carbón cálido, con menos contraste.')),
 }
+ACENTO_POR_DEFECTO = 'verde'          # v5.22: el verde, de fábrica (el usuario lo pidió; antes el azul)
 ACENTOS = {
+    'verde': (tr('Verde'), '#22B573'),
     'azul': (tr('Azul CineCaptions'), '#0F62FE'),
     'naranja': (tr('Naranja cine'), '#F5832F'),
-    'verde': (tr('Verde'), '#22B573'),
     'violeta': (tr('Violeta'), '#8B5CF6'),
     'rosa': (tr('Rosa'), '#E8457E'),
     'cian': (tr('Cian'), '#0EA5C6'),
@@ -61,8 +62,8 @@ def leer():
     except Exception:
         p = {}
     tema = p.get('tema') if p.get('tema') in PERFILES else 'noche'
-    acento = p.get('acento') if p.get('acento') in ACENTOS or p.get('acento') == 'personal' else 'azul'
-    personal = p.get('acento_personal') if _es_hex(p.get('acento_personal')) else '#0F62FE'
+    acento = p.get('acento') if p.get('acento') in ACENTOS or p.get('acento') == 'personal' else ACENTO_POR_DEFECTO
+    personal = p.get('acento_personal') if _es_hex(p.get('acento_personal')) else ACENTOS[ACENTO_POR_DEFECTO][1]
     try:
         tamano = int(p.get('tamano_interfaz') or 100)
     except (TypeError, ValueError):

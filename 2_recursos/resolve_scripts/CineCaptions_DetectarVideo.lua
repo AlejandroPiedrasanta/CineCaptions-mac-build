@@ -16,7 +16,7 @@ Si el render falla, cae al plan B: el archivo del clip mas largo de la
 pista de video 1.
 ]]
 
-local VERSION = "5.22 (detectar video)"
+local VERSION = "5.24 (detectar video)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -986,6 +986,23 @@ local function main()
         partes[#partes + 1] = '"mark_in": ' .. marca.entrada
         partes[#partes + 1] = '"mark_out": ' .. marca.salida
     end
+    -- v5.23: el segundo del ARCHIVO del clip principal que suena al empezar el audio renderizado (recortado o con zona no es 0): Efectos >
+    -- «Posicion» enseña los fotogramas justos. Todo dentro del pcall: main ya va justo de variables locales.
+    pcall(function()
+        if not desde_timeline or not clip_principal or not fps_tl or fps_tl <= 0 then return end
+        local mejor, dur_m = nil, -1
+        for _, it in ipairs(timeline:GetItemListInTrack("video", 1) or {}) do
+            local d = tonumber(it:GetDuration()) or 0
+            if d > dur_m then mejor, dur_m = it, d end
+        end
+        if not mejor then return end
+        local fps_c = fps_tl
+        pcall(function() fps_c = tonumber(mejor:GetMediaPoolItem():GetClipProperty("FPS")) or fps_tl end)
+        if not fps_c or fps_c <= 0 then fps_c = fps_tl end
+        local inicio = marca and marca.entrada or ini_tl
+        local desde = (tonumber(mejor:GetLeftOffset()) or 0) / fps_c + (inicio - (tonumber(mejor:GetStart()) or 0)) / fps_tl
+        partes[#partes + 1] = string.format('"clip_principal_desde": %.3f', desde)
+    end)
     -- v5.4.16: los clips de V1 (inicio, duracion, resolucion, nombre): sin MCP (Resolve Free) la app los necesita para armar el movimiento sobre V1 de los efectos visuales
     -- (zoom, temblor, transiciones). Con mas de 40 clips se omite (el registro de Resolve recorta las lineas largas y se perderia todo el reporte).
     pcall(function()

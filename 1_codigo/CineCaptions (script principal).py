@@ -7077,7 +7077,8 @@ class SubtitleApp(QWidget):
             self.fondo.poner_pagina(clave)
             self.escena_go.setVisible(clave == 'inicio')
             self.fondo.poner_cubierto(clave == 'inicio')       # v5.4: la escena 3D lo tapa entero: no se pinta ni se anima
-            if animar and cambio:
+            # v5.22: Inicio NO repite la entrada de sus tarjetas (efectos Qt sobre la escena 3D: tirones y parecía que se reiniciaba)
+            if animar and cambio and clave != 'inicio':
                 import efectos_ui
                 import mograf_ui
                 despues(10, lambda p=pagina: mograf_ui.entrada_escalonada(efectos_ui.tarjetas_de(p)), self)
@@ -7089,7 +7090,7 @@ class SubtitleApp(QWidget):
             pass
         if clave == 'inicio':
             self._refrescar_recientes()
-            self._pintar_go_reposo()
+            self._pintar_go_reposo_sin_esperas()
         if hasattr(self, 'marca_cinema'):
             self.marca_cinema.poner_en_inicio(clave == 'inicio')
         if hasattr(self, 'registro_flotante'):
@@ -9335,16 +9336,50 @@ class SubtitleApp(QWidget):
         self._guardar_preferencias()
         self.status_var.set(tr('Receta «{nombre}» aplicada.', nombre=rec.get('nombre') or ''))
         self.ir_a('nuevo')
+    def _pintar_go_reposo_sin_esperas(self):
+        """v5.22: la línea bajo GO mira si el video existe (Path.exists). Con el video en un disco que se duerme eso congelaba Inicio
+        1–3 s al volver de otra página o tras un rato sin usar el programa: primero se mira en un hilo (despierta el disco) y luego
+        se pinta, ya sin esperas."""
+        rutas = [str(r) for r in (getattr(self, '_go_archivo', None),
+                                  self.video_var.get().strip().strip('"') if hasattr(self, 'video_var') else '') if r]
+        if not rutas:
+            self._pintar_go_reposo()
+            return
+        correr_en_hilo(self, lambda: [Path(r).exists() for r in rutas], lambda _r, _e: self._pintar_go_reposo())
+
     def _refrescar_recientes(self):
-        """Repuebla «Proyectos recientes» de Inicio."""
+        """Repuebla «Proyectos recientes» de Inicio. v5.22: la lista (que lee cada proyecto y mira si su video existe) se arma en un
+        hilo: en el de la interfaz congelaba Inicio al volver con el disco dormido. Las filas solo se rehacen si algo cambió."""
+        if getattr(self, 'recientes_capa', None) is None:
+            return
+        if getattr(self, '_recientes_leyendo', False):
+            self._recientes_otra = True
+            return
+        self._recientes_leyendo, self._recientes_otra = True, False
+
+        def leer():
+            lista = [p for p in proyectos.listar(limite=12) if p.get('existe')][:5]
+            for p in lista:
+                p['_marcas'] = ruta_marcas(p.get('project_name') or Path(proyectos.nombre_display(p)).stem).exists()
+            return lista
+
+        def fin(lista, error):
+            self._recientes_leyendo = False
+            self._pintar_recientes([] if error is not None else (lista or []))
+            if self._recientes_otra:
+                self._refrescar_recientes()
+        correr_en_hilo(self, leer, fin)
+
+    def _pintar_recientes(self, lista):
         capa = getattr(self, 'recientes_capa', None)
         if capa is None:
             return
+        firma = [(p.get('_ruta_meta'), p.get('modificado_en'), bool(p.get('ultima_gen_bloques')), p.get('ultima_gen_langs'), p.get('_marcas'),
+                  p.get('modo'), p.get('look'), p.get('idioma'), _hace(p.get('modificado_en'))) for p in lista]
+        if firma == getattr(self, '_recientes_firma', None):
+            return
+        self._recientes_firma = firma
         limpiar_capa(capa)
-        try:
-            lista = [p for p in proyectos.listar(limite=12) if p.get('existe')][:5]
-        except Exception:
-            lista = []
         if not lista:
             vacio = Etiqueta(tr('Aún no hay proyectos. Genera los subtítulos de un video y aparecerá aquí.'), 13, color=TEXT_MUTED, envolver=True)
             vacio.setContentsMargins(4, 16, 4, 16)
@@ -9364,7 +9399,7 @@ class SubtitleApp(QWidget):
             modo_txt = looks.get(proy.get('look'), tr('Destacados')) if modo == 'destacados' else modos.get(modo, '—')
             if proy.get('ultima_gen_bloques'):
                 estado = Chip(tr('Traducido'), ui.ACCENT_CLARO, alto=26, tam=12) if len(codigos) > 1 else Chip(tr('Listo'), ui.VERDE, alto=26, tam=12)
-            elif ruta_marcas(proy.get('project_name') or Path(nombre).stem).exists():
+            elif proy.get('_marcas'):
                 estado = Chip(tr('Editando marcas'), ui.AMBAR, alto=26, tam=12)
             else:
                 estado = Chip(tr('Sin generar'), TEXT_MUTED, alto=26, tam=12)
@@ -10555,6 +10590,9 @@ class SubtitleApp(QWidget):
             return True
         try:
             import efectos_pagina
+            import posiciones_pro                # v5.22: la «Posición» de cada efecto se marca sobre el video de Inicio (el que usará GO)
+            posiciones_pro.poner_proveedor(lambda: getattr(self, '_go_archivo', None) or
+                                           (self.video_var.get().strip().strip('"') if hasattr(self, 'video_var') else ''))
             self._efectos_widget = efectos_pagina.PaginaEfectos(self, al_cambiar=self._pintar_opciones_go)
             self._efectos_capa.addWidget(self._efectos_widget)
         except Exception:
@@ -11844,7 +11882,12 @@ class SubtitleApp(QWidget):
                             self._pro_plan = {'ligero': True, 'solo_captions': True, 'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es',
                                               'opciones': op_go, 'tema': tema_pro}
                         elif op_go.get('pro_motions_completo'):      # v5.5.8: solo «Motions completo»
-                            self._pro_plan = {'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es', 'opciones': op_go}
+                            try:
+                                import posiciones_pro           # v5.22: sus tramos marcados en Efectos › «Posición»
+                                marcas_mc = posiciones_pro.para_plan(str(media_path), getattr(self, '_recorte', None))
+                            except Exception:
+                                marcas_mc = {}
+                            self._pro_plan = {'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es', 'opciones': op_go, '_marcas': marcas_mc}
                         return
                 except Exception:
                     pass
@@ -11864,8 +11907,13 @@ class SubtitleApp(QWidget):
                 cortes = pausas.remapear_cortes(cortes, recorte['segmentos']) if cortes else []
                 cortes = list(cortes) + [(float(t), 1.0) for t in (recorte.get('saltos') or [])]
                 duracion = recorte['duracion_nueva']
+            try:                                       # v5.22: dónde quiere el usuario cada efecto (Efectos › «Posición»), en segundos de ESTE timeline
+                import posiciones_pro
+                marcas = posiciones_pro.para_plan(str(media_path), recorte)
+            except Exception:
+                marcas = {}
             plan = edicion_pro.planificar(str(media_path), words, duracion, cortes=cortes, idioma=idioma or 'es',
-                                          al_estado=lambda t: self.msg_queue.put(('status', tr(t))), tema=tema_pro)
+                                          al_estado=lambda t: self.msg_queue.put(('status', tr(t))), tema=tema_pro, marcas=marcas)
             plan['tema5'] = tema5
             if tema5 and (getattr(self, 'plantilla_sel', '') or '') == 'Tema6':
                 plan['estilo_t5'] = 'editorial'        # Tema 6: el mismo motor, con el estilo editorial (serif fina, melocotón, visor, búsqueda…)

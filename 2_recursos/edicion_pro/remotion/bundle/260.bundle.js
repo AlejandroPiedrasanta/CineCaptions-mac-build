@@ -1,19 +1,19 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[567],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[260],{
 
-/***/ 4567
+/***/ 4260
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   VideoMattingModal: () => (/* binding */ VideoMattingModal)
 /* harmony export */ });
 /* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7449);
-/* harmony import */ var _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8698);
-/* harmony import */ var _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5173);
-/* harmony import */ var _index_a94vwgt9_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6692);
+/* harmony import */ var _index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8557);
+/* harmony import */ var _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(17);
+/* harmony import */ var _index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8614);
 /* harmony import */ var _index_zpf6xem0_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3731);
-/* harmony import */ var _index_2c9r9533_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(211);
-/* harmony import */ var _index_t3ahgbm5_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5854);
+/* harmony import */ var _index_zgedatsf_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3505);
+/* harmony import */ var _index_gcgrszqg_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5357);
 /* harmony import */ var _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(3872);
 Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(6540);
@@ -34,19 +34,19 @@ Object(function webpackMissingModule() { var e = new Error("Cannot find module '
 var MODELS = Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
 var controlStyle = { width: 330, maxWidth: "100%" };
 var panelStyle = {
-  ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsPanel */ .Z6,
+  ..._index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsPanel */ .Z6,
   flexDirection: "column",
   paddingTop: 16
 };
 var modalStyle = {
-  ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .outerModalStyle */ .uT,
+  ..._index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .outerModalStyle */ .uT,
   height: "auto",
   maxHeight: "calc(100vh - 40px)",
-  minHeight: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .outerModalStyle */ .uT.height,
+  minHeight: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .outerModalStyle */ .uT.height,
   outline: "none"
 };
 var modalLayout = {
-  ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalLayout */ .D6,
+  ..._index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalLayout */ .D6,
   flex: "1 1 auto"
 };
 var hiddenPanel = { display: "none" };
@@ -60,7 +60,7 @@ var makeOptions = ({
   id,
   value: id,
   label: optionLabel,
-  leftItem: id === selected ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Checkmark */ .MG, {}) : null,
+  leftItem: id === selected ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Checkmark */ .MG, {}) : null,
   keyHint: null,
   quickSwitcherLabel: null,
   subMenu: null,
@@ -79,16 +79,16 @@ var VideoMattingModal = ({
     models: MODELS,
     refreshKey: tab
   });
-  const baseName = (0,react__WEBPACK_IMPORTED_MODULE_9__.useMemo)(() => (0,_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .getDefaultOutputBaseName */ .Jj)(src, displayName, "video"), [displayName, src]);
+  const baseName = (0,react__WEBPACK_IMPORTED_MODULE_9__.useMemo)(() => (0,_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .getDefaultOutputBaseName */ .Jj)(src, displayName, "video"), [displayName, src]);
   const [outName, setOutName] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)(`${baseName}-no-background.webm`);
   const [model, setModel] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)("modnet");
   const [audio, setAudio] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)("keep");
   const [videoBitrate, setVideoBitrate] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)("very-high");
   const [support, setSupport] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)({ type: "checking" });
-  const staticFiles = (0,_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .useStaticFiles */ .JM)();
-  const { addVideoMattingJob, videoMattingJobs } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_1__/* .RenderQueueContext */ .x7);
-  const { setSelectedModal } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_1__/* .SetSelectedModalContext */ .Mq);
-  const { setSidebarCollapsedState } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .SidebarContext */ .I0);
+  const staticFiles = (0,_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .useStaticFiles */ .JM)();
+  const { addVideoMattingJob, videoMattingJobs } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_1__/* .RenderQueueContext */ .x7);
+  const { setSelectedModal } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_1__/* .SetSelectedModalContext */ .Mq);
+  const { setSidebarCollapsedState } = (0,react__WEBPACK_IMPORTED_MODULE_9__.useContext)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .SidebarContext */ .I0);
   (0,react__WEBPACK_IMPORTED_MODULE_9__.useEffect)(() => {
     let cancelled = false;
     setSupport({ type: "checking" });
@@ -103,7 +103,7 @@ var VideoMattingModal = ({
   }, [model]);
   const normalizedOutput = outName.normalize("NFC").toLowerCase();
   const queuedOutputs = new Set(videoMattingJobs.filter((job) => job.status === "idle" || job.status === "running" || job.status === "saving").map((job) => job.outName).map((name) => name.normalize("NFC").toLowerCase()));
-  const outputError = (0,_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .validatePublicOutputName */ .MD)({ extension: ".webm", outName }) ?? (queuedOutputs.has(normalizedOutput) ? "Another background removal job is using this output file" : null);
+  const outputError = (0,_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .validatePublicOutputName */ .MD)({ extension: ".webm", outName }) ?? (queuedOutputs.has(normalizedOutput) ? "Another background removal job is using this output file" : null);
   const outputExists = staticFiles.some((file) => file.name.normalize("NFC").toLowerCase() === normalizedOutput);
   const canSubmit = support.type === "supported" && outputError === null;
   const modelOptions = (0,react__WEBPACK_IMPORTED_MODULE_9__.useMemo)(() => makeOptions({
@@ -143,8 +143,8 @@ var VideoMattingModal = ({
       target
     });
     setSidebarCollapsedState({ left: null, right: "expanded" });
-    (0,_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .persistSelectedOptionsSidebarPanel */ .Gd)("renders");
-    _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsSidebarTabs */ .nm.current?.selectRendersPanel();
+    (0,_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .persistSelectedOptionsSidebarPanel */ .Gd)("renders");
+    _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsSidebarTabs */ .nm.current?.selectRendersPanel();
     setSelectedModal(null);
   }, [
     addVideoMattingJob,
@@ -160,27 +160,27 @@ var VideoMattingModal = ({
     videoBitrate
   ]);
   const title = `Remove background from ${displayName}`;
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .DismissableModal */ .sb, {
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .DismissableModal */ .sb, {
     ariaLabel: title,
     children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
       style: modalStyle,
       children: [
-        /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ModalHeader */ .rQ, {
+        /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ModalHeader */ .rQ, {
           title
         }),
         /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-          style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .container */ .kL,
+          style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .container */ .kL,
           children: [
             /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-              style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .flexer */ .lw
+              style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .flexer */ .lw
             }),
-            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Button */ .$n, {
+            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Button */ .$n, {
               disabled: !canSubmit,
               onClick: submit,
               "aria-label": support.type === "unsupported" ? support.message : undefined,
               style: {
-                ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .buttonStyle */ .i9,
-                backgroundColor: canSubmit ? _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .buttonStyle */ .i9.backgroundColor : _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .BLUE_DISABLED */ .er
+                ..._index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .buttonStyle */ .i9,
+                backgroundColor: canSubmit ? _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .buttonStyle */ .i9.backgroundColor : _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .BLUE_DISABLED */ .er
               },
               children: "Remove background"
             })
@@ -190,62 +190,62 @@ var VideoMattingModal = ({
           style: modalLayout,
           children: [
             /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-              style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .leftSidebar */ .K8,
+              style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .leftSidebar */ .K8,
               children: [
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
                   autoFocus: true,
                   onClick: () => setTab("remove"),
                   renderIcon: (color) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                    style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
-                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .GearIcon */ .L6, {
+                    style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
+                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .GearIcon */ .L6, {
                       color,
-                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
+                      style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
                     })
                   }),
                   selected: tab === "remove",
-                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
+                  style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
                   children: "General"
                 }),
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VerticalTab */ .sM, {
                   onClick: () => setTab("models"),
                   renderIcon: (color) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                    style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
-                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ModelsIcon */ .oi, {
+                    style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .iconContainer */ .zc,
+                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ModelsIcon */ .oi, {
                       color,
-                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
+                      style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .icon */ .Kk
                     })
                   }),
                   selected: tab === "models",
-                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
+                  style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .horizontalTab */ .So,
                   children: "Models"
                 })
               ]
             }),
             /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
               style: tab === "remove" ? panelStyle : hiddenPanel,
-              className: _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_1__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
+              className: _index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_1__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
               children: [
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalOutputName */ .Os, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalOutputName */ .Os, {
                   ariaLabel: "Video output file",
                   existingOutputPath: window.remotion_publicFolderExists ? `${window.remotion_publicFolderExists}/${outName}` : null,
                   existence: outputExists,
-                  inputStyle: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .input */ .hF,
+                  inputStyle: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .input */ .hF,
                   label: "Output in public/",
                   onValueChange: (event) => setOutName(event.target.value),
                   outName,
                   validationMessage: outputError
                 }),
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalHr */ .Yb, {}),
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderModalHr */ .Yb, {}),
                 /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
+                  style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
                   children: [
                     /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
+                      style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
                       children: "Model"
                     }),
                     /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
-                      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
+                      style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
+                      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
                         values: modelOptions,
                         selectedId: model,
                         "aria-label": "Model",
@@ -256,22 +256,22 @@ var VideoMattingModal = ({
                 }),
                 support.type === "unsupported" ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
                   style: validationStyle,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ValidationMessage */ .Xl, {
                     align: "flex-end",
                     message: support.message,
                     type: "error"
                   })
                 }) : null,
                 /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
+                  style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
                   children: [
                     /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
+                      style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
                       children: "Audio"
                     }),
                     /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
-                      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
+                      style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
+                      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
                         values: audioOptions,
                         selectedId: audio,
                         "aria-label": "Audio",
@@ -281,15 +281,15 @@ var VideoMattingModal = ({
                   ]
                 }),
                 /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsxs)("div", {
-                  style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
+                  style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionRow */ .wV,
                   children: [
                     /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
+                      style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .label */ .Pf,
                       children: "Video quality"
                     }),
                     /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
-                      style: _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
-                      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
+                      style: _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .rightRow */ .jm,
+                      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .Combobox */ .G3, {
                         values: qualityOptions,
                         selectedId: String(videoBitrate),
                         "aria-label": "Video quality",
@@ -300,7 +300,7 @@ var VideoMattingModal = ({
                 })
               ]
             }),
-            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_t3ahgbm5_mjs__WEBPACK_IMPORTED_MODULE_6__/* .Models2 */ .N, {
+            /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(_index_gcgrszqg_mjs__WEBPACK_IMPORTED_MODULE_6__/* .Models2 */ .N, {
               description: `Models are downloaded automatically when needed.
 You can also manage the browser cache here.`,
               indent: true,
@@ -317,15 +317,57 @@ You can also manage the browser cache here.`,
 
 /***/ },
 
-/***/ 211
+/***/ 5357
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   N: () => (/* binding */ Models2)
+/* harmony export */ });
+/* harmony import */ var _index_zgedatsf_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3505);
+Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4848);
+
+
+// src/components/VideoMatting/Models.tsx
+
+
+
+var AVAILABLE_MODELS = Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
+var Models2 = ({ description, indent, visible }) => {
+  const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
+  const loadModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model, onProgress) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
+    model,
+    onProgress: (progress) => onProgress(progress.progress)
+  }), []);
+  const removeModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_index_zgedatsf_mjs__WEBPACK_IMPORTED_MODULE_0__/* .ModelManager */ .P, {
+    ariaLabel: "Video matting models",
+    availableModels: AVAILABLE_MODELS,
+    description,
+    indent,
+    isModelCached,
+    loadModel,
+    prepare: null,
+    removeModel,
+    visible
+  });
+};
+
+
+
+
+/***/ },
+
+/***/ 3505
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   P: () => (/* binding */ ModelManager)
 /* harmony export */ });
 /* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7449);
-/* harmony import */ var _index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5173);
-/* harmony import */ var _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8698);
+/* harmony import */ var _index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(17);
+/* harmony import */ var _index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8557);
 /* harmony import */ var _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3872);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6540);
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(4848);
@@ -338,7 +380,7 @@ You can also manage the browser cache here.`,
 
 
 var modelPanel = {
-  ..._index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .optionsPanel */ .Z6,
+  ..._index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .optionsPanel */ .Z6,
   flexDirection: "column"
 };
 var hiddenPanel = { display: "none" };
@@ -494,13 +536,13 @@ var ModelManager = ({
     });
   }, [removeModel]);
   const renderDownloadIcon = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((color) => {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CloudDownloadIcon */ .$w, {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CloudDownloadIcon */ .$w, {
       color,
       style: actionIcon
     });
   }, []);
   const renderRemoveIcon = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((color) => {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .TrashIcon */ .uc, {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .TrashIcon */ .uc, {
       color,
       style: actionIcon
     });
@@ -508,7 +550,7 @@ var ModelManager = ({
   const actionInProgress = actionState.type === "downloading" || actionState.type === "removing";
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {
     style: visible ? modelPanel : hiddenPanel,
-    className: _index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
+    className: _index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_2__/* .VERTICAL_SCROLLBAR_CLASSNAME */ .uV,
     children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
       style: indent ? container : flushContainer,
       children: [
@@ -516,7 +558,7 @@ var ModelManager = ({
           style: descriptionStyle,
           children: description
         }),
-        cacheCheckError ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ValidationMessage */ .Xl, {
+        cacheCheckError ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ValidationMessage */ .Xl, {
           align: "flex-start",
           message: cacheCheckError,
           type: "error"
@@ -534,7 +576,7 @@ var ModelManager = ({
               role: "listitem",
               style: modelRow,
               children: [
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ModelsIcon */ .oi, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ModelsIcon */ .oi, {
                   "aria-hidden": true,
                   color: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .LIGHT_TEXT */ .hf,
                   style: modelIcon
@@ -549,34 +591,34 @@ var ModelManager = ({
                   "aria-label": modelStatus,
                   children: modelStatus
                 }),
-                cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CheckCircleFilled */ .Pk, {
+                cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CheckCircleFilled */ .Pk, {
                   "aria-hidden": true,
                   style: { ...statusIcon, fill: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .BLUE */ .ft }
                 }) : null,
                 processingThisModel ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("span", {
                   style: actionSlot,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Spinner */ .y$, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Spinner */ .y$, {
                     duration: 0.5,
                     size: 14
                   })
-                }) : cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ActionTooltip */ .mT, {
+                }) : cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ActionTooltip */ .mT, {
                   label: "Uninstall",
                   shortcut: null,
                   delay: 800,
                   dismissOnClick: true,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
                     "aria-label": `Remove ${model.name}`,
                     disabled: actionInProgress,
                     onClick: () => remove(model.name),
                     renderAction: renderRemoveIcon,
                     variant: null
                   })
-                }) : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_swet14kx_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ActionTooltip */ .mT, {
+                }) : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_2__/* .ActionTooltip */ .mT, {
                   label: "Install",
                   shortcut: null,
                   delay: 800,
                   dismissOnClick: true,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_00qdn7kw_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
                     "aria-label": `Download ${model.name}`,
                     disabled: cachedModels === null || actionInProgress,
                     onClick: () => downloadModel(model.name),
@@ -590,48 +632,6 @@ var ModelManager = ({
         })
       ]
     })
-  });
-};
-
-
-
-
-/***/ },
-
-/***/ 5854
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   N: () => (/* binding */ Models2)
-/* harmony export */ });
-/* harmony import */ var _index_2c9r9533_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(211);
-Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4848);
-
-
-// src/components/VideoMatting/Models.tsx
-
-
-
-var AVAILABLE_MODELS = Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
-var Models2 = ({ description, indent, visible }) => {
-  const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
-  const loadModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model, onProgress) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
-    model,
-    onProgress: (progress) => onProgress(progress.progress)
-  }), []);
-  const removeModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_index_2c9r9533_mjs__WEBPACK_IMPORTED_MODULE_0__/* .ModelManager */ .P, {
-    ariaLabel: "Video matting models",
-    availableModels: AVAILABLE_MODELS,
-    description,
-    indent,
-    isModelCached,
-    loadModel,
-    prepare: null,
-    removeModel,
-    visible
   });
 };
 
@@ -688,4 +688,4 @@ var useModelCacheStatus = ({
 /***/ }
 
 }]);
-//# sourceMappingURL=567.bundle.js.map
+//# sourceMappingURL=260.bundle.js.map

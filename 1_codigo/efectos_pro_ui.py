@@ -258,8 +258,10 @@ class Muestra(QWidget):
 
 # ====================================================================================== plegar / abrir
 class _Cabecera(QWidget):
-    """La cabecera de una sección: flecha (abierta / plegada), el título y el estilo que va a usar GO; un clic la abre o la pliega."""
+    """La cabecera de una sección: flecha (abierta / plegada), el título y el estilo que va a usar GO; un clic la abre o la pliega.
+    v5.22: el doble clic abre la «Posición» (el clic sencillo espera un instante para no plegar y desplegar en un doble clic)."""
     clic = Signal()
+    doble = Signal()
 
     def __init__(self, titulo, padre=None):
         super().__init__(padre)
@@ -297,7 +299,23 @@ class _Cabecera(QWidget):
 
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton and self.rect().contains(e.position().toPoint()):
-            self.clic.emit()
+            if getattr(self, '_tras_doble', False):
+                self._tras_doble = False
+                return
+            from PySide6.QtCore import QTimer
+            from PySide6.QtWidgets import QApplication
+            if getattr(self, '_espera', None) is None:
+                self._espera = QTimer(self)
+                self._espera.setSingleShot(True)
+                self._espera.timeout.connect(self.clic.emit)
+            self._espera.start(min(260, QApplication.doubleClickInterval()))
+
+    def mouseDoubleClickEvent(self, e):
+        if e.button() == Qt.MouseButton.LeftButton:
+            if getattr(self, '_espera', None) is not None:
+                self._espera.stop()
+            self._tras_doble = True
+            self.doble.emit()
 
     def paintEvent(self, _e):
         p = QPainter(self)
@@ -327,11 +345,20 @@ class SeccionEstilo(Tarjeta):
         # ---- la cabecera: siempre a la vista; un clic la abre o la pliega (el interruptor va aparte)
         self._cab = _Cabecera(tr(seccion['titulo']))
         self._cab.clic.connect(self.alternar)
+        self._cab.doble.connect(self.alternar_posiciones)
         cc = self._cab.capa
+        # v5.22: «Posición»: la línea de tiempo del video para marcar en qué segundos va este efecto (posiciones_pro)
+        try:
+            icono = ui.icono_linea('ph.map-pin', '#C9D6EC')
+        except Exception:
+            icono = None
+        self._b_pos = Boton(tr('Posición'), self.alternar_posiciones, tipo='neutro', alto=32, tam=12, icono=icono)
+        cc.addWidget(self._b_pos)
         self._var_on = ui.BooleanVar(False)
         self._sw = Interruptor(tr('Activado en GO'), self._var_on, self._cambio_on, tam=13, color='#E0EBFB')
         cc.addWidget(self._sw)
         self.capa.addWidget(self._cab)
+        self._pos = None                                 # la vista «Posición» (se arma la primera vez)
         self._cuerpo = QWidget()
         cuerpo = QVBoxLayout(self._cuerpo)
         cuerpo.setContentsMargins(0, 4, 0, 6)
@@ -389,11 +416,44 @@ class SeccionEstilo(Tarjeta):
 
     def alternar(self):
         self._abierta = not self._abierta
-        self._cuerpo.setVisible(self._abierta)
+        en_pos = bool(getattr(self, '_en_pos', False))
+        self._cuerpo.setVisible(self._abierta and not en_pos)
+        if self._pos is not None:
+            self._pos.setVisible(self._abierta and en_pos)
         self._cab.poner_abierta(self._abierta)
-        if self._abierta:
+        if self._abierta and not en_pos:
             sel = next((c for c in self.cartas.values() if c._sel), None)
             self.slider.mostrar(sel)
+
+    # -- v5.22: la vista «Posición» (en qué segundos del video va este efecto)
+    def alternar_posiciones(self):
+        self.mostrar_posiciones(not getattr(self, '_en_pos', False))
+
+    def mostrar_posiciones(self, si):
+        import posiciones_pro as POS
+        self._en_pos = bool(si)
+        if si and self._pos is None:
+            self._pos = POS.VistaPosiciones(self.clave)
+            self._pos.listo.connect(lambda: self.mostrar_posiciones(False))
+            self._pos.cambio.connect(self.refrescar)
+            self.capa.addWidget(self._pos)
+        if not self._abierta:
+            self._abierta = True
+            self._cab.poner_abierta(True)
+        self._cuerpo.setVisible(not si)
+        if self._pos is not None:
+            self._pos.setVisible(si)
+            if si:
+                self._pos.abrir()
+        self._b_pos.setProperty('tipo', 'primario' if si else 'neutro')
+        self._b_pos.style().unpolish(self._b_pos)
+        self._b_pos.style().polish(self._b_pos)
+        self.refrescar()
+
+    def mouseDoubleClickEvent(self, e):
+        """Doble clic en cualquier sitio de la sección (fuera de un control): la «Posición»."""
+        if e.button() == Qt.MouseButton.LeftButton:
+            self.alternar_posiciones()
 
     # -- estado
     def refrescar(self):
@@ -415,7 +475,18 @@ class SeccionEstilo(Tarjeta):
             self._var_on.set(on)
         nombre = tr(v['nombre']) if v else tr('Automático')
         self._lbl_estado.setText(tr('GO usará: ') + nombre + ('' if on else tr(' · ahora está apagada (enciéndela aquí o en el menú de Proyecto)')))
-        self._cab.poner_resumen(nombre + (tr(' · colores propios') if propios else ''))
+        extra = ''
+        try:                                             # v5.22: las posiciones marcadas para el video de Inicio
+            import posiciones_pro as POS
+            if self._pos is not None and getattr(self, '_en_pos', False):
+                self._pos.al_volver()                    # (v5.23: otro video en Inicio, p. ej. tras «Obtener»: se carga ese)
+            ruta = POS.video_actual()
+            n, modo = POS.resumen(ruta, self.clave) if ruta else (0, 'solo')
+            if n:
+                extra = ' · ' + (tr('1 posición') if n == 1 else tr('{n} posiciones', n=n)) + ('' if modo == 'solo' else tr(' + automático'))
+        except Exception:
+            pass
+        self._cab.poner_resumen(nombre + (tr(' · colores propios') if propios else '') + extra)
         self._pintar_muestras()
 
     def _pintar_muestras(self):
@@ -494,8 +565,9 @@ class SeccionEstilosPro(QWidget):
         except Exception:
             visibles = []
         por = {o['clave']: o for o in visibles}
+        orden = list(por)                                # v5.23 (el usuario: «ordena la página de Efectos conforme al menú»): el orden del menú lateral
         self.secciones = []
-        for s in EST.SECCIONES:
+        for s in sorted(EST.SECCIONES, key=lambda s: orden.index(s['clave']) if s['clave'] in orden else len(orden)):
             if visibles and s['clave'] not in por:
                 continue
             sec = SeccionEstilo(s, por.get(s['clave']))

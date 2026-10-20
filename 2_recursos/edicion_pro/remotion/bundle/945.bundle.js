@@ -1,5 +1,5 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[134],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[945],{
 
 /***/ 8033
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
@@ -404,7 +404,106 @@ var parseSpringEasingConfig = (node) => {
 
 /***/ },
 
-/***/ 2134
+/***/ 2690
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   E: () => (/* binding */ __esm),
+/* harmony export */   P$: () => (/* binding */ __commonJS),
+/* harmony export */   VA: () => (/* binding */ __export),
+/* harmony export */   Yp: () => (/* binding */ __toCommonJS),
+/* harmony export */   f1: () => (/* binding */ __toESM)
+/* harmony export */ });
+/* unused harmony export __require */
+var __create = Object.create;
+var __getProtoOf = Object.getPrototypeOf;
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+function __accessProp(key) {
+  return this[key];
+}
+var __toESMCache_node;
+var __toESMCache_esm;
+var __toESM = (mod, isNodeMode, target) => {
+  var canCache = mod != null && typeof mod === "object";
+  if (canCache) {
+    var cache = isNodeMode ? __toESMCache_node ??= new WeakMap : __toESMCache_esm ??= new WeakMap;
+    var cached = cache.get(mod);
+    if (cached)
+      return cached;
+  }
+  target = mod != null ? __create(__getProtoOf(mod)) : {};
+  const to = isNodeMode || !mod || !mod.__esModule || !__hasOwnProp.call(mod, "default") ? __defProp(target, "default", { value: mod, enumerable: true }) : target;
+  if (mod && typeof mod === "object" || typeof mod === "function") {
+    for (let key of __getOwnPropNames(mod))
+      if (!__hasOwnProp.call(to, key))
+        __defProp(to, key, {
+          get: __accessProp.bind(mod, key),
+          enumerable: true
+        });
+  }
+  if (canCache)
+    cache.set(mod, to);
+  return to;
+};
+var __toCommonJS = (from) => {
+  var entry = (__moduleCache ??= new WeakMap).get(from), desc;
+  if (entry)
+    return entry;
+  entry = __defProp({}, "__esModule", { value: true });
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (var key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(entry, key))
+        __defProp(entry, key, {
+          get: __accessProp.bind(from, key),
+          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+        });
+  }
+  __moduleCache.set(from, entry);
+  return entry;
+};
+var __moduleCache;
+var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
+var __returnValue = (v) => v;
+function __exportSetter(name, newValue) {
+  this[name] = __returnValue.bind(null, newValue);
+}
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {
+      get: all[name],
+      enumerable: true,
+      configurable: true,
+      set: __exportSetter.bind(all, name)
+    });
+};
+var __esm = (fn, res, err) => () => {
+  if (fn)
+    try {
+      res = fn(fn = 0);
+    } catch (e) {
+      err = [e];
+    }
+  if (err)
+    throw err[0];
+  return res;
+};
+var __require = /* @__PURE__ */ (/* unused pure expression or super */ null && (((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined")
+    return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+})));
+
+
+
+
+/***/ },
+
+/***/ 4945
 (__webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
@@ -418,6 +517,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   addFolder: () => (/* binding */ addFolder),
 /* harmony export */   applyCodemodChanges: () => (/* binding */ applyCodemodChanges),
 /* harmony export */   canPrecomposeJsxNodes: () => (/* binding */ canPrecomposeJsxNodes),
+/* harmony export */   canUnwrapNode: () => (/* binding */ canUnwrapNode),
 /* harmony export */   canWrapNode: () => (/* binding */ canWrapNode),
 /* harmony export */   createElement: () => (/* binding */ createElement),
 /* harmony export */   deleteComposition: () => (/* binding */ deleteComposition),
@@ -441,6 +541,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   splitSequences: () => (/* binding */ splitSequences),
 /* harmony export */   staticFileValue: () => (/* binding */ staticFileValue),
 /* harmony export */   unwrapFolder: () => (/* binding */ unwrapFolder),
+/* harmony export */   unwrapNode: () => (/* binding */ unwrapNode),
 /* harmony export */   updateCompositionMetadata: () => (/* binding */ updateCompositionMetadata),
 /* harmony export */   updateEffectKeyframes: () => (/* binding */ updateEffectKeyframes2),
 /* harmony export */   updateEffectProps: () => (/* binding */ updateEffectProps2),
@@ -16800,13 +16901,14 @@ var recast34 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */
 var recast35 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast36 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast37 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-var recast40 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast38 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-var recast39 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-
-
 var recast41 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+var recast39 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+var recast40 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+
+
 var recast42 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+var recast43 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
@@ -31930,11 +32032,10 @@ const basicCaptionsSchema = {
 	},
 } as const satisfies InteractivitySchema;
 
-export const BasicCaptions = Interactive.withSchema({
+export const BasicCaptions = Interactive.create({
 	Component: BasicCaptionsContent,
 	componentName: '<BasicCaptions>',
 	schema: basicCaptionsSchema,
-	wrapInSequence: true,
 });
 `;
 var getBasicCaptionsElementFile = ({
@@ -34405,11 +34506,11 @@ function validateDurationInFrames(durationInFrames, options) {
   if (durationInFrames <= 0) {
     throw new TypeError(`The "durationInFrames" prop ${component} must be positive, but got ${durationInFrames}.`);
   }
-  if (!allowFloats && durationInFrames % 1 !== 0) {
-    throw new TypeError(`The "durationInFrames" prop ${component} must be an integer, but got ${durationInFrames}.`);
-  }
   if (!Number.isFinite(durationInFrames)) {
     throw new TypeError(`The "durationInFrames" prop ${component} must be finite, but got ${durationInFrames}.`);
+  }
+  if (!allowFloats && durationInFrames % 1 !== 0) {
+    throw new TypeError(`The "durationInFrames" prop ${component} must be an integer, but got ${durationInFrames}.`);
   }
 }
 var getExpectedMediaFrameUncorrected = ({
@@ -48888,6 +48989,7 @@ var getSplitSourceEdit = ({
   left,
   prettierConfigOverride,
   right,
+  track,
   wrapInFragment
 }) => {
   if (!left.loc) {
@@ -48912,7 +49014,7 @@ var getSplitSourceEdit = ({
       prettierConfigOverride: formattingConfig
     })
   });
-  const replacement = wrapInFragment ? print(makeFragment2(left, right)) : `${print(left)}${isOnlyElementOnLine ? `${endOfLine}${lineIndent}` : " "}${print(right)}`;
+  const replacement = track ? print(track) : wrapInFragment ? print(makeFragment2(left, right)) : `${print(left)}${isOnlyElementOnLine ? `${endOfLine}${lineIndent}` : " "}${print(right)}`;
   return { end, replacement, start };
 };
 var splitJsxSequences = ({
@@ -48925,6 +49027,7 @@ var splitJsxSequences = ({
   }
   const ast = parseAst(input);
   const capturedNodePaths = captureJsxNodePaths(ast);
+  const importSnapshots = captureImportSnapshots(ast);
   const targets = splits.map(({ nodePath, sequenceKeys, splitFrame, videoConfigValues }) => {
     if (!Number.isFinite(splitFrame)) {
       throw new Error("Split frame must be finite");
@@ -48955,7 +49058,20 @@ var splitJsxSequences = ({
     if (splitFrame >= finiteEnd) {
       throw new Error("Cannot split at or after the sequence end");
     }
+    let isInsideTrack = false;
+    let ancestor = jsxPath.parentPath;
+    while (ancestor) {
+      if (ancestor.node.type === "JSXElement" && getJsxComponentIdentity({
+        ast,
+        jsxElement: ancestor.node.openingElement
+      }) === "dev.remotion.remotion.Track") {
+        isInsideTrack = true;
+        break;
+      }
+      ancestor = ancestor.parentPath;
+    }
     return {
+      isInsideTrack,
       contentDuration,
       from,
       jsxElement,
@@ -48966,8 +49082,18 @@ var splitJsxSequences = ({
   });
   const nodeLabels = [];
   const logLines = [];
-  const sourceEdits = targets.map(({ contentDuration, from, jsxElement, jsxPath, splitFrame, timing }) => {
+  const insertedElements = [];
+  const sourceEdits = targets.map(({
+    contentDuration,
+    from,
+    isInsideTrack,
+    jsxElement,
+    jsxPath,
+    splitFrame,
+    timing
+  }) => {
     const right = cloneJsxElement2(jsxElement);
+    insertedElements.push(right);
     const leftTimelineDuration = normalizeComputedTiming(splitFrame - from);
     const leftDuration = normalizeComputedTiming(leftTimelineDuration * timing.playbackRate);
     const rightDuration = contentDuration === Infinity ? Infinity : normalizeComputedTiming(contentDuration - leftDuration);
@@ -49007,8 +49133,63 @@ var splitJsxSequences = ({
       throw new Error("Cannot split JSX sequence with no parent");
     }
     const isJsxChild = namedTypes3.JSXElement.check(parentPath.node) || namedTypes3.JSXFragment.check(parentPath.node);
-    if (!insertAfter(parentPath.node, jsxElement, right)) {
-      jsxPath.replace(makeFragment2(jsxElement, right));
+    let track = null;
+    if (isInsideTrack) {
+      if (!insertAfter(parentPath.node, jsxElement, right)) {
+        jsxPath.replace(makeFragment2(jsxElement, right));
+      }
+    } else {
+      const trackLocalName = ensureOfficialNamedImport({
+        ast,
+        importedName: "Track",
+        sourcePath: "remotion",
+        preferredLocalName: "Track"
+      });
+      const { attributes } = jsxElement.openingElement;
+      const nameAttribute = attributes.find((attribute) => getAttributeName2(attribute) === "name");
+      const sourceAttribute = attributes.find((attribute) => getAttributeName2(attribute) === "src");
+      let name = nameAttribute?.type === "JSXAttribute" ? nameAttribute.value : null;
+      if (!name && sourceAttribute?.type === "JSXAttribute") {
+        const source = sourceAttribute.value;
+        const expression = source?.type === "JSXExpressionContainer" ? source.expression : source;
+        const sourceValue = expression?.type === "StringLiteral" ? expression.value : expression?.type === "CallExpression" && expression.arguments[0]?.type === "StringLiteral" && expression.callee.type === "Identifier" && expression.callee.name === "staticFile" ? expression.arguments[0].value : null;
+        if (sourceValue) {
+          let assetName = sourceValue.startsWith("data:") ? "Data URL" : sourceValue.startsWith("blob:") ? "Blob URL" : sourceValue.split(/[?#]/)[0].split(/[\\/]/).at(-1) || sourceValue;
+          try {
+            assetName = decodeURIComponent(assetName);
+          } catch {}
+          name = { type: "StringLiteral", value: assetName };
+        } else {
+          name = source;
+        }
+      }
+      track = {
+        type: "JSXElement",
+        openingElement: {
+          type: "JSXOpeningElement",
+          name: jsxId(trackLocalName),
+          attributes: [
+            {
+              type: "JSXAttribute",
+              name: jsxId("name"),
+              value: name ?? {
+                type: "StringLiteral",
+                value: getSplittableSequenceTagName(jsxElement)
+              }
+            }
+          ],
+          selfClosing: false
+        },
+        closingElement: {
+          type: "JSXClosingElement",
+          name: jsxId(trackLocalName)
+        },
+        children: [
+          stripParenthesizedExtra(jsxElement),
+          stripParenthesizedExtra(right)
+        ]
+      };
+      jsxPath.replace(track);
     }
     nodeLabels.push(getJsxElementTagLabel(jsxElement));
     logLines.push(jsxElement.openingElement.loc?.start.line ?? jsxElement.loc?.start.line ?? 1);
@@ -49017,11 +49198,23 @@ var splitJsxSequences = ({
       left: jsxElement,
       prettierConfigOverride: prettierConfigOverride ?? null,
       right,
+      track,
       wrapInFragment: !isJsxChild
     });
   });
-  const output = applySourceEdits({ edits: sourceEdits, input });
-  const { nodePathRemappings } = getNodePathRemappings({
+  const output = applySourceEdits({
+    edits: [
+      ...sourceEdits,
+      ...getInsertImportSourceEdits({
+        ast,
+        input,
+        prettierConfigOverride: prettierConfigOverride ?? null,
+        snapshots: importSnapshots
+      })
+    ],
+    input
+  });
+  const { nodePathRemappings, finalNodePathByNode } = getNodePathRemappings({
     ast,
     captured: capturedNodePaths,
     output
@@ -49030,6 +49223,13 @@ var splitJsxSequences = ({
     output,
     nodeLabels,
     logLines,
+    insertedNodePaths: insertedElements.map((element) => {
+      const nodePath = finalNodePathByNode.get(element.openingElement);
+      if (!nodePath) {
+        throw new Error("Could not locate the split clip after editing");
+      }
+      return nodePath;
+    }),
     nodePathRemappings
   });
 };
@@ -49097,7 +49297,7 @@ var splitSequences = async ({
       nodeLabels,
       logLines
     })),
-    insertedNodes: getInsertedNodeReferences(result.nodePathRemappings)
+    insertedNodes: edits.flatMap(({ filePath, insertedNodePaths }) => insertedNodePaths.map((nodePath) => ({ filePath, nodePath })))
   };
 };
 var { namedTypes: namedTypes4 } = recast29.types;
@@ -49689,6 +49889,7 @@ __export2(exports_timeline_position_state, {
   usePlaying: () => usePlaying,
   useTimelineContext: () => useTimelineContext,
   useTimelinePosition: () => useTimelinePosition,
+  useTimelinePositionWithOptionalSubscription: () => useTimelinePositionWithOptionalSubscription,
   useTimelineSeekFrame: () => useTimelineSeekFrame,
   useTimelineSetFrameWithoutSeek: () => useTimelineSetFrameWithoutSeek
 });
@@ -49891,13 +50092,15 @@ class CompositionErrorBoundary extends import_react9.default.Component {
   }
 }
 var getAssetPreviewCompositionId = (asset) => `asset:${asset}`;
-var CompositionManager = import_react10.createContext({
+var defaultCompositionManagerContext = {
   compositions: [],
   folders: [],
   currentCompositionMetadata: null,
   currentAssetMetadata: null,
   canvasContent: null
-});
+};
+var CompositionManager = import_react10.createContext(defaultCompositionManagerContext);
+var CompositionManagerRefContext = import_react10.createContext({ current: defaultCompositionManagerContext });
 var CompositionSetters = import_react10.createContext({
   setCanvasContent: () => {
     return;
@@ -50309,11 +50512,11 @@ function validateDurationInFrames2(durationInFrames, options) {
   if (durationInFrames <= 0) {
     throw new TypeError(`The "durationInFrames" prop ${component} must be positive, but got ${durationInFrames}.`);
   }
-  if (!allowFloats && durationInFrames % 1 !== 0) {
-    throw new TypeError(`The "durationInFrames" prop ${component} must be an integer, but got ${durationInFrames}.`);
-  }
   if (!Number.isFinite(durationInFrames)) {
     throw new TypeError(`The "durationInFrames" prop ${component} must be finite, but got ${durationInFrames}.`);
+  }
+  if (!allowFloats && durationInFrames % 1 !== 0) {
+    throw new TypeError(`The "durationInFrames" prop ${component} must be an integer, but got ${durationInFrames}.`);
   }
 }
 function validateFps2(fps, location2, isGif) {
@@ -51216,7 +51419,7 @@ var setStackForControls = (controls, stack) => {
 var getStackForControls = (controls) => {
   return stacksByControls.get(controls) ?? null;
 };
-var VERSION = "4.0.536";
+var VERSION = "4.0.537";
 var checkMultipleRemotionVersions = () => {
   if (typeof globalThis === "undefined") {
     return;
@@ -51429,6 +51632,7 @@ var useBuffering = () => {
   const { isBuffering, subscribeBuffering } = import_react33.useContext(SetTimelineContext);
   return useSyncExternalStore2(subscribeBuffering, isBuffering, isBuffering);
 };
+var UnsubscribedTimelineContext = import_react29.createContext(null);
 var makeKey = () => {
   return `remotion.time-all`;
 };
@@ -51458,6 +51662,9 @@ var useTimelinePositionFromContext = (state) => {
   const videoConfig = useVideo();
   const env = useRemotionEnvironment();
   const dormant = import_react29.useContext(SequenceActivityDormantContext);
+  if (state === null) {
+    return 0;
+  }
   if (!videoConfig) {
     return typeof window === "undefined" ? 0 : window.remotion_initialFrame ?? 0;
   }
@@ -51483,6 +51690,15 @@ var useTimelinePosition = () => {
   const state = useTimelineContext();
   return useTimelinePositionFromContext(state);
 };
+var useTimelinePositionWithOptionalSubscription = (subscribe) => {
+  const dormant = import_react29.useContext(SequenceActivityDormantContext);
+  const state = import_react29.useContext(subscribe ? dormant ? SequenceActivityTimelineContext : TimelineContext : UnsubscribedTimelineContext);
+  const frame = useTimelinePositionFromContext(state);
+  if (subscribe && state === null) {
+    throw new Error("TimelineContext is not available. This hook must be used inside a <Player> or the Remotion Studio.");
+  }
+  return frame;
+};
 var useIsInsideFreeze = () => {
   return useTimelineContext().isInsideFreeze;
 };
@@ -51502,7 +51718,7 @@ var useTimelineSeekFrame = () => {
   const { seek, setFrameWithoutSeek } = import_react29.useContext(SetTimelineContext);
   return seek?.seekFrame ?? setFrameWithoutSeek;
 };
-var useCurrentFrame = () => {
+var useCurrentFrameWithOptionalSubscription = (subscribe) => {
   const canUseRemotionHooks = import_react34.useContext(CanUseRemotionHooks);
   const env = useRemotionEnvironment();
   if (!canUseRemotionHooks) {
@@ -51511,10 +51727,16 @@ var useCurrentFrame = () => {
     }
     throw new Error(`useCurrentFrame() can only be called inside a component that was registered as a composition. See https://www.remotion.dev/docs/the-fundamentals#defining-compositions`);
   }
-  const frame = useTimelinePosition();
+  const frame = useTimelinePositionWithOptionalSubscription(subscribe);
   const context = import_react34.useContext(SequenceContext);
+  if (!subscribe) {
+    return 0;
+  }
   const contextOffset = context ? context.cumulatedFrom + context.relativeFrom : 0;
   return (frame - contextOffset) * (context?.playbackRate ?? 1);
+};
+var useCurrentFrame = () => {
+  return useCurrentFrameWithOptionalSubscription(true);
 };
 var useVideoConfig = () => {
   const videoConfig = useUnsafeVideoConfig();
@@ -55285,6 +55507,15 @@ var OverrideIdsToNodePathsSettersContext = import_react50.createContext({
 });
 var emptyDragOverrides2 = {};
 var useCacheCommitEffect = import_react49.default.useInsertionEffect ?? import_react49.useLayoutEffect;
+var areEffectParamsEqual = (previous, next) => {
+  if (Object.is(previous, next)) {
+    return true;
+  }
+  if (previous === null || next === null || typeof previous !== "object" || typeof next !== "object" || Object.getPrototypeOf(previous) !== Object.prototype || Object.getPrototypeOf(next) !== Object.prototype) {
+    return false;
+  }
+  return areRegistryEntriesEqual(previous, next);
+};
 var mergeOverrides = ({
   descriptor,
   propStatusOverrides,
@@ -55349,16 +55580,18 @@ var resolvePropStatusOverrides = (propStatus, frame) => {
 var useMemoizedEffectDefinitions = (effects) => {
   const activityDormant = import_react49.useContext(SequenceActivityDormantContext);
   const previousRef = import_react49.useRef(null);
-  const definitions = effects.map((descriptor) => descriptor.definition);
   const previous = previousRef.current;
-  const isSame = previous !== null && previous.definitions.length === definitions.length && previous.definitions.every((definition, i) => definition === definitions[i]);
+  const isSame = previous !== null && previous.definitions.length === effects.length && previous.definitions.every((definition, i) => definition === effects[i].definition);
   const controllers = isSame ? previous.controllers : effects.map((effect) => createRuntimeValueStore(effect.params));
-  const stableDefinitions = isSame ? previous.definitions : Object.assign(definitions, {
+  const stableDefinitions = isSame ? previous.definitions : Object.assign(effects.map((descriptor) => descriptor.definition), {
     runtimeValues: controllers.map((controller) => controller.store)
   });
   useCacheCommitEffect(() => {
     previousRef.current = { definitions: stableDefinitions, controllers };
     if (!activityDormant || controllers.length === 0) {
+      return;
+    }
+    if (controllers.every((controller, index) => areEffectParamsEqual(controller.store.getSnapshot(), effects[index]?.params))) {
       return;
     }
     let cancelled = false;
@@ -55369,14 +55602,8 @@ var useMemoizedEffectDefinitions = (effects) => {
       controllers.forEach((controller, index) => {
         const snapshot = effects[index]?.params;
         const currentSnapshot = controller.store.getSnapshot();
-        if (Object.is(snapshot, currentSnapshot)) {
+        if (areEffectParamsEqual(snapshot, currentSnapshot)) {
           return;
-        }
-        if (snapshot !== null && currentSnapshot !== null && typeof snapshot === "object" && typeof currentSnapshot === "object") {
-          const keys = Object.keys(snapshot);
-          if (keys.length === Object.keys(currentSnapshot).length && keys.every((key) => Object.prototype.hasOwnProperty.call(currentSnapshot, key) && Object.is(snapshot[key], currentSnapshot[key]))) {
-            return;
-          }
         }
         controller.setSnapshot(snapshot);
       });
@@ -55388,7 +55615,9 @@ var useMemoizedEffectDefinitions = (effects) => {
   import_react49.useLayoutEffect(() => {
     stableDefinitions.forEach((_definition, index) => {
       const snapshot = effects[index]?.params;
-      controllers[index].setSnapshot(snapshot);
+      if (!areEffectParamsEqual(controllers[index].store.getSnapshot(), snapshot)) {
+        controllers[index].setSnapshot(snapshot);
+      }
     });
   }, [controllers, effects, stableDefinitions]);
   return stableDefinitions;
@@ -55434,45 +55663,59 @@ var useMemoizedEffects = ({
 }) => {
   const previousRef = import_react49.useRef(null);
   const { propStatuses } = import_react49.useContext(VisualModePropStatusesContext);
-  const frame = useCurrentFrame();
   const { overrideIdToNodePathMappings } = import_react49.useContext(OverrideIdsToNodePathsGettersContext);
   const previous = previousRef.current;
   const nodePath = overrideId ? overrideIdToNodePathMappings[overrideId] ?? null : null;
   const effectDragOverrides = useEffectDragOverridesForNodePath(nodePath);
-  const resolved = effects.map((descriptor, index) => {
+  const effectPropStatuses = import_react49.useMemo(() => Array.from({ length: effects.length }, (_, effectIndex) => {
     if (nodePath === null) {
-      return {
-        descriptor,
-        params: descriptor.params,
-        effectKey: descriptor.effectKey
-      };
+      return null;
     }
-    const effectStatus = getEffectPropStatusesCtx({
+    const status = getEffectPropStatusesCtx({
       propStatuses,
       nodePath: { ...nodePath, videoConfigValues },
-      effectIndex: index
+      effectIndex
     });
-    const propStatusOverrides = effectStatus.type === "can-update-effect" ? resolvePropStatusOverrides(effectStatus.props, frame) : null;
+    return status.type === "can-update-effect" ? status.props : null;
+  }), [effects.length, nodePath, propStatuses, videoConfigValues]);
+  const animatedEffects = import_react49.useMemo(() => effectPropStatuses.map((status, index) => Object.values(status ?? {}).some((prop) => prop.status === "keyframed") || Object.values(effectDragOverrides[index] ?? emptyDragOverrides2).some((override) => override.type === "keyframed")), [effectDragOverrides, effectPropStatuses]);
+  const frame = useCurrentFrameWithOptionalSubscription(animatedEffects.some(Boolean));
+  const prepared = effects.map((descriptor, index) => {
+    const propStatus = effectPropStatuses[index];
     const dragOverridesMap = effectDragOverrides[index] ?? emptyDragOverrides2;
     const dragOverrides = Object.keys(dragOverridesMap).length === 0 ? null : dragOverridesMap;
+    const effectFrame = animatedEffects[index] ? frame : null;
+    const cached = previous?.prepared[index];
+    if (cached && cached.definition === descriptor.definition && cached.sourceKey === descriptor.effectKey && areEffectParamsEqual(cached.params, descriptor.params) && cached.propStatus === propStatus && cached.dragOverrides === dragOverrides && cached.frame === effectFrame) {
+      return cached;
+    }
+    const propStatusOverrides = resolvePropStatusOverrides(propStatus ?? undefined, frame);
     const { params, effectKey } = mergeOverrides({
       descriptor,
       propStatusOverrides,
       dragOverrides,
       frame
     });
-    return { descriptor, params, effectKey };
+    return {
+      definition: descriptor.definition,
+      sourceKey: descriptor.effectKey,
+      params: descriptor.params !== null && typeof descriptor.params === "object" && Object.getPrototypeOf(descriptor.params) === Object.prototype ? { ...descriptor.params } : descriptor.params,
+      propStatus,
+      dragOverrides,
+      frame: effectFrame,
+      value: cached?.value.definition === descriptor.definition && cached.value.effectKey === effectKey ? cached.value : {
+        definition: descriptor.definition,
+        effectKey,
+        params,
+        memoized: true
+      }
+    };
   });
-  const isSame = previous !== null && previous.length === resolved.length && previous.every((p, i) => p.definition === resolved[i].descriptor.definition && p.effectKey === resolved[i].effectKey);
-  const next = isSame ? previous : resolved.map(({ descriptor, params, effectKey }) => ({
-    definition: descriptor.definition,
-    effectKey,
-    params,
-    memoized: true
-  }));
+  const isSame = previous !== null && previous.effects.length === prepared.length && previous.effects.every((effect, i) => effect === prepared[i].value);
+  const next = isSame ? previous.effects : prepared.map((effect) => effect.value);
   useCacheCommitEffect(() => {
-    previousRef.current = next;
-  }, [next]);
+    previousRef.current = { prepared, effects: next };
+  }, [next, prepared]);
   return next;
 };
 var flattenActiveSchema = (schema, resolve) => {
@@ -55901,7 +56144,6 @@ var withInteractivitySchema = ({
     }
     const { propStatuses } = import_react48.useContext(VisualModePropStatusesContext);
     const nodePathMapping = import_react48.useContext(OverrideIdsToNodePathsGettersContext);
-    const frame = useCurrentFrame();
     const videoConfig = useUnsafeVideoConfig();
     const durationInFrames = videoConfig?.durationInFrames;
     const fps = videoConfig?.fps;
@@ -55943,6 +56185,12 @@ var withInteractivitySchema = ({
     });
     const nodePath = env.isReadOnlyStudio ? null : nodePathMapping.overrideIdToNodePathMappings[overrideId] ?? null;
     const dragOverrides = useDragOverridesForNodePath(nodePath);
+    const propStatus = import_react48.useMemo(() => nodePath === null ? undefined : getPropStatusesCtx(propStatuses, {
+      ...nodePath,
+      videoConfigValues
+    }), [nodePath, propStatuses, videoConfigValues]);
+    const needsFrame = flatKeys.some((key) => propStatus?.[key]?.status === "keyframed" || dragOverrides[key]?.type === "keyframed");
+    const frame = useCurrentFrameWithOptionalSubscription(needsFrame);
     const runtimeValues = flatKeys.map((key) => getRuntimeValueForSchemaKey({
       flatSchema,
       key,
@@ -55981,20 +56229,10 @@ var withInteractivitySchema = ({
         schema: schemaWithSequenceName,
         currentValue: currentRuntimeValueDotNotation,
         overrideValues: dragOverrides,
-        propStatus: nodePath === null ? undefined : getPropStatusesCtx(propStatuses, {
-          ...nodePath,
-          videoConfigValues
-        }),
+        propStatus,
         frame
       });
-    }, [
-      currentRuntimeValueDotNotation,
-      dragOverrides,
-      nodePath,
-      propStatuses,
-      videoConfigValues,
-      frame
-    ]);
+    }, [currentRuntimeValueDotNotation, dragOverrides, propStatus, frame]);
     const activeKeys = selectActiveKeys(schemaWithSequenceName, valuesDotNotation);
     const mergedProps = mergeValues({
       flatSchema,
@@ -57509,6 +57747,7 @@ var AnimatedImageContent = import_react53.forwardRef(({
   const resolvedSrc = resolveAnimatedImageSource(src);
   const [decodedImage, setDecodedImage] = import_react53.useState(null);
   const imageDecoder = decodedImage?.decoder ?? null;
+  const activeDecoderRef = import_react53.useRef(null);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -57537,6 +57776,7 @@ var AnimatedImageContent = import_react53.forwardRef(({
     const controller = new AbortController;
     let cancelled = false;
     let continued = false;
+    let decoder = null;
     const continueRenderOnce = () => {
       if (continued) {
         return;
@@ -57555,6 +57795,8 @@ var AnimatedImageContent = import_react53.forwardRef(({
         d.close();
         return;
       }
+      decoder = d;
+      activeDecoderRef.current = d;
       setDecodedImage({ decoder: d, handle: decodeHandle });
     }).catch((err) => {
       if (cancelled) {
@@ -57573,6 +57815,8 @@ var AnimatedImageContent = import_react53.forwardRef(({
     });
     return () => {
       cancelled = true;
+      activeDecoderRef.current = null;
+      decoder?.close();
       controller.abort();
       continueRenderOnce();
     };
@@ -57585,13 +57829,8 @@ var AnimatedImageContent = import_react53.forwardRef(({
     delayRender,
     cancelRender
   ]);
-  import_react53.useEffect(() => {
-    return () => {
-      imageDecoder?.close();
-    };
-  }, [imageDecoder]);
   import_react53.useLayoutEffect(() => {
-    if (!imageDecoder || !decodedImage) {
+    if (!imageDecoder || !decodedImage || activeDecoderRef.current !== imageDecoder) {
       return;
     }
     const delay = delayRender(`Rendering frame at ${currentTime} of <AnimatedImage src="${src}"/>`);
@@ -61371,7 +61610,7 @@ var HtmlInCanvasContent = import_react85.forwardRef(({
   const { isClientSideRendering, isRendering } = useRemotionEnvironment();
   const canRetryMissingPaintRecord = !isRendering || isClientSideRendering;
   const usesDirectLayoutCanvas = onPaint === undefined && onInit === undefined;
-  const paintTargetMode = usesDirectLayoutCanvas ? "direct" : isRendering ? "copied" : "transferred";
+  const paintTargetMode = ancestorPaintState ? "copied" : usesDirectLayoutCanvas ? "direct" : isRendering ? "copied" : "transferred";
   if (!isHtmlInCanvasSupported()) {
     cancelRender(new Error(getHtmlInCanvasUnsupportedMessage()));
   }
@@ -61438,6 +61677,7 @@ var HtmlInCanvasContent = import_react85.forwardRef(({
   const initializedRef = import_react85.useRef(false);
   const onInitCleanupRef = import_react85.useRef(null);
   const unmountedRef = import_react85.useRef(false);
+  const effectScratchCanvasesRef = import_react85.useRef(null);
   const paintingTargets = import_react85.useRef(new WeakMap);
   const onPaintCb = import_react85.useCallback(async () => {
     if (isRendering && paintState.pendingChildren > 0) {
@@ -61533,6 +61773,7 @@ var HtmlInCanvasContent = import_react85.forwardRef(({
         }
         throw error;
       }
+      let effectSourceCanvas = null;
       try {
         const currentOnPaint = onPaintRef.current;
         if (currentOnPaint) {
@@ -61548,6 +61789,41 @@ var HtmlInCanvasContent = import_react85.forwardRef(({
           if (paintResult) {
             await paintResult;
           }
+        } else if (paintTarget instanceof HTMLCanvasElement && effectsRef.current.some((effect) => !effect.params.disabled)) {
+          effectScratchCanvasesRef.current ??= {
+            source: document.createElement("canvas"),
+            previousOutput: document.createElement("canvas")
+          };
+          const { source: effectSource, previousOutput } = effectScratchCanvasesRef.current;
+          resizePaintTarget({
+            target: effectSource,
+            width: canvasWidth,
+            height: canvasHeight
+          });
+          resizePaintTarget({
+            target: previousOutput,
+            width: canvasWidth,
+            height: canvasHeight
+          });
+          const effectSourceCtx = effectSource.getContext("2d");
+          const previousOutputCtx = previousOutput.getContext("2d");
+          const paintTargetCtx = paintTarget.getContext("2d");
+          if (!effectSourceCtx || !previousOutputCtx || !paintTargetCtx) {
+            throw new Error("Failed to acquire 2D context for <HtmlInCanvas> canvas");
+          }
+          previousOutputCtx.reset();
+          previousOutputCtx.drawImage(paintTarget, 0, 0);
+          defaultOnPaint({
+            canvas: paintTarget,
+            element,
+            elementImage: elImage,
+            pixelDensity: resolvedPixelDensity
+          });
+          effectSourceCtx.reset();
+          effectSourceCtx.drawImage(paintTarget, 0, 0);
+          paintTargetCtx.reset();
+          paintTargetCtx.drawImage(previousOutput, 0, 0);
+          effectSourceCanvas = effectSource;
         } else {
           defaultOnPaint({
             canvas: paintTarget,
@@ -61560,7 +61836,7 @@ var HtmlInCanvasContent = import_react85.forwardRef(({
         if (state) {
           await runEffectChain({
             state,
-            source: paintTarget,
+            source: effectSourceCanvas ?? paintTarget,
             effects: effectsRef.current,
             output: paintTarget,
             width: canvasWidth,
@@ -61696,7 +61972,7 @@ var HtmlInCanvasContent = import_react85.forwardRef(({
   return /* @__PURE__ */ import_jsx_runtime32.jsxs(HtmlInCanvasAncestorContext.Provider, {
     value: paintState,
     children: [
-      /* @__PURE__ */ import_jsx_runtime32.jsxs("canvas", {
+      /* @__PURE__ */ import_jsx_runtime32.jsx("canvas", {
         ref: paintTargetMode === "copied" ? canvas2dRef : setVisibleCanvasRef,
         width: canvasWidth,
         height: canvasHeight,
@@ -61706,14 +61982,17 @@ var HtmlInCanvasContent = import_react85.forwardRef(({
           visibility: "hidden",
           pointerEvents: "none"
         } : canvasStyle,
-        children: [
-          /* @__PURE__ */ import_jsx_runtime32.jsx("div", {
-            ref: divRef,
-            style: paintTargetMode === "copied" ? { ...innerStyle, visibility: "visible" } : innerStyle,
-            children
-          }),
-          canvasSiblings
-        ]
+        children: /* @__PURE__ */ import_jsx_runtime32.jsxs(DefaultPremountContext.Provider, {
+          value: 0,
+          children: [
+            /* @__PURE__ */ import_jsx_runtime32.jsx("div", {
+              ref: divRef,
+              style: paintTargetMode === "copied" ? { ...innerStyle, visibility: "visible" } : innerStyle,
+              children
+            }),
+            canvasSiblings
+          ]
+        })
       }, canvasSizeKey),
       paintTargetMode === "copied" ? /* @__PURE__ */ import_jsx_runtime32.jsx("canvas", {
         ref: setVisibleCanvasRef,
@@ -63426,6 +63705,8 @@ var CompositionManagerProvider = ({
     currentAssetMetadata,
     canvasContent
   ]);
+  const compositionManagerRef = import_react92.useRef(compositionManagerContextValue);
+  compositionManagerRef.current = compositionManagerContextValue;
   if (registrationError !== null) {
     throw registrationError;
   }
@@ -63434,9 +63715,12 @@ var CompositionManagerProvider = ({
     onSnapshot: onCommitRegistrations,
     children: /* @__PURE__ */ import_jsx_runtime38.jsx(CompositionManager.Provider, {
       value: compositionManagerContextValue,
-      children: /* @__PURE__ */ import_jsx_runtime38.jsx(CompositionSetters.Provider, {
-        value: compositionManagerSetters,
-        children
+      children: /* @__PURE__ */ import_jsx_runtime38.jsx(CompositionManagerRefContext.Provider, {
+        value: compositionManagerRef,
+        children: /* @__PURE__ */ import_jsx_runtime38.jsx(CompositionSetters.Provider, {
+          value: compositionManagerSetters,
+          children
+        })
       })
     })
   });
@@ -64944,6 +65228,7 @@ var Internals2 = {
   resolveTrimProps,
   VideoForPreview,
   CompositionManager,
+  CompositionManagerRefContext,
   CompositionSetters,
   VisualModePropStatusesContext,
   VisualModePropStatusesRefContext,
@@ -68927,6 +69212,100 @@ var deleteNodes2 = async ({
     }))
   };
 };
+var canUnwrapNode = ({
+  input,
+  nodePath
+}) => {
+  const path = findJsxElementPathForDeletion(parseAst(input), nodePath);
+  const element = path?.node;
+  return Boolean(element?.loc && element.closingElement?.loc);
+};
+var unwrapNode = ({
+  project,
+  node
+}) => {
+  const filePath = findProjectFile({ project, filePath: node.filePath });
+  const input = project.files[filePath];
+  const ast = parseAst(input);
+  const captured = captureJsxNodePaths(ast);
+  const path = findJsxElementPathForDeletion(ast, node.nodePath);
+  const element = path?.node;
+  if (!path || !element?.loc || !element.openingElement.loc || !element.closingElement?.loc) {
+    throw new Error("This JSX element cannot be unwrapped");
+  }
+  const start = recastLocToOffset(input, element.loc.start);
+  const end = recastLocToOffset(input, element.loc.end);
+  const openingEnd = recastLocToOffset(input, element.openingElement.loc.end);
+  const closingStart = recastLocToOffset(input, element.closingElement.loc.start);
+  let firstChild = null;
+  for (const child of element.children) {
+    recast37.types.visit(child, {
+      visitJSXOpeningElement(childPath) {
+        firstChild ??= childPath.node;
+        return false;
+      }
+    });
+    if (firstChild !== null)
+      break;
+  }
+  const parent = path.parentPath?.node;
+  const isJsxChild = parent?.type === "JSXElement" || parent?.type === "JSXFragment";
+  const meaningfulChildren = element.children.filter((child) => child.type !== "JSXText" || child.value.trim() !== "");
+  const singleChild = meaningfulChildren.length === 1 && (meaningfulChildren[0].type === "JSXElement" || meaningfulChildren[0].type === "JSXFragment") ? meaningfulChildren[0] : null;
+  const needsFragment = !isJsxChild && singleChild === null;
+  let replacement = input.slice(openingEnd, closingStart);
+  if (needsFragment) {
+    path.replace(recast37.types.builders.jsxFragment(recast37.types.builders.jsxOpeningFragment(), recast37.types.builders.jsxClosingFragment(), element.children));
+    replacement = `<>${replacement}</>`;
+  } else {
+    if (isJsxChild) {
+      path.replace(...element.children);
+    } else {
+      path.replace(singleChild);
+    }
+    const preservedRanges = [];
+    recast37.types.visit(element, {
+      visitNode(literalPath) {
+        const literal = literalPath.node;
+        if (literal.loc && (literal.type === "TemplateLiteral" || literal.type === "StringLiteral" || literal.type === "JSXText" && literal.value.trim() !== "")) {
+          preservedRanges.push({
+            preserveWhitespace: literal.type !== "JSXText",
+            start: recastLocToOffset(input, literal.loc.start),
+            end: recastLocToOffset(input, literal.loc.end)
+          });
+        }
+        this.traverse(literalPath);
+      }
+    });
+    const indent = getLineIndent({ input, offset: start });
+    const firstContent = replacement.search(/\S/);
+    const childIndent = firstContent === -1 ? indent : getLineIndent({ input, offset: openingEnd + firstContent });
+    let offset = openingEnd;
+    replacement = replacement.split(/(?<=\n)/).map((line) => {
+      const lineOffset = offset;
+      offset += line.length;
+      if (lineOffset === openingEnd || preservedRanges.some((range) => lineOffset >= range.start && lineOffset < range.end && (range.preserveWhitespace || input.slice(lineOffset, Math.min(range.end, lineOffset + line.length)).trim().length > 0))) {
+        return line;
+      }
+      return childIndent.startsWith(indent) && line.startsWith(childIndent) ? `${indent}${line.slice(childIndent.length)}` : line;
+    }).join("");
+    replacement = replacement.replace(/^[\t ]*\r?\n[\t ]*/, "").replace(/\r?\n[\t ]*$/, "");
+  }
+  const output = applySourceEdits({ input, edits: [{ start, end, replacement }] });
+  const { nodePathRemappings, finalNodePathByNode } = getNodePathRemappings({
+    ast,
+    captured,
+    output
+  });
+  return {
+    ...getNodeEditResult({
+      project,
+      edits: [{ filePath, output, nodePathRemappings }]
+    }),
+    childNodePath: firstChild === null ? null : finalNodePathByNode.get(firstChild) ?? null,
+    logLine: element.openingElement.loc.start.line
+  };
+};
 var getHtmlInCanvasWrapperName = (wrapper) => {
   const exportName = wrapper.importName ?? wrapper.component;
   if (exportName === "HtmlInCanvas" && (wrapper.importPath === null || wrapper.importPath === "remotion")) {
@@ -68970,7 +69349,7 @@ var canWrapNode = ({
     current = current.parentPath;
   }
   let containsHtmlInCanvas = false;
-  recast37.types.visit(path.node, {
+  recast38.types.visit(path.node, {
     visitJSXElement(elementPath) {
       if (isHtmlInCanvasElement(elementPath.node)) {
         containsHtmlInCanvas = true;
@@ -69025,7 +69404,7 @@ var wrapNode = ({
   const childIndent = `${indent}${unit}`;
   const source = input.slice(start, end);
   const preservedRanges = [];
-  recast37.types.visit(original, {
+  recast38.types.visit(original, {
     visitTemplateLiteral(templatePath) {
       if (templatePath.node.loc) {
         preservedRanges.push({
@@ -69074,11 +69453,11 @@ var wrapNode = ({
     }
     return `${childIndent}${line.startsWith(closingIndent) ? line.slice(closingIndent.length) : line.trimStart()}`;
   });
-  const b = recast37.types.builders;
+  const b = recast38.types.builders;
   const wrapperElement = buildJsxElement({ ast, element: wrapper });
   const opening = wrapperElement.openingElement;
   opening.selfClosing = false;
-  const localName = recast37.print(opening.name).code;
+  const localName = recast38.print(opening.name).code;
   const openingLines = printJsxOpeningElement({
     compactLiteralProps: true,
     openingElement: opening,
@@ -69263,7 +69642,7 @@ var getPureTopLevelFunctionAnalysis = ({
         break;
     }
   };
-  recast38.visit(ast, {
+  recast39.visit(ast, {
     visitAssignmentExpression(path) {
       collectAssignedNames(path.node.left);
       this.traverse(path);
@@ -69337,7 +69716,7 @@ var getPureTopLevelFunctionAnalysis = ({
     return remotionImports.get(objectName) === "Easing" && topLevelBindings.has(objectName) && !duplicateBindings.has(objectName) && easingMethods.has(propertyName);
   };
   function isPureExpression(node, params) {
-    if (!recast38.types.namedTypes.Expression.check(node)) {
+    if (!recast39.types.namedTypes.Expression.check(node)) {
       return false;
     }
     const expression = node;
@@ -69455,7 +69834,7 @@ var getPureTopLevelFunctionAnalysis = ({
     return primitive;
   };
   function isPrimitiveExpression(node, params) {
-    if (!recast38.types.namedTypes.Expression.check(node)) {
+    if (!recast39.types.namedTypes.Expression.check(node)) {
       return false;
     }
     switch (node.type) {
@@ -69542,7 +69921,7 @@ var getStyleablePrecompositionRoot = ({
     return null;
   }
   let isTopLevelBinding = false;
-  recast39.visit(ast, {
+  recast40.visit(ast, {
     visitJSXElement(path) {
       if (path.node === element) {
         isTopLevelBinding = path.scope.lookup(identifier.name)?.path.node === ast.program;
@@ -69887,7 +70266,7 @@ var getPrecompositionPlan = ({
   ]);
   const scanSafePath = (path) => {
     let containsUnsupportedSyntax = false;
-    recast40.visit(path, {
+    recast41.visit(path, {
       visitNode(p) {
         if (unsupportedSyntax.has(p.node.type)) {
           containsUnsupportedSyntax = true;
@@ -69903,7 +70282,7 @@ var getPrecompositionPlan = ({
       unsafeReason = "The selected JSX contains unsupported syntax";
       return;
     }
-    recast40.visit(path, {
+    recast41.visit(path, {
       visitIdentifier(p) {
         if (isReferenced(p.node, p.parentPath.node, p.parentPath.parentPath?.node)) {
           const binding = p.scope.lookup(p.node.name);
@@ -70423,7 +70802,7 @@ var precomposeJsxNodes = ({
   const registrationAst = registrationFile === filePath ? ast : parseAst(project.files[registrationFile]);
   const occupiedNames = new Set;
   for (const candidateAst of new Set([ast, registrationAst])) {
-    recast40.visit(candidateAst, {
+    recast41.visit(candidateAst, {
       visitIdentifier(path) {
         occupiedNames.add(path.node.name);
         this.traverse(path);
@@ -70523,7 +70902,7 @@ var precomposeJsxNodes = ({
   const contentReferences = new Set;
   if (styleRoot) {
     const collectReferences = (node) => {
-      recast40.visit(node, {
+      recast41.visit(node, {
         visitJSXAttribute(path) {
           if (rootTimingAttributes.includes(path.node)) {
             return false;
@@ -70645,7 +71024,7 @@ var precomposeJsxNodes = ({
   if (styleRoot) {
     const { openingElement } = styleRoot.element;
     const originalAttributeSources = captureJsxAttributeSources(openingElement);
-    const b = recast40.types.builders;
+    const b = recast41.types.builders;
     const originalStyle = styleAttribute?.type === "JSXAttribute" && styleAttribute.value?.type === "JSXExpressionContainer" ? styleAttribute.value.expression : null;
     const mergedStyle = b.objectExpression([
       ...originalStyle?.type === "ObjectExpression" ? originalStyle.properties : originalStyle && originalStyle.type !== "NullLiteral" ? [b.spreadElement(originalStyle)] : [],
@@ -70730,7 +71109,7 @@ var precomposeJsxNodes = ({
   if (functionBody?.type === "BlockStatement") {
     while (true) {
       const referencedNames = new Set;
-      recast40.visit(functionBody, {
+      recast41.visit(functionBody, {
         visitIdentifier(path) {
           if (isReferenced(path.node, path.parentPath.node, path.parentPath.parentPath?.node)) {
             referencedNames.add(path.node.name);
@@ -70952,7 +71331,7 @@ var getCursorName = (cursor) => {
 };
 var serialize = (value) => {
   if (typeof value === "string") {
-    return recast41.prettyPrint(recast41.types.builders.stringLiteral(value), {
+    return recast42.prettyPrint(recast42.types.builders.stringLiteral(value), {
       quote: "single"
     }).code;
   }
@@ -71193,7 +71572,7 @@ var updateVisualControls = ({
   const file = parseAst(input);
   const updatedControls = [];
   const edits = [];
-  recast42.types.visit(file.program, {
+  recast43.types.visit(file.program, {
     visitCallExpression(path) {
       const { node } = path;
       if (node.type !== "CallExpression") {
@@ -71308,106 +71687,7 @@ var CodemodsInternals = {
 
 
 
-/***/ },
-
-/***/ 2690
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   E: () => (/* binding */ __esm),
-/* harmony export */   P$: () => (/* binding */ __commonJS),
-/* harmony export */   VA: () => (/* binding */ __export),
-/* harmony export */   Yp: () => (/* binding */ __toCommonJS),
-/* harmony export */   f1: () => (/* binding */ __toESM)
-/* harmony export */ });
-/* unused harmony export __require */
-var __create = Object.create;
-var __getProtoOf = Object.getPrototypeOf;
-var __defProp = Object.defineProperty;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-function __accessProp(key) {
-  return this[key];
-}
-var __toESMCache_node;
-var __toESMCache_esm;
-var __toESM = (mod, isNodeMode, target) => {
-  var canCache = mod != null && typeof mod === "object";
-  if (canCache) {
-    var cache = isNodeMode ? __toESMCache_node ??= new WeakMap : __toESMCache_esm ??= new WeakMap;
-    var cached = cache.get(mod);
-    if (cached)
-      return cached;
-  }
-  target = mod != null ? __create(__getProtoOf(mod)) : {};
-  const to = isNodeMode || !mod || !mod.__esModule || !__hasOwnProp.call(mod, "default") ? __defProp(target, "default", { value: mod, enumerable: true }) : target;
-  if (mod && typeof mod === "object" || typeof mod === "function") {
-    for (let key of __getOwnPropNames(mod))
-      if (!__hasOwnProp.call(to, key))
-        __defProp(to, key, {
-          get: __accessProp.bind(mod, key),
-          enumerable: true
-        });
-  }
-  if (canCache)
-    cache.set(mod, to);
-  return to;
-};
-var __toCommonJS = (from) => {
-  var entry = (__moduleCache ??= new WeakMap).get(from), desc;
-  if (entry)
-    return entry;
-  entry = __defProp({}, "__esModule", { value: true });
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (var key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(entry, key))
-        __defProp(entry, key, {
-          get: __accessProp.bind(from, key),
-          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-        });
-  }
-  __moduleCache.set(from, entry);
-  return entry;
-};
-var __moduleCache;
-var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
-var __returnValue = (v) => v;
-function __exportSetter(name, newValue) {
-  this[name] = __returnValue.bind(null, newValue);
-}
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, {
-      get: all[name],
-      enumerable: true,
-      configurable: true,
-      set: __exportSetter.bind(all, name)
-    });
-};
-var __esm = (fn, res, err) => () => {
-  if (fn)
-    try {
-      res = fn(fn = 0);
-    } catch (e) {
-      err = [e];
-    }
-  if (err)
-    throw err[0];
-  return res;
-};
-var __require = /* @__PURE__ */ (/* unused pure expression or super */ null && (((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined")
-    return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-})));
-
-
-
-
 /***/ }
 
 }]);
-//# sourceMappingURL=134.bundle.js.map
+//# sourceMappingURL=945.bundle.js.map

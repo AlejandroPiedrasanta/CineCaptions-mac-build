@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 
 import ritmo_ui
-from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QLineF, QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import (QColor, QConicalGradient, QFont, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap, QPolygonF,
                            QRadialGradient, QTransform)
 from PySide6.QtWidgets import QWidget
@@ -351,6 +351,9 @@ class EscenaGo(QWidget):
         self._objetos = []
         self.al_tic = []                        # funciones que avanzan con el reloj de la escena (el botón GO)
         self.al_pulso = None                    # () -> None: un destello en el orbe (llega una chispa de un paso terminado)
+        self.datos_barra = None                 # v5.22: () -> dict | None (PanelGo._datos_barra): la barra de progreso de abajo
+        self._barra_d = None
+        self._barra_a = 0.0
         self.modo = 'completo'                  # 'completo' | 'suave' | 'minimo' (Ajustes > Interfaz)
         self.par = (0.0, 0.0)                   # el ratón respecto al orbe (-1..1): inclina los haces de luz
         self._fase_t0 = -9.0
@@ -395,6 +398,7 @@ class EscenaGo(QWidget):
         self._dt_med = 0.016               # v5.5.8: el intervalo REAL entre cuadros (si no llega a 60 fps, 30 parejos: se ven mejor que 40 a saltos)
         self._lento_hasta = 0.0
         self._lento_n = 0
+        self._gracia_hasta = 0.0           # v5.22: tras volver a verse, los tirones de la transición no cuentan como «equipo lento»
         self._esc_cuadro = 1.0                  # escala de resolución interna de la escena (adaptativa, 0,62..1)
         self._cuadros = 0
         self._cuadro = None                     # el ultimo cuadro dibujado (QPixmap) y cuando: ver paintEvent
@@ -465,10 +469,28 @@ class EscenaGo(QWidget):
         if si:
             if not self._reloj.isActive():
                 self._ult = time.perf_counter()
+                self._reanudar()
                 self._reloj.setTimerType(Qt.TimerType.PreciseTimer)       # 60 fps parejos: el temporizador normal de Windows da saltos
-                self._reloj.start(16 if not self._quieto else 160)
+                self._ms_reloj = 16 if not self._quieto else 160
+                self._reloj.start(self._ms_reloj)
         else:
             self._reloj.stop()
+
+    def _reanudar(self):
+        """v5.22 (el usuario: «al volver a Inicio las animaciones van trabadas»): al volver de otra página o a la ventana, el primer
+        segundo trae cuadros lentos (la transición, Qt rehaciendo cachés). Antes contaban como «equipo lento» y la escena se quedaba a
+        30 fps 8 s, y más cada vez (16, 32… hasta 2 min). Ahora ese segundo no cuenta y la medida empieza limpia."""
+        self._gracia_hasta = time.perf_counter() + 1.2
+        self._dt_med = min(self._dt_med, 0.016)
+
+    def changeEvent(self, e):
+        super().changeEvent(e)
+        if e.type() == QEvent.Type.ActivationChange and self._reloj.isActive() and self.isVisible():
+            # vuelve a la ventana (o la deja): el ritmo cambia YA (60 ↔ 30 fps), sin esperar a la política de cada segundo
+            if self.window().isActiveWindow():
+                self._ult = time.perf_counter()
+                self._reanudar()
+            self._politica()
 
     def poner_pasos(self, pasos):
         """[(clave, texto)] en el orden en que van a ir cayendo."""
@@ -744,6 +766,8 @@ class EscenaGo(QWidget):
             return
         if self._ms_reloj == 250:                        # vuelve a verse: el ritmo bueno (60 / 30 fps) ya, sin esperar a la política
             self._ms_reloj = 0
+            self._reanudar()
+            dt = min(dt, 1 / 60)                         # (el salto de la pausa no se nota como un brinco)
             self._politica()
         self.avanzar(dt)
         for f in self.al_tic:
@@ -784,7 +808,7 @@ class EscenaGo(QWidget):
             self._inactiva = not self.window().isActiveWindow()
         except Exception:
             self._inactiva = False
-        if self._ms_reloj == 16 and self._dt_med > 0.0205 and ahora >= self._lento_hasta:
+        if self._ms_reloj == 16 and self._dt_med > 0.0205 and ahora >= self._lento_hasta and ahora >= self._gracia_hasta:
             # no llega a 60 fps (pantalla con escala alta, GO trabajando, equipo justo): 30 parejos un rato (8 s, 16 s… hasta 2 min) y vuelve a probar
             self._lento_n = min(self._lento_n + 1, 5)
             self._lento_hasta = ahora + 8.0 * 2 ** (self._lento_n - 1)
@@ -804,6 +828,7 @@ class EscenaGo(QWidget):
         if self._t_politica > 1.0:
             self._t_politica = 0.0
             self._politica()
+        self._avanzar_barra(dt)
         if self._quieto and self._estado != 'explotando':
             dt *= 0.15                                   # «Reducir animaciones»: todo casi quieto
         self._t += dt
@@ -1313,10 +1338,127 @@ class EscenaGo(QWidget):
             self._dibujar_cometa(p, k_)
         for im in self._impactos:
             self._dibujar_impacto(p, im)
+        if self._barra_d is not None and self._barra_a > 0.01:
+            self._dibujar_barra(p, W, H, rect.bottom())
         if self.destello > 0.01:
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(_col('#DFF1FF', 235 * self.destello ** 1.4))
             p.drawRect(QRectF(-10, -10, W + 20, H + 20))
+
+    # ------------------------------------------------------------------ la barra de progreso de abajo
+    def _avanzar_barra(self, dt):
+        """Lee los datos de la barra (el panel) y la hace aparecer / irse con suavidad; al terminar GO se queda llena 1,4 s y se va."""
+        d = None
+        if self.datos_barra is not None:
+            try:
+                d = self.datos_barra()
+            except Exception:
+                d = None
+        obj = 0.0
+        if d is not None:
+            self._barra_d = d
+            obj = 1.0 if d['estado'] == 'trabajando' else max(0.0, 1.0 - max(0.0, d.get('cierre', 0.0) - 1.4) / 1.0)
+        self._barra_a += (obj - self._barra_a) * min(1.0, dt * 7.0)
+        if obj == 0.0 and self._barra_a < 0.01:
+            self._barra_a, self._barra_d = 0.0, None
+
+    def _dibujar_barra(self, p, W, H, bajo_pasos):
+        """v5.22 (el usuario: «mejora su barra de progreso… abajo»): la barra de GO al pie de Inicio. Antes era una línea de 2 px del HUD
+        que seguía la energía de la esfera (no el %: marcaba ~60 con el centro en 45) y desaparecía en equipos lentos y en los estilos sin
+        HUD. Ahora lleva el MISMO % que el centro del botón (PanelGo._datos_barra), un tramo por paso con el peso de lo que tarda cada uno
+        (los pasos muy cortos se funden con el anterior: si no, quedaban puntitos), un brillo que recorre el tramo en curso, la cabeza
+        que brilla y, a sus lados, «3/6 · paso» y «45 % · ~2 min». Va siempre por debajo de la lista de pasos (`bajo_pasos`)."""
+        d, a = self._barra_d, self._barra_a
+        total = min(W - 96.0, 980.0)
+        if total < 220.0:
+            return
+        alto = 6.0
+        y = min(H - 14.0, max(H - 30.0, bajo_pasos + 18.0))
+        textos = total >= 640.0 and bool(d.get('izq') or d.get('der'))
+        lado = 196.0 if textos else 0.0                                            # el sitio de cada texto (fijo: la barra no salta)
+        x0 = (W - total) / 2.0 + (lado + 14.0 if textos else 0.0)
+        ancho = total - 2 * (lado + 14.0 if textos else 0.0)
+        prog = max(0.0, min(1.0, float(d.get('prog', 0.0))))
+        trabaja = d['estado'] == 'trabajando'
+        base = QColor('#FF6B6B') if d['estado'] == 'error' else QColor(getattr(self.estilo, 'acento', '#22D3EE'))
+        claro = QColor(min(255, base.red() + 110), min(255, base.green() + 110), min(255, base.blue() + 110))
+        xp = x0 + ancho * prog
+        p.save()
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setPen(Qt.PenStyle.NoPen)
+        # una sombra suave detrás (se lee sobre la esfera, los haces y las partículas)
+        sombra = QRectF((W - total) / 2.0 - 24, y - 20, total + 48, alto + 40)
+        g0 = QLinearGradient(0, sombra.top(), 0, sombra.bottom())
+        g0.setColorAt(0.0, QColor(2, 6, 14, 0))
+        g0.setColorAt(0.5, QColor(2, 6, 14, int(135 * a)))
+        g0.setColorAt(1.0, QColor(2, 6, 14, 0))
+        p.setBrush(g0)
+        p.drawRoundedRect(sombra, 22, 22)
+        relleno = QLinearGradient(x0, 0, x0 + ancho, 0)
+        relleno.setColorAt(0.0, _col(base.name(), 255 * a))
+        relleno.setColorAt(1.0, _col(claro.name(), 255 * a))
+        hueco = 4.0
+        piezas = []                                                                # (x desde, x hasta, estado) en píxeles
+        for _clave, i0, i1, est in (d.get('tramos') or ()):
+            a0, a1 = x0 + ancho * i0, x0 + ancho * i1
+            if a1 - a0 < 0.5:
+                continue
+            if piezas and (a1 - a0 < 18.0 or piezas[-1][1] - piezas[-1][0] < 18.0):  # un paso muy corto se funde con el de al lado
+                piezas[-1] = (piezas[-1][0], a1, 'activo' if 'activo' in (piezas[-1][2], est) else est)
+            else:
+                piezas.append((a0, a1, est))
+        piezas = piezas or [(x0, x0 + ancho, 'activo')]
+        en_curso = None
+        for a0, a1, est in piezas:
+            sx0 = a0 + (hueco / 2 if a0 > x0 + 0.5 else 0.0)
+            sx1 = a1 - (hueco / 2 if a1 < x0 + ancho - 0.5 else 0.0)
+            if sx1 - sx0 < 1.0:
+                continue
+            p.setBrush(QColor(255, 255, 255, int(30 * a)))                      # la pista del tramo
+            p.drawRoundedRect(QRectF(sx0, y, sx1 - sx0, alto), alto / 2, alto / 2)
+            fin = min(sx1, xp)
+            if fin > sx0 + 0.5:                                                    # lo hecho del tramo
+                p.setBrush(relleno)
+                p.drawRoundedRect(QRectF(sx0, y, fin - sx0, alto), alto / 2, alto / 2)
+                if est == 'activo':
+                    en_curso = (sx0, fin)
+        if en_curso and trabaja and not self._quieto and en_curso[1] - en_curso[0] > 12.0:
+            s0, s1 = en_curso                                                      # un brillo recorre lo hecho del paso en curso
+            cx = s0 - 40.0 + (s1 - s0 + 80.0) * ((self._t * 0.55) % 1.0)
+            gb = QLinearGradient(cx - 40.0, 0, cx + 40.0, 0)
+            gb.setColorAt(0.0, QColor(255, 255, 255, 0))
+            gb.setColorAt(0.5, QColor(255, 255, 255, int(150 * a)))
+            gb.setColorAt(1.0, QColor(255, 255, 255, 0))
+            p.save()
+            p.setClipRect(QRectF(s0, y - 1, s1 - s0, alto + 2))
+            p.setBrush(gb)
+            p.drawRoundedRect(QRectF(s0, y, s1 - s0, alto), alto / 2, alto / 2)
+            p.restore()
+        if trabaja and prog > 0.002:                                               # la cabeza
+            gc = QRadialGradient(QPointF(xp, y + alto / 2), 15.0)
+            gc.setColorAt(0.0, QColor(255, 255, 255, int(235 * a)))
+            gc.setColorAt(0.35, _col(claro.name(), 150 * a))
+            gc.setColorAt(1.0, _col(base.name(), 0))
+            p.setBrush(gc)
+            p.drawEllipse(QPointF(xp, y + alto / 2), 15.0, 15.0)
+        if textos:                                                                 # «3/6 · IA y palabras» [ barra ] «45 % · ~2 min»
+            izq = QRectF((W - total) / 2.0, y + alto / 2 - 10, lado, 20)
+            der = QRectF(x0 + ancho + 14.0, y + alto / 2 - 10, lado, 20)
+            f = ui.fuente(12, peso='medio')
+            p.setFont(f)
+            p.setPen(QColor(226, 236, 250, int(225 * a)))
+            p.drawText(izq, int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter),
+                       QFontMetricsF(f).elidedText(d.get('izq') or '', Qt.TextElideMode.ElideRight, lado))
+            f = ui.fuente(12, peso='negrita')
+            try:
+                f.setFeature(QFont.Tag('tnum'), 1)                                 # cifras de ancho fijo: el % no baila
+            except Exception:
+                pass
+            p.setFont(f)
+            p.setPen(_col(claro.name(), 245 * a))
+            p.drawText(der, int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
+                       QFontMetricsF(f).elidedText(d.get('der') or '', Qt.TextElideMode.ElideRight, lado))
+        p.restore()
 
     def _fondo_bajo(self, W, H, c, e):
         """El fondo entero de la escena a 1/3 de resolución (~0,6 ms): lo pinta el estilo elegido (estilos_inicio)."""

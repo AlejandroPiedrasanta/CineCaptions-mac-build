@@ -44,7 +44,7 @@ import os
 import time
 from pathlib import Path
 
-VERSION = "5.22 (detectar video)"
+VERSION = "5.24 (detectar video)"
 
 # Archivo de control que lee la ventana. Es un .json de unos pocos bytes, por
 # eso sigue viviendo en la carpeta compartida junto a los .srt y las marcas.
@@ -521,6 +521,29 @@ def video_fuente_del_timeline(timeline):
     return ruta, len(items)
 
 
+def desde_del_clip(timeline, marca):
+    """v5.23: el segundo del ARCHIVO del clip principal de V1 que suena en el
+    primer instante del audio renderizado (con el clip recortado o con zona
+    marcada no es 0). La app lo usa en Efectos > «Posición» para enseñar los
+    fotogramas justos de cada segundo. None si no se puede saber."""
+    try:
+        items = [it for it in (timeline.GetItemListInTrack("video", 1) or [])
+                 if it]
+        mejor = max(items, key=lambda it: it.GetDuration() or 0)
+        fps = float(timeline.GetSetting("timelineFrameRate") or 0)
+        if fps <= 0:
+            return None
+        try:
+            fps_c = float(mejor.GetMediaPoolItem().GetClipProperty("FPS") or fps)
+        except Exception:
+            fps_c = fps
+        inicio = marca[0] if marca else int(timeline.GetStartFrame())
+        return round(int(mejor.GetLeftOffset()) / (fps_c or fps)
+                     + (inicio - int(mejor.GetStart())) / fps, 3)
+    except Exception:
+        return None
+
+
 def main():
     try:
         resolve
@@ -628,6 +651,10 @@ def main():
     }
     if marca:
         datos["mark_in"], datos["mark_out"] = marca
+    if desde_timeline and clip_principal:
+        desde = desde_del_clip(timeline, marca)
+        if desde is not None:
+            datos["clip_principal_desde"] = desde
 
     SHARED_FOLDER.mkdir(parents=True, exist_ok=True)
     SALIDA_PATH.write_text(

@@ -20,11 +20,20 @@ import threading
 import time
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QFont, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
                            QRadialGradient)
 
 import qt_kit as ui
 from qt_kit import fuente
+
+
+def _cifras(f):
+    """v5.22: cifras de ancho fijo (tnum): el porcentaje no baila mientras cuenta."""
+    try:
+        f.setFeature(QFont.Tag('tnum'), 1)
+    except Exception:
+        pass
+    return f
 
 BRONCE = ((0.00, '#4a2e16'), (0.09, '#b27a41'), (0.20, '#f3c98f'), (0.29, '#8a5629'), (0.41, '#3b220f'), (0.54, '#c58a4c'),
           (0.65, '#f7d6a4'), (0.75, '#7b4a22'), (0.88, '#b87d42'), (1.00, '#4a2e16'))
@@ -426,7 +435,7 @@ class OrbeMecanica:
 
     def dibujar(self, p, c, R, t, estado, hover=0.0, presion=0.0, progreso=0.0, marca=0.0, texto='', rojo=0.0, quieto=False,
                 flare=0.0, R_base=None, fase='', fase_t=9.0, tono='ok', entrada=9.0, vibra=0.0, par=(0.0, 0.0), residuo=0.0,
-                apagon=0.0, eta='', luz=None):
+                apagon=0.0, eta='', luz=None, cortes=()):
         """estado: listo | apagado | trabajando | hecho | error.  fase: el paso en curso (resalta una pieza distinta del astrolabio);
         fase_t: segundos desde que cambió; tono 'aviso' = terminó con avisos (ámbar); entrada: segundos desde que apareció (las
         piezas se ensamblan de fuera hacia dentro); vibra 0..1: temblor de carga; par: posición del ratón -1..1 (paralaje);
@@ -494,14 +503,31 @@ class OrbeMecanica:
                     p.setPen(QPen(QColor(ESM_CLARO.red(), ESM_CLARO.green(), ESM_CLARO.blue(), int(120 * s_)), R * ancho, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
                     p.drawArc(QRectF(-R * rad, -R * rad, 2 * R * rad, 2 * R * rad), int((90 - 360 * f) * 16), 55 * 16)
         # --- progreso: un arco de luz en el filo interior del anillo de runas
+        # v5.22: sobre su pista (se ve lo que falta), más grueso, aclarándose hacia la cabeza y con un corte donde acaba cada paso
         if estado == 'trabajando':
             rad = R * 0.805
             caja = QRectF(-rad, -rad, 2 * rad, 2 * rad)
-            for grosor, al in ((R * 0.075, 26), (R * 0.04, 70), (R * 0.016, 255)):
-                col = ESM_CLARO if grosor < R * 0.02 else ESM
-                p.setPen(QPen(QColor(col.red(), col.green(), col.blue(), al), grosor, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-                p.setBrush(Qt.BrushStyle.NoBrush)
-                p.drawArc(caja, 90 * 16, -int(360 * 16 * max(0.004, min(1.0, progreso))))
+            pr = max(0.004, min(1.0, progreso))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(QColor(2, 14, 10, 120), R * 0.05))
+            p.drawEllipse(QPointF(0, 0), rad, rad)
+            p.setPen(QPen(QColor(ESM.red(), ESM.green(), ESM.blue(), 52), R * 0.012))
+            p.drawEllipse(QPointF(0, 0), rad, rad)
+            for grosor, al in ((R * 0.08, 26), (R * 0.045, 72)):
+                p.setPen(QPen(QColor(ESM.red(), ESM.green(), ESM.blue(), al), grosor, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                p.drawArc(caja, 90 * 16, -int(360 * 16 * pr))
+            g_ = QConicalGradient(QPointF(0, 0), 90)
+            g_.setColorAt(0.0, ESM)
+            g_.setColorAt(max(0.0005, 1.0 - pr), QColor(235, 255, 244))
+            g_.setColorAt(1.0, ESM)
+            p.setPen(QPen(QBrush(g_), R * 0.022, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawArc(caja, 90 * 16, -int(360 * 16 * pr))
+            if cortes:
+                p.setPen(QPen(QColor(2, 14, 10, 235), max(1.4, R * 0.011)))
+                for f_ in cortes:
+                    a_ = math.radians(90 - 360 * f_)
+                    u_ = QPointF(math.cos(a_), -math.sin(a_))
+                    p.drawLine(u_ * (rad - R * 0.03), u_ * (rad + R * 0.03))
             ang = math.radians(90 - 360 * min(1.0, progreso))
             cab = QPointF(rad * math.cos(ang), -rad * math.sin(ang))
             hg = QRadialGradient(cab, R * 0.07)
@@ -526,17 +552,30 @@ class OrbeMecanica:
                 self._palomita(p, R, r_domo, 1.0, residuo, acento)
         elif estado == 'trabajando':
             self._gema(p, R, t, hover, respira, 0.10)
+            # v5.22: un velo oscuro en el domo para que el texto se lea, cifras de ancho fijo y textos de 12 px como mínimo
+            velo = QRadialGradient(QPointF(0, r_domo * 0.1), r_domo * 0.98)
+            velo.setColorAt(0.0, QColor(1, 10, 8, 150))
+            velo.setColorAt(0.75, QColor(1, 10, 8, 90))
+            velo.setColorAt(1.0, QColor(1, 10, 8, 0))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(velo))
+            p.drawEllipse(QPointF(0, r_domo * 0.1), r_domo * 0.98, r_domo * 0.98)
             p.setPen(QColor(255, 255, 255, 255))
-            p.setFont(fuente(max(22, int(R * 0.27)), peso='extra'))
-            p.drawText(QRectF(-r_domo, -r_domo * 0.62, 2 * r_domo, r_domo * 0.95), int(Qt.AlignmentFlag.AlignCenter), f'{int(round(progreso * 100))}%')
-            # justo debajo del porcentaje: cuánto falta; debajo de eso, qué se está haciendo (paso n/N)
-            if eta:
-                p.setPen(QColor(255, 236, 170, 245))
-                p.setFont(fuente(max(10, int(R * 0.074)), peso='extra'))
-                p.drawText(QRectF(-r_domo * 0.85, r_domo * 0.2, 1.7 * r_domo, r_domo * 0.26), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop), eta)
-            p.setPen(QColor(180, 235, 205, 235))
-            p.setFont(fuente(max(9, int(R * 0.058)), peso='medio'))
-            p.drawText(QRectF(-r_domo * 0.8, r_domo * (0.47 if eta else 0.26), 1.6 * r_domo, r_domo * 0.4), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop | Qt.TextFlag.TextWordWrap), texto)
+            p.setFont(_cifras(fuente(max(22, int(R * 0.27)), peso='extra')))
+            p.drawText(QRectF(-r_domo, -r_domo * 0.66, 2 * r_domo, r_domo * 0.95), int(Qt.AlignmentFlag.AlignCenter), f'{int(round(progreso * 100))}%')
+            # justo debajo del porcentaje: cuánto falta; debajo de eso, qué se está haciendo. Cada uno en UNA línea que quepa en el
+            # domo; si no cabe ni a 10 px se omite (la barra de abajo de Inicio lo dice): antes se partía o se salía del cristal
+            from estilos_inicio import fuente_que_cabe
+            f_eta = fuente_que_cabe(eta, r_domo * 1.8, max(12, int(R * 0.078)), 10, 'extra', True) if eta else None
+            if f_eta is not None:
+                p.setPen(QColor(255, 236, 170, 250))
+                p.setFont(f_eta)
+                p.drawText(QRectF(-r_domo, r_domo * 0.18, 2 * r_domo, r_domo * 0.3), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop), eta)
+            f_txt = fuente_que_cabe(texto, r_domo * 1.7, max(12, int(R * 0.066)), 10, 'medio') if texto else None
+            if f_txt is not None:
+                p.setPen(QColor(200, 245, 222, 245))
+                p.setFont(f_txt)
+                p.drawText(QRectF(-r_domo, r_domo * (0.48 if f_eta is not None else 0.24), 2 * r_domo, r_domo * 0.3), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop), texto)
         elif estado == 'hecho':
             self._gema(p, R, t, hover, respira, 0.0)
             self._palomita(p, R, r_domo, marca, 1.0, acento)
@@ -647,7 +686,7 @@ class OrbeMecanica:
             aro(0.34, 0.14, 40 * k)
             for i in range(7):
                 a = i * math.tau / 7 + t * 0.6
-                rr = R * (0.30 + 0.10 * math.sin(t * 2.2 + i))
+                rr = R * (0.53 + 0.05 * math.sin(t * 2.2 + i))  # v5.22: por FUERA del domo (antes pasaban por encima del % y del tiempo)
                 x, y = rr * math.cos(a), rr * math.sin(a)
                 s_ = R * (0.02 + 0.03 * (0.5 + 0.5 * math.sin(t * 5.0 + i * 2.1))) * (0.5 + k)
                 p.setPen(QPen(QColor(255, 235, 255, int(235 * min(1.0, k))), max(1.0, R * 0.008), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))

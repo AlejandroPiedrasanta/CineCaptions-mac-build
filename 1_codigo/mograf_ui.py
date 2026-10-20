@@ -474,17 +474,6 @@ def dibujar_hud(p, W, H, c, Rs, t, energia=0.0, estado='reposo', calidad=1.0, ca
         p.drawEllipse(c, rr, rr)
         p.setBrush(Qt.BrushStyle.NoBrush)
 
-    # --- 4. (v5.4) sin encuadre de visor, REC ni timecode: solo la barra de carga mientras GO trabaja
-    m = 26.0
-    if detalle and W > 520:
-        # barra de carga fina bajo el pie mientras trabaja
-        if trabaja and carga > 0:
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(_rgba(claro, 40))
-            p.drawRect(QRectF(m + 4, H - m - 3, W - 2 * m - 8, 2))
-            g = QLinearGradient(m + 4, 0, W - m - 4, 0)
-            g.setColorAt(0.0, _rgba(azul, 230))
-            g.setColorAt(1.0, _rgba(cian, 230))
-            p.setBrush(g)
-            p.drawRect(QRectF(m + 4, H - m - 3, (W - 2 * m - 8) * _clamp(carga), 2))
+    # --- 4. (v5.4) sin encuadre de visor, REC ni timecode. v5.22: la barra de carga de aquí (2 px, seguía la energía de la esfera y no
+    #        el %) la sustituye la barra de progreso de la escena (EscenaGo._dibujar_barra), en todos los estilos y equipos
     p.restore()
