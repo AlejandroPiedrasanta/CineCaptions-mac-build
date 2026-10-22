@@ -4,10 +4,6 @@
 /***/ 7553
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   N: () => (/* binding */ AC3_SAMPLE_RATES),
-/* harmony export */   P: () => (/* binding */ EAC3_REDUCED_SAMPLE_RATES)
-/* harmony export */ });
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
  *
@@ -19,6 +15,11 @@
 const AC3_SAMPLE_RATES = [48000, 44100, 32000];
 /** E-AC-3 reduced sample rates for fscod2 per ATSC A/52:2018 */
 const EAC3_REDUCED_SAMPLE_RATES = [24000, 22050, 16000];
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "N", 0, /* binding */ AC3_SAMPLE_RATES,
+/* harmony export */   "P", 0, /* binding */ EAC3_REDUCED_SAMPLE_RATES
+/* harmony export */ ]);
 
 
 /***/ },
@@ -163,7 +164,7 @@ class AdtsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                 await this.advanceReader();
             }
             // There has to be a frame if this demuxer got selected
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.firstFrameHeader);
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.firstFrameHeader);
             // Create the single audio track
             this.trackBackings = [new AdtsAudioTrackBacking(this)];
         })();
@@ -308,17 +309,17 @@ class AdtsAudioTrackBacking {
         return 'aac';
     }
     getInternalCodecId() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
         return this.demuxer.firstFrameHeader.objectType;
     }
     getNumberOfChannels() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
         const numberOfChannels = _shared_aac_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .aacChannelMap */ .Ti[this.demuxer.firstFrameHeader.channelConfiguration];
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(numberOfChannels !== undefined);
         return numberOfChannels;
     }
     getSampleRate() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
         const sampleRate = _shared_aac_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .aacFrequencyTable */ .Im[this.demuxer.firstFrameHeader.samplingFrequencyIndex];
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(sampleRate !== undefined);
         return sampleRate;
@@ -329,7 +330,7 @@ class AdtsAudioTrackBacking {
         };
     }
     async getDecoderConfig() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
         return {
             codec: `mp4a.40.${this.demuxer.firstFrameHeader.objectType}`,
             numberOfChannels: this.getNumberOfChannels(),
@@ -426,7 +427,8 @@ class AdtsAudioTrackBacking {
 /* harmony export */   lh: () => (/* binding */ readAdtsFrameHeader)
 /* harmony export */ });
 /* harmony import */ var _shared_bitstream_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1390);
-/* harmony import */ var _reader_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7735);
+/* harmony import */ var _shared_aac_misc_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1299);
+/* harmony import */ var _reader_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7735);
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
  *
@@ -436,12 +438,16 @@ class AdtsAudioTrackBacking {
  */
 
 
+
 const MIN_ADTS_FRAME_HEADER_SIZE = 7;
 const MAX_ADTS_FRAME_HEADER_SIZE = 9;
 const readAdtsFrameHeader = (slice) => {
     // https://wiki.multimedia.cx/index.php/ADTS (last visited: 2025/08/17)
     const startPos = slice.filePos;
-    const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_1__/* .readBytes */ .io)(slice, 9); // 9 with CRC, 7 without CRC
+    if (slice.remainingLength < MIN_ADTS_FRAME_HEADER_SIZE) {
+        return null;
+    }
+    const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readBytes */ .io)(slice, MIN_ADTS_FRAME_HEADER_SIZE);
     const bitstream = new _shared_bitstream_js__WEBPACK_IMPORTED_MODULE_0__/* .Bitstream */ ._(bytes);
     const syncword = bitstream.readBits(12);
     if (syncword !== 0b1111_11111111) {
@@ -455,7 +461,7 @@ const readAdtsFrameHeader = (slice) => {
     const protectionAbsence = bitstream.readBits(1);
     const objectType = bitstream.readBits(2) + 1;
     const samplingFrequencyIndex = bitstream.readBits(4);
-    if (samplingFrequencyIndex === 15) {
+    if (samplingFrequencyIndex >= _shared_aac_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .aacFrequencyTable */ .Im.length) {
         return null;
     }
     bitstream.skipBits(1); // Private bit
@@ -474,11 +480,14 @@ const readAdtsFrameHeader = (slice) => {
         throw new Error('ADTS frames with more than one AAC frame are not supported.');
     }
     let crcCheck = null;
-    if (protectionAbsence === 1) { // No CRC
-        slice.filePos -= 2;
+    if (protectionAbsence === 0) { // CRC
+        if (slice.remainingLength < 2) {
+            return null;
+        }
+        crcCheck = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU16Be */ .mH)(slice);
     }
-    else { // CRC
-        crcCheck = bitstream.readBits(16);
+    if (frameLength < slice.filePos - startPos) {
+        return null; // The frame must at least contain its own header
     }
     return {
         objectType,
@@ -585,7 +594,7 @@ class Aes128CbcContext {
         this.outView = new DataView(this.out.buffer);
     }
     init({ key, iv }) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(key.byteLength === 16);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(key.byteLength === 16);
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(iv.byteLength === 16);
         if (!tablesGenerated) {
             generateAesTables();
@@ -854,8 +863,7 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                 if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isThenable */ .Qg)(headerSlice))
                     headerSlice = await headerSlice;
                 if (!headerSlice) {
-                    this.lastSampleLoaded = true;
-                    return;
+                    break;
                 }
                 const id3V2Header = (0,_id3_js__WEBPACK_IMPORTED_MODULE_8__/* .readId3V2Header */ .IX)(headerSlice);
                 if (!id3V2Header) {
@@ -878,7 +886,7 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                 if (sizeSlice === null) {
                     throw new Error(`Metadata block at position ${currentPos} is too small! Corrupted file.`);
                 }
-                (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(sizeSlice);
+                ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(sizeSlice);
                 const byte = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU8 */ .eo)(sizeSlice); // first bit: isLastMetadata, remaining 7 bits: metaBlockType
                 const size = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU24Be */ .n2)(sizeSlice);
                 const isLastMetadata = (byte & 0x80) !== 0;
@@ -887,10 +895,12 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                     case _codec_data_js__WEBPACK_IMPORTED_MODULE_0__/* .FlacBlockType */ .A3.STREAMINFO: {
                         // Parse streaminfo block
                         // https://www.rfc-editor.org/rfc/rfc9639.html#section-8.2
+                        if (size < 34) {
+                            throw new Error(`StreamInfo block at position ${currentPos} is too small! Corrupted file.`);
+                        }
                         let streamInfoBlock = this.reader.requestSlice(currentPos, size);
                         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isThenable */ .Qg)(streamInfoBlock))
                             streamInfoBlock = await streamInfoBlock;
-                        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(streamInfoBlock);
                         if (streamInfoBlock === null) {
                             throw new Error(`StreamInfo block at position ${currentPos} is too small! Corrupted file.`);
                         }
@@ -901,6 +911,9 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                         const minimumFrameSize = bitstream.readBits(24);
                         const maximumFrameSize = bitstream.readBits(24);
                         const sampleRate = bitstream.readBits(20);
+                        if (sampleRate === 0) {
+                            throw new Error('Invalid StreamInfo block: sample rate is 0. Corrupted file.');
+                        }
                         const numberOfChannels = bitstream.readBits(3) + 1;
                         bitstream.readBits(5); // bitsPerSample - 1
                         const totalSamples = bitstream.readBits(36);
@@ -936,8 +949,10 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                         let vorbisCommentBlock = this.reader.requestSlice(currentPos, size);
                         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isThenable */ .Qg)(vorbisCommentBlock))
                             vorbisCommentBlock = await vorbisCommentBlock;
-                        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(vorbisCommentBlock);
-                        (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_0__/* .readVorbisComments */ .Oc)((0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(vorbisCommentBlock, size), this.metadataTags);
+                        if (!vorbisCommentBlock) {
+                            throw new Error(`Vorbis comment block at position ${currentPos} exceeds the file. Corrupted file.`);
+                        }
+                        ;(0,_codec_data_js__WEBPACK_IMPORTED_MODULE_0__/* .readVorbisComments */ .Oc)((0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(vorbisCommentBlock, size), this.metadataTags);
                         break;
                     }
                     case _codec_data_js__WEBPACK_IMPORTED_MODULE_0__/* .FlacBlockType */ .A3.PICTURE: {
@@ -946,27 +961,35 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                         let pictureBlock = this.reader.requestSlice(currentPos, size);
                         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isThenable */ .Qg)(pictureBlock))
                             pictureBlock = await pictureBlock;
-                        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(pictureBlock);
-                        const pictureType = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32Be */ .cN)(pictureBlock);
-                        const mediaTypeLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32Be */ .cN)(pictureBlock);
-                        const mediaType = _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .textDecoder */ .su.decode((0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(pictureBlock, mediaTypeLength));
-                        const descriptionLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32Be */ .cN)(pictureBlock);
-                        const description = _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .textDecoder */ .su.decode((0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(pictureBlock, descriptionLength));
-                        pictureBlock.skip(4 + 4 + 4 + 4); // Skip width, height, color depth, number of indexed colors
-                        const dataLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32Be */ .cN)(pictureBlock);
-                        const data = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(pictureBlock, dataLength);
-                        this.metadataTags.images ??= [];
-                        this.metadataTags.images.push({
-                            data,
-                            mimeType: mediaType,
-                            // https://www.rfc-editor.org/rfc/rfc9639.html#table13
-                            kind: pictureType === 3
-                                ? 'coverFront'
-                                : pictureType === 4
-                                    ? 'coverBack'
-                                    : 'unknown',
-                            description,
-                        });
+                        if (!pictureBlock) {
+                            throw new Error(`Picture block at position ${currentPos} exceeds the file. Corrupted file.`);
+                        }
+                        try {
+                            const pictureType = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32Be */ .cN)(pictureBlock);
+                            const mediaTypeLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32Be */ .cN)(pictureBlock);
+                            const mediaType = _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .textDecoder */ .su.decode((0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(pictureBlock, mediaTypeLength));
+                            const descriptionLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32Be */ .cN)(pictureBlock);
+                            const description = _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .textDecoder */ .su.decode((0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(pictureBlock, descriptionLength));
+                            // Skip width, height, color depth, number of indexed colors
+                            pictureBlock.skip(4 + 4 + 4 + 4);
+                            const dataLength = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32Be */ .cN)(pictureBlock);
+                            const data = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(pictureBlock, dataLength);
+                            this.metadataTags.images ??= [];
+                            this.metadataTags.images.push({
+                                data,
+                                mimeType: mediaType,
+                                // https://www.rfc-editor.org/rfc/rfc9639.html#table13
+                                kind: pictureType === 3
+                                    ? 'coverFront'
+                                    : pictureType === 4
+                                        ? 'coverBack'
+                                        : 'unknown',
+                                description,
+                            });
+                        }
+                        catch {
+                            // The lengths inside the block are off, so it's a malformed picture; let's just skip it
+                        }
                         break;
                     }
                     default:
@@ -974,17 +997,18 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                 }
                 currentPos += size;
                 if (isLastMetadata) {
-                    this.lastLoadedPos = currentPos;
                     break;
                 }
             }
+            // Even if no block was flagged as the last one, the audio frames come after the metadata
+            this.lastLoadedPos = currentPos;
             if (!this.audioInfo) {
                 throw new Error('Missing STREAMINFO metadata block! Corrupted FLAC file.');
             }
         })());
     }
-    async readNextFlacFrame({ startPos, isFirstPacket, }) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.audioInfo);
+    async readNextFlacFrame(startPos) {
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.audioInfo);
         // we expect that there are at least `minimumFrameSize` bytes left in the file
         // Ideally we also want to validate the next header is valid
         // to throw out an accidental sync word
@@ -1024,10 +1048,7 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
         if (!slice) {
             return null;
         }
-        const frameHeader = this.readFlacFrameHeader({
-            slice,
-            isFirstPacket: isFirstPacket,
-        });
+        const frameHeader = this.readFlacFrameHeader(slice);
         if (!frameHeader) {
             return null;
         }
@@ -1059,10 +1080,7 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
                 }
                 slice.skip(-2);
                 const lengthIfNextFlacFrameHeaderIsLegit = slice.filePos - startPos;
-                const nextFrameHeader = this.readFlacFrameHeader({
-                    slice,
-                    isFirstPacket: false,
-                });
+                const nextFrameHeader = this.readFlacFrameHeader(slice);
                 if (!nextFrameHeader) {
                     slice.filePos = positionBeforeReading;
                     continue;
@@ -1094,7 +1112,7 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
             }
         }
     }
-    readFlacFrameHeader({ slice, isFirstPacket, }) {
+    readFlacFrameHeader(slice) {
         // In this function, generally it is not safe to throw errors.
         // We might end up here because we stumbled upon a syncword,
         // but the data might not actually be a FLAC frame, it might be random bitstream
@@ -1111,36 +1129,17 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
             // This cannot be a valid FLAC frame, must start with the syncword
             return null;
         }
-        if (this.blockingBit === null) {
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(isFirstPacket);
-            const newBlockingBit = bitstream.readBits(1);
-            this.blockingBit = newBlockingBit;
-        }
-        else if (this.blockingBit === 1) {
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(!isFirstPacket);
-            const newBlockingBit = bitstream.readBits(1);
-            if (newBlockingBit !== 1) {
-                // This cannot be a valid FLAC frame, expected 1 but got 0
-                return null;
-            }
-        }
-        else if (this.blockingBit === 0) {
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(!isFirstPacket);
-            const newBlockingBit = bitstream.readBits(1);
-            if (newBlockingBit !== 0) {
-                // This cannot be a valid FLAC frame, expected 0 but got 1
-                return null;
-            }
-        }
-        else {
-            throw new Error('Invalid blocking bit');
+        const blockingBit = bitstream.readBits(1);
+        if (this.blockingBit !== null && blockingBit !== this.blockingBit) {
+            // This cannot be a valid FLAC frame, the blocking strategy changed
+            return null;
         }
         const blockSizeOrUncommon = (0,_flac_misc_js__WEBPACK_IMPORTED_MODULE_6__/* .getBlockSizeOrUncommon */ .iv)(bitstream.readBits(4));
         if (!blockSizeOrUncommon) {
             // This cannot be a valid FLAC frame, the syncword was just coincidental
             return null;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.audioInfo);
         const sampleRateOrUncommon = (0,_flac_misc_js__WEBPACK_IMPORTED_MODULE_6__/* .getSampleRateOrUncommon */ .oP)(bitstream.readBits(4), this.audioInfo.sampleRate);
         if (!sampleRateOrUncommon) {
             // This cannot be a valid FLAC frame, the syncword was just coincidental
@@ -1152,6 +1151,19 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
         if (reservedZero !== 0) {
             // This cannot be a valid FLAC frame, the syncword was just coincidental
             return null;
+        }
+        // Callers guarantee the minimum header length, but the rest depends on the fields, so let's make sure it's
+        // actually there. The number of leading ones in the coded number's first byte gives its length.
+        const codedNumberFirstByte = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU8 */ .eo)(slice);
+        slice.skip(-1);
+        const codedNumberLength = Math.max(Math.clz32(~codedNumberFirstByte << 24), 1);
+        const headerLength = 4
+            + codedNumberLength
+            + (blockSizeOrUncommon === 'uncommon-u16' ? 2 : blockSizeOrUncommon === 'uncommon-u8' ? 1 : 0)
+            + (sampleRateOrUncommon === 'uncommon-u8' ? 1 : typeof sampleRateOrUncommon === 'number' ? 0 : 2)
+            + 1; // CRC
+        if (startOffset + headerLength > slice.end) {
+            return null; // Cut off by the end of the file
         }
         const num = (0,_flac_misc_js__WEBPACK_IMPORTED_MODULE_6__/* .readCodedNumber */ .X7)(slice);
         const blockSize = (0,_flac_misc_js__WEBPACK_IMPORTED_MODULE_6__/* .readBlockSize */ .f6)(slice, blockSizeOrUncommon);
@@ -1174,6 +1186,8 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
             // in the bitstream
             return null;
         }
+        // Only a legit frame gets to determine the blocking strategy
+        this.blockingBit = blockingBit;
         return { num, blockSize, sampleRate };
     }
     async advanceReader() {
@@ -1181,10 +1195,7 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.lastLoadedPos !== null);
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.audioInfo);
         const startPos = this.lastLoadedPos;
-        const frame = await this.readNextFlacFrame({
-            startPos,
-            isFirstPacket: this.loadedSamples.length === 0,
-        });
+        const frame = await this.readNextFlacFrame(startPos);
         if (!frame) {
             // Unexpected case, failed to read next FLAC frame
             // handling gracefully
@@ -1229,11 +1240,11 @@ class FlacAudioTrackBacking {
         return null;
     }
     getNumberOfChannels() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return this.demuxer.audioInfo.numberOfChannels;
     }
     getSampleRate() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return this.demuxer.audioInfo.sampleRate;
     }
     getName() {
@@ -1243,7 +1254,7 @@ class FlacAudioTrackBacking {
         return _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .UNDETERMINED_LANGUAGE */ .IR;
     }
     getTimeResolution() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return this.demuxer.audioInfo.sampleRate;
     }
     isRelativeToUnixEpoch() {
@@ -1262,7 +1273,7 @@ class FlacAudioTrackBacking {
         return null;
     }
     async getDurationFromMetadata() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         if (this.demuxer.audioInfo.totalSamples === 0) {
             return null;
         }
@@ -1277,7 +1288,7 @@ class FlacAudioTrackBacking {
         };
     }
     async getDecoderConfig() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return {
             codec: 'flac',
             numberOfChannels: this.demuxer.audioInfo.numberOfChannels,
@@ -1286,7 +1297,7 @@ class FlacAudioTrackBacking {
         };
     }
     async getPacket(timestamp, options) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         if (timestamp < 0) {
             return null;
         }
@@ -1295,6 +1306,9 @@ class FlacAudioTrackBacking {
             while (true) {
                 const packetIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .binarySearchLessOrEqual */ .eE)(this.demuxer.loadedSamples, timestamp, x => x.blockOffset / this.demuxer.audioInfo.sampleRate);
                 if (packetIndex === -1) {
+                    if (this.demuxer.lastSampleLoaded) {
+                        return null; // There are no packets at all
+                    }
                     await this.demuxer.advanceReader();
                     continue;
                 }
@@ -1358,7 +1372,7 @@ class FlacAudioTrackBacking {
             }
             data = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(slice, rawSample.byteSize);
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         const timestamp = rawSample.blockOffset / this.demuxer.audioInfo.sampleRate;
         const duration = rawSample.blockSize / this.demuxer.audioInfo.sampleRate;
         return new _packet_js__WEBPACK_IMPORTED_MODULE_3__/* .EncodedPacket */ .Z(data, 'key', timestamp, duration, sampleIndex, rawSample.byteSize);
@@ -1571,7 +1585,6 @@ class SegmentedInput {
         this.trackBackingsPromise = null;
         this.firstSegment = null;
         this.firstSegmentFirstTimestamps = new WeakMap();
-        this.firstTimestampCache = new WeakMap();
         this.input = input;
         this.path = path;
         this.trackDeclarations = trackDeclarations;
@@ -1637,46 +1650,21 @@ class SegmentedInput {
             return backings;
         })();
     }
-    // This operation is done a lot and can be semi-expensive, so it's good to have a cache for it
-    async getFirstTimestampForInput(input) {
-        const existing = this.firstTimestampCache.get(input);
-        if (existing !== undefined) {
-            return existing;
-        }
-        const firstTimestamp = await input.getFirstTimestamp();
-        this.firstTimestampCache.set(input, firstTimestamp);
-        return firstTimestamp;
-    }
     async getMediaOffset(segment, input) {
-        const firstSegment = segment.firstSegment ?? segment;
-        let firstSegmentFirstTimestamp;
-        if (this.firstSegmentFirstTimestamps.has(firstSegment)) {
-            firstSegmentFirstTimestamp = this.firstSegmentFirstTimestamps.get(firstSegment);
+        const format = await input.getFormat();
+        if (!format.supportsTimestampedMediaData) {
+            return segment.timestamp;
         }
-        else {
+        // The segments' timestamps are assumed to lie on one shared timeline (until the next discontinuity), which we
+        // align to the playlist using the first segment
+        const firstSegment = segment.firstSegment ?? segment;
+        let firstSegmentFirstTimestamp = this.firstSegmentFirstTimestamps.get(firstSegment);
+        if (firstSegmentFirstTimestamp === undefined) {
             const firstInput = this.getInputForSegment(firstSegment);
-            firstSegmentFirstTimestamp = await this.getFirstTimestampForInput(firstInput);
+            firstSegmentFirstTimestamp = await firstInput.getFirstTimestamp();
             this.firstSegmentFirstTimestamps.set(firstSegment, firstSegmentFirstTimestamp);
         }
-        if (firstSegment === segment) {
-            return firstSegment.timestamp - firstSegmentFirstTimestamp;
-        }
-        const segmentFirstTimestamp = await this.getFirstTimestampForInput(input);
-        const segmentElapsed = segment.timestamp - firstSegment.timestamp;
-        const inputElapsed = segmentFirstTimestamp - firstSegmentFirstTimestamp;
-        const difference = inputElapsed - segmentElapsed;
-        if (Math.abs(difference) <= Math.min(0.25, segmentElapsed)) { // Heuristic
-            // We're close enough
-            return firstSegment.timestamp - firstSegmentFirstTimestamp;
-        }
-        else {
-            // Ideally, each segment has absolute timestamps that are relative to some outside clock which is
-            // consistent across segments. This is often the case, but not always. Either the container format used is
-            // not timestamped at all (like ADTS), or the segments are just fucky. In this case, use the segment's
-            // relative timestamp to determine where we are, and completely offset out the segment's input start
-            // timestamp.
-            return segment.timestamp - segmentFirstTimestamp;
-        }
+        return firstSegment.timestamp - firstSegmentFirstTimestamp;
     }
     dispose() {
         for (const entry of this.inputCache) {
@@ -1785,7 +1773,7 @@ class SegmentedInputInputTrackBacking {
         return this.segmentedInput.getLiveRefreshInterval();
     }
     async createAdjustedPacket(packet, segment, track) {
-        (0,misc/* assert */.vA)(packet.sequenceNumber >= 0);
+        ;(0,misc/* assert */.vA)(packet.sequenceNumber >= 0);
         (0,misc/* assert */.vA)(this.segmentedInput.firstSegment);
         const mediaOffset = await this.segmentedInput.getMediaOffset(segment, track.input);
         // If we didn't do this then sequence numbers would exceed Number.MAX_SAFE_INTEGER for Unix-timestamped segments
@@ -1861,13 +1849,16 @@ class SegmentedInputInputTrackBacking {
                 currentSegment = nextSegment;
                 continue;
             }
-            const firstPacket = await nextTrack._backing.getFirstPacket(options);
-            if (!firstPacket) {
+            let packet = await nextTrack._backing.getFirstPacket(options);
+            if (packet && keyframesOnly && packet.type !== 'key') {
+                packet = await nextTrack._backing.getNextKeyPacket(packet, options);
+            }
+            if (!packet) {
                 // Segments may contain zero packets for a track, so, move on
                 currentSegment = nextSegment;
                 continue;
             }
-            return this.createAdjustedPacket(firstPacket, nextSegment, nextTrack);
+            return this.createAdjustedPacket(packet, nextSegment, nextTrack);
         }
     }
     getPacket(timestamp, options) {
@@ -1906,6 +1897,38 @@ class SegmentedInputInputTrackBacking {
                     skipLiveWait: options.skipLiveWait,
                 });
                 continue;
+            }
+            // The playlist may claim the segment to be longer than its media actually is, in which case the timestamp
+            // can lie in the next segment instead. That's only possible if it lies past this segment's media.
+            const lastPacket = keyframesOnly
+                ? await track._backing.getPacket(offsetTimestamp, { ...options, metadataOnly: true })
+                : packet;
+            (0,misc/* assert */.vA)(lastPacket);
+            if (offsetTimestamp >= lastPacket.timestamp + lastPacket.duration) {
+                const nextSegment = await this.segmentedInput.getNextSegment(currentSegment, {
+                    skipLiveWait: options.skipLiveWait,
+                });
+                if (nextSegment) {
+                    const nextInput = this.segmentedInput.getInputForSegment(nextSegment);
+                    const nextTracks = await nextInput.getTracks();
+                    const nextTrack = nextTracks.find(t => (t.type === this.firstInputTrack.type && t.number === this.firstInputTrack.number));
+                    let nextPacket = nextTrack
+                        ? await nextTrack._backing.getFirstPacket({ ...options, metadataOnly: true })
+                        : null;
+                    if (nextPacket && keyframesOnly && nextPacket.type !== 'key') {
+                        nextPacket = await nextTrack._backing.getNextKeyPacket(nextPacket, {
+                            ...options,
+                            metadataOnly: true,
+                        });
+                    }
+                    if (nextPacket) {
+                        const nextMediaOffset = await this.segmentedInput.getMediaOffset(nextSegment, nextInput);
+                        if (nextPacket.timestamp + nextMediaOffset <= timestamp) {
+                            currentSegment = nextSegment;
+                            continue;
+                        }
+                    }
+                }
             }
             return this.createAdjustedPacket(packet, currentSegment, track);
         }
@@ -2039,6 +2062,8 @@ var __disposeResources = (undefined && undefined.__disposeResources) || (functio
 
 const IV_STRING_REGEX = /^0[xX][0-9a-fA-F]+$/;
 const BASE64_DATA_URI_REGEX = /^data:.*;base64,/i;
+// Way more than any real duration, but small enough to keep all timestamp (and derived sequence number) math finite
+const MAX_DURATION = 1e9; // In seconds
 class HlsSegmentedInput extends SegmentedInput {
     constructor(demuxer, path, trackDeclarations, lines) {
         super(demuxer.input, path, trackDeclarations);
@@ -2089,6 +2114,17 @@ class HlsSegmentedInput extends SegmentedInput {
             try {
                 const ref = __addDisposableResource(env_1, await this.demuxer.input._getSourceUncached({ path: this.rootPath, isRoot: false }), false);
                 const reader = new src_reader/* Reader */.mP(ref.source);
+                // Check the start first, so that we don't read some (potentially huge) file in its entirety that isn't even
+                // a playlist
+                let headerSlice = reader.requestSliceRange(0, 0, 64);
+                if ((0,misc/* isThenable */.Qg)(headerSlice))
+                    headerSlice = await headerSlice;
+                if (headerSlice) {
+                    const header = misc/* textDecoder */.su.decode((0,src_reader/* readBytes */.io)(headerSlice, headerSlice.length));
+                    if (!header.trimStart().startsWith('#EXTM3U')) {
+                        throw new Error('Invalid M3U8 file; expected first line to be #EXTM3U.');
+                    }
+                }
                 const slice = await reader.requestEntireFile();
                 (0,misc/* assert */.vA)(slice);
                 lines = (0,src_reader/* readAllLines */.jo)(slice, slice.length, { ignore: hls_misc/* canIgnoreLine */.nf });
@@ -2187,6 +2223,7 @@ class HlsSegmentedInput extends SegmentedInput {
                         length: nextByteRange?.length ?? null,
                     };
                     const segment = {
+                        index: this.segments.length,
                         timestamp: accumulatedTime,
                         unixEpochTimestamp: accumulatedUnixTime,
                         firstSegment: currentFirstSegment,
@@ -2232,7 +2269,7 @@ class HlsSegmentedInput extends SegmentedInput {
                 const commaIndex = extinfContent.indexOf(',');
                 const durationStr = commaIndex === -1 ? extinfContent : extinfContent.slice(0, commaIndex);
                 const duration = Number(durationStr);
-                if (!Number.isFinite(duration) || duration < 0) {
+                if (!Number.isFinite(duration) || duration < 0 || duration > MAX_DURATION) {
                     throw new Error(`Invalid #EXTINF tag duration '${durationStr}'.`);
                 }
                 nextSegmentDuration = duration;
@@ -2266,6 +2303,7 @@ class HlsSegmentedInput extends SegmentedInput {
                         throw new Error('IV attribute must be set on #EXT-X-KEY tag preceding the #EXT-X-MAP tag.');
                     }
                     const segment = {
+                        index: -1,
                         timestamp: accumulatedTime,
                         unixEpochTimestamp: accumulatedUnixTime,
                         firstSegment: null,
@@ -2364,7 +2402,7 @@ class HlsSegmentedInput extends SegmentedInput {
             else if (line.startsWith(hls_misc/* TAG_MEDIA_SEQUENCE */._2)) {
                 const value = line.slice(hls_misc/* TAG_MEDIA_SEQUENCE */._2.length);
                 const number = Number(value);
-                if (!Number.isInteger(number) || number < 0) {
+                if (!Number.isSafeInteger(number) || number < 0) {
                     throw new Error(`Invalid EXT-X-MEDIA-SEQUENCE value '${value}'.`);
                 }
                 setNextSequenceNumber(number);
@@ -2424,10 +2462,10 @@ class HlsSegmentedInput extends SegmentedInput {
             else if (line.startsWith(hls_misc/* TAG_TARGETDURATION */.xe)) {
                 const value = line.slice(hls_misc/* TAG_TARGETDURATION */.xe.length);
                 const duration = Number(value);
-                if (!Number.isFinite(duration) || duration < 0) {
+                if (!Number.isFinite(duration) || duration < 0 || duration > MAX_DURATION) {
                     throw new Error(`Invalid EXT-X-TARGETDURATION value '${value}'.`);
                 }
-                this.refreshInterval = duration;
+                this.refreshInterval = (0,misc/* clamp */.qE)(duration, 0.5, 3600); // Clamped for safety
                 targetDuration = duration;
             }
             else if (line === hls_misc/* TAG_ENDLIST */.dY) {
@@ -2477,7 +2515,7 @@ class HlsSegmentedInput extends SegmentedInput {
         }
     }
     async getNextSegment(segment, options) {
-        const index = this.segments.indexOf(segment);
+        const index = segment.index;
         (0,misc/* assert */.vA)(index !== -1);
         const nextIndex = index + 1;
         // If we're skipping the live wait BUT there's no wait time, we're actually not lazy for the first iteration
@@ -2496,7 +2534,7 @@ class HlsSegmentedInput extends SegmentedInput {
         }
     }
     async getPreviousSegment(segment) {
-        const index = this.segments.indexOf(segment);
+        const index = segment.index;
         (0,misc/* assert */.vA)(index !== -1);
         return this.segments[index - 1] ?? null;
     }
@@ -2648,6 +2686,8 @@ class HlsSegmentedInput extends SegmentedInput {
 
 
 
+const MAX_VARIANT_STREAMS = 256;
+const MAX_MEDIA_TAGS = 256;
 class HlsDemuxer extends demuxer/* Demuxer */.B {
     constructor(input) {
         super(input);
@@ -2660,7 +2700,7 @@ class HlsDemuxer extends demuxer/* Demuxer */.B {
     }
     readMetadata() {
         return this.metadataPromise ??= (async () => {
-            (0,misc/* assert */.vA)(this.input._rootSource instanceof source/* PathedSource */.QI);
+            ;(0,misc/* assert */.vA)(this.input._rootSource instanceof source/* PathedSource */.QI);
             const slice = await this.input._reader.requestEntireFile();
             (0,misc/* assert */.vA)(slice);
             const lines = (0,src_reader/* readAllLines */.jo)(slice, slice.length, { ignore: hls_misc/* canIgnoreLine */.nf });
@@ -2744,6 +2784,9 @@ class HlsDemuxer extends demuxer/* Demuxer */.B {
                     this.trackBackings = await segmentedInput.getTrackBackings();
                     return;
                 }
+            }
+            if (variantStreams.length > MAX_VARIANT_STREAMS || mediaTags.length > MAX_MEDIA_TAGS) {
+                throw new Error('Unsupported M3U8 file; too many variant streams or media tags.');
             }
             this.masterPlaylistVariables = variables;
             // Now, let's process & resolve all variant streams in parallel, mapping each of them to tracks.
@@ -3151,7 +3194,7 @@ class HlsInputTrackBacking {
         return this.internalTrack.name;
     }
     getNumber() {
-        (0,misc/* assert */.vA)(this.internalTrack.demuxer.internalTracks);
+        ;(0,misc/* assert */.vA)(this.internalTrack.demuxer.internalTracks);
         const trackType = this.internalTrack.info.type;
         let number = 0;
         for (const track of this.internalTrack.demuxer.internalTracks) {
@@ -3268,6 +3311,10 @@ class HlsInputVideoTrackBacking extends HlsInputTrackBacking {
     }
     async getDecoderConfig() {
         await this.hydrate();
+        if ((await this.backingVideoTrack.getCodec()) !== this.getCodec()) {
+            // We check as late as possible, and we gotta check here
+            throw new Error('The codec in the playlist doesn\'t match the codec of the media data.');
+        }
         return this.backingVideoTrack.getDecoderConfig();
     }
 }
@@ -3302,6 +3349,10 @@ class HlsInputAudioTrackBacking extends HlsInputTrackBacking {
     }
     async getDecoderConfig() {
         await this.hydrate();
+        if ((await this.backingAudioTrack.getCodec()) !== this.getCodec()) {
+            // We check as late as possible, and we gotta check here
+            throw new Error('The codec in the playlist doesn\'t match the codec of the media data.');
+        }
         return this.backingAudioTrack.getDecoderConfig();
     }
 }
@@ -3355,25 +3406,8 @@ const preprocessLanguageCode = (code) => {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Bp: () => (/* binding */ TAG_DEFINE),
-/* harmony export */   DT: () => (/* binding */ TAG_I_FRAMES_ONLY),
-/* harmony export */   EF: () => (/* binding */ TAG_MEDIA),
 /* harmony export */   H$: () => (/* binding */ HlsPlaylistVariables),
-/* harmony export */   Hw: () => (/* binding */ AttributeList),
-/* harmony export */   L2: () => (/* binding */ TAG_KEY),
-/* harmony export */   _2: () => (/* binding */ TAG_MEDIA_SEQUENCE),
-/* harmony export */   bW: () => (/* binding */ TAG_PROGRAM_DATE_TIME),
-/* harmony export */   c$: () => (/* binding */ TAG_STREAM_INF),
-/* harmony export */   dY: () => (/* binding */ TAG_ENDLIST),
-/* harmony export */   e9: () => (/* binding */ TAG_EXTINF),
-/* harmony export */   g4: () => (/* binding */ TAG_I_FRAME_STREAM_INF),
-/* harmony export */   i$: () => (/* binding */ TAG_DISCONTINUITY),
-/* harmony export */   is: () => (/* binding */ HLS_MIME_TYPE),
-/* harmony export */   nf: () => (/* binding */ canIgnoreLine),
-/* harmony export */   sA: () => (/* binding */ TAG_MAP),
-/* harmony export */   v6: () => (/* binding */ TAG_BYTERANGE),
-/* harmony export */   xe: () => (/* binding */ TAG_TARGETDURATION),
-/* harmony export */   zA: () => (/* binding */ TAG_PLAYLIST_TYPE)
+/* harmony export */   Hw: () => (/* binding */ AttributeList)
 /* harmony export */ });
 /* harmony import */ var _logging_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6103);
 /* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3912);
@@ -3475,11 +3509,14 @@ class AttributeList {
 // Variable name `token_1` is referenced as `{$token_1}`
 const VARIABLE_NAME_PATTERN = /^[A-Za-z0-9_-]+$/;
 const VARIABLE_REFERENCE_PATTERN = /\{\$([A-Za-z0-9_-]+)\}/g;
+// Variable values may reference earlier variables, so substitution can grow output exponentially ("billion laughs")
+const MAX_TOTAL_SUBSTITUTED_LENGTH = 2 ** 26;
 class HlsPlaylistVariables {
     constructor(playlistPath, importedVariables) {
         this.playlistPath = playlistPath;
         this.importedVariables = importedVariables;
         this.variables = new Map();
+        this.totalSubstitutedLength = 0;
     }
     define(str) {
         const attributes = new AttributeList(str, this);
@@ -3520,6 +3557,10 @@ class HlsPlaylistVariables {
             if (replacement === undefined) {
                 throw new Error(`Invalid M3U8 file; variable "${name}" is referenced before being defined.`);
             }
+            this.totalSubstitutedLength += replacement.length;
+            if (this.totalSubstitutedLength > MAX_TOTAL_SUBSTITUTED_LENGTH) {
+                throw new Error('Invalid M3U8 file; variable substitution produces an excessive amount of data.');
+            }
             return replacement;
         });
     }
@@ -3537,6 +3578,26 @@ class HlsPlaylistVariables {
         this.variables.set(name, value);
     }
 }
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "Bp", 0, /* binding */ TAG_DEFINE,
+/* harmony export */   "DT", 0, /* binding */ TAG_I_FRAMES_ONLY,
+/* harmony export */   "EF", 0, /* binding */ TAG_MEDIA,
+/* harmony export */   "L2", 0, /* binding */ TAG_KEY,
+/* harmony export */   "_2", 0, /* binding */ TAG_MEDIA_SEQUENCE,
+/* harmony export */   "bW", 0, /* binding */ TAG_PROGRAM_DATE_TIME,
+/* harmony export */   "c$", 0, /* binding */ TAG_STREAM_INF,
+/* harmony export */   "dY", 0, /* binding */ TAG_ENDLIST,
+/* harmony export */   "e9", 0, /* binding */ TAG_EXTINF,
+/* harmony export */   "g4", 0, /* binding */ TAG_I_FRAME_STREAM_INF,
+/* harmony export */   "i$", 0, /* binding */ TAG_DISCONTINUITY,
+/* harmony export */   "is", 0, /* binding */ HLS_MIME_TYPE,
+/* harmony export */   "nf", 0, /* binding */ canIgnoreLine,
+/* harmony export */   "sA", 0, /* binding */ TAG_MAP,
+/* harmony export */   "v6", 0, /* binding */ TAG_BYTERANGE,
+/* harmony export */   "xe", 0, /* binding */ TAG_TARGETDURATION,
+/* harmony export */   "zA", 0, /* binding */ TAG_PLAYLIST_TYPE
+/* harmony export */ ]);
 
 
 /***/ },
@@ -4034,10 +4095,7 @@ class InputVideoTrack extends InputTrack {
     async getPixelAspectRatio() {
         // Potential minor async race condition here if called twice, but doesn't matter since the computation is
         // so cheap
-        return this._pixelAspectRatioCache ??= (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .simplifyRational */ .Yf)({
-            num: (await this.getSquarePixelWidth()) * (await this.getCodedHeight()),
-            den: (await this.getSquarePixelHeight()) * (await this.getCodedWidth()),
-        });
+        return this._pixelAspectRatioCache ??= toPixelAspectRatio((await this.getSquarePixelWidth()) * (await this.getCodedHeight()), (await this.getSquarePixelHeight()) * (await this.getCodedWidth()));
     }
     /**
      * The pixel aspect ratio of the track's frames, as a rational number in its reduced form. Most videos use
@@ -4045,12 +4103,9 @@ class InputVideoTrack extends InputTrack {
      * @deprecated Use {@link InputVideoTrack.getPixelAspectRatio} instead.
      */
     get pixelAspectRatio() {
-        return this._pixelAspectRatioCache ??= (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .simplifyRational */ .Yf)({
-            num: requireSync(this._backing.getSquarePixelWidth(), 'pixelAspectRatio', 'getPixelAspectRatio')
-                * requireSync(this._backing.getCodedHeight(), 'pixelAspectRatio', 'getPixelAspectRatio'),
-            den: requireSync(this._backing.getSquarePixelHeight(), 'pixelAspectRatio', 'getPixelAspectRatio')
-                * requireSync(this._backing.getCodedWidth(), 'pixelAspectRatio', 'getPixelAspectRatio'),
-        });
+        return this._pixelAspectRatioCache ??= toPixelAspectRatio(requireSync(this._backing.getSquarePixelWidth(), 'pixelAspectRatio', 'getPixelAspectRatio')
+            * requireSync(this._backing.getCodedHeight(), 'pixelAspectRatio', 'getPixelAspectRatio'), requireSync(this._backing.getSquarePixelHeight(), 'pixelAspectRatio', 'getPixelAspectRatio')
+            * requireSync(this._backing.getCodedWidth(), 'pixelAspectRatio', 'getPixelAspectRatio'));
     }
     /** Returns the display width of the track's frames in pixels, after aspect ratio adjustment and rotation. */
     async getDisplayWidth() {
@@ -4286,6 +4341,13 @@ class InputVideoTrack extends InputTrack {
         };
     }
 }
+const toPixelAspectRatio = (num, den) => {
+    if (num === 0 || den === 0) {
+        // Can kick if dimensions are zero, so just return square pixels
+        return { num: 1, den: 1 };
+    }
+    return (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .simplifyRational */ .Yf)({ num, den });
+};
 /**
  * Represents an audio track in an input file.
  * @group Input files & tracks
@@ -4847,7 +4909,7 @@ class Input extends _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .EventEmitter */ .bk
     }
     /** @internal */
     async _getSourceUncached(request) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this._rootSource instanceof _source_js__WEBPACK_IMPORTED_MODULE_4__/* .PathedSource */ .QI);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this._rootSource instanceof _source_js__WEBPACK_IMPORTED_MODULE_4__/* .PathedSource */ .QI);
         const ref = await this._rootSource._resolveRequest(request);
         this._emit('source', { source: ref.source, request, isRoot: request.isRoot });
         return ref;
@@ -5207,12 +5269,15 @@ class InputDisposedError extends Error {
 
 
 
+// Anything beyond this is malicious
+const MAX_BOX_NESTING_DEPTH = 64;
 class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer */ .B {
     constructor(input) {
         super(input);
         this.moovSlice = null;
         this.currentTrack = null;
         this.tracks = [];
+        this.idToTrack = new Map();
         this.metadataPromise = null;
         this.movieTimescale = -1;
         this.movieDurationInTimescale = -1;
@@ -5221,15 +5286,18 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
         this.metadataTags = {};
         this.currentMetadataKeys = null;
         this.isFragmented = false;
-        this.fragmentTrackDefaults = [];
+        this.fragmentTrackDefaults = new Map();
         this.psshBoxes = [];
         this.currentFragment = null;
+        this.isReadingTraf = false;
         /**
          * Caches the last fragment that was read. Based on the assumption that there will be multiple reads to the
          * same fragment in quick succession.
          */
         this.lastReadFragment = null;
+        this.fragmentSummaries = new Map(); // Keyed by moof offset
         this.decryptionKeyCache = new Map();
+        this.boxNestingDepth = 0;
         this.reader = input._reader;
     }
     async getTrackBackings() {
@@ -5267,7 +5335,7 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                 if (!boxInfo) {
                     break;
                 }
-                if (boxInfo.name === 'ftyp' || boxInfo.name === 'styp') {
+                if ((boxInfo.name === 'ftyp' || boxInfo.name === 'styp') && slice.remainingLength >= 4) {
                     const majorBrand = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readAscii */ .IT)(slice, 4);
                     this.isQuickTime = majorBrand === 'qt  ';
                 }
@@ -5280,6 +5348,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                         break;
                     this.moovSlice = moovSlice;
                     this.readContiguousBoxes(this.moovSlice);
+                    if (this.movieTimescale === -1) {
+                        throw new Error('Invalid moov box: missing mvhd box.');
+                    }
                     for (const track of this.tracks) {
                         // Modify the edit list offset based on the previous segment durations. They are in different
                         // timescales, so we first convert to seconds and then into the track timescale.
@@ -5337,6 +5408,18 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     }
                 }
             }
+            for (const track of this.tracks) {
+                // Sort by timestamp in case it's not naturally sorted, and remove multiple entries for the same time
+                const table = track.fragmentLookupTable;
+                table.sort((a, b) => a.timestamp - b.timestamp);
+                let writeIndex = 0;
+                for (const entry of table) {
+                    if (writeIndex === 0 || entry.timestamp !== table[writeIndex - 1].timestamp) {
+                        table[writeIndex++] = entry;
+                    }
+                }
+                table.length = writeIndex;
+            }
         })();
     }
     async copyMetadataFromInitInput(initInput) {
@@ -5386,11 +5469,13 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     const videoTrack = track;
                     track.trackBacking = new IsobmffVideoTrackBacking(videoTrack);
                     this.tracks.push(track);
+                    this.idToTrack.set(track.id, track);
                 }
                 else if (track.info.type === 'audio' && track.info.numberOfChannels !== -1) {
                     const audioTrack = track;
                     track.trackBacking = new IsobmffAudioTrackBacking(audioTrack);
                     this.tracks.push(track);
+                    this.idToTrack.set(track.id, track);
                 }
             }
             else {
@@ -5406,26 +5491,47 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             sampleTimingEntries: [],
             sampleCompositionTimeOffsets: [],
             sampleSizes: [],
+            sampleCount: 0,
+            cumulativeSampleSizes: null,
             keySampleIndices: null,
             chunkOffsets: [],
             sampleToChunk: [],
-            presentationTimestamps: null,
-            presentationTimestampIndexMap: null,
+            sortedCompositionTimeOffsets: null,
         };
         internalTrack.sampleTable = sampleTable;
         if (internalTrack.sampleTableByteOffset === null) {
             // There's no sample table to read, it's in another file (happens with segments)
             return sampleTable;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.moovSlice);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.moovSlice);
         const stblContainerSlice = this.moovSlice.slice(internalTrack.sampleTableByteOffset);
         this.currentTrack = internalTrack;
-        this.traverseBox(stblContainerSlice);
-        this.currentTrack = null;
+        try {
+            this.traverseBox(stblContainerSlice);
+        }
+        catch (error) {
+            internalTrack.sampleTable = null;
+            throw error;
+        }
+        finally {
+            this.currentTrack = null;
+        }
+        const lastTimingEntry = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .last */ ._g)(sampleTable.sampleTimingEntries);
+        const lastChunkEntryIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.sampleToChunk, sampleTable.chunkOffsets.length - 1, x => x.startChunkIndex);
+        const lastChunkEntry = sampleTable.sampleToChunk[lastChunkEntryIndex];
+        // Clamp the sample count on the minimum of what all the subentries tell us
+        sampleTable.sampleCount = Math.min(sampleTable.sampleCount, lastTimingEntry ? lastTimingEntry.startIndex + lastTimingEntry.count : 0, lastChunkEntry
+            ? lastChunkEntry.startSampleIndex
+                + (sampleTable.chunkOffsets.length - lastChunkEntry.startChunkIndex) * lastChunkEntry.samplesPerChunk
+            : 0);
+        capEntryCounts(sampleTable.sampleTimingEntries, sampleTable.sampleCount);
+        capEntryCounts(sampleTable.sampleCompositionTimeOffsets, sampleTable.sampleCount);
         const isPcmCodec = internalTrack.info?.type === 'audio'
             && internalTrack.info.codec
             && _codec_js__WEBPACK_IMPORTED_MODULE_1__/* .PCM_AUDIO_CODECS */ .Wq.includes(internalTrack.info.codec);
-        if (isPcmCodec && sampleTable.sampleCompositionTimeOffsets.length === 0) {
+        if (isPcmCodec
+            && sampleTable.sampleCompositionTimeOffsets.length === 0
+            && sampleTable.sampleTimingEntries.length > 0) {
             // If the audio has PCM samples, the way the samples are defined in the sample table is somewhat
             // suboptimal: Each individual audio sample is its own sample, meaning we can have 48000 samples per second.
             // Because we treat each sample as its own atomic unit that can be decoded, this would lead to a huge
@@ -5440,8 +5546,8 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             for (let i = 0; i < sampleTable.sampleToChunk.length; i++) {
                 const chunkEntry = sampleTable.sampleToChunk[i];
                 const nextEntry = sampleTable.sampleToChunk[i + 1];
-                const chunkCount = (nextEntry ? nextEntry.startChunkIndex : sampleTable.chunkOffsets.length)
-                    - chunkEntry.startChunkIndex;
+                const chunkCount = Math.min(nextEntry ? nextEntry.startChunkIndex : Infinity, sampleTable.chunkOffsets.length) - chunkEntry.startChunkIndex;
+                const newStartSampleIndex = newSampleSizes.length;
                 for (let j = 0; j < chunkCount; j++) {
                     const startSampleIndex = chunkEntry.startSampleIndex + j * chunkEntry.samplesPerChunk;
                     const endSampleIndex = startSampleIndex + chunkEntry.samplesPerChunk; // Exclusive, outside of chunk
@@ -5461,7 +5567,7 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     else {
                         // One sample for the entire chunk
                         newSampleTimingEntries.push({
-                            startIndex: chunkEntry.startChunkIndex + j,
+                            startIndex: newSampleSizes.length,
                             startDecodeTimestamp: firstSampleTimestamp,
                             count: 1,
                             delta,
@@ -5476,42 +5582,63 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                         * internalTrack.info.numberOfChannels;
                     newSampleSizes.push(chunkSize);
                 }
-                chunkEntry.startSampleIndex = chunkEntry.startChunkIndex;
+                // The new samples are numbered consecutively, even if the chunks don't start at the first one
+                chunkEntry.startSampleIndex = newStartSampleIndex;
                 chunkEntry.samplesPerChunk = 1;
             }
             sampleTable.sampleTimingEntries = newSampleTimingEntries;
             sampleTable.sampleSizes = newSampleSizes;
+            sampleTable.sampleCount = newSampleSizes.length;
         }
         if (sampleTable.sampleCompositionTimeOffsets.length > 0) {
-            // If composition time offsets are defined, we must build a list of all presentation timestamps and then
-            // sort them
-            sampleTable.presentationTimestamps = [];
-            for (const entry of sampleTable.sampleTimingEntries) {
-                for (let i = 0; i < entry.count; i++) {
-                    sampleTable.presentationTimestamps.push({
-                        presentationTimestamp: entry.startDecodeTimestamp + i * entry.delta,
-                        sampleIndex: entry.startIndex + i,
-                    });
+            // Presentation order differs from decode order. Let's prepare the offset entries for timestamped-keyed
+            // random access later
+            const entries = sampleTable.sampleCompositionTimeOffsets;
+            const lastEntry = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .last */ ._g)(entries);
+            const coveredSampleCount = lastEntry.startIndex + lastEntry.count;
+            if (coveredSampleCount < sampleTable.sampleCount) {
+                // The remaining samples have no offset
+                entries.push({
+                    startIndex: coveredSampleCount,
+                    count: sampleTable.sampleCount - coveredSampleCount,
+                    offset: 0,
+                    startTimestamp: -1,
+                    lastTimestamp: -1,
+                    maxLastTimestamp: -1,
+                });
+            }
+            const sortedEntries = entries.filter(entry => entry.count > 0);
+            const timingEntries = sampleTable.sampleTimingEntries;
+            let timingEntryIndex = 0;
+            const getDecodeTimestampAhead = (sampleIndex) => {
+                while (timingEntryIndex + 1 < timingEntries.length
+                    && timingEntries[timingEntryIndex + 1].startIndex <= sampleIndex) {
+                    timingEntryIndex++;
                 }
+                const timingEntry = timingEntries[timingEntryIndex];
+                return timingEntry.startDecodeTimestamp + (sampleIndex - timingEntry.startIndex) * timingEntry.delta;
+            };
+            for (const entry of sortedEntries) {
+                const lastSampleIndex = entry.startIndex + entry.count - 1;
+                entry.startTimestamp = getDecodeTimestampAhead(entry.startIndex) + entry.offset;
+                entry.lastTimestamp = getDecodeTimestampAhead(lastSampleIndex) + entry.offset;
             }
-            for (const entry of sampleTable.sampleCompositionTimeOffsets) {
-                for (let i = 0; i < entry.count; i++) {
-                    const sampleIndex = entry.startIndex + i;
-                    const sample = sampleTable.presentationTimestamps[sampleIndex];
-                    if (!sample) {
-                        continue;
-                    }
-                    sample.presentationTimestamp += entry.offset;
-                }
+            sortedEntries.sort((a, b) => a.startTimestamp - b.startTimestamp || a.startIndex - b.startIndex);
+            let maxLastTimestamp = -Infinity;
+            for (const entry of sortedEntries) {
+                maxLastTimestamp = Math.max(maxLastTimestamp, entry.lastTimestamp);
+                entry.maxLastTimestamp = maxLastTimestamp;
             }
-            sampleTable.presentationTimestamps.sort((a, b) => a.presentationTimestamp - b.presentationTimestamp);
-            sampleTable.presentationTimestampIndexMap = Array(sampleTable.presentationTimestamps.length).fill(-1);
-            for (let i = 0; i < sampleTable.presentationTimestamps.length; i++) {
-                sampleTable.presentationTimestampIndexMap[sampleTable.presentationTimestamps[i].sampleIndex] = i;
-            }
+            sampleTable.sortedCompositionTimeOffsets = sortedEntries;
         }
         else {
             // If they're not defined, we can simply use the decode timestamps as presentation timestamps
+        }
+        if (sampleTable.sampleSizes.length > 1) {
+            sampleTable.cumulativeSampleSizes = [0];
+            for (let i = 0; i < sampleTable.sampleSizes.length; i++) {
+                sampleTable.cumulativeSampleSizes.push(sampleTable.cumulativeSampleSizes[i] + sampleTable.sampleSizes[i]);
+            }
         }
         return sampleTable;
     }
@@ -5528,10 +5655,15 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
         let entireSlice = this.reader.requestSlice(startPos, moofBoxInfo.totalSize);
         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .isThenable */ .Qg)(entireSlice))
             entireSlice = await entireSlice;
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(entireSlice);
+        if (!entireSlice)
+            return null; // The moof box is cut off
         this.traverseBox(entireSlice);
         const fragment = this.lastReadFragment;
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(fragment && fragment.moofOffset === startPos);
+        this.fragmentSummaries.set(startPos, {
+            moofSize: fragment.moofSize,
+            trackIds: new Set(fragment.trackData.keys()),
+        });
         for (const [, trackData] of fragment.trackData) {
             const track = trackData.track;
             const { fragmentPositionCache } = track;
@@ -5542,15 +5674,29 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                 // exist, then the lookup will automatically start at the furthest possible point. If they don't, the
                 // lookup starts sequentially from the start, incrementally summing up all fragment durations. It's sort
                 // of implicit, but it ends up working nicely.
-                const lookupEntry = track.fragmentLookupTable.find(x => x.moofOffset === fragment.moofOffset);
-                if (lookupEntry) {
-                    // There's a lookup entry, let's use its timestamp
-                    offsetFragmentTrackDataByTimestamp(trackData, lookupEntry.timestamp);
+                // The table is sorted by timestamp, which for any sane file means it's also sorted by offset
+                const lookupEntryIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchExact */ .pl)(track.fragmentLookupTable, fragment.moofOffset, x => x.moofOffset);
+                const lookupEntry = track.fragmentLookupTable[lookupEntryIndex];
+                const lookupEntryIsValid = lookupEntry
+                    && trackData.trunSampleCounts.length >= lookupEntry.trunNumber
+                    && trackData.trunSampleCounts[lookupEntry.trunNumber - 1] >= lookupEntry.sampleNumber;
+                if (lookupEntryIsValid) {
+                    // We ignore traf number here, since we've already matched based on track ID
+                    let sampleIndex = 0;
+                    for (let i = 1; i < lookupEntry.trunNumber; i++) {
+                        sampleIndex += trackData.trunSampleCounts[i - 1];
+                    }
+                    sampleIndex += lookupEntry.sampleNumber - 1;
+                    const sample = trackData.samples[sampleIndex];
+                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(sample); // Must hold due to the above range checks
+                    // The timestamp in the lookup entry describes the timestamp of the referenced sample
+                    const timestampOffset = lookupEntry.timestamp - sample.presentationTimestamp;
+                    offsetFragmentTrackDataByTimestamp(trackData, timestampOffset);
                 }
                 else {
                     const lastCacheIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(fragmentPositionCache, fragment.moofOffset - 1, x => x.moofOffset);
                     if (lastCacheIndex !== -1) {
-                        // Let's use the timestamp of the previous fragment in the cache
+                        // Let's use the end timestamp of the previous fragment in the cache
                         const lastCache = fragmentPositionCache[lastCacheIndex];
                         offsetFragmentTrackDataByTimestamp(trackData, lastCache.endTimestamp);
                     }
@@ -5563,8 +5709,11 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             // Let's remember that a fragment with a given timestamp is here, speeding up future lookups if no
             // lookup table exists
             const insertionIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(fragmentPositionCache, trackData.startTimestamp, x => x.startTimestamp);
-            if (insertionIndex === -1
-                || fragmentPositionCache[insertionIndex].moofOffset !== fragment.moofOffset) {
+            const previousEntry = fragmentPositionCache[insertionIndex];
+            const nextEntry = fragmentPositionCache[insertionIndex + 1];
+            // Only remember it if the timestamp order matches the moof offset order
+            if ((!previousEntry || previousEntry.moofOffset < fragment.moofOffset)
+                && (!nextEntry || nextEntry.moofOffset > fragment.moofOffset)) {
                 fragmentPositionCache.splice(insertionIndex + 1, 0, {
                     moofOffset: fragment.moofOffset,
                     startTimestamp: trackData.startTimestamp,
@@ -5583,12 +5732,21 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
         return fragment;
     }
     readContiguousBoxes(slice) {
+        if (this.boxNestingDepth === MAX_BOX_NESTING_DEPTH) {
+            throw new Error('Invalid file: boxes are nested too deeply.');
+        }
         const startIndex = slice.filePos;
-        while (slice.filePos - startIndex <= slice.length - _isobmff_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_BOX_HEADER_SIZE */ .ZM) {
-            const foundBox = this.traverseBox(slice);
-            if (!foundBox) {
-                break;
+        this.boxNestingDepth++;
+        try {
+            while (slice.filePos - startIndex <= slice.length - _isobmff_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_BOX_HEADER_SIZE */ .ZM) {
+                const foundBox = this.traverseBox(slice);
+                if (!foundBox) {
+                    break;
+                }
             }
+        }
+        finally {
+            this.boxNestingDepth--;
         }
     }
     // eslint-disable-next-line @stylistic/generator-star-spacing
@@ -5639,6 +5797,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                         this.movieTimescale = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         this.movieDurationInTimescale = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                     }
+                    if (this.movieTimescale === 0) {
+                        throw new Error('Invalid mvhd box: timescale must not be 0.');
+                    }
                     slice.skip(4 + 2 + 2 + 2 * 4); // Rate, volume, reserved
                     this.movieMatrix = readMatrix(slice);
                 }
@@ -5646,6 +5807,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                 break;
             case 'trak':
                 {
+                    if (this.currentFragment || this.currentTrack) {
+                        break; // Misplaced
+                    }
                     const track = {
                         id: -1,
                         demuxer: this,
@@ -5677,16 +5841,21 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     };
                     this.currentTrack = track;
                     this.readContiguousBoxes(slice.slice(contentStartPos, boxInfo.contentSize));
-                    if (track.id !== -1 && track.timescale !== -1 && track.info !== null) {
+                    if (track.id !== -1
+                        && track.timescale !== -1
+                        && track.info !== null
+                        && track.sampleTableByteOffset !== -1) {
                         if (track.info.type === 'video' && track.info.width !== -1) {
                             const videoTrack = track;
                             track.trackBacking = new IsobmffVideoTrackBacking(videoTrack);
                             this.tracks.push(track);
+                            this.idToTrack.set(track.id, track);
                         }
                         else if (track.info.type === 'audio' && track.info.numberOfChannels !== -1) {
                             const audioTrack = track;
                             track.trackBacking = new IsobmffAudioTrackBacking(audioTrack);
                             this.tracks.push(track);
+                            this.idToTrack.set(track.id, track);
                         }
                     }
                     this.currentTrack = null;
@@ -5696,7 +5865,7 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'tkhd':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || this.currentFragment) {
                         break;
                     }
                     const version = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
@@ -5783,6 +5952,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                         slice.skip(16);
                         track.timescale = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         track.durationInMediaTimescale = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU64Be */ .th)(slice);
+                    }
+                    if (track.timescale === 0) {
+                        throw new Error('Invalid mdhd box: timescale must not be 0.');
                     }
                     let language = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU16Be */ .mH)(slice);
                     if (language > 0) {
@@ -6182,8 +6354,14 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     track.encryptionInfo.defaultIsProtected = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice) !== 0;
                     track.encryptionInfo.defaultPerSampleIvSize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
                     track.encryptionInfo.defaultKid = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .bytesToHexString */ .Br)((0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, 16));
+                    if (track.encryptionInfo.defaultPerSampleIvSize > 16) {
+                        throw new Error('Invalid tenc box: IV size must not exceed 16 bytes.');
+                    }
                     if (track.encryptionInfo.defaultIsProtected && track.encryptionInfo.defaultPerSampleIvSize === 0) {
                         const constantIvSize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
+                        if (constantIvSize > 16) {
+                            throw new Error('Invalid tenc box: IV size must not exceed 16 bytes.');
+                        }
                         const constantIv = new Uint8Array(16);
                         constantIv.set((0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, constantIvSize), 0);
                         track.encryptionInfo.defaultConstantIv = constantIv;
@@ -6194,10 +6372,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'avcC':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'video') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info);
                     if (boxInfo.contentSize === 0) {
                         // avcC box is empty, let's treat this like an Annex B stream
                         break;
@@ -6215,10 +6392,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'hvcC':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'video') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info);
                     if (boxInfo.contentSize === 0) {
                         // hvcC box is empty, let's treat this like an Annex B stream
                         break;
@@ -6236,10 +6412,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'vpcC':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'video') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'video');
                     slice.skip(4); // Version + flags
                     const profile = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
                     const level = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
@@ -6266,10 +6441,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'av1C':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'video') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'video');
                     slice.skip(1); // Marker + version
                     const secondByte = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
                     const profile = secondByte >> 5;
@@ -6308,10 +6482,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'colr':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'video') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'video');
                     const colourType = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readAscii */ .IT)(slice, 4);
                     if (colourType !== 'nclx' && colourType !== 'nclc') {
                         break;
@@ -6335,10 +6508,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'pasp':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'video') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'video');
                     const num = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                     const den = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                     // https://github.com/Vanilagy/mediabunny/issues/362
@@ -6422,10 +6594,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'enda':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'audio') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'audio');
                     track.info.pcmLittleEndian = !!((0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU16Be */ .mH)(slice) & 0xff); // 0xff is from FFmpeg
                 }
                 ;
@@ -6433,10 +6604,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'pcmC':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'audio') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'audio');
                     slice.skip(1 + 3); // Version + flags
                     // ISO/IEC 23003-5
                     const formatFlags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
@@ -6448,10 +6618,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'dOps':
                 { // Used for Opus audio
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'audio') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'audio');
                     slice.skip(1); // Version
                     // https://www.opus-codec.org/docs/opus_in_isobmff.html
                     const outputChannelCount = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
@@ -6487,10 +6656,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'dfLa':
                 { // Used for FLAC audio
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'audio') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'audio');
                     slice.skip(4); // Version + flags
                     // https://datatracker.ietf.org/doc/rfc9639/
                     const BLOCK_TYPE_MASK = 0x7f;
@@ -6534,10 +6702,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'dac3':
                 { // AC3SpecificBox
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'audio') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'audio');
                     const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, 3);
                     const bitstream = new _shared_bitstream_js__WEBPACK_IMPORTED_MODULE_11__/* .Bitstream */ ._(bytes);
                     const fscod = bitstream.readBits(2);
@@ -6554,10 +6721,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'dec3':
                 { // EC3SpecificBox
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'audio') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'audio');
                     const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, boxInfo.contentSize);
                     const config = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .parseEac3Config */ .Sd)(bytes);
                     if (!config) {
@@ -6575,10 +6741,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'ddts':
                 { // DTSSpecificBox
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || track.info?.type !== 'audio') {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.info?.type === 'audio');
                     const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, Math.min(boxInfo.contentSize, _codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .DTS_SPECIFIC_BOX_SIZE */ .Xc));
                     const config = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .parseDtsSpecificBox */ .ix)(bytes);
                     if (!config) {
@@ -6639,6 +6804,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                             startIndex: sampleIndex,
                             count: sampleCount,
                             offset: sampleOffset,
+                            startTimestamp: -1,
+                            lastTimestamp: -1,
+                            maxLastTimestamp: -1,
                         });
                         sampleIndex += sampleCount;
                     }
@@ -6666,6 +6834,7 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     else {
                         track.sampleTable.sampleSizes.push(sampleSize);
                     }
+                    track.sampleTable.sampleCount = sampleCount;
                 }
                 ;
                 break;
@@ -6682,12 +6851,16 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     slice.skip(3); // Reserved
                     const fieldSize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice); // in bits
                     const sampleCount = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
+                    if (fieldSize !== 4 && fieldSize !== 8 && fieldSize !== 16) {
+                        throw new Error(`Invalid stz2 box: unsupported field size ${fieldSize}.`);
+                    }
                     const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, Math.ceil(sampleCount * fieldSize / 8));
                     const bitstream = new _shared_bitstream_js__WEBPACK_IMPORTED_MODULE_11__/* .Bitstream */ ._(bytes);
                     for (let i = 0; i < sampleCount; i++) {
                         const sampleSize = bitstream.readBits(fieldSize);
                         track.sampleTable.sampleSizes.push(sampleSize);
                     }
+                    track.sampleTable.sampleCount = sampleCount;
                 }
                 ;
                 break;
@@ -6707,6 +6880,8 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                         const sampleIndex = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice) - 1; // Convert to 0-indexed
                         track.sampleTable.keySampleIndices.push(sampleIndex);
                     }
+                    // We binary search this list, so it must be sorted
+                    track.sampleTable.keySampleIndices.sort((a, b) => a - b);
                     if (track.sampleTable.keySampleIndices[0] !== 0) {
                         // Some files don't mark the first sample a key sample, which is basically almost always incorrect.
                         // Here, we correct for that mistake:
@@ -6726,16 +6901,27 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     }
                     slice.skip(4);
                     const entryCount = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
+                    let skippedEntryCount = 0;
                     for (let i = 0; i < entryCount; i++) {
                         const startChunkIndex = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice) - 1; // Convert to 0-indexed
                         const samplesPerChunk = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         const sampleDescriptionIndex = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
+                        const lastEntry = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .last */ ._g)(track.sampleTable.sampleToChunk);
+                        if (lastEntry && startChunkIndex <= lastEntry.startChunkIndex) {
+                            // Keeping it would mess up the sample-to-chunk mapping and make chunk iteration blow up
+                            skippedEntryCount++;
+                            continue;
+                        }
                         track.sampleTable.sampleToChunk.push({
                             startSampleIndex: -1,
                             startChunkIndex,
                             samplesPerChunk,
                             sampleDescriptionIndex,
                         });
+                    }
+                    if (skippedEntryCount > 0) {
+                        _logging_js__WEBPACK_IMPORTED_MODULE_13__/* .Logging */ .y._warn(`Skipped ${skippedEntryCount} invalid stsc entries whose chunk indices weren't strictly`
+                            + ' increasing.');
                     }
                     let startSampleIndex = 0;
                     for (let i = 0; i < track.sampleTable.sampleToChunk.length; i++) {
@@ -6811,7 +6997,7 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     const defaultSampleSize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                     const defaultSampleFlags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                     // We store these separately rather than in the tracks since the tracks may not exist yet
-                    this.fragmentTrackDefaults.push({
+                    this.fragmentTrackDefaults.set(trackId, {
                         trackId,
                         defaultSampleDescriptionIndex,
                         defaultSampleDuration,
@@ -6826,7 +7012,7 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     const version = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
                     slice.skip(3); // Flags
                     const trackId = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
-                    const track = this.tracks.find(x => x.id === trackId);
+                    const track = this.idToTrack.get(trackId);
                     if (!track) {
                         break;
                     }
@@ -6842,47 +7028,61 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     for (let i = 0; i < numberOfEntries; i++) {
                         const time = version === 1 ? (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU64Be */ .th)(slice) : (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         const moofOffset = version === 1 ? (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU64Be */ .th)(slice) : (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
-                        readTrafNum(slice);
-                        readTrunNum(slice);
-                        readSampleNum(slice);
-                        track.fragmentLookupTable.push({
-                            timestamp: time,
-                            moofOffset,
-                        });
-                    }
-                    // Sort by timestamp in case it's not naturally sorted
-                    track.fragmentLookupTable.sort((a, b) => a.timestamp - b.timestamp);
-                    // Remove multiple entries for the same time
-                    for (let i = 0; i < track.fragmentLookupTable.length - 1; i++) {
-                        const entry1 = track.fragmentLookupTable[i];
-                        const entry2 = track.fragmentLookupTable[i + 1];
-                        if (entry1.timestamp === entry2.timestamp) {
-                            track.fragmentLookupTable.splice(i + 1, 1);
-                            i--;
+                        readTrafNum(slice); // Not used
+                        const trunNumber = readTrunNum(slice);
+                        const sampleNumber = readSampleNum(slice);
+                        if (trunNumber >= 1 && sampleNumber >= 1) {
+                            track.fragmentLookupTable.push({
+                                timestamp: time,
+                                moofOffset,
+                                trunNumber,
+                                sampleNumber,
+                            });
+                        }
+                        else {
+                            // Invalid
                         }
                     }
+                    // The table gets sorted and deduplicated once all metadata has been read
                 }
                 ;
                 break;
             case 'moof':
                 {
+                    if (this.currentFragment) {
+                        break; // Nested moof boxes make no sense
+                    }
                     this.currentFragment = {
                         moofOffset: startPos,
                         moofSize: boxInfo.totalSize,
                         implicitBaseDataOffset: startPos,
                         trackData: new Map(),
                         psshBoxes: [],
+                        sampleCount: 0,
                     };
-                    this.readContiguousBoxes(slice.slice(contentStartPos, boxInfo.contentSize));
-                    this.lastReadFragment = this.currentFragment;
-                    this.currentFragment = null;
+                    try {
+                        this.readContiguousBoxes(slice.slice(contentStartPos, boxInfo.contentSize));
+                        this.lastReadFragment = this.currentFragment;
+                    }
+                    finally {
+                        this.currentFragment = null;
+                        this.currentTrack = null;
+                    }
                 }
                 ;
                 break;
             case 'traf':
                 {
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.currentFragment);
-                    this.readContiguousBoxes(slice.slice(contentStartPos, boxInfo.contentSize));
+                    if (!this.currentFragment || this.isReadingTraf) {
+                        break;
+                    }
+                    this.isReadingTraf = true;
+                    try {
+                        this.readContiguousBoxes(slice.slice(contentStartPos, boxInfo.contentSize));
+                    }
+                    finally {
+                        this.isReadingTraf = false;
+                    }
                     // It is possible that there is no current track, for example when we don't care about the track
                     // referenced in the track fragment header.
                     if (this.currentTrack) {
@@ -6949,7 +7149,10 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                 break;
             case 'tfhd':
                 {
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.currentFragment);
+                    // Only the first tfhd of a traf counts; anywhere else, there'd be no traf to finish the track data
+                    if (!this.currentFragment || !this.isReadingTraf || this.currentTrack) {
+                        break;
+                    }
                     slice.skip(1); // Version
                     const flags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU24Be */ .n2)(slice);
                     const baseDataOffsetPresent = Boolean(flags & 0x000001);
@@ -6960,12 +7163,16 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     const durationIsEmpty = Boolean(flags & 0x010000);
                     const defaultBaseIsMoof = Boolean(flags & 0x020000);
                     const trackId = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
-                    const track = this.tracks.find(x => x.id === trackId);
+                    const track = this.idToTrack.get(trackId);
                     if (!track) {
                         // We don't care about this track
                         break;
                     }
-                    const defaults = this.fragmentTrackDefaults.find(x => x.trackId === trackId);
+                    if (this.currentFragment.trackData.has(trackId)) {
+                        _logging_js__WEBPACK_IMPORTED_MODULE_13__/* .Logging */ .y._warn(`Multiple traf boxes for track ${trackId} in the same moof box; skipping.`);
+                        break;
+                    }
+                    const defaults = this.fragmentTrackDefaults.get(trackId);
                     this.currentTrack = track;
                     track.currentFragmentState = {
                         baseDataOffset: this.currentFragment.implicitBaseDataOffset,
@@ -7003,10 +7210,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'tfdt':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track?.currentFragmentState) {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.currentFragmentState);
                     const version = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
                     slice.skip(3); // Flags
                     const baseMediaDecodeTime = version === 0 ? (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice) : (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU64Be */ .th)(slice);
@@ -7017,11 +7223,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
             case 'trun':
                 {
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track?.currentFragmentState || !this.currentFragment) {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.currentFragment);
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.currentFragmentState);
                     slice.skip(1); // Version
                     const flags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU24Be */ .n2)(slice);
                     const dataOffsetPresent = Boolean(flags & 0x000001);
@@ -7031,6 +7235,18 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     const sampleFlagsPresent = Boolean(flags & 0x000400);
                     const sampleCompositionTimeOffsetsPresent = Boolean(flags & 0x000800);
                     const sampleCount = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
+                    const { defaultSampleDuration, defaultSampleSize, defaultSampleFlags } = track.currentFragmentState;
+                    if (sampleCount > 0
+                        && ((!sampleDurationPresent && defaultSampleDuration === null)
+                            || (!sampleSizePresent && defaultSampleSize === null)
+                            || (!sampleFlagsPresent && defaultSampleFlags === null))) {
+                        throw new Error('Invalid trun box: sample values are missing and there are no defaults.');
+                    }
+                    this.currentFragment.sampleCount += sampleCount;
+                    if (this.currentFragment.sampleCount > 2 ** 20) {
+                        // Safety measure
+                        throw new Error('Too many (> 2^20) samples in fragment.');
+                    }
                     let dataOffset = null;
                     if (dataOffsetPresent) {
                         dataOffset = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readI32Be */ .Ar)(slice);
@@ -7061,34 +7277,33 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                             samples: [],
                             presentationTimestamps: [],
                             startTimestampIsFinal: false,
+                            trunSampleCounts: [],
                             encryptionAuxInfo: null,
                         };
                         this.currentFragment.trackData.set(track.id, trackData);
                     }
+                    trackData.trunSampleCounts.push(sampleCount);
                     for (let i = 0; i < sampleCount; i++) {
                         let sampleDuration;
                         if (sampleDurationPresent) {
                             sampleDuration = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         }
                         else {
-                            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.currentFragmentState.defaultSampleDuration !== null);
-                            sampleDuration = track.currentFragmentState.defaultSampleDuration;
+                            sampleDuration = defaultSampleDuration;
                         }
                         let sampleSize;
                         if (sampleSizePresent) {
                             sampleSize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         }
                         else {
-                            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.currentFragmentState.defaultSampleSize !== null);
-                            sampleSize = track.currentFragmentState.defaultSampleSize;
+                            sampleSize = defaultSampleSize;
                         }
                         let sampleFlags;
                         if (sampleFlagsPresent) {
                             sampleFlags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         }
                         else {
-                            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.currentFragmentState.defaultSampleFlags !== null);
-                            sampleFlags = track.currentFragmentState.defaultSampleFlags;
+                            sampleFlags = defaultSampleFlags;
                         }
                         if (i === 0 && firstSampleFlags !== null) {
                             sampleFlags = firstSampleFlags;
@@ -7187,8 +7402,7 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     if (!track || !track.encryptionInfo) {
                         break;
                     }
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.currentFragment);
-                    const trackData = this.currentFragment.trackData.get(track.id);
+                    const trackData = this.currentFragment?.trackData.get(track.id);
                     if (!trackData) {
                         break;
                     }
@@ -7197,7 +7411,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     const useSubsamples = Boolean(flags & 0x000002);
                     const sampleCount = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                     const ivSize = track.encryptionInfo.defaultPerSampleIvSize;
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(ivSize !== null);
+                    if (ivSize === null) {
+                        throw new Error('Invalid file: encrypted track is missing its tenc box.');
+                    }
                     for (let i = 0; i < Math.min(sampleCount, trackData.samples.length); i++) {
                         // Normalize the IV to 16 bytes so downstream code can assume a full-length buffer. For CTR with
                         // an 8-byte per-sample IV the lower 8 bytes are zero (that's the CENC spec's block counter start);
@@ -7206,8 +7422,11 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                         if (ivSize > 0) {
                             iv.set((0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, ivSize), 0);
                         }
-                        else {
+                        else if (track.encryptionInfo.defaultConstantIv) {
                             iv.set(track.encryptionInfo.defaultConstantIv, 0);
+                        }
+                        else {
+                            throw new Error('Invalid file: encrypted sample has no IV.');
                         }
                         let subsamples = null;
                         if (useSubsamples) {
@@ -7366,6 +7585,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     const entryCount = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                     for (let i = 0; i < entryCount; i++) {
                         const keySize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
+                        if (keySize < 8) {
+                            throw new Error('Invalid keys box: key size must be at least 8.');
+                        }
                         slice.skip(4); // Key namespace
                         const keyName = _misc_js__WEBPACK_IMPORTED_MODULE_4__/* .textDecoder */ .su.decode((0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, keySize - 8));
                         this.currentMetadataKeys.set(i + 1, keyName);
@@ -7646,7 +7868,7 @@ class IsobmffTrackBacking {
             // must be computed instead.
             return null;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.trackBacking);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.trackBacking);
         const firstPacket = await track.trackBacking.getFirstPacket({ metadataOnly: true });
         return (firstPacket?.timestamp ?? 0) + track.durationInMediaTimescale / track.timescale;
     }
@@ -7775,13 +7997,14 @@ class IsobmffTrackBacking {
         return this.performFragmentedLookup(locationInFragment.fragment, (fragment) => {
             if (fragment === locationInFragment.fragment) {
                 const trackData = fragment.trackData.get(this.internalTrack.id);
-                const nextKeyFrameIndex = trackData.samples.findIndex((x, i) => x.isKeyFrame && i > locationInFragment.sampleIndex);
-                if (nextKeyFrameIndex !== -1) {
-                    // We can simply take the next key frame in the fragment
-                    return {
-                        sampleIndex: nextKeyFrameIndex,
-                        correctSampleFound: true,
-                    };
+                for (let i = locationInFragment.sampleIndex + 1; i < trackData.samples.length; i++) {
+                    if (trackData.samples[i].isKeyFrame) {
+                        // We can simply take the next key frame in the fragment
+                        return {
+                            sampleIndex: i,
+                            correctSampleFound: true,
+                        };
+                    }
                 }
             }
             else {
@@ -7887,7 +8110,7 @@ class IsobmffTrackBacking {
     // The timestamp with which we can search the lookup table
     searchTimestamp, 
     // The timestamp for which we know the correct sample will not come after it
-    latestTimestamp, options) {
+    latestTimestamp, options, isRetry = false) {
         const demuxer = this.internalTrack.demuxer;
         let currentFragment = null;
         let bestFragment = null;
@@ -7935,6 +8158,12 @@ class IsobmffTrackBacking {
                     break;
                 }
             }
+            const summary = demuxer.fragmentSummaries.get(currentPos);
+            if (summary && !summary.trackIds.has(this.internalTrack.id)) {
+                // We've read this fragment before and know it has nothing for this track, so let's not read it again
+                currentPos += summary.moofSize;
+                continue;
+            }
             // Load the header
             let slice = demuxer.reader.requestSliceRange(currentPos, _isobmff_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_BOX_HEADER_SIZE */ .ZM, _isobmff_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .MAX_BOX_HEADER_SIZE */ .Xk);
             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .isThenable */ .Qg)(slice))
@@ -7948,6 +8177,9 @@ class IsobmffTrackBacking {
             }
             if (boxInfo.name === 'moof') {
                 currentFragment = await demuxer.readFragment(boxStartPos);
+                if (!currentFragment) {
+                    break;
+                }
                 const { sampleIndex, correctSampleFound } = getMatchInFragment(currentFragment);
                 if (correctSampleFound) {
                     return this.fetchPacketInFragment(currentFragment, sampleIndex, options);
@@ -7962,11 +8194,12 @@ class IsobmffTrackBacking {
         // Catch faulty lookup table entries
         if (lookupEntry && (!bestFragment || bestFragment.moofOffset < lookupEntry.moofOffset)) {
             // The lookup table entry lied to us! We found a lookup entry but no fragment there that satisfied
-            // the match. In this case, let's search again but using the lookup entry before that.
+            // the match. In this case, let's search again but using the lookup entry before that. If that one lies
+            // too, we stop trusting the table altogether, since walking back through many faulty entries would mean
+            // rescanning the file over and over.
             const previousLookupEntry = this.internalTrack.fragmentLookupTable[lookupEntryIndex - 1];
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(!previousLookupEntry || previousLookupEntry.timestamp < lookupEntry.timestamp);
-            const newSearchTimestamp = previousLookupEntry?.timestamp ?? -Infinity;
-            return this.performFragmentedLookup(null, getMatchInFragment, newSearchTimestamp, latestTimestamp, options);
+            const newSearchTimestamp = !isRetry && previousLookupEntry ? previousLookupEntry.timestamp : -Infinity;
+            return this.performFragmentedLookup(null, getMatchInFragment, newSearchTimestamp, latestTimestamp, options, true);
         }
         if (bestFragment) {
             // If we finished looping but didn't find a perfect match, still return the best match we found
@@ -8124,12 +8357,8 @@ class IsobmffAudioTrackBacking extends IsobmffTrackBacking {
     }
 }
 const getSampleIndexForTimestamp = (sampleTable, timescaleUnits) => {
-    if (sampleTable.presentationTimestamps) {
-        const index = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.presentationTimestamps, timescaleUnits, x => x.presentationTimestamp);
-        if (index === -1) {
-            return -1;
-        }
-        return sampleTable.presentationTimestamps[index].sampleIndex;
+    if (sampleTable.sortedCompositionTimeOffsets) {
+        return performPresentationTimeLookup(sampleTable, timescaleUnits, false);
     }
     else {
         const index = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.sampleTimingEntries, timescaleUnits, x => x.startDecodeTimestamp);
@@ -8137,6 +8366,9 @@ const getSampleIndexForTimestamp = (sampleTable, timescaleUnits) => {
             return -1;
         }
         const entry = sampleTable.sampleTimingEntries[index];
+        if (entry.delta === 0) {
+            return entry.startIndex + entry.count - 1; // All samples share the same timestamp
+        }
         return entry.startIndex
             + Math.min(Math.floor((timescaleUnits - entry.startDecodeTimestamp) / entry.delta), entry.count - 1);
     }
@@ -8146,20 +8378,8 @@ const getKeyframeSampleIndexForTimestamp = (sampleTable, timescaleUnits) => {
         // Every sample is a keyframe
         return getSampleIndexForTimestamp(sampleTable, timescaleUnits);
     }
-    if (sampleTable.presentationTimestamps) {
-        const index = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.presentationTimestamps, timescaleUnits, x => x.presentationTimestamp);
-        if (index === -1) {
-            return -1;
-        }
-        // Walk the samples in presentation order until we find one that's a keyframe
-        for (let i = index; i >= 0; i--) {
-            const sampleIndex = sampleTable.presentationTimestamps[i].sampleIndex;
-            const isKeyFrame = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchExact */ .pl)(sampleTable.keySampleIndices, sampleIndex, x => x) !== -1;
-            if (isKeyFrame) {
-                return sampleIndex;
-            }
-        }
-        return -1;
+    if (sampleTable.sortedCompositionTimeOffsets) {
+        return performPresentationTimeLookup(sampleTable, timescaleUnits, true);
     }
     else {
         const sampleIndex = getSampleIndexForTimestamp(sampleTable, timescaleUnits);
@@ -8168,11 +8388,11 @@ const getKeyframeSampleIndexForTimestamp = (sampleTable, timescaleUnits) => {
     }
 };
 const getSampleInfo = (sampleTable, sampleIndex) => {
-    const timingEntryIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.sampleTimingEntries, sampleIndex, x => x.startIndex);
-    const timingEntry = sampleTable.sampleTimingEntries[timingEntryIndex];
-    if (!timingEntry || timingEntry.startIndex + timingEntry.count <= sampleIndex) {
+    if (sampleIndex >= sampleTable.sampleCount) {
         return null;
     }
+    const timingEntryIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.sampleTimingEntries, sampleIndex, x => x.startIndex);
+    const timingEntry = sampleTable.sampleTimingEntries[timingEntryIndex];
     const decodeTimestamp = timingEntry.startDecodeTimestamp
         + (sampleIndex - timingEntry.startIndex) * timingEntry.delta;
     let presentationTimestamp = decodeTimestamp;
@@ -8184,36 +8404,25 @@ const getSampleInfo = (sampleTable, sampleIndex) => {
     const sampleSize = sampleTable.sampleSizes[Math.min(sampleIndex, sampleTable.sampleSizes.length - 1)];
     const chunkEntryIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.sampleToChunk, sampleIndex, x => x.startSampleIndex);
     const chunkEntry = sampleTable.sampleToChunk[chunkEntryIndex];
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(chunkEntry);
     const chunkIndex = chunkEntry.startChunkIndex
         + Math.floor((sampleIndex - chunkEntry.startSampleIndex) / chunkEntry.samplesPerChunk);
     const chunkOffset = sampleTable.chunkOffsets[chunkIndex];
     const startSampleIndexOfChunk = chunkEntry.startSampleIndex
         + (chunkIndex - chunkEntry.startChunkIndex) * chunkEntry.samplesPerChunk;
-    let chunkSize = 0;
     let sampleOffset = chunkOffset;
     if (sampleTable.sampleSizes.length === 1) {
         sampleOffset += sampleSize * (sampleIndex - startSampleIndexOfChunk);
-        chunkSize += sampleSize * chunkEntry.samplesPerChunk;
     }
     else {
-        for (let i = startSampleIndexOfChunk; i < startSampleIndexOfChunk + chunkEntry.samplesPerChunk; i++) {
-            const sampleSize = sampleTable.sampleSizes[i];
-            if (i < sampleIndex) {
-                sampleOffset += sampleSize;
-            }
-            chunkSize += sampleSize;
-        }
+        sampleOffset += sampleTable.cumulativeSampleSizes[sampleIndex]
+            - sampleTable.cumulativeSampleSizes[startSampleIndexOfChunk];
     }
     let duration = timingEntry.delta;
-    if (sampleTable.presentationTimestamps) {
+    if (sampleTable.sortedCompositionTimeOffsets) {
         // In order to accurately compute the duration, we need to take the duration to the next sample in presentation
         // order, not in decode order
-        const presentationIndex = sampleTable.presentationTimestampIndexMap[sampleIndex];
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(presentationIndex !== undefined);
-        if (presentationIndex < sampleTable.presentationTimestamps.length - 1) {
-            const nextEntry = sampleTable.presentationTimestamps[presentationIndex + 1];
-            const nextPresentationTimestamp = nextEntry.presentationTimestamp;
+        const nextPresentationTimestamp = getNextPresentationTimestamp(sampleTable, sampleIndex, presentationTimestamp);
+        if (nextPresentationTimestamp !== null) {
             duration = nextPresentationTimestamp - presentationTimestamp;
         }
     }
@@ -8223,11 +8432,84 @@ const getSampleInfo = (sampleTable, sampleIndex) => {
         sampleOffset,
         sampleSize,
         chunkOffset,
-        chunkSize,
         isKeyFrame: sampleTable.keySampleIndices
             ? (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchExact */ .pl)(sampleTable.keySampleIndices, sampleIndex, x => x) !== -1
             : true,
     };
+};
+const performPresentationTimeLookup = (sampleTable, timestamp, keyFramesOnly) => {
+    const entries = sampleTable.sortedCompositionTimeOffsets;
+    let bestSampleIndex = -1;
+    let bestTimestamp = -Infinity;
+    // Walk back until no entry can beat the best sample found so far anymore
+    const startIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(entries, timestamp, x => x.startTimestamp);
+    for (let i = startIndex; i >= 0; i--) {
+        const entry = entries[i];
+        if (entry.maxLastTimestamp < bestTimestamp) {
+            break;
+        }
+        let sampleIndex = entry.lastTimestamp <= timestamp
+            ? entry.startIndex + entry.count - 1
+            : findFirstSampleInEntry(sampleTable, entry, (_, otherTimestamp) => otherTimestamp > timestamp) - 1;
+        if (keyFramesOnly) {
+            const keySampleIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.keySampleIndices, sampleIndex, x => x);
+            sampleIndex = sampleTable.keySampleIndices[keySampleIndex] ?? -1;
+        }
+        if (sampleIndex < entry.startIndex) {
+            continue; // Nothing suitable in this entry
+        }
+        const presentationTimestamp = getDecodeTimestamp(sampleTable, sampleIndex) + entry.offset;
+        if (presentationTimestamp > bestTimestamp
+            || (presentationTimestamp === bestTimestamp && sampleIndex > bestSampleIndex)) {
+            bestSampleIndex = sampleIndex;
+            bestTimestamp = presentationTimestamp;
+        }
+    }
+    return bestSampleIndex;
+};
+const getNextPresentationTimestamp = (sampleTable, sampleIndex, presentationTimestamp) => {
+    const entries = sampleTable.sortedCompositionTimeOffsets;
+    const lastStartedEntryIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(entries, presentationTimestamp, x => x.startTimestamp);
+    // No entry starting later can beat the first one of them
+    let nextTimestamp = entries[lastStartedEntryIndex + 1]?.startTimestamp ?? null;
+    // Walk back until no entry can beat the best sample found so far anymore
+    for (let i = lastStartedEntryIndex; i >= 0; i--) {
+        const entry = entries[i];
+        if (entry.maxLastTimestamp < presentationTimestamp) {
+            break;
+        }
+        const nextSampleIndex = findFirstSampleInEntry(sampleTable, entry, (otherSampleIndex, otherTimestamp) => otherTimestamp > presentationTimestamp
+            || (otherTimestamp === presentationTimestamp && otherSampleIndex > sampleIndex));
+        if (nextSampleIndex === entry.startIndex + entry.count) {
+            continue; // Nothing after the sample in this entry
+        }
+        const timestamp = getDecodeTimestamp(sampleTable, nextSampleIndex) + entry.offset;
+        if (nextTimestamp === null || timestamp < nextTimestamp) {
+            nextTimestamp = timestamp;
+        }
+    }
+    return nextTimestamp;
+};
+const findFirstSampleInEntry = (sampleTable, entry, predicate) => {
+    // The samples of an entry are in presentation order, so this binary searches for the first one satisfying the
+    // predicate
+    let low = entry.startIndex;
+    let high = entry.startIndex + entry.count;
+    while (low < high) {
+        const mid = Math.floor((low + high) / 2);
+        if (predicate(mid, getDecodeTimestamp(sampleTable, mid) + entry.offset)) {
+            high = mid;
+        }
+        else {
+            low = mid + 1;
+        }
+    }
+    return low;
+};
+const getDecodeTimestamp = (sampleTable, sampleIndex) => {
+    const timingEntryIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .binarySearchLessOrEqual */ .eE)(sampleTable.sampleTimingEntries, sampleIndex, x => x.startIndex);
+    const timingEntry = sampleTable.sampleTimingEntries[timingEntryIndex];
+    return timingEntry.startDecodeTimestamp + (sampleIndex - timingEntry.startIndex) * timingEntry.delta;
 };
 const getNextKeyframeIndexForSample = (sampleTable, sampleIndex) => {
     if (!sampleTable.keySampleIndices) {
@@ -8280,6 +8562,15 @@ const applySpsPixelAspectRatio = (track, pixelAspectRatio) => {
 const sampleTableIsEmpty = (sampleTable) => {
     return sampleTable.sampleSizes.length === 0;
 };
+const capEntryCounts = (entries, sampleCount) => {
+    while (entries.length > 0 && (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .last */ ._g)(entries).startIndex >= sampleCount) {
+        entries.pop();
+    }
+    const lastEntry = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .last */ ._g)(entries);
+    if (lastEntry) {
+        lastEntry.count = Math.min(lastEntry.count, sampleCount - lastEntry.startIndex);
+    }
+};
 const getOrCreateEncryptionAuxInfo = (track) => {
     if (track.currentFragmentState) {
         return track.currentFragmentState.encryptionAuxInfo ??= {
@@ -8324,7 +8615,9 @@ const resolveEncryptionAuxInfo = async (reader, encryptionInfo, aux) => {
         throw new Error('Failed to read auxiliary encryption info.');
     }
     const ivSize = encryptionInfo.defaultPerSampleIvSize;
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(ivSize !== null);
+    if (ivSize === null) {
+        throw new Error('Invalid file: encrypted track is missing its tenc box.');
+    }
     // Each aux entry has the same byte layout as a senc entry: IV (of size ivSize, or the constant IV from tenc
     // when ivSize is 0), then optionally subsample count + [clearLen, protectedLen] pairs. Subsamples are present
     // iff the entry is larger than the IV.
@@ -8337,8 +8630,11 @@ const resolveEncryptionAuxInfo = async (reader, encryptionInfo, aux) => {
         if (ivSize > 0) {
             iv.set((0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readBytes */ .io)(slice, ivSize), 0);
         }
-        else {
+        else if (encryptionInfo.defaultConstantIv) {
             iv.set(encryptionInfo.defaultConstantIv, 0);
+        }
+        else {
+            throw new Error('Invalid file: encrypted sample has no IV.');
         }
         let subsamples = null;
         if (entrySize > ivSize) {
@@ -8367,7 +8663,9 @@ const getDefaultSampleEncryption = (encryptionInfo) => {
 const decryptSample = async (track, sampleEncryption, data, fragment) => {
     (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(track.encryptionInfo);
     const encryptionInfo = track.encryptionInfo;
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(encryptionInfo.defaultKid !== null);
+    if (encryptionInfo.defaultKid === null) {
+        throw new Error('Invalid file: encrypted track is missing its tenc box.');
+    }
     const keyId = encryptionInfo.defaultKid;
     let keyBytes;
     const cacheEntry = track.demuxer.decryptionKeyCache.get(keyId);
@@ -8428,8 +8726,8 @@ const decryptCtr = async (key, encryptionInfo, sampleEncryption, data) => {
         // Whole sample is protected, no pattern
         return cryptApply(data);
     }
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(encryptionInfo.defaultCryptByteBlock !== null && encryptionInfo.defaultSkipByteBlock !== null);
-    const cryptRanges = collectCryptRanges(sampleEncryption.subsamples, encryptionInfo.defaultCryptByteBlock, encryptionInfo.defaultSkipByteBlock);
+    ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(encryptionInfo.defaultCryptByteBlock !== null && encryptionInfo.defaultSkipByteBlock !== null);
+    const cryptRanges = collectCryptRanges(sampleEncryption.subsamples, encryptionInfo.defaultCryptByteBlock, encryptionInfo.defaultSkipByteBlock, data.length);
     // Concatenate all crypt ranges into a single buffer so the continuous CTR counter behavior is preserved
     let totalCryptLen = 0;
     for (const range of cryptRanges) {
@@ -8481,7 +8779,7 @@ const decryptCbcs = (key, encryptionInfo, sampleEncryption, data) => {
     const output = new Uint8Array(data);
     // Pattern decryption: IV is reset at the start of each subsample. Within a subsample, the CBC chain continues
     // across skipped blocks (the IV after a crypt group carries over to the next crypt group's first block).
-    const cryptRanges = collectCryptRanges(sampleEncryption.subsamples, cryptByteBlock, skipByteBlock);
+    const cryptRanges = collectCryptRanges(sampleEncryption.subsamples, cryptByteBlock, skipByteBlock, data.length);
     const ivView = new DataView(sampleEncryption.iv.buffer, sampleEncryption.iv.byteOffset, 16);
     for (const range of cryptRanges) {
         // Reset IV per subsample
@@ -8502,11 +8800,14 @@ const decryptCbcs = (key, encryptionInfo, sampleEncryption, data) => {
     }
     return output;
 };
-const collectCryptRanges = (subsamples, cryptByteBlock, skipByteBlock) => {
+const collectCryptRanges = (subsamples, cryptByteBlock, skipByteBlock, dataLength) => {
     const ranges = [];
     const hasPattern = cryptByteBlock !== 0 || skipByteBlock !== 0;
     let cursor = 0;
     for (const subsample of subsamples) {
+        if (cursor + subsample.clearLen + subsample.protectedLen > dataLength) {
+            throw new Error('Invalid encryption info: subsamples exceed the sample size.');
+        }
         cursor += subsample.clearLen;
         const perSubsample = [];
         if (!hasPattern) {
@@ -8543,11 +8844,6 @@ const collectCryptRanges = (subsamples, cryptByteBlock, skipByteBlock) => {
 /***/ 1826
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   MG: () => (/* binding */ psshBoxesAreEqual),
-/* harmony export */   Xh: () => (/* binding */ buildIsobmffMimeType),
-/* harmony export */   j1: () => (/* binding */ parsePsshBoxContents)
-/* harmony export */ });
 /* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3912);
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
@@ -8571,6 +8867,9 @@ const buildIsobmffMimeType = (info) => {
     return string;
 };
 const parsePsshBoxContents = (contents) => {
+    if (contents.length < 24) {
+        throw new Error('Invalid pssh box: too small.');
+    }
     const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .toDataView */ .Zc)(contents);
     let pos = 0;
     const version = view.getUint8(pos);
@@ -8582,6 +8881,9 @@ const parsePsshBoxContents = (contents) => {
     if (version > 0) {
         const kidCount = view.getUint32(pos);
         pos += 4;
+        if (pos + 16 * kidCount + 4 > contents.length) {
+            throw new Error('Invalid pssh box: key ID count exceeds box size.');
+        }
         if (kidCount > 0) {
             keyIds = [];
             for (let i = 0; i < kidCount; i++) {
@@ -8600,6 +8902,12 @@ const parsePsshBoxContents = (contents) => {
 };
 const psshBoxesAreEqual = (a, b) => (a.systemId === b.systemId
     && (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .uint8ArraysAreEqual */ .ju)(a.data, b.data));
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "MG", 0, /* binding */ psshBoxesAreEqual,
+/* harmony export */   "Xh", 0, /* binding */ buildIsobmffMimeType,
+/* harmony export */   "j1", 0, /* binding */ parsePsshBoxContents
+/* harmony export */ ]);
 
 
 /***/ },
@@ -8721,7 +9029,7 @@ const readDataBox = (slice) => {
     if (!header || header.name !== 'data') {
         return null;
     }
-    if (slice.remainingLength < 8) {
+    if (header.contentSize < 8 || slice.remainingLength < 8) {
         // Box is too small
         return null;
     }
@@ -8897,6 +9205,7 @@ const METADATA_ELEMENTS = [
     { id: _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.Cues, flag: 'cuesSeen' },
 ];
 const MAX_RESYNC_LENGTH = 10 * 2 ** 20; // 10 MiB
+const MAX_ELEMENT_NESTING_DEPTH = 64;
 class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ .B {
     constructor(input) {
         super(input);
@@ -8913,6 +9222,8 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
         this.currentSimpleTagName = null;
         this.currentAttachedFile = null;
         this.isWebM = false;
+        this.claimedSeekTargets = new Set();
+        this.elementNestingDepth = 0;
         this.reader = input._reader;
     }
     async getTrackBackings() {
@@ -8934,15 +9245,16 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
         await this.readMetadata();
         // Load metadata tags from each segment lazily (only once)
         for (const segment of this.segments) {
-            if (!segment.metadataTagsCollected) {
+            if (!segment.metadataTagsPromise) {
                 if (this.reader.fileSize !== null) {
-                    await this.loadSegmentMetadata(segment);
+                    segment.metadataTagsPromise = this.loadSegmentMetadata(segment);
                 }
                 else {
                     // The seeking would be too crazy, let's not
+                    segment.metadataTagsPromise = Promise.resolve();
                 }
-                segment.metadataTagsCollected = true;
             }
+            await segment.metadataTagsPromise;
         }
         // This is kinda handwavy, and how we handle multiple segments isn't suuuuper well-defined anyway; so we just
         // shallow-merge metadata tags from all (usually just one) segments.
@@ -9008,7 +9320,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                         lastSegment.elementEndPos = dataStartPos + size;
                     }
                 }
-                (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .assertDefinedSize */ .p)(size);
+                ;(0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .assertDefinedSize */ .p)(size);
                 currentPos = dataStartPos + size;
             }
         })();
@@ -9026,6 +9338,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
             duration: -1,
             seekEntries: [],
             tracks: [],
+            idToTrack: new Map(),
             cuePoints: [],
             dataStartPos: segmentDataStart,
             elementEndPos: dataSize === undefined
@@ -9033,8 +9346,9 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 : segmentDataStart + dataSize,
             clusterSeekStartPos: segmentDataStart,
             lastReadCluster: null,
+            clusterSummaries: new Map(),
             metadataTags: {},
-            metadataTagsCollected: false,
+            metadataTagsPromise: null,
         };
         this.segments.push(this.currentSegment);
         let currentPos = segmentDataStart;
@@ -9048,8 +9362,9 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
             const elementStartPos = currentPos;
             const header = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readElementHeader */ .ur)(slice);
             if (!header || (!_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .LEVEL_1_EBML_IDS */ .VE.includes(header.id) && header.id !== _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.Void)) {
-                // Potential junk. Let's try to resync
-                const nextPos = await (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .resync */ .nE)(this.reader, elementStartPos, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .LEVEL_1_EBML_IDS */ .VE, Math.min(this.currentSegment.elementEndPos ?? Infinity, elementStartPos + MAX_RESYNC_LENGTH));
+                // Potential junk. Let's try to resync (skipping the current position, which might hold a valid ID
+                // followed by a broken size)
+                const nextPos = await (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .resync */ .nE)(this.reader, elementStartPos + 1, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .LEVEL_1_EBML_IDS */ .VE, Math.min(this.currentSegment.elementEndPos ?? Infinity, elementStartPos + MAX_RESYNC_LENGTH));
                 if (nextPos) {
                     currentPos = nextPos;
                     continue;
@@ -9067,7 +9382,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 if (id === _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.SeekHead) {
                     visitedSeekHeadPositions.add(elementStartPos - segmentDataStart);
                 }
-                (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .assertDefinedSize */ .p)(size);
+                ;(0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .assertDefinedSize */ .p)(size);
                 let slice = this.reader.requestSlice(dataStartPos, size);
                 if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isThenable */ .Qg)(slice))
                     slice = await slice;
@@ -9083,7 +9398,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 else {
                     this.currentSegment.attachmentsSeen = true;
                 }
-                (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .assertDefinedSize */ .p)(size);
+                ;(0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .assertDefinedSize */ .p)(size);
                 let slice = this.reader.requestSlice(dataStartPos, size);
                 if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isThenable */ .Qg)(slice))
                     slice = await slice;
@@ -9104,13 +9419,16 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
         }
         if (this.reader.fileSize !== null) {
             // Seek heads can sometimes point to other seek heads, so follow them until there are no unvisited
-            // ones left.
-            while (true) {
-                const seekEntry = this.currentSegment.seekEntries.find(x => x.id === _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.SeekHead && !visitedSeekHeadPositions.has(x.segmentPosition));
-                if (!seekEntry) {
-                    break;
+            // ones left. Following a seek head appends its entries to the list we're iterating over.
+            for (let i = 0; i < this.currentSegment.seekEntries.length; i++) {
+                const seekEntry = this.currentSegment.seekEntries[i];
+                if (seekEntry.id !== _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.SeekHead || visitedSeekHeadPositions.has(seekEntry.segmentPosition)) {
+                    continue;
                 }
                 visitedSeekHeadPositions.add(seekEntry.segmentPosition);
+                if (!this.claimSeekTarget(segmentDataStart + seekEntry.segmentPosition)) {
+                    continue;
+                }
                 let slice = this.reader.requestSliceRange(segmentDataStart + seekEntry.segmentPosition, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_HEADER_SIZE */ .De, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MAX_HEADER_SIZE */ .r1);
                 if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isThenable */ .Qg)(slice))
                     slice = await slice;
@@ -9139,6 +9457,8 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                     continue;
                 }
                 if (this.currentSegment[target.flag])
+                    continue;
+                if (!this.claimSeekTarget(segmentDataStart + seekEntry.segmentPosition))
                     continue;
                 let slice = this.reader.requestSliceRange(segmentDataStart + seekEntry.segmentPosition, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_HEADER_SIZE */ .De, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MAX_HEADER_SIZE */ .r1);
                 if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isThenable */ .Qg)(slice))
@@ -9173,27 +9493,24 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 track.defaultDuration = (this.currentSegment.timestampFactor * track.defaultDurationNs) / 1e9;
             }
         }
-        // Now, let's distribute the cue points to the tracks
-        const idToTrack = new Map(this.currentSegment.tracks.map(x => [x.id, x]));
         // Assign cue points to their respective tracks
         for (const cuePoint of this.currentSegment.cuePoints) {
-            const track = idToTrack.get(cuePoint.trackId);
+            const track = this.currentSegment.idToTrack.get(cuePoint.trackId);
             if (track) {
                 track.cuePoints.push(cuePoint);
             }
         }
         for (const track of this.currentSegment.tracks) {
-            // Sort cue points by time
-            track.cuePoints.sort((a, b) => a.time - b.time);
-            // Remove multiple cue points for the same time
-            for (let i = 0; i < track.cuePoints.length - 1; i++) {
-                const cuePoint1 = track.cuePoints[i];
-                const cuePoint2 = track.cuePoints[i + 1];
-                if (cuePoint1.time === cuePoint2.time) {
-                    track.cuePoints.splice(i + 1, 1);
-                    i--;
+            // Sort cue points by time and remove multiple cue points for the same time
+            const cuePoints = track.cuePoints;
+            cuePoints.sort((a, b) => a.time - b.time);
+            let writeIndex = 0;
+            for (const cuePoint of cuePoints) {
+                if (writeIndex === 0 || cuePoint.time !== cuePoints[writeIndex - 1].time) {
+                    cuePoints[writeIndex++] = cuePoint;
                 }
             }
+            cuePoints.length = writeIndex;
         }
         let trackWithMostCuePoints = null;
         let maxCuePointCount = -Infinity;
@@ -9247,12 +9564,18 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
             timestamp: -1,
             trackData: new Map(),
         };
-        this.currentCluster = cluster;
         if (dataSlice) {
-            // Read the children of the cluster, stopping early at level 0 or 1 EBML elements. We do this because some
-            // clusters have incorrect sizes that are too large
-            const endPos = this.readContiguousElements(dataSlice, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .LEVEL_0_AND_1_EBML_IDS */ .K9);
-            cluster.elementEndPos = endPos;
+            this.currentCluster = cluster;
+            try {
+                // Read the children of the cluster, stopping early at level 0 or 1 EBML elements. We do this because
+                // some clusters have incorrect sizes that are too large
+                const endPos = this.readContiguousElements(dataSlice, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .LEVEL_0_AND_1_EBML_IDS */ .K9);
+                cluster.elementEndPos = endPos;
+            }
+            finally {
+                this.currentCluster = null;
+                this.currentBlock = null;
+            }
         }
         for (const [, trackData] of cluster.trackData) {
             const track = trackData.track;
@@ -9293,7 +9616,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 // Perform lace resolution. Here, we expand each laced block into multiple blocks where each contains
                 // one frame of the lace. We do this after determining block timestamps so we can properly distribute
                 // the block's duration across the laced frames.
-                this.expandLacedBlocks(trackData.blocks, track);
+                trackData.blocks = this.expandLacedBlocks(trackData.blocks, track);
                 // Recompute since blocks have changed
                 trackData.presentationTimestamps = trackData.blocks
                     .map((block, i) => ({ timestamp: block.timestamp, blockIndex: i }))
@@ -9305,8 +9628,11 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
             trackData.endTimestamp = lastBlock.timestamp + lastBlock.duration;
             // Let's remember that a cluster with a given timestamp is here, speeding up future lookups if no cues exist
             const insertionIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .binarySearchLessOrEqual */ .eE)(track.clusterPositionCache, trackData.startTimestamp, x => x.startTimestamp);
-            if (insertionIndex === -1
-                || track.clusterPositionCache[insertionIndex].elementStartPos !== elementStartPos) {
+            const previousEntry = track.clusterPositionCache[insertionIndex];
+            const nextEntry = track.clusterPositionCache[insertionIndex + 1];
+            // Only remember it if the timestamp order matches the cluster position order
+            if ((!previousEntry || previousEntry.elementStartPos < elementStartPos)
+                && (!nextEntry || nextEntry.elementStartPos > elementStartPos)) {
                 track.clusterPositionCache.splice(insertionIndex + 1, 0, {
                     elementStartPos: cluster.elementStartPos,
                     startTimestamp: trackData.startTimestamp,
@@ -9314,12 +9640,16 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
             }
         }
         segment.lastReadCluster = cluster;
+        segment.clusterSummaries.set(startPos, {
+            elementEndPos: cluster.elementEndPos,
+            trackIds: new Set(cluster.trackData.keys()),
+        });
         return cluster;
     }
     getTrackDataInCluster(cluster, trackNumber) {
         let trackData = cluster.trackData.get(trackNumber);
         if (!trackData) {
-            const track = cluster.segment.tracks.find(x => x.id === trackNumber);
+            const track = cluster.segment.idToTrack.get(trackNumber);
             if (!track) {
                 return null;
             }
@@ -9337,17 +9667,17 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
     }
     expandLacedBlocks(blocks, track) {
         // https://www.matroska.org/technical/notes.html#block-lacing
-        for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
-            const originalBlock = blocks[blockIndex];
+        const expandedBlocks = [];
+        for (const originalBlock of blocks) {
             if (originalBlock.lacing === BlockLacing.None) {
+                expandedBlocks.push(originalBlock);
                 continue;
             }
-            // Decode the block data if it hasn't been decoded yet (needed for lacing expansion)
-            if (!originalBlock.decoded) {
-                originalBlock.data = this.decodeBlockData(track, originalBlock.data);
-                originalBlock.decoded = true;
-            }
+            // Content encodings apply to each frame, excluding the lacing data, so the frames get decoded lazily later
             const slice = _reader_js__WEBPACK_IMPORTED_MODULE_9__/* .FileSlice */ .x$.tempFromBytes(originalBlock.data);
+            if (slice.length === 0) {
+                throw new Error('Invalid laced block: no data.');
+            }
             const frameSizes = [];
             const frameCount = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readU8 */ .eo)(slice) + 1;
             switch (originalBlock.lacing) {
@@ -9387,14 +9717,18 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                     {
                         // EBML lacing: first size absolute, subsequent ones are coded as signed differences from the last
                         const firstResult = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readVarInt */ .pT)(slice);
-                        (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(firstResult !== null); // Assume it's not an invalid VINT
+                        if (firstResult === null) {
+                            throw new Error('Invalid EBML lacing: bad frame size.');
+                        }
                         let currentSize = firstResult;
                         frameSizes.push(currentSize);
                         let totalUsedSize = currentSize;
                         for (let i = 1; i < frameCount - 1; i++) {
                             const startPos = slice.bufferPos;
                             const diffResult = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readVarInt */ .pT)(slice);
-                            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(diffResult !== null);
+                            if (diffResult === null) {
+                                throw new Error('Invalid EBML lacing: bad frame size.');
+                            }
                             const unsignedDiff = diffResult;
                             const width = slice.bufferPos - startPos;
                             const bias = (1 << (width * 7 - 1)) - 1; // Typo-corrected version of 2^((7*n)-1)^-1
@@ -9410,30 +9744,31 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                     break;
                 default: (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(false);
             }
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(frameSizes.length === frameCount);
-            blocks.splice(blockIndex, 1); // Remove the original block
+            // Every frame must hold actual data; this also catches frame sizes that exceed the block
+            if (frameSizes.length !== frameCount || frameSizes.some(x => x <= 0)) {
+                throw new Error('Invalid block lacing: frame sizes don\'t match the block.');
+            }
             const blockDuration = originalBlock.duration || frameCount * (track.defaultDuration ?? 0);
-            // Now, let's insert each frame as its own block
+            // Now, let's replace the block with one block per frame
             for (let i = 0; i < frameCount; i++) {
                 const frameSize = frameSizes[i];
                 const frameData = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readBytes */ .io)(slice, frameSize);
                 // Distribute timestamps evenly across the block duration
                 const frameTimestamp = originalBlock.timestamp + (blockDuration * i / frameCount);
                 const frameDuration = blockDuration / frameCount;
-                blocks.splice(blockIndex + i, 0, {
+                expandedBlocks.push({
                     timestamp: frameTimestamp,
                     duration: frameDuration,
                     isKeyFrame: originalBlock.isKeyFrame,
                     data: frameData,
                     lacing: BlockLacing.None,
-                    decoded: true,
+                    decoded: originalBlock.decoded,
                     postProcessed: false,
                     mainAdditional: originalBlock.mainAdditional,
                 });
             }
-            blockIndex += frameCount; // Skip the blocks we just added
-            blockIndex--;
         }
+        return expandedBlocks;
     }
     async loadSegmentMetadata(segment) {
         for (const seekEntry of segment.seekEntries) {
@@ -9446,6 +9781,9 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
             else {
                 continue;
             }
+            if (!this.claimSeekTarget(segment.dataStartPos + seekEntry.segmentPosition)) {
+                continue;
+            }
             let slice = this.reader.requestSliceRange(segment.dataStartPos + seekEntry.segmentPosition, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_HEADER_SIZE */ .De, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MAX_HEADER_SIZE */ .r1);
             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isThenable */ .Qg)(slice))
                 slice = await slice;
@@ -9456,15 +9794,20 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 continue;
             const { size } = header;
             (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .assertDefinedSize */ .p)(size);
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(!this.currentSegment);
-            this.currentSegment = segment;
             let dataSlice = this.reader.requestSlice(slice.filePos, size);
             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isThenable */ .Qg)(dataSlice))
                 dataSlice = await dataSlice;
             if (dataSlice) {
-                this.readContiguousElements(dataSlice);
+                // No awaiting while the segment is set, so concurrent calls can't interfere with each other
+                (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(!this.currentSegment);
+                this.currentSegment = segment;
+                try {
+                    this.readContiguousElements(dataSlice);
+                }
+                finally {
+                    this.currentSegment = null;
+                }
             }
-            this.currentSegment = null;
             // Mark as seen
             if (seekEntry.id === _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.Tags) {
                 segment.tagsSeen = true;
@@ -9474,15 +9817,31 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
             }
         }
     }
-    readContiguousElements(slice, stopIds) {
-        while (slice.remainingLength >= _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_HEADER_SIZE */ .De) {
-            const startPos = slice.filePos;
-            const foundElement = this.traverseElement(slice, stopIds);
-            if (!foundElement) {
-                return startPos;
-            }
+    claimSeekTarget(position) {
+        if (this.claimedSeekTargets.has(position)) {
+            return false;
         }
-        return slice.filePos;
+        this.claimedSeekTargets.add(position);
+        return true;
+    }
+    readContiguousElements(slice, stopIds) {
+        if (this.elementNestingDepth === MAX_ELEMENT_NESTING_DEPTH) {
+            throw new Error('Invalid file: elements are nested too deeply.');
+        }
+        this.elementNestingDepth++;
+        try {
+            while (slice.remainingLength >= _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_HEADER_SIZE */ .De) {
+                const startPos = slice.filePos;
+                const foundElement = this.traverseElement(slice, stopIds);
+                if (!foundElement) {
+                    return startPos;
+                }
+            }
+            return slice.filePos;
+        }
+        finally {
+            this.elementNestingDepth--;
+        }
     }
     traverseElement(slice, stopIds) {
         const header = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readElementHeader */ .ur)(slice);
@@ -9495,6 +9854,9 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
         const { id, size } = header;
         const dataStartPos = slice.filePos;
         (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .assertDefinedSize */ .p)(size);
+        if (dataStartPos + size > slice.end) {
+            return false; // The element doesn't fit into its parent
+        }
         switch (id) {
             case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.DocType:
                 {
@@ -9537,8 +9899,12 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 {
                     if (!this.currentSegment)
                         break;
-                    this.currentSegment.timestampScale = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readUnsignedInt */ .dl)(slice, size);
-                    this.currentSegment.timestampFactor = 1e9 / this.currentSegment.timestampScale;
+                    const timestampScale = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readUnsignedInt */ .dl)(slice, size);
+                    if (timestampScale === 0) {
+                        throw new Error('Invalid TimestampScale element: must not be 0.');
+                    }
+                    this.currentSegment.timestampScale = timestampScale;
+                    this.currentSegment.timestampFactor = 1e9 / timestampScale;
                 }
                 ;
                 break;
@@ -9586,6 +9952,11 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                             || instruction.data.algorithm !== ContentCompAlgo.HeaderStripping;
                     })) {
                         _logging_js__WEBPACK_IMPORTED_MODULE_3__/* .Logging */ .y._warn(`Track #${this.currentTrack.id} has an unsupported content encoding; dropping.`);
+                        this.currentTrack = null;
+                    }
+                    if (this.currentTrack && this.currentSegment.idToTrack.has(this.currentTrack.id)) {
+                        // Blocks can't tell the tracks apart
+                        _logging_js__WEBPACK_IMPORTED_MODULE_3__/* .Logging */ .y._warn(`Track #${this.currentTrack.id} is defined more than once; dropping.`);
                         this.currentTrack = null;
                     }
                     if (this.currentTrack
@@ -9647,6 +10018,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                             const videoTrack = this.currentTrack;
                             this.currentTrack.trackBacking = new MatroskaVideoTrackBacking(videoTrack);
                             this.currentSegment.tracks.push(this.currentTrack);
+                            this.currentSegment.idToTrack.set(this.currentTrack.id, this.currentTrack);
                         }
                         else if (this.currentTrack.info.type === 'audio') {
                             if (codecIdWithoutSuffix === _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .CODEC_STRING_MAP */ .oo.aac) {
@@ -9729,6 +10101,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                             const audioTrack = this.currentTrack;
                             this.currentTrack.trackBacking = new MatroskaAudioTrackBacking(audioTrack);
                             this.currentSegment.tracks.push(this.currentTrack);
+                            this.currentSegment.idToTrack.set(this.currentTrack.id, this.currentTrack);
                         }
                     }
                     this.currentTrack = null;
@@ -10081,7 +10454,11 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 {
                     if (this.currentTrack?.info?.type !== 'audio')
                         break;
-                    this.currentTrack.info.sampleRate = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readFloat */ .zH)(slice, size);
+                    const sampleRate = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readFloat */ .zH)(slice, size);
+                    if (!(sampleRate > 0) || !Number.isFinite(sampleRate)) {
+                        throw new Error('Invalid SamplingFrequency element: must be a positive, finite number.');
+                    }
+                    this.currentTrack.info.sampleRate = sampleRate;
                 }
                 ;
                 break;
@@ -10089,7 +10466,11 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 {
                     if (this.currentTrack?.info?.type !== 'audio')
                         break;
-                    this.currentTrack.info.numberOfChannels = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readUnsignedInt */ .dl)(slice, size);
+                    const numberOfChannels = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readUnsignedInt */ .dl)(slice, size);
+                    if (numberOfChannels === 0) {
+                        throw new Error('Invalid Channels element: must not be 0.');
+                    }
+                    this.currentTrack.info.numberOfChannels = numberOfChannels;
                 }
                 ;
                 break;
@@ -10118,9 +10499,8 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 break;
             case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.CueTrackPositions:
                 {
-                    if (this.currentCueTime === null)
+                    if (this.currentCueTime === null || !this.currentSegment)
                         break;
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(this.currentSegment);
                     const cuePoint = { time: this.currentCueTime, trackId: -1, clusterPosition: -1 };
                     this.currentSegment.cuePoints.push(cuePoint);
                     this.readContiguousElements(slice.slice(dataStartPos, size));
@@ -10161,14 +10541,15 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 {
                     if (!this.currentCluster)
                         break;
-                    const trackNumber = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readVarInt */ .pT)(slice);
-                    if (trackNumber === null)
+                    const blockSlice = slice.slice(dataStartPos, size);
+                    const trackNumber = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readVarInt */ .pT)(blockSlice);
+                    if (trackNumber === null || blockSlice.remainingLength < 3)
                         break;
                     const trackData = this.getTrackDataInCluster(this.currentCluster, trackNumber);
                     if (!trackData)
                         break; // Not a track we care about
-                    const relativeTimestamp = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readI16Be */ .iH)(slice);
-                    const flags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readU8 */ .eo)(slice);
+                    const relativeTimestamp = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readI16Be */ .iH)(blockSlice);
+                    const flags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readU8 */ .eo)(blockSlice);
                     const lacing = (flags >> 1) & 0x3; // If the block is laced, we'll expand it later
                     let isKeyFrame = !!(flags & 0x80);
                     if (trackData.track.info?.type === 'audio' && trackData.track.info.codec) {
@@ -10178,7 +10559,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                         // https://github.com/Vanilagy/mediabunny/issues/192
                         isKeyFrame = true;
                     }
-                    const blockData = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readBytes */ .io)(slice, size - (slice.filePos - dataStartPos));
+                    const blockData = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readBytes */ .io)(blockSlice, blockSlice.remainingLength);
                     const hasDecodingInstructions = trackData.track.decodingInstructions.length > 0;
                     trackData.blocks.push({
                         timestamp: relativeTimestamp, // We'll add the cluster's timestamp to this later
@@ -10206,16 +10587,17 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 {
                     if (!this.currentCluster)
                         break;
-                    const trackNumber = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readVarInt */ .pT)(slice);
-                    if (trackNumber === null)
+                    const blockSlice = slice.slice(dataStartPos, size);
+                    const trackNumber = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readVarInt */ .pT)(blockSlice);
+                    if (trackNumber === null || blockSlice.remainingLength < 3)
                         break;
                     const trackData = this.getTrackDataInCluster(this.currentCluster, trackNumber);
                     if (!trackData)
                         break;
-                    const relativeTimestamp = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readI16Be */ .iH)(slice);
-                    const flags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readU8 */ .eo)(slice);
+                    const relativeTimestamp = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readI16Be */ .iH)(blockSlice);
+                    const flags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readU8 */ .eo)(blockSlice);
                     const lacing = (flags >> 1) & 0x3; // If the block is laced, we'll expand it later
-                    const blockData = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readBytes */ .io)(slice, size - (slice.filePos - dataStartPos));
+                    const blockData = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readBytes */ .io)(blockSlice, blockSlice.remainingLength);
                     const hasDecodingInstructions = trackData.track.decodingInstructions.length > 0;
                     this.currentBlock = {
                         timestamp: relativeTimestamp, // We'll add the cluster's timestamp to this later
@@ -10239,15 +10621,18 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 break;
             case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.BlockMore:
                 {
-                    if (!this.currentBlock)
+                    // Nested elements may modify the current block, so hold onto it
+                    const block = this.currentBlock;
+                    if (!block)
                         break;
-                    this.currentBlockAdditional = {
+                    const blockAdditional = {
                         addId: 1,
                         data: null,
                     };
+                    this.currentBlockAdditional = blockAdditional;
                     this.readContiguousElements(slice.slice(dataStartPos, size));
-                    if (this.currentBlockAdditional.data && this.currentBlockAdditional.addId === 1) {
-                        this.currentBlock.mainAdditional = this.currentBlockAdditional.data;
+                    if (blockAdditional.data && blockAdditional.addId === 1) {
+                        block.mainAdditional = blockAdditional.data;
                     }
                     this.currentBlockAdditional = null;
                 }
@@ -10353,8 +10738,8 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 break;
             case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.AttachedFile:
                 {
-                    if (!this.currentSegment)
-                        break;
+                    if (!this.currentSegment || this.currentAttachedFile)
+                        break; // Nested attached files make no sense
                     this.currentAttachedFile = {
                         fileUid: null,
                         fileName: null,
@@ -10437,24 +10822,30 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 break;
             case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.ContentEncodings:
                 {
-                    if (!this.currentTrack)
+                    // Nested elements may modify the current track, so hold onto it
+                    const track = this.currentTrack;
+                    if (!track)
                         break;
                     this.readContiguousElements(slice.slice(dataStartPos, size));
                     // "**MUST** start with the `ContentEncoding` with the highest `ContentEncodingOrder`"
-                    this.currentTrack.decodingInstructions.sort((a, b) => b.order - a.order);
+                    track.decodingInstructions.sort((a, b) => b.order - a.order);
                 }
                 ;
                 break;
             case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.ContentEncoding:
                 {
-                    this.currentDecodingInstruction = {
+                    const track = this.currentTrack;
+                    if (!track)
+                        break;
+                    const instruction = {
                         order: 0,
                         scope: ContentEncodingScope.Block,
                         data: null,
                     };
+                    this.currentDecodingInstruction = instruction;
                     this.readContiguousElements(slice.slice(dataStartPos, size));
-                    if (this.currentDecodingInstruction.data) {
-                        this.currentTrack.decodingInstructions.push(this.currentDecodingInstruction);
+                    if (instruction.data) {
+                        track.decodingInstructions.push(instruction);
                     }
                     this.currentDecodingInstruction = null;
                 }
@@ -10520,7 +10911,7 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
         return true;
     }
     decodeBlockData(track, rawData) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(track.decodingInstructions.length > 0); // This method shouldn't be called otherwise
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(track.decodingInstructions.length > 0); // This method shouldn't be called otherwise
         let currentData = rawData;
         for (const instruction of track.decodingInstructions) {
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(instruction.data);
@@ -10828,13 +11219,14 @@ class MatroskaTrackBacking {
         return this.performClusterLookup(locationInCluster.cluster, (cluster) => {
             if (cluster === locationInCluster.cluster) {
                 const trackData = cluster.trackData.get(this.internalTrack.id);
-                const nextKeyFrameIndex = trackData.blocks.findIndex((x, i) => x.isKeyFrame && i > locationInCluster.blockIndex);
-                if (nextKeyFrameIndex !== -1) {
-                    // We can simply take the next key frame in the cluster
-                    return {
-                        blockIndex: nextKeyFrameIndex,
-                        correctBlockFound: true,
-                    };
+                for (let i = locationInCluster.blockIndex + 1; i < trackData.blocks.length; i++) {
+                    if (trackData.blocks[i].isKeyFrame) {
+                        // We can simply take the next key frame in the cluster
+                        return {
+                            blockIndex: i,
+                            correctBlockFound: true,
+                        };
+                    }
                 }
             }
             else {
@@ -10912,7 +11304,7 @@ class MatroskaTrackBacking {
     // The timestamp with which we can search the lookup table
     searchTimestamp, 
     // The timestamp for which we know the correct block will not come after it
-    latestTimestamp, options) {
+    latestTimestamp, options, isRetry = false) {
         const { demuxer, segment } = this.internalTrack;
         let currentCluster = null;
         let bestCluster = null;
@@ -10961,6 +11353,12 @@ class MatroskaTrackBacking {
                     break;
                 }
             }
+            const summary = segment.clusterSummaries.get(currentPos);
+            if (summary && !summary.trackIds.has(this.internalTrack.id)) {
+                // We've read this cluster before and know it has nothing for this track, so let's not read it again
+                currentPos = summary.elementEndPos;
+                continue;
+            }
             // Load the header
             let slice = demuxer.reader.requestSliceRange(currentPos, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_HEADER_SIZE */ .De, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MAX_HEADER_SIZE */ .r1);
             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isThenable */ .Qg)(slice))
@@ -10973,7 +11371,7 @@ class MatroskaTrackBacking {
                 || (!_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .LEVEL_1_EBML_IDS */ .VE.includes(elementHeader.id) && elementHeader.id !== _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.Void)) {
                 // There's an element here that shouldn't be here. Might be garbage. In this case, let's
                 // try and resync to the next valid element.
-                const nextPos = await (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .resync */ .nE)(demuxer.reader, elementStartPos, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .LEVEL_1_EBML_IDS */ .VE, Math.min(segment.elementEndPos ?? Infinity, elementStartPos + MAX_RESYNC_LENGTH));
+                const nextPos = await (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .resync */ .nE)(demuxer.reader, elementStartPos + 1, _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .LEVEL_1_EBML_IDS */ .VE, Math.min(segment.elementEndPos ?? Infinity, elementStartPos + MAX_RESYNC_LENGTH));
                 if (nextPos) {
                     currentPos = nextPos;
                     continue;
@@ -11027,11 +11425,12 @@ class MatroskaTrackBacking {
         // Catch faulty cue points
         if (cuePoint && (!bestCluster || bestCluster.elementStartPos < cuePoint.clusterPosition)) {
             // The cue point lied to us! We found a cue point but no cluster there that satisfied the match. In this
-            // case, let's search again but using the cue point before that.
+            // case, let's search again but using the cue point before that. If that one lies too, we stop trusting the
+            // cues altogether, since walking back through many faulty cue points would mean rescanning the file over
+            // and over.
             const previousCuePoint = this.internalTrack.cuePoints[cuePointIndex - 1];
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(!previousCuePoint || previousCuePoint.time < cuePoint.time);
-            const newSearchTimestamp = previousCuePoint?.time ?? -Infinity;
-            return this.performClusterLookup(null, getMatchInCluster, newSearchTimestamp, latestTimestamp, options);
+            const newSearchTimestamp = !isRetry && previousCuePoint ? previousCuePoint.time : -Infinity;
+            return this.performClusterLookup(null, getMatchInCluster, newSearchTimestamp, latestTimestamp, options, true);
         }
         if (bestCluster) {
             // If we finished looping but didn't find a perfect match, still return the best match we found
@@ -11197,9 +11596,6 @@ class MatroskaAudioTrackBacking extends MatroskaTrackBacking {
 /***/ 3616
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   V: () => (/* binding */ buildMatroskaMimeType)
-/* harmony export */ });
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
  *
@@ -11220,6 +11616,10 @@ const buildMatroskaMimeType = (info) => {
     }
     return string;
 };
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "V", 0, /* binding */ buildMatroskaMimeType
+/* harmony export */ ]);
 
 
 /***/ },
@@ -11431,7 +11831,7 @@ class Mp3AudioTrackBacking {
         return 1;
     }
     getTimeResolution() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
         return this.demuxer.firstFrameHeader.sampleRate / this.demuxer.firstFrameHeader.audioSamplesInFrame;
     }
     isRelativeToUnixEpoch() {
@@ -11488,11 +11888,11 @@ class Mp3AudioTrackBacking {
         return null;
     }
     getNumberOfChannels() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
         return (0,_shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .getMp3ChannelCount */ .fX)(this.demuxer.firstFrameHeader.channel);
     }
     getSampleRate() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
         return this.demuxer.firstFrameHeader.sampleRate;
     }
     getDisposition() {
@@ -11501,7 +11901,7 @@ class Mp3AudioTrackBacking {
         };
     }
     async getDecoderConfig() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
         return {
             codec: 'mp3',
             numberOfChannels: (0,_shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .getMp3ChannelCount */ .fX)(this.demuxer.firstFrameHeader.channel),
@@ -11615,12 +12015,12 @@ const readNextMp3FrameHeader = async (reader, startPos, until, ref = null) => {
         const maxLength = until !== null
             ? Math.min(CHUNK_SIZE, until - currentPos)
             : CHUNK_SIZE;
-        let slice = reader.requestSliceRange(currentPos, _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .MP3_FRAME_HEADER_SIZE */ .D_, maxLength);
+        let slice = reader.requestSliceRange(currentPos, (/* inlined export .MP3_FRAME_HEADER_SIZE */4), maxLength);
         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .isThenable */ .Qg)(slice))
             slice = await slice;
-        if (!slice || slice.length < _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .MP3_FRAME_HEADER_SIZE */ .D_)
+        if (!slice || slice.length < (/* inlined export .MP3_FRAME_HEADER_SIZE */4))
             break;
-        while (slice.remainingLength >= _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .MP3_FRAME_HEADER_SIZE */ .D_) {
+        while (slice.remainingLength >= (/* inlined export .MP3_FRAME_HEADER_SIZE */4)) {
             const posBeforeRead = slice.filePos;
             const word = (0,_reader_js__WEBPACK_IMPORTED_MODULE_2__/* .readU32Be */ .cN)(slice);
             const remainingBytes = reader.fileSize !== null
@@ -11724,26 +12124,26 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
     }
     async readMetadata() {
         return this.metadataPromise ??= (async () => {
-            const lengthToCheck = _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT + 16 + 1;
+            const lengthToCheck = (/* inlined export .TS_PACKET_SIZE */188) + 16 + 1;
             let startingSlice = this.reader.requestSlice(0, lengthToCheck);
             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(startingSlice))
                 startingSlice = await startingSlice;
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(startingSlice);
             const startingBytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_11__/* .readBytes */ .io)(startingSlice, lengthToCheck);
-            if (startingBytes[0] === 0x47 && startingBytes[_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT] === 0x47) {
+            if (startingBytes[0] === 0x47 && startingBytes[(/* inlined export .TS_PACKET_SIZE */188)] === 0x47) {
                 // Regular MPEG-TS
                 this.packetOffset = 0;
-                this.packetStride = _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT;
+                this.packetStride = (/* inlined export .TS_PACKET_SIZE */188);
             }
-            else if (startingBytes[0] === 0x47 && startingBytes[_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT + 16] === 0x47) {
+            else if (startingBytes[0] === 0x47 && startingBytes[(/* inlined export .TS_PACKET_SIZE */188) + 16] === 0x47) {
                 // MPEG-TS with Forward Error Correction
                 this.packetOffset = 0;
-                this.packetStride = _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT + 16;
+                this.packetStride = (/* inlined export .TS_PACKET_SIZE */188) + 16;
             }
-            else if (startingBytes[4] === 0x47 && startingBytes[4 + _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT + 4] === 0x47) {
+            else if (startingBytes[4] === 0x47 && startingBytes[4 + (/* inlined export .TS_PACKET_SIZE */188) + 4] === 0x47) {
                 // MPEG-2-TS (DVHS)
                 this.packetOffset = 4;
-                this.packetStride = _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT + 4;
+                this.packetStride = (/* inlined export .TS_PACKET_SIZE */188) + 4;
             }
             else {
                 throw new Error('Unreachable.');
@@ -11765,8 +12165,9 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
                     currentPos += this.packetStride;
                     continue;
                 }
-                if (hasProgramMap && !this.elementaryStreams.some(x => x.pid === packetHeader.pid)) {
-                    // Don't care about this PID
+                if (hasProgramMap
+                    && !this.elementaryStreams.some(x => x.pid === packetHeader.pid && !x.initialized)) {
+                    // Don't care about this PID (anymore)
                     currentPos += this.packetStride;
                     continue;
                 }
@@ -12018,7 +12419,7 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
                         elementaryStream.canBeTrustedWithKeyPackets = section.randomAccessIndicator === 1;
                         if (this.input._initInput) {
                             const initDemuxer = (await this.input._initInput._getDemuxer());
-                            const matchingStream = initDemuxer.elementaryStreams.find(x => (x.pid === section.pid && x.info.codec === elementaryStream.info.codec));
+                            const matchingStream = initDemuxer.elementaryStreams.find(x => (x.pid === section.pid && x.info.codec === elementaryStream.info.codec && x.initialized));
                             if (matchingStream) {
                                 elementaryStream.info = matchingStream.info;
                                 elementaryStream.initialized = true;
@@ -12256,7 +12657,7 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
     async getMimeType() {
         await this.readMetadata();
         const codecStrings = await Promise.all(this.trackBackingEntries.map(x => x.getDecoderConfig().then(c => c?.codec ?? null)));
-        return (0,_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .buildMpegTsMimeType */ .Vx)(codecStrings);
+        return (0,_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .buildMpegTsMimeType */ .V)(codecStrings);
     }
     async readSection(startPos, full, contiguous = false) {
         let endPos = startPos;
@@ -12361,7 +12762,7 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
         }
         const syncByte = (0,_reader_js__WEBPACK_IMPORTED_MODULE_11__/* .readU8 */ .eo)(slice);
         if (syncByte !== 0x47) {
-            throw new Error('Invalid TS packet sync byte. Likely an internal bug, please report this file.');
+            throw new Error('Invalid TS packet sync byte; the file is likely corrupted.');
         }
         const nextTwoBytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_11__/* .readU16Be */ .mH)(slice);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -12384,16 +12785,16 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
     }
     async readPacket(pos) {
         // Code in here is duplicated from readPacketHeader for performance reasons
-        let slice = this.reader.requestSlice(pos, _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT);
+        let slice = this.reader.requestSlice(pos, (/* inlined export .TS_PACKET_SIZE */188));
         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(slice))
             slice = await slice;
         if (!slice) {
             return null;
         }
-        const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_11__/* .readBytes */ .io)(slice, _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TS_PACKET_SIZE */ .ZT);
+        const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_11__/* .readBytes */ .io)(slice, (/* inlined export .TS_PACKET_SIZE */188));
         const syncByte = bytes[0];
         if (syncByte !== 0x47) {
-            throw new Error('Invalid TS packet sync byte. Likely an internal bug, please report this file.');
+            throw new Error('Invalid TS packet sync byte; the file is likely corrupted.');
         }
         const nextTwoBytes = (bytes[1] << 8) + bytes[2];
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -12419,12 +12820,12 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
         if (!this.timestampWrapInfo) {
             // No info yet, let's initialize it anchored on this timestamp. Since we process packets sequentially when
             // extracting metadata, this means we'll anchor to the first PTS in the file.
-            const tolerance = 60 * _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS;
+            const tolerance = 60 * (/* inlined export .TIMESCALE */90000);
             this.timestampWrapInfo = {
                 reference: timestamp - tolerance,
-                offset: timestamp >= _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .Tx - tolerance
-                    ? -_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .Tx // Timestamps close to the modulus are treated as negative
-                    : _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .Tx,
+                offset: timestamp >= _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .T - tolerance
+                    ? -_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .T // Timestamps close to the modulus are treated as negative
+                    : _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .T,
             };
         }
         const { reference, offset } = this.timestampWrapInfo;
@@ -12529,7 +12930,7 @@ class MpegTsTrackBacking {
             if (backing.getType() === trackType) {
                 number++;
             }
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(backing instanceof MpegTsTrackBacking);
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(backing instanceof MpegTsTrackBacking);
             if (backing.elementaryStream === this.elementaryStream) {
                 break;
             }
@@ -12555,7 +12956,7 @@ class MpegTsTrackBacking {
         };
     }
     getTimeResolution() {
-        return _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS;
+        return (/* inlined export .TIMESCALE */90000);
     }
     isRelativeToUnixEpoch() {
         return false;
@@ -12588,7 +12989,7 @@ class MpegTsTrackBacking {
                 ? 'key'
                 : 'delta';
         }
-        return new _packet_js__WEBPACK_IMPORTED_MODULE_10__/* .EncodedPacket */ .Z(options.metadataOnly ? _packet_js__WEBPACK_IMPORTED_MODULE_10__/* .PLACEHOLDER_DATA */ .T : suppliedPacket.data, packetType, suppliedPacket.pts / _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS, Math.max(duration / _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS, 0), suppliedPacket.sequenceNumber, suppliedPacket.data.byteLength);
+        return new _packet_js__WEBPACK_IMPORTED_MODULE_10__/* .EncodedPacket */ .Z(options.metadataOnly ? _packet_js__WEBPACK_IMPORTED_MODULE_10__/* .PLACEHOLDER_DATA */ .T : suppliedPacket.data, packetType, suppliedPacket.pts / (/* inlined export .TIMESCALE */90000), Math.max(duration / (/* inlined export .TIMESCALE */90000), 0), suppliedPacket.sequenceNumber, suppliedPacket.data.byteLength);
     }
     async getFirstPacket(options) {
         const section = this.elementaryStream.firstSection;
@@ -12674,7 +13075,7 @@ class MpegTsTrackBacking {
      * make it more performant for small files and over high-latency readers such as the network.
      */
     async doPacketLookup(timestamp, keyframesOnly, options) {
-        const searchPts = (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .roundIfAlmostInteger */ .aI)(timestamp * _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS);
+        const searchPts = (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .roundIfAlmostInteger */ .aI)(timestamp * (/* inlined export .TIMESCALE */90000));
         const demuxer = this.elementaryStream.demuxer;
         const { reader, seekChunkSize } = demuxer;
         const pid = this.elementaryStream.pid;
@@ -12715,7 +13116,7 @@ class MpegTsTrackBacking {
         const referencePesPackets = this.elementaryStream.referencePesPackets;
         const referencePointIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .binarySearchLessOrEqual */ .eE)(referencePesPackets, searchPts, x => x.pts);
         const referencePoint = referencePointIndex !== -1 ? referencePesPackets[referencePointIndex] : null;
-        if (referencePoint && searchPts - referencePoint.pts < _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS / 2) {
+        if (referencePoint && searchPts - referencePoint.pts < (/* inlined export .TIMESCALE */90000) / 2) {
             // Reference point ain't too far away, prefer it over the chunk search
             scanStartPos = referencePoint.sectionStartPos;
         }
@@ -12789,9 +13190,7 @@ class MpegTsTrackBacking {
                 ? 0
                 : targetPacket.pts - buffer.presentationOrderPackets[targetIndex - 1].pts;
             // Pop packets in decode order until we hit the target packet
-            while (buffer.decodeOrderPackets[0] !== targetPacket) {
-                buffer.decodeOrderPackets.shift();
-            }
+            buffer.decodeOrderPackets.splice(0, buffer.decodeOrderPackets.indexOf(targetPacket));
             buffer.lastDuration = lastDuration; // Kinda ugly but necessary fix
             const result = await buffer.readNext();
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(result);
@@ -12849,6 +13248,9 @@ class MpegTsTrackBacking {
                     }
                     pos -= demuxer.packetStride;
                 }
+                if (pos < demuxer.packetOffset) {
+                    break; // We've hit the start of the file, there's nothing more to rewind
+                }
             }
             return retrieveEncodedPacket(currentPesHeader.sectionStartPos, p => p.pts <= searchPts);
         }
@@ -12868,12 +13270,13 @@ class MpegTsTrackBacking {
                     pesHeaderSection = firstSection;
                 }
                 else {
-                    const result = await findFirstPesPacketHeaderInChunk(currentChunkStartPos, reader.fileSize ?? Infinity, readSectionsInFull);
+                    const result = await findFirstPesPacketHeaderInChunk(currentChunkStartPos, nextChunkStartPos ?? reader.fileSize ?? Infinity, readSectionsInFull);
                     pesHeader = result?.pesPacketHeader ?? null;
                     pesHeaderSection = result?.section ?? null;
                 }
                 let passedSearchPts = false;
                 let lookaheadCount = 0;
+                let context = null; // Walks the chunk's packets in order
                 outer: while (pesHeader) {
                     if (nextChunkStartPos !== null && pesHeader.sectionStartPos >= nextChunkStartPos) {
                         // Stop at the next chunk boundary
@@ -12885,12 +13288,23 @@ class MpegTsTrackBacking {
                             isKeyPacket = pesHeader.randomAccessIndicator === 1;
                         }
                         else {
-                            (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(pesHeaderSection);
-                            const pesPacket = readPesPacket(demuxer, pesHeaderSection, true);
-                            (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(pesPacket);
-                            const context = new PacketReadingContext(this.elementaryStream, pesPacket);
-                            await context.markNextPacket();
-                            isKeyPacket = context.suppliedPacket?.randomAccessIndicator === 1;
+                            if (!context) {
+                                (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(pesHeaderSection);
+                                const pesPacket = readPesPacket(demuxer, pesHeaderSection, true);
+                                (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(pesPacket);
+                                context = new PacketReadingContext(this.elementaryStream, pesPacket);
+                            }
+                            // Advance to the first packet that starts in this PES packet
+                            while (!context.suppliedPacket
+                                || context.suppliedPacket.sectionStartPos < pesHeader.sectionStartPos) {
+                                context.suppliedPacket = null;
+                                await context.markNextPacket();
+                                if (!context.suppliedPacket) {
+                                    break;
+                                }
+                            }
+                            isKeyPacket = context.suppliedPacket?.sectionStartPos === pesHeader.sectionStartPos
+                                && context.suppliedPacket.randomAccessIndicator === 1;
                         }
                         if (isKeyPacket) {
                             bestKeyPesHeader = pesHeader;
@@ -12951,11 +13365,19 @@ class MpegTsTrackBacking {
                                 }
                                 pos -= demuxer.packetStride;
                             }
+                            if (pos < demuxer.packetOffset) {
+                                break; // We've hit the start of the file, there's nothing more to rewind
+                            }
                         }
                     }
                     const encodedPacket = await retrieveEncodedPacket(startPesHeader.sectionStartPos, p => p.pts <= searchPts && p.randomAccessIndicator === 1);
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(encodedPacket); // There must be one
-                    return encodedPacket;
+                    if (encodedPacket) {
+                        return encodedPacket;
+                    }
+                    else {
+                        // The key packet didn't materialize (can happen with odd packetization where packets take their
+                        // timestamp from a later PES packet), so let's keep looking further back
+                    }
                 }
                 if (isFirstChunk) {
                     return null;
@@ -12996,7 +13418,7 @@ class MpegTsVideoTrackBacking extends MpegTsTrackBacking {
         return false;
     }
     async getDecoderConfig() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(this.elementaryStream.info.decoderConfig);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(this.elementaryStream.info.decoderConfig);
         return this.elementaryStream.info.decoderConfig;
     }
     allPacketsAreKeyPackets() {
@@ -13020,7 +13442,7 @@ class MpegTsAudioTrackBacking extends MpegTsTrackBacking {
         return this.elementaryStream.info.sampleRate;
     }
     async getDecoderConfig() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(this.elementaryStream.info.decoderConfig);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(this.elementaryStream.info.decoderConfig);
         return this.elementaryStream.info.decoderConfig;
     }
     allPacketsAreKeyPackets() {
@@ -13156,8 +13578,11 @@ class PacketReadingContext {
         if (relativeOffset < currentPesPacket.data.byteLength) {
             return currentPesPacket.data[relativeOffset];
         }
-        this.advanceCurrentPacket();
-        currentPesPacket = this.getCurrentPesPacket();
+        // Skip over PES packets without any data
+        do {
+            this.advanceCurrentPacket();
+            currentPesPacket = this.getCurrentPesPacket();
+        } while (currentPesPacket.data.byteLength === 0);
         return currentPesPacket.data[0];
     }
     seekTo(pos) {
@@ -13193,18 +13618,8 @@ class PacketReadingContext {
         this.currentPesPacketPos += this.getCurrentPesPacket().data.byteLength;
         this.currentPesPacketIndex++;
     }
-    getPesPacketAt(pos) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(pos <= this.currentPos);
-        let pesPacketIndex = this.currentPesPacketIndex;
-        let pesPacketPos = this.currentPesPacketPos;
-        while (pos < pesPacketPos) {
-            pesPacketIndex--;
-            pesPacketPos -= this.pesPackets[pesPacketIndex].data.byteLength;
-        }
-        return this.pesPackets[pesPacketIndex];
-    }
     async markNextPacket() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(!this.suppliedPacket);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(!this.suppliedPacket);
         const elementaryStream = this.elementaryStream;
         if (elementaryStream.info.type === 'video') {
             // Our job here is to separate the video stream into access units. Sometimes this is easy (like when AUDs
@@ -13217,7 +13632,6 @@ class PacketReadingContext {
             const nalHeaderSize = codec === 'avc' ? 1 : 2;
             let packetStartPos = null;
             let frameStartFound = false;
-            let slicePts = null;
             let lastFirstMacroblockInSlice = 0;
             while (true) {
                 let remaining = this.ensureBuffered(CHUNK_SIZE);
@@ -13279,6 +13693,7 @@ class PacketReadingContext {
                     let nalUnitType;
                     let isSlice;
                     let isAccessUnitStart;
+                    let isAccessUnitDelimiter;
                     if (codec === 'avc') {
                         nalUnitType = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .extractNalUnitTypeForAvc */ .uN)(headerByte0);
                         isSlice = nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AvcNalUnitType */ .mY.NON_IDR_SLICE
@@ -13288,6 +13703,7 @@ class PacketReadingContext {
                             || nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AvcNalUnitType */ .mY.SPS
                             || nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AvcNalUnitType */ .mY.PPS
                             || nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AvcNalUnitType */ .mY.AUD;
+                        isAccessUnitDelimiter = nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AvcNalUnitType */ .mY.AUD;
                     }
                     else {
                         nalUnitType = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .extractNalUnitTypeForHevc */ .O9)(headerByte0);
@@ -13305,6 +13721,7 @@ class PacketReadingContext {
                             || nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .HevcNalUnitType */ .iJ.PREFIX_SEI_NUT
                             || (nalUnitType >= 41 && nalUnitType <= 44)
                             || (nalUnitType >= 48 && nalUnitType <= 55);
+                        isAccessUnitDelimiter = nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .HevcNalUnitType */ .iJ.AUD_NUT;
                     }
                     let isFrameBoundary = false;
                     if (isSlice) {
@@ -13324,21 +13741,22 @@ class PacketReadingContext {
                             }
                             else {
                                 frameStartFound = true;
-                                // When we find a slice, we prefer the timestamp of the PES packet containing that slice
-                                // instead of the one at the start of the access unit. This is almost almost the same
-                                // PES packet anyways, but some malformed streams can have weird packetization
-                                slicePts = this.getPesPacketAt(chunkStartPos + nalHeaderStart).pts;
                             }
                         }
                     }
                     else if (isAccessUnitStart && frameStartFound) {
                         isFrameBoundary = true;
                     }
+                    else if (isAccessUnitDelimiter) {
+                        // An AUD always begins a new access unit. We haven't seen a slice yet, so whatever came before
+                        // it holds no picture; let's drop it
+                        packetStartPos = startCodePos;
+                    }
                     if (isFrameBoundary) {
                         // End the packet at this start code (the next frame begins here)
                         const packetLength = startCodePos - packetStartPos;
                         this.seekTo(packetStartPos);
-                        return this.supplyPacket(packetLength, 0, slicePts);
+                        return this.supplyPacket(packetLength, 0);
                     }
                     i += startCodeLength;
                 }
@@ -13347,11 +13765,12 @@ class PacketReadingContext {
                     break;
                 }
             }
-            // End of stream - emit whatever's left as the final packet
-            if (packetStartPos !== null && this.endPos > packetStartPos) {
+            // End of stream - emit whatever's left as the final packet, unless it holds no picture
+            if (frameStartFound) {
+                (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(packetStartPos !== null);
                 const packetLength = this.endPos - packetStartPos;
                 this.seekTo(packetStartPos);
-                return this.supplyPacket(packetLength, 0, slicePts);
+                return this.supplyPacket(packetLength, 0);
             }
         }
         else {
@@ -13383,7 +13802,7 @@ class PacketReadingContext {
                             let remaining = this.ensureBuffered(header.frameLength);
                             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                                 remaining = await remaining;
-                            return this.supplyPacket(remaining, Math.round(_adts_adts_demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .SAMPLES_PER_AAC_FRAME */ .s * _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS / elementaryStream.info.sampleRate));
+                            return this.supplyPacket(remaining, Math.round(_adts_adts_demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .SAMPLES_PER_AAC_FRAME */ .s * (/* inlined export .TIMESCALE */90000) / elementaryStream.info.sampleRate));
                         }
                         else {
                             this.seekTo(possibleHeaderStartPos + 1);
@@ -13395,13 +13814,13 @@ class PacketReadingContext {
                         }
                         this.skip(-1);
                         const possibleHeaderStartPos = this.currentPos;
-                        let remaining = this.ensureBuffered(_shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_9__/* .MP3_FRAME_HEADER_SIZE */ .D_);
+                        let remaining = this.ensureBuffered((/* inlined export .MP3_FRAME_HEADER_SIZE */4));
                         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                             remaining = await remaining;
-                        if (remaining < _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_9__/* .MP3_FRAME_HEADER_SIZE */ .D_) {
+                        if (remaining < (/* inlined export .MP3_FRAME_HEADER_SIZE */4)) {
                             return;
                         }
-                        const headerBytes = this.readBytes(_shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_9__/* .MP3_FRAME_HEADER_SIZE */ .D_);
+                        const headerBytes = this.readBytes((/* inlined export .MP3_FRAME_HEADER_SIZE */4));
                         const word = (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .toDataView */ .Zc)(headerBytes).getUint32(0);
                         const result = (0,_shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_9__/* .readMp3FrameHeader */ .P8)(word, null);
                         if (result.header) {
@@ -13409,7 +13828,7 @@ class PacketReadingContext {
                             let remaining = this.ensureBuffered(result.header.totalSize);
                             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                                 remaining = await remaining;
-                            const duration = result.header.audioSamplesInFrame * _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS
+                            const duration = result.header.audioSamplesInFrame * (/* inlined export .TIMESCALE */90000)
                                 / elementaryStream.info.sampleRate;
                             return this.supplyPacket(remaining, Math.round(duration));
                         }
@@ -13449,7 +13868,7 @@ class PacketReadingContext {
                         remaining = this.ensureBuffered(frameSize);
                         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                             remaining = await remaining;
-                        const duration = Math.round(_codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AC3_SAMPLES_PER_FRAME */ .Ir * _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS / elementaryStream.info.sampleRate);
+                        const duration = Math.round(_codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AC3_SAMPLES_PER_FRAME */ .Ir * (/* inlined export .TIMESCALE */90000) / elementaryStream.info.sampleRate);
                         return this.supplyPacket(remaining, duration);
                     }
                     else if (codec === 'eac3') {
@@ -13481,7 +13900,7 @@ class PacketReadingContext {
                             remaining = await remaining;
                         // Duration = numblks * 256 samples per block
                         const samplesPerFrame = numblks * 256;
-                        const duration = Math.round(samplesPerFrame * _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS / elementaryStream.info.sampleRate);
+                        const duration = Math.round(samplesPerFrame * (/* inlined export .TIMESCALE */90000) / elementaryStream.info.sampleRate);
                         return this.supplyPacket(remaining, duration);
                     }
                     else if (codec === 'dts') {
@@ -13547,7 +13966,7 @@ class PacketReadingContext {
                         remaining = this.ensureBuffered(frameSize);
                         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                             remaining = await remaining;
-                        const duration = Math.round(sampleCount * _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESCALE */ .cS / elementaryStream.info.sampleRate);
+                        const duration = Math.round(sampleCount * (/* inlined export .TIMESCALE */90000) / elementaryStream.info.sampleRate);
                         return this.supplyPacket(remaining, duration);
                     }
                     else {
@@ -13561,13 +13980,10 @@ class PacketReadingContext {
         }
     }
     /** Supplies the context with a new encoded packet, beginning at the current position. */
-    supplyPacket(packetLength, intrinsicDuration, timestampOverride = null) {
+    supplyPacket(packetLength, intrinsicDuration) {
         const currentPesPacket = this.getCurrentPesPacket();
         let pts;
-        if (timestampOverride !== null) {
-            pts = timestampOverride;
-        }
-        else if (this.lastSuppliedPesPacket === currentPesPacket) {
+        if (this.lastSuppliedPesPacket === currentPesPacket) {
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(this.nextPts !== null);
             pts = this.nextPts;
         }
@@ -13640,9 +14056,9 @@ class PacketBuffer {
         const packet = this.decodeOrderPackets[0];
         // Let's compute the duration
         const presentationIndex = this.presentationOrderPackets.indexOf(packet);
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .assert */ .vA)(presentationIndex !== -1);
         let duration;
-        if (presentationIndex === this.presentationOrderPackets.length - 1) {
+        if (presentationIndex === -1 || presentationIndex === this.presentationOrderPackets.length - 1) {
+            // The packet has no known successor (or isn't even placed yet when timestamps are messed up)
             duration = this.lastDuration; // Reasonable heuristic
         }
         else {
@@ -13693,6 +14109,10 @@ class PacketBuffer {
             if (presentationIndex !== -1 && presentationIndex <= this.presentationOrderPackets.length - 2) {
                 break;
             }
+            // Cap it so that nonsensical timestamps don't scan the entire file
+            if (this.decodeOrderPackets.length > 4 * (this.reorderSize + 1)) {
+                break;
+            }
             const didRead = await this.readNextPacket();
             if (!didRead) {
                 break;
@@ -13727,12 +14147,6 @@ class PacketBuffer {
 /***/ 2490
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Tx: () => (/* binding */ TIMESTAMP_MODULUS),
-/* harmony export */   Vx: () => (/* binding */ buildMpegTsMimeType),
-/* harmony export */   ZT: () => (/* binding */ TS_PACKET_SIZE),
-/* harmony export */   cS: () => (/* binding */ TIMESCALE)
-/* harmony export */ });
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
  *
@@ -13751,6 +14165,11 @@ const buildMpegTsMimeType = (codecStrings) => {
     }
     return string;
 };
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "T", 0, /* binding */ TIMESTAMP_MODULUS,
+/* harmony export */   "V", 0, /* binding */ buildMpegTsMimeType
+/* harmony export */ ]);
 
 
 /***/ },
@@ -13786,6 +14205,9 @@ const buildMpegTsMimeType = (codecStrings) => {
 
 
 
+const MAX_LOGICAL_BITSTREAMS = 64;
+const VORBIS_IDENTIFICATION_HEADER_SIZE = 30;
+const OPUS_IDENTIFICATION_HEADER_MIN_SIZE = 19;
 class OggDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ .B {
     constructor(input) {
         super(input);
@@ -13814,6 +14236,9 @@ class OggDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ 
                     // we know we've seen all bitstreams (minus chaining)
                     break;
                 }
+                if (this.bitstreams.length === MAX_LOGICAL_BITSTREAMS) {
+                    throw new Error(`Too many (> ${MAX_LOGICAL_BITSTREAMS}) logical bitstreams.`);
+                }
                 this.bitstreams.push({
                     serialNumber: page.serialNumber,
                     bosPage: page,
@@ -13836,7 +14261,7 @@ class OggDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ 
                 }
                 if (
                 // Check for Vorbis
-                firstPacket.data.byteLength >= 7
+                firstPacket.data.byteLength >= VORBIS_IDENTIFICATION_HEADER_SIZE
                     && firstPacket.data[0] === 0x01 // Packet type 1 = identification header
                     && firstPacket.data[1] === 0x76 // 'v'
                     && firstPacket.data[2] === 0x6f // 'o'
@@ -13849,7 +14274,7 @@ class OggDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ 
                 }
                 else if (
                 // Check for Opus
-                firstPacket.data.byteLength >= 8
+                firstPacket.data.byteLength >= OPUS_IDENTIFICATION_HEADER_MIN_SIZE
                     && firstPacket.data[0] === 0x4f // 'O'
                     && firstPacket.data[1] === 0x70 // 'p'
                     && firstPacket.data[2] === 0x75 // 'u'
@@ -13887,6 +14312,12 @@ class OggDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ 
         if (secondPacket.data[0] !== 0x03 || thirdPacket.data[0] !== 0x05) {
             return;
         }
+        const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .toDataView */ .Zc)(firstPacket.data);
+        const numberOfChannels = view.getUint8(11);
+        const sampleRate = view.getUint32(12, true);
+        if (numberOfChannels === 0 || sampleRate === 0) {
+            throw new Error('Invalid Vorbis identification header: channel count and sample rate must not be 0.');
+        }
         const lacingValues = [];
         const addBytesToSegmentTable = (bytes) => {
             while (true) {
@@ -13910,9 +14341,8 @@ class OggDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ 
         bitstream.codecInfo.codec = 'vorbis';
         bitstream.description = description;
         bitstream.lastMetadataPacket = thirdPacket;
-        const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .toDataView */ .Zc)(firstPacket.data);
-        bitstream.numberOfChannels = view.getUint8(11);
-        bitstream.sampleRate = view.getUint32(12, true);
+        bitstream.numberOfChannels = numberOfChannels;
+        bitstream.sampleRate = sampleRate;
         const blockSizeByte = view.getUint8(28);
         bitstream.codecInfo.vorbisInfo = {
             blocksizes: [
@@ -13947,7 +14377,7 @@ class OggDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ 
         (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .readVorbisComments */ .Oc)(secondPacket.data.subarray(8), this.metadataTags); // Skip 'OpusTags'
     }
     async readPacket(startPage, startSegmentIndex) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(startSegmentIndex < startPage.lacingValues.length);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(startSegmentIndex < startPage.lacingValues.length);
         let startDataOffset = 0;
         for (let i = 0; i < startSegmentIndex; i++) {
             startDataOffset += startPage.lacingValues[i];
@@ -13961,7 +14391,9 @@ class OggDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxer */ 
             let pageSlice = this.reader.requestSlice(currentPage.dataStartPos, currentPage.dataSize);
             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .isThenable */ .Qg)(pageSlice))
                 pageSlice = await pageSlice;
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(pageSlice);
+            if (!pageSlice) {
+                return null; // The page is cut off
+            }
             const pageData = (0,_reader_js__WEBPACK_IMPORTED_MODULE_6__/* .readBytes */ .io)(pageSlice, currentPage.dataSize);
             while (true) {
                 if (currentSegmentIndex === currentPage.lacingValues.length) {
@@ -14123,7 +14555,7 @@ class OggAudioTrackBacking {
         return null;
     }
     async getDecoderConfig() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.bitstream.codecInfo.codec);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.bitstream.codecInfo.codec);
         return {
             codec: this.bitstream.codecInfo.codec,
             numberOfChannels: this.bitstream.numberOfChannels,
@@ -14213,7 +14645,7 @@ class OggAudioTrackBacking {
         })();
     }
     async getFirstPacket(options) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.bitstream.lastMetadataPacket);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.bitstream.lastMetadataPacket);
         const packetPosition = await this.demuxer.findNextPacketStart(this.bitstream.lastMetadataPacket);
         if (!packetPosition) {
             return null;
@@ -14256,7 +14688,7 @@ class OggAudioTrackBacking {
             // There's nothing here
             return null;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.bitstream.lastMetadataPacket);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(this.bitstream.lastMetadataPacket);
         const startPosition = await this.demuxer.findNextPacketStart(this.bitstream.lastMetadataPacket);
         if (!startPosition) {
             return null;
@@ -14275,12 +14707,10 @@ class OggAudioTrackBacking {
             // Inner loop: Does a linear forward scan if the page cannot be found immediately
             while (true) {
                 const until = Math.min(searchStartPos + _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MAX_PAGE_SIZE */ .H4, high - _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MIN_PAGE_HEADER_SIZE */ .b0);
-                let searchSlice = this.demuxer.reader.requestSlice(searchStartPos, until - searchStartPos);
+                let searchSlice = this.demuxer.reader.requestSlice(searchStartPos, Math.max(until - searchStartPos, 0));
                 if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .isThenable */ .Qg)(searchSlice))
                     searchSlice = await searchSlice;
-                (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(searchSlice);
-                const found = (0,_ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .findNextPageHeader */ .v5)(searchSlice, until);
-                if (!found) {
+                if (!searchSlice || !(0,_ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .findNextPageHeader */ .v5)(searchSlice, until, this.bitstream.serialNumber)) {
                     if (high <= mid + _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MIN_PAGE_HEADER_SIZE */ .b0) {
                         // The range can't be narrowed any further
                         break outer;
@@ -14288,37 +14718,17 @@ class OggAudioTrackBacking {
                     high = mid + _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MIN_PAGE_HEADER_SIZE */ .b0;
                     continue outer;
                 }
-                let headerSlice = this.demuxer.reader.requestSliceRange(searchSlice.filePos, _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MIN_PAGE_HEADER_SIZE */ .b0, _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MAX_PAGE_HEADER_SIZE */ .H9);
+                const pageStartPos = searchSlice.filePos;
+                let headerSlice = this.demuxer.reader.requestSliceRange(pageStartPos, _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MIN_PAGE_HEADER_SIZE */ .b0, _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MAX_PAGE_HEADER_SIZE */ .H9);
                 if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .isThenable */ .Qg)(headerSlice))
                     headerSlice = await headerSlice;
-                (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(headerSlice);
-                const page = (0,_ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readPageHeader */ .BF)(headerSlice);
-                (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(page);
-                let pageValid = false;
-                if (page.serialNumber === this.bitstream.serialNumber) {
-                    // Serial numbers are basically random numbers, and the chance of finding a fake page with
-                    // matching serial number is astronomically low, so we can be pretty sure this page is legit.
-                    pageValid = true;
-                }
-                else {
-                    let pageSlice = this.demuxer.reader.requestSlice(page.headerStartPos, page.totalSize);
-                    if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .isThenable */ .Qg)(pageSlice))
-                        pageSlice = await pageSlice;
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(pageSlice);
-                    // Validate the page by checking checksum
-                    const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_6__/* .readBytes */ .io)(pageSlice, page.totalSize);
-                    const crc = (0,_ogg_misc_js__WEBPACK_IMPORTED_MODULE_7__/* .computeOggPageCrc */ ._S)(bytes);
-                    pageValid = crc === page.checksum;
-                }
-                if (!pageValid) {
-                    // Keep searching for a valid page
-                    searchStartPos = page.headerStartPos + 4; // 'OggS' is 4 bytes
-                    continue;
-                }
-                if (pageValid && page.serialNumber !== this.bitstream.serialNumber) {
-                    // Page is valid but from a different bitstream, so keep searching forward until we find one
-                    // belonging to the our bitstream
-                    searchStartPos = page.headerStartPos + page.totalSize;
+                const page = headerSlice && (0,_ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readPageHeader */ .BF)(headerSlice);
+                // Serial numbers are basically random numbers, and the chance of finding a fake page with matching
+                // serial number is astronomically low, so we can be pretty sure a page with our serial is legit.
+                // Pages of other bitstreams (or junk) we simply scan past; validating them via their checksum instead
+                // could be abused to make us checksum huge amounts of data over and over.
+                if (!page || page.serialNumber !== this.bitstream.serialNumber) {
+                    searchStartPos = pageStartPos + 4; // 'OggS' is 4 bytes
                     continue;
                 }
                 const isContinuationPage = page.granulePosition === -1;
@@ -14365,15 +14775,18 @@ class OggAudioTrackBacking {
             let slice = this.demuxer.reader.requestSliceRange(nextPos, _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MIN_PAGE_HEADER_SIZE */ .b0, _ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .MAX_PAGE_HEADER_SIZE */ .H9);
             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .isThenable */ .Qg)(slice))
                 slice = await slice;
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(slice);
-            const nextPage = (0,_ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readPageHeader */ .BF)(slice);
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(nextPage);
+            const nextPage = slice && (0,_ogg_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readPageHeader */ .BF)(slice);
+            if (!nextPage) {
+                // There's junk between the pages, so we can't walk any further. Let's just jump to the page we know.
+                currentPage = lowPage;
+                previousPages.push(lowPage);
+                break;
+            }
             currentPage = nextPage;
             if (currentPage.serialNumber === this.bitstream.serialNumber) {
                 previousPages.push(currentPage);
             }
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(currentPage.granulePosition !== -1);
         let currentSegmentIndex = null;
         let currentTimestampInSamples;
         let currentTimestampIsCorrect;
@@ -14386,6 +14799,8 @@ class OggAudioTrackBacking {
             currentSegmentIndex = 0;
         }
         else {
+            // Holds since lowPage, if not the start page, came out of the bisection, which skips such pages
+            (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(currentPage.granulePosition !== -1);
             currentTimestampInSamples = 0; // Placeholder value! We'll refine it once we can
             currentTimestampIsCorrect = false;
             // Find the segment index of the next packet
@@ -14418,6 +14833,11 @@ class OggAudioTrackBacking {
                 if (startPosition) {
                     currentPage = startPosition.page;
                     currentSegmentIndex = startPosition.segmentIndex;
+                }
+                else {
+                    // The page chain is broken, so we can't step back; let's just start at the next packet then
+                    currentPage = nextPosition.startPage;
+                    currentSegmentIndex = nextPosition.startSegmentIndex;
                 }
             }
             else {
@@ -14571,7 +14991,7 @@ const findPacketStartPosition = (pageList, endPage, endSegmentIndex) => {
                 break outer;
             }
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(segmentIndex === -1);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(segmentIndex === -1);
         const pageStartsWithFreshPacket = !(page.headerType & 0x01);
         if (pageStartsWithFreshPacket) {
             // Fast exit: We know we don't need to look in the previous page
@@ -14585,7 +15005,7 @@ const findPacketStartPosition = (pageList, endPage, endSegmentIndex) => {
         page = previousPage;
         segmentIndex = page.lacingValues.length;
     }
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(segmentIndex !== -1);
+    ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(segmentIndex !== -1);
     if (segmentIndex === page.lacingValues.length) {
         // Wrap back around to the first segment of the next page
         const nextPage = pageList[pageList.indexOf(page) + 1];
@@ -14606,99 +15026,6 @@ const findPreviousPacketEndPosition = (pageList, startPage, startSegmentIndex) =
         return null;
     }
     return { page: previousPage, segmentIndex: previousPage.lacingValues.length - 1 };
-};
-
-
-/***/ },
-
-/***/ 9730
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Ob: () => (/* binding */ buildOggMimeType),
-/* harmony export */   Zk: () => (/* binding */ OGGS),
-/* harmony export */   _S: () => (/* binding */ computeOggPageCrc),
-/* harmony export */   nL: () => (/* binding */ extractSampleMetadata)
-/* harmony export */ });
-/* harmony import */ var _codec_data_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6297);
-/* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3912);
-/*!
- * Copyright (c) 2026-present, Vanilagy and contributors
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-
-const OGGS = 0x5367674f; // 'OggS'
-const OGG_CRC_POLYNOMIAL = 0x04c11db7;
-const OGG_CRC_TABLE = new Uint32Array(256);
-for (let n = 0; n < 256; n++) {
-    let crc = n << 24;
-    for (let k = 0; k < 8; k++) {
-        crc = (crc & 0x80000000)
-            ? ((crc << 1) ^ OGG_CRC_POLYNOMIAL)
-            : (crc << 1);
-    }
-    OGG_CRC_TABLE[n] = (crc >>> 0) & 0xffffffff;
-}
-const computeOggPageCrc = (bytes) => {
-    const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .toDataView */ .Zc)(bytes);
-    const originalChecksum = view.getUint32(22, true);
-    view.setUint32(22, 0, true); // Zero out checksum field
-    let crc = 0;
-    for (let i = 0; i < bytes.length; i++) {
-        const byte = bytes[i];
-        crc = ((crc << 8) ^ OGG_CRC_TABLE[(crc >>> 24) ^ byte]) >>> 0;
-    }
-    view.setUint32(22, originalChecksum, true); // Restore checksum field
-    return crc;
-};
-const extractSampleMetadata = (data, codecInfo, vorbisLastBlocksize) => {
-    let durationInSamples = 0;
-    let currentBlocksize = null;
-    if (data.length > 0) {
-        // To know sample duration, we'll need to peak inside the packet
-        if (codecInfo.codec === 'vorbis') {
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(codecInfo.vorbisInfo);
-            const vorbisModeCount = codecInfo.vorbisInfo.modeBlockflags.length;
-            const bitCount = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .ilog */ .al)(vorbisModeCount - 1);
-            const modeMask = ((1 << bitCount) - 1) << 1;
-            const modeNumber = (data[0] & modeMask) >> 1;
-            if (modeNumber >= codecInfo.vorbisInfo.modeBlockflags.length) {
-                throw new Error('Invalid mode number.');
-            }
-            // In Vorbis, packet duration also depends on the blocksize of the previous packet
-            let prevBlocksize = vorbisLastBlocksize;
-            const blockflag = codecInfo.vorbisInfo.modeBlockflags[modeNumber];
-            currentBlocksize = codecInfo.vorbisInfo.blocksizes[blockflag];
-            if (blockflag === 1) {
-                const prevMask = (modeMask | 0x1) + 1;
-                const flag = data[0] & prevMask ? 1 : 0;
-                prevBlocksize = codecInfo.vorbisInfo.blocksizes[flag];
-            }
-            durationInSamples = prevBlocksize !== null
-                ? (prevBlocksize + currentBlocksize) >> 2
-                : 0; // The first sample outputs no audio data and therefore has a duration of 0
-        }
-        else if (codecInfo.codec === 'opus') {
-            const toc = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_0__/* .parseOpusTocByte */ .ls)(data);
-            durationInSamples = toc.durationInSamples;
-        }
-    }
-    return {
-        durationInSamples,
-        vorbisBlockSize: currentBlocksize,
-    };
-};
-const buildOggMimeType = (info) => {
-    let string = 'audio/ogg';
-    if (info.codecStrings) {
-        const uniqueCodecMimeTypes = [...new Set(info.codecStrings)];
-        string += `; codecs="${uniqueCodecMimeTypes.join(', ')}"`;
-    }
-    return string;
 };
 
 
@@ -14741,6 +15068,10 @@ const readPageHeader = (slice) => {
     const sequenceNumber = (0,_reader_js__WEBPACK_IMPORTED_MODULE_0__/* .readU32Le */ .aJ)(slice);
     const checksum = (0,_reader_js__WEBPACK_IMPORTED_MODULE_0__/* .readU32Le */ .aJ)(slice);
     const numberPageSegments = (0,_reader_js__WEBPACK_IMPORTED_MODULE_0__/* .readU8 */ .eo)(slice);
+    if (numberPageSegments === 0 || slice.remainingLength < numberPageSegments) {
+        // Either a page that carries nothing (and would only trip up the packet logic) or a cut-off one
+        return null;
+    }
     const lacingValues = new Uint8Array(numberPageSegments);
     for (let i = 0; i < numberPageSegments; i++) {
         lacingValues[i] = (0,_reader_js__WEBPACK_IMPORTED_MODULE_0__/* .readU8 */ .eo)(slice);
@@ -14761,7 +15092,7 @@ const readPageHeader = (slice) => {
         lacingValues,
     };
 };
-const findNextPageHeader = (slice, until) => {
+const findNextPageHeader = (slice, until, serialNumber) => {
     while (slice.filePos < until - (4 - 1)) { // Size of word minus 1
         const word = (0,_reader_js__WEBPACK_IMPORTED_MODULE_0__/* .readU32Le */ .aJ)(slice);
         const firstByte = word & 0xff;
@@ -14775,7 +15106,16 @@ const findNextPageHeader = (slice, until) => {
         slice.skip(-4);
         if (word === _ogg_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .OGGS */ .Zk) {
             // We have found the capture pattern
-            return true;
+            if (serialNumber === undefined || slice.filePos + 18 > slice.end) {
+                return true; // Can't check the serial number here, leave it to the caller
+            }
+            // Skipping other streams' pages right here is much cheaper than having the caller check each one
+            slice.skip(14);
+            const pageSerialNumber = (0,_reader_js__WEBPACK_IMPORTED_MODULE_0__/* .readU32Le */ .aJ)(slice);
+            slice.skip(-18);
+            if (pageSerialNumber === serialNumber) {
+                return true;
+            }
         }
         slice.skip(1);
     }
@@ -14789,7 +15129,6 @@ const findNextPageHeader = (slice, until) => {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   T: () => (/* binding */ PLACEHOLDER_DATA),
 /* harmony export */   Z: () => (/* binding */ EncodedPacket)
 /* harmony export */ });
 /* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3912);
@@ -14991,6 +15330,10 @@ class EncodedPacket {
     }
 }
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "T", 0, /* binding */ PLACEHOLDER_DATA
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -15095,7 +15438,7 @@ class Reader {
                     return attempt;
                 }
                 // The slice couldn't fit, meaning we must know the file size now
-                (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this.fileSizeNonStrict !== null);
+                ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this.fileSizeNonStrict !== null);
                 return this.requestSlice(start, (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .clamp */ .qE)(this.fileSizeNonStrict - start, minLength, maxLength));
             };
             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .isThenable */ .Qg)(promisedAttempt)) {
@@ -15186,7 +15529,7 @@ class FileSlice {
     }
 }
 const checkIsInRange = (slice, bytesToRead) => {
-    if (slice.filePos < slice.start || slice.filePos + bytesToRead > slice.end) {
+    if (bytesToRead < 0 || slice.filePos < slice.start || slice.filePos + bytesToRead > slice.end) {
         throw new RangeError(`Tried reading [${slice.filePos}, ${slice.filePos + bytesToRead}), but slice is`
             + ` [${slice.start}, ${slice.end}). This is likely an internal error, please report it alongside the file`
             + ` that caused it.`);

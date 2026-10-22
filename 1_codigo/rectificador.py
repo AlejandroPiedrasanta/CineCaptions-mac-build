@@ -59,8 +59,8 @@ def efectos_con_pro(fx_plan, pro_plan, duracion=None):
                 e['transicion'], e['cortes'] = None, []
             if quitado:
                 motivos.append('Efectos: sin ' + ', '.join(quitado) + ' (la Edición PRO lleva la cámara: una sola)')
-            if not (e.get('transicion') or e.get('fondo') or e.get('zoom_intro')):
-                continue
+            if not (e.get('transicion') or e.get('fondo') or e.get('zoom_intro') or e.get('intro_gancho')):
+                continue                                                  # (v5.33: el zoom de la intro del gancho SÍ va con la PRO: es suyo)
         elif tipo in ENCIMA:
             fin = ini + float(e.get('dur') or DUR_EFECTO.get(tipo, 2.0))
             if any(ini < b + AIRE_S and a - AIRE_S < fin for a, b in ventanas):

@@ -20,6 +20,16 @@ from qt_kit import Boton, Entrada, Etiqueta, Interruptor, StringVar, Tarjeta, ca
 
 TEXT_MUTED = ui.TEXT_MUTED
 VERDE = ui.VERDE
+SIN_POSICION = ('gancho',)          # v5.33: la intro del gancho va siempre en el primer segundo: sin «Posición»
+
+
+def _marcar(b, si):
+    """Una píldora de las tiras de opciones: verde si es la elegida."""
+    t = 'primario' if si else 'fantasma'
+    if b.property('tipo') != t:
+        b.setProperty('tipo', t)
+        b.style().unpolish(b)
+        b.style().polish(b)
 
 
 # ====================================================================================== el slider de tarjetas (una fila que se desliza)
@@ -222,6 +232,51 @@ class ChipColor(QWidget):
         p.end()
 
 
+class ChipOpcion(ChipColor):
+    """v5.33: «🔊 Sonido: El de la intro» / «⤢ Zoom: Golpe seco» en la fila «Personaliza» del gancho, con el mismo aspecto que los de color.
+    Clic = abre su tira debajo. `icono` = un icono de Phosphor (en el sitio del círculo de color)."""
+
+    def __init__(self, hueco, etiqueta, icono, padre=None):
+        super().__init__(hueco, etiqueta, padre)
+        self.nombre = ''
+        try:
+            self._icono = ui.icono_linea(icono, '#8EA2C6').pixmap(16, 16)
+        except Exception:
+            self._icono = None
+
+    def _texto(self):
+        return f'{self.etiqueta}: {getattr(self, "nombre", "") or tr("El de la intro")}'
+
+    def _ajustar(self):
+        from PySide6.QtGui import QFontMetricsF
+        self.setFixedWidth(int(46 + QFontMetricsF(ui.fuente(12)).horizontalAdvance(self._texto())))
+
+    def poner(self, nombre, activo=None):
+        self.nombre = nombre or ''
+        if activo is not None:
+            self.activo = bool(activo)
+        self._ajustar()
+        self.update()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
+        p.setBrush(QColor('#16233D' if (self.activo or self._hover) else '#101A2E'))
+        p.setPen(QPen(QColor(VERDE if self.activo else '#2A3A5C'), 1.6 if self.activo else 1.0))
+        p.drawRoundedRect(r, 17, 17)
+        if self._icono is not None and not self._icono.isNull():
+            p.drawPixmap(10, (self.height() - 16) // 2, self._icono)
+        else:
+            p.setPen(QColor('#8EA2C6'))
+            p.setFont(ui.fuente(14, peso='negrita'))
+            p.drawText(QRectF(8, 0, 22, self.height()), int(Qt.AlignmentFlag.AlignCenter), '♪' if self.hueco == 'sonido' else '⤢')
+        p.setPen(QColor('#E0EBFB'))
+        p.setFont(ui.fuente(12))
+        p.drawText(QRectF(34, 0, self.width() - 40, self.height()), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), self._texto())
+        p.end()
+
+
 class Muestra(QWidget):
     """Un círculo de color de la tira."""
     clic = Signal(str)
@@ -354,6 +409,7 @@ class SeccionEstilo(Tarjeta):
             icono = None
         self._b_pos = Boton(tr('Posición'), self.alternar_posiciones, tipo='neutro', alto=32, tam=12, icono=icono)
         cc.addWidget(self._b_pos)
+        self._b_pos.setVisible(self.clave not in SIN_POSICION)
         self._var_on = ui.BooleanVar(False)
         self._sw = Interruptor(tr('Activado en GO'), self._var_on, self._cambio_on, tam=13, color='#E0EBFB')
         cc.addWidget(self._sw)
@@ -379,15 +435,25 @@ class SeccionEstilo(Tarjeta):
             lista.append(c)
         self.slider = SliderCartas(lista)
         cuerpo.addWidget(self.slider)
-        # ---- colores
+        # ---- colores (v5.33, el gancho: «Personaliza» = colores + sonido + zoom en UNA fila; cada botón abre su tira debajo, una a la vez)
         fila, cf = caja_h(espacio=8)
-        cf.addWidget(Etiqueta(tr('Colores'), 13, color=TEXT_MUTED))
+        extras = seccion.get('sonidos') or seccion.get('zooms')
+        cf.addWidget(Etiqueta(tr('Personaliza') if extras else tr('Colores'), 13, color=TEXT_MUTED))
         self.chips = {}
         for hueco, etiqueta in seccion['colores']:
             ch = ChipColor(hueco, tr(etiqueta))
             ch.clic.connect(self._abrir_tira)
             cf.addWidget(ch)
             self.chips[hueco] = ch
+        self._chip_sonido = self._chip_zoom = None
+        if seccion.get('sonidos'):
+            self._chip_sonido = ChipOpcion('sonido', tr('Sonido'), 'ph.speaker-high')
+            self._chip_sonido.clic.connect(lambda _h='': self._abrir_tira_de('sonido'))
+            cf.addWidget(self._chip_sonido)
+        if seccion.get('zooms'):
+            self._chip_zoom = ChipOpcion('zoom', tr('Zoom'), 'ph.arrows-out')
+            self._chip_zoom.clic.connect(lambda _h='': self._abrir_tira_de('zoom'))
+            cf.addWidget(self._chip_zoom)
         cf.addStretch(1)
         cuerpo.addWidget(fila)
         self._tira = QWidget()
@@ -409,6 +475,36 @@ class SeccionEstilo(Tarjeta):
         ct.addStretch(1)
         self._tira.setVisible(False)
         cuerpo.addWidget(self._tira)
+        # ---- v5.33, el gancho: la tira del SONIDO (el usuario: «por si el sonido por defecto no me gusta»: el de la intro, el de otra,
+        # ninguno o uno tuyo; cada uno suena al tocarlo) y la del ZOOM («te faltó el botón de efecto de zoom»: el de la intro, otro o ninguno)
+        self._tira_s = self._tira_z = self._b_propio = None
+        self._botones_s, self._botones_z = {}, {}
+        if seccion.get('sonidos'):
+            import intros_gancho
+            ops = ([('', tr('El de la intro'))] + [(v['id'], tr(v['nombre'])) for v in seccion['variantes']]
+                   + [(intros_gancho.SIN_SONIDO, tr('Sin sonido'))])
+            self._tira_s, self._botones_s = self._tira_opciones(ops, self._poner_sonido)
+            self._b_propio = Boton(tr('Tu sonido…'), self._elegir_sonido_propio, tipo='fantasma', alto=30, tam=12)
+            self._tira_s.layout().addWidget(self._b_propio)
+            cuerpo.addWidget(self._tira_s)
+        if seccion.get('zooms'):
+            import intros_gancho
+            ops = ([('', tr('El de la intro'))] + [(z, tr(n)) for z, n in intros_gancho.NOMBRES_ZOOM.items()]
+                   + [(intros_gancho.SIN_ZOOM, tr('Sin zoom'))])
+            self._tira_z, self._botones_z = self._tira_opciones(ops, self._poner_zoom)
+            cuerpo.addWidget(self._tira_z)
+        # v5.25: filas propias de la sección (Emojis animados: «Dónde» e «Intensidad»; las mismas preferencias que la píldora del menú lateral)
+        self._ajustes = []
+        for pref, etiqueta, opciones in seccion.get('ajustes') or []:
+            fila_a, ca = caja_h(espacio=10)
+            ca.addWidget(Etiqueta(tr(etiqueta), 13, color=TEXT_MUTED))
+            nombres = [tr(n) for _k, n in opciones]
+            var = StringVar(nombres[0])
+            seg = ui.Segmentado(nombres, var, lambda *_a, p=pref, o=opciones, v=var: self._cambio_ajuste(p, o, v), alto=30, tam=12)
+            ca.addWidget(seg)
+            ca.addStretch(1)
+            cuerpo.addWidget(fila_a)
+            self._ajustes.append((pref, opciones, var))
         self._abierta = True                            # v5.21 (el usuario: «siempre deja desplegadas las secciones»): abiertas al entrar
         self._cuerpo.setVisible(self._abierta)
         self._cab.poner_abierta(self._abierta)
@@ -427,6 +523,8 @@ class SeccionEstilo(Tarjeta):
 
     # -- v5.22: la vista «Posición» (en qué segundos del video va este efecto)
     def alternar_posiciones(self):
+        if self.clave in SIN_POSICION:
+            return
         self.mostrar_posiciones(not getattr(self, '_en_pos', False))
 
     def mostrar_posiciones(self, si):
@@ -434,12 +532,16 @@ class SeccionEstilo(Tarjeta):
         self._en_pos = bool(si)
         if si and self._pos is None:
             self._pos = POS.VistaPosiciones(self.clave)
-            self._pos.listo.connect(lambda: self.mostrar_posiciones(False))
+            self._pos.listo.connect(self._listo_posiciones)
+            self._pos.linea.marca_puesta.connect(self._encender_al_marcar)
             self._pos.cambio.connect(self.refrescar)
+            self._pos.volver.connect(lambda: self.mostrar_posiciones(False))
             self.capa.addWidget(self._pos)
         if not self._abierta:
             self._abierta = True
             self._cab.poner_abierta(True)
+        # v5.32: con el diseño nuevo («detrás de ti») la vista trae su propia cabecera (volver, título, Listo): la de la sección se esconde
+        self._cab.setVisible(not (si and getattr(self._pos, '_nuevo', None) is not None))
         self._cuerpo.setVisible(not si)
         if self._pos is not None:
             self._pos.setVisible(si)
@@ -450,13 +552,137 @@ class SeccionEstilo(Tarjeta):
         self._b_pos.style().polish(self._b_pos)
         self.refrescar()
 
+    def _encender_al_marcar(self):
+        """v5.27 (el usuario: «si le doy clic a una sugerencia, que ya quede lista la selección»): poner una marca enciende el efecto en GO
+        (antes había que acordarse de «Activado en GO» o de «Listo»)."""
+        try:
+            import pro_lateral_ui as LAT
+            if not LAT.estado(self.clave):
+                LAT.poner(self.clave, True)
+                self.refrescar()
+                self.cambio.emit()
+        except Exception:
+            pass
+
+    def _listo_posiciones(self):
+        """v5.27 (el usuario: «cuando le doy Listo que quede guardado y cuando vuelva a la página de Inicio lo aplique»): con marcas, el efecto
+        queda ENCENDIDO en GO (si no, para_plan las saltaba) y, si el video se eligió a mano, pasa a ser el de Inicio; el Registro lo dice."""
+        from pathlib import Path
+        import posiciones_pro as POS
+        pos = self._pos
+        ruta = pos.linea.ruta if pos is not None else None
+        n = len(pos.linea.marcas) if pos is not None else 0
+        if ruta and n:
+            hechos = []
+            try:
+                import pro_lateral_ui as LAT
+                if not LAT.estado(self.clave) and LAT.poner(self.clave, True) is not False:
+                    hechos.append('lo encendí en GO')
+            except Exception:
+                pass
+            if pos.a_mano() and POS.poner_video_inicio(ruta):
+                hechos.append('ahora es el video de Inicio')
+            ya = self._al_timeline(pos)                                # v5.29: va YA al timeline (abajo)
+            try:
+                import registro
+                modo = '' if pos.linea.modo == 'solo' else ' + automático'
+                registro.info(f'Efectos › {self.s["titulo"]}: {n} {"posición guardada" if n == 1 else "posiciones guardadas"}{modo} para '
+                              f'«{Path(str(ruta)).name}»' + (f' ({", ".join(hechos)})' if hechos else '') +
+                              ((('. La pongo' if n == 1 else '. Las pongo') + ' ya en tu timeline de Resolve.') if ya else
+                               ('. GO la aplica.' if n == 1 else '. GO las aplica.')), 'Efectos')
+            except Exception:
+                pass
+        if ruta and self.clave == 'detras' and pos is not None and not pos.a_mano() and pos.linea.dur > 0 and pos.linea._aplicados is not None:
+            if pos.linea.igual_que_timeline():                         # v5.30: nada cambió respecto al timeline: ni se toca Resolve
+                import registro
+                registro.info('Captions detrás de ti: ya está así en tu timeline.', 'Efectos')
+            elif self._poner_en_timeline(ruta, list(pos.linea.marcas), pos.linea.modo, vista=pos):
+                self.cambio.emit()                                     # v5.31: la vista sigue abierta con su barra y enseña cómo quedó
+                return
+        self.mostrar_posiciones(False)
+        self.cambio.emit()
+
+    def _al_timeline(self, pos):
+        """¿«Listo» lo pone YA en Resolve? Solo «detrás de ti», con el video de Inicio, si GO ya pasó por ese video (la tira sabe lo que hay en
+        su timeline: v5.31, sin GO antes solo se guarda y GO lo aplica) y si algo cambió."""
+        return (self.clave == 'detras' and pos is not None and not pos.a_mano() and pos.linea._aplicados is not None
+                and not pos.linea.igual_que_timeline())
+
+    def _poner_en_timeline(self, ruta, marcas=None, modo='solo', vista=None):
+        """v5.29 (el usuario: «cuando le dé Listo debe ponerlo automáticamente en la línea de tiempo; va a ser más útil que generar todo»):
+        «detrás de ti» con las marcas de ahora en el timeline ABIERTO de Resolve (edicion_pro.aplicar_detras: la persona con el matte de la IA,
+        los captions subidos; lo demás de la PRO no se toca), en un hilo. La cabecera dice cómo va; el Registro, cómo acabó. Sin GO de ese video
+        (o con otro timeline abierto) solo se guarda y lo dice. v5.31: con `vista` (la de Posición) la barra enseña el avance y, al acabar, la tira
+        lo que quedó. → True si empezó."""
+        import registro
+        if getattr(self, '_aplicando', False):
+            return False
+        if getattr(self.window(), '_go_corriendo', False):
+            registro.info('Captions detrás de ti: GO está trabajando; tus posiciones van en este GO o en el próximo.', 'Efectos')
+            return False
+        try:
+            import edicion_pro as EP
+            if not EP.detras_disponible():
+                return False
+        except Exception:
+            return False
+        self._aplicando = True
+        self._estado_tl = tr('poniéndolo en tu timeline…')
+        self.refrescar()
+        if vista is not None:
+            vista.empezar_aplicar()
+
+        def fin(r, error):
+            self._aplicando = False
+            ok, mensaje, n = r if (error is None and r) else (False, f'{type(error).__name__}: {error}' if error else '', 0)
+            if vista is not None:
+                try:
+                    vista.terminar_aplicar(ok, mensaje, marcas)
+                except RuntimeError:                               # (la vista ya no existe)
+                    pass
+            if ok:
+                self._estado_tl = tr('en tu timeline') if n else ''
+                registro.info(f'Captions detrás de ti: {n} {"tramo puesto" if n == 1 else "tramos puestos"} en tu timeline de Resolve (la persona '
+                              f'recortada con IA delante de los captions), sin rehacer GO.' if n else
+                              'Captions detrás de ti: quitado de tu timeline (ya no queda ninguno).', 'Efectos')
+            else:
+                self._estado_tl = ''
+                registro.aviso(f'Captions detrás de ti no se pudo poner en tu timeline: {mensaje}', 'Efectos')
+            self.refrescar()
+            self.cambio.emit()
+        ui.correr_en_hilo(self, lambda: EP.aplicar_detras(ruta, marcas_tira=marcas, modo=modo,
+                                                          al_progreso=vista.progreso_hilo if vista is not None else None), fin)
+        return True
+
     def mouseDoubleClickEvent(self, e):
         """Doble clic en cualquier sitio de la sección (fuera de un control): la «Posición»."""
         if e.button() == Qt.MouseButton.LeftButton:
             self.alternar_posiciones()
 
+    def _cambio_ajuste(self, pref, opciones, var):
+        inv = {tr(n): k for k, n in opciones}
+        valor = inv.get(str(var.get()))
+        if valor is None:
+            return
+        try:
+            import edicion_pro
+            edicion_pro.guardar_opciones({pref: valor})
+        except Exception:
+            return
+        self.cambio.emit()
+
     # -- estado
     def refrescar(self):
+        if getattr(self, '_ajustes', None):
+            try:
+                import edicion_pro
+                op = edicion_pro.opciones_guardadas()
+            except Exception:
+                op = {}
+            for pref, opciones, var in self._ajustes:
+                actual = dict(opciones).get(op.get(pref)) or opciones[0][1]
+                if str(var.get()) != tr(actual):
+                    var.set(tr(actual))
         est = EST.leer()
         d = est.get(self.clave) or {}
         actual = d.get('v') or ''
@@ -466,6 +692,26 @@ class SeccionEstilo(Tarjeta):
         propios = d.get('c') or {}
         for hueco, ch in self.chips.items():
             ch.poner(propios.get(hueco, ''), activo=hueco == self._hueco)
+        extra_s = ''
+        if self._chip_sonido is not None:                # v5.33: el sonido elegido (chip, opción marcada y resumen)
+            import intros_gancho
+            s = d.get('s', '')
+            propio = bool(s) and s != intros_gancho.SIN_SONIDO and EST.variante(self.clave, s) is None
+            self._chip_sonido.poner(tr(intros_gancho.nombre_sonido(s)), activo=not self._tira_s.isHidden())
+            for valor, b in self._botones_s.items():
+                _marcar(b, valor == s)
+            _marcar(self._b_propio, propio)
+            self._b_propio.setText(tr('Tu sonido: ') + intros_gancho.nombre_sonido(s) if propio else tr('Tu sonido…'))
+            if s:
+                extra_s = tr(' · sonido: ') + tr(intros_gancho.nombre_sonido(s))
+        if self._chip_zoom is not None:                  # v5.33: el zoom elegido
+            import intros_gancho
+            z = d.get('z', '')
+            self._chip_zoom.poner(tr(intros_gancho.nombre_zoom(z)), activo=not self._tira_z.isHidden())
+            for valor, b in self._botones_z.items():
+                _marcar(b, valor == z)
+            if z:
+                extra_s += tr(' · zoom: ') + tr(intros_gancho.nombre_zoom(z))
         try:
             import pro_lateral_ui as LAT
             on = bool(LAT.estado(self.clave))
@@ -474,19 +720,25 @@ class SeccionEstilo(Tarjeta):
         if bool(self._var_on.get()) != on:
             self._var_on.set(on)
         nombre = tr(v['nombre']) if v else tr('Automático')
-        self._lbl_estado.setText(tr('GO usará: ') + nombre + ('' if on else tr(' · ahora está apagada (enciéndela aquí o en el menú de Proyecto)')))
-        extra = ''
+        self._lbl_estado.setText(tr('GO usará: ') + nombre + extra_s + ('' if on else tr(' · ahora está apagada (enciéndela aquí o en el menú de Proyecto)')))
+        extra = extra_s
         try:                                             # v5.22: las posiciones marcadas para el video de Inicio
             import posiciones_pro as POS
             if self._pos is not None and getattr(self, '_en_pos', False):
                 self._pos.al_volver()                    # (v5.23: otro video en Inicio, p. ej. tras «Obtener»: se carga ese)
             ruta = POS.video_actual()
-            n, modo = POS.resumen(ruta, self.clave) if ruta else (0, 'solo')
+            if self._pos is not None and self._pos.linea.ruta and POS.es_de_inicio(self._pos.linea.ruta):
+                ruta = self._pos.linea.ruta              # (v5.27: el de la vista, ya con su video si Inicio tiene el audio de un timeline)
+            n, modo = POS.resumen(ruta, self.clave) if ruta and self.clave not in SIN_POSICION else (0, 'solo')
             if n:
-                extra = ' · ' + (tr('1 posición') if n == 1 else tr('{n} posiciones', n=n)) + ('' if modo == 'solo' else tr(' + automático'))
+                extra += ' · ' + (tr('1 posición') if n == 1 else tr('{n} posiciones', n=n)) + ('' if modo == 'solo' else tr(' + automático'))
         except Exception:
             pass
+        if getattr(self, '_estado_tl', ''):                # v5.29: «Listo» → al timeline: cómo va
+            extra += ' · ' + self._estado_tl
         self._cab.poner_resumen(nombre + (tr(' · colores propios') if propios else '') + extra)
+        if self._pos is not None and hasattr(self._pos, 'poner_resumen'):
+            self._pos.poner_resumen(nombre + (tr(' · colores propios') if propios else '') + extra)
         self._pintar_muestras()
 
     def _pintar_muestras(self):
@@ -500,6 +752,60 @@ class SeccionEstilo(Tarjeta):
         EST.guardar_variante(self.clave, ident)
         self.refrescar()
         self.cambio.emit()
+        if self.clave == 'gancho':                       # v5.33: la intro suena al elegirla (su golpe es la mitad de la intro)
+            self._oir_gancho(ident)
+
+    def _oir_gancho(self, ident=None, eleccion=None):
+        """Suena lo que GO pondría: la intro `ident` (None = la elegida) con el sonido `eleccion` (None = el guardado). En un hilo."""
+        if getattr(self, '_reproductor', None) is None:
+            import sfx_audio
+            self._reproductor = sfx_audio.Reproductor()
+        import intros_gancho
+        if ident is None:
+            ident = (EST.leer().get(self.clave) or {}).get('v') or ''
+        ui.correr_en_hilo(self, lambda: intros_gancho.oir(ident, self._reproductor, eleccion), lambda *_a: None)
+
+    # -- v5.33: «Sonido» y «Zoom» del gancho (sus tiras se abren debajo de «Personaliza», una a la vez)
+    def _tira_opciones(self, opciones, al_elegir):
+        """Una tira de opciones en píldoras que saltan de línea si no caben: (widget oculto, {valor: botón})."""
+        w = QWidget()
+        flujo = ui.FlujoCapa(w, espacio_h=6, espacio_v=6)
+        botones = {}
+        for valor, texto in opciones:
+            b = Boton(texto, lambda v=valor: al_elegir(v), tipo='fantasma', alto=30, tam=12)
+            flujo.addWidget(b)
+            botones[valor] = b
+        w.setVisible(False)
+        return w, botones
+
+    def _abrir_tira_de(self, cual):
+        tira = {'sonido': self._tira_s, 'zoom': self._tira_z}.get(cual)
+        if tira is None:
+            return
+        abrir = tira.isHidden()
+        self._cerrar_tira(refrescar=False)
+        for t in (self._tira_s, self._tira_z):
+            if t is not None:
+                t.setVisible(False)
+        tira.setVisible(abrir)
+        self.refrescar()
+
+    def _poner_zoom(self, valor):
+        EST.guardar_zoom(self.clave, valor)
+        self.refrescar()
+        self.cambio.emit()
+
+    def _poner_sonido(self, valor):
+        EST.guardar_sonido(self.clave, valor)
+        self.refrescar()
+        self.cambio.emit()
+        self._oir_gancho(eleccion=valor)
+
+    def _elegir_sonido_propio(self):
+        ruta = ui.filedialog.askopenfilename(title=tr('Elige tu sonido'), parent=self.window(),
+                                             filetypes=[(tr('Audio'), '*.wav *.mp3 *.m4a *.aif *.aiff *.flac *.ogg'), (tr('Todos los archivos'), '*.*')])
+        if ruta:
+            self._poner_sonido(ruta)
 
     def _cambio_on(self):
         si = bool(self._var_on.get())
@@ -524,13 +830,17 @@ class SeccionEstilo(Tarjeta):
         self._hueco = hueco
         actual = ((EST.leer().get(self.clave) or {}).get('c') or {}).get(hueco, '')
         self._v_hex.set(actual)
+        for t in (self._tira_s, self._tira_z):          # (v5.33: una tira a la vez)
+            if t is not None:
+                t.setVisible(False)
         self._tira.setVisible(True)
         self.refrescar()
 
-    def _cerrar_tira(self):
+    def _cerrar_tira(self, refrescar=True):
         self._hueco = None
         self._tira.setVisible(False)
-        self.refrescar()
+        if refrescar:
+            self.refrescar()
 
     def _poner_color(self, color):
         if not self._hueco:
@@ -553,12 +863,7 @@ class SeccionEstilosPro(QWidget):
         super().__init__(padre)
         capa = QVBoxLayout(self)
         capa.setContentsMargins(0, 0, 0, 0)
-        capa.setSpacing(18)
-        cab = Tarjeta(espacio=6, margenes=(22, 16, 22, 16))
-        cab.capa.addWidget(Etiqueta(tr('Edición PRO: estilos'), 20, peso='medio', color='#FFFFFF'))
-        cab.capa.addWidget(Etiqueta(tr('Elige cómo se ve cada función de la Edición PRO. Lo que pone (el lugar, la cifra, el icono…) sale de tu video; '
-                                       'aquí decides la forma y los colores. Se aplica cuando la función está encendida.'), 13, color=TEXT_MUTED, envolver=True))
-        capa.addWidget(cab)
+        capa.setSpacing(18)                              # (sin la tarjeta «Edición PRO: estilos» de cabecera: el usuario, «elimina esto»)
         try:
             import pro_lateral_ui as LAT
             visibles = LAT.opciones_visibles()

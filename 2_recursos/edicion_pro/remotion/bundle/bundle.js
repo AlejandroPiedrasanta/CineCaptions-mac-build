@@ -1,25 +1,213 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 3260
+/***/ 4715
 (__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
 
-// NAMESPACE OBJECT: ./node_modules/three/build/three.module.js
+// EXTERNAL MODULE: ./node_modules/react/index.js
+var react_namespaceFn = () => {
+	return __webpack_require__(6540);
+};
+
+// MODULE: ./node_modules/use-sync-external-store/cjs/use-sync-external-store-shim.production.js
+var use_sync_external_store_shim_production_namespaceFn = /*#__PURE__*/__webpack_require__.cw((__unused_webpack_module, exports) => {
+/**
+ * @license React
+ * use-sync-external-store-shim.production.js
+ *
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+
+var React = (react_namespaceFn());
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  useState = React.useState,
+  useEffect = React.useEffect,
+  useLayoutEffect = React.useLayoutEffect,
+  useDebugValue = React.useDebugValue;
+function useSyncExternalStore$2(subscribe, getSnapshot) {
+  var value = getSnapshot(),
+    _useState = useState({ inst: { value: value, getSnapshot: getSnapshot } }),
+    inst = _useState[0].inst,
+    forceUpdate = _useState[1];
+  useLayoutEffect(
+    function () {
+      inst.value = value;
+      inst.getSnapshot = getSnapshot;
+      checkIfSnapshotChanged(inst) && forceUpdate({ inst: inst });
+    },
+    [subscribe, value, getSnapshot]
+  );
+  useEffect(
+    function () {
+      checkIfSnapshotChanged(inst) && forceUpdate({ inst: inst });
+      return subscribe(function () {
+        checkIfSnapshotChanged(inst) && forceUpdate({ inst: inst });
+      });
+    },
+    [subscribe]
+  );
+  useDebugValue(value);
+  return value;
+}
+function checkIfSnapshotChanged(inst) {
+  var latestGetSnapshot = inst.getSnapshot;
+  inst = inst.value;
+  try {
+    var nextValue = latestGetSnapshot();
+    return !objectIs(inst, nextValue);
+  } catch (error) {
+    return !0;
+  }
+}
+function useSyncExternalStore$1(subscribe, getSnapshot) {
+  return getSnapshot();
+}
+var shim =
+  "undefined" === typeof window ||
+  "undefined" === typeof window.document ||
+  "undefined" === typeof window.document.createElement
+    ? useSyncExternalStore$1
+    : useSyncExternalStore$2;
+exports.useSyncExternalStore =
+  void 0 !== React.useSyncExternalStore ? React.useSyncExternalStore : shim;
+
+});
+
+// MODULE: ./node_modules/use-sync-external-store/cjs/use-sync-external-store-shim/with-selector.production.js
+var with_selector_production_namespaceFn = /*#__PURE__*/__webpack_require__.cw((__unused_webpack_module, exports) => {
+/**
+ * @license React
+ * use-sync-external-store-shim/with-selector.production.js
+ *
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+
+var React = (react_namespaceFn()),
+  shim = (shim_namespaceFn());
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  useSyncExternalStore = shim.useSyncExternalStore,
+  useRef = React.useRef,
+  useEffect = React.useEffect,
+  useMemo = React.useMemo,
+  useDebugValue = React.useDebugValue;
+exports.useSyncExternalStoreWithSelector = function (
+  subscribe,
+  getSnapshot,
+  getServerSnapshot,
+  selector,
+  isEqual
+) {
+  var instRef = useRef(null);
+  if (null === instRef.current) {
+    var inst = { hasValue: !1, value: null };
+    instRef.current = inst;
+  } else inst = instRef.current;
+  instRef = useMemo(
+    function () {
+      function memoizedSelector(nextSnapshot) {
+        if (!hasMemo) {
+          hasMemo = !0;
+          memoizedSnapshot = nextSnapshot;
+          nextSnapshot = selector(nextSnapshot);
+          if (void 0 !== isEqual && inst.hasValue) {
+            var currentSelection = inst.value;
+            if (isEqual(currentSelection, nextSnapshot))
+              return (memoizedSelection = currentSelection);
+          }
+          return (memoizedSelection = nextSnapshot);
+        }
+        currentSelection = memoizedSelection;
+        if (objectIs(memoizedSnapshot, nextSnapshot)) return currentSelection;
+        var nextSelection = selector(nextSnapshot);
+        if (void 0 !== isEqual && isEqual(currentSelection, nextSelection))
+          return (memoizedSnapshot = nextSnapshot), currentSelection;
+        memoizedSnapshot = nextSnapshot;
+        return (memoizedSelection = nextSelection);
+      }
+      var hasMemo = !1,
+        memoizedSnapshot,
+        memoizedSelection,
+        maybeGetServerSnapshot =
+          void 0 === getServerSnapshot ? null : getServerSnapshot;
+      return [
+        function () {
+          return memoizedSelector(getSnapshot());
+        },
+        null === maybeGetServerSnapshot
+          ? void 0
+          : function () {
+              return memoizedSelector(maybeGetServerSnapshot());
+            }
+      ];
+    },
+    [getSnapshot, getServerSnapshot, selector, isEqual]
+  );
+  var value = useSyncExternalStore(subscribe, instRef[0], instRef[1]);
+  useEffect(
+    function () {
+      inst.hasValue = !0;
+      inst.value = value;
+    },
+    [value]
+  );
+  useDebugValue(value);
+  return value;
+};
+
+});
+
+// MODULE: ./node_modules/use-sync-external-store/shim/index.js
+var shim_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+if (true) {
+  module.exports = (use_sync_external_store_shim_production_namespaceFn());
+} else // removed by dead control flow
+{}
+
+});
+
+// MODULE: ./node_modules/use-sync-external-store/shim/with-selector.js
+var with_selector_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+if (true) {
+  module.exports = (with_selector_production_namespaceFn());
+} else // removed by dead control flow
+{}
+
+});
+
+// NAMESPACE OBJECT (decoupled): ./node_modules/three/build/three.module.js
 var three_module_namespaceObject = {};
 __webpack_require__.r(three_module_namespaceObject);
 __webpack_require__.d(three_module_namespaceObject, {
-  ACESFilmicToneMapping: () => (ACESFilmicToneMapping),
-  AddEquation: () => (AddEquation),
-  AddOperation: () => (AddOperation),
-  AdditiveAnimationBlendMode: () => (AdditiveAnimationBlendMode),
-  AdditiveBlending: () => (AdditiveBlending),
-  AgXToneMapping: () => (AgXToneMapping),
-  AlphaFormat: () => (AlphaFormat),
-  AlwaysCompare: () => (AlwaysCompare),
-  AlwaysDepth: () => (AlwaysDepth),
-  AlwaysStencilFunc: () => (AlwaysStencilFunc),
+  ACESFilmicToneMapping: () => ((/* inlined export .ACESFilmicToneMapping */4)),
+  AddEquation: () => ((/* inlined export .AddEquation */100)),
+  AddOperation: () => ((/* inlined export .AddOperation */2)),
+  AdditiveAnimationBlendMode: () => ((/* inlined export .AdditiveAnimationBlendMode */2501)),
+  AdditiveBlending: () => ((/* inlined export .AdditiveBlending */2)),
+  AgXToneMapping: () => ((/* inlined export .AgXToneMapping */6)),
+  AlphaFormat: () => ((/* inlined export .AlphaFormat */1021)),
+  AlwaysCompare: () => ((/* inlined export .AlwaysCompare */519)),
+  AlwaysDepth: () => ((/* inlined export .AlwaysDepth */1)),
+  AlwaysStencilFunc: () => ((/* inlined export .AlwaysStencilFunc */519)),
   AmbientLight: () => (AmbientLight),
   AnimationAction: () => (AnimationAction),
   AnimationClip: () => (AnimationClip),
@@ -37,9 +225,9 @@ __webpack_require__.d(three_module_namespaceObject, {
   AudioListener: () => (AudioListener),
   AudioLoader: () => (AudioLoader),
   AxesHelper: () => (AxesHelper),
-  BackSide: () => (BackSide),
-  BasicDepthPacking: () => (BasicDepthPacking),
-  BasicShadowMap: () => (BasicShadowMap),
+  BackSide: () => ((/* inlined export .BackSide */1)),
+  BasicDepthPacking: () => ((/* inlined export .BasicDepthPacking */3200)),
+  BasicShadowMap: () => ((/* inlined export .BasicShadowMap */0)),
   BatchedMesh: () => (BatchedMesh),
   BezierInterpolant: () => (BezierInterpolant),
   Bone: () => (Bone),
@@ -52,16 +240,16 @@ __webpack_require__.d(three_module_namespaceObject, {
   BufferAttribute: () => (BufferAttribute),
   BufferGeometry: () => (BufferGeometry),
   BufferGeometryLoader: () => (BufferGeometryLoader),
-  ByteType: () => (ByteType),
+  ByteType: () => ((/* inlined export .ByteType */1010)),
   Cache: () => (Cache),
   Camera: () => (Camera),
   CameraHelper: () => (CameraHelper),
   CanvasTexture: () => (CanvasTexture),
   CapsuleGeometry: () => (CapsuleGeometry),
   CatmullRomCurve3: () => (CatmullRomCurve3),
-  CineonToneMapping: () => (CineonToneMapping),
+  CineonToneMapping: () => ((/* inlined export .CineonToneMapping */3)),
   CircleGeometry: () => (CircleGeometry),
-  ClampToEdgeWrapping: () => (ClampToEdgeWrapping),
+  ClampToEdgeWrapping: () => ((/* inlined export .ClampToEdgeWrapping */1001)),
   Clock: () => (Clock),
   Color: () => (Color),
   ColorKeyframeTrack: () => (ColorKeyframeTrack),
@@ -72,27 +260,27 @@ __webpack_require__.d(three_module_namespaceObject, {
   CompressedTexture: () => (CompressedTexture),
   CompressedTextureLoader: () => (CompressedTextureLoader),
   ConeGeometry: () => (ConeGeometry),
-  ConstantAlphaFactor: () => (ConstantAlphaFactor),
-  ConstantColorFactor: () => (ConstantColorFactor),
+  ConstantAlphaFactor: () => ((/* inlined export .ConstantAlphaFactor */213)),
+  ConstantColorFactor: () => ((/* inlined export .ConstantColorFactor */211)),
   Controls: () => (Controls),
   CubeCamera: () => (CubeCamera),
   CubeDepthTexture: () => (CubeDepthTexture),
-  CubeReflectionMapping: () => (CubeReflectionMapping),
-  CubeRefractionMapping: () => (CubeRefractionMapping),
+  CubeReflectionMapping: () => ((/* inlined export .CubeReflectionMapping */301)),
+  CubeRefractionMapping: () => ((/* inlined export .CubeRefractionMapping */302)),
   CubeTexture: () => (CubeTexture),
   CubeTextureLoader: () => (CubeTextureLoader),
-  CubeUVReflectionMapping: () => (CubeUVReflectionMapping),
+  CubeUVReflectionMapping: () => ((/* inlined export .CubeUVReflectionMapping */306)),
   CubicBezierCurve: () => (CubicBezierCurve),
   CubicBezierCurve3: () => (CubicBezierCurve3),
   CubicInterpolant: () => (CubicInterpolant),
-  CullFaceBack: () => (CullFaceBack),
-  CullFaceFront: () => (CullFaceFront),
-  CullFaceFrontBack: () => (CullFaceFrontBack),
-  CullFaceNone: () => (CullFaceNone),
+  CullFaceBack: () => ((/* inlined export .CullFaceBack */1)),
+  CullFaceFront: () => ((/* inlined export .CullFaceFront */2)),
+  CullFaceFrontBack: () => ((/* inlined export .CullFaceFrontBack */3)),
+  CullFaceNone: () => ((/* inlined export .CullFaceNone */0)),
   Curve: () => (Curve),
   CurvePath: () => (CurvePath),
-  CustomBlending: () => (CustomBlending),
-  CustomToneMapping: () => (CustomToneMapping),
+  CustomBlending: () => ((/* inlined export .CustomBlending */5)),
+  CustomToneMapping: () => ((/* inlined export .CustomToneMapping */5)),
   CylinderGeometry: () => (CylinderGeometry),
   Cylindrical: () => (Cylindrical),
   Data3DTexture: () => (Data3DTexture),
@@ -100,30 +288,30 @@ __webpack_require__.d(three_module_namespaceObject, {
   DataTexture: () => (DataTexture),
   DataTextureLoader: () => (DataTextureLoader),
   DataUtils: () => (DataUtils),
-  DecrementStencilOp: () => (DecrementStencilOp),
-  DecrementWrapStencilOp: () => (DecrementWrapStencilOp),
+  DecrementStencilOp: () => ((/* inlined export .DecrementStencilOp */7683)),
+  DecrementWrapStencilOp: () => ((/* inlined export .DecrementWrapStencilOp */34056)),
   DefaultLoadingManager: () => (DefaultLoadingManager),
-  DepthFormat: () => (DepthFormat),
-  DepthStencilFormat: () => (DepthStencilFormat),
+  DepthFormat: () => ((/* inlined export .DepthFormat */1026)),
+  DepthStencilFormat: () => ((/* inlined export .DepthStencilFormat */1027)),
   DepthTexture: () => (DepthTexture),
   DetachedBindMode: () => (DetachedBindMode),
   DirectionalLight: () => (DirectionalLight),
   DirectionalLightHelper: () => (DirectionalLightHelper),
   DiscreteInterpolant: () => (DiscreteInterpolant),
   DodecahedronGeometry: () => (DodecahedronGeometry),
-  DoubleSide: () => (DoubleSide),
-  DstAlphaFactor: () => (DstAlphaFactor),
-  DstColorFactor: () => (DstColorFactor),
-  DynamicCopyUsage: () => (DynamicCopyUsage),
-  DynamicDrawUsage: () => (DynamicDrawUsage),
-  DynamicReadUsage: () => (DynamicReadUsage),
+  DoubleSide: () => ((/* inlined export .DoubleSide */2)),
+  DstAlphaFactor: () => ((/* inlined export .DstAlphaFactor */206)),
+  DstColorFactor: () => ((/* inlined export .DstColorFactor */208)),
+  DynamicCopyUsage: () => ((/* inlined export .DynamicCopyUsage */35050)),
+  DynamicDrawUsage: () => ((/* inlined export .DynamicDrawUsage */35048)),
+  DynamicReadUsage: () => ((/* inlined export .DynamicReadUsage */35049)),
   EdgesGeometry: () => (EdgesGeometry),
   EllipseCurve: () => (EllipseCurve),
-  EqualCompare: () => (EqualCompare),
-  EqualDepth: () => (EqualDepth),
-  EqualStencilFunc: () => (EqualStencilFunc),
-  EquirectangularReflectionMapping: () => (EquirectangularReflectionMapping),
-  EquirectangularRefractionMapping: () => (EquirectangularRefractionMapping),
+  EqualCompare: () => ((/* inlined export .EqualCompare */514)),
+  EqualDepth: () => ((/* inlined export .EqualDepth */4)),
+  EqualStencilFunc: () => ((/* inlined export .EqualStencilFunc */514)),
+  EquirectangularReflectionMapping: () => ((/* inlined export .EquirectangularReflectionMapping */303)),
+  EquirectangularRefractionMapping: () => ((/* inlined export .EquirectangularRefractionMapping */304)),
   Euler: () => (Euler),
   EventDispatcher: () => (EventDispatcher),
   ExternalTexture: () => (ExternalTexture),
@@ -131,34 +319,34 @@ __webpack_require__.d(three_module_namespaceObject, {
   FileLoader: () => (FileLoader),
   Float16BufferAttribute: () => (Float16BufferAttribute),
   Float32BufferAttribute: () => (Float32BufferAttribute),
-  FloatType: () => (FloatType),
+  FloatType: () => ((/* inlined export .FloatType */1015)),
   Fog: () => (Fog),
   FogExp2: () => (FogExp2),
   FramebufferTexture: () => (FramebufferTexture),
-  FrontSide: () => (FrontSide),
+  FrontSide: () => ((/* inlined export .FrontSide */0)),
   Frustum: () => (Frustum),
   FrustumArray: () => (FrustumArray),
   GLBufferAttribute: () => (GLBufferAttribute),
-  GLSL1: () => (GLSL1),
-  GLSL3: () => (GLSL3),
-  GreaterCompare: () => (GreaterCompare),
-  GreaterDepth: () => (GreaterDepth),
-  GreaterEqualCompare: () => (GreaterEqualCompare),
-  GreaterEqualDepth: () => (GreaterEqualDepth),
-  GreaterEqualStencilFunc: () => (GreaterEqualStencilFunc),
-  GreaterStencilFunc: () => (GreaterStencilFunc),
+  GLSL1: () => ((/* inlined export .GLSL1 */"100")),
+  GLSL3: () => ((/* inlined export .GLSL3 */"300 es")),
+  GreaterCompare: () => ((/* inlined export .GreaterCompare */516)),
+  GreaterDepth: () => ((/* inlined export .GreaterDepth */6)),
+  GreaterEqualCompare: () => ((/* inlined export .GreaterEqualCompare */518)),
+  GreaterEqualDepth: () => ((/* inlined export .GreaterEqualDepth */5)),
+  GreaterEqualStencilFunc: () => ((/* inlined export .GreaterEqualStencilFunc */518)),
+  GreaterStencilFunc: () => ((/* inlined export .GreaterStencilFunc */516)),
   GridHelper: () => (GridHelper),
   Group: () => (Group),
   HTMLTexture: () => (HTMLTexture),
-  HalfFloatType: () => (HalfFloatType),
+  HalfFloatType: () => ((/* inlined export .HalfFloatType */1016)),
   HemisphereLight: () => (HemisphereLight),
   HemisphereLightHelper: () => (HemisphereLightHelper),
   IcosahedronGeometry: () => (IcosahedronGeometry),
   ImageBitmapLoader: () => (ImageBitmapLoader),
   ImageLoader: () => (ImageLoader),
   ImageUtils: () => (ImageUtils),
-  IncrementStencilOp: () => (IncrementStencilOp),
-  IncrementWrapStencilOp: () => (IncrementWrapStencilOp),
+  IncrementStencilOp: () => ((/* inlined export .IncrementStencilOp */7682)),
+  IncrementWrapStencilOp: () => ((/* inlined export .IncrementWrapStencilOp */34055)),
   InstancedBufferAttribute: () => (InstancedBufferAttribute),
   InstancedBufferGeometry: () => (InstancedBufferGeometry),
   InstancedInterleavedBuffer: () => (InstancedInterleavedBuffer),
@@ -166,28 +354,28 @@ __webpack_require__.d(three_module_namespaceObject, {
   Int16BufferAttribute: () => (Int16BufferAttribute),
   Int32BufferAttribute: () => (Int32BufferAttribute),
   Int8BufferAttribute: () => (Int8BufferAttribute),
-  IntType: () => (IntType),
+  IntType: () => ((/* inlined export .IntType */1013)),
   InterleavedBuffer: () => (InterleavedBuffer),
   InterleavedBufferAttribute: () => (InterleavedBufferAttribute),
   Interpolant: () => (Interpolant),
-  InterpolateBezier: () => (InterpolateBezier),
-  InterpolateDiscrete: () => (InterpolateDiscrete),
-  InterpolateLinear: () => (InterpolateLinear),
-  InterpolateSmooth: () => (InterpolateSmooth),
+  InterpolateBezier: () => ((/* inlined export .InterpolateBezier */2303)),
+  InterpolateDiscrete: () => ((/* inlined export .InterpolateDiscrete */2300)),
+  InterpolateLinear: () => ((/* inlined export .InterpolateLinear */2301)),
+  InterpolateSmooth: () => ((/* inlined export .InterpolateSmooth */2302)),
   InterpolationSamplingMode: () => (InterpolationSamplingMode),
   InterpolationSamplingType: () => (InterpolationSamplingType),
-  InvertStencilOp: () => (InvertStencilOp),
-  KeepStencilOp: () => (KeepStencilOp),
+  InvertStencilOp: () => ((/* inlined export .InvertStencilOp */5386)),
+  KeepStencilOp: () => ((/* inlined export .KeepStencilOp */7680)),
   KeyframeTrack: () => (KeyframeTrack),
   LOD: () => (LOD),
   LatheGeometry: () => (LatheGeometry),
   Layers: () => (Layers),
-  LessCompare: () => (LessCompare),
-  LessDepth: () => (LessDepth),
-  LessEqualCompare: () => (LessEqualCompare),
-  LessEqualDepth: () => (LessEqualDepth),
-  LessEqualStencilFunc: () => (LessEqualStencilFunc),
-  LessStencilFunc: () => (LessStencilFunc),
+  LessCompare: () => ((/* inlined export .LessCompare */513)),
+  LessDepth: () => ((/* inlined export .LessDepth */2)),
+  LessEqualCompare: () => ((/* inlined export .LessEqualCompare */515)),
+  LessEqualDepth: () => ((/* inlined export .LessEqualDepth */3)),
+  LessEqualStencilFunc: () => ((/* inlined export .LessEqualStencilFunc */515)),
+  LessStencilFunc: () => ((/* inlined export .LessStencilFunc */513)),
   Light: () => (Light),
   LightProbe: () => (LightProbe),
   LightShadow: () => (LightShadow),
@@ -199,30 +387,30 @@ __webpack_require__.d(three_module_namespaceObject, {
   LineDashedMaterial: () => (LineDashedMaterial),
   LineLoop: () => (LineLoop),
   LineSegments: () => (LineSegments),
-  LinearFilter: () => (LinearFilter),
+  LinearFilter: () => ((/* inlined export .LinearFilter */1006)),
   LinearInterpolant: () => (LinearInterpolant),
-  LinearMipMapLinearFilter: () => (LinearMipMapLinearFilter),
-  LinearMipMapNearestFilter: () => (LinearMipMapNearestFilter),
-  LinearMipmapLinearFilter: () => (LinearMipmapLinearFilter),
-  LinearMipmapNearestFilter: () => (LinearMipmapNearestFilter),
+  LinearMipMapLinearFilter: () => ((/* inlined export .LinearMipMapLinearFilter */1008)),
+  LinearMipMapNearestFilter: () => ((/* inlined export .LinearMipMapNearestFilter */1007)),
+  LinearMipmapLinearFilter: () => ((/* inlined export .LinearMipmapLinearFilter */1008)),
+  LinearMipmapNearestFilter: () => ((/* inlined export .LinearMipmapNearestFilter */1007)),
   LinearSRGBColorSpace: () => (LinearSRGBColorSpace),
-  LinearToneMapping: () => (LinearToneMapping),
-  LinearTransfer: () => (LinearTransfer),
+  LinearToneMapping: () => ((/* inlined export .LinearToneMapping */1)),
+  LinearTransfer: () => ((/* inlined export .LinearTransfer */"linear")),
   Loader: () => (Loader),
   LoaderUtils: () => (LoaderUtils),
   LoadingManager: () => (LoadingManager),
-  LoopOnce: () => (LoopOnce),
-  LoopPingPong: () => (LoopPingPong),
-  LoopRepeat: () => (LoopRepeat),
+  LoopOnce: () => ((/* inlined export .LoopOnce */2200)),
+  LoopPingPong: () => ((/* inlined export .LoopPingPong */2202)),
+  LoopRepeat: () => ((/* inlined export .LoopRepeat */2201)),
   MOUSE: () => (MOUSE),
   Material: () => (Material),
-  MaterialBlending: () => (MaterialBlending),
+  MaterialBlending: () => ((/* inlined export .MaterialBlending */6)),
   MaterialLoader: () => (MaterialLoader),
   MathUtils: () => (MathUtils),
   Matrix2: () => (Matrix2),
   Matrix3: () => (Matrix3),
   Matrix4: () => (Matrix4),
-  MaxEquation: () => (MaxEquation),
+  MaxEquation: () => ((/* inlined export .MaxEquation */104)),
   Mesh: () => (Mesh),
   MeshBasicMaterial: () => (MeshBasicMaterial),
   MeshDepthMaterial: () => (MeshDepthMaterial),
@@ -234,46 +422,46 @@ __webpack_require__.d(three_module_namespaceObject, {
   MeshPhysicalMaterial: () => (MeshPhysicalMaterial),
   MeshStandardMaterial: () => (MeshStandardMaterial),
   MeshToonMaterial: () => (MeshToonMaterial),
-  MinEquation: () => (MinEquation),
-  MirroredRepeatWrapping: () => (MirroredRepeatWrapping),
-  MixOperation: () => (MixOperation),
-  MultiplyBlending: () => (MultiplyBlending),
-  MultiplyOperation: () => (MultiplyOperation),
-  NearestFilter: () => (NearestFilter),
-  NearestMipMapLinearFilter: () => (NearestMipMapLinearFilter),
-  NearestMipMapNearestFilter: () => (NearestMipMapNearestFilter),
-  NearestMipmapLinearFilter: () => (NearestMipmapLinearFilter),
-  NearestMipmapNearestFilter: () => (NearestMipmapNearestFilter),
-  NeutralToneMapping: () => (NeutralToneMapping),
-  NeverCompare: () => (NeverCompare),
-  NeverDepth: () => (NeverDepth),
-  NeverStencilFunc: () => (NeverStencilFunc),
-  NoBlending: () => (NoBlending),
-  NoColorSpace: () => (NoColorSpace),
-  NoNormalPacking: () => (NoNormalPacking),
-  NoToneMapping: () => (NoToneMapping),
-  NormalAnimationBlendMode: () => (NormalAnimationBlendMode),
-  NormalBlending: () => (NormalBlending),
-  NormalGAPacking: () => (NormalGAPacking),
-  NormalRGPacking: () => (NormalRGPacking),
-  NotEqualCompare: () => (NotEqualCompare),
-  NotEqualDepth: () => (NotEqualDepth),
-  NotEqualStencilFunc: () => (NotEqualStencilFunc),
+  MinEquation: () => ((/* inlined export .MinEquation */103)),
+  MirroredRepeatWrapping: () => ((/* inlined export .MirroredRepeatWrapping */1002)),
+  MixOperation: () => ((/* inlined export .MixOperation */1)),
+  MultiplyBlending: () => ((/* inlined export .MultiplyBlending */4)),
+  MultiplyOperation: () => ((/* inlined export .MultiplyOperation */0)),
+  NearestFilter: () => ((/* inlined export .NearestFilter */1003)),
+  NearestMipMapLinearFilter: () => ((/* inlined export .NearestMipMapLinearFilter */1005)),
+  NearestMipMapNearestFilter: () => ((/* inlined export .NearestMipMapNearestFilter */1004)),
+  NearestMipmapLinearFilter: () => ((/* inlined export .NearestMipmapLinearFilter */1005)),
+  NearestMipmapNearestFilter: () => ((/* inlined export .NearestMipmapNearestFilter */1004)),
+  NeutralToneMapping: () => ((/* inlined export .NeutralToneMapping */7)),
+  NeverCompare: () => ((/* inlined export .NeverCompare */512)),
+  NeverDepth: () => ((/* inlined export .NeverDepth */0)),
+  NeverStencilFunc: () => ((/* inlined export .NeverStencilFunc */512)),
+  NoBlending: () => ((/* inlined export .NoBlending */0)),
+  NoColorSpace: () => ((/* inlined export .NoColorSpace */"")),
+  NoNormalPacking: () => ((/* inlined export .NoNormalPacking */"")),
+  NoToneMapping: () => ((/* inlined export .NoToneMapping */0)),
+  NormalAnimationBlendMode: () => ((/* inlined export .NormalAnimationBlendMode */2500)),
+  NormalBlending: () => ((/* inlined export .NormalBlending */1)),
+  NormalGAPacking: () => ((/* inlined export .NormalGAPacking */"ga")),
+  NormalRGPacking: () => ((/* inlined export .NormalRGPacking */"rg")),
+  NotEqualCompare: () => ((/* inlined export .NotEqualCompare */517)),
+  NotEqualDepth: () => ((/* inlined export .NotEqualDepth */7)),
+  NotEqualStencilFunc: () => ((/* inlined export .NotEqualStencilFunc */517)),
   NumberKeyframeTrack: () => (NumberKeyframeTrack),
   Object3D: () => (Object3D),
   ObjectLoader: () => (ObjectLoader),
-  ObjectSpaceNormalMap: () => (ObjectSpaceNormalMap),
+  ObjectSpaceNormalMap: () => ((/* inlined export .ObjectSpaceNormalMap */1)),
   OctahedronGeometry: () => (OctahedronGeometry),
-  OneFactor: () => (OneFactor),
-  OneMinusConstantAlphaFactor: () => (OneMinusConstantAlphaFactor),
-  OneMinusConstantColorFactor: () => (OneMinusConstantColorFactor),
-  OneMinusDstAlphaFactor: () => (OneMinusDstAlphaFactor),
-  OneMinusDstColorFactor: () => (OneMinusDstColorFactor),
-  OneMinusSrcAlphaFactor: () => (OneMinusSrcAlphaFactor),
-  OneMinusSrcColorFactor: () => (OneMinusSrcColorFactor),
+  OneFactor: () => ((/* inlined export .OneFactor */201)),
+  OneMinusConstantAlphaFactor: () => ((/* inlined export .OneMinusConstantAlphaFactor */214)),
+  OneMinusConstantColorFactor: () => ((/* inlined export .OneMinusConstantColorFactor */212)),
+  OneMinusDstAlphaFactor: () => ((/* inlined export .OneMinusDstAlphaFactor */207)),
+  OneMinusDstColorFactor: () => ((/* inlined export .OneMinusDstColorFactor */209)),
+  OneMinusSrcAlphaFactor: () => ((/* inlined export .OneMinusSrcAlphaFactor */205)),
+  OneMinusSrcColorFactor: () => ((/* inlined export .OneMinusSrcColorFactor */203)),
   OrthographicCamera: () => (OrthographicCamera),
-  PCFShadowMap: () => (PCFShadowMap),
-  PCFSoftShadowMap: () => (PCFSoftShadowMap),
+  PCFShadowMap: () => ((/* inlined export .PCFShadowMap */1)),
+  PCFSoftShadowMap: () => ((/* inlined export .PCFSoftShadowMap */2)),
   PMREMGenerator: () => (PMREMGenerator),
   Path: () => (Path),
   PerspectiveCamera: () => (PerspectiveCamera),
@@ -294,68 +482,68 @@ __webpack_require__.d(three_module_namespaceObject, {
   Quaternion: () => (Quaternion),
   QuaternionKeyframeTrack: () => (QuaternionKeyframeTrack),
   QuaternionLinearInterpolant: () => (QuaternionLinearInterpolant),
-  R11_EAC_Format: () => (R11_EAC_Format),
-  RED_GREEN_RGTC2_Format: () => (RED_GREEN_RGTC2_Format),
-  RED_RGTC1_Format: () => (RED_RGTC1_Format),
-  REVISION: () => (REVISION),
-  RG11_EAC_Format: () => (RG11_EAC_Format),
-  RGBADepthPacking: () => (RGBADepthPacking),
-  RGBAFormat: () => (RGBAFormat),
-  RGBAIntegerFormat: () => (RGBAIntegerFormat),
-  RGBA_ASTC_10x10_Format: () => (RGBA_ASTC_10x10_Format),
-  RGBA_ASTC_10x5_Format: () => (RGBA_ASTC_10x5_Format),
-  RGBA_ASTC_10x6_Format: () => (RGBA_ASTC_10x6_Format),
-  RGBA_ASTC_10x8_Format: () => (RGBA_ASTC_10x8_Format),
-  RGBA_ASTC_12x10_Format: () => (RGBA_ASTC_12x10_Format),
-  RGBA_ASTC_12x12_Format: () => (RGBA_ASTC_12x12_Format),
-  RGBA_ASTC_4x4_Format: () => (RGBA_ASTC_4x4_Format),
-  RGBA_ASTC_5x4_Format: () => (RGBA_ASTC_5x4_Format),
-  RGBA_ASTC_5x5_Format: () => (RGBA_ASTC_5x5_Format),
-  RGBA_ASTC_6x5_Format: () => (RGBA_ASTC_6x5_Format),
-  RGBA_ASTC_6x6_Format: () => (RGBA_ASTC_6x6_Format),
-  RGBA_ASTC_8x5_Format: () => (RGBA_ASTC_8x5_Format),
-  RGBA_ASTC_8x6_Format: () => (RGBA_ASTC_8x6_Format),
-  RGBA_ASTC_8x8_Format: () => (RGBA_ASTC_8x8_Format),
-  RGBA_BPTC_Format: () => (RGBA_BPTC_Format),
-  RGBA_ETC2_EAC_Format: () => (RGBA_ETC2_EAC_Format),
-  RGBA_PVRTC_2BPPV1_Format: () => (RGBA_PVRTC_2BPPV1_Format),
-  RGBA_PVRTC_4BPPV1_Format: () => (RGBA_PVRTC_4BPPV1_Format),
-  RGBA_S3TC_DXT1_Format: () => (RGBA_S3TC_DXT1_Format),
-  RGBA_S3TC_DXT3_Format: () => (RGBA_S3TC_DXT3_Format),
-  RGBA_S3TC_DXT5_Format: () => (RGBA_S3TC_DXT5_Format),
-  RGBDepthPacking: () => (RGBDepthPacking),
-  RGBFormat: () => (RGBFormat),
-  RGBIntegerFormat: () => (RGBIntegerFormat),
-  RGB_BPTC_SIGNED_Format: () => (RGB_BPTC_SIGNED_Format),
-  RGB_BPTC_UNSIGNED_Format: () => (RGB_BPTC_UNSIGNED_Format),
-  RGB_ETC1_Format: () => (RGB_ETC1_Format),
-  RGB_ETC2_Format: () => (RGB_ETC2_Format),
-  RGB_PVRTC_2BPPV1_Format: () => (RGB_PVRTC_2BPPV1_Format),
-  RGB_PVRTC_4BPPV1_Format: () => (RGB_PVRTC_4BPPV1_Format),
-  RGB_S3TC_DXT1_Format: () => (RGB_S3TC_DXT1_Format),
-  RGDepthPacking: () => (RGDepthPacking),
-  RGFormat: () => (RGFormat),
-  RGIntegerFormat: () => (RGIntegerFormat),
+  R11_EAC_Format: () => ((/* inlined export .R11_EAC_Format */37488)),
+  RED_GREEN_RGTC2_Format: () => ((/* inlined export .RED_GREEN_RGTC2_Format */36285)),
+  RED_RGTC1_Format: () => ((/* inlined export .RED_RGTC1_Format */36283)),
+  REVISION: () => ((/* inlined export .REVISION */"186")),
+  RG11_EAC_Format: () => ((/* inlined export .RG11_EAC_Format */37490)),
+  RGBADepthPacking: () => ((/* inlined export .RGBADepthPacking */3201)),
+  RGBAFormat: () => ((/* inlined export .RGBAFormat */1023)),
+  RGBAIntegerFormat: () => ((/* inlined export .RGBAIntegerFormat */1033)),
+  RGBA_ASTC_10x10_Format: () => ((/* inlined export .RGBA_ASTC_10x10_Format */37819)),
+  RGBA_ASTC_10x5_Format: () => ((/* inlined export .RGBA_ASTC_10x5_Format */37816)),
+  RGBA_ASTC_10x6_Format: () => ((/* inlined export .RGBA_ASTC_10x6_Format */37817)),
+  RGBA_ASTC_10x8_Format: () => ((/* inlined export .RGBA_ASTC_10x8_Format */37818)),
+  RGBA_ASTC_12x10_Format: () => ((/* inlined export .RGBA_ASTC_12x10_Format */37820)),
+  RGBA_ASTC_12x12_Format: () => ((/* inlined export .RGBA_ASTC_12x12_Format */37821)),
+  RGBA_ASTC_4x4_Format: () => ((/* inlined export .RGBA_ASTC_4x4_Format */37808)),
+  RGBA_ASTC_5x4_Format: () => ((/* inlined export .RGBA_ASTC_5x4_Format */37809)),
+  RGBA_ASTC_5x5_Format: () => ((/* inlined export .RGBA_ASTC_5x5_Format */37810)),
+  RGBA_ASTC_6x5_Format: () => ((/* inlined export .RGBA_ASTC_6x5_Format */37811)),
+  RGBA_ASTC_6x6_Format: () => ((/* inlined export .RGBA_ASTC_6x6_Format */37812)),
+  RGBA_ASTC_8x5_Format: () => ((/* inlined export .RGBA_ASTC_8x5_Format */37813)),
+  RGBA_ASTC_8x6_Format: () => ((/* inlined export .RGBA_ASTC_8x6_Format */37814)),
+  RGBA_ASTC_8x8_Format: () => ((/* inlined export .RGBA_ASTC_8x8_Format */37815)),
+  RGBA_BPTC_Format: () => ((/* inlined export .RGBA_BPTC_Format */36492)),
+  RGBA_ETC2_EAC_Format: () => ((/* inlined export .RGBA_ETC2_EAC_Format */37496)),
+  RGBA_PVRTC_2BPPV1_Format: () => ((/* inlined export .RGBA_PVRTC_2BPPV1_Format */35843)),
+  RGBA_PVRTC_4BPPV1_Format: () => ((/* inlined export .RGBA_PVRTC_4BPPV1_Format */35842)),
+  RGBA_S3TC_DXT1_Format: () => ((/* inlined export .RGBA_S3TC_DXT1_Format */33777)),
+  RGBA_S3TC_DXT3_Format: () => ((/* inlined export .RGBA_S3TC_DXT3_Format */33778)),
+  RGBA_S3TC_DXT5_Format: () => ((/* inlined export .RGBA_S3TC_DXT5_Format */33779)),
+  RGBDepthPacking: () => ((/* inlined export .RGBDepthPacking */3202)),
+  RGBFormat: () => ((/* inlined export .RGBFormat */1022)),
+  RGBIntegerFormat: () => ((/* inlined export .RGBIntegerFormat */1032)),
+  RGB_BPTC_SIGNED_Format: () => ((/* inlined export .RGB_BPTC_SIGNED_Format */36494)),
+  RGB_BPTC_UNSIGNED_Format: () => ((/* inlined export .RGB_BPTC_UNSIGNED_Format */36495)),
+  RGB_ETC1_Format: () => ((/* inlined export .RGB_ETC1_Format */36196)),
+  RGB_ETC2_Format: () => ((/* inlined export .RGB_ETC2_Format */37492)),
+  RGB_PVRTC_2BPPV1_Format: () => ((/* inlined export .RGB_PVRTC_2BPPV1_Format */35841)),
+  RGB_PVRTC_4BPPV1_Format: () => ((/* inlined export .RGB_PVRTC_4BPPV1_Format */35840)),
+  RGB_S3TC_DXT1_Format: () => ((/* inlined export .RGB_S3TC_DXT1_Format */33776)),
+  RGDepthPacking: () => ((/* inlined export .RGDepthPacking */3203)),
+  RGFormat: () => ((/* inlined export .RGFormat */1030)),
+  RGIntegerFormat: () => ((/* inlined export .RGIntegerFormat */1031)),
   RawShaderMaterial: () => (RawShaderMaterial),
   Ray: () => (Ray),
   Raycaster: () => (Raycaster),
   RectAreaLight: () => (RectAreaLight),
-  RedFormat: () => (RedFormat),
-  RedIntegerFormat: () => (RedIntegerFormat),
-  ReinhardToneMapping: () => (ReinhardToneMapping),
+  RedFormat: () => ((/* inlined export .RedFormat */1028)),
+  RedIntegerFormat: () => ((/* inlined export .RedIntegerFormat */1029)),
+  ReinhardToneMapping: () => ((/* inlined export .ReinhardToneMapping */2)),
   RenderObjectRefreshType: () => (RenderObjectRefreshType),
   RenderTarget: () => (RenderTarget),
   RenderTarget3D: () => (RenderTarget3D),
-  RepeatWrapping: () => (RepeatWrapping),
-  ReplaceStencilOp: () => (ReplaceStencilOp),
-  ReverseSubtractEquation: () => (ReverseSubtractEquation),
+  RepeatWrapping: () => ((/* inlined export .RepeatWrapping */1000)),
+  ReplaceStencilOp: () => ((/* inlined export .ReplaceStencilOp */7681)),
+  ReverseSubtractEquation: () => ((/* inlined export .ReverseSubtractEquation */102)),
   RingGeometry: () => (RingGeometry),
-  SIGNED_R11_EAC_Format: () => (SIGNED_R11_EAC_Format),
-  SIGNED_RED_GREEN_RGTC2_Format: () => (SIGNED_RED_GREEN_RGTC2_Format),
-  SIGNED_RED_RGTC1_Format: () => (SIGNED_RED_RGTC1_Format),
-  SIGNED_RG11_EAC_Format: () => (SIGNED_RG11_EAC_Format),
-  SRGBColorSpace: () => (SRGBColorSpace),
-  SRGBTransfer: () => (SRGBTransfer),
+  SIGNED_R11_EAC_Format: () => ((/* inlined export .SIGNED_R11_EAC_Format */37489)),
+  SIGNED_RED_GREEN_RGTC2_Format: () => ((/* inlined export .SIGNED_RED_GREEN_RGTC2_Format */36286)),
+  SIGNED_RED_RGTC1_Format: () => ((/* inlined export .SIGNED_RED_RGTC1_Format */36284)),
+  SIGNED_RG11_EAC_Format: () => ((/* inlined export .SIGNED_RG11_EAC_Format */37491)),
+  SRGBColorSpace: () => ((/* inlined export .SRGBColorSpace */"srgb")),
+  SRGBTransfer: () => ((/* inlined export .SRGBTransfer */"srgb")),
   Scene: () => (Scene),
   ShaderChunk: () => (ShaderChunk),
   ShaderLib: () => (ShaderLib),
@@ -365,7 +553,7 @@ __webpack_require__.d(three_module_namespaceObject, {
   ShapeGeometry: () => (ShapeGeometry),
   ShapePath: () => (ShapePath),
   ShapeUtils: () => (ShapeUtils),
-  ShortType: () => (ShortType),
+  ShortType: () => ((/* inlined export .ShortType */1011)),
   Skeleton: () => (Skeleton),
   SkeletonHelper: () => (SkeletonHelper),
   SkinnedMesh: () => (SkinnedMesh),
@@ -379,21 +567,21 @@ __webpack_require__.d(three_module_namespaceObject, {
   SpotLightHelper: () => (SpotLightHelper),
   Sprite: () => (Sprite),
   SpriteMaterial: () => (SpriteMaterial),
-  SrcAlphaFactor: () => (SrcAlphaFactor),
-  SrcAlphaSaturateFactor: () => (SrcAlphaSaturateFactor),
-  SrcColorFactor: () => (SrcColorFactor),
-  StaticCopyUsage: () => (StaticCopyUsage),
-  StaticDrawUsage: () => (StaticDrawUsage),
-  StaticReadUsage: () => (StaticReadUsage),
+  SrcAlphaFactor: () => ((/* inlined export .SrcAlphaFactor */204)),
+  SrcAlphaSaturateFactor: () => ((/* inlined export .SrcAlphaSaturateFactor */210)),
+  SrcColorFactor: () => ((/* inlined export .SrcColorFactor */202)),
+  StaticCopyUsage: () => ((/* inlined export .StaticCopyUsage */35046)),
+  StaticDrawUsage: () => ((/* inlined export .StaticDrawUsage */35044)),
+  StaticReadUsage: () => ((/* inlined export .StaticReadUsage */35045)),
   StereoCamera: () => (StereoCamera),
-  StreamCopyUsage: () => (StreamCopyUsage),
-  StreamDrawUsage: () => (StreamDrawUsage),
-  StreamReadUsage: () => (StreamReadUsage),
+  StreamCopyUsage: () => ((/* inlined export .StreamCopyUsage */35042)),
+  StreamDrawUsage: () => ((/* inlined export .StreamDrawUsage */35040)),
+  StreamReadUsage: () => ((/* inlined export .StreamReadUsage */35041)),
   StringKeyframeTrack: () => (StringKeyframeTrack),
-  SubtractEquation: () => (SubtractEquation),
-  SubtractiveBlending: () => (SubtractiveBlending),
+  SubtractEquation: () => ((/* inlined export .SubtractEquation */101)),
+  SubtractiveBlending: () => ((/* inlined export .SubtractiveBlending */3)),
   TOUCH: () => (TOUCH),
-  TangentSpaceNormalMap: () => (TangentSpaceNormalMap),
+  TangentSpaceNormalMap: () => ((/* inlined export .TangentSpaceNormalMap */0)),
   TetrahedronGeometry: () => (TetrahedronGeometry),
   Texture: () => (Texture),
   TextureLoader: () => (TextureLoader),
@@ -404,11 +592,11 @@ __webpack_require__.d(three_module_namespaceObject, {
   TorusGeometry: () => (TorusGeometry),
   TorusKnotGeometry: () => (TorusKnotGeometry),
   Triangle: () => (Triangle),
-  TriangleFanDrawMode: () => (TriangleFanDrawMode),
-  TriangleStripDrawMode: () => (TriangleStripDrawMode),
-  TrianglesDrawMode: () => (TrianglesDrawMode),
+  TriangleFanDrawMode: () => ((/* inlined export .TriangleFanDrawMode */2)),
+  TriangleStripDrawMode: () => ((/* inlined export .TriangleStripDrawMode */1)),
+  TrianglesDrawMode: () => ((/* inlined export .TrianglesDrawMode */0)),
   TubeGeometry: () => (TubeGeometry),
-  UVMapping: () => (UVMapping),
+  UVMapping: () => ((/* inlined export .UVMapping */300)),
   Uint16BufferAttribute: () => (Uint16BufferAttribute),
   Uint32BufferAttribute: () => (Uint32BufferAttribute),
   Uint8BufferAttribute: () => (Uint8BufferAttribute),
@@ -417,15 +605,15 @@ __webpack_require__.d(three_module_namespaceObject, {
   UniformsGroup: () => (UniformsGroup),
   UniformsLib: () => (UniformsLib),
   UniformsUtils: () => (UniformsUtils),
-  UnsignedByteType: () => (UnsignedByteType),
-  UnsignedInt101111Type: () => (UnsignedInt101111Type),
-  UnsignedInt248Type: () => (UnsignedInt248Type),
-  UnsignedInt5999Type: () => (UnsignedInt5999Type),
-  UnsignedIntType: () => (UnsignedIntType),
-  UnsignedShort4444Type: () => (UnsignedShort4444Type),
-  UnsignedShort5551Type: () => (UnsignedShort5551Type),
-  UnsignedShortType: () => (UnsignedShortType),
-  VSMShadowMap: () => (VSMShadowMap),
+  UnsignedByteType: () => ((/* inlined export .UnsignedByteType */1009)),
+  UnsignedInt101111Type: () => ((/* inlined export .UnsignedInt101111Type */35899)),
+  UnsignedInt248Type: () => ((/* inlined export .UnsignedInt248Type */1020)),
+  UnsignedInt5999Type: () => ((/* inlined export .UnsignedInt5999Type */35902)),
+  UnsignedIntType: () => ((/* inlined export .UnsignedIntType */1014)),
+  UnsignedShort4444Type: () => ((/* inlined export .UnsignedShort4444Type */1017)),
+  UnsignedShort5551Type: () => ((/* inlined export .UnsignedShort5551Type */1018)),
+  UnsignedShortType: () => ((/* inlined export .UnsignedShortType */1012)),
+  VSMShadowMap: () => ((/* inlined export .VSMShadowMap */3)),
   Vector2: () => (Vector2),
   Vector3: () => (Vector3),
   Vector4: () => (Vector4),
@@ -434,21 +622,21 @@ __webpack_require__.d(three_module_namespaceObject, {
   VideoTexture: () => (VideoTexture),
   WebGL3DRenderTarget: () => (WebGL3DRenderTarget),
   WebGLArrayRenderTarget: () => (WebGLArrayRenderTarget),
-  WebGLCoordinateSystem: () => (WebGLCoordinateSystem),
+  WebGLCoordinateSystem: () => ((/* inlined export .WebGLCoordinateSystem */2000)),
   WebGLCubeRenderTarget: () => (WebGLCubeRenderTarget),
   WebGLRenderTarget: () => (WebGLRenderTarget),
   WebGLRenderer: () => (WebGLRenderer),
   WebGLUtils: () => (WebGLUtils),
-  WebGPUCoordinateSystem: () => (WebGPUCoordinateSystem),
+  WebGPUCoordinateSystem: () => ((/* inlined export .WebGPUCoordinateSystem */2001)),
   WebXRController: () => (WebXRController),
   WireframeGeometry: () => (WireframeGeometry),
-  WrapAroundEnding: () => (WrapAroundEnding),
-  ZeroCurvatureEnding: () => (ZeroCurvatureEnding),
-  ZeroFactor: () => (ZeroFactor),
-  ZeroSlopeEnding: () => (ZeroSlopeEnding),
-  ZeroStencilOp: () => (ZeroStencilOp),
+  WrapAroundEnding: () => ((/* inlined export .WrapAroundEnding */2402)),
+  ZeroCurvatureEnding: () => ((/* inlined export .ZeroCurvatureEnding */2400)),
+  ZeroFactor: () => ((/* inlined export .ZeroFactor */200)),
+  ZeroSlopeEnding: () => ((/* inlined export .ZeroSlopeEnding */2401)),
+  ZeroStencilOp: () => ((/* inlined export .ZeroStencilOp */0)),
   createCanvasElement: () => (createCanvasElement),
-  error: () => (error),
+  error: () => (three_core_error),
   getConsoleFunction: () => (getConsoleFunction),
   log: () => (log),
   setConsoleFunction: () => (setConsoleFunction),
@@ -458,9 +646,10 @@ __webpack_require__.d(three_module_namespaceObject, {
 
 // EXTERNAL MODULE: ./node_modules/remotion/dist/esm/index.mjs
 var esm = __webpack_require__(3947);
-// EXTERNAL MODULE: ./node_modules/react/index.js
-var react = __webpack_require__(6540);
-var react_namespaceObject = /*#__PURE__*/__webpack_require__.t(react, 2);
+;// EXTERNAL MODULE: ./node_modules/react/index.js
+react_namespaceFn();
+
+function react_namespaceObject() { return react_namespaceObject.c || (react_namespaceObject.c = __webpack_require__.t(react_namespaceFn(), 2)); }
 ;// ./src/comun.tsx
 
 
@@ -499,26 +688,26 @@ const FUENTES = [
 let cargadas = null;
 const cargarFuentes = () => {
   cargadas = cargadas || Promise.all(FUENTES.map(async ([n, f, d]) => {
-    const ff = new FontFace(n, `url(${(0,esm.staticFile)(f)})`, d);
+    const ff = new FontFace(n, `url(${(0,esm/* staticFile */.dQ)(f)})`, d);
     await ff.load();
     document.fonts.add(ff);
   })).then(() => void 0);
   return cargadas;
 };
 const useFuentes = () => {
-  const [h] = (0,react.useState)(() => (0,esm.delayRender)("fuentes"));
-  (0,react.useEffect)(() => {
-    cargarFuentes().then(() => (0,esm.continueRender)(h)).catch(() => (0,esm.continueRender)(h));
+  const [h] = (0,react_namespaceFn().useState)(() => (0,esm/* delayRender */.IH)("fuentes"));
+  (0,react_namespaceFn().useEffect)(() => {
+    cargarFuentes().then(() => (0,esm/* continueRender */._8)(h)).catch(() => (0,esm/* continueRender */._8)(h));
   }, [h]);
 };
 const useU = () => {
-  const { width, height } = (0,esm.useVideoConfig)();
+  const { width, height } = (0,esm/* useVideoConfig */.Bk)();
   return Math.min(width, height) / 1080;
 };
 const useResorte = () => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps } = (0,esm.useVideoConfig)();
-  return (t0, config = {}) => (0,esm.spring)({ frame: frame - Math.round(t0 * fps), fps, config: { damping: 14, stiffness: 160, mass: 1, ...config } });
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
+  return (t0, config = {}) => (0,esm/* spring */.oz)({ frame: frame - Math.round(t0 * fps), fps, config: { damping: 14, stiffness: 160, mass: 1, ...config } });
 };
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const rgb = (hex) => {
@@ -533,14 +722,14 @@ const rgb = (hex) => {
 
 let mapa = null;
 const useMapa = () => {
-  const [m, setM] = (0,react.useState)(null);
-  const [h] = (0,react.useState)(() => (0,esm.delayRender)("mapa"));
-  (0,react.useEffect)(() => {
-    mapa = mapa || fetch((0,esm.staticFile)("mapa/paises.json")).then((r) => r.json());
+  const [m, setM] = (0,react_namespaceFn().useState)(null);
+  const [h] = (0,react_namespaceFn().useState)(() => (0,esm/* delayRender */.IH)("mapa"));
+  (0,react_namespaceFn().useEffect)(() => {
+    mapa = mapa || fetch((0,esm/* staticFile */.dQ)("mapa/paises.json")).then((r) => r.json());
     mapa.then((x) => {
       setM(x);
-      (0,esm.continueRender)(h);
-    }).catch(() => (0,esm.continueRender)(h));
+      (0,esm/* continueRender */._8)(h);
+    }).catch(() => (0,esm/* continueRender */._8)(h));
   }, [h]);
   return m;
 };
@@ -557,14 +746,14 @@ const Bandera = ({ iso, ancho, t }) => {
       height: alto,
       overflow: "hidden",
       filter: `brightness(${(1 + 0.16 * Math.cos(fase)).toFixed(3)})`
-    } }, /* @__PURE__ */ React.createElement(esm.Img, { src: (0,esm.staticFile)(`mapa/banderas/${iso}.svg`), style: { position: "absolute", left: -i * w, top: 0, width: ancho, height: alto } }));
+    } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`mapa/banderas/${iso}.svg`), style: { position: "absolute", left: -i * w, top: 0, width: ancho, height: alto } }));
   }));
 };
 const Ubicacion = ({ pais, nombre, kicker = "UBICACI\xD3N", acento = "#c9a46a", fondo = "#0a0f1e", fuente = "grotesk", salida = 0.4 }) => {
   useFuentes();
   const m = useMapa();
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width: W, height: H, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU();
   const S = useResorte();
   const t = frame / fps;
@@ -589,12 +778,12 @@ const Ubicacion = ({ pais, nombre, kicker = "UBICACI\xD3N", acento = "#c9a46a", 
   const pin = S(1.05, { damping: 9, stiffness: 180 });
   const carta = S(1.25, { damping: 15, stiffness: 140 });
   const nombreTxt = (nombre || (p == null ? void 0 : p.es) || iso.toUpperCase()).toUpperCase();
-  const entra = (0,esm.interpolate)(t, [0, 0.35], [0, 1], { extrapolateRight: "clamp" });
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q, transform: `scale(${1 - 0.04 * q})` } }, /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: {
+  const entra = (0,esm/* interpolate */.GW)(t, [0, 0.35], [0, 1], { extrapolateRight: "clamp" });
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, transform: `scale(${1 - 0.04 * q})` } }, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: {
     background: `radial-gradient(120% 80% at 50% 35%, rgba(${ar},${ag},${ab},0.22), rgba(${ar},${ag},${ab},0) 60%), ${fondo}`,
     // base OPACA debajo
     clipPath: `circle(${(entra * 140).toFixed(2)}% at 50% 108%)`
-  } }, /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: {
+  } }, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: {
     background: `linear-gradient(115deg, transparent 30%, rgba(${ar},${ag},${ab},0.10) 48%, transparent 62%)`,
     transform: `translateX(${Math.sin(t * 0.6) * 6}%)`
   } }), /* @__PURE__ */ React.createElement("svg", { width: mapW, height: mapH, viewBox: vb.map((v) => v.toFixed(2)).join(" "), style: { position: "absolute", left: 0, top: vertical ? H * 0.04 : 0 } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("filter", { id: "brillo", x: "-50%", y: "-50%", width: "200%", height: "200%" }, /* @__PURE__ */ React.createElement("feGaussianBlur", { stdDeviation: Math.max(0.6, vb[2] / 160), result: "b" }), /* @__PURE__ */ React.createElement("feMerge", null, /* @__PURE__ */ React.createElement("feMergeNode", { in: "b" }), /* @__PURE__ */ React.createElement("feMergeNode", { in: "SourceGraphic" })))), m && Object.entries(m.paises).map(([k, v]) => /* @__PURE__ */ React.createElement("path", { key: k, d: v.d, fill: k === iso ? "none" : "rgba(255,255,255,0.07)", stroke: "rgba(255,255,255,0.16)", strokeWidth: vb[2] / 900 })), p && /* @__PURE__ */ React.createElement(
@@ -673,22 +862,22 @@ const est = (e) => ESTILOS[e] || ESTILOS.dorado;
 const urlSticker = (s) => {
   if (!s) return "";
   const [tipo, n] = s.includes(":") ? s.split(":") : ["emoji", s];
-  return tipo === "3d" ? (0,esm.staticFile)(`iconos3d/${n}.png`) : (0,esm.staticFile)(`stickers/rcs_emoji_${n}.png`);
+  return tipo === "3d" ? (0,esm/* staticFile */.dQ)(`iconos3d/${n}.png`) : (0,esm/* staticFile */.dQ)(`stickers/rcs_emoji_${n}.png`);
 };
 const useSalida = (salida = 0.35) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps, fin = durationInFrames / fps;
   return { t, q: clamp((t - (fin - salida)) / salida), fin };
 };
 const Particulas = ({ n = 18, color, tipo = "bokeh", semilla = "p" }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width: W, height: H } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(W, H) / 1080, t = frame / fps;
   const [r, g, b] = rgb(color);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { pointerEvents: "none" } }, Array.from({ length: n }).map((_, i) => {
-    const x = (0,esm.random)(`${semilla}x${i}`) * W, y0 = (0,esm.random)(`${semilla}y${i}`) * H, v = 18 + (0,esm.random)(`${semilla}v${i}`) * 40;
-    const tam = (tipo === "destellos" ? 10 : 14) * U + (0,esm.random)(`${semilla}s${i}`) * 34 * U;
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { pointerEvents: "none" } }, Array.from({ length: n }).map((_, i) => {
+    const x = (0,esm/* random */.yT)(`${semilla}x${i}`) * W, y0 = (0,esm/* random */.yT)(`${semilla}y${i}`) * H, v = 18 + (0,esm/* random */.yT)(`${semilla}v${i}`) * 40;
+    const tam = (tipo === "destellos" ? 10 : 14) * U + (0,esm/* random */.yT)(`${semilla}s${i}`) * 34 * U;
     const y = ((y0 - t * v * U) % H + H) % H, osc = Math.sin(t * 1.3 + i) * 18 * U;
     const brillo = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 2.4 + i * 1.7));
     if (tipo === "petalos")
@@ -717,12 +906,12 @@ const Particulas = ({ n = 18, color, tipo = "bokeh", semilla = "p" }) => {
 };
 const Sticker = ({ src, tam, t0, x, y, saluda }) => {
   const S = useResorte();
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps, p = S(t0, { damping: 9, stiffness: 170 });
   if (!src || t < t0 - 0.05) return null;
   const giro = saluda ? Math.sin((t - t0) * 9) * 16 : Math.sin((t - t0) * 1.6) * 6;
-  return /* @__PURE__ */ React.createElement(esm.Img, { src, style: {
+  return /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src, style: {
     position: "absolute",
     left: x - tam / 2,
     top: y - tam / 2 + Math.sin((t - t0) * 2) * tam * 0.04,
@@ -744,15 +933,15 @@ const Halo = ({ x, y, w, h, fuerza = 0.42, p = 1 }) => /* @__PURE__ */ React.cre
   background: `radial-gradient(closest-side, rgba(0,0,0,${fuerza}), rgba(0,0,0,${fuerza * 0.45}) 55%, rgba(0,0,0,0))`
 } });
 const Escrito = ({ texto, t0, dur = 0.9, style }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
   const p = clamp((frame / fps - t0) / dur);
   const e = 1 - Math.pow(1 - p, 3);
   return /* @__PURE__ */ React.createElement("div", { style: { ...style, clipPath: `inset(-20% ${((1 - e) * 100).toFixed(2)}% -30% -5%)`, filter: `blur(${((1 - e) * 6).toFixed(2)}px)` } }, texto);
 };
 const Titulo = ({ kicker = "", titulo, subtitulo = "", estilo = "dorado", letra = "script", adorno = "lineas", tarjeta = false, sticker = "", y = 30, escala = 1, salida = 0.4 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = useSalida(salida);
   const E = est(estilo);
@@ -760,7 +949,7 @@ const Titulo = ({ kicker = "", titulo, subtitulo = "", estilo = "dorado", letra 
   const tam = Math.min(150 * U, W * 0.86 / Math.max(4, titulo.length) * (letra === "sans" ? 1.75 : 2.05));
   const linea = S(0.15, { damping: 18 }), k = S(0.05, { damping: 16 }), sub = S(0.75, { damping: 16 });
   const cy = H * y / 100;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q, transform: `translateY(${(-q * 30 * U).toFixed(1)}px)` } }, !tarjeta && estilo !== "editorial" && /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: Math.min(W * 1.05, tam * titulo.length * 0.62 + 320 * U), h: tam * 2.6 + (subtitulo ? 90 * U : 0), p: k * 1.5 }), adorno !== "lineas" && adorno !== "ninguno" && /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: adorno === "petalos" ? "petalos" : adorno === "destellos" ? "destellos" : "bokeh", n: adorno === "bokeh" ? 14 : 22, semilla: titulo }), /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, transform: `translateY(${(-q * 30 * U).toFixed(1)}px)` } }, !tarjeta && estilo !== "editorial" && /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: Math.min(W * 1.05, tam * titulo.length * 0.62 + 320 * U), h: tam * 2.6 + (subtitulo ? 90 * U : 0), p: k * 1.5 }), adorno !== "lineas" && adorno !== "ninguno" && /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: adorno === "petalos" ? "petalos" : adorno === "destellos" ? "destellos" : "bokeh", n: adorno === "bokeh" ? 14 : 22, semilla: titulo }), /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: cy,
@@ -812,13 +1001,13 @@ const Titulo = ({ kicker = "", titulo, subtitulo = "", estilo = "dorado", letra 
 };
 const Saludo = ({ linea1 = "\xA1Hola", linea2 = "amigos!", estilo = "rosa", sticker = "emoji:waving_hand", y = 24, escala = 1, salida = 0.4 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { q } = useSalida(salida);
   const E = est(estilo);
   const p2 = S(0.75, { damping: 11, stiffness: 150 });
   const cy = H * y / 100;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: W * 0.95, h: 360 * U }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "destellos", n: 14, semilla: linea1 + linea2 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: cy, transform: "translate(-50%,-50%)", textAlign: "center" } }, /* @__PURE__ */ React.createElement(Escrito, { texto: linea1, t0: 0.1, dur: 0.7, style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: W * 0.95, h: 360 * U }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "destellos", n: 14, semilla: linea1 + linea2 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: cy, transform: "translate(-50%,-50%)", textAlign: "center" } }, /* @__PURE__ */ React.createElement(Escrito, { texto: linea1, t0: 0.1, dur: 0.7, style: {
     fontFamily: FAMILIA.serif,
     fontStyle: "italic",
     fontSize: 150 * U,
@@ -838,15 +1027,15 @@ const Saludo = ({ linea1 = "\xA1Hola", linea2 = "amigos!", estilo = "rosa", stic
 };
 const Capitulos = ({ capitulos = "Maquillaje,Ceremonia,Fiesta,El show", actual = 0, estilo = "blanco", y = 12, escala = 1, salida = 0.35 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = useSalida(salida);
   const E = est(estilo);
   const lista = capitulos.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 6);
   const entra = S(0.05, { damping: 16 });
   const ancho = Math.min(W * 0.9, 220 * U * lista.length), paso = ancho / Math.max(1, lista.length - 1 || 1);
-  const avance = clamp((0,esm.interpolate)(t, [0.4, 1.4], [Math.max(0, actual - 1), actual], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) / Math.max(1, lista.length - 1));
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: (1 - q) * clamp(entra * 1.5) } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: (W - ancho) / 2, top: H * y / 100, width: ancho, transform: `translateY(${((1 - clamp(entra)) * -30 * U).toFixed(1)}px)` } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 18 * U, left: 0, width: ancho, height: 3 * U, background: "rgba(255,255,255,.25)", borderRadius: 3 * U } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 18 * U, left: 0, width: ancho * avance, height: 3 * U, background: E.acento, borderRadius: 3 * U, boxShadow: `0 0 ${12 * U}px ${E.acento}` } }), lista.map((c, i) => {
+  const avance = clamp((0,esm/* interpolate */.GW)(t, [0.4, 1.4], [Math.max(0, actual - 1), actual], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) / Math.max(1, lista.length - 1));
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: (1 - q) * clamp(entra * 1.5) } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: (W - ancho) / 2, top: H * y / 100, width: ancho, transform: `translateY(${((1 - clamp(entra)) * -30 * U).toFixed(1)}px)` } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 18 * U, left: 0, width: ancho, height: 3 * U, background: "rgba(255,255,255,.25)", borderRadius: 3 * U } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 18 * U, left: 0, width: ancho * avance, height: 3 * U, background: E.acento, borderRadius: 3 * U, boxShadow: `0 0 ${12 * U}px ${E.acento}` } }), lista.map((c, i) => {
     const on = i <= actual, x = lista.length > 1 ? i * paso : ancho / 2;
     return /* @__PURE__ */ React.createElement("div", { key: i, style: { position: "absolute", left: x, top: 0, transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 * U } }, /* @__PURE__ */ React.createElement("div", { style: {
       width: 38 * U,
@@ -870,13 +1059,13 @@ const Capitulos = ({ capitulos = "Maquillaje,Ceremonia,Fiesta,El show", actual =
 };
 const Fecha = ({ dia = "25", mes = "OCTUBRE", anio = "2026", texto = "SAVE THE DATE", estilo = "dorado", sticker = "emoji:two_hearts", y = 30, escala = 1, salida = 0.4 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { q } = useSalida(salida);
   const E = est(estilo);
   const gira = S(0.1, { damping: 13, stiffness: 120 }), num = S(0.5, { damping: 10 });
   const cw = 380 * U, cy = H * y / 100;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: cy,
@@ -910,14 +1099,14 @@ const Fecha = ({ dia = "25", mes = "OCTUBRE", anio = "2026", texto = "SAVE THE D
 };
 const Pareja = ({ nombre1 = "Ana", nombre2 = "Luis", texto = "", estilo = "dorado", sticker = "emoji:gem_stone", y = 28, escala = 1, salida = 0.45 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { q } = useSalida(salida);
   const E = est(estilo);
   const amp = S(0.55, { damping: 8, stiffness: 140 });
   const cy = H * y / 100;
   const fs = Math.min(140 * U, W * 0.42 / Math.max(3, Math.max(nombre1.length, nombre2.length)) * 2.1);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: W * 0.98, h: fs * 2.6 }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "petalos", n: 16, semilla: nombre1 + nombre2 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: cy, transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", gap: 24 * U } }, /* @__PURE__ */ React.createElement(Escrito, { texto: nombre1, t0: 0.1, style: { fontFamily: FAMILIA.serif, fontStyle: "italic", fontSize: fs, color: E.texto, textShadow: `0 6px 24px ${E.sombra}`, whiteSpace: "nowrap" } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.serif, fontSize: fs * 1.25, color: E.acento, transform: `scale(${Math.max(1e-3, amp).toFixed(3)})`, textShadow: `0 0 ${30 * U}px ${E.acento}` } }, "&"), /* @__PURE__ */ React.createElement(Escrito, { texto: nombre2, t0: 0.7, style: { fontFamily: FAMILIA.serif, fontStyle: "italic", fontSize: fs, color: E.texto, textShadow: `0 6px 24px ${E.sombra}`, whiteSpace: "nowrap" } })), texto && /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: W * 0.98, h: fs * 2.6 }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "petalos", n: 16, semilla: nombre1 + nombre2 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: cy, transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", gap: 24 * U } }, /* @__PURE__ */ React.createElement(Escrito, { texto: nombre1, t0: 0.1, style: { fontFamily: FAMILIA.serif, fontStyle: "italic", fontSize: fs, color: E.texto, textShadow: `0 6px 24px ${E.sombra}`, whiteSpace: "nowrap" } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.serif, fontSize: fs * 1.25, color: E.acento, transform: `scale(${Math.max(1e-3, amp).toFixed(3)})`, textShadow: `0 0 ${30 * U}px ${E.acento}` } }, "&"), /* @__PURE__ */ React.createElement(Escrito, { texto: nombre2, t0: 0.7, style: { fontFamily: FAMILIA.serif, fontStyle: "italic", fontSize: fs, color: E.texto, textShadow: `0 6px 24px ${E.sombra}`, whiteSpace: "nowrap" } })), texto && /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: cy + fs * 0.95,
@@ -932,13 +1121,13 @@ const Pareja = ({ nombre1 = "Ana", nombre2 = "Luis", texto = "", estilo = "dorad
 };
 const Pastilla = ({ texto = "MOMENTO DEL D\xCDA", estilo = "dorado", sticker = "emoji:sparkles", y = 18, escala = 1, salida = 0.3 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = useSalida(salida);
   const E = est(estilo);
   const p = S(0.05, { damping: 12, stiffness: 180 });
   const brillo = 0.5 + 0.5 * Math.sin(t * 4);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -951,15 +1140,15 @@ const Pastilla = ({ texto = "MOMENTO DEL D\xCDA", estilo = "dorado", sticker = "
     background: E.tarjeta,
     border: `${2 * U}px solid ${E.acento}`,
     boxShadow: `0 0 ${(20 + 20 * brillo) * U}px ${E.acento}88, 0 ${10 * U}px ${30 * U}px rgba(0,0,0,.35)`
-  } }, sticker && /* @__PURE__ */ React.createElement(esm.Img, { src: urlSticker(sticker), style: { width: 54 * U, height: 54 * U, transform: `rotate(${(Math.sin(t * 3) * 10).toFixed(1)}deg)` } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.16em", color: E.texto === "#111111" ? "#111" : "#fff", whiteSpace: "nowrap" } }, texto)));
+  } }, sticker && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: urlSticker(sticker), style: { width: 54 * U, height: 54 * U, transform: `rotate(${(Math.sin(t * 3) * 10).toFixed(1)}deg)` } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.16em", color: E.texto === "#111111" ? "#111" : "#fff", whiteSpace: "nowrap" } }, texto)));
 };
 const Encuesta = ({ pregunta = "\xBFQu\xE9 prefieres?", op1 = "S\xED, todos", op2 = "Tranquila", pct1 = 68, estilo = "blanco", y = 70, escala = 1, salida = 0.35 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = useSalida(salida);
   const E = est(estilo);
-  const p = S(0.05, { damping: 15 }), barra = clamp((0,esm.interpolate)(t, [0.9, 1.8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+  const p = S(0.05, { damping: 15 }), barra = clamp((0,esm/* interpolate */.GW)(t, [0.9, 1.8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   const ancho = Math.min(W * 0.86, 820 * U);
   const opc = (txt, pct, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: {
     position: "relative",
@@ -970,7 +1159,7 @@ const Encuesta = ({ pregunta = "\xBFQu\xE9 prefieres?", op1 = "S\xED, todos", op
     border: `${2 * U}px solid rgba(255,255,255,.35)`,
     opacity: clamp(S(0.35 + i * 0.15) * 2)
   } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${(pct * barra).toFixed(1)}%`, background: i === 0 ? `${E.acento === "#FFFFFF" ? "#ffffff" : E.acento}55` : "rgba(255,255,255,.18)" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 28 * U, top: 0, bottom: 0, display: "flex", alignItems: "center", fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 38 * U, color: "#fff" } }, txt), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", right: 28 * U, top: 0, bottom: 0, display: "flex", alignItems: "center", fontFamily: FAMILIA.mono, fontSize: 34 * U, color: "#fff", opacity: barra } }, Math.round(pct * barra), "%"));
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -988,7 +1177,7 @@ const Encuesta = ({ pregunta = "\xBFQu\xE9 prefieres?", op1 = "S\xED, todos", op
 };
 const Comentario = ({ palabra = "BODA", texto = "Comenta", hecho = "Te mando la info", estilo = "blanco", y = 72, escala = 1, salida = 0.35 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = useSalida(salida);
   const E = est(estilo);
@@ -996,11 +1185,11 @@ const Comentario = ({ palabra = "BODA", texto = "Comenta", hecho = "Te mando la 
   const n = Math.floor(clamp((t - 0.6) / (0.11 * Math.max(1, palabra.length))) * palabra.length);
   const enviado = t > 0.75 + 0.11 * palabra.length + 0.35;
   const ancho = Math.min(W * 0.88, 840 * U);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: H * y / 100, width: ancho, transform: `translate(-50%,-50%) translateY(${((1 - clamp(p)) * 70 * U).toFixed(1)}px)`, display: "flex", flexDirection: "column", gap: 16 * U } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 36 * U, color: "#fff", textShadow: "0 2px 12px rgba(0,0,0,.6)" } }, texto, " ", /* @__PURE__ */ React.createElement("span", { style: { color: E.acento === "#FFFFFF" ? "#FFD34D" : E.acento, fontWeight: 800 } }, "\xAB", palabra, "\xBB")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${18 * U}px ${22 * U}px`, borderRadius: 999, background: "rgba(255,255,255,.96)", boxShadow: `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.35)` } }, /* @__PURE__ */ React.createElement("div", { style: { width: 56 * U, height: 56 * U, borderRadius: "50%", background: `linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7)` } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: FAMILIA.grotesk, fontSize: 38 * U, color: n ? "#111" : "#999" } }, n ? palabra.slice(0, n) : "A\xF1ade un comentario\u2026", n > 0 && !enviado && /* @__PURE__ */ React.createElement("span", { style: { opacity: Math.floor(t * 3) % 2 ? 1 : 0 } }, "|")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 34 * U, color: "#0095f6", transform: `scale(${enviado ? 1 : 1 + 0.08 * Math.sin(t * 8)})` } }, enviado ? "\u2713" : "Publicar")), enviado && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 32 * U, color: "#7CFFB2", textShadow: "0 2px 10px rgba(0,0,0,.6)", opacity: clamp((t - (0.75 + 0.11 * palabra.length + 0.35)) * 4) } }, "\u2713 ", hecho)));
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: H * y / 100, width: ancho, transform: `translate(-50%,-50%) translateY(${((1 - clamp(p)) * 70 * U).toFixed(1)}px)`, display: "flex", flexDirection: "column", gap: 16 * U } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 36 * U, color: "#fff", textShadow: "0 2px 12px rgba(0,0,0,.6)" } }, texto, " ", /* @__PURE__ */ React.createElement("span", { style: { color: E.acento === "#FFFFFF" ? "#FFD34D" : E.acento, fontWeight: 800 } }, "\xAB", palabra, "\xBB")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${18 * U}px ${22 * U}px`, borderRadius: 999, background: "rgba(255,255,255,.96)", boxShadow: `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.35)` } }, /* @__PURE__ */ React.createElement("div", { style: { width: 56 * U, height: 56 * U, borderRadius: "50%", background: `linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7)` } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: FAMILIA.grotesk, fontSize: 38 * U, color: n ? "#111" : "#999" } }, n ? palabra.slice(0, n) : "A\xF1ade un comentario\u2026", n > 0 && !enviado && /* @__PURE__ */ React.createElement("span", { style: { opacity: Math.floor(t * 3) % 2 ? 1 : 0 } }, "|")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 34 * U, color: "#0095f6", transform: `scale(${enviado ? 1 : 1 + 0.08 * Math.sin(t * 8)})` } }, enviado ? "\u2713" : "Publicar")), enviado && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 32 * U, color: "#7CFFB2", textShadow: "0 2px 10px rgba(0,0,0,.6)", opacity: clamp((t - (0.75 + 0.11 * palabra.length + 0.35)) * 4) } }, "\u2713 ", hecho)));
 };
 const Sesion = ({ titulo = "Sesi\xF3n fotogr\xE1fica", kicker = "BEHIND THE SCENES", estilo = "blanco", sticker = "emoji:camera", y = 26, escala = 1, salida = 0.4 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = useSalida(salida);
   const E = est(estilo);
@@ -1019,7 +1208,7 @@ const Sesion = ({ titulo = "Sesi\xF3n fotogr\xE1fica", kicker = "BEHIND THE SCEN
     transformOrigin: "50% 50%"
   } });
   const sep = (1 - clamp(marco)) * 60 * U;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: `rgba(255,255,255,${flash.toFixed(3)})` } }), /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: mw * 1.15, h: mh * 1.5, p: marco * 1.5 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2 - mw / 2, top: cy - mh / 2, width: mw, height: mh, opacity: clamp(marco * 2) } }, esquina(-sep, -sep, 0), esquina(mw - 46 * U + sep, -sep, 90), esquina(mw - 46 * U + sep, mh - 46 * U + sep, 180), esquina(-sep, mh - 46 * U + sep, 270), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 * U } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.mono, fontSize: 26 * U, letterSpacing: "0.3em", color: E.acento === "#FFFFFF" ? "#fff" : E.acento } }, kicker), /* @__PURE__ */ React.createElement(Escrito, { texto: titulo, t0: 0.4, dur: 0.8, style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `rgba(255,255,255,${flash.toFixed(3)})` } }), /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: mw * 1.15, h: mh * 1.5, p: marco * 1.5 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2 - mw / 2, top: cy - mh / 2, width: mw, height: mh, opacity: clamp(marco * 2) } }, esquina(-sep, -sep, 0), esquina(mw - 46 * U + sep, -sep, 90), esquina(mw - 46 * U + sep, mh - 46 * U + sep, 180), esquina(-sep, mh - 46 * U + sep, 270), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 * U } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.mono, fontSize: 26 * U, letterSpacing: "0.3em", color: E.acento === "#FFFFFF" ? "#fff" : E.acento } }, kicker), /* @__PURE__ */ React.createElement(Escrito, { texto: titulo, t0: 0.4, dur: 0.8, style: {
     fontFamily: FAMILIA.serif,
     fontStyle: "italic",
     fontSize: Math.min(110 * U, mw / Math.max(5, titulo.length) * 1.9),
@@ -1030,14 +1219,14 @@ const Sesion = ({ titulo = "Sesi\xF3n fotogr\xE1fica", kicker = "BEHIND THE SCEN
 };
 const Ninas = ({ texto = "Las ni\xF1as", sub = "", estilo = "lila", sticker = "emoji:unicorn", y = 26, escala = 1, salida = 0.4 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = useSalida(salida);
   const E = est(estilo);
   const letras = [...texto];
   const tam = Math.min(150 * U, W * 0.86 / Math.max(4, letras.length) * 1.7);
   const colores = [E.acento, "#FFD1E8", "#FFF3A6", "#B8F2FF", "#D7C2FF"];
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: H * y / 100, w: W * 0.98, h: tam * 2.4, fuerza: 0.3 }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "destellos", n: 20, semilla: texto }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: H * y / 100, transform: "translate(-50%,-50%)", display: "flex", whiteSpace: "pre" } }, letras.map((c, i) => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: H * y / 100, w: W * 0.98, h: tam * 2.4, fuerza: 0.3 }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "destellos", n: 20, semilla: texto }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: H * y / 100, transform: "translate(-50%,-50%)", display: "flex", whiteSpace: "pre" } }, letras.map((c, i) => {
     const p = S(0.1 + i * 0.06, { damping: 7, stiffness: 190 });
     return /* @__PURE__ */ React.createElement("span", { key: i, style: {
       display: "inline-block",
@@ -1079,7 +1268,7 @@ const vidrio = (U, acento, alfa = 0.5) => {
   };
 };
 const useT = () => {
-  const { fps, durationInFrames } = (0,esm.useVideoConfig)();
+  const { fps, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   return { fps, fin: durationInFrames / fps };
 };
 const Notificacion = ({
@@ -1094,12 +1283,12 @@ const Notificacion = ({
   salida = 0.35
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
-  const U = useU() * escala, S = useResorte(), frame = (0,esm.useCurrentFrame)(), { fps, fin } = useT();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
+  const U = useU() * escala, S = useResorte(), frame = (0,esm/* useCurrentFrame */.UC)(), { fps, fin } = useT();
   const t = frame / fps, q = usarSalida(t, fin, salida);
   const p = S(0.05, { damping: 14, stiffness: 170 });
   const ancho = Math.min(W * 0.9, 900 * U);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1111,7 +1300,7 @@ const Notificacion = ({
     gap: 22 * U,
     alignItems: "center",
     ...vidrio(U, acento, 0.62)
-  } }, /* @__PURE__ */ React.createElement("div", { style: { width: 96 * U, height: 96 * U, borderRadius: 24 * U, background: `linear-gradient(135deg, ${acento}, #111)`, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(esm.Img, { src: (0,esm.staticFile)(`iconos3d/${icono3d}.png`), style: { width: 80 * U, height: 80 * U, transform: `rotate(${(Math.sin(t * 8) * 12 * clamp(1.4 - t)).toFixed(1)}deg)` } })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: FAMILIA.grotesk, fontSize: 24 * U, color: "rgba(255,255,255,.7)", letterSpacing: "0.08em" } }, /* @__PURE__ */ React.createElement("span", null, app), /* @__PURE__ */ React.createElement("span", null, hora)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 40 * U, color: "#fff", marginTop: 4 * U } }, titulo), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontSize: 32 * U, color: "rgba(255,255,255,.85)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, texto))));
+  } }, /* @__PURE__ */ React.createElement("div", { style: { width: 96 * U, height: 96 * U, borderRadius: 24 * U, background: `linear-gradient(135deg, ${acento}, #111)`, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono3d}.png`), style: { width: 80 * U, height: 80 * U, transform: `rotate(${(Math.sin(t * 8) * 12 * clamp(1.4 - t)).toFixed(1)}deg)` } })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: FAMILIA.grotesk, fontSize: 24 * U, color: "rgba(255,255,255,.7)", letterSpacing: "0.08em" } }, /* @__PURE__ */ React.createElement("span", null, app), /* @__PURE__ */ React.createElement("span", null, hora)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 40 * U, color: "#fff", marginTop: 4 * U } }, titulo), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontSize: 32 * U, color: "rgba(255,255,255,.85)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, texto))));
 };
 const Tarjeta = ({
   kicker = "PAQUETE",
@@ -1126,13 +1315,13 @@ const Tarjeta = ({
   salida = 0.35
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
-  const U = useU() * escala, S = useResorte(), frame = (0,esm.useCurrentFrame)(), { fps, fin } = useT();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
+  const U = useU() * escala, S = useResorte(), frame = (0,esm/* useCurrentFrame */.UC)(), { fps, fin } = useT();
   const t = frame / fps, q = usarSalida(t, fin, salida);
   const p = S(0.05, { damping: 15 }), ic = S(0.35, { damping: 9, stiffness: 170 });
-  const barra = clamp((0,esm.interpolate)(t, [0.6, 1.6], [0, progreso / 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+  const barra = clamp((0,esm/* interpolate */.GW)(t, [0.6, 1.6], [0, progreso / 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   const ancho = Math.min(W * 0.82, 760 * U);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1144,7 +1333,7 @@ const Tarjeta = ({
     flexDirection: "column",
     gap: 18 * U,
     ...vidrio(U, acento)
-  } }, /* @__PURE__ */ React.createElement(esm.Img, { src: (0,esm.staticFile)(`iconos3d/${icono3d}.png`), style: {
+  } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono3d}.png`), style: {
     position: "absolute",
     right: -30 * U,
     top: -70 * U,
@@ -1168,16 +1357,16 @@ const Tarjeta = ({
 };
 const Grafica = ({ titulo = "Reservas", valor = "+240%", subtitulo = "este a\xF1o", acento = "#3DDC97", y = 30, escala = 1, salida = 0.35 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
-  const U = useU() * escala, S = useResorte(), frame = (0,esm.useCurrentFrame)(), { fps, fin } = useT();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
+  const U = useU() * escala, S = useResorte(), frame = (0,esm/* useCurrentFrame */.UC)(), { fps, fin } = useT();
   const t = frame / fps, q = usarSalida(t, fin, salida);
   const p = S(0.05, { damping: 15 });
-  const dib = clamp((0,esm.interpolate)(t, [0.4, 1.6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+  const dib = clamp((0,esm/* interpolate */.GW)(t, [0.4, 1.6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   const ancho = Math.min(W * 0.84, 800 * U), alto = 420 * U;
   const pts = [0.08, 0.14, 0.12, 0.26, 0.22, 0.4, 0.36, 0.58, 0.7, 0.92];
   const d = pts.map((v, i) => `${i ? "L" : "M"}${i / (pts.length - 1) * 100},${(1 - v) * 100}`).join(" ");
   const num = Math.round(parseFloat(valor.replace(/[^\d.]/g, "")) * clamp(dib * 1.1) || 0);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1202,12 +1391,12 @@ const Grafica = ({ titulo = "Reservas", valor = "+240%", subtitulo = "este a\xF1
 };
 const Pasos = ({ pasos = "Agenda,Sesi\xF3n,Entrega", titulo = "As\xED trabajamos", acento = "#FF8A3D", y = 30, escala = 1, salida = 0.35 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
-  const U = useU() * escala, S = useResorte(), frame = (0,esm.useCurrentFrame)(), { fps, fin } = useT();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
+  const U = useU() * escala, S = useResorte(), frame = (0,esm/* useCurrentFrame */.UC)(), { fps, fin } = useT();
   const t = frame / fps, q = usarSalida(t, fin, salida);
   const lista = pasos.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 4);
   const ancho = Math.min(W * 0.86, 820 * U);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1241,12 +1430,12 @@ const Pasos = ({ pasos = "Agenda,Sesi\xF3n,Entrega", titulo = "As\xED trabajamos
 };
 const Interruptor = ({ texto = "Modo PRO", sub = "activado", acento = "#22D3EE", y = 22, escala = 1, salida = 0.35 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
-  const U = useU() * escala, S = useResorte(), frame = (0,esm.useCurrentFrame)(), { fps, fin } = useT();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
+  const U = useU() * escala, S = useResorte(), frame = (0,esm/* useCurrentFrame */.UC)(), { fps, fin } = useT();
   const t = frame / fps, q = usarSalida(t, fin, salida);
   const p = S(0.05, { damping: 14 }), on = S(0.7, { damping: 12, stiffness: 200 });
   const [r, g, b] = rgb(acento);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1320,12 +1509,12 @@ const Subtitulo = ({
   estilo = "skill"
 }) => {
   const ed = estilo === "editorial";
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps, fin = durationInFrames / fps;
-  const [h] = (0,react.useState)(() => (0,esm.delayRender)("medidas del subt\xEDtulo"));
-  const [listo, setListo] = (0,react.useState)(false);
-  (0,react.useEffect)(() => {
+  const [h] = (0,react_namespaceFn().useState)(() => (0,esm/* delayRender */.IH)("medidas del subt\xEDtulo"));
+  const [listo, setListo] = (0,react_namespaceFn().useState)(false);
+  (0,react_namespaceFn().useEffect)(() => {
     let vivo = true;
     cargarFuentes().catch(() => void 0).then(() => {
       if (vivo) setListo(true);
@@ -1334,12 +1523,12 @@ const Subtitulo = ({
       vivo = false;
     };
   }, []);
-  (0,react.useEffect)(() => {
-    if (listo) (0,esm.continueRender)(h);
+  (0,react_namespaceFn().useEffect)(() => {
+    if (listo) (0,esm/* continueRender */._8)(h);
   }, [listo, h]);
   const detras = modo === "detras";
-  const ps = (0,react.useMemo)(() => detras ? palabras.filter((w) => w.clave) : palabras, [palabras, detras]);
-  const anchos = (0,react.useMemo)(() => {
+  const ps = (0,react_namespaceFn().useMemo)(() => detras ? palabras.filter((w) => w.clave) : palabras, [palabras, detras]);
+  const anchos = (0,react_namespaceFn().useMemo)(() => {
     if (!listo) return [];
     const ctx = document.createElement("canvas").getContext("2d");
     return ps.map((w) => {
@@ -1349,7 +1538,7 @@ const Subtitulo = ({
       return ctx.measureText(w.texto).width;
     });
   }, [listo, ps, detras, ed]);
-  if (!listo || !ps.length) return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null);
+  if (!listo || !ps.length) return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null);
   const corto = Math.min(width, height);
   let S = (ed ? 0.048 : 0.035) * corto * escala;
   const lineas = detras ? [{ idx: ps.map((_, i) => i), serif: true }] : lineasDe(ps);
@@ -1394,7 +1583,7 @@ const Subtitulo = ({
       transform: `translateY(${((1 - e) * (ed ? 0.08 : 0.14)).toFixed(3)}em)`
     } }, w.texto);
   };
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - qs, filter: qs > 0 ? `blur(${(qs * 4).toFixed(2)}px)` : void 0 } }, velo && !oscura && !detras && (() => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - qs, filter: qs > 0 ? `blur(${(qs * 4).toFixed(2)}px)` : void 0 } }, velo && !oscura && !detras && (() => {
     const w = mayor * (mayor > maxAncho ? maxAncho / mayor : 1) + 5 * S, hv = total + 3.2 * S;
     const p0 = easeIn(clamp((t - (ps[0].t - 0.1)) / 0.3));
     return /* @__PURE__ */ React.createElement("div", { style: {
@@ -1449,11 +1638,11 @@ const TEMA_MELOCOTON = {
   borde: "rgba(214,170,140,.38)",
   letra: FAMILIA.serif
 };
-const TemaCtx = (0,react.createContext)(TEMA_CLARO);
-const useTema = () => (0,react.useContext)(TemaCtx);
+const TemaCtx = (0,react_namespaceFn().createContext)(TEMA_CLARO);
+const useTema = () => (0,react_namespaceFn().useContext)(TemaCtx);
 const useEntrada = (t0, dura = 0.42) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps;
   return { t, dt: t - t0, e: easeOut((t - t0) / dura) };
 };
@@ -1825,12 +2014,12 @@ const Skill_easeInOut = (q) => {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 };
 const useVida = (entra = 0.35, sale = 0.3) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps, fin = durationInFrames / fps;
   return { t, fin, e: Skill_easeOut(t / entra), s: Skill_easeOut((t - (fin - sale)) / sale) };
 };
-const Sombra = ({ y, fuerza }) => /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: `radial-gradient(ellipse 95% 46% at 50% ${y}%, rgba(0,0,0,${(0.68 * fuerza).toFixed(3)}), rgba(0,0,0,${(0.36 * fuerza).toFixed(3)}) 55%, rgba(0,0,0,${(0.12 * fuerza).toFixed(3)}) 100%)` } });
+const Sombra = ({ y, fuerza }) => /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 95% 46% at 50% ${y}%, rgba(0,0,0,${(0.68 * fuerza).toFixed(3)}), rgba(0,0,0,${(0.36 * fuerza).toFixed(3)}) 55%, rgba(0,0,0,${(0.12 * fuerza).toFixed(3)}) 100%)` } });
 const cristal = (U) => ({
   background: "linear-gradient(180deg, rgba(34,37,48,.78), rgba(18,20,28,.78))",
   border: `${Math.max(1, U * 1.4)}px solid rgba(255,255,255,.10)`,
@@ -1838,14 +2027,14 @@ const cristal = (U) => ({
 });
 const PasosT5 = ({ n = 3, actual = 0, gancho = false, y = 64 }) => {
   useFuentes();
-  const { width, height } = (0,esm.useVideoConfig)();
+  const { width, height } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(width, height) / 1080;
   const { t, e, s } = useVida();
   const vis = e * (1 - s);
   const d = 58 * U, linea = 64 * U, pad = 22 * U;
   const ancho = n * d + (n - 1) * linea + 2 * pad;
   const rojo = "#FF4B55";
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement(Sombra, { y, fuerza: vis }), /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement(Sombra, { y, fuerza: vis }), /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: (width - ancho) / 2,
     top: y / 100 * height - (d + 2 * pad) / 2,
@@ -1894,7 +2083,7 @@ const PasosT5 = ({ n = 3, actual = 0, gancho = false, y = 64 }) => {
 };
 const DeslizadorT5 = ({ izq = "Principiante", der = "Profesional", y = 63, acento = "#4C7DFF" }) => {
   useFuentes();
-  const { width, height } = (0,esm.useVideoConfig)();
+  const { width, height } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(width, height) / 1080;
   const { t, fin, e, s } = useVida();
   const vis = e * (1 - s);
@@ -1902,7 +2091,7 @@ const DeslizadorT5 = ({ izq = "Principiante", der = "Profesional", y = 63, acent
   const p = Skill_easeInOut((t - 0.35) / Math.max(0.6, fin - 0.95));
   const [r, g, b] = rgb(acento);
   const pista = w - 2 * pad, x = pad + pista * p;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement(Sombra, { y, fuerza: vis }), /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement(Sombra, { y, fuerza: vis }), /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: (width - w) / 2,
     top: y / 100 * height - hgt / 2,
@@ -1973,7 +2162,7 @@ const EscenaT5 = ({
   y = 68
 }) => {
   useFuentes();
-  const { width, height } = (0,esm.useVideoConfig)();
+  const { width, height } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(width, height) / 1080;
   const { t, fin, e, s } = useVida(0.3, 0.3);
   const arriba = mitad === "arriba", encima = mitad === "encima", cristal2 = fondo === "cristal" || encima;
@@ -2004,7 +2193,7 @@ const EscenaT5 = ({
       lista: /* @__PURE__ */ React.createElement(Lista, { o, U, acento }),
       comparacion: /* @__PURE__ */ React.createElement(Comparacion, { o, U, acento }),
       pregunta: /* @__PURE__ */ React.createElement(Pregunta, { o, U, acento }),
-      icono3d: /* @__PURE__ */ React.createElement("div", { style: { width: 340 * U, height: 340 * U, borderRadius: 75 * U, background: "linear-gradient(180deg,#FFFFFF,#F4F5F8)", boxShadow: sombra(U), display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(esm.Img, { src: (0,esm.staticFile)(`iconos3d/${o.icono}.png`), style: { width: 210 * U, height: 210 * U, objectFit: "contain" } }))
+      icono3d: /* @__PURE__ */ React.createElement("div", { style: { width: 340 * U, height: 340 * U, borderRadius: 75 * U, background: "linear-gradient(180deg,#FFFFFF,#F4F5F8)", boxShadow: sombra(U), display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${o.icono}.png`), style: { width: 210 * U, height: 210 * U, objectFit: "contain" } }))
     };
     const k = (ESCALA_OBJ[o.tipo] ?? 1) * ((arriba || encima) && ["ojo", "precio", "grafica", "calendario", "barra", "lista", "pregunta"].includes(o.tipo) ? 0.8 : 1) * (encima ? 0.86 : 1);
     return /* @__PURE__ */ React.createElement(Pieza, { key: `${o.tipo}${x}${y2}`, x, y: y2, t0: o.t, U, salida, fuera, flota: o.tipo === "barra" ? 0.3 : 1 }, /* @__PURE__ */ React.createElement("div", { style: { transform: `scale(${k})` } }, C[o.tipo] || null));
@@ -2044,7 +2233,7 @@ const EscenaT5 = ({
       alignItems: "center",
       justifyContent: "center",
       gap: lado * 0.06
-    } }, icono && /* @__PURE__ */ React.createElement(esm.Img, { src: (0,esm.staticFile)(`iconos3d/${icono}.png`), style: { width: lado * 0.56, height: lado * 0.56, objectFit: "contain" } }), /* @__PURE__ */ React.createElement("div", { style: { width: lado * 0.46, height: lado * 0.035, borderRadius: lado, background: "#E6E8EE" } }), /* @__PURE__ */ React.createElement("div", { style: { width: lado * 0.3, height: lado * 0.035, borderRadius: lado, background: "#EEF0F4" } }));
+    } }, icono && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono}.png`), style: { width: lado * 0.56, height: lado * 0.56, objectFit: "contain" } }), /* @__PURE__ */ React.createElement("div", { style: { width: lado * 0.46, height: lado * 0.035, borderRadius: lado, background: "#E6E8EE" } }), /* @__PURE__ */ React.createElement("div", { style: { width: lado * 0.3, height: lado * 0.035, borderRadius: lado, background: "#EEF0F4" } }));
   } else if (variante === "cifra") {
     contenido = objeto({ tipo: "cifra", t: 0.22, valor: cifra, etiqueta }, width / 2, cy);
   } else if (variante === "tarjeta" && imagen) {
@@ -2061,20 +2250,20 @@ const EscenaT5 = ({
       boxShadow: `0 ${30 * U}px ${70 * U}px rgba(20,25,40,.25)`,
       opacity: po * (1 - salida),
       transform: `translateY(${((1 - po) * 90 * U).toFixed(1)}px) rotate(${(-3 + (1 - po) * -4).toFixed(2)}deg) scale(${(0.6 + 0.4 * po).toFixed(3)})`
-    } }, /* @__PURE__ */ React.createElement(esm.Img, { src: imagen, style: { width: "100%", height: "100%", objectFit: "cover" } }));
+    } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: imagen, style: { width: "100%", height: "100%", objectFit: "cover" } }));
   }
   const [ar, ag, ab] = rgb(acento);
   if (melocoton) {
     const pre = 0.22;
     const quema = clamp(t / pre), aparece = clamp((t - pre) / 0.05), blanco = t < pre ? 0.95 * quema * quema : 0.95 * (1 - Skill_easeOut((t - pre) / 0.4));
     const sale = clamp((t - (fin - 0.25)) / 0.25);
-    return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: aparece * (1 - sale), fontSynthesis: "none" } }, /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: "linear-gradient(165deg, #FCE2D2 0%, #FFF4EE 46%, #FDE6D8 100%)" } }), /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: `radial-gradient(ellipse 70% 45% at ${(30 + 8 * Math.sin(t * 0.5)).toFixed(2)}% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%)` } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, transform: `scale(${(1 + 0.025 * clamp(t / Math.max(1, fin))).toFixed(4)})` } }, /* @__PURE__ */ React.createElement(TemaCtx.Provider, { value: TEMA_MELOCOTON }, contenido))), /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: "#FFFBF7", opacity: Math.max(blanco, 0.85 * Math.sin(sale * Math.PI)) } }));
+    return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: aparece * (1 - sale), fontSynthesis: "none" } }, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(165deg, #FCE2D2 0%, #FFF4EE 46%, #FDE6D8 100%)" } }), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 70% 45% at ${(30 + 8 * Math.sin(t * 0.5)).toFixed(2)}% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%)` } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, transform: `scale(${(1 + 0.025 * clamp(t / Math.max(1, fin))).toFixed(4)})` } }, /* @__PURE__ */ React.createElement(TemaCtx.Provider, { value: TEMA_MELOCOTON }, contenido))), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "#FFFBF7", opacity: Math.max(blanco, 0.85 * Math.sin(sale * Math.PI)) } }));
   }
   if (encima) {
     const vis = e * (1 - s);
-    return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: `radial-gradient(ellipse 90% 40% at 50% ${y}%, rgba(0,0,0,${(0.62 * vis).toFixed(3)}), rgba(0,0,0,${(0.3 * vis).toFixed(3)}) 60%, rgba(0,0,0,${(0.14 * vis).toFixed(3)}) 100%)` } }), /* @__PURE__ */ React.createElement(TemaCtx.Provider, { value: TEMA_OSCURO }, contenido));
+    return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 90% 40% at 50% ${y}%, rgba(0,0,0,${(0.62 * vis).toFixed(3)}), rgba(0,0,0,${(0.3 * vis).toFixed(3)}) 60%, rgba(0,0,0,${(0.14 * vis).toFixed(3)}) 100%)` } }), /* @__PURE__ */ React.createElement(TemaCtx.Provider, { value: TEMA_OSCURO }, contenido));
   }
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: 0,
     top: 0,
@@ -2172,15 +2361,15 @@ var LottieContent = ({
   preserveAspectRatio,
   assetsPath
 }) => {
-  const animationRef = (0,react.useRef)(null);
-  const currentFrameRef = (0,react.useRef)(null);
-  const containerRef = (0,react.useRef)(null);
-  const onAnimationLoadedRef = (0,react.useRef)(onAnimationLoaded);
+  const animationRef = (0,react_namespaceFn().useRef)(null);
+  const currentFrameRef = (0,react_namespaceFn().useRef)(null);
+  const containerRef = (0,react_namespaceFn().useRef)(null);
+  const onAnimationLoadedRef = (0,react_namespaceFn().useRef)(onAnimationLoaded);
   onAnimationLoadedRef.current = onAnimationLoaded;
-  const { delayRender, continueRender } = (0,esm.useDelayRender)();
-  const frame = (0,esm.useCurrentFrame)();
+  const { delayRender, continueRender } = (0,esm/* useDelayRender */.dB)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   currentFrameRef.current = frame;
-  (0,react.useLayoutEffect)(() => {
+  (0,react_namespaceFn().useLayoutEffect)(() => {
     if (!containerRef.current) {
       return;
     }
@@ -2224,12 +2413,12 @@ var LottieContent = ({
     continueRender,
     delayRender
   ]);
-  (0,react.useLayoutEffect)(() => {
+  (0,react_namespaceFn().useLayoutEffect)(() => {
     if (animationRef.current && direction) {
       animationRef.current.setDirection(direction === "backward" ? -1 : 1);
     }
   }, [direction]);
-  (0,react.useLayoutEffect)(() => {
+  (0,react_namespaceFn().useLayoutEffect)(() => {
     if (!animationRef.current) {
       return;
     }
@@ -2305,10 +2494,10 @@ var Lottie = ({
     styleWhilePostmounted: styleWhilePostmounted ?? null,
     hideWhilePremounted: "opacity"
   });
-  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Freeze, {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Freeze */.Kl, {
     frame: freezeFrame,
     active: isPremountingOrPostmounting,
-    children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Sequence, {
+    children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Sequence */.gd, {
       layout: "none",
       from,
       durationInFrames: sequenceDurationInFrames,
@@ -2343,28 +2532,28 @@ const datos = {};
 const idEmoji = (s) => String(s || "").replace(/^emoji:/, "").replace(/^rcs_emoji_/, "").replace(/\.png$/, "");
 const EmojiAnimado = ({ id, lado, style, bucle = true }) => {
   const n = idEmoji(id);
-  const [anim, setAnim] = (0,react.useState)(void 0);
-  const [h] = (0,react.useState)(() => (0,esm.delayRender)(`emoji ${n}`));
-  (0,react.useEffect)(() => {
+  const [anim, setAnim] = (0,react_namespaceFn().useState)(void 0);
+  const [h] = (0,react_namespaceFn().useState)(() => (0,esm/* delayRender */.IH)(`emoji ${n}`));
+  (0,react_namespaceFn().useEffect)(() => {
     let vivo = true;
-    indice = indice || fetch((0,esm.staticFile)("lottie/indice.json")).then((r) => r.json()).catch(() => []);
+    indice = indice || fetch((0,esm/* staticFile */.dQ)("lottie/indice.json")).then((r) => r.json()).catch(() => []);
     indice.then((ids) => {
       if (!ids.includes(n)) return null;
-      datos[n] = datos[n] || fetch((0,esm.staticFile)(`lottie/${n}.json`)).then((r) => r.json()).catch(() => null);
+      datos[n] = datos[n] || fetch((0,esm/* staticFile */.dQ)(`lottie/${n}.json`)).then((r) => r.json()).catch(() => null);
       return datos[n];
     }).then((d) => {
       if (vivo) setAnim(d || null);
-      (0,esm.continueRender)(h);
+      (0,esm/* continueRender */._8)(h);
     }).catch(() => {
       if (vivo) setAnim(null);
-      (0,esm.continueRender)(h);
+      (0,esm/* continueRender */._8)(h);
     });
     return () => {
       vivo = false;
     };
   }, [n, h]);
   if (anim === void 0) return /* @__PURE__ */ React.createElement("div", { style: { width: lado, height: lado, ...style } });
-  if (anim === null) return /* @__PURE__ */ React.createElement(esm.Img, { src: (0,esm.staticFile)(`stickers/rcs_emoji_${n}.png`), style: { width: lado, height: lado, objectFit: "contain", ...style } });
+  if (anim === null) return /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`stickers/rcs_emoji_${n}.png`), style: { width: lado, height: lado, objectFit: "contain", ...style } });
   return /* @__PURE__ */ React.createElement("div", { style: { width: lado, height: lado, ...style } }, /* @__PURE__ */ React.createElement(Lottie, { animationData: anim, loop: bucle, style: { width: "100%", height: "100%" } }));
 };
 
@@ -2477,8 +2666,8 @@ const AcompananteT5 = ({
   acento2 = ""
 }) => {
   useFuentes();
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps, fin = durationInFrames / fps;
   const U = Math.min(width, height) / 1080 * escala;
   const e = resorte(t / 0.5), s = Acompanantes_easeOut((t - (fin - 0.28)) / 0.28);
@@ -2533,7 +2722,7 @@ const AcompananteT5 = ({
       flex: "none",
       boxShadow: `0 ${4 * U}px ${12 * U}px rgba(0,0,0,.3)`,
       transform: `perspective(${300 * U}px) rotateY(${ola.toFixed(2)}deg) skewY(${(ola * 0.35).toFixed(2)}deg) scale(${(0.6 + 0.4 * pop(0.3)).toFixed(3)})`
-    } }, /* @__PURE__ */ React.createElement(esm.Img, { src: (0,esm.staticFile)(`mapa/banderas/${pais}.svg`), style: { width: "100%", height: "100%", objectFit: "cover" } })), textos(kicker, texto, 42));
+    } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`mapa/banderas/${pais}.svg`), style: { width: "100%", height: "100%", objectFit: "cover" } })), textos(kicker, texto, 42));
   } else if (tipo === "saludo") {
     const giro = Math.sin((t - 0.25) * 11) * 18 * clamp((t - 0.2) / 0.3) * (1 - clamp((t - 1.6) / 0.4));
     cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, /* @__PURE__ */ React.createElement(EmojiAnimado, { id: sticker || "waving_hand", lado: 78 * U, style: {
@@ -2624,7 +2813,7 @@ const AcompananteT5 = ({
     const pre = tipo === "dinero" ? signo || "$" : "", post = tipo === "cifra" && signo === "%" ? "%" : "";
     cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, icono(64 * U, tipo === "tiempo" ? /* @__PURE__ */ React.createElement("svg", { width: 36 * U, height: 36 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "9", fill: "none", stroke: marca, strokeWidth: "2.2" }), /* @__PURE__ */ React.createElement("path", { d: `M12 12 L${(12 + 6 * Math.sin(t * 4)).toFixed(2)} ${(12 - 6 * Math.cos(t * 4)).toFixed(2)}`, stroke: marca, strokeWidth: "2.2", strokeLinecap: "round" })) : /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 30 * U, color: marca } }, tipo === "dinero" ? signo || "$" : "#")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 * U } }, textos(kicker, /* @__PURE__ */ React.createElement(React.Fragment, null, pre, n, post, unidad ? /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 500, fontSize: 28 * U, color: gris } }, " ", unidad) : null), 46), tipo === "cifra" && signo === "%" && isFinite(v) && /* @__PURE__ */ React.createElement("div", { style: { width: 200 * U, height: 8 * U, borderRadius: 4 * U, background: oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.min(100, v * q)}%`, height: "100%", borderRadius: 4 * U, background: marca } }))));
   }
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: 0,
     width,
@@ -2637,12 +2826,12 @@ const AcompananteT5 = ({
   } }, /* @__PURE__ */ React.createElement("div", { style: { transform: "translateY(-50%)" } }, cuerpo)));
 };
 const VeloCaptionT = ({ y = 60, alto = 14, ancho = 92, fuerza = 0.42 }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps, fin = durationInFrames / fps;
   const vis = clamp(t / 0.15) * (1 - clamp((t - (fin - 0.2)) / 0.2));
   const h = alto / 100 * height * 1.7, w = ancho / 100 * width * 1.15;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: (width - w) / 2,
     top: y / 100 * height - h / 2,
@@ -2669,11 +2858,11 @@ const Efectos5_resorte = (q) => {
 };
 const urlIcono = (s) => {
   const [tipo, n] = s.includes(":") ? s.split(":") : ["3d", s];
-  return tipo === "emoji" ? (0,esm.staticFile)(`stickers/rcs_emoji_${n}.png`) : (0,esm.staticFile)(`iconos3d/${n}.png`);
+  return tipo === "emoji" ? (0,esm/* staticFile */.dQ)(`stickers/rcs_emoji_${n}.png`) : (0,esm/* staticFile */.dQ)(`iconos3d/${n}.png`);
 };
 const useTiempo = () => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   return { t: frame / fps, fin: durationInFrames / fps, W: width, H: height };
 };
 const Cursor = ({ U, clic }) => /* @__PURE__ */ React.createElement("svg", { width: 46 * U, height: 56 * U, viewBox: "0 0 36 44", style: {
@@ -2815,7 +3004,7 @@ const TarjetaT5 = ({
       transformOrigin: "0 50%",
       boxShadow: `0 ${2 * U}px ${8 * U}px rgba(255,59,77,.45)`,
       opacity: q > 0 ? 1 : 0
-    } }), /* @__PURE__ */ React.createElement(esm.Img, { src: (0,esm.staticFile)("stickers/rcs_emoji_cross_mark.png"), style: {
+    } }), /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_cross_mark.png"), style: {
       position: "absolute",
       right: -46 * U,
       top: -40 * U,
@@ -2863,7 +3052,7 @@ const TarjetaT5 = ({
       } }, it) : /* @__PURE__ */ React.createElement("div", { style: { width: (180 + 60 * (i % 2)) * U, height: 22 * U, borderRadius: 11 * U, background: suave } }));
     }));
   }
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: x / 100 * W - ancho / 2,
     width: ancho,
@@ -2950,7 +3139,7 @@ const OrbitaT5 = ({
     return [X + x * Math.cos(inc2) - yy * Math.sin(inc2), Y + x * Math.sin(inc2) + yy * Math.cos(inc2)];
   }).map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${yy.toFixed(1)}`).join(" ") : "";
   const nFantasmas = estilo === "cometa" ? [0.04, 0.08, 0.12, 0.16, 0.2] : estilo === "limpio" || estilo === "chips" ? [] : [0.08, 0.16];
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - sale } }, /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", inset: 0 } }, anillo(ruta, "a"), ruta2 && /* @__PURE__ */ React.createElement("path", { d: ruta2, fill: "none", stroke: `rgba(${tr},${tg},${tb},.55)`, strokeWidth: 2 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja })), lista.map((ic, i) => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - sale } }, /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", inset: 0 } }, anillo(ruta, "a"), ruta2 && /* @__PURE__ */ React.createElement("path", { d: ruta2, fill: "none", stroke: `rgba(${tr},${tg},${tb},.55)`, strokeWidth: 2 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja })), lista.map((ic, i) => {
     const th = th0 + 2 * Math.PI * Math.max(0, t - 0.1) / vuelta + i * Math.PI;
     const detras = Math.sin(th) < 0;
     if (detras !== atras) return null;
@@ -2969,7 +3158,7 @@ const OrbitaT5 = ({
       background: "linear-gradient(160deg, rgba(255,255,255,.3), rgba(255,255,255,.08))",
       border: `${2 * U}px solid rgba(255,255,255,.5)`,
       boxShadow: `0 ${14 * U}px ${30 * U}px rgba(0,0,0,.35), 0 0 ${24 * U}px rgba(${r},${g},${b},.45)`
-    } }), fantasmas.map(([fx, fy], k) => /* @__PURE__ */ React.createElement(esm.Img, { key: k, src: urlIcono(ic), style: {
+    } }), fantasmas.map(([fx, fy], k) => /* @__PURE__ */ React.createElement(esm/* Img */.E9, { key: k, src: urlIcono(ic), style: {
       position: "absolute",
       left: fx - lado2 / 2,
       top: fy - lado2 / 2,
@@ -2983,7 +3172,7 @@ const OrbitaT5 = ({
       top: yy - lado2 / 2,
       transform: `rotate(${(Math.cos(th) * 12).toFixed(1)}deg)`,
       filter: `drop-shadow(0 ${14 * U}px ${18 * U}px rgba(0,0,0,.4)) brightness(${(0.8 + 0.2 * prof).toFixed(3)})`
-    } }) : /* @__PURE__ */ React.createElement(esm.Img, { src: urlIcono(ic), style: {
+    } }) : /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: urlIcono(ic), style: {
       position: "absolute",
       left: x - lado2 / 2,
       top: yy - lado2 / 2,
@@ -3004,7 +3193,7 @@ const StickerT5 = ({ fondo = "", recorte = "", caja = [0.25, 0.2, 0.75, 1], zoom
   const [x0, y0, x1, y1] = caja;
   const borde = 9 * U * clamp(q * 1.4);
   const halo = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7, 0.7], [-0.7, 0.7], [0.7, -0.7], [-0.7, -0.7]].map(([dx, dy]) => `drop-shadow(${(dx * borde).toFixed(1)}px ${(dy * borde).toFixed(1)}px 0 #fff)`).join(" ");
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: "#000", overflow: "hidden" } }, fondo && /* @__PURE__ */ React.createElement(esm.Img, { src: fondo, style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "#000", overflow: "hidden" } }, fondo && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: fondo, style: {
     position: "absolute",
     inset: 0,
     width: "100%",
@@ -3013,7 +3202,7 @@ const StickerT5 = ({ fondo = "", recorte = "", caja = [0.25, 0.2, 0.75, 1], zoom
     // ya viene en el encuadre del timeline
     transform: `scale(${(zoom * (1 + 0.06 * apaga)).toFixed(4)})`,
     filter: `blur(${(16 * U * apaga).toFixed(1)}px) brightness(${(1 - 0.55 * apaga).toFixed(3)}) saturate(${(1 - 0.85 * apaga).toFixed(3)})`
-  } }), /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: `radial-gradient(60% 45% at 50% 55%, rgba(${r},${g},${b},${(0.22 * apaga).toFixed(3)}), rgba(0,0,0,0) 70%)` } }), recorte && /* @__PURE__ */ React.createElement("div", { style: {
+  } }), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(60% 45% at 50% 55%, rgba(${r},${g},${b},${(0.22 * apaga).toFixed(3)}), rgba(0,0,0,0) 70%)` } }), recorte && /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: x0 * W,
     top: y0 * H,
@@ -3021,12 +3210,12 @@ const StickerT5 = ({ fondo = "", recorte = "", caja = [0.25, 0.2, 0.75, 1], zoom
     height: (y1 - y0) * H,
     transformOrigin: "50% 70%",
     transform: `translateY(${(-0.03 * H * k).toFixed(1)}px) scale(${(zoom * (1 + 0.12 * k)).toFixed(4)}) rotate(${(giro * k).toFixed(2)}deg)`
-  } }, /* @__PURE__ */ React.createElement(esm.Img, { src: recorte, style: {
+  } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: recorte, style: {
     width: "100%",
     height: "100%",
     objectFit: "fill",
     filter: `${halo} drop-shadow(0 ${(22 * U * k).toFixed(1)}px ${(34 * U).toFixed(1)}px rgba(0,0,0,${(0.55 * clamp(k)).toFixed(3)}))`
-  } })), /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: "#fff", opacity: flash } }));
+  } })), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "#fff", opacity: flash } }));
 };
 const FinalT5 = ({ fondo = "", cara = "", usuario = "", titulo = "", boton = "Seguir", hecho = "Siguiendo", acento = "#4C7DFF" }) => {
   useFuentes();
@@ -3042,7 +3231,7 @@ const FinalT5 = ({ fondo = "", cara = "", usuario = "", titulo = "", boton = "Se
   const lado = (vertical ? 420 : 300) * U;
   const cyA = H * (vertical ? 0.36 : 0.34);
   const chispas = Array.from({ length: 10 }, (_, i) => i);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: "#05060A", opacity: 1 - sale } }, fondo && /* @__PURE__ */ React.createElement(esm.Img, { src: fondo, style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "#05060A", opacity: 1 - sale } }, fondo && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: fondo, style: {
     position: "absolute",
     inset: 0,
     width: "100%",
@@ -3050,7 +3239,7 @@ const FinalT5 = ({ fondo = "", cara = "", usuario = "", titulo = "", boton = "Se
     objectFit: "cover",
     transform: "scale(1.12)",
     filter: `blur(${(28 * U).toFixed(1)}px) brightness(${(1 - 0.6 * entra).toFixed(3)}) saturate(0.8)`
-  } }), /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { background: `radial-gradient(55% 40% at 50% 38%, rgba(${r},${g},${b},${(0.28 * entra).toFixed(3)}), rgba(0,0,0,0) 70%)` } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2 - lado / 2, top: cyA - lado / 2, width: lado, height: lado, transform: `scale(${clamp(av, 0, 1.12).toFixed(4)})` } }, /* @__PURE__ */ React.createElement("svg", { width: lado, height: lado, viewBox: "0 0 100 100", style: { position: "absolute", inset: 0, overflow: "visible" } }, /* @__PURE__ */ React.createElement(
+  } }), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(55% 40% at 50% 38%, rgba(${r},${g},${b},${(0.28 * entra).toFixed(3)}), rgba(0,0,0,0) 70%)` } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2 - lado / 2, top: cyA - lado / 2, width: lado, height: lado, transform: `scale(${clamp(av, 0, 1.12).toFixed(4)})` } }, /* @__PURE__ */ React.createElement("svg", { width: lado, height: lado, viewBox: "0 0 100 100", style: { position: "absolute", inset: 0, overflow: "visible" } }, /* @__PURE__ */ React.createElement(
     "circle",
     {
       cx: "50",
@@ -3065,7 +3254,7 @@ const FinalT5 = ({ fondo = "", cara = "", usuario = "", titulo = "", boton = "Se
       transform: "rotate(-90 50 50)",
       style: { filter: `drop-shadow(0 0 ${(10 * U).toFixed(1)}px rgba(${r},${g},${b},.9))` }
     }
-  ), t > 1 && /* @__PURE__ */ React.createElement("circle", { cx: "50", cy: "50", r: 53 + 14 * ((t - 1) % 1.4 / 1.4), fill: "none", stroke: acento, strokeWidth: "1.4", opacity: 1 - (t - 1) % 1.4 / 1.4 })), cara && /* @__PURE__ */ React.createElement(esm.Img, { src: cara, style: {
+  ), t > 1 && /* @__PURE__ */ React.createElement("circle", { cx: "50", cy: "50", r: 53 + 14 * ((t - 1) % 1.4 / 1.4), fill: "none", stroke: acento, strokeWidth: "1.4", opacity: 1 - (t - 1) % 1.4 / 1.4 })), cara && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: cara, style: {
     position: "absolute",
     inset: lado * 0.035,
     width: lado * 0.93,
@@ -3137,8 +3326,8 @@ const EditorialT6 = ({
   caras = []
 }) => {
   useFuentes();
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width: W, height: H, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps, fin = durationInFrames / fps;
   const U = Math.min(W, H) / 1080 * escala;
   const [r, g, b] = rgb(acento);
@@ -3163,7 +3352,7 @@ const EditorialT6 = ({
       borderRadius: 4 * U,
       filter: `drop-shadow(0 0 ${4 * U}px rgba(0,0,0,.35))`
     } });
-    return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: clamp(t / 0.12) * (1 - s) } }, [1, 2].map((i) => /* @__PURE__ */ React.createElement("div", { key: `v${i}`, style: { position: "absolute", left: W * i / 3, top: 0, width: 1.5 * U, height: H, background: "rgba(255,255,255,.35)", opacity: rejilla } })), [1, 2].map((i) => /* @__PURE__ */ React.createElement("div", { key: `h${i}`, style: { position: "absolute", top: H * i / 3, left: 0, height: 1.5 * U, width: W, background: "rgba(255,255,255,.35)", opacity: rejilla } })), esquina(-1, -1), esquina(1, -1), esquina(-1, 1), esquina(1, 1), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - 9 * U, top: cy - 1 * U, width: 18 * U, height: 2 * U, background: "rgba(255,255,255,.8)", opacity: rejilla } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - 1 * U, top: cy - 9 * U, width: 2 * U, height: 18 * U, background: "rgba(255,255,255,.8)", opacity: rejilla } }));
+    return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: clamp(t / 0.12) * (1 - s) } }, [1, 2].map((i) => /* @__PURE__ */ React.createElement("div", { key: `v${i}`, style: { position: "absolute", left: W * i / 3, top: 0, width: 1.5 * U, height: H, background: "rgba(255,255,255,.35)", opacity: rejilla } })), [1, 2].map((i) => /* @__PURE__ */ React.createElement("div", { key: `h${i}`, style: { position: "absolute", top: H * i / 3, left: 0, height: 1.5 * U, width: W, background: "rgba(255,255,255,.35)", opacity: rejilla } })), esquina(-1, -1), esquina(1, -1), esquina(-1, 1), esquina(1, 1), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - 9 * U, top: cy - 1 * U, width: 18 * U, height: 2 * U, background: "rgba(255,255,255,.8)", opacity: rejilla } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - 1 * U, top: cy - 9 * U, width: 2 * U, height: 18 * U, background: "rgba(255,255,255,.8)", opacity: rejilla } }));
   }
   let cuerpo = null;
   if (tipo === "buscar") {
@@ -3226,7 +3415,7 @@ const EditorialT6 = ({
       flex: "none",
       background: "#F3E6DE",
       boxShadow: `0 0 0 ${4 * U}px #fff, 0 0 0 ${7 * U}px rgba(${r},${g},${b},.65)`
-    } }, cara && /* @__PURE__ */ React.createElement(esm.Img, { src: cara, style: { width: "100%", height: "100%", objectFit: "cover" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 * U } }, usuario ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: "#1E1A18" } }, usuario) : /* @__PURE__ */ React.createElement("div", { style: { width: 200 * U, height: 18 * U, borderRadius: 9 * U, background: "#EFE3DB" } }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 14 * U } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.serif, fontSize: 84 * U, lineHeight: 0.9, color: "#1E1A18" } }, n), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 26 * U, color: "#9A8A80" } }, etiqueta))));
+    } }, cara && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: cara, style: { width: "100%", height: "100%", objectFit: "cover" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 * U } }, usuario ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: "#1E1A18" } }, usuario) : /* @__PURE__ */ React.createElement("div", { style: { width: 200 * U, height: 18 * U, borderRadius: 9 * U, background: "#EFE3DB" } }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 14 * U } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.serif, fontSize: 84 * U, lineHeight: 0.9, color: "#1E1A18" } }, n), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 26 * U, color: "#9A8A80" } }, etiqueta))));
   } else if (tipo === "equipo") {
     const lista = (caras.length ? caras : ["smiling_face_with_smiling_eyes", "star_struck", "smiling_face_with_sunglasses"]).slice(0, 3);
     cuerpo = /* @__PURE__ */ React.createElement("div", { style: {
@@ -3254,7 +3443,7 @@ const EditorialT6 = ({
       } }, /* @__PURE__ */ React.createElement(EmojiAnimado, { id: c, lado: 46 * U }));
     })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.02 } }, kicker && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 17 * U, color: "#9A8A80" } }, kicker), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 36 * U, color: "#1E1A18" } }, texto)));
   }
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: 0,
     width: W,
@@ -3308,8 +3497,8 @@ const suave = (q) => {
 };
 const Kit7_easeOut = (q) => 1 - Math.pow(1 - clamp(q), 3);
 const Kit7_useVida = (salida = 0.35) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps, fin = durationInFrames / fps;
   return { t, fin, q: suave((t - (fin - salida)) / Math.max(0.05, salida)) };
 };
@@ -3374,7 +3563,7 @@ const ListaRazonesK = ({
   acento2
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = Kit7_useVida(salida);
   const P = pal(tema, acento, acento2), ed = claro(tema);
@@ -3382,7 +3571,7 @@ const ListaRazonesK = ({
   const v = ["pildora", "cristal", "linea", "tarjeta"].includes(variante) ? variante : "pildora";
   const alto = 96 * U, hueco = (v === "linea" ? 10 : 18) * U, ancho = Math.min(W * 0.78, 640 * U);
   const total = textos.length * alto + (textos.length - 1) * hueco;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W * x / 100 - ancho / 2, top: H * y / 100 - total / 2, width: ancho, display: "flex", flexDirection: "column", gap: hueco } }, textos.map((txt, k) => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W * x / 100 - ancho / 2, top: H * y / 100 - total / 2, width: ancho, display: "flex", flexDirection: "column", gap: hueco } }, textos.map((txt, k) => {
     const p = S(0.1 + k * cada, { damping: 14, stiffness: 170 });
     const marcada = actual > 0 && k + 1 === actual, apagada = actual > 0 && !marcada;
     const late = 0.5 + 0.5 * Math.sin(t * 5 + k);
@@ -3470,7 +3659,7 @@ const MisterioK = ({
   acento2
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = Kit7_useVida(salida);
   const P = pal(tema === "editorial" ? "neon" : tema, acento, acento2);
@@ -3479,7 +3668,7 @@ const MisterioK = ({
   const N = entero(n, 3, 1, 5), hueco = 24 * U;
   const lado = Math.min(220 * U, (Math.min(W * 0.9, 980 * U) - hueco * (N - 1)) / N);
   const total = N * lado + (N - 1) * hueco;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, Array.from({ length: N }, (_, k) => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, Array.from({ length: N }, (_, k) => {
     const p = S(0.08 + k * 0.14, { damping: 11, stiffness: 170 });
     const flota = Math.sin(t * 2.2 + k * 1.3) * 7 * U;
     const rev = revelar === k + 1 ? Kit7_easeOut((t - 0.9) / 0.4) : 0;
@@ -3559,7 +3748,7 @@ const RuedaK = ({
   acento2
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = Kit7_useVida(salida);
   const P = pal(tema === "editorial" ? "neon" : tema, acento, acento2);
@@ -3577,7 +3766,7 @@ const RuedaK = ({
     return `M ${p(r, a0)} L ${p(R - 4 * U, a0)} A ${R - 4 * U} ${R - 4 * U} 0 0 1 ${p(R - 4 * U, a1)} L ${p(r, a1)} A ${r} ${r} 0 0 0 ${p(r, a0)} Z`;
   };
   const brilloSel = clamp((t - 0.8) / 0.4);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("svg", { width: 2 * R, height: 2 * R, style: { position: "absolute", left: cx - R, top: cy - R * (arco ? 1.12 : 1.55), opacity: aparece, overflow: "visible" } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "kitRuedaFade", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0.42", stopColor: "#fff", stopOpacity: "1" }), /* @__PURE__ */ React.createElement("stop", { offset: "0.9", stopColor: "#fff", stopOpacity: "0" })), /* @__PURE__ */ React.createElement("mask", { id: "kitRuedaMask" }, /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: 2 * R, height: 2 * R, fill: "url(#kitRuedaFade)" })), /* @__PURE__ */ React.createElement("linearGradient", { id: "kitRuedaSel", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: P.b }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: P.a }))), /* @__PURE__ */ React.createElement("g", { mask: arco ? void 0 : "url(#kitRuedaMask)", transform: `rotate(${rot.toFixed(3)} ${R} ${R})` }, Array.from({ length: N }, (_, k) => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("svg", { width: 2 * R, height: 2 * R, style: { position: "absolute", left: cx - R, top: cy - R * (arco ? 1.12 : 1.55), opacity: aparece, overflow: "visible" } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "kitRuedaFade", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0.42", stopColor: "#fff", stopOpacity: "1" }), /* @__PURE__ */ React.createElement("stop", { offset: "0.9", stopColor: "#fff", stopOpacity: "0" })), /* @__PURE__ */ React.createElement("mask", { id: "kitRuedaMask" }, /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: 2 * R, height: 2 * R, fill: "url(#kitRuedaFade)" })), /* @__PURE__ */ React.createElement("linearGradient", { id: "kitRuedaSel", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: P.b }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: P.a }))), /* @__PURE__ */ React.createElement("g", { mask: arco ? void 0 : "url(#kitRuedaMask)", transform: `rotate(${rot.toFixed(3)} ${R} ${R})` }, Array.from({ length: N }, (_, k) => {
     const es = k + 1 === sel, encendido = arco && k + 1 < sel;
     const am = (k * paso + inicio + paso / 2) * Math.PI / 180, rm = (R + r) / 2;
     return /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement(
@@ -3648,7 +3837,7 @@ const AbanicoK = ({
   acento2
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = Kit7_useVida(salida);
   const P = pal(tema, acento, acento2), ed = claro(tema);
@@ -3658,7 +3847,7 @@ const AbanicoK = ({
   const abre = Math.min(64, 11 * (N - 1)), Rf = w * 2.9;
   const cx = W * x / 100, base = H * y / 100 + (numero || titulo ? 150 * U : 0);
   const cabeza = numero || titulo;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, cabeza && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: base - h / 2 - 300 * U, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Encabezado, { numero, titulo, subtitulo, P, U, t, tam: 0.85, ed })), Array.from({ length: N }, (_, k) => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, cabeza && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: base - h / 2 - 300 * U, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Encabezado, { numero, titulo, subtitulo, P, U, t, tam: 0.85, ed })), Array.from({ length: N }, (_, k) => {
     const p = S(0.18 + k * 0.08, { damping: 15, stiffness: 140 });
     let ang = N === 1 ? 0 : -abre / 2 + k * abre / (N - 1);
     const rad = ang * Math.PI / 180;
@@ -3747,7 +3936,7 @@ const RutaK = ({
   acento2
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala;
   const { t, q } = Kit7_useVida(salida);
   const P = pal(tema, acento, acento2), ed = claro(tema);
@@ -3771,7 +3960,7 @@ const RutaK = ({
     return { i, p: desplazados[i], visible: clamp((prog - objetivo) / (0.08 * largo)) };
   });
   const trazo = ed ? P.a : "#E9EEF5";
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, (numero || titulo) && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 0, width: W, top: oy - 270 * U, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Encabezado, { numero, titulo, subtitulo, P, U, t, tam: 0.8, ed })), /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", left: 0, top: 0, overflow: "visible" } }, /* @__PURE__ */ React.createElement("g", { transform: `translate(${ox.toFixed(1)} ${oy.toFixed(1)})` }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, (numero || titulo) && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 0, width: W, top: oy - 270 * U, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Encabezado, { numero, titulo, subtitulo, P, U, t, tam: 0.8, ed })), /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", left: 0, top: 0, overflow: "visible" } }, /* @__PURE__ */ React.createElement("g", { transform: `translate(${ox.toFixed(1)} ${oy.toFixed(1)})` }, /* @__PURE__ */ React.createElement(
     "polyline",
     {
       points: linea(desplazados.filter((_, i) => acum[i] <= prog)),
@@ -3825,13 +4014,13 @@ const TituloNeonK = ({
   acento2
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala;
   const { t, q } = Kit7_useVida(salida);
   const P = pal(tema, acento, acento2), ed = claro(tema);
   const limpio = variante === "limpio";
   const late = 0.5 + 0.5 * Math.sin(t * 1.6);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, limpio && /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, limpio && /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: W * x / 100 - 260 * U,
     top: H * y / 100 + 112 * U,
@@ -3873,7 +4062,7 @@ const ConceptoK = ({
   acento2
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = Kit7_useVida(salida);
   const P = pal(tema, acento, acento2), ed = claro(tema);
@@ -3897,7 +4086,7 @@ const ConceptoK = ({
       break;
     }
   }
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: cx - cw / 2,
     top: cy - chh / 2,
@@ -3977,7 +4166,7 @@ const MixtoK = ({
   acento2
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala;
   const { t, q } = Kit7_useVida(salida);
   const P = pal(tema, acento, acento2), ed = claro(tema);
@@ -3989,7 +4178,7 @@ const MixtoK = ({
   const plegar = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\p{L}\p{N}]/gu, "");
   const k = plegar(clave);
   const p2 = Kit7_easeOut((t - 0.3) / 0.45);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W * x / 100 - W * 0.45, width: W * 0.9, top: H * y / 100 - 120 * U, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 70 * U, lineHeight: 1.05, color: ed ? P.texto : "#FFFFFF" } }, pal1.map((w, i) => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W * x / 100 - W * 0.45, width: W * 0.9, top: H * y / 100 - 120 * U, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 70 * U, lineHeight: 1.05, color: ed ? P.texto : "#FFFFFF" } }, pal1.map((w, i) => {
     const p = Kit7_easeOut((t - 0.05 - i * 0.07) / 0.35);
     return /* @__PURE__ */ React.createElement("span", { key: i, style: { display: "inline-block", marginRight: "0.25em", opacity: p, filter: `blur(${((1 - p) * 8 * U).toFixed(2)}px)` } }, w);
   })), /* @__PURE__ */ React.createElement("div", { style: {
@@ -4023,7 +4212,7 @@ const rgba = (h, a) => {
 };
 const RecorteK = ({ icono = "light_bulb", palabra = "", x = 50, y = 40, escala = 1, salida = 0.35, variante = "trama", acento }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = Kit7_useVida(salida);
   const cx = W * x / 100, cy = H * y / 100, lado = 430 * U;
@@ -4037,11 +4226,11 @@ const RecorteK = ({ icono = "light_bulb", palabra = "", x = 50, y = 40, escala =
   const escalaIn = neon ? 0.96 + 0.04 * Kit7_easeOut(t / 0.3) : 1.55 - 0.55 * p;
   const giro = neon ? 0 : giroFinal - 16 * (1 - clamp(p)) + vaiven;
   const sombra = neon ? "" : `drop-shadow(${(6 + 14 * (1 - clamp(p))) * U}px ${(14 + 20 * (1 - clamp(p))) * U}px ${(14 + 10 * (1 - clamp(p))) * U}px rgba(0,0,0,.45))`;
-  const url = (0,esm.staticFile)(`recortes/${neon ? "linea" : conColor ? "color" : "trama"}/${icono}.webp`);
+  const url = (0,esm/* staticFile */.dQ)(`recortes/${neon ? "linea" : conColor ? "color" : "trama"}/${icono}.webp`);
   const pc = S(0.32, { damping: 12, stiffness: 220 });
   const pt = Kit7_easeOut((t - 0.3) / 0.22);
   const pl = Kit7_easeOut((t - 0.38) / 0.35);
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: cx - lado / 2,
     top: cy - lado / 2 + flota,
@@ -4058,10 +4247,10 @@ const RecorteK = ({ icono = "light_bulb", palabra = "", x = 50, y = 40, escala =
     maskImage: `url(${url})`,
     WebkitMaskSize: "100% 100%",
     maskSize: "100% 100%"
-  } })) : /* @__PURE__ */ React.createElement(esm.Img, { src: url, style: { width: lado, height: lado } }), !neon && !conColor && /* @__PURE__ */ React.createElement(
-    esm.Img,
+  } })) : /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: url, style: { width: lado, height: lado } }), !neon && !conColor && /* @__PURE__ */ React.createElement(
+    esm/* Img */.E9,
     {
-      src: (0,esm.staticFile)("stickers/rcs_emoji_pushpin.png"),
+      src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"),
       style: {
         position: "absolute",
         left: lado / 2 - 48 * U,
@@ -4139,7 +4328,7 @@ const SeleccionK = ({
   acento
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, q } = Kit7_useVida(salida);
   const rosa = variante === "rosa", oscuro = variante === "oscuro";
@@ -4156,7 +4345,7 @@ const SeleccionK = ({
   const pchispa = S(1.1, { damping: 10 });
   const opciones = MENU[String(idioma).slice(0, 2)] || MENU.es;
   const tarjeta = rosa ? S(0, { damping: 18 }) : 0;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, rosa && /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, rosa && /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: cx - W * 0.44,
     width: W * 0.88,
@@ -4261,7 +4450,7 @@ const CalendarioK = ({
   acento
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, fin, q } = Kit7_useVida(salida);
   const E = { ...ESTILO_CAL[variante] || ESTILO_CAL.rojo };
@@ -4303,7 +4492,7 @@ const CalendarioK = ({
   const pv = arrancada !== null ? clamp((t - (t0 + k * dt)) / vuelo) : 1;
   const tFinal = t0 + cuantos * dt;
   const pcheck = final === "check" ? S(tFinal + 0.15, { damping: 11, stiffness: 200 }) : 0;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
     position: "absolute",
     left: cx - lado / 2,
     top: cy - lado / 2,
@@ -4370,7 +4559,7 @@ const RedNeonK = ({
   variante = "interruptor"
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU() * escala, S = useResorte();
   const { t, fin, q } = Kit7_useVida(salida);
   const cx = W * x / 100, cy = H * y / 100;
@@ -4385,7 +4574,7 @@ const RedNeonK = ({
   const pe = (i) => S(0.05 + i * 0.09, { damping: 12, stiffness: 170 });
   const pill = S(0.3, { damping: 14 });
   const etiqueta = pk < 0.5 ? izq : der;
-  return /* @__PURE__ */ React.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", left: 0, top: 0, overflow: "visible" } }, sitios.map(([dx, dy], i) => {
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", left: 0, top: 0, overflow: "visible" } }, sitios.map(([dx, dy], i) => {
     const x1 = cx + dx * U, y1 = cy + dy * U, x2 = cx, y2 = centroY;
     const largo = Math.hypot(x2 - x1, y2 - y1);
     const dibujo = Kit7_easeOut((t - 0.25 - i * 0.06) / 0.5);
@@ -4494,13 +4683,13 @@ const azar = (i) => {
   return x - Math.floor(x);
 };
 const Escenas9_lista = (s) => String(s || "").split("|").map((x) => x.trim()).filter(Boolean);
-const src = (s) => !s ? "" : /^(data:|https?:)/.test(s) ? s : (0,esm.staticFile)(s);
+const src = (s) => !s ? "" : /^(data:|https?:)/.test(s) ? s : (0,esm/* staticFile */.dQ)(s);
 const entre = (a, b, q) => a + (b - a) * q;
 const Glifo = ({ nombre, lado, color, relleno = true, grosor = 2, style }) => {
   const G = glifos_namespaceObject;
   const lleno = relleno && G.f[nombre];
   const nodos = lleno ? G.f[nombre] : G.o[nombre] || G.o["star"] || [];
-  return /* @__PURE__ */ react.createElement(
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(
     "svg",
     {
       width: lado,
@@ -4513,18 +4702,18 @@ const Glifo = ({ nombre, lado, color, relleno = true, grosor = 2, style }) => {
       strokeLinecap: "round",
       strokeLinejoin: "round"
     },
-    nodos.map(([tag, at], i) => react.createElement(tag, { key: i, ...at, ...lleno ? { fill: color } : {} }))
+    nodos.map(([tag, at], i) => (react_namespaceFn().createElement)(tag, { key: i, ...at, ...lleno ? { fill: color } : {} }))
   );
 };
-const Grano = ({ op = 0.08, frec = 0.85, id }) => /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: "100%", height: "100%", opacity: op, mixBlendMode: "multiply" } }, /* @__PURE__ */ react.createElement("filter", { id }, /* @__PURE__ */ react.createElement("feTurbulence", { type: "fractalNoise", baseFrequency: frec, numOctaves: 2, stitchTiles: "stitch" }), /* @__PURE__ */ react.createElement("feColorMatrix", { type: "saturate", values: "0" })), /* @__PURE__ */ react.createElement("rect", { width: "100%", height: "100%", filter: `url(#${id})` }));
-const FondoEscena = react.createContext("");
-const conFondo = (C) => (props) => /* @__PURE__ */ react.createElement(FondoEscena.Provider, { value: Escenas9_esHex(props.fondoEscena) ? Escenas9_hex(props.fondoEscena, "#000000") : "" }, /* @__PURE__ */ react.createElement(C, { ...props }));
+const Grano = ({ op = 0.08, frec = 0.85, id }) => /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: "100%", height: "100%", opacity: op, mixBlendMode: "multiply" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("filter", { id }, /* @__PURE__ */ (react_namespaceFn().createElement)("feTurbulence", { type: "fractalNoise", baseFrequency: frec, numOctaves: 2, stitchTiles: "stitch" }), /* @__PURE__ */ (react_namespaceFn().createElement)("feColorMatrix", { type: "saturate", values: "0" })), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { width: "100%", height: "100%", filter: `url(#${id})` }));
+const FondoEscena = (react_namespaceFn().createContext)("");
+const conFondo = (C) => (props) => /* @__PURE__ */ (react_namespaceFn().createElement)(FondoEscena.Provider, { value: Escenas9_esHex(props.fondoEscena) ? Escenas9_hex(props.fondoEscena, "#000000") : "" }, /* @__PURE__ */ (react_namespaceFn().createElement)(C, { ...props }));
 const Escena = ({ fondo: fondoDiseno, salida = 0.3, ox = 50, oy = 55, children }) => {
-  const propio = react.useContext(FondoEscena);
+  const propio = (react_namespaceFn().useContext)(FondoEscena);
   const fondo = propio ? `radial-gradient(120% 85% at 50% 35%, ${mezcla(propio, [255, 255, 255], 0.1)} 0%, ${propio} 72%)` : fondoDiseno;
   const { t, q } = Kit7_useVida(salida);
   const r = Kit7_easeOut(t / 0.32) * 150;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: {
     opacity: 1 - q,
     clipPath: r < 149 ? `circle(${r.toFixed(2)}% at ${ox}% ${oy}%)` : void 0,
     background: fondo,
@@ -4573,13 +4762,13 @@ const Monigote = ({ pose, F, x, y, boca, gafas, ropa = "#4C7DFF", contorno = "#F
     return [[x, y], c, seg(c, p[1], Ls)];
   };
   const pts = (q) => q.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
-  const linea = (q, w, c, k, extra = {}) => /* @__PURE__ */ react.createElement("polyline", { key: k, points: pts(q), fill: "none", stroke: c, strokeWidth: w, strokeLinecap: "round", strokeLinejoin: "round", ...extra });
+  const linea = (q, w, c, k, extra = {}) => /* @__PURE__ */ (react_namespaceFn().createElement)("polyline", { key: k, points: pts(q), fill: "none", stroke: c, strokeWidth: w, strokeLinecap: "round", strokeLinejoin: "round", ...extra });
   const pL = pierna(pose.pL), pR = pierna(pose.pR), bL = brazo(pose.bL), bR = brazo(pose.bR);
   const o = 0.032 * F;
   const zapato = (q, k, borde = 0) => {
     const [px, py] = q[2], [ax, ay] = q[1];
     const ang = Math.atan2(py - ay, px - ax) * 180 / Math.PI - 90;
-    return /* @__PURE__ */ react.createElement(
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(
       "ellipse",
       {
         key: k,
@@ -4592,26 +4781,26 @@ const Monigote = ({ pose, F, x, y, boca, gafas, ropa = "#4C7DFF", contorno = "#F
       }
     );
   };
-  const mano = (q, k, borde = 0) => /* @__PURE__ */ react.createElement("circle", { key: k, cx: q[2][0], cy: q[2][1], r: 0.04 * F + borde, fill: borde ? contorno : PIEL });
+  const mano = (q, k, borde = 0) => /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { key: k, cx: q[2][0], cy: q[2][1], r: 0.04 * F + borde, fill: borde ? contorno : PIEL });
   const codo = (q) => [q[0], q[1]];
   const antebrazo = (q) => [q[1], q[2]];
   const grados = ca * 180 / Math.PI;
   const suelo = Math.max(pL[2][1], pR[2][1]) + 0.035 * F;
-  return /* @__PURE__ */ react.createElement("g", null, /* @__PURE__ */ react.createElement("ellipse", { cx: (pL[2][0] + pR[2][0]) / 2, cy: suelo, rx: 0.26 * F, ry: 0.035 * F, fill: "#000", opacity: 0.28 }), /* @__PURE__ */ react.createElement("g", null, linea(pL, 0.12 * F + 2 * o, contorno, "opl"), linea(pR, 0.12 * F + 2 * o, contorno, "opr"), zapato(pL, "ozl", o), zapato(pR, "ozr", o), linea([[x, y], cuello], 0.27 * F + 2 * o, contorno, "ot"), linea(bL, 0.08 * F + 2 * o, contorno, "obl"), linea(bR, 0.08 * F + 2 * o, contorno, "obr"), mano(bL, "oml", o), mano(bR, "omr", o), /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0], cy: cabeza[1], r: r + o, fill: contorno })), linea(pL, 0.12 * F, PANTALON, "pl"), linea(pR, 0.12 * F, PANTALON, "pr"), zapato(pL, "zl"), zapato(pR, "zr"), linea([[x, y], cuello], 0.27 * F, ropa, "t"), linea([[x - 0.045 * F, y - 0.04 * F], [cuello[0] - 0.045 * F, cuello[1] + 0.05 * F]], 0.045 * F, "#FFFFFF", "tb", { strokeOpacity: 0.22 }), linea([[x - 0.135 * F, y + 5e-3 * F], [x + 0.135 * F, y + 5e-3 * F]], 0.05 * F, PANTALON, "cint"), linea(antebrazo(bL), 0.07 * F, PIEL, "al"), linea(antebrazo(bR), 0.07 * F, PIEL, "ar"), linea(codo(bL), 0.085 * F, ropa, "ml"), linea(codo(bR), 0.085 * F, ropa, "mr"), mano(bL, "hl"), mano(bR, "hr"), /* @__PURE__ */ react.createElement("g", { transform: `rotate(${grados.toFixed(2)} ${cabeza[0].toFixed(1)} ${cabeza[1].toFixed(1)})` }, /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0], cy: cabeza[1], r, fill: PIEL }), /* @__PURE__ */ react.createElement(
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("g", null, /* @__PURE__ */ (react_namespaceFn().createElement)("ellipse", { cx: (pL[2][0] + pR[2][0]) / 2, cy: suelo, rx: 0.26 * F, ry: 0.035 * F, fill: "#000", opacity: 0.28 }), /* @__PURE__ */ (react_namespaceFn().createElement)("g", null, linea(pL, 0.12 * F + 2 * o, contorno, "opl"), linea(pR, 0.12 * F + 2 * o, contorno, "opr"), zapato(pL, "ozl", o), zapato(pR, "ozr", o), linea([[x, y], cuello], 0.27 * F + 2 * o, contorno, "ot"), linea(bL, 0.08 * F + 2 * o, contorno, "obl"), linea(bR, 0.08 * F + 2 * o, contorno, "obr"), mano(bL, "oml", o), mano(bR, "omr", o), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0], cy: cabeza[1], r: r + o, fill: contorno })), linea(pL, 0.12 * F, PANTALON, "pl"), linea(pR, 0.12 * F, PANTALON, "pr"), zapato(pL, "zl"), zapato(pR, "zr"), linea([[x, y], cuello], 0.27 * F, ropa, "t"), linea([[x - 0.045 * F, y - 0.04 * F], [cuello[0] - 0.045 * F, cuello[1] + 0.05 * F]], 0.045 * F, "#FFFFFF", "tb", { strokeOpacity: 0.22 }), linea([[x - 0.135 * F, y + 5e-3 * F], [x + 0.135 * F, y + 5e-3 * F]], 0.05 * F, PANTALON, "cint"), linea(antebrazo(bL), 0.07 * F, PIEL, "al"), linea(antebrazo(bR), 0.07 * F, PIEL, "ar"), linea(codo(bL), 0.085 * F, ropa, "ml"), linea(codo(bR), 0.085 * F, ropa, "mr"), mano(bL, "hl"), mano(bR, "hr"), /* @__PURE__ */ (react_namespaceFn().createElement)("g", { transform: `rotate(${grados.toFixed(2)} ${cabeza[0].toFixed(1)} ${cabeza[1].toFixed(1)})` }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0], cy: cabeza[1], r, fill: PIEL }), /* @__PURE__ */ (react_namespaceFn().createElement)(
     "path",
     {
       d: `M ${cabeza[0] + r * 0.2} ${cabeza[1] + r * 0.98} A ${r} ${r} 0 0 0 ${cabeza[0] + r * 0.98} ${cabeza[1] + r * 0.2} A ${r * 1.3} ${r * 1.3} 0 0 1 ${cabeza[0] + r * 0.2} ${cabeza[1] + r * 0.98} z`,
       fill: PIEL_SOMBRA,
       opacity: 0.55
     }
-  ), /* @__PURE__ */ react.createElement(
+  ), /* @__PURE__ */ (react_namespaceFn().createElement)(
     "path",
     {
       d: `M ${cabeza[0] - r * 1.02} ${cabeza[1] + r * 0.05} A ${r * 1.02} ${r * 1.02} 0 0 1 ${cabeza[0] + r * 1.02} ${cabeza[1] - r * 0.05}
                   Q ${cabeza[0] + r * 0.55} ${cabeza[1] - r * 0.55} ${cabeza[0] + r * 0.05} ${cabeza[1] - r * 0.42} Q ${cabeza[0] - r * 0.6} ${cabeza[1] - r * 0.3} ${cabeza[0] - r * 1.02} ${cabeza[1] + r * 0.05} z`,
       fill: PELO
     }
-  ), /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0] - r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.11, fill: "#1B1B1F" }), /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0] + r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.11, fill: "#1B1B1F" }), /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0] - r * 0.31, cy: cabeza[1] + r * 0.01, r: r * 0.04, fill: "#FFFFFF" }), /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0] + r * 0.37, cy: cabeza[1] + r * 0.01, r: r * 0.04, fill: "#FFFFFF" }), /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0] - r * 0.58, cy: cabeza[1] + r * 0.35, r: r * 0.14, fill: "#FF7A8A", opacity: 0.45 }), /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0] + r * 0.58, cy: cabeza[1] + r * 0.35, r: r * 0.14, fill: "#FF7A8A", opacity: 0.45 }), boca ? /* @__PURE__ */ react.createElement("ellipse", { cx: cabeza[0], cy: cabeza[1] + r * 0.45, rx: r * 0.24, ry: r * 0.3, fill: "#5A1A22" }) : /* @__PURE__ */ react.createElement(
+  ), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] - r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.11, fill: "#1B1B1F" }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] + r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.11, fill: "#1B1B1F" }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] - r * 0.31, cy: cabeza[1] + r * 0.01, r: r * 0.04, fill: "#FFFFFF" }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] + r * 0.37, cy: cabeza[1] + r * 0.01, r: r * 0.04, fill: "#FFFFFF" }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] - r * 0.58, cy: cabeza[1] + r * 0.35, r: r * 0.14, fill: "#FF7A8A", opacity: 0.45 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] + r * 0.58, cy: cabeza[1] + r * 0.35, r: r * 0.14, fill: "#FF7A8A", opacity: 0.45 }), boca ? /* @__PURE__ */ (react_namespaceFn().createElement)("ellipse", { cx: cabeza[0], cy: cabeza[1] + r * 0.45, rx: r * 0.24, ry: r * 0.3, fill: "#5A1A22" }) : /* @__PURE__ */ (react_namespaceFn().createElement)(
     "path",
     {
       d: `M ${cabeza[0] - r * 0.26} ${cabeza[1] + r * 0.38} Q ${cabeza[0]} ${cabeza[1] + r * 0.62} ${cabeza[0] + r * 0.26} ${cabeza[1] + r * 0.38}`,
@@ -4620,11 +4809,11 @@ const Monigote = ({ pose, F, x, y, boca, gafas, ropa = "#4C7DFF", contorno = "#F
       strokeWidth: r * 0.1,
       strokeLinecap: "round"
     }
-  ), gafas && /* @__PURE__ */ react.createElement("g", { fill: "none", stroke: "#1B1B1F", strokeWidth: r * 0.09 }, /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0] - r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.26 }), /* @__PURE__ */ react.createElement("circle", { cx: cabeza[0] + r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.26 }), /* @__PURE__ */ react.createElement("path", { d: `M ${cabeza[0] - r * 0.08} ${cabeza[1] + r * 0.05} h ${r * 0.16}` }))));
+  ), gafas && /* @__PURE__ */ (react_namespaceFn().createElement)("g", { fill: "none", stroke: "#1B1B1F", strokeWidth: r * 0.09 }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] - r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.26 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] + r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.26 }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: `M ${cabeza[0] - r * 0.08} ${cabeza[1] + r * 0.05} h ${r * 0.16}` }))));
 };
 const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen = "", variante = "oscuro", acento, salida = 0.3 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const vert = H >= W;
@@ -4664,12 +4853,12 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
     const sentado = pose === "trabajando" || pose === "gritando";
     const hx = sentado ? cx + (pose === "gritando" ? 0.25 * F : -0.1 * F) : cx, hy = sentado ? cy + 0.12 * F : cy + 0.18 * F + dy;
     const pc = sentado ? S(0.05, { damping: 16 }) : 1;
-    figura = /* @__PURE__ */ react.createElement("svg", { width: W, height: H, style: {
+    figura = /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: W, height: H, style: {
       position: "absolute",
       inset: 0,
       overflow: "visible",
       filter: claro ? `drop-shadow(0 ${14 * U}px ${22 * U}px rgba(0,0,0,.18))` : neon ? `drop-shadow(0 0 ${30 * U}px ${ac})` : `drop-shadow(0 0 ${22 * U}px rgba(255,255,255,.25))`
-    } }, sentado && /* @__PURE__ */ react.createElement("g", { opacity: clamp(pc * 2), transform: `translate(0 ${((1 - clamp(pc)) * 60 * U).toFixed(1)})` }, /* @__PURE__ */ react.createElement("rect", { x: hx - 0.2 * F, y: hy - 0.02 * F, width: 0.24 * F, height: 0.05 * F, rx: 0.02 * F, fill: tinta }), /* @__PURE__ */ react.createElement("rect", { x: hx - 0.21 * F, y: hy - 0.32 * F, width: 0.05 * F, height: 0.32 * F, rx: 0.02 * F, fill: tinta }), /* @__PURE__ */ react.createElement("line", { x1: hx - 0.08 * F, y1: hy + 0.03 * F, x2: hx - 0.08 * F, y2: hy + 0.28 * F, stroke: tinta, strokeWidth: 0.035 * F }), /* @__PURE__ */ react.createElement("path", { d: `M${hx - 0.2 * F} ${hy + 0.3 * F} h${0.24 * F}`, stroke: tinta, strokeWidth: 0.03 * F, strokeLinecap: "round" }), /* @__PURE__ */ react.createElement("rect", { x: hx + 0.18 * F, y: hy - 0.1 * F, width: 0.62 * F, height: 0.06 * F, rx: 0.01 * F, fill: tinta }), /* @__PURE__ */ react.createElement("rect", { x: hx + 0.22 * F, y: hy - 0.04 * F, width: 0.04 * F, height: 0.34 * F, fill: tinta }), /* @__PURE__ */ react.createElement("rect", { x: hx + 0.72 * F, y: hy - 0.04 * F, width: 0.04 * F, height: 0.34 * F, fill: tinta }), /* @__PURE__ */ react.createElement("path", { d: `M${hx + 0.42 * F} ${hy - 0.1 * F} l${0.08 * F} ${-0.2 * F} h${0.22 * F} l${-0.02 * F} ${0.2 * F} z`, fill: tinta }), /* @__PURE__ */ react.createElement("circle", { cx: hx + 0.62 * F, cy: hy - 0.2 * F, r: 0.012 * F, fill: claro ? "#DCDCDA" : "#000" })), /* @__PURE__ */ react.createElement(Monigote, { pose: P, F, color: tinta, x: hx, y: hy, gafas: sentado, ropa }), pose === "gritando" && /* @__PURE__ */ react.createElement("g", { opacity: clamp((t - 0.25) / 0.2) }, /* @__PURE__ */ react.createElement(Monigote, { pose: mezclaPose(base, POSES.gritando, q), F: F * 1.02, color: tinta, x: hx - 0.62 * F, y: cy + 0.18 * F + Math.sin(t * 22) * 8e-3 * F, boca: true, ropa: "#E8505B" }), [0, 1, 2].map((k) => /* @__PURE__ */ react.createElement(
+    } }, sentado && /* @__PURE__ */ (react_namespaceFn().createElement)("g", { opacity: clamp(pc * 2), transform: `translate(0 ${((1 - clamp(pc)) * 60 * U).toFixed(1)})` }, /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx - 0.2 * F, y: hy - 0.02 * F, width: 0.24 * F, height: 0.05 * F, rx: 0.02 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx - 0.21 * F, y: hy - 0.32 * F, width: 0.05 * F, height: 0.32 * F, rx: 0.02 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("line", { x1: hx - 0.08 * F, y1: hy + 0.03 * F, x2: hx - 0.08 * F, y2: hy + 0.28 * F, stroke: tinta, strokeWidth: 0.035 * F }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: `M${hx - 0.2 * F} ${hy + 0.3 * F} h${0.24 * F}`, stroke: tinta, strokeWidth: 0.03 * F, strokeLinecap: "round" }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx + 0.18 * F, y: hy - 0.1 * F, width: 0.62 * F, height: 0.06 * F, rx: 0.01 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx + 0.22 * F, y: hy - 0.04 * F, width: 0.04 * F, height: 0.34 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx + 0.72 * F, y: hy - 0.04 * F, width: 0.04 * F, height: 0.34 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: `M${hx + 0.42 * F} ${hy - 0.1 * F} l${0.08 * F} ${-0.2 * F} h${0.22 * F} l${-0.02 * F} ${0.2 * F} z`, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: hx + 0.62 * F, cy: hy - 0.2 * F, r: 0.012 * F, fill: claro ? "#DCDCDA" : "#000" })), /* @__PURE__ */ (react_namespaceFn().createElement)(Monigote, { pose: P, F, color: tinta, x: hx, y: hy, gafas: sentado, ropa }), pose === "gritando" && /* @__PURE__ */ (react_namespaceFn().createElement)("g", { opacity: clamp((t - 0.25) / 0.2) }, /* @__PURE__ */ (react_namespaceFn().createElement)(Monigote, { pose: mezclaPose(base, POSES.gritando, q), F: F * 1.02, color: tinta, x: hx - 0.62 * F, y: cy + 0.18 * F + Math.sin(t * 22) * 8e-3 * F, boca: true, ropa: "#E8505B" }), [0, 1, 2].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)(
       "line",
       {
         key: k,
@@ -4684,7 +4873,7 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
       }
     ))), pose === "pensando" && [0, 1, 2].map((k) => {
       const pk = clamp((t - 0.5 - k * 0.25) / 0.3);
-      return /* @__PURE__ */ react.createElement(
+      return /* @__PURE__ */ (react_namespaceFn().createElement)(
         "text",
         {
           key: k,
@@ -4698,7 +4887,7 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
         },
         "?"
       );
-    }), (pose === "corriendo" || pose === "cayendo") && [0, 1, 2, 3].map((k) => /* @__PURE__ */ react.createElement(
+    }), (pose === "corriendo" || pose === "cayendo") && [0, 1, 2, 3].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)(
       "line",
       {
         key: k,
@@ -4711,16 +4900,16 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
         strokeLinecap: "round",
         opacity: 0.35
       }
-    )), pose === "subiendo" && [0, 1, 2, 3, 4].map((k) => /* @__PURE__ */ react.createElement("rect", { key: k, x: hx - 0.3 * F + k * 0.22 * F, y: hy + 0.42 * F - k * 0.14 * F, width: 0.24 * F, height: 0.14 * F + k * 0.14 * F, fill: tinta, opacity: 0.18 })), pose === "senalando" && /* @__PURE__ */ react.createElement("g", { opacity: clamp((t - 0.55) / 0.15) }, [0, 1, 2, 3, 4].map((k) => {
+    )), pose === "subiendo" && [0, 1, 2, 3, 4].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { key: k, x: hx - 0.3 * F + k * 0.22 * F, y: hy + 0.42 * F - k * 0.14 * F, width: 0.24 * F, height: 0.14 * F + k * 0.14 * F, fill: tinta, opacity: 0.18 })), pose === "senalando" && /* @__PURE__ */ (react_namespaceFn().createElement)("g", { opacity: clamp((t - 0.55) / 0.15) }, [0, 1, 2, 3, 4].map((k) => {
       const a = (-40 + k * 20) * (Math.PI / 180), r0 = 0.05 * F, r1 = 0.1 * F + 0.03 * F * Math.sin(t * 9);
       const px = hx + 0.4 * F, py = hy - 0.33 * F;
-      return /* @__PURE__ */ react.createElement("line", { key: k, x1: px + Math.cos(a) * r0, y1: py + Math.sin(a) * r0, x2: px + Math.cos(a) * r1, y2: py + Math.sin(a) * r1, stroke: tinta, strokeWidth: 0.018 * F, strokeLinecap: "round" });
+      return /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: k, x1: px + Math.cos(a) * r0, y1: py + Math.sin(a) * r0, x2: px + Math.cos(a) * r1, y2: py + Math.sin(a) * r1, stroke: tinta, strokeWidth: 0.018 * F, strokeLinecap: "round" });
     })));
   }
   const pl = Kit7_easeOut((t - 0.75) / 0.6), pi = S(1.25, { damping: 11, stiffness: 170 });
   const ix = vert ? W / 2 : W * 0.76, iy = vert ? H * 0.7 : H * 0.56, li = (vert ? 300 : 360) * U;
   const curva = vert ? `M ${W / 2} ${H * 0.565} C ${W / 2 + 70 * U} ${H * 0.58}, ${W / 2 - 50 * U} ${H * 0.6}, ${W / 2} ${iy - li * 0.5}` : `M ${W * 0.48} ${H * 0.52} C ${W * 0.55} ${H * 0.4}, ${W * 0.6} ${H * 0.66}, ${ix - li * 0.5} ${iy}`;
-  return /* @__PURE__ */ react.createElement(Escena, { fondo, salida }, claro && Array.from({ length: 22 }).map((_, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, claro && Array.from({ length: 22 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
     position: "absolute",
     left: azar(i) * W,
     top: (azar(i + 40) * H + t * 20 * U * (azar(i + 9) - 0.5)) % H,
@@ -4729,7 +4918,7 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
     borderRadius: "50%",
     background: "#111",
     opacity: 0.08 + 0.5 * azar(i + 5)
-  } })), claro && conTexto && /* @__PURE__ */ react.createElement("div", { style: {
+  } })), claro && conTexto && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: -W * 0.1 + t * 30 * U,
     top: H * 0.72,
@@ -4740,15 +4929,15 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
     WebkitTextStroke: `${3 * U}px rgba(0,0,0,.12)`,
     whiteSpace: "nowrap",
     letterSpacing: "-0.02em"
-  } }, texto, " ", texto), !claro && !neon && /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, Array.from({ length: Math.ceil(W / (170 * U)) + 1 }).map((_, i) => /* @__PURE__ */ react.createElement("line", { key: "v" + i, x1: i * 170 * U, y1: 0, x2: i * 170 * U, y2: H, stroke: "#262626", strokeWidth: 2 * U })), Array.from({ length: Math.ceil(H / (170 * U)) + 1 }).map((_, i) => /* @__PURE__ */ react.createElement("line", { key: "h" + i, x1: 0, y1: i * 170 * U, x2: W, y2: i * 170 * U, stroke: "#262626", strokeWidth: 2 * U }))), neon && /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, Array.from({ length: 9 }).map((_, i) => {
+  } }, texto, " ", texto), !claro && !neon && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, Array.from({ length: Math.ceil(W / (170 * U)) + 1 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: "v" + i, x1: i * 170 * U, y1: 0, x2: i * 170 * U, y2: H, stroke: "#262626", strokeWidth: 2 * U })), Array.from({ length: Math.ceil(H / (170 * U)) + 1 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: "h" + i, x1: 0, y1: i * 170 * U, x2: W, y2: i * 170 * U, stroke: "#262626", strokeWidth: 2 * U }))), neon && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, Array.from({ length: 9 }).map((_, i) => {
     const x0 = i / 8 * W;
     const d = Array.from({ length: 13 }).map((__, k) => `${k ? "L" : "M"} ${(x0 + Math.sin(k * 0.9 + t * 1.3 + i) * 14 * U).toFixed(1)} ${(k / 12 * H).toFixed(1)}`).join(" ");
-    return /* @__PURE__ */ react.createElement("path", { key: "v" + i, d, stroke: "rgba(255,255,255,.55)", strokeWidth: 2.5 * U, fill: "none" });
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("path", { key: "v" + i, d, stroke: "rgba(255,255,255,.55)", strokeWidth: 2.5 * U, fill: "none" });
   }), Array.from({ length: 14 }).map((_, i) => {
     const y0 = i / 13 * H;
     const d = Array.from({ length: 9 }).map((__, k) => `${k ? "L" : "M"} ${(k / 8 * W).toFixed(1)} ${(y0 + Math.sin(k * 1.1 + t * 1.1 + i) * 14 * U).toFixed(1)}`).join(" ");
-    return /* @__PURE__ */ react.createElement("path", { key: "h" + i, d, stroke: "rgba(255,255,255,.55)", strokeWidth: 2.5 * U, fill: "none" });
-  })), !claro && !neon && /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("path", { key: "h" + i, d, stroke: "rgba(255,255,255,.55)", strokeWidth: 2.5 * U, fill: "none" });
+  })), !claro && !neon && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cx - 420 * U,
     top: cy - 420 * U,
@@ -4756,7 +4945,7 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
     height: 840 * U,
     borderRadius: "50%",
     background: "radial-gradient(circle, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 65%)"
-  } }), figura, conTexto && /* @__PURE__ */ react.createElement("div", { style: {
+  } }), figura, conTexto && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 0,
     width: vert ? W : W * 0.68,
@@ -4770,7 +4959,7 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
     opacity: clamp((t - 0.2) / 0.25),
     textShadow: claro ? "none" : `0 0 ${24 * U}px rgba(255,255,255,.35)`,
     textTransform: "uppercase"
-  } }, texto), sub && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, texto), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 0,
     width: vert ? W : W * 0.68,
@@ -4781,7 +4970,7 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
     fontSize: 48 * U,
     color: claro ? "#444" : "rgba(255,255,255,.75)",
     opacity: clamp((t - 0.45) / 0.3)
-  } }, sub), imagen && !neon && /* @__PURE__ */ react.createElement(react.Fragment, null, /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ react.createElement("path", { d: curva, fill: "none", stroke: tinta, strokeWidth: 5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: (1 - pl).toFixed(4), opacity: 0.9 })), /* @__PURE__ */ react.createElement(esm.Img, { src: src(imagen), style: {
+  } }, sub), imagen && !neon && /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: curva, fill: "none", stroke: tinta, strokeWidth: 5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: (1 - pl).toFixed(4), opacity: 0.9 })), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(imagen), style: {
     position: "absolute",
     left: ix - li / 2,
     top: iy - li / 2,
@@ -4794,7 +4983,7 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
 };
 const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Clientes|Resultados", imagenes = "", variante = "gris", acento, salida = 0.3 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const vert = H >= W;
@@ -4815,7 +5004,7 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
   const cw = 270 * U, chh = 320 * U;
   const ptitulo = S(0.25 + n * 0.16 + 0.35, { damping: 10, stiffness: 200 });
   const hilo = (k) => Kit7_easeOut((t - 0.3 - n * 0.16 - k * 0.12) / 0.4);
-  const alfiler = (x, y, s, k) => /* @__PURE__ */ react.createElement(esm.Img, { key: k, src: (0,esm.staticFile)("stickers/rcs_emoji_pushpin.png"), style: {
+  const alfiler = (x, y, s, k) => /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { key: k, src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"), style: {
     position: "absolute",
     left: x - 34 * U,
     top: y - 60 * U,
@@ -4824,11 +5013,11 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
     transform: `scale(${Math.max(1e-3, s).toFixed(4)}) rotate(20deg)`,
     filter: `drop-shadow(${3 * U}px ${6 * U}px ${4 * U}px rgba(0,0,0,.35))`
   } });
-  return /* @__PURE__ */ react.createElement(Escena, { fondo: fondos[variante] || fondos.gris, salida }, /* @__PURE__ */ react.createElement(Grano, { id: "gtab", op: variante === "oscuro" ? 0.25 : 0.18, frec: 0.9 }), /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, pos.map((p, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondos[variante] || fondos.gris, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gtab", op: variante === "oscuro" ? 0.25 : 0.18, frec: 0.9 }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, pos.map((p, i) => {
     const q = pos[(i + 1) % pos.length];
     const k = hilo(i);
     const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2 + 40 * U;
-    return /* @__PURE__ */ react.createElement(
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(
       "path",
       {
         key: i,
@@ -4844,7 +5033,7 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
     );
   }), pos.map((p, i) => {
     const k = hilo(i + 1);
-    return /* @__PURE__ */ react.createElement(
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(
       "path",
       {
         key: "c" + i,
@@ -4862,7 +5051,7 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
     const pc = S(0.2 + i * 0.16, { damping: 12, stiffness: 190 });
     const giro = (azar(i + 3) - 0.5) * 16;
     const img = imgs[i % Math.max(1, imgs.length)];
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: p[0] - cw / 2,
       top: p[1] - chh / 2,
@@ -4874,7 +5063,7 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
       transform: `rotate(${(giro + (1 - clamp(pc)) * 20).toFixed(2)}deg) scale(${(1.35 - 0.35 * clamp(pc)).toFixed(4)})`,
       opacity: clamp(pc * 3),
       boxShadow: `0 ${10 * U}px ${24 * U}px rgba(0,0,0,.35)`
-    } }, /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       width: "100%",
       height: chh * 0.66,
       background: img ? "#222" : `linear-gradient(135deg, ${mezcla(rojo, [0, 0, 0], 0.55)}, ${mezcla(rojo, [0, 0, 0], 0.2)})`,
@@ -4882,13 +5071,13 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
-    } }, img && /* @__PURE__ */ react.createElement(esm.Img, { src: src(img), style: {
+    } }, img && /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(img), style: {
       width: img.startsWith("data:") ? "100%" : "72%",
       height: img.startsWith("data:") ? "100%" : "72%",
       objectFit: img.startsWith("data:") ? "cover" : "contain",
       filter: img.startsWith("data:") ? "grayscale(.25) contrast(1.05)" : "none"
-    } })), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.mano, fontWeight: 700, fontSize: 50 * U, color: "#1B1B1B", textAlign: "center", marginTop: 6 * U, lineHeight: 1 } }, its[i]), alfiler(cw / 2, 10 * U, S(0.3 + i * 0.16, { damping: 12 }), "a" + i));
-  }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, width: W, top: cy - 130 * U, textAlign: "center", transform: `scale(${(1.5 - 0.5 * clamp(ptitulo)).toFixed(4)})`, opacity: clamp(ptitulo * 3) } }, /* @__PURE__ */ react.createElement("div", { style: {
+    } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.mano, fontWeight: 700, fontSize: 50 * U, color: "#1B1B1B", textAlign: "center", marginTop: 6 * U, lineHeight: 1 } }, its[i]), alfiler(cw / 2, 10 * U, S(0.3 + i * 0.16, { damping: 12 }), "a" + i));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, width: W, top: cy - 130 * U, textAlign: "center", transform: `scale(${(1.5 - 0.5 * clamp(ptitulo)).toFixed(4)})`, opacity: clamp(ptitulo * 3) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     display: "inline-block",
     position: "relative",
     fontFamily: FAMILIA.estarcido,
@@ -4896,7 +5085,7 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
     color: rojo,
     lineHeight: 1,
     textShadow: `0 ${6 * U}px ${14 * U}px rgba(0,0,0,.35)`
-  } }, titulo, alfiler(0, 0, ptitulo, "tt")), sub && /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.mano, fontWeight: 700, fontSize: 64 * U, color: variante === "oscuro" ? "#EEE" : "#1C1C1C", marginTop: 6 * U } }, sub)));
+  } }, titulo, alfiler(0, 0, ptitulo, "tt")), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.mano, fontWeight: 700, fontSize: 64 * U, color: variante === "oscuro" ? "#EEE" : "#1C1C1C", marginTop: 6 * U } }, sub)));
 };
 const PolaroidE = ({
   foto = "",
@@ -4909,7 +5098,7 @@ const PolaroidE = ({
   salida = 0.3
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const vert = H >= W;
@@ -4926,7 +5115,7 @@ const PolaroidE = ({
   const pinza = S(0.35, { damping: 13 });
   const pn = S(0.95, { damping: 10 });
   const cuerda = `M ${-50} ${cuerdaY - 30 * U} Q ${W / 2} ${cuerdaY + 70 * U} ${W + 50} ${cuerdaY - 40 * U}`;
-  return /* @__PURE__ */ react.createElement(Escena, { fondo: `radial-gradient(ellipse at 50% 40%, ${c1} 0%, ${c2} 100%)`, salida, oy: 30 }, /* @__PURE__ */ react.createElement(Grano, { id: "gpol", op: 0.22, frec: 0.95 }), /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: `radial-gradient(ellipse at 50% 40%, ${c1} 0%, ${c2} 100%)`, salida, oy: 30 }, /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gpol", op: 0.22, frec: 0.95 }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: -W * 0.1 - t * 25 * U,
     top: H * 0.06,
@@ -4937,7 +5126,7 @@ const PolaroidE = ({
     whiteSpace: "nowrap",
     transform: "rotate(-12deg)",
     filter: `blur(${2 * U}px)`
-  } }, palabra, " ", palabra), /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ react.createElement("path", { d: cuerda, fill: "none", stroke: "#7B5A36", strokeWidth: 14 * U, strokeLinecap: "round" }), /* @__PURE__ */ react.createElement("path", { d: cuerda, fill: "none", stroke: "#B68B5A", strokeWidth: 14 * U, strokeDasharray: `${10 * U} ${10 * U}`, strokeLinecap: "butt", opacity: 0.8 })), [0, 1].map((k) => /* @__PURE__ */ react.createElement("div", { key: k, style: {
+  } }, palabra, " ", palabra), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: cuerda, fill: "none", stroke: "#7B5A36", strokeWidth: 14 * U, strokeLinecap: "round" }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: cuerda, fill: "none", stroke: "#B68B5A", strokeWidth: 14 * U, strokeDasharray: `${10 * U} ${10 * U}`, strokeLinecap: "butt", opacity: 0.8 })), [0, 1].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
     position: "absolute",
     left: k ? W * 0.74 : -W * 0.16,
     top: k ? H * 0.8 : H * 0.84,
@@ -4947,7 +5136,7 @@ const PolaroidE = ({
     transform: `rotate(${k ? 14 : -10}deg) translateY(${(Math.sin(t + k) * 10 * U).toFixed(1)}px)`,
     filter: `blur(${18 * U}px)`,
     opacity: 0.5
-  } })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: cx - pw / 2, top, width: pw, height: ph, transformOrigin: "50% 0%", transform: `rotate(${vaiven.toFixed(3)}deg)` } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, background: "#FBFAF7", boxShadow: `0 ${26 * U}px ${50 * U}px rgba(0,0,0,.4)`, padding: `${26 * U}px ${26 * U}px 0`, boxSizing: "border-box" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cx - pw / 2, top, width: pw, height: ph, transformOrigin: "50% 0%", transform: `rotate(${vaiven.toFixed(3)}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, background: "#FBFAF7", boxShadow: `0 ${26 * U}px ${50 * U}px rgba(0,0,0,.4)`, padding: `${26 * U}px ${26 * U}px 0`, boxSizing: "border-box" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     width: "100%",
     height: pw - 52 * U,
     background: foto ? "#000" : `linear-gradient(160deg, ${mezcla(c1, [255, 255, 255], 0.35)}, ${c2})`,
@@ -4955,7 +5144,7 @@ const PolaroidE = ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center"
-  } }, /* @__PURE__ */ react.createElement(esm.Img, { src: src(foto || imagen), style: foto ? { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.08 - 0.06 * clamp(t / 3)).toFixed(4)})` } : { width: "62%", height: "62%", objectFit: "contain" } })), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto || imagen), style: foto ? { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.08 - 0.06 * clamp(t / 3)).toFixed(4)})` } : { width: "62%", height: "62%", objectFit: "contain" } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     height: ph - pw + 26 * U,
     display: "flex",
     alignItems: "center",
@@ -4965,13 +5154,13 @@ const PolaroidE = ({
     fontSize: Math.min(76, 1100 / Math.max(6, pie.length)) * U,
     color: "#1F1F1F",
     opacity: clamp((t - 0.7) / 0.3)
-  } }, pie)), /* @__PURE__ */ react.createElement("svg", { width: 70 * U, height: 150 * U, viewBox: "0 0 70 150", style: {
+  } }, pie)), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 70 * U, height: 150 * U, viewBox: "0 0 70 150", style: {
     position: "absolute",
     left: pw / 2 - 35 * U,
     top: -95 * U,
     transform: `scale(${Math.max(1e-3, pinza).toFixed(4)})`,
     filter: `drop-shadow(${3 * U}px ${5 * U}px ${4 * U}px rgba(0,0,0,.35))`
-  } }, /* @__PURE__ */ react.createElement("rect", { x: "6", y: "0", width: "28", height: "150", rx: "6", fill: "#C8955B" }), /* @__PURE__ */ react.createElement("rect", { x: "36", y: "0", width: "28", height: "150", rx: "6", fill: "#B07D45" }), /* @__PURE__ */ react.createElement("rect", { x: "4", y: "62", width: "62", height: "14", rx: "3", fill: "#8D8D8D" }), /* @__PURE__ */ react.createElement("rect", { x: "12", y: "10", width: "6", height: "120", rx: "3", fill: "#D9A86E", opacity: "0.7" })), numero && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: "6", y: "0", width: "28", height: "150", rx: "6", fill: "#C8955B" }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: "36", y: "0", width: "28", height: "150", rx: "6", fill: "#B07D45" }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: "4", y: "62", width: "62", height: "14", rx: "3", fill: "#8D8D8D" }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: "12", y: "10", width: "6", height: "120", rx: "3", fill: "#D9A86E", opacity: "0.7" })), numero && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     right: -40 * U,
     bottom: ph * 0.06,
@@ -4991,7 +5180,7 @@ const PolaroidE = ({
 };
 const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", sello = "IMPORTANTE", lista: items = "", variante = "verde", acento, salida = 0.3 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const vert = H >= W;
@@ -5016,14 +5205,14 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
   const pn = S(0.6, { damping: 14 });
   const its = Escenas9_lista(items).slice(0, 4);
   const tam = Math.min(150, 1700 / Math.max(6, titulo.length)) * U;
-  return /* @__PURE__ */ react.createElement(Escena, { fondo: mesas[variante] || mesas.verde, salida }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, background: "repeating-linear-gradient(115deg, rgba(255,255,255,0) 0 160px, rgba(255,255,255,.06) 160px 260px)", opacity: 0.8 } }), /* @__PURE__ */ react.createElement(Grano, { id: "gcua", op: 0.2 }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: px, top: py, width: pw, height: ph, transform: `rotate(-3deg) scale(${(0.92 + 0.08 * clamp(pe)).toFixed(4)})`, opacity: clamp(pe * 2) } }, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: mesas[variante] || mesas.verde, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, background: "repeating-linear-gradient(115deg, rgba(255,255,255,0) 0 160px, rgba(255,255,255,.06) 160px 260px)", opacity: 0.8 } }), /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gcua", op: 0.2 }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: px, top: py, width: pw, height: ph, transform: `rotate(-3deg) scale(${(0.92 + 0.08 * clamp(pe)).toFixed(4)})`, opacity: clamp(pe * 2) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 0,
     background: "#F7F5EF",
     borderRadius: 10 * U,
     boxShadow: `0 ${30 * U}px ${60 * U}px rgba(0,0,0,.45)`,
     backgroundImage: `repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 ${62 * U}px, rgba(70,110,160,.18) ${62 * U}px ${64 * U}px)`
-  } }), Array.from({ length: Math.floor(ph / (58 * U)) }).map((_, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: {
+  } }), Array.from({ length: Math.floor(ph / (58 * U)) }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
     position: "absolute",
     left: -26 * U,
     top: 40 * U + i * 58 * U,
@@ -5033,13 +5222,13 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
     border: `${5 * U}px solid #9DA1A6`,
     boxSizing: "border-box",
     background: "transparent"
-  } })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 80 * U, right: 50 * U, top: 90 * U, fontFamily: FAMILIA.maquina, fontSize: tam, lineHeight: 1.05, color: "#151515" } }, pal.map((w, i) => {
+  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 80 * U, right: 50 * U, top: 90 * U, fontFamily: FAMILIA.maquina, fontSize: tam, lineHeight: 1.05, color: "#151515" } }, pal.map((w, i) => {
     const desde = cuenta;
     cuenta += w.length;
     const vis = w.slice(0, clamp(escritas - desde, 0, w.length));
     const esClave = clave && w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "") === clave.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-    if (/^\s+$/.test(w)) return /* @__PURE__ */ react.createElement("span", { key: i }, vis ? " " : "");
-    return /* @__PURE__ */ react.createElement("span", { key: i, style: { position: "relative", display: "inline-block" } }, vis, esClave && vis.length === w.length && /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", left: "-12%", top: "-18%", width: "124%", height: "136%", overflow: "visible" }, viewBox: "0 0 100 100", preserveAspectRatio: "none" }, /* @__PURE__ */ react.createElement(
+    if (/^\s+$/.test(w)) return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i }, vis ? " " : "");
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i, style: { position: "relative", display: "inline-block" } }, vis, esClave && vis.length === w.length && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", left: "-12%", top: "-18%", width: "124%", height: "136%", overflow: "visible" }, viewBox: "0 0 100 100", preserveAspectRatio: "none" }, /* @__PURE__ */ (react_namespaceFn().createElement)(
       "path",
       {
         d: "M 8 50 C 8 14, 92 10, 95 48 C 98 86, 10 92, 6 52 C 4 30, 30 16, 52 14",
@@ -5054,7 +5243,7 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
         strokeLinecap: "round"
       }
     )));
-  }), escritas < letras.length && /* @__PURE__ */ react.createElement("span", { style: { opacity: t * 3 % 1 > 0.5 ? 1 : 0 } }, "|")), /* @__PURE__ */ react.createElement("div", { style: {
+  }), escritas < letras.length && /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { opacity: t * 3 % 1 > 0.5 ? 1 : 0 } }, "|")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 80 * U,
     top: 90 * U + tam * 1.12 * Math.max(1, Math.ceil(titulo.length * tam * 0.6 / (pw - 130 * U))) + 10 * U,
@@ -5063,7 +5252,7 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
     borderRadius: 4 * U,
     background: rojo,
     transform: "rotate(-1deg)"
-  } }), its.length > 0 && /* @__PURE__ */ react.createElement("div", { style: {
+  } }), its.length > 0 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: pw * 0.5,
     top: ph * 0.6,
@@ -5073,7 +5262,7 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
     boxShadow: `0 ${10 * U}px ${22 * U}px rgba(0,0,0,.25)`,
     transform: `rotate(5deg) translateY(${((1 - Kit7_easeOut((t - 0.8) / 0.4)) * 60 * U).toFixed(1)}px)`,
     opacity: clamp((t - 0.8) / 0.2)
-  } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.maquina, fontSize: 46 * U, color: "#111", borderBottom: `${4 * U}px solid ${rojo}`, display: "inline-block", marginBottom: 10 * U } }, "lista"), its.map((x, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: { fontFamily: FAMILIA.maquina, fontSize: 38 * U, color: "#222", opacity: clamp((t - 1 - i * 0.15) / 0.2) } }, "\u2022 ", x)), /* @__PURE__ */ react.createElement(esm.Img, { src: (0,esm.staticFile)("fluent/paperclip.png"), style: { position: "absolute", right: 20 * U, top: -50 * U, width: 90 * U, height: 90 * U, transform: "rotate(20deg)" } })), sello && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.maquina, fontSize: 46 * U, color: "#111", borderBottom: `${4 * U}px solid ${rojo}`, display: "inline-block", marginBottom: 10 * U } }, "lista"), its.map((x, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { fontFamily: FAMILIA.maquina, fontSize: 38 * U, color: "#222", opacity: clamp((t - 1 - i * 0.15) / 0.2) } }, "\u2022 ", x)), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("fluent/paperclip.png"), style: { position: "absolute", right: 20 * U, top: -50 * U, width: 90 * U, height: 90 * U, transform: "rotate(20deg)" } })), sello && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     right: 40 * U,
     top: ph * (its.length ? 0.38 : 0.52),
@@ -5086,7 +5275,7 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
     opacity: clamp(ps * 2) * 0.88,
     transform: `rotate(-9deg) scale(${(1.7 - 0.7 * clamp(ps)).toFixed(4)})`,
     mixBlendMode: "multiply"
-  } }, sello)), nota && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, sello)), nota && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: px + (vert ? 40 : 60) * U,
     top: py + ph * (vert ? 0.58 : 0.55),
@@ -5103,7 +5292,7 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
     color: "#151515",
     textAlign: "center",
     lineHeight: 1
-  } }, nota, /* @__PURE__ */ react.createElement(esm.Img, { src: (0,esm.staticFile)("stickers/rcs_emoji_pushpin.png"), style: { position: "absolute", left: 170 * U, top: -40 * U, width: 80 * U, height: 80 * U } })), /* @__PURE__ */ react.createElement(esm.Img, { src: (0,esm.staticFile)("stickers/rcs_emoji_alarm_clock.png"), style: {
+  } }, nota, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"), style: { position: "absolute", left: 170 * U, top: -40 * U, width: 80 * U, height: 80 * U } })), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_alarm_clock.png"), style: {
     position: "absolute",
     right: -120 * U,
     bottom: -60 * U + Math.sin(t) * 10 * U,
@@ -5111,7 +5300,7 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
     height: 520 * U,
     filter: `blur(${14 * U}px) grayscale(.6) brightness(.8)`,
     opacity: 0.9
-  } }), /* @__PURE__ */ react.createElement(esm.Img, { src: (0,esm.staticFile)("stickers/rcs_emoji_camera.png"), style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_camera.png"), style: {
     position: "absolute",
     left: -130 * U,
     top: -80 * U + Math.cos(t) * 8 * U,
@@ -5121,10 +5310,10 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
     opacity: 0.85
   } }));
 };
-const MESES = { es: ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"] };
+const MESES = (/* unused pure expression or super */ null && ({ es: ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"] }));
 const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante = "naranja", acento, salida = 0.3 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const P = {
@@ -5143,11 +5332,11 @@ const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante
   const d0 = Math.max(1, Math.min(31, Math.round(Number(dia) || 1)));
   const papeles = [0, 1, 2, 3, 4, 5];
   const pc = Kit7_easeOut((t - 0.8) / 0.5);
-  return /* @__PURE__ */ react.createElement(Escena, { fondo: E.fondo, salida }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: W / 2, top: H / 2, transform: `rotate(${giro.toFixed(3)}deg) scale(${escala.toFixed(4)})` } }, celdas.map(([f, c], i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: E.fondo, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: W / 2, top: H / 2, transform: `rotate(${giro.toFixed(3)}deg) scale(${escala.toFixed(4)})` } }, celdas.map(([f, c], i) => {
     const centro = f === 0 && c === 0;
     const n = d0 + f * 3 + c;
     const x = c * (L + gap) - L / 2, y = f * (L + gap) - L / 2;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: x,
       top: y,
@@ -5159,7 +5348,7 @@ const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante
       transform: centro ? `scale(${(0.9 + 0.1 * clamp(pf) + 0.04 * Math.max(0, pf - 1)).toFixed(4)})` : "none",
       zIndex: centro ? 2 : 1,
       boxShadow: centro ? `0 0 ${60 * U}px rgba(255,140,40,${(0.5 * clamp(pf)).toFixed(3)})` : "none"
-    } }, (!centro || pf > 0.05) && /* @__PURE__ */ react.createElement("div", { style: {
+    } }, (!centro || pf > 0.05) && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: 30 * U,
       bottom: 30 * U,
@@ -5168,11 +5357,11 @@ const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante
       color: centro ? E.tinta : E.num,
       opacity: centro ? 1 : 0.35,
       fontSize: (centro ? 210 : 190) * U
-    } }, n > 0 && n <= 31 ? n : "", /* @__PURE__ */ react.createElement("div", { style: { fontSize: (centro ? Math.min(72, 560 / Math.max(4, mes.length)) : 44) * U, letterSpacing: "0.02em" } }, mes)), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", right: 24 * U, top: 18 * U, fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: 44 * U, color: centro ? E.tinta : E.num, opacity: centro ? 0.95 : 0.4 } }, centro ? semana : ""), centro && /* @__PURE__ */ react.createElement(Grano, { id: "gfec", op: 0.25, frec: 0.7 }));
+    } }, n > 0 && n <= 31 ? n : "", /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontSize: (centro ? Math.min(72, 560 / Math.max(4, mes.length)) : 44) * U, letterSpacing: "0.02em" } }, mes)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", right: 24 * U, top: 18 * U, fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: 44 * U, color: centro ? E.tinta : E.num, opacity: centro ? 0.95 : 0.4 } }, centro ? semana : ""), centro && /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gfec", op: 0.25, frec: 0.7 }));
   })), papeles.map((k) => {
     const a = k / papeles.length * Math.PI * 2 + 0.4, p = Kit7_easeOut((t - 0.45 - k * 0.04) / 0.7);
     if (p <= 0 || p >= 1) return null;
-    return /* @__PURE__ */ react.createElement("div", { key: k, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
       position: "absolute",
       left: W / 2 + Math.cos(a) * p * W * 0.7 - 110 * U,
       top: H / 2 + Math.sin(a) * p * H * 0.55 - 70 * U,
@@ -5183,7 +5372,7 @@ const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante
       transform: `rotate(${(a * 57 + p * 200).toFixed(1)}deg) scale(${(0.6 + p * 1.2).toFixed(3)})`,
       filter: `blur(${(2 + p * 10) * U}px)`
     } });
-  }), nota && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: W / 2 - 300 * U, width: 600 * U, top: H / 2 + L * 0.75, textAlign: "center", opacity: clamp((t - 0.8) / 0.3) } }, /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", left: -40 * U, top: -40 * U, width: 680 * U, height: 220 * U, overflow: "visible" }, viewBox: "0 0 680 220" }, /* @__PURE__ */ react.createElement(
+  }), nota && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: W / 2 - 300 * U, width: 600 * U, top: H / 2 + L * 0.75, textAlign: "center", opacity: clamp((t - 0.8) / 0.3) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", left: -40 * U, top: -40 * U, width: 680 * U, height: 220 * U, overflow: "visible" }, viewBox: "0 0 680 220" }, /* @__PURE__ */ (react_namespaceFn().createElement)(
     "ellipse",
     {
       cx: "340",
@@ -5199,7 +5388,7 @@ const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante
       style: { filter: "drop-shadow(0 0 10px rgba(255,255,255,.8))" },
       transform: "rotate(-6 340 110)"
     }
-  )), /* @__PURE__ */ react.createElement("div", { style: {
+  )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "relative",
     display: "inline-block",
     padding: `${10 * U}px ${26 * U}px`,
@@ -5217,7 +5406,7 @@ const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante
 const nombreMes = (m, idioma = "es") => (MESES[idioma] || MESES.es)[Math.max(0, Math.min(11, m - 1))];
 const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "morado", acento, salida = 0.3 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const F = { morado: ["#2B1D63", "#0D0920", "#B9A6FF"], azul: ["#123A73", "#050F22", "#8CC8FF"], negro: ["#1C1C22", "#030304", "#E6E6FF"] };
@@ -5228,7 +5417,7 @@ const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "
   const ry = -38 * (1 - clamp(p)) + Math.sin(t * 1.4) * 7, rx = 16 * (1 - clamp(p)) + Math.cos(t * 1.1) * 4;
   const brillo = clamp((t - 0.7) / 0.6);
   const late = 0.75 + 0.25 * Math.sin(t * 3);
-  return /* @__PURE__ */ react.createElement(Escena, { fondo: `radial-gradient(ellipse at 50% 42%, ${f1} 0%, ${f2} 75%)`, salida }, [0, 1, 2].map((k) => /* @__PURE__ */ react.createElement("div", { key: k, style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: `radial-gradient(ellipse at 50% 42%, ${f1} 0%, ${f2} 75%)`, salida }, [0, 1, 2].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
     position: "absolute",
     left: W * (0.2 + 0.3 * k) + Math.sin(t * 0.7 + k) * 60 * U,
     top: H * (0.25 + 0.25 * (k % 2)) + Math.cos(t * 0.6 + k) * 50 * U,
@@ -5236,7 +5425,7 @@ const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "
     height: 520 * U,
     borderRadius: "50%",
     background: `radial-gradient(circle, ${luz}33 0%, ${luz}00 70%)`
-  } })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: cx - L / 2, top: cy - L / 2, width: L, height: L, perspective: 1400 * U } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cx - L / 2, top: cy - L / 2, width: L, height: L, perspective: 1400 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 0,
     borderRadius: 110 * U,
@@ -5246,7 +5435,7 @@ const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "
     boxShadow: `0 ${40 * U}px ${80 * U}px rgba(0,0,0,.55), inset 0 0 ${40 * U}px rgba(255,255,255,.06), 0 ${2 * U}px 0 ${luz}66`,
     overflow: "hidden",
     opacity: clamp(p * 2)
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: "-10%", right: "-10%", top: "38%", height: "40%", background: "rgba(255,255,255,.06)", borderRadius: "50%", transform: "rotate(-8deg)" } }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: "-10%", right: "-10%", top: "38%", height: "40%", background: "rgba(255,255,255,.06)", borderRadius: "50%", transform: "rotate(-8deg)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     top: "-20%",
     bottom: "-20%",
@@ -5254,14 +5443,14 @@ const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "
     left: `${(-40 + 180 * brillo).toFixed(1)}%`,
     transform: "rotate(20deg)",
     background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.28), rgba(255,255,255,0))"
-  } }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 0,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     filter: `drop-shadow(0 0 ${16 * U * late}px ${luz}) drop-shadow(0 0 ${36 * U * late}px ${luz}AA)`
-  } }, /* @__PURE__ */ react.createElement(Glifo, { nombre: icono, lado: L * 0.52, color: mezcla(luz, [255, 255, 255], 0.75) })))), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Glifo, { nombre: icono, lado: L * 0.52, color: mezcla(luz, [255, 255, 255], 0.75) })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 0,
     width: W,
@@ -5274,7 +5463,7 @@ const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "
     color: "#FFFFFF",
     opacity: clamp((t - 0.45) / 0.3),
     textShadow: `0 0 ${20 * U}px ${luz}88`
-  } }, titulo), sub && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, titulo), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 0,
     width: W,
@@ -5289,7 +5478,7 @@ const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "
 };
 const ChatE = ({ mensaje = "\xBFCu\xE1nto cuesta?", respuesta = "", etiqueta = "", variante = "morado", acento, salida = 0.3 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const wa = variante === "whatsapp";
@@ -5304,7 +5493,7 @@ const ChatE = ({ mensaje = "\xBFCu\xE1nto cuesta?", respuesta = "", etiqueta = "
   const crece = Kit7_easeOut((t - tEsc + 0.15) / 0.35);
   const pr = respuesta ? S(tEsc + mensaje.length * 0.045 + 0.4, { damping: 13 }) : 0;
   const ancho = entre(BW, Math.min(W * 0.84, Math.max(BW, mensaje.length * 34 * U + 120 * U)), crece);
-  return /* @__PURE__ */ react.createElement(Escena, { fondo, salida }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: cx - 600 * U, top: cy - 400 * U, width: 1200 * U, height: 900 * U, background: `radial-gradient(ellipse, ${ac}22 0%, ${ac}00 65%)` } }), etiqueta && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 70 * U, top: 90 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 40 * U, color: "#FFFFFF", opacity: 0.9 } }, etiqueta), /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cx - 600 * U, top: cy - 400 * U, width: 1200 * U, height: 900 * U, background: `radial-gradient(ellipse, ${ac}22 0%, ${ac}00 65%)` } }), etiqueta && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 70 * U, top: 90 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 40 * U, color: "#FFFFFF", opacity: 0.9 } }, etiqueta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cx - BW * 0.2,
     top: cy - BH * 0.05,
@@ -5315,7 +5504,7 @@ const ChatE = ({ mensaje = "\xBFCu\xE1nto cuesta?", respuesta = "", etiqueta = "
     background: `linear-gradient(135deg, ${mezcla(ac, [255, 255, 255], 0.15)}, ${ac})`,
     transform: `scale(${(0.7 + 0.3 * clamp(p2)).toFixed(4)})`,
     boxShadow: `0 0 ${60 * U}px ${ac}66`
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", right: 90 * U, bottom: -46 * U, width: 0, height: 0, borderLeft: `${50 * U}px solid transparent`, borderTop: `${60 * U}px solid ${ac}` } })), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", right: 90 * U, bottom: -46 * U, width: 0, height: 0, borderLeft: `${50 * U}px solid transparent`, borderTop: `${60 * U}px solid ${ac}` } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cx - BW * 0.82 - (ancho - BW) * 0.3,
     top: cy - BH * 0.62,
@@ -5332,7 +5521,7 @@ const ChatE = ({ mensaje = "\xBFCu\xE1nto cuesta?", respuesta = "", etiqueta = "
     justifyContent: "center",
     padding: `${40 * U}px ${50 * U}px`,
     boxSizing: "border-box"
-  } }, t < tEsc + 0.05 ? /* @__PURE__ */ react.createElement("div", { style: { display: "flex", gap: 26 * U } }, [0, 1, 2].map((k) => /* @__PURE__ */ react.createElement("div", { key: k, style: { width: 52 * U, height: 52 * U, borderRadius: "50%", background: "#FFF", transform: `translateY(${(Math.sin(t * 9 - k * 0.8) * 10 * U).toFixed(1)}px)` } }))) : /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: Math.min(72, 1500 / Math.max(10, mensaje.length)) * U, color: "#FFFFFF", lineHeight: 1.15, textAlign: "left" } }, visibles, /* @__PURE__ */ react.createElement("span", { style: { opacity: escribe < 1 && t * 3 % 1 > 0.5 ? 1 : 0 } }, "|")), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 90 * U, bottom: -46 * U, width: 0, height: 0, borderRight: `${50 * U}px solid transparent`, borderTop: `${60 * U}px solid rgba(26,26,30,.9)` } })), respuesta && pr > 0.01 && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, t < tEsc + 0.05 ? /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", gap: 26 * U } }, [0, 1, 2].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: { width: 52 * U, height: 52 * U, borderRadius: "50%", background: "#FFF", transform: `translateY(${(Math.sin(t * 9 - k * 0.8) * 10 * U).toFixed(1)}px)` } }))) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: Math.min(72, 1500 / Math.max(10, mensaje.length)) * U, color: "#FFFFFF", lineHeight: 1.15, textAlign: "left" } }, visibles, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { opacity: escribe < 1 && t * 3 % 1 > 0.5 ? 1 : 0 } }, "|")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 90 * U, bottom: -46 * U, width: 0, height: 0, borderRight: `${50 * U}px solid transparent`, borderTop: `${60 * U}px solid rgba(26,26,30,.9)` } })), respuesta && pr > 0.01 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     right: W * 0.08,
     top: cy + BH * 0.75,
@@ -5359,7 +5548,7 @@ const CollageE = ({
   salida = 0.3
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const vert = H >= W;
@@ -5373,7 +5562,7 @@ const CollageE = ({
   const L = (vert ? 720 : 640) * U;
   const ix = vert ? W / 2 : W * 0.33, iy = vert ? H * 0.33 : H * 0.5;
   const tx = vert ? W / 2 : W * 0.7, ty = vert ? H * 0.62 : H * 0.42;
-  return /* @__PURE__ */ react.createElement(Escena, { fondo, salida }, /* @__PURE__ */ react.createElement(Grano, { id: "gcol", op: oscuro ? 0.3 : 0.12 }), !oscuro && /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ react.createElement(
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gcol", op: oscuro ? 0.3 : 0.12 }), !oscuro && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ (react_namespaceFn().createElement)(
     "path",
     {
       d: `M ${W * 0.62} ${-50} C ${W * 0.35} ${H * 0.25}, ${W * 1.05} ${H * 0.45}, ${W * 0.7} ${H + 50}`,
@@ -5384,7 +5573,7 @@ const CollageE = ({
       strokeDasharray: "1",
       strokeDashoffset: (1 - ps).toFixed(4)
     }
-  ), Array.from({ length: 9 }).map((_, i) => /* @__PURE__ */ react.createElement("line", { key: i, x1: W * 0.08 + i * 9 * U, y1: H * 0.06, x2: W * 0.08 + i * 9 * U, y2: H * 0.06 + 70 * U, stroke: "#111", strokeWidth: (azar(i) * 5 + 2) * U, opacity: 0.8 }))), /* @__PURE__ */ react.createElement("div", { style: {
+  ), Array.from({ length: 9 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: i, x1: W * 0.08 + i * 9 * U, y1: H * 0.06, x2: W * 0.08 + i * 9 * U, y2: H * 0.06 + 70 * U, stroke: "#111", strokeWidth: (azar(i) * 5 + 2) * U, opacity: 0.8 }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: ix + (vert ? 120 : 140) * U - 260 * U + Math.sin(t) * 12 * U,
     top: iy - 330 * U,
@@ -5394,7 +5583,7 @@ const CollageE = ({
     background: forma,
     transform: `scale(${(0.3 + 0.7 * Kit7_easeOut((t - 0.2) / 0.5)).toFixed(4)})`,
     opacity: oscuro ? 0.9 : 1
-  } }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: ix - 330 * U,
     top: iy + 120 * U,
@@ -5405,7 +5594,7 @@ const CollageE = ({
     borderBottom: `${200 * U}px solid ${menta ? forma : rojo}`,
     transform: `rotate(${(-12 + Math.sin(t * 0.8) * 4).toFixed(2)}deg) scale(${Kit7_easeOut((t - 0.35) / 0.4).toFixed(4)})`,
     opacity: 0.95
-  } }), oscuro && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: ix - L * 0.7, top: iy - L * 0.7, width: L * 1.4, height: L * 1.4, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,.18), rgba(255,255,255,0) 65%)" } }), /* @__PURE__ */ react.createElement(esm.Img, { src: src(imagen), style: {
+  } }), oscuro && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: ix - L * 0.7, top: iy - L * 0.7, width: L * 1.4, height: L * 1.4, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,.18), rgba(255,255,255,0) 65%)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(imagen), style: {
     position: "absolute",
     left: ix - L / 2,
     top: iy - L / 2,
@@ -5415,7 +5604,7 @@ const CollageE = ({
     transform: `scale(${(1.4 - 0.4 * clamp(pi)).toFixed(4)}) rotate(${((1 - clamp(pi)) * -14 - 4 + Math.sin(t * 1.2) * 1.5).toFixed(2)}deg)`,
     opacity: clamp(pi * 3),
     filter: `drop-shadow(${10 * U}px ${20 * U}px ${20 * U}px rgba(0,0,0,${oscuro ? 0.6 : 0.3}))`
-  } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: tx - W * 0.45, width: W * 0.9, top: ty - 100 * U, textAlign: vert ? "center" : "left" } }, linea1 && /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 64 * U, color: tinta, opacity: clamp((t - 0.35) / 0.3), letterSpacing: "-0.02em" } }, linea1), /* @__PURE__ */ react.createElement("div", { style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: tx - W * 0.45, width: W * 0.9, top: ty - 100 * U, textAlign: vert ? "center" : "left" } }, linea1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 64 * U, color: tinta, opacity: clamp((t - 0.35) / 0.3), letterSpacing: "-0.02em" } }, linea1), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     fontFamily: FAMILIA.inter,
     fontWeight: 700,
     fontSize: Math.min(170, 1500 / Math.max(5, clave.length)) * U,
@@ -5426,7 +5615,7 @@ const CollageE = ({
     transformOrigin: vert ? "50% 50%" : "0% 50%",
     opacity: clamp((t - 0.55) / 0.15),
     textShadow: oscuro ? `0 0 ${18 * U}px ${rojo}, 0 0 ${50 * U}px ${rojo}88` : "none"
-  } }, clave), linea2 && /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 60 * U, color: tinta, opacity: clamp((t - 0.85) / 0.3), letterSpacing: "-0.02em" } }, linea2)));
+  } }, clave), linea2 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 60 * U, color: tinta, opacity: clamp((t - 0.85) / 0.3), letterSpacing: "-0.02em" } }, linea2)));
 };
 const MovilE = ({
   usuario = "@tu_marca",
@@ -5441,7 +5630,7 @@ const MovilE = ({
   salida = 0.3
 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const vert = H >= W;
@@ -5468,17 +5657,17 @@ const MovilE = ({
   const etiquetas = idioma.startsWith("en") ? ["posts", "followers", "following", accion === "like" ? "Like" : "Follow", "Following"] : ["publicaciones", "seguidores", "seguidos", accion === "like" ? "Me gusta" : "Seguir", "Siguiendo"];
   const palabras = titulo.split(/\s+/);
   const ck = clave.toLowerCase();
-  return /* @__PURE__ */ react.createElement(Escena, { fondo, salida }, !claro && /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, !claro && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 0,
     backgroundImage: `linear-gradient(rgba(255,255,255,.04) ${2 * U}px, transparent ${2 * U}px), linear-gradient(90deg, rgba(255,255,255,.04) ${2 * U}px, transparent ${2 * U}px)`,
     backgroundSize: `${150 * U}px ${150 * U}px`
-  } }), claro && /* @__PURE__ */ react.createElement("div", { style: {
+  } }), claro && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 0,
     backgroundImage: `linear-gradient(rgba(0,0,0,.06) ${2 * U}px, transparent ${2 * U}px), linear-gradient(90deg, rgba(0,0,0,.06) ${2 * U}px, transparent ${2 * U}px)`,
     backgroundSize: `${150 * U}px ${150 * U}px`
-  } }), /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ react.createElement(
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ (react_namespaceFn().createElement)(
     "path",
     {
       d: `M ${-40} ${H * 0.72} C ${W * 0.3} ${H * 0.55}, ${W * 0.55} ${H * 0.95}, ${W + 40} ${H * 0.62}`,
@@ -5491,7 +5680,7 @@ const MovilE = ({
       strokeDashoffset: (1 - Kit7_easeOut((t - 0.3) / 0.8)).toFixed(4),
       opacity: 0.85
     }
-  )), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: px, top: py, width: PW, height: PH, perspective: 1600 * U } }, /* @__PURE__ */ react.createElement("div", { style: {
+  )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: px, top: py, width: PW, height: PH, perspective: 1600 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 0,
     borderRadius: 80 * U,
@@ -5501,7 +5690,7 @@ const MovilE = ({
     overflow: "hidden",
     transform: `rotateY(${ry.toFixed(2)}deg) translateY(${((1 - clamp(pe)) * 300 * U).toFixed(1)}px)`,
     boxShadow: `0 ${40 * U}px ${80 * U}px rgba(0,0,0,.55)`
-  } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 10 * U,
     borderRadius: 66 * U,
@@ -5511,7 +5700,7 @@ const MovilE = ({
     boxSizing: "border-box",
     fontFamily: FAMILIA.inter,
     color: claro ? "#111" : "#FFF"
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: "50%", top: 18 * U, width: 150 * U, height: 36 * U, marginLeft: -75 * U, borderRadius: 18 * U, background: "#000" } }), /* @__PURE__ */ react.createElement("div", { style: { fontWeight: 700, fontSize: 34 * U, marginBottom: 26 * U } }, usuario), /* @__PURE__ */ react.createElement("div", { style: { display: "flex", alignItems: "center", gap: 26 * U } }, /* @__PURE__ */ react.createElement("div", { style: { width: 150 * U, height: 150 * U, borderRadius: "50%", padding: 7 * U, background: "linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)", boxSizing: "border-box" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: "50%", top: 18 * U, width: 150 * U, height: 36 * U, marginLeft: -75 * U, borderRadius: 18 * U, background: "#000" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontWeight: 700, fontSize: 34 * U, marginBottom: 26 * U } }, usuario), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 26 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 150 * U, height: 150 * U, borderRadius: "50%", padding: 7 * U, background: "linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)", boxSizing: "border-box" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     width: "100%",
     height: "100%",
     borderRadius: "50%",
@@ -5523,7 +5712,7 @@ const MovilE = ({
     fontSize: 60 * U,
     color: "#FFF",
     border: `${5 * U}px solid ${claro ? "#FFF" : "#121214"}`
-  } }, (usuario.replace("@", "")[0] || "C").toUpperCase())), [[num("48", cuenta), etiquetas[0]], [num(seguidores, cuenta), etiquetas[1]], [num("312", cuenta), etiquetas[2]]].map(([a, b], i) => /* @__PURE__ */ react.createElement("div", { key: i, style: { textAlign: "center" } }, /* @__PURE__ */ react.createElement("div", { style: { fontWeight: 700, fontSize: 34 * U } }, a), /* @__PURE__ */ react.createElement("div", { style: { fontSize: 22 * U, opacity: 0.7 } }, b)))), [0.85, 0.65, 0.75].map((w, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: { width: `${w * 100}%`, height: 16 * U, borderRadius: 8 * U, background: claro ? "#E2E2E2" : "#2A2A2E", marginTop: (i ? 12 : 28) * U } })), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, (usuario.replace("@", "")[0] || "C").toUpperCase())), [[num("48", cuenta), etiquetas[0]], [num(seguidores, cuenta), etiquetas[1]], [num("312", cuenta), etiquetas[2]]].map(([a, b], i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { textAlign: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontWeight: 700, fontSize: 34 * U } }, a), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontSize: 22 * U, opacity: 0.7 } }, b)))), [0.85, 0.65, 0.75].map((w, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { width: `${w * 100}%`, height: 16 * U, borderRadius: 8 * U, background: claro ? "#E2E2E2" : "#2A2A2E", marginTop: (i ? 12 : 28) * U } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "relative",
     marginTop: 28 * U,
     height: 64 * U,
@@ -5536,7 +5725,7 @@ const MovilE = ({
     fontSize: 30 * U,
     color: pulsado ? claro ? "#111" : "#FFF" : "#FFF",
     transform: `scale(${(1 - 0.06 * Math.sin(Math.PI * clamp((t - tPulsa + 0.1) / 0.2))).toFixed(4)})`
-  } }, pulsado ? etiquetas[4] : etiquetas[3], anillo > 0 && anillo < 1 && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, pulsado ? etiquetas[4] : etiquetas[3], anillo > 0 && anillo < 1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: "50%",
     top: "50%",
@@ -5546,20 +5735,20 @@ const MovilE = ({
     marginTop: -150 * U * anillo,
     borderRadius: "50%",
     border: `${4 * U}px solid rgba(255,255,255,${(1 - anillo).toFixed(3)})`
-  } })), /* @__PURE__ */ react.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 * U, marginTop: 30 * U } }, Array.from({ length: 9 }).map((_, i) => {
+  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 * U, marginTop: 30 * U } }, Array.from({ length: 9 }).map((_, i) => {
     const img = imgs[i % Math.max(1, imgs.length)];
     const pk = clamp((t - 0.5 - i * 0.06) / 0.25);
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       aspectRatio: "1",
       background: img ? "#000" : `linear-gradient(${45 + i * 30}deg, ${mezcla(ac, [255, 255, 255], 0.2 + 0.06 * i)}, ${mezcla(ac, [0, 0, 0], 0.15 + 0.07 * (i % 4))})`,
       overflow: "hidden",
       opacity: pk,
       transform: `scale(${(0.8 + 0.2 * pk).toFixed(3)})`
-    } }, img && /* @__PURE__ */ react.createElement(esm.Img, { src: src(img), style: { width: "100%", height: "100%", objectFit: "cover" } }));
-  })))), t > tPulsa - 0.5 && t < tPulsa + 0.7 && /* @__PURE__ */ react.createElement(
-    esm.Img,
+    } }, img && /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(img), style: { width: "100%", height: "100%", objectFit: "cover" } }));
+  })))), t > tPulsa - 0.5 && t < tPulsa + 0.7 && /* @__PURE__ */ (react_namespaceFn().createElement)(
+    esm/* Img */.E9,
     {
-      src: (0,esm.staticFile)("stickers/rcs_emoji_backhand_index_pointing_up.png"),
+      src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_backhand_index_pointing_up.png"),
       style: {
         position: "absolute",
         left: PW * 0.48,
@@ -5570,10 +5759,10 @@ const MovilE = ({
         filter: `drop-shadow(0 ${8 * U}px ${12 * U}px rgba(0,0,0,.5))`
       }
     }
-  )), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: vert ? 70 * U : W * 0.06, width: vert ? W - 140 * U : W * 0.36, top: vert ? H * 0.06 : H * 0.36, textAlign: vert ? "center" : "left" } }, palabras.map((w, i) => {
+  )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: vert ? 70 * U : W * 0.06, width: vert ? W - 140 * U : W * 0.36, top: vert ? H * 0.06 : H * 0.36, textAlign: vert ? "center" : "left" } }, palabras.map((w, i) => {
     const es = w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "") === ck;
     const p = Kit7_easeOut((t - 0.25 - i * 0.08) / 0.35);
-    return /* @__PURE__ */ react.createElement("span", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i, style: {
       display: "inline-block",
       marginRight: "0.22em",
       fontFamily: es ? FAMILIA.display : FAMILIA.inter,
@@ -5589,7 +5778,7 @@ const MovilE = ({
 };
 const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t } = Kit7_useVida(salida);
   const claro = variante === "claro";
@@ -5609,10 +5798,10 @@ const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
     if (llega <= 0 || va >= 1) return null;
     const y = cy + (desdeArriba ? -1 : 1) * ((1 - llega) * 600 * U + va * 700 * U) + (desdeArriba ? -80 * U : 80 * U);
     const ab = 22 * (1 - cierra) + 4;
-    return /* @__PURE__ */ react.createElement("div", { key: k, style: { position: "absolute", left: x - 90 * U, top: y - 180 * U, width: 180 * U, height: 360 * U, transform: `rotate(${desdeArriba ? 180 : 0}deg)` } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, transformOrigin: "50% 45%", transform: `rotate(${-ab}deg)` } }, /* @__PURE__ */ react.createElement(Glifo, { nombre: "scissors", lado: 180 * U, color: tinta, relleno: false, grosor: 1.6 })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, transformOrigin: "50% 45%", transform: `rotate(${ab}deg) scaleX(-1)`, opacity: 0.85 } }, /* @__PURE__ */ react.createElement(Glifo, { nombre: "scissors", lado: 180 * U, color: tinta, relleno: false, grosor: 1.6 })));
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: { position: "absolute", left: x - 90 * U, top: y - 180 * U, width: 180 * U, height: 360 * U, transform: `rotate(${desdeArriba ? 180 : 0}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, transformOrigin: "50% 45%", transform: `rotate(${-ab}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Glifo, { nombre: "scissors", lado: 180 * U, color: tinta, relleno: false, grosor: 1.6 })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, transformOrigin: "50% 45%", transform: `rotate(${ab}deg) scaleX(-1)`, opacity: 0.85 } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Glifo, { nombre: "scissors", lado: 180 * U, color: tinta, relleno: false, grosor: 1.6 })));
   };
   const trozos = [0, 1, 2];
-  return /* @__PURE__ */ react.createElement(Escena, { fondo, salida }, titulo && /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, titulo && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 0,
     width: W,
@@ -5624,7 +5813,7 @@ const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
     color: tinta,
     opacity: clamp((t - 0.2) / 0.3),
     letterSpacing: "0.04em"
-  } }, titulo), aCinta < 0.999 && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, titulo), aCinta < 0.999 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cx - CW / 2,
     top: cy - CH / 2,
@@ -5636,7 +5825,7 @@ const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
     transform: `scale(${(0.6 + 0.4 * fase1).toFixed(4)}) scaleY(${(1 - 0.55 * aCinta).toFixed(4)})`,
     opacity: (1 - aCinta) * clamp(fase1 * 2),
     boxShadow: `0 ${20 * U}px ${50 * U}px rgba(0,0,0,.45)`
-  } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: "50%",
     top: "50%",
@@ -5647,7 +5836,7 @@ const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
     borderTop: `${45 * U}px solid transparent`,
     borderBottom: `${45 * U}px solid transparent`,
     borderLeft: `${75 * U}px solid rgba(255,255,255,.95)`
-  } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 40 * U, right: 40 * U, bottom: 34 * U, height: 6 * U, background: "rgba(255,255,255,.4)", borderRadius: 3 * U } }, /* @__PURE__ */ react.createElement("div", { style: { width: `${(clamp(t / 0.75) * 100).toFixed(1)}%`, height: "100%", background: "#FFF", borderRadius: 3 * U } }))), aCinta > 1e-3 && /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ react.createElement("defs", null, /* @__PURE__ */ react.createElement("linearGradient", { id: "gcinta", x1: "0", x2: "1" }, /* @__PURE__ */ react.createElement("stop", { offset: "0", stopColor: "#F2E43A" }), /* @__PURE__ */ react.createElement("stop", { offset: ".45", stopColor: "#9DF3D8" }), /* @__PURE__ */ react.createElement("stop", { offset: ".75", stopColor: "#E7A6FF" }), /* @__PURE__ */ react.createElement("stop", { offset: "1", stopColor: "#D946EF" }))), trozos.map((k) => {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 40 * U, right: 40 * U, bottom: 34 * U, height: 6 * U, background: "rgba(255,255,255,.4)", borderRadius: 3 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: `${(clamp(t / 0.75) * 100).toFixed(1)}%`, height: "100%", background: "#FFF", borderRadius: 3 * U } }))), aCinta > 1e-3 && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("defs", null, /* @__PURE__ */ (react_namespaceFn().createElement)("linearGradient", { id: "gcinta", x1: "0", x2: "1" }, /* @__PURE__ */ (react_namespaceFn().createElement)("stop", { offset: "0", stopColor: "#F2E43A" }), /* @__PURE__ */ (react_namespaceFn().createElement)("stop", { offset: ".45", stopColor: "#9DF3D8" }), /* @__PURE__ */ (react_namespaceFn().createElement)("stop", { offset: ".75", stopColor: "#E7A6FF" }), /* @__PURE__ */ (react_namespaceFn().createElement)("stop", { offset: "1", stopColor: "#D946EF" }))), trozos.map((k) => {
     const x0 = cx - CW / 2 + k * CW / 3, x1 = x0 + CW / 3;
     const corte = k > 0 && t > corte1 || k > 1 && t > corte2 || k === 0 && t > corte1;
     const dx = (k - 1) * sep * 260 * U, dy = -sep * (80 + k * 40) * U + (k === 1 ? sep * 120 * U : 0);
@@ -5659,8 +5848,8 @@ const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
       return [x, cy + ond(x)];
     });
     const d = "M " + pts.map((p) => `${p[0].toFixed(1)} ${(p[1] - alto / 2).toFixed(1)}`).join(" L ") + " L " + [...pts].reverse().map((p) => `${p[0].toFixed(1)} ${(p[1] + alto / 2).toFixed(1)}`).join(" L ") + " Z";
-    return /* @__PURE__ */ react.createElement("g", { key: k, transform: `translate(${dx.toFixed(1)} ${dy.toFixed(1)}) rotate(${rot.toFixed(2)} ${(x0 + x1) / 2} ${cy})`, opacity: aCinta }, /* @__PURE__ */ react.createElement("path", { d, fill: "url(#gcinta)", stroke: corte ? claro ? "#F2F2F0" : "#151515" : "none", strokeWidth: 6 * U }), sep > 0.3 && /* @__PURE__ */ react.createElement("path", { d: `M ${(x0 + x1) / 2 - 20 * U} ${cy - 30 * U} L ${(x0 + x1) / 2 + 30 * U} ${cy} L ${(x0 + x1) / 2 - 20 * U} ${cy + 30 * U} Z`, fill: "#FFF", opacity: (sep - 0.3) / 0.7 }));
-  }), sep > 0.05 && Array.from({ length: 14 }).map((_, i) => /* @__PURE__ */ react.createElement(
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("g", { key: k, transform: `translate(${dx.toFixed(1)} ${dy.toFixed(1)}) rotate(${rot.toFixed(2)} ${(x0 + x1) / 2} ${cy})`, opacity: aCinta }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d, fill: "url(#gcinta)", stroke: corte ? claro ? "#F2F2F0" : "#151515" : "none", strokeWidth: 6 * U }), sep > 0.3 && /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: `M ${(x0 + x1) / 2 - 20 * U} ${cy - 30 * U} L ${(x0 + x1) / 2 + 30 * U} ${cy} L ${(x0 + x1) / 2 - 20 * U} ${cy + 30 * U} Z`, fill: "#FFF", opacity: (sep - 0.3) / 0.7 }));
+  }), sep > 0.05 && Array.from({ length: 14 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)(
     "circle",
     {
       key: i,
@@ -5674,7 +5863,7 @@ const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
 };
 const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", acento, salida = 0.3, fondo = "" }) => {
   useFuentes();
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = useU(), S = useResorte();
   const { t, fin } = Kit7_useVida(salida);
   const vert = H >= W;
@@ -5683,7 +5872,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
   const q = clamp(t / Math.max(1, fin));
   const zoom = 1.16 - 0.12 * suave(q), dx = (azar(palabra.length) - 0.5) * 60 * U * q, dy = -30 * U * q;
   const pp = Kit7_easeOut((t - 0.25) / 0.45);
-  const etiqueta = palabra && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, width: W, top: vert ? H * 0.12 : H * 0.1, textAlign: "center", opacity: pp, transform: `translateY(${((1 - pp) * 30 * U).toFixed(1)}px)` } }, /* @__PURE__ */ react.createElement("span", { style: {
+  const etiqueta = palabra && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, width: W, top: vert ? H * 0.12 : H * 0.1, textAlign: "center", opacity: pp, transform: `translateY(${((1 - pp) * 30 * U).toFixed(1)}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: {
     display: "inline-block",
     fontFamily: FAMILIA.redonda,
     fontWeight: 800,
@@ -5695,7 +5884,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
     padding: `0 ${20 * U}px`,
     borderBottom: `${10 * U}px solid ${ac}`
   } }, palabra));
-  const pie = credito && /* @__PURE__ */ react.createElement("div", { style: {
+  const pie = credito && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 28 * U,
     bottom: 26 * U,
@@ -5706,8 +5895,8 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
     color: "rgba(255,255,255,.72)",
     textShadow: `0 ${1 * U}px ${4 * U}px rgba(0,0,0,.8)`
   } }, credito);
-  const imagen = (extra) => foto ? /* @__PURE__ */ react.createElement(esm.Img, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, ...extra } }) : null;
-  const detras = fondoU ? /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: `radial-gradient(120% 80% at 50% 40%, ${mezcla(fondoU, [255, 255, 255], 0.1)} 0%, ${fondoU} 70%)` } }) : foto ? /* @__PURE__ */ react.createElement(esm.Img, { src: src(foto), style: {
+  const imagen = (extra) => foto ? /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, ...extra } }) : null;
+  const detras = fondoU ? /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(120% 80% at 50% 40%, ${mezcla(fondoU, [255, 255, 255], 0.1)} 0%, ${fondoU} 70%)` } }) : foto ? /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto), style: {
     position: "absolute",
     inset: -60 * U,
     width: W + 120 * U,
@@ -5778,7 +5967,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
         transform: `perspective(${1400 * U}px) rotateY(${giro.toFixed(2)}deg) rotateX(${5 .toFixed(1)}deg) scale(${(0.86 + 0.14 * clamp(pc)).toFixed(4)})`
       };
     }
-    return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, variante === "neon" && /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, variante === "neon" && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: W / 2 - Lw,
       top: cy - Lh * 0.7,
@@ -5786,7 +5975,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
       height: Lh * 1.4,
       borderRadius: "50%",
       background: `radial-gradient(closest-side, ${ac}55, transparent)`
-    } }), fuera && /* @__PURE__ */ react.createElement("div", { style: fuera }), /* @__PURE__ */ react.createElement("div", { style: { ...base, ...marco } }, imagen()), variante === "polaroid" && palabra && /* @__PURE__ */ react.createElement("div", { style: {
+    } }), fuera && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: fuera }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { ...base, ...marco } }, imagen()), variante === "polaroid" && palabra && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: W / 2 - Lw / 2,
       top: cy + Lh / 2 + 22 * U,
@@ -5805,7 +5994,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
     const pe = Kit7_easeOut((t - 0.05) / 0.5);
     if (variante === "dividida") {
       const alto = H * (vert ? 0.56 : 0.62) * (0.4 + 0.6 * pe);
-      return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0C12", salida, oy: 20 }, /* @__PURE__ */ react.createElement("div", { style: {
+      return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0C12", salida, oy: 20 }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
         position: "absolute",
         left: 0,
         top: 0,
@@ -5814,7 +6003,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
         overflow: "hidden",
         borderRadius: `0 0 ${56 * U}px ${56 * U}px`,
         boxShadow: `0 ${20 * U}px ${60 * U}px rgba(0,0,0,.5)`
-      } }, imagen()), /* @__PURE__ */ react.createElement("div", { style: {
+      } }, imagen()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
         position: "absolute",
         left: W * 0.1,
         top: alto + 40 * U,
@@ -5825,7 +6014,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
         transform: `scaleX(${Kit7_easeOut((t - 0.3) / 0.5).toFixed(4)})`,
         transformOrigin: "left",
         boxShadow: `0 0 ${20 * U}px ${ac}`
-      } }), palabra && /* @__PURE__ */ react.createElement("div", { style: {
+      } }), palabra && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
         position: "absolute",
         left: W * 0.1,
         top: alto + 70 * U,
@@ -5842,7 +6031,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
     }
     if (variante === "ventana") {
       const Lw2 = W * 0.86, Lh2 = Math.min(H * 0.56, Lw2 * 1.25), barra = 74 * U;
-      return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0D14", salida }, detras, /* @__PURE__ */ react.createElement("div", { style: {
+      return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0D14", salida }, detras, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
         position: "absolute",
         left: W / 2 - Lw2 * 0.7,
         top: cy - Lh2 * 0.6,
@@ -5850,7 +6039,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
         height: Lh2 * 1.2,
         borderRadius: "50%",
         background: `radial-gradient(closest-side, ${ac}44, transparent)`
-      } }), /* @__PURE__ */ react.createElement("div", { style: {
+      } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
         position: "absolute",
         left: W / 2 - Lw2 / 2,
         top: cy - Lh2 / 2,
@@ -5863,7 +6052,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
         boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.55)`,
         opacity: clamp(pc * 2),
         transform: `translateY(${((1 - clamp(pc)) * 90 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * clamp(pc)).toFixed(4)})`
-      } }, /* @__PURE__ */ react.createElement("div", { style: { height: barra, display: "flex", alignItems: "center", gap: 14 * U, padding: `0 ${26 * U}px`, borderBottom: `${1.5 * U}px solid rgba(255,255,255,.1)` } }, ["#FF5F57", "#FEBC2E", "#28C840"].map((c) => /* @__PURE__ */ react.createElement("div", { key: c, style: { width: 20 * U, height: 20 * U, borderRadius: "50%", background: c } })), /* @__PURE__ */ react.createElement("div", { style: {
+      } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { height: barra, display: "flex", alignItems: "center", gap: 14 * U, padding: `0 ${26 * U}px`, borderBottom: `${1.5 * U}px solid rgba(255,255,255,.1)` } }, ["#FF5F57", "#FEBC2E", "#28C840"].map((c) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: c, style: { width: 20 * U, height: 20 * U, borderRadius: "50%", background: c } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
         marginLeft: 16 * U,
         fontFamily: FAMILIA.inter,
         fontWeight: 700,
@@ -5871,10 +6060,10 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
         color: "rgba(255,255,255,.85)",
         letterSpacing: "0.04em",
         textTransform: "uppercase"
-      } }, palabra)), /* @__PURE__ */ react.createElement("div", { style: { width: Lw2, height: Lh2, overflow: "hidden" } }, imagen())), pie);
+      } }, palabra)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: Lw2, height: Lh2, overflow: "hidden" } }, imagen())), pie);
     }
     const Lw = W * 1.08, Lh = Math.min(H * 0.42, W * 0.82), hueco = 40 * U;
-    return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: W / 2 - Lw / 2,
       top: cy - Lh / 2 - hueco,
@@ -5883,7 +6072,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
       background: "#111214",
       boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
       transform: `rotate(-3deg) translateX(${((1 - pe) * -W * 0.6).toFixed(1)}px)`
-    } }, [0, 1].map((fila) => /* @__PURE__ */ react.createElement("div", { key: fila, style: {
+    } }, [0, 1].map((fila) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: fila, style: {
       position: "absolute",
       left: 0,
       top: fila ? Lh + hueco + 10 * U : 10 * U,
@@ -5893,12 +6082,12 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
       gap: 26 * U,
       paddingLeft: t * 120 % (52 * U),
       overflow: "hidden"
-    } }, Array.from({ length: 30 }).map((_, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: { flex: "none", width: 26 * U, height: "100%", borderRadius: 5 * U, background: "#E9E6DE" } })))), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 30 * U, top: hueco, width: Lw - 60 * U, height: Lh, overflow: "hidden" } }, imagen({ filter: "saturate(1.1) contrast(1.05)" }))), etiqueta, pie);
+    } }, Array.from({ length: 30 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { flex: "none", width: 26 * U, height: "100%", borderRadius: 5 * U, background: "#E9E6DE" } })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 30 * U, top: hueco, width: Lw - 60 * U, height: Lh, overflow: "hidden" } }, imagen({ filter: "saturate(1.1) contrast(1.05)" }))), etiqueta, pie);
   }
   if (variante === "marco" || variante === "circulo") {
     const circ = variante === "circulo";
     const L = circ ? Math.min(W, H) * 0.78 : Math.min(W * 0.84, H * 0.5);
-    return /* @__PURE__ */ react.createElement(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, circ && /* @__PURE__ */ react.createElement("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ react.createElement(
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, circ && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ (react_namespaceFn().createElement)(
       "circle",
       {
         cx: W / 2,
@@ -5912,7 +6101,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
         strokeDashoffset: (1 - Kit7_easeOut((t - 0.15) / 0.6)).toFixed(4),
         style: { filter: `drop-shadow(0 0 ${16 * U}px ${ac})` }
       }
-    )), /* @__PURE__ */ react.createElement("div", { style: {
+    )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: W / 2 - L / 2,
       top: H * (vert ? 0.46 : 0.5) - (circ ? L / 2 : L * 0.62),
@@ -5926,7 +6115,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
       boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
       opacity: clamp(pc * 2),
       transform: `rotate(${circ ? 0 : (-3 + (1 - clamp(pc)) * -10).toFixed(2)}deg) scale(${(0.8 + 0.2 * clamp(pc)).toFixed(4)})`
-    } }, foto && /* @__PURE__ */ react.createElement(esm.Img, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)` } })), !circ && /* @__PURE__ */ react.createElement("div", { style: {
+    } }, foto && /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)` } })), !circ && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: W / 2 - 110 * U,
       top: H * (vert ? 0.46 : 0.5) - L * 0.62 - 30 * U,
@@ -5937,14 +6126,14 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
       boxShadow: `0 ${2 * U}px ${6 * U}px rgba(0,0,0,.25)`
     } }), etiqueta, pie);
   }
-  return /* @__PURE__ */ react.createElement(Escena, { fondo: "#000", salida }, foto && /* @__PURE__ */ react.createElement(esm.Img, { src: src(foto), style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: "#000", salida }, foto && /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto), style: {
     position: "absolute",
     inset: 0,
     width: W,
     height: H,
     objectFit: "cover",
     transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`
-  } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 62%, rgba(0,0,0,.5) 100%)" } }), /* @__PURE__ */ react.createElement(Grano, { id: "gfoto", op: 0.12, frec: 0.9 }), etiqueta, pie);
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 62%, rgba(0,0,0,.5) 100%)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gfoto", op: 0.12, frec: 0.9 }), etiqueta, pie);
 };
 
 ;// ./node_modules/three/build/three.core.js
@@ -7988,7 +8177,7 @@ function warn( ...params ) {
  * @param {...any} params - The message components. The first param is used as
  *                          the method name and prefixed with 'THREE.'.
  */
-function error( ...params ) {
+function three_core_error( ...params ) {
 
 	params = enhanceLogMessage( params );
 
@@ -18600,7 +18789,7 @@ class Object3D extends EventDispatcher {
 
 		if ( object === this ) {
 
-			error( 'Object3D.add: object can\'t be added as a child of itself.', object );
+			three_core_error( 'Object3D.add: object can\'t be added as a child of itself.', object );
 			return this;
 
 		}
@@ -18619,7 +18808,7 @@ class Object3D extends EventDispatcher {
 
 		} else {
 
-			error( 'Object3D.add: object not an instance of THREE.Object3D.', object );
+			three_core_error( 'Object3D.add: object not an instance of THREE.Object3D.', object );
 
 		}
 
@@ -24964,7 +25153,7 @@ class BufferGeometry extends EventDispatcher {
 
 		if ( position && position.isGLBufferAttribute ) {
 
-			error( 'BufferGeometry.computeBoundingBox(): GLBufferAttribute requires a manual bounding box.', this );
+			three_core_error( 'BufferGeometry.computeBoundingBox(): GLBufferAttribute requires a manual bounding box.', this );
 
 			this.boundingBox.set(
 				new Vector3( - Infinity, - Infinity, - Infinity ),
@@ -25015,7 +25204,7 @@ class BufferGeometry extends EventDispatcher {
 
 		if ( isNaN( this.boundingBox.min.x ) || isNaN( this.boundingBox.min.y ) || isNaN( this.boundingBox.min.z ) ) {
 
-			error( 'BufferGeometry.computeBoundingBox(): Computed min/max have NaN values. The "position" attribute is likely to have NaN values.', this );
+			three_core_error( 'BufferGeometry.computeBoundingBox(): Computed min/max have NaN values. The "position" attribute is likely to have NaN values.', this );
 
 		}
 
@@ -25039,7 +25228,7 @@ class BufferGeometry extends EventDispatcher {
 
 		if ( position && position.isGLBufferAttribute ) {
 
-			error( 'BufferGeometry.computeBoundingSphere(): GLBufferAttribute requires a manual bounding sphere.', this );
+			three_core_error( 'BufferGeometry.computeBoundingSphere(): GLBufferAttribute requires a manual bounding sphere.', this );
 
 			this.boundingSphere.set( new Vector3(), Infinity );
 
@@ -25130,7 +25319,7 @@ class BufferGeometry extends EventDispatcher {
 
 			if ( isNaN( this.boundingSphere.radius ) ) {
 
-				error( 'BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The "position" attribute is likely to have NaN values.', this );
+				three_core_error( 'BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The "position" attribute is likely to have NaN values.', this );
 
 			}
 
@@ -25158,7 +25347,7 @@ class BufferGeometry extends EventDispatcher {
 			 attributes.normal === undefined ||
 			 attributes.uv === undefined ) {
 
-			error( 'BufferGeometry: .computeTangents() failed. Missing required attributes (index, position, normal or uv)' );
+			three_core_error( 'BufferGeometry: .computeTangents() failed. Missing required attributes (index, position, normal or uv)' );
 			return;
 
 		}
@@ -28512,7 +28701,7 @@ class Sprite extends Object3D {
 
 		if ( raycaster.camera === null ) {
 
-			error( 'Sprite: "Raycaster.camera" needs to be set in order to raycast against sprites.' );
+			three_core_error( 'Sprite: "Raycaster.camera" needs to be set in order to raycast against sprites.' );
 
 		}
 
@@ -41222,7 +41411,7 @@ class ExtrudeGeometry extends BufferGeometry {
 
 			function scalePt2( pt, vec, size ) {
 
-				if ( ! vec ) error( 'ExtrudeGeometry: vec does not exist' );
+				if ( ! vec ) three_core_error( 'ExtrudeGeometry: vec does not exist' );
 
 				return pt.clone().addScaledVector( vec, size );
 
@@ -49226,7 +49415,7 @@ class KeyframeTrack {
 		const valueSize = this.getValueSize();
 		if ( valueSize - Math.floor( valueSize ) !== 0 ) {
 
-			error( 'KeyframeTrack: Invalid value size in track.', this );
+			three_core_error( 'KeyframeTrack: Invalid value size in track.', this );
 			valid = false;
 
 		}
@@ -49238,7 +49427,7 @@ class KeyframeTrack {
 
 		if ( nKeys === 0 ) {
 
-			error( 'KeyframeTrack: Track is empty.', this );
+			three_core_error( 'KeyframeTrack: Track is empty.', this );
 			valid = false;
 
 		}
@@ -49251,7 +49440,7 @@ class KeyframeTrack {
 
 			if ( typeof currTime === 'number' && isNaN( currTime ) ) {
 
-				error( 'KeyframeTrack: Time is not a valid number.', this, i, currTime );
+				three_core_error( 'KeyframeTrack: Time is not a valid number.', this, i, currTime );
 				valid = false;
 				break;
 
@@ -49259,7 +49448,7 @@ class KeyframeTrack {
 
 			if ( prevTime !== null && prevTime > currTime ) {
 
-				error( 'KeyframeTrack: Out of order keys.', this, i, currTime, prevTime );
+				three_core_error( 'KeyframeTrack: Out of order keys.', this, i, currTime, prevTime );
 				valid = false;
 				break;
 
@@ -49279,7 +49468,7 @@ class KeyframeTrack {
 
 					if ( isNaN( value ) ) {
 
-						error( 'KeyframeTrack: Value is not a valid number.', this, i, value );
+						three_core_error( 'KeyframeTrack: Value is not a valid number.', this, i, value );
 						valid = false;
 						break;
 
@@ -51346,7 +51535,7 @@ class AnimationLoader extends Loader {
 
 				} else {
 
-					error( e );
+					three_core_error( e );
 
 				}
 
@@ -51850,7 +52039,7 @@ class DataTextureLoader extends Loader {
 
 				} else {
 
-					error( e );
+					three_core_error( e );
 
 				}
 
@@ -54536,7 +54725,7 @@ class MaterialLoader extends Loader {
 
 				} else {
 
-					error( e );
+					three_core_error( e );
 
 				}
 
@@ -54829,7 +55018,7 @@ class BufferGeometryLoader extends Loader {
 
 				} else {
 
-					error( e );
+					three_core_error( e );
 
 				}
 
@@ -55068,7 +55257,7 @@ class ObjectLoader extends Loader {
 
 				if ( onError !== undefined ) onError( e );
 
-				error( 'ObjectLoader: Can\'t parse ' + url + '.', e.message );
+				three_core_error( 'ObjectLoader: Can\'t parse ' + url + '.', e.message );
 
 				return;
 
@@ -55080,7 +55269,7 @@ class ObjectLoader extends Loader {
 
 				if ( onError !== undefined ) onError( new Error( 'THREE.ObjectLoader: Can\'t load ' + url ) );
 
-				error( 'ObjectLoader: Can\'t load ' + url );
+				three_core_error( 'ObjectLoader: Can\'t load ' + url );
 				return;
 
 			}
@@ -56595,7 +56784,7 @@ class AudioLoader extends Loader {
 
 			} else {
 
-				error( e );
+				three_core_error( e );
 
 			}
 
@@ -59474,14 +59663,14 @@ class PropertyBinding {
 
 					if ( ! targetObject.material ) {
 
-						error( 'PropertyBinding: Can not bind to material as node does not have a material.', this );
+						three_core_error( 'PropertyBinding: Can not bind to material as node does not have a material.', this );
 						return;
 
 					}
 
 					if ( ! targetObject.material.materials ) {
 
-						error( 'PropertyBinding: Can not bind to material.materials as node.material does not have a materials array.', this );
+						three_core_error( 'PropertyBinding: Can not bind to material.materials as node.material does not have a materials array.', this );
 						return;
 
 					}
@@ -59494,7 +59683,7 @@ class PropertyBinding {
 
 					if ( ! targetObject.skeleton ) {
 
-						error( 'PropertyBinding: Can not bind to bones as node does not have a skeleton.', this );
+						three_core_error( 'PropertyBinding: Can not bind to bones as node does not have a skeleton.', this );
 						return;
 
 					}
@@ -59529,14 +59718,14 @@ class PropertyBinding {
 
 					if ( ! targetObject.material ) {
 
-						error( 'PropertyBinding: Can not bind to material as node does not have a material.', this );
+						three_core_error( 'PropertyBinding: Can not bind to material as node does not have a material.', this );
 						return;
 
 					}
 
 					if ( ! targetObject.material.map ) {
 
-						error( 'PropertyBinding: Can not bind to material.map as node.material does not have a map.', this );
+						three_core_error( 'PropertyBinding: Can not bind to material.map as node.material does not have a map.', this );
 						return;
 
 					}
@@ -59548,7 +59737,7 @@ class PropertyBinding {
 
 					if ( targetObject[ objectName ] === undefined ) {
 
-						error( 'PropertyBinding: Can not bind to objectName of node undefined.', this );
+						three_core_error( 'PropertyBinding: Can not bind to objectName of node undefined.', this );
 						return;
 
 					}
@@ -59562,7 +59751,7 @@ class PropertyBinding {
 
 				if ( targetObject[ objectIndex ] === undefined ) {
 
-					error( 'PropertyBinding: Trying to bind to objectIndex of objectName, but is undefined.', this, targetObject );
+					three_core_error( 'PropertyBinding: Trying to bind to objectIndex of objectName, but is undefined.', this, targetObject );
 					return;
 
 				}
@@ -59580,7 +59769,7 @@ class PropertyBinding {
 
 			const nodeName = parsedPath.nodeName;
 
-			error( 'PropertyBinding: Trying to update property for track: ' + nodeName +
+			three_core_error( 'PropertyBinding: Trying to update property for track: ' + nodeName +
 				'.' + propertyName + ' but it wasn\'t found.', targetObject );
 			return;
 
@@ -59615,14 +59804,14 @@ class PropertyBinding {
 				// support resolving morphTarget names into indices.
 				if ( ! targetObject.geometry ) {
 
-					error( 'PropertyBinding: Can not bind to morphTargetInfluences because node does not have a geometry.', this );
+					three_core_error( 'PropertyBinding: Can not bind to morphTargetInfluences because node does not have a geometry.', this );
 					return;
 
 				}
 
 				if ( ! targetObject.geometry.morphAttributes ) {
 
-					error( 'PropertyBinding: Can not bind to morphTargetInfluences because node does not have a geometry.morphAttributes.', this );
+					three_core_error( 'PropertyBinding: Can not bind to morphTargetInfluences because node does not have a geometry.morphAttributes.', this );
 					return;
 
 				}
@@ -59914,7 +60103,7 @@ class AnimationObjectGroup {
 
 			} else if ( objects[ index ] !== knownObject ) {
 
-				error( 'AnimationObjectGroup: Different objects with the same UUID ' +
+				three_core_error( 'AnimationObjectGroup: Different objects with the same UUID ' +
 					'detected. Clean the caches or recreate your infrastructure when reloading scenes.' );
 
 			} // else the object is already where we want it to be
@@ -62590,7 +62779,7 @@ class Raycaster {
 
 		} else {
 
-			error( 'Raycaster: Unsupported camera type: ' + camera.type );
+			three_core_error( 'Raycaster: Unsupported camera type: ' + camera.type );
 
 		}
 
@@ -67938,7 +68127,7 @@ function WebGLBackground( renderer, environments, state, objects, alpha, premult
 
 		const background = getBackground( scene );
 
-		if ( background && ( background.isCubeTexture || background.mapping === CubeUVReflectionMapping ) ) {
+		if ( background && ( background.isCubeTexture || background.mapping === (/* inlined export .CubeUVReflectionMapping */306) ) ) {
 
 			if ( boxMesh === undefined ) {
 
@@ -67949,7 +68138,7 @@ function WebGLBackground( renderer, environments, state, objects, alpha, premult
 						uniforms: cloneUniforms( ShaderLib.backgroundCube.uniforms ),
 						vertexShader: ShaderLib.backgroundCube.vertexShader,
 						fragmentShader: ShaderLib.backgroundCube.fragmentShader,
-						side: BackSide,
+						side: (/* inlined export .BackSide */1),
 						depthTest: false,
 						depthWrite: false,
 						fog: false,
@@ -67997,7 +68186,7 @@ function WebGLBackground( renderer, environments, state, objects, alpha, premult
 			}
 
 
-			boxMesh.material.toneMapped = ColorManagement.getTransfer( background.colorSpace ) !== SRGBTransfer;
+			boxMesh.material.toneMapped = ColorManagement.getTransfer( background.colorSpace ) !== (/* inlined export .SRGBTransfer */"srgb");
 
 			if ( currentBackground !== background ||
 				currentBackgroundVersion !== background.version ||
@@ -68027,7 +68216,7 @@ function WebGLBackground( renderer, environments, state, objects, alpha, premult
 						uniforms: cloneUniforms( ShaderLib.background.uniforms ),
 						vertexShader: ShaderLib.background.vertexShader,
 						fragmentShader: ShaderLib.background.fragmentShader,
-						side: FrontSide,
+						side: (/* inlined export .FrontSide */0),
 						depthTest: false,
 						depthWrite: false,
 						fog: false,
@@ -68054,7 +68243,7 @@ function WebGLBackground( renderer, environments, state, objects, alpha, premult
 
 			planeMesh.material.uniforms.t2D.value = background;
 			planeMesh.material.uniforms.backgroundIntensity.value = scene.backgroundIntensity;
-			planeMesh.material.toneMapped = ColorManagement.getTransfer( background.colorSpace ) !== SRGBTransfer;
+			planeMesh.material.toneMapped = ColorManagement.getTransfer( background.colorSpace ) !== (/* inlined export .SRGBTransfer */"srgb");
 
 			if ( background.matrixAutoUpdate === true ) {
 
@@ -68502,7 +68691,7 @@ function WebGLBindingStates( gl, attributes ) {
 
 					// check for integer attributes
 
-					const integer = ( type === gl.INT || type === gl.UNSIGNED_INT || geometryAttribute.gpuType === IntType );
+					const integer = ( type === gl.INT || type === gl.UNSIGNED_INT || geometryAttribute.gpuType === (/* inlined export .IntType */1013) );
 
 					if ( geometryAttribute.isInterleavedBufferAttribute ) {
 
@@ -68891,7 +69080,7 @@ function WebGLCapabilities( gl, extensions, parameters, utils ) {
 
 	function textureFormatReadable( textureFormat ) {
 
-		if ( textureFormat !== RGBAFormat && utils.convert( textureFormat ) !== gl.getParameter( gl.IMPLEMENTATION_COLOR_READ_FORMAT ) ) {
+		if ( textureFormat !== (/* inlined export .RGBAFormat */1023) && utils.convert( textureFormat ) !== gl.getParameter( gl.IMPLEMENTATION_COLOR_READ_FORMAT ) ) {
 
 			return false;
 
@@ -68903,9 +69092,9 @@ function WebGLCapabilities( gl, extensions, parameters, utils ) {
 
 	function textureTypeReadable( textureType ) {
 
-		const halfFloatSupportedByExt = ( textureType === HalfFloatType ) && ( extensions.has( 'EXT_color_buffer_half_float' ) || extensions.has( 'EXT_color_buffer_float' ) );
+		const halfFloatSupportedByExt = ( textureType === (/* inlined export .HalfFloatType */1016) ) && ( extensions.has( 'EXT_color_buffer_half_float' ) || extensions.has( 'EXT_color_buffer_float' ) );
 
-		if ( textureType !== UnsignedByteType && textureType !== FloatType && ! halfFloatSupportedByExt &&
+		if ( textureType !== (/* inlined export .UnsignedByteType */1009) && textureType !== (/* inlined export .FloatType */1015) && ! halfFloatSupportedByExt &&
 			utils.convert( textureType ) !== gl.getParameter( gl.IMPLEMENTATION_COLOR_READ_TYPE ) ) { // Edge and Chrome Mac < 52 (#9513)
 
 			return false;
@@ -69410,7 +69599,7 @@ class PMREMGenerator {
 
 	_fromTexture( texture, renderTarget ) {
 
-		if ( texture.mapping === CubeReflectionMapping || texture.mapping === CubeRefractionMapping ) {
+		if ( texture.mapping === (/* inlined export .CubeReflectionMapping */301) || texture.mapping === (/* inlined export .CubeRefractionMapping */302) ) {
 
 			this._setSize( texture.image.length === 0 ? 16 : ( texture.image[ 0 ].width || texture.image[ 0 ].image.width ) );
 
@@ -69442,11 +69631,11 @@ class PMREMGenerator {
 		const height = 4 * this._cubeSize;
 
 		const params = {
-			magFilter: LinearFilter,
-			minFilter: LinearFilter,
+			magFilter: (/* inlined export .LinearFilter */1006),
+			minFilter: (/* inlined export .LinearFilter */1006),
 			generateMipmaps: false,
-			type: HalfFloatType,
-			format: RGBAFormat,
+			type: (/* inlined export .HalfFloatType */1016),
+			format: (/* inlined export .RGBAFormat */1023),
 			colorSpace: LinearSRGBColorSpace,
 			depthBuffer: false
 		};
@@ -69495,7 +69684,7 @@ class PMREMGenerator {
 		const toneMapping = renderer.toneMapping;
 		renderer.getClearColor( _clearColor );
 
-		renderer.toneMapping = NoToneMapping;
+		renderer.toneMapping = (/* inlined export .NoToneMapping */0);
 		renderer.autoClear = false;
 
 		// https://github.com/mrdoob/three.js/issues/31413#issuecomment-3095966812
@@ -69515,7 +69704,7 @@ class PMREMGenerator {
 				new BoxGeometry(),
 				new MeshBasicMaterial( {
 					name: 'PMREM.Background',
-					side: BackSide,
+					side: (/* inlined export .BackSide */1),
 					depthWrite: false,
 					depthTest: false,
 				} )
@@ -69598,7 +69787,7 @@ class PMREMGenerator {
 
 		const renderer = this._renderer;
 
-		const isCubeTexture = ( texture.mapping === CubeReflectionMapping || texture.mapping === CubeRefractionMapping );
+		const isCubeTexture = ( texture.mapping === (/* inlined export .CubeReflectionMapping */301) || texture.mapping === (/* inlined export .CubeRefractionMapping */302) );
 
 		if ( isCubeTexture ) {
 
@@ -69868,7 +70057,7 @@ function _createPlanes( lodMax ) {
 function _createRenderTarget( width, height, params ) {
 
 	const cubeUVRenderTarget = new WebGLRenderTarget( width, height, params );
-	cubeUVRenderTarget.texture.mapping = CubeUVReflectionMapping;
+	cubeUVRenderTarget.texture.mapping = (/* inlined export .CubeUVReflectionMapping */306);
 	cubeUVRenderTarget.texture.name = 'PMREM.cubeUv';
 	cubeUVRenderTarget.scissorTest = true;
 	return cubeUVRenderTarget;
@@ -70009,7 +70198,7 @@ function _getGGXShader( lodMax, width, height ) {
 			}
 		`,
 
-		blending: NoBlending,
+		blending: (/* inlined export .NoBlending */0),
 		depthTest: false,
 		depthWrite: false
 
@@ -70102,7 +70291,7 @@ function _getBlurShader( lodMax, width, height ) {
 			}
 		`,
 
-		blending: NoBlending,
+		blending: (/* inlined export .NoBlending */0),
 		depthTest: false,
 		depthWrite: false
 
@@ -70145,7 +70334,7 @@ function _getEquirectMaterial() {
 			}
 		`,
 
-		blending: NoBlending,
+		blending: (/* inlined export .NoBlending */0),
 		depthTest: false,
 		depthWrite: false
 
@@ -70184,7 +70373,7 @@ function _getCubemapMaterial() {
 			}
 		`,
 
-		blending: NoBlending,
+		blending: (/* inlined export .NoBlending */0),
 		depthTest: false,
 		depthWrite: false
 
@@ -70333,8 +70522,8 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 			uniforms: cloneUniforms( shader.uniforms ),
 			vertexShader: shader.vertexShader,
 			fragmentShader: shader.fragmentShader,
-			side: BackSide,
-			blending: NoBlending
+			side: (/* inlined export .BackSide */1),
+			blending: (/* inlined export .NoBlending */0)
 
 		} );
 
@@ -70345,7 +70534,7 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 		const currentMinFilter = texture.minFilter;
 
 		// Avoid blurred poles
-		if ( texture.minFilter === LinearMipmapLinearFilter ) texture.minFilter = LinearFilter;
+		if ( texture.minFilter === (/* inlined export .LinearMipmapLinearFilter */1008) ) texture.minFilter = (/* inlined export .LinearFilter */1006);
 
 		const camera = new CubeCamera( 1, 10, this );
 		camera.update( renderer, mesh );
@@ -70412,7 +70601,7 @@ function WebGLEnvironments( renderer ) {
 
 			const mapping = texture.mapping;
 
-			if ( mapping === EquirectangularReflectionMapping || mapping === EquirectangularRefractionMapping ) {
+			if ( mapping === (/* inlined export .EquirectangularReflectionMapping */303) || mapping === (/* inlined export .EquirectangularRefractionMapping */304) ) {
 
 				if ( cubeMaps.has( texture ) ) {
 
@@ -70457,8 +70646,8 @@ function WebGLEnvironments( renderer ) {
 
 			const mapping = texture.mapping;
 
-			const isEquirectMap = ( mapping === EquirectangularReflectionMapping || mapping === EquirectangularRefractionMapping );
-			const isCubeMap = ( mapping === CubeReflectionMapping || mapping === CubeRefractionMapping );
+			const isEquirectMap = ( mapping === (/* inlined export .EquirectangularReflectionMapping */303) || mapping === (/* inlined export .EquirectangularRefractionMapping */304) );
+			const isCubeMap = ( mapping === (/* inlined export .CubeReflectionMapping */301) || mapping === (/* inlined export .CubeRefractionMapping */302) );
 
 			// equirect/cube map to cubeUV conversion
 
@@ -70524,13 +70713,13 @@ function WebGLEnvironments( renderer ) {
 
 	function mapTextureMapping( texture, mapping ) {
 
-		if ( mapping === EquirectangularReflectionMapping ) {
+		if ( mapping === (/* inlined export .EquirectangularReflectionMapping */303) ) {
 
-			texture.mapping = CubeReflectionMapping;
+			texture.mapping = (/* inlined export .CubeReflectionMapping */301);
 
-		} else if ( mapping === EquirectangularRefractionMapping ) {
+		} else if ( mapping === (/* inlined export .EquirectangularRefractionMapping */304) ) {
 
-			texture.mapping = CubeRefractionMapping;
+			texture.mapping = (/* inlined export .CubeRefractionMapping */302);
 
 		}
 
@@ -70955,7 +71144,7 @@ function WebGLInfo( gl ) {
 				break;
 
 			default:
-				error( 'WebGLInfo: Unknown draw mode:', mode );
+				three_core_error( 'WebGLInfo: Unknown draw mode:', mode );
 				break;
 
 		}
@@ -71029,7 +71218,7 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 			const buffer = new Float32Array( width * height * 4 * morphTargetsCount );
 
 			const texture = new DataArrayTexture( buffer, width, height, morphTargetsCount );
-			texture.type = FloatType;
+			texture.type = (/* inlined export .FloatType */1015);
 			texture.needsUpdate = true;
 
 			// fill buffer
@@ -71236,13 +71425,13 @@ function WebGLObjects( gl, geometries, attributes, bindingStates, info ) {
 }
 
 const toneMappingMap = {
-	[ LinearToneMapping ]: 'LINEAR_TONE_MAPPING',
-	[ ReinhardToneMapping ]: 'REINHARD_TONE_MAPPING',
-	[ CineonToneMapping ]: 'CINEON_TONE_MAPPING',
-	[ ACESFilmicToneMapping ]: 'ACES_FILMIC_TONE_MAPPING',
-	[ AgXToneMapping ]: 'AGX_TONE_MAPPING',
-	[ NeutralToneMapping ]: 'NEUTRAL_TONE_MAPPING',
-	[ CustomToneMapping ]: 'CUSTOM_TONE_MAPPING'
+	[ (/* inlined export .LinearToneMapping */1) ]: 'LINEAR_TONE_MAPPING',
+	[ (/* inlined export .ReinhardToneMapping */2) ]: 'REINHARD_TONE_MAPPING',
+	[ (/* inlined export .CineonToneMapping */3) ]: 'CINEON_TONE_MAPPING',
+	[ (/* inlined export .ACESFilmicToneMapping */4) ]: 'ACES_FILMIC_TONE_MAPPING',
+	[ (/* inlined export .AgXToneMapping */6) ]: 'AGX_TONE_MAPPING',
+	[ (/* inlined export .NeutralToneMapping */7) ]: 'NEUTRAL_TONE_MAPPING',
+	[ (/* inlined export .CustomToneMapping */5) ]: 'CUSTOM_TONE_MAPPING'
 };
 
 function WebGLOutput( type, width, height, antialias, depth, stencil ) {
@@ -71362,8 +71551,8 @@ function WebGLOutput( type, width, height, antialias, depth, stencil ) {
 
 		if ( _effects.length > 0 && targetA === null ) {
 
-			targetA = new WebGLRenderTarget( width, height, { type: HalfFloatType, depthBuffer: false, stencilBuffer: false } );
-			targetB = new WebGLRenderTarget( width, height, { type: HalfFloatType, depthBuffer: false, stencilBuffer: false } );
+			targetA = new WebGLRenderTarget( width, height, { type: (/* inlined export .HalfFloatType */1016), depthBuffer: false, stencilBuffer: false } );
+			targetB = new WebGLRenderTarget( width, height, { type: (/* inlined export .HalfFloatType */1016), depthBuffer: false, stencilBuffer: false } );
 
 		}
 
@@ -71381,7 +71570,7 @@ function WebGLOutput( type, width, height, antialias, depth, stencil ) {
 		// Don't begin during compositing phase (post-processing effects call render())
 		if ( _isCompositing ) return false;
 
-		if ( renderer.toneMapping === NoToneMapping && _effects.length === 0 ) return false;
+		if ( renderer.toneMapping === (/* inlined export .NoToneMapping */0) && _effects.length === 0 ) return false;
 
 		_savedRenderTarget = renderTarget;
 
@@ -71408,7 +71597,7 @@ function WebGLOutput( type, width, height, antialias, depth, stencil ) {
 
 		// disable tone mapping during render - it will be applied in end()
 		_savedToneMapping = renderer.toneMapping;
-		renderer.toneMapping = NoToneMapping;
+		renderer.toneMapping = (/* inlined export .NoToneMapping */0);
 
 		return true;
 
@@ -71458,7 +71647,7 @@ function WebGLOutput( type, width, height, antialias, depth, stencil ) {
 
 			material.defines = {};
 
-			if ( ColorManagement.getTransfer( _outputColorSpace ) === SRGBTransfer ) material.defines.SRGB_TRANSFER = '';
+			if ( ColorManagement.getTransfer( _outputColorSpace ) === (/* inlined export .SRGBTransfer */"srgb") ) material.defines.SRGB_TRANSFER = '';
 
 			const toneMapping = toneMappingMap[ _outputToneMapping ];
 			if ( toneMapping ) material.defines[ toneMapping ] = '';
@@ -72065,7 +72254,7 @@ function setValueT1( gl, v, textures ) {
 
 	if ( this.type === gl.SAMPLER_2D_SHADOW ) {
 
-		emptyShadowTexture.compareFunction = textures.isReversedDepthBuffer() ? GreaterEqualCompare : LessEqualCompare;
+		emptyShadowTexture.compareFunction = textures.isReversedDepthBuffer() ? (/* inlined export .GreaterEqualCompare */518) : (/* inlined export .LessEqualCompare */515);
 		emptyTexture2D = emptyShadowTexture;
 
 	} else {
@@ -72738,10 +72927,10 @@ function getEncodingComponents( colorSpace ) {
 
 	switch ( ColorManagement.getTransfer( colorSpace ) ) {
 
-		case LinearTransfer:
+		case (/* inlined export .LinearTransfer */"linear"):
 			return [ encodingMatrix, 'LinearTransferOETF' ];
 
-		case SRGBTransfer:
+		case (/* inlined export .SRGBTransfer */"srgb"):
 			return [ encodingMatrix, 'sRGBTransferOETF' ];
 
 		default:
@@ -72795,13 +72984,13 @@ function getTexelEncodingFunction( functionName, colorSpace ) {
 }
 
 const toneMappingFunctions = {
-	[ LinearToneMapping ]: 'Linear',
-	[ ReinhardToneMapping ]: 'Reinhard',
-	[ CineonToneMapping ]: 'Cineon',
-	[ ACESFilmicToneMapping ]: 'ACESFilmic',
-	[ AgXToneMapping ]: 'AgX',
-	[ NeutralToneMapping ]: 'Neutral',
-	[ CustomToneMapping ]: 'Custom'
+	[ (/* inlined export .LinearToneMapping */1) ]: 'Linear',
+	[ (/* inlined export .ReinhardToneMapping */2) ]: 'Reinhard',
+	[ (/* inlined export .CineonToneMapping */3) ]: 'Cineon',
+	[ (/* inlined export .ACESFilmicToneMapping */4) ]: 'ACESFilmic',
+	[ (/* inlined export .AgXToneMapping */6) ]: 'AgX',
+	[ (/* inlined export .NeutralToneMapping */7) ]: 'Neutral',
+	[ (/* inlined export .CustomToneMapping */5) ]: 'Custom'
 };
 
 function getToneMappingFunction( functionName, toneMapping ) {
@@ -73042,8 +73231,8 @@ function generatePrecision( parameters ) {
 }
 
 const shadowMapTypeDefines = {
-	[ PCFShadowMap ]: 'SHADOWMAP_TYPE_PCF',
-	[ VSMShadowMap ]: 'SHADOWMAP_TYPE_VSM'
+	[ (/* inlined export .PCFShadowMap */1) ]: 'SHADOWMAP_TYPE_PCF',
+	[ (/* inlined export .VSMShadowMap */3) ]: 'SHADOWMAP_TYPE_VSM'
 };
 
 function generateShadowMapTypeDefine( parameters ) {
@@ -73053,9 +73242,9 @@ function generateShadowMapTypeDefine( parameters ) {
 }
 
 const envMapTypeDefines = {
-	[ CubeReflectionMapping ]: 'ENVMAP_TYPE_CUBE',
-	[ CubeRefractionMapping ]: 'ENVMAP_TYPE_CUBE',
-	[ CubeUVReflectionMapping ]: 'ENVMAP_TYPE_CUBE_UV'
+	[ (/* inlined export .CubeReflectionMapping */301) ]: 'ENVMAP_TYPE_CUBE',
+	[ (/* inlined export .CubeRefractionMapping */302) ]: 'ENVMAP_TYPE_CUBE',
+	[ (/* inlined export .CubeUVReflectionMapping */306) ]: 'ENVMAP_TYPE_CUBE_UV'
 };
 
 function generateEnvMapTypeDefine( parameters ) {
@@ -73067,7 +73256,7 @@ function generateEnvMapTypeDefine( parameters ) {
 }
 
 const envMapModeDefines = {
-	[ CubeRefractionMapping ]: 'ENVMAP_MODE_REFRACTION'
+	[ (/* inlined export .CubeRefractionMapping */302) ]: 'ENVMAP_MODE_REFRACTION'
 };
 
 function generateEnvMapModeDefine( parameters ) {
@@ -73079,9 +73268,9 @@ function generateEnvMapModeDefine( parameters ) {
 }
 
 const envMapBlendingDefines = {
-	[ MultiplyOperation ]: 'ENVMAP_BLENDING_MULTIPLY',
-	[ MixOperation ]: 'ENVMAP_BLENDING_MIX',
-	[ AddOperation ]: 'ENVMAP_BLENDING_ADD'
+	[ (/* inlined export .MultiplyOperation */0) ]: 'ENVMAP_BLENDING_MULTIPLY',
+	[ (/* inlined export .MixOperation */1) ]: 'ENVMAP_BLENDING_MIX',
+	[ (/* inlined export .AddOperation */2) ]: 'ENVMAP_BLENDING_ADD'
 };
 
 function generateEnvMapBlendingDefine( parameters ) {
@@ -73468,9 +73657,9 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			'uniform vec3 cameraPosition;',
 			'uniform bool isOrthographic;',
 
-			( parameters.toneMapping !== NoToneMapping ) ? '#define TONE_MAPPING' : '',
-			( parameters.toneMapping !== NoToneMapping ) ? ShaderChunk[ 'tonemapping_pars_fragment' ] : '', // this code is required here because it is used by the toneMapping() function defined below
-			( parameters.toneMapping !== NoToneMapping ) ? getToneMappingFunction( 'toneMapping', parameters.toneMapping ) : '',
+			( parameters.toneMapping !== (/* inlined export .NoToneMapping */0) ) ? '#define TONE_MAPPING' : '',
+			( parameters.toneMapping !== (/* inlined export .NoToneMapping */0) ) ? ShaderChunk[ 'tonemapping_pars_fragment' ] : '', // this code is required here because it is used by the toneMapping() function defined below
+			( parameters.toneMapping !== (/* inlined export .NoToneMapping */0) ) ? getToneMappingFunction( 'toneMapping', parameters.toneMapping ) : '',
 
 			parameters.dithering ? '#define DITHERING' : '',
 			parameters.opaque ? '#define OPAQUE' : '',
@@ -73513,8 +73702,8 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 		prefixFragment = [
 			'#define varying in',
-			( parameters.glslVersion === GLSL3 ) ? '' : 'layout(location = 0) out highp vec4 pc_fragColor;',
-			( parameters.glslVersion === GLSL3 ) ? '' : '#define gl_FragColor pc_fragColor',
+			( parameters.glslVersion === (/* inlined export .GLSL3 */"300 es") ) ? '' : 'layout(location = 0) out highp vec4 pc_fragColor;',
+			( parameters.glslVersion === (/* inlined export .GLSL3 */"300 es") ) ? '' : '#define gl_FragColor pc_fragColor',
 			'#define gl_FragDepthEXT gl_FragDepth',
 			'#define texture2D texture',
 			'#define textureCube texture',
@@ -73588,7 +73777,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 					const vertexErrors = getShaderErrors( gl, glVertexShader, 'vertex' );
 					const fragmentErrors = getShaderErrors( gl, glFragmentShader, 'fragment' );
 
-					error(
+					three_core_error(
 						'WebGLProgram: Shader Error ' + gl.getError() + ' - ' +
 						'VALIDATE_STATUS ' + gl.getProgramParameter( program, gl.VALIDATE_STATUS ) + '\n\n' +
 						'Material Name: ' + self.name + '\n' +
@@ -73848,7 +74037,7 @@ class WebGLShaderStage {
 
 function isPackedRGFormat( format ) {
 
-	return format === RGFormat || format === RG11_EAC_Format || format === RED_GREEN_RGTC2_Format;
+	return format === (/* inlined export .RGFormat */1030) || format === (/* inlined export .RG11_EAC_Format */37490) || format === (/* inlined export .RED_GREEN_RGTC2_Format */36285);
 
 }
 
@@ -73900,7 +74089,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 		const usePMREM = material.isMeshStandardMaterial || ( material.isMeshLambertMaterial && ! material.envMap ) || ( material.isMeshPhongMaterial && ! material.envMap );
 		const envMap = environments.get( material.envMap || environment, usePMREM );
-		const envMapCubeUVHeight = ( !! envMap ) && ( envMap.mapping === CubeUVReflectionMapping ) ? envMap.image.height : null;
+		const envMapCubeUVHeight = ( !! envMap ) && ( envMap.mapping === (/* inlined export .CubeUVReflectionMapping */306) ) ? envMap.image.height : null;
 
 		const shaderID = shaderIDs[ material.type ];
 
@@ -74013,7 +74202,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 		const HAS_EXTENSIONS = !! material.extensions;
 
-		let toneMapping = NoToneMapping;
+		let toneMapping = (/* inlined export .NoToneMapping */0);
 
 		if ( material.toneMapped ) {
 
@@ -74064,9 +74253,9 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			displacementMap: HAS_DISPLACEMENTMAP,
 			emissiveMap: HAS_EMISSIVEMAP,
 
-			normalMapObjectSpace: HAS_NORMALMAP && material.normalMapType === ObjectSpaceNormalMap,
-			normalMapTangentSpace: HAS_NORMALMAP && material.normalMapType === TangentSpaceNormalMap,
-			packedNormalMap: HAS_NORMALMAP && material.normalMapType === TangentSpaceNormalMap && isPackedRGFormat( material.normalMap.format	),
+			normalMapObjectSpace: HAS_NORMALMAP && material.normalMapType === (/* inlined export .ObjectSpaceNormalMap */1),
+			normalMapTangentSpace: HAS_NORMALMAP && material.normalMapType === (/* inlined export .TangentSpaceNormalMap */0),
+			packedNormalMap: HAS_NORMALMAP && material.normalMapType === (/* inlined export .TangentSpaceNormalMap */0) && isPackedRGFormat( material.normalMap.format	),
 
 			metalnessMap: HAS_METALNESSMAP,
 			roughnessMap: HAS_ROUGHNESSMAP,
@@ -74100,7 +74289,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 			gradientMap: HAS_GRADIENTMAP,
 
-			opaque: material.transparent === false && material.blending === NormalBlending && material.alphaToCoverage === false,
+			opaque: material.transparent === false && material.blending === (/* inlined export .NormalBlending */1) && material.alphaToCoverage === false,
 
 			alphaMap: HAS_ALPHAMAP,
 			alphaTest: HAS_ALPHATEST,
@@ -74204,13 +74393,13 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 			toneMapping: toneMapping,
 
-			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.map.colorSpace ) === SRGBTransfer ),
-			decodeVideoTextureEmissive: HAS_EMISSIVEMAP && ( material.emissiveMap.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.emissiveMap.colorSpace ) === SRGBTransfer ),
+			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.map.colorSpace ) === (/* inlined export .SRGBTransfer */"srgb") ),
+			decodeVideoTextureEmissive: HAS_EMISSIVEMAP && ( material.emissiveMap.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.emissiveMap.colorSpace ) === (/* inlined export .SRGBTransfer */"srgb") ),
 
 			premultipliedAlpha: material.premultipliedAlpha,
 
-			doubleSided: material.side === DoubleSide,
-			flipSided: material.side === BackSide,
+			doubleSided: material.side === (/* inlined export .DoubleSide */2),
+			flipSided: material.side === (/* inlined export .BackSide */1),
 
 			useDepthPacking: material.depthPacking >= 0,
 			depthPacking: material.depthPacking || 0,
@@ -75089,7 +75278,7 @@ function WebGLLights( extensions ) {
 
 			if ( light.shadow && light.shadow.map ) {
 
-				if ( light.shadow.map.texture.format === RGFormat ) {
+				if ( light.shadow.map.texture.format === (/* inlined export .RGFormat */1030) ) {
 
 					// VSM uses color texture with blurred mean/std_dev
 					shadowMap = light.shadow.map.texture;
@@ -75637,7 +75826,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 		_maxTextureSize = capabilities.maxTextureSize;
 
-	const shadowSide = { [ FrontSide ]: BackSide, [ BackSide ]: FrontSide, [ DoubleSide ]: DoubleSide };
+	const shadowSide = { [ (/* inlined export .FrontSide */0) ]: (/* inlined export .BackSide */1), [ (/* inlined export .BackSide */1) ]: (/* inlined export .FrontSide */0), [ (/* inlined export .DoubleSide */2) ]: (/* inlined export .DoubleSide */2) };
 
 	const shadowMaterialVertical = new ShaderMaterial( {
 		defines: {
@@ -75675,7 +75864,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 	this.autoUpdate = true;
 	this.needsUpdate = false;
 
-	this.type = PCFShadowMap;
+	this.type = (/* inlined export .PCFShadowMap */1);
 	let _previousType = this.type;
 
 	this.render = function ( lights, scene, camera ) {
@@ -75685,10 +75874,10 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 		if ( lights.length === 0 ) return;
 
-		if ( this.type === PCFSoftShadowMap ) {
+		if ( this.type === (/* inlined export .PCFSoftShadowMap */2) ) {
 
 			warn( 'WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.' );
-			this.type = PCFShadowMap;
+			this.type = (/* inlined export .PCFShadowMap */1);
 
 		}
 
@@ -75699,7 +75888,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 		const _state = renderer.state;
 
 		// Set GL state for depth map.
-		_state.setBlending( NoBlending );
+		_state.setBlending( (/* inlined export .NoBlending */0) );
 
 		if ( _state.buffers.depth.getReversed() === true ) {
 
@@ -75804,7 +75993,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 				}
 
-				if ( this.type === VSMShadowMap ) {
+				if ( this.type === (/* inlined export .VSMShadowMap */3) ) {
 
 					if ( light.isPointLight ) {
 
@@ -75814,50 +76003,50 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 					}
 
 					shadow.map = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y, {
-						format: RGFormat,
-						type: HalfFloatType,
-						minFilter: LinearFilter,
-						magFilter: LinearFilter,
+						format: (/* inlined export .RGFormat */1030),
+						type: (/* inlined export .HalfFloatType */1016),
+						minFilter: (/* inlined export .LinearFilter */1006),
+						magFilter: (/* inlined export .LinearFilter */1006),
 						generateMipmaps: false
 					} );
 					shadow.map.texture.name = light.name + '.shadowMap';
 
 					// Native depth texture for VSM - depth is captured here, then blurred into the color texture
-					shadow.map.depthTexture = new DepthTexture( _shadowMapSize.x, _shadowMapSize.y, FloatType );
+					shadow.map.depthTexture = new DepthTexture( _shadowMapSize.x, _shadowMapSize.y, (/* inlined export .FloatType */1015) );
 					shadow.map.depthTexture.name = light.name + '.shadowMapDepth';
-					shadow.map.depthTexture.format = DepthFormat;
+					shadow.map.depthTexture.format = (/* inlined export .DepthFormat */1026);
 					shadow.map.depthTexture.compareFunction = null; // For regular sampling (not shadow comparison)
-					shadow.map.depthTexture.minFilter = NearestFilter;
-					shadow.map.depthTexture.magFilter = NearestFilter;
+					shadow.map.depthTexture.minFilter = (/* inlined export .NearestFilter */1003);
+					shadow.map.depthTexture.magFilter = (/* inlined export .NearestFilter */1003);
 
 				} else {
 
 					if ( light.isPointLight ) {
 
 						shadow.map = new WebGLCubeRenderTarget( _shadowMapSize.x );
-						shadow.map.depthTexture = new CubeDepthTexture( _shadowMapSize.x, UnsignedIntType );
+						shadow.map.depthTexture = new CubeDepthTexture( _shadowMapSize.x, (/* inlined export .UnsignedIntType */1014) );
 
 					} else {
 
 						shadow.map = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y );
-						shadow.map.depthTexture = new DepthTexture( _shadowMapSize.x, _shadowMapSize.y, UnsignedIntType );
+						shadow.map.depthTexture = new DepthTexture( _shadowMapSize.x, _shadowMapSize.y, (/* inlined export .UnsignedIntType */1014) );
 
 					}
 
 					shadow.map.depthTexture.name = light.name + '.shadowMap';
-					shadow.map.depthTexture.format = DepthFormat;
+					shadow.map.depthTexture.format = (/* inlined export .DepthFormat */1026);
 
-					if ( this.type === PCFShadowMap ) {
+					if ( this.type === (/* inlined export .PCFShadowMap */1) ) {
 
-						shadow.map.depthTexture.compareFunction = reversedDepthBuffer ? GreaterEqualCompare : LessEqualCompare;
-						shadow.map.depthTexture.minFilter = LinearFilter;
-						shadow.map.depthTexture.magFilter = LinearFilter;
+						shadow.map.depthTexture.compareFunction = reversedDepthBuffer ? (/* inlined export .GreaterEqualCompare */518) : (/* inlined export .LessEqualCompare */515);
+						shadow.map.depthTexture.minFilter = (/* inlined export .LinearFilter */1006);
+						shadow.map.depthTexture.magFilter = (/* inlined export .LinearFilter */1006);
 
 					} else {
 
 						shadow.map.depthTexture.compareFunction = null;
-						shadow.map.depthTexture.minFilter = NearestFilter;
-						shadow.map.depthTexture.magFilter = NearestFilter;
+						shadow.map.depthTexture.minFilter = (/* inlined export .NearestFilter */1003);
+						shadow.map.depthTexture.magFilter = (/* inlined export .NearestFilter */1003);
 
 					}
 
@@ -75950,7 +76139,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 			// do blur pass for VSM
 
-			if ( shadow.isPointLightShadow !== true && this.type === VSMShadowMap ) {
+			if ( shadow.isPointLightShadow !== true && this.type === (/* inlined export .VSMShadowMap */3) ) {
 
 				VSMPass( shadow, camera );
 
@@ -75985,8 +76174,8 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 		if ( shadow.mapPass === null ) {
 
 			shadow.mapPass = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y, {
-				format: RGFormat,
-				type: HalfFloatType
+				format: (/* inlined export .RGFormat */1030),
+				type: (/* inlined export .HalfFloatType */1016)
 			} );
 
 		} else if ( shadow.mapPass.width !== shadow.map.width || shadow.mapPass.height !== shadow.map.height ) {
@@ -76068,7 +76257,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 		result.visible = material.visible;
 		result.wireframe = material.wireframe;
 
-		if ( type === VSMShadowMap ) {
+		if ( type === (/* inlined export .VSMShadowMap */3) ) {
 
 			result.side = ( material.shadowSide !== null ) ? material.shadowSide : material.side;
 
@@ -76112,7 +76301,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 		if ( visible && ( object.isMesh || object.isLine || object.isPoints ) ) {
 
-			if ( ( object.castShadow || ( object.receiveShadow && type === VSMShadowMap ) ) && ( ! object.frustumCulled || object.intersectsFrustum( _frustum ) ) ) {
+			if ( ( object.castShadow || ( object.receiveShadow && type === (/* inlined export .VSMShadowMap */3) ) ) && ( ! object.frustumCulled || object.intersectsFrustum( _frustum ) ) ) {
 
 				object.modelViewMatrix.multiplyMatrices( shadowCamera.matrixWorldInverse, object.matrixWorld );
 
@@ -76333,42 +76522,42 @@ function WebGLState( gl, extensions ) {
 
 					switch ( depthFunc ) {
 
-						case NeverDepth:
+						case (/* inlined export .NeverDepth */0):
 
 							gl.depthFunc( gl.NEVER );
 							break;
 
-						case AlwaysDepth:
+						case (/* inlined export .AlwaysDepth */1):
 
 							gl.depthFunc( gl.ALWAYS );
 							break;
 
-						case LessDepth:
+						case (/* inlined export .LessDepth */2):
 
 							gl.depthFunc( gl.LESS );
 							break;
 
-						case LessEqualDepth:
+						case (/* inlined export .LessEqualDepth */3):
 
 							gl.depthFunc( gl.LEQUAL );
 							break;
 
-						case EqualDepth:
+						case (/* inlined export .EqualDepth */4):
 
 							gl.depthFunc( gl.EQUAL );
 							break;
 
-						case GreaterEqualDepth:
+						case (/* inlined export .GreaterEqualDepth */5):
 
 							gl.depthFunc( gl.GEQUAL );
 							break;
 
-						case GreaterDepth:
+						case (/* inlined export .GreaterDepth */6):
 
 							gl.depthFunc( gl.GREATER );
 							break;
 
-						case NotEqualDepth:
+						case (/* inlined export .NotEqualDepth */7):
 
 							gl.depthFunc( gl.NOTEQUAL );
 							break;
@@ -76641,13 +76830,13 @@ function WebGLState( gl, extensions ) {
 	stencilBuffer.setClear( 0 );
 
 	enable( gl.DEPTH_TEST );
-	depthBuffer.setFunc( LessEqualDepth );
+	depthBuffer.setFunc( (/* inlined export .LessEqualDepth */3) );
 
 	setFlipSided( false );
-	setCullFace( CullFaceBack );
+	setCullFace( (/* inlined export .CullFaceBack */1) );
 	enable( gl.CULL_FACE );
 
-	setBlending( NoBlending );
+	setBlending( (/* inlined export .NoBlending */0) );
 
 	//
 
@@ -76773,35 +76962,35 @@ function WebGLState( gl, extensions ) {
 	}
 
 	const equationToGL = {
-		[ AddEquation ]: gl.FUNC_ADD,
-		[ SubtractEquation ]: gl.FUNC_SUBTRACT,
-		[ ReverseSubtractEquation ]: gl.FUNC_REVERSE_SUBTRACT
+		[ (/* inlined export .AddEquation */100) ]: gl.FUNC_ADD,
+		[ (/* inlined export .SubtractEquation */101) ]: gl.FUNC_SUBTRACT,
+		[ (/* inlined export .ReverseSubtractEquation */102) ]: gl.FUNC_REVERSE_SUBTRACT
 	};
 
-	equationToGL[ MinEquation ] = gl.MIN;
-	equationToGL[ MaxEquation ] = gl.MAX;
+	equationToGL[ (/* inlined export .MinEquation */103) ] = gl.MIN;
+	equationToGL[ (/* inlined export .MaxEquation */104) ] = gl.MAX;
 
 	const factorToGL = {
-		[ ZeroFactor ]: gl.ZERO,
-		[ OneFactor ]: gl.ONE,
-		[ SrcColorFactor ]: gl.SRC_COLOR,
-		[ SrcAlphaFactor ]: gl.SRC_ALPHA,
-		[ SrcAlphaSaturateFactor ]: gl.SRC_ALPHA_SATURATE,
-		[ DstColorFactor ]: gl.DST_COLOR,
-		[ DstAlphaFactor ]: gl.DST_ALPHA,
-		[ OneMinusSrcColorFactor ]: gl.ONE_MINUS_SRC_COLOR,
-		[ OneMinusSrcAlphaFactor ]: gl.ONE_MINUS_SRC_ALPHA,
-		[ OneMinusDstColorFactor ]: gl.ONE_MINUS_DST_COLOR,
-		[ OneMinusDstAlphaFactor ]: gl.ONE_MINUS_DST_ALPHA,
-		[ ConstantColorFactor ]: gl.CONSTANT_COLOR,
-		[ OneMinusConstantColorFactor ]: gl.ONE_MINUS_CONSTANT_COLOR,
-		[ ConstantAlphaFactor ]: gl.CONSTANT_ALPHA,
-		[ OneMinusConstantAlphaFactor ]: gl.ONE_MINUS_CONSTANT_ALPHA
+		[ (/* inlined export .ZeroFactor */200) ]: gl.ZERO,
+		[ (/* inlined export .OneFactor */201) ]: gl.ONE,
+		[ (/* inlined export .SrcColorFactor */202) ]: gl.SRC_COLOR,
+		[ (/* inlined export .SrcAlphaFactor */204) ]: gl.SRC_ALPHA,
+		[ (/* inlined export .SrcAlphaSaturateFactor */210) ]: gl.SRC_ALPHA_SATURATE,
+		[ (/* inlined export .DstColorFactor */208) ]: gl.DST_COLOR,
+		[ (/* inlined export .DstAlphaFactor */206) ]: gl.DST_ALPHA,
+		[ (/* inlined export .OneMinusSrcColorFactor */203) ]: gl.ONE_MINUS_SRC_COLOR,
+		[ (/* inlined export .OneMinusSrcAlphaFactor */205) ]: gl.ONE_MINUS_SRC_ALPHA,
+		[ (/* inlined export .OneMinusDstColorFactor */209) ]: gl.ONE_MINUS_DST_COLOR,
+		[ (/* inlined export .OneMinusDstAlphaFactor */207) ]: gl.ONE_MINUS_DST_ALPHA,
+		[ (/* inlined export .ConstantColorFactor */211) ]: gl.CONSTANT_COLOR,
+		[ (/* inlined export .OneMinusConstantColorFactor */212) ]: gl.ONE_MINUS_CONSTANT_COLOR,
+		[ (/* inlined export .ConstantAlphaFactor */213) ]: gl.CONSTANT_ALPHA,
+		[ (/* inlined export .OneMinusConstantAlphaFactor */214) ]: gl.ONE_MINUS_CONSTANT_ALPHA
 	};
 
 	function setBlending( blending, blendEquation, blendSrc, blendDst, blendEquationAlpha, blendSrcAlpha, blendDstAlpha, blendColor, blendAlpha, premultipliedAlpha ) {
 
-		if ( blending === NoBlending ) {
+		if ( blending === (/* inlined export .NoBlending */0) ) {
 
 			if ( currentBlendingEnabled === true ) {
 
@@ -76821,16 +77010,16 @@ function WebGLState( gl, extensions ) {
 
 		}
 
-		if ( blending !== CustomBlending ) {
+		if ( blending !== (/* inlined export .CustomBlending */5) ) {
 
 			if ( blending !== currentBlending || premultipliedAlpha !== currentPremultipledAlpha ) {
 
-				if ( currentBlendEquation !== AddEquation || currentBlendEquationAlpha !== AddEquation ) {
+				if ( currentBlendEquation !== (/* inlined export .AddEquation */100) || currentBlendEquationAlpha !== (/* inlined export .AddEquation */100) ) {
 
 					gl.blendEquation( gl.FUNC_ADD );
 
-					currentBlendEquation = AddEquation;
-					currentBlendEquationAlpha = AddEquation;
+					currentBlendEquation = (/* inlined export .AddEquation */100);
+					currentBlendEquationAlpha = (/* inlined export .AddEquation */100);
 
 				}
 
@@ -76838,24 +77027,24 @@ function WebGLState( gl, extensions ) {
 
 					switch ( blending ) {
 
-						case NormalBlending:
+						case (/* inlined export .NormalBlending */1):
 							gl.blendFuncSeparate( gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA );
 							break;
 
-						case AdditiveBlending:
+						case (/* inlined export .AdditiveBlending */2):
 							gl.blendFunc( gl.ONE, gl.ONE );
 							break;
 
-						case SubtractiveBlending:
+						case (/* inlined export .SubtractiveBlending */3):
 							gl.blendFuncSeparate( gl.ZERO, gl.ONE_MINUS_SRC_COLOR, gl.ZERO, gl.ONE );
 							break;
 
-						case MultiplyBlending:
+						case (/* inlined export .MultiplyBlending */4):
 							gl.blendFuncSeparate( gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE );
 							break;
 
 						default:
-							error( 'WebGLState: Invalid blending: ', blending );
+							three_core_error( 'WebGLState: Invalid blending: ', blending );
 							break;
 
 					}
@@ -76864,24 +77053,24 @@ function WebGLState( gl, extensions ) {
 
 					switch ( blending ) {
 
-						case NormalBlending:
+						case (/* inlined export .NormalBlending */1):
 							gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA );
 							break;
 
-						case AdditiveBlending:
+						case (/* inlined export .AdditiveBlending */2):
 							gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE );
 							break;
 
-						case SubtractiveBlending:
-							error( 'WebGLState: SubtractiveBlending requires material.premultipliedAlpha = true' );
+						case (/* inlined export .SubtractiveBlending */3):
+							three_core_error( 'WebGLState: SubtractiveBlending requires material.premultipliedAlpha = true' );
 							break;
 
-						case MultiplyBlending:
-							error( 'WebGLState: MultiplyBlending requires material.premultipliedAlpha = true' );
+						case (/* inlined export .MultiplyBlending */4):
+							three_core_error( 'WebGLState: MultiplyBlending requires material.premultipliedAlpha = true' );
 							break;
 
 						default:
-							error( 'WebGLState: Invalid blending: ', blending );
+							three_core_error( 'WebGLState: Invalid blending: ', blending );
 							break;
 
 					}
@@ -76946,17 +77135,17 @@ function WebGLState( gl, extensions ) {
 
 	function setMaterial( material, frontFaceCW ) {
 
-		material.side === DoubleSide
+		material.side === (/* inlined export .DoubleSide */2)
 			? disable( gl.CULL_FACE )
 			: enable( gl.CULL_FACE );
 
-		let flipSided = ( material.side === BackSide );
+		let flipSided = ( material.side === (/* inlined export .BackSide */1) );
 		if ( frontFaceCW ) flipSided = ! flipSided;
 
 		setFlipSided( flipSided );
 
-		( material.blending === NormalBlending && material.transparent === false )
-			? setBlending( NoBlending )
+		( material.blending === (/* inlined export .NormalBlending */1) && material.transparent === false )
+			? setBlending( (/* inlined export .NoBlending */0) )
 			: setBlending( material.blending, material.blendEquation, material.blendSrc, material.blendDst, material.blendEquationAlpha, material.blendSrcAlpha, material.blendDstAlpha, material.blendColor, material.blendAlpha, material.premultipliedAlpha );
 
 		depthBuffer.setFunc( material.depthFunc );
@@ -77006,17 +77195,17 @@ function WebGLState( gl, extensions ) {
 
 	function setCullFace( cullFace ) {
 
-		if ( cullFace !== CullFaceNone ) {
+		if ( cullFace !== (/* inlined export .CullFaceNone */0) ) {
 
 			enable( gl.CULL_FACE );
 
 			if ( cullFace !== currentCullFace ) {
 
-				if ( cullFace === CullFaceBack ) {
+				if ( cullFace === (/* inlined export .CullFaceBack */1) ) {
 
 					gl.cullFace( gl.BACK );
 
-				} else if ( cullFace === CullFaceFront ) {
+				} else if ( cullFace === (/* inlined export .CullFaceFront */2) ) {
 
 					gl.cullFace( gl.FRONT );
 
@@ -77174,7 +77363,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77188,7 +77377,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77202,7 +77391,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77216,7 +77405,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77230,7 +77419,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77244,7 +77433,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77258,7 +77447,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77272,7 +77461,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77286,7 +77475,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77300,7 +77489,7 @@ function WebGLState( gl, extensions ) {
 
 		} catch ( e ) {
 
-			error( 'WebGLState:', e );
+			three_core_error( 'WebGLState:', e );
 
 		}
 
@@ -77783,11 +77972,11 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		if ( glFormat === _gl.RGBA ) {
 
-			const transfer = forceLinearTransfer ? LinearTransfer : ColorManagement.getTransfer( colorSpace );
+			const transfer = forceLinearTransfer ? (/* inlined export .LinearTransfer */"linear") : ColorManagement.getTransfer( colorSpace );
 
 			if ( glType === _gl.FLOAT ) internalFormat = _gl.RGBA32F;
 			if ( glType === _gl.HALF_FLOAT ) internalFormat = _gl.RGBA16F;
-			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = ( transfer === SRGBTransfer ) ? _gl.SRGB8_ALPHA8 : _gl.RGBA8;
+			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? _gl.SRGB8_ALPHA8 : _gl.RGBA8;
 			if ( glType === _gl.UNSIGNED_SHORT && ext_texture_norm16 ) internalFormat = ext_texture_norm16.RGBA16_EXT;
 			if ( glType === _gl.SHORT && ext_texture_norm16 ) internalFormat = ext_texture_norm16.RGBA16_SNORM_EXT;
 			if ( glType === _gl.UNSIGNED_SHORT_4_4_4_4 ) internalFormat = _gl.RGBA4;
@@ -77812,15 +78001,15 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		let glInternalFormat;
 		if ( useStencil ) {
 
-			if ( depthType === null || depthType === UnsignedIntType || depthType === UnsignedInt248Type ) {
+			if ( depthType === null || depthType === (/* inlined export .UnsignedIntType */1014) || depthType === (/* inlined export .UnsignedInt248Type */1020) ) {
 
 				glInternalFormat = _gl.DEPTH24_STENCIL8;
 
-			} else if ( depthType === FloatType ) {
+			} else if ( depthType === (/* inlined export .FloatType */1015) ) {
 
 				glInternalFormat = _gl.DEPTH32F_STENCIL8;
 
-			} else if ( depthType === UnsignedShortType ) {
+			} else if ( depthType === (/* inlined export .UnsignedShortType */1012) ) {
 
 				glInternalFormat = _gl.DEPTH24_STENCIL8;
 				warn( 'DepthTexture: 16 bit depth attachment is not supported with stencil. Using 24-bit attachment.' );
@@ -77829,15 +78018,15 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		} else {
 
-			if ( depthType === null || depthType === UnsignedIntType || depthType === UnsignedInt248Type ) {
+			if ( depthType === null || depthType === (/* inlined export .UnsignedIntType */1014) || depthType === (/* inlined export .UnsignedInt248Type */1020) ) {
 
 				glInternalFormat = _gl.DEPTH_COMPONENT24;
 
-			} else if ( depthType === FloatType ) {
+			} else if ( depthType === (/* inlined export .FloatType */1015) ) {
 
 				glInternalFormat = _gl.DEPTH_COMPONENT32F;
 
-			} else if ( depthType === UnsignedShortType ) {
+			} else if ( depthType === (/* inlined export .UnsignedShortType */1012) ) {
 
 				glInternalFormat = _gl.DEPTH_COMPONENT16;
 
@@ -77851,7 +78040,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	function getMipLevels( texture, image ) {
 
-		if ( textureNeedsGenerateMipmaps( texture ) === true || ( texture.isFramebufferTexture && texture.minFilter !== NearestFilter && texture.minFilter !== LinearFilter ) ) {
+		if ( textureNeedsGenerateMipmaps( texture ) === true || ( texture.isFramebufferTexture && texture.minFilter !== (/* inlined export .NearestFilter */1003) && texture.minFilter !== (/* inlined export .LinearFilter */1006) ) ) {
 
 			return Math.log2( Math.max( image.width, image.height ) ) + 1;
 
@@ -78191,37 +78380,37 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 	}
 
 	const wrappingToGL = {
-		[ RepeatWrapping ]: _gl.REPEAT,
-		[ ClampToEdgeWrapping ]: _gl.CLAMP_TO_EDGE,
-		[ MirroredRepeatWrapping ]: _gl.MIRRORED_REPEAT
+		[ (/* inlined export .RepeatWrapping */1000) ]: _gl.REPEAT,
+		[ (/* inlined export .ClampToEdgeWrapping */1001) ]: _gl.CLAMP_TO_EDGE,
+		[ (/* inlined export .MirroredRepeatWrapping */1002) ]: _gl.MIRRORED_REPEAT
 	};
 
 	const filterToGL = {
-		[ NearestFilter ]: _gl.NEAREST,
-		[ NearestMipmapNearestFilter ]: _gl.NEAREST_MIPMAP_NEAREST,
-		[ NearestMipmapLinearFilter ]: _gl.NEAREST_MIPMAP_LINEAR,
+		[ (/* inlined export .NearestFilter */1003) ]: _gl.NEAREST,
+		[ (/* inlined export .NearestMipmapNearestFilter */1004) ]: _gl.NEAREST_MIPMAP_NEAREST,
+		[ (/* inlined export .NearestMipmapLinearFilter */1005) ]: _gl.NEAREST_MIPMAP_LINEAR,
 
-		[ LinearFilter ]: _gl.LINEAR,
-		[ LinearMipmapNearestFilter ]: _gl.LINEAR_MIPMAP_NEAREST,
-		[ LinearMipmapLinearFilter ]: _gl.LINEAR_MIPMAP_LINEAR
+		[ (/* inlined export .LinearFilter */1006) ]: _gl.LINEAR,
+		[ (/* inlined export .LinearMipmapNearestFilter */1007) ]: _gl.LINEAR_MIPMAP_NEAREST,
+		[ (/* inlined export .LinearMipmapLinearFilter */1008) ]: _gl.LINEAR_MIPMAP_LINEAR
 	};
 
 	const compareToGL = {
-		[ NeverCompare ]: _gl.NEVER,
-		[ AlwaysCompare ]: _gl.ALWAYS,
-		[ LessCompare ]: _gl.LESS,
-		[ LessEqualCompare ]: _gl.LEQUAL,
-		[ EqualCompare ]: _gl.EQUAL,
-		[ GreaterEqualCompare ]: _gl.GEQUAL,
-		[ GreaterCompare ]: _gl.GREATER,
-		[ NotEqualCompare ]: _gl.NOTEQUAL
+		[ (/* inlined export .NeverCompare */512) ]: _gl.NEVER,
+		[ (/* inlined export .AlwaysCompare */519) ]: _gl.ALWAYS,
+		[ (/* inlined export .LessCompare */513) ]: _gl.LESS,
+		[ (/* inlined export .LessEqualCompare */515) ]: _gl.LEQUAL,
+		[ (/* inlined export .EqualCompare */514) ]: _gl.EQUAL,
+		[ (/* inlined export .GreaterEqualCompare */518) ]: _gl.GEQUAL,
+		[ (/* inlined export .GreaterCompare */516) ]: _gl.GREATER,
+		[ (/* inlined export .NotEqualCompare */517) ]: _gl.NOTEQUAL
 	};
 
 	function setTextureParameters( textureType, texture ) {
 
-		if ( texture.type === FloatType && extensions.has( 'OES_texture_float_linear' ) === false &&
-			( texture.magFilter === LinearFilter || texture.magFilter === LinearMipmapNearestFilter || texture.magFilter === NearestMipmapLinearFilter || texture.magFilter === LinearMipmapLinearFilter ||
-			texture.minFilter === LinearFilter || texture.minFilter === LinearMipmapNearestFilter || texture.minFilter === NearestMipmapLinearFilter || texture.minFilter === LinearMipmapLinearFilter ) ) {
+		if ( texture.type === (/* inlined export .FloatType */1015) && extensions.has( 'OES_texture_float_linear' ) === false &&
+			( texture.magFilter === (/* inlined export .LinearFilter */1006) || texture.magFilter === (/* inlined export .LinearMipmapNearestFilter */1007) || texture.magFilter === (/* inlined export .NearestMipmapLinearFilter */1005) || texture.magFilter === (/* inlined export .LinearMipmapLinearFilter */1008) ||
+			texture.minFilter === (/* inlined export .LinearFilter */1006) || texture.minFilter === (/* inlined export .LinearMipmapNearestFilter */1007) || texture.minFilter === (/* inlined export .NearestMipmapLinearFilter */1005) || texture.minFilter === (/* inlined export .LinearMipmapLinearFilter */1008) ) ) {
 
 			warn( 'WebGLRenderer: Unable to use linear filtering with floating point textures. OES_texture_float_linear not supported on this device.' );
 
@@ -78248,9 +78437,9 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		if ( extensions.has( 'EXT_texture_filter_anisotropic' ) === true ) {
 
-			if ( texture.magFilter === NearestFilter ) return;
-			if ( texture.minFilter !== NearestMipmapLinearFilter && texture.minFilter !== LinearMipmapLinearFilter ) return;
-			if ( texture.type === FloatType && extensions.has( 'OES_texture_float_linear' ) === false ) return; // verify extension
+			if ( texture.magFilter === (/* inlined export .NearestFilter */1003) ) return;
+			if ( texture.minFilter !== (/* inlined export .NearestMipmapLinearFilter */1005) && texture.minFilter !== (/* inlined export .LinearMipmapLinearFilter */1008) ) return;
+			if ( texture.type === (/* inlined export .FloatType */1015) && extensions.has( 'OES_texture_float_linear' ) === false ) return; // verify extension
 
 			if ( texture.anisotropy > 1 || properties.get( texture ).__currentAnisotropy ) {
 
@@ -78476,8 +78665,8 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			if ( isImageBitmap === false ) {
 
 				const workingPrimaries = ColorManagement.getPrimaries( ColorManagement.workingColorSpace );
-				const texturePrimaries = texture.colorSpace === NoColorSpace ? null : ColorManagement.getPrimaries( texture.colorSpace );
-				const unpackConversion = texture.colorSpace === NoColorSpace || workingPrimaries === texturePrimaries ? _gl.NONE : _gl.BROWSER_DEFAULT_WEBGL;
+				const texturePrimaries = texture.colorSpace === (/* inlined export .NoColorSpace */"") ? null : ColorManagement.getPrimaries( texture.colorSpace );
+				const unpackConversion = texture.colorSpace === (/* inlined export .NoColorSpace */"") || workingPrimaries === texturePrimaries ? _gl.NONE : _gl.BROWSER_DEFAULT_WEBGL;
 
 				state.pixelStorei( _gl.UNPACK_FLIP_Y_WEBGL, texture.flipY );
 				state.pixelStorei( _gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
@@ -78507,7 +78696,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			if ( texture.isDepthTexture ) {
 
-				glInternalFormat = getInternalDepthFormat( texture.format === DepthStencilFormat, texture.type );
+				glInternalFormat = getInternalDepthFormat( texture.format === (/* inlined export .DepthStencilFormat */1027), texture.type );
 
 				//
 
@@ -78599,7 +78788,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 						mipmap = mipmaps[ i ];
 
-						if ( texture.format !== RGBAFormat ) {
+						if ( texture.format !== (/* inlined export .RGBAFormat */1023) ) {
 
 							if ( glFormat !== null ) {
 
@@ -78675,7 +78864,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 						mipmap = mipmaps[ i ];
 
-						if ( texture.format !== RGBAFormat ) {
+						if ( texture.format !== (/* inlined export .RGBAFormat */1023) ) {
 
 							if ( glFormat !== null ) {
 
@@ -78976,8 +79165,8 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			state.activeTexture( _gl.TEXTURE0 + slot );
 
 			const workingPrimaries = ColorManagement.getPrimaries( ColorManagement.workingColorSpace );
-			const texturePrimaries = texture.colorSpace === NoColorSpace ? null : ColorManagement.getPrimaries( texture.colorSpace );
-			const unpackConversion = texture.colorSpace === NoColorSpace || workingPrimaries === texturePrimaries ? _gl.NONE : _gl.BROWSER_DEFAULT_WEBGL;
+			const texturePrimaries = texture.colorSpace === (/* inlined export .NoColorSpace */"") ? null : ColorManagement.getPrimaries( texture.colorSpace );
+			const unpackConversion = texture.colorSpace === (/* inlined export .NoColorSpace */"") || workingPrimaries === texturePrimaries ? _gl.NONE : _gl.BROWSER_DEFAULT_WEBGL;
 
 			state.pixelStorei( _gl.UNPACK_FLIP_Y_WEBGL, texture.flipY );
 			state.pixelStorei( _gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
@@ -79035,7 +79224,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 						const mipmap = mipmaps[ j ];
 
-						if ( texture.format !== RGBAFormat ) {
+						if ( texture.format !== (/* inlined export .RGBAFormat */1023) ) {
 
 							if ( glFormat !== null ) {
 
@@ -79358,11 +79547,11 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				// Use proper internal format for depth textures
 				let glInternalFormat;
-				if ( renderTarget.depthTexture.format === DepthFormat ) {
+				if ( renderTarget.depthTexture.format === (/* inlined export .DepthFormat */1026) ) {
 
 					glInternalFormat = _gl.DEPTH_COMPONENT24;
 
-				} else if ( renderTarget.depthTexture.format === DepthStencilFormat ) {
+				} else if ( renderTarget.depthTexture.format === (/* inlined export .DepthStencilFormat */1027) ) {
 
 					glInternalFormat = _gl.DEPTH24_STENCIL8;
 
@@ -79386,9 +79575,9 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		const samples = getRenderTargetSamples( renderTarget );
 
 		const glTextureType = isCube ? _gl.TEXTURE_CUBE_MAP_POSITIVE_X + cubeFace : _gl.TEXTURE_2D;
-		const glAttachmentType = renderTarget.depthTexture.format === DepthStencilFormat ? _gl.DEPTH_STENCIL_ATTACHMENT : _gl.DEPTH_ATTACHMENT;
+		const glAttachmentType = renderTarget.depthTexture.format === (/* inlined export .DepthStencilFormat */1027) ? _gl.DEPTH_STENCIL_ATTACHMENT : _gl.DEPTH_ATTACHMENT;
 
-		if ( renderTarget.depthTexture.format === DepthFormat ) {
+		if ( renderTarget.depthTexture.format === (/* inlined export .DepthFormat */1026) ) {
 
 			if ( useMultisampledRTT( renderTarget ) ) {
 
@@ -79400,7 +79589,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
-		} else if ( renderTarget.depthTexture.format === DepthStencilFormat ) {
+		} else if ( renderTarget.depthTexture.format === (/* inlined export .DepthStencilFormat */1027) ) {
 
 			if ( useMultisampledRTT( renderTarget ) ) {
 
@@ -79994,15 +80183,15 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		if ( texture.isCompressedTexture === true || texture.isVideoTexture === true ) return image;
 
-		if ( colorSpace !== LinearSRGBColorSpace && colorSpace !== NoColorSpace ) {
+		if ( colorSpace !== LinearSRGBColorSpace && colorSpace !== (/* inlined export .NoColorSpace */"") ) {
 
 			// sRGB
 
-			if ( ColorManagement.getTransfer( colorSpace ) === SRGBTransfer ) {
+			if ( ColorManagement.getTransfer( colorSpace ) === (/* inlined export .SRGBTransfer */"srgb") ) {
 
 				// in WebGL 2 uncompressed textures can only be sRGB encoded if they have the RGBA8 format
 
-				if ( format !== RGBAFormat || type !== UnsignedByteType ) {
+				if ( format !== (/* inlined export .RGBAFormat */1023) || type !== (/* inlined export .UnsignedByteType */1009) ) {
 
 					warn( 'WebGLTextures: sRGB encoded textures have to use RGBAFormat and UnsignedByteType.' );
 
@@ -80010,7 +80199,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			} else {
 
-				error( 'WebGLTextures: Unsupported texture color space:', colorSpace );
+				three_core_error( 'WebGLTextures: Unsupported texture color space:', colorSpace );
 
 			}
 
@@ -80074,54 +80263,54 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 function WebGLUtils( gl, extensions ) {
 
-	function convert( p, colorSpace = NoColorSpace ) {
+	function convert( p, colorSpace = (/* inlined export .NoColorSpace */"") ) {
 
 		let extension;
 
 		const transfer = ColorManagement.getTransfer( colorSpace );
 
-		if ( p === UnsignedByteType ) return gl.UNSIGNED_BYTE;
-		if ( p === UnsignedShort4444Type ) return gl.UNSIGNED_SHORT_4_4_4_4;
-		if ( p === UnsignedShort5551Type ) return gl.UNSIGNED_SHORT_5_5_5_1;
-		if ( p === UnsignedInt5999Type ) return gl.UNSIGNED_INT_5_9_9_9_REV;
-		if ( p === UnsignedInt101111Type ) return gl.UNSIGNED_INT_10F_11F_11F_REV;
+		if ( p === (/* inlined export .UnsignedByteType */1009) ) return gl.UNSIGNED_BYTE;
+		if ( p === (/* inlined export .UnsignedShort4444Type */1017) ) return gl.UNSIGNED_SHORT_4_4_4_4;
+		if ( p === (/* inlined export .UnsignedShort5551Type */1018) ) return gl.UNSIGNED_SHORT_5_5_5_1;
+		if ( p === (/* inlined export .UnsignedInt5999Type */35902) ) return gl.UNSIGNED_INT_5_9_9_9_REV;
+		if ( p === (/* inlined export .UnsignedInt101111Type */35899) ) return gl.UNSIGNED_INT_10F_11F_11F_REV;
 
-		if ( p === ByteType ) return gl.BYTE;
-		if ( p === ShortType ) return gl.SHORT;
-		if ( p === UnsignedShortType ) return gl.UNSIGNED_SHORT;
-		if ( p === IntType ) return gl.INT;
-		if ( p === UnsignedIntType ) return gl.UNSIGNED_INT;
-		if ( p === FloatType ) return gl.FLOAT;
-		if ( p === HalfFloatType ) return gl.HALF_FLOAT;
+		if ( p === (/* inlined export .ByteType */1010) ) return gl.BYTE;
+		if ( p === (/* inlined export .ShortType */1011) ) return gl.SHORT;
+		if ( p === (/* inlined export .UnsignedShortType */1012) ) return gl.UNSIGNED_SHORT;
+		if ( p === (/* inlined export .IntType */1013) ) return gl.INT;
+		if ( p === (/* inlined export .UnsignedIntType */1014) ) return gl.UNSIGNED_INT;
+		if ( p === (/* inlined export .FloatType */1015) ) return gl.FLOAT;
+		if ( p === (/* inlined export .HalfFloatType */1016) ) return gl.HALF_FLOAT;
 
-		if ( p === AlphaFormat ) return gl.ALPHA;
-		if ( p === RGBFormat ) return gl.RGB;
-		if ( p === RGBAFormat ) return gl.RGBA;
-		if ( p === DepthFormat ) return gl.DEPTH_COMPONENT;
-		if ( p === DepthStencilFormat ) return gl.DEPTH_STENCIL;
+		if ( p === (/* inlined export .AlphaFormat */1021) ) return gl.ALPHA;
+		if ( p === (/* inlined export .RGBFormat */1022) ) return gl.RGB;
+		if ( p === (/* inlined export .RGBAFormat */1023) ) return gl.RGBA;
+		if ( p === (/* inlined export .DepthFormat */1026) ) return gl.DEPTH_COMPONENT;
+		if ( p === (/* inlined export .DepthStencilFormat */1027) ) return gl.DEPTH_STENCIL;
 
 		// WebGL2 formats.
 
-		if ( p === RedFormat ) return gl.RED;
-		if ( p === RedIntegerFormat ) return gl.RED_INTEGER;
-		if ( p === RGFormat ) return gl.RG;
-		if ( p === RGIntegerFormat ) return gl.RG_INTEGER;
-		if ( p === RGBAIntegerFormat ) return gl.RGBA_INTEGER;
+		if ( p === (/* inlined export .RedFormat */1028) ) return gl.RED;
+		if ( p === (/* inlined export .RedIntegerFormat */1029) ) return gl.RED_INTEGER;
+		if ( p === (/* inlined export .RGFormat */1030) ) return gl.RG;
+		if ( p === (/* inlined export .RGIntegerFormat */1031) ) return gl.RG_INTEGER;
+		if ( p === (/* inlined export .RGBAIntegerFormat */1033) ) return gl.RGBA_INTEGER;
 
 		// S3TC
 
-		if ( p === RGB_S3TC_DXT1_Format || p === RGBA_S3TC_DXT1_Format || p === RGBA_S3TC_DXT3_Format || p === RGBA_S3TC_DXT5_Format ) {
+		if ( p === (/* inlined export .RGB_S3TC_DXT1_Format */33776) || p === (/* inlined export .RGBA_S3TC_DXT1_Format */33777) || p === (/* inlined export .RGBA_S3TC_DXT3_Format */33778) || p === (/* inlined export .RGBA_S3TC_DXT5_Format */33779) ) {
 
-			if ( transfer === SRGBTransfer ) {
+			if ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) {
 
 				extension = extensions.get( 'WEBGL_compressed_texture_s3tc_srgb' );
 
 				if ( extension !== null ) {
 
-					if ( p === RGB_S3TC_DXT1_Format ) return extension.COMPRESSED_SRGB_S3TC_DXT1_EXT;
-					if ( p === RGBA_S3TC_DXT1_Format ) return extension.COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
-					if ( p === RGBA_S3TC_DXT3_Format ) return extension.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
-					if ( p === RGBA_S3TC_DXT5_Format ) return extension.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+					if ( p === (/* inlined export .RGB_S3TC_DXT1_Format */33776) ) return extension.COMPRESSED_SRGB_S3TC_DXT1_EXT;
+					if ( p === (/* inlined export .RGBA_S3TC_DXT1_Format */33777) ) return extension.COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
+					if ( p === (/* inlined export .RGBA_S3TC_DXT3_Format */33778) ) return extension.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
+					if ( p === (/* inlined export .RGBA_S3TC_DXT5_Format */33779) ) return extension.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
 
 				} else {
 
@@ -80135,10 +80324,10 @@ function WebGLUtils( gl, extensions ) {
 
 				if ( extension !== null ) {
 
-					if ( p === RGB_S3TC_DXT1_Format ) return extension.COMPRESSED_RGB_S3TC_DXT1_EXT;
-					if ( p === RGBA_S3TC_DXT1_Format ) return extension.COMPRESSED_RGBA_S3TC_DXT1_EXT;
-					if ( p === RGBA_S3TC_DXT3_Format ) return extension.COMPRESSED_RGBA_S3TC_DXT3_EXT;
-					if ( p === RGBA_S3TC_DXT5_Format ) return extension.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+					if ( p === (/* inlined export .RGB_S3TC_DXT1_Format */33776) ) return extension.COMPRESSED_RGB_S3TC_DXT1_EXT;
+					if ( p === (/* inlined export .RGBA_S3TC_DXT1_Format */33777) ) return extension.COMPRESSED_RGBA_S3TC_DXT1_EXT;
+					if ( p === (/* inlined export .RGBA_S3TC_DXT3_Format */33778) ) return extension.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+					if ( p === (/* inlined export .RGBA_S3TC_DXT5_Format */33779) ) return extension.COMPRESSED_RGBA_S3TC_DXT5_EXT;
 
 				} else {
 
@@ -80152,16 +80341,16 @@ function WebGLUtils( gl, extensions ) {
 
 		// PVRTC
 
-		if ( p === RGB_PVRTC_4BPPV1_Format || p === RGB_PVRTC_2BPPV1_Format || p === RGBA_PVRTC_4BPPV1_Format || p === RGBA_PVRTC_2BPPV1_Format ) {
+		if ( p === (/* inlined export .RGB_PVRTC_4BPPV1_Format */35840) || p === (/* inlined export .RGB_PVRTC_2BPPV1_Format */35841) || p === (/* inlined export .RGBA_PVRTC_4BPPV1_Format */35842) || p === (/* inlined export .RGBA_PVRTC_2BPPV1_Format */35843) ) {
 
 			extension = extensions.get( 'WEBGL_compressed_texture_pvrtc' );
 
 			if ( extension !== null ) {
 
-				if ( p === RGB_PVRTC_4BPPV1_Format ) return extension.COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
-				if ( p === RGB_PVRTC_2BPPV1_Format ) return extension.COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
-				if ( p === RGBA_PVRTC_4BPPV1_Format ) return extension.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
-				if ( p === RGBA_PVRTC_2BPPV1_Format ) return extension.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+				if ( p === (/* inlined export .RGB_PVRTC_4BPPV1_Format */35840) ) return extension.COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
+				if ( p === (/* inlined export .RGB_PVRTC_2BPPV1_Format */35841) ) return extension.COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
+				if ( p === (/* inlined export .RGBA_PVRTC_4BPPV1_Format */35842) ) return extension.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+				if ( p === (/* inlined export .RGBA_PVRTC_2BPPV1_Format */35843) ) return extension.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
 
 			} else {
 
@@ -80173,18 +80362,18 @@ function WebGLUtils( gl, extensions ) {
 
 		// ETC
 
-		if ( p === RGB_ETC1_Format || p === RGB_ETC2_Format || p === RGBA_ETC2_EAC_Format || p === R11_EAC_Format || p === SIGNED_R11_EAC_Format || p === RG11_EAC_Format || p === SIGNED_RG11_EAC_Format ) {
+		if ( p === (/* inlined export .RGB_ETC1_Format */36196) || p === (/* inlined export .RGB_ETC2_Format */37492) || p === (/* inlined export .RGBA_ETC2_EAC_Format */37496) || p === (/* inlined export .R11_EAC_Format */37488) || p === (/* inlined export .SIGNED_R11_EAC_Format */37489) || p === (/* inlined export .RG11_EAC_Format */37490) || p === (/* inlined export .SIGNED_RG11_EAC_Format */37491) ) {
 
 			extension = extensions.get( 'WEBGL_compressed_texture_etc' );
 
 			if ( extension !== null ) {
 
-				if ( p === RGB_ETC1_Format || p === RGB_ETC2_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ETC2 : extension.COMPRESSED_RGB8_ETC2;
-				if ( p === RGBA_ETC2_EAC_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC : extension.COMPRESSED_RGBA8_ETC2_EAC;
-				if ( p === R11_EAC_Format ) return extension.COMPRESSED_R11_EAC;
-				if ( p === SIGNED_R11_EAC_Format ) return extension.COMPRESSED_SIGNED_R11_EAC;
-				if ( p === RG11_EAC_Format ) return extension.COMPRESSED_RG11_EAC;
-				if ( p === SIGNED_RG11_EAC_Format ) return extension.COMPRESSED_SIGNED_RG11_EAC;
+				if ( p === (/* inlined export .RGB_ETC1_Format */36196) || p === (/* inlined export .RGB_ETC2_Format */37492) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ETC2 : extension.COMPRESSED_RGB8_ETC2;
+				if ( p === (/* inlined export .RGBA_ETC2_EAC_Format */37496) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC : extension.COMPRESSED_RGBA8_ETC2_EAC;
+				if ( p === (/* inlined export .R11_EAC_Format */37488) ) return extension.COMPRESSED_R11_EAC;
+				if ( p === (/* inlined export .SIGNED_R11_EAC_Format */37489) ) return extension.COMPRESSED_SIGNED_R11_EAC;
+				if ( p === (/* inlined export .RG11_EAC_Format */37490) ) return extension.COMPRESSED_RG11_EAC;
+				if ( p === (/* inlined export .SIGNED_RG11_EAC_Format */37491) ) return extension.COMPRESSED_SIGNED_RG11_EAC;
 
 			} else {
 
@@ -80196,30 +80385,30 @@ function WebGLUtils( gl, extensions ) {
 
 		// ASTC
 
-		if ( p === RGBA_ASTC_4x4_Format || p === RGBA_ASTC_5x4_Format || p === RGBA_ASTC_5x5_Format ||
-			p === RGBA_ASTC_6x5_Format || p === RGBA_ASTC_6x6_Format || p === RGBA_ASTC_8x5_Format ||
-			p === RGBA_ASTC_8x6_Format || p === RGBA_ASTC_8x8_Format || p === RGBA_ASTC_10x5_Format ||
-			p === RGBA_ASTC_10x6_Format || p === RGBA_ASTC_10x8_Format || p === RGBA_ASTC_10x10_Format ||
-			p === RGBA_ASTC_12x10_Format || p === RGBA_ASTC_12x12_Format ) {
+		if ( p === (/* inlined export .RGBA_ASTC_4x4_Format */37808) || p === (/* inlined export .RGBA_ASTC_5x4_Format */37809) || p === (/* inlined export .RGBA_ASTC_5x5_Format */37810) ||
+			p === (/* inlined export .RGBA_ASTC_6x5_Format */37811) || p === (/* inlined export .RGBA_ASTC_6x6_Format */37812) || p === (/* inlined export .RGBA_ASTC_8x5_Format */37813) ||
+			p === (/* inlined export .RGBA_ASTC_8x6_Format */37814) || p === (/* inlined export .RGBA_ASTC_8x8_Format */37815) || p === (/* inlined export .RGBA_ASTC_10x5_Format */37816) ||
+			p === (/* inlined export .RGBA_ASTC_10x6_Format */37817) || p === (/* inlined export .RGBA_ASTC_10x8_Format */37818) || p === (/* inlined export .RGBA_ASTC_10x10_Format */37819) ||
+			p === (/* inlined export .RGBA_ASTC_12x10_Format */37820) || p === (/* inlined export .RGBA_ASTC_12x12_Format */37821) ) {
 
 			extension = extensions.get( 'WEBGL_compressed_texture_astc' );
 
 			if ( extension !== null ) {
 
-				if ( p === RGBA_ASTC_4x4_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR : extension.COMPRESSED_RGBA_ASTC_4x4_KHR;
-				if ( p === RGBA_ASTC_5x4_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR : extension.COMPRESSED_RGBA_ASTC_5x4_KHR;
-				if ( p === RGBA_ASTC_5x5_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR : extension.COMPRESSED_RGBA_ASTC_5x5_KHR;
-				if ( p === RGBA_ASTC_6x5_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR : extension.COMPRESSED_RGBA_ASTC_6x5_KHR;
-				if ( p === RGBA_ASTC_6x6_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR : extension.COMPRESSED_RGBA_ASTC_6x6_KHR;
-				if ( p === RGBA_ASTC_8x5_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR : extension.COMPRESSED_RGBA_ASTC_8x5_KHR;
-				if ( p === RGBA_ASTC_8x6_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR : extension.COMPRESSED_RGBA_ASTC_8x6_KHR;
-				if ( p === RGBA_ASTC_8x8_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR : extension.COMPRESSED_RGBA_ASTC_8x8_KHR;
-				if ( p === RGBA_ASTC_10x5_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR : extension.COMPRESSED_RGBA_ASTC_10x5_KHR;
-				if ( p === RGBA_ASTC_10x6_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR : extension.COMPRESSED_RGBA_ASTC_10x6_KHR;
-				if ( p === RGBA_ASTC_10x8_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR : extension.COMPRESSED_RGBA_ASTC_10x8_KHR;
-				if ( p === RGBA_ASTC_10x10_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR : extension.COMPRESSED_RGBA_ASTC_10x10_KHR;
-				if ( p === RGBA_ASTC_12x10_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR : extension.COMPRESSED_RGBA_ASTC_12x10_KHR;
-				if ( p === RGBA_ASTC_12x12_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR : extension.COMPRESSED_RGBA_ASTC_12x12_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_4x4_Format */37808) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR : extension.COMPRESSED_RGBA_ASTC_4x4_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_5x4_Format */37809) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR : extension.COMPRESSED_RGBA_ASTC_5x4_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_5x5_Format */37810) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR : extension.COMPRESSED_RGBA_ASTC_5x5_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_6x5_Format */37811) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR : extension.COMPRESSED_RGBA_ASTC_6x5_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_6x6_Format */37812) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR : extension.COMPRESSED_RGBA_ASTC_6x6_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_8x5_Format */37813) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR : extension.COMPRESSED_RGBA_ASTC_8x5_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_8x6_Format */37814) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR : extension.COMPRESSED_RGBA_ASTC_8x6_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_8x8_Format */37815) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR : extension.COMPRESSED_RGBA_ASTC_8x8_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_10x5_Format */37816) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR : extension.COMPRESSED_RGBA_ASTC_10x5_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_10x6_Format */37817) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR : extension.COMPRESSED_RGBA_ASTC_10x6_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_10x8_Format */37818) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR : extension.COMPRESSED_RGBA_ASTC_10x8_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_10x10_Format */37819) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR : extension.COMPRESSED_RGBA_ASTC_10x10_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_12x10_Format */37820) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR : extension.COMPRESSED_RGBA_ASTC_12x10_KHR;
+				if ( p === (/* inlined export .RGBA_ASTC_12x12_Format */37821) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR : extension.COMPRESSED_RGBA_ASTC_12x12_KHR;
 
 			} else {
 
@@ -80231,15 +80420,15 @@ function WebGLUtils( gl, extensions ) {
 
 		// BPTC
 
-		if ( p === RGBA_BPTC_Format || p === RGB_BPTC_SIGNED_Format || p === RGB_BPTC_UNSIGNED_Format ) {
+		if ( p === (/* inlined export .RGBA_BPTC_Format */36492) || p === (/* inlined export .RGB_BPTC_SIGNED_Format */36494) || p === (/* inlined export .RGB_BPTC_UNSIGNED_Format */36495) ) {
 
 			extension = extensions.get( 'EXT_texture_compression_bptc' );
 
 			if ( extension !== null ) {
 
-				if ( p === RGBA_BPTC_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT : extension.COMPRESSED_RGBA_BPTC_UNORM_EXT;
-				if ( p === RGB_BPTC_SIGNED_Format ) return extension.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT;
-				if ( p === RGB_BPTC_UNSIGNED_Format ) return extension.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT;
+				if ( p === (/* inlined export .RGBA_BPTC_Format */36492) ) return ( transfer === (/* inlined export .SRGBTransfer */"srgb") ) ? extension.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT : extension.COMPRESSED_RGBA_BPTC_UNORM_EXT;
+				if ( p === (/* inlined export .RGB_BPTC_SIGNED_Format */36494) ) return extension.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT;
+				if ( p === (/* inlined export .RGB_BPTC_UNSIGNED_Format */36495) ) return extension.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT;
 
 			} else {
 
@@ -80251,16 +80440,16 @@ function WebGLUtils( gl, extensions ) {
 
 		// RGTC
 
-		if ( p === RED_RGTC1_Format || p === SIGNED_RED_RGTC1_Format || p === RED_GREEN_RGTC2_Format || p === SIGNED_RED_GREEN_RGTC2_Format ) {
+		if ( p === (/* inlined export .RED_RGTC1_Format */36283) || p === (/* inlined export .SIGNED_RED_RGTC1_Format */36284) || p === (/* inlined export .RED_GREEN_RGTC2_Format */36285) || p === (/* inlined export .SIGNED_RED_GREEN_RGTC2_Format */36286) ) {
 
 			extension = extensions.get( 'EXT_texture_compression_rgtc' );
 
 			if ( extension !== null ) {
 
-				if ( p === RED_RGTC1_Format ) return extension.COMPRESSED_RED_RGTC1_EXT;
-				if ( p === SIGNED_RED_RGTC1_Format ) return extension.COMPRESSED_SIGNED_RED_RGTC1_EXT;
-				if ( p === RED_GREEN_RGTC2_Format ) return extension.COMPRESSED_RED_GREEN_RGTC2_EXT;
-				if ( p === SIGNED_RED_GREEN_RGTC2_Format ) return extension.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT;
+				if ( p === (/* inlined export .RED_RGTC1_Format */36283) ) return extension.COMPRESSED_RED_RGTC1_EXT;
+				if ( p === (/* inlined export .SIGNED_RED_RGTC1_Format */36284) ) return extension.COMPRESSED_SIGNED_RED_RGTC1_EXT;
+				if ( p === (/* inlined export .RED_GREEN_RGTC2_Format */36285) ) return extension.COMPRESSED_RED_GREEN_RGTC2_EXT;
+				if ( p === (/* inlined export .SIGNED_RED_GREEN_RGTC2_Format */36286) ) return extension.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT;
 
 			} else {
 
@@ -80272,7 +80461,7 @@ function WebGLUtils( gl, extensions ) {
 
 		//
 
-		if ( p === UnsignedInt248Type ) return gl.UNSIGNED_INT_24_8;
+		if ( p === (/* inlined export .UnsignedInt248Type */1020) ) return gl.UNSIGNED_INT_24_8;
 
 		// if "p" can't be resolved, assume the user defines a WebGL constant as a string (fallback/workaround for packed RGB formats)
 
@@ -80878,8 +81067,8 @@ class WebXRManager extends EventDispatcher {
 						glBaseLayer.framebufferWidth,
 						glBaseLayer.framebufferHeight,
 						{
-							format: RGBAFormat,
-							type: UnsignedByteType,
+							format: (/* inlined export .RGBAFormat */1023),
+							type: (/* inlined export .UnsignedByteType */1009),
 							colorSpace: renderer.outputColorSpace,
 							stencilBuffer: attributes.stencil,
 							resolveDepthBuffer: ( glBaseLayer.ignoreDepthValues === false ),
@@ -80899,8 +81088,8 @@ class WebXRManager extends EventDispatcher {
 					if ( attributes.depth ) {
 
 						glDepthFormat = attributes.stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT24;
-						depthFormat = attributes.stencil ? DepthStencilFormat : DepthFormat;
-						depthType = attributes.stencil ? UnsignedInt248Type : UnsignedIntType;
+						depthFormat = attributes.stencil ? (/* inlined export .DepthStencilFormat */1027) : (/* inlined export .DepthFormat */1026);
+						depthType = attributes.stencil ? (/* inlined export .UnsignedInt248Type */1020) : (/* inlined export .UnsignedIntType */1014);
 
 					}
 
@@ -80923,8 +81112,8 @@ class WebXRManager extends EventDispatcher {
 						glProjLayer.textureWidth,
 						glProjLayer.textureHeight,
 						{
-							format: RGBAFormat,
-							type: UnsignedByteType,
+							format: (/* inlined export .RGBAFormat */1023),
+							type: (/* inlined export .UnsignedByteType */1009),
 							depthTexture: new DepthTexture( glProjLayer.textureWidth, glProjLayer.textureHeight, depthType, undefined, undefined, undefined, undefined, undefined, undefined, depthFormat ),
 							stencilBuffer: attributes.stencil,
 							colorSpace: renderer.outputColorSpace,
@@ -81714,7 +81903,7 @@ function WebGLMaterials( renderer, properties ) {
 
 			uniforms.bumpScale.value = material.bumpScale;
 
-			if ( material.side === BackSide ) {
+			if ( material.side === (/* inlined export .BackSide */1) ) {
 
 				uniforms.bumpScale.value *= -1;
 
@@ -81730,7 +81919,7 @@ function WebGLMaterials( renderer, properties ) {
 
 			uniforms.normalScale.value.copy( material.normalScale );
 
-			if ( material.side === BackSide ) {
+			if ( material.side === (/* inlined export .BackSide */1) ) {
 
 				uniforms.normalScale.value.negate();
 
@@ -82006,7 +82195,7 @@ function WebGLMaterials( renderer, properties ) {
 
 				uniforms.clearcoatNormalScale.value.copy( material.clearcoatNormalScale );
 
-				if ( material.side === BackSide ) {
+				if ( material.side === (/* inlined export .BackSide */1) ) {
 
 					uniforms.clearcoatNormalScale.value.negate();
 
@@ -82226,7 +82415,7 @@ function WebGLUniformsGroups( gl, info, capabilities, state ) {
 
 		}
 
-		error( 'WebGLRenderer: Maximum number of simultaneously usable uniforms groups reached.' );
+		three_core_error( 'WebGLRenderer: Maximum number of simultaneously usable uniforms groups reached.' );
 
 		return 0;
 
@@ -82615,12 +82804,12 @@ function getDFGLUT() {
 
 	if ( lut === null ) {
 
-		lut = new DataTexture( DATA, 16, 16, RGFormat, HalfFloatType );
+		lut = new DataTexture( DATA, 16, 16, (/* inlined export .RGFormat */1030), (/* inlined export .HalfFloatType */1016) );
 		lut.name = 'DFG_LUT';
-		lut.minFilter = LinearFilter;
-		lut.magFilter = LinearFilter;
-		lut.wrapS = ClampToEdgeWrapping;
-		lut.wrapT = ClampToEdgeWrapping;
+		lut.minFilter = (/* inlined export .LinearFilter */1006);
+		lut.magFilter = (/* inlined export .LinearFilter */1006);
+		lut.wrapS = (/* inlined export .ClampToEdgeWrapping */1001);
+		lut.wrapT = (/* inlined export .ClampToEdgeWrapping */1001);
 		lut.generateMipmaps = false;
 		lut.needsUpdate = true;
 
@@ -82656,7 +82845,7 @@ class WebGLRenderer {
 			powerPreference = 'default',
 			failIfMajorPerformanceCaveat = false,
 			reversedDepthBuffer = false,
-			outputBufferType = UnsignedByteType,
+			outputBufferType = (/* inlined export .UnsignedByteType */1009),
 		} = parameters;
 
 		/**
@@ -82689,18 +82878,18 @@ class WebGLRenderer {
 		const _outputBufferType = outputBufferType;
 
 		const INTEGER_FORMATS = new Set( [
-			RGBAIntegerFormat,
-			RGIntegerFormat,
-			RedIntegerFormat
+			(/* inlined export .RGBAIntegerFormat */1033),
+			(/* inlined export .RGIntegerFormat */1031),
+			(/* inlined export .RedIntegerFormat */1029)
 		] );
 
 		const UNSIGNED_TYPES = new Set( [
-			UnsignedByteType,
-			UnsignedIntType,
-			UnsignedShortType,
-			UnsignedInt248Type,
-			UnsignedShort4444Type,
-			UnsignedShort5551Type
+			(/* inlined export .UnsignedByteType */1009),
+			(/* inlined export .UnsignedIntType */1014),
+			(/* inlined export .UnsignedShortType */1012),
+			(/* inlined export .UnsignedInt248Type */1020),
+			(/* inlined export .UnsignedShort4444Type */1017),
+			(/* inlined export .UnsignedShort5551Type */1018)
 		] );
 
 		const uintClearColor = new Uint32Array( 4 );
@@ -82849,7 +83038,7 @@ class WebGLRenderer {
 		 * @type {(NoToneMapping|LinearToneMapping|ReinhardToneMapping|CineonToneMapping|ACESFilmicToneMapping|CustomToneMapping|AgXToneMapping|NeutralToneMapping)}
 		 * @default NoToneMapping
 		 */
-		this.toneMapping = NoToneMapping;
+		this.toneMapping = (/* inlined export .NoToneMapping */0);
 
 		/**
 		 * Exposure level of tone mapping.
@@ -82884,7 +83073,7 @@ class WebGLRenderer {
 
 		// internal state cache
 
-		this._outputColorSpace = SRGBColorSpace;
+		this._outputColorSpace = (/* inlined export .SRGBColorSpace */"srgb");
 
 		let _currentActiveCubeFace = 0;
 		let _currentActiveMipmapLevel = 0;
@@ -82972,7 +83161,7 @@ class WebGLRenderer {
 			};
 
 			// OffscreenCanvas does not have setAttribute, see #22811
-			if ( 'setAttribute' in canvas ) canvas.setAttribute( 'data-engine', `three.js r${REVISION}` );
+			if ( 'setAttribute' in canvas ) canvas.setAttribute( 'data-engine', `three.js r${(/* inlined export .REVISION */"186")}` );
 
 			// event listeners must be registered before WebGL context is created, see #12753
 			canvas.addEventListener( 'webglcontextlost', onContextLost, false );
@@ -83009,7 +83198,7 @@ class WebGLRenderer {
 			canvas.removeEventListener( 'webglcontextrestored', onContextRestore, false );
 			canvas.removeEventListener( 'webglcontextcreationerror', onContextCreationError, false );
 
-			error( 'WebGLRenderer: ' + e.message );
+			three_core_error( 'WebGLRenderer: ' + e.message );
 			throw e;
 
 		}
@@ -83137,7 +83326,7 @@ class WebGLRenderer {
 
 		// initialize internal render target for non-UnsignedByteType color buffer
 
-		if ( _outputBufferType !== UnsignedByteType ) {
+		if ( _outputBufferType !== (/* inlined export .UnsignedByteType */1009) ) {
 
 			output = new WebGLOutput( _outputBufferType, canvas.width, canvas.height, antialias, depth, stencil );
 
@@ -83321,9 +83510,9 @@ class WebGLRenderer {
 		 */
 		this.setEffects = function ( effects ) {
 
-			if ( _outputBufferType === UnsignedByteType ) {
+			if ( _outputBufferType === (/* inlined export .UnsignedByteType */1009) ) {
 
-				error( 'WebGLRenderer: setEffects() requires outputBufferType set to HalfFloatType or FloatType.' );
+				three_core_error( 'WebGLRenderer: setEffects() requires outputBufferType set to HalfFloatType or FloatType.' );
 				return;
 
 			}
@@ -83719,7 +83908,7 @@ class WebGLRenderer {
 
 		function onContextCreationError( event ) {
 
-			error( 'WebGLRenderer: A WebGL context could not be created. Reason: ', event.statusMessage );
+			three_core_error( 'WebGLRenderer: A WebGL context could not be created. Reason: ', event.statusMessage );
 
 		}
 
@@ -83936,17 +84125,17 @@ class WebGLRenderer {
 
 			if ( _clippingEnabled === true ) clipping.setState( material, camera, false );
 
-			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+			if ( material.transparent === true && material.side === (/* inlined export .DoubleSide */2) && material.forceSinglePass === false ) {
 
-				material.side = BackSide;
+				material.side = (/* inlined export .BackSide */1);
 				material.needsUpdate = true;
 				getProgram( material, scene, object );
 
-				material.side = FrontSide;
+				material.side = (/* inlined export .FrontSide */0);
 				material.needsUpdate = true;
 				getProgram( material, scene, object );
 
-				material.side = DoubleSide;
+				material.side = (/* inlined export .DoubleSide */2);
 
 			} else {
 
@@ -84213,7 +84402,7 @@ class WebGLRenderer {
 
 			if ( camera !== undefined && camera.isCamera !== true ) {
 
-				error( 'WebGLRenderer.render: camera is not an instance of THREE.Camera.' );
+				three_core_error( 'WebGLRenderer.render: camera is not an instance of THREE.Camera.' );
 				return;
 
 			}
@@ -84259,7 +84448,7 @@ class WebGLRenderer {
 			renderStateStack.push( currentRenderState );
 
 			_projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
-			_frustum.setFromProjectionMatrix( _projScreenMatrix, WebGLCoordinateSystem, camera.reversedDepth );
+			_frustum.setFromProjectionMatrix( _projScreenMatrix, (/* inlined export .WebGLCoordinateSystem */2000), camera.reversedDepth );
 
 			_localClippingEnabled = this.localClippingEnabled;
 			_clippingEnabled = clipping.init( this.clippingPlanes, _localClippingEnabled );
@@ -84590,8 +84779,8 @@ class WebGLRenderer {
 
 				currentRenderState.state.transmissionRenderTarget[ camera.id ] = new WebGLRenderTarget( 1, 1, {
 					generateMipmaps: true,
-					type: hasHalfFloatSupport ? HalfFloatType : UnsignedByteType,
-					minFilter: LinearMipmapLinearFilter,
+					type: hasHalfFloatSupport ? (/* inlined export .HalfFloatType */1016) : (/* inlined export .UnsignedByteType */1009),
+					minFilter: (/* inlined export .LinearMipmapLinearFilter */1008),
 					samples: Math.max( 4, capabilities.samples ), // to avoid feedback loops, the transmission render target requires a resolve, see #26177
 					stencilBuffer: stencil,
 					resolveDepthBuffer: false,
@@ -84637,7 +84826,7 @@ class WebGLRenderer {
 			// Turn off the features which can affect the frag color for opaque objects pass.
 			// Otherwise they are applied twice in opaque objects pass and transmission objects pass.
 			const currentToneMapping = _this.toneMapping;
-			_this.toneMapping = NoToneMapping;
+			_this.toneMapping = (/* inlined export .NoToneMapping */0);
 
 			// Remove viewport from camera to avoid nested render calls resetting viewport to it (e.g Reflector).
 			// Transmission render pass requires viewport to match the transmissionRenderTarget.
@@ -84663,11 +84852,11 @@ class WebGLRenderer {
 
 					const { object, geometry, material, group } = renderItem;
 
-					if ( material.side === DoubleSide && object.layers.test( camera.layers ) ) {
+					if ( material.side === (/* inlined export .DoubleSide */2) && object.layers.test( camera.layers ) ) {
 
 						const currentSide = material.side;
 
-						material.side = BackSide;
+						material.side = (/* inlined export .BackSide */1);
 						material.needsUpdate = true;
 
 						renderObject( object, scene, camera, geometry, material, group );
@@ -84737,17 +84926,17 @@ class WebGLRenderer {
 
 			material.onBeforeRender( _this, scene, camera, geometry, object, group );
 
-			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+			if ( material.transparent === true && material.side === (/* inlined export .DoubleSide */2) && material.forceSinglePass === false ) {
 
-				material.side = BackSide;
+				material.side = (/* inlined export .BackSide */1);
 				material.needsUpdate = true;
 				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-				material.side = FrontSide;
+				material.side = (/* inlined export .FrontSide */0);
 				material.needsUpdate = true;
 				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-				material.side = DoubleSide;
+				material.side = (/* inlined export .DoubleSide */2);
 
 			} else {
 
@@ -84959,7 +85148,7 @@ class WebGLRenderer {
 			const morphNormals = !! geometry.morphAttributes.normal;
 			const morphColors = !! geometry.morphAttributes.color;
 
-			let toneMapping = NoToneMapping;
+			let toneMapping = (/* inlined export .NoToneMapping */0);
 
 			if ( material.toneMapped ) {
 
@@ -85708,7 +85897,7 @@ class WebGLRenderer {
 
 			if ( ! ( renderTarget && renderTarget.isWebGLRenderTarget ) ) {
 
-				error( 'WebGLRenderer.readRenderTargetPixels: renderTarget is not THREE.WebGLRenderTarget.' );
+				three_core_error( 'WebGLRenderer.readRenderTargetPixels: renderTarget is not THREE.WebGLRenderTarget.' );
 				return;
 
 			}
@@ -85739,14 +85928,14 @@ class WebGLRenderer {
 
 					if ( readableState.__formatReadable === false ) {
 
-						error( 'WebGLRenderer.readRenderTargetPixels: renderTarget is not in RGBA or implementation defined format.' );
+						three_core_error( 'WebGLRenderer.readRenderTargetPixels: renderTarget is not in RGBA or implementation defined format.' );
 						return;
 
 					}
 
 					if ( readableState.__typeReadable === false ) {
 
-						error( 'WebGLRenderer.readRenderTargetPixels: renderTarget is not in UnsignedByteType or implementation defined type.' );
+						three_core_error( 'WebGLRenderer.readRenderTargetPixels: renderTarget is not in UnsignedByteType or implementation defined type.' );
 						return;
 
 					}
@@ -86226,7 +86415,7 @@ class WebGLRenderer {
 	 */
 	get coordinateSystem() {
 
-		return WebGLCoordinateSystem;
+		return (/* inlined export .WebGLCoordinateSystem */2000);
 
 	}
 
@@ -86256,8 +86445,9 @@ class WebGLRenderer {
 
 
 
-// EXTERNAL MODULE: ./node_modules/use-sync-external-store/shim/with-selector.js
-var with_selector = __webpack_require__(9242);
+;// ./node_modules/use-sync-external-store/shim/with-selector.js
+with_selector_namespaceFn();
+
 ;// ./node_modules/zustand/esm/vanilla.mjs
 const createStoreImpl = (createState) => {
   let state;
@@ -86289,7 +86479,7 @@ const createStore = ((createState) => createState ? createStoreImpl(createState)
 
 
 
-const { useSyncExternalStoreWithSelector } = with_selector;
+const { useSyncExternalStoreWithSelector } = (with_selector_namespaceFn());
 const identity = (arg) => arg;
 function useStoreWithEqualityFn(api, selector = identity, equalityFn) {
   const slice = useSyncExternalStoreWithSelector(
@@ -86299,7 +86489,7 @@ function useStoreWithEqualityFn(api, selector = identity, equalityFn) {
     selector,
     equalityFn
   );
-  react.useDebugValue(slice);
+  (react_namespaceFn().useDebugValue)(slice);
   return slice;
 }
 const createWithEqualityFnImpl = (createState, defaultEqualityFn) => {
@@ -86405,7 +86595,7 @@ const clear = keys => {
 const v = /* @__PURE__ */ (() => {
   var e, t;
   return typeof window != "undefined" && (((e = window.document) == null ? void 0 : e.createElement) || ((t = window.navigator) == null ? void 0 : t.product) === "ReactNative");
-})() ? react.useLayoutEffect : react.useEffect;
+})() ? (react_namespaceFn().useLayoutEffect) : (react_namespaceFn().useEffect);
 function l(e, t, i) {
   if (!e) return;
   if (i(e) === !0) return e;
@@ -86438,17 +86628,17 @@ function b(e) {
     return e;
   }
 }
-const p = /* @__PURE__ */ b(/* @__PURE__ */ react.createContext(null));
-class h extends react.Component {
+const p = /* @__PURE__ */ b(/* @__PURE__ */ (react_namespaceFn().createContext)(null));
+class h extends (react_namespaceFn().Component) {
   render() {
-    return /* @__PURE__ */ react.createElement(p.Provider, { value: this._reactInternals }, this.props.children);
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(p.Provider, { value: this._reactInternals }, this.props.children);
   }
 }
 function m() {
-  const e = react.useContext(p);
+  const e = (react_namespaceFn().useContext)(p);
   if (e === null) throw new Error("its-fine: useFiber must be called within a <FiberProvider />!");
-  const t = react.useId();
-  return react.useMemo(() => {
+  const t = (react_namespaceFn().useId)();
+  return (react_namespaceFn().useMemo)(() => {
     for (const n of [e, e == null ? void 0 : e.alternate]) {
       if (!n) continue;
       const o = l(n, !1, (d) => {
@@ -86496,26 +86686,26 @@ function R(e) {
 }
 const w = Symbol.for("react.context"), E = (e) => e !== null && typeof e == "object" && "$$typeof" in e && e.$$typeof === w;
 function g() {
-  const e = m(), [t] = react.useState(() => /* @__PURE__ */ new Map());
+  const e = m(), [t] = (react_namespaceFn().useState)(() => /* @__PURE__ */ new Map());
   t.clear();
   let i = e;
   for (; i; ) {
     const n = i.type;
-    E(n) && n !== p && !t.has(n) && t.set(n, react.use(b(n))), i = i.return;
+    E(n) && n !== p && !t.has(n) && t.set(n, (react_namespaceFn().use)(b(n))), i = i.return;
   }
   return t;
 }
 function M() {
   const e = g();
-  return react.useMemo(
+  return (react_namespaceFn().useMemo)(
     () => Array.from(e.keys()).reduce(
-      (t, i) => (n) => /* @__PURE__ */ react.createElement(t, null, /* @__PURE__ */ react.createElement(i.Provider, { ...n, value: e.get(i) })),
-      (t) => /* @__PURE__ */ react.createElement(h, { ...t })
+      (t, i) => (n) => /* @__PURE__ */ (react_namespaceFn().createElement)(t, null, /* @__PURE__ */ (react_namespaceFn().createElement)(i.Provider, { ...n, value: e.get(i) })),
+      (t) => /* @__PURE__ */ (react_namespaceFn().createElement)(h, { ...t })
     ),
     [e]
   );
 }
-function x(e) {
+function dist_x(e) {
   if (typeof requestAnimationFrame == "function") {
     const i = requestAnimationFrame(e);
     return () => cancelAnimationFrame(i);
@@ -86524,18 +86714,18 @@ function x(e) {
   return () => clearTimeout(t);
 }
 function N() {
-  if (!react.Activity) throw new Error("its-fine: useActivityBridge requires React 19.2 or later!");
-  const e = m(), [t] = react.useState(() => {
+  if (!(react_namespaceFn().Activity)) throw new Error("its-fine: useActivityBridge requires React 19.2 or later!");
+  const e = m(), [t] = (react_namespaceFn().useState)(() => {
     const i = [];
     let n = !1;
     l(e, !0, (u) => {
       var c, a;
-      if (u.elementType === react.Activity) {
+      if (u.elementType === (react_namespaceFn().Activity)) {
         const y = ((c = u.child) == null ? void 0 : c.tag) === 22 ? u.child.stateNode : null;
         if (typeof (y == null ? void 0 : y._visibility) != "number")
           throw new Error("its-fine: unsupported React Activity internals!");
         i.push(y);
-      } else u.tag === 22 && ((a = u.return) == null ? void 0 : a.elementType) !== react.Activity && (n = !0);
+      } else u.tag === 22 && ((a = u.return) == null ? void 0 : a.elementType) !== (react_namespaceFn().Activity) && (n = !0);
     });
     let o = "hidden";
     const d = /* @__PURE__ */ new Set();
@@ -86549,7 +86739,7 @@ function N() {
         };
       },
       sync(u) {
-        f.mounted && !f.connected && n && i.length > 0 ? s || (s = x(() => {
+        f.mounted && !f.connected && n && i.length > 0 ? s || (s = dist_x(() => {
           s = void 0, f.sync(!0);
         })) : (s == null || s(), s = void 0);
         let c = o;
@@ -86559,10 +86749,10 @@ function N() {
         }
       },
       Bridge({ children: u }) {
-        return /* @__PURE__ */ react.createElement(
-          react.Activity,
+        return /* @__PURE__ */ (react_namespaceFn().createElement)(
+          (react_namespaceFn().Activity),
           {
-            mode: react.useSyncExternalStore(
+            mode: (react_namespaceFn().useSyncExternalStore)(
               f.subscribe,
               () => o,
               () => "hidden"
@@ -86574,9 +86764,9 @@ function N() {
     };
     return f;
   });
-  return react.useInsertionEffect(() => (t.mounted = !0, queueMicrotask(() => t.sync(!1)), () => {
+  return (react_namespaceFn().useInsertionEffect)(() => (t.mounted = !0, queueMicrotask(() => t.sync(!1)), () => {
     t.mounted = !1, queueMicrotask(() => t.sync(!1));
-  }), [t]), react.useLayoutEffect(() => (t.connected = !0, t.sync(!1), () => {
+  }), [t]), (react_namespaceFn().useLayoutEffect)(() => (t.connected = !0, t.sync(!1), () => {
     t.connected = !1, t.sync(!0);
   }), [t]), t.Bridge;
 }
@@ -86600,9 +86790,9 @@ var scheduler = __webpack_require__(9982);
 
 
 
-var threeTypes = /*#__PURE__*/Object.freeze({
+var threeTypes = /*#__PURE__*/(/* unused pure expression or super */ null && (Object.freeze({
   __proto__: null
-});
+})));
 
 /**
  * Safely flush async effects when testing, simulating a legacy root.
@@ -86610,7 +86800,7 @@ var threeTypes = /*#__PURE__*/Object.freeze({
  */
 // Reference with computed key to break Webpack static analysis
 // https://github.com/webpack/webpack/issues/14814
-const act = react_namespaceObject['act' + ''];
+const act = (react_namespaceObject())['act' + ''];
 
 /**
  * An SSR-friendly useLayoutEffect.
@@ -86621,9 +86811,9 @@ const act = react_namespaceObject['act' + ''];
  *
  * @see https://github.com/facebook/react/issues/14927
  */
-const useIsomorphicLayoutEffect = /* @__PURE__ */((_window$document, _window$navigator) => typeof window !== 'undefined' && (((_window$document = window.document) == null ? void 0 : _window$document.createElement) || ((_window$navigator = window.navigator) == null ? void 0 : _window$navigator.product) === 'ReactNative'))() ? react.useLayoutEffect : react.useEffect;
+const useIsomorphicLayoutEffect = /* @__PURE__ */((_window$document, _window$navigator) => typeof window !== 'undefined' && (((_window$document = window.document) == null ? void 0 : _window$document.createElement) || ((_window$navigator = window.navigator) == null ? void 0 : _window$navigator.product) === 'ReactNative'))() ? (react_namespaceFn().useLayoutEffect) : (react_namespaceFn().useEffect);
 function useMutableCallback(fn) {
-  const ref = react.useRef(fn);
+  const ref = (react_namespaceFn().useRef)(fn);
   useIsomorphicLayoutEffect(() => void (ref.current = fn), [fn]);
   return ref;
 }
@@ -86631,18 +86821,18 @@ function Gate({
   promise,
   onSettled
 }) {
-  react.use(promise);
+  ;(react_namespaceFn().use)(promise);
   useIsomorphicLayoutEffect(onSettled, [onSettled]);
   return null;
 }
 
 /** Waits for a promise in a null subtree, re-rendering the caller once it settles either way. */
 function useGate() {
-  const [promise, setPromise] = react.useState(null);
-  const onSettled = react.useCallback(() => setPromise(null), []);
+  const [promise, setPromise] = (react_namespaceFn().useState)(null);
+  const onSettled = (react_namespaceFn().useCallback)(() => setPromise(null), []);
   // Keep the first promise, or a repeated call would loop
-  const waitFor = react.useCallback(next => setPromise(current => current != null ? current : Promise.resolve(next).then(() => {}, () => {})), []);
-  const gate = promise ? /*#__PURE__*/(0,jsx_runtime.jsx)(react.Suspense, {
+  const waitFor = (react_namespaceFn().useCallback)(next => setPromise(current => current != null ? current : Promise.resolve(next).then(() => {}, () => {})), []);
+  const gate = promise ? /*#__PURE__*/(0,jsx_runtime.jsx)((react_namespaceFn().Suspense), {
     fallback: null,
     children: /*#__PURE__*/(0,jsx_runtime.jsx)(Gate, {
       promise: promise,
@@ -86653,7 +86843,7 @@ function useGate() {
 }
 
 // Activity is optional on React 19.0/19.1. A computed key also supports strict ESM bundlers.
-const useActivityBridge = react_namespaceObject['Activity' + ''] ? N : () => react.Fragment;
+const useActivityBridge = (react_namespaceObject())['Activity' + ''] ? N : () => (react_namespaceFn().Fragment);
 /**
  * Bridges Context, StrictMode, and Activity visibility from a primary renderer.
  */
@@ -86661,11 +86851,11 @@ function useBridge() {
   const fiber = m();
   const ContextBridge = M();
   const ActivityBridge = useActivityBridge();
-  return react.useMemo(() => ({
+  return (react_namespaceFn().useMemo)(() => ({
     children
   }) => {
-    const strict = !!l(fiber, true, node => node.type === react.StrictMode);
-    const Root = strict ? react.StrictMode : react.Fragment;
+    const strict = !!l(fiber, true, node => node.type === (react_namespaceFn().StrictMode));
+    const Root = strict ? (react_namespaceFn().StrictMode) : (react_namespaceFn().Fragment);
     return /*#__PURE__*/(0,jsx_runtime.jsx)(Root, {
       children: /*#__PURE__*/(0,jsx_runtime.jsx)(ActivityBridge, {
         children: /*#__PURE__*/(0,jsx_runtime.jsx)(ContextBridge, {
@@ -86686,7 +86876,7 @@ function Block({
 }
 
 // NOTE: static members get down-level transpiled to mutations which break tree-shaking
-const ErrorBoundary = /* @__PURE__ */(_ErrorBoundary => (_ErrorBoundary = class ErrorBoundary extends react.Component {
+const ErrorBoundary = /* @__PURE__ */(_ErrorBoundary => (_ErrorBoundary = class ErrorBoundary extends (react_namespaceFn().Component) {
   constructor(...args) {
     super(...args);
     this.state = {
@@ -86768,8 +86958,8 @@ function getRootState(obj) {
   return (_r3f = obj.__r3f) == null ? void 0 : _r3f.root.getState();
 }
 // A collection of compare functions
-const is = {
-  obj: a => a === Object(a) && !is.arr(a) && typeof a !== 'function',
+const events_e51d7528_esm_is = {
+  obj: a => a === Object(a) && !events_e51d7528_esm_is.arr(a) && typeof a !== 'function',
   fun: a => typeof a === 'function',
   str: a => typeof a === 'string',
   num: a => typeof a === 'number',
@@ -86785,10 +86975,10 @@ const is = {
     // Wrong type or one of the two undefined, doesn't match
     if (typeof a !== typeof b || !!a !== !!b) return false;
     // Atomic, just compare a against b
-    if (is.str(a) || is.num(a) || is.boo(a)) return a === b;
-    const isObj = is.obj(a);
+    if (events_e51d7528_esm_is.str(a) || events_e51d7528_esm_is.num(a) || events_e51d7528_esm_is.boo(a)) return a === b;
+    const isObj = events_e51d7528_esm_is.obj(a);
     if (isObj && objects === 'reference') return a === b;
-    const isArr = is.arr(a);
+    const isArr = events_e51d7528_esm_is.arr(a);
     if (isArr && arrays === 'reference') return a === b;
     // Array or Object, shallow compare first to see if it's a match
     if ((isArr || isObj) && a === b) return true;
@@ -86798,7 +86988,7 @@ const is = {
     for (i in a) if (!(i in b)) return false;
     // Check if values between keys match
     if (isObj && arrays === 'shallow' && objects === 'shallow') {
-      for (i in strict ? b : a) if (!is.equ(a[i], b[i], {
+      for (i in strict ? b : a) if (!events_e51d7528_esm_is.equ(a[i], b[i], {
         strict,
         objects: 'reference'
       })) return false;
@@ -86806,7 +86996,7 @@ const is = {
       for (i in strict ? b : a) if (a[i] !== b[i]) return false;
     }
     // If i is undefined
-    if (is.und(i)) {
+    if (events_e51d7528_esm_is.und(i)) {
       // If both arrays are empty we consider them equal
       if (isArr && a.length === 0 && b.length === 0) return true;
       // If both objects are empty we consider them equal
@@ -86927,7 +87117,7 @@ function resolve(root, key) {
 // Checks if a dash-cased string ends with an integer
 const INDEX_REGEX = /-\d+$/;
 function attach(parent, child) {
-  if (is.str(child.props.attach)) {
+  if (events_e51d7528_esm_is.str(child.props.attach)) {
     // If attaching into an array (foo-0), create one
     if (INDEX_REGEX.test(child.props.attach)) {
       const index = child.props.attach.replace(INDEX_REGEX, '');
@@ -86943,12 +87133,12 @@ function attach(parent, child) {
     } = resolve(parent.object, child.props.attach);
     child.previousAttach = root[key];
     root[key] = child.object;
-  } else if (is.fun(child.props.attach)) {
+  } else if (events_e51d7528_esm_is.fun(child.props.attach)) {
     child.previousAttach = child.props.attach(parent.object, child.object);
   }
 }
 function detach(parent, child) {
-  if (is.str(child.props.attach)) {
+  if (events_e51d7528_esm_is.str(child.props.attach)) {
     const {
       root,
       key
@@ -86991,7 +87181,7 @@ function diffProps(instance, newProps) {
     // Skip reserved keys
     if (RESERVED_PROPS.includes(prop)) continue;
     // Skip if props match
-    if (is.equ(newProps[prop], instance.props[prop])) continue;
+    if (events_e51d7528_esm_is.equ(newProps[prop], instance.props[prop])) continue;
 
     // Props changed, add them
     changedProps[prop] = newProps[prop];
@@ -87018,7 +87208,7 @@ function diffProps(instance, newProps) {
     if (root.constructor && root.constructor.length === 0) {
       // create a blank slate of the instance and copy the particular parameter.
       const ctor = getMemoizedPrototype(root);
-      if (!is.und(ctor)) changedProps[prop] = ctor[key];
+      if (!events_e51d7528_esm_is.und(ctor)) changedProps[prop] = ctor[key];
     } else {
       // instance does not have constructor, just set it to 0
       changedProps[prop] = 0;
@@ -87094,8 +87284,8 @@ function applyProps(object, props) {
       else target.set(value);
     }
     // ShaderMaterial uniforms must keep a stable target reference
-    else if (root instanceof ShaderMaterial && key === 'uniforms' && is.obj(value)) {
-      if (!is.obj(root.uniforms)) root.uniforms = {};
+    else if (root instanceof ShaderMaterial && key === 'uniforms' && events_e51d7528_esm_is.obj(value)) {
+      if (!events_e51d7528_esm_is.obj(root.uniforms)) root.uniforms = {};
       const uniforms = root.uniforms;
       const nextUniforms = value;
       for (const name in nextUniforms) {
@@ -87116,9 +87306,9 @@ function applyProps(object, props) {
       // https://github.com/mrdoob/three.js/pull/25857
       if (rootState && !rootState.linear && colorMaps.includes(key) && (_root$key = root[key]) != null && _root$key.isTexture &&
       // sRGB textures must be RGBA8 since r137 https://github.com/mrdoob/three.js/pull/23129
-      root[key].format === RGBAFormat && root[key].type === UnsignedByteType) {
+      root[key].format === (/* inlined export .RGBAFormat */1023) && root[key].type === (/* inlined export .UnsignedByteType */1009)) {
         // NOTE: this cannot be set from the renderer (e.g. sRGB source textures rendered to P3)
-        root[key].colorSpace = SRGBColorSpace;
+        root[key].colorSpace = (/* inlined export .SRGBColorSpace */"srgb");
       }
     }
   }
@@ -87728,7 +87918,7 @@ function attempt$1(step) {
   }
 }
 
-const context = /* @__PURE__ */react.createContext(null);
+const context = /* @__PURE__ */(react_namespaceFn().createContext)(null);
 const events_e51d7528_esm_createStore = (invalidate, advance) => {
   const rootStore = createWithEqualityFn((set, get) => {
     const position = new Vector3();
@@ -87891,7 +88081,7 @@ const events_e51d7528_esm_createStore = (invalidate, advance) => {
         initialClick: [0, 0],
         initialHits: [],
         capturedMap: new Map(),
-        lastEvent: /*#__PURE__*/react.createRef(),
+        lastEvent: /*#__PURE__*/(react_namespaceFn().createRef)(),
         // Updates
         active: false,
         frames: 0,
@@ -87986,7 +88176,7 @@ function useInstanceHandle(ref) {
  * @see https://docs.pmnd.rs/react-three-fiber/api/hooks#usestore
  */
 function useStore() {
-  const store = react.useContext(context);
+  const store = (react_namespaceFn().useContext)(context);
   if (!store) throw new Error('R3F: Hooks can only be used within the Canvas component!');
   return store;
 }
@@ -88062,7 +88252,7 @@ function useLoader(loader, input, extensions, onProgress) {
   // Use suspense to load async assets
   const keys = Array.isArray(input) ? input : [input];
   const results = suspend(loadingFn(extensions, onProgress), [loader, ...keys], {
-    equal: is.equ
+    equal: events_e51d7528_esm_is.equ
   });
   // Return the object(s)
   return Array.isArray(input) ? results : results[0];
@@ -88173,7 +88363,7 @@ function applyRootConfiguration({
   const state = store.getState();
   const gl = state.gl;
   const last = configuration.previous;
-  const changed = key => !last || !is.equ(next[key], last[key], shallow);
+  const changed = key => !last || !events_e51d7528_esm_is.equ(next[key], last[key], shallow);
   // A failure can leave inputs partly applied, so the next configuration applies all of them
   configuration.previous = undefined;
 
@@ -88308,25 +88498,25 @@ function applyRootConfiguration({
     const oldEnabled = gl.shadowMap.enabled;
     const oldType = gl.shadowMap.type;
     gl.shadowMap.enabled = !!shadows;
-    if (is.boo(shadows)) {
-      gl.shadowMap.type = PCFSoftShadowMap;
-    } else if (is.str(shadows)) {
+    if (events_e51d7528_esm_is.boo(shadows)) {
+      gl.shadowMap.type = (/* inlined export .PCFSoftShadowMap */2);
+    } else if (events_e51d7528_esm_is.str(shadows)) {
       var _types$shadows;
       const types = {
-        basic: BasicShadowMap,
-        percentage: PCFShadowMap,
-        soft: PCFSoftShadowMap,
-        variance: VSMShadowMap
+        basic: (/* inlined export .BasicShadowMap */0),
+        percentage: (/* inlined export .PCFShadowMap */1),
+        soft: (/* inlined export .PCFSoftShadowMap */2),
+        variance: (/* inlined export .VSMShadowMap */3)
       };
-      gl.shadowMap.type = (_types$shadows = types[shadows]) != null ? _types$shadows : PCFSoftShadowMap;
-    } else if (is.obj(shadows)) {
+      gl.shadowMap.type = (_types$shadows = types[shadows]) != null ? _types$shadows : (/* inlined export .PCFSoftShadowMap */2);
+    } else if (events_e51d7528_esm_is.obj(shadows)) {
       Object.assign(gl.shadowMap, shadows);
     }
     if (oldEnabled !== gl.shadowMap.enabled || oldType !== gl.shadowMap.type) gl.shadowMap.needsUpdate = true;
   }
 
   // Explicit renderer options take precedence over the color shorthands
-  const glProps = glConfig && !is.fun(glConfig) && !isRenderer(glConfig) ? glConfig : undefined;
+  const glProps = glConfig && !events_e51d7528_esm_is.fun(glConfig) && !isRenderer(glConfig) ? glConfig : undefined;
   if (changed('legacy')) {
     ColorManagement.enabled = !legacy;
     state.set({
@@ -88335,14 +88525,14 @@ function applyRootConfiguration({
   }
   if (changed('linear')) {
     if ((glProps == null ? void 0 : glProps.outputColorSpace) === undefined) {
-      gl.outputColorSpace = linear ? LinearSRGBColorSpace : SRGBColorSpace;
+      gl.outputColorSpace = linear ? LinearSRGBColorSpace : (/* inlined export .SRGBColorSpace */"srgb");
     }
     state.set({
       linear
     });
   }
   if (changed('flat')) {
-    if ((glProps == null ? void 0 : glProps.toneMapping) === undefined) gl.toneMapping = flat ? NoToneMapping : ACESFilmicToneMapping;
+    if ((glProps == null ? void 0 : glProps.toneMapping) === undefined) gl.toneMapping = flat ? (/* inlined export .NoToneMapping */0) : (/* inlined export .ACESFilmicToneMapping */4);
     state.set({
       flat
     });
@@ -93483,7 +93673,7 @@ Error generating stack: ` + l.message + `
         Ip(t, r), (t = t.alternate) && Ip(t, r);
       }
       var Y = {},
-        $n = react,
+        $n = (react_namespaceFn()),
         Et = scheduler,
         Lp = Object.assign,
         _m = Symbol.for("react.element"),
@@ -94946,7 +95136,7 @@ const reconciler = /* @__PURE__ */createReconciler({
   NotPendingTransition: null,
   // The reconciler types use the internal ReactContext with all the hidden properties
   // so we have to cast from the public React.Context type
-  HostTransitionContext: /* @__PURE__ */react.createContext(null),
+  HostTransitionContext: /* @__PURE__ */(react_namespaceFn().createContext)(null),
   setCurrentUpdatePriority(newPriority) {
     currentUpdatePriority = newPriority;
   },
@@ -95676,7 +95866,7 @@ function createPointerEvents(store) {
 
 
 ;// ./node_modules/react-use-measure/dist/index.js
-function dist_g(n,t){let o;return(...i)=>{window.clearTimeout(o),o=window.setTimeout(()=>n(...i),t)}}function j({debounce:n,scroll:t,polyfill:o,offsetSize:i}={debounce:0,scroll:!1,offsetSize:!1}){const a=o||(typeof window=="undefined"?class{}:window.ResizeObserver);if(!a)throw new Error("This browser does not support ResizeObserver out of the box. See: https://github.com/react-spring/react-use-measure/#resize-observer-polyfills");const[c,h]=(0,react.useState)({left:0,top:0,width:0,height:0,bottom:0,right:0,x:0,y:0}),e=(0,react.useRef)({element:null,scrollContainers:null,resizeObserver:null,lastBounds:c,orientationHandler:null}),d=n?typeof n=="number"?n:n.scroll:null,f=n?typeof n=="number"?n:n.resize:null,w=(0,react.useRef)(!1);(0,react.useEffect)(()=>(w.current=!0,()=>void(w.current=!1)));const[z,m,s]=(0,react.useMemo)(()=>{const r=()=>{if(!e.current.element)return;const{left:y,top:C,width:H,height:O,bottom:S,right:x,x:B,y:R}=e.current.element.getBoundingClientRect(),l={left:y,top:C,width:H,height:O,bottom:S,right:x,x:B,y:R};e.current.element instanceof HTMLElement&&i&&(l.height=e.current.element.offsetHeight,l.width=e.current.element.offsetWidth),Object.freeze(l),w.current&&!D(e.current.lastBounds,l)&&h(e.current.lastBounds=l)};return[r,f?dist_g(r,f):r,d?dist_g(r,d):r]},[h,i,d,f]);function v(){e.current.scrollContainers&&(e.current.scrollContainers.forEach(r=>r.removeEventListener("scroll",s,!0)),e.current.scrollContainers=null),e.current.resizeObserver&&(e.current.resizeObserver.disconnect(),e.current.resizeObserver=null),e.current.orientationHandler&&("orientation"in screen&&"removeEventListener"in screen.orientation?screen.orientation.removeEventListener("change",e.current.orientationHandler):"onorientationchange"in window&&window.removeEventListener("orientationchange",e.current.orientationHandler))}function b(){e.current.element&&(e.current.resizeObserver=new a(s),e.current.resizeObserver.observe(e.current.element),t&&e.current.scrollContainers&&e.current.scrollContainers.forEach(r=>r.addEventListener("scroll",s,{capture:!0,passive:!0})),e.current.orientationHandler=()=>{s()},"orientation"in screen&&"addEventListener"in screen.orientation?screen.orientation.addEventListener("change",e.current.orientationHandler):"onorientationchange"in window&&window.addEventListener("orientationchange",e.current.orientationHandler))}const L=r=>{!r||r===e.current.element||(v(),e.current.element=r,e.current.scrollContainers=dist_E(r),b())};return X(s,!!t),W(m),(0,react.useEffect)(()=>{v(),b()},[t,s,m]),(0,react.useEffect)(()=>v,[]),[L,c,z]}function W(n){(0,react.useEffect)(()=>{const t=n;return window.addEventListener("resize",t),()=>void window.removeEventListener("resize",t)},[n])}function X(n,t){(0,react.useEffect)(()=>{if(t){const o=n;return window.addEventListener("scroll",o,{capture:!0,passive:!0}),()=>void window.removeEventListener("scroll",o,!0)}},[n,t])}function dist_E(n){const t=[];if(!n||n===document.body)return t;const{overflow:o,overflowX:i,overflowY:a}=window.getComputedStyle(n);return[o,i,a].some(c=>c==="auto"||c==="scroll")&&t.push(n),[...t,...dist_E(n.parentElement)]}const k=["x","y","top","bottom","left","right","width","height"],D=(n,t)=>k.every(o=>n[o]===t[o]);
+function dist_g(n,t){let o;return(...i)=>{window.clearTimeout(o),o=window.setTimeout(()=>n(...i),t)}}function j({debounce:n,scroll:t,polyfill:o,offsetSize:i}={debounce:0,scroll:!1,offsetSize:!1}){const a=o||(typeof window=="undefined"?class{}:window.ResizeObserver);if(!a)throw new Error("This browser does not support ResizeObserver out of the box. See: https://github.com/react-spring/react-use-measure/#resize-observer-polyfills");const[c,h]=(0,react_namespaceFn().useState)({left:0,top:0,width:0,height:0,bottom:0,right:0,x:0,y:0}),e=(0,react_namespaceFn().useRef)({element:null,scrollContainers:null,resizeObserver:null,lastBounds:c,orientationHandler:null}),d=n?typeof n=="number"?n:n.scroll:null,f=n?typeof n=="number"?n:n.resize:null,w=(0,react_namespaceFn().useRef)(!1);(0,react_namespaceFn().useEffect)(()=>(w.current=!0,()=>void(w.current=!1)));const[z,m,s]=(0,react_namespaceFn().useMemo)(()=>{const r=()=>{if(!e.current.element)return;const{left:y,top:C,width:H,height:O,bottom:S,right:x,x:B,y:R}=e.current.element.getBoundingClientRect(),l={left:y,top:C,width:H,height:O,bottom:S,right:x,x:B,y:R};e.current.element instanceof HTMLElement&&i&&(l.height=e.current.element.offsetHeight,l.width=e.current.element.offsetWidth),Object.freeze(l),w.current&&!D(e.current.lastBounds,l)&&h(e.current.lastBounds=l)};return[r,f?dist_g(r,f):r,d?dist_g(r,d):r]},[h,i,d,f]);function v(){e.current.scrollContainers&&(e.current.scrollContainers.forEach(r=>r.removeEventListener("scroll",s,!0)),e.current.scrollContainers=null),e.current.resizeObserver&&(e.current.resizeObserver.disconnect(),e.current.resizeObserver=null),e.current.orientationHandler&&("orientation"in screen&&"removeEventListener"in screen.orientation?screen.orientation.removeEventListener("change",e.current.orientationHandler):"onorientationchange"in window&&window.removeEventListener("orientationchange",e.current.orientationHandler))}function b(){e.current.element&&(e.current.resizeObserver=new a(s),e.current.resizeObserver.observe(e.current.element),t&&e.current.scrollContainers&&e.current.scrollContainers.forEach(r=>r.addEventListener("scroll",s,{capture:!0,passive:!0})),e.current.orientationHandler=()=>{s()},"orientation"in screen&&"addEventListener"in screen.orientation?screen.orientation.addEventListener("change",e.current.orientationHandler):"onorientationchange"in window&&window.addEventListener("orientationchange",e.current.orientationHandler))}const L=r=>{!r||r===e.current.element||(v(),e.current.element=r,e.current.scrollContainers=dist_E(r),b())};return X(s,!!t),W(m),(0,react_namespaceFn().useEffect)(()=>{v(),b()},[t,s,m]),(0,react_namespaceFn().useEffect)(()=>v,[]),[L,c,z]}function W(n){;(0,react_namespaceFn().useEffect)(()=>{const t=n;return window.addEventListener("resize",t),()=>void window.removeEventListener("resize",t)},[n])}function X(n,t){;(0,react_namespaceFn().useEffect)(()=>{if(t){const o=n;return window.addEventListener("scroll",o,{capture:!0,passive:!0}),()=>void window.removeEventListener("scroll",o,!0)}},[n,t])}function dist_E(n){const t=[];if(!n||n===document.body)return t;const{overflow:o,overflowX:i,overflowY:a}=window.getComputedStyle(n);return[o,i,a].some(c=>c==="auto"||c==="scroll")&&t.push(n),[...t,...dist_E(n.parentElement)]}const k=["x","y","top","bottom","left","right","width","height"],D=(n,t)=>k.every(o=>n[o]===t[o]);
 //# sourceMappingURL=index.js.map
 
 ;// ./node_modules/@react-three/fiber/dist/react-three-fiber.esm.js
@@ -95719,7 +95909,7 @@ function CanvasImpl({
   // Create a known catalogue of Threejs-native elements
   // This will include the entire THREE namespace by default, users can extend
   // their own elements by using the createRoot API instead
-  react.useMemo(() => extend(three_module_namespaceObject), []);
+  (react_namespaceFn().useMemo)(() => extend(three_module_namespaceObject), []);
   const Bridge = useBridge();
   const [containerRef, containerRect] = j({
     scroll: true,
@@ -95729,28 +95919,28 @@ function CanvasImpl({
     },
     ...resize
   });
-  const canvasRef = react.useRef(null);
-  const divRef = react.useRef(null);
-  react.useImperativeHandle(ref, () => canvasRef.current);
+  const canvasRef = (react_namespaceFn().useRef)(null);
+  const divRef = (react_namespaceFn().useRef)(null);
+  (react_namespaceFn().useImperativeHandle)(ref, () => canvasRef.current);
   const handlePointerMissed = useMutableCallback(onPointerMissed);
-  const pointerMissed = react.useCallback(event => handlePointerMissed.current == null ? void 0 : handlePointerMissed.current(event), [handlePointerMissed]);
-  const [block, setBlock] = react.useState(false);
-  const [error, setError] = react.useState(false);
+  const pointerMissed = (react_namespaceFn().useCallback)(event => handlePointerMissed.current == null ? void 0 : handlePointerMissed.current(event), [handlePointerMissed]);
+  const [block, setBlock] = (react_namespaceFn().useState)(false);
+  const [error, setError] = (react_namespaceFn().useState)(false);
 
   // Suspend this component if block is a promise (2nd run)
   if (block) throw block;
   // Throw exception outwards if anything within canvas throws
   if (error) throw error;
-  const root = react.useRef(null);
+  const root = (react_namespaceFn().useRef)(null);
 
   // Waits for an async renderer without hiding the canvas
   const [gate, waitFor] = useGate();
-  const rootState = react.useRef(null);
+  const rootState = (react_namespaceFn().useRef)(null);
   const eventTarget = () => eventSource ? isRef(eventSource) ? eventSource.current : eventSource : divRef.current;
 
   // Insertion effects survive Activity hiding and StrictMode effect replay. Only
   // final removal releases the root, including removal while hidden from React 19.2
-  react.useInsertionEffect(() => {
+  (react_namespaceFn().useInsertionEffect)(() => {
     return () => {
       const current = root.current;
       root.current = null;
@@ -95804,7 +95994,7 @@ function CanvasImpl({
         root.current.render( /*#__PURE__*/(0,jsx_runtime.jsx)(Bridge, {
           children: /*#__PURE__*/(0,jsx_runtime.jsx)(ErrorBoundary, {
             set: setError,
-            children: /*#__PURE__*/(0,jsx_runtime.jsx)(react.Suspense, {
+            children: /*#__PURE__*/(0,jsx_runtime.jsx)((react_namespaceFn().Suspense), {
               fallback: /*#__PURE__*/(0,jsx_runtime.jsx)(Block, {
                 set: setBlock
               }),
@@ -95819,7 +96009,7 @@ function CanvasImpl({
   });
 
   // Refs on ancestors attach after our layout effect
-  react.useEffect(() => {
+  (react_namespaceFn().useEffect)(() => {
     var _rootState$current;
     const state = (_rootState$current = rootState.current) == null ? void 0 : _rootState$current.get();
     const target = eventTarget();
@@ -95828,7 +96018,7 @@ function CanvasImpl({
 
   // Before 19.2, React skips insertion cleanups in a subtree Suspense has hidden but keeps its
   // passive effects connected. A canvas that left the document was removed rather than hidden
-  react.useEffect(() => {
+  (react_namespaceFn().useEffect)(() => {
     const canvas = canvasRef.current;
     return () => {
       var _root$current;
@@ -95884,7 +96074,7 @@ function Canvas(props) {
 // EXTERNAL MODULE: ./node_modules/remotion/dist/esm/no-react.mjs
 var no_react = __webpack_require__(9382);
 ;// ./node_modules/@remotion/three/dist/esm/index.mjs
-/* unused harmony import specifier */ var useMemo;
+/* unused harmony import specifier */ var esm_useMemo;
 /* unused harmony import specifier */ var useState2;
 /* unused harmony import specifier */ var useCallback2;
 /* unused harmony import specifier */ var useLayoutEffect3;
@@ -95911,9 +96101,9 @@ var no_react = __webpack_require__(9382);
 
 
 var Unblocker = () => {
-  const { delayRender, continueRender } = (0,esm.useDelayRender)();
+  const { delayRender, continueRender } = (0,esm/* useDelayRender */.dB)();
   if (typeof document !== "undefined") {
-    (0,react.useLayoutEffect)(() => {
+    (0,react_namespaceFn().useLayoutEffect)(() => {
       const handle = delayRender(`Waiting for <Suspense /> of <ThreeCanvas /> to resolve`);
       return () => {
         continueRender(handle);
@@ -95923,7 +96113,7 @@ var Unblocker = () => {
   return null;
 };
 var SuspenseLoader = ({ children }) => {
-  return /* @__PURE__ */ (0,jsx_runtime.jsx)(react.Suspense, {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)((react_namespaceFn().Suspense), {
     fallback: /* @__PURE__ */ (0,jsx_runtime.jsx)(Unblocker, {}),
     children
   });
@@ -95940,8 +96130,8 @@ var Scale = ({
   height
 }) => {
   const { set, setSize: threeSetSize } = useThree();
-  const [setSize] = (0,react.useState)(() => threeSetSize);
-  (0,react.useLayoutEffect)(() => {
+  const [setSize] = (0,react_namespaceFn().useState)(() => threeSetSize);
+  (0,react_namespaceFn().useLayoutEffect)(() => {
     setSize(width, height);
     set({ setSize: () => null });
     return () => set({ setSize });
@@ -95950,8 +96140,8 @@ var Scale = ({
 };
 var ManualFrameRenderer = ({ onRendered }) => {
   const { advance } = useThree();
-  const frame = (0,esm.useCurrentFrame)();
-  (0,react.useEffect)(() => {
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  (0,react_namespaceFn().useEffect)(() => {
     advance(performance.now());
     onRendered();
   }, [frame, advance, onRendered]);
@@ -95971,13 +96161,13 @@ var ThreeCanvasContent = (props) => {
     documentationLink: _,
     ...rest
   } = props;
-  const { isRendering } = (0,esm.useRemotionEnvironment)();
-  const { delayRender, continueRender } = (0,esm.useDelayRender)();
+  const { isRendering } = (0,esm/* useRemotionEnvironment */.OK)();
+  const { delayRender, continueRender } = (0,esm/* useDelayRender */.dB)();
   const contexts = esm.Internals.useRemotionContexts();
-  const frame = (0,esm.useCurrentFrame)();
-  const createdHold = (0,react.useRef)(null);
-  const created = (0,react.useRef)(false);
-  (0,react.useLayoutEffect)(() => {
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const createdHold = (0,react_namespaceFn().useRef)(null);
+  const created = (0,react_namespaceFn().useRef)(false);
+  (0,react_namespaceFn().useLayoutEffect)(() => {
     if (created.current) {
       return;
     }
@@ -95989,7 +96179,7 @@ var ThreeCanvasContent = (props) => {
       }
     };
   }, [delayRender, continueRender]);
-  const frameDelayHandle = (0,react.useRef)(null);
+  const frameDelayHandle = (0,react_namespaceFn().useRef)(null);
   validateDimension(width, "width", "of the <ThreeCanvas /> component");
   validateDimension(height, "height", "of the <ThreeCanvas /> component");
   const actualStyle = {
@@ -95997,7 +96187,7 @@ var ThreeCanvasContent = (props) => {
     height,
     ...style
   };
-  const remotion_onCreated = (0,react.useCallback)((state) => {
+  const remotion_onCreated = (0,react_namespaceFn().useCallback)((state) => {
     if (isRendering && advanceOnCreated) {
       state.advance(performance.now());
     }
@@ -96008,7 +96198,7 @@ var ThreeCanvasContent = (props) => {
     }
     onCreated?.(state);
   }, [onCreated, continueRender, isRendering, advanceOnCreated]);
-  (0,react.useLayoutEffect)(() => {
+  (0,react_namespaceFn().useLayoutEffect)(() => {
     if (!isRendering || frame === 0) {
       return;
     }
@@ -96019,7 +96209,7 @@ var ThreeCanvasContent = (props) => {
       }
     };
   }, [frame, isRendering, delayRender, continueRender]);
-  const handleRendered = (0,react.useCallback)(() => {
+  const handleRendered = (0,react_namespaceFn().useCallback)(() => {
     if (frameDelayHandle.current !== null) {
       continueRender(frameDelayHandle.current);
       frameDelayHandle.current = null;
@@ -96089,10 +96279,10 @@ var ThreeCanvasInternals = ({
     styleWhilePostmounted: styleWhilePostmounted ?? null,
     hideWhilePremounted: "opacity"
   });
-  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Freeze, {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Freeze */.Kl, {
     frame: freezeFrame,
     active: isPremountingOrPostmounting,
-    children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Sequence, {
+    children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Sequence */.gd, {
       layout: "none",
       from,
       durationInFrames,
@@ -96138,14 +96328,14 @@ var useInnerVideoTexture = ({
   const frame = useCurrentFrame2();
   const { fps } = useVideoConfig();
   const mediaStartsAt = Internals2.useMediaStartsAt();
-  const currentTime = useMemo(() => {
+  const currentTime = esm_useMemo(() => {
     return NoReactInternals2.getExpectedMediaFrameUncorrected({
       frame,
       playbackRate,
       startFrom: -mediaStartsAt
     }) / fps;
   }, [frame, playbackRate, mediaStartsAt, fps]);
-  const offthreadVideoFrameSrc = useMemo(() => {
+  const offthreadVideoFrameSrc = esm_useMemo(() => {
     return NoReactInternals2.getOffthreadVideoSource({
       currentTime,
       src,
@@ -96153,7 +96343,7 @@ var useInnerVideoTexture = ({
       toneMapped
     });
   }, [toneMapped, currentTime, src, transparent]);
-  const [textLoaderPromise] = useState2(() => Promise.all(/* import() */[__webpack_require__.e(805), __webpack_require__.e(129)]).then(__webpack_require__.bind(__webpack_require__, 9129)));
+  const [textLoaderPromise] = useState2(() => Promise.all(/* import() */[__webpack_require__.e(805), __webpack_require__.e(129)]).then(() => (__webpack_require__(9129))));
   const [imageTexture, setImageTexture] = useState2(null);
   const { delayRender, continueRender, cancelRender } = useDelayRender3();
   const fetchTexture = useCallback2(() => {
@@ -96227,7 +96417,7 @@ function useOffthreadVideoTexture({
 }
 
 // src/use-video-texture.ts
-
+;
 
 var warned = false;
 var warnAboutRequestVideoFrameCallback = () => {
@@ -96251,7 +96441,7 @@ var useVideoTexture = (videoRef) => {
     throw new Error("useVideoTexture() cannot be used in client side rendering.");
   }
   const [videoTexture, setVideoTexture] = useState3(null);
-  const [vidText] = useState3(() => Promise.all(/* import() */[__webpack_require__.e(805), __webpack_require__.e(702)]).then(__webpack_require__.bind(__webpack_require__, 702)));
+  const [vidText] = useState3(() => Promise.all(/* import() */[__webpack_require__.e(805), __webpack_require__.e(702)]).then(() => (__webpack_require__(702))));
   const frame = useCurrentFrame3();
   const onReady = useCallback3(() => {
     vidText.then(({ VideoTexture }) => {
@@ -96343,7 +96533,7 @@ class RoomEnvironment extends Scene {
 		const geometry = new BoxGeometry();
 		geometry.deleteAttribute( 'uv' );
 
-		const roomMaterial = new MeshStandardMaterial( { side: BackSide } );
+		const roomMaterial = new MeshStandardMaterial( { side: (/* inlined export .BackSide */1) } );
 		const boxMaterial = new MeshStandardMaterial();
 
 		const mainLight = new PointLight( 0xffffff, 900, 28, 2 );
@@ -96569,10 +96759,10 @@ const Hueso = ({ a, b, r1, r2, mat }) => {
   const d = b.clone().sub(a);
   const largo = d.length();
   const q = new Quaternion().setFromUnitVectors(EJE_Y, d.clone().normalize());
-  const geo = (0,react.useMemo)(() => new CylinderGeometry(r2, r1, 1, 28, 1, true), [r1, r2]);
-  return /* @__PURE__ */ react.createElement("mesh", { geometry: geo, material: mat, position: a.clone().add(b).multiplyScalar(0.5), quaternion: q, scale: [1, Math.max(1e-4, largo), 1], castShadow: true });
+  const geo = (0,react_namespaceFn().useMemo)(() => new CylinderGeometry(r2, r1, 1, 28, 1, true), [r1, r2]);
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: geo, material: mat, position: a.clone().add(b).multiplyScalar(0.5), quaternion: q, scale: [1, Math.max(1e-4, largo), 1], castShadow: true });
 };
-const Bola = ({ c, r, mat, q }) => /* @__PURE__ */ react.createElement("mesh", { geometry: esfera, material: mat, position: c, scale: typeof r === "number" ? [r, r, r] : r, quaternion: q, castShadow: true });
+const Bola = ({ c, r, mat, q }) => /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: esfera, material: mat, position: c, scale: typeof r === "number" ? [r, r, r] : r, quaternion: q, castShadow: true });
 const Maniqui = ({ c, mat, k = 1 }) => {
   const qT = new Quaternion().setFromRotationMatrix(c.base);
   const dirMano = (h, m) => m.clone().sub(h).normalize();
@@ -96589,7 +96779,7 @@ const Maniqui = ({ c, mat, k = 1 }) => {
   };
   const MI = mano(c.cI, c.mI), MD = mano(c.cD, c.mD), PI = pie(c.aI), PD = pie(c.aD);
   const cuello0 = c.pecho.clone().add(c.cabeza.clone().sub(c.pecho).multiplyScalar(0.15));
-  return /* @__PURE__ */ react.createElement("group", null, /* @__PURE__ */ react.createElement("mesh", { geometry: torsoGeo, material: mat, position: c.pelvis, quaternion: qT, scale: [k * 1.04, k * (L.torso / 0.5), k * 0.74], castShadow: true }), /* @__PURE__ */ react.createElement(Bola, { c: c.pelvis.clone().add(new Vector3(0, -0.01, 0)), r: [0.158 * k, 0.11 * k, 0.118 * k], mat, q: qT }), /* @__PURE__ */ react.createElement(Hueso, { a: cuello0, b: c.cabeza, r1: 0.046 * k, r2: 0.042 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.cabeza, r: [0.13 * k, 0.156 * k, 0.14 * k], mat, q: qT }), /* @__PURE__ */ react.createElement(Bola, { c: c.hI, r: 0.07 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.hD, r: 0.07 * k, mat }), /* @__PURE__ */ react.createElement(Hueso, { a: c.hI, b: c.cI, r1: 0.066 * k, r2: 0.05 * k, mat }), /* @__PURE__ */ react.createElement(Hueso, { a: c.hD, b: c.cD, r1: 0.066 * k, r2: 0.05 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.cI, r: 0.05 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.cD, r: 0.05 * k, mat }), /* @__PURE__ */ react.createElement(Hueso, { a: c.cI, b: c.mI, r1: 0.05 * k, r2: 0.038 * k, mat }), /* @__PURE__ */ react.createElement(Hueso, { a: c.cD, b: c.mD, r1: 0.05 * k, r2: 0.038 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.mI, r: 0.038 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.mD, r: 0.038 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: MI.c, r: [0.045 * k, 0.074 * k, 0.03 * k], mat, q: MI.q }), /* @__PURE__ */ react.createElement(Bola, { c: MD.c, r: [0.045 * k, 0.074 * k, 0.03 * k], mat, q: MD.q }), /* @__PURE__ */ react.createElement(Bola, { c: c.kI, r: 0.092 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.kD, r: 0.092 * k, mat }), /* @__PURE__ */ react.createElement(Hueso, { a: c.kI, b: c.rI, r1: 0.095 * k, r2: 0.068 * k, mat }), /* @__PURE__ */ react.createElement(Hueso, { a: c.kD, b: c.rD, r1: 0.095 * k, r2: 0.068 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.rI, r: 0.068 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.rD, r: 0.068 * k, mat }), /* @__PURE__ */ react.createElement(Hueso, { a: c.rI, b: c.aI, r1: 0.066 * k, r2: 0.046 * k, mat }), /* @__PURE__ */ react.createElement(Hueso, { a: c.rD, b: c.aD, r1: 0.066 * k, r2: 0.046 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.aI, r: 0.046 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: c.aD, r: 0.046 * k, mat }), /* @__PURE__ */ react.createElement(Bola, { c: PI.c, r: [0.05 * k, 0.042 * k, 0.118 * k], mat, q: PI.q }), /* @__PURE__ */ react.createElement(Bola, { c: PD.c, r: [0.05 * k, 0.042 * k, 0.118 * k], mat, q: PD.q }));
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("group", null, /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: torsoGeo, material: mat, position: c.pelvis, quaternion: qT, scale: [k * 1.04, k * (L.torso / 0.5), k * 0.74], castShadow: true }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.pelvis.clone().add(new Vector3(0, -0.01, 0)), r: [0.158 * k, 0.11 * k, 0.118 * k], mat, q: qT }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: cuello0, b: c.cabeza, r1: 0.046 * k, r2: 0.042 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.cabeza, r: [0.13 * k, 0.156 * k, 0.14 * k], mat, q: qT }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.hI, r: 0.07 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.hD, r: 0.07 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.hI, b: c.cI, r1: 0.066 * k, r2: 0.05 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.hD, b: c.cD, r1: 0.066 * k, r2: 0.05 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.cI, r: 0.05 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.cD, r: 0.05 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.cI, b: c.mI, r1: 0.05 * k, r2: 0.038 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.cD, b: c.mD, r1: 0.05 * k, r2: 0.038 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.mI, r: 0.038 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.mD, r: 0.038 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: MI.c, r: [0.045 * k, 0.074 * k, 0.03 * k], mat, q: MI.q }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: MD.c, r: [0.045 * k, 0.074 * k, 0.03 * k], mat, q: MD.q }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.kI, r: 0.092 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.kD, r: 0.092 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.kI, b: c.rI, r1: 0.095 * k, r2: 0.068 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.kD, b: c.rD, r1: 0.095 * k, r2: 0.068 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.rI, r: 0.068 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.rD, r: 0.068 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.rI, b: c.aI, r1: 0.066 * k, r2: 0.046 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.rD, b: c.aD, r1: 0.066 * k, r2: 0.046 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.aI, r: 0.046 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.aD, r: 0.046 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: PI.c, r: [0.05 * k, 0.042 * k, 0.118 * k], mat, q: PI.q }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: PD.c, r: [0.05 * k, 0.042 * k, 0.118 * k], mat, q: PD.q }));
 };
 const mezclaV = (a, b, q) => [a[0] + (b[0] - a[0]) * q, a[1] + (b[1] - a[1]) * q, a[2] + (b[2] - a[2]) * q];
 const mezclaN = (a, b, q) => (a || 0) + ((b || 0) - (a || 0)) * q;
@@ -96799,7 +96989,7 @@ const ACCIONES = {
 const ACCIONES_3D = Object.keys(ACCIONES);
 const Entorno = () => {
   const { gl, scene } = useThree();
-  (0,react.useMemo)(() => {
+  (0,react_namespaceFn().useMemo)(() => {
     const pm = new PMREMGenerator(gl);
     scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environmentIntensity = 0.42;
@@ -96828,27 +97018,27 @@ const texHalo = (() => {
   g.fillStyle = gr;
   g.fillRect(0, 0, 256, 256);
   const t = new CanvasTexture(cv);
-  t.colorSpace = SRGBColorSpace;
+  t.colorSpace = (/* inlined export .SRGBColorSpace */"srgb");
   return t;
 })();
 const Estela = ({ puntos, q, grosor }) => {
-  const curva = (0,react.useMemo)(() => new CatmullRomCurve3(puntos.map(v3)), [puntos]);
-  const geo = (0,react.useMemo)(() => new TubeGeometry(curva, 160, grosor, 10, false), [curva, grosor]);
-  const halo = (0,react.useMemo)(() => new TubeGeometry(curva, 160, grosor * 5, 10, false), [curva, grosor]);
+  const curva = (0,react_namespaceFn().useMemo)(() => new CatmullRomCurve3(puntos.map(v3)), [puntos]);
+  const geo = (0,react_namespaceFn().useMemo)(() => new TubeGeometry(curva, 160, grosor, 10, false), [curva, grosor]);
+  const halo = (0,react_namespaceFn().useMemo)(() => new TubeGeometry(curva, 160, grosor * 5, 10, false), [curva, grosor]);
   for (const g of [geo, halo]) {
     const n = g.index ? g.index.count : 0;
     g.setDrawRange(0, Math.floor(n * clamp(q) / 6) * 6);
   }
-  return /* @__PURE__ */ react.createElement("group", null, /* @__PURE__ */ react.createElement("mesh", { geometry: geo }, /* @__PURE__ */ react.createElement("meshBasicMaterial", { color: "#E2B8FF", toneMapped: false })), /* @__PURE__ */ react.createElement("mesh", { geometry: halo }, /* @__PURE__ */ react.createElement("meshBasicMaterial", { color: "#8A2BE2", transparent: true, opacity: 0.28, blending: AdditiveBlending, depthWrite: false, toneMapped: false })));
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("group", null, /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: geo }, /* @__PURE__ */ (react_namespaceFn().createElement)("meshBasicMaterial", { color: "#E2B8FF", toneMapped: false })), /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: halo }, /* @__PURE__ */ (react_namespaceFn().createElement)("meshBasicMaterial", { color: "#8A2BE2", transparent: true, opacity: 0.28, blending: (/* inlined export .AdditiveBlending */2), depthWrite: false, toneMapped: false })));
 };
 const Pictos3DE = ({ accion = "ayudar", texto = "", salida = 0.3 }) => {
   useFuentes();
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width: W, height: H, durationInFrames } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   const dur = durationInFrames / fps;
   const t = frame / fps;
   const vertical = H > W;
-  const A = (0,react.useMemo)(() => (ACCIONES[accion] || ACCIONES.ayudar)(), [accion]);
+  const A = (0,react_namespaceFn().useMemo)(() => (ACCIONES[accion] || ACCIONES.ayudar)(), [accion]);
   const q = clamp((t - 0.1) / Math.max(0.6, dur - 0.35));
   const { m, b } = enClaves(A.claves, q);
   const cm = montar(m, A.k), cb = montar(b, KB);
@@ -96857,7 +97047,7 @@ const Pictos3DE = ({ accion = "ayudar", texto = "", salida = 0.3 }) => {
   const lejos = vertical ? 1.45 : 1;
   const mira = v3(mezclaV(c0.mira, c1.mira, qc));
   const pos = v3(mezclaV(c0.pos, c1.pos, qc)).sub(mira).multiplyScalar(lejos).add(mira);
-  const mats = (0,react.useMemo)(() => ({
+  const mats = (0,react_namespaceFn().useMemo)(() => ({
     morado: new MeshPhysicalMaterial({
       color: "#9E1CFF",
       roughness: 0.13,
@@ -96878,11 +97068,11 @@ const Pictos3DE = ({ accion = "ayudar", texto = "", salida = 0.3 }) => {
   }), []);
   const sal = clamp((t - (dur - salida)) / Math.max(0.01, salida));
   const ent = clamp(t / 0.35);
-  const halo = (c, alto, s) => texHalo && /* @__PURE__ */ react.createElement("mesh", { position: [c.pelvis.x, alto + 3e-3, c.pelvis.z], rotation: [-PI2, 0, 0] }, /* @__PURE__ */ react.createElement("planeGeometry", { args: [1.6 * s, 1.6 * s] }), /* @__PURE__ */ react.createElement("meshBasicMaterial", { map: texHalo, transparent: true, depthWrite: false, blending: AdditiveBlending, toneMapped: false }));
+  const halo = (c, alto, s) => texHalo && /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [c.pelvis.x, alto + 3e-3, c.pelvis.z], rotation: [-PI2, 0, 0] }, /* @__PURE__ */ (react_namespaceFn().createElement)("planeGeometry", { args: [1.6 * s, 1.6 * s] }), /* @__PURE__ */ (react_namespaceFn().createElement)("meshBasicMaterial", { map: texHalo, transparent: true, depthWrite: false, blending: (/* inlined export .AdditiveBlending */2), toneMapped: false }));
   const altoM = A.escalon ? A.escalon : 0;
   const crece = A.grafica ? Pictos3D_suave(clamp((q - 0.05) / 0.7)) : 0;
   const estelas = [[[-4, 3.2, -3], [-1.5, 2.6, -2.6], [1.2, 3.1, -2.4], [4, 2.2, -2.8]], [[-4.2, 0.9, -2.5], [-2, 1.6, -2.2], [0.6, 0.7, -2.6], [4, 1.4, -2.2]]];
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: "radial-gradient(110% 80% at 60% 38%, #1A0B2A 0%, #07050B 55%, #020203 100%)", opacity: ent * (1 - sal) } }, /* @__PURE__ */ react.createElement(ThreeCanvas, { width: W, height: H, shadows: true, gl: { antialias: true, alpha: true, preserveDrawingBuffer: true }, camera: { fov: 32, near: 0.05, far: 60 } }, /* @__PURE__ */ react.createElement(Entorno, null), /* @__PURE__ */ react.createElement("fog", { attach: "fog", args: ["#040306", 4.5, 11] }), /* @__PURE__ */ react.createElement(Camara, { pos, mira, fov: vertical ? 30 : 32 }), /* @__PURE__ */ react.createElement("ambientLight", { intensity: 0.12 }), /* @__PURE__ */ react.createElement(
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "radial-gradient(110% 80% at 60% 38%, #1A0B2A 0%, #07050B 55%, #020203 100%)", opacity: ent * (1 - sal) } }, /* @__PURE__ */ (react_namespaceFn().createElement)(ThreeCanvas, { width: W, height: H, shadows: true, gl: { antialias: true, alpha: true, preserveDrawingBuffer: true }, camera: { fov: 32, near: 0.05, far: 60 } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Entorno, null), /* @__PURE__ */ (react_namespaceFn().createElement)("fog", { attach: "fog", args: ["#040306", 4.5, 11] }), /* @__PURE__ */ (react_namespaceFn().createElement)(Camara, { pos, mira, fov: vertical ? 30 : 32 }), /* @__PURE__ */ (react_namespaceFn().createElement)("ambientLight", { intensity: 0.12 }), /* @__PURE__ */ (react_namespaceFn().createElement)(
     "directionalLight",
     {
       position: [-2.5, 4.5, 3.5],
@@ -96896,18 +97086,18 @@ const Pictos3DE = ({ accion = "ayudar", texto = "", salida = 0.3 }) => {
       "shadow-camera-top": 3,
       "shadow-camera-bottom": -3
     }
-  ), /* @__PURE__ */ react.createElement("pointLight", { position: [2.6, 2.4, -1.8], intensity: 38, color: "#B44CFF", distance: 9, decay: 2 }), /* @__PURE__ */ react.createElement("pointLight", { position: [-2.8, 1.8, -1.6], intensity: 30, color: "#8A2BE2", distance: 9, decay: 2 }), /* @__PURE__ */ react.createElement("pointLight", { position: [0.2, 2.2, 2.4], intensity: 3, color: "#D9B3FF", distance: 6, decay: 2 }), /* @__PURE__ */ react.createElement("mesh", { position: [0, -1e-3, 0], rotation: [-PI2, 0, 0], material: mats.suelo, receiveShadow: true }, /* @__PURE__ */ react.createElement("planeGeometry", { args: [30, 30] })), A.escalon && /* @__PURE__ */ react.createElement("group", null, /* @__PURE__ */ react.createElement("mesh", { position: [2, A.escalon / 2, 0], material: mats.suelo, receiveShadow: true, castShadow: true }, /* @__PURE__ */ react.createElement("boxGeometry", { args: [4, A.escalon, 3] })), /* @__PURE__ */ react.createElement("mesh", { position: [2e-3, A.escalon - 4e-3, 0], material: mats.borde }, /* @__PURE__ */ react.createElement("boxGeometry", { args: [0.012, 0.012, 3] }))), A.grafica && [0, 1, 2].map((i) => {
+  ), /* @__PURE__ */ (react_namespaceFn().createElement)("pointLight", { position: [2.6, 2.4, -1.8], intensity: 38, color: "#B44CFF", distance: 9, decay: 2 }), /* @__PURE__ */ (react_namespaceFn().createElement)("pointLight", { position: [-2.8, 1.8, -1.6], intensity: 30, color: "#8A2BE2", distance: 9, decay: 2 }), /* @__PURE__ */ (react_namespaceFn().createElement)("pointLight", { position: [0.2, 2.2, 2.4], intensity: 3, color: "#D9B3FF", distance: 6, decay: 2 }), /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [0, -1e-3, 0], rotation: [-PI2, 0, 0], material: mats.suelo, receiveShadow: true }, /* @__PURE__ */ (react_namespaceFn().createElement)("planeGeometry", { args: [30, 30] })), A.escalon && /* @__PURE__ */ (react_namespaceFn().createElement)("group", null, /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [2, A.escalon / 2, 0], material: mats.suelo, receiveShadow: true, castShadow: true }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [4, A.escalon, 3] })), /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [2e-3, A.escalon - 4e-3, 0], material: mats.borde }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [0.012, 0.012, 3] }))), A.grafica && [0, 1, 2].map((i) => {
     const qi = Pictos3D_suave(clamp((q - 0.08 - i * 0.16) / 0.42));
     const h = (0.45 + i * 0.5) * qi + 0.02;
-    return /* @__PURE__ */ react.createElement("group", { key: i, position: [-0.95 + i * 0.4, 0, -1] }, /* @__PURE__ */ react.createElement("mesh", { position: [0, h / 2, 0], material: mats.barra, castShadow: true }, /* @__PURE__ */ react.createElement("boxGeometry", { args: [0.3, h, 0.3] })), /* @__PURE__ */ react.createElement("mesh", { position: [0, h + 6e-3, 0], material: mats.borde }, /* @__PURE__ */ react.createElement("boxGeometry", { args: [0.3, 0.012, 0.3] })));
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("group", { key: i, position: [-0.95 + i * 0.4, 0, -1] }, /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [0, h / 2, 0], material: mats.barra, castShadow: true }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [0.3, h, 0.3] })), /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [0, h + 6e-3, 0], material: mats.borde }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [0.3, 0.012, 0.3] })));
   }), A.bloque && (() => {
     const centro = cm.mI.clone().add(cm.mD).multiplyScalar(0.5).add(new Vector3(0, 0.16, 0));
-    return /* @__PURE__ */ react.createElement("mesh", { position: centro, rotation: [0, 0.3 + q * 0.6, 0], material: mats.bloque, castShadow: true }, /* @__PURE__ */ react.createElement("boxGeometry", { args: [0.42, 0.32, 0.42] }));
-  })(), /* @__PURE__ */ react.createElement(Maniqui, { c: cm, mat: mats.morado, k: A.k }), /* @__PURE__ */ react.createElement(Maniqui, { c: cb, mat: mats.blanco, k: KB }), halo(cm, A.escalon && cm.pelvis.x > 0 ? altoM : 0, 1), estelas.map((e, i) => /* @__PURE__ */ react.createElement(Estela, { key: i, puntos: e, q: clamp((t - 0.1 - i * 0.25) / 1.6), grosor: 0.012 + i * 6e-3 }))), texto && (() => {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: centro, rotation: [0, 0.3 + q * 0.6, 0], material: mats.bloque, castShadow: true }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [0.42, 0.32, 0.42] }));
+  })(), /* @__PURE__ */ (react_namespaceFn().createElement)(Maniqui, { c: cm, mat: mats.morado, k: A.k }), /* @__PURE__ */ (react_namespaceFn().createElement)(Maniqui, { c: cb, mat: mats.blanco, k: KB }), halo(cm, A.escalon && cm.pelvis.x > 0 ? altoM : 0, 1), estelas.map((e, i) => /* @__PURE__ */ (react_namespaceFn().createElement)(Estela, { key: i, puntos: e, q: clamp((t - 0.1 - i * 0.25) / 1.6), grosor: 0.012 + i * 6e-3 }))), texto && (() => {
     const U = Math.min(W, H) / 1080;
     const qt = clamp((t - 0.3) / 0.35);
     const barra = Pictos3D_suave(clamp((t - 0.55) / 0.5));
-    return /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: 0,
       right: 0,
@@ -96917,7 +97107,7 @@ const Pictos3DE = ({ accion = "ayudar", texto = "", salida = 0.3 }) => {
       alignItems: "center",
       opacity: qt,
       transform: `translateY(${((1 - qt) * 30 * U).toFixed(1)}px)`
-    } }, /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       fontFamily: FAMILIA.inter,
       fontWeight: 800,
       fontSize: Math.min(accion === "explicar" ? 130 : 110, 1250 / Math.max(6, texto.length)) * U,
@@ -96927,7 +97117,7 @@ const Pictos3DE = ({ accion = "ayudar", texto = "", salida = 0.3 }) => {
       textShadow: "0 0 40px rgba(170,60,255,.6)",
       textAlign: "center",
       padding: `0 ${50 * U}px`
-    } }, texto), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, texto), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       marginTop: 16 * U,
       height: 8 * U,
       width: Math.min(W * 0.6, texto.length * 46 * U) * barra,
@@ -96955,13 +97145,13 @@ const Widgets_suave = (q) => {
 };
 const tema = (claro) => claro ? { claro, tarjeta: "#FFFFFF", tinta: "#111318", suave: "#8A8F9C", linea: "rgba(20,30,60,.13)", sombra: "0 30px 80px rgba(40,50,100,.16), 0 6px 18px rgba(40,50,100,.08)", borde: "rgba(20,30,60,.06)" } : { claro, tarjeta: "rgba(255,255,255,.07)", tinta: "#F5F6FA", suave: "rgba(255,255,255,.55)", linea: "rgba(255,255,255,.16)", sombra: "0 30px 80px rgba(0,0,0,.55)", borde: "rgba(255,255,255,.14)" };
 const useUni = () => {
-  const { width, height } = (0,esm.useVideoConfig)();
+  const { width, height } = (0,esm/* useVideoConfig */.Bk)();
   return Math.min(width, height) / 1080;
 };
 const IconoW = ({ ic, lado, style }) => {
   if (!ic) return null;
-  if (ic.emoji) return /* @__PURE__ */ react.createElement(EmojiAnimado, { id: ic.emoji, lado, style });
-  if (ic.img) return /* @__PURE__ */ react.createElement(esm.Img, { src: (0,esm.staticFile)(ic.img), style: { width: lado, height: lado, objectFit: "contain", ...style } });
+  if (ic.emoji) return /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: ic.emoji, lado, style });
+  if (ic.img) return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(ic.img), style: { width: lado, height: lado, objectFit: "contain", ...style } });
   return null;
 };
 const Titular = ({ palabras, acento, T, top }) => {
@@ -97013,8 +97203,8 @@ const Titular = ({ palabras, acento, T, top }) => {
   }));
 };
 const Widgets_Cursor = ({ desde, hasta, t0, t1, T, acento }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
   const U = useUni();
   const t = frame / fps;
   if (t < t0 - 0.2) return null;
@@ -97023,7 +97213,7 @@ const Widgets_Cursor = ({ desde, hasta, t0, t1, T, acento }) => {
   const x = desde[0] + (hasta[0] - desde[0]) * q, y = desde[1] + (hasta[1] - desde[1]) * q - arco;
   const clic = clamp((t - t1) / 0.35);
   const pres = t > t1 && t < t1 + 0.14 ? 0.86 : 1;
-  return /* @__PURE__ */ react.createElement(react.Fragment, null, t > t1 && clic < 1 && /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, t > t1 && clic < 1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: hasta[0] - 70 * U * clic,
     top: hasta[1] - 70 * U * clic,
@@ -97032,7 +97222,7 @@ const Widgets_Cursor = ({ desde, hasta, t0, t1, T, acento }) => {
     borderRadius: "50%",
     border: `${4 * U}px solid ${acento}`,
     opacity: 1 - clic
-  } }), /* @__PURE__ */ react.createElement("svg", { width: 54 * U, height: 64 * U, viewBox: "0 0 27 32", style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 54 * U, height: 64 * U, viewBox: "0 0 27 32", style: {
     position: "absolute",
     left: x,
     top: y,
@@ -97040,11 +97230,11 @@ const Widgets_Cursor = ({ desde, hasta, t0, t1, T, acento }) => {
     transformOrigin: "0 0",
     filter: "drop-shadow(0 6px 10px rgba(0,0,0,.28))",
     opacity: clamp((t - t0 + 0.2) / 0.2)
-  } }, /* @__PURE__ */ react.createElement("path", { d: "M2 2 L2 25 L8.5 19 L13 29 L17 27 L12.6 17.4 L21.5 17.4 Z", fill: T.claro ? "#111318" : "#FFFFFF", stroke: T.claro ? "#FFFFFF" : "#111318", strokeWidth: 1.6, strokeLinejoin: "round" })));
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M2 2 L2 25 L8.5 19 L13 29 L17 27 L12.6 17.4 L21.5 17.4 Z", fill: T.claro ? "#111318" : "#FFFFFF", stroke: T.claro ? "#FFFFFF" : "#111318", strokeWidth: 1.6, strokeLinejoin: "round" })));
 };
 const OrbitaMC = ({ centro, items, acento, T, cy }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width } = (0,esm/* useVideoConfig */.Bk)();
   const U = useUni();
   const t = frame / fps;
   const R = useResorte();
@@ -97053,9 +97243,9 @@ const OrbitaMC = ({ centro, items, acento, T, cy }) => {
   const [ar, ag, ab] = rgb(acento);
   const anillos = [360, 490].map((r) => r * U);
   const n = Math.min(6, items.length);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, [0, 1, 2].map((k) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, [0, 1, 2].map((k) => {
     const u = (t * 0.45 + k / 3) % 1;
-    return /* @__PURE__ */ react.createElement("div", { key: k, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
       position: "absolute",
       left: cx - 200 * U * (1 + u),
       top: cy - 200 * U * (1 + u),
@@ -97064,7 +97254,7 @@ const OrbitaMC = ({ centro, items, acento, T, cy }) => {
       borderRadius: "50%",
       background: `radial-gradient(circle, rgba(${ar},${ag},${ab},${(0.1 * (1 - u)).toFixed(3)}) 40%, rgba(${ar},${ag},${ab},0) 70%)`
     } });
-  }), anillos.map((r, k) => /* @__PURE__ */ react.createElement("div", { key: k, style: {
+  }), anillos.map((r, k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
     position: "absolute",
     left: cx - r,
     top: cy - r,
@@ -97074,7 +97264,7 @@ const OrbitaMC = ({ centro, items, acento, T, cy }) => {
     border: `${2 * U}px solid ${T.linea}`,
     transform: `scale(${(0.6 + 0.4 * Widgets_easeOut((t - 0.1 - k * 0.12) / 0.5)).toFixed(4)})`,
     opacity: Widgets_easeOut((t - 0.1 - k * 0.12) / 0.4)
-  } })), /* @__PURE__ */ react.createElement("div", { style: {
+  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cx - 175 * U,
     top: cy - 175 * U,
@@ -97090,7 +97280,7 @@ const OrbitaMC = ({ centro, items, acento, T, cy }) => {
     justifyContent: "center",
     transform: `scale(${Math.max(1e-3, r0).toFixed(4)})`,
     backdropFilter: T.claro ? void 0 : "blur(20px)"
-  } }, centro.icono && /* @__PURE__ */ react.createElement(IconoW, { ic: centro.icono, lado: 130 * U }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, centro.icono && /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: centro.icono, lado: 130 * U }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     marginTop: 8 * U,
     fontFamily: FAMILIA.inter,
     fontWeight: 800,
@@ -97105,7 +97295,7 @@ const OrbitaMC = ({ centro, items, acento, T, cy }) => {
     const q = R(0.45 + i * 0.16, { damping: 11, stiffness: 160 });
     const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r;
     const lado = 156 * U;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: { position: "absolute", left: x - lado / 2, top: y - lado / 2, width: lado, height: lado, transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { position: "absolute", left: x - lado / 2, top: y - lado / 2, width: lado, height: lado, transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       width: lado,
       height: lado,
       borderRadius: lado * 0.32,
@@ -97115,7 +97305,7 @@ const OrbitaMC = ({ centro, items, acento, T, cy }) => {
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
-    } }, it.icono ? /* @__PURE__ */ react.createElement(IconoW, { ic: it.icono, lado: lado * 0.6 }) : /* @__PURE__ */ react.createElement("div", { style: { width: lado * 0.3, height: lado * 0.3, borderRadius: "50%", background: acento } })), it.texto && /* @__PURE__ */ react.createElement("div", { style: {
+    } }, it.icono ? /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: it.icono, lado: lado * 0.6 }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: lado * 0.3, height: lado * 0.3, borderRadius: "50%", background: acento } })), it.texto && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       top: lado + 10 * U,
       left: -lado * 0.6,
@@ -97131,8 +97321,8 @@ const OrbitaMC = ({ centro, items, acento, T, cy }) => {
   }));
 };
 const RutaMC = ({ pasos, titulo, acento, T, cy }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width } = (0,esm/* useVideoConfig */.Bk)();
   const U = useUni();
   const t = frame / fps;
   const R = useResorte();
@@ -97145,7 +97335,7 @@ const RutaMC = ({ pasos, titulo, acento, T, cy }) => {
   const d = `M ${pts[0][0]} ${pts[0][1]} C ${pts[1][0]} ${pts[1][1]}, ${pts[2][0]} ${pts[2][1]}, ${pts[2][0]} ${pts[2][1]} S ${pts[3][0]} ${pts[3][1]}, ${pts[4][0]} ${pts[4][1]}`;
   const q = Widgets_suave((t - 0.45) / 1.6);
   const [ar, ag, ab] = rgb(acento);
-  return /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -97158,7 +97348,7 @@ const RutaMC = ({ pasos, titulo, acento, T, cy }) => {
     overflow: "hidden",
     transform: `translateY(${((1 - entra) * 160 * U).toFixed(1)}px) scale(${(0.92 + 0.08 * entra).toFixed(4)})`,
     opacity: clamp(entra * 1.5)
-  } }, /* @__PURE__ */ react.createElement("svg", { width: w, height: mapaH, style: { position: "absolute", left: 0, top: 0 } }, [0.2, 0.42, 0.63, 0.85].map((k, i) => /* @__PURE__ */ react.createElement("line", { key: "h" + i, x1: w * 0.42, y1: mapaH * k, x2: w, y2: mapaH * k - 40 * U, stroke: T.linea, strokeWidth: 10 * U })), [0.55, 0.75, 0.92].map((k, i) => /* @__PURE__ */ react.createElement("line", { key: "v" + i, x1: w * k, y1: 0, x2: w * k + 30 * U, y2: mapaH, stroke: T.linea, strokeWidth: 8 * U })), /* @__PURE__ */ react.createElement(
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: w, height: mapaH, style: { position: "absolute", left: 0, top: 0 } }, [0.2, 0.42, 0.63, 0.85].map((k, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: "h" + i, x1: w * 0.42, y1: mapaH * k, x2: w, y2: mapaH * k - 40 * U, stroke: T.linea, strokeWidth: 10 * U })), [0.55, 0.75, 0.92].map((k, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: "v" + i, x1: w * k, y1: 0, x2: w * k + 30 * U, y2: mapaH, stroke: T.linea, strokeWidth: 8 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)(
     "path",
     {
       d,
@@ -97171,10 +97361,10 @@ const RutaMC = ({ pasos, titulo, acento, T, cy }) => {
       strokeDashoffset: (1 - q).toFixed(4),
       style: { filter: `blur(${10 * U}px)` }
     }
-  ), /* @__PURE__ */ react.createElement("path", { d, fill: "none", stroke: acento, strokeWidth: 22 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: (1 - q).toFixed(4) })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, top: 50 * U, width: w * 0.5 } }, ps.map((p, i) => {
+  ), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d, fill: "none", stroke: acento, strokeWidth: 22 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: (1 - q).toFixed(4) })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 50 * U, width: w * 0.5 } }, ps.map((p, i) => {
     const qi = R(0.3 + i * 0.35, { damping: 12, stiffness: 170 });
     const activo = q > (i + 0.5) / ps.length;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 22 * U, height: mapaH / 3.2, opacity: clamp(qi * 1.5), transform: `translateX(${((1 - qi) * -40 * U).toFixed(1)}px)` } }, /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { display: "flex", alignItems: "center", gap: 22 * U, height: mapaH / 3.2, opacity: clamp(qi * 1.5), transform: `translateX(${((1 - qi) * -40 * U).toFixed(1)}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "relative",
       width: 56 * U,
       height: 56 * U,
@@ -97183,12 +97373,12 @@ const RutaMC = ({ pasos, titulo, acento, T, cy }) => {
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
-    } }, /* @__PURE__ */ react.createElement("div", { style: { width: 28 * U, height: 28 * U, borderRadius: "50%", background: activo ? acento : T.tarjeta, border: `${4 * U}px solid ${acento}` } }), i < ps.length - 1 && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", top: 56 * U, left: 25 * U, width: 0, height: mapaH / 3.2 - 56 * U, borderLeft: `${3 * U}px dashed rgba(${ar},${ag},${ab},.55)` } })), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 40 * U, color: T.tinta, whiteSpace: "nowrap" } }, p.texto));
-  })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 56 * U, right: 56 * U, top: mapaH + 50 * U } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: T.tinta, letterSpacing: "-0.025em", opacity: Widgets_easeOut((t - 0.8) / 0.4) } }, titulo), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 18 * U, height: 14 * U, width: "62%", borderRadius: 8 * U, background: T.linea, opacity: Widgets_easeOut((t - 1) / 0.4) } }), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 14 * U, height: 14 * U, width: "44%", borderRadius: 8 * U, background: T.linea, opacity: Widgets_easeOut((t - 1.1) / 0.4) } })));
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 28 * U, height: 28 * U, borderRadius: "50%", background: activo ? acento : T.tarjeta, border: `${4 * U}px solid ${acento}` } }), i < ps.length - 1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top: 56 * U, left: 25 * U, width: 0, height: mapaH / 3.2 - 56 * U, borderLeft: `${3 * U}px dashed rgba(${ar},${ag},${ab},.55)` } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 40 * U, color: T.tinta, whiteSpace: "nowrap" } }, p.texto));
+  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 56 * U, right: 56 * U, top: mapaH + 50 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: T.tinta, letterSpacing: "-0.025em", opacity: Widgets_easeOut((t - 0.8) / 0.4) } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 18 * U, height: 14 * U, width: "62%", borderRadius: 8 * U, background: T.linea, opacity: Widgets_easeOut((t - 1) / 0.4) } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 14 * U, height: 14 * U, width: "44%", borderRadius: 8 * U, background: T.linea, opacity: Widgets_easeOut((t - 1.1) / 0.4) } })));
 };
 const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width } = (0,esm/* useVideoConfig */.Bk)();
   const U = useUni();
   const t = frame / fps;
   const R = useResorte();
@@ -97197,7 +97387,7 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
   const cx = width / 2 - cw / 2 + 20 * U, top = cy - ch / 2;
   const ix = cx - 230 * U, lado = 150 * U;
   const ox = cx + cw + 70 * U;
-  const linea = (x1, y1, x2, y2, q, k) => /* @__PURE__ */ react.createElement(
+  const linea = (x1, y1, x2, y2, q, k) => /* @__PURE__ */ (react_namespaceFn().createElement)(
     "path",
     {
       key: k,
@@ -97214,13 +97404,13 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
   const fin = 0.7 + ops.length * 0.42;
   const qr = R(fin + 0.25, { damping: 11, stiffness: 160 });
   const yRes = cy;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("svg", { width, height: cy * 2 + 400 * U, style: { position: "absolute", left: 0, top: 0 } }, ens.map((_, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width, height: cy * 2 + 400 * U, style: { position: "absolute", left: 0, top: 0 } }, ens.map((_, i) => {
     const y = cy + (i - (ens.length - 1) / 2) * (lado + 34 * U);
     return linea(ix + lado, y, cx, cy, Widgets_easeOut((t - 0.35 - i * 0.1) / 0.5), "e" + i);
   }), linea(cx + cw, cy, ox, yRes, Widgets_easeOut((t - fin) / 0.4), "r")), ens.map((e, i) => {
     const y = cy + (i - (ens.length - 1) / 2) * (lado + 34 * U);
     const q = R(0.1 + i * 0.12, { damping: 12, stiffness: 160 });
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: ix,
       top: y - lado / 2,
@@ -97234,8 +97424,8 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
       alignItems: "center",
       justifyContent: "center",
       transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
-    } }, /* @__PURE__ */ react.createElement(IconoW, { ic: e.icono, lado: lado * 0.58 }));
-  }), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: e.icono, lado: lado * 0.58 }));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cx,
     top,
@@ -97250,7 +97440,7 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
     transform: `scale(${(0.9 + 0.1 * R(0.25, { damping: 15 })).toFixed(4)})`
   } }, ops.map((o, i) => {
     const on = clamp((t - (0.75 + i * 0.42)) / 0.18);
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: { height: fila, display: "flex", alignItems: "center", gap: 22 * U, borderBottom: i < ops.length - 1 ? `${1.5 * U}px solid ${T.linea}` : "none" } }, o.icono ? /* @__PURE__ */ react.createElement(IconoW, { ic: o.icono, lado: 50 * U }) : /* @__PURE__ */ react.createElement("div", { style: { width: 22 * U, height: 22 * U, borderRadius: 6 * U, border: `${3 * U}px solid ${T.suave}` } }), /* @__PURE__ */ react.createElement("div", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 40 * U, color: T.tinta, whiteSpace: "nowrap", overflow: "hidden" } }, o.texto), /* @__PURE__ */ react.createElement("div", { style: { width: 96 * U, height: 54 * U, borderRadius: 27 * U, background: on > 0.5 ? acento : T.linea, position: "relative", transition: "none" } }, /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { height: fila, display: "flex", alignItems: "center", gap: 22 * U, borderBottom: i < ops.length - 1 ? `${1.5 * U}px solid ${T.linea}` : "none" } }, o.icono ? /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: o.icono, lado: 50 * U }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 22 * U, height: 22 * U, borderRadius: 6 * U, border: `${3 * U}px solid ${T.suave}` } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 40 * U, color: T.tinta, whiteSpace: "nowrap", overflow: "hidden" } }, o.texto), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 96 * U, height: 54 * U, borderRadius: 27 * U, background: on > 0.5 ? acento : T.linea, position: "relative", transition: "none" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       top: 6 * U,
       left: (6 + 42 * Widgets_easeOut(on)) * U,
@@ -97260,7 +97450,7 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
       background: "#FFFFFF",
       boxShadow: "0 3px 8px rgba(0,0,0,.25)"
     } })));
-  })), /* @__PURE__ */ react.createElement("div", { style: {
+  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: ox,
     top: yRes - 56 * U,
@@ -97275,7 +97465,7 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
     gap: 16 * U,
     transform: `scale(${Math.max(1e-3, qr).toFixed(4)})`,
     transformOrigin: "left center"
-  } }, resultado.icono && /* @__PURE__ */ react.createElement(IconoW, { ic: resultado.icono, lado: 54 * U }), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 42 * U, color: T.tinta, whiteSpace: "nowrap" } }, resultado.texto), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, resultado.icono && /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: resultado.icono, lado: 54 * U }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 42 * U, color: T.tinta, whiteSpace: "nowrap" } }, resultado.texto), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     top: -26 * U,
     right: 10 * U,
@@ -97290,11 +97480,11 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
     fontSize: 30 * U,
     fontWeight: 900,
     fontFamily: FAMILIA.inter
-  } }, "\u2713")), /* @__PURE__ */ react.createElement(Widgets_Cursor, { desde: [width * 0.8, cy + 520 * U], hasta: [cx + cw - 70 * U, top + 20 * U + fila * 0.5], t0: 0.45, t1: 0.75, T, acento }));
+  } }, "\u2713")), /* @__PURE__ */ (react_namespaceFn().createElement)(Widgets_Cursor, { desde: [width * 0.8, cy + 520 * U], hasta: [cx + cw - 70 * U, top + 20 * U + fila * 0.5], t0: 0.45, t1: 0.75, T, acento }));
 };
 const ContadorMC = ({ valor, sufijo = "", prefijo = "", etiqueta = "", acento, T, cy }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width } = (0,esm/* useVideoConfig */.Bk)();
   const U = useUni();
   const t = frame / fps;
   const R = useResorte();
@@ -97304,7 +97494,7 @@ const ContadorMC = ({ valor, sufijo = "", prefijo = "", etiqueta = "", acento, T
   const entra = R(0.05, { damping: 13, stiffness: 140 });
   const [ar, ag, ab] = rgb(acento);
   const circ = 2 * Math.PI * r;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: width / 2 - r - 60 * U,
     top: cy - r - 60 * U,
@@ -97315,7 +97505,7 @@ const ContadorMC = ({ valor, sufijo = "", prefijo = "", etiqueta = "", acento, T
     boxShadow: T.sombra,
     border: `${1.5 * U}px solid ${T.borde}`,
     transform: `scale(${Math.max(1e-3, entra).toFixed(4)})`
-  } }, /* @__PURE__ */ react.createElement("svg", { width: 2 * r + 120 * U, height: 2 * r + 120 * U, style: { position: "absolute", inset: 0, transform: "rotate(-90deg)" } }, /* @__PURE__ */ react.createElement("circle", { cx: r + 60 * U, cy: r + 60 * U, r, fill: "none", stroke: T.linea, strokeWidth: grosor }), /* @__PURE__ */ react.createElement(
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 2 * r + 120 * U, height: 2 * r + 120 * U, style: { position: "absolute", inset: 0, transform: "rotate(-90deg)" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: r + 60 * U, cy: r + 60 * U, r, fill: "none", stroke: T.linea, strokeWidth: grosor }), /* @__PURE__ */ (react_namespaceFn().createElement)(
     "circle",
     {
       cx: r + 60 * U,
@@ -97329,18 +97519,18 @@ const ContadorMC = ({ valor, sufijo = "", prefijo = "", etiqueta = "", acento, T
       strokeDashoffset: circ * (1 - 0.92 * q),
       style: { filter: `drop-shadow(0 0 ${14 * U}px rgba(${ar},${ag},${ab},.6))` }
     }
-  )), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     fontFamily: FAMILIA.inter,
     fontWeight: 800,
     fontSize: Math.min(150, 760 / Math.max(3, (prefijo + n + sufijo).length)) * U,
     color: T.tinta,
     letterSpacing: "-0.04em",
     fontVariantNumeric: "tabular-nums"
-  } }, prefijo, n.toLocaleString("es"), sufijo), etiqueta && /* @__PURE__ */ react.createElement("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 38 * U, color: T.suave, opacity: Widgets_easeOut((t - 0.6) / 0.4) } }, etiqueta))));
+  } }, prefijo, n.toLocaleString("es"), sufijo), etiqueta && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 38 * U, color: T.suave, opacity: Widgets_easeOut((t - 0.6) / 0.4) } }, etiqueta))));
 };
 const VersionesMC = ({ cartas, acento, T, cy }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width } = (0,esm/* useVideoConfig */.Bk)();
   const U = useUni();
   const t = frame / fps;
   const R = useResorte();
@@ -97350,7 +97540,7 @@ const VersionesMC = ({ cartas, acento, T, cy }) => {
   const tClic = 1.35;
   const sel = R(tClic, { damping: 12, stiffness: 160 });
   const colores = ["#FF7A59", acento, "#111318"];
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, cs.map((c, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, cs.map((c, i) => {
     const q = R(0.15 + i * 0.14, { damping: 12, stiffness: 150 });
     const k = i - (cs.length - 1) / 2;
     const esta = i === elegida;
@@ -97358,7 +97548,7 @@ const VersionesMC = ({ cartas, acento, T, cy }) => {
     const dx = k * (w * 0.78) * (1 + (t > tClic ? 0.15 * sel : 0));
     const s = (0.85 + 0.15 * q) * (t > tClic ? esta ? 1 + 0.12 * sel : 1 - 0.1 * sel : 1);
     const op = t > tClic && !esta ? 1 - 0.45 * sel : 1;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: width / 2 - w / 2 + dx,
       top: cy - h / 2 + (1 - q) * 160 * U - Math.abs(k) * 18 * U,
@@ -97375,7 +97565,7 @@ const VersionesMC = ({ cartas, acento, T, cy }) => {
       alignItems: "center",
       justifyContent: "center",
       color: "#FFFFFF"
-    } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: 170 * U, lineHeight: 1 } }, String.fromCharCode(65 + i)), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: 170 * U, lineHeight: 1 } }, String.fromCharCode(65 + i)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       marginTop: 18 * U,
       padding: `${8 * U}px ${22 * U}px`,
       borderRadius: 30 * U,
@@ -97386,7 +97576,7 @@ const VersionesMC = ({ cartas, acento, T, cy }) => {
       maxWidth: w - 30 * U,
       whiteSpace: "nowrap",
       overflow: "hidden"
-    } }, c.texto), esta && t > tClic && /* @__PURE__ */ react.createElement("div", { style: {
+    } }, c.texto), esta && t > tClic && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       top: -24 * U,
       right: -24 * U,
@@ -97401,7 +97591,7 @@ const VersionesMC = ({ cartas, acento, T, cy }) => {
       fontWeight: 900,
       transform: `scale(${sel.toFixed(4)})`
     } }, "\u2713"));
-  }), /* @__PURE__ */ react.createElement(Widgets_Cursor, { desde: [width * 0.82, cy + 560 * U], hasta: [width / 2 + 30 * U, cy + 40 * U], t0: 0.95, t1: tClic, T, acento }));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)(Widgets_Cursor, { desde: [width * 0.82, cy + 560 * U], hasta: [width / 2 + 30 * U, cy + 40 * U], t0: 0.95, t1: tClic, T, acento }));
 };
 
 ;// ./src/Reel.tsx
@@ -97417,12 +97607,12 @@ const Reel_suave = (q) => {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 };
 const Reel_useT = () => {
-  const f = (0,esm.useCurrentFrame)();
-  const { fps } = (0,esm.useVideoConfig)();
+  const f = (0,esm/* useCurrentFrame */.UC)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
   return f / fps;
 };
 const Reel_useU = () => {
-  const { width, height } = (0,esm.useVideoConfig)();
+  const { width, height } = (0,esm/* useVideoConfig */.Bk)();
   return Math.min(width, height) / 1080;
 };
 const Reel_SOMBRA = (U) => `0 ${34 * U}px ${80 * U}px rgba(60,60,130,.18), 0 ${6 * U}px ${16 * U}px rgba(60,60,130,.08)`;
@@ -97430,7 +97620,7 @@ const Estrella = ({ x, y, lado, t0 }) => {
   const t = Reel_useT();
   const q = useResorte()(t0, { damping: 9, stiffness: 180 });
   const brillo = 0.85 + 0.15 * Math.sin(t * 4 + x);
-  return /* @__PURE__ */ react.createElement("svg", { width: lado, height: lado, viewBox: "0 0 24 24", style: { position: "absolute", left: x - lado / 2, top: y - lado / 2, transform: `scale(${Math.max(0, q) * brillo}) rotate(${t * 20 % 360}deg)` } }, /* @__PURE__ */ react.createElement("path", { d: "M12 1 L14.6 9.4 L23 12 L14.6 14.6 L12 23 L9.4 14.6 L1 12 L9.4 9.4 Z", fill: ORO, stroke: "#FFFFFF", strokeWidth: 1.6, strokeLinejoin: "round" }));
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: lado, height: lado, viewBox: "0 0 24 24", style: { position: "absolute", left: x - lado / 2, top: y - lado / 2, transform: `scale(${Math.max(0, q) * brillo}) rotate(${t * 20 % 360}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M12 1 L14.6 9.4 L23 12 L14.6 14.6 L12 23 L9.4 14.6 L1 12 L9.4 9.4 Z", fill: ORO, stroke: "#FFFFFF", strokeWidth: 1.6, strokeLinejoin: "round" }));
 };
 const CursorR = ({ desde, hasta, t0, t1, onda = true }) => {
   const t = Reel_useT();
@@ -97441,7 +97631,7 @@ const CursorR = ({ desde, hasta, t0, t1, onda = true }) => {
   const x = desde[0] + (hasta[0] - desde[0]) * q, y = desde[1] + (hasta[1] - desde[1]) * q - arco;
   const c = clamp((t - t1) / 0.45);
   const pres = t > t1 && t < t1 + 0.12 ? 0.82 : 1;
-  return /* @__PURE__ */ react.createElement(react.Fragment, null, onda && t > t1 && c < 1 && /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, onda && t > t1 && c < 1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: hasta[0] - 80 * U * c,
     top: hasta[1] - 80 * U * c,
@@ -97450,7 +97640,7 @@ const CursorR = ({ desde, hasta, t0, t1, onda = true }) => {
     borderRadius: "50%",
     border: `${5 * U}px solid rgba(123,92,245,${(0.6 * (1 - c)).toFixed(3)})`,
     background: `rgba(123,92,245,${(0.12 * (1 - c)).toFixed(3)})`
-  } }), /* @__PURE__ */ react.createElement("svg", { width: 58 * U, height: 58 * U, viewBox: "0 0 24 24", style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 58 * U, height: 58 * U, viewBox: "0 0 24 24", style: {
     position: "absolute",
     left: x - 6 * U,
     top: y - 4 * U,
@@ -97458,11 +97648,11 @@ const CursorR = ({ desde, hasta, t0, t1, onda = true }) => {
     transformOrigin: "20% 15%",
     filter: "drop-shadow(0 6px 10px rgba(70,40,160,.35))",
     opacity: clamp((t - t0 + 0.05) / 0.15)
-  } }, /* @__PURE__ */ react.createElement("path", { d: "M3 2 L21 10.5 L13.2 12.8 L10 21 Z", fill: CURSOR, stroke: "#FFFFFF", strokeWidth: 1.8, strokeLinejoin: "round" })));
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M3 2 L21 10.5 L13.2 12.8 L10 21 Z", fill: CURSOR, stroke: "#FFFFFF", strokeWidth: 1.8, strokeLinejoin: "round" })));
 };
 const Reel_Pastilla = ({ children, style }) => {
   const U = Reel_useU();
-  return /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     display: "inline-flex",
     alignItems: "center",
     gap: 14 * U,
@@ -97480,12 +97670,12 @@ const Reel_Pastilla = ({ children, style }) => {
 const RTitular = ({ palabras, arriba, top, claro = true }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const largo = palabras.reduce((n, p) => n + p.texto.length + 1, 0);
   const tam = Math.max(92, Math.min(132, width / U * 2.6 / Math.max(10, largo))) * U;
   const qa = R(0, { damping: 13, stiffness: 160 });
-  return /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" } }, arriba && /* @__PURE__ */ react.createElement("div", { style: { marginBottom: 26 * U, transform: `scale(${Math.max(0, qa).toFixed(4)})` } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { background: LILA_F, color: LILA, border: `${3 * U}px solid #D7CEFF`, fontSize: 60 * U, padding: `${18 * U}px ${40 * U}px` } }, arriba)), /* @__PURE__ */ react.createElement("div", { style: { display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "baseline", padding: `0 ${70 * U}px`, rowGap: 4 * U, maxWidth: width } }, palabras.map((p, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" } }, arriba && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginBottom: 26 * U, transform: `scale(${Math.max(0, qa).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { background: LILA_F, color: LILA, border: `${3 * U}px solid #D7CEFF`, fontSize: 60 * U, padding: `${18 * U}px ${40 * U}px` } }, arriba)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "baseline", padding: `0 ${70 * U}px`, rowGap: 4 * U, maxWidth: width } }, palabras.map((p, i) => {
     const q = Reel_easeOut((t - p.t + 0.05) / 0.3);
     const e = p.estilo;
     const base = {
@@ -97509,7 +97699,7 @@ const RTitular = ({ palabras, arriba, top, claro = true }) => {
     if (e === "pildora") Object.assign(base, { color: LILA, background: LILA_F, borderRadius: 999, padding: `${2 * U}px ${tam * 0.22}px`, border: `${3 * U}px solid #D7CEFF` });
     const tacha = Reel_easeOut((t - p.t - 0.35) / 0.3);
     const caja = Reel_easeOut((t - p.t + 0.05) / 0.3);
-    return /* @__PURE__ */ react.createElement("span", { key: i, style: base }, p.texto, e === "tachado" && /* @__PURE__ */ react.createElement("span", { style: { position: "absolute", left: -4 * U, top: "52%", height: 9 * U, borderRadius: 5 * U, background: ROJO, width: `calc(${(tacha * 100).toFixed(1)}% + ${8 * U}px)` } }), e === "caja" && /* @__PURE__ */ react.createElement("span", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i, style: base }, p.texto, e === "tachado" && /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { position: "absolute", left: -4 * U, top: "52%", height: 9 * U, borderRadius: 5 * U, background: ROJO, width: `calc(${(tacha * 100).toFixed(1)}% + ${8 * U}px)` } }), e === "caja" && /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: {
       position: "absolute",
       left: -14 * U,
       right: -14 * U,
@@ -97520,7 +97710,7 @@ const RTitular = ({ palabras, arriba, top, claro = true }) => {
       background: "rgba(47,91,231,.08)",
       opacity: caja,
       transform: `scale(${(0.9 + 0.1 * caja).toFixed(4)})`
-    } }, [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ react.createElement("span", { key: k, style: {
+    } }, [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: k, style: {
       position: "absolute",
       left: `calc(${a * 100}% - ${8 * U}px)`,
       top: `calc(${b * 100}% - ${8 * U}px)`,
@@ -97535,13 +97725,13 @@ const RTitular = ({ palabras, arriba, top, claro = true }) => {
 const RecW = ({ cy, nombre, foto }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 600 * U, h = 740 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 12, stiffness: 130 });
   const seg = Math.floor(t * 30) % 30, s = 13 + Math.floor(t);
   const parpadeo = Math.sin(t * 8) > 0 ? 1 : 0.35;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -97553,7 +97743,7 @@ const RecW = ({ cy, nombre, foto }) => {
     overflow: "hidden",
     background: "linear-gradient(180deg, #5C8BFF 0%, #2448C9 100%)",
     transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -4).toFixed(2)}deg)`
-  } }, Array.from({ length: 14 }).map((_, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: {
+  } }, Array.from({ length: 14 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
     position: "absolute",
     left: w / 2 - 6 * U,
     top: h * 0.35,
@@ -97562,7 +97752,7 @@ const RecW = ({ cy, nombre, foto }) => {
     transformOrigin: "50% 0",
     background: "rgba(255,255,255,.08)",
     transform: `rotate(${(-80 + i * 12 + Math.sin(t * 0.8) * 3).toFixed(1)}deg)`
-  } })), foto ? /* @__PURE__ */ react.createElement(Foto, { src: foto }) : /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: w / 2 - 100 * U, top: h * 0.3, width: 200 * U, height: 200 * U, borderRadius: "50%", background: "linear-gradient(180deg,#E8EEFF,#B9C9F7)" } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: w / 2 - 230 * U, top: h * 0.62, width: 460 * U, height: 420 * U, borderRadius: "50%", background: "linear-gradient(180deg,#E8EEFF,#AFC0F3)" } }), [[0.22, 0.26, 0, 0], [0.78, 0.26, 1, 0], [0.22, 0.6, 0, 1], [0.78, 0.6, 1, 1]].map(([a, b, c2, d2], k) => /* @__PURE__ */ react.createElement("div", { key: k, style: {
+  } })), foto ? /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: w / 2 - 100 * U, top: h * 0.3, width: 200 * U, height: 200 * U, borderRadius: "50%", background: "linear-gradient(180deg,#E8EEFF,#B9C9F7)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: w / 2 - 230 * U, top: h * 0.62, width: 460 * U, height: 420 * U, borderRadius: "50%", background: "linear-gradient(180deg,#E8EEFF,#AFC0F3)" } }), [[0.22, 0.26, 0, 0], [0.78, 0.26, 1, 0], [0.22, 0.6, 0, 1], [0.78, 0.6, 1, 1]].map(([a, b, c2, d2], k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
     position: "absolute",
     left: w * a - 30 * U,
     top: h * b - 30 * U,
@@ -97572,7 +97762,7 @@ const RecW = ({ cy, nombre, foto }) => {
     borderRight: c2 ? `${6 * U}px solid #F5C451` : "none",
     borderTop: d2 ? "none" : `${6 * U}px solid #F5C451`,
     borderBottom: d2 ? `${6 * U}px solid #F5C451` : "none"
-  } })), /* @__PURE__ */ react.createElement("div", { style: {
+  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 26 * U,
     top: 26 * U,
@@ -97586,7 +97776,7 @@ const RecW = ({ cy, nombre, foto }) => {
     display: "flex",
     alignItems: "center",
     gap: 10 * U
-  } }, /* @__PURE__ */ react.createElement("span", { style: { width: 16 * U, height: 16 * U, borderRadius: "50%", background: ROJO, opacity: parpadeo } }), "REC 00:00:", String(s).padStart(2, "0"), ":", String(seg).padStart(2, "0")), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { width: 16 * U, height: 16 * U, borderRadius: "50%", background: ROJO, opacity: parpadeo } }), "REC 00:00:", String(s).padStart(2, "0"), ":", String(seg).padStart(2, "0")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     right: 26 * U,
     top: 26 * U,
@@ -97597,7 +97787,7 @@ const RecW = ({ cy, nombre, foto }) => {
     fontFamily: FAMILIA.inter,
     fontWeight: 700,
     fontSize: 24 * U
-  } }, "4K \xB7 60")), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, "4K \xB7 60")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: width / 2 - 70 * U,
     top: y0 + h - 40 * U,
@@ -97610,12 +97800,12 @@ const RecW = ({ cy, nombre, foto }) => {
     alignItems: "center",
     justifyContent: "center",
     transform: `scale(${Math.max(0, R(0.25, { damping: 11 })).toFixed(4)})`
-  } }, /* @__PURE__ */ react.createElement("div", { style: { width: 66 * U, height: 66 * U, borderRadius: t > 0.9 ? 14 * U : "50%", background: ROJO } })), /* @__PURE__ */ react.createElement(Estrella, { x: x0 + w + 20 * U, y: y0 + 10 * U, lado: 70 * U, t0: 0.3 }), /* @__PURE__ */ react.createElement(Estrella, { x: x0 - 30 * U, y: y0 + h * 0.3, lado: 52 * U, t0: 0.4 }), /* @__PURE__ */ react.createElement(Estrella, { x: x0 + w + 30 * U, y: y0 + h * 0.86, lado: 54 * U, t0: 0.5 }), /* @__PURE__ */ react.createElement(Estrella, { x: x0 - 20 * U, y: y0 + h * 0.86, lado: 40 * U, t0: 0.55 }), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [width / 2 + 16 * U, y0 + h + 30 * U], t0: 0.35, t1: 0.85 }), nombre ? null : null);
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 66 * U, height: 66 * U, borderRadius: t > 0.9 ? 14 * U : "50%", background: ROJO } })), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 20 * U, y: y0 + 10 * U, lado: 70 * U, t0: 0.3 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 30 * U, y: y0 + h * 0.3, lado: 52 * U, t0: 0.4 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 30 * U, y: y0 + h * 0.86, lado: 54 * U, t0: 0.5 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 20 * U, y: y0 + h * 0.86, lado: 40 * U, t0: 0.55 }), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [width / 2 + 16 * U, y0 + h + 30 * U], t0: 0.35, t1: 0.85 }), nombre ? null : null);
 };
 const RelojW = ({ cy, desde = 22 * 60 + 30, hasta = 3 * 60 + 14 + 24 * 60, etiqueta = "Still editing\u2026" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width, durationInFrames, fps } = (0,esm.useVideoConfig)();
+  const { width, durationInFrames, fps } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const dur = durationInFrames / fps;
   const w = 840 * U, h = 600 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
@@ -97625,7 +97815,7 @@ const RelojW = ({ cy, desde = 22 * 60 + 30, hasta = 3 * 60 + 14 + 24 * 60, etiqu
   const h12 = (hh + 11) % 12 + 1, ampm = hh >= 12 ? "PM" : "AM";
   const rueda = clamp((t - 0.12) / Math.min(0.8, Math.max(0.5, dur - 0.6)));
   const borroso = rueda > 0 && rueda < 1 ? 6 * Math.sin(Math.PI * rueda) : 0;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -97635,7 +97825,7 @@ const RelojW = ({ cy, desde = 22 * 60 + 30, hasta = 3 * 60 + 14 + 24 * 60, etiqu
     background: "#FFFFFF",
     boxShadow: Reel_SOMBRA(U),
     transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 5).toFixed(2)}deg)`
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 34 * U, top: 30 * U, display: "flex", gap: 14 * U } }, ["#F0473C", "#F5B82E", "#2FB45A"].map((c) => /* @__PURE__ */ react.createElement("div", { key: c, style: { width: 26 * U, height: 26 * U, borderRadius: "50%", background: c } }))), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 34 * U, top: 30 * U, display: "flex", gap: 14 * U } }, ["#F0473C", "#F5B82E", "#2FB45A"].map((c) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: c, style: { width: 26 * U, height: 26 * U, borderRadius: "50%", background: c } }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 30 * U,
     right: 30 * U,
@@ -97645,7 +97835,7 @@ const RelojW = ({ cy, desde = 22 * 60 + 30, hasta = 3 * 60 + 14 + 24 * 60, etiqu
     background: "#F4F5FA",
     backgroundImage: "radial-gradient(rgba(70,80,140,.12) 2px, transparent 2px)",
     backgroundSize: `${22 * U}px ${22 * U}px`
-  } }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 80 * U,
     right: 80 * U,
@@ -97657,7 +97847,7 @@ const RelojW = ({ cy, desde = 22 * 60 + 30, hasta = 3 * 60 + 14 + 24 * 60, etiqu
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center"
-  } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 40 * U, color: "#2340C8" } }, ampm), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 190 * U, color: Reel_TINTA, letterSpacing: "-0.04em", lineHeight: 1, fontVariantNumeric: "tabular-nums" } }, String(h12).padStart(2, "0"), ":", /* @__PURE__ */ react.createElement("span", { style: { filter: `blur(${borroso.toFixed(1)}px)` } }, String(mm).padStart(2, "0"))), [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ react.createElement("div", { key: k, style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 40 * U, color: "#2340C8" } }, ampm), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 190 * U, color: Reel_TINTA, letterSpacing: "-0.04em", lineHeight: 1, fontVariantNumeric: "tabular-nums" } }, String(h12).padStart(2, "0"), ":", /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { filter: `blur(${borroso.toFixed(1)}px)` } }, String(mm).padStart(2, "0"))), [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
     position: "absolute",
     left: `calc(${a * 100}% - ${9 * U}px)`,
     top: `calc(${b * 100}% - ${9 * U}px)`,
@@ -97666,19 +97856,19 @@ const RelojW = ({ cy, desde = 22 * 60 + 30, hasta = 3 * 60 + 14 + 24 * 60, etiqu
     background: "#FFFFFF",
     border: `${3 * U}px solid ${AZUL}`,
     borderRadius: 3 * U
-  } })))), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0 + w - 190 * U, top: y0 - 110 * U, transform: `scale(${Math.max(0, R(0.3, { damping: 10 })).toFixed(4)}) rotate(${Math.sin(t * 1.5) * 4}deg)` } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: "crescent_moon", lado: 210 * U })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0 + w - 270 * U, top: y0 - 30 * U, opacity: 0.95, transform: `translateX(${Math.sin(t * 0.9) * 10 * U}px)` } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: "cloud", lado: 130 * U })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0 + w - 40 * U, top: y0 + 30 * U, transform: `translateX(${Math.cos(t * 0.8) * 8 * U}px)` } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: "cloud", lado: 100 * U })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2 - 20 * U, top: y0 + h + 30 * U, transform: `scale(${Math.max(0, R(0.6, { damping: 12 })).toFixed(4)})`, transformOrigin: "left center" } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { background: LILA_F, color: LILA, fontSize: 34 * U, padding: `${10 * U}px ${24 * U}px`, border: `${3 * U}px solid #D7CEFF` } }, etiqueta)), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.85, cy + 520 * U], hasta: [width / 2 - 50 * U, y0 + h - 40 * U], t0: 0.3, t1: 0.8, onda: false }));
+  } })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 + w - 190 * U, top: y0 - 110 * U, transform: `scale(${Math.max(0, R(0.3, { damping: 10 })).toFixed(4)}) rotate(${Math.sin(t * 1.5) * 4}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "crescent_moon", lado: 210 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 + w - 270 * U, top: y0 - 30 * U, opacity: 0.95, transform: `translateX(${Math.sin(t * 0.9) * 10 * U}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "cloud", lado: 130 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 + w - 40 * U, top: y0 + 30 * U, transform: `translateX(${Math.cos(t * 0.8) * 8 * U}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "cloud", lado: 100 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 20 * U, top: y0 + h + 30 * U, transform: `scale(${Math.max(0, R(0.6, { damping: 12 })).toFixed(4)})`, transformOrigin: "left center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { background: LILA_F, color: LILA, fontSize: 34 * U, padding: `${10 * U}px ${24 * U}px`, border: `${3 * U}px solid #D7CEFF` } }, etiqueta)), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.85, cy + 520 * U], hasta: [width / 2 - 50 * U, y0 + h - 40 * U], t0: 0.3, t1: 0.8, onda: false }));
 };
 const ArchivosW = ({ cy, titulo = "Raw footage", sub = "47 clips \xB7 3h 12m" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 680 * U, h = 330 * U, x0 = width / 2 - w / 2, y0 = cy + 40 * U;
   const qc = R(0.05, { damping: 13, stiffness: 130 });
   const fotos = [["#FF9A62", "#FFC48E", -16, -150], ["#5A86FF", "#8FB0FF", -4, -10], ["#8E6BFF", "#B79CFF", 12, 140]];
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, fotos.map(([c1, c2, rot, dx], i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, fotos.map(([c1, c2, rot, dx], i) => {
     const q = R(0.12 + i * 0.08, { damping: 11, stiffness: 150 });
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: width / 2 - 140 * U + dx * U * q,
       top: y0 - 60 * U - q * 170 * U,
@@ -97692,8 +97882,8 @@ const ArchivosW = ({ cy, titulo = "Raw footage", sub = "47 clips \xB7 3h 12m" })
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
-    } }, /* @__PURE__ */ react.createElement("div", { style: { width: 70 * U, height: 70 * U, borderRadius: "50%", background: "rgba(255,255,255,.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement("div", { style: { width: 0, height: 0, borderTop: `${14 * U}px solid transparent`, borderBottom: `${14 * U}px solid transparent`, borderLeft: `${22 * U}px solid ${c1}`, marginLeft: 6 * U } })));
-  }), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 70 * U, height: 70 * U, borderRadius: "50%", background: "rgba(255,255,255,.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 0, height: 0, borderTop: `${14 * U}px solid transparent`, borderBottom: `${14 * U}px solid transparent`, borderLeft: `${22 * U}px solid ${c1}`, marginLeft: 6 * U } })));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -97705,7 +97895,7 @@ const ArchivosW = ({ cy, titulo = "Raw footage", sub = "47 clips \xB7 3h 12m" })
     transform: `scale(${Math.max(1e-3, qc).toFixed(4)})`,
     padding: `${40 * U}px ${44 * U}px`,
     boxSizing: "border-box"
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 44 * U, bottom: 90 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, color: Reel_TINTA, letterSpacing: "-0.02em" } }, titulo), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 44 * U, bottom: 46 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#8A8E9C" } }, sub), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 44 * U, bottom: 90 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, color: Reel_TINTA, letterSpacing: "-0.02em" } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 44 * U, bottom: 46 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#8A8E9C" } }, sub), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     right: 40 * U,
     bottom: 40 * U,
@@ -97720,16 +97910,16 @@ const ArchivosW = ({ cy, titulo = "Raw footage", sub = "47 clips \xB7 3h 12m" })
     fontSize: 50 * U,
     fontWeight: 800,
     fontFamily: FAMILIA.inter
-  } }, "\u2197")), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.9, cy + 520 * U], hasta: [x0 + w - 90 * U, y0 + h - 90 * U], t0: 0.12, t1: 0.5 }));
+  } }, "\u2197")), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.9, cy + 520 * U], hasta: [x0 + w - 90 * U, y0 + h - 90 * U], t0: 0.12, t1: 0.5 }));
 };
 const BuscarW = ({ cy, etiqueta = "Story found", foto }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const clips = [["#FFB199", "#FFD5C4", "12:06"], ["#4F7BFF", "#8BAAFF", "08:41"], ["#B9A4FF", "#DCD2FF", "23:17"]];
   const sel = R(0.4, { damping: 12, stiffness: 140 });
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: width / 2 - 330 * U,
     top: cy - 330 * U,
@@ -97742,7 +97932,7 @@ const BuscarW = ({ cy, etiqueta = "Story found", foto }) => {
     const centro = i === 1;
     const w = (centro ? 300 : 250) * U * (centro ? 1 + 0.08 * sel : 1), h = w * 0.7;
     const x = width / 2 + (i - 1) * 330 * U;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: x - w / 2,
       top: cy - h / 2,
@@ -97754,7 +97944,7 @@ const BuscarW = ({ cy, etiqueta = "Story found", foto }) => {
       boxShadow: Reel_SOMBRA(U),
       transform: `scale(${Math.max(1e-3, q).toFixed(4)})`,
       opacity: centro ? 1 : 1 - 0.35 * sel
-    } }, centro && foto ? /* @__PURE__ */ react.createElement(Foto, { src: foto, style: { borderRadius: 16 * U } }) : null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: "50%", top: "42%", transform: "translate(-50%,-50%)", width: 56 * U, height: 56 * U, borderRadius: "50%", background: "rgba(255,255,255,.8)" } }), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, centro && foto ? /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto, style: { borderRadius: 16 * U } }) : null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: "50%", top: "42%", transform: "translate(-50%,-50%)", width: 56 * U, height: 56 * U, borderRadius: "50%", background: "rgba(255,255,255,.8)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       right: 12 * U,
       bottom: 10 * U,
@@ -97765,7 +97955,7 @@ const BuscarW = ({ cy, etiqueta = "Story found", foto }) => {
       fontFamily: FAMILIA.inter,
       fontWeight: 700,
       fontSize: 20 * U
-    } }, d), centro && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: -22 * U, border: `${3 * U}px solid ${AZUL}`, borderRadius: 6 * U, opacity: sel } }, [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ react.createElement("div", { key: k, style: {
+    } }, d), centro && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: -22 * U, border: `${3 * U}px solid ${AZUL}`, borderRadius: 6 * U, opacity: sel } }, [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
       position: "absolute",
       left: `calc(${a * 100}% - ${9 * U}px)`,
       top: `calc(${b * 100}% - ${9 * U}px)`,
@@ -97775,22 +97965,22 @@ const BuscarW = ({ cy, etiqueta = "Story found", foto }) => {
       border: `${3 * U}px solid ${AZUL}`,
       borderRadius: 3 * U
     } }))));
-  }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2, top: cy + 190 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.5, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { color: "#2340C8" } }, "\u2726 ", etiqueta)), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.82, cy + 480 * U], hasta: [width / 2 + 40 * U, cy + 40 * U], t0: 0.05, t1: 0.4 }));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: cy + 190 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.5, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { color: "#2340C8" } }, "\u2726 ", etiqueta)), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.82, cy + 480 * U], hasta: [width / 2 + 40 * U, cy + 40 * U], t0: 0.05, t1: 0.4 }));
 };
 const CortarW = ({ cy, titulo = "Timeline" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 940 * U, h = 420 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 130 });
   const cab = x0 + 60 * U + (w - 120 * U) * Reel_suave(clamp((t - 0.08) / 0.7));
   const corte = clamp((t - 0.45) / 0.4);
   const barras = (n, semilla) => Array.from({ length: n }).map((_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 1.7 + semilla)));
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 40 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 36 * U, top: 28 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 36 * U, color: Reel_TINTA } }, titulo), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", right: 40 * U, top: 32 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 28 * U, color: "#555A6A", display: "flex", alignItems: "center", gap: 8 * U } }, /* @__PURE__ */ react.createElement("span", { style: { width: 12 * U, height: 12 * U, borderRadius: "50%", background: ROJO } }), "00:", String(14 + Math.floor(t)).padStart(2, "0"), ":", String(Math.floor(t * 30) % 30).padStart(2, "0")), [0, 1, 2, 3].map((i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 40 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 36 * U, top: 28 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 36 * U, color: Reel_TINTA } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", right: 40 * U, top: 32 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 28 * U, color: "#555A6A", display: "flex", alignItems: "center", gap: 8 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { width: 12 * U, height: 12 * U, borderRadius: "50%", background: ROJO } }), "00:", String(14 + Math.floor(t)).padStart(2, "0"), ":", String(Math.floor(t * 30) % 30).padStart(2, "0")), [0, 1, 2, 3].map((i) => {
     const fuera = i === 3;
     const caida = fuera ? corte : 0;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: 60 * U + i * 210 * U,
       top: 120 * U + caida * 300 * U,
@@ -97804,8 +97994,8 @@ const CortarW = ({ cy, titulo = "Timeline" }) => {
       alignItems: "center",
       justifyContent: "space-evenly",
       padding: `0 ${8 * U}px`
-    } }, barras(12, i).map((b, k) => /* @__PURE__ */ react.createElement("div", { key: k, style: { width: 5 * U, height: 80 * U * b, borderRadius: 3 * U, background: "rgba(255,255,255,.85)" } })));
-  }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 60 * U, right: 60 * U, top: 310 * U, height: 64 * U, display: "flex", alignItems: "center", justifyContent: "space-between" } }, barras(46, 3).map((b, k) => /* @__PURE__ */ react.createElement("div", { key: k, style: { width: 5 * U, height: 40 * U * b, borderRadius: 3 * U, background: "#8B7BF0", opacity: 0.8 } })))), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: cab - 2 * U, top: y0 + 20 * U, width: 4 * U, height: h - 40 * U, background: Reel_TINTA } }), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, barras(12, i).map((b, k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: { width: 5 * U, height: 80 * U * b, borderRadius: 3 * U, background: "rgba(255,255,255,.85)" } })));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 60 * U, right: 60 * U, top: 310 * U, height: 64 * U, display: "flex", alignItems: "center", justifyContent: "space-between" } }, barras(46, 3).map((b, k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: { width: 5 * U, height: 40 * U * b, borderRadius: 3 * U, background: "#8B7BF0", opacity: 0.8 } })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cab - 2 * U, top: y0 + 20 * U, width: 4 * U, height: h - 40 * U, background: Reel_TINTA } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cab - 40 * U,
     top: y0 - 10 * U,
@@ -97824,11 +98014,11 @@ const CortarW = ({ cy, titulo = "Timeline" }) => {
 const LargoW = ({ cy, duracion = "2h 47m", foto }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = width * 1.02, h = 470 * U, y0 = cy - h / 2 - 40 * U;
   const q = R(0.05, { damping: 14, stiffness: 110 });
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: (width - w) / 2,
     top: y0,
@@ -97841,9 +98031,9 @@ const LargoW = ({ cy, duracion = "2h 47m", foto }) => {
     transform: `scaleX(${(0.6 + 0.4 * q).toFixed(4)})`,
     opacity: clamp(q * 1.5),
     overflow: "hidden"
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2 - 70 * U, top: h * 0.2, width: 140 * U, height: 140 * U, borderRadius: "50%", background: "#D9DBE0" } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2 - 200 * U, top: h * 0.62, width: 400 * U, height: 300 * U, borderRadius: "50%", background: "#D9DBE0" } }), /* @__PURE__ */ react.createElement(Foto, { src: foto, gris: true, style: { opacity: 0.85 } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2 - 45 * U, top: h * 0.29, width: 90 * U, height: 90 * U, borderRadius: "50%", background: "rgba(255,255,255,.75)" } })), [0, 1].map((k) => {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 70 * U, top: h * 0.2, width: 140 * U, height: 140 * U, borderRadius: "50%", background: "#D9DBE0" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 200 * U, top: h * 0.62, width: 400 * U, height: 300 * U, borderRadius: "50%", background: "#D9DBE0" } }), /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto, gris: true, style: { opacity: 0.85 } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 45 * U, top: h * 0.29, width: 90 * U, height: 90 * U, borderRadius: "50%", background: "rgba(255,255,255,.75)" } })), [0, 1].map((k) => {
     const u = (t * 0.5 + k * 0.5) % 1;
-    return /* @__PURE__ */ react.createElement("div", { key: k, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
       position: "absolute",
       left: width * 0.78 + u * 30 * U,
       top: y0 - 40 * U - u * 120 * U,
@@ -97853,19 +98043,19 @@ const LargoW = ({ cy, duracion = "2h 47m", foto }) => {
       color: "#9A9CA8",
       opacity: 1 - u
     } }, "z");
-  }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2, top: y0 + h + 50 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.45, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { fontSize: 40 * U } }, /* @__PURE__ */ react.createElement("span", { style: { color: ROJO } }, "\u25F7"), duracion)));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: y0 + h + 50 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.45, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { fontSize: 40 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: ROJO } }, "\u25F7"), duracion)));
 };
 const MovilW = ({ cy, titulo = "Your story,", cursiva = "finally.", sub = "Tight, clear, and actually worth watching.", boton = "Watch now", pct = 96, etiqueta = "Watch-through", foto }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 500 * U, h = 760 * U, x0 = width / 2 - w / 2 + 20 * U, y0 = cy - h / 2 + 20 * U;
   const q = R(0.05, { damping: 12, stiffness: 120 });
   const reacciones = ["light_bulb", "smiling_face_with_heart_eyes", "thumbs_up", "raising_hands", "exploding_head"];
   const pos = [[0.95, 0.06], [1.15, 0], [1.42, 0], [1.05, 0.2], [1.38, 0.24]];
   const n = Math.round(pct * Reel_suave(clamp((t - 0.6) / 1.1)));
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -97877,7 +98067,7 @@ const MovilW = ({ cy, titulo = "Your story,", cursiva = "finally.", sub = "Tight
     overflow: "hidden",
     background: "linear-gradient(180deg,#2C5BE8 0%,#0E2A7A 100%)",
     transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 4).toFixed(2)}deg)`
-  } }, Array.from({ length: 10 }).map((_, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: {
+  } }, Array.from({ length: 10 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
     position: "absolute",
     left: w / 2 - 4 * U,
     top: h * 0.25,
@@ -97886,7 +98076,7 @@ const MovilW = ({ cy, titulo = "Your story,", cursiva = "finally.", sub = "Tight
     transformOrigin: "50% 0",
     background: "rgba(255,255,255,.06)",
     transform: `rotate(${-60 + i * 13}deg)`
-  } })), foto ? /* @__PURE__ */ react.createElement(react.Fragment, null, /* @__PURE__ */ react.createElement(Foto, { src: foto }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(14,42,122,.15) 0%, rgba(14,42,122,.55) 45%, rgba(10,24,70,.92) 100%)" } })) : null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: w / 2 - 34 * U, top: h * 0.2, width: 68 * U, height: 68 * U, borderRadius: "50%", background: "rgba(255,255,255,.85)" } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, right: 0, top: h * 0.4, textAlign: "center", color: "#fff", padding: `0 ${30 * U}px` } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, lineHeight: 1.05 } }, titulo), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 54 * U, lineHeight: 1.05 } }, cursiva), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 16 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 24 * U, opacity: 0.8 } }, sub), /* @__PURE__ */ react.createElement("div", { style: {
+  } })), foto ? /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(14,42,122,.15) 0%, rgba(14,42,122,.55) 45%, rgba(10,24,70,.92) 100%)" } })) : null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: w / 2 - 34 * U, top: h * 0.2, width: 68 * U, height: 68 * U, borderRadius: "50%", background: "rgba(255,255,255,.85)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, top: h * 0.4, textAlign: "center", color: "#fff", padding: `0 ${30 * U}px` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, lineHeight: 1.05 } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 54 * U, lineHeight: 1.05 } }, cursiva), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 16 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 24 * U, opacity: 0.8 } }, sub), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     display: "inline-block",
     marginTop: 22 * U,
     padding: `${12 * U}px ${30 * U}px`,
@@ -97900,7 +98090,7 @@ const MovilW = ({ cy, titulo = "Your story,", cursiva = "finally.", sub = "Tight
     const qr = R(0.5 + i * 0.12, { damping: 9, stiffness: 170 });
     const [a, b] = pos[i];
     const lado = (i === 1 ? 120 : 92) * U;
-    return /* @__PURE__ */ react.createElement("div", { key: r, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: r, style: {
       position: "absolute",
       left: x0 + w * a - lado / 2,
       top: y0 + h * b - lado / 2 + Math.sin(t * 2 + i) * 8 * U,
@@ -97913,18 +98103,18 @@ const MovilW = ({ cy, titulo = "Your story,", cursiva = "finally.", sub = "Tight
       alignItems: "center",
       justifyContent: "center",
       transform: `scale(${Math.max(0, qr).toFixed(4)})`
-    } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: r, lado: lado * 0.7 }));
-  }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0 - 230 * U, top: y0 + 20 * U, transform: `scale(${Math.max(0, R(0.4, { damping: 11 })).toFixed(4)})`, transformOrigin: "left center" } }, /* @__PURE__ */ react.createElement("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${18 * U}px ${34 * U}px ${18 * U}px ${18 * U}px`, borderRadius: 999, background: OSCURO, boxShadow: Reel_SOMBRA(U) } }, /* @__PURE__ */ react.createElement("svg", { width: 86 * U, height: 86 * U, viewBox: "0 0 40 40" }, /* @__PURE__ */ react.createElement("circle", { cx: 20, cy: 20, r: 15, fill: "none", stroke: "rgba(255,255,255,.15)", strokeWidth: 5 }), /* @__PURE__ */ react.createElement("circle", { cx: 20, cy: 20, r: 15, fill: "none", stroke: "#2FD27A", strokeWidth: 5, strokeLinecap: "round", strokeDasharray: 94.2, strokeDashoffset: 94.2 * (1 - n / 100), transform: "rotate(-90 20 20)" })), /* @__PURE__ */ react.createElement("div", null, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 52 * U, color: "#fff", lineHeight: 1 } }, n, "%"), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 22 * U, color: "rgba(255,255,255,.65)" } }, etiqueta)))), /* @__PURE__ */ react.createElement(Estrella, { x: x0 - 40 * U, y: y0 + h - 20 * U, lado: 46 * U, t0: 0.8 }), /* @__PURE__ */ react.createElement(Estrella, { x: x0 + w + 40 * U, y: y0 + h - 60 * U, lado: 40 * U, t0: 0.9 }));
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: r, lado: lado * 0.7 }));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 - 230 * U, top: y0 + 20 * U, transform: `scale(${Math.max(0, R(0.4, { damping: 11 })).toFixed(4)})`, transformOrigin: "left center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${18 * U}px ${34 * U}px ${18 * U}px ${18 * U}px`, borderRadius: 999, background: OSCURO, boxShadow: Reel_SOMBRA(U) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 86 * U, height: 86 * U, viewBox: "0 0 40 40" }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 20, cy: 20, r: 15, fill: "none", stroke: "rgba(255,255,255,.15)", strokeWidth: 5 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 20, cy: 20, r: 15, fill: "none", stroke: "#2FD27A", strokeWidth: 5, strokeLinecap: "round", strokeDasharray: 94.2, strokeDashoffset: 94.2 * (1 - n / 100), transform: "rotate(-90 20 20)" })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 52 * U, color: "#fff", lineHeight: 1 } }, n, "%"), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 22 * U, color: "rgba(255,255,255,.65)" } }, etiqueta)))), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 40 * U, y: y0 + h - 20 * U, lado: 46 * U, t0: 0.8 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 40 * U, y: y0 + h - 60 * U, lado: 40 * U, t0: 0.9 }));
 };
 const ChatW = ({ cy, nombre = "", rol = "", responder = "Reply", iconos, cita }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const q1 = R(0.05, { damping: 12, stiffness: 150 }), q2 = R(0.25, { damping: 12, stiffness: 120 });
   const w = 900 * U;
   const emojis = [...iconos || [], "grinning_face_with_sweat", "thinking_face", "clapper_board"].filter((x, i, a) => a.indexOf(x) === i).slice(0, 3);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, nombre ? /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2 - 260 * U, top: cy - 420 * U, transform: `scale(${(Math.max(1e-3, q1) * 1.3).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: { display: "flex", alignItems: "center", gap: 20 * U, padding: `${18 * U}px ${22 * U}px`, width: 520 * U, borderRadius: 999, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), boxSizing: "border-box" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, nombre ? /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 260 * U, top: cy - 420 * U, transform: `scale(${(Math.max(1e-3, q1) * 1.3).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 20 * U, padding: `${18 * U}px ${22 * U}px`, width: 520 * U, borderRadius: 999, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), boxSizing: "border-box" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     width: 70 * U,
     height: 70 * U,
     borderRadius: "50%",
@@ -97936,7 +98126,7 @@ const ChatW = ({ cy, nombre = "", rol = "", responder = "Reply", iconos, cita })
     fontFamily: FAMILIA.inter,
     fontWeight: 800,
     fontSize: 36 * U
-  } }, nombre.slice(0, 1).toUpperCase()), /* @__PURE__ */ react.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, color: Reel_TINTA } }, nombre), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 22 * U, color: "#9A9CA8" } }, rol)), /* @__PURE__ */ react.createElement("div", { style: { padding: `${10 * U}px ${22 * U}px`, borderRadius: 14 * U, background: "#E6EDFF", color: AZUL, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 26 * U } }, responder))) : null, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, nombre.slice(0, 1).toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, color: Reel_TINTA } }, nombre), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 22 * U, color: "#9A9CA8" } }, rol)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { padding: `${10 * U}px ${22 * U}px`, borderRadius: 14 * U, background: "#E6EDFF", color: AZUL, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 26 * U } }, responder))) : null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: width / 2 - w / 2,
     top: cy - 220 * U,
@@ -97948,10 +98138,10 @@ const ChatW = ({ cy, nombre = "", rol = "", responder = "Reply", iconos, cita })
     border: `${6 * U}px solid #FFFFFF`,
     transform: `translateY(${((1 - q2) * 80 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * q2).toFixed(4)})`,
     opacity: clamp(q2 * 1.5)
-  } }, /* @__PURE__ */ react.createElement("div", { style: { height: 210 * U, background: "linear-gradient(180deg,#D7E3FF,#E9EEFF)", display: "flex", alignItems: "center", justifyContent: "center", gap: 24 * U } }, emojis.map((e, i) => {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { height: 210 * U, background: "linear-gradient(180deg,#D7E3FF,#E9EEFF)", display: "flex", alignItems: "center", justifyContent: "center", gap: 24 * U } }, emojis.map((e, i) => {
     const qe = R(0.5 + i * 0.12, { damping: 10 });
     const lado = (i === 1 ? 150 : 100) * U;
-    return /* @__PURE__ */ react.createElement("div", { key: e, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: e, style: {
       width: lado,
       height: lado,
       borderRadius: "50%",
@@ -97961,10 +98151,10 @@ const ChatW = ({ cy, nombre = "", rol = "", responder = "Reply", iconos, cita })
       justifyContent: "center",
       boxShadow: Reel_SOMBRA(U),
       transform: `scale(${Math.max(0, qe).toFixed(4)})`
-    } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: e, lado: lado * 0.72 }));
-  })), /* @__PURE__ */ react.createElement("div", { style: { padding: `${36 * U}px ${46 * U}px ${46 * U}px`, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 62 * U, color: Reel_TINTA, lineHeight: 1.18 } }, "\u201C", cita.map((p, i) => {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: e, lado: lado * 0.72 }));
+  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { padding: `${36 * U}px ${46 * U}px ${46 * U}px`, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 62 * U, color: Reel_TINTA, lineHeight: 1.18 } }, "\u201C", cita.map((p, i) => {
     const v = clamp((t - p.t + 0.05) / 0.2);
-    return /* @__PURE__ */ react.createElement("span", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i, style: {
       opacity: 0.25 + 0.75 * v,
       color: p.resalta ? "#2048D8" : Reel_TINTA,
       background: p.resalta ? `rgba(120,160,255,${(0.35 * v).toFixed(3)})` : "transparent",
@@ -97976,18 +98166,18 @@ const ChatW = ({ cy, nombre = "", rol = "", responder = "Reply", iconos, cita })
 const VersionesW = ({ cy, etiquetas = ["Punchy cut", "Story-first", "Minimal"], boton = "New version", version = "VERSION" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const abre = R(0.45, { damping: 12, stiffness: 120 });
   const cartas = [["A", "#3E6BF5", "#6E92FF"], ["B", "#FF7A45", "#FFB177"], ["C", "#1E1F29", "#3A3C4C"]];
   const giro = Reel_suave(clamp((t - 0.7) / 0.55));
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, cartas.map(([l, c1, c2], i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, cartas.map(([l, c1, c2], i) => {
     const q = R(0.05 + i * 0.06, { damping: 12, stiffness: 140 });
     const k = (i + 2) % 3 - 1;
     const kk = (i - 1) * (1 - giro) + k * giro;
     const delante = 1 - Math.min(1, Math.abs(kk));
     const w = 320 * U, h = 450 * U;
-    return /* @__PURE__ */ react.createElement("div", { key: l, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: l, style: {
       position: "absolute",
       left: width / 2 - w / 2 + kk * 280 * U * abre,
       top: cy - h / 2 + (1 - q) * 300 * U + Math.abs(kk) * 30 * U * abre,
@@ -98000,7 +98190,7 @@ const VersionesW = ({ cy, etiquetas = ["Punchy cut", "Story-first", "Minimal"], 
       transform: `rotate(${(kk * 12 * abre).toFixed(2)}deg) scale(${(1 + 0.1 * delante).toFixed(4)})`,
       zIndex: Math.round(delante * 10),
       opacity: clamp(q * 1.5)
-    } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 22 * U, top: 18 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 20 * U, color: "rgba(255,255,255,.75)", letterSpacing: "0.1em" } }, version), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 22 * U, top: 18 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 20 * U, color: "rgba(255,255,255,.75)", letterSpacing: "0.1em" } }, version), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       inset: 0,
       display: "flex",
@@ -98009,7 +98199,7 @@ const VersionesW = ({ cy, etiquetas = ["Punchy cut", "Story-first", "Minimal"], 
       fontFamily: FAMILIA.display,
       fontSize: 230 * U,
       color: l === "C" ? "#2FE0A0" : "#FFFFFF"
-    } }, l), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, l), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: "50%",
       bottom: 22 * U,
@@ -98023,19 +98213,19 @@ const VersionesW = ({ cy, etiquetas = ["Punchy cut", "Story-first", "Minimal"], 
       fontSize: 22 * U,
       whiteSpace: "nowrap"
     } }, etiquetas[i] || ""));
-  }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2, top: cy + 300 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.3, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { background: Reel_TINTA, color: "#fff" } }, "+ ", boton)), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.85, cy + 640 * U], hasta: [width / 2 + 40 * U, cy + 340 * U], t0: 0.25, t1: 0.65 }));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: cy + 300 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.3, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { background: Reel_TINTA, color: "#fff" } }, "+ ", boton)), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.85, cy + 640 * U], hasta: [width / 2 + 40 * U, cy + 340 * U], t0: 0.25, t1: 0.65 }));
 };
 const IdeasW = ({ cy, n1 = 249, e1 = "Video ideas", n2 = "24 hrs", e2 = "In a day" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const qn = R(0.05, { damping: 11, stiffness: 140 });
   const iconos = ["#FF6B4A", "#7B5CF5", "#1E1F29", "#FF9A62", "#2FB45A", "#3E6BF5", "#8A8E9C"];
   const cuenta = typeof n1 === "number" ? `${Math.round(n1 * (0.85 + 0.15 * Reel_suave(clamp((t - 0.6) / 1.4))))}+` : String(n1);
   const pill = (y, color, grande, chico, t0) => {
     const q = R(t0, { damping: 12, stiffness: 150 });
-    return /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2 - 280 * U, top: y, width: 560 * U, transform: `scale(${Math.max(0, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: { display: "flex", alignItems: "center", gap: 28 * U, padding: `${30 * U}px ${40 * U}px`, borderRadius: 999, background: OSCURO, boxShadow: Reel_SOMBRA(U) } }, /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 280 * U, top: y, width: 560 * U, transform: `scale(${Math.max(0, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 28 * U, padding: `${30 * U}px ${40 * U}px`, borderRadius: 999, background: OSCURO, boxShadow: Reel_SOMBRA(U) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       width: 100 * U,
       height: 100 * U,
       borderRadius: "50%",
@@ -98043,15 +98233,15 @@ const IdeasW = ({ cy, n1 = 249, e1 = "Video ideas", n2 = "24 hrs", e2 = "In a da
       boxSizing: "border-box",
       borderRightColor: "rgba(255,255,255,.12)",
       transform: `rotate(${t * 90 % 360}deg)`
-    } }), /* @__PURE__ */ react.createElement("div", null, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: "#fff", lineHeight: 1 } }, grande), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 28 * U, color: "rgba(255,255,255,.6)" } }, chico))));
+    } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: "#fff", lineHeight: 1 } }, grande), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 28 * U, color: "rgba(255,255,255,.6)" } }, chico))));
   };
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2 - 180 * U, top: cy - 330 * U, width: 360 * U, height: 230 * U, transform: `scale(${(Math.max(1e-3, qn) * 1.2).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("svg", { width: 360 * U, height: 230 * U, viewBox: "0 0 120 76" }, /* @__PURE__ */ react.createElement("path", { d: "M30 70 Q8 70 8 52 Q8 36 26 34 Q28 12 52 12 Q72 12 78 30 Q96 26 104 42 Q116 46 112 60 Q110 70 96 70 Z", fill: "#FFFFFF", stroke: "#DDE3FF", strokeWidth: 2 })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 120 * U, top: 60 * U } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: "light_bulb", lado: 120 * U }))), iconos.map((c, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 180 * U, top: cy - 330 * U, width: 360 * U, height: 230 * U, transform: `scale(${(Math.max(1e-3, qn) * 1.2).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 360 * U, height: 230 * U, viewBox: "0 0 120 76" }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M30 70 Q8 70 8 52 Q8 36 26 34 Q28 12 52 12 Q72 12 78 30 Q96 26 104 42 Q116 46 112 60 Q110 70 96 70 Z", fill: "#FFFFFF", stroke: "#DDE3FF", strokeWidth: 2 })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 120 * U, top: 60 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "light_bulb", lado: 120 * U }))), iconos.map((c, i) => {
     const lado = i % 2 ? 1 : -1;
     const u = clamp((t - 0.3 - i * 0.08) / 1);
     const e = Reel_easeOut(u);
     const x = width / 2 + lado * (140 + 260 * e + i % 3 * 30) * U;
     const y = cy - 190 * U - Math.sin(e * Math.PI * 0.8) * (60 + i * 10) * U + (i % 3 - 1) * 70 * U * e;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: x - 40 * U,
       top: y - 30 * U,
@@ -98065,12 +98255,12 @@ const IdeasW = ({ cy, n1 = 249, e1 = "Video ideas", n2 = "24 hrs", e2 = "In a da
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
-    } }, /* @__PURE__ */ react.createElement("div", { style: { width: 0, height: 0, borderTop: `${10 * U}px solid transparent`, borderBottom: `${10 * U}px solid transparent`, borderLeft: `${16 * U}px solid #fff`, marginLeft: 4 * U } }));
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 0, height: 0, borderTop: `${10 * U}px solid transparent`, borderBottom: `${10 * U}px solid transparent`, borderLeft: `${16 * U}px solid #fff`, marginLeft: 4 * U } }));
   }), pill(cy + 10 * U, "#2FD27A", cuenta, e1, 0.55), n2 ? pill(cy + 220 * U, "#E64BD8", n2, e2, 0.75) : null);
 };
 const Boton = ({ texto, oscuro = true, style }) => {
   const U = Reel_useU();
-  return /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -98089,13 +98279,13 @@ const Boton = ({ texto, oscuro = true, style }) => {
 const FechaW = ({ cy, dia = "10", mes = "OCT", semana = "", hora = "", boton = "Add to calendar" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 520 * U, h = 560 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2 - 60 * U;
   const q = R(0.05, { damping: 12, stiffness: 130 });
   const rueda = Reel_easeOut((t - 0.15) / 0.5);
   const hecho = t > 0.95;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -98106,7 +98296,7 @@ const FechaW = ({ cy, dia = "10", mes = "OCT", semana = "", hora = "", boton = "
     boxShadow: Reel_SOMBRA(U),
     overflow: "hidden",
     transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -5).toFixed(2)}deg)`
-  } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     height: 140 * U,
     background: `linear-gradient(135deg, ${ROJO}, #FF7A59)`,
     display: "flex",
@@ -98117,7 +98307,7 @@ const FechaW = ({ cy, dia = "10", mes = "OCT", semana = "", hora = "", boton = "
     fontSize: 64 * U,
     letterSpacing: "0.12em",
     color: "#fff"
-  } }, mes.toUpperCase()), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, right: 0, top: 140 * U, bottom: semana ? 90 * U : 30 * U, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, mes.toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, top: 140 * U, bottom: semana ? 90 * U : 30 * U, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     fontFamily: FAMILIA.inter,
     fontWeight: 800,
     fontSize: 250 * U,
@@ -98127,12 +98317,12 @@ const FechaW = ({ cy, dia = "10", mes = "OCT", semana = "", hora = "", boton = "
     transform: `translateY(${((1 - rueda) * 160 * U).toFixed(1)}px)`,
     filter: rueda < 1 ? `blur(${((1 - rueda) * 8).toFixed(1)}px)` : void 0,
     opacity: clamp(rueda * 2)
-  } }, dia)), semana && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, right: 0, bottom: 40 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 40 * U, color: "#8A8E9C" } }, semana)), hora && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0 + w - 90 * U, top: y0 - 30 * U, transform: `scale(${Math.max(0, R(0.35, { damping: 10 })).toFixed(4)})` } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { fontSize: 40 * U } }, /* @__PURE__ */ react.createElement("span", { style: { color: AZUL } }, "\u25F7"), hora)), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2, top: y0 + h + 50 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.45, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ react.createElement(Boton, { texto: (hecho ? "\u2713 " : "+ ") + boton, oscuro: !hecho })), /* @__PURE__ */ react.createElement(Estrella, { x: x0 - 30 * U, y: y0 + 60 * U, lado: 56 * U, t0: 0.3 }), /* @__PURE__ */ react.createElement(Estrella, { x: x0 + w + 20 * U, y: y0 + h - 40 * U, lado: 44 * U, t0: 0.45 }), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.86, cy + 640 * U], hasta: [width / 2 + 60 * U, y0 + h + 90 * U], t0: 0.45, t1: 0.9 }));
+  } }, dia)), semana && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, bottom: 40 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 40 * U, color: "#8A8E9C" } }, semana)), hora && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 + w - 90 * U, top: y0 - 30 * U, transform: `scale(${Math.max(0, R(0.35, { damping: 10 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { fontSize: 40 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: AZUL } }, "\u25F7"), hora)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: y0 + h + 50 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.45, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Boton, { texto: (hecho ? "\u2713 " : "+ ") + boton, oscuro: !hecho })), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 30 * U, y: y0 + 60 * U, lado: 56 * U, t0: 0.3 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 20 * U, y: y0 + h - 40 * U, lado: 44 * U, t0: 0.45 }), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 640 * U], hasta: [width / 2 + 60 * U, y0 + h + 90 * U], t0: 0.45, t1: 0.9 }));
 };
 const LugarW = ({ cy, nombre = "", sub = "", boton = "Directions" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 840 * U, h = 640 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 120 });
@@ -98140,7 +98330,7 @@ const LugarW = ({ cy, nombre = "", sub = "", boton = "Directions" }) => {
   const ruta = Reel_easeOut((t - 0.15) / 0.7);
   const px = w * 0.62, py = h * 0.36;
   const pulso = t * 0.9 % 1;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -98151,7 +98341,7 @@ const LugarW = ({ cy, nombre = "", sub = "", boton = "Directions" }) => {
     boxShadow: Reel_SOMBRA(U),
     overflow: "hidden",
     transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, top: 0, width: w, height: h * 0.68, background: "#EEF1F8" } }, /* @__PURE__ */ react.createElement("svg", { width: w, height: h * 0.68, viewBox: "0 0 100 68", preserveAspectRatio: "none", style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ react.createElement("path", { d: "M-5 50 Q30 40 50 52 T105 44", stroke: "#BFD3FF", strokeWidth: 6, fill: "none" }), /* @__PURE__ */ react.createElement("ellipse", { cx: 20, cy: 18, rx: 14, ry: 9, fill: "#D5F0DC" }), [[0, 22, 100, 30], [0, 8, 100, 4], [30, 0, 26, 68], [70, 0, 78, 68], [50, 0, 46, 68]].map(([a, b, c2, d], i) => /* @__PURE__ */ react.createElement("line", { key: i, x1: a, y1: b, x2: c2, y2: d, stroke: "#FFFFFF", strokeWidth: 2.4 })), /* @__PURE__ */ react.createElement("path", { d: "M8 60 C 20 40, 40 46, 46 30 S 58 26, 62 36", stroke: AZUL, strokeWidth: 1.8, fill: "none", strokeLinecap: "round", strokeDasharray: "120", strokeDashoffset: 120 * (1 - ruta), style: { stroke: AZUL } }), /* @__PURE__ */ react.createElement("circle", { cx: 8, cy: 60, r: 2.2, style: { fill: AZUL }, opacity: clamp(ruta * 4) })), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, top: 0, width: w, height: h * 0.68, background: "#EEF1F8" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: w, height: h * 0.68, viewBox: "0 0 100 68", preserveAspectRatio: "none", style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M-5 50 Q30 40 50 52 T105 44", stroke: "#BFD3FF", strokeWidth: 6, fill: "none" }), /* @__PURE__ */ (react_namespaceFn().createElement)("ellipse", { cx: 20, cy: 18, rx: 14, ry: 9, fill: "#D5F0DC" }), [[0, 22, 100, 30], [0, 8, 100, 4], [30, 0, 26, 68], [70, 0, 78, 68], [50, 0, 46, 68]].map(([a, b, c2, d], i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: i, x1: a, y1: b, x2: c2, y2: d, stroke: "#FFFFFF", strokeWidth: 2.4 })), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M8 60 C 20 40, 40 46, 46 30 S 58 26, 62 36", stroke: AZUL, strokeWidth: 1.8, fill: "none", strokeLinecap: "round", strokeDasharray: "120", strokeDashoffset: 120 * (1 - ruta), style: { stroke: AZUL } }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 8, cy: 60, r: 2.2, style: { fill: AZUL }, opacity: clamp(ruta * 4) })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: px - 60 * U * (0.4 + pulso),
     top: py + 34 * U - 30 * U * (0.4 + pulso),
@@ -98159,24 +98349,24 @@ const LugarW = ({ cy, nombre = "", sub = "", boton = "Directions" }) => {
     height: 60 * U * (0.4 + pulso),
     borderRadius: "50%",
     border: `${3 * U}px solid rgba(240,71,60,${(0.5 * (1 - pulso) * clamp(pin)).toFixed(3)})`
-  } }), /* @__PURE__ */ react.createElement("svg", { width: 86 * U, height: 110 * U, viewBox: "0 0 24 30", style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 86 * U, height: 110 * U, viewBox: "0 0 24 30", style: {
     position: "absolute",
     left: px - 43 * U,
     top: py - 80 * U - (1 - pin) * 220 * U,
     opacity: clamp(pin * 3),
     filter: "drop-shadow(0 8px 10px rgba(160,30,30,.3))"
-  } }, /* @__PURE__ */ react.createElement("path", { d: "M12 29 C 12 29, 2 17, 2 11 A 10 10 0 0 1 22 11 C 22 17, 12 29, 12 29 Z", fill: ROJO, stroke: "#fff", strokeWidth: 1.6 }), /* @__PURE__ */ react.createElement("circle", { cx: 12, cy: 11, r: 4, fill: "#fff" }))), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 44 * U, right: 44 * U, bottom: 36 * U, height: h * 0.32 - 50 * U, display: "flex", alignItems: "center", gap: 20 * U } }, /* @__PURE__ */ react.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA, lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, nombre), sub && /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#8A8E9C", marginTop: 6 * U } }, sub)), /* @__PURE__ */ react.createElement(Boton, { texto: "\u27A4 " + boton, oscuro: false, style: { fontSize: 28 * U, padding: `${14 * U}px ${26 * U}px` } }))), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.9, cy + 600 * U], hasta: [x0 + w - 130 * U, y0 + h - 90 * U], t0: 0.55, t1: 1 }));
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M12 29 C 12 29, 2 17, 2 11 A 10 10 0 0 1 22 11 C 22 17, 12 29, 12 29 Z", fill: ROJO, stroke: "#fff", strokeWidth: 1.6 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 12, cy: 11, r: 4, fill: "#fff" }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 44 * U, right: 44 * U, bottom: 36 * U, height: h * 0.32 - 50 * U, display: "flex", alignItems: "center", gap: 20 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA, lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, nombre), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#8A8E9C", marginTop: 6 * U } }, sub)), /* @__PURE__ */ (react_namespaceFn().createElement)(Boton, { texto: "\u27A4 " + boton, oscuro: false, style: { fontSize: 28 * U, padding: `${14 * U}px ${26 * U}px` } }))), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.9, cy + 600 * U], hasta: [x0 + w - 130 * U, y0 + h - 90 * U], t0: 0.55, t1: 1 }));
 };
 const EntradaW = ({ cy, valor = "FREE", titulo = "Ticket", sub = "", sello = "" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 860 * U, h = 360 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 12, stiffness: 120 });
   const s = R(0.6, { damping: 10, stiffness: 200 });
   const corte = w * 0.64;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -98184,7 +98374,7 @@ const EntradaW = ({ cy, valor = "FREE", titulo = "Ticket", sub = "", sello = "" 
     height: h,
     transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 6 - 3).toFixed(2)}deg)`,
     filter: "drop-shadow(0 30px 50px rgba(60,60,130,.22))"
-  } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 0,
     borderRadius: 40 * U,
@@ -98192,7 +98382,7 @@ const EntradaW = ({ cy, valor = "FREE", titulo = "Ticket", sub = "", sello = "" 
     WebkitMaskImage: `radial-gradient(circle at ${corte}px 0, transparent ${30 * U}px, #000 ${31 * U}px), radial-gradient(circle at ${corte}px ${h}px, transparent ${30 * U}px, #000 ${31 * U}px)`,
     WebkitMaskComposite: "source-in",
     maskComposite: "intersect"
-  } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: corte - 2 * U, top: 40 * U, bottom: 40 * U, borderLeft: `${4 * U}px dashed #D9DCE6` } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, top: 50 * U, width: corte - 100 * U } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.16em", color: "#8A8E9C" } }, titulo.toUpperCase()), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 14 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 52 * U, color: Reel_TINTA, lineHeight: 1.08 } }, sub), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", top: 210 * U, display: "flex", gap: 6 * U } }, Array.from({ length: 22 }).map((_, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: { width: (i % 3 ? 6 : 12) * U, height: 60 * U, background: Reel_TINTA, opacity: 0.85 } })))), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: corte, right: 0, top: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: (valor.length > 6 ? 54 : 74) * U, color: "#1FAF62", letterSpacing: "-0.02em" } }, valor))), sello && /* @__PURE__ */ react.createElement("div", { style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: corte - 2 * U, top: 40 * U, bottom: 40 * U, borderLeft: `${4 * U}px dashed #D9DCE6` } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 50 * U, width: corte - 100 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.16em", color: "#8A8E9C" } }, titulo.toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 14 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 52 * U, color: Reel_TINTA, lineHeight: 1.08 } }, sub), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top: 210 * U, display: "flex", gap: 6 * U } }, Array.from({ length: 22 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { width: (i % 3 ? 6 : 12) * U, height: 60 * U, background: Reel_TINTA, opacity: 0.85 } })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: corte, right: 0, top: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: (valor.length > 6 ? 54 : 74) * U, color: "#1FAF62", letterSpacing: "-0.02em" } }, valor))), sello && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0 + w - 300 * U,
     top: y0 - 70 * U,
@@ -98206,23 +98396,23 @@ const EntradaW = ({ cy, valor = "FREE", titulo = "Ticket", sub = "", sello = "" 
     transform: `rotate(-12deg) scale(${(2.2 - 1.2 * clamp(s)).toFixed(3)})`,
     opacity: clamp(s * 2),
     background: "rgba(255,255,255,.85)"
-  } }, sello), /* @__PURE__ */ react.createElement(Estrella, { x: x0 - 20 * U, y: y0 + h + 20 * U, lado: 56 * U, t0: 0.5 }), /* @__PURE__ */ react.createElement(Estrella, { x: x0 + w + 10 * U, y: y0 + h - 20 * U, lado: 44 * U, t0: 0.65 }), /* @__PURE__ */ react.createElement(Estrella, { x: x0 + 120 * U, y: y0 - 50 * U, lado: 36 * U, t0: 0.75 }));
+  } }, sello), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 20 * U, y: y0 + h + 20 * U, lado: 56 * U, t0: 0.5 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 10 * U, y: y0 + h - 20 * U, lado: 44 * U, t0: 0.65 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + 120 * U, y: y0 - 50 * U, lado: 36 * U, t0: 0.75 }));
 };
 const COLORES_CARA = [["#FF9A62", "#FF6B4A"], ["#6E92FF", "#3E6BF5"], ["#B79CFF", "#7B5CF5"], ["#5BD68E", "#1FAF62"]];
 const PersonasW = ({ cy, nombres = [], etiqueta = "", extra = "" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const n = Math.max(3, Math.min(4, nombres.length || 3));
   const w = 820 * U, h = 520 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 120 });
   const lado = 170 * U;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 48 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, right: 0, top: 70 * U, display: "flex", justifyContent: "center" } }, Array.from({ length: n }).map((_, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 48 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, top: 70 * U, display: "flex", justifyContent: "center" } }, Array.from({ length: n }).map((_, i) => {
     const qi = R(0.15 + i * 0.1, { damping: 10, stiffness: 170 });
     const nombre = nombres[i] || "";
     const [c1, c2] = COLORES_CARA[i % 4];
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       width: lado,
       height: lado,
       marginLeft: i ? -34 * U : 0,
@@ -98240,8 +98430,8 @@ const PersonasW = ({ cy, nombres = [], etiqueta = "", extra = "" }) => {
       fontWeight: 800,
       fontSize: 70 * U,
       zIndex: n - i
-    } }, nombre ? nombre.slice(0, 1).toUpperCase() : /* @__PURE__ */ react.createElement("svg", { width: lado * 0.5, height: lado * 0.5, viewBox: "0 0 24 24" }, /* @__PURE__ */ react.createElement("circle", { cx: 12, cy: 8, r: 5, fill: "rgba(255,255,255,.9)" }), /* @__PURE__ */ react.createElement("path", { d: "M2 23 Q12 10 22 23 Z", fill: "rgba(255,255,255,.9)" })));
-  }), extra && /* @__PURE__ */ react.createElement("div", { style: {
+    } }, nombre ? nombre.slice(0, 1).toUpperCase() : /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: lado * 0.5, height: lado * 0.5, viewBox: "0 0 24 24" }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 12, cy: 8, r: 5, fill: "rgba(255,255,255,.9)" }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M2 23 Q12 10 22 23 Z", fill: "rgba(255,255,255,.9)" })));
+  }), extra && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     width: lado,
     height: lado,
     marginLeft: -34 * U,
@@ -98257,7 +98447,7 @@ const PersonasW = ({ cy, nombres = [], etiqueta = "", extra = "" }) => {
     fontWeight: 800,
     fontSize: 52 * U,
     transform: `scale(${Math.max(0, R(0.5, { damping: 10 })).toFixed(4)})`
-  } }, extra)), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 30 * U, right: 30 * U, top: 290 * U, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 * U } }, nombres.slice(0, 4).map((x, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: {
+  } }, extra)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 30 * U, right: 30 * U, top: 290 * U, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 * U } }, nombres.slice(0, 4).map((x, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
     padding: `${10 * U}px ${22 * U}px`,
     borderRadius: 999,
     background: "#F2F3F8",
@@ -98267,22 +98457,22 @@ const PersonasW = ({ cy, nombres = [], etiqueta = "", extra = "" }) => {
     color: Reel_TINTA,
     opacity: clamp((t - 0.35 - i * 0.1) / 0.2),
     transform: `translateY(${((1 - Reel_easeOut((t - 0.35 - i * 0.1) / 0.3)) * 20 * U).toFixed(1)}px)`
-  } }, x))), etiqueta && /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, right: 0, bottom: 44 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 34 * U, color: "#8A8E9C" } }, etiqueta)), ["red_heart", "clapping_hands", "fire"].map((e, i) => {
+  } }, x))), etiqueta && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, bottom: 44 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 34 * U, color: "#8A8E9C" } }, etiqueta)), ["red_heart", "clapping_hands", "fire"].map((e, i) => {
     const u = (t - 0.4 - i * 0.25) * 0.55 % 1;
     if (t < 0.4 + i * 0.25) return null;
-    return /* @__PURE__ */ react.createElement("div", { key: e, style: { position: "absolute", left: x0 + w - 60 * U + i * 30 * U, top: y0 + 80 * U - u * 260 * U, opacity: 1 - u, transform: `scale(${(0.6 + 0.4 * (1 - u)).toFixed(3)})` } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: e, lado: 80 * U }));
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: e, style: { position: "absolute", left: x0 + w - 60 * U + i * 30 * U, top: y0 + 80 * U - u * 260 * U, opacity: 1 - u, transform: `scale(${(0.6 + 0.4 * (1 - u)).toFixed(3)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: e, lado: 80 * U }));
   }));
 };
 const MusicaW = ({ cy, titulo = "", sub = "Live" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 860 * U, h = 380 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 12, stiffness: 120 });
   const suena = t > 0.75;
   const lado = 250 * U;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 48 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 48 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 50 * U,
     top: (h - lado) / 2,
@@ -98297,12 +98487,12 @@ const MusicaW = ({ cy, titulo = "", sub = "Live" }) => {
     padding: `0 0 ${50 * U}px`,
     boxSizing: "border-box",
     overflow: "hidden"
-  } }, Array.from({ length: 5 }).map((_, i) => /* @__PURE__ */ react.createElement("div", { key: i, style: {
+  } }, Array.from({ length: 5 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
     width: 18 * U,
     borderRadius: 9 * U,
     background: "rgba(255,255,255,.9)",
     height: (40 + 90 * Math.abs(Math.sin(t * (suena ? 7 : 1.5) + i * 1.3))) * U
-  } }))), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U + lado + 40 * U, right: 160 * U, top: 80 * U } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, color: Reel_TINTA, lineHeight: 1.08, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" } }, titulo), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 12 * U, display: "flex", alignItems: "center", gap: 10 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 30 * U, color: "#8A8E9C" } }, /* @__PURE__ */ react.createElement("span", { style: { width: 14 * U, height: 14 * U, borderRadius: "50%", background: ROJO, opacity: Math.sin(t * 8) > 0 ? 1 : 0.4 } }), sub), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 34 * U, height: 10 * U, borderRadius: 5 * U, background: "#ECEDF3" } }, /* @__PURE__ */ react.createElement("div", { style: { width: `${(20 + 60 * clamp((t - 0.75) / 3)).toFixed(1)}%`, height: "100%", borderRadius: 5 * U, background: AZUL } }))), /* @__PURE__ */ react.createElement("div", { style: {
+  } }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U + lado + 40 * U, right: 160 * U, top: 80 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, color: Reel_TINTA, lineHeight: 1.08, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 12 * U, display: "flex", alignItems: "center", gap: 10 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 30 * U, color: "#8A8E9C" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { width: 14 * U, height: 14 * U, borderRadius: "50%", background: ROJO, opacity: Math.sin(t * 8) > 0 ? 1 : 0.4 } }), sub), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 34 * U, height: 10 * U, borderRadius: 5 * U, background: "#ECEDF3" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: `${(20 + 60 * clamp((t - 0.75) / 3)).toFixed(1)}%`, height: "100%", borderRadius: 5 * U, background: AZUL } }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     right: 44 * U,
     top: h / 2 - 50 * U,
@@ -98319,7 +98509,7 @@ const MusicaW = ({ cy, titulo = "", sub = "Live" }) => {
     fontWeight: 800
   } }, suena ? "\u275A\u275A" : "\u25B6")), [0, 1, 2].map((i) => {
     const u = (t * 0.5 + i * 0.33) % 1;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: x0 + 80 * U + i * 110 * U + Math.sin(u * 6) * 20 * U,
       top: y0 - 30 * U - u * 220 * U,
@@ -98327,17 +98517,17 @@ const MusicaW = ({ cy, titulo = "", sub = "Live" }) => {
       fontSize: (60 - i * 8) * U,
       color: [LILA, AZUL, "#1FB5E8"][i]
     } }, "\u266A");
-  }), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.88, cy + 560 * U], hasta: [x0 + w - 94 * U, y0 + h / 2 + 4 * U], t0: 0.3, t1: 0.72 }));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.88, cy + 560 * U], hasta: [x0 + w - 94 * U, y0 + h / 2 + 4 * U], t0: 0.3, t1: 0.72 }));
 };
 const PremioW = ({ cy, titulo = "", sub = "", icono = "trophy" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const q = R(0.05, { damping: 9, stiffness: 150 });
   const qc = R(0.3, { damping: 12, stiffness: 130 });
   const cx = width / 2, ty = cy - 170 * U;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cx - 260 * U,
     top: ty - 260 * U,
@@ -98350,7 +98540,7 @@ const PremioW = ({ cy, titulo = "", sub = "", icono = "trophy" }) => {
     const a = i / 18 * Math.PI * 2 + 0.3;
     const u = Reel_easeOut((t - 0.2) / 1.1);
     const d = (120 + i % 3 * 70) * U * u;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: cx + Math.cos(a) * d,
       top: ty + Math.sin(a) * d + u * u * 120 * U,
@@ -98361,7 +98551,7 @@ const PremioW = ({ cy, titulo = "", sub = "", icono = "trophy" }) => {
       opacity: (1 - clamp((t - 1.2) / 0.8)) * clamp(u * 5),
       transform: `rotate(${(a * 57 + t * 360 * (i % 2 ? 1 : -1)).toFixed(0)}deg)`
     } });
-  }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: cx - 160 * U, top: ty - 160 * U, transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${(Math.sin(t * 2) * 4).toFixed(2)}deg)` } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: icono, lado: 320 * U })), /* @__PURE__ */ react.createElement("div", { style: {
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cx - 160 * U, top: ty - 160 * U, transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${(Math.sin(t * 2) * 4).toFixed(2)}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: icono, lado: 320 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: cx - 400 * U,
     top: cy + 60 * U,
@@ -98374,12 +98564,12 @@ const PremioW = ({ cy, titulo = "", sub = "", icono = "trophy" }) => {
     textAlign: "center",
     transform: `translateY(${((1 - qc) * 120 * U).toFixed(1)}px)`,
     opacity: clamp(qc * 1.5)
-  } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 56 * U, color: Reel_TINTA, lineHeight: 1.08 } }, titulo), sub && /* @__PURE__ */ react.createElement("div", { style: { marginTop: 10 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 32 * U, color: "#8A8E9C" } }, sub)), /* @__PURE__ */ react.createElement(Estrella, { x: cx - 300 * U, y: ty - 120 * U, lado: 60 * U, t0: 0.25 }), /* @__PURE__ */ react.createElement(Estrella, { x: cx + 290 * U, y: ty - 40 * U, lado: 48 * U, t0: 0.35 }), /* @__PURE__ */ react.createElement(Estrella, { x: cx + 230 * U, y: ty + 150 * U, lado: 36 * U, t0: 0.45 }));
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 56 * U, color: Reel_TINTA, lineHeight: 1.08 } }, titulo), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 10 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 32 * U, color: "#8A8E9C" } }, sub)), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: cx - 300 * U, y: ty - 120 * U, lado: 60 * U, t0: 0.25 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: cx + 290 * U, y: ty - 40 * U, lado: 48 * U, t0: 0.35 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: cx + 230 * U, y: ty + 150 * U, lado: 36 * U, t0: 0.45 }));
 };
 const CompartirW = ({ cy, titulo = "Share", listo = "Sent", iconos }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 860 * U, h = 520 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 14, stiffness: 120 });
@@ -98387,7 +98577,7 @@ const CompartirW = ({ cy, titulo = "Share", listo = "Sent", iconos }) => {
   const fondos = ["#E7F8EE", "#FFF0E6", "#FDEBF1", "#ECE8FF"];
   const hecho = R(1, { damping: 11 });
   const paso = 170 * U;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -98398,9 +98588,9 @@ const CompartirW = ({ cy, titulo = "Share", listo = "Sent", iconos }) => {
     boxShadow: Reel_SOMBRA(U),
     transform: `translateY(${((1 - q) * 200 * U).toFixed(1)}px)`,
     opacity: clamp(q * 1.6)
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: w / 2 - 50 * U, top: 22 * U, width: 100 * U, height: 10 * U, borderRadius: 5 * U, background: "#E2E4EC" } }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, top: 60 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 46 * U, color: Reel_TINTA } }, titulo), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 150 * U, display: "flex", justifyContent: "space-between" } }, apps.map((e, i) => {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: w / 2 - 50 * U, top: 22 * U, width: 100 * U, height: 10 * U, borderRadius: 5 * U, background: "#E2E4EC" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 60 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 46 * U, color: Reel_TINTA } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 150 * U, display: "flex", justifyContent: "space-between" } }, apps.map((e, i) => {
     const qi = R(0.15 + i * 0.07, { damping: 10, stiffness: 170 });
-    return /* @__PURE__ */ react.createElement("div", { key: e, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: e, style: {
       width: 150 * U,
       height: 150 * U,
       borderRadius: 40 * U,
@@ -98409,8 +98599,8 @@ const CompartirW = ({ cy, titulo = "Share", listo = "Sent", iconos }) => {
       alignItems: "center",
       justifyContent: "center",
       transform: `scale(${(Math.max(0, qi) * (i === 0 && t > 0.68 && t < 0.8 ? 0.9 : 1)).toFixed(4)})`
-    } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: e, lado: 96 * U }));
-  })), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: e, lado: 96 * U }));
+  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 50 * U,
     right: 50 * U,
@@ -98423,26 +98613,26 @@ const CompartirW = ({ cy, titulo = "Share", listo = "Sent", iconos }) => {
     padding: `0 ${30 * U}px`,
     gap: 16 * U,
     boxSizing: "border-box"
-  } }, [0, 1, 2, 3, 4].map((i) => /* @__PURE__ */ react.createElement("div", { key: i, style: {
+  } }, [0, 1, 2, 3, 4].map((i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
     width: 64 * U,
     height: 64 * U,
     borderRadius: "50%",
     background: `linear-gradient(160deg, ${COLORES_CARA[i % 4][0]}, ${COLORES_CARA[i % 4][1]})`,
     border: `${4 * U}px solid #fff`,
     marginLeft: i ? -20 * U : 0
-  } })), /* @__PURE__ */ react.createElement("div", { style: { marginLeft: "auto", fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: "#8A8E9C" } }, "+24"))), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2, top: y0 - 110 * U, transform: `translateX(-50%) scale(${Math.max(0, hecho).toFixed(4)})` } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { color: "#1FAF62" } }, "\u2713 ", listo)), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.86, cy + 580 * U], hasta: [x0 + 50 * U + 75 * U, y0 + 150 * U + 75 * U], t0: 0.25, t1: 0.68 }), paso ? null : null);
+  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginLeft: "auto", fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: "#8A8E9C" } }, "+24"))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: y0 - 110 * U, transform: `translateX(-50%) scale(${Math.max(0, hecho).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { color: "#1FAF62" } }, "\u2713 ", listo)), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 580 * U], hasta: [x0 + 50 * U + 75 * U, y0 + 150 * U + 75 * U], t0: 0.25, t1: 0.68 }), paso ? null : null);
 };
 const AvisoW = ({ cy, icono = "bell", app = "", hora = "", titulo = "", cuerpo = "" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 900 * U, h = 300 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.1, { damping: 12, stiffness: 140 });
   const qb = R(0.02, { damping: 8, stiffness: 160 });
   const tarjeta = (k) => {
     const qk = k === 0 ? q : R(0.02 + 0.05 * k, { damping: 14, stiffness: 120 });
-    return /* @__PURE__ */ react.createElement("div", { key: k, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
       position: "absolute",
       left: x0 + k * 30 * U,
       top: y0 + k * 34 * U,
@@ -98454,15 +98644,15 @@ const AvisoW = ({ cy, icono = "bell", app = "", hora = "", titulo = "", cuerpo =
       transform: `translateY(${((1 - qk) * -160 * U).toFixed(1)}px)`,
       opacity: clamp(qk * 1.5),
       zIndex: 5 - k
-    } }, k === 0 && /* @__PURE__ */ react.createElement(react.Fragment, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 40 * U, top: 50 * U, width: 170 * U, height: 170 * U, borderRadius: 44 * U, background: LILA_F, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: icono, lado: 124 * U })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 240 * U, right: 44 * U, top: 52 * U } }, /* @__PURE__ */ react.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 26 * U, color: "#9A9CA8", letterSpacing: "0.04em" } }, /* @__PURE__ */ react.createElement("span", null, app.toUpperCase()), /* @__PURE__ */ react.createElement("span", null, hora)), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 8 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 58 * U, color: Reel_TINTA, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, titulo), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 38 * U, color: "#6B6F7D", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, cuerpo))));
+    } }, k === 0 && /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 40 * U, top: 50 * U, width: 170 * U, height: 170 * U, borderRadius: 44 * U, background: LILA_F, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: icono, lado: 124 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 240 * U, right: 44 * U, top: 52 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 26 * U, color: "#9A9CA8", letterSpacing: "0.04em" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", null, app.toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("span", null, hora)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 8 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 58 * U, color: Reel_TINTA, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 38 * U, color: "#6B6F7D", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, cuerpo))));
   };
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, [2, 1, 0].map(tarjeta), /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, [2, 1, 0].map(tarjeta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0 + w - 120 * U,
     top: y0 - 190 * U,
     transform: `scale(${Math.max(0, qb).toFixed(4)}) rotate(${(Math.sin(t * 9) * 12 * Math.max(0, 1 - t / 1.2)).toFixed(2)}deg)`,
     transformOrigin: "50% 10%"
-  } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: "bell", lado: 150 * U }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "bell", lado: 150 * U }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     right: -6 * U,
     top: 4 * U,
@@ -98479,22 +98669,22 @@ const AvisoW = ({ cy, icono = "bell", app = "", hora = "", titulo = "", cuerpo =
     fontSize: 32 * U,
     border: `${4 * U}px solid #fff`,
     transform: `scale(${Math.max(0, R(0.4, { damping: 9 })).toFixed(4)})`
-  } }, "3")), /* @__PURE__ */ react.createElement(Estrella, { x: x0 - 10 * U, y: y0 - 60 * U, lado: 48 * U, t0: 0.4 }));
+  } }, "3")), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 10 * U, y: y0 - 60 * U, lado: 48 * U, t0: 0.4 }));
 };
-const Foto = ({ src, style, gris }) => src ? /* @__PURE__ */ react.createElement("img", { src, style: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: gris ? "grayscale(1) contrast(.9) brightness(.95)" : void 0, ...style } }) : null;
+const Foto = ({ src, style, gris }) => src ? /* @__PURE__ */ (react_namespaceFn().createElement)("img", { src, style: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: gris ? "grayscale(1) contrast(.9) brightness(.95)" : void 0, ...style } }) : null;
 const ListaW = ({ cy, titulo = "", items = [] }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const filas = items.slice(0, 4);
   const w = 820 * U, fila = 108 * U, h = 140 * U + filas.length * fila, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 130 });
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, top: 44 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA } }, titulo), filas.map((x, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 44 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA } }, titulo), filas.map((x, i) => {
     const t0 = 0.25 + i * 0.22;
     const marca = Reel_easeOut((t - t0 - 0.12) / 0.25);
     const entra = Reel_easeOut((t - t0) / 0.3);
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: 50 * U,
       right: 50 * U,
@@ -98505,7 +98695,7 @@ const ListaW = ({ cy, titulo = "", items = [] }) => {
       gap: 26 * U,
       opacity: clamp(entra * 1.4),
       transform: `translateX(${((1 - entra) * 40 * U).toFixed(1)}px)`
-    } }, /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       width: 62 * U,
       height: 62 * U,
       borderRadius: 18 * U,
@@ -98518,20 +98708,20 @@ const ListaW = ({ cy, titulo = "", items = [] }) => {
       fontSize: 40 * U,
       fontWeight: 800,
       transform: `scale(${(1 + 0.18 * Math.sin(Math.PI * marca)).toFixed(3)})`
-    } }, marca > 0.5 ? "\u2713" : ""), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 44 * U, color: marca > 0.5 ? "#8A8E9C" : Reel_TINTA, position: "relative" } }, x, /* @__PURE__ */ react.createElement("span", { style: { position: "absolute", left: 0, top: "54%", height: 4 * U, background: "#B9BDCB", width: `${(clamp((marca - 0.5) * 2) * 100).toFixed(1)}%` } })));
-  })), /* @__PURE__ */ react.createElement(Estrella, { x: x0 + w + 10 * U, y: y0 + 30 * U, lado: 50 * U, t0: 0.3 }));
+    } }, marca > 0.5 ? "\u2713" : ""), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 44 * U, color: marca > 0.5 ? "#8A8E9C" : Reel_TINTA, position: "relative" } }, x, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { position: "absolute", left: 0, top: "54%", height: 4 * U, background: "#B9BDCB", width: `${(clamp((marca - 0.5) * 2) * 100).toFixed(1)}%` } })));
+  })), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 10 * U, y: y0 + 30 * U, lado: 50 * U, t0: 0.3 }));
 };
 const BuscadorW = ({ cy, consulta = "", resultados = [] }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 860 * U, x0 = width / 2 - w / 2, y0 = cy - 300 * U;
   const q = R(0.05, { damping: 13, stiffness: 140 });
   const n = Math.round(consulta.length * clamp((t - 0.15) / Math.max(0.4, consulta.length * 0.035)));
   const escrito = consulta.slice(0, n);
   const fin = 0.15 + Math.max(0.4, consulta.length * 0.035);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -98546,9 +98736,9 @@ const BuscadorW = ({ cy, consulta = "", resultados = [] }) => {
     padding: `0 ${40 * U}px`,
     boxSizing: "border-box",
     transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
-  } }, /* @__PURE__ */ react.createElement("svg", { width: 52 * U, height: 52 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ react.createElement("circle", { cx: 10, cy: 10, r: 7, fill: "none", stroke: "#8A8E9C", strokeWidth: 2.6 }), /* @__PURE__ */ react.createElement("line", { x1: 15, y1: 15, x2: 22, y2: 22, stroke: "#8A8E9C", strokeWidth: 2.6, strokeLinecap: "round" })), /* @__PURE__ */ react.createElement("div", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 46 * U, color: Reel_TINTA, whiteSpace: "nowrap", overflow: "hidden" } }, escrito, /* @__PURE__ */ react.createElement("span", { style: { display: "inline-block", width: 4 * U, height: 52 * U, marginLeft: 4 * U, verticalAlign: "middle", background: AZUL, opacity: Math.sin(t * 9) > 0 ? 1 : 0 } }))), resultados.slice(0, 3).map((x, i) => {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 52 * U, height: 52 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 10, cy: 10, r: 7, fill: "none", stroke: "#8A8E9C", strokeWidth: 2.6 }), /* @__PURE__ */ (react_namespaceFn().createElement)("line", { x1: 15, y1: 15, x2: 22, y2: 22, stroke: "#8A8E9C", strokeWidth: 2.6, strokeLinecap: "round" })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 46 * U, color: Reel_TINTA, whiteSpace: "nowrap", overflow: "hidden" } }, escrito, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { display: "inline-block", width: 4 * U, height: 52 * U, marginLeft: 4 * U, verticalAlign: "middle", background: AZUL, opacity: Math.sin(t * 9) > 0 ? 1 : 0 } }))), resultados.slice(0, 3).map((x, i) => {
     const e = Reel_easeOut((t - fin - 0.1 - i * 0.12) / 0.35);
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: x0 + 20 * U,
       width: w - 40 * U,
@@ -98564,7 +98754,7 @@ const BuscadorW = ({ cy, consulta = "", resultados = [] }) => {
       boxSizing: "border-box",
       opacity: clamp(e * 1.5),
       transform: `translateY(${((1 - e) * -40 * U).toFixed(1)}px)`
-    } }, /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       width: 64 * U,
       height: 64 * U,
       borderRadius: 18 * U,
@@ -98576,19 +98766,19 @@ const BuscadorW = ({ cy, consulta = "", resultados = [] }) => {
       fontFamily: FAMILIA.inter,
       fontWeight: 800,
       fontSize: 34 * U
-    } }, x.slice(0, 1).toUpperCase()), /* @__PURE__ */ react.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 38 * U, color: i === 0 ? AZUL : Reel_TINTA } }, x), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 8 * U, height: 12 * U, width: `${70 - i * 14}%`, borderRadius: 6 * U, background: "#ECEDF3" } })));
-  }), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [x0 + 200 * U, y0 + 230 * U], t0: fin, t1: fin + 0.4 }));
+    } }, x.slice(0, 1).toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 38 * U, color: i === 0 ? AZUL : Reel_TINTA } }, x), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 8 * U, height: 12 * U, width: `${70 - i * 14}%`, borderRadius: 6 * U, background: "#ECEDF3" } })));
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [x0 + 200 * U, y0 + 230 * U], t0: fin, t1: fin + 0.4 }));
 };
 const PostW = ({ cy, usuario = "", texto = "", likes = 1240, foto, megusta = "likes" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 680 * U, h = 860 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2 + 20 * U;
   const q = R(0.05, { damping: 12, stiffness: 120 });
   const late = R(0.6, { damping: 8, stiffness: 220 });
   const n = Math.round(likes * (0.6 + 0.4 * Reel_suave(clamp((t - 0.6) / 1.2))));
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -98599,7 +98789,7 @@ const PostW = ({ cy, usuario = "", texto = "", likes = 1240, foto, megusta = "li
     boxShadow: Reel_SOMBRA(U),
     overflow: "hidden",
     transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -4).toFixed(2)}deg)`
-  } }, /* @__PURE__ */ react.createElement("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${26 * U}px ${30 * U}px` } }, /* @__PURE__ */ react.createElement("div", { style: { width: 64 * U, height: 64 * U, borderRadius: "50%", background: `linear-gradient(135deg, #F7B731, #F0473C, ${LILA})`, padding: 4 * U, boxSizing: "border-box" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${26 * U}px ${30 * U}px` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 64 * U, height: 64 * U, borderRadius: "50%", background: `linear-gradient(135deg, #F7B731, #F0473C, ${LILA})`, padding: 4 * U, boxSizing: "border-box" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     width: "100%",
     height: "100%",
     borderRadius: "50%",
@@ -98611,24 +98801,24 @@ const PostW = ({ cy, usuario = "", texto = "", likes = 1240, foto, megusta = "li
     fontWeight: 800,
     fontSize: 26 * U,
     color: Reel_TINTA
-  } }, (usuario || "\xB7").slice(0, 1).toUpperCase())), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 32 * U, color: Reel_TINTA } }, usuario)), /* @__PURE__ */ react.createElement("div", { style: { position: "relative", height: h * 0.62, background: `linear-gradient(160deg, ${AZUL}, ${LILA})`, overflow: "hidden" } }, /* @__PURE__ */ react.createElement(Foto, { src: foto }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,-50%) scale(${(Math.max(0, late) * (t < 1.4 ? 1 : 0)).toFixed(3)})`, opacity: clamp((1.4 - t) * 3) } }, /* @__PURE__ */ react.createElement(EmojiAnimado, { id: "red_heart", lado: 220 * U }))), /* @__PURE__ */ react.createElement("div", { style: { padding: `${24 * U}px ${30 * U}px` } }, /* @__PURE__ */ react.createElement("div", { style: { display: "flex", gap: 26 * U, fontSize: 48 * U } }, /* @__PURE__ */ react.createElement("span", { style: { color: t > 0.6 ? ROJO : Reel_TINTA, transform: `scale(${(1 + 0.3 * Math.sin(Math.PI * clamp((t - 0.6) / 0.3))).toFixed(3)})`, display: "inline-block" } }, t > 0.6 ? "\u2665" : "\u2661"), /* @__PURE__ */ react.createElement("span", { style: { color: Reel_TINTA } }, "\u{1F4AC}"), /* @__PURE__ */ react.createElement("span", { style: { color: Reel_TINTA } }, "\u27A4")), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 12 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 34 * U, color: Reel_TINTA } }, n.toLocaleString("en-US"), " ", megusta), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#555A6A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, texto))), [0, 1, 2, 3].map((i) => {
+  } }, (usuario || "\xB7").slice(0, 1).toUpperCase())), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 32 * U, color: Reel_TINTA } }, usuario)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "relative", height: h * 0.62, background: `linear-gradient(160deg, ${AZUL}, ${LILA})`, overflow: "hidden" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,-50%) scale(${(Math.max(0, late) * (t < 1.4 ? 1 : 0)).toFixed(3)})`, opacity: clamp((1.4 - t) * 3) } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "red_heart", lado: 220 * U }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { padding: `${24 * U}px ${30 * U}px` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", gap: 26 * U, fontSize: 48 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: t > 0.6 ? ROJO : Reel_TINTA, transform: `scale(${(1 + 0.3 * Math.sin(Math.PI * clamp((t - 0.6) / 0.3))).toFixed(3)})`, display: "inline-block" } }, t > 0.6 ? "\u2665" : "\u2661"), /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: Reel_TINTA } }, "\u{1F4AC}"), /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: Reel_TINTA } }, "\u27A4")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 12 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 34 * U, color: Reel_TINTA } }, n.toLocaleString("en-US"), " ", megusta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#555A6A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, texto))), [0, 1, 2, 3].map((i) => {
     const u = (t - 0.7 - i * 0.2) * 0.7 % 1;
     if (t < 0.7 + i * 0.2) return null;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: { position: "absolute", left: x0 + w - 40 * U + Math.sin(u * 7 + i) * 30 * U, top: y0 + h * 0.75 - u * 420 * U, opacity: 1 - u, fontSize: (54 - i * 6) * U, color: ROJO } }, "\u2665");
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { position: "absolute", left: x0 + w - 40 * U + Math.sin(u * 7 + i) * 30 * U, top: y0 + h * 0.75 - u * 420 * U, opacity: 1 - u, fontSize: (54 - i * 6) * U, color: ROJO } }, "\u2665");
   }));
 };
 const EncuestaW = ({ cy, pregunta = "", opciones = ["A", "B"], pcts = [64, 36] }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 840 * U, h = 520 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 130 });
   const llena = Reel_suave(clamp((t - 0.75) / 0.7));
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 44 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA, lineHeight: 1.1 } }, pregunta), opciones.slice(0, 2).map((o, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 44 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA, lineHeight: 1.1 } }, pregunta), opciones.slice(0, 2).map((o, i) => {
     const p = pcts[i] ?? 50;
     const gana = p >= (pcts[1 - i] ?? 0);
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: 50 * U,
       right: 50 * U,
@@ -98638,7 +98828,7 @@ const EncuestaW = ({ cy, pregunta = "", opciones = ["A", "B"], pcts = [64, 36] }
       background: "#F2F3F8",
       overflow: "hidden",
       border: `${4 * U}px solid ${gana && llena > 0 ? AZUL : "transparent"}`
-    } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${(p * llena).toFixed(1)}%`, background: gana ? LILA_F : "#E4E6EE" } }), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${(p * llena).toFixed(1)}%`, background: gana ? LILA_F : "#E4E6EE" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: 30 * U,
       right: 30 * U,
@@ -98651,35 +98841,35 @@ const EncuestaW = ({ cy, pregunta = "", opciones = ["A", "B"], pcts = [64, 36] }
       fontWeight: 800,
       fontSize: 40 * U,
       color: Reel_TINTA
-    } }, /* @__PURE__ */ react.createElement("span", null, o), /* @__PURE__ */ react.createElement("span", { style: { opacity: clamp(llena * 3), color: gana ? AZUL : "#8A8E9C" } }, Math.round(p * llena), "%")));
-  })), /* @__PURE__ */ react.createElement(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [x0 + w - 160 * U, y0 + 245 * U], t0: 0.25, t1: 0.7 }));
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", null, o), /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { opacity: clamp(llena * 3), color: gana ? AZUL : "#8A8E9C" } }, Math.round(p * llena), "%")));
+  })), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [x0 + w - 160 * U, y0 + 245 * U], t0: 0.25, t1: 0.7 }));
 };
 const CargaW = ({ cy, etiqueta = "", pct = 100 }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 840 * U, h = 330 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 130 });
   const v = pct * Reel_suave(clamp((t - 0.2) / 1.3));
   const listo = v >= 99.5;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 50 * U, display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 40 * U, color: Reel_TINTA } }, etiqueta), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: listo ? "#1FAF62" : AZUL, fontVariantNumeric: "tabular-nums" } }, listo ? "\u2713" : `${Math.round(v)}%`)), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 190 * U, height: 44 * U, borderRadius: 22 * U, background: "#ECEDF3", overflow: "hidden" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 50 * U, display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 40 * U, color: Reel_TINTA } }, etiqueta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: listo ? "#1FAF62" : AZUL, fontVariantNumeric: "tabular-nums" } }, listo ? "\u2713" : `${Math.round(v)}%`)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 190 * U, height: 44 * U, borderRadius: 22 * U, background: "#ECEDF3", overflow: "hidden" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     width: `${v.toFixed(2)}%`,
     height: "100%",
     borderRadius: 22 * U,
     background: listo ? "#1FAF62" : `linear-gradient(90deg, ${AZUL}, ${LILA})`,
     backgroundImage: listo ? void 0 : `repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 ${14 * U}px, transparent ${14 * U}px ${28 * U}px), linear-gradient(90deg, ${AZUL}, ${LILA})`,
     backgroundPosition: `${(t * 60 * U).toFixed(1)}px 0`
-  } }))), listo && /* @__PURE__ */ react.createElement(Estrella, { x: x0 + w - 40 * U, y: y0 - 10 * U, lado: 60 * U, t0: 1.5 }));
+  } }))), listo && /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w - 40 * U, y: y0 - 10 * U, lado: 60 * U, t0: 1.5 }));
 };
 const NotaW = ({ cy, lineas = [] }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 640 * U, h = 640 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 10, stiffness: 140 });
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -98693,19 +98883,19 @@ const NotaW = ({ cy, lineas = [] }) => {
     boxSizing: "border-box"
   } }, lineas.slice(0, 4).map((x, i) => {
     const e = clamp((t - 0.25 - i * 0.28) / 0.3);
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: { fontFamily: FAMILIA.mano, fontSize: 76 * U, color: "#3B3315", lineHeight: 1.15, clipPath: `inset(0 ${((1 - e) * 100).toFixed(1)}% 0 0)` } }, i === 0 ? /* @__PURE__ */ react.createElement("span", { style: { background: `linear-gradient(transparent 60%, rgba(240,71,60,.35) 60%)` } }, x) : x);
-  })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: width / 2 - 34 * U, top: y0 - 30 * U, transform: `scale(${Math.max(0, R(0.15, { damping: 9 })).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("svg", { width: 68 * U, height: 68 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ react.createElement("circle", { cx: 12, cy: 10, r: 8, fill: ROJO, stroke: "#fff", strokeWidth: 1.5 }), /* @__PURE__ */ react.createElement("circle", { cx: 9.5, cy: 7.5, r: 2.4, fill: "rgba(255,255,255,.6)" }))));
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { fontFamily: FAMILIA.mano, fontSize: 76 * U, color: "#3B3315", lineHeight: 1.15, clipPath: `inset(0 ${((1 - e) * 100).toFixed(1)}% 0 0)` } }, i === 0 ? /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { background: `linear-gradient(transparent 60%, rgba(240,71,60,.35) 60%)` } }, x) : x);
+  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 34 * U, top: y0 - 30 * U, transform: `scale(${Math.max(0, R(0.15, { damping: 9 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 68 * U, height: 68 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 12, cy: 10, r: 8, fill: ROJO, stroke: "#fff", strokeWidth: 1.5 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 9.5, cy: 7.5, r: 2.4, fill: "rgba(255,255,255,.6)" }))));
 };
 const AntesDespuesW = ({ cy, foto, antes = "Before", despues = "After" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 840 * U, h = 680 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 120 });
   const corte = 0.92 - 0.84 * Reel_suave(clamp((t - 0.35) / 1.1));
   const fondo = foto ? void 0 : `linear-gradient(160deg, ${AZUL}, ${LILA})`;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -98717,7 +98907,7 @@ const AntesDespuesW = ({ cy, foto, antes = "Before", despues = "After" }) => {
     border: `${8 * U}px solid #fff`,
     transform: `scale(${Math.max(1e-3, q).toFixed(4)})`,
     background: fondo
-  } }, /* @__PURE__ */ react.createElement(Foto, { src: foto }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, clipPath: `inset(0 ${((1 - corte) * 100).toFixed(2)}% 0 0)`, background: foto ? void 0 : "#B9BDCB" } }, /* @__PURE__ */ react.createElement(Foto, { src: foto, gris: true })), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", top: 0, bottom: 0, left: `${(corte * 100).toFixed(2)}%`, width: 6 * U, marginLeft: -3 * U, background: "#fff" } }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, clipPath: `inset(0 ${((1 - corte) * 100).toFixed(2)}% 0 0)`, background: foto ? void 0 : "#B9BDCB" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto, gris: true })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top: 0, bottom: 0, left: `${(corte * 100).toFixed(2)}%`, width: 6 * U, marginLeft: -3 * U, background: "#fff" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     top: "50%",
     left: `${(corte * 100).toFixed(2)}%`,
@@ -98734,22 +98924,22 @@ const AntesDespuesW = ({ cy, foto, antes = "Before", despues = "After" }) => {
     fontSize: 40 * U,
     color: Reel_TINTA,
     fontWeight: 800
-  } }, "\u27F7"), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 30 * U, top: 30 * U } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { fontSize: 30 * U, padding: `${8 * U}px ${22 * U}px`, color: "#555A6A" } }, antes)), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", right: 30 * U, top: 30 * U, opacity: clamp((t - 0.6) * 3) } }, /* @__PURE__ */ react.createElement(Reel_Pastilla, { style: { fontSize: 30 * U, padding: `${8 * U}px ${22 * U}px`, color: "#fff", background: AZUL } }, despues))), /* @__PURE__ */ react.createElement(Estrella, { x: x0 + w - 20 * U, y: y0 + h - 10 * U, lado: 52 * U, t0: 1.2 }));
+  } }, "\u27F7"), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 30 * U, top: 30 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { fontSize: 30 * U, padding: `${8 * U}px ${22 * U}px`, color: "#555A6A" } }, antes)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", right: 30 * U, top: 30 * U, opacity: clamp((t - 0.6) * 3) } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { fontSize: 30 * U, padding: `${8 * U}px ${22 * U}px`, color: "#fff", background: AZUL } }, despues))), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w - 20 * U, y: y0 + h - 10 * U, lado: 52 * U, t0: 1.2 }));
 };
 const CuentaW = ({ cy, valores = ["03", "12", "45"], etiquetas = ["days", "hrs", "min"] }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const n = Math.min(3, valores.length);
   const lado = 230 * U, sep = 30 * U, total = n * lado + (n - 1) * sep, x0 = width / 2 - total / 2;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, valores.slice(0, n).map((v, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, valores.slice(0, n).map((v, i) => {
     const q = R(0.05 + i * 0.1, { damping: 12, stiffness: 150 });
     const ultimo = i === n - 1;
     const s = ultimo ? Math.max(0, parseInt(v, 10) - Math.floor(Math.max(0, t - 0.6) * 1.6)) : null;
     const txt = ultimo && s !== null && !isNaN(s) ? String(s).padStart(2, "0") : v;
     const tic = ultimo ? t * 1.6 % 1 : 1;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: { position: "absolute", left: x0 + i * (lado + sep), top: cy - lado / 2 - 40 * U, width: lado, transform: `translateY(${((1 - q) * 200 * U).toFixed(1)}px)`, opacity: clamp(q * 1.5) } }, /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { position: "absolute", left: x0 + i * (lado + sep), top: cy - lado / 2 - 40 * U, width: lado, transform: `translateY(${((1 - q) * 200 * U).toFixed(1)}px)`, opacity: clamp(q * 1.5) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       height: lado,
       borderRadius: 40 * U,
       background: i === n - 1 ? Reel_TINTA : "#FFFFFF",
@@ -98763,20 +98953,20 @@ const CuentaW = ({ cy, valores = ["03", "12", "45"], etiquetas = ["days", "hrs",
       color: i === n - 1 ? "#fff" : Reel_TINTA,
       fontVariantNumeric: "tabular-nums",
       overflow: "hidden"
-    } }, /* @__PURE__ */ react.createElement("span", { style: { transform: `translateY(${(ultimo && tic < 0.25 ? (1 - tic / 0.25) * -40 * U : 0).toFixed(1)}px)`, display: "inline-block" } }, txt)), /* @__PURE__ */ react.createElement("div", { style: { marginTop: 18 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 32 * U, color: "#8A8E9C", textTransform: "uppercase", letterSpacing: "0.08em" } }, etiquetas[i] || ""));
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { transform: `translateY(${(ultimo && tic < 0.25 ? (1 - tic / 0.25) * -40 * U : 0).toFixed(1)}px)`, display: "inline-block" } }, txt)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 18 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 32 * U, color: "#8A8E9C", textTransform: "uppercase", letterSpacing: "0.08em" } }, etiquetas[i] || ""));
   }));
 };
 const GraficaW = ({ cy, valor = "+40%", etiqueta = "" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const w = 840 * U, h = 620 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 130 });
   const alturas = [0.28, 0.4, 0.36, 0.55, 0.68, 0.95];
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, top: 40 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 32 * U, color: "#8A8E9C" } }, etiqueta), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 50 * U, top: 84 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 84 * U, color: "#1FAF62", opacity: clamp((t - 0.9) * 3) } }, valor, " \u2197"), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: 60 * U, right: 60 * U, bottom: 60 * U, height: 330 * U, display: "flex", alignItems: "flex-end", gap: 26 * U } }, alturas.map((a, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 40 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 32 * U, color: "#8A8E9C" } }, etiqueta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 84 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 84 * U, color: "#1FAF62", opacity: clamp((t - 0.9) * 3) } }, valor, " \u2197"), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 60 * U, right: 60 * U, bottom: 60 * U, height: 330 * U, display: "flex", alignItems: "flex-end", gap: 26 * U } }, alturas.map((a, i) => {
     const e = R(0.2 + i * 0.09, { damping: 12, stiffness: 140 });
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       flex: 1,
       height: `${(a * 100 * Math.max(0, e)).toFixed(1)}%`,
       borderRadius: 18 * U,
@@ -98787,13 +98977,13 @@ const GraficaW = ({ cy, valor = "+40%", etiqueta = "" }) => {
 const GolpeW = ({ cy, palabra = "", antes = "" }) => {
   const t = Reel_useT();
   const U = Reel_useU();
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const R = useResorte();
   const q = R(0, { damping: 9, stiffness: 170 });
   const largo = Math.max(3, palabra.length);
   const tam = Math.min(300, width / U * 1.55 / largo) * U;
   const raya = Reel_easeOut((t - 0.25) / 0.45);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", top: cy - tam * 0.95, left: 0, right: 0, textAlign: "center" } }, antes && /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 70 * U, color: Reel_TINTA, opacity: clamp(q * 2), marginBottom: 10 * U } }, antes), /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top: cy - tam * 0.95, left: 0, right: 0, textAlign: "center" } }, antes && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 70 * U, color: Reel_TINTA, opacity: clamp(q * 2), marginBottom: 10 * U } }, antes), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     display: "inline-block",
     position: "relative",
     fontFamily: FAMILIA.display,
@@ -98804,7 +98994,7 @@ const GolpeW = ({ cy, palabra = "", antes = "" }) => {
     transform: `scale(${(0.6 + 0.4 * Math.max(0, q)).toFixed(4)}) rotate(${((1 - Math.min(1, q)) * -6).toFixed(2)}deg)`,
     opacity: clamp(q * 2),
     filter: q < 0.9 ? `blur(${((1 - q) * 10).toFixed(1)}px)` : void 0
-  } }, palabra, /* @__PURE__ */ react.createElement("svg", { width: "100%", height: tam * 0.32, viewBox: "0 0 100 20", preserveAspectRatio: "none", style: { position: "absolute", left: 0, bottom: -tam * 0.2 } }, /* @__PURE__ */ react.createElement("path", { d: "M2 14 Q 30 4, 55 11 T 98 8", fill: "none", stroke: ORO, strokeWidth: 4, strokeLinecap: "round", strokeDasharray: "110", strokeDashoffset: 110 * (1 - raya) })))), /* @__PURE__ */ react.createElement(Estrella, { x: width / 2 - tam * largo * 0.24, y: cy - tam * 0.9, lado: 70 * U, t0: 0.2 }), /* @__PURE__ */ react.createElement(Estrella, { x: width / 2 + tam * largo * 0.25, y: cy - tam * 0.2, lado: 56 * U, t0: 0.3 }), /* @__PURE__ */ react.createElement(Estrella, { x: width / 2 + tam * largo * 0.18, y: cy - tam * 1.1, lado: 40 * U, t0: 0.38 }));
+  } }, palabra, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: "100%", height: tam * 0.32, viewBox: "0 0 100 20", preserveAspectRatio: "none", style: { position: "absolute", left: 0, bottom: -tam * 0.2 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M2 14 Q 30 4, 55 11 T 98 8", fill: "none", stroke: ORO, strokeWidth: 4, strokeLinecap: "round", strokeDasharray: "110", strokeDashoffset: 110 * (1 - raya) })))), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: width / 2 - tam * largo * 0.24, y: cy - tam * 0.9, lado: 70 * U, t0: 0.2 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: width / 2 + tam * largo * 0.25, y: cy - tam * 0.2, lado: 56 * U, t0: 0.3 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: width / 2 + tam * largo * 0.18, y: cy - tam * 1.1, lado: 40 * U, t0: 0.38 }));
 };
 
 ;// ./src/MotionsCompleto.tsx
@@ -98901,17 +99091,17 @@ const colores = (fondo, acento) => {
 };
 const Icono3 = ({ ic, lado, style }) => {
   if (!ic) return null;
-  if (ic.emoji) return /* @__PURE__ */ react.createElement(EmojiAnimado, { id: ic.emoji, lado, style });
-  if (ic.img) return /* @__PURE__ */ react.createElement(esm.Img, { src: (0,esm.staticFile)(ic.img), style: { width: lado, height: lado, objectFit: "contain", ...style } });
+  if (ic.emoji) return /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: ic.emoji, lado, style });
+  if (ic.img) return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(ic.img), style: { width: lado, height: lado, objectFit: "contain", ...style } });
   return null;
 };
 const Fondo = ({ c, acento, foto }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps;
   const [r, g, b] = rgb(acento);
   if (foto) {
-    return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: "#05060A", overflow: "hidden" } }, /* @__PURE__ */ react.createElement(esm.Img, { src: foto, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "#05060A", overflow: "hidden" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: foto, style: {
       position: "absolute",
       inset: -60,
       width: width + 120,
@@ -98919,10 +99109,10 @@ const Fondo = ({ c, acento, foto }) => {
       objectFit: "cover",
       filter: "blur(38px) saturate(1.25) brightness(.42)",
       transform: `scale(${(1.12 + 0.04 * Math.sin(t * 0.4)).toFixed(4)})`
-    } }), /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: `radial-gradient(90% 60% at 50% 45%, rgba(${r},${g},${b},.18) 0%, rgba(0,0,0,0) 70%)` } }));
+    } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(90% 60% at 50% 45%, rgba(${r},${g},${b},.18) 0%, rgba(0,0,0,0) 70%)` } }));
   }
   const m = Math.min(width, height);
-  const mancha = (x, y, s, a) => /* @__PURE__ */ react.createElement("div", { style: {
+  const mancha = (x, y, s, a) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: x - s / 2,
     top: y - s / 2,
@@ -98931,21 +99121,21 @@ const Fondo = ({ c, acento, foto }) => {
     borderRadius: "50%",
     background: `radial-gradient(circle, rgba(${r},${g},${b},${a}) 0%, rgba(${r},${g},${b},0) 68%)`
   } });
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: c.fondo, overflow: "hidden" } }, !c.oscuro && mancha(width * (0.2 + 0.06 * Math.sin(t * 0.4)), height * (0.18 + 0.04 * Math.cos(t * 0.35)), m * 1.3, 0.1), !c.oscuro && mancha(width * (0.85 + 0.05 * Math.cos(t * 0.3)), height * (0.8 + 0.04 * Math.sin(t * 0.33)), m * 1.2, 0.08), c.oscuro && mancha(width * (0.25 + 0.08 * Math.sin(t * 0.5)), height * (0.28 + 0.05 * Math.cos(t * 0.4)), m * 1.1, c.clave === "#FFFFFF" ? 0 : 0.22), c.oscuro && mancha(width * (0.78 + 0.06 * Math.cos(t * 0.45)), height * (0.72 + 0.05 * Math.sin(t * 0.35)), m * 0.9, c.clave === "#FFFFFF" ? 0 : 0.16), /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: c.fondo, overflow: "hidden" } }, !c.oscuro && mancha(width * (0.2 + 0.06 * Math.sin(t * 0.4)), height * (0.18 + 0.04 * Math.cos(t * 0.35)), m * 1.3, 0.1), !c.oscuro && mancha(width * (0.85 + 0.05 * Math.cos(t * 0.3)), height * (0.8 + 0.04 * Math.sin(t * 0.33)), m * 1.2, 0.08), c.oscuro && mancha(width * (0.25 + 0.08 * Math.sin(t * 0.5)), height * (0.28 + 0.05 * Math.cos(t * 0.4)), m * 1.1, c.clave === "#FFFFFF" ? 0 : 0.22), c.oscuro && mancha(width * (0.78 + 0.06 * Math.cos(t * 0.45)), height * (0.72 + 0.05 * Math.sin(t * 0.35)), m * 0.9, c.clave === "#FFFFFF" ? 0 : 0.16), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: {
     backgroundImage: `linear-gradient(${c.trama} 1px, transparent 1px), linear-gradient(90deg, ${c.trama} 1px, transparent 1px)`,
     backgroundSize: "72px 72px",
     backgroundPosition: `0 ${frame * 0.4 % 72}px`
   } }));
 };
 const Rotulo = ({ texto, acento, top, t0 = 0.25 }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width } = (0,esm/* useVideoConfig */.Bk)();
   const U = width / 1080;
   const t = frame / fps;
   const q = MotionsCompleto_easeOut((t - t0) / 0.42);
   const barra = MotionsCompleto_easeOut((t - t0 - 0.12) / 0.4);
   const tam = Math.min(150 * U, width * 0.9 / Math.max(4, texto.length * 0.5));
-  return /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     fontFamily: FAMILIA.condensada,
     fontSize: tam,
     color: "#fff",
@@ -98957,7 +99147,7 @@ const Rotulo = ({ texto, acento, top, t0 = 0.25 }) => {
     opacity: q,
     transform: `translateY(${((1 - q) * 40 * U).toFixed(1)}px)`,
     clipPath: `inset(0 ${((1 - q) * 100).toFixed(1)}% 0 0)`
-  } }, texto), /* @__PURE__ */ react.createElement("div", { style: {
+  } }, texto), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     marginTop: 18 * U,
     height: 12 * U,
     width: Math.min(width * 0.6, tam * texto.length * 0.42) * barra,
@@ -98967,8 +99157,8 @@ const Rotulo = ({ texto, acento, top, t0 = 0.25 }) => {
   } }));
 };
 const FotoMC = ({ e, src, acento, n }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height } = (0,esm/* useVideoConfig */.Bk)();
   const U = width / 1080;
   const dur = Math.max(0.5, e.fin - e.ini);
   const p = clamp(frame / fps / dur);
@@ -98977,7 +99167,7 @@ const FotoMC = ({ e, src, acento, n }) => {
   if (!src) return null;
   if (tarjeta) {
     const w = width * 0.8, h = height * (height > width ? 0.52 : 0.62);
-    return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement(Fondo, { c: colores("oscuro", acento), acento, foto: src }), /* @__PURE__ */ react.createElement("div", { style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)(Fondo, { c: colores("oscuro", acento), acento, foto: src }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       left: (width - w) / 2,
       top: height * 0.4 - h / 2,
@@ -98988,18 +99178,18 @@ const FotoMC = ({ e, src, acento, n }) => {
       boxShadow: `0 ${40 * U}px ${90 * U}px rgba(0,0,0,.55)`,
       border: `${6 * U}px solid rgba(255,255,255,.9)`,
       transform: `translateY(${((1 - r) * 120 * U).toFixed(1)}px) rotate(${((1 - r) * -6 + Math.sin(p * 3) * 0.6).toFixed(2)}deg) scale(${(0.9 + 0.1 * r).toFixed(4)})`
-    } }, /* @__PURE__ */ react.createElement(esm.Img, { src, style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.1 - 0.08 * p).toFixed(4)})` } })), e.titulo && /* @__PURE__ */ react.createElement(Rotulo, { texto: e.titulo, acento, top: height * 0.4 + h / 2 + 60 * U, t0: 0.35 }));
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src, style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.1 - 0.08 * p).toFixed(4)})` } })), e.titulo && /* @__PURE__ */ (react_namespaceFn().createElement)(Rotulo, { texto: e.titulo, acento, top: height * 0.4 + h / 2 + 60 * U, t0: 0.35 }));
   }
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: "#000", overflow: "hidden" } }, /* @__PURE__ */ react.createElement(esm.Img, { src, style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.16 - 0.12 * p).toFixed(4)}) translateX(${((p - 0.5) * 3).toFixed(2)}%)` } }), /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: "linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 34%, rgba(0,0,0,0) 60%, rgba(0,0,0,.65) 100%)" } }), e.titulo && /* @__PURE__ */ react.createElement(Rotulo, { texto: e.titulo, acento, top: height * 0.11 }));
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "#000", overflow: "hidden" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src, style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.16 - 0.12 * p).toFixed(4)}) translateX(${((p - 0.5) * 3).toFixed(2)}%)` } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 34%, rgba(0,0,0,0) 60%, rgba(0,0,0,.65) 100%)" } }), e.titulo && /* @__PURE__ */ (react_namespaceFn().createElement)(Rotulo, { texto: e.titulo, acento, top: height * 0.11 }));
 };
 const VideoMC = ({ e, acento }) => {
-  const { fps, height } = (0,esm.useVideoConfig)();
+  const { fps, height } = (0,esm/* useVideoConfig */.Bk)();
   if (!e.video) return null;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: "#000" } }, /* @__PURE__ */ react.createElement(esm.OffthreadVideo, { src: e.video, muted: true, startFrom: Math.round((e.inicio || 0) * fps), style: { width: "100%", height: "100%", objectFit: "cover" } }), /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: "linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 62%, rgba(0,0,0,.55) 100%)" } }), e.titulo && /* @__PURE__ */ react.createElement(Rotulo, { texto: e.titulo, acento, top: height * 0.11 }));
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "#000" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* OffthreadVideo */.pe, { src: e.video, muted: true, startFrom: Math.round((e.inicio || 0) * fps), style: { width: "100%", height: "100%", objectFit: "cover" } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 62%, rgba(0,0,0,.55) 100%)" } }), e.titulo && /* @__PURE__ */ (react_namespaceFn().createElement)(Rotulo, { texto: e.titulo, acento, top: height * 0.11 }));
 };
 const PildorasMC = ({ e, c, acento }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(width, height) / 1080;
   const t = frame / fps;
   const resorte = useResorte();
@@ -99007,7 +99197,7 @@ const PildorasMC = ({ e, c, acento }) => {
   const vertical = height > width;
   const k = vertical ? items.length <= 2 ? 1.5 : 1.3 : 1.1;
   const [r, g, b] = rgb(acento);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     display: "flex",
     flexDirection: vertical ? "column" : "row",
     flexWrap: "wrap",
@@ -99019,7 +99209,7 @@ const PildorasMC = ({ e, c, acento }) => {
     const q = resorte(0.12 + i * 0.22, { damping: 12, stiffness: 150 });
     const flota = Math.sin(t * 1.6 + i * 1.3) * 8 * U;
     const lado = 118 * U * k;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       display: "flex",
       alignItems: "center",
       gap: 26 * U * k,
@@ -99030,7 +99220,7 @@ const PildorasMC = ({ e, c, acento }) => {
       boxShadow: c.oscuro ? `0 ${20 * U}px ${50 * U}px rgba(0,0,0,.35), inset 0 0 ${30 * U}px rgba(${r},${g},${b},.18)` : `0 ${18 * U}px ${44 * U}px rgba(20,30,60,.14)`,
       opacity: clamp(q * 1.5),
       transform: `translateY(${((1 - q) * 60 * U + flota).toFixed(1)}px) scale(${(0.7 + 0.3 * q).toFixed(4)}) rotate(${((1 - q) * (i % 2 ? 4 : -4)).toFixed(2)}deg)`
-    } }, /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       width: lado,
       height: lado,
       borderRadius: "50%",
@@ -99038,12 +99228,12 @@ const PildorasMC = ({ e, c, acento }) => {
       alignItems: "center",
       justifyContent: "center",
       background: `radial-gradient(circle at 35% 30%, rgba(${r},${g},${b},.95), rgba(${Math.round(r * 0.5)},${Math.round(g * 0.5)},${Math.round(b * 0.5)},.95))`
-    } }, it.icono ? /* @__PURE__ */ react.createElement(Icono3, { ic: it.icono, lado: lado * 0.74 }) : /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: 56 * U, color: "#fff" } }, i + 1)), /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 58 * U * k, color: c.tinta, letterSpacing: "-0.02em", whiteSpace: "nowrap" } }, it.texto));
+    } }, it.icono ? /* @__PURE__ */ (react_namespaceFn().createElement)(Icono3, { ic: it.icono, lado: lado * 0.74 }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: 56 * U, color: "#fff" } }, i + 1)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 58 * U * k, color: c.tinta, letterSpacing: "-0.02em", whiteSpace: "nowrap" } }, it.texto));
   })));
 };
 const DiagramaMC = ({ e, c, acento }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(width, height) / 1080;
   const t = frame / fps;
   const resorte = useResorte();
@@ -99057,13 +99247,13 @@ const DiagramaMC = ({ e, c, acento }) => {
     return vertical ? { x: width / 2, y: height * 0.47 + d } : { x: width / 2 + d, y: height * 0.46 };
   };
   const [r, g, b] = rgb(acento);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("svg", { width, height, style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ react.createElement("defs", null, /* @__PURE__ */ react.createElement("marker", { id: "mcFlecha", viewBox: "0 0 10 10", refX: "7", refY: "5", markerWidth: "5", markerHeight: "5", orient: "auto-start-reverse" }, /* @__PURE__ */ react.createElement("path", { d: "M0,0 L10,5 L0,10 z", fill: acento }))), nodos.slice(1).map((_, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width, height, style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("defs", null, /* @__PURE__ */ (react_namespaceFn().createElement)("marker", { id: "mcFlecha", viewBox: "0 0 10 10", refX: "7", refY: "5", markerWidth: "5", markerHeight: "5", orient: "auto-start-reverse" }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M0,0 L10,5 L0,10 z", fill: acento }))), nodos.slice(1).map((_, i) => {
     const a = pos(i), z = pos(i + 1);
     const k = (lado / 2 + 26 * U) / Math.hypot(z.x - a.x, z.y - a.y);
     const x1 = a.x + (z.x - a.x) * k, y1 = a.y + (z.y - a.y) * k, x2 = z.x - (z.x - a.x) * k, y2 = z.y - (z.y - a.y) * k;
     const largo = Math.hypot(x2 - x1, y2 - y1);
     const q = MotionsCompleto_easeOut((t - 0.5 - i * 0.75) / 0.42);
-    return /* @__PURE__ */ react.createElement(
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(
       "line",
       {
         key: i,
@@ -99084,7 +99274,7 @@ const DiagramaMC = ({ e, c, acento }) => {
     const p = pos(i);
     const q = resorte(0.12 + i * 0.75, { damping: 11, stiffness: 150 });
     const pulso = 1 + 0.03 * Math.sin(t * 2.2 + i);
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: p.x - lado / 2,
       top: p.y - lado / 2,
@@ -99092,7 +99282,7 @@ const DiagramaMC = ({ e, c, acento }) => {
       height: lado,
       opacity: clamp(q * 1.6),
       transform: `scale(${((0.4 + 0.6 * q) * pulso).toFixed(4)})`
-    } }, /* @__PURE__ */ react.createElement("div", { style: {
+    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       width: lado,
       height: lado,
       borderRadius: "50%",
@@ -99102,7 +99292,7 @@ const DiagramaMC = ({ e, c, acento }) => {
       background: c.vidrio,
       border: `${8 * U}px solid ${acento}`,
       boxShadow: `0 0 ${50 * U}px rgba(${r},${g},${b},.45), 0 ${24 * U}px ${50 * U}px rgba(0,0,0,${c.oscuro ? 0.4 : 0.15})`
-    } }, nd.icono ? /* @__PURE__ */ react.createElement(Icono3, { ic: nd.icono, lado: lado * 0.62 }) : /* @__PURE__ */ react.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: lado * 0.36, color: c.clave } }, i + 1)), /* @__PURE__ */ react.createElement("div", { style: {
+    } }, nd.icono ? /* @__PURE__ */ (react_namespaceFn().createElement)(Icono3, { ic: nd.icono, lado: lado * 0.62 }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: lado * 0.36, color: c.clave } }, i + 1)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
       position: "absolute",
       top: vertical ? lado * 0.5 - 30 * U : lado + 22 * U,
       left: vertical ? lado + 30 * U : -lado * 0.4,
@@ -99118,8 +99308,8 @@ const DiagramaMC = ({ e, c, acento }) => {
   }));
 };
 const IconoMC = ({ e, c, acento }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(width, height) / 1080;
   const t = frame / fps;
   const r = useResorte()(0.05, { damping: 10, stiffness: 140 });
@@ -99128,7 +99318,7 @@ const IconoMC = ({ e, c, acento }) => {
   const cy = height * 0.42;
   const flota = Math.sin(t * 1.7) * 14 * U;
   const q = MotionsCompleto_easeOut((t - 0.35) / 0.4);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: width / 2 - lado * 0.85,
     top: cy - lado * 0.85,
@@ -99137,7 +99327,7 @@ const IconoMC = ({ e, c, acento }) => {
     borderRadius: "50%",
     background: `radial-gradient(circle, rgba(${ar},${ag},${ab},${c.oscuro ? 0.5 : 0.25}) 0%, rgba(${ar},${ag},${ab},0) 65%)`,
     opacity: clamp(r)
-  } }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: width / 2 - lado * 0.66,
     top: cy - lado * 0.66,
@@ -99151,7 +99341,7 @@ const IconoMC = ({ e, c, acento }) => {
     const ang = i / 6 * Math.PI * 2 + t * 0.6;
     const d = lado * (0.78 + 0.04 * Math.sin(t * 2 + i));
     const s = (10 + i % 3 * 5) * U;
-    return /* @__PURE__ */ react.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
       position: "absolute",
       left: width / 2 + Math.cos(ang) * d - s / 2,
       top: cy + Math.sin(ang) * d - s / 2,
@@ -99162,13 +99352,13 @@ const IconoMC = ({ e, c, acento }) => {
       opacity: 0.8 * clamp(r),
       boxShadow: `0 0 ${16 * U}px ${acento}`
     } });
-  }), /* @__PURE__ */ react.createElement("div", { style: {
+  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: width / 2 - lado / 2,
     top: cy - lado / 2 + flota,
     transform: `scale(${(0.5 + 0.5 * r).toFixed(4)})`,
     filter: `drop-shadow(0 ${30 * U}px ${40 * U}px rgba(0,0,0,${c.oscuro ? 0.5 : 0.22}))`
-  } }, /* @__PURE__ */ react.createElement(Icono3, { ic: e.icono, lado })), e.titulo && /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Icono3, { ic: e.icono, lado })), e.titulo && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     top: cy + lado * 0.68,
     left: 0,
@@ -99177,7 +99367,7 @@ const IconoMC = ({ e, c, acento }) => {
     justifyContent: "center",
     opacity: q,
     transform: `translateY(${((1 - q) * 40 * U).toFixed(1)}px) scale(${(0.85 + 0.15 * q).toFixed(4)})`
-  } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     padding: `${18 * U}px ${48 * U}px`,
     borderRadius: 999,
     background: acento,
@@ -99191,51 +99381,51 @@ const IconoMC = ({ e, c, acento }) => {
   } }, e.titulo)));
 };
 const ObjetoMC = ({ e, c, acento }) => {
-  const { width } = (0,esm.useVideoConfig)();
+  const { width } = (0,esm/* useVideoConfig */.Bk)();
   const U = width / 1080;
   const o = e.objeto;
   const C = {
-    precio: /* @__PURE__ */ react.createElement(Precio, { o, U, acento }),
-    grafica: /* @__PURE__ */ react.createElement(Objetos_Grafica, { o, U, acento }),
-    reloj: /* @__PURE__ */ react.createElement(Reloj, { o, U, acento }),
-    avatares: /* @__PURE__ */ react.createElement(Avatares, { o, U, acento }),
-    calendario: /* @__PURE__ */ react.createElement(Calendario, { o, U, acento }),
-    estado: /* @__PURE__ */ react.createElement(Estado, { o, U }),
-    cifra: /* @__PURE__ */ react.createElement(Cifra, { o, U, acento }),
-    lista: /* @__PURE__ */ react.createElement(Lista, { o, U, acento }),
-    comparacion: /* @__PURE__ */ react.createElement(Comparacion, { o, U, acento }),
-    pregunta: /* @__PURE__ */ react.createElement(Pregunta, { o, U, acento }),
-    ficha: /* @__PURE__ */ react.createElement(Ficha, { o, U }),
-    app: /* @__PURE__ */ react.createElement(App, { o, U, acento }),
-    ojo: /* @__PURE__ */ react.createElement(Ojo, { o, U, acento }),
-    barra: /* @__PURE__ */ react.createElement(Barra, { o, U, acento }),
-    muestra: /* @__PURE__ */ react.createElement(Muestra, { o, U })
+    precio: /* @__PURE__ */ (react_namespaceFn().createElement)(Precio, { o, U, acento }),
+    grafica: /* @__PURE__ */ (react_namespaceFn().createElement)(Objetos_Grafica, { o, U, acento }),
+    reloj: /* @__PURE__ */ (react_namespaceFn().createElement)(Reloj, { o, U, acento }),
+    avatares: /* @__PURE__ */ (react_namespaceFn().createElement)(Avatares, { o, U, acento }),
+    calendario: /* @__PURE__ */ (react_namespaceFn().createElement)(Calendario, { o, U, acento }),
+    estado: /* @__PURE__ */ (react_namespaceFn().createElement)(Estado, { o, U }),
+    cifra: /* @__PURE__ */ (react_namespaceFn().createElement)(Cifra, { o, U, acento }),
+    lista: /* @__PURE__ */ (react_namespaceFn().createElement)(Lista, { o, U, acento }),
+    comparacion: /* @__PURE__ */ (react_namespaceFn().createElement)(Comparacion, { o, U, acento }),
+    pregunta: /* @__PURE__ */ (react_namespaceFn().createElement)(Pregunta, { o, U, acento }),
+    ficha: /* @__PURE__ */ (react_namespaceFn().createElement)(Ficha, { o, U }),
+    app: /* @__PURE__ */ (react_namespaceFn().createElement)(App, { o, U, acento }),
+    ojo: /* @__PURE__ */ (react_namespaceFn().createElement)(Ojo, { o, U, acento }),
+    barra: /* @__PURE__ */ (react_namespaceFn().createElement)(Barra, { o, U, acento }),
+    muestra: /* @__PURE__ */ (react_namespaceFn().createElement)(Muestra, { o, U })
   };
-  return /* @__PURE__ */ react.createElement(TemaCtx.Provider, { value: c.oscuro ? TEMA_OSCURO : TEMA_CLARO }, /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ react.createElement("div", { style: { transform: `scale(${o && ESCALA_MC[o.tipo] || 1.18})` } }, o ? C[o.tipo] || null : null)));
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(TemaCtx.Provider, { value: c.oscuro ? TEMA_OSCURO : TEMA_CLARO }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { transform: `scale(${o && ESCALA_MC[o.tipo] || 1.18})` } }, o ? C[o.tipo] || null : null)));
 };
 const SAL = 0.3;
 const FondoTema = ({ claro, acento, fondo }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width, height } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height } = (0,esm/* useVideoConfig */.Bk)();
   const t = frame / fps;
   const U = Math.min(width, height) / 1080;
   const [r, g, b] = rgb(acento);
   const m = Math.min(width, height);
-  const mancha = (x, y, s, c) => /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: x - s / 2, top: y - s / 2, width: s, height: s, borderRadius: "50%", background: `radial-gradient(circle, ${c} 0%, rgba(0,0,0,0) 68%)` } });
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { background: fondo && HEXMC.test(fondo) ? `radial-gradient(125% 88% at 50% 22%, ${mezclaMC(fondo, claro ? 255 : 0, claro ? 0.55 : 0)} 0%, ${fondo} 52%, ${mezclaMC(fondo, 0, claro ? 0.08 : 0.55)} 100%)` : claro ? "radial-gradient(130% 90% at 50% 18%, #FFFFFF 0%, #F3F2FA 46%, #E6E3F4 100%)" : "radial-gradient(120% 85% at 50% 30%, #17142A 0%, #0A0912 60%, #050409 100%)", overflow: "hidden" } }, mancha(width * (0.5 + 0.05 * Math.sin(t * 0.3)), height * (0.5 + 0.03 * Math.cos(t * 0.25)), m * 1.25, `rgba(${r},${g},${b},${claro ? 0.13 : 0.22})`), mancha(width * (0.15 + 0.04 * Math.cos(t * 0.27)), height * (0.12 + 0.03 * Math.sin(t * 0.31)), m * 1.1, claro ? "rgba(190,175,255,.22)" : "rgba(120,80,255,.16)"), mancha(width * (0.88 + 0.03 * Math.sin(t * 0.22)), height * (0.86 + 0.03 * Math.cos(t * 0.29)), m * 1.1, claro ? "rgba(170,190,255,.2)" : "rgba(60,90,255,.14)"), /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: {
+  const mancha = (x, y, s, c) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x - s / 2, top: y - s / 2, width: s, height: s, borderRadius: "50%", background: `radial-gradient(circle, ${c} 0%, rgba(0,0,0,0) 68%)` } });
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: fondo && HEXMC.test(fondo) ? `radial-gradient(125% 88% at 50% 22%, ${mezclaMC(fondo, claro ? 255 : 0, claro ? 0.55 : 0)} 0%, ${fondo} 52%, ${mezclaMC(fondo, 0, claro ? 0.08 : 0.55)} 100%)` : claro ? "radial-gradient(130% 90% at 50% 18%, #FFFFFF 0%, #F3F2FA 46%, #E6E3F4 100%)" : "radial-gradient(120% 85% at 50% 30%, #17142A 0%, #0A0912 60%, #050409 100%)", overflow: "hidden" } }, mancha(width * (0.5 + 0.05 * Math.sin(t * 0.3)), height * (0.5 + 0.03 * Math.cos(t * 0.25)), m * 1.25, `rgba(${r},${g},${b},${claro ? 0.13 : 0.22})`), mancha(width * (0.15 + 0.04 * Math.cos(t * 0.27)), height * (0.12 + 0.03 * Math.sin(t * 0.31)), m * 1.1, claro ? "rgba(190,175,255,.22)" : "rgba(120,80,255,.16)"), mancha(width * (0.88 + 0.03 * Math.sin(t * 0.22)), height * (0.86 + 0.03 * Math.cos(t * 0.29)), m * 1.1, claro ? "rgba(170,190,255,.2)" : "rgba(60,90,255,.14)"), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: {
     backgroundImage: `radial-gradient(${claro ? "rgba(70,80,140,.13)" : "rgba(255,255,255,.07)"} ${2 * U}px, transparent ${2.2 * U}px)`,
     backgroundSize: `${34 * U}px ${34 * U}px`,
     backgroundPosition: `0 ${(-t * 6 * U).toFixed(1)}px`
   } }));
 };
 const Vida = ({ dur, lado = 0, empuje, children }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, height: H, width: W } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, height: H, width: W } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(W, H) / 1080;
   const t = frame / fps;
   const conf = { damping: 13, stiffness: 115, mass: 0.9 };
-  const s = (0,esm.spring)({ frame, fps, config: conf });
-  const s0 = (0,esm.spring)({ frame: Math.max(0, frame - 1), fps, config: conf });
+  const s = (0,esm/* spring */.oz)({ frame, fps, config: conf });
+  const s0 = (0,esm/* spring */.oz)({ frame: Math.max(0, frame - 1), fps, config: conf });
   const vel = Math.abs(s - s0) * fps;
   const q = MotionsCompleto_easeOut((t - dur) / SAL);
   const blur = Math.min(18, vel * 9) + q * 16;
@@ -99244,25 +99434,25 @@ const Vida = ({ dur, lado = 0, empuje, children }) => {
   const rot = (1 - s) * (lado ? 7 * lado : -6) + Math.sin(t * 0.9) * 0.45;
   const acerca = typeof empuje === "number" ? 0.12 * MotionsCompleto_easeOut((t - empuje) / 1.6) : 0;
   const sc = (0.84 + 0.16 * s) * (1 - 0.05 * q) * (1 + acerca);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: {
     transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${rot.toFixed(3)}deg) scale(${sc.toFixed(4)})`,
     opacity: clamp(s * 2.2) * (1 - q),
     filter: blur > 0.4 ? `blur(${blur.toFixed(1)}px)` : void 0
   } }, children);
 };
 const TitularVida = ({ palabras, arriba, dur, claro }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, height: H, width: W } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, height: H, width: W } = (0,esm/* useVideoConfig */.Bk)();
   const q = MotionsCompleto_easeOut((frame / fps - dur) / 0.22);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { opacity: 1 - q, filter: q > 0.02 ? `blur(${(q * 12).toFixed(1)}px)` : void 0, transform: `translateY(${(-q * H * 0.015).toFixed(1)}px)` } }, /* @__PURE__ */ react.createElement(RTitular, { palabras: palabras.map((p) => ({ t: p.t, texto: p.texto, estilo: p.estilo || (p.clave ? "clave" : void 0) })), arriba, claro, top: H * (H > W ? 0.15 : 0.08) }));
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, filter: q > 0.02 ? `blur(${(q * 12).toFixed(1)}px)` : void 0, transform: `translateY(${(-q * H * 0.015).toFixed(1)}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(RTitular, { palabras: palabras.map((p) => ({ t: p.t, texto: p.texto, estilo: p.estilo || (p.clave ? "clave" : void 0) })), arriba, claro, top: H * (H > W ? 0.15 : 0.08) }));
 };
 const TarjetaMC = ({ oscura = true, children }) => {
-  const { width: W, height: H } = (0,esm.useVideoConfig)();
+  const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(W, H) / 1080;
   const vertical = H > W;
   const cw = W * (vertical ? 0.86 : 0.58), ch = H * (vertical ? 0.64 : 0.74);
   const k = Math.max(cw / W, ch / H);
-  return /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: (W - cw) / 2,
     top: H * (vertical ? 0.57 : 0.56) - ch / 2,
@@ -99273,7 +99463,7 @@ const TarjetaMC = ({ oscura = true, children }) => {
     background: oscura ? "#0B0B12" : "#FFFFFF",
     boxShadow: `0 ${40 * U}px ${110 * U}px rgba(30,30,80,.28), 0 ${8 * U}px ${24 * U}px rgba(30,30,80,.12)`,
     border: `${3 * U}px solid rgba(255,255,255,.75)`
-  } }, /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", left: (cw - W * k) / 2, top: (ch - H * k) / 2, width: W, height: H, transform: `scale(${k.toFixed(5)})`, transformOrigin: "0 0" } }, children));
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: (cw - W * k) / 2, top: (ch - H * k) / 2, width: W, height: H, transform: `scale(${k.toFixed(5)})`, transformOrigin: "0 0" } }, children));
 };
 const REEL = {
   rec: RecW,
@@ -99313,43 +99503,43 @@ const MotionsCompleto_PALETAS = {
   rosa: ["#E64B8B", "#FF8FB8", "#FDEBF1"]
 };
 const MotionsCompleto_Escena = ({ e, acento, fotos, n, claro, fija }) => {
-  const { height: H, width: W } = (0,esm.useVideoConfig)();
+  const { height: H, width: W } = (0,esm/* useVideoConfig */.Bk)();
   const T = tema(claro);
   const c = colores(claro ? "claro" : "oscuro", acento);
   const cy = H * 0.57;
   const W5 = {
-    orbita: () => /* @__PURE__ */ react.createElement(OrbitaMC, { centro: e.centro || { texto: "" }, items: e.items || [], acento, T, cy }),
-    ruta: () => /* @__PURE__ */ react.createElement(RutaMC, { pasos: e.pasos || [], titulo: e.titulo || "", acento, T, cy }),
-    conectores: () => /* @__PURE__ */ react.createElement(ConectoresMC, { entradas: e.entradas || [], opciones: e.opciones || [], resultado: e.resultado || { texto: "" }, acento, T, cy }),
-    contador: () => /* @__PURE__ */ react.createElement(ContadorMC, { valor: e.valor || 0, sufijo: e.sufijo, prefijo: e.prefijo, etiqueta: e.etiqueta, acento, T, cy }),
-    versiones: () => /* @__PURE__ */ react.createElement(VersionesMC, { cartas: e.cartas || [], acento, T, cy })
+    orbita: () => /* @__PURE__ */ (react_namespaceFn().createElement)(OrbitaMC, { centro: e.centro || { texto: "" }, items: e.items || [], acento, T, cy }),
+    ruta: () => /* @__PURE__ */ (react_namespaceFn().createElement)(RutaMC, { pasos: e.pasos || [], titulo: e.titulo || "", acento, T, cy }),
+    conectores: () => /* @__PURE__ */ (react_namespaceFn().createElement)(ConectoresMC, { entradas: e.entradas || [], opciones: e.opciones || [], resultado: e.resultado || { texto: "" }, acento, T, cy }),
+    contador: () => /* @__PURE__ */ (react_namespaceFn().createElement)(ContadorMC, { valor: e.valor || 0, sufijo: e.sufijo, prefijo: e.prefijo, etiqueta: e.etiqueta, acento, T, cy }),
+    versiones: () => /* @__PURE__ */ (react_namespaceFn().createElement)(VersionesMC, { cartas: e.cartas || [], acento, T, cy })
   };
-  if (W5[e.tipo]) return /* @__PURE__ */ react.createElement(react.Fragment, null, W5[e.tipo]());
+  if (W5[e.tipo]) return /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, W5[e.tipo]());
   if (e.tipo === "reel" && e.reel && REEL[e.reel]) {
     const R = REEL[e.reel];
     const [a, b, c2] = fija && HEXMC.test(acento) ? [acento, mezclaMC(acento, 255, 0.35), mezclaMC(acento, 255, 0.9)] : MotionsCompleto_PALETAS[e.paleta || "azul"] || MotionsCompleto_PALETAS.azul;
     const foto = typeof e.img === "number" ? fotos[e.img] : void 0;
-    return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { ["--cc-azul"]: a, ["--cc-lila"]: b, ["--cc-lilaf"]: c2, transform: `translateX(${((e.lado || 0) * W * 0.035).toFixed(1)}px)` } }, /* @__PURE__ */ react.createElement(R, { cy: H * (H > W ? 0.63 : 0.6), ...e.wp || {}, foto }));
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { ["--cc-azul"]: a, ["--cc-lila"]: b, ["--cc-lilaf"]: c2, transform: `translateX(${((e.lado || 0) * W * 0.035).toFixed(1)}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(R, { cy: H * (H > W ? 0.63 : 0.6), ...e.wp || {}, foto }));
   }
   const conTitular = !!(e.titular && e.titular.length);
   if (e.tipo === "comp" && e.comp && COMPS[e.comp]) {
     const C = COMPS[e.comp];
-    return /* @__PURE__ */ react.createElement(TarjetaMC, null, !e.pantalla && /* @__PURE__ */ react.createElement(Fondo, { c: colores("oscuro", acento), acento, foto: typeof e.fondo_foto === "number" ? fotos[e.fondo_foto] : void 0 }), /* @__PURE__ */ react.createElement(esm.AbsoluteFill, null, /* @__PURE__ */ react.createElement(C, { ...e.props || {}, salida: 0.01 })));
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(TarjetaMC, null, !e.pantalla && /* @__PURE__ */ (react_namespaceFn().createElement)(Fondo, { c: colores("oscuro", acento), acento, foto: typeof e.fondo_foto === "number" ? fotos[e.fondo_foto] : void 0 }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)(C, { ...e.props || {}, salida: 0.01 })));
   }
   if (e.tipo === "foto" && typeof e.foto === "number") {
-    return /* @__PURE__ */ react.createElement(TarjetaMC, null, /* @__PURE__ */ react.createElement(FotoMC, { e: conTitular ? { ...e, titulo: "" } : e, src: fotos[e.foto], acento, n: 0 }));
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(TarjetaMC, null, /* @__PURE__ */ (react_namespaceFn().createElement)(FotoMC, { e: conTitular ? { ...e, titulo: "" } : e, src: fotos[e.foto], acento, n: 0 }));
   }
-  if (e.tipo === "video" && e.video) return /* @__PURE__ */ react.createElement(TarjetaMC, null, /* @__PURE__ */ react.createElement(VideoMC, { e: conTitular ? { ...e, titulo: "" } : e, acento }));
+  if (e.tipo === "video" && e.video) return /* @__PURE__ */ (react_namespaceFn().createElement)(TarjetaMC, null, /* @__PURE__ */ (react_namespaceFn().createElement)(VideoMC, { e: conTitular ? { ...e, titulo: "" } : e, acento }));
   let cuerpo = null;
-  if (e.tipo === "objeto" && e.objeto) cuerpo = /* @__PURE__ */ react.createElement(ObjetoMC, { e, c, acento });
-  else if (e.tipo === "pildoras") cuerpo = /* @__PURE__ */ react.createElement(PildorasMC, { e, c, acento });
-  else if (e.tipo === "diagrama") cuerpo = /* @__PURE__ */ react.createElement(DiagramaMC, { e, c, acento });
-  else if (e.tipo === "icono" && e.icono) cuerpo = /* @__PURE__ */ react.createElement(IconoMC, { e, c, acento });
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { transform: `translateY(${(H * 0.09).toFixed(1)}px)` } }, cuerpo);
+  if (e.tipo === "objeto" && e.objeto) cuerpo = /* @__PURE__ */ (react_namespaceFn().createElement)(ObjetoMC, { e, c, acento });
+  else if (e.tipo === "pildoras") cuerpo = /* @__PURE__ */ (react_namespaceFn().createElement)(PildorasMC, { e, c, acento });
+  else if (e.tipo === "diagrama") cuerpo = /* @__PURE__ */ (react_namespaceFn().createElement)(DiagramaMC, { e, c, acento });
+  else if (e.tipo === "icono" && e.icono) cuerpo = /* @__PURE__ */ (react_namespaceFn().createElement)(IconoMC, { e, c, acento });
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { transform: `translateY(${(H * 0.09).toFixed(1)}px)` } }, cuerpo);
 };
 const MotionsCompleto = ({ escenas = [], fotos = [], acento = "#4C7DFF", tema = "claro", titulares, fondo = "", fija = false }) => {
   useFuentes();
-  const { fps } = (0,esm.useVideoConfig)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
   const claro = tema !== "oscuro";
   const vars = fija && HEXMC.test(acento) ? {
     ["--cc-azul"]: acento,
@@ -99357,12 +99547,12 @@ const MotionsCompleto = ({ escenas = [], fotos = [], acento = "#4C7DFF", tema = 
     ["--cc-lilaf"]: mezclaMC(acento, 255, 0.9),
     ["--cc-azul-claro"]: mezclaMC(acento, 255, 0.4)
   } : void 0;
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: vars }, /* @__PURE__ */ react.createElement(FondoTema, { claro, acento, fondo: fondo ? "#" + fondo.replace("#", "") : "" }), escenas.map((e, i) => {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: vars }, /* @__PURE__ */ (react_namespaceFn().createElement)(FondoTema, { claro, acento, fondo: fondo ? "#" + fondo.replace("#", "") : "" }), escenas.map((e, i) => {
     const ultimo = i === escenas.length - 1;
     const desde = Math.round(e.ini * fps);
     const largo = Math.max(1, Math.round((e.fin - e.ini + (ultimo ? 0 : SAL)) * fps));
-    return /* @__PURE__ */ react.createElement(esm.Sequence, { key: i, from: desde, durationInFrames: largo }, /* @__PURE__ */ react.createElement(Vida, { dur: ultimo ? 1e9 : e.fin - e.ini, lado: e.lado || 0, empuje: e.empuje }, /* @__PURE__ */ react.createElement(MotionsCompleto_Escena, { e, acento, fotos, n: i, claro, fija })));
-  }), (titulares && titulares.length ? titulares : escenas).map((e, i) => e.titular && e.titular.length || e.arriba ? /* @__PURE__ */ react.createElement(esm.Sequence, { key: `t${i}`, from: Math.round(e.ini * fps), durationInFrames: Math.max(1, Math.round((e.fin - e.ini + 0.25) * fps)) }, /* @__PURE__ */ react.createElement(TitularVida, { palabras: e.titular || [], arriba: e.arriba, dur: e.fin - e.ini, claro })) : null));
+    return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Sequence */.gd, { key: i, from: desde, durationInFrames: largo }, /* @__PURE__ */ (react_namespaceFn().createElement)(Vida, { dur: ultimo ? 1e9 : e.fin - e.ini, lado: e.lado || 0, empuje: e.empuje }, /* @__PURE__ */ (react_namespaceFn().createElement)(MotionsCompleto_Escena, { e, acento, fotos, n: i, claro, fija })));
+  }), (titulares && titulares.length ? titulares : escenas).map((e, i) => e.titular && e.titular.length || e.arriba ? /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Sequence */.gd, { key: `t${i}`, from: Math.round(e.ini * fps), durationInFrames: Math.max(1, Math.round((e.fin - e.ini + 0.25) * fps)) }, /* @__PURE__ */ (react_namespaceFn().createElement)(TitularVida, { palabras: e.titular || [], arriba: e.arriba, dur: e.fin - e.ini, claro })) : null));
 };
 
 ;// ./src/kitneon/motor.ts
@@ -100146,7 +100336,7 @@ const FUENTES_KIT = [
 const FondoNeon = ({ t, escala }) => {
   const b1x = 300 + 140 * Math.sin(t * 0.21), b1y = 560 + 110 * Math.cos(t * 0.17);
   const b2x = 780 + 120 * Math.cos(t * 0.19), b2y = 1420 + 130 * Math.sin(t * 0.23);
-  return /* @__PURE__ */ react.createElement("div", { style: {
+  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: 0,
     top: 0,
@@ -100156,7 +100346,7 @@ const FondoNeon = ({ t, escala }) => {
     transformOrigin: "0 0",
     overflow: "hidden",
     background: "radial-gradient(circle at 540px 860px, #5B2AB0 0, #3A1A78 320px, #1E0E42 700px, #0E081A 1150px)"
-  } }, /* @__PURE__ */ react.createElement("div", { style: {
+  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: b1x - 420,
     top: b1y - 420,
@@ -100166,7 +100356,7 @@ const FondoNeon = ({ t, escala }) => {
     opacity: 0.32,
     background: "radial-gradient(circle, rgba(255,45,203,.9) 0, rgba(255,45,203,0) 70%)",
     filter: "blur(30px)"
-  } }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     left: b2x - 380,
     top: b2y - 380,
@@ -100176,7 +100366,7 @@ const FondoNeon = ({ t, escala }) => {
     opacity: 0.18,
     background: "radial-gradient(circle, rgba(214,255,59,.9) 0, rgba(214,255,59,0) 70%)",
     filter: "blur(36px)"
-  } }), /* @__PURE__ */ react.createElement("div", { style: {
+  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
     position: "absolute",
     inset: 0,
     opacity: 0.18,
@@ -100187,7 +100377,7 @@ const FondoNeon = ({ t, escala }) => {
 let fuentes = null;
 const cargar = () => {
   fuentes = fuentes || Promise.all(FUENTES_KIT.map(async ([n, f, d]) => {
-    const ff = new FontFace(n, `url(${(0,esm.staticFile)(f)})`, d);
+    const ff = new FontFace(n, `url(${(0,esm/* staticFile */.dQ)(f)})`, d);
     await ff.load();
     document.fonts.add(ff);
   })).then(() => void 0);
@@ -100197,7 +100387,7 @@ const imagenesListas = (raiz) => Promise.all([...raiz.querySelectorAll("img")].m
   i.onload = i.onerror = r;
 })));
 const KitNeon_montar = (raiz, tema, imagenes, codigo, L, escena) => {
-  const img = (s) => s && imagenes[s] || (s && /^(data:|https?:)/.test(s) ? s : s ? (0,esm.staticFile)(s) : "");
+  const img = (s) => s && imagenes[s] || (s && /^(data:|https?:)/.test(s) ? s : s ? (0,esm/* staticFile */.dQ)(s) : "");
   const m = crearMotor(raiz, tema, img);
   if (codigo) {
     const nombres = Object.keys(m.api);
@@ -100232,17 +100422,17 @@ const KitNeon_montar = (raiz, tema, imagenes, codigo, L, escena) => {
   return m;
 };
 const KitNeon = ({ escena = [], codigo = "", L = {}, imagenes = {}, t0 = 0, tema = "neon", subs = 5, fondo = "" }) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const { fps, width } = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width } = (0,esm/* useVideoConfig */.Bk)();
   const n = Math.max(1, Math.min(8, Math.round(subs)));
-  const raices = (0,react.useRef)([]);
-  const capas = (0,react.useRef)([]);
-  const motores = (0,react.useRef)([]);
+  const raices = (0,react_namespaceFn().useRef)([]);
+  const capas = (0,react_namespaceFn().useRef)([]);
+  const motores = (0,react_namespaceFn().useRef)([]);
   const t = frame / fps + t0;
-  const tRef = (0,react.useRef)(t);
+  const tRef = (0,react_namespaceFn().useRef)(t);
   tRef.current = t;
-  const [listo, setListo] = (0,react.useState)(false);
-  const [h] = (0,react.useState)(() => (0,esm.delayRender)("kit ne\xF3n"));
+  const [listo, setListo] = (0,react_namespaceFn().useState)(false);
+  const [h] = (0,react_namespaceFn().useState)(() => (0,esm/* delayRender */.IH)("kit ne\xF3n"));
   const pintar = (tt) => {
     const ms = motores.current;
     if (!ms.length) return;
@@ -100256,7 +100446,7 @@ const KitNeon = ({ escena = [], codigo = "", L = {}, imagenes = {}, t0 = 0, tema
       c.style.visibility = quieto && k > 0 ? "hidden" : "visible";
     });
   };
-  (0,react.useEffect)(() => {
+  (0,react_namespaceFn().useEffect)(() => {
     let vivo = true;
     (async () => {
       try {
@@ -100268,17 +100458,17 @@ const KitNeon = ({ escena = [], codigo = "", L = {}, imagenes = {}, t0 = 0, tema
         pintar(tRef.current);
         setListo(true);
       } finally {
-        (0,esm.continueRender)(h);
+        ;(0,esm/* continueRender */._8)(h);
       }
     })();
     return () => {
       vivo = false;
     };
   }, []);
-  (0,react.useLayoutEffect)(() => {
+  (0,react_namespaceFn().useLayoutEffect)(() => {
     if (listo) pintar(t);
   }, [listo, t]);
-  return /* @__PURE__ */ react.createElement(esm.AbsoluteFill, { style: { backgroundColor: fondo ? "#0E081A" : "transparent" } }, /* @__PURE__ */ react.createElement("style", null, BASE + (TEMA_CSS[tema] || TEMA_CSS.neon)), fondo === "neon" && /* @__PURE__ */ react.createElement(FondoNeon, { t, escala: width / 1080 }), /* @__PURE__ */ react.createElement("div", { style: { position: "absolute", inset: 0, isolation: "isolate" } }, Array.from({ length: n }, (_, k) => /* @__PURE__ */ react.createElement(
+  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { backgroundColor: fondo ? "#0E081A" : "transparent" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("style", null, BASE + (TEMA_CSS[tema] || TEMA_CSS.neon)), fondo === "neon" && /* @__PURE__ */ (react_namespaceFn().createElement)(FondoNeon, { t, escala: width / 1080 }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, isolation: "isolate" } }, Array.from({ length: n }, (_, k) => /* @__PURE__ */ (react_namespaceFn().createElement)(
     "div",
     {
       key: k,
@@ -100287,10 +100477,212 @@ const KitNeon = ({ escena = [], codigo = "", L = {}, imagenes = {}, t0 = 0, tema
       },
       style: { position: "absolute", left: 0, top: 0, width: 1080, height: 1920, transform: `scale(${width / 1080})`, transformOrigin: "0 0" }
     },
-    /* @__PURE__ */ react.createElement("div", { className: "st", ref: (el) => {
+    /* @__PURE__ */ (react_namespaceFn().createElement)("div", { className: "st", ref: (el) => {
       raices.current[k] = el;
     } })
   ))));
+};
+
+;// ./src/EmojiPro.tsx
+
+
+
+const CHISPAS = ["#FFFFFF", "#FFD54A"];
+const EmojiPro = ({
+  id,
+  variante = "rebote",
+  fuente = "png",
+  lottie = null,
+  imagen = null,
+  x = 50,
+  y = 30,
+  tamano = 16,
+  energia = 1,
+  acento = "#FFC24D"
+}) => {
+  const f = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width, height, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
+  const t = f / fps;
+  const e = Math.max(0.3, Number(energia) || 1);
+  const lado = Number(tamano) / 100 * Math.min(width, height);
+  const n = idEmoji(id);
+  const resorte = (amort, retraso = 0) => (0,esm/* spring */.oz)({ frame: f - retraso, fps, config: { damping: amort, stiffness: 170, mass: 0.7 } });
+  const salida = (0,esm/* interpolate */.GW)(
+    f,
+    [durationInFrames - Math.round(0.28 * fps), durationInFrames - 1],
+    [1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+  );
+  let escala = 1, dx = 0, dy = 0, rot = 0, sx = 1, sy = 1, rotY = 0, sombra = 0;
+  let filtro = "";
+  let detras = null;
+  let delante = null;
+  let interior = 1;
+  const salto = (periodo, alto) => {
+    const k = Math.abs(Math.sin(t * Math.PI / periodo));
+    const choque = Math.pow(1 - k, 6);
+    return { dy: -k * lado * alto * e, sx: 1 + 0.09 * e * choque, sy: 1 - 0.09 * e * choque, k };
+  };
+  switch (variante) {
+    case "animado":
+      escala = resorte(13);
+      dy = Math.sin(t * 2.2) * lado * 0.03 * e;
+      break;
+    case "rebote": {
+      escala = resorte(7);
+      const s = salto(1.1, 0.1);
+      dy = s.dy;
+      sx = s.sx;
+      sy = s.sy;
+      break;
+    }
+    case "brillo": {
+      escala = resorte(11);
+      dy = Math.sin(t * 2) * lado * 0.025 * e;
+      const pulso = 0.55 + 0.25 * Math.sin(t * 4) * Math.min(1.2, e);
+      filtro = `drop-shadow(0 0 ${lado * 0.07}px ${acento})`;
+      detras = /* @__PURE__ */ React.createElement("div", { style: {
+        position: "absolute",
+        left: -lado * 0.45,
+        top: -lado * 0.45,
+        width: lado * 1.9,
+        height: lado * 1.9,
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${acento} 0%, ${acento}00 64%)`,
+        opacity: pulso
+      } });
+      break;
+    }
+    case "burbuja": {
+      escala = resorte(10);
+      dy = Math.sin(t * 1.9) * lado * 0.035 * e;
+      const w = Math.sin(t * 5) * 0.035 * e;
+      interior = 0.74;
+      detras = /* @__PURE__ */ React.createElement("div", { style: {
+        position: "absolute",
+        left: -lado * 0.21,
+        top: -lado * 0.21,
+        width: lado * 1.42,
+        height: lado * 1.42,
+        borderRadius: "50%",
+        transform: `scale(${1 + w}, ${1 - w})`,
+        background: "radial-gradient(circle at 34% 28%, rgba(255,255,255,0.58), rgba(255,255,255,0.14) 42%, rgba(255,255,255,0.05) 72%)",
+        border: `${Math.max(2, lado * 0.018)}px solid rgba(255,255,255,0.62)`,
+        boxShadow: `0 ${lado * 0.06}px ${lado * 0.16}px rgba(0,0,0,0.28), inset 0 0 ${lado * 0.12}px rgba(255,255,255,0.35)`
+      } });
+      break;
+    }
+    case "sticker": {
+      const ent = resorte(9);
+      escala = ent;
+      rot = (0,esm/* interpolate */.GW)(ent, [0, 1], [-28, -7]) + Math.sin(t * 2.6) * 3 * e;
+      const o = Math.max(2, lado * 0.03);
+      filtro = `drop-shadow(${o}px 0 0 #fff) drop-shadow(-${o}px 0 0 #fff) drop-shadow(0 ${o}px 0 #fff) drop-shadow(0 -${o}px 0 #fff) drop-shadow(0 ${o * 2}px ${o * 2.5}px rgba(0,0,0,0.35))`;
+      break;
+    }
+    case "3d_salto": {
+      const ent = resorte(8);
+      const s = salto(1.25, 0.16);
+      dy = (0,esm/* interpolate */.GW)(ent, [0, 1], [lado * 1.2, 0]) + (f > fps * 0.5 ? s.dy : 0);
+      sx = s.sx;
+      sy = s.sy;
+      sombra = 1 - (f > fps * 0.5 ? s.k * 0.6 : 0.6 * (1 - ent));
+      break;
+    }
+    case "3d_flota":
+      escala = resorte(14);
+      dy = Math.sin(t * 1.8) * lado * 0.09 * e;
+      rot = Math.sin(t * 1.3) * 8 * e;
+      sombra = 0.75 - Math.sin(t * 1.8) * 0.25;
+      break;
+    case "3d_giro": {
+      escala = resorte(12);
+      rotY = (0,esm/* interpolate */.GW)(f, [0, Math.round(0.9 * fps)], [-360, 0], { extrapolateRight: "clamp" }) + Math.sin(t * 2.1) * 35 * Math.min(1.2, e);
+      dy = Math.sin(t * 2.4) * lado * 0.05 * e;
+      sombra = 0.8;
+      break;
+    }
+    case "3d_gelatina": {
+      escala = resorte(9);
+      const ph = t % 1.2;
+      const amp = 0.15 * e * Math.exp(-ph * 1.7);
+      sx = 1 + amp * Math.sin(ph * 16);
+      sy = 1 - amp * Math.sin(ph * 16);
+      dy = -Math.abs(Math.sin(t * Math.PI / 1.2)) * lado * 0.04 * e;
+      sombra = 0.8;
+      break;
+    }
+    case "3d_estallido": {
+      escala = resorte(6.5) * (1 + 0.07 * Math.sin(t * 5) * e);
+      rot = Math.sin(t * 3.1) * 5 * e;
+      const re = t > 0.8 ? (t - 0.8) % 1.4 : t;
+      const grande = t <= 0.8;
+      const onda = (0,esm/* interpolate */.GW)(re, [0, 0.5], [0, 1], { extrapolateRight: "clamp" }) * (grande ? 1 : 0.75);
+      const chispa = (0,esm/* interpolate */.GW)(re, [0, 0.15, 0.75], [0, 1, 0], { extrapolateRight: "clamp" }) * (grande ? 1 : 0.8);
+      delante = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: {
+        position: "absolute",
+        left: lado / 2 - lado * 0.8 * onda,
+        top: lado / 2 - lado * 0.8 * onda,
+        width: lado * 1.6 * onda,
+        height: lado * 1.6 * onda,
+        borderRadius: "50%",
+        border: `${Math.max(2, lado * 0.025)}px solid ${acento}`,
+        opacity: 0.85 * (1 - onda)
+      } }), Array.from({ length: 14 }, (_v, i) => {
+        const ang = i / 14 * Math.PI * 2 + 0.3;
+        const d = (0,esm/* interpolate */.GW)(t, [0, 0.7], [lado * 0.3, lado * 1.15 * e], { extrapolateRight: "clamp" });
+        const r = lado * (i % 3 === 0 ? 0.075 : 0.05);
+        return /* @__PURE__ */ React.createElement("div", { key: i, style: {
+          position: "absolute",
+          left: lado / 2 + Math.cos(ang) * d - r / 2,
+          top: lado / 2 + Math.sin(ang) * d - r / 2,
+          width: r,
+          height: r,
+          borderRadius: "50%",
+          background: i % 3 === 0 ? acento : CHISPAS[i % 2],
+          opacity: chispa,
+          boxShadow: `0 0 ${r}px ${acento}`
+        } });
+      }));
+      sombra = 0.7;
+      break;
+    }
+    default:
+      escala = resorte(10);
+      dy = Math.sin(t * 2) * lado * 0.03 * e;
+  }
+  const emoji = fuente === "lottie" ? lottie ? /* @__PURE__ */ React.createElement(Lottie, { animationData: lottie, loop: true, style: { width: "100%", height: "100%" } }) : /* @__PURE__ */ React.createElement(EmojiAnimado, { id: n, lado: lado * interior }) : /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: imagen || (0,esm/* staticFile */.dQ)(`stickers/rcs_emoji_${n}.png`), style: { width: "100%", height: "100%", objectFit: "contain" } });
+  const cx = Number(x) / 100 * width;
+  const cy = Number(y) / 100 * height;
+  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, sombra > 0 && // (los 3D: la sombra se queda en el «suelo» mientras el emoji sube)
+  /* @__PURE__ */ React.createElement("div", { style: {
+    position: "absolute",
+    left: cx - lado * 0.32,
+    top: cy + lado * 0.42,
+    width: lado * 0.64,
+    height: lado * 0.13,
+    borderRadius: "50%",
+    background: "radial-gradient(ellipse, rgba(0,0,0,0.45), rgba(0,0,0,0) 70%)",
+    opacity: sombra * escala * salida,
+    transform: `scale(${0.75 + 0.25 * sombra})`
+  } }), /* @__PURE__ */ React.createElement("div", { style: {
+    position: "absolute",
+    left: cx - lado / 2,
+    top: cy - lado / 2,
+    width: lado,
+    height: lado,
+    opacity: salida,
+    transform: `translate(${dx}px, ${dy}px) perspective(${lado * 5}px) rotateY(${rotY}deg) rotate(${rot}deg) scale(${Math.max(0, escala)})`
+  } }, detras, /* @__PURE__ */ React.createElement("div", { style: {
+    position: "absolute",
+    left: lado * (1 - interior) / 2,
+    top: lado * (1 - interior) / 2,
+    width: lado * interior,
+    height: lado * interior,
+    filter: filtro || void 0,
+    transform: `scale(${sx}, ${sy})`,
+    transformOrigin: "50% 90%"
+  } }, emoji), delante));
 };
 
 ;// ./src/Root.tsx
@@ -100309,14 +100701,15 @@ const KitNeon = ({ escena = [], codigo = "", L = {}, imagenes = {}, t0 = 0, tema
 
 
 
-const PLANTILLAS = { KitNeon: KitNeon, MotionsCompleto: MotionsCompleto, Pictos3DE: Pictos3DE, ListaRazonesK: ListaRazonesK, MisterioK: MisterioK, RuedaK: RuedaK, AbanicoK: AbanicoK, RutaK: RutaK, TituloNeonK: TituloNeonK, ConceptoK: ConceptoK, MixtoK: MixtoK, RecorteK: RecorteK, SeleccionK: SeleccionK, CalendarioK: CalendarioK, RedNeonK: RedNeonK, PictogramaE: PictogramaE, TableroE: TableroE, PolaroidE: PolaroidE, CuadernoE: CuadernoE, FechaE: FechaE, VidrioE: VidrioE, ChatE: ChatE, CollageE: CollageE, MovilE: MovilE, TijerasE: TijerasE, FotoE: FotoE, PasosT5: PasosT5, DeslizadorT5: DeslizadorT5, EscenaT5: EscenaT5, AcompananteT5: AcompananteT5, VeloCaptionT: VeloCaptionT, TarjetaT5: TarjetaT5, OrbitaT5: OrbitaT5, StickerT5: StickerT5, FinalT5: FinalT5, EditorialT6: EditorialT6, Titulo: Titulo, Saludo: Saludo, Capitulos: Capitulos, Fecha: Fecha, Pareja: Pareja, Pastilla: Pastilla, Encuesta: Encuesta, Comentario: Comentario, Sesion: Sesion, Ninas: Ninas, Notificacion: Notificacion, Tarjeta: Tarjeta, Grafica: Grafica, Pasos: Pasos, Interruptor: Interruptor };
+
+const PLANTILLAS = { EmojiPro: EmojiPro, KitNeon: KitNeon, MotionsCompleto: MotionsCompleto, Pictos3DE: Pictos3DE, ListaRazonesK: ListaRazonesK, MisterioK: MisterioK, RuedaK: RuedaK, AbanicoK: AbanicoK, RutaK: RutaK, TituloNeonK: TituloNeonK, ConceptoK: ConceptoK, MixtoK: MixtoK, RecorteK: RecorteK, SeleccionK: SeleccionK, CalendarioK: CalendarioK, RedNeonK: RedNeonK, PictogramaE: PictogramaE, TableroE: TableroE, PolaroidE: PolaroidE, CuadernoE: CuadernoE, FechaE: FechaE, VidrioE: VidrioE, ChatE: ChatE, CollageE: CollageE, MovilE: MovilE, TijerasE: TijerasE, FotoE: FotoE, PasosT5: PasosT5, DeslizadorT5: DeslizadorT5, EscenaT5: EscenaT5, AcompananteT5: AcompananteT5, VeloCaptionT: VeloCaptionT, TarjetaT5: TarjetaT5, OrbitaT5: OrbitaT5, StickerT5: StickerT5, FinalT5: FinalT5, EditorialT6: EditorialT6, Titulo: Titulo, Saludo: Saludo, Capitulos: Capitulos, Fecha: Fecha, Pareja: Pareja, Pastilla: Pastilla, Encuesta: Encuesta, Comentario: Comentario, Sesion: Sesion, Ninas: Ninas, Notificacion: Notificacion, Tarjeta: Tarjeta, Grafica: Grafica, Pasos: Pasos, Interruptor: Interruptor };
 for (const id of ["PictogramaE", "TableroE", "PolaroidE", "CuadernoE", "FechaE", "VidrioE", "ChatE", "CollageE", "MovilE", "TijerasE"]) PLANTILLAS[id] = conFondo(PLANTILLAS[id]);
 const medida = ({ props }) => {
   const fps = Number(props._fps) || 30;
   return { width: Number(props._ancho) || 1080, height: Number(props._alto) || 1920, fps, durationInFrames: Math.max(2, Math.round((Number(props._dur) || 3.5) * fps)) };
 };
 const RemotionRoot = () => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
-  esm.Composition,
+  esm/* Composition */.BO,
   {
     id: "Ubicacion",
     component: Ubicacion,
@@ -100328,7 +100721,7 @@ const RemotionRoot = () => /* @__PURE__ */ React.createElement(React.Fragment, n
     calculateMetadata: medida
   }
 ), /* @__PURE__ */ React.createElement(
-  esm.Composition,
+  esm/* Composition */.BO,
   {
     id: "Subtitulo",
     component: Subtitulo,
@@ -100339,12 +100732,12 @@ const RemotionRoot = () => /* @__PURE__ */ React.createElement(React.Fragment, n
     defaultProps: { palabras: [{ texto: "Esto", t: 0.05 }, { texto: "es", t: 0.3, rol: "context" }, { texto: "incre\xEDble", t: 0.5, rol: "main" }], modo: "normal" },
     calculateMetadata: medida
   }
-), Object.entries(PLANTILLAS).map(([id, C]) => /* @__PURE__ */ React.createElement(esm.Composition, { key: id, id, component: C, width: 1080, height: 1920, fps: 30, durationInFrames: 90, defaultProps: { titulo: "Casa de la novia" }, calculateMetadata: medida })));
+), Object.entries(PLANTILLAS).map(([id, C]) => /* @__PURE__ */ React.createElement(esm/* Composition */.BO, { key: id, id, component: C, width: 1080, height: 1920, fps: 30, durationInFrames: 90, defaultProps: { titulo: "Casa de la novia" }, calculateMetadata: medida })));
 
 ;// ./src/index.ts
 
 
-(0,esm.registerRoot)(RemotionRoot);
+(0,esm/* registerRoot */.eU)(RemotionRoot);
 
 
 /***/ },
@@ -100574,7 +100967,7 @@ if (false) // removed by dead control flow
 (__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
-var react__WEBPACK_IMPORTED_MODULE_0___namespace_cache;
+let react__WEBPACK_IMPORTED_MODULE_0___namespace_cache;
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6540);
 
 
@@ -137675,201 +138068,6 @@ if (true) {
 
 /***/ },
 
-/***/ 8493
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * @license React
- * use-sync-external-store-shim.production.js
- *
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-
-var React = __webpack_require__(6540);
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
-  useState = React.useState,
-  useEffect = React.useEffect,
-  useLayoutEffect = React.useLayoutEffect,
-  useDebugValue = React.useDebugValue;
-function useSyncExternalStore$2(subscribe, getSnapshot) {
-  var value = getSnapshot(),
-    _useState = useState({ inst: { value: value, getSnapshot: getSnapshot } }),
-    inst = _useState[0].inst,
-    forceUpdate = _useState[1];
-  useLayoutEffect(
-    function () {
-      inst.value = value;
-      inst.getSnapshot = getSnapshot;
-      checkIfSnapshotChanged(inst) && forceUpdate({ inst: inst });
-    },
-    [subscribe, value, getSnapshot]
-  );
-  useEffect(
-    function () {
-      checkIfSnapshotChanged(inst) && forceUpdate({ inst: inst });
-      return subscribe(function () {
-        checkIfSnapshotChanged(inst) && forceUpdate({ inst: inst });
-      });
-    },
-    [subscribe]
-  );
-  useDebugValue(value);
-  return value;
-}
-function checkIfSnapshotChanged(inst) {
-  var latestGetSnapshot = inst.getSnapshot;
-  inst = inst.value;
-  try {
-    var nextValue = latestGetSnapshot();
-    return !objectIs(inst, nextValue);
-  } catch (error) {
-    return !0;
-  }
-}
-function useSyncExternalStore$1(subscribe, getSnapshot) {
-  return getSnapshot();
-}
-var shim =
-  "undefined" === typeof window ||
-  "undefined" === typeof window.document ||
-  "undefined" === typeof window.document.createElement
-    ? useSyncExternalStore$1
-    : useSyncExternalStore$2;
-exports.useSyncExternalStore =
-  void 0 !== React.useSyncExternalStore ? React.useSyncExternalStore : shim;
-
-
-/***/ },
-
-/***/ 2162
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * @license React
- * use-sync-external-store-shim/with-selector.production.js
- *
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-
-var React = __webpack_require__(6540),
-  shim = __webpack_require__(9888);
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
-  useSyncExternalStore = shim.useSyncExternalStore,
-  useRef = React.useRef,
-  useEffect = React.useEffect,
-  useMemo = React.useMemo,
-  useDebugValue = React.useDebugValue;
-exports.useSyncExternalStoreWithSelector = function (
-  subscribe,
-  getSnapshot,
-  getServerSnapshot,
-  selector,
-  isEqual
-) {
-  var instRef = useRef(null);
-  if (null === instRef.current) {
-    var inst = { hasValue: !1, value: null };
-    instRef.current = inst;
-  } else inst = instRef.current;
-  instRef = useMemo(
-    function () {
-      function memoizedSelector(nextSnapshot) {
-        if (!hasMemo) {
-          hasMemo = !0;
-          memoizedSnapshot = nextSnapshot;
-          nextSnapshot = selector(nextSnapshot);
-          if (void 0 !== isEqual && inst.hasValue) {
-            var currentSelection = inst.value;
-            if (isEqual(currentSelection, nextSnapshot))
-              return (memoizedSelection = currentSelection);
-          }
-          return (memoizedSelection = nextSnapshot);
-        }
-        currentSelection = memoizedSelection;
-        if (objectIs(memoizedSnapshot, nextSnapshot)) return currentSelection;
-        var nextSelection = selector(nextSnapshot);
-        if (void 0 !== isEqual && isEqual(currentSelection, nextSelection))
-          return (memoizedSnapshot = nextSnapshot), currentSelection;
-        memoizedSnapshot = nextSnapshot;
-        return (memoizedSelection = nextSelection);
-      }
-      var hasMemo = !1,
-        memoizedSnapshot,
-        memoizedSelection,
-        maybeGetServerSnapshot =
-          void 0 === getServerSnapshot ? null : getServerSnapshot;
-      return [
-        function () {
-          return memoizedSelector(getSnapshot());
-        },
-        null === maybeGetServerSnapshot
-          ? void 0
-          : function () {
-              return memoizedSelector(maybeGetServerSnapshot());
-            }
-      ];
-    },
-    [getSnapshot, getServerSnapshot, selector, isEqual]
-  );
-  var value = useSyncExternalStore(subscribe, instRef[0], instRef[1]);
-  useEffect(
-    function () {
-      inst.hasValue = !0;
-      inst.value = value;
-    },
-    [value]
-  );
-  useDebugValue(value);
-  return value;
-};
-
-
-/***/ },
-
-/***/ 9888
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-if (true) {
-  module.exports = __webpack_require__(8493);
-} else // removed by dead control flow
-{}
-
-
-/***/ },
-
-/***/ 9242
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-if (true) {
-  module.exports = __webpack_require__(2162);
-} else // removed by dead control flow
-{}
-
-
-/***/ },
-
 /***/ 6270
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
@@ -138277,7 +138475,7 @@ var getBackgroundFromHoverState = ({
 /***/ },
 
 /***/ 3482
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+(__unused_webpack___webpack_module__, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export setBundleModeAndUpdate */
@@ -138351,7 +138549,7 @@ var GetVideoComposition = ({ state }) => {
   const { compositions, currentCompositionMetadata, canvasContent } = (0,react__WEBPACK_IMPORTED_MODULE_2__.useContext)(remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.CompositionManager);
   const { setCanvasContent } = (0,react__WEBPACK_IMPORTED_MODULE_2__.useContext)(remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.CompositionSetters);
   const portalContainer = (0,react__WEBPACK_IMPORTED_MODULE_2__.useRef)(null);
-  const { delayRender, continueRender } = (0,remotion__WEBPACK_IMPORTED_MODULE_4__.useDelayRender)();
+  const { delayRender, continueRender } = (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .useDelayRender */ .dB)();
   const handle = (0,react__WEBPACK_IMPORTED_MODULE_2__.useRef)(null);
   const isReady = (0,react__WEBPACK_IMPORTED_MODULE_2__.useRef)(false);
   (0,react__WEBPACK_IMPORTED_MODULE_2__.useLayoutEffect)(() => {
@@ -138411,7 +138609,7 @@ var GetVideoComposition = ({ state }) => {
   });
 };
 var DEFAULT_ROOT_COMPONENT_TIMEOUT = 1e4;
-var waitForRootHandle = (0,remotion__WEBPACK_IMPORTED_MODULE_4__.delayRender)("Loading root component - See https://remotion.dev/docs/troubleshooting/loading-root-component if you experience a timeout", {
+var waitForRootHandle = (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .delayRender */ .IH)("Loading root component - See https://remotion.dev/docs/troubleshooting/loading-root-component if you experience a timeout", {
   timeoutInMilliseconds: typeof window === "undefined" ? DEFAULT_ROOT_COMPONENT_TIMEOUT : window.remotion_puppeteerTimeout ?? DEFAULT_ROOT_COMPONENT_TIMEOUT
 });
 var videoContainer = document.getElementById("video-container");
@@ -138505,7 +138703,7 @@ var renderContent = (Root) => {
     renderToDOM(/* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)("div", {
       children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(DelayedSpinner, {})
     }));
-    Promise.all(/* import() */[__webpack_require__.e(155), __webpack_require__.e(428), __webpack_require__.e(226)]).then(__webpack_require__.bind(__webpack_require__, 6428)).then(({ StudioInternals }) => {
+    Promise.all(/* import() */[__webpack_require__.e(155), __webpack_require__.e(428), __webpack_require__.e(226)]).then(() => (__webpack_require__(6428))).then(({ StudioInternals }) => {
       window.remotion_isStudio = true;
       window.remotion_isReadOnlyStudio = true;
       window.remotion_inputProps = "{}";
@@ -138526,15 +138724,15 @@ var renderContent = (Root) => {
 };
 remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.waitForRoot((Root) => {
   renderContent(Root);
-  (0,remotion__WEBPACK_IMPORTED_MODULE_4__.continueRender)(waitForRootHandle);
+  (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .continueRender */ ._8)(waitForRootHandle);
 });
 var setBundleModeAndUpdate = (state) => {
   setBundleMode(state);
-  const delay = (0,remotion__WEBPACK_IMPORTED_MODULE_4__.delayRender)("Waiting for root component to load - See https://remotion.dev/docs/troubleshooting/loading-root-component if you experience a timeout");
+  const delay = (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .delayRender */ .IH)("Waiting for root component to load - See https://remotion.dev/docs/troubleshooting/loading-root-component if you experience a timeout");
   remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.waitForRoot((Root) => {
     renderContent(Root);
     requestAnimationFrame(() => {
-      (0,remotion__WEBPACK_IMPORTED_MODULE_4__.continueRender)(delay);
+      (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .continueRender */ ._8)(delay);
     });
   });
 };
@@ -138563,9 +138761,9 @@ if (typeof window !== "undefined") {
   };
   window.getStaticCompositions = () => {
     const compositions = getUnevaluatedComps();
-    const inputProps = typeof window === "undefined" || (0,remotion__WEBPACK_IMPORTED_MODULE_4__.getRemotionEnvironment)().isPlayer ? {} : (0,remotion__WEBPACK_IMPORTED_MODULE_4__.getInputProps)() ?? {};
+    const inputProps = typeof window === "undefined" || (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .getRemotionEnvironment */ .P1)().isPlayer ? {} : (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .getInputProps */ .ti)() ?? {};
     return Promise.all(compositions.map(async (c) => {
-      const handle = (0,remotion__WEBPACK_IMPORTED_MODULE_4__.delayRender)(`Running calculateMetadata() for composition ${c.id}. If you didn't want to evaluate this composition, use "selectComposition()" instead of "getCompositions()"`);
+      const handle = (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .delayRender */ .IH)(`Running calculateMetadata() for composition ${c.id}. If you didn't want to evaluate this composition, use "selectComposition()" instead of "getCompositions()"`);
       const originalProps = {
         ...c.defaultProps ?? {},
         ...inputProps ?? {}
@@ -138582,7 +138780,7 @@ if (typeof window !== "undefined") {
         compositionId: c.id
       });
       const resolved = await Promise.resolve(comp);
-      (0,remotion__WEBPACK_IMPORTED_MODULE_4__.continueRender)(handle);
+      (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .continueRender */ ._8)(handle);
       const { props, defaultProps, ...data } = resolved;
       return {
         ...data,
@@ -138609,8 +138807,8 @@ if (typeof window !== "undefined") {
       throw new Error(`Could not find composition with ID ${compId}. Available compositions: ${compositions.map((c) => c.id).join(", ")}`);
     }
     const abortController = new AbortController;
-    const handle = (0,remotion__WEBPACK_IMPORTED_MODULE_4__.delayRender)(`Running the calculateMetadata() function for composition ${compId}`);
-    const inputProps = typeof window === "undefined" || (0,remotion__WEBPACK_IMPORTED_MODULE_4__.getRemotionEnvironment)().isPlayer ? {} : (0,remotion__WEBPACK_IMPORTED_MODULE_4__.getInputProps)() ?? {};
+    const handle = (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .delayRender */ .IH)(`Running the calculateMetadata() function for composition ${compId}`);
+    const inputProps = typeof window === "undefined" || (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .getRemotionEnvironment */ .P1)().isPlayer ? {} : (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .getInputProps */ .ti)() ?? {};
     const originalProps = {
       ...selectedComp.defaultProps ?? {},
       ...inputProps ?? {}
@@ -138626,7 +138824,7 @@ if (typeof window !== "undefined") {
       defaultProps: selectedComp.defaultProps ?? {},
       compositionId: selectedComp.id
     }));
-    (0,remotion__WEBPACK_IMPORTED_MODULE_4__.continueRender)(handle);
+    (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .continueRender */ ._8)(handle);
     const { props, defaultProps, ...data } = prom;
     return {
       ...data,
@@ -138653,68 +138851,44 @@ if (typeof window !== "undefined") {
 (__webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-__webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   AbsoluteFill: () => (/* binding */ AbsoluteFill),
-/* harmony export */   AnimatedImage: () => (/* binding */ AnimatedImage),
-/* harmony export */   Artifact: () => (/* binding */ Artifact),
-/* harmony export */   Audio: () => (/* binding */ Audio),
-/* harmony export */   CanvasImage: () => (/* binding */ CanvasImage),
-/* harmony export */   Composition: () => (/* binding */ Composition),
-/* harmony export */   Config: () => (/* binding */ Config),
-/* harmony export */   Easing: () => (/* binding */ Easing),
-/* harmony export */   Experimental: () => (/* binding */ Experimental),
-/* harmony export */   Folder: () => (/* binding */ Folder),
-/* harmony export */   FolderContext: () => (/* binding */ FolderContext),
-/* harmony export */   Freeze: () => (/* binding */ Freeze),
-/* harmony export */   HTML_IN_CANVAS_UNSUPPORTED_MESSAGE: () => (/* binding */ HTML_IN_CANVAS_UNSUPPORTED_MESSAGE),
-/* harmony export */   Html5Audio: () => (/* binding */ Html5Audio),
-/* harmony export */   Html5Video: () => (/* binding */ Html5Video),
-/* harmony export */   HtmlInCanvas: () => (/* binding */ HtmlInCanvas),
-/* harmony export */   IFrame: () => (/* binding */ IFrame),
-/* harmony export */   Img: () => (/* binding */ Img),
-/* harmony export */   Interactive: () => (/* binding */ Interactive),
+/* harmony export */   BO: () => (/* binding */ Composition),
+/* harmony export */   Bk: () => (/* binding */ useVideoConfig),
+/* harmony export */   Dm: () => (/* binding */ isHtmlInCanvasSupported),
+/* harmony export */   E9: () => (/* binding */ Img),
+/* harmony export */   FZ: () => (/* binding */ Loop),
+/* harmony export */   Fx: () => (/* binding */ useBufferState),
+/* harmony export */   GS: () => (/* binding */ Easing),
+/* harmony export */   GW: () => (/* binding */ interpolate),
+/* harmony export */   H1: () => (/* binding */ AbsoluteFill),
+/* harmony export */   HG: () => (/* binding */ Interactive),
+/* harmony export */   IH: () => (/* binding */ delayRender),
 /* harmony export */   Internals: () => (/* binding */ Internals),
-/* harmony export */   Loop: () => (/* binding */ Loop),
-/* harmony export */   MediaPlaybackError: () => (/* binding */ MediaPlaybackError),
-/* harmony export */   OffthreadVideo: () => (/* binding */ OffthreadVideo),
-/* harmony export */   Sequence: () => (/* binding */ Sequence),
-/* harmony export */   Series: () => (/* binding */ Series),
-/* harmony export */   Solid: () => (/* binding */ Solid),
-/* harmony export */   Still: () => (/* binding */ Still),
-/* harmony export */   Track: () => (/* binding */ Track),
-/* harmony export */   VERSION: () => (/* binding */ VERSION),
-/* harmony export */   Video: () => (/* binding */ Video),
-/* harmony export */   absoluteFillSchema: () => (/* binding */ absoluteFillSchema),
-/* harmony export */   assertValidInterpolateEasingOption: () => (/* binding */ assertValidInterpolateEasingOption),
-/* harmony export */   assertValidInterpolatePosterizeOption: () => (/* binding */ assertValidInterpolatePosterizeOption),
-/* harmony export */   cancelRender: () => (/* binding */ cancelRender),
-/* harmony export */   continueRender: () => (/* binding */ continueRender),
-/* harmony export */   createEffect: () => (/* binding */ createEffect),
-/* harmony export */   delayRender: () => (/* binding */ delayRender),
-/* harmony export */   getHtmlInCanvasUnsupportedMessage: () => (/* binding */ getHtmlInCanvasUnsupportedMessage),
-/* harmony export */   getInputProps: () => (/* binding */ getInputProps),
-/* harmony export */   getRemotionEnvironment: () => (/* binding */ getRemotionEnvironment),
-/* harmony export */   getStaticFiles: () => (/* binding */ getStaticFiles),
-/* harmony export */   interpolate: () => (/* binding */ interpolate),
-/* harmony export */   interpolateColors: () => (/* binding */ interpolateColors),
-/* harmony export */   isHtmlInCanvasSupported: () => (/* binding */ isHtmlInCanvasSupported),
-/* harmony export */   measureSpring: () => (/* binding */ measureSpring),
-/* harmony export */   prefetch: () => (/* binding */ prefetch),
-/* harmony export */   random: () => (/* binding */ random),
-/* harmony export */   registerRoot: () => (/* binding */ registerRoot),
-/* harmony export */   spring: () => (/* binding */ spring),
-/* harmony export */   staticFile: () => (/* binding */ staticFile),
-/* harmony export */   useBufferState: () => (/* binding */ useBufferState),
-/* harmony export */   useCurrentFrame: () => (/* binding */ useCurrentFrame),
-/* harmony export */   useCurrentScale: () => (/* binding */ useCurrentScale),
-/* harmony export */   useDelayRender: () => (/* binding */ useDelayRender),
-/* harmony export */   useIsInsideNonPremountFreeze: () => (/* binding */ useIsInsideNonPremountFreeze),
-/* harmony export */   usePixelDensity: () => (/* binding */ usePixelDensity),
-/* harmony export */   useRemotionEnvironment: () => (/* binding */ useRemotionEnvironment),
-/* harmony export */   useVideoConfig: () => (/* binding */ useVideoConfig),
-/* harmony export */   watchStaticFile: () => (/* binding */ watchStaticFile)
+/* harmony export */   K_: () => (/* binding */ watchStaticFile),
+/* harmony export */   Kl: () => (/* binding */ Freeze),
+/* harmony export */   OK: () => (/* binding */ useRemotionEnvironment),
+/* harmony export */   P1: () => (/* binding */ getRemotionEnvironment),
+/* harmony export */   UC: () => (/* binding */ useCurrentFrame),
+/* harmony export */   Y7: () => (/* binding */ interpolateColors),
+/* harmony export */   _8: () => (/* binding */ continueRender),
+/* harmony export */   dB: () => (/* binding */ useDelayRender),
+/* harmony export */   dQ: () => (/* binding */ staticFile),
+/* harmony export */   eU: () => (/* binding */ registerRoot),
+/* harmony export */   fP: () => (/* binding */ Audio),
+/* harmony export */   gd: () => (/* binding */ Sequence),
+/* harmony export */   jC: () => (/* binding */ HtmlInCanvas),
+/* harmony export */   kY: () => (/* binding */ Html5Video),
+/* harmony export */   oz: () => (/* binding */ spring),
+/* harmony export */   pe: () => (/* binding */ OffthreadVideo),
+/* harmony export */   ti: () => (/* binding */ getInputProps),
+/* harmony export */   uk: () => (/* binding */ MediaPlaybackError),
+/* harmony export */   xN: () => (/* binding */ Html5Audio),
+/* harmony export */   xv: () => (/* binding */ VERSION),
+/* harmony export */   yT: () => (/* binding */ random),
+/* harmony export */   zo: () => (/* binding */ cancelRender)
 /* harmony export */ });
+/* unused harmony exports AnimatedImage, Artifact, CanvasImage, Config, Experimental, Folder, FolderContext, HTML_IN_CANVAS_UNSUPPORTED_MESSAGE, IFrame, Series, Solid, Still, Track, Video, absoluteFillSchema, assertValidInterpolateEasingOption, assertValidInterpolatePosterizeOption, createEffect, getHtmlInCanvasUnsupportedMessage, getStaticFiles, measureSpring, prefetch, useCurrentScale, useIsInsideNonPremountFreeze, usePixelDensity */
+/* unused harmony import specifier */ var useContext49;
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6540);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(961);
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4848);
@@ -138990,7 +139164,7 @@ class CompositionErrorBoundary extends react__WEBPACK_IMPORTED_MODULE_0__.Compon
 }
 
 // src/CompositionManagerContext.tsx
-
+;
 var getAssetPreviewCompositionId = (asset) => `asset:${asset}`;
 var defaultCompositionManagerContext = {
   compositions: [],
@@ -145567,7 +145741,7 @@ var RegularSequenceRefForwardingFunction = ({
   if (lastPlaybackRate.current.frame !== absoluteFrame && lastPlaybackRate.current.playbackRate !== playbackRate) {
     throw new Error('The "playbackRate" prop of <Sequence /> must be constant. Animating playbackRate is not supported.');
   }
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+  ;(0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
     lastPlaybackRate.current = { playbackRate, frame: absoluteFrame };
   }, [absoluteFrame, playbackRate]);
   const videoConfig = useVideoConfig();
@@ -151731,7 +151905,7 @@ function truncateSrcForLabel(src) {
 }
 
 // src/canvas-image/CanvasImage.tsx
-
+;
 var canvasImageSchema = {
   src: {
     type: "asset",
@@ -153972,8 +154146,8 @@ var getBrowserPixelDensity = () => {
   return window.devicePixelRatio || 1;
 };
 var usePixelDensity = (options) => {
-  const pixelDensity = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(PixelDensityContext);
-  const canUseRemotionHooks = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(CanUseRemotionHooks);
+  const pixelDensity = useContext49(PixelDensityContext);
+  const canUseRemotionHooks = useContext49(CanUseRemotionHooks);
   if (pixelDensity !== null) {
     return pixelDensity;
   }
@@ -154059,7 +154233,7 @@ var OffthreadVideoForRendering = ({
   if (!videoConfig) {
     throw new Error("No video config found");
   }
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+  ;(0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (!src) {
       throw new Error("No src passed");
     }
@@ -154261,7 +154435,7 @@ class MediaPlaybackError extends Error {
 }
 
 // src/video/VideoForPreview.tsx
-
+;
 var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
   const context = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SharedAudioContext);
   if (!context) {
@@ -155642,7 +155816,7 @@ var VideoForRenderingForwardFunction = ({
   if (!videoConfig) {
     throw new Error("No video config found");
   }
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+  ;(0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (!props.src) {
       throw new Error("No src passed");
     }
@@ -155944,14 +156118,14 @@ var VideoForwardingFunction = (props, ref) => {
 };
 var Html5Video = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(VideoForwardingFunction);
 addSequenceStackTraces(Html5Video);
-var Video = Html5Video;
+var Video = (/* unused pure expression or super */ null && (Html5Video));
 // src/index.ts
 checkMultipleRemotionVersions();
-var Experimental = {
+var Experimental = (/* unused pure expression or super */ null && ({
   Clipper,
   Null,
   useIsPlayer
-};
+}));
 var proxyObj = {};
 var Config = new Proxy(proxyObj, {
   get(_, prop) {
@@ -158595,17 +158769,17 @@ var NoReactInternals = {
 /******/ 	});
 /************************************************************************/
 /******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
+/******/ 	const __webpack_module_cache__ = {};
 /******/ 	
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		const cachedModule = __webpack_module_cache__[moduleId];
 /******/ 		if (cachedModule !== undefined) {
 /******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 		const module = __webpack_module_cache__[moduleId] = {
 /******/ 			// no module.id needed
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
@@ -158623,14 +158797,29 @@ var NoReactInternals = {
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/amd options */
-/******/ 	(() => {
-/******/ 		__webpack_require__.amdO = {};
-/******/ 	})();
+/******/ 	__webpack_require__.amdO = {};
+/******/ 	
+/******/ 	/* webpack/runtime/concatenation wrap */
+/******/ 	// wrap a concatenated module body as a lazy, memoized accessor; mod is
+/******/ 	// set before the body runs so re-entrant calls (require cycles) observe
+/******/ 	// the partial exports like Node.js
+/******/ 	__webpack_require__.cw = (body) => {
+/******/ 		var mod;
+/******/ 		return () => {
+/******/ 			if (body) {
+/******/ 				var fn = body;
+/******/ 				body = 0;
+/******/ 				mod = { exports: {} };
+/******/ 				fn.call(mod.exports, mod, mod.exports);
+/******/ 			}
+/******/ 			return mod.exports;
+/******/ 		};
+/******/ 	};
 /******/ 	
 /******/ 	/* webpack/runtime/create fake namespace object */
 /******/ 	(() => {
-/******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
-/******/ 		var leafPrototypes;
+/******/ 		const getProto = Object.getPrototypeOf;
+/******/ 		let leafPrototypes;
 /******/ 		// create a fake namespace object
 /******/ 		// mode & 1: value is a module id, require it
 /******/ 		// mode & 2: merge all properties of value into the ns
@@ -158644,9 +158833,9 @@ var NoReactInternals = {
 /******/ 				if((mode & 4) && value.__esModule) return value;
 /******/ 				if((mode & 16) && typeof value.then === 'function') return value;
 /******/ 			}
-/******/ 			var ns = Object.create(null);
+/******/ 			const ns = Object.create(null);
 /******/ 			__webpack_require__.r(ns);
-/******/ 			var def = {};
+/******/ 			const def = {};
 /******/ 			leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
 /******/ 			for(var current = mode & 2 && value; (typeof current == 'object' || typeof current == 'function') && !~leafPrototypes.indexOf(current); current = getProto(current)) {
 /******/ 				Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
@@ -158658,68 +158847,64 @@ var NoReactInternals = {
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 	// define getter/value functions for harmony exports
+/******/ 	__webpack_require__.d = (exports, definition) => {
+/******/ 		if(Array.isArray(definition)) {
+/******/ 			var i = 0;
+/******/ 			while(i < definition.length) {
+/******/ 				var key = definition[i++];
+/******/ 				var binding = definition[i++];
+/******/ 				var descriptor = binding === 0 ? { enumerable: true, value: definition[i++] } : { enumerable: true, get: binding };
+/******/ 				if(!__webpack_require__.o(exports, key)) Object.defineProperty(exports, key, descriptor);
+/******/ 			}
+/******/ 		} else {
 /******/ 			for(var key in definition) {
 /******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
-/******/ 		};
-/******/ 	})();
+/******/ 		}
+/******/ 	};
 /******/ 	
 /******/ 	/* webpack/runtime/ensure chunk */
-/******/ 	(() => {
-/******/ 		__webpack_require__.f = {};
-/******/ 		// This file contains only the entry chunk.
-/******/ 		// The chunk loading function for additional chunks
-/******/ 		__webpack_require__.e = (chunkId) => {
-/******/ 			return Promise.all(Object.keys(__webpack_require__.f).reduce((promises, key) => {
-/******/ 				__webpack_require__.f[key](chunkId, promises);
-/******/ 				return promises;
-/******/ 			}, []));
-/******/ 		};
-/******/ 	})();
+/******/ 	__webpack_require__.f = {};
+/******/ 	// This file contains only the entry chunk.
+/******/ 	// The chunk loading function for additional chunks
+/******/ 	__webpack_require__.e = (chunkId) => {
+/******/ 		const promises = [];
+/******/ 		__webpack_require__.f.j(chunkId, promises);
+/******/ 		return Promise.all(promises);
+/******/ 	};
 /******/ 	
 /******/ 	/* webpack/runtime/get javascript chunk filename */
-/******/ 	(() => {
-/******/ 		// This function allow to reference async chunks
-/******/ 		__webpack_require__.u = (chunkId) => {
-/******/ 			// return url for filenames based on template
-/******/ 			return "" + chunkId + ".bundle.js";
-/******/ 		};
-/******/ 	})();
+/******/ 	// This function allow to reference async chunks
+/******/ 	__webpack_require__.u = (chunkId) => (chunkId + ".bundle.js");
 /******/ 	
 /******/ 	/* webpack/runtime/global */
-/******/ 	(() => {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
+/******/ 	__webpack_require__.g = (function() {
+/******/ 		if (typeof globalThis === 'object') return globalThis;
+/******/ 		try {
+/******/ 			return this || new Function('return this')();
+/******/ 		} catch (e) {
+/******/ 			if (typeof window === 'object') return window;
+/******/ 		}
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
+/******/ 	__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop));
 /******/ 	
 /******/ 	/* webpack/runtime/load script */
 /******/ 	(() => {
-/******/ 		var inProgress = {};
-/******/ 		var dataWebpackPrefix = "cinecaptions-pro-remotion:";
+/******/ 		const inProgress = {};
+/******/ 		const dataWebpackPrefix = "cinecaptions-pro-remotion:";
 /******/ 		// loadScript function to load a script via script tag
 /******/ 		__webpack_require__.l = (url, done, key, chunkId) => {
 /******/ 			if(inProgress[url]) { inProgress[url].push(done); return; }
-/******/ 			var script, needAttach;
+/******/ 			let script, needAttach;
 /******/ 			if(key !== undefined) {
-/******/ 				var scripts = document.getElementsByTagName("script");
+/******/ 				const scripts = document.getElementsByTagName("script");
 /******/ 				for(var i = 0; i < scripts.length; i++) {
-/******/ 					var s = scripts[i];
+/******/ 					const s = scripts[i];
 /******/ 					if(s.getAttribute("src") == url || s.getAttribute("data-webpack") == dataWebpackPrefix + key) { script = s; break; }
 /******/ 				}
 /******/ 			}
@@ -158736,17 +158921,17 @@ var NoReactInternals = {
 /******/ 				script.src = url;
 /******/ 			}
 /******/ 			inProgress[url] = [done];
-/******/ 			var onScriptComplete = (prev, event) => {
+/******/ 			const onScriptComplete = (prev, event) => {
 /******/ 				// avoid mem leaks in IE.
 /******/ 				script.onerror = script.onload = null;
 /******/ 				clearTimeout(timeout);
-/******/ 				var doneFns = inProgress[url];
+/******/ 				const doneFns = inProgress[url];
 /******/ 				delete inProgress[url];
-/******/ 				script.parentNode && script.parentNode.removeChild(script);
-/******/ 				doneFns && doneFns.forEach((fn) => (fn(event)));
+/******/ 				script.parentNode?.removeChild(script);
+/******/ 				doneFns?.forEach((fn) => (fn(event)));
 /******/ 				if(prev) return prev(event);
 /******/ 			}
-/******/ 			var timeout = setTimeout(onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }), 120000);
+/******/ 			const timeout = setTimeout(onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }), 120000);
 /******/ 			script.onerror = onScriptComplete.bind(null, script.onerror);
 /******/ 			script.onload = onScriptComplete.bind(null, script.onload);
 /******/ 			needAttach && document.head.appendChild(script);
@@ -158754,36 +158939,41 @@ var NoReactInternals = {
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = (exports) => {
+/******/ 		Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/set anonymous default export name */
+/******/ 	// set .name for anonymous default exports per ES spec
+/******/ 	// skipped when the property is non-configurable (pre-ES2015 engines),
+/******/ 	// where Object.defineProperty would throw
+/******/ 	__webpack_require__.dn = (x) => {
+/******/ 		var descriptor = Object.getOwnPropertyDescriptor(x, "name");
+/******/ 		if (!descriptor || (!descriptor.writable && descriptor.configurable)) Object.defineProperty(x, "name", { value: "default", configurable: true });
+/******/ 	};
 /******/ 	
 /******/ 	/* webpack/runtime/publicPath */
 /******/ 	(() => {
-/******/ 		var scriptUrl;
+/******/ 		let scriptUrl;
 /******/ 		if (__webpack_require__.g.importScripts) scriptUrl = __webpack_require__.g.location + "";
-/******/ 		var document = __webpack_require__.g.document;
+/******/ 		const document = __webpack_require__.g.document;
 /******/ 		if (!scriptUrl && document) {
-/******/ 			if (document.currentScript && document.currentScript.tagName.toUpperCase() === 'SCRIPT')
+/******/ 			if (document.currentScript?.tagName.toUpperCase() === 'SCRIPT')
 /******/ 				scriptUrl = document.currentScript.src;
 /******/ 			if (!scriptUrl) {
-/******/ 				var scripts = document.getElementsByTagName("script");
+/******/ 				const scripts = document.getElementsByTagName("script");
 /******/ 				if(scripts.length) {
-/******/ 					var i = scripts.length - 1;
-/******/ 					while (i > -1 && (!scriptUrl || !/^http(s?):/.test(scriptUrl))) scriptUrl = scripts[i--].src;
+/******/ 					let i = scripts.length - 1;
+/******/ 					while (i > -1 && (!scriptUrl || !/^https?:/.test(scriptUrl))) scriptUrl = scripts[i--].src;
 /******/ 				}
 /******/ 			}
 /******/ 		}
 /******/ 		// When supporting browsers where an automatic publicPath is not supported you must specify an output.publicPath manually via configuration
 /******/ 		// or pass an empty string ("") and set the __webpack_public_path__ variable from your code to use your own logic.
 /******/ 		if (!scriptUrl) throw new Error("Automatic publicPath is not supported in this browser");
-/******/ 		scriptUrl = scriptUrl.replace(/^blob:/, "").replace(/#.*$/, "").replace(/\?.*$/, "").replace(/\/[^\/]+$/, "/");
+/******/ 		scriptUrl = scriptUrl.replace(/^blob:|[?#].*$/g, "").replace(/\/[^/]+$/, "/");
 /******/ 		__webpack_require__.p = scriptUrl;
 /******/ 	})();
 /******/ 	
@@ -158794,13 +158984,13 @@ var NoReactInternals = {
 /******/ 		// object to store loaded and loading chunks
 /******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
 /******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
-/******/ 		var installedChunks = {
+/******/ 		const installedChunks = {
 /******/ 			792: 0
 /******/ 		};
 /******/ 		
 /******/ 		__webpack_require__.f.j = (chunkId, promises) => {
 /******/ 				// JSONP chunk loading for javascript
-/******/ 				var installedChunkData = __webpack_require__.o(installedChunks, chunkId) ? installedChunks[chunkId] : undefined;
+/******/ 				let installedChunkData = __webpack_require__.o(installedChunks, chunkId) ? installedChunks[chunkId] : undefined;
 /******/ 				if(installedChunkData !== 0) { // 0 means "already installed".
 /******/ 		
 /******/ 					// a Promise means "currently loading".
@@ -158809,29 +158999,28 @@ var NoReactInternals = {
 /******/ 					} else {
 /******/ 						if(true) { // all chunks have JS
 /******/ 							// setup Promise in chunk cache
-/******/ 							var promise = new Promise((resolve, reject) => (installedChunkData = installedChunks[chunkId] = [resolve, reject]));
+/******/ 							const promise = new Promise((resolve, reject) => (installedChunkData = installedChunks[chunkId] = [resolve, reject]));
 /******/ 							promises.push(installedChunkData[2] = promise);
 /******/ 		
-/******/ 							// start chunk loading
-/******/ 							var url = __webpack_require__.p + __webpack_require__.u(chunkId);
 /******/ 							// create error before stack unwound to get useful stacktrace later
-/******/ 							var error = new Error();
-/******/ 							var loadingEnded = (event) => {
+/******/ 							const error = new Error();
+/******/ 							const loadingEnded = (event) => {
 /******/ 								if(__webpack_require__.o(installedChunks, chunkId)) {
 /******/ 									installedChunkData = installedChunks[chunkId];
 /******/ 									if(installedChunkData !== 0) installedChunks[chunkId] = undefined;
 /******/ 									if(installedChunkData) {
-/******/ 										var errorType = event && (event.type === 'load' ? 'missing' : event.type);
-/******/ 										var realSrc = event && event.target && event.target.src;
+/******/ 										const errorType = event && (event.type === 'load' ? 'missing' : event.type);
+/******/ 										const realSrc = event && event.target && event.target.src;
 /******/ 										error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
 /******/ 										error.name = 'ChunkLoadError';
 /******/ 										error.type = errorType;
 /******/ 										error.request = realSrc;
+/******/ 										error.event = event;
 /******/ 										installedChunkData[1](error);
 /******/ 									}
 /******/ 								}
 /******/ 							};
-/******/ 							__webpack_require__.l(url, loadingEnded, "chunk-" + chunkId, chunkId);
+/******/ 							__webpack_require__.l(__webpack_require__.p + __webpack_require__.u(chunkId), loadingEnded, "chunk-" + chunkId, chunkId);
 /******/ 						}
 /******/ 					}
 /******/ 				}
@@ -158848,8 +159037,8 @@ var NoReactInternals = {
 /******/ 		// no on chunks loaded
 /******/ 		
 /******/ 		// install a JSONP callback for chunk loading
-/******/ 		var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
-/******/ 			var [chunkIds, moreModules, runtime] = data;
+/******/ 		const webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
+/******/ 			let [chunkIds, moreModules, runtime] = data;
 /******/ 			// add "moreModules" to the modules object,
 /******/ 			// then flag all "chunkIds" as loaded and fire callback
 /******/ 			var moduleId, chunkId, i = 0;
@@ -158872,7 +159061,7 @@ var NoReactInternals = {
 /******/ 		
 /******/ 		}
 /******/ 		
-/******/ 		var chunkLoadingGlobal = self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || [];
+/******/ 		const chunkLoadingGlobal = self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || [];
 /******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
 /******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 /******/ 	})();
@@ -158884,9 +159073,9 @@ var NoReactInternals = {
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
 /******/ 	__webpack_require__(6507);
 /******/ 	__webpack_require__(3999);
-/******/ 	__webpack_require__(3260);
+/******/ 	__webpack_require__(4715);
 /******/ 	__webpack_require__(3610);
-/******/ 	var __webpack_exports__ = __webpack_require__(3482);
+/******/ 	let __webpack_exports__ = __webpack_require__(3482);
 /******/ 	
 /******/ })()
 ;

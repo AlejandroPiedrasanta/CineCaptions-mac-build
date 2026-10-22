@@ -15,7 +15,7 @@
 /* harmony import */ var _index_zgedatsf_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3505);
 /* harmony import */ var _index_acg3en8e_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(7129);
 /* harmony import */ var _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(3872);
-Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(6540);
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(4848);
 
@@ -148,7 +148,7 @@ var DEFAULT_REPETITION_PENALTY = 1;
 var DEFAULT_NO_REPEAT_NGRAM_SIZE = 0;
 var MAX_CHUNK_LENGTH_IN_SECONDS = 30;
 var REMOTION_CAPTION_STYLES_URL = "https://www.remotion.dev/elements/captions";
-var AVAILABLE_MODELS = Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
+var AVAILABLE_MODELS = Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
 var settingsPanel = {
   ..._index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .optionsPanel */ .Z6,
   flexDirection: "column",
@@ -441,10 +441,10 @@ var OutputSettings = ({ exists, onOutNameChange, outName, validationMessage }) =
       (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_0__/* .showNotification */ .Ds)("Could not find the public folder", 2000);
       return;
     }
-    (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_0__/* .openInFileExplorer */ .dP)({
+    ;(0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_0__/* .openInFileExplorer */ .dP)({
       directory: `${window.remotion_publicFolderExists}/${outName}`
     }).catch((err) => {
-      (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_0__/* .showNotification */ .Ds)(`Could not open file: ${err.message}`, 2000);
+      ;(0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_0__/* .showNotification */ .Ds)(`Could not open file: ${err.message}`, 2000);
     });
   }, [outName]);
   const renderOpenIcon = (0,react__WEBPACK_IMPORTED_MODULE_9__.useCallback)((color) => {
@@ -752,7 +752,7 @@ var TranscriptionModal = ({
     onClick: () => setLibraryUrl(url)
   }));
   const [tab, setTab] = (0,react__WEBPACK_IMPORTED_MODULE_9__.useState)("transcribe");
-  const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_9__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
+  const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_9__.useCallback)((model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
   const cachedModels = (0,_index_zpf6xem0_mjs__WEBPACK_IMPORTED_MODULE_4__/* .useModelCacheStatus */ .X)({
     isModelCached,
     models: AVAILABLE_MODELS,
@@ -779,7 +779,7 @@ var TranscriptionModal = ({
   const staticFiles = (0,_index_j19a8yz6_mjs__WEBPACK_IMPORTED_MODULE_2__/* .useStaticFiles */ .JM)();
   (0,react__WEBPACK_IMPORTED_MODULE_9__.useEffect)(() => {
     let cancelled = false;
-    Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())().then((result) => {
+    Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())().then((result) => {
       if (cancelled) {
         return;
       }
@@ -1118,7 +1118,7 @@ You can also manage the browser cache here.`,
 /* harmony export */   B: () => (/* binding */ Models)
 /* harmony export */ });
 /* harmony import */ var _index_zgedatsf_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3505);
-Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4848);
 
@@ -1127,14 +1127,14 @@ Object(function webpackMissingModule() { var e = new Error("Cannot find module '
 
 
 
-var AVAILABLE_MODELS = Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
+var AVAILABLE_MODELS = Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
 var Models = ({ description, indent, visible }) => {
-  const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
-  const loadModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model, onProgress) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
+  const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
+  const loadModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model, onProgress) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
     model,
     onProgress: (progress) => onProgress(progress.progress)
   }), []);
-  const removeModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
+  const removeModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_index_zgedatsf_mjs__WEBPACK_IMPORTED_MODULE_0__/* .ModelManager */ .P, {
     ariaLabel: "Whisper models",
     availableModels: AVAILABLE_MODELS,
@@ -1142,7 +1142,7 @@ var Models = ({ description, indent, visible }) => {
     indent,
     isModelCached,
     loadModel,
-    prepare: Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()),
+    prepare: Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()),
     removeModel,
     visible
   });

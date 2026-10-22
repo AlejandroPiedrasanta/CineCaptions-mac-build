@@ -11,7 +11,7 @@ Lo lanza edicion_pro.aplicar() (resolve_mcp.ejecutar_py) y lee ~/DaVinciSubtitle
      'sonidos': [{'ini': fotograma, 'archivo': .wav, 'dur': segundos}], 'punch': [[inicio absoluto del clip de V1, zoom]], 'cache': True,
      'captions_propios': True (Tema 5: los captions son animaciones Remotion en PRO-SUBS; los Text+ de respaldo que puso GO se apagan),
      'gris_foco': [[ini, fin]] (Tema 5: el fondo en blanco y negro bajo la persona a color), 'zoom': [[corte, n antes, n después]] (Tema 5:
-     la transición con zoom de Fusion en los cortes)}
+     la transición con zoom de Fusion en los cortes), 'solo_encima': True (v5.29, «Listo» en Efectos › Posición: SOLO «detrás de ti»)}
 
 Pistas (de abajo arriba, justo encima de V1 / FX-BROLL y DEBAJO de los captions, que siguen mandando):
 PRO-BROLL · PRO-ZOOM · PRO-GRIS · PRO-FONDO · PRO-VELO · PRO-DETRAS · PRO-PERSONA · PRO-DELANTE · PRO-SUBS; el audio en «PRO-SONIDO». Cada corrida vacía y rellena sus pistas
@@ -42,6 +42,39 @@ TRANSFORMACION = ('Scaling', 'ZoomX', 'ZoomY', 'Pan', 'Tilt', 'RotationAngle', '
 MARCA = 'ccpro-subir'                    # marca en cada clip de captions que se subió: 'ccpro-subir:<Tilt antes>:<Tilt después>'
 PISTA_SONIDO = 'PRO-SONIDO'              # (versiones anteriores: todo en una pista)
 PISTAS_AUDIO = ['PRO-WHOOSH', 'PRO-TEXTURA', 'PRO-RISER', 'PRO-HIT']   # una familia de sonido por pista (guía de sonido)
+# v5.24 (el usuario: «que cada pista indique qué hace, para que esté más ordenado»): en Resolve cada pista se ve «qué hace · CÓDIGO» (lo que
+# hace delante: la cabecera corta los nombres largos). Se busca SIEMPRE por el código (_id), así re-aplicar y los timelines de antes (solo el
+# código) siguen funcionando. Gemelo: CineCaptions_EdicionPro.lua.
+SEP_PISTA = ' · '
+DESCRIPCION = {
+    'PRO-BROLL': 'B-roll', 'PRO-ZOOM': 'Video con cámara y zooms', 'PRO-GRIS': 'Fondo en gris', 'PRO-FONDO': 'Fondos animados',
+    'PRO-VELO': 'Velos', 'PRO-DETRAS': 'Gráficos detrás de ti', 'PRO-PERSONA': 'Persona recortada', 'PRO-DELANTE': 'Gráficos delante',
+    'PRO-SUBS': 'Captions', 'PRO-SUBS2': 'Captions (2.ª)', 'PRO-ENCIMA': 'Persona encima de los captions', 'PRO-ICONOS': 'Iconos y cortinillas',
+    'PRO-MOTIONS': 'Motions completo', 'PRO-SONIDO': 'Sonidos', 'PRO-WHOOSH': 'Sonidos: whoosh', 'PRO-TEXTURA': 'Sonidos: texturas',
+    'PRO-RISER': 'Sonidos: subidas', 'PRO-HIT': 'Sonidos: golpes',
+}
+
+
+def _id(nombre):
+    """El código de una pista («Captions · PRO-SUBS» → «PRO-SUBS»; uno sin descripción, tal cual)."""
+    nombre = str(nombre or '')
+    return nombre.rsplit(SEP_PISTA, 1)[-1] if SEP_PISTA in nombre else nombre
+
+
+def _etiquetar(tl):
+    """Al final: cada pista de la PRO con lo que hace delante de su código. Devuelve cuántas renombró."""
+    n = 0
+    for tipo in ('video', 'audio'):
+        for i in range(1, int(tl.GetTrackCount(tipo) or 0) + 1):
+            actual = str(tl.GetTrackName(tipo, i) or '')
+            codigo = _id(actual)
+            if codigo in DESCRIPCION and actual != DESCRIPCION[codigo] + SEP_PISTA + codigo:
+                try:
+                    if tl.SetTrackName(tipo, i, DESCRIPCION[codigo] + SEP_PISTA + codigo):
+                        n += 1
+                except Exception:
+                    pass
+    return n
 BIN = 'RCS · Edición PRO'
 NOMBRE_COMP = 'CineCaptions PRO · persona'
 NOMBRE_ZOOM = 'CineCaptions PRO · zoom'
@@ -51,6 +84,14 @@ RASTREO_MAX_S = 150
 
 def _norm(r):
     return os.path.normcase(os.path.normpath(str(r)))
+
+
+def _pausa(s):
+    """Esperar a que la interfaz de Resolve se ponga al día solo sirve si este script corre en un hilo aparte; en el hilo principal (v5.33,
+    «Listo» síncrono) la bloquearía sin dejarla avanzar."""
+    import threading
+    if threading.current_thread() is not threading.main_thread():
+        time.sleep(s)
 
 
 def _buscar(carpeta, buscada):
@@ -151,13 +192,13 @@ def _preimportar(mp, caja, datos):
                 _alfa_recto(c)
         except Exception:
             pass
-    time.sleep(1.0)                                                        # (que Resolve termine de leerlos antes de empezar a colocar)
+    _pausa(1.0)                                                            # (que Resolve termine de leerlos antes de empezar a colocar)
     return len(nuevos)
 
 
 def _indice(tl, nombre, tipo='video'):
     for i in range(1, int(tl.GetTrackCount(tipo) or 0) + 1):
-        if tl.GetTrackName(tipo, i) == nombre:
+        if _id(tl.GetTrackName(tipo, i)) == nombre:                       # (v5.24: con su descripción delante, por el código)
             return i
     return None
 
@@ -509,15 +550,17 @@ def _broll(tl, mp, caja, tomas, base, pista):
 def _pistas_captions(tl):
     """Las pistas de los captions (y sus emojis): las que hay encima de las PRO que no son de PRO ni de los Efectos."""
     n = int(tl.GetTrackCount('video') or 0)
-    tope = max([i for i in range(1, n + 1) if str(tl.GetTrackName('video', i) or '') in ORDEN] or [1])
-    return [i for i in range(tope + 1, n + 1) if not str(tl.GetTrackName('video', i) or '').startswith(('PRO-', 'FX-'))]
+    tope = max([i for i in range(1, n + 1) if _id(tl.GetTrackName('video', i)) in ORDEN] or [1])
+    return [i for i in range(tope + 1, n + 1) if not _id(tl.GetTrackName('video', i)).startswith(('PRO-', 'FX-'))]
 
 
 def _deshacer_subidas(tl):
     """Re-aplicar no apila: los captions que subió una corrida anterior (llevan la marca) vuelven a su sitio si siguen donde se dejaron, y los
     emojis que se apagaron por un icono 3D se vuelven a encender."""
     vueltos = 0
-    for i in _pistas_captions(tl):
+    # (v5.29: también los captions del Tema 1 en PRO-SUBS / PRO-SUBS2: con «solo_encima» esas pistas NO se rehacen y subían el doble)
+    neon = [i for i in (_indice(tl, 'PRO-SUBS'), _indice(tl, 'PRO-SUBS2')) if i is not None]
+    for i in _pistas_captions(tl) + neon:
         for it in tl.GetItemListInTrack('video', i) or []:
             try:
                 marcas = it.GetMarkers() or {}
@@ -535,26 +578,40 @@ def _deshacer_subidas(tl):
                 if not dato.startswith(MARCA + ':'):
                     continue
                 try:
-                    antes, despues = (float(x) for x in dato.split(':')[1:3])
+                    partes = dato.split(':')
+                    antes, despues = float(partes[1]), float(partes[2])
                     if abs(float(it.GetProperty('Tilt') or 0.0) - despues) < 0.5 and it.SetProperty('Tilt', antes):
                         vueltos += 1
+                    if len(partes) >= 5:                               # (v5.32: también se movió de lado —horizontal—: su Pan de antes)
+                        pan_antes, pan_despues = float(partes[3]), float(partes[4])
+                        if abs(float(it.GetProperty('Pan') or 0.0) - pan_despues) < 0.5:
+                            it.SetProperty('Pan', pan_antes)
                     it.DeleteMarkerByCustomData(dato)
                 except Exception:
                     pass
     return vueltos
 
 
-def _poner_tilt(it, nuevo):
-    """Pone el Tilt de un clip de captions y deja (o actualiza) la marca con su Tilt ORIGINAL, para que re-aplicar lo devuelva a su sitio."""
+def _poner_tilt(it, nuevo, pan=None):
+    """Pone el Tilt de un clip de captions y deja (o actualiza) la marca con su Tilt ORIGINAL, para que re-aplicar lo devuelva a su sitio.
+    v5.32: con `pan` (horizontal, el caption a un lado de la persona) también el Pan; la marca lleva entonces el de antes y el nuevo."""
     try:
         original = float(it.GetProperty('Tilt') or 0.0)
+        pan_original = float(it.GetProperty('Pan') or 0.0) if pan is not None else 0.0
+        extra = ''
         for m in list((it.GetMarkers() or {}).values()):
             dato = str(m.get('customData') or '')
             if dato.startswith(MARCA + ':'):
-                original = float(dato.split(':')[1])
+                partes = dato.split(':')
+                original = float(partes[1])
+                if len(partes) >= 5:
+                    pan_original = float(partes[3])
+                    extra = ':%s:%s' % (partes[3], partes[4])          # (solo se cambia el Tilt: el Pan de antes no se pierde)
                 it.DeleteMarkerByCustomData(dato)
-        if it.SetProperty('Tilt', float(nuevo)):
-            it.AddMarker(0, 'Sand', 'PRO · captions movidos', '', 1, '%s:%.3f:%.3f' % (MARCA, original, float(nuevo)))
+        if it.SetProperty('Tilt', float(nuevo)) and (pan is None or it.SetProperty('Pan', float(pan))):
+            if pan is not None:
+                extra = ':%.3f:%.3f' % (pan_original, float(pan))
+            it.AddMarker(0, 'Sand', 'PRO · captions movidos', '', 1, '%s:%.3f:%.3f%s' % (MARCA, original, float(nuevo), extra))
             return True
     except Exception:
         pass
@@ -569,6 +626,7 @@ def _subir_captions(tl, cues, base, subs_pro=False):
     W = float(tl.GetSetting('timelineResolutionWidth') or 1080)
     H = float(tl.GetSetting('timelineResolutionHeight') or 1920)
     k_emoji = H / max(1.0, min(W, H))
+    k_pan = W / max(1.0, min(W, H))                                    # (v5.32: el Pan de un PNG «Fit», como en _emojis_sin_cara)
     clips = [(it.GetStart(), it, 'EMOJI' in str(tl.GetTrackName('video', i) or '').upper(), False)
              for i in _pistas_captions(tl) for it in tl.GetItemListInTrack('video', i) or []]
     if subs_pro:                                                       # v5.5.20: el Tema 1: sus captions son los clips neón de PRO-SUBS / PRO-SUBS2
@@ -577,12 +635,16 @@ def _subir_captions(tl, cues, base, subs_pro=False):
     movidos = 0
     for c in cues:
         f0, f1, d = base + int(c['ini']), base + int(c['fin']), float(c['subir'])
-        if abs(d) < 0.5:
+        mx = float(c.get('mover') or 0.0)                              # (v5.32: px a la derecha; horizontal, a un lado de la persona)
+        if abs(d) < 0.5 and abs(mx) < 0.5:
             continue
         for s, it, es_emoji, neon in clips:
             # (un clip neón por bloque: SOLO el que empieza con el bloque; el siguiente empieza 0,15 s antes de que este acabe y también subía)
             dentro = (f0 - 2 <= s <= f0 + 6) if neon else (f0 - 1 <= s < f1)
-            if dentro and _poner_tilt(it, float(it.GetProperty('Tilt') or 0.0) + d * (k_emoji if es_emoji else 1.0)):
+            if not dentro:
+                continue
+            pan = float(it.GetProperty('Pan') or 0.0) + mx * (k_pan if es_emoji else 1.0) if abs(mx) >= 0.5 else None
+            if _poner_tilt(it, float(it.GetProperty('Tilt') or 0.0) + d * (k_emoji if es_emoji else 1.0), pan):
                 movidos += 1
     return movidos
 
@@ -1066,6 +1128,38 @@ def _sonidos(tl, mp, caja, eventos, base):
     return puestos
 
 
+def _solo_encima(tl, mp, caja, datos, base, v1_antes):
+    """v5.29 (el usuario: «cuando le dé Listo debe ponerlo automáticamente en la línea de tiempo; más útil que generar todo»): SOLO «Captions
+    detrás de ti» en el timeline que ya armó GO; lo demás de la Edición PRO no se toca. Los captions vuelven a su sitio, la persona (el matte
+    de la IA, ProRes con alfa) va en PRO-ENCIMA en cada tramo marcado y los captions de esos tramos suben hasta su coronilla.
+    v5.32 (Resolve Studio 21.1.1 se CAYÓ con «Listo»: std::out_of_range en su hilo de interfaz en el mismo segundo de «Main view page is
+    changed to 2»): este script corre en un hilo y cambiaba el timeline mientras la interfaz aún montaba la página Edit (o dibujaba lo recién
+    importado). Ahora solo cambia de página si no está ya en Edit, y espera a que la interfaz termine antes de tocar el timeline."""
+    try:
+        pagina = resolve.GetCurrentPage()
+    except Exception:
+        pagina = None
+    if pagina != 'edit':
+        resolve.OpenPage('edit')
+        _pausa(2.0)
+    encima = datos.get('encima') or []
+    _preimportar(mp, caja, {'encima': encima})                             # (con algo nuevo, ya espera 1 s a que Resolve lo lea)
+    _deshacer_subidas(tl)                                              # (todo a su sitio: lo de antes y lo de «mover» se vuelve a poner)
+    detras, movidos = _encima(tl, mp, caja, encima, base, print, datos.get('cache', True))
+    movidos += _subir_captions(tl, datos.get('mover') or [], base)
+    emojis = _emojis_sin_cara(tl, [c for e in encima for c in e.get('cues') or []] + list(datos.get('mover') or []), base)
+    if datos.get('sin_emoji'):
+        _apagar_emojis(tl, datos['sin_emoji'], base)
+    _quitar_vacias(tl)
+    _etiquetar(tl)
+    print('Captions detrás de ti: %d tramos con la persona delante (%d clips de captions movidos, %d emojis apartados de la cara).' % (
+        detras, movidos, emojis))
+    if len(tl.GetItemListInTrack('video', 1) or []) < v1_antes:
+        raise SystemExit('ATENCION: V1 perdió clips al poner «detrás de ti»')
+    if encima and not detras:
+        raise SystemExit('Resolve no colocó a la persona delante de los captions')
+
+
 def main():
     with open(RUTA_JSON, encoding='utf-8') as f:
         datos = json.load(f)
@@ -1076,6 +1170,9 @@ def main():
     caja = _caja(mp)
     base = int(datos.get('inicio') if datos.get('inicio') is not None else tl.GetStartFrame())
     v1_antes = len(tl.GetItemListInTrack('video', 1) or [])
+    if datos.get('solo_encima'):
+        _solo_encima(tl, mp, caja, datos, base, v1_antes)
+        return
     decir = lambda t: print(t)
     resolve.OpenPage('edit')
     _preimportar(mp, caja, datos)                                          # v5.5.8: todo de una vez, ANTES de tocar el timeline
@@ -1181,6 +1278,7 @@ def main():
     if motions:
         print('Motions completo: %d clip(s) en %s, encima de todo.' % (motions, PISTA_MOTIONS))
     _quitar_vacias(tl)
+    _etiquetar(tl)                                                         # v5.24: cada pista dice qué hace
     if datos.get('cache', True):
         _cachear_al_final(tl)                                              # v5.5.8: la caché de render, AL FINAL
     try:
@@ -1189,7 +1287,7 @@ def main():
         pass
     total = puestos['fondo'] + puestos['velo'] + puestos['detras'] + puestos['delante'] + puestos['iconos'] + puestos['subs'] + puestos['subs2']
     if puestos['subs']:
-        print('Captions animados: %d (%d captions de respaldo apagados).' % (puestos['subs'], respaldo))
+        print('Captions animados: %d%s.' % (puestos['subs'] + puestos['subs2'], (' (%d captions de respaldo apagados)' % respaldo) if respaldo else ''))
     print('Edición PRO: %d gráficos (%d detrás, %d delante, %d escenas, %d velos), %d recortes de persona%s, captions detrás de la persona en %d tramos '
           '(%d clips movidos, %d emojis apartados de la cara), %d iconos 3D (%d emojis cambiados), %d tramos en gris, %d tomas de B-roll, '
           '%d punch-ins, %d sonidos%s.' % (

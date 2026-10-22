@@ -23,6 +23,8 @@ el estilo es la forma y el color, el contenido lo sigue poniendo la PRO según e
     previa(clave, ident) -> (mp4, jpg)     el ejemplo de cada estilo (2_recursos/edicion_pro/estilos_pro, herramientas_dev/hacer_estilos_pro.py)
 
 Preferencia: `pro_estilos` = {clave: {'v': id del estilo ('' = Automático), 'c': {hueco: '#RRGGBB'}}} (edicion_pro.OPCIONES_POR_DEFECTO).
+v5.33: las secciones con `sonidos` (el gancho) guardan también 's': '' = el de su estilo, el id de otro estilo, 'ninguno' o la ruta de un
+archivo del usuario (si ya no existe, vuelve a ''); y con `zooms`, 'z': '' = el de su estilo, un tipo de intros_gancho.ZOOMS o 'ninguno'.
 """
 from pathlib import Path
 
@@ -64,6 +66,27 @@ SECCIONES = [
          _v('sticker', 'Sticker', 'Blanca con borde grueso y sombra dura, un poco girada.'),
          _v('degradado', 'Degradado', 'Un degradado de dos colores.', 'aurora'),
      ]},
+    # v5.25 (el usuario: «agrega la opción de emoji con diferentes estilos 3D-2D, siempre animados, archivo Lottie, posición e intensidad»): los
+    # 2D son los Lottie animados de Google; los 3D, los de Microsoft con movimiento (remotion/src/EmojiPro.tsx). `ajustes`: filas propias de la
+    # sección en Efectos (las mismas preferencias que la píldora del menú lateral).
+    {'clave': 'emoji', 'titulo': 'Emojis animados',
+     'detalle': 'Un emoji animado con lo que dices, junto a los captions y sin tapar caras. El emoji sale de tus palabras; aquí eliges cómo se mueve, dónde y cuántos.',
+     'colores': [('acento', 'Brillo y chispas')],
+     'ajustes': [('pro_emoji_donde', 'Dónde', [('auto', 'Automático'), ('lado', 'Junto al caption'), ('encima', 'Encima del caption'),
+                                              ('cabeza', 'Junto a tu cabeza')]),
+                 ('pro_emoji_intensidad', 'Intensidad', [('suave', 'Suave'), ('media', 'Media'), ('fuerte', 'Fuerte')])],
+     'variantes': [
+         _v('animado', 'Lottie animado', '2D: el emoji animado de Google, que se mueve solo.'),
+         _v('rebote', 'Lottie con rebote', '2D: entra con un rebote y da saltitos.'),
+         _v('brillo', 'Lottie con brillo', '2D: con un halo de luz de color que late.', 'ambar'),
+         _v('burbuja', 'Burbuja de cristal', '2D: dentro de una burbuja de cristal que tiembla.'),
+         _v('sticker', 'Sticker', '2D: borde blanco grueso y sombra, un poco girado.'),
+         _v('3d_salto', '3D salto', '3D: sube de un salto y rebota con su sombra.'),
+         _v('3d_flota', '3D flotando', '3D: flota y se balancea suave.'),
+         _v('3d_giro', '3D giro', '3D: entra girando en 3D y se mece.'),
+         _v('3d_gelatina', '3D gelatina', '3D: tiembla como gelatina y vuelve a temblar.'),
+         _v('3d_estallido', '3D estallido', '3D: estalla en chispas y sigue latiendo.', 'violeta'),
+     ]},
     {'clave': 'detras', 'titulo': 'Captions detrás de ti',
      'detalle': 'Cuando el texto pasa por detrás de ti (Magic Mask), cómo se ve tu silueta: con sombra, con una orilla, con resplandor o sin nada.',
      'colores': [('acento', 'Color del efecto')],
@@ -72,27 +95,34 @@ SECCIONES = [
          _v('sombra', 'Sombra suave', 'Una sombra difuminada detrás de ti: te separa del texto.'),
          _v('sombra_dura', 'Sombra marcada', 'Una sombra nítida desplazada, estilo póster.'),
          _v('orilla', 'Orilla blanca', 'Un borde blanco alrededor de tu silueta.'),
-         _v('orilla_color', 'Orilla de color', 'Un borde del color que elijas.', 'indigo'),
-         _v('doble', 'Doble orilla', 'Borde blanco y, por fuera, otro de color.', 'indigo'),
-         _v('resplandor', 'Resplandor', 'Un brillo de color que sale de tu silueta.', 'violeta'),
+         # (sin «Orilla de color», «Doble orilla» ni «Resplandor»: el usuario, «elimina esto»; lo guardado con ellas vuelve a Automático)
          _v('aura', 'Aura blanca', 'Un halo blanco suave, como una luz de contra.'),
          _v('neon', 'Neón', 'Un trazo fino de color con brillo.', 'rosa'),
          _v('sticker', 'Sticker', 'Borde blanco grueso y una sombra: pareces un recorte.'),
      ]},
+    # v5.33 (el usuario: «va a ser intros de overlays con zoom para fuera y su sonido, en el primer segundo; solo 8 opciones que cambien de
+    # color, música y tipo de zoom»): cada intro = su luz (intros_gancho: los overlays del usuario coloreados), su zoom y su mezcla de sonido.
+    # Ya no hay órbita de iconos ni titular del gancho (lo guardado con aquellos estilos vuelve a Automático).
     {'clave': 'gancho', 'titulo': 'Gancho del inicio',
-     'detalle': 'Los primeros segundos: los iconos de lo que dices giran alrededor de tu cabeza. Eliges el trazo de la órbita y sus colores.',
-     'colores': [('acento', 'Acento'), ('acento2', 'Segundo color'), ('texto', 'Anillo y texto')],
+     'detalle': 'El primer segundo: un destello de luz, el video que se aleja con un zoom y un golpe de sonido. Elige una intro y, si quieres, '
+                'cambia su color, su sonido o su zoom en «Personaliza».',
+     'colores': [('acento', 'Color de la luz'), ('acento2', 'Segundo color')],
+     'sonidos': True,                         # (el usuario: «falta la sección de sonido por si el de la intro no me gusta»: fila «Sonido»)
+     'zooms': True,                           # (y «te faltó el botón de efecto de zoom»: el zoom de otra intro o ninguno)
      'variantes': [
-         _v('rastro', 'Rastro de luz', 'Una estela del acento y un trazo blanco que corre.', fuente='serif'),
-         _v('anillo', 'Anillo fino', 'Un anillo blanco limpio que se dibuja.', fuente='grotesk'),
-         _v('neon', 'Anillo neón', 'Un anillo del acento que brilla.', 'violeta', fuente='grotesk'),
-         _v('chips', 'Burbujas de cristal', 'Cada icono dentro de una burbuja de cristal.', fuente='redonda'),
-         _v('limpio', 'Solo iconos', 'Los iconos giran solos, sin trazo.', fuente='serif'),
-         _v('cometa', 'Cometa', 'Cada icono deja una estela larga.', 'ambar', fuente='grotesk'),
-         _v('doble', 'Doble órbita', 'Dos anillos finos, uno más ancho y girado.', fuente='serif'),
-         _v('puntos', 'Puntos', 'Un anillo de puntos que avanza.', 'cielo', fuente='redonda'),
-         _v('halo', 'Halo', 'Un anillo con degradado de dos colores.', 'halo', fuente='grotesk'),
-         _v('cinta', 'Cinta', 'Una banda translúcida ancha alrededor.', fuente='mono'),
+         _v('blanco', 'Flash blanco', 'Un fogonazo blanco y el video se aleja de golpe.', a=('#FFFFFF', '#CFE0FF'), luz='destello', zoom='golpe',
+            sonido='blanco', blanco=1.0),
+         _v('lima', 'Lima eléctrica', 'Luz lima con un borde rosa y un zoom suave.', a=('#D4FF3A', '#FF4FA3'), luz='nube', zoom='suave', sonido='lima'),
+         _v('neon', 'Verde neón', 'Destello verde y el video sale desenfocado.', a=('#39FF6A', '#E8FF7A'), luz='destello', zoom='desenfoque',
+            sonido='neon'),
+         _v('violeta', 'Violeta', 'Luz violeta y el cuadro gira al alejarse.', a=('#8B5CFF', '#E07BFF'), luz='destello', zoom='giro', sonido='violeta'),
+         _v('fuego', 'Fuego', 'Una raya de luz roja y amarilla con temblor.', a=('#FF2A1A', '#FFC24D'), luz='raya', zoom='temblor', sonido='fuego',
+            tau=0.05),
+         _v('atardecer', 'Atardecer', 'Una mancha naranja y rosa; el zoom rebota.', a=('#FF7A1A', '#FF3D8B'), luz='mancha', zoom='rebote',
+            sonido='atardecer'),
+         _v('hielo', 'Hielo', 'Luz cian y los colores se separan un instante.', a=('#00C2FF', '#7FB2FF'), luz='nube', zoom='rgb', sonido='hielo'),
+         _v('rosa', 'Rosa y oro', 'Una brasa rosa y dorada; el video entra de un latigazo.', a=('#FF3D8B', '#FFC24D'), luz='brasa', zoom='latigo',
+            sonido='rosa'),
      ]},
     {'clave': 'escenas', 'titulo': 'Escenas completas',
      'detalle': 'Las escenas a pantalla completa (cuaderno, chat, polaroid, calendario…) cuando cuentas algo. Eliges el tono y los colores.',
@@ -176,7 +206,8 @@ SECCIONES = [
 _POR_CLAVE = {s['clave']: s for s in SECCIONES}
 # de la paleta de un estilo, qué colores toma cada sección (la píldora sólida no debe tomar el «fondo» azul noche de su paleta…)
 DE_PALETA = {'pildora': ('acento', 'acento2'), 'detras': ('acento',), 'gancho': ('acento', 'acento2'), 'escenas': ('acento', 'fondo'),
-             'kit': ('acento', 'acento2'), 'graficos': ('acento', 'texto', 'fondo'), 'broll': ('acento',), 'motions_completo': ('acento', 'fondo')}
+             'kit': ('acento', 'acento2'), 'graficos': ('acento', 'texto', 'fondo'), 'broll': ('acento',), 'motions_completo': ('acento', 'fondo'),
+             'emoji': ('acento',)}
 TEMAS_KIT_SIN_ACENTO = ('editorial', 'neoncc')        # Kit7.pal: estos temas no se rehacen con el acento
 
 
@@ -214,7 +245,40 @@ def leer(op=None):
         huecos = {h for h, _e in _POR_CLAVE[clave]['colores']}
         c = {h: _hex(x) for h, x in (d.get('c') or {}).items() if h in huecos and _hex(x)}
         out[clave] = {'v': v if variante(clave, v) else '', 'c': c}
+        if _POR_CLAVE[clave].get('sonidos'):
+            out[clave]['s'] = _sonido_valido(clave, d.get('s'))
+        if _POR_CLAVE[clave].get('zooms'):
+            out[clave]['z'] = _zoom_valido(d.get('z'))
     return out
+
+
+def _zoom_valido(z):
+    z = str(z or '').strip()
+    try:
+        import intros_gancho
+        return z if z in ('', intros_gancho.SIN_ZOOM) or z in intros_gancho.ZOOMS else ''
+    except Exception:
+        return ''
+
+
+def guardar_zoom(clave, valor):
+    """v5.33: el zoom de una sección con `zooms` (el gancho): '' (el de su estilo), un tipo de intros_gancho.ZOOMS o 'ninguno'."""
+    _guardar(clave, lambda d: d.__setitem__('z', _zoom_valido(valor)))
+
+
+def _sonido_valido(clave, s):
+    s = str(s or '').strip()
+    if s in ('', 'ninguno') or variante(clave, s):
+        return s
+    try:
+        return s if Path(s).is_file() else ''
+    except (OSError, ValueError):
+        return ''
+
+
+def guardar_sonido(clave, valor):
+    """v5.33: el sonido de una sección con `sonidos`: '' (el de su estilo), el id de otro estilo, 'ninguno' o la ruta de un archivo."""
+    _guardar(clave, lambda d: d.__setitem__('s', _sonido_valido(clave, valor)))
 
 
 def _guardar(clave, cambio):
@@ -504,9 +568,6 @@ EFECTOS_PERSONA = {
     'sombra':       {'sombra': {'opacidad': 0.85, 'blur': 0.02, 'dx': 0.02, 'dy': -0.006}},
     'sombra_dura':  {'sombra': {'opacidad': 0.9, 'blur': 0.003, 'dx': 0.028, 'dy': -0.008}},
     'orilla':       {'orillas': [{'ancho': 0.006, 'color': '#FFFFFF'}]},
-    'orilla_color': {'orillas': [{'ancho': 0.006, 'color': 'acento'}]},
-    'doble':        {'orillas': [{'ancho': 0.012, 'color': 'acento'}, {'ancho': 0.005, 'color': '#FFFFFF'}]},
-    'resplandor':   {'brillo': {'ancho': 0.004, 'blur': 0.03, 'fuerza': 1.6, 'color': 'acento'}},
     'aura':         {'brillo': {'ancho': 0.002, 'blur': 0.028, 'fuerza': 1.0, 'color': '#FFFFFF'}},
     'neon':         {'brillo': {'ancho': 0.004, 'blur': 0.02, 'fuerza': 1.8, 'color': 'acento'}, 'orillas': [{'ancho': 0.003, 'color': 'acento'}]},
     'sticker':      {'sombra': {'opacidad': 0.6, 'blur': 0.012, 'dx': 0.014, 'dy': -0.005}, 'orillas': [{'ancho': 0.012, 'color': '#FFFFFF'}]},

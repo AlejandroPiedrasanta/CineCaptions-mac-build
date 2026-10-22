@@ -26,7 +26,7 @@ El MCP del programa: deja que Claude (u otro cliente MCP) hable con CineCaptions
     registro          las últimas líneas de cinecaptions.log
 
 Protocolo: JSON-RPC 2.0 por stdin/stdout, un mensaje por línea (MCP 2024-11-05). Nada más que JSON sale por stdout: lo demás va a stderr.
-Se registra en .mcp.json (raíz del proyecto):  {"mcpServers": {"cinecaptions": {"command": "6_compilacion/venv314/Scripts/python.exe", "args": ["1_codigo/mcp_cinecaptions.py"]}}}
+Se registra en .mcp.json (raíz del proyecto):  {"mcpServers": {"cinecaptions": {"command": "6_compilacion/venv315/Scripts/python.exe", "args": ["1_codigo/mcp_cinecaptions.py"]}}}
 """
 import base64
 import io

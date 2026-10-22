@@ -6,6 +6,7 @@
 # Qwen3-ASR va NATIVO en transformers 5 (ya sin el paquete qwen-asr, que fijaba transformers 4.57.6).
 # nagisa y soynlp: el alineador los usa para japones y coreano.
 # 2026-10-19: parches menores (certifi, filelock, httpx2/httpcore2, platformdirs, setuptools, transformers 5.20.2).
+# 2026-10-21: httpcore2/httpx2 2.16.0 y setuptools 84.2.1 (últimas versiones en PyPI).
 # mpmath 1.4.1 aunque sympy 1.14.0 pide <1.4 (pedido: «todo sin excepciones»; probado con el motor de voz y la IA de texto).
 accelerate==1.15.0
 annotated-doc==0.0.5
@@ -23,8 +24,8 @@ filelock==4.2.4
 fsspec==2026.9.0
 h11==0.16.0
 hf-xet==1.7.0
-httpcore2==2.15.1
-httpx2==2.15.1
+httpcore2==2.16.0
+httpx2==2.16.0
 huggingface_hub==2.2.0
 idna==3.20
 Jinja2==3.1.6
@@ -55,7 +56,7 @@ rich==15.0.0
 safetensors==0.8.0
 scikit-learn==1.9.1
 scipy==1.18.1
-setuptools==84.2.0
+setuptools==84.2.1
 shellingham==1.5.4
 six==1.17.0
 soundfile==0.14.0

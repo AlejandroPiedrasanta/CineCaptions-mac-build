@@ -336,9 +336,16 @@ def renderizar(video, plan, salida, ancho=1080, alto=1920, fps=None, progreso=No
         from concurrent.futures import ThreadPoolExecutor
         hilos = max(2, min(6, (os.cpu_count() or 4) // 2))
         P.grade(Image.new('RGB', (2, 2)))                                # (la tabla del grade, antes de los hilos)
+        zi = plan.get('intro_zoom')                                      # v5.33: el zoom de la intro del gancho (la placa tapa V1: va aquí)
+        if zi:
+            import intros_gancho as IG
+            fin_zi = float(IG.ZOOMS[zi]['d']) if zi in IG.ZOOMS else 0.0
 
         def pintar(img, t):
-            return av.VideoFrame.from_image(P.placa(P.grade(RV.derecho_img(img, rot)), t, fps))
+            out = P.placa(P.grade(RV.derecho_img(img, rot)), t, fps)
+            if zi and t < fin_zi:
+                out = Image.fromarray((np.clip(IG.zoom_np(np.asarray(out, dtype=np.float32) / 255.0, zi, t), 0, 1) * 255 + 0.5).astype(np.uint8))
+            return av.VideoFrame.from_image(out)
 
         def escribir(vf):
             for pk in os_.encode(vf):
@@ -346,7 +353,7 @@ def renderizar(video, plan, salida, ancho=1080, alto=1920, fps=None, progreso=No
         n = 0
         cola = deque()
         with ThreadPoolExecutor(hilos, thread_name_prefix='placa') as pool:
-            for fr in ent.decode(vs):
+            for fr in RV.fotogramas(ent, vs):                    # (v5.31: un paquete dañado ya no tira la placa entera)
                 t = n / fps
                 if t >= dur:
                     break
@@ -428,6 +435,16 @@ def para_pro(video, plan, carpeta, ancho, alto, fps, progreso=None):
     import hashlib
     import json
     pp = plan_de_pro(video, plan)                          # (aplicar ya ajusta los captions al empezar)
+    try:                                                   # v5.33: con la intro del gancho, su zoom hacia fuera va en la placa (tapa V1)
+        import intros_gancho as IG
+        op = plan.get('opciones') or None
+        if IG.activa(op):
+            intro, _c = IG.elegida(op)
+            z = IG.zoom_de(intro, IG.eleccion_zoom(op))
+            if z:
+                pp['intro_zoom'] = z
+    except Exception:
+        pass
     h = hashlib.sha1(json.dumps([str(video), ancho, alto, round(float(fps), 3), pp], sort_keys=True, default=str).encode('utf-8')).hexdigest()[:12]
     sal = Path(carpeta) / f'placa_neon_{h}.mp4'
     if sal.exists() and sal.stat().st_size > 100000:

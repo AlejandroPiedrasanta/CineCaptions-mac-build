@@ -15,8 +15,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         movil.json
         movil_fondo.jpg
         movil_marco.png
-    edicion_pro\   (4387 archivos)
-    efectos\   (148 archivos)
+    edicion_pro\   (4401 archivos)
+    efectos\   (161 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
         .cf\   (1 archivos)
@@ -92,6 +92,9 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     motions_resolve\   (13 archivos)
         Edit\   (12 archivos)
         CineCaptions Motions.drfx
+    motor_compat\   (2 archivos)
+        requirements.txt
+        worker.py
     motor_qwen\   (5 archivos)  — motor de voz e IA (corren en su propio Python 3.12) y sus versiones fijas
         .cf\   (1 archivos)
         desktop.ini

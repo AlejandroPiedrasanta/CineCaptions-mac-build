@@ -73,7 +73,7 @@ var getOutKeyframeEasing = (easing) => {
     y2: 1 - easing.y1
   };
 };
-var KEYFRAME_EASING_PRESETS = [
+var KEYFRAME_EASING_PRESETS = (/* unused pure expression or super */ null && ([
   {
     id: "ease-in",
     label: "Ease in",
@@ -133,7 +133,7 @@ var KEYFRAME_EASING_PRESETS = [
       stiffness: 120
     }
   }
-];
+]));
 
 
 
@@ -152,7 +152,7 @@ var keyframeInterpolationFunctions = [
   "interpolateColors",
   "interpolatePaths"
 ];
-var KEYFRAME_FIELD_TYPE_SUPPORT = {
+var KEYFRAME_FIELD_TYPE_SUPPORT = (/* unused pure expression or super */ null && ({
   array: false,
   asset: false,
   boolean: true,
@@ -172,8 +172,8 @@ var KEYFRAME_FIELD_TYPE_SUPPORT = {
   "transform-origin": true,
   translate: true,
   "uv-coordinate": true
-};
-var KEYFRAME_FIELD_TYPE_INTERPOLATION = {
+}));
+var KEYFRAME_FIELD_TYPE_INTERPOLATION = (/* unused pure expression or super */ null && ({
   array: "unsupported",
   asset: "unsupported",
   boolean: "interpolate",
@@ -193,8 +193,8 @@ var KEYFRAME_FIELD_TYPE_INTERPOLATION = {
   "transform-origin": "interpolate",
   translate: "interpolate",
   "uv-coordinate": "infer"
-};
-var KEYFRAME_FIELD_TYPE_OUTPUT_TYPE = {
+}));
+var KEYFRAME_FIELD_TYPE_OUTPUT_TYPE = (/* unused pure expression or super */ null && ({
   array: null,
   asset: null,
   boolean: null,
@@ -214,12 +214,12 @@ var KEYFRAME_FIELD_TYPE_OUTPUT_TYPE = {
   "transform-origin": "transform-origin",
   translate: "translate",
   "uv-coordinate": null
-};
-var KEYFRAME_INTERPOLATION_EASING_SUPPORT = {
+}));
+var KEYFRAME_INTERPOLATION_EASING_SUPPORT = (/* unused pure expression or super */ null && ({
   interpolate: true,
   interpolateColors: true,
   interpolatePaths: true
-};
+}));
 var isKeyframeInterpolationFunction = (name) => {
   return keyframeInterpolationFunctions.includes(name);
 };

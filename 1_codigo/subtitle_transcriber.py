@@ -1,6 +1,6 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/subtitle_transcriber.py — transcripción con Whisper, traducción con Argos y escritura de .srt / manifiestos.
-"""\nsubtitle_transcriber.py\n------------------------\nPieza 1 del sistema: transcribe un video/audio con Whisper (gratis, local)\ny genera archivos .srt controlando caracteres por línea y líneas por bloque.\n\nSoporta múltiples idiomas: transcribe el idioma \"fuente\" directamente con\nWhisper, y traduce a los idiomas adicionales con Argos Translate (gratis,\noffline, sin API keys).\n\nUso básico:\n    python subtitle_transcriber.py mi_video.mp4 --source-lang es --langs es en\n\nEsto genera:\n    ~/DaVinciSubtitles/mi_video.es.srt\n    ~/DaVinciSubtitles/mi_video.en.srt\n    ~/DaVinciSubtitles/subtitles_manifest.json   <- lo lee el script de Resolve\n\nInstalación (una sola vez):\n    pip install faster-whisper argostranslate\n\nPara traducir, la primera vez que uses un par de idiomas, Argos Translate\ndescarga un paquete pequeño (una sola vez, offline después):\n    python -c \"import argostranslate.package as p; p.update_package_index();         pkgs=p.get_available_packages();         [p.install_from_path(x.download()) for x in pkgs if x.from_code==\'es\' and x.to_code==\'en\']\"\n"""
+"""\nsubtitle_transcriber.py\n------------------------\nPieza 1 del sistema: transcribe un video/audio con Whisper (gratis, local)\ny genera archivos .srt controlando caracteres por línea y líneas por bloque.\n\nSoporta múltiples idiomas: transcribe el idioma \"fuente\" directamente con\nWhisper, y traduce a los idiomas adicionales con Argos Translate (gratis,\noffline, sin API keys).\n\nUso básico:\n    python subtitle_transcriber.py mi_video.mp4 --source-lang es --langs es en\n\nEsto genera:\n    ~/DaVinciSubtitles/mi_video.es.srt\n    ~/DaVinciSubtitles/mi_video.en.srt\n    ~/DaVinciSubtitles/subtitles_manifest.json   <- lo lee el script de Resolve\n\nInstalación (una sola vez):\n    servicio Python 3.14.9 motor_compat (se instala desde el instalador)\n\nPara traducir, la primera vez que uses un par de idiomas, Argos Translate\ndescarga un paquete pequeño (una sola vez, offline después):\n    python -c \"import argostranslate.package as p; p.update_package_index();         pkgs=p.get_available_packages();         [p.install_from_path(x.download()) for x in pkgs if x.from_code==\'es\' and x.to_code==\'en\']\"\n"""
 import argparse
 import json
 import os
@@ -70,20 +70,14 @@ def _tipo_cuda():
     except Exception:
         return 'float16'
 def _hay_cuda_usable():
-    """True si ctranslate2 ve al menos una GPU CUDA.\n\n    Se PREGUNTA en vez de probar. Antes se cargaba el modelo en CUDA \"a ver\n    si suena\", y en una maquina sin GPU eso costaba una carga entera del\n    modelo para nada antes de caer a CPU.\n\n    Que devuelva >0 NO garantiza que la inferencia vaya a funcionar: puede\n    haber GPU y driver pero faltar las DLL de CUDA 12 (es el caso que\n    reventaba). Por eso el reintento en CPU de transcribe() sigue siendo\n    necesario; esto solo evita el intento inutil.\n    """
+    """Consulta CUDA en el proceso Python 3.14 que carga CTranslate2."""
     if _CUDA_FALLO['v']:
         return False
     try:
-        import ctranslate2
-        if ctranslate2.get_cuda_device_count() <= 0:
-            return False
+        import motor_compat
+        return motor_compat.cuda_disponible()
     except Exception:
         return False
-    try:                                   # v5.4.8: con menos de 3 GB de VRAM el modelo no cabe: directo a la CPU (sin cargarlo para nada)
-        import cuda_libs
-        return cuda_libs.tipo_de_calculo() is not None
-    except Exception:
-        return True
 def _es_error_de_memoria(exc) -> bool:
     """True si la excepcion huele a \'me quede sin RAM\'.\n\n    v1.0.65 (caso real del usuario: generar con Resolve + Chrome abiertos):\n    el fallo de memoria de ctranslate2/MKL llega como **RuntimeError**\n    (\"mkl_malloc: failed to allocate memory\"), no como MemoryError, asi\n    que el tipo solo no alcanza — se mira tambien el texto. Los\n    marcadores cubren MKL, el allocator de C++ y los mensajes tipicos\n    de CUDA/SO.\n    """
     if isinstance(exc, MemoryError):
@@ -92,133 +86,31 @@ def _es_error_de_memoria(exc) -> bool:
         texto = str(exc).lower()
         return any((marca in texto for marca in ['mkl_malloc', 'failed to allocate', 'bad_alloc', 'out of memory', 'cannot allocate']))
 # ---------------------------------------------------------------------------
-# v5.3: el modelo de Whisper se REUTILIZA entre pasadas (cargarlo cuesta 3-10 s y ~3 GB en la GPU) y los audios largos
-# se procesan por LOTES (BatchedInferencePipeline de faster-whisper: varios tramos de 30 s a la vez en la GPU).
+# Whisper corre en el proceso auxiliar Python 3.14 para aislar sus extensiones nativas.
 # ---------------------------------------------------------------------------
-import threading as _threading
-import time as _time
-
-INACTIVO_WHISPER_S = 240
-LARGO_PARA_LOTES_S = 45.0       # por debajo de esto un solo tramo: el lote no aporta nada
-_WHISPER = {'clave': None, 'modelo': None, 't': 0.0, 'vigilando': False, 'lock': _threading.Lock()}
-
-
-_PESO_MODELO = {'large-v3-turbo': 1_620_000_000, 'large-v3': 3_100_000_000, 'medium': 1_530_000_000,
-                'small': 485_000_000, 'base': 145_000_000, 'tiny': 78_000_000}
-SIN_AVANCE_S = 120               # una descarga que no crece en tanto tiempo se da por colgada
-
-
-def _tamano_carpeta(carpeta):
-    total = 0
-    for raiz, _, archivos in os.walk(carpeta):
-        for a in archivos:
-            try:
-                total += os.path.getsize(os.path.join(raiz, a))
-            except OSError:
-                pass
-    return total
-
-
 def _asegurar_modelo_descargado(tamano, aviso=None):
-    """Si los pesos de Whisper no estan en disco, los baja MOSTRANDO el avance (antes la primera transcripcion en un equipo sin el
-    modelo se veia como un cuelgue mudo: WhisperModel descarga ~1,6 GB sin decir nada). Si no crece en SIN_AVANCE_S, avisa y falla."""
-    from faster_whisper.utils import _MODELS, download_model
-    try:
-        download_model(tamano, local_files_only=True)
-        return
-    except Exception:
-        pass
-    aviso = aviso or (lambda t: None)
-    import huggingface_hub
-    repo = _MODELS.get(tamano) or str(tamano)
-    carpeta = Path(huggingface_hub.constants.HF_HUB_CACHE) / ('models--' + repo.replace('/', '--'))
-    total = _PESO_MODELO.get(tamano) or 0
-    aviso(tr('Descargando el modelo de voz ({peso}). Solo pasa la primera vez: no cierres el programa.',
-             peso=f'{total / 1e9:.1f} GB'.replace('.', ',') if total else tr('puede pesar varios cientos de MB')))
-    inicial = _tamano_carpeta(carpeta)
-    resultado = {}
-
-    def bajar():
-        try:
-            resultado['ruta'] = download_model(tamano)
-        except Exception as exc:
-            resultado['error'] = exc
-    hilo = _threading.Thread(target=bajar, daemon=True, name='whisper-descarga')
-    hilo.start()
-    ultimo, desde = inicial, _time.time()
-    while hilo.is_alive():
-        hilo.join(2.0)
-        hecho = max(0, _tamano_carpeta(carpeta) - inicial)
-        actual = inicial + hecho
-        if actual > ultimo:
-            ultimo, desde = actual, _time.time()
-        elif _time.time() - desde > SIN_AVANCE_S:
-            raise RuntimeError(tr('La descarga del modelo de voz no avanza desde hace {s} segundos. Revisa tu conexión a internet '
-                                  '(o un firewall/VPN) y vuelve a intentarlo: lo que ya bajó no se pierde.', s=SIN_AVANCE_S))
-        if total:
-            aviso(tr('Descargando el modelo de voz: {a} de {b} MB ({p} %)', a=f'{hecho / 1e6:,.0f}'.replace(',', '.'),
-                     b=f'{total / 1e6:,.0f}'.replace(',', '.'), p=int(min(99, 100 * hecho / total))))
-        else:
-            aviso(tr('Descargando el modelo de voz: {a} MB', a=f'{hecho / 1e6:,.0f}'.replace(',', '.')))
-    if 'error' in resultado:
-        exc = resultado['error']
-        raise RuntimeError(tr('No pude descargar el modelo de voz ({t}: {m}). Revisa tu conexión a internet y vuelve a intentarlo.',
-                              t=type(exc).__name__, m=str(exc)[:200]))
-
-
-def _modelo_whisper(tamano, device, compute_type, local_only=False, aviso=None):
-    """El WhisperModel cargado (el mismo mientras no cambie tamano/dispositivo)."""
-    import compat_av
-    compat_av.aplicar()
-    from faster_whisper import WhisperModel
-    clave = (tamano, device, compute_type)
-    with _WHISPER['lock']:
-        if _WHISPER['clave'] == clave and _WHISPER['modelo'] is not None:
-            _WHISPER['t'] = _time.time()
-            return _WHISPER['modelo']
-        _WHISPER.update(modelo=None, clave=None)          # suelta el anterior antes de cargar el nuevo
-        if not local_only:
-            _asegurar_modelo_descargado(tamano, aviso)
-        if aviso:
-            aviso(tr('Cargando el modelo de voz en memoria…'))
-        extra = {}
-        if device == 'cpu' and __import__('sys').platform == 'darwin':
-            extra['cpu_threads'] = min(8, os.cpu_count() or 4)          # los nucleos de rendimiento del Mac; por defecto usa solo 4
-        modelo = WhisperModel(tamano, device=device, compute_type=compute_type, local_files_only=local_only, **extra)
-        _WHISPER.update(clave=clave, modelo=modelo, t=_time.time())
-        if not _WHISPER['vigilando']:
-            _WHISPER['vigilando'] = True
-            _threading.Thread(target=_vigilar_whisper, daemon=True, name='whisper-inactivo').start()
-        return modelo
-
-
-def _vigilar_whisper():
-    while True:
-        _time.sleep(20)
-        with _WHISPER['lock']:
-            if _WHISPER['modelo'] is None:
-                _WHISPER['vigilando'] = False
-                return
-            if _time.time() - _WHISPER['t'] > INACTIVO_WHISPER_S:
-                _WHISPER.update(modelo=None, clave=None, vigilando=False)
-                return
+    """Descarga los pesos de Whisper en el motor auxiliar Python 3.14."""
+    import motor_compat
+    return motor_compat.descargar_modelo(tamano, aviso=aviso)
 
 
 def liberar_whisper():
-    with _WHISPER['lock']:
-        _WHISPER.update(modelo=None, clave=None)
+    """Libera los modelos que mantiene cargados el proceso auxiliar."""
+    import motor_compat
+    motor_compat.liberar_whisper()
 
 
 def precargar_whisper(model_size):
-    """Carga Whisper en la GPU en segundo plano (al pulsar GO u «Obtener» con Whisper elegido). No hace nada sin CUDA."""
+    """Precalienta Whisper en segundo plano si el motor auxiliar ve CUDA."""
     def trabajo():
         try:
-            register_cuda_dlls()
+            import motor_compat
             if _hay_cuda_usable():
-                _modelo_whisper(model_size, 'cuda', _tipo_cuda())
+                motor_compat.precargar_whisper(model_size, _tipo_cuda())
         except Exception:
             pass
-    _threading.Thread(target=trabajo, daemon=True, name='whisper-precarga').start()
+    import threading
+    threading.Thread(target=trabajo, daemon=True, name='whisper-precarga').start()
 
 
 def _duracion_segundos(ruta):
@@ -319,50 +211,27 @@ def transcribe(media_path: str, source_lang: str, model_size: str, progress_call
     register_cuda_dlls()
 
     def _transcribir_con(device, compute_type, tamano=None, local_only=False):
-        """Carga el modelo y devuelve las palabras YA materializadas.
-
-        El bucle que consume el generador vive aqui dentro a proposito: es
-        donde ctranslate2 hace el computo de verdad, y por tanto lo unico
-        que permite reintentar cuando CUDA falla. Ver el comentario de abajo.
-
-        'tamano' permite a la escalera de memoria (v1.0.65) probar un
-        modelo mas chico que el pedido; 'local_only' prueba primero SIN
-        descargar nada (una descarga sorpresa en un equipo sin red es un
-        cuelgue con la barra parada).
-        """
+        """Transcribe en Python 3.14 y devuelve palabras ya materializadas."""
+        import motor_compat
         tamano = tamano or model_size
         print(f"Cargando modelo Whisper '{tamano}' en {device.upper()} (la primera vez descarga los pesos)...")
-        model = _modelo_whisper(tamano, device, compute_type, local_only, aviso=_avisar)
-        print('Transcribiendo... esto puede tardar según la duración del video.')
-        idioma_w = source_lang if source_lang != 'auto' else None
-        pistas = {'hotwords': contexto[:600]} if contexto else {}           # v5.5.17: el vocabulario del usuario (faster-whisper ≥ 1.0)
-        if device == 'cuda' and _duracion_segundos(media_path) > LARGO_PARA_LOTES_S:
-            try:                                           # audios largos: varios tramos a la vez en la GPU
-                import compat_av
-                compat_av.aplicar()
-                from faster_whisper import BatchedInferencePipeline
-                segments, info = BatchedInferencePipeline(model=model).transcribe(
-                    media_path, language=idioma_w, word_timestamps=True, vad_filter=True, batch_size=8, **pistas)
-            except Exception as e:
-                print(f'Lotes no disponibles ({e}); sigo tramo a tramo.')
-                segments, info = model.transcribe(media_path, language=idioma_w, word_timestamps=True, vad_filter=True, **pistas)
-        else:
-            segments, info = model.transcribe(media_path, language=idioma_w, word_timestamps=True, vad_filter=True, **pistas)
-        if model_loaded_callback and not ya_aviso['modelo']:
-            ya_aviso['modelo'] = True
-            model_loaded_callback()
-        total = getattr(info, 'duration', 0) or 0
-        palabras = []
-        for seg in segments:
-            if seg.words:
-                for w in seg.words:
-                    palabras.append({'start': w.start, 'end': w.end,
-                                     'word': w.word.strip()})
-            if progress_callback and total > 0:
-                progress_callback(min(1.0, seg.end / total))
-        print(f'Idioma detectado/usado: {info.language}  ({len(palabras)} palabras)')
-        _IDIOMA_DETECTADO['v'] = str(info.language or '').lower() or None
-        _al_registro('info', f'Voz: Whisper {tamano} en {device.upper()} · idioma {info.language} · {len(palabras)} palabras', 'voz')
+
+        def modelo_cargado():
+            if model_loaded_callback and not ya_aviso['modelo']:
+                ya_aviso['modelo'] = True
+                model_loaded_callback()
+
+        resultado = motor_compat.transcribir(
+            media_path, source_lang, tamano, contexto=contexto,
+            use_cuda=(device == 'cuda'), compute_type=compute_type,
+            local_only=local_only, progress_callback=progress_callback,
+            model_loaded_callback=modelo_cargado, status_callback=_avisar)
+        if not isinstance(resultado, dict):
+            raise RuntimeError('El motor auxiliar devolvió una respuesta inválida.')
+        _IDIOMA_DETECTADO['v'] = str(resultado.get('idioma') or '').lower() or None
+        palabras = resultado.get('palabras') or []
+        print(f"Idioma detectado/usado: {_IDIOMA_DETECTADO['v']}  ({len(palabras)} palabras)")
+        _al_registro('info', f"Voz: Whisper {resultado.get('modelo', tamano)} en {device.upper()} · idioma {_IDIOMA_DETECTADO['v']} · {len(palabras)} palabras", 'voz')
         return palabras
 
     if _hay_cuda_usable():
@@ -519,67 +388,33 @@ def _fraccion_sin_traducir(origen, salida):
         else:
             return sum((1 for w in o if w in s)) / float(len(o))
 def translate_cues(cues: list, from_code: str, to_code: str, progress_callback=None) -> list:
-    try:
-        import argostranslate.translate as at_translate
-    except ImportError as e:
-        que_falta = getattr(e, 'name', None) or ''
-        if que_falta and (not que_falta.startswith('argostranslate')):
-            raise SystemExit(tr('argostranslate está instalado pero le falta \'{modulo}\'.\nSi esto pasa en el programa compilado (no corriendo el código), es un problema del build, no tuyo: avisa para que se corrija el empaquetado.\nPara seguir mientras tanto: pip install {modulo}', modulo=que_falta))
-        else:
-            raise SystemExit(tr('Falta \'argostranslate\'. Instálalo con: pip install argostranslate\ny descarga el paquete de idioma una vez (ver docstring del script).'))
-    def _pares_instalados():
-        try:
-            import argostranslate.package as package
-            return {(p.from_code, p.to_code) for p in package.get_installed_packages()}
-        except Exception:
-            return set()
-    pares = _pares_instalados()
-    directo = (from_code, to_code) in pares
-    via_en = not directo and from_code != 'en' and (to_code != 'en') and ((from_code, 'en') in pares) and (('en', to_code) in pares)
-    if not directo and (not via_en):
-            via_en = False
-    def _traducir(texto):
-        if via_en:
-            return at_translate.translate(at_translate.translate(texto, from_code, 'en'), 'en', to_code)
-        else:
-            return at_translate.translate(texto, from_code, to_code)
-    if via_en:
-        print(f'  Traduccion {from_code}->{to_code} via ingles (no hay paquete directo).')
+    """Traduce frases en el motor auxiliar y conserva los tiempos de cada cue."""
+    import motor_compat
     grupos = _agrupar_cues_por_oracion(cues)
-    translated = []
-    total = len(grupos)
-    for i, grupo in enumerate(grupos, start=1):
-        texto_origen = ' '.join((' '.join(c.text.split()) for c in grupo))
-        try:
-            new_text = _traducir(texto_origen)
-        except Exception as e:
-            texto_error = str(e)
-            cabeza = tr('No se pudo traducir {origen}->{destino}:', origen=from_code, destino=to_code)
-            if 'stanza' in texto_error.lower():
-                raise SystemExit(f'{cabeza} {texto_error}')
-            else:
-                if isinstance(e, OSError) or 'download' in texto_error.lower() or 'urlopen' in texto_error.lower():
-                    raise SystemExit(f'{cabeza} {type(e).__name__}: {texto_error}\n' + tr('La primera traducción descarga el separador de frases (MiniSBD): necesita internet esa única vez. Revisa tu conexión y vuelve a intentarlo.'))
-                else:
-                    raise SystemExit(f'{cabeza} {type(e).__name__}: {texto_error}\n' + tr('¿Está instalado el paquete de ese par (o los dos eslabones {origen}->en y en->{destino})?', origen=from_code, destino=to_code))
-        if from_code != to_code and _fraccion_sin_traducir(texto_origen, new_text) >= UMBRAL_SIN_TRADUCIR:
-                alternativa = None
-                if directo and from_code != 'en' and (to_code != 'en') and ((from_code, 'en') in pares) and (('en', to_code) in pares):
-                                    try:
-                                        alternativa = at_translate.translate(at_translate.translate(texto_origen, from_code, 'en'), 'en', to_code)
-                                    except Exception:
-                                        alternativa = None
-                if alternativa is not None and _fraccion_sin_traducir(texto_origen, alternativa) < _fraccion_sin_traducir(texto_origen, new_text):
-                    print(f'  Aviso: una frase salio sin traducir a la primera; la repesque via ingles: \'{texto_origen[:60]}\'')
-                    new_text = alternativa
-                else:
-                    print(f'  Aviso: esta frase pudo salir sin traducir (revisala): \'{texto_origen[:60]}\'')
-        partes = _repartir_palabras(new_text.split(), [max(1, len(c.text.split())) for c in grupo])
+    textos = [' '.join(' '.join(c.text.split()) for c in grupo) for grupo in grupos]
+    try:
+        nuevos = motor_compat.traducir(textos, from_code, to_code,
+                                       progress_callback=progress_callback)
+    except Exception as e:
+        texto_error = str(e)
+        cabeza = tr('No se pudo traducir {origen}->{destino}:', origen=from_code, destino=to_code)
+        if isinstance(e, OSError) or 'download' in texto_error.lower() or 'urlopen' in texto_error.lower():
+            raise SystemExit(f'{cabeza} {type(e).__name__}: {texto_error}\n' +
+                             tr('La primera traducción puede descargar el separador de frases; necesita internet esa única vez. Revisa tu conexión y vuelve a intentarlo.'))
+        raise SystemExit(f'{cabeza} {type(e).__name__}: {texto_error}\n' +
+                         tr('¿Está instalado el paquete de ese par (o los dos eslabones {origen}->en y en->{destino})?',
+                            origen=from_code, destino=to_code))
+    traducidos = []
+    for i, (grupo, texto_nuevo) in enumerate(zip(grupos, nuevos), 1):
+        texto_origen = textos[i - 1]
+        if from_code != to_code and _fraccion_sin_traducir(texto_origen, texto_nuevo) >= UMBRAL_SIN_TRADUCIR:
+            print(f"  Aviso: esta frase pudo salir sin traducir (revisala): '{texto_origen[:60]}'")
+        partes = _repartir_palabras(str(texto_nuevo).split(),
+                                    [max(1, len(c.text.split())) for c in grupo])
         for cue, parte in zip(grupo, partes):
-            translated.append(Cue(start=cue.start, end=cue.end, text=' '.join(parte)))
-        if progress_callback and total > 0:
-                progress_callback(i / total)
-    return translated
+            traducidos.append(Cue(start=cue.start, end=cue.end, text=' '.join(parte)))
+    return traducidos
+
 def format_timestamp(t: float) -> str:
     ms = int(round(t * 1000))
     h, ms = divmod(ms, 3600000)

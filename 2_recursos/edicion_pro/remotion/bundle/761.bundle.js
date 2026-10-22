@@ -25,7 +25,7 @@ var parseColor = (value) => {
   const b = parseInt(colored.slice(6, 8), 16);
   return { a: opacity, r, g, b };
 };
-var zColor = () => zod__WEBPACK_IMPORTED_MODULE_1__.string().refine((value) => {
+var zColor = () => zod__WEBPACK_IMPORTED_MODULE_1__/* .string */ .Yj().refine((value) => {
   try {
     parseColor(value);
     return true;
@@ -37,7 +37,7 @@ var zColor = () => zod__WEBPACK_IMPORTED_MODULE_1__.string().refine((value) => {
 // src/z-matrix.ts
 
 var REMOTION_MATRIX_BRAND = "__remotion-matrix";
-var zMatrix = () => zod__WEBPACK_IMPORTED_MODULE_1__.array(zod__WEBPACK_IMPORTED_MODULE_1__.number().step(0.01)).refine((value) => {
+var zMatrix = () => zod__WEBPACK_IMPORTED_MODULE_1__/* .array */ .YO(zod__WEBPACK_IMPORTED_MODULE_1__/* .number */ .ai().step(0.01)).refine((value) => {
   const count = value.length;
   const root = Math.sqrt(count);
   return Number.isInteger(root) && root > 0;
@@ -46,7 +46,7 @@ var zMatrix = () => zod__WEBPACK_IMPORTED_MODULE_1__.array(zod__WEBPACK_IMPORTED
 // src/z-textarea.ts
 
 var REMOTION_TEXTAREA_BRAND = "__remotion-textarea";
-var zTextarea = () => zod__WEBPACK_IMPORTED_MODULE_1__.string().describe(REMOTION_TEXTAREA_BRAND);
+var zTextarea = () => zod__WEBPACK_IMPORTED_MODULE_1__/* .string */ .Yj().describe(REMOTION_TEXTAREA_BRAND);
 
 // src/index.ts
 var ZodZypesInternals = {

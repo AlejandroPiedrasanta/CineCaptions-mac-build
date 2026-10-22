@@ -1,10 +1,9 @@
-# Librerias del programa compilado (Python 3.14.8). Versiones FIJAS a proposito:
-# el instalador anterior (.bat) subia todo "a la ultima" y asi entro PyAV 19,
-# que rompe faster-whisper 1.2.1 (av.open ya no acepta metadata_errors =>
-# ninguna transcripcion funciona). Antes de subir una version: compilar,
-# instalar y correr  "CineCaptions.exe" --tarea verificar
-# Probado con 3.14.8 (v5.4.44): av 19 exige 1_codigo/compat_av.py (faster-whisper 1.2.1 aun pide metadata_errors).
-# Python 3.15: sin ruedas de ctranslate2 ni onnxruntime todavia.
+# Librerias del programa principal (Python 3.15.1). Versiones FIJAS a proposito:
+# PyAV 19 es el ultimo soporte de Python y quitó metadata_errors de av.open;
+# el worker 3.14 aplica el puente compat_av antes de cargar faster-whisper 1.2.1.
+# Antes de subir una version: compilar, instalar y correr --tarea verificar.
+# El motor auxiliar Python 3.14.9 instala Whisper, Argos y ONNX Runtime desde
+# 2_recursos/motor_compat/requirements.txt: varias extensiones aún no tienen ruedas cp315.
 # Interfaz: PySide6 (Qt 6). Solo los modulos esenciales (QtCore/QtGui/QtWidgets).
 PySide6-Essentials==6.12.0
 shiboken6==6.12.0
@@ -13,27 +12,12 @@ qtawesome==1.4.2
 QtPy==2.4.3
 pillow==13.0.0
 numpy==2.5.4
-av==19.0.1
+av==19.0.2
 pyspellchecker==0.9.1
 certifi==2026.10.19
 pynput==1.8.2
 comtypes==1.4.17; sys_platform == "win32"   # v5.5.6: UI Automation sin PowerShell (uia_resolve)
 six==1.17.0
-ctranslate2==4.8.3
-faster-whisper==1.2.1
-onnxruntime==1.31.0
-tokenizers==0.23.3
-huggingface_hub==2.2.0
-hf-xet==1.7.0
-PyYAML==6.0.3
-tqdm==4.70.1
-# Traduccion sin internet: argostranslate se instala con --no-deps (ver
-# Construir_Instalador.ps1) porque declara stanza+spacy, que arrastran torch
-# (~500 MB y arranque 6x mas lento). Se usa MiniSBD; stanza queda como stub
-# (rthook_stanza_stub.py).
-minisbd==0.9.5
-sacremoses==0.2.0
-sentencepiece==0.2.2
 # Compilador
 pyinstaller==6.22.3
-pyinstaller-hooks-contrib==2026.8
+pyinstaller-hooks-contrib==2026.9

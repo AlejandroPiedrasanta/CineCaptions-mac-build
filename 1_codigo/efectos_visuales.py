@@ -487,9 +487,10 @@ def duracion_video(video):
         return 0.0
 
 
-def detectar_cortes(video, al_progreso=None, tope_s=None):
+def detectar_cortes(video, al_progreso=None, tope_s=None, por_fotograma=None):
     """Los instantes (s) donde la imagen salta de una toma a otra. Compara cada fotograma, reducido a 48×86 en grises, con el anterior: un salto muy por encima de
-    lo normal del momento (movimiento de cámara incluido) es un corte. Devuelve [(t, fuerza)]."""
+    lo normal del momento (movimiento de cámara incluido) es un corte. Devuelve [(t, fuerza)].
+    v5.27: `por_fotograma(fr, t)` recibe cada fotograma en la misma pasada (Efectos › «Posición» busca ahí a la persona sin leer el video dos veces)."""
     import av
     import numpy as np
     cortes = []
@@ -504,12 +505,15 @@ def detectar_cortes(video, al_progreso=None, tope_s=None):
         previo = None
         recientes = []
         ultimo_corte = -9.0
-        for fr in c.decode(s):
+        import rotacion_video as RV
+        for fr in RV.fotogramas(c, s):                    # (v5.31: sin romperse en un paquete dañado)
             t = float(fr.pts * s.time_base) if fr.pts is not None else None
             if t is None:
                 continue
             if tope_s and t > tope_s:
                 break
+            if por_fotograma is not None:
+                por_fotograma(fr, t)
             g = fr.reformat(width=48, height=86, format='gray').to_ndarray().astype(np.float32)
             if previo is not None:
                 d = float(np.abs(g - previo).mean())
@@ -1041,6 +1045,38 @@ def planificar(video, palabras, duracion=None, opciones=None, al_estado=None, co
     return {'eventos': eventos, 'duracion': duracion, 'resumen': ', '.join(resumen), 'zonas': [list(z) for z in zonas]}
 
 
+def con_intro_gancho(plan, video=None, op=None):
+    """v5.33: la intro del «Gancho del inicio» (Edición PRO, intros_gancho) en el plan de efectos: la luz en FX-INTRO (Pantalla), su sonido en
+    FX-SONIDO y el zoom hacia fuera en el primer clip de V1 (con la PRO, en una comp aparte: `solo_intro`). Con la PRO, GO no pone los demás
+    efectos visuales, pero la intro SÍ. Devuelve True si la puso (nunca rompe GO)."""
+    try:
+        import intros_gancho
+        if not intros_gancho.activa(op):
+            return False
+        evs, intro = intros_gancho.eventos(op, video)
+    except Exception:
+        try:
+            import registro
+            registro.excepcion(origen='intro del gancho (plan)')
+        except Exception:
+            pass
+        return False
+    eventos = plan.setdefault('eventos', [])
+    eventos[:] = [e for e in eventos if e.get('tipo') != 'intro'] + evs
+    zoom = intros_gancho.zoom_de(intro, intros_gancho.eleccion_zoom(op))      # (el de la intro, el elegido en «Zoom» o ninguno)
+    v1 = next((e for e in eventos if e.get('tipo') == 'v1'), None)
+    if v1 is None and zoom:
+        v1 = {'tipo': 'v1', 'ini': 0.0, 'asset': 'movimiento', 'zoom': None, 'temblor': None, 'transicion': None, 'cortes': [], 'golpes': [],
+              'fondo': False, 'saltos': [], 'zoom_saltos': None, 'zoom_intro': None, 'solo_intro': True}
+        eventos.append(v1)
+    if v1 is not None:
+        v1['intro_gancho'] = zoom
+    plan['solo_audio'] = False
+    plan['intro_gancho'] = {'id': intro['id'], 'zoom': zoom}
+    plan['resumen'] = ', '.join(x for x in (plan.get('resumen'), f"intro «{intro['nombre']}»") if x)
+    return True
+
+
 # ----------------------------------------------------------------------------------------------------------------------- Resolve
 _INFO_TIMELINE = r"""
 tl = project.GetCurrentTimeline()
@@ -1098,6 +1134,9 @@ def comps_de_v1(evento_v1, info, fps, offset_frames, video=None):
             f_pico = local(zi.get('pico') or 0.0)
             if f_pico < dur:
                 zoom_intro = {'pico': max(0, f_pico), 'nivel': zi.get('nivel') or 'normal'}
+        intro = None
+        if (evento_v1 or {}).get('intro_gancho') and local(0.0) < dur and local(0.0) + int(round(fps)) > 0:    # v5.33: la intro del gancho (0-1 s)
+            intro = {'tipo': evento_v1['intro_gancho'], 'desde': local(0.0)}
         fondo = None
         try:
             cw, ch = (int(x) for x in str(it.get('res') or '').lower().replace(' ', '').split('x')[:2])
@@ -1107,8 +1146,13 @@ def comps_de_v1(evento_v1, info, fps, offset_frames, video=None):
             fondo = {'lienzo': (ancho, alto), 'clip': (cw, ch), 'desenfoque': 40}
         ruta = CACHE / f'v1_{k}.comp'
         hecho = bool(evento_v1) and fusion_v1.escribir_comp(ruta, dur, fps, zoom=evento_v1.get('zoom'), golpes=golpes, nivel_temblor=evento_v1.get('temblor') or 'normal',
-                                                           cortes=cortes, transicion=evento_v1.get('transicion'), fondo=fondo, saltos=saltos, zoom_saltos=evento_v1.get('zoom_saltos'), zoom_intro=zoom_intro)
-        salida.append({'inicio': ini, 'ruta': str(ruta) if hecho else None})
+                                                           cortes=cortes, transicion=evento_v1.get('transicion'), fondo=fondo, saltos=saltos, zoom_saltos=evento_v1.get('zoom_saltos'), zoom_intro=zoom_intro,
+                                                           intro=intro)
+        e = {'inicio': ini, 'ruta': str(ruta) if hecho else None}
+        if hecho and (evento_v1 or {}).get('solo_intro'):
+            import intros_gancho
+            e['nombre'] = intros_gancho.NOMBRE_COMP          # (con la PRO: colocar_pro sí recorta a la persona sobre este clip, pasado el zoom)
+        salida.append(e)
     return salida
 
 
@@ -1164,10 +1208,29 @@ def aplicar(plan, al_estado=None, offset_frames=0):
         e = dict(e)
         if e['tipo'] == 'v1':
             continue
-        if e['tipo'] in ('sonido', 'musica'):
+        if e['tipo'] in ('sonido', 'musica', 'voz_ai'):                  # v5.34: 'voz_ai' = la voz restaurada del AI Sound Director (pista AI VOICE)
             if not e.get('archivo') or not Path(e['archivo']).is_file():
                 continue
             e['modo'] = 'audio'
+        elif e['tipo'] == 'intro' and e.get('gancho'):            # v5.33: la luz de la intro del gancho, coloreada a la medida del timeline
+            if al_estado:
+                al_estado('Preparando la intro…')
+            try:
+                import estilos_pro
+                import intros_gancho
+                intro = estilos_pro.variante('gancho', e['gancho'].get('id')) or intros_gancho.automatica()
+                ruta = intros_gancho.preparar_clip(intro, e['gancho'].get('colores') or {}, ancho, alto, fps)
+            except Exception:
+                try:
+                    import registro
+                    registro.excepcion(origen='intro del gancho (luz)')
+                except Exception:
+                    pass
+                ruta = None
+            if ruta is None:
+                continue
+            e['archivo'] = str(ruta)
+            e['modo'] = 'screen'
         elif e['tipo'] in ('intro', 'corte'):
             ruta = _clip(e['tipo'], e['asset'], formato)
             if ruta is None:
@@ -1191,7 +1254,10 @@ def aplicar(plan, al_estado=None, offset_frames=0):
             e['modo'] = 'normal'
         listos.append(e)
     datos = {'eventos': listos, 'fps': fps, 'inicio': info['inicio'], 'offset_frames': int(offset_frames or 0), 'v1': v1_comps, 'solo_audio': bool((plan or {}).get('solo_audio')),
-             'movimiento': ({k: evento_v1.get(k) for k in ('zoom', 'temblor', 'transicion', 'cortes', 'golpes', 'fondo', 'saltos', 'zoom_saltos', 'zoom_intro')} if evento_v1 else None)}
+             'solo_ai': bool((plan or {}).get('solo_ai')),
+             'apagar_sfx': [str(x) for x in ((plan or {}).get('apagar_sfx') or [])],          # v5.37: los sonidos de Simple que el AI Sound Director apaga
+             'movimiento': ({k: evento_v1.get(k) for k in ('zoom', 'temblor', 'transicion', 'cortes', 'golpes', 'fondo', 'saltos', 'zoom_saltos', 'zoom_intro', 'intro_gancho')}
+                            if evento_v1 else None)}
     PLAN_JSON.parent.mkdir(parents=True, exist_ok=True)
     try:
         import archivos_seguros

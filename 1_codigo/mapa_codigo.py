@@ -19,7 +19,7 @@ Funciones (las mismas por MCP —herramientas mapa, simbolo, modulo, cambios, re
     resumen()           DOCUMENTACION/RESUMEN.md (una página: qué hace el programa)
     generar()           reescribe el mapa de CLAUDE.md desde mapa.json y avisa de lo que ya no existe (archivos/símbolos/secciones)
 
-Línea de comandos (sin MCP):  6_compilacion/venv314/Scripts/python.exe 1_codigo/mapa_codigo.py mapa go sonido  |  simbolo _go_generar  |  modulo vigilancia  |  generar
+Línea de comandos (sin MCP):  6_compilacion/venv315/Scripts/python.exe 1_codigo/mapa_codigo.py mapa go sonido  |  simbolo _go_generar  |  modulo vigilancia  |  generar
 """
 import ast
 import json

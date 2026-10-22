@@ -38,7 +38,7 @@ T5 = [('t5:escena', 'Escenas de papel'), ('t5:orbita', 'Órbita de iconos 3D'), 
       ('t6:buscar', 'Barra de búsqueda (Tema 6)'), ('t6:perfil', 'Perfil con seguidores (Tema 6)'), ('t6:equipo', 'Píldora del equipo (Tema 6)')]
 _COMP_T5 = {'OrbitaT5': 't5:orbita', 'TarjetaT5': 't5:tarjeta', 'AcompananteT5': 'acompanante', 'StickerT5': 't5:sticker', 'FinalT5': 't5:final',
             'PasosT5': 't5:pasos', 'DeslizadorT5': 't5:deslizador', 'EscenaT5': 't5:escena', 'Ubicacion': 'ograf:ubicacion'}
-_SIN_MOTION = {'subtitulo', 'velo', 'velo_caption'}
+_SIN_MOTION = {'subtitulo', 'velo', 'velo_caption', 'emoji'}     # (v5.25: los emojis animados tienen su propio interruptor, no son del catálogo)
 _ACOMPANAN = {'fondo', 'velo'}                        # piezas que solo existen junto a otra (el fondo de una escena, el velo de un titular)
 
 
@@ -119,10 +119,16 @@ def modo(op=None):
     return 'elegidos' if str(op.get('pro_motions_modo') or 'auto') == 'elegidos' and op.get('pro_motions') else 'auto'
 
 
+RETIRADOS = {'ograf:orbita', 't5:orbita', 't5:sticker'}     # v5.33: el «Gancho del inicio» ya es una intro (intros_gancho): ni órbita ni sticker
+
+
 def permitido(mid, op=None):
-    """¿Puede la PRO usar ese motion? En «auto», todos; en «elegidos», solo los marcados por el usuario. Un id desconocido (None) siempre."""
+    """¿Puede la PRO usar ese motion? En «auto», todos; en «elegidos», solo los marcados por el usuario. Un id desconocido (None) siempre.
+    Los RETIRADOS, nunca."""
     if not mid:
         return True
+    if mid in RETIRADOS:
+        return False
     op = _op(op)
     if modo(op) != 'elegidos':
         return True
@@ -164,9 +170,7 @@ def id_de_pieza(p):
 def filtrar(piezas, op=None):
     """Las piezas sin los motions no permitidos. Un fondo o un velo que solo acompañaba a una pieza quitada (mismo tramo) se va con ella."""
     op = _op(op)
-    if modo(op) != 'elegidos':
-        return list(piezas or [])
-    fuera = [p for p in piezas or [] if not permitido(id_de_pieza(p), op)]
+    fuera = [p for p in piezas or [] if not permitido(id_de_pieza(p), op)]       # (en «auto» solo salen los RETIRADOS)
     if not fuera:
         return list(piezas or [])
     quedan = [p for p in piezas or [] if p not in fuera]

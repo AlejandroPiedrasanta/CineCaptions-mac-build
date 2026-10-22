@@ -67,10 +67,11 @@ def main():
         lista, ej = fila.lista, fila.ejemplo
         comprobar(fila._pro and lista.isVisible(), f'{tema}: con la PRO en juego se ven la barra y el ejemplo')
         esperado = {o['clave']: (o['clave'] in PREFS['pro_neon_extras']) if pack == 'Kinetic' else LAT.estado(o['clave']) for o in LAT.OPCIONES}
-        if pack == 'Kinetic':
-            comprobar(not any(LAT.estado(o['clave']) for o in LAT.OPCIONES), f'{tema}: de inicio todo apagado (= la referencia)')
+        if pack == 'Kinetic':               # (v5.33: salvo el gancho, la intro del primer segundo, encendido por defecto en todos los temas)
+            comprobar(not any(LAT.estado(o['clave']) for o in LAT.OPCIONES if o['clave'] != 'gancho') and LAT.estado('gancho'),
+                      f'{tema}: de inicio todo apagado (= la referencia) salvo el gancho')
         barra, paso, y0 = lista._geo()
-        for k, o in enumerate(LAT.OPCIONES):
+        for k, o in enumerate(LAT.opciones_visibles()):    # (v5.33: solo las del menú: «Plantillas por frase» se quitó en la 5.20)
             clave = o['clave']
             pos = QPointF(barra.center().x(), y0 + paso * (k + 0.5))
             comprobar(lista._icono_en(pos) == clave, f'{tema}: el clic en el icono {k + 1} cae en «{clave}»')
@@ -82,7 +83,10 @@ def main():
                 QApplication.sendEvent(lista, ev)
             app.processEvents()
             despues = LAT.estado(clave)
-            if pack == 'Kinetic':
+            if pack == 'Kinetic' and clave == 'gancho':
+                comprobar(despues != antes and PREFS.get('pro_gancho_intro') is despues,
+                          f'{tema}: «gancho» se {"enciende" if despues else "apaga"} y se guarda en pro_gancho_intro (como en los otros temas)')
+            elif pack == 'Kinetic':
                 comprobar(despues != antes and (clave in PREFS['pro_neon_extras']) == despues,
                           f'{tema}: «{clave}» se {"enciende" if despues else "apaga"} y se guarda en pro_neon_extras')
                 comprobar(PREFS.get('pro_motions_modo') == 'auto' and PREFS.get('pro_mascara') == 'auto',

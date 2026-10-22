@@ -29,7 +29,8 @@ import edicion_pro_ograf as OG  # noqa: E402
 W, H, FPS, DUR = 270, 480, 24, 3.2
 HP.W, HP.H, HP.FPS, HP.DUR = W, H, FPS, DUR                   # las funciones de hacer_ejemplos_pro leen estos globales
 HP.N = N = int(round(DUR * FPS))
-TRAMOS = {'pildora': 51.9, 'detras': 15.6, 'gancho': 0.0, 'escenas': 56.0, 'kit': 43.6, 'graficos': 53.0, 'broll': 19.6, 'motions_completo': 28.6}
+TRAMOS = {'pildora': 51.9, 'detras': 15.6, 'gancho': 0.0, 'escenas': 56.0, 'kit': 43.6, 'graficos': 53.0, 'broll': 19.6, 'motions_completo': 28.6,
+          'emoji': 51.9}
 ACENTO_VIDEO = '#4C7DFF'                                         # «Automático»: el color que sacaría del video (para el ejemplo)
 ICONOS3D = 'crown-dynamic-color,bell-dynamic-color,camera-dynamic-premium,calendar-dynamic-color'
 
@@ -249,6 +250,13 @@ def hacer(clave, v, video, guion, carpeta, base_cache):
         p = _vestida(clave, v, {'remotion': 'FotoE', 'valores': {'foto': HP.foto_data(HP.RAIZ / '2_recursos' / 'fondos_estilos' / 'fondo_03.jpg'),
                                                                   'palabra': 'EUROPA', 'variante': 'completa'}})
         capas_delante.append((remotion('FotoE', p['valores'], DUR - 0.5, carpeta), 0.5))
+    elif clave == 'emoji':                                         # v5.25: el MISMO EmojiPro que pone GO (🎉, que trae Lottie y 3D), junto a los captions
+        ident = (v or {}).get('id') or 'rebote'
+        props = {'id': 'party_popper', 'variante': ident, 'fuente': 'png' if ident.startswith('3d_') else 'lottie', 'lottie': None, 'imagen': None,
+                 'x': 74, 'y': 54, 'tamano': 22, 'energia': 1.0,
+                 'acento': (EST.colores_de_variante(clave, v).get('acento') if v else None) or '#FFC24D'}
+        capas_delante.append((remotion('EmojiPro', props, DUR - 0.3, carpeta), 0.3))
+        cap_y = 0.66
     mates = base_cache.get('mates') if persona else None
     for i in range(N):
         t = i / FPS
@@ -299,6 +307,8 @@ def main():
     for s in EST.SECCIONES:
         clave = s['clave']
         if solo and clave not in solo:
+            continue
+        if clave == 'gancho':                                    # v5.33: las intros tienen su herramienta (hacer_intros.py --previas)
             continue
         cache = {}
         for v in [None] + list(s['variantes']):

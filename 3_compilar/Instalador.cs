@@ -48,6 +48,14 @@ static class Programa
     [STAThread]
     static int Main(string[] args)
     {
+        // v5.34: rutas de más de 260 caracteres. Sin estos interruptores .NET Framework rechaza las rutas \\?\ y da PathTooLongException;
+        // se fijan ANTES de tocar cualquier ruta (.NET los lee una sola vez).
+        try
+        {
+            AppContext.SetSwitch("Switch.System.IO.UseLegacyPathHandling", false);
+            AppContext.SetSwitch("Switch.System.IO.BlockLongPaths", false);
+        }
+        catch { }
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Opciones op = Opciones.Leer(args);
@@ -468,12 +476,17 @@ class Opciones
         return o;
     }
 
+    // v5.34: TODAS las opciones que entiende Leer (antes se perdían /sinmodelo /sinescritorio /noabrir /sinlimpiar al relanzarse)
     public string ComoArgumentos()
     {
         StringBuilder sb = new StringBuilder();
         if (Desinstalar) sb.Append(" /desinstalar");
         if (Silencioso) sb.Append(" /silencioso");
+        if (SinModelo) sb.Append(" /sinmodelo");
+        if (SinEscritorio) sb.Append(" /sinescritorio");
+        if (NoAbrir) sb.Append(" /noabrir");
         if (SinAccesos) sb.Append(" /sinaccesos");
+        if (SinLimpiar) sb.Append(" /sinlimpiar");
         if (Empezar) sb.Append(" /empezar");
         if (BorrarDatos) sb.Append(" /borrardatos");
         if (BorrarModelos) sb.Append(" /borrarmodelos");
@@ -634,7 +647,7 @@ class Instalacion
     volatile Process tareaActual;
     volatile bool omitirModelo;
 
-    Paso pPreparar, pCopiar, pVerificar, pScripts, pFuentes, pModelo, pMotorIA, pAccesos;
+    Paso pPreparar, pCopiar, pMotorCompat, pVerificar, pScripts, pFuentes, pModelo, pMotorIA, pAccesos;
     Paso dCerrar, dLicencia, dScripts, dFuentes, dAccesos, dArchivos, dDatos, dRastros;
 
     public bool DescargarModelo = true, AccesoEscritorio = true;
@@ -660,6 +673,7 @@ class Instalacion
         {
             pPreparar = Nuevo("Preparar el equipo", "Preparando el equipo...", 1);
             pCopiar = Nuevo("Programa CineCaptions", "Copiando el programa...", 10);
+            pMotorCompat = Nuevo("Motor compatible con Whisper y traducción", "Instalando Python 3.14 auxiliar...", 8);
             pVerificar = Nuevo("Comprobar que funciona en este equipo", "Comprobando que todo funciona...", 2);
             pScripts = Nuevo("Scripts de DaVinci Resolve", "Instalando los scripts en Resolve...", 1);
             pFuentes = Nuevo("Tipografías de las plantillas", "Instalando las tipografías...", 1);
@@ -692,7 +706,7 @@ class Instalacion
     }
 
     public string ExeInstalado { get { return Path.Combine(op.Dir, Programa.ExePrograma); } }
-    public bool DescargandoModelo { get { return (pModelo != null && pModelo.Estado == EstadoPaso.EnCurso) || (pMotorIA != null && pMotorIA.Estado == EstadoPaso.EnCurso); } }
+    public bool DescargandoModelo { get { return (pMotorCompat != null && pMotorCompat.Estado == EstadoPaso.EnCurso) || (pModelo != null && pModelo.Estado == EstadoPaso.EnCurso) || (pMotorIA != null && pMotorIA.Estado == EstadoPaso.EnCurso); } }
 
     public void OmitirDescarga()
     {
@@ -729,9 +743,22 @@ class Instalacion
         if (!Environment.Is64BitOperatingSystem)
             throw new Exception("CineCaptions necesita Windows 10 u 11 de 64 bits.");
         long tamPrograma = 0;
+        int relMasLarga = 0;
         using (FileStream fs = new FileStream(Application.ExecutablePath, FileMode.Open, FileAccess.Read, FileShare.Read))
         using (ZipArchive zip = Paquete.Abrir(fs))
-            foreach (ZipArchiveEntry e in zip.Entries) tamPrograma += e.Length;
+            foreach (ZipArchiveEntry e in zip.Entries)
+            {
+                tamPrograma += e.Length;
+                if (e.FullName.StartsWith("programa/")) relMasLarga = Math.Max(relMasLarga, e.FullName.Length - "programa/".Length);
+            }
+        // v5.34: el instalador copia con rutas largas, pero el programa (Python, Chrome de Remotion) solo abre sus archivos de más de 259
+        // caracteres si Windows tiene activadas las rutas largas: si no, se dice ANTES de copiar, con la carpeta más larga que cabe.
+        string carpeta = Path.GetFullPath(op.Dir).TrimEnd('\\');
+        int rutaMasLarga = carpeta.Length + 1 + relMasLarga;
+        if (rutaMasLarga > 259 && !RutasLargasDeWindows())
+            throw new Exception(string.Format("La carpeta de instalación es demasiado larga ({0} caracteres): algunos archivos del programa quedarían con rutas de " +
+                                              "{1} caracteres y Windows solo admite 259. Elige una carpeta de {2} caracteres como mucho (por ejemplo C:\\CineCaptions).",
+                                              carpeta.Length, rutaMasLarga, 259 - 1 - relMasLarga));
         long libre = EspacioLibre(op.Dir);
         long margen = 200L * 1024 * 1024;
         if (libre >= 0 && libre < tamPrograma + margen)
@@ -756,7 +783,12 @@ class Instalacion
         Empezar(pCopiar, "Abriendo el paquete");
         CopiarPrograma(tamPrograma);
 
-        // 3) autoprueba ---------------------------------------------------------------
+        // 3) motor compatible ----------------------------------------------------------
+        // Whisper, Argos y ONNX se ejecutan en su Python 3.14 aislado; el programa/UI usan Python 3.15.1.
+        Empezar(pMotorCompat, "Preparando Python 3.14.9 y sus librerías nativas");
+        Tarea(pMotorCompat, "motor_compat", 60 * 60, EstadoPaso.Aviso);
+
+        // 4) autoprueba ---------------------------------------------------------------
         Empezar(pVerificar, "Cargando cada parte del programa");
         Tarea(pVerificar, "verificar", 300, EstadoPaso.Error);
 
@@ -844,6 +876,17 @@ class Instalacion
     }
 
     public static long LibreEn(string dir) { return EspacioLibre(dir); }
+
+    // LongPathsEnabled de Windows 10/11 (se lee sin administrador)
+    static bool RutasLargasDeWindows()
+    {
+        try
+        {
+            using (RegistryKey k = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\FileSystem"))
+                return k != null && Convert.ToInt32(k.GetValue("LongPathsEnabled", 0)) == 1;
+        }
+        catch { return false; }
+    }
 
     public static long TamanoPrograma()
     {
@@ -1012,7 +1055,7 @@ class Instalacion
     {
         for (int intento = 1; ; intento++)
         {
-            try { return new FileStream(destino, FileMode.Create, FileAccess.Write, FileShare.None); }
+            try { return new FileStream(Borrado.Largo(destino), FileMode.Create, FileAccess.Write, FileShare.None); }
             catch (Exception ex)
             {
                 if (!(ex is IOException || ex is UnauthorizedAccessException) || intento >= 24) throw;
@@ -1080,8 +1123,9 @@ class Instalacion
                     if (rel.Length == 0) continue;
                     string destino = Path.GetFullPath(Path.Combine(dir, rel.Replace('/', '\\')));
                     if (!destino.StartsWith(dir + "\\", StringComparison.OrdinalIgnoreCase)) continue;
-                    if (rel.EndsWith("/")) { Directory.CreateDirectory(destino); continue; }
-                    Directory.CreateDirectory(Path.GetDirectoryName(destino));
+                    // v5.34: con \\?\ (Borrado.Largo) no hay límite de 260 aunque Windows no tenga activadas las rutas largas
+                    if (rel.EndsWith("/")) { Directory.CreateDirectory(Borrado.Largo(destino)); continue; }
+                    Directory.CreateDirectory(Borrado.Largo(Path.GetDirectoryName(destino)));
                     using (FileStream b = AbrirParaEscribir(destino))
                     using (Stream a = e.Open())
                     {
@@ -1099,7 +1143,7 @@ class Instalacion
                             }
                         }
                     }
-                    try { File.SetLastWriteTime(destino, e.LastWriteTime.DateTime); } catch { }
+                    try { File.SetLastWriteTime(Borrado.Largo(destino), e.LastWriteTime.DateTime); } catch { }
                 }
             }
             File.WriteAllText(Path.Combine(dir, "version.txt"), Programa.Version, Encoding.ASCII);
@@ -1124,7 +1168,7 @@ class Instalacion
     bool Tarea(Paso paso, string nombre, int timeoutSeg, EstadoPaso siFalla)
     {
         string exe = ExeInstalado;
-        if (Sitio.EsPrueba && (nombre == "fuentes" || nombre == "modelo" || nombre == "motor_ia"))      // pruebas del instalador: nada que toque el sistema real
+        if (Sitio.EsPrueba && (nombre == "fuentes" || nombre == "modelo" || nombre == "motor_ia" || nombre == "motor_compat"))      // pruebas del instalador: nada que toque el sistema real
         {
             Terminar(paso, EstadoPaso.Omitido, "Omitido en la prueba");
             return true;
@@ -1137,6 +1181,7 @@ class Instalacion
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
             psi.WorkingDirectory = op.Dir;
+            if (Sitio.EsPrueba) EntornoDePrueba(psi);
             Process p = Process.Start(psi);
             tareaActual = p;
             long leido = 0;
@@ -1185,6 +1230,18 @@ class Instalacion
         }
         Terminar(paso, siFalla, finalTexto);
         return false;
+    }
+
+    // v5.34: en la prueba del instalador el programa toma la carpeta de prueba como su usuario (Path.home, %APPDATA%, %LOCALAPPDATA%,
+    // %PROGRAMDATA%): los scripts de Resolve (scripts / quitar_scripts) y lo que deja en ~ caen ahí, no en el equipo de verdad.
+    static void EntornoDePrueba(ProcessStartInfo psi)
+    {
+        psi.EnvironmentVariables["USERPROFILE"] = Sitio.Usuario;
+        psi.EnvironmentVariables["APPDATA"] = Sitio.Roaming;
+        psi.EnvironmentVariables["LOCALAPPDATA"] = Sitio.Local;
+        psi.EnvironmentVariables["PROGRAMDATA"] = Sitio.ProgramData;
+        psi.EnvironmentVariables.Remove("HF_HOME");
+        psi.EnvironmentVariables.Remove("HF_HUB_CACHE");
     }
 
     long LeerEstado(string archivo, long desde, Paso paso, ref string final, ref string finalTexto)
@@ -1477,7 +1534,7 @@ class Instalacion
         List<string> nombresScripts = NombresDeScripts();
         int barridos = 0;
         try { barridos = QuitarScriptsDeResolve(nombresScripts); } catch (Exception ex) { Log("Scripts: " + ex.Message); }
-        if (File.Exists(ExeInstalado) && !Sitio.EsPrueba) Tarea(dScripts, "quitar_scripts", 120, EstadoPaso.Aviso);
+        if (File.Exists(ExeInstalado)) Tarea(dScripts, "quitar_scripts", 120, EstadoPaso.Aviso);       // en la prueba, redirigida (EntornoDePrueba)
         else Terminar(dScripts, EstadoPaso.Hecho, barridos + " scripts quitados del menú de Resolve");
 
         // 4) tipografias

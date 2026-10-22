@@ -305,7 +305,7 @@ function hasMoreVlq(reader, max) {
 
 // src/strings.ts
 var bufLength = (/* unused pure expression or super */ null && (1024 * 16));
-var td = typeof TextDecoder !== "undefined" ? /* @__PURE__ */ new TextDecoder() : typeof Buffer !== "undefined" ? {
+var td = (/* unused pure expression or super */ null && (typeof TextDecoder !== "undefined" ? /* @__PURE__ */ new TextDecoder() : typeof Buffer !== "undefined" ? {
   decode(buf) {
     const out = Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength);
     return out.toString();
@@ -318,7 +318,7 @@ var td = typeof TextDecoder !== "undefined" ? /* @__PURE__ */ new TextDecoder() 
     }
     return out;
   }
-};
+}));
 var StringWriter = class {
   constructor() {
     this.pos = 0;
@@ -1236,7 +1236,7 @@ if (typeof react__WEBPACK_IMPORTED_MODULE_0__.createContext !== "function") {
 }
 
 // src/icons.tsx
-
+;
 var ICON_SIZE = 25;
 var fullscreenIconSize = 16;
 var PlayIcon = () => {
@@ -1692,7 +1692,7 @@ class ThumbnailEmitter {
 }
 
 // src/use-buffer-state-emitter.ts
-
+;
 
 var useBufferStateEmitter = (emitter) => {
   const { subscribeBuffering } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(remotion__WEBPACK_IMPORTED_MODULE_2__.Internals.SetTimelineContext);
@@ -1793,7 +1793,7 @@ var usePlayerMethods = () => {
   } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(remotion__WEBPACK_IMPORTED_MODULE_2__.Internals.SetTimelineContext);
   const audioContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(remotion__WEBPACK_IMPORTED_MODULE_2__.Internals.SharedAudioContext);
   const audioTagsContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(remotion__WEBPACK_IMPORTED_MODULE_2__.Internals.SharedAudioTagsContext);
-  const environment = (0,remotion__WEBPACK_IMPORTED_MODULE_2__.useRemotionEnvironment)();
+  const environment = (0,remotion__WEBPACK_IMPORTED_MODULE_2__/* .useRemotionEnvironment */ .OK)();
   const video = remotion__WEBPACK_IMPORTED_MODULE_2__.Internals.useVideo();
   const config = remotion__WEBPACK_IMPORTED_MODULE_2__.Internals.useUnsafeVideoConfig();
   const emitter = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(PlayerEventEmitterContext);
@@ -2632,7 +2632,7 @@ class ErrorBoundary extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
 }
 
 // src/license-blacklist.tsx
-
+;
 
 var getHashOfDomain = async () => {
   if (typeof window === "undefined") {
@@ -2775,7 +2775,7 @@ var DefaultVolumeSlider = ({
     };
   }, [isVertical]);
   const randomId = typeof react__WEBPACK_IMPORTED_MODULE_0__.useId === "undefined" ? "volume-slider" : react__WEBPACK_IMPORTED_MODULE_0__.useId();
-  const [randomClass] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => `__remotion-volume-slider-${(0,remotion__WEBPACK_IMPORTED_MODULE_2__.random)(randomId)}`.replace(".", ""));
+  const [randomClass] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => `__remotion-volume-slider-${(0,remotion__WEBPACK_IMPORTED_MODULE_2__/* .random */ .yT)(randomId)}`.replace(".", ""));
   const onVolumeChange = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((e) => {
     setVolume(parseFloat(e.target.value));
   }, [setVolume]);
@@ -2965,7 +2965,7 @@ function useComponentVisible(initialIsVisible) {
 }
 
 // src/PlaybackrateControl.tsx
-
+;
 var BOTTOM = 35;
 var THRESHOLD = 70;
 var rateDiv = {
@@ -3174,7 +3174,7 @@ var PlaybackrateControl = ({ playbackRates, canvasSize }) => {
 
 var getFrameFromX = (clientX, durationInFrames, width) => {
   const pos = clientX;
-  const frame = Math.round((0,remotion__WEBPACK_IMPORTED_MODULE_2__.interpolate)(pos, [0, width], [0, durationInFrames - 1], {
+  const frame = Math.round((0,remotion__WEBPACK_IMPORTED_MODULE_2__/* .interpolate */ .GW)(pos, [0, width], [0, durationInFrames - 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp"
   }));
@@ -4671,13 +4671,13 @@ var PlayerFn = ({
     throw new Error("The <Player /> component does not accept `defaultProps`, but some were passed. Use `inputProps` instead.");
   }
   const componentForValidation = componentOrNullIfLazy(componentProps);
-  if (componentForValidation?.type === remotion__WEBPACK_IMPORTED_MODULE_2__.Composition) {
+  if (componentForValidation?.type === remotion__WEBPACK_IMPORTED_MODULE_2__/* .Composition */ .BO) {
     throw new TypeError(`'component' should not be an instance of <Composition/>. Pass the React component directly, and set the duration, fps and dimensions as separate props. See https://www.remotion.dev/docs/player/examples for an example.`);
   }
-  if (componentForValidation === remotion__WEBPACK_IMPORTED_MODULE_2__.Composition) {
+  if (componentForValidation === remotion__WEBPACK_IMPORTED_MODULE_2__/* .Composition */ .BO) {
     throw new TypeError(`'component' must not be the 'Composition' component. Pass your own React component directly, and set the duration, fps and dimensions as separate props. See https://www.remotion.dev/docs/player/examples for an example.`);
   }
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => acknowledgeRemotionLicenseMessage(Boolean(acknowledgeRemotionLicense), logLevel));
+  ;(0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => acknowledgeRemotionLicenseMessage(Boolean(acknowledgeRemotionLicense), logLevel));
   const component = remotion__WEBPACK_IMPORTED_MODULE_2__.Internals.useLazyComponent({
     compProps: componentProps,
     componentName: "Player",
@@ -17951,7 +17951,7 @@ var getConfigFileChangeMessage = (changeType) => {
   return "Config file changed";
 };
 // src/config-method-lifecycles.ts
-var configMethodLifecycles = {
+var configMethodLifecycles = (/* unused pure expression or super */ null && ({
   addElementLibrary: "runtime",
   overrideBundlerConfig: "restart",
   overrideDuration: "runtime",
@@ -18054,7 +18054,7 @@ var configMethodLifecycles = {
   setVideoImageFormat: "runtime",
   setWebpackPollingInMilliseconds: "restart",
   setX264Preset: "runtime"
-};
+}));
 // src/keyboard-shortcuts.ts
 var studioKeyboardShortcutActions = [
   "playPause",
@@ -18573,7 +18573,7 @@ var detectFileType = (data) => {
 var maxRemoteAssetSize = (/* unused pure expression or super */ null && (50 * 1024 * 1024));
 var remoteAssetDownloadTimeout = 15000;
 var remoteAssetAcceptHeader = "image/png,image/apng,image/jpeg,image/jxl,image/webp,image/bmp,image/gif";
-var extensionsForFileType = {
+var extensionsForFileType = (/* unused pure expression or super */ null && ({
   png: ["png"],
   apng: ["png", "apng"],
   jpeg: ["jpg", "jpeg"],
@@ -18581,7 +18581,7 @@ var extensionsForFileType = {
   webp: ["webp"],
   bmp: ["bmp"],
   gif: ["gif"]
-};
+}));
 var getRemoteAssetFilename = ({
   fileType,
   url
@@ -20328,35 +20328,35 @@ var getPreferredApp = ({
   }).at(0) ?? null;
 };
 // src/hot-middleware.ts
-var hotMiddlewareOptions = {
+var hotMiddlewareOptions = (/* unused pure expression or super */ null && ({
   timeout: 20 * 1000,
   reload: true,
   warn: true
-};
+}));
 // src/keyframe-easing-presets.ts
 var LINEAR_KEYFRAME_EASING = { type: "linear" };
 var HOLD_KEYFRAME_EASING = { type: "step1" };
-var EASE_KEYFRAME_EASING = {
+var EASE_KEYFRAME_EASING = (/* unused pure expression or super */ null && ({
   type: "bezier",
   x1: 0.42,
   y1: 0,
   x2: 1,
   y2: 1
-};
-var QUAD_KEYFRAME_EASING = {
+}));
+var QUAD_KEYFRAME_EASING = (/* unused pure expression or super */ null && ({
   type: "bezier",
   x1: 1 / 3,
   y1: 0,
   x2: 2 / 3,
   y2: 1 / 3
-};
-var CUBIC_KEYFRAME_EASING = {
+}));
+var CUBIC_KEYFRAME_EASING = (/* unused pure expression or super */ null && ({
   type: "bezier",
   x1: 1 / 3,
   y1: 0,
   x2: 2 / 3,
   y2: 0
-};
+}));
 var getBackKeyframeEasing = (s = 1.70158) => ({
   type: "bezier",
   x1: 1 / 3,
@@ -20590,7 +20590,7 @@ var allPackages = [
 ];
 var packages = allPackages.filter((pkg) => shouldReleasePackage({
   packageName: pkg === "core" ? "remotion" : `@remotion/${pkg}`,
-  releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__.VERSION
+  releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__/* .VERSION */ .xv
 }));
 var extraPackages = [
   {
@@ -20791,7 +20791,7 @@ var installableMap = {
   "install-whisper-cpp": true,
   "whisper-web": shouldReleasePackage({
     packageName: "@remotion/whisper-web",
-    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__.VERSION
+    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__/* .VERSION */ .xv
   }),
   "whisper-webgpu": true,
   "video-matting": true,
@@ -20837,13 +20837,13 @@ var installableMap = {
   transitions: true,
   "media-parser": shouldReleasePackage({
     packageName: "@remotion/media-parser",
-    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__.VERSION
+    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__/* .VERSION */ .xv
   }),
   "zod-types": true,
   "zod-types-v3": true,
   webcodecs: shouldReleasePackage({
     packageName: "@remotion/webcodecs",
-    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__.VERSION
+    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__/* .VERSION */ .xv
   }),
   convert: false,
   captions: true,
@@ -20858,17 +20858,17 @@ var installableMap = {
   "studio-protocol": true,
   "light-leaks": shouldReleasePackage({
     packageName: "@remotion/light-leaks",
-    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__.VERSION
+    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__/* .VERSION */ .xv
   }),
   "mac-cursors": shouldReleasePackage({
     packageName: "@remotion/mac-cursors",
-    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__.VERSION
+    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__/* .VERSION */ .xv
   }),
   maptiler: false,
   "rough-notation": true,
   starburst: shouldReleasePackage({
     packageName: "@remotion/starburst",
-    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__.VERSION
+    releaseVersion: remotion__WEBPACK_IMPORTED_MODULE_0__/* .VERSION */ .xv
   }),
   vercel: true,
   sfx: true,
@@ -20985,7 +20985,7 @@ var apiDocs = {
   effects: "https://www.remotion.dev/docs/effects/api"
 };
 // src/parse-spring-easing-config.ts
-var DEFAULT_SPRING_EASING = {
+var DEFAULT_SPRING_EASING = (/* unused pure expression or super */ null && ({
   type: "spring",
   allowTail: null,
   damping: 10,
@@ -20993,7 +20993,7 @@ var DEFAULT_SPRING_EASING = {
   mass: 1,
   overshootClamping: false,
   stiffness: 100
-};
+}));
 var isAstNode = (value) => {
   return typeof value === "object" && value !== null && typeof value.type === "string";
 };
@@ -22950,7 +22950,7 @@ var withRequiredAuxiliaryPackages = (dependencies) => {
 
 // src/api/install-package.ts
 var installPackages = async (dependencies) => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_3__.getRemotionEnvironment)().isStudio) {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_3__/* .getRemotionEnvironment */ .P1)().isStudio) {
     throw new Error("installPackages() is only available in the Studio");
   }
   const dependenciesWithAuxiliaryPackages = withRequiredAuxiliaryPackages(dependencies);
@@ -25453,7 +25453,7 @@ var expandDefaultPropsEditorRef = react__WEBPACK_IMPORTED_MODULE_4__.createRef()
 // src/api/restart-studio.ts
 
 var restartStudio2 = () => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_3__.getRemotionEnvironment)().isStudio) {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_3__/* .getRemotionEnvironment */ .P1)().isStudio) {
     throw new Error("restartStudio() is only available in the Studio");
   }
   if (getBrowserStudioOperations() !== null) {
@@ -25819,7 +25819,7 @@ async function getSourceMap(fileUri, fileContents) {
 }
 
 // src/error-overlay/react-overlay/utils/parser.ts
-
+;
 
 // src/error-overlay/react-overlay/effects/resolve-file-source.ts
 var resolveFileSource = async (location, contextLines) => {
@@ -27585,7 +27585,7 @@ var pLimit = (concurrency) => {
 };
 
 // src/get-audio-data.ts
-var metadataCache = {};
+var metadataCache = (/* unused pure expression or super */ null && ({}));
 var limit = pLimit(3);
 var fn = async (src, options) => {
   if (metadataCache[src]) {
@@ -27690,7 +27690,7 @@ var onMediaError = ({
 
 // src/get-audio-duration-in-seconds.ts
 var limit2 = pLimit(3);
-var metadataCache2 = {};
+var metadataCache2 = (/* unused pure expression or super */ null && ({}));
 var fn2 = (src) => {
   if (metadataCache2[src]) {
     return Promise.resolve(metadataCache2[src]);
@@ -27729,7 +27729,7 @@ var getAudioDurationInSeconds = (src) => {
 };
 var getAudioDuration = (src) => getAudioDurationInSeconds(src);
 // src/get-image-dimensions.ts
-var imageDimensionsCache = {};
+var imageDimensionsCache = (/* unused pure expression or super */ null && ({}));
 var limit3 = pLimit(3);
 var fn3 = async (src) => {
   if (imageDimensionsCache[src]) {
@@ -28037,7 +28037,7 @@ var getPartialAudioData = async ({
 };
 
 // src/use-windowed-audio-data.ts
-var warnedMatroska = {};
+var warnedMatroska = (/* unused pure expression or super */ null && ({}));
 var useWindowedAudioData = ({
   src,
   frame,
@@ -28331,7 +28331,7 @@ var complexMagnitude = function(c) {
 };
 
 // src/fft/exponent.ts
-var mapExponent = {};
+var mapExponent = (/* unused pure expression or super */ null && ({}));
 var exponent = function(k, N) {
   const x = -2 * Math.PI * (k / N);
   mapExponent[N] = mapExponent[N] || {};
@@ -28556,7 +28556,7 @@ var getMax = (array) => {
   }
   return max;
 };
-var cache2 = {};
+var cache2 = (/* unused pure expression or super */ null && ({}));
 var getMaxPossibleMagnitude = (metadata) => {
   if (cache2[metadata.resultId]) {
     return cache2[metadata.resultId];
@@ -28567,7 +28567,7 @@ var getMaxPossibleMagnitude = (metadata) => {
 };
 
 // src/visualize-audio.ts
-var cache3 = {};
+var cache3 = (/* unused pure expression or super */ null && ({}));
 var visualizeAudioFrame = ({
   audioData,
   frame,
@@ -28627,7 +28627,7 @@ var visualizeAudio = ({
   });
 };
 // src/visualize-audio-waveform.ts
-var cache4 = {};
+var cache4 = (/* unused pure expression or super */ null && ({}));
 var visualizeAudioWaveformFrame = ({
   audioData,
   frame,
@@ -30846,7 +30846,7 @@ var registrationPromise = null;
 var doRegister = async () => {
   const nativeSupport = await (0,encode/* canEncodeAudio */.Tc)("aac");
   if (!nativeSupport) {
-    const { registerAacEncoder } = await __webpack_require__.e(/* import() */ 208).then(__webpack_require__.bind(__webpack_require__, 5208));
+    const { registerAacEncoder } = await __webpack_require__.e(/* import() */ 208).then(() => (__webpack_require__(5208)));
     registerAacEncoder();
   }
 };
@@ -30863,7 +30863,7 @@ var registrationPromise2 = null;
 var doRegister2 = async () => {
   const nativeSupport = await (0,encode/* canEncodeAudio */.Tc)("flac");
   if (!nativeSupport) {
-    const { registerFlacEncoder } = await __webpack_require__.e(/* import() */ 624).then(__webpack_require__.bind(__webpack_require__, 5624));
+    const { registerFlacEncoder } = await __webpack_require__.e(/* import() */ 624).then(() => (__webpack_require__(5624)));
     registerFlacEncoder();
   }
 };
@@ -30880,7 +30880,7 @@ var registrationPromise3 = null;
 var doRegister3 = async () => {
   const nativeSupport = await (0,encode/* canEncodeAudio */.Tc)("mp3");
   if (!nativeSupport) {
-    const { registerMp3Encoder } = await __webpack_require__.e(/* import() */ 872).then(__webpack_require__.bind(__webpack_require__, 4872));
+    const { registerMp3Encoder } = await __webpack_require__.e(/* import() */ 872).then(() => (__webpack_require__(4872)));
     registerMp3Encoder();
   }
 };
@@ -31795,7 +31795,7 @@ function createBackgroundKeepalive({
 }
 
 // src/create-audio-sample-source.ts
-
+;
 var createAudioSampleSource = ({
   muted,
   codec,
@@ -36543,7 +36543,7 @@ var createLayer = async ({
         reason: "URL masks are loaded by the built-in DOM composer to guarantee deterministic rendering.",
         shouldWarn: false
       });
-    } else if (containsLayoutSubtreeCanvas(element) && !esm.HtmlInCanvas.isNestingSupported()) {
+    } else if (containsLayoutSubtreeCanvas(element) && !esm/* HtmlInCanvas */.jC.isNestingSupported()) {
       onHtmlInCanvasLayerOutcome({
         native: false,
         reason: "The composition contains an <HtmlInCanvas> element. Nested HTML-in-canvas capture requires Chrome 157 or newer, so the built-in DOM composer is used.",
@@ -39207,7 +39207,7 @@ var TimelineSlider = () => {
   return /* @__PURE__ */ (0,jsx_runtime.jsx)(TimelineSliderInner, {});
 };
 var TimelineSliderInner = () => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const timelinePosition = esm.Internals.Timeline.useTimelinePosition();
   const ref = (0,react.useRef)(null);
   const timelineWidth = (0,react.useContext)(TimelineWidthContext);
@@ -39577,7 +39577,7 @@ var getFrameFromX = ({
   extrapolate
 }) => {
   const pos = clientX - TIMELINE_PADDING;
-  const frame = Math.min(durationInFrames - 1, Math.round((0,esm.interpolate)(pos, [0, getUsableTimelineWidth(width)], [0, durationInFrames], {
+  const frame = Math.min(durationInFrames - 1, Math.round((0,esm/* interpolate */.GW)(pos, [0, getUsableTimelineWidth(width)], [0, durationInFrames], {
     extrapolateLeft: extrapolate,
     extrapolateRight: extrapolate
   })));
@@ -43997,13 +43997,13 @@ var pickColor = () => {
         ]
       }), 2000);
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
     });
   }).catch((err) => {
     if (err.message.includes("canceled")) {
       return;
     }
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not pick color.`, 2000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not pick color.`, 2000);
   });
 };
 
@@ -45051,9 +45051,9 @@ var requestCodexAnnotation = ({
     if (result?.accepted) {
       return true;
     }
-    (0,index_fp21v3v3/* showNotification */.Ds)("Could not open the annotation editor", 3000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)("Could not open the annotation editor", 3000);
   } catch (err) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open the annotation editor: ${err.message}`, 3000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open the annotation editor: ${err.message}`, 3000);
   }
   return false;
 };
@@ -45158,7 +45158,7 @@ var getCompositionMenuItems = ({
         (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open ${codingAgentName}`, 2000);
       }
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
   };
   const openCompositionWithEditor = async (editorId) => {
@@ -45169,7 +45169,7 @@ var getCompositionMenuItems = ({
     try {
       await (0,index_w5yee38t/* openOriginalPositionInEditor */.XK)(resolvedLocation, editorId);
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
   };
   const openComponentWithEditor = async (editorId) => {
@@ -45184,7 +45184,7 @@ var getCompositionMenuItems = ({
         editorId
       });
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
   };
   const openComponentInGitSource = async () => {
@@ -45199,15 +45199,15 @@ var getCompositionMenuItems = ({
       });
       openGitSource({ folder: false, location: info.location });
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
   };
   const openCompositionInFileExplorer = () => {
     if (!resolvedLocation?.source) {
       return;
     }
-    (0,index_fp21v3v3/* openInFileExplorer */.dP)({ directory: resolvedLocation.source }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
+    ;(0,index_fp21v3v3/* openInFileExplorer */.dP)({ directory: resolvedLocation.source }).catch((err) => {
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
     });
   };
   const openComponentInFileExplorer = async () => {
@@ -45221,7 +45221,7 @@ var getCompositionMenuItems = ({
       });
       await (0,index_fp21v3v3/* openInFileExplorer */.dP)({ directory: info.location.source });
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
     }
   };
   const commonOpenInMenuItems = {
@@ -45370,8 +45370,8 @@ var getCompositionMenuItems = ({
         if (!contextForAgents) {
           return;
         }
-        (0,index_w5yee38t/* copyText */.Dk)(contextForAgents).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
+        ;(0,index_w5yee38t/* copyText */.Dk)(contextForAgents).catch((err) => {
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
         });
       },
       quickSwitcherLabel: null,
@@ -45399,10 +45399,10 @@ var getCompositionMenuItems = ({
         if (!fileLocation) {
           return;
         }
-        (0,index_w5yee38t/* copyText */.Dk)(fileLocation).then(() => {
-          (0,index_fp21v3v3/* showNotification */.Ds)("Copied file location to clipboard", 1000);
+        ;(0,index_w5yee38t/* copyText */.Dk)(fileLocation).then(() => {
+          ;(0,index_fp21v3v3/* showNotification */.Ds)("Copied file location to clipboard", 1000);
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
         });
       },
       quickSwitcherLabel: "Copy composition file location",
@@ -45424,7 +45424,7 @@ var getCompositionMenuItems = ({
         (0,index_w5yee38t/* copyText */.Dk)(composition.id).then(() => {
           (0,index_fp21v3v3/* showNotification */.Ds)("Copied composition ID", 1000);
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
         });
       },
       quickSwitcherLabel: "Copy composition ID",
@@ -46280,7 +46280,7 @@ var getFolderMenuItems = ({
         try {
           await (0,index_w5yee38t/* openOriginalPositionInEditor */.XK)(resolvedLocation, editorId);
         } catch (err) {
-          (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
         }
       },
       quickSwitcherLabel: `Show folder in ${editorName}`,
@@ -46299,8 +46299,8 @@ var getFolderMenuItems = ({
         if (!contextForAgents) {
           return;
         }
-        (0,index_w5yee38t/* copyText */.Dk)(contextForAgents).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
+        ;(0,index_w5yee38t/* copyText */.Dk)(contextForAgents).catch((err) => {
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
         });
       },
       quickSwitcherLabel: null,
@@ -46319,10 +46319,10 @@ var getFolderMenuItems = ({
         if (!fileLocation) {
           return;
         }
-        (0,index_w5yee38t/* copyText */.Dk)(fileLocation).then(() => {
-          (0,index_fp21v3v3/* showNotification */.Ds)("Copied file location to clipboard", 1000);
+        ;(0,index_w5yee38t/* copyText */.Dk)(fileLocation).then(() => {
+          ;(0,index_fp21v3v3/* showNotification */.Ds)("Copied file location to clipboard", 1000);
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
         });
       },
       quickSwitcherLabel: "Copy folder file location",
@@ -46341,7 +46341,7 @@ var getFolderMenuItems = ({
         (0,index_w5yee38t/* copyText */.Dk)(folderId).then(() => {
           (0,index_fp21v3v3/* showNotification */.Ds)("Copied to clipboard", 1000);
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
         });
       },
       quickSwitcherLabel: "Copy folder ID",
@@ -46985,7 +46985,7 @@ var CompositionSelectorItem = ({
         toggleFolder(item.folderName, item.parentName);
       }
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(error instanceof Error ? error.message : String(error), 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(error instanceof Error ? error.message : String(error), 4000);
     }
   }, [item, toggleFolder]);
   const onRowDrop = (0,react.useCallback)(async (event) => {
@@ -47280,7 +47280,7 @@ var useSelectAsset = () => {
 var StaticFilesContext = (0,react.createContext)([]);
 var StaticFilesProvider = ({ children }) => {
   const [files, setFiles] = (0,react.useState)(() => (0,index_r4fxez7r/* getStaticFiles2 */.mT)());
-  const env = (0,esm.useRemotionEnvironment)();
+  const env = (0,esm/* useRemotionEnvironment */.OK)();
   const { previewServerState } = (0,react.useContext)(index_w5yee38t/* StudioServerConnectionCtx */.vF);
   const browserStudioCanWatch = previewServerState.type === "connected" && (0,index_fp21v3v3/* getBrowserStudioOperations */.P3)() !== null;
   (0,react.useEffect)(() => {
@@ -47864,7 +47864,7 @@ var CompositionSelector = ({ onCompositionSelected }) => {
         (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
       }
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(error instanceof Error ? error.message : String(error), 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(error instanceof Error ? error.message : String(error), 4000);
     }
   }, [stopCompositionListAutoScroll]);
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
@@ -48013,7 +48013,7 @@ function useBreakpoint(breakpoint) {
 }
 
 // src/helpers/use-responsive-sidebar-status.ts
-
+;
 
 // src/state/sidebar.tsx
 
@@ -49335,7 +49335,7 @@ var callBatchUpdateKeyframeSettings = ({
   }).then(() => {
     return;
   }).catch((err) => {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not update keyframe settings: ${err instanceof Error ? err.message : String(err)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not update keyframe settings: ${err instanceof Error ? err.message : String(err)}`, 4000);
     throw err;
   });
 };
@@ -49525,7 +49525,7 @@ var deleteSequencesFromSource = async (nodePathInfos, confirm) => {
     }
     return result.success && revision === (0,index_fp21v3v3/* getSourceMutationRevision */.sV)();
   }).catch((err) => {
-    (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     return false;
   });
 };
@@ -49552,10 +49552,10 @@ var deleteEffects2 = (effects) => {
     if (result.success) {
       return true;
     }
-    (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
     return false;
   }).catch((err) => {
-    (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     return false;
   });
 };
@@ -51203,8 +51203,8 @@ var TimelineClipboardKeybindingsUnmemoized = () => {
             (0,index_fp21v3v3/* showNotification */.Ds)("Select a continuous keyframe range from one property to copy", 3000);
             return;
           }
-          (0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(payload)).catch((err) => {
-            (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy keyframe: ${err.message}`, 2000);
+          ;(0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(payload)).catch((err) => {
+            ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy keyframe: ${err.message}`, 2000);
           });
           return;
         }
@@ -51224,10 +51224,10 @@ var TimelineClipboardKeybindingsUnmemoized = () => {
             (0,index_fp21v3v3/* showNotification */.Ds)("Cannot copy easing because it cannot be read", 3000);
             return;
           }
-          (0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(payload)).then(() => {
-            (0,index_fp21v3v3/* showNotification */.Ds)("Copied easing to clipboard", 1000);
+          ;(0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(payload)).then(() => {
+            ;(0,index_fp21v3v3/* showNotification */.Ds)("Copied easing to clipboard", 1000);
           }).catch((err) => {
-            (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy easing: ${err.message}`, 2000);
+            ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy easing: ${err.message}`, 2000);
           });
           return;
         }
@@ -51246,10 +51246,10 @@ var TimelineClipboardKeybindingsUnmemoized = () => {
             (0,index_fp21v3v3/* showNotification */.Ds)("Cannot copy property because its value cannot be copied", 3000);
             return;
           }
-          (0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(payload)).then(() => {
-            (0,index_fp21v3v3/* showNotification */.Ds)("Copied property value", 1000);
+          ;(0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(payload)).then(() => {
+            ;(0,index_fp21v3v3/* showNotification */.Ds)("Copied property value", 1000);
           }).catch((err) => {
-            (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy property: ${err.message}`, 2000);
+            ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy property: ${err.message}`, 2000);
           });
           return;
         }
@@ -51267,10 +51267,10 @@ var TimelineClipboardKeybindingsUnmemoized = () => {
             (0,index_fp21v3v3/* showNotification */.Ds)("Cannot copy effect prop because its value cannot be copied", 3000);
             return;
           }
-          (0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(payload)).then(() => {
-            (0,index_fp21v3v3/* showNotification */.Ds)("Copied effect prop to clipboard", 1000);
+          ;(0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(payload)).then(() => {
+            ;(0,index_fp21v3v3/* showNotification */.Ds)("Copied effect prop to clipboard", 1000);
           }).catch((err) => {
-            (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy effect prop: ${err.message}`, 2000);
+            ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy effect prop: ${err.message}`, 2000);
           });
           return;
         }
@@ -51295,7 +51295,7 @@ var TimelineClipboardKeybindingsUnmemoized = () => {
         (0,index_w5yee38t/* copyText */.Dk)(makeClipboardText(effectClipboardData.payload)).then(() => {
           (0,index_fp21v3v3/* showNotification */.Ds)(effectClipboardData.payload.effects.length === 1 ? "Copied effect to clipboard" : "Copied effects to clipboard", 1000);
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy effects: ${err.message}`, 2000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy effects: ${err.message}`, 2000);
         });
       },
       preventDefault: false,
@@ -51358,7 +51358,7 @@ var TimelineClipboardKeybindingsUnmemoized = () => {
             }
           });
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not cut effects: ${err.message}`, 2000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not cut effects: ${err.message}`, 2000);
         });
       },
       preventDefault: false,
@@ -51503,7 +51503,7 @@ var TimelineClipboardKeybindingsUnmemoized = () => {
             return;
           }
           return updatePromise.catch((err) => {
-            (0,index_fp21v3v3/* showNotification */.Ds)(`Could not paste easing: ${err.message}`, 3000);
+            ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not paste easing: ${err.message}`, 3000);
           });
         }
         const sequencePropResult = (0,studio_shared_dist_esm/* parseSequencePropClipboardDataResult */.ru)(text);
@@ -51666,7 +51666,7 @@ var TimelineClipboardKeybindingsUnmemoized = () => {
           }
         });
       }).catch((err) => {
-        (0,index_fp21v3v3/* showNotification */.Ds)(`Could not paste: ${err.message}`, 3000);
+        ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not paste: ${err.message}`, 3000);
       });
     };
     if (keybindings.isHighestContext && !(0,index_fp21v3v3/* areKeyboardShortcutsDisabled */.N9)()) {
@@ -51746,7 +51746,7 @@ var duplicateSequencesFromSource = async (nodePathInfos, confirm) => {
       (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
     }
   } catch (err) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
   }
 };
 var isDuplicatableSequenceRowSelection = (selection) => selection.type === "sequence";
@@ -51764,7 +51764,7 @@ var duplicateEffectsFromSource = (effects) => {
       (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
     }
   }).catch((err) => {
-    (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
   });
 };
 var duplicateSelectedTimelineItems = ({
@@ -51918,10 +51918,10 @@ var splitTimelineSequencesFromSource = ({
     if (result.success) {
       return true;
     }
-    (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
     return false;
   }).catch((err) => {
-    (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     return false;
   });
 };
@@ -54866,7 +54866,7 @@ var useCurrentCompositionMenuData = () => {
     if (connectionStatus !== "connected" || !currentComposition || !resolvedCompositionLocation?.source) {
       return;
     }
-    (0,index_w5yee38t/* preloadCompositionComponentInfo */.Xg)({
+    ;(0,index_w5yee38t/* preloadCompositionComponentInfo */.Xg)({
       compositionFile: resolvedCompositionLocation.source,
       compositionId: currentComposition.id
     });
@@ -55890,7 +55890,7 @@ var InspectorOpenInEditor = ({
     try {
       await (0,index_w5yee38t/* openOriginalPositionInEditor */.XK)(location, editorId);
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
   }, [location]);
   const openWithCodingAgent = (0,react.useCallback)(async (codingAgentId, codingAgentName) => {
@@ -55900,15 +55900,15 @@ var InspectorOpenInEditor = ({
         (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open ${codingAgentName}`, 2000);
       }
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
   }, [contextForAgents]);
   const copyPath = (0,react.useCallback)(() => {
     if (!location?.source) {
       return;
     }
-    (0,index_w5yee38t/* copyText */.Dk)(location.source).then(() => (0,index_fp21v3v3/* showNotification */.Ds)("Copied path", 1500)).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy path: ${err.message}`, 2000);
+    ;(0,index_w5yee38t/* copyText */.Dk)(location.source).then(() => (0,index_fp21v3v3/* showNotification */.Ds)("Copied path", 1500)).catch((err) => {
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy path: ${err.message}`, 2000);
     });
   }, [location]);
   const defaultAppName = defaultOpenInTarget === "git-source" ? "GitHub" : defaultEditorName ?? "default editor";
@@ -55957,8 +55957,8 @@ var InspectorOpenInEditor = ({
         if (!location?.source) {
           return;
         }
-        (0,index_fp21v3v3/* openInFileExplorer */.dP)({ directory: location.source }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
+        ;(0,index_fp21v3v3/* openInFileExplorer */.dP)({ directory: location.source }).catch((err) => {
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
         });
       },
       onOpenInGitClient: (gitClientId) => {
@@ -55967,7 +55967,7 @@ var InspectorOpenInEditor = ({
             (0,index_fp21v3v3/* showNotification */.Ds)("Could not open Git client", 2000);
           }
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open Git client: ${err.message}`, 2000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open Git client: ${err.message}`, 2000);
         });
       },
       onOpenInGitSource: () => {
@@ -55977,12 +55977,12 @@ var InspectorOpenInEditor = ({
         if (!location?.source || locationType !== "folder") {
           return;
         }
-        (0,index_w5yee38t/* openInTerminal */.S$)(terminalId, location.source).then((response) => {
+        ;(0,index_w5yee38t/* openInTerminal */.S$)(terminalId, location.source).then((response) => {
           if (!response.success) {
             (0,index_fp21v3v3/* showNotification */.Ds)("Could not open terminal", 2000);
           }
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open terminal: ${err.message}`, 2000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open terminal: ${err.message}`, 2000);
         });
       }
     });
@@ -57408,7 +57408,7 @@ var SplitterElement = ({ children, type, sticky }) => {
       position: "absolute",
       left: (type === "flexer" ? 0 : context.flexValue) * 100 + "%",
       width: (type === "flexer" ? context.flexValue : 1 - context.flexValue) * 100 + "%",
-      backgroundColor: (0,esm.interpolateColors)((0,esm.random)(context.flexValue), [0, 1], ["red", "blue"])
+      backgroundColor: (0,esm/* interpolateColors */.Y7)((0,esm/* random */.yT)(context.flexValue), [0, 1], ["red", "blue"])
     };
   }, [context.flexValue, type]);
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, {
@@ -57984,7 +57984,7 @@ var getFileMetadata = async ({
 };
 var getStaticAssetMetadata = (assetPath, assetType) => {
   const extension = assetPath.split(".").pop()?.toLowerCase();
-  const src = (0,esm.staticFile)(assetPath);
+  const src = (0,esm/* staticFile */.dQ)(assetPath);
   if (extension && ["png", "jpg", "jpeg", "jxl", "webp", "bmp", "gif", "apng", "svg"].includes(extension)) {
     return Promise.all([
       index_j19a8yz6_getImageDimensions({ revokeObjectUrl: false, src }),
@@ -58032,7 +58032,7 @@ var getStaticAssetFileType = async (assetPath) => {
     return null;
   }
   try {
-    const response = await fetch((0,esm.staticFile)(assetPath));
+    const response = await fetch((0,esm/* staticFile */.dQ)(assetPath));
     if (!response.ok) {
       return null;
     }
@@ -58233,7 +58233,7 @@ var importAssets = async ({
     notifyAddedStaticFiles();
     notifyUnsupportedFiles(unsupportedFiles);
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add asset: ${error instanceof Error ? error.message : String(error)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add asset: ${error instanceof Error ? error.message : String(error)}`, 4000);
   }
 };
 var importFigmaClipboard = async ({
@@ -58263,7 +58263,7 @@ var importFigmaClipboard = async ({
       markup: converted.svg
     });
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(formatFigmaClipboardErrorNotification(error instanceof Error ? error.message : String(error)), 8000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(formatFigmaClipboardErrorNotification(error instanceof Error ? error.message : String(error)), 8000);
   }
 };
 var insertSvgMarkup = async ({
@@ -58299,7 +58299,7 @@ var insertSvgMarkup = async ({
       }
     });
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add SVG: ${error instanceof Error ? error.message : String(error)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add SVG: ${error instanceof Error ? error.message : String(error)}`, 4000);
   }
 };
 var importRemoteAsset = async ({
@@ -58347,7 +58347,7 @@ var importRemoteAsset = async ({
       }
     });
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add remote asset: ${error instanceof Error ? error.message : String(error)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add remote asset: ${error instanceof Error ? error.message : String(error)}`, 4000);
   }
 };
 var insertRemoteAudio = async ({
@@ -58387,7 +58387,7 @@ var insertRemoteAudio = async ({
       })
     });
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add sound effect: ${error instanceof Error ? error.message : String(error)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add sound effect: ${error instanceof Error ? error.message : String(error)}`, 4000);
   }
 };
 var insertExistingAssets = async ({
@@ -58442,7 +58442,7 @@ var insertExistingAssets = async ({
     }
     notifyUnsupportedFiles(unsupportedFiles);
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add asset: ${error instanceof Error ? error.message : String(error)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add asset: ${error instanceof Error ? error.message : String(error)}`, 4000);
   }
 };
 var insertComponent = async ({
@@ -58475,7 +58475,7 @@ var insertComponent = async ({
       }
     });
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add component: ${error instanceof Error ? error.message : String(error)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add component: ${error instanceof Error ? error.message : String(error)}`, 4000);
   }
 };
 var serializeResolvedPropsForSourceCode = (props) => {
@@ -58534,7 +58534,7 @@ var insertComposition = async ({
       }
     });
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add composition: ${error instanceof Error ? error.message : String(error)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add composition: ${error instanceof Error ? error.message : String(error)}`, 4000);
   }
 };
 var insertElement = async ({
@@ -58571,14 +58571,14 @@ var insertElement = async ({
       (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add Element: ${reason}`, 4000);
       return false;
     }
-    (0,index_fp21v3v3/* requestInsertedElementSelection */.as)({
+    ;(0,index_fp21v3v3/* requestInsertedElementSelection */.as)({
       compositionId,
       nodePath: null,
       notification: `Installed ${element.displayName}`
     });
     return true;
   } catch (error) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add Element: ${error instanceof Error ? error.message : String(error)}`, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add Element: ${error instanceof Error ? error.message : String(error)}`, 4000);
     return false;
   }
 };
@@ -59791,7 +59791,7 @@ var deriveInputDraggerValueDiff = ({
   step,
   xDistance
 }) => {
-  return (0,esm.interpolate)(xDistance, [-5, -4, 0, 4, 5], [-step * dragSensitivity, 0, 0, 0, step * dragSensitivity]);
+  return (0,esm/* interpolate */.GW)(xDistance, [-5, -4, 0, 4, 5], [-step * dragSensitivity, 0, 0, 0, step * dragSensitivity]);
 };
 var InputDraggerForwardRefFn = ({
   onValueChange,
@@ -60047,7 +60047,7 @@ var InputDraggerForwardRefFn = ({
           onValueChangeEnd(lastDragValue, "drag");
         }
         setTimeout(() => {
-          (0,index_fp21v3v3/* setClickLock */.ul)(false);
+          ;(0,index_fp21v3v3/* setClickLock */.ul)(false);
         }, 2);
       }
     });
@@ -60404,7 +60404,7 @@ var currentTimeSubtitle = {
   textAlign: "left"
 };
 var CurrentTimeInput = ({ buttonRef, onTextChange, onValueChange, formatter }) => {
-  const frame = (0,esm.useCurrentFrame)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   return /* @__PURE__ */ (0,jsx_runtime.jsx)(InputDragger, {
     ref: buttonRef,
     "aria-label": String(frame),
@@ -60420,7 +60420,7 @@ var CurrentTimeInput = ({ buttonRef, onTextChange, onValueChange, formatter }) =
   });
 };
 var CurrentFrame = () => {
-  const frame = (0,esm.useCurrentFrame)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   return frame;
 };
 var TimeValue = react.memo(() => {
@@ -60824,7 +60824,7 @@ var TimelineDragHandler = () => {
   });
 };
 var TimelineDragHandlerInner = () => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const size = dist_esm/* PlayerInternals */.Cb.useElementSize(scrollableRef, {
     triggerOnWindowResize: true,
     shouldApplyCssTransforms: true
@@ -62419,7 +62419,7 @@ function useVirtualizer(options) {
 }
 
 // src/components/Timeline/TimelineVirtualization.tsx
-
+;
 
 // src/components/Timeline/MaxTimelineTracks.tsx
 
@@ -63192,7 +63192,7 @@ var line2 = {
 var inPointerHandle = (0,react.createRef)();
 var outPointerHandle = (0,react.createRef)();
 var InnerTimelineInOutPointerHandle = ({ atFrame, dragging, onPointerDown, timelineWidth, type }) => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const style = (0,react.useMemo)(() => {
     return {
       ...line2,
@@ -63241,7 +63241,7 @@ var TimelineInOutDragHandler = () => {
   return video ? /* @__PURE__ */ (0,jsx_runtime.jsx)(TimelineInOutDragHandlerInnerMemo, {}) : null;
 };
 var TimelineInOutDragHandlerInner = () => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const size = dist_esm/* PlayerInternals */.Cb.useElementSize(scrollableRef, {
     triggerOnWindowResize: true,
     shouldApplyCssTransforms: true
@@ -64077,7 +64077,7 @@ var addEffectFromDrop = async ({
       if (files.length === 1 && getPreviewFileType(files[0].name) === "lut") {
         content = await files[0].text();
       } else if (files.length === 0 && parsed?.type === "asset" && getPreviewFileType(parsed.data.assetPath) === "lut") {
-        const response = await fetch((0,esm.staticFile)(parsed.data.assetPath));
+        const response = await fetch((0,esm/* staticFile */.dQ)(parsed.data.assetPath));
         if (!response.ok) {
           throw new Error(`Could not read LUT file ${parsed.data.assetPath}`);
         }
@@ -64110,7 +64110,7 @@ DOMAIN_MAX ${lut.domainMax.join(" ")}`);
       selectItems
     });
   } catch (err) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
   }
 };
 var addEffectToSequence = async ({
@@ -64151,7 +64151,7 @@ var addEffectToSequence = async ({
       }
     ], { revealInInspector: true });
   } catch (err) {
-    (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+    ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
   }
 };
 
@@ -64261,13 +64261,13 @@ var getCopyContextForAgentsMenuItem = ({
       if (!contextForAgents) {
         return;
       }
-      (0,index_w5yee38t/* copyText */.Dk)(typeof contextForAgents === "string" ? contextForAgents : contextForAgents().then((context) => {
+      ;(0,index_w5yee38t/* copyText */.Dk)(typeof contextForAgents === "string" ? contextForAgents : contextForAgents().then((context) => {
         if (!context) {
           throw new Error("No source location found");
         }
         return context;
       })).catch((err) => {
-        (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 2000);
+        ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 2000);
       });
     },
     quickSwitcherLabel: null,
@@ -64538,8 +64538,8 @@ var getSequenceContextMenuItems = ({
       if (!originalLocation?.source) {
         return;
       }
-      (0,index_fp21v3v3/* openInFileExplorer */.dP)({ directory: originalLocation.source }).catch((err) => {
-        (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* openInFileExplorer */.dP)({ directory: originalLocation.source }).catch((err) => {
+        ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
       });
     },
     onOpenInGitClient: () => {
@@ -64629,7 +64629,7 @@ var getSequenceContextMenuItems = ({
         copyImageToClipboard(copyImageElement).then(() => {
           (0,index_fp21v3v3/* showNotification */.Ds)(`Copied ${copyImageLabel === "Copy image" ? "image" : "frame"} to clipboard`, 1000);
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy ${copyImageLabel === "Copy image" ? "image" : "frame"}: ${err.message}`, 2000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy ${copyImageLabel === "Copy image" ? "image" : "frame"}: ${err.message}`, 2000);
         });
       },
       quickSwitcherLabel: null,
@@ -64652,10 +64652,10 @@ var getSequenceContextMenuItems = ({
         if (!svg) {
           return;
         }
-        (0,index_w5yee38t/* copyText */.Dk)(svg.outerHTML).then(() => {
-          (0,index_fp21v3v3/* showNotification */.Ds)("Copied SVG to clipboard", 1000);
+        ;(0,index_w5yee38t/* copyText */.Dk)(svg.outerHTML).then(() => {
+          ;(0,index_fp21v3v3/* showNotification */.Ds)("Copied SVG to clipboard", 1000);
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 1000);
         });
       },
       quickSwitcherLabel: null,
@@ -65524,7 +65524,7 @@ var TimelineEffectItem = ({
         (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
       }
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     }
   }, [deleteDisabled, effectIndex, nodePath, validatedLocation.source]);
   const getContextMenuItems = (0,react.useCallback)(() => {
@@ -65734,7 +65734,7 @@ var TimelineEffectItem = ({
         (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
       }
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     }
   }, [
     canReorder,
@@ -66260,7 +66260,7 @@ var TimelineKeyframeControls = ({
   nodePathInfo,
   mode = "timeline"
 }) => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const timelinePosition = esm.Internals.Timeline.useTimelinePosition();
   const seekFrame = esm.Internals.Timeline.useTimelineSeekFrame();
   const { setPropStatuses } = (0,react.useContext)(esm.Internals.VisualModeSettersContext);
@@ -67216,7 +67216,7 @@ var getRemotionConvertUrl = ({
   studioOrigin
 }) => {
   const convertUrl = new URL("https://www.remotion.dev/convert");
-  const assetUrl = new URL((0,esm.staticFile)(relativePath), studioOrigin);
+  const assetUrl = new URL((0,esm/* staticFile */.dQ)(relativePath), studioOrigin);
   convertUrl.searchParams.set("url", assetUrl.toString());
   return convertUrl.toString();
 };
@@ -67263,7 +67263,7 @@ var useDeleteAsset = (relativePath) => {
         notification.replaceContent(`Could not delete ${relativePath}: ${err.message}`, 3000);
       });
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not delete ${relativePath}: ${err.message}`, 3000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not delete ${relativePath}: ${err.message}`, 3000);
     });
   }, [confirm, relativePath]);
 };
@@ -67401,10 +67401,10 @@ var useAssetContextMenuItems = ({
     if (fileName === null) {
       return;
     }
-    (0,index_w5yee38t/* copyText */.Dk)(fileName).then(() => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Copied '${fileName}' to clipboard`, 1000);
+    ;(0,index_w5yee38t/* copyText */.Dk)(fileName).then(() => {
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Copied '${fileName}' to clipboard`, 1000);
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
     });
   }, [fileName]);
   const copyStaticFilePath = (0,react.useCallback)(() => {
@@ -67415,7 +67415,7 @@ var useAssetContextMenuItems = ({
     (0,index_w5yee38t/* copyText */.Dk)(content).then(() => {
       (0,index_fp21v3v3/* showNotification */.Ds)(`Copied '${content}' to clipboard`, 1000);
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
     });
   }, [relativePath]);
   const copyAbsolutePath = (0,react.useCallback)(() => {
@@ -67426,7 +67426,7 @@ var useAssetContextMenuItems = ({
     (0,index_w5yee38t/* copyText */.Dk)(content).then(() => {
       (0,index_fp21v3v3/* showNotification */.Ds)(`Copied '${content}' to clipboard`, 1000);
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
     });
   }, [relativePath]);
   const openAssetInConvert = (0,react.useCallback)(() => {
@@ -67440,10 +67440,10 @@ var useAssetContextMenuItems = ({
       (0,index_fp21v3v3/* showNotification */.Ds)("Could not find the public folder", 2000);
       return;
     }
-    (0,index_fp21v3v3/* openInFileExplorer */.dP)({
+    ;(0,index_fp21v3v3/* openInFileExplorer */.dP)({
       directory: window.remotion_publicFolderExists + "/" + relativePath
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
     });
   }, [relativePath]);
   const { mutationsDisabled, fileExplorerDisabled } = getAssetActionAvailability({
@@ -68140,12 +68140,12 @@ var TimelineAssetField = ({
           filePath: file.name
         });
       }
-      onSelect(file.name, (0,esm.staticFile)(file.name));
+      onSelect(file.name, (0,esm/* staticFile */.dQ)(file.name));
       if (!existing) {
         (0,index_fp21v3v3/* showNotification */.Ds)(`Created ${file.name} in public folder`, 3000);
       }
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not upload asset: ${error instanceof Error ? error.message : String(error)}`, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not upload asset: ${error instanceof Error ? error.message : String(error)}`, 4000);
     }
   }, [assetType, onSelect, staticFiles]);
   const openAssetSelection = (0,react.useCallback)(() => {
@@ -68205,7 +68205,7 @@ var TimelineAssetField = ({
     if (linkInfo.kind === "local") {
       name = linkInfo.assetPath.split("/").pop() ?? linkInfo.assetPath;
       source = null;
-      previewSrc = (0,esm.staticFile)(linkInfo.assetPath);
+      previewSrc = (0,esm/* staticFile */.dQ)(linkInfo.assetPath);
     } else {
       previewSrc = linkInfo.href.startsWith("//") ? `https:${linkInfo.href}` : linkInfo.href;
       try {
@@ -70167,7 +70167,7 @@ var TimelineFontFamilyField = ({
     if (!googleFont) {
       return;
     }
-    (0,index_fp21v3v3/* loadGoogleFontForPreview */.IU)({
+    ;(0,index_fp21v3v3/* loadGoogleFontForPreview */.IU)({
       fontFamily: current,
       document
     }).catch(() => {
@@ -73521,7 +73521,7 @@ var getKeyframeTrimConstraints = ({
     if (!entry) {
       const pendingSource = (async () => {
         const [codemods, contents] = await Promise.all([
-          __webpack_require__.e(/* import() */ 945).then(__webpack_require__.bind(__webpack_require__, 4945)),
+          __webpack_require__.e(/* import() */ 945).then(() => (__webpack_require__(4945))),
           (async () => {
             if (browserOperations) {
               const value = await browserOperations.getFileSource(fileName);
@@ -75129,10 +75129,10 @@ var useAssetTimelineContextMenu = () => {
         value: "open-asset-in-explorer",
         disabled: Boolean(window.remotion_isReadOnlyStudio) || !window.remotion_publicFolderExists || previewServerState.type !== "connected",
         onClick: () => {
-          (0,index_fp21v3v3/* openInFileExplorer */.dP)({
+          ;(0,index_fp21v3v3/* openInFileExplorer */.dP)({
             directory: window.remotion_publicFolderExists + "/" + canvasContent.asset
           }).catch((err) => {
-            (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
+            ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
           });
         }
       },
@@ -75165,7 +75165,7 @@ var useOpenSequenceInApps = (sequence) => {
     try {
       await (0,index_w5yee38t/* openOriginalPositionInEditor */.XK)(originalLocation, resolvedEditorId);
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
   }, [canOpenInEditor, defaultEditorId, originalLocation]);
   const openSource = (0,react.useCallback)(() => {
@@ -75187,7 +75187,7 @@ var useOpenSequenceInApps = (sequence) => {
         (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open ${codingAgentName}`, 2000);
       }
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
   }, []);
   return {
@@ -75767,7 +75767,7 @@ var TimelineSequenceItemInner = ({
         (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
       }
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     }
   }, [
     canReorderSequence,
@@ -76966,7 +76966,7 @@ var TimelinePlayCursorSyncer = () => {
     setCurrentFps(video.fps);
     setCurrentDimensions(video.width, video.height);
   }
-  (0,react.useEffect)(() => {
+  ;(0,react.useEffect)(() => {
     if (!video) {
       return;
     }
@@ -78145,7 +78145,7 @@ var TimelineSequenceFrame = ({
   frozenFrame,
   showPremounting
 }) => {
-  const frame = (0,esm.useCurrentFrame)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   const relativeFrame = frame - s.from;
   const sequenceFrame = relativeFrame * s.sequencePlaybackRate + sequenceFrameOffset;
   const roundedFrame = Math.round(sequenceFrame * 100) / 100;
@@ -78188,7 +78188,7 @@ var TimelineSequenceMountIndicator = ({
   left,
   width
 }) => {
-  const frame = (0,esm.useCurrentFrame)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   const relativeFrame = frame - from;
   const isInRange = relativeFrame >= 0 && relativeFrame < displayDurationInFrames;
   const relativeMountFrame = mountType === "premount" ? relativeFrame + mountDurationInFrames : relativeFrame - displayDurationInFrames;
@@ -80686,7 +80686,7 @@ var TimelineVideoInfoSegment = ({
   frozenMediaFrame,
   extendLastFrame
 }) => {
-  const { fps } = (0,esm.useVideoConfig)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
   const resolvedSrc = esm.Internals.usePreload(src);
   const ref = (0,react.useRef)(null);
   const [error, setError] = (0,react.useState)(null);
@@ -83186,7 +83186,7 @@ var TimelineTrackOverlapValidation = react.memo(({ timeline, durationInFrames, f
     if (error === null) {
       return;
     }
-    (0,index_w5yee38t/* addErrorToOverlay */.X5)(error, null);
+    ;(0,index_w5yee38t/* addErrorToOverlay */.X5)(error, null);
     return () => (0,index_w5yee38t/* removeErrorFromOverlay */.bg)(error);
   }, [error, fastRefreshes]);
   return sources.map((src) => /* @__PURE__ */ (0,jsx_runtime.jsx)(TrackMediaMetadata, {
@@ -83491,7 +83491,7 @@ var useTimelineKeyframeDrag = ({
   selectable,
   selected
 }) => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const timelineWidth = (0,react.useContext)(TimelineWidthContext);
   const { previewServerState } = (0,react.useContext)(index_w5yee38t/* StudioServerConnectionCtx */.vF);
   const calculateTimeline = useTimelineCalculator();
@@ -83703,7 +83703,7 @@ var useTimelineEasingKeyframeDrag = ({
   selected,
   selectionItem
 }) => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const timelineWidth = (0,react.useContext)(TimelineWidthContext);
   const { previewServerState } = (0,react.useContext)(index_w5yee38t/* StudioServerConnectionCtx */.vF);
   const calculateTimeline = useTimelineCalculator();
@@ -83927,7 +83927,7 @@ var diamondBase = {
   width: diamondSize
 };
 var TimelineKeyframeDiamondUnmemoized = ({ frame, rowHeight, nodePathInfo }) => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const timelineWidth = (0,react.useContext)(TimelineWidthContext);
   const ref = (0,react.useRef)(null);
   const { selected, onSelect, selectable, selectionItem } = useTimelineKeyframeSelection(nodePathInfo, frame);
@@ -84367,13 +84367,13 @@ var presetPreviewYToSvg = (value) => PRESET_PREVIEW_PADDING + (PRESET_PREVIEW_Y_
 var getEasingFunction = (easing) => {
   switch (easing.type) {
     case "linear":
-      return esm.Easing.linear;
+      return esm/* Easing */.GS.linear;
     case "step1":
-      return esm.Easing.step1;
+      return esm/* Easing */.GS.step1;
     case "bezier":
-      return esm.Easing.bezier(easing.x1, easing.y1, easing.x2, easing.y2);
+      return esm/* Easing */.GS.bezier(easing.x1, easing.y1, easing.x2, easing.y2);
     case "spring":
-      return esm.Easing.spring({
+      return esm/* Easing */.GS.spring({
         allowTail: easing.allowTail ?? undefined,
         damping: easing.damping,
         durationRestThreshold: easing.durationRestThreshold ?? undefined,
@@ -84827,7 +84827,7 @@ var EasingEditor = ({ state, renderHeader }) => {
     return `M ${startPoint.x} ${startPoint.y} C ${firstHandle.x} ${firstHandle.y}, ${secondHandle.x} ${secondHandle.y}, ${endPoint.x} ${endPoint.y}`;
   }, [endPoint, firstHandle, secondHandle, startPoint]);
   const springPath = (0,react.useMemo)(() => {
-    const easing = esm.Easing.spring({
+    const easing = esm/* Easing */.GS.spring({
       allowTail: spring.allowTail ?? undefined,
       damping: spring.damping,
       durationRestThreshold: spring.durationRestThreshold ?? undefined,
@@ -85519,7 +85519,7 @@ var TimelineKeyframeEasingLineInteraction = ({ fromFrame, toFrame, nodePathInfo,
   });
 };
 var TimelineKeyframeEasingLineUnmemoized = ({ fromFrame, toFrame, rowHeight, nodePathInfo, segmentIndex }) => {
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const timelineWidth = (0,react.useContext)(TimelineWidthContext);
   const style = (0,react.useMemo)(() => {
     if (timelineWidth === null) {
@@ -86763,9 +86763,9 @@ var TimelineContextMenuArea = ({ children }) => {
       if (result.success) {
         return;
       }
-      (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     } finally {
       setIsAddingSolid(false);
     }
@@ -88475,7 +88475,7 @@ var WebMcp = () => {
           if (fileType !== "audio" && fileType !== "video") {
             throw new Error("The transcription asset must be audio or video.");
           }
-          const whisper = await Promise.resolve().then(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; });
+          const whisper = await Promise.resolve().then(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; });
           const modelName = input.model ?? "small.en";
           if (typeof modelName !== "string") {
             throw new Error("model must be a string.");
@@ -88515,7 +88515,7 @@ var WebMcp = () => {
           if (typeof forceFullSequences !== "boolean" || typeof doSample !== "boolean") {
             throw new Error("forceFullSequences and doSample must be booleans.");
           }
-          const src = (0,esm.staticFile)(assetPath);
+          const src = (0,esm/* staticFile */.dQ)(assetPath);
           const displayName = assetPath.split("/").at(-1) ?? assetPath;
           const outputPath = input.outputPath ?? getDefaultCaptionOutputName(src, displayName);
           if (typeof outputPath !== "string") {
@@ -88598,7 +88598,7 @@ var WebMcp = () => {
           if (getPreviewFileType(assetPath) !== "video") {
             throw new Error("The input asset must be a video.");
           }
-          const videoMatting = await Promise.resolve().then(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; });
+          const videoMatting = await Promise.resolve().then(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; });
           const modelName = input.model ?? "ben2-base";
           if (typeof modelName !== "string") {
             throw new Error("model must be a string.");
@@ -88615,7 +88615,7 @@ var WebMcp = () => {
           if ((typeof videoBitrate !== "number" || !Number.isInteger(videoBitrate) || videoBitrate <= 0) && videoBitrate !== "very-low" && videoBitrate !== "low" && videoBitrate !== "medium" && videoBitrate !== "high" && videoBitrate !== "very-high") {
             throw new Error("videoBitrate is invalid.");
           }
-          const src = (0,esm.staticFile)(assetPath);
+          const src = (0,esm/* staticFile */.dQ)(assetPath);
           const displayName = assetPath.split("/").at(-1) ?? assetPath;
           const baseName = getDefaultOutputBaseName(src, displayName, "video");
           const outputPath = input.outputPath ?? `${baseName}-no-background.webm`;
@@ -89218,7 +89218,7 @@ var WebMcp = () => {
           if (esm.Internals.timeValueRef.current === null) {
             throw new Error("Studio playback controls are not ready.");
           }
-          (0,index_r4fxez7r/* play2 */.Fp)();
+          ;(0,index_r4fxez7r/* play2 */.Fp)();
           return Promise.resolve({
             currentContent: currentContentRef.current,
             playing: true
@@ -89243,7 +89243,7 @@ var WebMcp = () => {
           if (esm.Internals.timeValueRef.current === null) {
             throw new Error("Studio playback controls are not ready.");
           }
-          (0,index_r4fxez7r/* pause2 */.Fm)();
+          ;(0,index_r4fxez7r/* pause2 */.Fm)();
           return Promise.resolve({
             currentContent: currentContentRef.current,
             playing: false
@@ -89554,7 +89554,7 @@ var ElementInstallRequestHandler = () => {
     if (previewServerClientId === null) {
       return;
     }
-    (0,index_fp21v3v3/* callApi */.px)("/api/update-element-install-target", {
+    ;(0,index_fp21v3v3/* callApi */.px)("/api/update-element-install-target", {
       requestId,
       clientId: previewServerClientId,
       compositionFile: hasCurrentComposition ? compositionFile : null,
@@ -89806,7 +89806,7 @@ var ElementInstallRequestHandler = () => {
         if (canceled) {
           return;
         }
-        (0,index_fp21v3v3/* showNotification */.Ds)(`Could not review Element installation: ${error instanceof Error ? error.message : String(error)}`, 4000);
+        ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not review Element installation: ${error instanceof Error ? error.message : String(error)}`, 4000);
         setActiveRequest(null);
       }
     };
@@ -90051,7 +90051,7 @@ function fuzzySearch(query, dataset) {
 }
 
 // src/components/QuickSwitcher/NoResults.tsx
-
+;
 var container23 = {
   padding: 80,
   color: index_ts7drhwc/* LIGHT_TEXT */.hf,
@@ -90858,7 +90858,7 @@ function waitForElm(selector) {
 }
 
 // src/components/AssetSelectorModal.tsx
-
+;
 var panel2 = {
   maxWidth: "calc(100vw - 40px)",
   overflow: "hidden",
@@ -94642,7 +94642,7 @@ var useDownloadProject = () => {
       const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
       downloadBlob(new Blob([arrayBuffer], { type: "application/zip" }), fileName);
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not download project: ${error instanceof Error ? error.message : String(error)}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not download project: ${error instanceof Error ? error.message : String(error)}`, 2000);
     }
   }, [confirm, downloadProject]);
   return downloadProject === null ? null : onDownloadProject;
@@ -96160,7 +96160,7 @@ var renameStaticFile = ({
   oldRelativePath,
   newRelativePath
 }) => {
-  if (!(0,esm.getRemotionEnvironment)().isStudio) {
+  if (!(0,esm/* getRemotionEnvironment */.P1)().isStudio) {
     throw new Error("renameStaticFile() is only available in the Studio");
   }
   const browserStudioOperations = (0,index_fp21v3v3/* getBrowserStudioOperations */.P3)();
@@ -98527,13 +98527,13 @@ var getCurrentAssetMetadataSource = (assetName) => {
     return null;
   }
   const fileType = getPreviewFileType(assetName);
-  return fileType === "audio" || fileType === "video" ? (0,esm.staticFile)(assetName) : null;
+  return fileType === "audio" || fileType === "video" ? (0,esm/* staticFile */.dQ)(assetName) : null;
 };
 var getCurrentAssetImageMetadataSource = (assetName) => {
   if (!assetName) {
     return null;
   }
-  return getPreviewFileType(assetName) === "image" ? (0,esm.staticFile)(assetName) : null;
+  return getPreviewFileType(assetName) === "image" ? (0,esm/* staticFile */.dQ)(assetName) : null;
 };
 var formatFps = (fps) => `${fps.toFixed(2)} FPS`;
 var getCurrentAssetMediaSections = (mediaMetadata) => {
@@ -98693,7 +98693,7 @@ var AssetInfo = ({ assetName, contentSized = false, onAssetClick, readOnlyStudio
         (0,index_fp21v3v3/* showNotification */.Ds)(`Could not create composition: ${result.reason}`, 4000);
       }
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not create composition: ${error.message}`, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not create composition: ${error.message}`, 4000);
     } finally {
       setIsMakingComposition(false);
     }
@@ -98745,10 +98745,10 @@ var AssetInfo = ({ assetName, contentSized = false, onAssetClick, readOnlyStudio
       (0,index_fp21v3v3/* showNotification */.Ds)("Could not find the public folder", 2000);
       return;
     }
-    (0,index_fp21v3v3/* openInFileExplorer */.dP)({
+    ;(0,index_fp21v3v3/* openInFileExplorer */.dP)({
       directory: window.remotion_publicFolderExists + "/" + assetName
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
     });
   }, [assetName]);
   const onDelete = useDeleteAsset(assetName);
@@ -99307,7 +99307,7 @@ function deepEqual(a, b) {
 }
 
 // src/components/RenderModal/SchemaEditor/ZodErrorMessages.tsx
-
+;
 
 var schemaLabel = {
   fontSize: 14,
@@ -99692,7 +99692,7 @@ function resolveCompositionSchema({
 }
 
 // src/components/RenderModal/SchemaEditor/Fieldset.tsx
-
+;
 
 var SCHEMA_EDITOR_FIELDSET_PADDING = 6;
 var getSchemaEditorFieldsetPadding = () => {
@@ -102557,7 +102557,7 @@ var useDataEditorWarnings = ({
       staticBase: window.remotion_staticBase
     });
   }, [inJSONEditor, defaultProps]);
-  const cliProps = (0,esm.getInputProps)();
+  const cliProps = (0,esm/* getInputProps */.ti)();
   const warnings = (0,react.useMemo)(() => {
     return getRenderModalWarnings({
       canSaveDefaultProps,
@@ -102864,7 +102864,7 @@ var useOriginalFileName = (stack) => {
     if (!stack) {
       return;
     }
-    (0,index_fp21v3v3/* getOriginalLocationFromStack */.pI)(stack, "visual-control").then((frame) => {
+    ;(0,index_fp21v3v3/* getOriginalLocationFromStack */.pI)(stack, "visual-control").then((frame) => {
       if (frame === null) {
         setOriginalFileName({
           type: "error",
@@ -102929,8 +102929,8 @@ var ClickableFileName = ({
     if (originalFileName.type !== "loaded" || !canOpen || !defaultEditorId) {
       return;
     }
-    (0,index_w5yee38t/* openOriginalPositionInEditor */.XK)(originalFileName.originalFileName, defaultEditorId).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+    ;(0,index_w5yee38t/* openOriginalPositionInEditor */.XK)(originalFileName.originalFileName, defaultEditorId).catch((err) => {
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     });
   }, [canOpen, defaultEditorId, originalFileName]);
   return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
@@ -103008,7 +103008,7 @@ var VisualControlHandle = ({ value, keyName }) => {
         ]
       });
     }).catch((e) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not save visual control: ${e.message}`, 3000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not save visual control: ${e.message}`, 3000);
     });
   }, [
     disableSave,
@@ -103204,8 +103204,8 @@ var InspectorLocationCopy = ({ children, location, name, openInEditorLocation })
     if (!contextForAgents) {
       return;
     }
-    (0,index_w5yee38t/* copyText */.Dk)(contextForAgents).then(markCopied).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 2000);
+    ;(0,index_w5yee38t/* copyText */.Dk)(contextForAgents).then(markCopied).catch((err) => {
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 2000);
     });
   }, [contextForAgents, markCopied]);
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
@@ -103411,7 +103411,7 @@ var CompositionInspectorHeader = () => {
     if (compositionFile === null || compositionId === null) {
       return;
     }
-    (0,index_w5yee38t/* preloadCompositionComponentInfo */.Xg)({
+    ;(0,index_w5yee38t/* preloadCompositionComponentInfo */.Xg)({
       compositionFile,
       compositionId
     });
@@ -103892,7 +103892,7 @@ var CompositionMetadata = ({ compositionId, disabled, stack }) => {
         for (const field of changedFields) {
           onPendingValueFailed(field, optimisticValues[field]);
         }
-        (0,index_fp21v3v3/* showNotification */.Ds)(`Could not update composition metadata: ${result.reason}`, 2000);
+        ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not update composition metadata: ${result.reason}`, 2000);
         return;
       }
       for (const field of changedFields) {
@@ -103902,7 +103902,7 @@ var CompositionMetadata = ({ compositionId, disabled, stack }) => {
       for (const field of changedFields) {
         onPendingValueFailed(field, optimisticValues[field]);
       }
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not update composition metadata: ${error.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not update composition metadata: ${error.message}`, 2000);
     });
   }, [
     compositionId,
@@ -104318,9 +104318,9 @@ var useCompositionActions = () => {
       if (result.success) {
         return;
       }
-      (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     } finally {
       setIsAddingSolid(false);
     }
@@ -104379,9 +104379,9 @@ var useCompositionActions = () => {
       if (result.success) {
         return;
       }
-      (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     } finally {
       setIsAddingText(false);
     }
@@ -104485,7 +104485,7 @@ var useCompositionActions = () => {
         preferCompositionStart: null
       });
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add composition: ${error instanceof Error ? error.message : String(error)}`, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add composition: ${error instanceof Error ? error.message : String(error)}`, 4000);
     } finally {
       setIsAddingComposition(false);
     }
@@ -105080,7 +105080,7 @@ var MultiSequenceField = ({ field, targets, readOnlyStudio }) => {
       });
       setEditingMixed(false);
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not save shared control: ${err.message}`, 3000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not save shared control: ${err.message}`, 3000);
     } finally {
       clear();
     }
@@ -105282,7 +105282,7 @@ var SequencePrecomposeAction = ({ targets, sourceActionsDisabled }) => {
         selectCompositionWhenReady(result.newCompositionId);
       }
     }).catch((error) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(error.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(error.message, 4000);
     }).finally(() => setBusy(false));
   }, [
     busy,
@@ -105691,7 +105691,7 @@ var TimelineNavigatorItem = ({ extendLineLeft, extendLineRight, item, onSelect, 
 var KeyframeEasingNavigator = ({ currentSelection, includeEasings, keyframes, nodePathInfo }) => {
   const { isSelected, selectItems } = useTimelineSelection();
   const seekFrame = esm.Internals.Timeline.useTimelineSeekFrame();
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const items = (0,react.useMemo)(() => getKeyframeEasingNavigatorItems({
     includeEasings,
     keyframes,
@@ -106244,7 +106244,7 @@ var addKeyframeIcon = {
 var EasingInspector = ({ selection }) => {
   const track = useTrackForSelection(selection);
   const runtimeValues = useRuntimeValues(track?.sequence.controls ?? null);
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const timelinePosition = esm.Internals.Timeline.useTimelinePosition();
   const { propStatuses } = (0,react.useContext)(esm.Internals.VisualModePropStatusesContext);
   const { getDragOverrides, getEffectDragOverrides } = (0,react.useContext)(esm.Internals.VisualModeDragOverridesContext);
@@ -106616,7 +106616,7 @@ var TrashIcon2 = ({ color }) => {
 var KeyframeInspector = ({ selection }) => {
   const track = useTrackForSelection(selection);
   const runtimeValues = useRuntimeValues(track?.sequence.controls ?? null);
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const { propStatuses } = (0,react.useContext)(esm.Internals.VisualModePropStatusesContext);
   const {
     clearDragOverrides,
@@ -107845,7 +107845,7 @@ var CaptionInspector = ({
         expansionRef.current.onToggle();
       }
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not import ${fileName}: ${error instanceof Error ? error.message : String(error)}`, 5000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not import ${fileName}: ${error instanceof Error ? error.message : String(error)}`, 5000);
     } finally {
       setIsImporting(false);
     }
@@ -110220,7 +110220,7 @@ var AlignmentControlsUnmemoized = ({ track }) => {
     try {
       elementRect = ref.getBoundingClientRect();
     } catch {
-      (0,index_fp21v3v3/* showNotification */.Ds)("Could not measure this sequence for alignment.", 1000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)("Could not measure this sequence for alignment.", 1000);
       return;
     }
     const { width } = getCurrentDimensions();
@@ -110425,7 +110425,7 @@ var SequenceUnwrapAction = ({ nodePathInfo, sequence, sourceActionsDisabled, sou
         setSelectedModal
       });
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(error.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(error.message, 4000);
     } finally {
       setBusy(false);
     }
@@ -110559,7 +110559,7 @@ var SequenceWrapAction = ({ nodePathInfo, track, sourceActionsDisabled, sourceLo
       return;
     }
     const { compositionId } = canvasContent;
-    if (!(0,esm.isHtmlInCanvasSupported)()) {
+    if (!(0,esm/* isHtmlInCanvasSupported */.Dm)()) {
       setSelectedModal({
         type: "html-in-canvas-unavailable",
         action: wrapper === "HtmlInCanvasMotionBlur" ? "motion-blur" : "effects"
@@ -110652,7 +110652,7 @@ var SequenceWrapAction = ({ nodePathInfo, track, sourceActionsDisabled, sourceLo
         (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
       }
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(error.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(error.message, 4000);
     } finally {
       setBusy(false);
     }
@@ -110841,7 +110841,7 @@ var SequenceSourceQuickActions = ({ selection, track, validatedLocation }) => {
         (0,index_fp21v3v3/* showNotification */.Ds)(result.reason, 4000);
       }
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 4000);
     });
   }, [selection.nodePathInfo, splitVideoFromAudioDisabledReason]);
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, {
@@ -111302,8 +111302,8 @@ var RenderQueueCancelButton = ({ job }) => {
       cancelClientJob(job.id);
       return;
     }
-    (0,index_fp21v3v3/* cancelRenderJob */.km)(job).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not cancel job: ${err.message}`, 2000);
+    ;(0,index_fp21v3v3/* cancelRenderJob */.km)(job).catch((err) => {
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not cancel job: ${err.message}`, 2000);
     });
   }, [job, cancelClientJob]);
   const icon = (0,react.useMemo)(() => {
@@ -111631,7 +111631,7 @@ var addAssetCacheBust = ({
 var remotion_outputsBase = window.remotion_outputsBase ?? "";
 var getSrcFromCanvasContent = (canvasContent) => {
   if (canvasContent.type === "asset") {
-    return (0,esm.staticFile)(canvasContent.asset);
+    return (0,esm/* staticFile */.dQ)(canvasContent.asset);
   }
   return remotion_outputsBase + canvasContent.path;
 };
@@ -111655,7 +111655,7 @@ var getAssetPreviewMetadata = ({
   return {
     asset: canvasContent.asset,
     src: addAssetCacheBust({
-      src: (0,esm.staticFile)(canvasContent.asset),
+      src: (0,esm/* staticFile */.dQ)(canvasContent.asset),
       fetchedAt: metadata.fetchedAt
     }),
     width: dimensions.width,
@@ -111804,7 +111804,7 @@ var RenderQueueCopyToClipboard = ({ job }) => {
       markCopied();
       (0,index_fp21v3v3/* showNotification */.Ds)("Copied to clipboard!", 1000);
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy to clipboard: ${err.message}`, 2000);
     }
   }, [job.outName, markCopied]);
   return /* @__PURE__ */ (0,jsx_runtime.jsx)(index_w5yee38t/* ActionTooltip */.mT, {
@@ -111833,7 +111833,7 @@ var RenderQueueDownloadItem = ({ job }) => {
     job.getBlob().then((blob) => {
       downloadBlob(blob, job.outName);
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not download file: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not download file: ${err.message}`, 2000);
     });
   }, [job]);
   const icon = (0,react.useMemo)(() => {
@@ -112119,8 +112119,8 @@ var RenderQueueRemoveItem = ({ job }) => {
       unregisterClientRender(job.id).catch(() => {});
       return;
     }
-    (0,index_fp21v3v3/* removeRenderJob */.OY)(job).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not remove item: ${err.message}`, 2000);
+    ;(0,index_fp21v3v3/* removeRenderJob */.OY)(job).catch((err) => {
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not remove item: ${err.message}`, 2000);
     });
   }, [
     job,
@@ -113022,7 +113022,7 @@ var OptionsPanel = ({ readOnlyStudio }) => {
         (0,index_fp21v3v3/* showNotification */.Ds)(`Cannot update default props: ${response.reason}. See console for more information.`, 2000);
       }
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Cannot update default props: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Cannot update default props: ${err.message}`, 2000);
     });
   }, [
     composition,
@@ -114450,7 +114450,7 @@ var useFileExistence = (outName) => {
     if (!clientId) {
       return;
     }
-    (0,index_fp21v3v3/* subscribeToFileExistenceWatcher */.w$)({
+    ;(0,index_fp21v3v3/* subscribeToFileExistenceWatcher */.w$)({
       file: outName,
       clientId
     }).then((_exists) => {
@@ -117237,10 +117237,10 @@ var RenderModal = ({
       if (!readOnlyRenderCommand) {
         return;
       }
-      (0,index_w5yee38t/* copyText */.Dk)(readOnlyRenderCommand).then(() => {
+      ;(0,index_w5yee38t/* copyText */.Dk)(readOnlyRenderCommand).then(() => {
         setCommandCopiedAt(Date.now());
       }).catch((err) => {
-        (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
+        ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
       });
       return;
     }
@@ -120739,7 +120739,7 @@ var InstallPackageSettings = ({ footerContainer, packageManager }) => {
                 " package",
                 selectedPackages.length === 1 ? "" : "s",
                 /* @__PURE__ */ (0,jsx_runtime.jsx)("br", {}),
-                packageManager === null ? `in this project, Remotion v${esm.VERSION}` : `using ${packageManager}, Remotion v${esm.VERSION}`
+                packageManager === null ? `in this project, Remotion v${esm/* VERSION */.xv}` : `using ${packageManager}, Remotion v${esm/* VERSION */.xv}`
               ]
             }) : null,
             /* @__PURE__ */ (0,jsx_runtime.jsx)(index_w5yee38t/* Flex */.so, {}),
@@ -121159,8 +121159,8 @@ var KeyboardShortcutsSettings = () => {
 // src/components/ModelsSettings.tsx
 
 
-var LazyWhisperModels = react.lazy(() => __webpack_require__.e(/* import() */ 679).then(__webpack_require__.bind(__webpack_require__, 1679)));
-var LazyVideoMattingModels = react.lazy(() => __webpack_require__.e(/* import() */ 206).then(__webpack_require__.bind(__webpack_require__, 5206)));
+var LazyWhisperModels = react.lazy(() => __webpack_require__.e(/* import() */ 679).then(() => (__webpack_require__(1679))));
+var LazyVideoMattingModels = react.lazy(() => __webpack_require__.e(/* import() */ 206).then(() => (__webpack_require__(5206))));
 var container65 = {
   alignSelf: "flex-start",
   boxSizing: "border-box",
@@ -122995,8 +122995,8 @@ var UpdatesSettings = () => {
     if (updateAction === null) {
       return;
     }
-    (0,index_w5yee38t/* copyText */.Dk)(updateAction).then(markCopied).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)("Could not copy: " + err.message, 2000);
+    ;(0,index_w5yee38t/* copyText */.Dk)(updateAction).then(markCopied).catch((err) => {
+      ;(0,index_fp21v3v3/* showNotification */.Ds)("Could not copy: " + err.message, 2000);
     });
   }, [markCopied, updateAction]);
   const renderCopyAction = (0,react.useCallback)((color) => {
@@ -123677,7 +123677,7 @@ var INSTALL_MESSAGE = /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment,
   ]
 });
 var LazyTranscriptionModal = react.lazy(async () => {
-  const { TranscriptionModal } = await __webpack_require__.e(/* import() */ 756).then(__webpack_require__.bind(__webpack_require__, 2756));
+  const { TranscriptionModal } = await __webpack_require__.e(/* import() */ 756).then(() => (__webpack_require__(2756)));
   return { default: TranscriptionModal };
 });
 var TranscriptionModalWithOptionalWhisper = ({ state }) => {
@@ -123700,7 +123700,7 @@ var TranscriptionModalWithOptionalWhisper = ({ state }) => {
 
 
 var LazyVideoMattingModal = react.lazy(async () => {
-  const { VideoMattingModal } = await __webpack_require__.e(/* import() */ 260).then(__webpack_require__.bind(__webpack_require__, 4260));
+  const { VideoMattingModal } = await __webpack_require__.e(/* import() */ 260).then(() => (__webpack_require__(4260)));
   return { default: VideoMattingModal };
 });
 var VideoMattingModalWithOptionalPackage = ({ state }) => /* @__PURE__ */ (0,jsx_runtime.jsx)(OptionalPackageModal, {
@@ -123871,7 +123871,7 @@ var Modals = ({ readOnlyStudio }) => {
         url
       });
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not add Element Library: ${error.message}`, 4000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not add Element Library: ${error.message}`, 4000);
     }
   }, [confirm, previewServerState, setSelectedModal]);
   (0,react.useEffect)(() => {
@@ -126736,10 +126736,10 @@ var getDurationOrCompute2 = async (input) => {
 var getUncachedMaxCacheSize = (logLevel) => {
   if (typeof window !== "undefined" && window.remotion_mediaCacheSizeInBytes !== undefined && window.remotion_mediaCacheSizeInBytes !== null) {
     if (window.remotion_mediaCacheSizeInBytes < 240 * 1024 * 1024) {
-      (0,esm.cancelRender)(new Error(`The minimum value for the "mediaCacheSizeInBytes" prop is 240MB (${240 * 1024 * 1024}), got: ${window.remotion_mediaCacheSizeInBytes}`));
+      (0,esm/* cancelRender */.zo)(new Error(`The minimum value for the "mediaCacheSizeInBytes" prop is 240MB (${240 * 1024 * 1024}), got: ${window.remotion_mediaCacheSizeInBytes}`));
     }
     if (window.remotion_mediaCacheSizeInBytes > 20000 * 1024 * 1024) {
-      (0,esm.cancelRender)(new Error(`The maximum value for the "mediaCacheSizeInBytes" prop is 20GB (${20000 * 1024 * 1024}), got: ${window.remotion_mediaCacheSizeInBytes}`));
+      (0,esm/* cancelRender */.zo)(new Error(`The maximum value for the "mediaCacheSizeInBytes" prop is 20GB (${20000 * 1024 * 1024}), got: ${window.remotion_mediaCacheSizeInBytes}`));
     }
     esm.Internals.Log.verbose({ logLevel, tag: "@remotion/media" }, `Using cache size set using "mediaCacheSizeInBytes": ${(window.remotion_mediaCacheSizeInBytes / 1024 / 1024).toFixed(1)} MB`);
     return window.remotion_mediaCacheSizeInBytes;
@@ -128504,7 +128504,7 @@ var AudioForPreviewAssertedShowing = ({
   style
 }) => {
   const videoConfig = useUnsafeVideoConfig();
-  const frame = (0,esm.useCurrentFrame)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   const mediaPlayerRef = (0,react.useRef)(null);
   const initialTrimBeforeRef = (0,react.useRef)(trimBefore);
   const initialTrimAfterRef = (0,react.useRef)(trimAfter);
@@ -128517,7 +128517,7 @@ var AudioForPreviewAssertedShowing = ({
   const playing = usePlaying();
   const { playbackRate: globalPlaybackRate } = esm.Internals.usePlaybackRate();
   const sharedAudioContext = (0,react.useContext)(SharedAudioContext);
-  const buffer = (0,esm.useBufferState)();
+  const buffer = (0,esm/* useBufferState */.Fx)();
   const [mediaVolume] = useMediaVolumeState();
   const unloopedVolumePropFrame = useFrameForVolumeProp(loopVolumeCurveBehavior ?? "repeat");
   const volumePropFrame = loop && videoConfig ? frameForVolumeProp({
@@ -128761,7 +128761,7 @@ var AudioForPreviewAssertedShowing = ({
     throw terminalError;
   }
   if (shouldFallbackToNativeAudio && !disallowFallbackToHtml5Audio) {
-    return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Audio, {
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Audio */.fP, {
       src,
       muted: effectiveMuted,
       volume,
@@ -128808,8 +128808,8 @@ var AudioForPreview = ({
 }) => {
   const preloadedSrc = usePreload(src);
   const defaultLogLevel = esm.Internals.useLogLevel();
-  const frame = (0,esm.useCurrentFrame)();
-  const videoConfig = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const currentTime = frame / videoConfig.fps;
   const showShow = (0,react.useMemo)(() => {
     return getTimeInSeconds({
@@ -131013,12 +131013,12 @@ var AudioForRendering = ({
   const sampleRate = audioContext?.sampleRate ?? 48000;
   const defaultLogLevel = esm.Internals.useLogLevel();
   const logLevel = overriddenLogLevel ?? defaultLogLevel;
-  const frame = (0,esm.useCurrentFrame)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   const absoluteFrame = esm.Internals.useTimelinePosition();
   const videoConfig = esm.Internals.useUnsafeVideoConfig();
   const { registerRenderAsset, unregisterRenderAsset } = (0,react.useContext)(esm.Internals.RenderAssetManager);
   const startsAt = esm.Internals.useMediaStartsAt();
-  const environment = (0,esm.useRemotionEnvironment)();
+  const environment = (0,esm/* useRemotionEnvironment */.OK)();
   if (!videoConfig) {
     throw new Error("No video config found");
   }
@@ -131026,13 +131026,13 @@ var AudioForRendering = ({
     throw new TypeError("No `src` was passed to <Audio>.");
   }
   const { fps } = videoConfig;
-  const { delayRender, continueRender } = (0,esm.useDelayRender)();
+  const { delayRender, continueRender } = (0,esm/* useDelayRender */.dB)();
   const [replaceWithHtml5Audio, setReplaceWithHtml5Audio] = (0,react.useState)(false);
   const [initialRequestInit] = (0,react.useState)(requestInit);
   const sequenceContext = (0,react.useContext)(esm.Internals.SequenceContext);
   const sequencePlaybackRate = sequenceContext?.playbackRate ?? 1;
   const startInVideo = sequenceContext ? sequenceContext.cumulatedFrom + sequenceContext.relativeFrom : 0;
-  const id = (0,react.useMemo)(() => `media-audio-${(0,esm.random)(src)}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.relativeFrom}-${sequenceContext?.durationInFrames}`, [
+  const id = (0,react.useMemo)(() => `media-audio-${(0,esm/* random */.yT)(src)}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.relativeFrom}-${sequenceContext?.durationInFrames}`, [
     src,
     sequenceContext?.cumulatedFrom,
     sequenceContext?.relativeFrom,
@@ -131092,7 +131092,7 @@ var AudioForRendering = ({
           clientSideError
         });
         if (action === "fail") {
-          (0,esm.cancelRender)(errorToUse);
+          (0,esm/* cancelRender */.zo)(errorToUse);
         }
         esm.Internals.Log.warn({ logLevel, tag: "@remotion/media" }, fallbackMessage);
         setReplaceWithHtml5Audio(true);
@@ -131155,7 +131155,7 @@ var AudioForRendering = ({
       if (cancelled || mediaCache.isDisposed()) {
         return;
       }
-      (0,esm.cancelRender)(error);
+      ;(0,esm/* cancelRender */.zo)(error);
     });
     return () => {
       cancelled = true;
@@ -131198,7 +131198,7 @@ var AudioForRendering = ({
     mediaCache
   ]);
   if (replaceWithHtml5Audio) {
-    return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Html5Audio, {
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Html5Audio */.xN, {
       src,
       playbackRate,
       muted: isMutedForPlayback,
@@ -131277,10 +131277,10 @@ var AudioInner = (props) => {
     postmountFor,
     ...otherProps
   } = props;
-  const environment = (0,esm.useRemotionEnvironment)();
+  const environment = (0,esm/* useRemotionEnvironment */.OK)();
   const sourceStack = controls ? esm.Internals.getStackForControls(controls) : null;
   const mediaStartsAt = esm.Internals.useMediaStartsAt();
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const effectiveTrimAfter = getMediaTrimAfter({
     durationInFrames,
     trimAfter: props.trimAfter,
@@ -131356,11 +131356,11 @@ var AudioInner = (props) => {
   if (sequenceDurationInFrames === 0) {
     return null;
   }
-  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Freeze, {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Freeze */.Kl, {
     frame: freezeFrame,
     active: isPremountingOrPostmounting,
     _remotionInternalIsPremounting: premountingActive,
-    children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Sequence, {
+    children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Sequence */.gd, {
       layout: "none",
       from: from ?? 0,
       durationInFrames: basicInfo.duration,
@@ -131393,7 +131393,7 @@ var AudioInner = (props) => {
     })
   });
 };
-var Audio = esm.Interactive.withSchema({
+var Audio = esm/* Interactive */.HG.withSchema({
   Component: AudioInner,
   componentName: "<Audio>",
   componentIdentity: "dev.remotion.media.Audio",
@@ -131498,7 +131498,7 @@ var VideoForPreviewAssertedShowing = ({
   const src = usePreload2(unpreloadedSrc);
   const canvasRef = (0,react.useRef)(null);
   const videoConfig = useUnsafeVideoConfig2();
-  const frame = (0,esm.useCurrentFrame)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   const mediaPlayerRef = (0,react.useRef)(null);
   const initialTrimBeforeRef = (0,react.useRef)(trimBefore);
   const initialTrimAfterRef = (0,react.useRef)(trimAfter);
@@ -131511,7 +131511,7 @@ var VideoForPreviewAssertedShowing = ({
   const playing = usePlaying2();
   const { playbackRate: globalPlaybackRate } = esm.Internals.usePlaybackRate();
   const sharedAudioContext = (0,react.useContext)(SharedAudioContext2);
-  const buffer = (0,esm.useBufferState)();
+  const buffer = (0,esm/* useBufferState */.Fx)();
   const [mediaVolume] = useMediaVolumeState2();
   const unloopedVolumePropFrame = useFrameForVolumeProp2(loopVolumeCurveBehavior);
   const volumePropFrame = loop && videoConfig ? frameForVolumeProp({
@@ -131827,7 +131827,7 @@ var VideoForPreviewAssertedShowing = ({
     throw terminalError;
   }
   if (shouldFallbackToNativeVideo && !disallowFallbackToOffthreadVideo) {
-    return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Html5Video, {
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Html5Video */.kY, {
       ...props,
       src,
       style: actualStyle,
@@ -131857,8 +131857,8 @@ var VideoForPreviewAssertedShowing = ({
   });
 };
 var VideoForPreview = (props) => {
-  const frame = (0,esm.useCurrentFrame)();
-  const videoConfig = (0,esm.useVideoConfig)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const currentTime = frame / videoConfig.fps;
   const showShow = (0,react.useMemo)(() => {
     return getTimeInSeconds({
@@ -131922,22 +131922,22 @@ var VideoForRendering = ({
   }
   const audioContext = (0,react.useContext)(esm.Internals.SharedAudioContext);
   const sampleRate = audioContext?.sampleRate ?? 48000;
-  const frame = (0,esm.useCurrentFrame)();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
   const absoluteFrame = esm.Internals.useTimelinePosition();
-  const { fps } = (0,esm.useVideoConfig)();
+  const { fps } = (0,esm/* useVideoConfig */.Bk)();
   const { registerRenderAsset, unregisterRenderAsset } = (0,react.useContext)(esm.Internals.RenderAssetManager);
   const startsAt = esm.Internals.useMediaStartsAt();
   const sequenceContext = (0,react.useContext)(esm.Internals.SequenceContext);
   const sequencePlaybackRate = sequenceContext?.playbackRate ?? 1;
   const startInVideo = sequenceContext ? sequenceContext.cumulatedFrom + sequenceContext.relativeFrom : 0;
-  const id = (0,react.useMemo)(() => `media-video-${(0,esm.random)(src)}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.relativeFrom}-${sequenceContext?.durationInFrames}`, [
+  const id = (0,react.useMemo)(() => `media-video-${(0,esm/* random */.yT)(src)}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.relativeFrom}-${sequenceContext?.durationInFrames}`, [
     src,
     sequenceContext?.cumulatedFrom,
     sequenceContext?.relativeFrom,
     sequenceContext?.durationInFrames
   ]);
-  const environment = (0,esm.useRemotionEnvironment)();
-  const { delayRender, continueRender, cancelRender } = (0,esm.useDelayRender)();
+  const environment = (0,esm/* useRemotionEnvironment */.OK)();
+  const { delayRender, continueRender, cancelRender } = (0,esm/* useDelayRender */.dB)();
   const canvasRef = (0,react.useRef)(null);
   const [replaceWithOffthreadVideo, setReplaceWithOffthreadVideo] = (0,react.useState)(false);
   const [initialRequestInit] = (0,react.useState)(requestInit);
@@ -131955,7 +131955,7 @@ var VideoForRendering = ({
   if (error) {
     throw error;
   }
-  (0,react.useLayoutEffect)(() => {
+  ;(0,react.useLayoutEffect)(() => {
     if (!canvasRef.current && !headless) {
       return;
     }
@@ -132221,7 +132221,7 @@ var VideoForRendering = ({
         cancelRender(err);
         throw err;
       }
-      return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Loop, {
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Loop */.FZ, {
         layout: "none",
         durationInFrames: esm.Internals.calculateMediaDuration({
           trimAfter: trimAfterValue,
@@ -132292,10 +132292,10 @@ var videoSchema = {
   muted: { type: "boolean", default: false, description: "Muted" },
   loop: { type: "boolean", default: false, description: "Loop" },
   ...esm.Internals.transformSchema,
-  ...esm.Interactive.backgroundSchema,
-  ...esm.Interactive.borderSchema,
-  ...esm.Interactive.borderRadiusSchema,
-  ...esm.Interactive.cropSchema
+  ...esm/* Interactive */.HG.backgroundSchema,
+  ...esm/* Interactive */.HG.borderSchema,
+  ...esm/* Interactive */.HG.borderRadiusSchema,
+  ...esm/* Interactive */.HG.cropSchema
 };
 var InnerVideo = ({
   src,
@@ -132332,7 +132332,7 @@ var InnerVideo = ({
   setMediaDurationInSeconds,
   ...props
 }) => {
-  const environment = (0,esm.useRemotionEnvironment)();
+  const environment = (0,esm/* useRemotionEnvironment */.OK)();
   if (typeof src !== "string") {
     throw new TypeError(`The \`<Video>\` tag requires a string for \`src\`, but got ${JSON.stringify(src)} instead.`);
   }
@@ -132470,7 +132470,7 @@ var VideoInner = ({
   const sourceStack = controls ? esm.Internals.getStackForControls(controls) ?? undefined : undefined;
   const fallbackLogLevel = esm.Internals.useLogLevel();
   const mediaStartsAt = esm.Internals.useMediaStartsAt();
-  const videoConfig = (0,esm.useVideoConfig)();
+  const videoConfig = (0,esm/* useVideoConfig */.Bk)();
   const effectiveTrimAfter = getMediaTrimAfter({
     durationInFrames,
     trimAfter,
@@ -132552,11 +132552,11 @@ var VideoInner = ({
   if (sequenceDurationInFrames === 0) {
     return null;
   }
-  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Freeze, {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Freeze */.Kl, {
     frame: freezeFrame,
     active: isPremountingOrPostmounting,
     _remotionInternalIsPremounting: premountingActive,
-    children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.Sequence, {
+    children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Sequence */.gd, {
       layout: "none",
       from: from ?? 0,
       durationInFrames: videoSequenceDuration,
@@ -132613,7 +132613,7 @@ var VideoInner = ({
     })
   });
 };
-var Video = esm.Interactive.withSchema({
+var Video = esm/* Interactive */.HG.withSchema({
   Component: VideoInner,
   componentName: "<Video>",
   componentIdentity: "dev.remotion.media.Video",
@@ -134876,7 +134876,7 @@ var SelectedOutlineElementUnmemoized = ({
     try {
       originalLocation = await (0,index_fp21v3v3/* getOriginalLocationFromStack */.pI)(stack, "sequence");
     } catch (err) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
     }
     updateResolvedStackTrace(stack, originalLocation);
     return originalLocation;
@@ -135051,7 +135051,7 @@ var SelectedOutlineElementUnmemoized = ({
             (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open ${codingAgentName}`, 2000);
           }
         }).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
         });
       },
       openInEditor: (editorId) => {
@@ -135059,8 +135059,8 @@ var SelectedOutlineElementUnmemoized = ({
         if (!originalLocation || !resolvedEditorId || !editorAvailable) {
           return;
         }
-        (0,index_w5yee38t/* openOriginalPositionInEditor */.XK)(originalLocation, resolvedEditorId).catch((err) => {
-          (0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
+        ;(0,index_w5yee38t/* openOriginalPositionInEditor */.XK)(originalLocation, resolvedEditorId).catch((err) => {
+          ;(0,index_fp21v3v3/* showNotification */.Ds)(err.message, 2000);
         });
       },
       originalLocation,
@@ -135871,7 +135871,7 @@ var SelectedOutlineTransformOriginHandle = ({ getLatestTargetByKey, layoutTarget
         undoLabel: "Move transform origin",
         redoLabel: "Move transform origin back"
       }).catch((err) => {
-        (0,index_fp21v3v3/* showNotification */.Ds)(`Could not save transform origin: ${err instanceof Error ? err.message : String(err)}`, 4000);
+        ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not save transform origin: ${err instanceof Error ? err.message : String(err)}`, 4000);
       }).finally(() => {
         clearDragOverrides(transformOriginDrag.nodePath);
       });
@@ -137616,7 +137616,7 @@ var errMsgStyle2 = {
 };
 var StaticFilePreview = ({ currentAsset, assetMetadata }) => {
   const fileType = getPreviewFileType(currentAsset);
-  const staticFileSrc = (0,esm.staticFile)(currentAsset);
+  const staticFileSrc = (0,esm/* staticFile */.dQ)(currentAsset);
   const staticFiles = useStaticFiles();
   const connectionStatus = (0,react.useContext)(index_w5yee38t/* StudioServerConnectionCtx */.vF).previewServerState.type;
   const exists = staticFiles.find((file) => file.name === currentAsset);
@@ -137936,7 +137936,7 @@ var CompWhenItHasDimensions = ({ contentDimensions, canvasSize, canvasContent, a
 var AssetMediaComposition = ({ asset, fetchedAt, fileType }) => {
   const src = addAssetCacheBust({
     fetchedAt,
-    src: (0,esm.staticFile)(asset)
+    src: (0,esm/* staticFile */.dQ)(asset)
   });
   const style = {
     width: "100%",
@@ -138559,7 +138559,7 @@ var Canvas = ({ canvasContent, size }) => {
     if (canvasContent.type !== "asset") {
       return;
     }
-    const file = (0,esm.watchStaticFile)(canvasContent.asset, () => {
+    const file = (0,esm/* watchStaticFile */.K_)(canvasContent.asset, () => {
       fetchMetadata();
     });
     return () => {
@@ -138991,7 +138991,7 @@ var canvasTabsRef = (0,react.createRef)();
 
 var FramePersistor = () => {
   const playing = esm.Internals.usePlaying();
-  const config = (0,esm.useVideoConfig)();
+  const config = (0,esm/* useVideoConfig */.Bk)();
   const frame = esm.Internals.Timeline.useTimelinePosition();
   const setFrameWithoutSeek = esm.Internals.useTimelineSetFrameWithoutSeek();
   (0,react.useEffect)(() => {
@@ -139094,7 +139094,7 @@ var WelcomeActions = () => {
       }
       await importFiles(files);
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Error during upload: ${error}`, 3000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Error during upload: ${error}`, 3000);
     }
   }, [importFiles]);
   const onDragOver = (0,react.useCallback)((event) => {
@@ -139117,7 +139117,7 @@ var WelcomeActions = () => {
     try {
       await importFiles(files);
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Error during upload: ${error}`, 3000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Error during upload: ${error}`, 3000);
     }
   }, [canMutateProject, importFiles]);
   const browseElements = (0,react.useCallback)(() => {
@@ -140300,7 +140300,7 @@ var AssetFolderItem = ({
     (0,index_w5yee38t/* copyText */.Dk)(folderPath).then(() => {
       (0,index_fp21v3v3/* showNotification */.Ds)(`Copied '${folderPath}' to clipboard`, 1000);
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
     });
   }, [folderPath]);
   const copyAbsolutePath = (0,react.useCallback)(() => {
@@ -140311,7 +140311,7 @@ var AssetFolderItem = ({
     (0,index_w5yee38t/* copyText */.Dk)(content).then(() => {
       (0,index_fp21v3v3/* showNotification */.Ds)(`Copied '${content}' to clipboard`, 1000);
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not copy: ${err.message}`, 2000);
     });
   }, [folderPath]);
   const openFolderInExplorer = (0,react.useCallback)(() => {
@@ -140319,10 +140319,10 @@ var AssetFolderItem = ({
       (0,index_fp21v3v3/* showNotification */.Ds)("Could not find the public folder", 2000);
       return;
     }
-    (0,index_fp21v3v3/* openInFileExplorer */.dP)({
+    ;(0,index_fp21v3v3/* openInFileExplorer */.dP)({
       directory: `${window.remotion_publicFolderExists}/${folderPath}`
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open folder: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open folder: ${err.message}`, 2000);
     });
   }, [folderPath]);
   const uploadAssetsToFolder = (0,react.useCallback)(() => {
@@ -140532,7 +140532,7 @@ var AssetSelectorItem = ({ item, tabIndex, level, parentFolder, readOnlyStudio }
     }
     setIsDragging(true);
     e.dataTransfer.effectAllowed = "copy";
-    const src = (0,esm.staticFile)(relativePath);
+    const src = (0,esm/* staticFile */.dQ)(relativePath);
     const imageMetadata = previewFileType === "image" ? getCachedImageMetadata(src) : null;
     const mediaMetadata = previewFileType === "audio" || previewFileType === "video" ? getCachedMediaMetadata(src) : null;
     const width = imageMetadata?.width ?? mediaMetadata?.width ?? null;
@@ -140577,10 +140577,10 @@ var AssetSelectorItem = ({ item, tabIndex, level, parentFolder, readOnlyStudio }
       (0,index_fp21v3v3/* showNotification */.Ds)("Could not find the public folder", 2000);
       return;
     }
-    (0,index_fp21v3v3/* openInFileExplorer */.dP)({
+    ;(0,index_fp21v3v3/* openInFileExplorer */.dP)({
       directory: window.remotion_publicFolderExists + "/" + relativePath
     }).catch((err) => {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not open file: ${err.message}`, 2000);
     });
   }, [relativePath]);
   const revealInExplorer = (0,react.useCallback)((e) => {
@@ -140781,7 +140781,7 @@ var AssetSelector = ({ readOnlyStudio }) => {
       }
       await writeFilesToPublicFolder({ files, assetPath });
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Error during upload: ${error}`, 3000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Error during upload: ${error}`, 3000);
     } finally {
       setDropLocation(null);
     }
@@ -140801,7 +140801,7 @@ var AssetSelector = ({ readOnlyStudio }) => {
         (0,index_fp21v3v3/* showNotification */.Ds)(files.length === 1 ? `Uploaded ${files[0].name} to ${destination}` : `Uploaded ${files.length} assets to ${destination}`, 3000);
       }
     } catch (error) {
-      (0,index_fp21v3v3/* showNotification */.Ds)(`Error during upload: ${error}`, 3000);
+      ;(0,index_fp21v3v3/* showNotification */.Ds)(`Error during upload: ${error}`, 3000);
     }
   }, [writeFilesToPublicFolder]);
   const getAssetActions = (0,react.useCallback)(() => {
@@ -141130,7 +141130,7 @@ function MobilePanel({
 }
 
 // src/components/PreviewToolbar.tsx
-
+;
 
 
 
@@ -142594,7 +142594,7 @@ npm run dev`
           await nextReconciliation;
         }
       } catch (error) {
-        (0,index_fp21v3v3/* showNotification */.Ds)(`Could not prepare client-side render: ${error.message}`, 4000);
+        ;(0,index_fp21v3v3/* showNotification */.Ds)(`Could not prepare client-side render: ${error.message}`, 4000);
         return null;
       } finally {
         if (onReconciliation) {
@@ -143539,7 +143539,7 @@ var ModalsProvider = ({ children }) => {
 
 
 var LazyCaptionQueueProcessor = react.lazy(async () => {
-  const { CaptionQueueProcessor } = await __webpack_require__.e(/* import() */ 541).then(__webpack_require__.bind(__webpack_require__, 4541));
+  const { CaptionQueueProcessor } = await __webpack_require__.e(/* import() */ 541).then(() => (__webpack_require__(4541)));
   return { default: CaptionQueueProcessor };
 });
 var CaptionQueueProcessorLoader = () => {
@@ -143724,7 +143724,7 @@ var ClientRenderQueueProcessor = () => {
 
 
 var LazyProcessor = react.lazy(async () => {
-  const { VideoMattingQueueProcessor } = await __webpack_require__.e(/* import() */ 578).then(__webpack_require__.bind(__webpack_require__, 4578));
+  const { VideoMattingQueueProcessor } = await __webpack_require__.e(/* import() */ 578).then(() => (__webpack_require__(4578)));
   return { default: VideoMattingQueueProcessor };
 });
 var VideoMattingQueueProcessorLoader = () => {
@@ -144273,7 +144273,7 @@ var ResolveCompositionConfigInStudio = ({ children }) => {
   const { props: allEditorProps } = (0,react.useContext)(esm.Internals.EditorPropsContext);
   const env = esm.Internals.getRemotionEnvironment();
   const inputProps = (0,react.useMemo)(() => {
-    return typeof window === "undefined" || env.isPlayer ? {} : (0,esm.getInputProps)() ?? {};
+    return typeof window === "undefined" || env.isPlayer ? {} : (0,esm/* getInputProps */.ti)() ?? {};
   }, [env.isPlayer]);
   const [resolvedConfigs, setResolvedConfigs] = (0,react.useState)({});
   const selectedEditorProps = (0,react.useMemo)(() => {
@@ -144689,7 +144689,7 @@ var Studio = ({ rootComponent, readOnly }) => {
 // src/api/delete-static-file.ts
 
 var deleteStaticFile2 = async (relativePath) => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__.getRemotionEnvironment)().isStudio) {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
     throw new Error("deleteStaticFile() is only available in the Studio");
   }
   if (relativePath.startsWith(window.remotion_staticBase)) {
@@ -144750,7 +144750,7 @@ var play2 = (e) => {
 // src/api/shut-down-studio.ts
 
 var shutDownStudio2 = () => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__.getRemotionEnvironment)().isStudio) {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
     throw new Error("shutDownStudio() is only available in the Studio");
   }
   if ((0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)() !== null) {
@@ -145243,11 +145243,11 @@ function getZodSchemaFromPrimitive(value, z) {
 }
 
 // src/components/get-zod-if-possible.tsx
-
+;
 
 async function getZodIfPossible() {
   try {
-    const { z } = await Promise.all(/* import() */[__webpack_require__.e(687), __webpack_require__.e(328)]).then(__webpack_require__.bind(__webpack_require__, 9328));
+    const { z } = await Promise.all(/* import() */[__webpack_require__.e(687), __webpack_require__.e(328)]).then(() => (__webpack_require__(9328)));
     return z;
   } catch {
     return null;
@@ -145255,7 +145255,7 @@ async function getZodIfPossible() {
 }
 var getZodV3IfPossible = async () => {
   try {
-    const mod = await __webpack_require__.e(/* import() */ 161).then(__webpack_require__.bind(__webpack_require__, 3161));
+    const mod = await __webpack_require__.e(/* import() */ 161).then(() => (__webpack_require__(3161)));
     return mod;
   } catch {
     return null;
@@ -145263,7 +145263,7 @@ var getZodV3IfPossible = async () => {
 };
 var getZTypesIfPossible = async () => {
   try {
-    const mod = await Promise.all(/* import() */[__webpack_require__.e(687), __webpack_require__.e(761)]).then(__webpack_require__.bind(__webpack_require__, 761));
+    const mod = await Promise.all(/* import() */[__webpack_require__.e(687), __webpack_require__.e(761)]).then(() => (__webpack_require__(761)));
     return mod;
   } catch {
     return null;
@@ -145371,7 +145371,7 @@ var VisualControlsProvider = ({ children }) => {
   }, []);
   const z = useZodIfPossible();
   const changedRef = (0,react__WEBPACK_IMPORTED_MODULE_2__.useRef)(false);
-  const env = (0,remotion__WEBPACK_IMPORTED_MODULE_1__.useRemotionEnvironment)();
+  const env = (0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .useRemotionEnvironment */ .OK)();
   const visualControl = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)(function(key, value, schema) {
     if (handles && false) // removed by dead control flow
 {}
@@ -145454,7 +145454,7 @@ var VisualControlsProvider = ({ children }) => {
 
 var WATCH_REMOTION_STATIC_FILES = "remotion_staticFilesChanged";
 var watchPublicFolder2 = (callback) => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__.getRemotionEnvironment)().isStudio) {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
     console.warn("The watchPublicFolder() API is only available while using the Remotion Studio.");
     return { cancel: () => {
       return;
@@ -146754,7 +146754,7 @@ var loadCompositionComponentInfo = async ({
       if (files === null) {
         throw new Error(`Could not find source map contents for ${compositionFile}`);
       }
-      const { resolveCompositionComponentLocation } = await __webpack_require__.e(/* import() */ 464).then(__webpack_require__.bind(__webpack_require__, 2464));
+      const { resolveCompositionComponentLocation } = await __webpack_require__.e(/* import() */ 464).then(() => (__webpack_require__(2464)));
       return {
         canAddSequence: false,
         location: resolveCompositionComponentLocation({
@@ -148348,7 +148348,7 @@ var UpdateStatusProvider = ({ children, skillsRevision }) => {
       }
       setError(err.message);
     });
-    fetch("https://bugs.remotion.dev/api/" + remotion__WEBPACK_IMPORTED_MODULE_4__.VERSION, {
+    fetch("https://bugs.remotion.dev/api/" + remotion__WEBPACK_IMPORTED_MODULE_4__/* .VERSION */ .xv, {
       signal: bugsController.signal
     }).then(async (response) => {
       const body = await response.json();
@@ -149151,7 +149151,7 @@ var getCurrentError = () => {
 // src/components/LazySyntaxHighlightedSource.tsx
 
 
-var SyntaxHighlightedSource = (0,react__WEBPACK_IMPORTED_MODULE_3__.lazy)(() => __webpack_require__.e(/* import() */ 912).then(__webpack_require__.bind(__webpack_require__, 8912)));
+var SyntaxHighlightedSource = (0,react__WEBPACK_IMPORTED_MODULE_3__.lazy)(() => __webpack_require__.e(/* import() */ 912).then(() => (__webpack_require__(8912))));
 var LazySyntaxHighlightedSource = ({ source }) => {
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(react__WEBPACK_IMPORTED_MODULE_3__.Suspense, {
     fallback: source,
@@ -149292,7 +149292,7 @@ var OpenInEditor = ({ stack, canHaveKeyboardShortcuts, editorId, editorName, siz
         (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)(`Could not open ${selectedEditorName}`, 2000);
       }
     } catch (err) {
-      (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)(err.message, 2000);
+      ;(0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)(err.message, 2000);
     }
   }, [stack]);
   const openPreferredEditor = (0,react__WEBPACK_IMPORTED_MODULE_3__.useCallback)(() => {
@@ -149305,7 +149305,7 @@ var OpenInEditor = ({ stack, canHaveKeyboardShortcuts, editorId, editorName, siz
       return;
     }
     copyText(sourcePath).then(() => (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)("Copied path", 1500)).catch((err) => {
-      (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)(`Could not copy path: ${err.message}`, 2000);
+      ;(0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)(`Could not copy path: ${err.message}`, 2000);
     });
   }, [sourcePath]);
   (0,react__WEBPACK_IMPORTED_MODULE_3__.useEffect)(() => {
@@ -149673,7 +149673,7 @@ var CodingAgentButton = ({ label, prompt, size, style }) => {
         (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)(`Could not open ${codingAgentName}`, 2000);
       }
     } catch (err) {
-      (0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)(err.message, 2000);
+      ;(0,_index_fp21v3v3_mjs__WEBPACK_IMPORTED_MODULE_1__/* .showNotification */ .Ds)(err.message, 2000);
     }
   }, [prompt]);
   const agentMenuItems = (0,react__WEBPACK_IMPORTED_MODULE_3__.useMemo)(() => {
@@ -149954,7 +149954,7 @@ function unregisterUnhandledRejection(target) {
 }
 
 // src/error-overlay/react-overlay/utils/unmapper.ts
-
+;
 
 
 // src/error-overlay/react-overlay/utils/get-lines-around.ts
@@ -150084,7 +150084,7 @@ function listenToRuntimeErrors() {
 }
 
 // src/error-overlay/remotion-overlay/ErrorDisplay.tsx
-
+;
 
 
 
@@ -150102,7 +150102,7 @@ function startReportingRuntimeErrors() {
 }
 
 // src/error-overlay/remotion-overlay/AskOnDiscord.tsx
-
+;
 
 var DISCORD_LINK = "https://remotion.dev/discord";
 var AskOnDiscord = ({ canHaveKeyboardShortcuts }) => {
@@ -150969,7 +150969,7 @@ ${errorTextForCopy}`;
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(CalculateMetadataErrorExplainer, {})
         ]
       }) : null,
-      display.error instanceof remotion__WEBPACK_IMPORTED_MODULE_4__.MediaPlaybackError ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.Fragment, {
+      display.error instanceof remotion__WEBPACK_IMPORTED_MODULE_4__/* .MediaPlaybackError */ .uk ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.Fragment, {
         children: [
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("br", {}),
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(Spacing, {
@@ -151705,14 +151705,6 @@ var StudioInternals = {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Im: () => (/* binding */ aacFrequencyTable),
-/* harmony export */   Ti: () => (/* binding */ aacChannelMap),
-/* harmony export */   Wz: () => (/* binding */ buildAacAudioSpecificConfig),
-/* harmony export */   hY: () => (/* binding */ writeAdtsFrameLength),
-/* harmony export */   k9: () => (/* binding */ buildAdtsHeaderTemplate),
-/* harmony export */   zF: () => (/* binding */ parseAacAudioSpecificConfig)
-/* harmony export */ });
 /* harmony import */ var _bitstream_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1390);
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
@@ -151889,6 +151881,15 @@ const writeAdtsFrameLength = (bitstream, frameLength) => {
     bitstream.writeBits(13, frameLength);
 };
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "Im", 0, /* binding */ aacFrequencyTable,
+/* harmony export */   "Ti", 0, /* binding */ aacChannelMap,
+/* harmony export */   "Wz", 0, /* binding */ buildAacAudioSpecificConfig,
+/* harmony export */   "hY", 0, /* binding */ writeAdtsFrameLength,
+/* harmony export */   "k9", 0, /* binding */ buildAdtsHeaderTemplate,
+/* harmony export */   "zF", 0, /* binding */ parseAacAudioSpecificConfig
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -151897,19 +151898,7 @@ const writeAdtsFrameLength = (bitstream, frameLength) => {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   D0: () => (/* binding */ KILOBIT_RATES),
-/* harmony export */   D_: () => (/* binding */ MP3_FRAME_HEADER_SIZE),
-/* harmony export */   EZ: () => (/* binding */ getXingOffset),
-/* harmony export */   Fm: () => (/* binding */ decodeSynchsafe),
-/* harmony export */   MJ: () => (/* binding */ XingFlags),
-/* harmony export */   P8: () => (/* binding */ readMp3FrameHeader),
-/* harmony export */   Pj: () => (/* binding */ encodeSynchsafe),
-/* harmony export */   _m: () => (/* binding */ SAMPLING_RATES),
-/* harmony export */   c9: () => (/* binding */ computeMp3FrameSize),
-/* harmony export */   fX: () => (/* binding */ getMp3ChannelCount),
-/* harmony export */   hD: () => (/* binding */ computeAverageMp3FrameSize),
-/* harmony export */   hY: () => (/* binding */ XING),
-/* harmony export */   rD: () => (/* binding */ INFO)
+/* harmony export */   MJ: () => (/* binding */ XingFlags)
 /* harmony export */ });
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
@@ -152082,6 +152071,20 @@ var XingFlags;
 const getMp3ChannelCount = (channel) => {
     return channel === 3 ? 1 : 2;
 };
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "D0", 0, /* binding */ KILOBIT_RATES,
+/* harmony export */   "EZ", 0, /* binding */ getXingOffset,
+/* harmony export */   "Fm", 0, /* binding */ decodeSynchsafe,
+/* harmony export */   "P8", 0, /* binding */ readMp3FrameHeader,
+/* harmony export */   "Pj", 0, /* binding */ encodeSynchsafe,
+/* harmony export */   "_m", 0, /* binding */ SAMPLING_RATES,
+/* harmony export */   "c9", 0, /* binding */ computeMp3FrameSize,
+/* harmony export */   "fX", 0, /* binding */ getMp3ChannelCount,
+/* harmony export */   "hD", 0, /* binding */ computeAverageMp3FrameSize,
+/* harmony export */   "hY", 0, /* binding */ XING,
+/* harmony export */   "rD", 0, /* binding */ INFO
+/* harmony export */ ]);
 
 
 /***/ },
@@ -152281,19 +152284,22 @@ const extractNalUnitTypeForAvc = (byte) => {
     return byte & 0x1F;
 };
 const removeEmulationPreventionBytes = (data) => {
-    const result = [];
+    const result = new Uint8Array(data.length); // The result can only be shorter
     const len = data.length;
+    let resultLength = 0;
     for (let i = 0; i < len; i++) {
         // Look for the 0x000003 pattern
         if (i + 2 < len && data[i] === 0x00 && data[i + 1] === 0x00 && data[i + 2] === 0x03) {
-            result.push(0x00, 0x00); // Push the first two bytes
+            // Push the first two bytes
+            result[resultLength++] = 0x00;
+            result[resultLength++] = 0x00;
             i += 2; // Skip the 0x03 byte
         }
         else {
-            result.push(data[i]);
+            result[resultLength++] = data[i];
         }
     }
-    return new Uint8Array(result);
+    return result.subarray(0, resultLength);
 };
 const addEmulationPreventionBytes = (data) => {
     const result = [];
@@ -152369,13 +152375,14 @@ const extractAvcDecoderConfigurationRecord = (packetData) => {
         for (const loc of iterateNalUnitsInAnnexB(packetData)) {
             const nalUnit = packetData.subarray(loc.offset, loc.offset + loc.length);
             const type = extractNalUnitTypeForAvc(nalUnit[0]);
-            if (type === AvcNalUnitType.SPS) {
+            // The counts are capped at what the record can hold
+            if (type === AvcNalUnitType.SPS && spsUnits.length < 31) {
                 spsUnits.push(nalUnit);
             }
-            else if (type === AvcNalUnitType.PPS) {
+            else if (type === AvcNalUnitType.PPS && ppsUnits.length < 255) {
                 ppsUnits.push(nalUnit);
             }
-            else if (type === AvcNalUnitType.SPS_EXT) {
+            else if (type === AvcNalUnitType.SPS_EXT && spsExtUnits.length < 255) {
                 spsExtUnits.push(nalUnit);
             }
         }
@@ -152388,7 +152395,9 @@ const extractAvcDecoderConfigurationRecord = (packetData) => {
         // Let's get the first SPS for profile and level information
         const spsData = spsUnits[0];
         const spsInfo = parseAvcSps(spsData);
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(spsInfo !== null);
+        if (!spsInfo) {
+            return null;
+        }
         const hasExtendedData = spsInfo.profileIdc === 100
             || spsInfo.profileIdc === 110
             || spsInfo.profileIdc === 122
@@ -152616,7 +152625,7 @@ const parseAvcSps = (sps) => {
                 }
             }
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_max_frame_num_minus4
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_max_frame_num_minus4
         const picOrderCntType = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
         if (picOrderCntType === 0) {
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_max_pic_order_cnt_lsb_minus4
@@ -152630,7 +152639,7 @@ const parseAvcSps = (sps) => {
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readSignedExpGolomb */ .OO)(bitstream); // offset_for_ref_frame[i]
             }
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // max_num_ref_frames
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // max_num_ref_frames
         bitstream.skipBits(1); // gaps_in_frame_num_value_allowed_flag
         const picWidthInMbsMinus1 = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
         const picHeightInMapUnitsMinus1 = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
@@ -152666,6 +152675,9 @@ const parseAvcSps = (sps) => {
             }
             displayWidth -= (cropUnitX * (frameCropLeftOffset + frameCropRightOffset));
             displayHeight -= (cropUnitY * (frameCropTopOffset + frameCropBottomOffset));
+        }
+        if (displayWidth <= 0 || displayHeight <= 0) {
+            return null; // Cropped away everything, invalid
         }
         // 2 = unspecified
         let colourPrimaries = 2;
@@ -152742,8 +152754,10 @@ const parseAvcSps = (sps) => {
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // max_bits_per_mb_denom
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_max_mv_length_horizontal
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_max_mv_length_vertical
-                numReorderFrames = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
-                maxDecFrameBuffering = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
+                // Both can't exceed MaxDpbFrames, which is at most 16. Bigger values would make us buffer absurd
+                // amounts of frames
+                numReorderFrames = Math.min((0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream), 16);
+                maxDecFrameBuffering = Math.min((0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream), 16);
             }
         }
         if (numReorderFrames === null) {
@@ -152769,7 +152783,7 @@ const parseAvcSps = (sps) => {
                 maxDecFrameBuffering = maxDpbFrames;
             }
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(maxDecFrameBuffering !== null);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(maxDecFrameBuffering !== null);
         return {
             emulationUnpreventedBytes,
             profileIdc,
@@ -152925,6 +152939,9 @@ const parseHevcSps = (sps) => {
             displayWidth -= (confWinLeftOffset + confWinRightOffset) * subWidthC;
             displayHeight -= (confWinTopOffset + confWinBottomOffset) * subHeightC;
         }
+        if (displayWidth <= 0 || displayHeight <= 0) {
+            return null; // Cropped away everything, invalid
+        }
         const bitDepthLumaMinus8 = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
         const bitDepthChromaMinus8 = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_max_pic_order_cnt_lsb_minus4
@@ -152936,7 +152953,7 @@ const parseHevcSps = (sps) => {
             spsMaxNumReorderPics = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // sps_max_num_reorder_pics[i]
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // sps_max_latency_increase_plus1[i]
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_min_luma_coding_block_size_minus3
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_min_luma_coding_block_size_minus3
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_diff_max_min_luma_coding_block_size
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_min_luma_transform_block_size_minus2
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream); // log2_diff_max_min_luma_transform_block_size
@@ -152990,7 +153007,9 @@ const parseHevcSps = (sps) => {
             transferCharacteristics,
             matrixCoefficients,
             fullRangeFlag,
-            maxDecFrameBuffering: spsMaxNumReorderPics + 1,
+            // Can't exceed MaxDpbSize, which is at most 16. Bigger values would make us buffer absurd amounts of
+            // frames
+            maxDecFrameBuffering: Math.min(spsMaxNumReorderPics + 1, 16),
             spsMaxSubLayersMinus1,
             spsTemporalIdNestingFlag,
             generalProfileSpace: general_profile_space,
@@ -153017,19 +153036,22 @@ const extractHevcDecoderConfigurationRecord = (packetData) => {
         const spsUnits = [];
         const ppsUnits = [];
         const seiUnits = [];
+        // The counts are capped at what the record can hold
+        const MAX_NAL_UNITS_PER_ARRAY = 0xffff;
         for (const loc of iterateNalUnitsInAnnexB(packetData)) {
             const nalUnit = packetData.subarray(loc.offset, loc.offset + loc.length);
             const type = extractNalUnitTypeForHevc(nalUnit[0]);
-            if (type === HevcNalUnitType.VPS_NUT) {
+            if (type === HevcNalUnitType.VPS_NUT && vpsUnits.length < MAX_NAL_UNITS_PER_ARRAY) {
                 vpsUnits.push(nalUnit);
             }
-            else if (type === HevcNalUnitType.SPS_NUT) {
+            else if (type === HevcNalUnitType.SPS_NUT && spsUnits.length < MAX_NAL_UNITS_PER_ARRAY) {
                 spsUnits.push(nalUnit);
             }
-            else if (type === HevcNalUnitType.PPS_NUT) {
+            else if (type === HevcNalUnitType.PPS_NUT && ppsUnits.length < MAX_NAL_UNITS_PER_ARRAY) {
                 ppsUnits.push(nalUnit);
             }
-            else if (type === HevcNalUnitType.PREFIX_SEI_NUT || type === HevcNalUnitType.SUFFIX_SEI_NUT) {
+            else if ((type === HevcNalUnitType.PREFIX_SEI_NUT || type === HevcNalUnitType.SUFFIX_SEI_NUT)
+                && seiUnits.length < MAX_NAL_UNITS_PER_ARRAY) {
                 seiUnits.push(nalUnit);
             }
         }
@@ -153059,7 +153081,7 @@ const extractHevcDecoderConfigurationRecord = (packetData) => {
             if (ppsBitstream.readBits(1)) { // cu_qp_delta_enabled_flag
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(ppsBitstream); // diff_cu_qp_delta_depth
             }
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readSignedExpGolomb */ .OO)(ppsBitstream); // pps_cb_qp_offset
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readSignedExpGolomb */ .OO)(ppsBitstream); // pps_cb_qp_offset
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readSignedExpGolomb */ .OO)(ppsBitstream); // pps_cr_qp_offset
             ppsBitstream.skipBits(1); // pps_slice_chroma_qp_offsets_present_flag
             ppsBitstream.skipBits(1); // weighted_pred_flag
@@ -153755,7 +153777,7 @@ const iterateAv1PacketObus = function* (packet) {
             // Calculate remaining bits and convert to bytes, rounding down
             obuSize = Math.floor(bitstream.getBitsLeft() / 8);
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(bitstream.pos % 8 === 0);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(bitstream.pos % 8 === 0);
         yield {
             type: obuType,
             data: packet.subarray(bitstream.pos / 8, bitstream.pos / 8 + obuSize),
@@ -153999,6 +154021,9 @@ const extractProresCodecInfoFromPacket = (packet) => {
     };
 };
 const parseOpusIdentificationHeader = (bytes) => {
+    if (bytes.byteLength < 19) {
+        throw new Error('Invalid Opus identification header: too short.');
+    }
     const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .toDataView */ .Zc)(bytes);
     const outputChannelCount = view.getUint8(9);
     const preSkip = view.getUint16(10, true);
@@ -154179,7 +154204,13 @@ const determineVideoPacketType = (codec, decoderConfig, packetData) => {
                             if (payloadType === PAYLOAD_TYPE_RECOVERY_POINT) {
                                 const bitstream = new _shared_bitstream_js__WEBPACK_IMPORTED_MODULE_4__/* .Bitstream */ ._(bytes);
                                 bitstream.pos = 8 * pos;
-                                const recoveryFrameCount = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
+                                let recoveryFrameCount = -1;
+                                try {
+                                    recoveryFrameCount = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .readExpGolomb */ .IP)(bitstream);
+                                }
+                                catch {
+                                    // Malformed SEI payload, so it's surely no recovery point
+                                }
                                 const exactMatchFlag = bitstream.readBits(1);
                                 if (recoveryFrameCount === 0 && exactMatchFlag === 1) {
                                     // https://github.com/w3c/webcodecs/pull/910
@@ -154294,6 +154325,9 @@ const readVorbisComments = (bytes, metadataTags) => {
     // https://datatracker.ietf.org/doc/html/rfc7845#section-5.2
     const commentView = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .toDataView */ .Zc)(bytes);
     let commentPos = 0;
+    if (bytes.length < 4) {
+        return;
+    }
     const vendorStringLength = commentView.getUint32(commentPos, true);
     commentPos += 4;
     const vendorString = _misc_js__WEBPACK_IMPORTED_MODULE_1__/* .textDecoder */ .su.decode(bytes.subarray(commentPos, commentPos + vendorStringLength));
@@ -154303,10 +154337,16 @@ const readVorbisComments = (bytes, metadataTags) => {
         metadataTags.raw ??= {};
         metadataTags.raw['vendor'] ??= vendorString;
     }
+    if (commentPos + 4 > bytes.length) {
+        return;
+    }
     const listLength = commentView.getUint32(commentPos, true);
     commentPos += 4;
     // Loop over all metadata tags
     for (let i = 0; i < listLength; i++) {
+        if (commentPos + 4 > bytes.length) {
+            break; // The list is cut off, keep what we have
+        }
         const stringLength = commentView.getUint32(commentPos, true);
         commentPos += 4;
         const string = _misc_js__WEBPACK_IMPORTED_MODULE_1__/* .textDecoder */ .su.decode(bytes.subarray(commentPos, commentPos + stringLength));
@@ -154319,7 +154359,7 @@ const readVorbisComments = (bytes, metadataTags) => {
         const value = string.slice(separatorIndex + 1);
         metadataTags.raw ??= {};
         if (Array.isArray(metadataTags.raw[key])) {
-            metadataTags.raw[key] = [...metadataTags.raw[key], value];
+            metadataTags.raw[key].push(value);
         }
         else if (typeof metadataTags.raw[key] === 'string') {
             metadataTags.raw[key] = [metadataTags.raw[key], value];
@@ -154443,23 +154483,28 @@ const readVorbisComments = (bytes, metadataTags) => {
             case 'METADATA_BLOCK_PICTURE':
                 {
                     // https://datatracker.ietf.org/doc/rfc9639/ Section 8.8
-                    const decoded = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .base64ToBytes */ .Kp)(value);
-                    const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .toDataView */ .Zc)(decoded);
-                    const pictureType = view.getUint32(0, false);
-                    const mediaTypeLength = view.getUint32(4, false);
-                    const mediaType = String.fromCharCode(...decoded.subarray(8, 8 + mediaTypeLength)); // ASCII
-                    const descriptionLength = view.getUint32(8 + mediaTypeLength, false);
-                    const description = _misc_js__WEBPACK_IMPORTED_MODULE_1__/* .textDecoder */ .su.decode(decoded.subarray(12 + mediaTypeLength, 12 + mediaTypeLength + descriptionLength));
-                    const dataLength = view.getUint32(mediaTypeLength + descriptionLength + 28);
-                    const data = decoded.subarray(mediaTypeLength + descriptionLength + 32, mediaTypeLength + descriptionLength + 32 + dataLength);
-                    metadataTags.images ??= [];
-                    metadataTags.images.push({
-                        data,
-                        mimeType: mediaType,
-                        kind: pictureType === 3 ? 'coverFront' : pictureType === 4 ? 'coverBack' : 'unknown',
-                        name: undefined,
-                        description: description || undefined,
-                    });
+                    try {
+                        const decoded = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .base64ToBytes */ .Kp)(value);
+                        const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .toDataView */ .Zc)(decoded);
+                        const pictureType = view.getUint32(0, false);
+                        const mediaTypeLength = view.getUint32(4, false);
+                        const mediaType = _misc_js__WEBPACK_IMPORTED_MODULE_1__/* .textDecoder */ .su.decode(decoded.subarray(8, 8 + mediaTypeLength)); // ASCII
+                        const descriptionLength = view.getUint32(8 + mediaTypeLength, false);
+                        const description = _misc_js__WEBPACK_IMPORTED_MODULE_1__/* .textDecoder */ .su.decode(decoded.subarray(12 + mediaTypeLength, 12 + mediaTypeLength + descriptionLength));
+                        const dataLength = view.getUint32(mediaTypeLength + descriptionLength + 28);
+                        const data = decoded.subarray(mediaTypeLength + descriptionLength + 32, mediaTypeLength + descriptionLength + 32 + dataLength);
+                        metadataTags.images ??= [];
+                        metadataTags.images.push({
+                            data,
+                            mimeType: mediaType,
+                            kind: pictureType === 3 ? 'coverFront' : pictureType === 4 ? 'coverBack' : 'unknown',
+                            name: undefined,
+                            description: description || undefined,
+                        });
+                    }
+                    catch {
+                        // Malformed picture, let's just skip it
+                    }
                 }
                 ;
                 break;
@@ -156716,7 +156761,7 @@ const buildVideoEncoderConfigs = (options) => {
             quantizer: null,
         });
     }
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(candidates.length > 0);
+    ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(candidates.length > 0);
     return candidates;
 };
 const validateAudioEncodingConfig = (config) => {
@@ -156915,7 +156960,7 @@ class Quality {
         if (this._bitrate !== undefined) {
             return this._bitrate;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this._quality !== undefined);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this._quality !== undefined);
         return computeVideoBitrate(codec, width, height, qualityToBitrateFactor(this._quality));
     }
     /** @internal */
@@ -157017,7 +157062,7 @@ const buildQuantizerEncodeOptions = (codec, quantizer) => {
     else if (codec === 'av1') {
         return { av1: { quantizer } };
     }
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(false);
+    ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(false);
 };
 /**
  * Represents a very low media quality.
@@ -157025,35 +157070,35 @@ const buildQuantizerEncodeOptions = (codec, quantizer) => {
  * @group Encoding
  * @public
  */
-const QUALITY_VERY_LOW = /* #__PURE__ */ new Quality('very-low');
+const QUALITY_VERY_LOW = /* #__PURE__ */ (/* unused pure expression or super */ null && (new Quality('very-low')));
 /**
  * Represents a low media quality.
  * @deprecated Use `new Quality('low')` instead.
  * @group Encoding
  * @public
  */
-const QUALITY_LOW = /* #__PURE__ */ new Quality('low');
+const QUALITY_LOW = /* #__PURE__ */ (/* unused pure expression or super */ null && (new Quality('low')));
 /**
  * Represents a medium media quality.
  * @deprecated Use `new Quality('medium')` instead.
  * @group Encoding
  * @public
  */
-const QUALITY_MEDIUM = /* #__PURE__ */ new Quality('medium');
+const QUALITY_MEDIUM = /* #__PURE__ */ (/* unused pure expression or super */ null && (new Quality('medium')));
 /**
  * Represents a high media quality.
  * @deprecated Use `new Quality('high')` instead.
  * @group Encoding
  * @public
  */
-const QUALITY_HIGH = /* #__PURE__ */ new Quality('high');
+const QUALITY_HIGH = /* #__PURE__ */ (/* unused pure expression or super */ null && (new Quality('high')));
 /**
  * Represents a very high media quality.
  * @deprecated Use `new Quality('very-high')` instead.
  * @group Encoding
  * @public
  */
-const QUALITY_VERY_HIGH = /* #__PURE__ */ new Quality('very-high');
+const QUALITY_VERY_HIGH = /* #__PURE__ */ (/* unused pure expression or super */ null && (new Quality('very-high')));
 /**
  * Checks if the browser is able to encode the given codec.
  * @group Encoding
@@ -157521,6 +157566,9 @@ const parseId3V2Tag = (slice, header, tags) => {
         reader.ununsynchronizeAll();
     }
     if (header.flags & Id3V2HeaderFlags.ExtendedHeader) {
+        if (reader.bytes.length < 4) {
+            return;
+        }
         const extendedHeaderSize = reader.readU32();
         if (header.majorVersion === 3) {
             reader.pos += extendedHeaderSize; // The extended header size excludes itself
@@ -157535,7 +157583,8 @@ const parseId3V2Tag = (slice, header, tags) => {
             break;
         }
         const frameStartPos = reader.pos;
-        const frameEndPos = reader.pos + frame.size;
+        const nextFramePos = Math.min(reader.pos + frame.size, reader.bytes.length);
+        let frameEndPos = nextFramePos;
         let frameEncrypted = false;
         let frameCompressed = false;
         let frameUnsynchronized = false;
@@ -157551,20 +157600,27 @@ const parseId3V2Tag = (slice, header, tags) => {
         }
         if (frameEncrypted) {
             _logging_js__WEBPACK_IMPORTED_MODULE_1__/* .Logging */ .y._warn(`Skipping encrypted ID3v2 frame ${frame.id}`);
-            reader.pos = frameEndPos;
+            reader.pos = nextFramePos;
             continue;
         }
         if (frameCompressed) {
             _logging_js__WEBPACK_IMPORTED_MODULE_1__/* .Logging */ .y._warn(`Skipping compressed ID3v2 frame ${frame.id}`); // Maybe someday? Idk
-            reader.pos = frameEndPos;
+            reader.pos = nextFramePos;
             continue;
         }
         if (frameUnsynchronized) {
-            reader.ununsynchronizeRegion(reader.pos, frameEndPos);
+            frameEndPos = reader.ununsynchronizeRegion(reader.pos, frameEndPos);
         }
+        // Frames don't necessarily hold the fixed-size fields they're supposed to
+        const ensureFrameHasBytes = (byteCount) => {
+            if (frameEndPos - reader.pos < byteCount) {
+                throw new Error(`Invalid ID3v2 ${frame.id} frame: too short.`);
+            }
+        };
         tags.raw ??= {};
         if (frame.id === 'TXXX') {
             const txxx = tags.raw['TXXX'] ??= {};
+            ensureFrameHasBytes(1);
             const encoding = reader.readId3V2TextEncoding();
             const description = reader.readId3V2Text(encoding, frameEndPos);
             const value = reader.readId3V2Text(encoding, frameEndPos);
@@ -157576,7 +157632,7 @@ const parseId3V2Tag = (slice, header, tags) => {
         }
         else {
             // For the others, let's just get the bytes
-            tags.raw[frame.id] ??= reader.readBytes(frame.size);
+            tags.raw[frame.id] ??= reader.readBytes(frameEndPos - reader.pos);
         }
         reader.pos = frameStartPos;
         switch (frame.id) {
@@ -157707,6 +157763,7 @@ const parseId3V2Tag = (slice, header, tags) => {
             case 'USLT':
             case 'ULT':
                 {
+                    ensureFrameHasBytes(4);
                     const encoding = reader.readU8();
                     reader.pos += 3; // Skip language
                     reader.readId3V2Text(encoding, frameEndPos); // Short content description
@@ -157717,6 +157774,7 @@ const parseId3V2Tag = (slice, header, tags) => {
             case 'COMM':
             case 'COM':
                 {
+                    ensureFrameHasBytes(4);
                     const encoding = reader.readU8();
                     reader.pos += 3; // Skip language
                     reader.readId3V2Text(encoding, frameEndPos); // Short content description
@@ -157727,9 +157785,11 @@ const parseId3V2Tag = (slice, header, tags) => {
             case 'APIC':
             case 'PIC':
                 {
+                    ensureFrameHasBytes(1);
                     const encoding = reader.readId3V2TextEncoding();
                     let mimeType;
                     if (header.majorVersion === 2) {
+                        ensureFrameHasBytes(3);
                         const imageFormat = reader.readAscii(3);
                         mimeType = imageFormat === 'PNG'
                             ? 'image/png'
@@ -157740,6 +157800,7 @@ const parseId3V2Tag = (slice, header, tags) => {
                     else {
                         mimeType = reader.readId3V2Text(encoding, frameEndPos);
                     }
+                    ensureFrameHasBytes(1);
                     const pictureType = reader.readU8();
                     const description = reader.readId3V2Text(encoding, frameEndPos).trimEnd(); // Trim ending spaces
                     const imageDataSize = frameEndPos - reader.pos;
@@ -157768,7 +157829,7 @@ const parseId3V2Tag = (slice, header, tags) => {
                 ;
                 break;
         }
-        reader.pos = frameEndPos;
+        reader.pos = nextFramePos;
     }
 };
 // https://id3.org/id3v2.3.0
@@ -157777,6 +157838,7 @@ class Id3V2Reader {
         this.header = header;
         this.bytes = bytes;
         this.pos = 0;
+        this.ownsBytes = false;
         this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     }
     frameHeaderSize() {
@@ -157798,10 +157860,17 @@ class Id3V2Reader {
         this.view = new DataView(this.bytes.buffer);
     }
     ununsynchronizeRegion(start, end) {
-        const newBytes = [];
+        if (!this.ownsBytes) {
+            // The bytes might belong to the file, which we must not modify
+            this.bytes = this.bytes.slice();
+            this.view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .toDataView */ .Zc)(this.bytes);
+            this.ownsBytes = true;
+        }
+        // Done in place rather than rebuilding the entire tag, which keeps it cheap for tags with tons of frames
+        let writePos = start;
         for (let i = start; i < end; i++) {
             const value1 = this.bytes[i];
-            newBytes.push(value1);
+            this.bytes[writePos++] = value1;
             if (value1 === 0xff && i !== end - 1) {
                 const value2 = this.bytes[i + 1];
                 if (value2 === 0x00) {
@@ -157809,13 +157878,7 @@ class Id3V2Reader {
                 }
             }
         }
-        const before = this.bytes.subarray(0, start);
-        const after = this.bytes.subarray(end);
-        this.bytes = new Uint8Array(before.length + newBytes.length + after.length);
-        this.bytes.set(before, 0);
-        this.bytes.set(newBytes, before.length);
-        this.bytes.set(after, before.length + newBytes.length);
-        this.view = new DataView(this.bytes.buffer);
+        return writePos;
     }
     readBytes(length) {
         const slice = this.bytes.subarray(this.pos, this.pos + length);
@@ -158320,7 +158383,6 @@ class Id3V2Writer {
 /* harmony import */ var _reader_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(7735);
 /* harmony import */ var _flac_flac_demuxer_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(4582);
 /* harmony import */ var _mpeg_ts_mpeg_ts_demuxer_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(7540);
-/* harmony import */ var _mpeg_ts_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(2490);
 /* harmony import */ var _hls_hls_demuxer_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(2261);
 /* harmony import */ var _hls_hls_misc_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(3622);
 /* harmony import */ var _source_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(4709);
@@ -158399,6 +158461,9 @@ class IsobmffInputFormat extends InputFormat {
     /** @internal */
     _createDemuxer(input) {
         return new _isobmff_isobmff_demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .IsobmffDemuxer */ .T(input);
+    }
+    get supportsTimestampedMediaData() {
+        return true;
     }
 }
 /**
@@ -158526,6 +158591,9 @@ class MatroskaInputFormat extends InputFormat {
             const dataStartPos = dataSlice.filePos;
             if (size === undefined)
                 return false;
+            if (dataStartPos + size > startPos + dataSize || (size > 8 && id !== _matroska_ebml_js__WEBPACK_IMPORTED_MODULE_1__/* .EBMLId */ .Cl.DocType)) {
+                return false; // The element overruns the header or is an integer of impossible size
+            }
             switch (id) {
                 case _matroska_ebml_js__WEBPACK_IMPORTED_MODULE_1__/* .EBMLId */ .Cl.EBMLVersion:
                     {
@@ -158581,6 +158649,9 @@ class MatroskaInputFormat extends InputFormat {
     }
     get mimeType() {
         return 'video/x-matroska';
+    }
+    get supportsTimestampedMediaData() {
+        return true;
     }
 }
 /**
@@ -158647,7 +158718,7 @@ class Mp3InputFormat extends InputFormat {
         currentPos = firstResult.startPos + firstResult.header.totalSize;
         // Fine, we found one frame header, but we're still not entirely sure this is MP3. Let's check if we can find
         // another header right after it:
-        const secondResult = await (0,_mp3_mp3_reader_js__WEBPACK_IMPORTED_MODULE_6__/* .readNextMp3FrameHeader */ .W)(input._reader, currentPos, currentPos + _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .MP3_FRAME_HEADER_SIZE */ .D_);
+        const secondResult = await (0,_mp3_mp3_reader_js__WEBPACK_IMPORTED_MODULE_6__/* .readNextMp3FrameHeader */ .W)(input._reader, currentPos, currentPos + (/* inlined export .MP3_FRAME_HEADER_SIZE */4));
         if (!secondResult) {
             return false;
         }
@@ -158668,6 +158739,9 @@ class Mp3InputFormat extends InputFormat {
     }
     get mimeType() {
         return 'audio/mpeg';
+    }
+    get supportsTimestampedMediaData() {
+        return false;
     }
 }
 /**
@@ -158704,6 +158778,9 @@ class WaveInputFormat extends InputFormat {
     get mimeType() {
         return 'audio/wav';
     }
+    get supportsTimestampedMediaData() {
+        return false;
+    }
 }
 /**
  * Ogg file format.
@@ -158732,6 +158809,9 @@ class OggInputFormat extends InputFormat {
     }
     get mimeType() {
         return 'application/ogg';
+    }
+    get supportsTimestampedMediaData() {
+        return true;
     }
 }
 /**
@@ -158771,6 +158851,9 @@ class FlacInputFormat extends InputFormat {
     }
     get mimeType() {
         return 'audio/flac';
+    }
+    get supportsTimestampedMediaData() {
+        return false;
     }
     /** @internal */
     _createDemuxer(input) {
@@ -158834,6 +158917,9 @@ class AdtsInputFormat extends InputFormat {
     get mimeType() {
         return 'audio/aac';
     }
+    get supportsTimestampedMediaData() {
+        return false;
+    }
 }
 /**
  * MPEG Transport Stream (MPEG-TS) file format.
@@ -158850,22 +158936,22 @@ class AdtsInputFormat extends InputFormat {
 class MpegTsInputFormat extends InputFormat {
     /** @internal */
     async _canReadInput(input) {
-        const lengthToCheck = _mpeg_ts_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_14__/* .TS_PACKET_SIZE */ .ZT + 16 + 1;
+        const lengthToCheck = (/* inlined export .TS_PACKET_SIZE */188) + 16 + 1;
         let slice = input._reader.requestSlice(0, lengthToCheck);
         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_18__/* .isThenable */ .Qg)(slice))
             slice = await slice;
         if (!slice)
             return false;
         const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_11__/* .readBytes */ .io)(slice, lengthToCheck);
-        if (bytes[0] === 0x47 && bytes[_mpeg_ts_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_14__/* .TS_PACKET_SIZE */ .ZT] === 0x47) {
+        if (bytes[0] === 0x47 && bytes[(/* inlined export .TS_PACKET_SIZE */188)] === 0x47) {
             // Regular MPEG-TS
             return true;
         }
-        else if (bytes[0] === 0x47 && bytes[_mpeg_ts_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_14__/* .TS_PACKET_SIZE */ .ZT + 16] === 0x47) {
+        else if (bytes[0] === 0x47 && bytes[(/* inlined export .TS_PACKET_SIZE */188) + 16] === 0x47) {
             // MPEG-TS with Forward Error Correction
             return true;
         }
-        else if (bytes[4] === 0x47 && bytes[4 + _mpeg_ts_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_14__/* .TS_PACKET_SIZE */ .ZT + 4] === 0x47) {
+        else if (bytes[4] === 0x47 && bytes[4 + (/* inlined export .TS_PACKET_SIZE */188) + 4] === 0x47) {
             // MPEG-2-TS (DVHS)
             return true;
         }
@@ -158880,6 +158966,9 @@ class MpegTsInputFormat extends InputFormat {
     }
     get mimeType() {
         return 'video/MP2T';
+    }
+    get supportsTimestampedMediaData() {
+        return true;
     }
 }
 /**
@@ -158917,6 +159006,9 @@ class HlsInputFormat extends InputFormat {
     }
     get mimeType() {
         return _hls_hls_misc_js__WEBPACK_IMPORTED_MODULE_16__/* .HLS_MIME_TYPE */ .is;
+    }
+    get supportsTimestampedMediaData() {
+        return true;
     }
 }
 /**
@@ -158998,7 +159090,7 @@ const ALL_FORMATS = [HLS, MP4, QTFF, MATROSKA, WEBM, WAVE, OGG, FLAC, MP3, ADTS,
  * @group Input formats
  * @public
  */
-const HLS_FORMATS = [HLS, MP4, QTFF, MP3, ADTS, MPEG_TS];
+const HLS_FORMATS = (/* unused pure expression or super */ null && ([HLS, MP4, QTFF, MP3, ADTS, MPEG_TS]));
 const validateInputFormatOptions = (options, prefix) => {
     if (!options || typeof options !== 'object') {
         throw new TypeError(`${prefix}, when provided, must be an object.`);
@@ -159561,7 +159653,8 @@ const readVarInt = (slice) => {
     return value;
 };
 const readUnsignedInt = (slice, width) => {
-    if (width < 1 || width > 8) {
+    // Zero width is valid and means zero
+    if (width > 8) {
         throw new Error('Bad unsigned int size ' + width);
     }
     let value = 0;
@@ -159573,7 +159666,7 @@ const readUnsignedInt = (slice, width) => {
     return value;
 };
 const readUnsignedBigInt = (slice, width) => {
-    if (width < 1) {
+    if (width < 1 || width > 8) {
         throw new Error('Bad unsigned int size ' + width);
     }
     let value = 0n;
@@ -159642,11 +159735,11 @@ const readElementHeader = (slice) => {
 const readAsciiString = (slice, length) => {
     const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_1__/* .readBytes */ .io)(slice, length);
     // Actual string length might be shorter due to null terminators
-    let strLength = 0;
-    while (strLength < length && bytes[strLength] !== 0) {
-        strLength += 1;
+    let str = '';
+    for (let i = 0; i < length && bytes[i] !== 0; i++) {
+        str += String.fromCharCode(bytes[i]);
     }
-    return String.fromCharCode(...bytes.subarray(0, strLength));
+    return str;
 };
 const readUnicodeString = (slice, length) => {
     const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_1__/* .readBytes */ .io)(slice, length);
@@ -159697,11 +159790,12 @@ const resync = async (reader, startPos, ids, until) => {
         let slice = reader.requestSliceRange(currentPos, 0, Math.min(CHUNK_SIZE, until - currentPos));
         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .isThenable */ .Qg)(slice))
             slice = await slice;
-        if (!slice)
+        if (!slice || slice.length === 0)
             break;
-        if (slice.length < MAX_VAR_INT_SIZE)
-            break;
-        for (let i = 0; i < slice.length - MAX_VAR_INT_SIZE; i++) {
+        // The last few positions are left for the next chunk so their IDs can be read in full. Close to the end, there
+        // is no next chunk to speak of, so we must still make progress.
+        const positionsToCheck = Math.max(slice.length - MAX_VAR_INT_SIZE, 1);
+        for (let i = 0; i < positionsToCheck; i++) {
             slice.filePos = currentPos;
             const elementId = readElementId(slice);
             if (elementId !== null && idsSet.has(elementId)) {
@@ -159912,17 +160006,27 @@ class EncodedPacketSink {
         if (!options.verifyKeyPackets) {
             return this._track._backing.getKeyPacket(timestamp, options);
         }
-        const packet = await this._track._backing.getKeyPacket(timestamp, options);
-        if (!packet) {
-            return packet;
+        let packet = await this._track._backing.getKeyPacket(timestamp, options);
+        while (packet) {
+            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(packet.type === 'key');
+            const determinedType = await this._track.determinePacketType(packet);
+            if (determinedType !== 'delta') {
+                return packet;
+            }
+            // Try the previous key packet instead (in hopes that it's actually a key packet)
+            let step = 1 / await this._track.getTimeResolution();
+            let previousPacket;
+            while (true) {
+                previousPacket = await this._track._backing.getKeyPacket(packet.timestamp - step, options);
+                if (!previousPacket || previousPacket.timestamp < packet.timestamp) {
+                    break;
+                }
+                // Huge timestamps, the step wasn't enough to move us, try again
+                step *= 2;
+            }
+            packet = previousPacket;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(packet.type === 'key');
-        const determinedType = await this._track.determinePacketType(packet);
-        if (determinedType === 'delta') {
-            // Try returning the previous key packet (in hopes that it's actually a key packet)
-            return this.getKeyPacket(packet.timestamp - 1 / await this._track.getTimeResolution(), options);
-        }
-        return packet;
+        return null;
     }
     /**
      * Retrieves the key packet following the given packet (in decode order), or null if the given packet is the last
@@ -159941,17 +160045,17 @@ class EncodedPacketSink {
         if (!options.verifyKeyPackets) {
             return this._track._backing.getNextKeyPacket(packet, options);
         }
-        const nextPacket = await this._track._backing.getNextKeyPacket(packet, options);
-        if (!nextPacket) {
-            return nextPacket;
+        let nextPacket = await this._track._backing.getNextKeyPacket(packet, options);
+        while (nextPacket) {
+            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(nextPacket.type === 'key');
+            const determinedType = await this._track.determinePacketType(nextPacket);
+            if (determinedType !== 'delta') {
+                return nextPacket;
+            }
+            // Try the next key packet instead (in hopes that it's actually a key packet)
+            nextPacket = await this._track._backing.getNextKeyPacket(nextPacket, options);
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(nextPacket.type === 'key');
-        const determinedType = await this._track.determinePacketType(nextPacket);
-        if (determinedType === 'delta') {
-            // Try returning the next key packet (in hopes that it's actually a key packet)
-            return this.getNextKeyPacket(nextPacket, options);
-        }
-        return nextPacket;
+        return null;
     }
     /**
      * Creates an async iterator that yields the packets in this track in decode order. To enable fast iteration, this
@@ -160241,7 +160345,7 @@ class BaseMediaSampleSink {
     }
     /** @internal */
     mediaSamplesAtTimestamps(timestamps, options) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .validateAnyIterable */ .D5)(timestamps);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .validateAnyIterable */ .D5)(timestamps);
         const timestampIterator = (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .toAsyncIterator */ .i1)(timestamps);
         const timestampsOfInterest = [];
         const sampleQueue = [];
@@ -160318,7 +160422,9 @@ class BaseMediaSampleSink {
                         break;
                     }
                     const nextPacket = await packetSink.getNextPacket(currentPacket, retrievalOptions);
-                    (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(nextPacket);
+                    if (!nextPacket) {
+                        throw new Error('Internal error: couldn\'t get next packet when one was expected.');
+                    }
                     decoder.decode(nextPacket);
                     currentPacket = nextPacket;
                 }
@@ -160784,7 +160890,7 @@ class VideoDecoderWrapper extends DecoderWrapper {
                 }
                 this.sampleQueue.length = 0;
             }
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .insertSorted */ .h8)(this.sampleQueue, sample, x => x.timestamp);
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .insertSorted */ .h8)(this.sampleQueue, sample, x => x.timestamp);
         }
         else {
             // Assign it the next earliest timestamp from the input. We do this because browsers, by spec, are
@@ -160833,11 +160939,11 @@ class VideoDecoderWrapper extends DecoderWrapper {
             }
         }
         catch (error) {
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .removeItem */ .Ai)(this.finalSamples, result);
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .removeItem */ .Ai)(this.finalSamples, result);
             this.onError(error);
         }
         finally {
-            (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .removeItem */ .Ai)(this.mergeAlphaPromises, resolver.promise);
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .removeItem */ .Ai)(this.mergeAlphaPromises, resolver.promise);
             resolver.resolve();
         }
     }
@@ -161741,7 +161847,8 @@ class PcmAudioDecoderWrapper extends DecoderWrapper {
     }
     decode(packet) {
         const inputView = (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .toDataView */ .Zc)(packet.data);
-        const numberOfFrames = packet.byteLength / this.decoderConfig.numberOfChannels / this.inputSampleSize;
+        // A trailing partial frame (only in malformed files) gets dropped
+        const numberOfFrames = Math.floor(packet.byteLength / this.decoderConfig.numberOfChannels / this.inputSampleSize);
         const outputBufferSize = numberOfFrames * this.decoderConfig.numberOfChannels * this.outputSampleSize;
         const outputBuffer = new ArrayBuffer(outputBufferSize);
         const outputView = new DataView(outputBuffer);
@@ -161991,7 +162098,7 @@ class AudioResampler {
      * Sets up the channel mixer to handle up/downmixing in the case where input and output channel counts don't match.
      */
     doChannelMixerSetup() {
-        (0,misc/* assert */.vA)(this.sourceNumberOfChannels !== null);
+        ;(0,misc/* assert */.vA)(this.sourceNumberOfChannels !== null);
         const sourceNum = this.sourceNumberOfChannels;
         const targetNum = this.targetNumberOfChannels;
         // Logic taken from
@@ -162131,7 +162238,7 @@ class AudioResampler {
             this.tempSourceBuffer = new Float32Array(this.sourceSampleRate * this.sourceNumberOfChannels);
             this.doChannelMixerSetup();
         }
-        (0,misc/* assert */.vA)(this.startTime !== null);
+        ;(0,misc/* assert */.vA)(this.startTime !== null);
         const requiredSamples = audioSample.numberOfFrames * audioSample.numberOfChannels;
         this.ensureTempBufferSize(requiredSamples);
         // Copy the audio data to the temp buffer
@@ -162190,7 +162297,7 @@ class AudioResampler {
         if (this.maxWrittenFrame === null) {
             return; // Nothing to finalize
         }
-        (0,misc/* assert */.vA)(this.startTime !== null);
+        ;(0,misc/* assert */.vA)(this.startTime !== null);
         const samplesWritten = Math.min(this.maxWrittenFrame + 1, this.bufferSizeInFrames)
             * this.targetNumberOfChannels;
         const outputData = new Float32Array(samplesWritten);
@@ -162668,7 +162775,7 @@ class VideoEncoderWrapper {
                         await this.ensureEncoderPromise;
                     }
                 }
-                (0,misc/* assert */.vA)(this.encoderInitialized);
+                ;(0,misc/* assert */.vA)(this.encoderInitialized);
                 if (this.closed) {
                     break;
                 }
@@ -162924,7 +163031,7 @@ class VideoEncoderWrapper {
                 }
                 this.createWebCodecsEncoders();
             }
-            (0,misc/* assert */.vA)(this.source._connectedTrack);
+            ;(0,misc/* assert */.vA)(this.source._connectedTrack);
             this.muxer = this.source._connectedTrack.output._muxer;
             this.encoderInitialized = true;
         })();
@@ -163113,7 +163220,7 @@ class VideoEncoderWrapper {
     // https://github.com/Vanilagy/mediabunny/issues/531), closing them and reporting a QuotaExceededError. Since a
     // reclaimed encoder was idle, no frames are lost, so we transparently replace the encoders with fresh ones.
     recreateWebCodecsEncoders() {
-        (0,misc/* assert */.vA)(this.encoder);
+        ;(0,misc/* assert */.vA)(this.encoder);
         if (this.encoder.state !== 'closed') {
             this.encoder.close();
         }
@@ -163486,7 +163593,7 @@ class CanvasSource extends VideoSource {
             && !(typeof OffscreenCanvas !== 'undefined' && canvas instanceof OffscreenCanvas)) {
             throw new TypeError('canvas must be an HTMLCanvasElement or OffscreenCanvas.');
         }
-        (0,encode/* validateVideoEncodingConfig */.bf)(encodingConfig);
+        ;(0,encode/* validateVideoEncodingConfig */.bf)(encodingConfig);
         super(encodingConfig.codec);
         this._encoder = new VideoEncoderWrapper(this, encodingConfig);
         this._canvas = canvas;
@@ -163543,7 +163650,7 @@ class MediaStreamVideoTrackSource extends VideoSource {
         if (!(track instanceof MediaStreamTrack) || track.kind !== 'video') {
             throw new TypeError('track must be a video MediaStreamTrack.');
         }
-        (0,encode/* validateVideoEncodingConfig */.bf)(encodingConfig);
+        ;(0,encode/* validateVideoEncodingConfig */.bf)(encodingConfig);
         if (typeof options !== 'object' || !options) {
             throw new TypeError('options must be an object.');
         }
@@ -163604,7 +163711,7 @@ class MediaStreamVideoTrackSource extends VideoSource {
             if (!this._lastVideoFrame) {
                 return;
             }
-            (0,misc/* assert */.vA)(lastFrameTime !== null);
+            ;(0,misc/* assert */.vA)(lastFrameTime !== null);
             (0,misc/* assert */.vA)(firstVideoFrameTimestamp !== null);
             const now = performance.now();
             // Add as many frames as warranted by the elapsed time.
@@ -164035,7 +164142,7 @@ class AudioEncoderWrapper {
                     await this.ensureEncoderPromise;
                 }
             }
-            (0,misc/* assert */.vA)(this.encoderInitialized);
+            ;(0,misc/* assert */.vA)(this.encoderInitialized);
             if (this.closed) {
                 return;
             }
@@ -164107,7 +164214,7 @@ class AudioEncoderWrapper {
         }
     }
     async doPcmEncoding(audioSample, shouldClose) {
-        (0,misc/* assert */.vA)(this.outputSampleSize);
+        ;(0,misc/* assert */.vA)(this.outputSampleSize);
         (0,misc/* assert */.vA)(this.writeOutputValue);
         // Need to extract data from the audio data before we close it
         const { numberOfChannels, numberOfFrames, sampleRate, timestamp } = audioSample;
@@ -164273,7 +164380,7 @@ class AudioEncoderWrapper {
                 });
                 this.encoder.configure(encoderConfig);
             }
-            (0,misc/* assert */.vA)(this.source._connectedTrack);
+            ;(0,misc/* assert */.vA)(this.source._connectedTrack);
             this.muxer = this.source._connectedTrack.output._muxer;
             this.encoderInitialized = true;
         })();
@@ -164442,7 +164549,7 @@ class AudioSampleSource extends AudioSource {
      * {@link AudioEncodingConfig}.
      */
     constructor(encodingConfig) {
-        (0,encode/* validateAudioEncodingConfig */.Kk)(encodingConfig);
+        ;(0,encode/* validateAudioEncodingConfig */.Kk)(encodingConfig);
         super(encodingConfig.codec);
         this._encoder = new AudioEncoderWrapper(this, encodingConfig);
     }
@@ -164475,7 +164582,7 @@ class AudioBufferSource extends AudioSource {
      * {@link AudioEncodingConfig} and {@link AudioBufferSourceOptions}.
      */
     constructor(encodingConfig, options = {}) {
-        (0,encode/* validateAudioEncodingConfig */.Kk)(encodingConfig);
+        ;(0,encode/* validateAudioEncodingConfig */.Kk)(encodingConfig);
         if (typeof options !== 'object' || !options) {
             throw new TypeError('options must be an object.');
         }
@@ -164536,7 +164643,7 @@ class MediaStreamAudioTrackSource extends AudioSource {
         if (!(track instanceof MediaStreamTrack) || track.kind !== 'audio') {
             throw new TypeError('track must be an audio MediaStreamTrack.');
         }
-        (0,encode/* validateAudioEncodingConfig */.Kk)(encodingConfig);
+        ;(0,encode/* validateAudioEncodingConfig */.Kk)(encodingConfig);
         if (typeof options !== 'object' || !options) {
             throw new TypeError('options must be an object.');
         }
@@ -164795,7 +164902,7 @@ const mediaStreamTrackProcessorIsSupportedInWorker = async () => {
         initMediaStreamTrackProcessorWorker();
     }
     return new Promise((resolve) => {
-        (0,misc/* assert */.vA)(mediaStreamTrackProcessorWorker);
+        ;(0,misc/* assert */.vA)(mediaStreamTrackProcessorWorker);
         const listener = (event) => {
             const message = event.data;
             if (message.type === 'support') {
@@ -164902,11 +165009,7 @@ class TextSubtitleSource extends SubtitleSource {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   VD: () => (/* binding */ validateMetadataTags),
 /* harmony export */   VF: () => (/* binding */ AttachedFile),
-/* harmony export */   Ze: () => (/* binding */ validateTrackDisposition),
-/* harmony export */   cc: () => (/* binding */ metadataTagsAreEmpty),
-/* harmony export */   gM: () => (/* binding */ DEFAULT_TRACK_DISPOSITION),
 /* harmony export */   sF: () => (/* binding */ RichImageData)
 /* harmony export */ });
 /* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3912);
@@ -165116,6 +165219,13 @@ const validateTrackDisposition = (disposition) => {
         throw new TypeError('disposition.visuallyImpaired must be a boolean.');
     }
 };
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "VD", 0, /* binding */ validateMetadataTags,
+/* harmony export */   "Ze", 0, /* binding */ validateTrackDisposition,
+/* harmony export */   "cc", 0, /* binding */ metadataTagsAreEmpty,
+/* harmony export */   "gM", 0, /* binding */ DEFAULT_TRACK_DISPOSITION
+/* harmony export */ ]);
 
 
 /***/ },
@@ -165351,7 +165461,8 @@ const readExpGolomb = (bitstream) => {
     if (leadingZeroBits >= 32) {
         throw new Error('Invalid exponential-Golomb code.');
     }
-    const result = (1 << leadingZeroBits) - 1 + bitstream.readBits(leadingZeroBits);
+    // Not using bit shifts here, since they'd overflow into negative numbers for 31 leading zeros
+    const result = 2 ** leadingZeroBits - 1 + bitstream.readBits(leadingZeroBits);
     return result;
 };
 const writeExpGolomb = (bitstream, value) => {
@@ -165364,9 +165475,10 @@ const writeExpGolomb = (bitstream, value) => {
 /** Reads a signed exponential-Golomb universal code from a Bitstream. */
 const readSignedExpGolomb = (bitstream) => {
     const codeNum = readExpGolomb(bitstream);
-    return ((codeNum & 1) === 0)
-        ? -(codeNum >> 1)
-        : ((codeNum + 1) >> 1);
+    // Division instead of bit shifts, since codeNum may exceed the 32-bit signed range
+    return codeNum % 2 === 0
+        ? -(codeNum / 2)
+        : (codeNum + 1) / 2;
 };
 const writeBits = (bytes, start, end, value) => {
     for (let i = start; i < end; i++) {
@@ -166117,7 +166229,13 @@ const imageMimeTypeToExtension = (mimeType) => {
     }
 };
 const base64ToBytes = (base64) => {
-    const decoded = atob(base64);
+    let decoded;
+    try {
+        decoded = atob(base64);
+    }
+    catch {
+        throw new Error('Invalid base64 string.');
+    }
     const bytes = new Uint8Array(decoded.length);
     for (let i = 0; i < decoded.length; i++) {
         bytes[i] = decoded.charCodeAt(i);
@@ -166220,11 +166338,15 @@ const getQueryParameter = (path, name) => {
     for (const parameter of query.split('&')) {
         const equalsIndex = parameter.indexOf('=');
         const encodedName = equalsIndex === -1 ? parameter : parameter.slice(0, equalsIndex);
-        if (decodeURIComponent(encodedName) !== name) {
-            continue;
-        }
         const encodedValue = equalsIndex === -1 ? '' : parameter.slice(equalsIndex + 1);
-        return decodeURIComponent(encodedValue);
+        try {
+            if (decodeURIComponent(encodedName) === name) {
+                return decodeURIComponent(encodedValue);
+            }
+        }
+        catch {
+            // Malformed percent-encoding, so let's not treat this as the parameter we're looking for
+        }
     }
     return null;
 };
@@ -166551,6 +166673,101 @@ const isRecordStringString = (value) => {
 
 /***/ },
 
+/***/ 9730
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var _codec_data_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6297);
+/* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3912);
+/*!
+ * Copyright (c) 2026-present, Vanilagy and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
+const OGGS = 0x5367674f; // 'OggS'
+const OGG_CRC_POLYNOMIAL = 0x04c11db7;
+const OGG_CRC_TABLE = new Uint32Array(256);
+for (let n = 0; n < 256; n++) {
+    let crc = n << 24;
+    for (let k = 0; k < 8; k++) {
+        crc = (crc & 0x80000000)
+            ? ((crc << 1) ^ OGG_CRC_POLYNOMIAL)
+            : (crc << 1);
+    }
+    OGG_CRC_TABLE[n] = (crc >>> 0) & 0xffffffff;
+}
+const computeOggPageCrc = (bytes) => {
+    const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .toDataView */ .Zc)(bytes);
+    const originalChecksum = view.getUint32(22, true);
+    view.setUint32(22, 0, true); // Zero out checksum field
+    let crc = 0;
+    for (let i = 0; i < bytes.length; i++) {
+        const byte = bytes[i];
+        crc = ((crc << 8) ^ OGG_CRC_TABLE[(crc >>> 24) ^ byte]) >>> 0;
+    }
+    view.setUint32(22, originalChecksum, true); // Restore checksum field
+    return crc;
+};
+const extractSampleMetadata = (data, codecInfo, vorbisLastBlocksize) => {
+    let durationInSamples = 0;
+    let currentBlocksize = null;
+    if (data.length > 0) {
+        // To know sample duration, we'll need to peak inside the packet
+        if (codecInfo.codec === 'vorbis') {
+            (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(codecInfo.vorbisInfo);
+            const vorbisModeCount = codecInfo.vorbisInfo.modeBlockflags.length;
+            const bitCount = (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .ilog */ .al)(vorbisModeCount - 1);
+            const modeMask = ((1 << bitCount) - 1) << 1;
+            const modeNumber = (data[0] & modeMask) >> 1;
+            if (modeNumber >= codecInfo.vorbisInfo.modeBlockflags.length) {
+                throw new Error('Invalid mode number.');
+            }
+            // In Vorbis, packet duration also depends on the blocksize of the previous packet
+            let prevBlocksize = vorbisLastBlocksize;
+            const blockflag = codecInfo.vorbisInfo.modeBlockflags[modeNumber];
+            currentBlocksize = codecInfo.vorbisInfo.blocksizes[blockflag];
+            if (blockflag === 1) {
+                const prevMask = (modeMask | 0x1) + 1;
+                const flag = data[0] & prevMask ? 1 : 0;
+                prevBlocksize = codecInfo.vorbisInfo.blocksizes[flag];
+            }
+            durationInSamples = prevBlocksize !== null
+                ? (prevBlocksize + currentBlocksize) >> 2
+                : 0; // The first sample outputs no audio data and therefore has a duration of 0
+        }
+        else if (codecInfo.codec === 'opus') {
+            const toc = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_0__/* .parseOpusTocByte */ .ls)(data);
+            durationInSamples = toc.durationInSamples;
+        }
+    }
+    return {
+        durationInSamples,
+        vorbisBlockSize: currentBlocksize,
+    };
+};
+const buildOggMimeType = (info) => {
+    let string = 'audio/ogg';
+    if (info.codecStrings) {
+        const uniqueCodecMimeTypes = [...new Set(info.codecStrings)];
+        string += `; codecs="${uniqueCodecMimeTypes.join(', ')}"`;
+    }
+    return string;
+};
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "Ob", 0, /* binding */ buildOggMimeType,
+/* harmony export */   "Zk", 0, /* binding */ OGGS,
+/* harmony export */   "_S", 0, /* binding */ computeOggPageCrc,
+/* harmony export */   "nL", 0, /* binding */ extractSampleMetadata
+/* harmony export */ ]);
+
+
+/***/ },
+
 /***/ 2697
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
@@ -166774,7 +166991,7 @@ class FlacMuxer extends Muxer {
         release();
     }
     applyDecoderConfig(decoderConfig) {
-        (0,misc/* assert */.vA)(decoderConfig.description);
+        ;(0,misc/* assert */.vA)(decoderConfig.description);
         this.sampleRate = decoderConfig.sampleRate;
         this.channels = decoderConfig.numberOfChannels;
         const descriptionBitstream = new shared_bitstream/* Bitstream */._((0,misc/* toUint8Array */.Fo)(decoderConfig.description));
@@ -166807,7 +167024,7 @@ class FlacMuxer extends Muxer {
         }
     }
     writeHeader({ bitsPerSample, minimumBlockSize, maximumBlockSize, minimumFrameSize, maximumFrameSize, sampleRate, channels, totalSamples, }) {
-        (0,misc/* assert */.vA)(this.writer.getPos() === 4);
+        ;(0,misc/* assert */.vA)(this.writer.getPos() === 4);
         const hasMetadata = !(0,metadata/* metadataTagsAreEmpty */.cc)(this.output._metadataTags);
         const headerBitstream = new shared_bitstream/* Bitstream */._(new Uint8Array(4));
         headerBitstream.writeBits(1, Number(!hasMetadata)); // isLastMetadata
@@ -166931,7 +167148,7 @@ class FlacMuxer extends Muxer {
             if (blockSizeOrUncommon === null) {
                 throw new Error('Invalid FLAC frame: Invalid block size.');
             }
-            (0,flac_misc/* readCodedNumber */.X7)(slice); // num
+            ;(0,flac_misc/* readCodedNumber */.X7)(slice); // num
             const blockSize = (0,flac_misc/* readBlockSize */.f6)(slice, blockSizeOrUncommon);
             if (!this.format._options.appendOnly) {
                 this.blockSizes.push(blockSize);
@@ -166989,7 +167206,7 @@ class FlacMuxer extends Muxer {
                 minimumFrameSize = 0;
                 maximumFrameSize = 0;
             }
-            (0,misc/* assert */.vA)(this.channels !== null);
+            ;(0,misc/* assert */.vA)(this.channels !== null);
             (0,misc/* assert */.vA)(this.bitsPerSample !== null);
             this.writer.seek(4);
             this.writeHeader({
@@ -167556,7 +167773,7 @@ const stsd = (trackData) => {
     else if (trackData.type === 'subtitle') {
         sampleDescription = subtitleSampleDescription(SUBTITLE_CODEC_TO_BOX_NAME[trackData.track.source._codec], trackData);
     }
-    (0,misc/* assert */.vA)(sampleDescription);
+    ;(0,misc/* assert */.vA)(sampleDescription);
     return fullBox('stsd', 0, 0, [
         u32(1), // Entry count
     ], [
@@ -168222,17 +168439,28 @@ const mfra = (trackDatas) => {
 /** Track Fragment Random Access Box: Provides pointers to sync samples within the file for random access. */
 const tfra = (trackData) => {
     const version = 1; // Using this version allows us to use 64-bit time and offset values
-    return fullBox('tfra', version, 0, [
-        u32(trackData.track.id), // Track ID
-        u32(0b111111), // This specifies that traf number, trun number and sample number are 32-bit ints
-        u32(trackData.finalizedChunks.length), // Number of entries
-        trackData.finalizedChunks.map(chunk => [
-            u64(intoTimescale(chunk.samples[0].timestamp, trackData.timescale)), // Time (in presentation time)
+    const entries = [];
+    for (const chunk of trackData.finalizedChunks) {
+        const sampleIndex = chunk.samples.findIndex(sample => sample.type === 'key');
+        if (sampleIndex === -1) {
+            // tfra must point to sync samples, so continue here. This should never happen in practice since all
+            // fragments begin with a sync sample for every track anyways.
+            continue;
+        }
+        const sample = chunk.samples[sampleIndex];
+        entries.push([
+            u64(intoTimescale(sample.timestamp, trackData.timescale)), // Time (in presentation time)
             u64(chunk.moofOffset), // moof offset
             u32(chunk.trafIndex + 1), // traf number
             u32(1), // trun number
-            u32(1), // Sample number
-        ]),
+            u32(sampleIndex + 1), // Sample number
+        ]);
+    }
+    return fullBox('tfra', version, 0, [
+        u32(trackData.track.id), // Track ID
+        u32(0b111111), // This specifies that traf number, trun number and sample number are 32-bit ints
+        u32(entries.length), // Number of entries
+        entries,
     ]);
 };
 /**
@@ -168943,7 +169171,7 @@ class IsobmffMuxer extends Muxer {
         if (existingTrackData) {
             return existingTrackData;
         }
-        (0,src_codec/* validateVideoChunkMetadata */.aF)(meta, track.source._codec);
+        ;(0,src_codec/* validateVideoChunkMetadata */.aF)(meta, track.source._codec);
         (0,misc/* assert */.vA)(meta);
         (0,misc/* assert */.vA)(meta.decoderConfig);
         const decoderConfig = { ...meta.decoderConfig };
@@ -169036,7 +169264,7 @@ class IsobmffMuxer extends Muxer {
         if (existingTrackData) {
             return existingTrackData;
         }
-        (0,src_codec/* validateAudioChunkMetadata */.P7)(meta, track.source._codec);
+        ;(0,src_codec/* validateAudioChunkMetadata */.P7)(meta, track.source._codec);
         (0,misc/* assert */.vA)(meta);
         (0,misc/* assert */.vA)(meta.decoderConfig);
         const decoderConfig = { ...meta.decoderConfig };
@@ -169116,7 +169344,7 @@ class IsobmffMuxer extends Muxer {
         if (existingTrackData) {
             return existingTrackData;
         }
-        (0,src_codec/* validateSubtitleMetadata */.GL)(meta);
+        ;(0,src_codec/* validateSubtitleMetadata */.GL)(meta);
         (0,misc/* assert */.vA)(meta);
         (0,misc/* assert */.vA)(meta.config);
         const newTrackData = {
@@ -169529,7 +169757,7 @@ class IsobmffMuxer extends Muxer {
                 trafIndex: null,
             };
         }
-        (0,misc/* assert */.vA)(trackData.currentChunk);
+        ;(0,misc/* assert */.vA)(trackData.currentChunk);
         trackData.currentChunk.samples.push(sample);
         if (this.isFragmented) {
             this.maxWrittenTimestamp = Math.max(this.maxWrittenTimestamp, sample.timestamp);
@@ -169538,7 +169766,7 @@ class IsobmffMuxer extends Muxer {
         }
     }
     async finalizeCurrentChunk(trackData) {
-        (0,misc/* assert */.vA)(!this.isFragmented);
+        ;(0,misc/* assert */.vA)(!this.isFragmented);
         (0,misc/* assert */.vA)(this.writer);
         if (!trackData.currentChunk)
             return;
@@ -169570,7 +169798,7 @@ class IsobmffMuxer extends Muxer {
         await this.writer.flush();
     }
     async interleaveSamples(isFinalCall = false) {
-        (0,misc/* assert */.vA)(this.isFragmented);
+        ;(0,misc/* assert */.vA)(this.isFragmented);
         if (!isFinalCall && !this.allTracksAreKnown()) {
             return; // We can't interleave yet as we don't yet know how many tracks we'll truly have
         }
@@ -169594,7 +169822,7 @@ class IsobmffMuxer extends Muxer {
         }
     }
     async finalizeFragment(flushWriter = !this.isCmaf) {
-        (0,misc/* assert */.vA)(this.isFragmented);
+        ;(0,misc/* assert */.vA)(this.isFragmented);
         if (!this.wroteFragmentedHeader) {
             this.wroteFragmentedHeader = true;
             const boxWriter = this.initBoxWriter ?? this.boxWriter;
@@ -169624,7 +169852,7 @@ class IsobmffMuxer extends Muxer {
                 this.writer.seek(this.segmentHeaderSize); // Make room for the header to be written later
             }
         }
-        (0,misc/* assert */.vA)(this.writer);
+        ;(0,misc/* assert */.vA)(this.writer);
         (0,misc/* assert */.vA)(this.boxWriter);
         // Not all tracks need to be present in every fragment
         const tracksInFragment = this.trackDatas.filter(x => x.currentChunk);
@@ -169675,7 +169903,7 @@ class IsobmffMuxer extends Muxer {
             const { data, start } = this.writer.stopTrackingWrites();
             this.formatOptions.onMoof(data, start, fragmentStartTimestamp);
         }
-        (0,misc/* assert */.vA)(this.writer.getPos() === mdatStartPos);
+        ;(0,misc/* assert */.vA)(this.writer.getPos() === mdatStartPos);
         if (this.formatOptions.onMdat) {
             this.writer.startTrackingWrites();
         }
@@ -169716,7 +169944,7 @@ class IsobmffMuxer extends Muxer {
         }
     }
     async createFastStartReserveMdat() {
-        (0,misc/* assert */.vA)(this.writer);
+        ;(0,misc/* assert */.vA)(this.writer);
         (0,misc/* assert */.vA)(this.boxWriter);
         this.ensureOneEnabledTrack();
         // We finally know all tracks, let's reserve space for the moov box
@@ -169741,7 +169969,7 @@ class IsobmffMuxer extends Muxer {
         }
     }
     computeSampleTableSizeUpperBound() {
-        (0,misc/* assert */.vA)(this.fastStart === 'reserve');
+        ;(0,misc/* assert */.vA)(this.fastStart === 'reserve');
         let upperBound = 0;
         for (const trackData of this.trackDatas) {
             const n = trackData.track.metadata.maximumPacketCount;
@@ -169804,7 +170032,7 @@ class IsobmffMuxer extends Muxer {
     }
     /** Internal function for external callers who want to full control fragment boundaries. */
     async forceFragmentFinalization() {
-        (0,misc/* assert */.vA)(this.isFragmented);
+        ;(0,misc/* assert */.vA)(this.isFragmented);
         const release = await this.mutex.acquire();
         try {
             for (const trackData of this.trackDatas) {
@@ -169879,7 +170107,7 @@ class IsobmffMuxer extends Muxer {
                 }
             }
         }
-        (0,misc/* assert */.vA)(this.writer);
+        ;(0,misc/* assert */.vA)(this.writer);
         (0,misc/* assert */.vA)(this.boxWriter);
         if (this.fastStart === 'in-memory') {
             this.mdat = mdat(false);
@@ -170608,7 +170836,7 @@ class MatroskaMuxer extends Muxer {
         this.cues = { id: ebml/* EBMLId */.Cl.Cues, data: [] };
     }
     get segmentDataOffset() {
-        (0,misc/* assert */.vA)(this.segment);
+        ;(0,misc/* assert */.vA)(this.segment);
         return this.ebmlWriter.dataOffsets.get(this.segment);
     }
     allTracksAreKnown() {
@@ -170647,7 +170875,7 @@ class MatroskaMuxer extends Muxer {
         if (existingTrackData) {
             return existingTrackData;
         }
-        (0,src_codec/* validateVideoChunkMetadata */.aF)(meta, track.source._codec);
+        ;(0,src_codec/* validateVideoChunkMetadata */.aF)(meta, track.source._codec);
         (0,misc/* assert */.vA)(meta);
         (0,misc/* assert */.vA)(meta.decoderConfig);
         (0,misc/* assert */.vA)(meta.decoderConfig.codedWidth !== undefined);
@@ -170702,7 +170930,7 @@ class MatroskaMuxer extends Muxer {
         if (existingTrackData) {
             return existingTrackData;
         }
-        (0,src_codec/* validateAudioChunkMetadata */.P7)(meta, track.source._codec);
+        ;(0,src_codec/* validateAudioChunkMetadata */.P7)(meta, track.source._codec);
         (0,misc/* assert */.vA)(meta);
         (0,misc/* assert */.vA)(meta.decoderConfig);
         const decoderConfig = { ...meta.decoderConfig };
@@ -170758,7 +170986,7 @@ class MatroskaMuxer extends Muxer {
         if (existingTrackData) {
             return existingTrackData;
         }
-        (0,src_codec/* validateSubtitleMetadata */.GL)(meta);
+        ;(0,src_codec/* validateSubtitleMetadata */.GL)(meta);
         (0,misc/* assert */.vA)(meta);
         (0,misc/* assert */.vA)(meta.config);
         const newTrackData = {
@@ -171065,7 +171293,7 @@ class MatroskaMuxer extends Muxer {
         this.trackDatasInCurrentCluster.clear();
     }
     finalizeCurrentCluster() {
-        (0,misc/* assert */.vA)(this.currentCluster);
+        ;(0,misc/* assert */.vA)(this.currentCluster);
         if (!this.format._options.appendOnly) {
             const clusterSize = this.writer.getPos() - this.ebmlWriter.dataOffsets.get(this.currentCluster);
             const endPos = this.writer.getPos();
@@ -171133,7 +171361,7 @@ class MatroskaMuxer extends Muxer {
         if (this.currentCluster) {
             this.finalizeCurrentCluster();
         }
-        (0,misc/* assert */.vA)(this.cues);
+        ;(0,misc/* assert */.vA)(this.cues);
         this.ebmlWriter.writeEBML(this.cues);
         if (!this.format._options.appendOnly) {
             // Write the Segment size
@@ -171542,7 +171770,7 @@ class OggMuxer extends Muxer {
         return newTrackData;
     }
     queueHeaderPackets(trackData, meta) {
-        (0,misc/* assert */.vA)(meta.decoderConfig);
+        ;(0,misc/* assert */.vA)(meta.decoderConfig);
         if (trackData.track.source._codec === 'vorbis') {
             (0,misc/* assert */.vA)(meta.decoderConfig.description);
             const bytes = (0,misc/* toUint8Array */.Fo)(meta.decoderConfig.description);
@@ -171770,6 +171998,10 @@ class OggMuxer extends Muxer {
                 dataStartOffset = dataOffset;
                 trackData.currentPageData.push(slice);
                 trackData.currentPageSize += slice.length;
+                if (segmentIsLastOfPacket) {
+                    // The packet ends on this page, so the page's granule position must include it
+                    trackData.currentGranulePosition = packetEndTimestampInSamples;
+                }
                 this.writePage(trackData, isFinalPacket && segmentIsLastOfPacket);
                 if (segmentIsLastOfPacket) {
                     return;
@@ -171896,7 +172128,7 @@ class MpegTsMuxer extends Muxer {
         this.trackDatas = [];
         this.tablesWritten = false;
         this.continuityCounters = new Map();
-        this.packetBuffer = new Uint8Array(mpeg_ts_misc/* TS_PACKET_SIZE */.ZT);
+        this.packetBuffer = new Uint8Array((/* inlined export .TS_PACKET_SIZE */188));
         this.packetView = (0,misc/* toDataView */.Zc)(this.packetBuffer);
         this.allTracksKnown = (0,misc/* promiseWithResolvers */.nJ)();
         this.videoTrackIndex = 0;
@@ -171912,14 +172144,14 @@ class MpegTsMuxer extends Muxer {
     }
     async getMimeType() {
         await this.allTracksKnown.promise;
-        return (0,mpeg_ts_misc/* buildMpegTsMimeType */.Vx)(this.trackDatas.map(x => x.codecString));
+        return (0,mpeg_ts_misc/* buildMpegTsMimeType */.V)(this.trackDatas.map(x => x.codecString));
     }
     getVideoTrackData(track, meta) {
         const existingTrackData = this.trackDatas.find(x => x.track === track);
         if (existingTrackData) {
             return existingTrackData;
         }
-        (0,src_codec/* validateVideoChunkMetadata */.aF)(meta, track.source._codec);
+        ;(0,src_codec/* validateVideoChunkMetadata */.aF)(meta, track.source._codec);
         (0,misc/* assert */.vA)(meta?.decoderConfig);
         const codec = track.source._codec;
         (0,misc/* assert */.vA)(codec === 'avc' || codec === 'hevc');
@@ -171956,7 +172188,7 @@ class MpegTsMuxer extends Muxer {
         if (existingTrackData) {
             return existingTrackData;
         }
-        (0,src_codec/* validateAudioChunkMetadata */.P7)(meta, track.source._codec);
+        ;(0,src_codec/* validateAudioChunkMetadata */.P7)(meta, track.source._codec);
         (0,misc/* assert */.vA)(meta?.decoderConfig);
         const codec = track.source._codec;
         (0,misc/* assert */.vA)(codec === 'aac' || codec === 'mp3' || codec === 'ac3' || codec === 'eac3' || codec === 'dts');
@@ -172185,7 +172417,7 @@ class MpegTsMuxer extends Muxer {
         if (trackData.inputIsAdts) {
             return packet.data;
         }
-        (0,misc/* assert */.vA)(trackData.adtsHeader);
+        ;(0,misc/* assert */.vA)(trackData.adtsHeader);
         (0,misc/* assert */.vA)(trackData.adtsHeaderBitstream);
         const header = trackData.adtsHeader;
         const frameLength = packet.data.byteLength + header.byteLength;
@@ -172253,7 +172485,7 @@ class MpegTsMuxer extends Muxer {
         }
     }
     writeTables() {
-        (0,misc/* assert */.vA)(!this.tablesWritten);
+        ;(0,misc/* assert */.vA)(!this.tablesWritten);
         this.writePsiSection(PAT_PID, PAT_SECTION);
         this.writePsiSection(PMT_PID, buildPmt(this.trackDatas));
         this.tablesWritten = true;
@@ -172300,8 +172532,8 @@ class MpegTsMuxer extends Muxer {
         pesView.setUint8(8, headerDataLength); // PES_header_data_length
         // This logic supports writing negative timestamps by simplying Euclid-modding them. It is then up to the
         // demuxer to interpret them as negative, if it wasnts to.
-        const unwrappedPts = Math.round(queuedPacket.presentationTimestamp * mpeg_ts_misc/* TIMESCALE */.cS);
-        const pts = (0,misc/* modEuclid */.pX)(unwrappedPts, mpeg_ts_misc/* TIMESTAMP_MODULUS */.Tx);
+        const unwrappedPts = Math.round(queuedPacket.presentationTimestamp * (/* inlined export .TIMESCALE */90000));
+        const pts = (0,misc/* modEuclid */.pX)(unwrappedPts, mpeg_ts_misc/* TIMESTAMP_MODULUS */.T);
         ptsDtsBitstream.pos = 0;
         ptsDtsBitstream.writeBits(4, includeDts ? 0b0011 : 0b0010); // marker
         ptsDtsBitstream.writeBits(3, Math.floor(pts / 2 ** 30)); // PTS[32:30]
@@ -172312,8 +172544,8 @@ class MpegTsMuxer extends Muxer {
         ptsDtsBitstream.writeBits(1, 1); // marker_bit
         if (includeDts) {
             (0,misc/* assert */.vA)(queuedPacket.decodeTimestamp !== null);
-            const unwrappedDts = Math.round(queuedPacket.decodeTimestamp * mpeg_ts_misc/* TIMESCALE */.cS);
-            const dts = (0,misc/* modEuclid */.pX)(unwrappedDts, mpeg_ts_misc/* TIMESTAMP_MODULUS */.Tx);
+            const unwrappedDts = Math.round(queuedPacket.decodeTimestamp * (/* inlined export .TIMESCALE */90000));
+            const dts = (0,misc/* modEuclid */.pX)(unwrappedDts, mpeg_ts_misc/* TIMESTAMP_MODULUS */.T);
             ptsDtsBitstream.writeBits(4, 0b0001);
             ptsDtsBitstream.writeBits(3, Math.floor(dts / 2 ** 30)); // DTS[32:30]
             ptsDtsBitstream.writeBits(1, 1); // marker_bit
@@ -172393,7 +172625,7 @@ class MpegTsMuxer extends Muxer {
         }
         this.packetBuffer.set(payload, offset);
         offset += payload.length;
-        if (offset < mpeg_ts_misc/* TS_PACKET_SIZE */.ZT) {
+        if (offset < (/* inlined export .TS_PACKET_SIZE */188)) {
             this.packetBuffer.fill(0xFF, offset); // stuffing_bytes
         }
         const startPos = this.writer.getPos();
@@ -173172,7 +173404,7 @@ class HlsMuxer extends Muxer {
             }
             // We must find a format. If no format is found, that means we incorrectly gated track creation and
             // assignment at an earlier step.
-            (0,misc/* assert */.vA)(candidate);
+            ;(0,misc/* assert */.vA)(candidate);
             return candidate;
         };
         const registerPlaylist = async (tracks) => {
@@ -173280,7 +173512,7 @@ class HlsMuxer extends Muxer {
         if (trackData) {
             return trackData;
         }
-        (0,src_codec/* validateVideoChunkMetadata */.aF)(meta, track.source._codec);
+        ;(0,src_codec/* validateVideoChunkMetadata */.aF)(meta, track.source._codec);
         (0,misc/* assert */.vA)(meta);
         (0,misc/* assert */.vA)(meta?.decoderConfig);
         const playlists = this.playlists.filter(x => x.tracks.includes(track));
@@ -173304,7 +173536,7 @@ class HlsMuxer extends Muxer {
         if (trackData) {
             return trackData;
         }
-        (0,src_codec/* validateAudioChunkMetadata */.P7)(meta, track.source._codec);
+        ;(0,src_codec/* validateAudioChunkMetadata */.P7)(meta, track.source._codec);
         (0,misc/* assert */.vA)(meta);
         (0,misc/* assert */.vA)(meta?.decoderConfig);
         const playlists = this.playlists.filter(x => x.tracks.includes(track));
@@ -173371,7 +173603,7 @@ class HlsMuxer extends Muxer {
         throw new Error('Unreachable.');
     }
     async advancePlaylist(playlist) {
-        (0,misc/* assert */.vA)(!playlist.done);
+        ;(0,misc/* assert */.vA)(!playlist.done);
         if (!this.allTracksAreKnown(playlist)) {
             return;
         }
@@ -173825,7 +174057,7 @@ class HlsMuxer extends Muxer {
         }
     }
     async onPlaylistDone(playlist) {
-        (0,misc/* assert */.vA)(!playlist.done);
+        ;(0,misc/* assert */.vA)(!playlist.done);
         playlist.done = true;
         if (playlist.singleFile) {
             if (playlist.singleFile.fragmentedIsobmffOutput) {
@@ -173901,7 +174133,7 @@ class HlsMuxer extends Muxer {
         playlist.averageBitrate = averageBitrate;
     }
     async writePlaylist(playlist) {
-        (0,misc/* assert */.vA)(this.output._target instanceof src_target/* PathedTarget */.oi);
+        ;(0,misc/* assert */.vA)(this.output._target instanceof src_target/* PathedTarget */.oi);
         const pathedTarget = this.output._target;
         this.updatePlaylistBitrates(playlist);
         let hasByteOffsets = false;
@@ -173965,7 +174197,7 @@ class HlsMuxer extends Muxer {
         await writer.finalize();
     }
     async writeMasterPlaylist() {
-        (0,misc/* assert */.vA)(this.output._target instanceof src_target/* PathedTarget */.oi);
+        ;(0,misc/* assert */.vA)(this.output._target instanceof src_target/* PathedTarget */.oi);
         const pathedTarget = this.output._target;
         let masterPlaylistText = '#EXTM3U\n';
         let firstVariantWritten = false;
@@ -173996,7 +174228,7 @@ class HlsMuxer extends Muxer {
                         maxRefAverageBitrate = Math.max(maxRefAverageBitrate, ref.playlist.averageBitrate ?? 0);
                     }
                 }
-                (0,misc/* assert */.vA)(decl.playlist.peakBitrate !== null);
+                ;(0,misc/* assert */.vA)(decl.playlist.peakBitrate !== null);
                 const totalPeakBitrate = decl.playlist.peakBitrate + peakDeclBitrate;
                 const totalAverageBitrate = (decl.playlist.averageBitrate ?? 0) + maxRefAverageBitrate;
                 if (!firstVariantWritten) {
@@ -174139,7 +174371,7 @@ class HlsMuxer extends Muxer {
         }
     }
     async tryWriteMasterPlaylist() {
-        (0,misc/* assert */.vA)(this.isLive);
+        ;(0,misc/* assert */.vA)(this.isLive);
         // The master playlist is written once all playlists have either produced at least one segment or are done
         for (const playlist of this.playlists) {
             if (playlist.writtenSegments.length === 0 && !playlist.done) {
@@ -175315,7 +175547,7 @@ class Output extends _misc_js__WEBPACK_IMPORTED_MODULE_0__/* .EventEmitter */ .b
     }
     /** @internal */
     _getTargetValidated(request) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._target instanceof _target_js__WEBPACK_IMPORTED_MODULE_4__/* .PathedTarget */ .oi);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._target instanceof _target_js__WEBPACK_IMPORTED_MODULE_4__/* .PathedTarget */ .oi);
         const result = this._target.getTarget(request);
         const handleResult = (result) => {
             if (!(result instanceof _target_js__WEBPACK_IMPORTED_MODULE_4__/* .Target */ .We)) {
@@ -175332,7 +175564,7 @@ class Output extends _misc_js__WEBPACK_IMPORTED_MODULE_0__/* .EventEmitter */ .b
     }
     /** @internal */
     async _getTarget(request) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._target instanceof _target_js__WEBPACK_IMPORTED_MODULE_4__/* .PathedTarget */ .oi);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._target instanceof _target_js__WEBPACK_IMPORTED_MODULE_4__/* .PathedTarget */ .oi);
         const target = await this._getTargetValidated(request);
         this._emit('target', { target, request, isRoot: request.isRoot });
         if (this.state === 'canceled') {
@@ -175350,7 +175582,7 @@ class Output extends _misc_js__WEBPACK_IMPORTED_MODULE_0__/* .EventEmitter */ .b
     }
     /** @internal */
     async _getInitTarget() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._initTarget !== null);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._initTarget !== null);
         if (this._initTarget instanceof _target_js__WEBPACK_IMPORTED_MODULE_4__/* .Target */ .We) {
             return this._initTarget;
         }
@@ -175495,7 +175727,7 @@ class Output extends _misc_js__WEBPACK_IMPORTED_MODULE_0__/* .EventEmitter */ .b
      * Can only be called before the output is started.
      */
     setMetadataTags(tags) {
-        (0,_metadata_js__WEBPACK_IMPORTED_MODULE_1__/* .validateMetadataTags */ .VD)(tags);
+        ;(0,_metadata_js__WEBPACK_IMPORTED_MODULE_1__/* .validateMetadataTags */ .VD)(tags);
         if (this.state !== 'pending') {
             throw new Error('Cannot set metadata tags after output has been started or canceled.');
         }
@@ -175726,12 +175958,6 @@ class Output extends _misc_js__WEBPACK_IMPORTED_MODULE_0__/* .EventEmitter */ .b
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   aw: () => (/* binding */ fromAlaw),
-/* harmony export */   qS: () => (/* binding */ fromUlaw),
-/* harmony export */   vX: () => (/* binding */ toUlaw),
-/* harmony export */   xq: () => (/* binding */ toAlaw)
-/* harmony export */ });
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
  *
@@ -175821,6 +176047,13 @@ const fromAlaw = (u8) => {
     return ((sign === 0) ? -decoded : decoded) << 3;
 };
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "aw", 0, /* binding */ fromAlaw,
+/* harmony export */   "qS", 0, /* binding */ fromUlaw,
+/* harmony export */   "vX", 0, /* binding */ toUlaw,
+/* harmony export */   "xq", 0, /* binding */ toAlaw
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -175830,12 +176063,7 @@ const fromAlaw = (u8) => {
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   B1: () => (/* binding */ AudioSample),
-/* harmony export */   Cd: () => (/* binding */ audioSampleToInterleavedFormat),
-/* harmony export */   Dw: () => (/* binding */ getBytesPerSample),
-/* harmony export */   U2: () => (/* binding */ VideoSample),
-/* harmony export */   kX: () => (/* binding */ toInterleavedAudioFormat),
-/* harmony export */   px: () => (/* binding */ clampCropRectangle),
-/* harmony export */   wS: () => (/* binding */ validateCropRectangle)
+/* harmony export */   U2: () => (/* binding */ VideoSample)
 /* harmony export */ });
 /* unused harmony exports VideoSampleResource, VIDEO_SAMPLE_PIXEL_FORMATS, registerVideoSampleTransformer, VideoSampleColorSpace, getPlaneConfigs, AudioSampleResource */
 /* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3912);
@@ -176333,7 +176561,7 @@ class VideoSample {
         if (this._closed) {
             throw new Error('VideoSample is closed.');
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._data !== null);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._data !== null);
         if (this._data instanceof VideoSampleResource) {
             return new VideoSample(this._data, {
                 timestamp: this.timestamp,
@@ -176447,7 +176675,7 @@ class VideoSample {
         if ((options.format ?? this.format) == null) {
             throw new Error('Cannot copy video sample data when format is null.');
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._data !== null);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._data !== null);
         if (isVideoFrame(this._data)) {
             return this._data.copyTo(destination, options);
         }
@@ -176620,7 +176848,7 @@ class VideoSample {
         if (this._closed) {
             throw new Error('VideoSample is closed.');
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._data !== null);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._data !== null);
         if (this._data instanceof VideoSampleResource) {
             if (this.format === null) {
                 throw new Error('Cannot convert a VideoSampleResource-backed VideoSample to VideoFrame if format is null.');
@@ -176949,7 +177177,7 @@ class VideoSample {
         if (this._closed) {
             throw new Error('VideoSample is closed.');
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._data !== null);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this._data !== null);
         if (this._data instanceof VideoSampleResource || this._data instanceof Uint8Array) {
             // Requires VideoFrame to be defined
             const videoFrame = this.toVideoFrame();
@@ -178341,6 +178569,14 @@ const audioSampleToInterleavedFormat = (sample, format) => {
     });
 };
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "Cd", 0, /* binding */ audioSampleToInterleavedFormat,
+/* harmony export */   "Dw", 0, /* binding */ getBytesPerSample,
+/* harmony export */   "kX", 0, /* binding */ toInterleavedAudioFormat,
+/* harmony export */   "px", 0, /* binding */ clampCropRectangle,
+/* harmony export */   "wS", 0, /* binding */ validateCropRectangle
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -178348,7 +178584,7 @@ const audioSampleToInterleavedFormat = (sample, format) => {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-var _node_js__WEBPACK_IMPORTED_MODULE_1___namespace_cache;
+let _node_js__WEBPACK_IMPORTED_MODULE_1___namespace_cache;
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   Fy: () => (/* binding */ SourceRef),
 /* harmony export */   QI: () => (/* binding */ PathedSource),
@@ -178782,7 +179018,7 @@ class BlobSource extends Source {
     }
     /** @internal */
     async _runWorker(worker) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(worker.strictTarget);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(worker.strictTarget);
         let reader = this._readers.get(worker);
         if (reader === undefined) {
             // https://github.com/Vanilagy/mediabunny/issues/184
@@ -179447,7 +179683,13 @@ class CustomSource extends Source {
                 if (!Number.isInteger(size) || size < 0) {
                     throw new TypeError('options.getSize must return or resolve to a non-negative integer.');
                 }
+                if (this._disposed) {
+                    throw new _input_js__WEBPACK_IMPORTED_MODULE_2__/* .InputDisposedError */ .QO();
+                }
                 this._orchestrator.fileSize = size;
+                if (end > size) {
+                    return null; // Now that we know the size, it turns out the read doesn't fit
+                }
                 return this._orchestrator.read(start, end, minReadPosition, maxReadPosition);
             });
         }
@@ -179456,6 +179698,9 @@ class CustomSource extends Source {
                 throw new TypeError('options.getSize must return or resolve to a non-negative integer.');
             }
             this._orchestrator.fileSize = result;
+            if (end > result) {
+                return null;
+            }
             return this._orchestrator.read(start, end, minReadPosition, maxReadPosition);
         }
     }
@@ -179615,7 +179860,7 @@ class ReadableStreamSource extends Source {
             };
         }
         let lastEnd = start;
-        const bytes = new Uint8Array(end - start);
+        const parts = [];
         if (cacheStartIndex !== -1) {
             // Walk over the cache to see if we can satisfy the request using multiple cache entries
             for (let i = cacheStartIndex; i < this._cache.length; i++) {
@@ -179630,17 +179875,16 @@ class ReadableStreamSource extends Source {
                 }
                 const cappedEnd = Math.min(end, cacheEntry.end);
                 if (cappedStart < cappedEnd) {
-                    bytes.set(cacheEntry.bytes.subarray(cappedStart - cacheEntry.start, cappedEnd - cacheEntry.start), cappedStart - start);
+                    parts.push({
+                        start: cappedStart,
+                        bytes: cacheEntry.bytes.subarray(cappedStart - cacheEntry.start, cappedEnd - cacheEntry.start),
+                    });
                     lastEnd = cappedEnd;
                 }
             }
         }
         if (lastEnd === end) {
-            return {
-                bytes,
-                view: (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .toDataView */ .Zc)(bytes),
-                offset: start,
-            };
+            return assembleSlice(start, end, parts);
         }
         // We need to pull more data
         if (this._currentIndex > lastEnd) {
@@ -179651,7 +179895,7 @@ class ReadableStreamSource extends Source {
         this._pendingSlices.push({
             start,
             end,
-            bytes,
+            parts,
             resolve,
             reject,
         });
@@ -179704,14 +179948,14 @@ class ReadableStreamSource extends Source {
                 const cappedStart = Math.max(startIndex, pendingSlice.start);
                 const cappedEnd = Math.min(endIndex, pendingSlice.end);
                 if (cappedStart < cappedEnd) {
-                    pendingSlice.bytes.set(value.subarray(cappedStart - startIndex, cappedEnd - startIndex), cappedStart - pendingSlice.start);
+                    pendingSlice.parts.push({
+                        start: cappedStart,
+                        bytes: value.subarray(cappedStart - startIndex, cappedEnd - startIndex),
+                    });
                     if (cappedEnd === pendingSlice.end) {
-                        // Pending slice fully filled
-                        pendingSlice.resolve({
-                            bytes: pendingSlice.bytes,
-                            view: (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .toDataView */ .Zc)(pendingSlice.bytes),
-                            offset: pendingSlice.start,
-                        });
+                        // Pending slice fully filled. Assembling only at the end protects us from attacks where huge
+                        // data ranges are requested, despite those never being fulfillable.
+                        pendingSlice.resolve(assembleSlice(pendingSlice.start, pendingSlice.end, pendingSlice.parts));
                         this._pendingSlices.splice(i, 1);
                         i--;
                     }
@@ -179749,6 +179993,17 @@ class ReadableStreamSource extends Source {
         void this._reader?.cancel().catch(() => { });
     }
 }
+const assembleSlice = (start, end, parts) => {
+    const bytes = new Uint8Array(end - start);
+    for (const part of parts) {
+        bytes.set(part.bytes, part.start - start);
+    }
+    return {
+        bytes,
+        view: (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .toDataView */ .Zc)(bytes),
+        offset: start,
+    };
+};
 const PREFETCH_PROFILES = {
     none: (start, end) => ({ start, end }),
     fileSystem: (start, end) => {
@@ -179811,7 +180066,7 @@ class ReadOrchestrator {
         this.queuedReads = [];
     }
     read(innerStart, innerEnd, minReadPosition, maxReadPosition) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(!this.disposed);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(!this.disposed);
         const prefetchRange = this.options.prefetchProfile(innerStart, innerEnd, this.workers);
         const outerStart = Math.max(prefetchRange.start, minReadPosition);
         const outerEnd = Math.min(prefetchRange.end, this.fileSize ?? Infinity, maxReadPosition);
@@ -180068,7 +180323,7 @@ class ReadOrchestrator {
         return worker;
     }
     runWorker(worker) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(!worker.running);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(!worker.running);
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(worker.currentPos < worker.targetPos);
         worker.running = true;
         worker.age = this.nextAge++;
@@ -180116,7 +180371,7 @@ class ReadOrchestrator {
     }
     /** Called by a worker when it has read some data. */
     supplyWorkerData(worker, bytes) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(!worker.aborted);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(!worker.aborted);
         const start = worker.currentPos;
         const end = start + bytes.length;
         this.insertIntoCache({
@@ -180174,7 +180429,7 @@ class ReadOrchestrator {
         }
     }
     supplyFileSize(size) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this.fileSize === null);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this.fileSize === null);
         this.fileSize = size;
         // Trim the workers with this new information
         for (const worker of this.workers) {
@@ -180434,10 +180689,7 @@ class RangedSource extends Source {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Fp: () => (/* binding */ inlineTimestampRegex),
-/* harmony export */   SH: () => (/* binding */ SubtitleParser),
-/* harmony export */   ce: () => (/* binding */ formatSubtitleTimestamp),
-/* harmony export */   cj: () => (/* binding */ parseSubtitleTimestamp)
+/* harmony export */   SH: () => (/* binding */ SubtitleParser)
 /* harmony export */ });
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
@@ -180529,6 +180781,12 @@ const formatSubtitleTimestamp = (timestamp) => {
         + milliseconds.toString().padStart(3, '0');
 };
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "Fp", 0, /* binding */ inlineTimestampRegex,
+/* harmony export */   "ce", 0, /* binding */ formatSubtitleTimestamp,
+/* harmony export */   "cj", 0, /* binding */ parseSubtitleTimestamp
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -180536,7 +180794,7 @@ const formatSubtitleTimestamp = (timestamp) => {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-var _node_js__WEBPACK_IMPORTED_MODULE_0___namespace_cache;
+let _node_js__WEBPACK_IMPORTED_MODULE_0___namespace_cache;
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   D$: () => (/* binding */ NullTarget),
 /* harmony export */   Kw: () => (/* binding */ StreamTarget),
@@ -180770,7 +181028,7 @@ class StreamTarget extends Target {
             // eslint-disable-next-line @typescript-eslint/only-throw-error
             throw this._writeError;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._streamWriter);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._streamWriter);
         if (this._sections.length === 0) {
             return;
         }
@@ -180902,7 +181160,7 @@ class StreamTarget extends Target {
     }
     /** @internal */
     _tryToFlushChunks(force = false) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._streamWriter);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._streamWriter);
         for (let i = 0; i < this._chunks.length; i++) {
             const chunk = this._chunks[i];
             if (!chunk.shouldFlush && !force)
@@ -180942,7 +181200,7 @@ class StreamTarget extends Target {
             // eslint-disable-next-line @typescript-eslint/only-throw-error
             throw this._writeError;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._streamWriter);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._streamWriter);
         await this._streamWriter.ready;
         await this._streamWriter.close();
         this._emit('finalized');
@@ -180980,7 +181238,7 @@ class AppendOnlyStreamTarget extends Target {
                     throw new Error('AppendOnlyStreamTarget requires that data be written monotonically (always appended to the'
                         + ' end). You must use a format that guarantees this behavior.');
                 }
-                (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(chunk.position === this._nextWritePos);
+                ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(chunk.position === this._nextWritePos);
                 this._nextWritePos += chunk.data.byteLength;
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._writer);
                 return this._writer.write(chunk.data);
@@ -181177,9 +181435,6 @@ class PathedTarget {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   K: () => (/* binding */ VERSIONED_NAME)
-/* harmony export */ });
 /* unused harmony export VERSION */
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
@@ -181189,8 +181444,12 @@ class PathedTarget {
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 // This file is generated by scripts/write-version.ts. Do not edit manually.
-const VERSION = '1.61.6';
+const VERSION = '1.62.0';
 const VERSIONED_NAME = `Mediabunny v${VERSION}`;
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "K", 0, /* binding */ VERSIONED_NAME
+/* harmony export */ ]);
 
 
 /***/ },
@@ -181280,7 +181539,7 @@ class WaveDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */
                 else if (chunkId === 'data') {
                     dataChunkSize ??= chunkSize;
                     this.dataStart = slice.filePos;
-                    this.dataSize = Math.min(dataChunkSize, (totalFileSize ?? Infinity) - this.dataStart);
+                    this.dataSize = Math.max(Math.min(dataChunkSize, (totalFileSize ?? Infinity) - this.dataStart), 0);
                     if (this.reader.fileSize === null) {
                         break; // Stop once we hit the data chunk
                     }
@@ -181292,6 +181551,9 @@ class WaveDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */
                         ds64Slice = await ds64Slice;
                     if (!ds64Slice)
                         break;
+                    if (chunkSize < 16) {
+                        throw new Error('Invalid RF64 file: "ds64" chunk is too small.');
+                    }
                     const riffChunkSize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU64 */ .IM)(ds64Slice, littleEndian);
                     dataChunkSize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU64 */ .IM)(ds64Slice, littleEndian);
                     totalFileSize = Math.min(riffChunkSize + 8, this.reader.fileSize ?? Infinity);
@@ -181322,13 +181584,19 @@ class WaveDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */
             slice = await slice;
         if (!slice)
             return; // File too short
+        if (size < 14) {
+            throw new Error('Invalid WAVE file - "fmt " chunk is too small');
+        }
         let formatTag = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU16 */ .Vv)(slice, littleEndian);
         const numChannels = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU16 */ .Vv)(slice, littleEndian);
         const sampleRate = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32 */ .PF)(slice, littleEndian);
         slice.skip(4); // Bytes per second
         const blockAlign = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU16 */ .Vv)(slice, littleEndian);
+        if (numChannels === 0 || sampleRate === 0 || blockAlign === 0) {
+            throw new Error('Invalid WAVE file - channel count, sample rate and block align must be positive');
+        }
         let bitsPerSample;
-        if (size === 14) { // Plain WAVEFORMAT
+        if (size < 16) { // Plain WAVEFORMAT
             bitsPerSample = 8;
         }
         else {
@@ -181372,6 +181640,8 @@ class WaveDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */
         };
     }
     async parseListChunk(startPos, size, littleEndian) {
+        if (size < 4)
+            return; // Chunk too short
         let slice = this.reader.requestSlice(startPos, size);
         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isThenable */ .Qg)(slice))
             slice = await slice;
@@ -181386,15 +181656,14 @@ class WaveDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */
             slice.filePos = currentPos;
             const chunkName = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readAscii */ .IT)(slice, 4);
             const chunkSize = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readU32 */ .PF)(slice, littleEndian);
-            const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(slice, chunkSize);
-            let stringLength = 0;
-            for (let i = 0; i < bytes.length; i++) {
-                if (bytes[i] === 0) {
-                    break;
-                }
-                stringLength++;
+            if (chunkSize > slice.remainingLength) {
+                break; // The sub-chunk doesn't fit into the LIST chunk
             }
-            const value = String.fromCharCode(...bytes.subarray(0, stringLength));
+            const bytes = (0,_reader_js__WEBPACK_IMPORTED_MODULE_4__/* .readBytes */ .io)(slice, chunkSize);
+            let value = '';
+            for (let i = 0; i < bytes.length && bytes[i] !== 0; i++) {
+                value += String.fromCharCode(bytes[i]);
+            }
             this.metadataTags.raw ??= {};
             this.metadataTags.raw[chunkName] = value;
             switch (chunkName) {
@@ -181479,6 +181748,8 @@ class WaveDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */
     }
     async parseId3Chunk(startPos, size) {
         // Parse ID3 tag embedded in WAV file (non-default, but used a lot in practice anyway)
+        if (size < _id3_js__WEBPACK_IMPORTED_MODULE_5__/* .ID3_V2_HEADER_SIZE */ .sY)
+            return; // Chunk too short
         let slice = this.reader.requestSlice(startPos, size);
         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isThenable */ .Qg)(slice))
             slice = await slice;
@@ -181497,7 +181768,7 @@ class WaveDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */
         }
     }
     getCodec() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.audioInfo);
         if (this.audioInfo.format === WaveFormat.MULAW) {
             return 'ulaw';
         }
@@ -181527,7 +181798,7 @@ class WaveDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */
                 return 'pcm-f64';
             }
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(false);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(false);
     }
     async getMimeType() {
         return 'audio/wav';
@@ -181559,7 +181830,7 @@ class WaveAudioTrackBacking {
         return this.demuxer.getCodec();
     }
     getInternalCodecId() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return this.demuxer.audioInfo.format;
     }
     async getDecoderConfig() {
@@ -181567,7 +181838,7 @@ class WaveAudioTrackBacking {
         if (!codec) {
             return null;
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return {
             codec,
             numberOfChannels: this.demuxer.audioInfo.numberOfChannels,
@@ -181575,15 +181846,15 @@ class WaveAudioTrackBacking {
         };
     }
     getNumberOfChannels() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return this.demuxer.audioInfo.numberOfChannels;
     }
     getSampleRate() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return this.demuxer.audioInfo.sampleRate;
     }
     getTimeResolution() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         return this.demuxer.audioInfo.sampleRate;
     }
     isRelativeToUnixEpoch() {
@@ -181602,7 +181873,7 @@ class WaveAudioTrackBacking {
         return null;
     }
     async getDurationFromMetadata() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.dataSize !== -1);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.dataSize !== -1);
         return this.demuxer.dataSize / this.demuxer.audioInfo.blockSizeInBytes / this.demuxer.audioInfo.sampleRate;
     }
     async getLiveRefreshInterval() {
@@ -181620,7 +181891,7 @@ class WaveAudioTrackBacking {
         };
     }
     async getPacketAtIndex(packetIndex, options) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(packetIndex >= 0);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(packetIndex >= 0);
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         const startOffset = packetIndex * PACKET_SIZE_IN_FRAMES * this.demuxer.audioInfo.blockSizeInBytes;
         if (startOffset >= this.demuxer.dataSize) {
@@ -181658,7 +181929,7 @@ class WaveAudioTrackBacking {
         return this.getPacketAtIndex(0, options);
     }
     async getPacket(timestamp, options) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         const packetIndex = Math.floor(Math.min(timestamp * this.demuxer.audioInfo.sampleRate / PACKET_SIZE_IN_FRAMES, (this.demuxer.dataSize - 1) / (PACKET_SIZE_IN_FRAMES * this.demuxer.audioInfo.blockSizeInBytes)));
         if (packetIndex < 0) {
             return null;
@@ -181670,7 +181941,7 @@ class WaveAudioTrackBacking {
         if (packetIndex === 0) {
             return null; // Empty data chunk
         }
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.reader.fileSize === null);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.reader.fileSize === null);
         // The file is shorter than we thought, meaning the packet we were looking for doesn't exist. So, let's find
         // the last packet by doing a sequential scan, instead.
         let currentPacket = await this.getPacketAtIndex(this.demuxer.lastKnownPacketIndex, options);
@@ -181684,7 +181955,7 @@ class WaveAudioTrackBacking {
         return currentPacket;
     }
     getNextPacket(packet, options) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.audioInfo);
         const packetIndex = Math.round(packet.timestamp * this.demuxer.audioInfo.sampleRate / PACKET_SIZE_IN_FRAMES);
         return this.getPacketAtIndex(packetIndex + 1, options);
     }
@@ -181731,13 +182002,13 @@ class Writer {
         target._writerAcquired = true;
     }
     start() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(!this.started);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(!this.started);
         this.target._start();
         this.started = true;
     }
     /** Writes the given data to the target, at the current position. */
     write(data) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this.started && !this.finalized);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this.started && !this.finalized);
         this.maybeTrackWrites(data);
         this.target._write(data, this.pos);
         this.pos += data.byteLength;
@@ -181752,12 +182023,12 @@ class Writer {
     }
     /** Signals to the writer that it may be time to flush. */
     async flush() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this.started && !this.finalized);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this.started && !this.finalized);
         return this.target._flush();
     }
     /** Called after muxing has finished. */
     async finalize() {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this.started && !this.finalized);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .assert */ .vA)(this.started && !this.finalized);
         await this.target._finalize();
         this.finalized = true;
     }
@@ -181868,7 +182139,6 @@ class Writer {
 /* harmony export */   Rl: () => (/* binding */ _string),
 /* harmony export */   Rv: () => (/* binding */ _default),
 /* harmony export */   ST: () => (/* binding */ _check),
-/* harmony export */   So: () => (/* binding */ TimePrecision),
 /* harmony export */   St: () => (/* binding */ _coercedBigint),
 /* harmony export */   T2: () => (/* binding */ _properties),
 /* harmony export */   TL: () => (/* binding */ _slugify),
@@ -183041,6 +183311,10 @@ function _stringFormat(Class, format, fnOrRegex, _params = {}) {
     return inst;
 }
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "So", 0, /* binding */ TimePrecision
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -183048,30 +183322,6 @@ function _stringFormat(Class, format, fnOrRegex, _params = {}) {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DG: () => (/* binding */ $ZodCheckRegex),
-/* harmony export */   E6: () => (/* binding */ $ZodCheckEndsWith),
-/* harmony export */   J: () => (/* binding */ $ZodCheckStartsWith),
-/* harmony export */   J_: () => (/* binding */ $ZodCheckGreaterThan),
-/* harmony export */   Jk: () => (/* binding */ $ZodCheckMultipleOf),
-/* harmony export */   KH: () => (/* binding */ $ZodCheckNumberFormat),
-/* harmony export */   Kk: () => (/* binding */ $ZodCheckMinLength),
-/* harmony export */   NI: () => (/* binding */ $ZodCheckLowerCase),
-/* harmony export */   PH: () => (/* binding */ $ZodCheckMinSize),
-/* harmony export */   QP: () => (/* binding */ $ZodCheck),
-/* harmony export */   RM: () => (/* binding */ $ZodCheckLengthEquals),
-/* harmony export */   Tt: () => (/* binding */ $ZodCheckIncludes),
-/* harmony export */   XF: () => (/* binding */ $ZodCheckProperty),
-/* harmony export */   Yk: () => (/* binding */ $ZodCheckMaxLength),
-/* harmony export */   e2: () => (/* binding */ $ZodCheckSizeEquals),
-/* harmony export */   j2: () => (/* binding */ $ZodCheckMaxSize),
-/* harmony export */   kH: () => (/* binding */ $ZodCheckUpperCase),
-/* harmony export */   ql: () => (/* binding */ $ZodCheckStringFormat),
-/* harmony export */   sj: () => (/* binding */ $ZodCheckMimeType),
-/* harmony export */   sm: () => (/* binding */ $ZodCheckLessThan),
-/* harmony export */   uE: () => (/* binding */ $ZodCheckBigIntFormat),
-/* harmony export */   v$: () => (/* binding */ $ZodCheckOverwrite)
-/* harmony export */ });
 /* harmony import */ var _core_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5435);
 /* harmony import */ var _regexes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3705);
 /* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7048);
@@ -183657,6 +183907,31 @@ const $ZodCheckOverwrite = /*@__PURE__*/ _core_js__WEBPACK_IMPORTED_MODULE_0__/*
     };
 });
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "DG", 0, /* binding */ $ZodCheckRegex,
+/* harmony export */   "E6", 0, /* binding */ $ZodCheckEndsWith,
+/* harmony export */   "J", 0, /* binding */ $ZodCheckStartsWith,
+/* harmony export */   "J_", 0, /* binding */ $ZodCheckGreaterThan,
+/* harmony export */   "Jk", 0, /* binding */ $ZodCheckMultipleOf,
+/* harmony export */   "KH", 0, /* binding */ $ZodCheckNumberFormat,
+/* harmony export */   "Kk", 0, /* binding */ $ZodCheckMinLength,
+/* harmony export */   "NI", 0, /* binding */ $ZodCheckLowerCase,
+/* harmony export */   "PH", 0, /* binding */ $ZodCheckMinSize,
+/* harmony export */   "QP", 0, /* binding */ $ZodCheck,
+/* harmony export */   "RM", 0, /* binding */ $ZodCheckLengthEquals,
+/* harmony export */   "Tt", 0, /* binding */ $ZodCheckIncludes,
+/* harmony export */   "XF", 0, /* binding */ $ZodCheckProperty,
+/* harmony export */   "Yk", 0, /* binding */ $ZodCheckMaxLength,
+/* harmony export */   "e2", 0, /* binding */ $ZodCheckSizeEquals,
+/* harmony export */   "j2", 0, /* binding */ $ZodCheckMaxSize,
+/* harmony export */   "kH", 0, /* binding */ $ZodCheckUpperCase,
+/* harmony export */   "ql", 0, /* binding */ $ZodCheckStringFormat,
+/* harmony export */   "sj", 0, /* binding */ $ZodCheckMimeType,
+/* harmony export */   "sm", 0, /* binding */ $ZodCheckLessThan,
+/* harmony export */   "uE", 0, /* binding */ $ZodCheckBigIntFormat,
+/* harmony export */   "v$", 0, /* binding */ $ZodCheckOverwrite
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -183869,11 +184144,9 @@ class Doc {
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   JM: () => (/* binding */ flattenError),
-/* harmony export */   Kd: () => (/* binding */ $ZodRealError),
 /* harmony export */   S1: () => (/* binding */ prettifyError),
 /* harmony export */   Wk: () => (/* binding */ formatError),
 /* harmony export */   ZC: () => (/* binding */ treeifyError),
-/* harmony export */   a$: () => (/* binding */ $ZodError),
 /* harmony export */   sR: () => (/* binding */ toDotPath)
 /* harmony export */ });
 /* harmony import */ var _core_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5435);
@@ -184149,6 +184422,11 @@ function prettifyError(error) {
     return lines.join("\n");
 }
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "Kd", 0, /* binding */ $ZodRealError,
+/* harmony export */   "a$", 0, /* binding */ $ZodError
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -184156,34 +184434,6 @@ function prettifyError(error) {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   D4: () => (/* binding */ decode),
-/* harmony export */   EJ: () => (/* binding */ parseAsync),
-/* harmony export */   EM: () => (/* binding */ safeEncodeAsync),
-/* harmony export */   F0: () => (/* binding */ validateAsync),
-/* harmony export */   GW: () => (/* binding */ _encodeAsync),
-/* harmony export */   Mv: () => (/* binding */ _encode),
-/* harmony export */   Od: () => (/* binding */ _safeParse),
-/* harmony export */   R3: () => (/* binding */ _safeDecodeAsync),
-/* harmony export */   Rb: () => (/* binding */ _parseAsync),
-/* harmony export */   Re: () => (/* binding */ decodeAsync),
-/* harmony export */   Tj: () => (/* binding */ _parse),
-/* harmony export */   VS: () => (/* binding */ _safeDecode),
-/* harmony export */   X$: () => (/* binding */ encodeAsync),
-/* harmony export */   bp: () => (/* binding */ safeParseAsync),
-/* harmony export */   e2: () => (/* binding */ _decode),
-/* harmony export */   ex: () => (/* binding */ safeDecode),
-/* harmony export */   lF: () => (/* binding */ encode),
-/* harmony export */   or: () => (/* binding */ _decodeAsync),
-/* harmony export */   qg: () => (/* binding */ parse),
-/* harmony export */   rh: () => (/* binding */ _safeEncode),
-/* harmony export */   tf: () => (/* binding */ validate),
-/* harmony export */   v_: () => (/* binding */ _safeEncodeAsync),
-/* harmony export */   wG: () => (/* binding */ _safeParseAsync),
-/* harmony export */   wy: () => (/* binding */ safeEncode),
-/* harmony export */   xL: () => (/* binding */ safeParse),
-/* harmony export */   yR: () => (/* binding */ safeDecodeAsync)
-/* harmony export */ });
 /* harmony import */ var _core_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5435);
 /* harmony import */ var _errors_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3371);
 /* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7048);
@@ -184342,6 +184592,35 @@ const _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
 };
 const safeDecodeAsync = /* @__PURE__*/ _safeDecodeAsync(_errors_js__WEBPACK_IMPORTED_MODULE_1__/* .$ZodRealError */ .Kd);
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "D4", 0, /* binding */ decode,
+/* harmony export */   "EJ", 0, /* binding */ parseAsync,
+/* harmony export */   "EM", 0, /* binding */ safeEncodeAsync,
+/* harmony export */   "F0", 0, /* binding */ validateAsync,
+/* harmony export */   "GW", 0, /* binding */ _encodeAsync,
+/* harmony export */   "Mv", 0, /* binding */ _encode,
+/* harmony export */   "Od", 0, /* binding */ _safeParse,
+/* harmony export */   "R3", 0, /* binding */ _safeDecodeAsync,
+/* harmony export */   "Rb", 0, /* binding */ _parseAsync,
+/* harmony export */   "Re", 0, /* binding */ decodeAsync,
+/* harmony export */   "Tj", 0, /* binding */ _parse,
+/* harmony export */   "VS", 0, /* binding */ _safeDecode,
+/* harmony export */   "X$", 0, /* binding */ encodeAsync,
+/* harmony export */   "bp", 0, /* binding */ safeParseAsync,
+/* harmony export */   "e2", 0, /* binding */ _decode,
+/* harmony export */   "ex", 0, /* binding */ safeDecode,
+/* harmony export */   "lF", 0, /* binding */ encode,
+/* harmony export */   "or", 0, /* binding */ _decodeAsync,
+/* harmony export */   "qg", 0, /* binding */ parse,
+/* harmony export */   "rh", 0, /* binding */ _safeEncode,
+/* harmony export */   "tf", 0, /* binding */ validate,
+/* harmony export */   "v_", 0, /* binding */ _safeEncodeAsync,
+/* harmony export */   "wG", 0, /* binding */ _safeParseAsync,
+/* harmony export */   "wy", 0, /* binding */ safeEncode,
+/* harmony export */   "xL", 0, /* binding */ safeParse,
+/* harmony export */   "yR", 0, /* binding */ safeDecodeAsync
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -184351,67 +184630,10 @@ const safeDecodeAsync = /* @__PURE__*/ _safeDecodeAsync(_errors_js__WEBPACK_IMPO
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   base64: () => (/* binding */ base64),
-/* harmony export */   base64url: () => (/* binding */ base64url),
-/* harmony export */   bigint: () => (/* binding */ bigint),
-/* harmony export */   boolean: () => (/* binding */ boolean),
-/* harmony export */   browserEmail: () => (/* binding */ browserEmail),
-/* harmony export */   cidrv4: () => (/* binding */ cidrv4),
-/* harmony export */   cidrv6: () => (/* binding */ cidrv6),
-/* harmony export */   creditCard: () => (/* binding */ creditCard),
-/* harmony export */   cuid: () => (/* binding */ cuid),
-/* harmony export */   cuid2: () => (/* binding */ cuid2),
-/* harmony export */   date: () => (/* binding */ date),
 /* harmony export */   datetime: () => (/* binding */ datetime),
-/* harmony export */   domain: () => (/* binding */ domain),
-/* harmony export */   duration: () => (/* binding */ duration),
-/* harmony export */   e164: () => (/* binding */ e164),
-/* harmony export */   email: () => (/* binding */ email),
 /* harmony export */   emoji: () => (/* binding */ emoji),
-/* harmony export */   extendedDuration: () => (/* binding */ extendedDuration),
-/* harmony export */   guid: () => (/* binding */ guid),
-/* harmony export */   hex: () => (/* binding */ hex),
-/* harmony export */   hostname: () => (/* binding */ hostname),
-/* harmony export */   html5Email: () => (/* binding */ html5Email),
-/* harmony export */   httpProtocol: () => (/* binding */ httpProtocol),
-/* harmony export */   idnEmail: () => (/* binding */ idnEmail),
-/* harmony export */   integer: () => (/* binding */ integer),
-/* harmony export */   ipv4: () => (/* binding */ ipv4),
-/* harmony export */   ipv6: () => (/* binding */ ipv6),
-/* harmony export */   ksuid: () => (/* binding */ ksuid),
-/* harmony export */   lowercase: () => (/* binding */ lowercase),
-/* harmony export */   mac: () => (/* binding */ mac),
-/* harmony export */   md5_base64: () => (/* binding */ md5_base64),
-/* harmony export */   md5_base64url: () => (/* binding */ md5_base64url),
-/* harmony export */   md5_hex: () => (/* binding */ md5_hex),
-/* harmony export */   nanoid: () => (/* binding */ nanoid),
 /* harmony export */   nanoidOfLength: () => (/* binding */ nanoidOfLength),
-/* harmony export */   "null": () => (/* binding */ _null),
-/* harmony export */   number: () => (/* binding */ number),
-/* harmony export */   rfc5322Email: () => (/* binding */ rfc5322Email),
-/* harmony export */   sha1_base64: () => (/* binding */ sha1_base64),
-/* harmony export */   sha1_base64url: () => (/* binding */ sha1_base64url),
-/* harmony export */   sha1_hex: () => (/* binding */ sha1_hex),
-/* harmony export */   sha256_base64: () => (/* binding */ sha256_base64),
-/* harmony export */   sha256_base64url: () => (/* binding */ sha256_base64url),
-/* harmony export */   sha256_hex: () => (/* binding */ sha256_hex),
-/* harmony export */   sha384_base64: () => (/* binding */ sha384_base64),
-/* harmony export */   sha384_base64url: () => (/* binding */ sha384_base64url),
-/* harmony export */   sha384_hex: () => (/* binding */ sha384_hex),
-/* harmony export */   sha512_base64: () => (/* binding */ sha512_base64),
-/* harmony export */   sha512_base64url: () => (/* binding */ sha512_base64url),
-/* harmony export */   sha512_hex: () => (/* binding */ sha512_hex),
-/* harmony export */   string: () => (/* binding */ string),
-/* harmony export */   time: () => (/* binding */ time),
-/* harmony export */   ulid: () => (/* binding */ ulid),
-/* harmony export */   undefined: () => (/* binding */ _undefined),
-/* harmony export */   unicodeEmail: () => (/* binding */ unicodeEmail),
-/* harmony export */   uppercase: () => (/* binding */ uppercase),
-/* harmony export */   uuid: () => (/* binding */ uuid),
-/* harmony export */   uuid4: () => (/* binding */ uuid4),
-/* harmony export */   uuid6: () => (/* binding */ uuid6),
-/* harmony export */   uuid7: () => (/* binding */ uuid7),
-/* harmony export */   xid: () => (/* binding */ xid)
+/* harmony export */   time: () => (/* binding */ time)
 /* harmony export */ });
 /* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7048);
 
@@ -184565,6 +184787,66 @@ const sha512_hex = /^[0-9a-fA-F]{128}$/;
 const sha512_base64 = /*@__PURE__*/ fixedBase64(86, "==");
 const sha512_base64url = /*@__PURE__*/ fixedBase64url(86);
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "base64", 0, /* binding */ base64,
+/* harmony export */   "base64url", 0, /* binding */ base64url,
+/* harmony export */   "bigint", 0, /* binding */ bigint,
+/* harmony export */   "boolean", 0, /* binding */ boolean,
+/* harmony export */   "browserEmail", 0, /* binding */ browserEmail,
+/* harmony export */   "cidrv4", 0, /* binding */ cidrv4,
+/* harmony export */   "cidrv6", 0, /* binding */ cidrv6,
+/* harmony export */   "creditCard", 0, /* binding */ creditCard,
+/* harmony export */   "cuid", 0, /* binding */ cuid,
+/* harmony export */   "cuid2", 0, /* binding */ cuid2,
+/* harmony export */   "date", 0, /* binding */ date,
+/* harmony export */   "domain", 0, /* binding */ domain,
+/* harmony export */   "duration", 0, /* binding */ duration,
+/* harmony export */   "e164", 0, /* binding */ e164,
+/* harmony export */   "email", 0, /* binding */ email,
+/* harmony export */   "extendedDuration", 0, /* binding */ extendedDuration,
+/* harmony export */   "guid", 0, /* binding */ guid,
+/* harmony export */   "hex", 0, /* binding */ hex,
+/* harmony export */   "hostname", 0, /* binding */ hostname,
+/* harmony export */   "html5Email", 0, /* binding */ html5Email,
+/* harmony export */   "httpProtocol", 0, /* binding */ httpProtocol,
+/* harmony export */   "idnEmail", 0, /* binding */ idnEmail,
+/* harmony export */   "integer", 0, /* binding */ integer,
+/* harmony export */   "ipv4", 0, /* binding */ ipv4,
+/* harmony export */   "ipv6", 0, /* binding */ ipv6,
+/* harmony export */   "ksuid", 0, /* binding */ ksuid,
+/* harmony export */   "lowercase", 0, /* binding */ lowercase,
+/* harmony export */   "mac", 0, /* binding */ mac,
+/* harmony export */   "md5_base64", 0, /* binding */ md5_base64,
+/* harmony export */   "md5_base64url", 0, /* binding */ md5_base64url,
+/* harmony export */   "md5_hex", 0, /* binding */ md5_hex,
+/* harmony export */   "nanoid", 0, /* binding */ nanoid,
+/* harmony export */   "null", 0, /* binding */ _null,
+/* harmony export */   "number", 0, /* binding */ number,
+/* harmony export */   "rfc5322Email", 0, /* binding */ rfc5322Email,
+/* harmony export */   "sha1_base64", 0, /* binding */ sha1_base64,
+/* harmony export */   "sha1_base64url", 0, /* binding */ sha1_base64url,
+/* harmony export */   "sha1_hex", 0, /* binding */ sha1_hex,
+/* harmony export */   "sha256_base64", 0, /* binding */ sha256_base64,
+/* harmony export */   "sha256_base64url", 0, /* binding */ sha256_base64url,
+/* harmony export */   "sha256_hex", 0, /* binding */ sha256_hex,
+/* harmony export */   "sha384_base64", 0, /* binding */ sha384_base64,
+/* harmony export */   "sha384_base64url", 0, /* binding */ sha384_base64url,
+/* harmony export */   "sha384_hex", 0, /* binding */ sha384_hex,
+/* harmony export */   "sha512_base64", 0, /* binding */ sha512_base64,
+/* harmony export */   "sha512_base64url", 0, /* binding */ sha512_base64url,
+/* harmony export */   "sha512_hex", 0, /* binding */ sha512_hex,
+/* harmony export */   "string", 0, /* binding */ string,
+/* harmony export */   "ulid", 0, /* binding */ ulid,
+/* harmony export */   "undefined", 0, /* binding */ _undefined,
+/* harmony export */   "unicodeEmail", 0, /* binding */ unicodeEmail,
+/* harmony export */   "uppercase", 0, /* binding */ uppercase,
+/* harmony export */   "uuid", 0, /* binding */ uuid,
+/* harmony export */   "uuid4", 0, /* binding */ uuid4,
+/* harmony export */   "uuid6", 0, /* binding */ uuid6,
+/* harmony export */   "uuid7", 0, /* binding */ uuid7,
+/* harmony export */   "xid", 0, /* binding */ xid
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -184573,9 +184855,6 @@ const sha512_base64url = /*@__PURE__*/ fixedBase64url(86);
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   UY: () => (/* binding */ $output),
-/* harmony export */   fd: () => (/* binding */ globalRegistry),
-/* harmony export */   nP: () => (/* binding */ $input),
 /* harmony export */   rs: () => (/* binding */ $ZodRegistry),
 /* harmony export */   u5: () => (/* binding */ registry)
 /* harmony export */ });
@@ -184631,6 +184910,12 @@ function registry() {
 (_a = globalThis).__zod_globalRegistry ?? (_a.__zod_globalRegistry = registry());
 const globalRegistry = globalThis.__zod_globalRegistry;
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "UY", 0, /* binding */ $output,
+/* harmony export */   "fd", 0, /* binding */ globalRegistry,
+/* harmony export */   "nP", 0, /* binding */ $input
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -184639,97 +184924,20 @@ const globalRegistry = globalThis.__zod_globalRegistry;
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   $N: () => (/* binding */ $ZodISODuration),
-/* harmony export */   $p: () => (/* binding */ $ZodArray),
-/* harmony export */   $v: () => (/* binding */ $ZodString),
-/* harmony export */   Ax: () => (/* binding */ $ZodISOTime),
-/* harmony export */   BN: () => (/* binding */ $ZodBigInt),
-/* harmony export */   CI: () => (/* binding */ $ZodCIDRv4),
-/* harmony export */   CQ: () => (/* binding */ $ZodBase64URL),
-/* harmony export */   CT: () => (/* binding */ $ZodFile),
-/* harmony export */   Cn: () => (/* binding */ $ZodCIDRv6),
 /* harmony export */   D3: () => (/* binding */ mergeValues),
-/* harmony export */   Dq: () => (/* binding */ $ZodBase64),
-/* harmony export */   Dw: () => (/* binding */ $ZodSuccess),
-/* harmony export */   EY: () => (/* binding */ $ZodStringFormat),
-/* harmony export */   G3: () => (/* binding */ $ZodTuple),
-/* harmony export */   GP: () => (/* binding */ $ZodUnknown),
-/* harmony export */   GY: () => (/* binding */ $ZodKSUID),
-/* harmony export */   Gb: () => (/* binding */ $ZodAny),
-/* harmony export */   I: () => (/* binding */ $ZodNumberFormat),
 /* harmony export */   IB: () => (/* binding */ getDiscriminatedOption),
-/* harmony export */   IT: () => (/* binding */ $ZodBigIntFormat),
-/* harmony export */   Ix: () => (/* binding */ URL_BAD_FORMAT),
-/* harmony export */   KX: () => (/* binding */ $ZodPreprocess),
-/* harmony export */   Ko: () => (/* binding */ $ZodISODateTime),
-/* harmony export */   L8: () => (/* binding */ $ZodObject),
-/* harmony export */   LJ: () => (/* binding */ $ZodIntersection),
-/* harmony export */   Lc: () => (/* binding */ $ZodIPv4),
-/* harmony export */   Mv: () => (/* binding */ $ZodUndefined),
-/* harmony export */   N$: () => (/* binding */ $ZodNonOptional),
 /* harmony export */   NH: () => (/* binding */ stripTabAndNewline),
-/* harmony export */   Oi: () => (/* binding */ $ZodSet),
-/* harmony export */   Oy: () => (/* binding */ $ZodE164),
-/* harmony export */   P0: () => (/* binding */ $ZodDiscriminatedUnion),
-/* harmony export */   Py: () => (/* binding */ $ZodNanoID),
-/* harmony export */   RL: () => (/* binding */ $ZodExactOptional),
 /* harmony export */   SW: () => (/* binding */ isValidIPv6),
-/* harmony export */   Sb: () => (/* binding */ $ZodReadonly),
-/* harmony export */   TF: () => (/* binding */ $ZodXID),
-/* harmony export */   U5: () => (/* binding */ $ZodSymbol),
 /* harmony export */   UY: () => (/* binding */ isValidBase64),
-/* harmony export */   Um: () => (/* binding */ $ZodNever),
-/* harmony export */   VF: () => (/* binding */ $ZodPrefault),
-/* harmony export */   VO: () => (/* binding */ $ZodEnum),
-/* harmony export */   VY: () => (/* binding */ $ZodURL),
-/* harmony export */   W4: () => (/* binding */ $ZodType),
-/* harmony export */   WH: () => (/* binding */ $ZodVoid),
-/* harmony export */   Wc: () => (/* binding */ $ZodTransform),
 /* harmony export */   Xe: () => (/* binding */ isValidCIDRv6),
 /* harmony export */   YK: () => (/* binding */ standardProps),
-/* harmony export */   YY: () => (/* binding */ $ZodCodec),
 /* harmony export */   Yf: () => (/* binding */ urlProtocolOk),
-/* harmony export */   ZQ: () => (/* binding */ $ZodCustomStringFormat),
-/* harmony export */   ZZ: () => (/* binding */ $ZodCreditCard),
-/* harmony export */   Zc: () => (/* binding */ $ZodGUID),
-/* harmony export */   Zn: () => (/* binding */ $ZodUUID),
-/* harmony export */   Zu: () => (/* binding */ $ZodCUID2),
-/* harmony export */   Zy: () => (/* binding */ $ZodIPv6),
-/* harmony export */   _A: () => (/* binding */ $ZodFunction),
-/* harmony export */   _m: () => (/* binding */ $ZodPipe),
-/* harmony export */   b0: () => (/* binding */ $ZodCustom),
 /* harmony export */   bL: () => (/* binding */ urlHostnameOk),
-/* harmony export */   bc: () => (/* binding */ URL_UNPARSEABLE),
-/* harmony export */   bl: () => (/* binding */ $ZodCUID),
 /* harmony export */   c2: () => (/* binding */ isValidJWT),
-/* harmony export */   cG: () => (/* binding */ $ZodEmoji),
-/* harmony export */   cu: () => (/* binding */ $ZodUnion),
-/* harmony export */   d: () => (/* binding */ $ZodTemplateLiteral),
-/* harmony export */   eb: () => (/* binding */ $ZodMap),
-/* harmony export */   g5: () => (/* binding */ $ZodULID),
-/* harmony export */   h: () => (/* binding */ $ZodRecord),
-/* harmony export */   h8: () => (/* binding */ $ZodJWT),
-/* harmony export */   hA: () => (/* binding */ $ZodPromise),
-/* harmony export */   ig: () => (/* binding */ $ZodOptional),
-/* harmony export */   kU: () => (/* binding */ $ZodLazy),
-/* harmony export */   nu: () => (/* binding */ $ZodLiteral),
-/* harmony export */   o5: () => (/* binding */ $ZodDate),
 /* harmony export */   o8: () => (/* reexport safe */ _util_js__WEBPACK_IMPORTED_MODULE_5__.clone),
-/* harmony export */   pm: () => (/* binding */ $ZodXor),
-/* harmony export */   qG: () => (/* binding */ $ZodEmail),
-/* harmony export */   qc: () => (/* binding */ $ZodNullable),
-/* harmony export */   rO: () => (/* binding */ $ZodMAC),
-/* harmony export */   rv: () => (/* binding */ $ZodDefault),
-/* harmony export */   sF: () => (/* binding */ $ZodBoolean),
-/* harmony export */   t$: () => (/* binding */ $ZodCatch),
 /* harmony export */   tV: () => (/* binding */ isValidBase64URL),
 /* harmony export */   uv: () => (/* binding */ isValidCreditCard),
-/* harmony export */   v1: () => (/* binding */ $ZodISODate),
-/* harmony export */   vz: () => (/* binding */ $ZodNumber),
-/* harmony export */   w: () => (/* binding */ $ZodObjectJIT),
-/* harmony export */   x8: () => (/* binding */ $ZodNull),
-/* harmony export */   y5: () => (/* binding */ parseURLObject),
-/* harmony export */   zP: () => (/* binding */ $ZodNaN)
+/* harmony export */   y5: () => (/* binding */ parseURLObject)
 /* harmony export */ });
 /* harmony import */ var _checks_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9737);
 /* harmony import */ var _core_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5435);
@@ -187179,6 +187387,84 @@ function handleRefineResult(result, payload, input, inst) {
     }
 }
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "$N", 0, /* binding */ $ZodISODuration,
+/* harmony export */   "$p", 0, /* binding */ $ZodArray,
+/* harmony export */   "$v", 0, /* binding */ $ZodString,
+/* harmony export */   "Ax", 0, /* binding */ $ZodISOTime,
+/* harmony export */   "BN", 0, /* binding */ $ZodBigInt,
+/* harmony export */   "CI", 0, /* binding */ $ZodCIDRv4,
+/* harmony export */   "CQ", 0, /* binding */ $ZodBase64URL,
+/* harmony export */   "CT", 0, /* binding */ $ZodFile,
+/* harmony export */   "Cn", 0, /* binding */ $ZodCIDRv6,
+/* harmony export */   "Dq", 0, /* binding */ $ZodBase64,
+/* harmony export */   "Dw", 0, /* binding */ $ZodSuccess,
+/* harmony export */   "EY", 0, /* binding */ $ZodStringFormat,
+/* harmony export */   "G3", 0, /* binding */ $ZodTuple,
+/* harmony export */   "GP", 0, /* binding */ $ZodUnknown,
+/* harmony export */   "GY", 0, /* binding */ $ZodKSUID,
+/* harmony export */   "Gb", 0, /* binding */ $ZodAny,
+/* harmony export */   "I", 0, /* binding */ $ZodNumberFormat,
+/* harmony export */   "IT", 0, /* binding */ $ZodBigIntFormat,
+/* harmony export */   "KX", 0, /* binding */ $ZodPreprocess,
+/* harmony export */   "Ko", 0, /* binding */ $ZodISODateTime,
+/* harmony export */   "L8", 0, /* binding */ $ZodObject,
+/* harmony export */   "LJ", 0, /* binding */ $ZodIntersection,
+/* harmony export */   "Lc", 0, /* binding */ $ZodIPv4,
+/* harmony export */   "Mv", 0, /* binding */ $ZodUndefined,
+/* harmony export */   "N$", 0, /* binding */ $ZodNonOptional,
+/* harmony export */   "Oi", 0, /* binding */ $ZodSet,
+/* harmony export */   "Oy", 0, /* binding */ $ZodE164,
+/* harmony export */   "P0", 0, /* binding */ $ZodDiscriminatedUnion,
+/* harmony export */   "Py", 0, /* binding */ $ZodNanoID,
+/* harmony export */   "RL", 0, /* binding */ $ZodExactOptional,
+/* harmony export */   "Sb", 0, /* binding */ $ZodReadonly,
+/* harmony export */   "TF", 0, /* binding */ $ZodXID,
+/* harmony export */   "U5", 0, /* binding */ $ZodSymbol,
+/* harmony export */   "Um", 0, /* binding */ $ZodNever,
+/* harmony export */   "VF", 0, /* binding */ $ZodPrefault,
+/* harmony export */   "VO", 0, /* binding */ $ZodEnum,
+/* harmony export */   "VY", 0, /* binding */ $ZodURL,
+/* harmony export */   "W4", 0, /* binding */ $ZodType,
+/* harmony export */   "WH", 0, /* binding */ $ZodVoid,
+/* harmony export */   "Wc", 0, /* binding */ $ZodTransform,
+/* harmony export */   "YY", 0, /* binding */ $ZodCodec,
+/* harmony export */   "ZQ", 0, /* binding */ $ZodCustomStringFormat,
+/* harmony export */   "ZZ", 0, /* binding */ $ZodCreditCard,
+/* harmony export */   "Zc", 0, /* binding */ $ZodGUID,
+/* harmony export */   "Zn", 0, /* binding */ $ZodUUID,
+/* harmony export */   "Zu", 0, /* binding */ $ZodCUID2,
+/* harmony export */   "Zy", 0, /* binding */ $ZodIPv6,
+/* harmony export */   "_A", 0, /* binding */ $ZodFunction,
+/* harmony export */   "_m", 0, /* binding */ $ZodPipe,
+/* harmony export */   "b0", 0, /* binding */ $ZodCustom,
+/* harmony export */   "bl", 0, /* binding */ $ZodCUID,
+/* harmony export */   "cG", 0, /* binding */ $ZodEmoji,
+/* harmony export */   "cu", 0, /* binding */ $ZodUnion,
+/* harmony export */   "d", 0, /* binding */ $ZodTemplateLiteral,
+/* harmony export */   "eb", 0, /* binding */ $ZodMap,
+/* harmony export */   "g5", 0, /* binding */ $ZodULID,
+/* harmony export */   "h", 0, /* binding */ $ZodRecord,
+/* harmony export */   "h8", 0, /* binding */ $ZodJWT,
+/* harmony export */   "hA", 0, /* binding */ $ZodPromise,
+/* harmony export */   "ig", 0, /* binding */ $ZodOptional,
+/* harmony export */   "kU", 0, /* binding */ $ZodLazy,
+/* harmony export */   "nu", 0, /* binding */ $ZodLiteral,
+/* harmony export */   "o5", 0, /* binding */ $ZodDate,
+/* harmony export */   "pm", 0, /* binding */ $ZodXor,
+/* harmony export */   "qG", 0, /* binding */ $ZodEmail,
+/* harmony export */   "qc", 0, /* binding */ $ZodNullable,
+/* harmony export */   "rO", 0, /* binding */ $ZodMAC,
+/* harmony export */   "rv", 0, /* binding */ $ZodDefault,
+/* harmony export */   "sF", 0, /* binding */ $ZodBoolean,
+/* harmony export */   "t$", 0, /* binding */ $ZodCatch,
+/* harmony export */   "v1", 0, /* binding */ $ZodISODate,
+/* harmony export */   "vz", 0, /* binding */ $ZodNumber,
+/* harmony export */   "w", 0, /* binding */ $ZodObjectJIT,
+/* harmony export */   "x8", 0, /* binding */ $ZodNull,
+/* harmony export */   "zP", 0, /* binding */ $ZodNaN
+/* harmony export */ ]);
+
 
 /***/ },
 
@@ -188117,14 +188403,15 @@ function constantCatch(value) {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   r: () => (/* binding */ version)
-/* harmony export */ });
 const version = {
     major: 4,
     minor: 5,
     patch: 4,
 };
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "r", 0, /* binding */ version
+/* harmony export */ ]);
 
 
 /***/ }

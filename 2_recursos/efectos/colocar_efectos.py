@@ -6,7 +6,11 @@ Lo lanza efectos_visuales.aplicar() (resolve_mcp.ejecutar_py) y lee ~/DaVinciSub
     {'fps': 30.0, 'inicio': <primer fotograma del timeline>, 'offset_frames': 0,
      'eventos': [{'tipo': 'intro'|'corte'|'icono'|'sonido', 'ini': segundos, 'modo': 'screen'|'normal'|'audio', 'archivo': mp4/wav | 'secuencia': {'patron', 'n'}}]}
 
-Reglas: nunca toca V1/A1 ni las pistas de los captions; las pistas FX-INTRO / FX-CORTES / FX-ICONOS (video) y FX-SONIDO (audio, el sonido de la intro) se vacían y se vuelven a llenar en cada corrida (re-aplicar no apila
+v5.34, AI Sound Director: eventos 'voz_ai' (la voz restaurada, una COPIA, en la pista «AI VOICE»: A1 se apaga SOLO después de comprobar que la
+copia quedó puesta; si algo falla, A1 queda encendida) y sonidos con 'pista' en AI MUSIC / AI AMBIENCE / AI SFX … (por NOMBRE). Sin esos eventos,
+sus pistas se quitan y A1 vuelve a sonar; 'solo_ai' = solo eso (la limpieza cuando el director se apaga).
+
+Reglas: nunca toca V1/A1 ni las pistas de los captions (salvo apagar A1 con AI VOICE ya puesta); las pistas FX-INTRO / FX-CORTES / FX-ICONOS (video) y FX-SONIDO (audio, el sonido de la intro) se vacían y se vuelven a llenar en cada corrida (re-aplicar no apila
 nada); los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos» (el prefijo «RCS · » hace que CineCaptions no lo
 cuente como plantillas del usuario). Nada de InsertFusionTitleIntoTimeline ni de stills: solo importar medios y AppendToTimeline.
 """
@@ -18,6 +22,9 @@ PISTAS = {'intro': 'FX-INTRO', 'corte': 'FX-CORTES', 'icono': 'FX-ICONOS', 'nume
           'overlay': 'FX-OVERLAY', 'propio': 'FX-PROPIOS', 'outro': 'FX-OUTRO', 'broll': 'FX-BROLL'}
 PISTA_SONIDO = 'FX-SONIDO'
 PISTA_MUSICA = 'FX-MUSICA'
+PISTA_VOZ_AI = 'AI VOICE'                    # v5.34, AI Sound Director: la voz restaurada (una COPIA; A1 se apaga solo con ella ya puesta)
+PISTAS_AI = ('AI MUSIC', 'AI AMBIENCE', 'AI SFX MOTION', 'AI SFX UI', 'AI SFX IMPACTS', 'AI SFX TONAL', 'AI SFX TEXTURE')
+PROPIAS = ('FX-', 'PRO-', 'AI ', 'SFX')       # las pistas de audio que pone CineCaptions (las demás son del usuario)
 MAX_CARRILES = 8
 BIN = 'RCS · Efectos'
 
@@ -73,8 +80,8 @@ def _importar(mp, caja, ev):
     return nuevos[0] if nuevos else None
 
 
-def _pista(tl, nombre, tipo='video'):
-    """El índice de la pista (de video o de audio) con ese nombre (se crea si no está) y sus clips de antes ya borrados."""
+def _pista(tl, nombre, tipo='video', sub='stereo'):
+    """El índice de la pista (de video o de audio, `sub` mono/stereo) con ese nombre (se crea si no está) y sus clips de antes ya borrados."""
     for i in range(1, int(tl.GetTrackCount(tipo) or 0) + 1):
         if tl.GetTrackName(tipo, i) == nombre:
             try:
@@ -89,7 +96,7 @@ def _pista(tl, nombre, tipo='video'):
     creada = False
     if tipo == 'audio':
         try:
-            creada = bool(tl.AddTrack('audio', 'stereo'))
+            creada = bool(tl.AddTrack('audio', sub))
         except Exception:
             creada = False
     if not creada and not tl.AddTrack(tipo):
@@ -122,11 +129,13 @@ def _quitar_si_vacia(tl, nombre, tipo='video'):
 
 
 NOMBRE_COMP = 'CineCaptions FX'
+NOMBRE_INTRO = 'CineCaptions Intro'          # v5.33: solo el zoom de la intro del gancho (con la PRO: colocar_pro sí recorta a la persona encima)
 
 
 def _poner_movimiento(tl, entradas):
     """La composición de Fusion de cada clip de V1 (zoom, temblor, transiciones, fondo desenfocado): se quita la de la vez anterior y se importa la nueva.
-    `entradas`: [{'inicio': fotograma del clip en el timeline, 'ruta': .comp | None}]. Devuelve cuántas se pusieron."""
+    `entradas`: [{'inicio': fotograma del clip en el timeline, 'ruta': .comp | None, 'nombre': nombre de la comp (por defecto NOMBRE_COMP)}].
+    Devuelve cuántas se pusieron."""
     puestas = 0
     por_inicio = {int(e['inicio']): e for e in entradas}
     for it in tl.GetItemListInTrack('video', 1) or []:
@@ -135,10 +144,11 @@ def _poner_movimiento(tl, entradas):
             continue
         try:
             for n in list(it.GetFusionCompNameList() or []):
-                if n == NOMBRE_COMP:
+                if n in (NOMBRE_COMP, NOMBRE_INTRO):
                     it.DeleteFusionCompByName(n)
             if not e.get('ruta'):
                 continue
+            nombre = e.get('nombre') or NOMBRE_COMP
             antes = set(it.GetFusionCompNameList() or [])
             comp = it.ImportFusionComp(e['ruta'])
             if not comp:
@@ -147,8 +157,8 @@ def _poner_movimiento(tl, entradas):
             nuevos = [n for n in (it.GetFusionCompNameList() or []) if n not in antes]
             if nuevos:
                 try:
-                    it.RenameFusionCompByName(nuevos[0], NOMBRE_COMP)
-                    it.LoadFusionCompByName(NOMBRE_COMP)
+                    it.RenameFusionCompByName(nuevos[0], nombre)
+                    it.LoadFusionCompByName(nombre)
                 except Exception:
                     pass
             try:
@@ -205,6 +215,103 @@ def _poner_audio(tl, mp, caja, fps, base, eventos, nombre_base):
     return puestos, saltados
 
 
+def _apagar_sfx(tl, nombres):
+    """v5.34, AI Sound Director (único dueño del sonido): los clips de los sonidos de Simple (pistas cuyo nombre empieza por uno de `nombres`: «SFX»,
+    «SFX 2»…) se APAGAN —siguen ahí, y un GO con el director apagado los vuelve a poner—. Las pistas «AI SFX …» no se tocan. Devuelve cuántos."""
+    prefijos = [str(n).upper() for n in nombres or [] if n]
+    apagados = 0
+    for i in range(1, int(tl.GetTrackCount('audio') or 0) + 1):
+        nombre = str(tl.GetTrackName('audio', i) or '').upper()
+        if not any(nombre.startswith(p) for p in prefijos):
+            continue
+        for it in tl.GetItemListInTrack('audio', i) or []:
+            try:
+                if it.GetClipEnabled() and it.SetClipEnabled(False):
+                    apagados += 1
+            except Exception:
+                pass
+    return apagados
+
+
+def _indice(tl, nombre, tipo='audio'):
+    for i in range(1, int(tl.GetTrackCount(tipo) or 0) + 1):
+        if tl.GetTrackName(tipo, i) == nombre:
+            return i
+    return None
+
+
+def _a1_encendida(tl):
+    try:
+        tl.SetTrackEnable('audio', 1, True)
+    except Exception:
+        pass
+
+
+def _poner_voz_ai(tl, mp, caja, fps, base, eventos):
+    """v5.34, AI Sound Director: la voz restaurada (una COPIA: el audio original sigue en A1) en la pista «AI VOICE». A1 se apaga SOLO después de
+    comprobar que la copia quedó puesta entera y en su sitio; si algo falla, la copia se quita y A1 queda encendida. Sin evento (director apagado o
+    voz que no hacía falta tocar): AI VOICE fuera y A1 vuelve a sonar. Con otras pistas de audio del usuario la voz original no se sustituye.
+    Devuelve (puestas, nota)."""
+    ev = next((e for e in eventos if e.get('tipo') == 'voz_ai' and e.get('archivo')), None)
+    if ev is None:
+        if _indice(tl, PISTA_VOZ_AI) is None:
+            return 0, ''
+        _vaciar_y_quitar(tl, PISTA_VOZ_AI, 'audio')
+        _a1_encendida(tl)
+        return 0, 'AI VOICE quitada: la voz original (A1) vuelve a sonar'
+
+    def deshacer(motivo):
+        _vaciar_y_quitar(tl, PISTA_VOZ_AI, 'audio')
+        _a1_encendida(tl)
+        return 0, motivo + ': la voz original sigue en A1'
+    propias = PROPIAS + tuple(str(p) for p in (ev.get('propias') or []) if p)
+    ajenas = []
+    for i in range(2, int(tl.GetTrackCount('audio') or 0) + 1):
+        nombre = str(tl.GetTrackName('audio', i) or '')
+        if nombre.startswith(propias):
+            continue
+        try:
+            if not tl.GetIsTrackEnabled('audio', i):
+                continue
+        except Exception:
+            pass
+        if tl.GetItemListInTrack('audio', i):
+            ajenas.append(nombre or 'A%d' % i)
+    if ajenas:
+        return deshacer('hay otras pistas de audio con clips (%s)' % ', '.join(ajenas[:3]))
+    a1 = sorted(tl.GetItemListInTrack('audio', 1) or [], key=lambda it: it.GetStart())
+    frames = max(2, int(round(float(ev.get('dur') or 0.0) * fps)))
+    ini = base + int(round(float(ev.get('ini') or 0.0) * fps))
+    if not a1:
+        return deshacer('A1 está vacía')
+    tolerancia = max(3, int(round(0.5 * fps)))                        # (el audio de un video puede acabar unos fotogramas antes que su imagen)
+    if abs(a1[0].GetStart() - ini) > 1 or abs(a1[-1].GetEnd() - (ini + frames)) > tolerancia:
+        return deshacer('la copia no cuadra con A1 (A1 %d-%d, copia %d-%d)' % (a1[0].GetStart(), a1[-1].GetEnd(), ini, ini + frames))
+    clip = _importar(mp, caja, ev)
+    if clip is None:
+        return deshacer('no pude importar la voz restaurada')
+    _vaciar_y_quitar(tl, PISTA_VOZ_AI, 'audio')                          # re-aplicar no apila: una pista nueva con un solo clip
+    idx = _pista(tl, PISTA_VOZ_AI, 'audio', 'mono' if int(ev.get('canales') or 2) == 1 else 'stereo')
+    if idx is None:
+        return deshacer('no pude crear la pista AI VOICE')
+    nuevos = mp.AppendToTimeline([{'mediaPoolItem': clip, 'startFrame': 0, 'endFrame': frames - 1, 'recordFrame': ini, 'trackIndex': idx, 'mediaType': 2}])
+    puestos = tl.GetItemListInTrack('audio', idx) or []
+    if not nuevos or len(puestos) != 1 or abs(puestos[0].GetStart() - ini) > 1 or abs(puestos[0].GetDuration() - frames) > 2:
+        return deshacer('AI VOICE no quedó bien puesta')
+    try:
+        puestos[0].SetName('AI VOICE · %s' % (ev.get('backend') or 'voz restaurada'))
+    except Exception:
+        pass
+    try:
+        tl.SetTrackEnable('audio', 1, False)
+        apagada = tl.GetIsTrackEnabled('audio', 1) is False
+    except Exception:
+        apagada = False
+    if not apagada:
+        return deshacer('no pude apagar A1 (sonarían las dos voces)')
+    return 1, 'AI VOICE puesta y A1 apagada (reversible: al apagar el director, A1 vuelve)'
+
+
 def main():
     with open(RUTA_JSON, encoding='utf-8') as f:
         datos = json.load(f)
@@ -218,7 +325,8 @@ def main():
     caja = _carpeta_efectos(mp)
     v1_antes = len(tl.GetItemListInTrack('video', 1) or [])
     puestos = {k: 0 for k in PISTAS}
-    solo_audio = bool(datos.get('solo_audio'))                          # sin efectos visuales: solo el audio extra (música, sonidos); las pistas visuales no se tocan
+    solo_ai = bool(datos.get('solo_ai'))                                # v5.34: solo las pistas del AI Sound Director (la limpieza al apagarlo)
+    solo_audio = bool(datos.get('solo_audio')) or solo_ai               # sin efectos visuales: solo el audio extra (música, sonidos); las pistas visuales no se tocan
     puestos['movimiento'] = 0 if solo_audio else _poner_movimiento(tl, datos.get('v1') or [])
     saltados = 0
     por_pista = {}
@@ -293,11 +401,31 @@ def main():
                 pass
             puestos[tipo] += 1
     # los sonidos (intro, cortes, gancho…) en pistas «FX-SONIDO», «FX-SONIDO 2»… y la música de fondo en «FX-MUSICA» (el audio del video, en A1, no se toca)
-    sonidos = [e for e in datos.get('eventos', []) if e.get('tipo') == 'sonido']
-    puestos['sonido'], s1 = _poner_audio(tl, mp, caja, fps, base, sonidos, PISTA_SONIDO)
-    musica = [e for e in datos.get('eventos', []) if e.get('tipo') == 'musica']
-    puestos['musica'], s2 = _poner_audio(tl, mp, caja, fps, base, musica, PISTA_MUSICA)
-    saltados += s1 + s2
+    eventos = datos.get('eventos', [])
+    if not solo_ai:
+        sonidos = [e for e in eventos if e.get('tipo') == 'sonido' and not e.get('pista')]
+        puestos['sonido'], s1 = _poner_audio(tl, mp, caja, fps, base, sonidos, PISTA_SONIDO)
+        musica = [e for e in eventos if e.get('tipo') == 'musica' and not e.get('pista')]
+        puestos['musica'], s2 = _poner_audio(tl, mp, caja, fps, base, musica, PISTA_MUSICA)
+        saltados += s1 + s2
+    # v5.34, AI Sound Director: sus pistas (por NOMBRE, nunca por índice) y la voz restaurada; sin sus eventos, sus pistas se quitan y A1 vuelve
+    puestos['ai'] = 0
+    existentes = {str(tl.GetTrackName('audio', i)) for i in range(1, int(tl.GetTrackCount('audio') or 0) + 1)}
+    pedidos_ai = 0
+    for nombre in PISTAS_AI:
+        evs = [e for e in eventos if e.get('pista') == nombre]
+        pedidos_ai += len(evs)
+        if evs or nombre in existentes:
+            n_ai, s_ai = _poner_audio(tl, mp, caja, fps, base, evs, nombre)
+            puestos['ai'] += n_ai
+            saltados += s_ai
+    if datos.get('apagar_sfx') and (puestos['ai'] > 0 or pedidos_ai == 0):    # solo con los sonidos del director ya puestos (o su silencio a propósito)
+        apagados = _apagar_sfx(tl, datos['apagar_sfx'])
+        if apagados:
+            print('  %d sonidos de Simple apagados (los decide el AI Sound Director)' % apagados)
+    puestos['voz'], nota_voz = _poner_voz_ai(tl, mp, caja, fps, base, eventos)
+    if nota_voz:
+        print('  ' + nota_voz)
     for tipo, nombre in pistas_visuales.items():
         if tipo in por_pista and puestos[tipo] == 0 and tipo != 'broll':
             _quitar_si_vacia(tl, nombre)
@@ -305,5 +433,5 @@ def main():
     v1_ahora = len(tl.GetItemListInTrack('video', 1) or [])
     if v1_ahora < v1_antes:                                         # nunca debería pasar: se avisa en voz alta en vez de callar
         raise SystemExit('ATENCION: V1 tenía %d clip(s) y ahora tiene %d tras colocar los efectos' % (v1_antes, v1_ahora))
-    if sum(puestos.values()) == 0 and datos.get('eventos'):
+    if sum(puestos.values()) == 0 and [e for e in datos.get('eventos', []) if e.get('tipo') != 'voz_ai']:      # (la voz que no se sustituye no es un fallo)
         raise SystemExit('Resolve no colocó ningún efecto')

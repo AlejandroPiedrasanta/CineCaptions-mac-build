@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos».
 ]]
 
-local VERSION = "5.24 (efectos)"
+local VERSION = "5.37 (efectos)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -335,6 +335,9 @@ local PISTAS = {
 }
 local PISTA_SONIDO = "FX-SONIDO"
 local PISTA_MUSICA = "FX-MUSICA"
+local PISTA_VOZ_AI = "AI VOICE"              -- v5.34, AI Sound Director: la voz restaurada (una COPIA; A1 se apaga solo con ella ya puesta)
+local PISTAS_AI = { "AI MUSIC", "AI AMBIENCE", "AI SFX MOTION", "AI SFX UI", "AI SFX IMPACTS", "AI SFX TONAL", "AI SFX TEXTURE" }
+local PROPIAS = { "FX-", "PRO-", "AI ", "SFX" }  -- las pistas de audio que pone CineCaptions (las demas son del usuario)
 local MAX_CARRILES = 8
 local BIN = "RCS · Efectos"
 local NOMBRE_COMP = "CineCaptions FX"
@@ -400,8 +403,8 @@ local function nombre_pista(tl, tipo, i)
     return nombre
 end
 
--- El indice de la pista (de video o de audio) con ese nombre (se crea si no esta) y sus clips de antes ya borrados.
-local function pista(tl, nombre, tipo)
+-- El indice de la pista (de video o de audio, `sub` mono/stereo) con ese nombre (se crea si no esta) y sus clips de antes ya borrados.
+local function pista(tl, nombre, tipo, sub)
     tipo = tipo or "video"
     for i = 1, math.floor(tonumber(tl:GetTrackCount(tipo)) or 0) do
         if nombre_pista(tl, tipo, i) == nombre then
@@ -415,7 +418,7 @@ local function pista(tl, nombre, tipo)
     end
     local creada = false
     if tipo == "audio" then
-        local ok, r = pcall(function() return tl:AddTrack("audio", "stereo") end)
+        local ok, r = pcall(function() return tl:AddTrack("audio", sub or "stereo") end)
         creada = ok and r == true
     end
     if not creada then
@@ -448,6 +451,27 @@ local function quitar_si_vacia(tl, nombre, tipo)
     end
 end
 
+-- v5.34, AI Sound Director (unico dueño del sonido): los clips de los sonidos de Simple (pistas cuyo nombre empieza por uno de `nombres`: «SFX»,
+-- «SFX 2»...) se APAGAN -siguen ahi, y un GO con el director apagado los vuelve a poner-. Las pistas «AI SFX ...» no se tocan. Devuelve cuantos.
+local function apagar_sfx(tl, nombres)
+    local apagados = 0
+    for i = 1, math.floor(tonumber(tl:GetTrackCount("audio")) or 0) do
+        local nombre = string.upper(nombre_pista(tl, "audio", i) or "")
+        local suyo = false
+        for _, n in ipairs(nombres or {}) do
+            local p = string.upper(tostring(n))
+            if p ~= "" and string.sub(nombre, 1, #p) == p then suyo = true end
+        end
+        if suyo then
+            for _, it in ipairs(lista_api(tl:GetItemListInTrack("audio", i))) do
+                local ok, r = pcall(function() return it:GetClipEnabled() and it:SetClipEnabled(false) end)
+                if ok and r then apagados = apagados + 1 end
+            end
+        end
+    end
+    return apagados
+end
+
 local function poner_prop(item, clave, valor)
     local ok, r = pcall(function() return item:SetProperty(clave, valor) end)
     if ok and r then return true end
@@ -463,19 +487,22 @@ local function lista_api_texto(t)
 end
 
 -- La composicion de Fusion de cada clip de V1 (zoom, temblor, transiciones, fondo desenfocado): se quita la de la vez anterior y se importa la nueva.
--- `entradas`: [{inicio = fotograma del clip en el timeline, ruta = .comp | nil}]. Devuelve cuantas se pusieron.
+-- `entradas`: [{inicio = fotograma del clip en el timeline, ruta = .comp | nil, nombre = nombre de la comp (por defecto NOMBRE_COMP)}].
+-- v5.33: «CineCaptions Intro» = solo el zoom de la intro del gancho (con la PRO: colocar_pro si recorta a la persona encima). Devuelve cuantas se pusieron.
 local function poner_movimiento(tl, entradas)
     local puestas = 0
     local por_inicio = {}
+    local NOMBRE_INTRO = "CineCaptions Intro"
     for _, e in ipairs(entradas or {}) do por_inicio[math.floor(tonumber(e.inicio) or -1)] = e end
     for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", 1))) do
         local e = por_inicio[math.floor(tonumber(it:GetStart()) or -2)]
         if e ~= nil then
             local ok, err = pcall(function()
                 for _, n in ipairs(lista_api_texto(it:GetFusionCompNameList())) do
-                    if n == NOMBRE_COMP then it:DeleteFusionCompByName(n) end
+                    if n == NOMBRE_COMP or n == NOMBRE_INTRO then it:DeleteFusionCompByName(n) end
                 end
                 if e.ruta == nil or e.ruta == "" then return end
+                local nombre = (e.nombre ~= nil and e.nombre ~= "") and e.nombre or NOMBRE_COMP
                 local antes = {}
                 for _, n in ipairs(lista_api_texto(it:GetFusionCompNameList())) do antes[n] = true end
                 local comp = it:ImportFusionComp(e.ruta)
@@ -489,8 +516,8 @@ local function poner_movimiento(tl, entradas)
                 end
                 if nuevo ~= nil then
                     pcall(function()
-                        it:RenameFusionCompByName(nuevo, NOMBRE_COMP)
-                        it:LoadFusionCompByName(NOMBRE_COMP)
+                        it:RenameFusionCompByName(nuevo, nombre)
+                        it:LoadFusionCompByName(nombre)
                     end)
                 end
                 pcall(function() it:SetFusionOutputCache("enabled") end)   -- v5.5.4: se pre-renderiza en segundo plano (gemelo de colocar_efectos.py)
@@ -557,6 +584,96 @@ local function poner_audio(tl, mp, caja, fps, base, eventos, nombre_base)
     return puestos, saltados
 end
 
+local function indice_pista(tl, nombre, tipo)
+    for i = 1, math.floor(tonumber(tl:GetTrackCount(tipo or "audio")) or 0) do
+        if nombre_pista(tl, tipo or "audio", i) == nombre then return i end
+    end
+    return nil
+end
+
+local function empieza_con(s, prefijos)
+    for _, p in ipairs(prefijos) do
+        if s:sub(1, #p) == p then return true end
+    end
+    return false
+end
+
+-- v5.34, AI Sound Director: la voz restaurada (una COPIA: el audio original sigue en A1) en la pista «AI VOICE». A1 se apaga SOLO despues de
+-- comprobar que la copia quedo puesta entera y en su sitio; si algo falla, la copia se quita y A1 queda encendida. Sin evento (director apagado o
+-- voz que no hacia falta tocar): AI VOICE fuera y A1 vuelve a sonar. Con otras pistas de audio del usuario la voz original no se sustituye.
+-- Gemelo de _poner_voz_ai (colocar_efectos.py). Devuelve (puestas, nota).
+local function poner_voz_ai(tl, mp, caja, fps, base, eventos)
+    local ev = nil
+    for _, e in ipairs(eventos) do
+        if e.tipo == "voz_ai" and e.archivo then ev = e; break end
+    end
+    local function a1_encendida() pcall(function() tl:SetTrackEnable("audio", 1, true) end) end
+    if ev == nil then
+        if indice_pista(tl, PISTA_VOZ_AI, "audio") == nil then return 0, "" end
+        vaciar_y_quitar(tl, PISTA_VOZ_AI, "audio")
+        a1_encendida()
+        return 0, "AI VOICE quitada: la voz original (A1) vuelve a sonar"
+    end
+    local function deshacer(motivo)
+        vaciar_y_quitar(tl, PISTA_VOZ_AI, "audio")
+        a1_encendida()
+        return 0, motivo .. ": la voz original sigue en A1"
+    end
+    local propias = {}
+    for _, p in ipairs(PROPIAS) do propias[#propias + 1] = p end
+    if type(ev.propias) == "table" then
+        for _, p in ipairs(ev.propias) do if p and tostring(p) ~= "" then propias[#propias + 1] = tostring(p) end end
+    end
+    local ajenas = {}
+    for i = 2, math.floor(tonumber(tl:GetTrackCount("audio")) or 0) do
+        local nombre = nombre_pista(tl, "audio", i)
+        if not empieza_con(nombre, propias) then
+            local activa = true
+            pcall(function() activa = tl:GetIsTrackEnabled("audio", i) ~= false end)
+            if activa and #lista_api(tl:GetItemListInTrack("audio", i)) > 0 then ajenas[#ajenas + 1] = (nombre ~= "" and nombre or ("A" .. i)) end
+        end
+    end
+    if #ajenas > 0 then return deshacer("hay otras pistas de audio con clips (" .. table.concat(ajenas, ", ", 1, math.min(3, #ajenas)) .. ")") end
+    local a1 = lista_api(tl:GetItemListInTrack("audio", 1))
+    table.sort(a1, function(x, y) return x:GetStart() < y:GetStart() end)
+    local frames = math.max(2, redondear((tonumber(ev.dur) or 0) * fps))
+    local ini = base + redondear((tonumber(ev.ini) or 0) * fps)
+    if #a1 == 0 then return deshacer("A1 esta vacia") end
+    local tolerancia = math.max(3, redondear(0.5 * fps))      -- (el audio de un video puede acabar unos fotogramas antes que su imagen)
+    if math.abs(a1[1]:GetStart() - ini) > 1 or math.abs(a1[#a1]:GetEnd() - (ini + frames)) > tolerancia then
+        return deshacer(string.format("la copia no cuadra con A1 (A1 %d-%d, copia %d-%d)", a1[1]:GetStart(), a1[#a1]:GetEnd(), ini, ini + frames))
+    end
+    local clip = importar(mp, caja, ev)
+    if clip == nil then return deshacer("no pude importar la voz restaurada") end
+    vaciar_y_quitar(tl, PISTA_VOZ_AI, "audio")                -- re-aplicar no apila: una pista nueva con un solo clip
+    local idx = pista(tl, PISTA_VOZ_AI, "audio", (tonumber(ev.canales) or 2) == 1 and "mono" or "stereo")
+    if idx == nil then return deshacer("no pude crear la pista AI VOICE") end
+    local ok, nuevos = pcall(function()
+        return mp:AppendToTimeline({ { mediaPoolItem = clip, startFrame = 0, endFrame = frames - 1, recordFrame = ini, trackIndex = idx, mediaType = 2 } })
+    end)
+    local puestos = lista_api(tl:GetItemListInTrack("audio", idx))
+    if not (ok and type(nuevos) == "table" and nuevos[1]) or #puestos ~= 1 or math.abs(puestos[1]:GetStart() - ini) > 1
+            or math.abs(puestos[1]:GetDuration() - frames) > 2 then
+        return deshacer("AI VOICE no quedo bien puesta")
+    end
+    pcall(function() puestos[1]:SetName("AI VOICE · " .. tostring(ev.backend or "voz restaurada")) end)
+    local apagada = false
+    pcall(function()
+        tl:SetTrackEnable("audio", 1, false)
+        apagada = tl:GetIsTrackEnabled("audio", 1) == false
+    end)
+    if not apagada then return deshacer("no pude apagar A1 (sonarian las dos voces)") end
+    return 1, "AI VOICE puesta y A1 apagada (reversible: al apagar el director, A1 vuelve)"
+end
+
+local function sin_pista(eventos)
+    local salida = {}
+    for _, e in ipairs(eventos) do
+        if not e.pista then salida[#salida + 1] = e end
+    end
+    return salida
+end
+
 local function de_tipo(eventos, tipo)
     local salida = {}
     for i, e in ipairs(eventos) do
@@ -607,7 +724,8 @@ local function main()
     local eventos_todos = (type(datos.eventos) == "table") and datos.eventos or {}
     local puestos = { movimiento = 0 }
     for _, p in ipairs(PISTAS) do puestos[p[1]] = 0 end
-    local solo_audio = datos.solo_audio == true            -- sin efectos visuales: solo el audio extra (musica, sonidos); las pistas visuales no se tocan
+    local solo_ai = datos.solo_ai == true                  -- v5.34: solo las pistas del AI Sound Director (la limpieza al apagarlo)
+    local solo_audio = datos.solo_audio == true or solo_ai  -- sin efectos visuales: solo el audio extra (musica, sonidos); las pistas visuales no se tocan
     if not solo_audio then puestos.movimiento = poner_movimiento(tl, datos.v1) end
     local saltados = 0
     local por_pista = {}
@@ -687,10 +805,34 @@ local function main()
         end
     end
     -- los sonidos (intro, cortes, gancho...) en pistas «FX-SONIDO», «FX-SONIDO 2»... y la musica de fondo en «FX-MUSICA» (el audio del video, en A1, no se toca)
-    local s1, s2
-    puestos.sonido, s1 = poner_audio(tl, mp, caja, fps, base, de_tipo(eventos_todos, "sonido"), PISTA_SONIDO)
-    puestos.musica, s2 = poner_audio(tl, mp, caja, fps, base, de_tipo(eventos_todos, "musica"), PISTA_MUSICA)
+    local s1, s2 = 0, 0
+    if not solo_ai then
+        puestos.sonido, s1 = poner_audio(tl, mp, caja, fps, base, sin_pista(de_tipo(eventos_todos, "sonido")), PISTA_SONIDO)
+        puestos.musica, s2 = poner_audio(tl, mp, caja, fps, base, sin_pista(de_tipo(eventos_todos, "musica")), PISTA_MUSICA)
+    end
     saltados = saltados + s1 + s2
+    -- v5.34, AI Sound Director: sus pistas (por NOMBRE, nunca por indice) y la voz restaurada; sin sus eventos, sus pistas se quitan y A1 vuelve
+    puestos.ai = 0
+    local existentes = {}
+    for i = 1, math.floor(tonumber(tl:GetTrackCount("audio")) or 0) do existentes[nombre_pista(tl, "audio", i)] = true end
+    local pedidos_ai = 0
+    for _, nombre in ipairs(PISTAS_AI) do
+        local evs = {}
+        for _, e in ipairs(eventos_todos) do if e.pista == nombre then evs[#evs + 1] = e end end
+        pedidos_ai = pedidos_ai + #evs
+        if #evs > 0 or existentes[nombre] then
+            local n_ai, s_ai = poner_audio(tl, mp, caja, fps, base, evs, nombre)
+            puestos.ai = puestos.ai + n_ai
+            saltados = saltados + s_ai
+        end
+    end
+    if type(datos.apagar_sfx) == "table" and (puestos.ai > 0 or pedidos_ai == 0) then   -- solo con los sonidos del director ya puestos (o su silencio a proposito)
+        local apagados = apagar_sfx(tl, datos.apagar_sfx)
+        if apagados > 0 then print(string.format("  %d sonidos de Simple apagados (los decide el AI Sound Director)", apagados)) end
+    end
+    local nota_voz
+    puestos.voz, nota_voz = poner_voz_ai(tl, mp, caja, fps, base, eventos_todos)
+    if nota_voz ~= "" then print("  " .. nota_voz) end
     for _, par in ipairs(PISTAS) do
         if not solo_audio and por_pista[par[1]] and puestos[par[1]] == 0 and par[1] ~= "broll" then quitar_si_vacia(tl, par[2]) end
     end
@@ -699,6 +841,8 @@ local function main()
     for _, p in ipairs(PISTAS) do orden[#orden + 1] = p[1] end
     orden[#orden + 1] = "sonido"
     orden[#orden + 1] = "musica"
+    orden[#orden + 1] = "ai"
+    orden[#orden + 1] = "voz"
     for _, k in ipairs(orden) do
         local v = puestos[k] or 0
         total = total + v
@@ -710,7 +854,9 @@ local function main()
     if v1_ahora < v1_antes then          -- nunca deberia pasar: se avisa en voz alta en vez de callar
         fail(string.format("ATENCION: V1 tenia %d clip(s) y ahora tiene %d tras colocar los efectos", v1_antes, v1_ahora))
     end
-    if total == 0 and #eventos_todos > 0 then fail("Resolve no coloco ningun efecto") end
+    local reales = 0                     -- (la voz que no se sustituye no es un fallo)
+    for _, e in ipairs(eventos_todos) do if e.tipo ~= "voz_ai" then reales = reales + 1 end end
+    if total == 0 and reales > 0 then fail("Resolve no coloco ningun efecto") end
 end
 
 local ok, err = pcall(main)

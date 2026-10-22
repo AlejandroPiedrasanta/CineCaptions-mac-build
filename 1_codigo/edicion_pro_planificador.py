@@ -699,7 +699,7 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
         if primero:                                                   # un dato en los primeros segundos manda: la órbita acaba antes
             b = min(b, min(primero) - 0.45 - sep * 0.4)                  # con el aire que exige libre() entre dos gráficos grandes
         a, b = _ajustar_a_corte(a, b, cortes)
-        if b - a >= 1.6 and libre(a, b, 0.0):
+        if b - a >= 1.6 and _permitido('ograf:orbita') and libre(a, b, 0.0):     # (v5.33: retirada: el gancho es la intro de intros_gancho)
             iconos = []
             for c in sorted((c for c in cands if c['tipo'] == 'concepto' and st(c['i']) <= max(10.0, duracion * 0.35)), key=lambda c: st(c['i'])):
                 if c['icono'] not in iconos:

@@ -484,6 +484,68 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.37', [
+        'AI Sound Director se encarga de todo el sonido: los sonidos de las reglas de antes ya no suenan, y los de los motions (también los del Tema 1) los rehace a la medida.',
+        'Usa todas tus bibliotecas de sonido: miles de whooshes, golpes, risers y tonos, camas de música de score y ambientes reales, cada uno revisado antes de usarlo.',
+        'Si no hay música de Epidemic, pone una cama de score de tus colecciones, siempre por debajo de la voz; el ambiente sale de tus grabaciones del mismo entorno.',
+        'La página SONIDO aplica sola cada cambio en Resolve y te dice si todo está al día. Viene encendida.',
+    ]),
+    ('5.35', [
+        'Nueva página SONIDO = AI Sound Director: la IA diseña el sonido de cada video (voz, sonidos, música y ambiente) y tú lo diriges. Viene apagada: enciéndela arriba de la página.',
+        'Decide caption a caption qué suena y qué se queda en silencio, y hace cada sonido a la medida de su animación. Los sonidos de antes se apagan, no se borran.',
+        'Escucha el antes y el después (Original / AI Sound) y toca un sonido para oírlo, pedir menos o más, regenerarlo, silenciarlo o bloquearlo; o díselo con una frase.',
+        'La voz limpia va en su propia pista (AI VOICE) y la original se apaga solo cuando la copia quedó bien puesta. El Sound Score te dice cómo quedó la mezcla.',
+        'El programa funciona ahora con Python 3.15.1 y PySide6 6.12.0, con las librerías al día.',
+    ]),
+    ('5.33', [
+        'Nuevo «Gancho del inicio»: 8 intros para el primer segundo, con un destello de luz, el video que se aleja con un zoom y un golpe de sonido. Viene encendido con la Edición PRO en todos los temas.',
+        'Cada intro tiene su color, su zoom (golpe, suave, desenfoque, giro, temblor, rebote, RGB o latigazo) y su sonido; al elegirla, suena.',
+        'En Efectos › Gancho del inicio › Personaliza cambias el color de la luz, el sonido (el de otra intro, ninguno o uno tuyo) y el zoom.',
+        'Página Proyecto: el nombre del tema y sus botones, un poco más pequeños. En «Captions detrás de ti» quedan los estilos más limpios.',
+    ]),
+    ('5.32', [
+        'Arreglado: CineCaptions ya no se congela cuando DaVinci Resolve está ocupado, y «Listo» de «detrás de ti» ya no hace caer a Resolve.',
+        'Si Resolve se cierra de golpe, CineCaptions lo avisa al momento y te dice qué hacer (tus marcas siguen guardadas).',
+        'Efectos › «Captions detrás de ti» › Posición, rediseñada: visor que reproduce tu video, pestañas Ajustes / Marcas / Sugerencias y la tira abajo.',
+        'Lo que la tira marca en verde es lo que «Listo» pone de verdad. En videos horizontales eliges el lado del caption: arriba, izquierda o derecha.',
+        'Página Proyecto con aspecto nuevo: la franja del audio, el nombre del tema y los botones «En uso» y «Edición PRO activada», con animación.',
+    ]),
+    ('5.31', [
+        'En Efectos › Posición la tira resalta lo que está en tu timeline (verde), lo nuevo (borde) y lo que se quita (rojo; un clic lo recupera).',
+        '«Listo» enseña una barra mientras lo pone en Resolve y, al acabar, la tira muestra cómo quedó.',
+        'La máscara de la persona es más fina (pelo, orejas, huecos entre brazos y piernas) y se guarda: la segunda vez sale al momento.',
+        'Las sugerencias de «detrás de ti» se comprueban con la misma regla que GO en los Temas 1 a 6: lo que te sugiere es lo que se pone.',
+        'Arreglado: un video con el último fotograma dañado (muchos descargados) ya no deja el Tema 1 sin su placa.',
+    ]),
+    ('5.30', [
+        'En Efectos › Posición ves lo que está ahora en tu timeline (también lo que puso GO por su cuenta) y las sugerencias: quita, mueve o añade y «Listo» lo pone en Resolve.',
+        '«Quitar todas» y «Listo» quita «detrás de ti» de tu timeline; si nada cambió, «Listo» ni toca Resolve.',
+    ]),
+    ('5.29', [
+        '«Listo» en «Captions detrás de ti» lo pone al momento en tu timeline de Resolve (sin volver a pasar GO).',
+        'La persona que va delante de los captions la recorta la IA (un matte con alfa): se ve igual en Resolve y en el render.',
+        'Arreglado: tus posiciones se aplican aunque Resolve use la copia con el audio compatible de tu video.',
+    ]),
+    ('5.28', [
+        '«Captions detrás de ti» › Posición: te sugiere los 3 mejores momentos; un clic y quedan puestos (o «Poner las 3»), y el efecto se enciende solo.',
+        'La vista grande enseña cómo queda: tus captions del tema elegido en Inicio, detrás de la persona (los del timeline si ya pasaste GO).',
+        'Arreglado: con el Tema 1 y el audio del timeline, los emojis animados y «detrás de ti» ya no fallan.',
+    ]),
+    ('5.27', [
+        'Efectos › «Captions detrás de ti» › Posición: la tira marca en verde dónde el texto queda bien detrás de ti y tus marcas no salen de ahí (como mucho 8).',
+        'Tus posiciones se aplican al pulsar GO aunque no vuelvas a soltar el video, y «Listo» deja el efecto encendido; Proyecto dice cuántas hay.',
+        'Magic Mask recorta solo a la persona: sus puntos van en la cara y los hombros, nunca en el micrófono ni en la mesa.',
+    ]),
+    ('5.26', [
+        'GO ya no se queda parado si minimizas CineCaptions o cambias de página mientras trabaja.',
+        'Tema 1: los captions y la Edición PRO vuelven a colocarse en Resolve (la 5.25 dejaba el video solo con los sonidos).',
+        'Menú de la Edición PRO: primero «Gancho del inicio», luego «Captions detrás de ti» y «Emojis animados».',
+    ]),
+    ('5.25', [
+        'Edición PRO › «Emojis animados»: un emoji que sale de lo que dices, junto a los captions y sin tapar caras; Suave, Media o Fuerte en el menú.',
+        'En Efectos, sus estilos 2D (Lottie) y 3D, siempre en movimiento, y dónde ponerlo: junto al caption, encima o junto a tu cabeza.',
+        'Tema 1 más rápido y ordenado en Resolve: ya no crea pistas que luego desactiva, y cada pista de la PRO dice qué hace.',
+    ]),
     ('5.24', [
         'Efectos › «Posición» con el audio que trae «Obtener»: se ven los fotogramas del video de tu timeline, en el segundo justo aunque el clip esté recortado o haya zona marcada.',
         'Efectos en el mismo orden que el menú de la Edición PRO.',

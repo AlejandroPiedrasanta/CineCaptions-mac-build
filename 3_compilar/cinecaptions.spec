@@ -25,7 +25,7 @@ AQUI = os.path.dirname(os.path.abspath(SPEC))
 # (sys._MEIPASS = <instalacion>\_internal).
 datas = []
 for carpeta in ('resolve_scripts', 'locales', 'plantillas_incluidas', 'fonts',
-                'sfx_library', 'sfx_emoji', 'emojis', 'motor_qwen', 'guia_estilo', 'generador_packs', 'fondos_estilos', 'vistas_slider', 'efectos', 'edicion_pro',          # v5.4.49: Edición PRO (plantillas OGraf, modelo de recorte, colocador)
+                'sfx_library', 'sfx_emoji', 'emojis', 'motor_qwen', 'motor_compat', 'guia_estilo', 'generador_packs', 'fondos_estilos', 'vistas_slider', 'efectos', 'edicion_pro',          # v5.4.49: Edición PRO (plantillas OGraf, modelo de recorte, colocador)
                 'motions_resolve', 'creativo'):          # v5.5.9: los motions editables de Resolve (Efectos › Títulos › CineCaptions; generador_packs/drfx_motions.py)
     origen = os.path.join(RECURSOS, carpeta)
     if not os.path.isdir(origen):
@@ -37,9 +37,7 @@ datas.append((os.path.join(RECURSOS, 'fondo_esfera.jpg'), '.'))      # v5.2.1: l
 
 # Datos de librerias que PyInstaller no ve solo (v5.0.0: la interfaz es
 # PySide6; su hook ya trae las DLL de Qt y el plugin de ventanas)
-datas += collect_data_files('faster_whisper')      # silero_vad*.onnx (filtro de voz)
 datas += collect_data_files('spellchecker')        # diccionarios de ortografia
-datas += collect_data_files('sacremoses')          # tablas del tokenizador de Argos
 datas += collect_data_files('qtawesome')           # v5.2: las fuentes de iconos (Phosphor)
 
 # Modulos propios: casi todos se importan dentro de funciones y alguno puede
@@ -48,8 +46,6 @@ propios = sorted(os.path.splitext(n)[0] for n in os.listdir(FUENTES)
                  if n.endswith('.py') and n != 'CineCaptions (script principal).py')
 
 hiddenimports = propios + [
-    'argostranslate.translate', 'argostranslate.package', 'argostranslate.settings',
-    'argostranslate.sbd', 'minisbd', 'sentencepiece', 'sacremoses',
     'pynput.keyboard._win32', 'pynput.mouse._win32',
     'qtawesome', 'qtpy', 'qtpy.QtCore', 'qtpy.QtGui', 'qtpy.QtWidgets',
 ]
@@ -67,6 +63,8 @@ if sys.platform.startswith('win'):
 # librerias de desarrollo.
 excludes = [
     'stanza', 'spacy', 'torch', 'torchvision', 'torchaudio', 'transformers',
+    'ctranslate2', 'faster_whisper', 'argostranslate', 'onnxruntime',
+    'tokenizers', 'sentencepiece', 'huggingface_hub', 'hf_xet', 'minisbd',
     'keybert', 'sentence_transformers', 'lupa',
     'matplotlib', 'scipy', 'pandas', 'IPython', 'jupyter', 'notebook',
     'pytest', 'ruff', 'pyflakes', 'PyInstaller',
@@ -86,7 +84,7 @@ a = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[os.path.join(AQUI, 'rthook_stanza_stub.py')],
+    runtime_hooks=[],
     excludes=excludes,
     noarchive=False,
     optimize=0,
@@ -95,6 +93,11 @@ a = Analysis(
 # las traducciones de Qt (los textos van por i18n.tr, nunca se cargan): ~26 MB.
 def _sobra(nombre):
     n = nombre.replace('/', '\\').lower()
+    # PyInstaller puede recoger ICU desde el PATH del compilador (p. ej. Poppler).
+    # Qt 6.12 usa el ICU del sistema en Windows; incluir el ICU de Poppler lo
+    # sombrea y QtCore falla con ERROR_PROC_NOT_FOUND al cargar.
+    if os.path.basename(n) in ('icuuc.dll', 'icudt78.dll'):
+        return True
     return n.startswith('pyside6\\') and (n.endswith('opengl32sw.dll') or '\\translations\\' in n)
 a.binaries = [x for x in a.binaries if not _sobra(x[0])]
 a.datas = [x for x in a.datas if not _sobra(x[0])]

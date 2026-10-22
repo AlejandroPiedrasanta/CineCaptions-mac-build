@@ -28,11 +28,18 @@ import qt_kit as ui
 from i18n import tr
 
 OPCIONES = [
-    # v5.22 (el usuario lo pidió): «Captions detrás de ti» la primera y «Gancho del inicio» la segunda; en Free la primera no se ve
+    # v5.26 (el usuario lo pidió): «Gancho del inicio» la primera, «Captions detrás de ti» la segunda (no se ve en Free) y «Emojis animados» la tercera
+    # v5.33: el gancho es una INTRO (intros_gancho: luz, zoom hacia fuera y golpe en el primer segundo) con su propia preferencia; la órbita y
+    # el sticker del gancho quedan retirados (motions_catalogo.RETIRADOS: siguen nombrados aquí para no caer en otro interruptor) y el titular
+    # detrás de la persona pasa a «Gráficos»
+    {'clave': 'gancho', 'nombre': 'Gancho del inicio', 'icono': 'ph.lightning', 'motions': ['ograf:orbita', 't5:orbita', 't5:sticker'],
+     'pref': 'pro_gancho_intro', 'solo_pref': True, 'defecto': True,
+     'detalle': 'El primer segundo: un destello de luz, el video que se aleja con un zoom y un golpe de sonido.'},
     {'clave': 'detras', 'nombre': 'Captions detrás de ti', 'icono': 'ph.user-focus', 'mascara': True, 'solo_studio': True,
      'detalle': 'Solo con DaVinci Resolve Studio: Magic Mask recorta a la persona (solo personas) y el texto pasa por detrás.'},
-    {'clave': 'gancho', 'nombre': 'Gancho del inicio', 'icono': 'ph.lightning', 'motions': ['ograf:titular', 'ograf:orbita', 't5:orbita', 't5:sticker'],
-     'detalle': 'Los primeros segundos: un titular detrás de ti e iconos que giran alrededor de tu cabeza.'},
+    # v5.25: los emojis animados (2D Lottie / 3D en movimiento) con lo que dices; con su intensidad en la píldora, como «detrás de ti»
+    {'clave': 'emoji', 'nombre': 'Emojis animados', 'icono': 'ph.smiley', 'pref': 'pro_emojis', 'niveles': 'pro_emoji_intensidad',
+     'detalle': 'Un emoji animado (2D o 3D) con lo que dices, junto a los captions y sin tapar caras.'},
     {'clave': 'pildora', 'nombre': 'Píldora bajo captions', 'icono': 'ph.chat-centered-text', 'motions': ['acompanante'],
      'detalle': 'Una píldora animada justo debajo del texto con el lugar, la cifra o el emoji de lo que dices.'},
     {'clave': 'broll', 'nombre': 'B-roll con fotos', 'icono': 'ph.image-square', 'motions': ['escena:foto'], 'pref': 'pro_internet',
@@ -68,18 +75,41 @@ def opciones_visibles():
     return [o for o in OPCIONES if (st or not o.get('solo_studio')) and o['clave'] != 'plantillas']   # v5.20: «Plantillas por frase» quitado (el usuario lo pidió)
 
 
-def intensidad():
+def _pref_niveles(clave):
+    """La preferencia de la intensidad de esa opción («detrás de ti» y, v5.25, «Emojis animados»), o None si no tiene."""
+    o = _POR_CLAVE.get(clave) or {}
+    return 'pro_detras_intensidad' if clave == 'detras' else o.get('niveles')
+
+
+def intensidad(clave='detras'):
     try:
         import edicion_pro
+        if clave == 'emoji':
+            return edicion_pro.intensidad_emoji()
         return edicion_pro.intensidad_detras()
     except Exception:
         return 'media'
 
 
-def poner_intensidad(nivel):
+def _posiciones(clave):
+    """v5.27 (el usuario: «al volver a Inicio que lo aplique»): «2 posiciones» (+ auto) de Efectos › «Posición» para el video de Inicio, o ''
+    (solo lee posiciones_pro.json: se llama al señalar un icono, no al pintar)."""
+    try:
+        import posiciones_pro as POS
+        ruta = POS.video_actual()
+        n, modo = POS.resumen(ruta, clave) if ruta else (0, 'solo')
+    except Exception:
+        return ''
+    if not n:
+        return ''
+    return (tr('1 posición') if n == 1 else tr('{n} posiciones', n=n)) + ('' if modo == 'solo' else tr(' + auto'))
+
+
+def poner_intensidad(nivel, clave='detras'):
     import edicion_pro
-    if nivel in dict(NIVELES):
-        edicion_pro.guardar_opciones({'pro_detras_intensidad': nivel})
+    pref = _pref_niveles(clave)
+    if pref and nivel in dict(NIVELES):
+        edicion_pro.guardar_opciones({pref: nivel})
 
 
 def icono_de(o, relleno=True):
@@ -159,6 +189,8 @@ def estado(clave, op=None):
     if o.get('solo_studio') and not _studio():
         return False                                    # (v5.5.20: sin Studio no va, aunque estuviera guardada encendida)
     op = _op() if op is None else op
+    if o.get('solo_pref'):                              # (v5.33: el gancho = la intro, solo su preferencia; también en el Tema 1, encendido por
+        return bool(op.get(o['pref'], o.get('defecto', False)))         # defecto: el usuario lo pidió)
     if _neon():
         return clave in (op.get('pro_neon_extras') or [])
     if o.get('mascara'):
@@ -178,10 +210,13 @@ def poner(clave, si):
     """Guarda el interruptor. Devuelve False si no se pudo (apagar el último grupo de motions dejaría la lista vacía = «todos»)."""
     import edicion_pro
     import motions_catalogo as MC
+    o = _POR_CLAVE[clave]
+    if o.get('solo_pref'):                              # (v5.33: el gancho, la misma preferencia en todos los temas)
+        edicion_pro.guardar_opciones({o['pref']: bool(si)})
+        return True
     if _neon():
         edicion_pro.poner_neon_extra(clave, si)
         return True
-    o = _POR_CLAVE[clave]
     op = edicion_pro.opciones_guardadas()
     cambios = {}
     if o.get('mascara'):
@@ -189,7 +224,7 @@ def poner(clave, si):
         cambios['pro_mascara'] = (antes if antes != 'no' else 'auto') if si else 'no'
     if o.get('pref'):
         cambios[o['pref']] = bool(si)
-    ids = ids_de(clave) if (o.get('motions') is not None or 'pref' not in o) and not o.get('mascara') else []
+    ids = ids_de(clave) if (o.get('motions') is not None or 'pref' not in o) and not o.get('mascara') and not o.get('solo_pref') else []
     if ids:
         todos = [i for i, _g in _catalogo_ids()]
         lista = [i for i in (op.get('pro_motions') or []) if i in set(todos)] if MC.modo(op) == 'elegidos' else list(todos)
@@ -250,6 +285,7 @@ def _icono(p, w, nombre, color, cx, cy, tam, opacidad=1.0, escala=1.0):
 # Fluent 3D de las escenas). Apagado = en gris y translúcido.
 ICONOS_3D = {
     'pildora': ('emojis', 'png', 'rcs_emoji_speech_balloon.png'),
+    'emoji': ('emojis', 'png', 'rcs_emoji_star_struck.png'),
     'broll': ('edicion_pro', 'ograf', 'lib', 'iconos3d', 'picture-dynamic-premium.png'),
     'detras': ('edicion_pro', 'fluent_extra', 'person_raising_hand.png'),         # (la silueta oscura no se veía sobre la barra negra)
     'motions_completo': ('emojis', 'png', 'rcs_emoji_clapper_board.png'),          # (la película gris parecía apagada)
@@ -409,7 +445,7 @@ class PanelMotionsPro(QWidget):
             self.activa = self._ops[0]['clave']
         try:
             import edicion_pro
-            self._nivel = edicion_pro.intensidad_detras(op)
+            self._nivel = edicion_pro.intensidad_emoji(op) if self.activa == 'emoji' else edicion_pro.intensidad_detras(op)
         except Exception:
             self._nivel = 'media'
         for o in OPCIONES:
@@ -428,8 +464,8 @@ class PanelMotionsPro(QWidget):
         return ui.fuente(13 * se, peso='medio'), ui.fuente(10 * se), se
 
     def _con_niveles(self):
-        """v5.5.20: la píldora de «Captions detrás de ti» encendido lleva debajo «Suave · Media · Fuerte»."""
-        return self.activa == 'detras' and self.encendido('detras')
+        """v5.5.20: la píldora de «Captions detrás de ti» (y, v5.25, de «Emojis animados») encendido lleva debajo «Suave · Media · Fuerte»."""
+        return bool(_pref_niveles(self.activa)) and self.encendido(self.activa)
 
     def _ancho_etiqueta(self, nombre, sub):
         f1, f2, se = self._fuentes()
@@ -442,13 +478,18 @@ class PanelMotionsPro(QWidget):
     def _texto_etiqueta(self):
         o = _POR_CLAVE[self.activa]
         si = self.encendido(self.activa)
-        if si and self.activa == 'detras':
-            return tr(o['nombre']), tr('Encendido · intensidad'), si, True     # (el nivel elegido se lee al pintar)
-        return tr(o['nombre']), (tr('Encendido · clic para apagar') if si else tr('Apagado · clic para encender')), si, None
+        pos = _posiciones(self.activa) if si else ''      # v5.27: lo marcado en Efectos › «Posición» para el video de Inicio (lo que GO aplicará)
+        if si and _pref_niveles(self.activa):          # (con posiciones, sin «· intensidad»: no cabría y Suave · Media · Fuerte ya lo dicen)
+            return tr(o['nombre']), (tr('Encendido · {p}', p=pos) if pos else tr('Encendido · intensidad')), si, True   # (el nivel se lee al pintar)
+        if si:
+            return tr(o['nombre']), (tr('Encendido · {p}', p=pos) if pos else tr('Encendido · clic para apagar')), si, None
+        return tr(o['nombre']), tr('Apagado · clic para encender'), si, None
 
     def senalar(self, clave, animar=True):
         cambia = clave != self.activa
         self.activa = clave
+        if cambia and _pref_niveles(clave):
+            self._nivel = intensidad(clave)               # (v5.25: cada opción con niveles tiene el suyo)
         i = [o['clave'] for o in self._ops].index(clave)
         nuevo = self._texto_etiqueta()
         if nuevo != self._et_txt:
@@ -579,10 +620,10 @@ class PanelMotionsPro(QWidget):
         if nivel:
             if nivel != self._nivel:
                 try:
-                    poner_intensidad(nivel)
+                    poner_intensidad(nivel, self.activa)
                 except Exception:
                     import registro
-                    registro.excepcion(origen='Proyecto · intensidad de «Captions detrás de ti»')
+                    registro.excepcion(origen=f'Proyecto · intensidad de «{self.activa}»')
                 self.refrescar()
                 self.cambiado.emit()
             super().mouseReleaseEvent(e)

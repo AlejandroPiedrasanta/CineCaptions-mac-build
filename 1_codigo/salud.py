@@ -8,9 +8,10 @@ la ventana). Pedido: «que siempre haga chequeos de librerías... no quiero nada
 obsoleto».
 
 Mira, para cada pieza:
-  * que la libreria cargue y que su version sea la FIJADA en
-    3_compilar/requirements.txt (las versiones van fijas a proposito: PyAV 19
-    rompe faster-whisper 1.2.1; una mas nueva no es mejor si rompe);
+  * que la libreria principal cargue y que su version sea la FIJADA en
+    3_compilar/requirements.txt;
+  * el motor auxiliar Python 3.14.9: Whisper, Argos y ONNX Runtime, con las versiones
+    de 2_recursos/motor_compat/requirements.txt;
   * el motor de IA (Python 3.14 propio): torch, las librerias del lock y los
     modelos de Qwen3 en la cache;
   * el MCP oficial de Resolve (21.1+).
@@ -27,15 +28,9 @@ LIBRERIAS = (
     ('qtawesome', 'Iconos (QtAwesome)', '1.4.2'),
     ('numpy', 'NumPy', '2.5.4'),
     ('PIL', 'Pillow', '13.0.0'),                      # (v5.5.10: subió con 3_compilar/requirements.txt; las dos van juntas)
-    ('av', 'PyAV (FFmpeg)', '19.0.1'),
-    ('ctranslate2', 'CTranslate2', '4.8.3'),          # (la de 3_compilar/requirements.txt; v5.5.4: decía 4.8.2 y cada arranque salía «Falla al iniciar»)
-    ('faster_whisper', 'faster-whisper', '1.2.1'),
-    ('onnxruntime', 'ONNX Runtime', '1.31.0'),
-    ('tokenizers', 'tokenizers', '0.23.3'),
-    ('huggingface_hub', 'Hugging Face Hub', '2.2.0'),
+    ('av', 'PyAV (FFmpeg)', '19.0.2'),
     ('spellchecker', 'pyspellchecker', '0.9.1'),
     ('pynput', 'pynput', '1.8.2'),
-    ('argostranslate', 'Argos Translate', None),
 )
 
 _ULTIMO = {'filas': None, 'cuando': 0.0}
@@ -121,6 +116,29 @@ def comprobar():
             filas.append({'nombre': 'Motor de IA (Qwen3)', 'ok': None, 'detalle': 'no instalado (se usa Whisper)'})
     except Exception as e:
         filas.append({'nombre': 'Motor de IA (Qwen3)', 'ok': False, 'detalle': str(e)[:160]})
+    try:
+        import motor_compat
+        if not motor_compat.instalado():
+            filas.append({'nombre': 'Motor auxiliar (Whisper/Argos/ONNX)', 'ok': None,
+                          'detalle': 'no instalado (se prepara desde el instalador o al usar esas funciones)'})
+        else:
+            datos = motor_compat.verificar()
+            faltan = motor_compat.faltan_requisitos()
+            py = datos.get('python')
+            ok = py == '3.14.9' and not faltan
+            if ok:
+                paquetes = datos.get('versiones', {})
+                detalle = 'Python 3.14.9 · Whisper ' + str(paquetes.get('faster-whisper', '?'))
+                detalle += ' · ONNX ' + str(paquetes.get('onnxruntime', '?'))
+                detalle += ' · Argos ' + str(paquetes.get('argostranslate', '?'))
+            else:
+                detalle = ('Python ' + str(py) if py else 'sin versión')
+                if faltan:
+                    detalle += ' · faltan ' + ', '.join(faltan[:4])
+            filas.append({'nombre': 'Motor auxiliar (Whisper/Argos/ONNX)', 'ok': ok, 'detalle': detalle})
+    except Exception as e:
+        filas.append({'nombre': 'Motor auxiliar (Whisper/Argos/ONNX)', 'ok': False,
+                      'detalle': str(e)[:160]})
     try:                                   # v5.4.8: la GPU para Whisper (antes el chequeo decía «todo en orden» aunque faltara cuBLAS y la voz cayera a la CPU)
         import cuda_libs
         d = cuda_libs.diagnostico()

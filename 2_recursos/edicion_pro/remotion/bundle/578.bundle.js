@@ -12,7 +12,7 @@
 /* harmony import */ var _index_w5yee38t_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8557);
 /* harmony import */ var _index_7shemw90_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8335);
 /* harmony import */ var _index_r4fxez7r_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7529);
-Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(6540);
 
 
@@ -44,7 +44,7 @@ var VideoMattingQueueProcessor = () => {
         message: "Checking WebGPU support...",
         value: 0
       });
-      const support = await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model: job.model });
+      const support = await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model: job.model });
       signal.throwIfAborted();
       if (!support.supported) {
         throw new Error(support.detailedReason);
@@ -54,14 +54,14 @@ var VideoMattingQueueProcessor = () => {
         model: job.model,
         progressStart: 0,
         progressSpan: 0.2,
-        isModelCached: (model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }),
+        isModelCached: (model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }),
         loadModel: async (model, onProgress) => {
-          await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
+          await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
             signal,
             model,
             onProgress: (progress) => onProgress(progress.progress)
           });
-          await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model, signal });
+          await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model, signal });
         },
         updateProgress: (progress) => updateVideoMattingJobProgress(job.id, {
           ...progress,
@@ -81,7 +81,7 @@ var VideoMattingQueueProcessor = () => {
           });
         }
       };
-      output = await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()).removeVideoBackground({
+      output = await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()).removeVideoBackground({
         ...mattingOptions,
         audio: job.audio
       });
@@ -126,7 +126,7 @@ var VideoMattingQueueProcessor = () => {
       await Promise.allSettled([output.video.dispose()]);
     }
     try {
-      await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model: job.model });
+      await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model: job.model });
     } catch {}
     if (signal.aborted) {
       markVideoMattingJobCancelled(job.id);

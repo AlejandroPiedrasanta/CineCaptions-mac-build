@@ -301,7 +301,39 @@ def _registro_resolve_callado_s():
         return 0.0
 
 
-UMBRAL_COLGADO_S = float(os.environ.get('CC_UMBRAL_COLGADO_S') or 60.0)                       # cuánto tiene que llevar Resolve «sin responder» Y sin escribir en su registro para darlo por colgado (las pruebas lo bajan)
+_CAIDA = {'mtime': 0.0, 'si': None}                                  # (si = hora de la última caída que dice el registro)
+
+
+def resolve_se_cayo(desde):
+    """v5.32: ¿Resolve se cayó (volcado de error) después del instante `desde`? MEDIDO (su caída de las 18:14:31 con «Listo»): Resolve escribe
+    «[CRASH DUMP]» en ResolveDebug.txt en el mismo segundo, pero el proceso tarda ~70 s en morir mientras guarda el .dmp; esperar a que
+    desaparezca Resolve.exe dejaba al usuario más de un minuto sin saber nada. Lee solo el final del registro y solo si cambió. Nunca lanza."""
+    try:
+        f = ruta_registro_resolve()
+        m = f.stat().st_mtime
+        if m < float(desde):
+            return False
+        if m != _CAIDA['mtime']:
+            with open(f, 'rb') as h:
+                h.seek(0, 2)
+                h.seek(max(0, h.tell() - 4096))
+                fin = h.read().decode('utf-8', 'replace')
+            cuando = None
+            if '[CRASH DUMP]' in fin:                                 # «#TIME Tue Oct 20 18:14:31 2026 - Uptime …» (la hora local de la caída)
+                x = re.search(r'#TIME \w+ (\w{3}) +(\d+) (\d+):(\d+):(\d+) (\d{4})', fin[fin.rindex('[CRASH DUMP]'):])
+                meses = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+                if x and x.group(1).lower() in meses:
+                    cuando = time.mktime((int(x.group(6)), meses.index(x.group(1).lower()) + 1, int(x.group(2)), int(x.group(3)),
+                                          int(x.group(4)), int(x.group(5)), 0, 0, -1))
+                else:
+                    cuando = m
+            _CAIDA.update(mtime=m, si=cuando)
+        return _CAIDA['si'] is not None and _CAIDA['si'] >= float(desde) - 1.0
+    except Exception:
+        return False
+
+
+UMBRAL_COLGADO_S =float(os.environ.get('CC_UMBRAL_COLGADO_S') or 60.0)                       # cuánto tiene que llevar Resolve «sin responder» Y sin escribir en su registro para darlo por colgado (las pruebas lo bajan)
 
 
 def estado_resolve(colgado_s=None, callado_s=None):
@@ -365,6 +397,27 @@ def _conexion_viva(resolve):
         return False
 _CACHE = {'resolve': None, 'intentado': False, 'ultimo_fallo': 0.0, 'hueco': False}
 REINTENTO_TRAS_FALLO_S = 5.0
+_CON_MCP = {'v': None, 't': 0.0}
+
+
+def _api_directa_permitida(muestrear=True):
+    """v5.32 (el usuario: «se congela el programa igual con DaVinci Resolve»): la API directa (fusionscript en ESTE proceso) no suelta el GIL;
+    con Resolve ocupado (reproduciendo, guardando, cayéndose) una sola llamada dejaba TODA la app parada hasta que Resolve contestaba o moría.
+    MEDIDO en su registro: 52,9 y 56,7 s «sin responder» (el vigía de congelaciones tampoco pudo avisar antes) justo cuando el MCP no contestaba
+    y asegurar_conexion caía a disponible(pasivo=True) → _conexion_viva con el handle guardado. Con ResolveMCP instalado (Studio 21.1+) la API
+    directa no se usa nunca: el MCP corre en OTRO proceso y, si Resolve tarda, solo espera su hilo. Sin MCP, solo con Resolve contestando
+    (`muestrear`=False: lo último que se vio, sin mirar ahora; para las preguntas pasivas)."""
+    if _CON_MCP['v'] is None or time.time() - _CON_MCP['t'] > 60.0:
+        try:
+            import resolve_mcp
+            _CON_MCP.update(v=resolve_mcp.ruta_exe() is not None, t=time.time())
+        except Exception:
+            _CON_MCP.update(v=False, t=time.time())
+    if _CON_MCP['v']:
+        return False
+    if not sys.platform.startswith('win'):
+        return True
+    return not (resolve_colgado() if muestrear else _COLGADO['desde'] is not None)
 _SONDA = {'pids': None, 'proxima': 0.0, 'espera': 0.0}
 SONDA_ESPERA_MAX_S = 20.0
 
@@ -436,6 +489,8 @@ def _sonda_api_externa():
 
 def conectar(refrescar=False, pasivo=False):
     """Devuelve el objeto \'resolve\' o None si no se puede.\n\n    El exito se cachea para siempre; el fallo, solo unos segundos. Antes\n    no se cacheaba el fallo en absoluto, asi que cada vez que la ventana\n    preguntaba en que modo estaba se reintentaba el import de\n    fusionscript, se formateaba un traceback y se reescribia\n    bridge_error.txt. Con el enfriamiento se deja de pagar ese costo sin\n    perder la posibilidad de reconectar si el usuario abre Resolve\n    despues del programa.\n\n    v3.3.3, \'pasivo\': NUNCA intenta conectar; devuelve el handle cacheado\n    (revalidado) o None. MEDIDO en el Windows Free del usuario: cada intento\n    de fusionscript.scriptapp tarda 4,1 s y falla, y las preguntas de\n    estado del arranque (modo actual, edicion, scripts instalados) lo\n    pagaban EN EL HILO DE TK — el «lag al iniciar». El intento real lo\n    hace un hilo al arrancar (la app) y lo que el usuario pide (generar,\n    buscar audio, reinstalar) sigue activo con el enfriamiento de siempre.\n    """
+    if not _api_directa_permitida(muestrear=not pasivo):           # v5.32: con MCP (o Resolve sin contestar) nunca fusionscript aquí
+        return None
     if pasivo and (not refrescar):
         r = _CACHE['resolve']
         if r is not None and _conexion_viva(r):

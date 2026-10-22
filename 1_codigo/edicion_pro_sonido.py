@@ -159,6 +159,45 @@ def disenar(plan, fps, rng, choques=(), cortes=(), voz_db=None):
     sobrio: separaciones mínimas, como mucho 2 risers, y la escena que sale no suena si entra otra al momento. Devuelve los eventos para colocar_pro."""
     t5 = bool(plan.get('tema5'))
     _USADOS.clear()
+    ev, transiciones = momentos(plan, cortes)
+    # al menos dos risers si hay transiciones; el primero, a ~5 s del gancho
+    transiciones.sort()
+    elegidas = []
+    for t, que in transiciones:
+        if t >= 2.0 and (not elegidas or t - elegidas[-1][0] >= (8.0 if t5 else 4.0)):
+            elegidas.append((t, que))
+    out = []
+    usados_cap = sorted(float(x) for x in choques)
+    for t, que in elegidas[:(2 if t5 else 6)]:
+        f, info = _elegir('riser', rng, largo=2.0, hasta=t)
+        if f is not None:
+            out.append({'pista': PISTAS['riser'], 'ini': int(round((t - info['pico']) * fps)), 'archivo': str(f), 'dur': min(4.0, info['dur']),
+                        'db': _nivel('riser', NIVEL['riser'], info, voz_db), 'que': f'riser · {que}'})
+            g, ig = _elegir('hit', rng, ancla='ataque', hasta=t)
+            if g is not None:
+                out.append({'pista': PISTAS['hit'], 'ini': int(round(max(0.0, t - ig['ataque']) * fps)), 'archivo': str(g),
+                            'dur': min(3.0, ig['dur']), 'db': _nivel('hit', NIVEL['hit'], ig, voz_db), 'que': f'hit · {que}'})
+    ultimo = {'whoosh': -99.0, 'textura': -99.0}
+    for clave, t, nivel, largo, ancla, que in sorted(ev, key=lambda e: e[1]):
+        familia = 'whoosh' if clave == 'whoosh' else 'textura'
+        if familia == 'textura' and clave != 'error' and any(abs(t - u) < CHOQUE_S for u in usados_cap):
+            continue                                                 # no pisar el sonido de un caption (los captions llevan uno por palabra)
+        if t5 and t - ultimo[familia] < SEPARACION[familia]:
+            continue                                                 # Tema 5: nada amontonado
+        f, info = _elegir(clave, rng, largo=largo, ancla=ancla, hasta=t)
+        if f is None:
+            continue
+        ultimo[familia] = t
+        ini = t - info[ancla]
+        guia = 'whoosh_grande' if (clave == 'whoosh' and nivel == NIVEL['whoosh_grande']) else ('corte' if clave == 'corte' else familia)
+        out.append({'pista': PISTAS[familia], 'ini': int(round(ini * fps)), 'archivo': str(f), 'dur': min(3.0, info['dur']),
+                    'db': _nivel(guia, nivel, info, voz_db), 'que': que})
+    return out
+
+
+def momentos(plan, cortes=()):
+    """v5.34: CUÁNDO suena cada movimiento y evento de los gráficos de la PRO (sin elegir archivos): ([(clave, t, nivel, largo, ancla, qué)],
+    [(t, qué) de las transiciones grandes]). Lo usan `disenar` (la PRO de siempre) y el AI Sound Director (que diseña cada sonido a la medida)."""
     ev = []                                                          # (tipo, t, nivel, largo deseado, ancla, qué)
 
     def mov(t, grande=False, largo=0.7, que=''):
@@ -353,37 +392,5 @@ def disenar(plan, fps, rng, choques=(), cortes=(), voz_db=None):
         if any(abs(float(t) - z) < 0.3 for z in zooms):
             continue                                                 # ese corte ya suena con el whoosh de su transición
         tex('corte', float(t), 'corte con punch-in', NIVEL['corte'])
-    # al menos dos risers si hay transiciones; el primero, a ~5 s del gancho
-    transiciones.sort()
-    elegidas = []
-    for t, que in transiciones:
-        if t >= 2.0 and (not elegidas or t - elegidas[-1][0] >= (8.0 if t5 else 4.0)):
-            elegidas.append((t, que))
-    out = []
-    usados_cap = sorted(float(x) for x in choques)
-    for t, que in elegidas[:(2 if t5 else 6)]:
-        f, info = _elegir('riser', rng, largo=2.0, hasta=t)
-        if f is not None:
-            out.append({'pista': PISTAS['riser'], 'ini': int(round((t - info['pico']) * fps)), 'archivo': str(f), 'dur': min(4.0, info['dur']),
-                        'db': _nivel('riser', NIVEL['riser'], info, voz_db), 'que': f'riser · {que}'})
-            g, ig = _elegir('hit', rng, ancla='ataque', hasta=t)
-            if g is not None:
-                out.append({'pista': PISTAS['hit'], 'ini': int(round(max(0.0, t - ig['ataque']) * fps)), 'archivo': str(g),
-                            'dur': min(3.0, ig['dur']), 'db': _nivel('hit', NIVEL['hit'], ig, voz_db), 'que': f'hit · {que}'})
-    ultimo = {'whoosh': -99.0, 'textura': -99.0}
-    for clave, t, nivel, largo, ancla, que in sorted(ev, key=lambda e: e[1]):
-        familia = 'whoosh' if clave == 'whoosh' else 'textura'
-        if familia == 'textura' and clave != 'error' and any(abs(t - u) < CHOQUE_S for u in usados_cap):
-            continue                                                 # no pisar el sonido de un caption (los captions llevan uno por palabra)
-        if t5 and t - ultimo[familia] < SEPARACION[familia]:
-            continue                                                 # Tema 5: nada amontonado
-        f, info = _elegir(clave, rng, largo=largo, ancla=ancla, hasta=t)
-        if f is None:
-            continue
-        ultimo[familia] = t
-        ini = t - info[ancla]
-        guia = 'whoosh_grande' if (clave == 'whoosh' and nivel == NIVEL['whoosh_grande']) else ('corte' if clave == 'corte' else familia)
-        out.append({'pista': PISTAS[familia], 'ini': int(round(ini * fps)), 'archivo': str(f), 'dur': min(3.0, info['dur']),
-                    'db': _nivel(guia, nivel, info, voz_db), 'que': que})
-    return out
+    return ev, transiciones
 

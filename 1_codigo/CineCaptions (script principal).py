@@ -18,8 +18,7 @@ funciones de subtitle_transcriber.py que usa la version de consola, para que
 las dos siempre produzcan resultados identicos.
 
 v5.0.0: la interfaz pasa de CustomTkinter a Qt (PySide6) y el programa a
-Python 3.14.8 (pedido literal: «actualiza todo mi programa con Python 3.14.8 y
-PySide6 para mejorar la interfaz y fluidez»), con la propuesta de panel de 5
+Python 3.15.1 en la aplicación principal; Whisper/Argos/ONNX usan el motor auxiliar Python 3.14.9., con la propuesta de panel de 5
 pantallas (Inicio, Nuevo proyecto, Editor de palabras, Estilos y composición,
 SFX Lab) y un menu lateral. La LOGICA es la de la v4.1.0: lo que cambia es
 como se ve y donde vive cada control. Lo comun de la interfaz (colores,
@@ -1909,15 +1908,12 @@ class PlantillasWindow(QWidget):
         if not plantillas.SOLO_TEMAS:
             ch.addWidget(Etiqueta(tr('Rueda, ← → o arrastra  ·  clic en la del centro para usarla'), 12, color=TEXT_MUTED))
         # «Crea tu estilo»: el único botón de la cabecera (las vistas reales de Resolve se piden solas)
-        self.crear_btn = Boton(tr('Crea tu estilo'), self._crear_estilo, tipo='primario', alto=32, tam=13, negrita=True)
-        icono_crear = ui.icono_linea('ph.sparkle-bold', '#FFFFFF')
-        if icono_crear is not None:
-            self.crear_btn.setIcon(icono_crear)
-            self.crear_btn.setIconSize(QSize(15, 15))
+        import proyecto_ui                            # v5.32 (maqueta del usuario): botón luminoso, como «Obtener»
+        self.crear_btn = proyecto_ui.BotonLuz(tr('Crea tu estilo'), self._crear_estilo, 'sparkle')
         Tooltip(self.crear_btn, tr('Elige hasta 3 estilos de una galería y crea tu propio pack en un clic.'))
         capa_audio = getattr(master, '_capa_franja_audio', None) if franja is not None else None
         if capa_audio is not None:                    # v5.5.10 (el usuario: «sube Crea tu estilo, a la par de Whisper»): a la franja del audio
-            capa_audio.addSpacing(4)
+            capa_audio.addWidget(proyecto_ui.Separador())
             capa_audio.addWidget(self.crear_btn)
         else:
             ch.addWidget(self.crear_btn)
@@ -1947,14 +1943,17 @@ class PlantillasWindow(QWidget):
         self.tarjeta.capa.addWidget(self.lateral_pro, 1)
         # el panel del estilo que está al centro: nombre, aviso de tipografías, nota, estructura y botones
         self._carta_actual = None
-        self.info_w = QWidget()
-        iv = QVBoxLayout(self.info_w)
-        iv.setContentsMargins(6, 0, 6, 0)
-        iv.setSpacing(4)
         import un_clic_ui
-        self.info_nombre = un_clic_ui.TituloGo('')      # v5.5.9: el nombre del tema entra letra a letra cada vez que llega otro al centro
-        self.info_nombre.setFixedHeight(54)
+        import proyecto_ui
+        self.info_w = proyecto_ui.FondoTema()           # v5.32 (referencia del usuario): halo lila y arcos con su punto detrás del nombre
+        iv = QVBoxLayout(self.info_w)
+        iv.setContentsMargins(6, 0, 6, 8)
+        iv.setSpacing(4)
+        # v5.32 (maqueta del usuario): el nombre en grande (blanco → celeste → lila) con su raya; sin la píldora «TEMA ACTIVO» (el usuario:
+        # «elimina esto para que el slider esté más grande»)
+        self.info_nombre = un_clic_ui.TituloGo('', estilo='tema')      # v5.5.9: el nombre del tema entra letra a letra cada vez que llega otro al centro
         iv.addWidget(self.info_nombre)
+        self.info_w.ancla = self.info_nombre
         fila_n, cn = caja_h(espacio=12)
         cn.addStretch(1)
         self.info_fuentes = ui.Enlace('', self._instalar_fuentes_central, 12, color=ui.AMBAR, color_hover=ui.NARANJA)
@@ -1972,11 +1971,12 @@ class PlantillasWindow(QWidget):
         self.info_extra.setContentsMargins(0, 0, 0, 0)
         self.info_extra.setSpacing(6)
         iv.addLayout(self.info_extra)
-        fila_b, cb = caja_h(espacio=8)
+        fila_b, cb = caja_h(espacio=18)
         cb.addStretch(1)
         self.info_izq = QWidget()                      # v5.4.20: del ancho de los botones de la derecha, para que «Usar este tema» quede justo en el centro
         cb.addWidget(self.info_izq)
-        self.usar_btn = Boton(tr('Usar este tema') if plantillas.SOLO_TEMAS else tr('Usar este estilo'), self._usar_central, tipo='primario', alto=40, ancho=220, tam=14, negrita=True)
+        # v5.32 (maqueta del usuario): «En uso» / «Usar este tema» como botón grande verde con su ✓ (proyecto_ui.BotonEstado)
+        self.usar_btn = proyecto_ui.BotonEstado('uso', tr('Usar este tema') if plantillas.SOLO_TEMAS else tr('Usar este estilo'), self._usar_central)
         cb.addWidget(self.usar_btn)
         self.info_acciones_w = QWidget()
         self.info_acciones = QHBoxLayout(self.info_acciones_w)
@@ -2135,8 +2135,13 @@ class PlantillasWindow(QWidget):
         if carta.extra is not None:
             self.info_extra.addWidget(carta.extra(), 0, Qt.AlignmentFlag.AlignHCenter)
         con_pro = carta.pack is not None and plantillas.es_de_fabrica(carta.pack.nombre)   # v5.4.49: los temas → la Edición PRO (el mismo interruptor que el chip de Inicio)
+        import proyecto_ui
         if con_pro:                                                                     # v5.5.9: AL LADO de «Usar este tema» (antes, encima)
-            self.info_acciones.addWidget(self._boton_pro())
+            b_pro = self._boton_pro()
+            self.info_acciones.addWidget(b_pro)
+            proyecto_ui.BotonEstado.emparejar(self.usar_btn, b_pro)                     # v5.32: los dos del mismo ancho (simétricos)
+        else:
+            proyecto_ui.BotonEstado.emparejar(self.usar_btn, None)
         for icono, glifo, ayuda, fn in ([] if solo_temas else carta.acciones):         # v5.8: ✎ editar en Resolve y 🗑 quitar
             ic = ui.icono_linea(icono, '#C9D6EC')
             b = Boton('' if ic is not None else glifo, lambda _=False, f=fn: f(), tipo='fantasma', alto=36, ancho=40, tam=14, icono=ic)
@@ -2163,11 +2168,9 @@ class PlantillasWindow(QWidget):
             activa = edicion_pro.activado()
         except Exception:
             activa = False
-        b = Boton(('✓ ' + tr('Edición PRO activada')) if activa else ('✦ ' + tr('Activar edición PRO')), self._alternar_pro,
-                  tipo='fantasma' if activa else 'primario', alto=40, ancho=240, tam=14, negrita=True)
-        if activa:
-            b.setStyleSheet(ui.traducir_hoja('QPushButton { background-color: #2A2310; border: 1px solid #C9A46A; color: #F2D9A6; }'))
-        Tooltip(b, tr('Además de los captions de este tema, GO edita el video en Resolve: los captions y titulares DETRÁS de la persona (Magic Mask), '
+        import proyecto_ui                              # v5.32 (maqueta del usuario): el botón grande dorado con su corona
+        b = proyecto_ui.BotonEstado('pro', tr('Edición PRO activada') if activa else tr('Activar edición PRO'), self._alternar_pro, activo=activa)
+        Tooltip(b,tr('Además de los captions de este tema, GO edita el video en Resolve: los captions y titulares DETRÁS de la persona (Magic Mask), '
                       'escenas de motion graphics y B-roll, cifras, listas, marcos, ficha final y sonidos, con un estilo propio para cada video (bodas, XV años, restaurantes, inmobiliaria, detrás de cámara…). '
                       'El estilo se elige en el chip «Edición PRO» de Inicio.'))
         return b
@@ -2208,17 +2211,16 @@ class PlantillasWindow(QWidget):
         if c is None:
             return
         if c.tipo == 'anadir':
-            self.usar_btn.setText(tr('Añadir plantilla (.drb)'))
+            self.usar_btn.poner(False, tr('Añadir plantilla (.drb)'))
             self.usar_btn.setEnabled(True)
             self.usar_btn.setVisible(True)
             return
         # en el modo «normal» la elección es la combinación (chips de abajo), no el pack
         self.usar_btn.setVisible(not (self.modo == 'normal' and c.valor != '__clasica__'))
         en_uso = c.valor == self._valor_actual()
-        self.usar_btn.setText('✓ ' + tr('En uso') if en_uso else (tr('Usar este tema') if plantillas.SOLO_TEMAS else tr('Usar este estilo')))
+        # «En uso» no es un botón apagado: es una confirmación (verde, encendido)
+        self.usar_btn.poner(en_uso, tr('En uso') if en_uso else (tr('Usar este tema') if plantillas.SOLO_TEMAS else tr('Usar este estilo')))
         self.usar_btn.setEnabled(not en_uso)
-        # «En uso» no es un botón apagado: es una confirmación (verde)
-        self.usar_btn.setStyleSheet(ui.traducir_hoja('QPushButton:disabled { background-color: #0F2A22; border: 1px solid #1F7A56; color: #6FE3AE; }') if en_uso else '')
     def _usar_central(self):
         c = getattr(self, '_carta_actual', None)
         if c is None:
@@ -7044,7 +7046,8 @@ class SubtitleApp(QWidget):
         construyendo, fuera de pantalla, porque el resto del programa lee y guarda sus valores."""
         if clave == 'nuevo':
             clave = 'estilos'
-        if (clave == 'estilos' and self._plantillas_ventana is None) or (clave == 'sfx' and self._estudio_ventana is None):
+        if (clave == 'estilos' and self._plantillas_ventana is None) or (clave == 'sfx' and self._estudio_ventana is None
+                                                                          and getattr(self, '_director_pagina', None) is None):
             # v5.4: la primera vez armar la pantalla cuesta unas decimas de segundo: el boton del menu ya se ve
             # pulsado antes de empezar (si no, parece que el clic no hizo nada)
             self._marcar_nav('nuevo' if clave == 'estilos' else clave)
@@ -9635,20 +9638,25 @@ class SubtitleApp(QWidget):
             lbl.hide()
             self._insignias_audio[n] = lbl
             return lbl
+        # v5.32 (maqueta del usuario, «aplica ese estilo tal cual»): chip del formato con borde de acento, onda del acento, separadores finos,
+        # «Obtener» y «Crea tu estilo» luminosos y el motor de voz en dos píldoras (proyecto_ui)
+        import proyecto_ui
+        ac = QColor(ui.ACCENT)
         self.insignia = QLabel('—')
         self.insignia.setObjectName('insignia')
-        self.insignia.setFixedSize(40, 40)
+        self.insignia.setFixedSize(54, 38)
         self.insignia.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.insignia.setFont(ui.fuente(11, peso='negrita'))
-        self.insignia.setStyleSheet(ui.traducir_hoja('QLabel#insignia { background-color: #111D33; border: 1px solid #1E2A42; border-radius: 9px; color: #4589FF; }'))
+        self.insignia.setFont(ui.fuente(13, peso='negrita'))
+        self.insignia.setStyleSheet(f'QLabel#insignia {{ background-color: rgba({ac.red()}, {ac.green()}, {ac.blue()}, 22); '
+                                    f'border: 1.5px solid {ac.name()}; border-radius: 9px; color: {ac.name()}; }}')
         info, cinf = caja_v(espacio=1)
-        self.fuente_nombre = _Elidida(tr('Ningún archivo elegido'), 14, peso='medio', color='#FFFFFF')
+        self.fuente_nombre = _Elidida(tr('Ningún archivo elegido'), 16, peso='negrita', color='#FFFFFF')
         cinf.addWidget(self.fuente_nombre)
-        self.fuente_meta = _Elidida(tr('Pulsa «Obtener» para traer el audio de tu timeline de Resolve'), 12, color=TEXT_MUTED)
+        self.fuente_meta = _Elidida(tr('Pulsa «Obtener» para traer el audio de tu timeline de Resolve'), 13, color=TEXT_MUTED)
         cinf.addWidget(self.fuente_meta)
-        self.fuente_onda = Onda(ui.ACCENT_CLARO, alto=36, barra=3.0, hueco=2.6)
-        self.fuente_onda.setMinimumWidth(110)
-        self.fuente_onda.setMaximumWidth(260)
+        self.fuente_onda = Onda(ui.ACCENT, alto=46, barra=3.2, hueco=2.8)
+        self.fuente_onda.setMinimumWidth(90)
+        self.fuente_onda.setMaximumWidth(220)
         # La entrada, «Buscar» y «Proyectos guardados» siguen existiendo (el resto del programa lee y bloquea sus
         # valores) pero fuera de pantalla: aquí solo se ve «Obtener». Soltar un video en la ventana y el clic derecho
         # sobre esta franja siguen sirviendo para elegir un archivo a mano.
@@ -9664,30 +9672,29 @@ class SubtitleApp(QWidget):
         co.addWidget(proy_btn)
         oculto.hide()
         t.capa.addWidget(oculto)
-        fila, cf = caja_h(espacio=12)
+        fila, cf = caja_h(espacio=14)
+        fila.layout().setContentsMargins(14, 10, 14, 10)
         _numero(1)
         _numero(2)
-        self.detect_btn = Boton(tr('Obtener'), lambda: self._detectar_desde_resolve(silencioso=False), tipo='primario', alto=40, ancho=132, tam=14, negrita=True)
-        icono_obtener = ui.icono_linea('ph.download-simple-bold', '#FFFFFF')
-        if icono_obtener is not None:
-            self.detect_btn.setIcon(icono_obtener)
-            self.detect_btn.setIconSize(QSize(16, 16))
+        self.detect_btn = proyecto_ui.BotonLuz(tr('Obtener'), lambda: self._detectar_desde_resolve(silencioso=False), 'download-simple', ancho=176)
         Tooltip(self.detect_btn, tr('Trae el audio del timeline que tienes abierto en Resolve (conexión MCP, rápida). Si Resolve está cerrado, lo abre.'))
         cf.addWidget(self.detect_btn)
+        cf.addWidget(proyecto_ui.Separador())
         cf.addWidget(self.insignia)
-        cf.addWidget(info, 2)
+        cf.addWidget(info, 3)
         cf.addWidget(self.fuente_onda, 1)
+        cf.addWidget(proyecto_ui.Separador())
         col_t, ct_ = caja_v(espacio=0)
-        self.fuente_duracion = Etiqueta('--:--', 22, peso='extra', color='#FFFFFF', alineacion=Qt.AlignmentFlag.AlignRight)
+        self.fuente_duracion = Etiqueta('--:--', 26, peso='extra', color='#FFFFFF')
         ct_.addWidget(self.fuente_duracion)
-        self.fuente_duracion_lbl = Etiqueta(tr('duración'), 10, color=TEXT_MUTED, alineacion=Qt.AlignmentFlag.AlignRight)
+        self.fuente_duracion_lbl = Etiqueta(tr('duración'), 12, color=TEXT_MUTED)
         ct_.addWidget(self.fuente_duracion_lbl)
         cf.addWidget(col_t)
-        cf.addSpacing(10)
+        cf.addWidget(proyecto_ui.Separador())
         self.obtener_nota = Etiqueta(tr('Del timeline abierto en Resolve · conexión MCP'), 12, color=TEXT_MUTED, envolver=True)
         self.obtener_nota.hide()
         # el motor que transcribe ese audio: la IA (Qwen3-ASR) o Whisper large-v3-turbo; el mismo ajuste que Ajustes > General
-        cf.addWidget(Etiqueta(tr('Transcribir con'), 13, color='#E0EBFB'))
+        cf.addWidget(Etiqueta(tr('Transcribir con'), 14, peso='medio', color='#E0EBFB'))
         self._motores_voz = {tr('IA · Qwen3-ASR'): 'qwen3', tr('Whisper large-v3-turbo'): 'whisper'}
         try:
             import ajustes_ui
@@ -9695,7 +9702,23 @@ class SubtitleApp(QWidget):
         except Exception:
             motor_guardado = 'qwen3'
         self.motor_var = StringVar(next((k for k, v in self._motores_voz.items() if v == motor_guardado), tr('IA · Qwen3-ASR')))
-        self.motor_seg = Segmentado(list(self._motores_voz.keys()), self.motor_var, self._cambio_motor_voz, alto=32, tam=12)
+        # v5.32: las dos opciones como píldoras (la elegida con borde y halo del acento); motor_seg sigue siendo el que lleva la ayuda
+        self.motor_seg = QWidget()
+        cm = QHBoxLayout(self.motor_seg)
+        cm.setContentsMargins(0, 0, 0, 0)
+        cm.setSpacing(8)
+        self._pildoras_motor = {}
+        for nombre, icono in zip(self._motores_voz, ('brain', 'sparkle')):
+            pm_ = proyecto_ui.PildoraMotor(nombre, icono)
+            pm_.clicked.connect(lambda _c=False, n=nombre: (self.motor_var.set(n), self._cambio_motor_voz()))
+            cm.addWidget(pm_)
+            self._pildoras_motor[nombre] = pm_
+
+        def _pintar_pildoras(*_a):
+            for n, b in self._pildoras_motor.items():
+                b.setChecked(n == self.motor_var.get())
+        _pintar_pildoras()
+        self.motor_var.observar(_pintar_pildoras, self)
         Tooltip(self.motor_seg, tr('Qué motor convierte la voz en palabras con su tiempo. La IA (Qwen3-ASR) usa la GPU y es la más fina; Whisper large-v3-turbo es el de respaldo y entiende 99 idiomas.'))
         cf.addWidget(self.motor_seg)
         self._capa_franja_audio = cf                 # v5.5.10: Proyecto pone aquí, a la par de Whisper, su botón «Crea tu estilo»
@@ -10574,8 +10597,8 @@ class SubtitleApp(QWidget):
         self._refrescar_receta()
     # -- SFX Lab ---------------------------------------------------------------
     def _pagina_sfx(self):
-        _pag, capa = self._nueva_pagina('sfx', tr('Elegir y retocar sonidos'), tr('Elige el sonido de cada momento, recórtalo y ajusta su volumen · se aplica al generar con GO'),
-                                        con_barra=False)         # v5.5.10: sin barra de título, como Proyecto (lo pidió el usuario)
+        _pag, capa = self._nueva_pagina('sfx', tr('AI Sound Director'), tr('La IA diseña el sonido de cada video; tú lo diriges · se aplica al generar con GO'),
+                                        con_barra=False)         # v5.5.10: sin barra de título, como Proyecto (lo pidió el usuario); v5.34: AI Sound Director
         self._sfx_capa = capa
     # -- Efectos visuales (v5.4.6): intro, transiciones en los cortes e iconos flotantes -------------------------------------------------------------------
     def _pagina_efectos(self):
@@ -10583,6 +10606,19 @@ class SubtitleApp(QWidget):
                                         con_barra=False)         # v5.5.10: sin barra de título, como las demás (el Registro va flotando arriba a la derecha)
         self._efectos_capa = capa
         self._efectos_widget = None
+        try:                                     # v5.22: la «Posición» de cada efecto se marca sobre el video de Inicio (el que usará GO); v5.27: desde
+            import posiciones_pro                # el arranque (la píldora de Proyecto dice cuántas hay) y con cómo poner otro («Listo» con un video elegido a mano)
+            posiciones_pro.poner_proveedor(lambda: getattr(self, '_go_archivo', None) or
+                                           (self.video_var.get().strip().strip('"') if hasattr(self, 'video_var') else ''),
+                                           poner=self._poner_video_de_efectos)
+        except Exception:
+            registro.excepcion(origen='posiciones de Efectos')
+    def _poner_video_de_efectos(self, ruta):
+        """v5.27: el video elegido en Efectos › «Posición» pasa a Inicio (como al soltarlo, pero sin arrancar GO): el próximo GO lo usa con sus marcas."""
+        self.video_var.set(str(ruta))
+        self._olvidar_marca(tr('elegiste otro video en Efectos'))
+        self._go_archivo = str(ruta)
+        self._pintar_go_reposo()
     def _asegurar_efectos(self):
         """Arma la página Efectos la primera vez que se abre (lee las vistas previas); las demás veces solo sincroniza su interruptor."""
         if self._efectos_widget is not None:
@@ -10590,9 +10626,6 @@ class SubtitleApp(QWidget):
             return True
         try:
             import efectos_pagina
-            import posiciones_pro                # v5.22: la «Posición» de cada efecto se marca sobre el video de Inicio (el que usará GO)
-            posiciones_pro.poner_proveedor(lambda: getattr(self, '_go_archivo', None) or
-                                           (self.video_var.get().strip().strip('"') if hasattr(self, 'video_var') else ''))
             self._efectos_widget = efectos_pagina.PaginaEfectos(self, al_cambiar=self._pintar_opciones_go)
             self._efectos_capa.addWidget(self._efectos_widget)
         except Exception:
@@ -10601,7 +10634,23 @@ class SubtitleApp(QWidget):
             return False
         return True
     def _asegurar_sfx(self):
-        """Arma el SFX Lab la primera vez (av/numpy solo si se usa)."""
+        """v5.34: la página SONIDO es «AI Sound Director» (director_sonido_ui): la IA hace el sonido y el usuario lo dirige. El SFX Lab de antes
+        solo se arma si la nueva no pudiera construirse (red técnica, no una página a elegir); sus motores siguen trabajando por dentro."""
+        pag = getattr(self, '_director_pagina', None)
+        if pag is not None:
+            pag.refrescar()
+            return True
+        if self._estudio_ventana is None:
+            try:
+                import director_sonido_ui
+                self._director_pagina = director_sonido_ui.PaginaDirector(
+                    self, video=lambda: getattr(self, '_go_archivo', None) or self.video_var.get().strip().strip('"'), offset=self._offset_frames)
+                self._sfx_capa.addWidget(self._director_pagina, 1)
+                self._director_pagina.refrescar()
+                return True
+            except Exception:
+                self._director_pagina = None
+                registro.excepcion(origen='página AI Sound Director')
         if self._estudio_ventana is not None:
             try:
                 self._estudio_ventana.poner_video(self.video_var.get().strip().strip('"') or None)
@@ -11764,8 +11813,16 @@ class SubtitleApp(QWidget):
     def _planificar_efectos(self, media_path, words, cortes_fx, avisar=True):
         """El plan de efectos de ESTE video (nunca rompe GO: si algo falla, se sigue sin efectos). Con avisar=False (en segundo plano, mientras la IA corrige el texto) no toca la línea de estado."""
         self._efectos_plan = None
-        if self._es_tema5():
-            return                                     # v5.4.51: el Tema 5 hace TODA la edición (también el sonido): Efectos no pone nada
+        if self._es_tema5():                           # v5.4.51: el Tema 5 hace TODA la edición (también el sonido): Efectos no pone nada…
+            try:                                       # …salvo, v5.33, la intro del «Gancho del inicio» (primer segundo: luz, zoom y su golpe)
+                import efectos_visuales
+                plan = {'eventos': [], 'duracion': None, 'resumen': '', 'zonas': [], 'solo_audio': True, 'video': str(media_path)}
+                if efectos_visuales.con_intro_gancho(plan, str(media_path)):
+                    self._efectos_plan = plan
+                    registro.info('Efectos: ' + plan.get('resumen', ''), 'efectos')
+            except Exception:
+                registro.excepcion(origen='intro del gancho (Tema 5)')
+            return
         try:
             import efectos_visuales
             import edicion_pro
@@ -11789,6 +11846,7 @@ class SubtitleApp(QWidget):
             else:                                      # sin efectos visuales el audio extra (música, sonidos de gancho) sale igual
                 dur = duracion or (efectos_visuales.duracion_video(str(media_path)) or (float(words[-1].get('end') or 0.0) if words else 0.0))
                 plan = {'eventos': [], 'duracion': dur, 'resumen': '', 'zonas': [], 'solo_audio': True}
+                efectos_visuales.con_intro_gancho(plan, str(media_path))      # v5.33: con la PRO, la intro del «Gancho del inicio» sí va
             plan['video'] = str(media_path)
             # v5.4.8: el audio extra (música de fondo, sonidos de las transiciones, riser + golpe del gancho) y los efectos que se acercan al pulso
             try:
@@ -11825,10 +11883,59 @@ class SubtitleApp(QWidget):
                               'rectificador')
         except Exception:
             registro.excepcion(origen='rectificador')
+        self._director_sonido_al_colocar()
+    def _director_sonido_arrancar(self, media_path, words, cortes_fx, idioma=None):
+        """v5.34, AI Sound Director: con su interruptor encendido, una foto de lo que hay (tema, palabras, bloques, planes de Efectos y PRO) y su
+        trabajo (análisis y voz restaurada) en un hilo propio; lo recoge _director_sonido_al_colocar. Apagado no hace nada. Nunca lanza."""
+        self._director_hilo, self._director_res = None, None
+        try:
+            import director_sonido
+            if not director_sonido.activo():
+                return
+            ancho, alto = getattr(self, '_ancho_timeline', None) or 0, getattr(self, '_alto_timeline', None) or 0
+            ctx = director_sonido.contexto(media_path, words, self._plantilla_un_clic(), formato='h' if ancho and alto and ancho > alto * 1.2 else 'v',
+                                           recorte=getattr(self, '_recorte', None), timeline_de_go=getattr(self, '_go_tl_listo', None) is not None,
+                                           bloques=getattr(self, '_ultimos_bloques', None), plan_efectos=getattr(self, '_efectos_plan', None),
+                                           plan_pro=getattr(self, '_pro_plan', None), idioma=idioma)
+
+            def trabajo():
+                try:
+                    if cortes_fx is not None and cortes_fx.hilo is not None:
+                        cortes_fx.hilo.join(90)                      # los cortes que ya busca GO (nunca se vuelve a mirar el video para esto)
+                    cortes = [c[0] if isinstance(c, (list, tuple)) else c for c in ((cortes_fx.resultado if cortes_fx is not None else None) or [])]
+                    if cortes and ctx.get('recorte'):
+                        import pausas
+                        cortes = [c[0] if isinstance(c, (list, tuple)) else c for c in (pausas.remapear_cortes([(t, 1.0) for t in cortes], ctx['recorte']['segmentos']) or [])]
+                    ctx['cortes'] = [float(t) for t in cortes]
+                except Exception:
+                    ctx['cortes'] = []
+                director_sonido.preparar(ctx, res=res)               # (lo va rellenando: GO recoge lo que ya esté hecho)
+            res = {}
+            self._director_res = res
+            self._director_hilo = threading.Thread(target=trabajo, daemon=True, name='ai-sound-director')
+            self._director_hilo.start()
+        except Exception:
+            registro.excepcion(origen='AI Sound Director')
+    def _director_sonido_al_colocar(self):
+        """v5.34: lo del AI Sound Director entra en el plan de Efectos (la voz restaurada en «AI VOICE»), o la limpieza de una vez anterior si se apagó.
+        Apagado y sin nada pendiente, el plan queda EXACTAMENTE igual. Nunca lanza."""
+        try:
+            import director_sonido
+            hilo = getattr(self, '_director_hilo', None)
+            res = getattr(self, '_director_res', None)
+            if hilo is not None:
+                hilo.join(300)
+                if hilo.is_alive():                                     # v5.34: los sonidos ya están; la voz no llegó: la original se queda
+                    director_sonido.log('la voz no terminó a tiempo: la original se queda' + (' (los sonidos sí van)' if (res or {}).get('sfx') else ''), 'aviso')
+                    res = {k: v for k, v in (res or {}).items() if k not in ('evento_voz', 'voz')}
+            self._efectos_plan = director_sonido.al_colocar(getattr(self, '_efectos_plan', None), res, self.video_var.get().strip().strip('"'),
+                                                            plan_pro=getattr(self, '_pro_plan', None))
+        except Exception:
+            registro.excepcion(origen='AI Sound Director')
     def _colocar_efectos(self):
         """Pone el plan de efectos en el timeline de Resolve (tras los captions). Devuelve un texto corto para el estado, o ''."""
         plan = getattr(self, '_efectos_plan', None)
-        if not plan or not plan.get('eventos'):
+        if not plan or not (plan.get('eventos') or plan.get('solo_ai')):          # v5.34: 'solo_ai' = solo limpiar las pistas del AI Sound Director
             return ''
         try:                                   # el plan es de un video: si ahora hay otro cargado (regenerar), no se aplica el de antes
             actual = self.video_var.get().strip().strip('"')
@@ -11914,6 +12021,7 @@ class SubtitleApp(QWidget):
                 marcas = {}
             plan = edicion_pro.planificar(str(media_path), words, duracion, cortes=cortes, idioma=idioma or 'es',
                                           al_estado=lambda t: self.msg_queue.put(('status', tr(t))), tema=tema_pro, marcas=marcas)
+            plan['_recorte'] = recorte                 # v5.29: «Listo» en Efectos › Posición pasa las marcas a ESTE timeline sin rehacer GO
             plan['tema5'] = tema5
             if tema5 and (getattr(self, 'plantilla_sel', '') or '') == 'Tema6':
                 plan['estilo_t5'] = 'editorial'        # Tema 6: el mismo motor, con el estilo editorial (serif fina, melocotón, visor, búsqueda…)
@@ -11933,8 +12041,39 @@ class SubtitleApp(QWidget):
         except Exception:
             return False
 
+    def _respaldo_tema1(self):
+        """v5.24: con el Tema 1 neón GO ya no coloca los Text+ de respaldo (la PRO los apagaba al final: tiempo perdido y pistas que estorbaban).
+        Si la Edición PRO NO pudo poner los captions neón, se colocan ahora esos Text+ (sin repetir los sonidos, que ya están) para que el video
+        no se quede sin captions. En el hilo de la colocación."""
+        kn = getattr(self, '_kitneon', None) or {}
+        track = kn.get('track_texto')
+        if not track:
+            return False
+        kn.pop('track_texto', None)                       # (una sola vez por GO)
+        try:
+            import resolve_bridge
+            manifest_path = st.SHARED_FOLDER / 'subtitles_manifest.json'
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+            except Exception:
+                manifest = {}
+            manifest['tracks'] = [track]
+            archivos_seguros.escribir_json(manifest_path, manifest, indent=2)
+            sidecar_lua.escribir_sidecar(manifest_path, manifest)
+            registro.aviso('Tema 1: la Edición PRO no pudo poner los captions neón; coloco los de respaldo (Text+).', 'GO')
+            self.msg_queue.put(('status', tr('Tema 1: coloco los captions de respaldo…')))
+            ok, err = resolve_bridge.ejecutar('subtitulos')
+            if not ok:
+                registro.aviso(f'Tema 1: tampoco se pudieron colocar los captions de respaldo: {err}', 'GO')
+            return bool(ok)
+        except Exception:
+            registro.excepcion(origen='Tema 1 (respaldo)')
+            return False
+
     def _colocar_pro(self):
-        """Pone la Edición PRO en el timeline de Resolve (tras los captions y los efectos). Devuelve un texto corto para el estado, o ''."""
+        """Pone la Edición PRO en el timeline de Resolve (tras los captions y los efectos). Devuelve un texto corto para el estado, o ''.
+        v5.24: `_pro_ok` dice si quedó puesta (el Tema 1 neón ya no deja Text+ de respaldo: sin la PRO, _respaldo_tema1 los pone)."""
+        self._pro_ok = False
         plan = getattr(self, '_pro_plan', None)
         try:
             import edicion_pro as _ep
@@ -11961,6 +12100,7 @@ class SubtitleApp(QWidget):
                 if self._es_fallo_de_resolve(mensaje):
                     self._efectos_atascado = True                       # v5.5.1: Resolve se colgó o se cayó con la Edición PRO (Magic Mask…): GO lo repara y rehace todo
                 return tr('La Edición PRO no se pudo colocar: {m}', m=str(mensaje)[:120])
+            self._pro_ok = True
             registro.info(f'Edición PRO colocada: {mensaje}', 'edición pro')
             if plan.get('_rectificado'):                                 # v5.5.2: lo que el rectificador quitó (y por qué)
                 registro.info(tr('Rectificador: {n} ajustes en la Edición PRO.', n=len(plan['_rectificado'])) + '\n· ' + '\n· '.join(plan['_rectificado'][:20]),
@@ -12057,6 +12197,8 @@ class SubtitleApp(QWidget):
                 self._rectificar_planes()                                # v5.5.2: Efectos y Edición PRO revisados JUNTOS antes de tocar Resolve
             nota_fx = self._colocar_efectos() if ok else ''
             nota_fx = ', '.join(x for x in (nota_fx, self._colocar_pro() if ok else '') if x)          # v5.4.49: Edición PRO
+            if ok and not getattr(self, '_pro_ok', False) and not getattr(self, '_efectos_atascado', False):
+                self._respaldo_tema1()                                   # v5.24: el Tema 1 sin la PRO puesta: sus Text+ para no quedarse sin captions
             if ok and getattr(self, '_efectos_atascado', False) and getattr(self, '_go_corriendo', False):          # v5.4.40: Resolve se colgó con los efectos: se rehace todo
                 self._efectos_atascado = False
                 if self._go_rearmar_en_resolve('efectos visuales'):
@@ -13318,6 +13460,13 @@ class SubtitleApp(QWidget):
                 detalle = tr(' No encontré sonidos en: {join}.', join=', '.join(sorted(perdidas))) if perdidas else ''
                 self.msg_queue.put(('status', tr('No pude asignar ningún efecto de sonido.') + detalle + tr(' Los subtítulos se generan igual.')))
                 return {}
+            try:                                       # v5.37: con el AI Sound Director encendido, él es el único dueño del sonido: las reglas de
+                import director_sonido                 # siempre solo le dicen qué había (sfx_eventos en los bloques) y Resolve no recibe sus «Hit»
+                if director_sonido.activo() and not getattr(self, '_go_sin_resolve', False):     # (sin Resolve, el MP4 lleva los de siempre)
+                    director_sonido.log(f"Simple: {sum(len(b.get('sfx_eventos') or []) for b in bloques)} sonidos de las reglas de siempre NO van a Resolve (los decide el director)")
+                    return {}
+            except Exception:
+                pass
             archivos = {cat: sfx_rules.archivos_de(cat) for cat in cuenta}
             return {'sfx_library': str(sfx_rules.carpeta_libreria()), 'sfx_archivos': {c: a for c, a in archivos.items() if a}, 'sfx_config': {'nombre_pista_audio': config.get('nombre_pista_audio'), 'volumen_db': config.get('volumen_db'), 'al_inicio': bool(config.get('al_inicio'))}, 'sfx_resumen': cuenta}
         except Exception:
@@ -13520,6 +13669,18 @@ class SubtitleApp(QWidget):
                  'offset_frames': self._offset_frames(), **pista_plantilla, **pista_sfx, **pista_emojis}
         if es_viral:
             track['clip_prueba'] = 'v fina'                       # el clip que prueba que el bin del pack VIRAL está completo (el de Kinetic es «k hero blanco»)
+        if self._kitneon and not es_viral and not sin_resolve:
+            # v5.24 (el usuario: «quita lo que pone y al final desactiva; quédate con lo que importa, así es más rápido»): con el Tema 1 neón la
+            # Edición PRO pone los captions (clips KitNeon); el script de Resolve ya no importa el pack ni coloca los Text+ que luego se apagaban:
+            # solo los sonidos. Si la PRO no pudiera ponerlos, _respaldo_tema1 coloca estos Text+ (sin repetir los sonidos).
+            try:
+                import edicion_pro_remotion as _rm
+                neon_listo = bool(_rm.disponible())
+            except Exception:
+                neon_listo = False
+            if neon_listo:
+                self._kitneon['track_texto'] = {k: v for k, v in track.items() if k not in ('sfx_library', 'sfx_archivos')}
+                track['solo_sonidos'] = True
         n_sonidos = sum(len(b.get('sfx_eventos') or [1]) for b in bloques if b.get('sfx'))
         avisar(tr('Estilo «{p}»: {n} bloques de títulos · {s} sonidos.', p=plantillas.nombre_visible(pack.nombre), n=len(cues), s=n_sonidos))
         return (bloques, track, pista_sfx)
@@ -14013,6 +14174,7 @@ class SubtitleApp(QWidget):
             else:
                 self._planificar_efectos(media_path, words, cortes_fx)
             self._planificar_pro(media_path, getattr(self, '_words_corregidas', None) or words, cortes_fx, base_lang)   # v5.4.49: la Edición PRO (si está activada); v5.5.7: con el texto corregido
+            self._director_sonido_arrancar(media_path, getattr(self, '_words_corregidas', None) or words, cortes_fx, base_lang)   # v5.34: AI Sound Director (solo si está encendido)
             ev_tl = getattr(self, '_go_tl_listo', None)
             if ev_tl is not None and not ev_tl.is_set():
                 # GO con un video soltado: Resolve todavía está armando el timeline con él (los captions se colocan ahí)
@@ -14331,12 +14493,21 @@ def escribir_diagnostico():
     cfg = sfx_rules.cargar_reglas()
     lineas.append(f"categoria x defecto: {cfg.get('categoria_por_defecto')}")
     lineas.append(f"reglas cargadas    : {len(cfg.get('reglas', []))}")
-    for modulo in ['faster_whisper', 'ctranslate2', 'PySide6.QtWidgets', 'PIL', 'av', 'argostranslate']:
+    for modulo in ['PySide6.QtWidgets', 'PIL', 'av']:
         try:
             __import__(modulo)
             lineas.append(f'import {modulo:<16} OK')
         except Exception as e:
             lineas.append(f'import {modulo:<16} FALLA: {e}')
+    try:
+        import motor_compat
+        if motor_compat.instalado():
+            datos_motor = motor_compat.verificar()
+            lineas.append(f"motor auxiliar : Python {datos_motor.get('python')} · Whisper/Argos/ONNX OK")
+        else:
+            lineas.append('motor auxiliar : no instalado')
+    except Exception as e:
+        lineas.append(f'motor auxiliar : FALLA: {e}')
     try:
         import salud
         lineas.append('')
@@ -14527,6 +14698,11 @@ def _licencia_al_abrir():
         return False
 def main():
     ui.ajustar_planificacion()
+    try:                                              # v5.34: la clave de Epidemic (EPIDEMIC_API_KEY) sale del entorno al arrancar: Resolve, la IA local y node no la heredan
+        import director_sonido_epidemic
+        director_sonido_epidemic.configurada()
+    except Exception:
+        pass
     if '--tarea' in sys.argv:
         import tareas_instalador
         sys.exit(tareas_instalador.ejecutar(sys.argv))

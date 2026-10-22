@@ -157,7 +157,7 @@ def actualizar_leeme():
     if corte:
         t = (t[:corte.start()].rstrip() + '\n\n\n13. ÍNDICE DE ARCHIVOS Y MAPA DEL CÓDIGO: ya no se escriben aquí (eran 267 KB).\n' + '-' * 80 + '\n'
              'Qué es cada archivo: el 0_LEEME.txt de su carpeta o «modulo(nombre)» del MCP. Dónde está algo: «mapa(consulta)». El código de una función: «simbolo(nombre)».\n'
-             'Sin MCP: 6_compilacion\\venv314\\Scripts\\python.exe 1_codigo\\mapa_codigo.py mapa|simbolo|modulo <palabras>. Una página de todo: DOCUMENTACION\\RESUMEN.md.\n')
+             'Sin MCP: 6_compilacion\\venv315\\Scripts\\python.exe 1_codigo\\mapa_codigo.py mapa|simbolo|modulo <palabras>. Una página de todo: DOCUMENTACION\\RESUMEN.md.\n')
     t = re.sub(r'(?m)^\s+13\. Índice de archivos.*\n', '', t)
     t = re.sub(r'(?m)^\s+14\. Mapa del código.*\n', '', t)
     t = re.sub(r'(CINECAPTIONS )[\d.]+', r'\g<1>' + version(), t, count=1)
@@ -242,8 +242,8 @@ FIJAS = {
     '5_licencias/LEEME.md': 'instrucciones completas del Administrador de Licencias',
     '5_licencias/requirements.txt': 'librerías del Administrador',
     '5_licencias/Instalar Administrador de Licencias 5.0.0.exe': 'el instalador del Administrador',
-    '6_compilacion/python-3.14.8': 'el Python con el que se compila (sin tocar el sistema)',
-    '6_compilacion/venv314': 'el entorno con las librerías fijas de 3_compilar/requirements.txt',
+    '6_compilacion/python-3.15.1': 'el Python principal con el que se compila (sin tocar el sistema)',
+    '6_compilacion/venv315': 'el entorno Python 3.15.1 con las librerías fijas de 3_compilar/requirements.txt',
     '6_compilacion/fuentes': 'copia del código preparada para PyInstaller',
     '6_compilacion/work': 'trabajo intermedio de PyInstaller',
     '6_compilacion/dist': 'el programa compilado (lo que va dentro del instalador)',

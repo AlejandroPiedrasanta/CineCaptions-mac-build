@@ -6,7 +6,7 @@ import os, subprocess, sys, time
 from pathlib import Path
 
 AQUI = str(Path(__file__).resolve().parent.parent)                      # 1_codigo
-PY = str(Path(AQUI).parent / '6_compilacion' / 'venv314' / 'Scripts' / 'python.exe')
+PY = str(Path(AQUI).parent / '6_compilacion' / 'venv315' / 'Scripts' / 'python.exe')
 def estado():
     r = subprocess.run(['powershell', '-NoProfile', '-Command',
                         "$p=Get-Process Resolve -ErrorAction SilentlyContinue|Select-Object -First 1; if($p){ '{0}|{1}|{2:N2}|{3}' -f $p.Id,$p.Responding,($p.WorkingSet64/1GB),$p.MainWindowTitle } else { 'SIN_RESOLVE' }"],

@@ -14,7 +14,7 @@ piezas que usa «Nuevo proyecto».
 """
 import math
 
-from PySide6.QtCore import QEasingCurve, QPoint, QPointF, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal
+from PySide6.QtCore import QEasingCurve, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal
 from PySide6.QtGui import (QConicalGradient, QFont, QFontMetricsF, QLinearGradient, QPainter, QPainterPath, QPen,
                            QPixmap, QRadialGradient)
 from PySide6.QtWidgets import (QAbstractButton, QFrame, QGraphicsOpacityEffect, QHBoxLayout, QSizePolicy,
@@ -348,13 +348,25 @@ class TituloGo(QWidget):
     ESCALON, DURACION, SUBIDA = 0.045, 0.6, 0.62          # s entre letras · s de cada letra · cuanto sube (en altos de letra)
     MARGEN = 10                                           # px alrededor de cada letra suelta: su halo
 
-    def __init__(self, texto, padre=None):
+    def __init__(self, texto, padre=None, estilo=None):
         super().__init__(padre)
         self._texto = texto
         self._k = 1.0                                     # avance de la entrada (1 = quieto, se pinta el pixmap entero)
         self._anim = None
-        self.setFixedHeight(64)
+        # v5.32 (maqueta del usuario para Proyecto): estilo 'tema' = el nombre del tema en grande, de blanco a celeste y lila, con su raya lila
+        self._estilo = estilo
+        self.setFixedHeight(86 if estilo == 'tema' else 64)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+
+    def latir(self):
+        """(estilo 'tema') El punto de luz que recorre la raya: lo mueve el reloj de proyecto_ui; solo se repinta la raya."""
+        self.update(QRect(0, self.height() - 22, self.width(), 22))
+
+    def hideEvent(self, e):
+        if self._estilo == 'tema':
+            import proyecto_ui
+            proyecto_ui.RELOJ.baja(self)
+        super().hideEvent(e)
 
     def configure(self, text=None, **_kw):
         if text is not None and text != self._texto:
@@ -367,6 +379,9 @@ class TituloGo(QWidget):
 
     def showEvent(self, e):
         super().showEvent(e)
+        if self._estilo == 'tema':
+            import proyecto_ui
+            proyecto_ui.RELOJ.alta(self)
         if not getattr(self, '_ya_entro', False):         # v5.22: solo la primera vez; al volver a Inicio repetirla parecía que se reiniciaba
             self._ya_entro = True
             self._entrar()
@@ -403,6 +418,9 @@ class TituloGo(QWidget):
         q = QPainter(self)
         if self._k >= 1.0:
             q.drawPixmap(0, 0, self._pm)
+            if self._estilo == 'tema':                    # (la raya va aparte: su punto de luz se mueve)
+                q.setRenderHint(QPainter.RenderHint.Antialiasing)
+                self._linea(q, w, h, self._ancho, 1.0)
         else:
             t = self._k * self._total()
             for i, x, letra in self._letras:
@@ -425,19 +443,22 @@ class TituloGo(QWidget):
         return pm
 
     def _preparar(self, w, h, dpr):
-        f = fuente(34, peso='extra')
-        f.setLetterSpacing(QFont.SpacingType.PercentageSpacing, 102)
+        f = fuente(54 if self._estilo == 'tema' else 34, peso='extra')      # (tema: 64 → 54, el usuario: «un poco más pequeño»)
+        f.setLetterSpacing(QFont.SpacingType.PercentageSpacing, 100 if self._estilo == 'tema' else 102)
         fm = QFontMetricsF(f)
         texto = self._texto
         self._ancho, self._alto = fm.horizontalAdvance(texto), fm.height()
-        x, y = (w - self._ancho) / 2, h * 0.62
+        x, y = (w - self._ancho) / 2, h * (0.66 if self._estilo == 'tema' else 0.62)
+        self._y_base, self._fm = y, fm
+        self._x0 = x
         self._pm = self._lienzo(w, h, dpr)
         p = QPainter(self._pm)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         ruta = QPainterPath()
         ruta.addText(QPointF(x, y), f, texto)
         self._relleno(p, ruta, y, fm)
-        self._linea(p, w, h, self._ancho, 1.0)
+        if self._estilo != 'tema':
+            self._linea(p, w, h, self._ancho, 1.0)
         p.end()
         self._letras = []
         m = self.MARGEN
@@ -449,21 +470,42 @@ class TituloGo(QWidget):
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             ruta = QPainterPath()
             ruta.addText(QPointF(m, y), f, ch)
-            self._relleno(p, ruta, y, fm)
+            desp = x + fm.horizontalAdvance(texto[:i]) - m
+            self._relleno(p, ruta, y, fm, desp)
             p.end()
-            self._letras.append((i, x + fm.horizontalAdvance(texto[:i]) - m, letra))
+            self._letras.append((i, desp, letra))
 
-    @staticmethod
-    def _relleno(p, ruta, y, fm):
-        for grosor, alfa in ((9, 14), (5, 22), (2.5, 34)):          # halo
-            p.setPen(QPen(QColorReal(90, 190, 255, alfa), grosor, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+    def _relleno(self, p, ruta, y, fm, desp=0.0):
+        """`desp`: dónde empieza este lienzo en el título (una letra suelta): el degradado de lado a lado del estilo 'tema' sigue igual."""
+        tema = self._estilo == 'tema'
+        halo = (150, 165, 255) if tema else (90, 190, 255)
+        for grosor, alfa in ((30, 5), (20, 9), (12, 16), (6, 26)) if tema else ((9, 14), (5, 22), (2.5, 34)):          # halo
+            p.setPen(QPen(QColorReal(*halo, alfa), grosor, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawPath(ruta)
         p.setPen(Qt.PenStyle.NoPen)
-        p.translate(0, 2)
-        p.setBrush(QColorReal(0, 0, 0, 150))
-        p.drawPath(ruta)
-        p.translate(0, -2)
+        if not tema:                                      # (en grande la sombra se veía como una raya dentro de la «e»: la referencia no la lleva)
+            p.translate(0, 2)
+            p.setBrush(QColorReal(0, 0, 0, 150))
+            p.drawPath(ruta)
+            p.translate(0, -2)
+        if tema:                                        # de blanco a celeste y lila, de izquierda a derecha (referencia de Proyecto)
+            x0 = getattr(self, '_x0', 0.0) - desp
+            g = QLinearGradient(x0, 0, x0 + max(1.0, self._ancho), 0)
+            g.setColorAt(0.0, QColorReal(255, 255, 255))
+            g.setColorAt(0.4, QColorReal(226, 244, 255))
+            g.setColorAt(0.68, QColorReal(178, 224, 255))
+            g.setColorAt(0.82, QColorReal(200, 196, 255))
+            g.setColorAt(1.0, QColorReal(192, 160, 255))
+            p.setBrush(g)
+            p.drawPath(ruta)
+            v = QLinearGradient(0, y - fm.ascent() * 0.75, 0, y + fm.descent())        # y de arriba abajo: blanco arriba, celeste abajo
+            v.setColorAt(0.0, QColorReal(255, 255, 255, 70))
+            v.setColorAt(0.45, QColorReal(255, 255, 255, 0))
+            v.setColorAt(1.0, QColorReal(110, 190, 255, 95))
+            p.setBrush(v)
+            p.drawPath(ruta)
+            return
         g = QLinearGradient(0, y - fm.ascent(), 0, y + fm.descent())
         g.setColorAt(0.0, QColorReal(255, 255, 255))
         g.setColorAt(0.55, QColorReal(226, 240, 255))
@@ -471,19 +513,40 @@ class TituloGo(QWidget):
         p.setBrush(g)
         p.drawPath(ruta)
 
-    @staticmethod
-    def _linea(p, w, h, ancho, k):
+    def _linea(self, p, w, h, ancho, k):
         """La linea de luz bajo el titulo; k = cuanto se ha abierto desde el centro (0..1)."""
-        a = ancho * k
+        tema = self._estilo == 'tema'
+        a = ancho * k * (0.72 if tema else 1.0)
         if a < 1:
             return
         lg = QLinearGradient(w / 2 - a / 2, 0, w / 2 + a / 2, 0)
-        lg.setColorAt(0.0, QColorReal(80, 200, 255, 0))
-        lg.setColorAt(0.5, QColorReal(120, 220, 255, 190))
-        lg.setColorAt(1.0, QColorReal(80, 200, 255, 0))
+        if tema:                                          # celeste → azul → lila, entera (la de la referencia)
+            lg.setColorAt(0.0, QColorReal(56, 189, 248, 235))
+            lg.setColorAt(0.5, QColorReal(96, 165, 250, 255))
+            lg.setColorAt(1.0, QColorReal(167, 139, 250, 235))
+        else:
+            lg.setColorAt(0.0, QColorReal(80, 200, 255, 0))
+            lg.setColorAt(0.5, QColorReal(120, 220, 255, 190))
+            lg.setColorAt(1.0, QColorReal(80, 200, 255, 0))
+        grosor = 5 if tema else 2
+        raya = QRectF(w / 2 - a / 2, h - 9 - grosor, a, grosor) if tema else QRectF(w / 2 - a / 2, h - 5 - grosor, a, grosor)
+        if tema:                                          # su brillo debajo
+            for g_, alfa in ((12, 16), (7, 30)):
+                p.setPen(QPen(QColorReal(110, 150, 255, alfa), g_, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                p.drawLine(QPointF(raya.left() + 4, raya.center().y()), QPointF(raya.right() - 4, raya.center().y()))
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(lg)
-        p.drawRoundedRect(QRectF(w / 2 - a / 2, h - 7, a, 2), 1, 1)
+        p.drawRoundedRect(raya, grosor / 2, grosor / 2)
+        if tema and k >= 1.0:                             # el punto de luz que la recorre (ida y vuelta, despacio)
+            import proyecto_ui
+            u = proyecto_ui._latido(5.0)
+            cx = raya.left() + raya.width() * (0.12 + 0.76 * u)
+            luz = QRadialGradient(QPointF(cx, raya.center().y()), 22)
+            luz.setColorAt(0.0, QColorReal(235, 245, 255, 235))
+            luz.setColorAt(0.35, QColorReal(150, 200, 255, 120))
+            luz.setColorAt(1.0, QColorReal(120, 160, 255, 0))
+            p.setBrush(luz)
+            p.drawEllipse(QPointF(cx, raya.center().y()), 22, 7)
 
 
 class CintaViral(QWidget):

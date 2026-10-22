@@ -44,7 +44,7 @@ import os
 import time
 from pathlib import Path
 
-VERSION = "5.24 (detectar video)"
+VERSION = "5.37 (detectar video)"
 
 # Archivo de control que lee la ventana. Es un .json de unos pocos bytes, por
 # eso sigue viviendo en la carpeta compartida junto a los .srt y las marcas.

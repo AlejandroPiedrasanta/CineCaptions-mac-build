@@ -56,7 +56,8 @@ def _origen(nombre, de='Output'):
     return 'Input = Input { SourceOp = "%s", Source = "%s", },' % (nombre, de)
 
 
-def texto_comp(duracion_frames, fps, zoom=None, golpes=None, nivel_temblor='normal', cortes=None, transicion=None, fondo=None, saltos=None, zoom_saltos=None, zoom_intro=None):
+def texto_comp(duracion_frames, fps, zoom=None, golpes=None, nivel_temblor='normal', cortes=None, transicion=None, fondo=None, saltos=None, zoom_saltos=None, zoom_intro=None,
+               intro=None):
     """El texto de la composición (None si no hay nada que hacer).
 
     zoom       'suave' | 'normal' | 'fuerte' | None   zoom lento continuo (de 100 % a 100 % + x a lo largo del clip)
@@ -65,6 +66,8 @@ def texto_comp(duracion_frames, fps, zoom=None, golpes=None, nivel_temblor='norm
     transicion 'zoom_blur' | 'whip' | 'glitch' | None  qué se hace en cada corte
     saltos     [fotograma, …] + zoom_saltos 'suave'|'normal'|'fuerte'  el cuadro se acerca en un tramo sí y en el siguiente no (cada corte seco del «quitar pausas»)
     zoom_intro {'pico': fotograma, 'nivel': 'suave'|'normal'|'fuerte'} | None   el cuadro se acerca cada vez más deprisa hasta `pico` (el pico del riser) y se suelta de golpe: «zoom hit»
+    intro      {'tipo': intros_gancho.ZOOMS, 'desde': fotograma} | None   v5.33: el zoom HACIA FUERA de la intro del gancho (con giro, temblor,
+                                                       latigazo, desenfoque o RGB según el tipo; las expresiones salen de intros_gancho)
     fondo      {'lienzo': (W, H), 'clip': (w, h), 'desenfoque': px} | None
                                                        copia del video ampliada y desenfocada DETRÁS (cuando el video no tiene la forma del timeline)
     """
@@ -79,7 +82,11 @@ def texto_comp(duracion_frames, fps, zoom=None, golpes=None, nivel_temblor='norm
     saltos = sorted(set(int(c) for c in (saltos or []) if 0 < c < dur)) if zoom_saltos in ZOOM_SALTOS else []
     if not (isinstance(zoom_intro, dict) and zoom_intro.get('nivel') in ZOOM_INTRO):
         zoom_intro = None
-    if not (zoom or golpes or cortes or fondo or saltos or zoom_intro):
+    ex = None
+    if isinstance(intro, dict) and intro.get('tipo'):
+        import intros_gancho
+        ex = intros_gancho.expresiones(intro['tipo'], fps, int(intro.get('desde') or 0))
+    if not (zoom or golpes or cortes or fondo or saltos or zoom_intro or ex):
         return None
     herramientas = []
     ultimo = 'MediaIn1'
@@ -114,7 +121,7 @@ def texto_comp(duracion_frames, fps, zoom=None, golpes=None, nivel_temblor='norm
                                                          'PerformDepthMerge = Input { Value = 0, },'], x))
         encadenar('FondoMerge2')
     # --- Transform: zoom lento + golpe de zoom + temblor + whip pan + sacudida del glitch
-    hay_tr = bool(zoom or golpes or saltos or zoom_intro or (cortes and transicion in ('whip', 'glitch')))
+    hay_tr = bool(zoom or golpes or saltos or zoom_intro or ex or (cortes and transicion in ('whip', 'glitch')))
     if hay_tr:
         dur_golpe = max(3.0, DURACION_TEMBLOR_S * fps)
         desp, pico = TEMBLOR.get(nivel_temblor, TEMBLOR['normal'])
@@ -156,8 +163,16 @@ def texto_comp(duracion_frames, fps, zoom=None, golpes=None, nivel_temblor='norm
             sacudida = _suma([_triangulo(c, medio) for c in cortes])
             dx = '%s+0.045*%s*((math.sin(time*37.1)>0) and 1 or -1)' % (dx, sacudida)
             dy = '%s+0.012*%s*((math.sin(time*23.3)>0) and 1 or -1)' % (dy, sacudida)
+        if ex:                                                    # v5.33: el zoom hacia fuera de la intro (multiplica a lo demás; vale 1 al acabar)
+            size_expr = '%s*%s' % (size_expr, ex['size'])
+            if ex['dx']:
+                dx = '%s+%s' % (dx, ex['dx'])
+            if ex['dy']:
+                dy = '%s+%s' % (dy, ex['dy'])
+            if ex['angulo']:
+                ang = ex['angulo'] if ang is None else '%s+%s' % (ang, ex['angulo'])
         entradas = [_num('Size', 1, size_expr), _origen(ultimo)]
-        if cortes and transicion in ('whip', 'glitch'):
+        if (cortes and transicion in ('whip', 'glitch')) or (ex and (ex['dx'] or ex['dy'] or ex['angulo'])):
             entradas.append('Edges = Input { Value = %d, },' % BORDES_ESPEJO)        # lo que sale del cuadro se refleja: nunca una franja negra
         if dx != '0' or dy != '0':
             entradas.append('Center = Input { Value = { 0.5, 0.5 }, Expression = "Point(0.5+%s, 0.5+%s)", },' % (dx, dy))
@@ -202,6 +217,36 @@ def texto_comp(duracion_frames, fps, zoom=None, golpes=None, nivel_temblor='norm
         largo = _suma([_triangulo(c, medio) for c in cortes])
         herramientas.append(_tool('DirectionalBlur', 'WhipBlur', ['Type = Input { Value = 0, },', _num('Length', 0, '0.22*' + largo), _num('Angle', 0), _origen(ultimo)], x))
         encadenar('WhipBlur')
+    # --- v5.33: lo que acompaña al zoom de la intro (las mismas herramientas que las transiciones de arriba)
+    if ex and ex['zblur']:
+        herramientas.append(_tool('DirectionalBlur', 'IntroZoomBlur', ['Type = Input { Value = 3, },', _num('Length', 0, ex['zblur']), _origen(ultimo)], x))
+        encadenar('IntroZoomBlur')
+    if ex and ex['dblur']:
+        herramientas.append(_tool('DirectionalBlur', 'IntroLatigo', ['Type = Input { Value = 0, },', _num('Length', 0, ex['dblur']), _num('Angle', 90),
+                                                                     _origen(ultimo)], x))
+        encadenar('IntroLatigo')
+    if ex and ex['rgb']:                                          # el rojo a un lado y el azul al otro (como el glitch, sumados con Screen)
+        base_in = ultimo
+        salidas = {}
+        for letra, (r, g, b_), cx in (('R', (1, 0, 0), '0.5-%s' % ex['rgb']), ('G', (0, 1, 0), None), ('B', (0, 0, 1), '0.5+%s' % ex['rgb'])):
+            herramientas.append(_tool('ColorCorrector', 'IntroCanal' + letra, [_num('MasterRedGain', r), _num('MasterGreenGain', g), _num('MasterBlueGain', b_),
+                                                                              _origen(base_in)], x))
+            x += 200
+            if cx:
+                herramientas.append(_tool('Transform', 'IntroMueve' + letra, ['Center = Input { Value = { 0.5, 0.5 }, Expression = "Point(%s, 0.5)", },' % cx,
+                                                                              'Edges = Input { Value = %d, },' % BORDES_ESPEJO, _origen('IntroCanal' + letra)], x))
+                x += 200
+                salidas[letra] = 'IntroMueve' + letra
+            else:
+                salidas[letra] = 'IntroCanal' + letra
+        herramientas.append(_tool('Merge', 'IntroRGB1', ['Background = Input { SourceOp = "%s", Source = "Output", },' % salidas['G'],
+                                                         'Foreground = Input { SourceOp = "%s", Source = "Output", },' % salidas['R'],
+                                                         'ApplyMode = Input { Value = "Screen", },', 'PerformDepthMerge = Input { Value = 0, },'], x))
+        x += 200
+        herramientas.append(_tool('Merge', 'IntroRGB2', ['Background = Input { SourceOp = "IntroRGB1", Source = "Output", },',
+                                                         'Foreground = Input { SourceOp = "%s", Source = "Output", },' % salidas['B'],
+                                                         'ApplyMode = Input { Value = "Screen", },', 'PerformDepthMerge = Input { Value = 0, },'], x))
+        encadenar('IntroRGB2')
     salida = ('\t\tMediaIn1 = MediaIn {\n\t\t\tViewInfo = OperatorInfo { Pos = { 0, 50 } },\n\t\t},\n'
               '\t\tMediaOut1 = MediaOut {\n\t\t\tInputs = {\n\t\t\t\tIndex = Input { Value = "0", },\n\t\t\t\t%s\n\t\t\t},\n\t\t\tViewInfo = OperatorInfo { Pos = { %d, 50 } },\n\t\t},\n'
               % (_origen(ultimo), x))

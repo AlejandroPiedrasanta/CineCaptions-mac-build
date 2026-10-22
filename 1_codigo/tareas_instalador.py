@@ -48,7 +48,7 @@ import time
 import traceback
 from pathlib import Path
 
-TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'transcribir', 'sonda_resolve')
+TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'motor_compat', 'transcribir', 'sonda_resolve')
 # v5.1: Whisper queda de respaldo (el motor principal es Qwen3-ASR, motor_ia)
 MODELO_WHISPER = 'large-v3-turbo'
 MODELO_BYTES_APROX = 1_620_000_000
@@ -127,6 +127,21 @@ def _base_recursos():
     return Path(__file__).resolve().parent.parent / '2_recursos'
 
 
+def _tarea_motor_compat(estado):
+    """Instala Python 3.14.9 y las ruedas que no pueden ir en Python 3.15."""
+    import motor_compat
+
+    def progreso(fraccion, texto=''):
+        estado.progreso(fraccion * 100, texto)
+
+    def aviso(texto):
+        estado.info(texto)
+
+    datos = motor_compat.instalar(progreso=progreso, aviso=aviso)
+    estado.progreso(100)
+    estado.ok(f"Python {datos.get('python', '3.14.9')} y dependencias del motor instalados")
+
+
 def _tarea_verificar(estado):
     import tempfile
     import wave
@@ -147,6 +162,7 @@ def _tarea_verificar(estado):
                               'fonts', 'sfx_library', 'emojis', 'logo_cinecaptions.png',
                               'motor_qwen/motor_qwen.py', 'motor_qwen/motor_texto.py',
                               'motor_qwen/requisitos_motor_qwen.txt',
+                              'motor_compat/worker.py', 'motor_compat/requirements.txt',
                               'resolve_scripts/CineCaptions - Vista Real.py')
                   if not (base / n).exists()]
         if faltan:
@@ -180,9 +196,7 @@ def _tarea_verificar(estado):
 
     @prueba('Lectura de audio y vídeo (PyAV)')
     def _():
-        import compat_av
-        compat_av.aplicar()
-        from faster_whisper.audio import decode_audio
+        import av
         with tempfile.TemporaryDirectory() as tmp:
             ruta = Path(tmp) / 'silencio.wav'
             with wave.open(str(ruta), 'wb') as w:
@@ -190,25 +204,23 @@ def _tarea_verificar(estado):
                 w.setsampwidth(2)
                 w.setframerate(16000)
                 w.writeframes(b'\x00\x00' * 8000)
-            if len(decode_audio(str(ruta))) == 0:
-                raise RuntimeError('no decodificó nada')
+            with av.open(str(ruta)) as contenedor:
+                audio = contenedor.streams.audio[0]
+                # PyAV 19 espera índices de stream en decode(audio=...), no el objeto AudioStream.
+                if next(contenedor.decode(audio=audio.index), None) is None:
+                    raise RuntimeError('no decodificó el silencio de prueba')
 
-    @prueba('Motor de Whisper (CTranslate2)')
+    @prueba('Motor auxiliar Whisper, Argos y ONNX', critica=False)
     def _():
-        import ctranslate2
-        tipos = ctranslate2.get_supported_compute_types('cpu')
-        if not tipos:
-            raise RuntimeError('sin tipos de cálculo para CPU')
-
-    @prueba('Detección de voz (onnxruntime)')
-    def _():
-        from faster_whisper.vad import get_vad_model
-        get_vad_model()
-
-    @prueba('Traducción sin internet (Argos)')
-    def _():
-        os.environ.setdefault('ARGOS_CHUNK_TYPE', 'MINISBD')
-        import argostranslate.translate  # noqa: F401
+        import motor_compat
+        if not motor_compat.instalado():
+            raise RuntimeError('Python 3.14 auxiliar aún no está instalado')
+        datos = motor_compat.verificar()
+        faltan = motor_compat.faltan_requisitos()
+        if faltan:
+            raise RuntimeError('faltan versiones: ' + ', '.join(faltan[:5]))
+        if datos.get('python') != '3.14.9':
+            raise RuntimeError('se esperaba Python 3.14.9, encontrado ' + str(datos.get('python')))
 
     @prueba('Revisor de ortografía')
     def _():
@@ -362,55 +374,20 @@ def _tamano_carpeta(carpeta):
 
 
 def _tarea_modelo(estado):
-    os.environ['HF_HUB_DISABLE_SYMLINKS'] = '1'
-    os.environ['HF_HUB_DISABLE_XET'] = '1'
-    try:
-        import certifi
-        os.environ.setdefault('SSL_CERT_FILE', certifi.where())
-    except Exception:
-        pass
-    import huggingface_hub
-    from faster_whisper.utils import _MODELS, download_model
-    repo = _MODELS[MODELO_WHISPER]
-    estado.progreso(0, 'Comprobando si ya está descargado')
-    try:
-        download_model(MODELO_WHISPER, local_files_only=True)
-        estado.progreso(100)
-        estado.ok('El modelo de voz ya estaba descargado')
-        return
-    except Exception:
-        pass
-    carpeta = Path(huggingface_hub.constants.HF_HUB_CACHE) / ('models--' + repo.replace('/', '--'))
-    total = MODELO_BYTES_APROX
-    try:
-        info = huggingface_hub.HfApi().model_info(repo, files_metadata=True)
-        medido = sum(s.size or 0 for s in info.siblings
-                     if s.rfilename in ('config.json', 'model.bin', 'tokenizer.json',
-                                        'preprocessor_config.json')
-                     or s.rfilename.startswith('vocabulary.'))
-        if medido > 0:
-            total = medido
-    except Exception:
-        pass
-    inicial = _tamano_carpeta(carpeta)
-    resultado = {}
+    """Descarga Whisper en el motor auxiliar, mostrando avance al instalador."""
+    import motor_compat
+    estado.progreso(0, 'Comprobando si el motor auxiliar está listo')
 
-    def bajar():
-        try:
-            resultado['ruta'] = download_model(MODELO_WHISPER)
-        except Exception as exc:
-            resultado['error'] = exc
+    def progreso(fraccion, detalle=''):
+        estado.progreso(fraccion * 100, detalle)
 
-    hilo = threading.Thread(target=bajar, daemon=True)
-    hilo.start()
-    while hilo.is_alive():
-        hilo.join(1.0)
-        hecho = max(0, _tamano_carpeta(carpeta) - inicial)
-        estado.progreso(min(99, 100 * hecho / total),
-                        f'{hecho / 1e6:,.0f} de {total / 1e6:,.0f} MB'.replace(',', '.'))
-    if 'error' in resultado:
-        exc = resultado['error']
-        estado.error(f'No pude descargar el modelo de voz ({type(exc).__name__}: {exc}). '
+    def aviso(texto):
+        estado.info(texto)
+
+    try:
+        motor_compat.descargar_modelo(MODELO_WHISPER, progreso=progreso, aviso=aviso)
+    except Exception as exc:
+        estado.error(f'No pude preparar el modelo de voz ({type(exc).__name__}: {exc}). '
                      'El programa lo descargará la primera vez que transcribas.')
         return
     estado.progreso(100)

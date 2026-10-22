@@ -9,8 +9,8 @@ Hasta la v4.1.0 la ventana era CustomTkinter: cada esquina redondeada era un
 dibujo en un Canvas de Tk y cada boton una pila de widgets, asi que abrir la
 ventana de palabras con un guion largo o el selector de emojis se notaba
 lento, y el redimensionado parpadeaba. Desde la v5.0.0 (pedido literal:
-«actualiza todo mi programa con Python 3.14.8 y PySide6 para mejorar la
-interfaz y fluidez», y despues la propuesta de 5 pantallas tipo panel) todo
+Python 3.15.1 y PySide6; el motor auxiliar mantiene las extensiones nativas en Python 3.14.9,
+y despues la propuesta de 5 pantallas tipo panel) todo
 se pinta con Qt.
 
 Aqui vive lo comun a todas las pantallas:

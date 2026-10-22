@@ -1546,7 +1546,7 @@ class Conversion {
             const source = new media_source/* AudioSampleSource */.Ii(encodingConfig);
             audioSource = source;
             this._registerTrackPump(async (pump) => {
-                let needsPadding = null;
+                let paddingLengthInSamples = null;
                 const sink = new media_sink/* AudioSampleSink */.qw(track);
                 for await (const sample_2 of sink.samples(this._startTimestamp, this._endTimestamp)) {
                     const env_3 = { stack: [], error: void 0, hasError: false };
@@ -1586,17 +1586,17 @@ class Conversion {
                         const finalSample = __addDisposableResource(env_3, finalSampleLet, false);
                         // Offset the timestamp as needed
                         finalSample.setTimestamp(finalSample.timestamp + this._timestampOffset);
-                        if (needsPadding === null) {
-                            needsPadding = finalSample.timestamp > 0 && !this.output.format.supportsTimestampedMediaData;
+                        if (paddingLengthInSamples === null) {
+                            paddingLengthInSamples = this.output.format.supportsTimestampedMediaData
+                                ? 0
+                                : Math.round(finalSample.timestamp * originalSampleRate);
                         }
-                        if (needsPadding) {
+                        if (paddingLengthInSamples > 0) {
                             const env_4 = { stack: [], error: void 0, hasError: false };
                             try {
                                 // Add one padding sample at the beginning
-                                const paddingLength = finalSample.timestamp;
-                                const paddingLengthSamples = Math.round(paddingLength * originalSampleRate);
                                 const bytesPerSample = (0,src_sample/* getBytesPerSample */.Dw)(sample.format);
-                                const data = new Uint8Array(bytesPerSample * paddingLengthSamples * originalNumberOfChannels);
+                                const data = new Uint8Array(bytesPerSample * paddingLengthInSamples * originalNumberOfChannels);
                                 if (sample.format === 'u8' || sample.format === 'u8-planar') {
                                     data.fill(2 ** 7); // Fill it with the silent value
                                 }
@@ -1610,7 +1610,7 @@ class Conversion {
                                     timestamp: 0,
                                 }), false);
                                 await this._registerAudioSample(pump, silentSample, source, outputTrackId, () => lastSampleTimestamp);
-                                needsPadding = false;
+                                paddingLengthInSamples = 0;
                             }
                             catch (e_3) {
                                 env_4.error = e_3;
@@ -1720,7 +1720,7 @@ class Conversion {
         if (!this._computeProgress || this._maxTimestamps.size === 0) {
             return;
         }
-        (0,misc/* assert */.vA)(this._totalDuration !== null);
+        ;(0,misc/* assert */.vA)(this._totalDuration !== null);
         const minTimestamp = Math.min(...this._maxTimestamps.values());
         const newProgress = (0,misc/* clamp */.qE)(minTimestamp / this._totalDuration, 0, 1);
         this._lastProcessedTime = minTimestamp;
@@ -1810,7 +1810,7 @@ class TrackSynchronizer {
 }
 
 ;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-c6ksy867.mjs
-Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 
 
 
@@ -1881,13 +1881,13 @@ var resampleMediaTo16Khz = async ({
             const floats = new Float32Array(sample.allocationSize({ format: "f32", planeIndex: 0 }) / Float32Array.BYTES_PER_ELEMENT);
             sample.copyTo(floats, { format: "f32", planeIndex: 0 });
             waveformChunks.push({
-              startFrame: Math.round(sample.timestamp * Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())),
+              startFrame: Math.round(sample.timestamp * Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())),
               waveform: floats
             });
             return sample;
           },
           sampleFormat: "f32",
-          sampleRate: Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())
+          sampleRate: Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())
         };
       }
     });
@@ -1943,7 +1943,7 @@ var CaptionQueueProcessor = () => {
         message: "Checking WebGPU support...",
         value: 0
       });
-      const support = await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
+      const support = await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
       signal.throwIfAborted();
       if (!support.supported) {
         throw new Error(support.detailedReason);
@@ -1952,21 +1952,21 @@ var CaptionQueueProcessor = () => {
         message: `Checking ${job.model}...`,
         value: 0.02
       });
-      await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
+      await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
       signal.throwIfAborted();
       await (0,index_7shemw90/* loadModelForJob */.k)({
         signal,
         model: job.model,
         progressStart: 0.03,
         progressSpan: 0.27,
-        isModelCached: (model) => Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }),
+        isModelCached: (model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }),
         loadModel: async (model, onProgress) => {
-          await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
+          await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
             signal,
             model,
             onProgress: (progress) => onProgress(progress.progress)
           });
-          await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model, signal });
+          await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model, signal });
         },
         updateProgress: (progress) => updateCaptionJobProgress(job.id, progress)
       });
@@ -1990,7 +1990,7 @@ var CaptionQueueProcessor = () => {
         message: `Transcribing ${job.displayName}...`,
         value: 0.5
       });
-      const transcription = await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
+      const transcription = await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
         signal,
         channelWaveform,
         model: job.model,
@@ -2005,7 +2005,7 @@ var CaptionQueueProcessor = () => {
         noRepeatNgramSize: job.noRepeatNgramSize,
         ...job.language === null ? {} : { language: job.language }
       });
-      const { captions } = Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
+      const { captions } = Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
         whisperWebGpuOutput: transcription
       });
       signal.throwIfAborted();
@@ -2103,7 +2103,7 @@ var CaptionQueueProcessor = () => {
       processingError = error instanceof Error ? error : new Error(String(error));
     }
     try {
-      await Object(function webpackMissingModule() { var e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model: job.model });
+      await Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model: job.model });
     } catch {}
     if (signal.aborted) {
       markCaptionJobCancelled(job.id);

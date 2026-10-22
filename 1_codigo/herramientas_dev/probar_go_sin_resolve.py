@@ -1,7 +1,7 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/herramientas_dev/probar_go_sin_resolve.py — GO de punta a punta SIN Resolve (CINECAPTIONS_SIN_RESOLVE=1), sin pantalla, sobre una copia del video.
 """
-    6_compilacion/venv314/Scripts/python.exe 1_codigo/herramientas_dev/probar_go_sin_resolve.py <video> [--por-ajuste] [--tema Kinetic|Referencia|VIRAL|Tema4|Tema5|Tema6 (en memoria)]
+    6_compilacion/venv315/Scripts/python.exe 1_codigo/herramientas_dev/probar_go_sin_resolve.py <video> [--por-ajuste] [--tema Kinetic|Referencia|VIRAL|Tema4|Tema5|Tema6 (en memoria)]
 
 --por-ajuste: en vez de CINECAPTIONS_SIN_RESOLVE=1, enciende en memoria el interruptor de Ajustes «Video MP4 en lugar de Resolve».
 

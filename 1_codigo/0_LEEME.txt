@@ -12,54 +12,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (24 archivos)
-        banco_voz\   (1 archivos)
-        banco_voz.py
-            v5.5.17: mide la transcripción (WER y la lista de errores) contra un texto CORRECTO, para comparar
-        comparar_kitneon.py
-            v5.5.13: compara el Tema 1 neón (composición KitNeon de Remotion) con el video de referencia del kit
-        comparar_ref_neon.py
-            v5.5.13: el Tema 1 neón contra REFERENCIA.mp4 (entregas/3_neon_kinetic_hook.mp4) fotograma a
-        galeria_remotion.py
-            la galería de las 100 plantillas Remotion de la Edición PRO: un fotograma de cada una sobre un
-        generar_recortes.py
-            los «recortes de revista» del motion RecorteK (Kit8.tsx): de cada emoji 3D (Fluent, MIT) saca
-        generar_resortes.js
-        hacer_ejemplos_pro.py
-            los EJEMPLOS REALES de los interruptores de la Edición PRO en Proyecto (pro_lateral_ui): un clip
-        hacer_estilos_pro.py
-            v5.20: los EJEMPLOS de cada estilo de la página Efectos › Edición PRO (estilos_pro.SECCIONES):
-        hacer_previas_motions.py
-            las miniaturas del carrusel «Motions de la Edición PRO» (página Efectos): un fotograma de cada
-        importar_sonidos.py
-            elige los mejores sonidos de la biblioteca del autor (E:\...\EFECTOS SONIDO y BODAS & XV) y los deja recortados en 2_recursos/sfx_library/<categoría>. SOLO desarrollo (no entra en el .exe).
-        probar_ciclos_go.py
-            repite el GO N veces seguidas con un pack y cuenta fallos/tiempos (cuelgues intermitentes de Resolve). SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
-        probar_cuelgue_resolve.py
-            suspende Resolve a mitad de un GO real (armar / captions / efectos) y comprueba que el programa lo nota, lo reinicia y termina. SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
-        probar_edicion_pro.py
-            prueba de punta a punta de la Edición PRO en Resolve REAL (proyecto temporal zz_PRUEBAS_CC).
-        probar_emojis_temas.py
-            GO solo con emojis por tema + render de los primeros segundos + hoja de fotogramas donde hay emoji (posición y animación). SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
-        probar_go_sin_resolve.py
-            GO de punta a punta SIN Resolve (CINECAPTIONS_SIN_RESOLVE=1), sin pantalla, sobre una copia del video.
-        probar_previo_resolve.py
-            suspende Resolve ANTES de pulsar GO: la revisión previa (colocacion.preparar_resolve_para_go) debe reiniciarlo y terminar bien. SOLO desarrollo (no entra en el .exe; necesita Resolve abierto y es seguro con el del usuario solo si él lo autoriza: ver memoria «resolve-uso-paralelo»).
-        probar_pro_lateral.py
-            v5.5.17: prueba el módulo DERECHO de la Edición PRO en Proyecto (pro_lateral_ui: la barra con
-        probar_ventanas_humo.py
-            humo de TODAS las ventanas sin pantalla ni Resolve: crea la app, recorre sus páginas, abre cada ventana y escribe una «huella» de widgets y textos para comparar antes/después de mover código entre módulos.
-        probar_vista_creativo.py
-            banco de la vista EXACTA del tema en Creativo (vista_tema.py) contra lo que recibió y pintó Resolve.
-        resortes_motion.py
-            mete en el motor OGraf de la Edición PRO las curvas de resorte de Motion (motion.dev).
-        vista_kitneon.py
-            v5.5.13: el Tema 1 neón de CUALQUIER video sin Resolve: planifica captions + motions + placa como GO
-        vista_ograf.py
-            ver una pieza OGraf SIN Resolve: la abre en el Chrome sin ventana del runtime de Remotion (servidor local)
-        vista_tema5.py
-            el Tema 5 SIN Resolve, para revisarlo y para la tarjeta del slider (2_recursos/vistas_slider/Tema5.mp4
-    remotion\   (17400 archivos)
+    herramientas_dev\   (36 archivos)
+    remotion\   (16059 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -100,6 +54,44 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     descargas.py
         descargas grandes que se reanudan y se verifican (SHA-256).
     desktop.ini
+    director_sonido.py
+        «AI Sound Director» (v5.34): el sound designer de GO. Analiza el video y dirige el sonido ENCIMA de los motores de siempre.
+    director_sonido_ambiente.py
+        «AI Sound Director» · AI AMBIENCE: el entorno de cada escena y qué hacer con su ambiente.
+    director_sonido_biblioteca.py
+        «AI Sound Director»: el ÍNDICE de TODO el material del autor (no solo UTILES) para SFX, música y ambiente.
+    director_sonido_capas.py
+        «AI Sound Director», FASE 4: la MÚSICA y el AMBIENTE (pistas AI MUSIC y AI AMBIENCE).
+    director_sonido_diseno.py
+        «AI Sound Director», FASE 3: qué suena y qué se queda en silencio, evento por evento, en los 6 temas.
+    director_sonido_epidemic.py
+        «AI Sound Director»: cliente de la API de Epidemic Sound (solo backend; la clave, solo del entorno).
+    director_sonido_estado.py
+        «AI Sound Director» (v5.34): el estado `sound_design_project` de cada video (lo analizado, decidido y medido).
+    director_sonido_eventos.py
+        «AI Sound Director»: lo que pasa en pantalla y en la narración, leído de la metadata REAL de GO.
+    director_sonido_fuentes.py
+        «AI Sound Director»: de dónde sale cada sonido (SOUND ASSET STRATEGY) y el QUALITY GATE de cada archivo.
+    director_sonido_identidad.py
+        «AI Sound Director»: THEME → SONIC PROFILE → PROJECT SONIC PALETTE.
+    director_sonido_medir.py
+        «AI Sound Director»: leer, filtrar y medir audio con PyAV (ffmpeg dentro del programa), en streaming.
+    director_sonido_mezcla.py
+        «AI Sound Director», FASE 5: la mezcla completa, el QC en 3 pasadas y el SOUND SCORE (de métricas reales).
+    director_sonido_musica.py
+        «AI Sound Director»: ¿hay música? ¿la necesita? La decisión de la música (no binaria).
+    director_sonido_nr.py
+        «AI Sound Director»: reducción de ruido de la voz (numpy, sin dependencias nuevas), natural antes que cero ruido.
+    director_sonido_sesion.py
+        «AI Sound Director», FASE 6: lo que la página necesita (leer el diseño de un video, controles, retocar, oír, aplicar).
+    director_sonido_sfx.py
+        «AI Sound Director», FASE 3: cada sonido del diseño hecho a la medida, en su WAV y listo para su pista AI.
+    director_sonido_sintesis.py
+        «AI Sound Director»: sonido PROCEDURAL diseñado alrededor de cada movimiento (no un WAV genérico).
+    director_sonido_ui.py
+        la página SONIDO = «AI Sound Director» (fase 6): la IA hace el 95 % del sonido; el usuario lo dirige (5 %).
+    director_sonido_voz.py
+        «AI Sound Director»: diagnóstico de la voz y su restauración (una COPIA), con guardas para que nunca suene robótica.
     ducking.py
         baja la música sola mientras hay voz (ducking), calculado desde las palabras de la transcripción.
     dynamic_subtitles.py
@@ -221,6 +213,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         copia los scripts de CineCaptions al menú de DaVinci Resolve y comprueba que estén al día.
     instalar_fuentes.py
         instala en el sistema las tipografías de las plantillas (para que Resolve/Fusion las vea).
+    intros_gancho.py
+        v5.33: el «Gancho del inicio» de la Edición PRO = una INTRO en el primer segundo: un destello de luz (los overlays
     isla_ui.py
         la «isla dinámica»: el menú de navegación flotante de arriba, los controles de la ventana y el borde.
     kinetic_captions.py
@@ -267,6 +261,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         v5.5.8 «Motions completo»: un video de SOLO motions a pantalla completa para TODO el video, tramo a tramo, que va
     motions_ui.py
         la sección «Motions de la Edición PRO» de la página Efectos: un carrusel con TODOS los motions (v5.5.7)
+    motor_compat.py
+        servicio Python 3.14 para Whisper, Argos y ONNX Runtime.
     motor_voz.py
         motor de voz e IA Qwen3 en su propio Python 3.12: instalar, detectar y transcribir.
     musica_go.py
@@ -284,6 +280,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         «Quitar pausas» (jump cuts en los silencios) para GO (v5.4.8).
     plantillas.py
         packs de estilos: leer, guardar, elegir y preparar el pack que se aplica.
+    posiciones_detras_ui.py
+        Efectos › «Captions detrás de ti» › Posición con el diseño nuevo (v5.32): cabecera, visor, panel y tira.
     posiciones_pro.py
         «Posición» de cada efecto de la Edición PRO: el usuario marca en la línea de tiempo de SU video (con sus
     preparar_efectos.py
@@ -314,6 +312,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         prueba del estilo «VIRAL» DENTRO de la app (sin pantalla y SIN Resolve): GO, Creativo (palabras marcadas), sonidos y emojis.
     proyecto_pruebas.py
         un proyecto TEMPORAL y vacío de Resolve para probar sin ensuciar el del usuario.
+    proyecto_ui.py
+        v5.32: el aspecto nuevo de la página Proyecto (las maquetas del usuario): la franja del audio y el bloque del tema.
     proyectos.py
         registro de proyectos (vídeos) trabajados: recientes, abrir, borrar.
     qt_kit.py

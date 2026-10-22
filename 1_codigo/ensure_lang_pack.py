@@ -60,145 +60,71 @@ class SinConexion(SystemExit):
     con un mensaje que diria «no hay paquete directo» siendo mentira."""
 
 
-def _asegurar_indice(log):
-    """Baja el indice de paquetes si no esta, DICIENDO por que si falla.
-
-    argostranslate lo baja solo, pero se traga el error (logger sin
-    salida en el compilado) y su get_available_packages reintenta en
-    recursion infinita hasta un RecursionError que no dice nada (medido:
-    984 intentos). Aqui la descarga va a la vista: sin red, bloqueada o
-    sin certificados, el mensaje lleva la causa real y la URL.
-    """
-    import urllib.request
-    import argostranslate.settings as settings
-    from pathlib import Path
-    ruta = Path(settings.local_package_index)
-    if ruta.exists():
-        return
-    url = settings.remote_package_index
-    log(tr('Descargando el índice de paquetes de traducción (una sola vez)...'))
-    try:
-        datos = urllib.request.urlopen(url, timeout=60).read()
-    except Exception as e:
-        raise SinConexion(
-            tr('No pude descargar el índice de paquetes de traducción ({url}):', url=url)
-            + f' {type(e).__name__}: {e}\n'
-            + tr('Revisa la conexión a internet y vuelve a intentarlo.')
-        )
-    ruta.parent.mkdir(parents=True, exist_ok=True)
-    ruta.write_bytes(datos)
-
-
 def ensure_lang_pack(from_code: str, to_code: str, log=print) -> None:
-    """Instala el paquete from_code->to_code si no esta ya instalado.
-
-    Lanza SystemExit si no existe un paquete para ese par de idiomas, y
-    SinConexion (subclase) si no se pudo descargar. `log` permite
-    redirigir los mensajes (la ventana grafica los muestra en pantalla
-    en vez de imprimirlos en la consola).
-    """
-    import logging
-    import argostranslate.package as package
-
-    installed = package.get_installed_packages()
-    if any(p.from_code == from_code and p.to_code == to_code for p in installed):
+    """Instala un paquete Argos con el servicio auxiliar Python 3.14."""
+    import motor_compat
+    installed = motor_compat.paquetes_instalados()
+    if any(p.get('from') == from_code and p.get('to') == to_code for p in installed):
         log(tr('Paquete de traduccion {origen}->{destino} ya estaba instalado.',
                origen=from_code, destino=to_code))
         return
-
-    _asegurar_indice(log)
     log(tr('Descargando paquete de traduccion {origen}->{destino} (una sola vez)...',
            origen=from_code, destino=to_code))
+    mensajes = []
 
-    ultimos = []
+    def registrar(texto):
+        mensajes.append(str(texto))
+        if log:
+            log(texto)
 
-    class _Captura(logging.Handler):
-        def emit(self, registro):
-            ultimos.append(registro.getMessage())
-
-    logger = logging.getLogger('argostranslate.utils')
-    captura = _Captura()
-    logger.addHandler(captura)
     try:
-        ok = package.install_package_for_language_pair(from_code, to_code)
-    except Exception as e:
-        detalle = f' — {ultimos[-1]}' if ultimos else ''
+        instalado = motor_compat.instalar_paquete(from_code, to_code, log=registrar)
+    except Exception as exc:
         raise SinConexion(
-            tr('No pude descargar el paquete de traducción {origen}->{destino}:',
+            tr('No pude instalar el paquete de traducción {origen}->{destino}:',
                origen=from_code, destino=to_code)
-            + f' {type(e).__name__}: {e}{detalle}\n'
+            + f' {type(exc).__name__}: {exc}\n'
             + tr('Revisa la conexión a internet y vuelve a intentarlo.')
         )
-    finally:
-        logger.removeHandler(captura)
-    if not ok:
+    if not instalado:
+        detalle = '\n'.join(mensajes[-3:])
+        if any(x in detalle.lower() for x in ('url', 'download', 'conexión', 'connection', 'timeout', 'ssl')):
+            raise SinConexion(detalle or tr('No se pudo descargar el paquete de traducción.'))
         raise SystemExit(tr('No encontre un paquete de traduccion {origen}->{destino} disponible.',
-                            origen=from_code, destino=to_code))
+                            origen=from_code, destino=to_code) + (f'\n{detalle}' if detalle else ''))
     log(tr('Paquete {origen}->{destino} instalado correctamente.',
            origen=from_code, destino=to_code))
 
 
-def _a_dict(paquete, instalado):
-    return {
-        'from': getattr(paquete, 'from_code', ''),
-        'to': getattr(paquete, 'to_code', ''),
-        'nombre_from': (getattr(paquete, 'from_name', '')
-                        or getattr(paquete, 'from_code', '')),
-        'nombre_to': (getattr(paquete, 'to_name', '')
-                      or getattr(paquete, 'to_code', '')),
-        'instalado': instalado,
-    }
-
-
 def paquetes_instalados():
-    """Lo que ya esta descargado en esta maquina. No necesita internet."""
+    """Lista los paquetes disponibles sin cargar Argos en Python 3.15."""
     try:
-        import argostranslate.package as package
-        return [_a_dict(p, True) for p in package.get_installed_packages()]
+        import motor_compat
+        return motor_compat.paquetes_instalados()
     except Exception:
         return []
 
 
 def paquetes_disponibles(refrescar=True):
-    """Todo el catalogo, marcando lo que ya esta instalado.
-
-    Necesita internet la primera vez (baja el indice). Sin conexion devuelve
-    solo lo instalado, que es informacion util y no una lista vacia: asi la
-    ventana puede decir "esto es lo que tienes" en vez de parecer rota.
-    """
+    """Lista el catálogo auxiliar; sin red devuelve lo que ya está instalado."""
     try:
-        import argostranslate.package as package
+        import motor_compat
+        return motor_compat.paquetes_disponibles(refrescar=refrescar)
     except Exception:
-        return []
-    instalados = {(p.from_code, p.to_code) for p in package.get_installed_packages()}
-    if refrescar:
-        try:
-            package.update_package_index()
-        except Exception:
-            return [dict(d) for d in paquetes_instalados()]
-    try:
-        disponibles = package.get_available_packages()
-    except Exception:
-        return [dict(d) for d in paquetes_instalados()]
-    return [_a_dict(p, (p.from_code, p.to_code) in instalados) for p in disponibles]
+        return paquetes_instalados()
 
 
 def instalar(from_code, to_code, log=print):
-    """Descarga e instala un par. Devuelve True si al terminar esta puesto.
-
-    Es lo mismo que hace ensure_lang_pack, pero devolviendo un booleano en
-    vez de lanzar: la ventana de idiomas prefiere mostrar el fallo en su
-    lista antes que reventar en medio de una descarga de varias.
-    """
+    """Instala el par solicitado y devuelve False si falla."""
     try:
         ensure_lang_pack(from_code, to_code, log=log)
         return True
-    except SystemExit as e:
-        log(str(e))
+    except SystemExit as exc:
+        log(str(exc))
         return False
-    except Exception as e:
+    except Exception as exc:
         log(tr('No pude instalar {origen}->{destino}: {e}',
-               origen=from_code, destino=to_code, e=e))
+               origen=from_code, destino=to_code, e=exc))
         return False
 
 

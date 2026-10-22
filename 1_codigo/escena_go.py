@@ -585,6 +585,22 @@ class EscenaGo(QWidget):
         self.meta = 1.0
         self._luego = luego
         self._sonar('boom')
+        # v5.26 (GO se quedó 8 min parado con CineCaptions minimizado): la colocación en Resolve NUNCA espera a la animación. Minimizada u
+        # oculta, la escena no avanza (_tic) y el pico no llegaba: ahora sale ya, y si se ve, como mucho 0,6 s después aunque el reloj vaya lento
+        if luego is not None:
+            if not self.isVisible() or self.window().isMinimized():
+                self._disparar_luego()
+            else:
+                QTimer.singleShot(600, self._disparar_luego)
+
+    def _disparar_luego(self):
+        """Llama una sola vez a lo que espera el pico de la explosión (desde la animación o desde el seguro de explotar)."""
+        f, self._luego = self._luego, None
+        if f is not None:
+            try:
+                f()
+            except Exception:
+                pass
 
     def terminar(self, ok, tono='ok'):
         self._tono_final = tono
@@ -839,11 +855,7 @@ class EscenaGo(QWidget):
             u = (self._t - self.t_expl) / 1.7
             self.expl = max(0.0, min(1.0, u))
             if self._luego is not None and self._t - self.t_expl >= 0.28:
-                f, self._luego = self._luego, None
-                try:
-                    f()
-                except Exception:
-                    pass
+                self._disparar_luego()
             if self._t - self.t_expl < 0.05 and not self._ondas_expl_hechas():
                 self._ondas.append((self._t, self._geometria()[0], '#FFFFFF', 1.0, False))
                 self._ondas.append((self._t + 0.12, self._geometria()[0], '#4FD8FF', 0.8, False))

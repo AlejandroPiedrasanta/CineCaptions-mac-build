@@ -40,7 +40,7 @@ async function inlineWorker(scriptText) {
   } else {
     let Worker3;
     try {
-      Worker3 = (await __webpack_require__.e(/* import() */ 304).then(__webpack_require__.t.bind(__webpack_require__, 304, 19))).Worker;
+      Worker3 = (await __webpack_require__.e(/* import() */ 304).then(() => (__webpack_require__.t(304, 19)))).Worker;
     } catch {
       Worker3 = __require("worker_threads").Worker;
     }

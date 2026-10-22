@@ -301,3 +301,64 @@ def secuencia_resolve(glifo):
         return datos
     except Exception:
         return None
+
+
+# ---------------------------------------------------------------------------------------------------------------- Lottie (v5.25)
+# «Emojis animados» de la Edición PRO: el MISMO emoji animado de Google en formato Lottie (vectorial: nítido a cualquier tamaño). Los ~110 más
+# usados vienen en el programa (2_recursos/edicion_pro/lottie, public/lottie del bundle de Remotion); el resto se baja la primera vez a
+# ~/DaVinciSubtitles/emojis_lottie/<hex>.json (CC BY 4.0, como el webp). LottieFiles NO: pide cuenta y su licencia no deja redistribuir.
+CARPETA_LOTTIE = Path.home() / 'DaVinciSubtitles' / 'emojis_lottie'
+_URL_LOTTIE = 'https://fonts.gstatic.com/s/e/notoemoji/latest/%s/lottie.json'
+
+
+def lottie_de(eid, bajar=True):
+    """('programa', None) si ese emoji animado viene en el programa (Remotion lo lee de su public/lottie), ('datos', dict) si está en la caché
+    o se acaba de bajar (va en las props), o (None, None) si no tiene versión animada (o no hay red). En un HILO: puede bajar."""
+    import json
+    n = str(eid or '').replace('emoji:', '').replace('rcs_emoji_', '').replace('.png', '')
+    try:
+        import edicion_pro
+        if (Path(edicion_pro.carpeta_recursos()) / 'lottie' / f'{n}.json').is_file():
+            return 'programa', None
+    except Exception:
+        pass
+    try:
+        import emojis
+        glifo = (emojis.por_id(n) or {}).get('glifo')
+    except Exception:
+        glifo = None
+    if not glifo:
+        return None, None
+    f = CARPETA_LOTTIE / (hex_de(glifo) + '.json')
+    sin = f.with_suffix('.no')
+    try:
+        if f.is_file():
+            return 'datos', json.loads(f.read_text(encoding='utf-8'))
+    except Exception:
+        pass
+    if sin.exists() or not bajar:
+        return None, None
+    todo_404 = True
+    for h in dict.fromkeys((hex_de(glifo), hex_de(glifo, True))):
+        try:
+            req = urllib.request.Request(_URL_LOTTIE % h, headers={'User-Agent': 'CineCaptions'})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                crudo = r.read()
+            datos = json.loads(crudo.decode('utf-8'))
+            CARPETA_LOTTIE.mkdir(parents=True, exist_ok=True)
+            tmp = f.with_suffix('.tmp')
+            tmp.write_bytes(crudo)
+            tmp.replace(f)
+            return 'datos', datos
+        except urllib.error.HTTPError as e:
+            if e.code != 404:
+                todo_404 = False
+        except Exception:
+            todo_404 = False                  # sin red: se reintenta otro día
+    if todo_404:
+        try:
+            CARPETA_LOTTIE.mkdir(parents=True, exist_ok=True)
+            sin.write_bytes(b'')              # Google no tiene versión animada de ese emoji
+        except OSError:
+            pass
+    return None, None

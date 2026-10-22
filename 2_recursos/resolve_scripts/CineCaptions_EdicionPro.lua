@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
 ]]
 
-local VERSION = "5.24 (edicion pro)"
+local VERSION = "5.37 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -345,6 +345,16 @@ local MARCA = "ccpro-subir"              -- marca en cada clip de captions que s
 local PISTA_SONIDO = "PRO-SONIDO"
 local BIN = "RCS · Edición PRO"
 local RESUMEN = ""
+-- v5.24 (gemelo de colocar_pro.py, el usuario: «que cada pista indique que hace»): en Resolve cada pista se ve «que hace · CODIGO»; se busca
+-- SIEMPRE por el codigo (nombre_pista lo devuelve), asi re-aplicar y los timelines de antes (solo el codigo) siguen funcionando.
+local SEP_PISTA = " · "
+local DESCRIPCION_PISTA = {
+    ["PRO-BROLL"] = "B-roll", ["PRO-ZOOM"] = "Video con cámara y zooms", ["PRO-GRIS"] = "Fondo en gris", ["PRO-FONDO"] = "Fondos animados",
+    ["PRO-VELO"] = "Velos", ["PRO-DETRAS"] = "Gráficos detrás de ti", ["PRO-PERSONA"] = "Persona recortada", ["PRO-DELANTE"] = "Gráficos delante",
+    ["PRO-SUBS"] = "Captions", ["PRO-SUBS2"] = "Captions (2.ª)", ["PRO-ENCIMA"] = "Persona encima de los captions", ["PRO-ICONOS"] = "Iconos y cortinillas",
+    ["PRO-MOTIONS"] = "Motions completo", ["PRO-SONIDO"] = "Sonidos", ["PRO-WHOOSH"] = "Sonidos: whoosh", ["PRO-TEXTURA"] = "Sonidos: texturas",
+    ["PRO-RISER"] = "Sonidos: subidas", ["PRO-HIT"] = "Sonidos: golpes",
+}
 
 local function redondear(x) return math.floor(x + 0.5) end
 
@@ -457,8 +467,17 @@ PRE.importar_todo = function(mp, caja, datos)
 end
 
 local function nombre_pista(tl, tipo, i)
+    -- v5.24: el CODIGO de la pista («Captions · PRO-SUBS» -> «PRO-SUBS»; una sin descripcion, tal cual)
     local nombre = ""
     pcall(function() nombre = tl:GetTrackName(tipo, i) or "" end)
+    nombre = tostring(nombre)
+    local desde, ultimo = 1, nil
+    while true do
+        local a, b = string.find(nombre, SEP_PISTA, desde, true)
+        if not a then break end
+        ultimo, desde = b, b + 1
+    end
+    if ultimo then return string.sub(nombre, ultimo + 1) end
     return nombre
 end
 
@@ -511,6 +530,26 @@ local function quitar_vacias(tl)
         local i = indice(tl, n)
         if i and #lista_api(tl:GetItemListInTrack("video", i)) == 0 then pcall(function() tl:DeleteTrack("video", i) end) end
     end
+end
+
+local function etiquetar(tl)
+    -- v5.24 (gemelo de _etiquetar): al final, cada pista de la PRO con lo que hace delante de su codigo
+    local n = 0
+    for _, tipo in ipairs({ "video", "audio" }) do
+        for i = 1, math.floor(tonumber(tl:GetTrackCount(tipo)) or 0) do
+            local codigo = nombre_pista(tl, tipo, i)
+            local desc = DESCRIPCION_PISTA[codigo]
+            if desc then
+                local actual = ""
+                pcall(function() actual = tl:GetTrackName(tipo, i) or "" end)
+                if actual ~= desc .. SEP_PISTA .. codigo then
+                    local ok, r = pcall(function() return tl:SetTrackName(tipo, i, desc .. SEP_PISTA .. codigo) end)
+                    if ok and r then n = n + 1 end
+                end
+            end
+        end
+    end
+    return n
 end
 
 local function append(mp, info)
@@ -1322,9 +1361,13 @@ local function main()
     local motions = poner_motions(tl, mp, caja, graficos, base)
     if motions > 0 then print(string.format("Motions completo: %d clip(s) en %s, encima de todo.", motions, PISTA_MOTIONS)) end
     quitar_vacias(tl)
+    etiquetar(tl)                                                    -- v5.24: cada pista dice que hace
     if datos.cache ~= false then cachear_al_final(tl, project) end     -- v5.5.8: la caché de render, AL FINAL (gemelo de colocar_pro.py)
     local total = puestos.fondo + puestos.velo + puestos.detras + puestos.delante + puestos.iconos + puestos.subs + puestos.subs2
-    if puestos.subs > 0 then print(string.format("Captions animados: %d (%d captions de respaldo apagados).", puestos.subs, puestos.respaldo)) end
+    if puestos.subs > 0 then
+        print(string.format("Captions animados: %d%s.", puestos.subs + puestos.subs2,
+            ((puestos.respaldo or 0) > 0) and string.format(" (%d captions de respaldo apagados)", puestos.respaldo) or ""))
+    end
     RESUMEN = string.format("Edicion PRO: %d graficos (%d detras, %d delante, %d escenas, %d velos), %d recortes de persona, captions detras de la persona en %d tramos (%d clips movidos, %d emojis apartados de la cara), %d iconos 3D (%d emojis cambiados), %d tramos en gris, %d tomas de B-roll, %d punch-ins, %d sonidos%s.",
         total, puestos.detras, puestos.delante, puestos.fondo, puestos.velo, puestos.persona, puestos.encima, puestos.movidos, puestos.emojis, puestos.iconos,
         puestos.cambiados, puestos.gris, puestos.broll, puestos.punch, puestos.sonido,

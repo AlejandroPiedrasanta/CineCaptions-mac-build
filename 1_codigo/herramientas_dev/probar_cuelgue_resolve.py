@@ -6,7 +6,7 @@ import ctypes, os, subprocess, sys, threading, time
 from pathlib import Path
 
 AQUI = str(Path(__file__).resolve().parent.parent)                      # 1_codigo
-PY = str(Path(AQUI).parent / '6_compilacion' / 'venv314' / 'Scripts' / 'python.exe')
+PY = str(Path(AQUI).parent / '6_compilacion' / 'venv315' / 'Scripts' / 'python.exe')
 video, pack, momento = sys.argv[1], sys.argv[2], sys.argv[3]
 registro = Path.home() / 'DaVinciSubtitles' / 'cinecaptions.log'
 claves = {'armar': 'Armando en Resolve un timeline', 'colocar': 'armado con tu video', 'efectos': 'Colocado en Resolve'}

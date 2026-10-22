@@ -653,7 +653,7 @@ if est is None:
     est = types.ModuleType('_cinecaptions_mcp')
     est.trabajos = {}
     sys.modules['_cinecaptions_mcp'] = est
-JOB, RUTA, NOMBRE, ESTADO = %r, %r, %r, %r
+JOB, RUTA, NOMBRE, ESTADO, SINCRONO = %r, %r, %r, %r, %r
 
 def _dejar(d):
     est.trabajos[JOB] = d
@@ -695,8 +695,13 @@ def _correr(res, proy):
 for _k in [k for k, v in list(est.trabajos.items()) if v is not None]:     # (los ya leídos por archivo: v5.5.8)
     est.trabajos.pop(_k, None)
 est.trabajos[JOB] = None
-threading.Thread(target=_correr, args=(resolve, project), daemon=True, name=JOB).start()
-result = 'lanzado'
+_principal = threading.current_thread() is threading.main_thread()
+if SINCRONO:                                            # v5.33: en la misma llamada del MCP (ningún hilo cambia el timeline a la vez que la interfaz)
+    _correr(resolve, project)
+    result = {'modo': 'sincrono', 'principal': _principal}
+else:
+    threading.Thread(target=_correr, args=(resolve, project), daemon=True, name=JOB).start()
+    result = {'modo': 'hilo', 'principal': _principal}
 '''
 
 _PREGUNTAR = r'''
@@ -716,8 +721,27 @@ def _reparar_vistas():
         pass
 
 
-def ejecutar_py(ruta_script, timeout=600, on_progreso=None):
-    """Corre un script gemelo dentro de Resolve. Devuelve (ok, mensaje)."""
+_HILO_MCP = {'anotado': False}
+
+
+def _anotar_hilo(r):
+    """Una vez por sesión: en qué hilo de Resolve corre ResolveMCP los scripts (para saber si «síncrono» = el hilo de su interfaz)."""
+    if _HILO_MCP['anotado'] or not isinstance(r, dict):
+        return
+    _HILO_MCP['anotado'] = True
+    try:
+        import registro
+        registro.info('ResolveMCP corre los scripts en el hilo ' + ('PRINCIPAL de Resolve.' if r.get('principal') else 'de un trabajo (no el principal).'),
+                      'Resolve')
+    except Exception:
+        pass
+
+
+def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
+    """Corre un script gemelo dentro de Resolve. Devuelve (ok, mensaje).
+    v5.33 (el usuario: «se cierra Resolve con Listo», 2 volcados: std::out_of_range en el hilo de la interfaz de Resolve mientras el script,
+    desde su propio hilo, cambiaba el timeline; la API de Resolve no es segura entre hilos): `sincrono` corre el script DENTRO de la llamada
+    del MCP, sin hilo aparte. Solo para trabajos cortos (el MCP corta a los 60 s: si se pasa, se sigue esperando su archivo de resultado)."""
     ruta = Path(ruta_script)
     if not ruta.exists():
         return False, f'No encuentro el script en {ruta}'
@@ -733,9 +757,10 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None):
             pass
         estado = carpeta / f'{job}.json'
         vivo = carpeta / f'{job}.json.vivo'
-        ok, _, err = script(_LANZAR % (job, str(ruta), nombre, str(estado)), timeout=20)
-        if not ok:
+        ok, r0, err = script(_LANZAR % (job, str(ruta), nombre, str(estado), bool(sincrono)), timeout=55 if sincrono else 20)
+        if not ok and not (sincrono and 'no contest' in str(err)):
             return False, f'MCP: {err}'
+        _anotar_hilo(r0)                                       # (síncrono y largo: el MCP dejó de esperar, pero el trabajo sigue y deja su archivo)
         inicio = time.time()
         ultima_pregunta = inicio
         # v5.5.8: mientras el trabajo corre NO se llama al MCP. MEDIDO (Tema 6, traza): cada llamada al MCP hace que Resolve guarde el proyecto;
@@ -761,6 +786,8 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None):
                     import resolve_bridge
                     if resolve_bridge._listar_pids_resolve() == []:
                         return False, 'Resolve se cerró mientras trabajaba'
+                    if resolve_bridge.resolve_se_cayo(inicio):          # v5.32: al momento (el proceso tarda ~70 s en morir guardando el volcado)
+                        return False, 'Resolve se cayó mientras trabajaba'
                     if resolve_bridge.resolve_colgado(120) and resolve_bridge._registro_resolve_callado_s() > 120:
                         return False, 'Resolve dejó de responder mientras trabajaba (2 min «No responde» y sin escribir en su registro)'
                 except Exception:
@@ -1207,8 +1234,11 @@ if tl:
                 a1 = tl.GetItemListInTrack('audio', 1) or []
         except Exception as e:
             res['error'] = repr(e)
+    res['ai_voice'] = any(tl.GetTrackName('audio', i) == 'AI VOICE' and (tl.GetItemListInTrack('audio', i) or [])
+                          for i in range(1, int(tl.GetTrackCount('audio') or 0) + 1))
     try:
-        tl.SetTrackEnable('audio', 1, True)
+        if not res['ai_voice']:                          # v5.34: con la voz del AI Sound Director puesta, A1 sigue apagada (si no, sonarían las dos voces)
+            tl.SetTrackEnable('audio', 1, True)
         for a in (tl.GetItemListInTrack('audio', 1) or []):
             a.SetClipEnabled(True)
     except Exception:

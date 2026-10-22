@@ -14,7 +14,7 @@ corre con PyTorch + transformers: varios GB que no caben en el .exe. Asi que
 el motor vive en su propia carpeta, con su propio Python embebido:
 
     %LOCALAPPDATA%\\CineCaptions\\motor_qwen\\
-        python\\              Python 3.14.8 embebido + torch + transformers 5 (v5.5.8; antes 3.12 + qwen-asr)
+        python\\              Python 3.14.9 embebido + torch + transformers 5 (v5.5.8; antes 3.12 + qwen-asr; v5.36: 3.14.9)
         listo.json           se escribe al final: si no esta, no se usa
 
 Lo instala el paso "Motor de voz" del instalador (o Ajustes > General >
@@ -45,7 +45,7 @@ from i18n import tr
 # v5.5.8 (motor 2.0): Python 3.14 + Qwen3-ASR NATIVO de Transformers 5 (modelos «-hf»); un motor 1.x (Python 3.12 + qwen-asr)
 # ya no cuenta como instalado y el instalador lo rehace solo
 VERSION_ENTORNO = '2.0.0'
-PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.14.8/python-3.14.8-embed-amd64.zip'
+PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.14.9/python-3.14.9-embed-amd64.zip'     # v5.36: la última 3.14 (el mismo que motor_compat); los 3.14.8 ya instalados siguen valiendo
 PYTHON_DLL = 'python314.dll'
 GET_PIP = 'https://bootstrap.pypa.io/get-pip.py'
 # torch según la tarjeta: CUDA 13 (torch 2.14) pide driver NVIDIA 580 o más nuevo; con uno anterior va la última de CUDA 12.8
@@ -241,12 +241,6 @@ def soporta(codigo_idioma):
 
 
 def hay_gpu_nvidia():
-    try:
-        import ctranslate2
-        if ctranslate2.get_cuda_device_count() > 0:
-            return True
-    except Exception:
-        pass
     try:
         r = subprocess.run(['nvidia-smi', '-L'], capture_output=True, text=True, timeout=10,
                            creationflags=SIN_VENTANA)
@@ -585,24 +579,8 @@ def liberar():
 # ---------------------------------------------------------------------------
 def _audio_16k(media_path):
     """El audio del video en un .wav mono 16 kHz (lo que espera el motor)."""
-    import wave
-    import numpy as np
-    try:
-        import compat_av
-        compat_av.aplicar()
-    except ImportError:
-        pass
-    from faster_whisper.audio import decode_audio
-    muestras = decode_audio(str(media_path), sampling_rate=16000)
-    fd, ruta = tempfile.mkstemp(prefix='cinecaptions_voz_', suffix='.wav')
-    os.close(fd)
-    pcm = (np.clip(muestras, -1.0, 1.0) * 32767).astype('<i2')
-    with wave.open(ruta, 'wb') as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(16000)
-        w.writeframes(pcm.tobytes())
-    return ruta
+    import motor_compat
+    return motor_compat.audio_16k(media_path)
 
 
 def _lanzar(argumentos, on_linea, timeout=None, sin_senal=None):

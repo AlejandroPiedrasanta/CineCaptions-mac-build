@@ -69,7 +69,7 @@ __webpack_require__.d(__webpack_exports__, {
   custom: () => (/* reexport */ custom),
   date: () => (/* reexport */ dateType),
   datetimeRegex: () => (/* reexport */ datetimeRegex),
-  "default": () => (/* binding */ v3),
+  "default": () => (/* reexport */ external_namespaceObject),
   defaultErrorMap: () => (/* reexport */ en),
   discriminatedUnion: () => (/* reexport */ discriminatedUnionType),
   effect: () => (/* reexport */ effectsType),
@@ -4465,7 +4465,7 @@ const NEVER = INVALID;
 
 
 
-/* harmony default export */ const v3 = (external_namespaceObject);
+
 
 
 /***/ }

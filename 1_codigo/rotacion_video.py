@@ -27,6 +27,19 @@ def cuartos(fr):
         return 0
 
 
+def fotogramas(c, vs):
+    """v5.31: c.decode(vs) que NO se rompe con un paquete dañado (muchos videos bajados de internet traen el último fotograma cortado:
+    TIPS_ES.mp4 a 44,67 s; PyAV lanzaba InvalidDataError y se perdía la placa entera del Tema 1): ese paquete se salta y se sigue."""
+    import av
+    for pk in c.demux(vs):
+        try:
+            frs = pk.decode()
+        except av.error.InvalidDataError:
+            continue
+        for fr in frs:
+            yield fr
+
+
 def giro(ruta):
     """cuartos() del primer cuadro de video de `ruta` (0 si no hay video o no se puede leer)."""
     try:

@@ -681,11 +681,15 @@ _REPRODUCCION = {'t': 0.0}
 _ITEM_DETENER = 'Detener|Stop|Parar|Arrêter|Arrêt|Anhalten|Stopp|Interrompi|Ferma|Стоп|停止'
 
 
-def detener_reproduccion(siempre=False):
+def detener_reproduccion(siempre=False, dura_s=None):
     """v5.5.7 (Windows): si CineCaptions lanzó la reproducción (o `siempre`), la detiene con «Reproducir > Detener». MEDIDO: mientras dura la
     reproducción lanzada desde el menú, Resolve no contesta a los scripts (el MCP daba «no contestó en 45 s» justo después de cada GO y el GO
-    siguiente creía que Resolve estaba cerrado: «Falta un clic»). Detener cuando no reproduce no hace nada. Devuelve el código. Nunca lanza."""
+    siguiente creía que Resolve estaba cerrado: «Falta un clic»). Detener cuando no reproduce no hace nada. Devuelve el código. Nunca lanza.
+    v5.32: `dura_s` (lo que dura el timeline): pasada la reproducción entera ya paró sola y no se abre el menú de Resolve para nada."""
     if not sys.platform.startswith('win') or not (siempre or _REPRODUCCION['t']):
+        return 'NADA'
+    if not siempre and dura_s and time.time() - _REPRODUCCION['t'] > float(dura_s) + 5.0:
+        _REPRODUCCION['t'] = 0.0
         return 'NADA'
     _REPRODUCCION['t'] = 0.0
     if not pids_resolve():

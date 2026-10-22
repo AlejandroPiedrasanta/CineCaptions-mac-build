@@ -6,11 +6,40 @@
 """
     necesita(ruta) -> bool
     para_resolve(ruta, al_estado=None) -> ruta (la copia compatible o, si no hace falta o no se pudo, la original)
+    original_de(ruta) -> la ruta del video ORIGINAL de una copia (o la misma ruta)
+
+v5.29: junto a cada copia, «origen.json» con la ruta del original. Las marcas de Efectos › «Posición» se guardan con el video original y GO,
+con el audio del timeline, solo ve la copia (es la que está en V1): sin esto, no las encontraba.
 """
 import hashlib
+import json
 from pathlib import Path
 
 CARPETA = Path.home() / 'DaVinciSubtitles' / 'audio_compatible'
+ORIGEN = 'origen.json'
+
+
+def _apuntar_origen(destino, origen):
+    try:
+        f = Path(destino).parent / ORIGEN
+        if not f.is_file():
+            import archivos_seguros
+            archivos_seguros.escribir_json(f, {'origen': str(origen)})
+    except Exception:
+        pass
+
+
+def original_de(ruta):
+    """El video original de una copia de esta carpeta (si se sabe); si no es una copia, la misma ruta. Solo lee un .json pequeño."""
+    try:
+        import os
+        p = Path(str(ruta))
+        if not os.path.normcase(os.path.abspath(str(p))).startswith(os.path.normcase(str(CARPETA)) + os.sep):
+            return str(ruta)                                             # (sin tocar el disco: casi nunca es una copia)
+        d = json.loads((p.parent / ORIGEN).read_text(encoding='utf-8'))
+        return str(d.get('origen') or ruta)
+    except Exception:
+        return str(ruta)
 
 
 def necesita(ruta) -> bool:
@@ -33,6 +62,7 @@ def para_resolve(ruta, al_estado=None):
         huella = hashlib.sha1(f'{origen.resolve()}|{origen.stat().st_size}|{origen.stat().st_mtime_ns}'.encode('utf-8')).hexdigest()[:12]
         destino = CARPETA / huella / origen.with_suffix('.mp4').name
         if destino.is_file() and destino.stat().st_size > 1000:
+            _apuntar_origen(destino, origen)                             # (las copias de antes de la 5.29 también lo apuntan)
             return str(destino)
         if al_estado:
             al_estado('Preparando el audio de tu video para Resolve (HE-AAC → AAC)…')
@@ -71,6 +101,7 @@ def para_resolve(ruta, al_estado=None):
             for p2 in aout.encode(None):
                 o.mux(p2)
         tmp.replace(destino)
+        _apuntar_origen(destino, origen)
         return str(destino)
     except Exception:
         try:

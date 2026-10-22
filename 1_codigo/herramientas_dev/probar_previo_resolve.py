@@ -6,7 +6,7 @@ import ctypes, os, subprocess, sys, time
 from pathlib import Path
 
 AQUI = str(Path(__file__).resolve().parent.parent)                      # 1_codigo
-PY = str(Path(AQUI).parent / '6_compilacion' / 'venv314' / 'Scripts' / 'python.exe')
+PY = str(Path(AQUI).parent / '6_compilacion' / 'venv315' / 'Scripts' / 'python.exe')
 video, pack = sys.argv[1], sys.argv[2]
 registro = Path.home() / 'DaVinciSubtitles' / 'cinecaptions.log'
 n0 = len(registro.read_text(encoding='utf-8', errors='replace').splitlines())

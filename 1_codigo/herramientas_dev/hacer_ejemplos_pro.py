@@ -47,9 +47,9 @@ ICONOS = ['3d:crown-dynamic-color', '3d:bell-dynamic-color', '3d:camera-dynamic-
 # el tramo del video (s) de cada ejemplo, elegido por lo que se dice en PRUEBA ESPAÑOL (un video real de un festival en Xela)
 # (con la persona en cámara: 10–13, 16–21, 43–46, 52–62 s; 47–51 es el cartel del festival y 32–41 el concierto)
 TRAMOS = {'gancho': 0.0, 'detras': 15.6, 'pildora': 51.9, 'broll': 19.6, 'motions_completo': 28.6, 'escenas': 56.0, 'kit': 43.6,
-          'graficos': 5.4, 'plantillas': 53.8}
+          'graficos': 5.4, 'plantillas': 53.8, 'emoji': 51.9}
 # cuándo entra el motion dentro del ejemplo (s): cuando se dice la palabra que lo pide
-ENTRA = {'pildora': 0.3, 'broll': 1.2, 'escenas': 0.5, 'kit': 1.1, 'graficos': 1.8, 'plantillas': 0.7}
+ENTRA = {'pildora': 0.3, 'broll': 1.2, 'escenas': 0.5, 'kit': 1.1, 'graficos': 1.8, 'plantillas': 0.7, 'emoji': 0.3}
 
 
 # ----------------------------------------------------------------------------------------------------------------------- video y voz
@@ -265,6 +265,9 @@ def hacer(clave, video, guion, carpeta):
         capas = remotion([('p', 'Ubicacion', {'pais': 'gt', 'nombre': 'Quetzaltenango', 'kicker': 'UBICACIÓN'}, 2.2)], carpeta)
     elif clave == 'plantillas':
         capas = remotion([('p', 'Pastilla', {'texto': 'GUÁRDALO PARA DESPUÉS', 'estilo': 'blanco', 'sticker': 'emoji:pushpin', 'y': 30, 'escala': 1.8}, 3.3)], carpeta)
+    elif clave == 'emoji':                              # v5.25: el MISMO EmojiPro que pone GO (🎉 de Lottie, con rebote) junto a los captions
+        capas = remotion([('p', 'EmojiPro', {'id': 'party_popper', 'variante': 'rebote', 'fuente': 'lottie', 'lottie': None, 'imagen': None,
+                                             'x': 74, 'y': 50, 'tamano': 24, 'energia': 1.0, 'acento': '#FFC24D'}, 3.6)], carpeta)
     empieza = ENTRA.get(clave, 0.0)
     for i in range(N):
         t = i / FPS

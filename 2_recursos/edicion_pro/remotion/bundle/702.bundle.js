@@ -8,7 +8,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   VideoTexture: () => (/* binding */ VideoTexture)
 /* harmony export */ });
-/* harmony import */ var _constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9128);
 /* harmony import */ var _Texture_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5805);
 
 
@@ -45,7 +44,7 @@ class VideoTexture extends _Texture_js__WEBPACK_IMPORTED_MODULE_1__/* .Texture *
 	 * @param {number} [type=UnsignedByteType] - The texture type.
 	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The anisotropy value.
 	 */
-	constructor( video, mapping, wrapS, wrapT, magFilter = _constants_js__WEBPACK_IMPORTED_MODULE_0__/* .LinearFilter */ .k6q, minFilter = _constants_js__WEBPACK_IMPORTED_MODULE_0__/* .LinearFilter */ .k6q, format, type, anisotropy ) {
+	constructor( video, mapping, wrapS, wrapT, magFilter = (/* inlined export .LinearFilter */1006), minFilter = (/* inlined export .LinearFilter */1006), format, type, anisotropy ) {
 
 		super( video, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy );
 

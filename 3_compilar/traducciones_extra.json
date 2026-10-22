@@ -6452,5 +6452,2553 @@
   "fr": "Effets dans le même ordre que le menu de l'Édition PRO.",
   "de": "Effekte in derselben Reihenfolge wie das Menü des PRO-Schnitts.",
   "it": "Effetti nello stesso ordine del menu dell'Editing PRO."
+ },
+ "Tema 1: coloco los captions de respaldo…": {
+  "en": "Theme 1: placing the backup captions…",
+  "pt": "Tema 1: colocando as legendas de reserva…",
+  "fr": "Thème 1 : je place les sous-titres de secours…",
+  "de": "Thema 1: Ersatz-Untertitel werden platziert…",
+  "it": "Tema 1: inserisco i sottotitoli di riserva…"
+ },
+ "2D: borde blanco grueso y sombra, un poco girado.": {
+  "en": "2D: thick white outline and shadow, slightly tilted.",
+  "pt": "2D: borda branca grossa e sombra, um pouco inclinado.",
+  "fr": "2D : contour blanc épais et ombre, un peu incliné.",
+  "de": "2D: dicker weißer Rand und Schatten, leicht gedreht.",
+  "it": "2D: bordo bianco spesso e ombra, un po’ inclinato."
+ },
+ "2D: con un halo de luz de color que late.": {
+  "en": "2D: with a pulsing halo of colored light.",
+  "pt": "2D: com um halo de luz colorida que pulsa.",
+  "fr": "2D : avec un halo de lumière colorée qui pulse.",
+  "de": "2D: mit einem pulsierenden farbigen Lichthof.",
+  "it": "2D: con un alone di luce colorata che pulsa."
+ },
+ "2D: dentro de una burbuja de cristal que tiembla.": {
+  "en": "2D: inside a wobbling glass bubble.",
+  "pt": "2D: dentro de uma bolha de vidro que treme.",
+  "fr": "2D : dans une bulle de verre qui tremble.",
+  "de": "2D: in einer wackelnden Glasblase.",
+  "it": "2D: dentro una bolla di vetro che trema."
+ },
+ "2D: el emoji animado de Google, que se mueve solo.": {
+  "en": "2D: Google’s animated emoji, which moves on its own.",
+  "pt": "2D: o emoji animado do Google, que se move sozinho.",
+  "fr": "2D : l’emoji animé de Google, qui bouge tout seul.",
+  "de": "2D: das animierte Emoji von Google, das sich von selbst bewegt.",
+  "it": "2D: l’emoji animato di Google, che si muove da solo."
+ },
+ "2D: entra con un rebote y da saltitos.": {
+  "en": "2D: bounces in and keeps hopping.",
+  "pt": "2D: entra com um quique e dá pulinhos.",
+  "fr": "2D : arrive en rebondissant et sautille.",
+  "de": "2D: springt herein und hüpft weiter.",
+  "it": "2D: entra con un rimbalzo e saltella."
+ },
+ "3D estallido": {
+  "en": "3D burst",
+  "pt": "3D explosão",
+  "fr": "3D éclat",
+  "de": "3D Explosion",
+  "it": "3D esplosione"
+ },
+ "3D flotando": {
+  "en": "3D floating",
+  "pt": "3D flutuando",
+  "fr": "3D flottant",
+  "de": "3D schwebend",
+  "it": "3D fluttuante"
+ },
+ "3D gelatina": {
+  "en": "3D jelly",
+  "pt": "3D gelatina",
+  "fr": "3D gelée",
+  "de": "3D Wackelpudding",
+  "it": "3D gelatina"
+ },
+ "3D giro": {
+  "en": "3D spin",
+  "pt": "3D giro",
+  "fr": "3D rotation",
+  "de": "3D Drehung",
+  "it": "3D rotazione"
+ },
+ "3D salto": {
+  "en": "3D jump",
+  "pt": "3D salto",
+  "fr": "3D saut",
+  "de": "3D Sprung",
+  "it": "3D salto"
+ },
+ "3D: estalla en chispas y sigue latiendo.": {
+  "en": "3D: bursts into sparks and keeps pulsing.",
+  "pt": "3D: explode em faíscas e continua pulsando.",
+  "fr": "3D : éclate en étincelles et continue de pulser.",
+  "de": "3D: zerplatzt in Funken und pulsiert weiter.",
+  "it": "3D: esplode in scintille e continua a pulsare."
+ },
+ "3D: entra girando en 3D y se mece.": {
+  "en": "3D: spins in in 3D and sways.",
+  "pt": "3D: entra girando em 3D e balança.",
+  "fr": "3D : arrive en tournant en 3D et se balance.",
+  "de": "3D: dreht sich in 3D herein und schaukelt.",
+  "it": "3D: entra ruotando in 3D e ondeggia."
+ },
+ "3D: flota y se balancea suave.": {
+  "en": "3D: floats and sways gently.",
+  "pt": "3D: flutua e balança suavemente.",
+  "fr": "3D : flotte et se balance doucement.",
+  "de": "3D: schwebt und schaukelt sanft.",
+  "it": "3D: fluttua e ondeggia dolcemente."
+ },
+ "3D: sube de un salto y rebota con su sombra.": {
+  "en": "3D: jumps up and bounces with its shadow.",
+  "pt": "3D: sobe com um salto e quica com sua sombra.",
+  "fr": "3D : monte d’un bond et rebondit avec son ombre.",
+  "de": "3D: springt hoch und hüpft mit seinem Schatten.",
+  "it": "3D: sale con un salto e rimbalza con la sua ombra."
+ },
+ "3D: tiembla como gelatina y vuelve a temblar.": {
+  "en": "3D: wobbles like jelly, again and again.",
+  "pt": "3D: treme como gelatina e volta a tremer.",
+  "fr": "3D : tremble comme de la gelée, encore et encore.",
+  "de": "3D: wackelt wie Wackelpudding, immer wieder.",
+  "it": "3D: trema come gelatina e torna a tremare."
+ },
+ "Brillo y chispas": {
+  "en": "Glow and sparks",
+  "pt": "Brilho e faíscas",
+  "fr": "Éclat et étincelles",
+  "de": "Glanz und Funken",
+  "it": "Bagliore e scintille"
+ },
+ "Burbuja de cristal": {
+  "en": "Glass bubble",
+  "pt": "Bolha de vidro",
+  "fr": "Bulle de verre",
+  "de": "Glasblase",
+  "it": "Bolla di vetro"
+ },
+ "Encima del caption": {
+  "en": "Above the caption",
+  "pt": "Acima da legenda",
+  "fr": "Au-dessus du sous-titre",
+  "de": "Über der Untertitelzeile",
+  "it": "Sopra il sottotitolo"
+ },
+ "Junto a tu cabeza": {
+  "en": "Next to your head",
+  "pt": "Ao lado da sua cabeça",
+  "fr": "À côté de ta tête",
+  "de": "Neben deinem Kopf",
+  "it": "Accanto alla tua testa"
+ },
+ "Junto al caption": {
+  "en": "Next to the caption",
+  "pt": "Ao lado da legenda",
+  "fr": "À côté du sous-titre",
+  "de": "Neben der Untertitelzeile",
+  "it": "Accanto al sottotitolo"
+ },
+ "Lottie animado": {
+  "en": "Animated Lottie",
+  "pt": "Lottie animado",
+  "fr": "Lottie animé",
+  "de": "Animiertes Lottie",
+  "it": "Lottie animato"
+ },
+ "Lottie con brillo": {
+  "en": "Lottie with glow",
+  "pt": "Lottie com brilho",
+  "fr": "Lottie avec éclat",
+  "de": "Lottie mit Glanz",
+  "it": "Lottie con bagliore"
+ },
+ "Lottie con rebote": {
+  "en": "Lottie with bounce",
+  "pt": "Lottie com quique",
+  "fr": "Lottie avec rebond",
+  "de": "Lottie mit Hüpfer",
+  "it": "Lottie con rimbalzo"
+ },
+ "Un emoji animado (2D o 3D) con lo que dices, junto a los captions y sin tapar caras.": {
+  "en": "An animated emoji (2D or 3D) for what you say, next to the captions and never over faces.",
+  "pt": "Um emoji animado (2D ou 3D) com o que você diz, junto às legendas e sem cobrir rostos.",
+  "fr": "Un emoji animé (2D ou 3D) selon ce que tu dis, à côté des sous-titres et sans cacher les visages.",
+  "de": "Ein animiertes Emoji (2D oder 3D) zu dem, was du sagst, neben den Untertiteln und ohne Gesichter zu verdecken.",
+  "it": "Un emoji animato (2D o 3D) con ciò che dici, accanto ai sottotitoli e senza coprire i volti."
+ },
+ "Un emoji animado con lo que dices, junto a los captions y sin tapar caras. El emoji sale de tus palabras; aquí eliges cómo se mueve, dónde y cuántos.": {
+  "en": "An animated emoji for what you say, next to the captions and never over faces. The emoji comes from your words; here you choose how it moves, where and how many.",
+  "pt": "Um emoji animado com o que você diz, junto às legendas e sem cobrir rostos. O emoji vem das suas palavras; aqui você escolhe como se move, onde e quantos.",
+  "fr": "Un emoji animé selon ce que tu dis, à côté des sous-titres et sans cacher les visages. L’emoji vient de tes mots ; ici tu choisis comment il bouge, où et combien.",
+  "de": "Ein animiertes Emoji zu dem, was du sagst, neben den Untertiteln und ohne Gesichter zu verdecken. Das Emoji kommt aus deinen Worten; hier wählst du, wie es sich bewegt, wo und wie viele.",
+  "it": "Un emoji animato con ciò che dici, accanto ai sottotitoli e senza coprire i volti. L’emoji nasce dalle tue parole; qui scegli come si muove, dove e quanti."
+ },
+ "Edición PRO › «Emojis animados»: un emoji que sale de lo que dices, junto a los captions y sin tapar caras; Suave, Media o Fuerte en el menú.": {
+  "en": "PRO Edit › “Animated emojis”: an emoji drawn from what you say, next to the captions and never over faces; Soft, Medium or Strong in the menu.",
+  "pt": "Edição PRO › «Emojis animados»: um emoji que vem do que você diz, junto às legendas e sem cobrir rostos; Suave, Média ou Forte no menu.",
+  "fr": "Montage PRO › « Emojis animés » : un emoji tiré de ce que tu dis, à côté des sous-titres et sans cacher les visages ; Doux, Moyen ou Fort dans le menu.",
+  "de": "PRO-Schnitt › „Animierte Emojis“: ein Emoji aus dem, was du sagst, neben den Untertiteln und ohne Gesichter zu verdecken; Sanft, Mittel oder Stark im Menü.",
+  "it": "Montaggio PRO › «Emoji animati»: un emoji preso da ciò che dici, accanto ai sottotitoli e senza coprire i volti; Leggero, Medio o Forte nel menu."
+ },
+ "En Efectos, sus estilos 2D (Lottie) y 3D, siempre en movimiento, y dónde ponerlo: junto al caption, encima o junto a tu cabeza.": {
+  "en": "In Effects, its 2D (Lottie) and 3D styles, always moving, and where to put it: next to the caption, above it or next to your head.",
+  "pt": "Em Efeitos, seus estilos 2D (Lottie) e 3D, sempre em movimento, e onde colocá-lo: ao lado da legenda, acima ou ao lado da sua cabeça.",
+  "fr": "Dans Effets, ses styles 2D (Lottie) et 3D, toujours en mouvement, et où le placer : à côté du sous-titre, au-dessus ou à côté de ta tête.",
+  "de": "In Effekte seine 2D- (Lottie) und 3D-Stile, immer in Bewegung, und wo es hinkommt: neben die Untertitelzeile, darüber oder neben deinen Kopf.",
+  "it": "In Effetti, i suoi stili 2D (Lottie) e 3D, sempre in movimento, e dove metterlo: accanto al sottotitolo, sopra o accanto alla tua testa."
+ },
+ "Tema 1 más rápido y ordenado en Resolve: ya no crea pistas que luego desactiva, y cada pista de la PRO dice qué hace.": {
+  "en": "Theme 1 faster and tidier in Resolve: it no longer creates tracks it later disables, and every PRO track says what it does.",
+  "pt": "Tema 1 mais rápido e organizado no Resolve: já não cria faixas que depois desativa, e cada faixa da PRO diz o que faz.",
+  "fr": "Thème 1 plus rapide et mieux rangé dans Resolve : il ne crée plus de pistes qu’il désactive ensuite, et chaque piste PRO dit ce qu’elle fait.",
+  "de": "Thema 1 schneller und aufgeräumter in Resolve: keine Spuren mehr, die danach deaktiviert werden, und jede PRO-Spur sagt, was sie macht.",
+  "it": "Tema 1 più veloce e ordinato in Resolve: non crea più tracce che poi disattiva, e ogni traccia PRO dice cosa fa."
+ },
+ "GO ya no se queda parado si minimizas CineCaptions o cambias de página mientras trabaja.": {
+  "en": "GO no longer stalls if you minimize CineCaptions or switch pages while it works.",
+  "pt": "O GO já não fica parado se você minimizar o CineCaptions ou mudar de página enquanto ele trabalha.",
+  "fr": "GO ne reste plus bloqué si tu réduis CineCaptions ou changes de page pendant qu’il travaille.",
+  "de": "GO bleibt nicht mehr stehen, wenn du CineCaptions minimierst oder die Seite wechselst, während es arbeitet.",
+  "it": "GO non si blocca più se riduci a icona CineCaptions o cambi pagina mentre lavora."
+ },
+ "Tema 1: los captions y la Edición PRO vuelven a colocarse en Resolve (la 5.25 dejaba el video solo con los sonidos).": {
+  "en": "Theme 1: captions and the PRO Edit are placed in Resolve again (5.25 left the video with only the sounds).",
+  "pt": "Tema 1: as legendas e a Edição PRO voltam a ser colocadas no Resolve (a 5.25 deixava o vídeo só com os sons).",
+  "fr": "Thème 1 : les sous-titres et le Montage PRO sont de nouveau placés dans Resolve (la 5.25 laissait la vidéo avec les sons seulement).",
+  "de": "Thema 1: Untertitel und PRO-Schnitt werden wieder in Resolve platziert (5.25 ließ das Video nur mit den Sounds).",
+  "it": "Tema 1: i sottotitoli e il Montaggio PRO tornano a essere inseriti in Resolve (la 5.25 lasciava il video solo con i suoni)."
+ },
+ "Menú de la Edición PRO: primero «Gancho del inicio», luego «Captions detrás de ti» y «Emojis animados».": {
+  "en": "PRO Edit menu: “Opening hook” first, then “Captions behind you” and “Animated emojis”.",
+  "pt": "Menu da Edição PRO: primeiro «Gancho do início», depois «Legendas atrás de você» e «Emojis animados».",
+  "fr": "Menu du Montage PRO : d’abord « Accroche du début », puis « Sous-titres derrière toi » et « Emojis animés ».",
+  "de": "Menü des PRO-Schnitts: zuerst „Einstiegs-Hook“, dann „Untertitel hinter dir“ und „Animierte Emojis“.",
+  "it": "Menu del Montaggio PRO: prima «Gancio iniziale», poi «Sottotitoli dietro di te» ed «Emoji animati»."
+ },
+ "elegiste otro video en Efectos": {
+  "en": "you chose another video in Effects",
+  "pt": "você escolheu outro vídeo em Efeitos",
+  "fr": "vous avez choisi une autre vidéo dans Effets",
+  "de": "du hast in Effekte ein anderes Video gewählt",
+  "it": "hai scelto un altro video in Effetti"
+ },
+ "No pude ver dónde está la persona: tus marcas van donde las pongas.": {
+  "en": "I couldn't see where the person is: your marks go wherever you put them.",
+  "pt": "Não consegui ver onde está a pessoa: suas marcas ficam onde você colocar.",
+  "fr": "Je n'ai pas pu voir où se trouve la personne : vos repères restent là où vous les placez.",
+  "de": "Ich konnte nicht erkennen, wo die Person ist: Deine Marken bleiben, wo du sie setzt.",
+  "it": "Non sono riuscito a vedere dove si trova la persona: i tuoi segni restano dove li metti."
+ },
+ "Aquí el texto no queda bien detrás de la persona en ningún momento ({m}): GO lo intentará, pero puede no ponerlo.": {
+  "en": "Here the text never looks right behind the person ({m}): GO will try, but it may not place it.",
+  "pt": "Aqui o texto nunca fica bem atrás da pessoa ({m}): o GO vai tentar, mas pode não colocar.",
+  "fr": "Ici, le texte ne rend jamais bien derrière la personne ({m}) : GO essaiera, mais il se peut qu'il ne le place pas.",
+  "de": "Hier wirkt der Text nie gut hinter der Person ({m}): GO versucht es, setzt ihn aber vielleicht nicht.",
+  "it": "Qui il testo non sta mai bene dietro la persona ({m}): GO ci proverà, ma potrebbe non metterlo."
+ },
+ "no se ve a ninguna persona": {
+  "en": "no person can be seen",
+  "pt": "não se vê nenhuma pessoa",
+  "fr": "on ne voit personne",
+  "de": "es ist keine Person zu sehen",
+  "it": "non si vede nessuna persona"
+ },
+ "Moví 1 marca a donde el texto queda bien detrás de ti.": {
+  "en": "I moved 1 mark to where the text looks right behind you.",
+  "pt": "Movi 1 marca para onde o texto fica bem atrás de você.",
+  "fr": "J'ai déplacé 1 repère là où le texte rend bien derrière vous.",
+  "de": "Ich habe 1 Marke dorthin verschoben, wo der Text gut hinter dir wirkt.",
+  "it": "Ho spostato 1 segno dove il testo sta bene dietro di te."
+ },
+ "Moví {n} marcas a donde el texto queda bien detrás de ti.": {
+  "en": "I moved {n} marks to where the text looks right behind you.",
+  "pt": "Movi {n} marcas para onde o texto fica bem atrás de você.",
+  "fr": "J'ai déplacé {n} repères là où le texte rend bien derrière vous.",
+  "de": "Ich habe {n} Marken dorthin verschoben, wo der Text gut hinter dir wirkt.",
+  "it": "Ho spostato {n} segni dove il testo sta bene dietro di te."
+ },
+ "Máximo {n} marcas: cada una es un recorte con Magic Mask que Resolve tiene que seguir y más lo cargan.": {
+  "en": "Up to {n} marks: each one is a Magic Mask cutout that Resolve has to track, and more would overload it.",
+  "pt": "Máximo de {n} marcas: cada uma é um recorte com Magic Mask que o Resolve precisa rastrear, e mais o sobrecarregam.",
+  "fr": "{n} repères au maximum : chacun est un détourage Magic Mask que Resolve doit suivre, et davantage le surchargerait.",
+  "de": "Höchstens {n} Marken: Jede ist ein Magic-Mask-Ausschnitt, den Resolve verfolgen muss, mehr würden es überlasten.",
+  "it": "Massimo {n} segni: ognuno è un ritaglio con Magic Mask che Resolve deve seguire, e di più lo sovraccaricano."
+ },
+ "En este video el texto no queda bien detrás de la persona en ningún momento: {m}.": {
+  "en": "In this video the text never looks right behind the person: {m}.",
+  "pt": "Neste vídeo o texto nunca fica bem atrás da pessoa: {m}.",
+  "fr": "Dans cette vidéo, le texte ne rend jamais bien derrière la personne : {m}.",
+  "de": "In diesem Video wirkt der Text nie gut hinter der Person: {m}.",
+  "it": "In questo video il testo non sta mai bene dietro la persona: {m}."
+ },
+ "Ya hay una marca en {t}: dos en el mismo caption sobran.": {
+  "en": "There is already a mark at {t}: two in the same caption are too many.",
+  "pt": "Já há uma marca em {t}: duas na mesma legenda é demais.",
+  "fr": "Il y a déjà un repère à {t} : deux dans la même légende, c’est trop.",
+  "de": "Bei {t} gibt es schon eine Marke: zwei in derselben Caption sind zu viel.",
+  "it": "C'è già un segno a {t}: due nella stessa didascalia sono troppi."
+ },
+ "Puesta en {t}, lo más cerca donde queda bien (en {o}: {m}).": {
+  "en": "Placed at {t}, the closest spot where it looks right (at {o}: {m}).",
+  "pt": "Colocada em {t}, o mais perto onde fica bem (em {o}: {m}).",
+  "fr": "Placé à {t}, le plus près là où ça rend bien (à {o} : {m}).",
+  "de": "Bei {t} gesetzt, der nächste Punkt, an dem es gut wirkt (bei {o}: {m}).",
+  "it": "Messo a {t}, il punto più vicino dove sta bene (a {o}: {m})."
+ },
+ "Buscando en tu video dónde queda bien… {p} %": {
+  "en": "Looking in your video for where it looks right… {p} %",
+  "pt": "Procurando no seu vídeo onde fica bem… {p} %",
+  "fr": "Recherche dans votre vidéo des endroits où ça rend bien… {p} %",
+  "de": "Suche in deinem Video, wo es gut wirkt… {p} %",
+  "it": "Cerco nel tuo video dove sta bene… {p} %"
+ },
+ "Aquí no queda bien: {m}": {
+  "en": "It doesn't look right here: {m}",
+  "pt": "Aqui não fica bem: {m}",
+  "fr": "Ici, ça ne rend pas bien : {m}",
+  "de": "Hier wirkt es nicht gut: {m}",
+  "it": "Qui non sta bene: {m}"
+ },
+ "Aquí queda bien detrás de ti": {
+  "en": "It looks right behind you here",
+  "pt": "Aqui fica bem atrás de você",
+  "fr": "Ici, ça rend bien derrière vous",
+  "de": "Hier wirkt es gut hinter dir",
+  "it": "Qui sta bene dietro di te"
+ },
+ "verde: aquí queda bien": {
+  "en": "green: it looks right here",
+  "pt": "verde: aqui fica bem",
+  "fr": "vert : ici, ça rend bien",
+  "de": "grün: hier wirkt es gut",
+  "it": "verde: qui sta bene"
+ },
+ "Verde = hay una persona quieta y su cabeza deja sitio al texto: tus marcas van ahí (máximo {n}).": {
+  "en": "Green = a person is still and their head leaves room for the text: your marks go there (up to {n}).",
+  "pt": "Verde = há uma pessoa parada e a cabeça dela deixa espaço para o texto: suas marcas vão ali (máximo {n}).",
+  "fr": "Vert = une personne immobile dont la tête laisse de la place au texte : vos repères vont là (maximum {n}).",
+  "de": "Grün = eine Person hält still und ihr Kopf lässt Platz für den Text: Deine Marken kommen dorthin (höchstens {n}).",
+  "it": "Verde = c’è una persona ferma e la sua testa lascia spazio al testo: i tuoi segni vanno lì (massimo {n})."
+ },
+ "Encendido · {p}": {
+  "en": "On · {p}",
+  "pt": "Ligado · {p}",
+  "fr": "Activé · {p}",
+  "de": "An · {p}",
+  "it": "Attivo · {p}"
+ },
+ "ahí no hay captions (no se habla)": {
+  "en": "there are no captions there (no one speaks)",
+  "pt": "ali não há legendas (ninguém fala)",
+  "fr": "il n'y a pas de sous-titres ici (personne ne parle)",
+  "de": "dort gibt es keine Captions (niemand spricht)",
+  "it": "lì non ci sono didascalie (nessuno parla)"
+ },
+ "cambia de toma a mitad del caption": {
+  "en": "the shot changes in the middle of the caption",
+  "pt": "a tomada muda no meio da legenda",
+  "fr": "le plan change au milieu de la légende",
+  "de": "die Einstellung wechselt mitten in der Caption",
+  "it": "l'inquadratura cambia a metà della didascalia"
+ },
+ "la persona se mueve demasiado durante el caption": {
+  "en": "the person moves too much during the caption",
+  "pt": "a pessoa se mexe demais durante a legenda",
+  "fr": "la personne bouge trop pendant la légende",
+  "de": "die Person bewegt sich während der Caption zu viel",
+  "it": "la persona si muove troppo durante la didascalia"
+ },
+ "la persona sale muy pequeña": {
+  "en": "the person appears too small",
+  "pt": "a pessoa aparece muito pequena",
+  "fr": "la personne apparaît trop petite",
+  "de": "die Person ist zu klein im Bild",
+  "it": "la persona appare troppo piccola"
+ },
+ "su cabeza está tan arriba que el texto no cabe detrás": {
+  "en": "their head is so high that the text does not fit behind it",
+  "pt": "a cabeça está tão no alto que o texto não cabe atrás",
+  "fr": "sa tête est si haute que le texte ne tient pas derrière",
+  "de": "der Kopf ist so weit oben, dass der Text nicht dahinter passt",
+  "it": "la testa è così in alto che il testo non ci sta dietro"
+ },
+ "su cabeza está tan abajo que el texto no llega": {
+  "en": "their head is so low that the text does not reach it",
+  "pt": "a cabeça está tão embaixo que o texto não chega",
+  "fr": "sa tête est si basse que le texte ne l'atteint pas",
+  "de": "der Kopf ist so weit unten, dass der Text nicht hinreicht",
+  "it": "la testa è così in basso che il testo non ci arriva"
+ },
+ "el caption no le pasa por encima (está a un lado)": {
+  "en": "the caption does not pass over them (they are off to one side)",
+  "pt": "a legenda não passa por cima (a pessoa está de lado)",
+  "fr": "la légende ne passe pas au-dessus (la personne est sur le côté)",
+  "de": "die Caption läuft nicht über die Person (sie steht seitlich)",
+  "it": "la didascalia non le passa sopra (è di lato)"
+ },
+ "el texto tendría que moverse demasiado": {
+  "en": "the text would have to move too much",
+  "pt": "o texto teria de se mover demais",
+  "fr": "le texte devrait trop se déplacer",
+  "de": "der Text müsste sich zu weit verschieben",
+  "it": "il testo dovrebbe spostarsi troppo"
+ },
+ "el caption dura muy poco": {
+  "en": "the caption is too short",
+  "pt": "a legenda dura muito pouco",
+  "fr": "la légende dure trop peu",
+  "de": "die Caption ist zu kurz",
+  "it": "la didascalia dura troppo poco"
+ },
+ "ese caption no tiene la palabra grande abajo": {
+  "en": "that caption has no big word at the bottom",
+  "pt": "essa legenda não tem a palavra grande embaixo",
+  "fr": "cette légende n'a pas le grand mot en bas",
+  "de": "diese Caption hat unten kein großes Wort",
+  "it": "quella didascalia non ha la parola grande in basso"
+ },
+ "Efectos › «Captions detrás de ti» › Posición: la tira marca en verde dónde el texto queda bien detrás de ti y tus marcas no salen de ahí (como mucho 8).": {
+  "en": "Effects › «Captions behind you» › Position: the strip shows in green where the text looks right behind you, and your marks stay there (up to 8).",
+  "pt": "Efeitos › «Legendas atrás de você» › Posição: a faixa mostra em verde onde o texto fica bem atrás de você e suas marcas ficam ali (no máximo 8).",
+  "fr": "Effets › «Sous-titres derrière vous» › Position : la bande montre en vert où le texte rend bien derrière vous, et vos repères y restent (8 au maximum).",
+  "de": "Effekte › «Captions hinter dir» › Position: Der Streifen zeigt grün, wo der Text gut hinter dir wirkt, und deine Marken bleiben dort (höchstens 8).",
+  "it": "Effetti › «Didascalie dietro di te» › Posizione: la striscia mostra in verde dove il testo sta bene dietro di te e i tuoi segni restano lì (massimo 8)."
+ },
+ "Tus posiciones se aplican al pulsar GO aunque no vuelvas a soltar el video, y «Listo» deja el efecto encendido; Proyecto dice cuántas hay.": {
+  "en": "Your positions are applied when you press GO even if you do not drop the video again, and «Done» leaves the effect on; Project shows how many there are.",
+  "pt": "Suas posições são aplicadas ao apertar GO mesmo sem soltar o vídeo de novo, e «Pronto» deixa o efeito ligado; Projeto mostra quantas são.",
+  "fr": "Vos positions s’appliquent quand vous appuyez sur GO, même sans redéposer la vidéo, et «Terminé» laisse l’effet activé ; Projet indique combien il y en a.",
+  "de": "Deine Positionen gelten beim Drücken von GO, auch ohne das Video erneut abzulegen, und «Fertig» lässt den Effekt an; Projekt zeigt, wie viele es sind.",
+  "it": "Le tue posizioni si applicano premendo GO anche senza trascinare di nuovo il video, e «Fatto» lascia l’effetto attivo; Progetto dice quante sono."
+ },
+ "Magic Mask recorta solo a la persona: sus puntos van en la cara y los hombros, nunca en el micrófono ni en la mesa.": {
+  "en": "Magic Mask cuts out only the person: its points go on the face and shoulders, never on the microphone or the desk.",
+  "pt": "O Magic Mask recorta só a pessoa: os pontos vão no rosto e nos ombros, nunca no microfone nem na mesa.",
+  "fr": "Magic Mask ne détoure que la personne : ses points vont sur le visage et les épaules, jamais sur le micro ni sur la table.",
+  "de": "Magic Mask schneidet nur die Person aus: Die Punkte sitzen auf Gesicht und Schultern, nie auf dem Mikrofon oder dem Tisch.",
+  "it": "Magic Mask ritaglia solo la persona: i punti vanno su viso e spalle, mai sul microfono né sul tavolo."
+ },
+ "Aquí no se habla: no hay captions.": {
+  "en": "No one speaks here: there are no captions.",
+  "pt": "Aqui ninguém fala: não há legendas.",
+  "fr": "Personne ne parle ici : il n’y a pas de sous-titres.",
+  "de": "Hier spricht niemand: keine Captions.",
+  "it": "Qui non si parla: non ci sono didascalie."
+ },
+ " + auto": {
+  "en": " + auto",
+  "pt": " + auto",
+  "fr": " + auto",
+  "de": " + Auto",
+  "it": " + auto"
+ },
+ "Puesta en {t}, lo más cerca donde queda bien.": {
+  "en": "Placed at {t}, the closest spot where it looks right.",
+  "pt": "Colocada em {t}, o mais perto onde fica bem.",
+  "fr": "Placé à {t}, le plus près là où ça rend bien.",
+  "de": "Bei {t} gesetzt, der nächste Punkt, an dem es gut wirkt.",
+  "it": "Messo a {t}, il punto più vicino dove sta bene."
+ },
+ "Así queda detrás de ti": {
+  "en": "This is how it looks behind you",
+  "pt": "Assim fica atrás de você",
+  "fr": "Voici le rendu derrière vous",
+  "de": "So wirkt es hinter dir",
+  "it": "Ecco come sta dietro di te"
+ },
+ "verde: queda bien · +: sugerido": {
+  "en": "green: looks right · +: suggested",
+  "pt": "verde: fica bem · +: sugerido",
+  "fr": "vert : ça rend bien · + : suggéré",
+  "de": "grün: wirkt gut · +: vorgeschlagen",
+  "it": "verde: sta bene · +: suggerito"
+ },
+ "Sugeridas:": {
+  "en": "Suggested:",
+  "pt": "Sugeridas:",
+  "fr": "Suggérés :",
+  "de": "Vorschläge:",
+  "it": "Suggeriti:"
+ },
+ "Poner las {n}": {
+  "en": "Add all {n}",
+  "pt": "Colocar as {n}",
+  "fr": "Placer les {n}",
+  "de": "Alle {n} setzen",
+  "it": "Metti tutti e {n}"
+ },
+ "Toca una sugerencia o haz clic en lo verde: el caption de ese momento va detrás de ti.": {
+  "en": "Tap a suggestion or click on the green: the caption at that moment goes behind you.",
+  "pt": "Toque numa sugestão ou clique no verde: a legenda desse momento vai atrás de você.",
+  "fr": "Touchez une suggestion ou cliquez sur le vert : la légende de ce moment passe derrière vous.",
+  "de": "Tippe auf einen Vorschlag oder klicke ins Grüne: Die Caption dieses Moments kommt hinter dich.",
+  "it": "Tocca un suggerimento o clicca sul verde: la didascalia di quel momento va dietro di te."
+ },
+ "Ahí y donde elija el automático.": {
+  "en": "There and wherever the automatic mode chooses.",
+  "pt": "Ali e onde o automático escolher.",
+  "fr": "Là et là où le mode automatique choisit.",
+  "de": "Dort und wo die Automatik es wählt.",
+  "it": "Lì e dove sceglie l’automatico."
+ },
+ "Solo ahí.": {
+  "en": "Only there.",
+  "pt": "Só ali.",
+  "fr": "Seulement là.",
+  "de": "Nur dort.",
+  "it": "Solo lì."
+ },
+ "«Captions detrás de ti» › Posición: te sugiere los 3 mejores momentos; un clic y quedan puestos (o «Poner las 3»), y el efecto se enciende solo.": {
+  "en": "«Captions behind you» › Position: it suggests the 3 best moments; one click and they are set (or «Add all 3»), and the effect turns on by itself.",
+  "pt": "«Legendas atrás de você» › Posição: sugere os 3 melhores momentos; um clique e ficam colocados (ou «Colocar as 3»), e o efeito liga sozinho.",
+  "fr": "«Sous-titres derrière vous» › Position : il propose les 3 meilleurs moments ; un clic et c’est placé (ou «Placer les 3»), et l’effet s’active tout seul.",
+  "de": "«Captions hinter dir» › Position: schlägt die 3 besten Momente vor; ein Klick und sie sind gesetzt (oder «Alle 3 setzen»), und der Effekt schaltet sich selbst ein.",
+  "it": "«Didascalie dietro di te» › Posizione: suggerisce i 3 momenti migliori; un clic e sono messi (o «Metti tutti e 3»), e l’effetto si attiva da solo."
+ },
+ "La vista grande enseña cómo queda: tus captions del tema elegido en Inicio, detrás de la persona (los del timeline si ya pasaste GO).": {
+  "en": "The large preview shows how it looks: your captions in the theme chosen in Home, behind the person (the timeline ones if you already ran GO).",
+  "pt": "A visualização grande mostra como fica: suas legendas do tema escolhido no Início, atrás da pessoa (as do timeline se você já rodou o GO).",
+  "fr": "Le grand aperçu montre le rendu : vos sous-titres du thème choisi dans Accueil, derrière la personne (ceux de la timeline si vous avez déjà lancé GO).",
+  "de": "Die große Vorschau zeigt, wie es aussieht: deine Captions im Thema aus Start, hinter der Person (die aus der Timeline, wenn du GO schon gestartet hast).",
+  "it": "L’anteprima grande mostra come viene: le tue didascalie del tema scelto in Home, dietro la persona (quelle della timeline se hai già usato GO)."
+ },
+ "Arreglado: con el Tema 1 y el audio del timeline, los emojis animados y «detrás de ti» ya no fallan.": {
+  "en": "Fixed: with Theme 1 and the timeline audio, animated emojis and «behind you» no longer fail.",
+  "pt": "Corrigido: com o Tema 1 e o áudio do timeline, os emojis animados e «atrás de você» já não falham.",
+  "fr": "Corrigé : avec le Thème 1 et l’audio de la timeline, les emojis animés et «derrière vous» ne plantent plus.",
+  "de": "Behoben: Mit Thema 1 und dem Timeline-Audio schlagen animierte Emojis und «hinter dir» nicht mehr fehl.",
+  "it": "Corretto: con il Tema 1 e l’audio della timeline, le emoji animate e «dietro di te» non falliscono più."
+ },
+ "poniéndolo en tu timeline…": {
+  "en": "placing it in your timeline…",
+  "pt": "colocando no seu timeline…",
+  "fr": "placement dans votre timeline…",
+  "de": "wird in deine Timeline gesetzt…",
+  "it": "lo sto mettendo nella tua timeline…"
+ },
+ "en tu timeline": {
+  "en": "in your timeline",
+  "pt": "no seu timeline",
+  "fr": "dans votre timeline",
+  "de": "in deiner Timeline",
+  "it": "nella tua timeline"
+ },
+ "«Listo» en «Captions detrás de ti» lo pone al momento en tu timeline de Resolve (sin volver a pasar GO).": {
+  "en": "«Done» in «Captions behind you» puts it in your Resolve timeline right away (no need to run GO again).",
+  "pt": "«Pronto» em «Legendas atrás de você» coloca na hora no seu timeline do Resolve (sem rodar o GO de novo).",
+  "fr": "«Terminé» dans «Sous-titres derrière vous» le place tout de suite dans votre timeline Resolve (sans relancer GO).",
+  "de": "«Fertig» bei «Captions hinter dir» setzt es sofort in deine Resolve-Timeline (ohne GO erneut zu starten).",
+  "it": "«Fatto» in «Didascalie dietro di te» lo mette subito nella tua timeline di Resolve (senza rifare GO)."
+ },
+ "La persona que va delante de los captions la recorta la IA (un matte con alfa): se ve igual en Resolve y en el render.": {
+  "en": "The person in front of the captions is cut out by AI (a matte with alpha): it looks the same in Resolve and in the render.",
+  "pt": "A pessoa na frente das legendas é recortada pela IA (um matte com alfa): fica igual no Resolve e no render.",
+  "fr": "La personne devant les sous-titres est détourée par l’IA (un matte avec alpha) : même rendu dans Resolve et à l’export.",
+  "de": "Die Person vor den Captions schneidet die KI aus (ein Matte mit Alpha): Sie sieht in Resolve und im Render gleich aus.",
+  "it": "La persona davanti alle didascalie la ritaglia l’IA (un matte con alfa): si vede uguale in Resolve e nel render."
+ },
+ "Arreglado: tus posiciones se aplican aunque Resolve use la copia con el audio compatible de tu video.": {
+  "en": "Fixed: your positions are applied even when Resolve uses the copy of your video with compatible audio.",
+  "pt": "Corrigido: suas posições são aplicadas mesmo quando o Resolve usa a cópia do seu vídeo com áudio compatível.",
+  "fr": "Corrigé : vos positions s’appliquent même quand Resolve utilise la copie de votre vidéo avec l’audio compatible.",
+  "de": "Behoben: Deine Positionen gelten auch, wenn Resolve die Kopie deines Videos mit kompatiblem Audio nutzt.",
+  "it": "Corretto: le tue posizioni si applicano anche quando Resolve usa la copia del video con audio compatibile."
+ },
+ "Así está ahora en tu timeline: {n}. Quita, mueve o añade y pulsa «Listo»: lo pongo en Resolve sin rehacer el video.": {
+  "en": "This is how your timeline is now: {n}. Remove, move or add and press «Done»: I put it in Resolve without redoing the video.",
+  "pt": "Assim está agora no seu timeline: {n}. Tire, mova ou adicione e aperte «Pronto»: coloco no Resolve sem refazer o vídeo.",
+  "fr": "Voici votre timeline maintenant : {n}. Retirez, déplacez ou ajoutez puis appuyez sur «Terminé» : je le place dans Resolve sans refaire la vidéo.",
+  "de": "So ist deine Timeline jetzt: {n}. Entfernen, verschieben oder hinzufügen und «Fertig» drücken: Ich setze es in Resolve, ohne das Video neu zu machen.",
+  "it": "Così è ora la tua timeline: {n}. Togli, sposta o aggiungi e premi «Fatto»: lo metto in Resolve senza rifare il video."
+ },
+ "En tu timeline no hay ninguno detrás de ti: toca una sugerencia o haz clic en lo verde y pulsa «Listo».": {
+  "en": "There is none behind you in your timeline: tap a suggestion or click on the green and press «Done».",
+  "pt": "No seu timeline não há nenhum atrás de você: toque numa sugestão ou clique no verde e aperte «Pronto».",
+  "fr": "Aucun n’est derrière vous dans votre timeline : touchez une suggestion ou cliquez sur le vert puis appuyez sur «Terminé».",
+  "de": "In deiner Timeline ist keiner hinter dir: Tippe auf einen Vorschlag oder klicke ins Grüne und drücke «Fertig».",
+  "it": "Nella tua timeline non ce n’è nessuno dietro di te: tocca un suggerimento o clicca sul verde e premi «Fatto»."
+ },
+ "En Efectos › Posición ves lo que está ahora en tu timeline (también lo que puso GO por su cuenta) y las sugerencias: quita, mueve o añade y «Listo» lo pone en Resolve.": {
+  "en": "In Effects › Position you see what is in your timeline now (also what GO placed by itself) and the suggestions: remove, move or add and «Done» puts it in Resolve.",
+  "pt": "Em Efeitos › Posição você vê o que está agora no seu timeline (também o que o GO colocou sozinho) e as sugestões: tire, mova ou adicione e «Pronto» coloca no Resolve.",
+  "fr": "Dans Effets › Position, vous voyez ce qui est dans votre timeline maintenant (y compris ce que GO a placé seul) et les suggestions : retirez, déplacez ou ajoutez et «Terminé» le place dans Resolve.",
+  "de": "In Effekte › Position siehst du, was jetzt in deiner Timeline ist (auch was GO selbst gesetzt hat), und die Vorschläge: entfernen, verschieben oder hinzufügen, und «Fertig» setzt es in Resolve.",
+  "it": "In Effetti › Posizione vedi cosa c’è ora nella tua timeline (anche quello che GO ha messo da solo) e i suggerimenti: togli, sposta o aggiungi e «Fatto» lo mette in Resolve."
+ },
+ "«Quitar todas» y «Listo» quita «detrás de ti» de tu timeline; si nada cambió, «Listo» ni toca Resolve.": {
+  "en": "«Remove all» and «Done» removes «behind you» from your timeline; if nothing changed, «Done» does not even touch Resolve.",
+  "pt": "«Tirar todas» e «Pronto» tira «atrás de você» do seu timeline; se nada mudou, «Pronto» nem toca no Resolve.",
+  "fr": "«Tout retirer» puis «Terminé» retire «derrière vous» de votre timeline ; si rien n’a changé, «Terminé» ne touche même pas Resolve.",
+  "de": "«Alle entfernen» und «Fertig» entfernt «hinter dir» aus deiner Timeline; wenn sich nichts geändert hat, berührt «Fertig» Resolve gar nicht.",
+  "it": "«Togli tutte» e «Fatto» toglie «dietro di te» dalla tua timeline; se non è cambiato nulla, «Fatto» non tocca nemmeno Resolve."
+ },
+ "se quita": {
+  "en": "removed",
+  "pt": "sai",
+  "fr": "retiré",
+  "de": "fällt weg",
+  "it": "si toglie"
+ },
+ "nueva": {
+  "en": "new",
+  "pt": "nova",
+  "fr": "nouveau",
+  "de": "neu",
+  "it": "nuovo"
+ },
+ "Aplicando en tu timeline de Resolve…": {
+  "en": "Applying to your Resolve timeline…",
+  "pt": "Aplicando na sua timeline do Resolve…",
+  "fr": "Application dans votre timeline Resolve…",
+  "de": "Wird in deine Resolve-Timeline eingefügt…",
+  "it": "Applicazione nella tua timeline di Resolve…"
+ },
+ "relleno: en tu timeline · borde: nueva · rojo: se quita": {
+  "en": "filled: in your timeline · outline: new · red: removed",
+  "pt": "preenchido: na sua timeline · borda: nova · vermelho: sai",
+  "fr": "plein : dans votre timeline · contour : nouveau · rouge : retiré",
+  "de": "gefüllt: in deiner Timeline · Rand: neu · rot: fällt weg",
+  "it": "pieno: nella tua timeline · bordo: nuovo · rosso: si toglie"
+ },
+ "Quitado de tu timeline: ya no hay ninguno detrás de ti.": {
+  "en": "Removed from your timeline: there are none behind you now.",
+  "pt": "Removido da sua timeline: já não há nenhum atrás de você.",
+  "fr": "Retiré de votre timeline : il n'y en a plus aucun derrière vous.",
+  "de": "Aus deiner Timeline entfernt: Jetzt ist keiner mehr hinter dir.",
+  "it": "Tolto dalla tua timeline: non ce n’è più nessuno dietro di te."
+ },
+ "Puesto en tu timeline: {n} de {m} (en el resto el texto no queda bien detrás de ti).": {
+  "en": "Placed in your timeline: {n} of {m} (in the rest the text does not look right behind you).",
+  "pt": "Colocado na sua timeline: {n} de {m} (no resto o texto não fica bem atrás de você).",
+  "fr": "Placé dans votre timeline : {n} sur {m} (pour le reste, le texte ne rend pas bien derrière vous).",
+  "de": "In deine Timeline gesetzt: {n} von {m} (beim Rest wirkt der Text hinter dir nicht gut).",
+  "it": "Messo nella tua timeline: {n} di {m} (negli altri il testo non sta bene dietro di te)."
+ },
+ "Puesto en tu timeline: {n}. Lo verde relleno es lo que hay ahora en Resolve.": {
+  "en": "Placed in your timeline: {n}. The filled green is what is in Resolve now.",
+  "pt": "Colocado na sua timeline: {n}. O verde preenchido é o que há agora no Resolve.",
+  "fr": "Placé dans votre timeline : {n}. Le vert plein correspond à ce qui est maintenant dans Resolve.",
+  "de": "In deine Timeline gesetzt: {n}. Das gefüllte Grün ist das, was jetzt in Resolve ist.",
+  "it": "Messo nella tua timeline: {n}. Il verde pieno è ciò che c’è ora in Resolve."
+ },
+ "Recortando a la persona con IA ({n} de {m})…": {
+  "en": "Cutting out the person with AI ({n} of {m})…",
+  "pt": "Recortando a pessoa com IA ({n} de {m})…",
+  "fr": "Détourage de la personne par IA ({n} sur {m})…",
+  "de": "Person wird mit KI freigestellt ({n} von {m})…",
+  "it": "Scontorno della persona con l’IA ({n} di {m})…"
+ },
+ "En Resolve está abierto otro timeline: abre «{t}» y vuelve a darle a «Listo».": {
+  "en": "Another timeline is open in Resolve: open “{t}” and press “Done” again.",
+  "pt": "Há outra timeline aberta no Resolve: abra «{t}» e pressione «Pronto» de novo.",
+  "fr": "Une autre timeline est ouverte dans Resolve : ouvrez « {t} » et appuyez de nouveau sur « Terminé ».",
+  "de": "In Resolve ist eine andere Timeline offen: Öffne „{t}“ und drücke erneut auf „Fertig“.",
+  "it": "In Resolve è aperta un’altra timeline: apri «{t}» e premi di nuovo «Fatto»."
+ },
+ "Listo: ya está en tu timeline de Resolve.": {
+  "en": "Done: it is now in your Resolve timeline.",
+  "pt": "Pronto: já está na sua timeline do Resolve.",
+  "fr": "Terminé : c’est maintenant dans votre timeline Resolve.",
+  "de": "Fertig: Es ist jetzt in deiner Resolve-Timeline.",
+  "it": "Fatto: ora è nella tua timeline di Resolve."
+ },
+ "No se pudo poner en tu timeline": {
+  "en": "It could not be placed in your timeline",
+  "pt": "Não foi possível colocar na sua timeline",
+  "fr": "Impossible de le placer dans votre timeline",
+  "de": "Es konnte nicht in deine Timeline gesetzt werden",
+  "it": "Non è stato possibile metterlo nella tua timeline"
+ },
+ "Preparando…": {
+  "en": "Preparing…",
+  "pt": "Preparando…",
+  "fr": "Préparation…",
+  "de": "Wird vorbereitet…",
+  "it": "Preparazione…"
+ },
+ "Buscando dónde va cada caption…": {
+  "en": "Finding where each caption goes…",
+  "pt": "Procurando onde vai cada legenda…",
+  "fr": "Recherche de la place de chaque sous-titre…",
+  "de": "Suche, wohin jede Caption gehört…",
+  "it": "Cerco dove va ogni didascalia…"
+ },
+ "Poniéndolo en tu timeline de Resolve…": {
+  "en": "Placing it in your Resolve timeline…",
+  "pt": "Colocando na sua timeline do Resolve…",
+  "fr": "Placement dans votre timeline Resolve…",
+  "de": "Wird in deine Resolve-Timeline gesetzt…",
+  "it": "Lo metto nella tua timeline di Resolve…"
+ },
+ "Listo en tu timeline": {
+  "en": "Done in your timeline",
+  "pt": "Pronto na sua timeline",
+  "fr": "Terminé dans votre timeline",
+  "de": "Fertig in deiner Timeline",
+  "it": "Fatto nella tua timeline"
+ },
+ "Pulsa GO una vez con este video: después, «Listo» pone «detrás de ti» directo en tu timeline.": {
+  "en": "Press GO once with this video: after that, “Done” puts “behind you” straight into your timeline.",
+  "pt": "Pressione GO uma vez com este vídeo: depois, «Pronto» coloca «atrás de você» direto na sua timeline.",
+  "fr": "Appuyez une fois sur GO avec cette vidéo : ensuite, « Terminé » place « derrière vous » directement dans votre timeline.",
+  "de": "Drücke einmal GO mit diesem Video: Danach setzt „Fertig“ „hinter dir“ direkt in deine Timeline.",
+  "it": "Premi GO una volta con questo video: poi «Fatto» mette «dietro di te» direttamente nella tua timeline."
+ },
+ "Abre DaVinci Resolve con el timeline de este video.": {
+  "en": "Open DaVinci Resolve with this video’s timeline.",
+  "pt": "Abra o DaVinci Resolve com a timeline deste vídeo.",
+  "fr": "Ouvrez DaVinci Resolve avec la timeline de cette vidéo.",
+  "de": "Öffne DaVinci Resolve mit der Timeline dieses Videos.",
+  "it": "Apri DaVinci Resolve con la timeline di questo video."
+ },
+ "«Captions detrás de ti» necesita DaVinci Resolve Studio.": {
+  "en": "“Captions behind you” needs DaVinci Resolve Studio.",
+  "pt": "«Legendas atrás de você» precisa do DaVinci Resolve Studio.",
+  "fr": "« Sous-titres derrière vous » nécessite DaVinci Resolve Studio.",
+  "de": "„Captions hinter dir“ braucht DaVinci Resolve Studio.",
+  "it": "«Didascalie dietro di te» richiede DaVinci Resolve Studio."
+ },
+ "Falta la placa del Tema 1 de tu último GO: pulsa GO otra vez.": {
+  "en": "The Theme 1 plate from your last GO is missing: press GO again.",
+  "pt": "Falta a placa do Tema 1 do seu último GO: pressione GO de novo.",
+  "fr": "La plaque du Thème 1 de votre dernier GO manque : appuyez de nouveau sur GO.",
+  "de": "Die Platte von Thema 1 aus deinem letzten GO fehlt: Drücke GO noch einmal.",
+  "it": "Manca la lastra del Tema 1 del tuo ultimo GO: premi di nuovo GO."
+ },
+ "En Efectos › Posición la tira resalta lo que está en tu timeline (verde), lo nuevo (borde) y lo que se quita (rojo; un clic lo recupera).": {
+  "en": "In Effects › Position the strip highlights what is in your timeline (green), what is new (outline) and what will be removed (red; one click brings it back).",
+  "pt": "Em Efeitos › Posição a faixa destaca o que está na sua timeline (verde), o novo (borda) e o que sai (vermelho; um clique o recupera).",
+  "fr": "Dans Effets › Position, la bande met en évidence ce qui est dans votre timeline (vert), le nouveau (contour) et ce qui sera retiré (rouge ; un clic le récupère).",
+  "de": "In Effekte › Position hebt der Streifen hervor, was in deiner Timeline ist (grün), was neu ist (Rand) und was wegfällt (rot; ein Klick holt es zurück).",
+  "it": "In Effetti › Posizione la striscia evidenzia ciò che è nella tua timeline (verde), il nuovo (bordo) e ciò che si toglie (rosso; un clic lo recupera)."
+ },
+ "«Listo» enseña una barra mientras lo pone en Resolve y, al acabar, la tira muestra cómo quedó.": {
+  "en": "“Done” shows a progress bar while it places it in Resolve and, when it finishes, the strip shows how it turned out.",
+  "pt": "«Pronto» mostra uma barra enquanto coloca no Resolve e, ao terminar, a faixa mostra como ficou.",
+  "fr": "« Terminé » affiche une barre pendant le placement dans Resolve et, à la fin, la bande montre le résultat.",
+  "de": "„Fertig“ zeigt einen Balken, während es in Resolve gesetzt wird, und danach zeigt der Streifen das Ergebnis.",
+  "it": "«Fatto» mostra una barra mentre lo mette in Resolve e, alla fine, la striscia mostra com’è rimasto."
+ },
+ "La máscara de la persona es más fina (pelo, orejas, huecos entre brazos y piernas) y se guarda: la segunda vez sale al momento.": {
+  "en": "The person mask is finer (hair, ears, gaps between arms and legs) and it is saved: the second time it is instant.",
+  "pt": "A máscara da pessoa é mais fina (cabelo, orelhas, espaços entre braços e pernas) e fica salva: na segunda vez sai na hora.",
+  "fr": "Le masque de la personne est plus fin (cheveux, oreilles, espaces entre bras et jambes) et il est conservé : la deuxième fois, il est immédiat.",
+  "de": "Die Personenmaske ist feiner (Haare, Ohren, Lücken zwischen Armen und Beinen) und wird gespeichert: Beim zweiten Mal ist sie sofort da.",
+  "it": "La maschera della persona è più fine (capelli, orecchie, spazi tra braccia e gambe) e resta salvata: la seconda volta è immediata."
+ },
+ "En {t} GO no lo pone ({m}): toca una sugerencia o lleva la marca a otro caption.": {
+  "en": "At {t} GO won’t place it ({m}): tap a suggestion or move the mark to another caption.",
+  "pt": "Em {t} o GO não coloca ({m}): toque numa sugestão ou leve a marca para outra legenda.",
+  "fr": "À {t}, GO ne le place pas ({m}) : touchez une suggestion ou déplacez le repère vers un autre sous-titre.",
+  "de": "Bei {t} setzt GO es nicht ({m}): Tippe auf einen Vorschlag oder zieh die Marke auf eine andere Caption.",
+  "it": "A {t} GO non lo mette ({m}): tocca un suggerimento o sposta il segno su un’altra didascalia."
+ },
+ "Las sugerencias de «detrás de ti» se comprueban con la misma regla que GO en los Temas 1 a 6: lo que te sugiere es lo que se pone.": {
+  "en": "“Behind you” suggestions are checked with the same rule as GO in Themes 1 to 6: what it suggests is what gets placed.",
+  "pt": "As sugestões de «atrás de você» são verificadas com a mesma regra do GO nos Temas 1 a 6: o que ele sugere é o que é colocado.",
+  "fr": "Les suggestions « derrière vous » sont vérifiées avec la même règle que GO dans les Thèmes 1 à 6 : ce qui est suggéré est ce qui est placé.",
+  "de": "Die Vorschläge für „hinter dir“ werden in den Themen 1 bis 6 mit derselben Regel wie GO geprüft: Was vorgeschlagen wird, wird auch gesetzt.",
+  "it": "I suggerimenti di «dietro di te» vengono verificati con la stessa regola di GO nei Temi da 1 a 6: ciò che suggerisce è ciò che viene messo."
+ },
+ "Arreglado: un video con el último fotograma dañado (muchos descargados) ya no deja el Tema 1 sin su placa.": {
+  "en": "Fixed: a video with a damaged last frame (many downloaded ones) no longer leaves Theme 1 without its plate.",
+  "pt": "Corrigido: um vídeo com o último quadro danificado (muitos baixados) já não deixa o Tema 1 sem sua placa.",
+  "fr": "Corrigé : une vidéo dont la dernière image est endommagée (beaucoup de vidéos téléchargées) ne laisse plus le Thème 1 sans sa plaque.",
+  "de": "Behoben: Ein Video mit beschädigtem letztem Bild (viele heruntergeladene) lässt Thema 1 nicht mehr ohne seine Platte.",
+  "it": "Risolto: un video con l’ultimo fotogramma danneggiato (molti scaricati) non lascia più il Tema 1 senza la sua lastra."
+ },
+ "Resolve no responde; espero a que termine…": {
+  "en": "Resolve is not responding; waiting for it to finish…",
+  "pt": "O Resolve não responde; espero que termine…",
+  "fr": "Resolve ne répond pas ; j’attends qu’il termine…",
+  "de": "Resolve antwortet nicht; ich warte, bis es fertig ist…",
+  "it": "Resolve non risponde; aspetto che finisca…"
+ },
+ "DaVinci Resolve se cerró de golpe. Ábrelo con tu proyecto y pulsa «Listo» otra vez: tus marcas siguen aquí.": {
+  "en": "DaVinci Resolve closed suddenly. Open it with your project and press «Done» again: your marks are still here.",
+  "pt": "O DaVinci Resolve fechou de repente. Abra-o com o seu projeto e clique em «Pronto» de novo: suas marcas continuam aqui.",
+  "fr": "DaVinci Resolve s’est fermé d’un coup. Ouvrez-le avec votre projet et appuyez de nouveau sur « Terminé » : vos repères sont toujours là.",
+  "de": "DaVinci Resolve wurde plötzlich geschlossen. Öffne es mit deinem Projekt und drücke erneut «Fertig»: deine Markierungen sind noch da.",
+  "it": "DaVinci Resolve si è chiuso all’improvviso. Aprilo con il tuo progetto e premi di nuovo «Fatto»: i tuoi segni sono ancora qui."
+ },
+ "Resolve dejó de responder. Ciérralo, ábrelo con tu proyecto y pulsa «Listo» otra vez: tus marcas siguen aquí.": {
+  "en": "Resolve stopped responding. Close it, open it with your project and press «Done» again: your marks are still here.",
+  "pt": "O Resolve parou de responder. Feche-o, abra-o com o seu projeto e clique em «Pronto» de novo: suas marcas continuam aqui.",
+  "fr": "Resolve ne répond plus. Fermez-le, rouvrez-le avec votre projet et appuyez de nouveau sur « Terminé » : vos repères sont toujours là.",
+  "de": "Resolve reagiert nicht mehr. Schließe es, öffne es mit deinem Projekt und drücke erneut «Fertig»: deine Markierungen sind noch da.",
+  "it": "Resolve ha smesso di rispondere. Chiudilo, aprilo con il tuo progetto e premi di nuovo «Fatto»: i tuoi segni sono ancora qui."
+ },
+ "DaVinci Resolve se cerró de golpe (se cayó)": {
+  "en": "DaVinci Resolve closed suddenly (it crashed)",
+  "pt": "O DaVinci Resolve fechou de repente (travou)",
+  "fr": "DaVinci Resolve s’est fermé d’un coup (plantage)",
+  "de": "DaVinci Resolve wurde plötzlich geschlossen (abgestürzt)",
+  "it": "DaVinci Resolve si è chiuso all’improvviso (crash)"
+ },
+ "Resolve tuvo un error interno mientras CineCaptions cambiaba el timeline y se cerró solo (deja un volcado en su carpeta de registros).": {
+  "en": "Resolve had an internal error while CineCaptions was changing the timeline and closed by itself (it leaves a dump in its logs folder).",
+  "pt": "O Resolve teve um erro interno enquanto o CineCaptions alterava a timeline e fechou sozinho (deixa um dump na pasta de registros).",
+  "fr": "Resolve a eu une erreur interne pendant que CineCaptions modifiait la timeline et s’est fermé tout seul (il laisse un dump dans son dossier de journaux).",
+  "de": "Resolve hatte einen internen Fehler, während CineCaptions die Timeline änderte, und hat sich selbst geschlossen (es hinterlässt einen Dump in seinem Log-Ordner).",
+  "it": "Resolve ha avuto un errore interno mentre CineCaptions modificava la timeline e si è chiuso da solo (lascia un dump nella sua cartella dei log)."
+ },
+ "Abre DaVinci Resolve con tu proyecto: guarda solo cada pocos minutos, así que lo de antes sigue ahí.": {
+  "en": "Open DaVinci Resolve with your project: it saves by itself every few minutes, so what you had is still there.",
+  "pt": "Abra o DaVinci Resolve com o seu projeto: ele salva sozinho a cada poucos minutos, então o que havia antes continua lá.",
+  "fr": "Ouvrez DaVinci Resolve avec votre projet : il enregistre tout seul toutes les quelques minutes, donc ce que vous aviez est toujours là.",
+  "de": "Öffne DaVinci Resolve mit deinem Projekt: Es speichert alle paar Minuten selbst, dein bisheriger Stand ist also noch da.",
+  "it": "Apri DaVinci Resolve con il tuo progetto: salva da solo ogni pochi minuti, quindi quello che c’era è ancora lì."
+ },
+ "Si fue con «Listo» de Efectos › Posición, tus marcas siguen guardadas: pulsa «Listo» otra vez.": {
+  "en": "If it happened with «Done» in Effects › Position, your marks are still saved: press «Done» again.",
+  "pt": "Se foi com «Pronto» em Efeitos › Posição, suas marcas continuam salvas: clique em «Pronto» de novo.",
+  "fr": "Si c’était avec « Terminé » dans Effets › Position, vos repères sont toujours enregistrés : appuyez de nouveau sur « Terminé ».",
+  "de": "Wenn es bei «Fertig» unter Effekte › Position passiert ist, sind deine Markierungen noch gespeichert: Drücke erneut «Fertig».",
+  "it": "Se è successo con «Fatto» in Effetti › Posizione, i tuoi segni sono ancora salvati: premi di nuovo «Fatto»."
+ },
+ "Mientras CineCaptions trabaja, no reproduzcas ni edites en Resolve; si se repite, avisa a soporte con el informe.": {
+  "en": "While CineCaptions is working, don’t play or edit in Resolve; if it happens again, contact support with the report.",
+  "pt": "Enquanto o CineCaptions trabalha, não reproduza nem edite no Resolve; se acontecer de novo, avise o suporte com o relatório.",
+  "fr": "Pendant que CineCaptions travaille, ne lisez ni ne montez dans Resolve ; si cela se reproduit, contactez le support avec le rapport.",
+  "de": "Während CineCaptions arbeitet, nichts in Resolve abspielen oder bearbeiten; passiert es wieder, melde dich mit dem Bericht beim Support.",
+  "it": "Mentre CineCaptions lavora, non riprodurre né montare in Resolve; se si ripete, avvisa il supporto con il rapporto."
+ },
+ "Tema activo": {
+  "en": "Active theme",
+  "pt": "Tema ativo",
+  "fr": "Thème actif",
+  "de": "Aktives Thema",
+  "it": "Tema attivo"
+ },
+ "Vista previa": {
+  "en": "Preview",
+  "pt": "Pré-visualização",
+  "fr": "Aperçu",
+  "de": "Vorschau",
+  "it": "Anteprima"
+ },
+ "Estado del tracking": {
+  "en": "Tracking status",
+  "pt": "Estado do tracking",
+  "fr": "État du suivi",
+  "de": "Tracking-Status",
+  "it": "Stato del tracking"
+ },
+ "Sugerencia": {
+  "en": "Tip",
+  "pt": "Sugestão",
+  "fr": "Conseil",
+  "de": "Tipp",
+  "it": "Suggerimento"
+ },
+ "Marcas": {
+  "en": "Marks",
+  "pt": "Marcas",
+  "fr": "Repères",
+  "de": "Markierungen",
+  "it": "Segni"
+ },
+ "Sugerencias": {
+  "en": "Suggestions",
+  "pt": "Sugestões",
+  "fr": "Suggestions",
+  "de": "Vorschläge",
+  "it": "Suggerimenti"
+ },
+ "Modo de marcas": {
+  "en": "Mark mode",
+  "pt": "Modo das marcas",
+  "fr": "Mode des repères",
+  "de": "Markierungsmodus",
+  "it": "Modalità dei segni"
+ },
+ "Usa solo las que tú coloques": {
+  "en": "Uses only the ones you place",
+  "pt": "Usa só as que você colocar",
+  "fr": "N’utilise que ceux que vous placez",
+  "de": "Nutzt nur die, die du setzt",
+  "it": "Usa solo quelli che metti tu"
+ },
+ "Combina tus marcas con IA": {
+  "en": "Combines your marks with AI",
+  "pt": "Combina suas marcas com IA",
+  "fr": "Combine vos repères avec l’IA",
+  "de": "Kombiniert deine Markierungen mit KI",
+  "it": "Combina i tuoi segni con l’IA"
+ },
+ "Posición del caption": {
+  "en": "Caption position",
+  "pt": "Posição da legenda",
+  "fr": "Position du sous-titre",
+  "de": "Position der Caption",
+  "it": "Posizione della didascalia"
+ },
+ "Derecha": {
+  "en": "Right",
+  "pt": "Direita",
+  "fr": "Droite",
+  "de": "Rechts",
+  "it": "Destra"
+ },
+ "Izquierda": {
+  "en": "Left",
+  "pt": "Esquerda",
+  "fr": "Gauche",
+  "de": "Links",
+  "it": "Sinistra"
+ },
+ "Intensidad / tamaño": {
+  "en": "Intensity / size",
+  "pt": "Intensidade / tamanho",
+  "fr": "Intensité / taille",
+  "de": "Intensität / Größe",
+  "it": "Intensità / dimensione"
+ },
+ "Horizontal: elige el lado": {
+  "en": "Horizontal: choose the side",
+  "pt": "Horizontal: escolha o lado",
+  "fr": "Horizontal : choisissez le côté",
+  "de": "Horizontal: wähle die Seite",
+  "it": "Orizzontale: scegli il lato"
+ },
+ "Vertical: siempre arriba": {
+  "en": "Vertical: always on top",
+  "pt": "Vertical: sempre em cima",
+  "fr": "Vertical : toujours en haut",
+  "de": "Vertikal: immer oben",
+  "it": "Verticale: sempre in alto"
+ },
+ "Buscando a la persona en tu video… {p} %": {
+  "en": "Looking for the person in your video… {p} %",
+  "pt": "Procurando a pessoa no seu vídeo… {p} %",
+  "fr": "Recherche de la personne dans votre vidéo… {p} %",
+  "de": "Suche die Person in deinem Video… {p} %",
+  "it": "Cerco la persona nel tuo video… {p} %"
+ },
+ "Aún no se ha mirado este video.": {
+  "en": "This video hasn’t been analyzed yet.",
+  "pt": "Este vídeo ainda não foi analisado.",
+  "fr": "Cette vidéo n’a pas encore été analysée.",
+  "de": "Dieses Video wurde noch nicht analysiert.",
+  "it": "Questo video non è ancora stato analizzato."
+ },
+ "Casi no se ve a nadie": {
+  "en": "Hardly anyone visible",
+  "pt": "Quase não se vê ninguém",
+  "fr": "Presque personne de visible",
+  "de": "Kaum jemand zu sehen",
+  "it": "Quasi nessuno visibile"
+ },
+ "Funcionando bien": {
+  "en": "Working well",
+  "pt": "Funcionando bem",
+  "fr": "Fonctionne bien",
+  "de": "Funktioniert gut",
+  "it": "Funziona bene"
+ },
+ "Regular": {
+  "en": "Fair",
+  "pt": "Regular",
+  "fr": "Moyen",
+  "de": "Mittel",
+  "it": "Discreto"
+ },
+ "La persona se detecta en el {p} % de los fotogramas del video.": {
+  "en": "The person is detected in {p} % of the video frames.",
+  "pt": "A pessoa é detectada em {p} % dos quadros do vídeo.",
+  "fr": "La personne est détectée sur {p} % des images de la vidéo.",
+  "de": "Die Person wird in {p} % der Videobilder erkannt.",
+  "it": "La persona viene rilevata nel {p} % dei fotogrammi del video."
+ },
+ "Coloca las marcas en los momentos clave donde quieras que aparezca un caption detrás de ti. Puedes ajustar la posición y la intensidad.": {
+  "en": "Place marks at the key moments where you want a caption to appear behind you. You can adjust the position and the intensity.",
+  "pt": "Coloque as marcas nos momentos-chave em que quer que uma legenda apareça atrás de você. Você pode ajustar a posição e a intensidade.",
+  "fr": "Placez des repères aux moments clés où vous voulez qu’un sous-titre apparaisse derrière vous. Vous pouvez régler la position et l’intensité.",
+  "de": "Setze Markierungen an den Schlüsselmomenten, an denen eine Caption hinter dir erscheinen soll. Position und Intensität kannst du anpassen.",
+  "it": "Metti i segni nei momenti chiave in cui vuoi che una didascalia appaia dietro di te. Puoi regolare la posizione e l’intensità."
+ },
+ "En tu timeline": {
+  "en": "In your timeline",
+  "pt": "Na sua timeline",
+  "fr": "Dans votre timeline",
+  "de": "In deiner Timeline",
+  "it": "Nella tua timeline"
+ },
+ "No se puede aquí": {
+  "en": "Not possible here",
+  "pt": "Não dá aqui",
+  "fr": "Impossible ici",
+  "de": "Hier nicht möglich",
+  "it": "Non si può qui"
+ },
+ "No se puede: {m}": {
+  "en": "Not possible: {m}",
+  "pt": "Não dá: {m}",
+  "fr": "Impossible : {m}",
+  "de": "Nicht möglich: {m}",
+  "it": "Non si può: {m}"
+ },
+ "Guardada: GO la aplica": {
+  "en": "Saved: GO applies it",
+  "pt": "Salva: o GO a aplica",
+  "fr": "Enregistré : GO l’applique",
+  "de": "Gespeichert: GO wendet sie an",
+  "it": "Salvato: GO lo applica"
+ },
+ "Nueva": {
+  "en": "New",
+  "pt": "Nova",
+  "fr": "Nouveau",
+  "de": "Neu",
+  "it": "Nuovo"
+ },
+ "{n} de {m} marcas": {
+  "en": "{n} of {m} marks",
+  "pt": "{n} de {m} marcas",
+  "fr": "{n} sur {m} repères",
+  "de": "{n} von {m} Markierungen",
+  "it": "{n} di {m} segni"
+ },
+ "Aún no hay marcas: haz clic en la tira de abajo o toca una sugerencia.": {
+  "en": "No marks yet: click the strip below or tap a suggestion.",
+  "pt": "Ainda não há marcas: clique na faixa abaixo ou toque numa sugestão.",
+  "fr": "Pas encore de repères : cliquez sur la bande ci-dessous ou touchez une suggestion.",
+  "de": "Noch keine Markierungen: Klicke auf den Streifen unten oder tippe auf einen Vorschlag.",
+  "it": "Ancora nessun segno: clicca sulla striscia qui sotto o tocca un suggerimento."
+ },
+ "Ver": {
+  "en": "View",
+  "pt": "Ver",
+  "fr": "Voir",
+  "de": "Ansehen",
+  "it": "Vedi"
+ },
+ "Se quita de tu timeline": {
+  "en": "Removed from your timeline",
+  "pt": "Sai da sua timeline",
+  "fr": "Retiré de votre timeline",
+  "de": "Wird aus deiner Timeline entfernt",
+  "it": "Viene tolto dalla tua timeline"
+ },
+ "Recuperar": {
+  "en": "Restore",
+  "pt": "Recuperar",
+  "fr": "Récupérer",
+  "de": "Wiederherstellen",
+  "it": "Recupera"
+ },
+ "Donde GO lo pone detrás de ti y queda bien. Un toque y queda marcada.": {
+  "en": "Where GO puts it behind you and it looks good. One tap and it’s marked.",
+  "pt": "Onde o GO a coloca atrás de você e fica bem. Um toque e fica marcada.",
+  "fr": "Là où GO le place derrière vous et où ça rend bien. Une touche et c’est marqué.",
+  "de": "Wo GO sie hinter dich setzt und es gut aussieht. Ein Tipp, und sie ist markiert.",
+  "it": "Dove GO la mette dietro di te e sta bene. Un tocco ed è segnata."
+ },
+ "Ahora no hay sugerencias: ya están marcadas, o tu video aún se está analizando.": {
+  "en": "No suggestions right now: they’re already marked, or your video is still being analyzed.",
+  "pt": "Agora não há sugestões: já estão marcadas, ou seu vídeo ainda está sendo analisado.",
+  "fr": "Aucune suggestion pour l’instant : elles sont déjà marquées, ou votre vidéo est encore en cours d’analyse.",
+  "de": "Gerade keine Vorschläge: Sie sind schon markiert, oder dein Video wird noch analysiert.",
+  "it": "Ora non ci sono suggerimenti: sono già segnati, oppure il tuo video è ancora in analisi."
+ },
+ "Elegir video": {
+  "en": "Choose video",
+  "pt": "Escolher vídeo",
+  "fr": "Choisir la vidéo",
+  "de": "Video wählen",
+  "it": "Scegli video"
+ },
+ "Sin video": {
+  "en": "No video",
+  "pt": "Sem vídeo",
+  "fr": "Pas de vidéo",
+  "de": "Kein Video",
+  "it": "Nessun video"
+ },
+ "Video elegido a mano: GO lo aplica": {
+  "en": "Video chosen by hand: GO applies it",
+  "pt": "Vídeo escolhido manualmente: o GO aplica",
+  "fr": "Vidéo choisie à la main : GO l’applique",
+  "de": "Video von Hand gewählt: GO wendet es an",
+  "it": "Video scelto a mano: GO lo applica"
+ },
+ "Proyecto listo": {
+  "en": "Project ready",
+  "pt": "Projeto pronto",
+  "fr": "Projet prêt",
+  "de": "Projekt bereit",
+  "it": "Progetto pronto"
+ },
+ "Pulsa GO una vez con este video": {
+  "en": "Press GO once with this video",
+  "pt": "Aperte GO uma vez com este vídeo",
+  "fr": "Appuyez une fois sur GO avec cette vidéo",
+  "de": "Drücke einmal GO mit diesem Video",
+  "it": "Premi GO una volta con questo video"
+ },
+ "Timeline": {
+  "en": "Timeline",
+  "pt": "Timeline",
+  "fr": "Timeline",
+  "de": "Timeline",
+  "it": "Timeline"
+ },
+ "Arrastra para mover": {
+  "en": "Drag to move",
+  "pt": "Arraste para mover",
+  "fr": "Glissez pour déplacer",
+  "de": "Ziehen zum Verschieben",
+  "it": "Trascina per spostare"
+ },
+ "Clic para añadir marcas": {
+  "en": "Click to add marks",
+  "pt": "Clique para adicionar marcas",
+  "fr": "Cliquez pour ajouter des repères",
+  "de": "Klicken zum Hinzufügen",
+  "it": "Clic per aggiungere segni"
+ },
+ "Doble clic o clic derecho para quitar": {
+  "en": "Double-click or right-click to remove",
+  "pt": "Clique duplo ou botão direito para tirar",
+  "fr": "Double-clic ou clic droit pour retirer",
+  "de": "Doppelklick oder Rechtsklick zum Entfernen",
+  "it": "Doppio clic o clic destro per togliere"
+ },
+ "← → para afinar": {
+  "en": "← → to fine-tune",
+  "pt": "← → para ajustar",
+  "fr": "← → pour affiner",
+  "de": "← → zum Feinjustieren",
+  "it": "← → per rifinire"
+ },
+ "Aplicando en Resolve…": {
+  "en": "Applying in Resolve…",
+  "pt": "Aplicando no Resolve…",
+  "fr": "Application dans Resolve…",
+  "de": "Wird in Resolve angewendet…",
+  "it": "Applicazione in Resolve…"
+ },
+ "No se pudo: mira el aviso": {
+  "en": "Couldn’t do it: see the notice",
+  "pt": "Não deu: veja o aviso",
+  "fr": "Échec : voir l’avis",
+  "de": "Hat nicht geklappt: siehe Hinweis",
+  "it": "Non è riuscito: guarda l’avviso"
+ },
+ "a ese lado de la persona no cabe el texto": {
+  "en": "the text doesn’t fit on that side of the person",
+  "pt": "o texto não cabe desse lado da pessoa",
+  "fr": "le texte ne tient pas de ce côté de la personne",
+  "de": "auf dieser Seite der Person passt der Text nicht",
+  "it": "da quel lato della persona il testo non ci sta"
+ },
+ "Analizando…": {
+  "en": "Analyzing…",
+  "pt": "Analisando…",
+  "fr": "Analyse…",
+  "de": "Wird analysiert…",
+  "it": "Analisi…"
+ },
+ "Arreglado: CineCaptions ya no se congela cuando DaVinci Resolve está ocupado, y «Listo» de «detrás de ti» ya no hace caer a Resolve.": {
+  "en": "Fixed: CineCaptions no longer freezes when DaVinci Resolve is busy, and «Done» in «behind you» no longer crashes Resolve.",
+  "pt": "Corrigido: o CineCaptions não trava mais quando o DaVinci Resolve está ocupado, e «Pronto» em «atrás de você» não derruba mais o Resolve.",
+  "fr": "Corrigé : CineCaptions ne se fige plus quand DaVinci Resolve est occupé, et « Terminé » de « derrière toi » ne fait plus planter Resolve.",
+  "de": "Behoben: CineCaptions friert nicht mehr ein, wenn DaVinci Resolve beschäftigt ist, und «Fertig» bei «hinter dir» bringt Resolve nicht mehr zum Absturz.",
+  "it": "Risolto: CineCaptions non si blocca più quando DaVinci Resolve è occupato, e «Fatto» di «dietro di te» non fa più chiudere Resolve."
+ },
+ "Si Resolve se cierra de golpe, CineCaptions lo avisa al momento y te dice qué hacer (tus marcas siguen guardadas).": {
+  "en": "If Resolve closes suddenly, CineCaptions tells you right away and what to do (your marks stay saved).",
+  "pt": "Se o Resolve fechar de repente, o CineCaptions avisa na hora e diz o que fazer (suas marcas continuam salvas).",
+  "fr": "Si Resolve se ferme d’un coup, CineCaptions le signale aussitôt et vous dit quoi faire (vos repères restent enregistrés).",
+  "de": "Wenn Resolve plötzlich schließt, meldet CineCaptions es sofort und sagt dir, was zu tun ist (deine Markierungen bleiben gespeichert).",
+  "it": "Se Resolve si chiude all’improvviso, CineCaptions lo segnala subito e ti dice cosa fare (i tuoi segni restano salvati)."
+ },
+ "Efectos › «Captions detrás de ti» › Posición, rediseñada: visor que reproduce tu video, pestañas Ajustes / Marcas / Sugerencias y la tira abajo.": {
+  "en": "Effects › «Captions behind you» › Position, redesigned: a viewer that plays your video, Settings / Marks / Suggestions tabs and the strip below.",
+  "pt": "Efeitos › «Legendas atrás de você» › Posição, redesenhada: visor que reproduz seu vídeo, abas Ajustes / Marcas / Sugestões e a faixa embaixo.",
+  "fr": "Effets › « Sous-titres derrière toi » › Position, repensée : un lecteur qui lit votre vidéo, onglets Réglages / Repères / Suggestions et la bande en bas.",
+  "de": "Effekte › «Captions hinter dir» › Position, neu gestaltet: ein Player, der dein Video abspielt, Tabs Einstellungen / Markierungen / Vorschläge und der Streifen unten.",
+  "it": "Effetti › «Didascalie dietro di te» › Posizione, ridisegnata: un visore che riproduce il tuo video, schede Impostazioni / Segni / Suggerimenti e la striscia sotto."
+ },
+ "Lo que la tira marca en verde es lo que «Listo» pone de verdad. En videos horizontales eliges el lado del caption: arriba, izquierda o derecha.": {
+  "en": "What the strip shows in green is what «Done» really places. In horizontal videos you choose the caption side: top, left or right.",
+  "pt": "O que a faixa marca em verde é o que «Pronto» coloca de verdade. Em vídeos horizontais você escolhe o lado da legenda: em cima, à esquerda ou à direita.",
+  "fr": "Ce que la bande montre en vert est ce que « Terminé » place vraiment. Dans les vidéos horizontales, vous choisissez le côté du sous-titre : haut, gauche ou droite.",
+  "de": "Was der Streifen grün zeigt, setzt «Fertig» wirklich. Bei horizontalen Videos wählst du die Seite der Caption: oben, links oder rechts.",
+  "it": "Ciò che la striscia segna in verde è ciò che «Fatto» mette davvero. Nei video orizzontali scegli il lato della didascalia: in alto, a sinistra o a destra."
+ },
+ "Página Proyecto con aspecto nuevo: la franja del audio, el nombre del tema y los botones «En uso» y «Edición PRO activada», con animación.": {
+  "en": "New look for the Project page: the audio strip, the theme name and the «In use» and «PRO editing on» buttons, animated.",
+  "pt": "Página Projeto com visual novo: a faixa do áudio, o nome do tema e os botões «Em uso» e «Edição PRO ativada», com animação.",
+  "fr": "Nouveau look pour la page Projet : la bande audio, le nom du thème et les boutons « Utilisé » et « Édition PRO activée », animés.",
+  "de": "Neues Aussehen der Projektseite: der Audiostreifen, der Themenname und die Schaltflächen «In Verwendung» und «PRO-Bearbeitung aktiv», animiert.",
+  "it": "Nuovo aspetto della pagina Progetto: la striscia dell’audio, il nome del tema e i pulsanti «In uso» e «Edizione PRO attiva», animati."
+ },
+ "El de la intro": {
+  "en": "The intro's own",
+  "pt": "O da intro",
+  "fr": "Celui de l'intro",
+  "de": "Der des Intros",
+  "it": "Quello dell'intro"
+ },
+ "Personaliza": {
+  "en": "Customize",
+  "pt": "Personalize",
+  "fr": "Personnalise",
+  "de": "Anpassen",
+  "it": "Personalizza"
+ },
+ "Zoom": {
+  "en": "Zoom",
+  "pt": "Zoom",
+  "fr": "Zoom",
+  "de": "Zoom",
+  "it": "Zoom"
+ },
+ "Tu sonido…": {
+  "en": "Your sound…",
+  "pt": "Seu som…",
+  "fr": "Ton son…",
+  "de": "Dein Ton…",
+  "it": "Il tuo suono…"
+ },
+ "Tu sonido: ": {
+  "en": "Your sound: ",
+  "pt": "Seu som: ",
+  "fr": "Ton son : ",
+  "de": "Dein Ton: ",
+  "it": "Il tuo suono: "
+ },
+ " · sonido: ": {
+  "en": " · sound: ",
+  "pt": " · som: ",
+  "fr": " · son : ",
+  "de": " · Ton: ",
+  "it": " · suono: "
+ },
+ " · zoom: ": {
+  "en": " · zoom: ",
+  "pt": " · zoom: ",
+  "fr": " · zoom : ",
+  "de": " · Zoom: ",
+  "it": " · zoom: "
+ },
+ "Elige tu sonido": {
+  "en": "Choose your sound",
+  "pt": "Escolha seu som",
+  "fr": "Choisis ton son",
+  "de": "Wähle deinen Ton",
+  "it": "Scegli il tuo suono"
+ },
+ "La llevé a {n}, el caption más cercano donde cabe: en {v} {m}.": {
+  "en": "I moved it to {n}, the nearest caption where it fits: in {v} {m}.",
+  "pt": "Levei para {n}, a legenda mais próxima onde cabe: em {v} {m}.",
+  "fr": "Je l'ai déplacée à {n}, le sous-titre le plus proche où il tient : dans {v} {m}.",
+  "de": "Ich habe sie auf {n} verschoben, den nächsten Untertitel, in den sie passt: in {v} {m}.",
+  "it": "L'ho spostata a {n}, il sottotitolo più vicino in cui entra: in {v} {m}."
+ },
+ "La llevé a {n}, el caption más cercano donde cabe.": {
+  "en": "I moved it to {n}, the nearest caption where it fits.",
+  "pt": "Levei para {n}, a legenda mais próxima onde cabe.",
+  "fr": "Je l'ai déplacée à {n}, le sous-titre le plus proche où il tient.",
+  "de": "Ich habe sie auf {n} verschoben, den nächsten Untertitel, in den sie passt.",
+  "it": "L'ho spostata a {n}, il sottotitolo più vicino in cui entra."
+ },
+ "Nuevo «Gancho del inicio»: 8 intros para el primer segundo, con un destello de luz, el video que se aleja con un zoom y un golpe de sonido. Viene encendido con la Edición PRO en todos los temas.": {
+  "en": "New «Opening hook»: 8 intros for the first second, with a flash of light, the video pulling back with a zoom and a sound hit. It comes on with the PRO Edit in every theme.",
+  "pt": "Novo «Gancho do início»: 8 intros para o primeiro segundo, com um flash de luz, o vídeo que se afasta com um zoom e um impacto sonoro. Vem ativado com a Edição PRO em todos os temas.",
+  "fr": "Nouvelle « Accroche du début » : 8 intros pour la première seconde, avec un éclair de lumière, la vidéo qui recule avec un zoom et un impact sonore. Elle est activée avec l'Édition PRO dans tous les thèmes.",
+  "de": "Neu: «Hook am Anfang»: 8 Intros für die erste Sekunde, mit einem Lichtblitz, einem Zoom, mit dem sich das Video entfernt, und einem Sound-Schlag. Mit der PRO-Bearbeitung ist er in allen Themen eingeschaltet.",
+  "it": "Nuovo «Gancio iniziale»: 8 intro per il primo secondo, con un lampo di luce, il video che si allontana con uno zoom e un colpo sonoro. È attivo con l'Edizione PRO in tutti i temi."
+ },
+ "Cada intro tiene su color, su zoom (golpe, suave, desenfoque, giro, temblor, rebote, RGB o latigazo) y su sonido; al elegirla, suena.": {
+  "en": "Each intro has its own color, zoom (punch, soft, blur, spin, shake, bounce, RGB or whip) and sound; it plays when you pick it.",
+  "pt": "Cada intro tem sua cor, seu zoom (golpe, suave, desfoque, giro, tremor, rebote, RGB ou chicote) e seu som; ao escolhê-la, ela toca.",
+  "fr": "Chaque intro a sa couleur, son zoom (coup, doux, flou, rotation, tremblement, rebond, RVB ou fouet) et son son ; elle se fait entendre quand tu la choisis.",
+  "de": "Jedes Intro hat seine Farbe, seinen Zoom (Schlag, sanft, Unschärfe, Drehung, Wackeln, Abprall, RGB oder Peitsche) und seinen Ton; beim Auswählen ist er zu hören.",
+  "it": "Ogni intro ha il suo colore, il suo zoom (colpo, morbido, sfocatura, rotazione, tremolio, rimbalzo, RGB o frusta) e il suo suono; quando la scegli, suona."
+ },
+ "En Efectos › Gancho del inicio › Personaliza cambias el color de la luz, el sonido (el de otra intro, ninguno o uno tuyo) y el zoom.": {
+  "en": "In Effects › Opening hook › Customize you change the light's color, the sound (another intro's, none or your own) and the zoom.",
+  "pt": "Em Efeitos › Gancho do início › Personalize você muda a cor da luz, o som (o de outra intro, nenhum ou um seu) e o zoom.",
+  "fr": "Dans Effets › Accroche du début › Personnalise, tu changes la couleur de la lumière, le son (celui d'une autre intro, aucun ou le tien) et le zoom.",
+  "de": "Unter Effekte › Hook am Anfang › Anpassen änderst du die Farbe des Lichts, den Ton (den eines anderen Intros, keinen oder deinen eigenen) und den Zoom.",
+  "it": "In Effetti › Gancio iniziale › Personalizza cambi il colore della luce, il suono (quello di un'altra intro, nessuno o il tuo) e lo zoom."
+ },
+ "Página Proyecto: el nombre del tema y sus botones, un poco más pequeños. En «Captions detrás de ti» quedan los estilos más limpios.": {
+  "en": "Project page: the theme name and its buttons, a bit smaller. «Captions behind you» keeps the cleanest styles.",
+  "pt": "Página Projeto: o nome do tema e seus botões, um pouco menores. Em «Legendas atrás de você» ficam os estilos mais limpos.",
+  "fr": "Page Projet : le nom du thème et ses boutons, un peu plus petits. « Sous-titres derrière vous » garde les styles les plus nets.",
+  "de": "Seite Projekt: der Themenname und seine Buttons, etwas kleiner. «Untertitel hinter dir» behält die saubersten Stile.",
+  "it": "Pagina Progetto: il nome del tema e i suoi pulsanti, un po’ più piccoli. In «Sottotitoli dietro di te» restano gli stili più puliti."
+ },
+ "(elegido por ti)": {
+  "en": "(chosen by you)",
+  "pt": "(escolhido por você)",
+  "fr": "(choisi par vous)",
+  "de": "(von dir gewählt)",
+  "it": "(scelto da te)"
+ },
+ "AI Sonic Style: {s}": {
+  "en": "AI Sonic Style: {s}",
+  "pt": "AI Sonic Style: {s}",
+  "fr": "AI Sonic Style : {s}",
+  "de": "AI Sonic Style: {s}",
+  "it": "AI Sonic Style: {s}"
+ },
+ "AI Sound": {
+  "en": "AI Sound",
+  "pt": "AI Sound",
+  "fr": "AI Sound",
+  "de": "AI Sound",
+  "it": "AI Sound"
+ },
+ "AI Sound Director": {
+  "en": "AI Sound Director",
+  "pt": "AI Sound Director",
+  "fr": "AI Sound Director",
+  "de": "AI Sound Director",
+  "it": "AI Sound Director"
+ },
+ "Activado": {
+  "en": "On",
+  "pt": "Ativado",
+  "fr": "Activé",
+  "de": "An",
+  "it": "Attivo"
+ },
+ "Apagado: GO pone los sonidos de siempre. Enciéndelo para que AI Sound Director diseñe el sonido en el próximo GO.": {
+  "en": "Off: GO adds the usual sounds. Turn it on so AI Sound Director designs the sound on the next GO.",
+  "pt": "Desligado: o GO coloca os sons de sempre. Ligue-o para que o AI Sound Director crie o som no próximo GO.",
+  "fr": "Désactivé : GO met les sons habituels. Activez-le pour que AI Sound Director conçoive le son au prochain GO.",
+  "de": "Aus: GO setzt die üblichen Sounds. Schalte es ein, damit AI Sound Director beim nächsten GO den Sound gestaltet.",
+  "it": "Spento: GO mette i soliti suoni. Accendilo perché AI Sound Director progetti il suono al prossimo GO."
+ },
+ "Aplicar a Resolve": {
+  "en": "Apply to Resolve",
+  "pt": "Aplicar no Resolve",
+  "fr": "Appliquer dans Resolve",
+  "de": "In Resolve anwenden",
+  "it": "Applica in Resolve"
+ },
+ "Auto": {
+  "en": "Auto",
+  "pt": "Auto",
+  "fr": "Auto",
+  "de": "Auto",
+  "it": "Auto"
+ },
+ "Bloqueado": {
+  "en": "Locked",
+  "pt": "Bloqueado",
+  "fr": "Verrouillé",
+  "de": "Gesperrt",
+  "it": "Bloccato"
+ },
+ "Bloquear": {
+  "en": "Lock",
+  "pt": "Bloquear",
+  "fr": "Verrouiller",
+  "de": "Sperren",
+  "it": "Blocca"
+ },
+ "Desbloquear": {
+  "en": "Unlock",
+  "pt": "Desbloquear",
+  "fr": "Déverrouiller",
+  "de": "Entsperren",
+  "it": "Sblocca"
+ },
+ "Deshacer todo": {
+  "en": "Undo everything",
+  "pt": "Desfazer tudo",
+  "fr": "Tout annuler",
+  "de": "Alles zurücksetzen",
+  "it": "Annulla tutto"
+ },
+ "Dile a AI Sound Director qué quieres cambiar…  («menos sonidos», «la voz más clara», «rediseña el final»)": {
+  "en": "Tell AI Sound Director what you want to change…  (\"fewer sounds\", \"clear voice\", \"redesign the ending\")",
+  "pt": "Diga ao AI Sound Director o que quer mudar…  («menos sons», «voz mais clara», «redesenhe o final»)",
+  "fr": "Dites à AI Sound Director ce que vous voulez changer…  (« moins de sons », « voix plus claire », « refais la fin »)",
+  "de": "Sag AI Sound Director, was du ändern willst…  („weniger Sounds“, „klarere Stimme“, „das Ende neu gestalten“)",
+  "it": "Di’ ad AI Sound Director cosa vuoi cambiare…  («meno suoni», «voce più chiara», «riprogetta il finale»)"
+ },
+ "Dirige el sonido (todo en Auto: decide la IA)": {
+  "en": "Direct the sound (all on Auto: the AI decides)",
+  "pt": "Dirija o som (tudo em Auto: a IA decide)",
+  "fr": "Dirigez le son (tout sur Auto : l’IA décide)",
+  "de": "Lenke den Sound (alles auf Auto: die KI entscheidet)",
+  "it": "Dirigi il suono (tutto su Auto: decide l’IA)"
+ },
+ "Diseño IA: {d}": {
+  "en": "AI design: {d}",
+  "pt": "Design da IA: {d}",
+  "fr": "Conception IA : {d}",
+  "de": "KI-Design: {d}",
+  "it": "Design IA: {d}"
+ },
+ "El sound designer de GO: escucha el video y decide qué suena, qué no y por qué.": {
+  "en": "GO’s sound designer: it listens to the video and decides what sounds, what doesn’t, and why.",
+  "pt": "O sound designer do GO: escuta o vídeo e decide o que soa, o que não soa e por quê.",
+  "fr": "Le sound designer de GO : il écoute la vidéo et décide ce qui sonne, ce qui ne sonne pas et pourquoi.",
+  "de": "Der Sounddesigner von GO: Er hört das Video und entscheidet, was klingt, was nicht und warum.",
+  "it": "Il sound designer di GO: ascolta il video e decide cosa suona, cosa no e perché."
+ },
+ "Encendido: en cada GO decide el sonido (voz, sonidos, música y ambiente). Lo de abajo es lo que decidió para este video.": {
+  "en": "On: on every GO it decides the sound (voice, sounds, music and ambience). Below is what it decided for this video.",
+  "pt": "Ligado: em cada GO decide o som (voz, sons, música e ambiente). Abaixo está o que decidiu para este vídeo.",
+  "fr": "Activé : à chaque GO il décide le son (voix, sons, musique et ambiance). Ci-dessous, ce qu’il a décidé pour cette vidéo.",
+  "de": "An: Bei jedem GO entscheidet er den Sound (Stimme, Sounds, Musik und Atmo). Unten steht, was er für dieses Video entschieden hat.",
+  "it": "Attivo: a ogni GO decide il suono (voce, suoni, musica e ambiente). Qui sotto c’è cosa ha deciso per questo video."
+ },
+ "Entendido: {q}…": {
+  "en": "Got it: {q}…",
+  "pt": "Entendido: {q}…",
+  "fr": "Compris : {q}…",
+  "de": "Verstanden: {q}…",
+  "it": "Capito: {q}…"
+ },
+ "Enviar": {
+  "en": "Send",
+  "pt": "Enviar",
+  "fr": "Envoyer",
+  "de": "Senden",
+  "it": "Invia"
+ },
+ "Hecho: {c} en «{v}».": {
+  "en": "Done: {c} set to \"{v}\".",
+  "pt": "Feito: {c} em «{v}».",
+  "fr": "Fait : {c} sur « {v} ».",
+  "de": "Erledigt: {c} auf „{v}“.",
+  "it": "Fatto: {c} su «{v}»."
+ },
+ "Hecho: {q}.": {
+  "en": "Done: {q}.",
+  "pt": "Feito: {q}.",
+  "fr": "Fait : {q}.",
+  "de": "Erledigt: {q}.",
+  "it": "Fatto: {q}."
+ },
+ "Importancia: {n} %": {
+  "en": "Importance: {n}%",
+  "pt": "Importância: {n} %",
+  "fr": "Importance : {n} %",
+  "de": "Wichtigkeit: {n} %",
+  "it": "Importanza: {n} %"
+ },
+ "La IA diseña el sonido de cada video; tú lo diriges · se aplica al generar con GO": {
+  "en": "The AI designs each video’s sound; you direct it · applied when you generate with GO",
+  "pt": "A IA cria o som de cada vídeo; você o dirige · aplica-se ao gerar com o GO",
+  "fr": "L’IA conçoit le son de chaque vidéo ; vous le dirigez · s’applique en générant avec GO",
+  "de": "Die KI gestaltet den Sound jedes Videos; du lenkst ihn · wird beim Erzeugen mit GO angewendet",
+  "it": "L’IA progetta il suono di ogni video; tu lo dirigi · si applica generando con GO"
+ },
+ "Menos…": {
+  "en": "Less…",
+  "pt": "Menos…",
+  "fr": "Moins…",
+  "de": "Weniger…",
+  "it": "Meno…"
+ },
+ "Más…": {
+  "en": "More…",
+  "pt": "Mais…",
+  "fr": "Plus…",
+  "de": "Mehr…",
+  "it": "Più…"
+ },
+ "No lo entendí. Prueba con: «menos sonidos», «la voz más clara», «más cinematográfico», «quita el sonido de …», «rediseña el final».": {
+  "en": "I didn’t understand. Try: \"fewer sounds\", \"clear voice\", \"more cinematic\", \"remove the sound of …\", \"redesign the ending\".",
+  "pt": "Não entendi. Tente: «menos sons», «voz mais clara», «mais cinematográfico», «tire o som de …», «redesenhe o final».",
+  "fr": "Je n’ai pas compris. Essayez : « moins de sons », « voix plus claire », « plus cinématographique », « enlève le son de … », « refais la fin ».",
+  "de": "Nicht verstanden. Versuch: „weniger Sounds“, „klarere Stimme“, „cinematischer“, „entferne den Sound von …“, „das Ende neu gestalten“.",
+  "it": "Non ho capito. Prova: «meno suoni», «voce più chiara», «più cinematografico», «togli il suono di …», «riprogetta il finale»."
+ },
+ "No pude leer el diseño de sonido: {e}": {
+  "en": "I couldn’t read the sound design: {e}",
+  "pt": "Não consegui ler o design de som: {e}",
+  "fr": "Impossible de lire la conception sonore : {e}",
+  "de": "Das Sounddesign konnte nicht gelesen werden: {e}",
+  "it": "Non ho potuto leggere il sound design: {e}"
+ },
+ "No se pudo poner en Resolve: {m}": {
+  "en": "Couldn’t place it in Resolve: {m}",
+  "pt": "Não foi possível colocar no Resolve: {m}",
+  "fr": "Impossible de le placer dans Resolve : {m}",
+  "de": "Konnte nicht in Resolve platziert werden: {m}",
+  "it": "Non è stato possibile metterlo in Resolve: {m}"
+ },
+ "No se pudo: {e}": {
+  "en": "It couldn’t be done: {e}",
+  "pt": "Não foi possível: {e}",
+  "fr": "Impossible : {e}",
+  "de": "Ging nicht: {e}",
+  "it": "Non è stato possibile: {e}"
+ },
+ "Parado.": {
+  "en": "Stopped.",
+  "pt": "Parado.",
+  "fr": "Arrêté.",
+  "de": "Gestoppt.",
+  "it": "Fermato."
+ },
+ "Poniendo el sonido en Resolve…": {
+  "en": "Placing the sound in Resolve…",
+  "pt": "Colocando o som no Resolve…",
+  "fr": "Placement du son dans Resolve…",
+  "de": "Sound wird in Resolve gesetzt…",
+  "it": "Metto il suono in Resolve…"
+ },
+ "Por qué: {p}": {
+  "en": "Why: {p}",
+  "pt": "Por quê: {p}",
+  "fr": "Pourquoi : {p}",
+  "de": "Warum: {p}",
+  "it": "Perché: {p}"
+ },
+ "Preparando este momento…": {
+  "en": "Preparing this moment…",
+  "pt": "Preparando este momento…",
+  "fr": "Préparation de ce moment…",
+  "de": "Dieser Moment wird vorbereitet…",
+  "it": "Preparo questo momento…"
+ },
+ "Preparando «{c}»…": {
+  "en": "Preparing \"{c}\"…",
+  "pt": "Preparando «{c}»…",
+  "fr": "Préparation de « {c} »…",
+  "de": "„{c}“ wird vorbereitet…",
+  "it": "Preparo «{c}»…"
+ },
+ "Puesto en Resolve (pistas AI SFX).": {
+  "en": "Placed in Resolve (AI SFX tracks).",
+  "pt": "Colocado no Resolve (faixas AI SFX).",
+  "fr": "Placé dans Resolve (pistes AI SFX).",
+  "de": "In Resolve gesetzt (Spuren AI SFX).",
+  "it": "Messo in Resolve (tracce AI SFX)."
+ },
+ "Que suene": {
+  "en": "Let it play",
+  "pt": "Que soe",
+  "fr": "Le faire sonner",
+  "de": "Wieder abspielen",
+  "it": "Fallo suonare"
+ },
+ "Rediseñado: otras variaciones, mismas decisiones de fondo.": {
+  "en": "Redesigned: new variations, same underlying decisions.",
+  "pt": "Redesenhado: outras variações, mesmas decisões de fundo.",
+  "fr": "Reconçu : d’autres variations, mêmes décisions de fond.",
+  "de": "Neu gestaltet: andere Variationen, gleiche Grundentscheidungen.",
+  "it": "Riprogettato: altre variazioni, stesse decisioni di fondo."
+ },
+ "Rediseñando con «{c}: {v}»…": {
+  "en": "Redesigning with \"{c}: {v}\"…",
+  "pt": "Redesenhando com «{c}: {v}»…",
+  "fr": "Reconception avec « {c} : {v} »…",
+  "de": "Neugestaltung mit „{c}: {v}“…",
+  "it": "Riprogetto con «{c}: {v}»…"
+ },
+ "Rediseñando el sonido (lo bloqueado se queda)…": {
+  "en": "Redesigning the sound (locked sounds stay)…",
+  "pt": "Redesenhando o som (o bloqueado fica)…",
+  "fr": "Reconception du son (le verrouillé reste)…",
+  "de": "Sound wird neu gestaltet (Gesperrtes bleibt)…",
+  "it": "Riprogetto il suono (il bloccato resta)…"
+ },
+ "Rediseñar sonido": {
+  "en": "Redesign sound",
+  "pt": "Redesenhar som",
+  "fr": "Reconcevoir le son",
+  "de": "Sound neu gestalten",
+  "it": "Riprogetta il suono"
+ },
+ "Regenerar": {
+  "en": "Regenerate",
+  "pt": "Regenerar",
+  "fr": "Régénérer",
+  "de": "Neu erzeugen",
+  "it": "Rigenera"
+ },
+ "Rehaciendo solo este sonido…": {
+  "en": "Remaking only this sound…",
+  "pt": "Refazendo só este som…",
+  "fr": "Je refais seulement ce son…",
+  "de": "Nur dieser Sound wird neu gemacht…",
+  "it": "Rifaccio solo questo suono…"
+ },
+ "Silenciado por ti": {
+  "en": "Muted by you",
+  "pt": "Silenciado por você",
+  "fr": "Coupé par vous",
+  "de": "Von dir stummgeschaltet",
+  "it": "Silenziato da te"
+ },
+ "Silenciar": {
+  "en": "Mute",
+  "pt": "Silenciar",
+  "fr": "Couper",
+  "de": "Stummschalten",
+  "it": "Silenzia"
+ },
+ "Sonando este momento con AI Sound.": {
+  "en": "Playing this moment with AI Sound.",
+  "pt": "Tocando este momento com AI Sound.",
+  "fr": "Lecture de ce moment avec AI Sound.",
+  "de": "Dieser Moment läuft mit AI Sound.",
+  "it": "Suona questo momento con AI Sound."
+ },
+ "Sonando «{c}» desde {t} (15 s).": {
+  "en": "Playing \"{c}\" from {t} (15 s).",
+  "pt": "Tocando «{c}» desde {t} (15 s).",
+  "fr": "Lecture de « {c} » depuis {t} (15 s).",
+  "de": "„{c}“ läuft ab {t} (15 s).",
+  "it": "Suona «{c}» da {t} (15 s)."
+ },
+ "Sound Score": {
+  "en": "Sound Score",
+  "pt": "Sound Score",
+  "fr": "Sound Score",
+  "de": "Sound Score",
+  "it": "Sound Score"
+ },
+ "Tema: {t}": {
+  "en": "Theme: {t}",
+  "pt": "Tema: {t}",
+  "fr": "Thème : {t}",
+  "de": "Thema: {t}",
+  "it": "Tema: {t}"
+ },
+ "Toca un sonido en la línea de tiempo": {
+  "en": "Tap a sound on the timeline",
+  "pt": "Toque um som na linha do tempo",
+  "fr": "Touchez un son sur la timeline",
+  "de": "Tippe auf einen Sound in der Zeitleiste",
+  "it": "Tocca un suono sulla timeline"
+ },
+ "Todo como lo decidió la IA (controles en Auto, sin retoques).": {
+  "en": "Everything as the AI decided (controls on Auto, no tweaks).",
+  "pt": "Tudo como a IA decidiu (controles em Auto, sem retoques).",
+  "fr": "Tout comme l’IA l’a décidé (réglages sur Auto, sans retouches).",
+  "de": "Alles wie von der KI entschieden (Regler auf Auto, keine Anpassungen).",
+  "it": "Tutto come ha deciso l’IA (controlli su Auto, senza ritocchi)."
+ },
+ "Verás qué hizo la IA, por qué, y podrás oírlo, pedir menos o más, regenerarlo, silenciarlo o bloquearlo.": {
+  "en": "You’ll see what the AI did and why, and you can play it, ask for less or more, regenerate, mute or lock it.",
+  "pt": "Você verá o que a IA fez e por quê, e poderá ouvir, pedir menos ou mais, regenerar, silenciar ou bloquear.",
+  "fr": "Vous verrez ce que l’IA a fait et pourquoi, et pourrez l’écouter, demander moins ou plus, le régénérer, le couper ou le verrouiller.",
+  "de": "Du siehst, was die KI gemacht hat und warum, und kannst es anhören, weniger oder mehr verlangen, neu erzeugen, stummschalten oder sperren.",
+  "it": "Vedrai cosa ha fatto l’IA e perché, e potrai ascoltarlo, chiedere meno o più, rigenerarlo, silenziarlo o bloccarlo."
+ },
+ "Volviendo a lo que decidió la IA…": {
+  "en": "Going back to what the AI decided…",
+  "pt": "Voltando ao que a IA decidiu…",
+  "fr": "Retour à ce que l’IA a décidé…",
+  "de": "Zurück zu dem, was die KI entschieden hat…",
+  "it": "Torno a quello che ha deciso l’IA…"
+ },
+ "sin música": {
+  "en": "no music",
+  "pt": "sem música",
+  "fr": "sans musique",
+  "de": "keine Musik",
+  "it": "senza musica"
+ },
+ "{v} (el último que pasó por GO)": {
+  "en": "{v} (the last one through GO)",
+  "pt": "{v} (o último que passou pelo GO)",
+  "fr": "{v} (le dernier passé par GO)",
+  "de": "{v} (das letzte, das durch GO lief)",
+  "it": "{v} (l’ultimo passato da GO)"
+ },
+ "■": {
+  "en": "■",
+  "pt": "■",
+  "fr": "■",
+  "de": "■",
+  "it": "■"
+ },
+ "▶  AI Sound": {
+  "en": "▶  AI Sound",
+  "pt": "▶  AI Sound",
+  "fr": "▶  AI Sound",
+  "de": "▶  AI Sound",
+  "it": "▶  AI Sound"
+ },
+ "▶  Original": {
+  "en": "▶  Original",
+  "pt": "▶  Original",
+  "fr": "▶  Original",
+  "de": "▶  Original",
+  "it": "▶  Originale"
+ },
+ "▶  Oír": {
+  "en": "▶  Play",
+  "pt": "▶  Ouvir",
+  "fr": "▶  Écouter",
+  "de": "▶  Anhören",
+  "it": "▶  Ascolta"
+ },
+ " + capa a la medida": {
+  "en": " + tailored layer",
+  "pt": " + camada sob medida",
+  "fr": " + couche sur mesure",
+  "de": " + maßgeschneiderte Ebene",
+  "it": " + strato su misura"
+ },
+ " + clic": {
+  "en": " + click",
+  "pt": " + clique",
+  "fr": " + clic",
+  "de": " + Klick",
+  "it": " + clic"
+ },
+ "Elige un video en Inicio y haz GO: AI Sound Director lo escucha y diseña su sonido.": {
+  "en": "Pick a video in Home and press GO: AI Sound Director listens to it and designs its sound.",
+  "pt": "Escolha um vídeo no Início e faça GO: o AI Sound Director o escuta e cria o som.",
+  "fr": "Choisissez une vidéo dans Accueil et lancez GO : AI Sound Director l’écoute et conçoit son son.",
+  "de": "Wähle ein Video in Start und drücke GO: AI Sound Director hört es und gestaltet seinen Sound.",
+  "it": "Scegli un video in Home e premi GO: AI Sound Director lo ascolta e ne progetta il suono."
+ },
+ "Haz GO con este video (con AI Sound Director encendido) y aquí verás cómo lo diseñó.": {
+  "en": "Run GO with this video (with AI Sound Director on) and you’ll see here how it designed it.",
+  "pt": "Faça GO com este vídeo (com o AI Sound Director ligado) e verá aqui como ele o criou.",
+  "fr": "Lancez GO avec cette vidéo (AI Sound Director activé) et vous verrez ici comment il l’a conçue.",
+  "de": "Starte GO mit diesem Video (AI Sound Director an) und du siehst hier, wie er es gestaltet hat.",
+  "it": "Fai GO con questo video (con AI Sound Director acceso) e qui vedrai come l’ha progettato."
+ },
+ "Limpio": {
+  "en": "Clean",
+  "pt": "Limpo",
+  "fr": "Épuré",
+  "de": "Clean",
+  "it": "Pulito"
+ },
+ "Cinemático": {
+  "en": "Cinematic",
+  "pt": "Cinematográfico",
+  "fr": "Cinématique",
+  "de": "Cinematisch",
+  "it": "Cinematografico"
+ },
+ "Enérgico": {
+  "en": "Energetic",
+  "pt": "Enérgico",
+  "fr": "Énergique",
+  "de": "Energisch",
+  "it": "Energico"
+ },
+ "Mínimo": {
+  "en": "Minimal",
+  "pt": "Mínimo",
+  "fr": "Minimal",
+  "de": "Minimal",
+  "it": "Minimo"
+ },
+ "Potente": {
+  "en": "Powerful",
+  "pt": "Potente",
+  "fr": "Puissante",
+  "de": "Kräftig",
+  "it": "Potente"
+ },
+ "Mínima": {
+  "en": "Minimal",
+  "pt": "Mínima",
+  "fr": "Minimale",
+  "de": "Minimal",
+  "it": "Minima"
+ },
+ "Rica": {
+  "en": "Rich",
+  "pt": "Rica",
+  "fr": "Riche",
+  "de": "Reich",
+  "it": "Ricca"
+ },
+ "Equilibrio": {
+  "en": "Balanced",
+  "pt": "Equilíbrio",
+  "fr": "Équilibre",
+  "de": "Ausgewogen",
+  "it": "Equilibrio"
+ },
+ "Máxima": {
+  "en": "Maximum",
+  "pt": "Máxima",
+  "fr": "Maximale",
+  "de": "Maximal",
+  "it": "Massima"
+ },
+ "Sin": {
+  "en": "None",
+  "pt": "Sem",
+  "fr": "Aucune",
+  "de": "Keine",
+  "it": "Nessuna"
+ },
+ "Enérgica": {
+  "en": "Energetic",
+  "pt": "Enérgica",
+  "fr": "Énergique",
+  "de": "Energisch",
+  "it": "Energica"
+ },
+ "Sutil": {
+  "en": "Subtle",
+  "pt": "Sutil",
+  "fr": "Subtile",
+  "de": "Dezent",
+  "it": "Sottile"
+ },
+ "Inmersivo": {
+  "en": "Immersive",
+  "pt": "Imersivo",
+  "fr": "Immersive",
+  "de": "Immersiv",
+  "it": "Immersivo"
+ },
+ "Estilo": {
+  "en": "Style",
+  "pt": "Estilo",
+  "fr": "Style",
+  "de": "Stil",
+  "it": "Stile"
+ },
+ "Densidad de sonidos": {
+  "en": "Sound density",
+  "pt": "Densidade de sons",
+  "fr": "Densité de sons",
+  "de": "Sound-Dichte",
+  "it": "Densità di suoni"
+ },
+ "Prioridad de la voz": {
+  "en": "Voice priority",
+  "pt": "Prioridade da voz",
+  "fr": "Priorité de la voix",
+  "de": "Stimm-Priorität",
+  "it": "Priorità della voce"
+ },
+ "Música": {
+  "en": "Music",
+  "pt": "Música",
+  "fr": "Musique",
+  "de": "Musik",
+  "it": "Musica"
+ },
+ "VIDEO": {
+  "en": "VIDEO",
+  "pt": "VÍDEO",
+  "fr": "VIDÉO",
+  "de": "VIDEO",
+  "it": "VIDEO"
+ },
+ "VOZ": {
+  "en": "VOICE",
+  "pt": "VOZ",
+  "fr": "VOIX",
+  "de": "STIMME",
+  "it": "VOCE"
+ },
+ "MÚSICA": {
+  "en": "MUSIC",
+  "pt": "MÚSICA",
+  "fr": "MUSIQUE",
+  "de": "MUSIK",
+  "it": "MUSICA"
+ },
+ "AMBIENTE": {
+  "en": "AMBIENCE",
+  "pt": "AMBIENTE",
+  "fr": "AMBIANCE",
+  "de": "ATMO",
+  "it": "AMBIENTE"
+ },
+ "SONIDOS IA": {
+  "en": "AI SOUNDS",
+  "pt": "SONS IA",
+  "fr": "SONS IA",
+  "de": "KI-SOUNDS",
+  "it": "SUONI IA"
+ },
+ "Voz": {
+  "en": "Voice",
+  "pt": "Voz",
+  "fr": "Voix",
+  "de": "Stimme",
+  "it": "Voce"
+ },
+ "Ruido": {
+  "en": "Noise",
+  "pt": "Ruído",
+  "fr": "Bruit",
+  "de": "Rauschen",
+  "it": "Rumore"
+ },
+ "Sonido de motions": {
+  "en": "Motion sound",
+  "pt": "Som dos motions",
+  "fr": "Son des motions",
+  "de": "Motion-Sound",
+  "it": "Suono dei motion"
+ },
+ "Master": {
+  "en": "Master",
+  "pt": "Master",
+  "fr": "Master",
+  "de": "Master",
+  "it": "Master"
+ },
+ "Excelente": {
+  "en": "Excellent",
+  "pt": "Excelente",
+  "fr": "Excellente",
+  "de": "Ausgezeichnet",
+  "it": "Eccellente"
+ },
+ "Buena": {
+  "en": "Good",
+  "pt": "Boa",
+  "fr": "Bonne",
+  "de": "Gut",
+  "it": "Buona"
+ },
+ "Necesita atención": {
+  "en": "Needs attention",
+  "pt": "Precisa de atenção",
+  "fr": "À surveiller",
+  "de": "Braucht Aufmerksamkeit",
+  "it": "Da sistemare"
+ },
+ "Es música, no ruido": {
+  "en": "It’s music, not noise",
+  "pt": "É música, não ruído",
+  "fr": "C’est de la musique, pas du bruit",
+  "de": "Das ist Musik, kein Rauschen",
+  "it": "È musica, non rumore"
+ },
+ "No hace falta": {
+  "en": "Not needed",
+  "pt": "Não precisa",
+  "fr": "Pas nécessaire",
+  "de": "Nicht nötig",
+  "it": "Non serve"
+ },
+ "La del video se queda": {
+  "en": "The video’s own stays",
+  "pt": "A do vídeo fica",
+  "fr": "Celle de la vidéo reste",
+  "de": "Die des Videos bleibt",
+  "it": "Resta quella del video"
+ },
+ "La del video, ajustada": {
+  "en": "The video’s own, adjusted",
+  "pt": "A do vídeo, ajustada",
+  "fr": "Celle de la vidéo, ajustée",
+  "de": "Die des Videos, angepasst",
+  "it": "Quella del video, regolata"
+ },
+ "Añadida": {
+  "en": "Added",
+  "pt": "Adicionada",
+  "fr": "Ajoutée",
+  "de": "Hinzugefügt",
+  "it": "Aggiunta"
+ },
+ "Se cambiaría solo con permiso": {
+  "en": "Would change only with permission",
+  "pt": "Só mudaria com permissão",
+  "fr": "Ne changerait qu’avec permission",
+  "de": "Würde nur mit Erlaubnis geändert",
+  "it": "Cambierebbe solo con permesso"
+ },
+ "Sin música (falta un proveedor autorizado)": {
+  "en": "No music (an authorized provider is missing)",
+  "pt": "Sem música (falta um provedor autorizado)",
+  "fr": "Sans musique (il manque un fournisseur autorisé)",
+  "de": "Keine Musik (es fehlt ein autorisierter Anbieter)",
+  "it": "Senza musica (manca un fornitore autorizzato)"
+ },
+ "Preservado": {
+  "en": "Preserved",
+  "pt": "Preservado",
+  "fr": "Préservée",
+  "de": "Erhalten",
+  "it": "Preservato"
+ },
+ "Diseñado": {
+  "en": "Designed",
+  "pt": "Criado",
+  "fr": "Conçue",
+  "de": "Gestaltet",
+  "it": "Progettato"
+ },
+ "Bajo la voz": {
+  "en": "Under the voice",
+  "pt": "Abaixo da voz",
+  "fr": "Sous la voix",
+  "de": "Unter der Stimme",
+  "it": "Sotto la voce"
+ },
+ "Golpe diseñado": {
+  "en": "Designed hit",
+  "pt": "Impacto criado",
+  "fr": "Impact conçu",
+  "de": "Gestalteter Hit",
+  "it": "Colpo progettato"
+ },
+ "Whoosh": {
+  "en": "Whoosh",
+  "pt": "Whoosh",
+  "fr": "Whoosh",
+  "de": "Whoosh",
+  "it": "Whoosh"
+ },
+ "Giro con slap": {
+  "en": "Spin with slap",
+  "pt": "Giro com slap",
+  "fr": "Rotation avec slap",
+  "de": "Dreh mit Slap",
+  "it": "Giro con slap"
+ },
+ "Riser": {
+  "en": "Riser",
+  "pt": "Riser",
+  "fr": "Riser",
+  "de": "Riser",
+  "it": "Riser"
+ },
+ "Trazo de rotulador": {
+  "en": "Marker stroke",
+  "pt": "Traço de marcador",
+  "fr": "Trait de feutre",
+  "de": "Markerstrich",
+  "it": "Tratto di pennarello"
+ },
+ "Acento tonal (el motivo del video)": {
+  "en": "Tonal accent (the video’s motif)",
+  "pt": "Acento tonal (o motivo do vídeo)",
+  "fr": "Accent tonal (le motif de la vidéo)",
+  "de": "Tonaler Akzent (das Motiv des Videos)",
+  "it": "Accento tonale (il motivo del video)"
+ },
+ "Toque de interfaz": {
+  "en": "UI tick",
+  "pt": "Toque de interface",
+  "fr": "Clic d’interface",
+  "de": "UI-Tick",
+  "it": "Tocco d’interfaccia"
+ },
+ "Pop": {
+  "en": "Pop",
+  "pt": "Pop",
+  "fr": "Pop",
+  "de": "Pop",
+  "it": "Pop"
+ },
+ "Quitar una capa": {
+  "en": "Remove a layer",
+  "pt": "Tirar uma camada",
+  "fr": "Retirer une couche",
+  "de": "Eine Ebene entfernen",
+  "it": "Togli uno strato"
+ },
+ "Otro sonido": {
+  "en": "Another sound",
+  "pt": "Outro som",
+  "fr": "Un autre son",
+  "de": "Anderer Sound",
+  "it": "Un altro suono"
+ },
+ "Más corto": {
+  "en": "Shorter",
+  "pt": "Mais curto",
+  "fr": "Plus court",
+  "de": "Kürzer",
+  "it": "Più corto"
+ },
+ "Más limpio": {
+  "en": "Cleaner",
+  "pt": "Mais limpo",
+  "fr": "Plus propre",
+  "de": "Sauberer",
+  "it": "Più pulito"
+ },
+ "Menos graves": {
+  "en": "Less bass",
+  "pt": "Menos graves",
+  "fr": "Moins de basses",
+  "de": "Weniger Bass",
+  "it": "Meno bassi"
+ },
+ "Menos ataque": {
+  "en": "Softer attack",
+  "pt": "Menos ataque",
+  "fr": "Attaque plus douce",
+  "de": "Weicherer Anschlag",
+  "it": "Attacco più morbido"
+ },
+ "Más simple": {
+  "en": "Simpler",
+  "pt": "Mais simples",
+  "fr": "Plus simple",
+  "de": "Einfacher",
+  "it": "Più semplice"
+ },
+ "Más bajo": {
+  "en": "Quieter",
+  "pt": "Mais baixo",
+  "fr": "Plus bas",
+  "de": "Leiser",
+  "it": "Più basso"
+ },
+ "Otra capa": {
+  "en": "Another layer",
+  "pt": "Outra camada",
+  "fr": "Une autre couche",
+  "de": "Weitere Ebene",
+  "it": "Un altro strato"
+ },
+ "Más profundidad": {
+  "en": "More depth",
+  "pt": "Mais profundidade",
+  "fr": "Plus de profondeur",
+  "de": "Mehr Tiefe",
+  "it": "Più profondità"
+ },
+ "Mejor ataque": {
+  "en": "Better attack",
+  "pt": "Ataque melhor",
+  "fr": "Meilleure attaque",
+  "de": "Besserer Anschlag",
+  "it": "Attacco migliore"
+ },
+ "Otra textura": {
+  "en": "Another texture",
+  "pt": "Outra textura",
+  "fr": "Une autre texture",
+  "de": "Andere Textur",
+  "it": "Un’altra texture"
+ },
+ "Más impacto": {
+  "en": "More impact",
+  "pt": "Mais impacto",
+  "fr": "Plus d’impact",
+  "de": "Mehr Wucht",
+  "it": "Più impatto"
+ },
+ "Más movimiento": {
+  "en": "More movement",
+  "pt": "Mais movimento",
+  "fr": "Plus de mouvement",
+  "de": "Mehr Bewegung",
+  "it": "Più movimento"
+ },
+ "Más alto": {
+  "en": "Louder",
+  "pt": "Mais alto",
+  "fr": "Plus fort",
+  "de": "Lauter",
+  "it": "Più forte"
+ },
+ "Interior": {
+  "en": "Indoors",
+  "pt": "Interior",
+  "fr": "Intérieur",
+  "de": "Innen",
+  "it": "Interno"
+ },
+ "Interior tranquilo": {
+  "en": "Quiet indoors",
+  "pt": "Interior tranquilo",
+  "fr": "Intérieur calme",
+  "de": "Ruhig innen",
+  "it": "Interno tranquillo"
+ },
+ "Habitación": {
+  "en": "Room",
+  "pt": "Quarto",
+  "fr": "Pièce",
+  "de": "Raum",
+  "it": "Stanza"
+ },
+ "Oficina": {
+  "en": "Office",
+  "pt": "Escritório",
+  "fr": "Bureau",
+  "de": "Büro",
+  "it": "Ufficio"
+ },
+ "Estudio": {
+  "en": "Studio",
+  "pt": "Estúdio",
+  "fr": "Studio",
+  "de": "Studio",
+  "it": "Studio"
+ },
+ "Calle": {
+  "en": "Street",
+  "pt": "Rua",
+  "fr": "Rue",
+  "de": "Straße",
+  "it": "Strada"
+ },
+ "Ciudad": {
+  "en": "City",
+  "pt": "Cidade",
+  "fr": "Ville",
+  "de": "Stadt",
+  "it": "Città"
+ },
+ "Exterior": {
+  "en": "Outdoors",
+  "pt": "Exterior",
+  "fr": "Extérieur",
+  "de": "Draußen",
+  "it": "Esterno"
+ },
+ "Naturaleza": {
+  "en": "Nature",
+  "pt": "Natureza",
+  "fr": "Nature",
+  "de": "Natur",
+  "it": "Natura"
+ },
+ "Bosque": {
+  "en": "Forest",
+  "pt": "Floresta",
+  "fr": "Forêt",
+  "de": "Wald",
+  "it": "Bosco"
+ },
+ "Parque": {
+  "en": "Park",
+  "pt": "Parque",
+  "fr": "Parc",
+  "de": "Park",
+  "it": "Parco"
+ },
+ "Gente": {
+  "en": "Crowd",
+  "pt": "Gente",
+  "fr": "Foule",
+  "de": "Menschen",
+  "it": "Gente"
+ },
+ "Café": {
+  "en": "Café",
+  "pt": "Café",
+  "fr": "Café",
+  "de": "Café",
+  "it": "Caffè"
+ },
+ "Evento": {
+  "en": "Event",
+  "pt": "Evento",
+  "fr": "Événement",
+  "de": "Event",
+  "it": "Evento"
+ },
+ "Viento": {
+  "en": "Wind",
+  "pt": "Vento",
+  "fr": "Vent",
+  "de": "Wind",
+  "it": "Vento"
+ },
+ "Agua": {
+  "en": "Water",
+  "pt": "Água",
+  "fr": "Eau",
+  "de": "Wasser",
+  "it": "Acqua"
+ },
+ "Tráfico": {
+  "en": "Traffic",
+  "pt": "Trânsito",
+  "fr": "Circulation",
+  "de": "Verkehr",
+  "it": "Traffico"
+ },
+ "Música de fondo": {
+  "en": "Background music",
+  "pt": "Música de fundo",
+  "fr": "Musique de fond",
+  "de": "Hintergrundmusik",
+  "it": "Musica di sottofondo"
+ },
+ "El Sound Score se mide con la mezcla completa en el próximo GO.": {
+  "en": "The Sound Score is measured on the full mix at the next GO.",
+  "pt": "O Sound Score é medido com a mixagem completa no próximo GO.",
+  "fr": "Le Sound Score se mesure sur le mixage complet au prochain GO.",
+  "de": "Der Sound Score wird beim nächsten GO am kompletten Mix gemessen.",
+  "it": "Il Sound Score si misura sul mix completo al prossimo GO."
+ },
+ "Sound Score {s}: ": {
+  "en": "Sound Score {s}: ",
+  "pt": "Sound Score {s}: ",
+  "fr": "Sound Score {s} : ",
+  "de": "Sound Score {s}: ",
+  "it": "Sound Score {s}: "
+ },
+ "voz": {
+  "en": "voice",
+  "pt": "voz",
+  "fr": "voix",
+  "de": "Stimme",
+  "it": "voce"
+ },
+ "ruido": {
+  "en": "noise",
+  "pt": "ruído",
+  "fr": "bruit",
+  "de": "Rauschen",
+  "it": "rumore"
+ },
+ "sincronía": {
+  "en": "sync",
+  "pt": "sincronia",
+  "fr": "synchro",
+  "de": "Synchronität",
+  "it": "sincronia"
+ },
+ "música": {
+  "en": "music",
+  "pt": "música",
+  "fr": "musique",
+  "de": "Musik",
+  "it": "musica"
+ },
+ "consistencia": {
+  "en": "consistency",
+  "pt": "consistência",
+  "fr": "cohérence",
+  "de": "Konsistenz",
+  "it": "coerenza"
+ },
+ "protección de la voz": {
+  "en": "voice protection",
+  "pt": "proteção da voz",
+  "fr": "protection de la voix",
+  "de": "Stimmschutz",
+  "it": "protezione della voce"
+ },
+ "mezcla final": {
+  "en": "final mix",
+  "pt": "mixagem final",
+  "fr": "mixage final",
+  "de": "finaler Mix",
+  "it": "mix finale"
+ },
+ "La voz manda": {
+  "en": "Voice first",
+  "pt": "A voz manda",
+  "fr": "La voix d’abord",
+  "de": "Die Stimme führt",
+  "it": "La voce comanda"
+ },
+ "Revisada": {
+  "en": "Checked",
+  "pt": "Revisada",
+  "fr": "Vérifiée",
+  "de": "Geprüft",
+  "it": "Verificata"
+ },
+ "Nueva página SONIDO = AI Sound Director: la IA diseña el sonido de cada video (voz, sonidos, música y ambiente) y tú lo diriges. Viene apagada: enciéndela arriba de la página.": {
+  "en": "New SOUND page = AI Sound Director: the AI designs each video’s sound (voice, sounds, music and ambience) and you direct it. It starts off: turn it on at the top of the page.",
+  "pt": "Nova página SOM = AI Sound Director: a IA cria o som de cada vídeo (voz, sons, música e ambiente) e você o dirige. Vem desligada: ligue-a no topo da página.",
+  "fr": "Nouvelle page SON = AI Sound Director : l’IA conçoit le son de chaque vidéo (voix, sons, musique et ambiance) et vous le dirigez. Elle est désactivée : activez-la en haut de la page.",
+  "de": "Neue Seite SOUND = AI Sound Director: Die KI gestaltet den Sound jedes Videos (Stimme, Sounds, Musik und Atmo) und du lenkst ihn. Sie ist aus: Schalte sie oben auf der Seite ein.",
+  "it": "Nuova pagina SUONO = AI Sound Director: l’IA progetta il suono di ogni video (voce, suoni, musica e ambiente) e tu lo dirigi. È spenta: accendila in cima alla pagina."
+ },
+ "Decide caption a caption qué suena y qué se queda en silencio, y hace cada sonido a la medida de su animación. Los sonidos de antes se apagan, no se borran.": {
+  "en": "It decides caption by caption what sounds and what stays silent, and makes each sound to fit its animation. The old sounds are turned off, not deleted.",
+  "pt": "Decide legenda a legenda o que soa e o que fica em silêncio, e faz cada som sob medida para a sua animação. Os sons de antes são desligados, não apagados.",
+  "fr": "Il décide sous-titre par sous-titre ce qui sonne et ce qui reste silencieux, et crée chaque son sur mesure pour son animation. Les anciens sons sont désactivés, pas supprimés.",
+  "de": "Er entscheidet Untertitel für Untertitel, was klingt und was still bleibt, und macht jeden Sound passend zu seiner Animation. Die alten Sounds werden ausgeschaltet, nicht gelöscht.",
+  "it": "Decide sottotitolo per sottotitolo cosa suona e cosa resta in silenzio, e crea ogni suono su misura per la sua animazione. I suoni di prima si spengono, non si cancellano."
+ },
+ "Escucha el antes y el después (Original / AI Sound) y toca un sonido para oírlo, pedir menos o más, regenerarlo, silenciarlo o bloquearlo; o díselo con una frase.": {
+  "en": "Hear the before and after (Original / AI Sound) and tap a sound to play it, ask for less or more, regenerate, mute or lock it; or tell it in a sentence.",
+  "pt": "Ouça o antes e o depois (Original / AI Sound) e toque um som para ouvi-lo, pedir menos ou mais, regenerar, silenciar ou bloquear; ou diga numa frase.",
+  "fr": "Écoutez l’avant et l’après (Original / AI Sound) et touchez un son pour l’écouter, demander moins ou plus, le régénérer, le couper ou le verrouiller ; ou dites-le en une phrase.",
+  "de": "Hör das Vorher und Nachher (Original / AI Sound) und tippe auf einen Sound, um ihn anzuhören, weniger oder mehr zu verlangen, ihn neu zu erzeugen, stummzuschalten oder zu sperren; oder sag es in einem Satz.",
+  "it": "Ascolta il prima e il dopo (Original / AI Sound) e tocca un suono per ascoltarlo, chiedere meno o più, rigenerarlo, silenziarlo o bloccarlo; oppure diglielo con una frase."
+ },
+ "La voz limpia va en su propia pista (AI VOICE) y la original se apaga solo cuando la copia quedó bien puesta. El Sound Score te dice cómo quedó la mezcla.": {
+  "en": "The cleaned voice goes on its own track (AI VOICE) and the original is turned off only once the copy is properly in place. The Sound Score tells you how the mix turned out.",
+  "pt": "A voz limpa vai na sua própria faixa (AI VOICE) e a original só é desligada quando a cópia ficou bem colocada. O Sound Score diz como ficou a mixagem.",
+  "fr": "La voix nettoyée va sur sa propre piste (AI VOICE) et l’originale n’est coupée qu’une fois la copie bien placée. Le Sound Score vous dit comment est le mixage.",
+  "de": "Die gereinigte Stimme kommt auf ihre eigene Spur (AI VOICE), und das Original wird erst ausgeschaltet, wenn die Kopie richtig sitzt. Der Sound Score zeigt dir, wie der Mix geworden ist.",
+  "it": "La voce pulita va sulla sua traccia (AI VOICE) e l’originale si spegne solo quando la copia è ben posizionata. Il Sound Score ti dice com’è venuto il mix."
+ },
+ "El programa funciona ahora con Python 3.15.1 y PySide6 6.12.0, con las librerías al día.": {
+  "en": "The program now runs on Python 3.15.1 and PySide6 6.12.0, with up-to-date libraries.",
+  "pt": "O programa agora funciona com Python 3.15.1 e PySide6 6.12.0, com as bibliotecas em dia.",
+  "fr": "Le programme fonctionne désormais avec Python 3.15.1 et PySide6 6.12.0, avec des bibliothèques à jour.",
+  "de": "Das Programm läuft jetzt mit Python 3.15.1 und PySide6 6.12.0, mit aktuellen Bibliotheken.",
+  "it": "Il programma ora funziona con Python 3.15.1 e PySide6 6.12.0, con le librerie aggiornate."
+ },
+ "SOUND SCORE": {
+  "en": "SOUND SCORE",
+  "pt": "SOUND SCORE",
+  "fr": "SOUND SCORE",
+  "de": "SOUND SCORE",
+  "it": "SOUND SCORE"
+ },
+ "MOTIONS PRO": {
+  "en": "PRO MOTIONS",
+  "pt": "MOTIONS PRO",
+  "fr": "MOTIONS PRO",
+  "de": "PRO-MOTIONS",
+  "it": "MOTION PRO"
+ },
+ "sin motions de la PRO en este GO": {
+  "en": "no PRO motions in this GO",
+  "pt": "sem motions da PRO neste GO",
+  "fr": "pas de motions PRO dans ce GO",
+  "de": "keine PRO-Motions in diesem GO",
+  "it": "nessun motion PRO in questo GO"
+ },
+ "Lo que decidió para este video": {
+  "en": "What it decided for this video",
+  "pt": "O que decidiu para este vídeo",
+  "fr": "Ce qu’il a décidé pour cette vidéo",
+  "de": "Was er für dieses Video entschieden hat",
+  "it": "Cosa ha deciso per questo video"
+ },
+ "Línea de sonido · toca un sonido para verlo, oírlo o cambiarlo": {
+  "en": "Sound timeline · tap a sound to see, hear or change it",
+  "pt": "Linha de som · toque num som para vê-lo, ouvi-lo ou mudá-lo",
+  "fr": "Ligne sonore · touchez un son pour le voir, l’écouter ou le changer",
+  "de": "Sound-Zeitleiste · tippe auf einen Sound, um ihn zu sehen, zu hören oder zu ändern",
+  "it": "Linea del suono · tocca un suono per vederlo, ascoltarlo o cambiarlo"
+ },
+ "Hay cambios que aún no están en Resolve": {
+  "en": "There are changes not in Resolve yet",
+  "pt": "Há mudanças que ainda não estão no Resolve",
+  "fr": "Des changements ne sont pas encore dans Resolve",
+  "de": "Es gibt Änderungen, die noch nicht in Resolve sind",
+  "it": "Ci sono modifiche non ancora in Resolve"
+ },
+ "En Resolve y al día": {
+  "en": "In Resolve and up to date",
+  "pt": "No Resolve e em dia",
+  "fr": "Dans Resolve et à jour",
+  "de": "In Resolve und aktuell",
+  "it": "In Resolve e aggiornato"
+ },
+ "Haz GO con AI Sound Director encendido para ponerlo en Resolve": {
+  "en": "Run GO with AI Sound Director on to put it in Resolve",
+  "pt": "Faça GO com o AI Sound Director ligado para colocá-lo no Resolve",
+  "fr": "Lancez GO avec AI Sound Director activé pour le mettre dans Resolve",
+  "de": "Starte GO mit eingeschaltetem AI Sound Director, um es in Resolve zu setzen",
+  "it": "Fai GO con AI Sound Director attivo per metterlo in Resolve"
+ },
+ "Material: «{m}» de tu biblioteca (pasó el Quality Gate)": {
+  "en": "Material: “{m}” from your library (passed the Quality Gate)",
+  "pt": "Material: «{m}» da sua biblioteca (passou no Quality Gate)",
+  "fr": "Matériau : « {m} » de votre bibliothèque (Quality Gate réussi)",
+  "de": "Material: „{m}“ aus deiner Bibliothek (Quality Gate bestanden)",
+  "it": "Materiale: «{m}» dalla tua libreria (ha superato il Quality Gate)"
+ },
+ "Material: sintetizado a la medida de este movimiento": {
+  "en": "Material: synthesized to fit this movement",
+  "pt": "Material: sintetizado sob medida para este movimento",
+  "fr": "Matériau : synthétisé sur mesure pour ce mouvement",
+  "de": "Material: passend zu dieser Bewegung synthetisiert",
+  "it": "Materiale: sintetizzato su misura per questo movimento"
+ },
+ "Material: {f}": {
+  "en": "Material: {f}",
+  "pt": "Material: {f}",
+  "fr": "Matériau : {f}",
+  "de": "Material: {f}",
+  "it": "Materiale: {f}"
+ },
+ "Material": {
+  "en": "Material",
+  "pt": "Material",
+  "fr": "Matériau",
+  "de": "Material",
+  "it": "Materiale"
+ },
+ "Hecho a la medida": {
+  "en": "Made to measure",
+  "pt": "Feito sob medida",
+  "fr": "Sur mesure",
+  "de": "Maßgeschneidert",
+  "it": "Su misura"
+ },
+ "Ya está en Resolve.": {
+  "en": "It’s in Resolve now.",
+  "pt": "Já está no Resolve.",
+  "fr": "C’est dans Resolve.",
+  "de": "Ist jetzt in Resolve.",
+  "it": "È già in Resolve."
+ },
+ "Puesto en Resolve: sonidos, música, ambiente y voz del director; los de siempre, apagados.": {
+  "en": "Placed in Resolve: the director’s sounds, music, ambience and voice; the old ones, off.",
+  "pt": "Colocado no Resolve: sons, música, ambiente e voz do diretor; os de sempre, desligados.",
+  "fr": "Placé dans Resolve : sons, musique, ambiance et voix du directeur ; les anciens, coupés.",
+  "de": "In Resolve gesetzt: Sounds, Musik, Atmo und Stimme des Directors; die alten aus.",
+  "it": "Messo in Resolve: suoni, musica, ambiente e voce del director; quelli di sempre, spenti."
+ },
+ "Listo para el próximo GO.": {
+  "en": "Ready for the next GO.",
+  "pt": "Pronto para o próximo GO.",
+  "fr": "Prêt pour le prochain GO.",
+  "de": "Bereit für das nächste GO.",
+  "it": "Pronto per il prossimo GO."
+ },
+ "Resolve está cerrado: se pondrá con «Aplicar a Resolve» o en el próximo GO.": {
+  "en": "Resolve is closed: it will go in with “Apply to Resolve” or at the next GO.",
+  "pt": "O Resolve está fechado: será colocado com «Aplicar ao Resolve» ou no próximo GO.",
+  "fr": "Resolve est fermé : ce sera placé avec « Appliquer à Resolve » ou au prochain GO.",
+  "de": "Resolve ist geschlossen: kommt mit „Auf Resolve anwenden“ oder beim nächsten GO.",
+  "it": "Resolve è chiuso: verrà messo con «Applica a Resolve» o al prossimo GO."
+ },
+ "tu biblioteca (Film Score: cama tonal)": {
+  "en": "your library (Film Score: tonal bed)",
+  "pt": "sua biblioteca (Film Score: cama tonal)",
+  "fr": "votre bibliothèque (Film Score : nappe tonale)",
+  "de": "deine Bibliothek (Film Score: tonales Bett)",
+  "it": "la tua libreria (Film Score: tappeto tonale)"
+ },
+ "tu biblioteca (grabación de ambiente)": {
+  "en": "your library (ambience recording)",
+  "pt": "sua biblioteca (gravação de ambiente)",
+  "fr": "votre bibliothèque (enregistrement d’ambiance)",
+  "de": "deine Bibliothek (Atmo-Aufnahme)",
+  "it": "la tua libreria (registrazione d’ambiente)"
+ },
+ "AI Sound Director se encarga de todo el sonido: los sonidos de las reglas de antes ya no suenan, y los de los motions (también los del Tema 1) los rehace a la medida.": {
+  "en": "AI Sound Director now handles all the sound: the old rule sounds no longer play, and motion sounds (Theme 1 too) are rebuilt to fit.",
+  "pt": "O AI Sound Director cuida de todo o som: os sons das regras antigas já não tocam, e os dos motions (também os do Tema 1) são refeitos sob medida.",
+  "fr": "AI Sound Director gère tout le son : les sons des anciennes règles ne jouent plus, et ceux des motions (le Thème 1 aussi) sont refaits sur mesure.",
+  "de": "AI Sound Director übernimmt den ganzen Sound: die Sounds der alten Regeln laufen nicht mehr, und die der Motions (auch Thema 1) werden passend neu gebaut.",
+  "it": "AI Sound Director si occupa di tutto il suono: i suoni delle vecchie regole non suonano più e quelli dei motion (anche del Tema 1) vengono rifatti su misura."
+ },
+ "Usa todas tus bibliotecas de sonido: miles de whooshes, golpes, risers y tonos, camas de música de score y ambientes reales, cada uno revisado antes de usarlo.": {
+  "en": "It uses all your sound libraries: thousands of whooshes, hits, risers and tones, score music beds and real ambiences, each checked before use.",
+  "pt": "Usa todas as suas bibliotecas de som: milhares de whooshes, impactos, risers e tons, camas de trilha e ambientes reais, cada um revisado antes de usar.",
+  "fr": "Il utilise toutes vos bibliothèques sonores : des milliers de whooshes, impacts, risers et tons, des nappes de musique de film et de vraies ambiances, chacun vérifié avant usage.",
+  "de": "Er nutzt alle deine Sound-Bibliotheken: Tausende Whooshes, Hits, Riser und Töne, Score-Musikbetten und echte Atmos, jeder vor dem Einsatz geprüft.",
+  "it": "Usa tutte le tue librerie di suoni: migliaia di whoosh, colpi, riser e toni, tappeti di musica da film e ambienti reali, ognuno verificato prima di usarlo."
+ },
+ "Si no hay música de Epidemic, pone una cama de score de tus colecciones, siempre por debajo de la voz; el ambiente sale de tus grabaciones del mismo entorno.": {
+  "en": "Without Epidemic music, it lays a score bed from your collections, always under the voice; ambience comes from your recordings of the same setting.",
+  "pt": "Sem música do Epidemic, coloca uma cama de trilha das suas coleções, sempre abaixo da voz; o ambiente vem das suas gravações do mesmo lugar.",
+  "fr": "Sans musique Epidemic, il pose une nappe de musique de film de vos collections, toujours sous la voix ; l’ambiance vient de vos enregistrements du même lieu.",
+  "de": "Ohne Epidemic-Musik legt er ein Score-Bett aus deinen Sammlungen, immer unter der Stimme; die Atmo stammt aus deinen Aufnahmen derselben Umgebung.",
+  "it": "Senza musica Epidemic mette un tappeto da film dalle tue collezioni, sempre sotto la voce; l’ambiente viene dalle tue registrazioni dello stesso luogo."
+ },
+ "La página SONIDO aplica sola cada cambio en Resolve y te dice si todo está al día. Viene encendida.": {
+  "en": "The SOUND page applies every change in Resolve by itself and tells you whether everything is up to date. It comes switched on.",
+  "pt": "A página SOM aplica sozinha cada mudança no Resolve e diz se está tudo em dia. Vem ligada.",
+  "fr": "La page SON applique seule chaque changement dans Resolve et vous dit si tout est à jour. Elle est activée.",
+  "de": "Die Seite SOUND überträgt jede Änderung selbst nach Resolve und zeigt, ob alles aktuell ist. Sie ist eingeschaltet.",
+  "it": "La pagina SUONO applica da sola ogni modifica in Resolve e ti dice se è tutto aggiornato. È attiva."
  }
 }
