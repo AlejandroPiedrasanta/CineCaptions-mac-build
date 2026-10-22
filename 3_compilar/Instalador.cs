@@ -26,6 +26,7 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -1139,7 +1140,9 @@ class Instalacion
                             if (pct != ultimoPct && (DateTime.Now - ultimo).TotalMilliseconds > 120)
                             {
                                 ultimoPct = pct; ultimo = DateTime.Now;
-                                Detalle(pCopiar, string.Format("{0}  ({1:N0} de {2:N0} MB)", rel.Replace('/', '\\'), hecho / 1048576, total / 1048576), pct);
+                                // v5.41 (diseño A): «99 de 1021 MB» arriba y solo el nombre corto del archivo debajo (sin ruta interna ni el código largo)
+                                string corto = Regex.Replace(Path.GetFileName(rel.TrimEnd('/')), "-[0-9a-f]{16,}(?=\\.)", "");
+                                Detalle(pCopiar, string.Format("{0} de {1} MB\n{2}", hecho / 1048576, total / 1048576, corto), pct);
                             }
                         }
                     }
@@ -2331,7 +2334,8 @@ class Ventana : Form
     BotonCirculo bPin, bMin, bMax, bCer;
     Panel cuerpo;
     ListaPasos lista;
-    Label lblEstado, lblInfo, lblFirma;
+    Label lblEstado, lblInfo, lblFirma, lblPct, lblNota;
+    DateTime inicioTrabajo;
     BarraModerna barra;
     BotonPildora boton;
     LinkLabel lnkDetalles, lnkOmitir;
@@ -2426,22 +2430,30 @@ class Ventana : Form
         sep.SetBounds(E(424), E(18), Math.Max(1, E(1)), E(290));
         cuerpo.Controls.Add(sep);
 
+        // v5.41 (diseño A elegido por el usuario): el % TOTAL en grande junto al título, la barra justo debajo, «99 de 1021 MB · quedan unos 2 min»
+        // y el archivo en una segunda línea; el botón grande se encoge mientras trabaja y vuelve al final
         lblEstado = Etiqueta(op.Desinstalar ? "Listo para desinstalar" : "Preparando la instalación...", 14f, true, Color.White);
-        lblEstado.SetBounds(E(450), E(30), E(400), E(64));
+        lblEstado.SetBounds(E(450), E(24), E(300), E(44));
+        lblEstado.AutoEllipsis = true;
+        lblPct = Etiqueta("", 20f, true, Tema.Cian);
+        lblPct.TextAlign = ContentAlignment.MiddleRight;
+        lblPct.SetBounds(E(752), E(20), E(100), E(46));
         barra = new BarraModerna();
-        barra.SetBounds(E(452), E(104), E(396), E(14));
+        barra.SetBounds(E(452), E(76), E(396), E(14));
         cuerpo.Controls.Add(barra);
         lblInfo = Etiqueta(TextoInfo(), 9.5f, false, Tema.Suave);
-        lblInfo.SetBounds(E(450), E(132), E(400), E(70));
+        lblInfo.SetBounds(E(450), E(100), E(400), E(84));
         lblInfo.AutoEllipsis = true;
+        lblNota = Etiqueta("Tus proyectos, tu licencia y tus ajustes no se tocan.", 9.5f, false, Tema.Suave);
+        lblNota.SetBounds(E(450), E(152), E(400), E(22));
+        lblNota.Visible = false;
         if (op.Desinstalar)
         {
             // las dos casillas de la limpieza completa (marcadas: «sin dejar rastro»); los tamaños se calculan aparte, sin frenar la ventana
-            chkDatos = Casilla("Borrar mis datos, licencia y ajustes", E(450), E(128), op.BorrarDatos || !op.Silencioso);
-            chkModelos = Casilla("Borrar los modelos de voz e idioma descargados", E(450), E(158), op.BorrarModelos || !op.Silencioso);
-            new ToolTip().SetToolTip(chkDatos, "DaVinciSubtitles: proyectos, marcas, ajustes, caches y copias de seguridad. También libera la licencia de este equipo.");
-            new ToolTip().SetToolTip(chkModelos, "Whisper, Qwen3 y los paquetes de traducción que bajó CineCaptions. Si otro programa usa los mismos modelos, los volverá a bajar.");
-            lblInfo.SetBounds(E(450), E(188), E(400), E(20));
+            // v5.41: sin globos de ayuda (regla del usuario): lo que borran va escrito en la propia casilla
+            chkDatos = Casilla("Borrar mis datos, licencia y ajustes (y liberar la licencia)", E(450), E(118), op.BorrarDatos || !op.Silencioso);
+            chkModelos = Casilla("Borrar los modelos descargados (voz, IA y traducción)", E(450), E(148), op.BorrarModelos || !op.Silencioso);
+            lblInfo.SetBounds(E(450), E(180), E(400), E(24));
         }
 
         boton = new BotonPildora();
@@ -2672,6 +2684,7 @@ class Ventana : Form
         if (verRutas && panel == "log") MostrarPanel("log");          // el registro se cierra: no cabrian los dos
         lista.Visible = !verRutas; sep.Visible = !verRutas; lblEstado.Visible = !verRutas; barra.Visible = !verRutas;
         lblInfo.Visible = !verRutas; lblFirma.Visible = !verRutas; lnkDetalles.Visible = !verRutas;
+        lblPct.Visible = !verRutas; lblNota.Visible = !verRutas && trabajando && !op.Desinstalar;
         if (picMarca != null) picMarca.Visible = !verRutas;
         rutas.Visible = verRutas;
         boton.Bounds = verRutas ? new Rectangle(E(452), E(296), E(398), E(44)) : new Rectangle(E(452), E(211), E(398), E(56));
@@ -2751,14 +2764,20 @@ class Ventana : Form
             op.BorrarDatos = chkDatos.Checked;             // lo elegido al desinstalar (la copia en TEMP ya arranca con las casillas de la linea de comandos)
             op.BorrarModelos = chkModelos.Checked;
             chkDatos.Visible = false; chkModelos.Visible = false;
-            lblInfo.SetBounds(E(450), E(132), E(400), E(70));
+            lblInfo.SetBounds(E(450), E(100), E(400), E(84));
         }
         boton.Enabled = false;
         banner.Estado = 1;
         foreach (RutaInfo ri in rutas.Items) ri.Editable = false;      // ya no se cambia la carpeta
         rutas.Invalidate();
-        boton.Text = op.Desinstalar ? "DESINSTALANDO..." : "INSTALANDO...";
+        boton.Text = op.Desinstalar ? "Desinstalando..." : "Instalando...";
+        BotonTrabajando(true);
         lblEstado.Text = ins.Pasos[0].Accion;
+        lblPct.Text = "0 %";
+        lblInfo.Text = "";
+        lblInfo.SetBounds(E(450), E(100), E(400), E(48));              // dos líneas; debajo, la nota de que los datos no se tocan
+        lblNota.Visible = !op.Desinstalar;
+        inicioTrabajo = DateTime.Now;
         hilo = new Thread(delegate()
         {
             ins.Correr();
@@ -2766,6 +2785,35 @@ class Ventana : Form
         });
         hilo.IsBackground = true;
         hilo.Start();
+    }
+
+    // v5.41 (diseño A): mientras trabaja el botón es una píldora pequeña y discreta («Instalando...»); al final vuelve el botón grande
+    void BotonTrabajando(bool si)
+    {
+        if (si)
+        {
+            boton.SetBounds(E(452), E(196), E(200), E(44));
+            boton.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+            boton.Colores(Color.FromArgb(44, 58, 88), Color.FromArgb(36, 48, 74));
+        }
+        else
+        {
+            boton.SetBounds(E(452), E(211), E(398), E(56));
+            boton.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
+            if (op.Desinstalar) boton.Colores(Color.FromArgb(226, 92, 80), Color.FromArgb(150, 44, 60));
+            else boton.Colores(Tema.Acento, Tema.Cian);
+        }
+    }
+
+    // «quedan unos 2 min» a partir de lo hecho y el tiempo pasado (solo cuando ya hay base para estimarlo)
+    string Falta(double hecho)
+    {
+        double s = (DateTime.Now - inicioTrabajo).TotalSeconds;
+        if (hecho < 0.04 || hecho >= 0.995 || s < 4) return "";
+        double r = s * (1 - hecho) / hecho;
+        if (r < 50) return "menos de un minuto";
+        int min = (int)Math.Round(r / 60.0);
+        return min <= 1 ? "queda un minuto" : "quedan unos " + min + " min";
     }
 
     void Reintentar()
@@ -2790,6 +2838,10 @@ class Ventana : Form
         bool ok = !ins.HuboError;
         banner.Estado = ok ? 2 : 3;
         if (ok) barra.Valor = 1;                // con error la barra se queda donde se corto
+        BotonTrabajando(false);
+        lblNota.Visible = false;
+        lblInfo.SetBounds(E(450), E(100), E(400), E(84));
+        if (ok) lblPct.Text = "100 %";
         if (op.Desinstalar)
             lblEstado.Text = ok ? "Listo, se desinstaló" : "La desinstalación tuvo problemas";
         else
@@ -2869,11 +2921,6 @@ class Ventana : Form
             BeginInvoke(new MethodInvoker(delegate
             {
                 lista.Invalidate();
-                if (p.Estado == EstadoPaso.EnCurso)
-                {
-                    lblEstado.Text = p.Accion;
-                    if (!string.IsNullOrEmpty(p.Detalle)) lblInfo.Text = p.Detalle;
-                }
                 double total = 0, hecho = 0;
                 foreach (Paso x in ins.Pasos)
                 {
@@ -2881,7 +2928,20 @@ class Ventana : Form
                     if (x.Estado == EstadoPaso.EnCurso) hecho += x.Peso * Math.Max(0, x.Progreso) / 100.0;
                     else if (x.Estado != EstadoPaso.Pendiente) hecho += x.Peso;
                 }
-                barra.Valor = total > 0 ? hecho / total : 0;
+                double f = total > 0 ? hecho / total : 0;
+                barra.Valor = f;
+                if (!terminado) lblPct.Text = (int)Math.Floor(f * 100) + " %";
+                if (p.Estado == EstadoPaso.EnCurso)
+                {
+                    lblEstado.Text = p.Accion;
+                    // v5.41: la primera línea del detalle lleva «· quedan unos N min»; la segunda (el archivo) va debajo
+                    string falta = Falta(f);
+                    string d = p.Detalle ?? "";
+                    int salto = d.IndexOf('\n');
+                    string l1 = salto >= 0 ? d.Substring(0, salto) : d, l2 = salto >= 0 ? d.Substring(salto + 1) : "";
+                    if (falta.Length > 0) l1 = l1.Length > 0 ? l1 + "  ·  " + falta : falta;
+                    if (l1.Length > 0 || l2.Length > 0) lblInfo.Text = l2.Length > 0 ? l1 + "\n" + l2 : l1;
+                }
             }));
         }
         catch { }

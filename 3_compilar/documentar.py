@@ -35,7 +35,7 @@ REGISTRO = RAIZ / 'DOCUMENTACION' / 'REGISTRO_DE_CAMBIOS.txt'
 HUELLAS = RAIZ / '3_compilar' / 'huellas.json'
 MARCA_REGISTRO = '=== ENTRADAS (la más nueva arriba) ==='
 # lo que se vigila (lo que forma el programa y su documentación); 6_compilacion se rehace sola
-VIGILADO = ('1_codigo', '2_recursos', '3_compilar', '4_diseno', '5_licencias')
+VIGILADO = ('1_codigo', '2_recursos', '3_compilar', '4_diseno')      # el Administrador de Licencias vive en su propia carpeta y repositorio
 IGNORADO = re.compile(r'(__pycache__|\.pyc$|huellas\.json$|\.exe$|(^|/)0_LEEME\.txt$)')
 VIEJO = re.compile('Resolve ' + 'Creator ' + 'Subtitles|ResolveCreator' + 'Subtitles', re.I)
 
@@ -71,7 +71,6 @@ def indice():
         ('2_recursos/motor_qwen', '2_recursos\\motor_qwen\\  MOTOR DE VOZ E IA (corre en su propio Python 3.12)'),
         ('3_compilar', '3_compilar\\  COMPILAR EL .EXE'),
         ('4_diseno', '4_diseno\\  DISEÑO (banner e icono)'),
-        ('5_licencias', '5_licencias\\  ADMINISTRADOR Y KIT DE LICENCIAS (no va dentro del .exe)'),
     ]
     out = []
     for carpeta, titulo in grupos:
@@ -187,10 +186,6 @@ CARPETAS = {
     '4_diseno': ('DISEÑO', [
         'Lo que dibuja el banner y el icono del instalador, y notas sueltas. Nada de aquí va dentro',
         'del .exe: los scripts escriben su resultado en 3_compilar y 2_recursos.']),
-    '5_licencias': ('ADMINISTRADOR Y KIT DE LICENCIAS', [
-        'Tu Administrador de Licencias (el panel del vendedor) y el kit cinema_licencias. NO va dentro',
-        'del .exe de CineCaptions: la licencia de CineCaptions es 1_codigo/licencia.py. Instrucciones',
-        'completas del Administrador: LEEME.md (en esta carpeta).']),
     '6_compilacion': ('COMPILACIÓN (TEMPORAL)', [
         'Lo crea 3_compilar/Construir_Instalador.ps1. Se puede borrar entero: se rehace solo',
         '(la próxima compilación tarda más porque vuelve a preparar el entorno).']),
@@ -229,19 +224,6 @@ FIJAS = {
     '4_diseno/plantillas_virales/cal_h.json': 'calibración horizontal (la misma medida a 1920×1080)',
     '4_diseno/plantillas_virales/PLANTILLAS VIRALES CINEMA - como se hicieron.txt': 'el documento de cómo se crearon los packs «Plantillas virales cinema»',
     '2_recursos/plantillas_incluidas/Subtitulos basicos': 'pack «Subtítulos básicos» (horizontal y vertical)',
-    '5_licencias/administrador': 'el Administrador de Licencias (panel del vendedor, PySide6)',
-    '5_licencias/administrador/icono.ico': 'el icono del Administrador',
-    '5_licencias/administrador/version_info.txt': 'la ficha de versión del .exe del Administrador',
-    '5_licencias/instalador/imagenes': 'banner e icono del instalador del Administrador (los crea crear_imagenes.py)',
-    '5_licencias/programa/cinema_licencias': 'el kit en sí (paquete de Python: tiendas, ventanas, servidor)',
-    '5_licencias/programa/cinema_licencias.json': 'configuración de ejemplo del kit (la crea el Administrador)',
-    '5_licencias/instalador': 'cómo se arma el instalador del Administrador (NSIS)',
-    '5_licencias/programa': 'el kit cinema_licencias para meter licencias en un programa + ejemplos',
-    '5_licencias/pruebas': 'pruebas del kit y del Administrador contra tiendas falsas (sin internet)',
-    '5_licencias/servidor': 'el SQL del servidor de control opcional (Supabase)',
-    '5_licencias/LEEME.md': 'instrucciones completas del Administrador de Licencias',
-    '5_licencias/requirements.txt': 'librerías del Administrador',
-    '5_licencias/Instalar Administrador de Licencias 5.0.0.exe': 'el instalador del Administrador',
     '6_compilacion/python-3.15.1': 'el Python principal con el que se compila (sin tocar el sistema)',
     '6_compilacion/venv315': 'el entorno Python 3.15.1 con las librerías fijas de 3_compilar/requirements.txt',
     '6_compilacion/fuentes': 'copia del código preparada para PyInstaller',

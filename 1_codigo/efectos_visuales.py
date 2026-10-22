@@ -1255,6 +1255,7 @@ def aplicar(plan, al_estado=None, offset_frames=0):
         listos.append(e)
     datos = {'eventos': listos, 'fps': fps, 'inicio': info['inicio'], 'offset_frames': int(offset_frames or 0), 'v1': v1_comps, 'solo_audio': bool((plan or {}).get('solo_audio')),
              'solo_ai': bool((plan or {}).get('solo_ai')),
+             'destino_ai': (plan or {}).get('destino_ai'),                 # Sonido valida su ultimo proyecto/timeline DENTRO de Resolve
              'apagar_sfx': [str(x) for x in ((plan or {}).get('apagar_sfx') or [])],          # v5.37: los sonidos de Simple que el AI Sound Director apaga
              'movimiento': ({k: evento_v1.get(k) for k in ('zoom', 'temblor', 'transicion', 'cortes', 'golpes', 'fondo', 'saltos', 'zoom_saltos', 'zoom_intro', 'intro_gancho')}
                             if evento_v1 else None)}

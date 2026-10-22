@@ -196,7 +196,7 @@ def candidatos(consulta, formato='v', claves_=None):
     if claves_.get('pixabay'):
         fuentes.append(lambda: _pixabay(consulta, formato, claves_['pixabay']))
     fuentes += [lambda: _openverse(consulta, formato), lambda: _commons(consulta, formato)]
-    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures.thread import ThreadPoolExecutor      # v5.41: 3.15 la expone «lazy» en el paquete y el .exe no la despertaba
 
     def una(f):
         try:

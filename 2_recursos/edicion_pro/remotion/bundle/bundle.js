@@ -646,6 +646,8 @@ __webpack_require__.d(three_module_namespaceObject, {
 
 // EXTERNAL MODULE: ./node_modules/remotion/dist/esm/index.mjs
 var esm = __webpack_require__(3947);
+// EXTERNAL MODULE: ./node_modules/react/jsx-runtime.js
+var jsx_runtime = __webpack_require__(4848);
 ;// EXTERNAL MODULE: ./node_modules/react/index.js
 react_namespaceFn();
 
@@ -720,6 +722,7 @@ const rgb = (hex) => {
 
 
 
+
 let mapa = null;
 const useMapa = () => {
   const [m, setM] = (0,react_namespaceFn().useState)(null);
@@ -735,10 +738,10 @@ const useMapa = () => {
 };
 const Bandera = ({ iso, ancho, t }) => {
   const alto = ancho * 0.75, n = 22, w = ancho / n;
-  return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: ancho, height: alto * 1.12 } }, Array.from({ length: n }).map((_, i) => {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "relative", width: ancho, height: alto * 1.12 }, children: Array.from({ length: n }).map((_, i) => {
     const fase = i / n * Math.PI * 2 - t * 5.2;
     const amp = alto * 0.045 * (0.25 + 0.75 * (i / n));
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: {
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
       left: i * w,
       top: alto * 0.06 + Math.sin(fase) * amp,
@@ -746,8 +749,8 @@ const Bandera = ({ iso, ancho, t }) => {
       height: alto,
       overflow: "hidden",
       filter: `brightness(${(1 + 0.16 * Math.cos(fase)).toFixed(3)})`
-    } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`mapa/banderas/${iso}.svg`), style: { position: "absolute", left: -i * w, top: 0, width: ancho, height: alto } }));
-  }));
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`mapa/banderas/${iso}.svg`), style: { position: "absolute", left: -i * w, top: 0, width: ancho, height: alto } }) }, i);
+  }) });
 };
 const Ubicacion = ({ pais, nombre, kicker = "UBICACI\xD3N", acento = "#c9a46a", fondo = "#0a0f1e", fuente = "grotesk", salida = 0.4 }) => {
   useFuentes();
@@ -779,74 +782,98 @@ const Ubicacion = ({ pais, nombre, kicker = "UBICACI\xD3N", acento = "#c9a46a", 
   const carta = S(1.25, { damping: 15, stiffness: 140 });
   const nombreTxt = (nombre || (p == null ? void 0 : p.es) || iso.toUpperCase()).toUpperCase();
   const entra = (0,esm/* interpolate */.GW)(t, [0, 0.35], [0, 1], { extrapolateRight: "clamp" });
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, transform: `scale(${1 - 0.04 * q})` } }, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, transform: `scale(${1 - 0.04 * q})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: {
     background: `radial-gradient(120% 80% at 50% 35%, rgba(${ar},${ag},${ab},0.22), rgba(${ar},${ag},${ab},0) 60%), ${fondo}`,
     // base OPACA debajo
     clipPath: `circle(${(entra * 140).toFixed(2)}% at 50% 108%)`
-  } }, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: {
-    background: `linear-gradient(115deg, transparent 30%, rgba(${ar},${ag},${ab},0.10) 48%, transparent 62%)`,
-    transform: `translateX(${Math.sin(t * 0.6) * 6}%)`
-  } }), /* @__PURE__ */ React.createElement("svg", { width: mapW, height: mapH, viewBox: vb.map((v) => v.toFixed(2)).join(" "), style: { position: "absolute", left: 0, top: vertical ? H * 0.04 : 0 } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("filter", { id: "brillo", x: "-50%", y: "-50%", width: "200%", height: "200%" }, /* @__PURE__ */ React.createElement("feGaussianBlur", { stdDeviation: Math.max(0.6, vb[2] / 160), result: "b" }), /* @__PURE__ */ React.createElement("feMerge", null, /* @__PURE__ */ React.createElement("feMergeNode", { in: "b" }), /* @__PURE__ */ React.createElement("feMergeNode", { in: "SourceGraphic" })))), m && Object.entries(m.paises).map(([k, v]) => /* @__PURE__ */ React.createElement("path", { key: k, d: v.d, fill: k === iso ? "none" : "rgba(255,255,255,0.07)", stroke: "rgba(255,255,255,0.16)", strokeWidth: vb[2] / 900 })), p && /* @__PURE__ */ React.createElement(
-    "path",
-    {
-      d: p.d,
-      fill: `rgba(${ar},${ag},${ab},${(0.85 * clamp(luz)).toFixed(3)})`,
-      stroke: acento,
-      strokeWidth: vb[2] / 300,
-      filter: "url(#brillo)"
-    }
-  ), p && [0, 0.45, 0.9].map((o, i) => {
-    const r = ((t - 1.1 - o) % 1.35 + 1.35) % 1.35;
-    return t > 1.1 + o ? /* @__PURE__ */ React.createElement(
-      "circle",
-      {
-        key: i,
-        cx: p.centro[0],
-        cy: p.centro[1],
-        r: vb[2] / 18 * r,
-        fill: "none",
-        stroke: acento,
-        strokeWidth: vb[2] / 400,
-        opacity: (1 - r / 1.35) * 0.8
-      }
-    ) : null;
-  })), p && (() => {
-    const px = (p.centro[0] - vb[0]) / vb[2] * mapW, py = (p.centro[1] - vb[1]) / vb[3] * mapH + (vertical ? H * 0.04 : 0);
-    const tam = 90 * U;
-    return /* @__PURE__ */ React.createElement("svg", { width: tam, height: tam * 1.3, viewBox: "0 0 24 31", style: {
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: {
+      background: `linear-gradient(115deg, transparent 30%, rgba(${ar},${ag},${ab},0.10) 48%, transparent 62%)`,
+      transform: `translateX(${Math.sin(t * 0.6) * 6}%)`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: mapW, height: mapH, viewBox: vb.map((v) => v.toFixed(2)).join(" "), style: { position: "absolute", left: 0, top: vertical ? H * 0.04 : 0 }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "brillo", x: "-50%", y: "-50%", width: "200%", height: "200%", children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: Math.max(0.6, vb[2] / 160), result: "b" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "b" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+        ] })
+      ] }) }),
+      m && Object.entries(m.paises).map(([k, v]) => /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: v.d, fill: k === iso ? "none" : "rgba(255,255,255,0.07)", stroke: "rgba(255,255,255,0.16)", strokeWidth: vb[2] / 900 }, k)),
+      p && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d: p.d,
+          fill: `rgba(${ar},${ag},${ab},${(0.85 * clamp(luz)).toFixed(3)})`,
+          stroke: acento,
+          strokeWidth: vb[2] / 300,
+          filter: "url(#brillo)"
+        }
+      ),
+      p && [0, 0.45, 0.9].map((o, i) => {
+        const r = ((t - 1.1 - o) % 1.35 + 1.35) % 1.35;
+        return t > 1.1 + o ? /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "circle",
+          {
+            cx: p.centro[0],
+            cy: p.centro[1],
+            r: vb[2] / 18 * r,
+            fill: "none",
+            stroke: acento,
+            strokeWidth: vb[2] / 400,
+            opacity: (1 - r / 1.35) * 0.8
+          },
+          i
+        ) : null;
+      })
+    ] }),
+    p && (() => {
+      const px = (p.centro[0] - vb[0]) / vb[2] * mapW, py = (p.centro[1] - vb[1]) / vb[3] * mapH + (vertical ? H * 0.04 : 0);
+      const tam = 90 * U;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: tam, height: tam * 1.3, viewBox: "0 0 24 31", style: {
+        position: "absolute",
+        left: px - tam / 2,
+        top: py - tam * 1.3 - (1 - clamp(pin, 0, 1.2)) * 260 * U,
+        opacity: clamp(pin * 3),
+        filter: `drop-shadow(0 ${10 * U}px ${14 * U}px rgba(0,0,0,.5))`
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M12 0C5.4 0 0 5.2 0 11.7 0 20.4 12 31 12 31s12-10.6 12-19.3C24 5.2 18.6 0 12 0z", fill: acento }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "11.5", r: "4.6", fill: "#fff" })
+      ] });
+    })(),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "absolute",
-      left: px - tam / 2,
-      top: py - tam * 1.3 - (1 - clamp(pin, 0, 1.2)) * 260 * U,
-      opacity: clamp(pin * 3),
-      filter: `drop-shadow(0 ${10 * U}px ${14 * U}px rgba(0,0,0,.5))`
-    } }, /* @__PURE__ */ React.createElement("path", { d: "M12 0C5.4 0 0 5.2 0 11.7 0 20.4 12 31 12 31s12-10.6 12-19.3C24 5.2 18.6 0 12 0z", fill: acento }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "11.5", r: "4.6", fill: "#fff" }));
-  })(), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: vertical ? W / 2 : W * 0.81,
-    top: vertical ? H * 0.69 : H * 0.5,
-    transform: `translate(-50%, -50%) translateY(${((1 - carta) * 180 * U).toFixed(1)}px)`,
-    opacity: clamp(carta * 2),
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 26 * U
-  } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.mono, fontSize: 30 * U, letterSpacing: "0.32em", color: acento } }, (kicker || "").toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: {
-    padding: 14 * U,
-    borderRadius: 22 * U,
-    background: "rgba(255,255,255,0.06)",
-    border: `${2 * U}px solid rgba(${ar},${ag},${ab},0.55)`,
-    boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.45), 0 0 ${60 * U}px rgba(${ar},${ag},${ab},0.25)`
-  } }, /* @__PURE__ */ React.createElement(Bandera, { iso, ancho: (vertical ? 360 : 300) * U, t })), /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA[fuente] || FAMILIA.grotesk,
-    fontWeight: 700,
-    fontSize: Math.min(140 * U, (vertical ? W * 0.9 : W * 0.34) / Math.max(4, nombreTxt.length) * 1.7),
-    color: "#fff",
-    letterSpacing: "0.02em",
-    textShadow: `0 ${8 * U}px ${30 * U}px rgba(0,0,0,.5)`
-  } }, nombreTxt))));
+      left: vertical ? W / 2 : W * 0.81,
+      top: vertical ? H * 0.69 : H * 0.5,
+      transform: `translate(-50%, -50%) translateY(${((1 - carta) * 180 * U).toFixed(1)}px)`,
+      opacity: clamp(carta * 2),
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 26 * U
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.mono, fontSize: 30 * U, letterSpacing: "0.32em", color: acento }, children: (kicker || "").toUpperCase() }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        padding: 14 * U,
+        borderRadius: 22 * U,
+        background: "rgba(255,255,255,0.06)",
+        border: `${2 * U}px solid rgba(${ar},${ag},${ab},0.55)`,
+        boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.45), 0 0 ${60 * U}px rgba(${ar},${ag},${ab},0.25)`
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Bandera, { iso, ancho: (vertical ? 360 : 300) * U, t }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA[fuente] || FAMILIA.grotesk,
+        fontWeight: 700,
+        fontSize: Math.min(140 * U, (vertical ? W * 0.9 : W * 0.34) / Math.max(4, nombreTxt.length) * 1.7),
+        color: "#fff",
+        letterSpacing: "0.02em",
+        textShadow: `0 ${8 * U}px ${30 * U}px rgba(0,0,0,.5)`
+      }, children: nombreTxt })
+    ] })
+  ] }) });
 };
 
 ;// ./src/Plantillas.tsx
+
 
 
 const ESTILOS = {
@@ -875,13 +902,13 @@ const Particulas = ({ n = 18, color, tipo = "bokeh", semilla = "p" }) => {
   const { fps, width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
   const U = Math.min(W, H) / 1080, t = frame / fps;
   const [r, g, b] = rgb(color);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { pointerEvents: "none" } }, Array.from({ length: n }).map((_, i) => {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { pointerEvents: "none" }, children: Array.from({ length: n }).map((_, i) => {
     const x = (0,esm/* random */.yT)(`${semilla}x${i}`) * W, y0 = (0,esm/* random */.yT)(`${semilla}y${i}`) * H, v = 18 + (0,esm/* random */.yT)(`${semilla}v${i}`) * 40;
     const tam = (tipo === "destellos" ? 10 : 14) * U + (0,esm/* random */.yT)(`${semilla}s${i}`) * 34 * U;
     const y = ((y0 - t * v * U) % H + H) % H, osc = Math.sin(t * 1.3 + i) * 18 * U;
     const brillo = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 2.4 + i * 1.7));
     if (tipo === "petalos")
-      return /* @__PURE__ */ React.createElement("div", { key: i, style: {
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
         position: "absolute",
         left: x + osc,
         top: y,
@@ -890,10 +917,10 @@ const Particulas = ({ n = 18, color, tipo = "bokeh", semilla = "p" }) => {
         borderRadius: "60% 0 60% 0",
         background: `rgba(${r},${g},${b},${0.55 * brillo})`,
         transform: `rotate(${(t * 40 + i * 37) % 360}deg)`
-      } });
+      } }, i);
     if (tipo === "destellos")
-      return /* @__PURE__ */ React.createElement("svg", { key: i, width: tam, height: tam, viewBox: "0 0 10 10", style: { position: "absolute", left: x + osc, top: y, opacity: brillo } }, /* @__PURE__ */ React.createElement("path", { d: "M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z", fill: `rgb(${r},${g},${b})` }));
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: {
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: tam, height: tam, viewBox: "0 0 10 10", style: { position: "absolute", left: x + osc, top: y, opacity: brillo }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z", fill: `rgb(${r},${g},${b})` }) }, i);
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
       left: x + osc,
       top: y,
@@ -901,8 +928,8 @@ const Particulas = ({ n = 18, color, tipo = "bokeh", semilla = "p" }) => {
       height: tam,
       borderRadius: "50%",
       background: `radial-gradient(circle, rgba(${r},${g},${b},${0.5 * brillo}) 0%, rgba(${r},${g},${b},0) 70%)`
-    } });
-  }));
+    } }, i);
+  }) });
 };
 const Sticker = ({ src, tam, t0, x, y, saluda }) => {
   const S = useResorte();
@@ -911,7 +938,7 @@ const Sticker = ({ src, tam, t0, x, y, saluda }) => {
   const t = frame / fps, p = S(t0, { damping: 9, stiffness: 170 });
   if (!src || t < t0 - 0.05) return null;
   const giro = saluda ? Math.sin((t - t0) * 9) * 16 : Math.sin((t - t0) * 1.6) * 6;
-  return /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src, style: {
     position: "absolute",
     left: x - tam / 2,
     top: y - tam / 2 + Math.sin((t - t0) * 2) * tam * 0.04,
@@ -922,7 +949,7 @@ const Sticker = ({ src, tam, t0, x, y, saluda }) => {
     filter: `drop-shadow(0 ${tam * 0.06}px ${tam * 0.09}px rgba(0,0,0,.4))`
   } });
 };
-const Halo = ({ x, y, w, h, fuerza = 0.42, p = 1 }) => /* @__PURE__ */ React.createElement("div", { style: {
+const Halo = ({ x, y, w, h, fuerza = 0.42, p = 1 }) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
   position: "absolute",
   left: x - w / 2,
   top: y - h / 2,
@@ -937,7 +964,7 @@ const Escrito = ({ texto, t0, dur = 0.9, style }) => {
   const { fps } = (0,esm/* useVideoConfig */.Bk)();
   const p = clamp((frame / fps - t0) / dur);
   const e = 1 - Math.pow(1 - p, 3);
-  return /* @__PURE__ */ React.createElement("div", { style: { ...style, clipPath: `inset(-20% ${((1 - e) * 100).toFixed(2)}% -30% -5%)`, filter: `blur(${((1 - e) * 6).toFixed(2)}px)` } }, texto);
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { ...style, clipPath: `inset(-20% ${((1 - e) * 100).toFixed(2)}% -30% -5%)`, filter: `blur(${((1 - e) * 6).toFixed(2)}px)` }, children: texto });
 };
 const Titulo = ({ kicker = "", titulo, subtitulo = "", estilo = "dorado", letra = "script", adorno = "lineas", tarjeta = false, sticker = "", y = 30, escala = 1, salida = 0.4 }) => {
   useFuentes();
@@ -949,55 +976,66 @@ const Titulo = ({ kicker = "", titulo, subtitulo = "", estilo = "dorado", letra 
   const tam = Math.min(150 * U, W * 0.86 / Math.max(4, titulo.length) * (letra === "sans" ? 1.75 : 2.05));
   const linea = S(0.15, { damping: 18 }), k = S(0.05, { damping: 16 }), sub = S(0.75, { damping: 16 });
   const cy = H * y / 100;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, transform: `translateY(${(-q * 30 * U).toFixed(1)}px)` } }, !tarjeta && estilo !== "editorial" && /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: Math.min(W * 1.05, tam * titulo.length * 0.62 + 320 * U), h: tam * 2.6 + (subtitulo ? 90 * U : 0), p: k * 1.5 }), adorno !== "lineas" && adorno !== "ninguno" && /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: adorno === "petalos" ? "petalos" : adorno === "destellos" ? "destellos" : "bokeh", n: adorno === "bokeh" ? 14 : 22, semilla: titulo }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: W / 2,
-    top: cy,
-    transform: "translate(-50%,-50%)",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 14 * U,
-    padding: tarjeta ? `${34 * U}px ${56 * U}px` : 0,
-    borderRadius: 28 * U,
-    background: tarjeta ? E.tarjeta : "transparent",
-    backdropFilter: tarjeta ? "blur(10px)" : void 0,
-    border: tarjeta ? `${1.5 * U}px solid ${E.acento}55` : "none"
-  } }, kicker && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.mono,
-    fontSize: 28 * U,
-    letterSpacing: `${(0.5 - 0.2 * clamp(k)).toFixed(3)}em`,
-    color: E.acento,
-    opacity: clamp(k),
-    textTransform: "uppercase",
-    textShadow: `0 2px 12px ${E.sombra}`
-  } }, kicker), adorno === "lineas" && /* @__PURE__ */ React.createElement("div", { style: { width: 260 * U * clamp(linea), height: 2 * U, background: `linear-gradient(90deg, transparent, ${E.acento}, transparent)` } }), /* @__PURE__ */ React.createElement(
-    Escrito,
-    {
-      texto: titulo,
-      t0: 0.25,
-      dur: letra === "script" ? 1 : 0.6,
-      style: {
-        fontFamily: fam,
-        fontStyle: letra === "sans" ? "normal" : "italic",
-        fontWeight: letra === "sans" ? 700 : 400,
-        fontSize: tam,
-        lineHeight: 1.05,
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, transform: `translateY(${(-q * 30 * U).toFixed(1)}px)` }, children: [
+    !tarjeta && estilo !== "editorial" && /* @__PURE__ */ (0,jsx_runtime.jsx)(Halo, { x: W / 2, y: cy, w: Math.min(W * 1.05, tam * titulo.length * 0.62 + 320 * U), h: tam * 2.6 + (subtitulo ? 90 * U : 0), p: k * 1.5 }),
+    adorno !== "lineas" && adorno !== "ninguno" && /* @__PURE__ */ (0,jsx_runtime.jsx)(Particulas, { color: E.acento, tipo: adorno === "petalos" ? "petalos" : adorno === "destellos" ? "destellos" : "bokeh", n: adorno === "bokeh" ? 14 : 22, semilla: titulo }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: W / 2,
+      top: cy,
+      transform: "translate(-50%,-50%)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 14 * U,
+      padding: tarjeta ? `${34 * U}px ${56 * U}px` : 0,
+      borderRadius: 28 * U,
+      background: tarjeta ? E.tarjeta : "transparent",
+      backdropFilter: tarjeta ? "blur(10px)" : void 0,
+      border: tarjeta ? `${1.5 * U}px solid ${E.acento}55` : "none"
+    }, children: [
+      kicker && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.mono,
+        fontSize: 28 * U,
+        letterSpacing: `${(0.5 - 0.2 * clamp(k)).toFixed(3)}em`,
+        color: E.acento,
+        opacity: clamp(k),
+        textTransform: "uppercase",
+        textShadow: `0 2px 12px ${E.sombra}`
+      }, children: kicker }),
+      adorno === "lineas" && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 260 * U * clamp(linea), height: 2 * U, background: `linear-gradient(90deg, transparent, ${E.acento}, transparent)` } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        Escrito,
+        {
+          texto: titulo,
+          t0: 0.25,
+          dur: letra === "script" ? 1 : 0.6,
+          style: {
+            fontFamily: fam,
+            fontStyle: letra === "sans" ? "normal" : "italic",
+            fontWeight: letra === "sans" ? 700 : 400,
+            fontSize: tam,
+            lineHeight: 1.05,
+            color: E.texto,
+            whiteSpace: "nowrap",
+            textShadow: `0 ${3 * U}px ${8 * U}px rgba(0,0,0,.45), 0 ${6 * U}px ${26 * U}px ${E.sombra}, 0 0 ${30 * U}px ${E.acento}55`
+          }
+        }
+      ),
+      subtitulo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.grotesk,
+        fontWeight: 500,
+        fontSize: 40 * U,
+        letterSpacing: "0.08em",
         color: E.texto,
-        whiteSpace: "nowrap",
-        textShadow: `0 ${3 * U}px ${8 * U}px rgba(0,0,0,.45), 0 ${6 * U}px ${26 * U}px ${E.sombra}, 0 0 ${30 * U}px ${E.acento}55`
-      }
-    }
-  ), subtitulo && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.grotesk,
-    fontWeight: 500,
-    fontSize: 40 * U,
-    letterSpacing: "0.08em",
-    color: E.texto,
-    opacity: clamp(sub),
-    transform: `translateY(${((1 - clamp(sub)) * 16 * U).toFixed(1)}px)`,
-    textShadow: `0 2px 14px ${E.sombra}`
-  } }, subtitulo), adorno === "lineas" && /* @__PURE__ */ React.createElement("div", { style: { width: 160 * U * clamp(linea), height: 2 * U, background: `linear-gradient(90deg, transparent, ${E.acento}, transparent)` } })), sticker && /* @__PURE__ */ React.createElement(Sticker, { src: urlSticker(sticker), tam: 150 * U, t0: 0.9, x: W / 2 + Math.min(W * 0.36, tam * titulo.length * 0.26), y: cy - tam * 0.75 }));
+        opacity: clamp(sub),
+        transform: `translateY(${((1 - clamp(sub)) * 16 * U).toFixed(1)}px)`,
+        textShadow: `0 2px 14px ${E.sombra}`
+      }, children: subtitulo }),
+      adorno === "lineas" && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 160 * U * clamp(linea), height: 2 * U, background: `linear-gradient(90deg, transparent, ${E.acento}, transparent)` } })
+    ] }),
+    sticker && /* @__PURE__ */ (0,jsx_runtime.jsx)(Sticker, { src: urlSticker(sticker), tam: 150 * U, t0: 0.9, x: W / 2 + Math.min(W * 0.36, tam * titulo.length * 0.26), y: cy - tam * 0.75 })
+  ] });
 };
 const Saludo = ({ linea1 = "\xA1Hola", linea2 = "amigos!", estilo = "rosa", sticker = "emoji:waving_hand", y = 24, escala = 1, salida = 0.4 }) => {
   useFuentes();
@@ -1007,23 +1045,31 @@ const Saludo = ({ linea1 = "\xA1Hola", linea2 = "amigos!", estilo = "rosa", stic
   const E = est(estilo);
   const p2 = S(0.75, { damping: 11, stiffness: 150 });
   const cy = H * y / 100;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: W * 0.95, h: 360 * U }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "destellos", n: 14, semilla: linea1 + linea2 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: cy, transform: "translate(-50%,-50%)", textAlign: "center" } }, /* @__PURE__ */ React.createElement(Escrito, { texto: linea1, t0: 0.1, dur: 0.7, style: {
-    fontFamily: FAMILIA.serif,
-    fontStyle: "italic",
-    fontSize: 150 * U,
-    color: E.texto,
-    lineHeight: 1,
-    textShadow: `0 ${6 * U}px ${24 * U}px ${E.sombra}`
-  } }), /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 132 * U,
-    color: E.acento,
-    lineHeight: 1,
-    letterSpacing: "0.01em",
-    transform: `scale(${Math.max(1e-3, p2).toFixed(3)})`,
-    textShadow: `0 ${6 * U}px ${24 * U}px ${E.sombra}`
-  } }, linea2)), /* @__PURE__ */ React.createElement(Sticker, { src: urlSticker(sticker), tam: 190 * U, t0: 0.45, x: W / 2 + 330 * U, y: cy - 120 * U, saluda: true }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Halo, { x: W / 2, y: cy, w: W * 0.95, h: 360 * U }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Particulas, { color: E.acento, tipo: "destellos", n: 14, semilla: linea1 + linea2 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: W / 2, top: cy, transform: "translate(-50%,-50%)", textAlign: "center" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Escrito, { texto: linea1, t0: 0.1, dur: 0.7, style: {
+        fontFamily: FAMILIA.serif,
+        fontStyle: "italic",
+        fontSize: 150 * U,
+        color: E.texto,
+        lineHeight: 1,
+        textShadow: `0 ${6 * U}px ${24 * U}px ${E.sombra}`
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: 132 * U,
+        color: E.acento,
+        lineHeight: 1,
+        letterSpacing: "0.01em",
+        transform: `scale(${Math.max(1e-3, p2).toFixed(3)})`,
+        textShadow: `0 ${6 * U}px ${24 * U}px ${E.sombra}`
+      }, children: linea2 })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Sticker, { src: urlSticker(sticker), tam: 190 * U, t0: 0.45, x: W / 2 + 330 * U, y: cy - 120 * U, saluda: true })
+  ] });
 };
 const Capitulos = ({ capitulos = "Maquillaje,Ceremonia,Fiesta,El show", actual = 0, estilo = "blanco", y = 12, escala = 1, salida = 0.35 }) => {
   useFuentes();
@@ -1035,27 +1081,34 @@ const Capitulos = ({ capitulos = "Maquillaje,Ceremonia,Fiesta,El show", actual =
   const entra = S(0.05, { damping: 16 });
   const ancho = Math.min(W * 0.9, 220 * U * lista.length), paso = ancho / Math.max(1, lista.length - 1 || 1);
   const avance = clamp((0,esm/* interpolate */.GW)(t, [0.4, 1.4], [Math.max(0, actual - 1), actual], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) / Math.max(1, lista.length - 1));
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: (1 - q) * clamp(entra * 1.5) } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: (W - ancho) / 2, top: H * y / 100, width: ancho, transform: `translateY(${((1 - clamp(entra)) * -30 * U).toFixed(1)}px)` } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 18 * U, left: 0, width: ancho, height: 3 * U, background: "rgba(255,255,255,.25)", borderRadius: 3 * U } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 18 * U, left: 0, width: ancho * avance, height: 3 * U, background: E.acento, borderRadius: 3 * U, boxShadow: `0 0 ${12 * U}px ${E.acento}` } }), lista.map((c, i) => {
-    const on = i <= actual, x = lista.length > 1 ? i * paso : ancho / 2;
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: { position: "absolute", left: x, top: 0, transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 * U } }, /* @__PURE__ */ React.createElement("div", { style: {
-      width: 38 * U,
-      height: 38 * U,
-      borderRadius: "50%",
-      background: on ? E.acento : "rgba(0,0,0,.35)",
-      border: `${3 * U}px solid ${on ? E.acento : "rgba(255,255,255,.6)"}`,
-      boxShadow: i === actual ? `0 0 ${24 * U}px ${E.acento}` : "none",
-      transform: i === actual ? `scale(${(1 + 0.12 * Math.sin(t * 5)).toFixed(3)})` : "none"
-    } }), /* @__PURE__ */ React.createElement("div", { style: {
-      fontFamily: FAMILIA.mono,
-      fontSize: 24 * U,
-      letterSpacing: "0.14em",
-      color: on ? "#fff" : "rgba(255,255,255,.65)",
-      textTransform: "uppercase",
-      whiteSpace: "nowrap",
-      textShadow: "0 2px 10px rgba(0,0,0,.7)",
-      fontWeight: i === actual ? 700 : 400
-    } }, c));
-  })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: (1 - q) * clamp(entra * 1.5) }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: (W - ancho) / 2, top: H * y / 100, width: ancho, transform: `translateY(${((1 - clamp(entra)) * -30 * U).toFixed(1)}px)` }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", top: 18 * U, left: 0, width: ancho, height: 3 * U, background: "rgba(255,255,255,.25)", borderRadius: 3 * U } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", top: 18 * U, left: 0, width: ancho * avance, height: 3 * U, background: E.acento, borderRadius: 3 * U, boxShadow: `0 0 ${12 * U}px ${E.acento}` } }),
+    lista.map((c, i) => {
+      const on = i <= actual, x = lista.length > 1 ? i * paso : ancho / 2;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x, top: 0, transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 * U }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: 38 * U,
+          height: 38 * U,
+          borderRadius: "50%",
+          background: on ? E.acento : "rgba(0,0,0,.35)",
+          border: `${3 * U}px solid ${on ? E.acento : "rgba(255,255,255,.6)"}`,
+          boxShadow: i === actual ? `0 0 ${24 * U}px ${E.acento}` : "none",
+          transform: i === actual ? `scale(${(1 + 0.12 * Math.sin(t * 5)).toFixed(3)})` : "none"
+        } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          fontFamily: FAMILIA.mono,
+          fontSize: 24 * U,
+          letterSpacing: "0.14em",
+          color: on ? "#fff" : "rgba(255,255,255,.65)",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+          textShadow: "0 2px 10px rgba(0,0,0,.7)",
+          fontWeight: i === actual ? 700 : 400
+        }, children: c })
+      ] }, i);
+    })
+  ] }) });
 };
 const Fecha = ({ dia = "25", mes = "OCTUBRE", anio = "2026", texto = "SAVE THE DATE", estilo = "dorado", sticker = "emoji:two_hearts", y = 30, escala = 1, salida = 0.4 }) => {
   useFuentes();
@@ -1065,37 +1118,45 @@ const Fecha = ({ dia = "25", mes = "OCTUBRE", anio = "2026", texto = "SAVE THE D
   const E = est(estilo);
   const gira = S(0.1, { damping: 13, stiffness: 120 }), num = S(0.5, { damping: 10 });
   const cw = 380 * U, cy = H * y / 100;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: W / 2,
-    top: cy,
-    transform: `translate(-50%,-50%) perspective(${1400 * U}px) rotateX(${((1 - clamp(gira, 0, 1.2)) * 80).toFixed(2)}deg)`,
-    width: cw,
-    borderRadius: 30 * U,
-    overflow: "hidden",
-    background: "rgba(255,255,255,.95)",
-    boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.4), 0 0 ${50 * U}px ${E.acento}55`
-  } }, /* @__PURE__ */ React.createElement("div", { style: { background: E.acento === "#FFFFFF" ? "#111" : E.acento, color: "#fff", fontFamily: FAMILIA.mono, fontSize: 30 * U, letterSpacing: "0.24em", textAlign: "center", padding: `${16 * U}px 0` } }, mes), /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 210 * U,
-    color: "#151515",
-    textAlign: "center",
-    lineHeight: 1.05,
-    transform: `scale(${Math.max(1e-3, num).toFixed(3)})`
-  } }, dia), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontSize: 34 * U, color: "#444", textAlign: "center", paddingBottom: 18 * U, letterSpacing: "0.2em" } }, anio)), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: W / 2,
-    top: cy + 330 * U,
-    transform: "translateX(-50%)",
-    fontFamily: FAMILIA.serif,
-    fontStyle: "italic",
-    fontSize: 70 * U,
-    color: E.texto === "#111111" ? "#fff" : E.texto,
-    whiteSpace: "nowrap",
-    textShadow: `0 4px 18px ${E.sombra}`,
-    opacity: clamp(S(0.8))
-  } }, texto), /* @__PURE__ */ React.createElement(Sticker, { src: urlSticker(sticker), tam: 130 * U, t0: 0.9, x: W / 2 + cw * 0.5, y: cy - 250 * U }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: W / 2,
+      top: cy,
+      transform: `translate(-50%,-50%) perspective(${1400 * U}px) rotateX(${((1 - clamp(gira, 0, 1.2)) * 80).toFixed(2)}deg)`,
+      width: cw,
+      borderRadius: 30 * U,
+      overflow: "hidden",
+      background: "rgba(255,255,255,.95)",
+      boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.4), 0 0 ${50 * U}px ${E.acento}55`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { background: E.acento === "#FFFFFF" ? "#111" : E.acento, color: "#fff", fontFamily: FAMILIA.mono, fontSize: 30 * U, letterSpacing: "0.24em", textAlign: "center", padding: `${16 * U}px 0` }, children: mes }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: 210 * U,
+        color: "#151515",
+        textAlign: "center",
+        lineHeight: 1.05,
+        transform: `scale(${Math.max(1e-3, num).toFixed(3)})`
+      }, children: dia }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontSize: 34 * U, color: "#444", textAlign: "center", paddingBottom: 18 * U, letterSpacing: "0.2em" }, children: anio })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: W / 2,
+      top: cy + 330 * U,
+      transform: "translateX(-50%)",
+      fontFamily: FAMILIA.serif,
+      fontStyle: "italic",
+      fontSize: 70 * U,
+      color: E.texto === "#111111" ? "#fff" : E.texto,
+      whiteSpace: "nowrap",
+      textShadow: `0 4px 18px ${E.sombra}`,
+      opacity: clamp(S(0.8))
+    }, children: texto }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Sticker, { src: urlSticker(sticker), tam: 130 * U, t0: 0.9, x: W / 2 + cw * 0.5, y: cy - 250 * U })
+  ] });
 };
 const Pareja = ({ nombre1 = "Ana", nombre2 = "Luis", texto = "", estilo = "dorado", sticker = "emoji:gem_stone", y = 28, escala = 1, salida = 0.45 }) => {
   useFuentes();
@@ -1106,18 +1167,28 @@ const Pareja = ({ nombre1 = "Ana", nombre2 = "Luis", texto = "", estilo = "dorad
   const amp = S(0.55, { damping: 8, stiffness: 140 });
   const cy = H * y / 100;
   const fs = Math.min(140 * U, W * 0.42 / Math.max(3, Math.max(nombre1.length, nombre2.length)) * 2.1);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: W * 0.98, h: fs * 2.6 }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "petalos", n: 16, semilla: nombre1 + nombre2 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: cy, transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", gap: 24 * U } }, /* @__PURE__ */ React.createElement(Escrito, { texto: nombre1, t0: 0.1, style: { fontFamily: FAMILIA.serif, fontStyle: "italic", fontSize: fs, color: E.texto, textShadow: `0 6px 24px ${E.sombra}`, whiteSpace: "nowrap" } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.serif, fontSize: fs * 1.25, color: E.acento, transform: `scale(${Math.max(1e-3, amp).toFixed(3)})`, textShadow: `0 0 ${30 * U}px ${E.acento}` } }, "&"), /* @__PURE__ */ React.createElement(Escrito, { texto: nombre2, t0: 0.7, style: { fontFamily: FAMILIA.serif, fontStyle: "italic", fontSize: fs, color: E.texto, textShadow: `0 6px 24px ${E.sombra}`, whiteSpace: "nowrap" } })), texto && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: W / 2,
-    top: cy + fs * 0.95,
-    transform: "translateX(-50%)",
-    fontFamily: FAMILIA.mono,
-    fontSize: 26 * U,
-    letterSpacing: "0.3em",
-    color: E.acento,
-    opacity: clamp(S(1.2)),
-    whiteSpace: "nowrap"
-  } }, texto.toUpperCase()), /* @__PURE__ */ React.createElement(Sticker, { src: urlSticker(sticker), tam: 110 * U, t0: 1.1, x: W / 2, y: cy - fs * 1.05 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Halo, { x: W / 2, y: cy, w: W * 0.98, h: fs * 2.6 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Particulas, { color: E.acento, tipo: "petalos", n: 16, semilla: nombre1 + nombre2 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: W / 2, top: cy, transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", gap: 24 * U }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Escrito, { texto: nombre1, t0: 0.1, style: { fontFamily: FAMILIA.serif, fontStyle: "italic", fontSize: fs, color: E.texto, textShadow: `0 6px 24px ${E.sombra}`, whiteSpace: "nowrap" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.serif, fontSize: fs * 1.25, color: E.acento, transform: `scale(${Math.max(1e-3, amp).toFixed(3)})`, textShadow: `0 0 ${30 * U}px ${E.acento}` }, children: "&" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Escrito, { texto: nombre2, t0: 0.7, style: { fontFamily: FAMILIA.serif, fontStyle: "italic", fontSize: fs, color: E.texto, textShadow: `0 6px 24px ${E.sombra}`, whiteSpace: "nowrap" } })
+    ] }),
+    texto && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: W / 2,
+      top: cy + fs * 0.95,
+      transform: "translateX(-50%)",
+      fontFamily: FAMILIA.mono,
+      fontSize: 26 * U,
+      letterSpacing: "0.3em",
+      color: E.acento,
+      opacity: clamp(S(1.2)),
+      whiteSpace: "nowrap"
+    }, children: texto.toUpperCase() }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Sticker, { src: urlSticker(sticker), tam: 110 * U, t0: 1.1, x: W / 2, y: cy - fs * 1.05 })
+  ] });
 };
 const Pastilla = ({ texto = "MOMENTO DEL D\xCDA", estilo = "dorado", sticker = "emoji:sparkles", y = 18, escala = 1, salida = 0.3 }) => {
   useFuentes();
@@ -1127,7 +1198,7 @@ const Pastilla = ({ texto = "MOMENTO DEL D\xCDA", estilo = "dorado", sticker = "
   const E = est(estilo);
   const p = S(0.05, { damping: 12, stiffness: 180 });
   const brillo = 0.5 + 0.5 * Math.sin(t * 4);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1140,7 +1211,10 @@ const Pastilla = ({ texto = "MOMENTO DEL D\xCDA", estilo = "dorado", sticker = "
     background: E.tarjeta,
     border: `${2 * U}px solid ${E.acento}`,
     boxShadow: `0 0 ${(20 + 20 * brillo) * U}px ${E.acento}88, 0 ${10 * U}px ${30 * U}px rgba(0,0,0,.35)`
-  } }, sticker && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: urlSticker(sticker), style: { width: 54 * U, height: 54 * U, transform: `rotate(${(Math.sin(t * 3) * 10).toFixed(1)}deg)` } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.16em", color: E.texto === "#111111" ? "#111" : "#fff", whiteSpace: "nowrap" } }, texto)));
+  }, children: [
+    sticker && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: urlSticker(sticker), style: { width: 54 * U, height: 54 * U, transform: `rotate(${(Math.sin(t * 3) * 10).toFixed(1)}deg)` } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.16em", color: E.texto === "#111111" ? "#111" : "#fff", whiteSpace: "nowrap" }, children: texto })
+  ] }) });
 };
 const Encuesta = ({ pregunta = "\xBFQu\xE9 prefieres?", op1 = "S\xED, todos", op2 = "Tranquila", pct1 = 68, estilo = "blanco", y = 70, escala = 1, salida = 0.35 }) => {
   useFuentes();
@@ -1150,7 +1224,7 @@ const Encuesta = ({ pregunta = "\xBFQu\xE9 prefieres?", op1 = "S\xED, todos", op
   const E = est(estilo);
   const p = S(0.05, { damping: 15 }), barra = clamp((0,esm/* interpolate */.GW)(t, [0.9, 1.8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   const ancho = Math.min(W * 0.86, 820 * U);
-  const opc = (txt, pct, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: {
+  const opc = (txt, pct, i) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "relative",
     height: 92 * U,
     borderRadius: 20 * U,
@@ -1158,8 +1232,15 @@ const Encuesta = ({ pregunta = "\xBFQu\xE9 prefieres?", op1 = "S\xED, todos", op
     background: "rgba(255,255,255,.12)",
     border: `${2 * U}px solid rgba(255,255,255,.35)`,
     opacity: clamp(S(0.35 + i * 0.15) * 2)
-  } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${(pct * barra).toFixed(1)}%`, background: i === 0 ? `${E.acento === "#FFFFFF" ? "#ffffff" : E.acento}55` : "rgba(255,255,255,.18)" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 28 * U, top: 0, bottom: 0, display: "flex", alignItems: "center", fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 38 * U, color: "#fff" } }, txt), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", right: 28 * U, top: 0, bottom: 0, display: "flex", alignItems: "center", fontFamily: FAMILIA.mono, fontSize: 34 * U, color: "#fff", opacity: barra } }, Math.round(pct * barra), "%"));
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${(pct * barra).toFixed(1)}%`, background: i === 0 ? `${E.acento === "#FFFFFF" ? "#ffffff" : E.acento}55` : "rgba(255,255,255,.18)" } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 28 * U, top: 0, bottom: 0, display: "flex", alignItems: "center", fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 38 * U, color: "#fff" }, children: txt }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", right: 28 * U, top: 0, bottom: 0, display: "flex", alignItems: "center", fontFamily: FAMILIA.mono, fontSize: 34 * U, color: "#fff", opacity: barra }, children: [
+      Math.round(pct * barra),
+      "%"
+    ] })
+  ] }, i);
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1173,7 +1254,11 @@ const Encuesta = ({ pregunta = "\xBFQu\xE9 prefieres?", op1 = "S\xED, todos", op
     display: "flex",
     flexDirection: "column",
     gap: 18 * U
-  } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 44 * U, color: "#fff" } }, pregunta), opc(op1, pct1, 0), opc(op2, 100 - pct1, 1)));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 44 * U, color: "#fff" }, children: pregunta }),
+    opc(op1, pct1, 0),
+    opc(op2, 100 - pct1, 1)
+  ] }) });
 };
 const Comentario = ({ palabra = "BODA", texto = "Comenta", hecho = "Te mando la info", estilo = "blanco", y = 72, escala = 1, salida = 0.35 }) => {
   useFuentes();
@@ -1185,7 +1270,29 @@ const Comentario = ({ palabra = "BODA", texto = "Comenta", hecho = "Te mando la 
   const n = Math.floor(clamp((t - 0.6) / (0.11 * Math.max(1, palabra.length))) * palabra.length);
   const enviado = t > 0.75 + 0.11 * palabra.length + 0.35;
   const ancho = Math.min(W * 0.88, 840 * U);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: H * y / 100, width: ancho, transform: `translate(-50%,-50%) translateY(${((1 - clamp(p)) * 70 * U).toFixed(1)}px)`, display: "flex", flexDirection: "column", gap: 16 * U } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 36 * U, color: "#fff", textShadow: "0 2px 12px rgba(0,0,0,.6)" } }, texto, " ", /* @__PURE__ */ React.createElement("span", { style: { color: E.acento === "#FFFFFF" ? "#FFD34D" : E.acento, fontWeight: 800 } }, "\xAB", palabra, "\xBB")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${18 * U}px ${22 * U}px`, borderRadius: 999, background: "rgba(255,255,255,.96)", boxShadow: `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.35)` } }, /* @__PURE__ */ React.createElement("div", { style: { width: 56 * U, height: 56 * U, borderRadius: "50%", background: `linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7)` } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: FAMILIA.grotesk, fontSize: 38 * U, color: n ? "#111" : "#999" } }, n ? palabra.slice(0, n) : "A\xF1ade un comentario\u2026", n > 0 && !enviado && /* @__PURE__ */ React.createElement("span", { style: { opacity: Math.floor(t * 3) % 2 ? 1 : 0 } }, "|")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 34 * U, color: "#0095f6", transform: `scale(${enviado ? 1 : 1 + 0.08 * Math.sin(t * 8)})` } }, enviado ? "\u2713" : "Publicar")), enviado && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 32 * U, color: "#7CFFB2", textShadow: "0 2px 10px rgba(0,0,0,.6)", opacity: clamp((t - (0.75 + 0.11 * palabra.length + 0.35)) * 4) } }, "\u2713 ", hecho)));
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: W / 2, top: H * y / 100, width: ancho, transform: `translate(-50%,-50%) translateY(${((1 - clamp(p)) * 70 * U).toFixed(1)}px)`, display: "flex", flexDirection: "column", gap: 16 * U }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 36 * U, color: "#fff", textShadow: "0 2px 12px rgba(0,0,0,.6)" }, children: [
+      texto,
+      " ",
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { color: E.acento === "#FFFFFF" ? "#FFD34D" : E.acento, fontWeight: 800 }, children: [
+        "\xAB",
+        palabra,
+        "\xBB"
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${18 * U}px ${22 * U}px`, borderRadius: 999, background: "rgba(255,255,255,.96)", boxShadow: `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.35)` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 56 * U, height: 56 * U, borderRadius: "50%", background: `linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7)` } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1, fontFamily: FAMILIA.grotesk, fontSize: 38 * U, color: n ? "#111" : "#999" }, children: [
+        n ? palabra.slice(0, n) : "A\xF1ade un comentario\u2026",
+        n > 0 && !enviado && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { opacity: Math.floor(t * 3) % 2 ? 1 : 0 }, children: "|" })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 34 * U, color: "#0095f6", transform: `scale(${enviado ? 1 : 1 + 0.08 * Math.sin(t * 8)})` }, children: enviado ? "\u2713" : "Publicar" })
+    ] }),
+    enviado && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 32 * U, color: "#7CFFB2", textShadow: "0 2px 10px rgba(0,0,0,.6)", opacity: clamp((t - (0.75 + 0.11 * palabra.length + 0.35)) * 4) }, children: [
+      "\u2713 ",
+      hecho
+    ] })
+  ] }) });
 };
 const Sesion = ({ titulo = "Sesi\xF3n fotogr\xE1fica", kicker = "BEHIND THE SCENES", estilo = "blanco", sticker = "emoji:camera", y = 26, escala = 1, salida = 0.4 }) => {
   useFuentes();
@@ -1196,7 +1303,7 @@ const Sesion = ({ titulo = "Sesi\xF3n fotogr\xE1fica", kicker = "BEHIND THE SCEN
   const flash = clamp(1 - Math.abs(t - 0.18) / 0.18) * 0.85;
   const marco = S(0.25, { damping: 14 });
   const cy = H * y / 100, mw = Math.min(W * 0.8, 820 * U), mh = 300 * U;
-  const esquina = (x, yy, r) => /* @__PURE__ */ React.createElement("div", { style: {
+  const esquina = (x, yy, r) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: x,
     top: yy,
@@ -1208,14 +1315,28 @@ const Sesion = ({ titulo = "Sesi\xF3n fotogr\xE1fica", kicker = "BEHIND THE SCEN
     transformOrigin: "50% 50%"
   } });
   const sep = (1 - clamp(marco)) * 60 * U;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `rgba(255,255,255,${flash.toFixed(3)})` } }), /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: cy, w: mw * 1.15, h: mh * 1.5, p: marco * 1.5 }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2 - mw / 2, top: cy - mh / 2, width: mw, height: mh, opacity: clamp(marco * 2) } }, esquina(-sep, -sep, 0), esquina(mw - 46 * U + sep, -sep, 90), esquina(mw - 46 * U + sep, mh - 46 * U + sep, 180), esquina(-sep, mh - 46 * U + sep, 270), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 * U } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.mono, fontSize: 26 * U, letterSpacing: "0.3em", color: E.acento === "#FFFFFF" ? "#fff" : E.acento } }, kicker), /* @__PURE__ */ React.createElement(Escrito, { texto: titulo, t0: 0.4, dur: 0.8, style: {
-    fontFamily: FAMILIA.serif,
-    fontStyle: "italic",
-    fontSize: Math.min(110 * U, mw / Math.max(5, titulo.length) * 1.9),
-    color: "#fff",
-    whiteSpace: "nowrap",
-    textShadow: "0 6px 24px rgba(0,0,0,.55)"
-  } }))), /* @__PURE__ */ React.createElement(Sticker, { src: urlSticker(sticker), tam: 130 * U, t0: 0.8, x: W / 2 + mw / 2 - 10 * U, y: cy - mh / 2 - 10 * U }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `rgba(255,255,255,${flash.toFixed(3)})` } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Halo, { x: W / 2, y: cy, w: mw * 1.15, h: mh * 1.5, p: marco * 1.5 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: W / 2 - mw / 2, top: cy - mh / 2, width: mw, height: mh, opacity: clamp(marco * 2) }, children: [
+      esquina(-sep, -sep, 0),
+      esquina(mw - 46 * U + sep, -sep, 90),
+      esquina(mw - 46 * U + sep, mh - 46 * U + sep, 180),
+      esquina(-sep, mh - 46 * U + sep, 270),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 * U }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.mono, fontSize: 26 * U, letterSpacing: "0.3em", color: E.acento === "#FFFFFF" ? "#fff" : E.acento }, children: kicker }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(Escrito, { texto: titulo, t0: 0.4, dur: 0.8, style: {
+          fontFamily: FAMILIA.serif,
+          fontStyle: "italic",
+          fontSize: Math.min(110 * U, mw / Math.max(5, titulo.length) * 1.9),
+          color: "#fff",
+          whiteSpace: "nowrap",
+          textShadow: "0 6px 24px rgba(0,0,0,.55)"
+        } })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Sticker, { src: urlSticker(sticker), tam: 130 * U, t0: 0.8, x: W / 2 + mw / 2 - 10 * U, y: cy - mh / 2 - 10 * U })
+  ] });
 };
 const Ninas = ({ texto = "Las ni\xF1as", sub = "", estilo = "lila", sticker = "emoji:unicorn", y = 26, escala = 1, salida = 0.4 }) => {
   useFuentes();
@@ -1226,35 +1347,42 @@ const Ninas = ({ texto = "Las ni\xF1as", sub = "", estilo = "lila", sticker = "e
   const letras = [...texto];
   const tam = Math.min(150 * U, W * 0.86 / Math.max(4, letras.length) * 1.7);
   const colores = [E.acento, "#FFD1E8", "#FFF3A6", "#B8F2FF", "#D7C2FF"];
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement(Halo, { x: W / 2, y: H * y / 100, w: W * 0.98, h: tam * 2.4, fuerza: 0.3 }), /* @__PURE__ */ React.createElement(Particulas, { color: E.acento, tipo: "destellos", n: 20, semilla: texto }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: H * y / 100, transform: "translate(-50%,-50%)", display: "flex", whiteSpace: "pre" } }, letras.map((c, i) => {
-    const p = S(0.1 + i * 0.06, { damping: 7, stiffness: 190 });
-    return /* @__PURE__ */ React.createElement("span", { key: i, style: {
-      display: "inline-block",
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 800,
-      fontSize: tam,
-      color: colores[i % colores.length],
-      transform: `translateY(${((1 - p) * -120 * U + Math.sin(t * 4 + i) * 5 * U).toFixed(1)}px) rotate(${(Math.sin(t * 3 + i) * 4).toFixed(1)}deg)`,
-      opacity: clamp(p * 3),
-      WebkitTextStroke: `${3 * U}px rgba(0,0,0,.15)`,
-      textShadow: `0 ${6 * U}px 0 rgba(0,0,0,.18), 0 ${10 * U}px ${24 * U}px ${E.sombra}`
-    } }, c);
-  })), sub && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: W / 2,
-    top: H * y / 100 + tam * 0.8,
-    transform: "translateX(-50%)",
-    fontFamily: FAMILIA.serif,
-    fontStyle: "italic",
-    fontSize: 52 * U,
-    color: "#fff",
-    opacity: clamp(S(0.9)),
-    textShadow: `0 4px 16px ${E.sombra}`,
-    whiteSpace: "nowrap"
-  } }, sub), /* @__PURE__ */ React.createElement(Sticker, { src: urlSticker(sticker), tam: 150 * U, t0: 0.9, x: W / 2 - Math.min(W * 0.38, tam * letras.length * 0.32), y: H * y / 100 - tam * 0.9 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Halo, { x: W / 2, y: H * y / 100, w: W * 0.98, h: tam * 2.4, fuerza: 0.3 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Particulas, { color: E.acento, tipo: "destellos", n: 20, semilla: texto }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: W / 2, top: H * y / 100, transform: "translate(-50%,-50%)", display: "flex", whiteSpace: "pre" }, children: letras.map((c, i) => {
+      const p = S(0.1 + i * 0.06, { damping: 7, stiffness: 190 });
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
+        display: "inline-block",
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: tam,
+        color: colores[i % colores.length],
+        transform: `translateY(${((1 - p) * -120 * U + Math.sin(t * 4 + i) * 5 * U).toFixed(1)}px) rotate(${(Math.sin(t * 3 + i) * 4).toFixed(1)}deg)`,
+        opacity: clamp(p * 3),
+        WebkitTextStroke: `${3 * U}px rgba(0,0,0,.15)`,
+        textShadow: `0 ${6 * U}px 0 rgba(0,0,0,.18), 0 ${10 * U}px ${24 * U}px ${E.sombra}`
+      }, children: c }, i);
+    }) }),
+    sub && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: W / 2,
+      top: H * y / 100 + tam * 0.8,
+      transform: "translateX(-50%)",
+      fontFamily: FAMILIA.serif,
+      fontStyle: "italic",
+      fontSize: 52 * U,
+      color: "#fff",
+      opacity: clamp(S(0.9)),
+      textShadow: `0 4px 16px ${E.sombra}`,
+      whiteSpace: "nowrap"
+    }, children: sub }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Sticker, { src: urlSticker(sticker), tam: 150 * U, t0: 0.9, x: W / 2 - Math.min(W * 0.38, tam * letras.length * 0.32), y: H * y / 100 - tam * 0.9 })
+  ] });
 };
 
 ;// ./src/Saas.tsx
+
 
 
 const usarSalida = (t, fin, salida = 0.35) => clamp((t - (fin - salida)) / salida);
@@ -1288,7 +1416,7 @@ const Notificacion = ({
   const t = frame / fps, q = usarSalida(t, fin, salida);
   const p = S(0.05, { damping: 14, stiffness: 170 });
   const ancho = Math.min(W * 0.9, 900 * U);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1300,7 +1428,17 @@ const Notificacion = ({
     gap: 22 * U,
     alignItems: "center",
     ...vidrio(U, acento, 0.62)
-  } }, /* @__PURE__ */ React.createElement("div", { style: { width: 96 * U, height: 96 * U, borderRadius: 24 * U, background: `linear-gradient(135deg, ${acento}, #111)`, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono3d}.png`), style: { width: 80 * U, height: 80 * U, transform: `rotate(${(Math.sin(t * 8) * 12 * clamp(1.4 - t)).toFixed(1)}deg)` } })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: FAMILIA.grotesk, fontSize: 24 * U, color: "rgba(255,255,255,.7)", letterSpacing: "0.08em" } }, /* @__PURE__ */ React.createElement("span", null, app), /* @__PURE__ */ React.createElement("span", null, hora)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 40 * U, color: "#fff", marginTop: 4 * U } }, titulo), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontSize: 32 * U, color: "rgba(255,255,255,.85)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, texto))));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 96 * U, height: 96 * U, borderRadius: 24 * U, background: `linear-gradient(135deg, ${acento}, #111)`, display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono3d}.png`), style: { width: 80 * U, height: 80 * U, transform: `rotate(${(Math.sin(t * 8) * 12 * clamp(1.4 - t)).toFixed(1)}deg)` } }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1, minWidth: 0 }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: FAMILIA.grotesk, fontSize: 24 * U, color: "rgba(255,255,255,.7)", letterSpacing: "0.08em" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: app }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: hora })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 40 * U, color: "#fff", marginTop: 4 * U }, children: titulo }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontSize: 32 * U, color: "rgba(255,255,255,.85)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: texto })
+    ] })
+  ] }) });
 };
 const Tarjeta = ({
   kicker = "PAQUETE",
@@ -1321,7 +1459,7 @@ const Tarjeta = ({
   const p = S(0.05, { damping: 15 }), ic = S(0.35, { damping: 9, stiffness: 170 });
   const barra = clamp((0,esm/* interpolate */.GW)(t, [0.6, 1.6], [0, progreso / 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   const ancho = Math.min(W * 0.82, 760 * U);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1333,27 +1471,34 @@ const Tarjeta = ({
     flexDirection: "column",
     gap: 18 * U,
     ...vidrio(U, acento)
-  } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono3d}.png`), style: {
-    position: "absolute",
-    right: -30 * U,
-    top: -70 * U,
-    width: 200 * U,
-    height: 200 * U,
-    transform: `scale(${Math.max(1e-3, ic).toFixed(3)}) rotate(${(Math.sin(t * 1.6) * 6).toFixed(1)}deg)`,
-    filter: `drop-shadow(0 ${16 * U}px ${24 * U}px rgba(0,0,0,.45))`
-  } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.mono, fontSize: 26 * U, letterSpacing: "0.24em", color: acento } }, kicker), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 64 * U, color: "#fff", lineHeight: 1.05 } }, titulo), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontSize: 34 * U, color: "rgba(255,255,255,.8)" } }, texto), /* @__PURE__ */ React.createElement("div", { style: { height: 14 * U, borderRadius: 14 * U, background: "rgba(255,255,255,.14)", overflow: "hidden", marginTop: 8 * U } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${(barra * 100).toFixed(1)}%`, height: "100%", borderRadius: 14 * U, background: `linear-gradient(90deg, ${acento}, #fff)`, boxShadow: `0 0 ${16 * U}px ${acento}` } })), boton && /* @__PURE__ */ React.createElement("div", { style: {
-    alignSelf: "flex-start",
-    marginTop: 10 * U,
-    padding: `${16 * U}px ${34 * U}px`,
-    borderRadius: 999,
-    background: "#fff",
-    color: "#111",
-    fontFamily: FAMILIA.grotesk,
-    fontWeight: 700,
-    fontSize: 32 * U,
-    transform: `scale(${(1 + 0.05 * Math.sin(t * 6) * clamp(t - 1.6)).toFixed(3)})`,
-    boxShadow: `0 0 ${30 * U}px ${acento}`
-  } }, boton)));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono3d}.png`), style: {
+      position: "absolute",
+      right: -30 * U,
+      top: -70 * U,
+      width: 200 * U,
+      height: 200 * U,
+      transform: `scale(${Math.max(1e-3, ic).toFixed(3)}) rotate(${(Math.sin(t * 1.6) * 6).toFixed(1)}deg)`,
+      filter: `drop-shadow(0 ${16 * U}px ${24 * U}px rgba(0,0,0,.45))`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.mono, fontSize: 26 * U, letterSpacing: "0.24em", color: acento }, children: kicker }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 64 * U, color: "#fff", lineHeight: 1.05 }, children: titulo }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontSize: 34 * U, color: "rgba(255,255,255,.8)" }, children: texto }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { height: 14 * U, borderRadius: 14 * U, background: "rgba(255,255,255,.14)", overflow: "hidden", marginTop: 8 * U }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: `${(barra * 100).toFixed(1)}%`, height: "100%", borderRadius: 14 * U, background: `linear-gradient(90deg, ${acento}, #fff)`, boxShadow: `0 0 ${16 * U}px ${acento}` } }) }),
+    boton && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      alignSelf: "flex-start",
+      marginTop: 10 * U,
+      padding: `${16 * U}px ${34 * U}px`,
+      borderRadius: 999,
+      background: "#fff",
+      color: "#111",
+      fontFamily: FAMILIA.grotesk,
+      fontWeight: 700,
+      fontSize: 32 * U,
+      transform: `scale(${(1 + 0.05 * Math.sin(t * 6) * clamp(t - 1.6)).toFixed(3)})`,
+      boxShadow: `0 0 ${30 * U}px ${acento}`
+    }, children: boton })
+  ] }) });
 };
 const Grafica = ({ titulo = "Reservas", valor = "+240%", subtitulo = "este a\xF1o", acento = "#3DDC97", y = 30, escala = 1, salida = 0.35 }) => {
   useFuentes();
@@ -1366,7 +1511,7 @@ const Grafica = ({ titulo = "Reservas", valor = "+240%", subtitulo = "este a\xF1
   const pts = [0.08, 0.14, 0.12, 0.26, 0.22, 0.4, 0.36, 0.58, 0.7, 0.92];
   const d = pts.map((v, i) => `${i ? "L" : "M"}${i / (pts.length - 1) * 100},${(1 - v) * 100}`).join(" ");
   const num = Math.round(parseFloat(valor.replace(/[^\d.]/g, "")) * clamp(dib * 1.1) || 0);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1375,19 +1520,38 @@ const Grafica = ({ titulo = "Reservas", valor = "+240%", subtitulo = "este a\xF1
     borderRadius: 36 * U,
     padding: 36 * U,
     ...vidrio(U, acento)
-  } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 36 * U, color: "rgba(255,255,255,.85)" } }, titulo), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: 72 * U, color: acento, textShadow: `0 0 ${24 * U}px ${acento}` } }, valor.startsWith("+") ? "+" : "", num, valor.includes("%") ? "%" : "")), /* @__PURE__ */ React.createElement("svg", { width: "100%", height: alto, viewBox: "0 0 100 100", preserveAspectRatio: "none", style: { marginTop: 10 * U, overflow: "visible" } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "relleno", x1: "0", x2: "0", y1: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: acento, stopOpacity: "0.45" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: acento, stopOpacity: "0" }))), [25, 50, 75].map((v) => /* @__PURE__ */ React.createElement("line", { key: v, x1: "0", x2: "100", y1: v, y2: v, stroke: "rgba(255,255,255,.12)", strokeWidth: "0.4" })), /* @__PURE__ */ React.createElement("path", { d: `${d} L100,100 L0,100 Z`, fill: "url(#relleno)", style: { clipPath: `inset(0 ${((1 - dib) * 100).toFixed(2)}% 0 0)` } }), /* @__PURE__ */ React.createElement(
-    "path",
-    {
-      d,
-      fill: "none",
-      stroke: acento,
-      strokeWidth: "1.4",
-      vectorEffect: "non-scaling-stroke",
-      pathLength: 1,
-      strokeDasharray: `${dib} 1`,
-      style: { filter: `drop-shadow(0 0 6px ${acento})` }
-    }
-  )), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.mono, fontSize: 24 * U, letterSpacing: "0.2em", color: "rgba(255,255,255,.6)", marginTop: 10 * U } }, subtitulo.toUpperCase())));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 36 * U, color: "rgba(255,255,255,.85)" }, children: titulo }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: 72 * U, color: acento, textShadow: `0 0 ${24 * U}px ${acento}` }, children: [
+        valor.startsWith("+") ? "+" : "",
+        num,
+        valor.includes("%") ? "%" : ""
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: "100%", height: alto, viewBox: "0 0 100 100", preserveAspectRatio: "none", style: { marginTop: 10 * U, overflow: "visible" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("linearGradient", { id: "relleno", x1: "0", x2: "0", y1: "0", y2: "1", children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0", stopColor: acento, stopOpacity: "0.45" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "1", stopColor: acento, stopOpacity: "0" })
+      ] }) }),
+      [25, 50, 75].map((v) => /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: "0", x2: "100", y1: v, y2: v, stroke: "rgba(255,255,255,.12)", strokeWidth: "0.4" }, v)),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: `${d} L100,100 L0,100 Z`, fill: "url(#relleno)", style: { clipPath: `inset(0 ${((1 - dib) * 100).toFixed(2)}% 0 0)` } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d,
+          fill: "none",
+          stroke: acento,
+          strokeWidth: "1.4",
+          vectorEffect: "non-scaling-stroke",
+          pathLength: 1,
+          strokeDasharray: `${dib} 1`,
+          style: { filter: `drop-shadow(0 0 6px ${acento})` }
+        }
+      )
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.mono, fontSize: 24 * U, letterSpacing: "0.2em", color: "rgba(255,255,255,.6)", marginTop: 10 * U }, children: subtitulo.toUpperCase() })
+  ] }) });
 };
 const Pasos = ({ pasos = "Agenda,Sesi\xF3n,Entrega", titulo = "As\xED trabajamos", acento = "#FF8A3D", y = 30, escala = 1, salida = 0.35 }) => {
   useFuentes();
@@ -1396,7 +1560,7 @@ const Pasos = ({ pasos = "Agenda,Sesi\xF3n,Entrega", titulo = "As\xED trabajamos
   const t = frame / fps, q = usarSalida(t, fin, salida);
   const lista = pasos.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 4);
   const ancho = Math.min(W * 0.86, 820 * U);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1409,24 +1573,30 @@ const Pasos = ({ pasos = "Agenda,Sesi\xF3n,Entrega", titulo = "As\xED trabajamos
     gap: 22 * U,
     ...vidrio(U, acento),
     opacity: clamp(S(0.05) * 2)
-  } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 48 * U, color: "#fff" } }, titulo), lista.map((p, i) => {
-    const e = S(0.35 + i * 0.35, { damping: 14 }), ok = clamp((t - (0.75 + i * 0.35)) * 4);
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 22 * U, opacity: clamp(e * 2), transform: `translateX(${((1 - clamp(e)) * 60 * U).toFixed(1)}px)` } }, /* @__PURE__ */ React.createElement("div", { style: {
-      width: 64 * U,
-      height: 64 * U,
-      borderRadius: "50%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: FAMILIA.grotesk,
-      fontWeight: 700,
-      fontSize: 32 * U,
-      color: ok > 0.5 ? "#111" : "#fff",
-      background: ok > 0.5 ? acento : "rgba(255,255,255,.12)",
-      border: `${2 * U}px solid ${acento}`,
-      boxShadow: ok > 0.5 ? `0 0 ${22 * U}px ${acento}` : "none"
-    } }, ok > 0.5 ? "\u2713" : i + 1), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 40 * U, color: "#fff" } }, p));
-  })));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 48 * U, color: "#fff" }, children: titulo }),
+    lista.map((p, i) => {
+      const e = S(0.35 + i * 0.35, { damping: 14 }), ok = clamp((t - (0.75 + i * 0.35)) * 4);
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 22 * U, opacity: clamp(e * 2), transform: `translateX(${((1 - clamp(e)) * 60 * U).toFixed(1)}px)` }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: 64 * U,
+          height: 64 * U,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: FAMILIA.grotesk,
+          fontWeight: 700,
+          fontSize: 32 * U,
+          color: ok > 0.5 ? "#111" : "#fff",
+          background: ok > 0.5 ? acento : "rgba(255,255,255,.12)",
+          border: `${2 * U}px solid ${acento}`,
+          boxShadow: ok > 0.5 ? `0 0 ${22 * U}px ${acento}` : "none"
+        }, children: ok > 0.5 ? "\u2713" : i + 1 }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 600, fontSize: 40 * U, color: "#fff" }, children: p })
+      ] }, i);
+    })
+  ] }) });
 };
 const Interruptor = ({ texto = "Modo PRO", sub = "activado", acento = "#22D3EE", y = 22, escala = 1, salida = 0.35 }) => {
   useFuentes();
@@ -1435,7 +1605,7 @@ const Interruptor = ({ texto = "Modo PRO", sub = "activado", acento = "#22D3EE",
   const t = frame / fps, q = usarSalida(t, fin, salida);
   const p = S(0.05, { damping: 14 }), on = S(0.7, { damping: 12, stiffness: 200 });
   const [r, g, b] = rgb(acento);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: W / 2,
     top: H * y / 100,
@@ -1447,26 +1617,33 @@ const Interruptor = ({ texto = "Modo PRO", sub = "activado", acento = "#22D3EE",
     padding: `${26 * U}px ${36 * U}px`,
     borderRadius: 999,
     ...vidrio(U, acento)
-  } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "relative",
-    width: 150 * U,
-    height: 82 * U,
-    borderRadius: 999,
-    background: `rgba(${r},${g},${b},${(0.15 + 0.85 * clamp(on)).toFixed(3)})`,
-    boxShadow: `0 0 ${40 * U * clamp(on)}px ${acento}`
-  } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    top: 7 * U,
-    left: 7 * U + clamp(on, 0, 1.08) * 68 * U,
-    width: 68 * U,
-    height: 68 * U,
-    borderRadius: "50%",
-    background: "#fff",
-    boxShadow: "0 4px 12px rgba(0,0,0,.35)"
-  } })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 52 * U, color: "#fff", lineHeight: 1 } }, texto), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.mono, fontSize: 24 * U, letterSpacing: "0.2em", color: acento, opacity: clamp(on) } }, sub.toUpperCase()))));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "relative",
+      width: 150 * U,
+      height: 82 * U,
+      borderRadius: 999,
+      background: `rgba(${r},${g},${b},${(0.15 + 0.85 * clamp(on)).toFixed(3)})`,
+      boxShadow: `0 0 ${40 * U * clamp(on)}px ${acento}`
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      top: 7 * U,
+      left: 7 * U + clamp(on, 0, 1.08) * 68 * U,
+      width: 68 * U,
+      height: 68 * U,
+      borderRadius: "50%",
+      background: "#fff",
+      boxShadow: "0 4px 12px rgba(0,0,0,.35)"
+    } }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.grotesk, fontWeight: 700, fontSize: 52 * U, color: "#fff", lineHeight: 1 }, children: texto }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.mono, fontSize: 24 * U, letterSpacing: "0.2em", color: acento, opacity: clamp(on) }, children: sub.toUpperCase() })
+    ] })
+  ] }) });
 };
 
 ;// ./src/Subtitulo.tsx
+
 
 
 
@@ -1538,7 +1715,7 @@ const Subtitulo = ({
       return ctx.measureText(w.texto).width;
     });
   }, [listo, ps, detras, ed]);
-  if (!listo || !ps.length) return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null);
+  if (!listo || !ps.length) return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, {});
   const corto = Math.min(width, height);
   let S = (ed ? 0.048 : 0.035) * corto * escala;
   const lineas = detras ? [{ idx: ps.map((_, i) => i), serif: true }] : lineasDe(ps);
@@ -1565,7 +1742,7 @@ const Subtitulo = ({
     const f = ed ? EDITORIAL : serif ? SERIF : SANS;
     const tam = tamDe(i);
     const tinta2 = oscura ? ed ? "#3A2E28" : "#1D1D21" : "#FFFFFF";
-    return /* @__PURE__ */ React.createElement("span", { style: {
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
       display: "inline-block",
       fontFamily: ed ? FAMILIA.serif : serif ? FAMILIA.display : FAMILIA.inter,
       fontWeight: f.peso,
@@ -1581,33 +1758,37 @@ const Subtitulo = ({
       opacity: e * (serif ? 1 : oscura ? 0.92 : 0.96),
       filter: `blur(${((1 - e) * (serif ? 12 : 8)).toFixed(2)}px)`,
       transform: `translateY(${((1 - e) * (ed ? 0.08 : 0.14)).toFixed(3)}em)`
-    } }, w.texto);
+    }, children: w.texto });
   };
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - qs, filter: qs > 0 ? `blur(${(qs * 4).toFixed(2)}px)` : void 0 } }, velo && !oscura && !detras && (() => {
-    const w = mayor * (mayor > maxAncho ? maxAncho / mayor : 1) + 5 * S, hv = total + 3.2 * S;
-    const p0 = easeIn(clamp((t - (ps[0].t - 0.1)) / 0.3));
-    return /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - qs, filter: qs > 0 ? `blur(${(qs * 4).toFixed(2)}px)` : void 0 }, children: [
+    velo && !oscura && !detras && (() => {
+      const w = mayor * (mayor > maxAncho ? maxAncho / mayor : 1) + 5 * S, hv = total + 3.2 * S;
+      const p0 = easeIn(clamp((t - (ps[0].t - 0.1)) / 0.3));
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: (width - w) / 2,
+        top: top0 - 1.6 * S,
+        width: w,
+        height: hv,
+        opacity: p0,
+        background: "radial-gradient(closest-side, rgba(0,0,0,.52), rgba(0,0,0,.34) 55%, rgba(0,0,0,0))"
+      } });
+    })(),
+    lineas.map((l, n) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
-      left: (width - w) / 2,
-      top: top0 - 1.6 * S,
-      width: w,
-      height: hv,
-      opacity: p0,
-      background: "radial-gradient(closest-side, rgba(0,0,0,.52), rgba(0,0,0,.34) 55%, rgba(0,0,0,0))"
-    } });
-  })(), lineas.map((l, n) => /* @__PURE__ */ React.createElement("div", { key: n, style: {
-    position: "absolute",
-    left: 0,
-    width,
-    top: top0 + altos.slice(0, n).reduce((a, b) => a + b, 0),
-    height: altos[n],
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "baseline"
-  } }, l.idx.map((i, k) => /* @__PURE__ */ React.createElement("span", { key: i, style: { marginLeft: k ? hueco(i) : 0 } }, palabra(i))))));
+      left: 0,
+      width,
+      top: top0 + altos.slice(0, n).reduce((a, b) => a + b, 0),
+      height: altos[n],
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "baseline"
+    }, children: l.idx.map((i, k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { marginLeft: k ? hueco(i) : 0 }, children: palabra(i) }, i)) }, n))
+  ] });
 };
 
 ;// ./src/Objetos.tsx
+
 
 
 
@@ -1652,30 +1833,36 @@ const Pieza = ({ x, y, t0, U, salida, fuera = [0, -1], flota = 1, children }) =>
   if (dt < -0.02) return null;
   const f = Math.sin(dt * 1.5 + x * 0.01) * 5 * U * flota;
   const s = easeOut(salida);
-  return /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: x,
     top: y,
     transform: `translate(-50%, -50%) translate(${(fuera[0] * s * 140 * U).toFixed(1)}px, ${(f + fuera[1] * s * 140 * U + (1 - e) * 26 * U).toFixed(1)}px) scale(${(0.78 + 0.22 * e).toFixed(4)})`,
     opacity: e * (1 - s),
     filter: `blur(${((1 - e) * 10 + s * 8).toFixed(2)}px)`
-  } }, children);
+  }, children });
 };
 const Muestra = ({ o, U }) => {
   const T = useTema();
   const lado = 200 * U;
   const claro = rgb(o.color).reduce((a, b) => a + b, 0) > 600;
-  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16 * U } }, /* @__PURE__ */ React.createElement("div", { style: {
-    width: lado,
-    height: lado,
-    borderRadius: 40 * U,
-    background: `linear-gradient(160deg, rgba(255,255,255,.16), rgba(255,255,255,0) 45%), ${o.color}`,
-    boxShadow: sombra(U) + (claro ? `, inset 0 0 0 ${1.5 * U}px rgba(0,0,0,.06)` : "")
-  } }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", lineHeight: 1.25 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 17 * U, letterSpacing: "0.09em", color: T.tinta } }, o.etiqueta), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 500, fontSize: 15 * U, letterSpacing: "0.06em", color: T.gris } }, o.hex)));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16 * U }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      width: lado,
+      height: lado,
+      borderRadius: 40 * U,
+      background: `linear-gradient(160deg, rgba(255,255,255,.16), rgba(255,255,255,0) 45%), ${o.color}`,
+      boxShadow: sombra(U) + (claro ? `, inset 0 0 0 ${1.5 * U}px rgba(0,0,0,.06)` : "")
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { textAlign: "center", lineHeight: 1.25 }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 17 * U, letterSpacing: "0.09em", color: T.tinta }, children: o.etiqueta }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 500, fontSize: 15 * U, letterSpacing: "0.06em", color: T.gris }, children: o.hex })
+    ] })
+  ] });
 };
 const Ficha = ({ o, U }) => {
   const T = useTema();
-  return /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     padding: `${18 * U}px ${30 * U}px`,
     borderRadius: 16 * U,
     background: T.carta,
@@ -1685,13 +1872,16 @@ const Ficha = ({ o, U }) => {
     display: "flex",
     alignItems: "center",
     gap: 12 * U
-  } }, !o.serif && /* @__PURE__ */ React.createElement("div", { style: { width: 14 * U, height: 14 * U, borderRadius: 7 * U, background: o.color } }), /* @__PURE__ */ React.createElement("span", { style: {
-    fontFamily: o.serif ? FAMILIA.serif : T.letra || FAMILIA.inter,
-    fontWeight: o.serif ? 400 : 700,
-    fontSize: (o.serif ? 34 : 30) * U,
-    letterSpacing: o.serif ? "0.06em" : "-0.01em",
-    color: o.serif ? T.oscuro ? T.tinta : o.color || TINTA : T.tinta
-  } }, o.texto));
+  }, children: [
+    !o.serif && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 14 * U, height: 14 * U, borderRadius: 7 * U, background: o.color } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
+      fontFamily: o.serif ? FAMILIA.serif : T.letra || FAMILIA.inter,
+      fontWeight: o.serif ? 400 : 700,
+      fontSize: (o.serif ? 34 : 30) * U,
+      letterSpacing: o.serif ? "0.06em" : "-0.01em",
+      color: o.serif ? T.oscuro ? T.tinta : o.color || TINTA : T.tinta
+    }, children: o.texto })
+  ] });
 };
 const App = ({ o, U, acento }) => {
   const T = useTema();
@@ -1704,63 +1894,74 @@ const App = ({ o, U, acento }) => {
   const [r, g, b] = rgb(acento);
   const marco = escala < 1 || escala > 1 ? clamp((dt - te + 0.2) / 0.25) : 0;
   const ins = easeOut((dt - te - 0.35) / 0.35);
-  return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: lado, height: lado } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, transform: `scale(${k.toFixed(4)})` } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    inset: 0,
-    borderRadius: lado * 0.22,
-    background: T.oscuro ? T.carta : "linear-gradient(180deg,#FFFFFF,#F3F4F8)",
-    border: `${1.2 * U}px solid ${T.borde}`,
-    boxShadow: sombra(U),
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: lado * 0.07
-  } }, /* @__PURE__ */ React.createElement("div", { style: {
-    width: lado * 0.52,
-    height: lado * 0.52,
-    borderRadius: lado * 0.13,
-    background: `linear-gradient(160deg, rgb(${Math.min(255, r + 40)},${Math.min(255, g + 70)},255), rgb(${r},${g},${b}) 60%, rgb(${Math.max(0, r - 30)},${Math.max(0, g - 40)},${Math.max(0, b - 40)}))`,
-    boxShadow: `0 ${10 * U}px ${26 * U}px rgba(${r},${g},${b},.45), inset 0 ${3 * U}px ${6 * U}px rgba(255,255,255,.35)`,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
-  } }, /* @__PURE__ */ React.createElement("svg", { width: lado * 0.22, height: lado * 0.22, viewBox: "0 0 100 100" }, /* @__PURE__ */ React.createElement("path", { d: "M30 18 Q30 10 38 14 L84 44 Q92 50 84 56 L38 86 Q30 90 30 82 Z", fill: "#fff" }))), /* @__PURE__ */ React.createElement("div", { style: { width: lado * 0.42, height: lado * 0.035, borderRadius: lado, background: T.linea } }), /* @__PURE__ */ React.createElement("div", { style: { width: lado * 0.26, height: lado * 0.035, borderRadius: lado, background: T.linea } })), marco > 0 && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: -16 * U, border: `${1.6 * U}px solid rgba(${r},${g},${b},${(0.9 * marco).toFixed(3)})`, borderRadius: 12 * U } }, [[0, 0], [1, 0], [0, 1], [1, 1]].map(([px, py], i) => /* @__PURE__ */ React.createElement("div", { key: i, style: {
-    position: "absolute",
-    left: `calc(${px * 100}% - ${6 * U}px)`,
-    top: `calc(${py * 100}% - ${6 * U}px)`,
-    width: 12 * U,
-    height: 12 * U,
-    background: T.oscuro ? "#1B1E29" : "#fff",
-    border: `${1.6 * U}px solid rgb(${r},${g},${b})`,
-    opacity: marco
-  } })))), o.insignia && ins > 0 && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    right: -lado * 0.18 + (1 - k) * lado * 0.5,
-    top: -lado * 0.16 + (1 - k) * lado * 0.5,
-    padding: `${8 * U}px ${18 * U}px`,
-    borderRadius: 30 * U,
-    background: `rgb(${r},${g},${b})`,
-    color: "#fff",
-    fontFamily: T.letra || FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 24 * U,
-    opacity: ins,
-    transform: `scale(${(0.7 + 0.3 * ins).toFixed(3)})`,
-    boxShadow: `0 ${8 * U}px ${18 * U}px rgba(${r},${g},${b},.35)`
-  } }, o.insignia), o.insignia && Array.from({ length: 12 }, (_, i) => {
-    const a = i / 12 * Math.PI * 2 + 0.4, d = lado * (0.62 + 0.25 * (i * 37 % 10) / 10) * (0.8 + 0.4 * pe);
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", width: lado, height: lado }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", inset: 0, transform: `scale(${k.toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        inset: 0,
+        borderRadius: lado * 0.22,
+        background: T.oscuro ? T.carta : "linear-gradient(180deg,#FFFFFF,#F3F4F8)",
+        border: `${1.2 * U}px solid ${T.borde}`,
+        boxShadow: sombra(U),
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: lado * 0.07
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: lado * 0.52,
+          height: lado * 0.52,
+          borderRadius: lado * 0.13,
+          background: `linear-gradient(160deg, rgb(${Math.min(255, r + 40)},${Math.min(255, g + 70)},255), rgb(${r},${g},${b}) 60%, rgb(${Math.max(0, r - 30)},${Math.max(0, g - 40)},${Math.max(0, b - 40)}))`,
+          boxShadow: `0 ${10 * U}px ${26 * U}px rgba(${r},${g},${b},.45), inset 0 ${3 * U}px ${6 * U}px rgba(255,255,255,.35)`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: lado * 0.22, height: lado * 0.22, viewBox: "0 0 100 100", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M30 18 Q30 10 38 14 L84 44 Q92 50 84 56 L38 86 Q30 90 30 82 Z", fill: "#fff" }) }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado * 0.42, height: lado * 0.035, borderRadius: lado, background: T.linea } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado * 0.26, height: lado * 0.035, borderRadius: lado, background: T.linea } })
+      ] }),
+      marco > 0 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: -16 * U, border: `${1.6 * U}px solid rgba(${r},${g},${b},${(0.9 * marco).toFixed(3)})`, borderRadius: 12 * U }, children: [[0, 0], [1, 0], [0, 1], [1, 1]].map(([px, py], i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: `calc(${px * 100}% - ${6 * U}px)`,
+        top: `calc(${py * 100}% - ${6 * U}px)`,
+        width: 12 * U,
+        height: 12 * U,
+        background: T.oscuro ? "#1B1E29" : "#fff",
+        border: `${1.6 * U}px solid rgb(${r},${g},${b})`,
+        opacity: marco
+      } }, i)) })
+    ] }),
+    o.insignia && ins > 0 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
-      left: lado / 2 + Math.cos(a) * d,
-      top: lado / 2 + Math.sin(a) * d,
-      width: 5 * U,
-      height: 5 * U,
-      borderRadius: 3 * U,
-      background: i % 3 ? `rgba(${r},${g},${b},.75)` : TINTA,
-      opacity: pe * (1 - clamp((dt - te - 1.2) / 1.5))
-    } });
-  }));
+      right: -lado * 0.18 + (1 - k) * lado * 0.5,
+      top: -lado * 0.16 + (1 - k) * lado * 0.5,
+      padding: `${8 * U}px ${18 * U}px`,
+      borderRadius: 30 * U,
+      background: `rgb(${r},${g},${b})`,
+      color: "#fff",
+      fontFamily: T.letra || FAMILIA.inter,
+      fontWeight: 700,
+      fontSize: 24 * U,
+      opacity: ins,
+      transform: `scale(${(0.7 + 0.3 * ins).toFixed(3)})`,
+      boxShadow: `0 ${8 * U}px ${18 * U}px rgba(${r},${g},${b},.35)`
+    }, children: o.insignia }),
+    o.insignia && Array.from({ length: 12 }, (_, i) => {
+      const a = i / 12 * Math.PI * 2 + 0.4, d = lado * (0.62 + 0.25 * (i * 37 % 10) / 10) * (0.8 + 0.4 * pe);
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: lado / 2 + Math.cos(a) * d,
+        top: lado / 2 + Math.sin(a) * d,
+        width: 5 * U,
+        height: 5 * U,
+        borderRadius: 3 * U,
+        background: i % 3 ? `rgba(${r},${g},${b},.75)` : TINTA,
+        opacity: pe * (1 - clamp((dt - te - 1.2) / 1.5))
+      } }, i);
+    })
+  ] });
 };
 const Ojo = ({ o, U, acento }) => {
   const T = useTema();
@@ -1769,47 +1970,65 @@ const Ojo = ({ o, U, acento }) => {
   const mx = Math.sin(dt * 0.9) * d * 0.035, my = Math.cos(dt * 0.7) * d * 0.02;
   const [r, g, b] = rgb(acento);
   const c1 = easeOut((dt - 0.45) / 0.4), c2 = easeOut((dt - 0.8) / 0.4);
-  return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: d, height: d } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: -d * 0.18, borderRadius: "50%", background: `radial-gradient(circle, rgba(${r},${g},${b},.16), rgba(${r},${g},${b},0) 70%)` } }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    inset: 0,
-    borderRadius: "50%",
-    overflow: "hidden",
-    background: "radial-gradient(circle at 38% 32%, #FFFFFF 0%, #F6F1EC 38%, #E6D9CF 62%, #C9B2A3 82%, #A88C7C 100%)",
-    boxShadow: `0 ${30 * U}px ${70 * U}px rgba(60,40,30,.25)`
-  } }, /* @__PURE__ */ React.createElement("svg", { style: { position: "absolute", inset: 0 }, viewBox: "0 0 100 100", width: d, height: d }, [[2, 48, 22, 44, 30, 50], [98, 52, 80, 58, 70, 52], [50, 98, 46, 82, 52, 72], [10, 20, 24, 30, 32, 40], [90, 80, 78, 70, 68, 64], [80, 12, 70, 26, 64, 36]].map((p, i) => /* @__PURE__ */ React.createElement("path", { key: i, d: `M${p[0]} ${p[1]} Q${p[2]} ${p[3]} ${p[4]} ${p[5]}`, stroke: "rgba(190,60,60,.28)", strokeWidth: 0.5, fill: "none" }))), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: d / 2 - iris / 2 + mx,
-    top: d / 2 - iris / 2 + my,
-    width: iris,
-    height: iris,
-    borderRadius: "50%",
-    background: "repeating-conic-gradient(from 0deg, #2E6F86 0deg 4deg, #5FA4B9 4deg 7deg, #1F5468 7deg 11deg)",
-    boxShadow: `inset 0 0 ${iris * 0.12}px ${iris * 0.06}px rgba(10,30,40,.85)`
-  } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,170,90,.55) 0%, rgba(200,170,90,0) 42%, rgba(0,0,0,0) 60%, rgba(10,25,35,.55) 100%)" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: iris * 0.32, top: iris * 0.32, width: iris * 0.36, height: iris * 0.36, borderRadius: "50%", background: "#06080A" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: iris * 0.56, top: iris * 0.24, width: iris * 0.14, height: iris * 0.14, borderRadius: "50%", background: "rgba(255,255,255,.85)" } }))), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: -d * 0.42,
-    top: -d * 0.02,
-    width: d * 0.62,
-    padding: 14 * U,
-    borderRadius: 16 * U,
-    background: T.carta,
-    border: `${1.2 * U}px solid ${T.borde}`,
-    boxShadow: sombra(U, 0.7),
-    opacity: c1,
-    transform: `translateY(${((1 - c1) * 20 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * c1).toFixed(3)})`
-  } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 11 * U, letterSpacing: "0.1em", color: T.gris, marginBottom: 8 * U } }, "TIMELINE"), [0.8, 0.55, 0.7].map((w, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { height: 9 * U, width: `${w * 100}%`, marginLeft: `${i * 8}%`, borderRadius: 5 * U, marginBottom: 6 * U, background: i === 1 ? acento : T.linea } }))), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    right: -d * 0.36,
-    bottom: d * 0.04,
-    width: d * 0.62,
-    padding: 14 * U,
-    borderRadius: 16 * U,
-    background: T.carta,
-    border: `${1.2 * U}px solid ${T.borde}`,
-    boxShadow: sombra(U, 0.7),
-    opacity: c2,
-    transform: `translateY(${((1 - c2) * 20 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * c2).toFixed(3)})`
-  } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 11 * U, letterSpacing: "0.1em", color: T.gris, marginBottom: 8 * U } }, "SOUND FX"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 3 * U, height: 44 * U } }, Array.from({ length: 26 }, (_, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { width: 4 * U, borderRadius: 2 * U, background: acento, height: (8 + 34 * Math.abs(Math.sin(i * 1.7 + dt * 6))) * U * (0.4 + 0.6 * Math.abs(Math.sin(i * 0.5))) } })))));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", width: d, height: d }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: -d * 0.18, borderRadius: "50%", background: `radial-gradient(circle, rgba(${r},${g},${b},.16), rgba(${r},${g},${b},0) 70%)` } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      inset: 0,
+      borderRadius: "50%",
+      overflow: "hidden",
+      background: "radial-gradient(circle at 38% 32%, #FFFFFF 0%, #F6F1EC 38%, #E6D9CF 62%, #C9B2A3 82%, #A88C7C 100%)",
+      boxShadow: `0 ${30 * U}px ${70 * U}px rgba(60,40,30,.25)`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { style: { position: "absolute", inset: 0 }, viewBox: "0 0 100 100", width: d, height: d, children: [[2, 48, 22, 44, 30, 50], [98, 52, 80, 58, 70, 52], [50, 98, 46, 82, 52, 72], [10, 20, 24, 30, 32, 40], [90, 80, 78, 70, 68, 64], [80, 12, 70, 26, 64, 36]].map((p, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: `M${p[0]} ${p[1]} Q${p[2]} ${p[3]} ${p[4]} ${p[5]}`, stroke: "rgba(190,60,60,.28)", strokeWidth: 0.5, fill: "none" }, i)) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: d / 2 - iris / 2 + mx,
+        top: d / 2 - iris / 2 + my,
+        width: iris,
+        height: iris,
+        borderRadius: "50%",
+        background: "repeating-conic-gradient(from 0deg, #2E6F86 0deg 4deg, #5FA4B9 4deg 7deg, #1F5468 7deg 11deg)",
+        boxShadow: `inset 0 0 ${iris * 0.12}px ${iris * 0.06}px rgba(10,30,40,.85)`
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,170,90,.55) 0%, rgba(200,170,90,0) 42%, rgba(0,0,0,0) 60%, rgba(10,25,35,.55) 100%)" } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: iris * 0.32, top: iris * 0.32, width: iris * 0.36, height: iris * 0.36, borderRadius: "50%", background: "#06080A" } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: iris * 0.56, top: iris * 0.24, width: iris * 0.14, height: iris * 0.14, borderRadius: "50%", background: "rgba(255,255,255,.85)" } })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: -d * 0.42,
+      top: -d * 0.02,
+      width: d * 0.62,
+      padding: 14 * U,
+      borderRadius: 16 * U,
+      background: T.carta,
+      border: `${1.2 * U}px solid ${T.borde}`,
+      boxShadow: sombra(U, 0.7),
+      opacity: c1,
+      transform: `translateY(${((1 - c1) * 20 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * c1).toFixed(3)})`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 11 * U, letterSpacing: "0.1em", color: T.gris, marginBottom: 8 * U }, children: "TIMELINE" }),
+      [0.8, 0.55, 0.7].map((w, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { height: 9 * U, width: `${w * 100}%`, marginLeft: `${i * 8}%`, borderRadius: 5 * U, marginBottom: 6 * U, background: i === 1 ? acento : T.linea } }, i))
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      right: -d * 0.36,
+      bottom: d * 0.04,
+      width: d * 0.62,
+      padding: 14 * U,
+      borderRadius: 16 * U,
+      background: T.carta,
+      border: `${1.2 * U}px solid ${T.borde}`,
+      boxShadow: sombra(U, 0.7),
+      opacity: c2,
+      transform: `translateY(${((1 - c2) * 20 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * c2).toFixed(3)})`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 11 * U, letterSpacing: "0.1em", color: T.gris, marginBottom: 8 * U }, children: "SOUND FX" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", alignItems: "center", gap: 3 * U, height: 44 * U }, children: Array.from({ length: 26 }, (_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 4 * U, borderRadius: 2 * U, background: acento, height: (8 + 34 * Math.abs(Math.sin(i * 1.7 + dt * 6))) * U * (0.4 + 0.6 * Math.abs(Math.sin(i * 0.5))) } }, i)) })
+    ] })
+  ] });
 };
 const Barra = ({ o, U, acento }) => {
   const T = useTema();
@@ -1818,18 +2037,28 @@ const Barra = ({ o, U, acento }) => {
   const llena = clamp(dt / 0.9) * n;
   const pos = 7 - 4 * easeInOut((dt - 1) / 1.4);
   const [r, g, b] = rgb(acento);
-  return /* @__PURE__ */ React.createElement("div", { style: { width: w, padding: `${22 * U}px ${26 * U}px ${26 * U}px`, borderRadius: 30 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 14 * U, letterSpacing: "0.1em", color: T.gris, marginBottom: 16 * U } }, /* @__PURE__ */ React.createElement("span", null, o.etiqueta || "EFFECT USAGE"), /* @__PURE__ */ React.createElement("span", { style: { color: acento } }, Math.max(1, Math.round(pos)), " / ", n)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap } }, Array.from({ length: n }, (_, i) => {
-    const on = i < llena;
-    const marca = Math.max(0, 1 - Math.abs(i - pos));
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: {
-      width: (w - 52 * U - gap * (n - 1)) / n,
-      height: seg * 1.25,
-      borderRadius: 12 * U,
-      background: marca > 0.01 ? `rgba(${r},${g},${b},${(0.35 + 0.65 * marca).toFixed(3)})` : on ? T.linea : T.suave,
-      boxShadow: marca > 0.4 ? `0 0 ${24 * U * marca}px rgba(${r},${g},${b},.55)` : void 0,
-      transition: "none"
-    } });
-  })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { width: w, padding: `${22 * U}px ${26 * U}px ${26 * U}px`, borderRadius: 30 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 14 * U, letterSpacing: "0.1em", color: T.gris, marginBottom: 16 * U }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: o.etiqueta || "EFFECT USAGE" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { color: acento }, children: [
+        Math.max(1, Math.round(pos)),
+        " / ",
+        n
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", gap }, children: Array.from({ length: n }, (_, i) => {
+      const on = i < llena;
+      const marca = Math.max(0, 1 - Math.abs(i - pos));
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: (w - 52 * U - gap * (n - 1)) / n,
+        height: seg * 1.25,
+        borderRadius: 12 * U,
+        background: marca > 0.01 ? `rgba(${r},${g},${b},${(0.35 + 0.65 * marca).toFixed(3)})` : on ? T.linea : T.suave,
+        boxShadow: marca > 0.4 ? `0 0 ${24 * U * marca}px rgba(${r},${g},${b},.55)` : void 0,
+        transition: "none"
+      } }, i);
+    }) })
+  ] });
 };
 const contar = (valor, q) => {
   const limpio = String(valor || "").replace(/,/g, "");
@@ -1845,68 +2074,109 @@ const Linea = ({ w, h, p, acento, U, sube = true }) => {
   const largo = w * 1.6;
   const fin = pts[Math.max(0, Math.min(pts.length - 1, Math.round(p * (pts.length - 1))))];
   const [r, g, b] = rgb(acento);
-  return /* @__PURE__ */ React.createElement("svg", { width: w, height: h, style: { overflow: "visible" } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "area", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: `rgba(${r},${g},${b},.28)` }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: `rgba(${r},${g},${b},0)` }))), /* @__PURE__ */ React.createElement("path", { d: d + ` L${w} ${h} L0 ${h} Z`, fill: "url(#area)", style: { clipPath: `inset(0 ${((1 - p) * 100).toFixed(2)}% 0 0)` } }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: acento, strokeWidth: 4 * U, strokeLinecap: "round", strokeLinejoin: "round", strokeDasharray: largo, strokeDashoffset: largo * (1 - p) }), p > 0.05 && /* @__PURE__ */ React.createElement("circle", { cx: fin[0], cy: fin[1], r: 8 * U, fill: T.oscuro ? "#1B1E29" : "#fff", stroke: acento, strokeWidth: 4 * U }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: w, height: h, style: { overflow: "visible" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("linearGradient", { id: "area", x1: "0", y1: "0", x2: "0", y2: "1", children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0", stopColor: `rgba(${r},${g},${b},.28)` }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "1", stopColor: `rgba(${r},${g},${b},0)` })
+    ] }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: d + ` L${w} ${h} L0 ${h} Z`, fill: "url(#area)", style: { clipPath: `inset(0 ${((1 - p) * 100).toFixed(2)}% 0 0)` } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: acento, strokeWidth: 4 * U, strokeLinecap: "round", strokeLinejoin: "round", strokeDasharray: largo, strokeDashoffset: largo * (1 - p) }),
+    p > 0.05 && /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: fin[0], cy: fin[1], r: 8 * U, fill: T.oscuro ? "#1B1E29" : "#fff", stroke: acento, strokeWidth: 4 * U })
+  ] });
 };
 const Precio = ({ o, U, acento }) => {
   const T = useTema();
   const { dt } = useEntrada(o.t);
   const q = easeOut((dt - 0.1) / 1);
   const w = 640 * U;
-  return /* @__PURE__ */ React.createElement("div", { style: { width: w, padding: 34 * U, borderRadius: 32 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 14 * U, letterSpacing: "0.12em", color: T.gris } }, "TOTAL"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 16 * U } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 92 * U, letterSpacing: "-0.03em", color: T.tinta } }, o.signo || "$", o.valor ? contar(o.valor, q) : "")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18 * U } }, /* @__PURE__ */ React.createElement(Linea, { w: w - 68 * U, h: 150 * U, p: easeInOut((dt - 0.2) / 1.2), acento, U })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { width: w, padding: 34 * U, borderRadius: 32 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 14 * U, letterSpacing: "0.12em", color: T.gris }, children: "TOTAL" }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", alignItems: "baseline", gap: 16 * U }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 92 * U, letterSpacing: "-0.03em", color: T.tinta }, children: [
+      o.signo || "$",
+      o.valor ? contar(o.valor, q) : ""
+    ] }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 18 * U }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Linea, { w: w - 68 * U, h: 150 * U, p: easeInOut((dt - 0.2) / 1.2), acento, U }) })
+  ] });
 };
 const Objetos_Grafica = ({ o, U, acento }) => {
   const T = useTema();
   const { dt } = useEntrada(o.t);
   const w = 700 * U;
   const p = easeInOut((dt - 0.15) / 1.3);
-  return /* @__PURE__ */ React.createElement("div", { style: { width: w, padding: 32 * U, borderRadius: 32 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U), position: "relative" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 14 * U, letterSpacing: "0.12em", color: T.gris } }, "GROWTH"), o.valor && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 76 * U, color: acento, opacity: clamp((dt - 0.9) / 0.4) } }, "+", contar(o.valor, easeOut((dt - 0.9) / 0.8)), o.signo)), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14 * U } }, /* @__PURE__ */ React.createElement(Linea, { w: w - 64 * U, h: 230 * U, p, acento, U })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 10 * U, fontFamily: T.letra || FAMILIA.inter, fontWeight: 500, fontSize: 14 * U, color: T.gris } }, ["Q1", "Q2", "Q3", "Q4"].map((x) => /* @__PURE__ */ React.createElement("span", { key: x }, x))));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { width: w, padding: 32 * U, borderRadius: 32 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U), position: "relative" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 14 * U, letterSpacing: "0.12em", color: T.gris }, children: "GROWTH" }),
+      o.valor && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 76 * U, color: acento, opacity: clamp((dt - 0.9) / 0.4) }, children: [
+        "+",
+        contar(o.valor, easeOut((dt - 0.9) / 0.8)),
+        o.signo
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 14 * U }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Linea, { w: w - 64 * U, h: 230 * U, p, acento, U }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 10 * U, fontFamily: T.letra || FAMILIA.inter, fontWeight: 500, fontSize: 14 * U, color: T.gris }, children: ["Q1", "Q2", "Q3", "Q4"].map((x) => /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: x }, x)) })
+  ] });
 };
 const Reloj = ({ o, U, acento }) => {
   const T = useTema();
   const { dt } = useEntrada(o.t);
   const d = 330 * U, sw = 16 * U, rr = (d - sw) / 2, largo = 2 * Math.PI * rr;
   const p = easeInOut((dt - 0.1) / 1.3);
-  return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: d, height: d, borderRadius: "50%", background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) } }, /* @__PURE__ */ React.createElement("svg", { width: d, height: d, style: { position: "absolute", inset: 0, transform: "rotate(-90deg)" } }, /* @__PURE__ */ React.createElement("circle", { cx: d / 2, cy: d / 2, r: rr - 14 * U, fill: "none", stroke: T.suave, strokeWidth: sw }), /* @__PURE__ */ React.createElement("circle", { cx: d / 2, cy: d / 2, r: rr - 14 * U, fill: "none", stroke: acento, strokeWidth: sw, strokeLinecap: "round", strokeDasharray: largo, strokeDashoffset: largo * (1 - 0.82 * p) })), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 104 * U, letterSpacing: "-0.04em", color: T.tinta, lineHeight: 1 } }, contar(o.valor, easeOut((dt - 0.05) / 1))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 20 * U, letterSpacing: "0.14em", color: T.gris, marginTop: 6 * U } }, String(o.unidad || "").toUpperCase())));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", width: d, height: d, borderRadius: "50%", background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: d, height: d, style: { position: "absolute", inset: 0, transform: "rotate(-90deg)" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: d / 2, cy: d / 2, r: rr - 14 * U, fill: "none", stroke: T.suave, strokeWidth: sw }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: d / 2, cy: d / 2, r: rr - 14 * U, fill: "none", stroke: acento, strokeWidth: sw, strokeLinecap: "round", strokeDasharray: largo, strokeDashoffset: largo * (1 - 0.82 * p) })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 104 * U, letterSpacing: "-0.04em", color: T.tinta, lineHeight: 1 }, children: contar(o.valor, easeOut((dt - 0.05) / 1)) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 20 * U, letterSpacing: "0.14em", color: T.gris, marginTop: 6 * U }, children: String(o.unidad || "").toUpperCase() })
+    ] })
+  ] });
 };
 const PALETA = [["#FFB199", "#FF6A88"], ["#9AD0FF", "#4C7DFF"], ["#B8F2C0", "#3CC985"], ["#FFE08A", "#F5A524"], ["#D4B8FF", "#8B5CF6"]];
 const Avatares = ({ o, U, acento }) => {
   const T = useTema();
   const { dt } = useEntrada(o.t);
   const d = 132 * U;
-  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 22 * U } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex" } }, PALETA.map(([a, b], i) => {
-    const e = easeOut((dt - 0.08 * i) / 0.35);
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: {
-      width: d,
-      height: d,
-      marginLeft: i ? -d * 0.28 : 0,
-      borderRadius: "50%",
-      border: `${6 * U}px solid ${T.oscuro ? "#1B1E29" : "#fff"}`,
-      boxShadow: sombra(U, 0.6),
-      background: `linear-gradient(150deg, ${a}, ${b})`,
-      opacity: e,
-      transform: `translateY(${((1 - e) * 24 * U).toFixed(1)}px) scale(${(0.8 + 0.2 * e).toFixed(3)})`,
-      display: "flex",
-      alignItems: "flex-end",
-      justifyContent: "center",
-      overflow: "hidden"
-    } }, /* @__PURE__ */ React.createElement("div", { style: { width: d * 0.5, height: d * 0.5, borderRadius: "50%", background: "rgba(255,255,255,.55)", marginBottom: -d * 0.12 } }));
-  }), /* @__PURE__ */ React.createElement("div", { style: {
-    width: d,
-    height: d,
-    marginLeft: -d * 0.28,
-    borderRadius: "50%",
-    border: `${6 * U}px solid ${T.oscuro ? "#1B1E29" : "#fff"}`,
-    background: acento,
-    color: "#fff",
-    boxShadow: sombra(U, 0.6),
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: T.letra || FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 32 * U,
-    opacity: easeOut((dt - 0.45) / 0.35)
-  } }, o.valor ? "+" + contar(String(o.valor), easeOut((dt - 0.45) / 1)) : "+")), o.etiqueta && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 600, fontSize: 26 * U, color: T.tinta, opacity: easeOut((dt - 0.3) / 0.4) } }, o.etiqueta));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 22 * U }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex" }, children: [
+      PALETA.map(([a, b], i) => {
+        const e = easeOut((dt - 0.08 * i) / 0.35);
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: d,
+          height: d,
+          marginLeft: i ? -d * 0.28 : 0,
+          borderRadius: "50%",
+          border: `${6 * U}px solid ${T.oscuro ? "#1B1E29" : "#fff"}`,
+          boxShadow: sombra(U, 0.6),
+          background: `linear-gradient(150deg, ${a}, ${b})`,
+          opacity: e,
+          transform: `translateY(${((1 - e) * 24 * U).toFixed(1)}px) scale(${(0.8 + 0.2 * e).toFixed(3)})`,
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "center",
+          overflow: "hidden"
+        }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: d * 0.5, height: d * 0.5, borderRadius: "50%", background: "rgba(255,255,255,.55)", marginBottom: -d * 0.12 } }) }, i);
+      }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: d,
+        height: d,
+        marginLeft: -d * 0.28,
+        borderRadius: "50%",
+        border: `${6 * U}px solid ${T.oscuro ? "#1B1E29" : "#fff"}`,
+        background: acento,
+        color: "#fff",
+        boxShadow: sombra(U, 0.6),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: T.letra || FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 32 * U,
+        opacity: easeOut((dt - 0.45) / 0.35)
+      }, children: o.valor ? "+" + contar(String(o.valor), easeOut((dt - 0.45) / 1)) : "+" })
+    ] }),
+    o.etiqueta && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 600, fontSize: 26 * U, color: T.tinta, opacity: easeOut((dt - 0.3) / 0.4) }, children: o.etiqueta })
+  ] });
 };
 const Calendario = ({ o, U, acento }) => {
   const T = useTema();
@@ -1915,53 +2185,65 @@ const Calendario = ({ o, U, acento }) => {
   const col = Math.max(0, dias.indexOf(o.dia || "V"));
   const c = 64 * U;
   const mark = easeOut((dt - 0.6) / 0.35);
-  return /* @__PURE__ */ React.createElement("div", { style: { padding: 30 * U, borderRadius: 32 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: `repeat(7, ${c}px)`, gap: 8 * U } }, dias.map((x) => /* @__PURE__ */ React.createElement("div", { key: x, style: { textAlign: "center", fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 15 * U, color: T.gris, letterSpacing: "0.08em" } }, x)), Array.from({ length: 35 }, (_, i) => {
-    const n = i - 1, sel = Math.floor(i / 7) === 2 && i % 7 === col;
-    const e = easeOut((dt - 0.015 * i) / 0.25);
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: {
-      height: c,
-      borderRadius: 14 * U,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: T.letra || FAMILIA.inter,
-      fontWeight: 600,
-      fontSize: 22 * U,
-      opacity: n < 1 || n > 30 ? 0 : e,
-      background: sel ? `color-mix(in srgb, ${acento} ${Math.round(mark * 100)}%, #F4F5F8)` : T.suave,
-      color: sel && mark > 0.5 ? "#fff" : T.tinta,
-      transform: sel ? `scale(${(1 + 0.12 * Math.sin(clamp((dt - 0.6) / 0.5) * Math.PI)).toFixed(3)})` : void 0
-    } }, n >= 1 && n <= 30 ? n : "");
-  })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { padding: 30 * U, borderRadius: 32 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "grid", gridTemplateColumns: `repeat(7, ${c}px)`, gap: 8 * U }, children: [
+    dias.map((x) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { textAlign: "center", fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 15 * U, color: T.gris, letterSpacing: "0.08em" }, children: x }, x)),
+    Array.from({ length: 35 }, (_, i) => {
+      const n = i - 1, sel = Math.floor(i / 7) === 2 && i % 7 === col;
+      const e = easeOut((dt - 0.015 * i) / 0.25);
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        height: c,
+        borderRadius: 14 * U,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: T.letra || FAMILIA.inter,
+        fontWeight: 600,
+        fontSize: 22 * U,
+        opacity: n < 1 || n > 30 ? 0 : e,
+        background: sel ? `color-mix(in srgb, ${acento} ${Math.round(mark * 100)}%, #F4F5F8)` : T.suave,
+        color: sel && mark > 0.5 ? "#fff" : T.tinta,
+        transform: sel ? `scale(${(1 + 0.12 * Math.sin(clamp((dt - 0.6) / 0.5) * Math.PI)).toFixed(3)})` : void 0
+      }, children: n >= 1 && n <= 30 ? n : "" }, i);
+    })
+  ] }) });
 };
 const Estado = ({ o, U }) => {
   const T = useTema();
   const { dt } = useEntrada(o.t);
   const color = o.bien ? "#18C964" : "#FF3B4D";
   const trazo = easeOut((dt - 0.2) / 0.4);
-  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 22 * U, padding: `${24 * U}px ${36 * U}px ${24 * U}px ${24 * U}px`, borderRadius: 30 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) } }, /* @__PURE__ */ React.createElement("div", { style: { width: 92 * U, height: 92 * U, borderRadius: "50%", background: `${color}26`, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("svg", { width: 50 * U, height: 50 * U, viewBox: "0 0 50 50" }, o.bien ? /* @__PURE__ */ React.createElement("path", { d: "M10 26 L21 37 L41 14", fill: "none", stroke: color, strokeWidth: 6, strokeLinecap: "round", strokeLinejoin: "round", strokeDasharray: 60, strokeDashoffset: 60 * (1 - trazo) }) : /* @__PURE__ */ React.createElement("path", { d: "M13 13 L37 37 M37 13 L13 37", fill: "none", stroke: color, strokeWidth: 6, strokeLinecap: "round", strokeDasharray: 70, strokeDashoffset: 70 * (1 - trazo) }))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.02em", color: T.tinta } }, o.etiqueta));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 22 * U, padding: `${24 * U}px ${36 * U}px ${24 * U}px ${24 * U}px`, borderRadius: 30 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 92 * U, height: 92 * U, borderRadius: "50%", background: `${color}26`, display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 50 * U, height: 50 * U, viewBox: "0 0 50 50", children: o.bien ? /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M10 26 L21 37 L41 14", fill: "none", stroke: color, strokeWidth: 6, strokeLinecap: "round", strokeLinejoin: "round", strokeDasharray: 60, strokeDashoffset: 60 * (1 - trazo) }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M13 13 L37 37 M37 13 L13 37", fill: "none", stroke: color, strokeWidth: 6, strokeLinecap: "round", strokeDasharray: 70, strokeDashoffset: 70 * (1 - trazo) }) }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.02em", color: T.tinta }, children: o.etiqueta })
+  ] });
 };
 const Cifra = ({ o, U, acento }) => {
   const T = useTema();
-  return /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 250 * U, lineHeight: 1, color: acento, letterSpacing: "-0.02em" } }, o.valor), o.etiqueta && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 500, fontSize: 40 * U, color: T.tinta, marginTop: 8 * U } }, o.etiqueta));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { textAlign: "center" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 250 * U, lineHeight: 1, color: acento, letterSpacing: "-0.02em" }, children: o.valor }),
+    o.etiqueta && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 500, fontSize: 40 * U, color: T.tinta, marginTop: 8 * U }, children: o.etiqueta })
+  ] });
 };
 const Lista = ({ o, U, acento }) => {
   const T = useTema();
   const { dt } = useEntrada(o.t);
   const items = o.items || [];
   const tiempos = o.tiempos || items.map((_, i) => i * 0.45);
-  return /* @__PURE__ */ React.createElement("div", { style: { width: 640 * U, padding: `${26 * U}px ${30 * U}px`, borderRadius: 30 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U), display: "flex", flexDirection: "column", gap: 16 * U } }, items.map((x, i) => {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 640 * U, padding: `${26 * U}px ${30 * U}px`, borderRadius: 30 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U), display: "flex", flexDirection: "column", gap: 16 * U }, children: items.map((x, i) => {
     const e = easeOut((dt - (tiempos[i] || 0)) / 0.35);
     const c = easeOut((dt - (tiempos[i] || 0) - 0.15) / 0.3);
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 18 * U, opacity: 0.25 + 0.75 * e, transform: `translateX(${((1 - e) * 18 * U).toFixed(1)}px)` } }, /* @__PURE__ */ React.createElement("div", { style: { width: 40 * U, height: 40 * U, borderRadius: 12 * U, background: c > 0.5 ? acento : T.suave, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("svg", { width: 22 * U, height: 22 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("path", { d: "M5 12.5 L10 17 L19 7", fill: "none", stroke: "#fff", strokeWidth: 3.2, strokeLinecap: "round", strokeLinejoin: "round", strokeDasharray: 24, strokeDashoffset: 24 * (1 - c) }))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 600, fontSize: 34 * U, color: T.tinta } }, x));
-  }));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, opacity: 0.25 + 0.75 * e, transform: `translateX(${((1 - e) * 18 * U).toFixed(1)}px)` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 40 * U, height: 40 * U, borderRadius: 12 * U, background: c > 0.5 ? acento : T.suave, display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 22 * U, height: 22 * U, viewBox: "0 0 24 24", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M5 12.5 L10 17 L19 7", fill: "none", stroke: "#fff", strokeWidth: 3.2, strokeLinecap: "round", strokeLinejoin: "round", strokeDasharray: 24, strokeDashoffset: 24 * (1 - c) }) }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 600, fontSize: 34 * U, color: T.tinta }, children: x })
+    ] }, i);
+  }) });
 };
 const Comparacion = ({ o, U, acento }) => {
   const T = useTema();
   const { dt } = useEntrada(o.t);
   const tb = typeof o.t_b === "number" ? o.t_b : 0.8;
   const ea = easeOut(dt / 0.35), eb = easeOut((dt - tb) / 0.35);
-  const tarjeta = (texto, e, bueno) => /* @__PURE__ */ React.createElement("div", { style: {
+  const tarjeta = (texto, e, bueno) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     width: 300 * U,
     padding: `${30 * U}px ${20 * U}px`,
     borderRadius: 28 * U,
@@ -1970,39 +2252,59 @@ const Comparacion = ({ o, U, acento }) => {
     opacity: 0.2 + 0.8 * e,
     transform: `translateY(${((1 - e) * 24 * U).toFixed(1)}px) scale(${(0.92 + 0.08 * e).toFixed(3)})`,
     textAlign: "center"
-  } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 13 * U, letterSpacing: "0.14em", color: bueno ? "rgba(255,255,255,.75)" : GRIS, marginBottom: 10 * U } }, bueno ? "B" : "A"), /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: bueno ? FAMILIA.display : T.letra || FAMILIA.inter,
-    fontStyle: bueno ? "italic" : "normal",
-    fontWeight: bueno ? 400 : 700,
-    fontSize: (bueno ? 50 : 38) * U,
-    color: bueno ? "#fff" : T.tinta,
-    lineHeight: 1.05
-  } }, texto));
-  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 22 * U } }, tarjeta(o.a, ea, false), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: T.gris, opacity: eb } }, "\u2192"), tarjeta(o.b, eb, true));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 13 * U, letterSpacing: "0.14em", color: bueno ? "rgba(255,255,255,.75)" : GRIS, marginBottom: 10 * U }, children: bueno ? "B" : "A" }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      fontFamily: bueno ? FAMILIA.display : T.letra || FAMILIA.inter,
+      fontStyle: bueno ? "italic" : "normal",
+      fontWeight: bueno ? 400 : 700,
+      fontSize: (bueno ? 50 : 38) * U,
+      color: bueno ? "#fff" : T.tinta,
+      lineHeight: 1.05
+    }, children: texto })
+  ] });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 22 * U }, children: [
+    tarjeta(o.a, ea, false),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: T.gris, opacity: eb }, children: "\u2192" }),
+    tarjeta(o.b, eb, true)
+  ] });
 };
 const Pregunta = ({ o, U, acento }) => {
   const T = useTema();
   const { dt } = useEntrada(o.t);
   const ops = o.opciones || [];
   const pct = [62, 38, 21];
-  return /* @__PURE__ */ React.createElement("div", { style: { width: 660 * U, padding: 30 * U, borderRadius: 30 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, color: T.tinta, marginBottom: 20 * U } }, o.pregunta), ops.map((x, i) => {
-    const p = easeOut((dt - 0.5 - i * 0.15) / 0.9) * pct[i % 3];
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: { position: "relative", height: 70 * U, borderRadius: 18 * U, background: T.suave, marginBottom: 12 * U, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${p}%`, background: i === 0 ? acento : T.linea, opacity: i === 0 ? 0.9 : 1 } }), /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: `0 ${22 * U}px`,
-      fontFamily: T.letra || FAMILIA.inter,
-      fontWeight: 600,
-      fontSize: 28 * U,
-      color: i === 0 && p > 30 ? "#fff" : T.tinta
-    } }, /* @__PURE__ */ React.createElement("span", null, x), /* @__PURE__ */ React.createElement("span", null, Math.round(p), "%")));
-  }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { width: 660 * U, padding: 30 * U, borderRadius: 30 * U, background: T.carta, border: `${1.2 * U}px solid ${T.borde}`, boxShadow: sombra(U) }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: T.letra || FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, color: T.tinta, marginBottom: 20 * U }, children: o.pregunta }),
+    ops.map((x, i) => {
+      const p = easeOut((dt - 0.5 - i * 0.15) / 0.9) * pct[i % 3];
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", height: 70 * U, borderRadius: 18 * U, background: T.suave, marginBottom: 12 * U, overflow: "hidden" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${p}%`, background: i === 0 ? acento : T.linea, opacity: i === 0 ? 0.9 : 1 } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: `0 ${22 * U}px`,
+          fontFamily: T.letra || FAMILIA.inter,
+          fontWeight: 600,
+          fontSize: 28 * U,
+          color: i === 0 && p > 30 ? "#fff" : T.tinta
+        }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: x }),
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { children: [
+            Math.round(p),
+            "%"
+          ] })
+        ] })
+      ] }, i);
+    })
+  ] });
 };
 
 ;// ./src/Skill.tsx
+
 
 
 
@@ -2019,7 +2321,7 @@ const useVida = (entra = 0.35, sale = 0.3) => {
   const t = frame / fps, fin = durationInFrames / fps;
   return { t, fin, e: Skill_easeOut(t / entra), s: Skill_easeOut((t - (fin - sale)) / sale) };
 };
-const Sombra = ({ y, fuerza }) => /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 95% 46% at 50% ${y}%, rgba(0,0,0,${(0.68 * fuerza).toFixed(3)}), rgba(0,0,0,${(0.36 * fuerza).toFixed(3)}) 55%, rgba(0,0,0,${(0.12 * fuerza).toFixed(3)}) 100%)` } });
+const Sombra = ({ y, fuerza }) => /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 95% 46% at 50% ${y}%, rgba(0,0,0,${(0.68 * fuerza).toFixed(3)}), rgba(0,0,0,${(0.36 * fuerza).toFixed(3)}) 55%, rgba(0,0,0,${(0.12 * fuerza).toFixed(3)}) 100%)` } });
 const cristal = (U) => ({
   background: "linear-gradient(180deg, rgba(34,37,48,.78), rgba(18,20,28,.78))",
   border: `${Math.max(1, U * 1.4)}px solid rgba(255,255,255,.10)`,
@@ -2034,52 +2336,61 @@ const PasosT5 = ({ n = 3, actual = 0, gancho = false, y = 64 }) => {
   const d = 58 * U, linea = 64 * U, pad = 22 * U;
   const ancho = n * d + (n - 1) * linea + 2 * pad;
   const rojo = "#FF4B55";
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement(Sombra, { y, fuerza: vis }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: (width - ancho) / 2,
-    top: y / 100 * height - (d + 2 * pad) / 2,
-    width: ancho,
-    height: d + 2 * pad,
-    borderRadius: (d + 2 * pad) / 2,
-    ...cristal(U),
-    opacity: vis,
-    transform: `translateY(${((1 - e) * 14 * U).toFixed(2)}px) scale(${(0.97 + 0.03 * e).toFixed(4)})`,
-    display: "flex",
-    alignItems: "center",
-    padding: `0 ${pad}px`
-  } }, Array.from({ length: n }, (_, i) => {
-    const k = i + 1;
-    const hecho = !gancho && k < actual, ahora = !gancho && k === actual;
-    const pi = gancho ? Skill_easeOut((t - 0.15 - i * 0.16) / 0.3) : 1;
-    const pa = ahora ? Skill_easeOut((t - 0.25) / 0.35) : 0;
-    const lleno = hecho || pa > 0.5;
-    const anillo = ahora ? clamp((t - 0.25) / 0.6) : 0;
-    const color = gancho ? rojo : lleno ? "#FFFFFF" : "rgba(255,255,255,.38)";
-    return /* @__PURE__ */ React.createElement("div", { key: k, style: { display: "flex", alignItems: "center" } }, i > 0 && /* @__PURE__ */ React.createElement("div", { style: { width: linea, height: Math.max(1.5, 2.6 * U), background: gancho ? "rgba(255,75,85,.45)" : k <= actual ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.2)" } }), /* @__PURE__ */ React.createElement("div", { style: {
-      position: "relative",
-      width: d,
-      height: d,
-      borderRadius: "50%",
-      border: `${Math.max(1.5, 3 * U)}px solid ${color}`,
-      boxSizing: "border-box",
-      background: lleno ? "#FFFFFF" : "transparent",
-      opacity: pi,
-      transform: `scale(${(0.7 + 0.3 * pi).toFixed(3)})`,
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Sombra, { y, fuerza: vis }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: (width - ancho) / 2,
+      top: y / 100 * height - (d + 2 * pad) / 2,
+      width: ancho,
+      height: d + 2 * pad,
+      borderRadius: (d + 2 * pad) / 2,
+      ...cristal(U),
+      opacity: vis,
+      transform: `translateY(${((1 - e) * 14 * U).toFixed(2)}px) scale(${(0.97 + 0.03 * e).toFixed(4)})`,
       display: "flex",
       alignItems: "center",
-      justifyContent: "center",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 700,
-      fontSize: 24 * U,
-      color: gancho ? rojo : lleno ? Skill_TINTA : "rgba(255,255,255,.55)"
-    } }, k, ahora && anillo > 0 && anillo < 1 && /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      inset: -2 * U,
-      borderRadius: "50%",
-      border: `${2 * U}px solid rgba(255,255,255,${(0.7 * (1 - anillo)).toFixed(3)})`,
-      transform: `scale(${(1 + anillo * 0.55).toFixed(3)})`
-    } })));
-  })));
+      padding: `0 ${pad}px`
+    }, children: Array.from({ length: n }, (_, i) => {
+      const k = i + 1;
+      const hecho = !gancho && k < actual, ahora = !gancho && k === actual;
+      const pi = gancho ? Skill_easeOut((t - 0.15 - i * 0.16) / 0.3) : 1;
+      const pa = ahora ? Skill_easeOut((t - 0.25) / 0.35) : 0;
+      const lleno = hecho || pa > 0.5;
+      const anillo = ahora ? clamp((t - 0.25) / 0.6) : 0;
+      const color = gancho ? rojo : lleno ? "#FFFFFF" : "rgba(255,255,255,.38)";
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center" }, children: [
+        i > 0 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: linea, height: Math.max(1.5, 2.6 * U), background: gancho ? "rgba(255,75,85,.45)" : k <= actual ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.2)" } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "relative",
+          width: d,
+          height: d,
+          borderRadius: "50%",
+          border: `${Math.max(1.5, 3 * U)}px solid ${color}`,
+          boxSizing: "border-box",
+          background: lleno ? "#FFFFFF" : "transparent",
+          opacity: pi,
+          transform: `scale(${(0.7 + 0.3 * pi).toFixed(3)})`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 700,
+          fontSize: 24 * U,
+          color: gancho ? rojo : lleno ? Skill_TINTA : "rgba(255,255,255,.55)"
+        }, children: [
+          k,
+          ahora && anillo > 0 && anillo < 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            position: "absolute",
+            inset: -2 * U,
+            borderRadius: "50%",
+            border: `${2 * U}px solid rgba(255,255,255,${(0.7 * (1 - anillo)).toFixed(3)})`,
+            transform: `scale(${(1 + anillo * 0.55).toFixed(3)})`
+          } })
+        ] })
+      ] }, k);
+    }) })
+  ] });
 };
 const DeslizadorT5 = ({ izq = "Principiante", der = "Profesional", y = 63, acento = "#4C7DFF" }) => {
   useFuentes();
@@ -2091,46 +2402,57 @@ const DeslizadorT5 = ({ izq = "Principiante", der = "Profesional", y = 63, acent
   const p = Skill_easeInOut((t - 0.35) / Math.max(0.6, fin - 0.95));
   const [r, g, b] = rgb(acento);
   const pista = w - 2 * pad, x = pad + pista * p;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement(Sombra, { y, fuerza: vis }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: (width - w) / 2,
-    top: y / 100 * height - hgt / 2,
-    width: w,
-    height: hgt,
-    borderRadius: 26 * U,
-    ...cristal(U),
-    opacity: vis,
-    transform: `translateY(${((1 - e) * 16 * U).toFixed(2)}px)`
-  } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: pad,
-    right: pad,
-    top: 26 * U,
-    display: "flex",
-    justifyContent: "space-between",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 500,
-    fontSize: 21 * U,
-    color: "rgba(255,255,255,.72)",
-    letterSpacing: "0.01em"
-  } }, /* @__PURE__ */ React.createElement("span", { style: { color: p < 0.5 ? "#fff" : void 0 } }, izq), /* @__PURE__ */ React.createElement("span", { style: { color: p >= 0.5 ? "#fff" : void 0 } }, der)), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: pad, width: pista, top: 74 * U, height: 8 * U, borderRadius: 4 * U, background: "rgba(255,255,255,.14)" } }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: pad,
-    width: Math.max(0, x - pad),
-    top: 74 * U,
-    height: 8 * U,
-    borderRadius: 4 * U,
-    background: `linear-gradient(90deg, rgba(${r},${g},${b},.55), rgb(${r},${g},${b}))`
-  } }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: x - 15 * U,
-    top: 78 * U - 15 * U,
-    width: 30 * U,
-    height: 30 * U,
-    borderRadius: "50%",
-    background: "#fff",
-    boxShadow: `0 0 ${18 * U}px rgba(${r},${g},${b},.9), 0 ${4 * U}px ${10 * U}px rgba(0,0,0,.35)`
-  } })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Sombra, { y, fuerza: vis }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: (width - w) / 2,
+      top: y / 100 * height - hgt / 2,
+      width: w,
+      height: hgt,
+      borderRadius: 26 * U,
+      ...cristal(U),
+      opacity: vis,
+      transform: `translateY(${((1 - e) * 16 * U).toFixed(2)}px)`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: pad,
+        right: pad,
+        top: 26 * U,
+        display: "flex",
+        justifyContent: "space-between",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 500,
+        fontSize: 21 * U,
+        color: "rgba(255,255,255,.72)",
+        letterSpacing: "0.01em"
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: p < 0.5 ? "#fff" : void 0 }, children: izq }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: p >= 0.5 ? "#fff" : void 0 }, children: der })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: pad, width: pista, top: 74 * U, height: 8 * U, borderRadius: 4 * U, background: "rgba(255,255,255,.14)" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: pad,
+        width: Math.max(0, x - pad),
+        top: 74 * U,
+        height: 8 * U,
+        borderRadius: 4 * U,
+        background: `linear-gradient(90deg, rgba(${r},${g},${b},.55), rgb(${r},${g},${b}))`
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: x - 15 * U,
+        top: 78 * U - 15 * U,
+        width: 30 * U,
+        height: 30 * U,
+        borderRadius: "50%",
+        background: "#fff",
+        boxShadow: `0 0 ${18 * U}px rgba(${r},${g},${b},.9), 0 ${4 * U}px ${10 * U}px rgba(0,0,0,.35)`
+      } })
+    ] })
+  ] });
 };
 const ESCALA_OBJ = {
   ficha: 1.35,
@@ -2178,25 +2500,25 @@ const EscenaT5 = ({
   const flota = Math.sin(t * 1.6) * 6 * U;
   const objeto = (o, x, y2, fuera = [0, -1]) => {
     const C = {
-      muestra: /* @__PURE__ */ React.createElement(Muestra, { o, U }),
-      ficha: /* @__PURE__ */ React.createElement(Ficha, { o, U }),
-      app: /* @__PURE__ */ React.createElement(App, { o, U, acento }),
-      ojo: /* @__PURE__ */ React.createElement(Ojo, { o, U, acento }),
-      barra: /* @__PURE__ */ React.createElement(Barra, { o, U, acento }),
-      precio: /* @__PURE__ */ React.createElement(Precio, { o, U, acento }),
-      grafica: /* @__PURE__ */ React.createElement(Objetos_Grafica, { o, U, acento }),
-      reloj: /* @__PURE__ */ React.createElement(Reloj, { o, U, acento }),
-      avatares: /* @__PURE__ */ React.createElement(Avatares, { o, U, acento }),
-      calendario: /* @__PURE__ */ React.createElement(Calendario, { o, U, acento }),
-      estado: /* @__PURE__ */ React.createElement(Estado, { o, U }),
-      cifra: /* @__PURE__ */ React.createElement(Cifra, { o, U, acento }),
-      lista: /* @__PURE__ */ React.createElement(Lista, { o, U, acento }),
-      comparacion: /* @__PURE__ */ React.createElement(Comparacion, { o, U, acento }),
-      pregunta: /* @__PURE__ */ React.createElement(Pregunta, { o, U, acento }),
-      icono3d: /* @__PURE__ */ React.createElement("div", { style: { width: 340 * U, height: 340 * U, borderRadius: 75 * U, background: "linear-gradient(180deg,#FFFFFF,#F4F5F8)", boxShadow: sombra(U), display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${o.icono}.png`), style: { width: 210 * U, height: 210 * U, objectFit: "contain" } }))
+      muestra: /* @__PURE__ */ (0,jsx_runtime.jsx)(Muestra, { o, U }),
+      ficha: /* @__PURE__ */ (0,jsx_runtime.jsx)(Ficha, { o, U }),
+      app: /* @__PURE__ */ (0,jsx_runtime.jsx)(App, { o, U, acento }),
+      ojo: /* @__PURE__ */ (0,jsx_runtime.jsx)(Ojo, { o, U, acento }),
+      barra: /* @__PURE__ */ (0,jsx_runtime.jsx)(Barra, { o, U, acento }),
+      precio: /* @__PURE__ */ (0,jsx_runtime.jsx)(Precio, { o, U, acento }),
+      grafica: /* @__PURE__ */ (0,jsx_runtime.jsx)(Objetos_Grafica, { o, U, acento }),
+      reloj: /* @__PURE__ */ (0,jsx_runtime.jsx)(Reloj, { o, U, acento }),
+      avatares: /* @__PURE__ */ (0,jsx_runtime.jsx)(Avatares, { o, U, acento }),
+      calendario: /* @__PURE__ */ (0,jsx_runtime.jsx)(Calendario, { o, U, acento }),
+      estado: /* @__PURE__ */ (0,jsx_runtime.jsx)(Estado, { o, U }),
+      cifra: /* @__PURE__ */ (0,jsx_runtime.jsx)(Cifra, { o, U, acento }),
+      lista: /* @__PURE__ */ (0,jsx_runtime.jsx)(Lista, { o, U, acento }),
+      comparacion: /* @__PURE__ */ (0,jsx_runtime.jsx)(Comparacion, { o, U, acento }),
+      pregunta: /* @__PURE__ */ (0,jsx_runtime.jsx)(Pregunta, { o, U, acento }),
+      icono3d: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 340 * U, height: 340 * U, borderRadius: 75 * U, background: "linear-gradient(180deg,#FFFFFF,#F4F5F8)", boxShadow: sombra(U), display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${o.icono}.png`), style: { width: 210 * U, height: 210 * U, objectFit: "contain" } }) })
     };
     const k = (ESCALA_OBJ[o.tipo] ?? 1) * ((arriba || encima) && ["ojo", "precio", "grafica", "calendario", "barra", "lista", "pregunta"].includes(o.tipo) ? 0.8 : 1) * (encima ? 0.86 : 1);
-    return /* @__PURE__ */ React.createElement(Pieza, { key: `${o.tipo}${x}${y2}`, x, y: y2, t0: o.t, U, salida, fuera, flota: o.tipo === "barra" ? 0.3 : 1 }, /* @__PURE__ */ React.createElement("div", { style: { transform: `scale(${k})` } }, C[o.tipo] || null));
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(Pieza, { x, y: y2, t0: o.t, U, salida, fuera, flota: o.tipo === "barra" ? 0.3 : 1, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { transform: `scale(${k})` }, children: C[o.tipo] || null }) }, `${o.tipo}${x}${y2}`);
   };
   let contenido = null;
   if (objetos.length) {
@@ -2217,7 +2539,7 @@ const EscenaT5 = ({
     }
   } else if (variante === "icono") {
     const lado = (arriba ? 300 : 360) * U;
-    contenido = /* @__PURE__ */ React.createElement("div", { style: {
+    contenido = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "absolute",
       left: width / 2 - lado / 2,
       top: cy - lado / 2 + flota,
@@ -2233,12 +2555,16 @@ const EscenaT5 = ({
       alignItems: "center",
       justifyContent: "center",
       gap: lado * 0.06
-    } }, icono && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono}.png`), style: { width: lado * 0.56, height: lado * 0.56, objectFit: "contain" } }), /* @__PURE__ */ React.createElement("div", { style: { width: lado * 0.46, height: lado * 0.035, borderRadius: lado, background: "#E6E8EE" } }), /* @__PURE__ */ React.createElement("div", { style: { width: lado * 0.3, height: lado * 0.035, borderRadius: lado, background: "#EEF0F4" } }));
+    }, children: [
+      icono && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`iconos3d/${icono}.png`), style: { width: lado * 0.56, height: lado * 0.56, objectFit: "contain" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado * 0.46, height: lado * 0.035, borderRadius: lado, background: "#E6E8EE" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado * 0.3, height: lado * 0.035, borderRadius: lado, background: "#EEF0F4" } })
+    ] });
   } else if (variante === "cifra") {
     contenido = objeto({ tipo: "cifra", t: 0.22, valor: cifra, etiqueta }, width / 2, cy);
   } else if (variante === "tarjeta" && imagen) {
     const w = (arriba ? 330 : 470) * U, h = w * 1.42;
-    contenido = /* @__PURE__ */ React.createElement("div", { style: {
+    contenido = /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
       left: width / 2 - w / 2,
       top: cy - h / 2 + flota,
@@ -2250,20 +2576,30 @@ const EscenaT5 = ({
       boxShadow: `0 ${30 * U}px ${70 * U}px rgba(20,25,40,.25)`,
       opacity: po * (1 - salida),
       transform: `translateY(${((1 - po) * 90 * U).toFixed(1)}px) rotate(${(-3 + (1 - po) * -4).toFixed(2)}deg) scale(${(0.6 + 0.4 * po).toFixed(3)})`
-    } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: imagen, style: { width: "100%", height: "100%", objectFit: "cover" } }));
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: imagen, style: { width: "100%", height: "100%", objectFit: "cover" } }) });
   }
   const [ar, ag, ab] = rgb(acento);
   if (melocoton) {
     const pre = 0.22;
     const quema = clamp(t / pre), aparece = clamp((t - pre) / 0.05), blanco = t < pre ? 0.95 * quema * quema : 0.95 * (1 - Skill_easeOut((t - pre) / 0.4));
     const sale = clamp((t - (fin - 0.25)) / 0.25);
-    return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: aparece * (1 - sale), fontSynthesis: "none" } }, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(165deg, #FCE2D2 0%, #FFF4EE 46%, #FDE6D8 100%)" } }), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 70% 45% at ${(30 + 8 * Math.sin(t * 0.5)).toFixed(2)}% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%)` } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, transform: `scale(${(1 + 0.025 * clamp(t / Math.max(1, fin))).toFixed(4)})` } }, /* @__PURE__ */ React.createElement(TemaCtx.Provider, { value: TEMA_MELOCOTON }, contenido))), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "#FFFBF7", opacity: Math.max(blanco, 0.85 * Math.sin(sale * Math.PI)) } }));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: aparece * (1 - sale), fontSynthesis: "none" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(165deg, #FCE2D2 0%, #FFF4EE 46%, #FDE6D8 100%)" } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 70% 45% at ${(30 + 8 * Math.sin(t * 0.5)).toFixed(2)}% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%)` } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, transform: `scale(${(1 + 0.025 * clamp(t / Math.max(1, fin))).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(TemaCtx.Provider, { value: TEMA_MELOCOTON, children: contenido }) })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: "#FFFBF7", opacity: Math.max(blanco, 0.85 * Math.sin(sale * Math.PI)) } })
+    ] });
   }
   if (encima) {
     const vis = e * (1 - s);
-    return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 90% 40% at 50% ${y}%, rgba(0,0,0,${(0.62 * vis).toFixed(3)}), rgba(0,0,0,${(0.3 * vis).toFixed(3)}) 60%, rgba(0,0,0,${(0.14 * vis).toFixed(3)}) 100%)` } }), /* @__PURE__ */ React.createElement(TemaCtx.Provider, { value: TEMA_OSCURO }, contenido));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(ellipse 90% 40% at 50% ${y}%, rgba(0,0,0,${(0.62 * vis).toFixed(3)}), rgba(0,0,0,${(0.3 * vis).toFixed(3)}) 60%, rgba(0,0,0,${(0.14 * vis).toFixed(3)}) 100%)` } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(TemaCtx.Provider, { value: TEMA_OSCURO, children: contenido })
+    ] });
   }
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: 0,
     top: 0,
@@ -2273,19 +2609,21 @@ const EscenaT5 = ({
     clipPath: corte,
     background: cristal2 ? `radial-gradient(ellipse 80% 60% at 50% 40%, rgba(${ar},${ag},${ab},.22), rgba(${ar},${ag},${ab},0) 70%), linear-gradient(180deg, #121626, #0A0D18)` : PAPEL,
     boxShadow: arriba ? `0 ${10 * U}px ${30 * U}px rgba(0,0,0,.35)` : void 0
-  } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, transform: `scale(${zoom.toFixed(4)})`, filter: desenfoque > 0.05 ? `blur(${desenfoque.toFixed(2)}px)` : void 0 } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    inset: "-4%",
-    backgroundImage: cristal2 ? `linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px)` : `linear-gradient(rgba(20,20,40,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(20,20,40,.045) 1px, transparent 1px)`,
-    backgroundSize: `${paso}px ${paso}px`,
-    backgroundPosition: `${width / 2 % paso}px 0`
-  } }), !cristal2 && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(ellipse 85% 70% at 50% 45%, rgba(255,255,255,.55), rgba(0,0,0,.035) 100%)" } }), /* @__PURE__ */ React.createElement(TemaCtx.Provider, { value: cristal2 ? TEMA_OSCURO : TEMA_CLARO }, contenido))));
+  }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", inset: 0, transform: `scale(${zoom.toFixed(4)})`, filter: desenfoque > 0.05 ? `blur(${desenfoque.toFixed(2)}px)` : void 0 }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      inset: "-4%",
+      backgroundImage: cristal2 ? `linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px)` : `linear-gradient(rgba(20,20,40,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(20,20,40,.045) 1px, transparent 1px)`,
+      backgroundSize: `${paso}px ${paso}px`,
+      backgroundPosition: `${width / 2 % paso}px 0`
+    } }),
+    !cristal2 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(ellipse 85% 70% at 50% 45%, rgba(255,255,255,.55), rgba(0,0,0,.035) 100%)" } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(TemaCtx.Provider, { value: cristal2 ? TEMA_OSCURO : TEMA_CLARO, children: contenido })
+  ] }) }) });
 };
 
 // EXTERNAL MODULE: ./node_modules/lottie-web/build/player/lottie.js
 var lottie = __webpack_require__(9891);
-// EXTERNAL MODULE: ./node_modules/react/jsx-runtime.js
-var jsx_runtime = __webpack_require__(4848);
 ;// ./node_modules/@remotion/lottie/dist/esm/index.mjs
 // src/get-lottie-metadata.ts
 var getLottieMetadata = (animationData) => {
@@ -2527,6 +2865,7 @@ var Lottie = ({
 
 
 
+
 let indice = null;
 const datos = {};
 const idEmoji = (s) => String(s || "").replace(/^emoji:/, "").replace(/^rcs_emoji_/, "").replace(/\.png$/, "");
@@ -2552,12 +2891,13 @@ const EmojiAnimado = ({ id, lado, style, bucle = true }) => {
       vivo = false;
     };
   }, [n, h]);
-  if (anim === void 0) return /* @__PURE__ */ React.createElement("div", { style: { width: lado, height: lado, ...style } });
-  if (anim === null) return /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`stickers/rcs_emoji_${n}.png`), style: { width: lado, height: lado, objectFit: "contain", ...style } });
-  return /* @__PURE__ */ React.createElement("div", { style: { width: lado, height: lado, ...style } }, /* @__PURE__ */ React.createElement(Lottie, { animationData: anim, loop: bucle, style: { width: "100%", height: "100%" } }));
+  if (anim === void 0) return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado, height: lado, ...style } });
+  if (anim === null) return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`stickers/rcs_emoji_${n}.png`), style: { width: lado, height: lado, objectFit: "contain", ...style } });
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado, height: lado, ...style }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Lottie, { animationData: anim, loop: bucle, style: { width: "100%", height: "100%" } }) });
 };
 
 ;// ./src/Acompanantes.tsx
+
 
 
 
@@ -2695,59 +3035,79 @@ const AcompananteT5 = ({
   };
   const flota = Math.sin(t * 2.1) * 4 * U;
   const pop = (t0) => resorte((t - t0) / 0.45);
-  const icono = (lado, contenido, fondo2 = `rgba(${r},${g},${b},.16)`) => /* @__PURE__ */ React.createElement("div", { style: { width: lado, height: lado, borderRadius: lado / 2, background: fondo2, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, contenido);
-  const textos = (arriba, abajo, grande = 40) => /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.05 } }, arriba && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 15 * U, letterSpacing: "0.14em", color: gris, textTransform: "uppercase" } }, arriba), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: grande * U, letterSpacing: "-0.01em", color: tinta } }, abajo));
+  const icono = (lado, contenido, fondo2 = `rgba(${r},${g},${b},.16)`) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado, height: lado, borderRadius: lado / 2, background: fondo2, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }, children: contenido });
+  const textos = (arriba, abajo, grande = 40) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.05 }, children: [
+    arriba && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 15 * U, letterSpacing: "0.14em", color: gris, textTransform: "uppercase" }, children: arriba }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: grande * U, letterSpacing: "-0.01em", color: tinta }, children: abajo })
+  ] });
   let cuerpo = null;
   if (tipo === "lugar") {
     const p = pop(0.15), ola = Math.sin(t * 6) * 4;
     const ruta = clamp((t - 0.35) / 0.8);
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: 70 * U, height: 70 * U, flex: "none" } }, /* @__PURE__ */ React.createElement("svg", { width: 70 * U, height: 70 * U, viewBox: "0 0 70 70", style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ React.createElement(
-      "circle",
-      {
-        cx: "35",
-        cy: "35",
-        r: "30",
-        fill: "none",
-        stroke: `rgba(${r},${g},${b},.5)`,
-        strokeWidth: "2",
-        strokeDasharray: "4 6",
-        strokeDashoffset: -t * 12,
-        style: { opacity: ruta }
-      }
-    )), /* @__PURE__ */ React.createElement("svg", { width: 40 * U, height: 52 * U, viewBox: "0 0 40 52", style: { position: "absolute", left: 15 * U, top: (8 - (1 - p) * 30) * U, opacity: clamp(p * 2) } }, /* @__PURE__ */ React.createElement("path", { d: "M20 50 C20 50 4 30 4 18 A16 16 0 0 1 36 18 C36 30 20 50 20 50 Z", fill: "#FF3B4D" }), /* @__PURE__ */ React.createElement("circle", { cx: "20", cy: "18", r: "6.5", fill: "#fff" }))), pais && /* @__PURE__ */ React.createElement("div", { style: {
-      width: 84 * U,
-      height: 56 * U,
-      borderRadius: 10 * U,
-      overflow: "hidden",
-      flex: "none",
-      boxShadow: `0 ${4 * U}px ${12 * U}px rgba(0,0,0,.3)`,
-      transform: `perspective(${300 * U}px) rotateY(${ola.toFixed(2)}deg) skewY(${(ola * 0.35).toFixed(2)}deg) scale(${(0.6 + 0.4 * pop(0.3)).toFixed(3)})`
-    } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`mapa/banderas/${pais}.svg`), style: { width: "100%", height: "100%", objectFit: "cover" } })), textos(kicker, texto, 42));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: carta, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", width: 70 * U, height: 70 * U, flex: "none" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 70 * U, height: 70 * U, viewBox: "0 0 70 70", style: { position: "absolute", inset: 0 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "circle",
+          {
+            cx: "35",
+            cy: "35",
+            r: "30",
+            fill: "none",
+            stroke: `rgba(${r},${g},${b},.5)`,
+            strokeWidth: "2",
+            strokeDasharray: "4 6",
+            strokeDashoffset: -t * 12,
+            style: { opacity: ruta }
+          }
+        ) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 40 * U, height: 52 * U, viewBox: "0 0 40 52", style: { position: "absolute", left: 15 * U, top: (8 - (1 - p) * 30) * U, opacity: clamp(p * 2) }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M20 50 C20 50 4 30 4 18 A16 16 0 0 1 36 18 C36 30 20 50 20 50 Z", fill: "#FF3B4D" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "20", cy: "18", r: "6.5", fill: "#fff" })
+        ] })
+      ] }),
+      pais && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: 84 * U,
+        height: 56 * U,
+        borderRadius: 10 * U,
+        overflow: "hidden",
+        flex: "none",
+        boxShadow: `0 ${4 * U}px ${12 * U}px rgba(0,0,0,.3)`,
+        transform: `perspective(${300 * U}px) rotateY(${ola.toFixed(2)}deg) skewY(${(ola * 0.35).toFixed(2)}deg) scale(${(0.6 + 0.4 * pop(0.3)).toFixed(3)})`
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(`mapa/banderas/${pais}.svg`), style: { width: "100%", height: "100%", objectFit: "cover" } }) }),
+      textos(kicker, texto, 42)
+    ] });
   } else if (tipo === "saludo") {
     const giro = Math.sin((t - 0.25) * 11) * 18 * clamp((t - 0.2) / 0.3) * (1 - clamp((t - 1.6) / 0.4));
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, /* @__PURE__ */ React.createElement(EmojiAnimado, { id: sticker || "waving_hand", lado: 78 * U, style: {
-      transform: `rotate(${(giro * 0.4).toFixed(1)}deg) scale(${(0.5 + 0.5 * pop(0.1)).toFixed(3)})`,
-      transformOrigin: "70% 85%",
-      filter: `drop-shadow(0 ${6 * U}px ${8 * U}px rgba(0,0,0,.3))`
-    } }), textos(kicker, texto, 44), [0, 1, 2].map((i) => {
-      const q = clamp((t - 0.45 - i * 0.12) / 0.6);
-      return /* @__PURE__ */ React.createElement("div", { key: i, style: {
-        position: "absolute",
-        right: (10 + i * 18) * U,
-        top: (-8 - i * 10) * U,
-        width: 10 * U,
-        height: 10 * U,
-        borderRadius: "50%",
-        background: marca,
-        opacity: Math.sin(q * Math.PI),
-        transform: `scale(${(0.5 + q).toFixed(2)})`
-      } });
-    }));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: carta, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: sticker || "waving_hand", lado: 78 * U, style: {
+        transform: `rotate(${(giro * 0.4).toFixed(1)}deg) scale(${(0.5 + 0.5 * pop(0.1)).toFixed(3)})`,
+        transformOrigin: "70% 85%",
+        filter: `drop-shadow(0 ${6 * U}px ${8 * U}px rgba(0,0,0,.3))`
+      } }),
+      textos(kicker, texto, 44),
+      [0, 1, 2].map((i) => {
+        const q = clamp((t - 0.45 - i * 0.12) / 0.6);
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          right: (10 + i * 18) * U,
+          top: (-8 - i * 10) * U,
+          width: 10 * U,
+          height: 10 * U,
+          borderRadius: "50%",
+          background: marca,
+          opacity: Math.sin(q * Math.PI),
+          transform: `scale(${(0.5 + q).toFixed(2)})`
+        } }, i);
+      })
+    ] });
   } else if (tipo === "sticker") {
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, /* @__PURE__ */ React.createElement(EmojiAnimado, { id: sticker, lado: 80 * U, style: {
-      transform: `translateY(${(Math.sin(t * 3) * 3 * U).toFixed(1)}px) scale(${(0.4 + 0.6 * pop(0.08)).toFixed(3)})`,
-      filter: `drop-shadow(0 ${6 * U}px ${8 * U}px rgba(0,0,0,.3))`
-    } }), textos(kicker, texto, 40));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: carta, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: sticker, lado: 80 * U, style: {
+        transform: `translateY(${(Math.sin(t * 3) * 3 * U).toFixed(1)}px) scale(${(0.4 + 0.6 * pop(0.08)).toFixed(3)})`,
+        filter: `drop-shadow(0 ${6 * U}px ${8 * U}px rgba(0,0,0,.3))`
+      } }),
+      textos(kicker, texto, 40)
+    ] });
   } else if (tipo === "redes") {
     const clic = clamp((t - 0.55) / 0.18);
     const hecho = t > 0.62;
@@ -2768,42 +3128,46 @@ const AcompananteT5 = ({
     const [antes, despues] = etiquetas[accion] || [texto || "Seguir", texto || "Seguir"];
     const esCorazon = accion === "like";
     const esCampana = accion === "suscribir" || accion === "subscribe";
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: { ...carta, position: "relative" } }, icono(64 * U, esCorazon ? /* @__PURE__ */ React.createElement("svg", { width: 34 * U, height: 34 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement(
-      "path",
-      {
-        d: "M12 21 C12 21 3 14.5 3 8.6 A4.6 4.6 0 0 1 12 6.4 A4.6 4.6 0 0 1 21 8.6 C21 14.5 12 21 12 21 Z",
-        fill: hecho ? "#FF3B5C" : "none",
-        stroke: hecho ? "#FF3B5C" : tinta,
-        strokeWidth: "2",
-        style: { transform: `scale(${hecho ? 1 + 0.25 * Math.max(0, 1 - (t - 0.62) / 0.3) : 1})`, transformOrigin: "center" }
-      }
-    )) : esCampana ? /* @__PURE__ */ React.createElement("svg", { width: 34 * U, height: 34 * U, viewBox: "0 0 24 24", style: { transform: `rotate(${(hecho ? Math.sin((t - 0.62) * 30) * 14 * Math.max(0, 1 - (t - 0.62) / 0.8) : 0).toFixed(1)}deg)` } }, /* @__PURE__ */ React.createElement("path", { d: "M6 16 V11 A6 6 0 0 1 18 11 V16 L20 18 H4 Z M10 20 A2 2 0 0 0 14 20", fill: hecho ? `rgb(${r},${g},${b})` : "none", stroke: hecho ? `rgb(${r},${g},${b})` : tinta, strokeWidth: "2" })) : /* @__PURE__ */ React.createElement("svg", { width: 34 * U, height: 34 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement(
-      "path",
-      {
-        d: accion.startsWith("coment") || accion === "comment" ? "M4 5 H20 V16 H9 L4 20 Z" : accion.startsWith("compart") || accion === "share" ? "M14 4 L20 10 L14 16 M20 10 H9 A5 5 0 0 0 4 15 V19" : accion.startsWith("guard") || accion === "save" ? "M6 3 H18 V21 L12 16 L6 21 Z" : "M12 5 V19 M5 12 H19",
-        fill: "none",
-        stroke: tinta,
-        strokeWidth: "2",
-        strokeLinejoin: "round",
-        strokeLinecap: "round"
-      }
-    ))), /* @__PURE__ */ React.createElement("div", { style: {
-      padding: `${12 * U}px ${26 * U}px`,
-      borderRadius: 999,
-      background: hecho ? oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" : marca,
-      color: hecho ? tinta : marca === tinta ? `rgb(${r},${g},${b})` : "#fff",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 700,
-      fontSize: 30 * U,
-      transform: `scale(${(1 - 0.08 * Math.sin(clic * Math.PI)).toFixed(3)})`
-    } }, hecho ? despues : antes), /* @__PURE__ */ React.createElement("svg", { width: 36 * U, height: 44 * U, viewBox: "0 0 36 44", style: {
-      position: "absolute",
-      left: (120 + (1 - cursor) * 160) * U,
-      top: (40 + (1 - cursor) * 60) * U,
-      opacity: clamp(t / 0.2) * (1 - clamp((t - 1.2) / 0.3)),
-      transform: `scale(${(1 - 0.12 * Math.sin(clic * Math.PI)).toFixed(3)})`,
-      filter: `drop-shadow(0 ${3 * U}px ${4 * U}px rgba(0,0,0,.4))`
-    } }, /* @__PURE__ */ React.createElement("path", { d: "M4 2 L4 34 L13 26 L19 40 L25 37 L19 24 L31 24 Z", fill: "#fff", stroke: "#111", strokeWidth: "2", strokeLinejoin: "round" })));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { ...carta, position: "relative" }, children: [
+      icono(64 * U, esCorazon ? /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 34 * U, height: 34 * U, viewBox: "0 0 24 24", children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d: "M12 21 C12 21 3 14.5 3 8.6 A4.6 4.6 0 0 1 12 6.4 A4.6 4.6 0 0 1 21 8.6 C21 14.5 12 21 12 21 Z",
+          fill: hecho ? "#FF3B5C" : "none",
+          stroke: hecho ? "#FF3B5C" : tinta,
+          strokeWidth: "2",
+          style: { transform: `scale(${hecho ? 1 + 0.25 * Math.max(0, 1 - (t - 0.62) / 0.3) : 1})`, transformOrigin: "center" }
+        }
+      ) }) : esCampana ? /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 34 * U, height: 34 * U, viewBox: "0 0 24 24", style: { transform: `rotate(${(hecho ? Math.sin((t - 0.62) * 30) * 14 * Math.max(0, 1 - (t - 0.62) / 0.8) : 0).toFixed(1)}deg)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M6 16 V11 A6 6 0 0 1 18 11 V16 L20 18 H4 Z M10 20 A2 2 0 0 0 14 20", fill: hecho ? `rgb(${r},${g},${b})` : "none", stroke: hecho ? `rgb(${r},${g},${b})` : tinta, strokeWidth: "2" }) }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 34 * U, height: 34 * U, viewBox: "0 0 24 24", children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d: accion.startsWith("coment") || accion === "comment" ? "M4 5 H20 V16 H9 L4 20 Z" : accion.startsWith("compart") || accion === "share" ? "M14 4 L20 10 L14 16 M20 10 H9 A5 5 0 0 0 4 15 V19" : accion.startsWith("guard") || accion === "save" ? "M6 3 H18 V21 L12 16 L6 21 Z" : "M12 5 V19 M5 12 H19",
+          fill: "none",
+          stroke: tinta,
+          strokeWidth: "2",
+          strokeLinejoin: "round",
+          strokeLinecap: "round"
+        }
+      ) })),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        padding: `${12 * U}px ${26 * U}px`,
+        borderRadius: 999,
+        background: hecho ? oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" : marca,
+        color: hecho ? tinta : marca === tinta ? `rgb(${r},${g},${b})` : "#fff",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 30 * U,
+        transform: `scale(${(1 - 0.08 * Math.sin(clic * Math.PI)).toFixed(3)})`
+      }, children: hecho ? despues : antes }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 36 * U, height: 44 * U, viewBox: "0 0 36 44", style: {
+        position: "absolute",
+        left: (120 + (1 - cursor) * 160) * U,
+        top: (40 + (1 - cursor) * 60) * U,
+        opacity: clamp(t / 0.2) * (1 - clamp((t - 1.2) / 0.3)),
+        transform: `scale(${(1 - 0.12 * Math.sin(clic * Math.PI)).toFixed(3)})`,
+        filter: `drop-shadow(0 ${3 * U}px ${4 * U}px rgba(0,0,0,.4))`
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M4 2 L4 34 L13 26 L19 40 L25 37 L19 24 L31 24 Z", fill: "#fff", stroke: "#111", strokeWidth: "2", strokeLinejoin: "round" }) })
+    ] });
   } else if (tipo === "cifra" || tipo === "dinero" || tipo === "tiempo") {
     const limpio = String(valor || "").replace(/,/g, "");
     const v = parseFloat(limpio);
@@ -2811,9 +3175,26 @@ const AcompananteT5 = ({
     const q = Acompanantes_easeOut((t - 0.15) / 0.9);
     const n = isFinite(v) ? (v * q).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec }) : valor;
     const pre = tipo === "dinero" ? signo || "$" : "", post = tipo === "cifra" && signo === "%" ? "%" : "";
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, icono(64 * U, tipo === "tiempo" ? /* @__PURE__ */ React.createElement("svg", { width: 36 * U, height: 36 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "9", fill: "none", stroke: marca, strokeWidth: "2.2" }), /* @__PURE__ */ React.createElement("path", { d: `M12 12 L${(12 + 6 * Math.sin(t * 4)).toFixed(2)} ${(12 - 6 * Math.cos(t * 4)).toFixed(2)}`, stroke: marca, strokeWidth: "2.2", strokeLinecap: "round" })) : /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 30 * U, color: marca } }, tipo === "dinero" ? signo || "$" : "#")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 * U } }, textos(kicker, /* @__PURE__ */ React.createElement(React.Fragment, null, pre, n, post, unidad ? /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 500, fontSize: 28 * U, color: gris } }, " ", unidad) : null), 46), tipo === "cifra" && signo === "%" && isFinite(v) && /* @__PURE__ */ React.createElement("div", { style: { width: 200 * U, height: 8 * U, borderRadius: 4 * U, background: oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.min(100, v * q)}%`, height: "100%", borderRadius: 4 * U, background: marca } }))));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: carta, children: [
+      icono(64 * U, tipo === "tiempo" ? /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 36 * U, height: 36 * U, viewBox: "0 0 24 24", children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "12", r: "9", fill: "none", stroke: marca, strokeWidth: "2.2" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: `M12 12 L${(12 + 6 * Math.sin(t * 4)).toFixed(2)} ${(12 - 6 * Math.cos(t * 4)).toFixed(2)}`, stroke: marca, strokeWidth: "2.2", strokeLinecap: "round" })
+      ] }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 30 * U, color: marca }, children: tipo === "dinero" ? signo || "$" : "#" })),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", gap: 8 * U }, children: [
+        textos(kicker, /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+          pre,
+          n,
+          post,
+          unidad ? /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { fontWeight: 500, fontSize: 28 * U, color: gris }, children: [
+            " ",
+            unidad
+          ] }) : null
+        ] }), 46),
+        tipo === "cifra" && signo === "%" && isFinite(v) && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 200 * U, height: 8 * U, borderRadius: 4 * U, background: oscuro ? "rgba(255,255,255,.12)" : "#EEF0F4" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: `${Math.min(100, v * q)}%`, height: "100%", borderRadius: 4 * U, background: marca } }) })
+      ] })
+    ] });
   }
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: 0,
     width,
@@ -2823,7 +3204,7 @@ const AcompananteT5 = ({
     opacity: vis,
     transform: `translateY(${((1 - e) * 46 * U + s * 30 * U + flota).toFixed(1)}px) scale(${(0.9 + 0.1 * clamp(e)).toFixed(4)})`,
     filter: `blur(${((1 - clamp(e * 1.4)) * 8 + s * 6).toFixed(2)}px)`
-  } }, /* @__PURE__ */ React.createElement("div", { style: { transform: "translateY(-50%)" } }, cuerpo)));
+  }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { transform: "translateY(-50%)" }, children: cuerpo }) }) });
 };
 const VeloCaptionT = ({ y = 60, alto = 14, ancho = 92, fuerza = 0.42 }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -2831,7 +3212,7 @@ const VeloCaptionT = ({ y = 60, alto = 14, ancho = 92, fuerza = 0.42 }) => {
   const t = frame / fps, fin = durationInFrames / fps;
   const vis = clamp(t / 0.15) * (1 - clamp((t - (fin - 0.2)) / 0.2));
   const h = alto / 100 * height * 1.7, w = ancho / 100 * width * 1.15;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: (width - w) / 2,
     top: y / 100 * height - h / 2,
@@ -2839,10 +3220,11 @@ const VeloCaptionT = ({ y = 60, alto = 14, ancho = 92, fuerza = 0.42 }) => {
     height: h,
     opacity: vis,
     background: `radial-gradient(closest-side, rgba(0,0,0,${fuerza.toFixed(3)}), rgba(0,0,0,${(fuerza * 0.62).toFixed(3)}) 55%, rgba(0,0,0,0))`
-  } }));
+  } }) });
 };
 
 ;// ./src/Efectos5.tsx
+
 
 
 
@@ -2865,10 +3247,10 @@ const useTiempo = () => {
   const { fps, width, height, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
   return { t: frame / fps, fin: durationInFrames / fps, W: width, H: height };
 };
-const Cursor = ({ U, clic }) => /* @__PURE__ */ React.createElement("svg", { width: 46 * U, height: 56 * U, viewBox: "0 0 36 44", style: {
+const Cursor = ({ U, clic }) => /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 46 * U, height: 56 * U, viewBox: "0 0 36 44", style: {
   transform: `scale(${(1 - 0.14 * Math.sin(clamp(clic) * Math.PI)).toFixed(3)})`,
   filter: `drop-shadow(0 ${4 * U}px ${6 * U}px rgba(0,0,0,.45))`
-} }, /* @__PURE__ */ React.createElement("path", { d: "M4 2 L4 34 L13 26 L19 40 L25 37 L19 24 L31 24 Z", fill: "#fff", stroke: "#111", strokeWidth: "2", strokeLinejoin: "round" }));
+}, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M4 2 L4 34 L13 26 L19 40 L25 37 L19 24 L31 24 Z", fill: "#fff", stroke: "#111", strokeWidth: "2", strokeLinejoin: "round" }) });
 const TarjetaT5 = ({
   tipo = "grafica",
   x = 50,
@@ -2927,32 +3309,51 @@ const TarjetaT5 = ({
       py = (p.centro[1] - vb[1]) / vb[3] * mh;
     }
     const nombreTxt = nombre || (p == null ? void 0 : p.es) || "";
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: mw, height: mh, borderRadius: 24 * U, overflow: "hidden", background: oscuro ? "rgba(0,0,0,.25)" : "#F3F5F9" } }, /* @__PURE__ */ React.createElement("svg", { width: mw, height: mh, viewBox: vb.map((v) => v.toFixed(3)).join(" "), style: { position: "absolute", inset: 0 } }, m && Object.entries(m.paises).map(([k, v]) => /* @__PURE__ */ React.createElement("path", { key: k, d: v.d, fill: oscuro ? "rgba(255,255,255,0.09)" : "#DDE1EA", stroke: oscuro ? "rgba(255,255,255,0.22)" : "#FFFFFF", strokeWidth: vb[2] / 500 })), p && /* @__PURE__ */ React.createElement(
-      "path",
-      {
-        d: p.d,
-        fill: `rgba(${r},${g},${b},${(0.92 * luz).toFixed(3)})`,
-        stroke: acento,
-        strokeWidth: vb[2] / 260,
-        style: { filter: `drop-shadow(0 0 ${(14 * U * luz).toFixed(1)}px rgba(${r},${g},${b},.8))` }
-      }
-    ), p && t > 1.3 && [0, 0.5].map((o, i) => {
-      const q = ((t - 1.3 - o) % 1.2 + 1.2) % 1.2;
-      return /* @__PURE__ */ React.createElement("circle", { key: i, cx: p.centro[0], cy: p.centro[1], r: vb[2] / 9 * q / 1.2, fill: "none", stroke: acento, strokeWidth: vb[2] / 300, opacity: (1 - q / 1.2) * 0.8 });
-    })), p && /* @__PURE__ */ React.createElement("svg", { width: 64 * U, height: 84 * U, viewBox: "0 0 24 31", style: {
-      position: "absolute",
-      left: px - 32 * U,
-      top: py - 84 * U - (1 - clamp(pin, 0, 1.2)) * 160 * U,
-      opacity: clamp(pin * 3),
-      filter: `drop-shadow(0 ${8 * U}px ${10 * U}px rgba(0,0,0,.5))`
-    } }, /* @__PURE__ */ React.createElement("path", { d: "M12 0C5.4 0 0 5.2 0 11.7 0 20.4 12 31 12 31s12-10.6 12-19.3C24 5.2 18.6 0 12 0z", fill: "#FF3B4D" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "11.5", r: "4.6", fill: "#fff" }))), /* @__PURE__ */ React.createElement("div", { style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 22 * U,
-      marginTop: 24 * U,
-      opacity: clamp((t - 1) / 0.3),
-      transform: `translateY(${((1 - Efectos5_easeOut((t - 1) / 0.45)) * 24 * U).toFixed(1)}px)`
-    } }, pais && /* @__PURE__ */ React.createElement("div", { style: { borderRadius: 8 * U, overflow: "hidden", flex: "none" } }, /* @__PURE__ */ React.createElement(Bandera, { iso: pais.toLowerCase(), ancho: 92 * U, t })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.05 } }, kicker && /* @__PURE__ */ React.createElement("span", { style: chico }, kicker), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 52 * U, color: tinta } }, nombreTxt))));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: carta, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", width: mw, height: mh, borderRadius: 24 * U, overflow: "hidden", background: oscuro ? "rgba(0,0,0,.25)" : "#F3F5F9" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: mw, height: mh, viewBox: vb.map((v) => v.toFixed(3)).join(" "), style: { position: "absolute", inset: 0 }, children: [
+          m && Object.entries(m.paises).map(([k, v]) => /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: v.d, fill: oscuro ? "rgba(255,255,255,0.09)" : "#DDE1EA", stroke: oscuro ? "rgba(255,255,255,0.22)" : "#FFFFFF", strokeWidth: vb[2] / 500 }, k)),
+          p && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "path",
+            {
+              d: p.d,
+              fill: `rgba(${r},${g},${b},${(0.92 * luz).toFixed(3)})`,
+              stroke: acento,
+              strokeWidth: vb[2] / 260,
+              style: { filter: `drop-shadow(0 0 ${(14 * U * luz).toFixed(1)}px rgba(${r},${g},${b},.8))` }
+            }
+          ),
+          p && t > 1.3 && [0, 0.5].map((o, i) => {
+            const q = ((t - 1.3 - o) % 1.2 + 1.2) % 1.2;
+            return /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: p.centro[0], cy: p.centro[1], r: vb[2] / 9 * q / 1.2, fill: "none", stroke: acento, strokeWidth: vb[2] / 300, opacity: (1 - q / 1.2) * 0.8 }, i);
+          })
+        ] }),
+        p && /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 64 * U, height: 84 * U, viewBox: "0 0 24 31", style: {
+          position: "absolute",
+          left: px - 32 * U,
+          top: py - 84 * U - (1 - clamp(pin, 0, 1.2)) * 160 * U,
+          opacity: clamp(pin * 3),
+          filter: `drop-shadow(0 ${8 * U}px ${10 * U}px rgba(0,0,0,.5))`
+        }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M12 0C5.4 0 0 5.2 0 11.7 0 20.4 12 31 12 31s12-10.6 12-19.3C24 5.2 18.6 0 12 0z", fill: "#FF3B4D" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "11.5", r: "4.6", fill: "#fff" })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 22 * U,
+        marginTop: 24 * U,
+        opacity: clamp((t - 1) / 0.3),
+        transform: `translateY(${((1 - Efectos5_easeOut((t - 1) / 0.45)) * 24 * U).toFixed(1)}px)`
+      }, children: [
+        pais && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { borderRadius: 8 * U, overflow: "hidden", flex: "none" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Bandera, { iso: pais.toLowerCase(), ancho: 92 * U, t }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.05 }, children: [
+          kicker && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: chico, children: kicker }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 52 * U, color: tinta }, children: nombreTxt })
+        ] })
+      ] })
+    ] });
   } else if (tipo === "grafica") {
     const limpio = String(valor || "").replace(/,/g, "");
     const v = parseFloat(limpio), dec = (limpio.split(".")[1] || "").length;
@@ -2963,96 +3364,125 @@ const TarjetaT5 = ({
     const altoG = 210 * U, anchoB = 92 * U, hueco = (ancho - 2 * pad - 5 * anchoB) / 4;
     const puntos = alturas.map((h, i) => [i * (anchoB + hueco) + anchoB / 2, altoG - h * altoG * Efectos5_easeOut((t - 0.25 - i * 0.12) / 0.6) - 18 * U]);
     const linea = clamp((t - 0.9) / 0.7);
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: carta }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 22 * U } }, /* @__PURE__ */ React.createElement("span", { style: { ...chico, maxWidth: ancho * 0.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, etiqueta), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 92 * U, lineHeight: 0.9, color: `rgb(${r},${g},${b})`, letterSpacing: "-0.02em" } }, pre, n, post)), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", height: altoG } }, alturas.map((h, i) => {
-      const k = Efectos5_easeOut((t - 0.25 - i * 0.12) / 0.6);
-      const ultimo = sube < 0 ? i === 0 : i === alturas.length - 1;
-      return /* @__PURE__ */ React.createElement("div", { key: i, style: {
-        position: "absolute",
-        bottom: 0,
-        left: i * (anchoB + hueco),
-        width: anchoB,
-        height: Math.max(2, h * altoG * k),
-        borderRadius: 16 * U,
-        background: ultimo ? `linear-gradient(180deg, rgb(${r},${g},${b}), rgba(${r},${g},${b},.75))` : suave
-      } });
-    }), /* @__PURE__ */ React.createElement("svg", { width: ancho - 2 * pad, height: altoG, style: { position: "absolute", inset: 0, overflow: "visible" } }, /* @__PURE__ */ React.createElement(
-      "polyline",
-      {
-        points: puntos.map((p) => p.map((x2) => x2.toFixed(1)).join(",")).join(" "),
-        fill: "none",
-        stroke: tinta,
-        strokeWidth: 5 * U,
-        strokeLinecap: "round",
-        strokeLinejoin: "round",
-        pathLength: 1,
-        strokeDasharray: "1",
-        strokeDashoffset: (1 - linea).toFixed(4)
-      }
-    ), puntos.map(([x2, yy], i) => /* @__PURE__ */ React.createElement("circle", { key: i, cx: x2, cy: yy, r: 8 * U, fill: tinta, opacity: clamp((linea - i / 5) * 5) })))));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: carta, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 22 * U }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { ...chico, maxWidth: ancho * 0.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: etiqueta }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 92 * U, lineHeight: 0.9, color: `rgb(${r},${g},${b})`, letterSpacing: "-0.02em" }, children: [
+          pre,
+          n,
+          post
+        ] })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", height: altoG }, children: [
+        alturas.map((h, i) => {
+          const k = Efectos5_easeOut((t - 0.25 - i * 0.12) / 0.6);
+          const ultimo = sube < 0 ? i === 0 : i === alturas.length - 1;
+          return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            position: "absolute",
+            bottom: 0,
+            left: i * (anchoB + hueco),
+            width: anchoB,
+            height: Math.max(2, h * altoG * k),
+            borderRadius: 16 * U,
+            background: ultimo ? `linear-gradient(180deg, rgb(${r},${g},${b}), rgba(${r},${g},${b},.75))` : suave
+          } }, i);
+        }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: ancho - 2 * pad, height: altoG, style: { position: "absolute", inset: 0, overflow: "visible" }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "polyline",
+            {
+              points: puntos.map((p) => p.map((x2) => x2.toFixed(1)).join(",")).join(" "),
+              fill: "none",
+              stroke: tinta,
+              strokeWidth: 5 * U,
+              strokeLinecap: "round",
+              strokeLinejoin: "round",
+              pathLength: 1,
+              strokeDasharray: "1",
+              strokeDashoffset: (1 - linea).toFixed(4)
+            }
+          ),
+          puntos.map(([x2, yy], i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: x2, cy: yy, r: 8 * U, fill: tinta, opacity: clamp((linea - i / 5) * 5) }, i))
+        ] })
+      ] })
+    ] });
   } else if (tipo === "tachado") {
     const q = Efectos5_easeInOut((t - t_tachar) / 0.38);
     const x2 = Efectos5_resorte((t - t_tachar - 0.3) / 0.45);
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: { ...carta, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 * U } }, kicker && /* @__PURE__ */ React.createElement("span", { style: { ...chico, color: "#FF5A5F" } }, kicker), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", padding: `0 ${10 * U}px` } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: (texto.length > 26 ? 44 : 54) * U, color: tinta, opacity: 1 - 0.45 * q, textAlign: "center", display: "block" } }, texto), /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      left: -6 * U,
-      top: "52%",
-      height: 9 * U,
-      width: `calc(${(q * 100).toFixed(2)}% + ${(12 * q * U).toFixed(1)}px)`,
-      borderRadius: 5 * U,
-      background: "#FF3B4D",
-      transform: "rotate(-2deg)",
-      transformOrigin: "0 50%",
-      boxShadow: `0 ${2 * U}px ${8 * U}px rgba(255,59,77,.45)`,
-      opacity: q > 0 ? 1 : 0
-    } }), /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_cross_mark.png"), style: {
-      position: "absolute",
-      right: -46 * U,
-      top: -40 * U,
-      width: 76 * U,
-      height: 76 * U,
-      opacity: clamp(x2 * 2),
-      transform: `scale(${(0.3 + 0.7 * x2).toFixed(3)}) rotate(${((1 - clamp(x2)) * -40).toFixed(1)}deg)`
-    } })));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { ...carta, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 * U }, children: [
+      kicker && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { ...chico, color: "#FF5A5F" }, children: kicker }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", padding: `0 ${10 * U}px` }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: (texto.length > 26 ? 44 : 54) * U, color: tinta, opacity: 1 - 0.45 * q, textAlign: "center", display: "block" }, children: texto }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: -6 * U,
+          top: "52%",
+          height: 9 * U,
+          width: `calc(${(q * 100).toFixed(2)}% + ${(12 * q * U).toFixed(1)}px)`,
+          borderRadius: 5 * U,
+          background: "#FF3B4D",
+          transform: "rotate(-2deg)",
+          transformOrigin: "0 50%",
+          boxShadow: `0 ${2 * U}px ${8 * U}px rgba(255,59,77,.45)`,
+          opacity: q > 0 ? 1 : 0
+        } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_cross_mark.png"), style: {
+          position: "absolute",
+          right: -46 * U,
+          top: -40 * U,
+          width: 76 * U,
+          height: 76 * U,
+          opacity: clamp(x2 * 2),
+          transform: `scale(${(0.3 + 0.7 * x2).toFixed(3)}) rotate(${((1 - clamp(x2)) * -40).toFixed(1)}deg)`
+        } })
+      ] })
+    ] });
   } else if (tipo === "lista") {
     const lista = (items || []).slice(0, 4);
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: { ...carta, display: "flex", flexDirection: "column", gap: 22 * U } }, kicker && /* @__PURE__ */ React.createElement("span", { style: chico }, kicker), lista.map((it, i) => {
-      const t0 = Number(tiempos[i] ?? i * 0.6);
-      const entra = Efectos5_easeOut((t - t0) / 0.35), marca = Efectos5_easeOut((t - t0 - 0.22) / 0.3), pop = Efectos5_resorte((t - t0 - 0.22) / 0.45);
-      return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 26 * U, height: 76 * U } }, /* @__PURE__ */ React.createElement("div", { style: {
-        width: 70 * U,
-        height: 70 * U,
-        borderRadius: 20 * U,
-        flex: "none",
-        boxSizing: "border-box",
-        position: "relative",
-        border: `${4 * U}px solid ${marca > 0 ? `rgb(${r},${g},${b})` : gris}`,
-        background: `rgba(${r},${g},${b},${marca.toFixed(3)})`,
-        transform: `scale(${(0.85 + 0.15 * clamp(pop, 0, 1.15)).toFixed(3)})`
-      } }, /* @__PURE__ */ React.createElement("svg", { width: "100%", height: "100%", viewBox: "0 0 24 24", style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ React.createElement(
-        "path",
-        {
-          d: "M6 12.5 L10.2 16.5 L18 8",
-          fill: "none",
-          stroke: oscuro ? "#141621" : "#fff",
-          strokeWidth: "3",
-          strokeLinecap: "round",
-          strokeLinejoin: "round",
-          pathLength: 1,
-          strokeDasharray: "1",
-          strokeDashoffset: (1 - marca).toFixed(4)
-        }
-      ))), entra > 0 ? /* @__PURE__ */ React.createElement("span", { style: {
-        fontFamily: FAMILIA.inter,
-        fontWeight: 700,
-        fontSize: 52 * U,
-        color: tinta,
-        opacity: entra,
-        transform: `translateX(${((1 - entra) * 30 * U).toFixed(1)}px)`,
-        whiteSpace: "nowrap"
-      } }, it) : /* @__PURE__ */ React.createElement("div", { style: { width: (180 + 60 * (i % 2)) * U, height: 22 * U, borderRadius: 11 * U, background: suave } }));
-    }));
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { ...carta, display: "flex", flexDirection: "column", gap: 22 * U }, children: [
+      kicker && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: chico, children: kicker }),
+      lista.map((it, i) => {
+        const t0 = Number(tiempos[i] ?? i * 0.6);
+        const entra = Efectos5_easeOut((t - t0) / 0.35), marca = Efectos5_easeOut((t - t0 - 0.22) / 0.3), pop = Efectos5_resorte((t - t0 - 0.22) / 0.45);
+        return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 26 * U, height: 76 * U }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            width: 70 * U,
+            height: 70 * U,
+            borderRadius: 20 * U,
+            flex: "none",
+            boxSizing: "border-box",
+            position: "relative",
+            border: `${4 * U}px solid ${marca > 0 ? `rgb(${r},${g},${b})` : gris}`,
+            background: `rgba(${r},${g},${b},${marca.toFixed(3)})`,
+            transform: `scale(${(0.85 + 0.15 * clamp(pop, 0, 1.15)).toFixed(3)})`
+          }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: "100%", height: "100%", viewBox: "0 0 24 24", style: { position: "absolute", inset: 0 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "path",
+            {
+              d: "M6 12.5 L10.2 16.5 L18 8",
+              fill: "none",
+              stroke: oscuro ? "#141621" : "#fff",
+              strokeWidth: "3",
+              strokeLinecap: "round",
+              strokeLinejoin: "round",
+              pathLength: 1,
+              strokeDasharray: "1",
+              strokeDashoffset: (1 - marca).toFixed(4)
+            }
+          ) }) }),
+          entra > 0 ? /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
+            fontFamily: FAMILIA.inter,
+            fontWeight: 700,
+            fontSize: 52 * U,
+            color: tinta,
+            opacity: entra,
+            transform: `translateX(${((1 - entra) * 30 * U).toFixed(1)}px)`,
+            whiteSpace: "nowrap"
+          }, children: it }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: (180 + 60 * (i % 2)) * U, height: 22 * U, borderRadius: 11 * U, background: suave } })
+        ] }, i);
+      })
+    ] });
   }
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: x / 100 * W - ancho / 2,
     width: ancho,
@@ -3062,7 +3492,7 @@ const TarjetaT5 = ({
     opacity: clamp(t / 0.18) * (1 - s),
     transform: `translateY(${((1 - e) * 60 * U - s * 30 * U).toFixed(1)}px) scale(${(0.93 + 0.07 * clamp(e)).toFixed(4)})`,
     filter: `blur(${((1 - clamp(e * 1.4)) * 10 + s * 8).toFixed(2)}px)`
-  } }, /* @__PURE__ */ React.createElement("div", { style: { transform: "translateY(-50%)" } }, cuerpo)));
+  }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { transform: "translateY(-50%)" }, children: cuerpo }) }) });
 };
 const OrbitaT5 = ({
   lado = "delante",
@@ -3098,39 +3528,56 @@ const OrbitaT5 = ({
   const dibuja = (1 - entra).toFixed(4);
   const anillo = (d, k) => {
     if (estilo === "limpio" || estilo === "chips" || estilo === "cometa") return null;
-    if (estilo === "anillo") return /* @__PURE__ */ React.createElement("path", { key: k, d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.9)`, strokeWidth: 3 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja });
-    if (estilo === "neon") return /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `rgb(${r},${g},${b})`, strokeWidth: 14 * U, strokeLinecap: "round", opacity: 0.55, pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja, style: { filter: `blur(${10 * U}px)` } }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `rgb(${r},${g},${b})`, strokeWidth: 4.5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: "rgba(255,255,255,.85)", strokeWidth: 1.6 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }));
-    if (estilo === "puntos") return /* @__PURE__ */ React.createElement("path", { key: k, d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.95)`, strokeWidth: 8 * U, strokeLinecap: "round", strokeDasharray: `0 ${20 * U}`, strokeDashoffset: -t * 40 * U, opacity: entra });
-    if (estilo === "halo") return /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: `og${k}`, x1: "0", y1: "0", x2: "1", y2: "0" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: acento2 }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: acento }))), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `url(#og${k})`, strokeWidth: 16 * U, strokeLinecap: "round", opacity: 0.5, pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja, style: { filter: `blur(${12 * U}px)` } }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `url(#og${k})`, strokeWidth: 5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }));
-    if (estilo === "cinta") return /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.16)`, strokeWidth: 42 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }), /* @__PURE__ */ React.createElement("path", { d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.7)`, strokeWidth: 2 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }));
+    if (estilo === "anillo") return /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.9)`, strokeWidth: 3 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }, k);
+    if (estilo === "neon") return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: `rgb(${r},${g},${b})`, strokeWidth: 14 * U, strokeLinecap: "round", opacity: 0.55, pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja, style: { filter: `blur(${10 * U}px)` } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: `rgb(${r},${g},${b})`, strokeWidth: 4.5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: "rgba(255,255,255,.85)", strokeWidth: 1.6 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja })
+    ] }, k);
+    if (estilo === "puntos") return /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.95)`, strokeWidth: 8 * U, strokeLinecap: "round", strokeDasharray: `0 ${20 * U}`, strokeDashoffset: -t * 40 * U, opacity: entra }, k);
+    if (estilo === "halo") return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("linearGradient", { id: `og${k}`, x1: "0", y1: "0", x2: "1", y2: "0", children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0", stopColor: acento2 }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "1", stopColor: acento })
+      ] }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: `url(#og${k})`, strokeWidth: 16 * U, strokeLinecap: "round", opacity: 0.5, pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja, style: { filter: `blur(${12 * U}px)` } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: `url(#og${k})`, strokeWidth: 5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja })
+    ] }, k);
+    if (estilo === "cinta") return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.16)`, strokeWidth: 42 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: `rgba(${tr},${tg},${tb},.7)`, strokeWidth: 2 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja })
+    ] }, k);
     return (
       // 'rastro' (y 'doble'): el de siempre
-      /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement(
-        "path",
-        {
-          d,
-          fill: "none",
-          stroke: `rgba(${r},${g},${b},.35)`,
-          strokeWidth: 12 * U,
-          strokeLinecap: "round",
-          pathLength: 1,
-          strokeDasharray: "1",
-          strokeDashoffset: dibuja,
-          style: { filter: `blur(${6 * U}px)` }
-        }
-      ), /* @__PURE__ */ React.createElement(
-        "path",
-        {
-          d,
-          fill: "none",
-          stroke: `rgba(${tr},${tg},${tb},.85)`,
-          strokeWidth: 3.5 * U,
-          strokeLinecap: "round",
-          strokeDasharray: `${14 * U} ${12 * U}`,
-          strokeDashoffset: -t * 60 * U,
-          opacity: entra
-        }
-      ))
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "path",
+          {
+            d,
+            fill: "none",
+            stroke: `rgba(${r},${g},${b},.35)`,
+            strokeWidth: 12 * U,
+            strokeLinecap: "round",
+            pathLength: 1,
+            strokeDasharray: "1",
+            strokeDashoffset: dibuja,
+            style: { filter: `blur(${6 * U}px)` }
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "path",
+          {
+            d,
+            fill: "none",
+            stroke: `rgba(${tr},${tg},${tb},.85)`,
+            strokeWidth: 3.5 * U,
+            strokeLinecap: "round",
+            strokeDasharray: `${14 * U} ${12 * U}`,
+            strokeDashoffset: -t * 60 * U,
+            opacity: entra
+          }
+        )
+      ] }, k)
     );
   };
   const ruta2 = estilo === "doble" ? Array.from({ length: pasos + 1 }, (_, i) => {
@@ -3139,49 +3586,59 @@ const OrbitaT5 = ({
     return [X + x * Math.cos(inc2) - yy * Math.sin(inc2), Y + x * Math.sin(inc2) + yy * Math.cos(inc2)];
   }).map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${yy.toFixed(1)}`).join(" ") : "";
   const nFantasmas = estilo === "cometa" ? [0.04, 0.08, 0.12, 0.16, 0.2] : estilo === "limpio" || estilo === "chips" ? [] : [0.08, 0.16];
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - sale } }, /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", inset: 0 } }, anillo(ruta, "a"), ruta2 && /* @__PURE__ */ React.createElement("path", { d: ruta2, fill: "none", stroke: `rgba(${tr},${tg},${tb},.55)`, strokeWidth: 2 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja })), lista.map((ic, i) => {
-    const th = th0 + 2 * Math.PI * Math.max(0, t - 0.1) / vuelta + i * Math.PI;
-    const detras = Math.sin(th) < 0;
-    if (detras !== atras) return null;
-    const prof = 0.72 + 0.28 * (Math.sin(th) + 1) / 2;
-    const pop = Efectos5_resorte((t - 0.08 - i * 0.18) / 0.5);
-    const lado2 = 160 * U * prof * clamp(pop, 0, 1.15);
-    const [x, yy] = punto(th);
-    const fantasmas = nFantasmas.map((d) => punto(th - 2 * Math.PI * d / vuelta));
-    return /* @__PURE__ */ React.createElement("div", { key: i }, estilo === "chips" && /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      left: x - lado2 * 0.62,
-      top: yy - lado2 * 0.62,
-      width: lado2 * 1.24,
-      height: lado2 * 1.24,
-      borderRadius: "50%",
-      background: "linear-gradient(160deg, rgba(255,255,255,.3), rgba(255,255,255,.08))",
-      border: `${2 * U}px solid rgba(255,255,255,.5)`,
-      boxShadow: `0 ${14 * U}px ${30 * U}px rgba(0,0,0,.35), 0 0 ${24 * U}px rgba(${r},${g},${b},.45)`
-    } }), fantasmas.map(([fx, fy], k) => /* @__PURE__ */ React.createElement(esm/* Img */.E9, { key: k, src: urlIcono(ic), style: {
-      position: "absolute",
-      left: fx - lado2 / 2,
-      top: fy - lado2 / 2,
-      width: lado2,
-      height: lado2,
-      opacity: estilo === "cometa" ? 0.32 - k * 0.06 : 0.22 - k * 0.1,
-      filter: `blur(${(4 + 4 * k) * U}px)`
-    } })), ic.startsWith("emoji:") ? /* @__PURE__ */ React.createElement(EmojiAnimado, { id: ic, lado: lado2, style: {
-      position: "absolute",
-      left: x - lado2 / 2,
-      top: yy - lado2 / 2,
-      transform: `rotate(${(Math.cos(th) * 12).toFixed(1)}deg)`,
-      filter: `drop-shadow(0 ${14 * U}px ${18 * U}px rgba(0,0,0,.4)) brightness(${(0.8 + 0.2 * prof).toFixed(3)})`
-    } }) : /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: urlIcono(ic), style: {
-      position: "absolute",
-      left: x - lado2 / 2,
-      top: yy - lado2 / 2,
-      width: lado2,
-      height: lado2,
-      transform: `rotate(${(Math.cos(th) * 12).toFixed(1)}deg)`,
-      filter: `drop-shadow(0 ${14 * U}px ${18 * U}px rgba(0,0,0,.4)) brightness(${(0.8 + 0.2 * prof).toFixed(3)})`
-    } }));
-  }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - sale }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: W, height: H, style: { position: "absolute", inset: 0 }, children: [
+      anillo(ruta, "a"),
+      ruta2 && /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: ruta2, fill: "none", stroke: `rgba(${tr},${tg},${tb},.55)`, strokeWidth: 2 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: dibuja })
+    ] }),
+    lista.map((ic, i) => {
+      const th = th0 + 2 * Math.PI * Math.max(0, t - 0.1) / vuelta + i * Math.PI;
+      const detras = Math.sin(th) < 0;
+      if (detras !== atras) return null;
+      const prof = 0.72 + 0.28 * (Math.sin(th) + 1) / 2;
+      const pop = Efectos5_resorte((t - 0.08 - i * 0.18) / 0.5);
+      const lado2 = 160 * U * prof * clamp(pop, 0, 1.15);
+      const [x, yy] = punto(th);
+      const fantasmas = nFantasmas.map((d) => punto(th - 2 * Math.PI * d / vuelta));
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { children: [
+        estilo === "chips" && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: x - lado2 * 0.62,
+          top: yy - lado2 * 0.62,
+          width: lado2 * 1.24,
+          height: lado2 * 1.24,
+          borderRadius: "50%",
+          background: "linear-gradient(160deg, rgba(255,255,255,.3), rgba(255,255,255,.08))",
+          border: `${2 * U}px solid rgba(255,255,255,.5)`,
+          boxShadow: `0 ${14 * U}px ${30 * U}px rgba(0,0,0,.35), 0 0 ${24 * U}px rgba(${r},${g},${b},.45)`
+        } }),
+        fantasmas.map(([fx, fy], k) => /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: urlIcono(ic), style: {
+          position: "absolute",
+          left: fx - lado2 / 2,
+          top: fy - lado2 / 2,
+          width: lado2,
+          height: lado2,
+          opacity: estilo === "cometa" ? 0.32 - k * 0.06 : 0.22 - k * 0.1,
+          filter: `blur(${(4 + 4 * k) * U}px)`
+        } }, k)),
+        ic.startsWith("emoji:") ? /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: ic, lado: lado2, style: {
+          position: "absolute",
+          left: x - lado2 / 2,
+          top: yy - lado2 / 2,
+          transform: `rotate(${(Math.cos(th) * 12).toFixed(1)}deg)`,
+          filter: `drop-shadow(0 ${14 * U}px ${18 * U}px rgba(0,0,0,.4)) brightness(${(0.8 + 0.2 * prof).toFixed(3)})`
+        } }) : /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: urlIcono(ic), style: {
+          position: "absolute",
+          left: x - lado2 / 2,
+          top: yy - lado2 / 2,
+          width: lado2,
+          height: lado2,
+          transform: `rotate(${(Math.cos(th) * 12).toFixed(1)}deg)`,
+          filter: `drop-shadow(0 ${14 * U}px ${18 * U}px rgba(0,0,0,.4)) brightness(${(0.8 + 0.2 * prof).toFixed(3)})`
+        } })
+      ] }, i);
+    })
+  ] });
 };
 const StickerT5 = ({ fondo = "", recorte = "", caja = [0.25, 0.2, 0.75, 1], zoom = 1, acento = "#4C7DFF", giro = -4 }) => {
   const { t, fin, W, H } = useTiempo();
@@ -3193,29 +3650,34 @@ const StickerT5 = ({ fondo = "", recorte = "", caja = [0.25, 0.2, 0.75, 1], zoom
   const [x0, y0, x1, y1] = caja;
   const borde = 9 * U * clamp(q * 1.4);
   const halo = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7, 0.7], [-0.7, 0.7], [0.7, -0.7], [-0.7, -0.7]].map(([dx, dy]) => `drop-shadow(${(dx * borde).toFixed(1)}px ${(dy * borde).toFixed(1)}px 0 #fff)`).join(" ");
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "#000", overflow: "hidden" } }, fondo && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: fondo, style: {
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "fill",
-    // ya viene en el encuadre del timeline
-    transform: `scale(${(zoom * (1 + 0.06 * apaga)).toFixed(4)})`,
-    filter: `blur(${(16 * U * apaga).toFixed(1)}px) brightness(${(1 - 0.55 * apaga).toFixed(3)}) saturate(${(1 - 0.85 * apaga).toFixed(3)})`
-  } }), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(60% 45% at 50% 55%, rgba(${r},${g},${b},${(0.22 * apaga).toFixed(3)}), rgba(0,0,0,0) 70%)` } }), recorte && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: x0 * W,
-    top: y0 * H,
-    width: (x1 - x0) * W,
-    height: (y1 - y0) * H,
-    transformOrigin: "50% 70%",
-    transform: `translateY(${(-0.03 * H * k).toFixed(1)}px) scale(${(zoom * (1 + 0.12 * k)).toFixed(4)}) rotate(${(giro * k).toFixed(2)}deg)`
-  } }, /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: recorte, style: {
-    width: "100%",
-    height: "100%",
-    objectFit: "fill",
-    filter: `${halo} drop-shadow(0 ${(22 * U * k).toFixed(1)}px ${(34 * U).toFixed(1)}px rgba(0,0,0,${(0.55 * clamp(k)).toFixed(3)}))`
-  } })), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "#fff", opacity: flash } }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { background: "#000", overflow: "hidden" }, children: [
+    fondo && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: fondo, style: {
+      position: "absolute",
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "fill",
+      // ya viene en el encuadre del timeline
+      transform: `scale(${(zoom * (1 + 0.06 * apaga)).toFixed(4)})`,
+      filter: `blur(${(16 * U * apaga).toFixed(1)}px) brightness(${(1 - 0.55 * apaga).toFixed(3)}) saturate(${(1 - 0.85 * apaga).toFixed(3)})`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(60% 45% at 50% 55%, rgba(${r},${g},${b},${(0.22 * apaga).toFixed(3)}), rgba(0,0,0,0) 70%)` } }),
+    recorte && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: x0 * W,
+      top: y0 * H,
+      width: (x1 - x0) * W,
+      height: (y1 - y0) * H,
+      transformOrigin: "50% 70%",
+      transform: `translateY(${(-0.03 * H * k).toFixed(1)}px) scale(${(zoom * (1 + 0.12 * k)).toFixed(4)}) rotate(${(giro * k).toFixed(2)}deg)`
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: recorte, style: {
+      width: "100%",
+      height: "100%",
+      objectFit: "fill",
+      filter: `${halo} drop-shadow(0 ${(22 * U * k).toFixed(1)}px ${(34 * U).toFixed(1)}px rgba(0,0,0,${(0.55 * clamp(k)).toFixed(3)}))`
+    } }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: "#fff", opacity: flash } })
+  ] });
 };
 const FinalT5 = ({ fondo = "", cara = "", usuario = "", titulo = "", boton = "Seguir", hecho = "Siguiendo", acento = "#4C7DFF" }) => {
   useFuentes();
@@ -3231,77 +3693,97 @@ const FinalT5 = ({ fondo = "", cara = "", usuario = "", titulo = "", boton = "Se
   const lado = (vertical ? 420 : 300) * U;
   const cyA = H * (vertical ? 0.36 : 0.34);
   const chispas = Array.from({ length: 10 }, (_, i) => i);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: "#05060A", opacity: 1 - sale } }, fondo && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: fondo, style: {
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    transform: "scale(1.12)",
-    filter: `blur(${(28 * U).toFixed(1)}px) brightness(${(1 - 0.6 * entra).toFixed(3)}) saturate(0.8)`
-  } }), /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(55% 40% at 50% 38%, rgba(${r},${g},${b},${(0.28 * entra).toFixed(3)}), rgba(0,0,0,0) 70%)` } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2 - lado / 2, top: cyA - lado / 2, width: lado, height: lado, transform: `scale(${clamp(av, 0, 1.12).toFixed(4)})` } }, /* @__PURE__ */ React.createElement("svg", { width: lado, height: lado, viewBox: "0 0 100 100", style: { position: "absolute", inset: 0, overflow: "visible" } }, /* @__PURE__ */ React.createElement(
-    "circle",
-    {
-      cx: "50",
-      cy: "50",
-      r: "53",
-      fill: "none",
-      stroke: acento,
-      strokeWidth: "3.2",
-      pathLength: 1,
-      strokeDasharray: "1",
-      strokeDashoffset: (1 - anillo).toFixed(4),
-      transform: "rotate(-90 50 50)",
-      style: { filter: `drop-shadow(0 0 ${(10 * U).toFixed(1)}px rgba(${r},${g},${b},.9))` }
-    }
-  ), t > 1 && /* @__PURE__ */ React.createElement("circle", { cx: "50", cy: "50", r: 53 + 14 * ((t - 1) % 1.4 / 1.4), fill: "none", stroke: acento, strokeWidth: "1.4", opacity: 1 - (t - 1) % 1.4 / 1.4 })), cara && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: cara, style: {
-    position: "absolute",
-    inset: lado * 0.035,
-    width: lado * 0.93,
-    height: lado * 0.93,
-    borderRadius: "50%",
-    objectFit: "cover",
-    boxShadow: `0 ${20 * U}px ${50 * U}px rgba(0,0,0,.5)`
-  } })), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: 0,
-    width: W,
-    top: cyA + lado * 0.62,
-    textAlign: "center",
-    opacity: clamp((t - 0.35) / 0.3),
-    transform: `translateY(${((1 - Efectos5_easeOut((t - 0.35) / 0.5)) * 30 * U).toFixed(1)}px)`
-  } }, (usuario || titulo) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 70 * U, color: "#fff", letterSpacing: "-0.01em" } }, usuario || titulo), usuario && titulo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 40 * U, color: "rgba(255,255,255,.7)", marginTop: 8 * U } }, titulo)), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W / 2, top: cyA + lado * 0.62 + (usuario && titulo ? 215 : 150) * U, transform: `translateX(-50%) scale(${(clamp(Efectos5_resorte((t - 0.55) / 0.5), 0, 1.1) * (1 - 0.08 * Math.sin(clic * Math.PI))).toFixed(4)})` } }, /* @__PURE__ */ React.createElement("div", { style: {
-    padding: `${28 * U}px ${84 * U}px`,
-    borderRadius: 999,
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 54 * U,
-    whiteSpace: "nowrap",
-    background: pulsado ? "rgba(255,255,255,.14)" : `rgb(${r},${g},${b})`,
-    color: pulsado ? "#fff" : "#0E1016",
-    boxShadow: pulsado ? "none" : `0 ${14 * U}px ${40 * U}px rgba(${r},${g},${b},.45)`
-  } }, pulsado ? `${hecho} \u2713` : boton), chispas.map((i) => {
-    const a = i / chispas.length * Math.PI * 2, d = Efectos5_easeOut((t - clicT - 0.05) / 0.5);
-    return t > clicT ? /* @__PURE__ */ React.createElement("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { background: "#05060A", opacity: 1 - sale }, children: [
+    fondo && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: fondo, style: {
       position: "absolute",
-      left: "50%",
-      top: "50%",
-      width: 12 * U,
-      height: 12 * U,
-      borderRadius: "50%",
-      background: acento,
-      opacity: 1 - d,
-      transform: `translate(${(Math.cos(a) * 220 * U * d - 6 * U).toFixed(1)}px, ${(Math.sin(a) * 90 * U * d - 6 * U).toFixed(1)}px)`
-    } }) : null;
-  }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: `calc(55% + ${((1 - cursor) * 240 * U).toFixed(1)}px)`,
-    top: `calc(45% + ${((1 - cursor) * 180 * U).toFixed(1)}px)`,
-    opacity: clamp((t - (clicT - 0.55)) / 0.2) * (1 - clamp((t - clicT - 0.6) / 0.3))
-  } }, /* @__PURE__ */ React.createElement(Cursor, { U, clic }))));
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      transform: "scale(1.12)",
+      filter: `blur(${(28 * U).toFixed(1)}px) brightness(${(1 - 0.6 * entra).toFixed(3)}) saturate(0.8)`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(55% 40% at 50% 38%, rgba(${r},${g},${b},${(0.28 * entra).toFixed(3)}), rgba(0,0,0,0) 70%)` } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: W / 2 - lado / 2, top: cyA - lado / 2, width: lado, height: lado, transform: `scale(${clamp(av, 0, 1.12).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: lado, height: lado, viewBox: "0 0 100 100", style: { position: "absolute", inset: 0, overflow: "visible" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "circle",
+          {
+            cx: "50",
+            cy: "50",
+            r: "53",
+            fill: "none",
+            stroke: acento,
+            strokeWidth: "3.2",
+            pathLength: 1,
+            strokeDasharray: "1",
+            strokeDashoffset: (1 - anillo).toFixed(4),
+            transform: "rotate(-90 50 50)",
+            style: { filter: `drop-shadow(0 0 ${(10 * U).toFixed(1)}px rgba(${r},${g},${b},.9))` }
+          }
+        ),
+        t > 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "50", cy: "50", r: 53 + 14 * ((t - 1) % 1.4 / 1.4), fill: "none", stroke: acento, strokeWidth: "1.4", opacity: 1 - (t - 1) % 1.4 / 1.4 })
+      ] }),
+      cara && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: cara, style: {
+        position: "absolute",
+        inset: lado * 0.035,
+        width: lado * 0.93,
+        height: lado * 0.93,
+        borderRadius: "50%",
+        objectFit: "cover",
+        boxShadow: `0 ${20 * U}px ${50 * U}px rgba(0,0,0,.5)`
+      } })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: 0,
+      width: W,
+      top: cyA + lado * 0.62,
+      textAlign: "center",
+      opacity: clamp((t - 0.35) / 0.3),
+      transform: `translateY(${((1 - Efectos5_easeOut((t - 0.35) / 0.5)) * 30 * U).toFixed(1)}px)`
+    }, children: [
+      (usuario || titulo) && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 70 * U, color: "#fff", letterSpacing: "-0.01em" }, children: usuario || titulo }),
+      usuario && titulo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 40 * U, color: "rgba(255,255,255,.7)", marginTop: 8 * U }, children: titulo })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: W / 2, top: cyA + lado * 0.62 + (usuario && titulo ? 215 : 150) * U, transform: `translateX(-50%) scale(${(clamp(Efectos5_resorte((t - 0.55) / 0.5), 0, 1.1) * (1 - 0.08 * Math.sin(clic * Math.PI))).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        padding: `${28 * U}px ${84 * U}px`,
+        borderRadius: 999,
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 54 * U,
+        whiteSpace: "nowrap",
+        background: pulsado ? "rgba(255,255,255,.14)" : `rgb(${r},${g},${b})`,
+        color: pulsado ? "#fff" : "#0E1016",
+        boxShadow: pulsado ? "none" : `0 ${14 * U}px ${40 * U}px rgba(${r},${g},${b},.45)`
+      }, children: pulsado ? `${hecho} \u2713` : boton }),
+      chispas.map((i) => {
+        const a = i / chispas.length * Math.PI * 2, d = Efectos5_easeOut((t - clicT - 0.05) / 0.5);
+        return t > clicT ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          width: 12 * U,
+          height: 12 * U,
+          borderRadius: "50%",
+          background: acento,
+          opacity: 1 - d,
+          transform: `translate(${(Math.cos(a) * 220 * U * d - 6 * U).toFixed(1)}px, ${(Math.sin(a) * 90 * U * d - 6 * U).toFixed(1)}px)`
+        } }, i) : null;
+      }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: `calc(55% + ${((1 - cursor) * 240 * U).toFixed(1)}px)`,
+        top: `calc(45% + ${((1 - cursor) * 180 * U).toFixed(1)}px)`,
+        opacity: clamp((t - (clicT - 0.55)) / 0.2) * (1 - clamp((t - clicT - 0.6) / 0.3))
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Cursor, { U, clic }) })
+    ] })
+  ] });
 };
 
 ;// ./src/Editorial6.tsx
+
 
 
 
@@ -3339,7 +3821,7 @@ const EditorialT6 = ({
     const k = 1 + 0.35 * (1 - Editorial6_easeOut(t / 0.35)) + 0.02 * Math.sin(t * 9) * clamp((t - 0.35) / 0.2) * (1 - clamp((t - 0.7) / 0.2));
     const L = Math.min(w, h) * 0.2, grosor = 5 * U;
     const rejilla = clamp(t / 0.2) * (1 - clamp((t - 0.9) / 0.3));
-    const esquina = (sx, sy) => /* @__PURE__ */ React.createElement("div", { style: {
+    const esquina = (sx, sy) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
       left: cx + sx * (w * k) / 2 - (sx > 0 ? L : 0),
       top: cy + sy * (h * k) / 2 - (sy > 0 ? L : 0),
@@ -3352,7 +3834,16 @@ const EditorialT6 = ({
       borderRadius: 4 * U,
       filter: `drop-shadow(0 0 ${4 * U}px rgba(0,0,0,.35))`
     } });
-    return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: clamp(t / 0.12) * (1 - s) } }, [1, 2].map((i) => /* @__PURE__ */ React.createElement("div", { key: `v${i}`, style: { position: "absolute", left: W * i / 3, top: 0, width: 1.5 * U, height: H, background: "rgba(255,255,255,.35)", opacity: rejilla } })), [1, 2].map((i) => /* @__PURE__ */ React.createElement("div", { key: `h${i}`, style: { position: "absolute", top: H * i / 3, left: 0, height: 1.5 * U, width: W, background: "rgba(255,255,255,.35)", opacity: rejilla } })), esquina(-1, -1), esquina(1, -1), esquina(-1, 1), esquina(1, 1), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - 9 * U, top: cy - 1 * U, width: 18 * U, height: 2 * U, background: "rgba(255,255,255,.8)", opacity: rejilla } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - 1 * U, top: cy - 9 * U, width: 2 * U, height: 18 * U, background: "rgba(255,255,255,.8)", opacity: rejilla } }));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: clamp(t / 0.12) * (1 - s) }, children: [
+      [1, 2].map((i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: W * i / 3, top: 0, width: 1.5 * U, height: H, background: "rgba(255,255,255,.35)", opacity: rejilla } }, `v${i}`)),
+      [1, 2].map((i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", top: H * i / 3, left: 0, height: 1.5 * U, width: W, background: "rgba(255,255,255,.35)", opacity: rejilla } }, `h${i}`)),
+      esquina(-1, -1),
+      esquina(1, -1),
+      esquina(-1, 1),
+      esquina(1, 1),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: cx - 9 * U, top: cy - 1 * U, width: 18 * U, height: 2 * U, background: "rgba(255,255,255,.8)", opacity: rejilla } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: cx - 1 * U, top: cy - 9 * U, width: 2 * U, height: 18 * U, background: "rgba(255,255,255,.8)", opacity: rejilla } })
+    ] });
   }
   let cuerpo = null;
   if (tipo === "buscar") {
@@ -3361,7 +3852,7 @@ const EditorialT6 = ({
     const tClic = 0.35 + texto.length * 0.075 + 0.35;
     const clic = clamp((t - tClic) / 0.16), onda = clamp((t - tClic) / 0.6);
     const ancho = Math.min(W * 0.8, 820 * U), alto = 104 * U;
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: {
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "relative",
       width: ancho,
       height: alto,
@@ -3372,26 +3863,35 @@ const EditorialT6 = ({
       alignItems: "center",
       padding: `0 ${14 * U}px 0 ${40 * U}px`,
       boxSizing: "border-box"
-    } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 44 * U, color: "#1E1A18", whiteSpace: "nowrap", overflow: "hidden" } }, escrito, /* @__PURE__ */ React.createElement("span", { style: { opacity: Math.floor(t * 2.4) % 2 ? 0 : 0.8, marginLeft: 2 * U, color: `rgb(${r},${g},${b})` } }, "|")), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: alto - 28 * U, height: alto - 28 * U, flex: "none" } }, t > tClic && /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      left: "50%",
-      top: "50%",
-      width: (alto - 28 * U) * (1 + 1.6 * onda),
-      height: (alto - 28 * U) * (1 + 1.6 * onda),
-      transform: "translate(-50%,-50%)",
-      borderRadius: "50%",
-      background: `rgba(${r},${g},${b},${(0.35 * (1 - onda)).toFixed(3)})`
-    } }), /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      inset: 0,
-      borderRadius: "50%",
-      background: `linear-gradient(160deg, rgb(${Math.min(255, r + 30)},${Math.min(255, g + 30)},${Math.min(255, b + 30)}), rgb(${r},${g},${b}))`,
-      transform: `scale(${(1 - 0.14 * Math.sin(clic * Math.PI)).toFixed(3)})`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      boxShadow: `0 ${6 * U}px ${14 * U}px rgba(${r},${g},${b},.45)`
-    } }, /* @__PURE__ */ React.createElement("svg", { width: 34 * U, height: 34 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("path", { d: "M6 14 L12 8 L18 14", fill: "none", stroke: "#fff", strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round" })))));
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 44 * U, color: "#1E1A18", whiteSpace: "nowrap", overflow: "hidden" }, children: [
+        escrito,
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { opacity: Math.floor(t * 2.4) % 2 ? 0 : 0.8, marginLeft: 2 * U, color: `rgb(${r},${g},${b})` }, children: "|" })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", width: alto - 28 * U, height: alto - 28 * U, flex: "none" }, children: [
+        t > tClic && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          width: (alto - 28 * U) * (1 + 1.6 * onda),
+          height: (alto - 28 * U) * (1 + 1.6 * onda),
+          transform: "translate(-50%,-50%)",
+          borderRadius: "50%",
+          background: `rgba(${r},${g},${b},${(0.35 * (1 - onda)).toFixed(3)})`
+        } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          inset: 0,
+          borderRadius: "50%",
+          background: `linear-gradient(160deg, rgb(${Math.min(255, r + 30)},${Math.min(255, g + 30)},${Math.min(255, b + 30)}), rgb(${r},${g},${b}))`,
+          transform: `scale(${(1 - 0.14 * Math.sin(clic * Math.PI)).toFixed(3)})`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: `0 ${6 * U}px ${14 * U}px rgba(${r},${g},${b},.45)`
+        }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 34 * U, height: 34 * U, viewBox: "0 0 24 24", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M6 14 L12 8 L18 14", fill: "none", stroke: "#fff", strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round" }) }) })
+      ] })
+    ] });
   } else if (tipo === "perfil") {
     const limpio = String(valor || "").replace(/,/g, "");
     const m = limpio.match(/^([\d.]+)\s*([kKmM]?)$/);
@@ -3399,7 +3899,7 @@ const EditorialT6 = ({
     const dec = m ? (m[1].split(".")[1] || "").length : 0;
     const q = Editorial6_easeOut((t - 0.4) / 1.3);
     const n = isFinite(v) ? (v * q).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suf : valor;
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: {
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       display: "flex",
       alignItems: "center",
       gap: 30 * U,
@@ -3407,18 +3907,27 @@ const EditorialT6 = ({
       borderRadius: 34 * U,
       background: "rgba(255,255,255,.97)",
       boxShadow: SOMBRA(U)
-    } }, /* @__PURE__ */ React.createElement("div", { style: {
-      width: 120 * U,
-      height: 120 * U,
-      borderRadius: "50%",
-      overflow: "hidden",
-      flex: "none",
-      background: "#F3E6DE",
-      boxShadow: `0 0 0 ${4 * U}px #fff, 0 0 0 ${7 * U}px rgba(${r},${g},${b},.65)`
-    } }, cara && /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: cara, style: { width: "100%", height: "100%", objectFit: "cover" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 * U } }, usuario ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: "#1E1A18" } }, usuario) : /* @__PURE__ */ React.createElement("div", { style: { width: 200 * U, height: 18 * U, borderRadius: 9 * U, background: "#EFE3DB" } }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 14 * U } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.serif, fontSize: 84 * U, lineHeight: 0.9, color: "#1E1A18" } }, n), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 26 * U, color: "#9A8A80" } }, etiqueta))));
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: 120 * U,
+        height: 120 * U,
+        borderRadius: "50%",
+        overflow: "hidden",
+        flex: "none",
+        background: "#F3E6DE",
+        boxShadow: `0 0 0 ${4 * U}px #fff, 0 0 0 ${7 * U}px rgba(${r},${g},${b},.65)`
+      }, children: cara && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: cara, style: { width: "100%", height: "100%", objectFit: "cover" } }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", gap: 10 * U }, children: [
+        usuario ? /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: "#1E1A18" }, children: usuario }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 200 * U, height: 18 * U, borderRadius: 9 * U, background: "#EFE3DB" } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "baseline", gap: 14 * U }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.serif, fontSize: 84 * U, lineHeight: 0.9, color: "#1E1A18" }, children: n }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 26 * U, color: "#9A8A80" }, children: etiqueta })
+        ] })
+      ] })
+    ] });
   } else if (tipo === "equipo") {
     const lista = (caras.length ? caras : ["smiling_face_with_smiling_eyes", "star_struck", "smiling_face_with_sunglasses"]).slice(0, 3);
-    cuerpo = /* @__PURE__ */ React.createElement("div", { style: {
+    cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       display: "flex",
       alignItems: "center",
       gap: 18 * U,
@@ -3426,24 +3935,30 @@ const EditorialT6 = ({
       borderRadius: 999,
       background: "rgba(255,255,255,.97)",
       boxShadow: SOMBRA(U)
-    } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex" } }, lista.map((c, i) => {
-      const p = Editorial6_resorte((t - 0.15 - i * 0.12) / 0.45);
-      return /* @__PURE__ */ React.createElement("div", { key: i, style: {
-        width: 64 * U,
-        height: 64 * U,
-        borderRadius: "50%",
-        marginLeft: i ? -18 * U : 0,
-        background: "#FBEDE5",
-        border: `${4 * U}px solid #fff`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transform: `scale(${clamp(p, 0, 1.15).toFixed(3)})`,
-        zIndex: 3 - i
-      } }, /* @__PURE__ */ React.createElement(EmojiAnimado, { id: c, lado: 46 * U }));
-    })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.02 } }, kicker && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 17 * U, color: "#9A8A80" } }, kicker), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 36 * U, color: "#1E1A18" } }, texto)));
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex" }, children: lista.map((c, i) => {
+        const p = Editorial6_resorte((t - 0.15 - i * 0.12) / 0.45);
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: 64 * U,
+          height: 64 * U,
+          borderRadius: "50%",
+          marginLeft: i ? -18 * U : 0,
+          background: "#FBEDE5",
+          border: `${4 * U}px solid #fff`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transform: `scale(${clamp(p, 0, 1.15).toFixed(3)})`,
+          zIndex: 3 - i
+        }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: c, lado: 46 * U }) }, i);
+      }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.02 }, children: [
+        kicker && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 17 * U, color: "#9A8A80" }, children: kicker }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 36 * U, color: "#1E1A18" }, children: texto })
+      ] })
+    ] });
   }
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: 0,
     width: W,
@@ -3453,10 +3968,11 @@ const EditorialT6 = ({
     opacity: clamp(t / 0.16) * (1 - s),
     transform: `translateY(${((1 - e) * 40 * U + s * 24 * U).toFixed(1)}px) scale(${(0.92 + 0.08 * clamp(e)).toFixed(4)})`,
     filter: `blur(${((1 - clamp(e * 1.4)) * 8 + s * 6).toFixed(2)}px)`
-  } }, /* @__PURE__ */ React.createElement("div", { style: { transform: "translateY(-50%)" } }, cuerpo)));
+  }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { transform: "translateY(-50%)" }, children: cuerpo }) }) });
 };
 
 ;// ./src/Kit7.tsx
+
 
 
 
@@ -3510,42 +4026,48 @@ const Encabezado = ({ numero, titulo, subtitulo, P, U, t, t0 = 0.05, tam = 1, ed
   if (!numero && !titulo) return null;
   const pn = Kit7_easeOut((t - t0) / 0.45), pt = Kit7_easeOut((t - t0 - 0.12) / 0.45), ps = Kit7_easeOut((t - t0 - 0.3) / 0.45);
   const grande = 210 * U * tam, medio = 74 * U * tam;
-  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 22 * U * tam } }, numero && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: grande,
-    lineHeight: 0.86,
-    letterSpacing: "-0.04em",
-    background: ed ? P.a : `linear-gradient(180deg, ${P.b}, ${P.a})`,
-    WebkitBackgroundClip: "text",
-    backgroundClip: "text",
-    color: "transparent",
-    filter: ed ? "none" : `drop-shadow(0 0 ${18 * U}px rgba(${P.glow},.7))`,
-    opacity: pn,
-    transform: `scale(${(1.35 - 0.35 * pn).toFixed(4)})`,
-    transformOrigin: "50% 60%"
-  } }, numero), (titulo || subtitulo) && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: numero ? "flex-start" : "center", maxWidth: 760 * U * tam } }, titulo && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: medio,
-    lineHeight: 0.98,
-    color: ed ? P.texto : "#FFFFFF",
-    textTransform: "uppercase",
-    textShadow: textoBrillo(P, U, 0.6),
-    opacity: pt,
-    letterSpacing: `${(0.06 * (1 - pt)).toFixed(3)}em`,
-    transform: `translateX(${((1 - pt) * 30 * U).toFixed(2)}px)`,
-    textAlign: numero ? "left" : "center"
-  } }, titulo), subtitulo && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 38 * U * tam,
-    color: ed ? P.suave : "rgba(255,255,255,.88)",
-    marginTop: 6 * U,
-    opacity: ps,
-    textShadow: ed ? "none" : `0 ${2 * U}px ${10 * U}px rgba(0,0,0,.55)`,
-    textAlign: numero ? "left" : "center"
-  } }, subtitulo)));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 22 * U * tam }, children: [
+    numero && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: grande,
+      lineHeight: 0.86,
+      letterSpacing: "-0.04em",
+      background: ed ? P.a : `linear-gradient(180deg, ${P.b}, ${P.a})`,
+      WebkitBackgroundClip: "text",
+      backgroundClip: "text",
+      color: "transparent",
+      filter: ed ? "none" : `drop-shadow(0 0 ${18 * U}px rgba(${P.glow},.7))`,
+      opacity: pn,
+      transform: `scale(${(1.35 - 0.35 * pn).toFixed(4)})`,
+      transformOrigin: "50% 60%"
+    }, children: numero }),
+    (titulo || subtitulo) && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", alignItems: numero ? "flex-start" : "center", maxWidth: 760 * U * tam }, children: [
+      titulo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: medio,
+        lineHeight: 0.98,
+        color: ed ? P.texto : "#FFFFFF",
+        textTransform: "uppercase",
+        textShadow: textoBrillo(P, U, 0.6),
+        opacity: pt,
+        letterSpacing: `${(0.06 * (1 - pt)).toFixed(3)}em`,
+        transform: `translateX(${((1 - pt) * 30 * U).toFixed(2)}px)`,
+        textAlign: numero ? "left" : "center"
+      }, children: titulo }),
+      subtitulo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 38 * U * tam,
+        color: ed ? P.suave : "rgba(255,255,255,.88)",
+        marginTop: 6 * U,
+        opacity: ps,
+        textShadow: ed ? "none" : `0 ${2 * U}px ${10 * U}px rgba(0,0,0,.55)`,
+        textAlign: numero ? "left" : "center"
+      }, children: subtitulo })
+    ] })
+  ] });
 };
 const ListaRazonesK = ({
   items = "",
@@ -3571,14 +4093,14 @@ const ListaRazonesK = ({
   const v = ["pildora", "cristal", "linea", "tarjeta"].includes(variante) ? variante : "pildora";
   const alto = 96 * U, hueco = (v === "linea" ? 10 : 18) * U, ancho = Math.min(W * 0.78, 640 * U);
   const total = textos.length * alto + (textos.length - 1) * hueco;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W * x / 100 - ancho / 2, top: H * y / 100 - total / 2, width: ancho, display: "flex", flexDirection: "column", gap: hueco } }, textos.map((txt, k) => {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: W * x / 100 - ancho / 2, top: H * y / 100 - total / 2, width: ancho, display: "flex", flexDirection: "column", gap: hueco }, children: textos.map((txt, k) => {
     const p = S(0.1 + k * cada, { damping: 14, stiffness: 170 });
     const marcada = actual > 0 && k + 1 === actual, apagada = actual > 0 && !marcada;
     const late = 0.5 + 0.5 * Math.sin(t * 5 + k);
     const claroFondo = ed || v === "tarjeta";
     const fondo = v === "pildora" ? ed ? "#FFFFFF" : "linear-gradient(180deg, #17171D, #0A0A0E)" : v === "cristal" ? "linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.10))" : v === "tarjeta" ? "#FFFFFF" : "transparent";
     const borde = v === "linea" ? "none" : `${1.6 * U}px solid ${marcada ? P.a : v === "cristal" ? "rgba(255,255,255,.42)" : claroFondo ? "rgba(0,0,0,.08)" : "rgba(255,255,255,.09)"}`;
-    const marca = v === "pildora" ? /* @__PURE__ */ React.createElement("div", { style: {
+    const marca = v === "pildora" ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       width: 28 * U,
       height: 28 * U,
       borderRadius: "50%",
@@ -3586,7 +4108,7 @@ const ListaRazonesK = ({
       flex: "none",
       boxShadow: `0 0 ${(10 + 10 * late) * U}px ${P.punto}`,
       transform: `scale(${(0.9 + 0.15 * late).toFixed(3)})`
-    } }) : v === "cristal" ? /* @__PURE__ */ React.createElement("div", { style: {
+    } }) : v === "cristal" ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       width: 54 * U,
       height: 54 * U,
       borderRadius: "50%",
@@ -3600,7 +4122,7 @@ const ListaRazonesK = ({
       fontSize: 30 * U,
       color: "#FFFFFF",
       boxShadow: brillo(P, U, 0.5)
-    } }, k + 1) : v === "linea" ? /* @__PURE__ */ React.createElement("div", { style: {
+    }, children: k + 1 }) : v === "linea" ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       fontFamily: FAMILIA.redonda,
       fontWeight: 800,
       fontSize: 70 * U,
@@ -3609,8 +4131,8 @@ const ListaRazonesK = ({
       flex: "none",
       minWidth: 54 * U,
       textShadow: ed ? "none" : textoBrillo(P, U, 0.5)
-    } }, k + 1) : /* @__PURE__ */ React.createElement("div", { style: { width: 10 * U, alignSelf: "stretch", margin: `${16 * U}px 0`, borderRadius: 6 * U, background: P.a, flex: "none" } });
-    return /* @__PURE__ */ React.createElement("div", { key: k, style: {
+    }, children: k + 1 }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 10 * U, alignSelf: "stretch", margin: `${16 * U}px 0`, borderRadius: 6 * U, background: P.a, flex: "none" } });
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       height: alto,
       borderRadius: v === "tarjeta" ? 20 * U : alto / 2,
       display: "flex",
@@ -3622,28 +4144,34 @@ const ListaRazonesK = ({
       boxShadow: v === "linea" ? "none" : (marcada ? brillo(P, U, 1) + ", " : "") + `0 ${12 * U}px ${30 * U}px rgba(0,0,0,${claroFondo ? 0.14 : 0.45})`,
       opacity: clamp(p) * (apagada ? 0.5 : 1),
       transform: `translateX(${((1 - clamp(p)) * -60 * U).toFixed(2)}px) scale(${((0.9 + 0.1 * p) * (marcada ? 1.05 : 1)).toFixed(4)})`
-    } }, marca, /* @__PURE__ */ React.createElement("div", { style: {
-      position: "relative",
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 800,
-      fontSize: 46 * U,
-      letterSpacing: "0.02em",
-      textTransform: "uppercase",
-      color: claroFondo ? ed ? P.texto : "#1D1D21" : "#FFFFFF",
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      textShadow: v === "linea" && !ed ? `0 ${3 * U}px ${12 * U}px rgba(0,0,0,.55)` : "none"
-    } }, txt, v === "linea" && /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      left: 0,
-      bottom: -6 * U,
-      height: 6 * U,
-      borderRadius: 3 * U,
-      background: P.a,
-      width: `${(100 * Kit7_easeOut((t - 0.25 - k * cada) / 0.5)).toFixed(1)}%`
-    } })));
-  })));
+    }, children: [
+      marca,
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "relative",
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: 46 * U,
+        letterSpacing: "0.02em",
+        textTransform: "uppercase",
+        color: claroFondo ? ed ? P.texto : "#1D1D21" : "#FFFFFF",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        textShadow: v === "linea" && !ed ? `0 ${3 * U}px ${12 * U}px rgba(0,0,0,.55)` : "none"
+      }, children: [
+        txt,
+        v === "linea" && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: 0,
+          bottom: -6 * U,
+          height: 6 * U,
+          borderRadius: 3 * U,
+          background: P.a,
+          width: `${(100 * Kit7_easeOut((t - 0.25 - k * cada) / 0.5)).toFixed(1)}%`
+        } })
+      ] })
+    ] }, k);
+  }) }) });
 };
 const MisterioK = ({
   n = 3,
@@ -3668,70 +4196,75 @@ const MisterioK = ({
   const N = entero(n, 3, 1, 5), hueco = 24 * U;
   const lado = Math.min(220 * U, (Math.min(W * 0.9, 980 * U) - hueco * (N - 1)) / N);
   const total = N * lado + (N - 1) * hueco;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, Array.from({ length: N }, (_, k) => {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: Array.from({ length: N }, (_, k) => {
     const p = S(0.08 + k * 0.14, { damping: 11, stiffness: 170 });
     const flota = Math.sin(t * 2.2 + k * 1.3) * 7 * U;
     const rev = revelar === k + 1 ? Kit7_easeOut((t - 0.9) / 0.4) : 0;
     const cx = W * x / 100 - total / 2 + k * (lado + hueco) + lado / 2, cy = H * y / 100 + flota;
-    return /* @__PURE__ */ React.createElement("div", { key: k, style: {
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "absolute",
       left: cx - lado / 2,
       top: cy - lado / 2,
       width: lado,
       height: lado,
       transform: `scale(${(Math.max(1e-3, p) * (1 + 0.1 * rev)).toFixed(4)})`
-    } }, /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      inset: 0,
-      borderRadius: radio,
-      transform: v === "cajas" ? `rotate(${(Math.sin(t * 1.6 + k) * 4).toFixed(2)}deg)` : void 0,
-      background: v === "contorno" ? "rgba(10,6,20,.35)" : v === "cajas" ? `linear-gradient(150deg, ${P.b}, ${P.a} 55%, ${P.carta[0]})` : `radial-gradient(circle at 36% 30%, ${P.b} 0%, ${P.a} 42%, ${P.carta[0]} 100%)`,
-      border: v === "contorno" ? `${6 * U}px solid ${P.a}` : "none",
-      boxShadow: `0 0 ${(30 + 30 * rev) * U}px rgba(${P.glow},.75), 0 0 ${90 * U}px rgba(${P.glow},.35)` + (v === "contorno" ? `, inset 0 0 ${26 * U}px rgba(${P.glow},.55)` : `, inset 0 ${-14 * U}px ${30 * U}px rgba(0,0,0,.35), inset 0 ${8 * U}px ${18 * U}px rgba(255,255,255,.25)`)
-    } }), /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 800,
-      fontSize: lado * 0.62,
-      color: v === "contorno" ? P.b : "#FFFFFF",
-      opacity: 1 - rev,
-      textShadow: v === "contorno" ? textoBrillo(P, U, 0.8) : `0 ${4 * U}px ${10 * U}px rgba(0,0,0,.35)`
-    } }, "?"), texto && rev > 0 && /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      inset: lado * 0.1,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 800,
-      fontSize: lado * 0.17,
-      lineHeight: 1,
-      color: "#FFFFFF",
-      opacity: rev
-    } }, texto), /* @__PURE__ */ React.createElement("div", { style: {
-      position: "absolute",
-      left: lado / 2 - lado * 0.15,
-      top: lado * 0.86,
-      width: lado * 0.3,
-      height: lado * 0.3,
-      borderRadius: "50%",
-      background: P.carta[0],
-      border: `${3 * U}px solid rgba(255,255,255,.9)`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 800,
-      fontSize: lado * 0.17,
-      color: "#FFFFFF",
-      boxShadow: brillo(P, U, 0.6)
-    } }, k + 1));
-  }));
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        inset: 0,
+        borderRadius: radio,
+        transform: v === "cajas" ? `rotate(${(Math.sin(t * 1.6 + k) * 4).toFixed(2)}deg)` : void 0,
+        background: v === "contorno" ? "rgba(10,6,20,.35)" : v === "cajas" ? `linear-gradient(150deg, ${P.b}, ${P.a} 55%, ${P.carta[0]})` : `radial-gradient(circle at 36% 30%, ${P.b} 0%, ${P.a} 42%, ${P.carta[0]} 100%)`,
+        border: v === "contorno" ? `${6 * U}px solid ${P.a}` : "none",
+        boxShadow: `0 0 ${(30 + 30 * rev) * U}px rgba(${P.glow},.75), 0 0 ${90 * U}px rgba(${P.glow},.35)` + (v === "contorno" ? `, inset 0 0 ${26 * U}px rgba(${P.glow},.55)` : `, inset 0 ${-14 * U}px ${30 * U}px rgba(0,0,0,.35), inset 0 ${8 * U}px ${18 * U}px rgba(255,255,255,.25)`)
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: lado * 0.62,
+        color: v === "contorno" ? P.b : "#FFFFFF",
+        opacity: 1 - rev,
+        textShadow: v === "contorno" ? textoBrillo(P, U, 0.8) : `0 ${4 * U}px ${10 * U}px rgba(0,0,0,.35)`
+      }, children: "?" }),
+      texto && rev > 0 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        inset: lado * 0.1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: lado * 0.17,
+        lineHeight: 1,
+        color: "#FFFFFF",
+        opacity: rev
+      }, children: texto }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: lado / 2 - lado * 0.15,
+        top: lado * 0.86,
+        width: lado * 0.3,
+        height: lado * 0.3,
+        borderRadius: "50%",
+        background: P.carta[0],
+        border: `${3 * U}px solid rgba(255,255,255,.9)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: lado * 0.17,
+        color: "#FFFFFF",
+        boxShadow: brillo(P, U, 0.6)
+      }, children: k + 1 })
+    ] }, k);
+  }) });
 };
 const RuedaK = ({
   n = 7,
@@ -3766,59 +4299,81 @@ const RuedaK = ({
     return `M ${p(r, a0)} L ${p(R - 4 * U, a0)} A ${R - 4 * U} ${R - 4 * U} 0 0 1 ${p(R - 4 * U, a1)} L ${p(r, a1)} A ${r} ${r} 0 0 0 ${p(r, a0)} Z`;
   };
   const brilloSel = clamp((t - 0.8) / 0.4);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("svg", { width: 2 * R, height: 2 * R, style: { position: "absolute", left: cx - R, top: cy - R * (arco ? 1.12 : 1.55), opacity: aparece, overflow: "visible" } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "kitRuedaFade", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0.42", stopColor: "#fff", stopOpacity: "1" }), /* @__PURE__ */ React.createElement("stop", { offset: "0.9", stopColor: "#fff", stopOpacity: "0" })), /* @__PURE__ */ React.createElement("mask", { id: "kitRuedaMask" }, /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: 2 * R, height: 2 * R, fill: "url(#kitRuedaFade)" })), /* @__PURE__ */ React.createElement("linearGradient", { id: "kitRuedaSel", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: P.b }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: P.a }))), /* @__PURE__ */ React.createElement("g", { mask: arco ? void 0 : "url(#kitRuedaMask)", transform: `rotate(${rot.toFixed(3)} ${R} ${R})` }, Array.from({ length: N }, (_, k) => {
-    const es = k + 1 === sel, encendido = arco && k + 1 < sel;
-    const am = (k * paso + inicio + paso / 2) * Math.PI / 180, rm = (R + r) / 2;
-    return /* @__PURE__ */ React.createElement("g", { key: k }, /* @__PURE__ */ React.createElement(
-      "path",
-      {
-        d: sector(k),
-        fill: es ? "url(#kitRuedaSel)" : encendido ? `rgba(${P.glow},.45)` : "rgba(18,10,36,.62)",
-        stroke: es || encendido ? P.b : "rgba(255,255,255,.28)",
-        strokeWidth: 1.5 * U,
-        style: es ? { filter: `drop-shadow(0 0 ${(10 + 18 * brilloSel) * U}px rgba(${P.glow},.9))` } : void 0
-      }
-    ), /* @__PURE__ */ React.createElement(
-      "text",
-      {
-        x: R + rm * Math.cos(am),
-        y: R + rm * Math.sin(am),
-        fill: es ? "#FFFFFF" : "rgba(255,255,255,.62)",
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 2 * R, height: 2 * R, style: { position: "absolute", left: cx - R, top: cy - R * (arco ? 1.12 : 1.55), opacity: aparece, overflow: "visible" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("linearGradient", { id: "kitRuedaFade", x1: "0", y1: "0", x2: "0", y2: "1", children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0.42", stopColor: "#fff", stopOpacity: "1" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0.9", stopColor: "#fff", stopOpacity: "0" })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("mask", { id: "kitRuedaMask", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: "0", y: "0", width: 2 * R, height: 2 * R, fill: "url(#kitRuedaFade)" }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("linearGradient", { id: "kitRuedaSel", x1: "0", y1: "0", x2: "0", y2: "1", children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0", stopColor: P.b }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "1", stopColor: P.a })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("g", { mask: arco ? void 0 : "url(#kitRuedaMask)", transform: `rotate(${rot.toFixed(3)} ${R} ${R})`, children: Array.from({ length: N }, (_, k) => {
+        const es = k + 1 === sel, encendido = arco && k + 1 < sel;
+        const am = (k * paso + inicio + paso / 2) * Math.PI / 180, rm = (R + r) / 2;
+        return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "path",
+            {
+              d: sector(k),
+              fill: es ? "url(#kitRuedaSel)" : encendido ? `rgba(${P.glow},.45)` : "rgba(18,10,36,.62)",
+              stroke: es || encendido ? P.b : "rgba(255,255,255,.28)",
+              strokeWidth: 1.5 * U,
+              style: es ? { filter: `drop-shadow(0 0 ${(10 + 18 * brilloSel) * U}px rgba(${P.glow},.9))` } : void 0
+            }
+          ),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "text",
+            {
+              x: R + rm * Math.cos(am),
+              y: R + rm * Math.sin(am),
+              fill: es ? "#FFFFFF" : "rgba(255,255,255,.62)",
+              fontFamily: FAMILIA.redonda,
+              fontWeight: 800,
+              fontSize: (es ? 64 : 40) * U,
+              textAnchor: "middle",
+              dominantBaseline: "central",
+              transform: `rotate(${(-rot).toFixed(3)} ${R + rm * Math.cos(am)} ${R + rm * Math.sin(am)})`,
+              children: k + 1
+            }
+          )
+        ] }, k);
+      }) })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: cy + 10 * U, display: "flex", flexDirection: "column", alignItems: "center" }, children: [
+      titulo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
         fontFamily: FAMILIA.redonda,
         fontWeight: 800,
-        fontSize: (es ? 64 : 40) * U,
-        textAnchor: "middle",
-        dominantBaseline: "central",
-        transform: `rotate(${(-rot).toFixed(3)} ${R + rm * Math.cos(am)} ${R + rm * Math.sin(am)})`
-      },
-      k + 1
-    ));
-  }))), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: cy + 10 * U, display: "flex", flexDirection: "column", alignItems: "center" } }, titulo && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 86 * U,
-    lineHeight: 1,
-    color: "#FFFFFF",
-    textTransform: "uppercase",
-    textAlign: "center",
-    textShadow: `0 ${6 * U}px ${22 * U}px rgba(0,0,0,.45)`,
-    opacity: Kit7_easeOut((t - 0.25) / 0.4),
-    transform: `translateY(${((1 - Kit7_easeOut((t - 0.25) / 0.4)) * 24 * U).toFixed(2)}px)`
-  } }, titulo), subtitulo && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 86 * U,
-    lineHeight: 1.05,
-    textTransform: "uppercase",
-    textAlign: "center",
-    background: `linear-gradient(90deg, ${P.b}, ${P.a})`,
-    WebkitBackgroundClip: "text",
-    backgroundClip: "text",
-    color: "transparent",
-    filter: `drop-shadow(0 0 ${14 * U}px rgba(${P.glow},.65))`,
-    transform: `skewX(-9deg) scale(${(0.9 + 0.1 * Kit7_easeOut((t - 0.45) / 0.4)).toFixed(4)})`,
-    opacity: Kit7_easeOut((t - 0.45) / 0.4)
-  } }, subtitulo)));
+        fontSize: 86 * U,
+        lineHeight: 1,
+        color: "#FFFFFF",
+        textTransform: "uppercase",
+        textAlign: "center",
+        textShadow: `0 ${6 * U}px ${22 * U}px rgba(0,0,0,.45)`,
+        opacity: Kit7_easeOut((t - 0.25) / 0.4),
+        transform: `translateY(${((1 - Kit7_easeOut((t - 0.25) / 0.4)) * 24 * U).toFixed(2)}px)`
+      }, children: titulo }),
+      subtitulo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: 86 * U,
+        lineHeight: 1.05,
+        textTransform: "uppercase",
+        textAlign: "center",
+        background: `linear-gradient(90deg, ${P.b}, ${P.a})`,
+        WebkitBackgroundClip: "text",
+        backgroundClip: "text",
+        color: "transparent",
+        filter: `drop-shadow(0 0 ${14 * U}px rgba(${P.glow},.65))`,
+        transform: `skewX(-9deg) scale(${(0.9 + 0.1 * Kit7_easeOut((t - 0.45) / 0.4)).toFixed(4)})`,
+        opacity: Kit7_easeOut((t - 0.45) / 0.4)
+      }, children: subtitulo })
+    ] })
+  ] });
 };
 const AbanicoK = ({
   n = 3,
@@ -3847,49 +4402,55 @@ const AbanicoK = ({
   const abre = Math.min(64, 11 * (N - 1)), Rf = w * 2.9;
   const cx = W * x / 100, base = H * y / 100 + (numero || titulo ? 150 * U : 0);
   const cabeza = numero || titulo;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, cabeza && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: base - h / 2 - 300 * U, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Encabezado, { numero, titulo, subtitulo, P, U, t, tam: 0.85, ed })), Array.from({ length: N }, (_, k) => {
-    const p = S(0.18 + k * 0.08, { damping: 15, stiffness: 140 });
-    let ang = N === 1 ? 0 : -abre / 2 + k * abre / (N - 1);
-    const rad = ang * Math.PI / 180;
-    let fx = cx + Math.sin(rad) * Rf, fy = base + (1 - Math.cos(rad)) * Rf;
-    if (v === "fila") {
-      const hueco = 18 * U;
-      fx = cx - (N - 1) * (w + hueco) / 2 + k * (w + hueco);
-      fy = base;
-      ang = k % 2 ? 4 : -4;
-    } else if (v === "pila") {
-      fx = cx + (k - (N - 1) / 2) * w * 0.22;
-      fy = base + (k - (N - 1) / 2) * w * 0.07;
-      ang = (k - (N - 1) / 2) * 3;
-    }
-    const sx = cx, sy = base + H * 0.18;
-    const px = sx + (fx - sx) * clamp(p), py = sy + (fy - sy) * clamp(p);
-    const marcada = actual > 0 && k + 1 === actual;
-    const sube = marcada ? Kit7_easeOut((t - 0.9) / 0.35) * 46 * U : 0;
-    return /* @__PURE__ */ React.createElement("div", { key: k, style: {
-      position: "absolute",
-      left: px - w / 2,
-      top: py - h / 2 - sube,
-      width: w,
-      height: h,
-      borderRadius: 24 * U,
-      background: ed ? `linear-gradient(160deg, #FFFFFF, ${P.carta[1]})` : `linear-gradient(160deg, ${P.carta[1]}, ${P.carta[0]})`,
-      border: `${2 * U}px solid ${ed ? "rgba(0,0,0,.08)" : "rgba(255,255,255,.22)"}`,
-      boxShadow: `${brillo(P, U, marcada ? 1.3 : 0.55)}, 0 ${16 * U}px ${36 * U}px rgba(0,0,0,.4)`,
-      transform: `rotate(${(ang * clamp(p)).toFixed(3)}deg) scale(${(0.82 + 0.18 * clamp(p)).toFixed(4)})`,
-      opacity: clamp(p * 1.4),
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden"
-    } }, ics[k % Math.max(1, ics.length)] ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 16 * U, top: 10 * U, fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: w * 0.3, color: ed ? P.a : "#FFFFFF" } }, k + 1), /* @__PURE__ */ React.createElement(EmojiAnimado, { id: ics[k % ics.length], lado: w * 0.56, style: { position: "absolute", left: w * 0.22, top: h * 0.36, opacity: 0.9 } })) : /* @__PURE__ */ React.createElement("div", { style: {
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 800,
-      fontSize: w * (N <= 3 ? 0.62 : 0.5),
-      color: ed ? P.a : "#FFFFFF",
-      textShadow: ed ? "none" : `0 ${4 * U}px ${14 * U}px rgba(0,0,0,.35)`
-    } }, k + 1));
-  }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    cabeza && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: base - h / 2 - 300 * U, display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Encabezado, { numero, titulo, subtitulo, P, U, t, tam: 0.85, ed }) }),
+    Array.from({ length: N }, (_, k) => {
+      const p = S(0.18 + k * 0.08, { damping: 15, stiffness: 140 });
+      let ang = N === 1 ? 0 : -abre / 2 + k * abre / (N - 1);
+      const rad = ang * Math.PI / 180;
+      let fx = cx + Math.sin(rad) * Rf, fy = base + (1 - Math.cos(rad)) * Rf;
+      if (v === "fila") {
+        const hueco = 18 * U;
+        fx = cx - (N - 1) * (w + hueco) / 2 + k * (w + hueco);
+        fy = base;
+        ang = k % 2 ? 4 : -4;
+      } else if (v === "pila") {
+        fx = cx + (k - (N - 1) / 2) * w * 0.22;
+        fy = base + (k - (N - 1) / 2) * w * 0.07;
+        ang = (k - (N - 1) / 2) * 3;
+      }
+      const sx = cx, sy = base + H * 0.18;
+      const px = sx + (fx - sx) * clamp(p), py = sy + (fy - sy) * clamp(p);
+      const marcada = actual > 0 && k + 1 === actual;
+      const sube = marcada ? Kit7_easeOut((t - 0.9) / 0.35) * 46 * U : 0;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: px - w / 2,
+        top: py - h / 2 - sube,
+        width: w,
+        height: h,
+        borderRadius: 24 * U,
+        background: ed ? `linear-gradient(160deg, #FFFFFF, ${P.carta[1]})` : `linear-gradient(160deg, ${P.carta[1]}, ${P.carta[0]})`,
+        border: `${2 * U}px solid ${ed ? "rgba(0,0,0,.08)" : "rgba(255,255,255,.22)"}`,
+        boxShadow: `${brillo(P, U, marcada ? 1.3 : 0.55)}, 0 ${16 * U}px ${36 * U}px rgba(0,0,0,.4)`,
+        transform: `rotate(${(ang * clamp(p)).toFixed(3)}deg) scale(${(0.82 + 0.18 * clamp(p)).toFixed(4)})`,
+        opacity: clamp(p * 1.4),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden"
+      }, children: ics[k % Math.max(1, ics.length)] ? /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 16 * U, top: 10 * U, fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: w * 0.3, color: ed ? P.a : "#FFFFFF" }, children: k + 1 }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: ics[k % ics.length], lado: w * 0.56, style: { position: "absolute", left: w * 0.22, top: h * 0.36, opacity: 0.9 } })
+      ] }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: w * (N <= 3 ? 0.62 : 0.5),
+        color: ed ? P.a : "#FFFFFF",
+        textShadow: ed ? "none" : `0 ${4 * U}px ${14 * U}px rgba(0,0,0,.35)`
+      }, children: k + 1 }) }, k);
+    })
+  ] });
 };
 const bez = (p0, p1, p2, p3, s) => {
   const m = 1 - s;
@@ -3960,45 +4521,56 @@ const RutaK = ({
     return { i, p: desplazados[i], visible: clamp((prog - objetivo) / (0.08 * largo)) };
   });
   const trazo = ed ? P.a : "#E9EEF5";
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, (numero || titulo) && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 0, width: W, top: oy - 270 * U, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Encabezado, { numero, titulo, subtitulo, P, U, t, tam: 0.8, ed })), /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", left: 0, top: 0, overflow: "visible" } }, /* @__PURE__ */ React.createElement("g", { transform: `translate(${ox.toFixed(1)} ${oy.toFixed(1)})` }, /* @__PURE__ */ React.createElement(
-    "polyline",
-    {
-      points: linea(desplazados.filter((_, i) => acum[i] <= prog)),
-      fill: "none",
-      stroke: P.b,
-      strokeWidth: 4 * U,
-      strokeDasharray: `${12 * U} ${10 * U}`,
-      opacity: 0.95,
-      style: { filter: `drop-shadow(0 0 ${3 * U}px rgba(0,0,0,.5))` }
-    }
-  ), /* @__PURE__ */ React.createElement("polyline", { points: linea(hasta), fill: "none", stroke: "rgba(0,0,0,.35)", strokeWidth: 22 * U, strokeLinecap: "round", strokeLinejoin: "round" }), /* @__PURE__ */ React.createElement(
-    "polyline",
-    {
-      points: linea(hasta),
-      fill: "none",
-      stroke: trazo,
-      strokeWidth: 14 * U,
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      style: { filter: ed ? "none" : `drop-shadow(0 0 ${10 * U}px rgba(255,255,255,.55))` }
-    }
-  ), marcas.map((m, k) => m.visible > 0 && /* @__PURE__ */ React.createElement("g", { key: k, opacity: m.visible, transform: `translate(${m.p[0].toFixed(1)} ${m.p[1].toFixed(1)}) scale(${(0.6 + 0.4 * m.visible).toFixed(3)})` }, /* @__PURE__ */ React.createElement("circle", { r: 16 * U, fill: P.b, stroke: "#FFFFFF", strokeWidth: 3 * U, style: { filter: `drop-shadow(0 0 ${10 * U}px ${P.b})` } }), /* @__PURE__ */ React.createElement(
-    "text",
-    {
-      x: 34 * U,
-      y: 0,
-      fill: ed ? P.a : "#FFFFFF",
-      stroke: ed ? "none" : P.a,
-      strokeWidth: 2 * U,
-      paintOrder: "stroke",
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 800,
-      fontSize: 64 * U,
-      dominantBaseline: "central",
-      style: { filter: ed ? "none" : `drop-shadow(0 0 ${8 * U}px rgba(${P.glow},.9))` }
-    },
-    k + 1
-  ))))));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    (numero || titulo) && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, width: W, top: oy - 270 * U, display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Encabezado, { numero, titulo, subtitulo, P, U, t, tam: 0.8, ed }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: W, height: H, style: { position: "absolute", left: 0, top: 0, overflow: "visible" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${ox.toFixed(1)} ${oy.toFixed(1)})`, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "polyline",
+        {
+          points: linea(desplazados.filter((_, i) => acum[i] <= prog)),
+          fill: "none",
+          stroke: P.b,
+          strokeWidth: 4 * U,
+          strokeDasharray: `${12 * U} ${10 * U}`,
+          opacity: 0.95,
+          style: { filter: `drop-shadow(0 0 ${3 * U}px rgba(0,0,0,.5))` }
+        }
+      ),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("polyline", { points: linea(hasta), fill: "none", stroke: "rgba(0,0,0,.35)", strokeWidth: 22 * U, strokeLinecap: "round", strokeLinejoin: "round" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "polyline",
+        {
+          points: linea(hasta),
+          fill: "none",
+          stroke: trazo,
+          strokeWidth: 14 * U,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          style: { filter: ed ? "none" : `drop-shadow(0 0 ${10 * U}px rgba(255,255,255,.55))` }
+        }
+      ),
+      marcas.map((m, k) => m.visible > 0 && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: m.visible, transform: `translate(${m.p[0].toFixed(1)} ${m.p[1].toFixed(1)}) scale(${(0.6 + 0.4 * m.visible).toFixed(3)})`, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { r: 16 * U, fill: P.b, stroke: "#FFFFFF", strokeWidth: 3 * U, style: { filter: `drop-shadow(0 0 ${10 * U}px ${P.b})` } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "text",
+          {
+            x: 34 * U,
+            y: 0,
+            fill: ed ? P.a : "#FFFFFF",
+            stroke: ed ? "none" : P.a,
+            strokeWidth: 2 * U,
+            paintOrder: "stroke",
+            fontFamily: FAMILIA.redonda,
+            fontWeight: 800,
+            fontSize: 64 * U,
+            dominantBaseline: "central",
+            style: { filter: ed ? "none" : `drop-shadow(0 0 ${8 * U}px rgba(${P.glow},.9))` },
+            children: k + 1
+          }
+        )
+      ] }, k))
+    ] }) })
+  ] });
 };
 const TituloNeonK = ({
   numero = "8",
@@ -4020,31 +4592,54 @@ const TituloNeonK = ({
   const P = pal(tema, acento, acento2), ed = claro(tema);
   const limpio = variante === "limpio";
   const late = 0.5 + 0.5 * Math.sin(t * 1.6);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, limpio && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: W * x / 100 - 260 * U,
-    top: H * y / 100 + 112 * U,
-    height: 10 * U,
-    borderRadius: 5 * U,
-    background: P.a,
-    width: 520 * U * Kit7_easeOut((t - 0.35) / 0.6),
-    boxShadow: ed ? "none" : brillo(P, U, 0.5)
-  } }), !ed && !limpio && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: W * x / 100 - 330 * U,
-    top: H * y / 100 - 260 * U,
-    width: 420 * U,
-    height: 420 * U,
-    borderRadius: "50%",
-    background: `radial-gradient(circle, rgba(${P.glow},.55) 0%, rgba(${P.glow},.18) 45%, rgba(${P.glow},0) 70%)`,
-    transform: `scale(${(0.85 + 0.15 * late + 0.2 * (1 - Kit7_easeOut(t / 0.6))).toFixed(4)})`,
-    opacity: Kit7_easeOut(t / 0.5)
-  } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W * x / 100 - W / 2, width: W, top: H * y / 100 - 110 * U, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Encabezado, { numero, titulo, subtitulo, P, U, t, ed })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    limpio && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: W * x / 100 - 260 * U,
+      top: H * y / 100 + 112 * U,
+      height: 10 * U,
+      borderRadius: 5 * U,
+      background: P.a,
+      width: 520 * U * Kit7_easeOut((t - 0.35) / 0.6),
+      boxShadow: ed ? "none" : brillo(P, U, 0.5)
+    } }),
+    !ed && !limpio && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: W * x / 100 - 330 * U,
+      top: H * y / 100 - 260 * U,
+      width: 420 * U,
+      height: 420 * U,
+      borderRadius: "50%",
+      background: `radial-gradient(circle, rgba(${P.glow},.55) 0%, rgba(${P.glow},.18) 45%, rgba(${P.glow},0) 70%)`,
+      transform: `scale(${(0.85 + 0.15 * late + 0.2 * (1 - Kit7_easeOut(t / 0.6))).toFixed(4)})`,
+      opacity: Kit7_easeOut(t / 0.5)
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: W * x / 100 - W / 2, width: W, top: H * y / 100 - 110 * U, display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Encabezado, { numero, titulo, subtitulo, P, U, t, ed }) })
+  ] });
 };
 const Icono = ({ tipo, lado, P, U }) => {
-  if (tipo.startsWith("emoji:")) return /* @__PURE__ */ React.createElement(EmojiAnimado, { id: tipo, lado: lado * 0.62 });
+  if (tipo.startsWith("emoji:")) return /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: tipo, lado: lado * 0.62 });
   const plata = "url(#kitPlata)";
-  return /* @__PURE__ */ React.createElement("svg", { width: lado * 0.62, height: lado * 0.62, viewBox: "0 0 100 100", style: { overflow: "visible" } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "kitPlata", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: "#FFFFFF" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: "#B9BEC8" }))), tipo === "personas" ? /* @__PURE__ */ React.createElement("g", { fill: plata }, /* @__PURE__ */ React.createElement("circle", { cx: "24", cy: "38", r: "11" }), /* @__PURE__ */ React.createElement("circle", { cx: "76", cy: "38", r: "11" }), /* @__PURE__ */ React.createElement("circle", { cx: "50", cy: "30", r: "14" }), /* @__PURE__ */ React.createElement("path", { d: "M6 82 Q8 56 24 54 Q40 56 42 82 Z" }), /* @__PURE__ */ React.createElement("path", { d: "M58 82 Q60 56 76 54 Q92 56 94 82 Z" }), /* @__PURE__ */ React.createElement("path", { d: "M26 90 Q28 50 50 48 Q72 50 74 90 Z" })) : tipo === "persona" ? /* @__PURE__ */ React.createElement("g", { fill: plata }, /* @__PURE__ */ React.createElement("circle", { cx: "50", cy: "30", r: "18" }), /* @__PURE__ */ React.createElement("path", { d: "M18 92 Q20 52 50 50 Q80 52 82 92 Z" })) : tipo === "rayo" ? /* @__PURE__ */ React.createElement("path", { d: "M58 4 L22 56 L46 56 L38 96 L80 40 L54 40 Z", fill: P.b }) : /* @__PURE__ */ React.createElement("g", { style: { filter: `drop-shadow(0 0 ${6 * U}px ${P.a})` } }, /* @__PURE__ */ React.createElement("path", { d: "M50 6 L86 50 L50 94 L14 50 Z", fill: P.a }), /* @__PURE__ */ React.createElement("path", { d: "M50 6 L86 50 L50 50 Z", fill: P.b, opacity: 0.7 })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: lado * 0.62, height: lado * 0.62, viewBox: "0 0 100 100", style: { overflow: "visible" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("linearGradient", { id: "kitPlata", x1: "0", y1: "0", x2: "0", y2: "1", children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0", stopColor: "#FFFFFF" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "1", stopColor: "#B9BEC8" })
+    ] }) }),
+    tipo === "personas" ? /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { fill: plata, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "24", cy: "38", r: "11" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "76", cy: "38", r: "11" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "50", cy: "30", r: "14" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M6 82 Q8 56 24 54 Q40 56 42 82 Z" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M58 82 Q60 56 76 54 Q92 56 94 82 Z" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M26 90 Q28 50 50 48 Q72 50 74 90 Z" })
+    ] }) : tipo === "persona" ? /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { fill: plata, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "50", cy: "30", r: "18" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M18 92 Q20 52 50 50 Q80 52 82 92 Z" })
+    ] }) : tipo === "rayo" ? /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M58 4 L22 56 L46 56 L38 96 L80 40 L54 40 Z", fill: P.b }) : /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { style: { filter: `drop-shadow(0 0 ${6 * U}px ${P.a})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M50 6 L86 50 L50 94 L14 50 Z", fill: P.a }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M50 6 L86 50 L50 50 Z", fill: P.b, opacity: 0.7 })
+    ] })
+  ] });
 };
 const ConceptoK = ({
   palabra = "\xC9XITO",
@@ -4086,7 +4681,7 @@ const ConceptoK = ({
       break;
     }
   }
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: cx - cw / 2,
     top: cy - chh / 2,
@@ -4099,57 +4694,62 @@ const ConceptoK = ({
     overflow: "hidden",
     opacity: clamp(pc * 1.3),
     transform: `scale(${(0.94 + 0.06 * clamp(pc)).toFixed(4)})`
-  } }, conIcono && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: cw / 2 - 74 * U,
-    top: chh * 0.12,
-    width: 148 * U,
-    height: 148 * U,
-    borderRadius: "50%",
-    border: `${4 * U}px solid ${P.a}`,
-    boxShadow: brillo(P, U, 1),
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: ed ? "#FFFFFF" : "rgba(0,0,0,.35)",
-    transform: `scale(${Math.max(1e-3, pi).toFixed(4)})`
-  } }, /* @__PURE__ */ React.createElement(Icono, { tipo: icono, lado: 148 * U, P, U })), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: chh * 0.12 + (conIcono ? 176 : 40) * U,
-    textAlign: "center",
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: (conIcono ? 84 : 120) * U,
-    color: ed ? P.texto : "#FFFFFF",
-    textTransform: "uppercase",
-    letterSpacing: `${(0.02 + 0.1 * (1 - pw)).toFixed(3)}em`,
-    textShadow: ed ? "none" : tarjeta ? `0 0 ${18 * U}px rgba(255,255,255,.35)` : `0 ${4 * U}px ${18 * U}px rgba(0,0,0,.6), 0 0 ${18 * U}px rgba(${P.glow},.5)`,
-    opacity: pw
-  } }, palabra), sub && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: 40 * U,
-    right: 40 * U,
-    top: chh * 0.12 + (conIcono ? 278 : 180) * U,
-    textAlign: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 500,
-    fontSize: 32 * U,
-    color: P.suave,
-    opacity: Kit7_easeOut((t - 0.6) / 0.4)
-  } }, sub), grafica !== "ninguna" && /* @__PURE__ */ React.createElement("svg", { width: gw, height: gh, style: { position: "absolute", left: (cw - gw) / 2, top: chh - gh - 40 * U, overflow: "visible" } }, /* @__PURE__ */ React.createElement(
-    "polyline",
-    {
-      points: visibles.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" "),
-      fill: "none",
-      stroke: P.a,
-      strokeWidth: 8 * U,
-      strokeLinejoin: "round",
-      strokeLinecap: "round",
-      style: { filter: ed ? "none" : `drop-shadow(0 0 ${12 * U}px ${P.a})` }
-    }
-  ))));
+  }, children: [
+    conIcono && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: cw / 2 - 74 * U,
+      top: chh * 0.12,
+      width: 148 * U,
+      height: 148 * U,
+      borderRadius: "50%",
+      border: `${4 * U}px solid ${P.a}`,
+      boxShadow: brillo(P, U, 1),
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: ed ? "#FFFFFF" : "rgba(0,0,0,.35)",
+      transform: `scale(${Math.max(1e-3, pi).toFixed(4)})`
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Icono, { tipo: icono, lado: 148 * U, P, U }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      top: chh * 0.12 + (conIcono ? 176 : 40) * U,
+      textAlign: "center",
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: (conIcono ? 84 : 120) * U,
+      color: ed ? P.texto : "#FFFFFF",
+      textTransform: "uppercase",
+      letterSpacing: `${(0.02 + 0.1 * (1 - pw)).toFixed(3)}em`,
+      textShadow: ed ? "none" : tarjeta ? `0 0 ${18 * U}px rgba(255,255,255,.35)` : `0 ${4 * U}px ${18 * U}px rgba(0,0,0,.6), 0 0 ${18 * U}px rgba(${P.glow},.5)`,
+      opacity: pw
+    }, children: palabra }),
+    sub && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: 40 * U,
+      right: 40 * U,
+      top: chh * 0.12 + (conIcono ? 278 : 180) * U,
+      textAlign: "center",
+      fontFamily: FAMILIA.inter,
+      fontWeight: 500,
+      fontSize: 32 * U,
+      color: P.suave,
+      opacity: Kit7_easeOut((t - 0.6) / 0.4)
+    }, children: sub }),
+    grafica !== "ninguna" && /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: gw, height: gh, style: { position: "absolute", left: (cw - gw) / 2, top: chh - gh - 40 * U, overflow: "visible" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      "polyline",
+      {
+        points: visibles.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" "),
+        fill: "none",
+        stroke: P.a,
+        strokeWidth: 8 * U,
+        strokeLinejoin: "round",
+        strokeLinecap: "round",
+        style: { filter: ed ? "none" : `drop-shadow(0 0 ${12 * U}px ${P.a})` }
+      }
+    ) })
+  ] }) });
 };
 const MixtoK = ({
   linea1 = "No es decoraci\xF3n,",
@@ -4178,28 +4778,32 @@ const MixtoK = ({
   const plegar = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\p{L}\p{N}]/gu, "");
   const k = plegar(clave);
   const p2 = Kit7_easeOut((t - 0.3) / 0.45);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: W * x / 100 - W * 0.45, width: W * 0.9, top: H * y / 100 - 120 * U, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 70 * U, lineHeight: 1.05, color: ed ? P.texto : "#FFFFFF" } }, pal1.map((w, i) => {
-    const p = Kit7_easeOut((t - 0.05 - i * 0.07) / 0.35);
-    return /* @__PURE__ */ React.createElement("span", { key: i, style: { display: "inline-block", marginRight: "0.25em", opacity: p, filter: `blur(${((1 - p) * 8 * U).toFixed(2)}px)` } }, w);
-  })), /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 96 * U,
-    lineHeight: 1.02,
-    marginTop: 10 * U,
-    opacity: p2,
-    transform: `scale(${(1.14 - 0.14 * p2).toFixed(4)})`,
-    filter: `blur(${((1 - p2) * 10 * U).toFixed(2)}px)`
-  } }, pal2.map((w, i) => {
-    const es = k && plegar(w) === k;
-    const color = es && !rotulador ? P.a : ed ? P.texto : "#FFFFFF";
-    const sombra = [rgbSplit, es && !ed && !rotulador ? textoBrillo(P, U, 1) : "", !es || rotulador ? `0 ${3 * U}px ${14 * U}px rgba(0,0,0,${ed ? 0 : 0.5})` : ""].filter(Boolean).join(", ") || "none";
-    const resalte = es && rotulador ? { background: `linear-gradient(${P.a}, ${P.a}) no-repeat 0 88% / ${(100 * marca).toFixed(1)}% 34%`, padding: `0 ${6 * U}px` } : {};
-    return /* @__PURE__ */ React.createElement("span", { key: i, style: { display: "inline-block", marginRight: "0.22em", color, textShadow: sombra, ...resalte } }, w);
-  }))));
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: W * x / 100 - W * 0.45, width: W * 0.9, top: H * y / 100 - 120 * U, textAlign: "center" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 70 * U, lineHeight: 1.05, color: ed ? P.texto : "#FFFFFF" }, children: pal1.map((w, i) => {
+      const p = Kit7_easeOut((t - 0.05 - i * 0.07) / 0.35);
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { display: "inline-block", marginRight: "0.25em", opacity: p, filter: `blur(${((1 - p) * 8 * U).toFixed(2)}px)` }, children: w }, i);
+    }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: 96 * U,
+      lineHeight: 1.02,
+      marginTop: 10 * U,
+      opacity: p2,
+      transform: `scale(${(1.14 - 0.14 * p2).toFixed(4)})`,
+      filter: `blur(${((1 - p2) * 10 * U).toFixed(2)}px)`
+    }, children: pal2.map((w, i) => {
+      const es = k && plegar(w) === k;
+      const color = es && !rotulador ? P.a : ed ? P.texto : "#FFFFFF";
+      const sombra = [rgbSplit, es && !ed && !rotulador ? textoBrillo(P, U, 1) : "", !es || rotulador ? `0 ${3 * U}px ${14 * U}px rgba(0,0,0,${ed ? 0 : 0.5})` : ""].filter(Boolean).join(", ") || "none";
+      const resalte = es && rotulador ? { background: `linear-gradient(${P.a}, ${P.a}) no-repeat 0 88% / ${(100 * marca).toFixed(1)}% 34%`, padding: `0 ${6 * U}px` } : {};
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { display: "inline-block", marginRight: "0.22em", color, textShadow: sombra, ...resalte }, children: w }, i);
+    }) })
+  ] }) });
 };
 
 ;// ./src/Kit8.tsx
+
 
 
 
@@ -4230,82 +4834,89 @@ const RecorteK = ({ icono = "light_bulb", palabra = "", x = 50, y = 40, escala =
   const pc = S(0.32, { damping: 12, stiffness: 220 });
   const pt = Kit7_easeOut((t - 0.3) / 0.22);
   const pl = Kit7_easeOut((t - 0.38) / 0.35);
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: cx - lado / 2,
-    top: cy - lado / 2 + flota,
-    width: lado,
-    height: lado,
-    opacity: neon ? parpadeo : clamp(p * 3),
-    transform: `rotate(${giro.toFixed(3)}deg) scale(${Math.max(1e-3, escalaIn).toFixed(4)})`,
-    filter: sombra || "none"
-  } }, neon ? /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, filter: `drop-shadow(0 0 ${7 * U * late}px ${brilloNeon}) drop-shadow(0 0 ${24 * U * late}px ${brilloNeon})` } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    inset: 0,
-    background: mezcla(brilloNeon, [255, 255, 255], 0.55),
-    WebkitMaskImage: `url(${url})`,
-    maskImage: `url(${url})`,
-    WebkitMaskSize: "100% 100%",
-    maskSize: "100% 100%"
-  } })) : /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: url, style: { width: lado, height: lado } }), !neon && !conColor && /* @__PURE__ */ React.createElement(
-    esm/* Img */.E9,
-    {
-      src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"),
-      style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: cx - lado / 2,
+      top: cy - lado / 2 + flota,
+      width: lado,
+      height: lado,
+      opacity: neon ? parpadeo : clamp(p * 3),
+      transform: `rotate(${giro.toFixed(3)}deg) scale(${Math.max(1e-3, escalaIn).toFixed(4)})`,
+      filter: sombra || "none"
+    }, children: [
+      neon ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, filter: `drop-shadow(0 0 ${7 * U * late}px ${brilloNeon}) drop-shadow(0 0 ${24 * U * late}px ${brilloNeon})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
         position: "absolute",
-        left: lado / 2 - 48 * U,
-        top: -30 * U - (1 - clamp(pc)) * 160 * U,
-        width: 96 * U,
-        height: 96 * U,
-        opacity: clamp(pc * 4),
-        transform: `rotate(${18 - 10 * (1 - clamp(pc))}deg) scale(${(1.25 - 0.25 * clamp(pc)).toFixed(4)})`,
-        filter: `drop-shadow(${4 * U}px ${7 * U}px ${5 * U}px rgba(0,0,0,.35))`
-      }
-    }
-  ), conColor && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: -22 * U,
-    top: 34 * U,
-    width: 190 * U,
-    height: 54 * U,
-    transformOrigin: "0% 50%",
-    transform: `rotate(-38deg) scaleX(${pt.toFixed(4)})`,
-    background: "rgba(238,226,196,.82)",
-    clipPath: "polygon(0% 8%, 4% 0%, 8% 10%, 12% 2%, 88% 0%, 92% 9%, 96% 1%, 100% 10%, 100% 90%, 96% 100%, 92% 91%, 88% 99%, 12% 100%, 8% 90%, 4% 99%, 0% 92%)",
-    boxShadow: `0 ${2 * U}px ${6 * U}px rgba(0,0,0,.18)`
-  } })), palabra && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: cy + lado * 0.47 + flota, display: "flex", justifyContent: "center" } }, neon ? /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 92 * U,
-    letterSpacing: "0.04em",
-    color: mezcla(brilloNeon, [255, 255, 255], 0.6),
-    textShadow: `0 0 ${10 * U * late}px ${brilloNeon}, 0 0 ${30 * U * late}px ${brilloNeon}`,
-    opacity: parpadeo * clamp((t - 0.2) / 0.1),
-    textTransform: "uppercase"
-  } }, palabra) : conColor ? /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 96 * U,
-    color: "#FFFFFF",
-    WebkitTextStroke: `${10 * U}px #141416`,
-    paintOrder: "stroke fill",
-    textTransform: "uppercase",
-    transform: `scale(${(0.6 + 0.4 * S(0.36, { damping: 11 })).toFixed(4)}) rotate(-3deg)`,
-    opacity: clamp((t - 0.36) / 0.08),
-    filter: `drop-shadow(0 ${6 * U}px ${10 * U}px rgba(0,0,0,.4))`
-  } }, palabra) : /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 70 * U,
-    color: "#F6F4EE",
-    background: "#141416",
-    padding: `${8 * U}px ${26 * U}px`,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    transform: "rotate(-3deg)",
-    clipPath: `inset(0 ${((1 - pl) * 100).toFixed(2)}% 0 0)`,
-    boxShadow: `0 ${8 * U}px ${18 * U}px rgba(0,0,0,.35)`
-  } }, palabra)));
+        inset: 0,
+        background: mezcla(brilloNeon, [255, 255, 255], 0.55),
+        WebkitMaskImage: `url(${url})`,
+        maskImage: `url(${url})`,
+        WebkitMaskSize: "100% 100%",
+        maskSize: "100% 100%"
+      } }) }) : /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: url, style: { width: lado, height: lado } }),
+      !neon && !conColor && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        esm/* Img */.E9,
+        {
+          src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"),
+          style: {
+            position: "absolute",
+            left: lado / 2 - 48 * U,
+            top: -30 * U - (1 - clamp(pc)) * 160 * U,
+            width: 96 * U,
+            height: 96 * U,
+            opacity: clamp(pc * 4),
+            transform: `rotate(${18 - 10 * (1 - clamp(pc))}deg) scale(${(1.25 - 0.25 * clamp(pc)).toFixed(4)})`,
+            filter: `drop-shadow(${4 * U}px ${7 * U}px ${5 * U}px rgba(0,0,0,.35))`
+          }
+        }
+      ),
+      conColor && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: -22 * U,
+        top: 34 * U,
+        width: 190 * U,
+        height: 54 * U,
+        transformOrigin: "0% 50%",
+        transform: `rotate(-38deg) scaleX(${pt.toFixed(4)})`,
+        background: "rgba(238,226,196,.82)",
+        clipPath: "polygon(0% 8%, 4% 0%, 8% 10%, 12% 2%, 88% 0%, 92% 9%, 96% 1%, 100% 10%, 100% 90%, 96% 100%, 92% 91%, 88% 99%, 12% 100%, 8% 90%, 4% 99%, 0% 92%)",
+        boxShadow: `0 ${2 * U}px ${6 * U}px rgba(0,0,0,.18)`
+      } })
+    ] }),
+    palabra && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: cy + lado * 0.47 + flota, display: "flex", justifyContent: "center" }, children: neon ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: 92 * U,
+      letterSpacing: "0.04em",
+      color: mezcla(brilloNeon, [255, 255, 255], 0.6),
+      textShadow: `0 0 ${10 * U * late}px ${brilloNeon}, 0 0 ${30 * U * late}px ${brilloNeon}`,
+      opacity: parpadeo * clamp((t - 0.2) / 0.1),
+      textTransform: "uppercase"
+    }, children: palabra }) : conColor ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: 96 * U,
+      color: "#FFFFFF",
+      WebkitTextStroke: `${10 * U}px #141416`,
+      paintOrder: "stroke fill",
+      textTransform: "uppercase",
+      transform: `scale(${(0.6 + 0.4 * S(0.36, { damping: 11 })).toFixed(4)}) rotate(-3deg)`,
+      opacity: clamp((t - 0.36) / 0.08),
+      filter: `drop-shadow(0 ${6 * U}px ${10 * U}px rgba(0,0,0,.4))`
+    }, children: palabra }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: 70 * U,
+      color: "#F6F4EE",
+      background: "#141416",
+      padding: `${8 * U}px ${26 * U}px`,
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+      transform: "rotate(-3deg)",
+      clipPath: `inset(0 ${((1 - pl) * 100).toFixed(2)}% 0 0)`,
+      boxShadow: `0 ${8 * U}px ${18 * U}px rgba(0,0,0,.35)`
+    }, children: palabra }) })
+  ] });
 };
 const MENU = {
   es: ["Copiar", "Seleccionar todo", "Compartir"],
@@ -4345,92 +4956,113 @@ const SeleccionK = ({
   const pchispa = S(1.1, { damping: 10 });
   const opciones = MENU[String(idioma).slice(0, 2)] || MENU.es;
   const tarjeta = rosa ? S(0, { damping: 18 }) : 0;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, rosa && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: cx - W * 0.44,
-    width: W * 0.88,
-    top: cy - 300 * U,
-    height: 600 * U,
-    borderRadius: 44 * U,
-    background: "rgba(244,243,240,.96)",
-    boxShadow: `0 ${24 * U}px ${60 * U}px rgba(0,0,0,.35)`,
-    opacity: clamp(tarjeta * 1.4),
-    transform: `scale(${(0.94 + 0.06 * clamp(tarjeta)).toFixed(4)})`
-  } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: cy - 200 * U, display: "flex", flexDirection: "column", alignItems: "center" } }, pa.length > 0 && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 66 * U,
-    letterSpacing: "-0.025em",
-    color: tinta,
-    textShadow: sombraTexto,
-    textDecoration: "underline",
-    textDecorationThickness: 5 * U,
-    textUnderlineOffset: 10 * U,
-    marginBottom: 6 * U
-  } }, pa.map((w, i) => {
-    const p = Kit7_easeOut((t - 0.04 - i * 0.07) / 0.3);
-    return /* @__PURE__ */ React.createElement("span", { key: i, style: { display: "inline-block", marginRight: "0.24em", opacity: p, transform: `translateY(${((1 - p) * 14 * U).toFixed(2)}px)` } }, w);
-  })), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", display: "inline-block", padding: `0 ${18 * U}px`, opacity: clamp(pw * 2), transform: `scale(${(1.12 - 0.12 * clamp(pw)).toFixed(4)})` } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 0, top: tam * 0.1, height: tam * 0.92, width: `${(barrido * 100).toFixed(2)}%`, background: resalte } }), barrido > 0.01 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: -3 * U, top: tam * 0.06, width: 7 * U, height: tam * 1, borderRadius: 4 * U, background: tirador } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: -12 * U, top: -24 * U, width: 31 * U, height: 31 * U, borderRadius: "50%", background: tirador } })), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: `calc(${(barrido * 100).toFixed(2)}% - ${4 * U}px)`, top: tam * 0.06, width: 7 * U, height: tam * 1, borderRadius: 4 * U, background: tirador } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: -12 * U, bottom: -24 * U, width: 31 * U, height: 31 * U, borderRadius: "50%", background: tirador } }))), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "relative",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: tam,
-    lineHeight: 1.08,
-    letterSpacing: "-0.05em",
-    color: tinta,
-    textShadow: sombraTexto,
-    filter: `blur(${((1 - clamp(pw)) * 8 * U).toFixed(2)}px)`
-  } }, palabra), pm > 0.01 && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: "50%",
-    top: (pa.length ? -208 : -112) * U,
-    transform: `translateX(-50%) scale(${Math.max(1e-3, 0.6 + 0.4 * pm).toFixed(4)})`,
-    transformOrigin: "50% 100%",
-    opacity: clamp(pm * 2),
-    display: "flex",
-    alignItems: "center",
-    background: "#FFFFFF",
-    borderRadius: 18 * U,
-    whiteSpace: "nowrap",
-    boxShadow: `0 ${10 * U}px ${30 * U}px rgba(0,0,0,.28)`,
-    fontFamily: FAMILIA.inter,
-    fontWeight: 500,
-    fontSize: 34 * U,
-    color: "#1C1C1E"
-  } }, opciones.map((o, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { padding: `${18 * U}px ${26 * U}px`, borderLeft: i ? `${1.5 * U}px solid rgba(60,60,67,.22)` : "none" } }, o)), /* @__PURE__ */ React.createElement("div", { style: { padding: `${18 * U}px ${20 * U}px`, borderLeft: `${1.5 * U}px solid rgba(60,60,67,.22)`, fontWeight: 700 } }, "\u203A"), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: "50%",
-    bottom: -13 * U,
-    marginLeft: -14 * U,
-    width: 0,
-    height: 0,
-    borderLeft: `${14 * U}px solid transparent`,
-    borderRight: `${14 * U}px solid transparent`,
-    borderTop: `${14 * U}px solid #FFFFFF`
-  } })), pchispa > 0.01 && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", right: -tam * 0.86, top: -tam * 0.14, transform: `scale(${Math.max(1e-3, pchispa).toFixed(4)}) rotate(${(Math.sin(t * 3) * 6).toFixed(2)}deg)` } }, /* @__PURE__ */ React.createElement(EmojiAnimado, { id: "sparkles", lado: tam * 0.9 })), rosa && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: -tam * 0.55,
-    top: -tam * 0.12,
-    width: tam * 0.52,
-    height: tam * 0.36,
-    borderRadius: tam * 0.18,
-    background: "#B9B9BE",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: tam * 0.05,
-    opacity: clamp((t - 0.7) / 0.15)
-  } }, [0, 1, 2].map((k) => /* @__PURE__ */ React.createElement("div", { key: k, style: { width: tam * 0.07, height: tam * 0.07, borderRadius: "50%", background: "#2B2B2E", opacity: 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 7 - k * 0.9)) } })))), abajo && /* @__PURE__ */ React.createElement("div", { style: {
-    fontFamily: FAMILIA.inter,
-    fontWeight: 400,
-    fontSize: 58 * U,
-    letterSpacing: "-0.02em",
-    color: tinta,
-    textShadow: sombraTexto,
-    marginTop: 14 * U,
-    opacity: Kit7_easeOut((t - 0.72) / 0.35),
-    transform: `translateY(${((1 - Kit7_easeOut((t - 0.72) / 0.35)) * 16 * U).toFixed(2)}px)`
-  } }, abajo)));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    rosa && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: cx - W * 0.44,
+      width: W * 0.88,
+      top: cy - 300 * U,
+      height: 600 * U,
+      borderRadius: 44 * U,
+      background: "rgba(244,243,240,.96)",
+      boxShadow: `0 ${24 * U}px ${60 * U}px rgba(0,0,0,.35)`,
+      opacity: clamp(tarjeta * 1.4),
+      transform: `scale(${(0.94 + 0.06 * clamp(tarjeta)).toFixed(4)})`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: cx - W / 2, width: W, top: cy - 200 * U, display: "flex", flexDirection: "column", alignItems: "center" }, children: [
+      pa.length > 0 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 66 * U,
+        letterSpacing: "-0.025em",
+        color: tinta,
+        textShadow: sombraTexto,
+        textDecoration: "underline",
+        textDecorationThickness: 5 * U,
+        textUnderlineOffset: 10 * U,
+        marginBottom: 6 * U
+      }, children: pa.map((w, i) => {
+        const p = Kit7_easeOut((t - 0.04 - i * 0.07) / 0.3);
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { display: "inline-block", marginRight: "0.24em", opacity: p, transform: `translateY(${((1 - p) * 14 * U).toFixed(2)}px)` }, children: w }, i);
+      }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", display: "inline-block", padding: `0 ${18 * U}px`, opacity: clamp(pw * 2), transform: `scale(${(1.12 - 0.12 * clamp(pw)).toFixed(4)})` }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, top: tam * 0.1, height: tam * 0.92, width: `${(barrido * 100).toFixed(2)}%`, background: resalte } }),
+        barrido > 0.01 && /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: -3 * U, top: tam * 0.06, width: 7 * U, height: tam * 1, borderRadius: 4 * U, background: tirador }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: -12 * U, top: -24 * U, width: 31 * U, height: 31 * U, borderRadius: "50%", background: tirador } }) }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: `calc(${(barrido * 100).toFixed(2)}% - ${4 * U}px)`, top: tam * 0.06, width: 7 * U, height: tam * 1, borderRadius: 4 * U, background: tirador }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: -12 * U, bottom: -24 * U, width: 31 * U, height: 31 * U, borderRadius: "50%", background: tirador } }) })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "relative",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 700,
+          fontSize: tam,
+          lineHeight: 1.08,
+          letterSpacing: "-0.05em",
+          color: tinta,
+          textShadow: sombraTexto,
+          filter: `blur(${((1 - clamp(pw)) * 8 * U).toFixed(2)}px)`
+        }, children: palabra }),
+        pm > 0.01 && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "absolute",
+          left: "50%",
+          top: (pa.length ? -208 : -112) * U,
+          transform: `translateX(-50%) scale(${Math.max(1e-3, 0.6 + 0.4 * pm).toFixed(4)})`,
+          transformOrigin: "50% 100%",
+          opacity: clamp(pm * 2),
+          display: "flex",
+          alignItems: "center",
+          background: "#FFFFFF",
+          borderRadius: 18 * U,
+          whiteSpace: "nowrap",
+          boxShadow: `0 ${10 * U}px ${30 * U}px rgba(0,0,0,.28)`,
+          fontFamily: FAMILIA.inter,
+          fontWeight: 500,
+          fontSize: 34 * U,
+          color: "#1C1C1E"
+        }, children: [
+          opciones.map((o, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { padding: `${18 * U}px ${26 * U}px`, borderLeft: i ? `${1.5 * U}px solid rgba(60,60,67,.22)` : "none" }, children: o }, i)),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { padding: `${18 * U}px ${20 * U}px`, borderLeft: `${1.5 * U}px solid rgba(60,60,67,.22)`, fontWeight: 700 }, children: "\u203A" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            position: "absolute",
+            left: "50%",
+            bottom: -13 * U,
+            marginLeft: -14 * U,
+            width: 0,
+            height: 0,
+            borderLeft: `${14 * U}px solid transparent`,
+            borderRight: `${14 * U}px solid transparent`,
+            borderTop: `${14 * U}px solid #FFFFFF`
+          } })
+        ] }),
+        pchispa > 0.01 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", right: -tam * 0.86, top: -tam * 0.14, transform: `scale(${Math.max(1e-3, pchispa).toFixed(4)}) rotate(${(Math.sin(t * 3) * 6).toFixed(2)}deg)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: "sparkles", lado: tam * 0.9 }) }),
+        rosa && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: -tam * 0.55,
+          top: -tam * 0.12,
+          width: tam * 0.52,
+          height: tam * 0.36,
+          borderRadius: tam * 0.18,
+          background: "#B9B9BE",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: tam * 0.05,
+          opacity: clamp((t - 0.7) / 0.15)
+        }, children: [0, 1, 2].map((k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: tam * 0.07, height: tam * 0.07, borderRadius: "50%", background: "#2B2B2E", opacity: 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 7 - k * 0.9)) } }, k)) })
+      ] }),
+      abajo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.inter,
+        fontWeight: 400,
+        fontSize: 58 * U,
+        letterSpacing: "-0.02em",
+        color: tinta,
+        textShadow: sombraTexto,
+        marginTop: 14 * U,
+        opacity: Kit7_easeOut((t - 0.72) / 0.35),
+        transform: `translateY(${((1 - Kit7_easeOut((t - 0.72) / 0.35)) * 16 * U).toFixed(2)}px)`
+      }, children: abajo })
+    ] })
+  ] });
 };
 const ESTILO_CAL = {
   rojo: { cuerpo: "#FFFFFF", cabeza: "#E3262E", numero: "#111114", etiqueta: "#FFFFFF", anillas: "#3A3A40" },
@@ -4463,36 +5095,39 @@ const CalendarioK = ({
   const lado = 340 * U, cx = W * x / 100, cy = H * y / 100;
   const pe = S(0.02, { damping: 13, stiffness: 180 });
   const dos = (n) => String(Math.abs(n)).padStart(2, "0");
-  const Hoja = ({ n, style }) => /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: 50 * U, background: E.cuerpo, overflow: "hidden", ...style } }, /* @__PURE__ */ React.createElement("div", { style: {
-    height: lado * 0.3,
-    background: E.cabeza,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 66 * U,
-    letterSpacing: "0.06em",
-    color: E.etiqueta
-  } }, etiqueta), /* @__PURE__ */ React.createElement("div", { style: {
-    height: lado * 0.7,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 190 * U,
-    lineHeight: 1,
-    letterSpacing: "-0.03em",
-    color: E.numero
-  } }, dos(n)));
+  const Hoja = ({ n, style }) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", inset: 0, borderRadius: 50 * U, background: E.cuerpo, overflow: "hidden", ...style }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      height: lado * 0.3,
+      background: E.cabeza,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: 66 * U,
+      letterSpacing: "0.06em",
+      color: E.etiqueta
+    }, children: etiqueta }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      height: lado * 0.7,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: 190 * U,
+      lineHeight: 1,
+      letterSpacing: "-0.03em",
+      color: E.numero
+    }, children: dos(n) })
+  ] });
   const k = clamp(Math.floor((t - t0) / dt), -1, cuantos);
   const actual = valores[Math.max(0, Math.min(cuantos, k + 1))];
   const arrancada = k >= 0 && k < cuantos ? valores[k] : null;
   const pv = arrancada !== null ? clamp((t - (t0 + k * dt)) / vuelo) : 1;
   const tFinal = t0 + cuantos * dt;
   const pcheck = final === "check" ? S(tFinal + 0.15, { damping: 11, stiffness: 200 }) : 0;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: cx - lado / 2,
     top: cy - lado / 2,
@@ -4501,36 +5136,41 @@ const CalendarioK = ({
     opacity: clamp(pe * 2),
     transform: `scale(${Math.max(1e-3, 0.55 + 0.45 * pe).toFixed(4)})`,
     filter: `drop-shadow(0 ${16 * U}px ${22 * U}px rgba(0,0,0,.38))`
-  } }, /* @__PURE__ */ React.createElement(Hoja, { n: t < t0 ? valores[0] : actual }), arrancada !== null && pv < 1 && /* @__PURE__ */ React.createElement(Hoja, { n: arrancada, style: {
-    transformOrigin: "0% 0%",
-    opacity: 1 - pv * pv,
-    transform: `translate(${(pv * 240 * U).toFixed(2)}px, ${(-pv * 40 * U + pv * pv * 260 * U).toFixed(2)}px) rotate(${(pv * 52).toFixed(2)}deg)`
-  } }), [0.22, 0.4, 0.6, 0.78].map((f, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { position: "absolute", left: lado * f - 7 * U, top: -20 * U, width: 14 * U, height: 46 * U, borderRadius: 7 * U, background: E.anillas } })), pcheck > 0.01 && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    right: -44 * U,
-    top: -44 * U,
-    width: 120 * U,
-    height: 120 * U,
-    borderRadius: "50%",
-    background: "#2BD46A",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transform: `scale(${Math.max(1e-3, pcheck).toFixed(4)})`,
-    boxShadow: `0 ${8 * U}px ${18 * U}px rgba(0,0,0,.3)`
-  } }, /* @__PURE__ */ React.createElement("svg", { width: 70 * U, height: 70 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement(
-    "path",
-    {
-      d: "M4 12.5 L9.5 18 L20 6.5",
-      fill: "none",
-      stroke: "#FFFFFF",
-      strokeWidth: "3.4",
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      strokeDasharray: "30",
-      strokeDashoffset: (30 * (1 - Kit7_easeOut((t - tFinal - 0.2) / 0.3))).toFixed(2)
-    }
-  )))));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hoja, { n: t < t0 ? valores[0] : actual }),
+    arrancada !== null && pv < 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)(Hoja, { n: arrancada, style: {
+      transformOrigin: "0% 0%",
+      opacity: 1 - pv * pv,
+      transform: `translate(${(pv * 240 * U).toFixed(2)}px, ${(-pv * 40 * U + pv * pv * 260 * U).toFixed(2)}px) rotate(${(pv * 52).toFixed(2)}deg)`
+    } }),
+    [0.22, 0.4, 0.6, 0.78].map((f, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: lado * f - 7 * U, top: -20 * U, width: 14 * U, height: 46 * U, borderRadius: 7 * U, background: E.anillas } }, i)),
+    pcheck > 0.01 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      right: -44 * U,
+      top: -44 * U,
+      width: 120 * U,
+      height: 120 * U,
+      borderRadius: "50%",
+      background: "#2BD46A",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      transform: `scale(${Math.max(1e-3, pcheck).toFixed(4)})`,
+      boxShadow: `0 ${8 * U}px ${18 * U}px rgba(0,0,0,.3)`
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 70 * U, height: 70 * U, viewBox: "0 0 24 24", children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      "path",
+      {
+        d: "M4 12.5 L9.5 18 L20 6.5",
+        fill: "none",
+        stroke: "#FFFFFF",
+        strokeWidth: "3.4",
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+        strokeDasharray: "30",
+        strokeDashoffset: (30 * (1 - Kit7_easeOut((t - tFinal - 0.2) / 0.3))).toFixed(2)
+      }
+    ) }) })
+  ] }) });
 };
 const RED = {
   facebook: { color: "#1877F2", glow: "#3B8BFF" },
@@ -4538,15 +5178,35 @@ const RED = {
   youtube: { color: "#FF0000", glow: "#FF3B3B" },
   tiktok: { color: "#111111", glow: "#E8E8E8" }
 };
-const Logo = ({ red, lado }) => /* @__PURE__ */ React.createElement("svg", { width: lado, height: lado, viewBox: "0 0 24 24" }, red === "instagram" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "kigrad", x1: "0", y1: "1", x2: "1", y2: "0" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: "#F58529" }), /* @__PURE__ */ React.createElement("stop", { offset: ".5", stopColor: "#DD2A7B" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: "#515BD4" }))), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "12", fill: "url(#kigrad)" }), /* @__PURE__ */ React.createElement("rect", { x: "6", y: "6", width: "12", height: "12", rx: "3.6", fill: "none", stroke: "#FFF", strokeWidth: "1.6" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "2.9", fill: "none", stroke: "#FFF", strokeWidth: "1.6" }), /* @__PURE__ */ React.createElement("circle", { cx: "15.6", cy: "8.4", r: ".9", fill: "#FFF" })) : red === "youtube" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "12", fill: "#FF0000" }), /* @__PURE__ */ React.createElement("rect", { x: "5.2", y: "7.6", width: "13.6", height: "8.8", rx: "2.6", fill: "#FFF" }), /* @__PURE__ */ React.createElement("path", { d: "M10.4 9.7 L14.4 12 L10.4 14.3 Z", fill: "#FF0000" })) : red === "tiktok" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "12", fill: "#111" }), [["#25F4EE", -0.5], ["#FE2C55", 0.5], ["#FFFFFF", 0]].map(([c, d], i) => /* @__PURE__ */ React.createElement(
-  "path",
-  {
-    key: i,
-    transform: `translate(${d} ${d})`,
-    fill: String(c),
-    d: "M15.6 6.4c-.6-.6-.9-1.4-.9-2.2h-2.1v8.6c0 1-.8 1.7-1.7 1.7s-1.7-.8-1.7-1.7.8-1.7 1.7-1.7c.2 0 .4 0 .5.1V9.1h-.5c-2.1 0-3.9 1.7-3.9 3.9s1.7 3.9 3.9 3.9 3.9-1.7 3.9-3.9V8.6c.8.6 1.8.9 2.9.9V7.4c-.8 0-1.5-.3-2.1-1z"
-  }
-))) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "12", fill: "#1877F2" }), /* @__PURE__ */ React.createElement("path", { d: "M13.3 19.5v-6.1h2l.3-2.4h-2.3V9.5c0-.7.2-1.2 1.2-1.2h1.3V6.2c-.2 0-1-.1-1.9-.1-1.9 0-3.1 1.1-3.1 3.2v1.7H8.7v2.4h2.1v6.1z", fill: "#FFF" })));
+const Logo = ({ red, lado }) => /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: lado, height: lado, viewBox: "0 0 24 24", children: red === "instagram" ? /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("linearGradient", { id: "kigrad", x1: "0", y1: "1", x2: "1", y2: "0", children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0", stopColor: "#F58529" }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: ".5", stopColor: "#DD2A7B" }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "1", stopColor: "#515BD4" })
+  ] }) }),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "12", r: "12", fill: "url(#kigrad)" }),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: "6", y: "6", width: "12", height: "12", rx: "3.6", fill: "none", stroke: "#FFF", strokeWidth: "1.6" }),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "12", r: "2.9", fill: "none", stroke: "#FFF", strokeWidth: "1.6" }),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "15.6", cy: "8.4", r: ".9", fill: "#FFF" })
+] }) : red === "youtube" ? /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "12", r: "12", fill: "#FF0000" }),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: "5.2", y: "7.6", width: "13.6", height: "8.8", rx: "2.6", fill: "#FFF" }),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M10.4 9.7 L14.4 12 L10.4 14.3 Z", fill: "#FF0000" })
+] }) : red === "tiktok" ? /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "12", r: "12", fill: "#111" }),
+  [["#25F4EE", -0.5], ["#FE2C55", 0.5], ["#FFFFFF", 0]].map(([c, d], i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+    "path",
+    {
+      transform: `translate(${d} ${d})`,
+      fill: String(c),
+      d: "M15.6 6.4c-.6-.6-.9-1.4-.9-2.2h-2.1v8.6c0 1-.8 1.7-1.7 1.7s-1.7-.8-1.7-1.7.8-1.7 1.7-1.7c.2 0 .4 0 .5.1V9.1h-.5c-2.1 0-3.9 1.7-3.9 3.9s1.7 3.9 3.9 3.9 3.9-1.7 3.9-3.9V8.6c.8.6 1.8.9 2.9.9V7.4c-.8 0-1.5-.3-2.1-1z"
+    },
+    i
+  ))
+] }) : /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "12", r: "12", fill: "#1877F2" }),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M13.3 19.5v-6.1h2l.3-2.4h-2.3V9.5c0-.7.2-1.2 1.2-1.2h1.3V6.2c-.2 0-1-.1-1.9-.1-1.9 0-3.1 1.1-3.1 3.2v1.7H8.7v2.4h2.1v6.1z", fill: "#FFF" })
+] }) });
 const RedNeonK = ({
   centro = "T\xDA",
   izq = "CONSUMIENDO",
@@ -4574,103 +5234,124 @@ const RedNeonK = ({
   const pe = (i) => S(0.05 + i * 0.09, { damping: 12, stiffness: 170 });
   const pill = S(0.3, { damping: 14 });
   const etiqueta = pk < 0.5 ? izq : der;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q } }, /* @__PURE__ */ React.createElement("svg", { width: W, height: H, style: { position: "absolute", left: 0, top: 0, overflow: "visible" } }, sitios.map(([dx, dy], i) => {
-    const x1 = cx + dx * U, y1 = cy + dy * U, x2 = cx, y2 = centroY;
-    const largo = Math.hypot(x2 - x1, y2 - y1);
-    const dibujo = Kit7_easeOut((t - 0.25 - i * 0.06) / 0.5);
-    const ida = pk < 0.5;
-    const f = (t * 0.9 + i * 0.27) % 1;
-    const pos = ida ? f : 1 - f;
-    const px = x1 + (x2 - x1) * pos, py = y1 + (y2 - y1) * pos;
-    return /* @__PURE__ */ React.createElement("g", { key: i }, /* @__PURE__ */ React.createElement(
-      "line",
-      {
-        x1,
-        y1,
-        x2: x1 + (x2 - x1) * dibujo,
-        y2: y1 + (y2 - y1) * dibujo,
-        stroke: "rgba(255,255,255,.85)",
-        strokeWidth: 3 * U,
-        strokeDasharray: `${10 * U} ${12 * U}`,
-        strokeDashoffset: (-t * 40 * U * (ida ? 1 : -1)).toFixed(1)
-      }
-    ), dibujo > 0.98 && largo > 0 && /* @__PURE__ */ React.createElement("circle", { cx: px, cy: py, r: 9 * U, fill: "#FFFFFF", style: { filter: `drop-shadow(0 0 ${8 * U}px #FFF) drop-shadow(0 0 ${16 * U}px ${ida ? "#FF5A5A" : "#5CFF8F"})` } }));
-  })), sitios.map(([dx, dy], i) => {
-    const p = pe(i), info = RED[nodos[i]];
-    const dinero = conDinero && pk > 0.6 ? clamp((t - tCambio - 0.3 - i * 0.12) / 0.8) : 0;
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: { position: "absolute", left: cx + dx * U - rN, top: cy + dy * U - rN, width: rN * 2, height: rN * 2 } }, /* @__PURE__ */ React.createElement("div", { style: {
-      width: rN * 2,
-      height: rN * 2,
-      borderRadius: "50%",
-      transform: `scale(${Math.max(1e-3, p).toFixed(4)})`,
-      filter: `drop-shadow(0 0 ${12 * U}px ${info.glow}) drop-shadow(0 0 ${30 * U}px ${info.glow})`
-    } }, /* @__PURE__ */ React.createElement(Logo, { red: nodos[i], lado: rN * 2 })), dinero > 0 && dinero < 1 && /* @__PURE__ */ React.createElement("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: W, height: H, style: { position: "absolute", left: 0, top: 0, overflow: "visible" }, children: sitios.map(([dx, dy], i) => {
+      const x1 = cx + dx * U, y1 = cy + dy * U, x2 = cx, y2 = centroY;
+      const largo = Math.hypot(x2 - x1, y2 - y1);
+      const dibujo = Kit7_easeOut((t - 0.25 - i * 0.06) / 0.5);
+      const ida = pk < 0.5;
+      const f = (t * 0.9 + i * 0.27) % 1;
+      const pos = ida ? f : 1 - f;
+      const px = x1 + (x2 - x1) * pos, py = y1 + (y2 - y1) * pos;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "line",
+          {
+            x1,
+            y1,
+            x2: x1 + (x2 - x1) * dibujo,
+            y2: y1 + (y2 - y1) * dibujo,
+            stroke: "rgba(255,255,255,.85)",
+            strokeWidth: 3 * U,
+            strokeDasharray: `${10 * U} ${12 * U}`,
+            strokeDashoffset: (-t * 40 * U * (ida ? 1 : -1)).toFixed(1)
+          }
+        ),
+        dibujo > 0.98 && largo > 0 && /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 9 * U, fill: "#FFFFFF", style: { filter: `drop-shadow(0 0 ${8 * U}px #FFF) drop-shadow(0 0 ${16 * U}px ${ida ? "#FF5A5A" : "#5CFF8F"})` } })
+      ] }, i);
+    }) }),
+    sitios.map(([dx, dy], i) => {
+      const p = pe(i), info = RED[nodos[i]];
+      const dinero = conDinero && pk > 0.6 ? clamp((t - tCambio - 0.3 - i * 0.12) / 0.8) : 0;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: cx + dx * U - rN, top: cy + dy * U - rN, width: rN * 2, height: rN * 2 }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: rN * 2,
+          height: rN * 2,
+          borderRadius: "50%",
+          transform: `scale(${Math.max(1e-3, p).toFixed(4)})`,
+          filter: `drop-shadow(0 0 ${12 * U}px ${info.glow}) drop-shadow(0 0 ${30 * U}px ${info.glow})`
+        }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Logo, { red: nodos[i], lado: rN * 2 }) }),
+        dinero > 0 && dinero < 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: rN * 0.6 + (i % 2 ? 30 : -30) * U,
+          top: -dinero * 120 * U,
+          fontFamily: FAMILIA.redonda,
+          fontWeight: 800,
+          fontSize: 64 * U,
+          color: "#4DFF7A",
+          opacity: Math.sin(dinero * Math.PI),
+          textShadow: `0 0 ${12 * U}px #2BFF6A, 0 0 ${26 * U}px #2BFF6A`
+        }, children: "$" })
+      ] }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "absolute",
-      left: rN * 0.6 + (i % 2 ? 30 : -30) * U,
-      top: -dinero * 120 * U,
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 800,
-      fontSize: 64 * U,
-      color: "#4DFF7A",
-      opacity: Math.sin(dinero * Math.PI),
-      textShadow: `0 0 ${12 * U}px #2BFF6A, 0 0 ${26 * U}px #2BFF6A`
-    } }, "$"));
-  }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: cx - rC,
-    top: centroY - rC,
-    width: rC * 2,
-    height: rC * 2,
-    borderRadius: "50%",
-    background: "#FFFFFF",
-    boxShadow: `0 0 ${16 * U}px rgba(255,255,255,.9), 0 0 ${40 * U}px ${pk > 0.5 ? "rgba(80,255,130,.7)" : "rgba(255,255,255,.5)"}`,
-    transform: `scale(${Math.max(1e-3, S(0.02, { damping: 12 })).toFixed(4)})`,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center"
-  } }, /* @__PURE__ */ React.createElement("svg", { width: rC * 1.05, height: rC * 0.9, viewBox: "0 0 24 20" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "6", r: "4.6", fill: "#111" }), /* @__PURE__ */ React.createElement("path", { d: "M2.5 20 Q3 11.5 12 11.5 Q21 11.5 21.5 20 Z", fill: "#111" })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: 28 * U, color: "#111", marginTop: -4 * U } }, centro)), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: cx - 230 * U,
-    top: centroY + rC + 64 * U,
-    width: 460 * U,
-    height: 96 * U,
-    borderRadius: 48 * U,
-    background: colorPill,
-    boxShadow: `0 0 ${18 * U}px ${colorPill}, 0 0 ${46 * U}px ${colorPill}`,
-    opacity: clamp(pill * 2),
-    transform: `scale(${Math.max(1e-3, 0.7 + 0.3 * pill).toFixed(4)})`
-  } }, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    top: 13 * U,
-    left: 13 * U + pk * (460 - 26 - 70) * U,
-    width: 70 * U,
-    height: 70 * U,
-    borderRadius: "50%",
-    background: "#FFFFFF",
-    boxShadow: `0 ${3 * U}px ${8 * U}px rgba(0,0,0,.3)`
-  } }), etiqueta && /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    top: 0,
-    height: 96 * U,
-    display: "flex",
-    alignItems: "center",
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 38 * U,
-    letterSpacing: "0.04em",
-    color: "#FFFFFF",
-    textShadow: `0 ${1 * U}px ${4 * U}px rgba(0,0,0,.35)`,
-    left: pk < 0.5 ? 100 * U : 30 * U,
-    right: pk < 0.5 ? 26 * U : 100 * U,
-    justifyContent: "center",
-    opacity: Math.abs(pk - 0.5) * 2
-  } }, etiqueta)));
+      left: cx - rC,
+      top: centroY - rC,
+      width: rC * 2,
+      height: rC * 2,
+      borderRadius: "50%",
+      background: "#FFFFFF",
+      boxShadow: `0 0 ${16 * U}px rgba(255,255,255,.9), 0 0 ${40 * U}px ${pk > 0.5 ? "rgba(80,255,130,.7)" : "rgba(255,255,255,.5)"}`,
+      transform: `scale(${Math.max(1e-3, S(0.02, { damping: 12 })).toFixed(4)})`,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center"
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: rC * 1.05, height: rC * 0.9, viewBox: "0 0 24 20", children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: "12", cy: "6", r: "4.6", fill: "#111" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M2.5 20 Q3 11.5 12 11.5 Q21 11.5 21.5 20 Z", fill: "#111" })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: 28 * U, color: "#111", marginTop: -4 * U }, children: centro })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: cx - 230 * U,
+      top: centroY + rC + 64 * U,
+      width: 460 * U,
+      height: 96 * U,
+      borderRadius: 48 * U,
+      background: colorPill,
+      boxShadow: `0 0 ${18 * U}px ${colorPill}, 0 0 ${46 * U}px ${colorPill}`,
+      opacity: clamp(pill * 2),
+      transform: `scale(${Math.max(1e-3, 0.7 + 0.3 * pill).toFixed(4)})`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        top: 13 * U,
+        left: 13 * U + pk * (460 - 26 - 70) * U,
+        width: 70 * U,
+        height: 70 * U,
+        borderRadius: "50%",
+        background: "#FFFFFF",
+        boxShadow: `0 ${3 * U}px ${8 * U}px rgba(0,0,0,.3)`
+      } }),
+      etiqueta && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        top: 0,
+        height: 96 * U,
+        display: "flex",
+        alignItems: "center",
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: 38 * U,
+        letterSpacing: "0.04em",
+        color: "#FFFFFF",
+        textShadow: `0 ${1 * U}px ${4 * U}px rgba(0,0,0,.35)`,
+        left: pk < 0.5 ? 100 * U : 30 * U,
+        right: pk < 0.5 ? 26 * U : 100 * U,
+        justifyContent: "center",
+        opacity: Math.abs(pk - 0.5) * 2
+      }, children: etiqueta })
+    ] })
+  ] });
 };
 
 ;// ./src/glifos.json
 const glifos_namespaceObject = /*#__PURE__*/JSON.parse('{"o":{"users":[["path",{"d":"M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"}],["path",{"d":"M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}],["path",{"d":"M21 21v-2a4 4 0 0 0 -3 -3.85"}]],"user":[["path",{"d":"M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"}],["path",{"d":"M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"}]],"users-group":[["path",{"d":"M10 13a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"}],["path",{"d":"M8 21v-1a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v1"}],["path",{"d":"M15 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"}],["path",{"d":"M17 10h2a2 2 0 0 1 2 2v1"}],["path",{"d":"M5 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"}],["path",{"d":"M3 13v-1a2 2 0 0 1 2 -2h2"}]],"crown":[["path",{"d":"M12 6l4 6l5 -4l-2 10h-14l-2 -10l5 4l4 -6"}]],"message-circle":[["path",{"d":"M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"}]],"messages":[["path",{"d":"M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10"}],["path",{"d":"M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2"}]],"message-dots":[["path",{"d":"M12 11v.01"}],["path",{"d":"M8 11v.01"}],["path",{"d":"M16 11v.01"}],["path",{"d":"M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3l12 0"}]],"heart":[["path",{"d":"M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"}]],"star":[["path",{"d":"M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245"}]],"lock":[["path",{"d":"M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6"}],["path",{"d":"M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"}],["path",{"d":"M8 11v-4a4 4 0 1 1 8 0v4"}]],"bolt":[["path",{"d":"M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"}]],"rocket":[["path",{"d":"M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3 -5a9 9 0 0 0 6 -8a3 3 0 0 0 -3 -3a9 9 0 0 0 -8 6a6 6 0 0 0 -5 3"}],["path",{"d":"M7 14a6 6 0 0 0 -3 6a6 6 0 0 0 6 -3"}],["path",{"d":"M14 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}]],"check":[["path",{"d":"M5 12l5 5l10 -10"}]],"chart-line":[["path",{"d":"M4 19l16 0"}],["path",{"d":"M4 15l4 -6l4 2l4 -5l4 4"}]],"chart-bar":[["path",{"d":"M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6"}],["path",{"d":"M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10"}],["path",{"d":"M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14"}],["path",{"d":"M4 20h14"}]],"home":[["path",{"d":"M5 12l-2 0l9 -9l9 9l-2 0"}],["path",{"d":"M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"}],["path",{"d":"M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"}]],"cash":[["path",{"d":"M7 15h-3a1 1 0 0 1 -1 -1v-8a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v3"}],["path",{"d":"M7 10a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1l0 -8"}],["path",{"d":"M12 14a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"}]],"coin":[["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"}],["path",{"d":"M14.8 9a2 2 0 0 0 -1.8 -1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1 -1.8 -1"}],["path",{"d":"M12 7v10"}]],"clock":[["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"}],["path",{"d":"M12 7v5l3 3"}]],"microphone":[["path",{"d":"M9 5a3 3 0 0 1 3 -3a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3a3 3 0 0 1 -3 -3l0 -5"}],["path",{"d":"M5 10a7 7 0 0 0 14 0"}],["path",{"d":"M8 21l8 0"}],["path",{"d":"M12 17l0 4"}]],"camera":[["path",{"d":"M5 7h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2"}],["path",{"d":"M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"}]],"player-play":[["path",{"d":"M7 4v16l13 -8l-13 -8"}]],"video":[["path",{"d":"M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4"}],["path",{"d":"M3 8a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -8"}]],"movie":[["path",{"d":"M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12"}],["path",{"d":"M8 4l0 16"}],["path",{"d":"M16 4l0 16"}],["path",{"d":"M4 8l4 0"}],["path",{"d":"M4 16l4 0"}],["path",{"d":"M4 12l16 0"}],["path",{"d":"M16 8l4 0"}],["path",{"d":"M16 16l4 0"}]],"scissors":[["path",{"d":"M3 7a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"}],["path",{"d":"M3 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"}],["path",{"d":"M8.6 8.6l10.4 10.4"}],["path",{"d":"M8.6 15.4l10.4 -10.4"}]],"brain":[["path",{"d":"M15.5 13a3.5 3.5 0 0 0 -3.5 3.5v1a3.5 3.5 0 0 0 7 0v-1.8"}],["path",{"d":"M8.5 13a3.5 3.5 0 0 1 3.5 3.5v1a3.5 3.5 0 0 1 -7 0v-1.8"}],["path",{"d":"M17.5 16a3.5 3.5 0 0 0 0 -7h-.5"}],["path",{"d":"M19 9.3v-2.8a3.5 3.5 0 0 0 -7 0"}],["path",{"d":"M6.5 16a3.5 3.5 0 0 1 0 -7h.5"}],["path",{"d":"M5 9.3v-2.8a3.5 3.5 0 0 1 7 0v10"}]],"bulb":[["path",{"d":"M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7"}],["path",{"d":"M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3"}],["path",{"d":"M9.7 17l4.6 0"}]],"target":[["path",{"d":"M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M7 12a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"}],["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"}]],"trophy":[["path",{"d":"M8 21l8 0"}],["path",{"d":"M12 17l0 4"}],["path",{"d":"M7 4l10 0"}],["path",{"d":"M17 4v8a5 5 0 0 1 -10 0v-8"}],["path",{"d":"M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}],["path",{"d":"M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}]],"flame":[["path",{"d":"M12 10.941c2.333 -3.308 .167 -7.823 -1 -8.941c0 3.395 -2.235 5.299 -3.667 6.706c-1.43 1.408 -2.333 3.294 -2.333 5.588c0 3.704 3.134 6.706 7 6.706c3.866 0 7 -3.002 7 -6.706c0 -1.712 -1.232 -4.403 -2.333 -5.588c-2.084 3.353 -3.257 3.353 -4.667 2.235"}]],"eye":[["path",{"d":"M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"}],["path",{"d":"M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"}]],"search":[["path",{"d":"M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"}],["path",{"d":"M21 21l-6 -6"}]],"settings":[["path",{"d":"M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"}],["path",{"d":"M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"}]],"tool":[["path",{"d":"M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5"}]],"briefcase":[["path",{"d":"M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2l0 -9"}],["path",{"d":"M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2"}],["path",{"d":"M12 12l0 .01"}],["path",{"d":"M3 13a20 20 0 0 0 18 0"}]],"building":[["path",{"d":"M3 21l18 0"}],["path",{"d":"M9 8l1 0"}],["path",{"d":"M9 12l1 0"}],["path",{"d":"M9 16l1 0"}],["path",{"d":"M14 8l1 0"}],["path",{"d":"M14 12l1 0"}],["path",{"d":"M14 16l1 0"}],["path",{"d":"M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"}]],"map-pin":[["path",{"d":"M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"}],["path",{"d":"M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0"}]],"world":[["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"}],["path",{"d":"M3.6 9h16.8"}],["path",{"d":"M3.6 15h16.8"}],["path",{"d":"M11.5 3a17 17 0 0 0 0 18"}],["path",{"d":"M12.5 3a17 17 0 0 1 0 18"}]],"plane":[["path",{"d":"M16 10h4a2 2 0 0 1 0 4h-4l-4 7h-3l2 -7h-4l-2 2h-3l2 -4l-2 -4h3l2 2h4l-2 -7h3l4 7"}]],"car":[["path",{"d":"M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}],["path",{"d":"M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}],["path",{"d":"M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5"}]],"shopping-cart":[["path",{"d":"M4 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}],["path",{"d":"M15 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}],["path",{"d":"M17 17h-11v-14h-2"}],["path",{"d":"M6 5l14 1l-1 7h-13"}]],"gift":[["path",{"d":"M3 9a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1l0 -2"}],["path",{"d":"M12 8l0 13"}],["path",{"d":"M19 12v7a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-7"}],["path",{"d":"M7.5 8a2.5 2.5 0 0 1 0 -5a4.8 8 0 0 1 4.5 5a4.8 8 0 0 1 4.5 -5a2.5 2.5 0 0 1 0 5"}]],"calendar":[["path",{"d":"M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"}],["path",{"d":"M16 3v4"}],["path",{"d":"M8 3v4"}],["path",{"d":"M4 11h16"}],["path",{"d":"M11 15h1"}],["path",{"d":"M12 15v3"}]],"mail":[["path",{"d":"M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10"}],["path",{"d":"M3 7l9 6l9 -6"}]],"phone":[["path",{"d":"M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"}]],"device-mobile":[["path",{"d":"M6 5a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-14"}],["path",{"d":"M11 4h2"}],["path",{"d":"M12 17v.01"}]],"shield":[["path",{"d":"M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"}]],"key":[["path",{"d":"M16.555 3.843l3.602 3.602a2.877 2.877 0 0 1 0 4.069l-2.643 2.643a2.877 2.877 0 0 1 -4.069 0l-.301 -.301l-6.558 6.558a2 2 0 0 1 -1.239 .578l-.175 .008h-1.172a1 1 0 0 1 -.993 -.883l-.007 -.117v-1.172a2 2 0 0 1 .467 -1.284l.119 -.13l.414 -.414h2v-2h2v-2l2.144 -2.144l-.301 -.301a2.877 2.877 0 0 1 0 -4.069l2.643 -2.643a2.877 2.877 0 0 1 4.069 0"}],["path",{"d":"M15 9h.01"}]],"award":[["path",{"d":"M6 9a6 6 0 1 0 12 0a6 6 0 1 0 -12 0"}],["path",{"d":"M12 15l3.4 5.89l1.598 -3.233l3.598 .232l-3.4 -5.889"}],["path",{"d":"M6.802 12l-3.4 5.89l3.598 -.233l1.598 3.232l3.4 -5.889"}]],"medal":[["path",{"d":"M12 4v3m-4 -3v6m8 -6v6"}],["path",{"d":"M12 18.5l-3 1.5l.5 -3.5l-2 -2l3 -.5l1.5 -3l1.5 3l3 .5l-2 2l.5 3.5l-3 -1.5"}]],"puzzle":[["path",{"d":"M4 7h3a1 1 0 0 0 1 -1v-1a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0 -1 1v3a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-1a2 2 0 0 0 -4 0v1a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h1a2 2 0 0 0 0 -4h-1a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1"}]],"compass":[["path",{"d":"M8 16l2 -6l6 -2l-2 6l-6 2"}],["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"}],["path",{"d":"M12 3l0 2"}],["path",{"d":"M12 19l0 2"}],["path",{"d":"M3 12l2 0"}],["path",{"d":"M19 12l2 0"}]],"music":[["path",{"d":"M3 17a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"}],["path",{"d":"M13 17a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"}],["path",{"d":"M9 17v-13h10v13"}],["path",{"d":"M9 8h10"}]],"headphones":[["path",{"d":"M4 15a2 2 0 0 1 2 -2h1a2 2 0 0 1 2 2v3a2 2 0 0 1 -2 2h-1a2 2 0 0 1 -2 -2l0 -3"}],["path",{"d":"M15 15a2 2 0 0 1 2 -2h1a2 2 0 0 1 2 2v3a2 2 0 0 1 -2 2h-1a2 2 0 0 1 -2 -2l0 -3"}],["path",{"d":"M4 15v-3a8 8 0 0 1 16 0v3"}]],"book":[["path",{"d":"M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"}],["path",{"d":"M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"}],["path",{"d":"M3 6l0 13"}],["path",{"d":"M12 6l0 13"}],["path",{"d":"M21 6l0 13"}]],"school":[["path",{"d":"M22 9l-10 -4l-10 4l10 4l10 -4v6"}],["path",{"d":"M6 10.6v5.4a6 3 0 0 0 12 0v-5.4"}]],"pencil":[["path",{"d":"M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"}],["path",{"d":"M13.5 6.5l4 4"}]],"edit":[["path",{"d":"M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"}],["path",{"d":"M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415"}],["path",{"d":"M16 5l3 3"}]],"trending-up":[["path",{"d":"M3 17l6 -6l4 4l8 -8"}],["path",{"d":"M14 7l7 0l0 7"}]],"trending-down":[["path",{"d":"M3 7l6 6l4 -4l8 8"}],["path",{"d":"M21 10l0 7l-7 0"}]],"alert-triangle":[["path",{"d":"M12 9v4"}],["path",{"d":"M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0"}],["path",{"d":"M12 16h.01"}]],"x":[["path",{"d":"M18 6l-12 12"}],["path",{"d":"M6 6l12 12"}]],"thumb-up":[["path",{"d":"M7 11v8a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-7a1 1 0 0 1 1 -1h3a4 4 0 0 0 4 -4v-1a2 2 0 0 1 4 0v5h3a2 2 0 0 1 2 2l-1 5a2 3 0 0 1 -2 2h-7a3 3 0 0 1 -3 -3"}]],"thumb-down":[["path",{"d":"M7 13v-8a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v7a1 1 0 0 0 1 1h3a4 4 0 0 1 4 4v1a2 2 0 0 0 4 0v-5h3a2 2 0 0 0 2 -2l-1 -5a2 3 0 0 0 -2 -2h-7a3 3 0 0 0 -3 3"}]],"mood-happy":[["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"}],["path",{"d":"M9 9l.01 0"}],["path",{"d":"M15 9l.01 0"}],["path",{"d":"M8 13a4 4 0 1 0 8 0h-8"}]],"mood-sad":[["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"}],["path",{"d":"M9 10l.01 0"}],["path",{"d":"M15 10l.01 0"}],["path",{"d":"M9.5 15.25a3.5 3.5 0 0 1 5 0"}]],"coffee":[["path",{"d":"M3 14c.83 .642 2.077 1.017 3.5 1c1.423 .017 2.67 -.358 3.5 -1c.83 -.642 2.077 -1.017 3.5 -1c1.423 -.017 2.67 .358 3.5 1"}],["path",{"d":"M8 3a2.4 2.4 0 0 0 -1 2a2.4 2.4 0 0 0 1 2"}],["path",{"d":"M12 3a2.4 2.4 0 0 0 -1 2a2.4 2.4 0 0 0 1 2"}],["path",{"d":"M3 10h14v5a6 6 0 0 1 -6 6h-2a6 6 0 0 1 -6 -6v-5"}],["path",{"d":"M16.746 16.726a3 3 0 1 0 .252 -5.555"}]],"pizza":[["path",{"d":"M12 21.5c-3.04 0 -5.952 -.714 -8.5 -1.983l8.5 -16.517l8.5 16.517a19.09 19.09 0 0 1 -8.5 1.983"}],["path",{"d":"M5.38 15.866a14.94 14.94 0 0 0 6.815 1.634a14.944 14.944 0 0 0 6.502 -1.479"}],["path",{"d":"M13 11.01v-.01"}],["path",{"d":"M11 14v-.01"}]],"leaf":[["path",{"d":"M5 21c.5 -4.5 2.5 -8 7 -10"}],["path",{"d":"M9 18c6.218 0 10.5 -3.288 11 -12v-2h-4.014c-9 0 -11.986 4 -12 9c0 1 0 3 2 5h3l.014 0"}]],"sun":[["path",{"d":"M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"}],["path",{"d":"M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"}]],"moon":[["path",{"d":"M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008"}]],"sparkles":[["path",{"d":"M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"}]],"wand":[["path",{"d":"M6 21l15 -15l-3 -3l-15 15l3 3"}],["path",{"d":"M15 6l3 3"}],["path",{"d":"M9 3a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2"}],["path",{"d":"M19 13a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2"}]],"diamond":[["path",{"d":"M6 5h12l3 5l-8.5 9.5a.7 .7 0 0 1 -1 0l-8.5 -9.5l3 -5"}],["path",{"d":"M10 12l-2 -2.2l.6 -1"}]],"infinity":[["path",{"d":"M9.828 9.172a4 4 0 1 0 0 5.656a10 10 0 0 0 2.172 -2.828a10 10 0 0 1 2.172 -2.828a4 4 0 1 1 0 5.656a10 10 0 0 1 -2.172 -2.828a10 10 0 0 0 -2.172 -2.828"}]],"refresh":[["path",{"d":"M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"}],["path",{"d":"M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"}]],"arrow-big-up":[["path",{"d":"M9 20v-8h-3.586a1 1 0 0 1 -.707 -1.707l6.586 -6.586a1 1 0 0 1 1.414 0l6.586 6.586a1 1 0 0 1 -.707 1.707h-3.586v8a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1"}]],"arrow-big-right":[["path",{"d":"M4 9h8v-3.586a1 1 0 0 1 1.707 -.707l6.586 6.586a1 1 0 0 1 0 1.414l-6.586 6.586a1 1 0 0 1 -1.707 -.707v-3.586h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1"}]],"hourglass":[["path",{"d":"M6.5 7h11"}],["path",{"d":"M6.5 17h11"}],["path",{"d":"M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1"}],["path",{"d":"M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1"}]],"stopwatch":[["path",{"d":"M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0"}],["path",{"d":"M14.5 10.5l-2.5 2.5"}],["path",{"d":"M17 8l1 -1"}],["path",{"d":"M14 3h-4"}]],"bell":[["path",{"d":"M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"}],["path",{"d":"M9 17v1a3 3 0 0 0 6 0v-1"}]],"flag":[["path",{"d":"M5 5a5 5 0 0 1 7 0a5 5 0 0 0 7 0v9a5 5 0 0 1 -7 0a5 5 0 0 0 -7 0v-9"}],["path",{"d":"M5 21v-7"}]],"link":[["path",{"d":"M9 15l6 -6"}],["path",{"d":"M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464"}],["path",{"d":"M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"}]],"wifi":[["path",{"d":"M12 18l.01 0"}],["path",{"d":"M9.172 15.172a4 4 0 0 1 5.656 0"}],["path",{"d":"M6.343 12.343a8 8 0 0 1 11.314 0"}],["path",{"d":"M3.515 9.515c4.686 -4.687 12.284 -4.687 17 0"}]],"battery":[["path",{"d":"M6 7h11a2 2 0 0 1 2 2v.5a.5 .5 0 0 0 .5 .5a.5 .5 0 0 1 .5 .5v3a.5 .5 0 0 1 -.5 .5a.5 .5 0 0 0 -.5 .5v.5a2 2 0 0 1 -2 2h-11a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2"}]],"lock-open":[["path",{"d":"M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2l0 -6"}],["path",{"d":"M11 16a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M8 11v-5a4 4 0 0 1 8 0"}]],"user-check":[["path",{"d":"M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"}],["path",{"d":"M6 21v-2a4 4 0 0 1 4 -4h4"}],["path",{"d":"M15 19l2 2l4 -4"}]],"user-plus":[["path",{"d":"M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"}],["path",{"d":"M16 19h6"}],["path",{"d":"M19 16v6"}],["path",{"d":"M6 21v-2a4 4 0 0 1 4 -4h4"}]],"speakerphone":[["path",{"d":"M18 8a3 3 0 0 1 0 6"}],["path",{"d":"M10 8v11a1 1 0 0 1 -1 1h-1a1 1 0 0 1 -1 -1v-5"}],["path",{"d":"M12 8l4.524 -3.77a.9 .9 0 0 1 1.476 .692v12.156a.9 .9 0 0 1 -1.476 .692l-4.524 -3.77h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h8"}]],"ad":[["path",{"d":"M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10"}],["path",{"d":"M7 15v-4a2 2 0 0 1 4 0v4"}],["path",{"d":"M7 13l4 0"}],["path",{"d":"M17 9v6h-1.5a1.5 1.5 0 1 1 1.5 -1.5"}]],"chart-pie":[["path",{"d":"M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-6.8a2 2 0 0 1 -2 -2v-7a.9 .9 0 0 0 -1 -.8"}],["path",{"d":"M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a1 1 0 0 1 -1 -1v-4.5"}]],"presentation":[["path",{"d":"M3 4l18 0"}],["path",{"d":"M4 4v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-10"}],["path",{"d":"M12 16l0 4"}],["path",{"d":"M9 20l6 0"}],["path",{"d":"M8 12l3 -3l2 2l3 -3"}]],"code":[["path",{"d":"M7 8l-4 4l4 4"}],["path",{"d":"M17 8l4 4l-4 4"}],["path",{"d":"M14 4l-4 16"}]],"cpu":[["path",{"d":"M5 6a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1l0 -12"}],["path",{"d":"M9 9h6v6h-6l0 -6"}],["path",{"d":"M3 10h2"}],["path",{"d":"M3 14h2"}],["path",{"d":"M10 3v2"}],["path",{"d":"M14 3v2"}],["path",{"d":"M21 10h-2"}],["path",{"d":"M21 14h-2"}],["path",{"d":"M14 21v-2"}],["path",{"d":"M10 21v-2"}]],"robot":[["path",{"d":"M6 6a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M9 12v9"}],["path",{"d":"M15 12v9"}],["path",{"d":"M5 16l4 -2"}],["path",{"d":"M15 14l4 2"}],["path",{"d":"M9 18h6"}],["path",{"d":"M10 8v.01"}],["path",{"d":"M14 8v.01"}]],"palette":[["path",{"d":"M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25"}],["path",{"d":"M7.5 10.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M11.5 7.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M15.5 10.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}]],"brush":[["path",{"d":"M3 21v-4a4 4 0 1 1 4 4h-4"}],["path",{"d":"M21 3a16 16 0 0 0 -12.8 10.2"}],["path",{"d":"M21 3a16 16 0 0 1 -10.2 12.8"}],["path",{"d":"M10.6 9a9 9 0 0 1 4.4 4.4"}]],"photo":[["path",{"d":"M15 8h.01"}],["path",{"d":"M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12"}],["path",{"d":"M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"}],["path",{"d":"M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"}]],"hand-click":[["path",{"d":"M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"}],["path",{"d":"M11 11.5v-2a1.5 1.5 0 0 1 3 0v2.5"}],["path",{"d":"M14 10.5a1.5 1.5 0 0 1 3 0v1.5"}],["path",{"d":"M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"}],["path",{"d":"M5 3l-1 -1"}],["path",{"d":"M4 7h-1"}],["path",{"d":"M14 3l1 -1"}],["path",{"d":"M15 6h1"}]],"hand-finger":[["path",{"d":"M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"}],["path",{"d":"M11 11.5v-2a1.5 1.5 0 1 1 3 0v2.5"}],["path",{"d":"M14 10.5a1.5 1.5 0 0 1 3 0v1.5"}],["path",{"d":"M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"}]],"mouse":[["path",{"d":"M6 7a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-4a4 4 0 0 1 -4 -4l0 -10"}],["path",{"d":"M12 7l0 4"}]],"keyboard":[["path",{"d":"M2 8a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2l0 -8"}],["path",{"d":"M6 10l0 .01"}],["path",{"d":"M10 10l0 .01"}],["path",{"d":"M14 10l0 .01"}],["path",{"d":"M18 10l0 .01"}],["path",{"d":"M6 14l0 .01"}],["path",{"d":"M18 14l0 .01"}],["path",{"d":"M10 14l4 .01"}]],"device-laptop":[["path",{"d":"M3 19l18 0"}],["path",{"d":"M5 7a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1l0 -8"}]],"help":[["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"}],["path",{"d":"M12 17l0 .01"}],["path",{"d":"M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4"}]],"question-mark":[["path",{"d":"M8 8a3.5 3 0 0 1 3.5 -3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1 -2 3a3 4 0 0 0 -2 4"}],["path",{"d":"M12 19l0 .01"}]],"exclamation-mark":[["path",{"d":"M12 19v.01"}],["path",{"d":"M12 15v-10"}]],"checklist":[["path",{"d":"M9.615 20h-2.615a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8"}],["path",{"d":"M14 19l2 2l4 -4"}],["path",{"d":"M9 8h4"}],["path",{"d":"M9 12h2"}]],"list-check":[["path",{"d":"M3.5 5.5l1.5 1.5l2.5 -2.5"}],["path",{"d":"M3.5 11.5l1.5 1.5l2.5 -2.5"}],["path",{"d":"M3.5 17.5l1.5 1.5l2.5 -2.5"}],["path",{"d":"M11 6l9 0"}],["path",{"d":"M11 12l9 0"}],["path",{"d":"M11 18l9 0"}]],"notes":[["path",{"d":"M5 5a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2l0 -14"}],["path",{"d":"M9 7l6 0"}],["path",{"d":"M9 11l6 0"}],["path",{"d":"M9 15l4 0"}]],"file-text":[["path",{"d":"M14 3v4a1 1 0 0 0 1 1h4"}],["path",{"d":"M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2"}],["path",{"d":"M9 9l1 0"}],["path",{"d":"M9 13l6 0"}],["path",{"d":"M9 17l6 0"}]],"clipboard-check":[["path",{"d":"M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"}],["path",{"d":"M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"}],["path",{"d":"M9 14l2 2l4 -4"}]],"scale":[["path",{"d":"M7 20l10 0"}],["path",{"d":"M6 6l6 -1l6 1"}],["path",{"d":"M12 3l0 17"}],["path",{"d":"M9 12l-3 -6l-3 6a3 3 0 0 0 6 0"}],["path",{"d":"M21 12l-3 -6l-3 6a3 3 0 0 0 6 0"}]],"gavel":[["path",{"d":"M13 10l7.383 7.418c.823 .82 .823 2.148 0 2.967a2.11 2.11 0 0 1 -2.976 0l-7.407 -7.385"}],["path",{"d":"M6 9l4 4"}],["path",{"d":"M13 10l-4 -4"}],["path",{"d":"M3 21h7"}],["path",{"d":"M6.793 15.793l-3.586 -3.586a1 1 0 0 1 0 -1.414l2.293 -2.293l.5 .5l3 -3l-.5 -.5l2.293 -2.293a1 1 0 0 1 1.414 0l3.586 3.586a1 1 0 0 1 0 1.414l-2.293 2.293l-.5 -.5l-3 3l.5 .5l-2.293 2.293a1 1 0 0 1 -1.414 0"}]],"stethoscope":[["path",{"d":"M6 4h-1a2 2 0 0 0 -2 2v3.5a5.5 5.5 0 0 0 11 0v-3.5a2 2 0 0 0 -2 -2h-1"}],["path",{"d":"M8 15a6 6 0 1 0 12 0v-3"}],["path",{"d":"M11 3v2"}],["path",{"d":"M6 3v2"}],["path",{"d":"M18 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}]],"heartbeat":[["path",{"d":"M19.5 13.572l-7.5 7.428l-2.896 -2.868m-6.117 -8.104a5 5 0 0 1 9.013 -3.022a5 5 0 1 1 7.5 6.572"}],["path",{"d":"M3 13h2l2 3l2 -6l1 3h3"}]],"run":[["path",{"d":"M11.007 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}],["path",{"d":"M4 17l5 1l.75 -1.5"}],["path",{"d":"M15 21v-4l-4 -3l1 -6"}],["path",{"d":"M7 12v-3l5 -1l3 3l3 1"}]],"walk":[["path",{"d":"M12 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M7 21l3 -4"}],["path",{"d":"M16 21l-2 -4l-3 -3l1 -6"}],["path",{"d":"M6 12l2 -3l4 -1l3 3l3 1"}]],"bike":[["path",{"d":"M2 18a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"}],["path",{"d":"M16 18a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"}],["path",{"d":"M12 19v-4l-3 -3l5 -4l2 3h3"}],["path",{"d":"M13.007 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}]],"barbell":[["path",{"d":"M2 12h1"}],["path",{"d":"M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2"}],["path",{"d":"M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1"}],["path",{"d":"M9 12h6"}],["path",{"d":"M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1"}],["path",{"d":"M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2"}],["path",{"d":"M22 12h-1"}]],"yoga":[["path",{"d":"M4 20h4l1.5 -3"}],["path",{"d":"M17 20l-1 -5h-5l1 -7"}],["path",{"d":"M4 10l4 -1l4 -1l4 1.5l4 1.5"}],["path",{"d":"M10.007 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"}]],"plant":[["path",{"d":"M7 15h10v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-4"}],["path",{"d":"M12 9a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"}],["path",{"d":"M12 11a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"}],["path",{"d":"M12 15l0 -6"}]],"tree":[["path",{"d":"M12 13l-2 -2"}],["path",{"d":"M12 12l2 -2"}],["path",{"d":"M12 21v-13"}],["path",{"d":"M9.824 16a3 3 0 0 1 -2.743 -3.69a3 3 0 0 1 .304 -4.833a3 3 0 0 1 4.615 -3.707a3 3 0 0 1 4.614 3.707a3 3 0 0 1 .305 4.833a3 3 0 0 1 -2.919 3.695h-4l-.176 -.005"}]],"mountain":[["path",{"d":"M3 20h18l-6.921 -14.612a2.3 2.3 0 0 0 -4.158 0l-6.921 14.612"}],["path",{"d":"M7.5 11l2 2.5l2.5 -2.5l2 3l2.5 -2"}]],"beach":[["path",{"d":"M17.553 16.75a7.5 7.5 0 0 0 -10.606 0"}],["path",{"d":"M18 3.804a6 6 0 0 0 -8.196 2.196l10.392 6a6 6 0 0 0 -2.196 -8.196"}],["path",{"d":"M16.732 10c1.658 -2.87 2.225 -5.644 1.268 -6.196c-.957 -.552 -3.075 1.326 -4.732 4.196"}],["path",{"d":"M15 9l-3 5.196"}],["path",{"d":"M3 19.25a2.4 2.4 0 0 1 1 -.25a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 1 .25"}]],"cake":[["path",{"d":"M3 20h18v-8a3 3 0 0 0 -3 -3h-12a3 3 0 0 0 -3 3v8"}],["path",{"d":"M3 14.803c.312 .135 .654 .204 1 .197a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1c.35 .007 .692 -.062 1 -.197"}],["path",{"d":"M12 4l1.465 1.638a2 2 0 1 1 -3.015 .099l1.55 -1.737"}]],"confetti":[["path",{"d":"M4 5h2"}],["path",{"d":"M5 4v2"}],["path",{"d":"M11.5 4l-.5 2"}],["path",{"d":"M18 5h2"}],["path",{"d":"M19 4v2"}],["path",{"d":"M15 9l-1 1"}],["path",{"d":"M18 13l2 -.5"}],["path",{"d":"M18 19h2"}],["path",{"d":"M19 18v2"}],["path",{"d":"M14 16.518l-6.518 -6.518l-4.39 9.58a1 1 0 0 0 1.329 1.329l9.579 -4.39"}]],"glass-full":[["path",{"d":"M8 21l8 0"}],["path",{"d":"M12 15l0 6"}],["path",{"d":"M17 3l1 7c0 3.012 -2.686 5 -6 5s-6 -1.988 -6 -5l1 -7h10"}],["path",{"d":"M6 10a5 5 0 0 1 6 0a5 5 0 0 0 6 0"}]],"building-store":[["path",{"d":"M3 21l18 0"}],["path",{"d":"M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2 -4h14l2 4"}],["path",{"d":"M5 21l0 -10.15"}],["path",{"d":"M19 21l0 -10.15"}],["path",{"d":"M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"}]],"home-dollar":[["path",{"d":"M19 10l-7 -7l-9 9h2v7a2 2 0 0 0 2 2h6"}],["path",{"d":"M9 21v-6a2 2 0 0 1 2 -2h2c.387 0 .748 .11 1.054 .3"}],["path",{"d":"M21 15h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5"}],["path",{"d":"M19 21v1m0 -8v1"}]],"pig-money":[["path",{"d":"M15 11v.01"}],["path",{"d":"M5.173 8.378a3 3 0 1 1 4.656 -1.377"}],["path",{"d":"M16 4v3.803a6.019 6.019 0 0 1 2.658 3.197h1.341a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-1.342c-.336 .95 -.907 1.8 -1.658 2.473v2.027a1.5 1.5 0 0 1 -3 0v-.583a6.04 6.04 0 0 1 -1 .083h-4a6.04 6.04 0 0 1 -1 -.083v.583a1.5 1.5 0 0 1 -3 0v-2l0 -.027a6 6 0 0 1 4 -10.473h2.5l4.5 -3"}]],"receipt":[["path",{"d":"M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16l-3 -2l-2 2l-2 -2l-2 2l-2 -2l-3 2m4 -14h6m-6 4h6m-2 4h2"}]],"discount":[["path",{"d":"M9 15l6 -6"}],["path",{"d":"M9 9.5a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0","fill":"currentColor"}],["path",{"d":"M14 14.5a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0","fill":"currentColor"}],["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"}]],"businessplan":[["path",{"d":"M11 6a5 3 0 1 0 10 0a5 3 0 1 0 -10 0"}],["path",{"d":"M11 6v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"}],["path",{"d":"M11 10v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"}],["path",{"d":"M11 14v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"}],["path",{"d":"M7 9h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5"}],["path",{"d":"M5 15v1m0 -8v1"}]],"rocket-off":[["path",{"d":"M9.29 9.275a9.03 9.03 0 0 0 -.29 .725a6 6 0 0 0 -5 3a8 8 0 0 1 7 7a6 6 0 0 0 3 -5c.241 -.085 .478 -.18 .708 -.283m2.428 -1.61a9 9 0 0 0 2.864 -6.107a3 3 0 0 0 -3 -3a9 9 0 0 0 -6.107 2.864"}],["path",{"d":"M7 14a6 6 0 0 0 -3 6a6 6 0 0 0 6 -3"}],["path",{"d":"M14 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M3 3l18 18"}]],"zoom-money":[["path",{"d":"M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"}],["path",{"d":"M21 21l-6 -6"}],["path",{"d":"M12 7h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5"}],["path",{"d":"M10 13v1m0 -8v1"}]],"moneybag":[["path",{"d":"M9.5 3h5a1.5 1.5 0 0 1 1.5 1.5a3.5 3.5 0 0 1 -3.5 3.5h-1a3.5 3.5 0 0 1 -3.5 -3.5a1.5 1.5 0 0 1 1.5 -1.5"}],["path",{"d":"M4 17v-1a8 8 0 1 1 16 0v1a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4"}]],"school-bell":[["path",{"d":"M4 17a3 3 0 0 0 3 3"}],["path",{"d":"M14.805 6.37l2.783 -2.784a2 2 0 1 1 2.829 2.828l-2.784 2.786"}],["path",{"d":"M16.505 7.495a5.105 5.105 0 0 1 .176 7.035l-.176 .184l-1.867 1.867a3.48 3.48 0 0 0 -1.013 2.234l-.008 .23v.934c0 .327 -.13 .64 -.36 .871a.51 .51 0 0 1 -.652 .06l-.07 -.06l-9.385 -9.384a.51 .51 0 0 1 0 -.722c.198 -.198 .456 -.322 .732 -.353l.139 -.008h.933c.848 0 1.663 -.309 2.297 -.864l.168 -.157l1.867 -1.867l.16 -.153a5.105 5.105 0 0 1 7.059 .153"}]],"send":[["path",{"d":"M10 14l11 -11"}],["path",{"d":"M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"}]],"share":[["path",{"d":"M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"}],["path",{"d":"M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"}],["path",{"d":"M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"}],["path",{"d":"M8.7 10.7l6.6 -3.4"}],["path",{"d":"M8.7 13.3l6.6 3.4"}]],"player-pause":[["path",{"d":"M6 6a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1l0 -12"}],["path",{"d":"M14 6a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1l0 -12"}]],"player-record":[["path",{"d":"M5 12a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"}]],"bulb-off":[["path",{"d":"M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7"}],["path",{"d":"M11.089 7.083a5 5 0 0 1 5.826 5.84m-1.378 2.611a5.012 5.012 0 0 1 -.537 .466a3.5 3.5 0 0 0 -1 3a2 2 0 1 1 -4 0a3.5 3.5 0 0 0 -1 -3a5 5 0 0 1 -.528 -7.544"}],["path",{"d":"M9.7 17h4.6"}],["path",{"d":"M3 3l18 18"}]],"mood-crazy-happy":[["path",{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"}],["path",{"d":"M7 8.5l3 3"}],["path",{"d":"M7 11.5l3 -3"}],["path",{"d":"M14 8.5l3 3"}],["path",{"d":"M14 11.5l3 -3"}],["path",{"d":"M9.5 15a3.5 3.5 0 0 0 5 0"}]],"ghost":[["path",{"d":"M5 11a7 7 0 0 1 14 0v7a1.78 1.78 0 0 1 -3.1 1.4a1.65 1.65 0 0 0 -2.6 0a1.65 1.65 0 0 1 -2.6 0a1.65 1.65 0 0 0 -2.6 0a1.78 1.78 0 0 1 -3.1 -1.4v-7"}],["path",{"d":"M10 10l.01 0"}],["path",{"d":"M14 10l.01 0"}],["path",{"d":"M10 14a3.5 3.5 0 0 0 4 0"}]],"skull":[["path",{"d":"M12 4c4.418 0 8 3.358 8 7.5c0 1.901 -.755 3.637 -2 4.96l0 2.54a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-2.54c-1.245 -1.322 -2 -3.058 -2 -4.96c0 -4.142 3.582 -7.5 8 -7.5"}],["path",{"d":"M10 17v3"}],["path",{"d":"M14 17v3"}],["path",{"d":"M8 11a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M14 11a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}]],"bomb":[["path",{"d":"M15.349 5.349l3.301 3.301a1.2 1.2 0 0 1 0 1.698l-.972 .972a7.5 7.5 0 1 1 -5 -5l.972 -.972a1.2 1.2 0 0 1 1.698 0l.001 .001"}],["path",{"d":"M17 7l1.293 -1.293a2.414 2.414 0 0 0 .707 -1.707a1 1 0 0 1 1 -1h1"}],["path",{"d":"M7 13a3 3 0 0 1 3 -3"}]],"crown-off":[["path",{"d":"M18 18h-13l-1.865 -9.327a.25 .25 0 0 1 .4 -.244l4.465 3.571l1.6 -2.4m1.596 -2.394l.804 -1.206l4 6l4.464 -3.571a.25 .25 0 0 1 .401 .244l-1.363 6.818"}],["path",{"d":"M3 3l18 18"}]],"chess-queen":[["path",{"d":"M16 16l2 -11l-4 4l-2 -5l-2 5l-4 -4l2 11"}],["path",{"d":"M8 16l-1.447 .724a1 1 0 0 0 -.553 .894v2.382h12v-2.382a1 1 0 0 0 -.553 -.894l-1.447 -.724h-8"}],["path",{"d":"M11 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M5 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M17 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}]],"chess-king":[["path",{"d":"M8 16l-1.447 .724a1 1 0 0 0 -.553 .894v2.382h12v-2.382a1 1 0 0 0 -.553 -.894l-1.447 -.724h-8"}],["path",{"d":"M8.5 16a3.5 3.5 0 1 1 3.163 -5h.674a3.5 3.5 0 1 1 3.163 5l-7 0"}],["path",{"d":"M9 6h6"}],["path",{"d":"M12 3v8"}]],"chess-knight":[["path",{"d":"M8 16l-1.447 .724a1 1 0 0 0 -.553 .894v2.382h12v-2.382a1 1 0 0 0 -.553 -.894l-1.447 -.724h-8"}],["path",{"d":"M9 3l1 3l-3.491 2.148a1 1 0 0 0 .524 1.852h2.967l-2.073 6h7.961l.112 -5c0 -3 -1.09 -5.983 -4 -7c-1.94 -.678 -2.94 -1.011 -3 -1"}]],"hand-stop":[["path",{"d":"M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5"}],["path",{"d":"M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"}],["path",{"d":"M14 5.5a1.5 1.5 0 0 1 3 0v6.5"}],["path",{"d":"M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"}]],"target-arrow":[["path",{"d":"M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M12 7a5 5 0 1 0 5 5"}],["path",{"d":"M13 3.055a9 9 0 1 0 7.941 7.945"}],["path",{"d":"M15 6v3h3l3 -3h-3v-3l-3 3"}],["path",{"d":"M15 9l-3 3"}]],"growth":[["path",{"d":"M16.5 15a4.5 4.5 0 0 0 -4.5 4.5m4.5 -8.5a4.5 4.5 0 0 0 -4.5 4.5m4.5 -8.5a4.5 4.5 0 0 0 -4.5 4.5m-4 3.5c2.21 0 4 2.015 4 4.5m-4 -8.5c2.21 0 4 2.015 4 4.5m-4 -8.5c2.21 0 4 2.015 4 4.5m0 -7.5v6"}]],"arrows-split":[["path",{"d":"M21 17h-8l-3.5 -5h-6.5"}],["path",{"d":"M21 7h-8l-3.495 5"}],["path",{"d":"M18 10l3 -3l-3 -3"}],["path",{"d":"M18 20l3 -3l-3 -3"}]],"arrow-loop-right":[["path",{"d":"M12 21v-13a4 4 0 1 0 -4 4h13"}],["path",{"d":"M17 16l4 -4l-4 -4"}]],"timeline":[["path",{"d":"M4 16l6 -7l5 5l5 -6"}],["path",{"d":"M14 14a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M9 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M3 16a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}],["path",{"d":"M19 8a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"}]],"stairs-up":[["path",{"d":"M22 6h-5v5h-5v5h-5v5h-5"}],["path",{"d":"M6 10v-7"}],["path",{"d":"M3 6l3 -3l3 3"}]],"ladder":[["path",{"d":"M8 3v18"}],["path",{"d":"M16 3v18"}],["path",{"d":"M8 14h8"}],["path",{"d":"M8 10h8"}],["path",{"d":"M8 6h8"}],["path",{"d":"M8 18h8"}]],"road":[["path",{"d":"M4 19l4 -14"}],["path",{"d":"M16 5l4 14"}],["path",{"d":"M12 8v-2"}],["path",{"d":"M12 13v-2"}],["path",{"d":"M12 18v-2"}]],"route":[["path",{"d":"M3 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"}],["path",{"d":"M19 7a2 2 0 1 0 0 -4a2 2 0 0 0 0 4"}],["path",{"d":"M11 19h5.5a3.5 3.5 0 0 0 0 -7h-8a3.5 3.5 0 0 1 0 -7h4.5"}]],"map":[["path",{"d":"M3 7l6 -3l6 3l6 -3v13l-6 3l-6 -3l-6 3v-13"}],["path",{"d":"M9 4v13"}],["path",{"d":"M15 7v13"}]],"flower":[["path",{"d":"M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"}],["path",{"d":"M12 2a3 3 0 0 1 3 3c0 .562 -.259 1.442 -.776 2.64l-.724 1.36l1.76 -1.893c.499 -.6 .922 -1 1.27 -1.205a2.968 2.968 0 0 1 4.07 1.099a3.011 3.011 0 0 1 -1.09 4.098c-.374 .217 -.99 .396 -1.846 .535l-2.664 .366l2.4 .326c1 .145 1.698 .337 2.11 .576a3.011 3.011 0 0 1 1.09 4.098a2.968 2.968 0 0 1 -4.07 1.098c-.348 -.202 -.771 -.604 -1.27 -1.205l-1.76 -1.893l.724 1.36c.516 1.199 .776 2.079 .776 2.64a3 3 0 0 1 -6 0c0 -.562 .259 -1.442 .776 -2.64l.724 -1.36l-1.76 1.893c-.499 .601 -.922 1 -1.27 1.205a2.968 2.968 0 0 1 -4.07 -1.098a3.011 3.011 0 0 1 1.09 -4.098c.374 -.218 .99 -.396 1.846 -.536l2.664 -.366l-2.4 -.325c-1 -.145 -1.698 -.337 -2.11 -.576a3.011 3.011 0 0 1 -1.09 -4.099a2.968 2.968 0 0 1 4.07 -1.099c.348 .203 .771 .604 1.27 1.205l1.76 1.894c-1 -2.292 -1.5 -3.625 -1.5 -4a3 3 0 0 1 3 -3"}]],"salt":[["path",{"d":"M12 13v.01"}],["path",{"d":"M10 16v.01"}],["path",{"d":"M14 16v.01"}],["path",{"d":"M7.5 8h9l-.281 -2.248a2 2 0 0 0 -1.985 -1.752h-4.468a2 2 0 0 0 -1.986 1.752l-.28 2.248"}],["path",{"d":"M7.5 8l-1.612 9.671a2 2 0 0 0 1.973 2.329h8.278a2 2 0 0 0 1.973 -2.329l-1.612 -9.671"}]],"tie":[["path",{"d":"M12 22l4 -4l-2.5 -11l.993 -2.649a1 1 0 0 0 -.936 -1.351h-3.114a1 1 0 0 0 -.936 1.351l.993 2.649l-2.5 11l4 4"}],["path",{"d":"M10.5 7h3l5 5.5"}]],"shirt":[["path",{"d":"M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"}]],"mask":[["path",{"d":"M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"}],["path",{"d":"M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12"}]],"ufo":[["path",{"d":"M16.95 9.01c3.02 .739 5.05 2.123 5.05 3.714c0 2.367 -4.48 4.276 -10 4.276s-10 -1.909 -10 -4.276c0 -1.59 2.04 -2.985 5.07 -3.724"}],["path",{"d":"M7 9c0 1.105 2.239 2 5 2s5 -.895 5 -2v-.035c0 -2.742 -2.239 -4.965 -5 -4.965s-5 2.223 -5 4.965v.035"}],["path",{"d":"M15 17l2 3"}],["path",{"d":"M8.5 17l-1.5 3"}],["path",{"d":"M12 14h.01"}],["path",{"d":"M7 13h.01"}],["path",{"d":"M17 13h.01"}]],"planet":[["path",{"d":"M18.816 13.58c2.292 2.138 3.546 4 3.092 4.9c-.745 1.46 -5.783 -.259 -11.255 -3.838c-5.47 -3.579 -9.304 -7.664 -8.56 -9.123c.464 -.91 2.926 -.444 5.803 .805"}],["path",{"d":"M5 12a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"}]]},"f":{"user":[["path",{"d":"M12 2a5 5 0 1 1 -5 5l.005 -.217a5 5 0 0 1 4.995 -4.783z"}],["path",{"d":"M14 14a5 5 0 0 1 5 5v1a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-1a5 5 0 0 1 5 -5h4z"}]],"crown":[["path",{"d":"M19 19h-14c-.5 0 -.9 -.3 -1 -.8l-2 -10c0 -.4 .1 -.8 .5 -1.1c.4 -.2 .8 -.2 1.1 0l4.1 3.3l3.4 -5.1c.4 -.6 1.3 -.6 1.7 0l3.4 5.1l4.1 -3.3c.3 -.3 .8 -.3 1.1 0c.4 .2 .5 .6 .5 1.1l-2 10c0 .5 -.5 .8 -1 .8z"}]],"message-circle":[["path",{"d":"M5.821 4.91c3.899 -2.765 9.468 -2.539 13.073 .535c3.667 3.129 4.168 8.238 1.152 11.898c-2.841 3.447 -7.965 4.583 -12.231 2.805l-.233 -.101l-4.374 .931l-.04 .006l-.035 .007h-.018l-.022 .005h-.038l-.033 .004l-.021 -.001l-.023 .001l-.033 -.003h-.035l-.022 -.004l-.022 -.002l-.035 -.007l-.034 -.005l-.016 -.004l-.024 -.005l-.049 -.016l-.024 -.005l-.011 -.005l-.022 -.007l-.045 -.02l-.03 -.012l-.011 -.006l-.014 -.006l-.031 -.018l-.045 -.024l-.016 -.011l-.037 -.026l-.04 -.027l-.002 -.004l-.013 -.009l-.043 -.04l-.025 -.02l-.006 -.007l-.056 -.062l-.013 -.014l-.011 -.014l-.039 -.056l-.014 -.019l-.005 -.01l-.042 -.073l-.007 -.012l-.004 -.008l-.007 -.012l-.014 -.038l-.02 -.042l-.004 -.016l-.004 -.01l-.017 -.061l-.007 -.018l-.002 -.015l-.005 -.019l-.005 -.033l-.008 -.042l-.002 -.031l-.003 -.01v-.016l-.004 -.054l.001 -.036l.001 -.023l.002 -.053l.004 -.025v-.019l.008 -.035l.005 -.034l.005 -.02l.004 -.02l.018 -.06l.003 -.013l1.15 -3.45l-.022 -.037c-2.21 -3.747 -1.209 -8.391 2.413 -11.119z"}]],"messages":[["path",{"d":"M20.901 14.995l-.044 -.006a.4 .4 0 0 1 -.102 -.02l-.045 -.012l-.048 -.017l-.045 -.016l-.043 -.02l-.045 -.022l-.04 -.024l-.044 -.026l-.043 -.032l-.036 -.027a1 1 0 0 1 -.073 -.066l-2.707 -2.707h-6.586a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2h9a2 2 0 0 1 2 2v10a1 1 0 0 1 -.076 .383l-.02 .043l-.022 .045l-.024 .04l-.026 .044l-.032 .043l-.027 .036a1 1 0 0 1 -.578 .347l-.052 .008l-.044 .006a1 1 0 0 1 -.198 0"}],["path",{"d":"M7 8.999v1.001a4 4 0 0 0 4 4h4v3a2 2 0 0 1 -2 2h-6.586l-2.707 2.707c-.63 .63 -1.707 .184 -1.707 -.707v-10a2 2 0 0 1 2 -2z"}]],"heart":[["path",{"d":"M6.979 3.074a6 6 0 0 1 4.988 1.425l.037 .033l.034 -.03a6 6 0 0 1 4.733 -1.44l.246 .036a6 6 0 0 1 3.364 10.008l-.18 .185l-.048 .041l-7.45 7.379a1 1 0 0 1 -1.313 .082l-.094 -.082l-7.493 -7.422a6 6 0 0 1 3.176 -10.215z"}]],"star":[["path",{"d":"M8.243 7.34l-6.38 .925l-.113 .023a1 1 0 0 0 -.44 1.684l4.622 4.499l-1.09 6.355l-.013 .11a1 1 0 0 0 1.464 .944l5.706 -3l5.693 3l.1 .046a1 1 0 0 0 1.352 -1.1l-1.091 -6.355l4.624 -4.5l.078 -.085a1 1 0 0 0 -.633 -1.62l-6.38 -.926l-2.852 -5.78a1 1 0 0 0 -1.794 0l-2.853 5.78z"}]],"lock":[["path",{"d":"M12 2a5 5 0 0 1 5 5v3a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-10a3 3 0 0 1 -3 -3v-6a3 3 0 0 1 3 -3v-3a5 5 0 0 1 5 -5m0 12a2 2 0 0 0 -1.995 1.85l-.005 .15a2 2 0 1 0 2 -2m0 -10a3 3 0 0 0 -3 3v3h6v-3a3 3 0 0 0 -3 -3"}]],"bolt":[["path",{"d":"M13 2l.018 .001l.016 .001l.083 .005l.011 .002h.011l.038 .009l.052 .008l.016 .006l.011 .001l.029 .011l.052 .014l.019 .009l.015 .004l.028 .014l.04 .017l.021 .012l.022 .01l.023 .015l.031 .017l.034 .024l.018 .011l.013 .012l.024 .017l.038 .034l.022 .017l.008 .01l.014 .012l.036 .041l.026 .027l.006 .009c.12 .147 .196 .322 .218 .513l.001 .012l.002 .041l.004 .064v6h5a1 1 0 0 1 .868 1.497l-.06 .091l-8 11c-.568 .783 -1.808 .38 -1.808 -.588v-6h-5a1 1 0 0 1 -.868 -1.497l.06 -.091l8 -11l.01 -.013l.018 -.024l.033 -.038l.018 -.022l.009 -.008l.013 -.014l.04 -.036l.028 -.026l.008 -.006a1 1 0 0 1 .402 -.199l.011 -.001l.027 -.005l.074 -.013l.011 -.001l.041 -.002z"}]],"check":[["path",{"d":"M20.707 6.293a1 1 0 0 1 0 1.414l-10 10a1 1 0 0 1 -1.414 0l-5 -5a1 1 0 0 1 1.414 -1.414l4.293 4.293l9.293 -9.293a1 1 0 0 1 1.414 0"}]],"home":[["path",{"d":"M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"}]],"coin":[["path",{"d":"M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 2.66a1 1 0 0 0 -1 1a3 3 0 1 0 0 6v2a1.024 1.024 0 0 1 -.866 -.398l-.068 -.101a1 1 0 0 0 -1.732 .998a3 3 0 0 0 2.505 1.5h.161a1 1 0 0 0 .883 .994l.117 .007a1 1 0 0 0 1 -1l.176 -.005a3 3 0 0 0 -.176 -5.995v-2c.358 -.012 .671 .14 .866 .398l.068 .101a1 1 0 0 0 1.732 -.998a3 3 0 0 0 -2.505 -1.501h-.161a1 1 0 0 0 -1 -1zm1 7a1 1 0 0 1 0 2v-2zm-2 -4v2a1 1 0 0 1 0 -2z"}]],"clock":[["path",{"d":"M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 2.66a1 1 0 0 0 -.993 .883l-.007 .117v5l.009 .131a1 1 0 0 0 .197 .477l.087 .1l3 3l.094 .082a1 1 0 0 0 1.226 0l.094 -.083l.083 -.094a1 1 0 0 0 0 -1.226l-.083 -.094l-2.707 -2.708v-4.585l-.007 -.117a1 1 0 0 0 -.993 -.883z"}]],"microphone":[["path",{"d":"M19 9a1 1 0 0 1 1 1a8 8 0 0 1 -6.999 7.938l-.001 2.062h3a1 1 0 0 1 0 2h-8a1 1 0 0 1 0 -2h3v-2.062a8 8 0 0 1 -7 -7.938a1 1 0 1 1 2 0a6 6 0 0 0 12 0a1 1 0 0 1 1 -1m-7 -8a4 4 0 0 1 4 4v5a4 4 0 1 1 -8 0v-5a4 4 0 0 1 4 -4"}]],"camera":[["path",{"d":"M15 3a2 2 0 0 1 1.995 1.85l.005 .15a1 1 0 0 0 .883 .993l.117 .007h1a3 3 0 0 1 2.995 2.824l.005 .176v9a3 3 0 0 1 -2.824 2.995l-.176 .005h-14a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-9a3 3 0 0 1 2.824 -2.995l.176 -.005h1a1 1 0 0 0 1 -1a2 2 0 0 1 1.85 -1.995l.15 -.005h6zm-3 7a3 3 0 0 0 -2.985 2.698l-.011 .152l-.004 .15l.004 .15a3 3 0 1 0 2.996 -3.15z"}]],"player-play":[["path",{"d":"M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z"}]],"video":[["path",{"d":"M20.117 7.625a1 1 0 0 0 -.564 .1l-4.553 2.275v4l4.553 2.275a1 1 0 0 0 1.447 -.892v-6.766a1 1 0 0 0 -.883 -.992z"}],["path",{"d":"M5 5c-1.645 0 -3 1.355 -3 3v8c0 1.645 1.355 3 3 3h8c1.645 0 3 -1.355 3 -3v-8c0 -1.645 -1.355 -3 -3 -3z"}]],"bulb":[["path",{"d":"M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"}],["path",{"d":"M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"}],["path",{"d":"M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"}],["path",{"d":"M4.893 4.893a1 1 0 0 1 1.32 -.083l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 0 -1.414z"}],["path",{"d":"M17.693 4.893a1 1 0 0 1 1.497 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7z"}],["path",{"d":"M14 18a1 1 0 0 1 1 1a3 3 0 0 1 -6 0a1 1 0 0 1 .883 -.993l.117 -.007h4z"}],["path",{"d":"M12 6a6 6 0 0 1 3.6 10.8a1 1 0 0 1 -.471 .192l-.129 .008h-6a1 1 0 0 1 -.6 -.2a6 6 0 0 1 3.6 -10.8z"}]],"trophy":[["path",{"d":"M17 3a1 1 0 0 1 .993 .883l.007 .117v2.17a3 3 0 1 1 0 5.659v.171a6.002 6.002 0 0 1 -5 5.917v2.083h3a1 1 0 0 1 .117 1.993l-.117 .007h-8a1 1 0 0 1 -.117 -1.993l.117 -.007h3v-2.083a6.002 6.002 0 0 1 -4.996 -5.692l-.004 -.225v-.171a3 3 0 0 1 -3.996 -2.653l-.003 -.176l.005 -.176a3 3 0 0 1 3.995 -2.654l-.001 -2.17a1 1 0 0 1 1 -1h10zm-12 5a1 1 0 1 0 0 2a1 1 0 0 0 0 -2m14 0a1 1 0 1 0 0 2a1 1 0 0 0 0 -2"}]],"flame":[["path",{"d":"M10 2c0 -.88 1.056 -1.331 1.692 -.722c1.958 1.876 3.096 5.995 1.75 9.12l-.08 .174l.012 .003c.625 .133 1.203 -.43 2.303 -2.173l.14 -.224a1 1 0 0 1 1.582 -.153c1.334 1.435 2.601 4.377 2.601 6.27c0 4.265 -3.591 7.705 -8 7.705s-8 -3.44 -8 -7.706c0 -2.252 1.022 -4.716 2.632 -6.301l.605 -.589c.241 -.236 .434 -.43 .618 -.624c1.43 -1.512 2.145 -2.924 2.145 -4.78"}]],"eye":[["path",{"d":"M12 4c4.29 0 7.863 2.429 10.665 7.154l.22 .379l.045 .1l.03 .083l.014 .055l.014 .082l.011 .1v.11l-.014 .111a.992 .992 0 0 1 -.026 .11l-.039 .108l-.036 .075l-.016 .03c-2.764 4.836 -6.3 7.38 -10.555 7.499l-.313 .004c-4.396 0 -8.037 -2.549 -10.868 -7.504a1 1 0 0 1 0 -.992c2.831 -4.955 6.472 -7.504 10.868 -7.504zm0 5a3 3 0 1 0 0 6a3 3 0 0 0 0 -6"}]],"search":[["path",{"d":"M14 3.072a8 8 0 0 1 2.32 11.834l5.387 5.387a1 1 0 0 1 -1.414 1.414l-5.388 -5.387a8 8 0 1 1 -.905 -13.249"}]],"settings":[["path",{"d":"M14.647 4.081a.724 .724 0 0 0 1.08 .448c2.439 -1.485 5.23 1.305 3.745 3.744a.724 .724 0 0 0 .447 1.08c2.775 .673 2.775 4.62 0 5.294a.724 .724 0 0 0 -.448 1.08c1.485 2.439 -1.305 5.23 -3.744 3.745a.724 .724 0 0 0 -1.08 .447c-.673 2.775 -4.62 2.775 -5.294 0a.724 .724 0 0 0 -1.08 -.448c-2.439 1.485 -5.23 -1.305 -3.745 -3.744a.724 .724 0 0 0 -.447 -1.08c-2.775 -.673 -2.775 -4.62 0 -5.294a.724 .724 0 0 0 .448 -1.08c-1.485 -2.439 1.305 -5.23 3.744 -3.745a.722 .722 0 0 0 1.08 -.447c.673 -2.775 4.62 -2.775 5.294 0zm-2.647 4.919a3 3 0 1 0 0 6a3 3 0 0 0 0 -6"}]],"briefcase":[["path",{"d":"M22 13.478v4.522a3 3 0 0 1 -3 3h-14a3 3 0 0 1 -3 -3v-4.522l.553 .277a20.999 20.999 0 0 0 18.897 -.002l.55 -.275zm-8 -11.478a3 3 0 0 1 3 3v1h2a3 3 0 0 1 3 3v2.242l-1.447 .724a19.002 19.002 0 0 1 -16.726 .186l-.647 -.32l-1.18 -.59v-2.242a3 3 0 0 1 3 -3h2v-1a3 3 0 0 1 3 -3h4zm-2 8a1 1 0 0 0 -1 1a1 1 0 1 0 2 .01c0 -.562 -.448 -1.01 -1 -1.01zm2 -6h-4a1 1 0 0 0 -1 1v1h6v-1a1 1 0 0 0 -1 -1z"}]],"map-pin":[["path",{"d":"M18.364 4.636a9 9 0 0 1 .203 12.519l-.203 .21l-4.243 4.242a3 3 0 0 1 -4.097 .135l-.144 -.135l-4.244 -4.243a9 9 0 0 1 12.728 -12.728zm-6.364 3.364a3 3 0 1 0 0 6a3 3 0 0 0 0 -6"}]],"world":[["path",{"d":"M21.165 16a10 10 0 0 1 -8.434 5.973a1 1 0 0 0 .617 -.444a18 18 0 0 0 2.28 -5.528z"}],["path",{"d":"M8.372 16a18 18 0 0 0 2.28 5.53a1 1 0 0 0 .616 .443a10 10 0 0 1 -8.433 -5.973z"}],["path",{"d":"M13.57 16a16 16 0 0 1 -1.57 3.884a16 16 0 0 1 -1.57 -3.884"}],["path",{"d":"M8.034 10a18 18 0 0 0 0 4h-5.832a10 10 0 0 1 -.002 -4z"}],["path",{"d":"M13.952 10a16 16 0 0 1 0 4h-3.904a16 16 0 0 1 0 -4z"}],["path",{"d":"M21.8 10a10.05 10.05 0 0 1 -.002 4h-5.832c.149 -1.329 .149 -2.67 0 -4z"}],["path",{"d":"M11.267 2.027a1 1 0 0 0 -.615 .444a18 18 0 0 0 -2.28 5.529h-5.54a10.01 10.01 0 0 1 8.334 -5.967z"}],["path",{"d":"M12 4.116a16 16 0 0 1 1.57 3.885h-3.14c.34 -1.317 .85 -2.6 1.53 -3.817z"}],["path",{"d":"M12.733 2.026a10.01 10.01 0 0 1 8.435 5.974h-5.54a18 18 0 0 0 -2.28 -5.53a1 1 0 0 0 -.517 -.414z"}]],"plane":[["path",{"d":"M12.868 2.504l3.712 6.496h3.42a3 3 0 0 1 0 6h-3.42l-3.712 6.496a1 1 0 0 1 -.868 .504h-3a1 1 0 0 1 -.962 -1.275l1.636 -5.725h-2.26l-1.707 1.707a1 1 0 0 1 -.707 .293h-3a1 1 0 0 1 -.894 -1.447l1.776 -3.553l-1.776 -3.553a1 1 0 0 1 .894 -1.447h3a1 1 0 0 1 .707 .293l1.707 1.707h2.26l-1.636 -5.725a1 1 0 0 1 .962 -1.275h3a1 1 0 0 1 .868 .504"}]],"car":[["path",{"d":"M14 5a1 1 0 0 1 .694 .28l.087 .095l3.699 4.625h.52a3 3 0 0 1 2.995 2.824l.005 .176v4a1 1 0 0 1 -1 1h-1.171a3.001 3.001 0 0 1 -5.658 0h-4.342a3.001 3.001 0 0 1 -5.658 0h-1.171a1 1 0 0 1 -1 -1v-6l.007 -.117l.008 -.056l.017 -.078l.012 -.036l.014 -.05l2.014 -5.034a1 1 0 0 1 .928 -.629zm-7 11a1 1 0 1 0 0 2a1 1 0 0 0 0 -2m10 0a1 1 0 1 0 0 2a1 1 0 0 0 0 -2m-6 -9h-5.324l-1.2 3h6.524zm2.52 0h-.52v3h2.92z"}]],"shopping-cart":[["path",{"d":"M6 2a1 1 0 0 1 .993 .883l.007 .117v1.068l13.071 .935a1 1 0 0 1 .929 1.024l-.01 .114l-1 7a1 1 0 0 1 -.877 .853l-.113 .006h-12v2h10a3 3 0 1 1 -2.995 3.176l-.005 -.176l.005 -.176c.017 -.288 .074 -.564 .166 -.824h-5.342a3 3 0 1 1 -5.824 1.176l-.005 -.176l.005 -.176a3.002 3.002 0 0 1 1.995 -2.654v-12.17h-1a1 1 0 0 1 -.993 -.883l-.007 -.117a1 1 0 0 1 .883 -.993l.117 -.007h2zm0 16a1 1 0 1 0 0 2a1 1 0 0 0 0 -2m11 0a1 1 0 1 0 0 2a1 1 0 0 0 0 -2"}]],"gift":[["path",{"d":"M11 14v8h-4a3 3 0 0 1 -3 -3v-4a1 1 0 0 1 1 -1h6zm8 0a1 1 0 0 1 1 1v4a3 3 0 0 1 -3 3h-4v-8h6zm-2.5 -12a3.5 3.5 0 0 1 3.163 5h.337a2 2 0 0 1 2 2v1a2 2 0 0 1 -2 2h-7v-5h-2v5h-7a2 2 0 0 1 -2 -2v-1a2 2 0 0 1 2 -2h.337a3.486 3.486 0 0 1 -.337 -1.5c0 -1.933 1.567 -3.5 3.483 -3.5c1.755 -.03 3.312 1.092 4.381 2.934l.136 .243c1.033 -1.914 2.56 -3.114 4.291 -3.175l.209 -.002zm-9 2a1.5 1.5 0 0 0 0 3h3.143c-.741 -1.905 -1.949 -3.02 -3.143 -3zm8.983 0c-1.18 -.02 -2.385 1.096 -3.126 3h3.143a1.5 1.5 0 1 0 -.017 -3z"}]],"calendar":[["path",{"d":"M16 2a1 1 0 0 1 .993 .883l.007 .117v1h1a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h1v-1a1 1 0 0 1 1.993 -.117l.007 .117v1h6v-1a1 1 0 0 1 1 -1zm3 7h-14v9.625c0 .705 .386 1.286 .883 1.366l.117 .009h12c.513 0 .936 -.53 .993 -1.215l.007 -.16v-9.625z"}],["path",{"d":"M12 12a1 1 0 0 1 .993 .883l.007 .117v3a1 1 0 0 1 -1.993 .117l-.007 -.117v-2a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"}]],"mail":[["path",{"d":"M22 7.535v9.465a3 3 0 0 1 -2.824 2.995l-.176 .005h-14a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-9.465l9.445 6.297l.116 .066a1 1 0 0 0 .878 0l.116 -.066l9.445 -6.297z"}],["path",{"d":"M19 4c1.08 0 2.027 .57 2.555 1.427l-9.555 6.37l-9.555 -6.37a2.999 2.999 0 0 1 2.354 -1.42l.201 -.007h14z"}]],"phone":[["path",{"d":"M9 3a1 1 0 0 1 .877 .519l.051 .11l2 5a1 1 0 0 1 -.313 1.16l-.1 .068l-1.674 1.004l.063 .103a10 10 0 0 0 3.132 3.132l.102 .062l1.005 -1.672a1 1 0 0 1 1.113 -.453l.115 .039l5 2a1 1 0 0 1 .622 .807l.007 .121v4c0 1.657 -1.343 3 -3.06 2.998c-8.579 -.521 -15.418 -7.36 -15.94 -15.998a3 3 0 0 1 2.824 -2.995l.176 -.005h4z"}]],"device-mobile":[["path",{"d":"M16 2a3 3 0 0 1 2.995 2.824l.005 .176v14a3 3 0 0 1 -2.824 2.995l-.176 .005h-8a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-14a3 3 0 0 1 2.824 -2.995l.176 -.005h8zm-4 14a1 1 0 0 0 -.993 .883l-.007 .117l.007 .127a1 1 0 0 0 1.986 0l.007 -.117l-.007 -.127a1 1 0 0 0 -.993 -.883zm1 -12h-2l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h2l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z"}]],"shield":[["path",{"d":"M11.884 2.007l.114 -.007l.118 .007l.059 .008l.061 .013l.111 .034a.993 .993 0 0 1 .217 .112l.104 .082l.255 .218a11 11 0 0 0 7.189 2.537l.342 -.01a1 1 0 0 1 1.005 .717a13 13 0 0 1 -9.208 16.25a1 1 0 0 1 -.502 0a13 13 0 0 1 -9.209 -16.25a1 1 0 0 1 1.005 -.717a11 11 0 0 0 7.531 -2.527l.263 -.225l.096 -.075a.993 .993 0 0 1 .217 -.112l.112 -.034a.97 .97 0 0 1 .119 -.021z"}]],"key":[["path",{"d":"M14.52 2c1.029 0 2.015 .409 2.742 1.136l3.602 3.602a3.877 3.877 0 0 1 0 5.483l-2.643 2.643a3.88 3.88 0 0 1 -4.941 .452l-.105 -.078l-5.882 5.883a3 3 0 0 1 -1.68 .843l-.22 .027l-.221 .009h-1.172c-1.014 0 -1.867 -.759 -1.991 -1.823l-.009 -.177v-1.172c0 -.704 .248 -1.386 .73 -1.96l.149 -.161l.414 -.414a1 1 0 0 1 .707 -.293h1v-1a1 1 0 0 1 .883 -.993l.117 -.007h1v-1a1 1 0 0 1 .206 -.608l.087 -.1l1.468 -1.469l-.076 -.103a3.9 3.9 0 0 1 -.678 -1.963l-.007 -.236c0 -1.029 .409 -2.015 1.136 -2.742l2.643 -2.643a3.88 3.88 0 0 1 2.741 -1.136m.495 5h-.02a2 2 0 1 0 0 4h.02a2 2 0 1 0 0 -4"}]],"award":[["path",{"d":"M19.496 13.983l1.966 3.406a1.001 1.001 0 0 1 -.705 1.488l-.113 .011l-.112 -.001l-2.933 -.19l-1.303 2.636a1.001 1.001 0 0 1 -1.608 .26l-.082 -.094l-.072 -.11l-1.968 -3.407a8.994 8.994 0 0 0 6.93 -3.999z"}],["path",{"d":"M11.43 17.982l-1.966 3.408a1.001 1.001 0 0 1 -1.622 .157l-.076 -.1l-.064 -.114l-1.304 -2.635l-2.931 .19a1.001 1.001 0 0 1 -1.022 -1.29l.04 -.107l.05 -.1l1.968 -3.409a8.994 8.994 0 0 0 6.927 4.001z"}],["path",{"d":"M12 2l.24 .004a7 7 0 0 1 6.76 6.996l-.003 .193l-.007 .192l-.018 .245l-.026 .242l-.024 .178a6.985 6.985 0 0 1 -.317 1.268l-.116 .308l-.153 .348a7.001 7.001 0 0 1 -12.688 -.028l-.13 -.297l-.052 -.133l-.08 -.217l-.095 -.294a6.96 6.96 0 0 1 -.093 -.344l-.06 -.271l-.049 -.271l-.02 -.139l-.039 -.323l-.024 -.365l-.006 -.292a7 7 0 0 1 6.76 -6.996l.24 -.004z"}]],"puzzle":[["path",{"d":"M10 2a3 3 0 0 1 2.995 2.824l.005 .176v1h3a2 2 0 0 1 1.995 1.85l.005 .15v3h1a3 3 0 0 1 .176 5.995l-.176 .005h-1v3a2 2 0 0 1 -1.85 1.995l-.15 .005h-3a2 2 0 0 1 -1.995 -1.85l-.005 -.15v-1a1 1 0 0 0 -1.993 -.117l-.007 .117v1a2 2 0 0 1 -1.85 1.995l-.15 .005h-3a2 2 0 0 1 -1.995 -1.85l-.005 -.15v-3a2 2 0 0 1 1.85 -1.995l.15 -.005h1a1 1 0 0 0 .117 -1.993l-.117 -.007h-1a2 2 0 0 1 -1.995 -1.85l-.005 -.15v-3a2 2 0 0 1 1.85 -1.995l.15 -.005h3v-1a3 3 0 0 1 3 -3z"}]],"compass":[["path",{"d":"M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 14.66a1 1 0 1 0 0 2a1 1 0 0 0 0 -2m3.684 -10.949l-6 2a1 1 0 0 0 -.633 .633l-2.007 6.026l-.023 .086l-.017 .113l-.004 .068v.044l.009 .111l.012 .07l.04 .144l.045 .1l.054 .095l.064 .09l.069 .075l.084 .074l.098 .07l.1 .054l.078 .033l.105 .033l.109 .02l.043 .005l.068 .004h.044l.111 -.009l.07 -.012l.02 -.006l.019 -.002l.074 -.022l6 -2a1 1 0 0 0 .633 -.633l2 -6a1 1 0 0 0 -1.265 -1.265zm-1.265 2.529l-1.21 3.629l-3.629 1.21l1.21 -3.629l3.629 -1.21zm-9.419 1.42a1 1 0 1 0 0 2a1 1 0 0 0 0 -2m14 0a1 1 0 1 0 0 2a1 1 0 0 0 0 -2m-7 -7a1 1 0 1 0 0 2a1 1 0 0 0 0 -2"}]],"headphones":[["path",{"d":"M21 18a3 3 0 0 1 -2.824 2.995l-.176 .005h-1a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-3a3 3 0 0 1 2.824 -2.995l.176 -.005h1c.351 0 .688 .06 1 .171v-.171a7 7 0 0 0 -13.996 -.24l-.004 .24v.17c.25 -.088 .516 -.144 .791 -.163l.209 -.007h1a3 3 0 0 1 2.995 2.824l.005 .176v3a3 3 0 0 1 -2.824 2.995l-.176 .005h-1a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-6a9 9 0 0 1 17.996 -.265l.004 .265v6z"}]],"book":[["path",{"d":"M21.5 5.134a1 1 0 0 1 .493 .748l.007 .118v13a1 1 0 0 1 -1.5 .866a8 8 0 0 0 -7.5 -.266v-15.174a10 10 0 0 1 8.5 .708m-10.5 -.707l.001 15.174a8 8 0 0 0 -7.234 .117l-.327 .18l-.103 .044l-.049 .016l-.11 .026l-.061 .01l-.117 .006h-.042l-.11 -.012l-.077 -.014l-.108 -.032l-.126 -.056l-.095 -.056l-.089 -.067l-.06 -.056l-.073 -.082l-.064 -.089l-.022 -.036l-.032 -.06l-.044 -.103l-.016 -.049l-.026 -.11l-.01 -.061l-.004 -.049l-.002 -13.068a1 1 0 0 1 .5 -.866a10 10 0 0 1 8.5 -.707"}]],"school":[["path",{"d":"M19 13.431v2.569c0 2.398 -3.205 4 -7 4s-7 -1.602 -7 -4v-2.569l5.886 2.354a3 3 0 0 0 2.011 .078l.217 -.078zm2 -2.955l-8.629 3.452a1 1 0 0 1 -.742 0l-10 -4c-.839 -.335 -.839 -1.521 0 -1.856l10 -4a1 1 0 0 1 .245 -.064l.126 -.008l.126 .008a1 1 0 0 1 .245 .064l10.032 4.013l.108 .055l.099 .068l.088 .076l.075 .082l.035 .044l.073 .115l.052 .115l.034 .102l.025 .135l.006 .058l.002 6.065a1 1 0 0 1 -2 0z"}]],"pencil":[["path",{"d":"M12.085 6.5l5.415 5.415l-8.793 8.792a1 1 0 0 1 -.707 .293h-4a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 .293 -.707zm5.406 -2.698a3.828 3.828 0 0 1 1.716 6.405l-.292 .293l-5.415 -5.415l.293 -.292a3.83 3.83 0 0 1 3.698 -.991"}]],"edit":[["path",{"d":"M8 7a1 1 0 0 1 -1 1h-1a1 1 0 0 0 -1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1 -1v-1a1 1 0 0 1 2 0v1a3 3 0 0 1 -3 3h-9a3 3 0 0 1 -3 -3v-9a3 3 0 0 1 3 -3h1a1 1 0 0 1 1 1"}],["path",{"d":"M14.596 5.011l4.392 4.392l-6.28 6.303a1 1 0 0 1 -.708 .294h-3a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 .294 -.708zm6.496 -2.103a3.097 3.097 0 0 1 .165 4.203l-.164 .18l-.693 .694l-4.387 -4.387l.695 -.69a3.1 3.1 0 0 1 4.384 0"}]],"alert-triangle":[["path",{"d":"M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403zm.01 13.33l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm-.01 -7a1 1 0 0 0 -.993 .883l-.007 .117v4l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-4l-.007 -.117a1 1 0 0 0 -.993 -.883z"}]],"x":[["path",{"d":"M6.707 5.293l5.293 5.292l5.293 -5.292a1 1 0 0 1 1.414 1.414l-5.292 5.293l5.292 5.293a1 1 0 0 1 -1.414 1.414l-5.293 -5.292l-5.293 5.292a1 1 0 1 1 -1.414 -1.414l5.292 -5.293l-5.292 -5.293a1 1 0 0 1 1.414 -1.414"}]],"thumb-up":[["path",{"d":"M13 3a3 3 0 0 1 2.995 2.824l.005 .176v4h2a3 3 0 0 1 2.98 2.65l.015 .174l.005 .176l-.02 .196l-1.006 5.032c-.381 1.626 -1.502 2.796 -2.81 2.78l-.164 -.008h-8a1 1 0 0 1 -.993 -.883l-.007 -.117l.001 -9.536a1 1 0 0 1 .5 -.865a2.998 2.998 0 0 0 1.492 -2.397l.007 -.202v-1a3 3 0 0 1 3 -3z"}],["path",{"d":"M5 10a1 1 0 0 1 .993 .883l.007 .117v9a1 1 0 0 1 -.883 .993l-.117 .007h-1a2 2 0 0 1 -1.995 -1.85l-.005 -.15v-7a2 2 0 0 1 1.85 -1.995l.15 -.005h1z"}]],"thumb-down":[["path",{"d":"M13 21.008a3 3 0 0 0 2.995 -2.823l.005 -.177v-4h2a3 3 0 0 0 2.98 -2.65l.015 -.173l.005 -.177l-.02 -.196l-1.006 -5.032c-.381 -1.625 -1.502 -2.796 -2.81 -2.78l-.164 .008h-8a1 1 0 0 0 -.993 .884l-.007 .116l.001 9.536a1 1 0 0 0 .5 .866a2.998 2.998 0 0 1 1.492 2.396l.007 .202v1a3 3 0 0 0 3 3z"}],["path",{"d":"M5 14.008a1 1 0 0 0 .993 -.883l.007 -.117v-9a1 1 0 0 0 -.883 -.993l-.117 -.007h-1a2 2 0 0 0 -1.995 1.852l-.005 .15v7a2 2 0 0 0 1.85 1.994l.15 .005h1z"}]],"mood-happy":[["path",{"d":"M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 9.66h-6a1 1 0 0 0 -1 1v.05a3.975 3.975 0 0 0 3.777 3.97l.227 .005a4.026 4.026 0 0 0 3.99 -3.79l.006 -.206a1 1 0 0 0 -1 -1.029zm-5.99 -5l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z"}]],"mood-sad":[["path",{"d":"M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 9.86a4.5 4.5 0 0 0 -3.214 1.35a1 1 0 1 0 1.428 1.4a2.5 2.5 0 0 1 3.572 0a1 1 0 0 0 1.428 -1.4a4.5 4.5 0 0 0 -3.214 -1.35zm-2.99 -4.2l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z"}]],"pizza":[["path",{"d":"M12.89 2.542l8.5 16.517a1 1 0 0 1 -.446 1.354a20.1 20.1 0 0 1 -8.945 2.087l-.522 -.007a20.1 20.1 0 0 1 -8.423 -2.08a1 1 0 0 1 -.443 -1.354l8.5 -16.517a1 1 0 0 1 1.778 0m-7.064 14.64l-.96 1.865l.409 .17a18.2 18.2 0 0 0 6.226 1.276l.5 .007a18.1 18.1 0 0 0 6.708 -1.279l.424 -.176l-.89 -1.728a15.9 15.9 0 0 1 -6.046 1.183a15.9 15.9 0 0 1 -6.37 -1.318m5.174 -4.192a1 1 0 0 0 -1 1l.007 .127a1 1 0 0 0 1.993 -.117l-.007 -.127a1 1 0 0 0 -.993 -.883m2 -2.99a1 1 0 0 0 -1 1l.007 .127a1 1 0 0 0 1.993 -.117l-.007 -.127a1 1 0 0 0 -.993 -.883"}]],"leaf":[["path",{"d":"M3.055 14.328l-.018 -.168l-.004 -.043a11 11 0 0 1 -.047 -1.12c.018 -6.29 4.29 -9.997 13 -9.997h4.014a1 1 0 0 1 1 1l-.002 2.057c-.498 8.701 -4.74 12.943 -11.998 12.943h-2.631a16 16 0 0 0 -.375 2.11a1 1 0 1 1 -1.988 -.22q .174 -1.568 .58 -2.947l-.118 -.146l-.208 -.28l-.157 -.229l-.182 -.293l-.098 -.171l-.065 -.122a6 6 0 0 1 -.397 -.941l-.072 -.237l-.085 -.327l-.057 -.268l-.043 -.242zm8.539 -4.242c-2.845 1.265 -4.854 3.13 -6.108 5.583q .098 .2 .218 .4l.185 .281l.07 .097q .12 .164 .258 .329l.197 .224h.649c1.037 -2.271 2.777 -3.946 5.343 -5.086a1 1 0 0 0 -.812 -1.828"}]],"sun":[["path",{"d":"M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"}],["path",{"d":"M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"}],["path",{"d":"M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"}],["path",{"d":"M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"}],["path",{"d":"M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"}],["path",{"d":"M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"}],["path",{"d":"M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"}],["path",{"d":"M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"}],["path",{"d":"M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"}]],"moon":[["path",{"d":"M12 1.992a10 10 0 1 0 9.236 13.838c.341 -.82 -.476 -1.644 -1.298 -1.31a6.5 6.5 0 0 1 -6.864 -10.787l.077 -.08c.551 -.63 .113 -1.653 -.758 -1.653h-.266l-.068 -.006l-.06 -.002z"}]],"sparkles":[["path",{"d":"M16 19a1 1 0 0 1 0 -2a1 1 0 0 0 1 -1c0 -1.333 2 -1.333 2 0a1 1 0 0 0 1 1c1.333 0 1.333 2 0 2a1 1 0 0 0 -1 1c0 1.333 -2 1.333 -2 0a1 1 0 0 0 -1 -1"}],["path",{"d":"M3 11a5 5 0 0 0 5 -5c0 -1.333 2 -1.333 2 0a5 5 0 0 0 5 5c1.333 0 1.333 2 0 2a5 5 0 0 0 -5 5a1 1 0 0 1 -2 0a5 5 0 0 0 -5 -5c-1.333 0 -1.333 -2 0 -2"}],["path",{"d":"M16 7a1 1 0 0 1 0 -2a1 1 0 0 0 1 -1c0 -1.333 2 -1.333 2 0a1 1 0 0 0 1 1c1.333 0 1.333 2 0 2a1 1 0 0 0 -1 1c0 1.333 -2 1.333 -2 0a1 1 0 0 0 -1 -1"}]],"diamond":[["path",{"d":"M18 4a1 1 0 0 1 .783 .378l.074 .108l3 5a1 1 0 0 1 -.032 1.078l-.08 .103l-8.53 9.533a1.7 1.7 0 0 1 -1.215 .51c-.4 0 -.785 -.14 -1.11 -.417l-.135 -.126l-8.5 -9.5a1 1 0 0 1 -.172 -1.067l.06 -.115l3.013 -5.022l.064 -.09a.982 .982 0 0 1 .155 -.154l.089 -.064l.088 -.05l.05 -.023l.06 -.025l.109 -.032l.112 -.02l.117 -.005h12zm-8.886 3.943a1 1 0 0 0 -1.371 .343l-.6 1l-.06 .116a1 1 0 0 0 .177 1.07l2 2.2l.09 .088a1 1 0 0 0 1.323 -.02l.087 -.09a1 1 0 0 0 -.02 -1.323l-1.501 -1.65l.218 -.363l.055 -.103a1 1 0 0 0 -.398 -1.268z"}]],"arrow-big-up":[["path",{"d":"M10.586 3l-6.586 6.586a2 2 0 0 0 -.434 2.18l.068 .145a2 2 0 0 0 1.78 1.089h2.586v7a2 2 0 0 0 2 2h4l.15 -.005a2 2 0 0 0 1.85 -1.995l-.001 -7h2.587a2 2 0 0 0 1.414 -3.414l-6.586 -6.586a2 2 0 0 0 -2.828 0z"}]],"arrow-big-right":[["path",{"d":"M12.089 3.634a2 2 0 0 0 -1.089 1.78l-.001 2.586h-6.999a2 2 0 0 0 -2 2v4l.005 .15a2 2 0 0 0 1.995 1.85l6.999 -.001l.001 2.587a2 2 0 0 0 3.414 1.414l6.586 -6.586a2 2 0 0 0 0 -2.828l-6.586 -6.586a2 2 0 0 0 -2.18 -.434l-.145 .068z"}]],"hourglass":[["path",{"d":"M17 2a2 2 0 0 1 1.995 1.85l.005 .15v2a6.996 6.996 0 0 1 -3.393 6a6.994 6.994 0 0 1 3.388 5.728l.005 .272v2a2 2 0 0 1 -1.85 1.995l-.15 .005h-10a2 2 0 0 1 -1.995 -1.85l-.005 -.15v-2a6.996 6.996 0 0 1 3.393 -6a6.994 6.994 0 0 1 -3.388 -5.728l-.005 -.272v-2a2 2 0 0 1 1.85 -1.995l.15 -.005h10z"}]],"bell":[["path",{"d":"M14.235 19c.865 0 1.322 1.024 .745 1.668a3.992 3.992 0 0 1 -2.98 1.332a3.992 3.992 0 0 1 -2.98 -1.332c-.552 -.616 -.158 -1.579 .634 -1.661l.11 -.006h4.471z"}],["path",{"d":"M12 2c1.358 0 2.506 .903 2.875 2.141l.046 .171l.008 .043a8.013 8.013 0 0 1 4.024 6.069l.028 .287l.019 .289v2.931l.021 .136a3 3 0 0 0 1.143 1.847l.167 .117l.162 .099c.86 .487 .56 1.766 -.377 1.864l-.116 .006h-16c-1.028 0 -1.387 -1.364 -.493 -1.87a3 3 0 0 0 1.472 -2.063l.021 -.143l.001 -2.97a8 8 0 0 1 3.821 -6.454l.248 -.146l.01 -.043a3.003 3.003 0 0 1 2.562 -2.29l.182 -.017l.176 -.004z"}]],"flag":[["path",{"d":"M4 5a1 1 0 0 1 .3 -.714a6 6 0 0 1 8.213 -.176l.351 .328a4 4 0 0 0 5.272 0l.249 -.227c.61 -.483 1.527 -.097 1.61 .676l.005 .113v9a1 1 0 0 1 -.3 .714a6 6 0 0 1 -8.213 .176l-.351 -.328a4 4 0 0 0 -5.136 -.114v6.552a1 1 0 0 1 -1.993 .117l-.007 -.117v-16z"}]],"link":[["path",{"d":"M15.707 8.293a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1 -1.414 -1.414l6 -6a1 1 0 0 1 1.414 0"}],["path",{"d":"M19.242 4.757c2.343 2.344 2.342 6.143 -.052 8.534l-.534 .464a1 1 0 1 1 -1.312 -1.51l.483 -.416a4 4 0 0 0 0 -5.657c-1.562 -1.563 -4.095 -1.563 -5.607 -.054l-.463 .536a1 1 0 1 1 -1.514 -1.308l.513 -.59a6 6 0 0 1 8.486 .001"}],["path",{"d":"M6.75 10.338a1 1 0 0 1 -.088 1.411l-.483 .425a3.97 3.97 0 0 0 0 5.649a4.064 4.064 0 0 0 5.678 .038l.34 -.458a1 1 0 1 1 1.606 1.194l-.397 .534l-.1 .114a6.07 6.07 0 0 1 -8.533 0a5.97 5.97 0 0 1 -1.773 -4.247c0 -1.595 .638 -3.124 1.814 -4.284l.524 -.463a1 1 0 0 1 1.411 .087"}]],"battery":[["path",{"d":"M17 6a3 3 0 0 1 2.995 2.824l.005 .176v.086l.052 .019a1.5 1.5 0 0 1 .941 1.25l.007 .145v3a1.5 1.5 0 0 1 -.948 1.395l-.052 .018v.087a3 3 0 0 1 -2.824 2.995l-.176 .005h-11a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-6a3 3 0 0 1 2.824 -2.995l.176 -.005h11z"}]],"ad":[["path",{"d":"M19 4h-14a3 3 0 0 0 -3 3v10a3 3 0 0 0 3 3h14a3 3 0 0 0 3 -3v-10a3 3 0 0 0 -3 -3zm-10 4a3 3 0 0 1 2.995 2.824l.005 .176v4a1 1 0 0 1 -1.993 .117l-.007 -.117v-1h-2v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-4a3 3 0 0 1 3 -3zm0 2a1 1 0 0 0 -.993 .883l-.007 .117v1h2v-1a1 1 0 0 0 -1 -1zm8 -2a1 1 0 0 1 .993 .883l.007 .117v6a1 1 0 0 1 -.883 .993l-.117 .007h-1.5a2.5 2.5 0 1 1 .326 -4.979l.174 .029v-2.05a1 1 0 0 1 .883 -.993l.117 -.007zm-1.41 5.008l-.09 -.008a.5 .5 0 0 0 -.09 .992l.09 .008h.5v-.5l-.008 -.09a.5 .5 0 0 0 -.318 -.379l-.084 -.023z"}]],"chart-pie":[["path",{"d":"M9.883 2.207a1.9 1.9 0 0 1 2.087 1.522l.025 .167l.005 .104v7a1 1 0 0 0 .883 .993l.117 .007h6.8a2 2 0 0 1 2 2a1 1 0 0 1 -.026 .226a10 10 0 1 1 -12.27 -11.933l.27 -.067l.11 -.02z"}],["path",{"d":"M14 3.5v5.5a1 1 0 0 0 1 1h5.5a1 1 0 0 0 .943 -1.332a10 10 0 0 0 -6.11 -6.111a1 1 0 0 0 -1.333 .943z"}]],"presentation":[["path",{"d":"M21 3a1 1 0 0 1 0 2v9a3 3 0 0 1 -3 3h-5v2h2a1 1 0 0 1 0 2h-6a1 1 0 0 1 0 -2h2v-2h-5a3 3 0 0 1 -3 -3v-9a1 1 0 1 1 0 -2zm-4.293 4.293a1 1 0 0 0 -1.414 0l-2.293 2.292l-1.293 -1.292a1 1 0 0 0 -1.414 0l-3 3a1 1 0 0 0 0 1.414l.094 .083a1 1 0 0 0 1.32 -.083l2.293 -2.292l1.293 1.292a1 1 0 0 0 1.414 0l3 -3a1 1 0 0 0 0 -1.414"}]],"palette":[["path",{"d":"M12 2c5.498 0 10 4.002 10 9c0 1.351 -.6 2.64 -1.654 3.576c-1.03 .914 -2.412 1.424 -3.846 1.424h-2.516a1 1 0 0 0 -.5 1.875a1 1 0 0 1 .194 .14a2.3 2.3 0 0 1 -1.597 3.99l-.156 -.009l.068 .004l-.273 -.004c-5.3 -.146 -9.57 -4.416 -9.716 -9.716l-.004 -.28c0 -5.523 4.477 -10 10 -10m-3.5 6.5a2 2 0 0 0 -1.995 1.85l-.005 .15a2 2 0 1 0 2 -2m8 0a2 2 0 0 0 -1.995 1.85l-.005 .15a2 2 0 1 0 2 -2m-4 -3a2 2 0 0 0 -1.995 1.85l-.005 .15a2 2 0 1 0 2 -2"}]],"photo":[["path",{"d":"M8.813 11.612c.457 -.38 .918 -.38 1.386 .011l.108 .098l4.986 4.986l.094 .083a1 1 0 0 0 1.403 -1.403l-.083 -.094l-1.292 -1.293l.292 -.293l.106 -.095c.457 -.38 .918 -.38 1.386 .011l.108 .098l4.674 4.675a4 4 0 0 1 -3.775 3.599l-.206 .005h-12a4 4 0 0 1 -3.98 -3.603l6.687 -6.69l.106 -.095zm9.187 -9.612a4 4 0 0 1 3.995 3.8l.005 .2v9.585l-3.293 -3.292l-.15 -.137c-1.256 -1.095 -2.85 -1.097 -4.096 -.017l-.154 .14l-.307 .306l-2.293 -2.292l-.15 -.137c-1.256 -1.095 -2.85 -1.097 -4.096 -.017l-.154 .14l-5.307 5.306v-9.585a4 4 0 0 1 3.8 -3.995l.2 -.005h12zm-2.99 5l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z"}]],"mouse":[["path",{"d":"M14 2a5 5 0 0 1 5 5v10a5 5 0 0 1 -5 5h-4a5 5 0 0 1 -5 -5v-10a5 5 0 0 1 5 -5zm-2 4a1 1 0 0 0 -1 1v4l.007 .117a1 1 0 0 0 1.993 -.117v-4l-.007 -.117a1 1 0 0 0 -.993 -.883z"}]],"keyboard":[["path",{"d":"M20 5a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-16a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3zm-14 8a1 1 0 0 0 -1 1v.01a1 1 0 0 0 2 0v-.01a1 1 0 0 0 -1 -1m12 0a1 1 0 0 0 -1 1v.01a1 1 0 0 0 2 0v-.01a1 1 0 0 0 -1 -1m-7.998 0a1 1 0 0 0 -.004 2l4 .01a1 1 0 0 0 .005 -2zm-4.002 -4a1 1 0 0 0 -1 1v.01a1 1 0 0 0 2 0v-.01a1 1 0 0 0 -1 -1m4 0a1 1 0 0 0 -1 1v.01a1 1 0 0 0 2 0v-.01a1 1 0 0 0 -1 -1m4 0a1 1 0 0 0 -1 1v.01a1 1 0 0 0 2 0v-.01a1 1 0 0 0 -1 -1m4 0a1 1 0 0 0 -1 1v.01a1 1 0 0 0 2 0v-.01a1 1 0 0 0 -1 -1"}]],"help":[["path",{"d":"M17 3.34a10 10 0 1 1 -10 17.32a10 10 0 0 1 10 -17.32m-5 12.66a1 1 0 0 0 -.993 .883l-.007 .127a1 1 0 0 0 1.993 .117l.007 -.127a1 1 0 0 0 -1 -1m1.173 -9.856a3.6 3.6 0 0 0 -3.97 1.252a1 1 0 0 0 1.512 1.304l.082 -.096a1.6 1.6 0 1 1 1.846 2.462a2.49 2.49 0 0 0 -1.641 2.49a1 1 0 0 0 1.996 .004v-.117a.5 .5 0 0 1 .259 -.466l.075 -.034a3.61 3.61 0 0 0 2.338 -3.47a3.6 3.6 0 0 0 -2.497 -3.329"}]],"list-check":[["path",{"d":"M8.207 3.793a1 1 0 0 1 0 1.414l-2.5 2.5a1 1 0 0 1 -1.414 0l-1.5 -1.5a1 1 0 0 1 1.414 -1.414l.793 .793l1.793 -1.793a1 1 0 0 1 1.414 0"}],["path",{"d":"M8.207 9.793a1 1 0 0 1 0 1.414l-2.5 2.5a1 1 0 0 1 -1.414 0l-1.5 -1.5a1 1 0 0 1 1.414 -1.414l.793 .793l1.793 -1.793a1 1 0 0 1 1.414 0"}],["path",{"d":"M8.207 15.793a1 1 0 0 1 0 1.414l-2.5 2.5a1 1 0 0 1 -1.414 0l-1.5 -1.5a1 1 0 0 1 1.414 -1.414l.793 .793l1.793 -1.793a1 1 0 0 1 1.414 0"}],["path",{"d":"M21 6a1 1 0 0 1 -1 1h-9a1 1 0 0 1 0 -2h9a1 1 0 0 1 1 1"}],["path",{"d":"M21 12a1 1 0 0 1 -1 1h-9a1 1 0 0 1 0 -2h9a1 1 0 0 1 1 1"}],["path",{"d":"M21 18a1 1 0 0 1 -1 1h-9a1 1 0 0 1 0 -2h9a1 1 0 0 1 1 1"}]],"file-text":[["path",{"d":"M12 2l.117 .007a1 1 0 0 1 .876 .876l.007 .117v4l.005 .15a2 2 0 0 0 1.838 1.844l.157 .006h4l.117 .007a1 1 0 0 1 .876 .876l.007 .117v9a3 3 0 0 1 -2.824 2.995l-.176 .005h-10a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-14a3 3 0 0 1 2.824 -2.995l.176 -.005zm3 14h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2m0 -4h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2m-5 -4h-1a1 1 0 1 0 0 2h1a1 1 0 0 0 0 -2"}],["path",{"d":"M19 7h-4l-.001 -4.001z"}]],"clipboard-check":[["path",{"d":"M17.997 4.17a3 3 0 0 1 2.003 2.83v12a3 3 0 0 1 -3 3h-10a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 2.003 -2.83a4 4 0 0 0 3.997 3.83h4a4 4 0 0 0 3.98 -3.597zm-3.704 7.123l-3.293 3.292l-1.293 -1.292a1 1 0 1 0 -1.414 1.414l2 2a1 1 0 0 0 1.414 0l4 -4a1 1 0 0 0 -1.414 -1.414m-.293 -9.293a2 2 0 1 1 0 4h-4a2 2 0 1 1 0 -4z"}]],"scale":[["path",{"d":"M12 2a1 1 0 0 1 1 1v1.152l5.159 .86a.98 .98 0 0 1 .636 .38l.041 .059l.058 .102l3.024 6.05l.035 .094l.025 .096l.016 .1l.005 .12l-.003 .061a3.996 3.996 0 0 1 -3.996 3.926a4 4 0 0 1 -4 -4a1 1 0 0 1 .106 -.447l2.393 -4.79l-3.499 -.583v12.82h4a1 1 0 0 1 0 2h-10a1 1 0 0 1 0 -2h4v-12.82l-3.5 .583l2.418 4.84l.035 .094l.025 .096l.016 .1l.005 .12l-.003 .061a3.996 3.996 0 0 1 -3.996 3.926a4 4 0 0 1 -4 -4a1 1 0 0 1 .106 -.447l3.034 -6.065l.039 -.061l.025 -.034a.98 .98 0 0 1 .636 -.38l5.16 -.862v-1.151a1 1 0 0 1 1 -1"}]],"bike":[["path",{"d":"M5 14a4 4 0 1 1 -4 4l.005 -.2a4 4 0 0 1 3.995 -3.8"}],["path",{"d":"M19 14a4 4 0 1 1 -4 4l.005 -.2a4 4 0 0 1 3.995 -3.8"}],["path",{"d":"M14.832 7.445l1.703 2.555h2.465a1 1 0 0 1 .993 .883l.007 .117a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -.832 -.445l-1.396 -2.093l-3.275 2.62l2.21 2.21a1 1 0 0 1 .284 .577l.009 .131v4a1 1 0 0 1 -2 0v-3.585l-2.707 -2.708a1 1 0 0 1 -.01 -1.403l.092 -.085l5 -4a1 1 0 0 1 1.457 .226"}],["path",{"d":"M17 3a2 2 0 1 1 -2 2l.005 -.15a2 2 0 0 1 1.995 -1.85"}]],"barbell":[["path",{"d":"M4 7a1 1 0 0 1 1 1v8a1 1 0 0 1 -2 0v-3h-1a1 1 0 0 1 0 -2h1v-3a1 1 0 0 1 1 -1"}],["path",{"d":"M20 7a1 1 0 0 1 1 1v3h1a1 1 0 0 1 0 2h-1v3a1 1 0 0 1 -2 0v-8a1 1 0 0 1 1 -1"}],["path",{"d":"M16 5a2 2 0 0 1 2 2v10a2 2 0 1 1 -4 0v-4h-4v4a2 2 0 1 1 -4 0v-10a2 2 0 1 1 4 0v4h4v-4a2 2 0 0 1 2 -2"}]],"mountain":[["path",{"d":"M6.18 10.95l2.54 3.175l.084 .093a1 1 0 0 0 1.403 -.01l1.637 -1.638l1.324 1.985a1 1 0 0 0 1.457 .226l3.632 -2.906l3.647 7.697a1 1 0 0 1 -.904 1.428h-18a1 1 0 0 1 -.904 -1.428zm5.82 -7.878a3.3 3.3 0 0 1 2.983 1.888l2.394 5.057l-3.15 2.52l-1.395 -2.092l-.075 -.099a1 1 0 0 0 -1.464 -.053l-1.711 1.709l-1.301 -1.627l-1.151 -1.435l1.888 -3.98a3.3 3.3 0 0 1 2.982 -1.888"}]],"confetti":[["path",{"d":"M3 5a1 1 0 0 1 1 -1a1 1 0 0 1 1.993 -.117l.007 .117a1 1 0 0 1 .117 1.993l-.117 .007a1 1 0 1 1 -2 0a1 1 0 0 1 -1 -1m7.53 -1.243a1 1 0 1 1 1.94 .486l-.5 2a1 1 0 1 1 -1.94 -.486zm6.47 1.243a1 1 0 0 1 1 -1a1 1 0 0 1 1.993 -.117l.007 .117a1 1 0 0 1 .117 1.993l-.117 .007a1 1 0 0 1 -2 0a1 1 0 0 1 -1 -1m-8.81 4.293l6.517 6.518a1 1 0 0 1 -.29 1.617l-9.573 4.387a2 2 0 0 1 -2.661 -2.652l4.39 -9.58a1 1 0 0 1 1.616 -.29m7.517 -1a1 1 0 0 1 0 1.414l-1 1a1 1 0 0 1 -1.414 -1.414l1 -1a1 1 0 0 1 1.414 0m4.05 3.237a1 1 0 0 1 .486 1.94l-2 .5a1 1 0 0 1 -.486 -1.94zm-2.756 7.47a1 1 0 0 1 1 -1a1 1 0 0 1 1.993 -.117l.007 .117a1 1 0 0 1 .117 1.993l-.117 .007a1 1 0 0 1 -2 0a1 1 0 0 1 -1 -1"}]],"glass-full":[["path",{"d":"M5.004 10.229l-.003 -.186l.001 -.113l.008 -.071l1 -7a1 1 0 0 1 .877 -.853l.113 -.006h10a1 1 0 0 1 .968 .747l.022 .112l1.006 7.05l.004 .091c0 3.226 -2.56 5.564 -6 5.945v4.055h3a1 1 0 0 1 .117 1.993l-.117 .007h-8a1 1 0 0 1 -.117 -1.993l.117 -.007h3v-4.055c-3.358 -.371 -5.878 -2.609 -5.996 -5.716zm11.129 -6.229h-8.267l-.607 4.258a6.001 6.001 0 0 1 5.125 .787l.216 .155a4 4 0 0 0 4.32 .31l-.787 -5.51z"}]],"receipt":[["path",{"d":"M17 2a3 3 0 0 1 3 3v16a1 1 0 0 1 -1.555 .832l-2.318 -1.545l-1.42 1.42a1 1 0 0 1 -1.32 .083l-.094 -.083l-1.293 -1.292l-1.293 1.292a1 1 0 0 1 -1.32 .083l-.094 -.083l-1.421 -1.42l-2.317 1.545l-.019 .012l-.054 .03l-.028 .017l-.054 .023l-.05 .023l-.049 .015l-.06 .019l-.052 .009l-.057 .011l-.084 .006l-.026 .003h-.022l-.049 -.003h-.039l-.013 -.003h-.016l-.041 -.008l-.038 -.005l-.015 -.005l-.018 -.002l-.034 -.011l-.04 -.01l-.019 -.007l-.015 -.004l-.029 -.013l-.04 -.015l-.021 -.011l-.013 -.005l-.028 -.016l-.036 -.018l-.014 -.01l-.018 -.01l-.038 -.027l-.022 -.014l-.01 -.009l-.02 -.014l-.045 -.041l-.012 -.008l-.024 -.024l-.035 -.039l-.02 -.02l-.007 -.011l-.011 -.012l-.032 -.045l-.02 -.025l-.012 -.019l-.03 -.054l-.017 -.028l-.023 -.054l-.023 -.05a1 1 0 0 1 -.034 -.108l-.01 -.057l-.01 -.053l-.009 -.132v-16a3 3 0 0 1 3 -3zm-2 12h-2a1 1 0 0 0 0 2h2a1 1 0 0 0 0 -2m0 -4h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2m0 -4h-6a1 1 0 1 0 0 2h6a1 1 0 0 0 0 -2"}]],"discount":[["path",{"d":"M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336m-2.5 9.66a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0 -3m1.207 -4.707a1 1 0 0 0 -1.414 0l-6 6a1 1 0 0 0 1.414 1.414l6 -6a1 1 0 0 0 0 -1.414m-6.207 -.293a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0 -3"}]],"zoom-money":[["path",{"d":"M14 3.072a8 8 0 0 1 2.32 11.834l5.387 5.387a1 1 0 0 1 -1.414 1.414l-5.388 -5.387a8 8 0 0 1 -12.905 -6.32l.005 -.285a8 8 0 0 1 11.995 -6.643m-2 2.928h-2.5a2.5 2.5 0 0 0 0 5h1a.5 .5 0 1 1 0 1h-2.5a1 1 0 0 0 0 2h2.5a2.5 2.5 0 1 0 0 -5h-1a.5 .5 0 0 1 0 -1h2.5a1 1 0 0 0 0 -2"}]],"send":[["path",{"d":"M21.864 3.549l-6.454 17.868a1.55 1.55 0 0 1 -1.41 .903a1.54 1.54 0 0 1 -1.394 -.874l-2.88 -5.759zm-1.414 -1.414l-12.139 12.138l-5.728 -2.864a1.55 1.55 0 0 1 -.903 -1.409c0 -.606 .353 -1.157 .981 -1.44z"}]],"player-pause":[["path",{"d":"M9 4h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2z"}],["path",{"d":"M17 4h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2z"}]],"player-record":[["path",{"d":"M8 5.072a8 8 0 1 1 -3.995 7.213l-.005 -.285l.005 -.285a8 8 0 0 1 3.995 -6.643z"}]],"mood-crazy-happy":[["path",{"d":"M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336m-1.8 10.946a1 1 0 0 0 -1.414 .014a2.5 2.5 0 0 1 -3.572 0a1 1 0 0 0 -1.428 1.4a4.5 4.5 0 0 0 6.428 0a1 1 0 0 0 -.014 -1.414m-7.493 -6.493a1 1 0 0 0 -1.414 1.414l.792 .793l-.792 .793a1 1 0 0 0 1.414 1.414l.793 -.792l.793 .792a1 1 0 1 0 1.414 -1.414l-.792 -.793l.792 -.793a1 1 0 1 0 -1.414 -1.414l-.793 .792zm7 0a1 1 0 0 0 -1.414 1.414l.792 .793l-.792 .793a1 1 0 0 0 1.414 1.414l.793 -.792l.793 .792a1 1 0 0 0 1.414 -1.414l-.792 -.793l.792 -.793a1 1 0 1 0 -1.414 -1.414l-.793 .792z"}]],"ghost":[["path",{"d":"M12 3a8 8 0 0 1 7.996 7.75l.004 .25l-.001 6.954l.01 .103a2.78 2.78 0 0 1 -1.468 2.618l-.163 .08c-1.053 .475 -2.283 .248 -3.129 -.593l-.137 -.146a.65 .65 0 0 0 -1.024 0a2.65 2.65 0 0 1 -4.176 0a.65 .65 0 0 0 -.512 -.25c-.2 0 -.389 .092 -.55 .296a2.78 2.78 0 0 1 -4.859 -2.005l.008 -.091l.001 -6.966l.004 -.25a8 8 0 0 1 7.996 -7.75zm2.82 10.429a1 1 0 0 0 -1.391 -.25a2.5 2.5 0 0 1 -2.858 0a1 1 0 0 0 -1.142 1.642a4.5 4.5 0 0 0 5.142 0a1 1 0 0 0 .25 -1.392zm-4.81 -4.429l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm4 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z"}]],"bomb":[["path",{"d":"M14.499 3.996a2.2 2.2 0 0 1 1.556 .645l3.302 3.301a2.2 2.2 0 0 1 0 3.113l-.567 .567l.043 .192a8.5 8.5 0 0 1 -3.732 8.83l-.23 .144a8.5 8.5 0 1 1 -2.687 -15.623l.192 .042l.567 -.566a2.2 2.2 0 0 1 1.362 -.636zm-4.499 5.004a4 4 0 0 0 -4 4a1 1 0 0 0 2 0a2 2 0 0 1 2 -2a1 1 0 0 0 0 -2z"}],["path",{"d":"M21 2a1 1 0 0 1 .117 1.993l-.117 .007h-1c0 .83 -.302 1.629 -.846 2.25l-.154 .163l-1.293 1.293a1 1 0 0 1 -1.497 -1.32l.083 -.094l1.293 -1.292c.232 -.232 .375 -.537 .407 -.86l.007 -.14a2 2 0 0 1 1.85 -1.995l.15 -.005h1z"}]],"chess-queen":[["path",{"d":"M12 2a2 2 0 0 1 1.572 3.236l.793 1.983l1.702 -1.702a2.003 2.003 0 0 1 1.933 -2.517a2 2 0 0 1 .674 3.884l-1.69 9.295a1 1 0 0 1 -.865 .814l-.119 .007h-8a1 1 0 0 1 -.956 -.705l-.028 -.116l-1.69 -9.295a2 2 0 1 1 2.607 -1.367l1.701 1.702l.794 -1.983a2 2 0 0 1 1.572 -3.236z"}],["path",{"d":"M18 18h-12a1 1 0 0 0 -1 1a2 2 0 0 0 2 2h10a2 2 0 0 0 1.987 -1.768l.011 -.174a1 1 0 0 0 -.998 -1.058z"}]],"chess-king":[["path",{"d":"M12 2a1 1 0 0 1 .993 .883l.007 .117v2h2a1 1 0 0 1 .117 1.993l-.117 .007h-2v1.758a4.49 4.49 0 0 1 2.033 -.734l.24 -.018l.227 -.006a4.5 4.5 0 0 1 4.5 4.5a4.504 4.504 0 0 1 -4.064 4.478l-.217 .016l-.219 .006h-7a4.5 4.5 0 1 1 2.501 -8.241l-.001 -1.759h-2a1 1 0 0 1 -.117 -1.993l.117 -.007h2v-2a1 1 0 0 1 1 -1z"}],["path",{"d":"M18 18h-12a1 1 0 0 0 -1 1a2 2 0 0 0 2 2h10a2 2 0 0 0 1.987 -1.768l.011 -.174a1 1 0 0 0 -.998 -1.058z"}]],"chess-knight":[["path",{"d":"M8.959 1.99l-.147 .028l-.115 .029a1 1 0 0 0 -.646 1.27l.749 2.245l-2.815 1.735a2 2 0 0 0 -.655 2.751l.089 .133a2 2 0 0 0 1.614 .819l1.563 -.001l-1.614 4.674a1 1 0 0 0 .945 1.327h7.961a1 1 0 0 0 1 -.978l.112 -5c0 -3.827 -1.555 -6.878 -4.67 -7.966l-2.399 -.83l-.375 -.121l-.258 -.074l-.135 -.031l-.101 -.013l-.055 -.001l-.048 .003z"}],["path",{"d":"M18 18h-12a1 1 0 0 0 -1 1a2 2 0 0 0 2 2h10a2 2 0 0 0 1.987 -1.768l.011 -.174a1 1 0 0 0 -.998 -1.058z"}]],"flower":[["path",{"d":"M12 1a4 4 0 0 1 4 4l-.002 .055l.03 -.018a3.97 3.97 0 0 1 2.79 -.455l.237 .056a3.97 3.97 0 0 1 2.412 1.865a4.01 4.01 0 0 1 -1.455 5.461l-.068 .036l.071 .039a4.01 4.01 0 0 1 1.555 5.27l-.101 .186a3.97 3.97 0 0 1 -5.441 1.468l-.03 -.02l.002 .057a4 4 0 0 1 -3.8 3.995l-.2 .005a4 4 0 0 1 -4 -4l.001 -.056l-.029 .019a3.97 3.97 0 0 1 -2.79 .456l-.236 -.056a3.97 3.97 0 0 1 -2.413 -1.865a4.01 4.01 0 0 1 1.453 -5.46l.07 -.038l-.071 -.038a4.01 4.01 0 0 1 -1.555 -5.27l.1 -.187a3.97 3.97 0 0 1 5.444 -1.468l.026 .018v-.055a4 4 0 0 1 3.8 -3.995zm0 8a3 3 0 1 0 0 6a3 3 0 0 0 0 -6"}]],"shirt":[["path",{"d":"M14.883 3.007l.095 -.007l.112 .004l.113 .017l.113 .03l6 2a1 1 0 0 1 .677 .833l.007 .116v5a1 1 0 0 1 -.883 .993l-.117 .007h-2v7a2 2 0 0 1 -1.85 1.995l-.15 .005h-10a2 2 0 0 1 -1.995 -1.85l-.005 -.15v-7h-2a1 1 0 0 1 -.993 -.883l-.007 -.117v-5a1 1 0 0 1 .576 -.906l.108 -.043l6 -2a1 1 0 0 1 1.316 .949a2 2 0 0 0 3.995 .15l.009 -.24l.017 -.113l.037 -.134l.044 -.103l.05 -.092l.068 -.093l.069 -.08c.056 -.054 .113 -.1 .175 -.14l.096 -.053l.103 -.044l.108 -.032l.112 -.02z"}]],"ufo":[["path",{"d":"M12 3c3.067 0 5.6 2.29 5.957 5.246c3.067 .903 5.043 2.476 5.043 4.478c0 2.3 -2.653 4.053 -6.427 4.833l1.26 1.888a1 1 0 1 1 -1.665 1.11l-1.78 -2.67c-.77 .076 -1.57 .115 -2.388 .115c-.966 0 -1.905 -.055 -2.801 -.16l-1.305 2.607a1 1 0 0 1 -1.788 -.894l1.028 -2.06c-3.618 -.807 -6.134 -2.529 -6.134 -4.768c0 -1.999 1.981 -3.58 5.044 -4.483c.36 -2.955 2.89 -5.242 5.956 -5.242m.01 10l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993m-5 -1l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993m10 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993m-5.01 -7c-2.11 0 -3.835 1.618 -3.989 3.667a1 1 0 0 1 .057 .4c.104 .087 .348 .251 .768 .419c.806 .322 1.94 .514 3.164 .514s2.358 -.192 3.164 -.514c.445 -.178 .693 -.352 .789 -.435l-.003 -.051q 0 -.113 .029 -.229l.014 -.046c-.125 -2.076 -1.864 -3.725 -3.993 -3.725"}]]}}');
 ;// ./src/Escenas9.tsx
+
 
 
 
@@ -4689,7 +5370,7 @@ const Glifo = ({ nombre, lado, color, relleno = true, grosor = 2, style }) => {
   const G = glifos_namespaceObject;
   const lleno = relleno && G.f[nombre];
   const nodos = lleno ? G.f[nombre] : G.o[nombre] || G.o["star"] || [];
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(
     "svg",
     {
       width: lado,
@@ -4700,26 +5381,32 @@ const Glifo = ({ nombre, lado, color, relleno = true, grosor = 2, style }) => {
       stroke: lleno ? "none" : color,
       strokeWidth: grosor,
       strokeLinecap: "round",
-      strokeLinejoin: "round"
-    },
-    nodos.map(([tag, at], i) => (react_namespaceFn().createElement)(tag, { key: i, ...at, ...lleno ? { fill: color } : {} }))
+      strokeLinejoin: "round",
+      children: nodos.map(([tag, at], i) => (react_namespaceFn().createElement)(tag, { key: i, ...at, ...lleno ? { fill: color } : {} }))
+    }
   );
 };
-const Grano = ({ op = 0.08, frec = 0.85, id }) => /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: "100%", height: "100%", opacity: op, mixBlendMode: "multiply" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("filter", { id }, /* @__PURE__ */ (react_namespaceFn().createElement)("feTurbulence", { type: "fractalNoise", baseFrequency: frec, numOctaves: 2, stitchTiles: "stitch" }), /* @__PURE__ */ (react_namespaceFn().createElement)("feColorMatrix", { type: "saturate", values: "0" })), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { width: "100%", height: "100%", filter: `url(#${id})` }));
+const Grano = ({ op = 0.08, frec = 0.85, id }) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { style: { position: "absolute", inset: 0, width: "100%", height: "100%", opacity: op, mixBlendMode: "multiply" }, children: [
+  /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("feTurbulence", { type: "fractalNoise", baseFrequency: frec, numOctaves: 2, stitchTiles: "stitch" }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("feColorMatrix", { type: "saturate", values: "0" })
+  ] }),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { width: "100%", height: "100%", filter: `url(#${id})` })
+] });
 const FondoEscena = (react_namespaceFn().createContext)("");
-const conFondo = (C) => (props) => /* @__PURE__ */ (react_namespaceFn().createElement)(FondoEscena.Provider, { value: Escenas9_esHex(props.fondoEscena) ? Escenas9_hex(props.fondoEscena, "#000000") : "" }, /* @__PURE__ */ (react_namespaceFn().createElement)(C, { ...props }));
+const conFondo = (C) => (props) => /* @__PURE__ */ (0,jsx_runtime.jsx)(FondoEscena.Provider, { value: Escenas9_esHex(props.fondoEscena) ? Escenas9_hex(props.fondoEscena, "#000000") : "", children: /* @__PURE__ */ (0,jsx_runtime.jsx)(C, { ...props }) });
 const Escena = ({ fondo: fondoDiseno, salida = 0.3, ox = 50, oy = 55, children }) => {
   const propio = (react_namespaceFn().useContext)(FondoEscena);
   const fondo = propio ? `radial-gradient(120% 85% at 50% 35%, ${mezcla(propio, [255, 255, 255], 0.1)} 0%, ${propio} 72%)` : fondoDiseno;
   const { t, q } = Kit7_useVida(salida);
   const r = Kit7_easeOut(t / 0.32) * 150;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: {
     opacity: 1 - q,
     clipPath: r < 149 ? `circle(${r.toFixed(2)}% at ${ox}% ${oy}%)` : void 0,
     background: fondo,
     overflow: "hidden",
     transform: `scale(${(1 + 0.04 * q).toFixed(4)})`
-  } }, children);
+  }, children });
 };
 const POSES = {
   parado: { inc: 0, bL: [-10, -5], bR: [10, 5], pL: [-5, -2], pR: [5, 2] },
@@ -4762,54 +5449,98 @@ const Monigote = ({ pose, F, x, y, boca, gafas, ropa = "#4C7DFF", contorno = "#F
     return [[x, y], c, seg(c, p[1], Ls)];
   };
   const pts = (q) => q.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
-  const linea = (q, w, c, k, extra = {}) => /* @__PURE__ */ (react_namespaceFn().createElement)("polyline", { key: k, points: pts(q), fill: "none", stroke: c, strokeWidth: w, strokeLinecap: "round", strokeLinejoin: "round", ...extra });
+  const linea = (q, w, c, k, extra = {}) => /* @__PURE__ */ (0,jsx_runtime.jsx)("polyline", { points: pts(q), fill: "none", stroke: c, strokeWidth: w, strokeLinecap: "round", strokeLinejoin: "round", ...extra }, k);
   const pL = pierna(pose.pL), pR = pierna(pose.pR), bL = brazo(pose.bL), bR = brazo(pose.bR);
   const o = 0.032 * F;
   const zapato = (q, k, borde = 0) => {
     const [px, py] = q[2], [ax, ay] = q[1];
     const ang = Math.atan2(py - ay, px - ax) * 180 / Math.PI - 90;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(
       "ellipse",
       {
-        key: k,
         cx: px + 0.02 * F,
         cy: py + 8e-3 * F,
         rx: 0.06 * F + borde,
         ry: 0.034 * F + borde,
         fill: borde ? contorno : ZAPATO,
         transform: `rotate(${(ang * 0.35).toFixed(1)} ${px.toFixed(1)} ${py.toFixed(1)})`
-      }
+      },
+      k
     );
   };
-  const mano = (q, k, borde = 0) => /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { key: k, cx: q[2][0], cy: q[2][1], r: 0.04 * F + borde, fill: borde ? contorno : PIEL });
+  const mano = (q, k, borde = 0) => /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: q[2][0], cy: q[2][1], r: 0.04 * F + borde, fill: borde ? contorno : PIEL }, k);
   const codo = (q) => [q[0], q[1]];
   const antebrazo = (q) => [q[1], q[2]];
   const grados = ca * 180 / Math.PI;
   const suelo = Math.max(pL[2][1], pR[2][1]) + 0.035 * F;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("g", null, /* @__PURE__ */ (react_namespaceFn().createElement)("ellipse", { cx: (pL[2][0] + pR[2][0]) / 2, cy: suelo, rx: 0.26 * F, ry: 0.035 * F, fill: "#000", opacity: 0.28 }), /* @__PURE__ */ (react_namespaceFn().createElement)("g", null, linea(pL, 0.12 * F + 2 * o, contorno, "opl"), linea(pR, 0.12 * F + 2 * o, contorno, "opr"), zapato(pL, "ozl", o), zapato(pR, "ozr", o), linea([[x, y], cuello], 0.27 * F + 2 * o, contorno, "ot"), linea(bL, 0.08 * F + 2 * o, contorno, "obl"), linea(bR, 0.08 * F + 2 * o, contorno, "obr"), mano(bL, "oml", o), mano(bR, "omr", o), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0], cy: cabeza[1], r: r + o, fill: contorno })), linea(pL, 0.12 * F, PANTALON, "pl"), linea(pR, 0.12 * F, PANTALON, "pr"), zapato(pL, "zl"), zapato(pR, "zr"), linea([[x, y], cuello], 0.27 * F, ropa, "t"), linea([[x - 0.045 * F, y - 0.04 * F], [cuello[0] - 0.045 * F, cuello[1] + 0.05 * F]], 0.045 * F, "#FFFFFF", "tb", { strokeOpacity: 0.22 }), linea([[x - 0.135 * F, y + 5e-3 * F], [x + 0.135 * F, y + 5e-3 * F]], 0.05 * F, PANTALON, "cint"), linea(antebrazo(bL), 0.07 * F, PIEL, "al"), linea(antebrazo(bR), 0.07 * F, PIEL, "ar"), linea(codo(bL), 0.085 * F, ropa, "ml"), linea(codo(bR), 0.085 * F, ropa, "mr"), mano(bL, "hl"), mano(bR, "hr"), /* @__PURE__ */ (react_namespaceFn().createElement)("g", { transform: `rotate(${grados.toFixed(2)} ${cabeza[0].toFixed(1)} ${cabeza[1].toFixed(1)})` }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0], cy: cabeza[1], r, fill: PIEL }), /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "path",
-    {
-      d: `M ${cabeza[0] + r * 0.2} ${cabeza[1] + r * 0.98} A ${r} ${r} 0 0 0 ${cabeza[0] + r * 0.98} ${cabeza[1] + r * 0.2} A ${r * 1.3} ${r * 1.3} 0 0 1 ${cabeza[0] + r * 0.2} ${cabeza[1] + r * 0.98} z`,
-      fill: PIEL_SOMBRA,
-      opacity: 0.55
-    }
-  ), /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "path",
-    {
-      d: `M ${cabeza[0] - r * 1.02} ${cabeza[1] + r * 0.05} A ${r * 1.02} ${r * 1.02} 0 0 1 ${cabeza[0] + r * 1.02} ${cabeza[1] - r * 0.05}
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("ellipse", { cx: (pL[2][0] + pR[2][0]) / 2, cy: suelo, rx: 0.26 * F, ry: 0.035 * F, fill: "#000", opacity: 0.28 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+      linea(pL, 0.12 * F + 2 * o, contorno, "opl"),
+      linea(pR, 0.12 * F + 2 * o, contorno, "opr"),
+      zapato(pL, "ozl", o),
+      zapato(pR, "ozr", o),
+      linea([[x, y], cuello], 0.27 * F + 2 * o, contorno, "ot"),
+      linea(bL, 0.08 * F + 2 * o, contorno, "obl"),
+      linea(bR, 0.08 * F + 2 * o, contorno, "obr"),
+      mano(bL, "oml", o),
+      mano(bR, "omr", o),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0], cy: cabeza[1], r: r + o, fill: contorno })
+    ] }),
+    linea(pL, 0.12 * F, PANTALON, "pl"),
+    linea(pR, 0.12 * F, PANTALON, "pr"),
+    zapato(pL, "zl"),
+    zapato(pR, "zr"),
+    linea([[x, y], cuello], 0.27 * F, ropa, "t"),
+    linea([[x - 0.045 * F, y - 0.04 * F], [cuello[0] - 0.045 * F, cuello[1] + 0.05 * F]], 0.045 * F, "#FFFFFF", "tb", { strokeOpacity: 0.22 }),
+    linea([[x - 0.135 * F, y + 5e-3 * F], [x + 0.135 * F, y + 5e-3 * F]], 0.05 * F, PANTALON, "cint"),
+    linea(antebrazo(bL), 0.07 * F, PIEL, "al"),
+    linea(antebrazo(bR), 0.07 * F, PIEL, "ar"),
+    linea(codo(bL), 0.085 * F, ropa, "ml"),
+    linea(codo(bR), 0.085 * F, ropa, "mr"),
+    mano(bL, "hl"),
+    mano(bR, "hr"),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `rotate(${grados.toFixed(2)} ${cabeza[0].toFixed(1)} ${cabeza[1].toFixed(1)})`, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0], cy: cabeza[1], r, fill: PIEL }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d: `M ${cabeza[0] + r * 0.2} ${cabeza[1] + r * 0.98} A ${r} ${r} 0 0 0 ${cabeza[0] + r * 0.98} ${cabeza[1] + r * 0.2} A ${r * 1.3} ${r * 1.3} 0 0 1 ${cabeza[0] + r * 0.2} ${cabeza[1] + r * 0.98} z`,
+          fill: PIEL_SOMBRA,
+          opacity: 0.55
+        }
+      ),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d: `M ${cabeza[0] - r * 1.02} ${cabeza[1] + r * 0.05} A ${r * 1.02} ${r * 1.02} 0 0 1 ${cabeza[0] + r * 1.02} ${cabeza[1] - r * 0.05}
                   Q ${cabeza[0] + r * 0.55} ${cabeza[1] - r * 0.55} ${cabeza[0] + r * 0.05} ${cabeza[1] - r * 0.42} Q ${cabeza[0] - r * 0.6} ${cabeza[1] - r * 0.3} ${cabeza[0] - r * 1.02} ${cabeza[1] + r * 0.05} z`,
-      fill: PELO
-    }
-  ), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] - r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.11, fill: "#1B1B1F" }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] + r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.11, fill: "#1B1B1F" }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] - r * 0.31, cy: cabeza[1] + r * 0.01, r: r * 0.04, fill: "#FFFFFF" }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] + r * 0.37, cy: cabeza[1] + r * 0.01, r: r * 0.04, fill: "#FFFFFF" }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] - r * 0.58, cy: cabeza[1] + r * 0.35, r: r * 0.14, fill: "#FF7A8A", opacity: 0.45 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] + r * 0.58, cy: cabeza[1] + r * 0.35, r: r * 0.14, fill: "#FF7A8A", opacity: 0.45 }), boca ? /* @__PURE__ */ (react_namespaceFn().createElement)("ellipse", { cx: cabeza[0], cy: cabeza[1] + r * 0.45, rx: r * 0.24, ry: r * 0.3, fill: "#5A1A22" }) : /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "path",
-    {
-      d: `M ${cabeza[0] - r * 0.26} ${cabeza[1] + r * 0.38} Q ${cabeza[0]} ${cabeza[1] + r * 0.62} ${cabeza[0] + r * 0.26} ${cabeza[1] + r * 0.38}`,
-      fill: "none",
-      stroke: "#5A1A22",
-      strokeWidth: r * 0.1,
-      strokeLinecap: "round"
-    }
-  ), gafas && /* @__PURE__ */ (react_namespaceFn().createElement)("g", { fill: "none", stroke: "#1B1B1F", strokeWidth: r * 0.09 }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] - r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.26 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: cabeza[0] + r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.26 }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: `M ${cabeza[0] - r * 0.08} ${cabeza[1] + r * 0.05} h ${r * 0.16}` }))));
+          fill: PELO
+        }
+      ),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0] - r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.11, fill: "#1B1B1F" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0] + r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.11, fill: "#1B1B1F" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0] - r * 0.31, cy: cabeza[1] + r * 0.01, r: r * 0.04, fill: "#FFFFFF" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0] + r * 0.37, cy: cabeza[1] + r * 0.01, r: r * 0.04, fill: "#FFFFFF" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0] - r * 0.58, cy: cabeza[1] + r * 0.35, r: r * 0.14, fill: "#FF7A8A", opacity: 0.45 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0] + r * 0.58, cy: cabeza[1] + r * 0.35, r: r * 0.14, fill: "#FF7A8A", opacity: 0.45 }),
+      boca ? /* @__PURE__ */ (0,jsx_runtime.jsx)("ellipse", { cx: cabeza[0], cy: cabeza[1] + r * 0.45, rx: r * 0.24, ry: r * 0.3, fill: "#5A1A22" }) : /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d: `M ${cabeza[0] - r * 0.26} ${cabeza[1] + r * 0.38} Q ${cabeza[0]} ${cabeza[1] + r * 0.62} ${cabeza[0] + r * 0.26} ${cabeza[1] + r * 0.38}`,
+          fill: "none",
+          stroke: "#5A1A22",
+          strokeWidth: r * 0.1,
+          strokeLinecap: "round"
+        }
+      ),
+      gafas && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { fill: "none", stroke: "#1B1B1F", strokeWidth: r * 0.09, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0] - r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.26 }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: cabeza[0] + r * 0.34, cy: cabeza[1] + r * 0.05, r: r * 0.26 }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: `M ${cabeza[0] - r * 0.08} ${cabeza[1] + r * 0.05} h ${r * 0.16}` })
+      ] })
+    ] })
+  ] });
 };
 const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen = "", variante = "oscuro", acento, salida = 0.3 }) => {
   useFuentes();
@@ -4853,133 +5584,177 @@ const PictogramaE = ({ pose = "trabajando", texto = "EDITOR", sub = "", imagen =
     const sentado = pose === "trabajando" || pose === "gritando";
     const hx = sentado ? cx + (pose === "gritando" ? 0.25 * F : -0.1 * F) : cx, hy = sentado ? cy + 0.12 * F : cy + 0.18 * F + dy;
     const pc = sentado ? S(0.05, { damping: 16 }) : 1;
-    figura = /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: W, height: H, style: {
+    figura = /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: W, height: H, style: {
       position: "absolute",
       inset: 0,
       overflow: "visible",
       filter: claro ? `drop-shadow(0 ${14 * U}px ${22 * U}px rgba(0,0,0,.18))` : neon ? `drop-shadow(0 0 ${30 * U}px ${ac})` : `drop-shadow(0 0 ${22 * U}px rgba(255,255,255,.25))`
-    } }, sentado && /* @__PURE__ */ (react_namespaceFn().createElement)("g", { opacity: clamp(pc * 2), transform: `translate(0 ${((1 - clamp(pc)) * 60 * U).toFixed(1)})` }, /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx - 0.2 * F, y: hy - 0.02 * F, width: 0.24 * F, height: 0.05 * F, rx: 0.02 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx - 0.21 * F, y: hy - 0.32 * F, width: 0.05 * F, height: 0.32 * F, rx: 0.02 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("line", { x1: hx - 0.08 * F, y1: hy + 0.03 * F, x2: hx - 0.08 * F, y2: hy + 0.28 * F, stroke: tinta, strokeWidth: 0.035 * F }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: `M${hx - 0.2 * F} ${hy + 0.3 * F} h${0.24 * F}`, stroke: tinta, strokeWidth: 0.03 * F, strokeLinecap: "round" }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx + 0.18 * F, y: hy - 0.1 * F, width: 0.62 * F, height: 0.06 * F, rx: 0.01 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx + 0.22 * F, y: hy - 0.04 * F, width: 0.04 * F, height: 0.34 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: hx + 0.72 * F, y: hy - 0.04 * F, width: 0.04 * F, height: 0.34 * F, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: `M${hx + 0.42 * F} ${hy - 0.1 * F} l${0.08 * F} ${-0.2 * F} h${0.22 * F} l${-0.02 * F} ${0.2 * F} z`, fill: tinta }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: hx + 0.62 * F, cy: hy - 0.2 * F, r: 0.012 * F, fill: claro ? "#DCDCDA" : "#000" })), /* @__PURE__ */ (react_namespaceFn().createElement)(Monigote, { pose: P, F, color: tinta, x: hx, y: hy, gafas: sentado, ropa }), pose === "gritando" && /* @__PURE__ */ (react_namespaceFn().createElement)("g", { opacity: clamp((t - 0.25) / 0.2) }, /* @__PURE__ */ (react_namespaceFn().createElement)(Monigote, { pose: mezclaPose(base, POSES.gritando, q), F: F * 1.02, color: tinta, x: hx - 0.62 * F, y: cy + 0.18 * F + Math.sin(t * 22) * 8e-3 * F, boca: true, ropa: "#E8505B" }), [0, 1, 2].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)(
-      "line",
-      {
-        key: k,
-        x1: hx - 0.5 * F + k * 0.06 * F,
-        y1: hy - 0.6 * F,
-        x2: hx - 0.46 * F + k * 0.1 * F,
-        y2: hy - 0.7 * F - (k === 1 ? 0.05 * F : 0),
-        stroke: tinta,
-        strokeWidth: 0.02 * F,
-        strokeLinecap: "round",
-        opacity: 0.5 + 0.5 * Math.sin(t * 18 + k)
-      }
-    ))), pose === "pensando" && [0, 1, 2].map((k) => {
-      const pk = clamp((t - 0.5 - k * 0.25) / 0.3);
-      return /* @__PURE__ */ (react_namespaceFn().createElement)(
-        "text",
+    }, children: [
+      sentado && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: clamp(pc * 2), transform: `translate(0 ${((1 - clamp(pc)) * 60 * U).toFixed(1)})`, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: hx - 0.2 * F, y: hy - 0.02 * F, width: 0.24 * F, height: 0.05 * F, rx: 0.02 * F, fill: tinta }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: hx - 0.21 * F, y: hy - 0.32 * F, width: 0.05 * F, height: 0.32 * F, rx: 0.02 * F, fill: tinta }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: hx - 0.08 * F, y1: hy + 0.03 * F, x2: hx - 0.08 * F, y2: hy + 0.28 * F, stroke: tinta, strokeWidth: 0.035 * F }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: `M${hx - 0.2 * F} ${hy + 0.3 * F} h${0.24 * F}`, stroke: tinta, strokeWidth: 0.03 * F, strokeLinecap: "round" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: hx + 0.18 * F, y: hy - 0.1 * F, width: 0.62 * F, height: 0.06 * F, rx: 0.01 * F, fill: tinta }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: hx + 0.22 * F, y: hy - 0.04 * F, width: 0.04 * F, height: 0.34 * F, fill: tinta }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: hx + 0.72 * F, y: hy - 0.04 * F, width: 0.04 * F, height: 0.34 * F, fill: tinta }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: `M${hx + 0.42 * F} ${hy - 0.1 * F} l${0.08 * F} ${-0.2 * F} h${0.22 * F} l${-0.02 * F} ${0.2 * F} z`, fill: tinta }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: hx + 0.62 * F, cy: hy - 0.2 * F, r: 0.012 * F, fill: claro ? "#DCDCDA" : "#000" })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Monigote, { pose: P, F, color: tinta, x: hx, y: hy, gafas: sentado, ropa }),
+      pose === "gritando" && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: clamp((t - 0.25) / 0.2), children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(Monigote, { pose: mezclaPose(base, POSES.gritando, q), F: F * 1.02, color: tinta, x: hx - 0.62 * F, y: cy + 0.18 * F + Math.sin(t * 22) * 8e-3 * F, boca: true, ropa: "#E8505B" }),
+        [0, 1, 2].map((k) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "line",
+          {
+            x1: hx - 0.5 * F + k * 0.06 * F,
+            y1: hy - 0.6 * F,
+            x2: hx - 0.46 * F + k * 0.1 * F,
+            y2: hy - 0.7 * F - (k === 1 ? 0.05 * F : 0),
+            stroke: tinta,
+            strokeWidth: 0.02 * F,
+            strokeLinecap: "round",
+            opacity: 0.5 + 0.5 * Math.sin(t * 18 + k)
+          },
+          k
+        ))
+      ] }),
+      pose === "pensando" && [0, 1, 2].map((k) => {
+        const pk = clamp((t - 0.5 - k * 0.25) / 0.3);
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "text",
+          {
+            x: hx + (0.12 + k * 0.12) * F,
+            y: hy - (0.58 + k * 0.09) * F - Math.sin(t * 2 + k) * 6 * U,
+            fontFamily: FAMILIA.redonda,
+            fontWeight: 800,
+            fontSize: (0.1 + k * 0.035) * F,
+            fill: tinta,
+            opacity: pk,
+            children: "?"
+          },
+          k
+        );
+      }),
+      (pose === "corriendo" || pose === "cayendo") && [0, 1, 2, 3].map((k) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "line",
         {
-          key: k,
-          x: hx + (0.12 + k * 0.12) * F,
-          y: hy - (0.58 + k * 0.09) * F - Math.sin(t * 2 + k) * 6 * U,
-          fontFamily: FAMILIA.redonda,
-          fontWeight: 800,
-          fontSize: (0.1 + k * 0.035) * F,
-          fill: tinta,
-          opacity: pk
+          x1: hx - (0.35 + 0.05 * k) * F,
+          y1: hy - (0.55 - k * 0.12) * F,
+          x2: hx - (0.6 + 0.05 * k) * F - t * 900 % 80 * U,
+          y2: hy - (0.55 - k * 0.12) * F,
+          stroke: tinta,
+          strokeWidth: 0.02 * F,
+          strokeLinecap: "round",
+          opacity: 0.35
         },
-        "?"
-      );
-    }), (pose === "corriendo" || pose === "cayendo") && [0, 1, 2, 3].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)(
-      "line",
-      {
-        key: k,
-        x1: hx - (0.35 + 0.05 * k) * F,
-        y1: hy - (0.55 - k * 0.12) * F,
-        x2: hx - (0.6 + 0.05 * k) * F - t * 900 % 80 * U,
-        y2: hy - (0.55 - k * 0.12) * F,
-        stroke: tinta,
-        strokeWidth: 0.02 * F,
-        strokeLinecap: "round",
-        opacity: 0.35
-      }
-    )), pose === "subiendo" && [0, 1, 2, 3, 4].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { key: k, x: hx - 0.3 * F + k * 0.22 * F, y: hy + 0.42 * F - k * 0.14 * F, width: 0.24 * F, height: 0.14 * F + k * 0.14 * F, fill: tinta, opacity: 0.18 })), pose === "senalando" && /* @__PURE__ */ (react_namespaceFn().createElement)("g", { opacity: clamp((t - 0.55) / 0.15) }, [0, 1, 2, 3, 4].map((k) => {
-      const a = (-40 + k * 20) * (Math.PI / 180), r0 = 0.05 * F, r1 = 0.1 * F + 0.03 * F * Math.sin(t * 9);
-      const px = hx + 0.4 * F, py = hy - 0.33 * F;
-      return /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: k, x1: px + Math.cos(a) * r0, y1: py + Math.sin(a) * r0, x2: px + Math.cos(a) * r1, y2: py + Math.sin(a) * r1, stroke: tinta, strokeWidth: 0.018 * F, strokeLinecap: "round" });
-    })));
+        k
+      )),
+      pose === "subiendo" && [0, 1, 2, 3, 4].map((k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: hx - 0.3 * F + k * 0.22 * F, y: hy + 0.42 * F - k * 0.14 * F, width: 0.24 * F, height: 0.14 * F + k * 0.14 * F, fill: tinta, opacity: 0.18 }, k)),
+      pose === "senalando" && /* @__PURE__ */ (0,jsx_runtime.jsx)("g", { opacity: clamp((t - 0.55) / 0.15), children: [0, 1, 2, 3, 4].map((k) => {
+        const a = (-40 + k * 20) * (Math.PI / 180), r0 = 0.05 * F, r1 = 0.1 * F + 0.03 * F * Math.sin(t * 9);
+        const px = hx + 0.4 * F, py = hy - 0.33 * F;
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: px + Math.cos(a) * r0, y1: py + Math.sin(a) * r0, x2: px + Math.cos(a) * r1, y2: py + Math.sin(a) * r1, stroke: tinta, strokeWidth: 0.018 * F, strokeLinecap: "round" }, k);
+      }) })
+    ] });
   }
   const pl = Kit7_easeOut((t - 0.75) / 0.6), pi = S(1.25, { damping: 11, stiffness: 170 });
   const ix = vert ? W / 2 : W * 0.76, iy = vert ? H * 0.7 : H * 0.56, li = (vert ? 300 : 360) * U;
   const curva = vert ? `M ${W / 2} ${H * 0.565} C ${W / 2 + 70 * U} ${H * 0.58}, ${W / 2 - 50 * U} ${H * 0.6}, ${W / 2} ${iy - li * 0.5}` : `M ${W * 0.48} ${H * 0.52} C ${W * 0.55} ${H * 0.4}, ${W * 0.6} ${H * 0.66}, ${ix - li * 0.5} ${iy}`;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, claro && Array.from({ length: 22 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-    position: "absolute",
-    left: azar(i) * W,
-    top: (azar(i + 40) * H + t * 20 * U * (azar(i + 9) - 0.5)) % H,
-    width: (6 + azar(i + 3) * 26) * U,
-    height: (6 + azar(i + 3) * 26) * U,
-    borderRadius: "50%",
-    background: "#111",
-    opacity: 0.08 + 0.5 * azar(i + 5)
-  } })), claro && conTexto && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: -W * 0.1 + t * 30 * U,
-    top: H * 0.72,
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 300 * U,
-    color: "transparent",
-    WebkitTextStroke: `${3 * U}px rgba(0,0,0,.12)`,
-    whiteSpace: "nowrap",
-    letterSpacing: "-0.02em"
-  } }, texto, " ", texto), !claro && !neon && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, Array.from({ length: Math.ceil(W / (170 * U)) + 1 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: "v" + i, x1: i * 170 * U, y1: 0, x2: i * 170 * U, y2: H, stroke: "#262626", strokeWidth: 2 * U })), Array.from({ length: Math.ceil(H / (170 * U)) + 1 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: "h" + i, x1: 0, y1: i * 170 * U, x2: W, y2: i * 170 * U, stroke: "#262626", strokeWidth: 2 * U }))), neon && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, Array.from({ length: 9 }).map((_, i) => {
-    const x0 = i / 8 * W;
-    const d = Array.from({ length: 13 }).map((__, k) => `${k ? "L" : "M"} ${(x0 + Math.sin(k * 0.9 + t * 1.3 + i) * 14 * U).toFixed(1)} ${(k / 12 * H).toFixed(1)}`).join(" ");
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("path", { key: "v" + i, d, stroke: "rgba(255,255,255,.55)", strokeWidth: 2.5 * U, fill: "none" });
-  }), Array.from({ length: 14 }).map((_, i) => {
-    const y0 = i / 13 * H;
-    const d = Array.from({ length: 9 }).map((__, k) => `${k ? "L" : "M"} ${(k / 8 * W).toFixed(1)} ${(y0 + Math.sin(k * 1.1 + t * 1.1 + i) * 14 * U).toFixed(1)}`).join(" ");
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("path", { key: "h" + i, d, stroke: "rgba(255,255,255,.55)", strokeWidth: 2.5 * U, fill: "none" });
-  })), !claro && !neon && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cx - 420 * U,
-    top: cy - 420 * U,
-    width: 840 * U,
-    height: 840 * U,
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 65%)"
-  } }), figura, conTexto && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 0,
-    width: vert ? W : W * 0.68,
-    top: vert ? H * 0.12 : H * 0.12,
-    textAlign: "center",
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: Math.min(150, 1300 / Math.max(5, texto.length)) * U,
-    color: neon ? "#FFF" : tinta,
-    letterSpacing: `${(0.01 + 0.12 * (1 - Kit7_easeOut((t - 0.2) / 0.5))).toFixed(3)}em`,
-    opacity: clamp((t - 0.2) / 0.25),
-    textShadow: claro ? "none" : `0 0 ${24 * U}px rgba(255,255,255,.35)`,
-    textTransform: "uppercase"
-  } }, texto), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 0,
-    width: vert ? W : W * 0.68,
-    top: vert ? H * 0.12 + 170 * U : H * 0.12 + 160 * U,
-    textAlign: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 500,
-    fontSize: 48 * U,
-    color: claro ? "#444" : "rgba(255,255,255,.75)",
-    opacity: clamp((t - 0.45) / 0.3)
-  } }, sub), imagen && !neon && /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: curva, fill: "none", stroke: tinta, strokeWidth: 5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: (1 - pl).toFixed(4), opacity: 0.9 })), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(imagen), style: {
-    position: "absolute",
-    left: ix - li / 2,
-    top: iy - li / 2,
-    width: li,
-    height: li,
-    objectFit: "contain",
-    transform: `scale(${Math.max(1e-3, pi).toFixed(4)}) rotate(${(Math.sin(t * 2) * 3).toFixed(2)}deg)`,
-    filter: `drop-shadow(0 ${16 * U}px ${30 * U}px rgba(0,0,0,.35))`
-  } })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo, salida, children: [
+    claro && Array.from({ length: 22 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: azar(i) * W,
+      top: (azar(i + 40) * H + t * 20 * U * (azar(i + 9) - 0.5)) % H,
+      width: (6 + azar(i + 3) * 26) * U,
+      height: (6 + azar(i + 3) * 26) * U,
+      borderRadius: "50%",
+      background: "#111",
+      opacity: 0.08 + 0.5 * azar(i + 5)
+    } }, i)),
+    claro && conTexto && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: -W * 0.1 + t * 30 * U,
+      top: H * 0.72,
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: 300 * U,
+      color: "transparent",
+      WebkitTextStroke: `${3 * U}px rgba(0,0,0,.12)`,
+      whiteSpace: "nowrap",
+      letterSpacing: "-0.02em"
+    }, children: [
+      texto,
+      " ",
+      texto
+    ] }),
+    !claro && !neon && /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { style: { position: "absolute", inset: 0, width: W, height: H }, children: [
+      Array.from({ length: Math.ceil(W / (170 * U)) + 1 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: i * 170 * U, y1: 0, x2: i * 170 * U, y2: H, stroke: "#262626", strokeWidth: 2 * U }, "v" + i)),
+      Array.from({ length: Math.ceil(H / (170 * U)) + 1 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: 0, y1: i * 170 * U, x2: W, y2: i * 170 * U, stroke: "#262626", strokeWidth: 2 * U }, "h" + i))
+    ] }),
+    neon && /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { style: { position: "absolute", inset: 0, width: W, height: H }, children: [
+      Array.from({ length: 9 }).map((_, i) => {
+        const x0 = i / 8 * W;
+        const d = Array.from({ length: 13 }).map((__, k) => `${k ? "L" : "M"} ${(x0 + Math.sin(k * 0.9 + t * 1.3 + i) * 14 * U).toFixed(1)} ${(k / 12 * H).toFixed(1)}`).join(" ");
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, stroke: "rgba(255,255,255,.55)", strokeWidth: 2.5 * U, fill: "none" }, "v" + i);
+      }),
+      Array.from({ length: 14 }).map((_, i) => {
+        const y0 = i / 13 * H;
+        const d = Array.from({ length: 9 }).map((__, k) => `${k ? "L" : "M"} ${(k / 8 * W).toFixed(1)} ${(y0 + Math.sin(k * 1.1 + t * 1.1 + i) * 14 * U).toFixed(1)}`).join(" ");
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, stroke: "rgba(255,255,255,.55)", strokeWidth: 2.5 * U, fill: "none" }, "h" + i);
+      })
+    ] }),
+    !claro && !neon && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: cx - 420 * U,
+      top: cy - 420 * U,
+      width: 840 * U,
+      height: 840 * U,
+      borderRadius: "50%",
+      background: "radial-gradient(circle, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 65%)"
+    } }),
+    figura,
+    conTexto && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: 0,
+      width: vert ? W : W * 0.68,
+      top: vert ? H * 0.12 : H * 0.12,
+      textAlign: "center",
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: Math.min(150, 1300 / Math.max(5, texto.length)) * U,
+      color: neon ? "#FFF" : tinta,
+      letterSpacing: `${(0.01 + 0.12 * (1 - Kit7_easeOut((t - 0.2) / 0.5))).toFixed(3)}em`,
+      opacity: clamp((t - 0.2) / 0.25),
+      textShadow: claro ? "none" : `0 0 ${24 * U}px rgba(255,255,255,.35)`,
+      textTransform: "uppercase"
+    }, children: texto }),
+    sub && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: 0,
+      width: vert ? W : W * 0.68,
+      top: vert ? H * 0.12 + 170 * U : H * 0.12 + 160 * U,
+      textAlign: "center",
+      fontFamily: FAMILIA.inter,
+      fontWeight: 500,
+      fontSize: 48 * U,
+      color: claro ? "#444" : "rgba(255,255,255,.75)",
+      opacity: clamp((t - 0.45) / 0.3)
+    }, children: sub }),
+    imagen && !neon && /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: curva, fill: "none", stroke: tinta, strokeWidth: 5 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: (1 - pl).toFixed(4), opacity: 0.9 }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(imagen), style: {
+        position: "absolute",
+        left: ix - li / 2,
+        top: iy - li / 2,
+        width: li,
+        height: li,
+        objectFit: "contain",
+        transform: `scale(${Math.max(1e-3, pi).toFixed(4)}) rotate(${(Math.sin(t * 2) * 3).toFixed(2)}deg)`,
+        filter: `drop-shadow(0 ${16 * U}px ${30 * U}px rgba(0,0,0,.35))`
+      } })
+    ] })
+  ] });
 };
 const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Clientes|Resultados", imagenes = "", variante = "gris", acento, salida = 0.3 }) => {
   useFuentes();
@@ -5004,7 +5779,7 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
   const cw = 270 * U, chh = 320 * U;
   const ptitulo = S(0.25 + n * 0.16 + 0.35, { damping: 10, stiffness: 200 });
   const hilo = (k) => Kit7_easeOut((t - 0.3 - n * 0.16 - k * 0.12) / 0.4);
-  const alfiler = (x, y, s, k) => /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { key: k, src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"), style: {
+  const alfiler = (x, y, s, k) => /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"), style: {
     position: "absolute",
     left: x - 34 * U,
     top: y - 60 * U,
@@ -5012,80 +5787,98 @@ const TableroE = ({ titulo = "UN A\xD1O", sub = "", items = "Idea|Equipo|Cliente
     height: 72 * U,
     transform: `scale(${Math.max(1e-3, s).toFixed(4)}) rotate(20deg)`,
     filter: `drop-shadow(${3 * U}px ${6 * U}px ${4 * U}px rgba(0,0,0,.35))`
-  } });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondos[variante] || fondos.gris, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gtab", op: variante === "oscuro" ? 0.25 : 0.18, frec: 0.9 }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, pos.map((p, i) => {
-    const q = pos[(i + 1) % pos.length];
-    const k = hilo(i);
-    const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2 + 40 * U;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(
-      "path",
-      {
-        key: i,
-        d: `M ${p[0]} ${p[1] - chh * 0.42} Q ${mx} ${my} ${q[0]} ${q[1] - chh * 0.42}`,
-        fill: "none",
-        stroke: rojo,
-        strokeWidth: 6 * U,
-        pathLength: 1,
-        strokeDasharray: "1",
-        strokeDashoffset: (1 - k).toFixed(4),
-        style: { filter: `drop-shadow(0 ${3 * U}px ${3 * U}px rgba(0,0,0,.3))` }
-      }
-    );
-  }), pos.map((p, i) => {
-    const k = hilo(i + 1);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(
-      "path",
-      {
-        key: "c" + i,
-        d: `M ${p[0]} ${p[1] - chh * 0.42} Q ${(p[0] + cx) / 2} ${(p[1] + cy) / 2 + 50 * U} ${cx} ${cy - 120 * U}`,
-        fill: "none",
-        stroke: rojo,
-        strokeWidth: 5 * U,
-        pathLength: 1,
-        strokeDasharray: "1",
-        strokeDashoffset: (1 - k).toFixed(4),
-        opacity: 0.9
-      }
-    );
-  })), pos.map((p, i) => {
-    const pc = S(0.2 + i * 0.16, { damping: 12, stiffness: 190 });
-    const giro = (azar(i + 3) - 0.5) * 16;
-    const img = imgs[i % Math.max(1, imgs.length)];
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      position: "absolute",
-      left: p[0] - cw / 2,
-      top: p[1] - chh / 2,
-      width: cw,
-      height: chh,
-      background: "#F8F7F3",
-      padding: 14 * U,
-      boxSizing: "border-box",
-      transform: `rotate(${(giro + (1 - clamp(pc)) * 20).toFixed(2)}deg) scale(${(1.35 - 0.35 * clamp(pc)).toFixed(4)})`,
-      opacity: clamp(pc * 3),
-      boxShadow: `0 ${10 * U}px ${24 * U}px rgba(0,0,0,.35)`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      width: "100%",
-      height: chh * 0.66,
-      background: img ? "#222" : `linear-gradient(135deg, ${mezcla(rojo, [0, 0, 0], 0.55)}, ${mezcla(rojo, [0, 0, 0], 0.2)})`,
-      overflow: "hidden",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    } }, img && /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(img), style: {
-      width: img.startsWith("data:") ? "100%" : "72%",
-      height: img.startsWith("data:") ? "100%" : "72%",
-      objectFit: img.startsWith("data:") ? "cover" : "contain",
-      filter: img.startsWith("data:") ? "grayscale(.25) contrast(1.05)" : "none"
-    } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.mano, fontWeight: 700, fontSize: 50 * U, color: "#1B1B1B", textAlign: "center", marginTop: 6 * U, lineHeight: 1 } }, its[i]), alfiler(cw / 2, 10 * U, S(0.3 + i * 0.16, { damping: 12 }), "a" + i));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, width: W, top: cy - 130 * U, textAlign: "center", transform: `scale(${(1.5 - 0.5 * clamp(ptitulo)).toFixed(4)})`, opacity: clamp(ptitulo * 3) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    display: "inline-block",
-    position: "relative",
-    fontFamily: FAMILIA.estarcido,
-    fontSize: Math.min(200, 1300 / Math.max(4, titulo.length)) * U,
-    color: rojo,
-    lineHeight: 1,
-    textShadow: `0 ${6 * U}px ${14 * U}px rgba(0,0,0,.35)`
-  } }, titulo, alfiler(0, 0, ptitulo, "tt")), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.mano, fontWeight: 700, fontSize: 64 * U, color: variante === "oscuro" ? "#EEE" : "#1C1C1C", marginTop: 6 * U } }, sub)));
+  } }, k);
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: fondos[variante] || fondos.gris, salida, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Grano, { id: "gtab", op: variante === "oscuro" ? 0.25 : 0.18, frec: 0.9 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" }, children: [
+      pos.map((p, i) => {
+        const q = pos[(i + 1) % pos.length];
+        const k = hilo(i);
+        const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2 + 40 * U;
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "path",
+          {
+            d: `M ${p[0]} ${p[1] - chh * 0.42} Q ${mx} ${my} ${q[0]} ${q[1] - chh * 0.42}`,
+            fill: "none",
+            stroke: rojo,
+            strokeWidth: 6 * U,
+            pathLength: 1,
+            strokeDasharray: "1",
+            strokeDashoffset: (1 - k).toFixed(4),
+            style: { filter: `drop-shadow(0 ${3 * U}px ${3 * U}px rgba(0,0,0,.3))` }
+          },
+          i
+        );
+      }),
+      pos.map((p, i) => {
+        const k = hilo(i + 1);
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "path",
+          {
+            d: `M ${p[0]} ${p[1] - chh * 0.42} Q ${(p[0] + cx) / 2} ${(p[1] + cy) / 2 + 50 * U} ${cx} ${cy - 120 * U}`,
+            fill: "none",
+            stroke: rojo,
+            strokeWidth: 5 * U,
+            pathLength: 1,
+            strokeDasharray: "1",
+            strokeDashoffset: (1 - k).toFixed(4),
+            opacity: 0.9
+          },
+          "c" + i
+        );
+      })
+    ] }),
+    pos.map((p, i) => {
+      const pc = S(0.2 + i * 0.16, { damping: 12, stiffness: 190 });
+      const giro = (azar(i + 3) - 0.5) * 16;
+      const img = imgs[i % Math.max(1, imgs.length)];
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: p[0] - cw / 2,
+        top: p[1] - chh / 2,
+        width: cw,
+        height: chh,
+        background: "#F8F7F3",
+        padding: 14 * U,
+        boxSizing: "border-box",
+        transform: `rotate(${(giro + (1 - clamp(pc)) * 20).toFixed(2)}deg) scale(${(1.35 - 0.35 * clamp(pc)).toFixed(4)})`,
+        opacity: clamp(pc * 3),
+        boxShadow: `0 ${10 * U}px ${24 * U}px rgba(0,0,0,.35)`
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: "100%",
+          height: chh * 0.66,
+          background: img ? "#222" : `linear-gradient(135deg, ${mezcla(rojo, [0, 0, 0], 0.55)}, ${mezcla(rojo, [0, 0, 0], 0.2)})`,
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }, children: img && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(img), style: {
+          width: img.startsWith("data:") ? "100%" : "72%",
+          height: img.startsWith("data:") ? "100%" : "72%",
+          objectFit: img.startsWith("data:") ? "cover" : "contain",
+          filter: img.startsWith("data:") ? "grayscale(.25) contrast(1.05)" : "none"
+        } }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.mano, fontWeight: 700, fontSize: 50 * U, color: "#1B1B1B", textAlign: "center", marginTop: 6 * U, lineHeight: 1 }, children: its[i] }),
+        alfiler(cw / 2, 10 * U, S(0.3 + i * 0.16, { damping: 12 }), "a" + i)
+      ] }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 0, width: W, top: cy - 130 * U, textAlign: "center", transform: `scale(${(1.5 - 0.5 * clamp(ptitulo)).toFixed(4)})`, opacity: clamp(ptitulo * 3) }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        display: "inline-block",
+        position: "relative",
+        fontFamily: FAMILIA.estarcido,
+        fontSize: Math.min(200, 1300 / Math.max(4, titulo.length)) * U,
+        color: rojo,
+        lineHeight: 1,
+        textShadow: `0 ${6 * U}px ${14 * U}px rgba(0,0,0,.35)`
+      }, children: [
+        titulo,
+        alfiler(0, 0, ptitulo, "tt")
+      ] }),
+      sub && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.mano, fontWeight: 700, fontSize: 64 * U, color: variante === "oscuro" ? "#EEE" : "#1C1C1C", marginTop: 6 * U }, children: sub })
+    ] })
+  ] });
 };
 const PolaroidE = ({
   foto = "",
@@ -5115,68 +5908,93 @@ const PolaroidE = ({
   const pinza = S(0.35, { damping: 13 });
   const pn = S(0.95, { damping: 10 });
   const cuerda = `M ${-50} ${cuerdaY - 30 * U} Q ${W / 2} ${cuerdaY + 70 * U} ${W + 50} ${cuerdaY - 40 * U}`;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: `radial-gradient(ellipse at 50% 40%, ${c1} 0%, ${c2} 100%)`, salida, oy: 30 }, /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gpol", op: 0.22, frec: 0.95 }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: -W * 0.1 - t * 25 * U,
-    top: H * 0.06,
-    fontFamily: FAMILIA.condensada,
-    fontSize: (vert ? 420 : 380) * U,
-    lineHeight: 0.9,
-    color: clara ? "rgba(120,90,60,.16)" : "rgba(0,0,0,.14)",
-    whiteSpace: "nowrap",
-    transform: "rotate(-12deg)",
-    filter: `blur(${2 * U}px)`
-  } }, palabra, " ", palabra), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: cuerda, fill: "none", stroke: "#7B5A36", strokeWidth: 14 * U, strokeLinecap: "round" }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: cuerda, fill: "none", stroke: "#B68B5A", strokeWidth: 14 * U, strokeDasharray: `${10 * U} ${10 * U}`, strokeLinecap: "butt", opacity: 0.8 })), [0, 1].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
-    position: "absolute",
-    left: k ? W * 0.74 : -W * 0.16,
-    top: k ? H * 0.8 : H * 0.84,
-    width: pw * 0.62,
-    height: ph * 0.62,
-    background: "#F4F3EF",
-    transform: `rotate(${k ? 14 : -10}deg) translateY(${(Math.sin(t + k) * 10 * U).toFixed(1)}px)`,
-    filter: `blur(${18 * U}px)`,
-    opacity: 0.5
-  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cx - pw / 2, top, width: pw, height: ph, transformOrigin: "50% 0%", transform: `rotate(${vaiven.toFixed(3)}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, background: "#FBFAF7", boxShadow: `0 ${26 * U}px ${50 * U}px rgba(0,0,0,.4)`, padding: `${26 * U}px ${26 * U}px 0`, boxSizing: "border-box" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    width: "100%",
-    height: pw - 52 * U,
-    background: foto ? "#000" : `linear-gradient(160deg, ${mezcla(c1, [255, 255, 255], 0.35)}, ${c2})`,
-    overflow: "hidden",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto || imagen), style: foto ? { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.08 - 0.06 * clamp(t / 3)).toFixed(4)})` } : { width: "62%", height: "62%", objectFit: "contain" } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    height: ph - pw + 26 * U,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.mano,
-    fontWeight: 700,
-    fontSize: Math.min(76, 1100 / Math.max(6, pie.length)) * U,
-    color: "#1F1F1F",
-    opacity: clamp((t - 0.7) / 0.3)
-  } }, pie)), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 70 * U, height: 150 * U, viewBox: "0 0 70 150", style: {
-    position: "absolute",
-    left: pw / 2 - 35 * U,
-    top: -95 * U,
-    transform: `scale(${Math.max(1e-3, pinza).toFixed(4)})`,
-    filter: `drop-shadow(${3 * U}px ${5 * U}px ${4 * U}px rgba(0,0,0,.35))`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: "6", y: "0", width: "28", height: "150", rx: "6", fill: "#C8955B" }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: "36", y: "0", width: "28", height: "150", rx: "6", fill: "#B07D45" }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: "4", y: "62", width: "62", height: "14", rx: "3", fill: "#8D8D8D" }), /* @__PURE__ */ (react_namespaceFn().createElement)("rect", { x: "12", y: "10", width: "6", height: "120", rx: "3", fill: "#D9A86E", opacity: "0.7" })), numero && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    right: -40 * U,
-    bottom: ph * 0.06,
-    width: 170 * U,
-    height: 170 * U,
-    borderRadius: "50%",
-    background: clara ? "#B83227" : "#C9252C",
-    color: "#FFF",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.condensada,
-    fontSize: 92 * U,
-    boxShadow: `0 ${8 * U}px ${16 * U}px rgba(0,0,0,.35)`,
-    transform: `scale(${Math.max(1e-3, pn).toFixed(4)}) rotate(-8deg)`
-  } }, numero)));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: `radial-gradient(ellipse at 50% 40%, ${c1} 0%, ${c2} 100%)`, salida, oy: 30, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Grano, { id: "gpol", op: 0.22, frec: 0.95 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: -W * 0.1 - t * 25 * U,
+      top: H * 0.06,
+      fontFamily: FAMILIA.condensada,
+      fontSize: (vert ? 420 : 380) * U,
+      lineHeight: 0.9,
+      color: clara ? "rgba(120,90,60,.16)" : "rgba(0,0,0,.14)",
+      whiteSpace: "nowrap",
+      transform: "rotate(-12deg)",
+      filter: `blur(${2 * U}px)`
+    }, children: [
+      palabra,
+      " ",
+      palabra
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: cuerda, fill: "none", stroke: "#7B5A36", strokeWidth: 14 * U, strokeLinecap: "round" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: cuerda, fill: "none", stroke: "#B68B5A", strokeWidth: 14 * U, strokeDasharray: `${10 * U} ${10 * U}`, strokeLinecap: "butt", opacity: 0.8 })
+    ] }),
+    [0, 1].map((k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: k ? W * 0.74 : -W * 0.16,
+      top: k ? H * 0.8 : H * 0.84,
+      width: pw * 0.62,
+      height: ph * 0.62,
+      background: "#F4F3EF",
+      transform: `rotate(${k ? 14 : -10}deg) translateY(${(Math.sin(t + k) * 10 * U).toFixed(1)}px)`,
+      filter: `blur(${18 * U}px)`,
+      opacity: 0.5
+    } }, k)),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: cx - pw / 2, top, width: pw, height: ph, transformOrigin: "50% 0%", transform: `rotate(${vaiven.toFixed(3)}deg)` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", inset: 0, background: "#FBFAF7", boxShadow: `0 ${26 * U}px ${50 * U}px rgba(0,0,0,.4)`, padding: `${26 * U}px ${26 * U}px 0`, boxSizing: "border-box" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: "100%",
+          height: pw - 52 * U,
+          background: foto ? "#000" : `linear-gradient(160deg, ${mezcla(c1, [255, 255, 255], 0.35)}, ${c2})`,
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(foto || imagen), style: foto ? { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.08 - 0.06 * clamp(t / 3)).toFixed(4)})` } : { width: "62%", height: "62%", objectFit: "contain" } }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          height: ph - pw + 26 * U,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: FAMILIA.mano,
+          fontWeight: 700,
+          fontSize: Math.min(76, 1100 / Math.max(6, pie.length)) * U,
+          color: "#1F1F1F",
+          opacity: clamp((t - 0.7) / 0.3)
+        }, children: pie })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 70 * U, height: 150 * U, viewBox: "0 0 70 150", style: {
+        position: "absolute",
+        left: pw / 2 - 35 * U,
+        top: -95 * U,
+        transform: `scale(${Math.max(1e-3, pinza).toFixed(4)})`,
+        filter: `drop-shadow(${3 * U}px ${5 * U}px ${4 * U}px rgba(0,0,0,.35))`
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: "6", y: "0", width: "28", height: "150", rx: "6", fill: "#C8955B" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: "36", y: "0", width: "28", height: "150", rx: "6", fill: "#B07D45" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: "4", y: "62", width: "62", height: "14", rx: "3", fill: "#8D8D8D" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: "12", y: "10", width: "6", height: "120", rx: "3", fill: "#D9A86E", opacity: "0.7" })
+      ] }),
+      numero && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        right: -40 * U,
+        bottom: ph * 0.06,
+        width: 170 * U,
+        height: 170 * U,
+        borderRadius: "50%",
+        background: clara ? "#B83227" : "#C9252C",
+        color: "#FFF",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: FAMILIA.condensada,
+        fontSize: 92 * U,
+        boxShadow: `0 ${8 * U}px ${16 * U}px rgba(0,0,0,.35)`,
+        transform: `scale(${Math.max(1e-3, pn).toFixed(4)}) rotate(-8deg)`
+      }, children: numero })
+    ] })
+  ] });
 };
 const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", sello = "IMPORTANTE", lista: items = "", variante = "verde", acento, salida = 0.3 }) => {
   useFuentes();
@@ -5205,110 +6023,140 @@ const CuadernoE = ({ titulo = "Pr\xF3ximamente", clave = "", nota = "12 junio", 
   const pn = S(0.6, { damping: 14 });
   const its = Escenas9_lista(items).slice(0, 4);
   const tam = Math.min(150, 1700 / Math.max(6, titulo.length)) * U;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: mesas[variante] || mesas.verde, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, background: "repeating-linear-gradient(115deg, rgba(255,255,255,0) 0 160px, rgba(255,255,255,.06) 160px 260px)", opacity: 0.8 } }), /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gcua", op: 0.2 }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: px, top: py, width: pw, height: ph, transform: `rotate(-3deg) scale(${(0.92 + 0.08 * clamp(pe)).toFixed(4)})`, opacity: clamp(pe * 2) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 0,
-    background: "#F7F5EF",
-    borderRadius: 10 * U,
-    boxShadow: `0 ${30 * U}px ${60 * U}px rgba(0,0,0,.45)`,
-    backgroundImage: `repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 ${62 * U}px, rgba(70,110,160,.18) ${62 * U}px ${64 * U}px)`
-  } }), Array.from({ length: Math.floor(ph / (58 * U)) }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-    position: "absolute",
-    left: -26 * U,
-    top: 40 * U + i * 58 * U,
-    width: 58 * U,
-    height: 22 * U,
-    borderRadius: 11 * U,
-    border: `${5 * U}px solid #9DA1A6`,
-    boxSizing: "border-box",
-    background: "transparent"
-  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 80 * U, right: 50 * U, top: 90 * U, fontFamily: FAMILIA.maquina, fontSize: tam, lineHeight: 1.05, color: "#151515" } }, pal.map((w, i) => {
-    const desde = cuenta;
-    cuenta += w.length;
-    const vis = w.slice(0, clamp(escritas - desde, 0, w.length));
-    const esClave = clave && w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "") === clave.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-    if (/^\s+$/.test(w)) return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i }, vis ? " " : "");
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i, style: { position: "relative", display: "inline-block" } }, vis, esClave && vis.length === w.length && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", left: "-12%", top: "-18%", width: "124%", height: "136%", overflow: "visible" }, viewBox: "0 0 100 100", preserveAspectRatio: "none" }, /* @__PURE__ */ (react_namespaceFn().createElement)(
-      "path",
-      {
-        d: "M 8 50 C 8 14, 92 10, 95 48 C 98 86, 10 92, 6 52 C 4 30, 30 16, 52 14",
-        fill: "none",
-        stroke: rojo,
-        strokeWidth: 3.2,
-        vectorEffect: "non-scaling-stroke",
-        pathLength: 1,
-        strokeDasharray: "1",
-        strokeDashoffset: (1 - circulo).toFixed(4),
-        style: { strokeWidth: 7 * U },
-        strokeLinecap: "round"
-      }
-    )));
-  }), escritas < letras.length && /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { opacity: t * 3 % 1 > 0.5 ? 1 : 0 } }, "|")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 80 * U,
-    top: 90 * U + tam * 1.12 * Math.max(1, Math.ceil(titulo.length * tam * 0.6 / (pw - 130 * U))) + 10 * U,
-    width: (pw - 200 * U) * subrayado,
-    height: 8 * U,
-    borderRadius: 4 * U,
-    background: rojo,
-    transform: "rotate(-1deg)"
-  } }), its.length > 0 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: pw * 0.5,
-    top: ph * 0.6,
-    width: pw * 0.46,
-    background: "#FFFFFF",
-    padding: 26 * U,
-    boxShadow: `0 ${10 * U}px ${22 * U}px rgba(0,0,0,.25)`,
-    transform: `rotate(5deg) translateY(${((1 - Kit7_easeOut((t - 0.8) / 0.4)) * 60 * U).toFixed(1)}px)`,
-    opacity: clamp((t - 0.8) / 0.2)
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.maquina, fontSize: 46 * U, color: "#111", borderBottom: `${4 * U}px solid ${rojo}`, display: "inline-block", marginBottom: 10 * U } }, "lista"), its.map((x, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { fontFamily: FAMILIA.maquina, fontSize: 38 * U, color: "#222", opacity: clamp((t - 1 - i * 0.15) / 0.2) } }, "\u2022 ", x)), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("fluent/paperclip.png"), style: { position: "absolute", right: 20 * U, top: -50 * U, width: 90 * U, height: 90 * U, transform: "rotate(20deg)" } })), sello && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    right: 40 * U,
-    top: ph * (its.length ? 0.38 : 0.52),
-    padding: `${10 * U}px ${26 * U}px`,
-    border: `${8 * U}px solid ${rojo}`,
-    borderRadius: 10 * U,
-    fontFamily: FAMILIA.estarcido,
-    fontSize: Math.min(84, 900 / Math.max(5, sello.length)) * U,
-    color: rojo,
-    opacity: clamp(ps * 2) * 0.88,
-    transform: `rotate(-9deg) scale(${(1.7 - 0.7 * clamp(ps)).toFixed(4)})`,
-    mixBlendMode: "multiply"
-  } }, sello)), nota && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: px + (vert ? 40 : 60) * U,
-    top: py + ph * (vert ? 0.58 : 0.55),
-    width: 420 * U,
-    height: 360 * U,
-    background: "#F3F1E8",
-    boxShadow: `0 ${16 * U}px ${30 * U}px rgba(0,0,0,.35)`,
-    transform: `rotate(-6deg) scale(${Math.max(1e-3, pn).toFixed(4)})`,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.maquina,
-    fontSize: Math.min(110, 900 / Math.max(4, nota.length)) * U,
-    color: "#151515",
-    textAlign: "center",
-    lineHeight: 1
-  } }, nota, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"), style: { position: "absolute", left: 170 * U, top: -40 * U, width: 80 * U, height: 80 * U } })), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_alarm_clock.png"), style: {
-    position: "absolute",
-    right: -120 * U,
-    bottom: -60 * U + Math.sin(t) * 10 * U,
-    width: 520 * U,
-    height: 520 * U,
-    filter: `blur(${14 * U}px) grayscale(.6) brightness(.8)`,
-    opacity: 0.9
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_camera.png"), style: {
-    position: "absolute",
-    left: -130 * U,
-    top: -80 * U + Math.cos(t) * 8 * U,
-    width: 420 * U,
-    height: 420 * U,
-    filter: `blur(${12 * U}px) grayscale(.7) brightness(.7)`,
-    opacity: 0.85
-  } }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: mesas[variante] || mesas.verde, salida, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, background: "repeating-linear-gradient(115deg, rgba(255,255,255,0) 0 160px, rgba(255,255,255,.06) 160px 260px)", opacity: 0.8 } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Grano, { id: "gcua", op: 0.2 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: px, top: py, width: pw, height: ph, transform: `rotate(-3deg) scale(${(0.92 + 0.08 * clamp(pe)).toFixed(4)})`, opacity: clamp(pe * 2) }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        inset: 0,
+        background: "#F7F5EF",
+        borderRadius: 10 * U,
+        boxShadow: `0 ${30 * U}px ${60 * U}px rgba(0,0,0,.45)`,
+        backgroundImage: `repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 ${62 * U}px, rgba(70,110,160,.18) ${62 * U}px ${64 * U}px)`
+      } }),
+      Array.from({ length: Math.floor(ph / (58 * U)) }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: -26 * U,
+        top: 40 * U + i * 58 * U,
+        width: 58 * U,
+        height: 22 * U,
+        borderRadius: 11 * U,
+        border: `${5 * U}px solid #9DA1A6`,
+        boxSizing: "border-box",
+        background: "transparent"
+      } }, i)),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 80 * U, right: 50 * U, top: 90 * U, fontFamily: FAMILIA.maquina, fontSize: tam, lineHeight: 1.05, color: "#151515" }, children: [
+        pal.map((w, i) => {
+          const desde = cuenta;
+          cuenta += w.length;
+          const vis = w.slice(0, clamp(escritas - desde, 0, w.length));
+          const esClave = clave && w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "") === clave.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+          if (/^\s+$/.test(w)) return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: vis ? " " : "" }, i);
+          return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { position: "relative", display: "inline-block" }, children: [
+            vis,
+            esClave && vis.length === w.length && /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { style: { position: "absolute", left: "-12%", top: "-18%", width: "124%", height: "136%", overflow: "visible" }, viewBox: "0 0 100 100", preserveAspectRatio: "none", children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "path",
+              {
+                d: "M 8 50 C 8 14, 92 10, 95 48 C 98 86, 10 92, 6 52 C 4 30, 30 16, 52 14",
+                fill: "none",
+                stroke: rojo,
+                strokeWidth: 3.2,
+                vectorEffect: "non-scaling-stroke",
+                pathLength: 1,
+                strokeDasharray: "1",
+                strokeDashoffset: (1 - circulo).toFixed(4),
+                style: { strokeWidth: 7 * U },
+                strokeLinecap: "round"
+              }
+            ) })
+          ] }, i);
+        }),
+        escritas < letras.length && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { opacity: t * 3 % 1 > 0.5 ? 1 : 0 }, children: "|" })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: 80 * U,
+        top: 90 * U + tam * 1.12 * Math.max(1, Math.ceil(titulo.length * tam * 0.6 / (pw - 130 * U))) + 10 * U,
+        width: (pw - 200 * U) * subrayado,
+        height: 8 * U,
+        borderRadius: 4 * U,
+        background: rojo,
+        transform: "rotate(-1deg)"
+      } }),
+      its.length > 0 && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: pw * 0.5,
+        top: ph * 0.6,
+        width: pw * 0.46,
+        background: "#FFFFFF",
+        padding: 26 * U,
+        boxShadow: `0 ${10 * U}px ${22 * U}px rgba(0,0,0,.25)`,
+        transform: `rotate(5deg) translateY(${((1 - Kit7_easeOut((t - 0.8) / 0.4)) * 60 * U).toFixed(1)}px)`,
+        opacity: clamp((t - 0.8) / 0.2)
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.maquina, fontSize: 46 * U, color: "#111", borderBottom: `${4 * U}px solid ${rojo}`, display: "inline-block", marginBottom: 10 * U }, children: "lista" }),
+        its.map((x, i) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.maquina, fontSize: 38 * U, color: "#222", opacity: clamp((t - 1 - i * 0.15) / 0.2) }, children: [
+          "\u2022 ",
+          x
+        ] }, i)),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("fluent/paperclip.png"), style: { position: "absolute", right: 20 * U, top: -50 * U, width: 90 * U, height: 90 * U, transform: "rotate(20deg)" } })
+      ] }),
+      sello && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        right: 40 * U,
+        top: ph * (its.length ? 0.38 : 0.52),
+        padding: `${10 * U}px ${26 * U}px`,
+        border: `${8 * U}px solid ${rojo}`,
+        borderRadius: 10 * U,
+        fontFamily: FAMILIA.estarcido,
+        fontSize: Math.min(84, 900 / Math.max(5, sello.length)) * U,
+        color: rojo,
+        opacity: clamp(ps * 2) * 0.88,
+        transform: `rotate(-9deg) scale(${(1.7 - 0.7 * clamp(ps)).toFixed(4)})`,
+        mixBlendMode: "multiply"
+      }, children: sello })
+    ] }),
+    nota && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: px + (vert ? 40 : 60) * U,
+      top: py + ph * (vert ? 0.58 : 0.55),
+      width: 420 * U,
+      height: 360 * U,
+      background: "#F3F1E8",
+      boxShadow: `0 ${16 * U}px ${30 * U}px rgba(0,0,0,.35)`,
+      transform: `rotate(-6deg) scale(${Math.max(1e-3, pn).toFixed(4)})`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: FAMILIA.maquina,
+      fontSize: Math.min(110, 900 / Math.max(4, nota.length)) * U,
+      color: "#151515",
+      textAlign: "center",
+      lineHeight: 1
+    }, children: [
+      nota,
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_pushpin.png"), style: { position: "absolute", left: 170 * U, top: -40 * U, width: 80 * U, height: 80 * U } })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_alarm_clock.png"), style: {
+      position: "absolute",
+      right: -120 * U,
+      bottom: -60 * U + Math.sin(t) * 10 * U,
+      width: 520 * U,
+      height: 520 * U,
+      filter: `blur(${14 * U}px) grayscale(.6) brightness(.8)`,
+      opacity: 0.9
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_camera.png"), style: {
+      position: "absolute",
+      left: -130 * U,
+      top: -80 * U + Math.cos(t) * 8 * U,
+      width: 420 * U,
+      height: 420 * U,
+      filter: `blur(${12 * U}px) grayscale(.7) brightness(.7)`,
+      opacity: 0.85
+    } })
+  ] });
 };
 const MESES = (/* unused pure expression or super */ null && ({ es: ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"] }));
 const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante = "naranja", acento, salida = 0.3 }) => {
@@ -5332,76 +6180,90 @@ const FechaE = ({ dia = 17, mes = "OCTUBRE", semana = "VIE", nota = "", variante
   const d0 = Math.max(1, Math.min(31, Math.round(Number(dia) || 1)));
   const papeles = [0, 1, 2, 3, 4, 5];
   const pc = Kit7_easeOut((t - 0.8) / 0.5);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: E.fondo, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: W / 2, top: H / 2, transform: `rotate(${giro.toFixed(3)}deg) scale(${escala.toFixed(4)})` } }, celdas.map(([f, c], i) => {
-    const centro = f === 0 && c === 0;
-    const n = d0 + f * 3 + c;
-    const x = c * (L + gap) - L / 2, y = f * (L + gap) - L / 2;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      position: "absolute",
-      left: x,
-      top: y,
-      width: L,
-      height: L,
-      background: centro ? `linear-gradient(150deg, ${foco0[0]}, ${foco0[1]})` : E.celda,
-      outline: `${gap / 2}px solid ${E.linea}`,
-      overflow: "hidden",
-      transform: centro ? `scale(${(0.9 + 0.1 * clamp(pf) + 0.04 * Math.max(0, pf - 1)).toFixed(4)})` : "none",
-      zIndex: centro ? 2 : 1,
-      boxShadow: centro ? `0 0 ${60 * U}px rgba(255,140,40,${(0.5 * clamp(pf)).toFixed(3)})` : "none"
-    } }, (!centro || pf > 0.05) && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: 30 * U,
-      bottom: 30 * U,
-      fontFamily: FAMILIA.condensada,
-      lineHeight: 0.85,
-      color: centro ? E.tinta : E.num,
-      opacity: centro ? 1 : 0.35,
-      fontSize: (centro ? 210 : 190) * U
-    } }, n > 0 && n <= 31 ? n : "", /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontSize: (centro ? Math.min(72, 560 / Math.max(4, mes.length)) : 44) * U, letterSpacing: "0.02em" } }, mes)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", right: 24 * U, top: 18 * U, fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: 44 * U, color: centro ? E.tinta : E.num, opacity: centro ? 0.95 : 0.4 } }, centro ? semana : ""), centro && /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gfec", op: 0.25, frec: 0.7 }));
-  })), papeles.map((k) => {
-    const a = k / papeles.length * Math.PI * 2 + 0.4, p = Kit7_easeOut((t - 0.45 - k * 0.04) / 0.7);
-    if (p <= 0 || p >= 1) return null;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
-      position: "absolute",
-      left: W / 2 + Math.cos(a) * p * W * 0.7 - 110 * U,
-      top: H / 2 + Math.sin(a) * p * H * 0.55 - 70 * U,
-      width: 220 * U,
-      height: 140 * U,
-      background: "linear-gradient(90deg, rgba(255,255,255,.95), rgba(220,220,220,.9))",
-      opacity: (1 - p) * 0.95,
-      transform: `rotate(${(a * 57 + p * 200).toFixed(1)}deg) scale(${(0.6 + p * 1.2).toFixed(3)})`,
-      filter: `blur(${(2 + p * 10) * U}px)`
-    } });
-  }), nota && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: W / 2 - 300 * U, width: 600 * U, top: H / 2 + L * 0.75, textAlign: "center", opacity: clamp((t - 0.8) / 0.3) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", left: -40 * U, top: -40 * U, width: 680 * U, height: 220 * U, overflow: "visible" }, viewBox: "0 0 680 220" }, /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "ellipse",
-    {
-      cx: "340",
-      cy: "110",
-      rx: "320",
-      ry: "80",
-      fill: "none",
-      stroke: "#FFFFFF",
-      strokeWidth: "5",
-      pathLength: 1,
-      strokeDasharray: "1",
-      strokeDashoffset: (1 - pc).toFixed(4),
-      style: { filter: "drop-shadow(0 0 10px rgba(255,255,255,.8))" },
-      transform: "rotate(-6 340 110)"
-    }
-  )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "relative",
-    display: "inline-block",
-    padding: `${10 * U}px ${26 * U}px`,
-    borderRadius: 40 * U,
-    background: "rgba(5,10,25,.82)",
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 48 * U,
-    color: Escenas9_hex(acento, "#FF8A1F"),
-    letterSpacing: "0.04em",
-    lineHeight: 1.1,
-    textTransform: "uppercase"
-  } }, nota)));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: E.fondo, salida, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: W / 2, top: H / 2, transform: `rotate(${giro.toFixed(3)}deg) scale(${escala.toFixed(4)})` }, children: celdas.map(([f, c], i) => {
+      const centro = f === 0 && c === 0;
+      const n = d0 + f * 3 + c;
+      const x = c * (L + gap) - L / 2, y = f * (L + gap) - L / 2;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: x,
+        top: y,
+        width: L,
+        height: L,
+        background: centro ? `linear-gradient(150deg, ${foco0[0]}, ${foco0[1]})` : E.celda,
+        outline: `${gap / 2}px solid ${E.linea}`,
+        overflow: "hidden",
+        transform: centro ? `scale(${(0.9 + 0.1 * clamp(pf) + 0.04 * Math.max(0, pf - 1)).toFixed(4)})` : "none",
+        zIndex: centro ? 2 : 1,
+        boxShadow: centro ? `0 0 ${60 * U}px rgba(255,140,40,${(0.5 * clamp(pf)).toFixed(3)})` : "none"
+      }, children: [
+        (!centro || pf > 0.05) && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "absolute",
+          left: 30 * U,
+          bottom: 30 * U,
+          fontFamily: FAMILIA.condensada,
+          lineHeight: 0.85,
+          color: centro ? E.tinta : E.num,
+          opacity: centro ? 1 : 0.35,
+          fontSize: (centro ? 210 : 190) * U
+        }, children: [
+          n > 0 && n <= 31 ? n : "",
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontSize: (centro ? Math.min(72, 560 / Math.max(4, mes.length)) : 44) * U, letterSpacing: "0.02em" }, children: mes })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", right: 24 * U, top: 18 * U, fontFamily: FAMILIA.redonda, fontWeight: 800, fontSize: 44 * U, color: centro ? E.tinta : E.num, opacity: centro ? 0.95 : 0.4 }, children: centro ? semana : "" }),
+        centro && /* @__PURE__ */ (0,jsx_runtime.jsx)(Grano, { id: "gfec", op: 0.25, frec: 0.7 })
+      ] }, i);
+    }) }),
+    papeles.map((k) => {
+      const a = k / papeles.length * Math.PI * 2 + 0.4, p = Kit7_easeOut((t - 0.45 - k * 0.04) / 0.7);
+      if (p <= 0 || p >= 1) return null;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: W / 2 + Math.cos(a) * p * W * 0.7 - 110 * U,
+        top: H / 2 + Math.sin(a) * p * H * 0.55 - 70 * U,
+        width: 220 * U,
+        height: 140 * U,
+        background: "linear-gradient(90deg, rgba(255,255,255,.95), rgba(220,220,220,.9))",
+        opacity: (1 - p) * 0.95,
+        transform: `rotate(${(a * 57 + p * 200).toFixed(1)}deg) scale(${(0.6 + p * 1.2).toFixed(3)})`,
+        filter: `blur(${(2 + p * 10) * U}px)`
+      } }, k);
+    }),
+    nota && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: W / 2 - 300 * U, width: 600 * U, top: H / 2 + L * 0.75, textAlign: "center", opacity: clamp((t - 0.8) / 0.3) }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { style: { position: "absolute", left: -40 * U, top: -40 * U, width: 680 * U, height: 220 * U, overflow: "visible" }, viewBox: "0 0 680 220", children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "ellipse",
+        {
+          cx: "340",
+          cy: "110",
+          rx: "320",
+          ry: "80",
+          fill: "none",
+          stroke: "#FFFFFF",
+          strokeWidth: "5",
+          pathLength: 1,
+          strokeDasharray: "1",
+          strokeDashoffset: (1 - pc).toFixed(4),
+          style: { filter: "drop-shadow(0 0 10px rgba(255,255,255,.8))" },
+          transform: "rotate(-6 340 110)"
+        }
+      ) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "relative",
+        display: "inline-block",
+        padding: `${10 * U}px ${26 * U}px`,
+        borderRadius: 40 * U,
+        background: "rgba(5,10,25,.82)",
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 800,
+        fontSize: 48 * U,
+        color: Escenas9_hex(acento, "#FF8A1F"),
+        letterSpacing: "0.04em",
+        lineHeight: 1.1,
+        textTransform: "uppercase"
+      }, children: nota })
+    ] })
+  ] });
 };
 const nombreMes = (m, idioma = "es") => (MESES[idioma] || MESES.es)[Math.max(0, Math.min(11, m - 1))];
 const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "morado", acento, salida = 0.3 }) => {
@@ -5417,64 +6279,73 @@ const VidrioE = ({ icono = "users", titulo = "COMUNIDAD", sub = "", variante = "
   const ry = -38 * (1 - clamp(p)) + Math.sin(t * 1.4) * 7, rx = 16 * (1 - clamp(p)) + Math.cos(t * 1.1) * 4;
   const brillo = clamp((t - 0.7) / 0.6);
   const late = 0.75 + 0.25 * Math.sin(t * 3);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: `radial-gradient(ellipse at 50% 42%, ${f1} 0%, ${f2} 75%)`, salida }, [0, 1, 2].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
-    position: "absolute",
-    left: W * (0.2 + 0.3 * k) + Math.sin(t * 0.7 + k) * 60 * U,
-    top: H * (0.25 + 0.25 * (k % 2)) + Math.cos(t * 0.6 + k) * 50 * U,
-    width: 520 * U,
-    height: 520 * U,
-    borderRadius: "50%",
-    background: `radial-gradient(circle, ${luz}33 0%, ${luz}00 70%)`
-  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cx - L / 2, top: cy - L / 2, width: L, height: L, perspective: 1400 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 0,
-    borderRadius: 110 * U,
-    transform: `rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg) scale(${(0.7 + 0.3 * clamp(p)).toFixed(4)})`,
-    background: "linear-gradient(160deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 45%, rgba(255,255,255,.08) 100%)",
-    border: `${3 * U}px solid rgba(255,255,255,.38)`,
-    boxShadow: `0 ${40 * U}px ${80 * U}px rgba(0,0,0,.55), inset 0 0 ${40 * U}px rgba(255,255,255,.06), 0 ${2 * U}px 0 ${luz}66`,
-    overflow: "hidden",
-    opacity: clamp(p * 2)
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: "-10%", right: "-10%", top: "38%", height: "40%", background: "rgba(255,255,255,.06)", borderRadius: "50%", transform: "rotate(-8deg)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    top: "-20%",
-    bottom: "-20%",
-    width: "30%",
-    left: `${(-40 + 180 * brillo).toFixed(1)}%`,
-    transform: "rotate(20deg)",
-    background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.28), rgba(255,255,255,0))"
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 0,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    filter: `drop-shadow(0 0 ${16 * U * late}px ${luz}) drop-shadow(0 0 ${36 * U * late}px ${luz}AA)`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Glifo, { nombre: icono, lado: L * 0.52, color: mezcla(luz, [255, 255, 255], 0.75) })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 0,
-    width: W,
-    top: cy + L / 2 + 70 * U,
-    textAlign: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: Math.min(96, 1200 / Math.max(5, titulo.length)) * U,
-    letterSpacing: `${(0.02 + 0.1 * (1 - Kit7_easeOut((t - 0.45) / 0.5))).toFixed(3)}em`,
-    color: "#FFFFFF",
-    opacity: clamp((t - 0.45) / 0.3),
-    textShadow: `0 0 ${20 * U}px ${luz}88`
-  } }, titulo), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 0,
-    width: W,
-    top: cy + L / 2 + 190 * U,
-    textAlign: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 400,
-    fontSize: 46 * U,
-    color: mezcla(luz, [255, 255, 255], 0.4),
-    opacity: clamp((t - 0.7) / 0.3)
-  } }, sub));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: `radial-gradient(ellipse at 50% 42%, ${f1} 0%, ${f2} 75%)`, salida, children: [
+    [0, 1, 2].map((k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: W * (0.2 + 0.3 * k) + Math.sin(t * 0.7 + k) * 60 * U,
+      top: H * (0.25 + 0.25 * (k % 2)) + Math.cos(t * 0.6 + k) * 50 * U,
+      width: 520 * U,
+      height: 520 * U,
+      borderRadius: "50%",
+      background: `radial-gradient(circle, ${luz}33 0%, ${luz}00 70%)`
+    } }, k)),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: cx - L / 2, top: cy - L / 2, width: L, height: L, perspective: 1400 * U }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      inset: 0,
+      borderRadius: 110 * U,
+      transform: `rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg) scale(${(0.7 + 0.3 * clamp(p)).toFixed(4)})`,
+      background: "linear-gradient(160deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 45%, rgba(255,255,255,.08) 100%)",
+      border: `${3 * U}px solid rgba(255,255,255,.38)`,
+      boxShadow: `0 ${40 * U}px ${80 * U}px rgba(0,0,0,.55), inset 0 0 ${40 * U}px rgba(255,255,255,.06), 0 ${2 * U}px 0 ${luz}66`,
+      overflow: "hidden",
+      opacity: clamp(p * 2)
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: "-10%", right: "-10%", top: "38%", height: "40%", background: "rgba(255,255,255,.06)", borderRadius: "50%", transform: "rotate(-8deg)" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        top: "-20%",
+        bottom: "-20%",
+        width: "30%",
+        left: `${(-40 + 180 * brillo).toFixed(1)}%`,
+        transform: "rotate(20deg)",
+        background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.28), rgba(255,255,255,0))"
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        filter: `drop-shadow(0 0 ${16 * U * late}px ${luz}) drop-shadow(0 0 ${36 * U * late}px ${luz}AA)`
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Glifo, { nombre: icono, lado: L * 0.52, color: mezcla(luz, [255, 255, 255], 0.75) }) })
+    ] }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: 0,
+      width: W,
+      top: cy + L / 2 + 70 * U,
+      textAlign: "center",
+      fontFamily: FAMILIA.inter,
+      fontWeight: 700,
+      fontSize: Math.min(96, 1200 / Math.max(5, titulo.length)) * U,
+      letterSpacing: `${(0.02 + 0.1 * (1 - Kit7_easeOut((t - 0.45) / 0.5))).toFixed(3)}em`,
+      color: "#FFFFFF",
+      opacity: clamp((t - 0.45) / 0.3),
+      textShadow: `0 0 ${20 * U}px ${luz}88`
+    }, children: titulo }),
+    sub && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: 0,
+      width: W,
+      top: cy + L / 2 + 190 * U,
+      textAlign: "center",
+      fontFamily: FAMILIA.inter,
+      fontWeight: 400,
+      fontSize: 46 * U,
+      color: mezcla(luz, [255, 255, 255], 0.4),
+      opacity: clamp((t - 0.7) / 0.3)
+    }, children: sub })
+  ] });
 };
 const ChatE = ({ mensaje = "\xBFCu\xE1nto cuesta?", respuesta = "", etiqueta = "", variante = "morado", acento, salida = 0.3 }) => {
   useFuentes();
@@ -5493,50 +6364,62 @@ const ChatE = ({ mensaje = "\xBFCu\xE1nto cuesta?", respuesta = "", etiqueta = "
   const crece = Kit7_easeOut((t - tEsc + 0.15) / 0.35);
   const pr = respuesta ? S(tEsc + mensaje.length * 0.045 + 0.4, { damping: 13 }) : 0;
   const ancho = entre(BW, Math.min(W * 0.84, Math.max(BW, mensaje.length * 34 * U + 120 * U)), crece);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cx - 600 * U, top: cy - 400 * U, width: 1200 * U, height: 900 * U, background: `radial-gradient(ellipse, ${ac}22 0%, ${ac}00 65%)` } }), etiqueta && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 70 * U, top: 90 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 40 * U, color: "#FFFFFF", opacity: 0.9 } }, etiqueta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cx - BW * 0.2,
-    top: cy - BH * 0.05,
-    width: BW,
-    height: BH,
-    borderRadius: 70 * U,
-    opacity: clamp(p2 * 2),
-    background: `linear-gradient(135deg, ${mezcla(ac, [255, 255, 255], 0.15)}, ${ac})`,
-    transform: `scale(${(0.7 + 0.3 * clamp(p2)).toFixed(4)})`,
-    boxShadow: `0 0 ${60 * U}px ${ac}66`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", right: 90 * U, bottom: -46 * U, width: 0, height: 0, borderLeft: `${50 * U}px solid transparent`, borderTop: `${60 * U}px solid ${ac}` } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cx - BW * 0.82 - (ancho - BW) * 0.3,
-    top: cy - BH * 0.62,
-    width: ancho,
-    minHeight: BH * 0.94,
-    borderRadius: 70 * U,
-    opacity: clamp(p1 * 2),
-    background: "linear-gradient(135deg, rgba(40,40,46,.92), rgba(18,18,22,.86))",
-    border: `${2 * U}px solid rgba(255,255,255,.22)`,
-    boxShadow: `0 ${30 * U}px ${60 * U}px rgba(0,0,0,.6), inset ${-60 * U}px 0 ${90 * U}px ${ac}55`,
-    transform: `scale(${(0.7 + 0.3 * clamp(p1)).toFixed(4)})`,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: `${40 * U}px ${50 * U}px`,
-    boxSizing: "border-box"
-  } }, t < tEsc + 0.05 ? /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", gap: 26 * U } }, [0, 1, 2].map((k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: { width: 52 * U, height: 52 * U, borderRadius: "50%", background: "#FFF", transform: `translateY(${(Math.sin(t * 9 - k * 0.8) * 10 * U).toFixed(1)}px)` } }))) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: Math.min(72, 1500 / Math.max(10, mensaje.length)) * U, color: "#FFFFFF", lineHeight: 1.15, textAlign: "left" } }, visibles, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { opacity: escribe < 1 && t * 3 % 1 > 0.5 ? 1 : 0 } }, "|")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 90 * U, bottom: -46 * U, width: 0, height: 0, borderRight: `${50 * U}px solid transparent`, borderTop: `${60 * U}px solid rgba(26,26,30,.9)` } })), respuesta && pr > 0.01 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    right: W * 0.08,
-    top: cy + BH * 0.75,
-    maxWidth: W * 0.7,
-    borderRadius: 60 * U,
-    padding: `${34 * U}px ${46 * U}px`,
-    background: ac,
-    fontFamily: FAMILIA.inter,
-    fontWeight: 600,
-    fontSize: 56 * U,
-    color: "#FFFFFF",
-    transform: `scale(${Math.max(1e-3, pr).toFixed(4)})`,
-    transformOrigin: "100% 0%",
-    boxShadow: `0 0 ${40 * U}px ${ac}88`
-  } }, respuesta));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo, salida, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: cx - 600 * U, top: cy - 400 * U, width: 1200 * U, height: 900 * U, background: `radial-gradient(ellipse, ${ac}22 0%, ${ac}00 65%)` } }),
+    etiqueta && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 70 * U, top: 90 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 40 * U, color: "#FFFFFF", opacity: 0.9 }, children: etiqueta }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: cx - BW * 0.2,
+      top: cy - BH * 0.05,
+      width: BW,
+      height: BH,
+      borderRadius: 70 * U,
+      opacity: clamp(p2 * 2),
+      background: `linear-gradient(135deg, ${mezcla(ac, [255, 255, 255], 0.15)}, ${ac})`,
+      transform: `scale(${(0.7 + 0.3 * clamp(p2)).toFixed(4)})`,
+      boxShadow: `0 0 ${60 * U}px ${ac}66`
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", right: 90 * U, bottom: -46 * U, width: 0, height: 0, borderLeft: `${50 * U}px solid transparent`, borderTop: `${60 * U}px solid ${ac}` } }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: cx - BW * 0.82 - (ancho - BW) * 0.3,
+      top: cy - BH * 0.62,
+      width: ancho,
+      minHeight: BH * 0.94,
+      borderRadius: 70 * U,
+      opacity: clamp(p1 * 2),
+      background: "linear-gradient(135deg, rgba(40,40,46,.92), rgba(18,18,22,.86))",
+      border: `${2 * U}px solid rgba(255,255,255,.22)`,
+      boxShadow: `0 ${30 * U}px ${60 * U}px rgba(0,0,0,.6), inset ${-60 * U}px 0 ${90 * U}px ${ac}55`,
+      transform: `scale(${(0.7 + 0.3 * clamp(p1)).toFixed(4)})`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: `${40 * U}px ${50 * U}px`,
+      boxSizing: "border-box"
+    }, children: [
+      t < tEsc + 0.05 ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", gap: 26 * U }, children: [0, 1, 2].map((k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 52 * U, height: 52 * U, borderRadius: "50%", background: "#FFF", transform: `translateY(${(Math.sin(t * 9 - k * 0.8) * 10 * U).toFixed(1)}px)` } }, k)) }) : /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: Math.min(72, 1500 / Math.max(10, mensaje.length)) * U, color: "#FFFFFF", lineHeight: 1.15, textAlign: "left" }, children: [
+        visibles,
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { opacity: escribe < 1 && t * 3 % 1 > 0.5 ? 1 : 0 }, children: "|" })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 90 * U, bottom: -46 * U, width: 0, height: 0, borderRight: `${50 * U}px solid transparent`, borderTop: `${60 * U}px solid rgba(26,26,30,.9)` } })
+    ] }),
+    respuesta && pr > 0.01 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      right: W * 0.08,
+      top: cy + BH * 0.75,
+      maxWidth: W * 0.7,
+      borderRadius: 60 * U,
+      padding: `${34 * U}px ${46 * U}px`,
+      background: ac,
+      fontFamily: FAMILIA.inter,
+      fontWeight: 600,
+      fontSize: 56 * U,
+      color: "#FFFFFF",
+      transform: `scale(${Math.max(1e-3, pr).toFixed(4)})`,
+      transformOrigin: "100% 0%",
+      boxShadow: `0 0 ${40 * U}px ${ac}88`
+    }, children: respuesta })
+  ] });
 };
 const CollageE = ({
   imagen = "recortes/trama/money_bag.webp",
@@ -5562,60 +6445,75 @@ const CollageE = ({
   const L = (vert ? 720 : 640) * U;
   const ix = vert ? W / 2 : W * 0.33, iy = vert ? H * 0.33 : H * 0.5;
   const tx = vert ? W / 2 : W * 0.7, ty = vert ? H * 0.62 : H * 0.42;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gcol", op: oscuro ? 0.3 : 0.12 }), !oscuro && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "path",
-    {
-      d: `M ${W * 0.62} ${-50} C ${W * 0.35} ${H * 0.25}, ${W * 1.05} ${H * 0.45}, ${W * 0.7} ${H + 50}`,
-      fill: "none",
-      stroke: "rgba(150,150,150,.35)",
-      strokeWidth: 150 * U,
-      pathLength: 1,
-      strokeDasharray: "1",
-      strokeDashoffset: (1 - ps).toFixed(4)
-    }
-  ), Array.from({ length: 9 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: i, x1: W * 0.08 + i * 9 * U, y1: H * 0.06, x2: W * 0.08 + i * 9 * U, y2: H * 0.06 + 70 * U, stroke: "#111", strokeWidth: (azar(i) * 5 + 2) * U, opacity: 0.8 }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: ix + (vert ? 120 : 140) * U - 260 * U + Math.sin(t) * 12 * U,
-    top: iy - 330 * U,
-    width: 520 * U,
-    height: 520 * U,
-    borderRadius: "50%",
-    background: forma,
-    transform: `scale(${(0.3 + 0.7 * Kit7_easeOut((t - 0.2) / 0.5)).toFixed(4)})`,
-    opacity: oscuro ? 0.9 : 1
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: ix - 330 * U,
-    top: iy + 120 * U,
-    width: 0,
-    height: 0,
-    borderLeft: `${120 * U}px solid transparent`,
-    borderRight: `${120 * U}px solid transparent`,
-    borderBottom: `${200 * U}px solid ${menta ? forma : rojo}`,
-    transform: `rotate(${(-12 + Math.sin(t * 0.8) * 4).toFixed(2)}deg) scale(${Kit7_easeOut((t - 0.35) / 0.4).toFixed(4)})`,
-    opacity: 0.95
-  } }), oscuro && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: ix - L * 0.7, top: iy - L * 0.7, width: L * 1.4, height: L * 1.4, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,.18), rgba(255,255,255,0) 65%)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(imagen), style: {
-    position: "absolute",
-    left: ix - L / 2,
-    top: iy - L / 2,
-    width: L,
-    height: L,
-    objectFit: "contain",
-    transform: `scale(${(1.4 - 0.4 * clamp(pi)).toFixed(4)}) rotate(${((1 - clamp(pi)) * -14 - 4 + Math.sin(t * 1.2) * 1.5).toFixed(2)}deg)`,
-    opacity: clamp(pi * 3),
-    filter: `drop-shadow(${10 * U}px ${20 * U}px ${20 * U}px rgba(0,0,0,${oscuro ? 0.6 : 0.3}))`
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: tx - W * 0.45, width: W * 0.9, top: ty - 100 * U, textAlign: vert ? "center" : "left" } }, linea1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 64 * U, color: tinta, opacity: clamp((t - 0.35) / 0.3), letterSpacing: "-0.02em" } }, linea1), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: Math.min(170, 1500 / Math.max(5, clave.length)) * U,
-    lineHeight: 1,
-    letterSpacing: "-0.045em",
-    color: rojo,
-    transform: `scale(${(1.2 - 0.2 * Kit7_easeOut((t - 0.55) / 0.35)).toFixed(4)})`,
-    transformOrigin: vert ? "50% 50%" : "0% 50%",
-    opacity: clamp((t - 0.55) / 0.15),
-    textShadow: oscuro ? `0 0 ${18 * U}px ${rojo}, 0 0 ${50 * U}px ${rojo}88` : "none"
-  } }, clave), linea2 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 60 * U, color: tinta, opacity: clamp((t - 0.85) / 0.3), letterSpacing: "-0.02em" } }, linea2)));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo, salida, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Grano, { id: "gcol", op: oscuro ? 0.3 : 0.12 }),
+    !oscuro && /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { style: { position: "absolute", inset: 0, width: W, height: H }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d: `M ${W * 0.62} ${-50} C ${W * 0.35} ${H * 0.25}, ${W * 1.05} ${H * 0.45}, ${W * 0.7} ${H + 50}`,
+          fill: "none",
+          stroke: "rgba(150,150,150,.35)",
+          strokeWidth: 150 * U,
+          pathLength: 1,
+          strokeDasharray: "1",
+          strokeDashoffset: (1 - ps).toFixed(4)
+        }
+      ),
+      Array.from({ length: 9 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: W * 0.08 + i * 9 * U, y1: H * 0.06, x2: W * 0.08 + i * 9 * U, y2: H * 0.06 + 70 * U, stroke: "#111", strokeWidth: (azar(i) * 5 + 2) * U, opacity: 0.8 }, i))
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: ix + (vert ? 120 : 140) * U - 260 * U + Math.sin(t) * 12 * U,
+      top: iy - 330 * U,
+      width: 520 * U,
+      height: 520 * U,
+      borderRadius: "50%",
+      background: forma,
+      transform: `scale(${(0.3 + 0.7 * Kit7_easeOut((t - 0.2) / 0.5)).toFixed(4)})`,
+      opacity: oscuro ? 0.9 : 1
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: ix - 330 * U,
+      top: iy + 120 * U,
+      width: 0,
+      height: 0,
+      borderLeft: `${120 * U}px solid transparent`,
+      borderRight: `${120 * U}px solid transparent`,
+      borderBottom: `${200 * U}px solid ${menta ? forma : rojo}`,
+      transform: `rotate(${(-12 + Math.sin(t * 0.8) * 4).toFixed(2)}deg) scale(${Kit7_easeOut((t - 0.35) / 0.4).toFixed(4)})`,
+      opacity: 0.95
+    } }),
+    oscuro && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: ix - L * 0.7, top: iy - L * 0.7, width: L * 1.4, height: L * 1.4, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,.18), rgba(255,255,255,0) 65%)" } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(imagen), style: {
+      position: "absolute",
+      left: ix - L / 2,
+      top: iy - L / 2,
+      width: L,
+      height: L,
+      objectFit: "contain",
+      transform: `scale(${(1.4 - 0.4 * clamp(pi)).toFixed(4)}) rotate(${((1 - clamp(pi)) * -14 - 4 + Math.sin(t * 1.2) * 1.5).toFixed(2)}deg)`,
+      opacity: clamp(pi * 3),
+      filter: `drop-shadow(${10 * U}px ${20 * U}px ${20 * U}px rgba(0,0,0,${oscuro ? 0.6 : 0.3}))`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: tx - W * 0.45, width: W * 0.9, top: ty - 100 * U, textAlign: vert ? "center" : "left" }, children: [
+      linea1 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 64 * U, color: tinta, opacity: clamp((t - 0.35) / 0.3), letterSpacing: "-0.02em" }, children: linea1 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: Math.min(170, 1500 / Math.max(5, clave.length)) * U,
+        lineHeight: 1,
+        letterSpacing: "-0.045em",
+        color: rojo,
+        transform: `scale(${(1.2 - 0.2 * Kit7_easeOut((t - 0.55) / 0.35)).toFixed(4)})`,
+        transformOrigin: vert ? "50% 50%" : "0% 50%",
+        opacity: clamp((t - 0.55) / 0.15),
+        textShadow: oscuro ? `0 0 ${18 * U}px ${rojo}, 0 0 ${50 * U}px ${rojo}88` : "none"
+      }, children: clave }),
+      linea2 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 60 * U, color: tinta, opacity: clamp((t - 0.85) / 0.3), letterSpacing: "-0.02em" }, children: linea2 })
+    ] })
+  ] });
 };
 const MovilE = ({
   usuario = "@tu_marca",
@@ -5657,124 +6555,149 @@ const MovilE = ({
   const etiquetas = idioma.startsWith("en") ? ["posts", "followers", "following", accion === "like" ? "Like" : "Follow", "Following"] : ["publicaciones", "seguidores", "seguidos", accion === "like" ? "Me gusta" : "Seguir", "Siguiendo"];
   const palabras = titulo.split(/\s+/);
   const ck = clave.toLowerCase();
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, !claro && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 0,
-    backgroundImage: `linear-gradient(rgba(255,255,255,.04) ${2 * U}px, transparent ${2 * U}px), linear-gradient(90deg, rgba(255,255,255,.04) ${2 * U}px, transparent ${2 * U}px)`,
-    backgroundSize: `${150 * U}px ${150 * U}px`
-  } }), claro && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 0,
-    backgroundImage: `linear-gradient(rgba(0,0,0,.06) ${2 * U}px, transparent ${2 * U}px), linear-gradient(90deg, rgba(0,0,0,.06) ${2 * U}px, transparent ${2 * U}px)`,
-    backgroundSize: `${150 * U}px ${150 * U}px`
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "path",
-    {
-      d: `M ${-40} ${H * 0.72} C ${W * 0.3} ${H * 0.55}, ${W * 0.55} ${H * 0.95}, ${W + 40} ${H * 0.62}`,
-      fill: "none",
-      stroke: ac,
-      strokeWidth: 10 * U,
-      strokeLinecap: "round",
-      pathLength: 1,
-      strokeDasharray: "1",
-      strokeDashoffset: (1 - Kit7_easeOut((t - 0.3) / 0.8)).toFixed(4),
-      opacity: 0.85
-    }
-  )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: px, top: py, width: PW, height: PH, perspective: 1600 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 0,
-    borderRadius: 80 * U,
-    background: "#0B0B0C",
-    border: `${10 * U}px solid #2A2A2E`,
-    boxSizing: "border-box",
-    overflow: "hidden",
-    transform: `rotateY(${ry.toFixed(2)}deg) translateY(${((1 - clamp(pe)) * 300 * U).toFixed(1)}px)`,
-    boxShadow: `0 ${40 * U}px ${80 * U}px rgba(0,0,0,.55)`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 10 * U,
-    borderRadius: 66 * U,
-    background: claro ? "#FFFFFF" : "#121214",
-    overflow: "hidden",
-    padding: `${70 * U}px ${34 * U}px`,
-    boxSizing: "border-box",
-    fontFamily: FAMILIA.inter,
-    color: claro ? "#111" : "#FFF"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: "50%", top: 18 * U, width: 150 * U, height: 36 * U, marginLeft: -75 * U, borderRadius: 18 * U, background: "#000" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontWeight: 700, fontSize: 34 * U, marginBottom: 26 * U } }, usuario), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 26 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 150 * U, height: 150 * U, borderRadius: "50%", padding: 7 * U, background: "linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)", boxSizing: "border-box" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    width: "100%",
-    height: "100%",
-    borderRadius: "50%",
-    background: ac,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: 700,
-    fontSize: 60 * U,
-    color: "#FFF",
-    border: `${5 * U}px solid ${claro ? "#FFF" : "#121214"}`
-  } }, (usuario.replace("@", "")[0] || "C").toUpperCase())), [[num("48", cuenta), etiquetas[0]], [num(seguidores, cuenta), etiquetas[1]], [num("312", cuenta), etiquetas[2]]].map(([a, b], i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { textAlign: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontWeight: 700, fontSize: 34 * U } }, a), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontSize: 22 * U, opacity: 0.7 } }, b)))), [0.85, 0.65, 0.75].map((w, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { width: `${w * 100}%`, height: 16 * U, borderRadius: 8 * U, background: claro ? "#E2E2E2" : "#2A2A2E", marginTop: (i ? 12 : 28) * U } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "relative",
-    marginTop: 28 * U,
-    height: 64 * U,
-    borderRadius: 16 * U,
-    background: pulsado ? claro ? "#E9E9E9" : "#2A2A2E" : "#0A84FF",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: 700,
-    fontSize: 30 * U,
-    color: pulsado ? claro ? "#111" : "#FFF" : "#FFF",
-    transform: `scale(${(1 - 0.06 * Math.sin(Math.PI * clamp((t - tPulsa + 0.1) / 0.2))).toFixed(4)})`
-  } }, pulsado ? etiquetas[4] : etiquetas[3], anillo > 0 && anillo < 1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    width: 300 * U * anillo,
-    height: 300 * U * anillo,
-    marginLeft: -150 * U * anillo,
-    marginTop: -150 * U * anillo,
-    borderRadius: "50%",
-    border: `${4 * U}px solid rgba(255,255,255,${(1 - anillo).toFixed(3)})`
-  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 * U, marginTop: 30 * U } }, Array.from({ length: 9 }).map((_, i) => {
-    const img = imgs[i % Math.max(1, imgs.length)];
-    const pk = clamp((t - 0.5 - i * 0.06) / 0.25);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      aspectRatio: "1",
-      background: img ? "#000" : `linear-gradient(${45 + i * 30}deg, ${mezcla(ac, [255, 255, 255], 0.2 + 0.06 * i)}, ${mezcla(ac, [0, 0, 0], 0.15 + 0.07 * (i % 4))})`,
-      overflow: "hidden",
-      opacity: pk,
-      transform: `scale(${(0.8 + 0.2 * pk).toFixed(3)})`
-    } }, img && /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(img), style: { width: "100%", height: "100%", objectFit: "cover" } }));
-  })))), t > tPulsa - 0.5 && t < tPulsa + 0.7 && /* @__PURE__ */ (react_namespaceFn().createElement)(
-    esm/* Img */.E9,
-    {
-      src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_backhand_index_pointing_up.png"),
-      style: {
-        position: "absolute",
-        left: PW * 0.48,
-        top: PH * 0.45 + (1 - Kit7_easeOut((t - tPulsa + 0.5) / 0.4)) * 200 * U - (t > tPulsa ? 10 * U : 0),
-        width: 150 * U,
-        height: 150 * U,
-        transform: "rotate(-8deg)",
-        filter: `drop-shadow(0 ${8 * U}px ${12 * U}px rgba(0,0,0,.5))`
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo, salida, children: [
+    !claro && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      inset: 0,
+      backgroundImage: `linear-gradient(rgba(255,255,255,.04) ${2 * U}px, transparent ${2 * U}px), linear-gradient(90deg, rgba(255,255,255,.04) ${2 * U}px, transparent ${2 * U}px)`,
+      backgroundSize: `${150 * U}px ${150 * U}px`
+    } }),
+    claro && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      inset: 0,
+      backgroundImage: `linear-gradient(rgba(0,0,0,.06) ${2 * U}px, transparent ${2 * U}px), linear-gradient(90deg, rgba(0,0,0,.06) ${2 * U}px, transparent ${2 * U}px)`,
+      backgroundSize: `${150 * U}px ${150 * U}px`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { style: { position: "absolute", inset: 0, width: W, height: H }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      "path",
+      {
+        d: `M ${-40} ${H * 0.72} C ${W * 0.3} ${H * 0.55}, ${W * 0.55} ${H * 0.95}, ${W + 40} ${H * 0.62}`,
+        fill: "none",
+        stroke: ac,
+        strokeWidth: 10 * U,
+        strokeLinecap: "round",
+        pathLength: 1,
+        strokeDasharray: "1",
+        strokeDashoffset: (1 - Kit7_easeOut((t - 0.3) / 0.8)).toFixed(4),
+        opacity: 0.85
       }
-    }
-  )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: vert ? 70 * U : W * 0.06, width: vert ? W - 140 * U : W * 0.36, top: vert ? H * 0.06 : H * 0.36, textAlign: vert ? "center" : "left" } }, palabras.map((w, i) => {
-    const es = w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "") === ck;
-    const p = Kit7_easeOut((t - 0.25 - i * 0.08) / 0.35);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i, style: {
-      display: "inline-block",
-      marginRight: "0.22em",
-      fontFamily: es ? FAMILIA.display : FAMILIA.inter,
-      fontStyle: es ? "italic" : "normal",
-      fontWeight: es ? 400 : 700,
-      fontSize: (es ? 104 : 80) * U,
-      lineHeight: 1.05,
-      color: es ? ac : tinta,
-      opacity: p,
-      transform: `translateY(${((1 - p) * 20 * U).toFixed(1)}px)`
-    } }, w);
-  })));
+    ) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: px, top: py, width: PW, height: PH, perspective: 1600 * U }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        inset: 0,
+        borderRadius: 80 * U,
+        background: "#0B0B0C",
+        border: `${10 * U}px solid #2A2A2E`,
+        boxSizing: "border-box",
+        overflow: "hidden",
+        transform: `rotateY(${ry.toFixed(2)}deg) translateY(${((1 - clamp(pe)) * 300 * U).toFixed(1)}px)`,
+        boxShadow: `0 ${40 * U}px ${80 * U}px rgba(0,0,0,.55)`
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        inset: 10 * U,
+        borderRadius: 66 * U,
+        background: claro ? "#FFFFFF" : "#121214",
+        overflow: "hidden",
+        padding: `${70 * U}px ${34 * U}px`,
+        boxSizing: "border-box",
+        fontFamily: FAMILIA.inter,
+        color: claro ? "#111" : "#FFF"
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: "50%", top: 18 * U, width: 150 * U, height: 36 * U, marginLeft: -75 * U, borderRadius: 18 * U, background: "#000" } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontWeight: 700, fontSize: 34 * U, marginBottom: 26 * U }, children: usuario }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 26 * U }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 150 * U, height: 150 * U, borderRadius: "50%", padding: 7 * U, background: "linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)", boxSizing: "border-box" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            background: ac,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 700,
+            fontSize: 60 * U,
+            color: "#FFF",
+            border: `${5 * U}px solid ${claro ? "#FFF" : "#121214"}`
+          }, children: (usuario.replace("@", "")[0] || "C").toUpperCase() }) }),
+          [[num("48", cuenta), etiquetas[0]], [num(seguidores, cuenta), etiquetas[1]], [num("312", cuenta), etiquetas[2]]].map(([a, b], i) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { textAlign: "center" }, children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontWeight: 700, fontSize: 34 * U }, children: a }),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontSize: 22 * U, opacity: 0.7 }, children: b })
+          ] }, i))
+        ] }),
+        [0.85, 0.65, 0.75].map((w, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: `${w * 100}%`, height: 16 * U, borderRadius: 8 * U, background: claro ? "#E2E2E2" : "#2A2A2E", marginTop: (i ? 12 : 28) * U } }, i)),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "relative",
+          marginTop: 28 * U,
+          height: 64 * U,
+          borderRadius: 16 * U,
+          background: pulsado ? claro ? "#E9E9E9" : "#2A2A2E" : "#0A84FF",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+          fontSize: 30 * U,
+          color: pulsado ? claro ? "#111" : "#FFF" : "#FFF",
+          transform: `scale(${(1 - 0.06 * Math.sin(Math.PI * clamp((t - tPulsa + 0.1) / 0.2))).toFixed(4)})`
+        }, children: [
+          pulsado ? etiquetas[4] : etiquetas[3],
+          anillo > 0 && anillo < 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: 300 * U * anillo,
+            height: 300 * U * anillo,
+            marginLeft: -150 * U * anillo,
+            marginTop: -150 * U * anillo,
+            borderRadius: "50%",
+            border: `${4 * U}px solid rgba(255,255,255,${(1 - anillo).toFixed(3)})`
+          } })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 * U, marginTop: 30 * U }, children: Array.from({ length: 9 }).map((_, i) => {
+          const img = imgs[i % Math.max(1, imgs.length)];
+          const pk = clamp((t - 0.5 - i * 0.06) / 0.25);
+          return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            aspectRatio: "1",
+            background: img ? "#000" : `linear-gradient(${45 + i * 30}deg, ${mezcla(ac, [255, 255, 255], 0.2 + 0.06 * i)}, ${mezcla(ac, [0, 0, 0], 0.15 + 0.07 * (i % 4))})`,
+            overflow: "hidden",
+            opacity: pk,
+            transform: `scale(${(0.8 + 0.2 * pk).toFixed(3)})`
+          }, children: img && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(img), style: { width: "100%", height: "100%", objectFit: "cover" } }) }, i);
+        }) })
+      ] }) }),
+      t > tPulsa - 0.5 && t < tPulsa + 0.7 && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        esm/* Img */.E9,
+        {
+          src: (0,esm/* staticFile */.dQ)("stickers/rcs_emoji_backhand_index_pointing_up.png"),
+          style: {
+            position: "absolute",
+            left: PW * 0.48,
+            top: PH * 0.45 + (1 - Kit7_easeOut((t - tPulsa + 0.5) / 0.4)) * 200 * U - (t > tPulsa ? 10 * U : 0),
+            width: 150 * U,
+            height: 150 * U,
+            transform: "rotate(-8deg)",
+            filter: `drop-shadow(0 ${8 * U}px ${12 * U}px rgba(0,0,0,.5))`
+          }
+        }
+      )
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: vert ? 70 * U : W * 0.06, width: vert ? W - 140 * U : W * 0.36, top: vert ? H * 0.06 : H * 0.36, textAlign: vert ? "center" : "left" }, children: palabras.map((w, i) => {
+      const es = w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "") === ck;
+      const p = Kit7_easeOut((t - 0.25 - i * 0.08) / 0.35);
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
+        display: "inline-block",
+        marginRight: "0.22em",
+        fontFamily: es ? FAMILIA.display : FAMILIA.inter,
+        fontStyle: es ? "italic" : "normal",
+        fontWeight: es ? 400 : 700,
+        fontSize: (es ? 104 : 80) * U,
+        lineHeight: 1.05,
+        color: es ? ac : tinta,
+        opacity: p,
+        transform: `translateY(${((1 - p) * 20 * U).toFixed(1)}px)`
+      }, children: w }, i);
+    }) })
+  ] });
 };
 const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
   useFuentes();
@@ -5798,68 +6721,92 @@ const TijerasE = ({ titulo = "", variante = "neon", salida = 0.3 }) => {
     if (llega <= 0 || va >= 1) return null;
     const y = cy + (desdeArriba ? -1 : 1) * ((1 - llega) * 600 * U + va * 700 * U) + (desdeArriba ? -80 * U : 80 * U);
     const ab = 22 * (1 - cierra) + 4;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: { position: "absolute", left: x - 90 * U, top: y - 180 * U, width: 180 * U, height: 360 * U, transform: `rotate(${desdeArriba ? 180 : 0}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, transformOrigin: "50% 45%", transform: `rotate(${-ab}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Glifo, { nombre: "scissors", lado: 180 * U, color: tinta, relleno: false, grosor: 1.6 })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, transformOrigin: "50% 45%", transform: `rotate(${ab}deg) scaleX(-1)`, opacity: 0.85 } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Glifo, { nombre: "scissors", lado: 180 * U, color: tinta, relleno: false, grosor: 1.6 })));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x - 90 * U, top: y - 180 * U, width: 180 * U, height: 360 * U, transform: `rotate(${desdeArriba ? 180 : 0}deg)` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, transformOrigin: "50% 45%", transform: `rotate(${-ab}deg)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Glifo, { nombre: "scissors", lado: 180 * U, color: tinta, relleno: false, grosor: 1.6 }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, transformOrigin: "50% 45%", transform: `rotate(${ab}deg) scaleX(-1)`, opacity: 0.85 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Glifo, { nombre: "scissors", lado: 180 * U, color: tinta, relleno: false, grosor: 1.6 }) })
+    ] }, k);
   };
   const trozos = [0, 1, 2];
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo, salida }, titulo && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 0,
-    width: W,
-    top: H * 0.1,
-    textAlign: "center",
-    fontFamily: FAMILIA.redonda,
-    fontWeight: 800,
-    fontSize: 110 * U,
-    color: tinta,
-    opacity: clamp((t - 0.2) / 0.3),
-    letterSpacing: "0.04em"
-  } }, titulo), aCinta < 0.999 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cx - CW / 2,
-    top: cy - CH / 2,
-    width: CW,
-    height: CH,
-    borderRadius: 30 * U,
-    background: grad,
-    overflow: "hidden",
-    transform: `scale(${(0.6 + 0.4 * fase1).toFixed(4)}) scaleY(${(1 - 0.55 * aCinta).toFixed(4)})`,
-    opacity: (1 - aCinta) * clamp(fase1 * 2),
-    boxShadow: `0 ${20 * U}px ${50 * U}px rgba(0,0,0,.45)`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    width: 0,
-    height: 0,
-    marginLeft: -30 * U,
-    marginTop: -45 * U,
-    borderTop: `${45 * U}px solid transparent`,
-    borderBottom: `${45 * U}px solid transparent`,
-    borderLeft: `${75 * U}px solid rgba(255,255,255,.95)`
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 40 * U, right: 40 * U, bottom: 34 * U, height: 6 * U, background: "rgba(255,255,255,.4)", borderRadius: 3 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: `${(clamp(t / 0.75) * 100).toFixed(1)}%`, height: "100%", background: "#FFF", borderRadius: 3 * U } }))), aCinta > 1e-3 && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("defs", null, /* @__PURE__ */ (react_namespaceFn().createElement)("linearGradient", { id: "gcinta", x1: "0", x2: "1" }, /* @__PURE__ */ (react_namespaceFn().createElement)("stop", { offset: "0", stopColor: "#F2E43A" }), /* @__PURE__ */ (react_namespaceFn().createElement)("stop", { offset: ".45", stopColor: "#9DF3D8" }), /* @__PURE__ */ (react_namespaceFn().createElement)("stop", { offset: ".75", stopColor: "#E7A6FF" }), /* @__PURE__ */ (react_namespaceFn().createElement)("stop", { offset: "1", stopColor: "#D946EF" }))), trozos.map((k) => {
-    const x0 = cx - CW / 2 + k * CW / 3, x1 = x0 + CW / 3;
-    const corte = k > 0 && t > corte1 || k > 1 && t > corte2 || k === 0 && t > corte1;
-    const dx = (k - 1) * sep * 260 * U, dy = -sep * (80 + k * 40) * U + (k === 1 ? sep * 120 * U : 0);
-    const rot = sep * (k - 1) * 14;
-    const ond = (x) => Math.sin(x / CW * Math.PI * 3 + t * 3) * 34 * U * (1 - sep);
-    const alto = CH * 0.45 * (1 - sep) + 230 * U * sep;
-    const pts = Array.from({ length: 9 }).map((_, j) => {
-      const x = x0 + (x1 - x0) * j / 8;
-      return [x, cy + ond(x)];
-    });
-    const d = "M " + pts.map((p) => `${p[0].toFixed(1)} ${(p[1] - alto / 2).toFixed(1)}`).join(" L ") + " L " + [...pts].reverse().map((p) => `${p[0].toFixed(1)} ${(p[1] + alto / 2).toFixed(1)}`).join(" L ") + " Z";
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("g", { key: k, transform: `translate(${dx.toFixed(1)} ${dy.toFixed(1)}) rotate(${rot.toFixed(2)} ${(x0 + x1) / 2} ${cy})`, opacity: aCinta }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d, fill: "url(#gcinta)", stroke: corte ? claro ? "#F2F2F0" : "#151515" : "none", strokeWidth: 6 * U }), sep > 0.3 && /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: `M ${(x0 + x1) / 2 - 20 * U} ${cy - 30 * U} L ${(x0 + x1) / 2 + 30 * U} ${cy} L ${(x0 + x1) / 2 - 20 * U} ${cy + 30 * U} Z`, fill: "#FFF", opacity: (sep - 0.3) / 0.7 }));
-  }), sep > 0.05 && Array.from({ length: 14 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "circle",
-    {
-      key: i,
-      cx: cx + (azar(i) - 0.5) * CW * 1.3 * sep,
-      cy: cy + (azar(i + 7) - 0.5) * 420 * U * sep - sep * 60 * U,
-      r: (6 + azar(i + 3) * 10) * U,
-      fill: ["#F2E43A", "#9DF3D8", "#E7A6FF", "#7CF29B"][i % 4],
-      opacity: sep * 0.8
-    }
-  ))), tijera(cx - CW / 6, corte1, true, "a"), tijera(cx + CW / 6, corte2, false, "b"));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo, salida, children: [
+    titulo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: 0,
+      width: W,
+      top: H * 0.1,
+      textAlign: "center",
+      fontFamily: FAMILIA.redonda,
+      fontWeight: 800,
+      fontSize: 110 * U,
+      color: tinta,
+      opacity: clamp((t - 0.2) / 0.3),
+      letterSpacing: "0.04em"
+    }, children: titulo }),
+    aCinta < 0.999 && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: cx - CW / 2,
+      top: cy - CH / 2,
+      width: CW,
+      height: CH,
+      borderRadius: 30 * U,
+      background: grad,
+      overflow: "hidden",
+      transform: `scale(${(0.6 + 0.4 * fase1).toFixed(4)}) scaleY(${(1 - 0.55 * aCinta).toFixed(4)})`,
+      opacity: (1 - aCinta) * clamp(fase1 * 2),
+      boxShadow: `0 ${20 * U}px ${50 * U}px rgba(0,0,0,.45)`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        width: 0,
+        height: 0,
+        marginLeft: -30 * U,
+        marginTop: -45 * U,
+        borderTop: `${45 * U}px solid transparent`,
+        borderBottom: `${45 * U}px solid transparent`,
+        borderLeft: `${75 * U}px solid rgba(255,255,255,.95)`
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 40 * U, right: 40 * U, bottom: 34 * U, height: 6 * U, background: "rgba(255,255,255,.4)", borderRadius: 3 * U }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: `${(clamp(t / 0.75) * 100).toFixed(1)}%`, height: "100%", background: "#FFF", borderRadius: 3 * U } }) })
+    ] }),
+    aCinta > 1e-3 && /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { style: { position: "absolute", inset: 0, width: W, height: H, overflow: "visible" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("linearGradient", { id: "gcinta", x1: "0", x2: "1", children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "0", stopColor: "#F2E43A" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: ".45", stopColor: "#9DF3D8" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: ".75", stopColor: "#E7A6FF" }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("stop", { offset: "1", stopColor: "#D946EF" })
+      ] }) }),
+      trozos.map((k) => {
+        const x0 = cx - CW / 2 + k * CW / 3, x1 = x0 + CW / 3;
+        const corte = k > 0 && t > corte1 || k > 1 && t > corte2 || k === 0 && t > corte1;
+        const dx = (k - 1) * sep * 260 * U, dy = -sep * (80 + k * 40) * U + (k === 1 ? sep * 120 * U : 0);
+        const rot = sep * (k - 1) * 14;
+        const ond = (x) => Math.sin(x / CW * Math.PI * 3 + t * 3) * 34 * U * (1 - sep);
+        const alto = CH * 0.45 * (1 - sep) + 230 * U * sep;
+        const pts = Array.from({ length: 9 }).map((_, j) => {
+          const x = x0 + (x1 - x0) * j / 8;
+          return [x, cy + ond(x)];
+        });
+        const d = "M " + pts.map((p) => `${p[0].toFixed(1)} ${(p[1] - alto / 2).toFixed(1)}`).join(" L ") + " L " + [...pts].reverse().map((p) => `${p[0].toFixed(1)} ${(p[1] + alto / 2).toFixed(1)}`).join(" L ") + " Z";
+        return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${dx.toFixed(1)} ${dy.toFixed(1)}) rotate(${rot.toFixed(2)} ${(x0 + x1) / 2} ${cy})`, opacity: aCinta, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "url(#gcinta)", stroke: corte ? claro ? "#F2F2F0" : "#151515" : "none", strokeWidth: 6 * U }),
+          sep > 0.3 && /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: `M ${(x0 + x1) / 2 - 20 * U} ${cy - 30 * U} L ${(x0 + x1) / 2 + 30 * U} ${cy} L ${(x0 + x1) / 2 - 20 * U} ${cy + 30 * U} Z`, fill: "#FFF", opacity: (sep - 0.3) / 0.7 })
+        ] }, k);
+      }),
+      sep > 0.05 && Array.from({ length: 14 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "circle",
+        {
+          cx: cx + (azar(i) - 0.5) * CW * 1.3 * sep,
+          cy: cy + (azar(i + 7) - 0.5) * 420 * U * sep - sep * 60 * U,
+          r: (6 + azar(i + 3) * 10) * U,
+          fill: ["#F2E43A", "#9DF3D8", "#E7A6FF", "#7CF29B"][i % 4],
+          opacity: sep * 0.8
+        },
+        i
+      ))
+    ] }),
+    tijera(cx - CW / 6, corte1, true, "a"),
+    tijera(cx + CW / 6, corte2, false, "b")
+  ] });
 };
 const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", acento, salida = 0.3, fondo = "" }) => {
   useFuentes();
@@ -5872,7 +6819,7 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
   const q = clamp(t / Math.max(1, fin));
   const zoom = 1.16 - 0.12 * suave(q), dx = (azar(palabra.length) - 0.5) * 60 * U * q, dy = -30 * U * q;
   const pp = Kit7_easeOut((t - 0.25) / 0.45);
-  const etiqueta = palabra && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, width: W, top: vert ? H * 0.12 : H * 0.1, textAlign: "center", opacity: pp, transform: `translateY(${((1 - pp) * 30 * U).toFixed(1)}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: {
+  const etiqueta = palabra && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, width: W, top: vert ? H * 0.12 : H * 0.1, textAlign: "center", opacity: pp, transform: `translateY(${((1 - pp) * 30 * U).toFixed(1)}px)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
     display: "inline-block",
     fontFamily: FAMILIA.redonda,
     fontWeight: 800,
@@ -5883,8 +6830,8 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
     textShadow: `0 ${6 * U}px ${28 * U}px rgba(0,0,0,.65)`,
     padding: `0 ${20 * U}px`,
     borderBottom: `${10 * U}px solid ${ac}`
-  } }, palabra));
-  const pie = credito && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  }, children: palabra }) });
+  const pie = credito && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: 28 * U,
     bottom: 26 * U,
@@ -5894,9 +6841,9 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
     fontSize: 20 * U,
     color: "rgba(255,255,255,.72)",
     textShadow: `0 ${1 * U}px ${4 * U}px rgba(0,0,0,.8)`
-  } }, credito);
-  const imagen = (extra) => foto ? /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, ...extra } }) : null;
-  const detras = fondoU ? /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(120% 80% at 50% 40%, ${mezcla(fondoU, [255, 255, 255], 0.1)} 0%, ${fondoU} 70%)` } }) : foto ? /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto), style: {
+  }, children: credito });
+  const imagen = (extra) => foto ? /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, ...extra } }) : null;
+  const detras = fondoU ? /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(120% 80% at 50% 40%, ${mezcla(fondoU, [255, 255, 255], 0.1)} 0%, ${fondoU} 70%)` } }) : foto ? /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(foto), style: {
     position: "absolute",
     inset: -60 * U,
     width: W + 120 * U,
@@ -5967,173 +6914,218 @@ const FotoE = ({ foto = "", palabra = "", credito = "", variante = "completa", a
         transform: `perspective(${1400 * U}px) rotateY(${giro.toFixed(2)}deg) rotateX(${5 .toFixed(1)}deg) scale(${(0.86 + 0.14 * clamp(pc)).toFixed(4)})`
       };
     }
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, variante === "neon" && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: W / 2 - Lw,
-      top: cy - Lh * 0.7,
-      width: Lw * 2,
-      height: Lh * 1.4,
-      borderRadius: "50%",
-      background: `radial-gradient(closest-side, ${ac}55, transparent)`
-    } }), fuera && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: fuera }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { ...base, ...marco } }, imagen()), variante === "polaroid" && palabra && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: W / 2 - Lw / 2,
-      top: cy + Lh / 2 + 22 * U,
-      width: Lw,
-      textAlign: "center",
-      fontFamily: FAMILIA.redonda,
-      fontWeight: 700,
-      fontSize: Math.min(70, 900 / Math.max(5, palabra.length)) * U,
-      color: "#22252B",
-      opacity: Kit7_easeOut((t - 0.35) / 0.4),
-      transform: fuera ? fuera.transform : void 0,
-      transformOrigin: `${Lw / 2}px ${-(Lh / 2 + 22 * U)}px`
-    } }, palabra), variante !== "polaroid" && etiqueta, pie);
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: fondoU || "#0B0B0D", salida, children: [
+      detras,
+      variante === "neon" && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: W / 2 - Lw,
+        top: cy - Lh * 0.7,
+        width: Lw * 2,
+        height: Lh * 1.4,
+        borderRadius: "50%",
+        background: `radial-gradient(closest-side, ${ac}55, transparent)`
+      } }),
+      fuera && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: fuera }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { ...base, ...marco }, children: imagen() }),
+      variante === "polaroid" && palabra && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: W / 2 - Lw / 2,
+        top: cy + Lh / 2 + 22 * U,
+        width: Lw,
+        textAlign: "center",
+        fontFamily: FAMILIA.redonda,
+        fontWeight: 700,
+        fontSize: Math.min(70, 900 / Math.max(5, palabra.length)) * U,
+        color: "#22252B",
+        opacity: Kit7_easeOut((t - 0.35) / 0.4),
+        transform: fuera ? fuera.transform : void 0,
+        transformOrigin: `${Lw / 2}px ${-(Lh / 2 + 22 * U)}px`
+      }, children: palabra }),
+      variante !== "polaroid" && etiqueta,
+      pie
+    ] });
   }
   if (variante === "ventana" || variante === "dividida" || variante === "cinta") {
     const pe = Kit7_easeOut((t - 0.05) / 0.5);
     if (variante === "dividida") {
       const alto = H * (vert ? 0.56 : 0.62) * (0.4 + 0.6 * pe);
-      return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0C12", salida, oy: 20 }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-        position: "absolute",
-        left: 0,
-        top: 0,
-        width: W,
-        height: alto,
-        overflow: "hidden",
-        borderRadius: `0 0 ${56 * U}px ${56 * U}px`,
-        boxShadow: `0 ${20 * U}px ${60 * U}px rgba(0,0,0,.5)`
-      } }, imagen()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-        position: "absolute",
-        left: W * 0.1,
-        top: alto + 40 * U,
-        width: W * 0.8,
-        height: 8 * U,
-        borderRadius: 4 * U,
-        background: ac,
-        transform: `scaleX(${Kit7_easeOut((t - 0.3) / 0.5).toFixed(4)})`,
-        transformOrigin: "left",
-        boxShadow: `0 0 ${20 * U}px ${ac}`
-      } }), palabra && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-        position: "absolute",
-        left: W * 0.1,
-        top: alto + 70 * U,
-        width: W * 0.8,
-        fontFamily: FAMILIA.redonda,
-        fontWeight: 800,
-        color: "#FFFFFF",
-        fontSize: Math.min(140, 1300 / Math.max(5, palabra.length)) * U,
-        textTransform: "uppercase",
-        lineHeight: 1,
-        opacity: Kit7_easeOut((t - 0.35) / 0.4),
-        transform: `translateY(${((1 - Kit7_easeOut((t - 0.35) / 0.4)) * 30 * U).toFixed(1)}px)`
-      } }, palabra), pie);
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: fondoU || "#0B0C12", salida, oy: 20, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: W,
+          height: alto,
+          overflow: "hidden",
+          borderRadius: `0 0 ${56 * U}px ${56 * U}px`,
+          boxShadow: `0 ${20 * U}px ${60 * U}px rgba(0,0,0,.5)`
+        }, children: imagen() }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: W * 0.1,
+          top: alto + 40 * U,
+          width: W * 0.8,
+          height: 8 * U,
+          borderRadius: 4 * U,
+          background: ac,
+          transform: `scaleX(${Kit7_easeOut((t - 0.3) / 0.5).toFixed(4)})`,
+          transformOrigin: "left",
+          boxShadow: `0 0 ${20 * U}px ${ac}`
+        } }),
+        palabra && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: W * 0.1,
+          top: alto + 70 * U,
+          width: W * 0.8,
+          fontFamily: FAMILIA.redonda,
+          fontWeight: 800,
+          color: "#FFFFFF",
+          fontSize: Math.min(140, 1300 / Math.max(5, palabra.length)) * U,
+          textTransform: "uppercase",
+          lineHeight: 1,
+          opacity: Kit7_easeOut((t - 0.35) / 0.4),
+          transform: `translateY(${((1 - Kit7_easeOut((t - 0.35) / 0.4)) * 30 * U).toFixed(1)}px)`
+        }, children: palabra }),
+        pie
+      ] });
     }
     if (variante === "ventana") {
       const Lw2 = W * 0.86, Lh2 = Math.min(H * 0.56, Lw2 * 1.25), barra = 74 * U;
-      return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0D14", salida }, detras, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-        position: "absolute",
-        left: W / 2 - Lw2 * 0.7,
-        top: cy - Lh2 * 0.6,
-        width: Lw2 * 1.4,
-        height: Lh2 * 1.2,
-        borderRadius: "50%",
-        background: `radial-gradient(closest-side, ${ac}44, transparent)`
-      } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-        position: "absolute",
-        left: W / 2 - Lw2 / 2,
-        top: cy - Lh2 / 2,
-        width: Lw2,
-        height: Lh2 + barra,
-        borderRadius: 34 * U,
-        overflow: "hidden",
-        background: "rgba(20,22,30,.86)",
-        border: `${1.5 * U}px solid rgba(255,255,255,.18)`,
-        boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.55)`,
-        opacity: clamp(pc * 2),
-        transform: `translateY(${((1 - clamp(pc)) * 90 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * clamp(pc)).toFixed(4)})`
-      } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { height: barra, display: "flex", alignItems: "center", gap: 14 * U, padding: `0 ${26 * U}px`, borderBottom: `${1.5 * U}px solid rgba(255,255,255,.1)` } }, ["#FF5F57", "#FEBC2E", "#28C840"].map((c) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: c, style: { width: 20 * U, height: 20 * U, borderRadius: "50%", background: c } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-        marginLeft: 16 * U,
-        fontFamily: FAMILIA.inter,
-        fontWeight: 700,
-        fontSize: 28 * U,
-        color: "rgba(255,255,255,.85)",
-        letterSpacing: "0.04em",
-        textTransform: "uppercase"
-      } }, palabra)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: Lw2, height: Lh2, overflow: "hidden" } }, imagen())), pie);
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: fondoU || "#0B0D14", salida, children: [
+        detras,
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: W / 2 - Lw2 * 0.7,
+          top: cy - Lh2 * 0.6,
+          width: Lw2 * 1.4,
+          height: Lh2 * 1.2,
+          borderRadius: "50%",
+          background: `radial-gradient(closest-side, ${ac}44, transparent)`
+        } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "absolute",
+          left: W / 2 - Lw2 / 2,
+          top: cy - Lh2 / 2,
+          width: Lw2,
+          height: Lh2 + barra,
+          borderRadius: 34 * U,
+          overflow: "hidden",
+          background: "rgba(20,22,30,.86)",
+          border: `${1.5 * U}px solid rgba(255,255,255,.18)`,
+          boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.55)`,
+          opacity: clamp(pc * 2),
+          transform: `translateY(${((1 - clamp(pc)) * 90 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * clamp(pc)).toFixed(4)})`
+        }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { height: barra, display: "flex", alignItems: "center", gap: 14 * U, padding: `0 ${26 * U}px`, borderBottom: `${1.5 * U}px solid rgba(255,255,255,.1)` }, children: [
+            ["#FF5F57", "#FEBC2E", "#28C840"].map((c) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 20 * U, height: 20 * U, borderRadius: "50%", background: c } }, c)),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+              marginLeft: 16 * U,
+              fontFamily: FAMILIA.inter,
+              fontWeight: 700,
+              fontSize: 28 * U,
+              color: "rgba(255,255,255,.85)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase"
+            }, children: palabra })
+          ] }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: Lw2, height: Lh2, overflow: "hidden" }, children: imagen() })
+        ] }),
+        pie
+      ] });
     }
     const Lw = W * 1.08, Lh = Math.min(H * 0.42, W * 0.82), hueco = 40 * U;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: W / 2 - Lw / 2,
-      top: cy - Lh / 2 - hueco,
-      width: Lw,
-      height: Lh + 2 * hueco,
-      background: "#111214",
-      boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
-      transform: `rotate(-3deg) translateX(${((1 - pe) * -W * 0.6).toFixed(1)}px)`
-    } }, [0, 1].map((fila) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: fila, style: {
-      position: "absolute",
-      left: 0,
-      top: fila ? Lh + hueco + 10 * U : 10 * U,
-      width: Lw,
-      height: hueco - 20 * U,
-      display: "flex",
-      gap: 26 * U,
-      paddingLeft: t * 120 % (52 * U),
-      overflow: "hidden"
-    } }, Array.from({ length: 30 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { flex: "none", width: 26 * U, height: "100%", borderRadius: 5 * U, background: "#E9E6DE" } })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 30 * U, top: hueco, width: Lw - 60 * U, height: Lh, overflow: "hidden" } }, imagen({ filter: "saturate(1.1) contrast(1.05)" }))), etiqueta, pie);
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: fondoU || "#0B0B0D", salida, children: [
+      detras,
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: W / 2 - Lw / 2,
+        top: cy - Lh / 2 - hueco,
+        width: Lw,
+        height: Lh + 2 * hueco,
+        background: "#111214",
+        boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
+        transform: `rotate(-3deg) translateX(${((1 - pe) * -W * 0.6).toFixed(1)}px)`
+      }, children: [
+        [0, 1].map((fila) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: 0,
+          top: fila ? Lh + hueco + 10 * U : 10 * U,
+          width: Lw,
+          height: hueco - 20 * U,
+          display: "flex",
+          gap: 26 * U,
+          paddingLeft: t * 120 % (52 * U),
+          overflow: "hidden"
+        }, children: Array.from({ length: 30 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { flex: "none", width: 26 * U, height: "100%", borderRadius: 5 * U, background: "#E9E6DE" } }, i)) }, fila)),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 30 * U, top: hueco, width: Lw - 60 * U, height: Lh, overflow: "hidden" }, children: imagen({ filter: "saturate(1.1) contrast(1.05)" }) })
+      ] }),
+      etiqueta,
+      pie
+    ] });
   }
   if (variante === "marco" || variante === "circulo") {
     const circ = variante === "circulo";
     const L = circ ? Math.min(W, H) * 0.78 : Math.min(W * 0.84, H * 0.5);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: fondoU || "#0B0B0D", salida }, detras, circ && /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { style: { position: "absolute", inset: 0, width: W, height: H } }, /* @__PURE__ */ (react_namespaceFn().createElement)(
-      "circle",
-      {
-        cx: W / 2,
-        cy: H * (vert ? 0.46 : 0.5),
-        r: L / 2 + 22 * U,
-        fill: "none",
-        stroke: ac,
-        strokeWidth: 8 * U,
-        pathLength: 1,
-        strokeDasharray: "1",
-        strokeDashoffset: (1 - Kit7_easeOut((t - 0.15) / 0.6)).toFixed(4),
-        style: { filter: `drop-shadow(0 0 ${16 * U}px ${ac})` }
-      }
-    )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: W / 2 - L / 2,
-      top: H * (vert ? 0.46 : 0.5) - (circ ? L / 2 : L * 0.62),
-      width: L,
-      height: circ ? L : L * 1.24,
-      borderRadius: circ ? "50%" : 8 * U,
-      overflow: "hidden",
-      background: "#222",
-      border: circ ? "none" : `${18 * U}px solid #FAFAF7`,
-      boxSizing: "border-box",
-      boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
-      opacity: clamp(pc * 2),
-      transform: `rotate(${circ ? 0 : (-3 + (1 - clamp(pc)) * -10).toFixed(2)}deg) scale(${(0.8 + 0.2 * clamp(pc)).toFixed(4)})`
-    } }, foto && /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)` } })), !circ && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: W / 2 - 110 * U,
-      top: H * (vert ? 0.46 : 0.5) - L * 0.62 - 30 * U,
-      width: 220 * U,
-      height: 60 * U,
-      background: "rgba(238,226,196,.85)",
-      transform: `rotate(-4deg) scaleX(${Kit7_easeOut((t - 0.3) / 0.25).toFixed(4)})`,
-      boxShadow: `0 ${2 * U}px ${6 * U}px rgba(0,0,0,.25)`
-    } }), etiqueta, pie);
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: fondoU || "#0B0B0D", salida, children: [
+      detras,
+      circ && /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { style: { position: "absolute", inset: 0, width: W, height: H }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "circle",
+        {
+          cx: W / 2,
+          cy: H * (vert ? 0.46 : 0.5),
+          r: L / 2 + 22 * U,
+          fill: "none",
+          stroke: ac,
+          strokeWidth: 8 * U,
+          pathLength: 1,
+          strokeDasharray: "1",
+          strokeDashoffset: (1 - Kit7_easeOut((t - 0.15) / 0.6)).toFixed(4),
+          style: { filter: `drop-shadow(0 0 ${16 * U}px ${ac})` }
+        }
+      ) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: W / 2 - L / 2,
+        top: H * (vert ? 0.46 : 0.5) - (circ ? L / 2 : L * 0.62),
+        width: L,
+        height: circ ? L : L * 1.24,
+        borderRadius: circ ? "50%" : 8 * U,
+        overflow: "hidden",
+        background: "#222",
+        border: circ ? "none" : `${18 * U}px solid #FAFAF7`,
+        boxSizing: "border-box",
+        boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.6)`,
+        opacity: clamp(pc * 2),
+        transform: `rotate(${circ ? 0 : (-3 + (1 - clamp(pc)) * -10).toFixed(2)}deg) scale(${(0.8 + 0.2 * clamp(pc)).toFixed(4)})`
+      }, children: foto && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(foto), style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)` } }) }),
+      !circ && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: W / 2 - 110 * U,
+        top: H * (vert ? 0.46 : 0.5) - L * 0.62 - 30 * U,
+        width: 220 * U,
+        height: 60 * U,
+        background: "rgba(238,226,196,.85)",
+        transform: `rotate(-4deg) scaleX(${Kit7_easeOut((t - 0.3) / 0.25).toFixed(4)})`,
+        boxShadow: `0 ${2 * U}px ${6 * U}px rgba(0,0,0,.25)`
+      } }),
+      etiqueta,
+      pie
+    ] });
   }
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(Escena, { fondo: "#000", salida }, foto && /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: src(foto), style: {
-    position: "absolute",
-    inset: 0,
-    width: W,
-    height: H,
-    objectFit: "cover",
-    transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 62%, rgba(0,0,0,.5) 100%)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)(Grano, { id: "gfoto", op: 0.12, frec: 0.9 }), etiqueta, pie);
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(Escena, { fondo: "#000", salida, children: [
+    foto && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: src(foto), style: {
+      position: "absolute",
+      inset: 0,
+      width: W,
+      height: H,
+      objectFit: "cover",
+      transform: `scale(${zoom.toFixed(4)}) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 62%, rgba(0,0,0,.5) 100%)" } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Grano, { id: "gfoto", op: 0.12, frec: 0.9 }),
+    etiqueta,
+    pie
+  ] });
 };
 
 ;// ./node_modules/three/build/three.core.js
@@ -96683,6 +97675,7 @@ function createAreaLightMaterial( intensity ) {
 
 
 
+
 const v3 = (a) => new Vector3(a[0], a[1], a[2]);
 const ARRIBA = new Vector3(0, 1, 0);
 const EJE_Y = new Vector3(0, 1, 0);
@@ -96760,9 +97753,9 @@ const Hueso = ({ a, b, r1, r2, mat }) => {
   const largo = d.length();
   const q = new Quaternion().setFromUnitVectors(EJE_Y, d.clone().normalize());
   const geo = (0,react_namespaceFn().useMemo)(() => new CylinderGeometry(r2, r1, 1, 28, 1, true), [r1, r2]);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: geo, material: mat, position: a.clone().add(b).multiplyScalar(0.5), quaternion: q, scale: [1, Math.max(1e-4, largo), 1], castShadow: true });
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { geometry: geo, material: mat, position: a.clone().add(b).multiplyScalar(0.5), quaternion: q, scale: [1, Math.max(1e-4, largo), 1], castShadow: true });
 };
-const Bola = ({ c, r, mat, q }) => /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: esfera, material: mat, position: c, scale: typeof r === "number" ? [r, r, r] : r, quaternion: q, castShadow: true });
+const Bola = ({ c, r, mat, q }) => /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { geometry: esfera, material: mat, position: c, scale: typeof r === "number" ? [r, r, r] : r, quaternion: q, castShadow: true });
 const Maniqui = ({ c, mat, k = 1 }) => {
   const qT = new Quaternion().setFromRotationMatrix(c.base);
   const dirMano = (h, m) => m.clone().sub(h).normalize();
@@ -96779,7 +97772,36 @@ const Maniqui = ({ c, mat, k = 1 }) => {
   };
   const MI = mano(c.cI, c.mI), MD = mano(c.cD, c.mD), PI = pie(c.aI), PD = pie(c.aD);
   const cuello0 = c.pecho.clone().add(c.cabeza.clone().sub(c.pecho).multiplyScalar(0.15));
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("group", null, /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: torsoGeo, material: mat, position: c.pelvis, quaternion: qT, scale: [k * 1.04, k * (L.torso / 0.5), k * 0.74], castShadow: true }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.pelvis.clone().add(new Vector3(0, -0.01, 0)), r: [0.158 * k, 0.11 * k, 0.118 * k], mat, q: qT }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: cuello0, b: c.cabeza, r1: 0.046 * k, r2: 0.042 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.cabeza, r: [0.13 * k, 0.156 * k, 0.14 * k], mat, q: qT }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.hI, r: 0.07 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.hD, r: 0.07 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.hI, b: c.cI, r1: 0.066 * k, r2: 0.05 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.hD, b: c.cD, r1: 0.066 * k, r2: 0.05 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.cI, r: 0.05 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.cD, r: 0.05 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.cI, b: c.mI, r1: 0.05 * k, r2: 0.038 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.cD, b: c.mD, r1: 0.05 * k, r2: 0.038 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.mI, r: 0.038 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.mD, r: 0.038 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: MI.c, r: [0.045 * k, 0.074 * k, 0.03 * k], mat, q: MI.q }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: MD.c, r: [0.045 * k, 0.074 * k, 0.03 * k], mat, q: MD.q }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.kI, r: 0.092 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.kD, r: 0.092 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.kI, b: c.rI, r1: 0.095 * k, r2: 0.068 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.kD, b: c.rD, r1: 0.095 * k, r2: 0.068 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.rI, r: 0.068 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.rD, r: 0.068 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.rI, b: c.aI, r1: 0.066 * k, r2: 0.046 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Hueso, { a: c.rD, b: c.aD, r1: 0.066 * k, r2: 0.046 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.aI, r: 0.046 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: c.aD, r: 0.046 * k, mat }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: PI.c, r: [0.05 * k, 0.042 * k, 0.118 * k], mat, q: PI.q }), /* @__PURE__ */ (react_namespaceFn().createElement)(Bola, { c: PD.c, r: [0.05 * k, 0.042 * k, 0.118 * k], mat, q: PD.q }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("group", { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { geometry: torsoGeo, material: mat, position: c.pelvis, quaternion: qT, scale: [k * 1.04, k * (L.torso / 0.5), k * 0.74], castShadow: true }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.pelvis.clone().add(new Vector3(0, -0.01, 0)), r: [0.158 * k, 0.11 * k, 0.118 * k], mat, q: qT }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: cuello0, b: c.cabeza, r1: 0.046 * k, r2: 0.042 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.cabeza, r: [0.13 * k, 0.156 * k, 0.14 * k], mat, q: qT }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.hI, r: 0.07 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.hD, r: 0.07 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: c.hI, b: c.cI, r1: 0.066 * k, r2: 0.05 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: c.hD, b: c.cD, r1: 0.066 * k, r2: 0.05 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.cI, r: 0.05 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.cD, r: 0.05 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: c.cI, b: c.mI, r1: 0.05 * k, r2: 0.038 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: c.cD, b: c.mD, r1: 0.05 * k, r2: 0.038 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.mI, r: 0.038 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.mD, r: 0.038 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: MI.c, r: [0.045 * k, 0.074 * k, 0.03 * k], mat, q: MI.q }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: MD.c, r: [0.045 * k, 0.074 * k, 0.03 * k], mat, q: MD.q }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.kI, r: 0.092 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.kD, r: 0.092 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: c.kI, b: c.rI, r1: 0.095 * k, r2: 0.068 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: c.kD, b: c.rD, r1: 0.095 * k, r2: 0.068 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.rI, r: 0.068 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.rD, r: 0.068 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: c.rI, b: c.aI, r1: 0.066 * k, r2: 0.046 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Hueso, { a: c.rD, b: c.aD, r1: 0.066 * k, r2: 0.046 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.aI, r: 0.046 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: c.aD, r: 0.046 * k, mat }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: PI.c, r: [0.05 * k, 0.042 * k, 0.118 * k], mat, q: PI.q }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Bola, { c: PD.c, r: [0.05 * k, 0.042 * k, 0.118 * k], mat, q: PD.q })
+  ] });
 };
 const mezclaV = (a, b, q) => [a[0] + (b[0] - a[0]) * q, a[1] + (b[1] - a[1]) * q, a[2] + (b[2] - a[2]) * q];
 const mezclaN = (a, b, q) => (a || 0) + ((b || 0) - (a || 0)) * q;
@@ -97029,7 +98051,10 @@ const Estela = ({ puntos, q, grosor }) => {
     const n = g.index ? g.index.count : 0;
     g.setDrawRange(0, Math.floor(n * clamp(q) / 6) * 6);
   }
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("group", null, /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: geo }, /* @__PURE__ */ (react_namespaceFn().createElement)("meshBasicMaterial", { color: "#E2B8FF", toneMapped: false })), /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { geometry: halo }, /* @__PURE__ */ (react_namespaceFn().createElement)("meshBasicMaterial", { color: "#8A2BE2", transparent: true, opacity: 0.28, blending: (/* inlined export .AdditiveBlending */2), depthWrite: false, toneMapped: false })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("group", { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { geometry: geo, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("meshBasicMaterial", { color: "#E2B8FF", toneMapped: false }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { geometry: halo, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("meshBasicMaterial", { color: "#8A2BE2", transparent: true, opacity: 0.28, blending: (/* inlined export .AdditiveBlending */2), depthWrite: false, toneMapped: false }) })
+  ] });
 };
 const Pictos3DE = ({ accion = "ayudar", texto = "", salida = 0.3 }) => {
   useFuentes();
@@ -97068,68 +98093,101 @@ const Pictos3DE = ({ accion = "ayudar", texto = "", salida = 0.3 }) => {
   }), []);
   const sal = clamp((t - (dur - salida)) / Math.max(0.01, salida));
   const ent = clamp(t / 0.35);
-  const halo = (c, alto, s) => texHalo && /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [c.pelvis.x, alto + 3e-3, c.pelvis.z], rotation: [-PI2, 0, 0] }, /* @__PURE__ */ (react_namespaceFn().createElement)("planeGeometry", { args: [1.6 * s, 1.6 * s] }), /* @__PURE__ */ (react_namespaceFn().createElement)("meshBasicMaterial", { map: texHalo, transparent: true, depthWrite: false, blending: (/* inlined export .AdditiveBlending */2), toneMapped: false }));
+  const halo = (c, alto, s) => texHalo && /* @__PURE__ */ (0,jsx_runtime.jsxs)("mesh", { position: [c.pelvis.x, alto + 3e-3, c.pelvis.z], rotation: [-PI2, 0, 0], children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("planeGeometry", { args: [1.6 * s, 1.6 * s] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("meshBasicMaterial", { map: texHalo, transparent: true, depthWrite: false, blending: (/* inlined export .AdditiveBlending */2), toneMapped: false })
+  ] });
   const altoM = A.escalon ? A.escalon : 0;
   const crece = A.grafica ? Pictos3D_suave(clamp((q - 0.05) / 0.7)) : 0;
   const estelas = [[[-4, 3.2, -3], [-1.5, 2.6, -2.6], [1.2, 3.1, -2.4], [4, 2.2, -2.8]], [[-4.2, 0.9, -2.5], [-2, 1.6, -2.2], [0.6, 0.7, -2.6], [4, 1.4, -2.2]]];
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "radial-gradient(110% 80% at 60% 38%, #1A0B2A 0%, #07050B 55%, #020203 100%)", opacity: ent * (1 - sal) } }, /* @__PURE__ */ (react_namespaceFn().createElement)(ThreeCanvas, { width: W, height: H, shadows: true, gl: { antialias: true, alpha: true, preserveDrawingBuffer: true }, camera: { fov: 32, near: 0.05, far: 60 } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Entorno, null), /* @__PURE__ */ (react_namespaceFn().createElement)("fog", { attach: "fog", args: ["#040306", 4.5, 11] }), /* @__PURE__ */ (react_namespaceFn().createElement)(Camara, { pos, mira, fov: vertical ? 30 : 32 }), /* @__PURE__ */ (react_namespaceFn().createElement)("ambientLight", { intensity: 0.12 }), /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "directionalLight",
-    {
-      position: [-2.5, 4.5, 3.5],
-      intensity: 1.6,
-      color: "#FFFFFF",
-      castShadow: true,
-      "shadow-mapSize": [2048, 2048],
-      "shadow-bias": -4e-4,
-      "shadow-camera-left": -3,
-      "shadow-camera-right": 3,
-      "shadow-camera-top": 3,
-      "shadow-camera-bottom": -3
-    }
-  ), /* @__PURE__ */ (react_namespaceFn().createElement)("pointLight", { position: [2.6, 2.4, -1.8], intensity: 38, color: "#B44CFF", distance: 9, decay: 2 }), /* @__PURE__ */ (react_namespaceFn().createElement)("pointLight", { position: [-2.8, 1.8, -1.6], intensity: 30, color: "#8A2BE2", distance: 9, decay: 2 }), /* @__PURE__ */ (react_namespaceFn().createElement)("pointLight", { position: [0.2, 2.2, 2.4], intensity: 3, color: "#D9B3FF", distance: 6, decay: 2 }), /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [0, -1e-3, 0], rotation: [-PI2, 0, 0], material: mats.suelo, receiveShadow: true }, /* @__PURE__ */ (react_namespaceFn().createElement)("planeGeometry", { args: [30, 30] })), A.escalon && /* @__PURE__ */ (react_namespaceFn().createElement)("group", null, /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [2, A.escalon / 2, 0], material: mats.suelo, receiveShadow: true, castShadow: true }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [4, A.escalon, 3] })), /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [2e-3, A.escalon - 4e-3, 0], material: mats.borde }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [0.012, 0.012, 3] }))), A.grafica && [0, 1, 2].map((i) => {
-    const qi = Pictos3D_suave(clamp((q - 0.08 - i * 0.16) / 0.42));
-    const h = (0.45 + i * 0.5) * qi + 0.02;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("group", { key: i, position: [-0.95 + i * 0.4, 0, -1] }, /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [0, h / 2, 0], material: mats.barra, castShadow: true }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [0.3, h, 0.3] })), /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: [0, h + 6e-3, 0], material: mats.borde }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [0.3, 0.012, 0.3] })));
-  }), A.bloque && (() => {
-    const centro = cm.mI.clone().add(cm.mD).multiplyScalar(0.5).add(new Vector3(0, 0.16, 0));
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("mesh", { position: centro, rotation: [0, 0.3 + q * 0.6, 0], material: mats.bloque, castShadow: true }, /* @__PURE__ */ (react_namespaceFn().createElement)("boxGeometry", { args: [0.42, 0.32, 0.42] }));
-  })(), /* @__PURE__ */ (react_namespaceFn().createElement)(Maniqui, { c: cm, mat: mats.morado, k: A.k }), /* @__PURE__ */ (react_namespaceFn().createElement)(Maniqui, { c: cb, mat: mats.blanco, k: KB }), halo(cm, A.escalon && cm.pelvis.x > 0 ? altoM : 0, 1), estelas.map((e, i) => /* @__PURE__ */ (react_namespaceFn().createElement)(Estela, { key: i, puntos: e, q: clamp((t - 0.1 - i * 0.25) / 1.6), grosor: 0.012 + i * 6e-3 }))), texto && (() => {
-    const U = Math.min(W, H) / 1080;
-    const qt = clamp((t - 0.3) / 0.35);
-    const barra = Pictos3D_suave(clamp((t - 0.55) / 0.5));
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      top: vertical ? H * 0.1 : H * 0.08,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      opacity: qt,
-      transform: `translateY(${((1 - qt) * 30 * U).toFixed(1)}px)`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      fontFamily: FAMILIA.inter,
-      fontWeight: 800,
-      fontSize: Math.min(accion === "explicar" ? 130 : 110, 1250 / Math.max(6, texto.length)) * U,
-      color: "#FFFFFF",
-      letterSpacing: "-0.02em",
-      textTransform: "uppercase",
-      textShadow: "0 0 40px rgba(170,60,255,.6)",
-      textAlign: "center",
-      padding: `0 ${50 * U}px`
-    } }, texto), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      marginTop: 16 * U,
-      height: 8 * U,
-      width: Math.min(W * 0.6, texto.length * 46 * U) * barra,
-      borderRadius: 4 * U,
-      background: "#B44CFF",
-      boxShadow: `0 0 ${24 * U}px #B44CFF`
-    } }));
-  })());
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { background: "radial-gradient(110% 80% at 60% 38%, #1A0B2A 0%, #07050B 55%, #020203 100%)", opacity: ent * (1 - sal) }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)(ThreeCanvas, { width: W, height: H, shadows: true, gl: { antialias: true, alpha: true, preserveDrawingBuffer: true }, camera: { fov: 32, near: 0.05, far: 60 }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Entorno, {}),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("fog", { attach: "fog", args: ["#040306", 4.5, 11] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Camara, { pos, mira, fov: vertical ? 30 : 32 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("ambientLight", { intensity: 0.12 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "directionalLight",
+        {
+          position: [-2.5, 4.5, 3.5],
+          intensity: 1.6,
+          color: "#FFFFFF",
+          castShadow: true,
+          "shadow-mapSize": [2048, 2048],
+          "shadow-bias": -4e-4,
+          "shadow-camera-left": -3,
+          "shadow-camera-right": 3,
+          "shadow-camera-top": 3,
+          "shadow-camera-bottom": -3
+        }
+      ),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("pointLight", { position: [2.6, 2.4, -1.8], intensity: 38, color: "#B44CFF", distance: 9, decay: 2 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("pointLight", { position: [-2.8, 1.8, -1.6], intensity: 30, color: "#8A2BE2", distance: 9, decay: 2 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("pointLight", { position: [0.2, 2.2, 2.4], intensity: 3, color: "#D9B3FF", distance: 6, decay: 2 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { position: [0, -1e-3, 0], rotation: [-PI2, 0, 0], material: mats.suelo, receiveShadow: true, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("planeGeometry", { args: [30, 30] }) }),
+      A.escalon && /* @__PURE__ */ (0,jsx_runtime.jsxs)("group", { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { position: [2, A.escalon / 2, 0], material: mats.suelo, receiveShadow: true, castShadow: true, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("boxGeometry", { args: [4, A.escalon, 3] }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { position: [2e-3, A.escalon - 4e-3, 0], material: mats.borde, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("boxGeometry", { args: [0.012, 0.012, 3] }) })
+      ] }),
+      A.grafica && [0, 1, 2].map((i) => {
+        const qi = Pictos3D_suave(clamp((q - 0.08 - i * 0.16) / 0.42));
+        const h = (0.45 + i * 0.5) * qi + 0.02;
+        return /* @__PURE__ */ (0,jsx_runtime.jsxs)("group", { position: [-0.95 + i * 0.4, 0, -1], children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { position: [0, h / 2, 0], material: mats.barra, castShadow: true, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("boxGeometry", { args: [0.3, h, 0.3] }) }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { position: [0, h + 6e-3, 0], material: mats.borde, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("boxGeometry", { args: [0.3, 0.012, 0.3] }) })
+        ] }, i);
+      }),
+      A.bloque && (() => {
+        const centro = cm.mI.clone().add(cm.mD).multiplyScalar(0.5).add(new Vector3(0, 0.16, 0));
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("mesh", { position: centro, rotation: [0, 0.3 + q * 0.6, 0], material: mats.bloque, castShadow: true, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("boxGeometry", { args: [0.42, 0.32, 0.42] }) });
+      })(),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Maniqui, { c: cm, mat: mats.morado, k: A.k }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Maniqui, { c: cb, mat: mats.blanco, k: KB }),
+      halo(cm, A.escalon && cm.pelvis.x > 0 ? altoM : 0, 1),
+      estelas.map((e, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(Estela, { puntos: e, q: clamp((t - 0.1 - i * 0.25) / 1.6), grosor: 0.012 + i * 6e-3 }, i))
+    ] }),
+    texto && (() => {
+      const U = Math.min(W, H) / 1080;
+      const qt = clamp((t - 0.3) / 0.35);
+      const barra = Pictos3D_suave(clamp((t - 0.55) / 0.5));
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        top: vertical ? H * 0.1 : H * 0.08,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        opacity: qt,
+        transform: `translateY(${((1 - qt) * 30 * U).toFixed(1)}px)`
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          fontFamily: FAMILIA.inter,
+          fontWeight: 800,
+          fontSize: Math.min(accion === "explicar" ? 130 : 110, 1250 / Math.max(6, texto.length)) * U,
+          color: "#FFFFFF",
+          letterSpacing: "-0.02em",
+          textTransform: "uppercase",
+          textShadow: "0 0 40px rgba(170,60,255,.6)",
+          textAlign: "center",
+          padding: `0 ${50 * U}px`
+        }, children: texto }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          marginTop: 16 * U,
+          height: 8 * U,
+          width: Math.min(W * 0.6, texto.length * 46 * U) * barra,
+          borderRadius: 4 * U,
+          background: "#B44CFF",
+          boxShadow: `0 0 ${24 * U}px #B44CFF`
+        } })
+      ] });
+    })()
+  ] });
 };
 
 ;// ./src/Widgets.tsx
-/* unused harmony import specifier */ var Widgets_React;
+/* unused harmony import specifier */ var Widgets_jsx;
+/* unused harmony import specifier */ var jsxs;
 /* unused harmony import specifier */ var useCurrentFrame;
 /* unused harmony import specifier */ var Widgets_useVideoConfig;
 /* unused harmony import specifier */ var Widgets_clamp;
@@ -97150,8 +98208,8 @@ const useUni = () => {
 };
 const IconoW = ({ ic, lado, style }) => {
   if (!ic) return null;
-  if (ic.emoji) return /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: ic.emoji, lado, style });
-  if (ic.img) return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(ic.img), style: { width: lado, height: lado, objectFit: "contain", ...style } });
+  if (ic.emoji) return /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: ic.emoji, lado, style });
+  if (ic.img) return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(ic.img), style: { width: lado, height: lado, objectFit: "contain", ...style } });
   return null;
 };
 const Titular = ({ palabras, acento, T, top }) => {
@@ -97162,7 +98220,7 @@ const Titular = ({ palabras, acento, T, top }) => {
   const ps = palabras.slice(0, 7);
   const largo = ps.reduce((n, p) => n + p.texto.length + 1, 0);
   const tam = Math.max(74, Math.min(124, width / U * 2.1 / Math.max(8, largo))) * U;
-  return /* @__PURE__ */ Widgets_React.createElement("div", { style: {
+  return /* @__PURE__ */ Widgets_jsx("div", { style: {
     position: "absolute",
     top,
     left: 0,
@@ -97173,10 +98231,10 @@ const Titular = ({ palabras, acento, T, top }) => {
     alignItems: "baseline",
     padding: `0 ${70 * U}px`,
     rowGap: 6 * U
-  } }, ps.map((p, i) => {
+  }, children: ps.map((p, i) => {
     const q = Widgets_easeOut((t - p.t + 0.06) / 0.3);
     const clave = !!p.clave;
-    return /* @__PURE__ */ Widgets_React.createElement("span", { key: i, style: {
+    return /* @__PURE__ */ jsxs("span", { style: {
       display: "inline-block",
       margin: `0 ${tam * 0.14}px`,
       opacity: Widgets_clamp(q * 1.3),
@@ -97190,17 +98248,20 @@ const Titular = ({ palabras, acento, T, top }) => {
       color: clave ? acento : T.tinta,
       letterSpacing: clave ? "0" : "-0.025em",
       lineHeight: 1.12
-    } }, p.texto, clave && /* @__PURE__ */ Widgets_React.createElement("span", { style: {
-      position: "absolute",
-      left: 0,
-      bottom: -tam * 0.06,
-      height: tam * 0.07,
-      borderRadius: tam,
-      background: acento,
-      opacity: 0.35,
-      width: `${(Widgets_easeOut((t - p.t - 0.15) / 0.4) * 100).toFixed(1)}%`
-    } }));
-  }));
+    }, children: [
+      p.texto,
+      clave && /* @__PURE__ */ Widgets_jsx("span", { style: {
+        position: "absolute",
+        left: 0,
+        bottom: -tam * 0.06,
+        height: tam * 0.07,
+        borderRadius: tam,
+        background: acento,
+        opacity: 0.35,
+        width: `${(Widgets_easeOut((t - p.t - 0.15) / 0.4) * 100).toFixed(1)}%`
+      } })
+    ] }, i);
+  }) });
 };
 const Widgets_Cursor = ({ desde, hasta, t0, t1, T, acento }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -97213,24 +98274,27 @@ const Widgets_Cursor = ({ desde, hasta, t0, t1, T, acento }) => {
   const x = desde[0] + (hasta[0] - desde[0]) * q, y = desde[1] + (hasta[1] - desde[1]) * q - arco;
   const clic = clamp((t - t1) / 0.35);
   const pres = t > t1 && t < t1 + 0.14 ? 0.86 : 1;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, t > t1 && clic < 1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: hasta[0] - 70 * U * clic,
-    top: hasta[1] - 70 * U * clic,
-    width: 140 * U * clic,
-    height: 140 * U * clic,
-    borderRadius: "50%",
-    border: `${4 * U}px solid ${acento}`,
-    opacity: 1 - clic
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 54 * U, height: 64 * U, viewBox: "0 0 27 32", style: {
-    position: "absolute",
-    left: x,
-    top: y,
-    transform: `scale(${pres})`,
-    transformOrigin: "0 0",
-    filter: "drop-shadow(0 6px 10px rgba(0,0,0,.28))",
-    opacity: clamp((t - t0 + 0.2) / 0.2)
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M2 2 L2 25 L8.5 19 L13 29 L17 27 L12.6 17.4 L21.5 17.4 Z", fill: T.claro ? "#111318" : "#FFFFFF", stroke: T.claro ? "#FFFFFF" : "#111318", strokeWidth: 1.6, strokeLinejoin: "round" })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+    t > t1 && clic < 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: hasta[0] - 70 * U * clic,
+      top: hasta[1] - 70 * U * clic,
+      width: 140 * U * clic,
+      height: 140 * U * clic,
+      borderRadius: "50%",
+      border: `${4 * U}px solid ${acento}`,
+      opacity: 1 - clic
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 54 * U, height: 64 * U, viewBox: "0 0 27 32", style: {
+      position: "absolute",
+      left: x,
+      top: y,
+      transform: `scale(${pres})`,
+      transformOrigin: "0 0",
+      filter: "drop-shadow(0 6px 10px rgba(0,0,0,.28))",
+      opacity: clamp((t - t0 + 0.2) / 0.2)
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M2 2 L2 25 L8.5 19 L13 29 L17 27 L12.6 17.4 L21.5 17.4 Z", fill: T.claro ? "#111318" : "#FFFFFF", stroke: T.claro ? "#FFFFFF" : "#111318", strokeWidth: 1.6, strokeLinejoin: "round" }) })
+  ] });
 };
 const OrbitaMC = ({ centro, items, acento, T, cy }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -97243,82 +98307,93 @@ const OrbitaMC = ({ centro, items, acento, T, cy }) => {
   const [ar, ag, ab] = rgb(acento);
   const anillos = [360, 490].map((r) => r * U);
   const n = Math.min(6, items.length);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, [0, 1, 2].map((k) => {
-    const u = (t * 0.45 + k / 3) % 1;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    [0, 1, 2].map((k) => {
+      const u = (t * 0.45 + k / 3) % 1;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: cx - 200 * U * (1 + u),
+        top: cy - 200 * U * (1 + u),
+        width: 400 * U * (1 + u),
+        height: 400 * U * (1 + u),
+        borderRadius: "50%",
+        background: `radial-gradient(circle, rgba(${ar},${ag},${ab},${(0.1 * (1 - u)).toFixed(3)}) 40%, rgba(${ar},${ag},${ab},0) 70%)`
+      } }, k);
+    }),
+    anillos.map((r, k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
-      left: cx - 200 * U * (1 + u),
-      top: cy - 200 * U * (1 + u),
-      width: 400 * U * (1 + u),
-      height: 400 * U * (1 + u),
+      left: cx - r,
+      top: cy - r,
+      width: 2 * r,
+      height: 2 * r,
       borderRadius: "50%",
-      background: `radial-gradient(circle, rgba(${ar},${ag},${ab},${(0.1 * (1 - u)).toFixed(3)}) 40%, rgba(${ar},${ag},${ab},0) 70%)`
-    } });
-  }), anillos.map((r, k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
-    position: "absolute",
-    left: cx - r,
-    top: cy - r,
-    width: 2 * r,
-    height: 2 * r,
-    borderRadius: "50%",
-    border: `${2 * U}px solid ${T.linea}`,
-    transform: `scale(${(0.6 + 0.4 * Widgets_easeOut((t - 0.1 - k * 0.12) / 0.5)).toFixed(4)})`,
-    opacity: Widgets_easeOut((t - 0.1 - k * 0.12) / 0.4)
-  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cx - 175 * U,
-    top: cy - 175 * U,
-    width: 350 * U,
-    height: 350 * U,
-    borderRadius: "50%",
-    background: T.tarjeta,
-    border: `${1.5 * U}px solid ${T.borde}`,
-    boxShadow: T.sombra,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    transform: `scale(${Math.max(1e-3, r0).toFixed(4)})`,
-    backdropFilter: T.claro ? void 0 : "blur(20px)"
-  } }, centro.icono && /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: centro.icono, lado: 130 * U }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    marginTop: 8 * U,
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: Math.min(54, 520 / Math.max(5, centro.texto.length)) * U,
-    color: T.tinta,
-    letterSpacing: "-0.02em",
-    textAlign: "center",
-    padding: `0 ${20 * U}px`
-  } }, centro.texto)), items.slice(0, n).map((it, i) => {
-    const r = anillos[i % 2];
-    const ang = -Math.PI / 2 + i / n * Math.PI * 2 + t * 0.12 * (i % 2 ? -1 : 1);
-    const q = R(0.45 + i * 0.16, { damping: 11, stiffness: 160 });
-    const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r;
-    const lado = 156 * U;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { position: "absolute", left: x - lado / 2, top: y - lado / 2, width: lado, height: lado, transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      width: lado,
-      height: lado,
-      borderRadius: lado * 0.32,
+      border: `${2 * U}px solid ${T.linea}`,
+      transform: `scale(${(0.6 + 0.4 * Widgets_easeOut((t - 0.1 - k * 0.12) / 0.5)).toFixed(4)})`,
+      opacity: Widgets_easeOut((t - 0.1 - k * 0.12) / 0.4)
+    } }, k)),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: cx - 175 * U,
+      top: cy - 175 * U,
+      width: 350 * U,
+      height: 350 * U,
+      borderRadius: "50%",
       background: T.tarjeta,
       border: `${1.5 * U}px solid ${T.borde}`,
       boxShadow: T.sombra,
       display: "flex",
+      flexDirection: "column",
       alignItems: "center",
-      justifyContent: "center"
-    } }, it.icono ? /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: it.icono, lado: lado * 0.6 }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: lado * 0.3, height: lado * 0.3, borderRadius: "50%", background: acento } })), it.texto && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      top: lado + 10 * U,
-      left: -lado * 0.6,
-      width: lado * 2.2,
-      textAlign: "center",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 700,
-      fontSize: 36 * U,
-      color: T.suave,
-      whiteSpace: "nowrap",
-      opacity: clamp((q - 0.6) * 3)
-    } }, it.texto));
-  }));
+      justifyContent: "center",
+      transform: `scale(${Math.max(1e-3, r0).toFixed(4)})`,
+      backdropFilter: T.claro ? void 0 : "blur(20px)"
+    }, children: [
+      centro.icono && /* @__PURE__ */ (0,jsx_runtime.jsx)(IconoW, { ic: centro.icono, lado: 130 * U }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        marginTop: 8 * U,
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        fontSize: Math.min(54, 520 / Math.max(5, centro.texto.length)) * U,
+        color: T.tinta,
+        letterSpacing: "-0.02em",
+        textAlign: "center",
+        padding: `0 ${20 * U}px`
+      }, children: centro.texto })
+    ] }),
+    items.slice(0, n).map((it, i) => {
+      const r = anillos[i % 2];
+      const ang = -Math.PI / 2 + i / n * Math.PI * 2 + t * 0.12 * (i % 2 ? -1 : 1);
+      const q = R(0.45 + i * 0.16, { damping: 11, stiffness: 160 });
+      const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r;
+      const lado = 156 * U;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x - lado / 2, top: y - lado / 2, width: lado, height: lado, transform: `scale(${Math.max(1e-3, q).toFixed(4)})` }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: lado,
+          height: lado,
+          borderRadius: lado * 0.32,
+          background: T.tarjeta,
+          border: `${1.5 * U}px solid ${T.borde}`,
+          boxShadow: T.sombra,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }, children: it.icono ? /* @__PURE__ */ (0,jsx_runtime.jsx)(IconoW, { ic: it.icono, lado: lado * 0.6 }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado * 0.3, height: lado * 0.3, borderRadius: "50%", background: acento } }) }),
+        it.texto && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          top: lado + 10 * U,
+          left: -lado * 0.6,
+          width: lado * 2.2,
+          textAlign: "center",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 700,
+          fontSize: 36 * U,
+          color: T.suave,
+          whiteSpace: "nowrap",
+          opacity: clamp((q - 0.6) * 3)
+        }, children: it.texto })
+      ] }, i);
+    })
+  ] });
 };
 const RutaMC = ({ pasos, titulo, acento, T, cy }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -97335,7 +98410,7 @@ const RutaMC = ({ pasos, titulo, acento, T, cy }) => {
   const d = `M ${pts[0][0]} ${pts[0][1]} C ${pts[1][0]} ${pts[1][1]}, ${pts[2][0]} ${pts[2][1]}, ${pts[2][0]} ${pts[2][1]} S ${pts[3][0]} ${pts[3][1]}, ${pts[4][0]} ${pts[4][1]}`;
   const q = Widgets_suave((t - 0.45) / 1.6);
   const [ar, ag, ab] = rgb(acento);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: x0,
     top: y0,
@@ -97348,33 +98423,52 @@ const RutaMC = ({ pasos, titulo, acento, T, cy }) => {
     overflow: "hidden",
     transform: `translateY(${((1 - entra) * 160 * U).toFixed(1)}px) scale(${(0.92 + 0.08 * entra).toFixed(4)})`,
     opacity: clamp(entra * 1.5)
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: w, height: mapaH, style: { position: "absolute", left: 0, top: 0 } }, [0.2, 0.42, 0.63, 0.85].map((k, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: "h" + i, x1: w * 0.42, y1: mapaH * k, x2: w, y2: mapaH * k - 40 * U, stroke: T.linea, strokeWidth: 10 * U })), [0.55, 0.75, 0.92].map((k, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: "v" + i, x1: w * k, y1: 0, x2: w * k + 30 * U, y2: mapaH, stroke: T.linea, strokeWidth: 8 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "path",
-    {
-      d,
-      fill: "none",
-      stroke: `rgba(${ar},${ag},${ab},.25)`,
-      strokeWidth: 46 * U,
-      strokeLinecap: "round",
-      pathLength: 1,
-      strokeDasharray: "1",
-      strokeDashoffset: (1 - q).toFixed(4),
-      style: { filter: `blur(${10 * U}px)` }
-    }
-  ), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d, fill: "none", stroke: acento, strokeWidth: 22 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: (1 - q).toFixed(4) })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 50 * U, width: w * 0.5 } }, ps.map((p, i) => {
-    const qi = R(0.3 + i * 0.35, { damping: 12, stiffness: 170 });
-    const activo = q > (i + 0.5) / ps.length;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { display: "flex", alignItems: "center", gap: 22 * U, height: mapaH / 3.2, opacity: clamp(qi * 1.5), transform: `translateX(${((1 - qi) * -40 * U).toFixed(1)}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "relative",
-      width: 56 * U,
-      height: 56 * U,
-      borderRadius: "50%",
-      border: `${6 * U}px solid rgba(${ar},${ag},${ab},.25)`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 28 * U, height: 28 * U, borderRadius: "50%", background: activo ? acento : T.tarjeta, border: `${4 * U}px solid ${acento}` } }), i < ps.length - 1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top: 56 * U, left: 25 * U, width: 0, height: mapaH / 3.2 - 56 * U, borderLeft: `${3 * U}px dashed rgba(${ar},${ag},${ab},.55)` } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 40 * U, color: T.tinta, whiteSpace: "nowrap" } }, p.texto));
-  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 56 * U, right: 56 * U, top: mapaH + 50 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: T.tinta, letterSpacing: "-0.025em", opacity: Widgets_easeOut((t - 0.8) / 0.4) } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 18 * U, height: 14 * U, width: "62%", borderRadius: 8 * U, background: T.linea, opacity: Widgets_easeOut((t - 1) / 0.4) } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 14 * U, height: 14 * U, width: "44%", borderRadius: 8 * U, background: T.linea, opacity: Widgets_easeOut((t - 1.1) / 0.4) } })));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: w, height: mapaH, style: { position: "absolute", left: 0, top: 0 }, children: [
+      [0.2, 0.42, 0.63, 0.85].map((k, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: w * 0.42, y1: mapaH * k, x2: w, y2: mapaH * k - 40 * U, stroke: T.linea, strokeWidth: 10 * U }, "h" + i)),
+      [0.55, 0.75, 0.92].map((k, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: w * k, y1: 0, x2: w * k + 30 * U, y2: mapaH, stroke: T.linea, strokeWidth: 8 * U }, "v" + i)),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "path",
+        {
+          d,
+          fill: "none",
+          stroke: `rgba(${ar},${ag},${ab},.25)`,
+          strokeWidth: 46 * U,
+          strokeLinecap: "round",
+          pathLength: 1,
+          strokeDasharray: "1",
+          strokeDashoffset: (1 - q).toFixed(4),
+          style: { filter: `blur(${10 * U}px)` }
+        }
+      ),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: acento, strokeWidth: 22 * U, strokeLinecap: "round", pathLength: 1, strokeDasharray: "1", strokeDashoffset: (1 - q).toFixed(4) })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 50 * U, top: 50 * U, width: w * 0.5 }, children: ps.map((p, i) => {
+      const qi = R(0.3 + i * 0.35, { damping: 12, stiffness: 170 });
+      const activo = q > (i + 0.5) / ps.length;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 22 * U, height: mapaH / 3.2, opacity: clamp(qi * 1.5), transform: `translateX(${((1 - qi) * -40 * U).toFixed(1)}px)` }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "relative",
+          width: 56 * U,
+          height: 56 * U,
+          borderRadius: "50%",
+          border: `${6 * U}px solid rgba(${ar},${ag},${ab},.25)`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 28 * U, height: 28 * U, borderRadius: "50%", background: activo ? acento : T.tarjeta, border: `${4 * U}px solid ${acento}` } }),
+          i < ps.length - 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", top: 56 * U, left: 25 * U, width: 0, height: mapaH / 3.2 - 56 * U, borderLeft: `${3 * U}px dashed rgba(${ar},${ag},${ab},.55)` } })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 40 * U, color: T.tinta, whiteSpace: "nowrap" }, children: p.texto })
+      ] }, i);
+    }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 56 * U, right: 56 * U, top: mapaH + 50 * U }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: T.tinta, letterSpacing: "-0.025em", opacity: Widgets_easeOut((t - 0.8) / 0.4) }, children: titulo }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 18 * U, height: 14 * U, width: "62%", borderRadius: 8 * U, background: T.linea, opacity: Widgets_easeOut((t - 1) / 0.4) } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 14 * U, height: 14 * U, width: "44%", borderRadius: 8 * U, background: T.linea, opacity: Widgets_easeOut((t - 1.1) / 0.4) } })
+    ] })
+  ] });
 };
 const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -97387,10 +98481,9 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
   const cx = width / 2 - cw / 2 + 20 * U, top = cy - ch / 2;
   const ix = cx - 230 * U, lado = 150 * U;
   const ox = cx + cw + 70 * U;
-  const linea = (x1, y1, x2, y2, q, k) => /* @__PURE__ */ (react_namespaceFn().createElement)(
+  const linea = (x1, y1, x2, y2, q, k) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
     "path",
     {
-      key: k,
       d: `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`,
       fill: "none",
       stroke: T.linea,
@@ -97399,88 +98492,106 @@ const ConectoresMC = ({ entradas, opciones, resultado, acento, T, cy }) => {
       pathLength: 1,
       strokeDasharray: "1",
       strokeDashoffset: (1 - clamp(q)).toFixed(4)
-    }
+    },
+    k
   );
   const fin = 0.7 + ops.length * 0.42;
   const qr = R(fin + 0.25, { damping: 11, stiffness: 160 });
   const yRes = cy;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width, height: cy * 2 + 400 * U, style: { position: "absolute", left: 0, top: 0 } }, ens.map((_, i) => {
-    const y = cy + (i - (ens.length - 1) / 2) * (lado + 34 * U);
-    return linea(ix + lado, y, cx, cy, Widgets_easeOut((t - 0.35 - i * 0.1) / 0.5), "e" + i);
-  }), linea(cx + cw, cy, ox, yRes, Widgets_easeOut((t - fin) / 0.4), "r")), ens.map((e, i) => {
-    const y = cy + (i - (ens.length - 1) / 2) * (lado + 34 * U);
-    const q = R(0.1 + i * 0.12, { damping: 12, stiffness: 160 });
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width, height: cy * 2 + 400 * U, style: { position: "absolute", left: 0, top: 0 }, children: [
+      ens.map((_, i) => {
+        const y = cy + (i - (ens.length - 1) / 2) * (lado + 34 * U);
+        return linea(ix + lado, y, cx, cy, Widgets_easeOut((t - 0.35 - i * 0.1) / 0.5), "e" + i);
+      }),
+      linea(cx + cw, cy, ox, yRes, Widgets_easeOut((t - fin) / 0.4), "r")
+    ] }),
+    ens.map((e, i) => {
+      const y = cy + (i - (ens.length - 1) / 2) * (lado + 34 * U);
+      const q = R(0.1 + i * 0.12, { damping: 12, stiffness: 160 });
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: ix,
+        top: y - lado / 2,
+        width: lado,
+        height: lado,
+        borderRadius: lado * 0.28,
+        background: T.tarjeta,
+        boxShadow: T.sombra,
+        border: `${1.5 * U}px solid ${T.borde}`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(IconoW, { ic: e.icono, lado: lado * 0.58 }) }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
-      left: ix,
-      top: y - lado / 2,
-      width: lado,
-      height: lado,
-      borderRadius: lado * 0.28,
+      left: cx,
+      top,
+      width: cw,
+      height: ch,
+      borderRadius: 40 * U,
+      background: T.tarjeta,
+      boxShadow: T.sombra,
+      border: `${1.5 * U}px solid ${T.borde}`,
+      padding: `${20 * U}px ${34 * U}px`,
+      opacity: clamp(R(0.25, { damping: 15 }) * 1.4),
+      transform: `scale(${(0.9 + 0.1 * R(0.25, { damping: 15 })).toFixed(4)})`
+    }, children: ops.map((o, i) => {
+      const on = clamp((t - (0.75 + i * 0.42)) / 0.18);
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { height: fila, display: "flex", alignItems: "center", gap: 22 * U, borderBottom: i < ops.length - 1 ? `${1.5 * U}px solid ${T.linea}` : "none" }, children: [
+        o.icono ? /* @__PURE__ */ (0,jsx_runtime.jsx)(IconoW, { ic: o.icono, lado: 50 * U }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 22 * U, height: 22 * U, borderRadius: 6 * U, border: `${3 * U}px solid ${T.suave}` } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 40 * U, color: T.tinta, whiteSpace: "nowrap", overflow: "hidden" }, children: o.texto }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 96 * U, height: 54 * U, borderRadius: 27 * U, background: on > 0.5 ? acento : T.linea, position: "relative", transition: "none" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          top: 6 * U,
+          left: (6 + 42 * Widgets_easeOut(on)) * U,
+          width: 42 * U,
+          height: 42 * U,
+          borderRadius: "50%",
+          background: "#FFFFFF",
+          boxShadow: "0 3px 8px rgba(0,0,0,.25)"
+        } }) })
+      ] }, i);
+    }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: ox,
+      top: yRes - 56 * U,
+      height: 112 * U,
+      padding: `0 ${34 * U}px`,
+      borderRadius: 56 * U,
       background: T.tarjeta,
       boxShadow: T.sombra,
       border: `${1.5 * U}px solid ${T.borde}`,
       display: "flex",
       alignItems: "center",
-      justifyContent: "center",
-      transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: e.icono, lado: lado * 0.58 }));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cx,
-    top,
-    width: cw,
-    height: ch,
-    borderRadius: 40 * U,
-    background: T.tarjeta,
-    boxShadow: T.sombra,
-    border: `${1.5 * U}px solid ${T.borde}`,
-    padding: `${20 * U}px ${34 * U}px`,
-    opacity: clamp(R(0.25, { damping: 15 }) * 1.4),
-    transform: `scale(${(0.9 + 0.1 * R(0.25, { damping: 15 })).toFixed(4)})`
-  } }, ops.map((o, i) => {
-    const on = clamp((t - (0.75 + i * 0.42)) / 0.18);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { height: fila, display: "flex", alignItems: "center", gap: 22 * U, borderBottom: i < ops.length - 1 ? `${1.5 * U}px solid ${T.linea}` : "none" } }, o.icono ? /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: o.icono, lado: 50 * U }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 22 * U, height: 22 * U, borderRadius: 6 * U, border: `${3 * U}px solid ${T.suave}` } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 40 * U, color: T.tinta, whiteSpace: "nowrap", overflow: "hidden" } }, o.texto), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 96 * U, height: 54 * U, borderRadius: 27 * U, background: on > 0.5 ? acento : T.linea, position: "relative", transition: "none" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      top: 6 * U,
-      left: (6 + 42 * Widgets_easeOut(on)) * U,
-      width: 42 * U,
-      height: 42 * U,
-      borderRadius: "50%",
-      background: "#FFFFFF",
-      boxShadow: "0 3px 8px rgba(0,0,0,.25)"
-    } })));
-  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: ox,
-    top: yRes - 56 * U,
-    height: 112 * U,
-    padding: `0 ${34 * U}px`,
-    borderRadius: 56 * U,
-    background: T.tarjeta,
-    boxShadow: T.sombra,
-    border: `${1.5 * U}px solid ${T.borde}`,
-    display: "flex",
-    alignItems: "center",
-    gap: 16 * U,
-    transform: `scale(${Math.max(1e-3, qr).toFixed(4)})`,
-    transformOrigin: "left center"
-  } }, resultado.icono && /* @__PURE__ */ (react_namespaceFn().createElement)(IconoW, { ic: resultado.icono, lado: 54 * U }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 42 * U, color: T.tinta, whiteSpace: "nowrap" } }, resultado.texto), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    top: -26 * U,
-    right: 10 * U,
-    width: 58 * U,
-    height: 40 * U,
-    borderRadius: 14 * U,
-    background: "#2FCB6B",
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 30 * U,
-    fontWeight: 900,
-    fontFamily: FAMILIA.inter
-  } }, "\u2713")), /* @__PURE__ */ (react_namespaceFn().createElement)(Widgets_Cursor, { desde: [width * 0.8, cy + 520 * U], hasta: [cx + cw - 70 * U, top + 20 * U + fila * 0.5], t0: 0.45, t1: 0.75, T, acento }));
+      gap: 16 * U,
+      transform: `scale(${Math.max(1e-3, qr).toFixed(4)})`,
+      transformOrigin: "left center"
+    }, children: [
+      resultado.icono && /* @__PURE__ */ (0,jsx_runtime.jsx)(IconoW, { ic: resultado.icono, lado: 54 * U }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 42 * U, color: T.tinta, whiteSpace: "nowrap" }, children: resultado.texto }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        top: -26 * U,
+        right: 10 * U,
+        width: 58 * U,
+        height: 40 * U,
+        borderRadius: 14 * U,
+        background: "#2FCB6B",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 30 * U,
+        fontWeight: 900,
+        fontFamily: FAMILIA.inter
+      }, children: "\u2713" })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Widgets_Cursor, { desde: [width * 0.8, cy + 520 * U], hasta: [cx + cw - 70 * U, top + 20 * U + fila * 0.5], t0: 0.45, t1: 0.75, T, acento })
+  ] });
 };
 const ContadorMC = ({ valor, sufijo = "", prefijo = "", etiqueta = "", acento, T, cy }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -97494,7 +98605,7 @@ const ContadorMC = ({ valor, sufijo = "", prefijo = "", etiqueta = "", acento, T
   const entra = R(0.05, { damping: 13, stiffness: 140 });
   const [ar, ag, ab] = rgb(acento);
   const circ = 2 * Math.PI * r;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: width / 2 - r - 60 * U,
     top: cy - r - 60 * U,
@@ -97505,28 +98616,41 @@ const ContadorMC = ({ valor, sufijo = "", prefijo = "", etiqueta = "", acento, T
     boxShadow: T.sombra,
     border: `${1.5 * U}px solid ${T.borde}`,
     transform: `scale(${Math.max(1e-3, entra).toFixed(4)})`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 2 * r + 120 * U, height: 2 * r + 120 * U, style: { position: "absolute", inset: 0, transform: "rotate(-90deg)" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: r + 60 * U, cy: r + 60 * U, r, fill: "none", stroke: T.linea, strokeWidth: grosor }), /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "circle",
-    {
-      cx: r + 60 * U,
-      cy: r + 60 * U,
-      r,
-      fill: "none",
-      stroke: acento,
-      strokeWidth: grosor,
-      strokeLinecap: "round",
-      strokeDasharray: circ,
-      strokeDashoffset: circ * (1 - 0.92 * q),
-      style: { filter: `drop-shadow(0 0 ${14 * U}px rgba(${ar},${ag},${ab},.6))` }
-    }
-  )), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: Math.min(150, 760 / Math.max(3, (prefijo + n + sufijo).length)) * U,
-    color: T.tinta,
-    letterSpacing: "-0.04em",
-    fontVariantNumeric: "tabular-nums"
-  } }, prefijo, n.toLocaleString("es"), sufijo), etiqueta && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 38 * U, color: T.suave, opacity: Widgets_easeOut((t - 0.6) / 0.4) } }, etiqueta))));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 2 * r + 120 * U, height: 2 * r + 120 * U, style: { position: "absolute", inset: 0, transform: "rotate(-90deg)" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: r + 60 * U, cy: r + 60 * U, r, fill: "none", stroke: T.linea, strokeWidth: grosor }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "circle",
+        {
+          cx: r + 60 * U,
+          cy: r + 60 * U,
+          r,
+          fill: "none",
+          stroke: acento,
+          strokeWidth: grosor,
+          strokeLinecap: "round",
+          strokeDasharray: circ,
+          strokeDashoffset: circ * (1 - 0.92 * q),
+          style: { filter: `drop-shadow(0 0 ${14 * U}px rgba(${ar},${ag},${ab},.6))` }
+        }
+      )
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        fontSize: Math.min(150, 760 / Math.max(3, (prefijo + n + sufijo).length)) * U,
+        color: T.tinta,
+        letterSpacing: "-0.04em",
+        fontVariantNumeric: "tabular-nums"
+      }, children: [
+        prefijo,
+        n.toLocaleString("es"),
+        sufijo
+      ] }),
+      etiqueta && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 38 * U, color: T.suave, opacity: Widgets_easeOut((t - 0.6) / 0.4) }, children: etiqueta })
+    ] })
+  ] }) });
 };
 const VersionesMC = ({ cartas, acento, T, cy }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -97540,58 +98664,65 @@ const VersionesMC = ({ cartas, acento, T, cy }) => {
   const tClic = 1.35;
   const sel = R(tClic, { damping: 12, stiffness: 160 });
   const colores = ["#FF7A59", acento, "#111318"];
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, cs.map((c, i) => {
-    const q = R(0.15 + i * 0.14, { damping: 12, stiffness: 150 });
-    const k = i - (cs.length - 1) / 2;
-    const esta = i === elegida;
-    const ang = k * 9 * (1 - (t > tClic ? sel : 0) * (esta ? 1 : 0.4));
-    const dx = k * (w * 0.78) * (1 + (t > tClic ? 0.15 * sel : 0));
-    const s = (0.85 + 0.15 * q) * (t > tClic ? esta ? 1 + 0.12 * sel : 1 - 0.1 * sel : 1);
-    const op = t > tClic && !esta ? 1 - 0.45 * sel : 1;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      position: "absolute",
-      left: width / 2 - w / 2 + dx,
-      top: cy - h / 2 + (1 - q) * 160 * U - Math.abs(k) * 18 * U,
-      width: w,
-      height: h,
-      borderRadius: 36 * U,
-      background: colores[i % 3],
-      boxShadow: T.sombra,
-      transform: `rotate(${ang.toFixed(2)}deg) scale(${s.toFixed(4)})`,
-      opacity: clamp(q * 1.5) * op,
-      zIndex: esta ? 3 : 1,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "#FFFFFF"
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: 170 * U, lineHeight: 1 } }, String.fromCharCode(65 + i)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      marginTop: 18 * U,
-      padding: `${8 * U}px ${22 * U}px`,
-      borderRadius: 30 * U,
-      background: "rgba(255,255,255,.18)",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 700,
-      fontSize: 34 * U,
-      maxWidth: w - 30 * U,
-      whiteSpace: "nowrap",
-      overflow: "hidden"
-    } }, c.texto), esta && t > tClic && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      top: -24 * U,
-      right: -24 * U,
-      width: 70 * U,
-      height: 70 * U,
-      borderRadius: "50%",
-      background: "#2FCB6B",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: 40 * U,
-      fontWeight: 900,
-      transform: `scale(${sel.toFixed(4)})`
-    } }, "\u2713"));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)(Widgets_Cursor, { desde: [width * 0.82, cy + 560 * U], hasta: [width / 2 + 30 * U, cy + 40 * U], t0: 0.95, t1: tClic, T, acento }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    cs.map((c, i) => {
+      const q = R(0.15 + i * 0.14, { damping: 12, stiffness: 150 });
+      const k = i - (cs.length - 1) / 2;
+      const esta = i === elegida;
+      const ang = k * 9 * (1 - (t > tClic ? sel : 0) * (esta ? 1 : 0.4));
+      const dx = k * (w * 0.78) * (1 + (t > tClic ? 0.15 * sel : 0));
+      const s = (0.85 + 0.15 * q) * (t > tClic ? esta ? 1 + 0.12 * sel : 1 - 0.1 * sel : 1);
+      const op = t > tClic && !esta ? 1 - 0.45 * sel : 1;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: width / 2 - w / 2 + dx,
+        top: cy - h / 2 + (1 - q) * 160 * U - Math.abs(k) * 18 * U,
+        width: w,
+        height: h,
+        borderRadius: 36 * U,
+        background: colores[i % 3],
+        boxShadow: T.sombra,
+        transform: `rotate(${ang.toFixed(2)}deg) scale(${s.toFixed(4)})`,
+        opacity: clamp(q * 1.5) * op,
+        zIndex: esta ? 3 : 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#FFFFFF"
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: 170 * U, lineHeight: 1 }, children: String.fromCharCode(65 + i) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          marginTop: 18 * U,
+          padding: `${8 * U}px ${22 * U}px`,
+          borderRadius: 30 * U,
+          background: "rgba(255,255,255,.18)",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 700,
+          fontSize: 34 * U,
+          maxWidth: w - 30 * U,
+          whiteSpace: "nowrap",
+          overflow: "hidden"
+        }, children: c.texto }),
+        esta && t > tClic && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          top: -24 * U,
+          right: -24 * U,
+          width: 70 * U,
+          height: 70 * U,
+          borderRadius: "50%",
+          background: "#2FCB6B",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 40 * U,
+          fontWeight: 900,
+          transform: `scale(${sel.toFixed(4)})`
+        }, children: "\u2713" })
+      ] }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Widgets_Cursor, { desde: [width * 0.82, cy + 560 * U], hasta: [width / 2 + 30 * U, cy + 40 * U], t0: 0.95, t1: tClic, T, acento })
+  ] });
 };
 
 ;// ./src/Reel.tsx
@@ -97620,7 +98751,7 @@ const Estrella = ({ x, y, lado, t0 }) => {
   const t = Reel_useT();
   const q = useResorte()(t0, { damping: 9, stiffness: 180 });
   const brillo = 0.85 + 0.15 * Math.sin(t * 4 + x);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: lado, height: lado, viewBox: "0 0 24 24", style: { position: "absolute", left: x - lado / 2, top: y - lado / 2, transform: `scale(${Math.max(0, q) * brillo}) rotate(${t * 20 % 360}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M12 1 L14.6 9.4 L23 12 L14.6 14.6 L12 23 L9.4 14.6 L1 12 L9.4 9.4 Z", fill: ORO, stroke: "#FFFFFF", strokeWidth: 1.6, strokeLinejoin: "round" }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: lado, height: lado, viewBox: "0 0 24 24", style: { position: "absolute", left: x - lado / 2, top: y - lado / 2, transform: `scale(${Math.max(0, q) * brillo}) rotate(${t * 20 % 360}deg)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M12 1 L14.6 9.4 L23 12 L14.6 14.6 L12 23 L9.4 14.6 L1 12 L9.4 9.4 Z", fill: ORO, stroke: "#FFFFFF", strokeWidth: 1.6, strokeLinejoin: "round" }) });
 };
 const CursorR = ({ desde, hasta, t0, t1, onda = true }) => {
   const t = Reel_useT();
@@ -97631,28 +98762,31 @@ const CursorR = ({ desde, hasta, t0, t1, onda = true }) => {
   const x = desde[0] + (hasta[0] - desde[0]) * q, y = desde[1] + (hasta[1] - desde[1]) * q - arco;
   const c = clamp((t - t1) / 0.45);
   const pres = t > t1 && t < t1 + 0.12 ? 0.82 : 1;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, onda && t > t1 && c < 1 && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: hasta[0] - 80 * U * c,
-    top: hasta[1] - 80 * U * c,
-    width: 160 * U * c,
-    height: 160 * U * c,
-    borderRadius: "50%",
-    border: `${5 * U}px solid rgba(123,92,245,${(0.6 * (1 - c)).toFixed(3)})`,
-    background: `rgba(123,92,245,${(0.12 * (1 - c)).toFixed(3)})`
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 58 * U, height: 58 * U, viewBox: "0 0 24 24", style: {
-    position: "absolute",
-    left: x - 6 * U,
-    top: y - 4 * U,
-    transform: `scale(${pres}) rotate(-8deg)`,
-    transformOrigin: "20% 15%",
-    filter: "drop-shadow(0 6px 10px rgba(70,40,160,.35))",
-    opacity: clamp((t - t0 + 0.05) / 0.15)
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M3 2 L21 10.5 L13.2 12.8 L10 21 Z", fill: CURSOR, stroke: "#FFFFFF", strokeWidth: 1.8, strokeLinejoin: "round" })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+    onda && t > t1 && c < 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: hasta[0] - 80 * U * c,
+      top: hasta[1] - 80 * U * c,
+      width: 160 * U * c,
+      height: 160 * U * c,
+      borderRadius: "50%",
+      border: `${5 * U}px solid rgba(123,92,245,${(0.6 * (1 - c)).toFixed(3)})`,
+      background: `rgba(123,92,245,${(0.12 * (1 - c)).toFixed(3)})`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 58 * U, height: 58 * U, viewBox: "0 0 24 24", style: {
+      position: "absolute",
+      left: x - 6 * U,
+      top: y - 4 * U,
+      transform: `scale(${pres}) rotate(-8deg)`,
+      transformOrigin: "20% 15%",
+      filter: "drop-shadow(0 6px 10px rgba(70,40,160,.35))",
+      opacity: clamp((t - t0 + 0.05) / 0.15)
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M3 2 L21 10.5 L13.2 12.8 L10 21 Z", fill: CURSOR, stroke: "#FFFFFF", strokeWidth: 1.8, strokeLinejoin: "round" }) })
+  ] });
 };
 const Reel_Pastilla = ({ children, style }) => {
   const U = Reel_useU();
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     display: "inline-flex",
     alignItems: "center",
     gap: 14 * U,
@@ -97665,7 +98799,7 @@ const Reel_Pastilla = ({ children, style }) => {
     fontSize: 40 * U,
     color: Reel_TINTA,
     ...style
-  } }, children);
+  }, children });
 };
 const RTitular = ({ palabras, arriba, top, claro = true }) => {
   const t = Reel_useT();
@@ -97675,52 +98809,59 @@ const RTitular = ({ palabras, arriba, top, claro = true }) => {
   const largo = palabras.reduce((n, p) => n + p.texto.length + 1, 0);
   const tam = Math.max(92, Math.min(132, width / U * 2.6 / Math.max(10, largo))) * U;
   const qa = R(0, { damping: 13, stiffness: 160 });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" } }, arriba && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginBottom: 26 * U, transform: `scale(${Math.max(0, qa).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { background: LILA_F, color: LILA, border: `${3 * U}px solid #D7CEFF`, fontSize: 60 * U, padding: `${18 * U}px ${40 * U}px` } }, arriba)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "baseline", padding: `0 ${70 * U}px`, rowGap: 4 * U, maxWidth: width } }, palabras.map((p, i) => {
-    const q = Reel_easeOut((t - p.t + 0.05) / 0.3);
-    const e = p.estilo;
-    const base = {
-      display: "inline-block",
-      margin: `0 ${tam * 0.13}px`,
-      position: "relative",
-      lineHeight: 1.1,
-      fontSize: tam,
-      fontFamily: FAMILIA.inter,
-      fontWeight: 800,
-      color: claro ? Reel_TINTA : "#FFFFFF",
-      letterSpacing: "-0.03em",
-      opacity: clamp(q * 1.3),
-      transform: `translateY(${((1 - q) * tam * 0.3).toFixed(1)}px)`,
-      filter: q < 1 ? `blur(${((1 - q) * 9).toFixed(1)}px)` : void 0
-    };
-    const azul = claro ? AZUL : "var(--cc-azul-claro, #9DB4FF)";
-    if (e === "clave") Object.assign(base, { fontFamily: FAMILIA.display, fontStyle: "italic", fontWeight: 400, color: azul, fontSize: tam * 1.1, letterSpacing: "0" });
-    if (e === "azul") Object.assign(base, { color: azul });
-    if (e === "gris") Object.assign(base, { color: "#9A9CA8", fontWeight: 600, opacity: clamp(q * 1.3) * (0.55 + 0.45 * (1 - Reel_easeOut((t - p.t - 0.5) / 0.6))) });
-    if (e === "pildora") Object.assign(base, { color: LILA, background: LILA_F, borderRadius: 999, padding: `${2 * U}px ${tam * 0.22}px`, border: `${3 * U}px solid #D7CEFF` });
-    const tacha = Reel_easeOut((t - p.t - 0.35) / 0.3);
-    const caja = Reel_easeOut((t - p.t + 0.05) / 0.3);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i, style: base }, p.texto, e === "tachado" && /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { position: "absolute", left: -4 * U, top: "52%", height: 9 * U, borderRadius: 5 * U, background: ROJO, width: `calc(${(tacha * 100).toFixed(1)}% + ${8 * U}px)` } }), e === "caja" && /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: {
-      position: "absolute",
-      left: -14 * U,
-      right: -14 * U,
-      top: -6 * U,
-      bottom: -10 * U,
-      border: `${3 * U}px solid ${AZUL}`,
-      borderRadius: 6 * U,
-      background: "rgba(47,91,231,.08)",
-      opacity: caja,
-      transform: `scale(${(0.9 + 0.1 * caja).toFixed(4)})`
-    } }, [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: k, style: {
-      position: "absolute",
-      left: `calc(${a * 100}% - ${8 * U}px)`,
-      top: `calc(${b * 100}% - ${8 * U}px)`,
-      width: 14 * U,
-      height: 14 * U,
-      background: "#FFFFFF",
-      border: `${3 * U}px solid ${AZUL}`,
-      borderRadius: 3 * U
-    } }))));
-  })));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }, children: [
+    arriba && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginBottom: 26 * U, transform: `scale(${Math.max(0, qa).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Reel_Pastilla, { style: { background: LILA_F, color: LILA, border: `${3 * U}px solid #D7CEFF`, fontSize: 60 * U, padding: `${18 * U}px ${40 * U}px` }, children: arriba }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "baseline", padding: `0 ${70 * U}px`, rowGap: 4 * U, maxWidth: width }, children: palabras.map((p, i) => {
+      const q = Reel_easeOut((t - p.t + 0.05) / 0.3);
+      const e = p.estilo;
+      const base = {
+        display: "inline-block",
+        margin: `0 ${tam * 0.13}px`,
+        position: "relative",
+        lineHeight: 1.1,
+        fontSize: tam,
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        color: claro ? Reel_TINTA : "#FFFFFF",
+        letterSpacing: "-0.03em",
+        opacity: clamp(q * 1.3),
+        transform: `translateY(${((1 - q) * tam * 0.3).toFixed(1)}px)`,
+        filter: q < 1 ? `blur(${((1 - q) * 9).toFixed(1)}px)` : void 0
+      };
+      const azul = claro ? AZUL : "var(--cc-azul-claro, #9DB4FF)";
+      if (e === "clave") Object.assign(base, { fontFamily: FAMILIA.display, fontStyle: "italic", fontWeight: 400, color: azul, fontSize: tam * 1.1, letterSpacing: "0" });
+      if (e === "azul") Object.assign(base, { color: azul });
+      if (e === "gris") Object.assign(base, { color: "#9A9CA8", fontWeight: 600, opacity: clamp(q * 1.3) * (0.55 + 0.45 * (1 - Reel_easeOut((t - p.t - 0.5) / 0.6))) });
+      if (e === "pildora") Object.assign(base, { color: LILA, background: LILA_F, borderRadius: 999, padding: `${2 * U}px ${tam * 0.22}px`, border: `${3 * U}px solid #D7CEFF` });
+      const tacha = Reel_easeOut((t - p.t - 0.35) / 0.3);
+      const caja = Reel_easeOut((t - p.t + 0.05) / 0.3);
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: base, children: [
+        p.texto,
+        e === "tachado" && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { position: "absolute", left: -4 * U, top: "52%", height: 9 * U, borderRadius: 5 * U, background: ROJO, width: `calc(${(tacha * 100).toFixed(1)}% + ${8 * U}px)` } }),
+        e === "caja" && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
+          position: "absolute",
+          left: -14 * U,
+          right: -14 * U,
+          top: -6 * U,
+          bottom: -10 * U,
+          border: `${3 * U}px solid ${AZUL}`,
+          borderRadius: 6 * U,
+          background: "rgba(47,91,231,.08)",
+          opacity: caja,
+          transform: `scale(${(0.9 + 0.1 * caja).toFixed(4)})`
+        }, children: [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
+          position: "absolute",
+          left: `calc(${a * 100}% - ${8 * U}px)`,
+          top: `calc(${b * 100}% - ${8 * U}px)`,
+          width: 14 * U,
+          height: 14 * U,
+          background: "#FFFFFF",
+          border: `${3 * U}px solid ${AZUL}`,
+          borderRadius: 3 * U
+        } }, k)) })
+      ] }, i);
+    }) })
+  ] });
 };
 const RecW = ({ cy, nombre, foto }) => {
   const t = Reel_useT();
@@ -97731,76 +98872,98 @@ const RecW = ({ cy, nombre, foto }) => {
   const q = R(0.05, { damping: 12, stiffness: 130 });
   const seg = Math.floor(t * 30) % 30, s = 13 + Math.floor(t);
   const parpadeo = Math.sin(t * 8) > 0 ? 1 : 0.35;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 56 * U,
-    border: `${10 * U}px solid #FFFFFF`,
-    boxShadow: Reel_SOMBRA(U),
-    overflow: "hidden",
-    background: "linear-gradient(180deg, #5C8BFF 0%, #2448C9 100%)",
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -4).toFixed(2)}deg)`
-  } }, Array.from({ length: 14 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-    position: "absolute",
-    left: w / 2 - 6 * U,
-    top: h * 0.35,
-    width: 12 * U,
-    height: h,
-    transformOrigin: "50% 0",
-    background: "rgba(255,255,255,.08)",
-    transform: `rotate(${(-80 + i * 12 + Math.sin(t * 0.8) * 3).toFixed(1)}deg)`
-  } })), foto ? /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: w / 2 - 100 * U, top: h * 0.3, width: 200 * U, height: 200 * U, borderRadius: "50%", background: "linear-gradient(180deg,#E8EEFF,#B9C9F7)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: w / 2 - 230 * U, top: h * 0.62, width: 460 * U, height: 420 * U, borderRadius: "50%", background: "linear-gradient(180deg,#E8EEFF,#AFC0F3)" } }), [[0.22, 0.26, 0, 0], [0.78, 0.26, 1, 0], [0.22, 0.6, 0, 1], [0.78, 0.6, 1, 1]].map(([a, b, c2, d2], k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
-    position: "absolute",
-    left: w * a - 30 * U,
-    top: h * b - 30 * U,
-    width: 60 * U,
-    height: 60 * U,
-    borderLeft: c2 ? "none" : `${6 * U}px solid #F5C451`,
-    borderRight: c2 ? `${6 * U}px solid #F5C451` : "none",
-    borderTop: d2 ? "none" : `${6 * U}px solid #F5C451`,
-    borderBottom: d2 ? `${6 * U}px solid #F5C451` : "none"
-  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 26 * U,
-    top: 26 * U,
-    padding: `${8 * U}px ${18 * U}px`,
-    borderRadius: 14 * U,
-    background: "rgba(15,25,70,.55)",
-    color: "#fff",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 26 * U,
-    display: "flex",
-    alignItems: "center",
-    gap: 10 * U
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { width: 16 * U, height: 16 * U, borderRadius: "50%", background: ROJO, opacity: parpadeo } }), "REC 00:00:", String(s).padStart(2, "0"), ":", String(seg).padStart(2, "0")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    right: 26 * U,
-    top: 26 * U,
-    padding: `${8 * U}px ${16 * U}px`,
-    borderRadius: 14 * U,
-    background: "rgba(255,255,255,.18)",
-    color: "#fff",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 24 * U
-  } }, "4K \xB7 60")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: width / 2 - 70 * U,
-    top: y0 + h - 40 * U,
-    width: 140 * U,
-    height: 140 * U,
-    borderRadius: "50%",
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transform: `scale(${Math.max(0, R(0.25, { damping: 11 })).toFixed(4)})`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 66 * U, height: 66 * U, borderRadius: t > 0.9 ? 14 * U : "50%", background: ROJO } })), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 20 * U, y: y0 + 10 * U, lado: 70 * U, t0: 0.3 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 30 * U, y: y0 + h * 0.3, lado: 52 * U, t0: 0.4 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 30 * U, y: y0 + h * 0.86, lado: 54 * U, t0: 0.5 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 20 * U, y: y0 + h * 0.86, lado: 40 * U, t0: 0.55 }), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [width / 2 + 16 * U, y0 + h + 30 * U], t0: 0.35, t1: 0.85 }), nombre ? null : null);
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 56 * U,
+      border: `${10 * U}px solid #FFFFFF`,
+      boxShadow: Reel_SOMBRA(U),
+      overflow: "hidden",
+      background: "linear-gradient(180deg, #5C8BFF 0%, #2448C9 100%)",
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -4).toFixed(2)}deg)`
+    }, children: [
+      Array.from({ length: 14 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: w / 2 - 6 * U,
+        top: h * 0.35,
+        width: 12 * U,
+        height: h,
+        transformOrigin: "50% 0",
+        background: "rgba(255,255,255,.08)",
+        transform: `rotate(${(-80 + i * 12 + Math.sin(t * 0.8) * 3).toFixed(1)}deg)`
+      } }, i)),
+      foto ? /* @__PURE__ */ (0,jsx_runtime.jsx)(Foto, { src: foto }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: w / 2 - 100 * U, top: h * 0.3, width: 200 * U, height: 200 * U, borderRadius: "50%", background: "linear-gradient(180deg,#E8EEFF,#B9C9F7)" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: w / 2 - 230 * U, top: h * 0.62, width: 460 * U, height: 420 * U, borderRadius: "50%", background: "linear-gradient(180deg,#E8EEFF,#AFC0F3)" } }),
+      [[0.22, 0.26, 0, 0], [0.78, 0.26, 1, 0], [0.22, 0.6, 0, 1], [0.78, 0.6, 1, 1]].map(([a, b, c2, d2], k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: w * a - 30 * U,
+        top: h * b - 30 * U,
+        width: 60 * U,
+        height: 60 * U,
+        borderLeft: c2 ? "none" : `${6 * U}px solid #F5C451`,
+        borderRight: c2 ? `${6 * U}px solid #F5C451` : "none",
+        borderTop: d2 ? "none" : `${6 * U}px solid #F5C451`,
+        borderBottom: d2 ? `${6 * U}px solid #F5C451` : "none"
+      } }, k)),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: 26 * U,
+        top: 26 * U,
+        padding: `${8 * U}px ${18 * U}px`,
+        borderRadius: 14 * U,
+        background: "rgba(15,25,70,.55)",
+        color: "#fff",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 26 * U,
+        display: "flex",
+        alignItems: "center",
+        gap: 10 * U
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { width: 16 * U, height: 16 * U, borderRadius: "50%", background: ROJO, opacity: parpadeo } }),
+        "REC 00:00:",
+        String(s).padStart(2, "0"),
+        ":",
+        String(seg).padStart(2, "0")
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        right: 26 * U,
+        top: 26 * U,
+        padding: `${8 * U}px ${16 * U}px`,
+        borderRadius: 14 * U,
+        background: "rgba(255,255,255,.18)",
+        color: "#fff",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 24 * U
+      }, children: "4K \xB7 60" })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: width / 2 - 70 * U,
+      top: y0 + h - 40 * U,
+      width: 140 * U,
+      height: 140 * U,
+      borderRadius: "50%",
+      background: "#FFFFFF",
+      boxShadow: Reel_SOMBRA(U),
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      transform: `scale(${Math.max(0, R(0.25, { damping: 11 })).toFixed(4)})`
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 66 * U, height: 66 * U, borderRadius: t > 0.9 ? 14 * U : "50%", background: ROJO } }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + w + 20 * U, y: y0 + 10 * U, lado: 70 * U, t0: 0.3 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 - 30 * U, y: y0 + h * 0.3, lado: 52 * U, t0: 0.4 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + w + 30 * U, y: y0 + h * 0.86, lado: 54 * U, t0: 0.5 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 - 20 * U, y: y0 + h * 0.86, lado: 40 * U, t0: 0.55 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [width / 2 + 16 * U, y0 + h + 30 * U], t0: 0.35, t1: 0.85 }),
+    nombre ? null : null
+  ] });
 };
 const RelojW = ({ cy, desde = 22 * 60 + 30, hasta = 3 * 60 + 14 + 24 * 60, etiqueta = "Still editing\u2026" }) => {
   const t = Reel_useT();
@@ -97815,48 +98978,67 @@ const RelojW = ({ cy, desde = 22 * 60 + 30, hasta = 3 * 60 + 14 + 24 * 60, etiqu
   const h12 = (hh + 11) % 12 + 1, ampm = hh >= 12 ? "PM" : "AM";
   const rueda = clamp((t - 0.12) / Math.min(0.8, Math.max(0.5, dur - 0.6)));
   const borroso = rueda > 0 && rueda < 1 ? 6 * Math.sin(Math.PI * rueda) : 0;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 44 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 5).toFixed(2)}deg)`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 34 * U, top: 30 * U, display: "flex", gap: 14 * U } }, ["#F0473C", "#F5B82E", "#2FB45A"].map((c) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: c, style: { width: 26 * U, height: 26 * U, borderRadius: "50%", background: c } }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 30 * U,
-    right: 30 * U,
-    top: 86 * U,
-    bottom: 30 * U,
-    borderRadius: 24 * U,
-    background: "#F4F5FA",
-    backgroundImage: "radial-gradient(rgba(70,80,140,.12) 2px, transparent 2px)",
-    backgroundSize: `${22 * U}px ${22 * U}px`
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 80 * U,
-    right: 80 * U,
-    top: 160 * U,
-    height: 300 * U,
-    border: `${3 * U}px solid ${AZUL}`,
-    borderRadius: 4 * U,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 40 * U, color: "#2340C8" } }, ampm), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 190 * U, color: Reel_TINTA, letterSpacing: "-0.04em", lineHeight: 1, fontVariantNumeric: "tabular-nums" } }, String(h12).padStart(2, "0"), ":", /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { filter: `blur(${borroso.toFixed(1)}px)` } }, String(mm).padStart(2, "0"))), [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
-    position: "absolute",
-    left: `calc(${a * 100}% - ${9 * U}px)`,
-    top: `calc(${b * 100}% - ${9 * U}px)`,
-    width: 16 * U,
-    height: 16 * U,
-    background: "#FFFFFF",
-    border: `${3 * U}px solid ${AZUL}`,
-    borderRadius: 3 * U
-  } })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 + w - 190 * U, top: y0 - 110 * U, transform: `scale(${Math.max(0, R(0.3, { damping: 10 })).toFixed(4)}) rotate(${Math.sin(t * 1.5) * 4}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "crescent_moon", lado: 210 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 + w - 270 * U, top: y0 - 30 * U, opacity: 0.95, transform: `translateX(${Math.sin(t * 0.9) * 10 * U}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "cloud", lado: 130 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 + w - 40 * U, top: y0 + 30 * U, transform: `translateX(${Math.cos(t * 0.8) * 8 * U}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "cloud", lado: 100 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 20 * U, top: y0 + h + 30 * U, transform: `scale(${Math.max(0, R(0.6, { damping: 12 })).toFixed(4)})`, transformOrigin: "left center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { background: LILA_F, color: LILA, fontSize: 34 * U, padding: `${10 * U}px ${24 * U}px`, border: `${3 * U}px solid #D7CEFF` } }, etiqueta)), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.85, cy + 520 * U], hasta: [width / 2 - 50 * U, y0 + h - 40 * U], t0: 0.3, t1: 0.8, onda: false }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 44 * U,
+      background: "#FFFFFF",
+      boxShadow: Reel_SOMBRA(U),
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 5).toFixed(2)}deg)`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 34 * U, top: 30 * U, display: "flex", gap: 14 * U }, children: ["#F0473C", "#F5B82E", "#2FB45A"].map((c) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 26 * U, height: 26 * U, borderRadius: "50%", background: c } }, c)) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: 30 * U,
+        right: 30 * U,
+        top: 86 * U,
+        bottom: 30 * U,
+        borderRadius: 24 * U,
+        background: "#F4F5FA",
+        backgroundImage: "radial-gradient(rgba(70,80,140,.12) 2px, transparent 2px)",
+        backgroundSize: `${22 * U}px ${22 * U}px`
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: 80 * U,
+        right: 80 * U,
+        top: 160 * U,
+        height: 300 * U,
+        border: `${3 * U}px solid ${AZUL}`,
+        borderRadius: 4 * U,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center"
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 40 * U, color: "#2340C8" }, children: ampm }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 190 * U, color: Reel_TINTA, letterSpacing: "-0.04em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }, children: [
+          String(h12).padStart(2, "0"),
+          ":",
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { filter: `blur(${borroso.toFixed(1)}px)` }, children: String(mm).padStart(2, "0") })
+        ] }),
+        [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: `calc(${a * 100}% - ${9 * U}px)`,
+          top: `calc(${b * 100}% - ${9 * U}px)`,
+          width: 16 * U,
+          height: 16 * U,
+          background: "#FFFFFF",
+          border: `${3 * U}px solid ${AZUL}`,
+          borderRadius: 3 * U
+        } }, k))
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: x0 + w - 190 * U, top: y0 - 110 * U, transform: `scale(${Math.max(0, R(0.3, { damping: 10 })).toFixed(4)}) rotate(${Math.sin(t * 1.5) * 4}deg)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: "crescent_moon", lado: 210 * U }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: x0 + w - 270 * U, top: y0 - 30 * U, opacity: 0.95, transform: `translateX(${Math.sin(t * 0.9) * 10 * U}px)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: "cloud", lado: 130 * U }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: x0 + w - 40 * U, top: y0 + 30 * U, transform: `translateX(${Math.cos(t * 0.8) * 8 * U}px)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: "cloud", lado: 100 * U }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2 - 20 * U, top: y0 + h + 30 * U, transform: `scale(${Math.max(0, R(0.6, { damping: 12 })).toFixed(4)})`, transformOrigin: "left center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Reel_Pastilla, { style: { background: LILA_F, color: LILA, fontSize: 34 * U, padding: `${10 * U}px ${24 * U}px`, border: `${3 * U}px solid #D7CEFF` }, children: etiqueta }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.85, cy + 520 * U], hasta: [width / 2 - 50 * U, y0 + h - 40 * U], t0: 0.3, t1: 0.8, onda: false })
+  ] });
 };
 const ArchivosW = ({ cy, titulo = "Raw footage", sub = "47 clips \xB7 3h 12m" }) => {
   const t = Reel_useT();
@@ -97866,51 +99048,59 @@ const ArchivosW = ({ cy, titulo = "Raw footage", sub = "47 clips \xB7 3h 12m" })
   const w = 680 * U, h = 330 * U, x0 = width / 2 - w / 2, y0 = cy + 40 * U;
   const qc = R(0.05, { damping: 13, stiffness: 130 });
   const fotos = [["#FF9A62", "#FFC48E", -16, -150], ["#5A86FF", "#8FB0FF", -4, -10], ["#8E6BFF", "#B79CFF", 12, 140]];
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, fotos.map(([c1, c2, rot, dx], i) => {
-    const q = R(0.12 + i * 0.08, { damping: 11, stiffness: 150 });
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    fotos.map(([c1, c2, rot, dx], i) => {
+      const q = R(0.12 + i * 0.08, { damping: 11, stiffness: 150 });
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: width / 2 - 140 * U + dx * U * q,
+        top: y0 - 60 * U - q * 170 * U,
+        width: 280 * U,
+        height: 200 * U,
+        borderRadius: 26 * U,
+        background: `linear-gradient(160deg, ${c1}, ${c2})`,
+        border: `${7 * U}px solid #FFFFFF`,
+        boxShadow: Reel_SOMBRA(U),
+        transform: `rotate(${(rot * q).toFixed(2)}deg)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 70 * U, height: 70 * U, borderRadius: "50%", background: "rgba(255,255,255,.85)", display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 0, height: 0, borderTop: `${14 * U}px solid transparent`, borderBottom: `${14 * U}px solid transparent`, borderLeft: `${22 * U}px solid ${c1}`, marginLeft: 6 * U } }) }) }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "absolute",
-      left: width / 2 - 140 * U + dx * U * q,
-      top: y0 - 60 * U - q * 170 * U,
-      width: 280 * U,
-      height: 200 * U,
-      borderRadius: 26 * U,
-      background: `linear-gradient(160deg, ${c1}, ${c2})`,
-      border: `${7 * U}px solid #FFFFFF`,
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 40 * U,
+      background: "#FFFFFF",
       boxShadow: Reel_SOMBRA(U),
-      transform: `rotate(${(rot * q).toFixed(2)}deg)`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 70 * U, height: 70 * U, borderRadius: "50%", background: "rgba(255,255,255,.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 0, height: 0, borderTop: `${14 * U}px solid transparent`, borderBottom: `${14 * U}px solid transparent`, borderLeft: `${22 * U}px solid ${c1}`, marginLeft: 6 * U } })));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 40 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    transform: `scale(${Math.max(1e-3, qc).toFixed(4)})`,
-    padding: `${40 * U}px ${44 * U}px`,
-    boxSizing: "border-box"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 44 * U, bottom: 90 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, color: Reel_TINTA, letterSpacing: "-0.02em" } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 44 * U, bottom: 46 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#8A8E9C" } }, sub), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    right: 40 * U,
-    bottom: 40 * U,
-    width: 100 * U,
-    height: 100 * U,
-    borderRadius: "50%",
-    background: Reel_TINTA,
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 50 * U,
-    fontWeight: 800,
-    fontFamily: FAMILIA.inter
-  } }, "\u2197")), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.9, cy + 520 * U], hasta: [x0 + w - 90 * U, y0 + h - 90 * U], t0: 0.12, t1: 0.5 }));
+      transform: `scale(${Math.max(1e-3, qc).toFixed(4)})`,
+      padding: `${40 * U}px ${44 * U}px`,
+      boxSizing: "border-box"
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 44 * U, bottom: 90 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, color: Reel_TINTA, letterSpacing: "-0.02em" }, children: titulo }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 44 * U, bottom: 46 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#8A8E9C" }, children: sub }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        right: 40 * U,
+        bottom: 40 * U,
+        width: 100 * U,
+        height: 100 * U,
+        borderRadius: "50%",
+        background: Reel_TINTA,
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 50 * U,
+        fontWeight: 800,
+        fontFamily: FAMILIA.inter
+      }, children: "\u2197" })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.9, cy + 520 * U], hasta: [x0 + w - 90 * U, y0 + h - 90 * U], t0: 0.12, t1: 0.5 })
+  ] });
 };
 const BuscarW = ({ cy, etiqueta = "Story found", foto }) => {
   const t = Reel_useT();
@@ -97919,53 +99109,66 @@ const BuscarW = ({ cy, etiqueta = "Story found", foto }) => {
   const R = useResorte();
   const clips = [["#FFB199", "#FFD5C4", "12:06"], ["#4F7BFF", "#8BAAFF", "08:41"], ["#B9A4FF", "#DCD2FF", "23:17"]];
   const sel = R(0.4, { damping: 12, stiffness: 140 });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: width / 2 - 330 * U,
-    top: cy - 330 * U,
-    width: 660 * U,
-    height: 660 * U,
-    borderRadius: "50%",
-    background: `radial-gradient(circle, rgba(79,123,255,${(0.35 * sel).toFixed(3)}) 0%, rgba(79,123,255,0) 65%)`
-  } }), clips.map(([c1, c2, d], i) => {
-    const q = R(0.1 + i * 0.1, { damping: 12, stiffness: 150 });
-    const centro = i === 1;
-    const w = (centro ? 300 : 250) * U * (centro ? 1 + 0.08 * sel : 1), h = w * 0.7;
-    const x = width / 2 + (i - 1) * 330 * U;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
-      left: x - w / 2,
-      top: cy - h / 2,
-      width: w,
-      height: h,
-      borderRadius: 22 * U,
-      background: `linear-gradient(160deg, ${c1}, ${c2})`,
-      border: `${6 * U}px solid #FFFFFF`,
-      boxShadow: Reel_SOMBRA(U),
-      transform: `scale(${Math.max(1e-3, q).toFixed(4)})`,
-      opacity: centro ? 1 : 1 - 0.35 * sel
-    } }, centro && foto ? /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto, style: { borderRadius: 16 * U } }) : null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: "50%", top: "42%", transform: "translate(-50%,-50%)", width: 56 * U, height: 56 * U, borderRadius: "50%", background: "rgba(255,255,255,.8)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      right: 12 * U,
-      bottom: 10 * U,
-      padding: `${2 * U}px ${8 * U}px`,
-      borderRadius: 8 * U,
-      background: "rgba(0,0,0,.35)",
-      color: "#fff",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 700,
-      fontSize: 20 * U
-    } }, d), centro && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: -22 * U, border: `${3 * U}px solid ${AZUL}`, borderRadius: 6 * U, opacity: sel } }, [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
-      position: "absolute",
-      left: `calc(${a * 100}% - ${9 * U}px)`,
-      top: `calc(${b * 100}% - ${9 * U}px)`,
-      width: 16 * U,
-      height: 16 * U,
-      background: "#fff",
-      border: `${3 * U}px solid ${AZUL}`,
-      borderRadius: 3 * U
-    } }))));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: cy + 190 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.5, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { color: "#2340C8" } }, "\u2726 ", etiqueta)), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.82, cy + 480 * U], hasta: [width / 2 + 40 * U, cy + 40 * U], t0: 0.05, t1: 0.4 }));
+      left: width / 2 - 330 * U,
+      top: cy - 330 * U,
+      width: 660 * U,
+      height: 660 * U,
+      borderRadius: "50%",
+      background: `radial-gradient(circle, rgba(79,123,255,${(0.35 * sel).toFixed(3)}) 0%, rgba(79,123,255,0) 65%)`
+    } }),
+    clips.map(([c1, c2, d], i) => {
+      const q = R(0.1 + i * 0.1, { damping: 12, stiffness: 150 });
+      const centro = i === 1;
+      const w = (centro ? 300 : 250) * U * (centro ? 1 + 0.08 * sel : 1), h = w * 0.7;
+      const x = width / 2 + (i - 1) * 330 * U;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: x - w / 2,
+        top: cy - h / 2,
+        width: w,
+        height: h,
+        borderRadius: 22 * U,
+        background: `linear-gradient(160deg, ${c1}, ${c2})`,
+        border: `${6 * U}px solid #FFFFFF`,
+        boxShadow: Reel_SOMBRA(U),
+        transform: `scale(${Math.max(1e-3, q).toFixed(4)})`,
+        opacity: centro ? 1 : 1 - 0.35 * sel
+      }, children: [
+        centro && foto ? /* @__PURE__ */ (0,jsx_runtime.jsx)(Foto, { src: foto, style: { borderRadius: 16 * U } }) : null,
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: "50%", top: "42%", transform: "translate(-50%,-50%)", width: 56 * U, height: 56 * U, borderRadius: "50%", background: "rgba(255,255,255,.8)" } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          right: 12 * U,
+          bottom: 10 * U,
+          padding: `${2 * U}px ${8 * U}px`,
+          borderRadius: 8 * U,
+          background: "rgba(0,0,0,.35)",
+          color: "#fff",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 700,
+          fontSize: 20 * U
+        }, children: d }),
+        centro && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: -22 * U, border: `${3 * U}px solid ${AZUL}`, borderRadius: 6 * U, opacity: sel }, children: [[0, 0], [1, 0], [0, 1], [1, 1]].map(([a, b], k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: `calc(${a * 100}% - ${9 * U}px)`,
+          top: `calc(${b * 100}% - ${9 * U}px)`,
+          width: 16 * U,
+          height: 16 * U,
+          background: "#fff",
+          border: `${3 * U}px solid ${AZUL}`,
+          borderRadius: 3 * U
+        } }, k)) })
+      ] }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2, top: cy + 190 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.5, { damping: 11 })).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(Reel_Pastilla, { style: { color: "#2340C8" }, children: [
+      "\u2726 ",
+      etiqueta
+    ] }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.82, cy + 480 * U], hasta: [width / 2 + 40 * U, cy + 40 * U], t0: 0.05, t1: 0.4 })
+  ] });
 };
 const CortarW = ({ cy, titulo = "Timeline" }) => {
   const t = Reel_useT();
@@ -97977,39 +99180,54 @@ const CortarW = ({ cy, titulo = "Timeline" }) => {
   const cab = x0 + 60 * U + (w - 120 * U) * Reel_suave(clamp((t - 0.08) / 0.7));
   const corte = clamp((t - 0.45) / 0.4);
   const barras = (n, semilla) => Array.from({ length: n }).map((_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 1.7 + semilla)));
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 40 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 36 * U, top: 28 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 36 * U, color: Reel_TINTA } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", right: 40 * U, top: 32 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 28 * U, color: "#555A6A", display: "flex", alignItems: "center", gap: 8 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { width: 12 * U, height: 12 * U, borderRadius: "50%", background: ROJO } }), "00:", String(14 + Math.floor(t)).padStart(2, "0"), ":", String(Math.floor(t * 30) % 30).padStart(2, "0")), [0, 1, 2, 3].map((i) => {
-    const fuera = i === 3;
-    const caida = fuera ? corte : 0;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 40 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 36 * U, top: 28 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 36 * U, color: Reel_TINTA }, children: titulo }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", right: 40 * U, top: 32 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 28 * U, color: "#555A6A", display: "flex", alignItems: "center", gap: 8 * U }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { width: 12 * U, height: 12 * U, borderRadius: "50%", background: ROJO } }),
+        "00:",
+        String(14 + Math.floor(t)).padStart(2, "0"),
+        ":",
+        String(Math.floor(t * 30) % 30).padStart(2, "0")
+      ] }),
+      [0, 1, 2, 3].map((i) => {
+        const fuera = i === 3;
+        const caida = fuera ? corte : 0;
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: 60 * U + i * 210 * U,
+          top: 120 * U + caida * 300 * U,
+          width: 196 * U,
+          height: 150 * U,
+          borderRadius: 14 * U,
+          background: fuera ? "#C9CEDA" : "#3D6BF0",
+          opacity: 1 - caida,
+          transform: `rotate(${(caida * 25).toFixed(1)}deg)`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-evenly",
+          padding: `0 ${8 * U}px`
+        }, children: barras(12, i).map((b, k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 5 * U, height: 80 * U * b, borderRadius: 3 * U, background: "rgba(255,255,255,.85)" } }, k)) }, i);
+      }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 60 * U, right: 60 * U, top: 310 * U, height: 64 * U, display: "flex", alignItems: "center", justifyContent: "space-between" }, children: barras(46, 3).map((b, k) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 5 * U, height: 40 * U * b, borderRadius: 3 * U, background: "#8B7BF0", opacity: 0.8 } }, k)) })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: cab - 2 * U, top: y0 + 20 * U, width: 4 * U, height: h - 40 * U, background: Reel_TINTA } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
-      left: 60 * U + i * 210 * U,
-      top: 120 * U + caida * 300 * U,
-      width: 196 * U,
-      height: 150 * U,
-      borderRadius: 14 * U,
-      background: fuera ? "#C9CEDA" : "#3D6BF0",
-      opacity: 1 - caida,
-      transform: `rotate(${(caida * 25).toFixed(1)}deg)`,
+      left: cab - 40 * U,
+      top: y0 - 10 * U,
+      width: 80 * U,
+      height: 80 * U,
+      borderRadius: "50%",
+      background: Reel_TINTA,
+      color: "#fff",
       display: "flex",
       alignItems: "center",
-      justifyContent: "space-evenly",
-      padding: `0 ${8 * U}px`
-    } }, barras(12, i).map((b, k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: { width: 5 * U, height: 80 * U * b, borderRadius: 3 * U, background: "rgba(255,255,255,.85)" } })));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 60 * U, right: 60 * U, top: 310 * U, height: 64 * U, display: "flex", alignItems: "center", justifyContent: "space-between" } }, barras(46, 3).map((b, k) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: { width: 5 * U, height: 40 * U * b, borderRadius: 3 * U, background: "#8B7BF0", opacity: 0.8 } })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cab - 2 * U, top: y0 + 20 * U, width: 4 * U, height: h - 40 * U, background: Reel_TINTA } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cab - 40 * U,
-    top: y0 - 10 * U,
-    width: 80 * U,
-    height: 80 * U,
-    borderRadius: "50%",
-    background: Reel_TINTA,
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 42 * U,
-    transform: `rotate(${t > 0.45 && t < 0.7 ? -25 : 0}deg)`
-  } }, "\u2702"));
+      justifyContent: "center",
+      fontSize: 42 * U,
+      transform: `rotate(${t > 0.45 && t < 0.7 ? -25 : 0}deg)`
+    }, children: "\u2702" })
+  ] });
 };
 const LargoW = ({ cy, duracion = "2h 47m", foto }) => {
   const t = Reel_useT();
@@ -98018,32 +99236,44 @@ const LargoW = ({ cy, duracion = "2h 47m", foto }) => {
   const R = useResorte();
   const w = width * 1.02, h = 470 * U, y0 = cy - h / 2 - 40 * U;
   const q = R(0.05, { damping: 14, stiffness: 110 });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: (width - w) / 2,
-    top: y0,
-    width: w,
-    height: h,
-    background: "linear-gradient(180deg,#C7C9CF,#A9ACB4)",
-    borderTop: `${8 * U}px solid #FFFFFF`,
-    borderBottom: `${8 * U}px solid #FFFFFF`,
-    boxShadow: Reel_SOMBRA(U),
-    transform: `scaleX(${(0.6 + 0.4 * q).toFixed(4)})`,
-    opacity: clamp(q * 1.5),
-    overflow: "hidden"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 70 * U, top: h * 0.2, width: 140 * U, height: 140 * U, borderRadius: "50%", background: "#D9DBE0" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 200 * U, top: h * 0.62, width: 400 * U, height: 300 * U, borderRadius: "50%", background: "#D9DBE0" } }), /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto, gris: true, style: { opacity: 0.85 } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 45 * U, top: h * 0.29, width: 90 * U, height: 90 * U, borderRadius: "50%", background: "rgba(255,255,255,.75)" } })), [0, 1].map((k) => {
-    const u = (t * 0.5 + k * 0.5) % 1;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "absolute",
-      left: width * 0.78 + u * 30 * U,
-      top: y0 - 40 * U - u * 120 * U,
-      fontFamily: FAMILIA.inter,
-      fontWeight: 800,
-      fontSize: (40 - k * 10) * U,
-      color: "#9A9CA8",
-      opacity: 1 - u
-    } }, "z");
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: y0 + h + 50 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.45, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { fontSize: 40 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: ROJO } }, "\u25F7"), duracion)));
+      left: (width - w) / 2,
+      top: y0,
+      width: w,
+      height: h,
+      background: "linear-gradient(180deg,#C7C9CF,#A9ACB4)",
+      borderTop: `${8 * U}px solid #FFFFFF`,
+      borderBottom: `${8 * U}px solid #FFFFFF`,
+      boxShadow: Reel_SOMBRA(U),
+      transform: `scaleX(${(0.6 + 0.4 * q).toFixed(4)})`,
+      opacity: clamp(q * 1.5),
+      overflow: "hidden"
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2 - 70 * U, top: h * 0.2, width: 140 * U, height: 140 * U, borderRadius: "50%", background: "#D9DBE0" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2 - 200 * U, top: h * 0.62, width: 400 * U, height: 300 * U, borderRadius: "50%", background: "#D9DBE0" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Foto, { src: foto, gris: true, style: { opacity: 0.85 } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2 - 45 * U, top: h * 0.29, width: 90 * U, height: 90 * U, borderRadius: "50%", background: "rgba(255,255,255,.75)" } })
+    ] }),
+    [0, 1].map((k) => {
+      const u = (t * 0.5 + k * 0.5) % 1;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: width * 0.78 + u * 30 * U,
+        top: y0 - 40 * U - u * 120 * U,
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        fontSize: (40 - k * 10) * U,
+        color: "#9A9CA8",
+        opacity: 1 - u
+      }, children: "z" }, k);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2, top: y0 + h + 50 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.45, { damping: 11 })).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(Reel_Pastilla, { style: { fontSize: 40 * U }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: ROJO }, children: "\u25F7" }),
+      duracion
+    ] }) })
+  ] });
 };
 const MovilW = ({ cy, titulo = "Your story,", cursiva = "finally.", sub = "Tight, clear, and actually worth watching.", boton = "Watch now", pct = 96, etiqueta = "Watch-through", foto }) => {
   const t = Reel_useT();
@@ -98055,56 +99285,87 @@ const MovilW = ({ cy, titulo = "Your story,", cursiva = "finally.", sub = "Tight
   const reacciones = ["light_bulb", "smiling_face_with_heart_eyes", "thumbs_up", "raising_hands", "exploding_head"];
   const pos = [[0.95, 0.06], [1.15, 0], [1.42, 0], [1.05, 0.2], [1.38, 0.24]];
   const n = Math.round(pct * Reel_suave(clamp((t - 0.6) / 1.1)));
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 40 * U,
-    border: `${8 * U}px solid #FFFFFF`,
-    boxShadow: Reel_SOMBRA(U),
-    overflow: "hidden",
-    background: "linear-gradient(180deg,#2C5BE8 0%,#0E2A7A 100%)",
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 4).toFixed(2)}deg)`
-  } }, Array.from({ length: 10 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-    position: "absolute",
-    left: w / 2 - 4 * U,
-    top: h * 0.25,
-    width: 8 * U,
-    height: h,
-    transformOrigin: "50% 0",
-    background: "rgba(255,255,255,.06)",
-    transform: `rotate(${-60 + i * 13}deg)`
-  } })), foto ? /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(14,42,122,.15) 0%, rgba(14,42,122,.55) 45%, rgba(10,24,70,.92) 100%)" } })) : null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: w / 2 - 34 * U, top: h * 0.2, width: 68 * U, height: 68 * U, borderRadius: "50%", background: "rgba(255,255,255,.85)" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, top: h * 0.4, textAlign: "center", color: "#fff", padding: `0 ${30 * U}px` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, lineHeight: 1.05 } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 54 * U, lineHeight: 1.05 } }, cursiva), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 16 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 24 * U, opacity: 0.8 } }, sub), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    display: "inline-block",
-    marginTop: 22 * U,
-    padding: `${12 * U}px ${30 * U}px`,
-    borderRadius: 999,
-    background: "#fff",
-    color: Reel_TINTA,
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 26 * U
-  } }, boton))), reacciones.map((r, i) => {
-    const qr = R(0.5 + i * 0.12, { damping: 9, stiffness: 170 });
-    const [a, b] = pos[i];
-    const lado = (i === 1 ? 120 : 92) * U;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: r, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "absolute",
-      left: x0 + w * a - lado / 2,
-      top: y0 + h * b - lado / 2 + Math.sin(t * 2 + i) * 8 * U,
-      width: lado,
-      height: lado,
-      borderRadius: "50%",
-      background: "#FFFFFF",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 40 * U,
+      border: `${8 * U}px solid #FFFFFF`,
       boxShadow: Reel_SOMBRA(U),
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transform: `scale(${Math.max(0, qr).toFixed(4)})`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: r, lado: lado * 0.7 }));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 - 230 * U, top: y0 + 20 * U, transform: `scale(${Math.max(0, R(0.4, { damping: 11 })).toFixed(4)})`, transformOrigin: "left center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${18 * U}px ${34 * U}px ${18 * U}px ${18 * U}px`, borderRadius: 999, background: OSCURO, boxShadow: Reel_SOMBRA(U) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 86 * U, height: 86 * U, viewBox: "0 0 40 40" }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 20, cy: 20, r: 15, fill: "none", stroke: "rgba(255,255,255,.15)", strokeWidth: 5 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 20, cy: 20, r: 15, fill: "none", stroke: "#2FD27A", strokeWidth: 5, strokeLinecap: "round", strokeDasharray: 94.2, strokeDashoffset: 94.2 * (1 - n / 100), transform: "rotate(-90 20 20)" })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 52 * U, color: "#fff", lineHeight: 1 } }, n, "%"), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 22 * U, color: "rgba(255,255,255,.65)" } }, etiqueta)))), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 40 * U, y: y0 + h - 20 * U, lado: 46 * U, t0: 0.8 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 40 * U, y: y0 + h - 60 * U, lado: 40 * U, t0: 0.9 }));
+      overflow: "hidden",
+      background: "linear-gradient(180deg,#2C5BE8 0%,#0E2A7A 100%)",
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 4).toFixed(2)}deg)`
+    }, children: [
+      Array.from({ length: 10 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: w / 2 - 4 * U,
+        top: h * 0.25,
+        width: 8 * U,
+        height: h,
+        transformOrigin: "50% 0",
+        background: "rgba(255,255,255,.06)",
+        transform: `rotate(${-60 + i * 13}deg)`
+      } }, i)),
+      foto ? /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(Foto, { src: foto }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(14,42,122,.15) 0%, rgba(14,42,122,.55) 45%, rgba(10,24,70,.92) 100%)" } })
+      ] }) : null,
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: w / 2 - 34 * U, top: h * 0.2, width: 68 * U, height: 68 * U, borderRadius: "50%", background: "rgba(255,255,255,.85)" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 0, right: 0, top: h * 0.4, textAlign: "center", color: "#fff", padding: `0 ${30 * U}px` }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, lineHeight: 1.05 }, children: titulo }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.display, fontStyle: "italic", fontSize: 54 * U, lineHeight: 1.05 }, children: cursiva }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 16 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 24 * U, opacity: 0.8 }, children: sub }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          display: "inline-block",
+          marginTop: 22 * U,
+          padding: `${12 * U}px ${30 * U}px`,
+          borderRadius: 999,
+          background: "#fff",
+          color: Reel_TINTA,
+          fontFamily: FAMILIA.inter,
+          fontWeight: 700,
+          fontSize: 26 * U
+        }, children: boton })
+      ] })
+    ] }),
+    reacciones.map((r, i) => {
+      const qr = R(0.5 + i * 0.12, { damping: 9, stiffness: 170 });
+      const [a, b] = pos[i];
+      const lado = (i === 1 ? 120 : 92) * U;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: x0 + w * a - lado / 2,
+        top: y0 + h * b - lado / 2 + Math.sin(t * 2 + i) * 8 * U,
+        width: lado,
+        height: lado,
+        borderRadius: "50%",
+        background: "#FFFFFF",
+        boxShadow: Reel_SOMBRA(U),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transform: `scale(${Math.max(0, qr).toFixed(4)})`
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: r, lado: lado * 0.7 }) }, r);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: x0 - 230 * U, top: y0 + 20 * U, transform: `scale(${Math.max(0, R(0.4, { damping: 11 })).toFixed(4)})`, transformOrigin: "left center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${18 * U}px ${34 * U}px ${18 * U}px ${18 * U}px`, borderRadius: 999, background: OSCURO, boxShadow: Reel_SOMBRA(U) }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 86 * U, height: 86 * U, viewBox: "0 0 40 40", children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: 20, cy: 20, r: 15, fill: "none", stroke: "rgba(255,255,255,.15)", strokeWidth: 5 }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: 20, cy: 20, r: 15, fill: "none", stroke: "#2FD27A", strokeWidth: 5, strokeLinecap: "round", strokeDasharray: 94.2, strokeDashoffset: 94.2 * (1 - n / 100), transform: "rotate(-90 20 20)" })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 52 * U, color: "#fff", lineHeight: 1 }, children: [
+          n,
+          "%"
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 22 * U, color: "rgba(255,255,255,.65)" }, children: etiqueta })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 - 40 * U, y: y0 + h - 20 * U, lado: 46 * U, t0: 0.8 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + w + 40 * U, y: y0 + h - 60 * U, lado: 40 * U, t0: 0.9 })
+  ] });
 };
 const ChatW = ({ cy, nombre = "", rol = "", responder = "Reply", iconos, cita }) => {
   const t = Reel_useT();
@@ -98114,54 +99375,74 @@ const ChatW = ({ cy, nombre = "", rol = "", responder = "Reply", iconos, cita })
   const q1 = R(0.05, { damping: 12, stiffness: 150 }), q2 = R(0.25, { damping: 12, stiffness: 120 });
   const w = 900 * U;
   const emojis = [...iconos || [], "grinning_face_with_sweat", "thinking_face", "clapper_board"].filter((x, i, a) => a.indexOf(x) === i).slice(0, 3);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, nombre ? /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 260 * U, top: cy - 420 * U, transform: `scale(${(Math.max(1e-3, q1) * 1.3).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 20 * U, padding: `${18 * U}px ${22 * U}px`, width: 520 * U, borderRadius: 999, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), boxSizing: "border-box" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    width: 70 * U,
-    height: 70 * U,
-    borderRadius: "50%",
-    background: "#F26B4E",
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: 36 * U
-  } }, nombre.slice(0, 1).toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, color: Reel_TINTA } }, nombre), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 22 * U, color: "#9A9CA8" } }, rol)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { padding: `${10 * U}px ${22 * U}px`, borderRadius: 14 * U, background: "#E6EDFF", color: AZUL, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 26 * U } }, responder))) : null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: width / 2 - w / 2,
-    top: cy - 220 * U,
-    width: w,
-    borderRadius: 40 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    overflow: "hidden",
-    border: `${6 * U}px solid #FFFFFF`,
-    transform: `translateY(${((1 - q2) * 80 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * q2).toFixed(4)})`,
-    opacity: clamp(q2 * 1.5)
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { height: 210 * U, background: "linear-gradient(180deg,#D7E3FF,#E9EEFF)", display: "flex", alignItems: "center", justifyContent: "center", gap: 24 * U } }, emojis.map((e, i) => {
-    const qe = R(0.5 + i * 0.12, { damping: 10 });
-    const lado = (i === 1 ? 150 : 100) * U;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: e, style: {
-      width: lado,
-      height: lado,
-      borderRadius: "50%",
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    nombre ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2 - 260 * U, top: cy - 420 * U, transform: `scale(${(Math.max(1e-3, q1) * 1.3).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 20 * U, padding: `${18 * U}px ${22 * U}px`, width: 520 * U, borderRadius: 999, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), boxSizing: "border-box" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: 70 * U,
+        height: 70 * U,
+        borderRadius: "50%",
+        background: "#F26B4E",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        fontSize: 36 * U
+      }, children: nombre.slice(0, 1).toUpperCase() }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1 }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, color: Reel_TINTA }, children: nombre }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 22 * U, color: "#9A9CA8" }, children: rol })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { padding: `${10 * U}px ${22 * U}px`, borderRadius: 14 * U, background: "#E6EDFF", color: AZUL, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 26 * U }, children: responder })
+    ] }) }) : null,
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: width / 2 - w / 2,
+      top: cy - 220 * U,
+      width: w,
+      borderRadius: 40 * U,
       background: "#FFFFFF",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
       boxShadow: Reel_SOMBRA(U),
-      transform: `scale(${Math.max(0, qe).toFixed(4)})`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: e, lado: lado * 0.72 }));
-  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { padding: `${36 * U}px ${46 * U}px ${46 * U}px`, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 62 * U, color: Reel_TINTA, lineHeight: 1.18 } }, "\u201C", cita.map((p, i) => {
-    const v = clamp((t - p.t + 0.05) / 0.2);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("span", { key: i, style: {
-      opacity: 0.25 + 0.75 * v,
-      color: p.resalta ? "#2048D8" : Reel_TINTA,
-      background: p.resalta ? `rgba(120,160,255,${(0.35 * v).toFixed(3)})` : "transparent",
-      borderRadius: 6 * U,
-      padding: `0 ${4 * U}px`
-    } }, p.texto, " ");
-  }), "\u201D")));
+      overflow: "hidden",
+      border: `${6 * U}px solid #FFFFFF`,
+      transform: `translateY(${((1 - q2) * 80 * U).toFixed(1)}px) scale(${(0.9 + 0.1 * q2).toFixed(4)})`,
+      opacity: clamp(q2 * 1.5)
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { height: 210 * U, background: "linear-gradient(180deg,#D7E3FF,#E9EEFF)", display: "flex", alignItems: "center", justifyContent: "center", gap: 24 * U }, children: emojis.map((e, i) => {
+        const qe = R(0.5 + i * 0.12, { damping: 10 });
+        const lado = (i === 1 ? 150 : 100) * U;
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: lado,
+          height: lado,
+          borderRadius: "50%",
+          background: "#FFFFFF",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: Reel_SOMBRA(U),
+          transform: `scale(${Math.max(0, qe).toFixed(4)})`
+        }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: e, lado: lado * 0.72 }) }, e);
+      }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { padding: `${36 * U}px ${46 * U}px ${46 * U}px`, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 62 * U, color: Reel_TINTA, lineHeight: 1.18 }, children: [
+        "\u201C",
+        cita.map((p, i) => {
+          const v = clamp((t - p.t + 0.05) / 0.2);
+          return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: {
+            opacity: 0.25 + 0.75 * v,
+            color: p.resalta ? "#2048D8" : Reel_TINTA,
+            background: p.resalta ? `rgba(120,160,255,${(0.35 * v).toFixed(3)})` : "transparent",
+            borderRadius: 6 * U,
+            padding: `0 ${4 * U}px`
+          }, children: [
+            p.texto,
+            " "
+          ] }, i);
+        }),
+        "\u201D"
+      ] })
+    ] })
+  ] });
 };
 const VersionesW = ({ cy, etiquetas = ["Punchy cut", "Story-first", "Minimal"], boton = "New version", version = "VERSION" }) => {
   const t = Reel_useT();
@@ -98171,49 +99452,60 @@ const VersionesW = ({ cy, etiquetas = ["Punchy cut", "Story-first", "Minimal"], 
   const abre = R(0.45, { damping: 12, stiffness: 120 });
   const cartas = [["A", "#3E6BF5", "#6E92FF"], ["B", "#FF7A45", "#FFB177"], ["C", "#1E1F29", "#3A3C4C"]];
   const giro = Reel_suave(clamp((t - 0.7) / 0.55));
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, cartas.map(([l, c1, c2], i) => {
-    const q = R(0.05 + i * 0.06, { damping: 12, stiffness: 140 });
-    const k = (i + 2) % 3 - 1;
-    const kk = (i - 1) * (1 - giro) + k * giro;
-    const delante = 1 - Math.min(1, Math.abs(kk));
-    const w = 320 * U, h = 450 * U;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: l, style: {
-      position: "absolute",
-      left: width / 2 - w / 2 + kk * 280 * U * abre,
-      top: cy - h / 2 + (1 - q) * 300 * U + Math.abs(kk) * 30 * U * abre,
-      width: w,
-      height: h,
-      borderRadius: 30 * U,
-      background: `linear-gradient(160deg, ${c1}, ${c2})`,
-      border: `${6 * U}px solid #FFFFFF`,
-      boxShadow: Reel_SOMBRA(U),
-      transform: `rotate(${(kk * 12 * abre).toFixed(2)}deg) scale(${(1 + 0.1 * delante).toFixed(4)})`,
-      zIndex: Math.round(delante * 10),
-      opacity: clamp(q * 1.5)
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 22 * U, top: 18 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 20 * U, color: "rgba(255,255,255,.75)", letterSpacing: "0.1em" } }, version), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: FAMILIA.display,
-      fontSize: 230 * U,
-      color: l === "C" ? "#2FE0A0" : "#FFFFFF"
-    } }, l), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: "50%",
-      bottom: 22 * U,
-      transform: "translateX(-50%)",
-      padding: `${6 * U}px ${18 * U}px`,
-      borderRadius: 999,
-      background: "rgba(255,255,255,.2)",
-      color: "#fff",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 700,
-      fontSize: 22 * U,
-      whiteSpace: "nowrap"
-    } }, etiquetas[i] || ""));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: cy + 300 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.3, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { background: Reel_TINTA, color: "#fff" } }, "+ ", boton)), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.85, cy + 640 * U], hasta: [width / 2 + 40 * U, cy + 340 * U], t0: 0.25, t1: 0.65 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    cartas.map(([l, c1, c2], i) => {
+      const q = R(0.05 + i * 0.06, { damping: 12, stiffness: 140 });
+      const k = (i + 2) % 3 - 1;
+      const kk = (i - 1) * (1 - giro) + k * giro;
+      const delante = 1 - Math.min(1, Math.abs(kk));
+      const w = 320 * U, h = 450 * U;
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: width / 2 - w / 2 + kk * 280 * U * abre,
+        top: cy - h / 2 + (1 - q) * 300 * U + Math.abs(kk) * 30 * U * abre,
+        width: w,
+        height: h,
+        borderRadius: 30 * U,
+        background: `linear-gradient(160deg, ${c1}, ${c2})`,
+        border: `${6 * U}px solid #FFFFFF`,
+        boxShadow: Reel_SOMBRA(U),
+        transform: `rotate(${(kk * 12 * abre).toFixed(2)}deg) scale(${(1 + 0.1 * delante).toFixed(4)})`,
+        zIndex: Math.round(delante * 10),
+        opacity: clamp(q * 1.5)
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 22 * U, top: 18 * U, fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 20 * U, color: "rgba(255,255,255,.75)", letterSpacing: "0.1em" }, children: version }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: FAMILIA.display,
+          fontSize: 230 * U,
+          color: l === "C" ? "#2FE0A0" : "#FFFFFF"
+        }, children: l }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: "50%",
+          bottom: 22 * U,
+          transform: "translateX(-50%)",
+          padding: `${6 * U}px ${18 * U}px`,
+          borderRadius: 999,
+          background: "rgba(255,255,255,.2)",
+          color: "#fff",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 700,
+          fontSize: 22 * U,
+          whiteSpace: "nowrap"
+        }, children: etiquetas[i] || "" })
+      ] }, l);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2, top: cy + 300 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.3, { damping: 11 })).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(Reel_Pastilla, { style: { background: Reel_TINTA, color: "#fff" }, children: [
+      "+ ",
+      boton
+    ] }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.85, cy + 640 * U], hasta: [width / 2 + 40 * U, cy + 340 * U], t0: 0.25, t1: 0.65 })
+  ] });
 };
 const IdeasW = ({ cy, n1 = 249, e1 = "Video ideas", n2 = "24 hrs", e2 = "In a day" }) => {
   const t = Reel_useT();
@@ -98225,42 +99517,56 @@ const IdeasW = ({ cy, n1 = 249, e1 = "Video ideas", n2 = "24 hrs", e2 = "In a da
   const cuenta = typeof n1 === "number" ? `${Math.round(n1 * (0.85 + 0.15 * Reel_suave(clamp((t - 0.6) / 1.4))))}+` : String(n1);
   const pill = (y, color, grande, chico, t0) => {
     const q = R(t0, { damping: 12, stiffness: 150 });
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 280 * U, top: y, width: 560 * U, transform: `scale(${Math.max(0, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 28 * U, padding: `${30 * U}px ${40 * U}px`, borderRadius: 999, background: OSCURO, boxShadow: Reel_SOMBRA(U) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      width: 100 * U,
-      height: 100 * U,
-      borderRadius: "50%",
-      border: `${12 * U}px solid ${color}`,
-      boxSizing: "border-box",
-      borderRightColor: "rgba(255,255,255,.12)",
-      transform: `rotate(${t * 90 % 360}deg)`
-    } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: "#fff", lineHeight: 1 } }, grande), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 28 * U, color: "rgba(255,255,255,.6)" } }, chico))));
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2 - 280 * U, top: y, width: 560 * U, transform: `scale(${Math.max(0, q).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 28 * U, padding: `${30 * U}px ${40 * U}px`, borderRadius: 999, background: OSCURO, boxShadow: Reel_SOMBRA(U) }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: 100 * U,
+        height: 100 * U,
+        borderRadius: "50%",
+        border: `${12 * U}px solid ${color}`,
+        boxSizing: "border-box",
+        borderRightColor: "rgba(255,255,255,.12)",
+        transform: `rotate(${t * 90 % 360}deg)`
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: "#fff", lineHeight: 1 }, children: grande }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 28 * U, color: "rgba(255,255,255,.6)" }, children: chico })
+      ] })
+    ] }) });
   };
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 180 * U, top: cy - 330 * U, width: 360 * U, height: 230 * U, transform: `scale(${(Math.max(1e-3, qn) * 1.2).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 360 * U, height: 230 * U, viewBox: "0 0 120 76" }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M30 70 Q8 70 8 52 Q8 36 26 34 Q28 12 52 12 Q72 12 78 30 Q96 26 104 42 Q116 46 112 60 Q110 70 96 70 Z", fill: "#FFFFFF", stroke: "#DDE3FF", strokeWidth: 2 })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 120 * U, top: 60 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "light_bulb", lado: 120 * U }))), iconos.map((c, i) => {
-    const lado = i % 2 ? 1 : -1;
-    const u = clamp((t - 0.3 - i * 0.08) / 1);
-    const e = Reel_easeOut(u);
-    const x = width / 2 + lado * (140 + 260 * e + i % 3 * 30) * U;
-    const y = cy - 190 * U - Math.sin(e * Math.PI * 0.8) * (60 + i * 10) * U + (i % 3 - 1) * 70 * U * e;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      position: "absolute",
-      left: x - 40 * U,
-      top: y - 30 * U,
-      width: 80 * U,
-      height: 60 * U,
-      borderRadius: 14 * U,
-      background: c,
-      boxShadow: Reel_SOMBRA(U),
-      transform: `rotate(${(lado * (8 + i * 3) * e).toFixed(1)}deg) scale(${(0.4 + 0.6 * e).toFixed(3)})`,
-      opacity: clamp(u * 3),
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 0, height: 0, borderTop: `${10 * U}px solid transparent`, borderBottom: `${10 * U}px solid transparent`, borderLeft: `${16 * U}px solid #fff`, marginLeft: 4 * U } }));
-  }), pill(cy + 10 * U, "#2FD27A", cuenta, e1, 0.55), n2 ? pill(cy + 220 * U, "#E64BD8", n2, e2, 0.75) : null);
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: width / 2 - 180 * U, top: cy - 330 * U, width: 360 * U, height: 230 * U, transform: `scale(${(Math.max(1e-3, qn) * 1.2).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: 360 * U, height: 230 * U, viewBox: "0 0 120 76", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M30 70 Q8 70 8 52 Q8 36 26 34 Q28 12 52 12 Q72 12 78 30 Q96 26 104 42 Q116 46 112 60 Q110 70 96 70 Z", fill: "#FFFFFF", stroke: "#DDE3FF", strokeWidth: 2 }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 120 * U, top: 60 * U }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: "light_bulb", lado: 120 * U }) })
+    ] }),
+    iconos.map((c, i) => {
+      const lado = i % 2 ? 1 : -1;
+      const u = clamp((t - 0.3 - i * 0.08) / 1);
+      const e = Reel_easeOut(u);
+      const x = width / 2 + lado * (140 + 260 * e + i % 3 * 30) * U;
+      const y = cy - 190 * U - Math.sin(e * Math.PI * 0.8) * (60 + i * 10) * U + (i % 3 - 1) * 70 * U * e;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: x - 40 * U,
+        top: y - 30 * U,
+        width: 80 * U,
+        height: 60 * U,
+        borderRadius: 14 * U,
+        background: c,
+        boxShadow: Reel_SOMBRA(U),
+        transform: `rotate(${(lado * (8 + i * 3) * e).toFixed(1)}deg) scale(${(0.4 + 0.6 * e).toFixed(3)})`,
+        opacity: clamp(u * 3),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 0, height: 0, borderTop: `${10 * U}px solid transparent`, borderBottom: `${10 * U}px solid transparent`, borderLeft: `${16 * U}px solid #fff`, marginLeft: 4 * U } }) }, i);
+    }),
+    pill(cy + 10 * U, "#2FD27A", cuenta, e1, 0.55),
+    n2 ? pill(cy + 220 * U, "#E64BD8", n2, e2, 0.75) : null
+  ] });
 };
 const Boton = ({ texto, oscuro = true, style }) => {
   const U = Reel_useU();
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -98274,7 +99580,7 @@ const Boton = ({ texto, oscuro = true, style }) => {
     fontSize: 32 * U,
     whiteSpace: "nowrap",
     ...style
-  } }, texto);
+  }, children: texto });
 };
 const FechaW = ({ cy, dia = "10", mes = "OCT", semana = "", hora = "", boton = "Add to calendar" }) => {
   const t = Reel_useT();
@@ -98285,39 +99591,53 @@ const FechaW = ({ cy, dia = "10", mes = "OCT", semana = "", hora = "", boton = "
   const q = R(0.05, { damping: 12, stiffness: 130 });
   const rueda = Reel_easeOut((t - 0.15) / 0.5);
   const hecho = t > 0.95;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 48 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    overflow: "hidden",
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -5).toFixed(2)}deg)`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    height: 140 * U,
-    background: `linear-gradient(135deg, ${ROJO}, #FF7A59)`,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: 64 * U,
-    letterSpacing: "0.12em",
-    color: "#fff"
-  } }, mes.toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, top: 140 * U, bottom: semana ? 90 * U : 30 * U, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: 250 * U,
-    color: Reel_TINTA,
-    letterSpacing: "-0.05em",
-    lineHeight: 1,
-    transform: `translateY(${((1 - rueda) * 160 * U).toFixed(1)}px)`,
-    filter: rueda < 1 ? `blur(${((1 - rueda) * 8).toFixed(1)}px)` : void 0,
-    opacity: clamp(rueda * 2)
-  } }, dia)), semana && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, bottom: 40 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 40 * U, color: "#8A8E9C" } }, semana)), hora && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0 + w - 90 * U, top: y0 - 30 * U, transform: `scale(${Math.max(0, R(0.35, { damping: 10 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { fontSize: 40 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: AZUL } }, "\u25F7"), hora)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: y0 + h + 50 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.45, { damping: 11 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Boton, { texto: (hecho ? "\u2713 " : "+ ") + boton, oscuro: !hecho })), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 30 * U, y: y0 + 60 * U, lado: 56 * U, t0: 0.3 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 20 * U, y: y0 + h - 40 * U, lado: 44 * U, t0: 0.45 }), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 640 * U], hasta: [width / 2 + 60 * U, y0 + h + 90 * U], t0: 0.45, t1: 0.9 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 48 * U,
+      background: "#FFFFFF",
+      boxShadow: Reel_SOMBRA(U),
+      overflow: "hidden",
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -5).toFixed(2)}deg)`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        height: 140 * U,
+        background: `linear-gradient(135deg, ${ROJO}, #FF7A59)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        fontSize: 64 * U,
+        letterSpacing: "0.12em",
+        color: "#fff"
+      }, children: mes.toUpperCase() }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, right: 0, top: 140 * U, bottom: semana ? 90 * U : 30 * U, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        fontSize: 250 * U,
+        color: Reel_TINTA,
+        letterSpacing: "-0.05em",
+        lineHeight: 1,
+        transform: `translateY(${((1 - rueda) * 160 * U).toFixed(1)}px)`,
+        filter: rueda < 1 ? `blur(${((1 - rueda) * 8).toFixed(1)}px)` : void 0,
+        opacity: clamp(rueda * 2)
+      }, children: dia }) }),
+      semana && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, right: 0, bottom: 40 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 40 * U, color: "#8A8E9C" }, children: semana })
+    ] }),
+    hora && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: x0 + w - 90 * U, top: y0 - 30 * U, transform: `scale(${Math.max(0, R(0.35, { damping: 10 })).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(Reel_Pastilla, { style: { fontSize: 40 * U }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: AZUL }, children: "\u25F7" }),
+      hora
+    ] }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2, top: y0 + h + 50 * U, transform: `translateX(-50%) scale(${Math.max(0, R(0.45, { damping: 11 })).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Boton, { texto: (hecho ? "\u2713 " : "+ ") + boton, oscuro: !hecho }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 - 30 * U, y: y0 + 60 * U, lado: 56 * U, t0: 0.3 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + w + 20 * U, y: y0 + h - 40 * U, lado: 44 * U, t0: 0.45 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.86, cy + 640 * U], hasta: [width / 2 + 60 * U, y0 + h + 90 * U], t0: 0.45, t1: 0.9 })
+  ] });
 };
 const LugarW = ({ cy, nombre = "", sub = "", boton = "Directions" }) => {
   const t = Reel_useT();
@@ -98330,32 +99650,57 @@ const LugarW = ({ cy, nombre = "", sub = "", boton = "Directions" }) => {
   const ruta = Reel_easeOut((t - 0.15) / 0.7);
   const px = w * 0.62, py = h * 0.36;
   const pulso = t * 0.9 % 1;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 48 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    overflow: "hidden",
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, top: 0, width: w, height: h * 0.68, background: "#EEF1F8" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: w, height: h * 0.68, viewBox: "0 0 100 68", preserveAspectRatio: "none", style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M-5 50 Q30 40 50 52 T105 44", stroke: "#BFD3FF", strokeWidth: 6, fill: "none" }), /* @__PURE__ */ (react_namespaceFn().createElement)("ellipse", { cx: 20, cy: 18, rx: 14, ry: 9, fill: "#D5F0DC" }), [[0, 22, 100, 30], [0, 8, 100, 4], [30, 0, 26, 68], [70, 0, 78, 68], [50, 0, 46, 68]].map(([a, b, c2, d], i) => /* @__PURE__ */ (react_namespaceFn().createElement)("line", { key: i, x1: a, y1: b, x2: c2, y2: d, stroke: "#FFFFFF", strokeWidth: 2.4 })), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M8 60 C 20 40, 40 46, 46 30 S 58 26, 62 36", stroke: AZUL, strokeWidth: 1.8, fill: "none", strokeLinecap: "round", strokeDasharray: "120", strokeDashoffset: 120 * (1 - ruta), style: { stroke: AZUL } }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 8, cy: 60, r: 2.2, style: { fill: AZUL }, opacity: clamp(ruta * 4) })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: px - 60 * U * (0.4 + pulso),
-    top: py + 34 * U - 30 * U * (0.4 + pulso),
-    width: 120 * U * (0.4 + pulso),
-    height: 60 * U * (0.4 + pulso),
-    borderRadius: "50%",
-    border: `${3 * U}px solid rgba(240,71,60,${(0.5 * (1 - pulso) * clamp(pin)).toFixed(3)})`
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 86 * U, height: 110 * U, viewBox: "0 0 24 30", style: {
-    position: "absolute",
-    left: px - 43 * U,
-    top: py - 80 * U - (1 - pin) * 220 * U,
-    opacity: clamp(pin * 3),
-    filter: "drop-shadow(0 8px 10px rgba(160,30,30,.3))"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M12 29 C 12 29, 2 17, 2 11 A 10 10 0 0 1 22 11 C 22 17, 12 29, 12 29 Z", fill: ROJO, stroke: "#fff", strokeWidth: 1.6 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 12, cy: 11, r: 4, fill: "#fff" }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 44 * U, right: 44 * U, bottom: 36 * U, height: h * 0.32 - 50 * U, display: "flex", alignItems: "center", gap: 20 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA, lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, nombre), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#8A8E9C", marginTop: 6 * U } }, sub)), /* @__PURE__ */ (react_namespaceFn().createElement)(Boton, { texto: "\u27A4 " + boton, oscuro: false, style: { fontSize: 28 * U, padding: `${14 * U}px ${26 * U}px` } }))), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.9, cy + 600 * U], hasta: [x0 + w - 130 * U, y0 + h - 90 * U], t0: 0.55, t1: 1 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 48 * U,
+      background: "#FFFFFF",
+      boxShadow: Reel_SOMBRA(U),
+      overflow: "hidden",
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 0, top: 0, width: w, height: h * 0.68, background: "#EEF1F8" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: w, height: h * 0.68, viewBox: "0 0 100 68", preserveAspectRatio: "none", style: { position: "absolute", inset: 0 }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M-5 50 Q30 40 50 52 T105 44", stroke: "#BFD3FF", strokeWidth: 6, fill: "none" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("ellipse", { cx: 20, cy: 18, rx: 14, ry: 9, fill: "#D5F0DC" }),
+          [[0, 22, 100, 30], [0, 8, 100, 4], [30, 0, 26, 68], [70, 0, 78, 68], [50, 0, 46, 68]].map(([a, b, c2, d], i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: a, y1: b, x2: c2, y2: d, stroke: "#FFFFFF", strokeWidth: 2.4 }, i)),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M8 60 C 20 40, 40 46, 46 30 S 58 26, 62 36", stroke: AZUL, strokeWidth: 1.8, fill: "none", strokeLinecap: "round", strokeDasharray: "120", strokeDashoffset: 120 * (1 - ruta), style: { stroke: AZUL } }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: 8, cy: 60, r: 2.2, style: { fill: AZUL }, opacity: clamp(ruta * 4) })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          left: px - 60 * U * (0.4 + pulso),
+          top: py + 34 * U - 30 * U * (0.4 + pulso),
+          width: 120 * U * (0.4 + pulso),
+          height: 60 * U * (0.4 + pulso),
+          borderRadius: "50%",
+          border: `${3 * U}px solid rgba(240,71,60,${(0.5 * (1 - pulso) * clamp(pin)).toFixed(3)})`
+        } }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 86 * U, height: 110 * U, viewBox: "0 0 24 30", style: {
+          position: "absolute",
+          left: px - 43 * U,
+          top: py - 80 * U - (1 - pin) * 220 * U,
+          opacity: clamp(pin * 3),
+          filter: "drop-shadow(0 8px 10px rgba(160,30,30,.3))"
+        }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M12 29 C 12 29, 2 17, 2 11 A 10 10 0 0 1 22 11 C 22 17, 12 29, 12 29 Z", fill: ROJO, stroke: "#fff", strokeWidth: 1.6 }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: 12, cy: 11, r: 4, fill: "#fff" })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 44 * U, right: 44 * U, bottom: 36 * U, height: h * 0.32 - 50 * U, display: "flex", alignItems: "center", gap: 20 * U }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1, minWidth: 0 }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA, lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: nombre }),
+          sub && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#8A8E9C", marginTop: 6 * U }, children: sub })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(Boton, { texto: "\u27A4 " + boton, oscuro: false, style: { fontSize: 28 * U, padding: `${14 * U}px ${26 * U}px` } })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.9, cy + 600 * U], hasta: [x0 + w - 130 * U, y0 + h - 90 * U], t0: 0.55, t1: 1 })
+  ] });
 };
 const EntradaW = ({ cy, valor = "FREE", titulo = "Ticket", sub = "", sello = "" }) => {
   const t = Reel_useT();
@@ -98366,37 +99711,52 @@ const EntradaW = ({ cy, valor = "FREE", titulo = "Ticket", sub = "", sello = "" 
   const q = R(0.05, { damping: 12, stiffness: 120 });
   const s = R(0.6, { damping: 10, stiffness: 200 });
   const corte = w * 0.64;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 6 - 3).toFixed(2)}deg)`,
-    filter: "drop-shadow(0 30px 50px rgba(60,60,130,.22))"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 0,
-    borderRadius: 40 * U,
-    background: "#FFFFFF",
-    WebkitMaskImage: `radial-gradient(circle at ${corte}px 0, transparent ${30 * U}px, #000 ${31 * U}px), radial-gradient(circle at ${corte}px ${h}px, transparent ${30 * U}px, #000 ${31 * U}px)`,
-    WebkitMaskComposite: "source-in",
-    maskComposite: "intersect"
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: corte - 2 * U, top: 40 * U, bottom: 40 * U, borderLeft: `${4 * U}px dashed #D9DCE6` } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 50 * U, width: corte - 100 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.16em", color: "#8A8E9C" } }, titulo.toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 14 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 52 * U, color: Reel_TINTA, lineHeight: 1.08 } }, sub), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top: 210 * U, display: "flex", gap: 6 * U } }, Array.from({ length: 22 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { width: (i % 3 ? 6 : 12) * U, height: 60 * U, background: Reel_TINTA, opacity: 0.85 } })))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: corte, right: 0, top: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: (valor.length > 6 ? 54 : 74) * U, color: "#1FAF62", letterSpacing: "-0.02em" } }, valor))), sello && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0 + w - 300 * U,
-    top: y0 - 70 * U,
-    padding: `${10 * U}px ${26 * U}px`,
-    borderRadius: 18 * U,
-    border: `${6 * U}px solid ${ROJO}`,
-    color: ROJO,
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: 52 * U,
-    transform: `rotate(-12deg) scale(${(2.2 - 1.2 * clamp(s)).toFixed(3)})`,
-    opacity: clamp(s * 2),
-    background: "rgba(255,255,255,.85)"
-  } }, sello), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 20 * U, y: y0 + h + 20 * U, lado: 56 * U, t0: 0.5 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 10 * U, y: y0 + h - 20 * U, lado: 44 * U, t0: 0.65 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + 120 * U, y: y0 - 50 * U, lado: 36 * U, t0: 0.75 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * 6 - 3).toFixed(2)}deg)`,
+      filter: "drop-shadow(0 30px 50px rgba(60,60,130,.22))"
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        inset: 0,
+        borderRadius: 40 * U,
+        background: "#FFFFFF",
+        WebkitMaskImage: `radial-gradient(circle at ${corte}px 0, transparent ${30 * U}px, #000 ${31 * U}px), radial-gradient(circle at ${corte}px ${h}px, transparent ${30 * U}px, #000 ${31 * U}px)`,
+        WebkitMaskComposite: "source-in",
+        maskComposite: "intersect"
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: corte - 2 * U, top: 40 * U, bottom: 40 * U, borderLeft: `${4 * U}px dashed #D9DCE6` } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 50 * U, top: 50 * U, width: corte - 100 * U }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 34 * U, letterSpacing: "0.16em", color: "#8A8E9C" }, children: titulo.toUpperCase() }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 14 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 52 * U, color: Reel_TINTA, lineHeight: 1.08 }, children: sub }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", top: 210 * U, display: "flex", gap: 6 * U }, children: Array.from({ length: 22 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: (i % 3 ? 6 : 12) * U, height: 60 * U, background: Reel_TINTA, opacity: 0.85 } }, i)) })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: corte, right: 0, top: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: (valor.length > 6 ? 54 : 74) * U, color: "#1FAF62", letterSpacing: "-0.02em" }, children: valor }) })
+    ] }),
+    sello && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: x0 + w - 300 * U,
+      top: y0 - 70 * U,
+      padding: `${10 * U}px ${26 * U}px`,
+      borderRadius: 18 * U,
+      border: `${6 * U}px solid ${ROJO}`,
+      color: ROJO,
+      fontFamily: FAMILIA.inter,
+      fontWeight: 800,
+      fontSize: 52 * U,
+      transform: `rotate(-12deg) scale(${(2.2 - 1.2 * clamp(s)).toFixed(3)})`,
+      opacity: clamp(s * 2),
+      background: "rgba(255,255,255,.85)"
+    }, children: sello }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 - 20 * U, y: y0 + h + 20 * U, lado: 56 * U, t0: 0.5 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + w + 10 * U, y: y0 + h - 20 * U, lado: 44 * U, t0: 0.65 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + 120 * U, y: y0 - 50 * U, lado: 36 * U, t0: 0.75 })
+  ] });
 };
 const COLORES_CARA = [["#FF9A62", "#FF6B4A"], ["#6E92FF", "#3E6BF5"], ["#B79CFF", "#7B5CF5"], ["#5BD68E", "#1FAF62"]];
 const PersonasW = ({ cy, nombres = [], etiqueta = "", extra = "" }) => {
@@ -98408,60 +99768,73 @@ const PersonasW = ({ cy, nombres = [], etiqueta = "", extra = "" }) => {
   const w = 820 * U, h = 520 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 120 });
   const lado = 170 * U;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 48 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, top: 70 * U, display: "flex", justifyContent: "center" } }, Array.from({ length: n }).map((_, i) => {
-    const qi = R(0.15 + i * 0.1, { damping: 10, stiffness: 170 });
-    const nombre = nombres[i] || "";
-    const [c1, c2] = COLORES_CARA[i % 4];
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      width: lado,
-      height: lado,
-      marginLeft: i ? -34 * U : 0,
-      borderRadius: "50%",
-      border: `${8 * U}px solid #FFFFFF`,
-      boxSizing: "border-box",
-      background: `linear-gradient(160deg, ${c1}, ${c2})`,
-      boxShadow: Reel_SOMBRA(U),
-      transform: `scale(${Math.max(0, qi).toFixed(4)}) translateY(${(Math.sin(t * 2 + i) * 4 * U).toFixed(1)}px)`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "#fff",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 800,
-      fontSize: 70 * U,
-      zIndex: n - i
-    } }, nombre ? nombre.slice(0, 1).toUpperCase() : /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: lado * 0.5, height: lado * 0.5, viewBox: "0 0 24 24" }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 12, cy: 8, r: 5, fill: "rgba(255,255,255,.9)" }), /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M2 23 Q12 10 22 23 Z", fill: "rgba(255,255,255,.9)" })));
-  }), extra && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    width: lado,
-    height: lado,
-    marginLeft: -34 * U,
-    borderRadius: "50%",
-    border: `${8 * U}px solid #FFFFFF`,
-    boxSizing: "border-box",
-    background: LILA_F,
-    color: LILA,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: 52 * U,
-    transform: `scale(${Math.max(0, R(0.5, { damping: 10 })).toFixed(4)})`
-  } }, extra)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 30 * U, right: 30 * U, top: 290 * U, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 * U } }, nombres.slice(0, 4).map((x, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-    padding: `${10 * U}px ${22 * U}px`,
-    borderRadius: 999,
-    background: "#F2F3F8",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 700,
-    fontSize: 30 * U,
-    color: Reel_TINTA,
-    opacity: clamp((t - 0.35 - i * 0.1) / 0.2),
-    transform: `translateY(${((1 - Reel_easeOut((t - 0.35 - i * 0.1) / 0.3)) * 20 * U).toFixed(1)}px)`
-  } }, x))), etiqueta && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, right: 0, bottom: 44 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 34 * U, color: "#8A8E9C" } }, etiqueta)), ["red_heart", "clapping_hands", "fire"].map((e, i) => {
-    const u = (t - 0.4 - i * 0.25) * 0.55 % 1;
-    if (t < 0.4 + i * 0.25) return null;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: e, style: { position: "absolute", left: x0 + w - 60 * U + i * 30 * U, top: y0 + 80 * U - u * 260 * U, opacity: 1 - u, transform: `scale(${(0.6 + 0.4 * (1 - u)).toFixed(3)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: e, lado: 80 * U }));
-  }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 48 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 0, right: 0, top: 70 * U, display: "flex", justifyContent: "center" }, children: [
+        Array.from({ length: n }).map((_, i) => {
+          const qi = R(0.15 + i * 0.1, { damping: 10, stiffness: 170 });
+          const nombre = nombres[i] || "";
+          const [c1, c2] = COLORES_CARA[i % 4];
+          return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            width: lado,
+            height: lado,
+            marginLeft: i ? -34 * U : 0,
+            borderRadius: "50%",
+            border: `${8 * U}px solid #FFFFFF`,
+            boxSizing: "border-box",
+            background: `linear-gradient(160deg, ${c1}, ${c2})`,
+            boxShadow: Reel_SOMBRA(U),
+            transform: `scale(${Math.max(0, qi).toFixed(4)}) translateY(${(Math.sin(t * 2 + i) * 4 * U).toFixed(1)}px)`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontFamily: FAMILIA.inter,
+            fontWeight: 800,
+            fontSize: 70 * U,
+            zIndex: n - i
+          }, children: nombre ? nombre.slice(0, 1).toUpperCase() : /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: lado * 0.5, height: lado * 0.5, viewBox: "0 0 24 24", children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: 12, cy: 8, r: 5, fill: "rgba(255,255,255,.9)" }),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M2 23 Q12 10 22 23 Z", fill: "rgba(255,255,255,.9)" })
+          ] }) }, i);
+        }),
+        extra && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: lado,
+          height: lado,
+          marginLeft: -34 * U,
+          borderRadius: "50%",
+          border: `${8 * U}px solid #FFFFFF`,
+          boxSizing: "border-box",
+          background: LILA_F,
+          color: LILA,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 800,
+          fontSize: 52 * U,
+          transform: `scale(${Math.max(0, R(0.5, { damping: 10 })).toFixed(4)})`
+        }, children: extra })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 30 * U, right: 30 * U, top: 290 * U, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 * U }, children: nombres.slice(0, 4).map((x, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        padding: `${10 * U}px ${22 * U}px`,
+        borderRadius: 999,
+        background: "#F2F3F8",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 700,
+        fontSize: 30 * U,
+        color: Reel_TINTA,
+        opacity: clamp((t - 0.35 - i * 0.1) / 0.2),
+        transform: `translateY(${((1 - Reel_easeOut((t - 0.35 - i * 0.1) / 0.3)) * 20 * U).toFixed(1)}px)`
+      }, children: x }, i)) }),
+      etiqueta && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, right: 0, bottom: 44 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 34 * U, color: "#8A8E9C" }, children: etiqueta })
+    ] }),
+    ["red_heart", "clapping_hands", "fire"].map((e, i) => {
+      const u = (t - 0.4 - i * 0.25) * 0.55 % 1;
+      if (t < 0.4 + i * 0.25) return null;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: x0 + w - 60 * U + i * 30 * U, top: y0 + 80 * U - u * 260 * U, opacity: 1 - u, transform: `scale(${(0.6 + 0.4 * (1 - u)).toFixed(3)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: e, lado: 80 * U }) }, e);
+    })
+  ] });
 };
 const MusicaW = ({ cy, titulo = "", sub = "Live" }) => {
   const t = Reel_useT();
@@ -98472,52 +99845,67 @@ const MusicaW = ({ cy, titulo = "", sub = "Live" }) => {
   const q = R(0.05, { damping: 12, stiffness: 120 });
   const suena = t > 0.75;
   const lado = 250 * U;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 48 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 50 * U,
-    top: (h - lado) / 2,
-    width: lado,
-    height: lado,
-    borderRadius: 32 * U,
-    background: "linear-gradient(150deg,#7B5CF5,#2F5BE7 60%,#1FB5E8)",
-    display: "flex",
-    alignItems: "flex-end",
-    justifyContent: "center",
-    gap: 10 * U,
-    padding: `0 0 ${50 * U}px`,
-    boxSizing: "border-box",
-    overflow: "hidden"
-  } }, Array.from({ length: 5 }).map((_, i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-    width: 18 * U,
-    borderRadius: 9 * U,
-    background: "rgba(255,255,255,.9)",
-    height: (40 + 90 * Math.abs(Math.sin(t * (suena ? 7 : 1.5) + i * 1.3))) * U
-  } }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U + lado + 40 * U, right: 160 * U, top: 80 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, color: Reel_TINTA, lineHeight: 1.08, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 12 * U, display: "flex", alignItems: "center", gap: 10 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 30 * U, color: "#8A8E9C" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { width: 14 * U, height: 14 * U, borderRadius: "50%", background: ROJO, opacity: Math.sin(t * 8) > 0 ? 1 : 0.4 } }), sub), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 34 * U, height: 10 * U, borderRadius: 5 * U, background: "#ECEDF3" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: `${(20 + 60 * clamp((t - 0.75) / 3)).toFixed(1)}%`, height: "100%", borderRadius: 5 * U, background: AZUL } }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    right: 44 * U,
-    top: h / 2 - 50 * U,
-    width: 100 * U,
-    height: 100 * U,
-    borderRadius: "50%",
-    background: Reel_TINTA,
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 40 * U,
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800
-  } }, suena ? "\u275A\u275A" : "\u25B6")), [0, 1, 2].map((i) => {
-    const u = (t * 0.5 + i * 0.33) % 1;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      position: "absolute",
-      left: x0 + 80 * U + i * 110 * U + Math.sin(u * 6) * 20 * U,
-      top: y0 - 30 * U - u * 220 * U,
-      opacity: (1 - u) * clamp((t - 0.3) * 3),
-      fontSize: (60 - i * 8) * U,
-      color: [LILA, AZUL, "#1FB5E8"][i]
-    } }, "\u266A");
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.88, cy + 560 * U], hasta: [x0 + w - 94 * U, y0 + h / 2 + 4 * U], t0: 0.3, t1: 0.72 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 48 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: 50 * U,
+        top: (h - lado) / 2,
+        width: lado,
+        height: lado,
+        borderRadius: 32 * U,
+        background: "linear-gradient(150deg,#7B5CF5,#2F5BE7 60%,#1FB5E8)",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        gap: 10 * U,
+        padding: `0 0 ${50 * U}px`,
+        boxSizing: "border-box",
+        overflow: "hidden"
+      }, children: Array.from({ length: 5 }).map((_, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: 18 * U,
+        borderRadius: 9 * U,
+        background: "rgba(255,255,255,.9)",
+        height: (40 + 90 * Math.abs(Math.sin(t * (suena ? 7 : 1.5) + i * 1.3))) * U
+      } }, i)) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 50 * U + lado + 40 * U, right: 160 * U, top: 80 * U }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 50 * U, color: Reel_TINTA, lineHeight: 1.08, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }, children: titulo }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { marginTop: 12 * U, display: "flex", alignItems: "center", gap: 10 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 30 * U, color: "#8A8E9C" }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { width: 14 * U, height: 14 * U, borderRadius: "50%", background: ROJO, opacity: Math.sin(t * 8) > 0 ? 1 : 0.4 } }),
+          sub
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 34 * U, height: 10 * U, borderRadius: 5 * U, background: "#ECEDF3" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: `${(20 + 60 * clamp((t - 0.75) / 3)).toFixed(1)}%`, height: "100%", borderRadius: 5 * U, background: AZUL } }) })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        right: 44 * U,
+        top: h / 2 - 50 * U,
+        width: 100 * U,
+        height: 100 * U,
+        borderRadius: "50%",
+        background: Reel_TINTA,
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 40 * U,
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800
+      }, children: suena ? "\u275A\u275A" : "\u25B6" })
+    ] }),
+    [0, 1, 2].map((i) => {
+      const u = (t * 0.5 + i * 0.33) % 1;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: x0 + 80 * U + i * 110 * U + Math.sin(u * 6) * 20 * U,
+        top: y0 - 30 * U - u * 220 * U,
+        opacity: (1 - u) * clamp((t - 0.3) * 3),
+        fontSize: (60 - i * 8) * U,
+        color: [LILA, AZUL, "#1FB5E8"][i]
+      }, children: "\u266A" }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.88, cy + 560 * U], hasta: [x0 + w - 94 * U, y0 + h / 2 + 4 * U], t0: 0.3, t1: 0.72 })
+  ] });
 };
 const PremioW = ({ cy, titulo = "", sub = "", icono = "trophy" }) => {
   const t = Reel_useT();
@@ -98527,44 +99915,55 @@ const PremioW = ({ cy, titulo = "", sub = "", icono = "trophy" }) => {
   const q = R(0.05, { damping: 9, stiffness: 150 });
   const qc = R(0.3, { damping: 12, stiffness: 130 });
   const cx = width / 2, ty = cy - 170 * U;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cx - 260 * U,
-    top: ty - 260 * U,
-    width: 520 * U,
-    height: 520 * U,
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(247,183,49,.45) 0%, rgba(247,183,49,0) 66%)",
-    transform: `scale(${(0.9 + 0.1 * Math.sin(t * 2.5)).toFixed(4)})`
-  } }), Array.from({ length: 18 }).map((_, i) => {
-    const a = i / 18 * Math.PI * 2 + 0.3;
-    const u = Reel_easeOut((t - 0.2) / 1.1);
-    const d = (120 + i % 3 * 70) * U * u;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
-      left: cx + Math.cos(a) * d,
-      top: ty + Math.sin(a) * d + u * u * 120 * U,
-      width: 18 * U,
-      height: 30 * U,
-      borderRadius: 4 * U,
-      background: [ORO, LILA, AZUL, ROJO, "#2FD27A"][i % 5],
-      opacity: (1 - clamp((t - 1.2) / 0.8)) * clamp(u * 5),
-      transform: `rotate(${(a * 57 + t * 360 * (i % 2 ? 1 : -1)).toFixed(0)}deg)`
-    } });
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: cx - 160 * U, top: ty - 160 * U, transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${(Math.sin(t * 2) * 4).toFixed(2)}deg)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: icono, lado: 320 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: cx - 400 * U,
-    top: cy + 60 * U,
-    width: 800 * U,
-    padding: `${36 * U}px ${44 * U}px`,
-    borderRadius: 44 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    boxSizing: "border-box",
-    textAlign: "center",
-    transform: `translateY(${((1 - qc) * 120 * U).toFixed(1)}px)`,
-    opacity: clamp(qc * 1.5)
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 56 * U, color: Reel_TINTA, lineHeight: 1.08 } }, titulo), sub && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 10 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 32 * U, color: "#8A8E9C" } }, sub)), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: cx - 300 * U, y: ty - 120 * U, lado: 60 * U, t0: 0.25 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: cx + 290 * U, y: ty - 40 * U, lado: 48 * U, t0: 0.35 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: cx + 230 * U, y: ty + 150 * U, lado: 36 * U, t0: 0.45 }));
+      left: cx - 260 * U,
+      top: ty - 260 * U,
+      width: 520 * U,
+      height: 520 * U,
+      borderRadius: "50%",
+      background: "radial-gradient(circle, rgba(247,183,49,.45) 0%, rgba(247,183,49,0) 66%)",
+      transform: `scale(${(0.9 + 0.1 * Math.sin(t * 2.5)).toFixed(4)})`
+    } }),
+    Array.from({ length: 18 }).map((_, i) => {
+      const a = i / 18 * Math.PI * 2 + 0.3;
+      const u = Reel_easeOut((t - 0.2) / 1.1);
+      const d = (120 + i % 3 * 70) * U * u;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: cx + Math.cos(a) * d,
+        top: ty + Math.sin(a) * d + u * u * 120 * U,
+        width: 18 * U,
+        height: 30 * U,
+        borderRadius: 4 * U,
+        background: [ORO, LILA, AZUL, ROJO, "#2FD27A"][i % 5],
+        opacity: (1 - clamp((t - 1.2) / 0.8)) * clamp(u * 5),
+        transform: `rotate(${(a * 57 + t * 360 * (i % 2 ? 1 : -1)).toFixed(0)}deg)`
+      } }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: cx - 160 * U, top: ty - 160 * U, transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${(Math.sin(t * 2) * 4).toFixed(2)}deg)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: icono, lado: 320 * U }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: cx - 400 * U,
+      top: cy + 60 * U,
+      width: 800 * U,
+      padding: `${36 * U}px ${44 * U}px`,
+      borderRadius: 44 * U,
+      background: "#FFFFFF",
+      boxShadow: Reel_SOMBRA(U),
+      boxSizing: "border-box",
+      textAlign: "center",
+      transform: `translateY(${((1 - qc) * 120 * U).toFixed(1)}px)`,
+      opacity: clamp(qc * 1.5)
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 56 * U, color: Reel_TINTA, lineHeight: 1.08 }, children: titulo }),
+      sub && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 10 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 32 * U, color: "#8A8E9C" }, children: sub })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: cx - 300 * U, y: ty - 120 * U, lado: 60 * U, t0: 0.25 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: cx + 290 * U, y: ty - 40 * U, lado: 48 * U, t0: 0.35 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: cx + 230 * U, y: ty + 150 * U, lado: 36 * U, t0: 0.45 })
+  ] });
 };
 const CompartirW = ({ cy, titulo = "Share", listo = "Sent", iconos }) => {
   const t = Reel_useT();
@@ -98577,50 +99976,66 @@ const CompartirW = ({ cy, titulo = "Share", listo = "Sent", iconos }) => {
   const fondos = ["#E7F8EE", "#FFF0E6", "#FDEBF1", "#ECE8FF"];
   const hecho = R(1, { damping: 11 });
   const paso = 170 * U;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 48 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    transform: `translateY(${((1 - q) * 200 * U).toFixed(1)}px)`,
-    opacity: clamp(q * 1.6)
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: w / 2 - 50 * U, top: 22 * U, width: 100 * U, height: 10 * U, borderRadius: 5 * U, background: "#E2E4EC" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 60 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 46 * U, color: Reel_TINTA } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 150 * U, display: "flex", justifyContent: "space-between" } }, apps.map((e, i) => {
-    const qi = R(0.15 + i * 0.07, { damping: 10, stiffness: 170 });
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: e, style: {
-      width: 150 * U,
-      height: 150 * U,
-      borderRadius: 40 * U,
-      background: fondos[i],
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transform: `scale(${(Math.max(0, qi) * (i === 0 && t > 0.68 && t < 0.8 ? 0.9 : 1)).toFixed(4)})`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: e, lado: 96 * U }));
-  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: 50 * U,
-    right: 50 * U,
-    top: 340 * U,
-    height: 110 * U,
-    borderRadius: 28 * U,
-    background: "#F2F3F8",
-    display: "flex",
-    alignItems: "center",
-    padding: `0 ${30 * U}px`,
-    gap: 16 * U,
-    boxSizing: "border-box"
-  } }, [0, 1, 2, 3, 4].map((i) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-    width: 64 * U,
-    height: 64 * U,
-    borderRadius: "50%",
-    background: `linear-gradient(160deg, ${COLORES_CARA[i % 4][0]}, ${COLORES_CARA[i % 4][1]})`,
-    border: `${4 * U}px solid #fff`,
-    marginLeft: i ? -20 * U : 0
-  } })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginLeft: "auto", fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: "#8A8E9C" } }, "+24"))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2, top: y0 - 110 * U, transform: `translateX(-50%) scale(${Math.max(0, hecho).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { color: "#1FAF62" } }, "\u2713 ", listo)), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 580 * U], hasta: [x0 + 50 * U + 75 * U, y0 + 150 * U + 75 * U], t0: 0.25, t1: 0.68 }), paso ? null : null);
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 48 * U,
+      background: "#FFFFFF",
+      boxShadow: Reel_SOMBRA(U),
+      transform: `translateY(${((1 - q) * 200 * U).toFixed(1)}px)`,
+      opacity: clamp(q * 1.6)
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: w / 2 - 50 * U, top: 22 * U, width: 100 * U, height: 10 * U, borderRadius: 5 * U, background: "#E2E4EC" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 50 * U, top: 60 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 46 * U, color: Reel_TINTA }, children: titulo }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 150 * U, display: "flex", justifyContent: "space-between" }, children: apps.map((e, i) => {
+        const qi = R(0.15 + i * 0.07, { damping: 10, stiffness: 170 });
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: 150 * U,
+          height: 150 * U,
+          borderRadius: 40 * U,
+          background: fondos[i],
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transform: `scale(${(Math.max(0, qi) * (i === 0 && t > 0.68 && t < 0.8 ? 0.9 : 1)).toFixed(4)})`
+        }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: e, lado: 96 * U }) }, e);
+      }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: 50 * U,
+        right: 50 * U,
+        top: 340 * U,
+        height: 110 * U,
+        borderRadius: 28 * U,
+        background: "#F2F3F8",
+        display: "flex",
+        alignItems: "center",
+        padding: `0 ${30 * U}px`,
+        gap: 16 * U,
+        boxSizing: "border-box"
+      }, children: [
+        [0, 1, 2, 3, 4].map((i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: 64 * U,
+          height: 64 * U,
+          borderRadius: "50%",
+          background: `linear-gradient(160deg, ${COLORES_CARA[i % 4][0]}, ${COLORES_CARA[i % 4][1]})`,
+          border: `${4 * U}px solid #fff`,
+          marginLeft: i ? -20 * U : 0
+        } }, i)),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginLeft: "auto", fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 30 * U, color: "#8A8E9C" }, children: "+24" })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2, top: y0 - 110 * U, transform: `translateX(-50%) scale(${Math.max(0, hecho).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(Reel_Pastilla, { style: { color: "#1FAF62" }, children: [
+      "\u2713 ",
+      listo
+    ] }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.86, cy + 580 * U], hasta: [x0 + 50 * U + 75 * U, y0 + 150 * U + 75 * U], t0: 0.25, t1: 0.68 }),
+    paso ? null : null
+  ] });
 };
 const AvisoW = ({ cy, icono = "bell", app = "", hora = "", titulo = "", cuerpo = "" }) => {
   const t = Reel_useT();
@@ -98632,7 +100047,7 @@ const AvisoW = ({ cy, icono = "bell", app = "", hora = "", titulo = "", cuerpo =
   const qb = R(0.02, { damping: 8, stiffness: 160 });
   const tarjeta = (k) => {
     const qk = k === 0 ? q : R(0.02 + 0.05 * k, { damping: 14, stiffness: 120 });
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: k, style: {
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
       left: x0 + k * 30 * U,
       top: y0 + k * 34 * U,
@@ -98644,34 +100059,51 @@ const AvisoW = ({ cy, icono = "bell", app = "", hora = "", titulo = "", cuerpo =
       transform: `translateY(${((1 - qk) * -160 * U).toFixed(1)}px)`,
       opacity: clamp(qk * 1.5),
       zIndex: 5 - k
-    } }, k === 0 && /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 40 * U, top: 50 * U, width: 170 * U, height: 170 * U, borderRadius: 44 * U, background: LILA_F, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: icono, lado: 124 * U })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 240 * U, right: 44 * U, top: 52 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 26 * U, color: "#9A9CA8", letterSpacing: "0.04em" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", null, app.toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("span", null, hora)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 8 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 58 * U, color: Reel_TINTA, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, titulo), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 38 * U, color: "#6B6F7D", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, cuerpo))));
+    }, children: k === 0 && /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 40 * U, top: 50 * U, width: 170 * U, height: 170 * U, borderRadius: 44 * U, background: LILA_F, display: "flex", alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: icono, lado: 124 * U }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 240 * U, right: 44 * U, top: 52 * U }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", justifyContent: "space-between", fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 26 * U, color: "#9A9CA8", letterSpacing: "0.04em" }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: app.toUpperCase() }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: hora })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 8 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 58 * U, color: Reel_TINTA, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: titulo }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 38 * U, color: "#6B6F7D", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: cuerpo })
+      ] })
+    ] }) }, k);
   };
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, [2, 1, 0].map(tarjeta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0 + w - 120 * U,
-    top: y0 - 190 * U,
-    transform: `scale(${Math.max(0, qb).toFixed(4)}) rotate(${(Math.sin(t * 9) * 12 * Math.max(0, 1 - t / 1.2)).toFixed(2)}deg)`,
-    transformOrigin: "50% 10%"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "bell", lado: 150 * U }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    right: -6 * U,
-    top: 4 * U,
-    minWidth: 54 * U,
-    height: 54 * U,
-    borderRadius: 27 * U,
-    background: ROJO,
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: 32 * U,
-    border: `${4 * U}px solid #fff`,
-    transform: `scale(${Math.max(0, R(0.4, { damping: 9 })).toFixed(4)})`
-  } }, "3")), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 - 10 * U, y: y0 - 60 * U, lado: 48 * U, t0: 0.4 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    [2, 1, 0].map(tarjeta),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0 + w - 120 * U,
+      top: y0 - 190 * U,
+      transform: `scale(${Math.max(0, qb).toFixed(4)}) rotate(${(Math.sin(t * 9) * 12 * Math.max(0, 1 - t / 1.2)).toFixed(2)}deg)`,
+      transformOrigin: "50% 10%"
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: "bell", lado: 150 * U }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        right: -6 * U,
+        top: 4 * U,
+        minWidth: 54 * U,
+        height: 54 * U,
+        borderRadius: 27 * U,
+        background: ROJO,
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        fontSize: 32 * U,
+        border: `${4 * U}px solid #fff`,
+        transform: `scale(${Math.max(0, R(0.4, { damping: 9 })).toFixed(4)})`
+      }, children: "3" })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 - 10 * U, y: y0 - 60 * U, lado: 48 * U, t0: 0.4 })
+  ] });
 };
-const Foto = ({ src, style, gris }) => src ? /* @__PURE__ */ (react_namespaceFn().createElement)("img", { src, style: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: gris ? "grayscale(1) contrast(.9) brightness(.95)" : void 0, ...style } }) : null;
+const Foto = ({ src, style, gris }) => src ? /* @__PURE__ */ (0,jsx_runtime.jsx)("img", { src, style: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: gris ? "grayscale(1) contrast(.9) brightness(.95)" : void 0, ...style } }) : null;
 const ListaW = ({ cy, titulo = "", items = [] }) => {
   const t = Reel_useT();
   const U = Reel_useU();
@@ -98680,36 +100112,48 @@ const ListaW = ({ cy, titulo = "", items = [] }) => {
   const filas = items.slice(0, 4);
   const w = 820 * U, fila = 108 * U, h = 140 * U + filas.length * fila, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 130 });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 44 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA } }, titulo), filas.map((x, i) => {
-    const t0 = 0.25 + i * 0.22;
-    const marca = Reel_easeOut((t - t0 - 0.12) / 0.25);
-    const entra = Reel_easeOut((t - t0) / 0.3);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      position: "absolute",
-      left: 50 * U,
-      right: 50 * U,
-      top: 130 * U + i * fila,
-      height: fila - 20 * U,
-      display: "flex",
-      alignItems: "center",
-      gap: 26 * U,
-      opacity: clamp(entra * 1.4),
-      transform: `translateX(${((1 - entra) * 40 * U).toFixed(1)}px)`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      width: 62 * U,
-      height: 62 * U,
-      borderRadius: 18 * U,
-      border: `${4 * U}px solid ${marca > 0.5 ? AZUL : "#D9DCE6"}`,
-      background: marca > 0.5 ? AZUL : "#fff",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "#fff",
-      fontSize: 40 * U,
-      fontWeight: 800,
-      transform: `scale(${(1 + 0.18 * Math.sin(Math.PI * marca)).toFixed(3)})`
-    } }, marca > 0.5 ? "\u2713" : ""), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 44 * U, color: marca > 0.5 ? "#8A8E9C" : Reel_TINTA, position: "relative" } }, x, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { position: "absolute", left: 0, top: "54%", height: 4 * U, background: "#B9BDCB", width: `${(clamp((marca - 0.5) * 2) * 100).toFixed(1)}%` } })));
-  })), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w + 10 * U, y: y0 + 30 * U, lado: 50 * U, t0: 0.3 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 50 * U, top: 44 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA }, children: titulo }),
+      filas.map((x, i) => {
+        const t0 = 0.25 + i * 0.22;
+        const marca = Reel_easeOut((t - t0 - 0.12) / 0.25);
+        const entra = Reel_easeOut((t - t0) / 0.3);
+        return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "absolute",
+          left: 50 * U,
+          right: 50 * U,
+          top: 130 * U + i * fila,
+          height: fila - 20 * U,
+          display: "flex",
+          alignItems: "center",
+          gap: 26 * U,
+          opacity: clamp(entra * 1.4),
+          transform: `translateX(${((1 - entra) * 40 * U).toFixed(1)}px)`
+        }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            width: 62 * U,
+            height: 62 * U,
+            borderRadius: 18 * U,
+            border: `${4 * U}px solid ${marca > 0.5 ? AZUL : "#D9DCE6"}`,
+            background: marca > 0.5 ? AZUL : "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontSize: 40 * U,
+            fontWeight: 800,
+            transform: `scale(${(1 + 0.18 * Math.sin(Math.PI * marca)).toFixed(3)})`
+          }, children: marca > 0.5 ? "\u2713" : "" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 44 * U, color: marca > 0.5 ? "#8A8E9C" : Reel_TINTA, position: "relative" }, children: [
+            x,
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { position: "absolute", left: 0, top: "54%", height: 4 * U, background: "#B9BDCB", width: `${(clamp((marca - 0.5) * 2) * 100).toFixed(1)}%` } })
+          ] })
+        ] }, i);
+      })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + w + 10 * U, y: y0 + 30 * U, lado: 50 * U, t0: 0.3 })
+  ] });
 };
 const BuscadorW = ({ cy, consulta = "", resultados = [] }) => {
   const t = Reel_useT();
@@ -98721,53 +100165,72 @@ const BuscadorW = ({ cy, consulta = "", resultados = [] }) => {
   const n = Math.round(consulta.length * clamp((t - 0.15) / Math.max(0.4, consulta.length * 0.035)));
   const escrito = consulta.slice(0, n);
   const fin = 0.15 + Math.max(0.4, consulta.length * 0.035);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: 130 * U,
-    borderRadius: 65 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    display: "flex",
-    alignItems: "center",
-    gap: 24 * U,
-    padding: `0 ${40 * U}px`,
-    boxSizing: "border-box",
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 52 * U, height: 52 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 10, cy: 10, r: 7, fill: "none", stroke: "#8A8E9C", strokeWidth: 2.6 }), /* @__PURE__ */ (react_namespaceFn().createElement)("line", { x1: 15, y1: 15, x2: 22, y2: 22, stroke: "#8A8E9C", strokeWidth: 2.6, strokeLinecap: "round" })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 46 * U, color: Reel_TINTA, whiteSpace: "nowrap", overflow: "hidden" } }, escrito, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { display: "inline-block", width: 4 * U, height: 52 * U, marginLeft: 4 * U, verticalAlign: "middle", background: AZUL, opacity: Math.sin(t * 9) > 0 ? 1 : 0 } }))), resultados.slice(0, 3).map((x, i) => {
-    const e = Reel_easeOut((t - fin - 0.1 - i * 0.12) / 0.35);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       position: "absolute",
-      left: x0 + 20 * U,
-      width: w - 40 * U,
-      top: y0 + 170 * U + i * 140 * U,
-      height: 118 * U,
-      borderRadius: 30 * U,
+      left: x0,
+      top: y0,
+      width: w,
+      height: 130 * U,
+      borderRadius: 65 * U,
       background: "#FFFFFF",
       boxShadow: Reel_SOMBRA(U),
       display: "flex",
       alignItems: "center",
       gap: 24 * U,
-      padding: `0 ${32 * U}px`,
+      padding: `0 ${40 * U}px`,
       boxSizing: "border-box",
-      opacity: clamp(e * 1.5),
-      transform: `translateY(${((1 - e) * -40 * U).toFixed(1)}px)`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      width: 64 * U,
-      height: 64 * U,
-      borderRadius: 18 * U,
-      background: [LILA_F, "#E7F8EE", "#FFF0E6"][i],
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: [LILA, "#1FAF62", "#F26B1D"][i],
-      fontFamily: FAMILIA.inter,
-      fontWeight: 800,
-      fontSize: 34 * U
-    } }, x.slice(0, 1).toUpperCase()), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { flex: 1 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 38 * U, color: i === 0 ? AZUL : Reel_TINTA } }, x), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 8 * U, height: 12 * U, width: `${70 - i * 14}%`, borderRadius: 6 * U, background: "#ECEDF3" } })));
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [x0 + 200 * U, y0 + 230 * U], t0: fin, t1: fin + 0.4 }));
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)})`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 52 * U, height: 52 * U, viewBox: "0 0 24 24", children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: 10, cy: 10, r: 7, fill: "none", stroke: "#8A8E9C", strokeWidth: 2.6 }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("line", { x1: 15, y1: 15, x2: 22, y2: 22, stroke: "#8A8E9C", strokeWidth: 2.6, strokeLinecap: "round" })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 46 * U, color: Reel_TINTA, whiteSpace: "nowrap", overflow: "hidden" }, children: [
+        escrito,
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { display: "inline-block", width: 4 * U, height: 52 * U, marginLeft: 4 * U, verticalAlign: "middle", background: AZUL, opacity: Math.sin(t * 9) > 0 ? 1 : 0 } })
+      ] })
+    ] }),
+    resultados.slice(0, 3).map((x, i) => {
+      const e = Reel_easeOut((t - fin - 0.1 - i * 0.12) / 0.35);
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: x0 + 20 * U,
+        width: w - 40 * U,
+        top: y0 + 170 * U + i * 140 * U,
+        height: 118 * U,
+        borderRadius: 30 * U,
+        background: "#FFFFFF",
+        boxShadow: Reel_SOMBRA(U),
+        display: "flex",
+        alignItems: "center",
+        gap: 24 * U,
+        padding: `0 ${32 * U}px`,
+        boxSizing: "border-box",
+        opacity: clamp(e * 1.5),
+        transform: `translateY(${((1 - e) * -40 * U).toFixed(1)}px)`
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: 64 * U,
+          height: 64 * U,
+          borderRadius: 18 * U,
+          background: [LILA_F, "#E7F8EE", "#FFF0E6"][i],
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: [LILA, "#1FAF62", "#F26B1D"][i],
+          fontFamily: FAMILIA.inter,
+          fontWeight: 800,
+          fontSize: 34 * U
+        }, children: x.slice(0, 1).toUpperCase() }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1 }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 38 * U, color: i === 0 ? AZUL : Reel_TINTA }, children: x }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 8 * U, height: 12 * U, width: `${70 - i * 14}%`, borderRadius: 6 * U, background: "#ECEDF3" } })
+        ] })
+      ] }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [x0 + 200 * U, y0 + 230 * U], t0: fin, t1: fin + 0.4 })
+  ] });
 };
 const PostW = ({ cy, usuario = "", texto = "", likes = 1240, foto, megusta = "likes" }) => {
   const t = Reel_useT();
@@ -98778,34 +100241,59 @@ const PostW = ({ cy, usuario = "", texto = "", likes = 1240, foto, megusta = "li
   const q = R(0.05, { damping: 12, stiffness: 120 });
   const late = R(0.6, { damping: 8, stiffness: 220 });
   const n = Math.round(likes * (0.6 + 0.4 * Reel_suave(clamp((t - 0.6) / 1.2))));
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 44 * U,
-    background: "#FFFFFF",
-    boxShadow: Reel_SOMBRA(U),
-    overflow: "hidden",
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -4).toFixed(2)}deg)`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${26 * U}px ${30 * U}px` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { width: 64 * U, height: 64 * U, borderRadius: "50%", background: `linear-gradient(135deg, #F7B731, #F0473C, ${LILA})`, padding: 4 * U, boxSizing: "border-box" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    width: "100%",
-    height: "100%",
-    borderRadius: "50%",
-    background: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 800,
-    fontSize: 26 * U,
-    color: Reel_TINTA
-  } }, (usuario || "\xB7").slice(0, 1).toUpperCase())), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 32 * U, color: Reel_TINTA } }, usuario)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "relative", height: h * 0.62, background: `linear-gradient(160deg, ${AZUL}, ${LILA})`, overflow: "hidden" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,-50%) scale(${(Math.max(0, late) * (t < 1.4 ? 1 : 0)).toFixed(3)})`, opacity: clamp((1.4 - t) * 3) } }, /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: "red_heart", lado: 220 * U }))), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { padding: `${24 * U}px ${30 * U}px` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { display: "flex", gap: 26 * U, fontSize: 48 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: t > 0.6 ? ROJO : Reel_TINTA, transform: `scale(${(1 + 0.3 * Math.sin(Math.PI * clamp((t - 0.6) / 0.3))).toFixed(3)})`, display: "inline-block" } }, t > 0.6 ? "\u2665" : "\u2661"), /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: Reel_TINTA } }, "\u{1F4AC}"), /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { color: Reel_TINTA } }, "\u27A4")), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 12 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 34 * U, color: Reel_TINTA } }, n.toLocaleString("en-US"), " ", megusta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#555A6A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, texto))), [0, 1, 2, 3].map((i) => {
-    const u = (t - 0.7 - i * 0.2) * 0.7 % 1;
-    if (t < 0.7 + i * 0.2) return null;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { position: "absolute", left: x0 + w - 40 * U + Math.sin(u * 7 + i) * 30 * U, top: y0 + h * 0.75 - u * 420 * U, opacity: 1 - u, fontSize: (54 - i * 6) * U, color: ROJO } }, "\u2665");
-  }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 44 * U,
+      background: "#FFFFFF",
+      boxShadow: Reel_SOMBRA(U),
+      overflow: "hidden",
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)}) rotate(${((1 - q) * -4).toFixed(2)}deg)`
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 18 * U, padding: `${26 * U}px ${30 * U}px` }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 64 * U, height: 64 * U, borderRadius: "50%", background: `linear-gradient(135deg, #F7B731, #F0473C, ${LILA})`, padding: 4 * U, boxSizing: "border-box" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: "100%",
+          height: "100%",
+          borderRadius: "50%",
+          background: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 800,
+          fontSize: 26 * U,
+          color: Reel_TINTA
+        }, children: (usuario || "\xB7").slice(0, 1).toUpperCase() }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 32 * U, color: Reel_TINTA }, children: usuario })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", height: h * 0.62, background: `linear-gradient(160deg, ${AZUL}, ${LILA})`, overflow: "hidden" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(Foto, { src: foto }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,-50%) scale(${(Math.max(0, late) * (t < 1.4 ? 1 : 0)).toFixed(3)})`, opacity: clamp((1.4 - t) * 3) }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: "red_heart", lado: 220 * U }) })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { padding: `${24 * U}px ${30 * U}px` }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", gap: 26 * U, fontSize: 48 * U }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: t > 0.6 ? ROJO : Reel_TINTA, transform: `scale(${(1 + 0.3 * Math.sin(Math.PI * clamp((t - 0.6) / 0.3))).toFixed(3)})`, display: "inline-block" }, children: t > 0.6 ? "\u2665" : "\u2661" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: Reel_TINTA }, children: "\u{1F4AC}" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: Reel_TINTA }, children: "\u27A4" })
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { marginTop: 12 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 34 * U, color: Reel_TINTA }, children: [
+          n.toLocaleString("en-US"),
+          " ",
+          megusta
+        ] }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 6 * U, fontFamily: FAMILIA.inter, fontWeight: 500, fontSize: 30 * U, color: "#555A6A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: texto })
+      ] })
+    ] }),
+    [0, 1, 2, 3].map((i) => {
+      const u = (t - 0.7 - i * 0.2) * 0.7 % 1;
+      if (t < 0.7 + i * 0.2) return null;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: x0 + w - 40 * U + Math.sin(u * 7 + i) * 30 * U, top: y0 + h * 0.75 - u * 420 * U, opacity: 1 - u, fontSize: (54 - i * 6) * U, color: ROJO }, children: "\u2665" }, i);
+    })
+  ] });
 };
 const EncuestaW = ({ cy, pregunta = "", opciones = ["A", "B"], pcts = [64, 36] }) => {
   const t = Reel_useT();
@@ -98815,34 +100303,49 @@ const EncuestaW = ({ cy, pregunta = "", opciones = ["A", "B"], pcts = [64, 36] }
   const w = 840 * U, h = 520 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 130 });
   const llena = Reel_suave(clamp((t - 0.75) / 0.7));
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 44 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA, lineHeight: 1.1 } }, pregunta), opciones.slice(0, 2).map((o, i) => {
-    const p = pcts[i] ?? 50;
-    const gana = p >= (pcts[1 - i] ?? 0);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      position: "absolute",
-      left: 50 * U,
-      right: 50 * U,
-      top: 190 * U + i * 140 * U,
-      height: 110 * U,
-      borderRadius: 30 * U,
-      background: "#F2F3F8",
-      overflow: "hidden",
-      border: `${4 * U}px solid ${gana && llena > 0 ? AZUL : "transparent"}`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${(p * llena).toFixed(1)}%`, background: gana ? LILA_F : "#E4E6EE" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: 30 * U,
-      right: 30 * U,
-      top: 0,
-      bottom: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 800,
-      fontSize: 40 * U,
-      color: Reel_TINTA
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", null, o), /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { opacity: clamp(llena * 3), color: gana ? AZUL : "#8A8E9C" } }, Math.round(p * llena), "%")));
-  })), /* @__PURE__ */ (react_namespaceFn().createElement)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [x0 + w - 160 * U, y0 + 245 * U], t0: 0.25, t1: 0.7 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 44 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 44 * U, color: Reel_TINTA, lineHeight: 1.1 }, children: pregunta }),
+      opciones.slice(0, 2).map((o, i) => {
+        const p = pcts[i] ?? 50;
+        const gana = p >= (pcts[1 - i] ?? 0);
+        return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+          position: "absolute",
+          left: 50 * U,
+          right: 50 * U,
+          top: 190 * U + i * 140 * U,
+          height: 110 * U,
+          borderRadius: 30 * U,
+          background: "#F2F3F8",
+          overflow: "hidden",
+          border: `${4 * U}px solid ${gana && llena > 0 ? AZUL : "transparent"}`
+        }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${(p * llena).toFixed(1)}%`, background: gana ? LILA_F : "#E4E6EE" } }),
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+            position: "absolute",
+            left: 30 * U,
+            right: 30 * U,
+            top: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontFamily: FAMILIA.inter,
+            fontWeight: 800,
+            fontSize: 40 * U,
+            color: Reel_TINTA
+          }, children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: o }),
+            /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { opacity: clamp(llena * 3), color: gana ? AZUL : "#8A8E9C" }, children: [
+              Math.round(p * llena),
+              "%"
+            ] })
+          ] })
+        ] }, i);
+      })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CursorR, { desde: [width * 0.86, cy + 560 * U], hasta: [x0 + w - 160 * U, y0 + 245 * U], t0: 0.25, t1: 0.7 })
+  ] });
 };
 const CargaW = ({ cy, etiqueta = "", pct = 100 }) => {
   const t = Reel_useT();
@@ -98853,14 +100356,23 @@ const CargaW = ({ cy, etiqueta = "", pct = 100 }) => {
   const q = R(0.05, { damping: 13, stiffness: 130 });
   const v = pct * Reel_suave(clamp((t - 0.2) / 1.3));
   const listo = v >= 99.5;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 50 * U, display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 40 * U, color: Reel_TINTA } }, etiqueta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: listo ? "#1FAF62" : AZUL, fontVariantNumeric: "tabular-nums" } }, listo ? "\u2713" : `${Math.round(v)}%`)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 190 * U, height: 44 * U, borderRadius: 22 * U, background: "#ECEDF3", overflow: "hidden" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    width: `${v.toFixed(2)}%`,
-    height: "100%",
-    borderRadius: 22 * U,
-    background: listo ? "#1FAF62" : `linear-gradient(90deg, ${AZUL}, ${LILA})`,
-    backgroundImage: listo ? void 0 : `repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 ${14 * U}px, transparent ${14 * U}px ${28 * U}px), linear-gradient(90deg, ${AZUL}, ${LILA})`,
-    backgroundPosition: `${(t * 60 * U).toFixed(1)}px 0`
-  } }))), listo && /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w - 40 * U, y: y0 - 10 * U, lado: 60 * U, t0: 1.5 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 50 * U, display: "flex", justifyContent: "space-between", alignItems: "baseline" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 40 * U, color: Reel_TINTA }, children: etiqueta }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 64 * U, color: listo ? "#1FAF62" : AZUL, fontVariantNumeric: "tabular-nums" }, children: listo ? "\u2713" : `${Math.round(v)}%` })
+      ] }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 50 * U, right: 50 * U, top: 190 * U, height: 44 * U, borderRadius: 22 * U, background: "#ECEDF3", overflow: "hidden" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: `${v.toFixed(2)}%`,
+        height: "100%",
+        borderRadius: 22 * U,
+        background: listo ? "#1FAF62" : `linear-gradient(90deg, ${AZUL}, ${LILA})`,
+        backgroundImage: listo ? void 0 : `repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 ${14 * U}px, transparent ${14 * U}px ${28 * U}px), linear-gradient(90deg, ${AZUL}, ${LILA})`,
+        backgroundPosition: `${(t * 60 * U).toFixed(1)}px 0`
+      } }) })
+    ] }),
+    listo && /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + w - 40 * U, y: y0 - 10 * U, lado: 60 * U, t0: 1.5 })
+  ] });
 };
 const NotaW = ({ cy, lineas = [] }) => {
   const t = Reel_useT();
@@ -98869,22 +100381,28 @@ const NotaW = ({ cy, lineas = [] }) => {
   const R = useResorte();
   const w = 640 * U, h = 640 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 10, stiffness: 140 });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    background: "linear-gradient(170deg,#FFF3A8,#FFE36E)",
-    borderRadius: 10 * U,
-    boxShadow: `0 ${30 * U}px ${60 * U}px rgba(120,100,20,.25)`,
-    transform: `rotate(${(-3 + (1 - q) * -10).toFixed(2)}deg) scale(${Math.max(1e-3, q).toFixed(4)})`,
-    padding: `${110 * U}px ${56 * U}px`,
-    boxSizing: "border-box"
-  } }, lineas.slice(0, 4).map((x, i) => {
-    const e = clamp((t - 0.25 - i * 0.28) / 0.3);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { fontFamily: FAMILIA.mano, fontSize: 76 * U, color: "#3B3315", lineHeight: 1.15, clipPath: `inset(0 ${((1 - e) * 100).toFixed(1)}% 0 0)` } }, i === 0 ? /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { background: `linear-gradient(transparent 60%, rgba(240,71,60,.35) 60%)` } }, x) : x);
-  })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: width / 2 - 34 * U, top: y0 - 30 * U, transform: `scale(${Math.max(0, R(0.15, { damping: 9 })).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: 68 * U, height: 68 * U, viewBox: "0 0 24 24" }, /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 12, cy: 10, r: 8, fill: ROJO, stroke: "#fff", strokeWidth: 1.5 }), /* @__PURE__ */ (react_namespaceFn().createElement)("circle", { cx: 9.5, cy: 7.5, r: 2.4, fill: "rgba(255,255,255,.6)" }))));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      background: "linear-gradient(170deg,#FFF3A8,#FFE36E)",
+      borderRadius: 10 * U,
+      boxShadow: `0 ${30 * U}px ${60 * U}px rgba(120,100,20,.25)`,
+      transform: `rotate(${(-3 + (1 - q) * -10).toFixed(2)}deg) scale(${Math.max(1e-3, q).toFixed(4)})`,
+      padding: `${110 * U}px ${56 * U}px`,
+      boxSizing: "border-box"
+    }, children: lineas.slice(0, 4).map((x, i) => {
+      const e = clamp((t - 0.25 - i * 0.28) / 0.3);
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.mano, fontSize: 76 * U, color: "#3B3315", lineHeight: 1.15, clipPath: `inset(0 ${((1 - e) * 100).toFixed(1)}% 0 0)` }, children: i === 0 ? /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { background: `linear-gradient(transparent 60%, rgba(240,71,60,.35) 60%)` }, children: x }) : x }, i);
+    }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: width / 2 - 34 * U, top: y0 - 30 * U, transform: `scale(${Math.max(0, R(0.15, { damping: 9 })).toFixed(4)})` }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 68 * U, height: 68 * U, viewBox: "0 0 24 24", children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: 12, cy: 10, r: 8, fill: ROJO, stroke: "#fff", strokeWidth: 1.5 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: 9.5, cy: 7.5, r: 2.4, fill: "rgba(255,255,255,.6)" })
+    ] }) })
+  ] });
 };
 const AntesDespuesW = ({ cy, foto, antes = "Before", despues = "After" }) => {
   const t = Reel_useT();
@@ -98895,36 +100413,46 @@ const AntesDespuesW = ({ cy, foto, antes = "Before", despues = "After" }) => {
   const q = R(0.05, { damping: 13, stiffness: 120 });
   const corte = 0.92 - 0.84 * Reel_suave(clamp((t - 0.35) / 1.1));
   const fondo = foto ? void 0 : `linear-gradient(160deg, ${AZUL}, ${LILA})`;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: x0,
-    top: y0,
-    width: w,
-    height: h,
-    borderRadius: 46 * U,
-    overflow: "hidden",
-    boxShadow: Reel_SOMBRA(U),
-    border: `${8 * U}px solid #fff`,
-    transform: `scale(${Math.max(1e-3, q).toFixed(4)})`,
-    background: fondo
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, clipPath: `inset(0 ${((1 - corte) * 100).toFixed(2)}% 0 0)`, background: foto ? void 0 : "#B9BDCB" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Foto, { src: foto, gris: true })), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top: 0, bottom: 0, left: `${(corte * 100).toFixed(2)}%`, width: 6 * U, marginLeft: -3 * U, background: "#fff" } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    top: "50%",
-    left: `${(corte * 100).toFixed(2)}%`,
-    width: 90 * U,
-    height: 90 * U,
-    marginLeft: -45 * U,
-    marginTop: -45 * U,
-    borderRadius: "50%",
-    background: "#fff",
-    boxShadow: Reel_SOMBRA(U),
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 40 * U,
-    color: Reel_TINTA,
-    fontWeight: 800
-  } }, "\u27F7"), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 30 * U, top: 30 * U } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { fontSize: 30 * U, padding: `${8 * U}px ${22 * U}px`, color: "#555A6A" } }, antes)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", right: 30 * U, top: 30 * U, opacity: clamp((t - 0.6) * 3) } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Reel_Pastilla, { style: { fontSize: 30 * U, padding: `${8 * U}px ${22 * U}px`, color: "#fff", background: AZUL } }, despues))), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: x0 + w - 20 * U, y: y0 + h - 10 * U, lado: 52 * U, t0: 1.2 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: x0,
+      top: y0,
+      width: w,
+      height: h,
+      borderRadius: 46 * U,
+      overflow: "hidden",
+      boxShadow: Reel_SOMBRA(U),
+      border: `${8 * U}px solid #fff`,
+      transform: `scale(${Math.max(1e-3, q).toFixed(4)})`,
+      background: fondo
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Foto, { src: foto }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, clipPath: `inset(0 ${((1 - corte) * 100).toFixed(2)}% 0 0)`, background: foto ? void 0 : "#B9BDCB" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Foto, { src: foto, gris: true }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", top: 0, bottom: 0, left: `${(corte * 100).toFixed(2)}%`, width: 6 * U, marginLeft: -3 * U, background: "#fff" } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        top: "50%",
+        left: `${(corte * 100).toFixed(2)}%`,
+        width: 90 * U,
+        height: 90 * U,
+        marginLeft: -45 * U,
+        marginTop: -45 * U,
+        borderRadius: "50%",
+        background: "#fff",
+        boxShadow: Reel_SOMBRA(U),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 40 * U,
+        color: Reel_TINTA,
+        fontWeight: 800
+      }, children: "\u27F7" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 30 * U, top: 30 * U }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Reel_Pastilla, { style: { fontSize: 30 * U, padding: `${8 * U}px ${22 * U}px`, color: "#555A6A" }, children: antes }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", right: 30 * U, top: 30 * U, opacity: clamp((t - 0.6) * 3) }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Reel_Pastilla, { style: { fontSize: 30 * U, padding: `${8 * U}px ${22 * U}px`, color: "#fff", background: AZUL }, children: despues }) })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: x0 + w - 20 * U, y: y0 + h - 10 * U, lado: 52 * U, t0: 1.2 })
+  ] });
 };
 const CuentaW = ({ cy, valores = ["03", "12", "45"], etiquetas = ["days", "hrs", "min"] }) => {
   const t = Reel_useT();
@@ -98933,28 +100461,31 @@ const CuentaW = ({ cy, valores = ["03", "12", "45"], etiquetas = ["days", "hrs",
   const R = useResorte();
   const n = Math.min(3, valores.length);
   const lado = 230 * U, sep = 30 * U, total = n * lado + (n - 1) * sep, x0 = width / 2 - total / 2;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, valores.slice(0, n).map((v, i) => {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: valores.slice(0, n).map((v, i) => {
     const q = R(0.05 + i * 0.1, { damping: 12, stiffness: 150 });
     const ultimo = i === n - 1;
     const s = ultimo ? Math.max(0, parseInt(v, 10) - Math.floor(Math.max(0, t - 0.6) * 1.6)) : null;
     const txt = ultimo && s !== null && !isNaN(s) ? String(s).padStart(2, "0") : v;
     const tic = ultimo ? t * 1.6 % 1 : 1;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: { position: "absolute", left: x0 + i * (lado + sep), top: cy - lado / 2 - 40 * U, width: lado, transform: `translateY(${((1 - q) * 200 * U).toFixed(1)}px)`, opacity: clamp(q * 1.5) } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      height: lado,
-      borderRadius: 40 * U,
-      background: i === n - 1 ? Reel_TINTA : "#FFFFFF",
-      boxShadow: Reel_SOMBRA(U),
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 800,
-      fontSize: 130 * U,
-      color: i === n - 1 ? "#fff" : Reel_TINTA,
-      fontVariantNumeric: "tabular-nums",
-      overflow: "hidden"
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("span", { style: { transform: `translateY(${(ultimo && tic < 0.25 ? (1 - tic / 0.25) * -40 * U : 0).toFixed(1)}px)`, display: "inline-block" } }, txt)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { marginTop: 18 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 32 * U, color: "#8A8E9C", textTransform: "uppercase", letterSpacing: "0.08em" } }, etiquetas[i] || ""));
-  }));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x0 + i * (lado + sep), top: cy - lado / 2 - 40 * U, width: lado, transform: `translateY(${((1 - q) * 200 * U).toFixed(1)}px)`, opacity: clamp(q * 1.5) }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        height: lado,
+        borderRadius: 40 * U,
+        background: i === n - 1 ? Reel_TINTA : "#FFFFFF",
+        boxShadow: Reel_SOMBRA(U),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: FAMILIA.inter,
+        fontWeight: 800,
+        fontSize: 130 * U,
+        color: i === n - 1 ? "#fff" : Reel_TINTA,
+        fontVariantNumeric: "tabular-nums",
+        overflow: "hidden"
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { transform: `translateY(${(ultimo && tic < 0.25 ? (1 - tic / 0.25) * -40 * U : 0).toFixed(1)}px)`, display: "inline-block" }, children: txt }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { marginTop: 18 * U, textAlign: "center", fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 32 * U, color: "#8A8E9C", textTransform: "uppercase", letterSpacing: "0.08em" }, children: etiquetas[i] || "" })
+    ] }, i);
+  }) });
 };
 const GraficaW = ({ cy, valor = "+40%", etiqueta = "" }) => {
   const t = Reel_useT();
@@ -98964,15 +100495,22 @@ const GraficaW = ({ cy, valor = "+40%", etiqueta = "" }) => {
   const w = 840 * U, h = 620 * U, x0 = width / 2 - w / 2, y0 = cy - h / 2;
   const q = R(0.05, { damping: 13, stiffness: 130 });
   const alturas = [0.28, 0.4, 0.36, 0.55, 0.68, 0.95];
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 40 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 32 * U, color: "#8A8E9C" } }, etiqueta), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 50 * U, top: 84 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 84 * U, color: "#1FAF62", opacity: clamp((t - 0.9) * 3) } }, valor, " \u2197"), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: 60 * U, right: 60 * U, bottom: 60 * U, height: 330 * U, display: "flex", alignItems: "flex-end", gap: 26 * U } }, alturas.map((a, i) => {
-    const e = R(0.2 + i * 0.09, { damping: 12, stiffness: 140 });
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      flex: 1,
-      height: `${(a * 100 * Math.max(0, e)).toFixed(1)}%`,
-      borderRadius: 18 * U,
-      background: i === alturas.length - 1 ? `linear-gradient(180deg, ${AZUL}, ${LILA})` : "#E4E6EE"
-    } });
-  }))));
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: x0, top: y0, width: w, height: h, borderRadius: 46 * U, background: "#FFFFFF", boxShadow: Reel_SOMBRA(U), transform: `scale(${Math.max(1e-3, q).toFixed(4)})` }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 50 * U, top: 40 * U, fontFamily: FAMILIA.inter, fontWeight: 600, fontSize: 32 * U, color: "#8A8E9C" }, children: etiqueta }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", left: 50 * U, top: 84 * U, fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 84 * U, color: "#1FAF62", opacity: clamp((t - 0.9) * 3) }, children: [
+      valor,
+      " \u2197"
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: 60 * U, right: 60 * U, bottom: 60 * U, height: 330 * U, display: "flex", alignItems: "flex-end", gap: 26 * U }, children: alturas.map((a, i) => {
+      const e = R(0.2 + i * 0.09, { damping: 12, stiffness: 140 });
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        flex: 1,
+        height: `${(a * 100 * Math.max(0, e)).toFixed(1)}%`,
+        borderRadius: 18 * U,
+        background: i === alturas.length - 1 ? `linear-gradient(180deg, ${AZUL}, ${LILA})` : "#E4E6EE"
+      } }, i);
+    }) })
+  ] }) });
 };
 const GolpeW = ({ cy, palabra = "", antes = "" }) => {
   const t = Reel_useT();
@@ -98983,18 +100521,29 @@ const GolpeW = ({ cy, palabra = "", antes = "" }) => {
   const largo = Math.max(3, palabra.length);
   const tam = Math.min(300, width / U * 1.55 / largo) * U;
   const raya = Reel_easeOut((t - 0.25) / 0.45);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top: cy - tam * 0.95, left: 0, right: 0, textAlign: "center" } }, antes && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 70 * U, color: Reel_TINTA, opacity: clamp(q * 2), marginBottom: 10 * U } }, antes), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    display: "inline-block",
-    position: "relative",
-    fontFamily: FAMILIA.display,
-    fontStyle: "italic",
-    fontSize: tam,
-    lineHeight: 1,
-    color: AZUL,
-    transform: `scale(${(0.6 + 0.4 * Math.max(0, q)).toFixed(4)}) rotate(${((1 - Math.min(1, q)) * -6).toFixed(2)}deg)`,
-    opacity: clamp(q * 2),
-    filter: q < 0.9 ? `blur(${((1 - q) * 10).toFixed(1)}px)` : void 0
-  } }, palabra, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width: "100%", height: tam * 0.32, viewBox: "0 0 100 20", preserveAspectRatio: "none", style: { position: "absolute", left: 0, bottom: -tam * 0.2 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M2 14 Q 30 4, 55 11 T 98 8", fill: "none", stroke: ORO, strokeWidth: 4, strokeLinecap: "round", strokeDasharray: "110", strokeDashoffset: 110 * (1 - raya) })))), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: width / 2 - tam * largo * 0.24, y: cy - tam * 0.9, lado: 70 * U, t0: 0.2 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: width / 2 + tam * largo * 0.25, y: cy - tam * 0.2, lado: 56 * U, t0: 0.3 }), /* @__PURE__ */ (react_namespaceFn().createElement)(Estrella, { x: width / 2 + tam * largo * 0.18, y: cy - tam * 1.1, lado: 40 * U, t0: 0.38 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", top: cy - tam * 0.95, left: 0, right: 0, textAlign: "center" }, children: [
+      antes && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 70 * U, color: Reel_TINTA, opacity: clamp(q * 2), marginBottom: 10 * U }, children: antes }),
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        display: "inline-block",
+        position: "relative",
+        fontFamily: FAMILIA.display,
+        fontStyle: "italic",
+        fontSize: tam,
+        lineHeight: 1,
+        color: AZUL,
+        transform: `scale(${(0.6 + 0.4 * Math.max(0, q)).toFixed(4)}) rotate(${((1 - Math.min(1, q)) * -6).toFixed(2)}deg)`,
+        opacity: clamp(q * 2),
+        filter: q < 0.9 ? `blur(${((1 - q) * 10).toFixed(1)}px)` : void 0
+      }, children: [
+        palabra,
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", { width: "100%", height: tam * 0.32, viewBox: "0 0 100 20", preserveAspectRatio: "none", style: { position: "absolute", left: 0, bottom: -tam * 0.2 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M2 14 Q 30 4, 55 11 T 98 8", fill: "none", stroke: ORO, strokeWidth: 4, strokeLinecap: "round", strokeDasharray: "110", strokeDashoffset: 110 * (1 - raya) }) })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: width / 2 - tam * largo * 0.24, y: cy - tam * 0.9, lado: 70 * U, t0: 0.2 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: width / 2 + tam * largo * 0.25, y: cy - tam * 0.2, lado: 56 * U, t0: 0.3 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Estrella, { x: width / 2 + tam * largo * 0.18, y: cy - tam * 1.1, lado: 40 * U, t0: 0.38 })
+  ] });
 };
 
 ;// ./src/MotionsCompleto.tsx
@@ -99091,8 +100640,8 @@ const colores = (fondo, acento) => {
 };
 const Icono3 = ({ ic, lado, style }) => {
   if (!ic) return null;
-  if (ic.emoji) return /* @__PURE__ */ (react_namespaceFn().createElement)(EmojiAnimado, { id: ic.emoji, lado, style });
-  if (ic.img) return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(ic.img), style: { width: lado, height: lado, objectFit: "contain", ...style } });
+  if (ic.emoji) return /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: ic.emoji, lado, style });
+  if (ic.img) return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: (0,esm/* staticFile */.dQ)(ic.img), style: { width: lado, height: lado, objectFit: "contain", ...style } });
   return null;
 };
 const Fondo = ({ c, acento, foto }) => {
@@ -99101,18 +100650,21 @@ const Fondo = ({ c, acento, foto }) => {
   const t = frame / fps;
   const [r, g, b] = rgb(acento);
   if (foto) {
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "#05060A", overflow: "hidden" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src: foto, style: {
-      position: "absolute",
-      inset: -60,
-      width: width + 120,
-      height: height + 120,
-      objectFit: "cover",
-      filter: "blur(38px) saturate(1.25) brightness(.42)",
-      transform: `scale(${(1.12 + 0.04 * Math.sin(t * 0.4)).toFixed(4)})`
-    } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(90% 60% at 50% 45%, rgba(${r},${g},${b},.18) 0%, rgba(0,0,0,0) 70%)` } }));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { background: "#05060A", overflow: "hidden" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: foto, style: {
+        position: "absolute",
+        inset: -60,
+        width: width + 120,
+        height: height + 120,
+        objectFit: "cover",
+        filter: "blur(38px) saturate(1.25) brightness(.42)",
+        transform: `scale(${(1.12 + 0.04 * Math.sin(t * 0.4)).toFixed(4)})`
+      } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `radial-gradient(90% 60% at 50% 45%, rgba(${r},${g},${b},.18) 0%, rgba(0,0,0,0) 70%)` } })
+    ] });
   }
   const m = Math.min(width, height);
-  const mancha = (x, y, s, a) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  const mancha = (x, y, s, a) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: x - s / 2,
     top: y - s / 2,
@@ -99121,11 +100673,17 @@ const Fondo = ({ c, acento, foto }) => {
     borderRadius: "50%",
     background: `radial-gradient(circle, rgba(${r},${g},${b},${a}) 0%, rgba(${r},${g},${b},0) 68%)`
   } });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: c.fondo, overflow: "hidden" } }, !c.oscuro && mancha(width * (0.2 + 0.06 * Math.sin(t * 0.4)), height * (0.18 + 0.04 * Math.cos(t * 0.35)), m * 1.3, 0.1), !c.oscuro && mancha(width * (0.85 + 0.05 * Math.cos(t * 0.3)), height * (0.8 + 0.04 * Math.sin(t * 0.33)), m * 1.2, 0.08), c.oscuro && mancha(width * (0.25 + 0.08 * Math.sin(t * 0.5)), height * (0.28 + 0.05 * Math.cos(t * 0.4)), m * 1.1, c.clave === "#FFFFFF" ? 0 : 0.22), c.oscuro && mancha(width * (0.78 + 0.06 * Math.cos(t * 0.45)), height * (0.72 + 0.05 * Math.sin(t * 0.35)), m * 0.9, c.clave === "#FFFFFF" ? 0 : 0.16), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: {
-    backgroundImage: `linear-gradient(${c.trama} 1px, transparent 1px), linear-gradient(90deg, ${c.trama} 1px, transparent 1px)`,
-    backgroundSize: "72px 72px",
-    backgroundPosition: `0 ${frame * 0.4 % 72}px`
-  } }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { background: c.fondo, overflow: "hidden" }, children: [
+    !c.oscuro && mancha(width * (0.2 + 0.06 * Math.sin(t * 0.4)), height * (0.18 + 0.04 * Math.cos(t * 0.35)), m * 1.3, 0.1),
+    !c.oscuro && mancha(width * (0.85 + 0.05 * Math.cos(t * 0.3)), height * (0.8 + 0.04 * Math.sin(t * 0.33)), m * 1.2, 0.08),
+    c.oscuro && mancha(width * (0.25 + 0.08 * Math.sin(t * 0.5)), height * (0.28 + 0.05 * Math.cos(t * 0.4)), m * 1.1, c.clave === "#FFFFFF" ? 0 : 0.22),
+    c.oscuro && mancha(width * (0.78 + 0.06 * Math.cos(t * 0.45)), height * (0.72 + 0.05 * Math.sin(t * 0.35)), m * 0.9, c.clave === "#FFFFFF" ? 0 : 0.16),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: {
+      backgroundImage: `linear-gradient(${c.trama} 1px, transparent 1px), linear-gradient(90deg, ${c.trama} 1px, transparent 1px)`,
+      backgroundSize: "72px 72px",
+      backgroundPosition: `0 ${frame * 0.4 % 72}px`
+    } })
+  ] });
 };
 const Rotulo = ({ texto, acento, top, t0 = 0.25 }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -99135,26 +100693,29 @@ const Rotulo = ({ texto, acento, top, t0 = 0.25 }) => {
   const q = MotionsCompleto_easeOut((t - t0) / 0.42);
   const barra = MotionsCompleto_easeOut((t - t0 - 0.12) / 0.4);
   const tam = Math.min(150 * U, width * 0.9 / Math.max(4, texto.length * 0.5));
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    fontFamily: FAMILIA.condensada,
-    fontSize: tam,
-    color: "#fff",
-    textTransform: "uppercase",
-    lineHeight: 0.95,
-    textAlign: "center",
-    padding: `0 ${50 * U}px`,
-    textShadow: `0 ${6 * U}px ${30 * U}px rgba(0,0,0,.55)`,
-    opacity: q,
-    transform: `translateY(${((1 - q) * 40 * U).toFixed(1)}px)`,
-    clipPath: `inset(0 ${((1 - q) * 100).toFixed(1)}% 0 0)`
-  } }, texto), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    marginTop: 18 * U,
-    height: 12 * U,
-    width: Math.min(width * 0.6, tam * texto.length * 0.42) * barra,
-    background: acento,
-    borderRadius: 6 * U,
-    boxShadow: `0 0 ${30 * U}px ${acento}`
-  } }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "absolute", top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      fontFamily: FAMILIA.condensada,
+      fontSize: tam,
+      color: "#fff",
+      textTransform: "uppercase",
+      lineHeight: 0.95,
+      textAlign: "center",
+      padding: `0 ${50 * U}px`,
+      textShadow: `0 ${6 * U}px ${30 * U}px rgba(0,0,0,.55)`,
+      opacity: q,
+      transform: `translateY(${((1 - q) * 40 * U).toFixed(1)}px)`,
+      clipPath: `inset(0 ${((1 - q) * 100).toFixed(1)}% 0 0)`
+    }, children: texto }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      marginTop: 18 * U,
+      height: 12 * U,
+      width: Math.min(width * 0.6, tam * texto.length * 0.42) * barra,
+      background: acento,
+      borderRadius: 6 * U,
+      boxShadow: `0 0 ${30 * U}px ${acento}`
+    } })
+  ] });
 };
 const FotoMC = ({ e, src, acento, n }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -99167,25 +100728,37 @@ const FotoMC = ({ e, src, acento, n }) => {
   if (!src) return null;
   if (tarjeta) {
     const w = width * 0.8, h = height * (height > width ? 0.52 : 0.62);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)(Fondo, { c: colores("oscuro", acento), acento, foto: src }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      left: (width - w) / 2,
-      top: height * 0.4 - h / 2,
-      width: w,
-      height: h,
-      borderRadius: 40 * U,
-      overflow: "hidden",
-      boxShadow: `0 ${40 * U}px ${90 * U}px rgba(0,0,0,.55)`,
-      border: `${6 * U}px solid rgba(255,255,255,.9)`,
-      transform: `translateY(${((1 - r) * 120 * U).toFixed(1)}px) rotate(${((1 - r) * -6 + Math.sin(p * 3) * 0.6).toFixed(2)}deg) scale(${(0.9 + 0.1 * r).toFixed(4)})`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src, style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.1 - 0.08 * p).toFixed(4)})` } })), e.titulo && /* @__PURE__ */ (react_namespaceFn().createElement)(Rotulo, { texto: e.titulo, acento, top: height * 0.4 + h / 2 + 60 * U, t0: 0.35 }));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(Fondo, { c: colores("oscuro", acento), acento, foto: src }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: (width - w) / 2,
+        top: height * 0.4 - h / 2,
+        width: w,
+        height: h,
+        borderRadius: 40 * U,
+        overflow: "hidden",
+        boxShadow: `0 ${40 * U}px ${90 * U}px rgba(0,0,0,.55)`,
+        border: `${6 * U}px solid rgba(255,255,255,.9)`,
+        transform: `translateY(${((1 - r) * 120 * U).toFixed(1)}px) rotate(${((1 - r) * -6 + Math.sin(p * 3) * 0.6).toFixed(2)}deg) scale(${(0.9 + 0.1 * r).toFixed(4)})`
+      }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src, style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.1 - 0.08 * p).toFixed(4)})` } }) }),
+      e.titulo && /* @__PURE__ */ (0,jsx_runtime.jsx)(Rotulo, { texto: e.titulo, acento, top: height * 0.4 + h / 2 + 60 * U, t0: 0.35 })
+    ] });
   }
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "#000", overflow: "hidden" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Img */.E9, { src, style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.16 - 0.12 * p).toFixed(4)}) translateX(${((p - 0.5) * 3).toFixed(2)}%)` } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 34%, rgba(0,0,0,0) 60%, rgba(0,0,0,.65) 100%)" } }), e.titulo && /* @__PURE__ */ (react_namespaceFn().createElement)(Rotulo, { texto: e.titulo, acento, top: height * 0.11 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { background: "#000", overflow: "hidden" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src, style: { width: "100%", height: "100%", objectFit: "cover", transform: `scale(${(1.16 - 0.12 * p).toFixed(4)}) translateX(${((p - 0.5) * 3).toFixed(2)}%)` } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 34%, rgba(0,0,0,0) 60%, rgba(0,0,0,.65) 100%)" } }),
+    e.titulo && /* @__PURE__ */ (0,jsx_runtime.jsx)(Rotulo, { texto: e.titulo, acento, top: height * 0.11 })
+  ] });
 };
 const VideoMC = ({ e, acento }) => {
   const { fps, height } = (0,esm/* useVideoConfig */.Bk)();
   if (!e.video) return null;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "#000" } }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* OffthreadVideo */.pe, { src: e.video, muted: true, startFrom: Math.round((e.inicio || 0) * fps), style: { width: "100%", height: "100%", objectFit: "cover" } }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 62%, rgba(0,0,0,.55) 100%)" } }), e.titulo && /* @__PURE__ */ (react_namespaceFn().createElement)(Rotulo, { texto: e.titulo, acento, top: height * 0.11 }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { background: "#000" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* OffthreadVideo */.pe, { src: e.video, muted: true, startFrom: Math.round((e.inicio || 0) * fps), style: { width: "100%", height: "100%", objectFit: "cover" } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: "linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 62%, rgba(0,0,0,.55) 100%)" } }),
+    e.titulo && /* @__PURE__ */ (0,jsx_runtime.jsx)(Rotulo, { texto: e.titulo, acento, top: height * 0.11 })
+  ] });
 };
 const PildorasMC = ({ e, c, acento }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -99197,7 +100770,7 @@ const PildorasMC = ({ e, c, acento }) => {
   const vertical = height > width;
   const k = vertical ? items.length <= 2 ? 1.5 : 1.3 : 1.1;
   const [r, g, b] = rgb(acento);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     display: "flex",
     flexDirection: vertical ? "column" : "row",
     flexWrap: "wrap",
@@ -99205,11 +100778,11 @@ const PildorasMC = ({ e, c, acento }) => {
     alignItems: "center",
     justifyContent: "center",
     maxWidth: width * 0.92
-  } }, items.map((it, i) => {
+  }, children: items.map((it, i) => {
     const q = resorte(0.12 + i * 0.22, { damping: 12, stiffness: 150 });
     const flota = Math.sin(t * 1.6 + i * 1.3) * 8 * U;
     const lado = 118 * U * k;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
       display: "flex",
       alignItems: "center",
       gap: 26 * U * k,
@@ -99220,16 +100793,19 @@ const PildorasMC = ({ e, c, acento }) => {
       boxShadow: c.oscuro ? `0 ${20 * U}px ${50 * U}px rgba(0,0,0,.35), inset 0 0 ${30 * U}px rgba(${r},${g},${b},.18)` : `0 ${18 * U}px ${44 * U}px rgba(20,30,60,.14)`,
       opacity: clamp(q * 1.5),
       transform: `translateY(${((1 - q) * 60 * U + flota).toFixed(1)}px) scale(${(0.7 + 0.3 * q).toFixed(4)}) rotate(${((1 - q) * (i % 2 ? 4 : -4)).toFixed(2)}deg)`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      width: lado,
-      height: lado,
-      borderRadius: "50%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: `radial-gradient(circle at 35% 30%, rgba(${r},${g},${b},.95), rgba(${Math.round(r * 0.5)},${Math.round(g * 0.5)},${Math.round(b * 0.5)},.95))`
-    } }, it.icono ? /* @__PURE__ */ (react_namespaceFn().createElement)(Icono3, { ic: it.icono, lado: lado * 0.74 }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: 56 * U, color: "#fff" } }, i + 1)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 58 * U * k, color: c.tinta, letterSpacing: "-0.02em", whiteSpace: "nowrap" } }, it.texto));
-  })));
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        width: lado,
+        height: lado,
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: `radial-gradient(circle at 35% 30%, rgba(${r},${g},${b},.95), rgba(${Math.round(r * 0.5)},${Math.round(g * 0.5)},${Math.round(b * 0.5)},.95))`
+      }, children: it.icono ? /* @__PURE__ */ (0,jsx_runtime.jsx)(Icono3, { ic: it.icono, lado: lado * 0.74 }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: 56 * U, color: "#fff" }, children: i + 1 }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 800, fontSize: 58 * U * k, color: c.tinta, letterSpacing: "-0.02em", whiteSpace: "nowrap" }, children: it.texto })
+    ] }, i);
+  }) }) });
 };
 const DiagramaMC = ({ e, c, acento }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -99247,65 +100823,74 @@ const DiagramaMC = ({ e, c, acento }) => {
     return vertical ? { x: width / 2, y: height * 0.47 + d } : { x: width / 2 + d, y: height * 0.46 };
   };
   const [r, g, b] = rgb(acento);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("svg", { width, height, style: { position: "absolute", inset: 0 } }, /* @__PURE__ */ (react_namespaceFn().createElement)("defs", null, /* @__PURE__ */ (react_namespaceFn().createElement)("marker", { id: "mcFlecha", viewBox: "0 0 10 10", refX: "7", refY: "5", markerWidth: "5", markerHeight: "5", orient: "auto-start-reverse" }, /* @__PURE__ */ (react_namespaceFn().createElement)("path", { d: "M0,0 L10,5 L0,10 z", fill: acento }))), nodos.slice(1).map((_, i) => {
-    const a = pos(i), z = pos(i + 1);
-    const k = (lado / 2 + 26 * U) / Math.hypot(z.x - a.x, z.y - a.y);
-    const x1 = a.x + (z.x - a.x) * k, y1 = a.y + (z.y - a.y) * k, x2 = z.x - (z.x - a.x) * k, y2 = z.y - (z.y - a.y) * k;
-    const largo = Math.hypot(x2 - x1, y2 - y1);
-    const q = MotionsCompleto_easeOut((t - 0.5 - i * 0.75) / 0.42);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(
-      "line",
-      {
-        key: i,
-        x1,
-        y1,
-        x2,
-        y2,
-        stroke: acento,
-        strokeWidth: 12 * U,
-        strokeLinecap: "round",
-        markerEnd: q > 0.9 ? "url(#mcFlecha)" : void 0,
-        strokeDasharray: largo,
-        strokeDashoffset: largo * (1 - q),
-        style: { filter: `drop-shadow(0 0 ${14 * U}px rgba(${r},${g},${b},.8))` }
-      }
-    );
-  })), nodos.map((nd, i) => {
-    const p = pos(i);
-    const q = resorte(0.12 + i * 0.75, { damping: 11, stiffness: 150 });
-    const pulso = 1 + 0.03 * Math.sin(t * 2.2 + i);
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
-      position: "absolute",
-      left: p.x - lado / 2,
-      top: p.y - lado / 2,
-      width: lado,
-      height: lado,
-      opacity: clamp(q * 1.6),
-      transform: `scale(${((0.4 + 0.6 * q) * pulso).toFixed(4)})`
-    } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      width: lado,
-      height: lado,
-      borderRadius: "50%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: c.vidrio,
-      border: `${8 * U}px solid ${acento}`,
-      boxShadow: `0 0 ${50 * U}px rgba(${r},${g},${b},.45), 0 ${24 * U}px ${50 * U}px rgba(0,0,0,${c.oscuro ? 0.4 : 0.15})`
-    } }, nd.icono ? /* @__PURE__ */ (react_namespaceFn().createElement)(Icono3, { ic: nd.icono, lado: lado * 0.62 }) : /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: lado * 0.36, color: c.clave } }, i + 1)), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-      position: "absolute",
-      top: vertical ? lado * 0.5 - 30 * U : lado + 22 * U,
-      left: vertical ? lado + 30 * U : -lado * 0.4,
-      width: vertical ? width * 0.42 : lado * 1.8,
-      textAlign: vertical ? "left" : "center",
-      fontFamily: FAMILIA.inter,
-      fontWeight: 800,
-      fontSize: 54 * U,
-      color: c.tinta,
-      letterSpacing: "-0.02em",
-      lineHeight: 1.05
-    } }, nd.texto));
-  }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width, height, style: { position: "absolute", inset: 0 }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("marker", { id: "mcFlecha", viewBox: "0 0 10 10", refX: "7", refY: "5", markerWidth: "5", markerHeight: "5", orient: "auto-start-reverse", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M0,0 L10,5 L0,10 z", fill: acento }) }) }),
+      nodos.slice(1).map((_, i) => {
+        const a = pos(i), z = pos(i + 1);
+        const k = (lado / 2 + 26 * U) / Math.hypot(z.x - a.x, z.y - a.y);
+        const x1 = a.x + (z.x - a.x) * k, y1 = a.y + (z.y - a.y) * k, x2 = z.x - (z.x - a.x) * k, y2 = z.y - (z.y - a.y) * k;
+        const largo = Math.hypot(x2 - x1, y2 - y1);
+        const q = MotionsCompleto_easeOut((t - 0.5 - i * 0.75) / 0.42);
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "line",
+          {
+            x1,
+            y1,
+            x2,
+            y2,
+            stroke: acento,
+            strokeWidth: 12 * U,
+            strokeLinecap: "round",
+            markerEnd: q > 0.9 ? "url(#mcFlecha)" : void 0,
+            strokeDasharray: largo,
+            strokeDashoffset: largo * (1 - q),
+            style: { filter: `drop-shadow(0 0 ${14 * U}px rgba(${r},${g},${b},.8))` }
+          },
+          i
+        );
+      })
+    ] }),
+    nodos.map((nd, i) => {
+      const p = pos(i);
+      const q = resorte(0.12 + i * 0.75, { damping: 11, stiffness: 150 });
+      const pulso = 1 + 0.03 * Math.sin(t * 2.2 + i);
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+        position: "absolute",
+        left: p.x - lado / 2,
+        top: p.y - lado / 2,
+        width: lado,
+        height: lado,
+        opacity: clamp(q * 1.6),
+        transform: `scale(${((0.4 + 0.6 * q) * pulso).toFixed(4)})`
+      }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          width: lado,
+          height: lado,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: c.vidrio,
+          border: `${8 * U}px solid ${acento}`,
+          boxShadow: `0 0 ${50 * U}px rgba(${r},${g},${b},.45), 0 ${24 * U}px ${50 * U}px rgba(0,0,0,${c.oscuro ? 0.4 : 0.15})`
+        }, children: nd.icono ? /* @__PURE__ */ (0,jsx_runtime.jsx)(Icono3, { ic: nd.icono, lado: lado * 0.62 }) : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: FAMILIA.inter, fontWeight: 900, fontSize: lado * 0.36, color: c.clave }, children: i + 1 }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+          position: "absolute",
+          top: vertical ? lado * 0.5 - 30 * U : lado + 22 * U,
+          left: vertical ? lado + 30 * U : -lado * 0.4,
+          width: vertical ? width * 0.42 : lado * 1.8,
+          textAlign: vertical ? "left" : "center",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 800,
+          fontSize: 54 * U,
+          color: c.tinta,
+          letterSpacing: "-0.02em",
+          lineHeight: 1.05
+        }, children: nd.texto })
+      ] }, i);
+    })
+  ] });
 };
 const IconoMC = ({ e, c, acento }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -99318,90 +100903,96 @@ const IconoMC = ({ e, c, acento }) => {
   const cy = height * 0.42;
   const flota = Math.sin(t * 1.7) * 14 * U;
   const q = MotionsCompleto_easeOut((t - 0.35) / 0.4);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: width / 2 - lado * 0.85,
-    top: cy - lado * 0.85,
-    width: lado * 1.7,
-    height: lado * 1.7,
-    borderRadius: "50%",
-    background: `radial-gradient(circle, rgba(${ar},${ag},${ab},${c.oscuro ? 0.5 : 0.25}) 0%, rgba(${ar},${ag},${ab},0) 65%)`,
-    opacity: clamp(r)
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: width / 2 - lado * 0.66,
-    top: cy - lado * 0.66,
-    width: lado * 1.32,
-    height: lado * 1.32,
-    borderRadius: "50%",
-    border: `${5 * U}px dashed rgba(${ar},${ag},${ab},.7)`,
-    transform: `rotate(${(t * 24).toFixed(2)}deg) scale(${(0.6 + 0.4 * r).toFixed(4)})`,
-    opacity: clamp(r)
-  } }), [0, 1, 2, 3, 4, 5].map((i) => {
-    const ang = i / 6 * Math.PI * 2 + t * 0.6;
-    const d = lado * (0.78 + 0.04 * Math.sin(t * 2 + i));
-    const s = (10 + i % 3 * 5) * U;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { key: i, style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
       position: "absolute",
-      left: width / 2 + Math.cos(ang) * d - s / 2,
-      top: cy + Math.sin(ang) * d - s / 2,
-      width: s,
-      height: s,
+      left: width / 2 - lado * 0.85,
+      top: cy - lado * 0.85,
+      width: lado * 1.7,
+      height: lado * 1.7,
       borderRadius: "50%",
-      background: i % 2 ? "#fff" : acento,
-      opacity: 0.8 * clamp(r),
-      boxShadow: `0 0 ${16 * U}px ${acento}`
-    } });
-  }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: width / 2 - lado / 2,
-    top: cy - lado / 2 + flota,
-    transform: `scale(${(0.5 + 0.5 * r).toFixed(4)})`,
-    filter: `drop-shadow(0 ${30 * U}px ${40 * U}px rgba(0,0,0,${c.oscuro ? 0.5 : 0.22}))`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)(Icono3, { ic: e.icono, lado })), e.titulo && /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    top: cy + lado * 0.68,
-    left: 0,
-    right: 0,
-    display: "flex",
-    justifyContent: "center",
-    opacity: q,
-    transform: `translateY(${((1 - q) * 40 * U).toFixed(1)}px) scale(${(0.85 + 0.15 * q).toFixed(4)})`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    padding: `${18 * U}px ${48 * U}px`,
-    borderRadius: 999,
-    background: acento,
-    color: "#fff",
-    fontFamily: FAMILIA.inter,
-    fontWeight: 900,
-    fontSize: Math.min(84 * U, width * 0.8 / Math.max(4, e.titulo.length * 0.6)),
-    letterSpacing: "-0.01em",
-    textTransform: "uppercase",
-    boxShadow: `0 ${16 * U}px ${40 * U}px rgba(${ar},${ag},${ab},.45)`
-  } }, e.titulo)));
+      background: `radial-gradient(circle, rgba(${ar},${ag},${ab},${c.oscuro ? 0.5 : 0.25}) 0%, rgba(${ar},${ag},${ab},0) 65%)`,
+      opacity: clamp(r)
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: width / 2 - lado * 0.66,
+      top: cy - lado * 0.66,
+      width: lado * 1.32,
+      height: lado * 1.32,
+      borderRadius: "50%",
+      border: `${5 * U}px dashed rgba(${ar},${ag},${ab},.7)`,
+      transform: `rotate(${(t * 24).toFixed(2)}deg) scale(${(0.6 + 0.4 * r).toFixed(4)})`,
+      opacity: clamp(r)
+    } }),
+    [0, 1, 2, 3, 4, 5].map((i) => {
+      const ang = i / 6 * Math.PI * 2 + t * 0.6;
+      const d = lado * (0.78 + 0.04 * Math.sin(t * 2 + i));
+      const s = (10 + i % 3 * 5) * U;
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: width / 2 + Math.cos(ang) * d - s / 2,
+        top: cy + Math.sin(ang) * d - s / 2,
+        width: s,
+        height: s,
+        borderRadius: "50%",
+        background: i % 2 ? "#fff" : acento,
+        opacity: 0.8 * clamp(r),
+        boxShadow: `0 0 ${16 * U}px ${acento}`
+      } }, i);
+    }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: width / 2 - lado / 2,
+      top: cy - lado / 2 + flota,
+      transform: `scale(${(0.5 + 0.5 * r).toFixed(4)})`,
+      filter: `drop-shadow(0 ${30 * U}px ${40 * U}px rgba(0,0,0,${c.oscuro ? 0.5 : 0.22}))`
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Icono3, { ic: e.icono, lado }) }),
+    e.titulo && /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      top: cy + lado * 0.68,
+      left: 0,
+      right: 0,
+      display: "flex",
+      justifyContent: "center",
+      opacity: q,
+      transform: `translateY(${((1 - q) * 40 * U).toFixed(1)}px) scale(${(0.85 + 0.15 * q).toFixed(4)})`
+    }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      padding: `${18 * U}px ${48 * U}px`,
+      borderRadius: 999,
+      background: acento,
+      color: "#fff",
+      fontFamily: FAMILIA.inter,
+      fontWeight: 900,
+      fontSize: Math.min(84 * U, width * 0.8 / Math.max(4, e.titulo.length * 0.6)),
+      letterSpacing: "-0.01em",
+      textTransform: "uppercase",
+      boxShadow: `0 ${16 * U}px ${40 * U}px rgba(${ar},${ag},${ab},.45)`
+    }, children: e.titulo }) })
+  ] });
 };
 const ObjetoMC = ({ e, c, acento }) => {
   const { width } = (0,esm/* useVideoConfig */.Bk)();
   const U = width / 1080;
   const o = e.objeto;
   const C = {
-    precio: /* @__PURE__ */ (react_namespaceFn().createElement)(Precio, { o, U, acento }),
-    grafica: /* @__PURE__ */ (react_namespaceFn().createElement)(Objetos_Grafica, { o, U, acento }),
-    reloj: /* @__PURE__ */ (react_namespaceFn().createElement)(Reloj, { o, U, acento }),
-    avatares: /* @__PURE__ */ (react_namespaceFn().createElement)(Avatares, { o, U, acento }),
-    calendario: /* @__PURE__ */ (react_namespaceFn().createElement)(Calendario, { o, U, acento }),
-    estado: /* @__PURE__ */ (react_namespaceFn().createElement)(Estado, { o, U }),
-    cifra: /* @__PURE__ */ (react_namespaceFn().createElement)(Cifra, { o, U, acento }),
-    lista: /* @__PURE__ */ (react_namespaceFn().createElement)(Lista, { o, U, acento }),
-    comparacion: /* @__PURE__ */ (react_namespaceFn().createElement)(Comparacion, { o, U, acento }),
-    pregunta: /* @__PURE__ */ (react_namespaceFn().createElement)(Pregunta, { o, U, acento }),
-    ficha: /* @__PURE__ */ (react_namespaceFn().createElement)(Ficha, { o, U }),
-    app: /* @__PURE__ */ (react_namespaceFn().createElement)(App, { o, U, acento }),
-    ojo: /* @__PURE__ */ (react_namespaceFn().createElement)(Ojo, { o, U, acento }),
-    barra: /* @__PURE__ */ (react_namespaceFn().createElement)(Barra, { o, U, acento }),
-    muestra: /* @__PURE__ */ (react_namespaceFn().createElement)(Muestra, { o, U })
+    precio: /* @__PURE__ */ (0,jsx_runtime.jsx)(Precio, { o, U, acento }),
+    grafica: /* @__PURE__ */ (0,jsx_runtime.jsx)(Objetos_Grafica, { o, U, acento }),
+    reloj: /* @__PURE__ */ (0,jsx_runtime.jsx)(Reloj, { o, U, acento }),
+    avatares: /* @__PURE__ */ (0,jsx_runtime.jsx)(Avatares, { o, U, acento }),
+    calendario: /* @__PURE__ */ (0,jsx_runtime.jsx)(Calendario, { o, U, acento }),
+    estado: /* @__PURE__ */ (0,jsx_runtime.jsx)(Estado, { o, U }),
+    cifra: /* @__PURE__ */ (0,jsx_runtime.jsx)(Cifra, { o, U, acento }),
+    lista: /* @__PURE__ */ (0,jsx_runtime.jsx)(Lista, { o, U, acento }),
+    comparacion: /* @__PURE__ */ (0,jsx_runtime.jsx)(Comparacion, { o, U, acento }),
+    pregunta: /* @__PURE__ */ (0,jsx_runtime.jsx)(Pregunta, { o, U, acento }),
+    ficha: /* @__PURE__ */ (0,jsx_runtime.jsx)(Ficha, { o, U }),
+    app: /* @__PURE__ */ (0,jsx_runtime.jsx)(App, { o, U, acento }),
+    ojo: /* @__PURE__ */ (0,jsx_runtime.jsx)(Ojo, { o, U, acento }),
+    barra: /* @__PURE__ */ (0,jsx_runtime.jsx)(Barra, { o, U, acento }),
+    muestra: /* @__PURE__ */ (0,jsx_runtime.jsx)(Muestra, { o, U })
   };
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(TemaCtx.Provider, { value: c.oscuro ? TEMA_OSCURO : TEMA_CLARO }, /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { transform: `scale(${o && ESCALA_MC[o.tipo] || 1.18})` } }, o ? C[o.tipo] || null : null)));
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(TemaCtx.Provider, { value: c.oscuro ? TEMA_OSCURO : TEMA_CLARO, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { alignItems: "center", justifyContent: "center" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { transform: `scale(${o && ESCALA_MC[o.tipo] || 1.18})` }, children: o ? C[o.tipo] || null : null }) }) });
 };
 const SAL = 0.3;
 const FondoTema = ({ claro, acento, fondo }) => {
@@ -99411,12 +101002,17 @@ const FondoTema = ({ claro, acento, fondo }) => {
   const U = Math.min(width, height) / 1080;
   const [r, g, b] = rgb(acento);
   const m = Math.min(width, height);
-  const mancha = (x, y, s, c) => /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: x - s / 2, top: y - s / 2, width: s, height: s, borderRadius: "50%", background: `radial-gradient(circle, ${c} 0%, rgba(0,0,0,0) 68%)` } });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { background: fondo && HEXMC.test(fondo) ? `radial-gradient(125% 88% at 50% 22%, ${mezclaMC(fondo, claro ? 255 : 0, claro ? 0.55 : 0)} 0%, ${fondo} 52%, ${mezclaMC(fondo, 0, claro ? 0.08 : 0.55)} 100%)` : claro ? "radial-gradient(130% 90% at 50% 18%, #FFFFFF 0%, #F3F2FA 46%, #E6E3F4 100%)" : "radial-gradient(120% 85% at 50% 30%, #17142A 0%, #0A0912 60%, #050409 100%)", overflow: "hidden" } }, mancha(width * (0.5 + 0.05 * Math.sin(t * 0.3)), height * (0.5 + 0.03 * Math.cos(t * 0.25)), m * 1.25, `rgba(${r},${g},${b},${claro ? 0.13 : 0.22})`), mancha(width * (0.15 + 0.04 * Math.cos(t * 0.27)), height * (0.12 + 0.03 * Math.sin(t * 0.31)), m * 1.1, claro ? "rgba(190,175,255,.22)" : "rgba(120,80,255,.16)"), mancha(width * (0.88 + 0.03 * Math.sin(t * 0.22)), height * (0.86 + 0.03 * Math.cos(t * 0.29)), m * 1.1, claro ? "rgba(170,190,255,.2)" : "rgba(60,90,255,.14)"), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: {
-    backgroundImage: `radial-gradient(${claro ? "rgba(70,80,140,.13)" : "rgba(255,255,255,.07)"} ${2 * U}px, transparent ${2.2 * U}px)`,
-    backgroundSize: `${34 * U}px ${34 * U}px`,
-    backgroundPosition: `0 ${(-t * 6 * U).toFixed(1)}px`
-  } }));
+  const mancha = (x, y, s, c) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: x - s / 2, top: y - s / 2, width: s, height: s, borderRadius: "50%", background: `radial-gradient(circle, ${c} 0%, rgba(0,0,0,0) 68%)` } });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { background: fondo && HEXMC.test(fondo) ? `radial-gradient(125% 88% at 50% 22%, ${mezclaMC(fondo, claro ? 255 : 0, claro ? 0.55 : 0)} 0%, ${fondo} 52%, ${mezclaMC(fondo, 0, claro ? 0.08 : 0.55)} 100%)` : claro ? "radial-gradient(130% 90% at 50% 18%, #FFFFFF 0%, #F3F2FA 46%, #E6E3F4 100%)" : "radial-gradient(120% 85% at 50% 30%, #17142A 0%, #0A0912 60%, #050409 100%)", overflow: "hidden" }, children: [
+    mancha(width * (0.5 + 0.05 * Math.sin(t * 0.3)), height * (0.5 + 0.03 * Math.cos(t * 0.25)), m * 1.25, `rgba(${r},${g},${b},${claro ? 0.13 : 0.22})`),
+    mancha(width * (0.15 + 0.04 * Math.cos(t * 0.27)), height * (0.12 + 0.03 * Math.sin(t * 0.31)), m * 1.1, claro ? "rgba(190,175,255,.22)" : "rgba(120,80,255,.16)"),
+    mancha(width * (0.88 + 0.03 * Math.sin(t * 0.22)), height * (0.86 + 0.03 * Math.cos(t * 0.29)), m * 1.1, claro ? "rgba(170,190,255,.2)" : "rgba(60,90,255,.14)"),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: {
+      backgroundImage: `radial-gradient(${claro ? "rgba(70,80,140,.13)" : "rgba(255,255,255,.07)"} ${2 * U}px, transparent ${2.2 * U}px)`,
+      backgroundSize: `${34 * U}px ${34 * U}px`,
+      backgroundPosition: `0 ${(-t * 6 * U).toFixed(1)}px`
+    } })
+  ] });
 };
 const Vida = ({ dur, lado = 0, empuje, children }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
@@ -99434,17 +101030,17 @@ const Vida = ({ dur, lado = 0, empuje, children }) => {
   const rot = (1 - s) * (lado ? 7 * lado : -6) + Math.sin(t * 0.9) * 0.45;
   const acerca = typeof empuje === "number" ? 0.12 * MotionsCompleto_easeOut((t - empuje) / 1.6) : 0;
   const sc = (0.84 + 0.16 * s) * (1 - 0.05 * q) * (1 + acerca);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: {
     transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${rot.toFixed(3)}deg) scale(${sc.toFixed(4)})`,
     opacity: clamp(s * 2.2) * (1 - q),
     filter: blur > 0.4 ? `blur(${blur.toFixed(1)}px)` : void 0
-  } }, children);
+  }, children });
 };
 const TitularVida = ({ palabras, arriba, dur, claro }) => {
   const frame = (0,esm/* useCurrentFrame */.UC)();
   const { fps, height: H, width: W } = (0,esm/* useVideoConfig */.Bk)();
   const q = MotionsCompleto_easeOut((frame / fps - dur) / 0.22);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, filter: q > 0.02 ? `blur(${(q * 12).toFixed(1)}px)` : void 0, transform: `translateY(${(-q * H * 0.015).toFixed(1)}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(RTitular, { palabras: palabras.map((p) => ({ t: p.t, texto: p.texto, estilo: p.estilo || (p.clave ? "clave" : void 0) })), arriba, claro, top: H * (H > W ? 0.15 : 0.08) }));
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { opacity: 1 - q, filter: q > 0.02 ? `blur(${(q * 12).toFixed(1)}px)` : void 0, transform: `translateY(${(-q * H * 0.015).toFixed(1)}px)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RTitular, { palabras: palabras.map((p) => ({ t: p.t, texto: p.texto, estilo: p.estilo || (p.clave ? "clave" : void 0) })), arriba, claro, top: H * (H > W ? 0.15 : 0.08) }) });
 };
 const TarjetaMC = ({ oscura = true, children }) => {
   const { width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
@@ -99452,7 +101048,7 @@ const TarjetaMC = ({ oscura = true, children }) => {
   const vertical = H > W;
   const cw = W * (vertical ? 0.86 : 0.58), ch = H * (vertical ? 0.64 : 0.74);
   const k = Math.max(cw / W, ch / H);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
     position: "absolute",
     left: (W - cw) / 2,
     top: H * (vertical ? 0.57 : 0.56) - ch / 2,
@@ -99463,7 +101059,7 @@ const TarjetaMC = ({ oscura = true, children }) => {
     background: oscura ? "#0B0B12" : "#FFFFFF",
     boxShadow: `0 ${40 * U}px ${110 * U}px rgba(30,30,80,.28), 0 ${8 * U}px ${24 * U}px rgba(30,30,80,.12)`,
     border: `${3 * U}px solid rgba(255,255,255,.75)`
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", left: (cw - W * k) / 2, top: (ch - H * k) / 2, width: W, height: H, transform: `scale(${k.toFixed(5)})`, transformOrigin: "0 0" } }, children));
+  }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", left: (cw - W * k) / 2, top: (ch - H * k) / 2, width: W, height: H, transform: `scale(${k.toFixed(5)})`, transformOrigin: "0 0" }, children }) });
 };
 const REEL = {
   rec: RecW,
@@ -99508,34 +101104,37 @@ const MotionsCompleto_Escena = ({ e, acento, fotos, n, claro, fija }) => {
   const c = colores(claro ? "claro" : "oscuro", acento);
   const cy = H * 0.57;
   const W5 = {
-    orbita: () => /* @__PURE__ */ (react_namespaceFn().createElement)(OrbitaMC, { centro: e.centro || { texto: "" }, items: e.items || [], acento, T, cy }),
-    ruta: () => /* @__PURE__ */ (react_namespaceFn().createElement)(RutaMC, { pasos: e.pasos || [], titulo: e.titulo || "", acento, T, cy }),
-    conectores: () => /* @__PURE__ */ (react_namespaceFn().createElement)(ConectoresMC, { entradas: e.entradas || [], opciones: e.opciones || [], resultado: e.resultado || { texto: "" }, acento, T, cy }),
-    contador: () => /* @__PURE__ */ (react_namespaceFn().createElement)(ContadorMC, { valor: e.valor || 0, sufijo: e.sufijo, prefijo: e.prefijo, etiqueta: e.etiqueta, acento, T, cy }),
-    versiones: () => /* @__PURE__ */ (react_namespaceFn().createElement)(VersionesMC, { cartas: e.cartas || [], acento, T, cy })
+    orbita: () => /* @__PURE__ */ (0,jsx_runtime.jsx)(OrbitaMC, { centro: e.centro || { texto: "" }, items: e.items || [], acento, T, cy }),
+    ruta: () => /* @__PURE__ */ (0,jsx_runtime.jsx)(RutaMC, { pasos: e.pasos || [], titulo: e.titulo || "", acento, T, cy }),
+    conectores: () => /* @__PURE__ */ (0,jsx_runtime.jsx)(ConectoresMC, { entradas: e.entradas || [], opciones: e.opciones || [], resultado: e.resultado || { texto: "" }, acento, T, cy }),
+    contador: () => /* @__PURE__ */ (0,jsx_runtime.jsx)(ContadorMC, { valor: e.valor || 0, sufijo: e.sufijo, prefijo: e.prefijo, etiqueta: e.etiqueta, acento, T, cy }),
+    versiones: () => /* @__PURE__ */ (0,jsx_runtime.jsx)(VersionesMC, { cartas: e.cartas || [], acento, T, cy })
   };
-  if (W5[e.tipo]) return /* @__PURE__ */ (react_namespaceFn().createElement)((react_namespaceFn().Fragment), null, W5[e.tipo]());
+  if (W5[e.tipo]) return /* @__PURE__ */ (0,jsx_runtime.jsx)(jsx_runtime.Fragment, { children: W5[e.tipo]() });
   if (e.tipo === "reel" && e.reel && REEL[e.reel]) {
     const R = REEL[e.reel];
     const [a, b, c2] = fija && HEXMC.test(acento) ? [acento, mezclaMC(acento, 255, 0.35), mezclaMC(acento, 255, 0.9)] : MotionsCompleto_PALETAS[e.paleta || "azul"] || MotionsCompleto_PALETAS.azul;
     const foto = typeof e.img === "number" ? fotos[e.img] : void 0;
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { ["--cc-azul"]: a, ["--cc-lila"]: b, ["--cc-lilaf"]: c2, transform: `translateX(${((e.lado || 0) * W * 0.035).toFixed(1)}px)` } }, /* @__PURE__ */ (react_namespaceFn().createElement)(R, { cy: H * (H > W ? 0.63 : 0.6), ...e.wp || {}, foto }));
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { ["--cc-azul"]: a, ["--cc-lila"]: b, ["--cc-lilaf"]: c2, transform: `translateX(${((e.lado || 0) * W * 0.035).toFixed(1)}px)` }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(R, { cy: H * (H > W ? 0.63 : 0.6), ...e.wp || {}, foto }) });
   }
   const conTitular = !!(e.titular && e.titular.length);
   if (e.tipo === "comp" && e.comp && COMPS[e.comp]) {
     const C = COMPS[e.comp];
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(TarjetaMC, null, !e.pantalla && /* @__PURE__ */ (react_namespaceFn().createElement)(Fondo, { c: colores("oscuro", acento), acento, foto: typeof e.fondo_foto === "number" ? fotos[e.fondo_foto] : void 0 }), /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, null, /* @__PURE__ */ (react_namespaceFn().createElement)(C, { ...e.props || {}, salida: 0.01 })));
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(TarjetaMC, { children: [
+      !e.pantalla && /* @__PURE__ */ (0,jsx_runtime.jsx)(Fondo, { c: colores("oscuro", acento), acento, foto: typeof e.fondo_foto === "number" ? fotos[e.fondo_foto] : void 0 }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsx)(C, { ...e.props || {}, salida: 0.01 }) })
+    ] });
   }
   if (e.tipo === "foto" && typeof e.foto === "number") {
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(TarjetaMC, null, /* @__PURE__ */ (react_namespaceFn().createElement)(FotoMC, { e: conTitular ? { ...e, titulo: "" } : e, src: fotos[e.foto], acento, n: 0 }));
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(TarjetaMC, { children: /* @__PURE__ */ (0,jsx_runtime.jsx)(FotoMC, { e: conTitular ? { ...e, titulo: "" } : e, src: fotos[e.foto], acento, n: 0 }) });
   }
-  if (e.tipo === "video" && e.video) return /* @__PURE__ */ (react_namespaceFn().createElement)(TarjetaMC, null, /* @__PURE__ */ (react_namespaceFn().createElement)(VideoMC, { e: conTitular ? { ...e, titulo: "" } : e, acento }));
+  if (e.tipo === "video" && e.video) return /* @__PURE__ */ (0,jsx_runtime.jsx)(TarjetaMC, { children: /* @__PURE__ */ (0,jsx_runtime.jsx)(VideoMC, { e: conTitular ? { ...e, titulo: "" } : e, acento }) });
   let cuerpo = null;
-  if (e.tipo === "objeto" && e.objeto) cuerpo = /* @__PURE__ */ (react_namespaceFn().createElement)(ObjetoMC, { e, c, acento });
-  else if (e.tipo === "pildoras") cuerpo = /* @__PURE__ */ (react_namespaceFn().createElement)(PildorasMC, { e, c, acento });
-  else if (e.tipo === "diagrama") cuerpo = /* @__PURE__ */ (react_namespaceFn().createElement)(DiagramaMC, { e, c, acento });
-  else if (e.tipo === "icono" && e.icono) cuerpo = /* @__PURE__ */ (react_namespaceFn().createElement)(IconoMC, { e, c, acento });
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { transform: `translateY(${(H * 0.09).toFixed(1)}px)` } }, cuerpo);
+  if (e.tipo === "objeto" && e.objeto) cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsx)(ObjetoMC, { e, c, acento });
+  else if (e.tipo === "pildoras") cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsx)(PildorasMC, { e, c, acento });
+  else if (e.tipo === "diagrama") cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsx)(DiagramaMC, { e, c, acento });
+  else if (e.tipo === "icono" && e.icono) cuerpo = /* @__PURE__ */ (0,jsx_runtime.jsx)(IconoMC, { e, c, acento });
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { transform: `translateY(${(H * 0.09).toFixed(1)}px)` }, children: cuerpo });
 };
 const MotionsCompleto = ({ escenas = [], fotos = [], acento = "#4C7DFF", tema = "claro", titulares, fondo = "", fija = false }) => {
   useFuentes();
@@ -99547,12 +101146,16 @@ const MotionsCompleto = ({ escenas = [], fotos = [], acento = "#4C7DFF", tema = 
     ["--cc-lilaf"]: mezclaMC(acento, 255, 0.9),
     ["--cc-azul-claro"]: mezclaMC(acento, 255, 0.4)
   } : void 0;
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: vars }, /* @__PURE__ */ (react_namespaceFn().createElement)(FondoTema, { claro, acento, fondo: fondo ? "#" + fondo.replace("#", "") : "" }), escenas.map((e, i) => {
-    const ultimo = i === escenas.length - 1;
-    const desde = Math.round(e.ini * fps);
-    const largo = Math.max(1, Math.round((e.fin - e.ini + (ultimo ? 0 : SAL)) * fps));
-    return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Sequence */.gd, { key: i, from: desde, durationInFrames: largo }, /* @__PURE__ */ (react_namespaceFn().createElement)(Vida, { dur: ultimo ? 1e9 : e.fin - e.ini, lado: e.lado || 0, empuje: e.empuje }, /* @__PURE__ */ (react_namespaceFn().createElement)(MotionsCompleto_Escena, { e, acento, fotos, n: i, claro, fija })));
-  }), (titulares && titulares.length ? titulares : escenas).map((e, i) => e.titular && e.titular.length || e.arriba ? /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* Sequence */.gd, { key: `t${i}`, from: Math.round(e.ini * fps), durationInFrames: Math.max(1, Math.round((e.fin - e.ini + 0.25) * fps)) }, /* @__PURE__ */ (react_namespaceFn().createElement)(TitularVida, { palabras: e.titular || [], arriba: e.arriba, dur: e.fin - e.ini, claro })) : null));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: vars, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(FondoTema, { claro, acento, fondo: fondo ? "#" + fondo.replace("#", "") : "" }),
+    escenas.map((e, i) => {
+      const ultimo = i === escenas.length - 1;
+      const desde = Math.round(e.ini * fps);
+      const largo = Math.max(1, Math.round((e.fin - e.ini + (ultimo ? 0 : SAL)) * fps));
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Sequence */.gd, { from: desde, durationInFrames: largo, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Vida, { dur: ultimo ? 1e9 : e.fin - e.ini, lado: e.lado || 0, empuje: e.empuje, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(MotionsCompleto_Escena, { e, acento, fotos, n: i, claro, fija }) }) }, i);
+    }),
+    (titulares && titulares.length ? titulares : escenas).map((e, i) => e.titular && e.titular.length || e.arriba ? /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Sequence */.gd, { from: Math.round(e.ini * fps), durationInFrames: Math.max(1, Math.round((e.fin - e.ini + 0.25) * fps)), children: /* @__PURE__ */ (0,jsx_runtime.jsx)(TitularVida, { palabras: e.titular || [], arriba: e.arriba, dur: e.fin - e.ini, claro }) }, `t${i}`) : null)
+  ] });
 };
 
 ;// ./src/kitneon/motor.ts
@@ -100333,10 +101936,11 @@ const FUENTES_KIT = [
 
 
 
+
 const FondoNeon = ({ t, escala }) => {
   const b1x = 300 + 140 * Math.sin(t * 0.21), b1y = 560 + 110 * Math.cos(t * 0.17);
   const b2x = 780 + 120 * Math.cos(t * 0.19), b2y = 1420 + 130 * Math.sin(t * 0.23);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
     position: "absolute",
     left: 0,
     top: 0,
@@ -100346,33 +101950,37 @@ const FondoNeon = ({ t, escala }) => {
     transformOrigin: "0 0",
     overflow: "hidden",
     background: "radial-gradient(circle at 540px 860px, #5B2AB0 0, #3A1A78 320px, #1E0E42 700px, #0E081A 1150px)"
-  } }, /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: b1x - 420,
-    top: b1y - 420,
-    width: 840,
-    height: 840,
-    borderRadius: "50%",
-    opacity: 0.32,
-    background: "radial-gradient(circle, rgba(255,45,203,.9) 0, rgba(255,45,203,0) 70%)",
-    filter: "blur(30px)"
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    left: b2x - 380,
-    top: b2y - 380,
-    width: 760,
-    height: 760,
-    borderRadius: "50%",
-    opacity: 0.18,
-    background: "radial-gradient(circle, rgba(214,255,59,.9) 0, rgba(214,255,59,0) 70%)",
-    filter: "blur(36px)"
-  } }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: {
-    position: "absolute",
-    inset: 0,
-    opacity: 0.18,
-    backgroundSize: "22px 22px",
-    backgroundImage: "radial-gradient(circle, rgba(255,255,255,.35) 1px, transparent 1.6px)"
-  } }));
+  }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: b1x - 420,
+      top: b1y - 420,
+      width: 840,
+      height: 840,
+      borderRadius: "50%",
+      opacity: 0.32,
+      background: "radial-gradient(circle, rgba(255,45,203,.9) 0, rgba(255,45,203,0) 70%)",
+      filter: "blur(30px)"
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: b2x - 380,
+      top: b2y - 380,
+      width: 760,
+      height: 760,
+      borderRadius: "50%",
+      opacity: 0.18,
+      background: "radial-gradient(circle, rgba(214,255,59,.9) 0, rgba(214,255,59,0) 70%)",
+      filter: "blur(36px)"
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      inset: 0,
+      opacity: 0.18,
+      backgroundSize: "22px 22px",
+      backgroundImage: "radial-gradient(circle, rgba(255,255,255,.35) 1px, transparent 1.6px)"
+    } })
+  ] });
 };
 let fuentes = null;
 const cargar = () => {
@@ -100468,22 +102076,27 @@ const KitNeon = ({ escena = [], codigo = "", L = {}, imagenes = {}, t0 = 0, tema
   (0,react_namespaceFn().useLayoutEffect)(() => {
     if (listo) pintar(t);
   }, [listo, t]);
-  return /* @__PURE__ */ (react_namespaceFn().createElement)(esm/* AbsoluteFill */.H1, { style: { backgroundColor: fondo ? "#0E081A" : "transparent" } }, /* @__PURE__ */ (react_namespaceFn().createElement)("style", null, BASE + (TEMA_CSS[tema] || TEMA_CSS.neon)), fondo === "neon" && /* @__PURE__ */ (react_namespaceFn().createElement)(FondoNeon, { t, escala: width / 1080 }), /* @__PURE__ */ (react_namespaceFn().createElement)("div", { style: { position: "absolute", inset: 0, isolation: "isolate" } }, Array.from({ length: n }, (_, k) => /* @__PURE__ */ (react_namespaceFn().createElement)(
-    "div",
-    {
-      key: k,
-      ref: (el) => {
-        capas.current[k] = el;
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { style: { backgroundColor: fondo ? "#0E081A" : "transparent" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("style", { children: BASE + (TEMA_CSS[tema] || TEMA_CSS.neon) }),
+    fondo === "neon" && /* @__PURE__ */ (0,jsx_runtime.jsx)(FondoNeon, { t, escala: width / 1080 }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { position: "absolute", inset: 0, isolation: "isolate" }, children: Array.from({ length: n }, (_, k) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      "div",
+      {
+        ref: (el) => {
+          capas.current[k] = el;
+        },
+        style: { position: "absolute", left: 0, top: 0, width: 1080, height: 1920, transform: `scale(${width / 1080})`, transformOrigin: "0 0" },
+        children: /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { className: "st", ref: (el) => {
+          raices.current[k] = el;
+        } })
       },
-      style: { position: "absolute", left: 0, top: 0, width: 1080, height: 1920, transform: `scale(${width / 1080})`, transformOrigin: "0 0" }
-    },
-    /* @__PURE__ */ (react_namespaceFn().createElement)("div", { className: "st", ref: (el) => {
-      raices.current[k] = el;
-    } })
-  ))));
+      k
+    )) })
+  ] });
 };
 
 ;// ./src/EmojiPro.tsx
+
 
 
 
@@ -100541,7 +102154,7 @@ const EmojiPro = ({
       dy = Math.sin(t * 2) * lado * 0.025 * e;
       const pulso = 0.55 + 0.25 * Math.sin(t * 4) * Math.min(1.2, e);
       filtro = `drop-shadow(0 0 ${lado * 0.07}px ${acento})`;
-      detras = /* @__PURE__ */ React.createElement("div", { style: {
+      detras = /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
         position: "absolute",
         left: -lado * 0.45,
         top: -lado * 0.45,
@@ -100558,7 +102171,7 @@ const EmojiPro = ({
       dy = Math.sin(t * 1.9) * lado * 0.035 * e;
       const w = Math.sin(t * 5) * 0.035 * e;
       interior = 0.74;
-      detras = /* @__PURE__ */ React.createElement("div", { style: {
+      detras = /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
         position: "absolute",
         left: -lado * 0.21,
         top: -lado * 0.21,
@@ -100619,31 +102232,34 @@ const EmojiPro = ({
       const grande = t <= 0.8;
       const onda = (0,esm/* interpolate */.GW)(re, [0, 0.5], [0, 1], { extrapolateRight: "clamp" }) * (grande ? 1 : 0.75);
       const chispa = (0,esm/* interpolate */.GW)(re, [0, 0.15, 0.75], [0, 1, 0], { extrapolateRight: "clamp" }) * (grande ? 1 : 0.8);
-      delante = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: {
-        position: "absolute",
-        left: lado / 2 - lado * 0.8 * onda,
-        top: lado / 2 - lado * 0.8 * onda,
-        width: lado * 1.6 * onda,
-        height: lado * 1.6 * onda,
-        borderRadius: "50%",
-        border: `${Math.max(2, lado * 0.025)}px solid ${acento}`,
-        opacity: 0.85 * (1 - onda)
-      } }), Array.from({ length: 14 }, (_v, i) => {
-        const ang = i / 14 * Math.PI * 2 + 0.3;
-        const d = (0,esm/* interpolate */.GW)(t, [0, 0.7], [lado * 0.3, lado * 1.15 * e], { extrapolateRight: "clamp" });
-        const r = lado * (i % 3 === 0 ? 0.075 : 0.05);
-        return /* @__PURE__ */ React.createElement("div", { key: i, style: {
+      delante = /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
           position: "absolute",
-          left: lado / 2 + Math.cos(ang) * d - r / 2,
-          top: lado / 2 + Math.sin(ang) * d - r / 2,
-          width: r,
-          height: r,
+          left: lado / 2 - lado * 0.8 * onda,
+          top: lado / 2 - lado * 0.8 * onda,
+          width: lado * 1.6 * onda,
+          height: lado * 1.6 * onda,
           borderRadius: "50%",
-          background: i % 3 === 0 ? acento : CHISPAS[i % 2],
-          opacity: chispa,
-          boxShadow: `0 0 ${r}px ${acento}`
-        } });
-      }));
+          border: `${Math.max(2, lado * 0.025)}px solid ${acento}`,
+          opacity: 0.85 * (1 - onda)
+        } }),
+        Array.from({ length: 14 }, (_v, i) => {
+          const ang = i / 14 * Math.PI * 2 + 0.3;
+          const d = (0,esm/* interpolate */.GW)(t, [0, 0.7], [lado * 0.3, lado * 1.15 * e], { extrapolateRight: "clamp" });
+          const r = lado * (i % 3 === 0 ? 0.075 : 0.05);
+          return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+            position: "absolute",
+            left: lado / 2 + Math.cos(ang) * d - r / 2,
+            top: lado / 2 + Math.sin(ang) * d - r / 2,
+            width: r,
+            height: r,
+            borderRadius: "50%",
+            background: i % 3 === 0 ? acento : CHISPAS[i % 2],
+            opacity: chispa,
+            boxShadow: `0 0 ${r}px ${acento}`
+          } }, i);
+        })
+      ] });
       sombra = 0.7;
       break;
     }
@@ -100651,41 +102267,49 @@ const EmojiPro = ({
       escala = resorte(10);
       dy = Math.sin(t * 2) * lado * 0.03 * e;
   }
-  const emoji = fuente === "lottie" ? lottie ? /* @__PURE__ */ React.createElement(Lottie, { animationData: lottie, loop: true, style: { width: "100%", height: "100%" } }) : /* @__PURE__ */ React.createElement(EmojiAnimado, { id: n, lado: lado * interior }) : /* @__PURE__ */ React.createElement(esm/* Img */.E9, { src: imagen || (0,esm/* staticFile */.dQ)(`stickers/rcs_emoji_${n}.png`), style: { width: "100%", height: "100%", objectFit: "contain" } });
+  const emoji = fuente === "lottie" ? lottie ? /* @__PURE__ */ (0,jsx_runtime.jsx)(Lottie, { animationData: lottie, loop: true, style: { width: "100%", height: "100%" } }) : /* @__PURE__ */ (0,jsx_runtime.jsx)(EmojiAnimado, { id: n, lado: lado * interior }) : /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Img */.E9, { src: imagen || (0,esm/* staticFile */.dQ)(`stickers/rcs_emoji_${n}.png`), style: { width: "100%", height: "100%", objectFit: "contain" } });
   const cx = Number(x) / 100 * width;
   const cy = Number(y) / 100 * height;
-  return /* @__PURE__ */ React.createElement(esm/* AbsoluteFill */.H1, null, sombra > 0 && // (los 3D: la sombra se queda en el «suelo» mientras el emoji sube)
-  /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: cx - lado * 0.32,
-    top: cy + lado * 0.42,
-    width: lado * 0.64,
-    height: lado * 0.13,
-    borderRadius: "50%",
-    background: "radial-gradient(ellipse, rgba(0,0,0,0.45), rgba(0,0,0,0) 70%)",
-    opacity: sombra * escala * salida,
-    transform: `scale(${0.75 + 0.25 * sombra})`
-  } }), /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: cx - lado / 2,
-    top: cy - lado / 2,
-    width: lado,
-    height: lado,
-    opacity: salida,
-    transform: `translate(${dx}px, ${dy}px) perspective(${lado * 5}px) rotateY(${rotY}deg) rotate(${rot}deg) scale(${Math.max(0, escala)})`
-  } }, detras, /* @__PURE__ */ React.createElement("div", { style: {
-    position: "absolute",
-    left: lado * (1 - interior) / 2,
-    top: lado * (1 - interior) / 2,
-    width: lado * interior,
-    height: lado * interior,
-    filter: filtro || void 0,
-    transform: `scale(${sx}, ${sy})`,
-    transformOrigin: "50% 90%"
-  } }, emoji), delante));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    sombra > 0 && // (los 3D: la sombra se queda en el «suelo» mientras el emoji sube)
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: cx - lado * 0.32,
+      top: cy + lado * 0.42,
+      width: lado * 0.64,
+      height: lado * 0.13,
+      borderRadius: "50%",
+      background: "radial-gradient(ellipse, rgba(0,0,0,0.45), rgba(0,0,0,0) 70%)",
+      opacity: sombra * escala * salida,
+      transform: `scale(${0.75 + 0.25 * sombra})`
+    } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      left: cx - lado / 2,
+      top: cy - lado / 2,
+      width: lado,
+      height: lado,
+      opacity: salida,
+      transform: `translate(${dx}px, ${dy}px) perspective(${lado * 5}px) rotateY(${rotY}deg) rotate(${rot}deg) scale(${Math.max(0, escala)})`
+    }, children: [
+      detras,
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        left: lado * (1 - interior) / 2,
+        top: lado * (1 - interior) / 2,
+        width: lado * interior,
+        height: lado * interior,
+        filter: filtro || void 0,
+        transform: `scale(${sx}, ${sy})`,
+        transformOrigin: "50% 90%"
+      }, children: emoji }),
+      delante
+    ] })
+  ] });
 };
 
 ;// ./src/Root.tsx
+
 
 
 
@@ -100708,31 +102332,35 @@ const medida = ({ props }) => {
   const fps = Number(props._fps) || 30;
   return { width: Number(props._ancho) || 1080, height: Number(props._alto) || 1920, fps, durationInFrames: Math.max(2, Math.round((Number(props._dur) || 3.5) * fps)) };
 };
-const RemotionRoot = () => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
-  esm/* Composition */.BO,
-  {
-    id: "Ubicacion",
-    component: Ubicacion,
-    width: 1080,
-    height: 1920,
-    fps: 30,
-    durationInFrames: 105,
-    defaultProps: { pais: "gt", kicker: "ESTAMOS EN", acento: "#c9a46a" },
-    calculateMetadata: medida
-  }
-), /* @__PURE__ */ React.createElement(
-  esm/* Composition */.BO,
-  {
-    id: "Subtitulo",
-    component: Subtitulo,
-    width: 1080,
-    height: 1920,
-    fps: 30,
-    durationInFrames: 60,
-    defaultProps: { palabras: [{ texto: "Esto", t: 0.05 }, { texto: "es", t: 0.3, rol: "context" }, { texto: "incre\xEDble", t: 0.5, rol: "main" }], modo: "normal" },
-    calculateMetadata: medida
-  }
-), Object.entries(PLANTILLAS).map(([id, C]) => /* @__PURE__ */ React.createElement(esm/* Composition */.BO, { key: id, id, component: C, width: 1080, height: 1920, fps: 30, durationInFrames: 90, defaultProps: { titulo: "Casa de la novia" }, calculateMetadata: medida })));
+const RemotionRoot = () => /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+    esm/* Composition */.BO,
+    {
+      id: "Ubicacion",
+      component: Ubicacion,
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      durationInFrames: 105,
+      defaultProps: { pais: "gt", kicker: "ESTAMOS EN", acento: "#c9a46a" },
+      calculateMetadata: medida
+    }
+  ),
+  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+    esm/* Composition */.BO,
+    {
+      id: "Subtitulo",
+      component: Subtitulo,
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      durationInFrames: 60,
+      defaultProps: { palabras: [{ texto: "Esto", t: 0.05 }, { texto: "es", t: 0.3, rol: "context" }, { texto: "incre\xEDble", t: 0.5, rol: "main" }], modo: "normal" },
+      calculateMetadata: medida
+    }
+  ),
+  Object.entries(PLANTILLAS).map(([id, C]) => /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Composition */.BO, { id, component: C, width: 1080, height: 1920, fps: 30, durationInFrames: 90, defaultProps: { titulo: "Casa de la novia" }, calculateMetadata: medida }, id))
+] });
 
 ;// ./src/index.ts
 
@@ -139057,6 +140685,15 @@ var getSingleChildComponent = (children) => {
 
 var CompositionRegistryFallbackContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(null);
 var useIsomorphicLayoutEffect = typeof window === "undefined" ? react__WEBPACK_IMPORTED_MODULE_0__.useEffect : react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect;
+var createEntryCleanup = (registry, identity) => {
+  if (registry === null) {
+    return;
+  }
+  return () => {
+    registry.entries.delete(identity);
+    registry.notifyCommit();
+  };
+};
 var useCommittedCompositionEntry = (entry) => {
   const registry = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(CompositionRegistryFallbackContext);
   const key = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)({});
@@ -139071,16 +140708,7 @@ var useCommittedCompositionEntry = (entry) => {
     }
     registry.notifyCommit();
   }, [entry, registry]);
-  useIsomorphicLayoutEffect(() => {
-    if (registry === null) {
-      return;
-    }
-    const identity = key.current;
-    return () => {
-      registry.entries.delete(identity);
-      registry.notifyCommit();
-    };
-  }, [registry]);
+  useIsomorphicLayoutEffect(createEntryCleanup.bind(null, registry, key.current), [registry]);
 };
 
 // src/composition-render-error-context.ts
@@ -139449,7 +141077,7 @@ var AbsoluteFillElementRefForwarding = (props, ref) => {
     ...other
   });
 };
-var AbsoluteFillElement = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(AbsoluteFillElementRefForwarding);
+var AbsoluteFillElement = react__WEBPACK_IMPORTED_MODULE_0__.memo((0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(AbsoluteFillElementRefForwarding));
 
 // src/use-current-scale.ts
 
@@ -140050,6 +141678,7 @@ function cancelRenderInternal(scope, err) {
     error = Error("Rendering was cancelled");
   }
   if (scope) {
+    scope.remotion_cancelledErrorObject = error;
     scope.remotion_cancelledError = getErrorStackWithMessage(error);
   }
   throw error;
@@ -140155,7 +141784,9 @@ var delayRenderInternal = ({
           called
         ].filter(truthy).join(" ");
         if (environment.isClientSideRendering) {
-          scope.remotion_cancelledError = getErrorStackWithMessage(Error(message));
+          const error = Error(message);
+          scope.remotion_cancelledErrorObject = error;
+          scope.remotion_cancelledError = getErrorStackWithMessage(error);
         } else {
           cancelRenderInternal(scope, Error(message));
         }
@@ -140379,6 +142010,13 @@ var useSyncExternalStore2 = react__WEBPACK_IMPORTED_MODULE_0__.useSyncExternalSt
 
 // src/use-lazy-component.ts
 var useIsomorphicLayoutEffect2 = typeof window === "undefined" ? react__WEBPACK_IMPORTED_MODULE_0__.useEffect : react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect;
+var createComponentWrapper = (componentStore) => {
+  const Wrapper = (props) => {
+    const Comp = useSyncExternalStore2(componentStore.subscribe, componentStore.getSnapshot, componentStore.getSnapshot);
+    return react__WEBPACK_IMPORTED_MODULE_0__.createElement(Comp, props);
+  };
+  return Wrapper;
+};
 var useLazyComponent = ({
   compProps,
   componentName,
@@ -140395,15 +142033,15 @@ var useLazyComponent = ({
       componentStore.setSnapshot(() => componentFromProps);
     }
   }, [componentFromProps, componentStore]);
+  const createWrapper = createComponentWrapper;
+  const Wrapper = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(createWrapper.bind(null, componentStore), [
+    componentStore
+  ]);
   const lazy = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     if ("component" in compProps) {
       if (typeof document === "undefined" || noSuspense) {
         return compProps.component;
       }
-      const Wrapper = (props) => {
-        const Comp = useSyncExternalStore2(componentStore.subscribe, componentStore.getSnapshot, componentStore.getSnapshot);
-        return react__WEBPACK_IMPORTED_MODULE_0__.createElement(Comp, props);
-      };
       return Wrapper;
     }
     if ("lazyComponent" in compProps && typeof compProps.lazyComponent !== "undefined") {
@@ -140413,7 +142051,7 @@ var useLazyComponent = ({
       return react__WEBPACK_IMPORTED_MODULE_0__.lazy(compProps.lazyComponent);
     }
     throw new Error("You must pass either 'component' or 'lazyComponent'");
-  }, [lazyComponentFromProps, componentStore]);
+  }, [lazyComponentFromProps, componentStore, Wrapper]);
   return lazy;
 };
 
@@ -140521,13 +142159,7 @@ var InnerComposition = ({
   const metadata = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({ type: "composition", id, value: registration }), [id, registration]);
   useCommittedCompositionEntry(metadata);
   const resolved = useResolvedVideoConfig(id);
-  const { setError, clearError } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(CompositionRenderErrorContext);
-  const onError = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((error) => {
-    setError(error);
-  }, [setError]);
-  const onClear = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
-    clearError();
-  }, [clearError]);
+  const { setError: onError, clearError: onClear } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(CompositionRenderErrorContext);
   const wrapRegistration = (content) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(CommittedMetadataProvider, {
     value: null,
     _remotionCommitMetadata: metadata,
@@ -140626,7 +142258,7 @@ var getStackForControls = (controls) => {
 };
 
 // src/version.ts
-var VERSION = "4.0.537";
+var VERSION = "4.0.538";
 
 // src/multiple-versions-warning.ts
 var checkMultipleRemotionVersions = () => {
@@ -141942,6 +143574,7 @@ var useIsomorphicLayoutEffect3 = typeof window === "undefined" ? react__WEBPACK_
 var SequenceManagerRefProvider = withCommittedMetadata(SequenceManagerRefContext.Provider);
 var SequenceRegistryProvider = ({ children }) => {
   const { isStudio } = useRemotionEnvironment();
+  const logLevel = useLogLevel();
   const sequenceRegistrationEnabled = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceRegistrationContext);
   const shouldObserveCommits = isStudio || sequenceRegistrationEnabled;
   const [sequenceManagerId] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => String(Math.random()));
@@ -142005,6 +143638,13 @@ var SequenceRegistryProvider = ({ children }) => {
       committedOrderIdsRef.current = ids;
       committedOrderRef.current = order;
       committedRegistrationIdsRef.current = nextIds;
+      if (isStudio && logLevel === "trace") {
+        for (const sequence of sequences) {
+          if (!previousIds.has(sequence.id)) {
+            Log.trace({ logLevel, tag: null }, `[Sequence registration] Registered "${sequence.displayName}" (${sequence.id}) after commit`, sequence);
+          }
+        }
+      }
       setSequences((current) => reconcileRegistryEntries({
         current,
         entries: sequences,
@@ -142016,7 +143656,7 @@ var SequenceRegistryProvider = ({ children }) => {
         orderProperty: "timelineOrder"
       }));
     });
-  }, [sequenceManagerId, setSequences]);
+  }, [isStudio, logLevel, sequenceManagerId, setSequences]);
   const onCommitRootSequences = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((sequences, sequenceIds) => {
     if (!rootObservationFailedRef.current) {
       observedCommitRef.current = true;
@@ -142113,6 +143753,9 @@ var SequenceRegistryProvider = ({ children }) => {
     onCommitSequences
   ]);
   const registerSequence = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((seq) => {
+    if (isStudio) {
+      Log.trace({ logLevel, tag: null }, `[Sequence registration] Registered "${seq.displayName}" (${seq.id}) after commit`, seq);
+    }
     setSequences((seqs) => {
       return [
         ...seqs,
@@ -142122,7 +143765,7 @@ var SequenceRegistryProvider = ({ children }) => {
         }
       ];
     });
-  }, [setSequences]);
+  }, [isStudio, logLevel, setSequences]);
   const updateSequence = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((seq) => {
     setSequences((seqs) => {
       const index = seqs.findIndex((item) => item.id === seq.id);
@@ -142220,6 +143863,12 @@ var VisualModePropStatusesContext = react__WEBPACK_IMPORTED_MODULE_0__.createCon
 var VisualModePropStatusesRefContext = react__WEBPACK_IMPORTED_MODULE_0__.createContext({
   current: {}
 });
+var VisualModePropStatusesSubscriptionContext = react__WEBPACK_IMPORTED_MODULE_0__.createContext({
+  subscribe: () => () => {
+    return;
+  },
+  getSnapshot: () => null
+});
 var defaultVisualModeDragOverrides = {
   getDragOverrides: () => {
     throw new Error("VisualModeDragOverridesContext not initialized");
@@ -142230,7 +143879,7 @@ var defaultVisualModeDragOverrides = {
 };
 var VisualModeDragOverridesContext = react__WEBPACK_IMPORTED_MODULE_0__.createContext(defaultVisualModeDragOverrides);
 var VisualModeDragOverridesRefContext = react__WEBPACK_IMPORTED_MODULE_0__.createContext({ current: defaultVisualModeDragOverrides });
-var useDragOverrideSnapshot = (subscribe, getSnapshot) => {
+var useVisualModeSnapshot = (subscribe, getSnapshot) => {
   const dormant = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceActivityDormantContext);
   const [, forceUpdate] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(0);
   const snapshot = useSyncExternalStore2(subscribe, getSnapshot, getSnapshot);
@@ -142251,7 +143900,14 @@ var useDragOverridesForNodePath = (nodePath) => {
     return;
   }), [key, scopedSubscription]);
   const getSnapshot = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => scopedSubscription?.getSnapshot(key) ?? emptyDragOverrides, [key, scopedSubscription]);
-  return useDragOverrideSnapshot(subscribe, getSnapshot);
+  return useVisualModeSnapshot(subscribe, getSnapshot);
+};
+var usePropStatusForNodePath = (nodePath) => {
+  const subscription = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(VisualModePropStatusesSubscriptionContext);
+  const key = nodePath === null ? null : makeSequencePropsSubscriptionKey(nodePath);
+  const subscribe = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((listener) => subscription.subscribe(key, listener), [key, subscription]);
+  const getSnapshot = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => subscription.getSnapshot(key), [key, subscription]);
+  return useVisualModeSnapshot(subscribe, getSnapshot);
 };
 var useActiveFromDragOverrideKeys = () => {
   const snapshot = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(ActiveFromDragOverrideKeysContext);
@@ -142267,7 +143923,7 @@ var useEffectDragOverridesForNodePath = (nodePath) => {
     return;
   }), [key, scopedSubscription]);
   const getSnapshot = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => scopedSubscription?.getEffectSnapshot(key) ?? emptyEffectDragOverrides, [key, scopedSubscription]);
-  return useDragOverrideSnapshot(subscribe, getSnapshot);
+  return useVisualModeSnapshot(subscribe, getSnapshot);
 };
 var VisualModeSettersContext = react__WEBPACK_IMPORTED_MODULE_0__.createContext({
   setDragOverrides: () => {
@@ -142309,8 +143965,18 @@ var SequenceManagerProvider = ({ children }) => {
   });
   const [propStatuses, setPropStatusesMapState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({});
   const propStatusesRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(propStatuses);
+  const requestedPropStatusesRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(propStatuses);
+  const propStatusListeners = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(new Map);
   useIsomorphicLayoutEffect4(() => {
+    const previous = propStatusesRef.current;
     propStatusesRef.current = propStatuses;
+    for (const [key, listeners] of propStatusListeners.current) {
+      if (previous[key] !== propStatuses[key]) {
+        for (const listener of listeners) {
+          listener();
+        }
+      }
+    }
   }, [propStatuses]);
   const setDragOverridesBatch = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((overrides) => {
     setDragOverrideState((prevState) => {
@@ -142484,8 +144150,17 @@ var SequenceManagerProvider = ({ children }) => {
       return next;
     });
   }, []);
+  const updatePropStatuses = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((update) => {
+    const previous = requestedPropStatusesRef.current;
+    const next = update(previous);
+    if (next === previous) {
+      return;
+    }
+    requestedPropStatusesRef.current = next;
+    setPropStatusesMapState(next);
+  }, []);
   const setPropStatuses = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((nodePath, values) => {
-    setPropStatusesMapState((prev) => {
+    updatePropStatuses((prev) => {
       const key = makeSequencePropsSubscriptionKey(nodePath);
       const prevKey = prev[key];
       const newKey = values(prevKey);
@@ -142494,9 +144169,9 @@ var SequenceManagerProvider = ({ children }) => {
       }
       return { ...prev, [key]: newKey };
     });
-  }, []);
+  }, [updatePropStatuses]);
   const remapPropStatuses = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((remappings) => {
-    setPropStatusesMapState((prev) => {
+    updatePropStatuses((prev) => {
       const next = { ...prev };
       for (const remapping of remappings) {
         delete next[makeSequencePropsSubscriptionKey(remapping.previousNodePath)];
@@ -142508,7 +144183,7 @@ var SequenceManagerProvider = ({ children }) => {
       }
       return next;
     });
-  }, []);
+  }, [updatePropStatuses]);
   const dragOverridesSubscription = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({
     subscribe: subscribeDragOverrides,
     getSnapshot: getDragOverridesSnapshot,
@@ -142531,6 +144206,28 @@ var SequenceManagerProvider = ({ children }) => {
       propStatuses
     };
   }, [propStatuses]);
+  const propStatusesSubscription = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({
+    subscribe: (key, listener) => {
+      if (key === null) {
+        return () => {
+          return;
+        };
+      }
+      let listeners = propStatusListeners.current.get(key);
+      if (!listeners) {
+        listeners = new Set;
+        propStatusListeners.current.set(key, listeners);
+      }
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+        if (listeners.size === 0) {
+          propStatusListeners.current.delete(key);
+        }
+      };
+    },
+    getSnapshot: (key) => key === null ? null : requestedPropStatusesRef.current[key] ?? null
+  }), []);
   const dragOverridesContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     return {
       getDragOverrides,
@@ -142562,20 +144259,23 @@ var SequenceManagerProvider = ({ children }) => {
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SequenceRegistryProvider, {
     children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesRefContext.Provider, {
       value: propStatusesRef,
-      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesContext.Provider, {
-        value: propStatusesContext,
-        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SequenceManagerScopeProviders, {
-          dragOverridesSubscription,
-          fromKeys: dragOverrideState.fromKeys,
-          children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeDragOverridesContext.Provider, {
-            value: dragOverridesContext,
-            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeDragOverridesRefContext.Provider, {
-              value: dragOverridesRef,
-              children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeSettersContext.Provider, {
-                value: settersContext,
-                children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeBatchSettersContext.Provider, {
-                  value: batchSettersContext,
-                  children
+      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesSubscriptionContext.Provider, {
+        value: propStatusesSubscription,
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesContext.Provider, {
+          value: propStatusesContext,
+          children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SequenceManagerScopeProviders, {
+            dragOverridesSubscription,
+            fromKeys: dragOverrideState.fromKeys,
+            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeDragOverridesContext.Provider, {
+              value: dragOverridesContext,
+              children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeDragOverridesRefContext.Provider, {
+                value: dragOverridesRef,
+                children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeSettersContext.Provider, {
+                  value: settersContext,
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeBatchSettersContext.Provider, {
+                    value: batchSettersContext,
+                    children
+                  })
                 })
               })
             })
@@ -142611,16 +144311,17 @@ var usePremounting = ({
   hideWhilePremounted
 }) => {
   const parentPremountContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(PremountContext);
-  const frame = useCurrentFrame() - parentPremountContext.premountFramesRemaining;
   const environment = useRemotionEnvironment();
   const { fps } = useVideoConfig();
   const defaultPremountInSeconds = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(DefaultPremountContext);
   const effectivePremountFor = premountFor ?? Math.round(defaultPremountInSeconds * fps);
   const effectivePostmountFor = postmountFor ?? 0;
+  const needsFrame = !environment.isRendering && (effectivePremountFor !== 0 || effectivePostmountFor !== 0);
+  const frame = useCurrentFrameWithOptionalSubscription(needsFrame) - parentPremountContext.premountFramesRemaining;
   const endExclusive = from + durationInFrames;
   const sequenceContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceContext);
   const boundaryTolerance = getSequenceBoundaryTolerance({
-    absoluteFrame: useTimelinePosition(),
+    absoluteFrame: useTimelinePositionWithOptionalSubscription(needsFrame),
     cumulatedFrom: sequenceContext ? sequenceContext.cumulatedFrom + sequenceContext.relativeFrom : 0,
     from,
     parentPlaybackRate: sequenceContext?.playbackRate ?? 1,
@@ -143892,27 +145593,30 @@ function springCalculation({
     stiffness: config.stiffness ?? defaultSpringConfig.stiffness,
     overshootClamping: config.overshootClamping ?? defaultSpringConfig.overshootClamping
   };
-  const cacheKey = [
-    frame,
+  const configKey = [
     fps,
     resolvedConfig.damping,
     resolvedConfig.mass,
     resolvedConfig.overshootClamping,
     resolvedConfig.stiffness
   ].join("-");
+  const cacheKey = `${frame}-${configKey}`;
   if (calculationCache[cacheKey]) {
     return calculationCache[cacheKey];
   }
-  let animation = {
+  const frameClamped = Math.max(0, frame);
+  const previousFrame = Math.ceil(frameClamped) - 1;
+  const previousAnimation = previousFrame >= 0 ? calculationCache[`${previousFrame}-${configKey}`] : undefined;
+  let animation = previousAnimation ?? {
     lastTimestamp: 0,
     current: from,
     toValue: to,
     velocity: 0,
     prevPosition: 0
   };
-  const frameClamped = Math.max(0, frame);
   const unevenRest = frameClamped % 1;
-  for (let f = 0;f <= Math.floor(frameClamped); f++) {
+  const startFrame = previousAnimation ? previousFrame + 1 : 0;
+  for (let f = startFrame;f <= Math.floor(frameClamped); f++) {
     const time = f / fps * 1000;
     animation = advance({
       animation,
@@ -144052,6 +145756,7 @@ function spring({
 // src/easing.ts
 var clampUnit = (t) => Math.min(1, Math.max(0, t));
 var springEasingDurationInFrames = 30;
+var easeBezier = null;
 
 class Easing {
   static step0(n) {
@@ -144064,7 +145769,8 @@ class Easing {
     return t;
   }
   static ease(t) {
-    return Easing.bezier(0.42, 0, 1, 1)(t);
+    easeBezier ??= Easing.bezier(0.42, 0, 1, 1);
+    return easeBezier(t);
   }
   static quad(t) {
     return t * t;
@@ -144172,23 +145878,23 @@ var MODERN_VALUE = "(?:none|[-+]?\\d*\\.?\\d+(?:%|deg|rad|grad|turn)?)";
 function modernColorCall(name) {
   return new RegExp(name + "\\(\\s*(" + MODERN_VALUE + ")\\s+(" + MODERN_VALUE + ")\\s+(" + MODERN_VALUE + ")(?:\\s*\\/\\s*(" + MODERN_VALUE + "))?\\s*\\)");
 }
+var cachedMatchers = {
+  rgb: undefined,
+  rgba: undefined,
+  hsl: undefined,
+  hsla: undefined,
+  hex3: undefined,
+  hex4: undefined,
+  hex5: undefined,
+  hex6: undefined,
+  hex8: undefined,
+  oklch: undefined,
+  oklab: undefined,
+  lab: undefined,
+  lch: undefined,
+  hwb: undefined
+};
 function getMatchers() {
-  const cachedMatchers = {
-    rgb: undefined,
-    rgba: undefined,
-    hsl: undefined,
-    hsla: undefined,
-    hex3: undefined,
-    hex4: undefined,
-    hex5: undefined,
-    hex6: undefined,
-    hex8: undefined,
-    oklch: undefined,
-    oklab: undefined,
-    lab: undefined,
-    lch: undefined,
-    hwb: undefined
-  };
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp("rgb" + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp("rgba" + call(NUMBER, NUMBER, NUMBER, NUMBER));
@@ -144979,12 +146685,11 @@ var useMemoizedEffectDefinitions = (effects) => {
   }, [controllers, effects, stableDefinitions]);
   return stableDefinitions;
 };
-var getEffectPropStatusesCtx = ({
-  propStatuses,
-  nodePath,
-  effectIndex
+var getEffectStatusForSequenceStatus = ({
+  status,
+  effectIndex,
+  videoConfigValues
 }) => {
-  const status = propStatuses[makeSequencePropsSubscriptionKey(nodePath)];
   if (!status) {
     return { type: "cannot-update-sequence", reason: "not-found" };
   }
@@ -145000,18 +146705,31 @@ var getEffectPropStatusesCtx = ({
   }
   return {
     type: "can-update-effect",
-    props: evaluateSourcePropStatuses(effect.props, nodePath.videoConfigValues)
+    props: evaluateSourcePropStatuses(effect.props, videoConfigValues)
   };
 };
-var getPropStatusesCtx = (propStatuses, nodePath) => {
-  const status = propStatuses[makeSequencePropsSubscriptionKey(nodePath)];
+var getEffectPropStatusesCtx = ({
+  propStatuses,
+  nodePath,
+  effectIndex
+}) => {
+  return getEffectStatusForSequenceStatus({
+    status: propStatuses[makeSequencePropsSubscriptionKey(nodePath)] ?? null,
+    effectIndex,
+    videoConfigValues: nodePath.videoConfigValues
+  });
+};
+var getPropStatusesForSequenceStatus = (status, videoConfigValues) => {
   if (!status) {
     return;
   }
   if (!status.canUpdate) {
     return;
   }
-  return evaluateSourcePropStatuses(status.props, nodePath.videoConfigValues);
+  return evaluateSourcePropStatuses(status.props, videoConfigValues);
+};
+var getPropStatusesCtx = (propStatuses, nodePath) => {
+  return getPropStatusesForSequenceStatus(propStatuses[makeSequencePropsSubscriptionKey(nodePath)] ?? null, nodePath.videoConfigValues);
 };
 var useMemoizedEffects = ({
   effects,
@@ -145019,22 +146737,22 @@ var useMemoizedEffects = ({
   videoConfigValues
 }) => {
   const previousRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
-  const { propStatuses } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(VisualModePropStatusesContext);
   const { overrideIdToNodePathMappings } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(OverrideIdsToNodePathsGettersContext);
   const previous = previousRef.current;
   const nodePath = overrideId ? overrideIdToNodePathMappings[overrideId] ?? null : null;
   const effectDragOverrides = useEffectDragOverridesForNodePath(nodePath);
+  const sequenceStatus = usePropStatusForNodePath(nodePath);
   const effectPropStatuses = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => Array.from({ length: effects.length }, (_, effectIndex) => {
     if (nodePath === null) {
       return null;
     }
-    const status = getEffectPropStatusesCtx({
-      propStatuses,
-      nodePath: { ...nodePath, videoConfigValues },
-      effectIndex
+    const status = getEffectStatusForSequenceStatus({
+      status: sequenceStatus,
+      effectIndex,
+      videoConfigValues
     });
     return status.type === "can-update-effect" ? status.props : null;
-  }), [effects.length, nodePath, propStatuses, videoConfigValues]);
+  }), [effects.length, nodePath, sequenceStatus, videoConfigValues]);
   const animatedEffects = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => effectPropStatuses.map((status, index) => Object.values(status ?? {}).some((prop) => prop.status === "keyframed") || Object.values(effectDragOverrides[index] ?? emptyDragOverrides2).some((override) => override.type === "keyframed")), [effectDragOverrides, effectPropStatuses]);
   const frame = useCurrentFrameWithOptionalSubscription(animatedEffects.some(Boolean));
   const prepared = effects.map((descriptor, index) => {
@@ -145510,7 +147228,6 @@ var withInteractivitySchema = ({
         ref
       });
     }
-    const { propStatuses } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(VisualModePropStatusesContext);
     const nodePathMapping = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(OverrideIdsToNodePathsGettersContext);
     const videoConfig = useUnsafeVideoConfig();
     const durationInFrames = videoConfig?.durationInFrames;
@@ -145553,10 +147270,8 @@ var withInteractivitySchema = ({
     });
     const nodePath = env.isReadOnlyStudio ? null : nodePathMapping.overrideIdToNodePathMappings[overrideId] ?? null;
     const dragOverrides = useDragOverridesForNodePath(nodePath);
-    const propStatus = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => nodePath === null ? undefined : getPropStatusesCtx(propStatuses, {
-      ...nodePath,
-      videoConfigValues
-    }), [nodePath, propStatuses, videoConfigValues]);
+    const sequenceStatus = usePropStatusForNodePath(nodePath);
+    const propStatus = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => getPropStatusesForSequenceStatus(sequenceStatus, videoConfigValues), [sequenceStatus, videoConfigValues]);
     const needsFrame = flatKeys.some((key) => propStatus?.[key]?.status === "keyframed" || dragOverrides[key]?.type === "keyframed");
     const frame = useCurrentFrameWithOptionalSubscription(needsFrame);
     const runtimeValues = flatKeys.map((key) => getRuntimeValueForSchemaKey({
@@ -145627,6 +147342,23 @@ var withInteractivitySchema = ({
 var SeriesContentVisibilityContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(true);
 var SequenceContextProvider = withCommittedMetadata(SequenceContext.Provider);
 var EMPTY_EFFECTS = [];
+var getSequenceRegistration = (sequence) => {
+  return sequence;
+};
+var getSequenceStack = (stack) => {
+  return stack;
+};
+var getSequenceCurrentFrame = (ref) => {
+  return ref.current;
+};
+var setSequenceWrapperRef = (ref, wrapperRef, node) => {
+  wrapperRef.current = node;
+  if (typeof ref === "function") {
+    ref(node);
+  } else if (ref) {
+    ref.current = node;
+  }
+};
 var RegularSequenceRefForwardingFunction = ({
   from = 0,
   trimBefore = 0,
@@ -145845,14 +147577,14 @@ var RegularSequenceRefForwardingFunction = ({
   const isInsideSeries = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(IsInsideSeriesContext);
   const singleChildComponent = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => childComponentOverride === undefined ? getSingleChildComponent(children) : childComponentOverride, [children, childComponentOverride]);
   const registrationStack = controls ? getStackForControls(controls) ?? stack ?? null : stack ?? null;
-  const getStack = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => registrationStack, [registrationStack]);
+  const getStack = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => getSequenceStack.bind(null, registrationStack), [registrationStack]);
   const registeredFrozenFrame = typeof freeze === "number" ? freeze : null;
   const currentFrame = registeredFrozenFrame ?? (absoluteFrame - currentSequenceStart) * cumulativePlaybackRate;
   const currentFrameRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(currentFrame);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
     currentFrameRef.current = currentFrame;
   }, [currentFrame]);
-  const getCurrentFrame = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => currentFrameRef.current, []);
+  const getCurrentFrame = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => getSequenceCurrentFrame.bind(null, currentFrameRef), [currentFrameRef]);
   const registeredTrimBefore = trimBefore === 0 ? null : trimBefore;
   const parentCumulatedNegativeFrom = parentSequence?.cumulatedNegativeFrom ?? 0;
   const startMediaFrom = isMedia && isMedia.type !== "image" ? isMedia.data.startMediaFrom + parentCumulatedNegativeFrom - cumulatedNegativeFrom : null;
@@ -145893,7 +147625,7 @@ var RegularSequenceRefForwardingFunction = ({
     controlsSchema,
     controlsSupportsEffects
   ]);
-  const getSequenceForRegistration = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
+  const sequenceForRegistration = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     const trackRegistration = timelineTrack ? {
       timelineTrack: {
         ...timelineTrack,
@@ -146027,6 +147759,7 @@ var RegularSequenceRefForwardingFunction = ({
     frozenMediaFrame,
     singleChildComponent
   ]);
+  const getSequenceForRegistration = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => getSequenceRegistration.bind(null, sequenceForRegistration), [sequenceForRegistration]);
   const registration = useSequenceRegistration({
     getSequence: env.isStudio || sequenceRegistrationEnabled ? getSequenceForRegistration : null,
     id
@@ -146070,14 +147803,7 @@ var RegularSequenceRefForwardingFunction = ({
     bottom: resolvedCropBottom,
     style: styleIfThere
   });
-  const sequenceRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((node) => {
-    wrapperRefForOutline.current = node;
-    if (typeof ref === "function") {
-      ref(node);
-    } else if (ref) {
-      ref.current = node;
-    }
-  }, [ref]);
+  const sequenceRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => setSequenceWrapperRef.bind(null, ref, wrapperRefForOutline), [ref, wrapperRefForOutline]);
   const defaultStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     return {
       flexDirection: undefined,
@@ -148172,6 +149898,9 @@ var durationReducer = (state, action) => {
       return state;
   }
 };
+var onMediaDuration = (setDurations, src, durationInSeconds) => {
+  setDurations({ type: "got-duration", durationInSeconds, src });
+};
 var DurationsContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)({
   durations: {},
   setDurations: () => {
@@ -148961,6 +150690,11 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
     ]
   });
 };
+var unregisterSharedAudio = (tagsContext, id) => {
+  if (tagsContext && tagsContext.numberOfAudioTags > 0) {
+    tagsContext.unregisterAudio(id);
+  }
+};
 var useSharedAudio = ({
   aud,
   audioId,
@@ -149007,11 +150741,7 @@ var useSharedAudio = ({
       }
     }, [aud, tagsCtx, elem.id, audioId, premounting, postmounting]);
     effectToUse(() => {
-      return () => {
-        if (tagsCtx && tagsCtx.numberOfAudioTags > 0) {
-          tagsCtx.unregisterAudio(elem.id);
-        }
-      };
+      return unregisterSharedAudio.bind(null, tagsCtx, elem.id);
     }, [tagsCtx, elem.id]);
   }
   return elem;
@@ -149220,6 +150950,34 @@ var useVolume = ({
     mediaRef.current.volume = Math.min(volume, 1);
   }
   return audioStuffRef;
+};
+
+// src/use-media-duration.ts
+
+var subscribeToMediaDuration = (mediaRef, onDurationRef, src) => {
+  const { current } = mediaRef;
+  if (!current) {
+    return;
+  }
+  if (current.duration) {
+    onDurationRef.current?.(src ?? current.src, current.duration);
+    return;
+  }
+  const onLoadedMetadata = () => {
+    onDurationRef.current?.(src ?? current.src, current.duration);
+  };
+  current.addEventListener("loadedmetadata", onLoadedMetadata);
+  return () => {
+    current.removeEventListener("loadedmetadata", onLoadedMetadata);
+  };
+};
+var useMediaDuration = (mediaRef, onDuration, src, useCurrentSrc) => {
+  const onDurationRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(onDuration);
+  onDurationRef.current = onDuration;
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(subscribeToMediaDuration.bind(null, mediaRef, onDurationRef, useCurrentSrc ? null : src), [mediaRef, src, useCurrentSrc]);
+};
+var scheduleMediaSourceCleanup = (cleanup) => {
+  requestAnimationFrame(() => cleanup?.());
 };
 
 // src/use-media-in-timeline.ts
@@ -150523,34 +152281,12 @@ var AudioForDevelopmentForwardRefFunction = (props, ref) => {
   });
   const effectToUse = react__WEBPACK_IMPORTED_MODULE_0__.useInsertionEffect ?? react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect;
   effectToUse(() => {
-    return () => {
-      requestAnimationFrame(() => {
-        cleanupOnMediaTagUnmount();
-      });
-    };
+    return scheduleMediaSourceCleanup.bind(null, cleanupOnMediaTagUnmount);
   }, [cleanupOnMediaTagUnmount]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useImperativeHandle)(ref, () => {
     return audioRef.current;
   }, [audioRef]);
-  const currentOnDurationCallback = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(onDuration);
-  currentOnDurationCallback.current = onDuration;
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    const { current } = audioRef;
-    if (!current) {
-      return;
-    }
-    if (current.duration) {
-      currentOnDurationCallback.current?.(current.src, current.duration);
-      return;
-    }
-    const onLoadedMetadata = () => {
-      currentOnDurationCallback.current?.(current.src, current.duration);
-    };
-    current.addEventListener("loadedmetadata", onLoadedMetadata);
-    return () => {
-      current.removeEventListener("loadedmetadata", onLoadedMetadata);
-    };
-  }, [audioRef, src]);
+  useMediaDuration(audioRef, onDuration, src, true);
   if (initialShouldPreMountAudioElements) {
     return null;
   }
@@ -150672,6 +152408,8 @@ var MediaEnabledProvider = ({
 var AudioForRenderingRefForwardingFunction = (props, ref) => {
   const audioRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const {
+    registerRenderAsset,
+    unregisterRenderAsset,
     volume: volumeProp,
     playbackRate,
     allowAmplificationDuringRender,
@@ -150687,7 +152425,7 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
     loopVolumeCurveBehavior,
     pauseWhenBuffering,
     audioStreamIndex,
-    preservePitch: _preservePitch,
+    preservePitch,
     ...nativeProps
   } = props;
   const absoluteFrame = useTimelinePosition();
@@ -150696,7 +152434,6 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
   const sequenceContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceContext);
   const sequencePlaybackRate = sequenceContext?.playbackRate ?? 1;
   const audioStartFrame = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(Html5MediaTrimContext);
-  const { registerRenderAsset, unregisterRenderAsset } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(RenderAssetManager);
   const { delayRender, continueRender } = useDelayRender();
   const id = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => `audio-${random(props.src ?? "")}-${sequenceContext?.relativeFrom}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.durationInFrames}`, [
     props.src,
@@ -150736,7 +152473,8 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
       playbackRate: (props.playbackRate ?? 1) * sequencePlaybackRate,
       toneFrequency: toneFrequency ?? 1,
       audioStartFrame,
-      audioStreamIndex: audioStreamIndex ?? 0
+      audioStreamIndex: audioStreamIndex ?? 0,
+      preservePitch: preservePitch ?? true
     });
     return () => unregisterRenderAsset(id);
   }, [
@@ -150754,7 +152492,8 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
     toneFrequency,
     audioStartFrame,
     sequencePlaybackRate,
-    audioStreamIndex
+    audioStreamIndex,
+    preservePitch
   ]);
   const { src } = props;
   const needsToRenderAudioTag = ref || _remotionInternalNeedsDurationCalculation;
@@ -150804,7 +152543,16 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
     onError: onNativeError
   });
 };
-var AudioForRendering = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(AudioForRenderingRefForwardingFunction);
+var MemoAudioForRendering = react__WEBPACK_IMPORTED_MODULE_0__.memo((0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(AudioForRenderingRefForwardingFunction));
+var AudioForRendering = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)((props, ref) => {
+  const { registerRenderAsset, unregisterRenderAsset } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(RenderAssetManager);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(MemoAudioForRendering, {
+    ...props,
+    ref,
+    registerRenderAsset,
+    unregisterRenderAsset
+  });
+});
 
 // src/audio/html5-audio.tsx
 
@@ -150854,9 +152602,7 @@ var AudioRefForwardingFunction = (props, ref) => {
       console.warn(errMessage);
     }
   }, [loop, onRemotionError, preloadedSrc]);
-  const onDuration = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((src, durationInSeconds) => {
-    setDurations({ type: "got-duration", durationInSeconds, src });
-  }, [setDurations]);
+  const onDuration = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => onMediaDuration.bind(null, setDurations), [setDurations]);
   const durationFetched = durations[getAbsoluteSrc(preloadedSrc)] ?? durations[getAbsoluteSrc(props.src)];
   validateMediaTrimProps({ startFrom, endAt, trimBefore, trimAfter });
   if (durationInFrames !== undefined) {
@@ -151222,6 +152968,62 @@ addSequenceStackTraces(Solid);
 // src/HtmlInCanvas.tsx
 
 
+// src/HtmlInCanvasFallback.tsx
+
+var HtmlInCanvasFallback = ({ children, style, label }) => {
+  const currentScale = useCurrentScale({ dontThrowIfOutsideOfRemotion: true });
+  const scale = currentScale > 0 ? currentScale : 1;
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
+    style: { position: "relative", ...style },
+    children: [
+      children,
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
+        className: "css-reset",
+        style: {
+          position: "absolute",
+          top: 8 / scale,
+          right: 8 / scale,
+          zIndex: 1000,
+          transform: `scale(${1 / scale})`,
+          transformOrigin: "top right",
+          maxWidth: `calc(${scale * 100}% - 16px)`,
+          padding: "8px 10px",
+          borderRadius: 6,
+          border: "1px solid #7f3540",
+          backgroundColor: "#2b171c",
+          boxShadow: "0 2px 8px #0003",
+          pointerEvents: "none",
+          textAlign: "left"
+        },
+        children: [
+          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
+            style: {
+              fontFamily: "Arial, Helvetica, sans-serif",
+              fontSize: 12,
+              fontWeight: 600,
+              lineHeight: 1.5,
+              color: "#ffabb5"
+            },
+            children: "HTML-in-canvas is not available"
+          }),
+          /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
+            style: {
+              fontFamily: "Arial, Helvetica, sans-serif",
+              fontSize: 11,
+              fontWeight: 400,
+              lineHeight: 1.5,
+              color: "#e8bdc3"
+            },
+            children: label
+          })
+        ]
+      })
+    ]
+  });
+};
+
+// src/HtmlInCanvas.tsx
+
 var transferredOffscreenCanvases = new WeakMap;
 var getTransferredOffscreenCanvas = (canvas) => {
   const existing = transferredOffscreenCanvases.get(canvas);
@@ -151329,6 +153131,16 @@ var defaultOnPaint = ({
   ctx.drawElementImage(elementImage, 0, 0);
 };
 var HtmlInCanvasAncestorContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(null);
+var useHtmlInCanvasUnsupportedMessage = () => {
+  const ancestorPaintState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(HtmlInCanvasAncestorContext);
+  if (!isHtmlInCanvasSupported()) {
+    return getHtmlInCanvasUnsupportedMessage();
+  }
+  if (ancestorPaintState && !isHtmlInCanvasNestingSupported()) {
+    return `Nested <HtmlInCanvas> components require Chrome ${MINIMUM_CHROME_VERSION_FOR_NESTED_HTML_IN_CANVAS} or newer with HTML-in-canvas enabled.`;
+  }
+  return null;
+};
 var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   width,
   height,
@@ -151768,6 +153580,7 @@ var HtmlInCanvasInner = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   onInit,
   pixelDensity,
   _remotionInternalCanvasSiblings,
+  _remotionInternalFallbackLabel = "Effects are not visible",
   controls,
   style,
   cropLeft,
@@ -151783,6 +153596,9 @@ var HtmlInCanvasInner = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   ...sequenceProps
 }, ref) => {
   const { isRendering } = useRemotionEnvironment();
+  const unsupportedMessage = useHtmlInCanvasUnsupportedMessage();
+  assertHtmlInCanvasDimensions(width, height);
+  resolveHtmlInCanvasPixelDensity(pixelDensity);
   const Content = isRendering ? HtmlInCanvasContentForRendering : HtmlInCanvasContent;
   const memoizedEffectDefinitions = useMemoizedEffectDefinitions(effects);
   const actualRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
@@ -151840,7 +153656,17 @@ var HtmlInCanvasInner = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
       _remotionInternalPostmountDisplay: effectivePostmountFor || null,
       _remotionInternalIsPremounting: premountingActive,
       _remotionInternalIsPostmounting: postmountingActive,
-      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(Content, {
+      children: !isRendering && unsupportedMessage !== null ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(HtmlInCanvasFallback, {
+        style: { width, height, ...croppedStyle },
+        label: _remotionInternalFallbackLabel,
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(DefaultPremountContext.Provider, {
+          value: 0,
+          children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
+            style: { width, height },
+            children
+          })
+        })
+      }) : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(Content, {
         ref: setCanvasRef,
         renderFrame: null,
         width,
@@ -151932,6 +153758,26 @@ var canvasImageSchema = {
   ...borderSchema,
   ...borderRadiusSchema
 };
+var continueImageLoadDelay = (pendingLoadDelayRef, setIsLoadPending, continueRender, { markAsReady }) => {
+  const pending = pendingLoadDelayRef.current;
+  if (!pending || pending.continued) {
+    return;
+  }
+  pending.continued = true;
+  if (markAsReady) {
+    setIsLoadPending(false);
+  }
+  continueRender(pending.handle);
+  pendingLoadDelayRef.current = null;
+};
+var setCanvasRef = (setOutputCanvas, ref, canvas) => {
+  setOutputCanvas(canvas);
+  if (typeof ref === "function") {
+    ref(canvas);
+  } else if (ref) {
+    ref.current = canvas;
+  }
+};
 var makeAbortError = () => {
   if (typeof DOMException !== "undefined") {
     return new DOMException("Image loading was aborted", "AbortError");
@@ -151984,7 +153830,7 @@ var loadImage = ({
       onAbort();
       return;
     }
-    image.crossOrigin = crossOrigin ?? "anonymous";
+    image.crossOrigin = crossOrigin || "anonymous";
     image.src = src;
   });
 };
@@ -152038,32 +153884,14 @@ var CanvasImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const [isLoadPending, setIsLoadPending] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const isPremounting = Boolean(sequenceContext?.premounting);
   const isPostmounting = Boolean(sequenceContext?.postmounting);
-  const continuePendingLoadDelay = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(({ markAsReady }) => {
-    const pending = pendingLoadDelayRef.current;
-    if (!pending || pending.continued) {
-      return;
-    }
-    pending.continued = true;
-    if (markAsReady) {
-      setIsLoadPending(false);
-    }
-    continueRender(pending.handle);
-    pendingLoadDelayRef.current = null;
-  }, [continueRender]);
+  const continuePendingLoadDelay = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => continueImageLoadDelay.bind(null, pendingLoadDelayRef, setIsLoadPending, continueRender), [continueRender]);
   const sourceCanvas = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     if (typeof document === "undefined") {
       return null;
     }
     return document.createElement("canvas");
   }, []);
-  const canvasRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((canvas) => {
-    setOutputCanvas(canvas);
-    if (typeof ref === "function") {
-      ref(canvas);
-    } else if (ref) {
-      ref.current = canvas;
-    }
-  }, [ref]);
+  const canvasRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => setCanvasRef.bind(null, setOutputCanvas, ref), [ref]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
     if (!pauseWhenLoading || !isLoadPending || isPremounting || isPostmounting) {
       return;
@@ -152474,6 +154302,120 @@ var IFrame = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(IFrameRefForwardi
 function exponentialBackoff2(errorCount) {
   return 1000 * 2 ** (errorCount - 1);
 }
+var setImageRef = (imageRef, ref, img) => {
+  imageRef.current = img;
+  if (typeof ref === "function") {
+    ref(img);
+  } else if (ref) {
+    ref.current = img;
+  }
+};
+var retryImage = (imageRef, timeout) => {
+  if (!imageRef.current) {
+    return;
+  }
+  const currentSrc = imageRef.current.src;
+  setTimeout(() => {
+    if (!imageRef.current) {
+      return;
+    }
+    const newSrc = imageRef.current?.src;
+    if (newSrc !== currentSrc) {
+      return;
+    }
+    imageRef.current.removeAttribute("src");
+    imageRef.current.setAttribute("src", newSrc);
+  }, timeout);
+};
+var handleImageError = ({
+  errors,
+  imageRef,
+  onError,
+  onImageError,
+  maxRetries,
+  cancelRender,
+  retryIn
+}, e) => {
+  if (!errors.current) {
+    return;
+  }
+  errors.current[imageRef.current?.src] = (errors.current[imageRef.current?.src] ?? 0) + 1;
+  if ((onError || onImageError) && (errors.current[imageRef.current?.src] ?? 0) > maxRetries) {
+    onError?.(e);
+    onImageError?.(new Error("Error loading image with src: " + truncateSrcForLabel(imageRef.current?.src)));
+    return;
+  }
+  if ((errors.current[imageRef.current?.src] ?? 0) <= maxRetries) {
+    const backoff = exponentialBackoff2(errors.current[imageRef.current?.src] ?? 0);
+    console.warn(`Could not load image with source ${truncateSrcForLabel(imageRef.current?.src)}, retrying again in ${backoff}ms`);
+    retryIn(backoff);
+    return;
+  }
+  try {
+    cancelRender("Error loading image with src: " + truncateSrcForLabel(imageRef.current?.src));
+  } catch {}
+};
+var loadImage2 = ({
+  imageRef,
+  errors,
+  actualSrc,
+  delayRenderRetries,
+  delayRenderTimeoutInMilliseconds,
+  onImageFrame,
+  delayRender,
+  continueRender,
+  setIsLoading
+}) => {
+  if (window.process?.env?.NODE_ENV === "test") {
+    if (imageRef.current) {
+      imageRef.current.src = actualSrc;
+    }
+    return;
+  }
+  const { current } = imageRef;
+  if (!current) {
+    return;
+  }
+  setIsLoading(true);
+  const newHandle = delayRender("Loading <Img> with src=" + truncateSrcForLabel(actualSrc), {
+    retries: delayRenderRetries ?? undefined,
+    timeoutInMilliseconds: delayRenderTimeoutInMilliseconds ?? undefined
+  });
+  let unmounted = false;
+  const onComplete = () => {
+    if (unmounted) {
+      continueRender(newHandle);
+      return;
+    }
+    if ((errors.current[imageRef.current?.src] ?? 0) > 0) {
+      delete errors.current[imageRef.current?.src];
+      console.info(`Retry successful - ${truncateSrcForLabel(imageRef.current?.src)} is now loaded`);
+    }
+    if (current) {
+      onImageFrame?.(current);
+    }
+    setIsLoading(false);
+    continueRender(newHandle);
+  };
+  if (!imageRef.current) {
+    onComplete();
+    return;
+  }
+  current.src = actualSrc;
+  current.decode().then(onComplete).catch((err) => {
+    console.warn(err);
+    if (current.complete && current.naturalWidth > 0 && current.naturalHeight > 0) {
+      onComplete();
+    } else {
+      current.addEventListener("load", onComplete);
+    }
+  });
+  return () => {
+    unmounted = true;
+    current.removeEventListener("load", onComplete);
+    continueRender(newHandle);
+  };
+};
 var ImgContent = ({
   onError,
   onImageError,
@@ -152497,55 +154439,21 @@ var ImgContent = ({
   if (!_propsValid) {
     throw new Error("typecheck error");
   }
-  const imageCallbackRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((img) => {
-    imageRef.current = img;
-    if (typeof ref === "function") {
-      ref(img);
-    } else if (ref) {
-      ref.current = img;
-    }
-  }, [ref]);
+  const imageCallbackRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => setImageRef.bind(null, imageRef, ref ?? null), [ref]);
   const actualSrc = usePreload(src);
-  const retryIn = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((timeout) => {
-    if (!imageRef.current) {
-      return;
-    }
-    const currentSrc = imageRef.current.src;
-    setTimeout(() => {
-      if (!imageRef.current) {
-        return;
-      }
-      const newSrc = imageRef.current?.src;
-      if (newSrc !== currentSrc) {
-        return;
-      }
-      imageRef.current.removeAttribute("src");
-      imageRef.current.setAttribute("src", newSrc);
-    }, timeout);
-  }, []);
+  const retryIn = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => retryImage.bind(null, imageRef), []);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const isPremounting = Boolean(sequenceContext?.premounting);
   const isPostmounting = Boolean(sequenceContext?.postmounting);
-  const didGetError = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((e) => {
-    if (!errors.current) {
-      return;
-    }
-    errors.current[imageRef.current?.src] = (errors.current[imageRef.current?.src] ?? 0) + 1;
-    if ((onError || onImageError) && (errors.current[imageRef.current?.src] ?? 0) > maxRetries) {
-      onError?.(e);
-      onImageError?.(new Error("Error loading image with src: " + truncateSrcForLabel(imageRef.current?.src)));
-      return;
-    }
-    if ((errors.current[imageRef.current?.src] ?? 0) <= maxRetries) {
-      const backoff = exponentialBackoff2(errors.current[imageRef.current?.src] ?? 0);
-      console.warn(`Could not load image with source ${truncateSrcForLabel(imageRef.current?.src)}, retrying again in ${backoff}ms`);
-      retryIn(backoff);
-      return;
-    }
-    try {
-      cancelRender("Error loading image with src: " + truncateSrcForLabel(imageRef.current?.src));
-    } catch {}
-  }, [cancelRender, maxRetries, onError, onImageError, retryIn]);
+  const didGetError = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => handleImageError.bind(null, {
+    errors,
+    imageRef,
+    onError: onError ?? null,
+    onImageError: onImageError ?? null,
+    maxRetries,
+    cancelRender,
+    retryIn
+  }), [cancelRender, maxRetries, onError, onImageError, retryIn]);
   if (typeof window !== "undefined") {
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
       if (!pauseWhenLoading || !isLoading || isPremounting || isPostmounting) {
@@ -152559,57 +154467,17 @@ var ImgContent = ({
       isPremounting,
       pauseWhenLoading
     ]);
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
-      if (window.process?.env?.NODE_ENV === "test") {
-        if (imageRef.current) {
-          imageRef.current.src = actualSrc;
-        }
-        return;
-      }
-      const { current } = imageRef;
-      if (!current) {
-        return;
-      }
-      setIsLoading(true);
-      const newHandle = delayRender("Loading <Img> with src=" + truncateSrcForLabel(actualSrc), {
-        retries: delayRenderRetries ?? undefined,
-        timeoutInMilliseconds: delayRenderTimeoutInMilliseconds ?? undefined
-      });
-      let unmounted = false;
-      const onComplete = () => {
-        if (unmounted) {
-          continueRender(newHandle);
-          return;
-        }
-        if ((errors.current[imageRef.current?.src] ?? 0) > 0) {
-          delete errors.current[imageRef.current?.src];
-          console.info(`Retry successful - ${truncateSrcForLabel(imageRef.current?.src)} is now loaded`);
-        }
-        if (current) {
-          onImageFrame?.(current);
-        }
-        setIsLoading(false);
-        continueRender(newHandle);
-      };
-      if (!imageRef.current) {
-        onComplete();
-        return;
-      }
-      current.src = actualSrc;
-      current.decode().then(onComplete).catch((err) => {
-        console.warn(err);
-        if (current.complete && current.naturalWidth > 0 && current.naturalHeight > 0) {
-          onComplete();
-        } else {
-          current.addEventListener("load", onComplete);
-        }
-      });
-      return () => {
-        unmounted = true;
-        current.removeEventListener("load", onComplete);
-        continueRender(newHandle);
-      };
-    }, [
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(loadImage2.bind(null, {
+      imageRef,
+      errors,
+      actualSrc,
+      delayRenderRetries: delayRenderRetries ?? null,
+      delayRenderTimeoutInMilliseconds: delayRenderTimeoutInMilliseconds ?? null,
+      onImageFrame: onImageFrame ?? null,
+      delayRender,
+      continueRender,
+      setIsLoading
+    }), [
       actualSrc,
       delayRenderRetries,
       delayRenderTimeoutInMilliseconds,
@@ -153547,11 +155415,41 @@ var createElementSourceProxy = (api, sourceArgumentIndex, getSourceFileName) => 
         const source = sourceArgumentIndex === null ? null : argArray[sourceArgumentIndex];
         const existingStack = props?.[internalStackProp];
         const controlsStack = !existingStack && component === getSequenceComponent() && props?.controls ? getStackForControls(props.controls) : null;
-        const stack = existingStack || (controlsStack ?? (source && typeof source.fileName === "string" && typeof source.lineNumber === "number" && typeof source.columnNumber === "number" ? makeOriginalSourceStack({
-          fileName: getSourceFileName(source.fileName),
-          lineNumber: source.lineNumber,
-          columnNumber: source.columnNumber - 1
-        }) : new Error().stack));
+        let stack = existingStack || controlsStack;
+        if (!stack) {
+          if (source && typeof source.fileName === "string" && typeof source.lineNumber === "number" && typeof source.columnNumber === "number") {
+            stack = makeOriginalSourceStack({
+              fileName: getSourceFileName(source.fileName),
+              lineNumber: source.lineNumber,
+              columnNumber: source.columnNumber - 1
+            });
+          } else {
+            const { stackTraceLimit } = Error;
+            const canLimitStack = typeof stackTraceLimit === "number" && stackTraceLimit > 2 && Object.getOwnPropertyDescriptor(Error, "stackTraceLimit")?.writable;
+            let capturedError;
+            try {
+              if (canLimitStack) {
+                Error.stackTraceLimit = 2;
+              }
+              capturedError = new Error;
+            } finally {
+              if (canLimitStack) {
+                Error.stackTraceLimit = stackTraceLimit;
+              }
+            }
+            const capturedStack = capturedError.stack;
+            if (capturedStack) {
+              const firstFrameEnd = capturedStack.indexOf(`
+`, capturedStack.startsWith(`Error
+`) ? 6 : 0);
+              const callerEnd = firstFrameEnd === -1 ? -1 : capturedStack.indexOf(`
+`, firstFrameEnd + 1);
+              stack = callerEnd === -1 ? capturedStack : capturedStack.slice(0, callerEnd);
+            } else {
+              stack = capturedStack;
+            }
+          }
+        }
         const newProps = existingStack ? { ...props } : {
           ...props ?? {},
           [internalStackProp]: stack
@@ -153741,6 +155639,10 @@ var getMediabunnyInputResourceKey = ({
 ]);
 var MEDIABUNNY_DURATION_VALUE_KEY = "mediabunny-duration";
 var globalMediaResourceManager = makeMediaResourceManager();
+
+// src/playback-pitch-context.ts
+
+var PlaybackPitchContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(false);
 
 // src/react-refresh-event.ts
 var REACT_REFRESH_STARTED_EVENT = "remotion-react-refresh-started";
@@ -154198,7 +156100,7 @@ var OffthreadVideoForRendering = ({
   onVideoFrame,
   crossOrigin,
   audioStreamIndex,
-  preservePitch: _preservePitch,
+  preservePitch,
   ...props
 }) => {
   const absoluteFrame = useTimelinePosition();
@@ -154250,7 +156152,8 @@ var OffthreadVideoForRendering = ({
       playbackRate: playbackRate * sequencePlaybackRate,
       toneFrequency,
       audioStartFrame,
-      audioStreamIndex
+      audioStreamIndex,
+      preservePitch: preservePitch ?? true
     });
     return () => unregisterRenderAsset(id);
   }, [
@@ -154266,7 +156169,8 @@ var OffthreadVideoForRendering = ({
     toneFrequency,
     audioStartFrame,
     sequencePlaybackRate,
-    audioStreamIndex
+    audioStreamIndex,
+    preservePitch
   ]);
   const currentTime = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     return getExpectedMediaFrameUncorrected({
@@ -154284,7 +156188,7 @@ var OffthreadVideoForRendering = ({
     });
   }, [toneMapped, currentTime, src, transparent]);
   const [imageSrc, setImageSrc] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-  const { delayRender, continueRender } = useDelayRender();
+  const { delayRender, continueRender, cancelRender } = useDelayRender();
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
     if (!window.remotion_videoEnabled) {
       return;
@@ -154354,6 +156258,7 @@ var OffthreadVideoForRendering = ({
     delayRenderTimeoutInMilliseconds,
     onError,
     continueRender,
+    cancelRender,
     delayRender
   ]);
   const onErr = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
@@ -154362,7 +156267,7 @@ var OffthreadVideoForRendering = ({
     } else {
       cancelRender("Failed to load image with src " + imageSrc);
     }
-  }, [imageSrc, onError]);
+  }, [imageSrc, onError, cancelRender]);
   const className = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     return [OBJECTFIT_CONTAIN_CLASS_NAME, props.className].filter(truthy).join(" ");
   }, [props.className]);
@@ -154453,11 +156358,7 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
   }, [context.audioContext]);
   const effectToUse = react__WEBPACK_IMPORTED_MODULE_0__.useInsertionEffect ?? react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect;
   effectToUse(() => {
-    return () => {
-      requestAnimationFrame(() => {
-        sharedSource?.cleanup();
-      });
-    };
+    return scheduleMediaSourceCleanup.bind(null, sharedSource?.cleanup ?? null);
   }, [sharedSource]);
   const {
     timelineId,
@@ -154589,26 +156490,8 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
       current.removeEventListener("error", errorHandler);
     };
   }, [onError, src]);
-  const currentOnDurationCallback = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(onDuration);
-  currentOnDurationCallback.current = onDuration;
   useEmitVideoFrame({ ref: videoRef, onVideoFrame });
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    const { current } = videoRef;
-    if (!current) {
-      return;
-    }
-    if (current.duration) {
-      currentOnDurationCallback.current?.(src, current.duration);
-      return;
-    }
-    const onLoadedMetadata = () => {
-      currentOnDurationCallback.current?.(src, current.duration);
-    };
-    current.addEventListener("loadedmetadata", onLoadedMetadata);
-    return () => {
-      current.removeEventListener("loadedmetadata", onLoadedMetadata);
-    };
-  }, [src]);
+  useMediaDuration(videoRef, onDuration, src, false);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const { current } = videoRef;
     if (!current) {
@@ -155144,6 +157027,8 @@ var RemotionContextProvider = (props) => {
 // src/internals.ts
 var compositionSelectorRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.createRef)();
 var Internals = {
+  HtmlInCanvasFallback,
+  useHtmlInCanvasUnsupportedMessage,
   OptimisticSequenceDeletion,
   usePendingSequenceDeletions,
   createElementSourceProxy,
@@ -155182,6 +157067,7 @@ var Internals = {
   CompositionSetters,
   VisualModePropStatusesContext,
   VisualModePropStatusesRefContext,
+  VisualModePropStatusesSubscriptionContext,
   VisualModeBatchSettersContext,
   VisualModeDragOverridesContext,
   VisualModeDragOverridesRefContext,
@@ -155319,6 +157205,7 @@ var Internals = {
   DelayRenderContextType,
   TimelineContext,
   usePlaying,
+  PlaybackPitchContext,
   PlaybackRateContext,
   AbsoluteTimeContext,
   RenderAssetManagerProvider,
@@ -155779,7 +157666,7 @@ var VideoForRenderingForwardFunction = ({
   loopVolumeCurveBehavior,
   audioStreamIndex,
   onVideoFrame,
-  preservePitch: _preservePitch,
+  preservePitch,
   ...props
 }, ref) => {
   const absoluteFrame = useTimelinePosition();
@@ -155833,7 +157720,8 @@ var VideoForRenderingForwardFunction = ({
       playbackRate: (playbackRate ?? 1) * sequencePlaybackRate,
       toneFrequency: toneFrequency ?? 1,
       audioStartFrame,
-      audioStreamIndex: audioStreamIndex ?? 0
+      audioStreamIndex: audioStreamIndex ?? 0,
+      preservePitch: preservePitch ?? true
     });
     return () => unregisterRenderAsset(id);
   }, [
@@ -155849,7 +157737,8 @@ var VideoForRenderingForwardFunction = ({
     toneFrequency,
     audioStartFrame,
     sequencePlaybackRate,
-    audioStreamIndex
+    audioStreamIndex,
+    preservePitch
   ]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useImperativeHandle)(ref, () => {
     return videoRef.current;
@@ -156020,9 +157909,7 @@ var VideoForwardingFunction = (props, ref) => {
     throw new TypeError(`The \`<Html5Video>\` tag requires a string for \`src\`, but got ${JSON.stringify(props.src)} instead.`);
   }
   const preloadedSrc = usePreload(props.src);
-  const onDuration = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((src, durationInSeconds) => {
-    setDurations({ type: "got-duration", durationInSeconds, src });
-  }, [setDurations]);
+  const onDuration = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => onMediaDuration.bind(null, setDurations), [setDurations]);
   const durationFetched = durations[getAbsoluteSrc(preloadedSrc)] ?? durations[getAbsoluteSrc(props.src)];
   validateMediaTrimProps({ startFrom, endAt, trimBefore, trimAfter });
   if (durationInFrames !== undefined) {
@@ -156489,27 +158376,30 @@ function springCalculation({
     stiffness: config.stiffness ?? defaultSpringConfig.stiffness,
     overshootClamping: config.overshootClamping ?? defaultSpringConfig.overshootClamping
   };
-  const cacheKey = [
-    frame,
+  const configKey = [
     fps,
     resolvedConfig.damping,
     resolvedConfig.mass,
     resolvedConfig.overshootClamping,
     resolvedConfig.stiffness
   ].join("-");
+  const cacheKey = `${frame}-${configKey}`;
   if (calculationCache[cacheKey]) {
     return calculationCache[cacheKey];
   }
-  let animation = {
+  const frameClamped = Math.max(0, frame);
+  const previousFrame = Math.ceil(frameClamped) - 1;
+  const previousAnimation = previousFrame >= 0 ? calculationCache[`${previousFrame}-${configKey}`] : undefined;
+  let animation = previousAnimation ?? {
     lastTimestamp: 0,
     current: from,
     toValue: to,
     velocity: 0,
     prevPosition: 0
   };
-  const frameClamped = Math.max(0, frame);
   const unevenRest = frameClamped % 1;
-  for (let f = 0;f <= Math.floor(frameClamped); f++) {
+  const startFrame = previousAnimation ? previousFrame + 1 : 0;
+  for (let f = startFrame;f <= Math.floor(frameClamped); f++) {
     const time = f / fps * 1000;
     animation = advance({
       animation,
@@ -156649,6 +158539,7 @@ function spring({
 // src/easing.ts
 var clampUnit = (t) => Math.min(1, Math.max(0, t));
 var springEasingDurationInFrames = 30;
+var easeBezier = null;
 
 class Easing {
   static step0(n) {
@@ -156661,7 +158552,8 @@ class Easing {
     return t;
   }
   static ease(t) {
-    return Easing.bezier(0.42, 0, 1, 1)(t);
+    easeBezier ??= Easing.bezier(0.42, 0, 1, 1);
+    return easeBezier(t);
   }
   static quad(t) {
     return t * t;
@@ -158111,23 +160003,23 @@ var MODERN_VALUE = "(?:none|[-+]?\\d*\\.?\\d+(?:%|deg|rad|grad|turn)?)";
 function modernColorCall(name) {
   return new RegExp(name + "\\(\\s*(" + MODERN_VALUE + ")\\s+(" + MODERN_VALUE + ")\\s+(" + MODERN_VALUE + ")(?:\\s*\\/\\s*(" + MODERN_VALUE + "))?\\s*\\)");
 }
+var cachedMatchers = {
+  rgb: undefined,
+  rgba: undefined,
+  hsl: undefined,
+  hsla: undefined,
+  hex3: undefined,
+  hex4: undefined,
+  hex5: undefined,
+  hex6: undefined,
+  hex8: undefined,
+  oklch: undefined,
+  oklab: undefined,
+  lab: undefined,
+  lch: undefined,
+  hwb: undefined
+};
 function getMatchers() {
-  const cachedMatchers = {
-    rgb: undefined,
-    rgba: undefined,
-    hsl: undefined,
-    hsla: undefined,
-    hex3: undefined,
-    hex4: undefined,
-    hex5: undefined,
-    hex6: undefined,
-    hex8: undefined,
-    oklch: undefined,
-    oklab: undefined,
-    lab: undefined,
-    lch: undefined,
-    hwb: undefined
-  };
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp("rgb" + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp("rgba" + call(NUMBER, NUMBER, NUMBER, NUMBER));

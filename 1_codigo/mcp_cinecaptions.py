@@ -508,7 +508,7 @@ def _mc():
 
 
 def t_mapa(a):
-    return _mc().mapa(a.get('consulta', ''), a.get('id', ''), bool(a.get('completo')), int(a.get('maximo', 5)))
+    return _mc().mapa(a.get('consulta', ''), a.get('id', ''), bool(a.get('completo')), int(a.get('maximo', 5)), str(a.get('parte', '')))
 
 
 def t_simbolo(a):
@@ -549,8 +549,8 @@ _PLAN = {'palabras': {'description': 'ruta de un .json de palabras [{word,start,
          'estilos': {'type': 'object', 'description': '{"índice de bloque": n de variante} para forzar el estilo de un bloque'},
          'fin_video': _N, 'idioma': _S}
 HERRAMIENTAS = {
-    'mapa': ('USAR ANTES DE ABRIR ARCHIVOS. Busca por palabras qué tema del programa tiene lo que buscas y devuelve sus archivos y símbolos (compacto); con id="go-inicio" da el detalle de ese tema; '
-             'con completo=true incluye el texto. Sin argumentos lista los grupos.', _esq({'consulta': _S, 'id': _S, 'completo': {'type': 'boolean'}, 'maximo': _N}), t_mapa),
+    'mapa': ('USAR ANTES DE ABRIR ARCHIVOS. Busca por palabras qué tema del programa tiene lo que buscas y devuelve sus archivos y símbolos (compacto); con id="go-inicio" da el detalle de ese tema (si es largo, un índice: pide parte="3" o parte="palabras"); '
+             'con completo=true incluye el texto entero. Sin argumentos lista los grupos.', _esq({'consulta': _S, 'id': _S, 'parte': _S, 'completo': {'type': 'boolean'}, 'maximo': _N}), t_mapa),
     'simbolo': ('Devuelve SOLO el código de una función, clase o método (p. ej. "_go_generar", "WordTagWindow._continuar", "Instalacion.Desinstalar") con archivo:líneas; las clases grandes dan la lista de métodos. '
                 'Evita leer el script principal (12 000 líneas).', _esq({'nombre': _S, 'lineas': _N, 'archivo': _S}, ['nombre']), t_simbolo),
     'modulo': ('Qué es un archivo de código (descripción, clases y funciones con su línea), p. ej. "vigilancia", "sfx_rules", "principal".', _esq({'nombre': _S}, ['nombre']), t_modulo),

@@ -53,7 +53,11 @@ def preparar(salida, video):
     ctx = D.contexto(video, palabras, 'Kinetic', 'v', timeline_de_go=False, bloques=cues, plan_efectos=plan_fx, plan_pro=plan_pro, cortes=cortes, idioma='es')
     ctx['cortes'] = cortes
     res = D.preparar(ctx)
-    D.al_colocar(copy.deepcopy(plan_fx), res, str(video), plan_pro=copy.deepcopy(plan_pro))
+    destino = {'proyecto': 'Prueba aislada', 'timeline': 'Sonido de prueba', 'timeline_id': 'sonido-ui-prueba'}
+    plan = D.al_colocar(copy.deepcopy(plan_fx), res, str(video), plan_pro=copy.deepcopy(plan_pro), destino=destino)
+    pendiente = E.cargar(video)
+    assert pendiente.get('pendiente_resolve') and not pendiente.get('en_resolve'), 'Preparar no confirma una colocación'
+    assert D.confirmar_colocacion(plan, True, 'GO simulado en el destino de prueba'), 'El GO simulado debe quedar confirmado'
     return E, D, res
 
 
@@ -221,15 +225,16 @@ def pagina(salida, video):
     ok('inspector: diseño, porqué e importancia; botones activos', pag._lbl_diseno.text() and pag._lbl_porque.text() and pag._b_regen.isEnabled())
     pag._b_silencio.click()
     ok('SILENCIAR desde el inspector', esperar(lambda: not pag._ocupado and (pag._ev or {}).get('silenciado')), pag._lbl_estado.text())
-    ok('SILENCIAR va solo a Resolve (abierto, último GO con el director) y la página dice que está al día', len(llamadas) == 1
-       and 'Resolve' in pag._lbl_estado.text() and not pag._res.get('pendiente_resolve') and 'al día' in pag._lbl_resolve.text(), pag._lbl_estado.text())
+    ok('SILENCIAR guarda cambios pendientes sin enviar automáticamente a Resolve', len(llamadas) == 0
+       and pag._res.get('pendiente_resolve') and 'pendientes' in pag._lbl_resolve.text().lower()
+       and pag._b_aplicar.property('tipo') == 'primario', pag._lbl_resolve.text())
     abierto['si'] = False
     pag._b_silencio.click()
     ok('y vuelve a sonar', esperar(lambda: not pag._ocupado and (pag._ev or {}).get('suena')))
-    ok('con Resolve cerrado no se intenta: queda «cambios sin poner» y «Aplicar a Resolve» pasa a principal', len(llamadas) == 1
+    ok('con Resolve cerrado la edición conserva los cambios pendientes y Aplicar como acción principal', len(llamadas) == 0
        and pag._res.get('pendiente_resolve') and pag._b_aplicar.property('tipo') == 'primario' and 'Resolve' in pag._lbl_resolve.text(), pag._lbl_resolve.text())
     pag._aplicar()
-    ok('«Aplicar a Resolve» lo pone y la cabecera vuelve a «al día»', esperar(lambda: not pag._ocupado) and len(llamadas) == 2
+    ok('solo «Aplicar a Resolve» envía el diseño y la cabecera vuelve a «al día» tras confirmación', esperar(lambda: not pag._ocupado) and len(llamadas) == 1
        and not pag._res.get('pendiente_resolve') and pag._b_aplicar.property('tipo') == 'secundario', pag._lbl_estado.text())
     abierto['si'] = True
     ok('fila «Material»: de dónde saca el sonido el director', bool(pag._filas['material'].valor.text()), pag._filas['material'].valor.text())
@@ -237,10 +242,11 @@ def pagina(salida, video):
     n0 = sum(1 for e in pag._res['eventos'] if e['suena'])
     pag._cambio_control('densidad', pag._vars['densidad'].get() if False else __import__('i18n').tr('Mínima'))
     ok('un control (Densidad «Mínima») rediseña y la página se repinta', esperar(lambda: not pag._ocupado and pag._res.get('controles', {}).get('densidad') == 'poco')
-       and sum(1 for e in pag._res['eventos'] if e['suena']) < n0)
+       and sum(1 for e in pag._res['eventos'] if e['suena']) < n0 and pag._res.get('pendiente_resolve') and len(llamadas) == 1)
     pag._var_frase.set('como estaba')
     pag._frase()
-    ok('«dile…»: «como estaba» deja todo en Auto', esperar(lambda: not pag._ocupado and not pag._res.get('controles')), pag._lbl_estado.text())
+    ok('«dile…»: «como estaba» deja todo en Auto y pendiente de aplicar', esperar(lambda: not pag._ocupado and not pag._res.get('controles'))
+       and pag._res.get('pendiente_resolve') and len(llamadas) == 1, pag._lbl_estado.text())
     marco.grab().save(str(Path(salida) / 'pagina_director_2.png'))
     S_.aplicar, RM_.resolve_abierto = real_aplicar, real_abierto
     # vacío: un video que no pasó por GO (y sin «último»)

@@ -11,7 +11,7 @@ principio (el golpe cae en la palabra) y como mucho `largo` segundos con fundido
 16 bit; los largos (aplausos, ambientes, pirotecnia) en MP3 256 kbps. Los que ya existen no se rehacen.
 Los derechos de los packs comerciales (Artlist, Envato, Film Score, Netflix Sounds…) son responsabilidad del autor (decidido el 2026-10-13)."""
 import json, re, subprocess, sys, unicodedata
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures.thread import ThreadPoolExecutor      # v5.41: 3.15 la expone «lazy» en el paquete y el .exe no la despertaba
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]

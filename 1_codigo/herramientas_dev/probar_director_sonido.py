@@ -128,10 +128,15 @@ def fase0(salida):
     ev = {'tipo': 'voz_ai', 'ini': 0.0, 'archivo': 'voz.wav', 'dur': 30.0, 'asset': 'AI VOICE'}
     nuevo = D.al_colocar(fx, {'evento_voz': ev}, 'v.mp4')
     ok('encendido con voz: una COPIA con el evento voz_ai', nuevo is not fx and fx == antes and sum(1 for e in nuevo['eventos'] if e['tipo'] == 'voz_ai') == 1)
+    metadatos = {'eventos', '_ai_sound_video', '_ai_sound_sesion', 'destino_ai'}
     ok('encendido con voz: lo visual del plan no cambia', [e for e in nuevo['eventos'] if e['tipo'] != 'voz_ai'] == antes['eventos']
-       and {k: v for k, v in nuevo.items() if k != 'eventos'} == {k: v for k, v in antes.items() if k != 'eventos'})
+       and {k: v for k, v in nuevo.items() if k not in metadatos} == {k: v for k, v in antes.items() if k not in metadatos})
     otra = D.al_colocar(nuevo, {'evento_voz': ev}, 'v.mp4')
     ok('re-aplicar no apila voz_ai', sum(1 for e in otra['eventos'] if e['tipo'] == 'voz_ai') == 1)
+    preparado = E.cargar('v.mp4')
+    ok('preparar voz no confirma la colocación: queda pendiente y sin marca general', preparado.get('pendiente_resolve') is True
+       and not preparado.get('en_resolve') and E.general().get('voz_ai_puesta') is not True)
+    ok('el acuse exitoso confirma la sesión actual', D.confirmar_colocacion(otra, True, 'Colocación simulada') is True)
     ok('marca «AI VOICE puesta» para poder devolver A1', E.general().get('voz_ai_puesta') is True)
     sin = D.al_colocar(None, {'evento_voz': ev}, 'v.mp4')
     ok('sin plan de Efectos: uno que solo lleva la voz (solo_ai)', sin and sin.get('solo_ai') and [e['tipo'] for e in sin['eventos']] == ['voz_ai'])

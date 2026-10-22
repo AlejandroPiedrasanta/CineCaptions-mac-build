@@ -540,7 +540,7 @@ def fotos_de_internet(momentos, video):
                     if sum(1 for q in qs if q) >= 2:
                         pedidos += [(m, q) for q in qs if q]
             if pedidos and FW.hay_red():
-                from concurrent.futures import ThreadPoolExecutor
+                from concurrent.futures.thread import ThreadPoolExecutor      # v5.41: 3.15 la expone «lazy» en el paquete y el .exe no la despertaba
                 formato = _formato(video)
                 with ThreadPoolExecutor(4) as ex:
                     res = list(ex.map(lambda pq: FW.buscar_foto(pq[1], formato, exigir=pq[0]['props'].get('exigir', '') if pq[0].get('comp') == 'FotoE' else ''), pedidos))

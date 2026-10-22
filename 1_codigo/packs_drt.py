@@ -395,6 +395,38 @@ def posiciones_de_drb(ruta):
 _VERSION_CLIP = re.compile('^Versi(?:o|ó)n \\d+$')
 _NOMBRE_O_COMP = re.compile('<Name>(.*?)</Name>|<CompositionBA>([0-9a-fA-F]*)</CompositionBA>', re.S)
 _MEMO_DRB = {}
+_DISCO_DRB = {'cargado': False, 'datos': {}}
+def _archivo_cache_drb():
+    return Path.home() / 'DaVinciSubtitles' / 'cache_drb.pickle'
+def _version_app():
+    try:
+        import version
+        return str(version.APP_VERSION)
+    except Exception:
+        return '?'
+def _cargar_cache_drb():
+    """v5.39: lo leído de cada .drb se guarda en disco (con tamaño, fecha y versión del programa): el arranque ya no descomprime los packs (~0,15 s)."""
+    if _DISCO_DRB['cargado']:
+        return
+    _DISCO_DRB['cargado'] = True
+    try:
+        import pickle
+        datos = pickle.loads(_archivo_cache_drb().read_bytes())
+        if isinstance(datos, dict) and datos.get('version') == _version_app():
+            _DISCO_DRB['datos'] = dict(datos.get('drb') or {})
+    except Exception:
+        pass
+def _guardar_cache_drb():
+    try:
+        import os
+        import pickle
+        destino = _archivo_cache_drb()
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        tmp = destino.with_suffix('.tmp')
+        tmp.write_bytes(pickle.dumps({'version': _version_app(), 'drb': _DISCO_DRB['datos']}))
+        os.replace(tmp, destino)
+    except Exception:
+        pass
 def leer_drb(ruta, con_estilos=False):
     """Como _leer_drb, con memo por (ruta, tamaño, fecha) — v3.3.3: el\n    arranque leia los mismos 8 .drb dos o tres veces (0,75 s cada pasada).\n    \'con_estilos\' (el estilo entero de cada TextPlus, v3.3.1) es opcional:\n    era el 70 % del costo y solo lo pide plantillas.estilos_para_medir."""
     try:
@@ -403,7 +435,15 @@ def leer_drb(ruta, con_estilos=False):
     except OSError:
         return _leer_drb(ruta, con_estilos)
     if clave not in _MEMO_DRB:
-        _MEMO_DRB[clave] = _leer_drb(ruta, con_estilos)
+        _cargar_cache_drb()
+        guardado = _DISCO_DRB['datos'].get(clave)
+        if isinstance(guardado, dict) and guardado.get('ok'):
+            _MEMO_DRB[clave] = dict(guardado, ruta=str(Path(ruta)))      # la ruta, como la pide quien llama (no como la pidió otra sesión)
+        else:
+            _MEMO_DRB[clave] = _leer_drb(ruta, con_estilos)
+            if isinstance(_MEMO_DRB[clave], dict) and _MEMO_DRB[clave].get('ok'):
+                _DISCO_DRB['datos'][clave] = _MEMO_DRB[clave]
+                _guardar_cache_drb()
     salida = _MEMO_DRB[clave]
     if isinstance(salida, dict):
         return dict(salida)

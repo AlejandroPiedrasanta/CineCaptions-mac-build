@@ -41,8 +41,13 @@ def _norm(t):
     return ''.join(c for c in t if unicodedata.category(c) != 'Mn')
 
 
+def _unir_temas(t):
+    """«Tema 5» / «tema-5» → «tema5», para que el número (una sola cifra) cuente al buscar."""
+    return re.sub(r'\btema[\s_-]*(\d)\b', r'tema\1', t)
+
+
 def _palabras(texto):
-    return re.findall(r'[a-z0-9_]+', _norm(texto))
+    return re.findall(r'[a-z0-9_]+', _unir_temas(_norm(texto)))
 
 
 def _cuenta(palabras, w):
@@ -53,7 +58,7 @@ def _cuenta(palabras, w):
 
 
 def _terminos(consulta):
-    return [w for w in re.findall(r'[a-z0-9_]+', _norm(consulta)) if len(w) > 1 and w not in _PARADA]
+    return [w for w in re.findall(r'[a-z0-9_]+', _unir_temas(_norm(consulta))) if len(w) > 1 and w not in _PARADA]
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- índice del código
@@ -279,8 +284,32 @@ def secciones():
     return salida
 
 
-def mapa(consulta='', id='', completo=False, maximo=5):
-    """Busca temas por palabras (compacto), o con id= da el detalle de ese tema."""
+_LARGO = 4000                                        # una sección más larga sale como índice de partes (ahorra tokens)
+
+
+def _partes(texto, id_, parte='', completo=False):
+    """Sección corta o completo=True: entera. Larga: primer párrafo + índice; parte='3' o parte='palabras' da solo esas partes."""
+    if completo or (len(texto) <= _LARGO and not parte):
+        return texto
+    trozos = [p.strip() for p in re.split(r'\n\s*\n', texto) if p.strip()]
+    if parte:
+        p = str(parte).strip()
+        if p.isdigit():
+            elegidos = [trozos[int(p) - 1]] if 0 < int(p) <= len(trozos) else []
+        else:
+            ter = _terminos(p)
+            elegidos = [x for x in trozos if ter and all(_cuenta(_palabras(x), w) for w in ter)]
+        return '\n\n'.join(elegidos) if elegidos else f'ninguna parte de «{id_}» con «{p}»; mapa(id="{id_}") da el índice.'
+    def rotulo(x):
+        r = re.match(r'\*\*(.+?)\*\*', x)
+        return (r.group(1) if r else x.replace('\n', ' '))[:90]
+    indice = '\n'.join(f'  {i}. {rotulo(x)}' for i, x in enumerate(trozos[1:], 2))
+    return (f'{trozos[0]}\n\n— Sección larga ({len(texto)} car.): pide solo lo que necesites con '
+            f'mapa(id="{id_}", parte="N" o "palabras"); completo=True la da entera.\n{indice}')
+
+
+def mapa(consulta='', id='', completo=False, maximo=5, parte=''):
+    """Busca temas por palabras (compacto), o con id= da el detalle de ese tema (si es largo, un índice; parte= elige)."""
     m = _mapa()
     temas = {t['id']: t for t in m['temas']}
     secs = secciones()
@@ -293,7 +322,7 @@ def mapa(consulta='', id='', completo=False, maximo=5):
             return f'no hay tema «{id_}». Temas: ' + ', '.join(sorted(temas)) + '. Grupos: ' + ', '.join(m.get('grupos', {}))
         t = temas.get(elegidas[0]['id'])
         cab = f"[{t['id']}] {t['tema']}  (DOCUMENTACION/temas/{t['grupo']}.md)\n  archivos: {', '.join(t['archivos']) or '—'}\n  símbolos: {', '.join(t['simbolos']) or '—'}\n" if t else ''
-        return cab + '\n\n'.join(s['texto'] for s in elegidas)
+        return cab + _partes('\n\n'.join(s['texto'] for s in elegidas), id_, parte, completo)
     ter = _terminos(consulta)
     if not ter:
         return 'Grupos: ' + ' | '.join(f'{g}: {d}' for g, d in m.get('grupos', {}).items()) + '\nPasa palabras (consulta="sonido emoji") o id="go-inicio".'
@@ -451,7 +480,7 @@ def main(argv):
     if orden == 'mapa':
         print(mapa(' '.join(a for a in args if not a.startswith('--')), completo='--completo' in args))
     elif orden == 'tema':
-        print(mapa(id=args[0]))
+        print(mapa(id=args[0], parte=' '.join(args[1:]), completo='--completo' in args) if '--completo' not in args[1:] else mapa(id=args[0], completo=True))
     elif orden == 'simbolo':
         print(simbolo(args[0], int(args[1]) if len(args) > 1 else 70))
     elif orden == 'modulo':

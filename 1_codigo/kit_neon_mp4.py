@@ -250,7 +250,7 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
         import os
         import queue
         from collections import deque
-        from concurrent.futures import ThreadPoolExecutor
+        from concurrent.futures.thread import ThreadPoolExecutor      # v5.41: 3.15 la expone «lazy» en el paquete y el .exe no la despertaba
         hilos = max(2, min(4, (os.cpu_count() or 4) // 3))
         entradas = queue.Queue(maxsize=12)
         parar = threading.Event()

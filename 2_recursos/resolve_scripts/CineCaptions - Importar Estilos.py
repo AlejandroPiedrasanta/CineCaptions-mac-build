@@ -29,7 +29,7 @@ import re
 import time
 from pathlib import Path
 
-VERSION = "5.37 (importar estilos)"
+VERSION = "5.41 (importar estilos)"
 
 # Los mismos nombres y el mismo tope que el resto del programa.
 NOMBRES = {

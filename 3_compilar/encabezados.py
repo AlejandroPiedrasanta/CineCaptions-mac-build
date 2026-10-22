@@ -154,36 +154,6 @@ DESCRIPCIONES = {
     '4_diseno/banner/crear_banner.py': 'dibuja 3_compilar/banner.jpg, el banner del instalador.',
     '4_diseno/icono/crear_icono.py': 'crea el icono del programa (2_recursos/logo_cinecaptions.png y .ico) desde el logo.',
     # ---------------------------------------------------------------- licencias (Administrador de Licencias, no va en el .exe)
-    '5_licencias/administrador/administrador_licencias.py': 'Administrador de Licencias: arranque del panel del vendedor.',
-    '5_licencias/administrador/control.py': 'Administrador de Licencias: servidor de control (Supabase): uso, equipos, avisos.',
-    '5_licencias/administrador/dialogos.py': 'Administrador de Licencias: ventanas emergentes (Dar licencia, conectar, avisos).',
-    '5_licencias/administrador/interfaz.py': 'Administrador de Licencias: componentes animados de la interfaz.',
-    '5_licencias/administrador/modelo.py': 'Administrador de Licencias: configuración y modelo de datos (personas, licencias, ventas).',
-    '5_licencias/administrador/paginas.py': 'Administrador de Licencias: páginas del panel (Inicio, Personas, Licencias...).',
-    '5_licencias/administrador/plataformas.py': 'Administrador de Licencias: APIs de Lemon Squeezy, Hotmart, Gumroad y Polar.',
-    '5_licencias/administrador/temas.py': 'Administrador de Licencias: temas de color y hoja de estilos.',
-    '5_licencias/administrador/administrador.spec': 'Administrador de Licencias: receta de PyInstaller.',
-    '5_licencias/administrador/CONSTRUIR_EXE.bat': 'Administrador de Licencias: crea el .exe portátil.',
-    '5_licencias/administrador/INICIAR_MAC_LINUX.sh': 'Administrador de Licencias: lo abre en macOS o Linux.',
-    '5_licencias/instalador/CONSTRUIR_INSTALADOR.bat': 'Administrador de Licencias: crea su instalador con NSIS.',
-    '5_licencias/instalador/crear_imagenes.py': 'Administrador de Licencias: dibuja las imágenes de su instalador.',
-    '5_licencias/instalador/instalador.nsi': 'Administrador de Licencias: receta del instalador (NSIS).',
-    '5_licencias/programa/licencia_cliente.py': 'kit de licencias: forma rápida de usar cinema_licencias en un programa.',
-    '5_licencias/programa/ejemplo_consola.py': 'kit de licencias: ejemplo sin ventanas.',
-    '5_licencias/programa/ejemplo_integracion.py': 'kit de licencias: ejemplo con PySide6.',
-    '5_licencias/programa/cinema_licencias/__init__.py': 'kit de licencias (cinema_licencias): lo que se importa.',
-    '5_licencias/programa/cinema_licencias/__main__.py': 'kit de licencias: uso desde la línea de comandos.',
-    '5_licencias/programa/cinema_licencias/base.py': 'kit de licencias: resultado, mensajes, ID del equipo y HTTP.',
-    '5_licencias/programa/cinema_licencias/config.py': 'kit de licencias: configuración (cinema_licencias.json).',
-    '5_licencias/programa/cinema_licencias/licencias.py': 'kit de licencias: la clase Licencias.',
-    '5_licencias/programa/cinema_licencias/qt.py': 'kit de licencias: ventanas de activación y «Mi licencia» (PySide6).',
-    '5_licencias/programa/cinema_licencias/servidor.py': 'kit de licencias: servidor de control y vigilancia.',
-    '5_licencias/programa/cinema_licencias/tiendas.py': 'kit de licencias: Lemon Squeezy, Gumroad y Polar.',
-    '5_licencias/programa/cinema_licencias/ventanas.py': 'kit de licencias: ventanas sin marco con botones dibujados.',
-    '5_licencias/pruebas/simulador.py': 'pruebas: tiendas y servidor FALSOS para probar sin internet.',
-    '5_licencias/pruebas/simulador_lemonsqueezy.py': 'pruebas: Lemon Squeezy FALSO para probar sin internet.',
-    '5_licencias/pruebas/test_licencias.py': 'pruebas del kit y del Administrador (56 casos, sin internet).',
-    '5_licencias/servidor/supabase_cinema.sql': 'servidor de control de licencias (Supabase/PostgreSQL): tablas y reglas.',
 }
 
 COMENTARIO = {'.py': '#', '.spec': '#', '.ps1': '#', '.sh': '#', '.lua': '--', '.sql': '--', '.cs': '//',
@@ -239,7 +209,7 @@ def poner(rel, descripcion):
 def sin_encabezado():
     """Archivos de código que todavía no tienen el encabezado (para avisar al compilar)."""
     faltan = []
-    for carpeta in ('1_codigo', '2_recursos/resolve_scripts', '2_recursos/motor_qwen', '3_compilar', '4_diseno', '5_licencias'):
+    for carpeta in ('1_codigo', '2_recursos/resolve_scripts', '2_recursos/motor_qwen', '3_compilar', '4_diseno'):
         for p in (RAIZ / carpeta).rglob('*'):
             if p.is_file() and p.suffix.lower() in COMENTARIO and '__pycache__' not in p.parts and 'node_modules' not in p.parts:
                 rel = p.relative_to(RAIZ).as_posix()

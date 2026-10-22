@@ -1,7 +1,7 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/director_sonido.py — «AI Sound Director» (v5.34): el sound designer de GO. Analiza el video y dirige el sonido ENCIMA de los motores de siempre.
 """
-Con el interruptor `ai_sound_director` (preferencia; apagado por defecto) GO, además de lo de siempre:
+Con el interruptor `ai_sound_director` (preferencia; encendido por defecto) GO, además de lo de siempre:
 
     contexto(...)        en el hilo de GO, justo tras planificar Efectos y la Edición PRO: una FOTO (datos simples) de lo que el director necesita leer
     preparar(ctx)        en un hilo propio: análisis (tema, voz, ruido, música, ambiente, captions, motions, narrativa), los SONIDOS (fase 3: qué suena
@@ -19,13 +19,63 @@ sonidos_extra, edicion_pro_sonido, rectificador, musica_go, ducking) quedan como
 """
 import copy
 import os
+import threading
 import time
+import uuid
 
 import director_sonido_estado as E
 
 PREF = 'ai_sound_director'
 ENV = 'CINECAPTIONS_AI_SOUND'                 # '1' / '0' fuerza el interruptor (arneses de prueba)
 ORIGEN = 'AI Sound Director'
+
+
+class _Preparacion:
+    """Coordina el resultado parcial de GO con el cierre por tiempo de espera."""
+    def __init__(self):
+        self.lock = threading.RLock()
+        self.cerrado = False
+
+
+def cerrar_preparacion(res, sin_voz=False):
+    """Congela una foto coherente; un trabajador tardío ya no publica ni guarda su resultado."""
+    res = res or {}
+    control = res.get('_preparacion')
+    with (control.lock if isinstance(control, _Preparacion) else threading.RLock()):
+        if isinstance(control, _Preparacion):
+            control.cerrado = True
+        omitir = {'_preparacion'} | ({'voz', 'evento_voz'} if sin_voz else set())
+        return copy.deepcopy({k: v for k, v in res.items() if k not in omitir})
+
+
+def destino_actual_resolve():
+    """Identidad del destino (solo en hilos de trabajo). La guardia del script confirma el destino antes de modificar pistas."""
+    try:
+        import resolve_mcp
+        if resolve_mcp.ruta_exe() is None:
+            import efectos_visuales
+            info, _ = efectos_visuales._info_libre()
+            info = info or {}
+            return {k: str(info[k]) for k in ('proyecto', 'timeline') if info.get(k)}
+    except Exception:
+        return {}
+    codigo = '''
+p = resolve.GetProjectManager().GetCurrentProject()
+tl = p.GetCurrentTimeline() if p else None
+result = {'proyecto': p.GetName() if p else None, 'timeline': tl.GetName() if tl else None}
+if tl:
+    try:
+        result['timeline_id'] = str(tl.GetUniqueId() or '')
+    except Exception:
+        pass
+'''
+    try:
+        ok, info, _ = resolve_mcp.script(codigo, timeout=15)
+    except Exception:
+        return {}
+    if ok is not True or not isinstance(info, dict):
+        return {}
+    return {k: str(info[k]) for k in ('proyecto', 'timeline', 'timeline_id') if info.get(k)}
 
 
 def activo(prefs=None):
@@ -165,23 +215,39 @@ def preparar(ctx, al_estado=None, res=None):
     devuelve: {'estado', 'analisis', 'sfx', 'voz', 'evento_voz', 'segundos'}; nunca lanza (lo que falle: fallback y GO sigue con lo de siempre)."""
     t0 = time.time()
     res = res if res is not None else {}
+    control = _Preparacion()
     res.update({'estado': None, 'analisis': None, 'sfx': None, 'capas': None, 'voz': None, 'evento_voz': None, 'qc': None, 'segundos': 0.0})
+    res['_preparacion'] = control
+
+    def publicar(cambios, nuevo, contexto=None):
+        # El cierre toma este mismo candado: ninguna escritura puede empezar después de la foto que GO coloca.
+        with control.lock:
+            if control.cerrado:
+                return False
+            if contexto is not None:
+                guardar_contexto(contexto)
+            res.update(cambios)
+            estado.clear()
+            estado.update(nuevo)
+            res['estado'] = E.guardar(video, estado)
+            return True
+
     try:
         video = ctx.get('video')
         if not video or not os.path.isfile(str(video)):
             return res
         estado = E.cargar(video)
         analisis, interno = analizar(ctx, al_estado)
-        res['analisis'] = analisis
-        guardar_contexto(ctx)
-        estado.update({'tema': analisis['tema'], 'perfil': analisis['perfil'], 'paleta': analisis['paleta'], 'analisis': analisis,
+        nuevo = copy.deepcopy(estado)
+        nuevo.update({'tema': analisis['tema'], 'perfil': analisis['perfil'], 'paleta': analisis['paleta'], 'analisis': analisis,
                        'ambience_analysis': analisis['ambiente'], 'music_decision_state': analisis['musica']['estado_sugerido']})
         try:
             import director_sonido_voz as V
-            estado['voice_quality_before'] = V.resumen_calidad(analisis['voz'])
+            nuevo['voice_quality_before'] = V.resumen_calidad(analisis['voz'])
         except Exception:
             pass
-        res['estado'] = E.guardar(video, estado)
+        if not publicar({'analisis': analisis}, nuevo, ctx):
+            return res
     except Exception:
         fallback('análisis')
         res['segundos'] = round(time.time() - t0, 2)
@@ -190,9 +256,10 @@ def preparar(ctx, al_estado=None, res=None):
         if al_estado:
             al_estado('AI Sound Director: diseñando los sonidos…')
         sfx = preparar_sfx(ctx, analisis)
-        res['sfx'] = sfx
-        _guardar_sfx(estado, sfx)
-        res['estado'] = E.guardar(video, estado)
+        nuevo = copy.deepcopy(estado)
+        _guardar_sfx(nuevo, sfx)
+        if not publicar({'sfx': sfx}, nuevo):
+            return res
     except Exception:
         res['sfx'] = None
         fallback('sonidos')
@@ -200,41 +267,45 @@ def preparar(ctx, al_estado=None, res=None):
         if al_estado:
             al_estado('AI Sound Director: música y ambiente…')
         capas = preparar_capas(ctx, analisis)
-        res['capas'] = capas
-        _guardar_capas(estado, capas)
-        res['estado'] = E.guardar(video, estado)
+        nuevo = copy.deepcopy(estado)
+        _guardar_capas(nuevo, capas)
+        if not publicar({'capas': capas}, nuevo):
+            return res
     except Exception:
         res['capas'] = None
         fallback('música y ambiente')
     try:                                                              # FASE 2: la voz (si falla, la original se queda y GO sigue)
         voz, evento = preparar_voz(ctx, analisis, interno, estado, al_estado)
-        estado.update({'voz': {k: voz.get(k) for k in ('archivo', 'clave', 'cadena', 'motivo', 'nivel', 'backend', 'fuerza', 'ganancia_db', 'objetivo_lufs',
+        nuevo = copy.deepcopy(estado)
+        nuevo.update({'voz': {k: voz.get(k) for k in ('archivo', 'clave', 'cadena', 'motivo', 'nivel', 'backend', 'fuerza', 'ganancia_db', 'objetivo_lufs',
                                                        'mezclada', 'segundos', 'canales', 'duracion')},
                        'voice_backend': {'nombre': voz.get('backend'), 'nivel': voz.get('nivel'), 'motivo': voz.get('motivo')},
                        'voice_quality_after': voz.get('despues'), 'metricas': dict(estado.get('metricas') or {}, guardas_voz=voz.get('guardas'))})
         sfx = res.get('sfx')
+        capas = res.get('capas')
         real = float(analisis['voz'].get('nivel_voz_db') or -30.0) + (float(voz.get('ganancia_db') or 0.0) if evento else 0.0)
         if sfx and abs(real - float(sfx.get('nivel_voz_db') or real)) > 1.0:   # la voz quedó a otro nivel del previsto: los sonidos, a su nivel
-            res['sfx'] = preparar_sfx(ctx, analisis, real, sfx.get('diseno'))
-            _guardar_sfx(estado, res['sfx'])
-            if res.get('capas'):
-                res['capas'] = preparar_capas(ctx, analisis, real)
-                _guardar_capas(estado, res['capas'])
-        res['voz'], res['evento_voz'] = voz, evento
-        res['estado'] = E.guardar(video, estado)
+            sfx = preparar_sfx(ctx, analisis, real, sfx.get('diseno'))
+            _guardar_sfx(nuevo, sfx)
+            if capas:
+                capas = preparar_capas(ctx, analisis, real)
+                _guardar_capas(nuevo, capas)
+        if not publicar({'voz': voz, 'evento_voz': evento, 'sfx': sfx, 'capas': capas}, nuevo):
+            return res
     except Exception:
         res['evento_voz'] = None
         fallback('voz')
     try:                                                              # FASE 5: mezcla, QC y Sound Score (si falla, todo sigue como estaba)
         if res.get('sfx') or res.get('capas'):
             sfx, capas, qc = mezclar(ctx, analisis, estado, res.get('sfx'), res.get('capas'), res.get('evento_voz'), al_estado)
-            res['sfx'], res['capas'], res['qc'] = sfx, capas, qc
+            nuevo = copy.deepcopy(estado)
             if sfx:
-                _guardar_sfx(estado, sfx)
+                _guardar_sfx(nuevo, sfx)
             if capas:
-                _guardar_capas(estado, capas)
-            _guardar_qc(estado, qc)
-            res['estado'] = E.guardar(video, estado)
+                _guardar_capas(nuevo, capas)
+            _guardar_qc(nuevo, qc)
+            if not publicar({'sfx': sfx, 'capas': capas, 'qc': qc}, nuevo):
+                return res
     except Exception:
         res['qc'] = None
         fallback('mezcla')
@@ -339,7 +410,7 @@ def mezclar(ctx, analisis, estado, sfx, capas, evento_voz, al_estado=None, previ
 
 def _guardar_qc(estado, qc):
     estado.update({'sound_score': qc['score'], 'score_components': qc['partes'], 'mix': qc['mix'], 'master': qc['master'],
-                   'qc': {k: qc[k] for k in ('medidas', 'correcciones', 'formula')}})
+                   'qc': {k: qc[k] for k in ('medidas', 'correcciones', 'formula')}, 'sound_score_viejo': False})
 
 
 def preparar_sfx(ctx, analisis, nivel_voz_db=None, diseno=None, ctrl=None, ajustes=None, ronda=None, mezcla=None):
@@ -499,7 +570,7 @@ def _pistas_sfx_captions():
     return sorted({'SFX'} | set(_pistas_propias()))
 
 
-def al_colocar(plan, res, video, plan_pro=None):
+def al_colocar(plan, res, video, plan_pro=None, destino=None):
     """Lo último antes de Resolve (hilo de GO). Encendido: una COPIA del plan de Efectos en la que el director es el ÚNICO dueño del sonido —sus
     sonidos en las pistas AI SFX …, los de Efectos con KEEP / REPLACE, los de Simple apagados ('apagar_sfx': colocar_efectos apaga sus clips, no los
     borra) y la PRO marcada para que sonidos_pro quite los suyos— y el evento 'voz_ai' si hay voz restaurada. Sin nada del director pero con sus
@@ -538,16 +609,7 @@ def al_colocar(plan, res, video, plan_pro=None):
                 plan_pro['_ai_sound'] = True
             if decisiones:
                 log('Efectos SFX: ' + ' · '.join(f"{d['asset']} → {d['decision']}" for d in decisiones))
-            try:
-                estado = E.cargar(video)
-                estado['efectos_sfx_decisions'] = decisiones
-                estado['pendiente_resolve'], estado['en_resolve'] = False, time.strftime('%Y-%m-%d %H:%M:%S')
-                estado['ultimo_go'] = {'con_director': True, 'fecha': time.strftime('%Y-%m-%d %H:%M:%S'), 'voz': bool(ev), 'apagar_sfx': nuevo['apagar_sfx'],
-                                       'evento_voz': dict(ev) if ev else None, 'pro': isinstance(plan_pro, dict)}
-                E.guardar(video, estado)
-            except Exception:
-                pass
-            log(f"Events placed: {len(sfx.get('eventos') or [])} en las pistas AI SFX · sonidos de Simple apagados ({', '.join(nuevo['apagar_sfx'])})"
+            log(f"Events planned: {len(sfx.get('eventos') or [])} en las pistas AI SFX · se apagarán los sonidos de Simple ({', '.join(nuevo['apagar_sfx'])})"
                 + (' · la PRO deja los suyos al director' if isinstance(plan_pro, dict) else ''))
         if capas_ev:
             if any(x.get('pista') == 'AI MUSIC' for x in capas_ev):     # la música del director manda: la de Efectos (si la hubiera) sale
@@ -559,11 +621,65 @@ def al_colocar(plan, res, video, plan_pro=None):
         nuevo['eventos'] = eventos
         if not plan:
             nuevo['duracion'] = (ev or {}).get('dur')
-        E.poner_general(voz_ai_puesta=bool(ev), ai_puesto=True, ultimo_video=str(video or ''))
+        # Preparar un plan no confirma una colocación. Su sesión y destino viajan hasta el acuse real de Resolve.
+        sesion = uuid.uuid4().hex
+        objetivo = {k: str(v) for k, v in (destino or {}).items() if k in ('proyecto', 'timeline', 'timeline_id') and v}
+        estado = E.cargar(video)
+        if sfx:
+            estado['efectos_sfx_decisions'] = decisiones
+        estado['pendiente_resolve'], estado['en_resolve'] = True, None
+        estado['ultimo_go'] = {'con_director': True, 'fecha': time.strftime('%Y-%m-%d %H:%M:%S'), 'voz': bool(ev),
+                               'apagar_sfx': nuevo.get('apagar_sfx') or [], 'evento_voz': dict(ev) if ev else None,
+                               'pro': isinstance(plan_pro, dict), 'destino': objetivo, 'sesion': sesion}
+        E.guardar(video, estado)
+        nuevo['_ai_sound_video'], nuevo['_ai_sound_sesion'] = str(video), sesion
+        if objetivo.get('proyecto') and objetivo.get('timeline'):
+            nuevo['destino_ai'] = objetivo
+        E.poner_general(ultimo_video=str(video or ''))
         return nuevo
     except Exception:
         fallback('al colocar')
         return plan
+
+
+def revincular_colocacion(plan, destino):
+    """Solo para el rearme automático de GO: el mismo audio, con la identidad del timeline recién recreado."""
+    if not isinstance(plan, dict) or not plan.get('_ai_sound_sesion') or not isinstance(destino, dict):
+        return False
+    if not all(str(destino.get(k) or '').strip() for k in ('proyecto', 'timeline')):
+        return False
+    video = plan.get('_ai_sound_video')
+    if not video:
+        return False
+    estado = E.cargar(video)
+    ultimo = estado.get('ultimo_go') or {}
+    if ultimo.get('sesion') != plan['_ai_sound_sesion']:
+        return False
+    objetivo = {k: str(v) for k, v in destino.items() if k in ('proyecto', 'timeline', 'timeline_id') and v}
+    sesion = uuid.uuid4().hex
+    estado['ultimo_go'] = dict(ultimo, destino=objetivo, sesion=sesion)
+    estado['pendiente_resolve'], estado['en_resolve'] = True, None
+    E.guardar(video, estado)
+    plan['_ai_sound_sesion'], plan['destino_ai'] = sesion, objetivo
+    return True
+
+
+def confirmar_colocacion(plan, ok, mensaje=''):
+    """Acuse de la colocación de GO; nunca declara sincronizada otra sesión más reciente."""
+    if not isinstance(plan, dict) or not plan.get('_ai_sound_sesion') or not plan.get('_ai_sound_video'):
+        return False
+    video, sesion = plan['_ai_sound_video'], plan['_ai_sound_sesion']
+    estado = E.cargar(video)
+    ultimo = estado.get('ultimo_go') or {}
+    if ultimo.get('sesion') != sesion:
+        return False
+    estado['pendiente_resolve'] = ok is not True
+    estado['en_resolve'] = time.strftime('%Y-%m-%d %H:%M:%S') if ok is True else None
+    estado['error_resolve'] = '' if ok is True else str(mensaje or 'Resolve no confirmó la colocación del sonido.')
+    E.guardar(video, estado)
+    if ok is True:
+        E.poner_general(voz_ai_puesta=bool(ultimo.get('voz')), ai_puesto=True, ultimo_video=str(video))
+    return ok is True
 
 
 def sonidos_pro(plan, sonidos, fps=30.0):

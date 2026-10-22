@@ -884,21 +884,41 @@ class EstimadorGo:
     def __init__(self):
         import time as _t
         self._time = _t
-        self.factor = {k: 1.0 for k in self.ORDEN}
+        self._factor = None
+        self._perfil = None
         self.efectos = False
-        self.perfil = perfil_del_equipo()
-        try:
-            import ajustes_ui
-            prefs = ajustes_ui.leer_prefs()
-            guardado = (prefs.get('go_ritmo_perfiles') or {}).get(self.perfil) or prefs.get('go_ritmo') or {}
-            for k in self.ORDEN:
-                v = float(guardado.get(k, 1.0))
-                if 0.2 <= v <= 6.0:
-                    self.factor[k] = v
-        except Exception:
-            pass
         self.minutos = 1.0
         self.reiniciar()
+        # v5.39: el perfil (nvidia-smi + motor auxiliar, ~0,3 s) ya no frena el arranque: se calcula en un hilo y el ritmo se lee al primer uso
+        import threading
+        threading.Thread(target=perfil_del_equipo, name='perfil-equipo', daemon=True).start()
+
+    @property
+    def perfil(self):
+        if self._perfil is None:
+            self._perfil = perfil_del_equipo()
+        return self._perfil
+
+    @property
+    def factor(self):
+        if self._factor is None:
+            factor = {k: 1.0 for k in self.ORDEN}
+            try:
+                import ajustes_ui
+                prefs = ajustes_ui.leer_prefs()
+                guardado = (prefs.get('go_ritmo_perfiles') or {}).get(self.perfil) or prefs.get('go_ritmo') or {}
+                for k in self.ORDEN:
+                    v = float(guardado.get(k, 1.0))
+                    if 0.2 <= v <= 6.0:
+                        factor[k] = v
+            except Exception:
+                pass
+            self._factor = factor
+        return self._factor
+
+    @factor.setter
+    def factor(self, valor):
+        self._factor = valor
 
     def reiniciar(self):
         self.t0 = None

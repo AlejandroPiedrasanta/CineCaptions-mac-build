@@ -333,7 +333,7 @@ def renderizar(video, plan, salida, ancho=1080, alto=1920, fps=None, progreso=No
         # v5.5.17: VARIOS fotogramas a la vez (Pillow y numpy sueltan el GIL al escalar, desenfocar y mezclar); se escriben en orden
         import os
         from collections import deque
-        from concurrent.futures import ThreadPoolExecutor
+        from concurrent.futures.thread import ThreadPoolExecutor      # v5.41: 3.15 la expone «lazy» en el paquete y el .exe no la despertaba
         hilos = max(2, min(6, (os.cpu_count() or 4) // 2))
         P.grade(Image.new('RGB', (2, 2)))                                # (la tabla del grade, antes de los hilos)
         zi = plan.get('intro_zoom')                                      # v5.33: el zoom de la intro del gancho (la placa tapa V1: va aquí)

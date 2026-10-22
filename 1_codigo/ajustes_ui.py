@@ -1723,6 +1723,12 @@ class _TarjetaEstilo(QAbstractButton):
         self._reloj.start()
         super().enterEvent(e)
 
+    def hideEvent(self, e):
+        # v5.39: si la página se oculta con el ratón encima no llega leaveEvent y la animación seguía a 30 fps para siempre
+        self._hover = False
+        self._reloj.stop()
+        super().hideEvent(e)
+
     def leaveEvent(self, e):
         self._hover = False
         self._reloj.stop()

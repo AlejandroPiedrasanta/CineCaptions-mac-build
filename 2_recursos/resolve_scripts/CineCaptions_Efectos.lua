@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos».
 ]]
 
-local VERSION = "5.37 (efectos)"
+local VERSION = "5.41 (efectos)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -710,6 +710,20 @@ local function main()
     if project == nil then fail("No hay ningun proyecto abierto en Resolve.") end
     local tl = project:GetCurrentTimeline()
     if tl == nil then fail("No hay un timeline activo en Resolve.") end
+    -- Sonido: comprobar el destino ANTES de crear bins, borrar clips o cambiar pistas.
+    if datos.destino_ai ~= nil then
+        local destino = datos.destino_ai
+        if type(destino) ~= "table" or type(destino.proyecto) ~= "string" or not destino.proyecto:match("%S")
+            or type(destino.timeline) ~= "string" or not destino.timeline:match("%S") then
+            fail("Sonido no se aplico: falta el destino del ultimo GO. Haz GO con AI Sound Director encendido.")
+        end
+        local mensaje = "Sonido no se aplico: abre el proyecto '" .. destino.proyecto .. "' y el timeline '" .. destino.timeline .. "' del ultimo GO."
+        if project:GetName() ~= destino.proyecto or tl:GetName() ~= destino.timeline then fail(mensaje) end
+        if destino.timeline_id ~= nil and tostring(destino.timeline_id) ~= "" then
+            local ok_id, identificador = pcall(function() return tl:GetUniqueId() end)
+            if not ok_id or identificador == nil or tostring(identificador) ~= tostring(destino.timeline_id) then fail(mensaje) end
+        end
+    end
     print("Proyecto: " .. tostring(project:GetName()) .. "  |  Timeline: " .. tostring(tl:GetName()))
     local mp = project:GetMediaPool()
     local fps = tonumber(datos.fps) or tonumber(tl:GetSetting("timelineFrameRate")) or 30

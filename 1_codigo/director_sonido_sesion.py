@@ -19,6 +19,7 @@ import re
 import sys
 import time
 import unicodedata
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -154,14 +155,14 @@ def resumen(video):
     video = str(video or '')
     activo = D.activo()
     estado = E.cargar(video) if video and Path(video).is_file() else {}
-    otro = None
-    if estado.get('sound_events') is None:                            # el de Inicio aún no pasó por GO con el director: el último que sí
+    ultimo_disponible = None
+    if estado.get('sound_events') is None:
         ultimo = str(E.general().get('ultimo_video') or '')
         if ultimo and ultimo != video and Path(ultimo).is_file() and E.cargar(ultimo).get('sound_events') is not None:
-            otro, video = video, ultimo
-            estado = E.cargar(video)
-    base = {'video': video, 'nombre_video': Path(video).name if video else '', 'otro_video': bool(otro), 'activo': activo, 'controles': D.controles(),
-            'hay': False}
+            ultimo_disponible = {'video': ultimo, 'nombre_video': Path(ultimo).name}
+    base = {'video': video, 'nombre_video': Path(video).name if video else '', 'otro_video': False, 'activo': activo,
+            'controles': deepcopy(D.controles()), 'hay': False, 'puede_aplicar': False, 'pendiente_resolve': False,
+            'en_resolve': None, 'sound_score_viejo': False, 'destino': {}, 'ultimo_disponible': ultimo_disponible}
     if not video or not Path(video).is_file():
         return dict(base, motivo='Elige un video en Inicio y haz GO: AI Sound Director lo escucha y diseña su sonido.')
     if estado.get('sound_events') is None:
@@ -214,12 +215,14 @@ def resumen(video):
             musica_tramos.append((float(m[0]), float(m[1]), 'IA'))
     ultimo = estado.get('ultimo_go') or {}
     return dict(base, hay=True, tema=estado.get('tema') or a.get('tema'), sonic_style=sonic, estilo_usuario=estilo_usuario,
-                sound_score=estado.get('sound_score'), score_partes=estado.get('score_components') or {}, notas=notas, eventos=eventos, duracion=round(dur, 2),
+                sound_score=estado.get('sound_score'), sound_score_viejo=bool(estado.get('sound_score_viejo')),
+                score_partes=deepcopy(estado.get('score_components') or {}), notas=notas, eventos=eventos, duracion=round(dur, 2),
                 carriles={'voz': _palabras_a_tramos(ctx.get('palabras')), 'cortes': [round(float(t), 2) for t in ctx.get('cortes') or []],
                           'captions': [(c.get('t'), c.get('decision'), c.get('texto')) for c in captions],
                           'musica': musica_tramos, 'ambiente': [(a_, b_, CONTEXTO.get(c_, str(c_ or '').title()), d_) for a_, b_, c_, d_ in _escenas_juntas(amb)]},
                 pro_eventos=[(e.get('t'), e.get('dur'), e.get('tipo'), e.get('decision')) for e in pro],
-                puede_aplicar=bool(ultimo.get('con_director')), ultimo_go=ultimo.get('fecha'), actualizado=estado.get('actualizado'),
+                puede_aplicar=bool(ultimo.get('con_director')) and _destino_valido(ultimo.get('destino')),
+                destino=deepcopy(ultimo.get('destino') or {}), ultimo_go=ultimo.get('fecha'), actualizado=estado.get('actualizado'),
                 pendiente_resolve=bool(estado.get('pendiente_resolve')) and bool(ultimo.get('con_director')), en_resolve=estado.get('en_resolve'))
 
 
@@ -283,6 +286,7 @@ def _rehacer(video, al_estado=None, capas=False):
     D._guardar_sfx(estado, sfx)
     if c is not None:
         D._guardar_capas(estado, c)
+    estado['sound_score_viejo'] = True                                # el número anterior ya no describe este diseño
     dur = float(((estado.get('analisis') or {}).get('voz') or {}).get('duracion') or 0.0)
     if dur <= 600.0:                                                  # la mezcla y el Sound Score, al día (en un video largo, en el próximo GO)
         try:
@@ -293,6 +297,7 @@ def _rehacer(video, al_estado=None, capas=False):
             if c2 and (c2.get('musica') or {}).get('estado'):
                 D._guardar_capas(estado, c2)
             D._guardar_qc(estado, qc)
+            estado['sound_score_viejo'] = False
         except Exception:
             D.fallback('mezcla (página)')
     else:
@@ -389,7 +394,7 @@ def retocar(video, clave, accion, al_estado=None):
     return _rehacer(video, al_estado), hecho
 
 
-def redisenar(video, desde=None, hasta=None, al_estado=None):
+def redisenar(video, desde=None, hasta=None, al_estado=None, capas=False):
     """«Rediseñar sonido»: otra ronda para todo lo no bloqueado; con `desde`/`hasta`, solo los sonidos de ese tramo (una sección)."""
     estado = E.cargar(video)
     if desde is None and hasta is None:
@@ -404,7 +409,7 @@ def redisenar(video, desde=None, hasta=None, al_estado=None):
                     ajustes[e.get('clave')] = aj
         estado['ajustes'] = ajustes
     E.guardar(video, estado)
-    return _rehacer(video, al_estado)
+    return _rehacer(video, al_estado, capas=capas)
 
 
 def deshacer_todo(video, al_estado=None):
@@ -518,31 +523,75 @@ def detener():
 # ------------------------------------------------------------------------------------------------------------------------------ Resolve
 def plan_para_resolve(video):
     """El plan 'solo_ai' con lo que el director tiene ahora para ese video (sus sonidos y, si GO la puso, la voz)."""
-    estado = E.cargar(video)
+    return _plan_del_estado(video, E.cargar(video))
+
+
+def _plan_del_estado(video, estado):
+    """Una copia del mismo diseño validado: no vuelve a cargar un estado que pudo cambiar."""
     ultimo = estado.get('ultimo_go') or {}
-    eventos = [dict(e) for e in (estado.get('sfx_plan') or []) + (estado.get('music_plan') or []) + (estado.get('ambience_plan') or [])]
+    eventos = deepcopy((estado.get('sfx_plan') or []) + (estado.get('music_plan') or []) + (estado.get('ambience_plan') or []))
     if ultimo.get('evento_voz'):
-        eventos.append(dict(ultimo['evento_voz']))
+        eventos.append(deepcopy(ultimo['evento_voz']))
     dur = float(((estado.get('analisis') or {}).get('voz') or {}).get('duracion') or 0.0)
     return {'eventos': eventos, 'duracion': dur, 'resumen': '', 'zonas': [], 'solo_audio': True, 'solo_ai': True,
-            'apagar_sfx': ultimo.get('apagar_sfx') or ['SFX'], 'video': str(video)}
+            'apagar_sfx': deepcopy(ultimo.get('apagar_sfx') or ['SFX']), 'video': str(video),
+            'destino_ai': deepcopy(ultimo.get('destino') or {})}
+
+
+def _destino_valido(destino):
+    return isinstance(destino, dict) and all(str(destino.get(k) or '').strip() for k in ('proyecto', 'timeline'))
+
+
+def _comprobar_destino(esperado):
+    """Comprueba el destino sin Qt; nunca inicia ni cambia un proyecto de Resolve."""
+    try:
+        actual = D.destino_actual_resolve()
+    except Exception:
+        actual = None
+    if not _destino_valido(actual):
+        return False, 'No pude verificar el proyecto y timeline de Resolve. Abre el destino del último GO y reintenta.'
+    claves = ('proyecto', 'timeline', 'timeline_id') if esperado.get('timeline_id') else ('proyecto', 'timeline')
+    if any(str(esperado.get(k) or '') != str(actual.get(k) or '') for k in claves):
+        return False, (f'El destino de Resolve cambió. Abre «{esperado["proyecto"]} / {esperado["timeline"]}» '
+                       'o haz GO en el nuevo destino antes de aplicar el sonido.')
+    return True, ''
+
+
+def _revision_para_aplicar(estado):
+    """Lo que se está enviando, sin fechas de escritura ni marcas de sincronización."""
+    return deepcopy({k: estado.get(k) for k in ('ultimo_go', 'sfx_plan', 'music_plan', 'ambience_plan', 'sound_events',
+                                               'ajustes', 'ronda', 'mezcla_ajustes')})
 
 
 def aplicar(video, offset_frames=0, al_estado=None):
-    """Pone en el timeline ABIERTO de Resolve lo que el director tiene ahora (sus pistas AI y la voz), con el mismo camino que GO. Solo si el
-    último GO de este video fue con el director (si no, la PRO y Simple aún tendrían sus sonidos). Devuelve (ok, mensaje)."""
+    """Aplica al destino del último GO; confirma sincronía solo tras éxito y sin cambios de diseño o destino."""
     estado = E.cargar(video)
-    if not (estado.get('ultimo_go') or {}).get('con_director'):
+    ultimo = estado.get('ultimo_go') or {}
+    if not ultimo.get('con_director'):
         return False, 'Haz GO con AI Sound Director encendido para ponerlo en Resolve.'
+    destino = deepcopy(ultimo.get('destino') or {})
+    if not _destino_valido(destino):
+        return False, 'Este diseño no tiene un destino vinculado. Haz GO con esta versión para vincular proyecto y timeline antes de aplicar.'
+    ok, msg = _comprobar_destino(destino)
+    if not ok:
+        return False, msg
+    revision = _revision_para_aplicar(estado)
+    plan = _plan_del_estado(video, estado)
     import efectos_visuales
-    ok, msg = efectos_visuales.aplicar(plan_para_resolve(video), al_estado=al_estado, offset_frames=offset_frames)
-    if ok:
-        E.poner_general(ai_puesto=True)
-        estado = E.cargar(video)
-        estado['pendiente_resolve'] = False
-        estado['en_resolve'] = time.strftime('%Y-%m-%d %H:%M:%S')
-        E.guardar(video, estado)
-    return ok, msg
+    ok, msg = efectos_visuales.aplicar(plan, al_estado=al_estado, offset_frames=offset_frames)
+    if ok is not True:
+        return False, str(msg or 'Resolve no confirmó la colocación del sonido. Los cambios siguen pendientes.')
+    ok, comprobacion = _comprobar_destino(destino)
+    if not ok:
+        return False, comprobacion + ' No se pudo confirmar la sincronización del sonido.'
+    estado = E.cargar(video)
+    if _revision_para_aplicar(estado) != revision:
+        return False, 'El diseño cambió durante el envío. Los cambios actuales siguen pendientes: vuelve a aplicar.'
+    estado['pendiente_resolve'] = False
+    estado['en_resolve'] = time.strftime('%Y-%m-%d %H:%M:%S')
+    E.guardar(video, estado)
+    E.poner_general(ai_puesto=True)
+    return True, str(msg or 'Sonido aplicado al destino del último GO.')
 
 
 def aplicar_al_momento(video, offset_frames=0, al_estado=None):
@@ -595,6 +644,24 @@ _REGLAS = [   # (patrón, acción, lo que se entendió) — en orden: lo más co
 def interpretar(texto, duracion=None):
     """Lo que el usuario pide en palabras → ({'entendido': [...], 'acciones': [...]}). No toca nada (ejecutar lo aplica)."""
     t = _plegar(texto)
+    # Las reglas son literales: una negación nunca puede caer en su coincidencia positiva.
+    t = re.sub(r'\bno (?:(?:quiero|deseo|necesito|pongas|agregues|anadas) )?(?:mas )?(sonidos|efectos|golpes|sfx)\b',
+               r'menos \1', t)
+    t = re.sub(r'\bsin mas (sonidos|efectos|golpes|sfx)\b', r'menos \1', t)
+    t = re.sub(r'\bno (?:(?:quiero|deseo|necesito) )?musica\b|\bno music\b', 'sin musica', t)
+    t = re.sub(r'\bno (?:(?:quiero|deseo|necesito) )?ambiente\b', 'sin ambiente', t)
+    if re.search(r'\b(no|nunca|tampoco|evita|evitar)\b', t):
+        return {'entendido': ['No puedo interpretar esa negación con seguridad. Usa un pedido compatible, por ejemplo «menos sonidos» o «sin música».'],
+                'acciones': [], 'requiere_aclaracion': True}
+    # Los controles afectan a todo el video. Solo rediseñar eventos admite un tramo.
+    # Separar cláusulas permite «sin música y rediseña el final», sin ampliar «sin música al final».
+    clausulas = re.split(r'\b(?:y|luego|despues|ademas)\b', t)
+    alcance_temporal = r'\b(inicio|principio|gancho|intro|final|cierre|cta|ultim[oa]s?|primer[oa]s?|segundos?|minutos?|desde|hasta|seccion|tramo|entre)\b|\b(solo aqui|esta parte|este momento)\b'
+    for clausula in clausulas:
+        if re.search(alcance_temporal, clausula) and any(re.search(p, clausula) and a[0] in ('control', 'reset') for p, a, _ in _REGLAS):
+            return {'entendido': ['Ese cambio por tramo no está disponible. Música, ambiente y dirección se ajustan para todo el video; '
+                                  'puedes pedir «sin música» para todo el video o «rediseña el final» para variar solo sus eventos.'],
+                    'acciones': [], 'requiere_aclaracion': True}
     entendido, acciones = [], []
     m = re.search(r'\b(quita|silencia|sin sonido en|calla)\b (el sonido (de|en) )?(la palabra )?(.+)$', t)
     if m and not re.search(r'\b(musica|ambiente|todo)\b', m.group(5)):
@@ -619,11 +686,16 @@ def interpretar(texto, duracion=None):
                 continue
             acciones.append(accion)
             entendido.append(texto_ok)
+    if ('reset',) in acciones and len(acciones) > 1:
+        return {'entendido': ['Restaurar el diseño IA y aplicar otros cambios son acciones distintas. Envía primero el pedido que quieres realizar.'],
+                'acciones': [], 'requiere_aclaracion': True}
     return {'entendido': entendido, 'acciones': acciones}
 
 
 def ejecutar(video, acciones, al_estado=None):
     """Aplica lo que interpretar entendió. Devuelve (resumen, texto)."""
+    if not acciones:
+        return resumen(video), 'No se aplicó ningún cambio. Usa un pedido compatible.'
     hechos = []
     estado = E.cargar(video)
     capas = False
@@ -651,7 +723,7 @@ def ejecutar(video, acciones, al_estado=None):
             hechos.append(('silenciados', n))
     seccion = next((a for a in acciones if a[0] in ('seccion', 'redisenar')), None)
     if seccion and seccion[0] == 'seccion':
-        return redisenar(video, seccion[1], seccion[2], al_estado), 'Hecho.'
+        return redisenar(video, seccion[1], seccion[2], al_estado, capas=capas), 'Hecho.'
     if seccion:
-        return redisenar(video, al_estado=al_estado), 'Hecho.'
+        return redisenar(video, al_estado=al_estado, capas=capas), 'Hecho.'
     return _rehacer(video, al_estado, capas=capas), 'Hecho.'

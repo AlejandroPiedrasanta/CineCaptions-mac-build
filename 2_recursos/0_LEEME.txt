@@ -11,11 +11,12 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    creativo\   (3 archivos)
+    creativo\   (4 archivos)
+        desktop.ini
         movil.json
         movil_fondo.jpg
         movil_marco.png
-    edicion_pro\   (4401 archivos)
+    edicion_pro\   (4448 archivos)
     efectos\   (161 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
@@ -80,7 +81,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         desktop.ini
         preparar_sonidos.py
             prepara los sonidos que el usuario aportó para los estilos (riser de gancho, golpecito del iPhone, obturadores de transición).
-    guia_estilo\   (410 archivos)
+    guia_estilo\   (411 archivos)
     locales\   (7 archivos)  — textos de la interfaz en en, pt, fr, de, it (la clave es el español)
         .cf\   (1 archivos)
         de.json
@@ -89,10 +90,12 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fr.json
         it.json
         pt.json
-    motions_resolve\   (13 archivos)
-        Edit\   (12 archivos)
+    motions_resolve\   (17 archivos)
+        Edit\   (15 archivos)
         CineCaptions Motions.drfx
-    motor_compat\   (2 archivos)
+        desktop.ini
+    motor_compat\   (3 archivos)
+        desktop.ini
         requirements.txt
         worker.py
     motor_qwen\   (5 archivos)  — motor de voz e IA (corren en su propio Python 3.12) y sus versiones fijas
@@ -104,7 +107,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
-    plantillas_incluidas\   (65 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    plantillas_incluidas\   (68 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
     resolve_scripts\   (25 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
         .cf\   (1 archivos)
         CineCaptions - Detectar Video.py
@@ -155,7 +158,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         sfx_rules.json
             cuándo suena cada efecto de sonido (editable sin tocar código)
     sfx_emoji\   (103 archivos)
-    sfx_library\   (621 archivos)  — los efectos de sonido, una carpeta por categoría
+    sfx_library\   (644 archivos)  — los efectos de sonido, una carpeta por categoría
     vistas_slider\   (26 archivos)
         .cf\   (1 archivos)
         desktop.ini

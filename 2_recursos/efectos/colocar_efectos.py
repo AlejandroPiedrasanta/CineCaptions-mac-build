@@ -312,13 +312,37 @@ def _poner_voz_ai(tl, mp, caja, fps, base, eventos):
     return 1, 'AI VOICE puesta y A1 apagada (reversible: al apagar el director, A1 vuelve)'
 
 
+def _validar_destino_ai(proyecto, tl, destino):
+    """La pagina Sonido solo puede reponer audio en el proyecto/timeline de su ultimo GO."""
+    if destino is None:
+        return
+    if not isinstance(destino, dict) or not all(isinstance(destino.get(k), str) and destino[k].strip() for k in ('proyecto', 'timeline')):
+        raise SystemExit('Sonido no se aplico: falta el destino del ultimo GO. Haz GO con AI Sound Director encendido.')
+    mensaje = "Sonido no se aplico: abre el proyecto '%s' y el timeline '%s' del ultimo GO." % (destino['proyecto'], destino['timeline'])
+    if proyecto.GetName() != destino['proyecto'] or tl.GetName() != destino['timeline']:
+        raise SystemExit(mensaje)
+    if destino.get('timeline_id') is not None and str(destino['timeline_id']) != '':
+        try:
+            identificador = tl.GetUniqueId()
+        except Exception:
+            identificador = None
+        if not identificador or str(identificador) != str(destino['timeline_id']):
+            raise SystemExit(mensaje)
+
+
 def main():
     with open(RUTA_JSON, encoding='utf-8') as f:
         datos = json.load(f)
-    tl = project.GetCurrentTimeline()
+    proyecto = project
+    if datos.get('destino_ai') is not None:
+        proyecto = resolve.GetProjectManager().GetCurrentProject()
+        if proyecto is None:
+            raise SystemExit('Sonido no se aplico: no hay un proyecto abierto en Resolve.')
+    tl = proyecto.GetCurrentTimeline()
     if tl is None:
         raise SystemExit('no hay un timeline activo en Resolve')
-    mp = project.GetMediaPool()
+    _validar_destino_ai(proyecto, tl, datos.get('destino_ai'))
+    mp = proyecto.GetMediaPool()
     fps = float(datos.get('fps') or tl.GetSetting('timelineFrameRate') or 30)
     base = int(datos.get('inicio') or tl.GetStartFrame()) + int(datos.get('offset_frames') or 0)
     modos = {'screen': getattr(resolve, 'COMPOSITE_SCREEN', None), 'multiply': getattr(resolve, 'COMPOSITE_MULTIPLY', None)}
