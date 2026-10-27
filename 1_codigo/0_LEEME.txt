@@ -13,7 +13,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     .cf\   (1 archivos)
         icono.ico
     herramientas_dev\   (42 archivos)
-    remotion\   (16082 archivos)
+    remotion\   (16088 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     ajustes_ui.py
@@ -360,6 +360,12 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         la pantalla SFX Lab (biblioteca, pad XY, marcadores por color, reemplazar).
     sidecar_lua.py
         escribe <archivo>.lua junto a cada .json (canal de lectura para Resolve Free 21.1).
+    sonido_musica.py
+        MÚSICA de la biblioteca del autor (Desktop\SFX\02_MUSICA) para la página Sonido (v5.48). Mismo criterio que
+    sonido_skill.py
+        SONIDO con la biblioteca del autor y las reglas de MAPA_SFX.md (reemplaza el diseño de SFX del «AI Sound Director»).
+    sonido_skill_ui.py
+        la página SONIDO (v5.43, diseño A+B elegido por el usuario): editor visual de lo que decidió sonido_skill.
     sonidos_extra.py
         los sonidos extra de GO (v5.4.8): música de fondo, sonidos de transición en los cortes, riser + golpe + silencio en el gancho.
     subtitle_transcriber.py

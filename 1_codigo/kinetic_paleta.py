@@ -52,11 +52,20 @@ TRAZO_GROSOR = 0.0065            # grosor del trazo (× ancho) ≈ 7 px
 SUBRAYADO_NOMINAL = 0.34         # ancho del subrayado a zoom 1 (× ancho)
 
 
-def puntos_circulo(lazo=False, n=64):
+ASPECTOS_TRAZO = (0.20, 0.25, 0.30, 0.36, 0.42, 0.50, 0.60, 0.72, 0.86, 1.0)   # v5.45: alto/ancho de las variantes del círculo y el lazo
+TRAZO_VARIANTE_ANCHO = 0.84      # v5.45: ancho de esas variantes a zoom 1 (× ancho): el tamaño real de un aro, así el zoom queda cerca de 1 y el trazo en ~7 px
+
+
+def puntos_circulo(lazo=False, n=64, aspecto=None):
     """La elipse dibujada a mano del kit (motor.js: 1,1 vueltas, radio que ondula un 3,5 % y un giro de −4° o −8° el lazo), en fracciones del ANCHO, centro
-    (0, 0), y hacia ABAJO. Empieza arriba a la izquierda y se pasa un poco de la vuelta, como un trazo de rotulador."""
+    (0, 0), y hacia ABAJO. Empieza arriba a la izquierda y se pasa un poco de la vuelta, como un trazo de rotulador.
+    v5.45: con `aspecto` (alto/ancho) la elipse ya tiene su forma y su tamaño real (TRAZO_VARIANTE_ANCHO): se escala por igual y el trazo no se deforma
+    (estirada con ZoomX ≠ ZoomY salía gruesa a los lados y fina arriba y abajo)."""
     import math
     rx, ry = TRAZO_NOMINAL[0] / 2.0, TRAZO_NOMINAL[1] / 2.0
+    if aspecto:
+        rx = TRAZO_VARIANTE_ANCHO / 2.0
+        ry = rx * float(aspecto)
     giro = math.radians(-8.0 if lazo else -4.0)
     pts = []
     for k in range(n + 1):
@@ -67,13 +76,25 @@ def puntos_circulo(lazo=False, n=64):
     return pts
 
 
-def puntos_subrayado(n=24):
-    """El subrayado curvo del kit (M x0−14,y1+4 Q medio,y1+36 x1+26,y1−8) para un ancho nominal, en fracciones del ANCHO, centro (0, 0), y hacia ABAJO."""
-    w = SUBRAYADO_NOMINAL
+SUBRAYADO_ANCHOS = (0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90)   # v5.47: anchos (× ancho del cuadro) de las variantes del subrayado («k line trazo lima 60»)
+SUBRAYADO_GROSOR = 12.0 / 1080.0  # v5.47: la pincelada es más gruesa que el aro (12 px a 1080)
+
+
+def puntos_subrayado(n=40, ancho=None):
+    """v5.47 (el usuario eligió la «pincelada con remate»): casi plana, sube al final y vuelve con un golpe corto, para un ancho `ancho` (× ANCHO del cuadro;
+    por defecto SUBRAYADO_NOMINAL), en fracciones del ANCHO, centro (0, 0) e y hacia ABAJO. Antes: la curva del kit (M x0−14,y1+4 Q medio,y1+36 x1+26,y1−8)
+    estirada en x, fina, muy curva y lejos de la palabra."""
+    w = float(ancho or SUBRAYADO_NOMINAL)
     px = 1.0 / 1080.0
-    p0, p1, p2 = (-w / 2 - 14 * px, 4 * px), (0.0, 36 * px), (w / 2 + 26 * px, -8 * px)
+    p0, c1, c2, p3 = (-w / 2 - 10 * px, 10 * px), (-w / 4, 22 * px), (w / 4, 16 * px), (w / 2 + 18 * px, -6 * px)     # el barrido
+    q1, q2 = (w / 2 + 34 * px, -16 * px), (w / 2 - 30 * px, 2 * px)                                                    # el remate
     pts = []
-    for k in range(n + 1):
-        t = k / n
-        pts.append(((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]))
+    m = max(8, int(n * 0.8))
+    for k in range(m + 1):
+        t = k / m
+        pts.append(tuple((1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t * t * c + t ** 3 * d for a, b, c, d in zip(p0, c1, c2, p3)))
+    r = max(4, n - m)
+    for k in range(1, r + 1):
+        t = k / r
+        pts.append(tuple((1 - t) ** 2 * a + 2 * (1 - t) * t * b + t * t * c for a, b, c in zip(p3, q1, q2)))
     return pts

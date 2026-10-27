@@ -805,18 +805,20 @@ def _pista_iconos(tl, hace_falta):
     return i
 
 
-def _apagar_emojis(tl, ventanas, base):
-    """Apaga (con marca, para re-aplicar) el emoji del tema en los bloques donde va un icono 3D: uno solo, el 3D."""
+def _apagar_emojis(tl, ventanas, base, captions=False):
+    """Apaga (con marca, para re-aplicar) el emoji del tema en los bloques donde va un icono 3D: uno solo, el 3D.
+    v5.43: con `captions` apaga los Text+ de captions (no los emojis) que empiezan en esos tramos: el Tema 1 con Text+ editables, donde un motion
+    del kit ya dice ese bloque (la misma marca: _deshacer_subidas los vuelve a encender al re-aplicar)."""
     apagados = 0
     for i in _pistas_captions(tl):
-        if 'EMOJI' not in str(tl.GetTrackName('video', i) or '').upper():
+        if ('EMOJI' in str(tl.GetTrackName('video', i) or '').upper()) == bool(captions):
             continue
         for it in tl.GetItemListInTrack('video', i) or []:
             s = int(it.GetStart())
             if any(base + int(a) <= s < base + int(b) for a, b in ventanas):
                 try:
                     if it.SetClipEnabled(False):
-                        it.AddMarker(0, 'Sand', 'PRO · emoji cambiado por un icono 3D', '', 1, MARCA_EMOJI)
+                        it.AddMarker(0, 'Sand', 'PRO · caption: ya lo dice el motion' if captions else 'PRO · emoji cambiado por un icono 3D', '', 1, MARCA_EMOJI)
                         apagados += 1
                 except Exception:
                     pass
@@ -1150,6 +1152,8 @@ def _solo_encima(tl, mp, caja, datos, base, v1_antes):
     emojis = _emojis_sin_cara(tl, [c for e in encima for c in e.get('cues') or []] + list(datos.get('mover') or []), base)
     if datos.get('sin_emoji'):
         _apagar_emojis(tl, datos['sin_emoji'], base)
+    if datos.get('sin_captions'):
+        _apagar_emojis(tl, datos['sin_captions'], base, captions=True)
     _quitar_vacias(tl)
     _etiquetar(tl)
     print('Captions detrás de ti: %d tramos con la persona delante (%d clips de captions movidos, %d emojis apartados de la cara).' % (
@@ -1266,6 +1270,8 @@ def main():
     movidos += _subir_captions(tl, datos.get('mover') or [], base)
     emojis = _emojis_sin_cara(tl, [c for e in datos.get('encima') or [] for c in e.get('cues') or []] + list(datos.get('mover') or []), base)
     cambiados = _apagar_emojis(tl, datos.get('sin_emoji') or [], base) if datos.get('sin_emoji') else 0      # v5.5.7: donde la PRO enseña algo (antes solo junto a un icono 3D)
+    if datos.get('sin_captions'):                                          # v5.43: Tema 1 con Text+: los bloques que ya dice un motion del kit
+        print('Tema 1: %d captions apagados (ya los dice un motion).' % _apagar_emojis(tl, datos['sin_captions'], base, captions=True))
     respaldo = (_apagar_captions(tl, sonidos=datos.get('captions_sonidos') is not True) if datos.get('captions_propios') and (puestos.get('subs') or puestos.get('subs2'))
                 else 0)            # (v5.5.13: el Tema 1 neón deja sus sonidos: un toque por palabra, como el kit)
     coloreados = _color_claves(tl, datos.get('color_claves'))

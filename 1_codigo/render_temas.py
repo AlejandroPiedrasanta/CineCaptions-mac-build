@@ -287,7 +287,7 @@ def _elemento_kinetic(r, s):
     if tipo == 'linea' and e.get('curva'):
         nw = PAL_K.SUBRAYADO_NOMINAL
         return trazo_a_mano(LINEA_K.get(var, PAL_K.LIMA), PAL_K.puntos_subrayado(), nw * 1080 * zx * s, nw * 1080 * zy * s, (nw, nw),
-                            PAL_K.TRAZO_GROSOR * 1080 * s * zx), 0.0, 0.0
+                            PAL_K.SUBRAYADO_GROSOR * 1080 * s), 0.0, 0.0
     if tipo == 'anillo':
         w, h, g = ANILLO_GEO
         return anillo(ANILLO_K.get(var, (1.0, 0.45, 0.15)), w * 1080 * zx * s, h * 1920 * zy * s, g * 1080 * s), 0.0, 0.0

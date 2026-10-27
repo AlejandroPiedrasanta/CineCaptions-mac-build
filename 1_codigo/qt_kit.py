@@ -9,7 +9,7 @@ Hasta la v4.1.0 la ventana era CustomTkinter: cada esquina redondeada era un
 dibujo en un Canvas de Tk y cada boton una pila de widgets, asi que abrir la
 ventana de palabras con un guion largo o el selector de emojis se notaba
 lento, y el redimensionado parpadeaba. Desde la v5.0.0 (pedido literal:
-Python 3.15.1 y PySide6; el motor auxiliar mantiene las extensiones nativas en Python 3.14.9,
+Python 3.15.2 y PySide6; el motor auxiliar mantiene las extensiones nativas en Python 3.14.10,
 y despues la propuesta de 5 pantallas tipo panel) todo
 se pinta con Qt.
 
@@ -362,7 +362,48 @@ def correr_en_hilo(contexto, trabajo, al_terminar, baja=False):
             return
         except Exception:
             pass
-    threading.Thread(target=correr, daemon=True).start()
+    _lanzar_en_hilo(correr)
+
+
+# v5.46: hilos que se reutilizan. Thread.start() espera a que el hilo nuevo arranque y, con el equipo ocupado (la página Efectos
+# dejando la GPU y la CPU a tope), la vuelta a Inicio pasaba 50-90 ms parada ahí. Un hilo libre recibe el trabajo al instante;
+# si no hay ninguno libre se crea otro (nunca se hace cola: un render largo no retrasa lo demás) y el que lleva 60 s sin uso se va.
+_HILOS = {'libres': 0, 'cerrojo': threading.Lock(), 'cola': None}
+
+
+def _lanzar_en_hilo(fn):
+    import queue
+    h = _HILOS
+    with h['cerrojo']:
+        if h['cola'] is None:
+            h['cola'] = queue.SimpleQueue()
+        if h['libres'] > 0:
+            h['libres'] -= 1
+            h['cola'].put(fn)
+            return
+    threading.Thread(target=_obrero, args=(fn,), daemon=True, name='cc-obrero').start()
+
+
+def _obrero(fn):
+    import queue
+    h = _HILOS
+    while True:
+        try:
+            fn()
+        except BaseException:
+            pass
+        with h['cerrojo']:
+            h['libres'] += 1
+        try:
+            fn = h['cola'].get(timeout=60)
+        except queue.Empty:
+            with h['cerrojo']:
+                # (entre el get vencido y este cerrojo alguien pudo dar el trabajo a «un libre»: entonces se recoge)
+                try:
+                    fn = h['cola'].get_nowait()
+                except queue.Empty:
+                    h['libres'] -= 1
+                    return
 
 
 # ---------------------------------------------------------------------------

@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
 ]]
 
-local VERSION = "5.41 (edicion pro)"
+local VERSION = "5.49 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -923,17 +923,20 @@ local function poner_motions(tl, mp, caja, graficos, base)
 end
 
 -- Apaga (con marca, para re-aplicar) el emoji del tema en los bloques donde va un icono 3D: uno solo, el 3D.
-local function apagar_emojis(tl, ventanas, base)
+-- v5.43: con `captions` apaga los Text+ de captions (no los emojis) de esos tramos: Tema 1 con Text+ editables, donde un motion del kit ya
+-- dice ese bloque (misma marca: deshacer_subidas los vuelve a encender al re-aplicar). Gemelo de colocar_pro.py.
+local function apagar_emojis(tl, ventanas, base, captions)
     local apagados = 0
+    local nota = captions and "PRO · caption: ya lo dice el motion" or "PRO · emoji cambiado por un icono 3D"
     for _, i in ipairs(pistas_captions(tl)) do
-        if nombre_pista(tl, "video", i):upper():find("EMOJI", 1, true) then
+        if (nombre_pista(tl, "video", i):upper():find("EMOJI", 1, true) ~= nil) ~= (captions == true) then
             for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do
                 local s0 = it:GetStart()
                 for _, v in ipairs(ventanas or {}) do
                     if s0 >= base + (tonumber(v[1]) or 0) and s0 < base + (tonumber(v[2]) or 0) then
                         local ok, r = pcall(function() return it:SetClipEnabled(false) end)
                         if ok and r then
-                            pcall(function() it:AddMarker(0, "Sand", "PRO · emoji cambiado por un icono 3D", "", 1, MARCA_EMOJI) end)
+                            pcall(function() it:AddMarker(0, "Sand", nota, "", 1, MARCA_EMOJI) end)
                             apagados = apagados + 1
                         end
                         break
@@ -1310,6 +1313,9 @@ local function main()
     puestos.emojis = emojis_sin_cara(tl, todos, base)
     -- v5.5.7: donde la PRO enseña algo, el emoji de GO se apaga (antes solo junto a un icono 3D); gemelo de colocar_pro.py
     if type(datos.sin_emoji) == "table" and #datos.sin_emoji > 0 then puestos.cambiados = apagar_emojis(tl, datos.sin_emoji, base) end
+    if type(datos.sin_captions) == "table" and #datos.sin_captions > 0 then    -- v5.43: Tema 1 con Text+: los bloques que ya dice un motion del kit
+        print(string.format("Tema 1: %d captions apagados (ya los dice un motion).", apagar_emojis(tl, datos.sin_captions, base, true)))
+    end
     if datos.captions_propios and (puestos.subs + puestos.subs2) > 0 then puestos.respaldo = apagar_captions(tl, datos.captions_sonidos ~= true) end
     local coloreados = color_claves(tl, datos.color_claves)
     if coloreados > 0 then print(string.format("Temas 1-4: %d palabras destacadas en el color del video.", coloreados)) end

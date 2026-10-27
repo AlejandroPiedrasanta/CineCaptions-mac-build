@@ -32,7 +32,11 @@ import unicodedata
 os.environ.setdefault('HF_HUB_DISABLE_SYMLINKS_WARNING', '1')
 os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
 
-REPOS = {'4B': 'Qwen/Qwen3-4B-Instruct-2507', '1.7B': 'Qwen/Qwen3-1.7B'}
+REPOS = {'gemma4': 'google/gemma-4-E4B-it', 'qwen3.5': 'Qwen/Qwen3.5-4B', '4B': 'Qwen/Qwen3-4B-Instruct-2507', '1.7B': 'Qwen/Qwen3-1.7B'}
+# v5.46 (pedido del usuario: «Gemma 4 E4B y de respaldo Qwen3.5-4B… que reciban lo mejor»; banco del 2026-10-26 con 4 videos en español: elige
+# mejores palabras clave y emojis y se equivoca menos al corregir): en GPUs de 15 GB o más se bajan Gemma 4 E4B (16 GB, Apache-2.0), Qwen3.5-4B
+# (9,3 GB, Apache-2.0) y Qwen3-1.7B (para cuando Resolve deja poca VRAM); en las más pequeñas, como antes. El 4B de antes sigue valiendo si ya está.
+DESCARGAS_GRANDES = ('gemma4', 'qwen3.5', '1.7B')
 # v5.3 (medido con 96 palabras en una RTX 5070 Ti): tramos de 90 palabras -> 23,4 s; de 40 -> 10,1 s; de 28 -> 8,2 s; de 20 -> 6,8 s,
 # con casi las mismas correcciones, pesos y emojis. La GPU decodifica varios tramos a la vez casi al precio de uno: el tiempo
 # lo manda lo que tarda el tramo MAS LARGO, asi que tramos cortos en lote = mucho mas rapido.
@@ -124,7 +128,33 @@ def elegir(pedido):
     dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
     if pedido in REPOS:
         return pedido, 'cuda:0', dtype
-    return ('4B' if vram >= 9.5 else '1.7B'), 'cuda:0', dtype
+    return ('gemma4' if vram >= 15 else '4B' if vram >= 9.5 else '1.7B'), 'cuda:0', dtype
+
+
+def _cargar_gemma(repo, dtype):
+    """v5.46: Gemma 4 E4B en ~8,7 GB de GPU: sus «per-layer embeddings» (5,25 GB, solo se CONSULTAN) quedan en la RAM y las torres de audio y
+    visión (no se usan) también; el resto va a la GPU (medido: pico de 11 GB con el LOTE de 12). Con device_map de accelerate la parte en la RAM
+    quedaba en «meta» y generate() fallaba (Tensor.item() cannot be called on meta tensors): se reparte a mano."""
+    import torch
+    from transformers import AutoModelForCausalLM
+    modelo = AutoModelForCausalLM.from_pretrained(repo, dtype=dtype, device_map='cpu')
+    lm = modelo.model.language_model
+    tabla = lm.embed_tokens_per_layer
+
+    class EnRam(torch.nn.Module):
+        def __init__(self, t):
+            super().__init__()
+            self.t = t
+
+        def forward(self, ids, *a, **k):
+            return self.t(ids.to('cpu'), *a, **k).to('cuda:0')
+    for nombre, hijo in list(lm.named_children()):
+        if nombre != 'embed_tokens_per_layer':
+            hijo.to('cuda:0')
+    lm.embed_tokens_per_layer = EnRam(tabla)
+    modelo.lm_head.to('cuda:0')
+    type(modelo).device = property(lambda s: torch.device('cuda:0'))
+    return modelo
 
 
 def tramos(palabras):
@@ -276,7 +306,10 @@ def cargar(pedido):
     t0 = time.time()
     tok = AutoTokenizer.from_pretrained(repo)
     tok.padding_side = 'left'
-    modelo = AutoModelForCausalLM.from_pretrained(repo, dtype=dtype, device_map=dispositivo)
+    if modelo_clave == 'gemma4' and str(dispositivo).startswith('cuda'):
+        modelo = _cargar_gemma(repo, dtype)
+    else:
+        modelo = AutoModelForCausalLM.from_pretrained(repo, dtype=dtype, device_map=dispositivo)
     modelo.eval()
     decir('ESTADO', f'IA de texto lista en {time.time() - t0:.1f} s')
     return tok, modelo, repo, dispositivo
@@ -313,8 +346,20 @@ def servidor(pedido, inactivo):
     cargar 8 GB. Al terminar escribe FIN (y libera la memoria de la GPU)."""
     import queue
     import threading
-    tok, modelo, repo, dispositivo = cargar(pedido)
-    calentar(tok, modelo)
+    # v5.46: un LATIDO mientras arranca (importar torch) y carga los pesos: Gemma 4 E4B son 16 GB del disco a la RAM y luego a la GPU; sin
+    # ninguna línea en 100 s ia_texto lo daba por colgado (SIN_SENAL_S) y en un disco lento nunca llegaba a cargar
+    cargando = threading.Event()
+
+    def latido():
+        t0 = time.time()
+        while not cargando.wait(15):
+            decir('ESTADO', f'Cargando la IA de texto… {int(time.time() - t0)} s')
+    threading.Thread(target=latido, daemon=True).start()
+    try:
+        tok, modelo, repo, dispositivo = cargar(pedido)
+        calentar(tok, modelo)
+    finally:
+        cargando.set()
     cola = queue.Queue()
 
     def leer():
@@ -707,9 +752,19 @@ def main():
         elif a.descargar:
             from huggingface_hub import snapshot_download
             clave, _, _ = elegir(a.modelo)
-            decir('ESTADO', f'Descargando {REPOS[clave]}')
-            snapshot_download(repo_id=REPOS[clave])
-            decir('LISTO', clave)
+            # v5.46: con GPU grande, Gemma 4 E4B + el respaldo Qwen3.5-4B + el ligero 1.7B; si uno falla, sigue con los demás
+            claves = list(DESCARGAS_GRANDES) if clave == 'gemma4' and a.modelo == 'auto' else [clave]
+            listas = []
+            for c in claves:
+                try:
+                    decir('ESTADO', f'Descargando {REPOS[c]}')
+                    snapshot_download(repo_id=REPOS[c])
+                    listas.append(c)
+                except Exception as e:
+                    decir('ESTADO', f'No pude descargar {REPOS[c]}: {type(e).__name__}')
+            if not listas:
+                raise RuntimeError('no se descargó ninguna IA de texto')
+            decir('LISTO', listas[0])
         else:
             analizar(a.entrada, a.salida, a.modelo)
     except Exception as e:

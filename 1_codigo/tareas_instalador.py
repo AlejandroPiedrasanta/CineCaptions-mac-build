@@ -128,7 +128,7 @@ def _base_recursos():
 
 
 def _tarea_motor_compat(estado):
-    """Instala Python 3.14.9 y las ruedas que no pueden ir en Python 3.15."""
+    """Instala Python 3.14 y las ruedas que no pueden ir en Python 3.15."""
     import motor_compat
 
     def progreso(fraccion, texto=''):
@@ -139,7 +139,7 @@ def _tarea_motor_compat(estado):
 
     datos = motor_compat.instalar(progreso=progreso, aviso=aviso)
     estado.progreso(100)
-    estado.ok(f"Python {datos.get('python', '3.14.9')} y dependencias del motor instalados")
+    estado.ok(f"Python {datos.get('python', '3.14')} y dependencias del motor instalados")
 
 
 def _tarea_verificar(estado):
@@ -219,8 +219,8 @@ def _tarea_verificar(estado):
         faltan = motor_compat.faltan_requisitos()
         if faltan:
             raise RuntimeError('faltan versiones: ' + ', '.join(faltan[:5]))
-        if datos.get('python') != '3.14.9':
-            raise RuntimeError('se esperaba Python 3.14.9, encontrado ' + str(datos.get('python')))
+        if not str(datos.get('python') or '').startswith('3.14.'):
+            raise RuntimeError('se esperaba Python 3.14, encontrado ' + str(datos.get('python')))
 
     @prueba('Revisor de ortografía')
     def _():
@@ -415,6 +415,10 @@ def _tarea_motor_ia(estado):
             estado.progreso(100)
             estado.error(f'{ya}; no pude poner al día sus librerías ({e}): sigue con las que tenía')
             return
+        estado.progreso(40, 'Comprobando la IA de texto (Gemma 4 E4B y Qwen3.5-4B)')
+        mejor = motor_voz.completar_ia_texto(aviso=estado.info)          # (v5.46: los modelos nuevos también a quien ya lo tenía)
+        if mejor:
+            ya += f'; IA de texto: {mejor}'
         estado.progreso(100)
         estado.ok(ya + (f'; {len(puestas)} librería(s) al día' if puestas else ''))
         return

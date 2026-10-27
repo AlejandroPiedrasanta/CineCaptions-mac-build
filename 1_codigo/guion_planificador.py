@@ -27,21 +27,37 @@ import guion_captions as G
 
 MAX_PALABRAS = 8
 ANCLAS = {'medio': 0.56, 'alto': 0.33, 'bajo': 0.68}
-ESTILOS_BASE = (1, 2, 4, 5)                  # Luxe: el estilo «de fondo» de cada oración (pack «Referencia»: en el orden en que los estrena la referencia)
+ESTILOS_BASE = (1, 2, 5)                     # (v5.48: sin el 4, «Moderno blanco», eliminado) Luxe: el estilo «de fondo» de cada oración (pack «Referencia»: en el orden en que los estrena la referencia)
 ESTILOS_ACENTO = (3, 8)                      # presets de Amro sueltos (pastilla, subrayado): el REMATE de la oración; fuego (6) y negación (7) van por significado
 ROTACION = ESTILOS_BASE + ESTILOS_ACENTO + (6, 7)
 ESTILOS_FUEGO = (6,)
 # v5.5: los estilos Luxe de base (1, 2, 4, 5) tienen tres formas de BARRIDO DE LUZ en el pack: el original (sutil), «Screen» (una banda de luz de color que se suma) y «Sólido» (una banda opaca).
 # {estilo base: (original, screen, sólido)}; las palabras grandes los van alternando para que el barrido (y su color) no se repita. Sólo cuando el pack trae esas variantes (9-16).
-BARRIDOS = {1: (1, 9, 13), 2: (2, 10, 14), 4: (4, 11, 15), 5: (5, 12, 16)}
+BARRIDOS = {1: (1, 9, 13), 2: (2, 10, 14), 5: (5, 12, 16)}            # (v5.48: «Moderno blanco» 4/11/15 eliminado del pack)
 ESTILOS_NEGACION = (7,)
+# v5.48 (pedido: «usa Luxe Count para números y si habla de dinero pon el signo de la moneda»): las cifras van GRANDES con la variante 17
+# (macro Luxe Count: cuenta de 0 a la cifra; el prefijo de moneda, el «%» y los decimales salen del texto que le escribe el planificador)
+VARIANTE_COUNT = 17
+_NUMEROS = {'dos': '2', 'tres': '3', 'cuatro': '4', 'cinco': '5', 'seis': '6', 'siete': '7', 'ocho': '8', 'nueve': '9', 'diez': '10', 'once': '11',
+            'doce': '12', 'quince': '15', 'veinte': '20', 'treinta': '30', 'cuarenta': '40', 'cincuenta': '50', 'cien': '100', 'mil': '1000',
+            'two': '2', 'three': '3', 'four': '4', 'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10', 'twenty': '20',
+            'hundred': '100', 'thousand': '1000'}
+_MONEDAS = {'dolar': '$', 'dolares': '$', 'peso': '$', 'pesos': '$', 'quetzal': 'Q', 'quetzales': 'Q', 'euro': '€', 'euros': '€', 'libra': '£', 'libras': '£',
+            'dollar': '$', 'dollars': '$', 'bucks': '$'}
+ESTILOS_LINEA3_CENTRADA = (8,)               # v5.48 (pedido): con el subrayado (8) la línea de debajo va centrada bajo la grande, no a la derecha
 # v5.5.8: con las líneas juntas (hueco 0,004) las palabras grandes en letra editorial / de pincel (2 rosa, 5 azul y sus barridos) pisaban la
 # línea de al lado: sus trazos suben y bajan más que la caja medida. Llevan un poco de aire arriba y abajo.
 ESTILOS_EDITORIAL = (2, 5, 10, 12, 14, 16)
 AIRE_EDITORIAL = 0.012
-AFINADO = {'adelanto': 0.03, 'hold': 0.22, 'min_bloque': 0.7, 'gap_minimo': 0.06, 'puntaje_min': 8.0, 'puntaje_2': 9.0, 'dist_mains': 4,
+# v5.48 (el usuario: «muy rápido y no están fluidos»; medido contra REFERENCIA.mp4 / ref_exacta): cada palabra entra cuando se dice (la referencia
+# va ~0,08 s DETRÁS de la voz), la última de cada bloque se ve al menos 'respiro' s (el siguiente espera hasta 'espera_max' s; ver _respiro) y entre
+# bloque y bloque queda un instante vacío ('gap_minimo'; en la referencia 0,15-0,25 s). Las grandes no pasan de 'zoom_max' (la referencia: 0,9-1,3).
+AFINADO = {'adelanto': 0.0, 'respiro': 0.55, 'espera_max': 0.35, 'zoom_max': 1.3, 'cortos_entre': 2, 'complejo_max': 4, 'complejo_s': 3.2, 'max_linea': 4, 'zoom_max_cifra': 1.7, 'bloque_min': 1.2,
+           # v5.48 (pedido: «más junto en general y el principal un poco más grande»): la grande = 1,1 × el ancho de su línea pequeña (y ≥1,1 × su
+           # tamaño natural); alturas estimadas más ceñidas a la tinta ('k_alto' 1,45 -> 1,3; 'alto_linea' 0,036 -> 0,031)
+           'grande_linea': 1.1, 'grande_min': 1.1, 'k_alto': 1.35, 'k_alto_sans': 1.7, 'hold': 0.22, 'min_bloque': 0.7, 'gap_minimo': 0.15, 'puntaje_min': 8.0, 'puntaje_2': 9.0, 'dist_mains': 4,
            'pausa_frase': 0.45, 'pausa_coma': 0.12, 'combinar_s': 2.0, 'cap_len': 10, 'bonus_det': 4.0, 'bonus_ultima': 4.0, 'bonus_gancho': 8.0,
-           'pen_verbo': 3.0, 'pen_pret': 6.0, 'pen_modifica': 2.0, 'bonus_adj': 3.0, 'bonus_cond': 5.0, 'hueco': 0.004, 'cabe': 0.96, 'alto_linea': 0.036,
+           'pen_verbo': 3.0, 'pen_pret': 6.0, 'pen_modifica': 2.0, 'bonus_adj': 3.0, 'bonus_cond': 5.0, 'hueco': 0.006, 'cabe': 0.96, 'alto_linea': 0.031,
            'pausa_oracion': 0.3}      # fin de oración sin signos: en la referencia los finales dejan ≥0,32 s y las comas ≤0,24 s
 
 _ES_STOP = set('''a al ante bajo cabe con contra de del desde durante en entre hacia hasta mediante para por segun sin so sobre tras
@@ -257,6 +273,184 @@ def _partir(pal, frase, mains, A=AFINADO, agrupadas=None):
     return [t for t in final if t]
 
 
+def _complejos(plan, pal, A=AFINADO):
+    """v5.48 (pedido: «bloques más complejos de tres líneas, la principal en medio, y bloques cortos»): alterna un bloque de TRES líneas
+    (pequeña · PRINCIPAL · pequeña) con bloques cortos. Un bloque que acaba en su palabra grande se lleva las primeras palabras pequeñas del
+    siguiente (hasta 'complejo_max' y sin pausa larga entre medias): queda pequeña · grande · pequeña y el siguiente, más corto. Tras un bloque de
+    tres líneas vienen al menos 'cortos_entre' bloques cortos."""
+    cortos = A['cortos_entre']                     # el primero puede ser de tres líneas
+    for n, b in enumerate(plan):
+        idx = b['palabras']
+        tres = bool(b['mains']) and idx[0] not in b['mains'] and idx[-1] not in b['mains'] and idx[-1] not in b['miembros']
+        if tres:
+            cortos = 0
+            continue
+        sig = plan[n + 1] if n + 1 < len(plan) else None
+        ultima = max(b['mains'] + [k for g in b['mains'] for k in b['grupos'].get(g, [g])]) if b['mains'] else None
+        if (cortos < A['cortos_entre'] or not b['mains'] or idx[0] in b['mains'] or ultima != idx[-1] or not sig or not sig['mains']):
+            cortos += 1
+            continue
+        tomar = []
+        for k in sig['palabras']:
+            if k in sig['mains'] or k in sig['miembros'] or len(tomar) >= A['complejo_max']:
+                break
+            antes = tomar[-1] if tomar else idx[-1]
+            if pal[k]['t'] - pal[antes]['fin'] > A['pausa_frase'] or pal[k]['fin'] - pal[idx[0]]['t'] > A['complejo_s']:
+                break
+            tomar.append(k)
+        while tomar and _debil(pal, tomar[-1]):
+            tomar.pop()                            # no se corta tras «de», «la», «que»… (se quedan con su palabra en el siguiente)
+        if len(tomar) < 2 or len(tomar) >= len(sig['palabras']):     # (la línea de debajo de la grande lleva al menos 2 palabras)
+            cortos += 1
+            continue
+        b['palabras'] = idx + tomar
+        sig['palabras'] = [k for k in sig['palabras'] if k not in tomar]
+        b['orig'] = sorted(o for k in b['palabras'] for o in pal[k]['orig'])
+        sig['orig'] = sorted(o for k in sig['palabras'] for o in pal[k]['orig'])
+        cortos = 0
+    return [b for b in plan if b['palabras']]
+
+
+def _corte(pal, ks, minimo, maximo, medio=False, fin=None):
+    """Cuántas palabras de `ks` van en el primer trozo (entre minimo y maximo): nunca tras «de», «la», «y»… si se puede, mejor donde hay pausa y
+    con los dos trozos lo más parejos: en palabras (`medio`) o en TIEMPO en pantalla (el segundo dura hasta `fin`, p. ej. el final de su grande),
+    así ninguno de los dos queda en un bloque fugaz."""
+    opciones = list(range(max(1, minimo), min(len(ks) - 1, maximo) + 1)) or [max(1, min(len(ks) - 1, maximo))]
+    hasta = fin if fin is not None else pal[ks[-1]]['fin']
+    def nota(c):
+        pausa = pal[ks[c]]['t'] - pal[ks[c - 1]]['fin']
+        parejo = -abs(c - len(ks) / 2.0) if medio else min(pal[ks[c - 1]]['fin'] - pal[ks[0]]['t'], hasta - pal[ks[c]]['t'])
+        return (not _debil(pal, ks[c - 1]), parejo + (0.25 if pausa >= 0.15 else 0.0))
+    return max(opciones, key=nota)
+
+
+def _reglas_lineas(plan, pal, A=AFINADO):
+    """v5.48 (pedido del usuario): ninguna línea pequeña pasa de A['max_linea'] (4) palabras; la línea de DEBAJO de la grande nunca lleva una sola
+    palabra ni acaba en «de», «del», «la», «y»… (esas pasan al bloque siguiente, con la palabra a la que acompañan). Si lo que va antes de la grande
+    no cabe, se corta por un sitio natural («La Unión Europea» | «trae a / Quetzaltenango») y lo de delante forma su propio bloque. Un bloque sin
+    grande de 5 a 8 palabras va en DOS líneas del mismo bloque (lo reparte _lineas_pequenas), no en dos bloques fugaces."""
+    MAX = A['max_linea']
+
+    def partes(b):
+        if not b['mains']:
+            return b['palabras'], [], []
+        m0 = min(b['mains'])
+        fin = max(k for g in b['mains'] for k in b['grupos'].get(g, [g]))
+        return [k for k in b['palabras'] if k < m0], [k for k in b['palabras'] if m0 <= k <= fin], [k for k in b['palabras'] if k > fin]
+
+    def nuevo(b, ks):
+        return dict(b, palabras=ks, mains=[], orig=sorted(o for k in ks for o in pal[k]['orig']))
+
+    def fijar(b, ks):
+        b['palabras'] = ks
+        b['orig'] = sorted(o for k in ks for o in pal[k]['orig'])
+
+    salida, cola = [], list(plan)
+    while cola:
+        b = cola.pop(0)
+        antes, medio, despues = partes(b)
+        if b['mains'] and despues:
+            # la línea de debajo no acaba en «de/la/y…» ni lleva una sola palabra: lo que sobra va al principio del bloque siguiente
+            pasa = []
+            junto = (bool(cola) and pal[cola[0]['palabras'][0]]['t'] - pal[despues[-1]]['fin'] < A['pausa_frase']
+                     and not (pal[despues[-1]]['signo'] and pal[despues[-1]]['signo'] in _FUERTE))       # (nunca por encima de un fin de frase)
+            while despues and (_debil(pal, despues[-1]) or len(despues) == 1) and junto:
+                pasa.insert(0, despues.pop())
+            if len(despues) == 1 and not junto:             # sin bloque siguiente pegado: esa palabra va sola en su bloque
+                cola.insert(0, nuevo(b, despues))
+                despues = []
+            if pasa:
+                fijar(cola[0], pasa + cola[0]['palabras'])
+            fijar(b, antes + medio + despues)
+        if not b['mains'] and len(antes) > 2 * MAX:                 # sin grande y larguísimo: en dos bloques (cada uno, hasta dos líneas)
+            corte = _corte(pal, antes, len(antes) - 2 * MAX, 2 * MAX, medio=True)
+            fijar(b, antes[corte:])
+            cola[:0] = [nuevo(b, antes[:corte]), b]
+            continue
+        if b['mains'] and len(antes) > MAX:                         # lo que no cabe delante de la grande: su propio bloque antes
+            sobra = _corte(pal, antes, max(2, len(antes) - MAX), len(antes) - 2, fin=pal[medio[-1]]['fin'] + A['respiro'])
+            fijar(b, antes[sobra:] + medio + despues)
+            cola[:0] = [nuevo(b, antes[:sobra]), b]
+            continue
+        if b['mains'] and len(despues) > MAX:                       # lo que no cabe debajo: su propio bloque después
+            queda = _corte(pal, despues, 2, min(MAX, len(despues) - 2))
+            cola.insert(0, nuevo(b, despues[queda:]))
+            fijar(b, antes + medio + despues[:queda])
+        salida.append(b)
+    return [b for b in salida if b['palabras']]
+
+
+def _juntar_cortos(plan, pal, A=AFINADO):
+    """v5.48 (pedido: «se ve muy rápido»): un bloque que se vería menos de A['bloque_min'] s se junta con su vecino de la misma frase, como una
+    línea más, si las reglas lo permiten (una sola grande por bloque, ≤3 líneas, ≤4 palabras por línea, la línea de debajo de la grande con ≥2
+    palabras y sin acabar en «de/la/y…»): «Se pasaron» + «me hicieron el día» -> un bloque de dos líneas."""
+    MAX = A['max_linea']
+
+    def partes(b):
+        if not b['mains']:
+            return b['palabras'], [], []
+        m0 = min(b['mains'])
+        fin = max(k for g in b['mains'] for k in b['grupos'].get(g, [g]))
+        return [k for k in b['palabras'] if k < m0], [k for k in b['palabras'] if m0 <= k <= fin], [k for k in b['palabras'] if k > fin]
+
+    def lineas(b):
+        antes, medio, despues = partes(b)
+        if not b['mains']:
+            return 1 if len(antes) <= MAX else 2
+        return (len(antes) + MAX - 1) // MAX + 1 + (1 if despues else 0)
+
+    def dura(b):
+        return pal[b['palabras'][-1]]['fin'] - pal[b['palabras'][0]]['t'] + A['respiro']
+
+    def seguidos(a, b):
+        ult = pal[a['palabras'][-1]]
+        return pal[b['palabras'][0]]['t'] - ult['fin'] < A['pausa_frase'] and not (ult['signo'] and ult['signo'] in _FUERTE)
+
+    def juntar(a, b):
+        ks = a['palabras'] + b['palabras']
+        return dict(b if b['mains'] else a, palabras=ks, mains=a['mains'] + b['mains'], orig=sorted(o for k in ks for o in pal[k]['orig']))
+
+    i = 0
+    while i + 1 < len(plan):
+        a, b = plan[i], plan[i + 1]
+        corto = min(dura(a), dura(b)) < A['bloque_min']
+        if not corto or not seguidos(a, b) or (a['mains'] and b['mains']) or dura(juntar(a, b)) > A['complejo_s'] + 0.6:
+            i += 1
+            continue
+        nuevo = juntar(a, b)
+        antes, medio, despues = partes(nuevo)
+        ok = lineas(nuevo) <= 3 and (not nuevo['mains'] or len(antes) <= 2 * MAX)
+        if nuevo['mains'] and despues:
+            ok = ok and len(despues) >= 2 and len(despues) <= MAX and not _debil(pal, despues[-1])
+        if not nuevo['mains']:
+            ok = ok and len(antes) <= 2 * MAX
+        if ok:
+            plan[i:i + 2] = [nuevo]
+            i = max(0, i - 1)                           # (el bloque nuevo puede juntarse otra vez con el de antes)
+        else:
+            i += 1
+    return plan
+
+
+def _lineas_pequenas(pal, segs, A=AFINADO):
+    """Una línea pequeña de más de A['max_linea'] palabras (bloque sin grande) se parte en dos líneas por un sitio natural."""
+    salida = []
+    for tipo, ks in segs:
+        if tipo == 'S' and len(ks) > A['max_linea']:
+            c = _corte(pal, ks, len(ks) - A['max_linea'], A['max_linea'], medio=True)
+            salida += [('S', ks[:c]), ('S', ks[c:])]
+        else:
+            salida.append((tipo, ks))
+    return salida
+
+
+def _ancho_linea(pal, ks, A, forzar, ancho_tl):
+    """Ancho de tinta (fracción del ancho) de una línea pequeña con sus pesos."""
+    tr = _tramos(pal, ks, True, A, forzar)
+    return (sum(G.ancho_px(t, G.FINA if p == 'L' else G.NEGRITA, G.TAM_PEQUENA, ancho_tl) for t, p, _ in tr)
+            + G.ancho_px(' ', G.FINA, G.TAM_PEQUENA, ancho_tl) * G.AFINADO['espacio'] * (len(tr) - 1)) * G.AFINADO['tinta_pequena'] / float(ancho_tl)
+
+
 def _negrita(pal, indices):
     """índice (dentro de `indices`) de la palabra en negrita de una línea pequeña, o None si no hay ninguna con peso (artículos, preposiciones…)."""
     contenido = [p for p, k in enumerate(indices) if _es_contenido(pal[k]['plano'])]
@@ -285,6 +479,42 @@ def _pesos_linea(pal, indices, con_main, forzar=None):
         else:
             b = _negrita(pal, indices)
         pesos = [('B' if p == b else 'L') if b is not None else ('L' if (con_main or finas) else 'B') for p in range(len(indices))]
+        if not finas:
+            pesos = _ritmo_pesos(pal, indices, pesos)
+    return pesos
+
+
+MAX_FINAS, MAX_NEGRITAS = 3, 2
+
+
+def _ritmo_pesos(pal, indices, pesos):
+    """v5.48 (pedido: «jamás 4 palabras en light, tiene que tener un bold; máximo 2 en bold y máximo 3 en light»): toda línea de 2+ palabras lleva
+    al menos una negrita, nunca más de MAX_FINAS finas seguidas ni más de MAX_NEGRITAS negritas seguidas."""
+    pesos = list(pesos)
+    n = len(pesos)
+
+    def valor(p):                                  # la mejor candidata a negrita: palabra con contenido, larga
+        return (_es_contenido(pal[indices[p]]['plano']), len(pal[indices[p]]['plano']))
+
+    if n >= 2 and 'B' not in pesos:
+        pesos[max(range(n), key=valor)] = 'B'
+    p = 0
+    while p < n:                                   # tramos de finas demasiado largos: una negrita dentro (sin pegarla a otra negrita si se puede)
+        q = p
+        while q < n and pesos[q] == pesos[p]:
+            q += 1
+        if pesos[p] == 'L' and q - p > MAX_FINAS:
+            cand = [r for r in range(p + 1, q - 1)] or list(range(p, q))
+            pesos[max(cand, key=valor)] = 'B'
+            p = 0
+            continue
+        if pesos[p] == 'B' and q - p > MAX_NEGRITAS:
+            menos = sorted(range(p, q), key=valor)[:q - p - MAX_NEGRITAS]
+            for r in menos:
+                pesos[r] = 'L'
+            p = 0
+            continue
+        p = q
     return pesos
 
 
@@ -326,19 +556,62 @@ def _intencion(texto):
     return ()
 
 
+def cifras(pal):
+    """{índice: (texto para el Luxe Count, [índices de la cantidad])} de las palabras que son una cantidad: '430,000' · '$430,000' · '50%' · '9.99'
+    · 'tres' -> '3'. «mil» / «millones» detrás van con su número («430 mil» -> '430,000', «dos millones» -> '2,000,000'). Si va pegada a una moneda
+    («430 mil dólares», «500 quetzales») o ya la trae, lleva su signo delante. «1.500» (punto de miles) -> «1,500». («uno/una» no: casi siempre
+    son artículos.)"""
+    salida, k = {}, 0
+    while k < len(pal):
+        t = pal[k]['texto'].strip().strip(',;:!?¡¿').rstrip('.')
+        signo = t[0] if t[:1] in '$€£' else ''
+        cuerpo = t[len(signo):]
+        pct = cuerpo.endswith('%')
+        cuerpo = cuerpo.rstrip('%')
+        if re.fullmatch(r'\d{1,3}(\.\d{3})+', cuerpo):
+            cuerpo = cuerpo.replace('.', ',')
+        if not signo and not pct and re.fullmatch(r'(19|20)\d\d', cuerpo):
+            k += 1                                        # un año («en 2026») no es una cantidad: no cuenta ni lleva comas
+            continue
+        if re.fullmatch(r'\d[\d,]*(\.\d{1,2})?', cuerpo):
+            valor = float(cuerpo.replace(',', ''))
+        elif not signo and not pct and pal[k]['plano'] in _NUMEROS:
+            valor = float(_NUMEROS[pal[k]['plano']].replace(',', ''))
+        else:
+            k += 1
+            continue
+        grupo = [k]
+        if not pct and k + 1 < len(pal) and pal[k + 1]['plano'] in ('mil', 'millones', 'millon', 'thousand', 'million', 'millions'):
+            valor *= 1000 if pal[k + 1]['plano'] in ('mil', 'thousand') else 1000000
+            grupo.append(k + 1)
+        if not signo:
+            for j in (grupo[-1] + 1, grupo[-1] + 2):          # «430 dólares», «500 millones de pesos»
+                if j < len(pal) and pal[j]['plano'] in _MONEDAS:
+                    signo = _MONEDAS[pal[j]['plano']]
+                    grupo += list(range(grupo[-1] + 1, j + 1))   # la palabra de la moneda (y el «de») ya la dice el signo: va dentro de la cifra
+                    break
+                if j < len(pal) and pal[j]['plano'] != 'de':
+                    break
+        decimales = len(cuerpo.split('.')[1]) if '.' in cuerpo and valor == float(cuerpo.replace(',', '')) else 0
+        salida[k] = (signo + f'{valor:,.{decimales}f}' + ('%' if pct else ''), grupo)
+        k = grupo[-1] + 1
+    return salida
+
+
 def _estilo_para(pack, texto, previo, forzar=None, ancho_tl=1080, rotacion=None):
     """Estilo (variante del pack) de una palabra grande: el que pide su significado, o el siguiente de la rotación (`rotacion`: los de base o los
     acentos), siempre uno donde quepa."""
-    n_est = max(G.datos_variantes(pack).keys() or [8])
+    hay = set(G.datos_variantes(pack).keys()) or set(range(1, 9))       # (v5.48: el pack puede tener huecos: 4, 11, 15 eliminados)
     if forzar:
         return forzar
     rotacion = tuple(rotacion or ROTACION)
-    resto = tuple(e for e in ROTACION if e not in rotacion)
+    # (v5.48: el tachado y el fuego solo los pide el significado: antes, si ninguna otra cabía, «Quetzaltenango» salía tachado en rojo)
+    resto = tuple(e for e in ROTACION if e not in rotacion and e not in ESTILOS_NEGACION + ESTILOS_FUEGO)
     pedido = _intencion(texto)
-    orden = [e for e in pedido if e <= n_est]
+    orden = [e for e in pedido if e in hay]
     i = (rotacion.index(previo) + 1) % len(rotacion) if previo in rotacion else 0
     orden += [rotacion[(i + paso) % len(rotacion)] for paso in range(len(rotacion))] + list(resto)
-    orden = [e for e in orden if e <= n_est and e != previo] or [1]
+    orden = [e for e in orden if e in hay and e != previo] or [1]
     for e in orden:
         if _cabe(pack, e, texto, ancho_tl):
             return e
@@ -346,9 +619,11 @@ def _estilo_para(pack, texto, previo, forzar=None, ancho_tl=1080, rotacion=None)
     return min(orden, key=lambda e: G.ancho_main(texto, e, pack, ancho_tl) or 0)
 
 
-def _alto_main(texto, w, ancho_tl=1080, A=AFINADO):
-    """Alto aproximado (fracción del cuadro, 9:16 = 1920 px) de la tinta de la palabra grande con ancho w (medido en los renders: ~1,45 veces ancho/letras)."""
-    return max(0.055, min(0.10, 1.45 * w * ancho_tl / (max(5, len(texto)) * 1920.0)))
+def _alto_main(texto, w, ancho_tl=1080, A=AFINADO, estilo=None):
+    """Alto aproximado (fracción del cuadro, 9:16 = 1920 px) de la tinta de la palabra grande con ancho w: k × ancho/letras. v5.48, medido en Resolve:
+    las serif cursivas (editoriales) ~1,35; Poppins / Inter (Impacto, Moderno, Amro, Count) son más altas para su ancho: ~1,7."""
+    k = A['k_alto'] if estilo in ESTILOS_EDITORIAL else A['k_alto_sans']
+    return max(0.05, min(0.16, k * w * ancho_tl / (max(5, len(texto)) * 1920.0)))
 
 
 def _agrupar(ms):
@@ -399,13 +674,33 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
         con_variantes = set(G.datos_variantes(pack).keys())
     except Exception:
         con_variantes = set()
+    numeros = cifras(pal) if VARIANTE_COUNT in con_variantes else {}
     for n_frase, frase in enumerate(frases(pal, A)):
         ms = elegir_mains(pal, frase, primera=(n_frase == 0), forzados=forzados, A=A)
+        if forzados is None and numeros:
+            # las cifras van grandes (Luxe Count); la grande que tuviera pegada deja de serlo (formarían un grupo que ya no es una cifra)
+            nums = [x for k in frase if k in numeros for x in numeros[k][1]]
+            if nums:
+                ms = sorted(set(k for k in ms if all(abs(k - x) > 1 for x in nums)) | set(nums))
         cabezas, grupos = _agrupar(ms)
         miembros = {k for g in grupos.values() for k in g[1:]}
+        trozos = []
         for trozo in _partir(pal, frase, cabezas, A, grupos):
+            # v5.48 (pedido: «jamás 4 líneas»): UNA palabra grande por bloque; el corte va justo después de la primera (sus palabras pequeñas
+            # siguientes van con la segunda: «pero en la / Fiesta» + «se desató el / Show»). (_partir no se toca: lo usan los temas 1 y 3.)
+            heads = [k for k in trozo if k in cabezas]
+            for h in heads[1:]:
+                fin0 = grupos.get(heads[heads.index(h) - 1], [heads[heads.index(h) - 1]])[-1]
+                trozos.append([k for k in trozo if k <= fin0])
+                trozo = [k for k in trozo if k > fin0]
+            trozos.append(trozo)
+        for trozo in trozos:
             plan.append({'frase': n_frase, 'palabras': trozo, 'mains': [k for k in trozo if k in cabezas], 'grupos': grupos, 'miembros': miembros,
                          'orig': sorted(o for k in trozo for o in pal[k]['orig'])})
+    if A.get('complejos', True) and not forzados:
+        plan = _complejos(plan, pal, A)
+    plan = _reglas_lineas(plan, pal, A)
+    plan = _juntar_cortos(plan, pal, A)
     # ORACIONES: un bloque abre oración nueva si lo anterior acabó en signo fuerte o con una pausa (los signos a veces se pierden por el camino)
     oraciones, o = [], -1
     for n, b in enumerate(plan):
@@ -446,8 +741,11 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
                 cur.append(k)
         if cur:
             segs.append(('S', cur))
+        segs = _lineas_pequenas(pal, segs, A)
 
         def texto_de(ks):
+            if ks and ks[0] in numeros and list(ks) == numeros[ks[0]][1]:
+                return numeros[ks[0]][0]       # (el texto que lee el Luxe Count: «$430,000», «50%»)
             t = ' '.join(pal[m]['texto'] for m in ks)
             return t[:1].upper() + t[1:]
         # estilo de cada palabra grande. Como en la referencia, los bloques de una misma ORACIÓN comparten estilo (5·5·5, 2·2) y cada oración
@@ -467,6 +765,8 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
             remate = (oraciones[n] > 0 and n == ultimo_con_main[oraciones[n]] and len(est) == n_m - 1 and mains_de_oracion[oraciones[n]] >= 2)
             if forzado:
                 e = forzado
+            elif ks and ks[0] in numeros and list(ks) == numeros[ks[0]][1]:
+                e = VARIANTE_COUNT                                 # una cantidad: cuenta hasta la cifra
             elif _intencion(texto):
                 e = _estilo_para(pack, texto, ult_base, None, ancho_tl, ESTILOS_BASE)          # el significado manda (fuego, negación)
             elif remate:
@@ -484,12 +784,31 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
                 est.append(e)
         b['estilos'] = est
         # alturas
-        alturas, anchos, m_a = [], {}, 0
+        alturas, anchos, m_a, arriba = [], {}, 0, {}
         for j, (tipo, ks) in enumerate(segs):
             if tipo == 'M':
                 anchos[j] = _ancho_objetivo_main(texto_de(ks))
+                if m_a < len(est):
+                    natural = G.ancho_main(texto_de(ks), est[m_a], pack, ancho_tl)
+                    vecinas = [segs[v] for v in (j - 1, j + 1) if 0 <= v < len(segs) and segs[v][0] == 'S']
+                    if vecinas:
+                        # v5.48 (pedido): la grande ocupa el ancho de su línea pequeña más ancha (la de encima o la de debajo): el Luxe Slide queda justo
+                        # sobre ella, casi al ras, y la de debajo nunca se sale de ella. Nunca más pequeña que su tamaño natural, ni más del 92 % del cuadro.
+                        w_linea = max(_ancho_linea(pal, v[1], A, forzar_peso, ancho_tl) for v in vecinas)
+                        minimo = natural / float(ancho_tl) if natural else 0.0
+                        tope = (A['zoom_max_cifra'] if est[m_a] == VARIANTE_COUNT else 2.4) * natural / float(ancho_tl) if natural else 0.92
+                        anchos[j] = min(0.92, max(A['grande_linea'] * w_linea, A['grande_min'] * minimo), tope)     # (una cifra corta no crece tanto)
+                    elif natural:                                               # sola (sin línea pequeña): no se infla (la referencia: zoom 0,9-1,3)
+                        anchos[j] = min(anchos[j], A['zoom_max'] * natural / float(ancho_tl))
                 aire = 2 * AIRE_EDITORIAL if (m_a < len(est) and est[m_a] in ESTILOS_EDITORIAL) else 0.0
-                alturas.append(_alto_main(texto_de(ks), anchos[j], ancho_tl) + aire)
+                # v5.48: el alto REAL de su tinta en su tipografía (antes una estimación por letras: «EMPEZAMOS» reservaba 266 px y mide 114)
+                # y lo que sube y baja respecto a la y del clip (Fusion centra la caja de la letra, no la tinta: «Maquillaje» cuelga por abajo)
+                ext = G.extension_tinta(texto_de(ks), est[m_a], anchos[j], pack, ancho_tl) if m_a < len(est) else None
+                if ext:
+                    arriba[j] = ext[0]
+                    alturas.append(ext[0] + ext[1])
+                else:
+                    alturas.append(_alto_main(texto_de(ks), anchos[j], ancho_tl, A, est[m_a] if m_a < len(est) else None) + aire)
                 m_a += 1
             else:
                 alturas.append(A['alto_linea'])
@@ -500,7 +819,7 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
         top = max(0.10, min(0.90 - total, yc - total / 2.0))
         lineas, y, m_i = [], top, 0
         for j, ((tipo, ks), h) in enumerate(zip(segs, alturas)):
-            centro = round(y + h / 2.0, 4)
+            centro = round(y + arriba.get(j, h / 2.0), 4)
             y += h + A['hueco']
             if tipo == 'M':
                 lineas.append(('M', [(texto_de(ks), round(pal[ks[0]]['t'] - A['adelanto'], 3), est[m_i])], 0.5, centro, round(anchos[j], 3)))
@@ -512,12 +831,46 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
                         b.setdefault('pesos', {})[o] = peso_p          # para que el editor pinte lo que el planificador decide solo (negrita = «Abajo»)
                 natural = sum(G.ancho_px(t, G.FINA if p == 'L' else G.NEGRITA, G.TAM_PEQUENA, ancho_tl) for t, p, _ in tr) / float(ancho_tl)
                 # una línea pequeña más ancha que el cuadro se reduce hasta 0,92 del ancho
-                lineas.append(('S', [(t, p, round(tt, 3)) for t, p, tt in tr], 0.5, centro, 0.92 if natural * G.AFINADO['tinta_pequena'] > 0.92 else None))
+                w_n = natural * G.AFINADO['tinta_pequena']
+                cx, w_l = 0.5, (0.92 if w_n > 0.92 else None)
+                if m_i > 0 and est[m_i - 1] not in ESTILOS_LINEA3_CENTRADA:
+                    # v5.48 (pedido): la línea de DEBAJO de la grande va del centro hacia la derecha y NUNCA se sale del borde derecho de la grande
+                    w_main = anchos[max(i for i in anchos if i < j)] - 0.03          # (margen: que la tinta quede DENTRO del borde, no justo en él)
+                    if w_n >= w_main:
+                        w_l = w_main
+                    else:
+                        cx = round(min(0.5 + w_n / 2.0, 0.5 + w_main / 2.0 - w_n / 2.0), 4)
+                lineas.append(('S', [(t, p, round(tt, 3)) for t, p, tt in tr], cx, centro, w_l))
         b['estilo_bloque'] = est[0] if est else None
         b['grandes'] = sorted(o for tipo, ks in segs if tipo == 'M' for k_g in ks for o in pal[k_g]['orig'])       # las palabras que quedaron GRANDES (índices entregados)
         # la caja de la pila (fracción del alto, desde arriba): el emoji del bloque se coloca encima o debajo de ella
         bloques.append({'t0': b['t0'], 't1': b['t1'], 'estilo': est[0] if est else None, 'lineas': lineas, 'caja': (round(top, 4), round(top + total, 4))})
+    _respiro(bloques, fin_video, A)
     return bloques, plan
+
+
+def _respiro(bloques, fin_video=None, A=AFINADO):
+    """v5.48: la última palabra de cada bloque se ve al menos A['respiro'] s. Si el bloque siguiente llega antes, espera (como mucho A['espera_max'] s)
+    y sus palabras que entrarían antes de aparecer él entran con él. Antes la última palabra podía verse 0,1 s («muy rápido, no fluye»)."""
+    def entradas(b):
+        return [x[1] if l[0] == 'M' else x[2] for l in b['lineas'] for x in l[1]]
+    for i, b in enumerate(bloques):
+        quiere = max(b['t1'], max(entradas(b) or [b['t0']]) + A['respiro'])
+        if i + 1 < len(bloques):
+            sig = bloques[i + 1]
+            fin = min(quiere, sig['t0'] - A['gap_minimo'] + A['espera_max'])
+            if fin > sig['t0'] - A['gap_minimo']:
+                nuevo = round(fin + A['gap_minimo'], 3)
+                sig['t0'], sig['t1'] = nuevo, round(max(sig['t1'], nuevo + 0.6), 3)
+                for n, l in enumerate(sig['lineas']):
+                    if l[0] == 'M':
+                        items = [(x[0], max(x[1], nuevo), x[2]) for x in l[1]]
+                    else:
+                        items = [(x[0], x[1], max(x[2], nuevo)) for x in l[1]]
+                    sig['lineas'][n] = (l[0], items) + tuple(l[2:])
+            b['t1'] = round(max(b['t1'], fin), 3)
+        else:
+            b['t1'] = round(max(b['t1'], min(float(fin_video), quiere) if fin_video else quiere), 3)
 
 
 def cues_de(palabras, idioma='es', pack='Referencia', ancho_tl=1080, **kw):

@@ -43,7 +43,7 @@ def _espec(clave):
     if clave.startswith('k script'):
         return dict(par=GUION, mayus=False, esp=1.0, tipo='texto')
     if clave == 'k label':
-        return dict(par=ETIQUETA, mayus=True, esp=1.42, tipo='texto')
+        return dict(par=ETIQUETA, mayus=True, esp=ESP_LABEL, tipo='texto')
     if clave.startswith('k ring trazo') or clave.startswith('k ring lazo'):
         return dict(tipo='trazo')
     if clave.startswith('k line trazo'):
@@ -84,7 +84,13 @@ def ancho_px(clave, texto, size, ancho_tl=1080):
     t = texto_visible(clave, texto)
     f = _fuente(e['par'], px)
     avance = f.getlength(t) if f is not None else len(t) * px * 0.5
-    return avance * e['esp'] * TINTA
+    # v5.44: el CharacterSpacing de Text+ no multiplica el avance: SUMA (esp − 1) × 1,93 em por letra (medido en Resolve 21.1.1 con las versalitas
+    # del Tema 1, 12 líneas: 0,81 em por letra con 1,42). Medido como producto, «HABRÁN CONCIERTOS DE» daba 0,62 del ancho y ocupaba 0,94: se salía.
+    return avance * TINTA + max(0, len(t) - 1) * (e['esp'] - 1.0) * K_ESP * px
+
+
+K_ESP = 1.93                         # em que suma Text+ por letra y por unidad de CharacterSpacing por encima de 1
+ESP_LABEL = 1.218                   # v5.45: el CharacterSpacing de las versalitas: 1 + 0,42/K_ESP = las .42em del kit (1,42 sumaba 0,81 em)
 
 
 def size_para_cap(clave, cap_px, ancho_tl=1080):
@@ -169,6 +175,27 @@ def apilar(lineas, ancla_y, ancho_tl=1080, alto_tl=1920):
             ref = _refs(l, textos)[-1]
             if ref is not textos[-1]:
                 ref['_pad_abajo'] = max(ref.get('_pad_abajo', 0.0), (float(l.get('sep', 0.012)) + 0.022) * alto_tl)
+    if all(l.get('kit') for l in textos):
+        # v5.45 (Tema 1 con Text+, «no es lo mismo»): la maqueta del kit (kit_neon.maqueta): cada línea con el ANCHO de la del kit (su fuente y su tamaño)
+        # y su centro a la misma altura; la caja de la pila, la del kit. Coordenadas del kit: 1080×1920.
+        for l in textos:
+            m, e = l['kit'], _espec(l['k'])
+            objetivo = (m['avance'] * TINTA + m['espacio']) * ancho_tl / 1080.0       # (lo que mide ancho_px: tinta + espaciado)
+            w0 = ancho_px(l['k'], l['texto'], l['size'], ancho_tl)
+            if w0 > 0:
+                l['size'] = max(AFINADO['min_size'], l['size'] * objetivo / w0)
+            l['cap_px'] = cap_de_size(l['k'], l['size'], ancho_tl)
+            l['w'] = ancho_px(l['k'], l['texto'], l['size'], ancho_tl)
+            l['h'] = l['cap_px'] * (e['caja'][0] if e['tipo'] == 'cinta' else 1.0)
+            if e['tipo'] == 'cinta':
+                l['w'] += 2.0 * l['cap_px'] * e['caja'][1]
+            l['y'] = round(m['centro'] / 1920.0, 4)
+            l['x'] = 0.5
+        arriba = min(l['y'] * alto_tl - l['h'] / 2.0 for l in textos)
+        abajo = max(l['y'] * alto_tl + l['h'] / 2.0 for l in textos)
+        caja = (round(arriba / alto_tl, 4), round(abajo / alto_tl, 4))
+        ls = _trazos(ls, textos, ancho_tl, alto_tl)
+        return ls + _partir_grande(textos, ancho_tl), caja
     # posiciones verticales (px desde arriba, relativas al inicio de la pila)
     y = 0.0
     previo = None
@@ -194,7 +221,37 @@ def apilar(lineas, ancla_y, ancho_tl=1080, alto_tl=1920):
         l['y'] = round(centro / alto_tl, 4)
         l['x'] = round(0.5 + float(l.get('dx') or 0.0), 4)
     caja = (round(arriba / alto_tl, 4), round((arriba + total) / alto_tl, 4))
-    # los trazos se colocan respecto a su línea de referencia ('sobre': índice de la línea dentro de `textos` ordenados por aparición)
+    return _trazos(ls, textos, ancho_tl, alto_tl), caja
+
+
+FILL_CLIP = {'acento': 'k hero lima', 'acento2': 'k hero magenta', 'blanco': 'k hero blanco'}
+
+
+def _partir_grande(textos, ancho_tl):
+    """v5.45 (kit: «3 JÓVENES» con la cifra en lima y cada palabra cuando se dice): la línea grande con 'partes' se queda con su PRIMERA palabra y
+    devuelve una línea más por cada una de las otras, una al lado de otra con su ancho real (los trazos ya se calcularon con la línea entera)."""
+    nuevas = []
+    for l in textos:
+        partes = (l.get('kit') or {}).get('partes')
+        if not partes or (len({f for _, f, _ in partes}) < 2 and len({t for _, _, t in partes}) < 2):
+            continue
+        anchos = [ancho_px(l['k'], p, l['size'], ancho_tl) for p, _, _ in partes]
+        hueco = ancho_px(l['k'], 'A A', l['size'], ancho_tl) - ancho_px(l['k'], 'AA', l['size'], ancho_tl)
+        x = l['x'] * ancho_tl - (sum(anchos) + hueco * (len(partes) - 1)) / 2.0
+        t_prev = float(l['t'])
+        for k, ((p, fill, t), w) in enumerate(zip(partes, anchos)):
+            d = l if k == 0 else dict(l, heroe=False, nombre='heroe_parte')
+            d.update(texto=p, k=FILL_CLIP.get(fill, l['k']), x=round((x + w / 2.0) / ancho_tl, 4), w=w)
+            if k and t is not None:
+                d['t'] = t_prev = max(t_prev, float(t) - 0.03)          # (cada palabra cuando se dice, nunca antes que la anterior)
+            if k:
+                nuevas.append(d)
+            x += w + hueco
+    return nuevas
+
+
+def _trazos(ls, textos, ancho_tl, alto_tl):
+    """Los trazos se colocan respecto a su línea de referencia ('sobre': índice de la línea dentro de `textos` ordenados por aparición)."""
     for l in ls:
         e = _espec(l['k'])
         if e['tipo'] == 'trazo':                                    # v5.5.13: círculo o lazo a mano alrededor de sus líneas
@@ -223,7 +280,7 @@ def apilar(lineas, ancla_y, ancho_tl=1080, alto_tl=1920):
             ancho = ref['w'] * float(l.get('rel_w', 0.9))
             l.update(x=ref['x'], y=round(ref['y'] + (ref['h'] / 2.0 + float(l.get('sep', 0.012)) * alto_tl) / alto_tl, 4),
                      zx=round(ancho / (nw * ancho_tl), 3), zy=1.0)
-    return ls, caja
+    return ls
 
 
 def construir_cues(bloques, ancho_tl=1080, alto_tl=1920):
@@ -246,6 +303,30 @@ def construir_cues(bloques, ancho_tl=1080, alto_tl=1920):
             runs.append(r)
         runs.sort(key=lambda r: r['t'])
         cues.append({'start': round(b['t0'], 3), 'end': round(b['t1'], 3), 'plantilla': b.get('receta'), 'caja': list(caja), 'runs': runs})
+    return cues
+
+
+def variantes_trazo(cues):
+    """v5.45 (el usuario: «el dibujo de rings no lo hace bien»): el círculo y el lazo a mano van con la variante del pack que ya tiene su forma
+    («k ring trazo lima 36»: alto/ancho 0,36) y un zoom IGUAL en x e y; con ZoomX ≠ ZoomY el trazo salía deformado. Solo para Resolve (el .json de la
+    pista); la vista y GO sin Resolve siguen con zx/zy sobre TRAZO_NOMINAL. Cambia los cues en su sitio."""
+    nw, nh = PAL.TRAZO_NOMINAL
+    for cue in cues or []:
+        for r in cue.get('runs') or []:
+            k = str(r.get('k') or '')
+            if k.startswith('k line trazo') and len(k.split()) == 4:        # v5.47: el subrayado igual: su variante de ancho y zoom igual en x e y
+                ancho = float(r.get('zx') or 1.0) * AFINADO['nominal_linea'][0]
+                v = min(PAL.SUBRAYADO_ANCHOS, key=lambda a: abs(a - ancho))
+                z = round(ancho / v, 3)
+                r.update(k=f'{k} {int(round(v * 100))}', zx=z, zy=z)
+                continue
+            if not (k.startswith('k ring trazo') or k.startswith('k ring lazo')) or len(k.split()) > 4:
+                continue
+            zx, zy = float(r.get('zx') or 1.0), float(r.get('zy') or 1.0)
+            ancho, alto = zx * nw, zy * nh
+            a = min(PAL.ASPECTOS_TRAZO, key=lambda v: abs(v - alto / max(ancho, 1e-6)))
+            z = round(ancho / PAL.TRAZO_VARIANTE_ANCHO, 3)
+            r.update(k=f'{k} {int(round(a * 100))}', zx=z, zy=z)
     return cues
 
 

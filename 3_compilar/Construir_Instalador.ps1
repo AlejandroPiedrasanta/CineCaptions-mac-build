@@ -9,12 +9,12 @@
 #   recursos\ .................... resolve_scripts, locales, plantillas_incluidas, fonts, sfx_library,
 #                                  emojis, logo_cinecaptions.png / .ico
 #   compilar\
-#     requirements.txt ........... librerias del programa principal (Python 3.15.1 + PySide6)
+#     requirements.txt ........... librerias del programa principal (Python 3.15.2 + PySide6)
 #     cinecaptions.spec + rthook_stanza_stub.py   PyInstaller
 #     Instalador.cs + app.manifest            el instalador/desinstalador (csc.exe de .NET Framework 4, viene con Windows)
 #     banner.jpg ................. la foto del banner del instalador (va dentro del .exe)
 # Deja:
-#   _compilacion\ ................ Python 3.15.1, venv315, build de PyInstaller (se puede borrar: se rehace)
+#   _compilacion\ ................ Python 3.15.2, venv315, build de PyInstaller (se puede borrar: se rehace)
 #   INSTALADORES\Windows\Instalar_CineCaptions_<version>.exe  lo unico que se entrega (con la version en el nombre; los anteriores se borran)
 # -SoloInstalador: reusa el programa ya compilado en 6_compilacion\dist (solo rehace el instalador)
 # ============================================================================
@@ -72,13 +72,13 @@ if ($SoloInstalador) {
     if ($verPy -notmatch "APP_VERSION = '([\d.]+)'") { throw 'No encontre APP_VERSION en version.py' }
     $version = $matches[1]
 } else {
-# 1) Python 3.15.1 y el entorno de compilacion ---------------------------------------
-#    El interprete vive en 6_compilacion\python-3.15.1 (sin tocar el Python del sistema)
-#    y el venv en 6_compilacion\venv315. Whisper/Argos/ONNX se ejecutan en el motor 3.14.9.
-Paso 'Entorno de compilacion (Python 3.15.1)'
+# 1) Python 3.15.2 y el entorno de compilacion ---------------------------------------
+#    El interprete vive en 6_compilacion\python-3.15.2 (sin tocar el Python del sistema)
+#    y el venv en 6_compilacion\venv315. Whisper/Argos/ONNX se ejecutan en el motor 3.14.10.
+Paso 'Entorno de compilacion (Python 3.15.2)'
 # si la carpeta del proyecto se movio, el venv sigue apuntando a la ruta vieja: se corrige solo
 $cfg = Join-Path $venv 'pyvenv.cfg'
-$pyBase = Join-Path $obra 'python-3.15.1'
+$pyBase = Join-Path $obra 'python-3.15.2'
 if ((Test-Path $cfg) -and (Test-Path (Join-Path $pyBase 'python.exe'))) {
     $txt = [IO.File]::ReadAllText($cfg, $utf8)
     if ($txt -notmatch [regex]::Escape("home = $pyBase")) {
@@ -89,26 +89,26 @@ if ((Test-Path $cfg) -and (Test-Path (Join-Path $pyBase 'python.exe'))) {
 }
 if (-not (Test-Path $vpy)) {
     New-Item -ItemType Directory -Force -Path $obra | Out-Null
-    $carpetaPy = Join-Path $obra 'python-3.15.1'
+    $carpetaPy = Join-Path $obra 'python-3.15.2'
     $py315 = Join-Path $carpetaPy 'python.exe'
     if (-not (Test-Path $py315) -and (Get-Command pymanager -ErrorAction SilentlyContinue)) {
-        & pymanager install -y "--target=$carpetaPy" 3.15.1
+        & pymanager install -y "--target=$carpetaPy" 3.15.2
     }
     if (-not (Test-Path $py315)) {
         try { $py315 = (& py -V:3.15 -c "import sys;print(sys.executable)").Trim() } catch { $py315 = $null }
     }
-    if (-not $py315 -or -not (Test-Path $py315)) { throw 'Falta Python 3.15.1 para compilar: instala Python 3.15.1 o colócalo en 6_compilacion\python-3.15.1' }
+    if (-not $py315 -or -not (Test-Path $py315)) { throw 'Falta Python 3.15.2 para compilar: instala Python 3.15.2 o colócalo en 6_compilacion\python-3.15.2' }
     & $py315 -m venv $venv
     if ($LASTEXITCODE -ne 0) { throw 'No pude crear el venv de compilacion' }
 }
 & $vpy -m pip install --progress-bar off -q -r (Join-Path $aqui 'requirements.txt')
 if ($LASTEXITCODE -ne 0) { throw 'pip install -r requirements.txt fallo' }
-& $vpy -c "import sys; assert sys.version_info[:3] == (3, 15, 1), sys.version"
-if ($LASTEXITCODE -ne 0) { throw 'El venv de compilacion no es Python 3.15.1' }
+& $vpy -c "import sys; assert sys.version_info[:3] == (3, 15, 2), sys.version"
+if ($LASTEXITCODE -ne 0) { throw 'El venv de compilacion no es Python 3.15.2' }
 # comtypes genera las interfaces UI Automation la primera vez que GetModule las usa.
 # PyInstaller necesita esos modulos ya generados para el soporte de DaVinci Resolve.
 & $vpy -c "from comtypes.client import GetModule; GetModule('UIAutomationCore.dll')"
-if ($LASTEXITCODE -ne 0) { throw 'No pude generar las interfaces COM de UI Automation para Python 3.15.1' }
+if ($LASTEXITCODE -ne 0) { throw 'No pude generar las interfaces COM de UI Automation para Python 3.15.2' }
 SincronizarVersion
 Documentar
 

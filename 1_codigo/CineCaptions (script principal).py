@@ -18,7 +18,7 @@ funciones de subtitle_transcriber.py que usa la version de consola, para que
 las dos siempre produzcan resultados identicos.
 
 v5.0.0: la interfaz pasa de CustomTkinter a Qt (PySide6) y el programa a
-Python 3.15.1 en la aplicación principal; Whisper/Argos/ONNX usan el motor auxiliar Python 3.14.9., con la propuesta de panel de 5
+Python 3.15.2 en la aplicación principal; Whisper/Argos/ONNX usan el motor auxiliar Python 3.14.10., con la propuesta de panel de 5
 pantallas (Inicio, Nuevo proyecto, Editor de palabras, Estilos y composición,
 SFX Lab) y un menu lateral. La LOGICA es la de la v4.1.0: lo que cambia es
 como se ve y donde vive cada control. Lo comun de la interfaz (colores,
@@ -6428,6 +6428,26 @@ class SubtitleApp(QWidget):
         despues(2500, self._precalentar_mcp, self)
         despues(9000, self._precalentar_secuencias_emoji, self)
         despues(12000, self._precalentar_ondas_sfx, self)
+        despues(7000, self._prearmar_paginas, self)
+    def _prearmar_paginas(self, pendientes=None):
+        """v5.47 (el usuario: «va lento y trabado cuando doy clic»; medido: el PRIMER clic en Efectos tardaba 0,77 s y en Estilos 0,29–0,37 s armando
+        la página): se arman solas, una cada 2 s, mientras el programa está en reposo (en Inicio y sin GO). Si el usuario está en otra página o hay un
+        GO, se espera; si ya se abrieron, no hace nada."""
+        pendientes = list(pendientes if pendientes is not None else ('efectos', 'estilos'))
+        if not pendientes:
+            return
+        if getattr(self, '_go_corriendo', False) or getattr(self, '_pagina_actual', 'inicio') != 'inicio':
+            despues(5000, lambda: self._prearmar_paginas(pendientes), self)
+            return
+        clave = pendientes.pop(0)
+        try:
+            if clave == 'efectos' and self._efectos_widget is None:
+                self._asegurar_efectos()
+            elif clave == 'estilos' and self._plantillas_ventana is None:
+                self._asegurar_estilos()
+        except Exception:
+            registro.excepcion(origen=f'preparar la página {clave}')
+        despues(2000, lambda: self._prearmar_paginas(pendientes), self)
     def palabras_de_la_ultima_transcripcion(self):
         """[{'word', 'start', 'end'}] de la ultima transcripcion (la de la sesion o la guardada del video actual); [] si no hay."""
         sesion = getattr(self, '_sfx_palabras', None)
@@ -10641,16 +10661,16 @@ class SubtitleApp(QWidget):
             pag.refrescar()
             return True
         if self._estudio_ventana is None:
-            try:
-                import director_sonido_ui
-                self._director_pagina = director_sonido_ui.PaginaDirector(
-                    self, video=lambda: getattr(self, '_go_archivo', None) or self.video_var.get().strip().strip('"'), offset=self._offset_frames)
+            video_fn = lambda: getattr(self, '_go_archivo', None) or self.video_var.get().strip().strip('"')  # noqa: E731
+            try:                                   # v5.43: la página Sonido = la biblioteca del autor + MAPA_SFX.md (sonido_skill_ui)
+                import sonido_skill_ui
+                self._director_pagina = sonido_skill_ui.PaginaSonido(self, video=video_fn, offset=self._offset_frames)
                 self._sfx_capa.addWidget(self._director_pagina, 1)
                 self._director_pagina.refrescar()
                 return True
-            except Exception:
+            except Exception:                      # (la página del AI Sound Director ya no se usa: el usuario la quitó en la v5.43)
                 self._director_pagina = None
-                registro.excepcion(origen='página AI Sound Director')
+                registro.excepcion(origen='página Sonido (biblioteca)')
         if self._estudio_ventana is not None:
             try:
                 self._estudio_ventana.poner_video(self.video_var.get().strip().strip('"') or None)
@@ -11894,7 +11914,11 @@ class SubtitleApp(QWidget):
         self._director_hilo, self._director_res = None, None
         try:
             import director_sonido
-            if not director_sonido.activo():
+            import sonido_skill                          # v5.43: el sonido lo diseña la biblioteca del autor con las reglas de MAPA_SFX.md
+            usar_skill = sonido_skill.activo()
+            if usar_skill and not director_sonido.activo():
+                sonido_skill.poner_pref(ai_sound_director=True)      # la tubería de colocación (pistas AI SFX, apagar Simple) es la del director
+            if not (usar_skill or director_sonido.activo()):
                 return
             ancho, alto = getattr(self, '_ancho_timeline', None) or 0, getattr(self, '_alto_timeline', None) or 0
             ctx = director_sonido.contexto(media_path, words, self._plantilla_un_clic(), formato='h' if ancho and alto and ancho > alto * 1.2 else 'v',
@@ -11913,7 +11937,10 @@ class SubtitleApp(QWidget):
                     ctx['cortes'] = [float(t) for t in cortes]
                 except Exception:
                     ctx['cortes'] = []
-                director_sonido.preparar(ctx, res=res)               # (lo va rellenando: GO recoge lo que ya esté hecho)
+                if usar_skill:
+                    sonido_skill.preparar(ctx, res=res)              # v5.43: los SFX de la biblioteca (Desktop\SFX + MAPA_SFX.md)
+                else:
+                    director_sonido.preparar(ctx, res=res)           # (lo va rellenando: GO recoge lo que ya esté hecho)
             res = {}
             self._director_res = res
             self._director_hilo = threading.Thread(target=trabajo, daemon=True, name='ai-sound-director')
@@ -12091,7 +12118,9 @@ class SubtitleApp(QWidget):
         neon = getattr(self, '_kitneon', None)          # v5.5.13: los captions del Tema 1 neón (los armó _generar_con_kinetic para ESTE video)
         if plan and plan.get('tema') == 'neon' and neon and neon.get('escena'):
             plan['kitneon'] = neon['escena']
-        if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or solo_motions or plan.get('kitneon')):   # (v5.5.9: «Motions completo» también)
+            plan['kitneon_texto'] = bool(neon.get('texto'))     # v5.43: los captions ya son los Text+ de GO (editables): la PRO no pone clips neón
+        neon_pro = bool(plan and plan.get('kitneon') and not (plan.get('kitneon_texto') and plan.get('kitneon_motions') is None))   # (Text+ sin la PRO: nada que poner)
+        if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or solo_motions or neon_pro):   # (v5.5.9: «Motions completo» también)
             return ''
         try:                                   # el plan es de un video: si ahora hay otro cargado (regenerar), no se aplica el de antes
             actual = self.video_var.get().strip().strip('"')
@@ -13637,7 +13666,7 @@ class SubtitleApp(QWidget):
                 ancho_tl, alto_tl = (1920, 1080) if formato == 'h' else (1080, 1920)
             res = kp.planificar(palabras_finales, idioma=base_lang, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=ancla, mains=mains, fin_video=self._fin_video())
         else:
-            res = kp.planificar(palabras_finales, idioma=base_lang, ancla=ancla, mains=mains, fin_video=self._fin_video())
+            res = kp.planificar(palabras_finales, idioma=base_lang, ancla=ancla, mains=mains, fin_video=self._fin_video(), kit=True)   # (v5.44: composición del kit)
         cues, plan = res['cues'], res['plan']
         if not cues:
             avisar(tr('No encontré palabras para armar el estilo «{p}»: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
@@ -13668,6 +13697,8 @@ class SubtitleApp(QWidget):
             for k in ('sfx', 'sfx_archivo', 'sfx_nombre', 'sfx_manual', 'sfx_original', 'sfx_eventos', 'emoji', 'emoji_ini', 'emoji_fin', 'emoji_linea'):
                 if k in b:
                     c[k] = b[k]
+        if not es_viral and not sin_resolve:
+            kc.variantes_trazo(cues)                                  # v5.45: el aro con su forma y zoom igual en x e y (el trazo no se deforma)
         json_path = kc.escribir(cues, st.SHARED_FOLDER / f'{project_name}.{base_lang}.kinetic.json', base_lang)
         if sin_resolve:
             self._go_cues_render = cues                              # GO sin Resolve: render_sin_resolve los graba en el video (render_temas.py)
@@ -13681,7 +13712,22 @@ class SubtitleApp(QWidget):
                  'offset_frames': self._offset_frames(), **pista_plantilla, **pista_sfx, **pista_emojis}
         if es_viral:
             track['clip_prueba'] = 'v fina'                       # el clip que prueba que el bin del pack VIRAL está completo (el de Kinetic es «k hero blanco»)
-        if self._kitneon and not es_viral and not sin_resolve:
+        else:
+            # v5.45 (el usuario: «los rings se quedan a medias»): en el kit el bloque EMPIEZA a salir al acabar y la salida dura 0,32 s; los clips del pack
+            # la hacen en sus últimos 0,32 s, así que se alargan eso (antes salían 0,32 s antes y el aro, que tarda 0,45 s, no acababa de dibujarse)
+            import kit_neon as _kn
+            track['extra_fin_s'] = _kn.EXTRA_FIN_TEXTO
+            track['fuente_del_tema'] = True                       # (la tipografía de «Crea tu estilo» no cambia la letra del kit; los clips neón tampoco)
+        try:                                                     # v5.43 (el usuario: «el Tema 1 en Resolve no tiene el formato Text+ para poder
+            import edicion_pro as _ep                            # trabajar»): por defecto sus captions son estos Text+ neón, EDITABLES; la PRO
+            editables = _ep.opciones_guardadas().get('pro_captions_editables', True) is not False   # pone motions y placa y los ajusta (sin clips neón)
+            import kit_neon as _kn
+            editables = editables and bool(_kn.CAPTIONS_TEXTO)  # v5.44: apagado hasta que los Text+ igualen a los clips (kit_neon.CAPTIONS_TEXTO)
+        except Exception:
+            editables = False
+        if self._kitneon and not es_viral and not sin_resolve and editables:
+            self._kitneon['texto'] = True
+        elif self._kitneon and not es_viral and not sin_resolve:
             # v5.24 (el usuario: «quita lo que pone y al final desactiva; quédate con lo que importa, así es más rápido»): con el Tema 1 neón la
             # Edición PRO pone los captions (clips KitNeon); el script de Resolve ya no importa el pack ni coloca los Text+ que luego se apagaban:
             # solo los sonidos. Si la PRO no pudiera ponerlos, _respaldo_tema1 coloca estos Text+ (sin repetir los sonidos).

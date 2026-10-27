@@ -10,7 +10,7 @@ obsoleto».
 Mira, para cada pieza:
   * que la libreria principal cargue y que su version sea la FIJADA en
     3_compilar/requirements.txt;
-  * el motor auxiliar Python 3.14.9: Whisper, Argos y ONNX Runtime, con las versiones
+  * el motor auxiliar Python 3.14: Whisper, Argos y ONNX Runtime, con las versiones
     de 2_recursos/motor_compat/requirements.txt;
   * el motor de IA (Python 3.14 propio): torch, las librerias del lock y los
     modelos de Qwen3 en la cache;
@@ -125,10 +125,10 @@ def comprobar():
             datos = motor_compat.verificar()
             faltan = motor_compat.faltan_requisitos()
             py = datos.get('python')
-            ok = py == '3.14.9' and not faltan
+            ok = str(py or '').startswith('3.14.') and not faltan
             if ok:
                 paquetes = datos.get('versiones', {})
-                detalle = 'Python 3.14.9 · Whisper ' + str(paquetes.get('faster-whisper', '?'))
+                detalle = f'Python {py} · Whisper ' + str(paquetes.get('faster-whisper', '?'))
                 detalle += ' · ONNX ' + str(paquetes.get('onnxruntime', '?'))
                 detalle += ' · Argos ' + str(paquetes.get('argostranslate', '?'))
             else:

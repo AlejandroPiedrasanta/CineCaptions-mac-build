@@ -1663,6 +1663,34 @@ def _caras_redondas(caras):
     return [[round(float(x), 4) for x in c] for c in caras or []]
 
 
+def _ajustes_texto_neon(antes, despues, bloques, fps, H, alto_kit=1920.0):
+    """v5.43, Tema 1 con captions Text+ (editables): lo que kit_neon_motions.ajustar_captions hizo con los bloques neón se pasa a los Text+ de GO.
+    `antes`/`despues` = la escena del kit sin y con el ajuste; `bloques` = los Text+ (_bloques_captions). Devuelve (mover, sin_captions):
+    - un bloque que el ajuste QUITÓ (un motion de abajo ya lo dice) → su tramo en `sin_captions` [f0, f1) (colocar_pro apaga esos Text+, con marca);
+    - uno que cambió de altura (órbita, pantalla dividida, cierre) → entrada de `mover` con el mismo arriba que el kit (sin salirse por abajo).
+    Lo demás (acortar la salida, el tamaño del cierre) no se puede hacer con un Text+ ya colocado y se deja como está."""
+    quedan = {round(float(e.get('t0', 0)), 3): e for e in despues or []}
+    mover, sin = [], []
+    for e in antes or []:
+        t0 = round(float(e.get('t0', 0)), 3)
+        bq = min(bloques or [], key=lambda b: abs(b['ini'] - t0), default=None)
+        if bq is None or abs(bq['ini'] - t0) > 0.35:
+            continue                                               # (ese bloque no tiene Text+: nada que ajustar)
+        f0, f1 = int(round(bq['ini'] * fps)), int(round(bq['fin'] * fps))
+        nuevo = quedan.get(t0)
+        if nuevo is None:
+            sin.append([f0 - 1, f1])
+            continue
+        top0, top1 = float((e.get('a') or {}).get('top') or 0), float((nuevo.get('a') or {}).get('top') or 0)
+        if abs(top1 - top0) < 1:
+            continue
+        alto = max(0.02, float(bq['abajo']) - float(bq['arriba']))
+        arriba = min(top1 / alto_kit, 0.95 - alto)
+        mover.append({'ini': f0, 'fin': f1, 'subir': round((float(bq['arriba']) - arriba) * H, 1), 'caras': [],
+                      'caja': [round(arriba, 4), round(arriba + alto, 4)]})
+    return mover, sin
+
+
 def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     """Pone la Edición PRO en el timeline actual. Devuelve (ok, mensaje)."""
     decir = al_estado or (lambda t: None)
@@ -1701,6 +1729,10 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     ligero = bool(plan.get('ligero'))              # Temas 1–4 sin la PRO: solo legibilidad, acompañantes, color y la regla de la cara (edicion_pro_temas)
     neon_tema = bool(plan.get('kitneon'))          # v5.5.13: Tema 1 neón = el estilo del kit: sin persona encima, iconos 3D, acompañantes ni punch-in alterno
     ex_neon = set(op.get('_neon_extras') or []) if neon_tema and not ligero else set()   # …salvo lo que el usuario encendió en el menú lateral
+    # v5.43: con `kitneon_texto` los captions del Tema 1 son los Text+ de GO (editables en Resolve): no van clips neón y lo que ajustar_captions
+    # cambia (quitar / bajar un bloque) se hace sobre esos Text+ (_ajustes_texto_neon)
+    neon_texto = neon_tema and bool(plan.get('kitneon_texto'))
+    kitneon_antes = list(plan.get('kitneon') or [])
     if neon_tema and plan.get('kitneon_motions') and not plan.get('_neon_ajustado'):
         import kit_neon_motions as KM            # donde hay un motion de abajo, ese caption sobra (el motion ya lo dice); antes de lo del menú
         plan['kitneon'] = KM.ajustar_captions(plan['kitneon'], plan['kitneon_motions'])
@@ -1974,7 +2006,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         bloques_tema, a_cuadro = None, None
         if neon_tema:
             import kit_neon as KN
-            bloques_tema = KN.bloques_pro(plan.get('kitneon') or [])
+            bloques_tema = _bloques_captions() if neon_texto else KN.bloques_pro(plan.get('kitneon') or [])
             if hilo_placa is not None:
                 try:
                     import kit_neon_placa as PLA
@@ -2027,6 +2059,18 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 mover.append({'ini': clave[0], 'fin': clave[1], 'subir': round((yc - y) * H, 1), 'caras': [], 'caja': [round(y - medio, 4), round(y + medio, 4)]})
         except Exception:
             pass
+    sin_captions = []
+    if neon_texto and plan.get('_neon_ajustado'):
+        try:
+            mov_neon, sin_captions = _ajustes_texto_neon(kitneon_antes, plan.get('kitneon') or [], _bloques_captions(), fps, H)
+            claves = {(m['ini'], m['fin']) for m in mov_neon}
+            mover = [m for m in mover if (m['ini'], m['fin']) not in claves] + mov_neon
+        except Exception:
+            try:
+                import registro
+                registro.excepcion(origen='edición PRO (Tema 1 con Text+)')
+            except Exception:
+                pass
     # iconos 3D flotando junto a los captions (en vez del emoji de ese bloque)
     iconos3d, sin_emoji = [], []
     try:
@@ -2039,7 +2083,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         emo_on = ('emoji' in ex_neon) if neon_tema else bool(op.get('pro_emojis', True))
         if emo_on and not ligero and not cap_t5:
             bl_emo = _bloques_captions()
-            if neon_tema:
+            if neon_tema and not neon_texto:
                 import kit_neon as KN
                 bl_emo = KN.bloques_pro(plan.get('kitneon') or [])
             oc_emo = ocupado3d + [(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p.get('capa') == 'iconos']
@@ -2071,7 +2115,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 import kit_neon_motions as KM
                 extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, [],
                                   dict(plan, piezas=list(plan.get('piezas') or []) + KM.piezas(plan.get('kitneon_motions') or [])),
-                                  maximo=3, bloques=KN.bloques_pro(plan['kitneon']))
+                                  maximo=3, bloques=_bloques_captions() if neon_texto else KN.bloques_pro(plan['kitneon']))
             else:
                 extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None if ligero else 3)
             m_pil = _marca(plan, 'pildora') if not neon_tema else None
@@ -2116,7 +2160,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         if plan.get('kitneon_motions'):              # con la PRO: los motions del kit (los captions ya se ajustaron a ellos arriba)
             import kit_neon_motions as KM
             plan['piezas'] = list(plan.get('piezas') or []) + KM.piezas(plan['kitneon_motions'])
-        neon = KN.piezas(plan['kitneon'])
+        neon = [] if neon_texto else KN.piezas(plan['kitneon'])     # (v5.43: con los Text+ editables, ningún clip neón de captions)
         plan['piezas'] = list(plan.get('piezas') or []) + neon
     try:                                             # v5.20: el estilo y los colores elegidos en Efectos › Edición PRO (mandan sobre el color del video y el neón)
         import estilos_pro as EST
@@ -2323,7 +2367,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                           if any(p.get('remotion') == 'EscenaT5' and abs(p['ini'] - d['ini']) < 1e-3 and rm_hechos.get(str(rm_salida.get(id(p))))
                                  for p in plan['piezas'])],
              'broll': [{k: v for k, v in t.items() if k != '_s'} for t in tomas], 'encima': encima, 'mover': mover, 'punch': punch,
-             'sin_emoji': sin_emoji, 'gris': gris, 'gris_foco': gris_foco, 'zoom': zoom,
+             'sin_emoji': sin_emoji, 'sin_captions': sin_captions, 'gris': gris, 'gris_foco': gris_foco, 'zoom': zoom,
              'resumen': plan.get('resumen', '')}
     try:                                                              # v5.5.2, el rectificador: riser solo en la intro, cada sonido con su porqué, una cámara
         import rectificador

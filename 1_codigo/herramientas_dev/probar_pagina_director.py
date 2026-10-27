@@ -7,8 +7,8 @@
    lista, estado del director en la salida).
 2) Motor (director_sonido_sesion): resumen, retocar (silenciar, bloquear, MENOS/MÁS, regenerar), rediseñar (todo y una sección), controles, deshacer,
    «dile a AI Sound Director», mezclas A/B, plan para Resolve y que «Aplicar» se niega sin un GO con el director.
-3) Página (director_sonido_ui, Qt offscreen): se arma, pinta el diseño, elige un evento con un clic en la línea, el inspector y sus botones, un control,
-   una frase; capturas PNG en la salida para mirarlas. 4) SubtitleApp._asegurar_sfx arma la página nueva (y la vieja solo si la nueva falla).
+3) Página (director_sonido_ui, Qt offscreen): se arma, pinta las tres versiones (elegir, ▶, Antes/Con sonido), «Ajustar a mano» con la línea, el
+   inspector y sus botones, un control y «Volver a lo de la IA»; capturas PNG en la salida para mirarlas. 4) SubtitleApp._asegurar_sfx arma la página nueva (y la vieja solo si la nueva falla).
 """
 import copy
 import os
@@ -198,15 +198,39 @@ def pagina(salida, video):
     marco.resize(1240, 1500)
     marco.show()
     pag.refrescar()
-    ok('la página lee el diseño (en un hilo) y lo pinta', esperar(lambda: pag._res.get('hay')), pag._lbl_tema.text()[:90])
+    ok('la página lee el diseño (en un hilo) y lo pinta', esperar(lambda: pag._res.get('hay')), pag._lbl_video.text()[:90])
     ok('cuerpo visible, aviso de vacío oculto', pag._cuerpo.isVisible() and not pag._vacio.isVisible())
-    ok('estado: voz, música y sonido de motions con su texto', all(pag._filas[k].valor.text() for k in ('voz', 'musica', 'motion')),
-       ' · '.join(pag._filas[k].valor.text() for k in ('voz', 'musica', 'motion')))
-    ok('el anillo enseña el Sound Score medido', pag._score._v is not None and pag._score._v == pag._res.get('sound_score'), pag._score._v)
-    pag._desglose()
-    ok('tocar el anillo: el desglose parte por parte en la línea de estado', 'Sound Score' in pag._lbl_estado.text() and 'sincronía' in pag._lbl_estado.text(),
-       pag._lbl_estado.text())
+    ok('cabecera: video · Tema y la pastilla de estado', 'Tema' in pag._lbl_video.text() and bool(pag._pildora._texto), f'{pag._lbl_video.text()} · {pag._pildora._texto}')
+    ok('tres versiones; con los controles en Auto la elegida es «Cinemática» (la de la IA, recomendada)',
+       list(pag._tarjetas) == ['suave', 'ia', 'energia'] and pag._tarjetas['ia'].elegida() and pag._tarjetas['ia']._recomendada
+       and not pag._tarjetas['suave'].elegida())
+    ok('el cuadro del video, en su formato (vertical como un móvil)', esperar(lambda: pag._vista._img is not None, 30) and pag._vista.height() > pag._vista.width(),
+       f'{pag._vista.width()}×{pag._vista.height()}')
+    ok('«Ajustar a mano» plegado al abrir', not pag._mano.isVisible())
     marco.grab().save(str(Path(salida) / 'pagina_director_1.png'))
+    sonando = []
+    real_reproducir = S_.reproducir
+    S_.reproducir = lambda ruta: sonando.append(str(ruta))
+    n_ia = sum(1 for e in pag._res['eventos'] if e['suena'])
+    pag._tarjetas['suave'].elegir.emit('suave')
+    ok('elegir «Suave»: guarda sus controles, menos efectos y queda pendiente (sin enviar a Resolve)',
+       esperar(lambda: not pag._ocupado and pag.version_actual() == 'suave') and pag._tarjetas['suave'].elegida()
+       and sum(1 for e in pag._res['eventos'] if e['suena']) < n_ia and pag._res.get('pendiente_resolve') and not llamadas
+       and pag._pildora._texto == __import__('i18n').tr('Cambios sin aplicar'), f"{n_ia} → {sum(1 for e in pag._res['eventos'] if e['suena'])} · {pag._lbl_estado.text()}")
+    n_suave = sum(1 for e in pag._res['eventos'] if e['suena'])
+    pag._tarjetas['energia'].oir.emit('energia')
+    ok('▶ en «Con energía»: la prepara, la elige y la hace sonar', esperar(lambda: not pag._ocupado and pag.version_actual() == 'energia' and sonando)
+       and sum(1 for e in pag._res['eventos'] if e['suena']) >= n_suave and sonando[-1].endswith('.wav'), f'{len(sonando)} previas · {pag._lbl_estado.text()}')
+    pag._var_ab.set(__import__('i18n').tr('Antes'))
+    pag._vista.clic.emit()
+    ok('▶ del video con «Antes»: suena el original', esperar(lambda: not pag._ocupado and len(sonando) == 2) and 'original' in Path(sonando[-1]).name, sonando[-1:])
+    pag._elegir_version('ia')
+    ok('volver a «Cinemática»: los controles de las versiones, en Auto', esperar(lambda: not pag._ocupado and pag.version_actual() == 'ia')
+       and not any(k in pag._res.get('controles', {}) for k in U.CLAVES_VERSION))
+    S_.reproducir = real_reproducir
+    pag._alternar_mano()
+    app.processEvents()
+    ok('«Ajustar a mano» abre la línea, el inspector y los controles', pag._mano.isVisible() and pag._linea.isVisible() and pag._controles['densidad'].isVisible())
     ev = next(e for e in pag._res['eventos'] if e['suena'] and e['tipo'] == 'golpe')
     L = pag._linea
     x, y = L._x(ev['ancla']), L._y(4) + L.CARRIL / 2
@@ -227,26 +251,26 @@ def pagina(salida, video):
     ok('SILENCIAR desde el inspector', esperar(lambda: not pag._ocupado and (pag._ev or {}).get('silenciado')), pag._lbl_estado.text())
     ok('SILENCIAR guarda cambios pendientes sin enviar automáticamente a Resolve', len(llamadas) == 0
        and pag._res.get('pendiente_resolve') and 'pendientes' in pag._lbl_resolve.text().lower()
-       and pag._b_aplicar.property('tipo') == 'primario', pag._lbl_resolve.text())
+       and 'aplicar' in pag._pildora._texto.lower(), pag._lbl_resolve.text())
     abierto['si'] = False
     pag._b_silencio.click()
     ok('y vuelve a sonar', esperar(lambda: not pag._ocupado and (pag._ev or {}).get('suena')))
-    ok('con Resolve cerrado la edición conserva los cambios pendientes y Aplicar como acción principal', len(llamadas) == 0
-       and pag._res.get('pendiente_resolve') and pag._b_aplicar.property('tipo') == 'primario' and 'Resolve' in pag._lbl_resolve.text(), pag._lbl_resolve.text())
+    ok('con Resolve cerrado la edición conserva los cambios pendientes (pastilla «sin aplicar»)', len(llamadas) == 0
+       and pag._res.get('pendiente_resolve') and 'aplicar' in pag._pildora._texto.lower() and 'Resolve' in pag._lbl_resolve.text(), pag._lbl_resolve.text())
     pag._aplicar()
-    ok('solo «Aplicar a Resolve» envía el diseño y la cabecera vuelve a «al día» tras confirmación', esperar(lambda: not pag._ocupado) and len(llamadas) == 1
-       and not pag._res.get('pendiente_resolve') and pag._b_aplicar.property('tipo') == 'secundario', pag._lbl_estado.text())
+    ok('solo «Aplicar a Resolve» envía el diseño y la pastilla vuelve a «al día» tras confirmación', esperar(lambda: not pag._ocupado) and len(llamadas) == 1
+       and not pag._res.get('pendiente_resolve') and 'al día' in pag._pildora._texto, pag._lbl_estado.text())
     abierto['si'] = True
-    ok('fila «Material»: de dónde saca el sonido el director', bool(pag._filas['material'].valor.text()), pag._filas['material'].valor.text())
     ok('la línea de tiempo enseña el carril MOTIONS PRO', 'MOTIONS PRO' in U.LineaSonido.CARRILES)
     n0 = sum(1 for e in pag._res['eventos'] if e['suena'])
-    pag._cambio_control('densidad', pag._vars['densidad'].get() if False else __import__('i18n').tr('Mínima'))
-    ok('un control (Densidad «Mínima») rediseña y la página se repinta', esperar(lambda: not pag._ocupado and pag._res.get('controles', {}).get('densidad') == 'poco')
-       and sum(1 for e in pag._res['eventos'] if e['suena']) < n0 and pag._res.get('pendiente_resolve') and len(llamadas) == 1)
-    pag._var_frase.set('como estaba')
-    pag._frase()
-    ok('«dile…»: «como estaba» deja todo en Auto y pendiente de aplicar', esperar(lambda: not pag._ocupado and not pag._res.get('controles'))
-       and pag._res.get('pendiente_resolve') and len(llamadas) == 1, pag._lbl_estado.text())
+    pag._cambio_control('densidad', __import__('i18n').tr('Mínima'))
+    ok('un control a mano (Densidad «Mínima») rehace, se repinta y ninguna versión queda elegida',
+       esperar(lambda: not pag._ocupado and pag._res.get('controles', {}).get('densidad') == 'poco')
+       and sum(1 for e in pag._res['eventos'] if e['suena']) < n0 and pag._res.get('pendiente_resolve') and len(llamadas) == 1
+       and not any(t.elegida() for t in pag._tarjetas.values()))
+    pag._deshacer()
+    ok('«Volver a lo de la IA»: todo en Auto, «Cinemática» elegida y pendiente de aplicar', esperar(lambda: not pag._ocupado and not pag._res.get('controles'))
+       and pag._tarjetas['ia'].elegida() and pag._res.get('pendiente_resolve') and len(llamadas) == 1, pag._lbl_estado.text())
     marco.grab().save(str(Path(salida) / 'pagina_director_2.png'))
     S_.aplicar, RM_.resolve_abierto = real_aplicar, real_abierto
     # vacío: un video que no pasó por GO (y sin «último»)

@@ -40,8 +40,8 @@ S = {
     'sc_a': dict(k='k script amarillo', cap=0.050, max=2, rot=-5.0, solape=0.08),
     'sc_c': dict(k='k script cian', cap=0.046, max=2, rot=-6.0, solape=0.15),
     'sc_r': dict(k='k script rosa', cap=0.048, max=2, rot=-4.0, solape=0.15),
-    'sc_l': dict(k='k script yt lima', cap=0.048, max=3, rot=-7.0, solape=0.10),       # v5.5.13 (neón): la palabra a mano (Yellowtail)
-    'sc_m': dict(k='k script yt magenta', cap=0.048, max=3, rot=-6.0, solape=0.10),
+    'sc_l': dict(k='k script yt lima', cap=0.048, max=3, rot=0.0, solape=0.10),        # v5.5.13 (neón): la palabra a mano (Yellowtail); v5.47 recta (el usuario: «está torcido»; era −7°)
+    'sc_m': dict(k='k script yt magenta', cap=0.048, max=3, rot=0.0, solape=0.10),       # v5.47 recta (era −6°)
 }
 # prioridad al QUITAR huecos cuando hay menos palabras que huecos (lo primero que se va es lo menos importante)
 PRIORIDAD_QUITAR = ('lab', 'sup', 'sup2', 'ser', 'tp_b', 'tp_l', 'tp_m', 'ts_m', 'tp_a', 'ts_a', 'tp_r', 'sc_c', 'sc_r', 'sc_a', 'sc_m', 'sc_l')
@@ -75,6 +75,15 @@ RECETAS = [
          antes={1: ['lab'], 2: ['lab'], 3: ['lab'], 4: ['lab', 'sup']},
          despues={1: ['sc_l'], 2: ['sc_l'], 3: ['sc_l', 'sup'], 4: ['sc_l', 'sup']}),
 ]
+
+
+def _color_contrario(k_trazo, k_texto):
+    """v5.47 (el usuario: «los rings de otro color, no el mismo que el texto»): un aro, lazo o subrayado nunca del color de lo que marca:
+    lima sobre lima pasa a magenta y magenta sobre magenta a lima (la receta «lima» ponía un aro lima alrededor de la palabra lima)."""
+    for a, b in (('lima', 'magenta'), ('magenta', 'lima')):
+        if str(k_trazo).endswith(' ' + a) and str(k_texto).endswith(' ' + a):
+            return str(k_trazo)[:-len(a)] + b
+    return k_trazo
 
 
 def _patron(tabla, n):
@@ -267,7 +276,7 @@ def armar_bloque(pal, bloque, k_receta, forzados=None, ancla=0.64):
             textos[i]['anillo'] = True                      # la pila le deja sitio al anillo (si no, pisaba a la línea de al lado)
             lineas.append(dict(k=a[0], texto='', t=textos[i]['t'] + 0.1, cap=0.0, sobre=i, nombre='anillo'))
     # v5.5.13 (neón): los trazos a mano del kit; entran cuando ya está escrito lo que rodean o subrayan (kit: +0,18 s el círculo, +0,3 s el lazo)
-    lazo = receta.get('lazo')
+    lazo = receta.get('lazo') and _color_contrario(receta['lazo'], clave_h)
     if lazo:
         sig = next((i for i in range(indice_h + 1, len(textos)) if textos[i]['nombre'].startswith('tp_')), None)
         if sig is not None and sig == indice_h + 1:
@@ -275,16 +284,66 @@ def armar_bloque(pal, bloque, k_receta, forzados=None, ancla=0.64):
         else:
             lineas.append(dict(k=lazo.replace('lazo', 'trazo'), texto='', t=lh['t'] + 0.18, cap=0.0, sobre=indice_h, nombre='trazo'))
     if receta.get('circulo'):
-        lineas.append(dict(k=receta['circulo'], texto='', t=lh['t'] + 0.18, cap=0.0, sobre=indice_h, nombre='trazo'))
+        lineas.append(dict(k=_color_contrario(receta['circulo'], clave_h), texto='', t=lh['t'] + 0.18, cap=0.0, sobre=indice_h, nombre='trazo'))
     sub = receta.get('subraya')
     if sub:
         i = indice_h if sub[1] == 'heroe' else next((j for j, l in enumerate(textos) if l['nombre'] == sub[1]), None)
         if i is not None:
-            lineas.append(dict(k=sub[0], texto='', t=textos[i]['t'] + 0.20, cap=0.0, sobre=i, rel_w=0.9, sep=0.014, nombre='deco'))
+            lineas.append(dict(k=_color_contrario(sub[0], textos[i]['k']), texto='', t=textos[i]['t'] + 0.20, cap=0.0, sobre=i, rel_w=0.9, sep=0.014, nombre='deco'))
     return dict(lineas=lineas, receta=receta['nombre'], heroe=h, palabras=bloque, ancla=ancla)
 
 
-def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo', mains=None, recetas=None, fin_video=None, con_bloques=False):
+def _como_el_kit(b, pal, idioma):
+    """v5.44 (Tema 1 con Text+ editables, «que quede igual que antes»): las líneas del bloque con las reglas de composición del kit (kit_neon.bloque_hook):
+    números de 2 a 99 en cifra («3 JÓVENES»), la pregunta en la grande («XELA?») y abierta con «¿», nunca dos versalitas apiladas («A UNA» +
+    «BECA DE» → «A UNA BECA DE»; más de 4 palabras → serif) y ninguna versalita DEBAJO de la grande (pasa a serif). Los trazos siguen a su línea."""
+    import kit_neon as KN
+    serif = next(v for v in S.values() if v['k'] == 'k serif blanco')
+    nuevas, mapa, visto_big = [], {}, False
+
+    def tipo(l):
+        if l.get('nombre') == 'heroe':
+            return 'big' if str(l['k']).startswith('k hero') else 'otro'
+        return 'esp' if l['k'] in ('k label', 'k sup') else 'serif' if str(l['k']).startswith('k serif') else 'otro'
+    for i, l in enumerate(b['lineas']):
+        if not l.get('texto'):
+            continue
+        l = dict(l, texto=KN._cifras(l['texto']), idx=list(l.get('idx') or []))
+        k = tipo(l)
+        if k == 'esp' and l['k'] != 'k label':                  # (v5.45: el kit tiene UNA versalita, Inter espaciada; «k sup» es la condensada)
+            l.update(k='k label', cap=next(v for v in S.values() if v['k'] == 'k label')['cap'])
+        if l.get('nombre') == 'heroe':
+            visto_big = visto_big or k == 'big'
+            if l['idx'] and '?' in str(pal[l['idx'][-1]].get('signo') or '') and not l['texto'].endswith('?'):
+                l['texto'] += '?'
+        elif k == 'esp' and visto_big:
+            l.update(k=serif['k'], cap=serif['cap'])
+            k = 'serif'
+        prev = nuevas[-1] if nuevas else None
+        if prev is not None and tipo(prev) == 'esp' and k == 'esp' and len((prev['texto'] + ' ' + l['texto']).split()) > 4:
+            l.update(k=serif['k'], cap=serif['cap'])
+            k = 'serif'
+        if prev is not None and tipo(prev) == k and k in ('esp', 'serif'):
+            prev['texto'] = f"{prev['texto']} {l['texto']}"
+            prev['idx'] = prev['idx'] + l['idx']
+            mapa[i] = len(nuevas) - 1
+            continue
+        mapa[i] = len(nuevas)
+        nuevas.append(l)
+    if str(idioma or 'es')[:2] == 'es' and any(l['texto'].rstrip().endswith('?') for l in nuevas) and not any('¿' in l['texto'] for l in nuevas):
+        nuevas[0]['texto'] = '¿' + nuevas[0]['texto'].lstrip()
+    for l in b['lineas']:
+        if l.get('texto'):
+            continue
+        sobre = l.get('sobre', 0)
+        refs = sorted({mapa[i] for i in (sobre if isinstance(sobre, (list, tuple)) else [sobre]) if i in mapa})
+        if refs:
+            nuevas.append(dict(l, sobre=refs if isinstance(sobre, (list, tuple)) and len(refs) > 1 else refs[0]))
+    b['lineas'] = nuevas
+    return b
+
+
+def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo', mains=None, recetas=None, fin_video=None, con_bloques=False, kit=False):
     """palabras [{'word','start','end'}] -> {'cues': [...], 'plan': [...]} . `mains`: palabras (texto) o índices forzados como héroe. `recetas`: {índice de bloque: n de receta}.
     v5.5.13: `con_bloques` añade 'bloques' (las líneas de cada bloque en el orden de la pila, con sus palabras) y 'pal' (las palabras preparadas):
     el Tema 1 neón (kit_neon.py) arma con ellos los bloques hook() del kit."""
@@ -316,6 +375,8 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
     for i, b in enumerate(bloques_idx):
         k_receta = (recetas or {}).get(i, i)
         info = armar_bloque(pal, b, k_receta, forzados or None, y_ancla)
+        if kit:                                           # v5.44: el Tema 1 con Text+: la composición del kit (los clips neón la hacían en kit_neon)
+            info = _como_el_kit(info, pal, idioma)
         t0 = max(0.0, min(l['t'] for l in info['lineas']))
         fin_hablado = max(pal[k]['fin'] for k in b)
         info.update(t0=t0, fin_hablado=fin_hablado, indice=i)
@@ -341,6 +402,36 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
             fin = fin_video if fin_video else ultimo_fin + 1.0
             t1 = min(t1, fin - AFINADO['gap_minimo']) if fin - AFINADO['gap_minimo'] > ultimo_el + AFINADO['visible_min'] else max(ultimo_el + AFINADO['visible_min'], t1)
         b['t1'] = t1
+    if kit:                                               # v5.45: la geometría del kit (tamaños y alturas de cada línea) para los Text+
+        import kit_neon as KN
+        for b in bloques:                                 # y sus tiempos: cada línea cuando se DICE su primera palabra (kit: max(t0, palabra) − 0,03),
+            for l in b['lineas']:                         # no retrasada con el bloque (retrasar el bloque solo evita que dos pilas se pisen)
+                if l.get('texto') and l.get('idx'):
+                    l['t'] = max(b['t0'], min(pal[i]['t'] for i in l['idx']) - 0.03)
+            textos = [l for l in b['lineas'] if l.get('texto')]
+            quedan = []
+            for l in b['lineas']:                         # los trazos como kit_neon.escena_captions: uno que empezaría en los últimos 0,5 s
+                if l.get('texto') or not textos:          # entra antes (0,5 s antes de la salida, tras lo que rodea) y, sin 0,4 s para dibujarse, no va
+                    quedan.append(l)
+                    continue
+                sobre = l.get('sobre', 0)
+                refs = [textos[min(len(textos) - 1, int(i))] for i in (sobre if isinstance(sobre, (list, tuple)) else [sobre])]
+                ti = max((float(r['t']) for r in refs), default=b['t0'])
+                t = max(float(l['t']), b['t0'])
+                if t > b['t1'] - 0.5:
+                    t = max(b['t1'] - 0.5, ti + 0.05)
+                if b['t1'] - t >= 0.4:
+                    quedan.append(dict(l, t=round(t, 3)))
+            b['lineas'] = quedan
+        for i, b in enumerate(bloques):
+            try:
+                hook = KN.bloque_hook(b, pal, primero=(i == 0), ultimo=(i == len(bloques) - 1))
+                textos = [l for l in b['lineas'] if l.get('texto')]
+                if hook and len(hook['items']) == len(textos):
+                    for l, m in zip(textos, KN.maqueta(hook)):
+                        l['kit'] = m
+            except Exception:
+                pass
     cues = KC.construir_cues(bloques, ancho_tl, alto_tl)
     plan = [dict(i=b['indice'], receta=b['receta'], heroe=pal[b['heroe']]['texto'], texto=' '.join(pal[k]['texto'] for k in b['palabras']), t0=round(b['t0'], 2), t1=round(b['t1'], 2))
             for b in bloques]

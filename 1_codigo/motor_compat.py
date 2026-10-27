@@ -2,8 +2,8 @@
 # 1_codigo/motor_compat.py — servicio Python 3.14 para Whisper, Argos y ONNX Runtime.
 """Aísla extensiones nativas que aún no publican ruedas para CPython 3.15.
 
-El programa principal corre en Python 3.15.1. Este servicio usa un Python
-3.14.9 embebido en %LOCALAPPDATA% y un protocolo JSON por stdin/stdout; no
+El programa principal corre en Python 3.15.2. Este servicio usa un Python
+3.14.10 embebido en %LOCALAPPDATA% y un protocolo JSON por stdin/stdout; no
 comparte módulos ni DLL con el proceso de Qt.
 """
 from __future__ import annotations
@@ -23,12 +23,19 @@ import zipfile
 from pathlib import Path
 
 VERSION = '1.0.0'
-PYTHON_VERSION = (3, 14, 9)
-PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.14.9/python-3.14.9-embed-amd64.zip'
+PYTHON_VERSION = (3, 14, 10)
+PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip'
 GET_PIP = 'https://bootstrap.pypa.io/get-pip.py'
 TIEMPO_MAX_PIP_S = 3600
 SIN_VENTANA = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
 _CACHE = {'info': None, 'cuando': 0.0}
+_PY = '.'.join(map(str, PYTHON_VERSION))
+
+
+def _misma_rama(version):
+    """v5.46: un 3.14.x ya instalado sigue valiendo (las ruedas son de la rama 3.14): subir el parche (3.14.9 -> 3.14.10) no obliga a
+    reinstalar el motor en los equipos que ya lo tienen; los nuevos se instalan con PYTHON_VERSION."""
+    return str(version or '').startswith('%d.%d.' % PYTHON_VERSION[:2])
 _SERVIDOR = {'s': None}
 _LOCK = threading.RLock()
 
@@ -77,7 +84,7 @@ def info_instalado():
         datos = json.loads((carpeta() / 'listo.json').read_text(encoding='utf-8'))
         paquetes = datos.get('paquetes') or {}
         completa = all(paquetes.get(n) == v for n, v in _fijados().items())
-        if (datos.get('version') == VERSION and datos.get('python') == '.'.join(map(str, PYTHON_VERSION))
+        if (datos.get('version') == VERSION and _misma_rama(datos.get('python'))
                 and completa and (carpeta() / 'python' / 'python314.dll').is_file()):
             return datos
     except Exception:
@@ -168,7 +175,7 @@ def instalar(progreso=None, aviso=None):
         try:
             r = subprocess.run([str(py), '-s', '-c', 'import sys;print(".".join(map(str,sys.version_info[:3])))'],
                                capture_output=True, text=True, timeout=15, creationflags=SIN_VENTANA)
-            version_ok = r.returncode == 0 and r.stdout.strip() == '.'.join(map(str, PYTHON_VERSION))
+            version_ok = r.returncode == 0 and _misma_rama(r.stdout.strip())
         except Exception:
             pass
     if py.exists() and not version_ok:
@@ -178,9 +185,9 @@ def instalar(progreso=None, aviso=None):
             s.cerrar()
         shutil.rmtree(base / 'python', ignore_errors=True)
     if not version_ok:
-        pr(0.02, 'Descargando Python 3.14.9 auxiliar')
+        pr(0.02, f'Descargando Python {_PY} auxiliar')
         zip_py = base / 'python_embebido.zip'
-        _descargar(PYTHON_EMBEBIDO, zip_py, lambda f: pr(0.02 + 0.12 * f, 'Descargando Python 3.14.9 auxiliar'))
+        _descargar(PYTHON_EMBEBIDO, zip_py, lambda f: pr(0.02 + 0.12 * f, f'Descargando Python {_PY} auxiliar'))
         with zipfile.ZipFile(zip_py) as z:
             z.extractall(base / 'python')
         zip_py.unlink(missing_ok=True)
@@ -201,7 +208,7 @@ def instalar(progreso=None, aviso=None):
             raise RuntimeError('get-pip: ' + (r.stderr or r.stdout)[-500:])
     pendientes = faltan_requisitos()
     if pendientes:
-        pr(0.22, 'Instalando Whisper, traducción y ONNX Runtime para Python 3.14.9')
+        pr(0.22, f'Instalando Whisper, traducción y ONNX Runtime para Python {_PY}')
         _pip(['--no-deps', '-r', str(requisitos())])
         _pip(['--no-deps', 'argostranslate==1.11.0'])
     versiones = _versiones()

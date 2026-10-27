@@ -26,13 +26,17 @@ El MCP del programa: deja que Claude (u otro cliente MCP) hable con CineCaptions
     registro          las últimas líneas de cinecaptions.log
 
 Protocolo: JSON-RPC 2.0 por stdin/stdout, un mensaje por línea (MCP 2024-11-05). Nada más que JSON sale por stdout: lo demás va a stderr.
-Se registra en .mcp.json (raíz del proyecto):  {"mcpServers": {"cinecaptions": {"command": "6_compilacion/venv315/Scripts/python.exe", "args": ["1_codigo/mcp_cinecaptions.py"]}}}
+Cada llamada corre en su hilo (una prueba larga no bloquea mapa/simbolo); las que tocan Resolve van de una en una. Cancelar una llamada mata su proceso.
+go_real exige confirmar=true (el usuario usa Resolve a la vez).
+Se registra en .mcp.json (raíz del proyecto):  {"mcpServers": {"cinecaptions": {"type": "stdio", "command": "6_compilacion/venv315/Scripts/python.exe",
+                                                "args": ["-X", "utf8", "-u", "1_codigo/mcp_cinecaptions.py"]}}}
 """
 import base64
 import io
 import json
 import os
 import sys
+import threading
 import traceback
 from pathlib import Path
 
@@ -47,7 +51,14 @@ AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 CARPETA = Path.home() / 'DaVinciSubtitles' / 'mcp'
 REFERENCIA = Path.home() / 'Downloads' / 'REFERENCIA.mp4'
-VERSION_MCP = '1.0'
+try:
+    from version import APP_VERSION as VERSION_MCP      # la misma versión que el programa
+except Exception:
+    VERSION_MCP = '0'
+_ESCRIBIR = threading.Lock()                 # una respuesta a la vez por stdout
+_RESOLVE = threading.Lock()                  # las herramientas que tocan Resolve (o cargan modelos) van de una en una
+_EN_CURSO = {}                               # id de la petición -> {'cancelada': bool, 'proceso': Popen | None}
+_HILO = threading.local()                    # id de la petición que atiende este hilo
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- utilidades
@@ -288,16 +299,48 @@ def t_probar_video(a):
             'imagen': hoja}
 
 
+def _matar(proceso):
+    """Mata el proceso y sus hijos (probar_go abre la app sin pantalla)."""
+    import subprocess
+    if os.name == 'nt':
+        subprocess.run(['taskkill', '/F', '/T', '/PID', str(proceso.pid)], capture_output=True)
+    else:
+        proceso.kill()
+
+
+def _ejecutar(cmd, timeout, env):
+    """Como subprocess.run(capture_output=True), pero si el cliente cancela la petición se mata el proceso."""
+    import subprocess
+    estado = _EN_CURSO.get(getattr(_HILO, 'id', None))
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=env)
+    if estado is not None:
+        estado['proceso'] = p
+        if estado['cancelada']:
+            _matar(p)
+    try:
+        out, err = p.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        _matar(p)
+        p.communicate()
+        raise
+    finally:
+        if estado is not None:
+            estado['proceso'] = None
+    if estado is not None and estado['cancelada']:
+        raise RuntimeError('cancelado por el cliente')
+    return subprocess.CompletedProcess(cmd, p.returncode, out, err)
+
+
 def t_go_real(a):
     """El botón GO de la app (sin pantalla) sobre un video y un pack: lo MISMO que haría el usuario. Banco → GO → render → hoja de cuadros."""
-    import subprocess
     import banco_pruebas as b
+    if a.get('confirmar') is not True:
+        raise RuntimeError('go_real usa Resolve de verdad y el usuario lo tiene abierto trabajando: pídele permiso y repite con confirmar=true')
     media = str(a['media'])
     pack = a.get('pack', 'Referencia')
     b.preparar(audio=media, renovar=(pack,))
     entorno = {**os.environ, 'DUMP_S': str(int(a.get('timeout', 400)))}
-    r = subprocess.run([sys.executable, str(AQUI / 'probar_go.py'), media, pack], capture_output=True, text=True, encoding='utf-8', errors='replace',
-                       timeout=int(a.get('timeout', 400)) + 60, env=entorno)
+    r = _ejecutar([sys.executable, str(AQUI / 'probar_go.py'), media, pack], int(a.get('timeout', 400)) + 60, entorno)
     salida = '\n'.join(l for l in (r.stdout + r.stderr).splitlines() if 'site-packages' not in l)[-1800:]
     if r.returncode != 0:
         raise RuntimeError(f'GO no terminó (código {r.returncode}):\n{salida}')
@@ -425,7 +468,6 @@ def t_arrastrar_video(a):
     timeline con el video, arranca GO y pone los captions. Renderiza ese timeline, devuelve la hoja de cuadros y (limpiar=true, por defecto) deja
     Resolve como estaba: borra el timeline y el bin que se crearon, vuelve a tu proyecto y timeline, y borra el proyecto «CineCaptions» SOLO si
     lo creó esta prueba."""
-    import subprocess
     import banco_pruebas as b
     import resolve_mcp
     media = str(a['media'])
@@ -435,8 +477,7 @@ def t_arrastrar_video(a):
         ok, previo, _err = resolve_mcp.script(_ESTADO_PREVIO % {'nombre': nombre}, timeout=40)
         previo = previo if ok and isinstance(previo, dict) else {}
     entorno = {**os.environ, 'DUMP_S': str(int(a.get('timeout', 420)))}
-    r = subprocess.run([sys.executable, str(AQUI / 'probar_go.py'), media, '-', '--soltar'], capture_output=True, text=True, encoding='utf-8', errors='replace',
-                       timeout=int(a.get('timeout', 420)) + 60, env=entorno)
+    r = _ejecutar([sys.executable, str(AQUI / 'probar_go.py'), media, '-', '--soltar'], int(a.get('timeout', 420)) + 60, entorno)
     salida = '\n'.join(l for l in (r.stdout + r.stderr).splitlines() if 'site-packages' not in l)[-1500:]
     stem = Path(media).stem[:40]
     render = hoja = None
@@ -552,7 +593,7 @@ HERRAMIENTAS = {
     'mapa': ('USAR ANTES DE ABRIR ARCHIVOS. Busca por palabras qué tema del programa tiene lo que buscas y devuelve sus archivos y símbolos (compacto); con id="go-inicio" da el detalle de ese tema (si es largo, un índice: pide parte="3" o parte="palabras"); '
              'con completo=true incluye el texto entero. Sin argumentos lista los grupos.', _esq({'consulta': _S, 'id': _S, 'parte': _S, 'completo': {'type': 'boolean'}, 'maximo': _N}), t_mapa),
     'simbolo': ('Devuelve SOLO el código de una función, clase o método (p. ej. "_go_generar", "WordTagWindow._continuar", "Instalacion.Desinstalar") con archivo:líneas; las clases grandes dan la lista de métodos. '
-                'Evita leer el script principal (12 000 líneas).', _esq({'nombre': _S, 'lineas': _N, 'archivo': _S}, ['nombre']), t_simbolo),
+                'Evita leer el script principal (13 600 líneas).', _esq({'nombre': _S, 'lineas': _N, 'archivo': _S}, ['nombre']), t_simbolo),
     'modulo': ('Qué es un archivo de código (descripción, clases y funciones con su línea), p. ej. "vigilancia", "sfx_rules", "principal".', _esq({'nombre': _S}, ['nombre']), t_modulo),
     'cambios': ('Las últimas n entradas EXPLICADAS del registro de cambios (el porqué de cada cambio reciente).', _esq({'n': _N}), t_cambios),
     'resumen': ('Una página: qué es CineCaptions, flujo de GO, pantallas, quién decide qué y reglas que no se rompen.', _esq({}), t_resumen),
@@ -578,8 +619,9 @@ HERRAMIENTAS = {
     'probar_video': ('Ciclo completo sobre un video: transcribe, planifica, prepara el banco, coloca, renderiza y devuelve la hoja de cuadros con la tabla de bloques.',
                      _esq({**_PLAN, 'media': _S, 'nombre': _S, 'columnas': _N, 'limpiar': {'type': 'boolean'}}, ['media']), t_probar_video),
     'go_real': ('El botón GO de la app (sin pantalla) sobre un video y un pack, como lo usaría el usuario: banco → GO → render → hoja de cuadros. Prueba TODO el flujo real '
-                '(voz, IA, planificador, colocación), no solo el planificador.',
-                _esq({'media': _S, 'pack': _S, 'nombre': _S, 'tiempos': _L, 'columnas': _N, 'timeout': _N, 'idioma': _S}, ['media']), t_go_real),
+                '(voz, IA, planificador, colocación), no solo el planificador. NO usar con el usuario trabajando en Resolve: exige confirmar=true y su permiso.',
+                _esq({'media': _S, 'pack': _S, 'nombre': _S, 'tiempos': _L, 'columnas': _N, 'timeout': _N, 'idioma': _S,
+                      'confirmar': {'type': 'boolean', 'description': 'true solo con permiso expreso del usuario'}}, ['media', 'confirmar']), t_go_real),
     'arrastrar_video': ('Lo mismo que ARRASTRAR un video a Inicio con las preferencias reales del usuario: la app arma en Resolve un timeline nuevo con el video, '
                         'arranca GO y pone los captions; renderiza ese timeline, devuelve la hoja de cuadros y limpia lo que creó (limpiar=false lo deja).',
                         _esq({'media': _S, 'nombre': _S, 'tiempos': _L, 'columnas': _N, 'timeout': _N, 'idioma': _S, 'limpiar': {'type': 'boolean'}}, ['media']), t_arrastrar_video),
@@ -589,6 +631,14 @@ HERRAMIENTAS = {
                 _esq({'pack': _S, 'ancla': _S}), t_evaluar),
     'registro': ('Últimas líneas del registro de la app (cinecaptions.log).', _esq({'lineas': _N}), t_registro),
 }
+_SOLO_LECTURA = {'mapa', 'simbolo', 'modulo', 'cambios', 'resumen', 'estado', 'packs', 'registro'}
+_DESTRUCTIVAS = {'go_real', 'arrastrar_video', 'limpiar_banco', 'colocar'}
+_SIN_RESOLVE = {'mapa', 'simbolo', 'modulo', 'cambios', 'resumen', 'registro', 'packs', 'planificar', 'evaluar', 'cuadros', 'comparar', 'medir'}   # corren en paralelo
+
+
+def _anotaciones(nombre):
+    return {'readOnlyHint': nombre in _SOLO_LECTURA, 'destructiveHint': nombre in _DESTRUCTIVAS,
+            'idempotentHint': nombre in _SOLO_LECTURA, 'openWorldHint': False}
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- protocolo
@@ -617,11 +667,13 @@ def _responder(id_, resultado=None, error=None):
         msg['error'] = error
     else:
         msg['result'] = resultado
-    _SALIDA.write(json.dumps(msg, ensure_ascii=False) + '\n')
-    _SALIDA.flush()
+    with _ESCRIBIR:
+        _SALIDA.write(json.dumps(msg, ensure_ascii=False) + '\n')
+        _SALIDA.flush()
 
 
-_MODULOS_VIVOS = ('guion_captions', 'guion_planificador', 'guion_referencia', 'banco_pruebas', 'mapa_codigo')    # en orden de dependencia
+# los que este proceso importa (Kinetic, VIRAL y Temas 4-6 corren en probar_go.py, un proceso nuevo: siempre frescos); en orden de dependencia
+_MODULOS_VIVOS = ('plantillas', 'kinetic_captions', 'guion_captions', 'guion_planificador', 'guion_referencia', 'banco_pruebas', 'mapa_codigo')
 _MTIMES = {}
 
 
@@ -644,30 +696,56 @@ def _recargar():
                 importlib.reload(mod)
 
 
+def _llamar(id_, nombre, args):
+    """Corre una herramienta en su hilo y responde (si el cliente no la canceló)."""
+    _HILO.id = id_
+    try:
+        if nombre in _SIN_RESOLVE:
+            r = HERRAMIENTAS[nombre][2](args)
+        else:
+            with _RESOLVE:
+                if _EN_CURSO[id_]['cancelada']:
+                    raise RuntimeError('cancelado por el cliente')
+                r = HERRAMIENTAS[nombre][2](args)
+        resultado = {'content': _contenido(r), 'isError': False}
+    except Exception as e:
+        sys.stderr.write(traceback.format_exc())
+        cola = ''.join(traceback.format_exception_only(type(e), e)).strip()
+        resultado = {'content': [{'type': 'text', 'text': f'{nombre}: {cola}'}], 'isError': True}
+    estado = _EN_CURSO.pop(id_, None)
+    if estado is None or not estado['cancelada']:      # una petición cancelada no lleva respuesta
+        _responder(id_, resultado)
+
+
 def _atender(msg):
     metodo, id_ = msg.get('method'), msg.get('id')
     p = msg.get('params') or {}
     if metodo == 'initialize':
         return _responder(id_, {'protocolVersion': p.get('protocolVersion') or '2024-11-05', 'capabilities': {'tools': {}},
                                 'serverInfo': {'name': 'cinecaptions', 'version': VERSION_MCP}})
-    if metodo in ('notifications/initialized', 'notifications/cancelled') or (metodo or '').startswith('notifications/'):
+    if metodo == 'notifications/cancelled':
+        estado = _EN_CURSO.get(p.get('requestId'))
+        if estado is not None:
+            estado['cancelada'] = True
+            if estado['proceso'] is not None:
+                _matar(estado['proceso'])
+        return None
+    if (metodo or '').startswith('notifications/'):
         return None
     if metodo == 'ping':
         return _responder(id_, {})
     if metodo == 'tools/list':
-        return _responder(id_, {'tools': [{'name': n, 'description': d, 'inputSchema': s} for n, (d, s, _f) in HERRAMIENTAS.items()]})
+        return _responder(id_, {'tools': [{'name': n, 'description': d, 'inputSchema': s, 'annotations': _anotaciones(n)}
+                                          for n, (d, s, _f) in HERRAMIENTAS.items()]})
     if metodo == 'tools/call':
         nombre, args = p.get('name'), p.get('arguments') or {}
         if nombre not in HERRAMIENTAS:
             return _responder(id_, error={'code': -32602, 'message': f'herramienta desconocida: {nombre}'})
-        try:
-            _recargar()
-            r = HERRAMIENTAS[nombre][2](args)
-            return _responder(id_, {'content': _contenido(r), 'isError': False})
-        except Exception as e:
-            sys.stderr.write(traceback.format_exc())
-            cola = ''.join(traceback.format_exception_only(type(e), e)).strip()
-            return _responder(id_, {'content': [{'type': 'text', 'text': f'{nombre}: {cola}'}], 'isError': True})
+        if not _EN_CURSO:
+            _recargar()                                 # solo sin nada corriendo: no se recarga un módulo que otro hilo está usando
+        _EN_CURSO[id_] = {'cancelada': False, 'proceso': None}
+        threading.Thread(target=_llamar, args=(id_, nombre, args), daemon=True, name=f'mcp-{nombre}').start()
+        return None
     if id_ is not None:
         return _responder(id_, error={'code': -32601, 'message': f'método no soportado: {metodo}'})
     return None

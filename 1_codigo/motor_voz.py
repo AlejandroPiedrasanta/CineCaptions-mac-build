@@ -14,7 +14,7 @@ corre con PyTorch + transformers: varios GB que no caben en el .exe. Asi que
 el motor vive en su propia carpeta, con su propio Python embebido:
 
     %LOCALAPPDATA%\\CineCaptions\\motor_qwen\\
-        python\\              Python 3.14.9 embebido + torch + transformers 5 (v5.5.8; antes 3.12 + qwen-asr; v5.36: 3.14.9)
+        python\\              Python 3.14.10 embebido + torch + transformers 5 (v5.5.8; antes 3.12 + qwen-asr; v5.36: 3.14.9)
         listo.json           se escribe al final: si no esta, no se usa
 
 Lo instala el paso "Motor de voz" del instalador (o Ajustes > General >
@@ -45,7 +45,7 @@ from i18n import tr
 # v5.5.8 (motor 2.0): Python 3.14 + Qwen3-ASR NATIVO de Transformers 5 (modelos «-hf»); un motor 1.x (Python 3.12 + qwen-asr)
 # ya no cuenta como instalado y el instalador lo rehace solo
 VERSION_ENTORNO = '2.0.0'
-PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.14.9/python-3.14.9-embed-amd64.zip'     # v5.36: la última 3.14 (el mismo que motor_compat); los 3.14.8 ya instalados siguen valiendo
+PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip'   # v5.46: la última 3.14 (el mismo que motor_compat); los 3.14.8 ya instalados siguen valiendo
 PYTHON_DLL = 'python314.dll'
 GET_PIP = 'https://bootstrap.pypa.io/get-pip.py'
 # torch según la tarjeta: CUDA 13 (torch 2.14) pide driver NVIDIA 580 o más nuevo; con uno anterior va la última de CUDA 12.8
@@ -54,6 +54,12 @@ INDICE_TORCH = {k: f'https://download.pytorch.org/whl/{k}' for k in TORCH}
 DRIVER_CUDA13 = 580
 REPOS_ASR = {'1.7B': ('Qwen/Qwen3-ASR-1.7B-hf', 1_000_000_000), '0.6B': ('Qwen/Qwen3-ASR-0.6B-hf', 400_000_000)}
 REPO_ALINEADOR = ('Qwen/Qwen3-ForcedAligner-0.6B-hf', 400_000_000)
+# v5.46: las IA de texto, de la mejor a la más ligera: (clave de motor_texto.REPOS, repo, bytes mínimos descargados, GB libres que necesita, GB
+# que ocupa cargada). Medido el 2026-10-26 en una RTX 5070 Ti con el LOTE de 12: Gemma 4 E4B 8,7 GB (pico 11,1), Qwen3.5-4B 7,8 (pico 12,3).
+MODELOS_TEXTO = (('gemma4', 'google/gemma-4-E4B-it', 15_000_000_000, 11.5, 9.0),
+                 ('qwen3.5', 'Qwen/Qwen3.5-4B', 8_000_000_000, 12.5, 8.0),
+                 ('4B', 'Qwen/Qwen3-4B-Instruct-2507', 3_000_000_000, 10.5, 9.5),
+                 ('1.7B', 'Qwen/Qwen3-1.7B', 1_000_000_000, 0.0, 4.0))
 REPOS_VIEJOS = ('Qwen/Qwen3-ASR-1.7B', 'Qwen/Qwen3-ASR-0.6B', 'Qwen/Qwen3-ForcedAligner-0.6B')   # los del motor 1.x (~6 GB)
 SIN_VENTANA = 0x08000000 if sys.platform == 'win32' else 0
 # v5.5.8: los servidores de IA (voz y texto) con prioridad BAJA: la interfaz no se traba mientras trabajan (sin competencia van igual)
@@ -203,8 +209,7 @@ def detectar_por_archivos():
     modelo = next((m for m, (repo, minimo) in REPOS_ASR.items() if modelo_descargado(repo, minimo)), None)
     if modelo is None or not modelo_descargado(*REPO_ALINEADOR):
         return None
-    texto = ('4B' if modelo_descargado('Qwen/Qwen3-4B-Instruct-2507', 3_000_000_000)
-             else '1.7B' if modelo_descargado('Qwen/Qwen3-1.7B', 1_000_000_000) else None)
+    texto = next((clave for clave, repo, minimo, _gb, _usa in MODELOS_TEXTO if modelo_descargado(repo, minimo)), None)
     return {'version': VERSION_ENTORNO, 'modelo': modelo, 'modelo_texto': texto, 'torch': torch_v,
             'cuda': '+cu' in torch_v, 'gpu': None, 'instalado': time.strftime('%Y-%m-%d %H:%M'),
             'detectado': True}
@@ -225,14 +230,72 @@ def asegurar_listo():
     return info
 
 
-def modelo_texto(info=None):
-    """v5.5.3: la IA de texto más grande que haya: 4B si ya está descargada (aunque listo.json diga 1.7B, p. ej. tras cambiar de GPU); si no, la
-    de listo.json. v5.5.4: la 4B solo si CABE en lo que de verdad queda libre (`vram_para_ia_gb` ≥ 10,5 GB: con Resolve abierto en una GPU de
-    16 GB no cabe y se va a la 1.7B, que sí; antes la 4B se desbordaba a la RAM y tardaba más de 100 s)."""
-    if modelo_descargado('Qwen/Qwen3-4B-Instruct-2507', 3_000_000_000):
-        if not vram_total_gb() or vram_para_ia_gb() >= 10.5 or not modelo_descargado('Qwen/Qwen3-1.7B', 1_000_000_000):
-            return '4B'
-        return '1.7B'
+def completar_ia_texto(aviso=None):
+    """v5.46: en un motor YA instalado, baja las IA de texto nuevas que le falten (Gemma 4 E4B y Qwen3.5-4B en GPUs de 15 GB o más; motor_texto
+    --descargar decide y se salta lo que ya está). Devuelve la mejor que quedó. No lanza: si falla, el motor sigue con la que tenía."""
+    estado = {}
+
+    def linea(tipo, texto):
+        if tipo == 'LISTO':
+            estado['modelo'] = texto
+        elif tipo == 'ESTADO' and aviso:
+            aviso(texto)
+    try:
+        _lanzar_script(_base_recursos() / 'motor_qwen' / 'motor_texto.py', ['--descargar'], linea)
+    except Exception as e:
+        if aviso:
+            aviso(f'IA de texto: {e}')
+    return estado.get('modelo')
+
+
+def modelos_texto_descargados():
+    """v5.46: las claves de las IA de texto que hay, de la mejor a la más ligera (MODELOS_TEXTO)."""
+    return [clave for clave, repo, minimo, _gb, _usa in MODELOS_TEXTO if modelo_descargado(repo, minimo)]
+
+
+NOMBRES_TEXTO = {'gemma4': 'Gemma 4 E4B', 'qwen3.5': 'Qwen3.5-4B', '4B': 'Qwen3-4B', '1.7B': 'Qwen3-1.7B'}
+
+
+def ia_texto_preferida():
+    """v5.47 (Ajustes > General > IA de texto): la que eligió el usuario; de fábrica Gemma 4 E4B. Es la PRIMERA que se intenta: si no cabe en la
+    GPU o no está, se baja por la lista (MODELOS_TEXTO), nunca se sube a una más grande."""
+    try:
+        prefs = json.loads((Path.home() / 'DaVinciSubtitles' / 'preferencias.json').read_text(encoding='utf-8'))
+        v = str(prefs.get('ia_texto') or 'gemma4')
+    except Exception:
+        v = 'gemma4'
+    return v if v in NOMBRES_TEXTO else 'gemma4'
+
+
+def ia_texto_para_esta_gpu():
+    """v5.47: las IA de texto que este equipo DEBERÍA tener (lo que baja motor_texto --descargar): GPU de 15 GB o más → Gemma 4 E4B, Qwen3.5-4B y
+    Qwen3-1.7B; 9,5 o más → Qwen3-4B; si no, Qwen3-1.7B."""
+    total = vram_total_gb() or 0
+    return ['gemma4', 'qwen3.5', '1.7B'] if total >= 15 else ['4B'] if total >= 9.5 else ['1.7B']
+
+
+def estado_ia_texto(preferida=None):
+    """v5.47, para Ajustes (llama a nvidia-smi: NUNCA desde el hilo de la interfaz): {'descargadas', 'faltan', 'elegida', 'en_uso', 'libre_gb'}."""
+    hay = modelos_texto_descargados()
+    return {'descargadas': hay, 'faltan': [c for c in ia_texto_para_esta_gpu() if c not in hay], 'elegida': preferida or ia_texto_preferida(),
+            'en_uso': modelo_texto(preferida=preferida) if hay else None, 'libre_gb': round(vram_para_ia_gb(), 1) if vram_total_gb() else None}
+
+
+def modelo_texto(info=None, preferida=None):
+    """v5.5.3: la IA de texto mejor que haya descargada; v5.5.4: solo si CABE en lo que de verdad queda libre (`vram_para_ia_gb`: con Resolve
+    abierto en una GPU de 16 GB la grande no cabe y se va a la ligera; antes se desbordaba a la RAM y tardaba más de 100 s).
+    v5.46: Gemma 4 E4B (≥ 11,5 GB libres) → Qwen3.5-4B (≥ 12,5) → Qwen3-4B de antes (≥ 10,5) → Qwen3-1.7B. Sin una más ligera, la mejor igual.
+    v5.47: empieza por la que eligió el usuario en Ajustes (ia_texto_preferida)."""
+    hay = modelos_texto_descargados()
+    if hay:
+        libre = vram_para_ia_gb() if vram_total_gb() else None
+        claves = [m[0] for m in MODELOS_TEXTO]
+        desde = claves.index(preferida if preferida in claves else ia_texto_preferida())
+        if not any(c in hay for c in claves[desde:]):
+            desde = 0                                   # (la elegida y las de debajo no están: la mejor que haya)
+        for clave, _repo, _minimo, necesita, _usa in MODELOS_TEXTO[desde:]:
+            if clave in hay and (libre is None or libre >= necesita or clave == hay[-1]):
+                return clave
     return ((info if info is not None else info_instalado()) or {}).get('modelo_texto') or 'auto'
 
 
@@ -447,7 +510,7 @@ def vram_para_ia_gb():
         ia = sys.modules.get('ia_texto')
         t = ia._SRV.get('s') if ia is not None else None
         if t is not None and t.vivo():
-            libre += 9.5 if str(t.modelo).upper().startswith('4B') else 4.0
+            libre += next((usa for clave, _r, _m, _n, usa in MODELOS_TEXTO if clave == str(t.modelo)), 4.0)   # (v5.46: lo que ocupa la cargada)
     except Exception:
         pass
     if not _SIN_RESOLVE['v'] and not resolve_abierto():

@@ -17,7 +17,11 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 # v5.8 (pedido: «todos los textos plus deben ser del paquete Luxe Title Pack, sin excepción»): además del macro Luxe Shine ahora viaja
 # el Luxe Slide REAL (sacado del clip «arriba» de «Base titulos dinamicos vertical.drb»). Antes contexto/complemento/base eran una
 # imitación hecha con Text+ sueltos que solo se llamaba «Luxe Slide».
-ARCHIVOS = {'shine': ('luxe_shine_base.lua', 'luxe_shine_cabecera.txt'), 'slide': ('luxe_slide_base.lua', 'luxe_slide_cabecera.txt')}
+# v5.48: los tres macros salen del Luxe Title Pack v1.09 (extraer_de_setting) y se suma «Luxe Count» (números que suben contando).
+ARCHIVOS = {'shine': ('luxe_shine_base.lua', 'luxe_shine_cabecera.txt'), 'slide': ('luxe_slide_base.lua', 'luxe_slide_cabecera.txt'),
+            'count': ('luxe_count_base.lua', 'luxe_count_cabecera.txt')}
+MACROS_V109 = {'shine': 'Luxe Shine', 'slide': 'Luxe Slide', 'count': 'Luxe Count'}
+TEMPLATE_V109 = 'VBT - Luxe Title Pack/Edit/Titles/Van Beek Tools/Luxe Title Pack/'
 BASE = os.path.join(AQUI, ARCHIVOS['shine'][0])
 CABECERA = os.path.join(AQUI, ARCHIVOS['shine'][1])
 
@@ -53,6 +57,55 @@ def extraer_base(drb, clip='principal', tipo='shine'):
     raise SystemExit('no encuentro el clip ' + clip)
 
 
+def extraer_de_setting(drfx, tipo):
+    """v5.48: guarda la base de ese macro sacándola del .setting del .drfx del Luxe Title Pack (v1.09), con la misma forma que las sacadas de un .drb
+    (todo en una línea, espacios simples fuera de las cadenas). La cabecera de la comp es la de siempre con el TEMPLATE_ID del macro nuevo."""
+    import zipfile
+    BASE, CABECERA = _rutas(tipo)
+    nombre = MACROS_V109[tipo]
+    z = zipfile.ZipFile(drfx)
+    s = z.read(next(n for n in z.namelist() if n.endswith('/' + nombre + '.setting'))).decode('utf-8')
+    # todo lo que hay en el «Tools = ordered()» de arriba: el macro y, a su lado, sus curvas (LUTLookup) y modificadores
+    i = s.index('{', s.index('Tools = ordered()'))
+    prof, k, en_cadena = 0, i, False
+    while True:                                   # la llave que cierra ese bloque (saltando las de dentro de las cadenas)
+        ch = s[k]
+        if ch == '"' and s[k - 1] != '\\':
+            en_cadena = not en_cadena
+        elif not en_cadena and ch in '{}':
+            prof += 1 if ch == '{' else -1
+            if prof == 0:
+                break
+        k += 1
+    partes = re.split(r'("(?:[^"\\]|\\.)*")', s[i:k + 1])
+    for n in range(0, len(partes), 2):
+        partes[n] = re.sub(r',\s*\}', ', }', re.sub(r'\s+', ' ', partes[n]))
+    tools = ''.join(partes)
+    m = re.search(r'MainOutput1 = InstanceOutput \{ SourceOp = "([^"]+)", Source = "Output", \}', tools)
+    if not tools.startswith('{ ' + nombre.replace(' ', '') + ' = MacroOperator {') or not m or not tools.endswith(' }'):
+        raise SystemExit(f'{nombre}: el .setting no tiene la forma esperada')
+    # el .setting es solo el macro: la comp de un título necesita además su MediaOut (sin él Resolve pinta el clip NEGRO, probado en 5.48)
+    tools = tools[:-2].rstrip().rstrip(',') + (', MediaOut1 = MediaOut { Inputs = { Index = Input { Value = "0", }, Input = Input { SourceOp = "%s", '
+                                               'Source = "Output", } }, ViewInfo = OperatorInfo { Pos = { 440, 49.5 } }, } }' % m.group(1))
+    cabecera = open(_rutas('slide')[1], encoding='utf-8').read()
+    cabecera = re.sub(r'TEMPLATE_ID = "[^"]*"', f'TEMPLATE_ID = "{TEMPLATE_V109}{nombre}"', cabecera, count=1)
+    open(BASE, 'w', encoding='utf-8').write(tools)
+    open(CABECERA, 'w', encoding='utf-8').write(cabecera)
+    return len(tools), len(cabecera)
+
+
+# v5.48 — REPARACIÓN AUTOMÁTICA del «Anim Engine» del macro. Si la entrada + la salida no caben en el clip, el macro marca «Error! Animation too long!»
+# y el texto no llega a verse (su botón «Fix Animations» solo reparte el clip entero entre entrada y salida). Aquí InLength / OutLength llevan una
+# expresión: nunca más del 30 % de lo que dura el clip, así cualquier palabra, por corta que sea, entra, se queda quieta un rato y sale.
+PARTE_ANIM = 0.3
+
+
+def _anim_auto(tools):
+    dur = '((comp.RenderEnd - comp.RenderStart + 1)/comp:GetPrefs(\\"Comp.FrameFormat.Rate\\"))'
+    return re.sub(r'\b(InLength|OutLength) = Input \{ Value = ([0-9.eE+-]+), \}',
+                  lambda m: f'{m.group(1)} = Input {{ Value = {m.group(2)}, Expression = "min({m.group(2)}, {dur}*{PARTE_ANIM})", }}', tools)
+
+
 def _n(v):
     return f'{v:.6g}'
 
@@ -62,9 +115,34 @@ def comp_luxe_shine(familia, estilo, tam, color, y, texto='Texto', mayus=True, e
     return comp_luxe('shine', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, barrido, brillo)
 
 
-def comp_luxe_slide(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None):
-    """Lo mismo con el macro Luxe Slide (contexto, complemento)."""
-    return comp_luxe('slide', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, None, brillo)
+def comp_luxe_slide(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None, deslizar=None):
+    """Lo mismo con el macro Luxe Slide (contexto, complemento). deslizar='derecha': entra y sale moviéndose hacia la derecha (ver _deslizar)."""
+    t = comp_luxe('slide', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, None, brillo)
+    return _deslizar(t) if deslizar == 'derecha' else t
+
+
+def _deslizar(texto):
+    """v5.48 (pedido del usuario, Tema 2): POSITION del macro con «Mirror Out» desactivado y la dirección «→» (Start Direction 180; la salida sigue
+    hacia la derecha: End Direction 0). Las palabras de una línea se suceden de izquierda a derecha y así el movimiento fluye. Desmarcar «Mirror Out»
+    en el Inspector ejecuta el Script de positionCtrl, que cambia las expresiones de positionVector: aquí se dejan como las pone ese Script."""
+    texto, n0 = re.subn(r'(positionCtrl = AlphaDivide \{ CtrlWShown = false, NameSet = true, Inputs = \{[^{]*?(?:\{[^}]*\}[^{]*?)*?)MirrorOut = Input \{ Value = 1, \}',
+                        r'\g<1>MirrorOut = Input { Value = 0, }', texto, count=1)
+    if not n0:
+        raise SystemExit('el macro Luxe Slide no trae positionCtrl con la forma esperada')
+    texto, n1 = re.subn(r'(positionCtrl = AlphaDivide \{.*?)StartDirection = Input \{ Value = [0-9.eE+-]+, \}', r'\g<1>StartDirection = Input { Value = 180, }', texto, count=1, flags=re.S)
+    texto, n2 = re.subn(r'(positionCtrl = AlphaDivide \{.*?)EndDirection = Input \{ Value = [0-9.eE+-]+, \}', r'\g<1>EndDirection = Input { Value = 0, }', texto, count=1, flags=re.S)
+    dist = 'Distance = Input { Expression = "positionCtrl.StartDistance*(1-AnimEngine.Output1)", }'
+    ang = 'Angle = Input { Value = -90, Expression = "positionCtrl.StartDirection", }'
+    if not (n1 and n2 and texto.count(dist) == 1 and texto.count(ang) == 1):
+        raise SystemExit('el macro Luxe Slide no trae positionVector con la forma esperada')
+    texto = texto.replace(dist, 'Distance = Input { Expression = "AnimEngine.Output2 == 0 and (positionCtrl.StartDistance*(1-AnimEngine.Output1)) or '
+                                '(positionCtrl.EndDistance*(1-AnimEngine.Output1))", }', 1)
+    return texto.replace(ang, 'Angle = Input { Value = 180, Expression = "AnimEngine.Output2 == 0 and positionCtrl.StartDirection or positionCtrl.EndDirection", }', 1)
+
+
+def comp_luxe_count(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None):
+    """v5.48: el macro Luxe Count (números): cuenta de 0 hasta la cifra que lleve el texto del clip."""
+    return comp_luxe('count', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, None, brillo)
 
 
 # v5.5 — EL BARRIDO DE LUZ del macro Luxe Shine. De fábrica empieza a los 0,25 s y tarda 1,5 s (termina a los 1,75 s): las palabras grandes de «Referencia» se ven 0,3-0,9 s (mediana
@@ -133,8 +211,12 @@ def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, e
     barra = chr(92)
     expr = base.replace(barra, barra * 2).replace('"', barra + '"')
     t1 = re.sub(r'StyledText = Input \{ Value = "[^"]*", \}', lambda m: f'StyledText = Input {{ Value = "", Expression = "{expr}", }}', t1, count=1)
+    # (el Luxe Count ya calcula su texto: el número va a su «CountEnd», más abajo)
     t1 = re.sub(r'CharacterSpacing = Input \{ Value = [^,]*,', f'CharacterSpacing = Input {{ Value = {_n(esp)},', t1, count=1)
     t1 = re.sub(r'(Center = Input \{ Value = \{ )[^}]*( \},)', lambda m: f'{m.group(1)}0.5, {_n(y)}{m.group(2)}', t1, count=1)
+    # v5.48: el Luxe Shine v1.09 trae su propio color (azul verdoso) en Text1; si se deja, va DESPUÉS del nuestro y gana (salían azules el «Moderno
+    # blanco» y los rosa): se quita antes de poner el del estilo
+    t1 = re.sub(r'\b(Red1|Green1|Blue1) = Input \{ Value = [0-9.eE+-]+, \}, ', '', t1)
     colores = f'Red1 = Input {{ Value = {_n(color[0])}, }}, Green1 = Input {{ Value = {_n(color[1])}, }}, Blue1 = Input {{ Value = {_n(color[2])}, }}, '
     # v5.5.10: sombra oscura suave (elemento 4, forma de LETRA) para que el texto claro se lea sobre fondos claros; el halo del macro solo no basta.
     import kinetic_elementos as E
@@ -162,6 +244,29 @@ def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, e
         entrada, salida = anim
         tools = re.sub(r'InLength = Input \{ Value = [0-9.eE+-]+, \}', f'InLength = Input {{ Value = {_n(entrada)}, }}', tools, count=1)
         tools = re.sub(r'OutLength = Input \{ Value = [0-9.eE+-]+, \}', f'OutLength = Input {{ Value = {_n(salida)}, }}', tools, count=1)
+    tools = _anim_auto(tools)
+    if tipo == 'count':
+        # cuenta de 0 a la cifra del texto (el macro quita solo lo que no sea número y pone las comas de miles)
+        tools, n = re.subn(r'CountEnd = Input \{ Value = "[^"]*", \}', 'CountEnd = Input { Value = "0", Expression = "tostring(Template.StyledText.Value)", }', tools, count=1)
+        tools = re.sub(r'CountStart = Input \{ Value = "[^"]*", \}', 'CountStart = Input { Value = "0", }', tools, count=1)
+        if not n:
+            raise SystemExit('el macro Luxe Count no trae CountEnd con la forma esperada')
+        # de fábrica: prefijo «$», 2 decimales y 1,5 s de cuenta. Aquí todo sale del TEXTO del clip (lo escribe el planificador): el prefijo es lo que
+        # va antes de la cifra («$», «Q», «€»), el sufijo lo que va detrás («%») y los decimales, los que trae («9.99» -> 2; «430,000» -> 0).
+        # La cuenta dura como mucho 0,9 s (la mitad del clip si es corto).
+        dur = '((comp.RenderEnd - comp.RenderStart + 1)/comp:GetPrefs(\\"Comp.FrameFormat.Rate\\"))'
+        txt = 'tostring(Template.StyledText.Value)'
+        prefijo = f'(string.match({txt}, \\"^[^%d%-]*\\") or \\"\\")'
+        sufijo = f'(string.match({txt}, \\"[^%d]*$\\") or \\"\\")'
+        decimales = f'(string.match({txt}, \\"%.(%d%d?)[^%d]*$\\") or \\"\\"):len()'
+        marca = 'countCtrl = AlphaDivide { CtrlWShown = false, NameSet = true, Inputs = { '
+        if marca not in tools or 'Prefix = Input { Value = "$", }' not in tools:
+            raise SystemExit('el macro Luxe Count no trae countCtrl con la forma esperada')
+        tools = tools.replace('Prefix = Input { Value = "$", }', f'Prefix = Input {{ Value = "", Expression = "{prefijo}", }}', 1)
+        tools = tools.replace(marca, marca + f'Precision = Input {{ Value = 0, Expression = "{decimales}", }}, '
+                                             f'Append = Input {{ Value = "", Expression = "{sufijo}", }}, ', 1)
+        tools = re.sub(r'(countCtrl = AlphaDivide \{.*?)Length = Input \{ Value = [0-9.eE+-]+, \}',
+                       lambda m: m.group(1) + f'Length = Input {{ Value = 0.9, Expression = "min(0.9, {dur}*0.5)", }}', tools, count=1, flags=re.S)
     if brillo:
         # v5.4.33: el halo suave que traen los dos macros (nodo glow1: GlowSize 17,3 · GlowIntensity 0,48) se puede reforzar: brillo = (tamaño, intensidad). El Tema 4 lo pide más fuerte.
         tamano_b, intensidad_b = brillo

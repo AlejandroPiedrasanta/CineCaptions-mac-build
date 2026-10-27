@@ -22,8 +22,8 @@
     "three": "0.186.1"
   },
   "overrides": {
-    "webpack": "5.112.0",
-    "@babel/types": "8.0.6",
+    "webpack": "5.112.2",
+    "@babel/types": "8.0.8",
     "@rspack/core": "2.2.9",
     "@types/dom-webcodecs": "0.1.19",
     "ast-types": "0.16.3",

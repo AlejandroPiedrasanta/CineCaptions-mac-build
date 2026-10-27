@@ -180,6 +180,18 @@ def liberar():
         s.cerrar()
 
 
+def _rango(modelo):
+    """v5.46: la posición de una IA de texto en motor_voz.MODELOS_TEXTO (0 = la mejor); las desconocidas, al final."""
+    claves = [m[0] for m in motor_voz.MODELOS_TEXTO]
+    return claves.index(str(modelo)) if str(modelo) in claves else len(claves)
+
+
+def _respaldos(modelo):
+    """v5.46: si `modelo` falla, las de debajo que estén descargadas (Gemma 4 E4B → Qwen3.5-4B → Qwen3-1.7B); antes solo la 1.7B."""
+    hay = motor_voz.modelos_texto_descargados()
+    return [m for m in hay if _rango(m) > _rango(modelo) and m != '4B'] or (['1.7B'] if modelo != '1.7B' else [])
+
+
 def precargar():
     """v5.3: arranca la IA de texto EN SEGUNDO PLANO (modelo + calentamiento) sin bloquear a nadie. Se llama al pulsar GO
     (mientras la voz trabaja) o al terminar la voz: cuando llegan las palabras, el modelo ya esta listo. True si quedo en
@@ -193,8 +205,8 @@ def precargar():
             s = _SRV['s']
             info = motor_voz.info_instalado() or {}
             quiero = motor_voz.modelo_texto(info)
-            if s is not None and s.vivo() and str(s.modelo).upper() != '4B' and str(quiero).upper() == '4B':
-                s.cerrar()                         # v5.5.17: ahora cabe la 4B (más lista; p. ej. GO sin Resolve): se cambia mientras la voz trabaja
+            if s is not None and s.vivo() and _rango(quiero) < _rango(s.modelo):
+                s.cerrar()                         # v5.5.17: ahora cabe una mejor (p. ej. GO sin Resolve): se cambia mientras la voz trabaja
                 s = None
             if s is None or not s.vivo():
                 _SRV['s'] = _Servidor(quiero)
@@ -323,7 +335,7 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
                             'Revisa Ajustes > General > Motor de voz > Reparar.' % _FALLOS['n'], 'IA de texto')
             raise RuntimeError('la IA de texto está desactivada en esta sesión tras fallar varias veces')
         # v5.11: si el modelo grande falla, se cambia SOLO al ligero (1.7B) antes de rendirse; cada intento queda en el Registro
-        modelos = [modelo] + (['1.7B'] if modelo != '1.7B' else [])
+        modelos = [modelo] + _respaldos(modelo)              # (v5.46: Gemma 4 E4B → Qwen3.5-4B → Qwen3-1.7B)
         if _PREFERIDO['m'] and _PREFERIDO['m'] != modelo:
             modelos = [_PREFERIDO['m']]
         ok, texto = False, ''
@@ -332,7 +344,7 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
                 s = _SRV['s']
                 if s is None or not s.vivo() or (k and getattr(s, 'modelo', None) != m):
                     if estado:
-                        estado('Cargando la IA de texto (la primera vez tarda unos segundos)…' if not k else 'La IA de texto falló; pruebo con el modelo ligero…')
+                        estado('Cargando la IA de texto (la primera vez tarda unos segundos)…' if not k else 'La IA de texto falló; pruebo con la de respaldo…')
                     s = _Servidor(m)
                     _SRV['s'] = s
                 try:

@@ -281,6 +281,19 @@ def cerrar():
 
 
 MENSAJE_COLGADO = 'Resolve no responde (su ventana está colgada). Ciérralo desde el Administrador de tareas y ábrelo de nuevo.'
+MENSAJE_CERRADO = 'DaVinci Resolve está cerrado'
+_VISTO_ABIERTO = {'t': 0.0}
+
+
+def _resolve_cerrado(resolve_bridge):
+    """v5.47 (Windows): con Resolve cerrado, ResolveMCP tardaba 4 s en contestar CADA script (medido). Si no hay ningún Resolve.exe, se
+    contesta al momento. Mirar los procesos cuesta ~7 ms: si hace menos de 2 s que se vio abierto no se vuelve a mirar."""
+    if not sys.platform.startswith('win') or time.time() - _VISTO_ABIERTO['t'] < 2.0:
+        return False
+    pids = resolve_bridge._listar_pids_resolve()
+    if pids:
+        _VISTO_ABIERTO['t'] = time.time()
+    return pids == []
 
 
 def script(codigo, timeout=20):
@@ -289,6 +302,8 @@ def script(codigo, timeout=20):
         import resolve_bridge
         if resolve_bridge.resolve_colgado(25.0):
             return False, None, MENSAJE_COLGADO
+        if _resolve_cerrado(resolve_bridge):
+            return False, None, MENSAJE_CERRADO
     except Exception:
         pass
     c = cliente()
@@ -383,6 +398,24 @@ result = info
 '''
 
 
+_REFRESCO = {'hilo': None}
+
+
+def _refrescar_en_hilo(pasivo, refrescar):
+    """v5.47: estado() de verdad en un hilo (uno a la vez): deja _ESTADO['cache'] al día para la próxima pregunta desde la ventana."""
+    h = _REFRESCO['hilo']
+    if h is not None and h.is_alive():
+        return
+
+    def trabajo():
+        try:
+            estado(pasivo=pasivo, refrescar=refrescar)
+        except Exception:
+            pass
+    _REFRESCO['hilo'] = threading.Thread(target=trabajo, daemon=True, name='resolve-estado')
+    _REFRESCO['hilo'].start()
+
+
 def estado(pasivo=False, refrescar=False):
     """{'conectado': bool, 'producto', 'version', 'proyecto', 'timeline', ...}
 
@@ -390,6 +423,21 @@ def estado(pasivo=False, refrescar=False):
     Se guarda unos segundos: la ventana pregunta seguido."""
     if not refrescar and time.time() - _ESTADO['cache_t'] < CACHE_ESTADO_S and _ESTADO['cache']:
         return dict(_ESTADO['cache'])
+    if _en_hilo_de_ventana():
+        # v5.47 (el usuario: «va lento y trabado cuando doy clic y a veces se congela»; registro: «congelación 2,5–3 s» en ir_a →
+        # _pintar_go_reposo → colocacion.detectar_resolve → aquí, esperando a ResolveMCP mientras un hilo lo arrancaba): desde la ventana NO se
+        # espera nunca: lo último que se sabía (o «comprobando») y la pregunta de verdad en un hilo; quien pinta vuelve a pintar al recoger el estado
+        _refrescar_en_hilo(pasivo, refrescar)
+        return dict(_ESTADO['cache']) if _ESTADO['cache'] else {'conectado': False, 'mcp': True, 'motivo': 'comprobando', 'comprobando': True}
+    try:                                         # v5.47: sin Resolve.exe, ResolveMCP tardaba 8,5 s en decir «cerrado» (medido): se contesta al momento
+        import resolve_bridge
+        if ruta_exe() is not None and _resolve_cerrado(resolve_bridge):
+            d = {'conectado': False, 'mcp': True, 'motivo': 'Resolve está cerrado', 'version': (_ESTADO['cache'] or {}).get('version')}
+            _ESTADO['cache'] = d
+            _ESTADO['cache_t'] = time.time()
+            return dict(d)
+    except Exception:
+        pass
     c = cliente(arrancar=not pasivo)
     if c is None:
         return {'conectado': False, 'mcp': ruta_exe() is not None, 'motivo': _ESTADO['motivo']}
@@ -488,6 +536,12 @@ def responde(timeout=20) -> bool:
 
 def resolve_abierto():
     """True/False si Resolve esta corriendo (None si no hay MCP)."""
+    try:                                         # v5.47: sin Resolve.exe se sabe al momento (ResolveMCP tardaba 4 s en decirlo)
+        import resolve_bridge
+        if ruta_exe() is not None and _resolve_cerrado(resolve_bridge):
+            return False
+    except Exception:
+        pass
     c = cliente()
     if c is None:
         return None
@@ -763,12 +817,15 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
         _anotar_hilo(r0)                                       # (síncrono y largo: el MCP dejó de esperar, pero el trabajo sigue y deja su archivo)
         inicio = time.time()
         ultima_pregunta = inicio
+        ultima_mirada = 0.0
+        # v5.47: el archivo de resultado se mira cada 50 ms los 3 primeros segundos y luego cada 150 ms (antes cada 500 ms: cada script
+        # tardaba al menos medio segundo de más, y GO manda varios); el proceso de Resolve se sigue mirando cada medio segundo (cuesta ~11 ms).
         # v5.5.8: mientras el trabajo corre NO se llama al MCP. MEDIDO (Tema 6, traza): cada llamada al MCP hace que Resolve guarde el proyecto;
         # coincidiendo con MediaPool.ImportMedia en el hilo del trabajo, Resolve se quedaba bloqueado (el sondeo no contestaba en 25 s y GO lo
         # cerraba). El trabajo deja su resultado en un archivo; aquí solo se mira ese archivo y que Resolve.exe siga vivo. El MCP solo se usa
         # si el trabajo no pudo escribir su archivo «vivo» al empezar.
         while time.time() - inicio < timeout:
-            time.sleep(0.5)
+            time.sleep(0.05 if time.time() - inicio < 3 else 0.15)
             r = None
             if estado.exists():
                 try:
@@ -781,7 +838,8 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
                             f.unlink()
                         except OSError:
                             pass
-            if r is None and sys.platform.startswith('win'):
+            if r is None and sys.platform.startswith('win') and time.time() - ultima_mirada >= 0.5:
+                ultima_mirada = time.time()
                 try:
                     import resolve_bridge
                     if resolve_bridge._listar_pids_resolve() == []:

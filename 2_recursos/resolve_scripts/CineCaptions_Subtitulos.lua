@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.41 (subtitulos)"
+local VERSION = "5.49 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -82,10 +82,10 @@ local NOMBRES = {
     base = { "simple", "base" },
     imagen = "imagen",
     solo_nuevos = { arriba = true, abajo = true, imagen = true },
-    max_variantes = 16,        -- v5.5: gemela de MAX_VARIANTES de CineCaptions.py (aquí se había quedado en 3)
+    max_variantes = 20,        -- v5.48: 20 (antes 16) · v5.5: gemela de MAX_VARIANTES de CineCaptions.py (aquí se había quedado en 3)
 }
 -- Cuantos juegos numerados se buscan: contexto, contexto 2, contexto 3...
-local MAX_SETS = 16
+local MAX_SETS = 20   -- v5.48: 16 -> 20 (la variante 17 de «Referencia» = Luxe Count); gemela de CineCaptions.py
 -- Formas de numerar que se aceptan, para no obligar a escribirlo de una
 -- manera concreta: "contexto 2", "contexto2", "contexto-2", "contexto_2",
 -- "contexto 02".

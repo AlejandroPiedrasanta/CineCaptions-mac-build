@@ -16,7 +16,7 @@ import math
 
 from PySide6.QtCore import QEasingCurve, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal
 from PySide6.QtGui import (QConicalGradient, QFont, QFontMetricsF, QLinearGradient, QPainter, QPainterPath, QPen,
-                           QPixmap, QRadialGradient)
+                           QPixmap, QRadialGradient, QTextLayout)
 from PySide6.QtWidgets import (QAbstractButton, QFrame, QGraphicsOpacityEffect, QHBoxLayout, QSizePolicy,
                                QVBoxLayout, QWidget)
 
@@ -423,6 +423,12 @@ class TituloGo(QWidget):
                 self._linea(q, w, h, self._ancho, 1.0)
         else:
             t = self._k * self._total()
+            if self._letras:                              # el halo entero se enciende con la última letra
+                u = min(1.0, max(0.0, (t - self._letras[-1][0] * self.ESCALON) / self.DURACION))
+                q.setOpacity(u ** 4)                      # (tarde: si no, se veía el halo de la última letra antes de que llegara)
+                q.drawPixmap(0, 0, self._pm_halo)
+            if self._estilo == 'tema':                    # las letras suben desde DETRÁS de la raya (antes la cruzaban y el borde las cortaba)
+                q.setClipRect(QRectF(0, 0, w, h - 14))
             for i, x, letra in self._letras:
                 u = min(1.0, max(0.0, (t - i * self.ESCALON) / self.DURACION))
                 if u <= 0.0:
@@ -431,6 +437,7 @@ class TituloGo(QWidget):
                 q.setOpacity(e)
                 q.drawPixmap(QPointF(x, (1.0 - e) * self.SUBIDA * self._alto), letra)
             q.setOpacity(1.0)
+            q.setClipping(False)
             q.setRenderHint(QPainter.RenderHint.Antialiasing)
             self._linea(q, w, h, self._ancho, 1.0 - (1.0 - self._k) ** 3)
         q.end()
@@ -454,36 +461,67 @@ class TituloGo(QWidget):
         self._pm = self._lienzo(w, h, dpr)
         p = QPainter(self._pm)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        # cada letra en el sitio EXACTO que tiene en el título (con su interletraje): antes cada una iba con su avance suelto y, al acabar la
+        # entrada, el título entero saltaba un píxel. Relleno «winding»: con par-impar los contornos que se pisan de Inter salían huecos (la «e»)
+        glifos = self._glifos(f, texto, x, y)
         ruta = QPainterPath()
-        ruta.addText(QPointF(x, y), f, texto)
+        ruta.setFillRule(Qt.FillRule.WindingFill)
+        for _i, g in glifos:
+            ruta.addPath(g)
         self._relleno(p, ruta, y, fm)
         if self._estilo != 'tema':
             self._linea(p, w, h, self._ancho, 1.0)
         p.end()
+        # en la entrada las letras suben SIN halo y el halo del título entero se enciende al aterrizar: con un halo por letra, donde dos se
+        # pisaban sumaban brillo y al acabar se notaba el cambio
+        self._pm_halo = self._lienzo(w, h, dpr)
+        p = QPainter(self._pm_halo)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self._relleno(p, ruta, y, fm, cuerpo=False)
+        p.end()
         self._letras = []
         m = self.MARGEN
-        for i, ch in enumerate(texto):
-            if not ch.strip():
-                continue
-            letra = self._lienzo(fm.horizontalAdvance(ch) + 2 * m, h, dpr)
+        for i, g in glifos:
+            caja = g.boundingRect()
+            desp = float(math.floor(caja.left() - m))        # entero: la letra se rasteriza con la misma fase que en el título entero
+            letra = self._lienzo(caja.width() + 2 * m, h, dpr)
             p = QPainter(letra)
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
-            ruta = QPainterPath()
-            ruta.addText(QPointF(m, y), f, ch)
-            desp = x + fm.horizontalAdvance(texto[:i]) - m
-            self._relleno(p, ruta, y, fm, desp)
+            self._relleno(p, g.translated(-desp, 0), y, fm, desp, halo=False)
             p.end()
             self._letras.append((i, desp, letra))
 
-    def _relleno(self, p, ruta, y, fm, desp=0.0):
+    @staticmethod
+    def _glifos(f, texto, x, y):
+        """[(orden, ruta)] de cada letra visible, colocada como en el texto entero (línea base en `y`, empezando en `x`)."""
+        capa = QTextLayout(texto, f)
+        capa.beginLayout()
+        linea = capa.createLine()
+        capa.endLayout()
+        if not linea.isValid():
+            return []
+        salida, orden = [], 0
+        for corrida in linea.glyphRuns():
+            fuente_cruda = corrida.rawFont()
+            for indice, pos in zip(corrida.glyphIndexes(), corrida.positions()):
+                g = fuente_cruda.pathForGlyph(indice)
+                if not g.isEmpty():
+                    g.setFillRule(Qt.FillRule.WindingFill)
+                    salida.append((orden, g.translated(x + pos.x(), y)))
+                orden += 1                                # (el espacio no se dibuja, pero cuenta en el escalonado)
+        return salida
+
+    def _relleno(self, p, ruta, y, fm, desp=0.0, halo=True, cuerpo=True):
         """`desp`: dónde empieza este lienzo en el título (una letra suelta): el degradado de lado a lado del estilo 'tema' sigue igual."""
         tema = self._estilo == 'tema'
-        halo = (150, 165, 255) if tema else (90, 190, 255)
-        for grosor, alfa in ((30, 5), (20, 9), (12, 16), (6, 26)) if tema else ((9, 14), (5, 22), (2.5, 34)):          # halo
-            p.setPen(QPen(QColorReal(*halo, alfa), grosor, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        color = (150, 165, 255) if tema else (90, 190, 255)
+        for grosor, alfa in (((30, 5), (20, 9), (12, 16), (6, 26)) if tema else ((9, 14), (5, 22), (2.5, 34))) if halo else ():
+            p.setPen(QPen(QColorReal(*color, alfa), grosor, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawPath(ruta)
         p.setPen(Qt.PenStyle.NoPen)
+        if not cuerpo:
+            return
         if not tema:                                      # (en grande la sombra se veía como una raya dentro de la «e»: la referencia no la lleva)
             p.translate(0, 2)
             p.setBrush(QColorReal(0, 0, 0, 150))
@@ -537,7 +575,7 @@ class TituloGo(QWidget):
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(lg)
         p.drawRoundedRect(raya, grosor / 2, grosor / 2)
-        if tema and k >= 1.0:                             # el punto de luz que la recorre (ida y vuelta, despacio)
+        if tema and k > 0.75:                             # el punto de luz que la recorre (ida y vuelta, despacio); aparece suave al final de la entrada
             import proyecto_ui
             u = proyecto_ui._latido(5.0)
             cx = raya.left() + raya.width() * (0.12 + 0.76 * u)
@@ -546,7 +584,9 @@ class TituloGo(QWidget):
             luz.setColorAt(0.35, QColorReal(150, 200, 255, 120))
             luz.setColorAt(1.0, QColorReal(120, 160, 255, 0))
             p.setBrush(luz)
+            p.setOpacity(min(1.0, (k - 0.75) / 0.25))
             p.drawEllipse(QPointF(cx, raya.center().y()), 22, 7)
+            p.setOpacity(1.0)
 
 
 class CintaViral(QWidget):

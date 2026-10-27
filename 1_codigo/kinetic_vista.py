@@ -99,7 +99,7 @@ def dibujar_cue(cue, ancho=1080, alto=1920, fondo=(40, 40, 46)):
                 im, ox, oy = _trazo(PAL.puntos_circulo(lazo='lazo' in k), ANILLOS.get(k.split()[-1], PAL.LIMA), ancho * r['zx'], ancho * r['zy'],
                                     PAL.TRAZO_GROSOR * ancho * (r['zx'] + r['zy']) / 2)
             else:
-                im, ox, oy = _trazo(PAL.puntos_subrayado(), LINEAS.get(k.split()[-1], PAL.LIMA), ancho * r['zx'], ancho * r['zy'], PAL.TRAZO_GROSOR * ancho * r['zx'])
+                im, ox, oy = _trazo(PAL.puntos_subrayado(), LINEAS.get(k.split()[-1], PAL.LIMA), ancho * r['zx'], ancho * r['zy'], PAL.SUBRAYADO_GROSOR * ancho)
             _pegar(lienzo, im, cx - ox, cy - oy, 0.0, 0)
         elif e['tipo'] == 'anillo':
             nw, nh = KC.AFINADO['nominal_anillo']

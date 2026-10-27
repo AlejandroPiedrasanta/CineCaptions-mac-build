@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos».
 ]]
 
-local VERSION = "5.41 (efectos)"
+local VERSION = "5.49 (efectos)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -355,16 +355,58 @@ local function norm(r)
     return r
 end
 
-local function buscar_clip(carpeta, buscada)
+-- v5.47 (gemelo de colocar_efectos.py): el Media Pool se lee UNA vez por corrida (ruta -> clip). Antes cada sonido recorria el pool entero
+-- pidiendo la ruta de cada clip (miles de llamadas: 18 s para 53 sonidos; ahora 4 s). Funciones en una tabla: el .lua va justo de locales.
+local INDICE = { mapa = nil }
+
+function INDICE.llenar(carpeta)
     for _, clip in ipairs(lista_api(carpeta:GetClipList())) do
         local ok, r = pcall(function() return clip:GetClipProperty("File Path") end)
-        if ok and r and r ~= "" and norm(r) == buscada then return clip end
+        if ok and r and r ~= "" then
+            local n = norm(r)
+            if INDICE.mapa[n] == nil then INDICE.mapa[n] = clip end
+        end
     end
     for _, sub in ipairs(lista_api(carpeta:GetSubFolderList())) do
-        local x = buscar_clip(sub, buscada)
-        if x ~= nil then return x end
+        INDICE.llenar(sub)
     end
-    return nil
+end
+
+function INDICE.anotar(clips)
+    if type(clips) ~= "table" then return end
+    for _, clip in ipairs(clips) do
+        local ok, r = pcall(function() return clip:GetClipProperty("File Path") end)
+        if ok and r and r ~= "" then INDICE.mapa[norm(r)] = clip end
+    end
+end
+
+local function buscar_clip(mp, buscada)
+    if INDICE.mapa == nil then
+        INDICE.mapa = {}
+        INDICE.llenar(mp:GetRootFolder())
+    end
+    return INDICE.mapa[buscada]
+end
+
+-- Los archivos de audio que aun no estan en el pool, importados en UNA llamada. Solo audio (varias imagenes numeradas se juntarian en una secuencia).
+function INDICE.precargar_audio(mp, caja, eventos)
+    local faltan, vistos = {}, {}
+    for _, ev in ipairs(eventos) do
+        if type(ev.secuencia) ~= "table" and ev.archivo and (ev.tipo == "sonido" or ev.tipo == "musica" or ev.tipo == "voz_ai") then
+            local n = norm(ev.archivo)
+            if not vistos[n] and buscar_clip(mp, n) == nil then
+                vistos[n] = true
+                faltan[#faltan + 1] = tostring(ev.archivo)
+            end
+        end
+    end
+    if #faltan == 0 then return end
+    local previa = nil
+    pcall(function() previa = mp:GetCurrentFolder() end)
+    pcall(function() mp:SetCurrentFolder(caja) end)
+    local ok, nuevos = pcall(function() return mp:ImportMedia(faltan) end)
+    if previa ~= nil then pcall(function() mp:SetCurrentFolder(previa) end) end
+    if ok then INDICE.anotar(nuevos) end
 end
 
 local function carpeta_efectos(mp)
@@ -386,14 +428,17 @@ local function importar(mp, caja, ev)
         buscada = norm(ev.archivo)
         pedido = { tostring(ev.archivo) }
     end
-    local ya = buscar_clip(mp:GetRootFolder(), buscada)
+    local ya = buscar_clip(mp, buscada)
     if ya ~= nil then return ya end
     local previa = nil
     pcall(function() previa = mp:GetCurrentFolder() end)
     pcall(function() mp:SetCurrentFolder(caja) end)
     local ok, nuevos = pcall(function() return mp:ImportMedia(pedido) end)
     if previa ~= nil then pcall(function() mp:SetCurrentFolder(previa) end) end
-    if ok and type(nuevos) == "table" then return nuevos[1] end
+    if ok and type(nuevos) == "table" and nuevos[1] then
+        INDICE.mapa[buscada] = nuevos[1]
+        return nuevos[1]
+    end
     return nil
 end
 
@@ -534,6 +579,8 @@ local function poner_audio(tl, mp, caja, fps, base, eventos, nombre_base)
     local carriles = {}
     local puestos, saltados = 0, 0
     table.sort(eventos, function(a, b) return (tonumber(a.ini) or 0) < (tonumber(b.ini) or 0) end)
+    INDICE.precargar_audio(mp, caja, eventos)
+    local pedidos, nombres = {}, {}
     for _, ev in ipairs(eventos) do
         local clip = importar(mp, caja, ev)
         if clip == nil then
@@ -561,21 +608,35 @@ local function poner_audio(tl, mp, caja, fps, base, eventos, nombre_base)
                     end
                 end
                 if k ~= nil then
-                    local ok, nuevos = pcall(function()
-                        return mp:AppendToTimeline({ { mediaPoolItem = clip, startFrame = 0, endFrame = frames - 1, recordFrame = ini, trackIndex = carriles[k].idx, mediaType = 2 } })
-                    end)
-                    local item = (ok and type(nuevos) == "table") and nuevos[1] or nil
-                    if not item then
-                        saltados = saltados + 1
-                    else
-                        carriles[k].fin = ini + frames
-                        pcall(function() item:SetName(string.format("%s · %s", nombre_base, tostring(ev.asset or ""))) end)
-                        puestos = puestos + 1
-                    end
+                    carriles[k].fin = ini + frames
+                    pedidos[#pedidos + 1] = { mediaPoolItem = clip, startFrame = 0, endFrame = frames - 1, recordFrame = ini, trackIndex = carriles[k].idx, mediaType = 2 }
+                    nombres[#nombres + 1] = string.format("%s · %s", nombre_base, tostring(ev.asset or ""))
                 end
             end
         end
     end
+    -- v5.47: todos en UNA llamada (antes un AppendToTimeline por sonido); si Resolve no devuelve nada, uno por uno como antes
+    local nuevos = {}
+    if #pedidos > 0 then
+        local ok, r = pcall(function() return mp:AppendToTimeline(pedidos) end)
+        nuevos = lista_api((ok and type(r) == "table") and r or nil)
+        if #nuevos == 0 then
+            for i, p in ipairs(pedidos) do
+                local ok1, r1 = pcall(function() return mp:AppendToTimeline({ p }) end)
+                nuevos[i] = (ok1 and type(r1) == "table") and r1[1] or false
+            end
+        end
+    end
+    local bien = 0
+    for i = 1, #pedidos do
+        local item = nuevos[i]
+        if item then
+            bien = bien + 1
+            if #nuevos == #pedidos then pcall(function() item:SetName(nombres[i]) end) end
+        end
+    end
+    puestos = puestos + bien
+    saltados = saltados + (#pedidos - bien)
     -- las pistas de una vez anterior que ya no hacen falta
     for i = #carriles + 1, MAX_CARRILES do
         vaciar_y_quitar(tl, string.format("%s %d", nombre_base, i), "audio")

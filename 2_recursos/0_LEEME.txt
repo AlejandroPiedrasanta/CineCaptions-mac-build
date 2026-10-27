@@ -34,7 +34,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_10.jpg
         fondo_11.jpg
     fonts\   (48 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
-    generador_packs\   (24 archivos)
+    generador_packs\   (26 archivos)
         .cf\   (1 archivos)
         banner_cinecaptions.png
         banner_inspector.py
@@ -53,6 +53,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             arma un .drb con clips de nombre libre y una comp de Fusion propia en cada uno (pack «Kinetic»).
         leer_comp.py
             lee la comp de Fusion (texto) que lleva un clip de un .drb: para ver cómo escribe Resolve cada herramienta.
+        luxe_count_base.lua
+        luxe_count_cabecera.txt
         luxe_macro.py
             pone los macros REALES «Luxe Shine» (principal) y «Luxe Slide» (el resto) del Luxe Title Pack en cada clip, con la tipografía, el color y la posición de cada variante.
         luxe_shine_base.lua

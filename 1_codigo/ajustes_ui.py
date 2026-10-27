@@ -40,9 +40,20 @@ import tema
 PREFS = Path.home() / 'DaVinciSubtitles' / 'preferencias.json'
 
 
+_PREFS_CACHE = {'firma': None, 'texto': ''}
+
+
 def leer_prefs():
+    """v5.46: se lee con caché (firma = tamaño + fecha): abrir el archivo en cada cambio de página tardaba hasta 90 ms con el
+    antivirus mirando la carpeta (la vuelta a Inicio se trababa). stat() no abre el archivo; si alguien lo reescribe, cambia la firma.
+    Devuelve siempre un dict nuevo (json.loads del texto guardado): quien lo modifique no toca la caché."""
     try:
-        d = json.loads(PREFS.read_text(encoding='utf-8'))
+        st = os.stat(PREFS)
+        firma = (st.st_mtime_ns, st.st_size)
+        if firma != _PREFS_CACHE['firma']:
+            _PREFS_CACHE['texto'] = PREFS.read_text(encoding='utf-8')
+            _PREFS_CACHE['firma'] = firma
+        d = json.loads(_PREFS_CACHE['texto'])
         return d if isinstance(d, dict) else {}
     except Exception:
         return {}
@@ -484,6 +495,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.49', [
+        'Tema 2 renovado con el Luxe Title Pack 1.09: las palabras entran con más calma, las líneas van al ras y la palabra grande ocupa el ancho de su línea.',
+        'Bloques de tres líneas con la palabra grande en medio, alternados con bloques cortos; nunca más de 4 palabras por línea ni frases cortadas por la mitad.',
+        'Página Sonido: música de tu biblioteca con carril propio y sonidos elegidos con lo aprendido de los creadores.',
+        'Los números suben contando y, si se habla de dinero, llevan su moneda ($, Q, €).',
+        'Las animaciones de los textos ya no fallan en clips cortos: se ajustan solas a lo que dura cada palabra.',
+    ]),
     ('5.37', [
         'AI Sound Director se encarga de todo el sonido: los sonidos de las reglas de antes ya no suenan, y los de los motions (también los del Tema 1) los rehace a la medida.',
         'Usa todas tus bibliotecas de sonido: miles de whooshes, golpes, risers y tonos, camas de música de score y ambientes reales, cada uno revisado antes de usarlo.',
@@ -2127,6 +2145,7 @@ class VentanaAjustes(_Panel):
         prefs = leer_prefs()
         self._borrador = dict(self._previos)
         self._borrador.update(motor_voz=prefs.get('motor_voz') or 'qwen3',
+                              ia_texto=str(prefs.get('ia_texto') or 'gemma4'),                  # v5.47: la IA de texto (Gemma 4 E4B de fábrica)
                               canal_beta=False,
                               actualizaciones_auto=prefs.get('actualizaciones_auto', True) is not False,
                               ventana_encima=bool(prefs.get('ventana_encima')),
@@ -2215,6 +2234,33 @@ class VentanaAjustes(_Panel):
                            'Para los demás idiomas, o si no está instalado, se usa Whisper large-v3-turbo.'),
                         caja_motor, 340)
         self._pintar_motor()
+        # v5.47 (el usuario: «otra opción abajo para que aparezcan las otras IA… por defecto Gemma, así el usuario puede verificar que las IA locales
+        # estén»): la IA de texto que corrige y elige palabras clave y emojis, cuáles hay instaladas y cuál se está usando
+        ias = {'gemma4': tr('Gemma 4 E4B (recomendado)'), 'qwen3.5': tr('Qwen3.5-4B'), '1.7B': tr('Qwen3-1.7B (ligera)')}
+        ia_var = StringVar(ias.get(self._borrador['ia_texto'], ias['gemma4']))
+        caja_ia, ci = caja_v(espacio=10)
+        ci.addWidget(Combo(list(ias.values()), var=ia_var, alto=52, tam=16,
+                           comando=lambda v: (self._cambio('ia_texto', next(k for k, n in ias.items() if n == v)), self._pintar_ia_texto())))
+        self.ia_estado = TextoAjustable(tr('Comprobando las IA de texto…'), 13, ancho=340)
+        ci.addWidget(self.ia_estado)
+        self.ia_btn = Boton(tr('Descargar las que faltan'), self._descargar_ia_texto, tipo='neutro', alto=42, tam=14)
+        self.ia_btn.hide()
+        ci.addWidget(self.ia_btn)
+        f_ia = _Fila(tr('IA de texto'),
+                     tr('Corrige la transcripción y elige las palabras clave y los emojis, en tu PC. Gemma 4 E4B (2026) es la principal; '
+                        'si no cabe en la tarjeta (con Resolve abierto) o falla, se usa Qwen3.5-4B y, al final, Qwen3-1.7B.'),
+                     caja_ia, 340)
+        self._pintar_ia_texto()
+        # v5.47 (el usuario: «y abajo de eso las otras IA de análisis o lo que pone el SFX»): qué más corre en el PC y para qué
+        caja_otras, co = caja_v(espacio=6)
+        self.otras_estado = TextoAjustable(tr('Comprobando…'), 13, ancho=340)
+        co.addWidget(self.otras_estado)
+        f_otras = _Fila(tr('Otras IA (análisis, sonido y efectos)'),
+                        tr('Whisper es la voz de respaldo (y la de Mac); MODNet recorta a la persona para los captions detrás de ti y las posiciones; '
+                           'Argos traduce a otros idiomas. Los efectos de sonido los elige el motor de reglas de CineCaptions con tu biblioteca, '
+                           'y el Sound Director y la Edición PRO deciden con la IA de texto.'),
+                        caja_otras, 340)
+        self._pintar_otras_ia()
         # GPU para la voz (v5.4.8)
         caja_gpu, cg = caja_v(espacio=10)
         self.gpu_estado = TextoAjustable(tr('Comprobando la GPU…'), 13, ancho=340)
@@ -2286,7 +2332,7 @@ class VentanaAjustes(_Panel):
                         tr('Deja Resolve en la página Edit con TU disposición de pantalla (vertical y con la vista expandida). Ponla como la quieres en Resolve y pulsa «Guardar la vista actual»: '
                            'desde entonces GO la aplica cada vez que termina.'), caja_vista, 340, ultima=True)
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
-        capa.addWidget(_grupo(f_motor, f_gpu, f_cache, f_avisos, f_mp4, f_repro, f_vert, f_vista))
+        capa.addWidget(_grupo(f_motor, f_ia, f_otras, f_gpu, f_cache, f_avisos, f_mp4, f_repro, f_vert, f_vista))
 
     def _pintar_motor(self):
         import motor_voz
@@ -2301,6 +2347,95 @@ class VentanaAjustes(_Panel):
         else:
             self.motor_estado.configure(text=tr('No instalado (descarga de 4 a 15 GB): mientras tanto se usa Whisper.'),
                                         text_color=ui.AMBAR)
+
+    def _pintar_ia_texto(self):
+        """v5.47: «Instaladas: Gemma 4 E4B ✓ · …» y la que se usaría ahora (con la VRAM libre de verdad: nvidia-smi, en un hilo)."""
+        def trabajo():
+            import motor_voz
+            if sys.platform != 'win32':
+                return None
+            return motor_voz.estado_ia_texto(self._borrador.get('ia_texto'))
+
+        def fin(e, error):
+            if not ui.vivo(self.ia_estado):
+                return
+            if sys.platform != 'win32':
+                self.ia_estado.configure(text=tr('En Mac la IA de texto local aún no está disponible: se usan las reglas.'), text_color=ui.TEXT_MUTED)
+                return
+            if error is not None or not e:
+                self.ia_estado.configure(text=tr('No pude comprobar las IA de texto.'), text_color=ui.AMBAR)
+                return
+            import motor_voz
+            nombre = motor_voz.NOMBRES_TEXTO
+            partes = [f'{nombre[c]} ✓' for c in e['descargadas'] if c != '4B' or '4B' not in e['faltan']]
+            partes += [tr('{m} falta', m=nombre[c]) for c in e['faltan']]
+            texto = tr('Instaladas: {l}', l=' · '.join(partes)) if e['descargadas'] else tr('Ninguna instalada: se usan las reglas.')
+            if e['en_uso']:
+                texto += '\n' + tr('Ahora se usaría: {m}', m=nombre.get(e['en_uso'], e['en_uso']))
+                if e['en_uso'] != e['elegida'] and e['elegida'] in e['descargadas']:
+                    texto += tr(' (la elegida no cabe en la GPU libre: {g} GB)', g=e['libre_gb'])
+            self.ia_estado.configure(text=texto, text_color=ui.AMBAR if e['faltan'] else ui.VERDE)
+            self.ia_btn.setVisible(bool(e['faltan']))
+        correr_en_hilo(self.app, trabajo, fin)
+
+    def _pintar_otras_ia(self):
+        """v5.47: una línea por IA (✓ instalada o lo que pasa si falta) y los efectos de sonido; en un hilo (mira la caché y cuenta la biblioteca)."""
+        def trabajo():
+            import motor_voz
+            lineas = []
+            snaps = motor_voz._cache_hf() / 'models--mobiuslabsgmbh--faster-whisper-large-v3-turbo' / 'snapshots'   # (CTranslate2: model.bin, no .safetensors)
+            whisper = snaps.is_dir() and any((d / 'model.bin').is_file() and (d / 'model.bin').stat().st_size > 1_000_000_000 for d in snaps.iterdir())
+            lineas.append((tr('Whisper large-v3-turbo · voz de respaldo') + (' ✓' if whisper else ' · ' + tr('se descarga al transcribir')), whisper))
+            try:
+                import edicion_pro_persona
+                modnet = edicion_pro_persona.ruta_modelo() is not None
+            except Exception:
+                modnet = False
+            lineas.append((tr('MODNet · recorta a la persona') + (' ✓' if modnet else ' · ' + tr('falta')), modnet))
+            argos = Path.home() / '.local' / 'share' / 'argos-translate' / 'packages'
+            n = sum(1 for p in argos.iterdir() if p.is_dir()) if argos.is_dir() else 0
+            lineas.append((tr('Argos Translate · traducción') + ' · ' + (tr('{n} idioma(s) instalados', n=n) if n else tr('los idiomas se bajan al traducir')), True))
+            try:
+                import sonido_skill
+                lib = sonido_skill.biblioteca()
+                sonidos = sum(1 for p in lib.rglob('*') if p.suffix.lower() in ('.wav', '.mp3', '.aif', '.aiff', '.flac', '.ogg')) if lib.is_dir() else 0
+            except Exception:
+                sonidos = 0
+            lineas.append((tr('Efectos de sonido · reglas de CineCaptions + tu biblioteca ({n} sonidos)', n=f'{sonidos:,}'.replace(',', '.')), sonidos > 0))
+            texto = motor_voz.NOMBRES_TEXTO.get(motor_voz.modelo_texto(), '') if motor_voz.modelos_texto_descargados() else ''
+            lineas.append((tr('Sound Director y Edición PRO · deciden con {m}', m=texto or tr('las reglas (sin IA de texto)')), bool(texto)))
+            return lineas
+
+        def fin(lineas, error):
+            if not ui.vivo(self.otras_estado):
+                return
+            if error is not None or not lineas:
+                self.otras_estado.configure(text=tr('No pude comprobarlas.'), text_color=ui.AMBAR)
+                return
+            self.otras_estado.configure(text='\n'.join(t for t, _ok in lineas),
+                                        text_color=ui.VERDE if all(ok for _t, ok in lineas) else ui.AMBAR)
+        correr_en_hilo(self.app, trabajo, fin)
+
+    def _descargar_ia_texto(self):
+        """v5.47: baja las IA de texto que faltan (motor_texto --descargar, el mismo paso del instalador; Gemma 4 E4B pesa 16 GB)."""
+        import motor_voz
+        if not motor_voz.info_instalado():
+            self.ia_estado.configure(text=tr('Primero instala el motor de voz (arriba): la IA de texto va en el mismo motor.'), text_color=ui.AMBAR)
+            return
+        self.ia_btn.setEnabled(False)
+
+        def aviso(texto):
+            ejecutar_en_ui(lambda: self.ia_estado.configure(text=str(texto), text_color=ui.ACCENT_CLARO) if ui.vivo(self.ia_estado) else None)
+
+        def fin(_r, error):
+            if not ui.vivo(self.ia_btn):
+                return
+            self.ia_btn.setEnabled(True)
+            if error is not None:
+                self.ia_estado.configure(text=tr('No pude descargar la IA de texto: {e}', e=str(error)[:120]), text_color=ui.AMBAR)
+                return
+            self._pintar_ia_texto()
+        correr_en_hilo(self.app, lambda: motor_voz.completar_ia_texto(aviso=aviso), fin)
 
     def _pintar_cache(self):
         def trabajo():
@@ -2738,7 +2873,7 @@ class VentanaAjustes(_Panel):
     def aplicar(self):
         b = self._borrador
         guardar_prefs({'tema': b['tema'], 'acento': b['acento'], 'acento_personal': b['acento_personal'],
-                       'tamano_interfaz': b['tamano'], 'lateral_inicio': b['lateral'], 'motor_voz': b['motor_voz'],
+                       'tamano_interfaz': b['tamano'], 'lateral_inicio': b['lateral'], 'motor_voz': b['motor_voz'], 'ia_texto': b.get('ia_texto', 'gemma4'),
                        'canal_beta': False, 'actualizaciones_auto': b.get('actualizaciones_auto', True), 'ventana_encima': b['ventana_encima'], 'avisos_sistema': b['avisos_sistema'], 'go_estilo': b['go_estilo']})
         reiniciar = any(b.get(k) != self._inicial.get(k) for k in ('tema', 'acento', 'acento_personal', 'tamano'))
         if b.get('idioma_ui') != self._inicial.get('idioma_ui'):

@@ -137,52 +137,6 @@
   },
   "amro": true
  },
- "4": {
-  "nombre": "Moderno blanco",
-  "color": "#FFFFFF",
-  "roles": {
-   "context": {
-    "f1": [
-     "Poppins",
-     "Light"
-    ],
-    "f2": [
-     "Poppins",
-     "Light"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   },
-   "main": {
-    "f1": [
-     "Poppins",
-     "Bold"
-    ],
-    "f2": [
-     "Poppins",
-     "Bold"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   },
-   "complement": {
-    "f1": [
-     "Poppins",
-     "Bold"
-    ],
-    "f2": [
-     "Poppins",
-     "Bold"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   }
-  },
-  "amro": false
- },
  "5": {
   "nombre": "Editorial azul",
   "color": "#5C9EF5",
@@ -459,52 +413,6 @@
   },
   "amro": false
  },
- "11": {
-  "nombre": "Moderno blanco · Screen",
-  "color": "#FFFFFF",
-  "roles": {
-   "context": {
-    "f1": [
-     "Poppins",
-     "Light"
-    ],
-    "f2": [
-     "Poppins",
-     "Light"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   },
-   "main": {
-    "f1": [
-     "Poppins",
-     "Bold"
-    ],
-    "f2": [
-     "Poppins",
-     "Bold"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   },
-   "complement": {
-    "f1": [
-     "Poppins",
-     "Bold"
-    ],
-    "f2": [
-     "Poppins",
-     "Bold"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   }
-  },
-  "amro": false
- },
  "12": {
   "nombre": "Editorial azul · Screen",
   "color": "#5C9EF5",
@@ -643,52 +551,6 @@
   },
   "amro": false
  },
- "15": {
-  "nombre": "Moderno blanco · Sólido",
-  "color": "#FFFFFF",
-  "roles": {
-   "context": {
-    "f1": [
-     "Poppins",
-     "Light"
-    ],
-    "f2": [
-     "Poppins",
-     "Light"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   },
-   "main": {
-    "f1": [
-     "Poppins",
-     "Bold"
-    ],
-    "f2": [
-     "Poppins",
-     "Bold"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   },
-   "complement": {
-    "f1": [
-     "Poppins",
-     "Bold"
-    ],
-    "f2": [
-     "Poppins",
-     "Bold"
-    ],
-    "tam": 0.118,
-    "color": "#FFFFFF",
-    "mayus": false
-   }
-  },
-  "amro": false
- },
  "16": {
   "nombre": "Editorial azul · Sólido",
   "color": "#5C9EF5",
@@ -717,6 +579,52 @@
     ],
     "tam": 0.28,
     "color": "#5C9EF5",
+    "mayus": false
+   },
+   "complement": {
+    "f1": [
+     "Poppins",
+     "Bold"
+    ],
+    "f2": [
+     "Poppins",
+     "Bold"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   }
+  },
+  "amro": false
+ },
+ "17": {
+  "nombre": "Count naranja",
+  "color": "#FF9E33",
+  "roles": {
+   "context": {
+    "f1": [
+     "Poppins",
+     "Light"
+    ],
+    "f2": [
+     "Poppins",
+     "Light"
+    ],
+    "tam": 0.118,
+    "color": "#FFFFFF",
+    "mayus": false
+   },
+   "main": {
+    "f1": [
+     "Poppins",
+     "ExtraBold"
+    ],
+    "f2": [
+     "Poppins",
+     "ExtraBold"
+    ],
+    "tam": 0.257,
+    "color": "#FF9E33",
     "mayus": false
    },
    "complement": {

@@ -23,6 +23,10 @@ ANCHO_UTIL = 900.0                  # px que puede ocupar una línea (el bloque 
 TOP = 1150                          # arriba del bloque (kit: 1130–1180)
 SUELO = 1560                        # nada importante por debajo (interfaz de Instagram)
 TECHO = 220
+# v5.44 (el usuario, con la 5.43: «le falta pulir, no es igual que antes… textos que se salen, efecto fantasma, faltan los halftone… no lo
+# arruines»): mientras los Text+ no igualen a los clips, GO pone los clips neón EXACTOS (la vía de antes). True = Text+ editables (v5.43).
+EXTRA_FIN_TEXTO = 0.33      # v5.45: cuánto dura cada clip Text+ tras su bloque (la salida del kit, 0,32 s, va DESPUÉS del bloque)
+CAPTIONS_TEXTO = True              # (v5.44: pulidos y probados en Resolve 21.1.1: entradas/salidas, halftone, composición y medidas del kit)
 
 # clip del pack Kinetic (receta) → item del kit
 FILL = {'lima': 'acento', 'magenta': 'acento2', 'blanco': 'blanco', 'amarillo': 'acento', 'rojo': 'acento2'}
@@ -61,6 +65,33 @@ def ancho(texto, tipo, px):
 def _encaja(texto, tipo, px, maximo=ANCHO_UTIL, minimo=40):
     w = ancho(texto, tipo, px)
     return int(max(minimo, min(px, px * maximo / w if w > 0 else px)))
+
+
+def maqueta(hook):
+    """v5.45 (Tema 1 con Text+, «que sea lo mismo»): de los argumentos de hook() del kit, por cada item [{'ancho': px de tinta, 'centro': y px}] a 1080×1920,
+    como lo maqueta el CSS del kit (cada línea en su caja: line-height de _alto, margin-top `mt`, versalitas con .42em y margen derecho −.42em)."""
+    out, y = [], float(hook.get('top') or TOP)
+    for it in hook.get('items') or []:
+        fs = float(it.get('size') or {'esp': 34, 'big': 170, 'serif': 78, 'script': 120, 'stk': 96}[it['k']])
+        mt = float(it.get('mt') or 0) * fs
+        lh = _alto(it) - mt
+        y += mt
+        t = str(it.get('txt') or '')
+        f = _fuente({'big': 'cond.ttf', 'stk': 'cond.ttf', 'serif': 'serif.ttf', 'script': 'script.ttf'}.get(it['k'], 'inter.ttf'))
+        t = t.upper() if it['k'] in ('big', 'stk', 'esp') else t
+        avance = f.getlength(t) * fs / 100.0
+        espacio = max(0, len(t) - 1) * 0.42 * fs if it['k'] == 'esp' else 0.0
+        alto_tinta = lh - (10 if it['k'] == 'esp' else 0)
+        m = {'avance': avance, 'espacio': espacio, 'centro': y + alto_tinta / 2.0, 'k': it['k'], 'px': fs}
+        pals = str(it.get('txt') or '').split()
+        if it['k'] == 'big' and len(pals) > 1 and (it.get('fills') or isinstance(it.get('t'), list)):
+            # (la grande de varias palabras: el kit pinta la cifra en el acento y saca cada palabra cuando se dice → un clip por palabra)
+            fills = it.get('fills') or [it.get('fill')] * len(pals)
+            ts = it['t'] if isinstance(it.get('t'), list) else [it.get('t')] * len(pals)
+            m['partes'] = [(p, fills[k] if k < len(fills) else it.get('fill'), ts[k] if k < len(ts) else ts[-1]) for k, p in enumerate(pals)]
+        out.append(m)
+        y += lh
+    return out
 
 
 def _alto(item):

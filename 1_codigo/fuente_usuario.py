@@ -53,8 +53,33 @@ def es_principal(run):
     return any(p in k for p in ('hero', 'tapes', 'negrita', 'shatter', 'select', 'drag'))
 
 
-def marcar_runs(data_path):
-    """Pone 'fu' en cada run con texto del .json de la pista. Nunca lanza; True si escribió."""
+def _encajar(run, fuente):
+    """v5.44 (el Tema 1 con «Arial Black» de texto principal: las palabras grandes se salían de la pantalla): el «Size» del run se calculó con la
+    fuente del tema; con otra más ancha se reduce lo justo para que ocupe lo mismo (nunca crece). Guarda el de antes en 'size0' (re-aplicar no
+    encoge dos veces). True si cambió."""
+    try:
+        import kinetic_captions as KC
+        clave, size0 = str(run.get('k') or ''), float(run.get('size0') or run.get('size') or 0)
+        if not clave or size0 <= 0:
+            return False
+        e = KC._espec(clave)
+        tema = KC.ancho_px(clave, run['texto'], size0)
+        propia = KC._fuente((fuente[0], fuente[1]), size0 * KC.K_PX)
+        if propia is None or tema <= 0:
+            return False
+        visible = KC.texto_visible(clave, run['texto'])
+        suya = propia.getlength(visible) * KC.TINTA + max(0, len(visible) - 1) * (e['esp'] - 1.0) * KC.K_ESP * size0 * KC.K_PX   # (como ancho_px)
+        nuevo = round(size0 * min(1.0, tema / suya), 4) if suya > 0 else size0
+        if abs(nuevo - float(run.get('size') or 0)) < 1e-4:
+            return False
+        run['size0'], run['size'] = size0, nuevo
+        return True
+    except Exception:
+        return False
+
+
+def marcar_runs(data_path, fu_prefs=None):
+    """Pone 'fu' en cada run con texto del .json de la pista y, con la fuente elegida (`fu_prefs`), encaja su tamaño. Nunca lanza; True si escribió."""
     try:
         import archivos_seguros
         ruta = Path(data_path)
@@ -66,6 +91,8 @@ def marcar_runs(data_path):
                     fu = 'main' if es_principal(run) else 'extra'
                     if run.get('fu') != fu:
                         run['fu'] = fu
+                        cambiado = True
+                    if (fu_prefs or {}).get(fu) and _encajar(run, fu_prefs[fu]):
                         cambiado = True
         if cambiado:
             archivos_seguros.escribir_json(ruta, datos)
@@ -79,8 +106,8 @@ def marcar_runs(data_path):
 def aplicar_a_pista(track, prefs):
     """Mete la fuente elegida en la pista de un tema (y marca sus runs). Sin elección no toca nada."""
     fu = de_prefs(prefs)
-    if not fu or not isinstance(track, dict):
-        return
+    if not fu or not isinstance(track, dict) or track.get('fuente_del_tema'):
+        return                     # (v5.45: el Tema 1 con Text+ va siempre con la letra del kit, como sus clips neón: «que sea lo mismo»)
     track['fuente_usuario'] = fu
     if track.get('style') == 'kinetic' and track.get('data_path'):
-        marcar_runs(track['data_path'])
+        marcar_runs(track['data_path'], fu)

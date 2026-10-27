@@ -33,19 +33,67 @@ def _norm(r):
     return os.path.normcase(os.path.normpath(str(r)))
 
 
-def _buscar_clip(carpeta, buscada):
+# v5.47: el Media Pool se lee UNA vez por corrida (ruta → clip). Antes cada sonido recorría el pool entero pidiendo la ruta de cada clip:
+# con 53 sonidos eran miles de llamadas a Resolve (29 s en el GO del Tema 1).
+_INDICE = {}
+
+
+def _llenar_indice(carpeta):
     for clip in carpeta.GetClipList() or []:
         try:
             r = clip.GetClipProperty('File Path') or ''
         except Exception:
             continue
-        if r and _norm(r) == buscada:
-            return clip
+        if r:
+            _INDICE.setdefault(_norm(r), clip)
     for sub in carpeta.GetSubFolderList() or []:
-        x = _buscar_clip(sub, buscada)
-        if x is not None:
-            return x
-    return None
+        _llenar_indice(sub)
+
+
+def _buscar_clip(mp, buscada):
+    if not _INDICE.get(None):
+        _INDICE.clear()
+        _llenar_indice(mp.GetRootFolder())
+        _INDICE[None] = True                                          # (marca: ya leído)
+    return _INDICE.get(buscada)
+
+
+def _anotar(clips):
+    for clip in clips or []:
+        try:
+            r = clip.GetClipProperty('File Path') or ''
+        except Exception:
+            continue
+        if r:
+            _INDICE[_norm(r)] = clip
+
+
+def _precargar_audio(mp, caja, eventos):
+    """Los archivos de audio que aún no están en el pool, importados en UNA llamada (antes, uno por uno). Solo audio: varias imágenes
+    numeradas en un mismo ImportMedia se podrían juntar como una secuencia."""
+    faltan, vistos = [], set()
+    for ev in eventos:
+        ruta = ev.get('archivo')
+        if ev.get('secuencia') or not ruta or ev.get('tipo') not in ('sonido', 'musica', 'voz_ai'):
+            continue
+        n = _norm(ruta)
+        if n in vistos or _buscar_clip(mp, n) is not None:
+            continue
+        vistos.add(n)
+        faltan.append(str(ruta))
+    if not faltan:
+        return
+    previa = mp.GetCurrentFolder()
+    try:
+        mp.SetCurrentFolder(caja)
+        _anotar(mp.ImportMedia(faltan))
+    except Exception as e:
+        print('  (importar los sonidos de una vez: %s)' % e)
+    finally:
+        try:
+            mp.SetCurrentFolder(previa)
+        except Exception:
+            pass
 
 
 def _carpeta_efectos(mp):
@@ -65,7 +113,7 @@ def _importar(mp, caja, ev):
     else:
         buscada = _norm(ev['archivo'])
         pedido = [str(ev['archivo'])]
-    ya = _buscar_clip(mp.GetRootFolder(), buscada)
+    ya = _buscar_clip(mp, buscada)
     if ya is not None:
         return ya
     previa = mp.GetCurrentFolder()
@@ -77,6 +125,8 @@ def _importar(mp, caja, ev):
             mp.SetCurrentFolder(previa)
         except Exception:
             pass
+    if nuevos:
+        _INDICE[buscada] = nuevos[0]
     return nuevos[0] if nuevos else None
 
 
@@ -176,7 +226,10 @@ def _poner_audio(tl, mp, caja, fps, base, eventos, nombre_base):
     Devuelve (puestos, saltados)."""
     carriles = []                                                     # [{'idx', 'fin'}]
     puestos = saltados = 0
-    for ev in sorted(eventos, key=lambda e: float(e['ini'])):
+    eventos = sorted(eventos, key=lambda e: float(e['ini']))
+    _precargar_audio(mp, caja, eventos)
+    pedidos, nombres = [], []
+    for ev in eventos:
         clip = _importar(mp, caja, ev)
         if clip is None:
             print('  no pude importar el sonido %s' % ev.get('asset'))
@@ -197,16 +250,24 @@ def _poner_audio(tl, mp, caja, fps, base, eventos, nombre_base):
                 continue
             carriles.append({'idx': idx, 'fin': -1})
             k = len(carriles) - 1
-        nuevos = mp.AppendToTimeline([{'mediaPoolItem': clip, 'startFrame': 0, 'endFrame': frames - 1, 'recordFrame': ini, 'trackIndex': carriles[k]['idx'], 'mediaType': 2}])
-        if not nuevos:
-            saltados += 1
-            continue
         carriles[k]['fin'] = ini + frames
-        try:
-            nuevos[0].SetName('%s · %s' % (nombre_base, ev.get('asset', '')))
-        except Exception:
-            pass
-        puestos += 1
+        pedidos.append({'mediaPoolItem': clip, 'startFrame': 0, 'endFrame': frames - 1, 'recordFrame': ini, 'trackIndex': carriles[k]['idx'], 'mediaType': 2})
+        nombres.append('%s · %s' % (nombre_base, ev.get('asset', '')))
+    # v5.47: todos en UNA llamada (antes un AppendToTimeline por sonido). Si Resolve no devuelve nada, se reintenta uno por uno.
+    nuevos = (mp.AppendToTimeline(pedidos) or []) if pedidos else []
+    if pedidos and not nuevos:
+        nuevos = []
+        for p in pedidos:
+            uno = mp.AppendToTimeline([p])
+            nuevos.append(uno[0] if uno else None)
+    saltados += len(pedidos) - len([x for x in nuevos if x])
+    for item, nombre in zip(nuevos, nombres if len(nuevos) == len(pedidos) else []):
+        if item:
+            try:
+                item.SetName(nombre)
+            except Exception:
+                pass
+    puestos += len([x for x in nuevos if x])
     # las pistas de una vez anterior que ya no hacen falta
     for i in range(len(carriles) + 1, MAX_CARRILES + 1):
         _vaciar_y_quitar(tl, '%s %d' % (nombre_base, i), 'audio')
@@ -331,6 +392,7 @@ def _validar_destino_ai(proyecto, tl, destino):
 
 
 def main():
+    _INDICE.clear()                                                   # (Resolve puede guardar el módulo entre corridas: el pool de antes no vale)
     with open(RUTA_JSON, encoding='utf-8') as f:
         datos = json.load(f)
     proyecto = project

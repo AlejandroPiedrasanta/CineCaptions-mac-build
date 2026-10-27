@@ -240,12 +240,16 @@ def construir(plantilla, salida, nombre_bin, pack, combinaciones=(1, 2, 3), y_po
         fuente = g.COMBINACIONES[comb].get('principal_drb') if rol in ('main', 'base') else None
         if fuente:
             texto = None                                    # el principal es un preset de Amro.Films Captions: su comp se copia tal cual
+        elif rol == 'main' and g.COMBINACIONES[comb].get('count'):     # v5.48: variante de números = macro Luxe Count
+            texto = luxe_macro.comp_luxe_count(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=False, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'),
+                                               brillo=g.COMBINACIONES[comb].get('brillo'))
         elif rol in ('main', 'base'):
             mayus = r['mayus'] if g.COMBINACIONES[comb].get('mayus_real') else True
             texto = luxe_macro.comp_luxe_shine(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=mayus and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'),
                                                barrido=g.COMBINACIONES[comb].get('barrido'), brillo=g.COMBINACIONES[comb].get('brillo'))
         else:
-            texto = luxe_macro.comp_luxe_slide(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=r['mayus'] and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'), brillo=g.COMBINACIONES[comb].get('brillo'))
+            texto = luxe_macro.comp_luxe_slide(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=r['mayus'] and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'), brillo=g.COMBINACIONES[comb].get('brillo'),
+                                              deslizar=g.COMBINACIONES[comb].get('deslizar'))
         bloque = m.group(0)
         hex_viejo = _BA.search(bloque).group(2)
         hex_nuevo = comp_de_drb(fuente['drb'], fuente['clip']) if fuente else blob_de_comp(texto, hex_viejo)

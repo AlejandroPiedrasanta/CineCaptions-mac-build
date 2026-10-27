@@ -7,11 +7,12 @@
 # nagisa y soynlp: el alineador los usa para japones y coreano.
 # 2026-10-19: parches menores (certifi, filelock, httpx2/httpcore2, platformdirs, setuptools, transformers 5.20.2).
 # 2026-10-21: httpcore2/httpx2 2.16.0 y setuptools 84.2.1 (últimas versiones en PyPI).
+# 2026-10-25: certifi 2026.10.23 (retira las raíces emSign C1/C3) y huggingface_hub 2.3.0 (arreglo de descargas offline).
 # mpmath 1.4.1 aunque sympy 1.14.0 pide <1.4 (pedido: «todo sin excepciones»; probado con el motor de voz y la IA de texto).
 accelerate==1.15.0
 annotated-doc==0.0.5
 anyio==4.15.1
-certifi==2026.10.19
+certifi==2026.10.23
 cffi==2.1.1
 charset-normalizer==3.5.2
 click==8.5.0
@@ -26,7 +27,7 @@ h11==0.16.0
 hf-xet==1.7.0
 httpcore2==2.16.0
 httpx2==2.16.0
-huggingface_hub==2.2.0
+huggingface_hub==2.3.0
 idna==3.20
 Jinja2==3.1.6
 joblib==1.6.0

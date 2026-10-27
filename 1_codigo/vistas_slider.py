@@ -87,10 +87,18 @@ class Reproductor:
             import av
             import numpy as np
             from PySide6.QtGui import QImage
-            while not parar.is_set():
-                with av.open(self.ruta) as contenedor:
-                    flujo = contenedor.streams.video[0]
-                    flujo.thread_type = 'AUTO'
+            # v5.46: decodificador de UN hilo y el archivo abierto una sola vez (en bucle se rebobina). Con thread_type='AUTO' cada
+            # tarjeta creaba un hilo de FFmpeg por núcleo y, al abrir/cerrar el mp4 (cada vuelta y al salir de la página), Python
+            # quedaba parado 50-90 ms: la vuelta a Inicio desde Efectos se trababa. Son clips pequeños: un hilo sobra.
+            with av.open(self.ruta) as contenedor:
+                flujo = contenedor.streams.video[0]
+                flujo.thread_type = 'NONE'
+                flujo.codec_context.thread_count = 1
+                primera = True
+                while not parar.is_set():
+                    if not primera:
+                        contenedor.seek(0, stream=flujo)
+                    primera = False
                     t0 = time.perf_counter()
                     for cuadro in contenedor.decode(flujo):
                         if parar.is_set():
@@ -106,9 +114,7 @@ class Reproductor:
                         a = np.ascontiguousarray(cuadro.to_ndarray(format='bgra'))
                         alto, ancho = a.shape[0], a.shape[1]
                         self._img = QImage(a.data, ancho, alto, ancho * 4, QImage.Format.Format_RGB32).copy()
-                if self._pausa > 0 and parar.wait(self._pausa):
-                    return
-                if parar.is_set():
-                    return
+                    if self._pausa > 0 and parar.wait(self._pausa):
+                        return
         except Exception:
             self.fallo = True

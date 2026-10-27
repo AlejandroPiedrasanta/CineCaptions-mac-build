@@ -27,8 +27,12 @@ K_PX = 640.0
 TAM_PEQUENA = 0.118          # el «Size» de arriba/abajo del pack Referencia (~75 px a 1080 de ancho)
 # Afinado contra el render de Resolve (v5.9): Pillow mide el AVANCE de las letras y lo que se ve (la tinta) es un poco menos; los presets de Amro
 # llevan su tipografía DENTRO del comp, así que su ancho se mide una vez en Resolve: tinta en px a zoom 1 = k × (ancho de Inter Black a 100 px) / 100.
-AFINADO = {'ancho': 1.0, 'espacio': 0.55, 'tinta_pequena': 0.975, 'tinta_principal': 0.95, 'amro_k': {3: None, 6: 1.99, 7: 0.964, 8: 1.53},
-           'dy': {1: -0.021},      # la tinta de las mayúsculas queda más abajo que el centro de la caja: se sube
+# v5.48: 'espacio' 0,55 -> 0,2 (el usuario: «mucha tabulación»; las referencias van con las palabras juntas)
+# v5.48: 'espaciado' = el Character Spacing del pack (pack_referencia.ESPACIADO). Medido en Resolve: Fusion quita por LETRA (1 - espaciado) × 1,4 ×
+# el tamaño de la letra ('k_espaciado'): con 0,95 las palabras pequeñas medían ~15 % menos, no 5 %.
+AFINADO = {'ancho': 1.0, 'espaciado': 0.99, 'k_espaciado': 1.4, 'espacio': 0.2, 'tinta_pequena': 0.975, 'tinta_principal': 0.95, 'amro_k': {3: None, 6: 1.99, 7: 0.964, 8: 1.53},
+           'amro_ext': {3: (82, 94), 6: (64, 118), 7: (32, 50), 8: (38, 98)},     # v5.48: alto real de cada preset de Amro (ver extension_tinta)
+           'dy': {},               # (hasta v5.47 {1: -0.021}: con el Luxe Shine viejo la tinta de las mayúsculas caía más abajo; con el v1.09 cae centrada y subirla abría un hueco)
            # los presets de Amro se revelan letra a letra (~0,3 s); la referencia los muestra enteros al instante: el comp arranca ya adelantado (s)
            'salto_amro': {3: 0.2, 6: 0.2, 7: 0.2, 8: 0.14}}
 
@@ -47,10 +51,16 @@ def _fuente(par, px):
 
 def ancho_px(texto, par=FINA, tam=TAM_PEQUENA, ancho_tl=1080):
     """Ancho (px del cuadro) de `texto` con esa tipografía y ese Size."""
-    f = _fuente(par, tam * K_PX * ancho_tl / 1080.0)
+    px = tam * K_PX * ancho_tl / 1080.0
+    f = _fuente(par, px)
     if f is None:
-        return len(texto) * tam * K_PX * 0.55 * ancho_tl / 1080.0
-    return f.getlength(texto) * AFINADO['ancho']
+        return len(texto) * px * 0.55
+    return f.getlength(texto) * AFINADO['ancho'] - _apretado(texto, px)
+
+
+def _apretado(texto, px):
+    """Lo que el Character Spacing del pack le quita a `texto` con letra de `px` (ver AFINADO['espaciado'])."""
+    return max(0, len(texto) - 1) * (1.0 - AFINADO['espaciado']) * AFINADO['k_espaciado'] * px
 
 
 def datos_variantes(pack='Referencia', formato='v'):
@@ -88,10 +98,44 @@ def ancho_main(texto, n, pack='Referencia', ancho_tl=1080):
         if not k or f is None:
             return None
         return k * f.getlength(texto) * ancho_tl / 1080.0
-    f = _fuente(d['fuente'], d['tam'] * K_PX * ancho_tl / 1080.0)
+    px = d['tam'] * K_PX * ancho_tl / 1080.0
+    f = _fuente(d['fuente'], px)
     if f is None:
         return None
-    return f.getlength(texto.upper() if d['mayus'] else texto) * AFINADO['ancho'] * AFINADO['tinta_principal']
+    txt = texto.upper() if d['mayus'] else texto
+    return (f.getlength(txt) * AFINADO['ancho'] - _apretado(txt, px)) * AFINADO['tinta_principal']
+
+
+def extension_tinta(texto, n, w, pack='Referencia', ancho_tl=1080, alto_tl=None):
+    """v5.48: (arriba, abajo) = cuánto sube y baja la TINTA de la palabra grande respecto a la y del clip (fracción del alto) cuando ocupa el ancho w.
+    Medido en Resolve: Fusion centra la CAJA de la letra (de lo más alto a lo más bajo de la tipografía: ascent/descent), no la tinta; por eso
+    «Maquillaje» (q, j) cuelga más por abajo y «EMPEZAMOS» queda centrada. Amro (pastilla, subrayado, fuego): lo medido de cada preset (AFINADO['amro_ext']). None si no
+    se puede medir."""
+    d = datos_variantes(pack).get(int(n or 0))
+    if not d or not texto:
+        return None
+    alto_tl = alto_tl or ancho_tl * 16 / 9.0
+    amro = d['amro']
+    f = _fuente(('Inter', 'Black'), 200) if amro else _fuente(d['fuente'], 200)
+    if f is None:
+        return None
+    txt = texto.upper() if (amro or d['mayus']) else texto
+    asc, desc = f.getmetrics()
+    x0, y0, x1, y1 = f.getbbox(txt, anchor='ls')
+    if x1 <= x0:
+        return None
+    k = w * ancho_tl / float(x1 - x0) / alto_tl
+    if amro:
+        # medido en Resolve (px a zoom 1 en 1920 de alto: arriba, abajo respecto a la y del clip): la pastilla, las llamas y el subrayado del preset
+        ext = AFINADO['amro_ext'].get(int(n))
+        if ext:
+            a_m = ancho_main(texto, n, pack, ancho_tl)
+            z = (w * ancho_tl / a_m) if a_m else 1.0
+            return ext[0] * z / 1920.0, ext[1] * z / 1920.0
+        h = (y1 - y0) * k
+        return 0.45 * h, 0.75 * h
+    c = (desc - asc) / 2.0                         # centro de la caja ascent/descent (y hacia abajo, origen en la línea base)
+    return max(0.0, (c - y0) * k), max(0.0, (y1 - c) * k)
 
 
 def distribuir(tramos, cx, ancho_tl=1080, tam=TAM_PEQUENA, w=None):

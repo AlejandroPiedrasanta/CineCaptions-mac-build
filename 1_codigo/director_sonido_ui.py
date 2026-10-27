@@ -2,23 +2,23 @@
 # 1_codigo/director_sonido_ui.py — la página SONIDO = «AI Sound Director» (fase 6): la IA hace el 95 % del sonido; el usuario lo dirige (5 %).
 """
 Al pulsar SONIDO se abre esta página directamente (la de antes —Simple / Emojis / Edición PRO— ya no se ve; su código sigue como motor interno).
-Nada técnico a la vista (ni EQ, ni compresores, ni dB): lo que la IA hizo, por qué, y pocas maneras de pedirle otra cosa.
+v5.42 (diseño C elegido por el usuario: «la página de sonido me estresa»): nada técnico a la vista. Escuchas y eliges.
 
-    cabecera     AI Sound Director, video visible, interruptor y Sound Score secundario
-    trabajo      A/B del tramo elegido, línea y lista de eventos; inspector al lado o debajo según el ancho
-    cambios      Se guardan en el diseño; solo «Aplicar a Resolve» modifica el timeline
-    dirección    Una frase, seis controles compactos y creación/restauración de versiones
-    diagnóstico Voz, ruido, música, ambiente, motions, mezcla, master y material, plegados de inicio
+    cabecera     «Sonido», el video y su tema, y una pastilla con el estado (al día en Resolve / cambios sin aplicar)
+    video        el cuadro del video en su formato, con ▶ y «Antes | Con sonido» (la previa del tramo, como antes)
+    versiones    Suave · Cinemática (la que diseñó la IA, recomendada) · Con energía: cada una es un juego de los controles de siempre
+                 (estilo, intensidad, densidad, música); elegirla o darle ▶ la rehace y deja los cambios pendientes de «Aplicar a Resolve»
+    a mano       plegado: interruptor del director, línea de sonido con su inspector y los seis controles
 
-Todo lo que cuesta (leer el estado, rediseñar, mezclas A/B, Resolve) va por correr_en_hilo; sin globos ni avisos flotantes: una línea de estado.
-El motor: director_sonido_sesion.
+Todo lo que cuesta (leer el estado, rehacer una versión, mezclas A/B, el cuadro del video, Resolve) va por correr_en_hilo; sin globos ni avisos
+flotantes: una línea de estado. El motor: director_sonido_sesion.
 """
 from PySide6.QtCore import QRectF, Qt, Signal
-from PySide6.QtGui import QFontMetricsF, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QListWidget, QListWidgetItem, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtGui import QImage, QPainter, QPainterPath, QPen, QPixmap
+from PySide6.QtWidgets import QGridLayout, QListWidget, QListWidgetItem, QSizePolicy, QVBoxLayout, QWidget
 
 import qt_kit as ui
-from qt_kit import Boton, Combo, Entrada, Etiqueta, IconoEstado, Interruptor, Menu, StringVar, Tarjeta, caja_h
+from qt_kit import Boton, Combo, Enlace, Etiqueta, IconoEstado, Interruptor, Menu, Segmentado, StringVar, Tarjeta, caja_h
 from qt_kit import QColor
 from i18n import tr
 
@@ -35,6 +35,13 @@ OPCIONES = {   # control → [(valor, etiqueta)]
 }
 TITULO_CONTROL = {'estilo': 'Estilo', 'intensidad': 'Intensidad', 'densidad': 'Densidad de sonidos', 'voz': 'Prioridad de la voz', 'musica': 'Música',
                   'ambiente': 'Ambiente'}
+# las tres versiones: (clave, nombre, qué es, controles). Los que no nombra quedan en Auto; voz y ambiente no los tocan (son del usuario)
+VERSIONES = (
+    ('suave', 'Suave', 'Pocos efectos · música tranquila · la voz manda', {'estilo': 'limpio', 'intensidad': 'poco', 'densidad': 'poco', 'musica': 'poco'}),
+    ('ia', 'Cinemática', 'La que diseñó la IA: golpes en los textos grandes · música que acompaña', {}),
+    ('energia', 'Con energía', 'Más efectos · música con ritmo', {'estilo': 'energico', 'intensidad': 'mucho', 'densidad': 'mucho', 'musica': 'mucho'}),
+)
+CLAVES_VERSION = ('estilo', 'intensidad', 'densidad', 'musica')
 
 
 def _tiempo(t):
@@ -42,82 +49,314 @@ def _tiempo(t):
     return f'{int(t // 60)}:{t % 60:04.1f}'.replace('.', ',')
 
 
+def version_de(controles):
+    """La versión que dicen los controles guardados (o None si se ajustaron a mano)."""
+    c = controles or {}
+    for clave, _n, _d, preset in VERSIONES:
+        if all(c.get(k, 'auto') == preset.get(k, 'auto') for k in CLAVES_VERSION):
+            return clave
+    return None
+
+
+def cuadro_del_video(ruta, ancho_max=540):
+    """(En un hilo) un cuadro del video a ~1/4 de su duración como QImage (QImage sí se puede crear fuera del hilo de la interfaz)."""
+    import av
+    with av.open(str(ruta)) as c:
+        vs = c.streams.video[0]
+        dur = float(c.duration or 0) / 1e6
+        if dur > 2:
+            c.seek(int(dur * 0.25 * 1e6))
+        for f in c.decode(video=0):
+            rot = 0
+            try:
+                rot = int(round(float(f.rotation or 0))) % 360
+            except Exception:
+                pass
+            img = f.to_image().convert('RGB')
+            if rot:
+                img = img.rotate(rot, expand=True)
+            if img.width > ancho_max:
+                img = img.resize((ancho_max, max(1, round(img.height * ancho_max / img.width))))
+            datos = img.tobytes()
+            q = QImage(datos, img.width, img.height, img.width * 3, QImage.Format.Format_RGB888)
+            return q.copy()
+    return None
+
+
 # ====================================================================================== piezas
-class Puntuacion(QWidget):
-    """El Sound Score en un anillo (o «—» si aún no se midió la mezcla). Un clic pide su desglose."""
+class Pildora(QWidget):
+    """La pastilla de estado de la cabecera: punto con brillo + texto, del color del estado."""
+    def __init__(self, padre=None):
+        super().__init__(padre)
+        self._texto, self._color = '', ui.VERDE
+        self.setFont(ui.fuente(13, peso='medio'))
+        self.setFixedHeight(36)
+
+    def poner(self, texto, color):
+        self._texto, self._color = str(texto or ''), color
+        self.setFixedWidth(int(self.fontMetrics().horizontalAdvance(self._texto)) + 52 if self._texto else 0)
+        self.setAccessibleName(self._texto)
+        self.update()
+
+    def paintEvent(self, _e):
+        if not self._texto:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        c = QColor(self._color)
+        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
+        fondo = QColor(c)
+        fondo.setAlpha(30)
+        borde = QColor(c)
+        borde.setAlpha(95)
+        p.setPen(QPen(borde, 1))
+        p.setBrush(fondo)
+        p.drawRoundedRect(r, r.height() / 2, r.height() / 2)
+        halo = QColor(c)
+        halo.setAlpha(70)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(halo)
+        p.drawEllipse(QRectF(13, self.height() / 2 - 7, 14, 14))
+        p.setBrush(c)
+        p.drawEllipse(QRectF(16, self.height() / 2 - 4, 8, 8))
+        p.setPen(c)
+        p.drawText(QRectF(34, 0, self.width() - 40, self.height()), int(Qt.AlignmentFlag.AlignVCenter), self._texto)
+        p.end()
+
+
+def _triangulo(p, cx, cy, lado, color):
+    """El ▶ de reproducir, centrado ópticamente."""
+    ruta = QPainterPath()
+    ruta.moveTo(cx - lado * 0.38, cy - lado * 0.5)
+    ruta.lineTo(cx + lado * 0.62, cy)
+    ruta.lineTo(cx - lado * 0.38, cy + lado * 0.5)
+    ruta.closeSubpath()
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor(color))
+    p.drawPath(ruta)
+
+
+class VistaVideo(QWidget):
+    """El cuadro del video en su formato (vertical como un móvil, horizontal como una pantalla) con un ▶ encima. Clic = oír."""
     clic = Signal()
 
     def __init__(self, padre=None):
         super().__init__(padre)
-        self._v = None
-        self.setFixedSize(72, 72)
+        self._img = None
+        self._pm = None
+        self._activo = True
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.setAccessibleName(tr('Ver desglose del Sound Score'))
+        self.setAccessibleName(tr('Reproducir el tramo'))
+        self._formato(True)
+
+    def _formato(self, vertical):
+        self.setFixedSize(252, 448) if vertical else self.setFixedSize(360, 203)
+
+    def poner(self, imagen):
+        self._img = imagen
+        self._pm = None
+        if imagen is not None and not imagen.isNull():
+            self._formato(imagen.height() >= imagen.width())
+        self.update()
+
+    def setEnabled(self, si):
+        super().setEnabled(si)
+        self.update()
 
     def mousePressEvent(self, e):
-        if e.button() == Qt.MouseButton.LeftButton:
+        if e.button() == Qt.MouseButton.LeftButton and self.isEnabled():
             self.clic.emit()
 
     def keyPressEvent(self, e):
-        if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+        if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space) and self.isEnabled():
             self.clic.emit()
             e.accept()
         else:
             super().keyPressEvent(e)
 
-    def poner(self, v):
-        self._v = None if v is None else int(round(float(v)))
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
+        radio = 26 if self.height() > self.width() else 16
+        marco = QPainterPath()
+        marco.addRoundedRect(r, radio, radio)
+        p.setClipPath(marco)
+        p.fillRect(r, QColor('#0B1424'))
+        if self._img is not None and not self._img.isNull():
+            dpr = self.devicePixelRatioF()
+            clave = (self.width(), self.height(), round(dpr, 2))
+            if self._pm is None or self._pm[0] != clave:                 # (escalar UNA vez: «cubrir», recortando lo que sobra)
+                im = self._img.scaled(int(self.width() * dpr), int(self.height() * dpr), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                                      Qt.TransformationMode.SmoothTransformation)
+                pm = QPixmap.fromImage(im)
+                pm.setDevicePixelRatio(dpr)
+                self._pm = (clave, pm)
+            pm = self._pm[1]
+            w, h = pm.width() / pm.devicePixelRatio(), pm.height() / pm.devicePixelRatio()
+            p.drawPixmap(QRectF((self.width() - w) / 2, (self.height() - h) / 2, w, h), pm, QRectF(pm.rect()))
+        p.setClipping(False)
+        p.setPen(QPen(QColor(ui.BORDER_COLOR), 1))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawRoundedRect(r, radio, radio)
+        cx, cy = self.width() / 2, self.height() / 2                     # el ▶ en un círculo oscuro
+        p.setPen(QPen(QColor(255, 255, 255, 70), 1))
+        p.setBrush(QColor(8, 12, 20, 165 if self.isEnabled() else 110))
+        p.drawEllipse(QRectF(cx - 32, cy - 32, 64, 64))
+        _triangulo(p, cx, cy, 22, '#FFFFFF' if self.isEnabled() else '#8D9BB5')
+        p.end()
+
+
+class TarjetaVersion(QWidget):
+    """Una versión del sonido: ▶, nombre (con «Recomendada»), qué es, la voz del video y —en la elegida— dónde suena cada efecto.
+    Clic en ▶ = oírla (si no es la elegida, primero se rehace); clic en el resto = elegirla."""
+    elegir = Signal(str)
+    oir = Signal(str)
+    ALTO = 132
+
+    def __init__(self, clave, nombre, descripcion, recomendada=False, padre=None):
+        super().__init__(padre)
+        self.clave, self.nombre, self.descripcion = clave, nombre, descripcion
+        self._recomendada = bool(recomendada)
+        self._elegida = False
+        self._trabajando = False
+        self._hover = False
+        self._res = {}
+        self.setFixedHeight(self.ALTO)
+        self.setMinimumWidth(320)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setAccessibleName(tr('Versión {n}', n=nombre))
+
+    def poner(self, res, elegida, descripcion=None, trabajando=False):
+        self._res, self._elegida, self._trabajando = res or {}, bool(elegida), bool(trabajando)
+        if descripcion:
+            self.descripcion = descripcion
+        self.setAccessibleDescription(self.descripcion + (' · ' + tr('elegida') if elegida else ''))
         self.update()
+
+    def elegida(self):
+        return self._elegida
+
+    def _zona_play(self):
+        return QRectF(20, 20, 44, 44)
+
+    def enterEvent(self, e):
+        self._hover = True
+        self.update()
+        super().enterEvent(e)
+
+    def leaveEvent(self, e):
+        self._hover = False
+        self.update()
+        super().leaveEvent(e)
+
+    def setEnabled(self, si):
+        super().setEnabled(si)
+        self.update()
+
+    def mousePressEvent(self, e):
+        if e.button() != Qt.MouseButton.LeftButton or not self.isEnabled():
+            return
+        if self._zona_play().adjusted(-6, -6, 6, 6).contains(e.position()):
+            self.oir.emit(self.clave)
+        else:
+            self.elegir.emit(self.clave)
+
+    def keyPressEvent(self, e):
+        if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and self.isEnabled():
+            self.oir.emit(self.clave)
+        elif e.key() == Qt.Key.Key_Space and self.isEnabled():
+            self.elegir.emit(self.clave)
+        else:
+            super().keyPressEvent(e)
+            return
+        e.accept()
 
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.scale(self.width() / 88.0, self.height() / 88.0)
-        r = QRectF(5, 5, 78, 78)
-        p.setPen(QPen(QColor('#1E2A42'), 6))
-        p.drawEllipse(r)
-        if self._v is not None:
-            color = ui.VERDE if self._v >= 85 else (ui.AMBAR if self._v >= 70 else ui.ROJO)
-            p.setPen(QPen(QColor(color), 6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-            p.drawArc(r, 90 * 16, -int(360 * 16 * max(0, min(100, self._v)) / 100))
-        p.setPen(QColor('#FFFFFF'))
-        p.setFont(ui.fuente(21, True))
-        p.drawText(QRectF(0, 18, 88, 34), int(Qt.AlignmentFlag.AlignCenter), '—' if self._v is None else str(self._v))
-        p.setPen(QColor(TEXT_MUTED))
-        p.setFont(ui.fuente(8))
-        p.drawText(QRectF(12, 50, 64, 14), int(Qt.AlignmentFlag.AlignCenter), tr('SOUND SCORE'))
+        w, h = self.width(), self.height()
+        activa = self.isEnabled()
+        r = QRectF(1.5, 1.5, w - 3, h - 3)
+        if self._elegida:                                                # el anillo de la elegida
+            anillo = QColor(ui.ACCENT_CLARO)
+            anillo.setAlpha(40)
+            p.setPen(QPen(anillo, 6))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawRoundedRect(r, 18, 18)
+        p.setPen(QPen(QColor(ui.ACCENT_CLARO if self._elegida else ('#2D4677' if self._hover and activa else ui.BORDER_COLOR)), 2 if self._elegida else 1))
+        p.setBrush(QColor(ui.CARD_COLOR))
+        p.drawRoundedRect(r, 18, 18)
+        z = self._zona_play()                                            # ▶
+        p.setPen(QPen(QColor(ui.BORDER_COLOR), 1))
+        p.setBrush(QColor(ui.CARD_2))
+        p.drawEllipse(z)
+        _triangulo(p, z.center().x(), z.center().y(), 14, '#FFFFFF' if activa else '#55617A')
+        x = 80                                                           # nombre (+ «Recomendada») y qué es
+        p.setFont(ui.fuente(16, peso='negrita'))
+        p.setPen(QColor('#FFFFFF' if activa else '#8D9BB5'))
+        p.drawText(QRectF(x, 20, w - x - 60, 24), int(Qt.AlignmentFlag.AlignVCenter), tr(self.nombre))
+        if self._recomendada:
+            xb = x + p.fontMetrics().horizontalAdvance(tr(self.nombre)) + 12
+            p.setFont(ui.fuente(11, peso='medio'))
+            tb = tr('Recomendada')
+            ancho = p.fontMetrics().horizontalAdvance(tb) + 20
+            fondo = QColor(ui.ACCENT_CLARO)
+            fondo.setAlpha(38)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(fondo)
+            p.drawRoundedRect(QRectF(xb, 21, ancho, 22), 11, 11)
+            p.setPen(QColor(ui.ACCENT_CLARO))
+            p.drawText(QRectF(xb, 21, ancho, 22), int(Qt.AlignmentFlag.AlignCenter), tb)
+        p.setFont(ui.fuente(13))
+        p.setPen(QColor(ui.ACCENT_CLARO if self._trabajando else TEXT_MUTED))
+        texto = tr('Preparando esta versión…') if self._trabajando else tr(self.descripcion)
+        p.drawText(QRectF(x, 46, w - x - 60, 20), int(Qt.AlignmentFlag.AlignVCenter), p.fontMetrics().elidedText(texto, Qt.TextElideMode.ElideRight, w - x - 60))
+        c = QRectF(w - 44, 31, 22, 22)                                   # ✓ de la elegida / círculo vacío
+        if self._elegida:
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(ui.ACCENT_CLARO))
+            p.drawEllipse(c)
+            p.setPen(QPen(QColor('#FFFFFF'), 2.2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+            ruta = QPainterPath()
+            ruta.moveTo(c.left() + 6.2, c.center().y() + 0.3)
+            ruta.lineTo(c.left() + 9.6, c.center().y() + 3.6)
+            ruta.lineTo(c.right() - 5.8, c.top() + 7.4)
+            p.drawPath(ruta)
+        else:
+            p.setPen(QPen(QColor(ui.BORDER_COLOR), 2))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawEllipse(c.adjusted(1, 1, -1, -1))
+        self._pintar_linea(p, QRectF(20, 82, w - 40, 32), activa)
         p.end()
 
-
-class FilaEstado(QWidget):
-    """✓ Voz · Excelente · «Limpiada (PyAV): fondo −36 → −54 dBFS»."""
-    def __init__(self, padre=None):
-        super().__init__(padre)
-        c = QHBoxLayout(self)
-        c.setContentsMargins(0, 0, 0, 0)
-        c.setSpacing(10)
-        self.icono = IconoEstado('ok')
-        c.addWidget(self.icono, 0, Qt.AlignmentFlag.AlignTop)
-        col = QVBoxLayout()
-        col.setSpacing(1)
-        fila = QHBoxLayout()
-        fila.setSpacing(8)
-        self.titulo = Etiqueta('', 13, peso='medio', color='#FFFFFF')
-        self.valor = Etiqueta('', 13, color=ui.ACCENT_CLARO)
-        fila.addWidget(self.titulo)
-        fila.addWidget(self.valor)
-        fila.addStretch(1)
-        col.addLayout(fila)
-        self.detalle = ui.Elidida('', 11, color=TEXT_MUTED)              # (una línea: en la rejilla, el texto envuelto se pisaba con la fila de abajo)
-        col.addWidget(self.detalle)
-        c.addLayout(col, 1)
-
-    def poner(self, n):
-        self.icono.poner({'ok': 'ok', 'aviso': 'aviso', 'error': 'error'}.get(n.get('nivel'), 'ok' if n.get('nivel') != 'info' else 'aviso'))
-        self.titulo.setText(tr(n.get('titulo') or ''))
-        self.valor.setText(tr(str(n.get('valor') or '')))
-        self.detalle.setText(str(n.get('detalle') or ''))
+    def _pintar_linea(self, p, r, activa):
+        """La voz del video (tramos) y, en la elegida, cada efecto que suena (puntos ámbar)."""
+        d = self._res
+        dur = float(d.get('duracion') or 0.0)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor('#0B1424'))
+        p.drawRoundedRect(r, 8, 8)
+        if dur <= 0:
+            return
+        x = lambda t: r.left() + 6 + max(0.0, min(1.0, float(t or 0) / dur)) * (r.width() - 12)
+        voz = QColor('#1F5FA8')
+        voz.setAlpha(210 if self._elegida else 120)
+        p.setBrush(voz)
+        for a, b in (d.get('carriles') or {}).get('voz') or []:
+            p.drawRoundedRect(QRectF(x(a), r.top() + 9, max(2.0, x(b) - x(a)), r.height() - 18), 3, 3)
+        if not self._elegida or not activa:
+            return
+        for e in d.get('eventos') or []:
+            if not e.get('suena'):
+                continue
+            cx = x(e.get('ancla'))
+            p.setPen(QPen(QColor(ui.BG_COLOR), 2))
+            p.setBrush(QColor(COLOR_TIPO.get(e.get('tipo'), ui.AMBAR)))
+            p.drawEllipse(QRectF(cx - 5, r.center().y() - 5, 10, 10))
 
 
 class LineaSonido(QWidget):
@@ -319,49 +558,75 @@ class PaginaDirector(QWidget):
         self._cargando = False
         self._mensaje_estado = ''
         self._ancho_distribuido = None
+        self._version_trabajando = None
+        self._video_cuadro = None
         capa = QVBoxLayout(self)
         capa.setContentsMargins(0, 0, 0, 0)
-        capa.setSpacing(12)
-        # ---- cabecera
-        cab = Tarjeta(espacio=12, margenes=(20, 14, 20, 14), horizontal=True)
+        capa.setSpacing(14)
+        # ---- cabecera: «Sonido», video · tema y la pastilla de estado
+        cab, cc_ = caja_h(espacio=14)
         col = QVBoxLayout()
         col.setSpacing(3)
-        fila, cf = caja_h(espacio=14)
-        cf.addWidget(Etiqueta(tr('AI Sound Director'), 20, peso='negrita', color='#FFFFFF'))
-        cf.addStretch(1)
-        self._var_on = ui.BooleanVar(False)
-        self._sw = Interruptor(tr('Activado'), self._var_on, self._cambio_on, tam=13, color='#E0EBFB')
-        cf.addWidget(self._sw)
-        col.addWidget(fila)
-        self._lbl_video = ui.Elidida(tr('Tu diseño de sonido'), 16, peso='medio', color='#FFFFFF')
+        col.addWidget(Etiqueta(tr('Sonido'), 24, peso='extra', color='#FFFFFF'))
+        self._lbl_video = ui.Elidida('', 13, color=TEXT_MUTED)
         col.addWidget(self._lbl_video)
-        self._lbl_tema = ui.Elidida('', 12, color='#B4C0D6')
-        col.addWidget(self._lbl_tema)
-        self._lbl_estado = Etiqueta(tr('Abre esta página después de GO para dirigir el sonido.'), 12, color=TEXT_MUTED, envolver=True)
-        col.addWidget(self._lbl_estado)
-        cab.capa.addLayout(col, 1)
-        score_col = QVBoxLayout()
-        score_col.setSpacing(0)
-        self._score = Puntuacion()
-        self._score.clic.connect(self._desglose)
-        score_col.addWidget(self._score, 0, Qt.AlignmentFlag.AlignHCenter)
-        self._lbl_score = Etiqueta('', 10, color=TEXT_MUTED)
-        self._lbl_score.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        score_col.addWidget(self._lbl_score)
-        cab.capa.addLayout(score_col)
+        cc_.addLayout(col, 1)
+        self._pildora = Pildora()
+        cc_.addWidget(self._pildora, 0, Qt.AlignmentFlag.AlignVCenter)
         capa.addWidget(cab)
+        self._lbl_estado = Etiqueta(tr('Abre esta página después de GO para elegir cómo suena tu video.'), 12, color=TEXT_MUTED, envolver=True)
+        capa.addWidget(self._lbl_estado)
         # ---- vacío (sin GO con el director todavía)
         self._vacio = Tarjeta(espacio=8, margenes=(22, 18, 22, 18))
-        self._lbl_vacio = Etiqueta(tr('Activa AI Sound Director y haz GO con un video. Aquí aparecerán su línea de sonido y los eventos para ajustar.'),
-                                  14, color='#E0EBFB', envolver=True)
+        self._lbl_vacio = Etiqueta(tr('Haz GO con un video: la IA le pone sonido y aquí eliges la versión que más te guste.'), 14, color='#E0EBFB', envolver=True)
         self._vacio.capa.addWidget(self._lbl_vacio)
         capa.addWidget(self._vacio)
         # ---- el resto (solo con diseño)
         self._cuerpo = QWidget()
         cc = QVBoxLayout(self._cuerpo)
         cc.setContentsMargins(0, 0, 0, 0)
-        cc.setSpacing(12)
-        # ---- el trabajo principal aparece antes de los controles y del diagnóstico
+        cc.setSpacing(14)
+        principal, cp = caja_h(espacio=24)
+        izq = Tarjeta(espacio=14, margenes=(22, 22, 22, 22))
+        self._vista = VistaVideo()
+        self._vista.clic.connect(self._oir_vista)
+        izq.capa.addWidget(self._vista, 0, Qt.AlignmentFlag.AlignHCenter)
+        self._var_ab = StringVar(tr('Con sonido'))
+        self._ab = Segmentado([tr('Antes'), tr('Con sonido')], self._var_ab, alto=40, tam=13, iguales=True)
+        izq.capa.addWidget(self._ab)
+        izq.capa.addStretch(1)
+        cp.addWidget(izq, 0, Qt.AlignmentFlag.AlignTop)
+        der = QVBoxLayout()
+        der.setSpacing(14)
+        der.addWidget(Etiqueta(tr('Escucha y elige la que más te guste'), 18, peso='negrita', color='#FFFFFF'))
+        self._tarjetas = {}
+        for clave, nombre, desc, _preset in VERSIONES:
+            t = TarjetaVersion(clave, nombre, desc, recomendada=clave == 'ia')
+            t.elegir.connect(self._elegir_version)
+            t.oir.connect(self._oir_version)
+            self._tarjetas[clave] = t
+            der.addWidget(t)
+        pie, cpie = caja_h(espacio=12)
+        self._b_mano = Enlace(tr('Ajustar a mano'), self._alternar_mano, 14, color=ui.ACCENT_CLARO, color_hover='#FFFFFF', subrayada=False, peso='medio')
+        cpie.addWidget(self._b_mano)
+        cpie.addStretch(1)
+        self._b_aplicar = Boton(tr('Aplicar a Resolve'), self._aplicar, tipo='primario', alto=44, tam=14, negrita=True)
+        cpie.addWidget(self._b_aplicar)
+        der.addWidget(pie)
+        der.addStretch(1)
+        cp.addLayout(der, 1)
+        cc.addWidget(principal)
+        # ---- «Ajustar a mano» (plegado): el director, la línea con su inspector y los controles de siempre
+        self._mano = QWidget()
+        cm = QVBoxLayout(self._mano)
+        cm.setContentsMargins(0, 0, 0, 0)
+        cm.setSpacing(12)
+        on = Tarjeta(espacio=12, margenes=(20, 12, 20, 12), horizontal=True)
+        on.capa.addWidget(Etiqueta(tr('AI Sound Director en los próximos GO'), 13, peso='medio', color='#E0EBFB'), 1)
+        self._var_on = ui.BooleanVar(False)
+        self._sw = Interruptor(tr('Activado'), self._var_on, self._cambio_on, tam=13, color='#E0EBFB')
+        on.capa.addWidget(self._sw)
+        cm.addWidget(on)
         zona = QWidget()
         self._zona_layout = QGridLayout(zona)
         self._zona_layout.setContentsMargins(0, 0, 0, 0)
@@ -369,9 +634,6 @@ class PaginaDirector(QWidget):
         self._tarjeta_linea = lt = Tarjeta(espacio=8, margenes=(18, 14, 18, 14))
         fila, cf = caja_h(espacio=10)
         cf.addWidget(Etiqueta(tr('Línea de sonido'), 15, peso='medio', color='#FFFFFF'), 1)
-        self._b_aplicar = Boton(tr('Aplicar a Resolve'), self._aplicar, alto=36, tam=13)
-        self._b_aplicar.setToolTip(tr('Envía a Resolve los cambios pendientes de este diseño.'))
-        cf.addWidget(self._b_aplicar)
         lt.capa.addWidget(fila)
         self._fila_resolve, cr = caja_h(espacio=8)
         self._ico_resolve = IconoEstado('ok')
@@ -381,15 +643,6 @@ class PaginaDirector(QWidget):
         lt.capa.addWidget(self._fila_resolve)
         self._lbl_destino = ui.Elidida('', 11, color=TEXT_MUTED)
         lt.capa.addWidget(self._lbl_destino)
-        acc, ca = caja_h(espacio=8)
-        self._b_orig = Boton(tr('▶  Original'), lambda: self._oir('original'), tipo='fantasma', alto=32, tam=12)
-        self._b_ai = Boton(tr('▶  AI Sound'), lambda: self._oir('ai'), alto=32, tam=12)
-        self._b_parar = Boton(tr('■'), self._parar, tipo='fantasma', alto=32, ancho=36, tam=12, tooltip=tr('Detener previa'))
-        self._b_parar.setAccessibleName(tr('Detener previa'))
-        for b in (self._b_orig, self._b_ai, self._b_parar):
-            ca.addWidget(b)
-        ca.addStretch(1)
-        lt.capa.addWidget(acc)
         self._lbl_tramo = Etiqueta('', 11, color=TEXT_MUTED)
         lt.capa.addWidget(self._lbl_tramo)
         self._linea = LineaSonido()
@@ -409,13 +662,11 @@ class PaginaDirector(QWidget):
         self._lista_eventos.itemActivated.connect(lambda _item: self._oir_evento())
         lt.capa.addWidget(self._lista_eventos)
         self._tarjeta_inspector = ins = Tarjeta(espacio=8, margenes=(18, 16, 18, 16))
-        ins.capa.addWidget(Etiqueta(tr('Inspector de sonido'), 13, peso='medio', color=TEXT_MUTED))
+        ins.capa.addWidget(Etiqueta(tr('Este sonido'), 13, peso='medio', color=TEXT_MUTED))
         self._lbl_ev = Etiqueta('', 16, peso='medio', color='#FFFFFF', envolver=True)
         self._lbl_diseno = Etiqueta('', 13, color=ui.ACCENT_CLARO, envolver=True)
-        self._lbl_material = ui.Elidida('', 12, color='#B4C0D6')
         self._lbl_porque = Etiqueta('', 12, color='#B4C0D6', envolver=True)
-        self._lbl_imp = Etiqueta('', 12, color=TEXT_MUTED, envolver=True)
-        for w in (self._lbl_ev, self._lbl_diseno, self._lbl_material, self._lbl_porque, self._lbl_imp):
+        for w in (self._lbl_ev, self._lbl_diseno, self._lbl_porque):
             w.setMinimumWidth(0)
             w.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
             ins.capa.addWidget(w)
@@ -434,23 +685,10 @@ class PaginaDirector(QWidget):
         self._botones_ev = (self._b_oir_ev, self._b_menos, self._b_mas, self._b_regen, self._b_silencio, self._b_bloq)
         self._zona_layout.addWidget(lt, 0, 0)
         self._zona_layout.addWidget(ins, 1, 0)
-        cc.addWidget(zona)
-        # «dile a AI Sound Director»
-        dile = Tarjeta(espacio=8, margenes=(18, 12, 18, 12))
-        fd, cdl = caja_h(espacio=10)
-        self._var_frase = StringVar('')
-        self._entrada = Entrada(self._var_frase, placeholder=tr('Dile a AI Sound Director qué quieres cambiar…  («menos sonidos», «la voz más clara», «rediseña el final»)'),
-                                alto=38, tam=13)
-        self._entrada.returnPressed.connect(self._frase)
-        cdl.addWidget(self._entrada, 1)
-        self._b_enviar = Boton(tr('Enviar'), self._frase, alto=38, tam=13)
-        cdl.addWidget(self._b_enviar)
-        dile.capa.addWidget(fd)
-        cc.addWidget(dile)
-        # Controles de la misma biblioteca visual del resto de CineCaptions.
+        cm.addWidget(zona)
         ctl = Tarjeta(espacio=10, margenes=(18, 14, 18, 14))
-        ctl.capa.addWidget(Etiqueta(tr('Dirige el sonido'), 15, peso='medio', color='#FFFFFF'))
-        ctl.capa.addWidget(Etiqueta(tr('Para este diseño y próximos GO · En Auto decide la IA'), 11, color=TEXT_MUTED, envolver=True))
+        ctl.capa.addWidget(Etiqueta(tr('Controles'), 15, peso='medio', color='#FFFFFF'))
+        ctl.capa.addWidget(Etiqueta(tr('Para este video y próximos GO · En Auto decide la IA'), 11, color=TEXT_MUTED, envolver=True))
         self._controles_layout = QGridLayout()
         self._controles_layout.setHorizontalSpacing(16)
         self._controles_layout.setVerticalSpacing(10)
@@ -469,35 +707,18 @@ class PaginaDirector(QWidget):
             self._grupos_control.append(grupo)
         ctl.capa.addLayout(self._controles_layout)
         acciones, ca = caja_h(espacio=8)
-        self._b_redisenar = Boton(tr('Crear otra versión'), self._redisenar, alto=34, tam=12)
-        self._b_redisenar.setToolTip(tr('Crea otras variaciones y conserva los sonidos bloqueados.'))
-        self._b_deshacer = Boton(tr('Restaurar diseño IA'), self._deshacer, tipo='fantasma', alto=34, tam=12)
-        self._b_deshacer.setToolTip(tr('Quita los retoques y devuelve los controles a Auto, también para próximos GO.'))
+        self._b_redisenar = Boton(tr('Crear otra variación'), self._redisenar, alto=34, tam=12)
+        self._b_deshacer = Boton(tr('Volver a lo de la IA'), self._deshacer, tipo='fantasma', alto=34, tam=12)
         ca.addWidget(self._b_redisenar)
         ca.addWidget(self._b_deshacer)
         ca.addStretch(1)
         ctl.capa.addWidget(acciones)
-        cc.addWidget(ctl)
-        # El diagnóstico conserva las ocho notas originales, sin desplazar el trabajo.
-        est = Tarjeta(espacio=10, margenes=(18, 10, 18, 10))
-        self._b_diagnostico = Boton(tr('Ver diagnóstico de la IA'), self._alternar_diagnostico, tipo='fantasma', alto=32, tam=13)
-        self._b_diagnostico.setCheckable(True)
-        est.capa.addWidget(self._b_diagnostico)
-        self._diagnostico = QWidget()
-        self._diagnostico_layout = QGridLayout(self._diagnostico)
-        self._diagnostico_layout.setContentsMargins(0, 4, 0, 6)
-        self._diagnostico_layout.setHorizontalSpacing(24)
-        self._diagnostico_layout.setVerticalSpacing(12)
-        self._filas = {}
-        for i, k in enumerate(('voz', 'ruido', 'musica', 'ambiente', 'motion', 'mezcla', 'master', 'material')):
-            self._filas[k] = FilaEstado()
-            self._diagnostico_layout.addWidget(self._filas[k], i // 2, i % 2)
-        est.capa.addWidget(self._diagnostico)
-        self._diagnostico.hide()
-        cc.addWidget(est)
+        cm.addWidget(ctl)
+        self._mano.hide()
+        cc.addWidget(self._mano)
         capa.addWidget(self._cuerpo)
         capa.addStretch(1)                                           # (el sobrante, abajo: las tarjetas con su alto natural)
-        self._acciones = (self._b_orig, self._b_ai, self._b_parar, self._b_redisenar, self._b_aplicar, self._b_deshacer) + self._botones_ev
+        self._acciones = (self._b_redisenar, self._b_aplicar, self._b_deshacer) + self._botones_ev
         self._distribuir()
         self._pintar_evento(None)
         self._cuerpo.hide()
@@ -510,11 +731,11 @@ class PaginaDirector(QWidget):
     def _distribuir(self):
         """Solo redistribuye widgets de esta página; no modifica el marco de la aplicación."""
         ancho = self.width()
-        modo = (ancho >= 1000, 3 if ancho >= 740 else (2 if ancho >= 480 else 1), 2 if ancho >= 680 else 1)
+        modo = (ancho >= 1000, 3 if ancho >= 740 else (2 if ancho >= 480 else 1))
         if self._ancho_distribuido == modo:
             return
         self._ancho_distribuido = modo
-        lateral, columnas, columnas_notas = modo
+        lateral, columnas = modo
         for w in (self._tarjeta_linea, self._tarjeta_inspector):
             self._zona_layout.removeWidget(w)
         self._zona_layout.addWidget(self._tarjeta_linea, 0, 0)
@@ -527,15 +748,11 @@ class PaginaDirector(QWidget):
             self._controles_layout.setColumnStretch(c, 1 if c < columnas else 0)
         for i, w in enumerate(self._grupos_control):
             self._controles_layout.addWidget(w, i // columnas, i % columnas)
-        for w in self._filas.values():
-            self._diagnostico_layout.removeWidget(w)
-        for i, w in enumerate(self._filas.values()):
-            self._diagnostico_layout.addWidget(w, i // columnas_notas, i % columnas_notas)
 
-    def _alternar_diagnostico(self):
-        abierto = self._b_diagnostico.isChecked()
-        self._diagnostico.setVisible(abierto)
-        self._b_diagnostico.setText(tr('Ocultar diagnóstico de la IA') if abierto else tr('Ver diagnóstico de la IA'))
+    def _alternar_mano(self):
+        abierto = not self._mano.isVisible()
+        self._mano.setVisible(abierto)
+        self._b_mano.setText(tr('Ocultar ajustes') if abierto else tr('Ajustar a mano'))
 
     # ---------------------------------------------------------------- datos
     def video(self):
@@ -558,9 +775,9 @@ class PaginaDirector(QWidget):
         import director_sonido_sesion as S
         v = self.video()
         self._cargando = True
-        self._estado(tr('Leyendo el diseño de sonido…'))
+        self._estado(tr('Leyendo el sonido del video…'))
         if not self._res.get('hay'):
-            self._lbl_vacio.setText(tr('Cargando el diseño de sonido del video…'))
+            self._lbl_vacio.setText(tr('Cargando el sonido del video…'))
             self._vacio.show()
         self._actualizar_disponibles()
         ui.correr_en_hilo(self, lambda: S.resumen(v), self._al_resumen)
@@ -569,12 +786,27 @@ class PaginaDirector(QWidget):
         self._cargando = False
         if err is not None:
             if not self._res.get('hay'):
-                self._lbl_vacio.setText(tr('No se pudo cargar el diseño. Vuelve a abrir Sonido para reintentar.'))
-            self._estado(tr('No pude leer el diseño de sonido: {e}', e=err))
+                self._lbl_vacio.setText(tr('No se pudo cargar el sonido. Vuelve a abrir Sonido para reintentar.'))
+            self._estado(tr('No pude leer el sonido del video: {e}', e=err))
             self._actualizar_disponibles()
             return
         self._mensaje_estado = ''
         self._pintar(res)
+
+    def _pedir_cuadro(self):
+        """El cuadro del video para la vista de la izquierda (una vez por video, en un hilo)."""
+        v = self._video_mostrado()
+        if not v or v == self._video_cuadro:
+            return
+        self._video_cuadro = v
+
+        def fin(img, err):
+            if err is None and img is not None and self._video_cuadro == v:
+                self._vista.poner(img)
+        ui.correr_en_hilo(self, lambda: cuadro_del_video(v), fin)
+
+    def version_actual(self):
+        return version_de(self._res.get('controles'))
 
     def _pintar(self, res):
         self._res = res or {}
@@ -593,40 +825,38 @@ class PaginaDirector(QWidget):
         if not hay:
             self._ev = None
             self._linea.poner({})
-            self._lbl_video.setText(tr('Tu diseño de sonido'))
-            self._lbl_tema.setText(tr('La IA diseña el sonido en GO; aquí lo diriges.'))
-            self._lbl_vacio.setText(tr(self._res.get('motivo') or 'Activa AI Sound Director y haz GO con un video para empezar.'))
-            self._score.poner(None)
-            self._lbl_score.setText('')
+            self._lbl_video.setText(tr('La IA le pone sonido en GO; aquí eliges cómo suena.'))
+            self._lbl_vacio.setText(tr(self._res.get('motivo') or 'Haz GO con un video para empezar.'))
+            self._pildora.poner('', ui.VERDE)
             self._actualizar_disponibles()
             return
-        estilo = self._res.get('estilo_usuario')
-        sonic = self._res.get('sonic_style') or ''
-        if estilo:
-            sonic = tr(dict(OPCIONES['estilo']).get(estilo, estilo)) + ' ' + tr('(elegido por ti)')
         nombre = self._res.get('nombre_video') or self._res.get('video') or tr('Video sin nombre')
-        self._lbl_video.setText(tr('{v} · último diseño de GO', v=nombre) if self._res.get('otro_video') else str(nombre))
-        self._lbl_video.setToolTip(str(self._res.get('video') or nombre))
-        self._lbl_tema.setText(tr('Tema: {t}', t=self._res.get('tema') or '—') + '   ·   ' + tr('AI Sonic Style: {s}', s=sonic or '—'))
-        viejo = bool(self._res.get('sound_score_viejo'))
-        self._score.poner(None if viejo else self._res.get('sound_score'))
-        self._lbl_score.setText(tr('Medición pendiente') if viejo else '')
-        self._score.setToolTip(tr('La mezcla cambió. El score anterior era {s}; vuelve a medirse en GO.', s=self._res.get('sound_score') or '—')
-                               if viejo else tr('Ver desglose del Sound Score'))
-        for n in self._res.get('notas') or []:
-            if n.get('clave') in self._filas:
-                self._filas[n['clave']].poner(n)
+        tema = self._res.get('tema') or ''
+        self._lbl_video.setText(' · '.join(x for x in (str(nombre) + (' · ' + tr('último video con GO') if self._res.get('otro_video') else ''), str(tema)) if x))
+        self._pedir_cuadro()
         self._pintar_resolve()
+        self._pintar_versiones()
         sel = (self._ev or {}).get('clave')
         self._ev = next((e for e in self._res.get('eventos') or [] if e.get('clave') == sel), None)
+        if self._ev is None:                                         # el tramo de «Antes | Con sonido»: desde el primer sonido
+            primero = next((e for e in sorted(self._res.get('eventos') or [], key=lambda e: float(e.get('ancla') or 0)) if e.get('suena')), None)
+            self._linea._cursor = max(0.0, float((primero or {}).get('ancla') or 0.0))
         self._linea.poner(self._res, sel if self._ev else None)
         self._llenar_eventos()
         self._pintar_evento(self._ev)
         self._pintar_tramo()
         self._actualizar_disponibles()
 
+    def _pintar_versiones(self):
+        actual = self.version_actual()
+        musica_del_video = any(m[2] == 'del video' for m in (self._res.get('carriles') or {}).get('musica') or [])
+        for clave, _n, desc, _preset in VERSIONES:
+            if musica_del_video:                                     # (si el video ya trae música, ninguna le pone otra encima)
+                desc = desc.split(' · música')[0] + ' · ' + tr('respeta la música del video')
+            self._tarjetas[clave].poner(self._res, clave == actual, desc, trabajando=clave == self._version_trabajando)
+
     def _pintar_resolve(self):
-        """Al día en Resolve (y desde cuándo) o con cambios sin poner; con cambios, «Aplicar a Resolve» pasa a ser el botón principal."""
+        """La pastilla de la cabecera (y la fila de «Ajustar a mano»): al día en Resolve, cambios sin aplicar o sin destino."""
         hay = bool(self._res.get('hay'))
         self._fila_resolve.setVisible(hay)
         pendiente = bool(self._res.get('pendiente_resolve'))
@@ -635,31 +865,30 @@ class PaginaDirector(QWidget):
         if pendiente:
             self._ico_resolve.poner('aviso')
             self._lbl_resolve.setText(tr('Cambios pendientes · pulsa Aplicar a Resolve'))
+            self._pildora.poner(tr('Cambios sin aplicar'), ui.AMBAR)
         elif self._res.get('puede_aplicar') and self._res.get('en_resolve'):
             self._ico_resolve.poner('ok')
             cuando = str(self._res.get('en_resolve') or '')[-8:-3]
             self._lbl_resolve.setText(tr('En Resolve y al día') + (f'  ·  {cuando}' if cuando else ''))
+            self._pildora.poner(tr('En Resolve y al día'), ui.VERDE)
         elif self._res.get('puede_aplicar'):
             self._ico_resolve.poner('aviso')
             self._lbl_resolve.setText(tr('Listo para aplicar · envío a Resolve sin confirmar'))
+            self._pildora.poner(tr('Listo para aplicar'), ui.ACCENT_CLARO)
         else:
             self._ico_resolve.poner('aviso')
             self._lbl_resolve.setText(tr('Haz GO con AI Sound Director encendido para ponerlo en Resolve'))
+            self._pildora.poner(tr('Haz GO para ponerlo en Resolve'), TEXT_MUTED)
         destino = self._res.get('destino') or self._res.get('destination') or {}
         if isinstance(destino, dict):
             destino = ' · '.join(str(destino[k]) for k in ('proyecto', 'timeline') if destino.get(k))
         self._lbl_destino.setText(tr('Destino: {d}', d=destino) if destino else '')
         self._lbl_destino.setVisible(bool(destino))
-        for b, t in ((self._b_aplicar, 'primario' if pendiente else 'secundario'),):
-            if b.property('tipo') != t:
-                b.setProperty('tipo', t)
-                b.style().unpolish(b)
-                b.style().polish(b)
 
     def _texto_on(self):
         if self._res.get('activo'):
-            return tr('Activo en próximos GO. Los ajustes se guardan aquí; Aplicar a Resolve los envía al timeline.')
-        return tr('Desactivado en próximos GO. Puedes seguir ajustando el diseño que ya existe.')
+            return tr('Elige una versión y pulsa «Aplicar a Resolve» para ponerla en tu timeline.')
+        return tr('AI Sound Director está apagado para los próximos GO (en «Ajustar a mano»). Puedes seguir eligiendo para este video.')
 
     def _llenar_eventos(self):
         seleccion = (self._ev or {}).get('clave')
@@ -671,15 +900,14 @@ class PaginaDirector(QWidget):
                 estado = (' · ' + tr('Silenciado') if e.get('silenciado') else '') + (' · ' + tr('Bloqueado') if e.get('bloqueado') else '')
                 item = QListWidgetItem(f"{_tiempo(e.get('ancla'))}   {e.get('nombre') or tr('Sonido')}{estado}")
                 item.setData(Qt.ItemDataRole.UserRole, e.get('clave'))
-                item.setToolTip(item.text())
                 self._lista_eventos.addItem(item)
                 if e.get('clave') == seleccion:
                     self._lista_eventos.setCurrentItem(item)
             if not eventos:
-                item = QListWidgetItem(tr('Este diseño no tiene eventos de sonido IA.'))
+                item = QListWidgetItem(tr('Esta versión no tiene efectos de sonido.'))
                 item.setFlags(Qt.ItemFlag.NoItemFlags)
                 self._lista_eventos.addItem(item)
-            self._lbl_eventos.setText(tr('Eventos · {n} · elige con clic o con las flechas', n=len(eventos)))
+            self._lbl_eventos.setText(tr('Efectos · {n} · elige con clic o con las flechas', n=len(eventos)))
         finally:
             self._lista_eventos.blockSignals(False)
 
@@ -698,7 +926,7 @@ class PaginaDirector(QWidget):
 
     def _pintar_tramo(self):
         inicio, fin = self._tramo()
-        self._lbl_tramo.setText(tr('Comparar tramo {a} – {b} · clic en la línea para moverlo', a=_tiempo(inicio), b=_tiempo(fin)))
+        self._lbl_tramo.setText(tr('El ▶ de arriba suena {a} – {b} · clic en la línea para moverlo', a=_tiempo(inicio), b=_tiempo(fin)))
 
     def _actualizar_disponibles(self):
         libre = not (self._ocupado or self._cargando)
@@ -706,7 +934,7 @@ class PaginaDirector(QWidget):
         for b in self._acciones:
             b.setEnabled(libre and hay)
         self._b_aplicar.setEnabled(libre and hay and bool(self._res.get('puede_aplicar')))
-        for w in (self._entrada, self._b_enviar, self._linea, self._lista_eventos):
+        for w in (self._linea, self._lista_eventos, self._vista, self._ab) + tuple(self._tarjetas.values()):
             w.setEnabled(libre and hay)
         self._sw.setEnabled(libre)
         for w in self._controles.values():
@@ -715,27 +943,15 @@ class PaginaDirector(QWidget):
 
     def _pintar_evento(self, e):
         if not e:
-            self._lbl_ev.setText(tr('Selecciona un sonido'))
+            self._lbl_ev.setText(tr('Elige un efecto'))
             self._lbl_diseno.setText('')
-            self._lbl_material.setText('')
-            self._lbl_porque.setText(tr('Elige un evento en la línea o en la lista. Aquí podrás escuchar el momento y ajustar lo que decidió la IA.'))
-            self._lbl_imp.setText('')
+            self._lbl_porque.setText(tr('Toca un efecto en la línea o en la lista para oírlo y ajustarlo.'))
             for b in self._botones_ev:
                 b.setEnabled(False)
             return
         self._lbl_ev.setText(f"{e.get('nombre')}  ·  {_tiempo(e.get('ancla'))}")
-        self._lbl_diseno.setText(tr('Diseño IA: {d}', d=tr(e.get('diseno') or '') + (tr(' + capa a la medida') if e.get('con_capa') else '') +
-                                    (tr(' + clic') if e.get('con_clic') else '')))
-        fuente = str(e.get('fuente') or '')
-        if e.get('material'):
-            self._lbl_material.setText(tr('Material: «{m}» de tu biblioteca (pasó el Quality Gate)', m=e.get('material')))
-        elif 'procedural' in fuente:
-            self._lbl_material.setText(tr('Material: sintetizado a la medida de este movimiento'))
-        else:
-            self._lbl_material.setText(tr('Material: {f}', f=tr(fuente)) if fuente else '')
+        self._lbl_diseno.setText(tr(e.get('diseno') or ''))
         self._lbl_porque.setText(tr('Por qué: {p}', p=e.get('por_que') or ''))
-        self._lbl_imp.setText(tr('Importancia: {n} %', n=int(round(100 * float(e.get('importancia') or 0)))) +
-                              ('   ·   ' + tr('Bloqueado') if e.get('bloqueado') else '') + ('   ·   ' + tr('Silenciado por ti') if e.get('silenciado') else ''))
         self._b_silencio.setText(tr('Que suene') if e.get('silenciado') else tr('Silenciar'))
         self._b_bloq.setText(tr('Desbloquear') if e.get('bloqueado') else tr('Bloquear'))
         libre = not (self._ocupado or self._cargando)
@@ -749,18 +965,6 @@ class PaginaDirector(QWidget):
     def _estado(self, texto):
         self._mensaje_estado = str(texto)
         self._lbl_estado.setText(self._mensaje_estado)
-
-    def _desglose(self):
-        """El Sound Score parte por parte (cada número sale de una medida de la mezcla)."""
-        partes = self._res.get('score_partes') or {}
-        if not partes:
-            self._estado(tr('El Sound Score se mide con la mezcla completa en el próximo GO.'))
-            return
-        nombres = {'voz': 'voz', 'ruido': 'ruido', 'sincronia': 'sincronía', 'musica': 'música', 'consistencia': 'consistencia', 'proteccion': 'protección de la voz',
-                   'mezcla': 'mezcla final'}
-        prefijo = tr('Medición anterior · ') if self._res.get('sound_score_viejo') else ''
-        self._estado(prefijo + tr('Sound Score {s}: ', s=self._res.get('sound_score')) + ' · '.join(
-            f"{tr(nombres.get(k, k))} {v.get('puntos')}" for k, v in partes.items()))
 
     def _offset(self):
         try:
@@ -778,6 +982,7 @@ class PaginaDirector(QWidget):
 
         def fin(r, err):
             self._ocupado = False
+            self._version_trabajando = None
             if err is not None:
                 self._pintar(self._res)
                 self._estado(tr('No se pudo: {e}', e=err))
@@ -792,10 +997,47 @@ class PaginaDirector(QWidget):
             ui.correr_en_hilo(self, trabajo, fin)
         except Exception as err:
             self._ocupado = False
+            self._version_trabajando = None
             self._actualizar_disponibles()
             self._estado(tr('No se pudo iniciar: {e}', e=err))
             return False
         return True
+
+    # ---------------------------------------------------------------- versiones
+    def _trabajo_version(self, clave):
+        """(En un hilo) deja los controles de esa versión y rehace el sonido (también música y ambiente)."""
+        import director_sonido_sesion as S
+        preset = next(p for c, _n, _d, p in VERSIONES if c == clave)
+        v = self._video_mostrado()
+        for k in CLAVES_VERSION:
+            S.poner_control(k, preset.get(k, 'auto'))
+        return S._rehacer(v, capas=True)
+
+    def _elegir_version(self, clave, y_oir=False):
+        if self._ocupado or self._cargando:
+            return
+        nombre = next(n for c, n, _d, _p in VERSIONES if c == clave)
+        if clave == self.version_actual():
+            if y_oir:
+                self._oir('ai')
+            return
+        self._version_trabajando = clave
+        self._pintar_versiones()
+        self._ev = None
+
+        def fin(r):
+            self._pintar(r)
+            self._estado(tr('Versión «{n}» lista. Pulsa «Aplicar a Resolve» para ponerla en tu timeline.', n=tr(nombre)))
+            if y_oir:
+                self._oir('ai')
+        self._trabajar(tr('Preparando la versión «{n}»…', n=tr(nombre)), lambda: self._trabajo_version(clave), fin)
+
+    def _oir_version(self, clave):
+        self._var_ab.set(tr('Con sonido'))
+        self._elegir_version(clave, y_oir=True)
+
+    def _oir_vista(self):
+        self._oir('original' if self._var_ab.get() == tr('Antes') else 'ai')
 
     # ---------------------------------------------------------------- acciones
     def _cambio_on(self):
@@ -811,8 +1053,7 @@ class PaginaDirector(QWidget):
         def trabajo():
             S.poner_activo(si)
             return S.resumen(v)
-        self._trabajar(tr('Guardando la activación del director…'), trabajo,
-                       lambda r: (self._pintar(r), self._estado(self._texto_on())))
+        self._trabajar(tr('Guardando…'), trabajo, lambda r: (self._pintar(r), self._estado(self._texto_on())))
 
     def _cambio_control(self, clave, etiqueta):
         if self._pintando:
@@ -827,7 +1068,7 @@ class PaginaDirector(QWidget):
         def trabajo():
             S.poner_control(clave, valor)
             return S._rehacer(v, capas=clave in ('musica', 'ambiente')) if self._res.get('hay') else S.resumen(v)
-        self._trabajar(tr('Rediseñando con «{c}: {v}»…', c=tr(TITULO_CONTROL[clave]), v=etiqueta), trabajo,
+        self._trabajar(tr('Rehaciendo con «{c}: {v}»…', c=tr(TITULO_CONTROL[clave]), v=etiqueta), trabajo,
                        lambda r: (self._pintar(r), self._estado(tr('Guardado: {c} en «{v}». Aplica los cambios cuando termines.', c=tr(TITULO_CONTROL[clave]), v=etiqueta))))
 
     def _elegir(self, e):
@@ -881,14 +1122,14 @@ class PaginaDirector(QWidget):
     def _redisenar(self):
         import director_sonido_sesion as S
         v = self._video_mostrado()
-        self._trabajar(tr('Rediseñando el sonido (lo bloqueado se queda)…'), lambda: S.redisenar(v),
-                       lambda r: (self._pintar(r), self._estado(tr('Nueva versión guardada. Los sonidos bloqueados se conservan.'))))
+        self._trabajar(tr('Creando otra variación (lo bloqueado se queda)…'), lambda: S.redisenar(v),
+                       lambda r: (self._pintar(r), self._estado(tr('Otra variación lista. Los sonidos bloqueados se conservan.'))))
 
     def _deshacer(self):
         import director_sonido_sesion as S
         v = self._video_mostrado()
         self._trabajar(tr('Volviendo a lo que decidió la IA…'), lambda: S.deshacer_todo(v),
-                       lambda r: (self._pintar(r), self._estado(tr('Diseño IA restaurado: sin retoques y controles en Auto, también para próximos GO.'))))
+                       lambda r: (self._pintar(r), self._estado(tr('De vuelta a lo de la IA: sin retoques y controles en Auto, también para próximos GO.'))))
 
     def _aplicar(self):
         import director_sonido_sesion as S
@@ -910,16 +1151,16 @@ class PaginaDirector(QWidget):
         v = self._video_mostrado()
         t0, t1 = self._tramo()
         if t1 <= t0:
-            self._estado(tr('Este diseño no tiene un tramo de audio para comparar.'))
+            self._estado(tr('Este video no tiene un tramo de audio para escuchar.'))
             return
 
         def trabajo():
             ruta = S.previa(v, cual, t0, t1)
             S.reproducir(ruta)
             return ruta
-        etiqueta = tr('Original') if cual == 'original' else tr('AI Sound')
+        etiqueta = tr('Antes') if cual == 'original' else tr('Con sonido')
         self._trabajar(tr('Preparando «{c}»…', c=etiqueta), trabajo,
-                       lambda _r: (self._pintar(self._res), self._estado(tr('Previa «{c}» abierta: {a} – {b}.', c=etiqueta, a=_tiempo(t0), b=_tiempo(t1)))))
+                       lambda _r: (self._pintar(self._res), self._estado(tr('Sonando «{c}»: {a} – {b}.', c=etiqueta, a=_tiempo(t0), b=_tiempo(t1)))))
 
     def _oir_evento(self):
         import director_sonido_sesion as S
@@ -930,33 +1171,7 @@ class PaginaDirector(QWidget):
         if t1 <= t0:
             return
         self._trabajar(tr('Preparando este momento…'), lambda: (S.reproducir(S.previa(v, 'ai', t0, t1)), None)[1],
-                       lambda _r: (self._pintar(self._res), self._estado(tr('Previa del momento abierta: {a} – {b}.', a=_tiempo(t0), b=_tiempo(t1)))))
-
-    def _parar(self):
-        import director_sonido_sesion as S
-        S.detener()
-        self._estado(tr('Parado.'))
-
-    def _frase(self):
-        import director_sonido_sesion as S
-        if self._ocupado or self._cargando:
-            return
-        texto = str(self._var_frase.get() or '').strip()
-        if not texto:
-            return
-        r = S.interpretar(texto, self._res.get('duracion'))
-        if not r['acciones']:
-            aclaracion = ', '.join(r.get('entendido') or []) if r.get('requiere_aclaracion') else ''
-            self._estado(aclaracion or tr('No lo entendí. Prueba con: «menos sonidos», «la voz más clara», «más cinematográfico», «quita el sonido de …», «rediseña el final».'))
-            return
-        v = self._video_mostrado()
-        entendido = ', '.join(r['entendido'])
-
-        def fin(res):
-            self._pintar(res)
-            self._var_frase.set('')
-            self._estado(tr('Guardado: {q}. Aplica los cambios cuando termines.', q=entendido))
-        self._trabajar(tr('Entendido: {q}…', q=entendido), lambda: S.ejecutar(v, r['acciones'])[0], fin)
+                       lambda _r: (self._pintar(self._res), self._estado(tr('Sonando este momento: {a} – {b}.', a=_tiempo(t0), b=_tiempo(t1)))))
 
     def hideEvent(self, e):
         try:
