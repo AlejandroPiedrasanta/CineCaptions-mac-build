@@ -1204,9 +1204,8 @@ _FPS_COMUNES = (23.976, 24.0, 25.0, 29.97, 30.0, 48.0, 50.0, 59.94, 60.0)
 
 def medir_medio(ruta):
     """Del video (o audio) soltado, SIN decodificar nada (PyAV lee la cabecera): {'ancho', 'alto', 'fps', 'duracion', 'solo_audio'} y el
-    formato del timeline que le corresponde ('tl_ancho', 'tl_alto', 'tl_fps'): vertical 1080×1920, horizontal 1920×1080, cuadrado 1080×1080;
-    un audio sin imagen se trata como vertical. Con la rotación de los celulares (metadato «rotate») ya aplicada.
-    v5.5: con la opción «Abrir siempre en vertical» (por defecto) el timeline es SIEMPRE 1080×1920, sea cual sea el video."""
+    formato del timeline ('tl_ancho', 'tl_alto', 'tl_fps'). Con la rotación de los celulares (metadato «rotate») ya aplicada.
+    v5.5: el timeline es SIEMPRE vertical 1080×1920, sea cual sea el video (v5.52: sin la opción «Abrir siempre en vertical», que el usuario quitó)."""
     info = {'ancho': 0, 'alto': 0, 'fps': 30.0, 'duracion': None, 'solo_audio': True}
     try:
         import av
@@ -1231,19 +1230,7 @@ def medir_medio(ruta):
                 break
     except Exception:
         pass
-    w, h = info['ancho'], info['alto']
-    if info['solo_audio'] or h > w * 1.05:
-        info.update(tl_ancho=1080, tl_alto=1920)
-    elif w > h * 1.05:
-        info.update(tl_ancho=1920, tl_alto=1080)
-    else:
-        info.update(tl_ancho=1080, tl_alto=1080)
-    try:                                                  # v5.5: «cada vez que abras un proyecto, siempre en vertical» (pref go_vertical, activada por defecto)
-        import ajustes_ui
-        if ajustes_ui.leer_prefs().get('go_vertical', True) is not False:
-            info.update(tl_ancho=1080, tl_alto=1920)
-    except Exception:
-        pass
+    info.update(tl_ancho=1080, tl_alto=1920)              # v5.5: «cada vez que abras un proyecto, siempre en vertical» (v5.52: ya sin opción, siempre)
     info['tl_fps'] = info['fps']
     return info
 

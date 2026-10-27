@@ -35,6 +35,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         regenera el índice y el mapa del código del LEEME y anota los cambios en el registro.
     encabezados.py
         pone (o actualiza) el encabezado de autor y la descripción en cada archivo de código.
+    firmar_manifiesto.py
+        firma el version.json (Ed25519) antes de publicarlo: los programas desde la 5.52 rechazan uno sin firma.
     huellas.json
         huellas de cada archivo: con ellas documentar.py anota qué cambió
     Instalador.cs

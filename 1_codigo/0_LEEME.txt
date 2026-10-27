@@ -178,6 +178,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         v5.20: los ESTILOS y COLORES de cada función de la Edición PRO (página Efectos › Edición PRO), en un solo sitio.
     estilos_slider.py
         el carrusel horizontal de «Pack de estilos»: tarjetas verticales sobre fotos de video con los captions de Resolve encima.
+    firma_ed25519.py
+        firma Ed25519 (RFC 8032) en Python puro: el programa comprueba que el version.json lo publicó Cinema Productions.
     fuente_usuario.py
         v5.5.12: la tipografía que el usuario elige en «Crea tu estilo» para los Temas (texto principal y, aparte, el de
     fuentes_sistema.py
@@ -240,7 +242,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     kit_neon_placa.py
         v5.5.13: la PLACA de video del Tema 1 neón: el motor/plate.py del kit «TEMA 1» del usuario, portado a Pillow + numpy +
     licencia.py
-        la licencia (Lemon Squeezy / Gumroad): activar, verificar, desactivar, estado firmado, 7 días sin internet.
+        la licencia (claves CC- de cinecaptions.shop): activar, verificar, desactivar, estado firmado, 7 días sin internet.
     mantenimiento.py
         límite y limpieza automática de las cachés del programa (secuencias, vistas, voz, emojis…).
     mapa_codigo.py

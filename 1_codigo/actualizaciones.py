@@ -16,6 +16,9 @@ El programa lee un archivo version.json publicado en internet (ver Publicar_Vers
     }
 
 (El formato viejo, «url» suelta en la versión, sigue valiendo: se abre en el navegador.)
+v5.52: el manifiesto lleva además "firma": {"alg": "ed25519", "clave": "<id>", "valor": "<base64>"} (3_compilar/firmar_manifiesto.py, desde
+Publicar_Version.ps1) y el programa NO ofrece nada sin una firma válida de CLAVES_FIRMA: aunque alguien entrara en la cuenta de GitHub o
+cambiara la dirección del manifiesto, no podría repartir un instalador suyo (la huella SHA-256 de cada instalador va dentro de lo firmado).
 
 Qué hace cada pieza:
   comprobar()   consulta el manifiesto y dice si hay una versión más nueva que la instalada (con el archivo que le toca a ESTE equipo);
@@ -24,6 +27,7 @@ Qué hace cada pieza:
 La dirección del manifiesto sale de (en este orden) la variable CINECAPTIONS_URL_ACTUALIZACIONES, la preferencia «url_actualizaciones» y URL_MANIFIESTO.
 Nada de esto corre en el hilo de la interfaz (lo llaman correr_en_hilo y un hilo propio).
 """
+import base64
 import hashlib
 import json
 import os
@@ -39,10 +43,18 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import firma_ed25519
+
 # Donde se publican las versiones: el «latest/download» de GitHub siempre apunta al version.json de la última publicación del repositorio
 # de instaladores (público, solo trae los instaladores; el código sigue en el repositorio privado). Se puede cambiar sin recompilar con la
 # variable CINECAPTIONS_URL_ACTUALIZACIONES o la preferencia «url_actualizaciones».
 URL_MANIFIESTO = 'https://github.com/AlejandroPiedrasanta/CineCaptions-releases/releases/latest/download/version.json'
+# v5.52: claves PÚBLICAS que pueden firmar el manifiesto (id → hex). Las privadas NUNCA van al repositorio: ~/CineCaptions_claves
+# (la de reserva, copiada aparte por si se pierde la principal). Perder las dos = los programas instalados ya no aceptan actualizaciones.
+CLAVES_FIRMA = {
+    '7a4e413e': '64d8646c1df645cb148402eb08066d45cb6c510508d54588779b294451a9225a',   # principal
+    'de5653c3': 'cb292941636c7b8c59cad39ca499a7795d0a27082d1f614328e9e87b61b66252',   # reserva
+}
 INTERVALO_AUTO_S = 10                 # el programa mira cada 10 s si hay una versión nueva (con ETag: casi siempre un «304 sin cambios», casi sin tráfico)
 INTERVALO_SIN_RED_S = 60              # tras varios fallos seguidos (sin internet) mira cada minuto, sin llenar el Registro
 
@@ -129,6 +141,8 @@ def explicar_fallo(mensaje):
     """Una frase CLARA para el usuario a partir del texto crudo de un fallo de red al buscar actualizaciones (el crudo va al Registro)."""
     m = str(mensaje or '')
     bajo = m.lower()
+    if 'sin firma' in bajo:
+        return 'No se ofrece: la versión publicada no trae la firma de Cinema Productions y, por seguridad, no se instala nada sin ella.'
     if 'timed out' in bajo or 'timeout' in bajo:
         return 'No pude comprobarlo: el servidor tardó demasiado en responder. Prueba otra vez en unos minutos.'
     if 'certificate' in bajo or 'ssl' in bajo:
@@ -169,7 +183,33 @@ def comprobar_ligero(version_local, canal_beta=False, timeout=8):
     return _interpretar(datos, version_local, canal_beta)
 
 
+def bytes_firmados(datos):
+    """Lo que se firma: el manifiesto sin «firma», en JSON canónico (claves ordenadas, sin espacios, solo ASCII)."""
+    resto = {k: v for k, v in datos.items() if k != 'firma'}
+    return json.dumps(resto, sort_keys=True, separators=(',', ':'), ensure_ascii=True).encode('ascii')
+
+
+_FIRMAS_VISTAS = {}                   # el aviso automático relee el mismo manifiesto cada 10 s: se verifica una vez
+
+
+def firma_valida(datos):
+    try:
+        f = datos.get('firma') or {}
+        publica = CLAVES_FIRMA.get(str(f.get('clave') or ''))
+        if not publica or f.get('alg') != 'ed25519':
+            return False
+        mensaje = bytes_firmados(datos)
+        memo = hashlib.sha256(mensaje + str(f.get('valor')).encode('utf-8')).hexdigest()
+        if memo not in _FIRMAS_VISTAS:
+            _FIRMAS_VISTAS[memo] = firma_ed25519.verificar(bytes.fromhex(publica), mensaje, base64.b64decode(str(f.get('valor') or ''), validate=True))
+        return _FIRMAS_VISTAS[memo]
+    except Exception:
+        return False
+
+
 def _interpretar(datos, version_local, canal_beta=False):
+    if not firma_valida(datos):
+        return {'estado': 'error', 'mensaje': 'manifiesto sin firma válida de Cinema Productions'}
     candidatos = [datos.get('estable') or {}]
     if canal_beta:
         candidatos.append(datos.get('beta') or {})

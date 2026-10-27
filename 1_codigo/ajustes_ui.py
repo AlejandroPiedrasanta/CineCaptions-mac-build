@@ -446,7 +446,7 @@ def _cabecera(sobre, titulo, al_cerrar, tam=30):
 # ---------------------------------------------------------------------------
 # Licencia: lo que se muestra en el panel rapido y en «Acerca de»
 def datos_licencia():
-    """v5.2.1: la licencia de Lemon Squeezy guardada en este equipo (sin red)."""
+    """La licencia (clave CC- de cinecaptions.shop) guardada en este equipo (sin red)."""
     try:
         import licencia
         d = licencia.resumen()
@@ -495,6 +495,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.52', [
+        'Más seguridad: las actualizaciones llegan firmadas y CineCaptions solo instala las versiones auténticas de Cinema Productions.',
+        'Licencias de cinecaptions.shop: pega tu clave CC- y se activa al momento, en hasta 2 computadoras. Desactivar este equipo lo libera enseguida para usarla en otra.',
+        'Ajustes más simples: GO siempre arma el timeline en vertical, reproduce al terminar y deja Resolve con tu vista.',
+    ]),
     ('5.51', [
         'Tema 2: las palabras entran y salen con más calma, como en tus referencias, y los bloques van seguidos, sin parpadeos en negro.',
         'Tema 2: el subrayado verde queda pegado a la palabra y de su mismo ancho, y la palabra grande azul lleva una trama de puntos sutil.',
@@ -970,7 +975,6 @@ NOTAS_VERSION = [
         'Se quitaron las plantillas antiguas «Títulos dinámicos II» (inferior y superior) y la composición del bloque se recorre con flechas, con el icono arriba o abajo del texto.',
     ]),
     ('5.2.1', [
-        'Licencias de Lemon Squeezy: pega tu clave y se activa en segundos (ya no hace falta el correo ni el código de Hotmart).',
         'Ventana de licencia nueva, con el mismo formato que CineSlide: panel animado, la tienda reconocida por el formato de la clave y confeti al activarla.',
         'Funciona hasta 7 días sin internet y se verifica sola en segundo plano.',
         'Ajustes > Acerca de muestra tu licencia y deja desactivar este equipo para usarla en otra computadora.',
@@ -2321,27 +2325,11 @@ class VentanaAjustes(_Panel):
         f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
                       tr('GO graba los subtítulos del tema elegido (con sus sonidos y emojis) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
                          'Si Resolve no está instalado lo hace siempre.'),
-                      Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})))
-        # v5.5: lo que pasa en Resolve cuando GO termina
-        repro_var = BooleanVar(leer_prefs().get('go_reproducir', True) is not False)
-        f_repro = _Fila(tr('Reproducir al terminar'),
-                        tr('Cuando GO termina, Resolve se pone al frente y reproduce el timeline desde el principio para que veas el resultado.'),
-                        Interruptor('', var=repro_var, comando=lambda: guardar_prefs({'go_reproducir': bool(repro_var.get())})))
-        vert_var = BooleanVar(leer_prefs().get('go_vertical', True) is not False)
-        f_vert = _Fila(tr('Abrir siempre en vertical'),
-                       tr('Cada proyecto y timeline que CineCaptions arma para un video queda en vertical (1080×1920), sea cómo sea el video. Apágalo para que respete su orientación.'),
-                       Interruptor('', var=vert_var, comando=lambda: guardar_prefs({'go_vertical': bool(vert_var.get())})))
-        vista_var = BooleanVar(leer_prefs().get('go_vista_resolve', True) is not False)
-        caja_vista, cvi = caja_v(espacio=8)
-        cvi.addWidget(Interruptor('', var=vista_var, comando=lambda: guardar_prefs({'go_vista_resolve': bool(vista_var.get())})), 0, Qt.AlignmentFlag.AlignRight)
-        self.vista_texto = Etiqueta('', 12, color=ui.TEXT_MUTED, envolver=True)
-        cvi.addWidget(self.vista_texto)
-        cvi.addWidget(Boton(tr('Guardar la vista actual de Resolve'), self._guardar_vista_resolve, tipo='neutro', alto=42, tam=14))
-        f_vista = _Fila(tr('Vista de Resolve al terminar'),
-                        tr('Deja Resolve en la página Edit con TU disposición de pantalla (vertical y con la vista expandida). Ponla como la quieres en Resolve y pulsa «Guardar la vista actual»: '
-                           'desde entonces GO la aplica cada vez que termina.'), caja_vista, 340, ultima=True)
+                      Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})), ultima=True)
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
-        capa.addWidget(_grupo(f_motor, f_ia, f_otras, f_gpu, f_cache, f_avisos, f_mp4, f_repro, f_vert, f_vista))
+        # v5.52: quitadas «Reproducir al terminar», «Abrir siempre en vertical» y «Vista de Resolve al terminar» (el usuario lo pidió): van SIEMPRE
+        # activadas (go_reproducir / go_vertical / go_vista_resolve ya no se leen); la vista que GO aplica es la que ya estuviera guardada
+        capa.addWidget(_grupo(f_motor, f_ia, f_otras, f_gpu, f_cache, f_avisos, f_mp4))
 
     def _pintar_motor(self):
         import motor_voz
@@ -2567,22 +2555,6 @@ class VentanaAjustes(_Panel):
                     pass
         correr_en_hilo(self.app, lambda: motor_voz.instalar(progreso=progreso), fin)
 
-    def _guardar_vista_resolve(self):
-        """Guarda la disposición de pantalla actual de Resolve como la de CineCaptions (en un hilo: habla con Resolve)."""
-        self.vista_texto.configure(text=tr('Guardando…'))
-
-        def trabajo():
-            import colocacion
-            return colocacion.guardar_vista_actual()
-
-        def fin(r, error):
-            if not ui.vivo(self.vista_texto):
-                return
-            ok, texto = r if r else (False, str(error))
-            self.vista_texto.poner_color(ui.VERDE if ok else ui.AMBAR)
-            self.vista_texto.configure(text=texto)
-        correr_en_hilo(self.app, trabajo, fin)
-
     def _comprobar_conexion(self):
         self.con_punto.poner(ui.TEXT_MUTED)
         self.con_texto.configure(text=tr('Comprobando…'))
@@ -2782,7 +2754,7 @@ class VentanaAjustes(_Panel):
                                 tipo='peligro', alto=42, tam=14)
         cfb.addWidget(self.lic_desact)
         cl.addWidget(fb)
-        f_lic = _Fila(tr('Licencia'), tr('Tu clave de Lemon Squeezy. Desactiva este equipo para activarla en otra computadora.'),
+        f_lic = _Fila(tr('Licencia'), tr('Tu clave de cinecaptions.shop. Desactiva este equipo para activarla en otra computadora.'),
                       caja_lic, 380)
         self._pintar_licencia()
         # notas

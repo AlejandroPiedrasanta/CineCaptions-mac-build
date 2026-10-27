@@ -6,7 +6,7 @@ encabezados.py
 Cada archivo de código de CineCaptions empieza con dos líneas de comentario:
 
     # CineCaptions · By Cinema Productions
-    # 1_codigo/licencia.py — la licencia (Lemon Squeezy / Gumroad): ...
+    # 1_codigo/licencia.py — la licencia (claves CC- de cinecaptions.shop): ...
 
 La primera deja grabado el autor; la segunda dice QUÉ ES ese archivo, y de ahí sale el «ÍNDICE DE
 ARCHIVOS» del LEEME (3_compilar/documentar.py). Para un archivo NUEVO: añade su descripción en
@@ -34,12 +34,13 @@ DESCRIPCIONES = {
     '1_codigo/efectos_ui.py': 'animaciones de la interfaz: fondo vivo, vistas reales animadas, entrada escalonada de tarjetas.',
     '1_codigo/emojis.py': 'emojis de las palabras clave: catálogo, biblioteca Fluent 3D, PNG propios y sugerencias por idioma.',
     '1_codigo/ensure_lang_pack.py': 'instala los paquetes de traducción sin internet (Argos Translate) que falten.',
+    '1_codigo/firma_ed25519.py': 'firma Ed25519 (RFC 8032) en Python puro: el programa comprueba que el version.json lo publicó Cinema Productions.',
     '1_codigo/fuentes_sistema.py': 'encuentra en el disco el archivo .ttf/.otf de una familia y estilo.',
     '1_codigo/i18n.py': 'idiomas de la interfaz: tr("texto en español") y los catálogos de 2_recursos/locales.',
     '1_codigo/ia_texto.py': 'IA de texto local (Qwen3): corrige, elige palabras clave y emojis virales, quita signos.',
     '1_codigo/instalador_scripts.py': 'copia los scripts de CineCaptions al menú de DaVinci Resolve y comprueba que estén al día.',
     '1_codigo/instalar_fuentes.py': 'instala en el sistema las tipografías de las plantillas (para que Resolve/Fusion las vea).',
-    '1_codigo/licencia.py': 'la licencia (Lemon Squeezy / Gumroad): activar, verificar, desactivar, estado firmado, 7 días sin internet.',
+    '1_codigo/licencia.py': 'la licencia (claves CC- de cinecaptions.shop): activar, verificar, desactivar, estado firmado, 7 días sin internet.',
     '1_codigo/medir_texto.py': 'mide cuánto ocupa cada palabra en pantalla (look «pintado»).',
     '1_codigo/motor_voz.py': 'motor de voz e IA Qwen3 en su propio Python 3.12: instalar, detectar y transcribir.',
     '1_codigo/ortografia.py': 'revisión ortográfica del editor (marca y propone, nunca corrige solo).',
@@ -137,6 +138,7 @@ DESCRIPCIONES = {
     '3_compilar/Instalador.cs': 'el instalador y desinstalador (C#, .NET Framework 4): pasos, banner, registro.',
     '3_compilar/encabezados.py': 'pone (o actualiza) el encabezado de autor y la descripción en cada archivo de código.',
     '3_compilar/documentar.py': 'regenera el índice y el mapa del código del LEEME y anota los cambios en el registro.',
+    '3_compilar/firmar_manifiesto.py': 'firma el version.json (Ed25519) antes de publicarlo: los programas desde la 5.52 rechazan uno sin firma.',
     # ---------------------------------------------------------------- diseño
     '4_diseno/plantilla_base_cinema/diseno_base.py': 'el diseño de la plantilla BASE nueva (arriba · principal · abajo · imagen × 3 variantes + simple), solo con Luxe Slide y Luxe Shine → diseno.json.',
     '4_diseno/plantilla_base_cinema/taller_base.py': 'funciones que corren DENTRO de Resolve (por el MCP) para construir y comprobar la plantilla base nueva.',

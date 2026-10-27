@@ -6053,7 +6053,7 @@ def _correr_en_hilo(widget, trabajo, al_terminar, baja=False):
     licencias no puede congelar la ventana (el «no responde» de Windows)."""
     correr_en_hilo(widget, trabajo, al_terminar, baja=baja)
 # v5.2.1: la ventana de la licencia es ventana_licencia.DialogoLicencia (el formato de la de
-# CineSlide: Lemon Squeezy, ya no correo + código de Hotmart)
+# CineSlide; v5.52: claves CC- de cinecaptions.shop)
 # ---------------------------------------------------------------------------
 # v5.0.0: las piezas del panel (menu lateral + 5 pantallas)
 def _hace(ts):
@@ -9648,7 +9648,7 @@ class SubtitleApp(QWidget):
         self._refrescar_receta()
         self._pintar_go_reposo()
     def _pintar_licencia(self, _est=None):
-        """La tarjeta «Licencia» de Inicio (v5.2.1: el estado guardado de Lemon Squeezy, sin red)."""
+        """La tarjeta «Licencia» de Inicio (el estado guardado de la licencia, sin red)."""
         try:
             d = licencia.resumen()
         except Exception:
@@ -11700,14 +11700,8 @@ class SubtitleApp(QWidget):
         temas verticales (Tema 1 y 2) sin poder aplicarse («no puedo aplicar el tema»)."""
         return None
     def _formato_para_temas(self):
-        """El formato con el que se decide si un tema sirve: vertical (el timeline que arma GO), salvo que se haya apagado «Abrir siempre en vertical»."""
-        try:
-            import ajustes_ui
-            if ajustes_ui.leer_prefs().get('go_vertical', True) is not False:
-                return 'v'
-        except Exception:
-            pass
-        return self._formato_en_juego() or 'v'
+        """El formato con el que se decide si un tema sirve: vertical, el timeline que arma GO (v5.52: «Abrir siempre en vertical» va siempre activada)."""
+        return 'v'
     def _pista_plantilla(self):
         """El campo 'plantilla' del manifiesto, ya resuelto.
 
@@ -12294,12 +12288,10 @@ class SubtitleApp(QWidget):
             except Exception:
                 pass
             if ok and colocacion and getattr(self, '_go_corriendo', False):
-                try:
-                    import ajustes_ui
-                    if ajustes_ui.leer_prefs().get('go_reproducir', True) is not False:
-                        self.msg_queue.put(('status', tr('Reproduciendo el timeline desde el principio…')))
-                        rep_ok, rep_txt = colocacion.reproducir_desde_inicio()
-                        (registro.info if rep_ok else registro.aviso)(rep_txt, 'GO · reproducir')
+                try:                                   # v5.52: «Reproducir al terminar» va siempre activada
+                    self.msg_queue.put(('status', tr('Reproduciendo el timeline desde el principio…')))
+                    rep_ok, rep_txt = colocacion.reproducir_desde_inicio()
+                    (registro.info if rep_ok else registro.aviso)(rep_txt, 'GO · reproducir')
                 except Exception:
                     registro.excepcion(origen='GO · reproducir')
             extra = ''
@@ -13123,7 +13115,7 @@ class SubtitleApp(QWidget):
             messagebox.showinfo(tr('Tipografías'), texto, parent=self)
             self._refrescar_estado()
         _correr_en_hilo(self, medir, preguntar)
-    # -- Licencia (v5.2.1: Lemon Squeezy, el sistema de CineSlide; ver licencia.py) -------------
+    # -- Licencia (v5.52: claves CC- de cinecaptions.shop; ver licencia.py) -----------------------
     def _revisar_licencia_al_arrancar(self):
         """La licencia ya se pidió ANTES de abrir la ventana (main -> _licencia_al_abrir). Aquí se
         pinta su estado, se verifica en línea en segundo plano a los 3 s y luego cada 30 min mira

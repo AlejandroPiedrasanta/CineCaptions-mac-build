@@ -465,7 +465,7 @@ class VentanaLicencia(QDialog):
         v.addSpacing(8)
         self.txt = QLineEdit()
         self.txt.setObjectName('campoClave')
-        self.txt.setPlaceholderText('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX')
+        self.txt.setPlaceholderText('CC-XXXX-XXXX-XXXX-XXXX')
         mono = QFont('Consolas')
         mono.setStyleHint(QFont.StyleHint.Monospace)
         mono.setPixelSize(17)
@@ -530,9 +530,9 @@ class VentanaLicencia(QDialog):
         self.fila_compra.setVisible(bool(tiendas))
         v.addWidget(self.fila_compra)
         v.addSpacing(6)
-        self.nota_hotmart = etiqueta(tr('Tu clave de licencia te llega por correo al comprar en Gumroad.'
-                                        ''), 12, C['tenue'], envolver=True)
-        v.addWidget(self.nota_hotmart)
+        self.nota_compra = etiqueta(tr('Tu clave de licencia (CC-…) aparece al pagar en cinecaptions.shop y te llega '
+                                        'por correo.'), 12, C['tenue'], envolver=True)
+        v.addWidget(self.nota_compra)
         v.addSpacing(12)
         pie = QHBoxLayout()
         pie.setSpacing(8)
@@ -859,13 +859,8 @@ class VentanaLicencia(QDialog):
         aviso, color = '', C['suave']
         if not k:
             pass
-        elif tipo == 'ls':
-            aviso, color = '✓  ' + tr('Clave de Lemon Squeezy'), C['ok']
-        elif tipo == 'gumroad':
-            aviso, color = (('✓  ' + tr('Clave de Gumroad'), C['ok']) if licencia.LIC_GUMROAD_PRODUCTO else
-                            (tr('Clave de Gumroad: CineCaptions todavía no se vende ahí'), C['naranja']))
-        elif tipo == 'hotmart':
-            aviso, color = tr('Eso es tu número de compra de Hotmart: pide tu clave al vendedor'), C['naranja']
+        elif tipo == 'cinecaptions':
+            aviso, color = '✓  ' + tr('Clave de CineCaptions'), C['ok']
         elif len(k) >= 10:
             aviso, color = tr('Revisa la clave: cópiala tal cual del correo de tu compra'), C['tenue']
         self._chip(aviso, color)
@@ -931,7 +926,7 @@ class VentanaLicencia(QDialog):
         self.boton.poner_modo('ok', tr('Listo'))
         self._pintar_datos(datos)
         self.fila_compra.hide()
-        self.nota_hotmart.hide()
+        self.nota_compra.hide()
         self.b_desactivar.show()
         self.b_salir.setText(tr('Cerrar'))
 
@@ -968,7 +963,7 @@ class VentanaLicencia(QDialog):
         self._chip('', C['suave'])
         self.mensaje(texto, tipo)
         self.fila_compra.setVisible(bool(self.botones_tienda))
-        self.nota_hotmart.show()
+        self.nota_compra.show()
         self.b_desactivar.hide()
         self.b_salir.setText(tr('Salir'))
         self.txt.setFocus()

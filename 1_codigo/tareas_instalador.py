@@ -247,7 +247,7 @@ def _tarea_verificar(estado):
         if falla:
             raise RuntimeError(falla)
 
-    @prueba('Licencia (Lemon Squeezy)')
+    @prueba('Licencia')
     def _():
         # v5.2.1: la ventana «Activa tu licencia» se DIBUJA en memoria (sin mostrarla ni hablar con
         # ninguna tienda) y el ID del equipo se puede leer: sin esto nadie podria activar

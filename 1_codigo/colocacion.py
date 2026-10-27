@@ -14,7 +14,7 @@ ok=False o «0 líneas colocadas», pero la app sólo miraba que el script hubie
     reproducir_desde_inicio()  al terminar, Resolve en primer plano y «reproducir» desde el principio (Inicio + Espacio)
     guardar_vista_actual()  guarda la disposición de pantalla actual de Resolve como la de CineCaptions (resolve.SaveLayoutPreset)
 
-Prefs: go_reproducir (sí), go_vista_resolve (sí), go_vista_nombre («CineCaptions vertical»).
+Prefs: go_vista_nombre («CineCaptions vertical»). v5.52: reproducir al terminar y la vista de Resolve van SIEMPRE (sus opciones se quitaron de Ajustes).
 """
 import json
 import re
@@ -340,7 +340,7 @@ def archivo_de_la_vista():
 
 def vista_en_manifiesto(ruta_manifiesto):
     """Antes de colocar: apunta en el manifiesto cómo debe quedar Resolve al terminar (el script lo lee): página Edit, la disposición de pantalla guardada (vertical y vista expandida) y el
-    cabezal al inicio. `go_vista_resolve` = False lo apaga."""
+    cabezal al inicio. v5.52: siempre (la opción «Vista de Resolve al terminar» se quitó de Ajustes)."""
     try:
         import archivos_seguros
         from pathlib import Path
@@ -348,8 +348,7 @@ def vista_en_manifiesto(ruta_manifiesto):
         datos = json.loads(p.read_text(encoding='utf-8'))
         if not isinstance(datos, dict):
             return False
-        usar = _prefs().get('go_vista_resolve', True) is not False
-        datos['vista'] = {'pagina': 'edit', 'preset': vista_nombre() if usar else '', 'al_inicio': True, 'archivo': archivo_de_la_vista() if usar else ''}
+        datos['vista'] = {'pagina': 'edit', 'preset': vista_nombre(), 'al_inicio': True, 'archivo': archivo_de_la_vista()}
         archivos_seguros.escribir_json(p, datos)
         try:                                       # Resolve Free 21.1 (sin io) lee el manifiesto por su gemelo «.lua»: sin esto no veria la «vista»
             import sidecar_lua
