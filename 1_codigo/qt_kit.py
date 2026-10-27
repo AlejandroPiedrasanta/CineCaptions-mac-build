@@ -328,10 +328,12 @@ def ajustar_planificacion():
 
 def congelar_gc():
     """Lo que ya existe (la interfaz entera, los módulos) pasa a la zona permanente del recolector: las pasadas siguientes solo
-    recorren lo nuevo y casi no se notan."""
+    recorren lo nuevo y casi no se notan.
+    v5.49 (el usuario: «que no haya tirones jamás»): sin gc.collect() antes. Corre a los 4 s de abrir, con Inicio ya animándose, y
+    recorrer los ~190 000 objetos de la ventana eran ~25 ms de golpe en el hilo de la interfaz para apenas ~2 400 de basura (medido):
+    se congelan tal cual (la recolección completa ya se hizo al arrancar, en ajustar_planificacion)."""
     try:
         import gc
-        gc.collect()
         gc.freeze()
     except Exception:
         pass

@@ -52,7 +52,9 @@ NEGRITA = _rol(('Poppins', 'Bold'), TAM_NEGRITA)
 AMRO = 'Amro principales.drb'
 # entrada y salida del macro en segundos. v5.48: 0,14/0,10 -> 0,28/0,22, el deslizado con desenfoque de las referencias nuevas del usuario (ya no hay
 # riesgo de que una palabra corta no se vea: luxe_macro limita la entrada y la salida al 30 % de lo que dura cada clip)
-ANIM = (0.28, 0.22)
+# v5.50 (pedido: «entrada y salida muy rápidas»): MEDIDO contra PRUEBAS (3) a 30 fps, la referencia entra en 8-9 fotogramas (la grande) y 4-6 (las
+# pequeñas) y sale en 4-5; con 0,28/0,22 y el tope del 30 % salían la mitad. 0,60/0,45 con tope 50 % / 35 % del clip (la suma nunca llega al clip).
+ANIM = (0.60, 0.45, 0.50, 0.35)
 # v5.48 (pedido del usuario): variantes que ya no van en el pack; las demás conservan su número (los proyectos guardados no cambian de estilo).
 QUITAR = (4, 11, 15)          # «Moderno blanco» y sus dos barridos
 NARANJA = (1.0, 0.62, 0.20)
@@ -74,8 +76,25 @@ def _combo(nombre, main, amro=None, entrada='pop', barrido=None):
         c['barrido'] = barrido
     if amro:
         c['rel'] = (0.0836, 0.0847)
-        c['principal_drb'] = {'drb': amro[0], 'clip': 'principal' if amro[1] == 1 else f'principal {amro[1]}'}
+        c['principal_drb'] = {'drb': amro[0], 'clip': 'principal' if amro[1] == 1 else f'principal {amro[1]}', 'cambios': amro[2] if len(amro) > 2 else ()}
     return c
+
+
+# v5.50 (pedido: «la barra debe quedar al ras de la palabra»): la barra del Underline de Amro es el Text+ «Line» (su recuadro, encogido y bajado
+# con Offset8, en fracción del alto). MEDIDO en Resolve: quedaba 12 px (a zoom 1) bajo la tinta de las letras; con -0,032 ya las tapaba 7 px.
+# v5.50 (pedido: «1-9-13 agregas halftone»; luego «están feos: debe ser todo, sutil y difuminado»): puntos azul oscuro (#16357A) por TODA la letra,
+# de bordes suaves y poca opacidad (40 % en la base que se desvanece a 12 % arriba)
+TRAMA_IMPACTO = {'color': (0.086, 0.208, 0.478), 'celda': 9, 'radio': 2.4, 'suave': 1.6, 'opacidad': (0.4, 0.12)}
+# A lo ancho, la barra es la caja del MISMO texto en «Line»: su fuente, peso y espaciado siguen a los de la palabra (Text1) por expresión (la fuente de
+# «Crea tu estilo» la cambia el script solo en Text1: con Arial Black la barra salía más ancha) y ExtendHorizontal8 recorta el margen de la caja
+# (MEDIDO: -0,1 recorta 22 px por lado a zoom 1; con las fuentes enlazadas sobraban 13 px -> -0,16).
+BARRA_AL_RAS = (('Offset8 = Input { Value = { 0, -0.042 }, }', 'Offset8 = Input { Value = { 0, -0.036 }, }'),
+                ('ExtendVertical8 = Input { Value = -0.342, }', 'ExtendVertical8 = Input { Value = -0.342, }, ExtendHorizontal8 = Input { Value = -0.16, }'),
+                ('StyledText = Input { Value = "standard 1", Expression = "Text1.StyledText", }, Font = Input { Value = "Inter", }, Style = Input { Value = "Black", }, ',
+                 'StyledText = Input { Value = "standard 1", Expression = "Text1.StyledText", }, Font = Input { Value = "Inter", Expression = "Text1.Font", }, '
+                 'Style = Input { Value = "Black", Expression = "Text1.Style", }, '),
+                ('CharacterSpacing = Input { Value = 0.958, }, TransformRotation = Input { Value = 1, }, TransformPivot',
+                 'CharacterSpacing = Input { Value = 0.958, Expression = "Text1.CharacterSpacing", }, TransformRotation = Input { Value = 1, }, TransformPivot'))
 
 
 def combinaciones(ruta_amro):
@@ -87,8 +106,9 @@ def combinaciones(ruta_amro):
         _combo('Editorial azul', _rol(('DM Serif Text', 'Italic'), 0.28, AZUL, esp=ESPACIADO), entrada='abre', barrido=BARRIDO_BRILLO),
         _combo('Amro Fire', _rol(('Inter', 'Black'), 0.17, (1.0, 0.30, 0.15), mayus=True), amro=(ruta_amro, 5)),
         _combo('Amro Strike rojo', _rol(('Inter', 'Black'), 0.17, (1.0, 0.28, 0.28), mayus=True), amro=(ruta_amro, 6)),
-        _combo('Amro Underline lima', _rol(('Inter', 'Black'), 0.17, (0.62, 1.0, 0.30), mayus=True), amro=(ruta_amro, 3)),
+        _combo('Amro Underline lima', _rol(('Inter', 'Black'), 0.17, (0.62, 1.0, 0.30), mayus=True), amro=(ruta_amro, 3, BARRA_AL_RAS)),
     ]
+    base[0]['trama'] = TRAMA_IMPACTO        # v5.50: el Impacto cian (1) y sus barridos (9, 13: se copian de él aquí abajo) llevan halftone
     # 9-12 «Screen» y 13-16 «Sólido»: el mismo texto de los estilos 1, 2, 4 y 5 con otra forma y otro color de barrido
     screen, solido = [], []
     for n, c_screen, c_solido in VARIANTES_BARRIDO:

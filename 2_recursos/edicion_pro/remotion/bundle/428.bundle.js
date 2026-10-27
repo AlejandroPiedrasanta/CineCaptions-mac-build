@@ -2041,12 +2041,12 @@ var useBrowserMediaSession = ({
     });
     navigator.mediaSession.setActionHandler("seekbackward", () => {
       if (browserMediaControlsBehavior.mode === "register-media-session" && videoConfig) {
-        seek(Math.max(0, Math.round((getCurrentFrame() - 10) * videoConfig.fps)));
+        seek(Math.max(0, Math.round(getCurrentFrame() - 10 * videoConfig.fps)));
       }
     });
     navigator.mediaSession.setActionHandler("seekforward", () => {
       if (browserMediaControlsBehavior.mode === "register-media-session" && videoConfig) {
-        seek(Math.max(videoConfig.durationInFrames - 1, Math.round((getCurrentFrame() + 10) * videoConfig.fps)));
+        seek(Math.min(videoConfig.durationInFrames - 1, Math.round(getCurrentFrame() + 10 * videoConfig.fps)));
       }
     });
     navigator.mediaSession.setActionHandler("previoustrack", () => {
@@ -3049,8 +3049,11 @@ var PlaybackPopup = ({ setIsComponentVisible, playbackRates, canvasSize }) => {
   const [keyboardSelectedRate, setKeyboardSelectedRate] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(playbackRate);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const listener = (e) => {
-      e.preventDefault();
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
       if (e.key === "ArrowUp") {
+        e.preventDefault();
         const currentIndex = playbackRates.findIndex((rate) => rate === keyboardSelectedRate);
         if (currentIndex === 0) {
           return;
@@ -3061,6 +3064,7 @@ var PlaybackPopup = ({ setIsComponentVisible, playbackRates, canvasSize }) => {
           setKeyboardSelectedRate(playbackRates[currentIndex - 1]);
         }
       } else if (e.key === "ArrowDown") {
+        e.preventDefault();
         const currentIndex = playbackRates.findIndex((rate) => rate === keyboardSelectedRate);
         if (currentIndex === playbackRates.length - 1) {
           return;
@@ -3071,7 +3075,13 @@ var PlaybackPopup = ({ setIsComponentVisible, playbackRates, canvasSize }) => {
           setKeyboardSelectedRate(playbackRates[currentIndex + 1]);
         }
       } else if (e.key === "Enter") {
+        e.preventDefault();
         setPlaybackRate(keyboardSelectedRate);
+        setIsComponentVisible(false);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setIsComponentVisible(false);
+      } else if (e.key === "Tab") {
         setIsComponentVisible(false);
       }
     };
@@ -8521,12 +8531,11 @@ var isProductionOption = {
       /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("code", {
         children: "false"
       }),
-      " if this a development render to not count it as a billable render on remotion.pro. Only can be used in conjuction with",
-      " ",
+      " for a development render so it is not counted as a billable render on remotion.pro. Defaults to ",
       /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("code", {
-        children: "licenseKey"
+        children: "true"
       }),
-      "."
+      ". Only has an effect when a license key is provided."
     ]
   }),
   ssrName: "isProduction",
@@ -8727,6 +8736,26 @@ var licenseKeyOption = {
       " ",
       /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("code", {
         children: "@remotion/licensing"
+      }),
+      ". For ",
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("code", {
+        children: "npx remotion render"
+      }),
+      " and",
+      " ",
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("code", {
+        children: "npx remotion still"
+      }),
+      ", pass a private API key starting with",
+      " ",
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("code", {
+        children: "rm_sec_"
+      }),
+      " from the License keys page on",
+      " ",
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("a", {
+        href: "https://www.remotion.pro/dashboard",
+        children: "remotion.pro"
       }),
       "."
     ]
@@ -18930,6 +18959,17 @@ var EFFECT_CATALOG = [
     }
   },
   {
+    id: "effects-curves",
+    category: "Color",
+    label: "curves()",
+    description: "Adjust RGB or individual channels with a tonal curve",
+    effect: {
+      name: "curves",
+      importPath: "@remotion/effects/curves",
+      config: {}
+    }
+  },
+  {
     id: "effects-duotone",
     category: "Color",
     label: "duotone()",
@@ -19614,6 +19654,17 @@ var EFFECT_CATALOG = [
     effect: {
       name: "speckle",
       importPath: "@remotion/effects/speckle",
+      config: {}
+    }
+  },
+  {
+    id: "effects-shatter",
+    category: "Stylize",
+    label: "shatter()",
+    description: "Break the source into tumbling fragments",
+    effect: {
+      name: "shatter",
+      importPath: "@remotion/effects/shatter",
       config: {}
     }
   },
@@ -22651,7 +22702,4508 @@ export const ${componentName}: React.FC = () => {
 
 /***/ },
 
-/***/ 1045
+/***/ 5576
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   $: () => (/* binding */ extractEnumJsonPaths),
+/* harmony export */   $i: () => (/* binding */ getCachedResolvedStack),
+/* harmony export */   A2: () => (/* binding */ VisualControlsContext),
+/* harmony export */   BW: () => (/* binding */ getObjectShape),
+/* harmony export */   Bu: () => (/* binding */ getDefaultValue),
+/* harmony export */   Ch: () => (/* binding */ VisualControlsProvider),
+/* harmony export */   Cj: () => (/* binding */ getVisualControlEditedValue),
+/* harmony export */   Dc: () => (/* binding */ getBrandedInner),
+/* harmony export */   Ex: () => (/* binding */ getDiscriminatedOptionKeys),
+/* harmony export */   F0: () => (/* binding */ hasResolvedStack),
+/* harmony export */   Fm: () => (/* binding */ pause2),
+/* harmony export */   Fp: () => (/* binding */ play2),
+/* harmony export */   IB: () => (/* binding */ getDiscriminatedOption),
+/* harmony export */   K6: () => (/* binding */ getUnionOptions),
+/* harmony export */   Lm: () => (/* binding */ getLiteralValue),
+/* harmony export */   Ls: () => (/* binding */ getZodDef),
+/* harmony export */   Nt: () => (/* binding */ ZodProvider),
+/* harmony export */   Q6: () => (/* binding */ getIntersectionSchemas),
+/* harmony export */   QP: () => (/* binding */ SetVisualControlsContext),
+/* harmony export */   R$: () => (/* binding */ getPipelineInput),
+/* harmony export */   RC: () => (/* binding */ useZodIfPossible),
+/* harmony export */   SI: () => (/* binding */ getPipelineOutput),
+/* harmony export */   TL: () => (/* binding */ getInnerType),
+/* harmony export */   TT: () => (/* binding */ seek2),
+/* harmony export */   X8: () => (/* binding */ getZodSchemaDescription),
+/* harmony export */   YA: () => (/* binding */ resolvedStackToSymbolicated),
+/* harmony export */   d2: () => (/* binding */ getRecordKeyType),
+/* harmony export */   d4: () => (/* binding */ watchPublicFolder2),
+/* harmony export */   dO: () => (/* binding */ getDiscriminator),
+/* harmony export */   eS: () => (/* binding */ deleteStaticFile2),
+/* harmony export */   g4: () => (/* binding */ writeStaticFile2),
+/* harmony export */   hA: () => (/* binding */ getTupleItems),
+/* harmony export */   hl: () => (/* binding */ getFirstEnumValue),
+/* harmony export */   l4: () => (/* binding */ shutDownStudio2),
+/* harmony export */   m8: () => (/* binding */ isStudioSelectionEnabled),
+/* harmony export */   mT: () => (/* binding */ getStaticFiles2),
+/* harmony export */   oR: () => (/* binding */ getUserFacingDescription),
+/* harmony export */   qQ: () => (/* binding */ useResolvedStack),
+/* harmony export */   r2: () => (/* binding */ getZodSchemaType),
+/* harmony export */   sk: () => (/* binding */ isZodV3Schema),
+/* harmony export */   sl: () => (/* binding */ getArrayElement),
+/* harmony export */   tF: () => (/* binding */ isStudioInteractivityEnabled),
+/* harmony export */   w5: () => (/* binding */ getEnumValues),
+/* harmony export */   wI: () => (/* binding */ useZodTypesIfPossible),
+/* harmony export */   xT: () => (/* binding */ getRecordValueType),
+/* harmony export */   xq: () => (/* binding */ getEffectsInner),
+/* harmony export */   y$: () => (/* binding */ zodSafeParse)
+/* harmony export */ });
+/* unused harmony exports visualControlStore, visualControlRef */
+/* harmony import */ var _index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5293);
+/* harmony import */ var remotion__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3947);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4848);
+
+
+// src/api/delete-static-file.ts
+
+var deleteStaticFile2 = async (relativePath) => {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
+    throw new Error("deleteStaticFile() is only available in the Studio");
+  }
+  if (relativePath.startsWith(window.remotion_staticBase)) {
+    relativePath = relativePath.substring(window.remotion_staticBase.length + 1);
+  }
+  const browserStudioOperations = (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)();
+  if (browserStudioOperations) {
+    return browserStudioOperations.deleteStaticFile({ relativePath });
+  }
+  if (window.remotion_isReadOnlyStudio) {
+    throw new Error("deleteStaticFile() is not available in Read-Only Studio");
+  }
+  const res = await (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .callApi */ .px)("/api/delete-static-file", { relativePath });
+  return res;
+};
+
+// src/api/get-static-files.ts
+var warnedServer = false;
+var warnedPlayer = false;
+var warnServerOnce = () => {
+  if (warnedServer) {
+    return;
+  }
+  warnedServer = true;
+  console.warn("Called getStaticFiles() on the server. The API is only available in the browser. An empty array was returned.");
+};
+var warnPlayerOnce = () => {
+  if (warnedPlayer) {
+    return;
+  }
+  warnedPlayer = true;
+  console.warn("Called getStaticFiles() while using the Remotion Player. The API is only available while using the Remotion Studio. An empty array was returned.");
+};
+var getStaticFiles2 = () => {
+  if (typeof document === "undefined") {
+    warnServerOnce();
+    return [];
+  }
+  if (window.remotion_isPlayer) {
+    warnPlayerOnce();
+    return [];
+  }
+  return window.remotion_staticFiles;
+};
+
+// src/api/pause.ts
+
+var pause2 = () => {
+  remotion__WEBPACK_IMPORTED_MODULE_1__.Internals.timeValueRef.current?.pause();
+};
+
+// src/api/play.ts
+
+var play2 = (e) => {
+  remotion__WEBPACK_IMPORTED_MODULE_1__.Internals.timeValueRef.current?.play(e);
+};
+
+// src/api/shut-down-studio.ts
+
+var shutDownStudio2 = () => {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
+    throw new Error("shutDownStudio() is only available in the Studio");
+  }
+  if ((0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)() !== null) {
+    throw new Error("shutDownStudio() is not supported in Browser Studio");
+  }
+  if (window.remotion_isReadOnlyStudio) {
+    throw new Error("shutDownStudio() is not available in read-only Studio");
+  }
+  return (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .callApi */ .px)("/api/shutdown-studio", {});
+};
+
+// src/components/RenderModal/SchemaEditor/zod-schema-type.ts
+var zodSafeParse = (schema, data) => {
+  return schema.safeParse(data);
+};
+var getZodDef = (schema) => {
+  if (schema._def)
+    return schema._def;
+  if (schema._zod)
+    return schema._zod.def;
+  throw new Error("Invalid zod schema: missing _def and _zod");
+};
+var v3TypeNameMap = {
+  ZodString: "string",
+  ZodNumber: "number",
+  ZodBoolean: "boolean",
+  ZodObject: "object",
+  ZodArray: "array",
+  ZodEnum: "enum",
+  ZodUnion: "union",
+  ZodDiscriminatedUnion: "discriminatedUnion",
+  ZodOptional: "optional",
+  ZodNullable: "nullable",
+  ZodDefault: "default",
+  ZodTuple: "tuple",
+  ZodDate: "date",
+  ZodAny: "any",
+  ZodUnknown: "unknown",
+  ZodBigInt: "bigint",
+  ZodNull: "null",
+  ZodUndefined: "undefined",
+  ZodEffects: "effects",
+  ZodLiteral: "literal",
+  ZodRecord: "record",
+  ZodNever: "never",
+  ZodVoid: "void",
+  ZodNaN: "nan",
+  ZodSymbol: "symbol",
+  ZodIntersection: "intersection",
+  ZodMap: "map",
+  ZodSet: "set",
+  ZodLazy: "lazy",
+  ZodFunction: "function",
+  ZodNativeEnum: "nativeEnum",
+  ZodCatch: "catch",
+  ZodPromise: "promise",
+  ZodBranded: "branded",
+  ZodPipeline: "pipeline"
+};
+var isZodV3Schema = (schema) => {
+  const def = getZodDef(schema);
+  return "typeName" in def;
+};
+var getZodSchemaType = (schema) => {
+  const def = getZodDef(schema);
+  if ("typeName" in def) {
+    const { typeName } = def;
+    return v3TypeNameMap[typeName] ?? typeName;
+  }
+  const { type } = def;
+  if (type === "union" && def.discriminator !== undefined) {
+    return "discriminatedUnion";
+  }
+  return type;
+};
+var getZodSchemaDescription = (schema) => {
+  if (isZodV3Schema(schema)) {
+    return getZodDef(schema).description;
+  }
+  return schema.description;
+};
+var REMOTION_BRAND_PREFIX = "__remotion-";
+var getUserFacingDescription = (schema) => {
+  const description = getZodSchemaDescription(schema);
+  if (!description || description.startsWith(REMOTION_BRAND_PREFIX)) {
+    return null;
+  }
+  return description;
+};
+var getObjectShape = (schema) => {
+  const { shape } = getZodDef(schema);
+  return typeof shape === "function" ? shape() : shape;
+};
+var getArrayElement = (schema) => {
+  const def = getZodDef(schema);
+  return isZodV3Schema(schema) ? def.type : def.element;
+};
+var getInnerType = (schema) => {
+  return getZodDef(schema).innerType;
+};
+var getEffectsInner = (schema) => {
+  return getZodDef(schema).schema;
+};
+var getLiteralValue = (schema) => {
+  const def = getZodDef(schema);
+  if (isZodV3Schema(schema)) {
+    return def.value;
+  }
+  return def.values?.[0];
+};
+var getEnumValues = (schema) => {
+  const def = getZodDef(schema);
+  if (isZodV3Schema(schema)) {
+    return def.values;
+  }
+  const { entries } = def;
+  return Object.values(entries);
+};
+var getFirstEnumValue = (schema) => {
+  const def = getZodDef(schema);
+  if (isZodV3Schema(schema)) {
+    if (def.typeName === "ZodNativeEnum") {
+      const vals = Object.values(def.values);
+      return vals[0];
+    }
+    return def.values[0];
+  }
+  const { entries } = def;
+  const pairs = Object.entries(entries);
+  const hasReverseMapping = pairs.some(([key, value]) => key !== String(value));
+  if (hasReverseMapping) {
+    const forwardPairs = pairs.filter(([key]) => Number.isNaN(Number(key)));
+    if (forwardPairs.length > 0) {
+      return forwardPairs[0][1];
+    }
+  }
+  return Object.values(entries)[0];
+};
+var getUnionOptions = (schema) => {
+  return getZodDef(schema).options;
+};
+var getDefaultValue = (schema) => {
+  const dv = getZodDef(schema).defaultValue;
+  return typeof dv === "function" ? dv() : dv;
+};
+var getDiscriminator = (schema) => {
+  return getZodDef(schema).discriminator;
+};
+var getDiscriminatedOptionKeys = (schema) => {
+  const def = getZodDef(schema);
+  const discriminator = getDiscriminator(schema);
+  if (isZodV3Schema(schema) && def.optionsMap) {
+    return [...def.optionsMap.keys()];
+  }
+  const options = getUnionOptions(schema);
+  return options.map((option) => {
+    const shape = getObjectShape(option);
+    const discriminatorSchema = shape[discriminator];
+    return getLiteralValue(discriminatorSchema);
+  });
+};
+var getDiscriminatedOption = (schema, discriminatorValue) => {
+  const def = getZodDef(schema);
+  const discriminator = getDiscriminator(schema);
+  if (isZodV3Schema(schema) && def.optionsMap) {
+    return def.optionsMap.get(discriminatorValue);
+  }
+  const options = getUnionOptions(schema);
+  return options.find((option) => {
+    const shape = getObjectShape(option);
+    const discriminatorSchema = shape[discriminator];
+    return getLiteralValue(discriminatorSchema) === discriminatorValue;
+  });
+};
+var getIntersectionSchemas = (schema) => {
+  const def = getZodDef(schema);
+  return { left: def.left, right: def.right };
+};
+var getTupleItems = (schema) => {
+  return getZodDef(schema).items;
+};
+var getRecordValueType = (schema) => {
+  return getZodDef(schema).valueType;
+};
+var getRecordKeyType = (schema) => {
+  return getZodDef(schema).keyType;
+};
+var getPipelineOutput = (schema) => {
+  return getZodDef(schema).out;
+};
+var getPipelineInput = (schema) => {
+  return getZodDef(schema).in;
+};
+var getBrandedInner = (schema) => {
+  return isZodV3Schema(schema) ? getZodDef(schema).type : schema;
+};
+
+// src/components/RenderModal/SchemaEditor/extract-enum-json-paths.ts
+var extractEnumJsonPaths = ({
+  schema,
+  zodRuntime,
+  currentPath,
+  zodTypes
+}) => {
+  const description = getZodSchemaDescription(schema);
+  if (zodTypes && description === zodTypes.ZodZypesInternals.REMOTION_MATRIX_BRAND) {
+    return [currentPath];
+  }
+  const typeName = getZodSchemaType(schema);
+  switch (typeName) {
+    case "object": {
+      const shape = getObjectShape(schema);
+      const keys = Object.keys(shape);
+      return keys.map((key) => {
+        return extractEnumJsonPaths({
+          schema: shape[key],
+          zodRuntime,
+          currentPath: [...currentPath, key],
+          zodTypes
+        });
+      }).flat(1);
+    }
+    case "array": {
+      return extractEnumJsonPaths({
+        schema: getArrayElement(schema),
+        zodRuntime,
+        currentPath: [...currentPath, "[]"],
+        zodTypes
+      });
+    }
+    case "union": {
+      return getUnionOptions(schema).map((option) => {
+        return extractEnumJsonPaths({
+          schema: option,
+          zodRuntime,
+          currentPath,
+          zodTypes
+        });
+      }).flat(1);
+    }
+    case "discriminatedUnion": {
+      return getUnionOptions(schema).map((op) => {
+        return extractEnumJsonPaths({
+          schema: op,
+          zodRuntime,
+          currentPath,
+          zodTypes
+        });
+      }).flat(1);
+    }
+    case "literal": {
+      return [currentPath];
+    }
+    case "effects": {
+      return extractEnumJsonPaths({
+        schema: getEffectsInner(schema),
+        zodRuntime,
+        currentPath,
+        zodTypes
+      });
+    }
+    case "intersection": {
+      const { left, right } = getIntersectionSchemas(schema);
+      const leftValue = extractEnumJsonPaths({
+        schema: left,
+        zodRuntime,
+        currentPath,
+        zodTypes
+      });
+      const rightValue = extractEnumJsonPaths({
+        schema: right,
+        zodRuntime,
+        currentPath,
+        zodTypes
+      });
+      return [...leftValue, ...rightValue];
+    }
+    case "tuple": {
+      return getTupleItems(schema).map((item, i) => extractEnumJsonPaths({
+        schema: item,
+        zodRuntime,
+        currentPath: [...currentPath, i],
+        zodTypes
+      })).flat(1);
+    }
+    case "record": {
+      const recordPath = [...currentPath, "{}"];
+      const keyResults = extractEnumJsonPaths({
+        schema: getRecordKeyType(schema),
+        zodRuntime,
+        currentPath: recordPath,
+        zodTypes
+      });
+      const valueResults = extractEnumJsonPaths({
+        schema: getRecordValueType(schema),
+        zodRuntime,
+        currentPath: recordPath,
+        zodTypes
+      });
+      return [...keyResults, ...valueResults];
+    }
+    case "function": {
+      throw new Error("Cannot create a value for type function");
+    }
+    case "enum": {
+      return [currentPath];
+    }
+    case "nativeEnum": {
+      return [];
+    }
+    case "optional":
+    case "nullable":
+    case "catch": {
+      return extractEnumJsonPaths({
+        schema: getInnerType(schema),
+        zodRuntime,
+        currentPath,
+        zodTypes
+      });
+    }
+    case "default": {
+      return extractEnumJsonPaths({
+        schema: getInnerType(schema),
+        zodRuntime,
+        currentPath,
+        zodTypes
+      });
+    }
+    case "promise": {
+      return [];
+    }
+    case "branded": {
+      return extractEnumJsonPaths({
+        schema: getBrandedInner(schema),
+        zodRuntime,
+        currentPath,
+        zodTypes
+      });
+    }
+    case "pipeline":
+    case "pipe": {
+      return extractEnumJsonPaths({
+        schema: getPipelineOutput(schema),
+        zodRuntime,
+        currentPath,
+        zodTypes
+      });
+    }
+    case "string":
+    case "number":
+    case "bigint":
+    case "boolean":
+    case "nan":
+    case "date":
+    case "symbol":
+    case "undefined":
+    case "null":
+    case "any":
+    case "unknown":
+    case "never":
+    case "void":
+    case "map":
+    case "lazy":
+    case "set":
+    case "custom": {
+      return [];
+    }
+    default:
+      throw new Error("Not implemented: " + typeName);
+  }
+};
+
+// src/components/Timeline/use-resolved-stack.ts
+
+
+var resolvedCache = new Map;
+var hasResolvedStack = (stack) => {
+  if (!stack) {
+    return true;
+  }
+  return resolvedCache.has(stack);
+};
+var getCachedResolvedStack = (stack) => {
+  return stack ? resolvedCache.get(stack) ?? null : null;
+};
+var inFlight = new Set;
+var subscribers = new Map;
+var useResolvedStack = (stack) => {
+  const updateResolvedStackTrace = (0,react__WEBPACK_IMPORTED_MODULE_2__.useContext)(remotion__WEBPACK_IMPORTED_MODULE_1__.Internals.SequenceStackTracesUpdateContext);
+  const [state, setState] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(() => ({
+    stack,
+    value: stack ? resolvedCache.get(stack) ?? null : null
+  }));
+  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
+    if (!stack) {
+      return;
+    }
+    if (resolvedCache.has(stack)) {
+      const cached = resolvedCache.get(stack);
+      setState((prev) => prev.stack === stack && prev.value === cached ? prev : { stack, value: cached });
+      return;
+    }
+    if (!subscribers.has(stack)) {
+      subscribers.set(stack, new Set);
+    }
+    const subs = subscribers.get(stack);
+    const onResolved = (value) => {
+      setState({ stack, value });
+    };
+    subs.add(onResolved);
+    if (!inFlight.has(stack)) {
+      inFlight.add(stack);
+      (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getOriginalLocationFromStack */ .pI)(stack, "sequence").then((frame) => {
+        resolvedCache.set(stack, frame);
+        updateResolvedStackTrace(stack, frame);
+        subs.forEach((fn) => fn(frame));
+      }).catch((err) => {
+        console.error("Could not get original location of Sequence", err);
+        resolvedCache.set(stack, null);
+        subs.forEach((fn) => fn(null));
+      }).finally(() => {
+        inFlight.delete(stack);
+      });
+    }
+    return () => {
+      subs.delete(onResolved);
+    };
+  }, [stack, updateResolvedStackTrace]);
+  return state.stack === stack ? state.value : stack ? resolvedCache.get(stack) ?? null : null;
+};
+
+// src/helpers/resolved-stack-to-symbolicated.ts
+var resolvedStackToSymbolicated = (location) => {
+  if (!location?.source) {
+    return null;
+  }
+  return {
+    originalFileName: location.source,
+    originalLineNumber: location.line,
+    originalColumnNumber: location.column,
+    originalFunctionName: null,
+    originalScriptCode: null
+  };
+};
+
+// src/api/seek.ts
+
+var seek2 = (frame) => {
+  remotion__WEBPACK_IMPORTED_MODULE_1__.Internals.timeValueRef.current?.seek(Math.max(0, frame));
+};
+
+// src/visual-controls/visual-control-store.ts
+var version = 0;
+var listeners = new Set;
+var visualControlStore = {
+  subscribe(listener) {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  },
+  getSnapshot() {
+    return version;
+  },
+  emitChange() {
+    version++;
+    for (const listener of listeners) {
+      listener();
+    }
+  }
+};
+
+// src/visual-controls/VisualControls.tsx
+
+
+
+// src/api/get-zod-schema-from-primitive.ts
+function getZodSchemaFromPrimitive(value, z) {
+  if (typeof value === "string") {
+    return z.string();
+  }
+  if (typeof value === "number") {
+    return z.number();
+  }
+  let stringified;
+  try {
+    stringified = JSON.stringify(value);
+  } catch {}
+  throw new Error(`visualControl(): Specify a schema for this value: ${stringified ?? "[non-serializable value]"}. See https://remotion.dev/docs/studio/visual-control`);
+}
+
+// src/components/get-zod-if-possible.tsx
+;
+
+async function getZodIfPossible() {
+  try {
+    const { z } = await Promise.all(/* import() */[__webpack_require__.e(687), __webpack_require__.e(328)]).then(() => (__webpack_require__(9328)));
+    return z;
+  } catch {
+    return null;
+  }
+}
+var getZodV3IfPossible = async () => {
+  try {
+    const mod = await __webpack_require__.e(/* import() */ 161).then(() => (__webpack_require__(3161)));
+    return mod;
+  } catch {
+    return null;
+  }
+};
+var getZTypesIfPossible = async () => {
+  try {
+    const mod = await Promise.all(/* import() */[__webpack_require__.e(687), __webpack_require__.e(761)]).then(() => (__webpack_require__(761)));
+    return mod;
+  } catch {
+    return null;
+  }
+};
+function useZodIfPossible() {
+  const context = (0,react__WEBPACK_IMPORTED_MODULE_2__.useContext)(ZodContext);
+  return context?.zod ?? null;
+}
+var useZodTypesIfPossible = () => {
+  const context = (0,react__WEBPACK_IMPORTED_MODULE_2__.useContext)(ZodContext);
+  return context?.zodTypes ?? null;
+};
+var ZodContext = (0,react__WEBPACK_IMPORTED_MODULE_2__.createContext)(null);
+var ZodProvider = ({ children }) => {
+  const [zod, setZod] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(null);
+  const [zodV3, setZodV3] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(null);
+  const [zodTypes, setZodTypes] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(null);
+  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
+    getZodIfPossible().then((z) => setZod(z));
+  }, []);
+  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
+    getZodV3IfPossible().then((z) => setZodV3(z));
+  }, []);
+  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
+    getZTypesIfPossible().then((z) => setZodTypes(z));
+  }, []);
+  const contextValue = (0,react__WEBPACK_IMPORTED_MODULE_2__.useMemo)(() => {
+    return {
+      zod,
+      zodV3,
+      zodTypes
+    };
+  }, [zod, zodV3, zodTypes]);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(ZodContext.Provider, {
+    value: contextValue,
+    children
+  });
+};
+
+// src/helpers/interactivity-enabled.ts
+var isStudioInteractivityEnabled = () => {
+  return (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getStudioInteractivityEnabled */ .dG)() && (typeof window === "undefined" || !window.remotion_isReadOnlyStudio);
+};
+var isStudioSelectionEnabled = _index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getStudioInteractivityEnabled */ .dG;
+
+// src/visual-controls/get-current-edited-value.ts
+var getVisualControlEditedValue = ({
+  handles,
+  key
+}) => {
+  const handle = handles?.[key];
+  if (handle === undefined) {
+    return null;
+  }
+  return handle.unsavedValue;
+};
+
+// src/visual-controls/VisualControls.tsx
+
+var VisualControlsTabActivatedContext = (0,react__WEBPACK_IMPORTED_MODULE_2__.createContext)(false);
+var VisualControlsContext = (0,react__WEBPACK_IMPORTED_MODULE_2__.createContext)({
+  handles: {}
+});
+var visualControlRef = (0,react__WEBPACK_IMPORTED_MODULE_2__.createRef)();
+var SetVisualControlsContext = (0,react__WEBPACK_IMPORTED_MODULE_2__.createContext)({
+  updateHandles: () => {
+    throw new Error("updateHandles is not implemented");
+  },
+  updateValue: () => {
+    throw new Error("updateValue is not implemented");
+  },
+  visualControl: () => {
+    throw new Error("visualControl is not implemented");
+  }
+});
+var VisualControlsProvider = ({ children }) => {
+  const imperativeHandles = (0,react__WEBPACK_IMPORTED_MODULE_2__.useRef)({});
+  const [handles, setHandles] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)({});
+  const state = (0,react__WEBPACK_IMPORTED_MODULE_2__.useMemo)(() => {
+    return {
+      handles
+    };
+  }, [handles]);
+  const setControl = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((key, value) => {
+    const existingHandle = imperativeHandles.current?.[key];
+    const currentSavedState = existingHandle?.valueInCode;
+    const changedSavedValue = value.valueInCode !== currentSavedState;
+    const changedUnsavedValue = existingHandle === undefined && value.valueInCode !== undefined;
+    imperativeHandles.current = {
+      ...imperativeHandles.current,
+      [key]: {
+        ...value,
+        unsavedValue: existingHandle !== undefined && !changedSavedValue ? existingHandle.unsavedValue : value.valueInCode,
+        valueInCode: value.valueInCode
+      }
+    };
+    return {
+      changed: changedSavedValue || changedUnsavedValue,
+      currentValue: getVisualControlEditedValue({
+        key,
+        handles: imperativeHandles.current
+      })
+    };
+  }, []);
+  const z = useZodIfPossible();
+  const changedRef = (0,react__WEBPACK_IMPORTED_MODULE_2__.useRef)(false);
+  const env = (0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .useRemotionEnvironment */ .OK)();
+  const visualControl = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)(function(key, value, schema) {
+    if (handles && false) // removed by dead control flow
+{}
+    if (!env.isStudio) {
+      return value;
+    }
+    if (!isStudioInteractivityEnabled()) {
+      return value;
+    }
+    if (!z) {
+      return value;
+    }
+    const { changed, currentValue } = setControl(key, {
+      valueInCode: value,
+      schema: schema ?? getZodSchemaFromPrimitive(value, z),
+      stack: new Error().stack
+    });
+    if (changed) {
+      changedRef.current = true;
+    }
+    return currentValue;
+  }, [setControl, handles, z, env.isStudio]);
+  const updateHandles = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)(() => {
+    setHandles(() => {
+      return imperativeHandles.current;
+    });
+  }, []);
+  const updateValue = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((key, value) => {
+    imperativeHandles.current = {
+      ...imperativeHandles.current,
+      [key]: {
+        ...imperativeHandles.current[key],
+        unsavedValue: value
+      }
+    };
+    updateHandles();
+    visualControlStore.emitChange();
+  }, [updateHandles]);
+  (0,react__WEBPACK_IMPORTED_MODULE_2__.useImperativeHandle)(visualControlRef, () => {
+    return {
+      globalVisualControl: visualControl
+    };
+  }, [visualControl]);
+  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
+    visualControlStore.emitChange();
+  }, [visualControl]);
+  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
+    const callback = () => {
+      if (imperativeHandles.current) {
+        updateHandles();
+        changedRef.current = false;
+      }
+    };
+    const interval = setInterval(callback, 100);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [updateHandles]);
+  const setState = (0,react__WEBPACK_IMPORTED_MODULE_2__.useMemo)(() => {
+    return {
+      setControl,
+      updateHandles,
+      updateValue,
+      visualControl
+    };
+  }, [setControl, updateHandles, updateValue, visualControl]);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(VisualControlsTabActivatedContext.Provider, {
+    value: Object.keys(state.handles).length > 0,
+    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(VisualControlsContext.Provider, {
+      value: state,
+      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(SetVisualControlsContext.Provider, {
+        value: setState,
+        children
+      })
+    })
+  });
+};
+
+// src/api/watch-public-folder.ts
+
+var WATCH_REMOTION_STATIC_FILES = "remotion_staticFilesChanged";
+var watchPublicFolder2 = (callback) => {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
+    console.warn("The watchPublicFolder() API is only available while using the Remotion Studio.");
+    return { cancel: () => {
+      return;
+    } };
+  }
+  if (window.remotion_isReadOnlyStudio && !(0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)()) {
+    throw new Error("watchPublicFolder() is not available in read-only Studio");
+  }
+  const emitUpdate = () => {
+    callback(getStaticFiles2());
+  };
+  window.addEventListener(WATCH_REMOTION_STATIC_FILES, emitUpdate);
+  const cancel = () => {
+    return window.removeEventListener(WATCH_REMOTION_STATIC_FILES, emitUpdate);
+  };
+  return { cancel };
+};
+
+// src/api/write-static-file.ts
+var writeStaticFile2 = async ({
+  contents,
+  filePath
+}) => {
+  if (filePath.includes("\\")) {
+    return Promise.reject(new Error("File path cannot contain backslashes"));
+  }
+  const browserStudioOperations = (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)();
+  if (browserStudioOperations) {
+    return browserStudioOperations.writeStaticFile({ contents, filePath });
+  }
+  if (window.remotion_isReadOnlyStudio) {
+    throw new Error("writeStaticFile() is not available in read-only Studio");
+  }
+  const url = new URL(`${window.remotion_staticBase}/api/add-asset`, window.location.origin);
+  url.search = new URLSearchParams({
+    filePath
+  }).toString();
+  const response = await fetch(url, {
+    method: "POST",
+    body: contents
+  });
+  if (!response.ok) {
+    const jsonResponse = await response.json();
+    throw new Error(jsonResponse.error);
+  }
+};
+
+
+
+
+/***/ },
+
+/***/ 5293
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   $H: () => (/* binding */ KeybindingContextProvider),
+/* harmony export */   $q: () => (/* binding */ canUseEffectOperations),
+/* harmony export */   AF: () => (/* binding */ unsubscribeFromFileExistenceWatcher),
+/* harmony export */   AO: () => (/* binding */ getKeyboardShortcutLabel),
+/* harmony export */   B_: () => (/* binding */ takePendingSequenceNodePathMutations),
+/* harmony export */   DJ: () => (/* binding */ addStillRenderJob),
+/* harmony export */   DZ: () => (/* binding */ formatKeyboardShortcut),
+/* harmony export */   Dc: () => (/* binding */ getSourceMapFilesForSource),
+/* harmony export */   Ds: () => (/* binding */ showNotification),
+/* harmony export */   E4: () => (/* binding */ addVideoRenderJob),
+/* harmony export */   E_: () => (/* binding */ addFolder2),
+/* harmony export */   FZ: () => (/* binding */ DEFAULT_PROPS_PATH_CLASSNAME),
+/* harmony export */   Gt: () => (/* binding */ getStudioBufferStateDelayInMilliseconds),
+/* harmony export */   Gw: () => (/* binding */ useKeybinding),
+/* harmony export */   Hw: () => (/* binding */ updateAvailable),
+/* harmony export */   I4: () => (/* binding */ expandDefaultPropsEditorRef),
+/* harmony export */   IA: () => (/* binding */ DEFAULT_PROPS_PATH_ACTIVE_CLASSNAME),
+/* harmony export */   IU: () => (/* binding */ loadGoogleFontForPreview),
+/* harmony export */   Ip: () => (/* binding */ addComposition2),
+/* harmony export */   JT: () => (/* binding */ updateCompositionMetadata2),
+/* harmony export */   K8: () => (/* binding */ unwrapFolder2),
+/* harmony export */   Lr: () => (/* binding */ getStudioAskAIEnabled),
+/* harmony export */   MJ: () => (/* binding */ getMissingPackages),
+/* harmony export */   N9: () => (/* binding */ areKeyboardShortcutsDisabled),
+/* harmony export */   NJ: () => (/* binding */ renameComposition2),
+/* harmony export */   NM: () => (/* binding */ canInstallPackages),
+/* harmony export */   OB: () => (/* binding */ getStudioShowPremounting),
+/* harmony export */   OY: () => (/* binding */ removeRenderJob),
+/* harmony export */   OZ: () => (/* binding */ getKeyboardShortcutsForAction),
+/* harmony export */   Ow: () => (/* binding */ getStudioShowLayerFrameNumbers),
+/* harmony export */   P3: () => (/* binding */ getBrowserStudioOperations),
+/* harmony export */   Q7: () => (/* binding */ getStudioDefaultPremountInSeconds),
+/* harmony export */   R: () => (/* binding */ installPackages),
+/* harmony export */   R7: () => (/* binding */ getOriginalPosition),
+/* harmony export */   RI: () => (/* binding */ getPortal),
+/* harmony export */   RY: () => (/* binding */ CodingAgentIcon),
+/* harmony export */   SK: () => (/* binding */ getStudioKeyboardShortcutsEnabled),
+/* harmony export */   TL: () => (/* binding */ FinderIcon),
+/* harmony export */   W2: () => (/* binding */ getSourceMap),
+/* harmony export */   WG: () => (/* binding */ getStudioSequenceActivitySettings),
+/* harmony export */   WN: () => (/* binding */ defaultKeyboardShortcuts),
+/* harmony export */   WO: () => (/* binding */ applyVisualControlChange),
+/* harmony export */   Wn: () => (/* binding */ startCapturedPointerSession),
+/* harmony export */   Xz: () => (/* binding */ queueSequenceNodePathMutation),
+/* harmony export */   YK: () => (/* binding */ useZIndex),
+/* harmony export */   YS: () => (/* binding */ keyboardShortcutGroups),
+/* harmony export */   YT: () => (/* binding */ getBrowserStudioEffectOperations),
+/* harmony export */   Yq: () => (/* binding */ canUseKeyframeOperations),
+/* harmony export */   Ys: () => (/* binding */ defaultPropsEditorScrollableAreaRef),
+/* harmony export */   Zv: () => (/* binding */ callUpdateDefaultPropsApi),
+/* harmony export */   _9: () => (/* binding */ getStudioMaxTimelineTracks),
+/* harmony export */   _Q: () => (/* binding */ resolveFileSource),
+/* harmony export */   aD: () => (/* binding */ shortcutFromKeyboardEvent),
+/* harmony export */   as: () => (/* binding */ requestInsertedElementSelection),
+/* harmony export */   bG: () => (/* binding */ NotificationCenter),
+/* harmony export */   bh: () => (/* binding */ EditorIcon),
+/* harmony export */   c4: () => (/* binding */ deleteComposition2),
+/* harmony export */   cX: () => (/* binding */ isMac),
+/* harmony export */   cb: () => (/* binding */ HigherZIndex),
+/* harmony export */   dG: () => (/* binding */ getStudioInteractivityEnabled),
+/* harmony export */   dP: () => (/* binding */ openInFileExplorer),
+/* harmony export */   e8: () => (/* binding */ moveComposition2),
+/* harmony export */   el: () => (/* binding */ duplicateComposition2),
+/* harmony export */   eu: () => (/* binding */ clearInsertedElementSelection),
+/* harmony export */   gY: () => (/* binding */ moveFolder2),
+/* harmony export */   hb: () => (/* binding */ renameFolder2),
+/* harmony export */   iN: () => (/* binding */ BROWSER_STUDIO_OPERATIONS_READY_EVENT),
+/* harmony export */   iy: () => (/* binding */ withRequiredAuxiliaryPackages),
+/* harmony export */   jB: () => (/* binding */ getInsertedElementSelection),
+/* harmony export */   k1: () => (/* binding */ addSequenceRenderJob),
+/* harmony export */   k3: () => (/* binding */ TerminalIcon),
+/* harmony export */   k9: () => (/* binding */ AppsIcon),
+/* harmony export */   kY: () => (/* binding */ askAIKeyboardShortcutGroup),
+/* harmony export */   km: () => (/* binding */ cancelRenderJob),
+/* harmony export */   lK: () => (/* binding */ observePointerRelease),
+/* harmony export */   ll: () => (/* binding */ getKeyboardShortcutAriaKeyShortcuts),
+/* harmony export */   mu: () => (/* binding */ GOOGLE_FONTS_LIST),
+/* harmony export */   oX: () => (/* binding */ installRequiredPackages),
+/* harmony export */   p4: () => (/* binding */ startDeferredCapturedPointerSession),
+/* harmony export */   pI: () => (/* binding */ getOriginalLocationFromStack),
+/* harmony export */   pj: () => (/* binding */ isPointerSessionRelease),
+/* harmony export */   px: () => (/* binding */ callApi),
+/* harmony export */   rz: () => (/* binding */ useSyncExternalStore),
+/* harmony export */   sH: () => (/* binding */ portals),
+/* harmony export */   sV: () => (/* binding */ getSourceMutationRevision),
+/* harmony export */   tG: () => (/* binding */ getReleaseNotes),
+/* harmony export */   u: () => (/* binding */ HighestZIndexProvider),
+/* harmony export */   u$: () => (/* binding */ parseError),
+/* harmony export */   uJ: () => (/* binding */ TRANSFORMERS_PACKAGE),
+/* harmony export */   ul: () => (/* binding */ setClickLock),
+/* harmony export */   w$: () => (/* binding */ subscribeToFileExistenceWatcher),
+/* harmony export */   we: () => (/* binding */ keyboardShortcutsOverlap),
+/* harmony export */   wk: () => (/* binding */ getClickLock),
+/* harmony export */   yC: () => (/* binding */ subscribeToInsertedElementSelection),
+/* harmony export */   ym: () => (/* binding */ restartStudio2)
+/* harmony export */ });
+/* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7449);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4848);
+/* harmony import */ var _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3872);
+/* harmony import */ var remotion__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3947);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6540);
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(961);
+/* harmony import */ var _remotion_sdk__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(6916);
+/* harmony import */ var remotion_no_react__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9382);
+/* harmony import */ var _jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(5379);
+
+
+// src/icons/apps.tsx
+
+var AppsIcon = ({ color, ...props }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 640 640",
+  ...props,
+  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+    fill: color ?? _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR_LOWERCASE */ .g9,
+    d: "M144 128C135.2 128 128 135.2 128 144L128 240C128 248.8 135.2 256 144 256L240 256C248.8 256 256 248.8 256 240L256 144C256 135.2 248.8 128 240 128L144 128zM96 144C96 117.5 117.5 96 144 96L240 96C266.5 96 288 117.5 288 144L288 240C288 266.5 266.5 288 240 288L144 288C117.5 288 96 266.5 96 240L96 144zM144 384C135.2 384 128 391.2 128 400L128 496C128 504.8 135.2 512 144 512L240 512C248.8 512 256 504.8 256 496L256 400C256 391.2 248.8 384 240 384L144 384zM96 400C96 373.5 117.5 352 144 352L240 352C266.5 352 288 373.5 288 400L288 496C288 522.5 266.5 544 240 544L144 544C117.5 544 96 522.5 96 496L96 400zM496 128L400 128C391.2 128 384 135.2 384 144L384 240C384 248.8 391.2 256 400 256L496 256C504.8 256 512 248.8 512 240L512 144C512 135.2 504.8 128 496 128zM400 96L496 96C522.5 96 544 117.5 544 144L544 240C544 266.5 522.5 288 496 288L400 288C373.5 288 352 266.5 352 240L352 144C352 117.5 373.5 96 400 96zM400 384C391.2 384 384 391.2 384 400L384 496C384 504.8 391.2 512 400 512L496 512C504.8 512 512 504.8 512 496L512 400C512 391.2 504.8 384 496 384L400 384zM352 400C352 373.5 373.5 352 400 352L496 352C522.5 352 544 373.5 544 400L544 496C544 522.5 522.5 544 496 544L400 544C373.5 544 352 522.5 352 496L352 400z"
+  })
+});
+
+// src/components/CodingAgentIcon.tsx
+
+var CodingAgentIcon = ({ codingAgentId, size }) => {
+  if (codingAgentId === null) {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(AppsIcon, {
+      height: size,
+      width: size
+    });
+  }
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("img", {
+    alt: "",
+    "aria-hidden": true,
+    "data-coding-agent-icon": codingAgentId,
+    draggable: false,
+    src: `/api/app-icon/coding-agent/${codingAgentId}.png`,
+    style: { flexShrink: 0, height: size, width: size }
+  });
+};
+
+// src/icons/custom-editor.tsx
+
+var CustomEditorIcon = ({
+  size: sizeProp
+}) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
+  focusable: "false",
+  role: "img",
+  viewBox: "0 0 24 24",
+  style: {
+    width: sizeProp ?? 14,
+    height: sizeProp ?? 14,
+    flexShrink: 0
+  },
+  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+    fill: "none",
+    stroke: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR */ .Ol,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: "1.8",
+    d: "m8 8-4 4 4 4m8-8 4 4-4 4m-2-10-4 12"
+  })
+});
+
+// src/icons/editor.tsx
+
+var iconStyle = (size) => ({
+  flexShrink: 0,
+  height: size,
+  width: size
+});
+var VsCodeIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
+  viewBox: "0 0 40 40",
+  style: iconStyle(size),
+  "aria-hidden": true,
+  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+    fill: "#23A9F2",
+    fillRule: "evenodd",
+    clipRule: "evenodd",
+    d: "M26.02 34.13c.23.09.48.13.72.12.25-.01.49-.07.71-.18l5.93-2.85c.31-.15.56-.38.74-.66.18-.29.28-.62.28-.96V10.25c0-.34-.1-.67-.28-.96-.18-.28-.43-.51-.74-.66l-5.93-2.85c-.34-.16-.71-.22-1.08-.15-.36.06-.7.23-.96.5L14.05 16.48 9.11 12.73a1.2 1.2 0 0 0-1.53.07L5.99 14.24a1.2 1.2 0 0 0 0 1.77l4.29 3.92-4.29 3.91a1.2 1.2 0 0 0 0 1.77l1.59 1.44a1.2 1.2 0 0 0 1.53.07l4.94-3.75 11.36 10.36c.17.17.38.31.61.4Zm1.18-20.74-8.61 6.54 8.61 6.53V13.39Z"
+  })
+});
+var CursorIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("svg", {
+  viewBox: "0 0 40 40",
+  style: iconStyle(size),
+  "aria-hidden": true,
+  children: [
+    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("rect", {
+      x: "4",
+      y: "4",
+      width: "32",
+      height: "32",
+      rx: "7.625",
+      fill: "#050505"
+    }),
+    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+      fill: "#fff",
+      d: "m29.62 14.21-8.67-5.09a.89.89 0 0 0-.9 0l-8.67 5.09a.77.77 0 0 0-.38.66v10.26c0 .27.14.52.38.66l8.67 5.09c.28.16.62.16.9 0l8.67-5.09c.24-.14.38-.39.38-.66V14.87a.77.77 0 0 0-.38-.66Zm-.54 1.07L20.7 30.01a.11.11 0 0 1-.2-.06v-9.64c0-.19-.1-.37-.27-.47l-8.22-4.82a.11.11 0 0 1 .06-.21h16.74c.24 0 .39.27.27.47Z"
+    })
+  ]
+});
+var WindsurfIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
+  viewBox: "0 0 24 24",
+  style: iconStyle(size),
+  "aria-hidden": true,
+  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+    fill: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR */ .Ol,
+    d: "M23.55 5.07a2.18 2.18 0 0 0-2.18 2.17v4.87c0 .97-.8 1.76-1.76 1.76-.57 0-1.14-.29-1.47-.77l-4.97-7.1a2.21 2.21 0 0 0-3.96 1.22v4.89c0 .97-.8 1.76-1.77 1.76-.57 0-1.13-.29-1.47-.77L.41 5.16A.22.22 0 0 0 0 5.29v4.24c0 .22.07.43.19.6l5.47 7.82c.33.46.8.81 1.35.93a2.15 2.15 0 0 0 2.65-2.1v-4.89c0-.97.79-1.76 1.76-1.76.57 0 1.14.29 1.47.77l4.98 7.1c.41.59 1.05.94 1.81.94a2.15 2.15 0 0 0 2.15-2.16v-4.89c0-.97.79-1.76 1.76-1.76h.19a.22.22 0 0 0 .22-.22V5.29a.22.22 0 0 0-.22-.22h-.23Z"
+  })
+});
+var ZedIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
+  viewBox: "0 0 40 40",
+  style: iconStyle(size),
+  "aria-hidden": true,
+  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+    fill: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR */ .Ol,
+    fillRule: "evenodd",
+    clipRule: "evenodd",
+    d: "M8.3 7.4a.9.9 0 0 0-.9.9v19.8H5.6V8.3a2.7 2.7 0 0 1 2.7-2.7h24.11c1.2 0 1.81 1.45.96 2.3L18.52 22.76h4.18V20.9h1.8v2.31c0 .75-.6 1.35-1.35 1.35h-6.43l-3.1 3.09h14.03V16.4h1.8v11.25c0 1-.8 1.8-1.8 1.8H11.82L8.67 32.6H31.7a.9.9 0 0 0 .9-.9V11.9h1.8v19.8a2.7 2.7 0 0 1-2.7 2.7H7.59c-1.2 0-1.81-1.45-.96-2.31L21.43 17.3H17.3v1.8h-1.8v-2.25c0-.75.6-1.35 1.35-1.35h6.38l3.15-3.15H12.35V23.6h-1.8V12.35c0-1 .8-1.8 1.8-1.8h15.83l3.15-3.15H8.3Z"
+  })
+});
+var VscodiumIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
+  viewBox: "0 0 24 24",
+  style: iconStyle(size),
+  "aria-hidden": true,
+  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+    fill: "#2F80ED",
+    d: "M11.58.54a1.47 1.47 0 0 0-.44 2.03c2.43 3.76 3 6.6 2.75 9.08-1 4.75-3.18 5.72-5.09 5.72-1.86 0-1.36-3.07.03-3.96a5.3 5.3 0 0 1 2.73-.87 1.47 1.47 0 1 0 0-2.94c-.96 0-1.9.21-2.78.55.18-.85.25-1.76.02-2.74-.36-1.47-1.37-2.88-3.13-4.25a1.47 1.47 0 0 0-1.81 2.32c1.43 1.11 1.9 1.94 2.07 2.62.16.68.03 1.4-.3 2.4-.41 1.35-.9 2.56-1.1 3.71-.11.57-.12 1.19-.15 1.68-1.03-1-1.43-2.34-1.43-4.28a1.47 1.47 0 1 0-2.95 0c0 2.66.78 5.18 2.86 6.87 1.88 1.79 6.67 1.13 6.67 4.01 0 .81 1.19 1.21 2 1.21.84 0 1.89-.56 1.89-1.21 0-3.27 3.44-5.25 9.11-5.24A1.47 1.47 0 1 0 22.53 14.3c-.39 0-.77.01-1.14.03.64-1.49.92-3.13.86-4.9a1.47 1.47 0 1 0-2.95.1c.08 2.32-.01 4.39-1.74 5.48-.49.31-1.06.58-1.6.58.42-1.14.74-2.35.87-3.65.08-.83.09-1.82 0-2.59-.15-1.18-.33-2.53.12-3.55.4-.87 1.31-1.24 2.65-1.24a1.47 1.47 0 1 0 0-2.94c-1.98 0-3.48 1.04-4.34 2.3-.44-.95-.98-1.93-1.64-2.94a1.47 1.47 0 0 0-2.04-.44Z"
+  })
+});
+var WebStormIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("svg", {
+  viewBox: "0 0 24 24",
+  style: iconStyle(size),
+  "aria-hidden": true,
+  children: [
+    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("rect", {
+      width: "24",
+      height: "24",
+      rx: "3",
+      fill: "#07C3F2"
+    }),
+    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+      fill: "#050505",
+      d: "M3 3h18v18H3z"
+    }),
+    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+      fill: "#fff",
+      d: "M4.8 5.4h2.1l1.3 4.9 1.4-4.9h1.6l1.4 4.9 1.3-4.9h2.1l-2.5 8.7h-1.8l-1.3-4.8-1.4 4.8H7.3L4.8 5.4Zm10.8 7.3 1.1-1.4c.8.6 1.6 1 2.5 1 .7 0 1.2-.3 1.2-.8 0-.5-.3-.7-1.7-1.1-1.7-.4-2.8-.9-2.8-2.6 0-1.6 1.3-2.6 3-2.6 1.2 0 2.3.4 3.2 1.1l-1 1.5c-.8-.5-1.5-.8-2.2-.8-.7 0-1.1.3-1.1.7 0 .6.4.7 1.8 1.1 1.7.5 2.7 1.1 2.7 2.6 0 1.7-1.3 2.7-3.2 2.7-1.3 0-2.6-.5-3.5-1.4ZM4.7 18h8v1.3h-8V18Z"
+    })
+  ]
+});
+var SublimeTextIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("svg", {
+  viewBox: "0 0 40 40",
+  style: iconStyle(size),
+  "aria-hidden": true,
+  children: [
+    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+      fill: "#FF9800",
+      d: "M35.91 4.51c0-.37-.36-.59-.8-.48L4.8 11.44c-.44.11-.8.5-.8.87v7.58c0 .37.36.59.8.48l30.31-7.41c.44-.11.8-.5.8-.87V4.51Zm0 15.57c0-.38-.36-.59-.8-.49L4.8 27.01c-.44.1-.8.5-.8.87v7.57c0 .38.36.6.8.49l30.31-7.41c.44-.11.8-.5.8-.88v-7.57Z"
+    }),
+    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+      fill: "#F28C00",
+      d: "M4 19.84c0 .37.36.76.8.87l30.32 7.41c.44.11.8-.11.8-.48v-7.58c0-.37-.36-.76-.8-.87L4.8 11.78c-.44-.11-.8.11-.8.48v7.58Z"
+    })
+  ]
+});
+var EditorIcon = ({ editorId, size: sizeProp }) => {
+  const size = sizeProp ?? 14;
+  switch (editorId) {
+    case "vscode":
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(VsCodeIcon, {
+        size
+      });
+    case "cursor":
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(CursorIcon, {
+        size
+      });
+    case "windsurf":
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(WindsurfIcon, {
+        size
+      });
+    case "zed":
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(ZedIcon, {
+        size
+      });
+    case "vscodium":
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(VscodiumIcon, {
+        size
+      });
+    case "webstorm":
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(WebStormIcon, {
+        size
+      });
+    case "sublime-text":
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(SublimeTextIcon, {
+        size
+      });
+    case "custom":
+    case null:
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(CustomEditorIcon, {
+        size
+      });
+    default:
+      return null;
+  }
+};
+
+// src/icons/finder.tsx
+
+var FinderIcon = ({ size }) => {
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("img", {
+    alt: "",
+    "aria-hidden": true,
+    "data-file-manager-icon": "finder",
+    draggable: false,
+    src: "/api/app-icon/file-manager/finder.png",
+    style: { flexShrink: 0, height: size, width: size }
+  });
+};
+
+// src/icons/terminal.tsx
+
+var iconStyle2 = (size) => ({
+  flexShrink: 0,
+  height: size,
+  width: size
+});
+var simpleTerminalIcons = {
+  warp: {
+    color: "#01A4FF",
+    path: "M12.035 2.723h9.253A2.712 2.712 0 0 1 24 5.435v10.529a2.712 2.712 0 0 1-2.712 2.713H8.047Zm-1.681 2.6L6.766 19.677h5.598l-.399 1.6H2.712A2.712 2.712 0 0 1 0 18.565V8.036a2.712 2.712 0 0 1 2.712-2.712Z"
+  },
+  wezterm: {
+    color: "#4E49EE",
+    path: "M3.27 8.524c0-.623.62-1.007 2.123-1.007l-.5 2.757c-.931-.623-1.624-1.199-1.624-1.75zm4.008 6.807c0 .647-.644 1.079-2.123 1.15l.524-2.924c.931.624 1.6 1.175 1.6 1.774zm-2.625 5.992.454-2.708c3.603-.336 5.01-1.798 5.01-3.404 0-1.653-2.004-2.948-3.841-4.074l.668-3.548c.764.072 1.67.216 2.744.432l.31-2.469c-.81-.12-1.575-.168-2.29-.216L8.257 2.7l-2.363-.024-.453 2.684C1.838 5.648.43 7.158.43 8.764c0 1.63 2.004 2.876 3.841 3.954l-.668 3.716c-.859-.048-1.908-.192-3.125-.408L0 18.495c1.026.12 1.98.192 2.84.216l-.525 2.588zm15.553-1.894h2.673c.334-2.804.81-8.46 1.121-14.86h-2.553c-.071 1.51-.334 10.498-.43 11.241h-.071c-.644-2.42-1.169-4.386-1.813-6.782h-1.456c-.62 2.396-1.05 4.194-1.694 6.782h-.096c-.071-.743-.477-9.73-.525-11.24h-2.648c.31 6.399.763 12.055 1.097 14.86h2.625l1.838-7.12z"
+  },
+  alacritty: {
+    color: "#F46D01",
+    path: "m10.065 0-8.57 21.269h3.595l6.91-16.244 6.91 16.244h3.594l-8.57-21.269zm1.935 9.935c-.76666 1.8547-1.5334 3.7094-2.298 5.565 1.475 4.54 1.475 4.54 2.298 8.5.823-3.96.823-3.96 2.297-8.5-.76637-1.8547-1.5315-3.7099-2.297-5.565z"
+  },
+  "gnome-terminal": {
+    color: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR */ .Ol,
+    path: "M1.846 0A1.841 1.841 0 000 1.846v18.463c0 1.022.823 1.845 1.846 1.845h20.308A1.841 1.841 0 0024 20.31V1.846A1.841 1.841 0 0022.154 0H1.846zm0 .924h20.308c.512 0 .922.41.922.922v18.463c0 .511-.41.921-.922.921H1.846a.919.919 0 01-.922-.921V1.846c0-.512.41-.922.922-.922zm0 .922v18.463h20.308V1.846H1.846zm1.845 2.14l3.235 1.758v.836L3.69 8.477V7.385l2.243-1.207v-.033L3.69 5.076v-1.09zM7.846 9.23h3.693v.924H7.846V9.23zM0 21.736v.418C0 23.177.823 24 1.846 24h20.308A1.841 1.841 0 0024 22.154v-.418a2.334 2.334 0 01-1.846.918H1.846A2.334 2.334 0 010 21.736Z"
+  }
+};
+var TerminalIcon = ({ terminalId, size }) => {
+  const hasArtwork = terminalId === "terminal" || terminalId === "iterm2" || terminalId === "ghostty" || terminalId === "windows-terminal";
+  if (hasArtwork) {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("img", {
+      alt: "",
+      "aria-hidden": true,
+      "data-terminal-icon": terminalId,
+      draggable: false,
+      src: `/api/app-icon/terminal/${terminalId}.png`,
+      style: iconStyle2(size)
+    });
+  }
+  const icon = simpleTerminalIcons[terminalId];
+  if (!icon) {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(AppsIcon, {
+      "aria-hidden": true,
+      "data-terminal-icon": terminalId,
+      height: size,
+      width: size
+    });
+  }
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
+    "aria-hidden": true,
+    "data-terminal-icon": terminalId,
+    style: iconStyle2(size),
+    viewBox: "0 0 24 24",
+    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
+      d: icon.path,
+      fill: icon.color
+    })
+  });
+};
+
+// src/components/call-api.ts
+
+
+// src/helpers/enqueue-studio-source-mutation.ts
+
+
+// src/api/install-package.ts
+
+
+// src/helpers/browser-studio-operations.ts
+
+var queuedOperations = new WeakMap;
+var withMutationQueue = (operations) => {
+  const existing = queuedOperations.get(operations);
+  if (existing) {
+    return existing;
+  }
+  const methods = new Map;
+  const wrapped = new Proxy(operations, {
+    get(target, property, receiver) {
+      const value = Reflect.get(target, property, receiver);
+      if (property === "effects" || property === "keyframes") {
+        return value ? withMutationQueue(value) : value;
+      }
+      if (typeof property !== "string" || typeof value !== "function") {
+        return value;
+      }
+      const cached = methods.get(property);
+      if (cached?.original === value) {
+        return cached.queued;
+      }
+      const name = property === "deleteEffects" ? "deleteEffect" : property === "duplicateEffects" ? "duplicateEffect" : property;
+      const endpoint = `/api/${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
+      const queued = _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__/* .studioOperations */ .bx[endpoint]?.mutatesSource ? (...args) => enqueueStudioSourceMutation(endpoint, args[0], () => value.apply(target, args)) : value.bind(target);
+      methods.set(property, { original: value, queued });
+      return queued;
+    }
+  });
+  queuedOperations.set(operations, wrapped);
+  return wrapped;
+};
+var BROWSER_STUDIO_OPERATIONS_READY_EVENT = "remotion-browser-studio-operations-ready";
+var getBrowserStudioOperations = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.remotion_browserStudio ? withMutationQueue(window.remotion_browserStudio) : null;
+};
+var getBrowserStudioKeyframeOperations = () => getBrowserStudioOperations()?.keyframes ?? null;
+var getBrowserStudioEffectOperations = () => getBrowserStudioOperations()?.effects ?? null;
+var canUseKeyframeOperations = () => !window.remotion_isReadOnlyStudio || getBrowserStudioKeyframeOperations() !== null;
+var canUseEffectOperations = () => !window.remotion_isReadOnlyStudio || getBrowserStudioEffectOperations() !== null;
+var canInstallPackages = () => {
+  const browserStudioOperations = getBrowserStudioOperations();
+  if (browserStudioOperations !== null) {
+    return true;
+  }
+  return !window.remotion_isReadOnlyStudio;
+};
+
+// src/helpers/optional-package-dependencies.ts
+
+var TRANSFORMERS_PACKAGE = "@huggingface/transformers";
+var packagesRequiringTransformers = new Set([
+  "@remotion/whisper-webgpu",
+  "@remotion/video-matting"
+]);
+var withRequiredAuxiliaryPackages = (dependencies) => {
+  if (!dependencies.some((dependency) => packagesRequiringTransformers.has(dependency.name)) || dependencies.some((dependency) => dependency.name === TRANSFORMERS_PACKAGE)) {
+    return [...dependencies];
+  }
+  const transformers = _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__/* .extraPackages */ .IJ.find((pkg) => pkg.name === TRANSFORMERS_PACKAGE);
+  if (!transformers) {
+    throw new Error(`No recommended version found for ${TRANSFORMERS_PACKAGE}`);
+  }
+  return [
+    ...dependencies,
+    { name: transformers.name, version: transformers.version }
+  ];
+};
+
+// src/api/install-package.ts
+var installPackages = async (dependencies) => {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_3__/* .getRemotionEnvironment */ .P1)().isStudio) {
+    throw new Error("installPackages() is only available in the Studio");
+  }
+  const dependenciesWithAuxiliaryPackages = withRequiredAuxiliaryPackages(dependencies);
+  const browserStudioOperations = getBrowserStudioOperations();
+  if (browserStudioOperations !== null) {
+    const response = await browserStudioOperations.packageInstallation.installPackages({
+      dependencies: dependenciesWithAuxiliaryPackages
+    });
+    if (!response.success) {
+      const error = new Error(response.reason);
+      error.stack = response.stack;
+      throw error;
+    }
+    return {};
+  }
+  if (window.remotion_isReadOnlyStudio) {
+    throw new Error("installPackages() is not available in Read-Only Studio");
+  }
+  return callApi("/api/install-package", {
+    dependencies: dependenciesWithAuxiliaryPackages
+  });
+};
+
+// src/components/Notifications/NotificationCenter.tsx
+
+
+
+// src/state/z-index.tsx
+
+
+// src/helpers/pointer-session.ts
+
+var {
+  isPointerSessionRelease,
+  observePointerRelease,
+  startCapturedPointerSession,
+  startDeferredCapturedPointerSession
+} = _remotion_sdk__WEBPACK_IMPORTED_MODULE_6__/* .CanvasInternals */ .h8;
+
+// src/helpers/use-keybinding.ts
+
+
+// src/helpers/is-mac.ts
+var isMac = typeof window !== "undefined" && window.navigator.platform.startsWith("Mac");
+
+// src/helpers/studio-runtime-config.ts
+
+var DEFAULT_BUFFER_STATE_DELAY_IN_MILLISECONDS = 300;
+var defaultStudioRuntimeConfig = {
+  preservePitchOnPlayback: true,
+  showLayerFrameNumbers: false,
+  showPremounting: null,
+  defaultPremountInSeconds: null,
+  askAIEnabled: false,
+  sequenceActivityLimit: null,
+  bufferStateDelayInMilliseconds: null,
+  defaultCodingAgent: null,
+  defaultEditor: null,
+  interactivityEnabled: true,
+  keyboardShortcutsEnabled: true,
+  maxTimelineTracks: null,
+  publicLicenseKey: null,
+  canvasTabsEnabled: true,
+  configFileStudioSettings: null
+};
+var getStudioRuntimeConfig = () => {
+  if (typeof window === "undefined") {
+    return defaultStudioRuntimeConfig;
+  }
+  return window.remotion_studioConfig ?? defaultStudioRuntimeConfig;
+};
+var getStudioAskAIEnabled = () => {
+  return getStudioRuntimeConfig().askAIEnabled;
+};
+var getStudioInteractivityEnabled = () => {
+  return getStudioRuntimeConfig().interactivityEnabled;
+};
+var getStudioKeyboardShortcutsEnabled = () => {
+  return getStudioRuntimeConfig().keyboardShortcutsEnabled;
+};
+var getStudioKeyboardShortcuts = () => {
+  return getStudioRuntimeConfig().keyboardShortcuts ?? null;
+};
+var getStudioMaxTimelineTracks = () => {
+  return getStudioRuntimeConfig().maxTimelineTracks;
+};
+var getStudioBufferStateDelayInMilliseconds = () => {
+  return getStudioRuntimeConfig().bufferStateDelayInMilliseconds ?? DEFAULT_BUFFER_STATE_DELAY_IN_MILLISECONDS;
+};
+var getStudioDefaultPremountInSeconds = () => {
+  return getStudioRuntimeConfig().defaultPremountInSeconds ?? remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.DEFAULT_STUDIO_PREMOUNT_IN_SECONDS;
+};
+var getStudioShowPremounting = () => {
+  return getStudioRuntimeConfig().showPremounting ?? false;
+};
+var getStudioShowLayerFrameNumbers = () => {
+  return getStudioRuntimeConfig().showLayerFrameNumbers;
+};
+var getStudioSequenceActivitySettings = () => {
+  const config = getStudioRuntimeConfig();
+  return {
+    limit: config.sequenceActivityLimit ?? remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.DEFAULT_SEQUENCE_ACTIVITY_LIMIT
+  };
+};
+
+// src/components/keyboard-shortcuts.ts
+var shortcut = (action, actionId) => ({ action, actionId });
+var fixedShortcut = (action, fixedChords, fixedReason) => ({ action, actionId: null, fixedChords, fixedReason });
+var defaultKeyboardShortcuts = {
+  playPause: [{ key: "Space" }],
+  toggleMute: [{ key: "m", shift: false }],
+  toggleLoop: [{ key: "l", shift: true }],
+  jumpToBeginning: [{ key: "a" }],
+  jumpToEnd: [{ key: "e" }],
+  reversePlayback: [{ key: "j" }],
+  pausePlayback: [{ key: "k" }],
+  playForward: [{ key: "l", shift: false }],
+  goToFrame: [{ key: "g" }],
+  pauseAndReturnToPlaybackStart: [{ key: "Enter" }],
+  toggleLeftSidebar: [{ key: "b", commandOrControl: true }],
+  toggleRightSidebar: [{ key: "j", commandOrControl: true }],
+  toggleBothSidebars: [{ key: "g", commandOrControl: true }],
+  enterFullscreen: [{ key: "f" }],
+  toggleSnapping: [{ key: "m", shift: true }],
+  toggleOutlines: [{ key: "o", shift: true }],
+  toggleRulersAndGuides: [{ key: "r", shift: true }],
+  togglePixelGrid: [{ key: "p", shift: true }],
+  previousComposition: [{ key: "PageUp" }],
+  nextComposition: [{ key: "PageDown" }],
+  newComposition: [{ key: "n" }],
+  showKeyboardShortcuts: [{ key: "?", shift: true }],
+  quickSwitcher: [{ key: "k", commandOrControl: true }],
+  render: [{ key: "r", shift: false }],
+  toggleCheckerboard: [{ key: "t" }],
+  setInPoint: [{ key: "i" }],
+  setOutPoint: [{ key: "o", shift: false }],
+  clearInOutPoints: [{ key: "x" }],
+  zoomIn: [{ key: "+", shift: true }, { key: "+" }],
+  zoomOut: [{ key: "-" }],
+  resetZoom: [{ key: "0" }],
+  undo: [{ key: "z", commandOrControl: true, shift: false }],
+  redo: [
+    ...isMac ? [] : [{ key: "y", commandOrControl: true }],
+    { key: "z", commandOrControl: true, shift: true }
+  ],
+  selectAllSequenceRows: [{ key: "a", commandOrControl: true }],
+  selectTranslateProp: [{ key: "p", shift: false }],
+  selectOpacityProp: [{ key: "t" }],
+  selectRotateProp: [{ key: "r", shift: false }],
+  selectScaleProp: [{ key: "s" }],
+  selectVolumeProp: [{ key: "v" }],
+  duplicateSequences: [{ key: "d", commandOrControl: true, shift: false }],
+  splitSequences: [{ key: "d", commandOrControl: true, shift: true }],
+  copyEffectsAndValues: [{ key: "c", commandOrControl: true }],
+  cutEffects: [{ key: "x", commandOrControl: true }],
+  deleteSelection: [{ key: "Backspace" }, { key: "Delete" }],
+  askAI: [{ key: "i", commandOrControl: true }],
+  pickColor: [{ key: "c", shift: true }]
+};
+var keyboardShortcutGroups = [
+  {
+    name: "Playback",
+    shortcuts: [
+      fixedShortcut("1 second back", [["Shift", "←"]], "Context-sensitive timeline control"),
+      fixedShortcut("Previous frame", [["←"]], "Context-sensitive timeline control"),
+      shortcut("Play / Pause", "playPause"),
+      shortcut("Mute / Unmute", "toggleMute"),
+      shortcut("Loop", "toggleLoop"),
+      fixedShortcut("Next frame", [["→"]], "Context-sensitive timeline control"),
+      fixedShortcut("1 second forward", [["Shift", "→"]], "Context-sensitive timeline control"),
+      shortcut("Jump to beginning", "jumpToBeginning"),
+      shortcut("Jump to end", "jumpToEnd"),
+      shortcut("Reverse playback", "reversePlayback"),
+      shortcut("Pause", "pausePlayback"),
+      shortcut("Play / Speed up", "playForward"),
+      shortcut("Go to frame", "goToFrame"),
+      shortcut("Pause & return to playback start", "pauseAndReturnToPlaybackStart")
+    ]
+  },
+  {
+    name: "Sidebar",
+    shortcuts: [
+      shortcut("Toggle left sidebar", "toggleLeftSidebar"),
+      shortcut("Toggle right sidebar", "toggleRightSidebar"),
+      shortcut("Toggle both sidebars", "toggleBothSidebars")
+    ]
+  },
+  {
+    name: "View",
+    shortcuts: [
+      shortcut("Enter fullscreen", "enterFullscreen"),
+      fixedShortcut("Exit fullscreen", [["Esc"]], "Handled by the browser"),
+      shortcut("Enable snapping", "toggleSnapping"),
+      shortcut("Outlines", "toggleOutlines"),
+      shortcut("Rulers and guides", "toggleRulersAndGuides"),
+      shortcut("Pixel grid", "togglePixelGrid")
+    ]
+  },
+  {
+    name: "Navigation",
+    shortcuts: [
+      shortcut("Previous composition", "previousComposition"),
+      shortcut("Next composition", "nextComposition"),
+      shortcut("New composition", "newComposition"),
+      shortcut("Render, unless a sequence or prop is selected", "render"),
+      shortcut("Checkerboard, unless a sequence or prop is selected", "toggleCheckerboard"),
+      shortcut("Show keyboard shortcuts", "showKeyboardShortcuts"),
+      shortcut("Quick Switcher", "quickSwitcher")
+    ]
+  },
+  {
+    name: "Playback range",
+    shortcuts: [
+      shortcut("Set In Point", "setInPoint"),
+      shortcut("Set Out Point", "setOutPoint"),
+      shortcut("Clear In/Out Points", "clearInOutPoints")
+    ]
+  },
+  {
+    name: "Zoom",
+    shortcuts: [
+      shortcut("Zoom in", "zoomIn"),
+      shortcut("Zoom out", "zoomOut"),
+      shortcut("Reset zoom", "resetZoom")
+    ]
+  },
+  {
+    name: "Tools",
+    shortcuts: [shortcut("Color Picker", "pickColor")]
+  },
+  {
+    name: "Props Editor",
+    shortcuts: [shortcut("Undo", "undo"), shortcut("Redo", "redo")]
+  },
+  {
+    name: "Interactivity",
+    shortcuts: [
+      fixedShortcut("Select range / axis lock drag", [["Shift"]], "Gesture modifier"),
+      fixedShortcut("Toggle selection", [[isMac ? "⌘" : "Ctrl"]], "Gesture modifier"),
+      shortcut("Select sequence rows", "selectAllSequenceRows"),
+      shortcut("Select translate prop", "selectTranslateProp"),
+      shortcut("Select opacity prop", "selectOpacityProp"),
+      shortcut("Select rotate prop", "selectRotateProp"),
+      shortcut("Select scale prop", "selectScaleProp"),
+      shortcut("Select volume prop", "selectVolumeProp"),
+      shortcut("Duplicate sequences", "duplicateSequences"),
+      shortcut("Split sequences at playhead", "splitSequences"),
+      shortcut("Copy effects / values", "copyEffectsAndValues"),
+      shortcut("Cut effects", "cutEffects"),
+      fixedShortcut("Paste effects / values", [[isMac ? "⌘" : "Ctrl", "V"]], "Handled by the browser clipboard event"),
+      shortcut("Delete / reset selection", "deleteSelection")
+    ]
+  }
+];
+var askAIKeyboardShortcutGroup = {
+  name: "AI",
+  shortcuts: [shortcut("Ask AI", "askAI")]
+};
+var getKeyboardShortcutsForAction = (action, configured = getStudioKeyboardShortcuts()) => {
+  if (configured !== null && Object.prototype.hasOwnProperty.call(configured, action)) {
+    const value = configured[action];
+    if (value === null) {
+      return [];
+    }
+    return Array.isArray(value) ? value : [
+      value
+    ];
+  }
+  return defaultKeyboardShortcuts[action];
+};
+var normalizeKey = (key) => key === "Space" ? " " : key;
+var keyboardEventMatchesShortcut = ({
+  event,
+  shortcut: value
+}) => {
+  const commandOrControl = isMac ? event.metaKey : event.ctrlKey;
+  return event.key.toLowerCase() === normalizeKey(value.key).toLowerCase() && commandOrControl === (value.commandOrControl ?? false) && (isMac ? !event.ctrlKey : !event.metaKey) && (value.shift === undefined || event.shiftKey === value.shift) && (value.alt === undefined || event.altKey === value.alt);
+};
+var keyboardShortcutsOverlap = (first, second) => first.key.toLowerCase() === second.key.toLowerCase() && (first.commandOrControl ?? false) === (second.commandOrControl ?? false) && (first.shift === undefined || second.shift === undefined || first.shift === second.shift) && (first.alt === undefined || second.alt === undefined || first.alt === second.alt);
+var keyboardEventMatchesAction = (event, action) => getKeyboardShortcutsForAction(action).some((value) => keyboardEventMatchesShortcut({ event, shortcut: value }));
+var displayKey = (keyboardKey) => {
+  if (keyboardKey === "ArrowLeft")
+    return "←";
+  if (keyboardKey === "ArrowRight")
+    return "→";
+  if (keyboardKey === "Delete")
+    return "Del";
+  if (keyboardKey === "Backspace")
+    return "⌫";
+  if (keyboardKey === "Escape")
+    return "Esc";
+  return keyboardKey.length === 1 ? keyboardKey.toUpperCase() : keyboardKey;
+};
+var formatKeyboardShortcut = (value) => [
+  ...value.commandOrControl ? [isMac ? "⌘" : "Ctrl"] : [],
+  ...value.alt ? [isMac ? "Option" : "Alt"] : [],
+  ...value.shift && !["+", "?"].includes(value.key) ? ["Shift"] : [],
+  displayKey(value.key)
+];
+var formatKeyboardShortcutForAria = (value) => [
+  ...value.commandOrControl ? [isMac ? "Meta" : "Control"] : [],
+  ...value.alt ? ["Alt"] : [],
+  ...value.shift ? ["Shift"] : [],
+  value.key
+].join("+");
+var getKeyboardShortcutLabel = (action) => getKeyboardShortcutsForAction(action).map((value) => formatKeyboardShortcut(value).join("+")).join(" / ");
+var getKeyboardShortcutAriaKeyShortcuts = (action) => getKeyboardShortcutsForAction(action).map(formatKeyboardShortcutForAria).join(" ");
+var shortcutFromKeyboardEvent = (event) => {
+  if (["Alt", "Control", "Meta", "Shift"].includes(event.key)) {
+    return null;
+  }
+  if (isMac ? event.ctrlKey : event.metaKey) {
+    return null;
+  }
+  return {
+    key: event.key === " " ? "Space" : event.key,
+    ...(isMac ? event.metaKey : event.ctrlKey) ? { commandOrControl: true } : {},
+    shift: event.shiftKey,
+    alt: event.altKey
+  };
+};
+
+// src/state/keybindings.tsx
+
+
+var KeybindingContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.createContext)({
+  registerKeybinding: () => {
+    throw new Error("Has no keybinding context");
+  },
+  unregisterKeybinding: () => {
+    return;
+  },
+  unregisterPane: () => {
+    return;
+  }
+});
+var KeybindingContextProvider = ({ children }) => {
+  const registered = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)([]);
+  const registerKeybinding = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((binding) => {
+    registered.current = [...registered.current, binding];
+    window.addEventListener(binding.event, binding.callback);
+  }, []);
+  const unregisterKeybinding = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((binding) => {
+    registered.current = registered.current.filter((r) => {
+      if (r.id === binding.id) {
+        window.removeEventListener(binding.event, binding.callback);
+        return false;
+      }
+      return true;
+    });
+  }, []);
+  const unregisterPane = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((paneId) => {
+    const matchedKeybindings = registered.current.filter((r) => r.registeredFromPane === paneId);
+    for (const matched of matchedKeybindings) {
+      unregisterKeybinding(matched);
+    }
+  }, [unregisterKeybinding]);
+  const value = (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => {
+    return {
+      registerKeybinding,
+      unregisterKeybinding,
+      unregisterPane
+    };
+  }, [registerKeybinding, unregisterKeybinding, unregisterPane]);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(KeybindingContext.Provider, {
+    value,
+    children
+  });
+};
+
+// src/helpers/use-keybinding.ts
+if (!getStudioKeyboardShortcutsEnabled()) {
+  console.warn("Keyboard shortcuts disabled either due to: a) --disable-keyboard-shortcuts being passed b) Config.setKeyboardShortcutsEnabled(false) being set or c) a Remotion version mismatch.");
+}
+var areKeyboardShortcutsDisabled = () => {
+  return !getStudioKeyboardShortcutsEnabled();
+};
+var useKeybinding = () => {
+  const [paneId] = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)(() => String(Math.random()));
+  const context = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(KeybindingContext);
+  const { isHighestContext } = useZIndex();
+  const registerKeybinding = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((options) => {
+    if (!isHighestContext && !options.keepRegisteredWhenNotHighestContext) {
+      return {
+        unregister: () => {
+          return;
+        }
+      };
+    }
+    const listener = (e) => {
+      if (!e.key) {
+        return;
+      }
+      const matches = options.action ? keyboardEventMatchesAction(e, options.action) : e.key.toLowerCase() === options.key.toLowerCase() && options.commandCtrlKey === (isMac ? e.metaKey : e.ctrlKey);
+      if (matches && getStudioKeyboardShortcutsEnabled()) {
+        if (!options.triggerIfInputFieldFocused) {
+          const { activeElement } = document;
+          if (activeElement instanceof HTMLInputElement) {
+            return;
+          }
+          if (activeElement instanceof HTMLTextAreaElement) {
+            return;
+          }
+        }
+        options.callback(e);
+        if (options.preventDefault) {
+          e.preventDefault();
+        }
+      }
+    };
+    const toRegister = {
+      registeredFromPane: paneId,
+      event: options.event,
+      key: options.action ?? options.key,
+      callback: listener,
+      id: String(Math.random())
+    };
+    context.registerKeybinding(toRegister);
+    return {
+      unregister: () => context.unregisterKeybinding(toRegister)
+    };
+  }, [context, isHighestContext, paneId]);
+  (0,react__WEBPACK_IMPORTED_MODULE_4__.useEffect)(() => {
+    return () => {
+      context.unregisterPane(paneId);
+    };
+  }, [context, paneId]);
+  return (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => ({ registerKeybinding, isHighestContext }), [registerKeybinding, isHighestContext]);
+};
+
+// src/state/highest-z-index.tsx
+
+
+var HighestZIndexContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.createContext)({
+  highestIndex: 0,
+  registerZIndex: () => {
+    return;
+  },
+  unregisterZIndex: () => {
+    return;
+  }
+});
+var HighestZIndexProvider = ({ children }) => {
+  const [zIndexes, setZIndexes] = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)([]);
+  const registerZIndex = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((newIndex) => {
+    setZIndexes((prev) => [...prev, newIndex]);
+  }, []);
+  const unregisterZIndex = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((newIndex) => {
+    setZIndexes((prev) => {
+      const index = prev.indexOf(newIndex);
+      if (index === -1) {
+        throw new Error("did not find z-index " + newIndex);
+      }
+      return prev.filter((_n, i) => i !== index);
+    });
+  }, []);
+  const highestIndex = Math.max(...zIndexes);
+  const value = (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => {
+    return {
+      highestIndex,
+      registerZIndex,
+      unregisterZIndex
+    };
+  }, [registerZIndex, unregisterZIndex, highestIndex]);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(HighestZIndexContext.Provider, {
+    value,
+    children
+  });
+};
+
+// src/state/input-dragger-click-lock.ts
+var clickLock = false;
+var getClickLock = () => clickLock;
+var setClickLock = (lock) => {
+  clickLock = lock;
+};
+
+// src/state/z-index.tsx
+
+var ZIndexContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.createContext)({
+  currentIndex: 0
+});
+var margin = {
+  margin: "auto"
+};
+var EscapeHook = ({ onEscape }) => {
+  const keybindings = useKeybinding();
+  (0,react__WEBPACK_IMPORTED_MODULE_4__.useLayoutEffect)(() => {
+    const escape = keybindings.registerKeybinding({
+      event: "keydown",
+      key: "Escape",
+      callback: onEscape,
+      commandCtrlKey: false,
+      preventDefault: true,
+      triggerIfInputFieldFocused: true,
+      keepRegisteredWhenNotHighestContext: false
+    });
+    return () => {
+      escape.unregister();
+    };
+  }, [keybindings, onEscape]);
+  return null;
+};
+var HigherZIndex = ({
+  children,
+  onEscape,
+  onOutsideClick,
+  disabled,
+  outsideClickButton = "any"
+}) => {
+  const context = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(ZIndexContext);
+  const highestContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(HighestZIndexContext);
+  const { registerZIndex, unregisterZIndex } = highestContext;
+  const containerRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(null);
+  const highestIndexRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(highestContext.highestIndex);
+  const onOutsideClickRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(onOutsideClick);
+  const outsideClickButtonRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(outsideClickButton);
+  const currentIndex = disabled ? context.currentIndex : context.currentIndex + 1;
+  (0,react__WEBPACK_IMPORTED_MODULE_4__.useLayoutEffect)(() => {
+    highestIndexRef.current = highestContext.highestIndex;
+    onOutsideClickRef.current = onOutsideClick;
+    outsideClickButtonRef.current = outsideClickButton;
+  }, [highestContext.highestIndex, onOutsideClick, outsideClickButton]);
+  (0,react__WEBPACK_IMPORTED_MODULE_4__.useLayoutEffect)(() => {
+    if (disabled) {
+      return;
+    }
+    registerZIndex(currentIndex);
+    return () => unregisterZIndex(currentIndex);
+  }, [currentIndex, disabled, registerZIndex, unregisterZIndex]);
+  (0,react__WEBPACK_IMPORTED_MODULE_4__.useLayoutEffect)(() => {
+    if (disabled) {
+      return;
+    }
+    let endPointerSession = null;
+    const listener = (downEvent) => {
+      if (outsideClickButtonRef.current === "primary" && downEvent.button !== 0) {
+        return;
+      }
+      const outsideClick = !containerRef.current?.contains(downEvent.target);
+      if (!outsideClick) {
+        return;
+      }
+      if (highestIndexRef.current !== currentIndex) {
+        return;
+      }
+      endPointerSession?.();
+      endPointerSession = observePointerRelease({
+        event: downEvent,
+        onEnd: (reason, upEvent) => {
+          endPointerSession = null;
+          if (isPointerSessionRelease(reason, upEvent) && !getClickLock()) {
+            const target = document.elementFromPoint(upEvent.clientX, upEvent.clientY) ?? upEvent.target;
+            if (document.contains(target)) {
+              upEvent.stopPropagation();
+              onOutsideClickRef.current(target);
+            }
+          }
+        }
+      });
+    };
+    window.addEventListener("pointerdown", listener, true);
+    return () => {
+      endPointerSession?.();
+      endPointerSession = null;
+      return window.removeEventListener("pointerdown", listener, true);
+    };
+  }, [currentIndex, disabled]);
+  const value = (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => {
+    return {
+      currentIndex
+    };
+  }, [currentIndex]);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)(ZIndexContext.Provider, {
+    value,
+    children: [
+      disabled ? null : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(EscapeHook, {
+        onEscape
+      }),
+      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+        ref: containerRef,
+        style: margin,
+        children
+      })
+    ]
+  });
+};
+var useZIndex = () => {
+  const context = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(ZIndexContext);
+  const highestContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(HighestZIndexContext);
+  const isHighestContext = highestContext.highestIndex === context.currentIndex;
+  return (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => ({
+    currentZIndex: context.currentIndex,
+    highestZIndex: highestContext.highestIndex,
+    isHighestContext,
+    tabIndex: isHighestContext ? 0 : -1
+  }), [context.currentIndex, highestContext.highestIndex, isHighestContext]);
+};
+
+// src/components/Menu/portals.ts
+var portalIds = [
+  "menuportal-0",
+  "menuportal-1",
+  "menuportal-2",
+  "menuportal-3",
+  "menuportal-4",
+  "menuportal-5"
+];
+var portals = typeof document === "undefined" ? [] : portalIds.map((id) => document.getElementById(id));
+var getPortal = (i) => {
+  const portal = portals[i];
+  if (!portal) {
+    throw new Error(`Expected menu portal ${i} to exist`);
+  }
+  return portal;
+};
+
+// src/components/Notifications/Notification.tsx
+
+
+var notification = {
+  backgroundColor: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .NOTIFICATION_BACKGROUND */ .jc,
+  color: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .WHITE_HEX */ .C4,
+  fontFamily: "Arial, Helvetica, sans-serif",
+  display: "inline-flex",
+  padding: "6px 14px",
+  borderRadius: 6,
+  fontSize: 13,
+  border: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .NOTIFICATION_BORDER */ .$t,
+  boxShadow: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .NOTIFICATION_SHADOW */ .no,
+  marginTop: 3,
+  marginBottom: 3,
+  alignItems: "center"
+};
+var Notification = ({ children, id, duration, created, onRemove }) => {
+  (0,react__WEBPACK_IMPORTED_MODULE_4__.useEffect)(() => {
+    if (duration === null) {
+      return;
+    }
+    const timeout = setTimeout(() => {
+      onRemove(id);
+    }, duration - (Date.now() - created));
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [created, duration, id, onRemove]);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+    className: "css-reset",
+    style: notification,
+    children
+  });
+};
+
+// src/components/Notifications/NotificationCenter.tsx
+
+var container = {
+  position: "absolute",
+  justifyContent: "center",
+  alignItems: "center",
+  display: "flex",
+  width: "100%",
+  flexDirection: "column",
+  paddingTop: 40,
+  pointerEvents: "none",
+  backgroundColor: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .TRANSPARENT */ .nj
+};
+var notificationCenter = (0,react__WEBPACK_IMPORTED_MODULE_4__.createRef)();
+var showNotification = (content, durationInMs) => {
+  return notificationCenter.current.addNotification({
+    content,
+    duration: durationInMs,
+    created: Date.now(),
+    id: String(Math.random()).replace("0.", "")
+  });
+};
+var NotificationCenter = () => {
+  const [notifications, setNotifications] = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)([]);
+  const { currentZIndex } = useZIndex();
+  const onRemove = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((id) => {
+    setNotifications((not) => {
+      return not.filter((n) => n.id !== id);
+    });
+  }, []);
+  const addNotification = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((notification) => {
+    setNotifications((previousNotifications) => {
+      return [...previousNotifications, notification];
+    });
+    return {
+      dismiss: () => {
+        setNotifications((oldNotifications) => {
+          return oldNotifications.filter((notificationToFilter) => notificationToFilter.id !== notification.id);
+        });
+      },
+      replaceContent: (newContent, durationInMs) => {
+        setNotifications((oldNotifications) => {
+          return oldNotifications.map((notificationToMap) => {
+            if (notificationToMap.id === notification.id) {
+              return {
+                ...notificationToMap,
+                duration: durationInMs,
+                content: newContent,
+                created: Date.now()
+              };
+            }
+            return notificationToMap;
+          });
+        });
+      }
+    };
+  }, []);
+  (0,react__WEBPACK_IMPORTED_MODULE_4__.useImperativeHandle)(notificationCenter, () => {
+    return {
+      addNotification
+    };
+  }, [addNotification]);
+  return react_dom__WEBPACK_IMPORTED_MODULE_5__.createPortal(/* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+    style: container,
+    children: notifications.map((n) => {
+      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(Notification, {
+        created: n.created,
+        duration: n.duration,
+        id: n.id,
+        onRemove,
+        children: n.content
+      }, n.id);
+    })
+  }), getPortal(currentZIndex + 1));
+};
+
+// src/helpers/install-required-package.ts
+var installQueue = Promise.resolve();
+var uniqueDependencies = (dependencies) => Array.from(new Map(dependencies.map((dependency) => [dependency.name, dependency])).values());
+var getMissingPackages = (dependencies) => {
+  const installedPackages = window.remotion_installedPackages ?? [];
+  return uniqueDependencies(dependencies).filter((dependency) => dependency.version !== null || !installedPackages.includes(dependency.name));
+};
+var addInstalledPackages = (dependencies) => {
+  const installedPackages = window.remotion_installedPackages ?? [];
+  window.remotion_installedPackages = Array.from(new Set([
+    ...installedPackages,
+    ...uniqueDependencies(dependencies).map((dependency) => dependency.name)
+  ]));
+};
+var formatPackageList = (dependencies) => dependencies.length === 1 ? dependencies[0].name : `${dependencies.length} packages`;
+var installRequiredPackages = async (dependencies) => {
+  const runInstall = async () => {
+    const missingPackages = getMissingPackages(dependencies);
+    if (missingPackages.length === 0)
+      return;
+    showNotification(`Installing ${formatPackageList(missingPackages)}...`, 3000);
+    await installPackages(missingPackages);
+    addInstalledPackages(missingPackages);
+    showNotification(`Installed ${formatPackageList(missingPackages)}`, 3000);
+  };
+  const queuedInstall = installQueue.then(runInstall, runInstall);
+  installQueue = queuedInstall.catch(() => {
+    return;
+  });
+  await queuedInstall;
+};
+
+// src/components/Timeline/google-fonts-list.ts
+var GOOGLE_FONTS_LIST = [
+  {
+    importName: "ABeeZee",
+    fontFamily: "ABeeZee",
+    previewUrl: "ABeeZee",
+    weights: ["400"]
+  },
+  {
+    importName: "Abel",
+    fontFamily: "Abel",
+    previewUrl: "Abel",
+    weights: ["400"]
+  },
+  {
+    importName: "AbrilFatface",
+    fontFamily: "Abril Fatface",
+    previewUrl: "Abril+Fatface",
+    weights: ["400"]
+  },
+  {
+    importName: "Acme",
+    fontFamily: "Acme",
+    previewUrl: "Acme",
+    weights: ["400"]
+  },
+  {
+    importName: "Alata",
+    fontFamily: "Alata",
+    previewUrl: "Alata",
+    weights: ["400"]
+  },
+  {
+    importName: "AlbertSans",
+    fontFamily: "Albert Sans",
+    previewUrl: "Albert+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Alegreya",
+    fontFamily: "Alegreya",
+    previewUrl: "Alegreya",
+    weights: ["400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "AlegreyaSans",
+    fontFamily: "Alegreya Sans",
+    previewUrl: "Alegreya+Sans",
+    weights: ["100", "300", "400", "500", "700", "800", "900"]
+  },
+  {
+    importName: "AlegreyaSansSC",
+    fontFamily: "Alegreya Sans SC",
+    previewUrl: "Alegreya+Sans+SC",
+    weights: ["100", "300", "400", "500", "700", "800", "900"]
+  },
+  {
+    importName: "AlfaSlabOne",
+    fontFamily: "Alfa Slab One",
+    previewUrl: "Alfa+Slab+One",
+    weights: ["400"]
+  },
+  {
+    importName: "Alice",
+    fontFamily: "Alice",
+    previewUrl: "Alice",
+    weights: ["400"]
+  },
+  {
+    importName: "Almarai",
+    fontFamily: "Almarai",
+    previewUrl: "Almarai",
+    weights: ["300", "400", "700", "800"]
+  },
+  {
+    importName: "AmaticSC",
+    fontFamily: "Amatic SC",
+    previewUrl: "Amatic+SC",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Amiri",
+    fontFamily: "Amiri",
+    previewUrl: "Amiri",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "AnticSlab",
+    fontFamily: "Antic Slab",
+    previewUrl: "Antic+Slab",
+    weights: ["400"]
+  },
+  {
+    importName: "Anton",
+    fontFamily: "Anton",
+    previewUrl: "Anton",
+    weights: ["400"]
+  },
+  {
+    importName: "ArchitectsDaughter",
+    fontFamily: "Architects Daughter",
+    previewUrl: "Architects+Daughter",
+    weights: ["400"]
+  },
+  {
+    importName: "Archivo",
+    fontFamily: "Archivo",
+    previewUrl: "Archivo",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "ArchivoBlack",
+    fontFamily: "Archivo Black",
+    previewUrl: "Archivo+Black",
+    weights: ["400"]
+  },
+  {
+    importName: "ArchivoNarrow",
+    fontFamily: "Archivo Narrow",
+    previewUrl: "Archivo+Narrow",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "Arimo",
+    fontFamily: "Arimo",
+    previewUrl: "Arimo",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "Arsenal",
+    fontFamily: "Arsenal",
+    previewUrl: "Arsenal",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Arvo",
+    fontFamily: "Arvo",
+    previewUrl: "Arvo",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Asap",
+    fontFamily: "Asap",
+    previewUrl: "Asap",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "AsapCondensed",
+    fontFamily: "Asap Condensed",
+    previewUrl: "Asap+Condensed",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Assistant",
+    fontFamily: "Assistant",
+    previewUrl: "Assistant",
+    weights: ["200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Barlow",
+    fontFamily: "Barlow",
+    previewUrl: "Barlow",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "BarlowCondensed",
+    fontFamily: "Barlow Condensed",
+    previewUrl: "Barlow+Condensed",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "BarlowSemiCondensed",
+    fontFamily: "Barlow Semi Condensed",
+    previewUrl: "Barlow+Semi+Condensed",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "BeVietnamPro",
+    fontFamily: "Be Vietnam Pro",
+    previewUrl: "Be+Vietnam+Pro",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "BebasNeue",
+    fontFamily: "Bebas Neue",
+    previewUrl: "Bebas+Neue",
+    weights: ["400"]
+  },
+  {
+    importName: "Bitter",
+    fontFamily: "Bitter",
+    previewUrl: "Bitter",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "BlackOpsOne",
+    fontFamily: "Black Ops One",
+    previewUrl: "Black+Ops+One",
+    weights: ["400"]
+  },
+  {
+    importName: "BodoniModa",
+    fontFamily: "Bodoni Moda",
+    previewUrl: "Bodoni+Moda",
+    weights: ["400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "BreeSerif",
+    fontFamily: "Bree Serif",
+    previewUrl: "Bree+Serif",
+    weights: ["400"]
+  },
+  {
+    importName: "Bungee",
+    fontFamily: "Bungee",
+    previewUrl: "Bungee",
+    weights: ["400"]
+  },
+  {
+    importName: "Cabin",
+    fontFamily: "Cabin",
+    previewUrl: "Cabin",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "Cairo",
+    fontFamily: "Cairo",
+    previewUrl: "Cairo",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Cantarell",
+    fontFamily: "Cantarell",
+    previewUrl: "Cantarell",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Cardo",
+    fontFamily: "Cardo",
+    previewUrl: "Cardo",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Catamaran",
+    fontFamily: "Catamaran",
+    previewUrl: "Catamaran",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Caveat",
+    fontFamily: "Caveat",
+    previewUrl: "Caveat",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "ChakraPetch",
+    fontFamily: "Chakra Petch",
+    previewUrl: "Chakra+Petch",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Changa",
+    fontFamily: "Changa",
+    previewUrl: "Changa",
+    weights: ["200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Chivo",
+    fontFamily: "Chivo",
+    previewUrl: "Chivo",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Cinzel",
+    fontFamily: "Cinzel",
+    previewUrl: "Cinzel",
+    weights: ["400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Comfortaa",
+    fontFamily: "Comfortaa",
+    previewUrl: "Comfortaa",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Commissioner",
+    fontFamily: "Commissioner",
+    previewUrl: "Commissioner",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "ConcertOne",
+    fontFamily: "Concert One",
+    previewUrl: "Concert+One",
+    weights: ["400"]
+  },
+  {
+    importName: "Cookie",
+    fontFamily: "Cookie",
+    previewUrl: "Cookie",
+    weights: ["400"]
+  },
+  {
+    importName: "Cormorant",
+    fontFamily: "Cormorant",
+    previewUrl: "Cormorant",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "CormorantGaramond",
+    fontFamily: "Cormorant Garamond",
+    previewUrl: "Cormorant+Garamond",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Courgette",
+    fontFamily: "Courgette",
+    previewUrl: "Courgette",
+    weights: ["400"]
+  },
+  {
+    importName: "CreteRound",
+    fontFamily: "Crete Round",
+    previewUrl: "Crete+Round",
+    weights: ["400"]
+  },
+  {
+    importName: "CrimsonPro",
+    fontFamily: "Crimson Pro",
+    previewUrl: "Crimson+Pro",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "CrimsonText",
+    fontFamily: "Crimson Text",
+    previewUrl: "Crimson+Text",
+    weights: ["400", "600", "700"]
+  },
+  {
+    importName: "Cuprum",
+    fontFamily: "Cuprum",
+    previewUrl: "Cuprum",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "DMSans",
+    fontFamily: "DM Sans",
+    previewUrl: "DM+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "DMSerifDisplay",
+    fontFamily: "DM Serif Display",
+    previewUrl: "DM+Serif+Display",
+    weights: ["400"]
+  },
+  {
+    importName: "DMSerifText",
+    fontFamily: "DM Serif Text",
+    previewUrl: "DM+Serif+Text",
+    weights: ["400"]
+  },
+  {
+    importName: "DancingScript",
+    fontFamily: "Dancing Script",
+    previewUrl: "Dancing+Script",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "DidactGothic",
+    fontFamily: "Didact Gothic",
+    previewUrl: "Didact+Gothic",
+    weights: ["400"]
+  },
+  {
+    importName: "Domine",
+    fontFamily: "Domine",
+    previewUrl: "Domine",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "Dosis",
+    fontFamily: "Dosis",
+    previewUrl: "Dosis",
+    weights: ["200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "EBGaramond",
+    fontFamily: "EB Garamond",
+    previewUrl: "EB+Garamond",
+    weights: ["400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Eczar",
+    fontFamily: "Eczar",
+    previewUrl: "Eczar",
+    weights: ["400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "ElMessiri",
+    fontFamily: "El Messiri",
+    previewUrl: "El+Messiri",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "Electrolize",
+    fontFamily: "Electrolize",
+    previewUrl: "Electrolize",
+    weights: ["400"]
+  },
+  {
+    importName: "EncodeSans",
+    fontFamily: "Encode Sans",
+    previewUrl: "Encode+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "EncodeSansCondensed",
+    fontFamily: "Encode Sans Condensed",
+    previewUrl: "Encode+Sans+Condensed",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Exo",
+    fontFamily: "Exo",
+    previewUrl: "Exo",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Exo2",
+    fontFamily: "Exo Two",
+    previewUrl: "Exo+2",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Figtree",
+    fontFamily: "Figtree",
+    previewUrl: "Figtree",
+    weights: ["300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "FiraSans",
+    fontFamily: "Fira Sans",
+    previewUrl: "Fira+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "FiraSansCondensed",
+    fontFamily: "Fira Sans Condensed",
+    previewUrl: "Fira+Sans+Condensed",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "FjallaOne",
+    fontFamily: "Fjalla One",
+    previewUrl: "Fjalla+One",
+    weights: ["400"]
+  },
+  {
+    importName: "FrancoisOne",
+    fontFamily: "Francois One",
+    previewUrl: "Francois+One",
+    weights: ["400"]
+  },
+  {
+    importName: "FrankRuhlLibre",
+    fontFamily: "Frank Ruhl Libre",
+    previewUrl: "Frank+Ruhl+Libre",
+    weights: ["300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Fraunces",
+    fontFamily: "Fraunces",
+    previewUrl: "Fraunces",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Gelasio",
+    fontFamily: "Gelasio",
+    previewUrl: "Gelasio",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "GloriaHallelujah",
+    fontFamily: "Gloria Hallelujah",
+    previewUrl: "Gloria+Hallelujah",
+    weights: ["400"]
+  },
+  {
+    importName: "GothicA1",
+    fontFamily: "Gothic AOne",
+    previewUrl: "Gothic+A1",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "GreatVibes",
+    fontFamily: "Great Vibes",
+    previewUrl: "Great+Vibes",
+    weights: ["400"]
+  },
+  {
+    importName: "Gruppo",
+    fontFamily: "Gruppo",
+    previewUrl: "Gruppo",
+    weights: ["400"]
+  },
+  {
+    importName: "Heebo",
+    fontFamily: "Heebo",
+    previewUrl: "Heebo",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Hind",
+    fontFamily: "Hind",
+    previewUrl: "Hind",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "HindMadurai",
+    fontFamily: "Hind Madurai",
+    previewUrl: "Hind+Madurai",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "HindSiliguri",
+    fontFamily: "Hind Siliguri",
+    previewUrl: "Hind+Siliguri",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "IBMPlexMono",
+    fontFamily: "IBM Plex Mono",
+    previewUrl: "IBM+Plex+Mono",
+    weights: ["100", "200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "IBMPlexSans",
+    fontFamily: "IBM Plex Sans",
+    previewUrl: "IBM+Plex+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "IBMPlexSansArabic",
+    fontFamily: "IBM Plex Sans Arabic",
+    previewUrl: "IBM+Plex+Sans+Arabic",
+    weights: ["100", "200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "IBMPlexSansCondensed",
+    fontFamily: "IBM Plex Sans Condensed",
+    previewUrl: "IBM+Plex+Sans+Condensed",
+    weights: ["100", "200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "IBMPlexSerif",
+    fontFamily: "IBM Plex Serif",
+    previewUrl: "IBM+Plex+Serif",
+    weights: ["100", "200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Inconsolata",
+    fontFamily: "Inconsolata",
+    previewUrl: "Inconsolata",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "IndieFlower",
+    fontFamily: "Indie Flower",
+    previewUrl: "Indie+Flower",
+    weights: ["400"]
+  },
+  {
+    importName: "Inter",
+    fontFamily: "Inter",
+    previewUrl: "Inter",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "InterTight",
+    fontFamily: "Inter Tight",
+    previewUrl: "Inter+Tight",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "JosefinSans",
+    fontFamily: "Josefin Sans",
+    previewUrl: "Josefin+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "JosefinSlab",
+    fontFamily: "Josefin Slab",
+    previewUrl: "Josefin+Slab",
+    weights: ["100", "200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Jost",
+    fontFamily: "Jost",
+    previewUrl: "Jost",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Kalam",
+    fontFamily: "Kalam",
+    previewUrl: "Kalam",
+    weights: ["300", "400", "700"]
+  },
+  {
+    importName: "Kanit",
+    fontFamily: "Kanit",
+    previewUrl: "Kanit",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Karla",
+    fontFamily: "Karla",
+    previewUrl: "Karla",
+    weights: ["200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "KaushanScript",
+    fontFamily: "Kaushan Script",
+    previewUrl: "Kaushan+Script",
+    weights: ["400"]
+  },
+  {
+    importName: "Khand",
+    fontFamily: "Khand",
+    previewUrl: "Khand",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Lato",
+    fontFamily: "Lato",
+    previewUrl: "Lato",
+    weights: ["100", "300", "400", "700", "900"]
+  },
+  {
+    importName: "LeagueSpartan",
+    fontFamily: "League Spartan",
+    previewUrl: "League+Spartan",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Lexend",
+    fontFamily: "Lexend",
+    previewUrl: "Lexend",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "LexendDeca",
+    fontFamily: "Lexend Deca",
+    previewUrl: "Lexend+Deca",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "LibreBarcode39",
+    fontFamily: "Libre Barcode ThreeNine",
+    previewUrl: "Libre+Barcode+39",
+    weights: ["400"]
+  },
+  {
+    importName: "LibreBaskerville",
+    fontFamily: "Libre Baskerville",
+    previewUrl: "Libre+Baskerville",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "LibreCaslonText",
+    fontFamily: "Libre Caslon Text",
+    previewUrl: "Libre+Caslon+Text",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "LibreFranklin",
+    fontFamily: "Libre Franklin",
+    previewUrl: "Libre+Franklin",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "LilitaOne",
+    fontFamily: "Lilita One",
+    previewUrl: "Lilita+One",
+    weights: ["400"]
+  },
+  {
+    importName: "Lobster",
+    fontFamily: "Lobster",
+    previewUrl: "Lobster",
+    weights: ["400"]
+  },
+  {
+    importName: "LobsterTwo",
+    fontFamily: "Lobster Two",
+    previewUrl: "Lobster+Two",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Lora",
+    fontFamily: "Lora",
+    previewUrl: "Lora",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "LuckiestGuy",
+    fontFamily: "Luckiest Guy",
+    previewUrl: "Luckiest+Guy",
+    weights: ["400"]
+  },
+  {
+    importName: "MPLUS1p",
+    fontFamily: "M PLUS Onep",
+    previewUrl: "M+PLUS+1p",
+    weights: ["100", "300", "400", "500", "700", "800", "900"]
+  },
+  {
+    importName: "MPLUSRounded1c",
+    fontFamily: "M PLUS Rounded Onec",
+    previewUrl: "M+PLUS+Rounded+1c",
+    weights: ["100", "300", "400", "500", "700", "800", "900"]
+  },
+  {
+    importName: "Macondo",
+    fontFamily: "Macondo",
+    previewUrl: "Macondo",
+    weights: ["400"]
+  },
+  {
+    importName: "Manrope",
+    fontFamily: "Manrope",
+    previewUrl: "Manrope",
+    weights: ["200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Marcellus",
+    fontFamily: "Marcellus",
+    previewUrl: "Marcellus",
+    weights: ["400"]
+  },
+  {
+    importName: "Martel",
+    fontFamily: "Martel",
+    previewUrl: "Martel",
+    weights: ["200", "300", "400", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Mate",
+    fontFamily: "Mate",
+    previewUrl: "Mate",
+    weights: ["400"]
+  },
+  {
+    importName: "MateSC",
+    fontFamily: "Mate SC",
+    previewUrl: "Mate+SC",
+    weights: ["400"]
+  },
+  {
+    importName: "MavenPro",
+    fontFamily: "Maven Pro",
+    previewUrl: "Maven+Pro",
+    weights: ["400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Merienda",
+    fontFamily: "Merienda",
+    previewUrl: "Merienda",
+    weights: ["300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Merriweather",
+    fontFamily: "Merriweather",
+    previewUrl: "Merriweather",
+    weights: ["300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "MerriweatherSans",
+    fontFamily: "Merriweather Sans",
+    previewUrl: "Merriweather+Sans",
+    weights: ["300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Montserrat",
+    fontFamily: "Montserrat",
+    previewUrl: "Montserrat",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "MontserratAlternates",
+    fontFamily: "Montserrat Alternates",
+    previewUrl: "Montserrat+Alternates",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Mukta",
+    fontFamily: "Mukta",
+    previewUrl: "Mukta",
+    weights: ["200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Mulish",
+    fontFamily: "Mulish",
+    previewUrl: "Mulish",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NanumGothic",
+    fontFamily: "Nanum Gothic",
+    previewUrl: "Nanum+Gothic",
+    weights: ["400", "700", "800"]
+  },
+  {
+    importName: "NanumGothicCoding",
+    fontFamily: "Nanum Gothic Coding",
+    previewUrl: "Nanum+Gothic+Coding",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "NanumMyeongjo",
+    fontFamily: "Nanum Myeongjo",
+    previewUrl: "Nanum+Myeongjo",
+    weights: ["400", "700", "800"]
+  },
+  {
+    importName: "Neuton",
+    fontFamily: "Neuton",
+    previewUrl: "Neuton",
+    weights: ["200", "300", "400", "700", "800"]
+  },
+  {
+    importName: "NoticiaText",
+    fontFamily: "Noticia Text",
+    previewUrl: "Noticia+Text",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "NotoColorEmoji",
+    fontFamily: "Noto Color Emoji",
+    previewUrl: "Noto+Color+Emoji",
+    weights: ["400"]
+  },
+  {
+    importName: "NotoKufiArabic",
+    fontFamily: "Noto Kufi Arabic",
+    previewUrl: "Noto+Kufi+Arabic",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoNaskhArabic",
+    fontFamily: "Noto Naskh Arabic",
+    previewUrl: "Noto+Naskh+Arabic",
+    weights: ["400", "500", "600", "700"]
+  },
+  {
+    importName: "NotoSans",
+    fontFamily: "Noto Sans",
+    previewUrl: "Noto+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansArabic",
+    fontFamily: "Noto Sans Arabic",
+    previewUrl: "Noto+Sans+Arabic",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansBengali",
+    fontFamily: "Noto Sans Bengali",
+    previewUrl: "Noto+Sans+Bengali",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansDisplay",
+    fontFamily: "Noto Sans Display",
+    previewUrl: "Noto+Sans+Display",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansHK",
+    fontFamily: "Noto Sans HK",
+    previewUrl: "Noto+Sans+HK",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansJP",
+    fontFamily: "Noto Sans JP",
+    previewUrl: "Noto+Sans+JP",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansKR",
+    fontFamily: "Noto Sans KR",
+    previewUrl: "Noto+Sans+KR",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansMono",
+    fontFamily: "Noto Sans Mono",
+    previewUrl: "Noto+Sans+Mono",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansSC",
+    fontFamily: "Noto Sans SC",
+    previewUrl: "Noto+Sans+SC",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansTC",
+    fontFamily: "Noto Sans TC",
+    previewUrl: "Noto+Sans+TC",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSansThai",
+    fontFamily: "Noto Sans Thai",
+    previewUrl: "Noto+Sans+Thai",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSerif",
+    fontFamily: "Noto Serif",
+    previewUrl: "Noto+Serif",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSerifJP",
+    fontFamily: "Noto Serif JP",
+    previewUrl: "Noto+Serif+JP",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSerifKR",
+    fontFamily: "Noto Serif KR",
+    previewUrl: "Noto+Serif+KR",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NotoSerifTC",
+    fontFamily: "Noto Serif TC",
+    previewUrl: "Noto+Serif+TC",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Nunito",
+    fontFamily: "Nunito",
+    previewUrl: "Nunito",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "NunitoSans",
+    fontFamily: "Nunito Sans",
+    previewUrl: "Nunito+Sans",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "OldStandardTT",
+    fontFamily: "Old Standard TT",
+    previewUrl: "Old+Standard+TT",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "OleoScript",
+    fontFamily: "Oleo Script",
+    previewUrl: "Oleo+Script",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "OpenSans",
+    fontFamily: "Open Sans",
+    previewUrl: "Open+Sans",
+    weights: ["300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Orbitron",
+    fontFamily: "Orbitron",
+    previewUrl: "Orbitron",
+    weights: ["400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Oswald",
+    fontFamily: "Oswald",
+    previewUrl: "Oswald",
+    weights: ["200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Outfit",
+    fontFamily: "Outfit",
+    previewUrl: "Outfit",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Overpass",
+    fontFamily: "Overpass",
+    previewUrl: "Overpass",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Oxygen",
+    fontFamily: "Oxygen",
+    previewUrl: "Oxygen",
+    weights: ["300", "400", "700"]
+  },
+  {
+    importName: "PTSans",
+    fontFamily: "PT Sans",
+    previewUrl: "PT+Sans",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "PTSansCaption",
+    fontFamily: "PT Sans Caption",
+    previewUrl: "PT+Sans+Caption",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "PTSansNarrow",
+    fontFamily: "PT Sans Narrow",
+    previewUrl: "PT+Sans+Narrow",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "PTSerif",
+    fontFamily: "PT Serif",
+    previewUrl: "PT+Serif",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Pacifico",
+    fontFamily: "Pacifico",
+    previewUrl: "Pacifico",
+    weights: ["400"]
+  },
+  {
+    importName: "PassionOne",
+    fontFamily: "Passion One",
+    previewUrl: "Passion+One",
+    weights: ["400", "700", "900"]
+  },
+  {
+    importName: "PathwayGothicOne",
+    fontFamily: "Pathway Gothic One",
+    previewUrl: "Pathway+Gothic+One",
+    weights: ["400"]
+  },
+  {
+    importName: "PatuaOne",
+    fontFamily: "Patua One",
+    previewUrl: "Patua+One",
+    weights: ["400"]
+  },
+  {
+    importName: "PaytoneOne",
+    fontFamily: "Paytone One",
+    previewUrl: "Paytone+One",
+    weights: ["400"]
+  },
+  {
+    importName: "PermanentMarker",
+    fontFamily: "Permanent Marker",
+    previewUrl: "Permanent+Marker",
+    weights: ["400"]
+  },
+  {
+    importName: "Philosopher",
+    fontFamily: "Philosopher",
+    previewUrl: "Philosopher",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Play",
+    fontFamily: "Play",
+    previewUrl: "Play",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "PlayfairDisplay",
+    fontFamily: "Playfair Display",
+    previewUrl: "Playfair+Display",
+    weights: ["400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "PlusJakartaSans",
+    fontFamily: "Plus Jakarta Sans",
+    previewUrl: "Plus+Jakarta+Sans",
+    weights: ["200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Poppins",
+    fontFamily: "Poppins",
+    previewUrl: "Poppins",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Prata",
+    fontFamily: "Prata",
+    previewUrl: "Prata",
+    weights: ["400"]
+  },
+  {
+    importName: "Prompt",
+    fontFamily: "Prompt",
+    previewUrl: "Prompt",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "PublicSans",
+    fontFamily: "Public Sans",
+    previewUrl: "Public+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Quattrocento",
+    fontFamily: "Quattrocento",
+    previewUrl: "Quattrocento",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "QuattrocentoSans",
+    fontFamily: "Quattrocento Sans",
+    previewUrl: "Quattrocento+Sans",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Questrial",
+    fontFamily: "Questrial",
+    previewUrl: "Questrial",
+    weights: ["400"]
+  },
+  {
+    importName: "Quicksand",
+    fontFamily: "Quicksand",
+    previewUrl: "Quicksand",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Rajdhani",
+    fontFamily: "Rajdhani",
+    previewUrl: "Rajdhani",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Raleway",
+    fontFamily: "Raleway",
+    previewUrl: "Raleway",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "ReadexPro",
+    fontFamily: "Readex Pro",
+    previewUrl: "Readex+Pro",
+    weights: ["200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "RedHatDisplay",
+    fontFamily: "Red Hat Display",
+    previewUrl: "Red+Hat+Display",
+    weights: ["300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Righteous",
+    fontFamily: "Righteous",
+    previewUrl: "Righteous",
+    weights: ["400"]
+  },
+  {
+    importName: "Roboto",
+    fontFamily: "Roboto",
+    previewUrl: "Roboto",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "RobotoCondensed",
+    fontFamily: "Roboto Condensed",
+    previewUrl: "Roboto+Condensed",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "RobotoFlex",
+    fontFamily: "Roboto Flex",
+    previewUrl: "Roboto+Flex",
+    weights: ["400"]
+  },
+  {
+    importName: "RobotoMono",
+    fontFamily: "Roboto Mono",
+    previewUrl: "Roboto+Mono",
+    weights: ["100", "200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "RobotoSerif",
+    fontFamily: "Roboto Serif",
+    previewUrl: "Roboto+Serif",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "RobotoSlab",
+    fontFamily: "Roboto Slab",
+    previewUrl: "Roboto+Slab",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Rokkitt",
+    fontFamily: "Rokkitt",
+    previewUrl: "Rokkitt",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Rowdies",
+    fontFamily: "Rowdies",
+    previewUrl: "Rowdies",
+    weights: ["300", "400", "700"]
+  },
+  {
+    importName: "Rubik",
+    fontFamily: "Rubik",
+    previewUrl: "Rubik",
+    weights: ["300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "RubikBubbles",
+    fontFamily: "Rubik Bubbles",
+    previewUrl: "Rubik+Bubbles",
+    weights: ["400"]
+  },
+  {
+    importName: "RubikMonoOne",
+    fontFamily: "Rubik Mono One",
+    previewUrl: "Rubik+Mono+One",
+    weights: ["400"]
+  },
+  {
+    importName: "RussoOne",
+    fontFamily: "Russo One",
+    previewUrl: "Russo+One",
+    weights: ["400"]
+  },
+  {
+    importName: "Sacramento",
+    fontFamily: "Sacramento",
+    previewUrl: "Sacramento",
+    weights: ["400"]
+  },
+  {
+    importName: "Saira",
+    fontFamily: "Saira",
+    previewUrl: "Saira",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "SairaCondensed",
+    fontFamily: "Saira Condensed",
+    previewUrl: "Saira+Condensed",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Sarabun",
+    fontFamily: "Sarabun",
+    previewUrl: "Sarabun",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Satisfy",
+    fontFamily: "Satisfy",
+    previewUrl: "Satisfy",
+    weights: ["400"]
+  },
+  {
+    importName: "SawarabiGothic",
+    fontFamily: "Sawarabi Gothic",
+    previewUrl: "Sawarabi+Gothic",
+    weights: ["400"]
+  },
+  {
+    importName: "SawarabiMincho",
+    fontFamily: "Sawarabi Mincho",
+    previewUrl: "Sawarabi+Mincho",
+    weights: ["400"]
+  },
+  {
+    importName: "Sen",
+    fontFamily: "Sen",
+    previewUrl: "Sen",
+    weights: ["400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "ShadowsIntoLight",
+    fontFamily: "Shadows Into Light",
+    previewUrl: "Shadows+Into+Light",
+    weights: ["400"]
+  },
+  {
+    importName: "Signika",
+    fontFamily: "Signika",
+    previewUrl: "Signika",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "SignikaNegative",
+    fontFamily: "Signika Negative",
+    previewUrl: "Signika+Negative",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Silkscreen",
+    fontFamily: "Silkscreen",
+    previewUrl: "Silkscreen",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "SixCaps",
+    fontFamily: "Six Caps",
+    previewUrl: "Six+Caps",
+    weights: ["400"]
+  },
+  {
+    importName: "Slabo27px",
+    fontFamily: "Slabo TwoSevenpx",
+    previewUrl: "Slabo+27px",
+    weights: ["400"]
+  },
+  {
+    importName: "Sora",
+    fontFamily: "Sora",
+    previewUrl: "Sora",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "SourceCodePro",
+    fontFamily: "Source Code Pro",
+    previewUrl: "Source+Code+Pro",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "SourceSans3",
+    fontFamily: "Source Sans Three",
+    previewUrl: "Source+Sans+3",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "SourceSerif4",
+    fontFamily: "Source Serif Four",
+    previewUrl: "Source+Serif+4",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "SpaceGrotesk",
+    fontFamily: "Space Grotesk",
+    previewUrl: "Space+Grotesk",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "SpaceMono",
+    fontFamily: "Space Mono",
+    previewUrl: "Space+Mono",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "SpecialElite",
+    fontFamily: "Special Elite",
+    previewUrl: "Special+Elite",
+    weights: ["400"]
+  },
+  {
+    importName: "Spectral",
+    fontFamily: "Spectral",
+    previewUrl: "Spectral",
+    weights: ["200", "300", "400", "500", "600", "700", "800"]
+  },
+  {
+    importName: "Tajawal",
+    fontFamily: "Tajawal",
+    previewUrl: "Tajawal",
+    weights: ["200", "300", "400", "500", "700", "800", "900"]
+  },
+  {
+    importName: "Tangerine",
+    fontFamily: "Tangerine",
+    previewUrl: "Tangerine",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Teko",
+    fontFamily: "Teko",
+    previewUrl: "Teko",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Tinos",
+    fontFamily: "Tinos",
+    previewUrl: "Tinos",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "TitanOne",
+    fontFamily: "Titan One",
+    previewUrl: "Titan+One",
+    weights: ["400"]
+  },
+  {
+    importName: "TitilliumWeb",
+    fontFamily: "Titillium Web",
+    previewUrl: "Titillium+Web",
+    weights: ["200", "300", "400", "600", "700", "900"]
+  },
+  {
+    importName: "Ubuntu",
+    fontFamily: "Ubuntu",
+    previewUrl: "Ubuntu",
+    weights: ["300", "400", "500", "700"]
+  },
+  {
+    importName: "UbuntuCondensed",
+    fontFamily: "Ubuntu Condensed",
+    previewUrl: "Ubuntu+Condensed",
+    weights: ["400"]
+  },
+  {
+    importName: "UbuntuMono",
+    fontFamily: "Ubuntu Mono",
+    previewUrl: "Ubuntu+Mono",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Unbounded",
+    fontFamily: "Unbounded",
+    previewUrl: "Unbounded",
+    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "Unna",
+    fontFamily: "Unna",
+    previewUrl: "Unna",
+    weights: ["400", "700"]
+  },
+  {
+    importName: "Urbanist",
+    fontFamily: "Urbanist",
+    previewUrl: "Urbanist",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "VarelaRound",
+    fontFamily: "Varela Round",
+    previewUrl: "Varela+Round",
+    weights: ["400"]
+  },
+  {
+    importName: "Vollkorn",
+    fontFamily: "Vollkorn",
+    previewUrl: "Vollkorn",
+    weights: ["400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "WorkSans",
+    fontFamily: "Work Sans",
+    previewUrl: "Work+Sans",
+    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+  },
+  {
+    importName: "YanoneKaffeesatz",
+    fontFamily: "Yanone Kaffeesatz",
+    previewUrl: "Yanone+Kaffeesatz",
+    weights: ["200", "300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "Yantramanav",
+    fontFamily: "Yantramanav",
+    previewUrl: "Yantramanav",
+    weights: ["100", "300", "400", "500", "700", "900"]
+  },
+  {
+    importName: "Yellowtail",
+    fontFamily: "Yellowtail",
+    previewUrl: "Yellowtail",
+    weights: ["400"]
+  },
+  {
+    importName: "YesevaOne",
+    fontFamily: "Yeseva One",
+    previewUrl: "Yeseva+One",
+    weights: ["400"]
+  },
+  {
+    importName: "ZenKakuGothicNew",
+    fontFamily: "Zen Kaku Gothic New",
+    previewUrl: "Zen+Kaku+Gothic+New",
+    weights: ["300", "400", "500", "700", "900"]
+  },
+  {
+    importName: "Zeyada",
+    fontFamily: "Zeyada",
+    previewUrl: "Zeyada",
+    weights: ["400"]
+  },
+  {
+    importName: "ZillaSlab",
+    fontFamily: "Zilla Slab",
+    previewUrl: "Zilla+Slab",
+    weights: ["300", "400", "500", "600", "700"]
+  },
+  {
+    importName: "TikTokSans",
+    fontFamily: "TikTok Sans",
+    previewUrl: "TikTok+Sans",
+    weights: ["300", "400", "500", "600", "700", "800", "900"]
+  }
+];
+
+// src/helpers/load-google-font-for-preview.ts
+var fontLoads = new Map;
+var loadGoogleFontForPreview = ({
+  fontFamily,
+  document: document2
+}) => {
+  const existing = fontLoads.get(fontFamily);
+  if (existing) {
+    return existing;
+  }
+  const font = GOOGLE_FONTS_LIST.find((entry) => entry.fontFamily === fontFamily);
+  if (!font) {
+    return Promise.resolve();
+  }
+  const commonWeights = font.weights.filter((weight) => ["400", "700", "800"].includes(weight));
+  const weights = commonWeights.length ? commonWeights : font.weights.slice(0, 1);
+  const promise = Promise.all(weights.map(async (weight) => {
+    const response = await fetch(`https://fonts.googleapis.com/css?family=${font.previewUrl}:${weight}`);
+    if (!response.ok) {
+      throw new Error(`Could not load font "${fontFamily}" for Studio preview`);
+    }
+    const cssText = await response.text();
+    const urls = [...cssText.matchAll(/url\(([^)]+)\)/g)].map((match) => match[1]);
+    if (urls.length === 0) {
+      throw new Error(`Could not load font "${fontFamily}" for Studio preview`);
+    }
+    await Promise.all(urls.map(async (url) => {
+      const fontFace = new FontFace(fontFamily, `url(${url})`, { weight });
+      await fontFace.load();
+      document2.fonts.add(fontFace);
+    }));
+  })).then(() => {
+    return;
+  }).catch((error) => {
+    fontLoads.delete(fontFamily);
+    throw error;
+  });
+  fontLoads.set(fontFamily, promise);
+  return promise;
+};
+
+// src/helpers/sequence-node-path-mutations.ts
+
+
+// src/helpers/inserted-element-selection.ts
+var pendingSelection = null;
+var listeners = new Set;
+var requestInsertedElementSelection = (selection) => {
+  pendingSelection = selection;
+  for (const listener of listeners) {
+    listener();
+  }
+};
+var clearInsertedElementSelection = (selection) => {
+  if (pendingSelection !== selection) {
+    return;
+  }
+  pendingSelection = null;
+  for (const listener of listeners) {
+    listener();
+  }
+};
+var subscribeToInsertedElementSelection = (listener) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+var getInsertedElementSelection = () => pendingSelection;
+
+// src/helpers/source-mutation-queue.ts
+var revision = 0;
+var lastDispatchedRevision = 0;
+var chain = Promise.resolve();
+var getSourceMutationRevision = () => revision;
+var getLastDispatchedSourceMutationRevision = () => lastDispatchedRevision;
+var enqueueSourceMutation = (run, onQueued = null) => {
+  const operation = { id: `source-operation-${++revision}`, revision };
+  const next = chain.then(() => {
+    lastDispatchedRevision = operation.revision;
+    return run(operation);
+  });
+  chain = next.then(() => {
+    return;
+  }, () => {
+    return;
+  });
+  onQueued?.(operation);
+  return next;
+};
+
+// src/helpers/sequence-node-path-mutations.ts
+var pendingMutations = [];
+var pendingDeletionRetirements = [];
+var seenMutationIds = new Set;
+var queueSequenceNodePathMutation = (mutation) => {
+  if (seenMutationIds.has(mutation.mutationId)) {
+    return;
+  }
+  seenMutationIds.add(mutation.mutationId);
+  pendingMutations.push(mutation);
+  pendingDeletionRetirements.push(remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.prepareRetirement(mutation.files.flatMap((file) => file.remappings.flatMap((remapping) => remapping.oldNodePath === null ? [] : [
+    {
+      absolutePath: file.absolutePath,
+      nodePath: remapping.oldNodePath
+    }
+  ])), getLastDispatchedSourceMutationRevision()));
+  if (mutation.timelineSelection !== null) {
+    requestInsertedElementSelection({
+      compositionId: mutation.timelineSelection.compositionId,
+      nodePath: {
+        absolutePath: mutation.timelineSelection.absolutePath,
+        nodePath: mutation.timelineSelection.nodePath
+      },
+      notification: null
+    });
+  }
+};
+var queueSequenceNodePathMutationFromApiResponse = (response) => {
+  if (typeof response !== "object" || response === null || !("nodePathMutation" in response)) {
+    return;
+  }
+  const { nodePathMutation } = response;
+  if (typeof nodePathMutation !== "object" || nodePathMutation === null || !("mutationId" in nodePathMutation) || typeof nodePathMutation.mutationId !== "string") {
+    return;
+  }
+  queueSequenceNodePathMutation(nodePathMutation);
+};
+var takePendingSequenceNodePathMutations = () => {
+  for (const retire of pendingDeletionRetirements.splice(0)) {
+    retire();
+  }
+  return pendingMutations.splice(0);
+};
+
+// src/helpers/enqueue-studio-source-mutation.ts
+var enqueueStudioSourceMutation = (endpoint, body, run) => {
+  const nodes = endpoint === "/api/delete-nodes" ? body.nodes.map((node) => ({
+    absolutePath: node.fileName,
+    nodePath: node.nodePath
+  })) : [];
+  return enqueueSourceMutation(async (operation) => {
+    try {
+      if (endpoint === "/api/save-sequence-props") {
+        const fonts = body.edits.flatMap(({ sourceEdit }) => sourceEdit?.type === "google-font" ? [sourceEdit.font] : []);
+        if (fonts.length > 0) {
+          await Promise.all(fonts.map(({ fontFamily }) => loadGoogleFontForPreview({ fontFamily, document })));
+          await installRequiredPackages([
+            { name: "@remotion/google-fonts", version: null }
+          ]);
+        }
+      }
+      const result = await run();
+      queueSequenceNodePathMutationFromApiResponse(result);
+      if (typeof result !== "object" || result === null) {
+        return result;
+      }
+      if ("success" in result && result.success === false) {
+        remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.rollback(nodes, operation.revision);
+        return result;
+      }
+      if ((endpoint === "/api/undo" || endpoint === "/api/redo") && "nodePathMutation" in result && result.nodePathMutation) {
+        const mutation = result.nodePathMutation;
+        for (const file of mutation.files) {
+          for (const remapping of file.remappings) {
+            if (remapping.oldNodePath === null && remapping.newNodePath !== null) {
+              remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.restore([
+                {
+                  absolutePath: file.absolutePath,
+                  nodePath: remapping.newNodePath
+                }
+              ], operation.revision, false);
+            } else if (remapping.newNodePath === null && remapping.oldNodePath !== null) {
+              remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.restore([
+                {
+                  absolutePath: file.absolutePath,
+                  nodePath: remapping.oldNodePath
+                }
+              ], operation.revision, true);
+            }
+          }
+        }
+      }
+      return result;
+    } catch (error) {
+      remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.rollback(nodes, operation.revision);
+      throw error;
+    }
+  }, (operation) => {
+    if (nodes.length > 0) {
+      remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.set(nodes, operation.revision, true);
+    }
+  });
+};
+
+// src/components/call-api.ts
+var callApiImmediately = (endpoint, body, signal) => {
+  return new Promise((resolve, reject) => {
+    fetch(endpoint, {
+      method: "post",
+      headers: {
+        "content-type": "application/json"
+      },
+      signal,
+      body: JSON.stringify(body)
+    }).then((res) => res.json()).then((data) => {
+      if (data.success) {
+        queueSequenceNodePathMutationFromApiResponse(data.data);
+        resolve(data.data);
+      } else {
+        reject(new Error(data.error));
+      }
+    }).catch((err) => {
+      reject(err);
+    });
+  });
+};
+var callApi = (endpoint, body, signal) => {
+  if (!_remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__/* .studioOperations */ .bx[endpoint].mutatesSource) {
+    return callApiImmediately(endpoint, body, signal);
+  }
+  return enqueueStudioSourceMutation(endpoint, body, () => callApiImmediately(endpoint, body, signal));
+};
+
+// src/components/RenderModal/SchemaEditor/scroll-to-default-props-path.ts
+
+var DEFAULT_PROPS_PATH_CLASSNAME = "__remotion-default-props-editor-label";
+var DEFAULT_PROPS_PATH_ACTIVE_CLASSNAME = "__remotion-default-props-editor-label-active";
+var defaultPropsEditorScrollableAreaRef = react__WEBPACK_IMPORTED_MODULE_4__.createRef();
+var expandDefaultPropsEditorRef = react__WEBPACK_IMPORTED_MODULE_4__.createRef();
+
+// src/api/restart-studio.ts
+
+var restartStudio2 = () => {
+  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_3__/* .getRemotionEnvironment */ .P1)().isStudio) {
+    throw new Error("restartStudio() is only available in the Studio");
+  }
+  if (getBrowserStudioOperations() !== null) {
+    throw new Error("restartStudio() is not supported in Browser Studio");
+  }
+  if (window.remotion_isReadOnlyStudio) {
+    throw new Error("restartStudio() is not available in read-only Studio");
+  }
+  return callApi("/api/restart-studio", {});
+};
+
+// src/components/RenderQueue/actions.ts
+
+var addStillRenderJob = ({
+  compositionId,
+  outName,
+  imageFormat,
+  jpegQuality,
+  frame,
+  scale,
+  logLevel,
+  chromiumOptions,
+  delayRenderTimeout,
+  envVariables,
+  inputProps,
+  offthreadVideoCacheSizeInBytes,
+  offthreadVideoThreads,
+  multiProcessOnLinux,
+  beepOnFinish,
+  metadata,
+  chromeMode,
+  mediaCacheSizeInBytes,
+  licenseKey
+}) => {
+  return callApi("/api/render", {
+    compositionId,
+    type: "still",
+    outName,
+    imageFormat,
+    jpegQuality,
+    frame,
+    scale,
+    logLevel,
+    chromiumOptions,
+    delayRenderTimeout,
+    envVariables,
+    serializedInputPropsWithCustomSchema: remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.serializeJSONWithSpecialTypes({
+      data: inputProps,
+      staticBase: window.remotion_staticBase,
+      indent: undefined
+    }).serializedString,
+    offthreadVideoCacheSizeInBytes,
+    offthreadVideoThreads,
+    multiProcessOnLinux,
+    beepOnFinish,
+    metadata,
+    chromeMode,
+    mediaCacheSizeInBytes,
+    licenseKey
+  });
+};
+var addSequenceRenderJob = ({
+  compositionId,
+  outName,
+  imageFormat,
+  startFrame,
+  endFrame,
+  scale,
+  logLevel,
+  chromiumOptions,
+  delayRenderTimeout,
+  envVariables,
+  inputProps,
+  concurrency,
+  offthreadVideoCacheSizeInBytes,
+  offthreadVideoThreads,
+  jpegQuality,
+  disallowParallelEncoding,
+  multiProcessOnLinux,
+  beepOnFinish,
+  repro,
+  metadata,
+  chromeMode,
+  mediaCacheSizeInBytes
+}) => {
+  return callApi("/api/render", {
+    compositionId,
+    type: "sequence",
+    outName,
+    imageFormat,
+    jpegQuality,
+    scale,
+    startFrame,
+    endFrame,
+    logLevel,
+    chromiumOptions,
+    delayRenderTimeout,
+    envVariables,
+    concurrency,
+    serializedInputPropsWithCustomSchema: remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.serializeJSONWithSpecialTypes({
+      data: inputProps,
+      staticBase: window.remotion_staticBase,
+      indent: undefined
+    }).serializedString,
+    offthreadVideoCacheSizeInBytes,
+    offthreadVideoThreads,
+    disallowParallelEncoding,
+    multiProcessOnLinux,
+    beepOnFinish,
+    repro,
+    metadata,
+    chromeMode,
+    mediaCacheSizeInBytes
+  });
+};
+var addVideoRenderJob = ({
+  compositionId,
+  outName,
+  imageFormat,
+  jpegQuality,
+  scale,
+  logLevel,
+  codec,
+  concurrency,
+  crf,
+  gopSize,
+  startFrame,
+  endFrame,
+  muted,
+  enforceAudioTrack,
+  proResProfile,
+  x264Preset,
+  pixelFormat,
+  audioBitrate,
+  videoBitrate,
+  everyNthFrame,
+  numberOfGifLoops,
+  delayRenderTimeout,
+  audioCodec,
+  disallowParallelEncoding,
+  chromiumOptions,
+  envVariables,
+  inputProps,
+  offthreadVideoCacheSizeInBytes,
+  offthreadVideoThreads,
+  colorSpace,
+  multiProcessOnLinux,
+  encodingMaxRate,
+  encodingBufferSize,
+  beepOnFinish,
+  repro,
+  forSeamlessAacConcatenation,
+  separateAudioTo,
+  metadata,
+  hardwareAcceleration,
+  chromeMode,
+  mediaCacheSizeInBytes,
+  sampleRate,
+  licenseKey
+}) => {
+  return callApi("/api/render", {
+    compositionId,
+    type: "video",
+    outName,
+    imageFormat,
+    jpegQuality,
+    scale,
+    logLevel,
+    codec,
+    concurrency,
+    crf,
+    gopSize,
+    endFrame,
+    startFrame,
+    muted,
+    enforceAudioTrack,
+    proResProfile,
+    x264Preset,
+    pixelFormat,
+    audioBitrate,
+    videoBitrate,
+    everyNthFrame,
+    numberOfGifLoops,
+    delayRenderTimeout,
+    audioCodec,
+    disallowParallelEncoding,
+    chromiumOptions,
+    envVariables,
+    serializedInputPropsWithCustomSchema: remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.serializeJSONWithSpecialTypes({
+      data: inputProps,
+      staticBase: window.remotion_staticBase,
+      indent: undefined
+    }).serializedString,
+    offthreadVideoCacheSizeInBytes,
+    offthreadVideoThreads,
+    colorSpace,
+    multiProcessOnLinux,
+    encodingBufferSize,
+    encodingMaxRate,
+    beepOnFinish,
+    repro,
+    forSeamlessAacConcatenation,
+    separateAudioTo,
+    metadata,
+    hardwareAcceleration,
+    chromeMode,
+    mediaCacheSizeInBytes,
+    sampleRate,
+    licenseKey
+  });
+};
+var unsubscribeFromFileExistenceWatcher = ({
+  file,
+  clientId
+}) => {
+  return callApi("/api/unsubscribe-from-file-existence", { file, clientId });
+};
+var subscribeToFileExistenceWatcher = async ({
+  file,
+  clientId
+}) => {
+  const { exists } = await callApi("/api/subscribe-to-file-existence", {
+    file,
+    clientId
+  });
+  return exists;
+};
+var openInFileExplorer = ({ directory }) => {
+  const body = {
+    directory
+  };
+  return callApi("/api/open-in-file-explorer", body);
+};
+var addComposition2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/add-composition", request, signal) : operations.addComposition(request);
+};
+var duplicateComposition2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/duplicate-composition", request, signal) : operations.duplicateComposition(request);
+};
+var renameComposition2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/rename-composition", request, signal) : operations.renameComposition(request);
+};
+var updateCompositionMetadata2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/update-composition-metadata", request, signal) : operations.updateCompositionMetadata(request);
+};
+var deleteComposition2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/delete-composition", request, signal) : operations.deleteComposition(request);
+};
+var moveComposition2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/move-composition", request, signal) : operations.moveComposition(request);
+};
+var addFolder2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/add-folder", request, signal) : operations.addFolder(request);
+};
+var renameFolder2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/rename-folder", request, signal) : operations.renameFolder(request);
+};
+var unwrapFolder2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/unwrap-folder", request, signal) : operations.unwrapFolder(request);
+};
+var moveFolder2 = (request, signal) => {
+  const operations = getBrowserStudioOperations();
+  return operations === null ? callApi("/api/move-folder", request, signal) : operations.moveFolder(request);
+};
+var removeRenderJob = (job) => {
+  return callApi("/api/remove-render", {
+    jobId: job.id
+  });
+};
+var cancelRenderJob = (job) => {
+  return callApi("/api/cancel", {
+    jobId: job.id
+  });
+};
+var updateAvailable = (signal) => {
+  return callApi("/api/update-available", {}, signal);
+};
+var getReleaseNotes = (currentVersion, latestVersion, signal) => {
+  return callApi("/api/release-notes", { currentVersion, latestVersion }, signal);
+};
+var callUpdateDefaultPropsApi = (compositionId, defaultProps, enumPaths, symbolicatedStack) => {
+  const body = {
+    compositionId,
+    defaultProps: remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.serializeJSONWithSpecialTypes({
+      data: defaultProps,
+      indent: undefined,
+      staticBase: window.remotion_staticBase
+    }).serializedString,
+    enumPaths,
+    symbolicatedStack
+  };
+  const browserStudioOperations = getBrowserStudioOperations();
+  if (browserStudioOperations !== null) {
+    return browserStudioOperations.updateDefaultProps(body);
+  }
+  return callApi("/api/update-default-props", body);
+};
+var applyVisualControlChange = ({
+  fileName,
+  changes
+}) => {
+  return callApi("/api/apply-visual-control-change", {
+    fileName,
+    changes
+  });
+};
+
+// src/components/Timeline/TimelineStack/get-stack.ts
+
+
+
+// src/error-overlay/react-overlay/utils/get-source-map.ts
+
+var getOriginalPosition = (sourceMap, line, column) => {
+  const result = (0,_jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__/* .originalPositionFor */ .sP)(sourceMap, {
+    line,
+    column
+  });
+  return { line: result.line, column: result.column, source: result.source };
+};
+function extractSourceMapUrl(fileContents) {
+  const regex = /\/\/[#@] ?sourceMappingURL=([^\s'"]+)\s*$/gm;
+  let match = null;
+  for (;; ) {
+    const next = regex.exec(fileContents);
+    if (next == null) {
+      break;
+    }
+    match = next;
+  }
+  if (!match?.[1]) {
+    return null;
+  }
+  return match[1].toString();
+}
+async function getSourceMap(fileUri, fileContents) {
+  const sm = extractSourceMapUrl(fileContents);
+  if (sm === null) {
+    return null;
+  }
+  if (sm.indexOf("data:") === 0) {
+    const base64 = /^data:application\/json;([\w=:"-]+;)*base64,/;
+    const match2 = sm.match(base64);
+    if (!match2) {
+      throw new Error("Sorry, non-base64 inline source-map encoding is not supported.");
+    }
+    const converted = window.atob(sm.substring(match2[0].length));
+    return new _jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__/* .TraceMap */ .YX(JSON.parse(converted));
+  }
+  const index = fileUri.lastIndexOf("/");
+  const url = fileUri.substring(0, index + 1) + sm;
+  const obj = await fetch(url).then((res) => res.json());
+  return new _jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__/* .TraceMap */ .YX(obj);
+}
+
+// src/error-overlay/react-overlay/utils/parser.ts
+;
+
+// src/error-overlay/react-overlay/effects/resolve-file-source.ts
+var resolveFileSource = async (location, contextLines) => {
+  const browserStudioOperations = getBrowserStudioOperations();
+  let text;
+  if (browserStudioOperations) {
+    const browserSource = await browserStudioOperations.getFileSource(location.fileName);
+    if (browserSource === null) {
+      throw new Error(`Could not find ${location.fileName}`);
+    }
+    text = browserSource;
+  } else {
+    const response = await fetch(`/api/file-source?f=${encodeURIComponent(location.fileName)}`);
+    if (!response.ok) {
+      throw new Error(`Could not load source for ${location.fileName}`);
+    }
+    text = await response.text();
+  }
+  const lines = text.split(`
+`).map((l, i) => {
+    const oneIndexedLineNumber = i + 1;
+    return [oneIndexedLineNumber, l];
+  }).filter(([oneIndexedLineNumber]) => {
+    return Math.abs(oneIndexedLineNumber - location.lineNumber) <= contextLines;
+  });
+  const scriptCode = lines.map(([num, line]) => {
+    return {
+      content: line,
+      highlight: location.lineNumber === num,
+      lineNumber: num
+    };
+  });
+  return {
+    originalColumnNumber: location.columnNumber,
+    originalFunctionName: null,
+    originalFileName: location.fileName,
+    originalLineNumber: location.lineNumber,
+    originalScriptCode: scriptCode
+  };
+};
+
+// src/error-overlay/react-overlay/utils/make-stack-frame.ts
+var makeStackFrame = ({
+  functionName,
+  fileName,
+  lineNumber,
+  columnNumber
+}) => {
+  if (functionName && functionName.indexOf("Object.") === 0) {
+    functionName = functionName.slice("Object.".length);
+  }
+  if (functionName === "friendlySyntaxErrorLabel" || functionName === "exports.__esModule" || functionName === "<anonymous>" || !functionName) {
+    functionName = null;
+  }
+  return {
+    columnNumber,
+    fileName,
+    functionName,
+    lineNumber
+  };
+};
+
+// src/error-overlay/react-overlay/utils/parser.ts
+var regexExtractLocation = /\(?(.+?)(?::(\d+))?(?::(\d+))?\)?$/;
+function extractLocation(token) {
+  const execed = regexExtractLocation.exec(token);
+  if (!execed) {
+    throw new Error("Could not match in extractLocation");
+  }
+  return execed.slice(1).map((v) => {
+    const p = Number(v);
+    if (!isNaN(p)) {
+      return p;
+    }
+    return v;
+  });
+}
+var regexValidFrame_Chrome = /^\s*(at|in)\s.+(:\d+)/;
+var regexValidFrame_FireFox = /(^|@)\S+:\d+|.+line\s+\d+\s+>\s+(eval|Function).+/;
+function parseStack(stack) {
+  const frames = stack.filter((e) => regexValidFrame_Chrome.test(e) || regexValidFrame_FireFox.test(e)).map((e) => {
+    if (regexValidFrame_FireFox.test(e)) {
+      let isEval = false;
+      if (/ > (eval|Function)/.test(e)) {
+        e = e.replace(/ line (\d+)(?: > eval line \d+)* > (eval|Function):\d+:\d+/g, ":$1");
+        isEval = true;
+      }
+      const _data = e.split(/[@]/g);
+      const _last = _data.pop();
+      if (!_last) {
+        throw new Error("could not get last");
+      }
+      const [_fileName, _lineNumber, _columnNumber] = extractLocation(_last);
+      return makeStackFrame({
+        functionName: _data.join("@") || (isEval ? "eval" : null),
+        fileName: _fileName,
+        lineNumber: _lineNumber,
+        columnNumber: _columnNumber
+      });
+    }
+    if (e.indexOf("(eval ") !== -1) {
+      e = e.replace(/(\(eval at [^()]*)|(\),.*$)/g, "");
+    }
+    if (e.indexOf("(at ") !== -1) {
+      e = e.replace(/\(at /, "(");
+    }
+    const data = e.trim().split(/\s+/g).slice(1);
+    const last = data.pop();
+    if (!last) {
+      throw new Error("could not get last");
+    }
+    const [fileName, lineNumber, columnNumber] = extractLocation(last);
+    return makeStackFrame({
+      functionName: data.join(" ") || null,
+      fileName,
+      lineNumber,
+      columnNumber
+    });
+  });
+  return frames;
+}
+var parseError = async (error, contextLines) => {
+  if (error === null) {
+    throw new Error("You cannot pass a null object.");
+  }
+  if (typeof error === "string") {
+    return parseStack(error.split(`
+`)).map((frame) => {
+      return {
+        type: "transpiled",
+        frame
+      };
+    });
+  }
+  if (Array.isArray(error)) {
+    return parseStack(error).map((frame) => {
+      return {
+        type: "transpiled",
+        frame
+      };
+    });
+  }
+  const errorLocation = (0,_remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__/* .getLocationFromBuildError */ .Ug)(error);
+  if (errorLocation) {
+    return [
+      {
+        type: "symbolicated",
+        frame: await resolveFileSource(errorLocation, contextLines)
+      }
+    ];
+  }
+  if (typeof error.stack === "string") {
+    return parseStack(error.stack.split(`
+`)).map((frame) => {
+      return {
+        type: "transpiled",
+        frame
+      };
+    });
+  }
+  return [];
+};
+
+// src/helpers/get-location-of-sequence.ts
+var getLocationOfSequence = (stack) => {
+  if (!stack) {
+    return null;
+  }
+  const parsed = parseStack(stack.split(`
+`));
+  let i = 0;
+  while (i < parsed.length) {
+    const frame = parsed[i];
+    if (frame.functionName === "apply") {
+      i++;
+      continue;
+    }
+    return frame;
+  }
+  return null;
+};
+var getLocationOfFunctionCall = (stack, functionName) => {
+  if (!stack) {
+    return null;
+  }
+  const parsed = parseStack(stack.split(`
+`));
+  let i = 0;
+  while (i < parsed.length) {
+    const frame = parsed[i];
+    if (frame.functionName !== functionName) {
+      i++;
+      continue;
+    }
+    return parsed[i + 1];
+  }
+  return null;
+};
+
+// src/components/Timeline/TimelineStack/get-stack.ts
+var traceMapCache = {};
+var traceMapPromises = {};
+var traceMapsByOriginalSource = new Map;
+var sourceMapFilesCache = new WeakMap;
+var isInternalSource = (source) => {
+  if (source === null) {
+    return false;
+  }
+  const normalizedSource = source.replaceAll("\\", "/");
+  return /(?:^|\/)node_modules\//.test(normalizedSource) || /(?:^|\/)dist\/(?:[^/]+\/)*[^/]+\.(?:cjs|mjs|js)$/.test(normalizedSource) || /(?:^|\/)(?:packages\/)?core\/src\//.test(normalizedSource);
+};
+var getSourceMapCache = (fileName) => {
+  if (traceMapCache[fileName]) {
+    return Promise.resolve(traceMapCache[fileName]);
+  }
+  if (traceMapPromises[fileName]) {
+    return traceMapPromises[fileName];
+  }
+  traceMapPromises[fileName] = fetch(`${fileName}.map`).then((res) => res.json()).then((json) => {
+    const map = new _jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__/* .TraceMap */ .YX(json);
+    traceMapCache[fileName] = map;
+    for (let index = 0;index < map.sources.length; index++) {
+      const source = map.sources[index];
+      const content = map.sourcesContent?.[index];
+      if (source !== null && typeof content === "string") {
+        traceMapsByOriginalSource.set(source, map);
+      }
+    }
+    return map;
+  }).finally(() => {
+    delete traceMapPromises[fileName];
+  });
+  return traceMapPromises[fileName];
+};
+var getSourceMapFilesForSource = (source) => {
+  const map = traceMapsByOriginalSource.get(source);
+  if (!map) {
+    return null;
+  }
+  const cached = sourceMapFilesCache.get(map);
+  if (cached) {
+    return cached;
+  }
+  const files = {};
+  for (let index = 0;index < map.sources.length; index++) {
+    const fileName = map.sources[index];
+    const content = map.sourcesContent?.[index];
+    if (fileName !== null && typeof content === "string") {
+      files[fileName] = content;
+    }
+  }
+  sourceMapFilesCache.set(map, files);
+  return files;
+};
+var getOriginalLocationFromStack = async (stack, type) => {
+  const location = type === "sequence" ? getLocationOfSequence(stack) : getLocationOfFunctionCall(stack, "visualControl");
+  if (!location) {
+    return null;
+  }
+  const originalSource = remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.parseOriginalSourceStack(stack);
+  if (originalSource) {
+    if (isInternalSource(originalSource.fileName)) {
+      return null;
+    }
+    return {
+      column: originalSource.column,
+      line: originalSource.line,
+      source: originalSource.fileName
+    };
+  }
+  const map = await getSourceMapCache(location.fileName);
+  const originalPosition = getOriginalPosition(map, location.lineNumber, location.columnNumber);
+  return isInternalSource(originalPosition.source) ? null : originalPosition;
+};
+
+// src/helpers/use-sync-external-store.ts
+
+var {
+  useSyncExternalStore
+} = remotion__WEBPACK_IMPORTED_MODULE_3__.Internals;
+
+
+
+
+/***/ },
+
+/***/ 8083
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -23897,10 +28449,7 @@ function _function(params) {
 var sdk_dist_esm = __webpack_require__(6916);
 ;// ./node_modules/@remotion/media-utils/dist/esm/index.mjs
 /* unused harmony import specifier */ var NoReactInternals;
-/* unused harmony import specifier */ var useRef;
-/* unused harmony import specifier */ var useEffect;
 /* unused harmony import specifier */ var useState;
-/* unused harmony import specifier */ var useCallback;
 /* unused harmony import specifier */ var useLayoutEffect;
 /* unused harmony import specifier */ var useDelayRender;
 /* unused harmony import specifier */ var UrlSource;
@@ -23909,10 +28458,10 @@ var sdk_dist_esm = __webpack_require__(6916);
 /* unused harmony import specifier */ var WEBM;
 /* unused harmony import specifier */ var Input;
 /* unused harmony import specifier */ var InputDisposedError;
-/* unused harmony import specifier */ var useRef2;
+/* unused harmony import specifier */ var useRef;
 /* unused harmony import specifier */ var useState2;
-/* unused harmony import specifier */ var useEffect2;
-/* unused harmony import specifier */ var useCallback2;
+/* unused harmony import specifier */ var useEffect;
+/* unused harmony import specifier */ var useCallback;
 /* unused harmony import specifier */ var useLayoutEffect2;
 /* unused harmony import specifier */ var useMemo;
 /* unused harmony import specifier */ var useDelayRender2;
@@ -23920,18 +28469,6 @@ var sdk_dist_esm = __webpack_require__(6916);
 /* unused harmony import specifier */ var AudioBufferSink;
 /* unused harmony import specifier */ var NoReactInternals2;
 // src/audio-buffer/audio-buffer-to-wav.ts
-function interleave(inputL, inputR) {
-  const length = inputL.length + inputR.length;
-  const result = new Float32Array(length);
-  let index = 0;
-  let inputIndex = 0;
-  while (index < length) {
-    result[index++] = inputL[inputIndex];
-    result[index++] = inputR[inputIndex];
-    inputIndex++;
-  }
-  return result;
-}
 function writeFloat32(output, offset, input) {
   for (let i = 0;i < input.length; i++, offset += 4) {
     output.setFloat32(offset, input[i], true);
@@ -23985,10 +28522,16 @@ function audioBufferToWav(buffer, opt) {
   const format = opt.float32 ? 3 : 1;
   const bitDepth = format === 3 ? 32 : 16;
   let result;
-  if (numChannels === 2) {
-    result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
-  } else {
+  if (numChannels === 1) {
     result = buffer.getChannelData(0);
+  } else {
+    result = new Float32Array(buffer.length * numChannels);
+    for (let channel = 0;channel < numChannels; channel++) {
+      const samples = buffer.getChannelData(channel);
+      for (let frame = 0;frame < buffer.length; frame++) {
+        result[frame * numChannels + channel] = samples[frame];
+      }
+    }
   }
   return encodeWAV({
     samples: result,
@@ -24142,12 +28685,19 @@ var fn = async (src, options) => {
   const audioContext = new AudioContext({
     sampleRate: options?.sampleRate ?? 48000
   });
-  const response = await fetchWithCorsCatch(src, options?.requestInit);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch audio data from ${src}: ${response.status} ${response.statusText}`);
+  let wave;
+  try {
+    const response = await fetchWithCorsCatch(src, options?.requestInit);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch audio data from ${src}: ${response.status} ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    wave = await audioContext.decodeAudioData(arrayBuffer);
+  } finally {
+    try {
+      await audioContext.close();
+    } catch {}
   }
-  const arrayBuffer = await response.arrayBuffer();
-  const wave = await audioContext.decodeAudioData(arrayBuffer);
   const channelWaveforms = new Array(wave.numberOfChannels).fill(true).map((_, channel) => {
     return wave.getChannelData(channel);
   });
@@ -24480,29 +29030,31 @@ var useAudioData = (src, options) => {
   if (!src) {
     throw new TypeError("useAudioData requires a 'src' parameter");
   }
-  const mountState = useRef({ isMounted: true });
-  useEffect(() => {
-    const { current } = mountState;
-    current.isMounted = true;
-    return () => {
-      current.isMounted = false;
-    };
-  }, []);
   const [metadata, setMetadata] = useState(null);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const sampleRate = options?.sampleRate;
   const [initialRequestInit] = useState(options?.requestInit);
-  const fetchMetadata = useCallback(async () => {
+  useLayoutEffect(() => {
+    let cancelled = false;
     const handle = delayRender(`Waiting for audio metadata with src="${src}" to be loaded`);
-    try {
-      const data = await getAudioData(src, sampleRate === undefined && initialRequestInit === undefined ? undefined : { sampleRate, requestInit: initialRequestInit });
-      if (mountState.current.isMounted) {
-        setMetadata(data);
+    const fetchMetadata = async () => {
+      try {
+        const data = await getAudioData(src, sampleRate === undefined && initialRequestInit === undefined ? undefined : { sampleRate, requestInit: initialRequestInit });
+        if (!cancelled) {
+          setMetadata(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          cancelRender(err);
+        }
       }
-    } catch (err) {
-      cancelRender(err);
-    }
-    continueRender(handle);
+      continueRender(handle);
+    };
+    fetchMetadata();
+    return () => {
+      cancelled = true;
+      continueRender(handle);
+    };
   }, [
     src,
     sampleRate,
@@ -24511,9 +29063,6 @@ var useAudioData = (src, options) => {
     continueRender,
     cancelRender
   ]);
-  useLayoutEffect(() => {
-    fetchMetadata();
-  }, [fetchMetadata]);
   return metadata;
 };
 // src/use-windowed-audio-data.ts
@@ -24598,16 +29147,16 @@ var useWindowedAudioData = ({
   channelIndex = 0,
   requestInit
 }) => {
-  const isMounted = useRef2(true);
+  const isMounted = useRef(true);
   const [audioUtils, setAudioUtils] = useState2(null);
   const [waveFormMap, setWaveformMap] = useState2({});
-  const requests = useRef2({});
+  const requests = useRef({});
   const [initialWindowInSeconds] = useState2(windowInSeconds);
   const [initialRequestInit] = useState2(requestInit);
   if (windowInSeconds !== initialWindowInSeconds) {
     throw new Error("windowInSeconds cannot be changed dynamically");
   }
-  useEffect2(() => {
+  useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
@@ -24624,7 +29173,7 @@ var useWindowedAudioData = ({
     };
   }, [audioUtils]);
   const { delayRender, continueRender, cancelRender } = useDelayRender2();
-  const fetchMetadata = useCallback2(async (signal) => {
+  const fetchMetadata = useCallback(async (signal) => {
     const handle = delayRender(`Waiting for audio metadata with src="${src}" to be loaded`);
     const cont = () => {
       continueRender(handle);
@@ -24717,7 +29266,7 @@ var useWindowedAudioData = ({
       currentWindowIndex + 1 > maxWindowIndex ? null : currentWindowIndex + 1
     ].filter((i) => i !== null).filter((i) => i >= 0);
   }, [currentWindowIndex, audioUtils, windowInSeconds]);
-  const fetchAndSetWaveformData = useCallback2(async (windowIndex) => {
+  const fetchAndSetWaveformData = useCallback(async (windowIndex) => {
     if (!audioUtils?.metadata || !audioUtils) {
       throw new Error("MediaBunny context is not loaded yet");
     }
@@ -24779,7 +29328,7 @@ Due to format limitation, audio decoding must start from the beginning of the fi
       }
     }
   }, [channelIndex, audioUtils, windowInSeconds, windowsToFetch, src]);
-  useEffect2(() => {
+  useEffect(() => {
     if (!audioUtils?.metadata) {
       return;
     }
@@ -25109,7 +29658,7 @@ var getVisualization = ({
 var getMax = (array) => {
   let max = 0;
   for (let i = 0;i < array.length; i++) {
-    const val = array[i];
+    const val = Math.abs(toInt16(array[i]));
     if (val > max) {
       max = val;
     }
@@ -25121,7 +29670,7 @@ var getMaxPossibleMagnitude = (metadata) => {
   if (cache2[metadata.resultId]) {
     return cache2[metadata.resultId];
   }
-  const result = toInt16(getMax(metadata.channelWaveforms[0]));
+  const result = getMax(metadata.channelWaveforms[0]) || 1;
   cache2[metadata.resultId] = result;
   return result;
 };
@@ -27762,7 +32311,7 @@ var encode = __webpack_require__(5374);
 var src_target = __webpack_require__(917);
 ;// ./node_modules/remotion/dist/esm/version.mjs
 // src/version.ts
-var VERSION = "4.0.538";
+var VERSION = "4.0.539";
 
 
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/sample.js
@@ -34750,7 +39299,7 @@ var renderStillOnWeb = (options) => {
 };
 
 
-;// ./node_modules/@remotion/studio/dist/esm/index-394460kk.mjs
+;// ./node_modules/@remotion/studio/dist/esm/index-kewagct1.mjs
 
 
 
@@ -34759,7 +39308,7 @@ var renderStillOnWeb = (options) => {
 
 // ../paths/dist/esm/index.mjs
 
-var index_394460kk_length = {
+var index_kewagct1_length = {
   a: 7,
   A: 7,
   C: 6,
@@ -34783,7 +39332,7 @@ var index_394460kk_length = {
 };
 var chunkExact = (array, instruction) => {
   const chunks = [];
-  const expectedSize = index_394460kk_length[instruction];
+  const expectedSize = index_kewagct1_length[instruction];
   if (array.length % expectedSize !== 0) {
     throw new Error(`Expected number of arguments of SVG instruction "${instruction} ${array.join(" ")}" to be a multiple of ${expectedSize}`);
   }
@@ -34829,13 +39378,13 @@ var parseValues = (args, instructionType) => {
     }
     throw new Error(`Malformed path data: ${instructionType} was expected to have numbers afterwards`);
   }
-  const expectedArguments = index_394460kk_length[instructionType];
+  const expectedArguments = index_kewagct1_length[instructionType];
   if (numbers.length % expectedArguments !== 0) {
     throw new Error(`Malformed path data: ${instructionType} was expected to have a multiple of ${expectedArguments} numbers, but got "${instructionType} ${numbers.join(" ")} instead"`);
   }
   return numbers.map(Number);
 };
-var index_394460kk_parsePath = (path) => {
+var index_kewagct1_parsePath = (path) => {
   if (!path) {
     throw new Error("No path provided");
   }
@@ -35576,7 +40125,7 @@ var normalizeInstructions = (instructions) => {
   return normalized;
 };
 var normalizePath = (path) => {
-  const instructions = index_394460kk_parsePath(path);
+  const instructions = index_kewagct1_parsePath(path);
   const normalized = normalizeInstructions(instructions);
   return serializeInstructions(normalized);
 };
@@ -35848,7 +40397,7 @@ var interpolatePaths = (input, inputRange, outputRange, options) => {
   }
   const contributingPaths = outputRange.map((path, index) => ({ path, weight: weights[index] })).filter(({ weight }) => weight !== 0);
   const paths = contributingPaths.map(({ path }) => {
-    const commands = reduceInstructions(index_394460kk_parsePath(path));
+    const commands = reduceInstructions(index_kewagct1_parsePath(path));
     if (commands.length === 0) {
       throw new TypeError(`SVG Path "${path}" is not valid`);
     }
@@ -36126,6 +40675,7 @@ var buildTimelineTree = ({
   propStatuses,
   includeTextContent,
   includeSourceControls,
+  includeInspectorOnlyFields,
   runtimeValues
 }) => {
   const roots = [];
@@ -36177,7 +40727,7 @@ var buildTimelineTree = ({
           nodePath: sequenceSubscriptionKey,
           propStatuses,
           getEffectDragOverrides
-        });
+        }).filter((field) => includeInspectorOnlyFields || effect.type !== "remotion/curves" || field.key !== "points");
         return {
           kind: "group",
           nodePathInfo: {
@@ -36432,7 +40982,7 @@ var slider = {
   height: "100%"
 };
 var PLAYHEAD_LINE_WIDTH = 1;
-var index_394460kk_line = {
+var index_kewagct1_line = {
   height: "100vh",
   width: PLAYHEAD_LINE_WIDTH,
   position: "fixed",
@@ -36518,7 +41068,7 @@ var TimelineSliderInner = () => {
       style: slider,
       children: [
         /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
-          style: index_394460kk_line
+          style: index_kewagct1_line
         }),
         /* @__PURE__ */ (0,jsx_runtime.jsx)(TimelineSliderHandle, {})
       ]
@@ -37227,7 +41777,7 @@ function cached(getter) {
     }
   };
 }
-function index_394460kk_nullish(input) {
+function index_kewagct1_nullish(input) {
   return input === null || input === undefined;
 }
 function cleanRegex(source) {
@@ -37688,7 +42238,7 @@ var _parse = (_Err) => {
   };
   return fn;
 };
-var index_394460kk_parse = /* @__PURE__ */ _parse($ZodRealError);
+var index_kewagct1_parse = /* @__PURE__ */ _parse($ZodRealError);
 var _parseAsync = (_Err) => {
   const fn = async (schema, value, _ctx, params) => {
     const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
@@ -37728,14 +42278,14 @@ var _safeParseAsync = (_Err) => async (schema, value, _ctx) => {
   } : { success: true, data: result.value };
 };
 var safeParseAsync = /* @__PURE__ */ _safeParseAsync($ZodRealError);
-var index_394460kk_string = (params) => {
+var index_kewagct1_string = (params) => {
   const regex = params ? `[\\s\\S]{${params?.minimum ?? 0},${params?.maximum ?? ""}}` : `[\\s\\S]*`;
   return new RegExp(`^${regex}$`);
 };
 var integer = /^-?\d+$/;
-var index_394460kk_number = /^-?\d+(?:\.\d+)?$/;
-var index_394460kk_boolean = /^(?:true|false)$/i;
-var index_394460kk_null = /^null$/i;
+var index_kewagct1_number = /^-?\d+(?:\.\d+)?$/;
+var index_kewagct1_boolean = /^(?:true|false)$/i;
+var index_kewagct1_null = /^null$/i;
 var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
   var _a;
   inst._zod ?? (inst._zod = {});
@@ -37744,7 +42294,7 @@ var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
 });
 var _whenHasLength = (payload) => {
   const val = payload.value;
-  return !index_394460kk_nullish(val) && val.length !== undefined;
+  return !index_kewagct1_nullish(val) && val.length !== undefined;
 };
 var numericOriginMap = {
   number: "number",
@@ -38115,7 +42665,7 @@ function standardProps(inst) {
 }
 var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
   $ZodType.init(inst, def);
-  inst._zod.pattern = [...inst?._zod.bag?.patterns ?? []].pop() ?? index_394460kk_string(inst._zod.bag);
+  inst._zod.pattern = [...inst?._zod.bag?.patterns ?? []].pop() ?? index_kewagct1_string(inst._zod.bag);
   inst._zod.parse = (payload, _) => {
     if (def.coerce)
       try {
@@ -38134,7 +42684,7 @@ var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
 });
 var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
   $ZodType.init(inst, def);
-  inst._zod.pattern = inst._zod.bag.pattern ?? index_394460kk_number;
+  inst._zod.pattern = inst._zod.bag.pattern ?? index_kewagct1_number;
   inst._zod.parse = (payload, _ctx) => {
     if (def.coerce)
       try {
@@ -38161,7 +42711,7 @@ var $ZodNumberFormat = /* @__PURE__ */ $constructor("$ZodNumberFormat", (inst, d
 });
 var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def) => {
   $ZodType.init(inst, def);
-  inst._zod.pattern = index_394460kk_boolean;
+  inst._zod.pattern = index_kewagct1_boolean;
   inst._zod.parse = (payload, _ctx) => {
     if (def.coerce)
       try {
@@ -38181,7 +42731,7 @@ var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def) => {
 });
 var $ZodNull = /* @__PURE__ */ $constructor("$ZodNull", (inst, def) => {
   $ZodType.init(inst, def);
-  inst._zod.pattern = index_394460kk_null;
+  inst._zod.pattern = index_kewagct1_null;
   inst._zod.values = new Set([null]);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
@@ -38579,7 +43129,7 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
         if (keyResult instanceof Promise) {
           throw new Error("Async schemas not supported in object keys currently");
         }
-        const checkNumericKey = typeof key === "string" && index_394460kk_number.test(key) && keyResult.issues.length;
+        const checkNumericKey = typeof key === "string" && index_kewagct1_number.test(key) && keyResult.issues.length;
         if (checkNumericKey) {
           const retryResult = def.keyType._zod.run({ value: Number(key), issues: [] }, ctx);
           if (retryResult instanceof Promise) {
@@ -38905,7 +43455,7 @@ function _refine(Class, fn, _params) {
   });
   return schema;
 }
-var index_394460kk_ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (inst, def) => {
+var index_kewagct1_ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (inst, def) => {
   if (!inst._zod)
     throw new Error("Uninitialized schema in ZodMiniType.");
   $ZodType.init(inst, def);
@@ -38919,7 +43469,7 @@ var index_394460kk_ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (in
     own(this, "with", value);
   },
   parse(data, params) {
-    return index_394460kk_parse(this, data, params, { callee: this.parse });
+    return index_kewagct1_parse(this, data, params, { callee: this.parse });
   },
   parseAsync(data, params) {
     return parseAsync(this, data, params, { callee: this.parseAsync });
@@ -38954,176 +43504,176 @@ var index_394460kk_ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (in
     return args.length === 0 ? fn(this) : fn(this, ...args);
   }
 });
-var index_394460kk_ZodMiniString = /* @__PURE__ */ $constructor("ZodMiniString", (inst, def) => {
+var index_kewagct1_ZodMiniString = /* @__PURE__ */ $constructor("ZodMiniString", (inst, def) => {
   $ZodString.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
 function string2(params) {
-  return _string(index_394460kk_ZodMiniString, params);
+  return _string(index_kewagct1_ZodMiniString, params);
 }
-var index_394460kk_ZodMiniNumber = /* @__PURE__ */ $constructor("ZodMiniNumber", (inst, def) => {
+var index_kewagct1_ZodMiniNumber = /* @__PURE__ */ $constructor("ZodMiniNumber", (inst, def) => {
   $ZodNumber.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
 function number2(params) {
-  return _number(index_394460kk_ZodMiniNumber, params);
+  return _number(index_kewagct1_ZodMiniNumber, params);
 }
-var index_394460kk_ZodMiniNumberFormat = /* @__PURE__ */ $constructor("ZodMiniNumberFormat", (inst, def) => {
+var index_kewagct1_ZodMiniNumberFormat = /* @__PURE__ */ $constructor("ZodMiniNumberFormat", (inst, def) => {
   $ZodNumberFormat.init(inst, def);
-  index_394460kk_ZodMiniNumber.init(inst, def);
+  index_kewagct1_ZodMiniNumber.init(inst, def);
 });
-function index_394460kk_int(params) {
-  return _int(index_394460kk_ZodMiniNumberFormat, params);
+function index_kewagct1_int(params) {
+  return _int(index_kewagct1_ZodMiniNumberFormat, params);
 }
-var index_394460kk_ZodMiniBoolean = /* @__PURE__ */ $constructor("ZodMiniBoolean", (inst, def) => {
+var index_kewagct1_ZodMiniBoolean = /* @__PURE__ */ $constructor("ZodMiniBoolean", (inst, def) => {
   $ZodBoolean.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
 function boolean2(params) {
-  return _boolean(index_394460kk_ZodMiniBoolean, params);
+  return _boolean(index_kewagct1_ZodMiniBoolean, params);
 }
-var index_394460kk_ZodMiniNull = /* @__PURE__ */ $constructor("ZodMiniNull", (inst, def) => {
+var index_kewagct1_ZodMiniNull = /* @__PURE__ */ $constructor("ZodMiniNull", (inst, def) => {
   $ZodNull.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
 function _null3(params) {
-  return _null2(index_394460kk_ZodMiniNull, params);
+  return _null2(index_kewagct1_ZodMiniNull, params);
 }
-var index_394460kk_ZodMiniUnknown = /* @__PURE__ */ $constructor("ZodMiniUnknown", (inst, def) => {
+var index_kewagct1_ZodMiniUnknown = /* @__PURE__ */ $constructor("ZodMiniUnknown", (inst, def) => {
   $ZodUnknown.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_unknown() {
-  return _unknown(index_394460kk_ZodMiniUnknown);
+function index_kewagct1_unknown() {
+  return _unknown(index_kewagct1_ZodMiniUnknown);
 }
-var index_394460kk_ZodMiniNever = /* @__PURE__ */ $constructor("ZodMiniNever", (inst, def) => {
+var index_kewagct1_ZodMiniNever = /* @__PURE__ */ $constructor("ZodMiniNever", (inst, def) => {
   $ZodNever.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_never(params) {
-  return _never(index_394460kk_ZodMiniNever, params);
+function index_kewagct1_never(params) {
+  return _never(index_kewagct1_ZodMiniNever, params);
 }
-var index_394460kk_ZodMiniArray = /* @__PURE__ */ $constructor("ZodMiniArray", (inst, def) => {
+var index_kewagct1_ZodMiniArray = /* @__PURE__ */ $constructor("ZodMiniArray", (inst, def) => {
   $ZodArray.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_array(element, params) {
-  return new index_394460kk_ZodMiniArray({
+function index_kewagct1_array(element, params) {
+  return new index_kewagct1_ZodMiniArray({
     type: "array",
     element,
     ...normalizeParams(params)
   });
 }
-var index_394460kk_ZodMiniObject = /* @__PURE__ */ $constructor("ZodMiniObject", (inst, def) => {
+var index_kewagct1_ZodMiniObject = /* @__PURE__ */ $constructor("ZodMiniObject", (inst, def) => {
   $ZodObject.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
   installLazyProp(inst, "shape", (self) => self._zod.def.shape, false);
 });
-function index_394460kk_object(shape, params) {
+function index_kewagct1_object(shape, params) {
   const def = {
     type: "object",
     shape: shape ?? {},
     ...normalizeParams(params)
   };
-  return new index_394460kk_ZodMiniObject(def);
+  return new index_kewagct1_ZodMiniObject(def);
 }
-function index_394460kk_strictObject(shape, params) {
-  return new index_394460kk_ZodMiniObject({
+function index_kewagct1_strictObject(shape, params) {
+  return new index_kewagct1_ZodMiniObject({
     type: "object",
     shape,
-    catchall: index_394460kk_never(),
+    catchall: index_kewagct1_never(),
     ...normalizeParams(params)
   });
 }
-function index_394460kk_looseObject(shape, params) {
-  return new index_394460kk_ZodMiniObject({
+function index_kewagct1_looseObject(shape, params) {
+  return new index_kewagct1_ZodMiniObject({
     type: "object",
     shape,
-    catchall: index_394460kk_unknown(),
+    catchall: index_kewagct1_unknown(),
     ...normalizeParams(params)
   });
 }
-var index_394460kk_ZodMiniUnion = /* @__PURE__ */ $constructor("ZodMiniUnion", (inst, def) => {
+var index_kewagct1_ZodMiniUnion = /* @__PURE__ */ $constructor("ZodMiniUnion", (inst, def) => {
   $ZodUnion.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_union(options, params) {
-  return new index_394460kk_ZodMiniUnion({
+function index_kewagct1_union(options, params) {
+  return new index_kewagct1_ZodMiniUnion({
     type: "union",
     options,
     ...normalizeParams(params)
   });
 }
-var index_394460kk_ZodMiniRecord = /* @__PURE__ */ $constructor("ZodMiniRecord", (inst, def) => {
+var index_kewagct1_ZodMiniRecord = /* @__PURE__ */ $constructor("ZodMiniRecord", (inst, def) => {
   $ZodRecord.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_record(keyType, valueType, params) {
+function index_kewagct1_record(keyType, valueType, params) {
   if (!valueType || !valueType._zod) {
-    return new index_394460kk_ZodMiniRecord({
+    return new index_kewagct1_ZodMiniRecord({
       type: "record",
       keyType: string2(),
       valueType: keyType,
       ...normalizeParams(valueType)
     });
   }
-  return new index_394460kk_ZodMiniRecord({
+  return new index_kewagct1_ZodMiniRecord({
     type: "record",
     keyType,
     valueType,
     ...normalizeParams(params)
   });
 }
-var index_394460kk_ZodMiniEnum = /* @__PURE__ */ $constructor("ZodMiniEnum", (inst, def) => {
+var index_kewagct1_ZodMiniEnum = /* @__PURE__ */ $constructor("ZodMiniEnum", (inst, def) => {
   $ZodEnum.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
   inst.options = Object.values(def.entries);
 });
-function index_394460kk_enum(values, params) {
+function index_kewagct1_enum(values, params) {
   const entries = Array.isArray(values) ? Object.fromEntries(values.map((v) => [v, v])) : values;
-  return new index_394460kk_ZodMiniEnum({
+  return new index_kewagct1_ZodMiniEnum({
     type: "enum",
     entries,
     ...normalizeParams(params)
   });
 }
-var index_394460kk_ZodMiniLiteral = /* @__PURE__ */ $constructor("ZodMiniLiteral", (inst, def) => {
+var index_kewagct1_ZodMiniLiteral = /* @__PURE__ */ $constructor("ZodMiniLiteral", (inst, def) => {
   $ZodLiteral.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_literal(value, params) {
-  return new index_394460kk_ZodMiniLiteral({
+function index_kewagct1_literal(value, params) {
+  return new index_kewagct1_ZodMiniLiteral({
     type: "literal",
     values: Array.isArray(value) ? value : [value],
     ...normalizeParams(params)
   });
 }
-var index_394460kk_ZodMiniOptional = /* @__PURE__ */ $constructor("ZodMiniOptional", (inst, def) => {
+var index_kewagct1_ZodMiniOptional = /* @__PURE__ */ $constructor("ZodMiniOptional", (inst, def) => {
   $ZodOptional.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_optional(innerType) {
-  return new index_394460kk_ZodMiniOptional({
+function index_kewagct1_optional(innerType) {
+  return new index_kewagct1_ZodMiniOptional({
     type: "optional",
     innerType
   });
 }
-var index_394460kk_ZodMiniNullable = /* @__PURE__ */ $constructor("ZodMiniNullable", (inst, def) => {
+var index_kewagct1_ZodMiniNullable = /* @__PURE__ */ $constructor("ZodMiniNullable", (inst, def) => {
   $ZodNullable.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_nullable(innerType) {
-  return new index_394460kk_ZodMiniNullable({
+function index_kewagct1_nullable(innerType) {
+  return new index_kewagct1_ZodMiniNullable({
     type: "nullable",
     innerType
   });
 }
-var index_394460kk_ZodMiniDefault = /* @__PURE__ */ $constructor("ZodMiniDefault", (inst, def) => {
+var index_kewagct1_ZodMiniDefault = /* @__PURE__ */ $constructor("ZodMiniDefault", (inst, def) => {
   $ZodDefault.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_default(innerType, defaultValue) {
-  return new index_394460kk_ZodMiniDefault({
+function index_kewagct1_default(innerType, defaultValue) {
+  return new index_kewagct1_ZodMiniDefault({
     type: "default",
     innerType,
     get defaultValue() {
@@ -39131,32 +43681,32 @@ function index_394460kk_default(innerType, defaultValue) {
     }
   });
 }
-var index_394460kk_ZodMiniLazy = /* @__PURE__ */ $constructor("ZodMiniLazy", (inst, def) => {
+var index_kewagct1_ZodMiniLazy = /* @__PURE__ */ $constructor("ZodMiniLazy", (inst, def) => {
   $ZodLazy.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_lazy(getter) {
-  return new index_394460kk_ZodMiniLazy({
+function index_kewagct1_lazy(getter) {
+  return new index_kewagct1_ZodMiniLazy({
     type: "lazy",
     getter
   });
 }
-var index_394460kk_ZodMiniCustom = /* @__PURE__ */ $constructor("ZodMiniCustom", (inst, def) => {
+var index_kewagct1_ZodMiniCustom = /* @__PURE__ */ $constructor("ZodMiniCustom", (inst, def) => {
   $ZodCustom.init(inst, def);
-  index_394460kk_ZodMiniType.init(inst, def);
+  index_kewagct1_ZodMiniType.init(inst, def);
 });
-function index_394460kk_refine(fn, _params = {}) {
-  return _refine(index_394460kk_ZodMiniCustom, fn, _params);
+function index_kewagct1_refine(fn, _params = {}) {
+  return _refine(index_kewagct1_ZodMiniCustom, fn, _params);
 }
-function index_394460kk_json() {
-  const jsonSchema = index_394460kk_lazy(() => {
-    return index_394460kk_union([string2(), number2(), boolean2(), _null3(), index_394460kk_array(jsonSchema), index_394460kk_record(string2(), jsonSchema)]);
+function index_kewagct1_json() {
+  const jsonSchema = index_kewagct1_lazy(() => {
+    return index_kewagct1_union([string2(), number2(), boolean2(), _null3(), index_kewagct1_array(jsonSchema), index_kewagct1_record(string2(), jsonSchema)]);
   });
   return jsonSchema;
 }
-var assetDragDataSchema = index_394460kk_object({
-  type: index_394460kk_literal("remotion-asset"),
-  version: index_394460kk_literal(1),
+var assetDragDataSchema = index_kewagct1_object({
+  type: index_kewagct1_literal("remotion-asset"),
+  version: index_kewagct1_literal(1),
   assetPath: string2().check(_minLength(1))
 });
 var makeAssetDragData = (assetPath) => {
@@ -39175,26 +43725,26 @@ var parseAssetDragData = (value) => {
   }
 };
 var componentIdentifierSchema = string2().check(_regex(/^[A-Z_$][A-Za-z0-9_$]*$/));
-var componentImportPathSchema = string2().check(index_394460kk_refine((value) => value.length > 0 && value.length < 200 && !value.includes("\\") && !value.includes("\x00") && !value.startsWith("/") && /^[A-Za-z0-9@._/-]+$/.test(value)));
-var componentPropNameSchema = string2().check(index_394460kk_refine((value) => value !== "style" && /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(value)));
-var componentPropSchema = index_394460kk_object({
+var componentImportPathSchema = string2().check(index_kewagct1_refine((value) => value.length > 0 && value.length < 200 && !value.includes("\\") && !value.includes("\x00") && !value.startsWith("/") && /^[A-Za-z0-9@._/-]+$/.test(value)));
+var componentPropNameSchema = string2().check(index_kewagct1_refine((value) => value !== "style" && /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(value)));
+var componentPropSchema = index_kewagct1_object({
   name: componentPropNameSchema,
-  value: index_394460kk_union([string2(), number2(), boolean2()])
+  value: index_kewagct1_union([string2(), number2(), boolean2()])
 });
-var componentPropsSchema = index_394460kk_array(componentPropSchema).check(index_394460kk_refine((props) => {
+var componentPropsSchema = index_kewagct1_array(componentPropSchema).check(index_kewagct1_refine((props) => {
   const names = props.map((prop) => prop.name);
   return new Set(names).size === names.length;
 }));
-var componentDimensionsSchema = index_394460kk_object({
+var componentDimensionsSchema = index_kewagct1_object({
   width: number2().check(_nonnegative()),
   height: number2().check(_nonnegative())
 });
-var componentDragDataSchema = index_394460kk_object({
-  type: index_394460kk_literal("remotion-component"),
-  version: index_394460kk_literal(1),
-  component: index_394460kk_object({
+var componentDragDataSchema = index_kewagct1_object({
+  type: index_kewagct1_literal("remotion-component"),
+  version: index_kewagct1_literal(1),
+  component: index_kewagct1_object({
     componentName: componentIdentifierSchema,
-    dimensions: index_394460kk_optional(componentDimensionsSchema),
+    dimensions: index_kewagct1_optional(componentDimensionsSchema),
     importName: componentIdentifierSchema,
     importPath: componentImportPathSchema,
     props: componentPropsSchema
@@ -39412,12 +43962,12 @@ var getDragPreviewMetadata = (mimeTypes) => {
   }
   return null;
 };
-var jsonSchema = index_394460kk_json();
-var effectConfigSchema = index_394460kk_record(string2(), jsonSchema);
-var effectDragDataSchema = index_394460kk_object({
-  type: index_394460kk_literal("remotion-effect"),
-  version: index_394460kk_literal(1),
-  effect: index_394460kk_object({
+var jsonSchema = index_kewagct1_json();
+var effectConfigSchema = index_kewagct1_record(string2(), jsonSchema);
+var effectDragDataSchema = index_kewagct1_object({
+  type: index_kewagct1_literal("remotion-effect"),
+  version: index_kewagct1_literal(1),
+  effect: index_kewagct1_object({
     name: string2(),
     importPath: string2(),
     config: effectConfigSchema
@@ -39521,8 +44071,8 @@ var isValidPackageName = (packageName) => {
 };
 var maxElementAssets = 100;
 var maxElementAssetBytes = 50 * 1024 * 1024;
-var lowercaseElementFileNameSchema = string2().check(index_394460kk_refine((value) => value.length > 0 && value.length < 120 && value === value.toLowerCase() && value.endsWith(".tsx") && !value.includes("/") && !value.includes("\\") && !value.includes("\x00") && !value.includes("..") && /^[a-z0-9][a-z0-9.-]*\.tsx$/.test(value)));
-var slugSchema = string2().check(index_394460kk_refine((value) => value.length > 0 && value.length < 120 && /^[a-z0-9][a-z0-9/-]*$/.test(value) && !value.includes("..") && !value.includes("//")));
+var lowercaseElementFileNameSchema = string2().check(index_kewagct1_refine((value) => value.length > 0 && value.length < 120 && value === value.toLowerCase() && value.endsWith(".tsx") && !value.includes("/") && !value.includes("\\") && !value.includes("\x00") && !value.includes("..") && /^[a-z0-9][a-z0-9.-]*\.tsx$/.test(value)));
+var slugSchema = string2().check(index_kewagct1_refine((value) => value.length > 0 && value.length < 120 && /^[a-z0-9][a-z0-9/-]*$/.test(value) && !value.includes("..") && !value.includes("//")));
 var makeElementFileNameFromSlug = (slug) => {
   if (!safeParse(slugSchema, slug).success) {
     return null;
@@ -39548,9 +44098,9 @@ var packagesProvidedByRemotionProjects = new Set([
   "remotion"
 ]);
 var exactVersionSchema = string2().check(_regex(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/));
-var elementDependencyEnvelopeSchema = index_394460kk_looseObject({
-  name: string2().check(index_394460kk_refine(isValidPackageName)),
-  version: index_394460kk_unknown()
+var elementDependencyEnvelopeSchema = index_kewagct1_looseObject({
+  name: string2().check(index_kewagct1_refine(isValidPackageName)),
+  version: index_kewagct1_unknown()
 });
 var getElementDependencyError = (value) => {
   const parsed = safeParse(elementDependencyEnvelopeSchema, value);
@@ -39565,7 +44115,7 @@ var getElementDependencyError = (value) => {
   }
   return safeParse(exactVersionSchema, parsed.data.version).success ? null : `Non-Remotion Element dependency ${JSON.stringify(parsed.data.name)} must declare an exact version.`;
 };
-var elementDependencySchema = elementDependencyEnvelopeSchema.check(index_394460kk_refine((value) => getElementDependencyError(value) === null));
+var elementDependencySchema = elementDependencyEnvelopeSchema.check(index_kewagct1_refine((value) => getElementDependencyError(value) === null));
 function assertElementDependency(value) {
   const error = getElementDependencyError(value);
   if (error !== null) {
@@ -39603,19 +44153,19 @@ var isValidElementAssetUrl = (value) => {
     return false;
   }
 };
-var elementAssetSchema = index_394460kk_union([
-  index_394460kk_strictObject({
-    path: string2().check(index_394460kk_refine(isValidElementAssetPath)),
-    type: index_394460kk_literal("url"),
-    url: string2().check(index_394460kk_refine(isValidElementAssetUrl))
+var elementAssetSchema = index_kewagct1_union([
+  index_kewagct1_strictObject({
+    path: string2().check(index_kewagct1_refine(isValidElementAssetPath)),
+    type: index_kewagct1_literal("url"),
+    url: string2().check(index_kewagct1_refine(isValidElementAssetUrl))
   }),
-  index_394460kk_strictObject({
-    path: string2().check(index_394460kk_refine(isValidElementAssetPath)),
-    type: index_394460kk_literal("base64"),
+  index_kewagct1_strictObject({
+    path: string2().check(index_kewagct1_refine(isValidElementAssetPath)),
+    type: index_kewagct1_literal("base64"),
     data: string2().check(_regex(strictBase64Regex))
   })
 ]);
-var elementAssetsSchema = index_394460kk_array(elementAssetSchema).check(_maxLength(maxElementAssets));
+var elementAssetsSchema = index_kewagct1_array(elementAssetSchema).check(_maxLength(maxElementAssets));
 function assertElementAssets(value) {
   const parsed = safeParse(elementAssetsSchema, value);
   if (!parsed.success) {
@@ -39642,16 +44192,16 @@ function assertElementAssets(value) {
     throw new TypeError("Element assets exceed the 50MB aggregate limit");
   }
 }
-var dimensionsSchema = index_394460kk_object({
+var dimensionsSchema = index_kewagct1_object({
   width: number2().check(_positive()),
   height: number2().check(_positive())
 });
-var elementInstallationModeSchema = index_394460kk_union([
-  index_394460kk_literal("wrapped"),
-  index_394460kk_literal("component-owned-sequence")
+var elementInstallationModeSchema = index_kewagct1_union([
+  index_kewagct1_literal("wrapped"),
+  index_kewagct1_literal("component-owned-sequence")
 ]);
-var durationSchema = number2().check(index_394460kk_int(), _positive(), _lte(1e8));
-var elementInitialPropsSchema = index_394460kk_record(string2(), index_394460kk_unknown());
+var durationSchema = number2().check(index_kewagct1_int(), _positive(), _lte(1e8));
+var elementInitialPropsSchema = index_kewagct1_record(string2(), index_kewagct1_unknown());
 var initialPropNameRegex = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
 var componentOwnedInstallationProps = new Set([
   "durationInFrames",
@@ -39692,7 +44242,7 @@ var isElementInitialProps = (value) => {
   }
   return isJsonCompatibleValue(value, new Set);
 };
-var elementAssetPathSchema = string2().check(index_394460kk_refine(isValidElementAssetPath));
+var elementAssetPathSchema = string2().check(index_kewagct1_refine(isValidElementAssetPath));
 var isStaticFileRef = (value) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
@@ -39794,20 +44344,20 @@ var makeElementDragData = ({
     element
   };
 };
-var elementDragDataSchema = index_394460kk_object({
-  type: index_394460kk_literal("remotion-element"),
-  version: index_394460kk_union([index_394460kk_literal(1), index_394460kk_literal(2)]),
-  element: index_394460kk_object({
-    assets: index_394460kk_optional(index_394460kk_array(index_394460kk_unknown())),
-    dependencies: index_394460kk_array(index_394460kk_unknown()).check(_maxLength(100)),
-    durationInFrames: index_394460kk_optional(durationSchema),
-    initialProps: index_394460kk_optional(index_394460kk_nullable(elementInitialPropsSchema)),
-    installationMode: index_394460kk_optional(elementInstallationModeSchema),
-    isCaptionStyle: index_394460kk_optional(boolean2()),
+var elementDragDataSchema = index_kewagct1_object({
+  type: index_kewagct1_literal("remotion-element"),
+  version: index_kewagct1_union([index_kewagct1_literal(1), index_kewagct1_literal(2)]),
+  element: index_kewagct1_object({
+    assets: index_kewagct1_optional(index_kewagct1_array(index_kewagct1_unknown())),
+    dependencies: index_kewagct1_array(index_kewagct1_unknown()).check(_maxLength(100)),
+    durationInFrames: index_kewagct1_optional(durationSchema),
+    initialProps: index_kewagct1_optional(index_kewagct1_nullable(elementInitialPropsSchema)),
+    installationMode: index_kewagct1_optional(elementInstallationModeSchema),
+    isCaptionStyle: index_kewagct1_optional(boolean2()),
     slug: slugSchema,
     displayName: string2().check(_minLength(1), _maxLength(119)),
-    sourceCode: string2().check(index_394460kk_refine((value) => value.trim().length > 0 && value.length < 200000 && getElementComponentNameFromSourceCode(value) !== null)),
-    dimensions: index_394460kk_optional(index_394460kk_nullable(dimensionsSchema))
+    sourceCode: string2().check(index_kewagct1_refine((value) => value.trim().length > 0 && value.length < 200000 && getElementComponentNameFromSourceCode(value) !== null)),
+    dimensions: index_kewagct1_optional(index_kewagct1_nullable(dimensionsSchema))
   })
 });
 var parseElementDragData = (value) => {
@@ -39853,11 +44403,11 @@ var parseElementDragData = (value) => {
     return null;
   }
 };
-var renderOutputDragDataSchema = index_394460kk_object({
-  type: index_394460kk_literal("remotion-render-output"),
-  version: index_394460kk_literal(1),
+var renderOutputDragDataSchema = index_kewagct1_object({
+  type: index_kewagct1_literal("remotion-render-output"),
+  version: index_kewagct1_literal(1),
   outputPath: string2().check(_minLength(1)),
-  fileName: string2().check(index_394460kk_refine((value) => value.length > 0 && !value.includes("/") && !value.includes("\\")))
+  fileName: string2().check(index_kewagct1_refine((value) => value.length > 0 && !value.includes("/") && !value.includes("\\")))
 });
 var makeRenderOutputDragData = ({
   outputPath,
@@ -39881,12 +44431,12 @@ var parseRenderOutputDragData = (value) => {
     return null;
   }
 };
-var sfxDragDataSchema = index_394460kk_object({
-  type: index_394460kk_literal("remotion-sfx"),
-  version: index_394460kk_literal(1),
-  sfx: index_394460kk_object({
+var sfxDragDataSchema = index_kewagct1_object({
+  type: index_kewagct1_literal("remotion-sfx"),
+  version: index_kewagct1_literal(1),
+  sfx: index_kewagct1_object({
     name: string2().check(_minLength(1)),
-    url: string2().check(index_394460kk_refine(isUrl))
+    url: string2().check(index_kewagct1_refine(isUrl))
   })
 });
 var makeSfxDragData = ({
@@ -39993,7 +44543,19 @@ var parseDragData = (source) => {
   if ("types" in source) {
     const candidate = getDragPreviewMetadata(source.types);
     if (candidate === null) {
-      return null;
+      const data = parseElementDragData(source.getData("text/plain"));
+      if (data === null || data.element.durationInFrames === undefined) {
+        return null;
+      }
+      return {
+        type: "element",
+        data,
+        preview: {
+          type: "element",
+          ...data.element.dimensions ?? {},
+          durationInFrames: data.element.durationInFrames
+        }
+      };
     }
     serialized = {
       mimeType: candidate.mimeType,
@@ -40043,17 +44605,17 @@ var parseDragData = (source) => {
   }
 };
 var MAX_PAYLOAD_SIZE = 250000;
-var durationSchema2 = index_394460kk_int().check(_positive(), _lte(1e8));
-var studioElementPayloadEnvelopeSchema = index_394460kk_object({
-  type: index_394460kk_literal("remotion-element"),
-  version: index_394460kk_union([index_394460kk_literal(1), index_394460kk_literal(2)]),
+var durationSchema2 = index_kewagct1_int().check(_positive(), _lte(1e8));
+var studioElementPayloadEnvelopeSchema = index_kewagct1_object({
+  type: index_kewagct1_literal("remotion-element"),
+  version: index_kewagct1_union([index_kewagct1_literal(1), index_kewagct1_literal(2)]),
   durationInFrames: durationSchema2,
-  element: index_394460kk_unknown()
+  element: index_kewagct1_unknown()
 });
 var displayNameSchema = string2().check(_minLength(1));
-var sourceCodeSchema = string2().check(index_394460kk_refine((value) => value.trim().length > 0));
-var installationModeSchema = index_394460kk_optional(index_394460kk_enum(["wrapped", "component-owned-sequence"]));
-var captionStyleSchema = index_394460kk_optional(boolean2());
+var sourceCodeSchema = string2().check(index_kewagct1_refine((value) => value.trim().length > 0));
+var installationModeSchema = index_kewagct1_optional(index_kewagct1_enum(["wrapped", "component-owned-sequence"]));
+var captionStyleSchema = index_kewagct1_optional(boolean2());
 var parseStudioElementPayload = (value) => {
   const parsed = safeParse(studioElementPayloadEnvelopeSchema, value);
   if (!parsed.success) {
@@ -40103,61 +44665,61 @@ var studioProtocolProbePorts = [
   3009
 ];
 var requestTimeout = 2000;
-var targetSchema = index_394460kk_looseObject({
+var targetSchema = index_kewagct1_looseObject({
   id: string2().check(_minLength(1)),
   expiresAt: number2(),
   lastFocusedAt: number2()
 });
-var installTargetSchema = index_394460kk_looseObject({
+var installTargetSchema = index_kewagct1_looseObject({
   id: string2().check(_minLength(1)),
   expiresAt: number2(),
-  lastFocusedAt: index_394460kk_nullable(number2()),
-  compositionId: index_394460kk_nullable(string2().check(_minLength(1)))
+  lastFocusedAt: index_kewagct1_nullable(number2()),
+  compositionId: index_kewagct1_nullable(string2().check(_minLength(1)))
 });
-var installCapabilitySchema = index_394460kk_looseObject({
-  type: index_394460kk_literal("install-element"),
-  payloadType: index_394460kk_literal("remotion-element"),
-  payloadVersions: index_394460kk_array(number2()),
-  target: index_394460kk_nullable(installTargetSchema)
+var installCapabilitySchema = index_kewagct1_looseObject({
+  type: index_kewagct1_literal("install-element"),
+  payloadType: index_kewagct1_literal("remotion-element"),
+  payloadVersions: index_kewagct1_array(number2()),
+  target: index_kewagct1_nullable(installTargetSchema)
 });
-var setLicenseKeyCapabilitySchema = index_394460kk_looseObject({
-  type: index_394460kk_literal("set-license-key"),
-  target: index_394460kk_nullable(targetSchema)
+var setLicenseKeyCapabilitySchema = index_kewagct1_looseObject({
+  type: index_kewagct1_literal("set-license-key"),
+  target: index_kewagct1_nullable(targetSchema)
 });
-var addElementLibraryCapabilitySchema = index_394460kk_looseObject({
-  type: index_394460kk_literal("add-element-library"),
-  target: index_394460kk_nullable(targetSchema)
+var addElementLibraryCapabilitySchema = index_kewagct1_looseObject({
+  type: index_kewagct1_literal("add-element-library"),
+  target: index_kewagct1_nullable(targetSchema)
 });
-var capabilitySchema = index_394460kk_union([
+var capabilitySchema = index_kewagct1_union([
   installCapabilitySchema,
   setLicenseKeyCapabilitySchema,
   addElementLibraryCapabilitySchema
 ]);
-var descriptorEnvelopeSchema = index_394460kk_looseObject({
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
+var descriptorEnvelopeSchema = index_kewagct1_looseObject({
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
   studioVersion: string2(),
-  projectName: index_394460kk_nullable(string2()),
-  capabilities: index_394460kk_array(index_394460kk_unknown())
+  projectName: index_kewagct1_nullable(string2()),
+  capabilities: index_kewagct1_array(index_kewagct1_unknown())
 });
-var descriptorSchema = index_394460kk_looseObject({
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
+var descriptorSchema = index_kewagct1_looseObject({
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
   studioVersion: string2(),
-  projectName: index_394460kk_nullable(string2()),
-  capabilities: index_394460kk_array(capabilitySchema)
-}).check(index_394460kk_refine((descriptor) => {
+  projectName: index_kewagct1_nullable(string2()),
+  capabilities: index_kewagct1_array(capabilitySchema)
+}).check(index_kewagct1_refine((descriptor) => {
   const capabilityTypes = descriptor.capabilities.map((capability) => capability.type);
   return new Set(capabilityTypes).size === capabilityTypes.length;
 }));
-var protocolEnvelopeSchema = index_394460kk_looseObject({
-  protocol: index_394460kk_literal("remotion-studio-protocol")
+var protocolEnvelopeSchema = index_kewagct1_looseObject({
+  protocol: index_kewagct1_literal("remotion-studio-protocol")
 });
-var protocolVersionEnvelopeSchema = index_394460kk_looseObject({
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_unknown()
+var protocolVersionEnvelopeSchema = index_kewagct1_looseObject({
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_unknown()
 });
-var index_394460kk_fetchWithTimeout = async ({
+var index_kewagct1_fetchWithTimeout = async ({
   fetchFn,
   options,
   url
@@ -40248,14 +44810,14 @@ var discoverStudios = async (dependencies) => {
   };
 };
 var isAbortError = (cause) => cause instanceof Error && cause.name === "AbortError";
-var awaitingConfirmationResponseSchema = index_394460kk_object({
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
-  status: index_394460kk_literal("awaiting-confirmation")
+var awaitingConfirmationResponseSchema = index_kewagct1_object({
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
+  status: index_kewagct1_literal("awaiting-confirmation")
 });
-var studioProtocolErrorSchema = index_394460kk_object({
-  status: index_394460kk_literal("error"),
-  error: index_394460kk_object({
+var studioProtocolErrorSchema = index_kewagct1_object({
+  status: index_kewagct1_literal("error"),
+  error: index_kewagct1_object({
     code: string2(),
     message: string2()
   })
@@ -40265,33 +44827,33 @@ var parseStudioProtocolError = (value) => {
   const parsed = safeParse(studioProtocolErrorSchema, value);
   return parsed.success ? { code: parsed.data.error.code, message: parsed.data.error.message } : null;
 };
-var studioProtocolInstallRequestEnvelopeSchema = index_394460kk_object({
-  operation: index_394460kk_literal("install-element"),
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
+var studioProtocolInstallRequestEnvelopeSchema = index_kewagct1_object({
+  operation: index_kewagct1_literal("install-element"),
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
   targetId: string2(),
-  payload: index_394460kk_unknown()
+  payload: index_kewagct1_unknown()
 });
-var studioProtocolIframeInstallRequestSchema = index_394460kk_object({
-  operation: index_394460kk_literal("install-element"),
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
-  payload: index_394460kk_unknown()
+var studioProtocolIframeInstallRequestSchema = index_kewagct1_object({
+  operation: index_kewagct1_literal("install-element"),
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
+  payload: index_kewagct1_unknown()
 });
-var installInStudioResultSchema = index_394460kk_union([
-  index_394460kk_object({
-    success: index_394460kk_literal(true),
-    status: index_394460kk_literal("awaiting-confirmation"),
-    target: index_394460kk_object({
-      projectName: index_394460kk_nullable(string2()),
-      compositionId: index_394460kk_nullable(string2()),
+var installInStudioResultSchema = index_kewagct1_union([
+  index_kewagct1_object({
+    success: index_kewagct1_literal(true),
+    status: index_kewagct1_literal("awaiting-confirmation"),
+    target: index_kewagct1_object({
+      projectName: index_kewagct1_nullable(string2()),
+      compositionId: index_kewagct1_nullable(string2()),
       studioOrigin: string2(),
       studioVersion: string2()
     })
   }),
-  index_394460kk_object({
-    success: index_394460kk_literal(false),
-    code: index_394460kk_enum(["no-installable-target", "request-rejected"]),
+  index_kewagct1_object({
+    success: index_kewagct1_literal(false),
+    code: index_kewagct1_enum(["no-installable-target", "request-rejected"]),
     message: string2()
   })
 ]);
@@ -40358,7 +44920,7 @@ var requestElementInstallation = async ({
       targetId: target.id,
       payload
     };
-    response = await index_394460kk_fetchWithTimeout({
+    response = await index_kewagct1_fetchWithTimeout({
       fetchFn,
       url: `${studio.origin}/api/studio-protocol/install`,
       options: {
@@ -40453,36 +45015,36 @@ var installInStudioWithDependencies = async (payload, dependencies, fallbackPayl
     payload: selectedPayload
   });
 };
-var studioProtocolAddElementLibraryRequestSchema = index_394460kk_object({
-  operation: index_394460kk_literal("add-element-library"),
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
+var studioProtocolAddElementLibraryRequestSchema = index_kewagct1_object({
+  operation: index_kewagct1_literal("add-element-library"),
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
   targetId: string2().check(_minLength(1)),
   url: string2(),
-  displayName: index_394460kk_nullable(string2()),
-  captionStylesUrl: index_394460kk_default(index_394460kk_nullable(string2()), null)
+  displayName: index_kewagct1_nullable(string2()),
+  captionStylesUrl: index_kewagct1_default(index_kewagct1_nullable(string2()), null)
 });
-var studioProtocolIframeAddElementLibraryRequestSchema = index_394460kk_object({
-  operation: index_394460kk_literal("add-element-library"),
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
+var studioProtocolIframeAddElementLibraryRequestSchema = index_kewagct1_object({
+  operation: index_kewagct1_literal("add-element-library"),
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
   url: string2(),
-  displayName: index_394460kk_nullable(string2()),
-  captionStylesUrl: index_394460kk_default(index_394460kk_nullable(string2()), null)
+  displayName: index_kewagct1_nullable(string2()),
+  captionStylesUrl: index_kewagct1_default(index_kewagct1_nullable(string2()), null)
 });
-var addElementLibraryToStudioResultSchema = index_394460kk_union([
-  index_394460kk_object({
-    success: index_394460kk_literal(true),
-    status: index_394460kk_literal("awaiting-confirmation"),
-    target: index_394460kk_object({
-      projectName: index_394460kk_nullable(string2()),
+var addElementLibraryToStudioResultSchema = index_kewagct1_union([
+  index_kewagct1_object({
+    success: index_kewagct1_literal(true),
+    status: index_kewagct1_literal("awaiting-confirmation"),
+    target: index_kewagct1_object({
+      projectName: index_kewagct1_nullable(string2()),
       studioOrigin: string2(),
       studioVersion: string2()
     })
   }),
-  index_394460kk_object({
-    success: index_394460kk_literal(false),
-    code: index_394460kk_enum([
+  index_kewagct1_object({
+    success: index_kewagct1_literal(false),
+    code: index_kewagct1_enum([
       "invalid-url",
       "invalid-display-name",
       "unsupported-origin",
@@ -40546,7 +45108,7 @@ var normalizeElementLibraryDetails = ({
       return failure2("invalid-url", "The caption styles URL must be an absolute HTTP or HTTPS URL.");
     }
   }
-  if (!safeParse(index_394460kk_nullable(string2()), displayName).success) {
+  if (!safeParse(index_kewagct1_nullable(string2()), displayName).success) {
     return failure2("invalid-display-name", "The Element Library display name must be a string.");
   }
   const normalizedDisplayName = displayName?.trim() ?? null;
@@ -40619,7 +45181,7 @@ var addElementLibraryToStudioWithDependencies = async ({
       targetId: selected.target.id,
       ...normalized.details
     };
-    response = await index_394460kk_fetchWithTimeout({
+    response = await index_kewagct1_fetchWithTimeout({
       fetchFn: dependencies.fetchFn,
       url: `${selected.origin}/api/studio-protocol/element-library`,
       options: {
@@ -40662,10 +45224,10 @@ var addElementLibraryToStudioWithDependencies = async ({
 var browserStudioHashKey = "remotion-browser-studio";
 var defaultBrowserStudioEndpoint = "https://www.remotion.dev/new";
 var maxEncodedPayloadLength = 1100000;
-var browserStudioEnvelopeSchema = index_394460kk_object({
-  type: index_394460kk_literal("remotion-browser-studio"),
-  version: index_394460kk_literal(1),
-  payload: index_394460kk_unknown()
+var browserStudioEnvelopeSchema = index_kewagct1_object({
+  type: index_kewagct1_literal("remotion-browser-studio"),
+  version: index_kewagct1_literal(1),
+  payload: index_kewagct1_unknown()
 });
 var toBase64Url = (value) => {
   const bytes = new TextEncoder().encode(value);
@@ -40740,19 +45302,19 @@ var openInBrowserStudio = ({
   }
   window.open(makeBrowserStudioUrl({ endpoint, payload }), "_blank", "noopener");
 };
-var captionStyleSelectionSchema = index_394460kk_nullable(index_394460kk_object({
-  slug: string2().check(index_394460kk_refine((slug) => makeElementFileNameFromSlug(slug) !== null)),
-  origin: string2().check(index_394460kk_refine((origin) => isAllowedStudioProtocolPageOrigin(origin) && new URL(origin).origin === origin))
+var captionStyleSelectionSchema = index_kewagct1_nullable(index_kewagct1_object({
+  slug: string2().check(index_kewagct1_refine((slug) => makeElementFileNameFromSlug(slug) !== null)),
+  origin: string2().check(index_kewagct1_refine((origin) => isAllowedStudioProtocolPageOrigin(origin) && new URL(origin).origin === origin))
 }));
-var captionStyleSubscriptionSchema = index_394460kk_object({
-  operation: index_394460kk_literal("subscribe-to-caption-style-selection"),
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1)
+var captionStyleSubscriptionSchema = index_kewagct1_object({
+  operation: index_kewagct1_literal("subscribe-to-caption-style-selection"),
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1)
 });
-var captionStyleSelectionMessageSchema = index_394460kk_object({
-  operation: index_394460kk_literal("caption-style-selection"),
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
+var captionStyleSelectionMessageSchema = index_kewagct1_object({
+  operation: index_kewagct1_literal("caption-style-selection"),
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
   selection: captionStyleSelectionSchema
 });
 var isStudioProtocolCaptionStyleSubscription = (value) => {
@@ -40783,10 +45345,10 @@ var resolveElementAssets = async ({
   }
   return resolved;
 };
-var studioProtocolSetLicenseKeyRequestSchema = index_394460kk_object({
-  operation: index_394460kk_literal("set-license-key"),
-  protocol: index_394460kk_literal("remotion-studio-protocol"),
-  protocolVersion: index_394460kk_literal(1),
+var studioProtocolSetLicenseKeyRequestSchema = index_kewagct1_object({
+  operation: index_kewagct1_literal("set-license-key"),
+  protocol: index_kewagct1_literal("remotion-studio-protocol"),
+  protocolVersion: index_kewagct1_literal(1),
   targetId: string2().check(_minLength(1)),
   licenseKey: string2()
 });
@@ -40863,7 +45425,7 @@ var setLicenseKeyInStudioWithDependencies = async (licenseKey, dependencies) => 
       targetId: selected.target.id,
       licenseKey
     };
-    response = await index_394460kk_fetchWithTimeout({
+    response = await index_kewagct1_fetchWithTimeout({
       fetchFn: dependencies.fetchFn,
       url: `${selected.origin}/api/studio-protocol/license-key`,
       options: {
@@ -50287,6 +54849,7 @@ var getSelectableTimelineItemsForTrack = ({
     propStatuses,
     includeTextContent: false,
     includeSourceControls: false,
+    includeInspectorOnlyFields: false,
     runtimeValues: null
   });
   const filteredTree = filterTimelineExpandedTree({
@@ -50713,6 +55276,7 @@ var TimelineSelectionProvider = ({ children }) => {
     return timelineRowContainsSelection(nodePathInfo, availableSelectedItems);
   }, [availableSelectedItems]);
   const remapSelectionNodePaths = (0,react.useCallback)((mutations) => {
+    const remappingIndexes = new Map;
     const remapItem = (item) => {
       if (item === null || item.type === "guide") {
         return item;
@@ -50726,7 +55290,25 @@ var TimelineSelectionProvider = ({ children }) => {
           continue;
         }
         const nodePathString = JSON.stringify(nodePath);
-        const remapping = file.remappings.find((candidate) => candidate.oldNodePath !== null && JSON.stringify(candidate.oldNodePath) === nodePathString);
+        let index = remappingIndexes.get(file);
+        if (index === undefined) {
+          index = { nextIndex: 0, byOldPath: new Map };
+          remappingIndexes.set(file, index);
+        }
+        let remapping = index.byOldPath.get(nodePathString);
+        while (remapping === undefined && index.nextIndex < file.remappings.length) {
+          const candidate = file.remappings[index.nextIndex++];
+          if (candidate.oldNodePath === null) {
+            continue;
+          }
+          const oldPath = JSON.stringify(candidate.oldNodePath);
+          if (!index.byOldPath.has(oldPath)) {
+            index.byOldPath.set(oldPath, candidate);
+          }
+          if (oldPath === nodePathString) {
+            remapping = candidate;
+          }
+        }
         if (!remapping) {
           continue;
         }
@@ -51195,7 +55777,7 @@ var sequencePropShortcuts = [
   { action: "selectOpacityProp", fieldKey: "style.opacity" },
   { action: "selectVolumeProp", fieldKey: "volume" }
 ];
-var index_394460kk_hasOwnProperty = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+var index_kewagct1_hasOwnProperty = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 var GlobalKeybindings = () => {
   const calculateTimeline = useTimelineCalculator();
   const keybindings = (0,index_gjr0ae8m/* useKeybinding */.Gw)();
@@ -51292,7 +55874,7 @@ var GlobalKeybindings = () => {
     }
     const { schema, runtimeValues } = track.sequence.controls;
     const currentRuntimeValueDotNotation = runtimeValues.getSnapshot();
-    if (!index_394460kk_hasOwnProperty(schema, fieldKey) && !index_394460kk_hasOwnProperty(currentRuntimeValueDotNotation, fieldKey)) {
+    if (!index_kewagct1_hasOwnProperty(schema, fieldKey) && !index_kewagct1_hasOwnProperty(currentRuntimeValueDotNotation, fieldKey)) {
       return false;
     }
     selectItems([
@@ -55038,14 +59620,14 @@ var useIsVideoComposition = () => {
 
 
 // src/helpers/get-duration-or-compute.ts
-var index_394460kk_getDurationOrCompute = async (input) => {
+var index_kewagct1_getDurationOrCompute = async (input) => {
   return await input.getDurationFromMetadata(undefined, {
     skipLiveWait: true
   }) ?? input.computeDuration(undefined, { skipLiveWait: true });
 };
 
 // src/helpers/use-media-metadata.ts
-var index_394460kk_cache = new Map;
+var index_kewagct1_cache = new Map;
 var pendingRequests = new Map;
 var getFrameRateFromMetrics = (metrics) => {
   if (metrics === null || metrics.probedPacketCount < 2) {
@@ -55054,7 +59636,7 @@ var getFrameRateFromMetrics = (metrics) => {
   return metrics.bestGuessFrameRate;
 };
 var getCachedMediaMetadata = (src) => {
-  return index_394460kk_cache.get(src) ?? null;
+  return index_kewagct1_cache.get(src) ?? null;
 };
 var safeCall = async (fn) => {
   try {
@@ -55098,7 +59680,7 @@ var getMediabunnyMetadata = async (src) => {
   const input = lease.resource;
   try {
     const [duration, format, videoTrack, audioTrack] = await Promise.all([
-      safeCall(() => lease.getOrCreateValue(esm.Internals.MEDIABUNNY_DURATION_VALUE_KEY, () => index_394460kk_getDurationOrCompute(input))),
+      safeCall(() => lease.getOrCreateValue(esm.Internals.MEDIABUNNY_DURATION_VALUE_KEY, () => index_kewagct1_getDurationOrCompute(input))),
       safeCall(() => input.getFormat()),
       safeCall(() => input.getPrimaryVideoTrack()),
       safeCall(() => input.getPrimaryAudioTrack())
@@ -55161,7 +59743,7 @@ var getFallbackVideoMetadata = async (src) => {
   }
 };
 var getMediaMetadata = (src) => {
-  const cached = index_394460kk_cache.get(src);
+  const cached = index_kewagct1_cache.get(src);
   if (cached) {
     return Promise.resolve(cached);
   }
@@ -55180,7 +59762,7 @@ var getMediaMetadata = (src) => {
     return metadata;
   }).then((metadata) => {
     if (metadata) {
-      index_394460kk_cache.set(src, metadata);
+      index_kewagct1_cache.set(src, metadata);
     }
     return metadata;
   }).finally(() => {
@@ -55462,7 +60044,7 @@ var getComponentDimensions = (component) => {
   }
   return null;
 };
-var index_394460kk_getImageDimensions = ({
+var index_kewagct1_getImageDimensions = ({
   revokeObjectUrl,
   src
 }) => {
@@ -55505,7 +60087,7 @@ var getFileMetadata = async ({
   if (fileType.type === "unknown" && file.name.toLowerCase().endsWith(".svg")) {
     const objectUrl = URL.createObjectURL(file);
     return {
-      dimensions: await index_394460kk_getImageDimensions({
+      dimensions: await index_kewagct1_getImageDimensions({
         revokeObjectUrl: true,
         src: objectUrl
       }),
@@ -55523,7 +60105,7 @@ var getFileMetadata = async ({
   if (fileType.type === "png" || fileType.type === "jpeg" || fileType.type === "jxl" || fileType.type === "webp" || fileType.type === "bmp" || fileType.type === "apng" || fileType.type === "gif") {
     const objectUrl = URL.createObjectURL(file);
     try {
-      const dimensions = fileType.dimensions ?? await index_394460kk_getImageDimensions({ revokeObjectUrl: false, src: objectUrl });
+      const dimensions = fileType.dimensions ?? await index_kewagct1_getImageDimensions({ revokeObjectUrl: false, src: objectUrl });
       const isAnimated = fileType.type === "gif" || fileType.type === "apng" || fileType.type === "webp" && fileType.animated;
       return {
         dimensions,
@@ -55548,7 +60130,7 @@ var getStaticAssetMetadata = (assetPath, assetType) => {
   const src = (0,esm/* staticFile */.dQ)(assetPath);
   if (extension && ["png", "jpg", "jpeg", "jxl", "webp", "bmp", "gif", "apng", "svg"].includes(extension)) {
     return Promise.all([
-      index_394460kk_getImageDimensions({ revokeObjectUrl: false, src }),
+      index_kewagct1_getImageDimensions({ revokeObjectUrl: false, src }),
       assetType === "gif" || assetType === "animated-image" ? getAnimatedImageAssetDuration(src, extension === "gif" ? "image/gif" : extension === "webp" ? "image/webp" : "image/png") : null
     ]).then(([dimensions, durationInSeconds]) => ({
       dimensions,
@@ -55838,7 +60420,7 @@ var insertSvgMarkup = async ({
     const objectUrl = URL.createObjectURL(new Blob([markup], { type: "image/svg+xml" }));
     let dimensions = null;
     try {
-      dimensions = await index_394460kk_getImageDimensions({
+      dimensions = await index_kewagct1_getImageDimensions({
         revokeObjectUrl: true,
         src: objectUrl
       });
@@ -58001,7 +62583,7 @@ var TimelineZoomControls = react.memo(TimelineZoomControlsInner);
 
 // src/components/TimeValue.tsx
 
-var index_394460kk_text = {
+var index_kewagct1_text = {
   color: index_ts7drhwc/* WHITE */.UE,
   display: "flex",
   flexDirection: "row",
@@ -58011,7 +62593,7 @@ var index_394460kk_text = {
   width: "100%"
 };
 var currentTimeTypography = {
-  color: index_ts7drhwc/* LIGHT_TEXT */.hf,
+  color: index_ts7drhwc/* WHITE_ALPHA_80 */.Aq,
   display: "inline-block",
   fontSize: 14,
   fontVariantNumeric: "tabular-nums",
@@ -58127,7 +62709,7 @@ var TimeValue = react.memo(() => {
     return null;
   }
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
-    style: index_394460kk_text,
+    style: index_kewagct1_text,
     children: [
       /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
         style: currentTimeStack,
@@ -60416,6 +64998,7 @@ var useTimelineTrackHeights = ({
           propStatuses,
           includeTextContent: false,
           includeSourceControls: false,
+          includeInspectorOnlyFields: false,
           runtimeValues
         });
         const filteredTree = filterTimelineExpandedTree({
@@ -63754,6 +68337,7 @@ var resolveKeyframeControlTarget = ({
     propStatuses,
     includeTextContent: false,
     includeSourceControls: false,
+    includeInspectorOnlyFields: false,
     runtimeValues: null
   });
   const fieldNode = findFieldNode(tree, timelineNodePathInfoToKey(nodePathInfo));
@@ -64468,7 +69052,7 @@ var keywordOptions = (keyword) => {
     { axis: "y", value: center }
   ];
 };
-var index_394460kk_parseLengthPercentage = (token) => {
+var index_kewagct1_parseLengthPercentage = (token) => {
   const match = cssNumberWithUnit.exec(token);
   if (!match) {
     return null;
@@ -64484,7 +69068,7 @@ var parseToken = (token) => {
   if (keywords.has(lower)) {
     return { type: "keyword", keyword: lower };
   }
-  const value = index_394460kk_parseLengthPercentage(token);
+  const value = index_kewagct1_parseLengthPercentage(token);
   return value === null ? null : { type: "length-percentage", value };
 };
 var parseTwoKeywords = (first, second) => {
@@ -64549,7 +69133,7 @@ var parseTransformOriginZ = (token) => {
   const value = Number(match[1]);
   return Number.isFinite(value) ? { value, unit: match[2] } : null;
 };
-var index_394460kk_parseTransformOrigin = (value) => {
+var index_kewagct1_parseTransformOrigin = (value) => {
   if (typeof value !== "string") {
     return null;
   }
@@ -64778,7 +69362,7 @@ var formatTransformOriginTimelineFieldValueForDisplay = ({
       value: numericValue
     });
   }
-  const parsed = index_394460kk_parseTransformOrigin(value);
+  const parsed = index_kewagct1_parseTransformOrigin(value);
   if (parsed === null) {
     return null;
   }
@@ -69028,7 +73612,7 @@ var isValidPathData = (value) => {
     return true;
   }
   try {
-    index_394460kk_parsePath(value);
+    index_kewagct1_parsePath(value);
     return true;
   } catch {
     return false;
@@ -69172,7 +73756,7 @@ var TimelineTransformOriginField = ({
   const [dragY, setDragY] = (0,react.useState)(null);
   const [dragZ, setDragZ] = (0,react.useState)(null);
   const transform3DMode = (0,react.useContext)(Transform3DModeContext);
-  const parsed = (0,react.useMemo)(() => index_394460kk_parseTransformOrigin(effectiveValue), [effectiveValue]);
+  const parsed = (0,react.useMemo)(() => index_kewagct1_parseTransformOrigin(effectiveValue), [effectiveValue]);
   const percent = (0,react.useMemo)(() => parsed === null ? null : parsedTransformOriginToPercent(parsed), [parsed]);
   const parsedZ = (0,react.useMemo)(() => parsed?.z === null || parsed?.z === undefined ? null : parseTransformOriginZ(parsed.z), [parsed?.z]);
   const show3D = transform3DMode || parsedZ !== null && parsedZ.value !== 0;
@@ -69998,7 +74582,7 @@ var itemLabel = {
   width: 18,
   textAlign: "right"
 };
-var index_394460kk_button = {
+var index_kewagct1_button = {
   background: index_ts7drhwc/* WHITE_ALPHA_08 */.Sn,
   border: index_ts7drhwc/* BORDER_WHITE_ALPHA_12 */.WY,
   borderRadius: 3,
@@ -70010,7 +74594,7 @@ var index_394460kk_button = {
   padding: "0 5px"
 };
 var disabledButton = {
-  ...index_394460kk_button,
+  ...index_kewagct1_button,
   cursor: "default",
   opacity: 0.4
 };
@@ -70209,7 +74793,7 @@ var TimelineArrayField = ({ field, effectiveValue, onSave, onDragValueChange, on
             /* @__PURE__ */ (0,jsx_runtime.jsx)("button", {
               disabled: !canRemove,
               onClick: () => onRemove(index),
-              style: canRemove ? index_394460kk_button : disabledButton,
+              style: canRemove ? index_kewagct1_button : disabledButton,
               "aria-label": `Remove item ${index}`,
               type: "button",
               children: "-"
@@ -70221,7 +74805,7 @@ var TimelineArrayField = ({ field, effectiveValue, onSave, onDragValueChange, on
         style: addButtonRow,
         children: /* @__PURE__ */ (0,jsx_runtime.jsx)("button", {
           type: "button",
-          style: index_394460kk_button,
+          style: index_kewagct1_button,
           onClick: onAdd,
           "aria-label": "Add item",
           children: "+"
@@ -71203,7 +75787,7 @@ var getKeyframeTrimConstraints = ({
     if (!entry) {
       const pendingSource = (async () => {
         const [codemods, contents] = await Promise.all([
-          __webpack_require__.e(/* import() */ 995).then(() => (__webpack_require__(3995))),
+          __webpack_require__.e(/* import() */ 276).then(() => (__webpack_require__(3276))),
           (async () => {
             if (browserOperations) {
               const value = await browserOperations.getFileSource(fileName);
@@ -71309,8 +75893,8 @@ var getKeyframeDurationLimits = ({
   tracks,
   propStatuses
 }) => {
-  const sequencesById = new Map(sequences.map((item) => [item.id, item]));
-  const tracksById = new Map(tracks.map((item) => [item.sequence.id, item]));
+  let sequencesById = null;
+  let tracksById = null;
   const visited = new Set;
   let minimumEnd = -Infinity;
   let maximumEnd = Infinity;
@@ -71324,6 +75908,8 @@ var getKeyframeDurationLimits = ({
     const constraints = status?.canUpdate ? status.durationDependentKeyframes : null;
     if (constraints === null)
       continue;
+    sequencesById ??= new Map(sequences.map((item) => [item.id, item]));
+    tracksById ??= new Map(tracks.map((item) => [item.sequence.id, item]));
     let scopeTrack = track;
     let owner = sequencesById.get(scopeTrack.sequence.parent ?? "");
     while (owner) {
@@ -72412,6 +76998,66 @@ var TimelineExpandedRow = react.memo(TimelineExpandedRowInner);
 
 
 
+
+// src/components/Timeline/use-timeline-structure-selector.ts
+
+var useTimelineStructureSelector = ({
+  controls,
+  selector,
+  isEqual
+}) => {
+  const schema = controls?.schema;
+  const store = controls?.runtimeValues;
+  const selectStructure = (0,react.useMemo)(() => {
+    const keys = new Map;
+    const schemas = schema ? [schema] : [];
+    for (const current of schemas) {
+      for (const [key, field] of Object.entries(current)) {
+        if (field.type === "enum") {
+          keys.set(key, true);
+          schemas.push(...Object.values(field.variants));
+        } else if (field.type === "array" && !keys.has(key)) {
+          keys.set(key, false);
+        }
+      }
+    }
+    let previous = null;
+    let result;
+    return (values) => {
+      const next = [];
+      let cacheable = true;
+      for (const [key, isEnum] of keys) {
+        const present = Object.prototype.propertyIsEnumerable.call(values, key);
+        next.push(present);
+        if (!present)
+          continue;
+        const value = values[key];
+        if (isEnum) {
+          if (value !== null && (typeof value === "object" || typeof value === "function")) {
+            cacheable = false;
+          }
+          next.push(value);
+        } else {
+          next.push(Array.isArray(value) ? value.length : null);
+        }
+      }
+      const last = previous;
+      if (cacheable && last !== null && last.length === next.length && next.every((value, index) => Object.is(value, last[index]))) {
+        return result;
+      }
+      result = selector(values);
+      previous = cacheable ? next : null;
+      return result;
+    };
+  }, [schema, store, selector]);
+  return useRuntimeValueSelector({
+    controls,
+    selector: selectStructure,
+    isEqual: isEqual ?? Object.is
+  });
+};
+
+// src/components/Timeline/use-timeline-expanded-tree.ts
 var useTimelineSequenceHasExpandableContent = ({
   sequence,
   nodePathInfo,
@@ -72460,6 +77106,7 @@ var useTimelineSequenceHasExpandableContent = ({
       propStatuses: visualModePropStatuses,
       includeTextContent: false,
       includeSourceControls: false,
+      includeInspectorOnlyFields: false,
       runtimeValues
     });
     return filterTimelineExpandedTree({
@@ -72484,16 +77131,18 @@ var useTimelineSequenceHasExpandableContent = ({
     sequence,
     visualModePropStatuses
   ]);
-  return useRuntimeValueSelector({
+  return useTimelineStructureSelector({
     controls: canHaveExpandableContent ? sequence.controls : null,
-    selector: selectHasExpandableContent
+    selector: selectHasExpandableContent,
+    isEqual: null
   });
 };
 var useTimelineExpandedTree = ({
   sequence,
   nodePathInfo,
   includeTextContent,
-  includeSourceControls
+  includeSourceControls,
+  includeInspectorOnlyFields
 }) => {
   const { getIsExpanded } = (0,react.useContext)(ExpandedTracksGetterContext);
   const { toggleTrack } = (0,react.useContext)(ExpandedTracksSetterContext);
@@ -72534,6 +77183,7 @@ var useTimelineExpandedTree = ({
     propStatuses: visualModePropStatuses,
     includeTextContent,
     includeSourceControls,
+    includeInspectorOnlyFields,
     runtimeValues
   }), [
     sequence,
@@ -72543,6 +77193,7 @@ var useTimelineExpandedTree = ({
     visualModePropStatuses,
     includeTextContent,
     includeSourceControls,
+    includeInspectorOnlyFields,
     runtimeValues
   ]);
   const selectedRowKeys = (0,react.useMemo)(() => getSelectedTimelineExpandedRowKeys(selectedItems), [selectedItems]);
@@ -72602,7 +77253,8 @@ var TimelineExpandedSection = ({
     sequence,
     nodePathInfo,
     includeTextContent: false,
-    includeSourceControls: false
+    includeSourceControls: false,
+    includeInspectorOnlyFields: false
   });
   const flat = (0,react.useMemo)(() => flattenVisibleTreeNodes({ nodes: filteredTree, getIsExpanded }), [filteredTree, getIsExpanded]);
   const expandedHeight = (0,react.useMemo)(() => {
@@ -72669,10 +77321,10 @@ var formatMediaDuration = (seconds) => {
 // src/helpers/use-image-metadata.ts
 
 
-var index_394460kk_cache2 = new Map;
+var index_kewagct1_cache2 = new Map;
 var pendingRequests2 = new Map;
 var getCachedImageMetadata = (src) => {
-  return index_394460kk_cache2.get(src) ?? null;
+  return index_kewagct1_cache2.get(src) ?? null;
 };
 var formatImageType = (fileType) => {
   if (fileType === "webp") {
@@ -72692,7 +77344,7 @@ var getImageMetadataFromData = (data) => {
   };
 };
 var getImageMetadata = (src) => {
-  const cached = index_394460kk_cache2.get(src);
+  const cached = index_kewagct1_cache2.get(src);
   if (cached) {
     return Promise.resolve(cached);
   }
@@ -72711,7 +77363,7 @@ var getImageMetadata = (src) => {
     }
     const metadata = getImageMetadataFromData(new Uint8Array(data));
     if (metadata) {
-      index_394460kk_cache2.set(src, metadata);
+      index_kewagct1_cache2.set(src, metadata);
     }
     return metadata;
   }).catch(() => null).finally(() => {
@@ -76912,7 +81564,7 @@ var getTimelineSequenceDurationDragTargets = ({
         sequences,
         timelineDurationInFrames
       });
-      const minimumDuration = Math.max((track.sequence.from + 1 - track.cascadedStart) * track.keyframePlaybackRate, getMinimumSequenceDuration({ sequence: originalSequence, sequences }), timingLimits.minimumDuration);
+      const { minimumDuration } = timingLimits;
       const initialDuration = mediaDurationDragLimits ? mediaDurationDragLimits.initialDuration * track.keyframePlaybackRate : originalSequence.autoDuration ? (track.sequence.from + track.sequence.duration - track.cascadedStart) * track.keyframePlaybackRate : originalSequence.duration;
       const naturalDuration = getTimelineSequenceNaturalDuration({
         sequence: originalSequence,
@@ -83666,6 +88318,7 @@ var useExpandedTrackKeyframeRows = ({
     propStatuses,
     includeTextContent: false,
     includeSourceControls: false,
+    includeInspectorOnlyFields: false,
     runtimeValues
   }), [
     sequence,
@@ -83674,7 +88327,7 @@ var useExpandedTrackKeyframeRows = ({
     getEffectDragOverrides,
     nodePathInfo
   ]);
-  const tree = useRuntimeValueSelector({
+  const tree = useTimelineStructureSelector({
     controls: sequence.controls,
     selector: selectTree,
     isEqual: areTimelineTreeLayoutsEqual
@@ -84286,8 +88939,13 @@ var TimelineTracks = react.memo(TimelineTracksInner);
 
 
 // src/components/element-drag-and-drop.ts
-var hasElementDragType = (dataTransfer) => {
-  return StudioProtocolInternals.getDragPreviewMetadata(dataTransfer?.types ?? [])?.type === "element";
+var mayHaveElementDragData = (dataTransfer) => {
+  const types = dataTransfer?.types ?? [];
+  const metadata = StudioProtocolInternals.getDragPreviewMetadata(types);
+  if (metadata !== null) {
+    return metadata.type === "element";
+  }
+  return Array.from(types).includes("text/plain");
 };
 var getElementDragData = (dataTransfer) => {
   if (!dataTransfer) {
@@ -84627,7 +89285,7 @@ var useTimelineAssetDrop = () => {
       setAssetDropFrame(null);
       return;
     }
-    const canDropElementIntoNewComposition = compositionComponentInfo?.canAddSequence === false && canReceiveElementDrop && hasElementDragType(dataTransfer);
+    const canDropElementIntoNewComposition = compositionComponentInfo?.canAddSequence === false && canReceiveElementDrop && mayHaveElementDragData(dataTransfer);
     event.preventDefault();
     event.stopPropagation();
     dataTransfer.dropEffect = canInsertAsset || canDropElementIntoNewComposition ? "copy" : "none";
@@ -86072,7 +90730,7 @@ var getSelectedOutlineRotationPivot = ({
   if (dimensions === null) {
     return getOutlineCenter(points);
   }
-  const parsed = index_394460kk_parseTransformOrigin(transformOriginValue);
+  const parsed = index_kewagct1_parseTransformOrigin(transformOriginValue);
   if (parsed === null) {
     return getOutlineCenter(points);
   }
@@ -91636,6 +96294,7 @@ var ElementInstallConfirmation = ({ state }) => {
 // src/components/ElementLibraryFrame.tsx
 
 
+var LOAD_TIMEOUT = 15000;
 var contentStyle2 = {
   flex: 1,
   minHeight: 0,
@@ -91656,6 +96315,26 @@ var loadingStyle = {
   justifyContent: "center",
   position: "absolute"
 };
+var errorStyle2 = {
+  ...loadingStyle,
+  flexDirection: "column",
+  gap: 12,
+  overflowY: "auto",
+  padding: 24,
+  textAlign: "center"
+};
+var errorTitleStyle = {
+  color: index_ts7drhwc/* WHITE */.UE,
+  fontSize: 16,
+  fontWeight: 600
+};
+var errorDescriptionStyle = {
+  color: index_ts7drhwc/* LIGHT_TEXT */.hf,
+  fontSize: 14,
+  lineHeight: 1.5,
+  maxWidth: 500,
+  overflowWrap: "anywhere"
+};
 var ElementLibraryFrame = ({ name, url, context, captionStyleSelection }) => {
   const iframeRef = (0,react.useRef)(null);
   const selectionPortRef = (0,react.useRef)(null);
@@ -91666,15 +96345,61 @@ var ElementLibraryFrame = ({ name, url, context, captionStyleSelection }) => {
     selection: captionStyleSelection
   });
   selectionMessageRef.current.selection = captionStyleSelection;
-  const [isLoaded, setIsLoaded] = (0,react.useState)(false);
+  const [loadState, setLoadState] = (0,react.useState)("loading");
+  const [error, setError] = (0,react.useState)(null);
+  const [attempt, setAttempt] = (0,react.useState)(0);
+  const retry = (0,react.useCallback)(() => {
+    setAttempt((previous) => previous + 1);
+  }, []);
   (0,react.useLayoutEffect)(() => {
     const iframe = iframeRef.current;
     if (iframe === null) {
       return;
     }
-    setIsLoaded(false);
-    const onLoad = () => setIsLoaded(true);
+    setLoadState("loading");
+    setError(null);
+    let disposed = false;
+    let blocked = false;
+    const iframeUrl = new URL(url);
+    iframeUrl.searchParams.set("remotion-studio", "true");
+    if (context === null) {
+      iframeUrl.searchParams.delete("remotion-studio-context");
+    } else {
+      iframeUrl.searchParams.set("remotion-studio-context", context);
+    }
+    iframeUrl.searchParams.set("docusaurus-theme", "dark");
+    const timeout = window.setTimeout(() => {
+      setError("timeout");
+      setLoadState("error");
+    }, LOAD_TIMEOUT);
+    const onLoad = () => {
+      if (blocked) {
+        return;
+      }
+      window.clearTimeout(timeout);
+      setError(null);
+      setLoadState("loaded");
+    };
     iframe.addEventListener("load", onLoad);
+    const observer = typeof ReportingObserver === "undefined" ? null : new ReportingObserver((reports) => {
+      if (disposed) {
+        return;
+      }
+      for (const report of reports) {
+        if (report.type !== "coep" || !report.body) {
+          continue;
+        }
+        const body = report.body.toJSON();
+        if (body.disposition !== "enforce" || body.blockedURL !== iframeUrl.href) {
+          continue;
+        }
+        blocked = true;
+        window.clearTimeout(timeout);
+        setError("coep");
+        setLoadState("error");
+      }
+    }, { types: ["coep"], buffered: false });
+    observer?.observe();
     const onMessage = (event) => {
       if (context !== "captions" || event.source !== iframe.contentWindow || !StudioProtocolInternals.isAllowedStudioProtocolPageOrigin(event.origin) || !StudioProtocolInternals.isStudioProtocolCaptionStyleSubscription(event.data)) {
         return;
@@ -91697,22 +96422,17 @@ var ElementLibraryFrame = ({ name, url, context, captionStyleSelection }) => {
     };
     window.addEventListener("message", onMessage);
     iframe.setAttribute("credentialless", "");
-    const iframeUrl = new URL(url);
-    iframeUrl.searchParams.set("remotion-studio", "true");
-    if (context === null) {
-      iframeUrl.searchParams.delete("remotion-studio-context");
-    } else {
-      iframeUrl.searchParams.set("remotion-studio-context", context);
-    }
-    iframeUrl.searchParams.set("docusaurus-theme", "dark");
     iframe.src = iframeUrl.toString();
     return () => {
+      disposed = true;
+      window.clearTimeout(timeout);
+      observer?.disconnect();
       iframe.removeEventListener("load", onLoad);
       window.removeEventListener("message", onMessage);
       selectionPortRef.current?.close();
       selectionPortRef.current = null;
     };
-  }, [context, url]);
+  }, [attempt, context, url]);
   (0,react.useLayoutEffect)(() => {
     selectionPortRef.current?.postMessage(selectionMessageRef.current);
   }, [captionStyleSelection]);
@@ -91725,11 +96445,11 @@ var ElementLibraryFrame = ({ name, url, context, captionStyleSelection }) => {
         "data-remotion-element-library": "",
         style: {
           ...iframeStyle,
-          visibility: isLoaded ? "visible" : "hidden"
+          visibility: loadState === "loaded" ? "visible" : "hidden"
         },
         "aria-label": `${name} library`
-      }),
-      isLoaded ? null : /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+      }, `${url}-${context}-${attempt}`),
+      loadState === "loading" ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
         style: loadingStyle,
         role: "status",
         "aria-label": `Loading ${name}`,
@@ -91737,7 +96457,36 @@ var ElementLibraryFrame = ({ name, url, context, captionStyleSelection }) => {
           duration: 0.5,
           size: 24
         })
-      })
+      }) : null,
+      loadState === "error" ? /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
+        style: errorStyle2,
+        children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
+            role: "alert",
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
+                style: errorTitleStyle,
+                children: [
+                  "Could not load ",
+                  name
+                ]
+              }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+                style: errorDescriptionStyle,
+                children: url
+              }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+                style: errorDescriptionStyle,
+                children: error === "coep" ? "Your browser blocked this library because of Cross-Origin-Embedder-Policy. Check the browser console for details." : "The library did not finish loading within 15 seconds. Check your connection and try again. The browser console may have more details."
+              })
+            ]
+          }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(ModalButton, {
+            onClick: retry,
+            children: "Retry"
+          })
+        ]
+      }) : null
     ]
   });
 };
@@ -91985,7 +96734,7 @@ var skillName = {
   textOverflow: "ellipsis",
   whiteSpace: "nowrap"
 };
-var index_394460kk_status = {
+var index_kewagct1_status = {
   color: index_ts7drhwc/* LIGHT_TEXT */.hf,
   fontSize: 12,
   lineHeight: 1.4,
@@ -92172,10 +96921,10 @@ var SkillSettingsRow = ({ skill }) => {
         ]
       }),
       processingThisSkill ? /* @__PURE__ */ (0,jsx_runtime.jsx)("span", {
-        style: index_394460kk_status,
+        style: index_kewagct1_status,
         children: skillAction.type === "installing" ? "Installing…" : skillAction.type === "upgrading" ? "Upgrading…" : "Removing…"
       }) : installedLocation ? /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", {
-        style: index_394460kk_status,
+        style: index_kewagct1_status,
         children: [
           installedLocation,
           upgradeAvailable ? " · Out of date" : ""
@@ -106207,6 +110956,511 @@ var InlineCaptionInspector = ({
   });
 };
 
+// src/components/InspectorPanel/CurvesEditor.tsx
+
+
+
+// src/components/InspectorPanel/CurvesControl.tsx
+
+
+
+var pointBounds = (points, index) => ({
+  min: index === 0 ? 0 : Math.min(points[index][0], points[index - 1][0] + 0.001),
+  max: index === points.length - 1 ? 1 : Math.max(points[index][0], points[index + 1][0] - 0.001)
+});
+var movePoint = (points, index, input, output) => {
+  const { min, max } = pointBounds(points, index);
+  return points.map((point, i) => i === index ? [
+    input === point[0] ? point[0] : Math.min(max, Math.max(min, Math.round(input * 1000) / 1000)),
+    output === point[1] ? point[1] : Math.min(1, Math.max(0, Math.round(output * 1000) / 1000))
+  ] : point);
+};
+var CurvesControl = ({
+  points,
+  channel,
+  interpolation,
+  editable,
+  histogram,
+  onChange,
+  onCancel
+}) => {
+  const graph = (0,react.useRef)(null);
+  const onCancelRef = (0,react.useRef)(onCancel);
+  onCancelRef.current = onCancel;
+  const [selection, setSelection] = (0,react.useState)(0);
+  const selected = Math.min(selection, points.length - 1);
+  const drag = (0,react.useRef)(null);
+  const cancel = (0,react.useCallback)(() => {
+    const { current } = drag;
+    drag.current = null;
+    if (current && graph.current?.hasPointerCapture(current.pointerId)) {
+      graph.current.releasePointerCapture(current.pointerId);
+    }
+    onCancelRef.current();
+  }, []);
+  (0,react.useEffect)(() => {
+    if (!editable && drag.current)
+      cancel();
+  }, [cancel, editable]);
+  (0,react.useEffect)(() => {
+    const onBlur = () => {
+      if (drag.current)
+        cancel();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden")
+        onBlur();
+    };
+    window.addEventListener("blur", onBlur);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("blur", onBlur);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [cancel]);
+  const sample = (0,react.useMemo)(() => esm.Internals.createCurveSampler(points, interpolation), [points, interpolation]);
+  const curvePath = Array.from({ length: 257 }, (_, i) => {
+    const x = i / 256;
+    return `${i === 0 ? "M" : "L"}${x * 256} ${(1 - sample(x)) * 256}`;
+  }).join(" ");
+  const color = channel === "red" ? "#ed7777" : channel === "green" ? "#80d995" : channel === "blue" ? "#87acff" : "#e5e5e8";
+  const removePoint = (index) => {
+    if (!editable || points.length <= 2)
+      return;
+    setSelection(Math.max(0, index - 1));
+    onChange(points.filter((_, i) => i !== index), true);
+  };
+  const beginDrag = (event, index) => {
+    if (!editable || event.button !== 0 || !graph.current || drag.current)
+      return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.focus({ preventScroll: true });
+    if (event.altKey && index !== null) {
+      removePoint(index);
+      return;
+    }
+    const rect = graph.current.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0)
+      return;
+    let nextPoints = points;
+    let pointIndex = index;
+    if (pointIndex === null) {
+      if (points.length >= 32)
+        return;
+      const x = Math.min(1, Math.max(0, Math.round((event.clientX - rect.left) / rect.width * 1000) / 1000));
+      const y = Math.min(1, Math.max(0, Math.round((1 - (event.clientY - rect.top) / rect.height) * 1000) / 1000));
+      if (points.some((point) => Math.abs(point[0] - x) < 0.001))
+        return;
+      pointIndex = points.findIndex((point) => point[0] > x);
+      if (pointIndex === -1)
+        pointIndex = points.length;
+      nextPoints = [
+        ...points.slice(0, pointIndex),
+        [x, y],
+        ...points.slice(pointIndex)
+      ];
+      onChange(nextPoints, false);
+    }
+    setSelection(pointIndex);
+    graph.current.setPointerCapture(event.pointerId);
+    drag.current = {
+      pointerId: event.pointerId,
+      index: pointIndex,
+      initial: points,
+      points: nextPoints,
+      rect,
+      offsetX: event.clientX - rect.left - nextPoints[pointIndex][0] * rect.width,
+      offsetY: event.clientY - rect.top - (1 - nextPoints[pointIndex][1]) * rect.height
+    };
+  };
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
+    style: { padding: "6px 16px 8px", opacity: editable ? 1 : 0.55 },
+    children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
+        ref: graph,
+        tabIndex: -1,
+        role: "group",
+        "aria-label": "Curves graph",
+        style: {
+          position: "relative",
+          aspectRatio: "1",
+          touchAction: "none",
+          cursor: "default"
+        },
+        onPointerDown: (event) => beginDrag(event, null),
+        onPointerMove: (event) => {
+          const { current } = drag;
+          if (!current || current.pointerId !== event.pointerId)
+            return;
+          current.points = movePoint(current.points, current.index, (event.clientX - current.rect.left - current.offsetX) / current.rect.width, 1 - (event.clientY - current.rect.top - current.offsetY) / current.rect.height);
+          onChange(current.points, false);
+        },
+        onPointerUp: (event) => {
+          const { current } = drag;
+          if (!current || current.pointerId !== event.pointerId)
+            return;
+          drag.current = null;
+          event.currentTarget.releasePointerCapture(event.pointerId);
+          if (JSON.stringify(current.points) === JSON.stringify(current.initial)) {
+            onCancel();
+          } else {
+            onChange(current.points, true);
+          }
+        },
+        onPointerCancel: (event) => {
+          if (drag.current?.pointerId === event.pointerId)
+            cancel();
+        },
+        onLostPointerCapture: (event) => {
+          if (drag.current?.pointerId === event.pointerId)
+            cancel();
+        },
+        onKeyDown: (event) => {
+          if (event.key === "Escape" && drag.current) {
+            event.preventDefault();
+            event.stopPropagation();
+            cancel();
+          }
+        },
+        children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+            style: {
+              position: "absolute",
+              inset: 0,
+              opacity: 0.32,
+              pointerEvents: "none"
+            },
+            children: histogram
+          }),
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", {
+            viewBox: "0 0 256 256",
+            preserveAspectRatio: "none",
+            "aria-hidden": true,
+            style: {
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              border: "1px solid #45454b",
+              pointerEvents: "none"
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("path", {
+                d: "M64 0V256M128 0V256M192 0V256M0 64H256M0 128H256M0 192H256",
+                stroke: "#38383e",
+                strokeWidth: 0.7
+              }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("path", {
+                d: "M0 256L256 0",
+                stroke: "#64646d",
+                strokeDasharray: "3 4",
+                strokeWidth: 0.8
+              }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("path", {
+                d: curvePath,
+                fill: "none",
+                stroke: color,
+                strokeWidth: 1.7,
+                vectorEffect: "non-scaling-stroke"
+              })
+            ]
+          }),
+          points.map((point, index) => /* @__PURE__ */ (0,jsx_runtime.jsx)(ContextMenu, {
+            style: {
+              position: "absolute",
+              left: `${point[0] * 100}%`,
+              top: `${(1 - point[1]) * 100}%`,
+              transform: "translate(-50%, -50%)",
+              width: 18,
+              height: 18
+            },
+            getItems: () => {
+              setSelection(index);
+              return [
+                {
+                  type: "item",
+                  id: "remove-curve-point",
+                  label: "Remove point",
+                  keyHint: "⌫",
+                  leftItem: null,
+                  disabled: !editable || points.length <= 2,
+                  onClick: () => removePoint(index),
+                  quickSwitcherLabel: null,
+                  subMenu: null,
+                  value: "remove-curve-point"
+                }
+              ];
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)("button", {
+              type: "button",
+              disabled: !editable,
+              "aria-label": `Curve point ${index + 1}, input ${point[0]}, output ${point[1]}`,
+              "aria-pressed": selected === index,
+              className: index_kwxewaaz/* FOCUS_VISIBLE_ONLY_CLASS_NAME */.kv,
+              style: {
+                display: "block",
+                width: 18,
+                height: 18,
+                padding: 5,
+                border: "none",
+                cursor: "default",
+                touchAction: "none"
+              },
+              onPointerDown: (event) => beginDrag(event, index),
+              onFocus: () => setSelection(index),
+              onClick: () => setSelection(index),
+              onKeyDown: (event) => {
+                if (event.key === "Delete" || event.key === "Backspace") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  removePoint(index);
+                  return;
+                }
+                if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key))
+                  return;
+                event.preventDefault();
+                event.stopPropagation();
+                const delta = event.shiftKey ? 0.1 : 0.01;
+                onChange(movePoint(points, index, point[0] + (event.key === "ArrowRight" ? delta : event.key === "ArrowLeft" ? -delta : 0), point[1] + (event.key === "ArrowUp" ? delta : event.key === "ArrowDown" ? -delta : 0)), true);
+              },
+              children: /* @__PURE__ */ (0,jsx_runtime.jsx)("span", {
+                style: {
+                  display: "block",
+                  width: 8,
+                  height: 8,
+                  backgroundColor: selected === index ? color : "#202024",
+                  border: `1px solid ${color}`,
+                  boxShadow: "0 0 0 1px #151519"
+                }
+              })
+            })
+          }, index))
+        ]
+      }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+        style: {
+          height: 5,
+          marginTop: 10,
+          background: `linear-gradient(to right, #000, ${color})`
+        }
+      })
+    ]
+  });
+};
+
+// src/components/InspectorPanel/EffectHistogram.tsx
+
+
+
+var EffectHistogram = ({
+  nodePath,
+  effectIndex,
+  channel,
+  disabled,
+  multipleInstances,
+  height
+}) => {
+  const sequenceKey = esm.Internals.makeSequencePropsSubscriptionKey(nodePath);
+  const playing = esm.Internals.usePlaying();
+  const [histogram, setHistogram] = (0,react.useState)(null);
+  (0,react.useEffect)(() => {
+    setHistogram(null);
+    if (disabled || multipleInstances) {
+      return;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 144;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) {
+      setHistogram({ path: "", available: false });
+      return;
+    }
+    let lastSample = -Infinity;
+    return esm.Internals.subscribeToEffectSource({
+      sequenceKey,
+      effectIndex,
+      onSource: (source) => {
+        if (source === null) {
+          lastSample = -Infinity;
+          setHistogram(null);
+          return;
+        }
+        const now = performance.now();
+        if (playing && now - lastSample < 100) {
+          return;
+        }
+        lastSample = now;
+        try {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(source, 0, 0, canvas.width, canvas.height);
+          const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+          const bins = new Uint32Array(256);
+          let maximum = 0;
+          for (let i = 0;i < data.length; i += 4) {
+            if (data[i + 3] === 0) {
+              continue;
+            }
+            const value = channel === "red" ? data[i] : channel === "green" ? data[i + 1] : channel === "blue" ? data[i + 2] : Math.round(data[i] * 0.2126 + data[i + 1] * 0.7152 + data[i + 2] * 0.0722);
+            bins[value]++;
+            maximum = Math.max(maximum, bins[value]);
+          }
+          let path = "";
+          for (let i = 0;i < bins.length; i++) {
+            if (bins[i] === 0) {
+              continue;
+            }
+            const barHeight = bins[i] / maximum * 78;
+            path += `M${i} 80v-${barHeight.toFixed(2)}h1V80z`;
+          }
+          setHistogram({ path, available: true });
+        } catch {
+          setHistogram({ path: "", available: false });
+        }
+      }
+    });
+  }, [channel, disabled, effectIndex, multipleInstances, playing, sequenceKey]);
+  const color = channel === "red" ? "#e65d5d" : channel === "green" ? "#65c77b" : channel === "blue" ? "#648ee8" : "#b6b6bd";
+  const message = disabled ? "Effect is disabled" : multipleInstances ? "Histogram unavailable for repeated layers" : histogram === null ? "No input frame" : !histogram.available ? "Histogram unavailable" : null;
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
+    style: {
+      position: "relative",
+      height,
+      backgroundColor: "#151519",
+      border: "1px solid #45454b"
+    },
+    title: "Input histogram: pixels entering this effect",
+    children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", {
+        role: "img",
+        "aria-label": `${channel === "rgb" ? "Luminance" : channel} input histogram`,
+        viewBox: "0 0 256 80",
+        preserveAspectRatio: "none",
+        style: { display: "block", width: "100%", height: "100%" },
+        children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("path", {
+            d: "M64 0V80M128 0V80M192 0V80",
+            stroke: "#29292f"
+          }),
+          !message && histogram ? /* @__PURE__ */ (0,jsx_runtime.jsx)("path", {
+            d: histogram.path,
+            fill: color
+          }) : null
+        ]
+      }),
+      message ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+        style: {
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 11,
+          color: "#9b9ba2"
+        },
+        children: message
+      }) : null
+    ]
+  });
+};
+
+// src/components/InspectorPanel/CurvesEditor.tsx
+
+var CurvesEditor = ({
+  nodePath,
+  effectIndex,
+  schema,
+  validatedLocation,
+  runtimeValueStore,
+  multipleInstances
+}) => {
+  const { propStatuses } = (0,react.useContext)(esm.Internals.VisualModePropStatusesContext);
+  const { getEffectDragOverrides } = (0,react.useContext)(esm.Internals.VisualModeDragOverridesContext);
+  const { setEffectDragOverrides, clearEffectDragOverrides, setPropStatuses } = (0,react.useContext)(esm.Internals.VisualModeSettersContext);
+  const { previewServerState } = (0,react.useContext)(index_kwxewaaz/* StudioServerConnectionCtx */.vF);
+  const nodePathKey = esm.Internals.makeSequencePropsSubscriptionKey(nodePath);
+  const nodePathRef = (0,react.useRef)(nodePath);
+  nodePathRef.current = nodePath;
+  const runtimeValues = {
+    points: useRuntimeStoreValue(runtimeValueStore, "points"),
+    channel: useRuntimeStoreValue(runtimeValueStore, "channel"),
+    interpolation: useRuntimeStoreValue(runtimeValueStore, "interpolation"),
+    disabled: useRuntimeStoreValue(runtimeValueStore, "disabled")
+  };
+  const effectStatus = esm.Internals.getEffectPropStatusesCtx({
+    propStatuses,
+    nodePath,
+    effectIndex
+  });
+  const overrides = getEffectDragOverrides(nodePath, effectIndex);
+  const getStatus = (key) => effectStatus.type === "can-update-effect" ? effectStatus.props[key] ?? null : null;
+  const getDefault = (key) => schema[key]?.type === "hidden" ? undefined : schema[key]?.default;
+  const getValue = (key) => {
+    const status = getStatus(key);
+    if (!status || status.status !== "static")
+      return runtimeValues[key] ?? getDefault(key);
+    return esm.Internals.getEffectiveVisualModeValue({
+      propStatus: status,
+      dragOverrideValue: overrides[key],
+      defaultValue: getDefault(key),
+      frame: 0,
+      shouldResortToDefaultValueIfUndefined: true
+    });
+  };
+  const points = getValue("points") ?? [
+    [0, 0],
+    [1, 1]
+  ];
+  const rawChannel = getValue("channel");
+  const channel = rawChannel === "red" || rawChannel === "green" || rawChannel === "blue" ? rawChannel : "rgb";
+  const interpolation = getValue("interpolation") === "linear" ? "linear" : "smooth";
+  const disabled = Boolean(getValue("disabled"));
+  const editable = !disabled && (0,index_gjr0ae8m/* canUseEffectOperations */.$q)() && previewServerState.type === "connected" && getStatus("points")?.status === "static";
+  (0,react.useEffect)(() => {
+    const cleanupNodePath = nodePathRef.current;
+    return () => clearEffectDragOverrides(cleanupNodePath, effectIndex);
+  }, [clearEffectDragOverrides, effectIndex, nodePathKey]);
+  const onChange = (value, commit) => {
+    if (!editable || previewServerState.type !== "connected")
+      return;
+    if (!commit) {
+      setEffectDragOverrides(nodePath, effectIndex, "points", esm.Internals.makeStaticDragOverride(value));
+      return;
+    }
+    const save = saveEffectProp({
+      type: "value",
+      fileName: validatedLocation.source,
+      nodePath,
+      effectIndex,
+      fieldKey: "points",
+      value,
+      schema,
+      setPropStatuses,
+      clientId: previewServerState.clientId,
+      defaultValue: JSON.stringify(getDefault("points"))
+    });
+    clearEffectDragOverrides(nodePath, effectIndex);
+    save.catch((err) => (0,index_gjr0ae8m/* showNotification */.Ds)(err.message, 4000));
+  };
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(CurvesControl, {
+    points,
+    channel,
+    interpolation,
+    editable,
+    onChange,
+    onCancel: () => clearEffectDragOverrides(nodePath, effectIndex),
+    histogram: /* @__PURE__ */ (0,jsx_runtime.jsx)(EffectHistogram, {
+      height: "100%",
+      nodePath,
+      effectIndex,
+      channel,
+      disabled,
+      multipleInstances
+    })
+  });
+};
+
 // src/components/InspectorPanel/inspector-section-collapse.ts
 
 var BORDER_KEYS = [
@@ -106370,6 +111624,325 @@ var getInspectorSectionActivity = ({
   return isInspectorSectionEffectivelyInactive({ group, propStatuses, schema }) ? "inactive" : "active";
 };
 
+// src/components/InspectorPanel/LevelsEditor.tsx
+
+
+
+// src/components/InspectorPanel/LevelsControl.tsx
+
+
+var labels = {
+  blackPoint: "Input black",
+  whitePoint: "Input white",
+  gamma: "Gamma",
+  outputBlack: "Output black",
+  outputWhite: "Output white"
+};
+var LevelsHandle = ({ field, values, disabled, onChange, onCancel }) => {
+  const drag = (0,react.useRef)(null);
+  const gamma = field === "gamma";
+  const inputGap = Math.min(0.001, values.whitePoint - values.blackPoint);
+  const min = gamma ? 0.01 : field === "whitePoint" ? values.blackPoint + inputGap : 0;
+  const max = gamma ? 10 : field === "blackPoint" ? values.whitePoint - inputGap : 1;
+  const position = gamma ? values.blackPoint + (values.whitePoint - values.blackPoint) * 0.5 ** values.gamma : values[field];
+  const color = gamma ? "#888" : field === "blackPoint" || field === "outputBlack" ? "#151515" : "#fff";
+  const clamp = (value) => Math.min(max, Math.max(min, value));
+  const fromPointer = (clientX) => {
+    if (!drag.current)
+      return values[field];
+    const fraction = Math.min(1, Math.max(0, (clientX - drag.current.left - drag.current.offset) / drag.current.width));
+    const value = gamma ? Math.log(Math.min(0.999999, Math.max(0.000001, (fraction - values.blackPoint) / (values.whitePoint - values.blackPoint)))) / Math.log(0.5) : fraction;
+    return clamp(Math.round(value * (gamma ? 100 : 1000)) / (gamma ? 100 : 1000));
+  };
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("button", {
+    type: "button",
+    role: "slider",
+    "aria-label": labels[field],
+    "aria-valuemin": min,
+    "aria-valuemax": max,
+    "aria-valuenow": values[field],
+    "aria-valuetext": values[field].toFixed(gamma ? 2 : 3),
+    title: `${labels[field]}: ${values[field].toFixed(gamma ? 2 : 3)}`,
+    disabled,
+    className: `${index_kwxewaaz/* FOCUS_VISIBLE_ONLY_CLASS_NAME */.kv} ${index_kwxewaaz/* HOVERABLE_CLASS_NAME */.g3}`,
+    style: {
+      ...(0,index_kwxewaaz/* hoverableStyle */.ki)({
+        idleBackground: index_ts7drhwc/* TRANSPARENT */.nj,
+        hoverBackground: index_ts7drhwc/* TRANSPARENT */.nj,
+        idleColor: index_ts7drhwc/* LIGHT_TEXT */.hf,
+        hoverColor: index_ts7drhwc/* WHITE */.UE
+      }),
+      position: "absolute",
+      left: `${Math.min(1, Math.max(0, position)) * 100}%`,
+      top: 0,
+      width: 16,
+      height: 20,
+      transform: "translateX(-50%)",
+      padding: 0,
+      border: "none",
+      cursor: "default",
+      touchAction: "none",
+      opacity: disabled ? 0.35 : 1
+    },
+    onPointerDown: (event) => {
+      if (event.button !== 0)
+        return;
+      event.stopPropagation();
+      const rect = event.currentTarget.parentElement.getBoundingClientRect();
+      if (rect.width === 0)
+        return;
+      drag.current = {
+        left: rect.left,
+        width: rect.width,
+        offset: event.clientX - rect.left - position * rect.width,
+        value: values[field],
+        initialValue: values[field]
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    onPointerMove: (event) => {
+      if (!drag.current)
+        return;
+      const value = fromPointer(event.clientX);
+      if (value === drag.current.value)
+        return;
+      drag.current.value = value;
+      onChange(field, value, false);
+    },
+    onPointerUp: (event) => {
+      if (!drag.current)
+        return;
+      const { value, initialValue } = drag.current;
+      drag.current = null;
+      event.currentTarget.releasePointerCapture(event.pointerId);
+      if (value === initialValue) {
+        onCancel();
+      } else {
+        onChange(field, value, true);
+      }
+    },
+    onLostPointerCapture: () => {
+      if (!drag.current)
+        return;
+      drag.current = null;
+      onCancel();
+    },
+    onKeyDown: (event) => {
+      if (event.key === "Escape") {
+        if (!drag.current)
+          return;
+        event.preventDefault();
+        event.stopPropagation();
+        drag.current = null;
+        onCancel();
+        return;
+      }
+      const direction = event.key === "ArrowRight" || event.key === "ArrowUp" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowDown" ? -1 : 0;
+      if (!direction && event.key !== "Home" && event.key !== "End")
+        return;
+      event.preventDefault();
+      event.stopPropagation();
+      const value = event.key === "Home" ? min : event.key === "End" ? max : values[field] + direction * (event.shiftKey ? 0.1 : 0.01);
+      const nextValue = event.key === "Home" || event.key === "End" ? value : clamp(Math.round(value * 1000) / 1000);
+      if (nextValue !== values[field]) {
+        onChange(field, nextValue, true);
+      }
+    },
+    children: /* @__PURE__ */ (0,jsx_runtime.jsx)("svg", {
+      width: "14",
+      height: "16",
+      viewBox: "0 0 14 16",
+      style: { display: "block", margin: "auto", overflow: "visible" },
+      "aria-hidden": "true",
+      children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", {
+        d: "M7 1 L13 9 L13 14 L1 14 L1 9 Z",
+        fill: color,
+        stroke: "currentColor",
+        strokeWidth: "1"
+      })
+    })
+  });
+};
+var LevelsControl = ({ values, editable, onChange, onCancel, histogram }) => {
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
+    style: { padding: "8px 20px 4px", userSelect: "none" },
+    children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+        style: { fontSize: 11, color: index_ts7drhwc/* LIGHT_TEXT */.hf, marginBottom: 6 },
+        children: "Input levels"
+      }),
+      histogram,
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+        style: { height: 6, background: "linear-gradient(to right, #000, #fff)" }
+      }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+        style: { position: "relative", height: 26 },
+        children: ["blackPoint", "gamma", "whitePoint"].map((field) => /* @__PURE__ */ (0,jsx_runtime.jsx)(LevelsHandle, {
+          field,
+          values,
+          disabled: !editable[field],
+          onChange,
+          onCancel
+        }, field))
+      }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+        style: { fontSize: 11, color: index_ts7drhwc/* LIGHT_TEXT */.hf, marginBottom: 6 },
+        children: "Output levels"
+      }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+        style: {
+          height: 10,
+          background: "linear-gradient(to right, #000, #fff)",
+          border: "1px solid #555"
+        }
+      }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+        style: { position: "relative", height: 22 },
+        children: ["outputBlack", "outputWhite"].map((field) => /* @__PURE__ */ (0,jsx_runtime.jsx)(LevelsHandle, {
+          field,
+          values,
+          disabled: !editable[field],
+          onChange,
+          onCancel
+        }, field))
+      })
+    ]
+  });
+};
+
+// src/components/InspectorPanel/LevelsEditor.tsx
+
+var LevelsEditor = ({
+  nodePath,
+  effectIndex,
+  schema,
+  validatedLocation,
+  runtimeValueStore,
+  keyframeDisplayOffset,
+  keyframePlaybackRate,
+  multipleInstances
+}) => {
+  const { propStatuses } = (0,react.useContext)(esm.Internals.VisualModePropStatusesContext);
+  const { getEffectDragOverrides } = (0,react.useContext)(esm.Internals.VisualModeDragOverridesContext);
+  const { setEffectDragOverrides, clearEffectDragOverrides, setPropStatuses } = (0,react.useContext)(esm.Internals.VisualModeSettersContext);
+  const { previewServerState } = (0,react.useContext)(index_kwxewaaz/* StudioServerConnectionCtx */.vF);
+  const nodePathKey = esm.Internals.makeSequencePropsSubscriptionKey(nodePath);
+  const nodePathRef = (0,react.useRef)(nodePath);
+  nodePathRef.current = nodePath;
+  const displayFrame = esm.Internals.Timeline.useTimelinePosition();
+  const runtimeValues = {
+    blackPoint: useRuntimeStoreValue(runtimeValueStore, "blackPoint"),
+    whitePoint: useRuntimeStoreValue(runtimeValueStore, "whitePoint"),
+    gamma: useRuntimeStoreValue(runtimeValueStore, "gamma"),
+    outputBlack: useRuntimeStoreValue(runtimeValueStore, "outputBlack"),
+    outputWhite: useRuntimeStoreValue(runtimeValueStore, "outputWhite"),
+    channel: useRuntimeStoreValue(runtimeValueStore, "channel"),
+    disabled: useRuntimeStoreValue(runtimeValueStore, "disabled")
+  };
+  const effectStatus = esm.Internals.getEffectPropStatusesCtx({
+    propStatuses,
+    nodePath,
+    effectIndex
+  });
+  const overrides = getEffectDragOverrides(nodePath, effectIndex);
+  const getStatus = (key) => effectStatus.type === "can-update-effect" ? effectStatus.props[key] ?? null : null;
+  const getDefaultValue = (key) => {
+    const fieldSchema = schema[key];
+    return fieldSchema?.type === "hidden" ? undefined : fieldSchema?.default;
+  };
+  const sourceFrame = (key) => {
+    const propStatus = getStatus(key);
+    return getKeyframeSourceFrame({
+      displayFrame,
+      keyframeDisplayOffset: getKeyframeDisplayOffset({
+        propStatus,
+        keyframeDisplayOffset,
+        keyframePlaybackRate
+      }),
+      keyframePlaybackRate,
+      propStatus
+    });
+  };
+  const getValue = (key) => {
+    const propStatus = getStatus(key);
+    if (!propStatus || propStatus.status === "computed") {
+      return runtimeValues[key] ?? getDefaultValue(key);
+    }
+    return esm.Internals.getEffectiveVisualModeValue({
+      propStatus,
+      dragOverrideValue: overrides[key],
+      defaultValue: getDefaultValue(key),
+      frame: getKeyframeLocalFrame(sourceFrame(key), propStatus),
+      shouldResortToDefaultValueIfUndefined: true
+    });
+  };
+  const values = {
+    blackPoint: Number(getValue("blackPoint") ?? 0),
+    whitePoint: Number(getValue("whitePoint") ?? 1),
+    gamma: Number(getValue("gamma") ?? 1),
+    outputBlack: Number(getValue("outputBlack") ?? 0),
+    outputWhite: Number(getValue("outputWhite") ?? 1)
+  };
+  const rawChannel = getValue("channel");
+  const channel = rawChannel === "red" || rawChannel === "green" || rawChannel === "blue" ? rawChannel : "rgb";
+  const disabled = Boolean(getValue("disabled"));
+  const editable = Object.fromEntries(Object.keys(values).map((key) => {
+    const status = getStatus(key);
+    return [
+      key,
+      !disabled && (0,index_gjr0ae8m/* canUseEffectOperations */.$q)() && previewServerState.type === "connected" && status !== null && status.status !== "computed" && (status.status !== "keyframed" || (0,index_gjr0ae8m/* canUseKeyframeOperations */.Yq)())
+    ];
+  }));
+  (0,react.useEffect)(() => {
+    const cleanupNodePath = nodePathRef.current;
+    return () => clearEffectDragOverrides(cleanupNodePath, effectIndex);
+  }, [clearEffectDragOverrides, effectIndex, nodePathKey]);
+  const onChange = (field, value, commit) => {
+    const status = getStatus(field);
+    if (!editable[field] || !status || status.status === "computed" || previewServerState.type !== "connected")
+      return;
+    if (!commit) {
+      setEffectDragOverrides(nodePath, effectIndex, field, status.status === "keyframed" ? esm.Internals.makeKeyframedDragOverride({
+        status,
+        frame: sourceFrame(field),
+        value
+      }) : esm.Internals.makeStaticDragOverride(value));
+      return;
+    }
+    const common = {
+      fileName: validatedLocation.source,
+      nodePath,
+      effectIndex,
+      fieldKey: field,
+      value,
+      schema,
+      setPropStatuses,
+      clientId: previewServerState.clientId
+    };
+    const save = status.status === "keyframed" ? callAddEffectKeyframe({ ...common, sourceFrame: sourceFrame(field) }) : saveEffectProp({
+      ...common,
+      type: "value",
+      defaultValue: getDefaultValue(field) === undefined ? null : JSON.stringify(getDefaultValue(field))
+    });
+    clearEffectDragOverrides(nodePath, effectIndex);
+    save.catch((err) => (0,index_gjr0ae8m/* showNotification */.Ds)(err.message, 4000));
+  };
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(LevelsControl, {
+    values,
+    editable,
+    onChange,
+    onCancel: () => clearEffectDragOverrides(nodePath, effectIndex),
+    histogram: /* @__PURE__ */ (0,jsx_runtime.jsx)(EffectHistogram, {
+      height: 80,
+      nodePath,
+      effectIndex,
+      channel,
+      disabled,
+      multipleInstances
+    })
+  });
+};
+
 // src/components/Timeline/border-radius-representation.ts
 
 var getBorderRadiusConversionChanges = (conversion) => {
@@ -106441,7 +112014,7 @@ var has3DTransformValue = ({
     return z !== null && z !== 0;
   }
   if (fieldKey === "style.transformOrigin") {
-    const parsed = index_394460kk_parseTransformOrigin(value);
+    const parsed = index_kewagct1_parseTransformOrigin(value);
     const z = parsed?.z ? parseTransformOriginZ(parsed.z) : null;
     return z !== null && z.value !== 0;
   }
@@ -106628,7 +112201,8 @@ var InspectorSequenceSection = ({
     sequence,
     nodePathInfo,
     includeTextContent: true,
-    includeSourceControls: true
+    includeSourceControls: true,
+    includeInspectorOnlyFields: true
   });
   const {
     consumeInspectorRevealRequest,
@@ -107207,9 +112781,28 @@ var InspectorSequenceSection = ({
             children: effectRows.map((row) => {
               const selection = getTimelineSelectionFromNodePathInfo(row.node.nodePathInfo);
               const selected = selection !== null && getTimelineSelectionKey(selection) === selectedEffectKey;
-              return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", {
+              return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", {
                 ref: selected ? selectedEffectRowRef : null,
-                children: renderRow(row)
+                children: [
+                  row.node.kind === "field" && row.node.field?.kind === "effect-field" && row.node.field.key === "points" && sequence.effects[row.node.field.effectIndex]?.type === "remotion/curves" ? /* @__PURE__ */ (0,jsx_runtime.jsx)(CurvesEditor, {
+                    multipleInstances: nodePathInfo.numberOfSequencesWithThisNodePath > 1,
+                    nodePath: nodePathInfo.sequenceSubscriptionKey,
+                    effectIndex: row.node.field.effectIndex,
+                    schema: row.node.field.effectSchema,
+                    validatedLocation,
+                    runtimeValueStore: sequence.effectRuntimeValues?.[row.node.field.effectIndex] ?? null
+                  }) : renderRow(row),
+                  row.node.kind === "field" && row.node.field?.kind === "effect-field" && row.node.field.key === "channel" && sequence.effects[row.node.field.effectIndex]?.type === "remotion/levels" ? /* @__PURE__ */ (0,jsx_runtime.jsx)(LevelsEditor, {
+                    multipleInstances: nodePathInfo.numberOfSequencesWithThisNodePath > 1,
+                    nodePath: nodePathInfo.sequenceSubscriptionKey,
+                    effectIndex: row.node.field.effectIndex,
+                    schema: row.node.field.effectSchema,
+                    validatedLocation,
+                    runtimeValueStore: sequence.effectRuntimeValues?.[row.node.field.effectIndex] ?? null,
+                    keyframeDisplayOffset,
+                    keyframePlaybackRate
+                  }) : null
+                ]
               }, getInspectorExpansionKey(row.node.nodePathInfo));
             })
           }) : null
@@ -107412,7 +113005,7 @@ var getSelectedOutlineCropFollowingTransformOrigin = ({
   if (dimensions === null || transformOrigin === null || transformOrigin.propStatus.status !== "static") {
     return null;
   }
-  const parsed = index_394460kk_parseTransformOrigin(transformOrigin.value);
+  const parsed = index_kewagct1_parseTransformOrigin(transformOrigin.value);
   if (parsed === null) {
     return null;
   }
@@ -109168,7 +114761,7 @@ var renderQueueItemSubtitleStyle = {
 // src/components/RenderQueue/QueueJobError.tsx
 
 
-var errorStyle2 = {
+var errorStyle3 = {
   ...renderQueueItemSubtitleStyle
 };
 var QueueJobError = ({ error, modalTitle }) => {
@@ -109184,7 +114777,7 @@ var QueueJobError = ({ error, modalTitle }) => {
   return /* @__PURE__ */ (0,jsx_runtime.jsx)("button", {
     onClick,
     type: "button",
-    style: errorStyle2,
+    style: errorStyle3,
     "aria-label": error.message,
     children: error.message
   });
@@ -111191,7 +116784,7 @@ var description3 = {
   lineHeight: 1.5,
   maxWidth: 400
 };
-var index_394460kk_link = {
+var index_kewagct1_link = {
   fontSize: INFO_TOOLTIP_FONT_SIZE,
   maxWidth: 200,
   color: index_ts7drhwc/* BLUE */.ft,
@@ -111246,7 +116839,7 @@ var OptionExplainer = ({
                     x: 1
                   }),
                   /* @__PURE__ */ (0,jsx_runtime.jsx)("a", {
-                    style: index_394460kk_link,
+                    style: index_kewagct1_link,
                     href: option.docLink,
                     target: "_blank",
                     children: "Docs"
@@ -119098,8 +124691,8 @@ var KeyboardShortcutsSettings = () => {
 // src/components/ModelsSettings.tsx
 
 
-var LazyWhisperModels = react.lazy(() => __webpack_require__.e(/* import() */ 698).then(() => (__webpack_require__(2698))));
-var LazyVideoMattingModels = react.lazy(() => __webpack_require__.e(/* import() */ 340).then(() => (__webpack_require__(7340))));
+var LazyWhisperModels = react.lazy(() => __webpack_require__.e(/* import() */ 815).then(() => (__webpack_require__(4815))));
+var LazyVideoMattingModels = react.lazy(() => __webpack_require__.e(/* import() */ 889).then(() => (__webpack_require__(7889))));
 var container65 = {
   alignSelf: "flex-start",
   boxSizing: "border-box",
@@ -119153,7 +124746,7 @@ var installButton = {
   color: index_ts7drhwc/* WHITE */.UE,
   flexShrink: 0
 };
-var errorStyle3 = {
+var errorStyle4 = {
   color: index_ts7drhwc/* WARNING_COLOR */.pj,
   fontSize: 12,
   lineHeight: 1.4,
@@ -119213,7 +124806,7 @@ var OptionalModelPackage = ({ canInstall, children, label, packageName, style })
             children: canInstall ? `Install the package and ${index_gjr0ae8m/* TRANSFORMERS_PACKAGE */.uJ} to download and manage its models.` : "Reconnect the Studio server to install this package and manage its models."
           }),
           installState.type === "error" ? /* @__PURE__ */ (0,jsx_runtime.jsx)("p", {
-            style: errorStyle3,
+            style: errorStyle4,
             children: installState.message
           }) : null
         ]
@@ -121651,7 +127244,7 @@ var INSTALL_MESSAGE = /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment,
   ]
 });
 var LazyTranscriptionModal = react.lazy(async () => {
-  const { TranscriptionModal } = await __webpack_require__.e(/* import() */ 623).then(() => (__webpack_require__(3623)));
+  const { TranscriptionModal } = await __webpack_require__.e(/* import() */ 204).then(() => (__webpack_require__(4204)));
   return { default: TranscriptionModal };
 });
 var TranscriptionModalWithOptionalWhisper = ({ state }) => {
@@ -121674,7 +127267,7 @@ var TranscriptionModalWithOptionalWhisper = ({ state }) => {
 
 
 var LazyVideoMattingModal = react.lazy(async () => {
-  const { VideoMattingModal } = await __webpack_require__.e(/* import() */ 292).then(() => (__webpack_require__(2292)));
+  const { VideoMattingModal } = await __webpack_require__.e(/* import() */ 527).then(() => (__webpack_require__(6527)));
   return { default: VideoMattingModal };
 });
 var VideoMattingModalWithOptionalPackage = ({ state }) => /* @__PURE__ */ (0,jsx_runtime.jsx)(OptionalPackageModal, {
@@ -123351,17 +128944,17 @@ var useIsRulerVisible = () => {
 
 
 
-var index_394460kk_dispose = Symbol.dispose || /* @__PURE__ */ Symbol.for("Symbol.dispose");
-var index_394460kk_asyncDispose = Symbol.asyncDispose || /* @__PURE__ */ Symbol.for("Symbol.asyncDispose");
-var index_394460kk_using = (stack, value, async) => {
+var index_kewagct1_dispose = Symbol.dispose || /* @__PURE__ */ Symbol.for("Symbol.dispose");
+var index_kewagct1_asyncDispose = Symbol.asyncDispose || /* @__PURE__ */ Symbol.for("Symbol.asyncDispose");
+var index_kewagct1_using = (stack, value, async) => {
   if (value != null) {
     if (typeof value !== "object" && typeof value !== "function")
       throw TypeError('Object expected to be assigned to "using" declaration');
     var dispose;
     if (async)
-      dispose = value[index_394460kk_asyncDispose];
+      dispose = value[index_kewagct1_asyncDispose];
     if (dispose === undefined)
-      dispose = value[index_394460kk_dispose];
+      dispose = value[index_kewagct1_dispose];
     if (typeof dispose !== "function")
       throw TypeError("Object not disposable");
     stack.push([async, dispose, value]);
@@ -123370,7 +128963,7 @@ var index_394460kk_using = (stack, value, async) => {
   }
   return value;
 };
-var index_394460kk_callDispose = (stack, error, hasError) => {
+var index_kewagct1_callDispose = (stack, error, hasError) => {
   var E = typeof SuppressedError === "function" ? SuppressedError : function(e, s, m, _) {
     return _ = Error(m), _.name = "SuppressedError", _.error = e, _.suppressed = s, _;
   }, fail = (e) => error = hasError ? new E(e, error, "An error was suppressed during disposal") : (hasError = true, e), next = (it) => {
@@ -123640,12 +129233,12 @@ var getTrimStartForAudioNode = ({
   const offsetBecauseOfTooLate = targetTime < 0 ? -targetTime * combinedPlaybackRate : 0;
   return sourceStartOffsetInSeconds + offsetBecauseOfTrim + offsetBecauseOfTooLate;
 };
-var index_394460kk_REFERENCE_SAMPLE_RATE = 48000;
-var index_394460kk_REFERENCE_HOP_SIZE = 512;
-var index_394460kk_makePlanarAudio = (numberOfChannels, length) => {
+var index_kewagct1_REFERENCE_SAMPLE_RATE = 48000;
+var index_kewagct1_REFERENCE_HOP_SIZE = 512;
+var index_kewagct1_makePlanarAudio = (numberOfChannels, length) => {
   return new Array(numberOfChannels).fill(null).map(() => new Float32Array(length));
 };
-var index_394460kk_ensurePlanarCapacity = ({
+var index_kewagct1_ensurePlanarCapacity = ({
   buffers,
   requiredLength
 }) => {
@@ -123663,7 +129256,7 @@ var index_394460kk_ensurePlanarCapacity = ({
   });
 };
 
-class index_394460kk_PlanarAudioQueue {
+class index_kewagct1_PlanarAudioQueue {
   chunks = [];
   length = 0;
   push(audio) {
@@ -123675,7 +129268,7 @@ class index_394460kk_PlanarAudioQueue {
   }
   take(numberOfFrames, numberOfChannels) {
     const framesToTake = Math.min(numberOfFrames, this.length);
-    const result = index_394460kk_makePlanarAudio(numberOfChannels, framesToTake);
+    const result = index_kewagct1_makePlanarAudio(numberOfChannels, framesToTake);
     let written = 0;
     while (written < framesToTake) {
       const first = this.chunks[0];
@@ -123699,7 +129292,7 @@ class index_394460kk_PlanarAudioQueue {
   }
 }
 
-class index_394460kk_StreamingTimeStretcher {
+class index_kewagct1_StreamingTimeStretcher {
   numberOfChannels;
   factor;
   hopSize;
@@ -123723,19 +129316,19 @@ class index_394460kk_StreamingTimeStretcher {
   }) {
     this.numberOfChannels = numberOfChannels;
     this.factor = factor;
-    this.hopSize = Math.max(32, Math.round(index_394460kk_REFERENCE_HOP_SIZE * sampleRate / index_394460kk_REFERENCE_SAMPLE_RATE));
+    this.hopSize = Math.max(32, Math.round(index_kewagct1_REFERENCE_HOP_SIZE * sampleRate / index_kewagct1_REFERENCE_SAMPLE_RATE));
     this.windowSize = this.hopSize * 2;
     this.searchRadius = this.hopSize;
     this.analysisHop = this.hopSize / factor;
-    this.input = index_394460kk_makePlanarAudio(numberOfChannels, 65536);
-    this.output = index_394460kk_makePlanarAudio(numberOfChannels, 65536);
+    this.input = index_kewagct1_makePlanarAudio(numberOfChannels, 65536);
+    this.output = index_kewagct1_makePlanarAudio(numberOfChannels, 65536);
   }
   append(audio) {
     if (this.finalized) {
       throw new Error("Cannot append audio after the time stretcher was finalized.");
     }
     const { length } = audio[0];
-    this.input = index_394460kk_ensurePlanarCapacity({
+    this.input = index_kewagct1_ensurePlanarCapacity({
       buffers: this.input,
       requiredLength: this.inputLength + length
     });
@@ -123818,7 +129411,7 @@ class index_394460kk_StreamingTimeStretcher {
         break;
       }
       const nextSynthesisPosition = this.synthesisPosition + this.hopSize;
-      this.output = index_394460kk_ensurePlanarCapacity({
+      this.output = index_kewagct1_ensurePlanarCapacity({
         buffers: this.output,
         requiredLength: nextSynthesisPosition + this.windowSize
       });
@@ -123841,7 +129434,7 @@ class index_394460kk_StreamingTimeStretcher {
   }
   drainFinalizedOutput() {
     if (!this.initialized) {
-      return index_394460kk_makePlanarAudio(this.numberOfChannels, 0);
+      return index_kewagct1_makePlanarAudio(this.numberOfChannels, 0);
     }
     const finalizedLength = Math.max(0, this.synthesisPosition + this.hopSize);
     const result = this.output.map((channel) => channel.slice(0, finalizedLength));
@@ -123865,8 +129458,8 @@ class index_394460kk_StreamingTimeStretcher {
     }
     this.finalized = true;
     const targetLength = Math.round(this.totalInputFrames * this.factor);
-    const padding = index_394460kk_makePlanarAudio(this.numberOfChannels, this.windowSize + this.searchRadius * 2);
-    this.input = index_394460kk_ensurePlanarCapacity({
+    const padding = index_kewagct1_makePlanarAudio(this.numberOfChannels, this.windowSize + this.searchRadius * 2);
+    this.input = index_kewagct1_ensurePlanarCapacity({
       buffers: this.input,
       requiredLength: this.inputLength + padding[0].length
     });
@@ -123880,7 +129473,7 @@ class index_394460kk_StreamingTimeStretcher {
     if (finalized[0].length >= remaining) {
       return finalized.map((channel) => channel.slice(0, remaining));
     }
-    const result = index_394460kk_makePlanarAudio(this.numberOfChannels, remaining);
+    const result = index_kewagct1_makePlanarAudio(this.numberOfChannels, remaining);
     for (let channel = 0;channel < this.numberOfChannels; channel++) {
       result[channel].set(finalized[channel]);
     }
@@ -123888,7 +129481,7 @@ class index_394460kk_StreamingTimeStretcher {
   }
 }
 
-class index_394460kk_StreamingLinearResampler {
+class index_kewagct1_StreamingLinearResampler {
   numberOfChannels;
   step;
   input;
@@ -123900,10 +129493,10 @@ class index_394460kk_StreamingLinearResampler {
   }) {
     this.numberOfChannels = numberOfChannels;
     this.step = step;
-    this.input = index_394460kk_makePlanarAudio(numberOfChannels, 65536);
+    this.input = index_kewagct1_makePlanarAudio(numberOfChannels, 65536);
   }
   append(audio) {
-    this.input = index_394460kk_ensurePlanarCapacity({
+    this.input = index_kewagct1_ensurePlanarCapacity({
       buffers: this.input,
       requiredLength: this.inputLength + audio[0].length
     });
@@ -123915,7 +129508,7 @@ class index_394460kk_StreamingLinearResampler {
   }
   process(finalizing) {
     const outputLength = Math.max(0, Math.floor((this.inputLength - (finalizing ? 0 : 1) - this.position) / this.step) + 1);
-    const result = index_394460kk_makePlanarAudio(this.numberOfChannels, outputLength);
+    const result = index_kewagct1_makePlanarAudio(this.numberOfChannels, outputLength);
     for (let outputFrame = 0;outputFrame < outputLength; outputFrame++) {
       const leftIndex = Math.floor(this.position);
       const rightIndex = Math.min(leftIndex + 1, this.inputLength - 1);
@@ -123940,11 +129533,11 @@ class index_394460kk_StreamingLinearResampler {
   }
 }
 
-class index_394460kk_StreamingPitchShifter {
+class index_kewagct1_StreamingPitchShifter {
   numberOfChannels;
   stretcher;
   resampler;
-  outputQueue = new index_394460kk_PlanarAudioQueue;
+  outputQueue = new index_kewagct1_PlanarAudioQueue;
   totalInputFrames = 0;
   totalOutputFrames = 0;
   constructor({
@@ -123953,12 +129546,12 @@ class index_394460kk_StreamingPitchShifter {
     toneFrequency
   }) {
     this.numberOfChannels = numberOfChannels;
-    this.stretcher = new index_394460kk_StreamingTimeStretcher({
+    this.stretcher = new index_kewagct1_StreamingTimeStretcher({
       numberOfChannels,
       sampleRate,
       factor: toneFrequency
     });
-    this.resampler = new index_394460kk_StreamingLinearResampler({
+    this.resampler = new index_kewagct1_StreamingLinearResampler({
       numberOfChannels,
       step: toneFrequency
     });
@@ -123981,7 +129574,7 @@ class index_394460kk_StreamingPitchShifter {
     this.outputQueue.push(this.resampler.finalize());
     const remaining = this.totalInputFrames - this.totalOutputFrames;
     const available = this.outputQueue.take(Math.min(remaining, this.outputQueue.getLength()), this.numberOfChannels);
-    const result = index_394460kk_makePlanarAudio(this.numberOfChannels, remaining);
+    const result = index_kewagct1_makePlanarAudio(this.numberOfChannels, remaining);
     for (let channel = 0;channel < this.numberOfChannels; channel++) {
       result[channel].set(available[channel]);
     }
@@ -124062,7 +129655,7 @@ async function* pitchShiftAudioIterator({
       segmentStart = slice.timelineTimestamp;
       segmentInputFrames = 0;
       segmentOutputFrames = 0;
-      shifter = new index_394460kk_StreamingPitchShifter({
+      shifter = new index_kewagct1_StreamingPitchShifter({
         numberOfChannels,
         sampleRate,
         toneFrequency
@@ -124893,7 +130486,7 @@ var resolveAudioTrack = async ({
   }
   return audioTracks[0] ?? null;
 };
-function index_394460kk_isNetworkError(error) {
+function index_kewagct1_isNetworkError(error) {
   if (error.message.includes("Failed to fetch") || error.message.includes("Load failed") || error.message.includes("NetworkError when attempting to fetch resource")) {
     return true;
   }
@@ -124919,6 +130512,7 @@ var makeNonceManager = () => {
 class PremountAwareDelayPlayback {
   isPremounting;
   isPostmounting;
+  disposed = false;
   activeHandles = new Set;
   delayPlayback;
   constructor({
@@ -124931,7 +130525,13 @@ class PremountAwareDelayPlayback {
     this.isPostmounting = isPostmounting;
   }
   shouldDelayPlayback() {
-    return !this.isPremounting && !this.isPostmounting;
+    return !this.disposed && !this.isPremounting && !this.isPostmounting;
+  }
+  dispose() {
+    this.disposed = true;
+    for (const handle of this.activeHandles) {
+      handle.dispose();
+    }
   }
   syncHandles() {
     for (const handle of this.activeHandles) {
@@ -125551,7 +131151,7 @@ var videoIteratorManager = async ({
     try {
       clearLastDrawnFrame();
       videoFrameIterator?.destroy();
-      const delayHandle = index_394460kk_using(__stack, delayPlaybackHandleIfNotPremounting(), 0);
+      const delayHandle = index_kewagct1_using(__stack, delayPlaybackHandleIfNotPremounting(), 0);
       currentDelayHandle = delayHandle;
       currentSeek = timeToSeek;
       const iterator = await createVideoIterator(timeToSeek, prewarmedVideoIteratorCache);
@@ -125580,7 +131180,7 @@ var videoIteratorManager = async ({
     } catch (_catch) {
       var _err = _catch, _hasErr = 1;
     } finally {
-      index_394460kk_callDispose(__stack, _err, _hasErr);
+      index_kewagct1_callDispose(__stack, _err, _hasErr);
     }
   };
   const seek = async ({
@@ -125839,7 +131439,7 @@ class MediaPlayer {
   async _initialize(startTimeUnresolved, initialMuted, initialVolume) {
     let __stack = [];
     try {
-      const _ = index_394460kk_using(__stack, this.delayPlaybackHandleIfNotPremounting(), 0);
+      const _ = index_kewagct1_using(__stack, this.delayPlaybackHandleIfNotPremounting(), 0);
       try {
         if (this.isDisposalError()) {
           return { type: "disposed" };
@@ -125851,7 +131451,7 @@ class MediaPlayer {
             return { type: "disposed" };
           }
           const err = error;
-          if (index_394460kk_isNetworkError(err)) {
+          if (index_kewagct1_isNetworkError(err)) {
             throw error;
           }
           esm.Internals.Log.error({ logLevel: this.logLevel, tag: "@remotion/media" }, `[MediaPlayer] Failed to recognize format for ${this.src}`, error);
@@ -125982,8 +131582,11 @@ class MediaPlayer {
         }
         return { type: "success", durationInSeconds };
       } catch (error) {
+        if (this.isDisposalError()) {
+          return { type: "disposed" };
+        }
         const err = error;
-        if (index_394460kk_isNetworkError(err)) {
+        if (index_kewagct1_isNetworkError(err)) {
           esm.Internals.Log.error({ logLevel: this.logLevel, tag: "@remotion/media" }, `[MediaPlayer] Network/CORS error for ${this.src}`, err);
           return { type: "network-error", error: err };
         }
@@ -125993,7 +131596,7 @@ class MediaPlayer {
     } catch (_catch) {
       var _err = _catch, _hasErr = 1;
     } finally {
-      index_394460kk_callDispose(__stack, _err, _hasErr);
+      index_kewagct1_callDispose(__stack, _err, _hasErr);
     }
   }
   seekToWithQueue = async (newTime, unloopedNewTime, intent) => {
@@ -126186,6 +131789,9 @@ class MediaPlayer {
     this.disposed = true;
     this.nonceManager.createAsyncOperation();
     this.videoIteratorManager?.destroy();
+    this.audioIteratorManager?.destroyIterator();
+    this.premountAwareDelayPlayback.dispose();
+    this.releaseInput();
     if (this.initializationPromise) {
       try {
         await this.initializationPromise;
@@ -126193,7 +131799,6 @@ class MediaPlayer {
     }
     this.videoIteratorManager?.destroy();
     this.audioIteratorManager?.destroyIterator();
-    this.releaseInput();
   }
   getTargetTime = (mediaTimestamp, currentTime) => {
     if (!this.sharedAudioContext) {
@@ -126981,7 +132586,7 @@ var makeAudioCache = () => {
     getTotalSize
   };
 };
-var index_394460kk_EXTRA_THRESHOLD_IN_SECONDS = 1.5;
+var index_kewagct1_EXTRA_THRESHOLD_IN_SECONDS = 1.5;
 var safetyOutOfOrderThreshold = 0.2;
 var warned = {};
 var warnAboutMatroskaOnce = (src, logLevel) => {
@@ -126999,7 +132604,7 @@ var makeAudioIterator2 = ({
   actualMatroskaTimestamps,
   logLevel
 }) => {
-  const sampleIterator = audioSampleSink.samples(isMatroska ? 0 : Math.max(0, startTimestamp - index_394460kk_EXTRA_THRESHOLD_IN_SECONDS));
+  const sampleIterator = audioSampleSink.samples(isMatroska ? 0 : Math.max(0, startTimestamp - index_kewagct1_EXTRA_THRESHOLD_IN_SECONDS));
   if (isMatroska) {
     warnAboutMatroskaOnce(src, logLevel);
   }
@@ -127315,7 +132920,7 @@ var makeSinks = (src, logLevel, credentials, requestInit) => {
     } catch (error) {
       formatDetectionError = error;
     }
-    const isNetworkFailure = formatDetectionError !== null && index_394460kk_isNetworkError(formatDetectionError);
+    const isNetworkFailure = formatDetectionError !== null && index_kewagct1_isNetworkError(formatDetectionError);
     const isMatroska = format === input_format/* MATROSKA */.BN || format === input_format/* WEBM */.q6;
     const getVideoSinks = async () => {
       if (isNetworkFailure) {
@@ -128090,7 +133695,7 @@ var applyVolume = (array, volume) => {
     }
   }
 };
-var index_394460kk_TARGET_NUMBER_OF_CHANNELS = 2;
+var index_kewagct1_TARGET_NUMBER_OF_CHANNELS = 2;
 var fixFloatingPoint = (value) => {
   if (value % 1 < 0.0000001) {
     return Math.floor(value);
@@ -128141,7 +133746,7 @@ var resampleAudioData = ({
   for (let newFrameIndex = 0;newFrameIndex < targetFrames; newFrameIndex++) {
     const start = newFrameIndex * chunkSize;
     const end = start + chunkSize;
-    if (index_394460kk_TARGET_NUMBER_OF_CHANNELS === srcNumberOfChannels) {
+    if (index_kewagct1_TARGET_NUMBER_OF_CHANNELS === srcNumberOfChannels) {
       for (let i = 0;i < srcNumberOfChannels; i++) {
         destination[newFrameIndex * srcNumberOfChannels + i] = getSourceValues(start, end, i);
       }
@@ -128173,7 +133778,7 @@ var resampleAudioData = ({
       destination[newFrameIndex * 2 + 1] = clampToS16(r2);
     } else {
       for (let i = 0;i < srcNumberOfChannels; i++) {
-        destination[newFrameIndex * index_394460kk_TARGET_NUMBER_OF_CHANNELS + i] = getSourceValues(start, end, i);
+        destination[newFrameIndex * index_kewagct1_TARGET_NUMBER_OF_CHANNELS + i] = getSourceValues(start, end, i);
       }
     }
   }
@@ -128265,7 +133870,7 @@ var resamplePcmS16AudioData = ({
   if (newNumberOfFrames === 0) {
     throw new Error("Cannot resample - the given sample rate would result in less than 1 sample");
   }
-  if (newNumberOfFrames === audioData.numberOfFrames && index_394460kk_TARGET_NUMBER_OF_CHANNELS === audioData.numberOfChannels && playbackRate === 1) {
+  if (newNumberOfFrames === audioData.numberOfFrames && index_kewagct1_TARGET_NUMBER_OF_CHANNELS === audioData.numberOfChannels && playbackRate === 1) {
     return {
       data: audioData.data,
       numberOfFrames: newNumberOfFrames,
@@ -128273,7 +133878,7 @@ var resamplePcmS16AudioData = ({
       durationInMicroSeconds: fixFloatingPoint2(newNumberOfFrames / targetSampleRate * 1e6)
     };
   }
-  const data = new Int16Array(newNumberOfFrames * index_394460kk_TARGET_NUMBER_OF_CHANNELS);
+  const data = new Int16Array(newNumberOfFrames * index_kewagct1_TARGET_NUMBER_OF_CHANNELS);
   const chunkSize = audioData.numberOfFrames / newNumberOfFrames;
   resampleAudioData({
     srcNumberOfChannels: audioData.numberOfChannels,
@@ -128485,7 +134090,7 @@ var extractAudioInternal = async ({
     return { data: resampled, durationInSeconds: mediaDurationInSeconds };
   } catch (err) {
     const error = err;
-    if (index_394460kk_isNetworkError(error)) {
+    if (index_kewagct1_isNetworkError(error)) {
       return "network-error";
     }
     if (isUnsupportedConfigurationError(error)) {
@@ -128656,7 +134261,7 @@ var extractFrameAndAudio = async ({
       const sink = await mediaCache.sinkManager.getSink(src, logLevel, credentials, requestInit);
       if (sink.formatDetectionError) {
         return {
-          type: index_394460kk_isNetworkError(sink.formatDetectionError) ? "network-error" : "unknown-container-format",
+          type: index_kewagct1_isNetworkError(sink.formatDetectionError) ? "network-error" : "unknown-container-format",
           error: sink.formatDetectionError
         };
       }
@@ -128752,7 +134357,7 @@ var extractFrameAndAudio = async ({
     };
   } catch (err) {
     const error = err;
-    if (index_394460kk_isNetworkError(error)) {
+    if (index_kewagct1_isNetworkError(error)) {
       return { type: "network-error", error };
     }
     throw err;
@@ -129479,17 +135084,41 @@ class ProResDecoderNotEnabledError extends Error {
     this.name = "ProResDecoderNotEnabledError";
   }
 }
-var index_394460kk_cache3 = new Map;
+var index_kewagct1_cache3 = new Map;
+var MAX_CACHE_BYTES = 64 * 1024 * 1024;
+var cacheBytes = 0;
+var removeCachedFrame = (src, canvas) => {
+  index_kewagct1_cache3.delete(src);
+  cacheBytes -= canvas.width * canvas.height * 4;
+  canvas.width = 0;
+  canvas.height = 0;
+};
 var cacheVideoFrame = (src, sourceCanvas) => {
   const { width, height } = sourceCanvas;
   if (width === 0 || height === 0) {
     return;
   }
-  let cached = index_394460kk_cache3.get(src);
+  let cached = index_kewagct1_cache3.get(src);
   if (!cached || cached.width !== width || cached.height !== height) {
+    if (cached) {
+      removeCachedFrame(src, cached);
+    }
+    const bytes = width * height * 4;
+    if (bytes > MAX_CACHE_BYTES) {
+      return;
+    }
+    for (const [key, canvas] of index_kewagct1_cache3) {
+      if (cacheBytes + bytes <= MAX_CACHE_BYTES) {
+        break;
+      }
+      removeCachedFrame(key, canvas);
+    }
     cached = new OffscreenCanvas(width, height);
-    index_394460kk_cache3.set(src, cached);
+    index_kewagct1_cache3.set(src, cached);
+    cacheBytes += bytes;
   }
+  index_kewagct1_cache3.delete(src);
+  index_kewagct1_cache3.set(src, cached);
   const ctx = cached.getContext("2d");
   if (!ctx) {
     return;
@@ -129498,7 +135127,13 @@ var cacheVideoFrame = (src, sourceCanvas) => {
   ctx.drawImage(sourceCanvas, 0, 0);
 };
 var getCachedVideoFrame = (src) => {
-  return index_394460kk_cache3.get(src) ?? null;
+  const cached = index_kewagct1_cache3.get(src);
+  if (!cached) {
+    return null;
+  }
+  index_kewagct1_cache3.delete(src);
+  index_kewagct1_cache3.set(src, cached);
+  return cached;
 };
 var OBJECT_FIT_CLASS_PATTERN = /\bobject-(contain|cover|fill|none|scale-down)\b/;
 var warnedStyle = false;
@@ -133314,7 +138949,7 @@ var SelectedOutlinePathPoints = ({ outline, pathDrag, onDraggingChange }) => {
       };
     }
     try {
-      const instructions = index_394460kk_parsePath(normalizePath(outline.path.d));
+      const instructions = index_kewagct1_parsePath(normalizePath(outline.path.d));
       const pathPoints = [];
       const pathConnections = [];
       const pathImplicitTControls = new Map;
@@ -133525,7 +139160,7 @@ var SelectedOutlinePathPoints = ({ outline, pathDrag, onDraggingChange }) => {
     }
     let instructions;
     try {
-      instructions = index_394460kk_parsePath(normalizePath(outline.path.d));
+      instructions = index_kewagct1_parsePath(normalizePath(outline.path.d));
     } catch {
       return;
     }
@@ -133782,7 +139417,7 @@ var SelectedOutlineTransformOriginHandle = ({ getLatestTargetByKey, layoutTarget
   const transformOriginValue = transformOriginDrag?.originValue ?? (layoutTarget?.selectedForRotation ? layoutTarget.transformOriginValue : null);
   const crop = target?.crop;
   const transformOriginPoints = outline.uncroppedPoints ?? outline.points;
-  const parsed = (0,react.useMemo)(() => transformOriginValue === null ? null : index_394460kk_parseTransformOrigin(transformOriginValue), [transformOriginValue]);
+  const parsed = (0,react.useMemo)(() => transformOriginValue === null ? null : index_kewagct1_parseTransformOrigin(transformOriginValue), [transformOriginValue]);
   const uv = (0,react.useMemo)(() => {
     if (parsed === null || outline.dimensions === null) {
       return null;
@@ -136740,7 +142375,7 @@ var Canvas = ({ canvasContent, size }) => {
       return;
     }
     const mayBeCanvasCapture = isFileDragEvent(event) && !window.remotion_isReadOnlyStudio;
-    const canDropElementIntoNewComposition = cannotAddSequence && canReceiveElementInstallRequest && !isAddingAsset && hasElementDragType(event.dataTransfer);
+    const canDropElementIntoNewComposition = cannotAddSequence && canReceiveElementInstallRequest && !isAddingAsset && mayHaveElementDragData(event.dataTransfer);
     if (!canDropAssets && !cannotAddSequence && !mayBeCanvasCapture) {
       setCompositionDropPreview(null);
       return;
@@ -141728,7 +147363,7 @@ var ModalsProvider = ({ children }) => {
 
 
 var LazyCaptionQueueProcessor = react.lazy(async () => {
-  const { CaptionQueueProcessor } = await __webpack_require__.e(/* import() */ 103).then(() => (__webpack_require__(9103)));
+  const { CaptionQueueProcessor } = await __webpack_require__.e(/* import() */ 598).then(() => (__webpack_require__(4598)));
   return { default: CaptionQueueProcessor };
 });
 var CaptionQueueProcessorLoader = () => {
@@ -142830,4507 +148465,6 @@ var Studio = ({ rootComponent, readOnly }) => {
     })
   });
 };
-
-
-
-
-/***/ },
-
-/***/ 5576
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   $: () => (/* binding */ extractEnumJsonPaths),
-/* harmony export */   $i: () => (/* binding */ getCachedResolvedStack),
-/* harmony export */   A2: () => (/* binding */ VisualControlsContext),
-/* harmony export */   BW: () => (/* binding */ getObjectShape),
-/* harmony export */   Bu: () => (/* binding */ getDefaultValue),
-/* harmony export */   Ch: () => (/* binding */ VisualControlsProvider),
-/* harmony export */   Cj: () => (/* binding */ getVisualControlEditedValue),
-/* harmony export */   Dc: () => (/* binding */ getBrandedInner),
-/* harmony export */   Ex: () => (/* binding */ getDiscriminatedOptionKeys),
-/* harmony export */   F0: () => (/* binding */ hasResolvedStack),
-/* harmony export */   Fm: () => (/* binding */ pause2),
-/* harmony export */   Fp: () => (/* binding */ play2),
-/* harmony export */   IB: () => (/* binding */ getDiscriminatedOption),
-/* harmony export */   K6: () => (/* binding */ getUnionOptions),
-/* harmony export */   Lm: () => (/* binding */ getLiteralValue),
-/* harmony export */   Ls: () => (/* binding */ getZodDef),
-/* harmony export */   Nt: () => (/* binding */ ZodProvider),
-/* harmony export */   Q6: () => (/* binding */ getIntersectionSchemas),
-/* harmony export */   QP: () => (/* binding */ SetVisualControlsContext),
-/* harmony export */   R$: () => (/* binding */ getPipelineInput),
-/* harmony export */   RC: () => (/* binding */ useZodIfPossible),
-/* harmony export */   SI: () => (/* binding */ getPipelineOutput),
-/* harmony export */   TL: () => (/* binding */ getInnerType),
-/* harmony export */   TT: () => (/* binding */ seek2),
-/* harmony export */   X8: () => (/* binding */ getZodSchemaDescription),
-/* harmony export */   YA: () => (/* binding */ resolvedStackToSymbolicated),
-/* harmony export */   d2: () => (/* binding */ getRecordKeyType),
-/* harmony export */   d4: () => (/* binding */ watchPublicFolder2),
-/* harmony export */   dO: () => (/* binding */ getDiscriminator),
-/* harmony export */   eS: () => (/* binding */ deleteStaticFile2),
-/* harmony export */   g4: () => (/* binding */ writeStaticFile2),
-/* harmony export */   hA: () => (/* binding */ getTupleItems),
-/* harmony export */   hl: () => (/* binding */ getFirstEnumValue),
-/* harmony export */   l4: () => (/* binding */ shutDownStudio2),
-/* harmony export */   m8: () => (/* binding */ isStudioSelectionEnabled),
-/* harmony export */   mT: () => (/* binding */ getStaticFiles2),
-/* harmony export */   oR: () => (/* binding */ getUserFacingDescription),
-/* harmony export */   qQ: () => (/* binding */ useResolvedStack),
-/* harmony export */   r2: () => (/* binding */ getZodSchemaType),
-/* harmony export */   sk: () => (/* binding */ isZodV3Schema),
-/* harmony export */   sl: () => (/* binding */ getArrayElement),
-/* harmony export */   tF: () => (/* binding */ isStudioInteractivityEnabled),
-/* harmony export */   w5: () => (/* binding */ getEnumValues),
-/* harmony export */   wI: () => (/* binding */ useZodTypesIfPossible),
-/* harmony export */   xT: () => (/* binding */ getRecordValueType),
-/* harmony export */   xq: () => (/* binding */ getEffectsInner),
-/* harmony export */   y$: () => (/* binding */ zodSafeParse)
-/* harmony export */ });
-/* unused harmony exports visualControlStore, visualControlRef */
-/* harmony import */ var _index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5293);
-/* harmony import */ var remotion__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3947);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4848);
-
-
-// src/api/delete-static-file.ts
-
-var deleteStaticFile2 = async (relativePath) => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
-    throw new Error("deleteStaticFile() is only available in the Studio");
-  }
-  if (relativePath.startsWith(window.remotion_staticBase)) {
-    relativePath = relativePath.substring(window.remotion_staticBase.length + 1);
-  }
-  const browserStudioOperations = (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)();
-  if (browserStudioOperations) {
-    return browserStudioOperations.deleteStaticFile({ relativePath });
-  }
-  if (window.remotion_isReadOnlyStudio) {
-    throw new Error("deleteStaticFile() is not available in Read-Only Studio");
-  }
-  const res = await (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .callApi */ .px)("/api/delete-static-file", { relativePath });
-  return res;
-};
-
-// src/api/get-static-files.ts
-var warnedServer = false;
-var warnedPlayer = false;
-var warnServerOnce = () => {
-  if (warnedServer) {
-    return;
-  }
-  warnedServer = true;
-  console.warn("Called getStaticFiles() on the server. The API is only available in the browser. An empty array was returned.");
-};
-var warnPlayerOnce = () => {
-  if (warnedPlayer) {
-    return;
-  }
-  warnedPlayer = true;
-  console.warn("Called getStaticFiles() while using the Remotion Player. The API is only available while using the Remotion Studio. An empty array was returned.");
-};
-var getStaticFiles2 = () => {
-  if (typeof document === "undefined") {
-    warnServerOnce();
-    return [];
-  }
-  if (window.remotion_isPlayer) {
-    warnPlayerOnce();
-    return [];
-  }
-  return window.remotion_staticFiles;
-};
-
-// src/api/pause.ts
-
-var pause2 = () => {
-  remotion__WEBPACK_IMPORTED_MODULE_1__.Internals.timeValueRef.current?.pause();
-};
-
-// src/api/play.ts
-
-var play2 = (e) => {
-  remotion__WEBPACK_IMPORTED_MODULE_1__.Internals.timeValueRef.current?.play(e);
-};
-
-// src/api/shut-down-studio.ts
-
-var shutDownStudio2 = () => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
-    throw new Error("shutDownStudio() is only available in the Studio");
-  }
-  if ((0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)() !== null) {
-    throw new Error("shutDownStudio() is not supported in Browser Studio");
-  }
-  if (window.remotion_isReadOnlyStudio) {
-    throw new Error("shutDownStudio() is not available in read-only Studio");
-  }
-  return (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .callApi */ .px)("/api/shutdown-studio", {});
-};
-
-// src/components/RenderModal/SchemaEditor/zod-schema-type.ts
-var zodSafeParse = (schema, data) => {
-  return schema.safeParse(data);
-};
-var getZodDef = (schema) => {
-  if (schema._def)
-    return schema._def;
-  if (schema._zod)
-    return schema._zod.def;
-  throw new Error("Invalid zod schema: missing _def and _zod");
-};
-var v3TypeNameMap = {
-  ZodString: "string",
-  ZodNumber: "number",
-  ZodBoolean: "boolean",
-  ZodObject: "object",
-  ZodArray: "array",
-  ZodEnum: "enum",
-  ZodUnion: "union",
-  ZodDiscriminatedUnion: "discriminatedUnion",
-  ZodOptional: "optional",
-  ZodNullable: "nullable",
-  ZodDefault: "default",
-  ZodTuple: "tuple",
-  ZodDate: "date",
-  ZodAny: "any",
-  ZodUnknown: "unknown",
-  ZodBigInt: "bigint",
-  ZodNull: "null",
-  ZodUndefined: "undefined",
-  ZodEffects: "effects",
-  ZodLiteral: "literal",
-  ZodRecord: "record",
-  ZodNever: "never",
-  ZodVoid: "void",
-  ZodNaN: "nan",
-  ZodSymbol: "symbol",
-  ZodIntersection: "intersection",
-  ZodMap: "map",
-  ZodSet: "set",
-  ZodLazy: "lazy",
-  ZodFunction: "function",
-  ZodNativeEnum: "nativeEnum",
-  ZodCatch: "catch",
-  ZodPromise: "promise",
-  ZodBranded: "branded",
-  ZodPipeline: "pipeline"
-};
-var isZodV3Schema = (schema) => {
-  const def = getZodDef(schema);
-  return "typeName" in def;
-};
-var getZodSchemaType = (schema) => {
-  const def = getZodDef(schema);
-  if ("typeName" in def) {
-    const { typeName } = def;
-    return v3TypeNameMap[typeName] ?? typeName;
-  }
-  const { type } = def;
-  if (type === "union" && def.discriminator !== undefined) {
-    return "discriminatedUnion";
-  }
-  return type;
-};
-var getZodSchemaDescription = (schema) => {
-  if (isZodV3Schema(schema)) {
-    return getZodDef(schema).description;
-  }
-  return schema.description;
-};
-var REMOTION_BRAND_PREFIX = "__remotion-";
-var getUserFacingDescription = (schema) => {
-  const description = getZodSchemaDescription(schema);
-  if (!description || description.startsWith(REMOTION_BRAND_PREFIX)) {
-    return null;
-  }
-  return description;
-};
-var getObjectShape = (schema) => {
-  const { shape } = getZodDef(schema);
-  return typeof shape === "function" ? shape() : shape;
-};
-var getArrayElement = (schema) => {
-  const def = getZodDef(schema);
-  return isZodV3Schema(schema) ? def.type : def.element;
-};
-var getInnerType = (schema) => {
-  return getZodDef(schema).innerType;
-};
-var getEffectsInner = (schema) => {
-  return getZodDef(schema).schema;
-};
-var getLiteralValue = (schema) => {
-  const def = getZodDef(schema);
-  if (isZodV3Schema(schema)) {
-    return def.value;
-  }
-  return def.values?.[0];
-};
-var getEnumValues = (schema) => {
-  const def = getZodDef(schema);
-  if (isZodV3Schema(schema)) {
-    return def.values;
-  }
-  const { entries } = def;
-  return Object.values(entries);
-};
-var getFirstEnumValue = (schema) => {
-  const def = getZodDef(schema);
-  if (isZodV3Schema(schema)) {
-    if (def.typeName === "ZodNativeEnum") {
-      const vals = Object.values(def.values);
-      return vals[0];
-    }
-    return def.values[0];
-  }
-  const { entries } = def;
-  const pairs = Object.entries(entries);
-  const hasReverseMapping = pairs.some(([key, value]) => key !== String(value));
-  if (hasReverseMapping) {
-    const forwardPairs = pairs.filter(([key]) => Number.isNaN(Number(key)));
-    if (forwardPairs.length > 0) {
-      return forwardPairs[0][1];
-    }
-  }
-  return Object.values(entries)[0];
-};
-var getUnionOptions = (schema) => {
-  return getZodDef(schema).options;
-};
-var getDefaultValue = (schema) => {
-  const dv = getZodDef(schema).defaultValue;
-  return typeof dv === "function" ? dv() : dv;
-};
-var getDiscriminator = (schema) => {
-  return getZodDef(schema).discriminator;
-};
-var getDiscriminatedOptionKeys = (schema) => {
-  const def = getZodDef(schema);
-  const discriminator = getDiscriminator(schema);
-  if (isZodV3Schema(schema) && def.optionsMap) {
-    return [...def.optionsMap.keys()];
-  }
-  const options = getUnionOptions(schema);
-  return options.map((option) => {
-    const shape = getObjectShape(option);
-    const discriminatorSchema = shape[discriminator];
-    return getLiteralValue(discriminatorSchema);
-  });
-};
-var getDiscriminatedOption = (schema, discriminatorValue) => {
-  const def = getZodDef(schema);
-  const discriminator = getDiscriminator(schema);
-  if (isZodV3Schema(schema) && def.optionsMap) {
-    return def.optionsMap.get(discriminatorValue);
-  }
-  const options = getUnionOptions(schema);
-  return options.find((option) => {
-    const shape = getObjectShape(option);
-    const discriminatorSchema = shape[discriminator];
-    return getLiteralValue(discriminatorSchema) === discriminatorValue;
-  });
-};
-var getIntersectionSchemas = (schema) => {
-  const def = getZodDef(schema);
-  return { left: def.left, right: def.right };
-};
-var getTupleItems = (schema) => {
-  return getZodDef(schema).items;
-};
-var getRecordValueType = (schema) => {
-  return getZodDef(schema).valueType;
-};
-var getRecordKeyType = (schema) => {
-  return getZodDef(schema).keyType;
-};
-var getPipelineOutput = (schema) => {
-  return getZodDef(schema).out;
-};
-var getPipelineInput = (schema) => {
-  return getZodDef(schema).in;
-};
-var getBrandedInner = (schema) => {
-  return isZodV3Schema(schema) ? getZodDef(schema).type : schema;
-};
-
-// src/components/RenderModal/SchemaEditor/extract-enum-json-paths.ts
-var extractEnumJsonPaths = ({
-  schema,
-  zodRuntime,
-  currentPath,
-  zodTypes
-}) => {
-  const description = getZodSchemaDescription(schema);
-  if (zodTypes && description === zodTypes.ZodZypesInternals.REMOTION_MATRIX_BRAND) {
-    return [currentPath];
-  }
-  const typeName = getZodSchemaType(schema);
-  switch (typeName) {
-    case "object": {
-      const shape = getObjectShape(schema);
-      const keys = Object.keys(shape);
-      return keys.map((key) => {
-        return extractEnumJsonPaths({
-          schema: shape[key],
-          zodRuntime,
-          currentPath: [...currentPath, key],
-          zodTypes
-        });
-      }).flat(1);
-    }
-    case "array": {
-      return extractEnumJsonPaths({
-        schema: getArrayElement(schema),
-        zodRuntime,
-        currentPath: [...currentPath, "[]"],
-        zodTypes
-      });
-    }
-    case "union": {
-      return getUnionOptions(schema).map((option) => {
-        return extractEnumJsonPaths({
-          schema: option,
-          zodRuntime,
-          currentPath,
-          zodTypes
-        });
-      }).flat(1);
-    }
-    case "discriminatedUnion": {
-      return getUnionOptions(schema).map((op) => {
-        return extractEnumJsonPaths({
-          schema: op,
-          zodRuntime,
-          currentPath,
-          zodTypes
-        });
-      }).flat(1);
-    }
-    case "literal": {
-      return [currentPath];
-    }
-    case "effects": {
-      return extractEnumJsonPaths({
-        schema: getEffectsInner(schema),
-        zodRuntime,
-        currentPath,
-        zodTypes
-      });
-    }
-    case "intersection": {
-      const { left, right } = getIntersectionSchemas(schema);
-      const leftValue = extractEnumJsonPaths({
-        schema: left,
-        zodRuntime,
-        currentPath,
-        zodTypes
-      });
-      const rightValue = extractEnumJsonPaths({
-        schema: right,
-        zodRuntime,
-        currentPath,
-        zodTypes
-      });
-      return [...leftValue, ...rightValue];
-    }
-    case "tuple": {
-      return getTupleItems(schema).map((item, i) => extractEnumJsonPaths({
-        schema: item,
-        zodRuntime,
-        currentPath: [...currentPath, i],
-        zodTypes
-      })).flat(1);
-    }
-    case "record": {
-      const recordPath = [...currentPath, "{}"];
-      const keyResults = extractEnumJsonPaths({
-        schema: getRecordKeyType(schema),
-        zodRuntime,
-        currentPath: recordPath,
-        zodTypes
-      });
-      const valueResults = extractEnumJsonPaths({
-        schema: getRecordValueType(schema),
-        zodRuntime,
-        currentPath: recordPath,
-        zodTypes
-      });
-      return [...keyResults, ...valueResults];
-    }
-    case "function": {
-      throw new Error("Cannot create a value for type function");
-    }
-    case "enum": {
-      return [currentPath];
-    }
-    case "nativeEnum": {
-      return [];
-    }
-    case "optional":
-    case "nullable":
-    case "catch": {
-      return extractEnumJsonPaths({
-        schema: getInnerType(schema),
-        zodRuntime,
-        currentPath,
-        zodTypes
-      });
-    }
-    case "default": {
-      return extractEnumJsonPaths({
-        schema: getInnerType(schema),
-        zodRuntime,
-        currentPath,
-        zodTypes
-      });
-    }
-    case "promise": {
-      return [];
-    }
-    case "branded": {
-      return extractEnumJsonPaths({
-        schema: getBrandedInner(schema),
-        zodRuntime,
-        currentPath,
-        zodTypes
-      });
-    }
-    case "pipeline":
-    case "pipe": {
-      return extractEnumJsonPaths({
-        schema: getPipelineOutput(schema),
-        zodRuntime,
-        currentPath,
-        zodTypes
-      });
-    }
-    case "string":
-    case "number":
-    case "bigint":
-    case "boolean":
-    case "nan":
-    case "date":
-    case "symbol":
-    case "undefined":
-    case "null":
-    case "any":
-    case "unknown":
-    case "never":
-    case "void":
-    case "map":
-    case "lazy":
-    case "set":
-    case "custom": {
-      return [];
-    }
-    default:
-      throw new Error("Not implemented: " + typeName);
-  }
-};
-
-// src/components/Timeline/use-resolved-stack.ts
-
-
-var resolvedCache = new Map;
-var hasResolvedStack = (stack) => {
-  if (!stack) {
-    return true;
-  }
-  return resolvedCache.has(stack);
-};
-var getCachedResolvedStack = (stack) => {
-  return stack ? resolvedCache.get(stack) ?? null : null;
-};
-var inFlight = new Set;
-var subscribers = new Map;
-var useResolvedStack = (stack) => {
-  const updateResolvedStackTrace = (0,react__WEBPACK_IMPORTED_MODULE_2__.useContext)(remotion__WEBPACK_IMPORTED_MODULE_1__.Internals.SequenceStackTracesUpdateContext);
-  const [state, setState] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(() => ({
-    stack,
-    value: stack ? resolvedCache.get(stack) ?? null : null
-  }));
-  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
-    if (!stack) {
-      return;
-    }
-    if (resolvedCache.has(stack)) {
-      const cached = resolvedCache.get(stack);
-      setState((prev) => prev.stack === stack && prev.value === cached ? prev : { stack, value: cached });
-      return;
-    }
-    if (!subscribers.has(stack)) {
-      subscribers.set(stack, new Set);
-    }
-    const subs = subscribers.get(stack);
-    const onResolved = (value) => {
-      setState({ stack, value });
-    };
-    subs.add(onResolved);
-    if (!inFlight.has(stack)) {
-      inFlight.add(stack);
-      (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getOriginalLocationFromStack */ .pI)(stack, "sequence").then((frame) => {
-        resolvedCache.set(stack, frame);
-        updateResolvedStackTrace(stack, frame);
-        subs.forEach((fn) => fn(frame));
-      }).catch((err) => {
-        console.error("Could not get original location of Sequence", err);
-        resolvedCache.set(stack, null);
-        subs.forEach((fn) => fn(null));
-      }).finally(() => {
-        inFlight.delete(stack);
-      });
-    }
-    return () => {
-      subs.delete(onResolved);
-    };
-  }, [stack, updateResolvedStackTrace]);
-  return state.stack === stack ? state.value : stack ? resolvedCache.get(stack) ?? null : null;
-};
-
-// src/helpers/resolved-stack-to-symbolicated.ts
-var resolvedStackToSymbolicated = (location) => {
-  if (!location?.source) {
-    return null;
-  }
-  return {
-    originalFileName: location.source,
-    originalLineNumber: location.line,
-    originalColumnNumber: location.column,
-    originalFunctionName: null,
-    originalScriptCode: null
-  };
-};
-
-// src/api/seek.ts
-
-var seek2 = (frame) => {
-  remotion__WEBPACK_IMPORTED_MODULE_1__.Internals.timeValueRef.current?.seek(Math.max(0, frame));
-};
-
-// src/visual-controls/visual-control-store.ts
-var version = 0;
-var listeners = new Set;
-var visualControlStore = {
-  subscribe(listener) {
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  },
-  getSnapshot() {
-    return version;
-  },
-  emitChange() {
-    version++;
-    for (const listener of listeners) {
-      listener();
-    }
-  }
-};
-
-// src/visual-controls/VisualControls.tsx
-
-
-
-// src/api/get-zod-schema-from-primitive.ts
-function getZodSchemaFromPrimitive(value, z) {
-  if (typeof value === "string") {
-    return z.string();
-  }
-  if (typeof value === "number") {
-    return z.number();
-  }
-  let stringified;
-  try {
-    stringified = JSON.stringify(value);
-  } catch {}
-  throw new Error(`visualControl(): Specify a schema for this value: ${stringified ?? "[non-serializable value]"}. See https://remotion.dev/docs/studio/visual-control`);
-}
-
-// src/components/get-zod-if-possible.tsx
-;
-
-async function getZodIfPossible() {
-  try {
-    const { z } = await Promise.all(/* import() */[__webpack_require__.e(687), __webpack_require__.e(328)]).then(() => (__webpack_require__(9328)));
-    return z;
-  } catch {
-    return null;
-  }
-}
-var getZodV3IfPossible = async () => {
-  try {
-    const mod = await __webpack_require__.e(/* import() */ 161).then(() => (__webpack_require__(3161)));
-    return mod;
-  } catch {
-    return null;
-  }
-};
-var getZTypesIfPossible = async () => {
-  try {
-    const mod = await Promise.all(/* import() */[__webpack_require__.e(687), __webpack_require__.e(761)]).then(() => (__webpack_require__(761)));
-    return mod;
-  } catch {
-    return null;
-  }
-};
-function useZodIfPossible() {
-  const context = (0,react__WEBPACK_IMPORTED_MODULE_2__.useContext)(ZodContext);
-  return context?.zod ?? null;
-}
-var useZodTypesIfPossible = () => {
-  const context = (0,react__WEBPACK_IMPORTED_MODULE_2__.useContext)(ZodContext);
-  return context?.zodTypes ?? null;
-};
-var ZodContext = (0,react__WEBPACK_IMPORTED_MODULE_2__.createContext)(null);
-var ZodProvider = ({ children }) => {
-  const [zod, setZod] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(null);
-  const [zodV3, setZodV3] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(null);
-  const [zodTypes, setZodTypes] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(null);
-  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
-    getZodIfPossible().then((z) => setZod(z));
-  }, []);
-  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
-    getZodV3IfPossible().then((z) => setZodV3(z));
-  }, []);
-  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
-    getZTypesIfPossible().then((z) => setZodTypes(z));
-  }, []);
-  const contextValue = (0,react__WEBPACK_IMPORTED_MODULE_2__.useMemo)(() => {
-    return {
-      zod,
-      zodV3,
-      zodTypes
-    };
-  }, [zod, zodV3, zodTypes]);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(ZodContext.Provider, {
-    value: contextValue,
-    children
-  });
-};
-
-// src/helpers/interactivity-enabled.ts
-var isStudioInteractivityEnabled = () => {
-  return (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getStudioInteractivityEnabled */ .dG)() && (typeof window === "undefined" || !window.remotion_isReadOnlyStudio);
-};
-var isStudioSelectionEnabled = _index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getStudioInteractivityEnabled */ .dG;
-
-// src/visual-controls/get-current-edited-value.ts
-var getVisualControlEditedValue = ({
-  handles,
-  key
-}) => {
-  const handle = handles?.[key];
-  if (handle === undefined) {
-    return null;
-  }
-  return handle.unsavedValue;
-};
-
-// src/visual-controls/VisualControls.tsx
-
-var VisualControlsTabActivatedContext = (0,react__WEBPACK_IMPORTED_MODULE_2__.createContext)(false);
-var VisualControlsContext = (0,react__WEBPACK_IMPORTED_MODULE_2__.createContext)({
-  handles: {}
-});
-var visualControlRef = (0,react__WEBPACK_IMPORTED_MODULE_2__.createRef)();
-var SetVisualControlsContext = (0,react__WEBPACK_IMPORTED_MODULE_2__.createContext)({
-  updateHandles: () => {
-    throw new Error("updateHandles is not implemented");
-  },
-  updateValue: () => {
-    throw new Error("updateValue is not implemented");
-  },
-  visualControl: () => {
-    throw new Error("visualControl is not implemented");
-  }
-});
-var VisualControlsProvider = ({ children }) => {
-  const imperativeHandles = (0,react__WEBPACK_IMPORTED_MODULE_2__.useRef)({});
-  const [handles, setHandles] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)({});
-  const state = (0,react__WEBPACK_IMPORTED_MODULE_2__.useMemo)(() => {
-    return {
-      handles
-    };
-  }, [handles]);
-  const setControl = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((key, value) => {
-    const existingHandle = imperativeHandles.current?.[key];
-    const currentSavedState = existingHandle?.valueInCode;
-    const changedSavedValue = value.valueInCode !== currentSavedState;
-    const changedUnsavedValue = existingHandle === undefined && value.valueInCode !== undefined;
-    imperativeHandles.current = {
-      ...imperativeHandles.current,
-      [key]: {
-        ...value,
-        unsavedValue: existingHandle !== undefined && !changedSavedValue ? existingHandle.unsavedValue : value.valueInCode,
-        valueInCode: value.valueInCode
-      }
-    };
-    return {
-      changed: changedSavedValue || changedUnsavedValue,
-      currentValue: getVisualControlEditedValue({
-        key,
-        handles: imperativeHandles.current
-      })
-    };
-  }, []);
-  const z = useZodIfPossible();
-  const changedRef = (0,react__WEBPACK_IMPORTED_MODULE_2__.useRef)(false);
-  const env = (0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .useRemotionEnvironment */ .OK)();
-  const visualControl = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)(function(key, value, schema) {
-    if (handles && false) // removed by dead control flow
-{}
-    if (!env.isStudio) {
-      return value;
-    }
-    if (!isStudioInteractivityEnabled()) {
-      return value;
-    }
-    if (!z) {
-      return value;
-    }
-    const { changed, currentValue } = setControl(key, {
-      valueInCode: value,
-      schema: schema ?? getZodSchemaFromPrimitive(value, z),
-      stack: new Error().stack
-    });
-    if (changed) {
-      changedRef.current = true;
-    }
-    return currentValue;
-  }, [setControl, handles, z, env.isStudio]);
-  const updateHandles = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)(() => {
-    setHandles(() => {
-      return imperativeHandles.current;
-    });
-  }, []);
-  const updateValue = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((key, value) => {
-    imperativeHandles.current = {
-      ...imperativeHandles.current,
-      [key]: {
-        ...imperativeHandles.current[key],
-        unsavedValue: value
-      }
-    };
-    updateHandles();
-    visualControlStore.emitChange();
-  }, [updateHandles]);
-  (0,react__WEBPACK_IMPORTED_MODULE_2__.useImperativeHandle)(visualControlRef, () => {
-    return {
-      globalVisualControl: visualControl
-    };
-  }, [visualControl]);
-  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
-    visualControlStore.emitChange();
-  }, [visualControl]);
-  (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
-    const callback = () => {
-      if (imperativeHandles.current) {
-        updateHandles();
-        changedRef.current = false;
-      }
-    };
-    const interval = setInterval(callback, 100);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [updateHandles]);
-  const setState = (0,react__WEBPACK_IMPORTED_MODULE_2__.useMemo)(() => {
-    return {
-      setControl,
-      updateHandles,
-      updateValue,
-      visualControl
-    };
-  }, [setControl, updateHandles, updateValue, visualControl]);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(VisualControlsTabActivatedContext.Provider, {
-    value: Object.keys(state.handles).length > 0,
-    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(VisualControlsContext.Provider, {
-      value: state,
-      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(SetVisualControlsContext.Provider, {
-        value: setState,
-        children
-      })
-    })
-  });
-};
-
-// src/api/watch-public-folder.ts
-
-var WATCH_REMOTION_STATIC_FILES = "remotion_staticFilesChanged";
-var watchPublicFolder2 = (callback) => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_1__/* .getRemotionEnvironment */ .P1)().isStudio) {
-    console.warn("The watchPublicFolder() API is only available while using the Remotion Studio.");
-    return { cancel: () => {
-      return;
-    } };
-  }
-  if (window.remotion_isReadOnlyStudio && !(0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)()) {
-    throw new Error("watchPublicFolder() is not available in read-only Studio");
-  }
-  const emitUpdate = () => {
-    callback(getStaticFiles2());
-  };
-  window.addEventListener(WATCH_REMOTION_STATIC_FILES, emitUpdate);
-  const cancel = () => {
-    return window.removeEventListener(WATCH_REMOTION_STATIC_FILES, emitUpdate);
-  };
-  return { cancel };
-};
-
-// src/api/write-static-file.ts
-var writeStaticFile2 = async ({
-  contents,
-  filePath
-}) => {
-  if (filePath.includes("\\")) {
-    return Promise.reject(new Error("File path cannot contain backslashes"));
-  }
-  const browserStudioOperations = (0,_index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)();
-  if (browserStudioOperations) {
-    return browserStudioOperations.writeStaticFile({ contents, filePath });
-  }
-  if (window.remotion_isReadOnlyStudio) {
-    throw new Error("writeStaticFile() is not available in read-only Studio");
-  }
-  const url = new URL(`${window.remotion_staticBase}/api/add-asset`, window.location.origin);
-  url.search = new URLSearchParams({
-    filePath
-  }).toString();
-  const response = await fetch(url, {
-    method: "POST",
-    body: contents
-  });
-  if (!response.ok) {
-    const jsonResponse = await response.json();
-    throw new Error(jsonResponse.error);
-  }
-};
-
-
-
-
-/***/ },
-
-/***/ 5293
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   $H: () => (/* binding */ KeybindingContextProvider),
-/* harmony export */   $q: () => (/* binding */ canUseEffectOperations),
-/* harmony export */   AF: () => (/* binding */ unsubscribeFromFileExistenceWatcher),
-/* harmony export */   AO: () => (/* binding */ getKeyboardShortcutLabel),
-/* harmony export */   B_: () => (/* binding */ takePendingSequenceNodePathMutations),
-/* harmony export */   DJ: () => (/* binding */ addStillRenderJob),
-/* harmony export */   DZ: () => (/* binding */ formatKeyboardShortcut),
-/* harmony export */   Dc: () => (/* binding */ getSourceMapFilesForSource),
-/* harmony export */   Ds: () => (/* binding */ showNotification),
-/* harmony export */   E4: () => (/* binding */ addVideoRenderJob),
-/* harmony export */   E_: () => (/* binding */ addFolder2),
-/* harmony export */   FZ: () => (/* binding */ DEFAULT_PROPS_PATH_CLASSNAME),
-/* harmony export */   Gt: () => (/* binding */ getStudioBufferStateDelayInMilliseconds),
-/* harmony export */   Gw: () => (/* binding */ useKeybinding),
-/* harmony export */   Hw: () => (/* binding */ updateAvailable),
-/* harmony export */   I4: () => (/* binding */ expandDefaultPropsEditorRef),
-/* harmony export */   IA: () => (/* binding */ DEFAULT_PROPS_PATH_ACTIVE_CLASSNAME),
-/* harmony export */   IU: () => (/* binding */ loadGoogleFontForPreview),
-/* harmony export */   Ip: () => (/* binding */ addComposition2),
-/* harmony export */   JT: () => (/* binding */ updateCompositionMetadata2),
-/* harmony export */   K8: () => (/* binding */ unwrapFolder2),
-/* harmony export */   Lr: () => (/* binding */ getStudioAskAIEnabled),
-/* harmony export */   MJ: () => (/* binding */ getMissingPackages),
-/* harmony export */   N9: () => (/* binding */ areKeyboardShortcutsDisabled),
-/* harmony export */   NJ: () => (/* binding */ renameComposition2),
-/* harmony export */   NM: () => (/* binding */ canInstallPackages),
-/* harmony export */   OB: () => (/* binding */ getStudioShowPremounting),
-/* harmony export */   OY: () => (/* binding */ removeRenderJob),
-/* harmony export */   OZ: () => (/* binding */ getKeyboardShortcutsForAction),
-/* harmony export */   Ow: () => (/* binding */ getStudioShowLayerFrameNumbers),
-/* harmony export */   P3: () => (/* binding */ getBrowserStudioOperations),
-/* harmony export */   Q7: () => (/* binding */ getStudioDefaultPremountInSeconds),
-/* harmony export */   R: () => (/* binding */ installPackages),
-/* harmony export */   R7: () => (/* binding */ getOriginalPosition),
-/* harmony export */   RI: () => (/* binding */ getPortal),
-/* harmony export */   RY: () => (/* binding */ CodingAgentIcon),
-/* harmony export */   SK: () => (/* binding */ getStudioKeyboardShortcutsEnabled),
-/* harmony export */   TL: () => (/* binding */ FinderIcon),
-/* harmony export */   W2: () => (/* binding */ getSourceMap),
-/* harmony export */   WG: () => (/* binding */ getStudioSequenceActivitySettings),
-/* harmony export */   WN: () => (/* binding */ defaultKeyboardShortcuts),
-/* harmony export */   WO: () => (/* binding */ applyVisualControlChange),
-/* harmony export */   Wn: () => (/* binding */ startCapturedPointerSession),
-/* harmony export */   Xz: () => (/* binding */ queueSequenceNodePathMutation),
-/* harmony export */   YK: () => (/* binding */ useZIndex),
-/* harmony export */   YS: () => (/* binding */ keyboardShortcutGroups),
-/* harmony export */   YT: () => (/* binding */ getBrowserStudioEffectOperations),
-/* harmony export */   Yq: () => (/* binding */ canUseKeyframeOperations),
-/* harmony export */   Ys: () => (/* binding */ defaultPropsEditorScrollableAreaRef),
-/* harmony export */   Zv: () => (/* binding */ callUpdateDefaultPropsApi),
-/* harmony export */   _9: () => (/* binding */ getStudioMaxTimelineTracks),
-/* harmony export */   _Q: () => (/* binding */ resolveFileSource),
-/* harmony export */   aD: () => (/* binding */ shortcutFromKeyboardEvent),
-/* harmony export */   as: () => (/* binding */ requestInsertedElementSelection),
-/* harmony export */   bG: () => (/* binding */ NotificationCenter),
-/* harmony export */   bh: () => (/* binding */ EditorIcon),
-/* harmony export */   c4: () => (/* binding */ deleteComposition2),
-/* harmony export */   cX: () => (/* binding */ isMac),
-/* harmony export */   cb: () => (/* binding */ HigherZIndex),
-/* harmony export */   dG: () => (/* binding */ getStudioInteractivityEnabled),
-/* harmony export */   dP: () => (/* binding */ openInFileExplorer),
-/* harmony export */   e8: () => (/* binding */ moveComposition2),
-/* harmony export */   el: () => (/* binding */ duplicateComposition2),
-/* harmony export */   eu: () => (/* binding */ clearInsertedElementSelection),
-/* harmony export */   gY: () => (/* binding */ moveFolder2),
-/* harmony export */   hb: () => (/* binding */ renameFolder2),
-/* harmony export */   iN: () => (/* binding */ BROWSER_STUDIO_OPERATIONS_READY_EVENT),
-/* harmony export */   iy: () => (/* binding */ withRequiredAuxiliaryPackages),
-/* harmony export */   jB: () => (/* binding */ getInsertedElementSelection),
-/* harmony export */   k1: () => (/* binding */ addSequenceRenderJob),
-/* harmony export */   k3: () => (/* binding */ TerminalIcon),
-/* harmony export */   k9: () => (/* binding */ AppsIcon),
-/* harmony export */   kY: () => (/* binding */ askAIKeyboardShortcutGroup),
-/* harmony export */   km: () => (/* binding */ cancelRenderJob),
-/* harmony export */   lK: () => (/* binding */ observePointerRelease),
-/* harmony export */   ll: () => (/* binding */ getKeyboardShortcutAriaKeyShortcuts),
-/* harmony export */   mu: () => (/* binding */ GOOGLE_FONTS_LIST),
-/* harmony export */   oX: () => (/* binding */ installRequiredPackages),
-/* harmony export */   p4: () => (/* binding */ startDeferredCapturedPointerSession),
-/* harmony export */   pI: () => (/* binding */ getOriginalLocationFromStack),
-/* harmony export */   pj: () => (/* binding */ isPointerSessionRelease),
-/* harmony export */   px: () => (/* binding */ callApi),
-/* harmony export */   rz: () => (/* binding */ useSyncExternalStore),
-/* harmony export */   sH: () => (/* binding */ portals),
-/* harmony export */   sV: () => (/* binding */ getSourceMutationRevision),
-/* harmony export */   tG: () => (/* binding */ getReleaseNotes),
-/* harmony export */   u: () => (/* binding */ HighestZIndexProvider),
-/* harmony export */   u$: () => (/* binding */ parseError),
-/* harmony export */   uJ: () => (/* binding */ TRANSFORMERS_PACKAGE),
-/* harmony export */   ul: () => (/* binding */ setClickLock),
-/* harmony export */   w$: () => (/* binding */ subscribeToFileExistenceWatcher),
-/* harmony export */   we: () => (/* binding */ keyboardShortcutsOverlap),
-/* harmony export */   wk: () => (/* binding */ getClickLock),
-/* harmony export */   yC: () => (/* binding */ subscribeToInsertedElementSelection),
-/* harmony export */   ym: () => (/* binding */ restartStudio2)
-/* harmony export */ });
-/* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7449);
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4848);
-/* harmony import */ var _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3872);
-/* harmony import */ var remotion__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3947);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6540);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(961);
-/* harmony import */ var _remotion_sdk__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(6916);
-/* harmony import */ var remotion_no_react__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9382);
-/* harmony import */ var _jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(5379);
-
-
-// src/icons/apps.tsx
-
-var AppsIcon = ({ color, ...props }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
-  xmlns: "http://www.w3.org/2000/svg",
-  viewBox: "0 0 640 640",
-  ...props,
-  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-    fill: color ?? _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR_LOWERCASE */ .g9,
-    d: "M144 128C135.2 128 128 135.2 128 144L128 240C128 248.8 135.2 256 144 256L240 256C248.8 256 256 248.8 256 240L256 144C256 135.2 248.8 128 240 128L144 128zM96 144C96 117.5 117.5 96 144 96L240 96C266.5 96 288 117.5 288 144L288 240C288 266.5 266.5 288 240 288L144 288C117.5 288 96 266.5 96 240L96 144zM144 384C135.2 384 128 391.2 128 400L128 496C128 504.8 135.2 512 144 512L240 512C248.8 512 256 504.8 256 496L256 400C256 391.2 248.8 384 240 384L144 384zM96 400C96 373.5 117.5 352 144 352L240 352C266.5 352 288 373.5 288 400L288 496C288 522.5 266.5 544 240 544L144 544C117.5 544 96 522.5 96 496L96 400zM496 128L400 128C391.2 128 384 135.2 384 144L384 240C384 248.8 391.2 256 400 256L496 256C504.8 256 512 248.8 512 240L512 144C512 135.2 504.8 128 496 128zM400 96L496 96C522.5 96 544 117.5 544 144L544 240C544 266.5 522.5 288 496 288L400 288C373.5 288 352 266.5 352 240L352 144C352 117.5 373.5 96 400 96zM400 384C391.2 384 384 391.2 384 400L384 496C384 504.8 391.2 512 400 512L496 512C504.8 512 512 504.8 512 496L512 400C512 391.2 504.8 384 496 384L400 384zM352 400C352 373.5 373.5 352 400 352L496 352C522.5 352 544 373.5 544 400L544 496C544 522.5 522.5 544 496 544L400 544C373.5 544 352 522.5 352 496L352 400z"
-  })
-});
-
-// src/components/CodingAgentIcon.tsx
-
-var CodingAgentIcon = ({ codingAgentId, size }) => {
-  if (codingAgentId === null) {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(AppsIcon, {
-      height: size,
-      width: size
-    });
-  }
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("img", {
-    alt: "",
-    "aria-hidden": true,
-    "data-coding-agent-icon": codingAgentId,
-    draggable: false,
-    src: `/api/app-icon/coding-agent/${codingAgentId}.png`,
-    style: { flexShrink: 0, height: size, width: size }
-  });
-};
-
-// src/icons/custom-editor.tsx
-
-var CustomEditorIcon = ({
-  size: sizeProp
-}) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
-  focusable: "false",
-  role: "img",
-  viewBox: "0 0 24 24",
-  style: {
-    width: sizeProp ?? 14,
-    height: sizeProp ?? 14,
-    flexShrink: 0
-  },
-  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-    fill: "none",
-    stroke: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR */ .Ol,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    strokeWidth: "1.8",
-    d: "m8 8-4 4 4 4m8-8 4 4-4 4m-2-10-4 12"
-  })
-});
-
-// src/icons/editor.tsx
-
-var iconStyle = (size) => ({
-  flexShrink: 0,
-  height: size,
-  width: size
-});
-var VsCodeIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
-  viewBox: "0 0 40 40",
-  style: iconStyle(size),
-  "aria-hidden": true,
-  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-    fill: "#23A9F2",
-    fillRule: "evenodd",
-    clipRule: "evenodd",
-    d: "M26.02 34.13c.23.09.48.13.72.12.25-.01.49-.07.71-.18l5.93-2.85c.31-.15.56-.38.74-.66.18-.29.28-.62.28-.96V10.25c0-.34-.1-.67-.28-.96-.18-.28-.43-.51-.74-.66l-5.93-2.85c-.34-.16-.71-.22-1.08-.15-.36.06-.7.23-.96.5L14.05 16.48 9.11 12.73a1.2 1.2 0 0 0-1.53.07L5.99 14.24a1.2 1.2 0 0 0 0 1.77l4.29 3.92-4.29 3.91a1.2 1.2 0 0 0 0 1.77l1.59 1.44a1.2 1.2 0 0 0 1.53.07l4.94-3.75 11.36 10.36c.17.17.38.31.61.4Zm1.18-20.74-8.61 6.54 8.61 6.53V13.39Z"
-  })
-});
-var CursorIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("svg", {
-  viewBox: "0 0 40 40",
-  style: iconStyle(size),
-  "aria-hidden": true,
-  children: [
-    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("rect", {
-      x: "4",
-      y: "4",
-      width: "32",
-      height: "32",
-      rx: "7.625",
-      fill: "#050505"
-    }),
-    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-      fill: "#fff",
-      d: "m29.62 14.21-8.67-5.09a.89.89 0 0 0-.9 0l-8.67 5.09a.77.77 0 0 0-.38.66v10.26c0 .27.14.52.38.66l8.67 5.09c.28.16.62.16.9 0l8.67-5.09c.24-.14.38-.39.38-.66V14.87a.77.77 0 0 0-.38-.66Zm-.54 1.07L20.7 30.01a.11.11 0 0 1-.2-.06v-9.64c0-.19-.1-.37-.27-.47l-8.22-4.82a.11.11 0 0 1 .06-.21h16.74c.24 0 .39.27.27.47Z"
-    })
-  ]
-});
-var WindsurfIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
-  viewBox: "0 0 24 24",
-  style: iconStyle(size),
-  "aria-hidden": true,
-  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-    fill: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR */ .Ol,
-    d: "M23.55 5.07a2.18 2.18 0 0 0-2.18 2.17v4.87c0 .97-.8 1.76-1.76 1.76-.57 0-1.14-.29-1.47-.77l-4.97-7.1a2.21 2.21 0 0 0-3.96 1.22v4.89c0 .97-.8 1.76-1.77 1.76-.57 0-1.13-.29-1.47-.77L.41 5.16A.22.22 0 0 0 0 5.29v4.24c0 .22.07.43.19.6l5.47 7.82c.33.46.8.81 1.35.93a2.15 2.15 0 0 0 2.65-2.1v-4.89c0-.97.79-1.76 1.76-1.76.57 0 1.14.29 1.47.77l4.98 7.1c.41.59 1.05.94 1.81.94a2.15 2.15 0 0 0 2.15-2.16v-4.89c0-.97.79-1.76 1.76-1.76h.19a.22.22 0 0 0 .22-.22V5.29a.22.22 0 0 0-.22-.22h-.23Z"
-  })
-});
-var ZedIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
-  viewBox: "0 0 40 40",
-  style: iconStyle(size),
-  "aria-hidden": true,
-  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-    fill: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR */ .Ol,
-    fillRule: "evenodd",
-    clipRule: "evenodd",
-    d: "M8.3 7.4a.9.9 0 0 0-.9.9v19.8H5.6V8.3a2.7 2.7 0 0 1 2.7-2.7h24.11c1.2 0 1.81 1.45.96 2.3L18.52 22.76h4.18V20.9h1.8v2.31c0 .75-.6 1.35-1.35 1.35h-6.43l-3.1 3.09h14.03V16.4h1.8v11.25c0 1-.8 1.8-1.8 1.8H11.82L8.67 32.6H31.7a.9.9 0 0 0 .9-.9V11.9h1.8v19.8a2.7 2.7 0 0 1-2.7 2.7H7.59c-1.2 0-1.81-1.45-.96-2.31L21.43 17.3H17.3v1.8h-1.8v-2.25c0-.75.6-1.35 1.35-1.35h6.38l3.15-3.15H12.35V23.6h-1.8V12.35c0-1 .8-1.8 1.8-1.8h15.83l3.15-3.15H8.3Z"
-  })
-});
-var VscodiumIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
-  viewBox: "0 0 24 24",
-  style: iconStyle(size),
-  "aria-hidden": true,
-  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-    fill: "#2F80ED",
-    d: "M11.58.54a1.47 1.47 0 0 0-.44 2.03c2.43 3.76 3 6.6 2.75 9.08-1 4.75-3.18 5.72-5.09 5.72-1.86 0-1.36-3.07.03-3.96a5.3 5.3 0 0 1 2.73-.87 1.47 1.47 0 1 0 0-2.94c-.96 0-1.9.21-2.78.55.18-.85.25-1.76.02-2.74-.36-1.47-1.37-2.88-3.13-4.25a1.47 1.47 0 0 0-1.81 2.32c1.43 1.11 1.9 1.94 2.07 2.62.16.68.03 1.4-.3 2.4-.41 1.35-.9 2.56-1.1 3.71-.11.57-.12 1.19-.15 1.68-1.03-1-1.43-2.34-1.43-4.28a1.47 1.47 0 1 0-2.95 0c0 2.66.78 5.18 2.86 6.87 1.88 1.79 6.67 1.13 6.67 4.01 0 .81 1.19 1.21 2 1.21.84 0 1.89-.56 1.89-1.21 0-3.27 3.44-5.25 9.11-5.24A1.47 1.47 0 1 0 22.53 14.3c-.39 0-.77.01-1.14.03.64-1.49.92-3.13.86-4.9a1.47 1.47 0 1 0-2.95.1c.08 2.32-.01 4.39-1.74 5.48-.49.31-1.06.58-1.6.58.42-1.14.74-2.35.87-3.65.08-.83.09-1.82 0-2.59-.15-1.18-.33-2.53.12-3.55.4-.87 1.31-1.24 2.65-1.24a1.47 1.47 0 1 0 0-2.94c-1.98 0-3.48 1.04-4.34 2.3-.44-.95-.98-1.93-1.64-2.94a1.47 1.47 0 0 0-2.04-.44Z"
-  })
-});
-var WebStormIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("svg", {
-  viewBox: "0 0 24 24",
-  style: iconStyle(size),
-  "aria-hidden": true,
-  children: [
-    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("rect", {
-      width: "24",
-      height: "24",
-      rx: "3",
-      fill: "#07C3F2"
-    }),
-    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-      fill: "#050505",
-      d: "M3 3h18v18H3z"
-    }),
-    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-      fill: "#fff",
-      d: "M4.8 5.4h2.1l1.3 4.9 1.4-4.9h1.6l1.4 4.9 1.3-4.9h2.1l-2.5 8.7h-1.8l-1.3-4.8-1.4 4.8H7.3L4.8 5.4Zm10.8 7.3 1.1-1.4c.8.6 1.6 1 2.5 1 .7 0 1.2-.3 1.2-.8 0-.5-.3-.7-1.7-1.1-1.7-.4-2.8-.9-2.8-2.6 0-1.6 1.3-2.6 3-2.6 1.2 0 2.3.4 3.2 1.1l-1 1.5c-.8-.5-1.5-.8-2.2-.8-.7 0-1.1.3-1.1.7 0 .6.4.7 1.8 1.1 1.7.5 2.7 1.1 2.7 2.6 0 1.7-1.3 2.7-3.2 2.7-1.3 0-2.6-.5-3.5-1.4ZM4.7 18h8v1.3h-8V18Z"
-    })
-  ]
-});
-var SublimeTextIcon = ({ size }) => /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("svg", {
-  viewBox: "0 0 40 40",
-  style: iconStyle(size),
-  "aria-hidden": true,
-  children: [
-    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-      fill: "#FF9800",
-      d: "M35.91 4.51c0-.37-.36-.59-.8-.48L4.8 11.44c-.44.11-.8.5-.8.87v7.58c0 .37.36.59.8.48l30.31-7.41c.44-.11.8-.5.8-.87V4.51Zm0 15.57c0-.38-.36-.59-.8-.49L4.8 27.01c-.44.1-.8.5-.8.87v7.57c0 .38.36.6.8.49l30.31-7.41c.44-.11.8-.5.8-.88v-7.57Z"
-    }),
-    /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-      fill: "#F28C00",
-      d: "M4 19.84c0 .37.36.76.8.87l30.32 7.41c.44.11.8-.11.8-.48v-7.58c0-.37-.36-.76-.8-.87L4.8 11.78c-.44-.11-.8.11-.8.48v7.58Z"
-    })
-  ]
-});
-var EditorIcon = ({ editorId, size: sizeProp }) => {
-  const size = sizeProp ?? 14;
-  switch (editorId) {
-    case "vscode":
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(VsCodeIcon, {
-        size
-      });
-    case "cursor":
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(CursorIcon, {
-        size
-      });
-    case "windsurf":
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(WindsurfIcon, {
-        size
-      });
-    case "zed":
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(ZedIcon, {
-        size
-      });
-    case "vscodium":
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(VscodiumIcon, {
-        size
-      });
-    case "webstorm":
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(WebStormIcon, {
-        size
-      });
-    case "sublime-text":
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(SublimeTextIcon, {
-        size
-      });
-    case "custom":
-    case null:
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(CustomEditorIcon, {
-        size
-      });
-    default:
-      return null;
-  }
-};
-
-// src/icons/finder.tsx
-
-var FinderIcon = ({ size }) => {
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("img", {
-    alt: "",
-    "aria-hidden": true,
-    "data-file-manager-icon": "finder",
-    draggable: false,
-    src: "/api/app-icon/file-manager/finder.png",
-    style: { flexShrink: 0, height: size, width: size }
-  });
-};
-
-// src/icons/terminal.tsx
-
-var iconStyle2 = (size) => ({
-  flexShrink: 0,
-  height: size,
-  width: size
-});
-var simpleTerminalIcons = {
-  warp: {
-    color: "#01A4FF",
-    path: "M12.035 2.723h9.253A2.712 2.712 0 0 1 24 5.435v10.529a2.712 2.712 0 0 1-2.712 2.713H8.047Zm-1.681 2.6L6.766 19.677h5.598l-.399 1.6H2.712A2.712 2.712 0 0 1 0 18.565V8.036a2.712 2.712 0 0 1 2.712-2.712Z"
-  },
-  wezterm: {
-    color: "#4E49EE",
-    path: "M3.27 8.524c0-.623.62-1.007 2.123-1.007l-.5 2.757c-.931-.623-1.624-1.199-1.624-1.75zm4.008 6.807c0 .647-.644 1.079-2.123 1.15l.524-2.924c.931.624 1.6 1.175 1.6 1.774zm-2.625 5.992.454-2.708c3.603-.336 5.01-1.798 5.01-3.404 0-1.653-2.004-2.948-3.841-4.074l.668-3.548c.764.072 1.67.216 2.744.432l.31-2.469c-.81-.12-1.575-.168-2.29-.216L8.257 2.7l-2.363-.024-.453 2.684C1.838 5.648.43 7.158.43 8.764c0 1.63 2.004 2.876 3.841 3.954l-.668 3.716c-.859-.048-1.908-.192-3.125-.408L0 18.495c1.026.12 1.98.192 2.84.216l-.525 2.588zm15.553-1.894h2.673c.334-2.804.81-8.46 1.121-14.86h-2.553c-.071 1.51-.334 10.498-.43 11.241h-.071c-.644-2.42-1.169-4.386-1.813-6.782h-1.456c-.62 2.396-1.05 4.194-1.694 6.782h-.096c-.071-.743-.477-9.73-.525-11.24h-2.648c.31 6.399.763 12.055 1.097 14.86h2.625l1.838-7.12z"
-  },
-  alacritty: {
-    color: "#F46D01",
-    path: "m10.065 0-8.57 21.269h3.595l6.91-16.244 6.91 16.244h3.594l-8.57-21.269zm1.935 9.935c-.76666 1.8547-1.5334 3.7094-2.298 5.565 1.475 4.54 1.475 4.54 2.298 8.5.823-3.96.823-3.96 2.297-8.5-.76637-1.8547-1.5315-3.7099-2.297-5.565z"
-  },
-  "gnome-terminal": {
-    color: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .CURRENT_COLOR */ .Ol,
-    path: "M1.846 0A1.841 1.841 0 000 1.846v18.463c0 1.022.823 1.845 1.846 1.845h20.308A1.841 1.841 0 0024 20.31V1.846A1.841 1.841 0 0022.154 0H1.846zm0 .924h20.308c.512 0 .922.41.922.922v18.463c0 .511-.41.921-.922.921H1.846a.919.919 0 01-.922-.921V1.846c0-.512.41-.922.922-.922zm0 .922v18.463h20.308V1.846H1.846zm1.845 2.14l3.235 1.758v.836L3.69 8.477V7.385l2.243-1.207v-.033L3.69 5.076v-1.09zM7.846 9.23h3.693v.924H7.846V9.23zM0 21.736v.418C0 23.177.823 24 1.846 24h20.308A1.841 1.841 0 0024 22.154v-.418a2.334 2.334 0 01-1.846.918H1.846A2.334 2.334 0 010 21.736Z"
-  }
-};
-var TerminalIcon = ({ terminalId, size }) => {
-  const hasArtwork = terminalId === "terminal" || terminalId === "iterm2" || terminalId === "ghostty" || terminalId === "windows-terminal";
-  if (hasArtwork) {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("img", {
-      alt: "",
-      "aria-hidden": true,
-      "data-terminal-icon": terminalId,
-      draggable: false,
-      src: `/api/app-icon/terminal/${terminalId}.png`,
-      style: iconStyle2(size)
-    });
-  }
-  const icon = simpleTerminalIcons[terminalId];
-  if (!icon) {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(AppsIcon, {
-      "aria-hidden": true,
-      "data-terminal-icon": terminalId,
-      height: size,
-      width: size
-    });
-  }
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
-    "aria-hidden": true,
-    "data-terminal-icon": terminalId,
-    style: iconStyle2(size),
-    viewBox: "0 0 24 24",
-    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("path", {
-      d: icon.path,
-      fill: icon.color
-    })
-  });
-};
-
-// src/components/call-api.ts
-
-
-// src/helpers/enqueue-studio-source-mutation.ts
-
-
-// src/api/install-package.ts
-
-
-// src/helpers/browser-studio-operations.ts
-
-var queuedOperations = new WeakMap;
-var withMutationQueue = (operations) => {
-  const existing = queuedOperations.get(operations);
-  if (existing) {
-    return existing;
-  }
-  const methods = new Map;
-  const wrapped = new Proxy(operations, {
-    get(target, property, receiver) {
-      const value = Reflect.get(target, property, receiver);
-      if (property === "effects" || property === "keyframes") {
-        return value ? withMutationQueue(value) : value;
-      }
-      if (typeof property !== "string" || typeof value !== "function") {
-        return value;
-      }
-      const cached = methods.get(property);
-      if (cached?.original === value) {
-        return cached.queued;
-      }
-      const name = property === "deleteEffects" ? "deleteEffect" : property === "duplicateEffects" ? "duplicateEffect" : property;
-      const endpoint = `/api/${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
-      const queued = _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__/* .studioOperations */ .bx[endpoint]?.mutatesSource ? (...args) => enqueueStudioSourceMutation(endpoint, args[0], () => value.apply(target, args)) : value.bind(target);
-      methods.set(property, { original: value, queued });
-      return queued;
-    }
-  });
-  queuedOperations.set(operations, wrapped);
-  return wrapped;
-};
-var BROWSER_STUDIO_OPERATIONS_READY_EVENT = "remotion-browser-studio-operations-ready";
-var getBrowserStudioOperations = () => {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  return window.remotion_browserStudio ? withMutationQueue(window.remotion_browserStudio) : null;
-};
-var getBrowserStudioKeyframeOperations = () => getBrowserStudioOperations()?.keyframes ?? null;
-var getBrowserStudioEffectOperations = () => getBrowserStudioOperations()?.effects ?? null;
-var canUseKeyframeOperations = () => !window.remotion_isReadOnlyStudio || getBrowserStudioKeyframeOperations() !== null;
-var canUseEffectOperations = () => !window.remotion_isReadOnlyStudio || getBrowserStudioEffectOperations() !== null;
-var canInstallPackages = () => {
-  const browserStudioOperations = getBrowserStudioOperations();
-  if (browserStudioOperations !== null) {
-    return true;
-  }
-  return !window.remotion_isReadOnlyStudio;
-};
-
-// src/helpers/optional-package-dependencies.ts
-
-var TRANSFORMERS_PACKAGE = "@huggingface/transformers";
-var packagesRequiringTransformers = new Set([
-  "@remotion/whisper-webgpu",
-  "@remotion/video-matting"
-]);
-var withRequiredAuxiliaryPackages = (dependencies) => {
-  if (!dependencies.some((dependency) => packagesRequiringTransformers.has(dependency.name)) || dependencies.some((dependency) => dependency.name === TRANSFORMERS_PACKAGE)) {
-    return [...dependencies];
-  }
-  const transformers = _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__/* .extraPackages */ .IJ.find((pkg) => pkg.name === TRANSFORMERS_PACKAGE);
-  if (!transformers) {
-    throw new Error(`No recommended version found for ${TRANSFORMERS_PACKAGE}`);
-  }
-  return [
-    ...dependencies,
-    { name: transformers.name, version: transformers.version }
-  ];
-};
-
-// src/api/install-package.ts
-var installPackages = async (dependencies) => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_3__/* .getRemotionEnvironment */ .P1)().isStudio) {
-    throw new Error("installPackages() is only available in the Studio");
-  }
-  const dependenciesWithAuxiliaryPackages = withRequiredAuxiliaryPackages(dependencies);
-  const browserStudioOperations = getBrowserStudioOperations();
-  if (browserStudioOperations !== null) {
-    const response = await browserStudioOperations.packageInstallation.installPackages({
-      dependencies: dependenciesWithAuxiliaryPackages
-    });
-    if (!response.success) {
-      const error = new Error(response.reason);
-      error.stack = response.stack;
-      throw error;
-    }
-    return {};
-  }
-  if (window.remotion_isReadOnlyStudio) {
-    throw new Error("installPackages() is not available in Read-Only Studio");
-  }
-  return callApi("/api/install-package", {
-    dependencies: dependenciesWithAuxiliaryPackages
-  });
-};
-
-// src/components/Notifications/NotificationCenter.tsx
-
-
-
-// src/state/z-index.tsx
-
-
-// src/helpers/pointer-session.ts
-
-var {
-  isPointerSessionRelease,
-  observePointerRelease,
-  startCapturedPointerSession,
-  startDeferredCapturedPointerSession
-} = _remotion_sdk__WEBPACK_IMPORTED_MODULE_6__/* .CanvasInternals */ .h8;
-
-// src/helpers/use-keybinding.ts
-
-
-// src/helpers/is-mac.ts
-var isMac = typeof window !== "undefined" && window.navigator.platform.startsWith("Mac");
-
-// src/helpers/studio-runtime-config.ts
-
-var DEFAULT_BUFFER_STATE_DELAY_IN_MILLISECONDS = 300;
-var defaultStudioRuntimeConfig = {
-  preservePitchOnPlayback: true,
-  showLayerFrameNumbers: false,
-  showPremounting: null,
-  defaultPremountInSeconds: null,
-  askAIEnabled: false,
-  sequenceActivityLimit: null,
-  bufferStateDelayInMilliseconds: null,
-  defaultCodingAgent: null,
-  defaultEditor: null,
-  interactivityEnabled: true,
-  keyboardShortcutsEnabled: true,
-  maxTimelineTracks: null,
-  publicLicenseKey: null,
-  canvasTabsEnabled: true,
-  configFileStudioSettings: null
-};
-var getStudioRuntimeConfig = () => {
-  if (typeof window === "undefined") {
-    return defaultStudioRuntimeConfig;
-  }
-  return window.remotion_studioConfig ?? defaultStudioRuntimeConfig;
-};
-var getStudioAskAIEnabled = () => {
-  return getStudioRuntimeConfig().askAIEnabled;
-};
-var getStudioInteractivityEnabled = () => {
-  return getStudioRuntimeConfig().interactivityEnabled;
-};
-var getStudioKeyboardShortcutsEnabled = () => {
-  return getStudioRuntimeConfig().keyboardShortcutsEnabled;
-};
-var getStudioKeyboardShortcuts = () => {
-  return getStudioRuntimeConfig().keyboardShortcuts ?? null;
-};
-var getStudioMaxTimelineTracks = () => {
-  return getStudioRuntimeConfig().maxTimelineTracks;
-};
-var getStudioBufferStateDelayInMilliseconds = () => {
-  return getStudioRuntimeConfig().bufferStateDelayInMilliseconds ?? DEFAULT_BUFFER_STATE_DELAY_IN_MILLISECONDS;
-};
-var getStudioDefaultPremountInSeconds = () => {
-  return getStudioRuntimeConfig().defaultPremountInSeconds ?? remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.DEFAULT_STUDIO_PREMOUNT_IN_SECONDS;
-};
-var getStudioShowPremounting = () => {
-  return getStudioRuntimeConfig().showPremounting ?? false;
-};
-var getStudioShowLayerFrameNumbers = () => {
-  return getStudioRuntimeConfig().showLayerFrameNumbers;
-};
-var getStudioSequenceActivitySettings = () => {
-  const config = getStudioRuntimeConfig();
-  return {
-    limit: config.sequenceActivityLimit ?? remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.DEFAULT_SEQUENCE_ACTIVITY_LIMIT
-  };
-};
-
-// src/components/keyboard-shortcuts.ts
-var shortcut = (action, actionId) => ({ action, actionId });
-var fixedShortcut = (action, fixedChords, fixedReason) => ({ action, actionId: null, fixedChords, fixedReason });
-var defaultKeyboardShortcuts = {
-  playPause: [{ key: "Space" }],
-  toggleMute: [{ key: "m", shift: false }],
-  toggleLoop: [{ key: "l", shift: true }],
-  jumpToBeginning: [{ key: "a" }],
-  jumpToEnd: [{ key: "e" }],
-  reversePlayback: [{ key: "j" }],
-  pausePlayback: [{ key: "k" }],
-  playForward: [{ key: "l", shift: false }],
-  goToFrame: [{ key: "g" }],
-  pauseAndReturnToPlaybackStart: [{ key: "Enter" }],
-  toggleLeftSidebar: [{ key: "b", commandOrControl: true }],
-  toggleRightSidebar: [{ key: "j", commandOrControl: true }],
-  toggleBothSidebars: [{ key: "g", commandOrControl: true }],
-  enterFullscreen: [{ key: "f" }],
-  toggleSnapping: [{ key: "m", shift: true }],
-  toggleOutlines: [{ key: "o", shift: true }],
-  toggleRulersAndGuides: [{ key: "r", shift: true }],
-  togglePixelGrid: [{ key: "p", shift: true }],
-  previousComposition: [{ key: "PageUp" }],
-  nextComposition: [{ key: "PageDown" }],
-  newComposition: [{ key: "n" }],
-  showKeyboardShortcuts: [{ key: "?", shift: true }],
-  quickSwitcher: [{ key: "k", commandOrControl: true }],
-  render: [{ key: "r", shift: false }],
-  toggleCheckerboard: [{ key: "t" }],
-  setInPoint: [{ key: "i" }],
-  setOutPoint: [{ key: "o", shift: false }],
-  clearInOutPoints: [{ key: "x" }],
-  zoomIn: [{ key: "+", shift: true }, { key: "+" }],
-  zoomOut: [{ key: "-" }],
-  resetZoom: [{ key: "0" }],
-  undo: [{ key: "z", commandOrControl: true, shift: false }],
-  redo: [
-    ...isMac ? [] : [{ key: "y", commandOrControl: true }],
-    { key: "z", commandOrControl: true, shift: true }
-  ],
-  selectAllSequenceRows: [{ key: "a", commandOrControl: true }],
-  selectTranslateProp: [{ key: "p", shift: false }],
-  selectOpacityProp: [{ key: "t" }],
-  selectRotateProp: [{ key: "r", shift: false }],
-  selectScaleProp: [{ key: "s" }],
-  selectVolumeProp: [{ key: "v" }],
-  duplicateSequences: [{ key: "d", commandOrControl: true, shift: false }],
-  splitSequences: [{ key: "d", commandOrControl: true, shift: true }],
-  copyEffectsAndValues: [{ key: "c", commandOrControl: true }],
-  cutEffects: [{ key: "x", commandOrControl: true }],
-  deleteSelection: [{ key: "Backspace" }, { key: "Delete" }],
-  askAI: [{ key: "i", commandOrControl: true }],
-  pickColor: [{ key: "c", shift: true }]
-};
-var keyboardShortcutGroups = [
-  {
-    name: "Playback",
-    shortcuts: [
-      fixedShortcut("1 second back", [["Shift", "←"]], "Context-sensitive timeline control"),
-      fixedShortcut("Previous frame", [["←"]], "Context-sensitive timeline control"),
-      shortcut("Play / Pause", "playPause"),
-      shortcut("Mute / Unmute", "toggleMute"),
-      shortcut("Loop", "toggleLoop"),
-      fixedShortcut("Next frame", [["→"]], "Context-sensitive timeline control"),
-      fixedShortcut("1 second forward", [["Shift", "→"]], "Context-sensitive timeline control"),
-      shortcut("Jump to beginning", "jumpToBeginning"),
-      shortcut("Jump to end", "jumpToEnd"),
-      shortcut("Reverse playback", "reversePlayback"),
-      shortcut("Pause", "pausePlayback"),
-      shortcut("Play / Speed up", "playForward"),
-      shortcut("Go to frame", "goToFrame"),
-      shortcut("Pause & return to playback start", "pauseAndReturnToPlaybackStart")
-    ]
-  },
-  {
-    name: "Sidebar",
-    shortcuts: [
-      shortcut("Toggle left sidebar", "toggleLeftSidebar"),
-      shortcut("Toggle right sidebar", "toggleRightSidebar"),
-      shortcut("Toggle both sidebars", "toggleBothSidebars")
-    ]
-  },
-  {
-    name: "View",
-    shortcuts: [
-      shortcut("Enter fullscreen", "enterFullscreen"),
-      fixedShortcut("Exit fullscreen", [["Esc"]], "Handled by the browser"),
-      shortcut("Enable snapping", "toggleSnapping"),
-      shortcut("Outlines", "toggleOutlines"),
-      shortcut("Rulers and guides", "toggleRulersAndGuides"),
-      shortcut("Pixel grid", "togglePixelGrid")
-    ]
-  },
-  {
-    name: "Navigation",
-    shortcuts: [
-      shortcut("Previous composition", "previousComposition"),
-      shortcut("Next composition", "nextComposition"),
-      shortcut("New composition", "newComposition"),
-      shortcut("Render, unless a sequence or prop is selected", "render"),
-      shortcut("Checkerboard, unless a sequence or prop is selected", "toggleCheckerboard"),
-      shortcut("Show keyboard shortcuts", "showKeyboardShortcuts"),
-      shortcut("Quick Switcher", "quickSwitcher")
-    ]
-  },
-  {
-    name: "Playback range",
-    shortcuts: [
-      shortcut("Set In Point", "setInPoint"),
-      shortcut("Set Out Point", "setOutPoint"),
-      shortcut("Clear In/Out Points", "clearInOutPoints")
-    ]
-  },
-  {
-    name: "Zoom",
-    shortcuts: [
-      shortcut("Zoom in", "zoomIn"),
-      shortcut("Zoom out", "zoomOut"),
-      shortcut("Reset zoom", "resetZoom")
-    ]
-  },
-  {
-    name: "Tools",
-    shortcuts: [shortcut("Color Picker", "pickColor")]
-  },
-  {
-    name: "Props Editor",
-    shortcuts: [shortcut("Undo", "undo"), shortcut("Redo", "redo")]
-  },
-  {
-    name: "Interactivity",
-    shortcuts: [
-      fixedShortcut("Select range / axis lock drag", [["Shift"]], "Gesture modifier"),
-      fixedShortcut("Toggle selection", [[isMac ? "⌘" : "Ctrl"]], "Gesture modifier"),
-      shortcut("Select sequence rows", "selectAllSequenceRows"),
-      shortcut("Select translate prop", "selectTranslateProp"),
-      shortcut("Select opacity prop", "selectOpacityProp"),
-      shortcut("Select rotate prop", "selectRotateProp"),
-      shortcut("Select scale prop", "selectScaleProp"),
-      shortcut("Select volume prop", "selectVolumeProp"),
-      shortcut("Duplicate sequences", "duplicateSequences"),
-      shortcut("Split sequences at playhead", "splitSequences"),
-      shortcut("Copy effects / values", "copyEffectsAndValues"),
-      shortcut("Cut effects", "cutEffects"),
-      fixedShortcut("Paste effects / values", [[isMac ? "⌘" : "Ctrl", "V"]], "Handled by the browser clipboard event"),
-      shortcut("Delete / reset selection", "deleteSelection")
-    ]
-  }
-];
-var askAIKeyboardShortcutGroup = {
-  name: "AI",
-  shortcuts: [shortcut("Ask AI", "askAI")]
-};
-var getKeyboardShortcutsForAction = (action, configured = getStudioKeyboardShortcuts()) => {
-  if (configured !== null && Object.prototype.hasOwnProperty.call(configured, action)) {
-    const value = configured[action];
-    if (value === null) {
-      return [];
-    }
-    return Array.isArray(value) ? value : [
-      value
-    ];
-  }
-  return defaultKeyboardShortcuts[action];
-};
-var normalizeKey = (key) => key === "Space" ? " " : key;
-var keyboardEventMatchesShortcut = ({
-  event,
-  shortcut: value
-}) => {
-  const commandOrControl = isMac ? event.metaKey : event.ctrlKey;
-  return event.key.toLowerCase() === normalizeKey(value.key).toLowerCase() && commandOrControl === (value.commandOrControl ?? false) && (isMac ? !event.ctrlKey : !event.metaKey) && (value.shift === undefined || event.shiftKey === value.shift) && (value.alt === undefined || event.altKey === value.alt);
-};
-var keyboardShortcutsOverlap = (first, second) => first.key.toLowerCase() === second.key.toLowerCase() && (first.commandOrControl ?? false) === (second.commandOrControl ?? false) && (first.shift === undefined || second.shift === undefined || first.shift === second.shift) && (first.alt === undefined || second.alt === undefined || first.alt === second.alt);
-var keyboardEventMatchesAction = (event, action) => getKeyboardShortcutsForAction(action).some((value) => keyboardEventMatchesShortcut({ event, shortcut: value }));
-var displayKey = (keyboardKey) => {
-  if (keyboardKey === "ArrowLeft")
-    return "←";
-  if (keyboardKey === "ArrowRight")
-    return "→";
-  if (keyboardKey === "Delete")
-    return "Del";
-  if (keyboardKey === "Backspace")
-    return "⌫";
-  if (keyboardKey === "Escape")
-    return "Esc";
-  return keyboardKey.length === 1 ? keyboardKey.toUpperCase() : keyboardKey;
-};
-var formatKeyboardShortcut = (value) => [
-  ...value.commandOrControl ? [isMac ? "⌘" : "Ctrl"] : [],
-  ...value.alt ? [isMac ? "Option" : "Alt"] : [],
-  ...value.shift && !["+", "?"].includes(value.key) ? ["Shift"] : [],
-  displayKey(value.key)
-];
-var formatKeyboardShortcutForAria = (value) => [
-  ...value.commandOrControl ? [isMac ? "Meta" : "Control"] : [],
-  ...value.alt ? ["Alt"] : [],
-  ...value.shift ? ["Shift"] : [],
-  value.key
-].join("+");
-var getKeyboardShortcutLabel = (action) => getKeyboardShortcutsForAction(action).map((value) => formatKeyboardShortcut(value).join("+")).join(" / ");
-var getKeyboardShortcutAriaKeyShortcuts = (action) => getKeyboardShortcutsForAction(action).map(formatKeyboardShortcutForAria).join(" ");
-var shortcutFromKeyboardEvent = (event) => {
-  if (["Alt", "Control", "Meta", "Shift"].includes(event.key)) {
-    return null;
-  }
-  if (isMac ? event.ctrlKey : event.metaKey) {
-    return null;
-  }
-  return {
-    key: event.key === " " ? "Space" : event.key,
-    ...(isMac ? event.metaKey : event.ctrlKey) ? { commandOrControl: true } : {},
-    shift: event.shiftKey,
-    alt: event.altKey
-  };
-};
-
-// src/state/keybindings.tsx
-
-
-var KeybindingContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.createContext)({
-  registerKeybinding: () => {
-    throw new Error("Has no keybinding context");
-  },
-  unregisterKeybinding: () => {
-    return;
-  },
-  unregisterPane: () => {
-    return;
-  }
-});
-var KeybindingContextProvider = ({ children }) => {
-  const registered = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)([]);
-  const registerKeybinding = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((binding) => {
-    registered.current = [...registered.current, binding];
-    window.addEventListener(binding.event, binding.callback);
-  }, []);
-  const unregisterKeybinding = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((binding) => {
-    registered.current = registered.current.filter((r) => {
-      if (r.id === binding.id) {
-        window.removeEventListener(binding.event, binding.callback);
-        return false;
-      }
-      return true;
-    });
-  }, []);
-  const unregisterPane = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((paneId) => {
-    const matchedKeybindings = registered.current.filter((r) => r.registeredFromPane === paneId);
-    for (const matched of matchedKeybindings) {
-      unregisterKeybinding(matched);
-    }
-  }, [unregisterKeybinding]);
-  const value = (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => {
-    return {
-      registerKeybinding,
-      unregisterKeybinding,
-      unregisterPane
-    };
-  }, [registerKeybinding, unregisterKeybinding, unregisterPane]);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(KeybindingContext.Provider, {
-    value,
-    children
-  });
-};
-
-// src/helpers/use-keybinding.ts
-if (!getStudioKeyboardShortcutsEnabled()) {
-  console.warn("Keyboard shortcuts disabled either due to: a) --disable-keyboard-shortcuts being passed b) Config.setKeyboardShortcutsEnabled(false) being set or c) a Remotion version mismatch.");
-}
-var areKeyboardShortcutsDisabled = () => {
-  return !getStudioKeyboardShortcutsEnabled();
-};
-var useKeybinding = () => {
-  const [paneId] = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)(() => String(Math.random()));
-  const context = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(KeybindingContext);
-  const { isHighestContext } = useZIndex();
-  const registerKeybinding = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((options) => {
-    if (!isHighestContext && !options.keepRegisteredWhenNotHighestContext) {
-      return {
-        unregister: () => {
-          return;
-        }
-      };
-    }
-    const listener = (e) => {
-      if (!e.key) {
-        return;
-      }
-      const matches = options.action ? keyboardEventMatchesAction(e, options.action) : e.key.toLowerCase() === options.key.toLowerCase() && options.commandCtrlKey === (isMac ? e.metaKey : e.ctrlKey);
-      if (matches && getStudioKeyboardShortcutsEnabled()) {
-        if (!options.triggerIfInputFieldFocused) {
-          const { activeElement } = document;
-          if (activeElement instanceof HTMLInputElement) {
-            return;
-          }
-          if (activeElement instanceof HTMLTextAreaElement) {
-            return;
-          }
-        }
-        options.callback(e);
-        if (options.preventDefault) {
-          e.preventDefault();
-        }
-      }
-    };
-    const toRegister = {
-      registeredFromPane: paneId,
-      event: options.event,
-      key: options.action ?? options.key,
-      callback: listener,
-      id: String(Math.random())
-    };
-    context.registerKeybinding(toRegister);
-    return {
-      unregister: () => context.unregisterKeybinding(toRegister)
-    };
-  }, [context, isHighestContext, paneId]);
-  (0,react__WEBPACK_IMPORTED_MODULE_4__.useEffect)(() => {
-    return () => {
-      context.unregisterPane(paneId);
-    };
-  }, [context, paneId]);
-  return (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => ({ registerKeybinding, isHighestContext }), [registerKeybinding, isHighestContext]);
-};
-
-// src/state/highest-z-index.tsx
-
-
-var HighestZIndexContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.createContext)({
-  highestIndex: 0,
-  registerZIndex: () => {
-    return;
-  },
-  unregisterZIndex: () => {
-    return;
-  }
-});
-var HighestZIndexProvider = ({ children }) => {
-  const [zIndexes, setZIndexes] = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)([]);
-  const registerZIndex = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((newIndex) => {
-    setZIndexes((prev) => [...prev, newIndex]);
-  }, []);
-  const unregisterZIndex = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((newIndex) => {
-    setZIndexes((prev) => {
-      const index = prev.indexOf(newIndex);
-      if (index === -1) {
-        throw new Error("did not find z-index " + newIndex);
-      }
-      return prev.filter((_n, i) => i !== index);
-    });
-  }, []);
-  const highestIndex = Math.max(...zIndexes);
-  const value = (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => {
-    return {
-      highestIndex,
-      registerZIndex,
-      unregisterZIndex
-    };
-  }, [registerZIndex, unregisterZIndex, highestIndex]);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(HighestZIndexContext.Provider, {
-    value,
-    children
-  });
-};
-
-// src/state/input-dragger-click-lock.ts
-var clickLock = false;
-var getClickLock = () => clickLock;
-var setClickLock = (lock) => {
-  clickLock = lock;
-};
-
-// src/state/z-index.tsx
-
-var ZIndexContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.createContext)({
-  currentIndex: 0
-});
-var margin = {
-  margin: "auto"
-};
-var EscapeHook = ({ onEscape }) => {
-  const keybindings = useKeybinding();
-  (0,react__WEBPACK_IMPORTED_MODULE_4__.useLayoutEffect)(() => {
-    const escape = keybindings.registerKeybinding({
-      event: "keydown",
-      key: "Escape",
-      callback: onEscape,
-      commandCtrlKey: false,
-      preventDefault: true,
-      triggerIfInputFieldFocused: true,
-      keepRegisteredWhenNotHighestContext: false
-    });
-    return () => {
-      escape.unregister();
-    };
-  }, [keybindings, onEscape]);
-  return null;
-};
-var HigherZIndex = ({
-  children,
-  onEscape,
-  onOutsideClick,
-  disabled,
-  outsideClickButton = "any"
-}) => {
-  const context = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(ZIndexContext);
-  const highestContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(HighestZIndexContext);
-  const { registerZIndex, unregisterZIndex } = highestContext;
-  const containerRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(null);
-  const highestIndexRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(highestContext.highestIndex);
-  const onOutsideClickRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(onOutsideClick);
-  const outsideClickButtonRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(outsideClickButton);
-  const currentIndex = disabled ? context.currentIndex : context.currentIndex + 1;
-  (0,react__WEBPACK_IMPORTED_MODULE_4__.useLayoutEffect)(() => {
-    highestIndexRef.current = highestContext.highestIndex;
-    onOutsideClickRef.current = onOutsideClick;
-    outsideClickButtonRef.current = outsideClickButton;
-  }, [highestContext.highestIndex, onOutsideClick, outsideClickButton]);
-  (0,react__WEBPACK_IMPORTED_MODULE_4__.useLayoutEffect)(() => {
-    if (disabled) {
-      return;
-    }
-    registerZIndex(currentIndex);
-    return () => unregisterZIndex(currentIndex);
-  }, [currentIndex, disabled, registerZIndex, unregisterZIndex]);
-  (0,react__WEBPACK_IMPORTED_MODULE_4__.useLayoutEffect)(() => {
-    if (disabled) {
-      return;
-    }
-    let endPointerSession = null;
-    const listener = (downEvent) => {
-      if (outsideClickButtonRef.current === "primary" && downEvent.button !== 0) {
-        return;
-      }
-      const outsideClick = !containerRef.current?.contains(downEvent.target);
-      if (!outsideClick) {
-        return;
-      }
-      if (highestIndexRef.current !== currentIndex) {
-        return;
-      }
-      endPointerSession?.();
-      endPointerSession = observePointerRelease({
-        event: downEvent,
-        onEnd: (reason, upEvent) => {
-          endPointerSession = null;
-          if (isPointerSessionRelease(reason, upEvent) && !getClickLock()) {
-            const target = document.elementFromPoint(upEvent.clientX, upEvent.clientY) ?? upEvent.target;
-            if (document.contains(target)) {
-              upEvent.stopPropagation();
-              onOutsideClickRef.current(target);
-            }
-          }
-        }
-      });
-    };
-    window.addEventListener("pointerdown", listener, true);
-    return () => {
-      endPointerSession?.();
-      endPointerSession = null;
-      return window.removeEventListener("pointerdown", listener, true);
-    };
-  }, [currentIndex, disabled]);
-  const value = (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => {
-    return {
-      currentIndex
-    };
-  }, [currentIndex]);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)(ZIndexContext.Provider, {
-    value,
-    children: [
-      disabled ? null : /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(EscapeHook, {
-        onEscape
-      }),
-      /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
-        ref: containerRef,
-        style: margin,
-        children
-      })
-    ]
-  });
-};
-var useZIndex = () => {
-  const context = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(ZIndexContext);
-  const highestContext = (0,react__WEBPACK_IMPORTED_MODULE_4__.useContext)(HighestZIndexContext);
-  const isHighestContext = highestContext.highestIndex === context.currentIndex;
-  return (0,react__WEBPACK_IMPORTED_MODULE_4__.useMemo)(() => ({
-    currentZIndex: context.currentIndex,
-    highestZIndex: highestContext.highestIndex,
-    isHighestContext,
-    tabIndex: isHighestContext ? 0 : -1
-  }), [context.currentIndex, highestContext.highestIndex, isHighestContext]);
-};
-
-// src/components/Menu/portals.ts
-var portalIds = [
-  "menuportal-0",
-  "menuportal-1",
-  "menuportal-2",
-  "menuportal-3",
-  "menuportal-4",
-  "menuportal-5"
-];
-var portals = typeof document === "undefined" ? [] : portalIds.map((id) => document.getElementById(id));
-var getPortal = (i) => {
-  const portal = portals[i];
-  if (!portal) {
-    throw new Error(`Expected menu portal ${i} to exist`);
-  }
-  return portal;
-};
-
-// src/components/Notifications/Notification.tsx
-
-
-var notification = {
-  backgroundColor: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .NOTIFICATION_BACKGROUND */ .jc,
-  color: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .WHITE_HEX */ .C4,
-  fontFamily: "Arial, Helvetica, sans-serif",
-  display: "inline-flex",
-  padding: "6px 14px",
-  borderRadius: 6,
-  fontSize: 13,
-  border: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .NOTIFICATION_BORDER */ .$t,
-  boxShadow: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .NOTIFICATION_SHADOW */ .no,
-  marginTop: 3,
-  marginBottom: 3,
-  alignItems: "center"
-};
-var Notification = ({ children, id, duration, created, onRemove }) => {
-  (0,react__WEBPACK_IMPORTED_MODULE_4__.useEffect)(() => {
-    if (duration === null) {
-      return;
-    }
-    const timeout = setTimeout(() => {
-      onRemove(id);
-    }, duration - (Date.now() - created));
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [created, duration, id, onRemove]);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
-    className: "css-reset",
-    style: notification,
-    children
-  });
-};
-
-// src/components/Notifications/NotificationCenter.tsx
-
-var container = {
-  position: "absolute",
-  justifyContent: "center",
-  alignItems: "center",
-  display: "flex",
-  width: "100%",
-  flexDirection: "column",
-  paddingTop: 40,
-  pointerEvents: "none",
-  backgroundColor: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .TRANSPARENT */ .nj
-};
-var notificationCenter = (0,react__WEBPACK_IMPORTED_MODULE_4__.createRef)();
-var showNotification = (content, durationInMs) => {
-  return notificationCenter.current.addNotification({
-    content,
-    duration: durationInMs,
-    created: Date.now(),
-    id: String(Math.random()).replace("0.", "")
-  });
-};
-var NotificationCenter = () => {
-  const [notifications, setNotifications] = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)([]);
-  const { currentZIndex } = useZIndex();
-  const onRemove = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((id) => {
-    setNotifications((not) => {
-      return not.filter((n) => n.id !== id);
-    });
-  }, []);
-  const addNotification = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((notification) => {
-    setNotifications((previousNotifications) => {
-      return [...previousNotifications, notification];
-    });
-    return {
-      dismiss: () => {
-        setNotifications((oldNotifications) => {
-          return oldNotifications.filter((notificationToFilter) => notificationToFilter.id !== notification.id);
-        });
-      },
-      replaceContent: (newContent, durationInMs) => {
-        setNotifications((oldNotifications) => {
-          return oldNotifications.map((notificationToMap) => {
-            if (notificationToMap.id === notification.id) {
-              return {
-                ...notificationToMap,
-                duration: durationInMs,
-                content: newContent,
-                created: Date.now()
-              };
-            }
-            return notificationToMap;
-          });
-        });
-      }
-    };
-  }, []);
-  (0,react__WEBPACK_IMPORTED_MODULE_4__.useImperativeHandle)(notificationCenter, () => {
-    return {
-      addNotification
-    };
-  }, [addNotification]);
-  return react_dom__WEBPACK_IMPORTED_MODULE_5__.createPortal(/* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
-    style: container,
-    children: notifications.map((n) => {
-      return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(Notification, {
-        created: n.created,
-        duration: n.duration,
-        id: n.id,
-        onRemove,
-        children: n.content
-      }, n.id);
-    })
-  }), getPortal(currentZIndex + 1));
-};
-
-// src/helpers/install-required-package.ts
-var installQueue = Promise.resolve();
-var uniqueDependencies = (dependencies) => Array.from(new Map(dependencies.map((dependency) => [dependency.name, dependency])).values());
-var getMissingPackages = (dependencies) => {
-  const installedPackages = window.remotion_installedPackages ?? [];
-  return uniqueDependencies(dependencies).filter((dependency) => dependency.version !== null || !installedPackages.includes(dependency.name));
-};
-var addInstalledPackages = (dependencies) => {
-  const installedPackages = window.remotion_installedPackages ?? [];
-  window.remotion_installedPackages = Array.from(new Set([
-    ...installedPackages,
-    ...uniqueDependencies(dependencies).map((dependency) => dependency.name)
-  ]));
-};
-var formatPackageList = (dependencies) => dependencies.length === 1 ? dependencies[0].name : `${dependencies.length} packages`;
-var installRequiredPackages = async (dependencies) => {
-  const runInstall = async () => {
-    const missingPackages = getMissingPackages(dependencies);
-    if (missingPackages.length === 0)
-      return;
-    showNotification(`Installing ${formatPackageList(missingPackages)}...`, 3000);
-    await installPackages(missingPackages);
-    addInstalledPackages(missingPackages);
-    showNotification(`Installed ${formatPackageList(missingPackages)}`, 3000);
-  };
-  const queuedInstall = installQueue.then(runInstall, runInstall);
-  installQueue = queuedInstall.catch(() => {
-    return;
-  });
-  await queuedInstall;
-};
-
-// src/components/Timeline/google-fonts-list.ts
-var GOOGLE_FONTS_LIST = [
-  {
-    importName: "ABeeZee",
-    fontFamily: "ABeeZee",
-    previewUrl: "ABeeZee",
-    weights: ["400"]
-  },
-  {
-    importName: "Abel",
-    fontFamily: "Abel",
-    previewUrl: "Abel",
-    weights: ["400"]
-  },
-  {
-    importName: "AbrilFatface",
-    fontFamily: "Abril Fatface",
-    previewUrl: "Abril+Fatface",
-    weights: ["400"]
-  },
-  {
-    importName: "Acme",
-    fontFamily: "Acme",
-    previewUrl: "Acme",
-    weights: ["400"]
-  },
-  {
-    importName: "Alata",
-    fontFamily: "Alata",
-    previewUrl: "Alata",
-    weights: ["400"]
-  },
-  {
-    importName: "AlbertSans",
-    fontFamily: "Albert Sans",
-    previewUrl: "Albert+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Alegreya",
-    fontFamily: "Alegreya",
-    previewUrl: "Alegreya",
-    weights: ["400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "AlegreyaSans",
-    fontFamily: "Alegreya Sans",
-    previewUrl: "Alegreya+Sans",
-    weights: ["100", "300", "400", "500", "700", "800", "900"]
-  },
-  {
-    importName: "AlegreyaSansSC",
-    fontFamily: "Alegreya Sans SC",
-    previewUrl: "Alegreya+Sans+SC",
-    weights: ["100", "300", "400", "500", "700", "800", "900"]
-  },
-  {
-    importName: "AlfaSlabOne",
-    fontFamily: "Alfa Slab One",
-    previewUrl: "Alfa+Slab+One",
-    weights: ["400"]
-  },
-  {
-    importName: "Alice",
-    fontFamily: "Alice",
-    previewUrl: "Alice",
-    weights: ["400"]
-  },
-  {
-    importName: "Almarai",
-    fontFamily: "Almarai",
-    previewUrl: "Almarai",
-    weights: ["300", "400", "700", "800"]
-  },
-  {
-    importName: "AmaticSC",
-    fontFamily: "Amatic SC",
-    previewUrl: "Amatic+SC",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Amiri",
-    fontFamily: "Amiri",
-    previewUrl: "Amiri",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "AnticSlab",
-    fontFamily: "Antic Slab",
-    previewUrl: "Antic+Slab",
-    weights: ["400"]
-  },
-  {
-    importName: "Anton",
-    fontFamily: "Anton",
-    previewUrl: "Anton",
-    weights: ["400"]
-  },
-  {
-    importName: "ArchitectsDaughter",
-    fontFamily: "Architects Daughter",
-    previewUrl: "Architects+Daughter",
-    weights: ["400"]
-  },
-  {
-    importName: "Archivo",
-    fontFamily: "Archivo",
-    previewUrl: "Archivo",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "ArchivoBlack",
-    fontFamily: "Archivo Black",
-    previewUrl: "Archivo+Black",
-    weights: ["400"]
-  },
-  {
-    importName: "ArchivoNarrow",
-    fontFamily: "Archivo Narrow",
-    previewUrl: "Archivo+Narrow",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "Arimo",
-    fontFamily: "Arimo",
-    previewUrl: "Arimo",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "Arsenal",
-    fontFamily: "Arsenal",
-    previewUrl: "Arsenal",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Arvo",
-    fontFamily: "Arvo",
-    previewUrl: "Arvo",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Asap",
-    fontFamily: "Asap",
-    previewUrl: "Asap",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "AsapCondensed",
-    fontFamily: "Asap Condensed",
-    previewUrl: "Asap+Condensed",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Assistant",
-    fontFamily: "Assistant",
-    previewUrl: "Assistant",
-    weights: ["200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Barlow",
-    fontFamily: "Barlow",
-    previewUrl: "Barlow",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "BarlowCondensed",
-    fontFamily: "Barlow Condensed",
-    previewUrl: "Barlow+Condensed",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "BarlowSemiCondensed",
-    fontFamily: "Barlow Semi Condensed",
-    previewUrl: "Barlow+Semi+Condensed",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "BeVietnamPro",
-    fontFamily: "Be Vietnam Pro",
-    previewUrl: "Be+Vietnam+Pro",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "BebasNeue",
-    fontFamily: "Bebas Neue",
-    previewUrl: "Bebas+Neue",
-    weights: ["400"]
-  },
-  {
-    importName: "Bitter",
-    fontFamily: "Bitter",
-    previewUrl: "Bitter",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "BlackOpsOne",
-    fontFamily: "Black Ops One",
-    previewUrl: "Black+Ops+One",
-    weights: ["400"]
-  },
-  {
-    importName: "BodoniModa",
-    fontFamily: "Bodoni Moda",
-    previewUrl: "Bodoni+Moda",
-    weights: ["400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "BreeSerif",
-    fontFamily: "Bree Serif",
-    previewUrl: "Bree+Serif",
-    weights: ["400"]
-  },
-  {
-    importName: "Bungee",
-    fontFamily: "Bungee",
-    previewUrl: "Bungee",
-    weights: ["400"]
-  },
-  {
-    importName: "Cabin",
-    fontFamily: "Cabin",
-    previewUrl: "Cabin",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "Cairo",
-    fontFamily: "Cairo",
-    previewUrl: "Cairo",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Cantarell",
-    fontFamily: "Cantarell",
-    previewUrl: "Cantarell",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Cardo",
-    fontFamily: "Cardo",
-    previewUrl: "Cardo",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Catamaran",
-    fontFamily: "Catamaran",
-    previewUrl: "Catamaran",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Caveat",
-    fontFamily: "Caveat",
-    previewUrl: "Caveat",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "ChakraPetch",
-    fontFamily: "Chakra Petch",
-    previewUrl: "Chakra+Petch",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Changa",
-    fontFamily: "Changa",
-    previewUrl: "Changa",
-    weights: ["200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Chivo",
-    fontFamily: "Chivo",
-    previewUrl: "Chivo",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Cinzel",
-    fontFamily: "Cinzel",
-    previewUrl: "Cinzel",
-    weights: ["400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Comfortaa",
-    fontFamily: "Comfortaa",
-    previewUrl: "Comfortaa",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Commissioner",
-    fontFamily: "Commissioner",
-    previewUrl: "Commissioner",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "ConcertOne",
-    fontFamily: "Concert One",
-    previewUrl: "Concert+One",
-    weights: ["400"]
-  },
-  {
-    importName: "Cookie",
-    fontFamily: "Cookie",
-    previewUrl: "Cookie",
-    weights: ["400"]
-  },
-  {
-    importName: "Cormorant",
-    fontFamily: "Cormorant",
-    previewUrl: "Cormorant",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "CormorantGaramond",
-    fontFamily: "Cormorant Garamond",
-    previewUrl: "Cormorant+Garamond",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Courgette",
-    fontFamily: "Courgette",
-    previewUrl: "Courgette",
-    weights: ["400"]
-  },
-  {
-    importName: "CreteRound",
-    fontFamily: "Crete Round",
-    previewUrl: "Crete+Round",
-    weights: ["400"]
-  },
-  {
-    importName: "CrimsonPro",
-    fontFamily: "Crimson Pro",
-    previewUrl: "Crimson+Pro",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "CrimsonText",
-    fontFamily: "Crimson Text",
-    previewUrl: "Crimson+Text",
-    weights: ["400", "600", "700"]
-  },
-  {
-    importName: "Cuprum",
-    fontFamily: "Cuprum",
-    previewUrl: "Cuprum",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "DMSans",
-    fontFamily: "DM Sans",
-    previewUrl: "DM+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "DMSerifDisplay",
-    fontFamily: "DM Serif Display",
-    previewUrl: "DM+Serif+Display",
-    weights: ["400"]
-  },
-  {
-    importName: "DMSerifText",
-    fontFamily: "DM Serif Text",
-    previewUrl: "DM+Serif+Text",
-    weights: ["400"]
-  },
-  {
-    importName: "DancingScript",
-    fontFamily: "Dancing Script",
-    previewUrl: "Dancing+Script",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "DidactGothic",
-    fontFamily: "Didact Gothic",
-    previewUrl: "Didact+Gothic",
-    weights: ["400"]
-  },
-  {
-    importName: "Domine",
-    fontFamily: "Domine",
-    previewUrl: "Domine",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "Dosis",
-    fontFamily: "Dosis",
-    previewUrl: "Dosis",
-    weights: ["200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "EBGaramond",
-    fontFamily: "EB Garamond",
-    previewUrl: "EB+Garamond",
-    weights: ["400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Eczar",
-    fontFamily: "Eczar",
-    previewUrl: "Eczar",
-    weights: ["400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "ElMessiri",
-    fontFamily: "El Messiri",
-    previewUrl: "El+Messiri",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "Electrolize",
-    fontFamily: "Electrolize",
-    previewUrl: "Electrolize",
-    weights: ["400"]
-  },
-  {
-    importName: "EncodeSans",
-    fontFamily: "Encode Sans",
-    previewUrl: "Encode+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "EncodeSansCondensed",
-    fontFamily: "Encode Sans Condensed",
-    previewUrl: "Encode+Sans+Condensed",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Exo",
-    fontFamily: "Exo",
-    previewUrl: "Exo",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Exo2",
-    fontFamily: "Exo Two",
-    previewUrl: "Exo+2",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Figtree",
-    fontFamily: "Figtree",
-    previewUrl: "Figtree",
-    weights: ["300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "FiraSans",
-    fontFamily: "Fira Sans",
-    previewUrl: "Fira+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "FiraSansCondensed",
-    fontFamily: "Fira Sans Condensed",
-    previewUrl: "Fira+Sans+Condensed",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "FjallaOne",
-    fontFamily: "Fjalla One",
-    previewUrl: "Fjalla+One",
-    weights: ["400"]
-  },
-  {
-    importName: "FrancoisOne",
-    fontFamily: "Francois One",
-    previewUrl: "Francois+One",
-    weights: ["400"]
-  },
-  {
-    importName: "FrankRuhlLibre",
-    fontFamily: "Frank Ruhl Libre",
-    previewUrl: "Frank+Ruhl+Libre",
-    weights: ["300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Fraunces",
-    fontFamily: "Fraunces",
-    previewUrl: "Fraunces",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Gelasio",
-    fontFamily: "Gelasio",
-    previewUrl: "Gelasio",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "GloriaHallelujah",
-    fontFamily: "Gloria Hallelujah",
-    previewUrl: "Gloria+Hallelujah",
-    weights: ["400"]
-  },
-  {
-    importName: "GothicA1",
-    fontFamily: "Gothic AOne",
-    previewUrl: "Gothic+A1",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "GreatVibes",
-    fontFamily: "Great Vibes",
-    previewUrl: "Great+Vibes",
-    weights: ["400"]
-  },
-  {
-    importName: "Gruppo",
-    fontFamily: "Gruppo",
-    previewUrl: "Gruppo",
-    weights: ["400"]
-  },
-  {
-    importName: "Heebo",
-    fontFamily: "Heebo",
-    previewUrl: "Heebo",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Hind",
-    fontFamily: "Hind",
-    previewUrl: "Hind",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "HindMadurai",
-    fontFamily: "Hind Madurai",
-    previewUrl: "Hind+Madurai",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "HindSiliguri",
-    fontFamily: "Hind Siliguri",
-    previewUrl: "Hind+Siliguri",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "IBMPlexMono",
-    fontFamily: "IBM Plex Mono",
-    previewUrl: "IBM+Plex+Mono",
-    weights: ["100", "200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "IBMPlexSans",
-    fontFamily: "IBM Plex Sans",
-    previewUrl: "IBM+Plex+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "IBMPlexSansArabic",
-    fontFamily: "IBM Plex Sans Arabic",
-    previewUrl: "IBM+Plex+Sans+Arabic",
-    weights: ["100", "200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "IBMPlexSansCondensed",
-    fontFamily: "IBM Plex Sans Condensed",
-    previewUrl: "IBM+Plex+Sans+Condensed",
-    weights: ["100", "200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "IBMPlexSerif",
-    fontFamily: "IBM Plex Serif",
-    previewUrl: "IBM+Plex+Serif",
-    weights: ["100", "200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Inconsolata",
-    fontFamily: "Inconsolata",
-    previewUrl: "Inconsolata",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "IndieFlower",
-    fontFamily: "Indie Flower",
-    previewUrl: "Indie+Flower",
-    weights: ["400"]
-  },
-  {
-    importName: "Inter",
-    fontFamily: "Inter",
-    previewUrl: "Inter",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "InterTight",
-    fontFamily: "Inter Tight",
-    previewUrl: "Inter+Tight",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "JosefinSans",
-    fontFamily: "Josefin Sans",
-    previewUrl: "Josefin+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "JosefinSlab",
-    fontFamily: "Josefin Slab",
-    previewUrl: "Josefin+Slab",
-    weights: ["100", "200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Jost",
-    fontFamily: "Jost",
-    previewUrl: "Jost",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Kalam",
-    fontFamily: "Kalam",
-    previewUrl: "Kalam",
-    weights: ["300", "400", "700"]
-  },
-  {
-    importName: "Kanit",
-    fontFamily: "Kanit",
-    previewUrl: "Kanit",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Karla",
-    fontFamily: "Karla",
-    previewUrl: "Karla",
-    weights: ["200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "KaushanScript",
-    fontFamily: "Kaushan Script",
-    previewUrl: "Kaushan+Script",
-    weights: ["400"]
-  },
-  {
-    importName: "Khand",
-    fontFamily: "Khand",
-    previewUrl: "Khand",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Lato",
-    fontFamily: "Lato",
-    previewUrl: "Lato",
-    weights: ["100", "300", "400", "700", "900"]
-  },
-  {
-    importName: "LeagueSpartan",
-    fontFamily: "League Spartan",
-    previewUrl: "League+Spartan",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Lexend",
-    fontFamily: "Lexend",
-    previewUrl: "Lexend",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "LexendDeca",
-    fontFamily: "Lexend Deca",
-    previewUrl: "Lexend+Deca",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "LibreBarcode39",
-    fontFamily: "Libre Barcode ThreeNine",
-    previewUrl: "Libre+Barcode+39",
-    weights: ["400"]
-  },
-  {
-    importName: "LibreBaskerville",
-    fontFamily: "Libre Baskerville",
-    previewUrl: "Libre+Baskerville",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "LibreCaslonText",
-    fontFamily: "Libre Caslon Text",
-    previewUrl: "Libre+Caslon+Text",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "LibreFranklin",
-    fontFamily: "Libre Franklin",
-    previewUrl: "Libre+Franklin",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "LilitaOne",
-    fontFamily: "Lilita One",
-    previewUrl: "Lilita+One",
-    weights: ["400"]
-  },
-  {
-    importName: "Lobster",
-    fontFamily: "Lobster",
-    previewUrl: "Lobster",
-    weights: ["400"]
-  },
-  {
-    importName: "LobsterTwo",
-    fontFamily: "Lobster Two",
-    previewUrl: "Lobster+Two",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Lora",
-    fontFamily: "Lora",
-    previewUrl: "Lora",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "LuckiestGuy",
-    fontFamily: "Luckiest Guy",
-    previewUrl: "Luckiest+Guy",
-    weights: ["400"]
-  },
-  {
-    importName: "MPLUS1p",
-    fontFamily: "M PLUS Onep",
-    previewUrl: "M+PLUS+1p",
-    weights: ["100", "300", "400", "500", "700", "800", "900"]
-  },
-  {
-    importName: "MPLUSRounded1c",
-    fontFamily: "M PLUS Rounded Onec",
-    previewUrl: "M+PLUS+Rounded+1c",
-    weights: ["100", "300", "400", "500", "700", "800", "900"]
-  },
-  {
-    importName: "Macondo",
-    fontFamily: "Macondo",
-    previewUrl: "Macondo",
-    weights: ["400"]
-  },
-  {
-    importName: "Manrope",
-    fontFamily: "Manrope",
-    previewUrl: "Manrope",
-    weights: ["200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Marcellus",
-    fontFamily: "Marcellus",
-    previewUrl: "Marcellus",
-    weights: ["400"]
-  },
-  {
-    importName: "Martel",
-    fontFamily: "Martel",
-    previewUrl: "Martel",
-    weights: ["200", "300", "400", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Mate",
-    fontFamily: "Mate",
-    previewUrl: "Mate",
-    weights: ["400"]
-  },
-  {
-    importName: "MateSC",
-    fontFamily: "Mate SC",
-    previewUrl: "Mate+SC",
-    weights: ["400"]
-  },
-  {
-    importName: "MavenPro",
-    fontFamily: "Maven Pro",
-    previewUrl: "Maven+Pro",
-    weights: ["400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Merienda",
-    fontFamily: "Merienda",
-    previewUrl: "Merienda",
-    weights: ["300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Merriweather",
-    fontFamily: "Merriweather",
-    previewUrl: "Merriweather",
-    weights: ["300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "MerriweatherSans",
-    fontFamily: "Merriweather Sans",
-    previewUrl: "Merriweather+Sans",
-    weights: ["300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Montserrat",
-    fontFamily: "Montserrat",
-    previewUrl: "Montserrat",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "MontserratAlternates",
-    fontFamily: "Montserrat Alternates",
-    previewUrl: "Montserrat+Alternates",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Mukta",
-    fontFamily: "Mukta",
-    previewUrl: "Mukta",
-    weights: ["200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Mulish",
-    fontFamily: "Mulish",
-    previewUrl: "Mulish",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NanumGothic",
-    fontFamily: "Nanum Gothic",
-    previewUrl: "Nanum+Gothic",
-    weights: ["400", "700", "800"]
-  },
-  {
-    importName: "NanumGothicCoding",
-    fontFamily: "Nanum Gothic Coding",
-    previewUrl: "Nanum+Gothic+Coding",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "NanumMyeongjo",
-    fontFamily: "Nanum Myeongjo",
-    previewUrl: "Nanum+Myeongjo",
-    weights: ["400", "700", "800"]
-  },
-  {
-    importName: "Neuton",
-    fontFamily: "Neuton",
-    previewUrl: "Neuton",
-    weights: ["200", "300", "400", "700", "800"]
-  },
-  {
-    importName: "NoticiaText",
-    fontFamily: "Noticia Text",
-    previewUrl: "Noticia+Text",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "NotoColorEmoji",
-    fontFamily: "Noto Color Emoji",
-    previewUrl: "Noto+Color+Emoji",
-    weights: ["400"]
-  },
-  {
-    importName: "NotoKufiArabic",
-    fontFamily: "Noto Kufi Arabic",
-    previewUrl: "Noto+Kufi+Arabic",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoNaskhArabic",
-    fontFamily: "Noto Naskh Arabic",
-    previewUrl: "Noto+Naskh+Arabic",
-    weights: ["400", "500", "600", "700"]
-  },
-  {
-    importName: "NotoSans",
-    fontFamily: "Noto Sans",
-    previewUrl: "Noto+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansArabic",
-    fontFamily: "Noto Sans Arabic",
-    previewUrl: "Noto+Sans+Arabic",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansBengali",
-    fontFamily: "Noto Sans Bengali",
-    previewUrl: "Noto+Sans+Bengali",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansDisplay",
-    fontFamily: "Noto Sans Display",
-    previewUrl: "Noto+Sans+Display",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansHK",
-    fontFamily: "Noto Sans HK",
-    previewUrl: "Noto+Sans+HK",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansJP",
-    fontFamily: "Noto Sans JP",
-    previewUrl: "Noto+Sans+JP",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansKR",
-    fontFamily: "Noto Sans KR",
-    previewUrl: "Noto+Sans+KR",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansMono",
-    fontFamily: "Noto Sans Mono",
-    previewUrl: "Noto+Sans+Mono",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansSC",
-    fontFamily: "Noto Sans SC",
-    previewUrl: "Noto+Sans+SC",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansTC",
-    fontFamily: "Noto Sans TC",
-    previewUrl: "Noto+Sans+TC",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSansThai",
-    fontFamily: "Noto Sans Thai",
-    previewUrl: "Noto+Sans+Thai",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSerif",
-    fontFamily: "Noto Serif",
-    previewUrl: "Noto+Serif",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSerifJP",
-    fontFamily: "Noto Serif JP",
-    previewUrl: "Noto+Serif+JP",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSerifKR",
-    fontFamily: "Noto Serif KR",
-    previewUrl: "Noto+Serif+KR",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NotoSerifTC",
-    fontFamily: "Noto Serif TC",
-    previewUrl: "Noto+Serif+TC",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Nunito",
-    fontFamily: "Nunito",
-    previewUrl: "Nunito",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "NunitoSans",
-    fontFamily: "Nunito Sans",
-    previewUrl: "Nunito+Sans",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "OldStandardTT",
-    fontFamily: "Old Standard TT",
-    previewUrl: "Old+Standard+TT",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "OleoScript",
-    fontFamily: "Oleo Script",
-    previewUrl: "Oleo+Script",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "OpenSans",
-    fontFamily: "Open Sans",
-    previewUrl: "Open+Sans",
-    weights: ["300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Orbitron",
-    fontFamily: "Orbitron",
-    previewUrl: "Orbitron",
-    weights: ["400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Oswald",
-    fontFamily: "Oswald",
-    previewUrl: "Oswald",
-    weights: ["200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Outfit",
-    fontFamily: "Outfit",
-    previewUrl: "Outfit",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Overpass",
-    fontFamily: "Overpass",
-    previewUrl: "Overpass",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Oxygen",
-    fontFamily: "Oxygen",
-    previewUrl: "Oxygen",
-    weights: ["300", "400", "700"]
-  },
-  {
-    importName: "PTSans",
-    fontFamily: "PT Sans",
-    previewUrl: "PT+Sans",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "PTSansCaption",
-    fontFamily: "PT Sans Caption",
-    previewUrl: "PT+Sans+Caption",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "PTSansNarrow",
-    fontFamily: "PT Sans Narrow",
-    previewUrl: "PT+Sans+Narrow",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "PTSerif",
-    fontFamily: "PT Serif",
-    previewUrl: "PT+Serif",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Pacifico",
-    fontFamily: "Pacifico",
-    previewUrl: "Pacifico",
-    weights: ["400"]
-  },
-  {
-    importName: "PassionOne",
-    fontFamily: "Passion One",
-    previewUrl: "Passion+One",
-    weights: ["400", "700", "900"]
-  },
-  {
-    importName: "PathwayGothicOne",
-    fontFamily: "Pathway Gothic One",
-    previewUrl: "Pathway+Gothic+One",
-    weights: ["400"]
-  },
-  {
-    importName: "PatuaOne",
-    fontFamily: "Patua One",
-    previewUrl: "Patua+One",
-    weights: ["400"]
-  },
-  {
-    importName: "PaytoneOne",
-    fontFamily: "Paytone One",
-    previewUrl: "Paytone+One",
-    weights: ["400"]
-  },
-  {
-    importName: "PermanentMarker",
-    fontFamily: "Permanent Marker",
-    previewUrl: "Permanent+Marker",
-    weights: ["400"]
-  },
-  {
-    importName: "Philosopher",
-    fontFamily: "Philosopher",
-    previewUrl: "Philosopher",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Play",
-    fontFamily: "Play",
-    previewUrl: "Play",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "PlayfairDisplay",
-    fontFamily: "Playfair Display",
-    previewUrl: "Playfair+Display",
-    weights: ["400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "PlusJakartaSans",
-    fontFamily: "Plus Jakarta Sans",
-    previewUrl: "Plus+Jakarta+Sans",
-    weights: ["200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Poppins",
-    fontFamily: "Poppins",
-    previewUrl: "Poppins",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Prata",
-    fontFamily: "Prata",
-    previewUrl: "Prata",
-    weights: ["400"]
-  },
-  {
-    importName: "Prompt",
-    fontFamily: "Prompt",
-    previewUrl: "Prompt",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "PublicSans",
-    fontFamily: "Public Sans",
-    previewUrl: "Public+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Quattrocento",
-    fontFamily: "Quattrocento",
-    previewUrl: "Quattrocento",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "QuattrocentoSans",
-    fontFamily: "Quattrocento Sans",
-    previewUrl: "Quattrocento+Sans",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Questrial",
-    fontFamily: "Questrial",
-    previewUrl: "Questrial",
-    weights: ["400"]
-  },
-  {
-    importName: "Quicksand",
-    fontFamily: "Quicksand",
-    previewUrl: "Quicksand",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Rajdhani",
-    fontFamily: "Rajdhani",
-    previewUrl: "Rajdhani",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Raleway",
-    fontFamily: "Raleway",
-    previewUrl: "Raleway",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "ReadexPro",
-    fontFamily: "Readex Pro",
-    previewUrl: "Readex+Pro",
-    weights: ["200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "RedHatDisplay",
-    fontFamily: "Red Hat Display",
-    previewUrl: "Red+Hat+Display",
-    weights: ["300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Righteous",
-    fontFamily: "Righteous",
-    previewUrl: "Righteous",
-    weights: ["400"]
-  },
-  {
-    importName: "Roboto",
-    fontFamily: "Roboto",
-    previewUrl: "Roboto",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "RobotoCondensed",
-    fontFamily: "Roboto Condensed",
-    previewUrl: "Roboto+Condensed",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "RobotoFlex",
-    fontFamily: "Roboto Flex",
-    previewUrl: "Roboto+Flex",
-    weights: ["400"]
-  },
-  {
-    importName: "RobotoMono",
-    fontFamily: "Roboto Mono",
-    previewUrl: "Roboto+Mono",
-    weights: ["100", "200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "RobotoSerif",
-    fontFamily: "Roboto Serif",
-    previewUrl: "Roboto+Serif",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "RobotoSlab",
-    fontFamily: "Roboto Slab",
-    previewUrl: "Roboto+Slab",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Rokkitt",
-    fontFamily: "Rokkitt",
-    previewUrl: "Rokkitt",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Rowdies",
-    fontFamily: "Rowdies",
-    previewUrl: "Rowdies",
-    weights: ["300", "400", "700"]
-  },
-  {
-    importName: "Rubik",
-    fontFamily: "Rubik",
-    previewUrl: "Rubik",
-    weights: ["300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "RubikBubbles",
-    fontFamily: "Rubik Bubbles",
-    previewUrl: "Rubik+Bubbles",
-    weights: ["400"]
-  },
-  {
-    importName: "RubikMonoOne",
-    fontFamily: "Rubik Mono One",
-    previewUrl: "Rubik+Mono+One",
-    weights: ["400"]
-  },
-  {
-    importName: "RussoOne",
-    fontFamily: "Russo One",
-    previewUrl: "Russo+One",
-    weights: ["400"]
-  },
-  {
-    importName: "Sacramento",
-    fontFamily: "Sacramento",
-    previewUrl: "Sacramento",
-    weights: ["400"]
-  },
-  {
-    importName: "Saira",
-    fontFamily: "Saira",
-    previewUrl: "Saira",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "SairaCondensed",
-    fontFamily: "Saira Condensed",
-    previewUrl: "Saira+Condensed",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Sarabun",
-    fontFamily: "Sarabun",
-    previewUrl: "Sarabun",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Satisfy",
-    fontFamily: "Satisfy",
-    previewUrl: "Satisfy",
-    weights: ["400"]
-  },
-  {
-    importName: "SawarabiGothic",
-    fontFamily: "Sawarabi Gothic",
-    previewUrl: "Sawarabi+Gothic",
-    weights: ["400"]
-  },
-  {
-    importName: "SawarabiMincho",
-    fontFamily: "Sawarabi Mincho",
-    previewUrl: "Sawarabi+Mincho",
-    weights: ["400"]
-  },
-  {
-    importName: "Sen",
-    fontFamily: "Sen",
-    previewUrl: "Sen",
-    weights: ["400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "ShadowsIntoLight",
-    fontFamily: "Shadows Into Light",
-    previewUrl: "Shadows+Into+Light",
-    weights: ["400"]
-  },
-  {
-    importName: "Signika",
-    fontFamily: "Signika",
-    previewUrl: "Signika",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "SignikaNegative",
-    fontFamily: "Signika Negative",
-    previewUrl: "Signika+Negative",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Silkscreen",
-    fontFamily: "Silkscreen",
-    previewUrl: "Silkscreen",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "SixCaps",
-    fontFamily: "Six Caps",
-    previewUrl: "Six+Caps",
-    weights: ["400"]
-  },
-  {
-    importName: "Slabo27px",
-    fontFamily: "Slabo TwoSevenpx",
-    previewUrl: "Slabo+27px",
-    weights: ["400"]
-  },
-  {
-    importName: "Sora",
-    fontFamily: "Sora",
-    previewUrl: "Sora",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "SourceCodePro",
-    fontFamily: "Source Code Pro",
-    previewUrl: "Source+Code+Pro",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "SourceSans3",
-    fontFamily: "Source Sans Three",
-    previewUrl: "Source+Sans+3",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "SourceSerif4",
-    fontFamily: "Source Serif Four",
-    previewUrl: "Source+Serif+4",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "SpaceGrotesk",
-    fontFamily: "Space Grotesk",
-    previewUrl: "Space+Grotesk",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "SpaceMono",
-    fontFamily: "Space Mono",
-    previewUrl: "Space+Mono",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "SpecialElite",
-    fontFamily: "Special Elite",
-    previewUrl: "Special+Elite",
-    weights: ["400"]
-  },
-  {
-    importName: "Spectral",
-    fontFamily: "Spectral",
-    previewUrl: "Spectral",
-    weights: ["200", "300", "400", "500", "600", "700", "800"]
-  },
-  {
-    importName: "Tajawal",
-    fontFamily: "Tajawal",
-    previewUrl: "Tajawal",
-    weights: ["200", "300", "400", "500", "700", "800", "900"]
-  },
-  {
-    importName: "Tangerine",
-    fontFamily: "Tangerine",
-    previewUrl: "Tangerine",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Teko",
-    fontFamily: "Teko",
-    previewUrl: "Teko",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Tinos",
-    fontFamily: "Tinos",
-    previewUrl: "Tinos",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "TitanOne",
-    fontFamily: "Titan One",
-    previewUrl: "Titan+One",
-    weights: ["400"]
-  },
-  {
-    importName: "TitilliumWeb",
-    fontFamily: "Titillium Web",
-    previewUrl: "Titillium+Web",
-    weights: ["200", "300", "400", "600", "700", "900"]
-  },
-  {
-    importName: "Ubuntu",
-    fontFamily: "Ubuntu",
-    previewUrl: "Ubuntu",
-    weights: ["300", "400", "500", "700"]
-  },
-  {
-    importName: "UbuntuCondensed",
-    fontFamily: "Ubuntu Condensed",
-    previewUrl: "Ubuntu+Condensed",
-    weights: ["400"]
-  },
-  {
-    importName: "UbuntuMono",
-    fontFamily: "Ubuntu Mono",
-    previewUrl: "Ubuntu+Mono",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Unbounded",
-    fontFamily: "Unbounded",
-    previewUrl: "Unbounded",
-    weights: ["200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "Unna",
-    fontFamily: "Unna",
-    previewUrl: "Unna",
-    weights: ["400", "700"]
-  },
-  {
-    importName: "Urbanist",
-    fontFamily: "Urbanist",
-    previewUrl: "Urbanist",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "VarelaRound",
-    fontFamily: "Varela Round",
-    previewUrl: "Varela+Round",
-    weights: ["400"]
-  },
-  {
-    importName: "Vollkorn",
-    fontFamily: "Vollkorn",
-    previewUrl: "Vollkorn",
-    weights: ["400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "WorkSans",
-    fontFamily: "Work Sans",
-    previewUrl: "Work+Sans",
-    weights: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-  },
-  {
-    importName: "YanoneKaffeesatz",
-    fontFamily: "Yanone Kaffeesatz",
-    previewUrl: "Yanone+Kaffeesatz",
-    weights: ["200", "300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "Yantramanav",
-    fontFamily: "Yantramanav",
-    previewUrl: "Yantramanav",
-    weights: ["100", "300", "400", "500", "700", "900"]
-  },
-  {
-    importName: "Yellowtail",
-    fontFamily: "Yellowtail",
-    previewUrl: "Yellowtail",
-    weights: ["400"]
-  },
-  {
-    importName: "YesevaOne",
-    fontFamily: "Yeseva One",
-    previewUrl: "Yeseva+One",
-    weights: ["400"]
-  },
-  {
-    importName: "ZenKakuGothicNew",
-    fontFamily: "Zen Kaku Gothic New",
-    previewUrl: "Zen+Kaku+Gothic+New",
-    weights: ["300", "400", "500", "700", "900"]
-  },
-  {
-    importName: "Zeyada",
-    fontFamily: "Zeyada",
-    previewUrl: "Zeyada",
-    weights: ["400"]
-  },
-  {
-    importName: "ZillaSlab",
-    fontFamily: "Zilla Slab",
-    previewUrl: "Zilla+Slab",
-    weights: ["300", "400", "500", "600", "700"]
-  },
-  {
-    importName: "TikTokSans",
-    fontFamily: "TikTok Sans",
-    previewUrl: "TikTok+Sans",
-    weights: ["300", "400", "500", "600", "700", "800", "900"]
-  }
-];
-
-// src/helpers/load-google-font-for-preview.ts
-var fontLoads = new Map;
-var loadGoogleFontForPreview = ({
-  fontFamily,
-  document: document2
-}) => {
-  const existing = fontLoads.get(fontFamily);
-  if (existing) {
-    return existing;
-  }
-  const font = GOOGLE_FONTS_LIST.find((entry) => entry.fontFamily === fontFamily);
-  if (!font) {
-    return Promise.resolve();
-  }
-  const commonWeights = font.weights.filter((weight) => ["400", "700", "800"].includes(weight));
-  const weights = commonWeights.length ? commonWeights : font.weights.slice(0, 1);
-  const promise = Promise.all(weights.map(async (weight) => {
-    const response = await fetch(`https://fonts.googleapis.com/css?family=${font.previewUrl}:${weight}`);
-    if (!response.ok) {
-      throw new Error(`Could not load font "${fontFamily}" for Studio preview`);
-    }
-    const cssText = await response.text();
-    const urls = [...cssText.matchAll(/url\(([^)]+)\)/g)].map((match) => match[1]);
-    if (urls.length === 0) {
-      throw new Error(`Could not load font "${fontFamily}" for Studio preview`);
-    }
-    await Promise.all(urls.map(async (url) => {
-      const fontFace = new FontFace(fontFamily, `url(${url})`, { weight });
-      await fontFace.load();
-      document2.fonts.add(fontFace);
-    }));
-  })).then(() => {
-    return;
-  }).catch((error) => {
-    fontLoads.delete(fontFamily);
-    throw error;
-  });
-  fontLoads.set(fontFamily, promise);
-  return promise;
-};
-
-// src/helpers/sequence-node-path-mutations.ts
-
-
-// src/helpers/inserted-element-selection.ts
-var pendingSelection = null;
-var listeners = new Set;
-var requestInsertedElementSelection = (selection) => {
-  pendingSelection = selection;
-  for (const listener of listeners) {
-    listener();
-  }
-};
-var clearInsertedElementSelection = (selection) => {
-  if (pendingSelection !== selection) {
-    return;
-  }
-  pendingSelection = null;
-  for (const listener of listeners) {
-    listener();
-  }
-};
-var subscribeToInsertedElementSelection = (listener) => {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-};
-var getInsertedElementSelection = () => pendingSelection;
-
-// src/helpers/source-mutation-queue.ts
-var revision = 0;
-var lastDispatchedRevision = 0;
-var chain = Promise.resolve();
-var getSourceMutationRevision = () => revision;
-var getLastDispatchedSourceMutationRevision = () => lastDispatchedRevision;
-var enqueueSourceMutation = (run, onQueued = null) => {
-  const operation = { id: `source-operation-${++revision}`, revision };
-  const next = chain.then(() => {
-    lastDispatchedRevision = operation.revision;
-    return run(operation);
-  });
-  chain = next.then(() => {
-    return;
-  }, () => {
-    return;
-  });
-  onQueued?.(operation);
-  return next;
-};
-
-// src/helpers/sequence-node-path-mutations.ts
-var pendingMutations = [];
-var pendingDeletionRetirements = [];
-var seenMutationIds = new Set;
-var queueSequenceNodePathMutation = (mutation) => {
-  if (seenMutationIds.has(mutation.mutationId)) {
-    return;
-  }
-  seenMutationIds.add(mutation.mutationId);
-  pendingMutations.push(mutation);
-  pendingDeletionRetirements.push(remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.prepareRetirement(mutation.files.flatMap((file) => file.remappings.flatMap((remapping) => remapping.oldNodePath === null ? [] : [
-    {
-      absolutePath: file.absolutePath,
-      nodePath: remapping.oldNodePath
-    }
-  ])), getLastDispatchedSourceMutationRevision()));
-  if (mutation.timelineSelection !== null) {
-    requestInsertedElementSelection({
-      compositionId: mutation.timelineSelection.compositionId,
-      nodePath: {
-        absolutePath: mutation.timelineSelection.absolutePath,
-        nodePath: mutation.timelineSelection.nodePath
-      },
-      notification: null
-    });
-  }
-};
-var queueSequenceNodePathMutationFromApiResponse = (response) => {
-  if (typeof response !== "object" || response === null || !("nodePathMutation" in response)) {
-    return;
-  }
-  const { nodePathMutation } = response;
-  if (typeof nodePathMutation !== "object" || nodePathMutation === null || !("mutationId" in nodePathMutation) || typeof nodePathMutation.mutationId !== "string") {
-    return;
-  }
-  queueSequenceNodePathMutation(nodePathMutation);
-};
-var takePendingSequenceNodePathMutations = () => {
-  for (const retire of pendingDeletionRetirements.splice(0)) {
-    retire();
-  }
-  return pendingMutations.splice(0);
-};
-
-// src/helpers/enqueue-studio-source-mutation.ts
-var enqueueStudioSourceMutation = (endpoint, body, run) => {
-  const nodes = endpoint === "/api/delete-nodes" ? body.nodes.map((node) => ({
-    absolutePath: node.fileName,
-    nodePath: node.nodePath
-  })) : [];
-  return enqueueSourceMutation(async (operation) => {
-    try {
-      if (endpoint === "/api/save-sequence-props") {
-        const fonts = body.edits.flatMap(({ sourceEdit }) => sourceEdit?.type === "google-font" ? [sourceEdit.font] : []);
-        if (fonts.length > 0) {
-          await Promise.all(fonts.map(({ fontFamily }) => loadGoogleFontForPreview({ fontFamily, document })));
-          await installRequiredPackages([
-            { name: "@remotion/google-fonts", version: null }
-          ]);
-        }
-      }
-      const result = await run();
-      queueSequenceNodePathMutationFromApiResponse(result);
-      if (typeof result !== "object" || result === null) {
-        return result;
-      }
-      if ("success" in result && result.success === false) {
-        remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.rollback(nodes, operation.revision);
-        return result;
-      }
-      if ((endpoint === "/api/undo" || endpoint === "/api/redo") && "nodePathMutation" in result && result.nodePathMutation) {
-        const mutation = result.nodePathMutation;
-        for (const file of mutation.files) {
-          for (const remapping of file.remappings) {
-            if (remapping.oldNodePath === null && remapping.newNodePath !== null) {
-              remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.restore([
-                {
-                  absolutePath: file.absolutePath,
-                  nodePath: remapping.newNodePath
-                }
-              ], operation.revision, false);
-            } else if (remapping.newNodePath === null && remapping.oldNodePath !== null) {
-              remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.restore([
-                {
-                  absolutePath: file.absolutePath,
-                  nodePath: remapping.oldNodePath
-                }
-              ], operation.revision, true);
-            }
-          }
-        }
-      }
-      return result;
-    } catch (error) {
-      remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.rollback(nodes, operation.revision);
-      throw error;
-    }
-  }, (operation) => {
-    if (nodes.length > 0) {
-      remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.OptimisticSequenceDeletion.set(nodes, operation.revision, true);
-    }
-  });
-};
-
-// src/components/call-api.ts
-var callApiImmediately = (endpoint, body, signal) => {
-  return new Promise((resolve, reject) => {
-    fetch(endpoint, {
-      method: "post",
-      headers: {
-        "content-type": "application/json"
-      },
-      signal,
-      body: JSON.stringify(body)
-    }).then((res) => res.json()).then((data) => {
-      if (data.success) {
-        queueSequenceNodePathMutationFromApiResponse(data.data);
-        resolve(data.data);
-      } else {
-        reject(new Error(data.error));
-      }
-    }).catch((err) => {
-      reject(err);
-    });
-  });
-};
-var callApi = (endpoint, body, signal) => {
-  if (!_remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__/* .studioOperations */ .bx[endpoint].mutatesSource) {
-    return callApiImmediately(endpoint, body, signal);
-  }
-  return enqueueStudioSourceMutation(endpoint, body, () => callApiImmediately(endpoint, body, signal));
-};
-
-// src/components/RenderModal/SchemaEditor/scroll-to-default-props-path.ts
-
-var DEFAULT_PROPS_PATH_CLASSNAME = "__remotion-default-props-editor-label";
-var DEFAULT_PROPS_PATH_ACTIVE_CLASSNAME = "__remotion-default-props-editor-label-active";
-var defaultPropsEditorScrollableAreaRef = react__WEBPACK_IMPORTED_MODULE_4__.createRef();
-var expandDefaultPropsEditorRef = react__WEBPACK_IMPORTED_MODULE_4__.createRef();
-
-// src/api/restart-studio.ts
-
-var restartStudio2 = () => {
-  if (!(0,remotion__WEBPACK_IMPORTED_MODULE_3__/* .getRemotionEnvironment */ .P1)().isStudio) {
-    throw new Error("restartStudio() is only available in the Studio");
-  }
-  if (getBrowserStudioOperations() !== null) {
-    throw new Error("restartStudio() is not supported in Browser Studio");
-  }
-  if (window.remotion_isReadOnlyStudio) {
-    throw new Error("restartStudio() is not available in read-only Studio");
-  }
-  return callApi("/api/restart-studio", {});
-};
-
-// src/components/RenderQueue/actions.ts
-
-var addStillRenderJob = ({
-  compositionId,
-  outName,
-  imageFormat,
-  jpegQuality,
-  frame,
-  scale,
-  logLevel,
-  chromiumOptions,
-  delayRenderTimeout,
-  envVariables,
-  inputProps,
-  offthreadVideoCacheSizeInBytes,
-  offthreadVideoThreads,
-  multiProcessOnLinux,
-  beepOnFinish,
-  metadata,
-  chromeMode,
-  mediaCacheSizeInBytes,
-  licenseKey
-}) => {
-  return callApi("/api/render", {
-    compositionId,
-    type: "still",
-    outName,
-    imageFormat,
-    jpegQuality,
-    frame,
-    scale,
-    logLevel,
-    chromiumOptions,
-    delayRenderTimeout,
-    envVariables,
-    serializedInputPropsWithCustomSchema: remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.serializeJSONWithSpecialTypes({
-      data: inputProps,
-      staticBase: window.remotion_staticBase,
-      indent: undefined
-    }).serializedString,
-    offthreadVideoCacheSizeInBytes,
-    offthreadVideoThreads,
-    multiProcessOnLinux,
-    beepOnFinish,
-    metadata,
-    chromeMode,
-    mediaCacheSizeInBytes,
-    licenseKey
-  });
-};
-var addSequenceRenderJob = ({
-  compositionId,
-  outName,
-  imageFormat,
-  startFrame,
-  endFrame,
-  scale,
-  logLevel,
-  chromiumOptions,
-  delayRenderTimeout,
-  envVariables,
-  inputProps,
-  concurrency,
-  offthreadVideoCacheSizeInBytes,
-  offthreadVideoThreads,
-  jpegQuality,
-  disallowParallelEncoding,
-  multiProcessOnLinux,
-  beepOnFinish,
-  repro,
-  metadata,
-  chromeMode,
-  mediaCacheSizeInBytes
-}) => {
-  return callApi("/api/render", {
-    compositionId,
-    type: "sequence",
-    outName,
-    imageFormat,
-    jpegQuality,
-    scale,
-    startFrame,
-    endFrame,
-    logLevel,
-    chromiumOptions,
-    delayRenderTimeout,
-    envVariables,
-    concurrency,
-    serializedInputPropsWithCustomSchema: remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.serializeJSONWithSpecialTypes({
-      data: inputProps,
-      staticBase: window.remotion_staticBase,
-      indent: undefined
-    }).serializedString,
-    offthreadVideoCacheSizeInBytes,
-    offthreadVideoThreads,
-    disallowParallelEncoding,
-    multiProcessOnLinux,
-    beepOnFinish,
-    repro,
-    metadata,
-    chromeMode,
-    mediaCacheSizeInBytes
-  });
-};
-var addVideoRenderJob = ({
-  compositionId,
-  outName,
-  imageFormat,
-  jpegQuality,
-  scale,
-  logLevel,
-  codec,
-  concurrency,
-  crf,
-  gopSize,
-  startFrame,
-  endFrame,
-  muted,
-  enforceAudioTrack,
-  proResProfile,
-  x264Preset,
-  pixelFormat,
-  audioBitrate,
-  videoBitrate,
-  everyNthFrame,
-  numberOfGifLoops,
-  delayRenderTimeout,
-  audioCodec,
-  disallowParallelEncoding,
-  chromiumOptions,
-  envVariables,
-  inputProps,
-  offthreadVideoCacheSizeInBytes,
-  offthreadVideoThreads,
-  colorSpace,
-  multiProcessOnLinux,
-  encodingMaxRate,
-  encodingBufferSize,
-  beepOnFinish,
-  repro,
-  forSeamlessAacConcatenation,
-  separateAudioTo,
-  metadata,
-  hardwareAcceleration,
-  chromeMode,
-  mediaCacheSizeInBytes,
-  sampleRate,
-  licenseKey
-}) => {
-  return callApi("/api/render", {
-    compositionId,
-    type: "video",
-    outName,
-    imageFormat,
-    jpegQuality,
-    scale,
-    logLevel,
-    codec,
-    concurrency,
-    crf,
-    gopSize,
-    endFrame,
-    startFrame,
-    muted,
-    enforceAudioTrack,
-    proResProfile,
-    x264Preset,
-    pixelFormat,
-    audioBitrate,
-    videoBitrate,
-    everyNthFrame,
-    numberOfGifLoops,
-    delayRenderTimeout,
-    audioCodec,
-    disallowParallelEncoding,
-    chromiumOptions,
-    envVariables,
-    serializedInputPropsWithCustomSchema: remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.serializeJSONWithSpecialTypes({
-      data: inputProps,
-      staticBase: window.remotion_staticBase,
-      indent: undefined
-    }).serializedString,
-    offthreadVideoCacheSizeInBytes,
-    offthreadVideoThreads,
-    colorSpace,
-    multiProcessOnLinux,
-    encodingBufferSize,
-    encodingMaxRate,
-    beepOnFinish,
-    repro,
-    forSeamlessAacConcatenation,
-    separateAudioTo,
-    metadata,
-    hardwareAcceleration,
-    chromeMode,
-    mediaCacheSizeInBytes,
-    sampleRate,
-    licenseKey
-  });
-};
-var unsubscribeFromFileExistenceWatcher = ({
-  file,
-  clientId
-}) => {
-  return callApi("/api/unsubscribe-from-file-existence", { file, clientId });
-};
-var subscribeToFileExistenceWatcher = async ({
-  file,
-  clientId
-}) => {
-  const { exists } = await callApi("/api/subscribe-to-file-existence", {
-    file,
-    clientId
-  });
-  return exists;
-};
-var openInFileExplorer = ({ directory }) => {
-  const body = {
-    directory
-  };
-  return callApi("/api/open-in-file-explorer", body);
-};
-var addComposition2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/add-composition", request, signal) : operations.addComposition(request);
-};
-var duplicateComposition2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/duplicate-composition", request, signal) : operations.duplicateComposition(request);
-};
-var renameComposition2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/rename-composition", request, signal) : operations.renameComposition(request);
-};
-var updateCompositionMetadata2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/update-composition-metadata", request, signal) : operations.updateCompositionMetadata(request);
-};
-var deleteComposition2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/delete-composition", request, signal) : operations.deleteComposition(request);
-};
-var moveComposition2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/move-composition", request, signal) : operations.moveComposition(request);
-};
-var addFolder2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/add-folder", request, signal) : operations.addFolder(request);
-};
-var renameFolder2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/rename-folder", request, signal) : operations.renameFolder(request);
-};
-var unwrapFolder2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/unwrap-folder", request, signal) : operations.unwrapFolder(request);
-};
-var moveFolder2 = (request, signal) => {
-  const operations = getBrowserStudioOperations();
-  return operations === null ? callApi("/api/move-folder", request, signal) : operations.moveFolder(request);
-};
-var removeRenderJob = (job) => {
-  return callApi("/api/remove-render", {
-    jobId: job.id
-  });
-};
-var cancelRenderJob = (job) => {
-  return callApi("/api/cancel", {
-    jobId: job.id
-  });
-};
-var updateAvailable = (signal) => {
-  return callApi("/api/update-available", {}, signal);
-};
-var getReleaseNotes = (currentVersion, latestVersion, signal) => {
-  return callApi("/api/release-notes", { currentVersion, latestVersion }, signal);
-};
-var callUpdateDefaultPropsApi = (compositionId, defaultProps, enumPaths, symbolicatedStack) => {
-  const body = {
-    compositionId,
-    defaultProps: remotion_no_react__WEBPACK_IMPORTED_MODULE_7__/* .NoReactInternals */ .JC.serializeJSONWithSpecialTypes({
-      data: defaultProps,
-      indent: undefined,
-      staticBase: window.remotion_staticBase
-    }).serializedString,
-    enumPaths,
-    symbolicatedStack
-  };
-  const browserStudioOperations = getBrowserStudioOperations();
-  if (browserStudioOperations !== null) {
-    return browserStudioOperations.updateDefaultProps(body);
-  }
-  return callApi("/api/update-default-props", body);
-};
-var applyVisualControlChange = ({
-  fileName,
-  changes
-}) => {
-  return callApi("/api/apply-visual-control-change", {
-    fileName,
-    changes
-  });
-};
-
-// src/components/Timeline/TimelineStack/get-stack.ts
-
-
-
-// src/error-overlay/react-overlay/utils/get-source-map.ts
-
-var getOriginalPosition = (sourceMap, line, column) => {
-  const result = (0,_jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__/* .originalPositionFor */ .sP)(sourceMap, {
-    line,
-    column
-  });
-  return { line: result.line, column: result.column, source: result.source };
-};
-function extractSourceMapUrl(fileContents) {
-  const regex = /\/\/[#@] ?sourceMappingURL=([^\s'"]+)\s*$/gm;
-  let match = null;
-  for (;; ) {
-    const next = regex.exec(fileContents);
-    if (next == null) {
-      break;
-    }
-    match = next;
-  }
-  if (!match?.[1]) {
-    return null;
-  }
-  return match[1].toString();
-}
-async function getSourceMap(fileUri, fileContents) {
-  const sm = extractSourceMapUrl(fileContents);
-  if (sm === null) {
-    return null;
-  }
-  if (sm.indexOf("data:") === 0) {
-    const base64 = /^data:application\/json;([\w=:"-]+;)*base64,/;
-    const match2 = sm.match(base64);
-    if (!match2) {
-      throw new Error("Sorry, non-base64 inline source-map encoding is not supported.");
-    }
-    const converted = window.atob(sm.substring(match2[0].length));
-    return new _jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__/* .TraceMap */ .YX(JSON.parse(converted));
-  }
-  const index = fileUri.lastIndexOf("/");
-  const url = fileUri.substring(0, index + 1) + sm;
-  const obj = await fetch(url).then((res) => res.json());
-  return new _jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__/* .TraceMap */ .YX(obj);
-}
-
-// src/error-overlay/react-overlay/utils/parser.ts
-;
-
-// src/error-overlay/react-overlay/effects/resolve-file-source.ts
-var resolveFileSource = async (location, contextLines) => {
-  const browserStudioOperations = getBrowserStudioOperations();
-  let text;
-  if (browserStudioOperations) {
-    const browserSource = await browserStudioOperations.getFileSource(location.fileName);
-    if (browserSource === null) {
-      throw new Error(`Could not find ${location.fileName}`);
-    }
-    text = browserSource;
-  } else {
-    const response = await fetch(`/api/file-source?f=${encodeURIComponent(location.fileName)}`);
-    if (!response.ok) {
-      throw new Error(`Could not load source for ${location.fileName}`);
-    }
-    text = await response.text();
-  }
-  const lines = text.split(`
-`).map((l, i) => {
-    const oneIndexedLineNumber = i + 1;
-    return [oneIndexedLineNumber, l];
-  }).filter(([oneIndexedLineNumber]) => {
-    return Math.abs(oneIndexedLineNumber - location.lineNumber) <= contextLines;
-  });
-  const scriptCode = lines.map(([num, line]) => {
-    return {
-      content: line,
-      highlight: location.lineNumber === num,
-      lineNumber: num
-    };
-  });
-  return {
-    originalColumnNumber: location.columnNumber,
-    originalFunctionName: null,
-    originalFileName: location.fileName,
-    originalLineNumber: location.lineNumber,
-    originalScriptCode: scriptCode
-  };
-};
-
-// src/error-overlay/react-overlay/utils/make-stack-frame.ts
-var makeStackFrame = ({
-  functionName,
-  fileName,
-  lineNumber,
-  columnNumber
-}) => {
-  if (functionName && functionName.indexOf("Object.") === 0) {
-    functionName = functionName.slice("Object.".length);
-  }
-  if (functionName === "friendlySyntaxErrorLabel" || functionName === "exports.__esModule" || functionName === "<anonymous>" || !functionName) {
-    functionName = null;
-  }
-  return {
-    columnNumber,
-    fileName,
-    functionName,
-    lineNumber
-  };
-};
-
-// src/error-overlay/react-overlay/utils/parser.ts
-var regexExtractLocation = /\(?(.+?)(?::(\d+))?(?::(\d+))?\)?$/;
-function extractLocation(token) {
-  const execed = regexExtractLocation.exec(token);
-  if (!execed) {
-    throw new Error("Could not match in extractLocation");
-  }
-  return execed.slice(1).map((v) => {
-    const p = Number(v);
-    if (!isNaN(p)) {
-      return p;
-    }
-    return v;
-  });
-}
-var regexValidFrame_Chrome = /^\s*(at|in)\s.+(:\d+)/;
-var regexValidFrame_FireFox = /(^|@)\S+:\d+|.+line\s+\d+\s+>\s+(eval|Function).+/;
-function parseStack(stack) {
-  const frames = stack.filter((e) => regexValidFrame_Chrome.test(e) || regexValidFrame_FireFox.test(e)).map((e) => {
-    if (regexValidFrame_FireFox.test(e)) {
-      let isEval = false;
-      if (/ > (eval|Function)/.test(e)) {
-        e = e.replace(/ line (\d+)(?: > eval line \d+)* > (eval|Function):\d+:\d+/g, ":$1");
-        isEval = true;
-      }
-      const _data = e.split(/[@]/g);
-      const _last = _data.pop();
-      if (!_last) {
-        throw new Error("could not get last");
-      }
-      const [_fileName, _lineNumber, _columnNumber] = extractLocation(_last);
-      return makeStackFrame({
-        functionName: _data.join("@") || (isEval ? "eval" : null),
-        fileName: _fileName,
-        lineNumber: _lineNumber,
-        columnNumber: _columnNumber
-      });
-    }
-    if (e.indexOf("(eval ") !== -1) {
-      e = e.replace(/(\(eval at [^()]*)|(\),.*$)/g, "");
-    }
-    if (e.indexOf("(at ") !== -1) {
-      e = e.replace(/\(at /, "(");
-    }
-    const data = e.trim().split(/\s+/g).slice(1);
-    const last = data.pop();
-    if (!last) {
-      throw new Error("could not get last");
-    }
-    const [fileName, lineNumber, columnNumber] = extractLocation(last);
-    return makeStackFrame({
-      functionName: data.join(" ") || null,
-      fileName,
-      lineNumber,
-      columnNumber
-    });
-  });
-  return frames;
-}
-var parseError = async (error, contextLines) => {
-  if (error === null) {
-    throw new Error("You cannot pass a null object.");
-  }
-  if (typeof error === "string") {
-    return parseStack(error.split(`
-`)).map((frame) => {
-      return {
-        type: "transpiled",
-        frame
-      };
-    });
-  }
-  if (Array.isArray(error)) {
-    return parseStack(error).map((frame) => {
-      return {
-        type: "transpiled",
-        frame
-      };
-    });
-  }
-  const errorLocation = (0,_remotion_studio_shared__WEBPACK_IMPORTED_MODULE_2__/* .getLocationFromBuildError */ .Ug)(error);
-  if (errorLocation) {
-    return [
-      {
-        type: "symbolicated",
-        frame: await resolveFileSource(errorLocation, contextLines)
-      }
-    ];
-  }
-  if (typeof error.stack === "string") {
-    return parseStack(error.stack.split(`
-`)).map((frame) => {
-      return {
-        type: "transpiled",
-        frame
-      };
-    });
-  }
-  return [];
-};
-
-// src/helpers/get-location-of-sequence.ts
-var getLocationOfSequence = (stack) => {
-  if (!stack) {
-    return null;
-  }
-  const parsed = parseStack(stack.split(`
-`));
-  let i = 0;
-  while (i < parsed.length) {
-    const frame = parsed[i];
-    if (frame.functionName === "apply") {
-      i++;
-      continue;
-    }
-    return frame;
-  }
-  return null;
-};
-var getLocationOfFunctionCall = (stack, functionName) => {
-  if (!stack) {
-    return null;
-  }
-  const parsed = parseStack(stack.split(`
-`));
-  let i = 0;
-  while (i < parsed.length) {
-    const frame = parsed[i];
-    if (frame.functionName !== functionName) {
-      i++;
-      continue;
-    }
-    return parsed[i + 1];
-  }
-  return null;
-};
-
-// src/components/Timeline/TimelineStack/get-stack.ts
-var traceMapCache = {};
-var traceMapPromises = {};
-var traceMapsByOriginalSource = new Map;
-var sourceMapFilesCache = new WeakMap;
-var isInternalSource = (source) => {
-  if (source === null) {
-    return false;
-  }
-  const normalizedSource = source.replaceAll("\\", "/");
-  return /(?:^|\/)node_modules\//.test(normalizedSource) || /(?:^|\/)dist\/(?:[^/]+\/)*[^/]+\.(?:cjs|mjs|js)$/.test(normalizedSource) || /(?:^|\/)(?:packages\/)?core\/src\//.test(normalizedSource);
-};
-var getSourceMapCache = (fileName) => {
-  if (traceMapCache[fileName]) {
-    return Promise.resolve(traceMapCache[fileName]);
-  }
-  if (traceMapPromises[fileName]) {
-    return traceMapPromises[fileName];
-  }
-  traceMapPromises[fileName] = fetch(`${fileName}.map`).then((res) => res.json()).then((json) => {
-    const map = new _jridgewell_trace_mapping__WEBPACK_IMPORTED_MODULE_8__/* .TraceMap */ .YX(json);
-    traceMapCache[fileName] = map;
-    for (let index = 0;index < map.sources.length; index++) {
-      const source = map.sources[index];
-      const content = map.sourcesContent?.[index];
-      if (source !== null && typeof content === "string") {
-        traceMapsByOriginalSource.set(source, map);
-      }
-    }
-    return map;
-  }).finally(() => {
-    delete traceMapPromises[fileName];
-  });
-  return traceMapPromises[fileName];
-};
-var getSourceMapFilesForSource = (source) => {
-  const map = traceMapsByOriginalSource.get(source);
-  if (!map) {
-    return null;
-  }
-  const cached = sourceMapFilesCache.get(map);
-  if (cached) {
-    return cached;
-  }
-  const files = {};
-  for (let index = 0;index < map.sources.length; index++) {
-    const fileName = map.sources[index];
-    const content = map.sourcesContent?.[index];
-    if (fileName !== null && typeof content === "string") {
-      files[fileName] = content;
-    }
-  }
-  sourceMapFilesCache.set(map, files);
-  return files;
-};
-var getOriginalLocationFromStack = async (stack, type) => {
-  const location = type === "sequence" ? getLocationOfSequence(stack) : getLocationOfFunctionCall(stack, "visualControl");
-  if (!location) {
-    return null;
-  }
-  const originalSource = remotion__WEBPACK_IMPORTED_MODULE_3__.Internals.parseOriginalSourceStack(stack);
-  if (originalSource) {
-    if (isInternalSource(originalSource.fileName)) {
-      return null;
-    }
-    return {
-      column: originalSource.column,
-      line: originalSource.line,
-      source: originalSource.fileName
-    };
-  }
-  const map = await getSourceMapCache(location.fileName);
-  const originalPosition = getOriginalPosition(map, location.lineNumber, location.columnNumber);
-  return isInternalSource(originalPosition.source) ? null : originalPosition;
-};
-
-// src/helpers/use-sync-external-store.ts
-
-var {
-  useSyncExternalStore
-} = remotion__WEBPACK_IMPORTED_MODULE_3__.Internals;
 
 
 
@@ -153598,7 +154732,7 @@ var injectCSS = () => {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   StudioInternals: () => (/* binding */ StudioInternals)
 /* harmony export */ });
-/* harmony import */ var _index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1045);
+/* harmony import */ var _index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8083);
 /* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7449);
 /* harmony import */ var _index_gjr0ae8m_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5293);
 /* harmony import */ var _index_kwxewaaz_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6929);
@@ -153611,7 +154745,7 @@ var injectCSS = () => {
 
 // src/internals.ts
 var StudioInternals = {
-  Studio: _index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_0__/* .Studio */ .qz
+  Studio: _index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_0__/* .Studio */ .qz
 };
 
 
@@ -183361,7 +184495,7 @@ class PathedTarget {
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 // This file is generated by scripts/write-version.ts. Do not edit manually.
-const VERSION = '1.62.0';
+const VERSION = '1.62.1';
 const VERSIONED_NAME = `Mediabunny v${VERSION}`;
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, [

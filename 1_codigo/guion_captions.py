@@ -31,7 +31,7 @@ TAM_PEQUENA = 0.118          # el «Size» de arriba/abajo del pack Referencia (
 # v5.48: 'espaciado' = el Character Spacing del pack (pack_referencia.ESPACIADO). Medido en Resolve: Fusion quita por LETRA (1 - espaciado) × 1,4 ×
 # el tamaño de la letra ('k_espaciado'): con 0,95 las palabras pequeñas medían ~15 % menos, no 5 %.
 AFINADO = {'ancho': 1.0, 'espaciado': 0.99, 'k_espaciado': 1.4, 'espacio': 0.2, 'tinta_pequena': 0.975, 'tinta_principal': 0.95, 'amro_k': {3: None, 6: 1.99, 7: 0.964, 8: 1.53},
-           'amro_ext': {3: (82, 94), 6: (64, 118), 7: (32, 50), 8: (38, 98)},     # v5.48: alto real de cada preset de Amro (ver extension_tinta)
+           'amro_ext': {3: (82, 94), 6: (64, 118), 7: (32, 50), 8: (38, 87)},     # v5.48: alto real de cada preset de Amro (ver extension_tinta)
            'dy': {},               # (hasta v5.47 {1: -0.021}: con el Luxe Shine viejo la tinta de las mayúsculas caía más abajo; con el v1.09 cae centrada y subirla abría un hueco)
            # los presets de Amro se revelan letra a letra (~0,3 s); la referencia los muestra enteros al instante: el comp arranca ya adelantado (s)
            'salto_amro': {3: 0.2, 6: 0.2, 7: 0.2, 8: 0.14}}

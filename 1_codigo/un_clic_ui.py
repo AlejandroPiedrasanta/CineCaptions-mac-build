@@ -101,7 +101,7 @@ class BotonGo(QAbstractButton):
         self._ultimo = _time.perf_counter()
 
     def _poner_estilo(self, clave):
-        """Cambia el diseño del botón (los 10 estilos de Inicio): cada uno lleva su propia instancia con su movimiento."""
+        """Cambia el estilo de Inicio (v5.49: los 3, todos con el astrolabio): cada uno lleva su propia instancia con su movimiento."""
         self._estilo_clave = clave
         self._estilo = self._estilos.crear(clave)
         self._ctx = self._estilos.Ctx()
@@ -331,7 +331,7 @@ class BotonGo(QAbstractButton):
         cx.vibra, cx.apagon, cx.residuo, cx.eta, cx.texto = vibra, self._apagon, self._residuo, self._eta_texto(), texto
         cx.entrada, cx.vel, cx.quieto, cx.cierre = self._ent, self._vel, self._quieto, self._cierre
         cx.cortes = self.cortes if estado == 'trabajando' else ()
-        if self._estilo_clave != 'astrolabio' and self._ent < 1.2:                # entrada: aparece creciendo (el astrolabio se ensambla pieza a pieza)
+        if not getattr(self._estilo, 'ensambla', False) and self._ent < 1.2:      # entrada: aparece creciendo (el astrolabio se ensambla pieza a pieza)
             e = min(1.0, self._ent / 0.8)
             p.setOpacity(e)
             R *= 0.86 + 0.14 * (1 - (1 - e) ** 3)

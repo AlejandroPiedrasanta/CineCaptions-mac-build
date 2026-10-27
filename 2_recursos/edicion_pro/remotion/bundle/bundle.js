@@ -141008,7 +141008,7 @@ var hasTailwindClassName = ({
 };
 var AbsoluteFillElementRefForwarding = (props, ref) => {
   const { style, ...other } = props;
-  const actualStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
+  const defaultStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     return {
       position: "absolute",
       top: hasTailwindClassName({
@@ -141067,10 +141067,15 @@ var AbsoluteFillElementRefForwarding = (props, ref) => {
           "flex-col-reverse"
         ],
         type: "exact"
-      }) ? undefined : "column",
+      }) ? undefined : "column"
+    };
+  }, [other.className]);
+  const actualStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
+    return {
+      ...defaultStyle,
       ...style
     };
-  }, [other.className, style]);
+  }, [defaultStyle, style]);
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
     ref,
     style: actualStyle,
@@ -142039,9 +142044,6 @@ var useLazyComponent = ({
   ]);
   const lazy = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     if ("component" in compProps) {
-      if (typeof document === "undefined" || noSuspense) {
-        return compProps.component;
-      }
       return Wrapper;
     }
     if ("lazyComponent" in compProps && typeof compProps.lazyComponent !== "undefined") {
@@ -142052,6 +142054,9 @@ var useLazyComponent = ({
     }
     throw new Error("You must pass either 'component' or 'lazyComponent'");
   }, [lazyComponentFromProps, componentStore, Wrapper]);
+  if ("component" in compProps && (typeof document === "undefined" || noSuspense)) {
+    return compProps.component;
+  }
   return lazy;
 };
 
@@ -142258,7 +142263,7 @@ var getStackForControls = (controls) => {
 };
 
 // src/version.ts
-var VERSION = "4.0.538";
+var VERSION = "4.0.539";
 
 // src/multiple-versions-warning.ts
 var checkMultipleRemotionVersions = () => {
@@ -145054,6 +145059,20 @@ var interpolateSegment = ({
     output
   });
 };
+var getInputForInterpolation = ({
+  input,
+  inputRange,
+  options
+}) => {
+  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
+  const inputMin = inputRange[0];
+  const inputMax = inputRange[inputRange.length - 1];
+  if (inputRange.length === 1 || !(posterizedInput < inputMin && options?.extrapolateLeft === "wrap" || posterizedInput > inputMax && options?.extrapolateRight === "wrap")) {
+    return posterizedInput;
+  }
+  const range = inputMax - inputMin;
+  return ((posterizedInput - inputMin) % range + range) % range + inputMin;
+};
 var interpolateNumber = ({
   input,
   inputRange,
@@ -145073,14 +145092,18 @@ var interpolateNumber = ({
   if (options?.extrapolateRight !== undefined) {
     extrapolateRight = options.extrapolateRight;
   }
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
-  const range = findRange(posterizedInput, inputRange);
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
+  const range = findRange(resolvedInput, inputRange);
   const easing = resolveEasingForSegment({
     easing: easingOption,
     segmentIndex: range
   });
   let result = interpolateSegment({
-    input: posterizedInput,
+    input: resolvedInput,
     inputRange: [inputRange[range], inputRange[range + 1]],
     outputRange: [outputRange[range], outputRange[range + 1]],
     easing,
@@ -145097,11 +145120,11 @@ var interpolateNumber = ({
       continue;
     }
     const previousSegmentEnd = inputRange[segmentIndex + 1];
-    if (posterizedInput <= previousSegmentEnd) {
+    if (resolvedInput <= previousSegmentEnd) {
       continue;
     }
     const continuedSegmentValue = interpolateSegment({
-      input: posterizedInput,
+      input: resolvedInput,
       inputRange: [inputRange[segmentIndex], previousSegmentEnd],
       outputRange: [outputRange[segmentIndex], outputRange[segmentIndex + 1]],
       easing: previousEasing,
@@ -145122,8 +145145,12 @@ var interpolateString = ({
 }) => {
   const initiallyParsedOutputRange = outputRange.map((output) => parseStringInterpolationValue(output, outputType));
   const hasAxisRotation = initiallyParsedOutputRange.some((parsed) => parsed.axisRotation);
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
-  const segmentIndex = inputRange.length === 1 ? 0 : findRange(posterizedInput, inputRange);
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
+  const segmentIndex = inputRange.length === 1 ? 0 : findRange(resolvedInput, inputRange);
   const parsedOutputRange = hasAxisRotation ? initiallyParsedOutputRange.map((parsed, index) => {
     if (parsed.kind !== "rotate") {
       return parsed;
@@ -145247,31 +145274,24 @@ var interpolateDiscreteValue = ({
       throw new TypeError(typeof outputRange[0] === "boolean" ? "Booleans can only be interpolated using Easing.step1" : "Non-numeric strings can only be interpolated using Easing.step1");
     }
   }
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
   const inputMin = inputRange[0];
   const inputMax = inputRange[inputRange.length - 1];
-  let resolvedInput = posterizedInput;
   if (resolvedInput < inputMin) {
     if (options?.extrapolateLeft === "identity") {
       throw new TypeError(typeof outputRange[0] === "boolean" ? 'extrapolateLeft: "identity" is not supported for booleans' : 'extrapolateLeft: "identity" is not supported for non-numeric strings');
     }
-    if (options?.extrapolateLeft === "wrap") {
-      const wrapRange = inputMax - inputMin;
-      resolvedInput = ((resolvedInput - inputMin) % wrapRange + wrapRange) % wrapRange + inputMin;
-    } else {
-      return outputRange[0];
-    }
+    return outputRange[0];
   }
   if (resolvedInput > inputMax) {
     if (options?.extrapolateRight === "identity") {
       throw new TypeError(typeof outputRange[0] === "boolean" ? 'extrapolateRight: "identity" is not supported for booleans' : 'extrapolateRight: "identity" is not supported for non-numeric strings');
     }
-    if (options?.extrapolateRight === "wrap") {
-      const wrapRange = inputMax - inputMin;
-      resolvedInput = ((resolvedInput - inputMin) % wrapRange + wrapRange) % wrapRange + inputMin;
-    } else {
-      return outputRange[outputRange.length - 1];
-    }
+    return outputRange[outputRange.length - 1];
   }
   const range = findRange(resolvedInput, inputRange);
   return resolvedInput >= inputRange[range + 1] ? outputRange[range + 1] : outputRange[range];
@@ -145748,7 +145768,7 @@ function spring({
     frame: durationProcessed,
     config
   });
-  const inner = config.overshootClamping ? to >= from ? Math.min(spr.current, to) : Math.max(spr.current, to) : spr.current;
+  const inner = config.overshootClamping ? Math.min(spr.current, 1) : spr.current;
   const interpolated = from === 0 && to === 1 ? inner : interpolate(inner, [0, 1], [from, to]);
   return interpolated;
 }
@@ -145983,14 +146003,16 @@ function parseModernComponent(str, percentScale) {
 function parseHueAngle(str) {
   if (str === "none")
     return 0;
-  if (str.endsWith("rad")) {
-    return Number.parseFloat(str) * 180 / Math.PI;
+  let degrees = Number.parseFloat(str);
+  if (str.endsWith("grad")) {
+    degrees *= 0.9;
+  } else if (str.endsWith("rad")) {
+    degrees = degrees * 180 / Math.PI;
+  } else if (str.endsWith("turn")) {
+    degrees *= 360;
   }
-  if (str.endsWith("grad"))
-    return Number.parseFloat(str) * 0.9;
-  if (str.endsWith("turn"))
-    return Number.parseFloat(str) * 360;
-  return Number.parseFloat(str);
+  const normalized = degrees % 360;
+  return normalized < 0 ? (normalized + 360) % 360 : normalized;
 }
 function parseModernAlpha(str) {
   if (str === undefined || str === "none")
@@ -146567,6 +146589,128 @@ var OverrideIdsToNodePathsSettersContext = (0,react__WEBPACK_IMPORTED_MODULE_0__
   }
 });
 
+// src/effects/effect-source-observer.ts
+
+var observers = new Map;
+var redrawListeners = new Map;
+var identities = new WeakMap;
+var inspectedChains = new WeakMap;
+var sourceChainOwners = new Map;
+var useIdentityCommitEffect = react__WEBPACK_IMPORTED_MODULE_0__.useInsertionEffect ?? react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect;
+var subscribeToEffectSource = ({
+  sequenceKey,
+  effectIndex,
+  onSource
+}) => {
+  let sequence = observers.get(sequenceKey);
+  if (!sequence) {
+    sequence = new Map;
+    observers.set(sequenceKey, sequence);
+  }
+  let listeners = sequence.get(effectIndex);
+  if (!listeners) {
+    listeners = new Set;
+    sequence.set(effectIndex, listeners);
+  }
+  listeners.add(onSource);
+  redrawListeners.get(sequenceKey)?.forEach((redraw) => redraw());
+  return () => {
+    listeners.delete(onSource);
+    if (listeners.size === 0) {
+      sequence.delete(effectIndex);
+    }
+    if (sequence.size === 0) {
+      observers.delete(sequenceKey);
+    }
+  };
+};
+var publishEffectSource = (effect, source, chain) => {
+  if (observers.size === 0) {
+    return;
+  }
+  const identity = identities.get(effect);
+  if (!identity) {
+    return;
+  }
+  const listeners = observers.get(identity.sequenceKey)?.get(identity.effectIndex);
+  if (!listeners || listeners.size === 0) {
+    return;
+  }
+  let inspected = inspectedChains.get(chain);
+  if (!inspected) {
+    inspected = new Map;
+    inspectedChains.set(chain, inspected);
+  }
+  const key = `${identity.sequenceKey}\x00${identity.effectIndex}`;
+  inspected.set(key, identity);
+  sourceChainOwners.set(key, chain);
+  listeners.forEach((listener) => {
+    try {
+      listener(source);
+    } catch {}
+  });
+};
+var invalidateEffectChainSources = (chain) => {
+  const inspected = inspectedChains.get(chain);
+  inspectedChains.delete(chain);
+  inspected?.forEach((identity, key) => {
+    if (sourceChainOwners.get(key) !== chain) {
+      return;
+    }
+    sourceChainOwners.delete(key);
+    observers.get(identity.sequenceKey)?.get(identity.effectIndex)?.forEach((listener) => {
+      try {
+        listener(null);
+      } catch {}
+    });
+  });
+};
+var useEffectSourceInspection = (effects, sequenceKey) => {
+  const [revision, setRevision] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(0);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    if (sequenceKey === null) {
+      return;
+    }
+    let listeners = redrawListeners.get(sequenceKey);
+    if (!listeners) {
+      listeners = new Set;
+      redrawListeners.set(sequenceKey, listeners);
+    }
+    const redraw = () => setRevision((previous) => previous + 1);
+    listeners.add(redraw);
+    if (observers.has(sequenceKey)) {
+      redraw();
+    }
+    return () => {
+      listeners.delete(redraw);
+      if (listeners.size === 0) {
+        redrawListeners.delete(sequenceKey);
+        observers.get(sequenceKey)?.forEach((sourceListeners) => {
+          sourceListeners.forEach((listener) => {
+            try {
+              listener(null);
+            } catch {}
+          });
+        });
+      }
+    };
+  }, [sequenceKey]);
+  useIdentityCommitEffect(() => {
+    if (sequenceKey === null) {
+      return;
+    }
+    effects.forEach((effect, effectIndex) => {
+      identities.set(effect, { sequenceKey, effectIndex });
+    });
+    return () => {
+      effects.forEach((effect) => identities.delete(effect));
+    };
+  }, [effects, sequenceKey]);
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
+    return sequenceKey === null || revision === 0 ? effects : effects.slice();
+  }, [effects, revision, sequenceKey]);
+};
+
 // src/effects/use-memoized-effects.ts
 var emptyDragOverrides2 = {};
 var useCacheCommitEffect = react__WEBPACK_IMPORTED_MODULE_0__.useInsertionEffect ?? react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect;
@@ -146737,6 +146881,7 @@ var useMemoizedEffects = ({
   videoConfigValues
 }) => {
   const previousRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const { isStudio } = useRemotionEnvironment();
   const { overrideIdToNodePathMappings } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(OverrideIdsToNodePathsGettersContext);
   const previous = previousRef.current;
   const nodePath = overrideId ? overrideIdToNodePathMappings[overrideId] ?? null : null;
@@ -146791,7 +146936,7 @@ var useMemoizedEffects = ({
   useCacheCommitEffect(() => {
     previousRef.current = { prepared, effects: next };
   }, [next, prepared]);
-  return next;
+  return useEffectSourceInspection(next, isStudio && nodePath !== null ? makeSequencePropsSubscriptionKey({ ...nodePath, videoConfigValues }) : null);
 };
 
 // src/flatten-schema.ts
@@ -148361,6 +148506,7 @@ var createEffectChainState = (width, height) => {
 };
 var cleanupEffectChainState = (state) => {
   state.currentRunId++;
+  invalidateEffectChainSources(state);
   try {
     for (const entry of state.cleanupRegistry) {
       entry.definition.cleanup(entry.state);
@@ -148427,6 +148573,7 @@ var runEffectChainWithoutResize = async ({ state, source, effects, output, width
           state.pool.assertContextNotLost(dst);
         }
         const setupState = ensureSetup(state, def, dst);
+        publishEffectSource(eff, currentImage, state);
         def.apply({
           source: currentImage,
           target: dst,
@@ -148701,6 +148848,7 @@ var decodeImage = async ({
         continue;
       }
       const item = sortByClosestToCurrentTime[i];
+      item.frame?.close();
       item.frame = null;
     }
   };
@@ -149606,6 +149754,7 @@ var usePreload = (src) => {
   }
   return preloads[withoutHashFragment];
 };
+var activePrefetches = new Map;
 var blobToBase64 = function(blob) {
   const reader = new FileReader;
   return new Promise((resolve, reject) => {
@@ -149677,6 +149826,7 @@ var prefetch = (src, options) => {
     return;
   });
   const controller = new AbortController;
+  const prefetchId = Symbol("prefetch");
   let reader = null;
   fetch(srcWithoutHash, {
     signal: controller.signal,
@@ -149716,6 +149866,9 @@ var prefetch = (src, options) => {
     return URL.createObjectURL(actualBlob);
   }).then((url) => {
     if (canceled) {
+      if (url && method === "blob-url") {
+        URL.revokeObjectURL(url);
+      }
       return;
     }
     playbackLogging({
@@ -149725,6 +149878,9 @@ var prefetch = (src, options) => {
       mountTime: null
     });
     objectUrl = url;
+    const prefetchesForSrc = activePrefetches.get(srcWithoutHash) ?? new Map;
+    prefetchesForSrc.set(prefetchId, objectUrl);
+    activePrefetches.set(srcWithoutHash, prefetchesForSrc);
     setPreloads((p) => ({
       ...p,
       [srcWithoutHash]: objectUrl
@@ -149738,6 +149894,10 @@ var prefetch = (src, options) => {
   });
   return {
     free: () => {
+      if (canceled) {
+        return;
+      }
+      canceled = true;
       playbackLogging({
         logLevel,
         tag: "prefetch",
@@ -149748,16 +149908,25 @@ var prefetch = (src, options) => {
         if (method === "blob-url") {
           URL.revokeObjectURL(objectUrl);
         }
+        const prefetchesForSrc = activePrefetches.get(srcWithoutHash);
+        prefetchesForSrc?.delete(prefetchId);
+        const remainingUrl = prefetchesForSrc ? [...prefetchesForSrc.values()].pop() : undefined;
+        if (prefetchesForSrc?.size === 0) {
+          activePrefetches.delete(srcWithoutHash);
+        }
         setPreloads((p) => {
+          if (p[srcWithoutHash] === remainingUrl) {
+            return p;
+          }
           const copy = { ...p };
-          delete copy[srcWithoutHash];
+          if (remainingUrl === undefined) {
+            delete copy[srcWithoutHash];
+          } else {
+            copy[srcWithoutHash] = remainingUrl;
+          }
           return copy;
         });
       } else {
-        if (canceled) {
-          return;
-        }
-        canceled = true;
         const cancellationError = new Error("free() called");
         reject(cancellationError);
         try {
@@ -155515,6 +155684,72 @@ var makeDefaultPreviewCSS = (scope, backgroundColor) => {
   `;
 };
 
+// src/effects/create-curve-sampler.ts
+var createCurveSampler = (points, interpolation) => {
+  const distances = points.slice(1).map((point, index) => Math.hypot(point[0] - points[index][0], point[1] - points[index][1]));
+  const tangents = points.map(() => [0, 0]);
+  if (interpolation === "smooth" && points.length > 2) {
+    for (let axis = 0;axis < 2; axis++) {
+      const slopes = distances.map((distance, index) => (points[index + 1][axis] - points[index][axis]) / distance);
+      const curvatures = new Array(points.length).fill(0);
+      const upper = new Array(points.length).fill(0);
+      for (let index = 1;index < points.length - 1; index++) {
+        const diagonal = 2 * (distances[index - 1] + distances[index]) - distances[index - 1] * upper[index - 1];
+        upper[index] = distances[index] / diagonal;
+        curvatures[index] = (6 * (slopes[index] - slopes[index - 1]) - distances[index - 1] * curvatures[index - 1]) / diagonal;
+      }
+      for (let index = points.length - 2;index > 0; index--) {
+        curvatures[index] -= upper[index] * curvatures[index + 1];
+      }
+      for (let index = 0;index < points.length; index++) {
+        tangents[index][axis] = index === 0 ? slopes[0] - distances[0] * curvatures[1] / 6 : slopes[index - 1] + distances[index - 1] * (curvatures[index - 1] + 2 * curvatures[index]) / 6;
+      }
+    }
+    for (let index = 0;index < points.length; index++) {
+      const maxTangent = 3 * Math.min(index === 0 ? Infinity : (points[index][0] - points[index - 1][0]) / distances[index - 1], index === points.length - 1 ? Infinity : (points[index + 1][0] - points[index][0]) / distances[index]);
+      if (tangents[index][0] > maxTangent) {
+        tangents[index][1] *= maxTangent / tangents[index][0];
+      }
+      tangents[index][0] = Math.max(0, Math.min(maxTangent, tangents[index][0]));
+    }
+  }
+  return (input) => {
+    if (input <= points[0][0])
+      return points[0][1];
+    if (input >= points[points.length - 1][0]) {
+      return points[points.length - 1][1];
+    }
+    const index = points.findIndex((point) => point[0] > input) - 1;
+    const start = points[index];
+    const end = points[index + 1];
+    if (input === start[0])
+      return start[1];
+    if (interpolation === "linear" || points.length === 2) {
+      return start[1] + (end[1] - start[1]) * ((input - start[0]) / (end[0] - start[0]));
+    }
+    const handleLength = distances[index] / 3;
+    const firstX = start[0] + handleLength * tangents[index][0];
+    const secondX = end[0] - handleLength * tangents[index + 1][0];
+    let low = 0;
+    let high = 1;
+    for (let iteration = 0;iteration < 32; iteration++) {
+      const candidate = (low + high) / 2;
+      const inverse = 1 - candidate;
+      const x = inverse ** 3 * start[0] + 3 * inverse ** 2 * candidate * firstX + 3 * inverse * candidate ** 2 * secondX + candidate ** 3 * end[0];
+      if (x < input)
+        low = candidate;
+      else
+        high = candidate;
+    }
+    const progress = (low + high) / 2;
+    const remaining = 1 - progress;
+    const firstY = start[1] + handleLength * tangents[index][1];
+    const secondY = end[1] - handleLength * tangents[index + 1][1];
+    const value = remaining ** 3 * start[1] + 3 * remaining ** 2 * progress * firstY + 3 * remaining * progress ** 2 * secondY + progress ** 3 * end[1];
+    return Math.max(0, Math.min(1, value));
+  };
+};
+
 // src/get-preview-dom-element.ts
 var REMOTION_STUDIO_CONTAINER_ELEMENT = "__remotion-studio-container";
 var getPreviewDomElement = () => {
@@ -157216,8 +157451,10 @@ var Internals = {
   cleanupEffectChainState,
   runEffectChain,
   useMemoizedEffects,
+  subscribeToEffectSource,
   useMemoizedEffectDefinitions,
   createEffect,
+  createCurveSampler,
   createWebGLContextError,
   createWebGL2ContextError,
   computeEffectiveSchemaValuesDotNotation,
@@ -158531,7 +158768,7 @@ function spring({
     frame: durationProcessed,
     config
   });
-  const inner = config.overshootClamping ? to >= from ? Math.min(spr.current, to) : Math.max(spr.current, to) : spr.current;
+  const inner = config.overshootClamping ? Math.min(spr.current, 1) : spr.current;
   const interpolated = from === 0 && to === 1 ? inner : interpolate(inner, [0, 1], [from, to]);
   return interpolated;
 }
@@ -159073,6 +159310,20 @@ var interpolateSegment = ({
     output
   });
 };
+var getInputForInterpolation = ({
+  input,
+  inputRange,
+  options
+}) => {
+  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
+  const inputMin = inputRange[0];
+  const inputMax = inputRange[inputRange.length - 1];
+  if (inputRange.length === 1 || !(posterizedInput < inputMin && options?.extrapolateLeft === "wrap" || posterizedInput > inputMax && options?.extrapolateRight === "wrap")) {
+    return posterizedInput;
+  }
+  const range = inputMax - inputMin;
+  return ((posterizedInput - inputMin) % range + range) % range + inputMin;
+};
 var interpolateNumber = ({
   input,
   inputRange,
@@ -159092,14 +159343,18 @@ var interpolateNumber = ({
   if (options?.extrapolateRight !== undefined) {
     extrapolateRight = options.extrapolateRight;
   }
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
-  const range = findRange(posterizedInput, inputRange);
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
+  const range = findRange(resolvedInput, inputRange);
   const easing = resolveEasingForSegment({
     easing: easingOption,
     segmentIndex: range
   });
   let result = interpolateSegment({
-    input: posterizedInput,
+    input: resolvedInput,
     inputRange: [inputRange[range], inputRange[range + 1]],
     outputRange: [outputRange[range], outputRange[range + 1]],
     easing,
@@ -159116,11 +159371,11 @@ var interpolateNumber = ({
       continue;
     }
     const previousSegmentEnd = inputRange[segmentIndex + 1];
-    if (posterizedInput <= previousSegmentEnd) {
+    if (resolvedInput <= previousSegmentEnd) {
       continue;
     }
     const continuedSegmentValue = interpolateSegment({
-      input: posterizedInput,
+      input: resolvedInput,
       inputRange: [inputRange[segmentIndex], previousSegmentEnd],
       outputRange: [outputRange[segmentIndex], outputRange[segmentIndex + 1]],
       easing: previousEasing,
@@ -159141,8 +159396,12 @@ var interpolateString = ({
 }) => {
   const initiallyParsedOutputRange = outputRange.map((output) => parseStringInterpolationValue(output, outputType));
   const hasAxisRotation = initiallyParsedOutputRange.some((parsed) => parsed.axisRotation);
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
-  const segmentIndex = inputRange.length === 1 ? 0 : findRange(posterizedInput, inputRange);
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
+  const segmentIndex = inputRange.length === 1 ? 0 : findRange(resolvedInput, inputRange);
   const parsedOutputRange = hasAxisRotation ? initiallyParsedOutputRange.map((parsed, index) => {
     if (parsed.kind !== "rotate") {
       return parsed;
@@ -159266,31 +159525,24 @@ var interpolateDiscreteValue = ({
       throw new TypeError(typeof outputRange[0] === "boolean" ? "Booleans can only be interpolated using Easing.step1" : "Non-numeric strings can only be interpolated using Easing.step1");
     }
   }
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
   const inputMin = inputRange[0];
   const inputMax = inputRange[inputRange.length - 1];
-  let resolvedInput = posterizedInput;
   if (resolvedInput < inputMin) {
     if (options?.extrapolateLeft === "identity") {
       throw new TypeError(typeof outputRange[0] === "boolean" ? 'extrapolateLeft: "identity" is not supported for booleans' : 'extrapolateLeft: "identity" is not supported for non-numeric strings');
     }
-    if (options?.extrapolateLeft === "wrap") {
-      const wrapRange = inputMax - inputMin;
-      resolvedInput = ((resolvedInput - inputMin) % wrapRange + wrapRange) % wrapRange + inputMin;
-    } else {
-      return outputRange[0];
-    }
+    return outputRange[0];
   }
   if (resolvedInput > inputMax) {
     if (options?.extrapolateRight === "identity") {
       throw new TypeError(typeof outputRange[0] === "boolean" ? 'extrapolateRight: "identity" is not supported for booleans' : 'extrapolateRight: "identity" is not supported for non-numeric strings');
     }
-    if (options?.extrapolateRight === "wrap") {
-      const wrapRange = inputMax - inputMin;
-      resolvedInput = ((resolvedInput - inputMin) % wrapRange + wrapRange) % wrapRange + inputMin;
-    } else {
-      return outputRange[outputRange.length - 1];
-    }
+    return outputRange[outputRange.length - 1];
   }
   const range = findRange(resolvedInput, inputRange);
   return resolvedInput >= inputRange[range + 1] ? outputRange[range + 1] : outputRange[range];
@@ -160108,14 +160360,16 @@ function parseModernComponent(str, percentScale) {
 function parseHueAngle(str) {
   if (str === "none")
     return 0;
-  if (str.endsWith("rad")) {
-    return Number.parseFloat(str) * 180 / Math.PI;
+  let degrees = Number.parseFloat(str);
+  if (str.endsWith("grad")) {
+    degrees *= 0.9;
+  } else if (str.endsWith("rad")) {
+    degrees = degrees * 180 / Math.PI;
+  } else if (str.endsWith("turn")) {
+    degrees *= 360;
   }
-  if (str.endsWith("grad"))
-    return Number.parseFloat(str) * 0.9;
-  if (str.endsWith("turn"))
-    return Number.parseFloat(str) * 360;
-  return Number.parseFloat(str);
+  const normalized = degrees % 360;
+  return normalized < 0 ? (normalized + 360) % 360 : normalized;
 }
 function parseModernAlpha(str) {
   if (str === undefined || str === "none")

@@ -6432,11 +6432,15 @@ class SubtitleApp(QWidget):
     def _prearmar_paginas(self, pendientes=None):
         """v5.47 (el usuario: «va lento y trabado cuando doy clic»; medido: el PRIMER clic en Efectos tardaba 0,77 s y en Estilos 0,29–0,37 s armando
         la página): se arman solas, una cada 2 s, mientras el programa está en reposo (en Inicio y sin GO). Si el usuario está en otra página o hay un
-        GO, se espera; si ya se abrieron, no hace nada."""
+        GO, se espera; si ya se abrieron, no hace nada.
+        v5.49 (el usuario: «la animación de Inicio se traba demasiado»): armar Efectos congela la ventana ~0,36 s y Estilos ~0,07 s; con la animación
+        de Inicio a la vista se veía como un tirón a los 7-9 s de abrir. Ahora espera a que la ventana no tenga el foco (el usuario está en Resolve)
+        o esté minimizada: nadie mira la animación."""
         pendientes = list(pendientes if pendientes is not None else ('efectos', 'estilos'))
         if not pendientes:
             return
-        if getattr(self, '_go_corriendo', False) or getattr(self, '_pagina_actual', 'inicio') != 'inicio':
+        if (getattr(self, '_go_corriendo', False) or getattr(self, '_pagina_actual', 'inicio') != 'inicio'
+                or (self.isActiveWindow() and not self.isMinimized())):
             despues(5000, lambda: self._prearmar_paginas(pendientes), self)
             return
         clave = pendientes.pop(0)
@@ -6473,7 +6477,13 @@ class SubtitleApp(QWidget):
     def _precalentar_ondas_sfx(self):
         """v5.5: la onda de los primeros sonidos de cada categoria de la biblioteca, en un hilo: al abrir Sonido ya estan.
         v5.5.8: tambien la LISTA de sonidos va en el hilo (leia las reglas y miraba cientos de archivos en el de la interfaz: Inicio se
-        congelaba ~250 ms a los 12 s de abrir)."""
+        congelaba ~250 ms a los 12 s de abrir).
+        v5.49 (el usuario: «que no haya tirones jamás»): aun en un hilo, importar sfx_studio carga PyAV (las DLL de FFmpeg) sin soltar el
+        GIL: ~50 ms de Inicio parado. Espera, como _prearmar_paginas, a que la ventana no tenga el foco (o esté minimizada) y no haya GO;
+        si el usuario abre Sonido antes, las ondas se calculan allí como siempre."""
+        if getattr(self, '_go_corriendo', False) or (self.isActiveWindow() and not self.isMinimized()):
+            despues(5000, self._precalentar_ondas_sfx, self)
+            return
         def trabajo():
             import sfx_rules
             import sfx_studio
@@ -6552,13 +6562,21 @@ class SubtitleApp(QWidget):
                 registro.info(f'Emojis animados: {total - fallos} listos de {total} ({fallos} sin versión animada)', 'emojis')
     def _chequear_librerias(self):
         def trabajo():
+            # v5.49 (el usuario: «que no haya tirones jamás»): el resumen, el informe y el aviso al Registro (que se escribe a disco) van
+            # aquí; en el hilo de la interfaz eran ~8 ms con la animación de Inicio corriendo
             import salud
-            return salud.comprobar()
-        def fin(filas, _error):
-            if not filas or not vivo(self):
-                return
-            import salud
+            filas = salud.comprobar()
+            if not filas:
+                return None
             texto, ok = salud.resumen(filas)
+            informe = salud.informe(filas)
+            if ok is False:                       # v5.5.8: al Registro (ya no hay «Detalles y estado del sistema» en Inicio, ni globos)
+                registro.aviso(f'Chequeo de librerías: {texto}.\n{informe}', 'salud')
+            return texto, ok, informe
+        def fin(r, _error):
+            if not r or not vivo(self):
+                return
+            texto, ok, informe = r
             fila = getattr(self, '_filas_sistema', {}).get('librerias')
             if fila:
                 icono, valor, _w = fila
@@ -6567,9 +6585,7 @@ class SubtitleApp(QWidget):
                 except Exception:
                     pass
                 valor.configure(text=texto)
-                Tooltip(valor, salud.informe(filas))
-            if ok is False:                       # v5.5.8: al Registro (ya no hay «Detalles y estado del sistema» en Inicio, ni globos)
-                registro.aviso(f'Chequeo de librerías: {texto}.\n{salud.informe(filas)}', 'salud')
+                Tooltip(valor, informe)
         _correr_en_hilo(self, trabajo, fin)
     def _colocar_ventana(self):
         """1440 x 900 si cabe; minimo 1100 x 700 (o lo que deje la pantalla)."""
@@ -7897,25 +7913,28 @@ class SubtitleApp(QWidget):
         self._descargar_actualizacion(r)
     def _descargar_actualizacion(self, r):
         import actualizaciones
-        import editor_ui
+        import actualizar_ui
         if getattr(self, '_descargando_actualizacion', False):          # v5.4.41: un segundo clic (o dos avisos a la vez) no arranca otra descarga encima de la primera
             return
         archivo = r['archivo']
         try:
-            dlg = Dialogo(self, tr('Actualizando CineCaptions'), 500, 430, redimensionable=False)
+            # v5.49 (propuesta A + B elegida por el usuario): anillo con el %, 5.48 → 5.49, MB / velocidad / tiempo que falta, los pasos,
+            # las novedades de la versión y «Cancelar» (actualizar_ui.PanelActualizacion)
+            dlg = Dialogo(self, tr('Actualizando CineCaptions'), 520, 560, redimensionable=False)
+            # sin la barra de título de Windows (pedido: «quítale eso, deja metida la X»): el panel pinta el fondo redondeado y lleva la ✕
+            dlg.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
+            dlg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
             capa = _capa_dialogo(dlg, (0, 0, 0, 0), 0)
-            panel = editor_ui.PanelAsistencia(tr('Actualizando CineCaptions'), tr('Listo'), tr('Descargando…'),
-                                              [tr('Descargar la versión nueva'), tr('Comprobar que es auténtica'), tr('Instalarla')], f"v{r['version']}",
-                                              tr('CineCaptions se cierra y se vuelve a abrir solo'))
+            panel = actualizar_ui.PanelActualizacion(APP_VERSION, r['version'], r.get('notas') or '', al_cancelar=lambda: dlg.cerrar(), sin_marco=True)
             capa.addWidget(panel, 1)
             dlg.show()
         except Exception:
             registro.excepcion(origen='actualizar · ventana')
             return
-        est = {'texto': '', 'fase': 0, 'ruta': None, 'error': None, 'cancelado': False, 'lanzado': False}
+        est = {'fase': 0, 'ruta': None, 'error': None, 'cancelado': False, 'lanzado': False, 'hechos': 0, 'total': 0}
         dlg.finished.connect(lambda _r: est.__setitem__('cancelado', True))
         def progreso(h, t):
-            est['texto'] = tr('{h} de {t} MB', h=f'{h / 1048576:.0f}', t=f'{(t or h) / 1048576:.0f}')
+            est['hechos'], est['total'] = h, (t or h)
             if t and h >= t:
                 est['fase'] = 1
         def trabajo():
@@ -7927,7 +7946,7 @@ class SubtitleApp(QWidget):
             if est['ruta'] and not est['cancelado']:
                 # v5.4.45: el instalador se lanza AQUI, en el hilo de la descarga: lanzar un .exe de 230 MB (Windows lo
                 # escanea antes de abrirlo) desde el hilo de la interfaz la dejaba 3 s congelada (registro del 11-10)
-                est['fase'], est['texto'] = 2, tr('Lanzando el instalador…')
+                est['fase'] = 2
                 est['lanzado'] = actualizaciones.instalar(est['ruta'])
         self._descargando_actualizacion = True
         def trabajo_y_liberar():
@@ -7941,8 +7960,7 @@ class SubtitleApp(QWidget):
             if hilo.is_alive():
                 if vivo(dlg):
                     panel.poner_fase(est['fase'])
-                    if est['texto']:
-                        panel.poner_detalle(est['texto'])
+                    panel.poner_descarga(est['hechos'], est['total'])
                     despues(150, revisar, self)
                 return
             if est['cancelado'] and not est['lanzado']:
@@ -9403,6 +9421,7 @@ class SubtitleApp(QWidget):
             return
         self._recientes_firma = firma
         limpiar_capa(capa)
+        self._recientes_gen = gen = getattr(self, '_recientes_gen', 0) + 1
         if not lista:
             vacio = Etiqueta(tr('Aún no hay proyectos. Genera los subtítulos de un video y aparecerá aquí.'), 13, color=TEXT_MUTED, envolver=True)
             vacio.setContentsMargins(4, 16, 4, 16)
@@ -9410,7 +9429,14 @@ class SubtitleApp(QWidget):
             return
         modos = {'normal': tr('Normales'), 'dinamico': tr('Dinámicos')}
         looks = {'hormozi': tr('Hormozi'), 'gadzhi': tr('Gadzhi'), 'acumulativo': tr('Acumulativo'), 'pintado': tr('Pintado')}
-        for k, proy in enumerate(lista):
+        pendientes = list(enumerate(lista))
+
+        def una_fila():
+            # v5.49 (el usuario: «que no haya tirones jamás»): una fila por vuelta del bucle. Las cinco juntas eran ~20 ms seguidos en el
+            # hilo de la interfaz justo al abrir y la animación de Inicio perdía un cuadro
+            if gen != self._recientes_gen or not pendientes or not vivo(capa):
+                return
+            k, proy = pendientes.pop(0)
             nombre = proyectos.nombre_display(proy)
             langs = str(proy.get('ultima_gen_langs') or '')
             codigos = [c.strip() for c in langs.split(',') if c.strip()]
@@ -9432,6 +9458,9 @@ class SubtitleApp(QWidget):
                                  comando=lambda p=proy: (self._cargar_proyecto(p), self.ir_a('nuevo')),
                                  ultima=k == len(lista) - 1)
             capa.addWidget(fila)
+            if pendientes:
+                despues(0, una_fila, self)
+        una_fila()
     def _ejecutar_diagnostico(self):
         """«Ejecutar diagnóstico»: el informe de siempre (diagnostico.txt) y
         el del Puente al portapapeles."""
@@ -13602,8 +13631,16 @@ class SubtitleApp(QWidget):
                 self.msg_queue.put(('status', tr('Eligiendo los efectos de sonido...')))
                 pista_sfx = self._preparar_sfx(bloques, self._instantes_main(bloques, cues))
             self.msg_queue.put(('gen_fase', 'emojis'))
-            pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales)
-            self._emojis_con_la_palabra_grande(bloques)
+            import edicion_pro
+            if edicion_pro.emojis_del_tema(pack.nombre):
+                pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales)
+                self._emojis_con_la_palabra_grande(bloques)
+            else:
+                # v5.49 (pedido): el Tema 2 solo pone emojis con la Edición PRO encendida y su opción «Emojis animados»
+                for b_e in list(bloques) + list(cues):       # (el planificador ya deja el emoji en cada bloque: fuera también de ahí)
+                    for k_e in ('emoji', 'emoji_ini', 'emoji_fin', 'emoji_linea'):
+                        b_e.pop(k_e, None)
+                registro.info(tr('Tema 2: sin emojis (salen con la Edición PRO y su opción «Emojis animados»).'), 'GO')
             if con_sfx:
                 pista_sfx = self._sfx_de_emojis(bloques, pista_sfx)
         except Exception:

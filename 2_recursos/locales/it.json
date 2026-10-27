@@ -3992,7 +3992,16 @@
     "AI Sound Director se encarga de todo el sonido: los sonidos de las reglas de antes ya no suenan, y los de los motions (también los del Tema 1) los rehace a la medida.": "AI Sound Director si occupa di tutto il suono: i suoni delle vecchie regole non suonano più e quelli dei motion (anche del Tema 1) vengono rifatti su misura.",
     "Usa todas tus bibliotecas de sonido: miles de whooshes, golpes, risers y tonos, camas de música de score y ambientes reales, cada uno revisado antes de usarlo.": "Usa tutte le tue librerie di suoni: migliaia di whoosh, colpi, riser e toni, tappeti di musica da film e ambienti reali, ognuno verificato prima di usarlo.",
     "Si no hay música de Epidemic, pone una cama de score de tus colecciones, siempre por debajo de la voz; el ambiente sale de tus grabaciones del mismo entorno.": "Senza musica Epidemic mette un tappeto da film dalle tue collezioni, sempre sotto la voce; l’ambiente viene dalle tue registrazioni dello stesso luogo.",
-    "La página SONIDO aplica sola cada cambio en Resolve y te dice si todo está al día. Viene encendida.": "La pagina SUONO applica da sola ogni modifica in Resolve e ti dice se è tutto aggiornato. È attiva."
+    "La página SONIDO aplica sola cada cambio en Resolve y te dice si todo está al día. Viene encendida.": "La pagina SUONO applica da sola ogni modifica in Resolve e ti dice se è tutto aggiornato. È attiva.",
+    "Nebulosa": "Nebulosa",
+    "Proceso": "Processo",
+    "Diseño": "Design",
+    "hecho": "fatto",
+    "en espera": "in attesa",
+    "Una nebulosa de luz gira tras el astrolabio. En GO se vuelve un remolino del color de cada paso.": "Una nebulosa di luce ruota dietro l'astrolabio. Durante GO diventa un vortice del colore di ogni passo.",
+    "Aros de bronce en 3D y constelaciones de oro. En GO cada paso es una estrella y los aros se alinean.": "Anelli di bronzo in 3D e costellazioni dorate. Durante GO ogni passo è una stella e gli anelli si allineano.",
+    "Anillo de voz y palabras de cristal. En GO seis tarjetas enseñan cada paso y el timeline se llena.": "Anello di voce e parole di vetro. Durante GO sei schede mostrano ogni passo e la timeline si riempie.",
+    "Tres escenas para Inicio, las tres con el astrolabio de bronce: cada una con sus animaciones y su manera de enseñar el proceso de GO. También cambian la luz de fondo de TODAS las páginas. Pasa el ratón por una tarjeta para verla en movimiento.": "Tre scene per la Home, tutte con l'astrolabio di bronzo: ognuna con le sue animazioni e il suo modo di mostrare il processo di GO. Cambiano anche la luce di sfondo di TUTTE le pagine. Passa il mouse su una scheda per vederla in movimento."
   },
   "Suave": "Leggero",
   "Media": "Media",

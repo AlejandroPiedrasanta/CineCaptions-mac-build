@@ -1,29 +1,40 @@
 # CineCaptions · By Cinema Productions
-# 1_codigo/estilos_inicio.py — los 10 estilos de la pantalla de Inicio: cada uno es un rediseño completo (héroe, fondo, partículas).
+# 1_codigo/estilos_inicio.py — los 3 estilos de la pantalla de Inicio (Nebulosa, Astrolabio, Proceso): el astrolabio de bronce con su escena y su proceso de GO.
 """
-Un estilo = el botón GO dibujado a su manera (`heroe`), el fondo animado de la escena (`fondo`, a 1/3 de resolución; `frente` a
-resolución completa si hace falta) y el movimiento de las partículas (`modo`: espiral, ascenso, caida, orbita). Todos entienden los
-mismos estados (listo, trabajando con porcentaje, hecho con palomita, error, apagado), las fases de GO y el tono del final.
+v5.49 (el usuario, tras ver las tres propuestas: «me gustan los 3, púlelo más, elimina todos estos y deja estos 3 para que se pueda
+escoger, y deja por defecto la opción B»): los 11 estilos de antes (orbe, synthwave, reactor, agujero, líquido, prisma, ecualizador,
+plasma, carrete, matrix y el astrolabio de líneas) se quitaron. Quedan tres, los tres con el MISMO botón (el astrolabio de bronce de
+`orbe_mecanica`) y cada uno con su escena (lo que hay detrás y alrededor) y su manera de enseñar el proceso de GO:
 
-  astrolabio · synthwave · reactor · agujero · liquido · prisma · ecualizador · plasma · carrete · matrix
+  nebulosa    luz y volumen: una nebulosa que gira, haces suaves, destellos con profundidad; en GO un remolino del color de cada paso
+  astrolabio  (la de fábrica) mecánica celeste: aros de bronce en 3D, anillo horario, constelaciones; en GO cada paso es una estrella
+              de una constelación y los aros se alinean uno a uno
+  proceso     se ve lo que hace GO: anillo de voz y palabras de cristal; en GO seis tarjetas con su haz de energía, palabras que salen al
+              transcribir, captions en Diseño, ondas en Sonido y el timeline que se llena al colocar
 
-Cada estilo trae además su `tema` (superficies de la interfaz), su `acento` y su `aurora` (los 3 colores de luz de todas las páginas):
-al elegirlo en Ajustes > Interfaz cambia el aspecto de TODA la interfaz, no solo el Inicio.
-Se dibuja con QPainter (vectorial) y cada cuadro hace pocas llamadas a Qt: el hilo de la interfaz tiene que seguir fluido aunque el
-equipo esté transcribiendo.
+Un estilo = `dibujar` (el botón), `fondo` (a 1/3 de resolución, lo escala la escena), `escena` (todo lo demás, a resolución completa:
+la llama `EscenaGo.dibujar` con la escena viva) y `onda` (cómo se ven las ondas de choque). La escena real pone encima lo común (chispas,
+barra de progreso, destello y, si el estilo los quiere, la lista de pasos y los cometas). Cada estilo trae además su `tema`, su `acento`
+y su `aurora` (las 3 luces de fondo de todas las páginas). Lo que no cambia de un cuadro a otro va en sprites ya pintados (`_luz`, las
+texturas de la nebulosa, el anillo horario, las palabras de cristal): copiar una imagen cuesta mucho menos que pintar un degradado.
 """
 import math
 import random
 
 import numpy as np
-from PySide6.QtCore import QLineF, QPointF, QRectF, Qt
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QFont, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath,
+from PySide6.QtCore import QLineF, QPointF, QRectF, QSize, Qt
+from PySide6.QtGui import (QBrush, QColor, QFont, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath,
                            QPen, QPixmap, QPolygonF, QRadialGradient)
 
 from i18n import tr
 from qt_kit import fuente
 
-PI2 = math.tau
+TAU = math.tau
+PLUS = QPainter.CompositionMode.CompositionMode_Plus
+OVER = QPainter.CompositionMode.CompositionMode_SourceOver
+FASE_COL = {'timeline': '#7DFFB2', 'voz': '#4FD8FF', 'ia': '#B388FF', 'diseno': '#FFC46B', 'sfx': '#FF7BD5', 'resolve': '#8FFFD6'}
+FASES = ('timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve')
+NOMBRES_PASO = {'timeline': tr('Timeline'), 'voz': tr('Voz'), 'ia': tr('IA'), 'diseno': tr('Diseño'), 'sfx': tr('Sonido'), 'resolve': tr('Resolve')}
 
 
 def _c(hexa, a=255):
@@ -32,8 +43,15 @@ def _c(hexa, a=255):
     return c
 
 
-def _pen(col, ancho, cap=Qt.PenCapStyle.RoundCap):
-    return QPen(col, max(0.6, ancho), Qt.PenStyle.SolidLine, cap, Qt.PenJoinStyle.RoundJoin)
+def _suave(x):
+    x = max(0.0, min(1.0, x))
+    return x * x * (3 - 2 * x)
+
+
+def mezcla(h1, h2, f):
+    a, b = QColor(h1), QColor(h2)
+    f = max(0.0, min(1.0, f))
+    return QColor(int(a.red() + (b.red() - a.red()) * f), int(a.green() + (b.green() - a.green()) * f), int(a.blue() + (b.blue() - a.blue()) * f))
 
 
 class Ctx:
@@ -97,214 +115,188 @@ def fuente_que_cabe(texto, ancho, tam, minimo=10, peso='medio', tnum=False):
     return elegida
 
 
-def arco_prog(p, rad, ancho, prog, col, col2=None, cortes=()):
-    """Un arco de progreso con resplandor (de las 12 en punto, en sentido horario) y una cabeza brillante.
-    v5.22 (el usuario: «mejora su barra de progreso»): va sobre una pista del anillo entero (se ve lo que falta), el trazo es más
-    grueso y se aclara hacia la cabeza, y unos cortes marcan dónde acaba cada paso de GO (`cortes`: los mismos tramos que la barra
-    de abajo de la escena, así las dos cuentan lo mismo)."""
-    prog = max(0.004, min(1.0, prog))
-    caja = QRectF(-rad, -rad, 2 * rad, 2 * rad)
-    p.setBrush(Qt.BrushStyle.NoBrush)
-    p.setPen(_pen(QColor(0, 0, 0, 95), ancho * 2.6))                 # la pista: oscura, con un filo del color
-    p.drawEllipse(QPointF(0, 0), rad, rad)
-    p.setPen(_pen(_c(col.name(), 46), ancho * 1.1))
-    p.drawEllipse(QPointF(0, 0), rad, rad)
-    for k, al in ((3.6, 26), (2.1, 72)):                             # el resplandor
-        p.setPen(_pen(_c(col.name(), al), ancho * k))
-        p.drawArc(caja, 90 * 16, -int(360 * 16 * prog))
-    claro = col2 or QColor(255, 255, 255)
-    g = QConicalGradient(QPointF(0, 0), 90)                          # el trazo: del color (inicio) al claro (cabeza)
-    g.setColorAt(0.0, _c(col.name(), 255))
-    g.setColorAt(max(0.0005, 1.0 - prog), claro)
-    g.setColorAt(1.0, _c(col.name(), 255))
-    p.setPen(QPen(QBrush(g), max(0.8, ancho * 1.3), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-    p.drawArc(caja, 90 * 16, -int(360 * 16 * prog))
-    if cortes:                                                       # dónde acaba cada paso
-        p.setPen(_pen(QColor(4, 10, 18, 235), max(1.4, ancho * 0.75), Qt.PenCapStyle.FlatCap))
-        for f in cortes:
-            a = math.radians(90 - 360 * f)
-            u = QPointF(math.cos(a), -math.sin(a))
-            p.drawLine(u * (rad - ancho * 2.1), u * (rad + ancho * 2.1))
-    ang = math.radians(90 - 360 * prog)
-    cab = QPointF(rad * math.cos(ang), -rad * math.sin(ang))
-    g = QRadialGradient(cab, ancho * 3.0)
-    g.setColorAt(0, QColor(255, 255, 255, 255))
-    g.setColorAt(0.4, _c(col.name(), 170))
-    g.setColorAt(1, _c(col.name(), 0))
-    p.setPen(Qt.PenStyle.NoPen)
-    p.setBrush(QBrush(g))
-    p.drawEllipse(cab, ancho * 3.0, ancho * 3.0)
+_LUCES = {}
+_PERFILES = {'suave': ((0, 255), (0.15, 185), (0.4, 70), (0.7, 18), (1, 0)),
+             'bokeh': ((0, 52), (0.62, 66), (0.84, 120), (0.93, 58), (1, 0)),       # v5.49 pulido: el borde menos duro (eran «burbujas»)
+             'nucleo': ((0, 255), (0.1, 250), (0.22, 120), (0.5, 26), (1, 0)),
+             'anillo': ((0, 0), (0.78, 0), (0.88, 200), (0.93, 255), (0.97, 120), (1, 0))}
 
 
-def palomita(p, rd, marca, col, alfa=1.0):
-    tm = 1 - (1 - max(0.0, min(1.0, marca))) ** 3
-    if tm <= 0.001:
+def _luz(r, hexa, dpr, perfil='suave'):
+    """Una luz redonda ya pintada (degradado radial) de radio `r`: se copia en vez de pintar el degradado en cada cuadro."""
+    clave = (int(r * 4), hexa, round(dpr, 2), perfil)
+    pm = _LUCES.get(clave)
+    if pm is not None:
+        return pm
+    if len(_LUCES) > 700:
+        _LUCES.clear()
+    r = max(1.0, r)
+    n = max(2, int(math.ceil(2 * r * dpr)))
+    img = QImage(n, n, QImage.Format.Format_ARGB32_Premultiplied)
+    img.fill(Qt.GlobalColor.transparent)
+    img.setDevicePixelRatio(dpr)
+    q = QPainter(img)
+    q.setRenderHint(QPainter.RenderHint.Antialiasing)
+    g = QRadialGradient(QPointF(r, r), r)
+    base = QColor(hexa)
+    for s, a in _PERFILES[perfil]:
+        c = QColor(base)
+        c.setAlpha(a)
+        g.setColorAt(s, c)
+    q.setPen(Qt.PenStyle.NoPen)
+    q.setBrush(QBrush(g))
+    q.drawEllipse(QPointF(r, r), r, r)
+    q.end()
+    pm = QPixmap.fromImage(img)
+    _LUCES[clave] = pm
+    return pm
+
+
+def _poner(p, pm, x, y, alfa=1.0, esc=1.0):
+    """Copia un sprite centrado en (x, y) con su opacidad (y escalado si `esc` != 1)."""
+    if alfa <= 0.003:
         return
-    a, b, d = QPointF(-rd * 0.42, rd * 0.02), QPointF(-rd * 0.1, rd * 0.34), QPointF(rd * 0.5, -rd * 0.32)
-    cam = QPainterPath()
-    cam.moveTo(a)
-    if tm < 0.4:
-        cam.lineTo(a + (b - a) * (tm / 0.4))
+    dw, dh = pm.width() / pm.devicePixelRatio(), pm.height() / pm.devicePixelRatio()
+    if alfa < 0.999:
+        p.setOpacity(alfa)
+    if abs(esc - 1.0) < 1e-3:
+        p.drawPixmap(QPointF(x - dw / 2, y - dh / 2), pm)
     else:
-        cam.lineTo(b)
-        cam.lineTo(b + (d - b) * ((tm - 0.4) / 0.6))
-    p.setBrush(Qt.BrushStyle.NoBrush)
-    for k, al in ((0.34, 40), (0.2, 90), (0.11, 255)):
-        c = col if k > 0.15 else QColor(min(255, col.red() + 90), min(255, col.green() + 40), min(255, col.blue() + 60))
-        p.setPen(_pen(_c(c.name(), al * alfa), rd * k))
-        p.drawPath(cam)
+        dw, dh = dw * esc, dh * esc
+        p.drawPixmap(QRectF(x - dw / 2, y - dh / 2, dw, dh), pm, QRectF(pm.rect()))
+    if alfa < 0.999:
+        p.setOpacity(1.0)
 
 
-def play(p, s, col, glow=True):
-    """El triángulo de «play», con resplandor."""
-    tri = QPainterPath()
-    tri.moveTo(-s * 0.42, -s * 0.62)
-    tri.lineTo(s * 0.74, 0)
-    tri.lineTo(-s * 0.42, s * 0.62)
-    tri.closeSubpath()
-    if glow:
-        for k, al in ((1.5, 28), (1.0, 60)):
-            p.setPen(_pen(_c(col.name(), al), s * 0.22 * k))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawPath(tri)
-    p.setPen(Qt.PenStyle.NoPen)
-    g = QLinearGradient(-s * 0.4, -s * 0.6, s * 0.7, s * 0.6)
-    g.setColorAt(0, QColor(255, 255, 255, 250))
-    g.setColorAt(1, _c(col.name(), 240))
-    p.setBrush(QBrush(g))
-    p.drawPath(tri)
+def _dpr(p):
+    d = p.device()
+    return d.devicePixelRatioF() if hasattr(d, 'devicePixelRatioF') else 1.0
 
 
-def centro_estado(p, ctx, R, rd, col, col2=None, emblema=None, fam='extra'):
-    """El contenido del centro según el estado: porcentaje + paso + tiempo restante, palomita, «!» o el emblema en reposo."""
-    est = ctx.estado
-    if est == 'trabajando':
-        # v5.22: un velo oscuro detrás del texto (se lee sobre cualquier estilo), cifras de ancho fijo y nada por debajo de 12 px
-        velo = QRadialGradient(QPointF(0, rd * 0.12), rd * 1.1)
-        velo.setColorAt(0.0, QColor(2, 6, 14, 105))
-        velo.setColorAt(1.0, QColor(2, 6, 14, 0))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(velo))
-        p.drawEllipse(QPointF(0, rd * 0.12), rd * 1.1, rd * 1.1)
-        p.setPen(QColor(255, 255, 255))
-        p.setFont(cifras(fuente(max(20, int(rd * 0.78)), peso=fam)))
-        p.drawText(QRectF(-rd, -rd * 0.78, 2 * rd, rd * 1.2), int(Qt.AlignmentFlag.AlignCenter), f'{int(round(ctx.progreso * 100))}%')
-        # justo debajo del porcentaje: cuánto falta; debajo, qué se está haciendo. Cada uno en UNA línea que quepa; si no cabe ni a
-        # 10 px se omite (la barra de abajo lo dice): antes se partía o se salía del círculo en ventanas pequeñas
-        f_eta = fuente_que_cabe(ctx.eta, rd * 1.8, max(12, int(rd * 0.23)), 10, 'extra', True) if ctx.eta else None
-        if f_eta is not None:
-            p.setPen(QColor(255, 236, 170, 250))
-            p.setFont(f_eta)
-            p.drawText(QRectF(-rd, rd * 0.36, 2 * rd, rd * 0.32), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop), ctx.eta)
-        f_txt = fuente_que_cabe(ctx.texto, rd * 1.75, max(12, int(rd * 0.19)), 10, 'medio') if ctx.texto else None
-        if f_txt is not None:
-            p.setPen(QColor(min(255, col.red() + 70), min(255, col.green() + 70), min(255, col.blue() + 70), 245))
-            p.setFont(f_txt)
-            p.drawText(QRectF(-rd, rd * (0.7 if f_eta is not None else 0.36), 2 * rd, rd * 0.32), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop), ctx.texto)
-    elif est == 'hecho':
-        palomita(p, rd, ctx.marca, QColor('#FFC857') if ctx.tono == 'aviso' else col)
-    elif est == 'error':
-        p.setPen(QColor(255, 150, 150, int(255 * (1 - 0.5 * ctx.apagon))))
-        p.setFont(fuente(max(30, int(rd * 1.5)), peso='extra'))
-        p.drawText(QRectF(-rd, -rd, 2 * rd, 2 * rd), int(Qt.AlignmentFlag.AlignCenter), '!')
-    else:
-        if ctx.residuo > 0.01:
-            palomita(p, rd, 1.0, col, ctx.residuo)
-        (emblema or (lambda: play(p, rd * 0.62, col)))()
+def _ruido(n, rng, octavas=(4, 8, 16, 32, 64)):
+    """Ruido fractal suave en [0, 1] (n x n): octavas de valores al azar interpolados (matriz de pesos: rápido) y difuminados."""
+    acc = np.zeros((n, n), np.float32)
+    total = 0.0
+    for i, o in enumerate(octavas):
+        xs = np.linspace(0.0, o, n)
+        i0 = np.minimum(xs.astype(int), o - 1)
+        f = xs - i0
+        f = f * f * (3 - 2 * f)
+        m = np.zeros((n, o + 1), np.float32)
+        m[np.arange(n), i0] = 1 - f
+        m[np.arange(n), i0 + 1] += f
+        base = rng.random((o + 1, o + 1)).astype(np.float32)
+        w = 1.0 / (1.7 ** i)
+        acc += (m @ base @ m.T) * w
+        total += w
+    acc /= total
+    for _ in range(2):
+        acc = (np.roll(acc, 2, 0) + acc + np.roll(acc, -2, 0)) / 3
+        acc = (np.roll(acc, 2, 1) + acc + np.roll(acc, -2, 1)) / 3
+    return (acc - acc.min()) / max(1e-6, float(acc.max() - acc.min()))
 
 
+def _imagen(rgb, a):
+    """numpy rgb (alto, ancho, 3) 0..255 y alfa 0..1 -> QImage ARGB32 premultiplicado."""
+    h, w = a.shape
+    buf = np.zeros((h, w, 4), np.uint8)
+    buf[..., 0] = np.clip(rgb[..., 2] * a, 0, 255)
+    buf[..., 1] = np.clip(rgb[..., 1] * a, 0, 255)
+    buf[..., 2] = np.clip(rgb[..., 0] * a, 0, 255)
+    buf[..., 3] = np.clip(a * 255, 0, 255)
+    return QImage(buf.data, w, h, w * 4, QImage.Format.Format_ARGB32_Premultiplied).copy()
+
+
+def _textura_nube(n, semilla, c1, c2, densidad=1.0):
+    rng = np.random.default_rng(semilla)
+    f = _ruido(n, rng)
+    g = _ruido(n, rng, (3, 6, 12))
+    yy, xx = (np.mgrid[0:n, 0:n] / (n - 1)) * 2 - 1
+    caida = np.clip(1 - np.sqrt(xx ** 2 + yy ** 2), 0, 1) ** 1.5
+    dens = (np.clip((f - 0.30) * 2.0, 0, 1) ** 1.5) * caida * densidad
+    m = np.clip(g * 1.5 - 0.25, 0, 1)[..., None]
+    rgb = np.array(c1, np.float32) * (1 - m) + np.array(c2, np.float32) * m
+    return QPixmap.fromImage(_imagen(rgb, np.clip(dens, 0, 1)))
+
+
+def _textura_disco(n=320, semilla=81):
+    """v5.49 pulido: un disco de gas visto de frente (un anillo con tres brazos en espiral y grumos), casi blanco para teñirlo. Aplastado
+    y girando alrededor del orbe parece un remolino en perspectiva."""
+    rng = np.random.default_rng(semilla)
+    f = _ruido(n, rng, (4, 8, 16, 32))
+    yy, xx = (np.mgrid[0:n, 0:n] / (n - 1)) * 2 - 1
+    r = np.sqrt(xx ** 2 + yy ** 2)
+    th = np.arctan2(yy, xx)
+    banda = np.exp(-((r - 0.68) / 0.19) ** 2)
+    brazos = 0.5 + 0.5 * np.sin(3 * th + 10 * r)
+    a = np.clip(banda * (0.35 + 0.65 * brazos) * (0.3 + 1.0 * f), 0, 1) * (r < 1)
+    calor = np.clip((0.85 - r) * 2.5, 0, 1)[..., None]                  # más claro por dentro
+    rgb = np.array((205, 225, 235), np.float32) * (1 - calor) + np.array((255, 255, 250), np.float32) * calor
+    return QPixmap.fromImage(_imagen(rgb, a))
+
+
+def _tenir(pm, hexa):
+    """Una textura teñida de un color: multiplicar y recortar con su propia transparencia."""
+    base = pm.toImage().convertToFormat(QImage.Format.Format_ARGB32_Premultiplied)
+    img = QImage(base)
+    q = QPainter(img)
+    q.setCompositionMode(QPainter.CompositionMode.CompositionMode_Multiply)
+    q.fillRect(img.rect(), QColor(hexa))
+    q.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationIn)
+    q.drawImage(0, 0, base)
+    q.end()
+    return QPixmap.fromImage(img)
+
+
+def _textura_haz(largo=512, ancho=96):
+    """Un haz de luz: se apaga a lo largo y es gaussiano a lo ancho (verde claro)."""
+    xs = np.linspace(0, 1, largo)[None, :]
+    ys = np.linspace(-1, 1, ancho)[:, None]
+    a = (1 - xs) ** 1.6 * np.exp(-(ys ** 2) / (0.10 + 0.5 * xs ** 1.2)) * np.clip(xs * 8, 0, 1)
+    rgb = np.broadcast_to(np.array((200, 255, 235), np.float32), (ancho, largo, 3))
+    return QPixmap.fromImage(_imagen(rgb, a))
+
+
+class _Escena:
+    """Lo que un estilo lee de la escena en cada cuadro (de la real, `EscenaGo`, o de la falsa de las miniaturas)."""
+    __slots__ = ('t', 'estado', 'trab', 'en', 'prog', 'fase', 'fcol', 'reap', 'expl', 'pasos', 'hechos', 'fin')
+
+    def __init__(self, e):
+        self.t = e._t
+        self.estado = e._estado
+        self.trab = self.estado in ('trabajando', 'explotando')
+        self.en = e.energia
+        self.prog = max(0.0, min(1.0, (e.meta - 0.08) / 0.8)) if self.trab else 0.0
+        self.fase = e._fase if self.trab else ''
+        self.fcol = FASE_COL.get(e._fase, '#7DFFB2') if self.trab else '#7DFFB2'
+        self.reap = e.reaparecer if self.estado in ('hecho', 'reposo') else 1.0
+        self.expl = e.expl
+        self.pasos = e._pasos
+        self.fin = self.estado == 'hecho' or self.expl > 0
+        self.hechos = 6 if self.fin else sum(1 for s in self.pasos if s['estado'] in ('hecho', 'saltado'))
+
+
+# --------------------------------------------------------------------------------------------------- estilo base: el astrolabio
 class Estilo:
+    """El botón GO es el astrolabio de bronce (`orbe_mecanica.OrbeMecanica`, capas cacheadas que giran); la escena la pone cada estilo."""
     clave = ''
     nombre = ''
     descr = ''
     tema = 'noche'                       # superficies de la interfaz: noche | negro | grafito
-    acento = '#22D3EE'                   # color de resaltado de toda la interfaz
-    aurora = ('#0F62FE', '#8B5CF6', '#22D3EE')       # las 3 luces del fondo de todas las páginas
-    pal = ('#FFFFFF',)                   # colores de las partículas
-    modo = 'espiral'                     # espiral | ascenso | caida | orbita
-    trazo = True                         # con estela (líneas) o solo puntos/burbujas
-    cabeza = 2.4                         # tamaño de la cabeza de la partícula
-    hud = False                          # el dial y las órbitas de mograf_ui encima del héroe
-    vel_extra = 1.0
-
-    def __init__(self):
-        self.rot = [0.0] * 6
-
-    # -- movimiento (cada cuadro)
-    def avanzar(self, dt, vel):
-        v = max(0.0, vel) * self.vel_extra
-        for i, k in enumerate((3.0, -4.5, 7.0, 10.0, -2.0, 5.0)):
-            self.rot[i] = (self.rot[i] + k * v * dt) % 360.0
-
-    # -- dibujo
-    def dibujar(self, p, c, R, ctx, R_base=None):
-        p.save()
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        p.translate(c)
-        if ctx.vibra > 0.01:
-            p.translate(math.sin(ctx.t * 71.0) * ctx.vibra * R * 0.007, math.cos(ctx.t * 83.0) * ctx.vibra * R * 0.006)
-        self.heroe(p, R, ctx)
-        if ctx.flare > 0.01:
-            f = 1.0 - ctx.flare
-            col = QColor('#FFC857') if (ctx.tono == 'aviso' and ctx.estado == 'hecho') else (QColor('#FF6B6B') if ctx.estado == 'error' else QColor(self.acento))
-            p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-            g = QRadialGradient(QPointF(0, 0), R * (0.6 + 1.1 * f))
-            g.setColorAt(0.0, QColor(235, 255, 245, int(150 * ctx.flare ** 1.5)))
-            g.setColorAt(0.5, _c(col.name(), 90 * ctx.flare))
-            g.setColorAt(1.0, _c(col.name(), 0))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QBrush(g))
-            p.drawEllipse(QPointF(0, 0), R * (0.6 + 1.1 * f), R * (0.6 + 1.1 * f))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            p.setPen(QPen(QColor(235, 255, 245, int(220 * ctx.flare)), max(1.5, R * 0.03 * ctx.flare)))
-            p.drawEllipse(QPointF(0, 0), R * (0.45 + 0.85 * f), R * (0.45 + 0.85 * f))
-            p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
-        p.restore()
-
-    def heroe(self, p, R, ctx):
-        pass
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QRadialGradient(c, max(W, H) * 0.8)
-        g.setColorAt(0.0, QColor(10, 30 + int(30 * e), 40 + int(30 * e)))
-        g.setColorAt(1.0, QColor(2, 6, 10))
-        q.fillRect(QRectF(0, 0, W, H), g)
-
-    def frente(self, p, W, H, c, t, estado):
-        pass
-
-    # -- utilidades
-    @staticmethod
-    def halo(p, R, col, a, radio=1.25):
-        g = QRadialGradient(QPointF(0, 0), R * radio)
-        g.setColorAt(0.4, _c(col.name(), a))
-        g.setColorAt(1.0, _c(col.name(), 0))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(g))
-        p.drawEllipse(QPointF(0, 0), R * radio, R * radio)
-
-    @staticmethod
-    def atenuar(ctx):
-        return (0.5 if ctx.estado == 'apagado' else 1.0) * (1.0 - 0.55 * ctx.apagon)
-
-
-# =================================================================================================== 1 · ASTROLABIO
-class Astrolabio(Estilo):
-    clave = 'astrolabio'
-    nombre = tr('Astrolabio')
-    descr = tr('Engranajes de bronce, runas esmeralda y una gema: una máquina de relojería que trabaja por ti.')
-    tema = 'noche'
-    acento = '#22B573'
-    aurora = ('#0B8F5B', '#1D6B7A', '#B8742C')
+    acento = '#22B573'                   # color de resaltado de toda la interfaz
+    aurora = ('#0B8F5B', '#1D6B7A', '#B8742C')       # las 3 luces del fondo de todas las páginas
     pal = ('#7DFFB2', '#4FFFB0', '#4FD8FF', '#FFFFFF', '#B7FFE0', '#FFD166', '#B388FF', '#FF7BD5', '#FFB35C', '#E6C9FF', '#FFC857', '#FFE3A3')
-    modo = 'espiral'
-    hud = True
+    modo = 'espiral'                     # cómo se mueven las motas de la escena (EscenaGo._posiciones_particulas)
+    perfiles = True                      # las motas usan los perfiles por fase de GO (EscenaGo.PERFIL)
+    ensambla = True                      # el astrolabio entra pieza a pieza: BotonGo no lo hace crecer
+    pasos_lista = True                   # la lista de pasos de la escena (Proceso pone sus tarjetas)
+    cometas = True                       # los cometas que llevan cada paso a su etiqueta
 
     def __init__(self):
-        super().__init__()
         import orbe_mecanica
         self._orb = orbe_mecanica.OrbeMecanica()
+        self._bajo = None
+        self._st = None
 
     def avanzar(self, dt, vel):
         self._orb.avanzar(dt, vel)
@@ -314,1023 +306,1059 @@ class Astrolabio(Estilo):
                           1.0 if ctx.apagon > 0 else 0.0, ctx.quieto, ctx.flare, R_base, ctx.fase, ctx.fase_t, ctx.tono, ctx.entrada,
                           ctx.vibra, (0.0, 0.0), ctx.residuo, ctx.apagon, ctx.eta, cortes=ctx.cortes)
 
+    # -- la escena
+    def escena(self, e, p, W, H, c, Rs, rect):
+        """Todo lo del estilo a resolución completa (antes de lo común: chispas, pasos, barra…). `e` = la escena."""
+        self._st = _Escena(e)
+        self._pintar_fondo(e, p, W, H, c)
+
     def fondo(self, q, W, H, c, e, t, estado):
         g = QRadialGradient(c, max(W, H) * 0.8)
         g.setColorAt(0.0, QColor(6, 34 + int(36 * e), 30 + int(30 * e)))
         g.setColorAt(0.5, QColor(3, 16, 16))
         g.setColorAt(1.0, QColor(1, 6, 8))
         q.fillRect(QRectF(0, 0, W, H), g)
-        if estado == 'explotando':
-            return
-        grande = max(W, H)
-        cg = QConicalGradient(c, -((t * (3.0 + 5.0 * e)) % 360.0))
-        alfa_h, ancho_h = int(20 + 28 * e), 0.0085
-        cg.setColorAt(0.0, QColor(70, 235, 160, alfa_h))
-        cg.setColorAt(ancho_h, QColor(70, 235, 160, 0))
-        for i in range(1, 9):
-            pos = i / 9.0
-            cg.setColorAt(pos - ancho_h, QColor(70, 235, 160, 0))
-            cg.setColorAt(pos, QColor(70, 235, 160, alfa_h))
-            cg.setColorAt(pos + ancho_h, QColor(70, 235, 160, 0))
-        cg.setColorAt(1.0 - ancho_h, QColor(70, 235, 160, 0))
-        cg.setColorAt(1.0, QColor(70, 235, 160, alfa_h))
-        q.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-        q.fillRect(QRectF(0, 0, W, H), cg)
-        q.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
-        velo = QRadialGradient(c, grande * 0.75)
-        velo.setColorAt(0.10, QColor(3, 16, 16, 0))
-        velo.setColorAt(0.85, QColor(3, 12, 14, 235))
-        velo.setColorAt(1.0, QColor(2, 8, 10, 255))
-        q.fillRect(QRectF(0, 0, W, H), velo)
-        vig = QRadialGradient(QPointF(W / 2, H / 2), grande * 0.72)
-        vig.setColorAt(0.55, QColor(0, 0, 0, 0))
-        vig.setColorAt(1.0, QColor(0, 0, 0, 150))
-        q.fillRect(QRectF(0, 0, W, H), vig)
 
+    def onda(self, e, p, onda, W, H):
+        e._dibujar_onda(p, onda, W, H)
 
-# =================================================================================================== 2 · SYNTHWAVE
-class Synthwave(Estilo):
-    clave = 'synthwave'
-    nombre = tr('Synthwave')
-    descr = tr('Un sol retro con franjas, anillos de neón y una cuadrícula que avanza hacia ti.')
-    tema = 'negro'
-    acento = '#E8457E'
-    aurora = ('#FF2E93', '#7B2FF7', '#2BD2FF')
-    pal = ('#FF3CAC', '#2BD2FF', '#FFE259', '#FFFFFF')
-    modo = 'ascenso'
-    cabeza = 2.6
-
-    def heroe(self, p, R, ctx):
-        rosa, cian = QColor('#FF2E93'), QColor('#2BD2FF')
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        self.halo(p, R, rosa, 60 + 40 * math.sin(ctx.t * 2.0) ** 2 + 40 * ctx.hover)
-        # el sol
-        rs = R * 0.70
-        sol = QPainterPath()
-        sol.addEllipse(QPointF(0, 0), rs, rs)
-        p.save()
-        p.setClipPath(sol)
-        lg = QLinearGradient(0, -rs, 0, rs)
-        lg.setColorAt(0.0, QColor('#FFE259'))
-        lg.setColorAt(0.42, QColor('#FF9A3C'))
-        lg.setColorAt(0.72, QColor('#FF2E93'))
-        lg.setColorAt(1.0, QColor('#8E1FD0'))
-        p.fillRect(QRectF(-rs, -rs, 2 * rs, 2 * rs), lg)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(18, 7, 40))
-        off = (ctx.t * 0.05 * max(0.4, ctx.vel * 0.5)) % 0.12                     # las franjas suben despacio
-        for k in range(8):
-            y = (0.02 + k * 0.12 - off) * R
-            if y < -0.05 * R:
-                continue
-            p.drawRect(QRectF(-rs, y, 2 * rs, (0.012 + 0.012 * k) * R))
-        p.restore()
-        # anillos de neón
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        for k, al in ((2.6, 30), (1.0, 230)):
-            p.setPen(_pen(_c('#FF2E93', al), R * 0.018 * k))
-            p.drawEllipse(QPointF(0, 0), R * 0.93, R * 0.93)
-        pen = QPen(_c('#2BD2FF', 235), R * 0.014)
-        pen.setDashPattern([2.5, 5.0])
-        pen.setDashOffset(-self.rot[0] * 0.6)
-        p.setPen(pen)
-        p.drawEllipse(QPointF(0, 0), R * 0.84, R * 0.84)
-        for i in range(2):                                                         # dos satélites de neón
-            ang = math.radians(self.rot[2] * 0.9 + i * 180)
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(_c('#FFFFFF', 255))
-            p.drawEllipse(QPointF(R * 0.93 * math.cos(ang), R * 0.93 * math.sin(ang)), R * 0.028, R * 0.028)
-        if ctx.estado == 'trabajando':
-            arco_prog(p, R * 0.93, R * 0.016, ctx.progreso, cian, cortes=ctx.cortes)
-        centro_estado(p, ctx, R, R * 0.42, cian, emblema=lambda: play(p, R * 0.30, QColor('#FFFFFF')))
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        hor = H * 0.64
-        g = QLinearGradient(0, 0, 0, hor)
-        g.setColorAt(0.0, QColor('#08011A'))
-        g.setColorAt(0.65, QColor('#2A0A4F'))
-        g.setColorAt(1.0, QColor(255, 46, 147, 150 + int(40 * e)))
-        q.fillRect(QRectF(0, 0, W, hor), g)
-        suelo = QLinearGradient(0, hor, 0, H)
-        suelo.setColorAt(0.0, QColor('#240742'))
-        suelo.setColorAt(1.0, QColor('#07010F'))
-        q.fillRect(QRectF(0, hor, W, H - hor), suelo)
-        rnd = random.Random(5)
-        q.setPen(Qt.PenStyle.NoPen)
-        for i in range(70):                                                         # estrellas que titilan
-            x, y, f = rnd.random() * W, rnd.random() * hor * 0.85, rnd.random() * PI2
-            q.setBrush(QColor(255, 255, 255, int(80 + 140 * (0.5 + 0.5 * math.sin(t * 2.2 + f)))))
-            q.drawEllipse(QPointF(x, y), 1.4, 1.4)
-        # la cuadrícula en perspectiva que avanza
-        q.setPen(QPen(QColor(255, 60, 180, 120), 1.6))
-        lines = []
-        cx = W / 2
-        for i in range(-14, 15):
-            lines.append(QLineF(cx + i * 6, hor, cx + i * W * 0.11, H))
-        n = 12
-        fase = (t * 0.35 * (1.0 + 2.0 * e)) % 1.0
-        for k in range(n):
-            u = ((k + fase) / n) ** 2.3
-            y = hor + (H - hor) * u
-            lines.append(QLineF(0, y, W, y))
-        q.drawLines(lines)
-        glow = QLinearGradient(0, hor - 30, 0, hor + 30)
-        glow.setColorAt(0.0, QColor(255, 46, 147, 0))
-        glow.setColorAt(0.5, QColor(255, 120, 200, 130))
-        glow.setColorAt(1.0, QColor(255, 46, 147, 0))
-        q.fillRect(QRectF(0, hor - 30, W, 60), glow)
-
-
-# =================================================================================================== 3 · REACTOR
-class Reactor(Estilo):
-    clave = 'reactor'
-    nombre = tr('Reactor')
-    descr = tr('Un núcleo hexagonal con anillos segmentados que giran en sentidos opuestos, estilo panel de nave.')
-    tema = 'noche'
-    acento = '#22D3EE'
-    aurora = ('#0EA5E9', '#2563EB', '#22D3EE')
-    pal = ('#22D3EE', '#FFFFFF', '#7DD3FC', '#38BDF8')
-    modo = 'orbita'
-    cabeza = 2.2
-
-    def heroe(self, p, R, ctx):
-        cian = QColor('#22D3EE')
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        self.halo(p, R, cian, 50 + 40 * ctx.hover + (35 if ctx.estado == 'trabajando' else 0))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        # marcas finas
-        p.setPen(QPen(_c('#7DD3FC', 90), 1.2))
-        marcas = []
-        for i in range(90):
-            ang = i * PI2 / 90 + math.radians(self.rot[4])
-            l = 0.05 if i % 5 == 0 else 0.025
-            marcas.append(QLineF(R * 0.995 * math.cos(ang), R * 0.995 * math.sin(ang), R * (0.995 - l) * math.cos(ang), R * (0.995 - l) * math.sin(ang)))
-        p.drawLines(marcas)
-        # anillo segmentado exterior (el que muestra el progreso: cada segmento se enciende)
-        nseg = 12
-        lit = ctx.progreso * nseg if ctx.estado == 'trabajando' else (nseg if ctx.estado == 'hecho' else 0)
-        rect = QRectF(-R * 0.86, -R * 0.86, R * 1.72, R * 1.72)
-        for i in range(nseg):
-            ang0 = i * 360.0 / nseg + self.rot[1] * 0.25
-            on = max(0.0, min(1.0, lit - i))
-            al = 60 + 195 * on if ctx.estado != 'listo' else 110 + 70 * (0.5 + 0.5 * math.sin(ctx.t * 2 + i * 0.5))
-            p.setPen(_pen(_c('#22D3EE', al), R * 0.05, Qt.PenCapStyle.FlatCap))
-            p.drawArc(rect, int(-ang0 * 16), int(-24 * 16))
-        # anillo intermedio, en sentido contrario
-        rect2 = QRectF(-R * 0.70, -R * 0.70, R * 1.40, R * 1.40)
-        p.setPen(_pen(_c('#38BDF8', 170), R * 0.028, Qt.PenCapStyle.FlatCap))
-        for i in range(8):
-            p.drawArc(rect2, int((-i * 45 + self.rot[0] * 1.4) * 16), int(-30 * 16))
-        p.setPen(_pen(_c('#FFFFFF', 150), R * 0.012))
-        for i in range(3):
-            p.drawArc(QRectF(-R * 0.62, -R * 0.62, R * 1.24, R * 1.24), int((i * 120 + self.rot[2]) * 16), 28 * 16)
-        # radios
-        p.setPen(QPen(_c('#22D3EE', 60), 1.2))
-        p.drawLines([QLineF(R * 0.34 * math.cos(math.radians(60 * i + 30)), R * 0.34 * math.sin(math.radians(60 * i + 30)),
-                            R * 0.58 * math.cos(math.radians(60 * i + 30)), R * 0.58 * math.sin(math.radians(60 * i + 30))) for i in range(6)])
-        # el núcleo hexagonal que late
-        lat = 1.0 + 0.05 * math.sin(ctx.t * 3.0) + (0.04 if ctx.estado == 'trabajando' else 0.0)
-        hexa = QPolygonF([QPointF(R * 0.40 * lat * math.cos(math.radians(60 * i + 30)), R * 0.40 * lat * math.sin(math.radians(60 * i + 30))) for i in range(6)])
-        g = QRadialGradient(QPointF(0, 0), R * 0.42)
-        g.setColorAt(0.0, QColor(210, 250, 255, 240))
-        g.setColorAt(0.55, QColor(34, 211, 238, 150))
-        g.setColorAt(1.0, QColor(8, 60, 90, 230))
-        p.setBrush(QBrush(g))
-        p.setPen(_pen(_c('#9BE8FF', 220), R * 0.016))
-        p.drawPolygon(hexa)
-        # esquinas de visor
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(_pen(_c('#22D3EE', 150), R * 0.014, Qt.PenCapStyle.SquareCap))
-        for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
-            x, y, l = sx * R * 1.04, sy * R * 1.04, R * 0.14
-            p.drawPolyline([QPointF(x - sx * l, y), QPointF(x, y), QPointF(x, y - sy * l)])
-        centro_estado(p, ctx, R, R * 0.36, cian, emblema=lambda: play(p, R * 0.26, QColor('#FFFFFF')))
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QRadialGradient(c, max(W, H) * 0.75)
-        g.setColorAt(0.0, QColor(6, 36 + int(30 * e), 62 + int(40 * e)))
-        g.setColorAt(1.0, QColor(2, 7, 16))
-        q.fillRect(QRectF(0, 0, W, H), g)
-        # cuadrícula de planos
-        paso = 44.0
-        off = (t * 6.0) % paso
-        q.setPen(QPen(QColor(34, 211, 238, 24), 1.0))
-        lineas = [QLineF(x - off, 0, x - off, H) for x in np.arange(0, W + paso, paso)]
-        lineas += [QLineF(0, y - off * 0.5, W, y - off * 0.5) for y in np.arange(0, H + paso, paso)]
-        q.drawLines(lineas)
-        # círculos de radar y el barrido
-        q.setBrush(Qt.BrushStyle.NoBrush)
-        q.setPen(QPen(QColor(34, 211, 238, 34), 1.2))
-        for k in range(1, 5):
-            q.drawEllipse(c, k * max(W, H) * 0.13, k * max(W, H) * 0.13)
-        cg = QConicalGradient(c, -((t * (30 + 80 * e)) % 360.0))
-        cg.setColorAt(0.0, QColor(34, 211, 238, 70))
-        cg.setColorAt(0.12, QColor(34, 211, 238, 0))
-        cg.setColorAt(1.0, QColor(34, 211, 238, 0))
-        q.setPen(Qt.PenStyle.NoPen)
-        q.setBrush(QBrush(cg))
-        q.drawEllipse(c, max(W, H) * 0.62, max(W, H) * 0.62)
-
-
-# =================================================================================================== 4 · AGUJERO NEGRO
-class Agujero(Estilo):
-    clave = 'agujero'
-    nombre = tr('Agujero negro')
-    descr = tr('Un disco de acreción incandescente que gira alrededor de un horizonte de sucesos, con estrellas lejanas.')
-    tema = 'negro'
-    acento = '#F5832F'
-    aurora = ('#F97316', '#7C2D12', '#FBBF24')
-    pal = ('#FFB35C', '#FFFFFF', '#FF7A18', '#FFD166', '#FFE8B0')
-    modo = 'espiral'
-    cabeza = 2.6
-
-    def heroe(self, p, R, ctx):
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        self.halo(p, R, QColor('#FF7A18'), 55 + 35 * ctx.hover + (30 if ctx.estado == 'trabajando' else 0), 1.35)
-        rh = R * 0.46                                                              # el horizonte
-        # el disco de acreción: un degradado cónico que gira, en una elipse inclinada
-        def disco(frente):
-            p.save()
-            p.rotate(-16)
-            if frente:
-                clip = QPainterPath()
-                clip.addRect(QRectF(-R * 1.2, 0, R * 2.4, R * 1.2))
-                p.setClipPath(clip)
-            cg = QConicalGradient(QPointF(0, 0), self.rot[0] * 1.6)
-            for pos, col in ((0.0, '#FFF4D6'), (0.2, '#FFB35C'), (0.45, '#FF5A1F'), (0.65, '#8A1F0A'), (0.85, '#FF8A2E'), (1.0, '#FFF4D6')):
-                cg.setColorAt(pos, QColor(col))
-            ex = QPainterPath()
-            ex.addEllipse(QPointF(0, 0), R * 1.04, R * 0.21)
-            hueco = QPainterPath()
-            hueco.addEllipse(QPointF(0, 0), R * 0.50, R * 0.09)
-            p.fillPath(ex.subtracted(hueco), QBrush(cg))
-            p.restore()
-        disco(False)
-        # el disco negro y el anillo de fotones
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(0, 0, 0))
-        p.drawEllipse(QPointF(0, 0), rh, rh)
-        # luz del disco doblada por la gravedad, por encima y por debajo del horizonte
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        for k, al in ((3.0, 46), (1.0, 245)):
-            p.setPen(_pen(_c('#FFC070', al), R * 0.024 * k))
-            p.drawArc(QRectF(-rh * 1.12, -rh * 1.12, rh * 2.24, rh * 2.24), 6 * 16, 168 * 16)      # la luz de detrás del disco, doblada por arriba
-            p.setPen(_pen(_c('#FF8A3C', al * 0.55), R * 0.016 * k))
-            p.drawArc(QRectF(-rh * 1.12, -rh * 1.12, rh * 2.24, rh * 2.24), 190 * 16, 160 * 16)     # y por abajo
-        p.setPen(_pen(_c('#FFE6B8', 120), R * 0.012))
-        p.drawEllipse(QPointF(0, 0), rh * 1.04, rh * 1.04)
-        disco(True)
-        if ctx.estado == 'trabajando':
-            arco_prog(p, rh * 1.04, R * 0.018, ctx.progreso, QColor('#FFC070'), cortes=ctx.cortes)
-        centro_estado(p, ctx, R, rh * 0.82, QColor('#FFC070'), emblema=lambda: play(p, rh * 0.62, QColor('#FFC070')))
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QRadialGradient(c, max(W, H) * 0.8)
-        g.setColorAt(0.0, QColor(34 + int(30 * e), 14, 8))
-        g.setColorAt(0.5, QColor(10, 5, 8))
-        g.setColorAt(1.0, QColor(2, 2, 5))
-        q.fillRect(QRectF(0, 0, W, H), g)
-        rnd = random.Random(11)
-        q.setPen(Qt.PenStyle.NoPen)
-        ang0 = t * (0.012 + 0.03 * e)                                               # las estrellas giran despacio alrededor del agujero
-        for i in range(120):
-            r = (0.06 + rnd.random() ** 0.7 * 0.9) * max(W, H) * 0.7
-            a = rnd.random() * PI2 + ang0 * (1.4 - r / (max(W, H) * 0.7))
-            tam = 0.8 + rnd.random() * 1.6
-            q.setBrush(QColor(255, 235, 210, int(60 + 150 * (0.5 + 0.5 * math.sin(t * 1.6 + i)))))
-            q.drawEllipse(QPointF(c.x() + r * math.cos(a), c.y() + 0.8 * r * math.sin(a)), tam, tam)
-
-
-# =================================================================================================== 5 · LÍQUIDO
-class Liquido(Estilo):
-    clave = 'liquido'
-    nombre = tr('Cristal líquido')
-    descr = tr('Una gota de cristal que respira, se llena de luz con el progreso y refleja un fondo de pasteles suaves.')
-    tema = 'noche'
-    acento = '#8B5CF6'
-    aurora = ('#7DD3FC', '#C084FC', '#F9A8D4')
-    pal = ('#BAE6FD', '#E9D5FF', '#FBCFE8', '#FFFFFF')
-    modo = 'ascenso'
-    trazo = False
-    cabeza = 5.0
-
-    def _blob(self, R, t, amp, n=72):
-        pts = []
-        for i in range(n):
-            a = i * PI2 / n
-            r = R * (1.0 + amp * (0.050 * math.sin(3 * a + t * 1.3) + 0.040 * math.sin(5 * a - t * 1.7) + 0.030 * math.sin(2 * a + t * 0.9)))
-            pts.append(QPointF(r * math.cos(a), r * math.sin(a)))
-        return QPolygonF(pts)
-
-    def heroe(self, p, R, ctx):
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        trab = ctx.estado == 'trabajando'
-        amp = 1.0 + (1.6 if trab else 0.0) + 1.2 * ctx.hover
-        t = ctx.t
-        rb = R * 0.80
-        blob = self._blob(rb, t, amp)
-        ruta = QPainterPath()
-        ruta.addPolygon(blob)
-        ruta.closeSubpath()
-        # sombra suave debajo
-        sg = QRadialGradient(QPointF(0, rb * 1.12), rb * 0.9)
-        sg.setColorAt(0.0, QColor(10, 10, 40, 110))
-        sg.setColorAt(1.0, QColor(10, 10, 40, 0))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(sg))
-        p.save()
-        p.translate(0, rb * 1.0)
-        p.scale(1.0, 0.22)
-        p.drawEllipse(QPointF(0, 0), rb, rb)
-        p.restore()
-        # el cuerpo de cristal
-        g = QRadialGradient(QPointF(-rb * 0.35, -rb * 0.4), rb * 1.5)
-        g.setColorAt(0.0, QColor(240, 250, 255, 240))
-        g.setColorAt(0.35, QColor(125, 211, 252, 215))
-        g.setColorAt(0.75, QColor(192, 132, 252, 215))
-        g.setColorAt(1.0, QColor(99, 102, 241, 235))
-        p.setBrush(QBrush(g))
-        p.drawPath(ruta)
-        # el líquido que sube con el progreso (o el nivel en reposo)
-        nivel = ctx.progreso if trab else (1.0 if ctx.estado == 'hecho' else 0.34)
-        y0 = rb * (1.0 - 2.0 * nivel)
-        p.save()
-        p.setClipPath(ruta)
-        agua = QPainterPath()
-        agua.moveTo(-rb * 1.1, rb * 1.1)
-        for k in range(0, 33):
-            x = -rb * 1.1 + k * (rb * 2.2 / 32)
-            agua.lineTo(x, y0 + math.sin(x / rb * 5.0 + t * 2.6) * rb * 0.035 * (1 + amp * 0.4))
-        agua.lineTo(rb * 1.1, rb * 1.1)
-        agua.closeSubpath()
-        lg = QLinearGradient(0, y0, 0, rb)
-        lg.setColorAt(0.0, QColor(56, 189, 248, 190))
-        lg.setColorAt(1.0, QColor(129, 140, 248, 235))
-        p.setBrush(QBrush(lg))
-        p.drawPath(agua)
-        p.restore()
-        # reflejos y borde de luz
-        p.setBrush(QColor(255, 255, 255, 120))
-        p.save()
-        p.translate(-rb * 0.34, -rb * 0.46)
-        p.rotate(-28)
-        p.drawEllipse(QPointF(0, 0), rb * 0.34, rb * 0.15)
-        p.restore()
-        p.setBrush(QColor(255, 255, 255, 190))
-        p.drawEllipse(QPointF(rb * 0.42, -rb * 0.52), rb * 0.06, rb * 0.06)
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(_pen(QColor(255, 255, 255, 150), R * 0.012))
-        p.drawPolygon(blob)
-        # burbujas que orbitan
-        p.setPen(Qt.PenStyle.NoPen)
-        for i in range(6):
-            ang = math.radians(self.rot[1] * 0.6 + i * 60)
-            rr = R * (0.98 + 0.04 * math.sin(t * 2 + i))
-            p.setBrush(QColor(255, 255, 255, 60))
-            p.drawEllipse(QPointF(rr * math.cos(ang), rr * 0.9 * math.sin(ang)), R * 0.032, R * 0.032)
-        if trab:
-            arco_prog(p, R * 0.98, R * 0.012, ctx.progreso, QColor('#E9D5FF'), cortes=ctx.cortes)
-        centro_estado(p, ctx, R, R * 0.40, QColor('#FFFFFF'), emblema=lambda: play(p, R * 0.28, QColor('#FFFFFF'), False))
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QLinearGradient(0, 0, W, H)
-        g.setColorAt(0.0, QColor('#1A1347'))
-        g.setColorAt(0.5, QColor('#241257'))
-        g.setColorAt(1.0, QColor('#0F2147'))
-        q.fillRect(QRectF(0, 0, W, H), g)
-        grande = max(W, H)
-        for i, (hexa, fx, fy) in enumerate((('#7DD3FC', 0.13, 0.17), ('#C084FC', 0.11, 0.23), ('#F9A8D4', 0.09, 0.19), ('#818CF8', 0.15, 0.13))):
-            cx = W * (0.5 + 0.38 * math.sin(t * fx + i * 1.7))
-            cy = H * (0.5 + 0.34 * math.cos(t * fy + i * 2.3))
-            rg = QRadialGradient(QPointF(cx, cy), grande * 0.42)
-            rg.setColorAt(0.0, _c(hexa, 90 + 40 * e))
-            rg.setColorAt(1.0, _c(hexa, 0))
-            q.fillRect(QRectF(0, 0, W, H), rg)
-        rnd = random.Random(3)
-        q.setPen(Qt.PenStyle.NoPen)
-        for i in range(26):                                                           # bokeh
-            x = (rnd.random() * W + t * (4 + 6 * rnd.random())) % W
-            y = (rnd.random() * H - t * (5 + 8 * rnd.random())) % H
-            q.setBrush(QColor(255, 255, 255, int(14 + 22 * rnd.random())))
-            q.drawEllipse(QPointF(x, y), 6 + rnd.random() * 18, 6 + rnd.random() * 18)
-
-
-# =================================================================================================== 6 · PRISMA
-class Prisma(Estilo):
-    clave = 'prisma'
-    nombre = tr('Prisma')
-    descr = tr('Un cristal facetado que gira en 3D y descompone la luz en un abanico de colores.')
-    tema = 'grafito'
-    acento = '#A78BFA'
-    aurora = ('#A78BFA', '#38BDF8', '#F472B6')
-    pal = ('#FF6B6B', '#FFD166', '#7DFFB2', '#4FD8FF', '#B388FF', '#FF7BD5', '#FFFFFF')
-    modo = 'espiral'
-    cabeza = 2.6
-
-    ARCO = ('#FF4D4D', '#FF9F43', '#FFE259', '#4ADE80', '#38BDF8', '#818CF8', '#C084FC')
-
-    def heroe(self, p, R, ctx):
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        t = ctx.t
-        self.halo(p, R, QColor('#A78BFA'), 55 + 35 * ctx.hover)
-        rot = math.radians(self.rot[0] * 1.3)
-        rad = R * 0.60
-        ytop, ybot, yeq = -R * 0.92, R * 0.88, -R * 0.04
-        vert = []
-        for i in range(6):
-            ang = rot + i * PI2 / 6
-            vert.append((rad * math.cos(ang), math.sin(ang), ang))
-        # los rayos descompuestos salen por la derecha
-        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-        base = math.radians(-14 + 4 * math.sin(t * 0.6))
-        for k, col in enumerate(self.ARCO):
-            ang = base + math.radians(k * 4.6)
-            p.setPen(_pen(_c(col, 150 if ctx.estado != 'apagado' else 60), R * 0.022))
-            p.drawLine(QPointF(R * 0.5, -R * 0.04), QPointF(R * 1.55 * math.cos(ang) + R * 0.4, R * 1.55 * math.sin(ang) * 0.9))
-        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
-        # caras: ordenadas por profundidad (las de detrás primero)
-        caras = []
-        for i in range(6):
-            x0, z0, a0 = vert[i]
-            x1, z1, a1 = vert[(i + 1) % 6]
-            zm = (z0 + z1) / 2
-            luz = 0.5 + 0.5 * math.cos((a0 + a1) / 2 - math.radians(-120))
-            caras.append((zm, (QPointF(0, ytop), QPointF(x0, yeq), QPointF(x1, yeq)), luz, 0))
-            caras.append((zm, (QPointF(0, ybot), QPointF(x1, yeq), QPointF(x0, yeq)), luz * 0.75, 1))
-        caras.sort(key=lambda c: c[0])
-        lit = ctx.progreso if ctx.estado == 'trabajando' else (1.0 if ctx.estado == 'hecho' else 0.0)
-        for idx, (zm, pts, luz, abajo) in enumerate(caras):
-            if zm < -0.15 and ctx.estado != 'apagado':
-                al = 70
-            else:
-                al = 215
-            k = (idx % 12) / 12.0
-            on = 1.0 if (k <= lit) else 0.0
-            col = QColor.fromHsvF((0.72 + 0.12 * luz + 0.05 * abajo + 0.08 * on) % 1.0, 0.45 + 0.35 * on, 0.55 + 0.45 * luz, al / 255.0)
-            p.setBrush(col)
-            p.setPen(_pen(QColor(255, 255, 255, 190 if zm > -0.15 else 70), R * 0.008))
-            p.drawPolygon(QPolygonF(list(pts)))
-        # destello que cruza una cara
-        f = (t % 3.6) / 3.6
-        if f < 0.3 and ctx.estado == 'listo':
-            x = -rad * 0.6 + (f / 0.3) * rad * 1.2
-            sp = QRadialGradient(QPointF(x, -R * 0.25), R * 0.2)
-            sp.setColorAt(0, QColor(255, 255, 255, int(230 * math.sin(f / 0.3 * math.pi))))
-            sp.setColorAt(1, QColor(255, 255, 255, 0))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QBrush(sp))
-            p.drawEllipse(QPointF(x, -R * 0.25), R * 0.2, R * 0.2)
-        if ctx.estado == 'trabajando':
-            cg = QConicalGradient(QPointF(0, 0), 90)
-            arco_prog(p, R * 0.98, R * 0.014, ctx.progreso, QColor('#C4B5FD'), cortes=ctx.cortes)
-        centro_estado(p, ctx, R, R * 0.34, QColor('#E9D5FF'), emblema=lambda: None)
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QRadialGradient(c, max(W, H) * 0.8)
-        g.setColorAt(0.0, QColor(26, 16, 48 + int(20 * e)))
-        g.setColorAt(1.0, QColor(6, 4, 12))
-        q.fillRect(QRectF(0, 0, W, H), g)
-        # un haz blanco entra por la izquierda y se abre en abanico por la derecha
-        q.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-        q.setPen(Qt.PenStyle.NoPen)
-        haz = QLinearGradient(0, c.y(), c.x(), c.y())
-        haz.setColorAt(0.0, QColor(255, 255, 255, 0))
-        haz.setColorAt(1.0, QColor(255, 255, 255, 60))
-        pol = QPolygonF([QPointF(0, c.y() - 8), QPointF(c.x(), c.y() - 3), QPointF(c.x(), c.y() + 3), QPointF(0, c.y() + 8)])
-        q.setBrush(QBrush(haz))
-        q.drawPolygon(pol)
-        for k, col in enumerate(self.ARCO):
-            ang = math.radians(-8 + k * 4.5 + 3 * math.sin(t * 0.5 + k))
-            L = max(W, H)
-            lg = QLinearGradient(c, QPointF(c.x() + L * math.cos(ang), c.y() + L * math.sin(ang)))
-            lg.setColorAt(0.0, _c(col, 70 + 30 * e))
-            lg.setColorAt(1.0, _c(col, 0))
-            tri = QPolygonF([c, QPointF(c.x() + L * math.cos(ang - 0.016), c.y() + L * math.sin(ang - 0.016)),
-                             QPointF(c.x() + L * math.cos(ang + 0.016), c.y() + L * math.sin(ang + 0.016))])
-            q.setBrush(QBrush(lg))
-            q.drawPolygon(tri)
-        q.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
-        rnd = random.Random(8)
-        for i in range(40):
-            x, y = rnd.random() * W, rnd.random() * H
-            q.setBrush(QColor(255, 255, 255, int(50 + 160 * (0.5 + 0.5 * math.sin(t * 2.4 + i * 1.7)))))
-            q.drawEllipse(QPointF(x, y), 1.3, 1.3)
-
-
-# =================================================================================================== 7 · ECUALIZADOR
-class Ecualizador(Estilo):
-    clave = 'ecualizador'
-    nombre = tr('Ecualizador')
-    descr = tr('Un anillo de barras de audio que baila: más grande cuanto más trabaja, con ondas de sonido de fondo.')
-    tema = 'noche'
-    acento = '#F472B6'
-    aurora = ('#EC4899', '#8B5CF6', '#22D3EE')
-    pal = ('#F472B6', '#22D3EE', '#FFFFFF', '#C084FC')
-    modo = 'ascenso'
-    cabeza = 2.8
-
-    N = 64
-
-    def heroe(self, p, R, ctx):
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        t = ctx.t
-        trab = ctx.estado == 'trabajando'
-        amp = 0.07 + (0.30 + 0.16 * ctx.progreso if trab else 0.0) + 0.05 * ctx.hover
-        if ctx.estado == 'hecho':
-            amp = 0.05 + 0.20 * max(0.0, 1.0 - max(0.0, ctx.cierre) / 1.2)
-        if ctx.estado == 'error':
-            amp = 0.02
-        beat = 0.5 + 0.5 * math.sin(t * 8.0) ** 2 if trab else 0.4
-        self.halo(p, R, QColor('#F472B6'), 45 + 40 * ctx.hover + 40 * (beat if trab else 0))
-        # el disco central
-        rc = R * 0.44
-        g = QRadialGradient(QPointF(-rc * 0.3, -rc * 0.4), rc * 1.6)
-        g.setColorAt(0.0, QColor(60, 30, 90))
-        g.setColorAt(1.0, QColor(14, 8, 30))
-        p.setPen(_pen(QColor(244, 114, 182, 170), R * 0.014))
-        p.setBrush(QBrush(g))
-        p.drawEllipse(QPointF(0, 0), rc, rc)
-        # las barras: tres grupos de color por altura (3 llamadas)
-        grupos = ([], [], [])
-        lit = int(ctx.progreso * self.N) if trab else (self.N if ctx.estado == 'hecho' else -1)
-        for i in range(self.N):
-            ang = i * PI2 / self.N - math.pi / 2
-            ruido = (math.sin(t * 3.1 + i * 0.9) + math.sin(t * 5.3 - i * 0.37) + math.sin(t * 1.7 + i * 2.1)) / 3.0
-            h = R * (0.05 + amp * (0.55 + 0.45 * ruido) * (0.7 + 0.5 * beat))
-            r0 = R * 0.52
-            ca, sa = math.cos(ang), math.sin(ang)
-            grupo = 0 if (i <= lit or lit < 0) else 2
-            if i > lit >= 0:
-                grupo = 2
-            elif h > R * 0.2:
-                grupo = 1
-            grupos[grupo].append(QLineF(r0 * ca, r0 * sa, (r0 + h) * ca, (r0 + h) * sa))
-        for lines, col, al in ((grupos[2], '#6B5B95', 140), (grupos[0], '#F472B6', 235), (grupos[1], '#22D3EE', 245)):
-            if lines:
-                p.setPen(_pen(_c(col, al), R * 0.034))
-                p.drawLines(lines)
-        # el osciloscopio circular
-        pts = []
-        for i in range(73):
-            ang = i * PI2 / 72
-            rr = R * 0.40 + R * 0.02 * math.sin(ang * 6 + t * 5.0) * (1 + 3 * amp)
-            pts.append(QPointF(rr * math.cos(ang), rr * math.sin(ang)))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(_pen(QColor(255, 255, 255, 120), R * 0.01))
-        p.drawPolyline(QPolygonF(pts))
-        centro_estado(p, ctx, R, R * 0.34, QColor('#F9A8D4'), emblema=lambda: play(p, R * 0.26, QColor('#F9A8D4')))
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QLinearGradient(0, 0, 0, H)
-        g.setColorAt(0.0, QColor('#0B0620'))
-        g.setColorAt(1.0, QColor('#150A30'))
-        q.fillRect(QRectF(0, 0, W, H), g)
-        q.setBrush(Qt.BrushStyle.NoBrush)
-        for k, (col, fr, ph, am) in enumerate((('#F472B6', 1.6, 0.0, 0.07), ('#22D3EE', 2.3, 1.7, 0.055), ('#C084FC', 1.1, 3.1, 0.09))):
-            q.setPen(_pen(_c(col, 56 + 40 * e), 2.4))
-            pts = []
-            for i in range(0, 49):
-                x = W * i / 48
-                y = H * (0.5 + 0.12 * (k - 1)) + math.sin(i * 0.5 * fr + t * (1.4 + 0.5 * k) + ph) * H * am * (1 + 1.6 * e)
-                pts.append(QPointF(x, y))
-            q.drawPolyline(QPolygonF(pts))
-        for k in range(5):                                                            # barras de luz verticales que laten
-            x = W * (0.12 + 0.19 * k)
-            al = 14 + 16 * (0.5 + 0.5 * math.sin(t * 2.0 + k))
-            lg = QLinearGradient(0, 0, 0, H)
-            lg.setColorAt(0.0, QColor(244, 114, 182, 0))
-            lg.setColorAt(0.5, QColor(244, 114, 182, int(al)))
-            lg.setColorAt(1.0, QColor(244, 114, 182, 0))
-            q.fillRect(QRectF(x - 3, 0, 6, H), lg)
-
-
-# =================================================================================================== 8 · PLASMA
-class Plasma(Estilo):
-    clave = 'plasma'
-    nombre = tr('Plasma')
-    descr = tr('Una esfera de energía en llamas: el plasma se calienta con el progreso y suelta rayos y brasas.')
-    tema = 'grafito'
-    acento = '#F5832F'
-    aurora = ('#EF4444', '#F97316', '#FBBF24')
-    pal = ('#FFB35C', '#FF7A18', '#FFE08A', '#FF4D2E', '#FFFFFF')
-    modo = 'ascenso'
-    cabeza = 2.8
-    N = 72
-
-    def __init__(self):
-        super().__init__()
-        n = self.N
-        yy, xx = np.mgrid[-1:1:complex(n), -1:1:complex(n)]
-        self._xx, self._yy = xx.astype(np.float32), yy.astype(np.float32)
-        self._rr = np.sqrt(xx * xx + yy * yy).astype(np.float32)
-        self._mask = np.clip((1.0 - self._rr) * 9.0, 0.0, 1.0).astype(np.float32)
-        lut = np.zeros((256, 4), np.uint8)
-        for i in range(256):
-            u = i / 255.0
-            lut[i] = (min(255, int(255 * min(1.0, u * 2.2))), min(255, int(255 * max(0.0, u * 2.0 - 0.45))), min(255, int(255 * max(0.0, u * 3.0 - 2.0))), 255)
-        self._lut = lut
-        self._buf = None
-        self._fase = 0.0
-
-    def avanzar(self, dt, vel):
-        super().avanzar(dt, vel)
-        self._fase += dt * (0.6 + 0.5 * min(8.0, vel))
-
-    def heroe(self, p, R, ctx):
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        t = self._fase
-        trab = ctx.estado == 'trabajando'
-        calor = 0.55 + 0.45 * (ctx.progreso if trab else (1.0 if ctx.estado == 'hecho' else 0.2)) + 0.15 * ctx.hover
-        self.halo(p, R, QColor('#FF7A18'), 60 + 70 * calor, 1.3)
-        xx, yy, rr = self._xx, self._yy, self._rr
-        v = (np.sin(xx * 3.4 + t * 1.3) + np.sin(yy * 3.0 - t * 1.1) + np.sin((xx + yy) * 2.6 + t * 0.9)
-             + np.sin(rr * 6.0 - t * 2.0) + np.sin(np.hypot(xx - 0.4 * math.sin(t * 0.7), yy + 0.4 * math.cos(t * 0.6)) * 5.0 - t * 1.5))
-        idx = np.clip(((v + 5.0) / 10.0 * calor * 1.25) * 255.0, 0, 255).astype(np.uint8)
-        img = self._lut[idx]
-        img[..., 3] = (self._mask * 255).astype(np.uint8)
-        self._buf = np.ascontiguousarray(img)
-        qi = QImage(self._buf.data, self.N, self.N, self.N * 4, QImage.Format.Format_RGBA8888)
-        rs = R * 0.80
-        p.drawImage(QRectF(-rs, -rs, 2 * rs, 2 * rs), qi)
-        # borde brillante (fresnel) y núcleo caliente
-        g = QRadialGradient(QPointF(0, 0), rs)
-        g.setColorAt(0.78, QColor(255, 120, 30, 0))
-        g.setColorAt(1.0, QColor(255, 200, 120, 190))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(g))
-        p.drawEllipse(QPointF(0, 0), rs, rs)
-        # rayos que saltan al trabajar
-        if trab or ctx.estado == 'hecho':
-            rnd = random.Random(int(ctx.t * 14))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            for _ in range(3 if trab else 1):
-                ang = rnd.random() * PI2
-                pts = [QPointF(0, 0)]
-                x = y = 0.0
-                for k in range(7):
-                    ang += rnd.uniform(-0.5, 0.5)
-                    x += math.cos(ang) * rs * 0.15
-                    y += math.sin(ang) * rs * 0.15
-                    pts.append(QPointF(x, y))
-                for k, al in ((3.0, 50), (1.0, 230)):
-                    p.setPen(_pen(_c('#FFE9B8', al), R * 0.012 * k))
-                    p.drawPolyline(QPolygonF(pts))
-        if trab:
-            arco_prog(p, R * 0.94, R * 0.014, ctx.progreso, QColor('#FFC070'), cortes=ctx.cortes)
-        centro_estado(p, ctx, R, R * 0.40, QColor('#FFE9B8'), emblema=lambda: play(p, R * 0.28, QColor('#FFFFFF')))
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QRadialGradient(QPointF(c.x(), c.y() + H * 0.1), max(W, H) * 0.85)
-        g.setColorAt(0.0, QColor(70 + int(50 * e), 22, 10))
-        g.setColorAt(0.5, QColor(22, 8, 8))
-        g.setColorAt(1.0, QColor(6, 3, 4))
-        q.fillRect(QRectF(0, 0, W, H), g)
-        q.setPen(Qt.PenStyle.NoPen)
-        rnd = random.Random(9)
-        for i in range(14):                                                           # calor que sube: manchas suaves
-            x = rnd.random() * W
-            y = (H * 1.1 - ((t * (14 + 10 * rnd.random()) + rnd.random() * H) % (H * 1.2)))
-            rg = QRadialGradient(QPointF(x, y), 60 + 50 * rnd.random())
-            rg.setColorAt(0.0, QColor(255, 120, 30, int(26 + 20 * e)))
-            rg.setColorAt(1.0, QColor(255, 120, 30, 0))
-            q.setBrush(QBrush(rg))
-            q.drawEllipse(QPointF(x, y), 110, 110)
-
-
-# =================================================================================================== 9 · CARRETE DE CINE
-class Carrete(Estilo):
-    clave = 'carrete'
-    nombre = tr('Carrete de cine')
-    descr = tr('Un carrete de película con su cinta, la luz del proyector y polvo dorado: cine de verdad.')
-    tema = 'grafito'
-    acento = '#FBBF24'
-    aurora = ('#D97706', '#92400E', '#FBBF24')
-    pal = ('#FFD27A', '#FFF1CC', '#E0A030', '#FFFFFF')
-    modo = 'ascenso'
-    cabeza = 2.2
-
-    def heroe(self, p, R, ctx):
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        trab = ctx.estado == 'trabajando'
-        ambar = QColor('#FBBF24')
-        self.halo(p, R, QColor('#E0A030'), 40 + 35 * ctx.hover + (25 if trab else 0))
-        # la cinta enrollada alrededor del carrete: fotogramas que se encienden con el progreso
-        n = 36
-        lit = int(ctx.progreso * n) if trab else (n if ctx.estado == 'hecho' else -1)
-        p.setPen(Qt.PenStyle.NoPen)
-        base = self.rot[1] * 0.3
-        rin, rout = R * 0.86, R * 1.02
-        for i in range(n):
-            ang = base + i * 360.0 / n
-            on = i <= lit
-            p.save()
-            p.rotate(ang)
-            p.setBrush(QColor(255, 210, 110, 235) if on else QColor(70, 52, 30, 230))
-            p.drawRect(QRectF(-R * 0.045, -rout, R * 0.09, rout - rin))
-            p.restore()
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(_pen(QColor(20, 14, 8, 255), R * 0.02))
-        p.drawEllipse(QPointF(0, 0), R * 1.03, R * 1.03)
-        p.drawEllipse(QPointF(0, 0), R * 0.85, R * 0.85)
-        # el disco del carrete (gira)
-        rd = R * 0.80
-        g = QRadialGradient(QPointF(-rd * 0.35, -rd * 0.4), rd * 1.5)
-        g.setColorAt(0.0, QColor('#5A4A38'))
-        g.setColorAt(0.6, QColor('#2A2018'))
-        g.setColorAt(1.0, QColor('#120D08'))
-        p.setPen(_pen(QColor(224, 160, 48, 190), R * 0.014))
-        p.setBrush(QBrush(g))
-        p.drawEllipse(QPointF(0, 0), rd, rd)
-        p.save()
-        p.rotate(self.rot[0] * 1.2)
-        fondo_h = QColor(8, 6, 4)
-        p.setPen(_pen(QColor(224, 160, 48, 150), R * 0.01))
-        for i in range(6):                                                         # los 6 agujeros grandes
-            ang = i * PI2 / 6
-            p.setBrush(fondo_h)
-            p.drawEllipse(QPointF(R * 0.50 * math.cos(ang), R * 0.50 * math.sin(ang)), R * 0.19, R * 0.19)
-        # el buje
-        p.setBrush(QColor('#3A2E20'))
-        p.drawEllipse(QPointF(0, 0), R * 0.20, R * 0.20)
-        p.setBrush(fondo_h)
-        for i in range(3):
-            ang = i * PI2 / 3 + 0.5
-            p.drawEllipse(QPointF(R * 0.10 * math.cos(ang), R * 0.10 * math.sin(ang)), R * 0.035, R * 0.035)
-        p.restore()
-        if trab:
-            arco_prog(p, R * 0.855, R * 0.012, ctx.progreso, ambar, cortes=ctx.cortes)
-        centro_estado(p, ctx, R, R * 0.26, ambar, emblema=lambda: None)
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QRadialGradient(c, max(W, H) * 0.8)
-        g.setColorAt(0.0, QColor(46 + int(30 * e), 28, 12))
-        g.setColorAt(1.0, QColor(8, 5, 3))
-        q.fillRect(QRectF(0, 0, W, H), g)
-        # el cono de luz del proyector, con parpadeo
-        parp = 0.85 + 0.15 * math.sin(t * 24.0) * math.sin(t * 7.3)
-        q.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-        origen = QPointF(W * 0.04, H * 0.06)
-        lg = QLinearGradient(origen, c)
-        lg.setColorAt(0.0, QColor(255, 220, 150, int(90 * parp)))
-        lg.setColorAt(1.0, QColor(255, 200, 120, int(24 * parp)))
-        cono = QPolygonF([origen, QPointF(c.x() + W * 0.42, c.y() - H * 0.34), QPointF(c.x() + W * 0.34, c.y() + H * 0.5)])
-        q.setPen(Qt.PenStyle.NoPen)
-        q.setBrush(QBrush(lg))
-        q.drawPolygon(cono)
-        q.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
-        # rayones verticales que aparecen y desaparecen
-        rnd = random.Random(int(t * 6))
-        q.setPen(QPen(QColor(255, 235, 200, 40), 1.0))
-        q.drawLines([QLineF(x, 0, x + rnd.uniform(-2, 2), H) for x in (rnd.random() * W for _ in range(2))])
-        # tiras de película que cruzan arriba y abajo
-        q.setPen(Qt.PenStyle.NoPen)
-        for y, sentido in ((H * 0.07, 1), (H * 0.93, -1)):
-            q.setBrush(QColor(14, 10, 6, 235))
-            q.drawRect(QRectF(0, y - 14, W, 28))
-            off = (t * 26 * sentido) % 30
-            q.setBrush(QColor(224, 160, 48, 90))
-            for k in range(-1, int(W / 30) + 2):
-                q.drawRect(QRectF(k * 30 + off, y - 10, 12, 6))
-                q.drawRect(QRectF(k * 30 + off, y + 4, 12, 6))
-
-
-# =================================================================================================== 10 · MATRIX
-class Matrix(Estilo):
-    clave = 'matrix'
-    nombre = tr('Código')
-    descr = tr('Lluvia de código verde, anillos de caracteres que cambian y un porcentaje en consola.')
-    tema = 'negro'
-    acento = '#22C55E'
-    aurora = ('#16A34A', '#065F46', '#22C55E')
-    pal = ('#7CFF9B', '#22C55E', '#B6FFC9', '#FFFFFF')
-    modo = 'caida'
-    cabeza = 2.2
-    GLIFOS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉ0123456789ABCDEF<>/{}[]=+*'
-
-    def __init__(self):
-        super().__init__()
-        self._rnd = random.Random(2)
-        self._anillos = {}
-        self._t_anillo = -9.0
-        self._tiras = None
-        self._tira_clave = None
-
-    def _texto_anillo(self, n):
-        return ''.join(self._rnd.choice(self.GLIFOS) for _ in range(n))
-
-    def _pixmap_anillo(self, tam, n, rad, col, dpr):
-        """La corona de caracteres dibujada UNA vez (se rehace cada ~0,18 s al cambiar los glifos); luego solo se gira."""
-        pm = QPixmap(int(tam * dpr), int(tam * dpr))
-        pm.setDevicePixelRatio(dpr)
-        pm.fill(Qt.GlobalColor.transparent)
-        q = QPainter(pm)
-        q.setRenderHint(QPainter.RenderHint.Antialiasing)
-        q.translate(tam / 2.0, tam / 2.0)
-        txt = self._texto_anillo(n)
-        f = fuente(max(9, int(tam * 0.045)), peso='negrita')
-        f.setFamily('Consolas')
-        q.setFont(f)
-        for i, ch in enumerate(txt):
-            q.save()
-            q.rotate(i * 360.0 / n)
-            q.setPen(_c(col, 120 + 135 * self._rnd.random()))
-            q.drawText(QRectF(-tam * 0.03, -rad - tam * 0.03, tam * 0.06, tam * 0.06), int(Qt.AlignmentFlag.AlignCenter), ch)
-            q.restore()
-        q.end()
-        return pm
-
-    def heroe(self, p, R, ctx):
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        verde = QColor('#22C55E')
-        trab = ctx.estado == 'trabajando'
-        dpr = p.device().devicePixelRatioF() if hasattr(p.device(), 'devicePixelRatioF') else 1.0
-        self.halo(p, R, verde, 36 + 30 * ctx.hover + (28 if trab else 0))
-        tam = int(R * 2.3)
-        if ctx.t - self._t_anillo > (0.18 if trab else 0.5) or not self._anillos:
-            self._t_anillo = ctx.t
-            self._anillos = {'a': self._pixmap_anillo(tam, 40, R * 0.93, '#7CFF9B', dpr), 'b': self._pixmap_anillo(tam, 28, R * 0.70, '#22C55E', dpr)}
-        d = tam
-        for clave, giro in (('a', self.rot[0] * 0.8), ('b', -self.rot[1] * 0.6)):
-            p.save()
-            p.rotate(giro)
-            p.drawPixmap(QRectF(-d / 2, -d / 2, d, d), self._anillos[clave], QRectF(self._anillos[clave].rect()))
-            p.restore()
-        # el marco de consola
-        p.setBrush(QColor(2, 14, 6, 235))
-        p.setPen(_pen(_c('#22C55E', 200), R * 0.012))
-        rc = R * 0.52
-        p.drawRoundedRect(QRectF(-rc, -rc, 2 * rc, 2 * rc), R * 0.07, R * 0.07)
-        p.setPen(_pen(_c('#7CFF9B', 220), R * 0.02, Qt.PenCapStyle.SquareCap))
-        for sx in (-1, 1):                                                          # los corchetes [ ]
-            x = sx * rc * 1.12
-            p.drawPolyline([QPointF(x - sx * R * 0.09, -rc * 1.02), QPointF(x, -rc * 1.02), QPointF(x, rc * 1.02), QPointF(x - sx * R * 0.09, rc * 1.02)])
-        # barrido de línea de escaneo
-        y = ((ctx.t * 0.5) % 1.0 * 2.0 - 1.0) * rc
-        p.setPen(QPen(_c('#7CFF9B', 70), 1.4))
-        p.drawLine(QPointF(-rc, y), QPointF(rc, y))
-        if trab:
-            arco_prog(p, R * 0.985, R * 0.012, ctx.progreso, verde, cortes=ctx.cortes)
-        centro_estado(p, ctx, R, rc * 0.80, verde, emblema=lambda: play(p, rc * 0.46, QColor('#7CFF9B')))
-        p.setOpacity(1.0)
-
-    def fondo(self, q, W, H, c, e, t, estado):
-        g = QRadialGradient(c, max(W, H) * 0.8)
-        g.setColorAt(0.0, QColor(4, 26 + int(26 * e), 10))
-        g.setColorAt(1.0, QColor(1, 6, 2))
-        q.fillRect(QRectF(0, 0, W, H), g)
-
-    def frente(self, p, W, H, c, t, estado):
-        """La lluvia de código: columnas de glifos (tiras pre-dibujadas) que caen a distinta velocidad."""
-        dpr = p.device().devicePixelRatioF() if hasattr(p.device(), 'devicePixelRatioF') else 1.0
-        if self._tiras is None or self._tira_clave != round(dpr, 2):
-            self._tira_clave = round(dpr, 2)
-            self._tiras = []
-            f = fuente(15, peso='negrita')
-            f.setFamily('Consolas')
-            rnd = random.Random(21)
-            for k in range(4):
-                alto = 520
-                pm = QPixmap(int(18 * dpr), int(alto * dpr))
-                pm.setDevicePixelRatio(dpr)
-                pm.fill(Qt.GlobalColor.transparent)
-                q = QPainter(pm)
-                q.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-                q.setFont(f)
-                for j in range(alto // 17):
-                    u = j / (alto / 17.0)
-                    q.setPen(QColor(60, 255, 120, int(25 + 190 * u ** 2.4)))
-                    q.drawText(QRectF(0, j * 17, 18, 17), int(Qt.AlignmentFlag.AlignCenter), rnd.choice(self.GLIFOS))
-                q.end()
-                self._tiras.append(pm)
-        p.save()
-        p.setOpacity(0.55)
-        n = int(W / 26) + 1
-        for i in range(n):
-            x = i * 26.0 + 4
-            vel = 60 + (i * 37 % 90)
-            y = ((t * vel + i * 211) % (H + 520)) - 520
-            p.drawPixmap(QPointF(x, y), self._tiras[i % 4])
-        p.restore()
-
-
-# =================================================================================================== 11 · ORBE (React Bits «Orb»)
-class Orbe(Estilo):
-    """v5.5.8 (pedido: «incorpora el efecto Orb de React Bits en Inicio»): el shader de Orb —un anillo de luz morado / cian sobre azul profundo,
-    de radio ondulado por ruido, con una luz que lo recorre y el resplandor del borde— calculado con numpy a N×N y escalado suave (como Plasma).
-    Al pasar el ratón el anillo se ondula y gira más rápido (el «hover intensity» de Orb); al trabajar se enciende con el progreso."""
-    clave = 'orbe'
-    nombre = tr('Orbe')
-    descr = tr('El orbe de luz de React Bits: un anillo morado y cian que fluye, se ondula al pasar el ratón y se enciende al trabajar.')
-    tema = 'negro'
-    acento = '#9C43FE'
-    aurora = ('#9C43FE', '#4CC2E9', '#101499')
-    pal = ('#C69BFF', '#9C43FE', '#4CC2E9', '#8AE4FF', '#FFFFFF')
-    modo = 'orbita'
-    trazo = False
-    cabeza = 2.2
-    N = 112
-    C1, C2, C3 = (np.array([0.611765, 0.262745, 0.996078], np.float32), np.array([0.298039, 0.760784, 0.913725], np.float32),
-                  np.array([0.062745, 0.078431, 0.600000], np.float32))
-    INTERIOR, ESCALA_RUIDO = 0.6, 0.65
-
-    def __init__(self):
-        super().__init__()
-        n = self.N
-        yy, xx = np.mgrid[-1.25:1.25:complex(n), -1.25:1.25:complex(n)]
-        self._xx, self._yy = xx.astype(np.float32), yy.astype(np.float32)
-        self._buf = None
-        self._fase = 0.0
-        self._hover = 0.0
-
-    def avanzar(self, dt, vel):
-        super().avanzar(dt, vel)
-        self._fase += dt * (1.0 + 0.6 * min(6.0, vel))
+    def _pintar_fondo(self, e, p, W, H, c):
+        bajo = e._fondo_bajo(W, H, c, e.energia)
+        p.drawPixmap(QRectF(-10, -10, W + 20, H + 20), bajo, QRectF(bajo.rect()))
 
     @staticmethod
-    def _ruido(x, y, t):
-        """Ruido suave en [0, 1] (sumas de senos desfasados: lo que hace el simplex 3D del shader, más barato)."""
-        return 0.5 + 0.125 * (np.sin(x * 3.1 + t * 1.7) + np.sin(y * 2.7 - t * 1.3) + np.sin((x + y) * 2.2 + t * 0.9)
-                              + np.sin(np.hypot(x - 0.3, y + 0.2) * 3.4 - t * 1.1))
+    def _vineta(q, W, H, fuerza=170):
+        vig = QRadialGradient(QPointF(W / 2, H / 2), max(W, H) * 0.7)
+        vig.setColorAt(0.5, QColor(0, 0, 0, 0))
+        vig.setColorAt(1.0, QColor(0, 0, 0, fuerza))
+        q.fillRect(QRectF(0, 0, W, H), vig)
 
-    def heroe(self, p, R, ctx):
-        a = self.atenuar(ctx)
-        p.setOpacity(a)
-        self._hover += (ctx.hover - self._hover) * 0.12
-        t = self._fase * 0.5
-        trab = ctx.estado == 'trabajando'
-        brillo = 1.0 + (0.5 * ctx.progreso if trab else 0.25 if ctx.estado == 'hecho' else 0.0)
-        x, y = self._xx, self._yy
-        h = self._hover
-        if h > 0.01:                                          # la onda del «hover» de Orb
-            x = x + h * 0.08 * np.sin(y * 10.0 + t * 2.0)
-            y = y + h * 0.08 * np.sin(x * 10.0 + t * 2.0)
-        giro = t * (0.3 + 0.9 * h)
-        cg, sg = math.cos(giro), math.sin(giro)
-        x, y = x * cg - y * sg, x * sg + y * cg
-        ln = np.sqrt(x * x + y * y) + 1e-6
-        ang = np.arctan2(y, x)
-        n0 = self._ruido(x * self.ESCALA_RUIDO, y * self.ESCALA_RUIDO, t)
-        ri = self.INTERIOR
-        r0 = (ri + (1.0 - ri) * 0.4) + ((ri + (1.0 - ri) * 0.6) - (ri + (1.0 - ri) * 0.4)) * n0
-        d0 = np.abs(ln - r0)                                    # distancia al anillo
-        v0 = 1.0 / (1.0 + d0 * 10.0)
-        v0 = v0 * np.clip((r0 * 1.05 - ln) / (r0 * 0.05), 0.0, 1.0)
-        cl = np.cos(ang + t * 2.0) * 0.5 + 0.5
-        pa = -t
-        px, py = math.cos(pa), math.sin(pa)
-        d = np.hypot(x - px * r0, y - py * r0)
-        v1 = (1.5 / (1.0 + d * d * 5.0)) * (1.0 / (1.0 + d0 * 50.0))
-        v2 = np.clip((1.0 - ln) / np.maximum(1e-3, 1.0 - (ri + (1.0 - ri) * n0 * 0.5)), 0.0, 1.0)
-        v3 = np.clip((ln - ri) / ((1.0 - ri) * 0.5), 0.0, 1.0)
-        col = self.C1[None, None, :] * (1.0 - cl[..., None]) + self.C2[None, None, :] * cl[..., None]
-        col = self.C3[None, None, :] * (1.0 - v0[..., None]) + col * v0[..., None]
-        col = np.clip((col + v1[..., None]) * (v2 * v3)[..., None] * brillo, 0.0, 1.0)
-        alfa = col.max(axis=2)
-        rgb = col / np.maximum(alfa, 1e-4)[..., None]
-        img = np.empty((self.N, self.N, 4), np.uint8)
-        img[..., :3] = (rgb * 255.0).astype(np.uint8)
-        img[..., 3] = (alfa * 255.0 * a).astype(np.uint8)
-        self._buf = np.ascontiguousarray(img)
-        qi = QImage(self._buf.data, self.N, self.N, self.N * 4, QImage.Format.Format_RGBA8888)
-        rs = R * 1.05
-        self.halo(p, R, QColor('#9C43FE'), 40 + 40 * brillo * (0.6 + 0.4 * h), 1.25)
-        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-        p.drawImage(QRectF(-rs * 1.25, -rs * 1.25, rs * 2.5, rs * 2.5), qi)
-        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+    @staticmethod
+    def _charco(q, c, Rs, hexa, alfa, ancho=2.2):
+        """El charco de luz bajo el orbe (una elipse aplastada)."""
+        q.save()
+        q.translate(c.x(), c.y() + Rs * 1.05)
+        q.scale(1.0, 0.22)
+        g = QRadialGradient(QPointF(0, 0), Rs * ancho)
+        g.setColorAt(0.0, _c(hexa, alfa))
+        g.setColorAt(1.0, _c(hexa, 0))
+        q.setPen(Qt.PenStyle.NoPen)
+        q.setBrush(g)
+        q.drawEllipse(QPointF(0, 0), Rs * ancho, Rs * ancho)
+        q.restore()
+
+    @staticmethod
+    def _sombra(p, c, Rs):
+        """Una sombra suave bajo el texto del botón: se lee aunque detrás pase luz."""
+        sombra = QRadialGradient(QPointF(0, 0), Rs * 0.95)
+        sombra.setColorAt(0.0, QColor(2, 6, 16, 140))
+        sombra.setColorAt(1.0, QColor(2, 6, 16, 0))
+        p.save()
+        p.translate(c.x(), c.y() + Rs * 0.82)
+        p.scale(1.0, 0.34)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(sombra)
+        p.drawEllipse(QPointF(0, 0), Rs * 0.95, Rs * 0.95)
+        p.restore()
+
+    def _onda_suave(self, e, p, onda, hexa=None):
+        """Una onda de choque: un filo de luz fino que se abre rápido y frena, con su resplandor detrás, y adelgaza al crecer. v5.49 pulido
+        (el usuario: «púlelo más»): antes era un anillo de luz ESCALADO (hasta 4 veces su tamaño: grueso, borroso y caro) que lavaba el
+        título y los botones de debajo. Las «chicas» (un paso que llega a la lista) son un destello plano y pequeño sobre su fila, y solo
+        si el estilo enseña la lista (en Proceso eran un aro grande sobre los botones)."""
+        t0, centro, color, grueso, chica = onda
+        u = (e._t - t0) / (0.9 if chica else 1.7)
+        if u < 0 or u > 1 or (chica and not self.pasos_lista):
+            return
+        k = 1.0 - (1.0 - u) ** 3
+        col = hexa or color
+        p.setCompositionMode(PLUS)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        if chica:
+            rx = 26 + 150 * k
+            a = (1 - u) ** 2
+            for w_, al in ((7.0, 40), (1.6, 170)):
+                p.setPen(QPen(_c(col, al * a), w_))
+                p.drawEllipse(centro, rx, rx * 0.16)
+        else:
+            Rs = e._geometria()[1]
+            self._aro_luz(p, centro, Rs * (0.95 + 3.4 * k), col, (1 - u) ** 1.4 * min(1.0, grueso + 0.25), 1.0 + 2.6 * (1 - u))
+        p.setCompositionMode(OVER)
+
+    @staticmethod
+    def _aro_luz(p, c, r, hexa, a, ancho):
+        """Un aro de luz nítido (con PLUS ya puesto): el resplandor en dos trazos anchos SIN antialias (tenues: no se nota y cuestan la
+        quinta parte) y el filo con antialias. Medido a 3440x1392: ~1,7 ms por aro grande (con los tres trazos suavizados, ~3,4)."""
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        for w_, al in ((ancho * 7, 30), (ancho * 3.2, 60)):
+            p.setPen(QPen(_c(hexa, al * a), w_))
+            p.drawEllipse(c, r, r)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        p.setPen(QPen(_c(hexa, 240 * a), ancho))
+        p.drawEllipse(c, r, r)
+
+    @staticmethod
+    def _destello_anamorfico(p, c, Rs, hexa, a, dpr, largo=7.0):
+        """El destello de la explosión: una raya de luz horizontal (como el de una lente anamórfica) y su núcleo, en vez de una mancha
+        enorme que tapaba el texto. `a` 0..1."""
+        if a <= 0.01:
+            return
+        p.setCompositionMode(PLUS)
+        for esc_x, esc_y, col, al in ((largo, 0.10, hexa, 0.9), (largo * 0.55, 0.05, '#FFFFFF', 1.0), (1.0, 1.0, hexa, 0.55)):
+            p.save()
+            p.translate(c)
+            p.scale(esc_x, esc_y)
+            _poner(p, _luz(round(Rs * 0.9), col, dpr, 'nucleo'), 0, 0, a * al)
+            p.restore()
+        p.setCompositionMode(OVER)
+
+
+# =================================================================================================== A · NEBULOSA
+class Nebulosa(Estilo):
+    clave = 'nebulosa'
+    nombre = tr('Nebulosa')
+    descr = tr('Una nebulosa de luz gira tras el astrolabio. En GO se vuelve un remolino del color de cada paso.')
+    aurora = ('#0B8F5B', '#1D6B7A', '#B8742C')
+    _NUBES = None
+    _HAZ = None
+    _TINTE = None
+    _VIOLETA = None
+    _POLVO = None
+    _DISCOS = None
+
+    def __init__(self):
+        super().__init__()
+        r = random.Random(3)
+        self._bokeh = [(r.random(), r.random(), r.uniform(0.2, 1.0), r.uniform(0, TAU), r.choice(('#7DFFB2', '#4FD8FF', '#FFD9A0', '#B7FFE0')))
+                       for _ in range(46)]
+        self._estrellas = [(r.random(), r.random(), int(r.random() * 3)) for _ in range(220)]
+        self._grupos = None
+
+    @classmethod
+    def _texturas(cls):
+        """Las nubes, la blanca para teñir, el haz, el velo violeta, el polvo oscuro y el disco: se hacen una vez (numpy, ~30 ms) y las
+        comparten todas las instancias (el Astrolabio usa la blanca para sus velos)."""
+        if cls._NUBES is None:
+            cls._NUBES = [_textura_nube(256, 11, (20, 190, 130), (40, 120, 200), 1.0),
+                          _textura_nube(256, 23, (10, 140, 160), (220, 150, 60), 0.85),
+                          _textura_nube(256, 37, (60, 230, 170), (20, 90, 140), 0.9)]
+            cls._HAZ = _textura_haz()
+            cls._TINTE = {'_blanca': _textura_nube(256, 51, (255, 255, 255), (210, 210, 210), 1.0)}
+            cls._VIOLETA = _textura_nube(256, 61, (120, 80, 230), (40, 120, 225), 0.9)
+            cls._POLVO = _textura_nube(256, 71, (1, 6, 8), (0, 3, 6), 1.25)
+            cls._DISCOS = {'_base': _textura_disco()}
+        return cls._NUBES
+
+    @classmethod
+    def _tinte(cls, hexa):
+        """La nube blanca teñida del color, en caché por color."""
+        pm = cls._TINTE.get(hexa)
+        if pm is None:
+            pm = cls._TINTE[hexa] = _tenir(cls._TINTE['_blanca'], hexa)
+        return pm
+
+    @classmethod
+    def _disco(cls, hexa):
+        """El disco de gas teñido del color, en caché por color."""
+        pm = cls._DISCOS.get(hexa)
+        if pm is None:
+            pm = cls._DISCOS[hexa] = _tenir(cls._DISCOS['_base'], hexa)
+        return pm
+
+    def fondo(self, q, W, H, c, e, t, estado):
+        st = self._st
+        trab = st.trab if st else False
+        prog = st.prog if st else 0.0
+        fcol = st.fcol if st else '#7DFFB2'
+        reap = st.reap if st else 1.0
+        Rs = min(W * 0.28, H * 0.32) if st is None else self._rs
+        g = QRadialGradient(c, max(W, H) * 0.75)
+        g.setColorAt(0.0, QColor(6, 40 + int(30 * e), 36 + int(20 * e)))
+        g.setColorAt(0.45, QColor(3, 18, 20))
+        g.setColorAt(1.0, QColor(1, 5, 8))
+        q.fillRect(QRectF(0, 0, W, H), g)
+        q.setCompositionMode(PLUS)
+        # v5.49 pulido: detrás de todo un velo grande violeta y azul que gira al revés (más color y profundidad que solo verde)
+        self._texturas()
+        q.save()
+        q.translate(c)
+        q.rotate((-t * 1.1) % 360)
+        tam = max(W, H) * 1.15
+        q.setOpacity(0.34 * reap)
+        q.drawPixmap(QRectF(-tam / 2, -tam * 0.33, tam, tam * 0.66), self._VIOLETA, QRectF(self._VIOLETA.rect()))
+        q.restore()
+        # la nebulosa: tres nubes que giran despacio y respiran; en GO se aprietan hacia el orbe y giran cada vez más rápido (un remolino)
+        vel = 1.0 + (5.0 + 10.0 * prog) * (1.0 if trab else 0.0)
+        for k, nube in enumerate(self._texturas()):
+            q.save()
+            q.translate(c)
+            q.rotate((t * (2.2 + 1.3 * k) * vel * (1 if k % 2 == 0 else -1)) % 360)
+            tam = max(W, H) * (0.95 - 0.12 * k) * (1.0 - 0.28 * prog) * (1.0 + 0.04 * math.sin(t * 0.3 + k * 2.0))
+            q.setOpacity((0.62 - 0.08 * k) * (0.75 + 0.25 * math.sin(t * 0.4 + k)) * reap)
+            q.drawPixmap(QRectF(-tam / 2, -tam / 2 * 0.62, tam, tam * 0.62), nube, QRectF(nube.rect()))
+            q.restore()
+        # su color: en reposo pasa despacio de esmeralda a turquesa y a ámbar; en GO, el del paso en curso
         if trab:
-            arco_prog(p, R * 0.94, R * 0.014, ctx.progreso, QColor('#4CC2E9'), QColor('#E9D8FF'), cortes=ctx.cortes)
-        centro_estado(p, ctx, R, R * 0.40, QColor('#E9D8FF'), emblema=lambda: play(p, R * 0.28, QColor('#FFFFFF')))
-        p.setOpacity(1.0)
+            tintes = ((fcol, 0.55),)
+        else:
+            ciclo = (t / 14.0) % 3.0
+            i = int(ciclo)
+            f = _suave(ciclo - i)
+            cols = ('#2FE6A0', '#3FB8FF', '#FFB347')
+            tintes = ((cols[i], 0.26 * (1 - f)), (cols[(i + 1) % 3], 0.26 * f))
+        for hexa, op in tintes:
+            if op < 0.01:
+                continue
+            q.save()
+            q.translate(c)
+            q.rotate((-t * (30 if trab else 4)) % 360)
+            tam = max(W, H) * (0.62 if trab else 0.85) * (1.0 - 0.3 * prog)
+            q.setOpacity(op * reap)
+            tn = self._tinte(hexa)
+            q.drawPixmap(QRectF(-tam / 2, -tam / 2 * 0.7, tam, tam * 0.7), tn, QRectF(tn.rect()))
+            q.restore()
+        # v5.49 pulido: vetas de polvo oscuro (el contraste de una nebulosa de verdad) y, encima, el núcleo que vuelve a encender el centro
+        q.setCompositionMode(OVER)
+        q.save()
+        q.translate(c)
+        q.rotate((t * 1.6 + 35) % 360)
+        tam = max(W, H) * 1.0
+        q.setOpacity(0.6)
+        q.drawPixmap(QRectF(-tam / 2, -tam * 0.31, tam, tam * 0.62), self._POLVO, QRectF(self._POLVO.rect()))
+        q.restore()
+        q.setOpacity(1.0)
+        q.setCompositionMode(PLUS)
+        nucleo = QRadialGradient(c, Rs * 2.3)
+        nucleo.setColorAt(0.0, _c('#CFFFF0', (95 + 60 * e) * reap))
+        nucleo.setColorAt(0.35, _c('#7FF0D4', (34 + 30 * e) * reap))
+        nucleo.setColorAt(1.0, _c('#7FF0D4', 0))
+        q.fillRect(QRectF(c.x() - Rs * 2.3, c.y() - Rs * 2.3, Rs * 4.6, Rs * 4.6), nucleo)
+        # el disco de gas: aplastado e inclinado alrededor del orbe; en GO gira cada vez más rápido y toma el color del paso
+        paso = max(0.0, min(0.1, t - getattr(self, '_t_disco', t)))
+        self._t_disco = t
+        self._giro_disco = (getattr(self, '_giro_disco', 0.0) + paso * (9.0 + ((70.0 + 160.0 * prog) if trab else 0.0))) % 360
+        disco = self._disco(fcol if trab else '#7FF0D4')
+        q.save()
+        q.translate(c)
+        q.rotate(-14)
+        q.scale(1.0, 0.25)
+        q.rotate(self._giro_disco)
+        d = Rs * 5.2 * (1.0 - 0.15 * prog)
+        q.setOpacity(min(1.0, (0.62 + 0.3 * e) * reap))
+        q.drawPixmap(QRectF(-d / 2, -d / 2, d, d), disco, QRectF(disco.rect()))
+        q.restore()
+        # haces de luz anchos y suaves que salen del orbe y respiran
+        for k in range(7):
+            q.save()
+            q.translate(c)
+            q.rotate((k * 360 / 7 + t * (4.0 + 18.0 * prog)) % 360)
+            largo = max(W, H) * (0.42 + 0.06 * math.sin(t * 0.7 + k * 1.7))
+            ancho = Rs * (0.9 + 0.35 * math.sin(t * 0.5 + k))
+            q.setOpacity((0.16 + 0.10 * math.sin(t * 0.9 + k * 2.1) + 0.18 * e) * reap)
+            q.drawPixmap(QRectF(Rs * 0.6, -ancho / 2, largo, ancho), self._HAZ, QRectF(self._HAZ.rect()))
+            q.restore()
+        q.setOpacity(1.0)
+        self._charco(q, c, Rs, fcol, 80 + 40 * e)
+        q.setCompositionMode(OVER)
+        # v5.49 pulido: una penumbra suave detrás del título y los botones de abajo (en GO la nube teñida les quitaba contraste)
+        q.save()
+        q.translate(c.x(), c.y() + Rs * 1.85)
+        q.scale(1.0, 0.3)
+        sombra = QRadialGradient(QPointF(0, 0), Rs * 2.4)
+        sombra.setColorAt(0.0, QColor(0, 6, 8, 140))
+        sombra.setColorAt(0.6, QColor(0, 6, 8, 75))
+        sombra.setColorAt(1.0, QColor(0, 6, 8, 0))
+        q.setPen(Qt.PenStyle.NoPen)
+        q.setBrush(sombra)
+        q.drawEllipse(QPointF(0, 0), Rs * 2.4, Rs * 2.4)
+        q.restore()
+        self._vineta(q, W, H)
+
+    def escena(self, e, p, W, H, c, Rs, rect):
+        self._rs = Rs
+        super().escena(e, p, W, H, c, Rs, rect)
+        st = self._st
+        t, trab, reap, fcol, en = st.t, st.trab, st.reap, st.fcol, st.en
+        dpr = _dpr(p)
+        # v5.49 pulido: estrellas nítidas que titilan por grupos (lo único definido contra la nube: da escala y profundidad)
+        if self._grupos is None or self._grupos[0] != (W, H):
+            self._grupos = ((W, H), [QPolygonF([QPointF(x * W, y * H) for (x, y, g) in self._estrellas if g == k]) for k in range(3)])
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        for k, pts in enumerate(self._grupos[1]):
+            brillo = 0.5 + 0.5 * math.sin(t * (0.9 + k * 0.41) + k * 2.3)
+            p.setPen(QPen(_c('#E6FFF6', (55 + 55 * k) * (0.5 + 0.5 * brillo) * reap), 1.0 + 0.5 * k, Qt.PenStyle.SolidLine, Qt.PenCapStyle.SquareCap))
+            p.drawPoints(pts)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        p.setCompositionMode(PLUS)
+        # luces desenfocadas (bokeh) a distintas profundidades: las lejanas, pequeñas y nítidas; las cercanas, grandes y en anillo
+        for (bx, by, z, ph, hexa) in self._bokeh:
+            x = (bx * W + math.sin(t * 0.11 * (1.5 - z) + ph) * 60 * z + t * 6 * (1.2 - z)) % (W + 80) - 40
+            y = (by * H + math.cos(t * 0.09 + ph) * 40 * z - t * 10 * (1.3 - z)) % (H + 80) - 40
+            _poner(p, _luz(round(4 + 26 * z), hexa, dpr, 'bokeh' if z > 0.55 else 'nucleo'), x, y,
+                   (0.10 + 0.22 * (1 - z)) * (0.6 + 0.4 * math.sin(t * 1.3 + ph * 3)) * reap)
+        # las motas de la escena (su movimiento real: espiral hacia el orbe) como luces; en GO con una cola de luz
+        pts = self._motas(e)
+        if pts is not None:
+            x, y, x2, y2, a, idx = pts
+            for i in range(len(x)):
+                k = int(idx[i])
+                z = (k * 37 % 100) / 100.0
+                r = 2.5 + 9 * z
+                hexa = fcol if (trab and k % 3 == 0) else ('#B7FFE0' if k % 2 else '#7DFFB2')
+                al = float(a[i]) * (0.35 + 0.65 * (1 - z * 0.5))
+                if trab:
+                    for f, s_ in ((0.66, 0.55), (0.33, 0.35)):
+                        _poner(p, _luz(round(r * s_ + 1), hexa, dpr, 'nucleo'), x2[i] + (x[i] - x2[i]) * f, y2[i] + (y[i] - y2[i]) * f, al * s_)
+                _poner(p, _luz(round(r), hexa, dpr, 'nucleo' if z < 0.6 else 'bokeh'), float(x[i]), float(y[i]), al)
+        # un resplandor suave alrededor del orbe (antes un aro borroso: ahora el anillo es el disco de gas del fondo) y tres luces que
+        # orbitan EN el plano del disco, con su estela
+        _poner(p, _luz(round(Rs * 1.35), fcol if trab else '#6FE8C0', dpr, 'suave'), c.x(), c.y(), (0.10 + 0.05 * math.sin(t * 1.4) + 0.14 * en) * reap)
+        for k in range(3):
+            vel = (0.55 + 0.25 * k) * (1 + 3 * st.prog)
+            rx = Rs * (1.5 + 0.35 * k)
+            ry, inc = rx * 0.25, math.radians(-14)
+            for cola in range(7):
+                th = t * vel + k * TAU / 3 - cola * 0.045
+                ox, oy = rx * math.cos(th), ry * math.sin(th)
+                delante = 0.5 + 0.5 * math.sin(th)
+                _poner(p, _luz(9 - cola, ('#4FD8FF', '#B7FFE0', '#FFD9A0')[k], dpr, 'nucleo'),
+                       c.x() + ox * math.cos(inc) - oy * math.sin(inc), c.y() + ox * math.sin(inc) + oy * math.cos(inc),
+                       (0.85 - cola * 0.12) * (0.45 + 0.55 * delante) * reap)
+        # en GO el orbe brilla del color del paso y late con la energía; al estallar, una floración de luz
+        if trab or getattr(e, '_carga_final', False):                    # (v5.49 pulido: más ceñido, no llega al título de abajo)
+            _poner(p, _luz(round(Rs * 1.35), fcol, dpr, 'suave'), c.x(), c.y(), 0.12 + 0.16 * en + 0.06 * math.sin(t * 6))
+        if st.expl > 0:                                                  # v5.49 pulido: floración corta + destello anamórfico (antes una mancha
+            a = (1 - st.expl) ** 2                                       # blanca que crecía 5 veces y lavaba el título)
+            _poner(p, _luz(round(Rs * 1.4), '#E8FFF4', dpr, 'suave'), c.x(), c.y(), 0.75 * a, 1.0 + 1.3 * st.expl)
+            self._destello_anamorfico(p, c, Rs, '#BFFFE8', a, dpr)
+        p.setCompositionMode(OVER)
+
+    def onda(self, e, p, onda, W, H):
+        self._onda_suave(e, p, onda, self._st.fcol if (self._st and self._st.trab) else None)
+
+    @staticmethod
+    def _motas(e):
+        return e.posiciones_motas() if hasattr(e, 'posiciones_motas') else None
+
+
+# =================================================================================================== B · ASTROLABIO (de fábrica)
+CONSTELACIONES = (
+    ((0.10, 0.20), (0.16, 0.13), (0.23, 0.16), (0.27, 0.10), (0.33, 0.14)),
+    ((0.08, 0.62), (0.13, 0.70), (0.19, 0.66), (0.22, 0.76), (0.15, 0.82)),
+    ((0.74, 0.12), (0.80, 0.18), (0.86, 0.14), (0.90, 0.22), (0.84, 0.27), (0.80, 0.18)),
+    ((0.78, 0.66), (0.84, 0.60), (0.91, 0.64), (0.88, 0.74), (0.94, 0.80)),
+    ((0.40, 0.08), (0.45, 0.04), (0.52, 0.07), (0.58, 0.03)),
+)
+HORAS = ('I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII')
+PUNTEROS = ((12, 0.78), (58, 0.74), (101, 0.81), (147, 0.76), (196, 0.80), (238, 0.73), (283, 0.82), (329, 0.77))   # (grados, punta/R)
+
+
+class Astrolabio(Estilo):
+    clave = 'astrolabio'
+    nombre = tr('Astrolabio')
+    descr = tr('Aros de bronce en 3D y constelaciones de oro. En GO cada paso es una estrella y los aros se alinean.')
+    aurora = ('#16507A', '#B8862C', '#0B8F5B')
+    cometas = False                      # v5.49 pulido: cada paso ya es una estrella de la constelación (el cometa cruzaba el cielo)
+
+    def __init__(self):
+        super().__init__()
+        r = random.Random(5)
+        self._estrellas = [(r.random(), r.random(), int(r.random() * 4)) for _ in range(340)]
+        self._brillantes = [(r.uniform(0.04, 0.96), r.uniform(0.06, 0.94), r.uniform(0, TAU), r.choice(('#FFF4DC', '#DDEBFF', '#FFE2A8')))
+                            for _ in range(9)]
+        self._grupos = None
+        self._horas = None
+        self._fijo = [0.0, 0.0, 0.0]
+        self._destello = [-9.0, -9.0, -9.0]
 
     def fondo(self, q, W, H, c, e, t, estado):
         g = QRadialGradient(c, max(W, H) * 0.8)
-        g.setColorAt(0.0, QColor(26 + int(20 * e), 14, 52 + int(30 * e)))
-        g.setColorAt(0.45, QColor(9, 7, 22))
-        g.setColorAt(1.0, QColor(2, 2, 6))
+        g.setColorAt(0.0, QColor(10, 36 + int(26 * e), 46 + int(20 * e)))
+        g.setColorAt(0.5, QColor(4, 14, 26))
+        g.setColorAt(1.0, QColor(1, 4, 10))
         q.fillRect(QRectF(0, 0, W, H), g)
+        q.setCompositionMode(PLUS)
+        # v5.49 pulido: dos velos de nebulosa muy tenues (azul y oro) que derivan despacio: el cielo gana profundidad
+        Nebulosa._texturas()
+        for k, (hexa, op, cx, cy, ang) in enumerate((('#2C5C9A', 0.42, 0.24, 0.36, -24), ('#A97B32', 0.26, 0.78, 0.62, 14))):
+            velo = Nebulosa._tinte(hexa)
+            q.save()
+            q.translate(W * cx, H * cy)
+            q.rotate(ang + 4.0 * math.sin(t * 0.05 + k * 2.0))
+            tam = max(W, H) * 0.9
+            q.setOpacity(op)
+            q.drawPixmap(QRectF(-tam / 2, -tam * 0.22, tam, tam * 0.44), velo, QRectF(velo.rect()))
+            q.restore()
+        q.setOpacity(1.0)
+        via = QLinearGradient(QPointF(0, 0), QPointF(0, 1))                 # una vía láctea tenue en diagonal
+        via.setCoordinateMode(QLinearGradient.CoordinateMode.ObjectBoundingMode)
+        via.setColorAt(0.0, QColor(0, 0, 0, 0))
+        via.setColorAt(0.5, QColor(40, 70, 90, 70))
+        via.setColorAt(1.0, QColor(0, 0, 0, 0))
+        q.save()
+        q.translate(W / 2, H / 2)
+        q.rotate(-22)
+        q.fillRect(QRectF(-W, -H * 0.22, 2 * W, H * 0.44), via)
+        q.restore()
+        q.setCompositionMode(OVER)
+        self._vineta(q, W, H, 150)
+
+    def _anillo_horas(self, Rz, dpr):
+        """El anillo horario, pintado una vez (cada cuadro solo se copia o se gira). v5.49 pulido: grabado como el de un astrolabio de
+        verdad: una banda oscura de bronce, filetes con su sombra y su luz, la escala de grados por dentro (cada 2°, larga cada 10°),
+        números romanos de oro con relieve y un rombo en cada hora."""
+        clave = (round(Rz, 1), round(dpr, 2))
+        if self._horas is not None and self._horas[0] == clave:
+            return self._horas[1]
+        lado = Rz * 2 + 70
+        img = QImage(int(lado * dpr), int(lado * dpr), QImage.Format.Format_ARGB32_Premultiplied)
+        img.fill(Qt.GlobalColor.transparent)
+        img.setDevicePixelRatio(dpr)
+        q = QPainter(img)
+        q.setRenderHint(QPainter.RenderHint.Antialiasing)
+        q.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        q.translate(lado / 2, lado / 2)
+        q.setBrush(Qt.BrushStyle.NoBrush)
+        q.setPen(QPen(_c('#140C04', 105), 33))                             # la banda: da cuerpo al anillo (los números se leen sobre ella)
+        q.drawEllipse(QPointF(0, 0), Rz, Rz)
+        for rr, w_, a in ((Rz - 17, 1.2, 165), (Rz + 17, 1.9, 190), (Rz + 23, 0.9, 110)):
+            q.setPen(QPen(_c('#000000', 130), w_ + 0.9))                    # el grabado: sombra un poco abajo y el filete encima
+            q.drawEllipse(QPointF(0, 0.9), rr, rr)
+            q.setPen(QPen(_c('#E9C27C', a), w_))
+            q.drawEllipse(QPointF(0, 0), rr, rr)
+        grados = []
+        for i in range(180):
+            a = i * TAU / 180
+            largo = 7.5 if i % 5 == 0 else 3.5
+            s_, c_ = math.sin(a), -math.cos(a)
+            grados.append(QLineF(s_ * (Rz - 20), c_ * (Rz - 20), s_ * (Rz - 20 - largo), c_ * (Rz - 20 - largo)))
+        q.setPen(QPen(_c('#E9C27C', 125), 0.9))
+        q.drawLines(grados)
+        f = QFont('Georgia', 15)
+        f.setLetterSpacing(QFont.SpacingType.PercentageSpacing, 106)
+        q.setFont(f)
+        oro = QLinearGradient(QPointF(0, -Rz - 11), QPointF(0, -Rz + 11))
+        oro.setColorAt(0.0, QColor('#FFF3D2'))
+        oro.setColorAt(1.0, QColor('#C08C45'))
+        rombo = QPolygonF([QPointF(0, -Rz - 21), QPointF(2.6, -Rz - 17), QPointF(0, -Rz - 13), QPointF(-2.6, -Rz - 17)])
+        for i, ch in enumerate(HORAS):
+            q.save()
+            q.rotate(i * 30)
+            caja = QRectF(-28, -Rz - 12, 56, 24)
+            q.setPen(_c('#000000', 150))
+            q.drawText(caja.translated(0.7, 1.1), int(Qt.AlignmentFlag.AlignCenter), ch)
+            q.setPen(QPen(QBrush(oro), 1.0))
+            q.drawText(caja, int(Qt.AlignmentFlag.AlignCenter), ch)
+            q.rotate(15)                                                    # entre dos horas, un rombo en el filete de fuera
+            q.setPen(Qt.PenStyle.NoPen)
+            q.setBrush(_c('#E9C27C', 200))
+            q.drawPolygon(rombo)
+            q.setBrush(Qt.BrushStyle.NoBrush)
+            q.restore()
+        q.end()
+        pm = QPixmap.fromImage(img)
+        self._horas = (clave, pm)
+        return pm
+
+    @staticmethod
+    def _polar(r, grados):
+        a = math.radians(grados)
+        return QPointF(r * math.sin(a), -r * math.cos(a))
+
+    def _arana(self, p, c, R, giro, alfa, dpr):
+        """v5.49 pulido: la «araña» de un astrolabio: el aro de fuera, la eclíptica descentrada y punteros como llamas con una estrella en
+        la punta, de oro calado. Gira despacio (rápido en GO). En vector: unas curvas finas cuestan menos que girar una imagen grande."""
+        if alfa <= 0.01:
+            return
+        pol = self._polar
+        p.save()
+        p.translate(c)
+        p.rotate(giro)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(_c('#E9C27C', 120 * alfa), 1.2))
+        p.drawEllipse(QPointF(0, 0), R * 0.97, R * 0.97)
+        p.drawEllipse(QPointF(0, -R * 0.24), R * 0.74, R * 0.74)
+        p.setPen(QPen(_c('#E9C27C', 60 * alfa), 0.8))
+        p.drawEllipse(QPointF(0, -R * 0.24), R * 0.74 - 5, R * 0.74 - 5)
+        llamas = QPainterPath()                                         # cada puntero, una llama fina que se curva hacia su estrella
+        for ang, punta in PUNTEROS:
+            mitad = R * (0.97 + punta) / 2
+            llamas.moveTo(pol(R * 0.97, ang - 1.8))
+            llamas.quadTo(pol(mitad, ang + 0.4), pol(R * punta, ang + 6.0))
+            llamas.quadTo(pol(mitad, ang + 3.6), pol(R * 0.97, ang + 1.8))
+            llamas.closeSubpath()
+        p.setPen(QPen(_c('#F6DDA8', 200 * alfa), 1.1))
+        p.setBrush(_c('#E9C27C', 42 * alfa))
+        p.drawPath(llamas)
+        p.setCompositionMode(PLUS)
+        for ang, punta in PUNTEROS:
+            q_ = pol(R * punta, ang + 6.0)
+            _poner(p, _luz(9, '#FFE9B8', dpr, 'nucleo'), q_.x(), q_.y(), min(1.0, 1.3 * alfa))
+        p.setCompositionMode(OVER)
+        p.restore()
+
+    @staticmethod
+    def _aro(c, R, inc, giro, n=48):
+        """Los puntos (x, y, z) de un aro inclinado `inc` (eje x) y girado `giro` (eje y), proyectado."""
+        ci, si, cg, sg = math.cos(inc), math.sin(inc), math.cos(giro), math.sin(giro)
+        pts = []
+        for i in range(n + 1):
+            th = i * TAU / n
+            x, y = R * math.cos(th), R * math.sin(th)
+            y, z = y * ci, y * si
+            x, z = x * cg + z * sg, -x * sg + z * cg
+            pts.append((c.x() + x, c.y() + y * 0.9, z))
+        return pts
+
+    @staticmethod
+    def _mitad(pts, delante, umbral=0.0):
+        camino = QPainterPath()
+        dentro = False
+        for (x, y, z) in pts:
+            if (z >= umbral) == delante:
+                if dentro:
+                    camino.lineTo(x, y)
+                else:
+                    camino.moveTo(x, y)
+                    dentro = True
+            else:
+                dentro = False
+        return camino
+
+    def _pintar_aro(self, p, pts, ancho, delante, luz, destello, c, R):
+        """Un aro de bronce. v5.49 pulido: metal de verdad, con la luz arriba a la izquierda: delante un canto oscuro, el cuerpo en
+        degradado (oro claro → bronce → sombra; más claro cuanto más alineado) y un filo brillante por el medio; detrás más fino, más
+        oscuro y frío (está lejos). (Cada trazo ancho cuesta ~0,3 ms a 3440x1440: tres delante y uno detrás.)"""
+        camino = self._mitad(pts, delante, -0.05 * R if delante else 0.0)      # (delante empieza un poco antes: tapa la unión con el de detrás)
+        a0, a1 = QPointF(c.x() - R, c.y() - R), QPointF(c.x() + R, c.y() + R)
+        g = QLinearGradient(a0, a1)
+        if delante:
+            g.setColorAt(0.0, mezcla('#F0CB86', '#FFF4DC', luz))
+            g.setColorAt(0.5, QColor('#B47E40'))
+            g.setColorAt(1.0, QColor('#5A361A'))
+            filo = QLinearGradient(a0, a1)
+            filo.setColorAt(0.0, _c('#FFF7E6', 235))
+            filo.setColorAt(0.5, _c('#FFE7B8', 90))
+            filo.setColorAt(1.0, _c('#FFE7B8', 10))
+            capas = ((ancho + 3.0, QBrush(_c('#1E1108', 215))), (ancho, QBrush(g)), (max(1.0, ancho * 0.26), QBrush(filo)))
+        else:
+            g.setColorAt(0.0, _c('#8E7050', 210))
+            g.setColorAt(1.0, _c('#2A1E16', 210))
+            capas = ((ancho * 0.72, QBrush(g)),)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        k = 1.0 if delante else 0.55
+        for w_, br in capas:
+            p.setPen(QPen(br, w_, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap if delante else Qt.PenCapStyle.RoundCap))
+            p.drawPath(camino)
+        if destello > 0.01:                                           # el aro acaba de alinearse: un relámpago de oro lo recorre
+            p.setCompositionMode(PLUS)
+            p.setPen(QPen(_c('#FFE2A8', 200 * destello * k), ancho + 6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawPath(camino)
+            p.setCompositionMode(OVER)
+
+    def escena(self, e, p, W, H, c, Rs, rect):
+        super().escena(e, p, W, H, c, Rs, rect)
+        st = self._st
+        t, trab, reap, en = st.t, st.trab, st.reap, st.en
+        dpr = _dpr(p)
+        # estrellas nítidas que titilan por grupos (cuatro llamadas a Qt, no 340; puntos cuadrados sin antialias: a 1-2 px no se nota y
+        # cuesta la décima parte)
+        if self._grupos is None or self._grupos[0] != (W, H):
+            self._grupos = ((W, H), [QPolygonF([QPointF(x * W, y * H) for (x, y, g) in self._estrellas if g == k]) for k in range(4)])
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        for k, pts in enumerate(self._grupos[1]):
+            brillo = 0.5 + 0.5 * math.sin(t * (0.8 + k * 0.37) + k * 1.9)
+            p.setPen(QPen(_c('#E8F4FF', (60 + 50 * k) * (0.55 + 0.45 * brillo) * reap), 1.0 + 0.5 * k, Qt.PenStyle.SolidLine, Qt.PenCapStyle.SquareCap))
+            p.drawPoints(pts)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        # constelaciones de oro que se dibujan, se quedan y se apagan, una tras otra; y alguna estrella fugaz
+        p.setCompositionMode(PLUS)
+        for (bx, by, ph, hexa) in self._brillantes:                     # v5.49 pulido: unas pocas estrellas grandes con su destello en cruz
+            x, y = bx * W, by * H
+            if abs(x - c.x()) < Rs * 1.9 and abs(y - c.y()) < Rs * 1.9:
+                continue
+            tw = (0.55 + 0.45 * math.sin(t * 1.1 + ph * 3.0)) * reap
+            for ang in (0, 90):
+                p.save()
+                p.translate(x, y)
+                p.rotate(ang)
+                p.scale(2.8, 0.2)
+                _poner(p, _luz(8, hexa, dpr, 'nucleo'), 0, 0, 0.8 * tw)
+                p.restore()
+            _poner(p, _luz(5, '#FFFFFF', dpr, 'nucleo'), x, y, tw)
+        for k, cons in enumerate(CONSTELACIONES):
+            ciclo = (t + k * 2.3) % 11.5
+            alfa = (1.0 if ciclo < 7.5 else max(0.0, 1 - (ciclo - 7.5) / 2.0)) * reap
+            if alfa <= 0:
+                continue
+            puntos = [QPointF(x * W, y * H) for x, y in cons]
+            tramos = (len(puntos) - 1) * _suave(ciclo / 2.4)
+            p.setPen(QPen(_c('#E9C27C', 110 * alfa), 1.1))
+            for i in range(len(puntos) - 1):
+                f = max(0.0, min(1.0, tramos - i))
+                if f > 0:
+                    a_, b_ = puntos[i], puntos[i + 1]
+                    p.drawLine(a_, a_ + (b_ - a_) * f)
+            for i, q_ in enumerate(puntos):
+                if tramos >= i - 0.2:
+                    _poner(p, _luz(7, '#FFE2A8', dpr, 'nucleo'), q_.x(), q_.y(), alfa * (0.7 + 0.3 * math.sin(t * 2 + i)))
+        if t % 9.0 < 0.9:
+            f = (t % 9.0) / 0.9
+            x0, y0 = W * 0.15 + (int(t / 9) * 0.37 % 1) * W * 0.6, H * 0.08
+            for j in range(10):
+                g_ = f - j * 0.025
+                if g_ > 0:
+                    _poner(p, _luz(5 - j * 0.3, '#FFFFFF', dpr, 'nucleo'), x0 + g_ * 380, y0 + g_ * 160, (1 - f) * (1 - j / 10))
+        _poner(p, _luz(round(Rs * 1.5), '#2FE6A0', dpr, 'suave'), c.x(), c.y(), (0.10 + 0.10 * en) * reap)
+        p.setCompositionMode(OVER)
+        # el anillo horario: quieto en reposo (copiarlo sin girar cuesta ~0,1 ms; girado, ~1,5 ms) y en GO gira con la energía
+        horas = self._anillo_horas(Rs * 1.62, dpr)
+        paso_t = max(0.0, min(0.1, t - getattr(self, '_t_horas', t)))
+        self._t_horas = t
+        giro_h = getattr(self, '_giro_horas', 0.0)
+        if trab:
+            giro_h += paso_t * (15.0 + 180.0 * en)
+        elif giro_h:                                                   # tras GO termina la vuelta hasta quedar como estaba
+            giro_h += paso_t * 25.0
+            if giro_h >= 360.0:
+                giro_h = 0.0
+        self._giro_horas = giro_h = giro_h % 360.0 if trab else giro_h
+        if giro_h:
+            p.save()
+            p.translate(c)
+            p.rotate(giro_h)
+            d = horas.width() / dpr
+            p.setOpacity(0.75 * reap)
+            p.drawPixmap(QRectF(-d / 2, -d / 2, d, d), horas, QRectF(horas.rect()))
+            p.restore()
+            p.setOpacity(1.0)
+        else:
+            _poner(p, horas, c.x(), c.y(), 0.75 * reap)
+        Rz = Rs * 1.62
+        p.setCompositionMode(PLUS)                                     # v5.49 pulido: un brillo que da la vuelta despacio por el filete
+        for k, (rr, tam, al) in enumerate(((Rz + 17, 15, 0.55), (Rz - 17, 9, 0.35))):
+            q_ = c + self._polar(rr, (t * (11.0 if k == 0 else -7.0) + 40 * k) % 360)
+            _poner(p, _luz(tam, '#FFE9B8', dpr, 'nucleo'), q_.x(), q_.y(), al * reap)
+        p.setCompositionMode(OVER)
+        # la araña: gira despacio (una vuelta cada 3 min) y en GO con la energía
+        giro_a = getattr(self, '_giro_arana', 0.0) + paso_t * (2.0 + (60.0 * en if trab else 0.0))
+        self._giro_arana = giro_a % 360.0
+        self._arana(p, c, Rz - 26, giro_a, 0.62 * reap, dpr)
+        # la esfera armilar: tres aros de bronce en 3D; en GO, cada dos pasos hechos uno se alinea (plano y quieto) con un destello
+        vel = 1.0 + (3.5 * en if trab else 0.0)
+        estalla = (1 - st.expl) ** 2 if st.expl > 0 else 0.0
+        aros = []
+        for k, (Rk, inc0, w_) in enumerate(((Rs * 1.20, 62, 7), (Rs * 1.36, -48, 6), (Rs * 1.08, 80, 5))):
+            fijo = _suave((st.hechos - 2 * k) / 1.5) if (trab or st.fin) else 0.0
+            if fijo > 0.97 and self._fijo[k] <= 0.97:
+                self._destello[k] = t
+            self._fijo[k] = fijo
+            inc = math.radians(inc0 * (1 - fijo) + 74 * fijo)
+            giro = (t * (0.35 + 0.18 * k) * vel * (1 if k != 1 else -1)) * (1 - fijo)
+            aros.append((self._aro(c, Rk, inc, giro), w_, 0.4 + 0.6 * fijo, max(estalla, 1.0 - (t - self._destello[k]) / 0.7), Rk))
+        for pts, w_, luz, des, Rk in aros:
+            self._pintar_aro(p, pts, w_, False, luz, des, c, Rk)
+        for pts, w_, luz, des, Rk in aros:
+            self._pintar_aro(p, pts, w_, True, luz, des, c, Rk)
+        # un brillo que recorre el aro de fuera (el metal refleja)
+        pts = aros[1][0]
+        i = int((t * 9) % len(pts))
+        if pts[i][2] >= 0:
+            p.setCompositionMode(PLUS)
+            _poner(p, _luz(10, '#FFF1D6', dpr, 'nucleo'), pts[i][0], pts[i][1], 0.8 * reap)
+            p.setCompositionMode(OVER)
+        self._sombra(p, c, Rs)
+        if st.pasos and (trab or st.fin):
+            self._constelacion_go(p, W, H, c, Rs, st, dpr)
+        if estalla > 0:
+            self._destello_anamorfico(p, c, Rs, '#FFD98A', estalla, dpr)
+
+    def _constelacion_go(self, p, W, H, c, Rs, st, dpr):
+        """GO: cada paso es una estrella en un arco sobre el orbe; la activa late y manda luz al orbe; las hechas forman la constelación."""
+        t = st.t
+        rx = min(W / 2 - 140, Rs * 3.0)
+        ry = min(c.y() - 120, Rs * 1.9)
+        pos = [QPointF(c.x() + rx * math.cos(math.pi + (i + 0.5) / 6 * math.pi), c.y() + ry * math.sin(math.pi + (i + 0.5) / 6 * math.pi) + Rs * 0.35)
+               for i in range(6)]
+        estados = [s['estado'] for s in st.pasos[:6]]
+        hecho = [est in ('hecho', 'saltado') or st.fin for est in estados]
+        p.setCompositionMode(PLUS)
+        for i in range(1, len(estados)):
+            if hecho[i] and hecho[i - 1]:
+                for w_, a in ((7, 40), (1.8, 210)):
+                    p.setPen(QPen(_c('#FFD98A', a), w_, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                    p.drawLine(pos[i - 1], pos[i])
+        for i, est in enumerate(estados):
+            q_ = pos[i]
+            hexa = FASE_COL[FASES[i]]
+            if est in ('activo', 'cayendo') and not st.fin:
+                pul = 0.5 + 0.5 * math.sin(t * 7)
+                _poner(p, _luz(40, hexa, dpr, 'suave'), q_.x(), q_.y(), 0.55 + 0.4 * pul)
+                _poner(p, _luz(22, hexa, dpr, 'anillo'), q_.x(), q_.y(), 0.9 * (1 - (t * 1.5) % 1.0), 1.0 + 0.6 * ((t * 1.5) % 1.0))
+                p.setPen(QPen(_c(hexa, 70), 4.0))
+                p.drawLine(q_, c)
+                for j in range(7):                                      # paquetes de luz de la estrella al orbe
+                    f = (t * 1.3 + j / 7) % 1.0
+                    _poner(p, _luz(8, hexa, dpr, 'nucleo'), q_.x() + (c.x() - q_.x()) * f, q_.y() + (c.y() - q_.y()) * f, 0.95 * math.sin(f * math.pi))
+            elif hecho[i]:
+                _poner(p, _luz(30, '#FFE2A8', dpr, 'suave'), q_.x(), q_.y(), 0.8)
+                for ang in (0, 90):                                     # destello de cuatro puntas
+                    p.save()
+                    p.translate(q_)
+                    p.rotate(ang + 45 * math.sin(t * 0.8 + i))
+                    p.scale(3.2, 0.32)
+                    _poner(p, _luz(9, '#FFF4DC', dpr, 'nucleo'), 0, 0, 0.95)
+                    p.restore()
+                _poner(p, _luz(7, '#FFFFFF', dpr, 'nucleo'), q_.x(), q_.y(), 1.0)
+            else:
+                _poner(p, _luz(12, '#9FB6D8', dpr, 'anillo'), q_.x(), q_.y(), 0.55)
+                _poner(p, _luz(5, '#C8D8F0', dpr, 'nucleo'), q_.x(), q_.y(), 0.5)
+        p.setCompositionMode(OVER)
+        f = QFont('Georgia', 13)                                        # v5.49 pulido: más grandes, espaciadas y con sombra (se leen)
+        f.setLetterSpacing(QFont.SpacingType.PercentageSpacing, 118)
+        p.setFont(f)
+        for i, est in enumerate(estados):
+            caja = QRectF(pos[i].x() - 90, pos[i].y() + 17, 180, 22)
+            texto = NOMBRES_PASO[FASES[i]].upper()
+            p.setPen(_c('#000000', 170))
+            p.drawText(caja.translated(0.8, 1.2), int(Qt.AlignmentFlag.AlignCenter), texto)
+            p.setPen(_c('#FFE6B5' if est in ('activo', 'cayendo') and not st.fin else '#F3D9A6', 240 if (est in ('activo', 'cayendo') or hecho[i]) else 120))
+            p.drawText(caja, int(Qt.AlignmentFlag.AlignCenter), texto)
+
+    def onda(self, e, p, onda, W, H):
+        self._onda_suave(e, p, onda, '#FFD98A')
+
+
+# =================================================================================================== C · PROCESO
+FRASE = ('Hoy', 'te', 'enseño', 'a', 'poner', 'captions', 'en', 'un', 'clic', 'y', 'listo')
+PALABRAS_REPOSO = ('Un clic', 'y listo', 'captions', '✨', 'IA', 'VIRAL', '🔥', '3 líneas', '🎬', 'ritmo')
+CAPTIONS_DISENO = (('UN CLIC', '#7DFFB2'), ('Y LISTO', '#FFC46B'), ('captions', '#4FD8FF'))
+ICONOS_PASO = {'timeline': 'ph.film-strip', 'voz': 'ph.waveform', 'ia': 'ph.sparkle', 'diseno': 'ph.text-aa', 'sfx': 'ph.speaker-high',
+               'resolve': 'ph.monitor-play'}
+
+
+class Proceso(Estilo):
+    clave = 'proceso'
+    nombre = tr('Proceso')
+    descr = tr('Anillo de voz y palabras de cristal. En GO seis tarjetas enseñan cada paso y el timeline se llena.')
+    aurora = ('#0B8F5B', '#1D7FA0', '#6B3FB8')
+    pasos_lista = False
+    cometas = False
+
+    def __init__(self):
+        super().__init__()
+        self._chips = {}
+        self._iconos = {}
+        self._palabras = []                 # (t0, texto, ángulo, fase)
+        self._t_pal = -9.0
+        self._bloques = []                  # (t0, i): los captions que bajan al timeline
+        self._t_blo = -9.0
+        self._t_hecho = None
+        self._rnd = random.Random(4)
+
+    def _chip(self, texto, dpr, tam=19, color='#7DFFB2'):
+        """Una palabra en una píldora de cristal (con su borde de color y su reflejo), pintada una vez."""
+        clave = (texto, round(dpr, 2), tam, color)
+        pm = self._chips.get(clave)
+        if pm is not None:
+            return pm
+        f = fuente(tam, peso='extra')
+        fm = QFontMetricsF(f)
+        w = fm.horizontalAdvance(texto) + tam * 1.8
+        h = fm.height() + tam * 0.85
+        img = QImage(int((w + 12) * dpr), int((h + 12) * dpr), QImage.Format.Format_ARGB32_Premultiplied)
+        img.fill(Qt.GlobalColor.transparent)
+        img.setDevicePixelRatio(dpr)
+        q = QPainter(img)
+        q.setRenderHint(QPainter.RenderHint.Antialiasing)
+        q.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        caja = QRectF(6, 6, w, h)
+        g = QLinearGradient(caja.topLeft(), caja.bottomLeft())
+        g.setColorAt(0, QColor(30, 70, 60, 205))
+        g.setColorAt(1, QColor(6, 26, 22, 225))
+        q.setBrush(g)
+        borde = QLinearGradient(caja.topLeft(), caja.bottomRight())
+        borde.setColorAt(0, _c(color, 230))
+        borde.setColorAt(1, _c('#4FD8FF', 120))
+        q.setPen(QPen(QBrush(borde), 1.4))
+        q.drawRoundedRect(caja, h / 2, h / 2)
+        q.setPen(QPen(_c('#FFFFFF', 45), 1.0))
+        q.drawLine(QPointF(caja.left() + h / 2, caja.top() + 2.5), QPointF(caja.right() - h / 2, caja.top() + 2.5))
+        q.setFont(f)
+        q.setPen(QColor('#FFFFFF'))
+        q.drawText(caja, int(Qt.AlignmentFlag.AlignCenter), texto)
+        q.end()
+        pm = self._chips[clave] = QPixmap.fromImage(img)
+        if len(self._chips) > 120:
+            self._chips.clear()
+            self._chips[clave] = pm
+        return pm
+
+    def _icono(self, clave, hexa, dpr):
+        pm = self._iconos.get((clave, hexa))
+        if pm is None:
+            import qt_kit
+            ic = qt_kit.icono_linea(ICONOS_PASO[clave], hexa)
+            pm = ic.pixmap(QSize(26, 26), dpr) if ic is not None else QPixmap()
+            self._iconos[(clave, hexa)] = pm
+        return pm
+
+    def fondo(self, q, W, H, c, e, t, estado):
+        st = self._st
+        fcol = st.fcol if st else '#7DFFB2'
+        Rs = getattr(self, '_rs', min(W * 0.28, H * 0.32))
+        g = QRadialGradient(c, max(W, H) * 0.8)
+        g.setColorAt(0.0, QColor(6, 40 + int(26 * e), 36 + int(16 * e)))
+        g.setColorAt(0.5, QColor(3, 16, 18))
+        g.setColorAt(1.0, QColor(1, 5, 8))
+        q.fillRect(QRectF(0, 0, W, H), g)
+        q.setCompositionMode(PLUS)
+        self._charco(q, c, Rs, fcol, 80 + 60 * e, 2.6)
+        q.setCompositionMode(OVER)
+        q.setPen(QPen(_c('#2E8A72', 26), 1.0))                       # el «suelo» del estudio: una rejilla tenue en perspectiva
+        hz = c.y() + Rs * 1.15
+        for i in range(-14, 15):
+            q.drawLine(QPointF(c.x() + i * 60, hz), QPointF(c.x() + i * 260, H + 40))
+        for j in range(1, 7):
+            y = hz + (H - hz) * (j / 6) ** 1.8
+            q.drawLine(QPointF(0, y), QPointF(W, y))
+        self._vineta(q, W, H)
+
+    def _anillo_voz(self, p, c, R0, t, energia, hexa):
+        """El anillo de voz. v5.49 pulido: un espectro circular de 120 barras redondeadas que salen del orbe con la «voz» (senoides),
+        con su resplandor y un filete fino por dentro (antes una cinta rellena que, al hablar, se deformaba como una mancha)."""
+        n = 120
+        barras = []
+        for i in range(n):
+            th = i * TAU / n
+            v = (math.sin(th * 3 + t * 2.1) * 0.5 + math.sin(th * 7 - t * 3.3) * 0.35 + math.sin(th * 13 + t * 5.7) * 0.25 * energia
+                 + math.sin(th * 19 - t * 8.1) * 0.18 * energia)
+            ct, s_ = math.cos(th), math.sin(th)
+            largo = ((3 + 5 * energia) + (8 + 50 * energia) * max(0.0, v) ** 1.3) * (1.0 - 0.75 * max(0.0, s_) ** 3)   # (abajo, cortas: no tapan el texto)
+            barras.append(QLineF(c.x() + R0 * ct, c.y() + R0 * s_, c.x() + (R0 + largo) * ct, c.y() + (R0 + largo) * s_))
+        ang = t * 0.7                                                  # el color gira (un degradado lineal que rota: el cónico cuesta el doble)
+        u = QPointF(math.cos(ang), math.sin(ang)) * (R0 + 40)
+        g = QLinearGradient(c - u, c + u)
+        g.setColorAt(0.0, _c(hexa, 240))
+        g.setColorAt(0.5, _c('#4FD8FF', 205))
+        g.setColorAt(1.0, _c('#B7FFE0', 235))
+        p.setCompositionMode(PLUS)
+        p.setPen(QPen(_c(hexa, 36), 10, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.drawLines(barras)
+        p.setCompositionMode(OVER)
+        p.setPen(QPen(QBrush(g), 3.4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.drawLines(barras)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(_c(hexa, 80), 1.2))
+        p.drawEllipse(c, R0 - 5, R0 - 5)
+
+    def _tarjetas(self, p, W, c, Rs, dpr, st):
+        """Los seis pasos de GO en tarjetas de cristal (tres a cada lado); la activa, con su haz de energía al orbe. v5.49 pulido: más
+        grandes y con letra que se lee, unidas por un riel que se enciende de verde paso a paso (y baja una luz al paso que empieza)."""
+        t = st.t
+        pasos = {s['clave']: s for s in st.pasos}
+        tw, th_ = 258.0, 68.0
+        cajas = []
+        for lado, claves in ((-1, FASES[:3]), (1, FASES[3:])):
+            for j, k in enumerate(claves):
+                ang = math.radians(-38 + j * 38)
+                sep = min(Rs * 2.05 + 120 + 40 * math.cos(ang), W / 2 - tw - 24)          # (en ventanas estrechas no se salen)
+                x = c.x() + lado * sep - (tw if lado < 0 else 0)
+                s = pasos.get(k)
+                est = s['estado'] if s else 'pendiente'
+                cajas.append((lado, k, QRectF(x, c.y() + Rs * 1.18 * math.sin(ang) - th_ / 2, tw, th_),
+                              est in ('activo', 'cayendo') and not st.fin, est in ('hecho', 'saltado') or st.fin))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        for (l1, k1, c1, _a1, h1), (l2, k2, c2, a2, _h2) in zip(cajas, cajas[1:]):
+            if l1 != l2:
+                continue
+            p0, p1 = QPointF(c1.left() + 32, c1.bottom()), QPointF(c2.left() + 32, c2.top())
+            p.setPen(QPen(_c('#24D18F', 200), 2.0) if h1 else QPen(_c('#5E7A86', 100), 1.6, Qt.PenStyle.DashLine))
+            p.drawLine(p0, p1)
+            if a2:
+                f = (t * 1.1) % 1.0
+                p.setCompositionMode(PLUS)
+                _poner(p, _luz(8, FASE_COL[k2], dpr, 'nucleo'), p0.x() + (p1.x() - p0.x()) * f, p0.y() + (p1.y() - p0.y()) * f, math.sin(f * math.pi))
+                p.setCompositionMode(OVER)
+        for lado, k, caja, activo, hecho in cajas:
+            hexa = FASE_COL[k]
+            if activo:
+                ancla = QPointF(caja.right() if lado < 0 else caja.left(), caja.center().y())
+                camino = QPainterPath(ancla)
+                camino.quadTo(QPointF((ancla.x() + c.x()) / 2, ancla.y() - 60), c)
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                for w_, a in ((10, 50), (2.0, 200)):
+                    p.setPen(QPen(_c(hexa, a), w_, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                    p.drawPath(camino)
+                p.setCompositionMode(PLUS)
+                for i in range(5):                                  # paquetes de luz hacia el orbe
+                    f = (t * 1.2 + i / 5) % 1.0
+                    q_ = camino.pointAtPercent(f)
+                    _poner(p, _luz(9, hexa, dpr, 'nucleo'), q_.x(), q_.y(), math.sin(f * math.pi))
+                _poner(p, _luz(70, hexa, dpr, 'suave'), caja.center().x(), caja.center().y(), 0.35 + 0.15 * math.sin(t * 6))
+                p.setCompositionMode(OVER)
+            g = QLinearGradient(caja.topLeft(), caja.bottomLeft())
+            g.setColorAt(0, QColor(24, 60, 54, 215 if (activo or hecho) else 150))
+            g.setColorAt(1, QColor(5, 22, 20, 230 if (activo or hecho) else 160))
+            p.setBrush(g)
+            p.setPen(QPen(_c(hexa, 230) if activo else (_c('#24D18F', 170) if hecho else _c('#5E7A86', 110)), 2.0 if activo else 1.2))
+            p.drawRoundedRect(caja, 18, 18)
+            if activo:
+                borde = QPainterPath()                               # una luz que recorre el borde
+                borde.addRoundedRect(caja, 18, 18)
+                f = (t * 0.7) % 1.0
+                p.setCompositionMode(PLUS)
+                for i in range(8):
+                    q_ = borde.pointAtPercent((f - i * 0.012) % 1.0)
+                    _poner(p, _luz(7 - i * 0.6, '#FFFFFF', dpr, 'nucleo'), q_.x(), q_.y(), 1 - i / 8)
+                p.setCompositionMode(OVER)
+                barra = QRectF(caja.left() + 64, caja.bottom() - 13, caja.width() - 82, 3)      # «trabajando»: una barra que corre
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(_c('#FFFFFF', 30))
+                p.drawRoundedRect(barra, 1.5, 1.5)
+                u = (t * 0.8) % 1.0
+                p.setBrush(_c(hexa, 220))
+                p.drawRoundedRect(QRectF(barra.left() + barra.width() * max(0.0, u - 0.3), barra.top(), barra.width() * min(0.3, u, 1.3 - u), 3), 1.5, 1.5)
+            circ = QPointF(caja.left() + 32, caja.center().y())
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(_c('#24D18F', 230) if hecho else _c(hexa, 60))
+            p.drawEllipse(circ, 19, 19)
+            if hecho:
+                p.setPen(QPen(QColor('#04140C'), 2.6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+                p.drawPolyline([circ + QPointF(-6, 0.5), circ + QPointF(-1.5, 5), circ + QPointF(6.5, -4.5)])
+            else:
+                ic = self._icono(k, hexa if activo else '#9FB3C8', dpr)
+                if not ic.isNull():
+                    p.drawPixmap(QPointF(circ.x() - 13, circ.y() - 13), ic)
+            p.setFont(fuente(17, peso='extra' if activo else 'medio'))
+            p.setPen(QColor('#FFFFFF') if (activo or hecho) else QColor('#8FA3B8'))
+            p.drawText(QRectF(caja.left() + 64, caja.top() + 9, caja.width() - 72, 28), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), NOMBRES_PASO[k])
+            if not activo:
+                p.setFont(fuente(13))
+                p.setPen(_c('#7F93A8', 210))
+                p.drawText(QRectF(caja.left() + 64, caja.top() + 37, caja.width() - 72, 21), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
+                           tr('hecho') if hecho else tr('en espera'))
+
+    def escena(self, e, p, W, H, c, Rs, rect):
+        self._rs = Rs
+        super().escena(e, p, W, H, c, Rs, rect)
+        st = self._st
+        t, trab, reap, fcol, en, fase = st.t, st.trab, st.reap, st.fcol, st.en, st.fase
+        dpr = _dpr(p)
+        p.setCompositionMode(PLUS)
+        _poner(p, _luz(round(Rs * 1.5), fcol, dpr, 'suave'), c.x(), c.y(), 0.18 + 0.2 * en)
+        p.setCompositionMode(OVER)
+        self._anillo_voz(p, c, Rs * 1.18, t, 1.0 if fase == 'voz' else (0.55 if trab else 0.18), fcol)
+        self._sombra(p, c, Rs)
+        # reposo: palabras de cristal que llegan desde los lados y entran en el orbe. v5.49 pulido: en dos corrientes ordenadas (una por
+        # lado, alternando, a ritmo fijo) que se curvan hacia el orbe y se encogen al entrar (antes salían sueltas por toda la pantalla)
+        if st.estado == 'reposo':
+            periodo, vida = 1.25, 7.5
+            n0 = int(t / periodo)
+            for j in range(int(vida / periodo) + 1):
+                idx = n0 - j
+                u = (t - idx * periodo) / vida
+                if idx < 0 or not 0.0 <= u < 1.0:
+                    continue
+                lado = -1 if idx % 2 else 1
+                carril = (idx * 0.618) % 1.0
+                x0 = c.x() + lado * (W * 0.5 + 70)
+                y0 = c.y() + (carril - 0.5) * H * 0.58
+                f = _suave(u) ** 1.2
+                x = x0 + (c.x() - x0) * f
+                y = y0 + (c.y() - y0) * f - math.sin(f * math.pi) * 46 * (1 if carril < 0.5 else -1)
+                al = min(1.0, u * 7) * (1.0 - _suave((u - 0.8) / 0.2)) * reap
+                _poner(p, self._chip(PALABRAS_REPOSO[idx % len(PALABRAS_REPOSO)], dpr, 22), x, y, al, 1.15 - 0.7 * f)
+        # Voz: las palabras salen del orbe al transcribirse; IA: se vuelven píldoras con ✨; Diseño: captions con su estilo
+        if trab and fase in ('voz', 'ia') and t - self._t_pal > (0.22 if fase == 'voz' else 0.35):
+            self._t_pal = t
+            self._palabras.append((t, FRASE[len(self._palabras) % len(FRASE)], self._rnd.uniform(-0.9, 0.9) + (math.pi if self._rnd.random() < 0.5 else 0), fase))
+        self._palabras = [w_ for w_ in self._palabras if t - w_[0] < 2.2]
+        for (t0, txt, ang, f_) in self._palabras:
+            u = (t - t0) / 2.2
+            r = Rs * (1.25 + 1.3 * _suave(u))                            # (v5.49 pulido: no llegan a las tarjetas)
+            x, y = c.x() + math.cos(ang) * r * 1.25, c.y() + math.sin(ang) * r * 0.6
+            al = min(1.0, u * 6) * (1 - u) ** 0.7
+            if f_ == 'ia':                                               # (v5.49 pulido: más grandes, se leen)
+                _poner(p, self._chip(txt + (' ✨' if len(txt) > 4 else ''), dpr, 20, '#B388FF'), x, y, al, 0.95 + 0.2 * _suave(u))
+            else:
+                _poner(p, self._chip(txt, dpr, 19, '#4FD8FF'), x, y, al, 0.92 + 0.15 * _suave(u))
+        if trab and fase == 'diseno':
+            for i, (txt, col) in enumerate(CAPTIONS_DISENO):
+                u = ((t * 0.5) + i / 3) % 1.0
+                ang = math.radians(-150 + i * 60 + 20 * math.sin(t * 0.7 + i))
+                _poner(p, self._chip(txt, dpr, 24 if i < 2 else 18, col), c.x() + math.cos(ang) * Rs * 2.0, c.y() + math.sin(ang) * Rs * 1.15,
+                       min(1.0, u * 5) * (1 - u) ** 0.5, 0.8 + 0.3 * _suave(u))
+        if trab and fase == 'sfx':                                      # Sonido: ondas nítidas que salen del orbe (v5.49 pulido: antes manchas)
+            p.setCompositionMode(PLUS)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            for j in range(3):
+                f = (t * 0.9 + j / 3) % 1.0
+                self._aro_luz(p, c, Rs * (1.3 + 0.95 * f), '#FF7BD5', 0.8 * (1 - f) ** 1.5, 1.8)
+            p.setCompositionMode(OVER)
+        self._timeline(p, W, H, c, Rs, st)
+        if trab or st.fin:
+            self._tarjetas(p, W, c, Rs, dpr, st)
+        if st.expl > 0:                                                  # v5.49 pulido: floración corta + destello anamórfico
+            a = (1 - st.expl) ** 2
+            p.setCompositionMode(PLUS)
+            _poner(p, _luz(round(Rs * 1.4), '#E8FFF4', dpr, 'suave'), c.x(), c.y(), 0.8 * a, 1.0 + 1.3 * st.expl)
+            p.setCompositionMode(OVER)
+            self._destello_anamorfico(p, c, Rs, '#9FFFD8', a, dpr)
+
+    def _timeline(self, p, W, H, c, Rs, st):
+        """Resolve: los captions bajan del orbe a un timeline pequeño que se va llenando; se va cuando entran los contadores del final."""
+        t = st.t
+        if st.estado != 'hecho':
+            self._t_hecho = None
+        elif self._t_hecho is None:
+            self._t_hecho = t
+        alfa = 1.0 if st.estado != 'hecho' else max(0.0, 1.0 - (t - self._t_hecho) / 0.8)
+        if st.estado == 'reposo':
+            self._bloques = []
+        if not (((st.trab and st.fase == 'resolve') or st.fin) and alfa > 0):
+            return
+        if st.trab and st.fase == 'resolve' and t - self._t_blo > 0.16 and len(self._bloques) < 24:
+            self._t_blo = t
+            self._bloques.append((t, len(self._bloques)))
+        p.setOpacity(alfa)
+        tl = QRectF(c.x() - 380, H - 106, 760, 62)                      # (sin lista de pasos: debajo de los botones, sin tocarlos)
+        p.setPen(QPen(_c('#3B5B66', 160), 1.0))
+        p.setBrush(QColor(6, 18, 22, 200))
+        p.drawRoundedRect(tl, 10, 10)
+        p.setFont(fuente(10, peso='medio'))
+        for j, (nom, hexa) in enumerate((('V2', '#7DFFB2'), ('V1', '#4FD8FF'), ('A1', '#FFC46B'))):
+            y = tl.top() + 6 + j * 18
+            p.setPen(_c('#7F93A8'))
+            p.drawText(QRectF(tl.left() + 8, y, 24, 16), int(Qt.AlignmentFlag.AlignVCenter), nom)
+            if nom != 'V2':                                              # v5.49 pulido: clips con sus cortes, como en Resolve
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(_c(hexa, 80))
+                x_, ancho_t = tl.left() + 36, tl.width() - 46
+                for a_, b_ in ((0.0, 0.31), (0.316, 0.58), (0.586, 0.83), (0.836, 1.0)):
+                    p.drawRoundedRect(QRectF(x_ + ancho_t * a_, y + 2, ancho_t * (b_ - a_), 12), 3, 3)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(_c('#7DFFB2', 230))
+        for (t0, i) in self._bloques:
+            u = _suave(min(1.0, (t - t0) / 0.5))
+            x1, y1 = tl.left() + 36 + i * 29, tl.top() + 8
+            x0, y0 = c.x() - 10, c.y() + Rs * 0.9
+            p.drawRoundedRect(QRectF(x0 + (x1 - x0) * u, y0 + (y1 - y0) * u, 26, 12), 3, 3)
+        xc = tl.left() + 36 + min(24, len(self._bloques)) * 29                # el cabezal sigue a lo que ya se colocó
+        p.setBrush(_c('#FFFFFF', 235))
+        p.drawPolygon(QPolygonF([QPointF(xc - 5, tl.top() + 1), QPointF(xc + 5, tl.top() + 1), QPointF(xc, tl.top() + 7)]))
+        p.setPen(QPen(_c('#FFFFFF', 220), 1.4))
+        p.drawLine(QPointF(xc, tl.top() + 6), QPointF(xc, tl.bottom() - 4))
+        p.setOpacity(1.0)
+
+    def onda(self, e, p, onda, W, H):
+        self._onda_suave(e, p, onda, self._st.fcol if (self._st and self._st.trab) else None)
 
 
 # --------------------------------------------------------------------------------------------------- registro
-ESTILOS = {c.clave: c for c in (Orbe, Astrolabio, Synthwave, Reactor, Agujero, Liquido, Prisma, Ecualizador, Plasma, Carrete, Matrix)}
+ESTILOS = {c.clave: c for c in (Nebulosa, Astrolabio, Proceso)}
 ORDEN = tuple(ESTILOS.keys())
-POR_DEFECTO = 'orbe'                     # v5.5.8: el orbe de React Bits es el Inicio de fábrica (el elegido en Ajustes › Interfaz se respeta)
+POR_DEFECTO = 'astrolabio'               # v5.49: la propuesta B (el usuario: «deja por defecto la opción B»)
 
 
 def crear(clave):
@@ -1339,6 +1367,7 @@ def crear(clave):
 
 
 def clave_guardada():
+    """El estilo elegido en Ajustes › Interfaz; los de antes de la v5.49 (orbe, synthwave…) pasan al de fábrica."""
     try:
         import ajustes_ui
         c = str(ajustes_ui.leer_prefs().get('go_estilo') or POR_DEFECTO)
@@ -1347,29 +1376,73 @@ def clave_guardada():
         return POR_DEFECTO
 
 
+class _EscenaMini:
+    """Una escena de mentira para las miniaturas de Ajustes: lo que el estilo lee de `EscenaGo` (sin motas, ondas ni explosión)."""
+
+    def __init__(self, ctx, W, H, c, Rs, rect):
+        self._W, self._H, self._c, self._Rs, self._rect = W, H, c, Rs, rect
+        trab = ctx.estado == 'trabajando'
+        self._t = ctx.t
+        self._estado = 'trabajando' if trab else ('hecho' if ctx.estado == 'hecho' else 'reposo')
+        self.energia = 0.3 + 0.5 * ctx.progreso if trab else 0.15
+        self.meta = 0.08 + 0.8 * ctx.progreso
+        n = min(5, int(ctx.progreso * 6))
+        self._fase = FASES[n] if trab else ''
+        self._pasos = [{'clave': k, 'estado': ('hecho' if i < n else ('activo' if i == n else 'pendiente'))} for i, k in enumerate(FASES)] if trab else []
+        self.expl = 0.0
+        self.reaparecer = 1.0
+        self._carga_final = False
+        self._pviva = None
+        self._bajo = None
+
+    def width(self):
+        return self._W
+
+    def height(self):
+        return self._H
+
+    def _geometria(self):
+        return self._c, self._Rs, self._rect
+
+    def _fondo_bajo(self, W, H, c, e):
+        w, h = max(8, int(W / 3.0)), max(8, int(H / 3.0))
+        if self._bajo is None:
+            self._bajo = QPixmap(w, h)
+        q = QPainter(self._bajo)
+        q.setRenderHint(QPainter.RenderHint.Antialiasing)
+        q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        q.scale(w / float(W), h / float(H))
+        self._estilo.fondo(q, W, H, c, e, self._t, self._estado)
+        q.end()
+        return self._bajo
+
+    def _dibujar_onda(self, p, onda, W, H):
+        pass
+
+
 def dibujar_miniatura(est, ctx, w, h, dpr=1.0, destino=None):
-    """Dibuja el estilo `est` (instancia viva) con el contexto `ctx` en un pixmap w x h: fondo + héroe. Sirve para las tarjetas de
-    Ajustes (estáticas o animadas al pasar el ratón)."""
+    """Dibuja el estilo `est` (instancia viva) con el contexto `ctx` en un pixmap w x h: la escena y el botón, como en una ventana de
+    1000 px de ancho reducida (así se ve igual que en Inicio: tarjetas, aros y palabras en su sitio). Para las tarjetas de Ajustes."""
     pm = destino or QPixmap(int(w * dpr), int(h * dpr))
     pm.setDevicePixelRatio(dpr)
-    c = QPointF(w * 0.5, h * 0.50)
-    bajo = QPixmap(max(8, int(w / 2)), max(8, int(h / 2)))
-    q = QPainter(bajo)
-    q.scale(bajo.width() / float(w), bajo.height() / float(h))
-    est.fondo(q, w, h, c, 0.3 if ctx.estado == 'trabajando' else 0.0, ctx.t, ctx.estado)
-    q.end()
+    W = 1000.0
+    H = W * h / float(w)
+    c = QPointF(W * 0.5, H * 0.46)
+    Rs = H * 0.24
+    mini = _EscenaMini(ctx, W, H, c, Rs, QRectF(W / 2 - 240, H * 0.8, 480, 200))
+    mini._estilo = est
     p = QPainter(pm)
-    p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-    p.drawPixmap(QRectF(0, 0, w, h), bajo, QRectF(bajo.rect()))
-    est.frente(p, w, h, c, ctx.t, ctx.estado)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
-    est.dibujar(p, c, h * 0.34, ctx, h * 0.34)
+    p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+    p.scale(w / W, h / H)
+    est.escena(mini, p, W, H, c, Rs, mini._rect)
+    est.dibujar(p, c, Rs * 0.8, ctx, Rs * 0.8)
     p.end()
     return pm
 
 
 def miniatura(clave, w=320, h=180, t=2.4, estado='listo', dpr=1.0):
-    """Una imagen del estilo (fondo + héroe) para las tarjetas de Ajustes."""
+    """Una imagen del estilo (escena + botón) para las tarjetas de Ajustes."""
     est = crear(clave)
     ctx = Ctx()
     ctx.t = t

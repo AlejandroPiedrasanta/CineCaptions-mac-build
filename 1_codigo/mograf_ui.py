@@ -14,8 +14,6 @@ Pedido: «mejora las animaciones de todas las páginas y la página de inicio co
   * sembrar_formas / dibujar_formas
                              formas geométricas finas (anillos, cruces, triángulos, hexágonos, arcos) que derivan y
                              giran muy despacio detrás de todo; y ráfagas de datos que cruzan de vez en cuando.
-  * dibujar_hud(...)         lo de Inicio: dial de marcas girando alrededor de la esfera, órbitas con satélites, marcos
-                             de visor en las esquinas con REC y timecode, y un radar que barre mientras GO trabaja.
 
 Criterio (las skills de movimiento): curvas de salida, nada repetitivo en lo que se usa cien veces por minuto, el
 espectáculo en los momentos raros. Todo respeta «Reducir animaciones» y no cuesta CPU cuando no se ve (los
@@ -25,9 +23,8 @@ import math
 import random
 import time
 
-from PySide6.QtCore import QEasingCurve, QEvent, QLineF, QObject, QPointF, QRect, QRectF, Qt, QTimer, QVariantAnimation
-from PySide6.QtGui import (QConicalGradient, QFont, QFontMetricsF, QLinearGradient, QPainter, QPainterPath, QPen,
-                           QPolygonF)
+from PySide6.QtCore import QEasingCurve, QEvent, QObject, QPointF, QRect, QRectF, Qt, QTimer, QVariantAnimation
+from PySide6.QtGui import QFont, QFontMetricsF, QLinearGradient, QPainter, QPainterPath, QPen, QPolygonF
 from PySide6.QtWidgets import QFrame, QGraphicsEffect, QWidget
 
 import qt_kit as ui
@@ -408,72 +405,3 @@ def _letras(f, espacio=1.8):
     f = QFont(f)
     f.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, espacio)
     return f
-
-
-def dibujar_hud(p, W, H, c, Rs, t, energia=0.0, estado='reposo', calidad=1.0, carga=0.0):
-    """La capa de Motion Graphics de Inicio, dibujada sobre la esfera. 't' = segundos de la escena; 'energia' 0..1."""
-    p.save()
-    p.setRenderHint(QPainter.RenderHint.Antialiasing)
-    p.setBrush(Qt.BrushStyle.NoBrush)
-    entra = _salida(t / 1.6)
-    trabaja = estado in ('trabajando', 'explotando')
-    azul, claro, cian = '#4589FF', '#8FB4FF', '#22D3EE'
-    detalle = calidad >= 0.55
-
-    # --- 1. el dial: marcas que giran alrededor de la esfera (se aceleran y se encienden con la energía)
-    n = 96 if detalle else 48
-    giro = t * (0.10 + 0.9 * energia)
-    r0, r1, r2 = Rs * 1.10, Rs * 1.135, Rs * 1.175
-    largas, cortas = [], []                                         # dos grupos de marcas = dos llamadas de dibujo (no 96)
-    for i in range(n):
-        a = giro + i * TAU / n
-        ca, sa = math.cos(a), math.sin(a)
-        larga = i % 6 == 0
-        rr = r2 if larga else r1
-        (largas if larga else cortas).append(QLineF(c.x() + r0 * ca, c.y() + r0 * sa, c.x() + rr * ca, c.y() + rr * sa))
-    p.setPen(QPen(_rgba(claro, (26 + 80 * energia) * entra), 1.2))
-    p.drawLines(cortas)
-    p.setPen(QPen(_rgba(claro, (72 + 80 * energia) * entra), 1.8))
-    p.drawLines(largas)
-    # un arco brillante que gira por fuera del dial
-    p.setPen(QPen(_rgba(cian, (70 + 120 * energia) * entra), 2.4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-    ra = Rs * 1.23
-    p.drawArc(QRectF(c.x() - ra, c.y() - ra, 2 * ra, 2 * ra), int(-giro * 1.3 * 57.2958 * 16), 52 * 16)
-    p.drawArc(QRectF(c.x() - ra, c.y() - ra, 2 * ra, 2 * ra), int((-giro * 1.3 * 57.2958 + 180) * 16), 26 * 16)
-
-    # --- 2. órbitas con satélites
-    for rx, incl, vel, nsat, col in ((Rs * 1.50, -18.0, 0.34, 2, claro), (Rs * 1.92, 23.0, -0.21, 3, cian)):
-        p.save()
-        p.translate(c)
-        p.rotate(incl)
-        p.setPen(QPen(_rgba(col, 46 * entra), 1.0))
-        p.drawEllipse(QPointF(0, 0), rx, rx * 0.30)
-        for s in range(nsat):
-            ang = t * vel * (1.0 + 2.2 * energia) + s * TAU / nsat
-            sx, sy = rx * math.cos(ang), rx * 0.30 * math.sin(ang)
-            prof = 0.5 + 0.5 * math.sin(ang)                  # 0 = detrás, 1 = delante
-            r = 1.6 + 2.2 * prof
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(_rgba(col, (40 + 90 * prof) * entra))
-            p.drawEllipse(QPointF(sx, sy), r * 2.6, r * 2.6)
-            p.setBrush(_rgba('#FFFFFF', (90 + 160 * prof) * entra))
-            p.drawEllipse(QPointF(sx, sy), r, r)
-        p.restore()
-    p.setBrush(Qt.BrushStyle.NoBrush)
-
-    # --- 3. radar mientras GO trabaja
-    if trabaja and detalle:
-        ang = -(t * 160.0) % 360.0
-        g = QConicalGradient(c, ang)
-        g.setColorAt(0.0, _rgba(cian, 90))
-        g.setColorAt(0.16, _rgba(azul, 0))
-        g.setColorAt(1.0, _rgba(azul, 0))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(g)
-        rr = Rs * 1.16
-        p.drawEllipse(c, rr, rr)
-        p.setBrush(Qt.BrushStyle.NoBrush)
-
-    # --- 4. (v5.4) sin encuadre de visor, REC ni timecode. v5.22: la barra de carga de aquí (2 px, seguía la energía de la esfera y no
-    #        el %) la sustituye la barra de progreso de la escena (EscenaGo._dibujar_barra), en todos los estilos y equipos
-    p.restore()

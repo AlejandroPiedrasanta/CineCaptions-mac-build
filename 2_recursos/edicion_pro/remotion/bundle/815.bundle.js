@@ -1,16 +1,16 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[698],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[815],{
 
-/***/ 2698
+/***/ 4815
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* reexport safe */ _index_r1dx4ekm_mjs__WEBPACK_IMPORTED_MODULE_2__.B)
+/* harmony export */   "default": () => (/* reexport safe */ _index_341r8t78_mjs__WEBPACK_IMPORTED_MODULE_2__.B)
 /* harmony export */ });
 /* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7449);
-/* harmony import */ var _index_e7w84rbx_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6990);
-/* harmony import */ var _index_r1dx4ekm_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5561);
+/* harmony import */ var _index_dapnr3e1_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9495);
+/* harmony import */ var _index_341r8t78_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2466);
 
 
 
@@ -19,14 +19,56 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ },
 
-/***/ 6990
+/***/ 2466
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   B: () => (/* binding */ Models)
+/* harmony export */ });
+/* harmony import */ var _index_dapnr3e1_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9495);
+Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4848);
+
+
+// src/components/Transcription/Models.tsx
+
+
+
+var AVAILABLE_MODELS = Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
+var Models = ({ description, indent, visible }) => {
+  const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
+  const loadModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model, onProgress) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
+    model,
+    onProgress: (progress) => onProgress(progress.progress)
+  }), []);
+  const removeModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_index_dapnr3e1_mjs__WEBPACK_IMPORTED_MODULE_0__/* .ModelManager */ .P, {
+    ariaLabel: "Whisper models",
+    availableModels: AVAILABLE_MODELS,
+    description,
+    indent,
+    isModelCached,
+    loadModel,
+    prepare: Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()),
+    removeModel,
+    visible
+  });
+};
+
+
+
+
+/***/ },
+
+/***/ 9495
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   P: () => (/* binding */ ModelManager)
 /* harmony export */ });
 /* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7449);
-/* harmony import */ var _index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1045);
+/* harmony import */ var _index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8083);
 /* harmony import */ var _index_kwxewaaz_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6929);
 /* harmony import */ var _remotion_studio_shared__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3872);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6540);
@@ -40,7 +82,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var modelPanel = {
-  ..._index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .optionsPanel */ .Z6,
+  ..._index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .optionsPanel */ .Z6,
   flexDirection: "column"
 };
 var hiddenPanel = { display: "none" };
@@ -196,13 +238,13 @@ var ModelManager = ({
     });
   }, [removeModel]);
   const renderDownloadIcon = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((color) => {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CloudDownloadIcon */ .$w, {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CloudDownloadIcon */ .$w, {
       color,
       style: actionIcon
     });
   }, []);
   const renderRemoveIcon = (0,react__WEBPACK_IMPORTED_MODULE_4__.useCallback)((color) => {
-    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .TrashIcon */ .uc, {
+    return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .TrashIcon */ .uc, {
       color,
       style: actionIcon
     });
@@ -218,7 +260,7 @@ var ModelManager = ({
           style: descriptionStyle,
           children: description
         }),
-        cacheCheckError ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ValidationMessage */ .Xl, {
+        cacheCheckError ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ValidationMessage */ .Xl, {
           align: "flex-start",
           message: cacheCheckError,
           type: "error"
@@ -236,7 +278,7 @@ var ModelManager = ({
               role: "listitem",
               style: modelRow,
               children: [
-                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ModelsIcon */ .oi, {
+                /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .ModelsIcon */ .oi, {
                   "aria-hidden": true,
                   color: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .LIGHT_TEXT */ .hf,
                   style: modelIcon
@@ -251,13 +293,13 @@ var ModelManager = ({
                   "aria-label": modelStatus,
                   children: modelStatus
                 }),
-                cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CheckCircleFilled */ .Pk, {
+                cached ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .CheckCircleFilled */ .Pk, {
                   "aria-hidden": true,
                   style: { ...statusIcon, fill: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .BLUE */ .ft }
                 }) : null,
                 processingThisModel ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("span", {
                   style: actionSlot,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Spinner */ .y$, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .Spinner */ .y$, {
                     duration: 0.5,
                     size: 14
                   })
@@ -266,7 +308,7 @@ var ModelManager = ({
                   shortcut: null,
                   delay: 800,
                   dismissOnClick: true,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
                     "aria-label": `Remove ${model.name}`,
                     disabled: actionInProgress,
                     onClick: () => remove(model.name),
@@ -278,7 +320,7 @@ var ModelManager = ({
                   shortcut: null,
                   delay: 800,
                   dismissOnClick: true,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_394460kk_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_index_kewagct1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .InlineAction */ .gs, {
                     "aria-label": `Download ${model.name}`,
                     disabled: cachedModels === null || actionInProgress,
                     onClick: () => downloadModel(model.name),
@@ -298,49 +340,7 @@ var ModelManager = ({
 
 
 
-/***/ },
-
-/***/ 5561
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   B: () => (/* binding */ Models)
-/* harmony export */ });
-/* harmony import */ var _index_e7w84rbx_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6990);
-Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4848);
-
-
-// src/components/Transcription/Models.tsx
-
-
-
-var AVAILABLE_MODELS = Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())();
-var Models = ({ description, indent, visible }) => {
-  const isModelCached = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
-  const loadModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model, onProgress) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({
-    model,
-    onProgress: (progress) => onProgress(progress.progress)
-  }), []);
-  const removeModel = (0,react__WEBPACK_IMPORTED_MODULE_2__.useCallback)((model) => Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }())({ model }), []);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_index_e7w84rbx_mjs__WEBPACK_IMPORTED_MODULE_0__/* .ModelManager */ .P, {
-    ariaLabel: "Whisper models",
-    availableModels: AVAILABLE_MODELS,
-    description,
-    indent,
-    isModelCached,
-    loadModel,
-    prepare: Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()),
-    removeModel,
-    visible
-  });
-};
-
-
-
-
 /***/ }
 
 }]);
-//# sourceMappingURL=698.bundle.js.map
+//# sourceMappingURL=815.bundle.js.map

@@ -131,7 +131,9 @@ _PICOS = {'datos': None, 'sucio': False}
 def _picos_cargar():
     if _PICOS['datos'] is None:
         try:
-            _PICOS['datos'] = json.loads(ARCHIVO_PICOS.read_text(encoding='utf-8'))
+            # v5.49: 3,5 MB; json.loads retenía el GIL ~45 ms (se carga en el hilo «picos-sfx» a los 12 s de abrir: un tirón en Inicio)
+            import archivos_seguros
+            _PICOS['datos'] = archivos_seguros.leer_json_cediendo(ARCHIVO_PICOS)
         except Exception:
             _PICOS['datos'] = {}
     return _PICOS['datos']

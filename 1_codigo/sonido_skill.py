@@ -18,7 +18,8 @@ API para GO (la misma forma que director_sonido; el resto de la tubería —al_c
 Elección (v5.48, lo aprendido de 70 videos de creadores): solo sonidos curados, 1 principal + 3 variantes por tipo con tope del 40 %, nunca la
 misma familia seguida, lo APROBADO por el usuario primero y la densidad de los creadores por estilo (max10).
     rehacer(video, …)   la página Sonido rediseña con la foto guardada de GO (estilo, gancho, fiesta) sin volver a hacer GO
-Biblioteca: preferencia 'sonido_biblioteca' (por defecto Desktop\\SFX del autor si existe; si no, «Mis sonidos» del director). Si la carpeta trae
+Biblioteca: preferencia 'sonido_biblioteca'; si no, 5_SFX de la carpeta de CineCaptions (v5.48, fuera de Git), luego Desktop\\SFX (enlace a
+5_SFX; lo usan el .exe y la skill) y por último «Mis sonidos» del director. Si la carpeta trae
 catalogo_sfx.json (lo escribe la skill) se usa; si no, se mide aquí con PyAV y se guarda en caché.
 """
 import json
@@ -33,7 +34,8 @@ import numpy as np
 PREF_ON, PREF_LIB, PREF_ESTILO, PREF_GANCHO, PREF_FIESTA = 'sonido_skill', 'sonido_biblioteca', 'sonido_estilo', 'sonido_gancho', 'sonido_fiesta'
 ORIGEN = 'Sonido (biblioteca)'
 SR = 48000
-LIB_AUTOR = Path.home() / 'Desktop' / 'SFX'
+LIB_PROPIA = Path(__file__).resolve().parent.parent / '5_SFX'   # v5.48: la biblioteca vive en la carpeta de CineCaptions (fuera de Git)
+LIB_AUTOR = Path.home() / 'Desktop' / 'SFX'                     # enlace a 5_SFX (el .exe y la skill la encuentran aquí)
 AUDIO_EXT = ('.wav', '.mp3', '.aif', '.aiff', '.flac', '.ogg', '.m4a')
 VERSION = 1
 
@@ -71,7 +73,9 @@ POOL_A_TIPO = {'riser': 'riser', 'whoosh': 'whoosh', 'swoosh': 'whoosh', 'flash'
                'shine': 'acento', 'ding': 'acento', 'burbuja': 'pop', 'tarjeta': 'pop', 'boton_on': 'tick', 'boton_off': 'tick', 'mouse': 'tick',
                'notif': 'acento', 'dinero': 'dinero', 'positivo': 'acento', 'error': 'acento', 'impacto': 'golpe', 'carga': 'carga',
                'pagina': 'papel', 'glitch': 'glitch'}
-DINERO_RX = r'(\$|€|₹|dinero|precio|gratis|gratuit|money|dollar|price|free|cost|pesos|quetzal|millon)'
+REGLAS_CC = {'pegatina': ('burbuja', 6), 'sube': ('swoosh', 6), 'barrido_kit': ('whoosh', 7), 'tarjeta_kit': ('tarjeta', 6),
+             'logo_kit': ('shine', 8)}   # tipos que solo existen en CineCaptions (Tema 1 y su kit neón); REGLAS sigue igual a la skill
+DINERO_RX = r'(\$|€|₹|\b(dinero|precio|gratis|gratuit\w*|money|dollars?|price|free|cost\w*|pesos?|quetzal(es)?|millon\w*|millón)\b)'   # palabras ENTERAS: «Quetzaltenango» no es dinero
 # v5.48 — lo aprendido de 70 videos de creadores (skill, apoyo_decision.py 2026-10-26): densidad por estilo, 4 sonidos por tipo con tope,
 # solo sonidos curados (los extraídos de los creadores suenan pobres en un video nuevo) y lo que el usuario APROBÓ pesa 5×
 REFS_CREADORES = Path.home() / '.sonorizar-sfx' / 'datos' / 'refs.json'     # lo escribe la skill (autoentreno.py); sin él, la tabla
@@ -82,6 +86,7 @@ VARIANTES_POR_ROL, TOPE_REPETIR = 3, 0.40         # 1 principal + 3 de otras fam
 RESPALDO = {'boton_on': 'mouse', 'boton_off': 'mouse', 'mouse': 'pop', 'kinetic': 'pop', 'shine': 'ding', 'ding': 'shine', 'flash': 'swoosh',
             'carga': 'pop', 'notif': 'ding', 'riser': 'swoosh', 'acento': 'pop', 'tarjeta': 'burbuja'}   # pool de 1 familia → el vecino
 _DENS = {}
+SIEMPRE_SU_SONIDO = ('kinetic', 'boton_on')   # MAPA: «el KINETIC va en TODO caption con aro»; un interruptor suena a interruptor (variantes: rotar)
 
 
 def _prefs():
@@ -113,8 +118,9 @@ def biblioteca(prefs=None):
     p = (prefs if prefs is not None else _prefs()).get(PREF_LIB)
     if p and Path(p).is_dir():
         return Path(p)
-    if LIB_AUTOR.is_dir():
-        return LIB_AUTOR
+    for lib in (LIB_PROPIA, LIB_AUTOR):
+        if (lib / '01_SFX').is_dir():
+            return lib
     import director_sonido_estado as E
     return E.CARPETA / 'biblioteca'
 
@@ -199,12 +205,149 @@ def _tipo_pieza(nombre):
     return 'tarjeta'
 
 
+HEROE_GOLPE = 0.0                 # Tema 1: el pop del héroe va en el PRIMER cuadro de su entrada (antes en p≈0,37 del rebote: +0,12 s, «llega tarde»)
+GANCHO_MIN = 0.45                 # lo que necesita un riser para subir antes del primer momento
+CORTE_MIN = 0.3                   # un «corte» antes de esto es el comienzo del video, no un corte
+
+
+def cues_kinetic(ctx):
+    """Tema 1 (pack Kinetic): sus bloques con los ELEMENTOS que anima cada uno y cuándo entran (`runs`: k hero/ring/line/tape/label/serif/
+    script con su t), del .kinetic.json que GO escribe en DaVinciSubtitles (`{video}.{idioma}.kinetic.json`). Solo si sus bloques coinciden con
+    los de este GO (si no, None y se sigue con la metadata general)."""
+    if 'kinetic' not in str(ctx.get('pack') or '').lower() or not ctx.get('video'):
+        return None
+    carpeta, stem = Path.home() / 'DaVinciSubtitles', Path(ctx['video']).stem
+    rutas = [carpeta / f"{stem}.{ctx.get('idioma')}.kinetic.json"] + sorted(carpeta.glob(f'{glob_escape(stem)}.*.kinetic.json'),
+                                                                           key=lambda p: -p.stat().st_mtime)
+    bloques = ctx.get('bloques') or []
+    for ruta in rutas:
+        try:
+            cues = json.loads(ruta.read_text(encoding='utf-8')).get('cues') or []
+        except Exception:
+            continue
+        if cues and len(cues) == len(bloques) and all(abs(float(c['start']) - float(b['start'])) < 0.05 for c, b in zip(cues, bloques)):
+            return cues
+    return None
+
+
+def glob_escape(texto):
+    import glob
+    return glob.escape(texto)
+
+
+def etiquetas_tema1(cues, frases):
+    """Tema 1: el tema no cambia, así que cada bloque suena siempre igual según lo que anima, con las reglas de la biblioteca
+    (03_CAPTIONS_TAP_TECLEO/TEMA_1/00_REGLAS_DE_USO.txt y MAPA_SFX.md): UN sonido por bloque — si se dibuja un ARO o SUBRAYADO, el KINETIC
+    (va en TODO caption con aro; empieza cuando el aro empieza a dibujarse); si no, el pop del HÉROE en el primer cuadro de su entrada; si solo hay PEGATINA, su
+    pop. Las líneas chicas (label, serif) y la palabra a mano (script) no suenan. El dinero solo si la palabra es de dinero de verdad."""
+    import director_sonido_eventos as EV
+    ev = []
+    for c in cues:
+        runs = c.get('runs') or []
+        texto = ' '.join(str(r.get('texto')) for r in runs if r.get('texto'))[:60]
+        trazo = next((r for r in runs if str(r.get('k') or '').startswith(('k ring', 'k line'))), None)
+        heroe = next((r for r in runs if str(r.get('k') or '').startswith('k hero')), None)
+        cinta = next((r for r in runs if str(r.get('k') or '').startswith('k tape')), None)
+        if trazo:
+            ev.append({'segundo': round(float(trazo['t']), 3), 'tipo': 'aro', 'fuerza': 9,
+                       'detalle': f"Tema 1: {'aro' if 'ring' in str(trazo['k']) else 'subrayado'} que se dibuja · «{texto}»"})
+        elif heroe:
+            t, palabra = float(heroe['t']), str(heroe.get('texto') or '')[:30]
+            rol, importancia, _ = EV._rol_en(frases, t) if frases else ('EXPLANATION', 0.3, '')
+            tipo = 'numero_precio' if re.search(DINERO_RX, palabra.lower()) else 'texto_grande'
+            ev.append({'segundo': round(t + HEROE_GOLPE, 3), 'tipo': tipo, 'detalle': f'Tema 1: héroe «{palabra}» ({rol})',
+                       'fuerza': round(8 + 5 * (EV.PESO_ROL.get(rol, 0.0) + float(importancia)), 2)})
+        elif cinta:
+            ev.append({'segundo': round(float(cinta['t']), 3), 'tipo': 'pegatina', 'detalle': f"Tema 1: pegatina «{str(cinta.get('texto') or '')[:30]}»",
+                       'fuerza': 8})
+    return ev
+
+
+def motions_neon(plan_pro):
+    """Los motions del kit neón del Tema 1: `kitneon_motions` del plan de la PRO o, si solo quedan las piezas ya armadas, sus escenas."""
+    pro = plan_pro if isinstance(plan_pro, dict) else {}
+    if pro.get('kitneon_motions'):
+        return pro['kitneon_motions']
+    out = []
+    for p in pro.get('piezas') or []:
+        if isinstance(p, dict) and p.get('pieza') == 'neon_motion' and not p.get('quitar'):
+            val = p.get('valores') if isinstance(p.get('valores'), dict) else {}
+            esc = (val.get('escena') or [{}])[0] if isinstance(val.get('escena'), list) else {}
+            a = esc.get('a') if isinstance(esc.get('a'), dict) else ({'_args': esc['args']} if esc.get('args') else {})
+            out.append({'fn': esc.get('fn'), 'a': a, 'ini': float(p.get('ini') or 0.0)})
+    return out
+
+
+def etiquetas_neon(motions):
+    """Tema 1 con Edición PRO: los MOTIONS del kit neón (`plan_pro['kitneon_motions']`, kit_neon_motions.escena_motions) con sus tiempos
+    internos. Cada pieza suena siempre igual, calibrado con la línea de tiempo que el usuario APROBÓ para SOLO VOZ (el mismo kit):
+    notificación que baja → NOTIFICACION · tarjeta que sube / tarjeta de ruta / interruptores → swoosh corto ·
+    barrido → whoosh (0,1 s antes de su centro) · órbita, avatares, chips y etiquetas → burbuja · cada interruptor → ACTIVAR ON · (todo en el PRIMER cuadro de su animación) la ruta que
+    se dibuja → CARGA y el último hito → POSITIVO · tarjetas en cascada → UI tarjeta (cada 0,2 s) · checks → ACTIVAR ON y el último POSITIVO ·
+    logo de cierre → SHINE. El avión y el degradado de fondo no suenan (van pegados a otro sonido)."""
+    ev = []
+
+    def poner(t, tipo, que):
+        if t is not None:
+            ev.append({'segundo': round(float(t), 3), 'tipo': tipo, 'detalle': f'motion Tema 1: {que}', 'fuerza': 8})
+
+    for m in motions or []:
+        fn, a, ini = m.get('fn'), m.get('a') or {}, float(m.get('ini') or 0.0)
+        args = a.get('_args') or []
+        if fn == 'notificacion':
+            poner(ini, 'notificacion', 'notificación baja')
+        elif fn == 'tarjetaInferior':
+            poner(ini, 'sube', 'tarjeta sube')
+        elif fn == 'barrido' and args:
+            poner(float(args[0]) - 0.1, 'barrido_kit', 'barrido de transición')
+        elif fn == 'orbita':
+            poner(a.get('tin', ini), 'pegatina', 'íconos en órbita')
+        elif fn == 'avataresArco':
+            poner(a.get('t0', ini), 'pegatina', 'avatares')
+        elif fn == 'interruptores':
+            poner(a.get('tin', ini), 'sube', 'tarjeta de opciones')
+            for fila in a.get('filas') or []:
+                poner(float(fila[-1]), 'boton_on', f'interruptor «{fila[0]}» ON')
+            if a.get('tDerecha') is not None:
+                poner(float(a['tDerecha']), 'pegatina', f"chip «{a.get('etiqueta') or ''}»")
+        elif fn == 'lineaIcono':
+            poner(a.get('tin', ini), 'pegatina', f"chip «{a.get('texto') or ''}»")
+        elif fn in ('etiquetas', 'filaEtiqueta'):
+            for it in a.get('items') or []:
+                if isinstance(it, (list, tuple)) and it and isinstance(it[-1], (int, float)):
+                    poner(it[-1], 'pegatina', f"etiqueta «{it[1] if len(it) > 2 else ''}»")
+        elif fn == 'tarjetaRuta':
+            poner(a.get('tin', ini), 'sube', 'tarjeta de ruta')
+            poner(float(a.get('tin', ini)) + 0.3, 'barra_carga', 'la ruta se dibuja')
+            hitos = [float(h[-1]) for h in a.get('hitos') or [] if isinstance(h, (list, tuple)) and h]
+            if hitos:
+                poner(max(hitos), 'positivo', 'ruta completa: el pin')
+        elif fn == 'tarjetasProducto':
+            for k in range(len(a.get('contenidos') or a.get('rects') or [])):
+                poner(float(a.get('tin', ini)) + 0.2 * k, 'tarjeta_kit', f'tarjeta {k + 1} en cascada')
+        elif fn == 'checks':
+            items = [it for it in a.get('items') or [] if isinstance(it, (list, tuple)) and it]
+            for k, it in enumerate(items):
+                ultimo = k == len(items) - 1 and len(items) > 1
+                poner(float(it[-1]), 'positivo' if ultimo else 'check', f'check «{str(it[0])[:30]}»')
+        elif fn == 'logoCierre':
+            poner(a.get('t', ini), 'logo_kit', 'logo de cierre (brillo)')
+    return ev
+
+
 def etiquetas_de_go(ctx):
     """Los eventos que GO ya conoce, con su tipo de MAPA_SFX.md: [{'segundo', 'tipo', 'detalle', 'fuerza'}]."""
     import director_sonido_eventos as EV
     dur = None
     ev = []
-    caps = EV.captions(ctx.get('bloques') or [], dur).get('lista') or []
+    kin = cues_kinetic(ctx)
+    if kin:
+        try:
+            frases = EV.narrativa(ctx.get('palabras') or [], dur).get('frases') or []
+        except Exception:
+            frases = []
+        ev = etiquetas_tema1(kin, frases)
+    caps = [] if kin else EV.captions(ctx.get('bloques') or [], dur).get('lista') or []
     tam = [c.get('tamano') or c.get('escala_clave') or 0 for c in caps]
     grande = float(np.percentile([t for t in tam if t] or [1], 60))
     try:
@@ -236,9 +379,13 @@ def etiquetas_de_go(ctx):
             tipo = 'numero_precio'
         ev.append({'segundo': round(t, 3), 'tipo': tipo, 'detalle': f'caption «{texto}» ({rol})',
                    'fuerza': round(5 + 10 * float(v or 0) + 5 * peso, 2)})
+    neon = motions_neon(ctx.get('plan_pro'))
+    ev += etiquetas_neon(neon)
     mot = EV.motions(ctx.get('plan_efectos'), ctx.get('plan_pro'), dur).get('lista') or []
     fx = {'corte': 'corte', 'icono': 'icono', 'numero': 'grafica', 'pegatina': 'icono', 'enfasis': 'acento', 'broll': 'corte'}
     for m in mot:
+        if m['origen'] == 'kit neón' and neon:
+            continue                                        # ya sonó con sus tiempos internos (etiquetas_neon)
         if m['origen'] == 'Efectos':
             tipo = fx.get(m['pieza'])
             if not tipo:
@@ -249,8 +396,12 @@ def etiquetas_de_go(ctx):
             tipo = _tipo_pieza(f"{m.get('pieza')} {m.get('asset')}")
         ev.append({'segundo': round(float(m['ini']), 3), 'tipo': tipo, 'detalle': f"{m['origen']}: {m.get('asset') or m.get('pieza')}",
                    'fuerza': 7})
-    for t in ctx.get('cortes') or []:
-        ev.append({'segundo': round(float(t), 3), 'tipo': 'corte', 'detalle': 'corte del video', 'fuerza': 6})
+    # Tema 1 SOLO CAPTIONS: cada sonido sale de un caption; los cortes del video NO suenan (el usuario: «estás confundiendo el Tema 1 solo
+    # captions con el PRO, hay sonidos donde no deberían ir»). Un corte suena si lo pide quien lo anima: las transiciones de Efectos (ya
+    # vienen arriba como 'corte') o los barridos de la PRO (etiquetas_neon). Los otros temas siguen con los cortes que detecta GO.
+    for t in ([] if kin else ctx.get('cortes') or []):
+        if float(t) >= CORTE_MIN:
+            ev.append({'segundo': round(float(t), 3), 'tipo': 'corte', 'detalle': 'corte del video', 'fuerza': 6})
     return sorted(ev, key=lambda e: e['segundo'])
 
 
@@ -269,9 +420,19 @@ def intro_con_sonido(ctx):
 
 
 # ---------------------------------------------------------------------------------------------------- el motor (igual a la skill)
+HECHO_POR_IA = ('/_VARIANTES/', '/_SINTETIZADOS/')   # además del campo 'generado' del catálogo (variante | sintetizado | tema)
+
+
+def hecho_por_ia(rel, info=None):
+    """Sonido que hizo una máquina y no es una grabación real: variantes de tono, sintetizados y los de temas armados por la skill.
+    El usuario (2026-10-27): «NO USES SONIDOS CREADOS POR IA»."""
+    return bool((info or {}).get('generado')) or any(m in '/' + rel.replace('\\', '/') for m in HECHO_POR_IA)
+
+
 def curado(rel, info=None):
-    """¿Sirve para un video nuevo? Nunca los extraídos de los videos de creadores ni los crudos de ejercicio."""
-    return '17_EXTRAIDOS_REFERENCIAS' not in rel and '_DE_REFERENCIAS' not in rel and not (info or {}).get('solo_ejercicio')
+    """¿Sirve para un video nuevo? Nunca los extraídos de los videos de creadores, los crudos de ejercicio ni los hechos por IA."""
+    return ('17_EXTRAIDOS_REFERENCIAS' not in rel and '_DE_REFERENCIAS' not in rel and not (info or {}).get('solo_ejercicio')
+            and not hecho_por_ia(rel, info))
 
 
 def densidad_creadores(ruta=None):
@@ -291,9 +452,11 @@ def densidad_creadores(ruta=None):
 
 
 def max10(estilo):
-    """Tope de SFX por ventana de 10 s: la densidad de los creadores en ese estilo (elegante ~3, dinámico ~7, cinética ~15)."""
+    """Tope de SFX por ventana de 10 s: el MAYOR entre la tabla de ESTILO (elegante 7, dinámico 11, lista 11, cinética 16) y la densidad de
+    los creadores en ese estilo. Los videos de CineCaptions llevan un caption cada ~2 s: con solo la densidad de los creadores (dinámico ~7)
+    no cabían los cortes y el usuario los oyó «muy pocos» (2026-10-27)."""
     d = densidad_creadores().get(estilo) or DENSIDAD_ESTILO.get(estilo)
-    return max(1, int(round(d * 10))) if d else ESTILO[estilo]['max10']
+    return max(ESTILO[estilo]['max10'], int(round(d * 10)) if d else 0)
 
 
 def usos_aprobados(lib):
@@ -321,7 +484,8 @@ def usos_aprobados(lib):
 def pools_de(cat, lib=None):
     """{pool: [archivos curados]} en orden de preferencia: lo que el usuario aprobó y los creadores usan primero, luego por nombre."""
     usos = usos_aprobados(lib or biblioteca())
-    return {k: sorted((r for r in cat if re.search(rx, r) and curado(r, cat[r])), key=lambda r: (-usos.get(r, 0), r)) for k, rx in POOLS.items()}
+    return {k: sorted((r for r in cat if re.search(rx, r) and curado(r, cat[r]) and not (k == 'pop' and any(m in r for m in POP_FUERA))),
+                      key=lambda r: (-usos.get(r, 0), r)) for k, rx in POOLS.items()}
 
 
 class Elector:
@@ -348,6 +512,13 @@ class Elector:
         return self.fijos[pool]
 
     def elegir(self, pool):
+        if pool in SIEMPRE_SU_SONIDO and self.pools.get(pool):    # siempre ese sonido: rota sus variantes de tono, sin tope ni vecino
+            todos = self.pools[pool]
+            arch = todos[self.por_pool[pool] % len(todos)]
+            self.usos[arch] += 1
+            self.por_pool[pool] += 1
+            self.ultimo = arch
+            return arch
         lista = self.lista(pool)
         if not lista:
             return None
@@ -371,7 +542,9 @@ class Elector:
 def elegir(ev, estilo):
     cfg = dict(ESTILO[estilo], max10=max10(estilo))
     ev = [dict(e) for e in ev if cfg['chicos'] or e['tipo'] != 'texto_chico']
-    textos = [e for e in ev if e['tipo'] == 'texto_grande']
+    # Tema 1: el héroe suena SIEMPRE con su pop al entrar; el acento (sube 0,34 s ANTES de la palabra) sonaba sobre las letras chicas que
+    # la preceden (el usuario, 50–54 s de ESPAÑOL: «hay sonido que no va» = ACENTO en «PERDER» desde 53,50 s)
+    textos = [e for e in ev if e['tipo'] == 'texto_grande' and not str(e.get('detalle') or '').startswith('Tema 1')]
     ult = -10
     for w in range(0, int(max([e['segundo'] for e in ev] or [0])) + 4, 4):
         grupo = [e for e in textos if w <= e['segundo'] < w + 4]
@@ -380,12 +553,12 @@ def elegir(ev, estilo):
             ult = w
     out = []
     for e in sorted(ev, key=lambda x: x['segundo']):
-        e['pool'], e['prioridad'] = REGLAS.get(e['tipo'], ('pop', 2))
+        e['pool'], e['prioridad'] = REGLAS.get(e['tipo']) or REGLAS_CC.get(e['tipo'], ('pop', 2))
         if out:
             p = out[-1]
             gap = cfg['gap_pop'] if e['pool'] in ('pop', 'acento') and p['pool'] in ('pop', 'acento') else 0.25
             if e['segundo'] - p['segundo'] < gap:
-                if e['prioridad'] > p['prioridad']:
+                if _peso(e) > _peso(p):
                     out[-1] = e
                 continue
         out.append(e)
@@ -397,10 +570,20 @@ def elegir(ev, estilo):
         for e in out:
             ventana = [x for x in out if e['segundo'] <= x['segundo'] < e['segundo'] + 10]
             if len(ventana) > cfg['max10']:
-                out.remove(min(ventana, key=lambda x: (x['prioridad'], x['fuerza'])))
+                out.remove(min(ventana, key=lambda x: (_peso(x), x['fuerza'])))
                 cambio = True
                 break
     return out
+
+
+RELLENO = ('corte', 'corte_fuerte', 'transicion', 'icono', 'foto', 'tarjeta', 'golpe_ref', 'aparicion')
+
+
+def _peso(e):
+    """Qué gana al chocar o al pasar del tope. En CineCaptions mandan los CAPTIONS y las piezas con su animación; los cortes, íconos y
+    tarjetas son RELLENO y salen primero (el usuario: «no se aplican bien y son muy pocos»: en ESPAÑOL.mov el tope se comía 20 de 33
+    palabras clave para dejar swooshes en los cortes). Entre los de un mismo grupo sigue la prioridad de REGLAS."""
+    return e['prioridad'] + (0 if e['tipo'] in RELLENO else 10)
 
 
 def asignar(out, cat, lib=None):
@@ -440,6 +623,65 @@ def _escribir_wav(destino, x):
         w.writeframes((y * 32767).astype('<i2').tobytes())
 
 
+# Pulido de los sonidos que más se repiten en un video de captions (2026-10-27, el usuario: «los aros… bájale el sonido y hazlo variado para
+# que no se repita siempre exactamente; en el texto principal, tap o pop, mejóralo»). Medido: el KINETIC es casi todo siseo (timbre ~10 kHz)
+# y sonaba al nivel de la voz; los pops buenos son cortos y medios (900–1300 Hz). Cada sonido sale con su propio tono, nivel y brillo
+# (azar fijo por sonido: rehacer da lo mismo) y sin graves sucios.
+#   nivel   dB sobre el nivel de su categoría   tono  ±% de velocidad   db  ±dB al azar   agudos  corte de agudos (Hz) entre min y max
+#   graves  corte de graves (Hz)                fundido  fundido final (s)
+PULIDO = {
+    'kinetic': {'nivel': -9.0, 'tono': 0.035, 'db': 1.5, 'agudos': (6000, 9500), 'graves': 180, 'fundido': 0.12},
+    'pop': {'nivel': -1.5, 'tono': 0.04, 'db': 1.0, 'agudos': (9000, 14000), 'graves': 140, 'fundido': 0.05},
+    'acento': {'nivel': -1.0, 'tono': 0.025, 'db': 0.8, 'agudos': (10000, 15000), 'graves': 110, 'fundido': 0.08},
+}
+POP_FUERA = ('CAPTIONS_TAP_TECLEO - POP 3',)   # golpe grave (174 Hz) con cola de 0,22 s: suena a tocar una puerta, no a pop de caption
+
+
+def _filtrar(x, graves, agudos):
+    """Corte de graves y de agudos suave en el dominio de frecuencia (rápido para sonidos de < 1 s)."""
+    n = x.shape[1]
+    if n < 64:
+        return x
+    X = np.fft.rfft(x, axis=1)
+    f = np.fft.rfftfreq(n, 1 / SR)
+    h = 1.0 / np.sqrt(1.0 + (graves / np.maximum(f, 1.0)) ** 4)        # paso alto de 2.º orden
+    h *= 1.0 / np.sqrt(1.0 + (f / agudos) ** 2)                         # paso bajo de 1.er orden
+    return np.fft.irfft(X * h, n=n, axis=1).astype(np.float32)
+
+
+def pulir(x, p, semilla):
+    """(x, variación en dB): tono, brillo y nivel propios para ESTE sonido (azar fijo por la semilla) + el nivel de su categoría."""
+    import hashlib
+    rng = np.random.default_rng(int(hashlib.sha1(semilla.encode('utf-8')).hexdigest()[:12], 16))
+    factor = 1.0 + float(rng.uniform(-p['tono'], p['tono']))
+    if abs(factor - 1.0) > 0.002:
+        n = max(1, int(x.shape[1] / factor))
+        pos = np.linspace(0, x.shape[1] - 1, n)
+        x = np.stack([np.interp(pos, np.arange(x.shape[1]), c) for c in x]).astype(np.float32)
+    x = _filtrar(x, p['graves'], float(rng.uniform(*p['agudos'])))
+    return x, p['nivel'] + float(rng.uniform(-p['db'], p['db']))
+
+
+SYNC_CATALOGO = ('whoosh', 'swoosh', 'riser', 'acento', 'impacto', 'flash')   # suben hacia el momento: su pico/fin cae en el cuadro
+ARRANCAN_CON_LA_ANIMACION = ('sube',)   # tarjeta que sube: el swoosh acompaña el movimiento desde su primer cuadro (no se adelanta como al corte)
+UMBRAL_INICIO = 0.03          # primer instante que se oye: 3 % del pico (−30 dB)
+
+
+def sin_silencio_inicial(x):
+    """(audio sin el silencio del comienzo, segundos quitados). Deja 2 ms antes del primer sonido y un fundido de entrada de 2 ms (sin clic)."""
+    m = np.abs(x).max(axis=0)
+    pk = float(m.max()) if m.size else 0.0
+    if pk <= 0:
+        return x, 0.0
+    k = max(0, int(np.argmax(m > pk * UMBRAL_INICIO)) - int(0.002 * SR))
+    if not k:
+        return x, 0.0
+    y = x[:, k:].copy()
+    n = min(int(0.002 * SR), y.shape[1])
+    y[:, :n] *= np.linspace(0.0, 1.0, n, dtype=np.float32)
+    return y, k / SR
+
+
 def hornear(filas, cat, lib, carpeta, con_voz=True):
     """Cada SFX recortado, con fundido y su nivel dentro del archivo (Resolve ignora el volumen de clip por script)."""
     carpeta = Path(carpeta)
@@ -449,18 +691,33 @@ def hornear(filas, cat, lib, carpeta, con_voz=True):
         info = cat[f['archivo']]
         dur = recorte(info, f.get('duracion'))
         x = leer_audio(Path(lib) / f['archivo'])[:, :int(dur * SR)]
+        # lo que cae en el cuadro del evento es el PUNTO DE SYNC del catálogo (ataque, pico o fin según el sonido: un riser termina en el
+        # evento), igual que la skill; antes era siempre el pico (hasta 5 cuadros de error en un riser)
+        sync = float(info.get('punto_sync', info['pico']) or 0.0)
+        x, inicio = sin_silencio_inicial(x)                     # fuera los milisegundos vacíos del archivo: el clip empieza sonando
+        # lo que APARECE (pop, aro, burbuja, notificación, interruptor, check, tarjeta…) suena desde el primer cuadro de su animación: va el
+        # PRIMER sonido audible, no su pico (el usuario: «el video pasa y el sonido después… que empiece justo en la animación»). Los que
+        # suben HACIA el momento (whoosh al corte, riser, acento, impacto) siguen con el punto de sync del catálogo.
+        sync = max(0.0, sync - inicio) if f['pool'] in SYNC_CATALOGO and f['tipo'] not in ARRANCAN_CON_LA_ANIMACION else 0.0
+        antes = sync - float(f['segundo'])
+        if antes > 0:                                           # empezaría antes del 0: se recorta el comienzo, el sync sigue en su cuadro
+            x = x[:, int(antes * SR):]
+            sync -= antes
         if not x.shape[1]:
             x = np.zeros((2, int(0.05 * SR)), np.float32)       # nunca saltar: sfx_plan[i] va con filas[i]
         variacion_db = 0.0
         repeticion = repeticion + 1 if f['archivo'] == previo else 0
         previo = f['archivo']
-        if repeticion:                                          # el mismo archivo seguido: microvariación (tono ±3 %, ±0,7 dB) para que no suene clonado
+        pulido = PULIDO.get(f['pool'])
+        if pulido:                                              # aros y pops de caption: cada uno distinto y más limpio (ver PULIDO)
+            x, variacion_db = pulir(x, pulido, f"{f['archivo']}|{i}|{f['segundo']}")
+        elif repeticion:                                        # el mismo archivo seguido: microvariación (tono ±3 %, ±0,7 dB) para que no suene clonado
             factor = 1.0 + 0.03 * (1 if repeticion % 2 else -1)
             n = int(x.shape[1] / factor)
             pos = np.linspace(0, x.shape[1] - 1, n)
             x = np.stack([np.interp(pos, np.arange(x.shape[1]), c) for c in x]).astype(np.float32)
             variacion_db = 0.7 if repeticion % 2 else -0.7
-        fade = min(int(0.2 * SR), x.shape[1])
+        fade = min(int((pulido or {}).get('fundido', 0.2) * SR), x.shape[1])
         x[:, -fade:] *= np.linspace(1.0, 0.0, fade, dtype=np.float32)
         g = (info['nivel_db'] - info['max_db'] + (OFFSET_VOZ if con_voz else 0.0) + float(f.get('ganancia_db') or 0.0) + variacion_db)
         x *= 10 ** (g / 20)
@@ -470,9 +727,9 @@ def hornear(filas, cat, lib, carpeta, con_voz=True):
         destino = carpeta / f"sfx_{i:03d}_{f['pool']}.wav"
         _escribir_wav(destino, x)
         tipo = POOL_A_TIPO.get(f['pool'], 'pop')
-        eventos.append({'tipo': 'sonido', 'pista': PISTA.get(tipo, 'AI SFX UI'), 'ini': round(max(0.0, f['segundo'] - info['pico']), 3),
+        eventos.append({'tipo': 'sonido', 'pista': PISTA.get(tipo, 'AI SFX UI'), 'ini': round(max(0.0, f['segundo'] - sync), 3),
                         'dur': round(x.shape[1] / SR, 3), 'archivo': str(destino), 'asset': f"{f['tipo']} · {Path(f['archivo']).stem}"[:80],
-                        'pico': info['pico'], 'ai': {'tipo': tipo, 'ancla': f['segundo'], 'origen': ORIGEN, 'fuente': f['archivo'],
+                        'pico': round(sync, 3), 'ai': {'tipo': tipo, 'ancla': f['segundo'], 'origen': ORIGEN, 'fuente': f['archivo'],
                                                      'por_que': f['por_que']}})
     return eventos
 
@@ -486,9 +743,11 @@ def disenar(ctx, prefs=None):
     if estilo not in ESTILO:
         estilo = estilo_de_pack(ctx.get('pack'))
     ev = etiquetas_de_go(ctx)
-    if prefs.get(PREF_GANCHO, True) and not intro_con_sonido(ctx):
-        ev.append({'segundo': round(min([e['segundo'] for e in ev if e['segundo'] < 1.0] or [0.3]), 3), 'tipo': 'gancho',
-                   'detalle': 'gancho del inicio', 'fuerza': 99})
+    primero = min([e['segundo'] for e in ev if e['tipo'] != 'corte' and e['segundo'] < 1.0] or [None], key=lambda x: 9 if x is None else x)
+    # el riser termina EN el primer momento (≈0,4 s de subida): si el video arranca con algo antes de 0,45 s no cabe (quedaba una cola de
+    # 0,06 s): ese primer golpe ya es el gancho
+    if prefs.get(PREF_GANCHO, True) and not intro_con_sonido(ctx) and (primero is None or primero >= GANCHO_MIN):
+        ev.append({'segundo': round(primero if primero is not None else 0.5, 3), 'tipo': 'gancho', 'detalle': 'gancho del inicio', 'fuerza': 99})
     filas = asignar(elegir(ev, estilo), cat, lib)
     return estilo, filas, cat, lib
 
@@ -518,6 +777,7 @@ def preparar(ctx, res=None, al_estado=None, prefs=None):
         et = etiquetas_de_go(ctx)
         guia = {'captions': [{'t': e['segundo'], 'texto': e['detalle']} for e in et if e['detalle'].startswith('caption')],
                 'cortes': [e['segundo'] for e in et if e['tipo'] == 'corte'],
+                'bloques': bloques_captions(ctx),
                 'duracion': max([float(p.get('end') or 0) for p in ctx.get('palabras') or []] + [f['segundo'] + 1 for f in filas] + [1.0])}
         estado['sonido_skill'] = {'version': VERSION, 'estilo': estilo, 'biblioteca': str(lib), 'filas': filas, 'con_voz': con_voz,
                                   'guia': guia, 'fecha': time.strftime('%Y-%m-%d %H:%M:%S')}
@@ -550,11 +810,29 @@ def rehacer(video, prefs=None):
     return True, f"{len(res['sfx']['eventos'])} sonidos listos. Pulsa «Aplicar a Resolve»."
 
 
+def bloques_captions(ctx):
+    """Los captions de GO para el carril de la página: [{'ini', 'fin', 'texto', 'clave', 't'}] ('t' = cuando sale la palabra clave)."""
+    import director_sonido_eventos as EV
+    try:
+        caps = EV.captions((ctx or {}).get('bloques') or [], None).get('lista') or []
+    except Exception:
+        return []
+    return [{'ini': round(float(c['ini']), 3), 'fin': round(float(c.get('fin') or c['ini']), 3), 'texto': str(c.get('texto') or '')[:80],
+             'clave': str(c.get('clave') or ''), 't': round(float(next((s['t'] for s in c.get('sonidos') or [] if s.get('t') is not None),
+                                                                       c['ini'])), 3)} for c in caps]
+
+
 def resumen(video):
     """Lo que la página muestra: estilo, biblioteca, filas (con su WAV horneado y pista), guía (captions, cortes) y si está pendiente."""
     import director_sonido_estado as E
     estado = E.cargar(video) if video else {}
     s = estado.get('sonido_skill') or {}
+    if s and not (s.get('guia') or {}).get('bloques'):           # diseño anterior a los carriles de captions: se leen de la foto de GO
+        try:
+            import director_sonido as D
+            s.setdefault('guia', {})['bloques'] = bloques_captions(D.cargar_contexto(video))
+        except Exception:
+            pass
     filas = [dict(f) for f in s.get('filas') or []]
     for f, e in zip(filas, estado.get('sfx_plan') or []):
         f.update({'wav': e.get('archivo'), 'pista': e.get('pista'), 'ini': e.get('ini'), 'dur': e.get('dur')})

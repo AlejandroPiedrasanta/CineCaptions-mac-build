@@ -2143,6 +2143,7 @@ class VentanaAjustes(_Panel):
         self._capa = None
         self._previos = tema.leer()
         prefs = leer_prefs()
+        import estilos_inicio
         self._borrador = dict(self._previos)
         self._borrador.update(motor_voz=prefs.get('motor_voz') or 'qwen3',
                               ia_texto=str(prefs.get('ia_texto') or 'gemma4'),                  # v5.47: la IA de texto (Gemma 4 E4B de fábrica)
@@ -2150,7 +2151,7 @@ class VentanaAjustes(_Panel):
                               actualizaciones_auto=prefs.get('actualizaciones_auto', True) is not False,
                               ventana_encima=bool(prefs.get('ventana_encima')),
                               avisos_sistema=prefs.get('avisos_sistema', True) is not False,
-                              go_estilo=str(prefs.get('go_estilo') or 'orbe'))           # v5.5.8: el orbe de React Bits, de fábrica
+                              go_estilo=estilos_inicio.clave_guardada())                 # v5.49: Astrolabio de fábrica (los de antes pasan a él)
         self._inicial = dict(self._borrador)
         self._idioma_inicial = self._idioma_actual()
         self._borrador['idioma_ui'] = self._idioma_inicial
@@ -2633,7 +2634,7 @@ class VentanaAjustes(_Panel):
         f_tam = _Fila(tr('Tamaño de interfaz'), tr('Agranda o achica todo el programa. Se aplica al reiniciar.'),
                       Combo([f'{t}%' for t in tema.TAMANOS], var=tam_var, alto=52, tam=16,
                             comando=lambda v: self._cambio('tamano', int(v.rstrip('%')))), 380)
-        # 10 estilos: cada uno es un rediseño completo de Inicio y trae su tema (superficies), su color de resaltado y su aurora
+        # v5.49: 3 estilos de Inicio (Nebulosa, Astrolabio de fábrica, Proceso), todos con el astrolabio; cada uno trae su aurora
         import estilos_inicio
         self._tarjetas_tema = []
         self._tarjetas_estilo = []
@@ -2650,8 +2651,8 @@ class VentanaAjustes(_Panel):
         self._carrusel = _CarruselEstilos(self._tarjetas_estilo, elegido)
         ce.addWidget(self._carrusel)
         f_estilos = _Fila(tr('Estilo de la interfaz'),
-                          tr('Diez diseños completamente distintos para Inicio, con sus propias animaciones. Cada uno cambia también las '
-                             'superficies, el color de resaltado y la luz de fondo de TODAS las páginas. Pasa el ratón por una tarjeta para verla en movimiento.'),
+                          tr('Tres escenas para Inicio, las tres con el astrolabio de bronce: cada una con sus animaciones y su manera de '
+                             'enseñar el proceso de GO. También cambian la luz de fondo de TODAS las páginas. Pasa el ratón por una tarjeta para verla en movimiento.'),
                           caja_est, vertical=True, expandir=True)
         # acentos (v5.22: una fila de muestras a la derecha, como los demás ajustes)
         self._muestras = _MuestrasAcento(self._borrador['acento'], self._borrador['acento_personal'],

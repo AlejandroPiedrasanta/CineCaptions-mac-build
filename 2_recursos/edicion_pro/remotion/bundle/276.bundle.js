@@ -1,5 +1,5 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[995],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[276],{
 
 /***/ 8033
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
@@ -503,7 +503,7 @@ var __require = /* @__PURE__ */ (/* unused pure expression or super */ null && (
 
 /***/ },
 
-/***/ 3995
+/***/ 3276
 (__webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
@@ -32540,7 +32540,7 @@ function spring({
     frame: durationProcessed,
     config
   });
-  const inner = config.overshootClamping ? to >= from ? Math.min(spr.current, to) : Math.max(spr.current, to) : spr.current;
+  const inner = config.overshootClamping ? Math.min(spr.current, 1) : spr.current;
   const interpolated = from === 0 && to === 1 ? inner : interpolate(inner, [0, 1], [from, to]);
   return interpolated;
 }
@@ -33076,6 +33076,20 @@ var interpolateSegment = ({
     output
   });
 };
+var getInputForInterpolation = ({
+  input,
+  inputRange,
+  options
+}) => {
+  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
+  const inputMin = inputRange[0];
+  const inputMax = inputRange[inputRange.length - 1];
+  if (inputRange.length === 1 || !(posterizedInput < inputMin && options?.extrapolateLeft === "wrap" || posterizedInput > inputMax && options?.extrapolateRight === "wrap")) {
+    return posterizedInput;
+  }
+  const range = inputMax - inputMin;
+  return ((posterizedInput - inputMin) % range + range) % range + inputMin;
+};
 var interpolateNumber = ({
   input,
   inputRange,
@@ -33095,14 +33109,18 @@ var interpolateNumber = ({
   if (options?.extrapolateRight !== undefined) {
     extrapolateRight = options.extrapolateRight;
   }
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
-  const range = findRange(posterizedInput, inputRange);
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
+  const range = findRange(resolvedInput, inputRange);
   const easing = resolveEasingForSegment({
     easing: easingOption,
     segmentIndex: range
   });
   let result = interpolateSegment({
-    input: posterizedInput,
+    input: resolvedInput,
     inputRange: [inputRange[range], inputRange[range + 1]],
     outputRange: [outputRange[range], outputRange[range + 1]],
     easing,
@@ -33119,11 +33137,11 @@ var interpolateNumber = ({
       continue;
     }
     const previousSegmentEnd = inputRange[segmentIndex + 1];
-    if (posterizedInput <= previousSegmentEnd) {
+    if (resolvedInput <= previousSegmentEnd) {
       continue;
     }
     const continuedSegmentValue = interpolateSegment({
-      input: posterizedInput,
+      input: resolvedInput,
       inputRange: [inputRange[segmentIndex], previousSegmentEnd],
       outputRange: [outputRange[segmentIndex], outputRange[segmentIndex + 1]],
       easing: previousEasing,
@@ -33144,8 +33162,12 @@ var interpolateString = ({
 }) => {
   const initiallyParsedOutputRange = outputRange.map((output) => parseStringInterpolationValue(output, outputType));
   const hasAxisRotation = initiallyParsedOutputRange.some((parsed) => parsed.axisRotation);
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
-  const segmentIndex = inputRange.length === 1 ? 0 : findRange(posterizedInput, inputRange);
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
+  const segmentIndex = inputRange.length === 1 ? 0 : findRange(resolvedInput, inputRange);
   const parsedOutputRange = hasAxisRotation ? initiallyParsedOutputRange.map((parsed, index) => {
     if (parsed.kind !== "rotate") {
       return parsed;
@@ -33269,31 +33291,24 @@ var interpolateDiscreteValue = ({
       throw new TypeError(typeof outputRange[0] === "boolean" ? "Booleans can only be interpolated using Easing.step1" : "Non-numeric strings can only be interpolated using Easing.step1");
     }
   }
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
+  const resolvedInput = getInputForInterpolation({
+    input,
+    inputRange,
+    options: options ?? null
+  });
   const inputMin = inputRange[0];
   const inputMax = inputRange[inputRange.length - 1];
-  let resolvedInput = posterizedInput;
   if (resolvedInput < inputMin) {
     if (options?.extrapolateLeft === "identity") {
       throw new TypeError(typeof outputRange[0] === "boolean" ? 'extrapolateLeft: "identity" is not supported for booleans' : 'extrapolateLeft: "identity" is not supported for non-numeric strings');
     }
-    if (options?.extrapolateLeft === "wrap") {
-      const wrapRange = inputMax - inputMin;
-      resolvedInput = ((resolvedInput - inputMin) % wrapRange + wrapRange) % wrapRange + inputMin;
-    } else {
-      return outputRange[0];
-    }
+    return outputRange[0];
   }
   if (resolvedInput > inputMax) {
     if (options?.extrapolateRight === "identity") {
       throw new TypeError(typeof outputRange[0] === "boolean" ? 'extrapolateRight: "identity" is not supported for booleans' : 'extrapolateRight: "identity" is not supported for non-numeric strings');
     }
-    if (options?.extrapolateRight === "wrap") {
-      const wrapRange = inputMax - inputMin;
-      resolvedInput = ((resolvedInput - inputMin) % wrapRange + wrapRange) % wrapRange + inputMin;
-    } else {
-      return outputRange[outputRange.length - 1];
-    }
+    return outputRange[outputRange.length - 1];
   }
   const range = findRange(resolvedInput, inputRange);
   return resolvedInput >= inputRange[range + 1] ? outputRange[range + 1] : outputRange[range];
@@ -34063,14 +34078,16 @@ function parseModernComponent(str, percentScale) {
 function parseHueAngle(str) {
   if (str === "none")
     return 0;
-  if (str.endsWith("rad")) {
-    return Number.parseFloat(str) * 180 / Math.PI;
+  let degrees = Number.parseFloat(str);
+  if (str.endsWith("grad")) {
+    degrees *= 0.9;
+  } else if (str.endsWith("rad")) {
+    degrees = degrees * 180 / Math.PI;
+  } else if (str.endsWith("turn")) {
+    degrees *= 360;
   }
-  if (str.endsWith("grad"))
-    return Number.parseFloat(str) * 0.9;
-  if (str.endsWith("turn"))
-    return Number.parseFloat(str) * 360;
-  return Number.parseFloat(str);
+  const normalized = degrees % 360;
+  return normalized < 0 ? (normalized + 360) % 360 : normalized;
 }
 function parseModernAlpha(str) {
   if (str === undefined || str === "none")
@@ -42879,7 +42896,19 @@ var parseDragData = (source) => {
   if ("types" in source) {
     const candidate = getDragPreviewMetadata(source.types);
     if (candidate === null) {
-      return null;
+      const data = parseElementDragData(source.getData("text/plain"));
+      if (data === null || data.element.durationInFrames === undefined) {
+        return null;
+      }
+      return {
+        type: "element",
+        data,
+        preview: {
+          type: "element",
+          ...data.element.dimensions ?? {},
+          durationInFrames: data.element.durationInFrames
+        }
+      };
     }
     serialized = {
       mimeType: candidate.mimeType,
@@ -50033,34 +50062,34 @@ var import_react48 = __toESM2(require_react(), 1);
 var import_react49 = __toESM2(require_react(), 1);
 var import_react50 = __toESM2(require_react(), 1);
 var import_react51 = __toESM2(require_react(), 1);
-var import_jsx_runtime17 = __toESM2(require_jsx_runtime(), 1);
 var import_react52 = __toESM2(require_react(), 1);
-var import_jsx_runtime18 = __toESM2(require_jsx_runtime(), 1);
+var import_jsx_runtime17 = __toESM2(require_jsx_runtime(), 1);
 var import_react53 = __toESM2(require_react(), 1);
+var import_jsx_runtime18 = __toESM2(require_jsx_runtime(), 1);
 var import_react54 = __toESM2(require_react(), 1);
 var import_react55 = __toESM2(require_react(), 1);
 var import_react56 = __toESM2(require_react(), 1);
+var import_react57 = __toESM2(require_react(), 1);
 var import_jsx_runtime19 = __toESM2(require_jsx_runtime(), 1);
 var import_jsx_runtime20 = __toESM2(require_jsx_runtime(), 1);
-var import_react57 = __toESM2(require_react(), 1);
 var import_react58 = __toESM2(require_react(), 1);
 var import_react59 = __toESM2(require_react(), 1);
-var import_jsx_runtime21 = __toESM2(require_jsx_runtime(), 1);
 var import_react60 = __toESM2(require_react(), 1);
+var import_jsx_runtime21 = __toESM2(require_jsx_runtime(), 1);
 var import_react61 = __toESM2(require_react(), 1);
-var import_jsx_runtime22 = __toESM2(require_jsx_runtime(), 1);
 var import_react62 = __toESM2(require_react(), 1);
+var import_jsx_runtime22 = __toESM2(require_jsx_runtime(), 1);
 var import_react63 = __toESM2(require_react(), 1);
-var import_jsx_runtime23 = __toESM2(require_jsx_runtime(), 1);
 var import_react64 = __toESM2(require_react(), 1);
-var import_jsx_runtime24 = __toESM2(require_jsx_runtime(), 1);
+var import_jsx_runtime23 = __toESM2(require_jsx_runtime(), 1);
 var import_react65 = __toESM2(require_react(), 1);
+var import_jsx_runtime24 = __toESM2(require_jsx_runtime(), 1);
 var import_react66 = __toESM2(require_react(), 1);
 var import_react67 = __toESM2(require_react(), 1);
 var import_react68 = __toESM2(require_react(), 1);
 var import_react69 = __toESM2(require_react(), 1);
-var import_jsx_runtime25 = __toESM2(require_jsx_runtime(), 1);
 var import_react70 = __toESM2(require_react(), 1);
+var import_jsx_runtime25 = __toESM2(require_jsx_runtime(), 1);
 var import_react71 = __toESM2(require_react(), 1);
 var import_react72 = __toESM2(require_react(), 1);
 var import_react73 = __toESM2(require_react(), 1);
@@ -50068,61 +50097,62 @@ var import_react74 = __toESM2(require_react(), 1);
 var import_react75 = __toESM2(require_react(), 1);
 var import_react76 = __toESM2(require_react(), 1);
 var import_react77 = __toESM2(require_react(), 1);
-var import_jsx_runtime26 = __toESM2(require_jsx_runtime(), 1);
 var import_react78 = __toESM2(require_react(), 1);
+var import_jsx_runtime26 = __toESM2(require_jsx_runtime(), 1);
 var import_react79 = __toESM2(require_react(), 1);
 var import_react80 = __toESM2(require_react(), 1);
 var import_react81 = __toESM2(require_react(), 1);
 var import_react82 = __toESM2(require_react(), 1);
-var import_jsx_runtime27 = __toESM2(require_jsx_runtime(), 1);
 var import_react83 = __toESM2(require_react(), 1);
+var import_jsx_runtime27 = __toESM2(require_jsx_runtime(), 1);
 var import_react84 = __toESM2(require_react(), 1);
+var import_react85 = __toESM2(require_react(), 1);
 var import_jsx_runtime28 = __toESM2(require_jsx_runtime(), 1);
 var import_jsx_runtime29 = __toESM2(require_jsx_runtime(), 1);
 var import_jsx_runtime30 = __toESM2(require_jsx_runtime(), 1);
-var import_react85 = __toESM2(require_react(), 1);
-var import_jsx_runtime31 = __toESM2(require_jsx_runtime(), 1);
 var import_react86 = __toESM2(require_react(), 1);
+var import_jsx_runtime31 = __toESM2(require_jsx_runtime(), 1);
+var import_react87 = __toESM2(require_react(), 1);
 var import_jsx_runtime32 = __toESM2(require_jsx_runtime(), 1);
 var import_jsx_runtime33 = __toESM2(require_jsx_runtime(), 1);
-var import_react87 = __toESM2(require_react(), 1);
-var import_jsx_runtime34 = __toESM2(require_jsx_runtime(), 1);
 var import_react88 = __toESM2(require_react(), 1);
-var import_jsx_runtime35 = __toESM2(require_jsx_runtime(), 1);
+var import_jsx_runtime34 = __toESM2(require_jsx_runtime(), 1);
 var import_react89 = __toESM2(require_react(), 1);
-var import_jsx_runtime36 = __toESM2(require_jsx_runtime(), 1);
+var import_jsx_runtime35 = __toESM2(require_jsx_runtime(), 1);
 var import_react90 = __toESM2(require_react(), 1);
-var import_jsx_runtime37 = __toESM2(require_jsx_runtime(), 1);
+var import_jsx_runtime36 = __toESM2(require_jsx_runtime(), 1);
 var import_react91 = __toESM2(require_react(), 1);
+var import_jsx_runtime37 = __toESM2(require_jsx_runtime(), 1);
 var import_react92 = __toESM2(require_react(), 1);
 var import_react93 = __toESM2(require_react(), 1);
 var import_react94 = __toESM2(require_react(), 1);
+var import_react95 = __toESM2(require_react(), 1);
 var import_jsx_runtime38 = __toESM2(require_jsx_runtime(), 1);
 var import_jsx_runtime39 = __toESM2(require_jsx_runtime(), 1);
-var import_react95 = __toESM2(require_react(), 1);
 var import_react96 = __toESM2(require_react(), 1);
 var import_react97 = __toESM2(require_react(), 1);
-var import_jsx_runtime40 = __toESM2(require_jsx_runtime(), 1);
 var import_react98 = __toESM2(require_react(), 1);
+var import_jsx_runtime40 = __toESM2(require_jsx_runtime(), 1);
 var import_react99 = __toESM2(require_react(), 1);
 var import_react100 = __toESM2(require_react(), 1);
-var import_jsx_runtime41 = __toESM2(require_jsx_runtime(), 1);
 var import_react101 = __toESM2(require_react(), 1);
+var import_jsx_runtime41 = __toESM2(require_jsx_runtime(), 1);
 var import_react102 = __toESM2(require_react(), 1);
 var import_react103 = __toESM2(require_react(), 1);
-var import_jsx_runtime42 = __toESM2(require_jsx_runtime(), 1);
 var import_react104 = __toESM2(require_react(), 1);
+var import_jsx_runtime42 = __toESM2(require_jsx_runtime(), 1);
 var import_react105 = __toESM2(require_react(), 1);
+var import_react106 = __toESM2(require_react(), 1);
 var import_jsx_runtime43 = __toESM2(require_jsx_runtime(), 1);
 var import_jsx_runtime44 = __toESM2(require_jsx_runtime(), 1);
-var import_react106 = __toESM2(require_react(), 1);
-var import_jsx_runtime45 = __toESM2(require_jsx_runtime(), 1);
 var import_react107 = __toESM2(require_react(), 1);
+var import_jsx_runtime45 = __toESM2(require_jsx_runtime(), 1);
 var import_react108 = __toESM2(require_react(), 1);
-var import_jsx_runtime46 = __toESM2(require_jsx_runtime(), 1);
 var import_react109 = __toESM2(require_react(), 1);
+var import_jsx_runtime46 = __toESM2(require_jsx_runtime(), 1);
 var import_react110 = __toESM2(require_react(), 1);
 var import_react111 = __toESM2(require_react(), 1);
+var import_react112 = __toESM2(require_react(), 1);
 var import_jsx_runtime47 = __toESM2(require_jsx_runtime(), 1);
 var import_jsx_runtime48 = __toESM2(require_jsx_runtime(), 1);
 var __defProp2 = Object.defineProperty;
@@ -50547,7 +50577,7 @@ var hasTailwindClassName = ({
 };
 var AbsoluteFillElementRefForwarding = (props, ref) => {
   const { style, ...other } = props;
-  const actualStyle = import_react13.useMemo(() => {
+  const defaultStyle = import_react13.useMemo(() => {
     return {
       position: "absolute",
       top: hasTailwindClassName({
@@ -50606,10 +50636,15 @@ var AbsoluteFillElementRefForwarding = (props, ref) => {
           "flex-col-reverse"
         ],
         type: "exact"
-      }) ? undefined : "column",
+      }) ? undefined : "column"
+    };
+  }, [other.className]);
+  const actualStyle = import_react13.useMemo(() => {
+    return {
+      ...defaultStyle,
       ...style
     };
-  }, [other.className, style]);
+  }, [defaultStyle, style]);
   return /* @__PURE__ */ import_jsx_runtime5.jsx("div", {
     ref,
     style: actualStyle,
@@ -51478,9 +51513,6 @@ var useLazyComponent = ({
   ]);
   const lazy = import_react24.useMemo(() => {
     if ("component" in compProps) {
-      if (typeof document === "undefined" || noSuspense) {
-        return compProps.component;
-      }
       return Wrapper;
     }
     if ("lazyComponent" in compProps && typeof compProps.lazyComponent !== "undefined") {
@@ -51491,6 +51523,9 @@ var useLazyComponent = ({
     }
     throw new Error("You must pass either 'component' or 'lazyComponent'");
   }, [lazyComponentFromProps, componentStore, Wrapper]);
+  if ("component" in compProps && (typeof document === "undefined" || noSuspense)) {
+    return compProps.component;
+  }
   return lazy;
 };
 var getRegex2 = () => /^([a-zA-Z0-9-\u4E00-\u9FFF])+$/g;
@@ -51686,7 +51721,7 @@ var setStackForControls = (controls, stack) => {
 var getStackForControls = (controls) => {
   return stacksByControls.get(controls) ?? null;
 };
-var VERSION = "4.0.538";
+var VERSION = "4.0.539";
 var checkMultipleRemotionVersions = () => {
   if (typeof globalThis === "undefined") {
     return;
@@ -54355,6 +54390,20 @@ var interpolateSegment2 = ({
     output
   });
 };
+var getInputForInterpolation2 = ({
+  input,
+  inputRange,
+  options
+}) => {
+  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
+  const inputMin = inputRange[0];
+  const inputMax = inputRange[inputRange.length - 1];
+  if (inputRange.length === 1 || !(posterizedInput < inputMin && options?.extrapolateLeft === "wrap" || posterizedInput > inputMax && options?.extrapolateRight === "wrap")) {
+    return posterizedInput;
+  }
+  const range = inputMax - inputMin;
+  return ((posterizedInput - inputMin) % range + range) % range + inputMin;
+};
 var interpolateNumber2 = ({
   input,
   inputRange,
@@ -54374,14 +54423,18 @@ var interpolateNumber2 = ({
   if (options?.extrapolateRight !== undefined) {
     extrapolateRight = options.extrapolateRight;
   }
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
-  const range = findRange2(posterizedInput, inputRange);
+  const resolvedInput = getInputForInterpolation2({
+    input,
+    inputRange,
+    options: options ?? null
+  });
+  const range = findRange2(resolvedInput, inputRange);
   const easing = resolveEasingForSegment2({
     easing: easingOption,
     segmentIndex: range
   });
   let result = interpolateSegment2({
-    input: posterizedInput,
+    input: resolvedInput,
     inputRange: [inputRange[range], inputRange[range + 1]],
     outputRange: [outputRange[range], outputRange[range + 1]],
     easing,
@@ -54398,11 +54451,11 @@ var interpolateNumber2 = ({
       continue;
     }
     const previousSegmentEnd = inputRange[segmentIndex + 1];
-    if (posterizedInput <= previousSegmentEnd) {
+    if (resolvedInput <= previousSegmentEnd) {
       continue;
     }
     const continuedSegmentValue = interpolateSegment2({
-      input: posterizedInput,
+      input: resolvedInput,
       inputRange: [inputRange[segmentIndex], previousSegmentEnd],
       outputRange: [outputRange[segmentIndex], outputRange[segmentIndex + 1]],
       easing: previousEasing,
@@ -54423,8 +54476,12 @@ var interpolateString2 = ({
 }) => {
   const initiallyParsedOutputRange = outputRange.map((output) => parseStringInterpolationValue2(output, outputType));
   const hasAxisRotation = initiallyParsedOutputRange.some((parsed) => parsed.axisRotation);
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
-  const segmentIndex = inputRange.length === 1 ? 0 : findRange2(posterizedInput, inputRange);
+  const resolvedInput = getInputForInterpolation2({
+    input,
+    inputRange,
+    options: options ?? null
+  });
+  const segmentIndex = inputRange.length === 1 ? 0 : findRange2(resolvedInput, inputRange);
   const parsedOutputRange = hasAxisRotation ? initiallyParsedOutputRange.map((parsed, index) => {
     if (parsed.kind !== "rotate") {
       return parsed;
@@ -54548,31 +54605,24 @@ var interpolateDiscreteValue2 = ({
       throw new TypeError(typeof outputRange[0] === "boolean" ? "Booleans can only be interpolated using Easing.step1" : "Non-numeric strings can only be interpolated using Easing.step1");
     }
   }
-  const posterizedInput = options?.posterize === undefined ? input : Math.floor(input / options.posterize) * options.posterize;
+  const resolvedInput = getInputForInterpolation2({
+    input,
+    inputRange,
+    options: options ?? null
+  });
   const inputMin = inputRange[0];
   const inputMax = inputRange[inputRange.length - 1];
-  let resolvedInput = posterizedInput;
   if (resolvedInput < inputMin) {
     if (options?.extrapolateLeft === "identity") {
       throw new TypeError(typeof outputRange[0] === "boolean" ? 'extrapolateLeft: "identity" is not supported for booleans' : 'extrapolateLeft: "identity" is not supported for non-numeric strings');
     }
-    if (options?.extrapolateLeft === "wrap") {
-      const wrapRange = inputMax - inputMin;
-      resolvedInput = ((resolvedInput - inputMin) % wrapRange + wrapRange) % wrapRange + inputMin;
-    } else {
-      return outputRange[0];
-    }
+    return outputRange[0];
   }
   if (resolvedInput > inputMax) {
     if (options?.extrapolateRight === "identity") {
       throw new TypeError(typeof outputRange[0] === "boolean" ? 'extrapolateRight: "identity" is not supported for booleans' : 'extrapolateRight: "identity" is not supported for non-numeric strings');
     }
-    if (options?.extrapolateRight === "wrap") {
-      const wrapRange = inputMax - inputMin;
-      resolvedInput = ((resolvedInput - inputMin) % wrapRange + wrapRange) % wrapRange + inputMin;
-    } else {
-      return outputRange[outputRange.length - 1];
-    }
+    return outputRange[outputRange.length - 1];
   }
   const range = findRange2(resolvedInput, inputRange);
   return resolvedInput >= inputRange[range + 1] ? outputRange[range + 1] : outputRange[range];
@@ -55039,7 +55089,7 @@ function spring2({
     frame: durationProcessed,
     config
   });
-  const inner = config.overshootClamping ? to >= from ? Math.min(spr.current, to) : Math.max(spr.current, to) : spr.current;
+  const inner = config.overshootClamping ? Math.min(spr.current, 1) : spr.current;
   const interpolated = from === 0 && to === 1 ? inner : interpolate2(inner, [0, 1], [from, to]);
   return interpolated;
 }
@@ -55270,14 +55320,16 @@ function parseModernComponent2(str, percentScale) {
 function parseHueAngle2(str) {
   if (str === "none")
     return 0;
-  if (str.endsWith("rad")) {
-    return Number.parseFloat(str) * 180 / Math.PI;
+  let degrees = Number.parseFloat(str);
+  if (str.endsWith("grad")) {
+    degrees *= 0.9;
+  } else if (str.endsWith("rad")) {
+    degrees = degrees * 180 / Math.PI;
+  } else if (str.endsWith("turn")) {
+    degrees *= 360;
   }
-  if (str.endsWith("grad"))
-    return Number.parseFloat(str) * 0.9;
-  if (str.endsWith("turn"))
-    return Number.parseFloat(str) * 360;
-  return Number.parseFloat(str);
+  const normalized = degrees % 360;
+  return normalized < 0 ? (normalized + 360) % 360 : normalized;
 }
 function parseModernAlpha2(str) {
   if (str === undefined || str === "none")
@@ -55846,6 +55898,125 @@ var OverrideIdsToNodePathsSettersContext = import_react50.createContext({
     throw new Error("OverrideIdsToNodePathsSettersContext not initialized");
   }
 });
+var observers = new Map;
+var redrawListeners = new Map;
+var identities = new WeakMap;
+var inspectedChains = new WeakMap;
+var sourceChainOwners = new Map;
+var useIdentityCommitEffect = import_react51.default.useInsertionEffect ?? import_react51.useLayoutEffect;
+var subscribeToEffectSource = ({
+  sequenceKey,
+  effectIndex,
+  onSource
+}) => {
+  let sequence = observers.get(sequenceKey);
+  if (!sequence) {
+    sequence = new Map;
+    observers.set(sequenceKey, sequence);
+  }
+  let listeners = sequence.get(effectIndex);
+  if (!listeners) {
+    listeners = new Set;
+    sequence.set(effectIndex, listeners);
+  }
+  listeners.add(onSource);
+  redrawListeners.get(sequenceKey)?.forEach((redraw) => redraw());
+  return () => {
+    listeners.delete(onSource);
+    if (listeners.size === 0) {
+      sequence.delete(effectIndex);
+    }
+    if (sequence.size === 0) {
+      observers.delete(sequenceKey);
+    }
+  };
+};
+var publishEffectSource = (effect, source, chain) => {
+  if (observers.size === 0) {
+    return;
+  }
+  const identity = identities.get(effect);
+  if (!identity) {
+    return;
+  }
+  const listeners = observers.get(identity.sequenceKey)?.get(identity.effectIndex);
+  if (!listeners || listeners.size === 0) {
+    return;
+  }
+  let inspected = inspectedChains.get(chain);
+  if (!inspected) {
+    inspected = new Map;
+    inspectedChains.set(chain, inspected);
+  }
+  const key = `${identity.sequenceKey}\x00${identity.effectIndex}`;
+  inspected.set(key, identity);
+  sourceChainOwners.set(key, chain);
+  listeners.forEach((listener) => {
+    try {
+      listener(source);
+    } catch {}
+  });
+};
+var invalidateEffectChainSources = (chain) => {
+  const inspected = inspectedChains.get(chain);
+  inspectedChains.delete(chain);
+  inspected?.forEach((identity, key) => {
+    if (sourceChainOwners.get(key) !== chain) {
+      return;
+    }
+    sourceChainOwners.delete(key);
+    observers.get(identity.sequenceKey)?.get(identity.effectIndex)?.forEach((listener) => {
+      try {
+        listener(null);
+      } catch {}
+    });
+  });
+};
+var useEffectSourceInspection = (effects, sequenceKey) => {
+  const [revision, setRevision] = import_react51.useState(0);
+  import_react51.useLayoutEffect(() => {
+    if (sequenceKey === null) {
+      return;
+    }
+    let listeners = redrawListeners.get(sequenceKey);
+    if (!listeners) {
+      listeners = new Set;
+      redrawListeners.set(sequenceKey, listeners);
+    }
+    const redraw = () => setRevision((previous) => previous + 1);
+    listeners.add(redraw);
+    if (observers.has(sequenceKey)) {
+      redraw();
+    }
+    return () => {
+      listeners.delete(redraw);
+      if (listeners.size === 0) {
+        redrawListeners.delete(sequenceKey);
+        observers.get(sequenceKey)?.forEach((sourceListeners) => {
+          sourceListeners.forEach((listener) => {
+            try {
+              listener(null);
+            } catch {}
+          });
+        });
+      }
+    };
+  }, [sequenceKey]);
+  useIdentityCommitEffect(() => {
+    if (sequenceKey === null) {
+      return;
+    }
+    effects.forEach((effect, effectIndex) => {
+      identities.set(effect, { sequenceKey, effectIndex });
+    });
+    return () => {
+      effects.forEach((effect) => identities.delete(effect));
+    };
+  }, [effects, sequenceKey]);
+  return import_react51.useMemo(() => {
+    return sequenceKey === null || revision === 0 ? effects : effects.slice();
+  }, [effects, revision, sequenceKey]);
+};
 var emptyDragOverrides2 = {};
 var useCacheCommitEffect = import_react49.default.useInsertionEffect ?? import_react49.useLayoutEffect;
 var areEffectParamsEqual = (previous, next) => {
@@ -56015,6 +56186,7 @@ var useMemoizedEffects = ({
   videoConfigValues
 }) => {
   const previousRef = import_react49.useRef(null);
+  const { isStudio } = useRemotionEnvironment();
   const { overrideIdToNodePathMappings } = import_react49.useContext(OverrideIdsToNodePathsGettersContext);
   const previous = previousRef.current;
   const nodePath = overrideId ? overrideIdToNodePathMappings[overrideId] ?? null : null;
@@ -56069,7 +56241,7 @@ var useMemoizedEffects = ({
   useCacheCommitEffect(() => {
     previousRef.current = { prepared, effects: next };
   }, [next, prepared]);
-  return next;
+  return useEffectSourceInspection(next, isStudio && nodePath !== null ? makeSequencePropsSubscriptionKey({ ...nodePath, videoConfigValues }) : null);
 };
 var flattenActiveSchema = (schema, resolve) => {
   const out = {};
@@ -56155,7 +56327,7 @@ var OptimisticSequenceDeletion = {
   },
   isDeleted: (node, pending) => node !== null && pending.has(keyForNode(node)),
   isElementDeleted: (element, pending) => {
-    if (!import_react51.isValidElement(element)) {
+    if (!import_react52.isValidElement(element)) {
       return false;
     }
     const stack = element.props._remotionInternalStack;
@@ -57324,7 +57496,7 @@ var AbsoluteFillInner = ({
   ...divProps
 }) => {
   const videoConfig = useUnsafeVideoConfig();
-  const callbackRef = import_react52.useCallback((element) => {
+  const callbackRef = import_react53.useCallback((element) => {
     setRef(ref, element);
   }, [ref]);
   if (videoConfig === null) {
@@ -57372,7 +57544,7 @@ var useCropStyle = ({
   componentName
 }) => {
   validateSequenceCrop({ cropLeft, cropRight, cropTop, cropBottom }, componentName);
-  return import_react54.useMemo(() => {
+  return import_react55.useMemo(() => {
     const cropClipPath = getSequenceCropClipPath({
       ...resolveSequenceCrop({ cropLeft, cropRight, cropTop, cropBottom }),
       style
@@ -57602,6 +57774,7 @@ var createEffectChainState = (width, height) => {
 };
 var cleanupEffectChainState = (state) => {
   state.currentRunId++;
+  invalidateEffectChainSources(state);
   try {
     for (const entry of state.cleanupRegistry) {
       entry.definition.cleanup(entry.state);
@@ -57668,6 +57841,7 @@ var runEffectChainWithoutResize = async ({ state, source, effects, output, width
           state.pool.assertContextNotLost(dst);
         }
         const setupState = ensureSetup(state, def, dst);
+        publishEffectSource(eff, currentImage, state);
         def.apply({
           source: currentImage,
           target: dst,
@@ -57746,10 +57920,10 @@ var useEffectChainState = (effectsOutputSize = null) => {
     validateDimension2(effectWidth, "effectsOutputSize.width", "on an effect-capable component");
     validateDimension2(effectHeight, "effectsOutputSize.height", "on an effect-capable component");
   }
-  const chainStateRef = import_react56.useRef(null);
-  const sizeRef = import_react56.useRef(null);
-  const unmountedRef = import_react56.useRef(false);
-  import_react56.useEffect(() => {
+  const chainStateRef = import_react57.useRef(null);
+  const sizeRef = import_react57.useRef(null);
+  const unmountedRef = import_react57.useRef(false);
+  import_react57.useEffect(() => {
     unmountedRef.current = false;
     return () => {
       unmountedRef.current = true;
@@ -57760,7 +57934,7 @@ var useEffectChainState = (effectsOutputSize = null) => {
       }
     };
   }, []);
-  return import_react56.useMemo(() => ({
+  return import_react57.useMemo(() => ({
     get: (width, height) => {
       width = effectWidth ?? width;
       height = effectHeight ?? height;
@@ -57779,15 +57953,15 @@ var useEffectChainState = (effectsOutputSize = null) => {
   }), [effectWidth, effectHeight]);
 };
 var CanvasRefForwardingFunction = ({ width, height, fit, className, style, effects, effectsOutputSize, ...props }, ref) => {
-  const canvasRef = import_react55.useRef(null);
+  const canvasRef = import_react56.useRef(null);
   const chainState = useEffectChainState(effectsOutputSize);
-  const sourceCanvas = import_react55.useMemo(() => {
+  const sourceCanvas = import_react56.useMemo(() => {
     if (typeof document === "undefined") {
       return null;
     }
     return document.createElement("canvas");
   }, []);
-  const draw = import_react55.useCallback((imageData) => {
+  const draw = import_react56.useCallback((imageData) => {
     const canvas = canvasRef.current;
     const canvasWidth = width ?? imageData.displayWidth;
     const canvasHeight = height ?? imageData.displayHeight;
@@ -57821,7 +57995,7 @@ var CanvasRefForwardingFunction = ({ width, height, fit, className, style, effec
       height: canvasHeight
     });
   }, [chainState, effects, fit, height, sourceCanvas, width]);
-  import_react55.useImperativeHandle(ref, () => {
+  import_react56.useImperativeHandle(ref, () => {
     return {
       draw,
       getCanvas: () => {
@@ -57846,7 +58020,7 @@ var CanvasRefForwardingFunction = ({ width, height, fit, className, style, effec
     ...props
   });
 };
-var Canvas = import_react55.default.forwardRef(CanvasRefForwardingFunction);
+var Canvas = import_react56.default.forwardRef(CanvasRefForwardingFunction);
 var createImageDecoder = async ({
   resolvedSrc,
   signal,
@@ -57932,6 +58106,7 @@ var decodeImage = async ({
         continue;
       }
       const item = sortByClosestToCurrentTime[i];
+      item.frame?.close();
       item.frame = null;
     }
   };
@@ -58091,7 +58266,7 @@ var getCanvasPropsFromSequenceProps = (props) => {
   }
   return canvasProps;
 };
-var AnimatedImageContent = import_react53.forwardRef(({
+var AnimatedImageContent = import_react54.forwardRef(({
   src,
   width,
   height,
@@ -58106,33 +58281,33 @@ var AnimatedImageContent = import_react53.forwardRef(({
   ...props
 }, canvasRef) => {
   const resolvedSrc = resolveAnimatedImageSource(src);
-  const [decodedImage, setDecodedImage] = import_react53.useState(null);
+  const [decodedImage, setDecodedImage] = import_react54.useState(null);
   const imageDecoder = decodedImage?.decoder ?? null;
-  const activeDecoderRef = import_react53.useRef(null);
+  const activeDecoderRef = import_react54.useRef(null);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const currentTime = getCurrentTime({ frame, playbackRate, fps });
-  const currentTimeRef = import_react53.useRef(currentTime);
+  const currentTimeRef = import_react54.useRef(currentTime);
   currentTimeRef.current = currentTime;
   const requestInitKey = serializeRequestInit(requestInit);
-  const requestInitRef = import_react53.useRef(requestInit);
+  const requestInitRef = import_react54.useRef(requestInit);
   requestInitRef.current = requestInit;
-  const ref = import_react53.useRef(null);
+  const ref = import_react54.useRef(null);
   const memoizedEffects = useMemoizedEffects({
     effects,
     overrideId: controls?.overrideId ?? null,
     videoConfigValues: controls?.videoConfigValues ?? null
   });
-  import_react53.useImperativeHandle(canvasRef, () => {
+  import_react54.useImperativeHandle(canvasRef, () => {
     const c = ref.current?.getCanvas();
     if (!c) {
       throw new Error("Canvas ref is not set");
     }
     return c;
   }, []);
-  const [initialLoopBehavior] = import_react53.useState(() => loopBehavior);
-  import_react53.useLayoutEffect(() => {
+  const [initialLoopBehavior] = import_react54.useState(() => loopBehavior);
+  import_react54.useLayoutEffect(() => {
     const decodeHandle = delayRender(`Rendering <AnimatedImage/> with src="${resolvedSrc}"`);
     const controller = new AbortController;
     let cancelled = false;
@@ -58190,7 +58365,7 @@ var AnimatedImageContent = import_react53.forwardRef(({
     delayRender,
     cancelRender
   ]);
-  import_react53.useLayoutEffect(() => {
+  import_react54.useLayoutEffect(() => {
     if (!imageDecoder || !decodedImage || activeDecoderRef.current !== imageDecoder) {
       return;
     }
@@ -58281,9 +58456,9 @@ var AnimatedImageInner = ({
   ref,
   ...sequenceProps
 }) => {
-  const actualRef = import_react53.useRef(null);
+  const actualRef = import_react54.useRef(null);
   const memoizedEffectDefinitions = useMemoizedEffectDefinitions(effects);
-  import_react53.useImperativeHandle(ref, () => {
+  import_react54.useImperativeHandle(ref, () => {
     return actualRef.current;
   }, []);
   const {
@@ -58364,13 +58539,13 @@ var AnimatedImageWithIntrinsicDuration = (props) => {
   const { fps } = useVideoConfig();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const { src, requestInit, trimBefore } = props;
-  const requestInitRef = import_react53.useRef(requestInit);
+  const requestInitRef = import_react54.useRef(requestInit);
   requestInitRef.current = requestInit;
-  const onErrorRef = import_react53.useRef(props.onError);
+  const onErrorRef = import_react54.useRef(props.onError);
   onErrorRef.current = props.onError;
-  const [duration, setDuration] = import_react53.useState(null);
-  const [failedHandle, setFailedHandle] = import_react53.useState(null);
-  import_react53.useLayoutEffect(() => {
+  const [duration, setDuration] = import_react54.useState(null);
+  const [failedHandle, setFailedHandle] = import_react54.useState(null);
+  import_react54.useLayoutEffect(() => {
     const handle = delayRender(`Finding duration of <AnimatedImage src="${src}" />`);
     const controller = new AbortController;
     let cancelled = false;
@@ -58403,7 +58578,7 @@ var AnimatedImageWithIntrinsicDuration = (props) => {
       continueRender(handle);
     };
   }, [cancelRender, continueRender, delayRender, fps, src, trimBefore]);
-  import_react53.useLayoutEffect(() => {
+  import_react54.useLayoutEffect(() => {
     if (duration !== null) {
       continueRender(duration.handle);
     }
@@ -58423,7 +58598,7 @@ var AnimatedImageComponent = (props) => {
   if (props.loop && props.durationInFrames === undefined) {
     const resolvedSrc = resolveAnimatedImageSource(props.src);
     const requestInitKey = serializeRequestInit(props.requestInit);
-    return /* @__PURE__ */ import_react57.createElement(AnimatedImageWithIntrinsicDuration, {
+    return /* @__PURE__ */ import_react58.createElement(AnimatedImageWithIntrinsicDuration, {
       ...props,
       key: `${resolvedSrc}-${requestInitKey}-${props.trimBefore ?? 0}`
     });
@@ -58500,7 +58675,7 @@ var validateRenderAsset = (artifact) => {
   }
   validateContent(artifact.content);
 };
-var RenderAssetManager = import_react59.createContext({
+var RenderAssetManager = import_react60.createContext({
   registerRenderAsset: () => {
     return;
   },
@@ -58510,15 +58685,15 @@ var RenderAssetManager = import_react59.createContext({
   renderAssets: []
 });
 var RenderAssetManagerProvider = ({ children, collectAssets }) => {
-  const [renderAssets, setRenderAssets] = import_react59.useState([]);
-  const renderAssetsRef = import_react59.useRef([]);
-  const registerRenderAsset = import_react59.useCallback((renderAsset) => {
+  const [renderAssets, setRenderAssets] = import_react60.useState([]);
+  const renderAssetsRef = import_react60.useRef([]);
+  const registerRenderAsset = import_react60.useCallback((renderAsset) => {
     validateRenderAsset(renderAsset);
     renderAssetsRef.current = [...renderAssetsRef.current, renderAsset];
     setRenderAssets(renderAssetsRef.current);
   }, []);
   if (collectAssets) {
-    import_react59.useImperativeHandle(collectAssets, () => {
+    import_react60.useImperativeHandle(collectAssets, () => {
       return {
         collectAssets: () => {
           const assets = renderAssetsRef.current;
@@ -58529,11 +58704,11 @@ var RenderAssetManagerProvider = ({ children, collectAssets }) => {
       };
     }, []);
   }
-  const unregisterRenderAsset = import_react59.useCallback((id) => {
+  const unregisterRenderAsset = import_react60.useCallback((id) => {
     renderAssetsRef.current = renderAssetsRef.current.filter((a) => a.id !== id);
     setRenderAssets(renderAssetsRef.current);
   }, []);
-  import_react59.useLayoutEffect(() => {
+  import_react60.useLayoutEffect(() => {
     if (typeof window !== "undefined") {
       window.remotion_collectAssets = () => {
         const assets = renderAssetsRef.current;
@@ -58543,7 +58718,7 @@ var RenderAssetManagerProvider = ({ children, collectAssets }) => {
       };
     }
   }, []);
-  const contextValue = import_react59.useMemo(() => {
+  const contextValue = import_react60.useMemo(() => {
     return {
       registerRenderAsset,
       unregisterRenderAsset,
@@ -58557,13 +58732,13 @@ var RenderAssetManagerProvider = ({ children, collectAssets }) => {
 };
 var ArtifactThumbnail = Symbol("Thumbnail");
 var Artifact = ({ filename, content, downloadBehavior }) => {
-  const { registerRenderAsset, unregisterRenderAsset } = import_react58.useContext(RenderAssetManager);
+  const { registerRenderAsset, unregisterRenderAsset } = import_react59.useContext(RenderAssetManager);
   const env = useRemotionEnvironment();
   const frame = useCurrentFrame();
-  const [id] = import_react58.useState(() => {
+  const [id] = import_react59.useState(() => {
     return String(Math.random());
   });
-  import_react58.useLayoutEffect(() => {
+  import_react59.useLayoutEffect(() => {
     if (!env.isRendering) {
       return;
     }
@@ -58648,9 +58823,9 @@ var getMediaTrimAfter = ({
   }
   return trimAfter === undefined ? durationAsTrimAfter : Math.min(trimAfter, durationAsTrimAfter);
 };
-var LoopTimelineContext = import_react61.createContext(null);
+var LoopTimelineContext = import_react62.createContext(null);
 var useLoop = () => {
-  return import_react61.default.useContext(LoopContext);
+  return import_react62.default.useContext(LoopContext);
 };
 var Loop = ({
   durationInFrames,
@@ -58663,7 +58838,7 @@ var Loop = ({
 }) => {
   const currentFrame = useCurrentFrame();
   const { durationInFrames: compDuration } = useVideoConfig();
-  const parentSequence = import_react61.useContext(SequenceContext);
+  const parentSequence = import_react62.useContext(SequenceContext);
   const parentPlaybackRate = parentSequence?.playbackRate ?? 1;
   const playbackRateValue = playbackRate ?? 1;
   const iterationDurationInFrames = durationInFrames / playbackRateValue;
@@ -58692,20 +58867,20 @@ var Loop = ({
   const iteration = Math.max(0, Math.min(actualTimes - 1, isAtBoundary ? nearestIteration : Math.floor(loopsElapsed)));
   const start = isAtBoundary ? currentFrame : iteration * iterationDurationInFrames;
   const from = Math.max(0, Math.min(start, maxFrame));
-  const loopDisplay = import_react61.useMemo(() => {
+  const loopDisplay = import_react62.useMemo(() => {
     return {
       numberOfTimes: Math.min(compDuration / iterationDurationInFrames, times),
       startOffset: -from,
       durationInFrames: iterationDurationInFrames
     };
   }, [compDuration, from, iterationDurationInFrames, times]);
-  const loopContext = import_react61.useMemo(() => {
+  const loopContext = import_react62.useMemo(() => {
     return {
       iteration,
       durationInFrames
     };
   }, [iteration, durationInFrames]);
-  const timelineContext = import_react61.useMemo(() => ({
+  const timelineContext = import_react62.useMemo(() => ({
     startFrame: loopStartFrame,
     firstVisibleFrame,
     endFrame,
@@ -58742,12 +58917,12 @@ var playbackLogging = ({
   const tags = [mountTime ? Date.now() - mountTime + "ms " : null, tag].filter(Boolean).join(" ");
   Log.trace({ logLevel, tag: null }, `[${tags}]`, message);
 };
-var PreloadContext = import_react63.createContext({});
+var PreloadContext = import_react64.createContext({});
 var preloads = {};
 var updaters = [];
 var PrefetchProvider = ({ children }) => {
-  const [_preloads, _setPreloads] = import_react63.useState(() => preloads);
-  import_react63.useEffect(() => {
+  const [_preloads, _setPreloads] = import_react64.useState(() => preloads);
+  import_react64.useEffect(() => {
     const updaterFunction = () => {
       _setPreloads(preloads);
     };
@@ -58776,7 +58951,7 @@ var getSrcWithoutHash = (src) => {
   return src.slice(0, hashIndex);
 };
 var usePreload = (src) => {
-  const preloads = import_react62.useContext(PreloadContext);
+  const preloads = import_react63.useContext(PreloadContext);
   const hashFragmentIndex = removeAndGetHashFragment(src);
   const withoutHashFragment = getSrcWithoutHash(src);
   if (!preloads[withoutHashFragment]) {
@@ -58787,6 +58962,7 @@ var usePreload = (src) => {
   }
   return preloads[withoutHashFragment];
 };
+var activePrefetches = new Map;
 var validateMediaProps = (props, component) => {
   if (typeof props.volume !== "number" && typeof props.volume !== "function" && typeof props.volume !== "undefined") {
     throw new TypeError(`You have passed a volume of type ${typeof props.volume} to your <${component} /> component. Volume must be a number or a function with the signature '(frame: number) => number' undefined.`);
@@ -58907,15 +59083,15 @@ var durationReducer = (state, action) => {
 var onMediaDuration = (setDurations, src, durationInSeconds) => {
   setDurations({ type: "got-duration", durationInSeconds, src });
 };
-var DurationsContext = import_react64.createContext({
+var DurationsContext = import_react65.createContext({
   durations: {},
   setDurations: () => {
     throw new Error("context missing");
   }
 });
 var DurationsContextProvider = ({ children }) => {
-  const [durations, setDurations] = import_react64.useReducer(durationReducer, {});
-  const value = import_react64.useMemo(() => {
+  const [durations, setDurations] = import_react65.useReducer(durationReducer, {});
+  const value = import_react65.useMemo(() => {
     return {
       durations,
       setDurations
@@ -59086,11 +59262,11 @@ var useSingletonAudioContext = ({
   sampleRate
 }) => {
   const env = useRemotionEnvironment();
-  const initialSampleRate = import_react69.useRef(sampleRate);
+  const initialSampleRate = import_react70.useRef(sampleRate);
   if (sampleRate !== initialSampleRate.current) {
     throw new Error(`Changing the AudioContext sample rate dynamically is not supported. The sample rate was initialized with ${initialSampleRate.current} Hz, but ${sampleRate} Hz was passed later.`);
   }
-  const context = import_react69.useMemo(() => {
+  const context = import_react70.useMemo(() => {
     if (env.isRendering) {
       return null;
     }
@@ -59249,8 +59425,8 @@ var didPropChange = (key, newProp, prevProp) => {
   }
   return true;
 };
-var SharedAudioContext = import_react68.createContext(null);
-var SharedAudioTagsContext = import_react68.createContext(null);
+var SharedAudioContext = import_react69.createContext(null);
+var SharedAudioTagsContext = import_react69.createContext(null);
 var shouldSaveForLater = (state) => {
   if (state === "suspended" || state === "running-to-suspended" || state === "interrupted") {
     return true;
@@ -59275,17 +59451,17 @@ var SharedAudioContextProvider = ({
     audioEnabled,
     sampleRate
   });
-  const audioContextIsPlayingEventually = import_react68.useRef(false);
-  const initialExperimentalKeepAudioContextAlive = import_react68.useRef(_experimentalKeepAudioContextAlive);
+  const audioContextIsPlayingEventually = import_react69.useRef(false);
+  const initialExperimentalKeepAudioContextAlive = import_react69.useRef(_experimentalKeepAudioContextAlive);
   if (initialExperimentalKeepAudioContextAlive.current !== _experimentalKeepAudioContextAlive) {
     throw new Error("`_experimentalKeepAudioContextAlive` cannot be changed dynamically.");
   }
-  const isResuming = import_react68.useRef(null);
-  const nextResumeAttemptId = import_react68.useRef(0);
-  const nextResumeIsAutoPlayAttempt = import_react68.useRef(false);
-  const audioSyncAnchor = import_react68.useMemo(() => ({ value: 0 }), []);
-  const audioSyncAnchorListeners = import_react68.useRef([]);
-  const audioSyncAnchorEmitter = import_react68.useMemo(() => {
+  const isResuming = import_react69.useRef(null);
+  const nextResumeAttemptId = import_react69.useRef(0);
+  const nextResumeIsAutoPlayAttempt = import_react69.useRef(false);
+  const audioSyncAnchor = import_react69.useMemo(() => ({ value: 0 }), []);
+  const audioSyncAnchorListeners = import_react69.useRef([]);
+  const audioSyncAnchorEmitter = import_react69.useMemo(() => {
     return {
       dispatch: (event) => {
         audioSyncAnchorListeners.current.forEach((l) => l(event));
@@ -59300,12 +59476,12 @@ var SharedAudioContextProvider = ({
       }
     };
   }, []);
-  const prevEndTimes = import_react68.useRef({ scheduledEndTime: null, mediaEndTime: null });
-  const nodesToResume = import_react68.useRef(new Map);
-  const unscheduleAudioNode = import_react68.useCallback((node) => {
+  const prevEndTimes = import_react69.useRef({ scheduledEndTime: null, mediaEndTime: null });
+  const nodesToResume = import_react69.useRef(new Map);
+  const unscheduleAudioNode = import_react69.useCallback((node) => {
     return nodesToResume.current.delete(node);
   }, []);
-  const scheduleAudioNode = import_react68.useMemo(() => {
+  const scheduleAudioNode = import_react69.useMemo(() => {
     return ({
       node,
       mediaTimestamp,
@@ -59357,7 +59533,7 @@ var SharedAudioContextProvider = ({
       };
     };
   }, [ctxAndGain, _experimentalKeepAudioContextAlive, logLevel]);
-  const resume = import_react68.useCallback(() => {
+  const resume = import_react69.useCallback(() => {
     const isAutoPlayAttempt = nextResumeIsAutoPlayAttempt.current;
     nextResumeIsAutoPlayAttempt.current = false;
     if (!ctxAndGain) {
@@ -59399,14 +59575,14 @@ var SharedAudioContextProvider = ({
     };
     return resumePromise.catch(() => {});
   }, [ctxAndGain, _experimentalKeepAudioContextAlive, logLevel]);
-  const resumeAsAutoPlay = import_react68.useCallback(() => {
+  const resumeAsAutoPlay = import_react69.useCallback(() => {
     nextResumeIsAutoPlayAttempt.current = true;
     return resume();
   }, [resume]);
-  const getIsResumingAudioContext = import_react68.useCallback(() => {
+  const getIsResumingAudioContext = import_react69.useCallback(() => {
     return isResuming.current?.promise ?? null;
   }, []);
-  const suspend = import_react68.useCallback(() => {
+  const suspend = import_react69.useCallback(() => {
     isResuming.current?.abortController.abort();
     if (!ctxAndGain) {
       return Promise.resolve();
@@ -59422,7 +59598,7 @@ var SharedAudioContextProvider = ({
     }
     return ctxAndGain.suspend();
   }, [ctxAndGain, _experimentalKeepAudioContextAlive]);
-  import_react68.useEffect(() => {
+  import_react69.useEffect(() => {
     if (!_experimentalKeepAudioContextAlive) {
       return;
     }
@@ -59450,7 +59626,7 @@ var SharedAudioContextProvider = ({
       ctxAndGain.suspend().catch(() => {});
     };
   }, [ctxAndGain, _experimentalKeepAudioContextAlive]);
-  const audioContextValue = import_react68.useMemo(() => {
+  const audioContextValue = import_react69.useMemo(() => {
     return {
       sampleRate,
       audioContext: ctxAndGain?.audioContext ?? null,
@@ -59485,20 +59661,20 @@ var SharedAudioContextProvider = ({
   });
 };
 var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
-  const audios = import_react68.useRef([]);
-  const [initialNumberOfAudioTags] = import_react68.useState(numberOfAudioTags);
+  const audios = import_react69.useRef([]);
+  const [initialNumberOfAudioTags] = import_react69.useState(numberOfAudioTags);
   if (numberOfAudioTags !== initialNumberOfAudioTags) {
     throw new Error("The number of shared audio tags has changed dynamically. Once you have set this property, you cannot change it afterwards.");
   }
   const logLevel = useLogLevel();
   const mountTime = useMountTime();
   const env = useRemotionEnvironment();
-  const audioCtx = import_react68.useContext(SharedAudioContext);
+  const audioCtx = import_react69.useContext(SharedAudioContext);
   const audioContext = audioCtx?.audioContext ?? null;
   const resume = audioCtx?.resume;
-  const [refs] = import_react68.useState(() => {
+  const [refs] = import_react69.useState(() => {
     return new Array(numberOfAudioTags).fill(true).map(() => {
-      const ref = import_react68.createRef();
+      const ref = import_react69.createRef();
       return {
         id: Math.random(),
         ref,
@@ -59512,7 +59688,7 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
   for (const { mediaElementSourceNode } of refs) {
     mediaElementSourceNode?.setAudioContext(audioContext);
   }
-  const effectToUse = import_react68.default.useInsertionEffect ?? import_react68.default.useLayoutEffect;
+  const effectToUse = import_react69.default.useInsertionEffect ?? import_react69.default.useLayoutEffect;
   effectToUse(() => {
     return () => {
       requestAnimationFrame(() => {
@@ -59522,8 +59698,8 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
       });
     };
   }, [refs]);
-  const takenAudios = import_react68.useRef(new Array(numberOfAudioTags).fill(false));
-  const rerenderAudios = import_react68.useCallback(() => {
+  const takenAudios = import_react69.useRef(new Array(numberOfAudioTags).fill(false));
+  const rerenderAudios = import_react69.useCallback(() => {
     refs.forEach(({ ref, id }) => {
       const data = audios.current?.find((a) => a.id === id);
       const { current } = ref;
@@ -59546,7 +59722,7 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
       });
     });
   }, [refs]);
-  const registerAudio = import_react68.useCallback((options) => {
+  const registerAudio = import_react69.useCallback((options) => {
     const { aud, audioId, premounting, postmounting } = options;
     const found = audios.current?.find((a) => a.audioId === audioId);
     if (found) {
@@ -59575,7 +59751,7 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
     rerenderAudios();
     return newElem;
   }, [numberOfAudioTags, refs, rerenderAudios]);
-  const unregisterAudio = import_react68.useCallback((id) => {
+  const unregisterAudio = import_react69.useCallback((id) => {
     const cloned = [...takenAudios.current];
     const index = refs.findIndex((r) => r.id === id);
     if (index === -1) {
@@ -59586,7 +59762,7 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
     audios.current = audios.current?.filter((a) => a.id !== id);
     rerenderAudios();
   }, [refs, rerenderAudios]);
-  const updateAudio = import_react68.useCallback(({
+  const updateAudio = import_react69.useCallback(({
     aud,
     audioId,
     id,
@@ -59620,7 +59796,7 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
       rerenderAudios();
     }
   }, [rerenderAudios]);
-  const playAllAudios = import_react68.useCallback(() => {
+  const playAllAudios = import_react69.useCallback(() => {
     refs.forEach((ref) => {
       const audio = audios.current.find((a) => a.el === ref.ref);
       if (audio?.premounting) {
@@ -59638,7 +59814,7 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
     });
     resume?.();
   }, [logLevel, mountTime, refs, env.isPlayer, resume]);
-  const audioTagsValue = import_react68.useMemo(() => {
+  const audioTagsValue = import_react69.useMemo(() => {
     return {
       registerAudio,
       unregisterAudio,
@@ -59653,7 +59829,7 @@ var SharedAudioTagsContextProvider = ({ children, numberOfAudioTags }) => {
     unregisterAudio,
     updateAudio
   ]);
-  const sharedAudioTagElements = import_react68.useMemo(() => {
+  const sharedAudioTagElements = import_react69.useMemo(() => {
     return refs.map(({ id, ref }) => {
       return /* @__PURE__ */ import_jsx_runtime25.jsx("audio", {
         ref,
@@ -59681,13 +59857,13 @@ var useSharedAudio = ({
   premounting,
   postmounting
 }) => {
-  const audioCtx = import_react68.useContext(SharedAudioContext);
-  const tagsCtx = import_react68.useContext(SharedAudioTagsContext);
-  const [elem] = import_react68.useState(() => {
+  const audioCtx = import_react69.useContext(SharedAudioContext);
+  const tagsCtx = import_react69.useContext(SharedAudioTagsContext);
+  const [elem] = import_react69.useState(() => {
     if (tagsCtx && tagsCtx.numberOfAudioTags > 0) {
       return tagsCtx.registerAudio({ aud, audioId, premounting, postmounting });
     }
-    const el = import_react68.default.createRef();
+    const el = import_react69.default.createRef();
     const mediaElementSourceNode = makeSharedElementSourceNode({
       audioContext: audioCtx?.audioContext ?? null,
       ref: el
@@ -59707,7 +59883,7 @@ var useSharedAudio = ({
     };
   });
   elem.mediaElementSourceNode?.setAudioContext(audioCtx?.audioContext ?? null);
-  const effectToUse = import_react68.default.useInsertionEffect ?? import_react68.default.useLayoutEffect;
+  const effectToUse = import_react69.default.useInsertionEffect ?? import_react69.default.useLayoutEffect;
   if (typeof document !== "undefined") {
     effectToUse(() => {
       if (tagsCtx && tagsCtx.numberOfAudioTags > 0) {
@@ -59818,9 +59994,9 @@ var useAppendVideoFragment = ({
   duration: initialDuration,
   fps
 }) => {
-  const actualFromRef = import_react70.useRef(initialActualFrom);
-  const actualDuration = import_react70.useRef(initialDuration);
-  const actualSrc = import_react70.useRef(initialActualSrc);
+  const actualFromRef = import_react71.useRef(initialActualFrom);
+  const actualDuration = import_react71.useRef(initialDuration);
+  const actualSrc = import_react71.useRef(initialActualSrc);
   if (!isSubsetOfDuration({
     prevStartFrom: actualFromRef.current,
     newStartFrom: initialActualFrom,
@@ -59857,16 +60033,16 @@ var useVolume = ({
   source,
   shouldUseWebAudioApi
 }) => {
-  const audioStuffRef = import_react67.useRef(null);
-  const currentVolumeRef = import_react67.useRef(volume);
+  const audioStuffRef = import_react68.useRef(null);
+  const currentVolumeRef = import_react68.useRef(volume);
   currentVolumeRef.current = volume;
-  const sharedAudioContext = import_react67.useContext(SharedAudioContext);
+  const sharedAudioContext = import_react68.useContext(SharedAudioContext);
   if (!sharedAudioContext) {
     throw new Error("useAmplification must be used within a SharedAudioContext");
   }
   const { audioContext, gainNode: masterGainNode } = sharedAudioContext;
   if (typeof window !== "undefined") {
-    import_react67.useLayoutEffect(() => {
+    import_react68.useLayoutEffect(() => {
       if (!audioContext) {
         return;
       }
@@ -59942,22 +60118,22 @@ var subscribeToMediaDuration = (mediaRef, onDurationRef, src) => {
   };
 };
 var useMediaDuration = (mediaRef, onDuration, src, useCurrentSrc) => {
-  const onDurationRef = import_react71.useRef(onDuration);
+  const onDurationRef = import_react72.useRef(onDuration);
   onDurationRef.current = onDuration;
-  import_react71.useEffect(subscribeToMediaDuration.bind(null, mediaRef, onDurationRef, useCurrentSrc ? null : src), [mediaRef, src, useCurrentSrc]);
+  import_react72.useEffect(subscribeToMediaDuration.bind(null, mediaRef, onDurationRef, useCurrentSrc ? null : src), [mediaRef, src, useCurrentSrc]);
 };
 var scheduleMediaSourceCleanup = (cleanup) => {
   requestAnimationFrame(() => cleanup?.());
 };
-var Html5MediaTrimContext = import_react73.createContext(0);
+var Html5MediaTrimContext = import_react74.createContext(0);
 var useMediaStartsAt = () => {
-  const parentSequence = import_react73.useContext(SequenceContext);
+  const parentSequence = import_react74.useContext(SequenceContext);
   return parentSequence?.cumulatedNegativeFrom ?? 0;
 };
 var useFrameForVolumeProp = (behavior) => {
   const loop = Loop.useLoop();
-  const loopTimeline = import_react73.useContext(LoopTimelineContext);
-  const sequenceContext = import_react73.useContext(SequenceContext);
+  const loopTimeline = import_react74.useContext(LoopTimelineContext);
+  const sequenceContext = import_react74.useContext(SequenceContext);
   const frame = useCurrentFrame();
   const startsAt = useMediaStartsAt();
   if (behavior === "repeat" || loop === null) {
@@ -60019,7 +60195,7 @@ var useBasicMediaInTimeline = ({
   if (!src) {
     throw new Error("No src passed");
   }
-  const parentSequence = import_react72.useContext(SequenceContext);
+  const parentSequence = import_react73.useContext(SequenceContext);
   const duration = getTimelineDuration({
     compositionDurationInFrames: sequenceDurationInFrames,
     playbackRate,
@@ -60029,7 +60205,7 @@ var useBasicMediaInTimeline = ({
     loop
   });
   const startMediaFrom = 0 - mediaStartsAt + (trimBefore ?? 0);
-  const memoizedResult = import_react72.useMemo(() => {
+  const memoizedResult = import_react73.useMemo(() => {
     return {
       duration,
       finalDisplayName: displayName ?? getAssetDisplayName(src),
@@ -60055,17 +60231,17 @@ var useMediaInTimelineRegistration = ({
   documentationLink,
   muted
 }) => {
-  const parentSequence = import_react72.useContext(SequenceContext);
-  const timelineTrack = import_react72.useContext(TimelineTrackContext);
-  const mediaTrimBefore = import_react72.useContext(Html5MediaTrimContext);
-  const sequenceRegistrationEnabled = import_react72.useContext(SequenceRegistrationContext);
+  const parentSequence = import_react73.useContext(SequenceContext);
+  const timelineTrack = import_react73.useContext(TimelineTrackContext);
+  const mediaTrimBefore = import_react73.useContext(Html5MediaTrimContext);
+  const sequenceRegistrationEnabled = import_react73.useContext(SequenceRegistrationContext);
   const { durationInFrames } = useVideoConfig();
   const mediaStartsAt = useMediaStartsAt();
-  const canvasOutlinesEnabled = import_react72.useContext(SequenceOutlineContext);
+  const canvasOutlinesEnabled = import_react73.useContext(SequenceOutlineContext);
   const { isStudio } = useRemotionEnvironment();
   const stack = getStack();
-  const getStackForRegistration = import_react72.useCallback(() => stack, [stack]);
-  const automaticOutlineRef = import_react72.useMemo(() => mediaType === "video" && (isStudio || canvasOutlinesEnabled) ? SequenceOutlineInternals.createRef() : null, [canvasOutlinesEnabled, isStudio, mediaType]);
+  const getStackForRegistration = import_react73.useCallback(() => stack, [stack]);
+  const automaticOutlineRef = import_react73.useMemo(() => mediaType === "video" && (isStudio || canvasOutlinesEnabled) ? SequenceOutlineInternals.createRef() : null, [canvasOutlinesEnabled, isStudio, mediaType]);
   const { duration, finalDisplayName } = useBasicMediaInTimeline({
     src,
     displayName,
@@ -60077,7 +60253,7 @@ var useMediaInTimelineRegistration = ({
     loop: false,
     muted
   });
-  const getSequenceForRegistration = import_react72.useCallback(() => {
+  const getSequenceForRegistration = import_react73.useCallback(() => {
     if (!src) {
       throw new Error("No src passed");
     }
@@ -60143,10 +60319,10 @@ var useMediaInTimelineRegistration = ({
   return { automaticOutlineRef, registration };
 };
 var useBufferManager = (logLevel, mountTime, setBuffering, isBuffering) => {
-  const [blockCount, setBlockCount] = import_react77.useState(0);
+  const [blockCount, setBlockCount] = import_react78.useState(0);
   const env = useRemotionEnvironment();
   const rendering = env.isRendering;
-  const addBlock = import_react77.useCallback(() => {
+  const addBlock = import_react78.useCallback(() => {
     if (rendering) {
       return {
         unblock: () => {
@@ -60166,7 +60342,7 @@ var useBufferManager = (logLevel, mountTime, setBuffering, isBuffering) => {
       }
     };
   }, [rendering]);
-  import_react77.useEffect(() => {
+  import_react78.useEffect(() => {
     if (rendering) {
       return;
     }
@@ -60181,7 +60357,7 @@ var useBufferManager = (logLevel, mountTime, setBuffering, isBuffering) => {
     }
   }, [blockCount]);
   if (typeof window !== "undefined") {
-    import_react77.useLayoutEffect(() => {
+    import_react78.useLayoutEffect(() => {
       if (rendering) {
         return;
       }
@@ -60196,12 +60372,12 @@ var useBufferManager = (logLevel, mountTime, setBuffering, isBuffering) => {
       }
     }, [blockCount]);
   }
-  return import_react77.useMemo(() => ({ addBlock }), [addBlock]);
+  return import_react78.useMemo(() => ({ addBlock }), [addBlock]);
 };
-var BufferingContextReact = import_react77.default.createContext(null);
+var BufferingContextReact = import_react78.default.createContext(null);
 var BufferingProvider = ({ children }) => {
-  const { logLevel, mountTime } = import_react77.useContext(LogLevelContext);
-  const { isBuffering, setBuffering } = import_react77.useContext(SetTimelineContext);
+  const { logLevel, mountTime } = import_react78.useContext(LogLevelContext);
+  const { isBuffering, setBuffering } = import_react78.useContext(SetTimelineContext);
   const bufferManager = useBufferManager(logLevel ?? "info", mountTime, setBuffering, isBuffering);
   return /* @__PURE__ */ import_jsx_runtime26.jsx(BufferingContextReact.Provider, {
     value: bufferManager,
@@ -60209,10 +60385,10 @@ var BufferingProvider = ({ children }) => {
   });
 };
 var useBufferState = () => {
-  const buffer = import_react76.useContext(BufferingContextReact);
+  const buffer = import_react77.useContext(BufferingContextReact);
   const logLevel = useLogLevel();
   const addBlock = buffer ? buffer.addBlock : null;
-  return import_react76.useMemo(() => ({
+  return import_react77.useMemo(() => ({
     delayPlayback: () => {
       if (!addBlock) {
         throw new Error("Tried to enable the buffering state, but a Remotion context was not found. This API can only be called in a component that was passed to the Remotion Player or a <Composition>. Or you might have experienced a version mismatch - run `npx remotion versions` and ensure all packages have the same version. This error is thrown by the buffer state https://remotion.dev/docs/player/buffer-state");
@@ -60245,9 +60421,9 @@ var useBufferUntilFirstFrame = ({
   logLevel,
   mountTime
 }) => {
-  const bufferingRef = import_react75.useRef(false);
+  const bufferingRef = import_react76.useRef(false);
   const { delayPlayback } = useBufferState();
-  const bufferUntilFirstFrame = import_react75.useCallback((requestedTime) => {
+  const bufferUntilFirstFrame = import_react76.useCallback((requestedTime) => {
     if (mediaType !== "video") {
       return;
     }
@@ -60318,7 +60494,7 @@ var useBufferUntilFirstFrame = ({
     onVariableFpsVideoDetected,
     pauseWhenBuffering
   ]);
-  return import_react75.useMemo(() => {
+  return import_react76.useMemo(() => {
     return {
       isBuffering: () => bufferingRef.current,
       bufferUntilFirstFrame
@@ -60392,7 +60568,7 @@ var getMediaSyncAction = (input) => {
   return { type: "none" };
 };
 var useCurrentTimeOfMediaTagWithUpdateTimeStamp = (mediaRef) => {
-  const lastUpdate = import_react78.default.useRef({
+  const lastUpdate = import_react79.default.useRef({
     time: mediaRef.current?.currentTime ?? 0,
     lastUpdate: performance.now()
   });
@@ -60432,8 +60608,8 @@ var useMediaBuffering = ({
   src
 }) => {
   const buffer = useBufferState();
-  const [isBuffering, setIsBuffering] = import_react79.useState(false);
-  import_react79.useEffect(() => {
+  const [isBuffering, setIsBuffering] = import_react80.useState(false);
+  import_react80.useEffect(() => {
     let cleanupFns = [];
     const { current } = element;
     if (!current) {
@@ -60565,8 +60741,8 @@ var useRequestVideoCallbackTime = ({
   lastSeek,
   onVariableFpsVideoDetected
 }) => {
-  const currentTime = import_react80.useRef(null);
-  import_react80.useEffect(() => {
+  const currentTime = import_react81.useRef(null);
+  import_react81.useEffect(() => {
     const { current } = mediaRef;
     if (current) {
       currentTime.current = {
@@ -60711,13 +60887,13 @@ var useMediaPlayback = ({
   const playing = usePlaying();
   const playerBuffering = useBuffering();
   const { fps } = useVideoConfig();
-  const mediaTrimBefore = import_react74.useContext(Html5MediaTrimContext);
-  const lastSeekDueToShift = import_react74.useRef(null);
-  const lastSeek = import_react74.useRef(null);
+  const mediaTrimBefore = import_react75.useContext(Html5MediaTrimContext);
+  const lastSeekDueToShift = import_react75.useRef(null);
+  const lastSeek = import_react75.useRef(null);
   const logLevel = useLogLevel();
   const mountTime = useMountTime();
-  const isVariableFpsVideoMap = import_react74.useRef({});
-  const onVariableFpsVideoDetected = import_react74.useCallback(() => {
+  const isVariableFpsVideoMap = import_react75.useRef({});
+  const onVariableFpsVideoDetected = import_react75.useCallback(() => {
     if (!src) {
       return;
     }
@@ -60757,7 +60933,7 @@ var useMediaPlayback = ({
     logLevel,
     mountTime
   });
-  const sequenceContext = import_react74.useContext(SequenceContext);
+  const sequenceContext = import_react75.useContext(SequenceContext);
   const playbackRate = localPlaybackRate * globalPlaybackRate * (sequenceContext?.playbackRate ?? 1);
   const acceptableTimeShiftButLessThanDuration = (() => {
     if (mediaRef.current?.duration) {
@@ -60766,7 +60942,7 @@ var useMediaPlayback = ({
     return acceptableTimeshift ?? DEFAULT_ACCEPTABLE_TIMESHIFT_WITH_AMPLIFICATION;
   })();
   const env = useRemotionEnvironment();
-  import_react74.useLayoutEffect(() => {
+  import_react75.useLayoutEffect(() => {
     const playbackRateToSet = Math.max(0, playbackRate);
     if (mediaRef.current && mediaRef.current.defaultPlaybackRate !== playbackRateToSet) {
       mediaRef.current.defaultPlaybackRate = playbackRateToSet;
@@ -60778,7 +60954,7 @@ var useMediaPlayback = ({
       mediaRef.current.preservesPitch = preservePitch;
     }
   }, [mediaRef, playbackRate, preservePitch]);
-  import_react74.useEffect(() => {
+  import_react75.useEffect(() => {
     const tagName = mediaType === "audio" ? "<Html5Audio>" : "<Html5Video>";
     if (!mediaRef.current) {
       throw new Error(`No ${mediaType} ref found`);
@@ -60928,13 +61104,13 @@ var useMediaTag = ({
   isPostmounting
 }) => {
   const { audioAndVideoTags, isPlaying } = useTimelineContext();
-  const { subscribePlaying } = import_react81.useContext(SetTimelineContext);
-  const isPlayingRef = import_react81.useRef(isPlaying);
+  const { subscribePlaying } = import_react82.useContext(SetTimelineContext);
+  const isPlayingRef = import_react82.useRef(isPlaying);
   isPlayingRef.current = isPlaying;
   const logLevel = useLogLevel();
   const mountTime = useMountTime();
   const env = useRemotionEnvironment();
-  import_react81.useEffect(() => {
+  import_react82.useEffect(() => {
     const tag = {
       id,
       play: (reason) => {
@@ -60990,11 +61166,11 @@ var useMediaTag = ({
     subscribePlaying
   ]);
 };
-var MediaVolumeContext = import_react82.createContext({
+var MediaVolumeContext = import_react83.createContext({
   playerMuted: false,
   mediaVolume: 1
 });
-var SetMediaVolumeContext = import_react82.createContext({
+var SetMediaVolumeContext = import_react83.createContext({
   setPlayerMuted: () => {
     throw new Error("default");
   },
@@ -61003,16 +61179,16 @@ var SetMediaVolumeContext = import_react82.createContext({
   }
 });
 var useMediaVolumeState = () => {
-  const { mediaVolume } = import_react82.useContext(MediaVolumeContext);
-  const { setMediaVolume } = import_react82.useContext(SetMediaVolumeContext);
-  return import_react82.useMemo(() => {
+  const { mediaVolume } = import_react83.useContext(MediaVolumeContext);
+  const { setMediaVolume } = import_react83.useContext(SetMediaVolumeContext);
+  return import_react83.useMemo(() => {
     return [mediaVolume, setMediaVolume];
   }, [mediaVolume, setMediaVolume]);
 };
 var usePlayerMutedState = () => {
-  const { playerMuted } = import_react82.useContext(MediaVolumeContext);
-  const { setPlayerMuted } = import_react82.useContext(SetMediaVolumeContext);
-  return import_react82.useMemo(() => {
+  const { playerMuted } = import_react83.useContext(MediaVolumeContext);
+  const { setPlayerMuted } = import_react83.useContext(SetMediaVolumeContext);
+  return import_react83.useMemo(() => {
     return [playerMuted, setPlayerMuted];
   }, [playerMuted, setPlayerMuted]);
 };
@@ -61075,7 +61251,7 @@ var useMediaAudioState = ({
   });
 };
 var AudioForDevelopmentForwardRefFunction = (props, ref) => {
-  const [initialShouldPreMountAudioElements] = import_react66.useState(props.shouldPreMountAudioTags);
+  const [initialShouldPreMountAudioElements] = import_react67.useState(props.shouldPreMountAudioTags);
   if (props.shouldPreMountAudioTags !== initialShouldPreMountAudioElements) {
     throw new Error("Cannot change the behavior for pre-mounting audio tags dynamically.");
   }
@@ -61118,14 +61294,14 @@ var AudioForDevelopmentForwardRefFunction = (props, ref) => {
     throw new TypeError("No 'src' was passed to <Html5Audio>.");
   }
   const preloadedSrc = usePreload(src);
-  const sequenceContext = import_react66.useContext(SequenceContext);
+  const sequenceContext = import_react67.useContext(SequenceContext);
   warnAboutTooHighVolume(userPreferredVolume);
   const crossOriginValue = getCrossOriginValue({
     crossOrigin,
     requestsVideoFrame: false,
     isClientSideRendering: false
   });
-  const propsToPass = import_react66.useMemo(() => {
+  const propsToPass = import_react67.useMemo(() => {
     return {
       muted: isMutedForPlayback,
       src: preloadedSrc,
@@ -61140,7 +61316,7 @@ var AudioForDevelopmentForwardRefFunction = (props, ref) => {
     preloadedSrc,
     crossOriginValue
   ]);
-  const id = import_react66.useMemo(() => `audio-${random(src ?? "")}-${sequenceContext?.relativeFrom}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.durationInFrames}-muted:${props.muted}-loop:${props.loop}`, [
+  const id = import_react67.useMemo(() => `audio-${random(src ?? "")}-${sequenceContext?.relativeFrom}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.durationInFrames}-muted:${props.muted}-loop:${props.loop}`, [
     src,
     sequenceContext?.relativeFrom,
     sequenceContext?.cumulatedFrom,
@@ -61186,11 +61362,11 @@ var AudioForDevelopmentForwardRefFunction = (props, ref) => {
     volume: userPreferredVolume,
     shouldUseWebAudioApi: useWebAudioApi ?? false
   });
-  const effectToUse = import_react66.default.useInsertionEffect ?? import_react66.default.useLayoutEffect;
+  const effectToUse = import_react67.default.useInsertionEffect ?? import_react67.default.useLayoutEffect;
   effectToUse(() => {
     return scheduleMediaSourceCleanup.bind(null, cleanupOnMediaTagUnmount);
   }, [cleanupOnMediaTagUnmount]);
-  import_react66.useImperativeHandle(ref, () => {
+  import_react67.useImperativeHandle(ref, () => {
     return audioRef.current;
   }, [audioRef]);
   useMediaDuration(audioRef, onDuration, src, true);
@@ -61205,7 +61381,7 @@ var AudioForDevelopmentForwardRefFunction = (props, ref) => {
   });
   return audio;
 };
-var AudioForPreviewContent = import_react66.forwardRef(AudioForDevelopmentForwardRefFunction);
+var AudioForPreviewContent = import_react67.forwardRef(AudioForDevelopmentForwardRefFunction);
 var AudioForPreviewRefForwardingFunction = (props, ref) => {
   const {
     volume,
@@ -61217,8 +61393,8 @@ var AudioForPreviewRefForwardingFunction = (props, ref) => {
     showInTimeline,
     loopVolumeCurveBehavior
   } = props;
-  const [timelineId] = import_react66.useState(() => String(Math.random()));
-  const sequenceContext = import_react66.useContext(SequenceContext);
+  const [timelineId] = import_react67.useState(() => String(Math.random()));
+  const sequenceContext = import_react67.useContext(SequenceContext);
   const { isStudio } = useRemotionEnvironment();
   const [mediaVolume] = useMediaVolumeState();
   const volumePropFrame = useFrameForVolumeProp(loopVolumeCurveBehavior ?? "repeat");
@@ -61232,7 +61408,7 @@ var AudioForPreviewRefForwardingFunction = (props, ref) => {
     volume: userPreferredVolume,
     audioEnabled: true
   });
-  const getStack = import_react65.useCallback(() => {
+  const getStack = import_react66.useCallback(() => {
     return _remotionInternalStack ?? null;
   }, [_remotionInternalStack]);
   const { registration } = useMediaInTimelineRegistration({
@@ -61249,7 +61425,7 @@ var AudioForPreviewRefForwardingFunction = (props, ref) => {
     documentationLink: "https://www.remotion.dev/docs/html5-audio",
     muted: isMutedForTimeline
   });
-  const metadata = import_react66.useMemo(() => isStudio || registration !== null ? {
+  const metadata = import_react67.useMemo(() => isStudio || registration !== null ? {
     type: "sequence",
     id: timelineId,
     value: registration,
@@ -61269,10 +61445,10 @@ var AudioForPreviewRefForwardingFunction = (props, ref) => {
     })
   });
 };
-var AudioForPreview = import_react66.forwardRef(AudioForPreviewRefForwardingFunction);
-var MediaEnabledContext = import_react84.createContext(null);
+var AudioForPreview = import_react67.forwardRef(AudioForPreviewRefForwardingFunction);
+var MediaEnabledContext = import_react85.createContext(null);
 var useVideoEnabled = () => {
-  const context = import_react84.useContext(MediaEnabledContext);
+  const context = import_react85.useContext(MediaEnabledContext);
   if (!context) {
     return window.remotion_videoEnabled;
   }
@@ -61282,7 +61458,7 @@ var useVideoEnabled = () => {
   return context.videoEnabled;
 };
 var useAudioEnabled = () => {
-  const context = import_react84.useContext(MediaEnabledContext);
+  const context = import_react85.useContext(MediaEnabledContext);
   if (!context) {
     return window.remotion_audioEnabled;
   }
@@ -61296,14 +61472,14 @@ var MediaEnabledProvider = ({
   videoEnabled,
   audioEnabled
 }) => {
-  const value = import_react84.useMemo(() => ({ videoEnabled, audioEnabled }), [videoEnabled, audioEnabled]);
+  const value = import_react85.useMemo(() => ({ videoEnabled, audioEnabled }), [videoEnabled, audioEnabled]);
   return /* @__PURE__ */ import_jsx_runtime28.jsx(MediaEnabledContext.Provider, {
     value,
     children
   });
 };
 var AudioForRenderingRefForwardingFunction = (props, ref) => {
-  const audioRef = import_react83.useRef(null);
+  const audioRef = import_react84.useRef(null);
   const {
     registerRenderAsset,
     unregisterRenderAsset,
@@ -61328,11 +61504,11 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
   const absoluteFrame = useTimelinePosition();
   const volumePropFrame = useFrameForVolumeProp(loopVolumeCurveBehavior ?? "repeat");
   const frame = useCurrentFrame();
-  const sequenceContext = import_react83.useContext(SequenceContext);
+  const sequenceContext = import_react84.useContext(SequenceContext);
   const sequencePlaybackRate = sequenceContext?.playbackRate ?? 1;
-  const audioStartFrame = import_react83.useContext(Html5MediaTrimContext);
+  const audioStartFrame = import_react84.useContext(Html5MediaTrimContext);
   const { delayRender, continueRender } = useDelayRender();
-  const id = import_react83.useMemo(() => `audio-${random(props.src ?? "")}-${sequenceContext?.relativeFrom}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.durationInFrames}`, [
+  const id = import_react84.useMemo(() => `audio-${random(props.src ?? "")}-${sequenceContext?.relativeFrom}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.durationInFrames}`, [
     props.src,
     sequenceContext?.relativeFrom,
     sequenceContext?.cumulatedFrom,
@@ -61350,10 +61526,10 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
     volume,
     audioEnabled
   });
-  import_react83.useImperativeHandle(ref, () => {
+  import_react84.useImperativeHandle(ref, () => {
     return audioRef.current;
   }, []);
-  import_react83.useEffect(() => {
+  import_react84.useEffect(() => {
     if (!props.src) {
       throw new Error("No src passed");
     }
@@ -61394,7 +61570,7 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
   ]);
   const { src } = props;
   const needsToRenderAudioTag = ref || _remotionInternalNeedsDurationCalculation;
-  import_react83.useLayoutEffect(() => {
+  import_react84.useLayoutEffect(() => {
     if (window.process?.env?.NODE_ENV === "test") {
       return;
     }
@@ -61440,9 +61616,9 @@ var AudioForRenderingRefForwardingFunction = (props, ref) => {
     onError: onNativeError
   });
 };
-var MemoAudioForRendering = import_react83.default.memo(import_react83.forwardRef(AudioForRenderingRefForwardingFunction));
-var AudioForRendering = import_react83.forwardRef((props, ref) => {
-  const { registerRenderAsset, unregisterRenderAsset } = import_react83.useContext(RenderAssetManager);
+var MemoAudioForRendering = import_react84.default.memo(import_react84.forwardRef(AudioForRenderingRefForwardingFunction));
+var AudioForRendering = import_react84.forwardRef((props, ref) => {
+  const { registerRenderAsset, unregisterRenderAsset } = import_react84.useContext(RenderAssetManager);
   return /* @__PURE__ */ import_jsx_runtime29.jsx(MemoAudioForRendering, {
     ...props,
     ref,
@@ -61451,7 +61627,7 @@ var AudioForRendering = import_react83.forwardRef((props, ref) => {
   });
 });
 var AudioRefForwardingFunction = (props, ref) => {
-  const audioTagsContext = import_react60.useContext(SharedAudioTagsContext);
+  const audioTagsContext = import_react61.useContext(SharedAudioTagsContext);
   const propsWithFreeze = props;
   const {
     startFrom,
@@ -61477,12 +61653,12 @@ var AudioRefForwardingFunction = (props, ref) => {
   if (typeof freeze !== "undefined") {
     throw new TypeError('The "freeze" prop is not supported on <Html5Audio />. Use <Sequence freeze={...}> to freeze media playback.');
   }
-  const { durations, setDurations } = import_react60.useContext(DurationsContext);
+  const { durations, setDurations } = import_react61.useContext(DurationsContext);
   if (typeof props.src !== "string") {
     throw new TypeError(`The \`<Html5Audio>\` tag requires a string for \`src\`, but got ${JSON.stringify(props.src)} instead.`);
   }
   const preloadedSrc = usePreload(props.src);
-  const onError = import_react60.useCallback((e) => {
+  const onError = import_react61.useCallback((e) => {
     console.log(e.currentTarget.error);
     const errMessage = `Could not play audio with src ${preloadedSrc}: ${e.currentTarget.error}. See https://remotion.dev/docs/media-playback-error for help.`;
     if (loop) {
@@ -61496,7 +61672,7 @@ var AudioRefForwardingFunction = (props, ref) => {
       console.warn(errMessage);
     }
   }, [loop, onRemotionError, preloadedSrc]);
-  const onDuration = import_react60.useMemo(() => onMediaDuration.bind(null, setDurations), [setDurations]);
+  const onDuration = import_react61.useMemo(() => onMediaDuration.bind(null, setDurations), [setDurations]);
   const durationFetched = durations[getAbsoluteSrc2(preloadedSrc)] ?? durations[getAbsoluteSrc2(props.src)];
   validateMediaTrimProps({ startFrom, endAt, trimBefore, trimAfter });
   if (durationInFrames !== undefined) {
@@ -61585,7 +61761,7 @@ var AudioRefForwardingFunction = (props, ref) => {
     showInTimeline: showInTimeline ?? true
   });
 };
-var Html5Audio = import_react60.forwardRef(AudioRefForwardingFunction);
+var Html5Audio = import_react61.forwardRef(AudioRefForwardingFunction);
 addSequenceStackTraces(Html5Audio);
 var resolveSolidPixelDensity = (pixelDensity) => {
   if (pixelDensity === undefined) {
@@ -61652,13 +61828,13 @@ var SolidInner = ({
   const resolvedPixelDensity = resolveSolidPixelDensity(pixelDensity);
   const canvasWidth = Math.ceil(width * resolvedPixelDensity);
   const canvasHeight = Math.ceil(height * resolvedPixelDensity);
-  const [outputCanvas, setOutputCanvas] = import_react85.useState(null);
+  const [outputCanvas, setOutputCanvas] = import_react86.useState(null);
   const memoizedEffects = useMemoizedEffects({
     effects,
     overrideId: overrideId ?? null,
     videoConfigValues
   });
-  const sourceCanvas = import_react85.useMemo(() => {
+  const sourceCanvas = import_react86.useMemo(() => {
     if (typeof document === "undefined") {
       return null;
     }
@@ -61668,7 +61844,7 @@ var SolidInner = ({
     return canvas;
   }, []);
   const chainState = useEffectChainState(effectsOutputSize);
-  const canvasRef = import_react85.useCallback((canvas) => {
+  const canvasRef = import_react86.useCallback((canvas) => {
     setOutputCanvas(canvas);
     if (typeof reference === "function") {
       reference(canvas);
@@ -61676,7 +61852,7 @@ var SolidInner = ({
       reference.current = canvas;
     }
   }, [reference]);
-  import_react85.useEffect(() => {
+  import_react86.useEffect(() => {
     if (!outputCanvas || !sourceCanvas) {
       return;
     }
@@ -61726,7 +61902,7 @@ var SolidInner = ({
     cancelRender,
     memoizedEffects
   ]);
-  const canvasStyle = import_react85.useMemo(() => {
+  const canvasStyle = import_react86.useMemo(() => {
     return {
       width,
       height,
@@ -61741,7 +61917,7 @@ var SolidInner = ({
     style: canvasStyle
   });
 };
-var SolidOuter = import_react85.forwardRef(({
+var SolidOuter = import_react86.forwardRef(({
   effects = [],
   effectsOutputSize = null,
   controls,
@@ -61771,8 +61947,8 @@ var SolidOuter = import_react85.forwardRef(({
   ...props
 }, ref) => {
   const memoizedEffectDefinitions = useMemoizedEffectDefinitions(effects);
-  const actualRef = import_react85.useRef(null);
-  import_react85.useImperativeHandle(ref, () => {
+  const actualRef = import_react86.useRef(null);
+  import_react86.useImperativeHandle(ref, () => {
     return actualRef.current;
   }, []);
   const {
@@ -62012,9 +62188,9 @@ var defaultOnPaint = ({
   ctx.reset();
   ctx.drawElementImage(elementImage, 0, 0);
 };
-var HtmlInCanvasAncestorContext = import_react86.createContext(null);
+var HtmlInCanvasAncestorContext = import_react87.createContext(null);
 var useHtmlInCanvasUnsupportedMessage = () => {
-  const ancestorPaintState = import_react86.useContext(HtmlInCanvasAncestorContext);
+  const ancestorPaintState = import_react87.useContext(HtmlInCanvasAncestorContext);
   if (!isHtmlInCanvasSupported()) {
     return getHtmlInCanvasUnsupportedMessage();
   }
@@ -62023,7 +62199,7 @@ var useHtmlInCanvasUnsupportedMessage = () => {
   }
   return null;
 };
-var HtmlInCanvasContent = import_react86.forwardRef(({
+var HtmlInCanvasContent = import_react87.forwardRef(({
   width,
   height,
   effects,
@@ -62037,7 +62213,7 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
   style,
   renderFrame
 }, ref) => {
-  const ancestorPaintState = import_react86.useContext(HtmlInCanvasAncestorContext);
+  const ancestorPaintState = import_react87.useContext(HtmlInCanvasAncestorContext);
   assertHtmlInCanvasDimensions(width, height);
   if (ancestorPaintState && !isHtmlInCanvasNestingSupported()) {
     throw new Error(`Nested <HtmlInCanvas> components require Chrome ${MINIMUM_CHROME_VERSION_FOR_NESTED_HTML_IN_CANVAS} or newer with HTML-in-canvas enabled.`);
@@ -62053,12 +62229,12 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
   if (!isHtmlInCanvasSupported()) {
     cancelRender(new Error(getHtmlInCanvasUnsupportedMessage()));
   }
-  const canvas2dRef = import_react86.useRef(null);
-  const outputCanvasRef = import_react86.useRef(null);
-  const paintTargetRef = import_react86.useRef(null);
-  const divRef = import_react86.useRef(null);
+  const canvas2dRef = import_react87.useRef(null);
+  const outputCanvasRef = import_react87.useRef(null);
+  const paintTargetRef = import_react87.useRef(null);
+  const divRef = import_react87.useRef(null);
   const canvasSizeKey = `${width}x${height}@${resolvedPixelDensity}-${paintTargetMode}`;
-  const paintState = import_react86.useMemo(() => {
+  const paintState = import_react87.useMemo(() => {
     const state = {
       pendingChildren: 0,
       generation: 0,
@@ -62089,7 +62265,7 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
     };
     return state;
   }, [continueRender, delayRender, ancestorPaintState]);
-  const setVisibleCanvasRef = import_react86.useCallback((node) => {
+  const setVisibleCanvasRef = import_react87.useCallback((node) => {
     if (paintTargetMode === "copied") {
       outputCanvasRef.current = node;
     } else {
@@ -62107,18 +62283,18 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
     overrideId: controls?.overrideId ?? null,
     videoConfigValues: controls?.videoConfigValues ?? null
   });
-  const effectsRef = import_react86.useRef(memoizedEffects);
+  const effectsRef = import_react87.useRef(memoizedEffects);
   effectsRef.current = memoizedEffects;
-  const onPaintRef = import_react86.useRef(onPaint);
+  const onPaintRef = import_react87.useRef(onPaint);
   onPaintRef.current = onPaint;
-  const onInitRef = import_react86.useRef(onInit);
+  const onInitRef = import_react87.useRef(onInit);
   onInitRef.current = onInit;
-  const initializedRef = import_react86.useRef(false);
-  const onInitCleanupRef = import_react86.useRef(null);
-  const unmountedRef = import_react86.useRef(false);
-  const effectScratchCanvasesRef = import_react86.useRef(null);
-  const paintingTargets = import_react86.useRef(new WeakMap);
-  const onPaintCb = import_react86.useCallback(async () => {
+  const initializedRef = import_react87.useRef(false);
+  const onInitCleanupRef = import_react87.useRef(null);
+  const unmountedRef = import_react87.useRef(false);
+  const effectScratchCanvasesRef = import_react87.useRef(null);
+  const paintingTargets = import_react87.useRef(new WeakMap);
+  const onPaintCb = import_react87.useCallback(async () => {
     if (isRendering && paintState.pendingChildren > 0) {
       return;
     }
@@ -62323,13 +62499,13 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
     paintState,
     ancestorPaintState
   ]);
-  import_react86.useLayoutEffect(() => {
+  import_react87.useLayoutEffect(() => {
     return () => {
       paintState.release?.();
       paintState.release = null;
     };
   }, [paintState]);
-  import_react86.useLayoutEffect(() => {
+  import_react87.useLayoutEffect(() => {
     const placeholder = canvas2dRef.current;
     if (!placeholder) {
       throw new Error("Canvas not found");
@@ -62356,8 +62532,8 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
       onInitCleanupRef.current = null;
     };
   }, [onPaintCb, cancelRender, canvasWidth, canvasHeight, paintTargetMode]);
-  const onPaintChangedRef = import_react86.useRef(false);
-  import_react86.useLayoutEffect(() => {
+  const onPaintChangedRef = import_react87.useRef(false);
+  import_react87.useLayoutEffect(() => {
     if (!onPaintChangedRef.current) {
       onPaintChangedRef.current = true;
       return;
@@ -62368,7 +62544,7 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
     }
     canvas.requestPaint?.();
   }, [onPaint, memoizedEffects]);
-  import_react86.useLayoutEffect(() => {
+  import_react87.useLayoutEffect(() => {
     const canvas = canvas2dRef.current;
     if (!canvas) {
       return;
@@ -62395,13 +62571,13 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
     isRendering,
     ancestorPaintState
   ]);
-  const innerStyle = import_react86.useMemo(() => {
+  const innerStyle = import_react87.useMemo(() => {
     return {
       width,
       height
     };
   }, [width, height]);
-  const canvasStyle = import_react86.useMemo(() => {
+  const canvasStyle = import_react87.useMemo(() => {
     return {
       width,
       height,
@@ -62443,7 +62619,7 @@ var HtmlInCanvasContent = import_react86.forwardRef(({
   });
 });
 HtmlInCanvasContent.displayName = "HtmlInCanvasContent";
-var HtmlInCanvasContentForRendering = import_react86.forwardRef((props, ref) => {
+var HtmlInCanvasContentForRendering = import_react87.forwardRef((props, ref) => {
   const frame = useCurrentFrame();
   return /* @__PURE__ */ import_jsx_runtime33.jsx(HtmlInCanvasContent, {
     ...props,
@@ -62452,7 +62628,7 @@ var HtmlInCanvasContentForRendering = import_react86.forwardRef((props, ref) => 
   });
 });
 HtmlInCanvasContentForRendering.displayName = "HtmlInCanvasContentForRendering";
-var HtmlInCanvasInner = import_react86.forwardRef(({
+var HtmlInCanvasInner = import_react87.forwardRef(({
   width,
   height,
   effects = [],
@@ -62483,8 +62659,8 @@ var HtmlInCanvasInner = import_react86.forwardRef(({
   resolveHtmlInCanvasPixelDensity(pixelDensity);
   const Content = isRendering ? HtmlInCanvasContentForRendering : HtmlInCanvasContent;
   const memoizedEffectDefinitions = useMemoizedEffectDefinitions(effects);
-  const actualRef = import_react86.useRef(null);
-  const setCanvasRef = import_react86.useCallback((node) => {
+  const actualRef = import_react87.useRef(null);
+  const setCanvasRef = import_react87.useCallback((node) => {
     actualRef.current = node;
     if (typeof ref === "function") {
       ref(node);
@@ -62724,7 +62900,7 @@ var waitForNextFrame = ({
   const frame = requestAnimationFrame(onFrame);
   return () => cancelAnimationFrame(frame);
 };
-var CanvasImageContent = import_react87.forwardRef(({
+var CanvasImageContent = import_react88.forwardRef(({
   src,
   crossOrigin,
   width,
@@ -62745,8 +62921,8 @@ var CanvasImageContent = import_react87.forwardRef(({
 }, ref) => {
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const { delayPlayback } = useBufferState();
-  const [outputCanvas, setOutputCanvas] = import_react87.useState(null);
-  const [loadedImage, setLoadedImage] = import_react87.useState(null);
+  const [outputCanvas, setOutputCanvas] = import_react88.useState(null);
+  const [loadedImage, setLoadedImage] = import_react88.useState(null);
   const actualSrc = usePreload(src);
   const chainState = useEffectChainState(effectsOutputSize);
   const memoizedEffects = useMemoizedEffects({
@@ -62754,20 +62930,20 @@ var CanvasImageContent = import_react87.forwardRef(({
     overrideId: controls?.overrideId ?? null,
     videoConfigValues: controls?.videoConfigValues ?? null
   });
-  const sequenceContext = import_react87.useContext(SequenceContext);
-  const pendingLoadDelayRef = import_react87.useRef(null);
-  const [isLoadPending, setIsLoadPending] = import_react87.useState(false);
+  const sequenceContext = import_react88.useContext(SequenceContext);
+  const pendingLoadDelayRef = import_react88.useRef(null);
+  const [isLoadPending, setIsLoadPending] = import_react88.useState(false);
   const isPremounting = Boolean(sequenceContext?.premounting);
   const isPostmounting = Boolean(sequenceContext?.postmounting);
-  const continuePendingLoadDelay = import_react87.useMemo(() => continueImageLoadDelay.bind(null, pendingLoadDelayRef, setIsLoadPending, continueRender), [continueRender]);
-  const sourceCanvas = import_react87.useMemo(() => {
+  const continuePendingLoadDelay = import_react88.useMemo(() => continueImageLoadDelay.bind(null, pendingLoadDelayRef, setIsLoadPending, continueRender), [continueRender]);
+  const sourceCanvas = import_react88.useMemo(() => {
     if (typeof document === "undefined") {
       return null;
     }
     return document.createElement("canvas");
   }, []);
-  const canvasRef = import_react87.useMemo(() => setCanvasRef.bind(null, setOutputCanvas, ref), [ref]);
-  import_react87.useLayoutEffect(() => {
+  const canvasRef = import_react88.useMemo(() => setCanvasRef.bind(null, setOutputCanvas, ref), [ref]);
+  import_react88.useLayoutEffect(() => {
     if (!pauseWhenLoading || !isLoadPending || isPremounting || isPostmounting) {
       return;
     }
@@ -62779,7 +62955,7 @@ var CanvasImageContent = import_react87.forwardRef(({
     isPremounting,
     pauseWhenLoading
   ]);
-  import_react87.useLayoutEffect(() => {
+  import_react88.useLayoutEffect(() => {
     const handle = delayRender(`Rendering <CanvasImage> with src="${truncateSrcForLabel(actualSrc)}"`, {
       retries: delayRenderRetries ?? undefined,
       timeoutInMilliseconds: delayRenderTimeoutInMilliseconds ?? undefined
@@ -62842,7 +63018,7 @@ var CanvasImageContent = import_react87.forwardRef(({
     maxRetries,
     onError
   ]);
-  import_react87.useLayoutEffect(() => {
+  import_react88.useLayoutEffect(() => {
     if (!loadedImage || !outputCanvas || !sourceCanvas) {
       return;
     }
@@ -62940,7 +63116,7 @@ var CanvasImageContent = import_react87.forwardRef(({
   });
 });
 CanvasImageContent.displayName = "CanvasImageContent";
-var CanvasImageInner = import_react87.forwardRef(({
+var CanvasImageInner = import_react88.forwardRef(({
   src,
   crossOrigin,
   width,
@@ -62980,13 +63156,13 @@ var CanvasImageInner = import_react87.forwardRef(({
   if (!src) {
     throw new Error('No "src" prop was passed to <CanvasImage>.');
   }
-  const isMedia = import_react87.useMemo(() => ({
+  const isMedia = import_react88.useMemo(() => ({
     type: "image",
     src
   }), [src]);
   const memoizedEffectDefinitions = useMemoizedEffectDefinitions(effects);
-  const actualRef = import_react87.useRef(null);
-  import_react87.useImperativeHandle(ref, () => {
+  const actualRef = import_react88.useRef(null);
+  import_react88.useImperativeHandle(ref, () => {
     return actualRef.current;
   }, []);
   const {
@@ -63083,10 +63259,10 @@ var IFrameRefForwarding = ({
   ...props
 }, ref) => {
   const { delayRender, continueRender } = useDelayRender();
-  const handle = import_react88.useRef(null);
-  const loadedSource = import_react88.useRef(null);
+  const handle = import_react89.useRef(null);
+  const loadedSource = import_react89.useRef(null);
   const { src, srcDoc } = props;
-  import_react88.useLayoutEffect(() => {
+  import_react89.useLayoutEffect(() => {
     if (loadedSource.current?.src === src && loadedSource.current?.srcDoc === srcDoc && loadedSource.current !== null) {
       return;
     }
@@ -63108,7 +63284,7 @@ var IFrameRefForwarding = ({
     src,
     srcDoc
   ]);
-  const didLoad = import_react88.useCallback((e) => {
+  const didLoad = import_react89.useCallback((e) => {
     loadedSource.current = { src, srcDoc };
     if (handle.current !== null) {
       continueRender(handle.current);
@@ -63116,7 +63292,7 @@ var IFrameRefForwarding = ({
     }
     onLoad?.(e);
   }, [onLoad, continueRender, src, srcDoc]);
-  const didGetError = import_react88.useCallback((e) => {
+  const didGetError = import_react89.useCallback((e) => {
     loadedSource.current = { src, srcDoc };
     if (handle.current !== null) {
       continueRender(handle.current);
@@ -63136,7 +63312,7 @@ var IFrameRefForwarding = ({
     onLoad: didLoad
   });
 };
-var IFrame = import_react88.forwardRef(IFrameRefForwarding);
+var IFrame = import_react89.forwardRef(IFrameRefForwarding);
 function exponentialBackoff2(errorCount) {
   return 1000 * 2 ** (errorCount - 1);
 }
@@ -63268,22 +63444,22 @@ var ImgContent = ({
   ref,
   ...props
 }) => {
-  const imageRef = import_react89.useRef(null);
-  const errors = import_react89.useRef({});
+  const imageRef = import_react90.useRef(null);
+  const errors = import_react90.useRef({});
   const { delayPlayback } = useBufferState();
-  const sequenceContext = import_react89.useContext(SequenceContext);
-  const [isLoading, setIsLoading] = import_react89.useState(false);
+  const sequenceContext = import_react90.useContext(SequenceContext);
+  const [isLoading, setIsLoading] = import_react90.useState(false);
   const _propsValid = true;
   if (!_propsValid) {
     throw new Error("typecheck error");
   }
-  const imageCallbackRef = import_react89.useMemo(() => setImageRef.bind(null, imageRef, ref ?? null), [ref]);
+  const imageCallbackRef = import_react90.useMemo(() => setImageRef.bind(null, imageRef, ref ?? null), [ref]);
   const actualSrc = usePreload(src);
-  const retryIn = import_react89.useMemo(() => retryImage.bind(null, imageRef), []);
+  const retryIn = import_react90.useMemo(() => retryImage.bind(null, imageRef), []);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const isPremounting = Boolean(sequenceContext?.premounting);
   const isPostmounting = Boolean(sequenceContext?.postmounting);
-  const didGetError = import_react89.useMemo(() => handleImageError.bind(null, {
+  const didGetError = import_react90.useMemo(() => handleImageError.bind(null, {
     errors,
     imageRef,
     onError: onError ?? null,
@@ -63293,7 +63469,7 @@ var ImgContent = ({
     retryIn
   }), [cancelRender, maxRetries, onError, onImageError, retryIn]);
   if (typeof window !== "undefined") {
-    import_react89.useLayoutEffect(() => {
+    import_react90.useLayoutEffect(() => {
       if (!pauseWhenLoading || !isLoading || isPremounting || isPostmounting) {
         return;
       }
@@ -63305,7 +63481,7 @@ var ImgContent = ({
       isPremounting,
       pauseWhenLoading
     ]);
-    import_react89.useLayoutEffect(loadImage2.bind(null, {
+    import_react90.useLayoutEffect(loadImage2.bind(null, {
       imageRef,
       errors,
       actualSrc,
@@ -63363,7 +63539,7 @@ var NativeImgInner = ({
   if (!src) {
     throw new Error('No "src" prop was passed to <Img>.');
   }
-  const isMedia = import_react89.useMemo(() => ({
+  const isMedia = import_react90.useMemo(() => ({
     type: "image",
     src
   }), [src]);
@@ -63695,8 +63871,8 @@ var withSchema = (untypedOptions) => {
     layout = "none",
     ...rest
   } = options;
-  const ComponentWrappedInSequence = import_react90.forwardRef((props, ref) => {
-    const { canvasContent, compositions } = import_react90.useContext(CompositionManager);
+  const ComponentWrappedInSequence = import_react91.forwardRef((props, ref) => {
+    const { canvasContent, compositions } = import_react91.useContext(CompositionManager);
     const componentIdentity = resolveComponentIdentity(Wrapped);
     const isCurrentComposition = compositions.some((composition) => canvasContent?.type === "composition" && composition.id === canvasContent.compositionId && composition.componentFromProps === componentIdentity);
     const { width, height, ...propsWithoutDimensions } = props;
@@ -63782,7 +63958,7 @@ var withSchema = (untypedOptions) => {
         _remotionInternalPostmountDisplay: effectivePostmountFor || null,
         _remotionInternalIsPremounting: premountingActive,
         _remotionInternalIsPostmounting: postmountingActive,
-        children: import_react90.default.createElement(Component, {
+        children: import_react91.default.createElement(Component, {
           ...componentPropsWithoutCropping,
           ...layout === "none" ? { style: croppedStyle ?? undefined, ref } : {}
         })
@@ -63815,7 +63991,7 @@ var create = (untypedOptions) => {
   });
 };
 var makeInteractiveElement = (tag, displayName, schema) => {
-  const Inner = import_react90.forwardRef((propsWithControls, ref) => {
+  const Inner = import_react91.forwardRef((propsWithControls, ref) => {
     const {
       durationInFrames,
       from,
@@ -63868,7 +64044,7 @@ var makeInteractiveElement = (tag, displayName, schema) => {
       style: premountingStyle,
       componentName: displayName
     });
-    const callbackRef = import_react90.useCallback((element) => {
+    const callbackRef = import_react91.useCallback((element) => {
       setRef2(ref, element);
     }, [ref]);
     return /* @__PURE__ */ import_jsx_runtime37.jsx(Freeze, {
@@ -63892,7 +64068,7 @@ var makeInteractiveElement = (tag, displayName, schema) => {
         _remotionInternalPostmountDisplay: effectivePostmountFor || null,
         _remotionInternalIsPremounting: premountingActive,
         _remotionInternalIsPostmounting: postmountingActive,
-        children: import_react90.default.createElement(tag, {
+        children: import_react91.default.createElement(tag, {
           ...props,
           style: croppedStyle ?? undefined,
           ref: callbackRef
@@ -63982,20 +64158,20 @@ var getAudioSyncAnchorTolerance = (audioContext) => {
   const safeOutputLatency = outputLatency === 0 ? 0.3 : outputLatency;
   return ALLOWED_GLOBAL_TIME_ANCHOR_SHIFT + baseLatency + safeOutputLatency;
 };
-var compositionsRef = import_react92.default.createRef();
-var useIsomorphicLayoutEffect6 = typeof window === "undefined" ? import_react94.useEffect : import_react94.useLayoutEffect;
+var compositionsRef = import_react93.default.createRef();
+var useIsomorphicLayoutEffect6 = typeof window === "undefined" ? import_react95.useEffect : import_react95.useLayoutEffect;
 var CompositionRegistryFallbackProvider = withCommittedMetadata(CompositionRegistryFallbackContext.Provider);
-var CompositionRegistryProvider = import_react94.forwardRef(({ children, onSnapshot }, flushSnapshotRef) => {
+var CompositionRegistryProvider = import_react95.forwardRef(({ children, onSnapshot }, flushSnapshotRef) => {
   const { isStudio } = useRemotionEnvironment();
-  const [managerId] = import_react94.useState(() => String(Math.random()));
-  const [useCommitObserver, setUseCommitObserver] = import_react94.useState(() => isStudio && isCommitRegistrationObserverInstalled());
-  const observedCommitRef = import_react94.useRef(false);
-  const observerFailedRef = import_react94.useRef(false);
-  const unmountedRef = import_react94.useRef(false);
-  const onSnapshotRef = import_react94.useRef(onSnapshot);
-  const lastSnapshotRef = import_react94.useRef(null);
-  const pendingSnapshotRef = import_react94.useRef(null);
-  const flushSnapshot = import_react94.useCallback(() => {
+  const [managerId] = import_react95.useState(() => String(Math.random()));
+  const [useCommitObserver, setUseCommitObserver] = import_react95.useState(() => isStudio && isCommitRegistrationObserverInstalled());
+  const observedCommitRef = import_react95.useRef(false);
+  const observerFailedRef = import_react95.useRef(false);
+  const unmountedRef = import_react95.useRef(false);
+  const onSnapshotRef = import_react95.useRef(onSnapshot);
+  const lastSnapshotRef = import_react95.useRef(null);
+  const pendingSnapshotRef = import_react95.useRef(null);
+  const flushSnapshot = import_react95.useCallback(() => {
     const pending = pendingSnapshotRef.current;
     pendingSnapshotRef.current = null;
     if (pending === null || unmountedRef.current) {
@@ -64009,8 +64185,8 @@ var CompositionRegistryProvider = import_react94.forwardRef(({ children, onSnaps
     lastSnapshotRef.current = committed;
     onSnapshotRef.current(committed);
   }, []);
-  import_react94.useImperativeHandle(flushSnapshotRef, () => flushSnapshot, [flushSnapshot]);
-  const queueSnapshot = import_react94.useCallback((snapshot) => {
+  import_react95.useImperativeHandle(flushSnapshotRef, () => flushSnapshot, [flushSnapshot]);
+  const queueSnapshot = import_react95.useCallback((snapshot) => {
     const alreadyPending = pendingSnapshotRef.current !== null;
     pendingSnapshotRef.current = snapshot;
     if (alreadyPending) {
@@ -64018,14 +64194,14 @@ var CompositionRegistryProvider = import_react94.forwardRef(({ children, onSnaps
     }
     queueMicrotask(flushSnapshot);
   }, [flushSnapshot]);
-  const onObservedSnapshot = import_react94.useCallback((snapshot) => {
+  const onObservedSnapshot = import_react95.useCallback((snapshot) => {
     if (observerFailedRef.current) {
       return;
     }
     observedCommitRef.current = true;
     queueSnapshot(snapshot);
   }, [queueSnapshot]);
-  const fallbackRegistry = import_react94.useMemo(() => {
+  const fallbackRegistry = import_react95.useMemo(() => {
     const entries = new Map;
     const getSnapshot = () => {
       const compositions = [];
@@ -64096,7 +64272,7 @@ var CompositionRegistryProvider = import_react94.forwardRef(({ children, onSnaps
       }
     };
   }, [isStudio, useCommitObserver]);
-  const metadata = import_react94.useMemo(() => isStudio ? {
+  const metadata = import_react95.useMemo(() => isStudio ? {
     type: "composition-manager",
     id: managerId,
     onCommit: useCommitObserver ? onObservedSnapshot : null
@@ -64114,11 +64290,11 @@ var CompositionManagerProvider = ({
   initialCompositions,
   initialCanvasContent
 }) => {
-  const committedKeysRef = import_react93.useRef(new Set);
-  const flushSnapshotRef = import_react93.useRef(null);
-  const committedDescriptorsRef = import_react93.useRef(new Map);
-  const [registrationError, setRegistrationError] = import_react93.useState(null);
-  const [registry] = import_react93.useState(() => createRegistryStore({
+  const committedKeysRef = import_react94.useRef(new Set);
+  const flushSnapshotRef = import_react94.useRef(null);
+  const committedDescriptorsRef = import_react94.useRef(new Map);
+  const [registrationError, setRegistrationError] = import_react94.useState(null);
+  const [registry] = import_react94.useState(() => createRegistryStore({
     compositions: initialCompositions.map((composition, order) => ({
       ...composition,
       order
@@ -64126,9 +64302,9 @@ var CompositionManagerProvider = ({
     folders: []
   }));
   const { compositions, folders } = useSyncExternalStore2(registry.subscribe, registry.getSnapshot, registry.getSnapshot);
-  const [canvasContent, setCanvasContent] = import_react93.useState(initialCanvasContent);
-  const [currentAssetMetadata, setCurrentAssetMetadata] = import_react93.useState(null);
-  const onCommitRegistrations = import_react93.useCallback((pending) => {
+  const [canvasContent, setCanvasContent] = import_react94.useState(initialCanvasContent);
+  const [currentAssetMetadata, setCurrentAssetMetadata] = import_react94.useState(null);
+  const onCommitRegistrations = import_react94.useCallback((pending) => {
     const previousKeys = committedKeysRef.current;
     const previousDescriptors = committedDescriptorsRef.current;
     const existingIds = new Set(registry.getSnapshot().compositions.map((composition) => composition.id));
@@ -64172,7 +64348,7 @@ var CompositionManagerProvider = ({
       return nextCompositions === current.compositions && nextFolders === current.folders ? current : { compositions: nextCompositions, folders: nextFolders };
     });
   }, [registry]);
-  import_react93.useImperativeHandle(compositionsRef, () => {
+  import_react94.useImperativeHandle(compositionsRef, () => {
     return {
       getCompositions: () => {
         flushSnapshotRef.current?.();
@@ -64180,12 +64356,12 @@ var CompositionManagerProvider = ({
       }
     };
   }, [registry]);
-  const compositionManagerSetters = import_react93.useMemo(() => ({
+  const compositionManagerSetters = import_react94.useMemo(() => ({
     setCanvasContent,
     setCurrentAssetMetadata,
     onlyRenderComposition
   }), [onlyRenderComposition]);
-  const compositionManagerContextValue = import_react93.useMemo(() => {
+  const compositionManagerContextValue = import_react94.useMemo(() => {
     return {
       compositions,
       folders,
@@ -64200,7 +64376,7 @@ var CompositionManagerProvider = ({
     currentAssetMetadata,
     canvasContent
   ]);
-  const compositionManagerRef = import_react93.useRef(compositionManagerContextValue);
+  const compositionManagerRef = import_react94.useRef(compositionManagerContextValue);
   compositionManagerRef.current = compositionManagerContextValue;
   if (registrationError !== null) {
     throw registrationError;
@@ -64328,11 +64504,75 @@ var makeDefaultPreviewCSS = (scope, backgroundColor) => {
     }
   `;
 };
+var createCurveSampler = (points, interpolation) => {
+  const distances = points.slice(1).map((point, index) => Math.hypot(point[0] - points[index][0], point[1] - points[index][1]));
+  const tangents = points.map(() => [0, 0]);
+  if (interpolation === "smooth" && points.length > 2) {
+    for (let axis = 0;axis < 2; axis++) {
+      const slopes = distances.map((distance, index) => (points[index + 1][axis] - points[index][axis]) / distance);
+      const curvatures = new Array(points.length).fill(0);
+      const upper = new Array(points.length).fill(0);
+      for (let index = 1;index < points.length - 1; index++) {
+        const diagonal = 2 * (distances[index - 1] + distances[index]) - distances[index - 1] * upper[index - 1];
+        upper[index] = distances[index] / diagonal;
+        curvatures[index] = (6 * (slopes[index] - slopes[index - 1]) - distances[index - 1] * curvatures[index - 1]) / diagonal;
+      }
+      for (let index = points.length - 2;index > 0; index--) {
+        curvatures[index] -= upper[index] * curvatures[index + 1];
+      }
+      for (let index = 0;index < points.length; index++) {
+        tangents[index][axis] = index === 0 ? slopes[0] - distances[0] * curvatures[1] / 6 : slopes[index - 1] + distances[index - 1] * (curvatures[index - 1] + 2 * curvatures[index]) / 6;
+      }
+    }
+    for (let index = 0;index < points.length; index++) {
+      const maxTangent = 3 * Math.min(index === 0 ? Infinity : (points[index][0] - points[index - 1][0]) / distances[index - 1], index === points.length - 1 ? Infinity : (points[index + 1][0] - points[index][0]) / distances[index]);
+      if (tangents[index][0] > maxTangent) {
+        tangents[index][1] *= maxTangent / tangents[index][0];
+      }
+      tangents[index][0] = Math.max(0, Math.min(maxTangent, tangents[index][0]));
+    }
+  }
+  return (input) => {
+    if (input <= points[0][0])
+      return points[0][1];
+    if (input >= points[points.length - 1][0]) {
+      return points[points.length - 1][1];
+    }
+    const index = points.findIndex((point) => point[0] > input) - 1;
+    const start = points[index];
+    const end = points[index + 1];
+    if (input === start[0])
+      return start[1];
+    if (interpolation === "linear" || points.length === 2) {
+      return start[1] + (end[1] - start[1]) * ((input - start[0]) / (end[0] - start[0]));
+    }
+    const handleLength = distances[index] / 3;
+    const firstX = start[0] + handleLength * tangents[index][0];
+    const secondX = end[0] - handleLength * tangents[index + 1][0];
+    let low = 0;
+    let high = 1;
+    for (let iteration = 0;iteration < 32; iteration++) {
+      const candidate = (low + high) / 2;
+      const inverse = 1 - candidate;
+      const x = inverse ** 3 * start[0] + 3 * inverse ** 2 * candidate * firstX + 3 * inverse * candidate ** 2 * secondX + candidate ** 3 * end[0];
+      if (x < input)
+        low = candidate;
+      else
+        high = candidate;
+    }
+    const progress = (low + high) / 2;
+    const remaining = 1 - progress;
+    const firstY = start[1] + handleLength * tangents[index][1];
+    const secondY = end[1] - handleLength * tangents[index + 1][1];
+    const value = remaining ** 3 * start[1] + 3 * remaining ** 2 * progress * firstY + 3 * remaining * progress ** 2 * secondY + progress ** 3 * end[1];
+    return Math.max(0, Math.min(1, value));
+  };
+};
 var REMOTION_STUDIO_CONTAINER_ELEMENT = "__remotion-studio-container";
 var getPreviewDomElement = () => {
   return document.getElementById(REMOTION_STUDIO_CONTAINER_ELEMENT);
 };
-var MaxMediaCacheSizeContext = import_react95.default.createContext(null);
+var MaxMediaCacheSizeContext = import_react96.default.createContext(null);
 var disposeResource = (resource) => {
   if (resource.disposed) {
     return;
@@ -64446,7 +64686,7 @@ var getMediabunnyInputResourceKey = ({
 ]);
 var MEDIABUNNY_DURATION_VALUE_KEY = "mediabunny-duration";
 var globalMediaResourceManager = makeMediaResourceManager();
-var PlaybackPitchContext = import_react96.createContext(false);
+var PlaybackPitchContext = import_react97.createContext(false);
 var REACT_REFRESH_STARTED_EVENT = "remotion-react-refresh-started";
 var REACT_REFRESH_FINISHED_EVENT = "remotion-react-refresh-finished";
 var Root = null;
@@ -64477,7 +64717,7 @@ var RemotionRootContexts = ({
   frameState,
   _experimentalKeepAudioContextAlive
 }) => {
-  const logging = import_react97.useMemo(() => {
+  const logging = import_react98.useMemo(() => {
     return { logLevel, mountTime: Date.now() };
   }, [logLevel]);
   return /* @__PURE__ */ import_jsx_runtime40.jsx(LogLevelContext.Provider, {
@@ -64553,7 +64793,7 @@ var makeRenderResourceManager = () => {
     }
   };
 };
-var RenderResourceManagerContext = import_react98.default.createContext(null);
+var RenderResourceManagerContext = import_react99.default.createContext(null);
 var validCodecs2 = [
   "h264",
   "h265",
@@ -64736,7 +64976,7 @@ var resolveVideoConfigOrCatch = (params) => {
     };
   }
 };
-var SequenceStackTracesUpdateContext = import_react99.default.createContext(() => {});
+var SequenceStackTracesUpdateContext = import_react100.default.createContext(() => {});
 var getEnvVariables = () => {
   if (getRemotionEnvironment().isRendering) {
     const param = window.remotion_envVariables;
@@ -64778,8 +65018,8 @@ var TrackWithoutSchema = ({
   layout = "none",
   ...props
 }) => {
-  const [id] = import_react100.useState(() => String(Math.random()));
-  const value = import_react100.useMemo(() => ({ id, name }), [id, name]);
+  const [id] = import_react101.useState(() => String(Math.random()));
+  const value = import_react101.useMemo(() => ({ id, name }), [id, name]);
   return /* @__PURE__ */ import_jsx_runtime41.jsx(TimelineTrackContext.Provider, {
     value,
     children: /* @__PURE__ */ import_jsx_runtime41.jsx(SequenceWithoutSchema, {
@@ -64803,7 +65043,7 @@ var Track = withInteractivitySchema({
   supportsEffects: false
 });
 addSequenceStackTraces(Track);
-var PixelDensityContext = import_react101.default.createContext(null);
+var PixelDensityContext = import_react102.default.createContext(null);
 var getOffthreadVideoSource2 = ({
   src,
   transparent,
@@ -64836,14 +65076,14 @@ var OffthreadVideoForRendering = ({
   const frame = useCurrentFrame();
   const volumePropsFrame = useFrameForVolumeProp(loopVolumeCurveBehavior);
   const videoConfig = useUnsafeVideoConfig();
-  const sequenceContext = import_react103.useContext(SequenceContext);
+  const sequenceContext = import_react104.useContext(SequenceContext);
   const sequencePlaybackRate = sequenceContext?.playbackRate ?? 1;
-  const audioStartFrame = import_react103.useContext(Html5MediaTrimContext);
-  const { registerRenderAsset, unregisterRenderAsset } = import_react103.useContext(RenderAssetManager);
+  const audioStartFrame = import_react104.useContext(Html5MediaTrimContext);
+  const { registerRenderAsset, unregisterRenderAsset } = import_react104.useContext(RenderAssetManager);
   if (!src) {
     throw new TypeError("No `src` was passed to <OffthreadVideo>.");
   }
-  const id = import_react103.useMemo(() => `offthreadvideo-${random(src)}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.relativeFrom}-${sequenceContext?.durationInFrames}`, [
+  const id = import_react104.useMemo(() => `offthreadvideo-${random(src)}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.relativeFrom}-${sequenceContext?.durationInFrames}`, [
     src,
     sequenceContext?.cumulatedFrom,
     sequenceContext?.relativeFrom,
@@ -64864,7 +65104,7 @@ var OffthreadVideoForRendering = ({
   if (!videoConfig) {
     throw new Error("No video config found");
   }
-  import_react103.useEffect(() => {
+  import_react104.useEffect(() => {
     if (!src) {
       throw new Error("No src passed");
     }
@@ -64901,14 +65141,14 @@ var OffthreadVideoForRendering = ({
     audioStreamIndex,
     preservePitch
   ]);
-  const currentTime = import_react103.useMemo(() => {
+  const currentTime = import_react104.useMemo(() => {
     return getExpectedMediaFrameUncorrected2({
       frame,
       playbackRate: playbackRate || 1,
       startFrom: audioStartFrame
     }) / videoConfig.fps;
   }, [frame, audioStartFrame, playbackRate, videoConfig.fps]);
-  const actualSrc = import_react103.useMemo(() => {
+  const actualSrc = import_react104.useMemo(() => {
     return getOffthreadVideoSource2({
       src,
       currentTime,
@@ -64916,9 +65156,9 @@ var OffthreadVideoForRendering = ({
       toneMapped
     });
   }, [toneMapped, currentTime, src, transparent]);
-  const [imageSrc, setImageSrc] = import_react103.useState(null);
+  const [imageSrc, setImageSrc] = import_react104.useState(null);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
-  import_react103.useLayoutEffect(() => {
+  import_react104.useLayoutEffect(() => {
     if (!window.remotion_videoEnabled) {
       return;
     }
@@ -64990,17 +65230,17 @@ var OffthreadVideoForRendering = ({
     cancelRender,
     delayRender
   ]);
-  const onErr = import_react103.useCallback(() => {
+  const onErr = import_react104.useCallback(() => {
     if (onError) {
       onError?.(new Error("Failed to load image with src " + imageSrc));
     } else {
       cancelRender("Failed to load image with src " + imageSrc);
     }
   }, [imageSrc, onError, cancelRender]);
-  const className = import_react103.useMemo(() => {
+  const className = import_react104.useMemo(() => {
     return [OBJECTFIT_CONTAIN_CLASS_NAME, props.className].filter(truthy2).join(" ");
   }, [props.className]);
-  const onImageFrame = import_react103.useCallback((img) => {
+  const onImageFrame = import_react104.useCallback((img) => {
     if (onVideoFrame) {
       onVideoFrame(img);
     }
@@ -65023,7 +65263,7 @@ var useEmitVideoFrame = ({
   ref,
   onVideoFrame
 }) => {
-  import_react105.useEffect(() => {
+  import_react106.useEffect(() => {
     const { current } = ref;
     if (!current) {
       return;
@@ -65061,12 +65301,12 @@ class MediaPlaybackError extends Error {
   }
 }
 var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
-  const context = import_react104.useContext(SharedAudioContext);
+  const context = import_react105.useContext(SharedAudioContext);
   if (!context) {
     throw new Error("SharedAudioContext not found");
   }
-  const videoRef = import_react104.useRef(null);
-  const sharedSource = import_react104.useMemo(() => {
+  const videoRef = import_react105.useRef(null);
+  const sharedSource = import_react105.useMemo(() => {
     if (!context.audioContext) {
       return null;
     }
@@ -65075,7 +65315,7 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
       ref: videoRef
     });
   }, [context.audioContext]);
-  const effectToUse = import_react104.default.useInsertionEffect ?? import_react104.default.useLayoutEffect;
+  const effectToUse = import_react105.default.useInsertionEffect ?? import_react105.default.useLayoutEffect;
   effectToUse(() => {
     return scheduleMediaSourceCleanup.bind(null, sharedSource?.cleanup ?? null);
   }, [sharedSource]);
@@ -65116,7 +65356,7 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
     throw new Error("typecheck error");
   }
   const { fps, durationInFrames } = useVideoConfig();
-  const parentSequence = import_react104.useContext(SequenceContext);
+  const parentSequence = import_react105.useContext(SequenceContext);
   const logLevel = useLogLevel();
   const mountTime = useMountTime();
   if (typeof acceptableTimeShift !== "undefined") {
@@ -65160,16 +65400,16 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
     duration,
     fps
   });
-  import_react104.useImperativeHandle(ref, () => {
+  import_react105.useImperativeHandle(ref, () => {
     return videoRef.current;
   }, []);
-  import_react104.useState(() => playbackLogging({
+  import_react105.useState(() => playbackLogging({
     logLevel,
     message: `Mounting video with source = ${actualSrc}, v=${VERSION}, user agent=${typeof navigator === "undefined" ? "server" : navigator.userAgent}`,
     tag: "video",
     mountTime
   }));
-  import_react104.useEffect(() => {
+  import_react105.useEffect(() => {
     const { current } = videoRef;
     if (!current) {
       return;
@@ -65211,7 +65451,7 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
   }, [onError, src]);
   useEmitVideoFrame({ ref: videoRef, onVideoFrame });
   useMediaDuration(videoRef, onDuration, src, false);
-  import_react104.useEffect(() => {
+  import_react105.useEffect(() => {
     const { current } = videoRef;
     if (!current) {
       return;
@@ -65222,7 +65462,7 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
       current.preload = "auto";
     }
   }, []);
-  const actualStyle = import_react104.useMemo(() => {
+  const actualStyle = import_react105.useMemo(() => {
     return {
       ...style
     };
@@ -65246,7 +65486,7 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
   });
   return video;
 };
-var VideoForPreviewContent = import_react104.forwardRef(VideoForDevelopmentRefForwardingFunction);
+var VideoForPreviewContent = import_react105.forwardRef(VideoForDevelopmentRefForwardingFunction);
 var VideoForPreviewRefForwardingFunction = (props, ref) => {
   const {
     volume,
@@ -65259,8 +65499,8 @@ var VideoForPreviewRefForwardingFunction = (props, ref) => {
     loopVolumeCurveBehavior,
     onlyWarnForMediaSeekingError
   } = props;
-  const [timelineId] = import_react104.useState(() => String(Math.random()));
-  const parentSequence = import_react104.useContext(SequenceContext);
+  const [timelineId] = import_react105.useState(() => String(Math.random()));
+  const parentSequence = import_react105.useContext(SequenceContext);
   const { isStudio } = useRemotionEnvironment();
   const [mediaVolume] = useMediaVolumeState();
   const volumePropFrame = useFrameForVolumeProp(loopVolumeCurveBehavior ?? "repeat");
@@ -65274,7 +65514,7 @@ var VideoForPreviewRefForwardingFunction = (props, ref) => {
     volume: userPreferredVolume,
     audioEnabled: true
   });
-  const getStack = import_react104.useCallback(() => {
+  const getStack = import_react105.useCallback(() => {
     return _remotionInternalStack ?? null;
   }, [_remotionInternalStack]);
   const { automaticOutlineRef, registration } = useMediaInTimelineRegistration({
@@ -65291,7 +65531,7 @@ var VideoForPreviewRefForwardingFunction = (props, ref) => {
     documentationLink: onlyWarnForMediaSeekingError ? "https://www.remotion.dev/docs/offthreadvideo" : "https://www.remotion.dev/docs/html5-video",
     muted: isMutedForTimeline
   });
-  const metadata = import_react104.useMemo(() => isStudio || automaticOutlineRef || registration !== null ? {
+  const metadata = import_react105.useMemo(() => isStudio || automaticOutlineRef || registration !== null ? {
     type: "sequence",
     id: timelineId,
     value: registration,
@@ -65311,7 +65551,7 @@ var VideoForPreviewRefForwardingFunction = (props, ref) => {
     })
   });
 };
-var VideoForPreview = import_react104.forwardRef(VideoForPreviewRefForwardingFunction);
+var VideoForPreview = import_react105.forwardRef(VideoForPreviewRefForwardingFunction);
 var InnerOffthreadVideo = (props) => {
   const {
     startFrom,
@@ -65330,7 +65570,7 @@ var InnerOffthreadVideo = (props) => {
   if (environment.isClientSideRendering) {
     throw new Error("<OffthreadVideo> is not supported in @remotion/web-renderer. Use <Video> from @remotion/media instead. See https://remotion.dev/docs/client-side-rendering/limitations");
   }
-  const onDuration = import_react102.useCallback(() => {
+  const onDuration = import_react103.useCallback(() => {
     return;
   }, []);
   if (typeof props.src !== "string") {
@@ -65490,28 +65730,28 @@ var OffthreadVideo = ({
 addSequenceStackTraces(OffthreadVideo);
 var WATCH_REMOTION_STATIC_FILES = "remotion_staticFilesChanged";
 function useRemotionContexts() {
-  const compositionManagerCtx = import_react106.default.useContext(CompositionManager);
-  const videoContext = import_react106.default.useContext(VideoContext);
-  const timelineContext = import_react106.default.useContext(TimelineContext);
-  const setTimelineContext = import_react106.default.useContext(SetTimelineContext);
-  const sequenceContext = import_react106.default.useContext(SequenceContext);
-  const defaultPremountInSeconds = import_react106.default.useContext(DefaultPremountContext);
-  const timelineTrackContext = import_react106.default.useContext(TimelineTrackContext);
-  const canUseRemotionHooksContext = import_react106.default.useContext(CanUseRemotionHooks);
-  const preloadContext = import_react106.default.useContext(PreloadContext);
-  const resolveCompositionContext = import_react106.default.useContext(ResolveCompositionContext);
-  const renderAssetManagerContext = import_react106.default.useContext(RenderAssetManager);
-  const sequenceManagerActionsContext = import_react106.default.useContext(SequenceManagerActionsContext);
-  const sequenceManagerRefContext = import_react106.default.useContext(SequenceManagerRefContext);
-  const sequenceRegistryContext = import_react106.default.useContext(SequenceRegistryContext);
-  const sequenceRegistryScopeContext = import_react106.default.useContext(SequenceRegistryScopeContext);
-  const sequenceRegistrationContext = import_react106.default.useContext(SequenceRegistrationContext);
-  const disableSequenceRegistrationContext = import_react106.default.useContext(DisableSequenceRegistrationContext);
-  const remotionEnvironmentContext = import_react106.default.useContext(RemotionEnvironmentContext);
-  const visualModePropStatusesRefContext = import_react106.default.useContext(VisualModePropStatusesRefContext);
-  const bufferManagerContext = import_react106.default.useContext(BufferingContextReact);
-  const logLevelContext = import_react106.default.useContext(LogLevelContext);
-  return import_react106.useMemo(() => ({
+  const compositionManagerCtx = import_react107.default.useContext(CompositionManager);
+  const videoContext = import_react107.default.useContext(VideoContext);
+  const timelineContext = import_react107.default.useContext(TimelineContext);
+  const setTimelineContext = import_react107.default.useContext(SetTimelineContext);
+  const sequenceContext = import_react107.default.useContext(SequenceContext);
+  const defaultPremountInSeconds = import_react107.default.useContext(DefaultPremountContext);
+  const timelineTrackContext = import_react107.default.useContext(TimelineTrackContext);
+  const canUseRemotionHooksContext = import_react107.default.useContext(CanUseRemotionHooks);
+  const preloadContext = import_react107.default.useContext(PreloadContext);
+  const resolveCompositionContext = import_react107.default.useContext(ResolveCompositionContext);
+  const renderAssetManagerContext = import_react107.default.useContext(RenderAssetManager);
+  const sequenceManagerActionsContext = import_react107.default.useContext(SequenceManagerActionsContext);
+  const sequenceManagerRefContext = import_react107.default.useContext(SequenceManagerRefContext);
+  const sequenceRegistryContext = import_react107.default.useContext(SequenceRegistryContext);
+  const sequenceRegistryScopeContext = import_react107.default.useContext(SequenceRegistryScopeContext);
+  const sequenceRegistrationContext = import_react107.default.useContext(SequenceRegistrationContext);
+  const disableSequenceRegistrationContext = import_react107.default.useContext(DisableSequenceRegistrationContext);
+  const remotionEnvironmentContext = import_react107.default.useContext(RemotionEnvironmentContext);
+  const visualModePropStatusesRefContext = import_react107.default.useContext(VisualModePropStatusesRefContext);
+  const bufferManagerContext = import_react107.default.useContext(BufferingContextReact);
+  const logLevelContext = import_react107.default.useContext(LogLevelContext);
+  return import_react107.useMemo(() => ({
     compositionManagerCtx,
     videoContext,
     timelineContext,
@@ -65562,24 +65802,24 @@ var ForwardedSequenceRegistry = ({
   contexts,
   children
 }) => {
-  const [scopeId] = import_react106.useState(() => String(Math.random()));
-  const [observerAvailable, setObserverAvailable] = import_react106.useState(isCommitRegistrationObserverInstalled);
-  const observedCommitRef = import_react106.useRef(false);
-  const observerFailedRef = import_react106.useRef(false);
-  const unmountedRef = import_react106.useRef(false);
-  const lifetimeRef = import_react106.useRef(0);
+  const [scopeId] = import_react107.useState(() => String(Math.random()));
+  const [observerAvailable, setObserverAvailable] = import_react107.useState(isCommitRegistrationObserverInstalled);
+  const observedCommitRef = import_react107.useRef(false);
+  const observerFailedRef = import_react107.useRef(false);
+  const unmountedRef = import_react107.useRef(false);
+  const lifetimeRef = import_react107.useRef(0);
   const registry = contexts.sequenceRegistryContext;
   const scope = contexts.sequenceRegistryScopeContext;
-  const activeRegistryRef = import_react106.useRef(registry);
+  const activeRegistryRef = import_react107.useRef(registry);
   const commitRegistrationEnabled = scope?.commitRegistrationRequested === true && registry !== null && observerAvailable;
-  const onCommitSequences = import_react106.useCallback((sequences, sequenceIds) => {
+  const onCommitSequences = import_react107.useCallback((sequences, sequenceIds) => {
     if (observerFailedRef.current && sequenceIds.length > 0) {
       return;
     }
     observedCommitRef.current = true;
     scope?.onCommitSequences(scopeId, sequences, sequenceIds);
   }, [scope, scopeId]);
-  const useIsomorphicLayoutEffect = typeof window === "undefined" ? import_react106.default.useEffect : import_react106.default.useLayoutEffect;
+  const useIsomorphicLayoutEffect = typeof window === "undefined" ? import_react107.default.useEffect : import_react107.default.useLayoutEffect;
   useIsomorphicLayoutEffect(() => {
     if (scope === null || typeof window === "undefined") {
       return;
@@ -65618,7 +65858,7 @@ var ForwardedSequenceRegistry = ({
       });
     };
   }, [scope, scopeId, registry, commitRegistrationEnabled]);
-  const metadata = import_react106.useMemo(() => ({
+  const metadata = import_react107.useMemo(() => ({
     type: "sequence-manager",
     id: scopeId,
     onCommit: commitRegistrationEnabled ? onCommitSequences : null
@@ -65699,7 +65939,7 @@ var RemotionContextProvider = (props) => {
     })
   });
 };
-var compositionSelectorRef = import_react91.createRef();
+var compositionSelectorRef = import_react92.createRef();
 var Internals2 = {
   HtmlInCanvasFallback,
   useHtmlInCanvasUnsupportedMessage,
@@ -65890,8 +66130,10 @@ var Internals2 = {
   cleanupEffectChainState,
   runEffectChain,
   useMemoizedEffects,
+  subscribeToEffectSource,
   useMemoizedEffectDefinitions,
   createEffect,
+  createCurveSampler,
   createWebGLContextError,
   createWebGL2ContextError,
   computeEffectiveSchemaValuesDotNotation,
@@ -65919,9 +66161,9 @@ var Internals2 = {
 Object.assign(Internals2, { useSyncExternalStore: useSyncExternalStore2 });
 var fontDataByUrl2 = new Map;
 var flattenChildren = (children) => {
-  const childrenArray = import_react108.default.Children.toArray(children);
+  const childrenArray = import_react109.default.Children.toArray(children);
   return childrenArray.reduce((flatChildren, child) => {
-    if (child.type === import_react108.default.Fragment) {
+    if (child.type === import_react109.default.Fragment) {
       return flatChildren.concat(flattenChildren(child.props.children));
     }
     flatChildren.push(child);
@@ -65938,7 +66180,7 @@ var seriesSequenceSchema = {
   playbackRate: Interactive.sequenceSchema.playbackRate,
   layout: Interactive.sequenceSchema.layout
 };
-var SeriesSequenceInner = import_react107.forwardRef(({ offset = 0, className = "", _remotionInternalRender = null, ...props }, ref) => {
+var SeriesSequenceInner = import_react108.forwardRef(({ offset = 0, className = "", _remotionInternalRender = null, ...props }, ref) => {
   useRequireToBeInsideSeries();
   if (_remotionInternalRender) {
     return _remotionInternalRender({ ...props, offset, className: className || undefined }, ref);
@@ -65982,7 +66224,7 @@ var validateSeriesSequenceProps = ({
 };
 var SeriesInner = (props) => {
   const pendingDeletions = usePendingSequenceDeletions();
-  const childrenValue = import_react107.useMemo(() => {
+  const childrenValue = import_react108.useMemo(() => {
     const flattenedChildren = flattenChildren(props.children).filter((child) => !OptimisticSequenceDeletion.isElementDeleted(child, pendingDeletions));
     const renderChildren = (i, startFrame) => {
       if (i === flattenedChildren.length) {
@@ -66006,7 +66248,7 @@ var SeriesInner = (props) => {
         index: i,
         childrenLength: flattenedChildren.length
       });
-      return import_react107.default.cloneElement(castedElement, {
+      return import_react108.default.cloneElement(castedElement, {
         _remotionInternalRender: (resolvedProps, ref) => {
           const durationInFramesProp = resolvedProps.durationInFrames;
           const timelineDurationInFrames = durationInFramesProp / (resolvedProps.playbackRate ?? 1);
@@ -66085,7 +66327,7 @@ var Still = (props) => {
     durationInFrames: 1,
     fps: 1
   };
-  return import_react109.default.createElement(Composition, newProps);
+  return import_react110.default.createElement(Composition, newProps);
 };
 addSequenceStackTraces(Still);
 var roundTo6Commas = (num) => {
@@ -66231,16 +66473,16 @@ var VideoForRenderingForwardFunction = ({
   const frame = useCurrentFrame();
   const volumePropsFrame = useFrameForVolumeProp(loopVolumeCurveBehavior ?? "repeat");
   const videoConfig = useUnsafeVideoConfig();
-  const videoRef = import_react111.useRef(null);
-  const sequenceContext = import_react111.useContext(SequenceContext);
+  const videoRef = import_react112.useRef(null);
+  const sequenceContext = import_react112.useContext(SequenceContext);
   const sequencePlaybackRate = sequenceContext?.playbackRate ?? 1;
-  const audioStartFrame = import_react111.useContext(Html5MediaTrimContext);
+  const audioStartFrame = import_react112.useContext(Html5MediaTrimContext);
   const environment = useRemotionEnvironment();
   const logLevel = useLogLevel();
   const mountTime = useMountTime();
   const { delayRender, continueRender } = useDelayRender();
-  const { registerRenderAsset, unregisterRenderAsset } = import_react111.useContext(RenderAssetManager);
-  const id = import_react111.useMemo(() => `video-${random(props.src ?? "")}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.relativeFrom}-${sequenceContext?.durationInFrames}`, [
+  const { registerRenderAsset, unregisterRenderAsset } = import_react112.useContext(RenderAssetManager);
+  const id = import_react112.useMemo(() => `video-${random(props.src ?? "")}-${sequenceContext?.cumulatedFrom}-${sequenceContext?.relativeFrom}-${sequenceContext?.durationInFrames}`, [
     props.src,
     sequenceContext?.cumulatedFrom,
     sequenceContext?.relativeFrom,
@@ -66261,7 +66503,7 @@ var VideoForRenderingForwardFunction = ({
   if (!videoConfig) {
     throw new Error("No video config found");
   }
-  import_react111.useEffect(() => {
+  import_react112.useEffect(() => {
     if (!props.src) {
       throw new Error("No src passed");
     }
@@ -66298,11 +66540,11 @@ var VideoForRenderingForwardFunction = ({
     audioStreamIndex,
     preservePitch
   ]);
-  import_react111.useImperativeHandle(ref, () => {
+  import_react112.useImperativeHandle(ref, () => {
     return videoRef.current;
   }, []);
   useEmitVideoFrame({ ref: videoRef, onVideoFrame });
-  import_react111.useEffect(() => {
+  import_react112.useEffect(() => {
     if (!window.remotion_videoEnabled) {
       return;
     }
@@ -66392,7 +66634,7 @@ var VideoForRenderingForwardFunction = ({
   ]);
   const { src } = props;
   if (environment.isRendering) {
-    import_react111.useLayoutEffect(() => {
+    import_react112.useLayoutEffect(() => {
       if (window.process?.env?.NODE_ENV === "test") {
         return;
       }
@@ -66432,7 +66674,7 @@ var VideoForRenderingForwardFunction = ({
     ...props
   });
 };
-var VideoForRendering = import_react111.forwardRef(VideoForRenderingForwardFunction);
+var VideoForRendering = import_react112.forwardRef(VideoForRenderingForwardFunction);
 var VideoForwardingFunction = (props, ref) => {
   const {
     startFrom,
@@ -66456,7 +66698,7 @@ var VideoForwardingFunction = (props, ref) => {
   if (environment.isClientSideRendering) {
     throw new Error("<Html5Video> is not supported in @remotion/web-renderer. Use <Video> from @remotion/media instead. See https://remotion.dev/docs/client-side-rendering/limitations");
   }
-  const { durations, setDurations } = import_react110.useContext(DurationsContext);
+  const { durations, setDurations } = import_react111.useContext(DurationsContext);
   if (typeof ref === "string") {
     throw new Error("string refs are not supported");
   }
@@ -66464,7 +66706,7 @@ var VideoForwardingFunction = (props, ref) => {
     throw new TypeError(`The \`<Html5Video>\` tag requires a string for \`src\`, but got ${JSON.stringify(props.src)} instead.`);
   }
   const preloadedSrc = usePreload(props.src);
-  const onDuration = import_react110.useMemo(() => onMediaDuration.bind(null, setDurations), [setDurations]);
+  const onDuration = import_react111.useMemo(() => onMediaDuration.bind(null, setDurations), [setDurations]);
   const durationFetched = durations[getAbsoluteSrc2(preloadedSrc)] ?? durations[getAbsoluteSrc2(props.src)];
   validateMediaTrimProps({ startFrom, endAt, trimBefore, trimAfter });
   if (durationInFrames !== undefined) {
@@ -66558,7 +66800,7 @@ var VideoForwardingFunction = (props, ref) => {
     onAutoPlayError: onAutoPlayError ?? undefined
   });
 };
-var Html5Video = import_react110.forwardRef(VideoForwardingFunction);
+var Html5Video = import_react111.forwardRef(VideoForwardingFunction);
 addSequenceStackTraces(Html5Video);
 checkMultipleRemotionVersions();
 var proxyObj = {};
@@ -72202,4 +72444,4 @@ var CodemodsInternals = {
 /***/ }
 
 }]);
-//# sourceMappingURL=995.bundle.js.map
+//# sourceMappingURL=276.bundle.js.map

@@ -10,7 +10,9 @@ Nunca se toca algo modificado en los últimos 10 minutos (puede estar en uso por
     limpiar_todo()      -> (mb_liberados, entradas_borradas)     (arranque, 45 s después de abrir, en un hilo)
     resumen()           -> ([(nombre, mb, tope_mb)], total_mb)   (Ajustes)
 """
+import os
 import shutil
+import stat
 import time
 from pathlib import Path
 
@@ -31,28 +33,44 @@ CACHES = {
 RECIENTE_S = 600
 
 
-def _tam_entrada(p):
+def _medir_entrada(p):
+    """(bytes, fecha más reciente) de una entrada; si es una carpeta, la suma de sus archivos y la fecha del más nuevo. Si algo no se
+    puede leer, la fecha es «ahora» (no se borra). v5.49 (el usuario: «que no haya tirones jamás»): antes se recorría DOS veces con
+    pathlib (rglob + is_file + stat: mucho Python por archivo) y con ~19 000 archivos en las cachés ese hilo le quitaba el GIL a la
+    interfaz: tirones de 35-98 ms en la animación de Inicio a los 45 s de abrir. Ahora una pasada con os.scandir (en Windows el
+    tamaño y la fecha vienen del propio listado) y 1 ms de pausa cada 200 archivos."""
     try:
-        if p.is_file():
-            return p.stat().st_size
-        return sum(f.stat().st_size for f in p.rglob('*') if f.is_file())
+        st = os.stat(p)
     except OSError:
-        return 0
-
-
-def _mtime_entrada(p):
-    """La fecha más reciente de una entrada (si es una carpeta, la de su archivo más nuevo)."""
-    try:
-        if p.is_file():
-            return p.stat().st_mtime
-        return max([p.stat().st_mtime] + [f.stat().st_mtime for f in p.rglob('*') if f.is_file()])
-    except (OSError, ValueError):
-        return time.time()
+        return 0, time.time()
+    if not stat.S_ISDIR(st.st_mode):
+        return st.st_size, st.st_mtime
+    tam, fecha, n = 0, st.st_mtime, 0
+    pila = [p]
+    while pila:
+        try:
+            with os.scandir(pila.pop()) as it:
+                for e in it:
+                    try:
+                        if e.is_dir(follow_symlinks=False):
+                            pila.append(e.path)
+                        elif e.is_file():
+                            s = e.stat()
+                            tam += s.st_size
+                            fecha = max(fecha, s.st_mtime)
+                    except OSError:
+                        fecha = time.time()
+                    n += 1
+                    if n % 200 == 0:
+                        time.sleep(0.001)
+        except OSError:
+            fecha = time.time()
+    return tam, fecha
 
 
 def tamano_mb(carpeta):
     try:
-        return sum(_tam_entrada(e) for e in Path(carpeta).iterdir()) / 1e6
+        return sum(_medir_entrada(e)[0] for e in Path(carpeta).iterdir()) / 1e6
     except OSError:
         return 0.0
 
@@ -63,7 +81,7 @@ def limpiar_carpeta(carpeta, tope_mb, max_dias=None):
     carpeta = Path(carpeta)
     liberado, borradas = 0.0, 0
     try:
-        entradas = [(e, _mtime_entrada(e), _tam_entrada(e)) for e in carpeta.iterdir()]
+        entradas = [(e, m, t) for e in carpeta.iterdir() for t, m in (_medir_entrada(e),)]
     except OSError:
         return 0.0, 0
     ahora = time.time()

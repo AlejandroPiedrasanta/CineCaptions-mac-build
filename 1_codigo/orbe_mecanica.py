@@ -21,7 +21,7 @@ import time
 
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QFont, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
-                           QRadialGradient)
+                           QPolygonF, QRadialGradient)
 
 import qt_kit as ui
 from qt_kit import fuente
@@ -371,6 +371,7 @@ class OrbeMecanica:
         self._pedido = None                  # (lado, desde cuándo) el tamaño que se pide ahora
         self._hilo = None
         self._nuevas = None                  # (lado, {capa: QImage}) que dejó listas el hilo de fondo
+        self._sprites = {}                   # v5.49: nombre -> (clave, QPixmap) ya a los píxeles reales (ver _sprite)
         self.rot = {'runas': 0.0, 'engr': 0.0, 'fili': 0.0, 'rayos': 0.0}
 
     @staticmethod
@@ -429,6 +430,86 @@ class OrbeMecanica:
         p.drawPixmap(QRectF(-d / 2, -d / 2, d, d), pm, QRectF(pm.rect()))
         p.restore()
 
+    def _sprite(self, nombre, lado_logico, dpr, pintar, extra=None):
+        """v5.49 (Inicio trabado: el orbe costaba ~4,2 ms por cuadro a 60 fps): lo que no cambia de un cuadro a otro (el halo, botones +
+        domo, el vidrio, el cuerpo de la gema) se pinta UNA vez a los píxeles reales de la pantalla; copiarlo sin escalar cuesta ~0,08 ms
+        (escalar la capa de 1,25x, ~0,3 ms; el degradado del halo, ~0,5 ms). pintar(q, lado_logico) dibuja centrado en el origen. Se
+        rehace solo si cambia el tamaño, la densidad, las capas (las buenas del hilo) o `extra` (el color del halo)."""
+        lado = max(2, int(math.ceil(lado_logico * dpr)))
+        clave = (lado, round(dpr, 3), self._clave, extra)
+        hecho = self._sprites.get(nombre)
+        if hecho is not None and hecho[0] == clave:
+            return hecho[1]
+        img = QImage(lado, lado, QImage.Format.Format_ARGB32_Premultiplied)
+        img.fill(Qt.GlobalColor.transparent)
+        img.setDevicePixelRatio(dpr)
+        q = QPainter(img)
+        q.setRenderHint(QPainter.RenderHint.Antialiasing)
+        q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        q.translate(lado / dpr / 2, lado / dpr / 2)
+        pintar(q, lado_logico)
+        q.end()
+        pm = QPixmap.fromImage(img)
+        self._sprites[nombre] = (clave, pm)
+        return pm
+
+    @staticmethod
+    def _pintar_capas(q, L, capas, nombres):
+        for n in nombres:
+            q.drawPixmap(QRectF(-L / 2, -L / 2, L, L), capas[n], QRectF(capas[n].rect()))
+
+    @staticmethod
+    def _pintar_halo(q, r, rgb):
+        g = QRadialGradient(QPointF(0, 0), r)
+        g.setColorAt(0.45, QColor(rgb[0], rgb[1], rgb[2], 255))
+        g.setColorAt(1.0, QColor(rgb[0], rgb[1], rgb[2], 0))
+        q.setPen(Qt.PenStyle.NoPen)
+        q.setBrush(QBrush(g))
+        q.drawEllipse(QPointF(0, 0), r, r)
+
+    @staticmethod
+    def _pintar_halo_gema(q, L):
+        r = L / 2
+        halo = QRadialGradient(QPointF(0, 0), r)
+        halo.setColorAt(0, QColor(190, 255, 190, 170))
+        halo.setColorAt(0.5, QColor(ESM.red(), ESM.green(), ESM.blue(), 70))
+        halo.setColorAt(1, QColor(ESM.red(), ESM.green(), ESM.blue(), 0))
+        q.setPen(Qt.PenStyle.NoPen)
+        q.setBrush(QBrush(halo))
+        q.drawEllipse(QPointF(0, 0), r, r)
+
+    @staticmethod
+    def _pintar_cuerpo_gema(q, R):
+        """La gema «play»: triángulo con 3 facetas y sus aristas (sin respirar: la escala la pone _gema)."""
+        s = R * 0.30
+        A, B, C, P = QPointF(-0.44 * s, -0.62 * s), QPointF(-0.44 * s, 0.62 * s), QPointF(0.78 * s, 0.0), QPointF(-0.04 * s, 0.0)
+        caras = ((A, B, P, ('#2fd488', '#0b6b44')), (B, C, P, ('#5cf0a8', '#0f8a58')), (C, A, P, ('#aaf7cf', '#15a56a')))
+        for (u, v, w, (c1, c2)) in caras:
+            path = QPainterPath()
+            path.moveTo(u); path.lineTo(v); path.lineTo(w); path.closeSubpath()
+            g = QLinearGradient(u, w)
+            g.setColorAt(0, QColor(c1)); g.setColorAt(1, QColor(c2))
+            q.fillPath(path, QBrush(g))
+        q.setBrush(Qt.BrushStyle.NoBrush)
+        q.setPen(QPen(QColor(235, 255, 240, 220), max(1.4, R * 0.006), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        for (u, v, w, _) in caras:
+            q.drawLine(u, v); q.drawLine(v, w); q.drawLine(w, u)
+
+    @staticmethod
+    def _copiar(p, pm, alfa=1.0, esc=1.0):
+        """Un sprite centrado en el origen. Sin escala es la copia rápida (con SmoothPixmapTransform: medido, sin él va 3x más lento)."""
+        d = pm.width() / pm.devicePixelRatio()
+        if alfa < 0.999:
+            p.save()
+            p.setOpacity(max(0.0, alfa))
+        if abs(esc - 1.0) < 1e-4:
+            p.drawPixmap(QPointF(-d / 2, -d / 2), pm)
+        else:
+            d *= esc
+            p.drawPixmap(QRectF(-d / 2, -d / 2, d, d), pm, QRectF(pm.rect()))
+        if alfa < 0.999:
+            p.restore()
+
     # el orden de las capas, cuando entra cada una (s) y cuanto las mueve el raton (paralaje, en radios)
     ENTRADA = {'runas': 0.0, 'engr': 0.15, 'fili': 0.30, 'botones': 0.38, 'domo': 0.45, 'vidrio': 0.55, 'gema': 0.62}
     PARALAJE = {'runas': 0.010, 'engr': 0.018, 'fili': 0.028, 'botones': 0.018, 'domo': 0.040, 'vidrio': 0.052, 'gema': 0.060}
@@ -452,17 +533,17 @@ class OrbeMecanica:
         p.translate(c)
         if vibra > 0.01:                                             # temblor de carga antes del estallido
             p.translate(math.sin(t * 71.0) * vibra * R * 0.007, math.cos(t * 83.0) * vibra * R * 0.006)
-        # halo exterior que respira
+        Rb = R_base or R                                             # los sprites se hacen a R_base; al pulsar (R algo menor) se escalan
+        self._rb_dpr = (Rb, dpr)                                     # (para _gema)
+        # halo exterior que respira (v5.49: un sprite con la opacidad del cuadro; antes un degradado radial de ~0,5 ms en cada cuadro)
         if not apagado:
             a = (0.16 + 0.12 * respira + 0.10 * hover + (0.14 if estado == 'trabajando' else 0.0) + 0.16 * vibra) * (1.0 - 0.7 * apagon)
-            g = QRadialGradient(QPointF(0, 0), R * 1.24)
-            g.setColorAt(0.45, QColor(acento.red(), acento.green(), acento.blue(), int(255 * min(1.0, a))))
-            g.setColorAt(1.0, QColor(acento.red(), acento.green(), acento.blue(), 0))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QBrush(g))
-            p.drawEllipse(QPointF(0, 0), R * 1.24, R * 1.24)
+            rgb = (acento.red(), acento.green(), acento.blue())
+            halo = self._sprite('halo', 2.48 * Rb, dpr, lambda q, L: self._pintar_halo(q, L / 2, rgb), rgb)
+            self._copiar(p, halo, min(1.0, a), R / Rb)
         base = (0.45 if apagado else 1.0) * (1.0 - 0.55 * apagon)
         ensamblando = entrada < 1.4
+        fijas = not ensamblando and base >= 0.999 and not par[0] and not par[1]       # botones, domo y vidrio: sprites (ver _sprite)
 
         def pieza(nombre, giro=0.0, alfa=1.0):
             """alfa/escala/giro de entrada + paralaje del ratón para una capa."""
@@ -479,8 +560,11 @@ class OrbeMecanica:
         pieza('runas', self.rot['runas'])
         pieza('engr', self.rot['engr'])
         pieza('fili', self.rot['fili'])
-        pieza('botones')
-        pieza('domo')
+        if fijas:
+            self._copiar(p, self._sprite('bd', 2.3 * Rb, dpr, lambda q, L: self._pintar_capas(q, L, capas, ('botones', 'domo'))), esc=R / Rb)
+        else:
+            pieza('botones')
+            pieza('domo')
         # --- el cursor como foco de luz: se refleja en el bronce, las runas y el cristal (nada se mueve)
         if hover > 0.02 and estado in ('listo', 'trabajando', 'hecho', 'error'):          # al pasar el ratón: solo se enciende el borde
             p.save()
@@ -584,7 +668,10 @@ class OrbeMecanica:
             p.setPen(QColor(255, 150, 150, int(255 * (1.0 - 0.5 * apagon))))
             p.setFont(fuente(max(36, int(R * 0.5)), peso='extra'))
             p.drawText(QRectF(-r_domo, -r_domo, 2 * r_domo, 2 * r_domo), int(Qt.AlignmentFlag.AlignCenter), '!')
-        pieza('vidrio', 0.0, 1.0 if not apagado else 0.5)
+        if fijas:
+            self._copiar(p, self._sprite('vidrio', 2.3 * Rb, dpr, lambda q, L: self._pintar_capas(q, L, capas, ('vidrio',))), esc=R / Rb)
+        else:
+            pieza('vidrio', 0.0, 1.0 if not apagado else 0.5)
         if flare > 0.01:                                  # el destello del clic: un resplandor que se expande y un anillo de luz
             f = 1.0 - flare
             col = acento if estado in ('hecho', 'error') else ESM
@@ -718,44 +805,27 @@ class OrbeMecanica:
         if alfa <= 0.01:
             return
         esc = 1.0 + 0.035 * respira
+        Rb, dpr = getattr(self, '_rb_dpr', (R, 1.0))
         p.save()
         p.setOpacity(alfa)
         # rayos que giran y laten (detras de la gema)
         n = 16
+        p.setPen(Qt.PenStyle.NoPen)
         for i in range(n):
             a = math.radians(self.rot['rayos'] + i * 360 / n)
             largo = R * (0.34 + 0.07 * math.sin(t * 2.0 + i * 1.3))
             ancho = math.radians(2.6 if i % 2 else 1.6)
-            tri = QPainterPath()
-            tri.moveTo(QPointF(R * 0.10 * math.cos(a), R * 0.10 * math.sin(a)))
-            tri.lineTo(QPointF(largo * math.cos(a - ancho), largo * math.sin(a - ancho)))
-            tri.lineTo(QPointF(largo * math.cos(a + ancho), largo * math.sin(a + ancho)))
-            tri.closeSubpath()
             lg = QLinearGradient(QPointF(0, 0), QPointF(largo * math.cos(a), largo * math.sin(a)))
             lg.setColorAt(0, QColor(220, 255, 180, 190))
             lg.setColorAt(1, QColor(ESM.red(), ESM.green(), ESM.blue(), 0))
-            p.fillPath(tri, QBrush(lg))
-        halo = QRadialGradient(QPointF(0, 0), R * 0.33)
-        halo.setColorAt(0, QColor(190, 255, 190, 170))
-        halo.setColorAt(0.5, QColor(ESM.red(), ESM.green(), ESM.blue(), 70))
-        halo.setColorAt(1, QColor(ESM.red(), ESM.green(), ESM.blue(), 0))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(halo))
-        p.drawEllipse(QPointF(0, 0), R * 0.33, R * 0.33)
-        # la gema: triangulo con 3 facetas
+            p.setBrush(QBrush(lg))
+            p.drawPolygon(QPolygonF([QPointF(R * 0.10 * math.cos(a), R * 0.10 * math.sin(a)),
+                                     QPointF(largo * math.cos(a - ancho), largo * math.sin(a - ancho)),
+                                     QPointF(largo * math.cos(a + ancho), largo * math.sin(a + ancho))]))
+        # v5.49: el halo y la gema facetada (3 caras con degradado + aristas) son sprites; la gema respira escalando el suyo
+        self._copiar(p, self._sprite('gema_halo', 0.66 * Rb, dpr, self._pintar_halo_gema), esc=R / Rb)
+        self._copiar(p, self._sprite('gema', 0.56 * Rb, dpr, lambda q, L: self._pintar_cuerpo_gema(q, Rb)), esc=R / Rb * esc)
         s = R * 0.30 * esc
-        A, B, C, P = QPointF(-0.44 * s, -0.62 * s), QPointF(-0.44 * s, 0.62 * s), QPointF(0.78 * s, 0.0), QPointF(-0.04 * s, 0.0)
-        caras = ((A, B, P, ('#2fd488', '#0b6b44')), (B, C, P, ('#5cf0a8', '#0f8a58')), (C, A, P, ('#aaf7cf', '#15a56a')))
-        for (u, v, w, (c1, c2)) in caras:
-            path = QPainterPath()
-            path.moveTo(u); path.lineTo(v); path.lineTo(w); path.closeSubpath()
-            g = QLinearGradient(u, w)
-            g.setColorAt(0, QColor(c1)); g.setColorAt(1, QColor(c2))
-            p.fillPath(path, QBrush(g))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(QPen(QColor(235, 255, 240, 220), max(1.4, R * 0.006), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-        for (u, v, w, _) in caras:
-            p.drawLine(u, v); p.drawLine(v, w); p.drawLine(w, u)
         # chispa que cruza la gema
         f = (t % 3.4) / 3.4
         if f < 0.3:

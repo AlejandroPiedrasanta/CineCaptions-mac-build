@@ -99,6 +99,17 @@ def activado():
     return bool(_prefs().get('go_edicion_pro', False))
 
 
+# v5.49 (pedido del usuario): los temas de esta lista solo ponen emojis con la Edición PRO encendida Y su opción «Emojis animados»
+TEMAS_EMOJI_SOLO_PRO = ('Referencia',)          # el Tema 2
+
+
+def emojis_del_tema(pack):
+    """¿Puede el tema `pack` poner emojis? Los de TEMAS_EMOJI_SOLO_PRO solo con la Edición PRO encendida y «Emojis animados» activado."""
+    if str(pack or '') not in TEMAS_EMOJI_SOLO_PRO:
+        return True
+    return activado() and bool(opciones_guardadas().get('pro_emojis', True))
+
+
 TEMAS_PRO = ('Tema5', 'Tema6')            # edicion_pro_tema5.activo: estos temas SON la Edición PRO completa, aunque su interruptor esté apagado
 
 

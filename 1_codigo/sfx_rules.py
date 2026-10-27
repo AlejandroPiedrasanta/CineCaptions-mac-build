@@ -32,9 +32,27 @@ CUANTOS_SIMPLES = {'inicio': 3, 'intro': 2, 'final': 2}          # cuántos soni
 DONDE_SIMPLE = ('todas', 'principal', 'ninguna')
 # v5.4.29: las tarjetas de la pantalla Sonido que se pueden apagar enteras (palabra = «Sonido por palabra», principal = «Sonido del texto principal», introducción y final)
 TARJETAS_SONIDO = ('palabra', 'principal', 'intro', 'final')
+# v5.49 (el usuario: «revisa para que no haya tirones jamás»): los JSON de aquí se leían en CADA llamada y hay funciones que se llaman
+# cientos de veces seguidas (al precalentar Sonido, `_rutas_de` de cada categoría → `fuentes_del_usuario` → `sonido_de_regla` de cada
+# regla → `cargar_avanzado`…: ~950 lecturas en 10 s, todo un hilo dando vueltas con el GIL mientras Inicio se anima). Ahora se lee una
+# vez y se reutiliza mientras el archivo no cambie (fecha y tamaño); se devuelve una copia (quien la reciba puede modificarla).
+_JSON = {}
+
+
+def _leer_json(archivo):
+    """El JSON del archivo (copia), o lanza la excepción de leerlo / decodificarlo como json.loads(read_text())."""
+    import copy
+    p = str(archivo)
+    st = os.stat(p)
+    firma = (st.st_mtime_ns, st.st_size)
+    hecho = _JSON.get(p)
+    if hecho is None or hecho[0] != firma:
+        hecho = (firma, json.loads(Path(p).read_text(encoding='utf-8')))
+        _JSON[p] = hecho
+    return copy.deepcopy(hecho[1])
 def _leer_lista(archivo):
     try:
-        datos = json.loads(Path(archivo).read_text(encoding='utf-8'))
+        datos = _leer_json(archivo)
         if isinstance(datos, list):
             return [str(x) for x in datos]
     except Exception:
@@ -58,12 +76,12 @@ def guardar_carpetas_usuario(carpetas):
 def cargar_modo():
     """{'modo': 'simple' | 'avanzado', 'donde': 'todas' | 'principal' | 'ninguna', 'sonidos': [3 del inicio], 'intro': [2], 'final': [2]} que dejó el usuario. Por defecto: simple, en todas las palabras."""
     try:
-        datos = json.loads(ARCHIVO_MODO.read_text(encoding='utf-8'))
+        datos = _leer_json(ARCHIVO_MODO)
     except Exception:
         datos = {}
     if not isinstance(datos, dict):
         datos = {}
-    modo = 'simple'                      # v5.4.29: el modo «Avanzado» ya no existe en la pantalla Sonido: aunque un archivo viejo diga 'avanzado', manda siempre el simple
+    modo = 'simple'                     # v5.4.29: el modo «Avanzado» ya no existe en la pantalla Sonido: aunque un archivo viejo diga 'avanzado', manda siempre el simple
     salida = {'modo': modo, 'donde': datos.get('donde') if datos.get('donde') in DONDE_SIMPLE else 'todas'}
     for clave in ('sonidos', 'intro', 'final'):
         salida[clave] = [str(x) for x in (datos.get(clave) or []) if isinstance(x, str)][:CUANTOS_SIMPLES[{'sonidos': 'inicio'}.get(clave, clave)]]
@@ -254,7 +272,7 @@ AJUSTES_AVANZADO_BASE = {'probabilidad': 100, 'max_por_minuto': 0, 'omitir_inici
                          'volumen_global_db': 0.0, 'categoria_por_defecto': None, 'reglas': {}}
 def _leer_dic(archivo):
     try:
-        d = json.loads(Path(archivo).read_text(encoding='utf-8'))
+        d = _leer_json(archivo)
         return d if isinstance(d, dict) else {}
     except Exception:
         return {}
@@ -827,7 +845,32 @@ def fuentes_del_usuario():
     v3.3.3: los JSON se leen aqui mismo (cargar_carpetas_usuario /
     cargar_favoritos): importar sfx_studio para esto costaba 1,2 s al
     arrancar (Tk + PyAV + numpy).
+
+    v5.49: se reutiliza mientras no cambie nada de lo que mira (sus JSON y las
+    carpetas del usuario) y como mucho 3 s (un archivo borrado a mano fuera de
+    esas carpetas): `_rutas_de` la pedia una vez por categoria.
     """
+    import time
+    firma = []
+    for archivo in (ARCHIVO_CARPETAS, ARCHIVO_FAVORITOS, ARCHIVO_MODO, ARCHIVO_AVANZADO):
+        try:
+            st = os.stat(archivo)
+            firma.append((st.st_mtime_ns, st.st_size))
+        except OSError:
+            firma.append(None)
+    for ruta in cargar_carpetas_usuario():
+        try:
+            firma.append(os.stat(ruta).st_mtime_ns)
+        except OSError:
+            firma.append(None)
+    hecho = _FUENTES.get('v')
+    if hecho is not None and hecho[0] == firma and time.monotonic() - hecho[1] < 3.0:
+        return {k: list(v) for k, v in hecho[2].items()}
+    fuentes = _fuentes_del_usuario()
+    _FUENTES['v'] = (firma, time.monotonic(), fuentes)
+    return {k: list(v) for k, v in fuentes.items()}
+_FUENTES = {}
+def _fuentes_del_usuario():
     fuentes = {}
     try:
         for ruta in cargar_carpetas_usuario():

@@ -34,7 +34,8 @@ NOMBRE_TIPO = {'gancho': 'Gancho', 'acento': 'Acento', 'texto_grande': 'Palabra 
                'barrido_luz': 'Brillo', 'neon': 'Neón', 'icono': 'Ícono', 'tarjeta': 'Tarjeta', 'foto': 'Foto', 'numero_precio': 'Dinero',
                'check': 'Check', 'boton_on': 'Botón ON', 'boton_off': 'Botón OFF', 'cursor_click': 'Click', 'notificacion': 'Notificación',
                'barra_carga': 'Carga', 'pagina': 'Página', 'glitch': 'Glitch', 'tachado': 'Tachado', 'positivo': 'Positivo',
-               'negativo': 'Negativo', 'grafica': 'Gráfica'}
+               'negativo': 'Negativo', 'grafica': 'Gráfica', 'pegatina': 'Pegatina', 'sube': 'Tarjeta sube', 'barrido_kit': 'Barrido',
+               'tarjeta_kit': 'Tarjeta', 'logo_kit': 'Logo'}
 CARRILES = (('AI SFX MOTION', 'Movimiento', '#4589FF'), ('AI SFX IMPACTS', 'Impactos', '#FF5D73'), ('AI SFX TONAL', 'Acentos', '#F5C451'),
             ('AI SFX UI', 'Interfaz', '#2BD4A4'), ('AI SFX TEXTURE', 'Textura', '#B07CFF'))
 COLOR = {p: c for p, _, c in CARRILES}
@@ -298,20 +299,24 @@ class Onda(QWidget):
 
 
 class LineaTiempo(QWidget):
-    """Editor (A): tira de fotogramas, voz y un carril por pista; clic en un bloque = seleccionado(índice en filas)."""
+    """Editor (A): tira de fotogramas, voz, CAPTIONS (cada bloque con su palabra clave y si suena), un carril por pista y la música;
+    clic en un bloque o en un caption con sonido = seleccionado(índice en filas)."""
     seleccionado = Signal(int)
-    IZQ, TIRA, VOZ, ALTO, REGLA = 108, 56, 38, 34, 22
+    IZQ, TIRA, VOZ, CAP, ALTO, REGLA = 108, 56, 38, 46, 34, 22
+    TOL_CAPTION = 0.06                                      # un sonido a menos de esto del momento de la palabra clave es «su» sonido
 
     def __init__(self, padre=None):
         super().__init__(padre)
         self.filas, self.vis, self.sel, self.pps, self.dur = [], {}, -1, 70.0, 5.0
         self.musica = None                                  # {'titulo', 'onda', 'dur'}: un carril más, debajo de los SFX
+        self.captions = []                                  # [{'ini', 'fin', 'texto', 'clave', 't'}] de sonido_skill.bloques_captions
+        self._cajas_cap = []
         self.carriles = list(CARRILES)
         self._cajas = []
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-    def poner(self, filas, vis, duracion, musica=None):
-        self.filas, self.vis, self.musica = filas or [], vis or {}, musica
+    def poner(self, filas, vis, duracion, musica=None, captions=None):
+        self.filas, self.vis, self.musica, self.captions = filas or [], vis or {}, musica, captions or []
         usadas = {f.get('pista') for f in self.filas}
         self.carriles = [c for c in CARRILES if c[0] in usadas] or list(CARRILES[:1])   # solo las pistas que suenan
         self.dur = max([float(duracion or 0)] + [float(f.get('segundo') or 0) + 1.5 for f in self.filas] + [5.0])
@@ -325,7 +330,13 @@ class LineaTiempo(QWidget):
         return len(self.carriles) + (1 if self.musica else 0)
 
     def alto_total(self):
-        return int(self.TIRA + self.VOZ + self.n_carriles() * self.ALTO + self.REGLA + 24)
+        return int(self.TIRA + self.VOZ + (self.CAP if self.captions else 0) + self.n_carriles() * self.ALTO + self.REGLA + 24)
+
+    def sonido_de(self, c):
+        """Índice del sonido que cae en la palabra clave de ese caption (o -1)."""
+        cerca = [(abs(float(f.get('segundo') or 0) - c['t']), i) for i, f in enumerate(self.filas)]
+        d, i = min(cerca or [(9.0, -1)])
+        return i if d <= self.TOL_CAPTION else -1
 
     def _medir(self):
         self.setFixedSize(int(self.IZQ + self.dur * self.pps + 30), self.alto_total())
@@ -366,8 +377,45 @@ class LineaTiempo(QWidget):
         voz = self.vis.get('voz') or []
         dv = float(self.vis.get('duracion') or self.dur) or self.dur
         pintar_onda(p, QRectF(self.IZQ, y + 4, dv * self.pps, self.VOZ - 8), voz, QColor('#2F4A72'))
+        # captions: cada bloque con su texto; la palabra clave en blanco y su marca (verde = suena, gris = sin sonido)
+        self._cajas_cap = []
+        if self.captions:
+            yc = self.TIRA + self.VOZ + 4
+            p.setPen(QColor('#E0EBFB'))
+            p.drawText(QRectF(12, yc, self.IZQ - 16, self.CAP - 6), Qt.AlignmentFlag.AlignVCenter, tr('Captions'))
+            for c in self.captions:
+                i = self.sonido_de(c)
+                caja = QRectF(self.x_de(c['ini']), yc + 3, max(18.0, (c['fin'] - c['ini']) * self.pps - 3), self.CAP - 12)
+                self._cajas_cap.append((caja, i))
+                activa = i >= 0 and i == self.sel
+                p.setPen(QPen(QColor('#FFFFFF'), 1.6) if activa else QPen(QColor('#22324F'), 1))
+                p.setBrush(QColor('#16233D'))
+                p.drawRoundedRect(caja, 7, 7)
+                xt = self.x_de(c['t'])
+                col = QColor('#2BD4A4') if i >= 0 else QColor('#5A6B87')
+                p.setPen(QPen(col, 2))
+                p.drawLine(QPointF(xt, caja.top() + 3), QPointF(xt, caja.bottom() - 3))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(col)
+                p.drawEllipse(QPointF(xt, caja.top() + 3), 3.2, 3.2)
+                texto = QRectF(caja.left() + 8, caja.top(), caja.width() - 12, caja.height())
+                if texto.width() > 16:
+                    clave = c.get('clave') or ''
+                    p.setFont(ui.fuente(11, peso='negrita'))
+                    fm = p.fontMetrics()
+                    ancho_clave = min(fm.horizontalAdvance(clave), int(texto.width())) if clave else 0
+                    p.setPen(QColor('#FFFFFF'))
+                    if clave:
+                        p.drawText(texto, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, fm.elidedText(clave, Qt.TextElideMode.ElideRight, int(texto.width())))
+                    resto = texto.adjusted(ancho_clave + (6 if clave else 0), 0, 0, 0)
+                    if resto.width() > 24:
+                        p.setFont(ui.fuente(11))
+                        p.setPen(QColor(MUT))
+                        p.drawText(resto, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                   p.fontMetrics().elidedText(c.get('texto') or '', Qt.TextElideMode.ElideRight, int(resto.width())))
+            p.setFont(ui.fuente(12))
         # carriles de sonido
-        y0 = self.TIRA + self.VOZ + 6
+        y0 = self.TIRA + self.VOZ + 6 + (self.CAP if self.captions else 0)
         fila_de = {c[0]: k for k, c in enumerate(self.carriles)}
         for k, (_pista, nombre, col) in enumerate(self.carriles):
             yy = y0 + k * self.ALTO
@@ -437,6 +485,10 @@ class LineaTiempo(QWidget):
         pos = ev.position()
         for caja, i in reversed(self._cajas):
             if caja.contains(pos):
+                self.seleccionado.emit(i)
+                return
+        for caja, i in self._cajas_cap:
+            if caja.contains(pos) and i >= 0:
                 self.seleccionado.emit(i)
                 return
 
@@ -759,7 +811,8 @@ class PaginaSonido(QWidget):
         self._lbl_pend.setText(tr('● cambios sin aplicar') if self._res.get('pendiente') and filas else '')
         self._aro.poner(filas)
         self._pintar_musica(self._res.get('musica') or {})
-        self._linea.poner(filas, self._vis, (self._res.get('guia') or {}).get('duracion'), self._musica_linea(self._res.get('musica') or {}))
+        guia = self._res.get('guia') or {}
+        self._linea.poner(filas, self._vis, guia.get('duracion'), self._musica_linea(self._res.get('musica') or {}), guia.get('bloques'))
         self._scroll.setFixedHeight(self._linea.alto_total() + 16)
         self._llenar_momentos(filas)
         avisos = S.revisar(filas) if filas else []

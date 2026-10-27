@@ -1,5 +1,5 @@
 # CineCaptions · By Cinema Productions
-# 1_codigo/sonido_musica.py — MÚSICA de la biblioteca del autor (Desktop\SFX\02_MUSICA) para la página Sonido (v5.48). Mismo criterio que
+# 1_codigo/sonido_musica.py — MÚSICA de la biblioteca del autor (5_SFX\02_MUSICA) para la página Sonido (v5.48). Mismo criterio que
 # la skill «sonorizar-sfx» (~/.claude/skills/sonorizar-sfx/scripts/musica.py): mantener MOODS y puntuar() iguales en los dos.
 """
     preparar(ctx, filas, lib, carpeta)  3 opciones (de carpetas distintas) horneadas en WAV; la 1.ª queda elegida
@@ -65,12 +65,21 @@ def activa(prefs=None):
 
 # ---------------------------------------------------------------------------------------------------- medir pistas
 def _de_la_skill(ruta):
+    """La medida que guardó la skill. Su clave lleva la ruta: la biblioteca vive en 5_SFX pero la skill la ve como Desktop\\SFX (enlace)."""
+    S = _sk()
     st = os.stat(ruta)
-    clave = hashlib.sha1(f'{os.path.abspath(ruta)}|{st.st_size}|{int(st.st_mtime)}'.encode()).hexdigest()[:16]
+    rutas = [os.path.abspath(ruta)]
     try:
-        return json.loads((CACHE_SKILL / f'{clave}.json').read_text(encoding='utf-8'))
-    except Exception:
-        return None
+        rutas.append(str(S.LIB_AUTOR / Path(ruta).resolve().relative_to(S.LIB_PROPIA.resolve())))
+    except ValueError:
+        pass
+    for r in rutas:
+        clave = hashlib.sha1(f'{r}|{st.st_size}|{int(st.st_mtime)}'.encode()).hexdigest()[:16]
+        try:
+            return json.loads((CACHE_SKILL / f'{clave}.json').read_text(encoding='utf-8'))
+        except Exception:
+            continue
+    return None
 
 
 def medir(ruta, cache=None):

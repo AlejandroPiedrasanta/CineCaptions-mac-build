@@ -3992,7 +3992,16 @@
     "AI Sound Director se encarga de todo el sonido: los sonidos de las reglas de antes ya no suenan, y los de los motions (también los del Tema 1) los rehace a la medida.": "AI Sound Director now handles all the sound: the old rule sounds no longer play, and motion sounds (Theme 1 too) are rebuilt to fit.",
     "Usa todas tus bibliotecas de sonido: miles de whooshes, golpes, risers y tonos, camas de música de score y ambientes reales, cada uno revisado antes de usarlo.": "It uses all your sound libraries: thousands of whooshes, hits, risers and tones, score music beds and real ambiences, each checked before use.",
     "Si no hay música de Epidemic, pone una cama de score de tus colecciones, siempre por debajo de la voz; el ambiente sale de tus grabaciones del mismo entorno.": "Without Epidemic music, it lays a score bed from your collections, always under the voice; ambience comes from your recordings of the same setting.",
-    "La página SONIDO aplica sola cada cambio en Resolve y te dice si todo está al día. Viene encendida.": "The SOUND page applies every change in Resolve by itself and tells you whether everything is up to date. It comes switched on."
+    "La página SONIDO aplica sola cada cambio en Resolve y te dice si todo está al día. Viene encendida.": "The SOUND page applies every change in Resolve by itself and tells you whether everything is up to date. It comes switched on.",
+    "Nebulosa": "Nebula",
+    "Proceso": "Process",
+    "Diseño": "Design",
+    "hecho": "done",
+    "en espera": "waiting",
+    "Una nebulosa de luz gira tras el astrolabio. En GO se vuelve un remolino del color de cada paso.": "A nebula of light swirls behind the astrolabe. During GO it becomes a vortex in the color of each step.",
+    "Aros de bronce en 3D y constelaciones de oro. En GO cada paso es una estrella y los aros se alinean.": "Bronze rings in 3D and golden constellations. During GO each step is a star and the rings line up.",
+    "Anillo de voz y palabras de cristal. En GO seis tarjetas enseñan cada paso y el timeline se llena.": "A voice ring and glass words. During GO six cards show each step and the timeline fills up.",
+    "Tres escenas para Inicio, las tres con el astrolabio de bronce: cada una con sus animaciones y su manera de enseñar el proceso de GO. También cambian la luz de fondo de TODAS las páginas. Pasa el ratón por una tarjeta para verla en movimiento.": "Three scenes for Home, all with the bronze astrolabe: each with its own animations and its own way of showing the GO process. They also change the background light of ALL pages. Hover over a card to see it move."
   },
   "Suave": "Subtle",
   "Media": "Medium",

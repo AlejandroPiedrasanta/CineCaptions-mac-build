@@ -379,8 +379,6 @@ class EscenaGo(QWidget):
         self._cometas = []
         self._impactos = []
         self._ondas = []                        # ondas de choque: (t0, centro, color, grueso)
-        self._anillos = []                      # anillos suaves del fondo
-        self._rayos = []
         self._pasos = []
         self._t_spawn = 0.0
         self._fase = ''
@@ -398,16 +396,25 @@ class EscenaGo(QWidget):
         self._dt_med = 0.016               # v5.5.8: el intervalo REAL entre cuadros (si no llega a 60 fps, 30 parejos: se ven mejor que 40 a saltos)
         self._lento_hasta = 0.0
         self._lento_n = 0
+        self._n_tics = 0                        # v5.49: cuadros y cuadros tarde (> 20,5 ms) desde la última _politica
+        self._n_lentos = 0
         self._gracia_hasta = 0.0           # v5.22: tras volver a verse, los tirones de la transición no cuentan como «equipo lento»
         self._esc_cuadro = 1.0                  # escala de resolución interna de la escena (adaptativa, 0,62..1)
         self._cuadros = 0
         self._cuadro = None                     # el ultimo cuadro dibujado (QPixmap) y cuando: ver paintEvent
         self._cuadro_clave = None
         self._cuadro_t = 0.0
+        self._cuadro_sig = None                 # v5.49: en calma, el cuadro que se prepara en un tic y se enseña en el siguiente (ver _tic)
+        self._sig_clave = None
+        self._calmado = False
+        self._tic_par = False
+        self._rafaga_hasta = -1.0               # hasta cuándo hay chispas de una ráfaga en el aire
         self._sonidos = {}
         self._rep = None
         self.sonido = True
-        self._reloj = QTimer(self)
+        import ritmo_ui
+        self._reloj = ritmo_ui.RelojPantalla(self)     # v5.49: a 60/30 fps late con el refresco del monitor (antes un QTimer de 16 ms: 62,5 Hz)
+        self._reloj.pantalla = self._ventana_hwnd
         self._reloj.timeout.connect(self._tic)
         self._cargar_referencia()
 
@@ -475,13 +482,20 @@ class EscenaGo(QWidget):
                 self._reloj.start(self._ms_reloj)
         else:
             self._reloj.stop()
+            self._cuadro_sig = self._sig_clave = None   # oculta no hace falta el segundo búfer (~19 MB a 3440x1440)
+
+    def _ventana_hwnd(self):
+        """La ventana nativa (ritmo_ui.RelojPantalla mira su monitor)."""
+        return int(self.window().winId()) or None
 
     def _reanudar(self):
         """v5.22 (el usuario: «al volver a Inicio las animaciones van trabadas»): al volver de otra página o a la ventana, el primer
         segundo trae cuadros lentos (la transición, Qt rehaciendo cachés). Antes contaban como «equipo lento» y la escena se quedaba a
         30 fps 8 s, y más cada vez (16, 32… hasta 2 min). Ahora ese segundo no cuenta y la medida empieza limpia."""
-        self._gracia_hasta = time.perf_counter() + 1.2
+        # v5.49: la PRIMERA vez 4 s: al abrir el programa carga fuentes, packs, el MCP… y esos tirones dejaban Inicio a 30 fps de entrada
+        self._gracia_hasta = time.perf_counter() + (1.2 if self._cuadros else 4.0)
         self._dt_med = min(self._dt_med, 0.016)
+        self._n_tics = self._n_lentos = 0
 
     def changeEvent(self, e):
         super().changeEvent(e)
@@ -663,6 +677,7 @@ class EscenaGo(QWidget):
         b['col'][idx] = rng.choice(cols, n)
         b['grav'][idx] = grav
         b['tipo'][idx] = tipo
+        self._rafaga_hasta = max(self._rafaga_hasta, self._t + vida[1])
 
     # ------------------------------------------------------------------ efectos
     def _sonar(self, nombre):
@@ -709,7 +724,8 @@ class EscenaGo(QWidget):
         x0, y0 = rect.center().x() - 120, rect.top() + self.ALTO_FILA * i + self.ALTO_FILA / 2
         self._chispas_paso.append((self._t, x0, y0, COLORES[i % len(COLORES)]))
 
-    def _dibujar_chispas_paso(self, p, c):
+    def _dibujar_chispas_paso(self, p, c, dibujar=True):
+        """(v5.49 pulido: sin la lista de pasos no se dibuja —salía de donde estaría la lista—, pero sigue avisando al orbe al llegar)"""
         vivas = []
         for t0, x0, y0, col in self._chispas_paso:
             u = (self._t - t0) / 0.7
@@ -722,6 +738,8 @@ class EscenaGo(QWidget):
                 self.meta = min(1.0, self.meta + 0.01)
                 continue
             vivas.append((t0, x0, y0, col))
+            if not dibujar:
+                continue
             for k in range(7):                                  # la estela: la misma curva, un poco antes
                 uu = max(0.0, u - k * 0.035)
                 e = uu * uu * (3 - 2 * uu)
@@ -766,8 +784,6 @@ class EscenaGo(QWidget):
     def _absorbido(self, o):
         self.meta = min(1.0, self.meta + 0.006)
         self.energia = min(1.0, self.energia + 0.004)
-        if len(self._anillos) < 5:
-            self._anillos.append((self._t, 0.35))
 
     # ------------------------------------------------------------------ reloj
     def _tic(self):
@@ -775,6 +791,9 @@ class EscenaGo(QWidget):
         dt = min(0.08, ahora - self._ult)
         self._ult = ahora
         self._dt_med += (dt - self._dt_med) * 0.08
+        self._n_tics += 1
+        if dt > 0.0205:
+            self._n_lentos += 1
         if not self.isVisible() or self.window().isMinimized():
             if self._ms_reloj != 250:                    # v5.5.7: minimizada u oculta, el reloj despierta 4 veces por segundo (no 60) solo para ver si vuelve
                 self._ms_reloj = 250
@@ -792,43 +811,90 @@ class EscenaGo(QWidget):
             except RuntimeError:
                 pass
         t0 = time.perf_counter()
-        self.update()
+        # v5.49 (el usuario: «la animación de Inicio se traba demasiado»; medido a 3440x1440 al 150 %: cada cuadro repintaba la ventana
+        # entera, ~16 ms en el hilo de la interfaz, 95 % ocupado; no cabía en 60 fps y bailaba 60↔30 con huecos de 20-40 ms). En calma
+        # (reposo o terminado, sin nada rápido en pantalla) el fondo, las motas y el HUD giran despacio: la escena se dibuja a 30 fps y el
+        # orbe (BotonGo, encima) sigue a 60. Para que los dos tics cuesten lo mismo, uno PREPARA el cuadro fuera de pantalla y el siguiente
+        # solo lo enseña (un repintado entero); en el de preparar Qt solo repinta el rectángulo del orbe.
+        self._calmado = self._calma()
+        if self._calmado:
+            self._tic_par = not self._tic_par
+            if self._tic_par:
+                self._preparar_cuadro()
+            else:
+                if self._cuadro_sig is not None and self._sig_clave == self._clave_cuadro():
+                    self._cuadro, self._cuadro_sig = self._cuadro_sig, self._cuadro
+                    self._cuadro_clave, self._sig_clave = self._sig_clave, self._cuadro_clave
+                    self._cuadro_t = time.perf_counter()
+                self.update()
+        else:
+            self._tic_par = False
+            self.update()
         self._medir(t0)
+
+    def _calma(self):
+        """v5.49: nada rápido en pantalla: reposo o terminado, a 60 fps, sin carga final, explosión, sacudida, destello, ondas, cometas,
+        impactos, objetos, chispas, rayos ni barra de progreso. Ahí la escena puede ir a 30 fps sin que se note (ver _tic)."""
+        return (self._ms_reloj == 16 and self._estado in ('reposo', 'hecho') and not self._carga_final and self._t_final is None
+                and self.expl <= 0.0 and self._sacudida <= 0.0 and self.destello <= 0.01 and self._barra_a < 0.01
+                and self._t >= self._rafaga_hasta and self.width() >= 10 and self.height() >= 10
+                and not (self._ondas or self._cometas or self._impactos or self._objetos or self._chispas_paso or self._salida))
+
+    def _clave_cuadro(self):
+        return (self.width(), self.height(), round(self.devicePixelRatioF(), 3), round(self._esc_cuadro, 2))
+
+    def _preparar_cuadro(self):
+        """El cuadro siguiente, en el búfer de reserva (lo enseña el próximo tic)."""
+        clave = self._clave_cuadro()
+        self._cuadro_sig = self._dibujar_cuadro(self._cuadro_sig if self._sig_clave == clave else None, clave)
+        self._sig_clave = clave
 
     def _medir(self, t0):
         pass
+
+    @staticmethod
+    def _leer_prefs_escena():
+        """(en un hilo) El modo de Inicio elegido en Ajustes, el estilo y «Reducir animaciones»."""
+        import ajustes_ui
+        import efectos_ui
+        import estilos_inicio
+        modo = str(ajustes_ui.leer_prefs().get('go_animaciones') or 'completo')
+        return modo, estilos_inicio.clave_guardada(), bool(efectos_ui.reducir_animaciones())
+
+    def _aplicar_prefs_escena(self, r, error):
+        self._leyendo_prefs = False
+        if error is not None or not r:
+            return
+        modo, clave, reducir = r
+        self.modo = modo if modo in ('completo', 'suave', 'minimo') else 'completo'
+        if clave != self.estilo_clave:
+            self.poner_estilo(clave)
+        self._quieto = reducir or self.modo == 'minimo'
 
     def _politica(self):
         """Cada ~1 s: el modo elegido en Ajustes (completo / suave / mínimo), la ventana inactiva y la calidad adaptativa deciden la
         frecuencia del reloj (60 o 30 fps) y cuántas partículas hay."""
         import time as _tm
         ahora = _tm.perf_counter()
-        if ahora - self._t_prefs > 2.0:
+        if ahora - self._t_prefs > 2.0 and not getattr(self, '_leyendo_prefs', False):
+            # v5.49 (el usuario: «que no haya tirones jamás»): las preferencias se miran en un hilo. os.stat de preferencias.json se quedó
+            # ~400 ms esperando (recién reescrito, con el antivirus mirándolo) y esto corría en el hilo de la interfaz cada 2 s
             self._t_prefs = ahora
-            try:
-                import ajustes_ui
-                modo = str(ajustes_ui.leer_prefs().get('go_animaciones') or 'completo')
-            except Exception:
-                modo = 'completo'
-            self.modo = modo if modo in ('completo', 'suave', 'minimo') else 'completo'
-            import estilos_inicio
-            clave = estilos_inicio.clave_guardada()
-            if clave != self.estilo_clave:
-                self.poner_estilo(clave)
-            try:
-                import efectos_ui
-                self._quieto = bool(efectos_ui.reducir_animaciones()) or self.modo == 'minimo'
-            except Exception:
-                pass
+            self._leyendo_prefs = True
+            ui.correr_en_hilo(self, self._leer_prefs_escena, self._aplicar_prefs_escena)
         try:
             self._inactiva = not self.window().isActiveWindow()
         except Exception:
             self._inactiva = False
-        if self._ms_reloj == 16 and self._dt_med > 0.0205 and ahora >= self._lento_hasta and ahora >= self._gracia_hasta:
+        # v5.49: «no llega» = más de 1 de cada 4 cuadros tarde desde la última vez (antes la media móvil: UN tirón de 80 ms al abrir, otras
+        # cosas cargando, ya la pasaba de 20,5 ms y la escena se quedaba a 30 fps 8 s y más)
+        n, lentos = self._n_tics, self._n_lentos
+        self._n_tics = self._n_lentos = 0
+        if self._ms_reloj == 16 and n >= 20 and lentos > n * 0.25 and ahora >= self._lento_hasta and ahora >= self._gracia_hasta:
             # no llega a 60 fps (pantalla con escala alta, GO trabajando, equipo justo): 30 parejos un rato (8 s, 16 s… hasta 2 min) y vuelve a probar
             self._lento_n = min(self._lento_n + 1, 5)
             self._lento_hasta = ahora + 8.0 * 2 ** (self._lento_n - 1)
-        elif self._ms_reloj == 16 and self._dt_med < 0.0185 and ahora > self._lento_hasta + 6.0:
+        elif self._ms_reloj == 16 and n >= 20 and lentos < n * 0.08 and ahora > self._lento_hasta + 6.0:
             self._lento_n = 0
         lento = ahora < self._lento_hasta
         ms = 160 if self._quieto else (33 if (self.modo == 'suave' or self._inactiva or self.calidad < 0.5 or lento) else 16)
@@ -930,16 +996,8 @@ class EscenaGo(QWidget):
             self._carga_final = False
             self._final_festivo()
         self._ondas = [o for o in self._ondas if self._t - o[0] < 1.7]
-        self._anillos = [a for a in self._anillos if self._t - a[0] < 1.6]
         for p in self._pasos:
             p['brillo'] = max(0.0, p['brillo'] - dt * 0.8)
-        # anillos suaves del fondo (ondas de luz sutiles)
-        if self._estado in ('reposo', 'hecho') and int(self._t * 10) % 46 == 0 and (not self._anillos or self._t - self._anillos[-1][0] > 3.0):
-            self._anillos.append((self._t, 0.12))
-        # rayos al estar hipercargada
-        if self.energia > 0.8 and self._estado == 'trabajando' and random.random() < dt * 5.0:
-            self._rayos.append((self._t, random.uniform(0, math.tau)))
-        self._rayos = [x for x in self._rayos if self._t - x[0] < 0.22]
         # ocultar etiquetas pasado un rato
         if self._t_ocultar is not None and self._t >= self._t_ocultar:
             self._t_ocultar = None
@@ -970,7 +1028,6 @@ class EscenaGo(QWidget):
         self.estilo_clave = clave if clave in estilos_inicio.ESTILOS else estilos_inicio.POR_DEFECTO
         self.estilo = estilos_inicio.crear(self.estilo_clave)
         self._pal = list(self.estilo.pal) + ['#FFC857', '#FFE3A3', '#FFB35C']          # las 3 últimas: el ámbar del final con avisos
-        self._pal_claro = [QColor(h).lighter(165).name() for h in self._pal]
         if getattr(self, '_pviva', None) is not None:
             self._pviva[:] = False
         if self._b is not None:
@@ -1001,7 +1058,7 @@ class EscenaGo(QWidget):
             return
         modo = self.estilo.modo
         dur_modo, ritmo_modo = self.MODOS.get(modo, self.MODOS['espiral'])
-        astro = self.estilo_clave == 'astrolabio'
+        astro = getattr(self.estilo, 'perfiles', False)        # los colores de cada fase de GO (los 3 estilos del astrolabio)
         ligero = 0.5 if (self.modo == 'suave' or self._inactiva or self.calidad < 0.55) else 1.0
         if emitir:
             perfil = (self.PERFIL.get(self._fase) or self.PERFIL['timeline']) if astro else None
@@ -1073,20 +1130,18 @@ class EscenaGo(QWidget):
         x2, y2 = pos(u2)
         return x, y, x2, y2, alfa
 
-    def _dibujar_particulas(self, p, c):
-        """Partículas con estela: las mueve el estilo (espiral, ascenso, caída u órbita). Todo en numpy: sin objetos por partícula,
-        solo líneas y puntos agrupados por color."""
+    def posiciones_motas(self):
+        """v5.49: (x, y, x2, y2, alfa, idx) de las motas vivas (cabeza, cola y opacidad) con el cursor apartando las cercanas, o None.
+        Las dibuja el estilo (estilos_inicio: la Nebulosa, como luces con cola; antes aquí, como líneas)."""
         if getattr(self, '_pviva', None) is None or not self._pviva.any():
-            return
+            return None
         idx = np.flatnonzero(self._pviva)
         u = ((self._t - self._pt0[idx]) / self._pdur[idx]).astype(np.float32)
         ok = (u >= 0) & (u < 1)
         idx, u = idx[ok], u[ok]
         if not len(idx):
-            return
-        W, H = float(self.width()), float(self.height())
-        x, y, x2, y2, alfa = self._posiciones_particulas(idx, u, c, W, H)
-        amb = self._pamb[idx]
+            return None
+        x, y, x2, y2, alfa = self._posiciones_particulas(idx, u, self._geometria()[0], float(self.width()), float(self.height()))
         if self._cur_k > 0.03:                             # el cursor aparta las partículas cercanas (como una mano en el agua)
             for xs, ys in ((x, y), (x2, y2)):
                 dx, dy = xs - self._cur.x(), ys - self._cur.y()
@@ -1094,27 +1149,7 @@ class EscenaGo(QWidget):
                 f = np.clip(1.0 - d / 200.0, 0.0, 1.0) ** 2 * 80.0 * self._cur_k
                 xs += dx / d * f
                 ys += dy / d * f
-        brillante = alfa > (0.45 if not amb.any() else 0.3)
-        col = self._pcol[idx] % len(self._pal)
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        cab = self.estilo.cabeza
-        trazo = self.estilo.trazo
-        for k, hexa in enumerate(self._pal):
-            m = col == k
-            if not m.any():
-                continue
-            if trazo:
-                for esamb in (False, True):
-                    ma = m & (amb == esamb)
-                    if ma.any():
-                        p.setPen(QPen(_col(hexa, 80 if esamb else 170), 1.2 if esamb else 1.4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
-                        p.drawLines([QLineF(float(a), float(b), float(cc), float(d)) for a, b, cc, d in zip(x2[ma], y2[ma], x[ma], y[ma])])
-                mb = m & brillante & ~amb
-            else:
-                mb = m & (alfa > 0.12)
-            if mb.any():
-                p.setPen(QPen(_col(self._pal_claro[k], 255 if trazo else 150), cab, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-                p.drawPoints(QPolygonF([QPointF(float(a), float(b)) for a, b in zip(x[mb], y[mb])]))
+        return x, y, x2, y2, alfa, idx
 
     def _ondas_expl_hechas(self):
         return any(o[2] == '#FFFFFF' and self._t - o[0] < 0.2 for o in self._ondas)
@@ -1256,36 +1291,14 @@ class EscenaGo(QWidget):
         if W < 10 or H < 10:
             return
         t0 = time.perf_counter()
-        dpr = self.devicePixelRatioF()
-        esc = self._esc_cuadro
-        clave = (W, H, round(dpr, 3), round(esc, 2))
+        clave = self._clave_cuadro()
         cuadro = self._cuadro
-        if cuadro is None or self._cuadro_clave != clave or t0 - self._cuadro_t >= max(0.012, self._ms_reloj * 0.0009):
-            if cuadro is None or self._cuadro_clave != clave:
-                # la escena se pinta a una fracción de la resolución real si el equipo no da los 60 fps (pantallas 4K o con escala
-                # alta): el fondo es borroso por naturaleza y se nota mucho menos que los tirones
-                cuadro = QPixmap(max(1, int(math.ceil(W * dpr * esc))), max(1, int(math.ceil(H * dpr * esc))))
-                cuadro.setDevicePixelRatio(dpr * esc)
-                self._cuadro, self._cuadro_clave = cuadro, clave
-            q = QPainter(cuadro)
-            q.setRenderHint(QPainter.RenderHint.Antialiasing)
-            q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-            self.dibujar(q, W, H)
-            q.end()
+        # v5.49: en calma el cuadro lo prepara _tic (aquí solo se copia, también cuando se repinta solo el orbe que hay encima)
+        if cuadro is None or self._cuadro_clave != clave or (not self._calmado and t0 - self._cuadro_t >= max(0.012, self._ms_reloj * 0.0009)):
+            self._cuadro = cuadro = self._dibujar_cuadro(cuadro if self._cuadro_clave == clave else None, clave)
+            self._cuadro_clave = clave
             self._cuadro_t = t0
-            ms = (time.perf_counter() - t0) * 1000.0
-            self._ms_cuadro = self._ms_cuadro * 0.88 + ms * 0.12
-            self._cuadros += 1
-            if self._cuadros % 24 == 0:
-                if self._ms_cuadro > 11.0 and self._esc_cuadro > 0.62:
-                    self._esc_cuadro = max(0.62, self._esc_cuadro - 0.1)
-                elif self._ms_cuadro < 6.0 and self._esc_cuadro < 1.0:
-                    self._esc_cuadro = min(1.0, self._esc_cuadro + 0.05)
-                # los detalles del HUD bajan solo si ni así llega
-                if self._ms_cuadro > 15.0 and self.calidad > 0.45:
-                    self.calidad = max(0.45, self.calidad - 0.15)
-                elif self._ms_cuadro < 8.0 and self.calidad < 1.0:
-                    self.calidad = min(1.0, self.calidad + 0.1)
+        esc = self._cuadro_clave[3]
         p = QPainter(self)
         if esc < 0.999:
             p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
@@ -1294,61 +1307,69 @@ class EscenaGo(QWidget):
             p.drawPixmap(0, 0, cuadro)
         p.end()
 
+    def _dibujar_cuadro(self, cuadro, clave):
+        """Dibuja la escena entera en `cuadro` (None = uno nuevo del tamaño de `clave`) y mide cuánto tarda: con eso baja o sube la
+        resolución interna y los detalles del HUD."""
+        W, H, _dpr, esc = clave
+        if cuadro is None:
+            # la escena se pinta a una fracción de la resolución real si el equipo no da los 60 fps (pantallas 4K o con escala
+            # alta): el fondo es borroso por naturaleza y se nota mucho menos que los tirones
+            dpr = self.devicePixelRatioF()
+            cuadro = QPixmap(max(1, int(math.ceil(W * dpr * esc))), max(1, int(math.ceil(H * dpr * esc))))
+            cuadro.setDevicePixelRatio(dpr * esc)
+        t0 = time.perf_counter()
+        q = QPainter(cuadro)
+        q.setRenderHint(QPainter.RenderHint.Antialiasing)
+        q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        self.dibujar(q, W, H)
+        q.end()
+        ms = (time.perf_counter() - t0) * 1000.0
+        self._ms_cuadro = self._ms_cuadro * 0.88 + ms * 0.12
+        self._cuadros += 1
+        if self._cuadros % 24 == 0:
+            # v5.49: vuelve a la resolución entera por debajo de 9,5 ms (antes 6): los 3 estilos cuestan 7-9 ms por cuadro entero y en
+            # reposo se dibuja a 30 fps en su propio tic (sobra margen); un tirón al abrir la dejaba al 80-90 % para siempre, algo borrosa
+            if self._ms_cuadro > 11.0 and self._esc_cuadro > 0.62:
+                self._esc_cuadro = max(0.62, self._esc_cuadro - 0.1)
+            elif self._ms_cuadro < 9.5 and self._esc_cuadro < 1.0:
+                self._esc_cuadro = min(1.0, self._esc_cuadro + 0.05)
+            # los detalles del HUD bajan solo si ni así llega
+            if self._ms_cuadro > 15.0 and self.calidad > 0.45:
+                self.calidad = max(0.45, self.calidad - 0.15)
+            elif self._ms_cuadro < 8.0 and self.calidad < 1.0:
+                self.calidad = min(1.0, self.calidad + 0.1)
+        return cuadro
+
     def dibujar(self, p, W, H):
         c, Rs, rect = self._geometria()
         sac = self._sacudida
         if sac > 0:
             p.translate(math.sin(self._t * 90) * 5 * min(1.0, sac * 2), math.cos(self._t * 77) * 4 * min(1.0, sac * 2))
-        # fondo (degradado + haces + velo + viñeta): se pinta a 1/3 de resolución, que es borroso por naturaleza, y se escala
-        e = self.energia
-        bajo = self._fondo_bajo(W, H, c, e)
-        p.drawPixmap(QRectF(-10, -10, W + 20, H + 20), bajo, QRectF(bajo.rect()))
-        self.estilo.frente(p, W, H, c, self._t, self._estado)
-        # anillos de luz muy suaves
-        for t0, fuerza in self._anillos:
-            u = (self._t - t0) / 1.6
-            rr = Rs * (0.9 + 2.4 * u)
-            p.setPen(QPen(_col('#4589FF', 255 * fuerza * (1 - u) ** 2 * 0.5), 2.0 + 6 * u))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawEllipse(c, rr, rr)
-        # sombra suave bajo los textos del botón (se leen aunque la esfera pase por detrás)
-        if self._estado in ('trabajando', 'explotando', 'hecho', 'error', 'reposo'):
-            sombra = QRadialGradient(QPointF(c.x(), c.y() + Rs * 0.82), Rs * 0.95)
-            sombra.setColorAt(0.0, QColor(2, 6, 16, 150))
-            sombra.setColorAt(1.0, QColor(2, 6, 16, 0))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(sombra)
-            p.save()
-            p.translate(c.x(), c.y() + Rs * 0.82)
-            p.scale(1.0, 0.34)
-            p.translate(-c.x(), -(c.y() + Rs * 0.82))
-            p.drawEllipse(QPointF(c.x(), c.y() + Rs * 0.82), Rs * 0.95, Rs * 0.95)
-            p.restore()
+        # v5.49: lo de cada estilo de Inicio (estilos_inicio: Nebulosa, Astrolabio, Proceso): su fondo a 1/3 de resolución, sus luces, aros,
+        # tarjetas… y su manera de enseñar el proceso de GO. Encima, lo común: chispas, ondas (a su manera), pasos y cometas si los quiere,
+        # barra de progreso y destello. (Antes: el dial de marcas, las órbitas y las motas con estela: «solo se ven líneas».)
+        est = self.estilo
         try:
-            if self.estilo.hud:
-                import mograf_ui
-                mograf_ui.dibujar_hud(p, W, H, c, Rs, 3.0 if self._quieto else self._t, self.energia, self._estado,
-                                      self.calidad, self.meta)
+            est.escena(self, p, W, H, c, Rs, rect)
         except Exception as ex:
-            if not getattr(self, '_aviso_hud', False):
-                self._aviso_hud = True
+            p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+            p.setOpacity(1.0)
+            if not getattr(self, '_aviso_estilo', False):
+                self._aviso_estilo = True
                 try:
                     import registro
-                    registro.aviso(f'HUD de Inicio: {type(ex).__name__}: {ex}', 'escena_go')
+                    registro.aviso(f'Escena de Inicio ({self.estilo_clave}): {type(ex).__name__}: {ex}', 'escena_go')
                 except Exception:
                     pass
-        self._dibujar_gravedad(p, c, Rs)
-        self._dibujar_particulas(p, c)
-        self._dibujar_chispas_paso(p, c)
+        self._dibujar_chispas_paso(p, c, est.pasos_lista)
         self._dibujar_chispas(p)
-        for r in self._rayos:
-            self._dibujar_rayo(p, c, Rs, r)
         for onda in self._ondas:
-            self._dibujar_onda(p, onda, W, H)
-        self._dibujar_pasos(p, rect)
-        for k_ in self._cometas:
+            est.onda(self, p, onda, W, H)
+        if est.pasos_lista:
+            self._dibujar_pasos(p, rect)
+        for k_ in (self._cometas if est.cometas else ()):
             self._dibujar_cometa(p, k_)
-        for im in self._impactos:
+        for im in (self._impactos if est.cometas else ()):          # (sin cometas no hay choque: en Proceso era un destello sobre los botones)
             self._dibujar_impacto(p, im)
         if self._barra_d is not None and self._barra_a > 0.01:
             self._dibujar_barra(p, W, H, rect.bottom())
@@ -1483,42 +1504,6 @@ class EscenaGo(QWidget):
         self.estilo.fondo(q, W, H, c, e, self._t, self._estado)
         q.end()
         return pm
-
-    def _dibujar_gravedad(self, p, c, Rs):
-        """Lente gravitacional y masa crítica: anillos que se estiran y un núcleo que se pone blanco al cargarse."""
-        e = self.energia
-        if e < 0.25 or self.expl > 0:
-            return
-        p.setPen(Qt.PenStyle.NoPen)
-        k = (e - 0.25) / 0.75
-        g = QRadialGradient(c, Rs * 0.95)
-        g.setColorAt(0.0, _col('#FFFFFF', 120 * k ** 2))
-        g.setColorAt(0.35, _col('#7FB5FF', 80 * k))
-        g.setColorAt(1.0, _col('#4589FF', 0))
-        p.setBrush(g)
-        p.drawEllipse(c, Rs * 0.95, Rs * 0.95)
-        if e > 0.55:
-            for j in range(3):
-                ph = (self._t * (0.6 + 0.2 * j) + j * 0.33) % 1.0
-                rr = Rs * (1.05 + 0.5 * ph)
-                p.setPen(QPen(_col('#9CC8FF', 120 * (e - 0.5) * (1 - ph) ** 1.5), 1.5))
-                p.setBrush(Qt.BrushStyle.NoBrush)
-                p.drawEllipse(c, rr, rr * (0.86 - 0.12 * math.sin(self._t * 3 + j)))
-
-    def _dibujar_rayo(self, p, c, Rs, r):
-        t0, ang = r
-        u = (self._t - t0) / 0.22
-        a = 1.0 - u
-        pts = []
-        x, y = c.x() + math.cos(ang) * Rs * 0.95, c.y() + math.sin(ang) * Rs * 0.8
-        for k in range(9):
-            ang2 = ang + random.uniform(-0.28, 0.28)
-            x += math.cos(ang2) * Rs * 0.12
-            y += math.sin(ang2) * Rs * 0.1
-            pts.append(QPointF(x, y))
-        for ancho, alfa in ((6, 40), (3, 90), (1.3, 255)):
-            p.setPen(QPen(_col('#BFE0FF', alfa * a), ancho, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-            p.drawPolyline(pts)
 
     def _dibujar_objeto(self, p, o, c):
         u = o.u(self._t)

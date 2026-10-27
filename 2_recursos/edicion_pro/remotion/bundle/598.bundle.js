@@ -1,7 +1,7 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[103],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[598],{
 
-/***/ 9103
+/***/ 4598
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 
@@ -18,8 +18,8 @@ var index_ts7drhwc = __webpack_require__(7449);
 var index_kwxewaaz = __webpack_require__(6929);
 // EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-7shemw90.mjs
 var index_7shemw90 = __webpack_require__(8335);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-394460kk.mjs + 7 modules
-var index_394460kk = __webpack_require__(1045);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-kewagct1.mjs + 7 modules
+var index_kewagct1 = __webpack_require__(8083);
 // EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-fa0wsc5r.mjs
 var index_fa0wsc5r = __webpack_require__(5576);
 // EXTERNAL MODULE: ./node_modules/react/index.js
@@ -1809,7 +1809,7 @@ class TrackSynchronizer {
     }
 }
 
-;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-hcbpmydg.mjs
+;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-m1y3j802.mjs
 Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 
 
@@ -2032,7 +2032,7 @@ var CaptionQueueProcessor = () => {
         for (let index = 0;index < 1000; index++) {
           signal.throwIfAborted();
           const installationName = `${baseName}${index === 0 ? "" : `-copy${index === 1 ? "" : `-${index}`}`}`;
-          const preflight = await (0,index_394460kk/* prepareElementInstall */.Rl)({
+          const preflight = await (0,index_kewagct1/* prepareElementInstall */.Rl)({
             installationName,
             destination: {
               type: "selected-media",
@@ -2051,7 +2051,7 @@ var CaptionQueueProcessor = () => {
             await (0,index_gjr0ae8m/* installRequiredPackages */.oX)(element.dependencies);
           }
           signal.throwIfAborted();
-          const response = await (0,index_394460kk/* installElement */.iW)({
+          const response = await (0,index_kewagct1/* installElement */.iW)({
             installationName,
             compositionFile: null,
             compositionId: null,
@@ -2167,4 +2167,4 @@ var loadModelForJob = async ({
 /***/ }
 
 }]);
-//# sourceMappingURL=103.bundle.js.map
+//# sourceMappingURL=598.bundle.js.map

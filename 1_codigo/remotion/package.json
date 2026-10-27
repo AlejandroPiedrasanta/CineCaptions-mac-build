@@ -10,15 +10,15 @@
   },
   "dependencies": {
     "@react-three/fiber": "9.8.2",
-    "@remotion/bundler": "4.0.538",
-    "@remotion/cli": "4.0.538",
-    "@remotion/lottie": "4.0.538",
-    "@remotion/renderer": "4.0.538",
-    "@remotion/three": "4.0.538",
+    "@remotion/bundler": "4.0.539",
+    "@remotion/cli": "4.0.539",
+    "@remotion/lottie": "4.0.539",
+    "@remotion/renderer": "4.0.539",
+    "@remotion/three": "4.0.539",
     "lottie-web": "5.13.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "remotion": "4.0.538",
+    "remotion": "4.0.539",
     "three": "0.186.1"
   },
   "overrides": {
@@ -27,7 +27,7 @@
     "@rspack/core": "2.2.9",
     "@types/dom-webcodecs": "0.1.19",
     "ast-types": "0.16.3",
-    "mediabunny": "1.62.0",
+    "mediabunny": "1.62.1",
     "react-refresh": "0.19.0"
   }
 }

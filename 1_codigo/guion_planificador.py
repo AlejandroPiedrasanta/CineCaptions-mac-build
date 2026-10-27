@@ -52,10 +52,12 @@ AIRE_EDITORIAL = 0.012
 # v5.48 (el usuario: «muy rápido y no están fluidos»; medido contra REFERENCIA.mp4 / ref_exacta): cada palabra entra cuando se dice (la referencia
 # va ~0,08 s DETRÁS de la voz), la última de cada bloque se ve al menos 'respiro' s (el siguiente espera hasta 'espera_max' s; ver _respiro) y entre
 # bloque y bloque queda un instante vacío ('gap_minimo'; en la referencia 0,15-0,25 s). Las grandes no pasan de 'zoom_max' (la referencia: 0,9-1,3).
+# v5.50 (pedido, medido contra PRUEBAS (3)): sin hueco en negro entre bloques ('gap_minimo' 0,15 -> 0): un bloque sale con su animación y el
+# siguiente entra enseguida, y si la voz hace una pausa de hasta 'pegar' s el bloque se queda en pantalla hasta que llega el siguiente.
 AFINADO = {'adelanto': 0.0, 'respiro': 0.55, 'espera_max': 0.35, 'zoom_max': 1.3, 'cortos_entre': 2, 'complejo_max': 4, 'complejo_s': 3.2, 'max_linea': 4, 'zoom_max_cifra': 1.7, 'bloque_min': 1.2,
            # v5.48 (pedido: «más junto en general y el principal un poco más grande»): la grande = 1,1 × el ancho de su línea pequeña (y ≥1,1 × su
            # tamaño natural); alturas estimadas más ceñidas a la tinta ('k_alto' 1,45 -> 1,3; 'alto_linea' 0,036 -> 0,031)
-           'grande_linea': 1.1, 'grande_min': 1.1, 'k_alto': 1.35, 'k_alto_sans': 1.7, 'hold': 0.22, 'min_bloque': 0.7, 'gap_minimo': 0.15, 'puntaje_min': 8.0, 'puntaje_2': 9.0, 'dist_mains': 4,
+           'grande_linea': 1.1, 'grande_min': 1.1, 'k_alto': 1.35, 'k_alto_sans': 1.7, 'hold': 0.22, 'min_bloque': 0.7, 'gap_minimo': 0.0, 'pegar': 1.2, 'puntaje_min': 8.0, 'puntaje_2': 9.0, 'dist_mains': 4,
            'pausa_frase': 0.45, 'pausa_coma': 0.12, 'combinar_s': 2.0, 'cap_len': 10, 'bonus_det': 4.0, 'bonus_ultima': 4.0, 'bonus_gancho': 8.0,
            'pen_verbo': 3.0, 'pen_pret': 6.0, 'pen_modifica': 2.0, 'bonus_adj': 3.0, 'bonus_cond': 5.0, 'hueco': 0.006, 'cabe': 0.96, 'alto_linea': 0.031,
            'pausa_oracion': 0.3}      # fin de oración sin signos: en la referencia los finales dejan ≥0,32 s y las comas ≤0,24 s
@@ -722,6 +724,8 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
         ultimo_fin = pal[idx[-1]]['fin']
         t1 = ultimo_fin + A['hold']
         if sig_t0 is not None:
+            if sig_t0 - t1 <= A['pegar']:          # pausa corta: se queda hasta el siguiente (sin negro entre bloques)
+                t1 = sig_t0
             t1 = min(t1, sig_t0 - A['gap_minimo'])
         elif fin_video:
             t1 = max(t1, min(float(fin_video), ultimo_fin + 1.0))

@@ -13,9 +13,11 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     .cf\   (1 archivos)
         icono.ico
     herramientas_dev\   (42 archivos)
-    remotion\   (16088 archivos)
+    remotion\   (16238 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
+    actualizar_ui.py
+        la ventana «Actualizando CineCaptions» (v5.49, propuesta A + B elegida por el usuario; pulida: «más profesional,
     ajustes_ui.py
         Ajustes: panel rápido y ventana completa (General, Interfaz, Atajos, Acerca de, Ayuda) + notas de la versión.
     archivos_seguros.py
@@ -171,7 +173,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     estilos_bloque.py
         qué estilo (variante del pack) lleva CADA bloque: lo decide la app y lo enseña Creativo, ya no el azar de Resolve.
     estilos_inicio.py
-        los 10 estilos de la pantalla de Inicio: cada uno es un rediseño completo (héroe, fondo, partículas).
+        los 3 estilos de la pantalla de Inicio (Nebulosa, Astrolabio, Proceso): el astrolabio de bronce con su escena y su proceso de GO.
     estilos_pro.py
         v5.20: los ESTILOS y COLORES de cada función de la Edición PRO (página Efectos › Edición PRO), en un solo sitio.
     estilos_slider.py
@@ -361,7 +363,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     sidecar_lua.py
         escribe <archivo>.lua junto a cada .json (canal de lectura para Resolve Free 21.1).
     sonido_musica.py
-        MÚSICA de la biblioteca del autor (Desktop\SFX\02_MUSICA) para la página Sonido (v5.48). Mismo criterio que
+        MÚSICA de la biblioteca del autor (5_SFX\02_MUSICA) para la página Sonido (v5.48). Mismo criterio que
     sonido_skill.py
         SONIDO con la biblioteca del autor y las reglas de MAPA_SFX.md (reemplaza el diseño de SFX del «AI Sound Director»).
     sonido_skill_ui.py

@@ -8110,7 +8110,11 @@ class IsobmffTrackBacking {
     // The timestamp with which we can search the lookup table
     searchTimestamp, 
     // The timestamp for which we know the correct sample will not come after it
-    latestTimestamp, options, isRetry = false) {
+    latestTimestamp, options, 
+    // The position for which we know the correct sample will not come after it
+    stopPos = Infinity, 
+    // How many times we've retried due to a faulty lookup table entry
+    lookupRetryCount = 0) {
         const demuxer = this.internalTrack.demuxer;
         let currentFragment = null;
         let bestFragment = null;
@@ -8136,6 +8140,7 @@ class IsobmffTrackBacking {
             ? this.internalTrack.fragmentPositionCache[positionCacheIndex]
             : null;
         const lookupEntryPosition = Math.max(lookupEntry?.moofOffset ?? 0, positionCacheEntry?.moofOffset ?? 0) || null;
+        const lookupTableWins = !!lookupEntry && lookupEntry.moofOffset >= (positionCacheEntry?.moofOffset ?? 0);
         let currentPos;
         if (!startFragment) {
             currentPos = lookupEntryPosition ?? 0;
@@ -8150,13 +8155,15 @@ class IsobmffTrackBacking {
                 currentPos = lookupEntryPosition;
             }
         }
-        while (true) {
+        const scanStartPos = currentFragment ? currentFragment.moofOffset : currentPos;
+        while (currentPos < stopPos) {
             if (currentFragment) {
                 const trackData = currentFragment.trackData.get(this.internalTrack.id);
                 if (trackData && trackData.startTimestamp > latestTimestamp) {
                     // We're already past the upper bound, no need to keep searching
                     break;
                 }
+                currentFragment = null; // So we don't process it again next iteration
             }
             const summary = demuxer.fragmentSummaries.get(currentPos);
             if (summary && !summary.trackIds.has(this.internalTrack.id)) {
@@ -8191,15 +8198,19 @@ class IsobmffTrackBacking {
             }
             currentPos = boxStartPos + boxInfo.totalSize;
         }
-        // Catch faulty lookup table entries
-        if (lookupEntry && (!bestFragment || bestFragment.moofOffset < lookupEntry.moofOffset)) {
-            // The lookup table entry lied to us! We found a lookup entry but no fragment there that satisfied
-            // the match. In this case, let's search again but using the lookup entry before that. If that one lies
-            // too, we stop trusting the table altogether, since walking back through many faulty entries would mean
-            // rescanning the file over and over.
-            const previousLookupEntry = this.internalTrack.fragmentLookupTable[lookupEntryIndex - 1];
-            const newSearchTimestamp = !isRetry && previousLookupEntry ? previousLookupEntry.timestamp : -Infinity;
-            return this.performFragmentedLookup(null, getMatchInFragment, newSearchTimestamp, latestTimestamp, options, true);
+        // Handle unsatisfactory lookup table entries or position cache entries
+        if (lookupEntryPosition !== null && (!bestFragment || bestFragment.moofOffset < lookupEntryPosition)) {
+            // We found a lookup entry but no fragment from there on that satisfied the match. In this case, let's
+            // search again but using a previous entry of the kind we started from. Each time this happens, we double
+            // the backwards step to perform better (and have more sequential reads) if it takes us a long time to find
+            // the media.
+            const step = 1 << lookupRetryCount;
+            const previousEntryTimestamp = lookupTableWins
+                ? this.internalTrack.fragmentLookupTable[lookupEntryIndex - step]?.timestamp
+                : this.internalTrack.fragmentPositionCache[positionCacheIndex - step]?.startTimestamp;
+            const newSearchTimestamp = previousEntryTimestamp ?? -Infinity;
+            return this.performFragmentedLookup(null, getMatchInFragment, newSearchTimestamp, latestTimestamp, options, scanStartPos, // So we don't read the same fragments again
+            lookupRetryCount + 1);
         }
         if (bestFragment) {
             // If we finished looping but didn't find a perfect match, still return the best match we found
@@ -11304,7 +11315,11 @@ class MatroskaTrackBacking {
     // The timestamp with which we can search the lookup table
     searchTimestamp, 
     // The timestamp for which we know the correct block will not come after it
-    latestTimestamp, options, isRetry = false) {
+    latestTimestamp, options, 
+    // The position for which we know the correct block will not come after it
+    stopPos = Infinity, 
+    // How many times we've retried due to a faulty lookup entry
+    lookupRetryCount = 0) {
         const { demuxer, segment } = this.internalTrack;
         let currentCluster = null;
         let bestCluster = null;
@@ -11331,6 +11346,7 @@ class MatroskaTrackBacking {
             ? this.internalTrack.clusterPositionCache[positionCacheIndex]
             : null;
         const lookupEntryPosition = Math.max(cuePoint?.clusterPosition ?? 0, positionCacheEntry?.elementStartPos ?? 0) || null;
+        const cuePointWins = !!cuePoint && cuePoint.clusterPosition >= (positionCacheEntry?.elementStartPos ?? 0);
         let currentPos;
         if (!startCluster) {
             currentPos = lookupEntryPosition ?? segment.clusterSeekStartPos;
@@ -11345,13 +11361,16 @@ class MatroskaTrackBacking {
                 currentPos = lookupEntryPosition;
             }
         }
-        while (segment.elementEndPos === null || currentPos <= segment.elementEndPos - _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_HEADER_SIZE */ .De) {
+        const scanStartPos = currentCluster ? currentCluster.elementStartPos : currentPos;
+        while ((segment.elementEndPos === null || currentPos <= segment.elementEndPos - _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .MIN_HEADER_SIZE */ .De)
+            && currentPos < stopPos) {
             if (currentCluster) {
                 const trackData = currentCluster.trackData.get(this.internalTrack.id);
                 if (trackData && trackData.startTimestamp > latestTimestamp) {
                     // We're already past the upper bound, no need to keep searching
                     break;
                 }
+                currentCluster = null; // So we don't process it again next iteration
             }
             const summary = segment.clusterSummaries.get(currentPos);
             if (summary && !summary.trackIds.has(this.internalTrack.id)) {
@@ -11422,15 +11441,23 @@ class MatroskaTrackBacking {
             }
             currentPos = endPos;
         }
-        // Catch faulty cue points
-        if (cuePoint && (!bestCluster || bestCluster.elementStartPos < cuePoint.clusterPosition)) {
-            // The cue point lied to us! We found a cue point but no cluster there that satisfied the match. In this
-            // case, let's search again but using the cue point before that. If that one lies too, we stop trusting the
-            // cues altogether, since walking back through many faulty cue points would mean rescanning the file over
-            // and over.
-            const previousCuePoint = this.internalTrack.cuePoints[cuePointIndex - 1];
-            const newSearchTimestamp = !isRetry && previousCuePoint ? previousCuePoint.time : -Infinity;
-            return this.performClusterLookup(null, getMatchInCluster, newSearchTimestamp, latestTimestamp, options, true);
+        // Handle unsatisfactoy cue points or position cache entries
+        if (lookupEntryPosition !== null && (!bestCluster || bestCluster.elementStartPos < lookupEntryPosition)) {
+            // We found a lookup entry but no cluster from there on that satisfied the match. In this case, let's search
+            // again but using a previous entry of the kind we started from. Each time this happens, we double the
+            // backwards step to perform better (and have more sequential reads) if it takes us a long time to find
+            // the media.
+            //
+            // Note that this doesn't only kick for faulty cue points but also for multi-track files where only one
+            // track has cue points. Since we distribute the cue points to the track with none, they might not
+            // accurately reflect where media can be found.
+            const step = 1 << lookupRetryCount;
+            const previousEntryTimestamp = cuePointWins
+                ? this.internalTrack.cuePoints[cuePointIndex - step]?.time
+                : this.internalTrack.clusterPositionCache[positionCacheIndex - step]?.startTimestamp;
+            const newSearchTimestamp = previousEntryTimestamp ?? -Infinity;
+            return this.performClusterLookup(null, getMatchInCluster, newSearchTimestamp, latestTimestamp, options, scanStartPos, // So we don't read the same clusters again
+            lookupRetryCount + 1);
         }
         if (bestCluster) {
             // If we finished looping but didn't find a perfect match, still return the best match we found

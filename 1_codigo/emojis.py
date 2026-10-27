@@ -301,7 +301,9 @@ def _catalogo_base():
     """El catalogo que viaja con el programa (emojis/indice.json)."""
     if 'base' not in _CACHE:
         try:
-            datos = json.loads((carpeta() / 'indice.json').read_text(encoding='utf-8'))
+            # v5.49: 10 MB; json.loads retenía el GIL ~115 ms (las tarjetas de estado lo cargan en un hilo al abrir: un tirón en Inicio)
+            import archivos_seguros
+            datos = archivos_seguros.leer_json_cediendo(carpeta() / 'indice.json', niveles=2)
             lista = [e for e in (datos.get('emojis') or [])
                      if isinstance(e, dict) and e.get('id')]
         except (OSError, ValueError, AttributeError):

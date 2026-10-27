@@ -97,22 +97,65 @@ def extraer_de_setting(drfx, tipo):
 # v5.48 — REPARACIÓN AUTOMÁTICA del «Anim Engine» del macro. Si la entrada + la salida no caben en el clip, el macro marca «Error! Animation too long!»
 # y el texto no llega a verse (su botón «Fix Animations» solo reparte el clip entero entre entrada y salida). Aquí InLength / OutLength llevan una
 # expresión: nunca más del 30 % de lo que dura el clip, así cualquier palabra, por corta que sea, entra, se queda quieta un rato y sale.
+# v5.50: cada pack puede dar su tope (entrada, salida) en los dos últimos valores de su 'anim' (la suma nunca llega al clip entero).
 PARTE_ANIM = 0.3
 
 
-def _anim_auto(tools):
+def _anim_auto(tools, partes=None):
     dur = '((comp.RenderEnd - comp.RenderStart + 1)/comp:GetPrefs(\\"Comp.FrameFormat.Rate\\"))'
+    tope = dict(zip(('InLength', 'OutLength'), partes or (PARTE_ANIM, PARTE_ANIM)))
     return re.sub(r'\b(InLength|OutLength) = Input \{ Value = ([0-9.eE+-]+), \}',
-                  lambda m: f'{m.group(1)} = Input {{ Value = {m.group(2)}, Expression = "min({m.group(2)}, {dur}*{PARTE_ANIM})", }}', tools)
+                  lambda m: f'{m.group(1)} = Input {{ Value = {m.group(2)}, Expression = "min({m.group(2)}, {dur}*{_n(tope[m.group(1)])})", }}', tools)
 
 
 def _n(v):
     return f'{v:.6g}'
 
 
-def comp_luxe_shine(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None, brillo=None):
+def comp_luxe_shine(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None, brillo=None, trama=None):
     """Texto de la comp completa (cabecera + Tools) con el macro Luxe Shine ya personalizado."""
-    return comp_luxe('shine', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, barrido, brillo)
+    t = comp_luxe('shine', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, barrido, brillo)
+    return _trama(t, tam, y, trama) if trama else t
+
+
+def _trama(texto, tam, y, trama):
+    """v5.50 (pedido: «agrega halftone»; luego «están feos: debe ser todo, sutil y difuminado»): toda la letra lleva una trama de puntos de color
+    `trama['color']` de bordes suaves (`suave` px de degradado) y poca opacidad: `opacidad` = (abajo, arriba), un poco más marcada en la base que se
+    desvanece hacia arriba. Entre la salida del macro y MediaOut1: «TramaPuntos» (Custom sobre un Background) dibuja la rejilla de `celda` px (a 1080
+    de ancho) sin depender del fotograma (Fusion no la rehace en cada uno); «Trama» (Custom simple) la pinta sobre la letra solo donde es casi opaca
+    (ni el halo ni la sombra del macro se puntean). El degradado va de la base a la parte alta de las mayúsculas: centradas en `y` (Text+ centra la
+    caja ascent/descent y, en Poppins, eso deja las mayúsculas a ±0,35 em), con el em de Size 1 = 640/1080 del ancho."""
+    mitad = 0.35 * tam * 640.0 / 1920.0                                    # media altura de las mayúsculas, en fracción del alto
+    arriba, abajo = y + mitad, y - mitad                                    # (y de Fusion: 0 abajo)
+    px = '(w / 1080)'
+    celda = f'({_n(trama.get("celda", 9))} * {px})'
+    fx = f'(x * w - floor(x * w / {celda}) * {celda} - {celda} / 2)'
+    fy = f'(y * h - floor(y * h / {celda}) * {celda} - {celda} / 2)'
+    op_abajo, op_arriba = trama.get('opacidad', (0.4, 0.12))
+    t = f'max(0, min(1, ({_n(arriba)} - y) / {_n(arriba - abajo)}))'
+    opacidad = f'({_n(op_arriba)} + {_n(op_abajo - op_arriba)} * {t})'
+    radio = f'({_n(trama.get("radio", 2.4))} * {px})'
+    punto = f'max(0, min(1, ({radio} - sqrt({fx} * {fx} + {fy} * {fy})) / ({_n(trama.get("suave", 1.6))} * {px}))) * {opacidad}'
+    k = 'a2 * max(0, min(1, (a1 - 0.6) * 3.3))'
+    cr, cg, cb = trama['color']
+    nodo = (f'TramaLienzo = Background {{ Inputs = {{ UseFrameFormatSettings = Input {{ Value = 1, }}, TopLeftAlpha = Input {{ Value = 1, }}, }}, '
+            f'ViewInfo = OperatorInfo {{ Pos = {{ 220, 120 }} }}, }}, '
+            f'TramaPuntos = Custom {{ CtrlWZoom = false, Inputs = {{ RedExpression = Input {{ Value = "0", }}, GreenExpression = Input {{ Value = "0", }}, '
+            f'BlueExpression = Input {{ Value = "0", }}, AlphaExpression = Input {{ Value = "{punto}", }}, '
+            f'Image1 = Input {{ SourceOp = "TramaLienzo", Source = "Output", }}, }}, ViewInfo = OperatorInfo {{ Pos = {{ 330, 120 }} }}, }}, '
+            f'Trama = Custom {{ CtrlWZoom = false, Inputs = {{ '
+            f'RedExpression = Input {{ Value = "r1 + ({_n(cr)} * a1 - r1) * {k}", }}, '
+            f'GreenExpression = Input {{ Value = "g1 + ({_n(cg)} * a1 - g1) * {k}", }}, '
+            f'BlueExpression = Input {{ Value = "b1 + ({_n(cb)} * a1 - b1) * {k}", }}, '
+            f'AlphaExpression = Input {{ Value = "a1", }}, '
+            f'Image1 = Input {{ SourceOp = "{{fuente}}", Source = "Output", }}, Image2 = Input {{ SourceOp = "TramaPuntos", Source = "Output", }}, }}, '
+            f'ViewInfo = OperatorInfo {{ Pos = {{ 330, 49.5 }} }}, }}, ')
+    patron = r'MediaOut1 = MediaOut \{ Inputs = \{ Index = Input \{ Value = "0", \}, Input = Input \{ SourceOp = "([^"]+)", Source = "Output", \}'
+    m = re.search(patron, texto)
+    if not m:
+        raise SystemExit('el macro no trae MediaOut1 con la forma esperada (trama)')
+    nuevo = m.group(0).replace(f'SourceOp = "{m.group(1)}"', 'SourceOp = "Trama"')
+    return texto[:m.start()] + nodo.replace('{fuente}', m.group(1)) + nuevo + texto[m.end():]
 
 
 def comp_luxe_slide(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None, deslizar=None):
@@ -241,10 +284,10 @@ def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, e
     if anim:
         # v5.9: duración de la entrada y la salida del macro (AnimEngine.InLength / OutLength, en segundos; de fábrica 0,7 s cada una: una palabra que dura menos
         # de 1,4 s ni se ve, porque el macro se esconde si entrada + salida no caben en el clip). Los captions rápidos usan ~0,12 s.
-        entrada, salida = anim
+        entrada, salida = anim[:2]
         tools = re.sub(r'InLength = Input \{ Value = [0-9.eE+-]+, \}', f'InLength = Input {{ Value = {_n(entrada)}, }}', tools, count=1)
         tools = re.sub(r'OutLength = Input \{ Value = [0-9.eE+-]+, \}', f'OutLength = Input {{ Value = {_n(salida)}, }}', tools, count=1)
-    tools = _anim_auto(tools)
+    tools = _anim_auto(tools, tuple(anim[2:4]) if anim and len(anim) >= 4 else None)
     if tipo == 'count':
         # cuenta de 0 a la cifra del texto (el macro quita solo lo que no sea número y pone las comas de miles)
         tools, n = re.subn(r'CountEnd = Input \{ Value = "[^"]*", \}', 'CountEnd = Input { Value = "0", Expression = "tostring(Template.StyledText.Value)", }', tools, count=1)

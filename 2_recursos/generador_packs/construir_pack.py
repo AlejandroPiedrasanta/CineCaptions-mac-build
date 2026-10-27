@@ -81,6 +81,26 @@ def comp_de_drb(ruta, clip):
     return _COMPS_DRB[clave]
 
 
+def retocar_comp(hex_comp, cambios):
+    """v5.50: el CompositionBA (hex) con textos de sus Tools cambiados [(viejo, nuevo), …] (la comp de Amro se copia tal cual salvo esto)."""
+    if not cambios:
+        return hex_comp
+    cab = zlib.decompress(binascii.unhexlify(hex_comp)[4:])
+    i = cab.index(b'Composition {')
+    prefijo, datos = cab[:i - 4], cab[i:]
+    j = datos.index(b'\x00')
+    z = zlib.decompressobj()
+    tools = z.decompress(datos[j + 5:]).decode('utf-8')
+    for viejo, nuevo in cambios:
+        if viejo not in tools:
+            raise SystemExit(f'no encuentro {viejo!r} en la comp a retocar')
+        tools = tools.replace(viejo, nuevo, 1)
+    tools_b = tools.encode('utf-8')
+    datos = datos[:j] + b'\x00' + struct.pack('<I', len(tools_b)) + zlib.compress(tools_b, 9) + z.unused_data
+    cab = prefijo + struct.pack('>I', len(datos)) + datos
+    return binascii.hexlify(struct.pack('>I', len(cab)) + zlib.compress(cab, 6)).decode()
+
+
 def blob_con_tilt(hex_blob, tilt):
     """El FieldsBlob (hex) de un clip con su Tilt cambiado. tilt = fracción del alto, positivo = arriba (como packs_drt.posiciones_de_drb).
     El blob es: cabecera + (tam, 10001, largo) + 0x81 + zstd(protobuf); el Tilt es un double dentro del protobuf (campo 0x29), así que
@@ -246,13 +266,14 @@ def construir(plantilla, salida, nombre_bin, pack, combinaciones=(1, 2, 3), y_po
         elif rol in ('main', 'base'):
             mayus = r['mayus'] if g.COMBINACIONES[comb].get('mayus_real') else True
             texto = luxe_macro.comp_luxe_shine(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=mayus and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'),
-                                               barrido=g.COMBINACIONES[comb].get('barrido'), brillo=g.COMBINACIONES[comb].get('brillo'))
+                                               barrido=g.COMBINACIONES[comb].get('barrido'), brillo=g.COMBINACIONES[comb].get('brillo'),
+                                               trama=g.COMBINACIONES[comb].get('trama') if rol == 'main' else None)
         else:
             texto = luxe_macro.comp_luxe_slide(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=r['mayus'] and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'), brillo=g.COMBINACIONES[comb].get('brillo'),
                                               deslizar=g.COMBINACIONES[comb].get('deslizar'))
         bloque = m.group(0)
         hex_viejo = _BA.search(bloque).group(2)
-        hex_nuevo = comp_de_drb(fuente['drb'], fuente['clip']) if fuente else blob_de_comp(texto, hex_viejo)
+        hex_nuevo = retocar_comp(comp_de_drb(fuente['drb'], fuente['clip']), fuente.get('cambios')) if fuente else blob_de_comp(texto, hex_viejo)
         bloque_nuevo = _BA.sub(lambda mm: mm.group(1) + hex_nuevo + mm.group(3), bloque, count=1)
         if nombres_nuevos:
             bloque_nuevo = bloque_nuevo.replace(f'<Name>{nombre}</Name>', f'<Name>{nombre_de_estructura(nombre)}</Name>', 1)
