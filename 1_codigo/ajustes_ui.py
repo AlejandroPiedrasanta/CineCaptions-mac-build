@@ -495,6 +495,14 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.51', [
+        'Tema 2: las palabras entran y salen con más calma, como en tus referencias, y los bloques van seguidos, sin parpadeos en negro.',
+        'Tema 2: el subrayado verde queda pegado a la palabra y de su mismo ancho, y la palabra grande azul lleva una trama de puntos sutil.',
+        'Tema 2: los emojis salen solo con la Edición PRO y su opción «Emojis animados».',
+        'Inicio más fluido, a 60 fps, con tres estilos para elegir: Astrolabio, Nebulosa y Proceso.',
+        'Sonido: cada efecto empieza con su animación, el Tema 1 suena con reglas fijas y nunca se usan sonidos hechos por IA.',
+        'Nueva ventana de actualización con el progreso, los pasos y lo que trae cada versión; motores de voz y animaciones al día.',
+    ]),
     ('5.49', [
         'Tema 2 renovado con el Luxe Title Pack 1.09: las palabras entran con más calma, las líneas van al ras y la palabra grande ocupa el ancho de su línea.',
         'Bloques de tres líneas con la palabra grande en medio, alternados con bloques cortos; nunca más de 4 palabras por línea ni frases cortadas por la mitad.',
