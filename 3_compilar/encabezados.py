@@ -50,7 +50,7 @@ DESCRIPCIONES = {
     '1_codigo/qt_kit.py': 'kit de interfaz Qt: colores, tipografía Inter, controles, mensajes, hilos (correr_en_hilo, despues).',
     '1_codigo/resolve_bridge.py': 'conexión con Resolve: API externa (Studio), Puente (Free) o paso manual; ejecuta los scripts.',
     '1_codigo/resolve_mcp.py': 'conexión con el MCP oficial de Resolve 21.1+: abrir Resolve, proyecto reciente, ejecutar scripts.',
-    '1_codigo/mapa_codigo.py': 'consulta el código y la documentación POR TEMA sin leer archivos enteros (mapa, símbolo, módulo, cambios); lo usan el MCP y la línea de comandos.',
+    '1_codigo/mapa_codigo.py': 'consulta el código y la documentación POR TEMA sin leer archivos enteros (mapa, símbolo, módulo, llamadas, ruta, cambios); lo usan el MCP y la línea de comandos.',
     '3_compilar/sincronizar_version.py': 'pone la versión de version.py en todos los sitios que la repiten (scripts de Resolve, Puente) y avisa si algo no cuadra.',
     '1_codigo/vigilancia.py': 'guardián de tareas largas (GO, Generar): detecta atascos, destraba motores, chequeos periódicos y arranque atascado.',
     '1_codigo/salud.py': 'chequeo de librerías al arrancar (versiones fijadas, motor de IA, MCP).',

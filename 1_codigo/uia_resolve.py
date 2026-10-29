@@ -42,7 +42,13 @@ def _api():
             pass                                                           # (ya iniciado en este hilo, con otro modo: vale igual)
         m = cc.GetModule('UIAutomationCore.dll')
         _HILO.m = m
-        _HILO.u = cc.CreateObject(m.CUIAutomation, interface=m.IUIAutomation)
+        try:                                                               # v5.53: CUIAutomation8 + topes (ms): sin ellos una ventana que no responde deja a UIA esperando minutos
+            u = cc.CreateObject(m.CUIAutomation8, interface=m.IUIAutomation2)
+            u.ConnectionTimeout = 2000
+            u.TransactionTimeout = 8000
+        except Exception:
+            u = cc.CreateObject(m.CUIAutomation, interface=m.IUIAutomation)  # (Windows 7: sin CUIAutomation8)
+        _HILO.u = u
     return _HILO.m, _HILO.u
 
 
@@ -66,11 +72,33 @@ def _patron(e, ident, interfaz):
 
 
 def _ventanas(u, pids):
-    """Las ventanas de primer nivel de los procesos de Resolve."""
+    """Las ventanas de primer nivel de los procesos de Resolve.
+    v5.53: por EnumWindows + ElementFromHandle, no FindAll desde la raíz del escritorio: ese FindAll le pregunta a TODAS las ventanas de Windows y
+    una de otro programa que no responde lo dejaba colgado (GO se quedó 6+ min en «expandir vista»)."""
+    import ctypes
+    from ctypes import wintypes
+    user32 = ctypes.windll.user32
+    buscados = {int(p) for p in pids or []}
+    hwnds = []
+
+    @ctypes.WINFUNCTYPE(ctypes.c_int, wintypes.HWND, wintypes.LPARAM)
+    def cb(h, _l):
+        if user32.IsWindowVisible(h):
+            pid = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(h, ctypes.byref(pid))
+            if pid.value in buscados:
+                hwnds.append(h)
+        return 1
+
+    user32.EnumWindows(cb, 0)
     out = []
-    raiz = u.GetRootElement()
-    for pid in pids or []:
-        out += _todos(raiz, _HIJOS, u.CreatePropertyCondition(_PID, int(pid)))
+    for h in hwnds:
+        try:
+            e = u.ElementFromHandle(h)
+            if e:
+                out.append(e)
+        except Exception:
+            pass
     return out
 
 
@@ -257,9 +285,12 @@ def lanzar_script(pids, script, menus, subs):
             return 'SIN_MENU'
         _desplegar(m, menu)
         time.sleep(0.4)
-        raiz = u.GetRootElement()
         cond = u.CreatePropertyCondition(_NOMBRE, str(script))
-        e = _primero(raiz, _DESCENDIENTES, cond)
+
+        def en_resolve():                                                  # v5.53: el menú abierto es una ventana de Resolve; buscar en TODO el escritorio podía colgarse
+            return next((x for x in (_primero(v, _DESCENDIENTES, cond) for v in _ventanas(u, pids)) if x is not None), None)
+
+        e = en_resolve()
         if e is None:
             subs_menu = _todos(menu, _DESCENDIENTES, u.CreatePropertyCondition(_TIPO, _MENU_ITEM))
             primeros = [x for x in str(subs).split('|') if x]
@@ -271,7 +302,7 @@ def lanzar_script(pids, script, menus, subs):
                     continue
                 for _ in range(5):                                         # el submenú tarda en rellenarse (hasta ~1,5 s)
                     time.sleep(0.3)
-                    e = _primero(raiz, _DESCENDIENTES, cond)
+                    e = en_resolve()
                     if e is not None:
                         break
                 if e is not None:

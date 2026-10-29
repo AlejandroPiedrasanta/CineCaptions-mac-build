@@ -33,7 +33,7 @@ from pathlib import Path
 
 SHARED = Path.home() / 'DaVinciSubtitles'
 PEDIDO = SHARED / 'vista_real_pedido.json'
-VERSION = '5.52 (vista real)'
+VERSION = '5.53 (vista real)'
 
 
 def _gemelo():

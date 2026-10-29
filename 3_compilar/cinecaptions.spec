@@ -98,6 +98,12 @@ def _sobra(nombre):
     # sombrea y QtCore falla con ERROR_PROC_NOT_FOUND al cargar.
     if os.path.basename(n) in ('icuuc.dll', 'icudt78.dll'):
         return True
+    # v5.53: chrome-headless-shell deja su chrome_debug.log junto al .exe cuando se usa para capturas: no viaja en el instalador
+    if os.path.basename(n) == 'chrome_debug.log':
+        return True
+    # v5.53: la descarga de Chrome de Remotion (ensureBrowser) ya va copiada en runtime/chrome: no viaja dos veces
+    if '\\node_modules\\.remotion\\' in n:
+        return True
     return n.startswith('pyside6\\') and (n.endswith('opengl32sw.dll') or '\\translations\\' in n)
 a.binaries = [x for x in a.binaries if not _sobra(x[0])]
 a.datas = [x for x in a.datas if not _sobra(x[0])]

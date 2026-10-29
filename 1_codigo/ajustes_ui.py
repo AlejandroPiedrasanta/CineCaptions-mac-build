@@ -495,6 +495,15 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.53', [
+        'Las animaciones de la Edición PRO y del Tema 1 se crean unas 3 veces más rápido (los personajes 3D, hasta 7): ahora usan la tarjeta gráfica.',
+        'Repetir GO con un video ya transcrito vuelve a aprovechar el resultado de la IA: unos 10 segundos en vez de 2-3 minutos.',
+        'Conexión con DaVinci Resolve más estable: al reconectar ya no quedan procesos de Resolve sueltos que podían colgarlo, y si la conexión se corta en mitad de un trabajo se avisa al momento.',
+        'GO ya no se queda parado en «Expandir vista» cuando otra ventana de Windows no responde.',
+        'Tema 2: Amro Fire ya no corta las palabras largas.',
+        'Mac: con Resolve cerrado, CineCaptions lo detecta al instante en vez de esperar unos segundos en cada paso.',
+        'Motores al día: PyTorch 2.15 en instalaciones nuevas con drivers NVIDIA recientes (los ya instalados siguen igual), Node 26 LTS y Chrome 157.',
+    ]),
     ('5.52', [
         'Más seguridad: las actualizaciones llegan firmadas y CineCaptions solo instala las versiones auténticas de Cinema Productions.',
         'Licencias de cinecaptions.shop: pega tu clave CC- y se activa al momento, en hasta 2 computadoras. Desactivar este equipo lo libera enseguida para usarla en otra.',

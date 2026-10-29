@@ -275,8 +275,7 @@ class AdtsAudioTrackBacking {
         return 1;
     }
     getTimeResolution() {
-        const sampleRate = this.getSampleRate();
-        return sampleRate / SAMPLES_PER_AAC_FRAME;
+        return this.getSampleRate();
     }
     isRelativeToUnixEpoch() {
         return false;
@@ -1044,7 +1043,7 @@ class FlacDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_1__/* .Demuxer */
         const effectiveMinFrameSize = this.audioInfo.minimumFrameSize || minimumFrameLength;
         const effectiveMaxFrameSize = this.audioInfo.maximumFrameSize || maximumFrameLength;
         const maximumSliceLength = effectiveMaxFrameSize + maximumHeaderLength;
-        const slice = await this.reader.requestSliceRange(startPos, maximumHeaderLength, maximumSliceLength);
+        const slice = await this.reader.requestSliceRange(startPos, minimumHeaderLength, maximumSliceLength);
         if (!slice) {
             return null;
         }
@@ -1584,7 +1583,9 @@ class SegmentedInput {
         this.inputCache = [];
         this.trackBackingsPromise = null;
         this.firstSegment = null;
-        this.firstSegmentFirstTimestamps = new WeakMap();
+        // Roughly maps local segment timestamps onto actual packet timestamps
+        this.learnedSegmentTimestampOffset = null;
+        this.segmentMediaOffsets = new WeakMap();
         this.input = input;
         this.path = path;
         this.trackDeclarations = trackDeclarations;
@@ -1596,7 +1597,7 @@ class SegmentedInput {
         if (!lastSegment) {
             return null;
         }
-        return lastSegment.timestamp + lastSegment.duration;
+        return (lastSegment.timestamp + await this.getFirstSegmentTimestampOffset()) + lastSegment.duration;
     }
     async getUnixTimeForTimestamp(timestamp) {
         let segment = await this.getSegmentAt(timestamp, {});
@@ -1604,7 +1605,7 @@ class SegmentedInput {
         if (!segment || segment.unixEpochTimestamp === null) {
             return null;
         }
-        const elapsed = timestamp - segment.timestamp;
+        const elapsed = timestamp - (segment.timestamp + await this.getFirstSegmentTimestampOffset());
         return segment.unixEpochTimestamp + elapsed;
     }
     async getTrackBackings() {
@@ -1650,21 +1651,36 @@ class SegmentedInput {
             return backings;
         })();
     }
-    async getMediaOffset(segment, input) {
-        const format = await input.getFormat();
-        if (!format.supportsTimestampedMediaData) {
-            return segment.timestamp;
+    getMediaOffset(segment, input) {
+        let promise = this.segmentMediaOffsets.get(segment);
+        if (promise) {
+            return promise;
         }
-        // The segments' timestamps are assumed to lie on one shared timeline (until the next discontinuity), which we
-        // align to the playlist using the first segment
-        const firstSegment = segment.firstSegment ?? segment;
-        let firstSegmentFirstTimestamp = this.firstSegmentFirstTimestamps.get(firstSegment);
-        if (firstSegmentFirstTimestamp === undefined) {
-            const firstInput = this.getInputForSegment(firstSegment);
-            firstSegmentFirstTimestamp = await firstInput.getFirstTimestamp();
-            this.firstSegmentFirstTimestamps.set(firstSegment, firstSegmentFirstTimestamp);
-        }
-        return firstSegment.timestamp - firstSegmentFirstTimestamp;
+        promise = (async () => {
+            const rawTimestampOffset = await this.getRawTimestampOffset(input);
+            if (rawTimestampOffset === null) {
+                // Without media timestamps, all we can do is place the media at the segment's timestamp
+                return segment.timestamp;
+            }
+            let mediaOffset = rawTimestampOffset
+                + await this.getMediaOffsetForDiscontinuity(segment.discontinuityNumber);
+            const period = this.getTimestampWrapPeriod();
+            if (period < Infinity) {
+                // Media timestamps wrap around periodically (that's how MPEG-TS timestamps work). To make the entire
+                // timeline continuous and monotonic (even for live streams that go on forever), we do a simple trick:
+                // shift the media timestamps by multiples of the period length so that the first timestamp is closest
+                // to the segment's timestamp (which DOES rise monotonically). This even works correctly for
+                // non-wrapping formats like fMP4 because for them it's just a noop (or a constant shift for all media).
+                const tracks = await input.getTracks();
+                const track = tracks.find(x => x.type === 'video') ?? tracks[0];
+                (0,misc/* assert */.vA)(track);
+                const mediaStart = await track.getFirstTimestamp() + mediaOffset;
+                mediaOffset += period * Math.round((segment.timestamp - mediaStart) / period);
+            }
+            return mediaOffset;
+        })();
+        this.segmentMediaOffsets.set(segment, promise);
+        return promise;
     }
     dispose() {
         for (const entry of this.inputCache) {
@@ -1887,6 +1903,28 @@ class SegmentedInputInputTrackBacking {
                 continue;
             }
             const mediaOffset = await this.segmentedInput.getMediaOffset(currentSegment, input);
+            // If we don't know the segment timestamp offset yet, learn it once from where this segment's media
+            // actually lies. If the timestamp is more than a segment's duration away from the segment, the lookup was
+            // way off, so redo it with the learned offset instead of walking there segment by segment. Note that it's
+            // fine if the result is still off, because we follow it with a correction step that finds the correct
+            // packet.
+            const firstPacket = this.segmentedInput.learnedSegmentTimestampOffset === null
+                ? await track._backing.getFirstPacket({ ...options, metadataOnly: true })
+                : null;
+            if (firstPacket) {
+                const segmentStart = firstPacket.timestamp + mediaOffset;
+                this.segmentedInput.learnedSegmentTimestampOffset = segmentStart - currentSegment.timestamp;
+                const distance = timestamp - segmentStart;
+                if (distance < -currentSegment.duration || distance >= 2 * currentSegment.duration) {
+                    const segment = await this.segmentedInput.getSegmentAt(timestamp, {
+                        skipLiveWait: options.skipLiveWait,
+                    });
+                    if (segment !== currentSegment) {
+                        currentSegment = segment;
+                        continue;
+                    }
+                }
+            }
             const offsetTimestamp = timestamp - mediaOffset;
             const packet = keyframesOnly
                 ? await track._backing.getKeyPacket(offsetTimestamp, options)
@@ -1991,6 +2029,8 @@ var source = __webpack_require__(4709);
 var input_format = __webpack_require__(5608);
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/isobmff/isobmff-misc.js
 var isobmff_misc = __webpack_require__(1826);
+// EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-misc.js
+var mpeg_ts_misc = __webpack_require__(2490);
 ;// ./node_modules/mediabunny/dist/modules/src/hls/hls-segmented-input.js
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
@@ -2060,6 +2100,7 @@ var __disposeResources = (undefined && undefined.__disposeResources) || (functio
 
 
 
+
 const IV_STRING_REGEX = /^0[xX][0-9a-fA-F]+$/;
 const BASE64_DATA_URI_REGEX = /^data:.*;base64,/i;
 // Way more than any real duration, but small enough to keep all timestamp (and derived sequence number) math finite
@@ -2071,8 +2112,10 @@ class HlsSegmentedInput extends SegmentedInput {
         this.nextLines = null;
         this.currentUpdateSegmentsPromise = null;
         this.streamHasEnded = false;
+        this.neverRemovesSegments = false;
         this.lastSegmentUpdateTime = -Infinity;
         this.refreshInterval = 5; // Reasonable default in case the playlist doesn't specify it
+        this.segmentTimestampOffsetPromise = null;
         this.rootPath = path;
         this.demuxer = demuxer;
         this.nextLines = lines;
@@ -2149,13 +2192,12 @@ class HlsSegmentedInput extends SegmentedInput {
         let nextSegmentDuration = null;
         let currentKey = null;
         let nextSequenceNumber = 0;
+        let nextDiscontinuityNumber = 0;
         let currentFirstSegment = null;
         let currentInitSegment = null;
         let lastByteRangeEnd = null;
         let nextByteRange = null;
         let lastProgramDateTimeSeconds = null;
-        let targetDuration = null;
-        let segmentSeen = false;
         // Used for repeated parses where our job it is to only add the new segments
         let prevLastSegment = (0,misc/* last */._g)(this.segments) ?? null;
         const parseByteRange = (content) => {
@@ -2226,6 +2268,7 @@ class HlsSegmentedInput extends SegmentedInput {
                         index: this.segments.length,
                         timestamp: accumulatedTime,
                         unixEpochTimestamp: accumulatedUnixTime,
+                        discontinuityNumber: nextDiscontinuityNumber,
                         firstSegment: currentFirstSegment,
                         sequenceNumber: nextSequenceNumber,
                         location,
@@ -2255,15 +2298,7 @@ class HlsSegmentedInput extends SegmentedInput {
             }
             if (line.startsWith(hls_misc/* TAG_EXTINF */.e9)) {
                 if (prevLastSegment) {
-                    segmentSeen = true;
                     continue;
-                }
-                if (!segmentSeen) {
-                    if (lastProgramDateTimeSeconds === null && nextSequenceNumber > 0 && targetDuration !== null) {
-                        // Offset the first segment's start timestamp by the following:
-                        accumulatedTime = nextSequenceNumber * targetDuration;
-                    }
-                    segmentSeen = true;
                 }
                 const extinfContent = line.slice(hls_misc/* TAG_EXTINF */.e9.length);
                 const commaIndex = extinfContent.indexOf(',');
@@ -2306,6 +2341,7 @@ class HlsSegmentedInput extends SegmentedInput {
                         index: -1,
                         timestamp: accumulatedTime,
                         unixEpochTimestamp: accumulatedUnixTime,
+                        discontinuityNumber: nextDiscontinuityNumber,
                         firstSegment: null,
                         sequenceNumber: null,
                         location,
@@ -2456,8 +2492,19 @@ class HlsSegmentedInput extends SegmentedInput {
             }
             else if (line === hls_misc/* TAG_DISCONTINUITY */.i$) {
                 currentFirstSegment = null;
+                // Counted even for known segments since the discontinuity number is absolute, derived from the
+                // playlist's discontinuity sequence
+                nextDiscontinuityNumber++;
                 // Note: the init segment is not reset; the #EXT-X-MAP statement simply lasts until the next
                 // #EXT-X-MAP statement.
+            }
+            else if (line.startsWith(hls_misc/* TAG_DISCONTINUITY_SEQUENCE */.gS)) {
+                const value = line.slice(hls_misc/* TAG_DISCONTINUITY_SEQUENCE */.gS.length);
+                const number = Number(value);
+                if (!Number.isSafeInteger(number) || number < 0) {
+                    throw new Error(`Invalid EXT-X-DISCONTINUITY-SEQUENCE value '${value}'.`);
+                }
+                nextDiscontinuityNumber = number;
             }
             else if (line.startsWith(hls_misc/* TAG_TARGETDURATION */.xe)) {
                 const value = line.slice(hls_misc/* TAG_TARGETDURATION */.xe.length);
@@ -2466,17 +2513,20 @@ class HlsSegmentedInput extends SegmentedInput {
                     throw new Error(`Invalid EXT-X-TARGETDURATION value '${value}'.`);
                 }
                 this.refreshInterval = (0,misc/* clamp */.qE)(duration, 0.5, 3600); // Clamped for safety
-                targetDuration = duration;
             }
             else if (line === hls_misc/* TAG_ENDLIST */.dY) {
                 this.streamHasEnded = true;
                 break; // No need to keep reading after this
             }
             else if (line.startsWith(hls_misc/* TAG_PLAYLIST_TYPE */.zA)) {
-                const type = line.slice(hls_misc/* TAG_PLAYLIST_TYPE */.zA.length);
-                if (type.toLowerCase() === 'vod') {
+                const type = line.slice(hls_misc/* TAG_PLAYLIST_TYPE */.zA.length).toLowerCase();
+                if (type === 'vod') {
                     // A VOD playlist cannot be updated per spec so we can be sure the stream has ended
                     this.streamHasEnded = true;
+                }
+                if (type === 'vod' || type === 'event') {
+                    // Per spec, neither can have segments removed
+                    this.neverRemovesSegments = true;
                 }
             }
         }
@@ -2494,10 +2544,11 @@ class HlsSegmentedInput extends SegmentedInput {
         if (this.segments.length === 0) {
             await this.runUpdateSegments();
         }
+        const playlistTimestamp = timestamp - (this.learnedSegmentTimestampOffset ?? 0);
         // If we're skipping the live wait BUT there's no wait time, we're actually not lazy for the first iteration
         let isLazy = !!options.skipLiveWait && this.getRemainingWaitTimeMs() > 0;
         while (true) {
-            const index = (0,misc/* binarySearchLessOrEqual */.eE)(this.segments, timestamp, x => x.timestamp);
+            const index = (0,misc/* binarySearchLessOrEqual */.eE)(this.segments, playlistTimestamp, x => x.timestamp);
             if (index === -1) {
                 return null;
             }
@@ -2505,7 +2556,7 @@ class HlsSegmentedInput extends SegmentedInput {
                 return this.segments[index];
             }
             const segment = this.segments[index];
-            if (timestamp < segment.timestamp + segment.duration) {
+            if (playlistTimestamp < segment.timestamp + segment.duration) {
                 return segment;
             }
             await this.runUpdateSegments();
@@ -2668,6 +2719,77 @@ class HlsSegmentedInput extends SegmentedInput {
         }
         return this.streamHasEnded ? null : this.refreshInterval;
     }
+    getMediaOffsetForDiscontinuity(discontinuityNumber) {
+        return this.demuxer.getMediaOffsetForDiscontinuity(discontinuityNumber);
+    }
+    getFirstSegmentTimestampOffset() {
+        return this.segmentTimestampOffsetPromise ??= (async () => {
+            const firstSegment = await this.getFirstSegment();
+            (0,misc/* assert */.vA)(firstSegment);
+            const referenceSegmentedInput = this.demuxer.getReferenceSegmentedInput();
+            if (this === referenceSegmentedInput) {
+                return 0;
+            }
+            // An offset of 0 is only safe (= close enough) if we start at the same point as the reference: either both
+            // of us list all segments since the presentation's start, or both of us are on date-time-based timelines
+            const referenceFirstSegment = await referenceSegmentedInput.getFirstSegment();
+            if (referenceFirstSegment
+                && ((this.listsAllSegments() && referenceSegmentedInput.listsAllSegments())
+                    || (firstSegment.unixEpochTimestamp === firstSegment.timestamp
+                        && referenceFirstSegment.unixEpochTimestamp === referenceFirstSegment.timestamp))) {
+                return 0;
+            }
+            // Otherwise, we must fetch the actual media timestamp of the first segment to properly deduce the offset
+            // that we need
+            const input = this.getInputForSegment(firstSegment);
+            if (await this.getRawTimestampOffset(input) === null) {
+                return 0;
+            }
+            const tracks = await input.getTracks();
+            const track = tracks.find(x => x.type === 'video') ?? tracks[0];
+            if (!track) {
+                throw new Error('The playlist\'s first segment contains no tracks.');
+            }
+            const mediaOffset = await this.getMediaOffset(firstSegment, input);
+            const offset = await track.getFirstTimestamp() + mediaOffset - firstSegment.timestamp;
+            // Set it if it isn't already
+            this.learnedSegmentTimestampOffset ??= offset;
+            return offset;
+        })();
+    }
+    listsAllSegments() {
+        return this.segments[0].sequenceNumber === 0 || this.neverRemovesSegments;
+    }
+    async getRawTimestampOffset(input) {
+        const format = await input.getFormat();
+        if (format.supportsTimestampedMediaData) {
+            return 0;
+        }
+        // Packed audio has the timestamp of its first sample in an ID3 PRIV frame (RFC 8216, Section 3.4)
+        const tags = await input.getMetadataTags();
+        const priv = tags.raw?.['PRIV'];
+        for (const frame of (0,misc/* toArray */.$r)(priv)) {
+            if (!(frame instanceof Uint8Array)
+                || frame.length !== hls_misc/* TIMESTAMP_PRIV_OWNER */.$j.length + 1 + 8
+                || misc/* textDecoder */.su.decode(frame.subarray(0, hls_misc/* TIMESTAMP_PRIV_OWNER */.$j.length)) !== hls_misc/* TIMESTAMP_PRIV_OWNER */.$j
+                || frame[hls_misc/* TIMESTAMP_PRIV_OWNER */.$j.length] !== 0) {
+                continue;
+            }
+            // A 33-bit MPEG-TS timestamp but stored as a big-endian 64-bit number
+            const view = (0,misc/* toDataView */.Zc)(frame);
+            const timestampHigh = view.getUint32(hls_misc/* TIMESTAMP_PRIV_OWNER */.$j.length + 1);
+            const timestampLow = view.getUint32(hls_misc/* TIMESTAMP_PRIV_OWNER */.$j.length + 5);
+            if (timestampHigh > 1) {
+                continue;
+            }
+            const timestamp = 2 ** 32 * timestampHigh + timestampLow;
+            return (0,mpeg_ts_misc/* normalizeWrappedTimestamp */.hD)(timestamp, (0,mpeg_ts_misc/* createTimestampWrapInfo */.dV)(timestamp)) / (/* inlined export .MPEG_TS_TIMESCALE */90000);
+        }
+        return null;
+    }
+    getTimestampWrapPeriod() {
+        return mpeg_ts_misc/* TIMESTAMP_MODULUS */.Tx / (/* inlined export .MPEG_TS_TIMESCALE */90000);
+    }
 }
 
 ;// ./node_modules/mediabunny/dist/modules/src/hls/hls-demuxer.js
@@ -2697,6 +2819,7 @@ class HlsDemuxer extends demuxer/* Demuxer */.B {
         this.segmentedInputs = [];
         this.hasMasterPlaylist = true;
         this.masterPlaylistVariables = null;
+        this.mediaOffsets = new Map();
     }
     readMetadata() {
         return this.metadataPromise ??= (async () => {
@@ -3088,6 +3211,52 @@ class HlsDemuxer extends demuxer/* Demuxer */.B {
         (0,misc/* assert */.vA)(this.trackBackings);
         return this.trackBackings;
     }
+    getMediaOffsetForDiscontinuity(discontinuityNumber) {
+        let promise = this.mediaOffsets.get(discontinuityNumber);
+        if (promise) {
+            return promise;
+        }
+        promise = (async () => {
+            // All playlists share their media's timestamps within a discontinuity, so the reference playlist alone
+            // defines global timestamps. For the reference track, the first packet of any discontinuity lands exactly
+            // on the timestamp of the discontinuity's first segment. This ensures that time starts at 0 (unless
+            // PDT is used) and that discontinuities don't mess with overall timestamp continuity.
+            const referenceSegmentedInput = this.getReferenceSegmentedInput();
+            let segment = await referenceSegmentedInput.getFirstSegment();
+            while (segment && segment.discontinuityNumber < discontinuityNumber) {
+                segment = await referenceSegmentedInput.getNextSegment(segment, {});
+            }
+            if (!segment || segment.discontinuityNumber !== discontinuityNumber) {
+                throw new Error(`The reference playlist contains no segment in discontinuity ${discontinuityNumber}, so the`
+                    + ' discontinuity can\'t be synchronized across tracks. If you think this is a bug, please raise an'
+                    + ' issue and include the playlist.');
+            }
+            const input = referenceSegmentedInput.getInputForSegment(segment);
+            const rawTimestampOffset = await referenceSegmentedInput.getRawTimestampOffset(input) ?? 0;
+            const tracks = await input.getTracks();
+            const track = tracks.find(x => x.type === 'video') ?? tracks[0];
+            if (!track) {
+                throw new Error('The reference playlist\'s segment contains no tracks.');
+            }
+            return segment.timestamp - (rawTimestampOffset + await track.getFirstTimestamp());
+        })();
+        this.mediaOffsets.set(discontinuityNumber, promise);
+        return promise;
+    }
+    getReferenceSegmentedInput() {
+        if (!this.hasMasterPlaylist) {
+            return this.segmentedInputs[0];
+        }
+        ;(0,misc/* assert */.vA)(this.internalTracks);
+        // Prefer the cheapest video track, since video timestamps are straightforward and its segments are
+        // cheap to load
+        const candidates = this.internalTracks.filter(x => !x.hasOnlyKeyPackets);
+        const videoCandidates = candidates.filter(x => x.info.type === 'video');
+        const pool = videoCandidates.length > 0 ? videoCandidates : candidates;
+        const index = (0,misc/* arrayArgmin */.Yg)(pool, x => x.peakBitrate ?? Infinity);
+        (0,misc/* assert */.vA)(index !== -1);
+        return this.getSegmentedInputForPath(pool[index].fullPath);
+    }
     getSegmentedInputForPath(path) {
         let segmentedInput = this.segmentedInputs.find(x => x.path === path);
         if (segmentedInput) {
@@ -3432,10 +3601,14 @@ const TAG_MEDIA_SEQUENCE = '#EXT-X-MEDIA-SEQUENCE:';
 const TAG_BYTERANGE = '#EXT-X-BYTERANGE:';
 const TAG_PROGRAM_DATE_TIME = '#EXT-X-PROGRAM-DATE-TIME:';
 const TAG_DISCONTINUITY = '#EXT-X-DISCONTINUITY';
+const TAG_DISCONTINUITY_SEQUENCE = '#EXT-X-DISCONTINUITY-SEQUENCE:';
 const TAG_TARGETDURATION = '#EXT-X-TARGETDURATION:';
 const TAG_ENDLIST = '#EXT-X-ENDLIST';
 const TAG_PLAYLIST_TYPE = '#EXT-X-PLAYLIST-TYPE:';
 const TAG_I_FRAMES_ONLY = '#EXT-X-I-FRAMES-ONLY';
+// Owner of the ID3 PRIV frame through which packed audio segments carry the timestamp of their first sample
+// (RFC 8216, Section 3.4)
+const TIMESTAMP_PRIV_OWNER = 'com.apple.streaming.transportStreamTimestamp';
 const canIgnoreLine = (line) => line.length === 0 || (line.startsWith('#') && !line.startsWith('#EXT'));
 class AttributeList {
     constructor(str, variables) {
@@ -3580,6 +3753,7 @@ class HlsPlaylistVariables {
 }
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "$j", 0, /* binding */ TIMESTAMP_PRIV_OWNER,
 /* harmony export */   "Bp", 0, /* binding */ TAG_DEFINE,
 /* harmony export */   "DT", 0, /* binding */ TAG_I_FRAMES_ONLY,
 /* harmony export */   "EF", 0, /* binding */ TAG_MEDIA,
@@ -3590,6 +3764,7 @@ class HlsPlaylistVariables {
 /* harmony export */   "dY", 0, /* binding */ TAG_ENDLIST,
 /* harmony export */   "e9", 0, /* binding */ TAG_EXTINF,
 /* harmony export */   "g4", 0, /* binding */ TAG_I_FRAME_STREAM_INF,
+/* harmony export */   "gS", 0, /* binding */ TAG_DISCONTINUITY_SEQUENCE,
 /* harmony export */   "i$", 0, /* binding */ TAG_DISCONTINUITY,
 /* harmony export */   "is", 0, /* binding */ HLS_MIME_TYPE,
 /* harmony export */   "nf", 0, /* binding */ canIgnoreLine,
@@ -4412,6 +4587,20 @@ class InputAudioTrack extends InputTrack {
         }
         const decoderConfig = await this._backing.getDecoderConfig();
         return decoderConfig?.codec ?? null;
+    }
+    /**
+     * Returns the decoder pre-roll duration for this track. It specifies how far ahead of any given timestamp,
+     * in seconds, decoding must start so that the audio at that timestamp comes out correctly and the codec state has
+     * properly converged. Returns `null` if the track's codec is unknown.
+     */
+    async getPreRollDuration() {
+        const codec = await this._backing.getCodec();
+        if (codec === null) {
+            return null;
+        }
+        const decoderConfig = await this._backing.getDecoderConfig();
+        (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(decoderConfig);
+        return (0,_codec_js__WEBPACK_IMPORTED_MODULE_0__/* .getAudioPreRollDuration */ .$c)(codec, decoderConfig);
     }
     async canDecode() {
         try {
@@ -9498,11 +9687,12 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
             this.currentSegment.timestampScale = 1e6;
             this.currentSegment.timestampFactor = 1e9 / 1e6;
         }
-        // Compute default duration for all tracks now that we have the timestamp factor
+        // Compute default duration and codec delay for all tracks now that we have the timestamp factor
         for (const track of this.currentSegment.tracks) {
             if (track.defaultDurationNs !== null) {
                 track.defaultDuration = (this.currentSegment.timestampFactor * track.defaultDurationNs) / 1e9;
             }
+            track.codecDelay = Math.round((this.currentSegment.timestampFactor * track.codecDelayNs) / 1e9);
         }
         // Assign cue points to their respective tracks
         for (const cuePoint of this.currentSegment.cuePoints) {
@@ -9946,6 +10136,8 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                         codecPrivate: null,
                         defaultDuration: null,
                         defaultDurationNs: null,
+                        codecDelay: 0,
+                        codecDelayNs: 0,
                         name: null,
                         languageCode: 'eng', // The default in Matroska
                         hasLanguageBcp47: false,
@@ -10247,6 +10439,14 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                     if (!this.currentTrack)
                         break;
                     this.currentTrack.defaultDurationNs = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readUnsignedInt */ .dl)(slice, size);
+                }
+                ;
+                break;
+            case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.CodecDelay:
+                {
+                    if (!this.currentTrack)
+                        break;
+                    this.currentTrack.codecDelayNs = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readUnsignedInt */ .dl)(slice, size);
                 }
                 ;
                 break;
@@ -11071,9 +11271,10 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
         if (segment.duration <= 0) {
             return null;
         }
+        const minCodecDelay = Math.min(...segment.tracks.map(x => x.codecDelay));
         // We treat the Duration field as the end timestamp of the segment, since this is what FFmpeg treats it as.
         // The spec unfortunately does not clarify what it means by duration here.
-        return segment.duration / segment.timestampFactor;
+        return (segment.duration - minCodecDelay) / segment.timestampFactor;
     }
 }
 class MatroskaTrackBacking {
@@ -11159,7 +11360,8 @@ class MatroskaTrackBacking {
         // Do a little rounding to catch cases where the result is very close to an integer. If it is, it's likely
         // that the number was originally an integer divided by the timescale. For stability, it's best
         // to return the integer in this case.
-        return (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .roundIfAlmostInteger */ .aI)(timestamp * this.internalTrack.segment.timestampFactor);
+        return (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .roundIfAlmostInteger */ .aI)(timestamp * this.internalTrack.segment.timestampFactor)
+            + this.internalTrack.codecDelay;
     }
     async getPacket(timestamp, options) {
         const timestampInTimescale = this.intoTimescale(timestamp);
@@ -11295,8 +11497,9 @@ class MatroskaTrackBacking {
             block.postProcessed = true;
         }
         const data = options.metadataOnly ? _packet_js__WEBPACK_IMPORTED_MODULE_6__/* .PLACEHOLDER_DATA */ .T : block.data;
-        const timestamp = block.timestamp / this.internalTrack.segment.timestampFactor;
-        const duration = block.duration / this.internalTrack.segment.timestampFactor;
+        const { codecDelay, segment } = this.internalTrack;
+        const timestamp = (block.timestamp - codecDelay) / segment.timestampFactor;
+        const duration = block.duration / segment.timestampFactor;
         const sideData = {};
         if (block.mainAdditional && this.internalTrack.info?.type === 'video' && this.internalTrack.info.alphaMode) {
             sideData.alpha = options.metadataOnly ? _packet_js__WEBPACK_IMPORTED_MODULE_6__/* .PLACEHOLDER_DATA */ .T : block.mainAdditional;
@@ -11763,6 +11966,8 @@ class Mp3Demuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */ 
                         const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .toDataView */ .Zc)(xingData);
                         const flags = view.getUint32(0, false);
                         this.xingData = {
+                            // LAME and FFmpeg write the same header with 'Info' in place of 'Xing' for CBR streams
+                            isVbr: word === _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .XING */ .hY,
                             frameCount: (flags & _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .XingFlags */ .MJ.FrameCount)
                                 ? view.getUint32(4, false)
                                 : null,
@@ -11859,7 +12064,7 @@ class Mp3AudioTrackBacking {
     }
     getTimeResolution() {
         ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(this.demuxer.firstFrameHeader);
-        return this.demuxer.firstFrameHeader.sampleRate / this.demuxer.firstFrameHeader.audioSamplesInFrame;
+        return this.demuxer.firstFrameHeader.sampleRate;
     }
     isRelativeToUnixEpoch() {
         return false;
@@ -11880,15 +12085,13 @@ class Mp3AudioTrackBacking {
         const demuxer = this.demuxer;
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(demuxer.firstFrameHeader !== null);
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(demuxer.firstFrameHeaderPos !== null);
-        if (demuxer.xingData) {
-            if (demuxer.xingData.frameCount !== null) {
-                return demuxer.xingData.frameCount
-                    * demuxer.firstFrameHeader.audioSamplesInFrame
-                    / demuxer.firstFrameHeader.sampleRate;
-            }
+        if (demuxer.xingData && demuxer.xingData.frameCount !== null) {
+            return demuxer.xingData.frameCount
+                * demuxer.firstFrameHeader.audioSamplesInFrame
+                / demuxer.firstFrameHeader.sampleRate;
         }
-        else {
-            // No Xing, assuming CBR
+        else if (!demuxer.xingData?.isVbr) {
+            // Not tagged as VBR, assuming CBR
             if (demuxer.reader.fileSize !== null) {
                 const averageFrameSize = (0,_shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .computeAverageMp3FrameSize */ .hD)(demuxer.firstFrameHeader.lowSamplingFrequency, demuxer.firstFrameHeader.layer, demuxer.firstFrameHeader.bitrate, demuxer.firstFrameHeader.sampleRate);
                 const frameCount = (demuxer.reader.fileSize - demuxer.firstFrameHeaderPos) / averageFrameSize;
@@ -12684,7 +12887,7 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
     async getMimeType() {
         await this.readMetadata();
         const codecStrings = await Promise.all(this.trackBackingEntries.map(x => x.getDecoderConfig().then(c => c?.codec ?? null)));
-        return (0,_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .buildMpegTsMimeType */ .V)(codecStrings);
+        return (0,_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .buildMpegTsMimeType */ .Vx)(codecStrings);
     }
     async readSection(startPos, full, contiguous = false) {
         let endPos = startPos;
@@ -12844,23 +13047,10 @@ class MpegTsDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_5__/* .Demuxer 
         };
     }
     normalizeTimestamp(timestamp) {
-        if (!this.timestampWrapInfo) {
-            // No info yet, let's initialize it anchored on this timestamp. Since we process packets sequentially when
-            // extracting metadata, this means we'll anchor to the first PTS in the file.
-            const tolerance = 60 * (/* inlined export .TIMESCALE */90000);
-            this.timestampWrapInfo = {
-                reference: timestamp - tolerance,
-                offset: timestamp >= _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .T - tolerance
-                    ? -_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .T // Timestamps close to the modulus are treated as negative
-                    : _mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .TIMESTAMP_MODULUS */ .T,
-            };
-        }
-        const { reference, offset } = this.timestampWrapInfo;
-        if ((offset < 0 && timestamp >= reference)
-            || (offset > 0 && timestamp < reference)) {
-            return timestamp + offset;
-        }
-        return timestamp;
+        // If there's no info yet, initialize it anchored on this timestamp. Since we process packets sequentially when
+        // extracting metadata, this means we'll anchor to the first PTS in the file.
+        this.timestampWrapInfo ??= (0,_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .createTimestampWrapInfo */ .dV)(timestamp);
+        return (0,_mpeg_ts_misc_js__WEBPACK_IMPORTED_MODULE_12__/* .normalizeWrappedTimestamp */ .hD)(timestamp, this.timestampWrapInfo);
     }
 }
 const readPesPacketHeader = (demuxer, section, expectPts) => {
@@ -12983,7 +13173,7 @@ class MpegTsTrackBacking {
         };
     }
     getTimeResolution() {
-        return (/* inlined export .TIMESCALE */90000);
+        return (/* inlined export .MPEG_TS_TIMESCALE */90000);
     }
     isRelativeToUnixEpoch() {
         return false;
@@ -13016,7 +13206,7 @@ class MpegTsTrackBacking {
                 ? 'key'
                 : 'delta';
         }
-        return new _packet_js__WEBPACK_IMPORTED_MODULE_10__/* .EncodedPacket */ .Z(options.metadataOnly ? _packet_js__WEBPACK_IMPORTED_MODULE_10__/* .PLACEHOLDER_DATA */ .T : suppliedPacket.data, packetType, suppliedPacket.pts / (/* inlined export .TIMESCALE */90000), Math.max(duration / (/* inlined export .TIMESCALE */90000), 0), suppliedPacket.sequenceNumber, suppliedPacket.data.byteLength);
+        return new _packet_js__WEBPACK_IMPORTED_MODULE_10__/* .EncodedPacket */ .Z(options.metadataOnly ? _packet_js__WEBPACK_IMPORTED_MODULE_10__/* .PLACEHOLDER_DATA */ .T : suppliedPacket.data, packetType, suppliedPacket.pts / (/* inlined export .MPEG_TS_TIMESCALE */90000), Math.max(duration / (/* inlined export .MPEG_TS_TIMESCALE */90000), 0), suppliedPacket.sequenceNumber, suppliedPacket.data.byteLength);
     }
     async getFirstPacket(options) {
         const section = this.elementaryStream.firstSection;
@@ -13102,7 +13292,7 @@ class MpegTsTrackBacking {
      * make it more performant for small files and over high-latency readers such as the network.
      */
     async doPacketLookup(timestamp, keyframesOnly, options) {
-        const searchPts = (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .roundIfAlmostInteger */ .aI)(timestamp * (/* inlined export .TIMESCALE */90000));
+        const searchPts = (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .roundIfAlmostInteger */ .aI)(timestamp * (/* inlined export .MPEG_TS_TIMESCALE */90000));
         const demuxer = this.elementaryStream.demuxer;
         const { reader, seekChunkSize } = demuxer;
         const pid = this.elementaryStream.pid;
@@ -13143,7 +13333,7 @@ class MpegTsTrackBacking {
         const referencePesPackets = this.elementaryStream.referencePesPackets;
         const referencePointIndex = (0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .binarySearchLessOrEqual */ .eE)(referencePesPackets, searchPts, x => x.pts);
         const referencePoint = referencePointIndex !== -1 ? referencePesPackets[referencePointIndex] : null;
-        if (referencePoint && searchPts - referencePoint.pts < (/* inlined export .TIMESCALE */90000) / 2) {
+        if (referencePoint && searchPts - referencePoint.pts < (/* inlined export .MPEG_TS_TIMESCALE */90000) / 2) {
             // Reference point ain't too far away, prefer it over the chunk search
             scanStartPos = referencePoint.sectionStartPos;
         }
@@ -13506,7 +13696,13 @@ const maybeInsertReferencePacket = (elementaryStream, pesPacketHeader) => {
             }
         }
     }
-    referencePesPackets.splice(index + 1, 0, pesPacketHeader);
+    // Copy only the header fields (callers may pass a whole PES packet)
+    referencePesPackets.splice(index + 1, 0, {
+        sectionStartPos: pesPacketHeader.sectionStartPos,
+        sectionEndPos: pesPacketHeader.sectionEndPos,
+        pts: pesPacketHeader.pts,
+        randomAccessIndicator: pesPacketHeader.randomAccessIndicator,
+    });
     return true;
 };
 /** Stateful context used to extract exact encoded packets from the underlying data stream. */
@@ -13829,7 +14025,7 @@ class PacketReadingContext {
                             let remaining = this.ensureBuffered(header.frameLength);
                             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                                 remaining = await remaining;
-                            return this.supplyPacket(remaining, Math.round(_adts_adts_demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .SAMPLES_PER_AAC_FRAME */ .s * (/* inlined export .TIMESCALE */90000) / elementaryStream.info.sampleRate));
+                            return this.supplyPacket(remaining, Math.round(_adts_adts_demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .SAMPLES_PER_AAC_FRAME */ .s * (/* inlined export .MPEG_TS_TIMESCALE */90000) / elementaryStream.info.sampleRate));
                         }
                         else {
                             this.seekTo(possibleHeaderStartPos + 1);
@@ -13855,7 +14051,7 @@ class PacketReadingContext {
                             let remaining = this.ensureBuffered(result.header.totalSize);
                             if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                                 remaining = await remaining;
-                            const duration = result.header.audioSamplesInFrame * (/* inlined export .TIMESCALE */90000)
+                            const duration = result.header.audioSamplesInFrame * (/* inlined export .MPEG_TS_TIMESCALE */90000)
                                 / elementaryStream.info.sampleRate;
                             return this.supplyPacket(remaining, Math.round(duration));
                         }
@@ -13895,7 +14091,7 @@ class PacketReadingContext {
                         remaining = this.ensureBuffered(frameSize);
                         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                             remaining = await remaining;
-                        const duration = Math.round(_codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AC3_SAMPLES_PER_FRAME */ .Ir * (/* inlined export .TIMESCALE */90000) / elementaryStream.info.sampleRate);
+                        const duration = Math.round(_codec_data_js__WEBPACK_IMPORTED_MODULE_4__/* .AC3_SAMPLES_PER_FRAME */ .Ir * (/* inlined export .MPEG_TS_TIMESCALE */90000) / elementaryStream.info.sampleRate);
                         return this.supplyPacket(remaining, duration);
                     }
                     else if (codec === 'eac3') {
@@ -13927,7 +14123,7 @@ class PacketReadingContext {
                             remaining = await remaining;
                         // Duration = numblks * 256 samples per block
                         const samplesPerFrame = numblks * 256;
-                        const duration = Math.round(samplesPerFrame * (/* inlined export .TIMESCALE */90000) / elementaryStream.info.sampleRate);
+                        const duration = Math.round(samplesPerFrame * (/* inlined export .MPEG_TS_TIMESCALE */90000) / elementaryStream.info.sampleRate);
                         return this.supplyPacket(remaining, duration);
                     }
                     else if (codec === 'dts') {
@@ -13993,7 +14189,7 @@ class PacketReadingContext {
                         remaining = this.ensureBuffered(frameSize);
                         if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_8__/* .isThenable */ .Qg)(remaining))
                             remaining = await remaining;
-                        const duration = Math.round(sampleCount * (/* inlined export .TIMESCALE */90000) / elementaryStream.info.sampleRate);
+                        const duration = Math.round(sampleCount * (/* inlined export .MPEG_TS_TIMESCALE */90000) / elementaryStream.info.sampleRate);
                         return this.supplyPacket(remaining, duration);
                     }
                     else {
@@ -14167,36 +14363,6 @@ class PacketBuffer {
         this.reorderBuffer.length = 0;
     }
 }
-
-
-/***/ },
-
-/***/ 2490
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-/*!
- * Copyright (c) 2026-present, Vanilagy and contributors
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-const TIMESCALE = 90_000; // MPEG-TS timestamps run on a 90 kHz clock
-const TIMESTAMP_MODULUS = 2 ** 33;
-const TS_PACKET_SIZE = 188;
-const buildMpegTsMimeType = (codecStrings) => {
-    let string = 'video/MP2T';
-    const uniqueCodecStrings = [...new Set(codecStrings.filter(Boolean))];
-    if (uniqueCodecStrings.length > 0) {
-        string += `; codecs="${uniqueCodecStrings.join(', ')}"`;
-    }
-    return string;
-};
-
-/* harmony export */ __webpack_require__.d(__webpack_exports__, [
-/* harmony export */   "T", 0, /* binding */ TIMESTAMP_MODULUS,
-/* harmony export */   "V", 0, /* binding */ buildMpegTsMimeType
-/* harmony export */ ]);
 
 
 /***/ },
@@ -14623,10 +14789,7 @@ class OggAudioTrackBacking {
             const endTimestampInSamples = this.granulePositionToTimestampInSamples(packet.endPage.granulePosition);
             durationInSamples = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .clamp */ .qE)(endTimestampInSamples - additional.timestampInSamples, 0, durationInSamples);
         }
-        // Clamp both ends so that a packet partially before zero doesn't overlap with the following packet
-        const startTimestampInSamples = Math.max(additional.timestampInSamples, 0);
-        const endTimestampInSamples = Math.max(additional.timestampInSamples + durationInSamples, 0);
-        const encodedPacket = new _packet_js__WEBPACK_IMPORTED_MODULE_5__/* .EncodedPacket */ .Z(options.metadataOnly ? _packet_js__WEBPACK_IMPORTED_MODULE_5__/* .PLACEHOLDER_DATA */ .T : packet.data, 'key', startTimestampInSamples / this.internalSampleRate, (endTimestampInSamples - startTimestampInSamples) / this.internalSampleRate, packet.endPage.headerStartPos + packet.endSegmentIndex, packet.data.byteLength);
+        const encodedPacket = new _packet_js__WEBPACK_IMPORTED_MODULE_5__/* .EncodedPacket */ .Z(options.metadataOnly ? _packet_js__WEBPACK_IMPORTED_MODULE_5__/* .PLACEHOLDER_DATA */ .T : packet.data, 'key', additional.timestampInSamples / this.internalSampleRate, durationInSamples / this.internalSampleRate, packet.endPage.headerStartPos + packet.endSegmentIndex, packet.data.byteLength);
         this.encodedPacketToMetadata.set(encodedPacket, {
             packet,
             timestampInSamples: additional.timestampInSamples,
@@ -14649,6 +14812,7 @@ class OggAudioTrackBacking {
             // durations of these packets and compare.
             let firstEndPage = null;
             let totalDurationInSamples = 0;
+            let firstPacketDurationInSamples = null;
             let vorbisLastBlocksize = null;
             while (position) {
                 const packet = await this.demuxer.readPacket(position.startPage, position.startSegmentIndex);
@@ -14661,14 +14825,21 @@ class OggAudioTrackBacking {
                 }
                 const { durationInSamples, vorbisBlockSize } = (0,_ogg_misc_js__WEBPACK_IMPORTED_MODULE_7__/* .extractSampleMetadata */ .nL)(packet.data, this.bitstream.codecInfo, vorbisLastBlocksize);
                 totalDurationInSamples += durationInSamples;
+                firstPacketDurationInSamples ??= durationInSamples;
                 vorbisLastBlocksize = vorbisBlockSize;
                 position = await this.demuxer.findNextPacketStart(packet);
             }
             if (!firstEndPage) {
                 return defaultTimestampInSamples;
             }
-            // A smaller granule position is only legal on the final page, where it signals end trimming
-            return defaultTimestampInSamples + Math.max(firstEndPage.granulePosition - totalDurationInSamples, 0);
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .assert */ .vA)(firstPacketDurationInSamples !== null);
+            // A smaller granule position is only legal on the final page, where it signals end trimming. The Vorbis
+            // priming packet decodes to nothing though, so it's allowed to precede the granule position's origin.
+            const minStartInSamples = this.bitstream.codecInfo.codec === 'vorbis'
+                ? -firstPacketDurationInSamples
+                : 0;
+            return defaultTimestampInSamples
+                + Math.max(firstEndPage.granulePosition - totalDurationInSamples, minStartInSamples);
         })();
     }
     async getFirstPacket(options) {
@@ -14707,11 +14878,11 @@ class OggAudioTrackBacking {
         }
         const timestampInSamples = (0,_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .roundIfAlmostInteger */ .aI)(timestamp * this.internalSampleRate);
         const firstTimestampInSamples = await this.getFirstTimestampInSamples();
-        if (timestampInSamples === Math.max(firstTimestampInSamples, 0)) {
+        if (timestampInSamples === firstTimestampInSamples) {
             // Fast path for the first timestamp - avoids binary search when playing back from the start
             return this.getFirstPacket(options);
         }
-        if (timestampInSamples < Math.max(firstTimestampInSamples, 0)) {
+        if (timestampInSamples < firstTimestampInSamples) {
             // There's nothing here
             return null;
         }
@@ -14934,9 +15105,9 @@ class OggAudioTrackBacking {
                 if (currentTimestampIsCorrect
                     && (
                     // Next timestamp will be too late
-                    Math.max(currentTimestampInSamples, 0) > timestampInSamples
+                    currentTimestampInSamples > timestampInSamples
                         // This timestamp already matches
-                        || Math.max(encodedPacketMetadata.timestampInSamples, 0) === timestampInSamples)) {
+                        || encodedPacketMetadata.timestampInSamples === timestampInSamples)) {
                     break;
                 }
             }

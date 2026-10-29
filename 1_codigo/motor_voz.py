@@ -48,10 +48,13 @@ VERSION_ENTORNO = '2.0.0'
 PYTHON_EMBEBIDO = 'https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip'   # v5.46: la última 3.14 (el mismo que motor_compat); los 3.14.8 ya instalados siguen valiendo
 PYTHON_DLL = 'python314.dll'
 GET_PIP = 'https://bootstrap.pypa.io/get-pip.py'
-# torch según la tarjeta: CUDA 13 (torch 2.14) pide driver NVIDIA 580 o más nuevo; con uno anterior va la última de CUDA 12.8
-TORCH = {'cu130': '2.14.1', 'cu128': '2.11.0', 'cpu': '2.14.1'}
+# torch según el driver (v5.53): CUDA 13.2 (torch 2.15) con driver ≥ 595; de 580 a 594 se queda CUDA 13.0 (2.14.1: PyTorch
+# 2.15 ya no publica cu130); < 580 → CUDA 12.8 (2.11.0, la última cu128)
+TORCH = {'cu132': '2.15.0', 'cu130': '2.14.1', 'cu128': '2.11.0', 'cpu': '2.15.0'}
 INDICE_TORCH = {k: f'https://download.pytorch.org/whl/{k}' for k in TORCH}
 DRIVER_CUDA13 = 580
+DRIVER_CUDA132 = 595
+TORCH_ACEPTADOS = {'2.14.1+cpu'}   # lo que pusieron instaladores anteriores: sigue valiendo (sin 2 GB de descarga ni «faltan modelos» en salud)
 REPOS_ASR = {'1.7B': ('Qwen/Qwen3-ASR-1.7B-hf', 1_000_000_000), '0.6B': ('Qwen/Qwen3-ASR-0.6B-hf', 400_000_000)}
 REPO_ALINEADOR = ('Qwen/Qwen3-ForcedAligner-0.6B-hf', 400_000_000)
 # v5.46: las IA de texto, de la mejor a la más ligera: (clave de motor_texto.REPOS, repo, bytes mínimos descargados, GB libres que necesita, GB
@@ -323,18 +326,20 @@ def _driver_nvidia():
 
 
 def torch_para_este_equipo():
-    """v5.5.8: (variante, versión) de torch que toca aquí: 'cu130' (torch 2.14) con driver ≥ 580, 'cu128' (2.11) con uno
-    anterior o si no se sabe, 'cpu' sin NVIDIA. Así nadie se queda sin GPU por el driver."""
+    """v5.5.8: (variante, versión) de torch que toca aquí: 'cu132' (torch 2.15) con driver ≥ 595 (v5.53), 'cu130' (2.14.1)
+    de 580 a 594, 'cu128' (2.11) con uno anterior o si no se sabe, 'cpu' sin NVIDIA. Así nadie se queda sin GPU por el driver."""
     if not hay_gpu_nvidia():
         return 'cpu', TORCH['cpu']
-    variante = 'cu130' if _driver_nvidia() >= DRIVER_CUDA13 else 'cu128'
+    d = _driver_nvidia()
+    variante = 'cu132' if d >= DRIVER_CUDA132 else 'cu130' if d >= DRIVER_CUDA13 else 'cu128'
     return variante, TORCH[variante]
 
 
 def _torch_valido(version):
-    """True si el torch instalado ('2.14.1+cu130') es uno de los que pone el instalador."""
+    """True si el torch instalado ('2.14.1+cu130') es uno de los que pone (o puso) el instalador: los motores con 2.14.1
+    siguen valiendo con la 2.15 (v5.53); la 2.15 solo llega a instalaciones nuevas o con «Reparar»."""
     base, _, variante = (version or '').partition('+')
-    return bool(base) and TORCH.get(variante or 'cpu') == base
+    return bool(base) and (TORCH.get(variante or 'cpu') == base or version in TORCH_ACEPTADOS)
 
 
 def _python_al_dia():
@@ -637,6 +642,15 @@ def liberar():
         s.cerrar()
 
 
+def soltar():
+    """v5.53: GO con la voz en caché: el motor precargado no se usará. Sale YA de _SRV_VOZ (vram_para_ia_gb deja de sumar
+    6 GB) y se cierra en otro hilo (cerrar() espera hasta 6 s: el servidor no lee stdin hasta terminar de cargar)."""
+    with _LOCK_VOZ:
+        s, _SRV_VOZ['s'] = _SRV_VOZ['s'], None
+    if s is not None:
+        threading.Thread(target=s.cerrar, daemon=True, name='voz-soltar').start()
+
+
 # ---------------------------------------------------------------------------
 # transcribir
 # ---------------------------------------------------------------------------
@@ -921,6 +935,14 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
     else:
         pr(0.05, tr('Descargando PyTorch ({tipo}, ~{peso})', tipo='CUDA' if gpu else 'CPU',
                     peso='2,5 GB' if gpu else '200 MB'))
+        # v5.53: «Reparar» con driver ≥ 595 cambia la torch 2.14.1 por la 2.15: los servidores de IA vivos tienen sus DLL cargadas y pip no
+        # podría moverlas (WinError 5): se sueltan antes, como en la rama del motor 1.x
+        liberar()
+        try:
+            import ia_texto
+            ia_texto.liberar()
+        except Exception:
+            pass
         # con la etiqueta (+cu130…): sin ella pip daría por buena la de otra variante ya instalada
         _pip([f'torch=={version_torch}+{variante}', '--index-url', INDICE_TORCH[variante]], aviso)
     if _faltan_requisitos():

@@ -123,7 +123,9 @@ def _toolhelp():
 
 
 def _listar_pids_resolve():
-    """Los PID de Resolve.exe (Windows, ToolHelp32: ~2 ms); None si no se pudo mirar."""
+    """Los PID de Resolve.exe (Windows, ToolHelp32: ~2 ms; v5.53 Mac: pgrep); None si no se pudo mirar."""
+    if sys.platform == 'darwin':
+        return _listar_pids_resolve_mac()
     try:
         import ctypes
         from ctypes import wintypes
@@ -145,6 +147,23 @@ def _listar_pids_resolve():
         return pids
     except Exception:
         return None
+
+
+def _listar_pids_resolve_mac():
+    """v5.53: el proceso principal de Resolve en Mac es «Resolve» (DaVinci Resolve.app/Contents/MacOS/Resolve). Si pgrep -x no lo ve, se busca
+    por la ruta del .app principal (ResolveMCP vive en Contents/Applications y otras apps de Blackmagic, como «DaVinci Resolve Project
+    Server.app», no coinciden). [] = cerrado; None = no se pudo mirar."""
+    import subprocess
+    for patron in (['-x', 'Resolve'], ['-f', r'/DaVinci Resolve( Studio)?\.app/Contents/MacOS/']):
+        try:
+            r = subprocess.run(['/usr/bin/pgrep', *patron], capture_output=True, text=True, timeout=3)
+        except Exception:
+            return None
+        if r.returncode == 0:
+            return [int(x) for x in r.stdout.split() if x.isdigit()]
+        if r.returncode != 1:
+            return None
+    return []
 
 
 def _resolve_en_ejecucion():

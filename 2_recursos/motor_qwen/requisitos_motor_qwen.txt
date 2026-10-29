@@ -9,6 +9,7 @@
 # 2026-10-21: httpcore2/httpx2 2.16.0 y setuptools 84.2.1 (últimas versiones en PyPI).
 # 2026-10-25: certifi 2026.10.23 (retira las raíces emSign C1/C3) y huggingface_hub 2.3.0 (arreglo de descargas offline).
 # mpmath 1.4.1 aunque sympy 1.14.0 pide <1.4 (pedido: «todo sin excepciones»; probado con el motor de voz y la IA de texto).
+# 2026-10-28 (v5.53): hf-xet 1.7.1 y platformdirs 4.14.0; torch 2.15.0 (CUDA 13.2) con driver ≥ 595 en instalaciones nuevas y «Reparar» (los motores con 2.14.1 siguen valiendo).
 accelerate==1.15.0
 annotated-doc==0.0.5
 anyio==4.15.1
@@ -24,7 +25,7 @@ dyNET38==2.2
 filelock==4.2.4
 fsspec==2026.9.0
 h11==0.16.0
-hf-xet==1.7.0
+hf-xet==1.7.1
 httpcore2==2.16.0
 httpx2==2.16.0
 huggingface_hub==2.3.0
@@ -45,7 +46,7 @@ networkx==3.7
 numba==0.68.1
 numpy==2.5.4
 packaging==26.3
-platformdirs==4.13.6
+platformdirs==4.14.0
 pooch==1.9.0
 psutil==7.2.2
 pycparser==3.12

@@ -154770,6 +154770,8 @@ const aacFrequencyTable = [
     24000, 22050, 16000, 12000, 11025, 8000, 7350,
 ];
 const aacChannelMap = [-1, 1, 2, 3, 4, 5, 6, 8];
+// The object types whose config is a GASpecificConfig, except for AAC-LD, for which frameLengthFlag means 480 vs. 512
+const generalAudioObjectTypes = [1, 2, 3, 4, 6, 7, 17, 19, 20, 21, 22];
 const parseAacAudioSpecificConfig = (bytes) => {
     if (!bytes || bytes.byteLength < 2) {
         throw new TypeError('AAC description must be at least 2 bytes long.');
@@ -154795,7 +154797,11 @@ const parseAacAudioSpecificConfig = (bytes) => {
             bitstream.skipBits(4); // extensionChannelConfiguration
         }
     }
-    else {
+    let frameLength = 1024;
+    if (generalAudioObjectTypes.includes(coreObjectType)) {
+        frameLength = bitstream.readBits(1) ? 960 : 1024; // frameLengthFlag
+    }
+    if (objectType !== 5 && objectType !== 29) {
         // There may be SBR/PS flags sitting behind a sync word after the config of the core coder. We find them by
         // scanning for the sync word, just like FFmpeg does.
         while (bitstream.getBitsLeft() > 15) {
@@ -154822,10 +154828,12 @@ const parseAacAudioSpecificConfig = (bytes) => {
         coreObjectType,
         frequencyIndex,
         channelConfiguration,
+        coreSampleRate: sampleRate,
         outputSampleRate,
         outputNumberOfChannels: psPresent && numberOfChannels === 1
             ? 2
             : numberOfChannels,
+        frameLength,
     };
 };
 const readAacObjectType = (bitstream) => {
@@ -158366,6 +158374,7 @@ const getDtsChannelCount = (channelLayout) => {
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   $3: () => (/* binding */ AVC_LEVEL_TABLE),
+/* harmony export */   $c: () => (/* binding */ getAudioPreRollDuration),
 /* harmony export */   DC: () => (/* binding */ generateAv1CodecConfigurationFromCodecString),
 /* harmony export */   Ei: () => (/* binding */ parsePcmCodec),
 /* harmony export */   GL: () => (/* binding */ validateSubtitleMetadata),
@@ -158394,8 +158403,8 @@ const getDtsChannelCount = (channelLayout) => {
 /* unused harmony import specifier */ var base64ToBytes;
 /* unused harmony import specifier */ var toDataView;
 /* harmony import */ var _shared_aac_misc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1299);
-/* harmony import */ var _codec_data_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6297);
-/* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3912);
+/* harmony import */ var _codec_data_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6297);
+/* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3912);
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
  *
@@ -158403,6 +158412,7 @@ const getDtsChannelCount = (channelLayout) => {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+
 
 
 
@@ -158589,13 +158599,19 @@ const PRORES_PROFILE_TARGET_BITRATES = [
 ];
 const buildVideoCodecString = (codec, width, height, bitrate, alpha) => {
     if (codec === 'avc') {
-        const profileIndication = 0x64; // High Profile
+        // Needed as a workaround for https://github.com/WebKit/WebKit/pull/74602, otherwise the encoder stalls.
+        // Also see https://github.com/Vanilagy/mediabunny/issues/541
+        // and https://github.com/Vanilagy/mediabunny/issues/587
+        // Unfortunately, Safari doesn't expose its version so we can't condition this on a specific Safari version. In
+        // the future, we can consider adding some runtime detection logic for it.
+        const constrainedBaseline = (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .isWebKit */ .Tc)();
+        const profileIndication = constrainedBaseline ? 0x42 : 0x64; // Baseline or High Profile
         const totalMacroblocks = Math.ceil(width / 16) * Math.ceil(height / 16);
         // Determine the level based on the table
-        const levelInfo = AVC_LEVEL_TABLE.find(level => totalMacroblocks <= level.maxMacroblocks && bitrate <= level.maxBitrate) ?? (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .last */ ._g)(AVC_LEVEL_TABLE);
+        const levelInfo = AVC_LEVEL_TABLE.find(level => totalMacroblocks <= level.maxMacroblocks && bitrate <= level.maxBitrate) ?? (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .last */ ._g)(AVC_LEVEL_TABLE);
         const levelIndication = levelInfo ? levelInfo.level : 0;
         const hexProfileIndication = profileIndication.toString(16).padStart(2, '0');
-        const hexProfileCompatibility = '00';
+        const hexProfileCompatibility = constrainedBaseline ? '40' : '00'; // constraint_set1_flag for Constrained
         const hexLevelIndication = levelIndication.toString(16).padStart(2, '0');
         return `avc1.${hexProfileIndication}${hexProfileCompatibility}${hexLevelIndication}`;
     }
@@ -158604,7 +158620,7 @@ const buildVideoCodecString = (codec, width, height, bitrate, alpha) => {
         const profileIdc = 1; // Main Profile
         const compatibilityFlags = '6'; // Taken from the example in ISO 14496-15
         const pictureSize = width * height;
-        const levelInfo = HEVC_LEVEL_TABLE.find(level => pictureSize <= level.maxPictureSize && bitrate <= level.maxBitrate) ?? (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .last */ ._g)(HEVC_LEVEL_TABLE);
+        const levelInfo = HEVC_LEVEL_TABLE.find(level => pictureSize <= level.maxPictureSize && bitrate <= level.maxBitrate) ?? (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .last */ ._g)(HEVC_LEVEL_TABLE);
         const constraintFlags = 'B0'; // Progressive source flag
         return 'hev1.'
             + `${profilePrefix}${profileIdc}.`
@@ -158618,14 +158634,14 @@ const buildVideoCodecString = (codec, width, height, bitrate, alpha) => {
     else if (codec === 'vp9') {
         const profile = '00'; // Profile 0
         const pictureSize = width * height;
-        const levelInfo = VP9_LEVEL_TABLE.find(level => pictureSize <= level.maxPictureSize && bitrate <= level.maxBitrate) ?? (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .last */ ._g)(VP9_LEVEL_TABLE);
+        const levelInfo = VP9_LEVEL_TABLE.find(level => pictureSize <= level.maxPictureSize && bitrate <= level.maxBitrate) ?? (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .last */ ._g)(VP9_LEVEL_TABLE);
         const bitDepth = '08'; // 8-bit
         return `vp09.${profile}.${levelInfo.level.toString().padStart(2, '0')}.${bitDepth}`;
     }
     else if (codec === 'av1') {
         const profile = 0; // Main Profile, single digit
         const pictureSize = width * height;
-        const levelInfo = AV1_LEVEL_TABLE.find(level => pictureSize <= level.maxPictureSize && bitrate <= level.maxBitrate) ?? (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .last */ ._g)(AV1_LEVEL_TABLE);
+        const levelInfo = AV1_LEVEL_TABLE.find(level => pictureSize <= level.maxPictureSize && bitrate <= level.maxBitrate) ?? (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .last */ ._g)(AV1_LEVEL_TABLE);
         const level = levelInfo.level.toString().padStart(2, '0');
         const bitDepth = '08'; // 8-bit
         return `av01.${profile}.${level}${levelInfo.tier}.${bitDepth}`;
@@ -158646,7 +158662,7 @@ const buildVideoCodecString = (codec, width, height, bitrate, alpha) => {
         return bestFourCc;
     }
     else {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assertNever */ .xb)(codec);
+        (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assertNever */ .xb)(codec);
     }
     throw new TypeError(`Unhandled codec '${String(codec)}'.`);
 };
@@ -158696,19 +158712,19 @@ const generateAv1CodecConfigurationFromCodecString = (codecString) => {
 const extractVideoCodecString = (trackInfo) => {
     const { codec, codecDescription, colorSpace, avcCodecInfo, hevcCodecInfo, vp9CodecInfo, av1CodecInfo, proresFormat, } = trackInfo;
     if (codec === 'avc') {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(trackInfo.avcType !== null);
+        (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assert */ .vA)(trackInfo.avcType !== null);
         if (avcCodecInfo) {
             const bytes = new Uint8Array([
                 avcCodecInfo.avcProfileIndication,
                 avcCodecInfo.profileCompatibility,
                 avcCodecInfo.avcLevelIndication,
             ]);
-            return `avc${trackInfo.avcType}.${(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .bytesToHexString */ .Br)(bytes)}`;
+            return `avc${trackInfo.avcType}.${(0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .bytesToHexString */ .Br)(bytes)}`;
         }
         if (!codecDescription || codecDescription.byteLength < 4) {
             throw new TypeError('AVC decoder description is not provided or is not at least 4 bytes long.');
         }
-        return `avc${trackInfo.avcType}.${(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .bytesToHexString */ .Br)(codecDescription.subarray(1, 4))}`;
+        return `avc${trackInfo.avcType}.${(0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .bytesToHexString */ .Br)(codecDescription.subarray(1, 4))}`;
     }
     else if (codec === 'hevc') {
         let generalProfileSpace;
@@ -158720,7 +158736,7 @@ const extractVideoCodecString = (trackInfo) => {
         if (hevcCodecInfo) {
             generalProfileSpace = hevcCodecInfo.generalProfileSpace;
             generalProfileIdc = hevcCodecInfo.generalProfileIdc;
-            compatibilityFlags = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .reverseBitsU32 */ .P5)(hevcCodecInfo.generalProfileCompatibilityFlags);
+            compatibilityFlags = (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .reverseBitsU32 */ .P5)(hevcCodecInfo.generalProfileCompatibilityFlags);
             generalTierFlag = hevcCodecInfo.generalTierFlag;
             generalLevelIdc = hevcCodecInfo.generalLevelIdc;
             constraintFlags = [...hevcCodecInfo.generalConstraintIndicatorFlags];
@@ -158729,11 +158745,11 @@ const extractVideoCodecString = (trackInfo) => {
             if (!codecDescription || codecDescription.byteLength < 23) {
                 throw new TypeError('HEVC decoder description is not provided or is not at least 23 bytes long.');
             }
-            const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .toDataView */ .Zc)(codecDescription);
+            const view = (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .toDataView */ .Zc)(codecDescription);
             const profileByte = view.getUint8(1);
             generalProfileSpace = (profileByte >> 6) & 0x03;
             generalProfileIdc = profileByte & 0x1F;
-            compatibilityFlags = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .reverseBitsU32 */ .P5)(view.getUint32(2));
+            compatibilityFlags = (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .reverseBitsU32 */ .P5)(view.getUint32(2));
             generalTierFlag = (profileByte >> 5) & 0x01;
             generalLevelIdc = view.getUint8(12);
             constraintFlags = [];
@@ -158764,7 +158780,7 @@ const extractVideoCodecString = (trackInfo) => {
         if (!vp9CodecInfo) {
             // Calculate level based on dimensions
             const pictureSize = trackInfo.width * trackInfo.height;
-            let level = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .last */ ._g)(VP9_LEVEL_TABLE).level; // Default to highest level
+            let level = (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .last */ ._g)(VP9_LEVEL_TABLE).level; // Default to highest level
             for (const entry of VP9_LEVEL_TABLE) {
                 if (pictureSize <= entry.maxPictureSize) {
                     level = entry.level;
@@ -158793,7 +158809,7 @@ const extractVideoCodecString = (trackInfo) => {
         if (!av1CodecInfo) {
             // Calculate level based on dimensions
             const pictureSize = trackInfo.width * trackInfo.height;
-            let level = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .last */ ._g)(VP9_LEVEL_TABLE).level; // Default to highest level
+            let level = (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .last */ ._g)(VP9_LEVEL_TABLE).level; // Default to highest level
             for (const entry of VP9_LEVEL_TABLE) {
                 if (pictureSize <= entry.maxPictureSize) {
                     level = entry.level;
@@ -158818,7 +158834,7 @@ const extractVideoCodecString = (trackInfo) => {
         let transferCharacteristics;
         let matrixCoefficients;
         let videoFullRangeFlag;
-        if ((0,_codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .av1CodecInfoHasColorInfo */ .et)(av1CodecInfo)) {
+        if ((0,_codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .av1CodecInfoHasColorInfo */ .et)(av1CodecInfo)) {
             colorPrimaries = av1CodecInfo.colourPrimaries;
             transferCharacteristics = av1CodecInfo.transferCharacteristics;
             matrixCoefficients = av1CodecInfo.matrixCoefficients;
@@ -158826,9 +158842,9 @@ const extractVideoCodecString = (trackInfo) => {
         }
         else {
             // The defaults are 1 (ITU-R BT.709)
-            colorPrimaries = colorSpace?.primaries ? _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .COLOR_PRIMARIES_MAP */ .wd[colorSpace.primaries] : 1;
-            transferCharacteristics = colorSpace?.transfer ? _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .TRANSFER_CHARACTERISTICS_MAP */ .uN[colorSpace.transfer] : 1;
-            matrixCoefficients = colorSpace?.matrix ? _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .MATRIX_COEFFICIENTS_MAP */ .Au[colorSpace.matrix] : 1;
+            colorPrimaries = colorSpace?.primaries ? _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .COLOR_PRIMARIES_MAP */ .wd[colorSpace.primaries] : 1;
+            transferCharacteristics = colorSpace?.transfer ? _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .TRANSFER_CHARACTERISTICS_MAP */ .uN[colorSpace.transfer] : 1;
+            matrixCoefficients = colorSpace?.matrix ? _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .MATRIX_COEFFICIENTS_MAP */ .Au[colorSpace.matrix] : 1;
             videoFullRangeFlag = colorSpace?.fullRange ? 1 : 0;
         }
         let string = `av01.${profile}.${level}${tier}.${bitDepth}`;
@@ -158846,7 +158862,7 @@ const extractVideoCodecString = (trackInfo) => {
         return proresFormat ?? 'apch';
     }
     else if (codec !== null) {
-        (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assertNever */ .xb)(codec);
+        (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assertNever */ .xb)(codec);
     }
     throw new TypeError(`Unhandled codec '${codec}'.`);
 };
@@ -158856,15 +158872,15 @@ const extractColorSpace = (info) => {
             {
                 let spsData = info.avcCodecInfo?.sequenceParameterSets[0];
                 if (!spsData && info.codecDescription) {
-                    spsData = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .deserializeAvcDecoderConfigurationRecord */ .BP)(info.codecDescription)?.sequenceParameterSets[0];
+                    spsData = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .deserializeAvcDecoderConfigurationRecord */ .BP)(info.codecDescription)?.sequenceParameterSets[0];
                 }
                 if (spsData) {
-                    const spsInfo = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .parseAvcSps */ .eM)(spsData);
+                    const spsInfo = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .parseAvcSps */ .eM)(spsData);
                     if (spsInfo) {
                         return {
-                            primaries: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[spsInfo.colourPrimaries],
-                            transfer: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[spsInfo.transferCharacteristics],
-                            matrix: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[spsInfo.matrixCoefficients],
+                            primaries: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[spsInfo.colourPrimaries],
+                            transfer: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[spsInfo.transferCharacteristics],
+                            matrix: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[spsInfo.matrixCoefficients],
                             fullRange: !!spsInfo.fullRangeFlag,
                         };
                     }
@@ -158875,18 +158891,18 @@ const extractColorSpace = (info) => {
         case 'hevc':
             {
                 let spsData = info.hevcCodecInfo?.arrays
-                    .find(x => x.nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .HevcNalUnitType */ .iJ.SPS_NUT)?.nalUnits[0];
+                    .find(x => x.nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .HevcNalUnitType */ .iJ.SPS_NUT)?.nalUnits[0];
                 if (!spsData && info.codecDescription) {
-                    spsData = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .deserializeHevcDecoderConfigurationRecord */ .hf)(info.codecDescription)?.arrays
-                        .find(x => x.nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .HevcNalUnitType */ .iJ.SPS_NUT)?.nalUnits[0];
+                    spsData = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .deserializeHevcDecoderConfigurationRecord */ .hf)(info.codecDescription)?.arrays
+                        .find(x => x.nalUnitType === _codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .HevcNalUnitType */ .iJ.SPS_NUT)?.nalUnits[0];
                 }
                 if (spsData) {
-                    const spsInfo = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .parseHevcSps */ .gT)(spsData);
+                    const spsInfo = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_2__/* .parseHevcSps */ .gT)(spsData);
                     if (spsInfo) {
                         return {
-                            primaries: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[spsInfo.colourPrimaries],
-                            transfer: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[spsInfo.transferCharacteristics],
-                            matrix: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[spsInfo.matrixCoefficients],
+                            primaries: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[spsInfo.colourPrimaries],
+                            transfer: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[spsInfo.transferCharacteristics],
+                            matrix: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[spsInfo.matrixCoefficients],
                             fullRange: !!spsInfo.fullRangeFlag,
                         };
                     }
@@ -158904,9 +158920,9 @@ const extractColorSpace = (info) => {
             {
                 if (info.vp9CodecInfo) {
                     return {
-                        primaries: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[info.vp9CodecInfo.colourPrimaries],
-                        transfer: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[info.vp9CodecInfo.transferCharacteristics],
-                        matrix: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[info.vp9CodecInfo.matrixCoefficients],
+                        primaries: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[info.vp9CodecInfo.colourPrimaries],
+                        transfer: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[info.vp9CodecInfo.transferCharacteristics],
+                        matrix: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[info.vp9CodecInfo.matrixCoefficients],
                         fullRange: !!info.vp9CodecInfo.videoFullRangeFlag,
                     };
                 }
@@ -158917,9 +158933,9 @@ const extractColorSpace = (info) => {
             {
                 if (info.av1CodecInfo) {
                     return {
-                        primaries: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[info.av1CodecInfo.colourPrimaries],
-                        transfer: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[info.av1CodecInfo.transferCharacteristics],
-                        matrix: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[info.av1CodecInfo.matrixCoefficients],
+                        primaries: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[info.av1CodecInfo.colourPrimaries],
+                        transfer: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[info.av1CodecInfo.transferCharacteristics],
+                        matrix: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[info.av1CodecInfo.matrixCoefficients],
                         fullRange: !!info.av1CodecInfo.videoFullRangeFlag,
                     };
                 }
@@ -158930,9 +158946,9 @@ const extractColorSpace = (info) => {
             {
                 if (info.proresCodecInfo) {
                     return {
-                        primaries: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[info.proresCodecInfo.colourPrimaries],
-                        transfer: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[info.proresCodecInfo.transferCharacteristics],
-                        matrix: _misc_js__WEBPACK_IMPORTED_MODULE_2__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[info.proresCodecInfo.matrixCoefficients],
+                        primaries: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .COLOR_PRIMARIES_MAP_INVERSE */ .BL[info.proresCodecInfo.colourPrimaries],
+                        transfer: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .TRANSFER_CHARACTERISTICS_MAP_INVERSE */ .x_[info.proresCodecInfo.transferCharacteristics],
+                        matrix: _misc_js__WEBPACK_IMPORTED_MODULE_3__/* .MATRIX_COEFFICIENTS_MAP_INVERSE */ .fl[info.proresCodecInfo.matrixCoefficients],
                         fullRange: info.proresCodecInfo.fullRange,
                     };
                 }
@@ -159067,10 +159083,89 @@ const guessDescriptionForAudio = (decoderConfig) => {
         default: return undefined; // All other codecs allow an undefined description
     }
 };
+const getAudioPreRollDuration = (codec, decoderConfig) => {
+    switch (codec) {
+        case 'aac': {
+            if (!decoderConfig.description) {
+                // Best guess
+                return 1024 / decoderConfig.sampleRate;
+            }
+            const audioSpecificConfig = (0,_shared_aac_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .parseAacAudioSpecificConfig */ .zF)((0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .toUint8Array */ .Fo)(decoderConfig.description));
+            if (audioSpecificConfig.coreSampleRate === null) {
+                throw new Error('Invalid AAC sampling frequency index.');
+            }
+            return audioSpecificConfig.frameLength / audioSpecificConfig.coreSampleRate;
+        }
+        case 'opus': {
+            return 0.08;
+        }
+        case 'mp3': {
+            // The bit reservoir reaches back a fixed number of bytes, so it spans the most frames when a (VBR)
+            // stream drops to the lowest bitrate. We can't rule that out, so we go with that worst case, plus one
+            // frame of overlap on top.
+            const { sampleRate, numberOfChannels } = decoderConfig;
+            const isMpeg1 = sampleRate >= 32000; // MPEG-2 and MPEG-2.5 cover the rates below
+            const frameSamples = isMpeg1 ? 1152 : 576;
+            const minBitrate = isMpeg1 ? 32000 : 8000;
+            const maxMainDataBegin = isMpeg1 ? 511 : 255;
+            const sideInfoSize = isMpeg1
+                ? (numberOfChannels === 1 ? 17 : 32)
+                : (numberOfChannels === 1 ? 9 : 17);
+            const minFrameSize = Math.floor(frameSamples / 8 * minBitrate / sampleRate);
+            const minMainDataSize = minFrameSize - (/* inlined export .MP3_FRAME_HEADER_SIZE */4) - sideInfoSize;
+            const frameCount = 1 + Math.ceil(maxMainDataBegin / minMainDataSize);
+            return frameCount * frameSamples / sampleRate;
+        }
+        case 'vorbis': {
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assert */ .vA)(decoderConfig.description);
+            // Skip the Xiph lacing to get to the identification header
+            const bytes = (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .toUint8Array */ .Fo)(decoderConfig.description);
+            let pos = 1;
+            let lacedLengthsLeft = 2;
+            while (lacedLengthsLeft > 0) {
+                if (bytes[pos++] < 255) {
+                    lacedLengthsLeft--;
+                }
+            }
+            const blockSizeByte = bytes[pos + 28];
+            const longBlockSize = 1 << (blockSizeByte >> 4); // blocksize_1
+            // The previous packet's long window overlaps by up to half its size
+            return (longBlockSize / 2) / decoderConfig.sampleRate;
+        }
+        case 'ac3':
+        case 'eac3': {
+            return 256 / decoderConfig.sampleRate;
+        }
+        case 'dts': {
+            return 512 / decoderConfig.sampleRate;
+        }
+        case 'flac':
+        case 'pcm-s16':
+        case 'pcm-s16be':
+        case 'pcm-s24':
+        case 'pcm-s24be':
+        case 'pcm-s32':
+        case 'pcm-s32be':
+        case 'pcm-f32':
+        case 'pcm-f32be':
+        case 'pcm-f64':
+        case 'pcm-f64be':
+        case 'pcm-u8':
+        case 'pcm-s8':
+        case 'ulaw':
+        case 'alaw': {
+            return 0;
+        }
+        default: {
+            ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assertNever */ .xb)(codec);
+            (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assert */ .vA)(false);
+        }
+    }
+};
 const OPUS_SAMPLE_RATE = 48_000;
 const PCM_CODEC_REGEX = /^pcm-([usf])(\d+)(be)?$/;
 const parsePcmCodec = (codec) => {
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(PCM_AUDIO_CODECS.includes(codec));
+    (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assert */ .vA)(PCM_AUDIO_CODECS.includes(codec));
     if (codec === 'ulaw') {
         return { dataType: 'ulaw', sampleSize: 1, littleEndian: true, silentValue: 255 };
     }
@@ -159078,7 +159173,7 @@ const parsePcmCodec = (codec) => {
         return { dataType: 'alaw', sampleSize: 1, littleEndian: true, silentValue: 213 };
     }
     const match = PCM_CODEC_REGEX.exec(codec);
-    (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(match);
+    (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assert */ .vA)(match);
     let dataType;
     if (match[1] === 'u') {
         dataType = 'unsigned';
@@ -159239,7 +159334,7 @@ const validateVideoChunkMetadata = (metadata, trackCodec) => {
             + ' or neither.');
     }
     if (metadata.decoderConfig.description !== undefined) {
-        if (!(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isAllowSharedBufferSource */ .SM)(metadata.decoderConfig.description)) {
+        if (!(0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .isAllowSharedBufferSource */ .SM)(metadata.decoderConfig.description)) {
             throw new TypeError('Video chunk metadata decoder configuration description, when defined, must be an ArrayBuffer or an'
                 + ' ArrayBuffer view.');
         }
@@ -159249,17 +159344,17 @@ const validateVideoChunkMetadata = (metadata, trackCodec) => {
         if (typeof colorSpace !== 'object') {
             throw new TypeError('Video chunk metadata decoder configuration colorSpace, when provided, must be an object.');
         }
-        const primariesValues = Object.keys(_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .COLOR_PRIMARIES_MAP */ .wd);
+        const primariesValues = Object.keys(_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .COLOR_PRIMARIES_MAP */ .wd);
         if (colorSpace.primaries != null && !primariesValues.includes(colorSpace.primaries)) {
             throw new TypeError(`Video chunk metadata decoder configuration colorSpace primaries, when defined, must be one of`
                 + ` ${primariesValues.join(', ')}.`);
         }
-        const transferValues = Object.keys(_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .TRANSFER_CHARACTERISTICS_MAP */ .uN);
+        const transferValues = Object.keys(_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .TRANSFER_CHARACTERISTICS_MAP */ .uN);
         if (colorSpace.transfer != null && !transferValues.includes(colorSpace.transfer)) {
             throw new TypeError(`Video chunk metadata decoder configuration colorSpace transfer, when defined, must be one of`
                 + ` ${transferValues.join(', ')}.`);
         }
-        const matrixValues = Object.keys(_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .MATRIX_COEFFICIENTS_MAP */ .Au);
+        const matrixValues = Object.keys(_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .MATRIX_COEFFICIENTS_MAP */ .Au);
         if (colorSpace.matrix != null && !matrixValues.includes(colorSpace.matrix)) {
             throw new TypeError(`Video chunk metadata decoder configuration colorSpace matrix, when defined, must be one of`
                 + ` ${matrixValues.join(', ')}.`);
@@ -159350,7 +159445,7 @@ const validateAudioChunkMetadata = (metadata, trackCodec) => {
         throw new TypeError('Audio chunk metadata decoder configuration must specify a valid numberOfChannels (positive integer).');
     }
     if (metadata.decoderConfig.description !== undefined) {
-        if (!(0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isAllowSharedBufferSource */ .SM)(metadata.decoderConfig.description)) {
+        if (!(0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .isAllowSharedBufferSource */ .SM)(metadata.decoderConfig.description)) {
             throw new TypeError('Audio chunk metadata decoder configuration description, when defined, must be an ArrayBuffer or an'
                 + ' ArrayBuffer view.');
         }
@@ -160682,8 +160777,18 @@ const parseId3V2Tag = (slice, header, tags) => {
             tags.raw[frame.id] ??= reader.readId3V2EncodingAndText(frameEndPos);
         }
         else {
-            // For the others, let's just get the bytes
-            tags.raw[frame.id] ??= reader.readBytes(frameEndPos - reader.pos);
+            // For the others, let's just get the bytes. Frames that appear more than once are collected into an array.
+            const bytes = reader.readBytes(frameEndPos - reader.pos);
+            const existing = tags.raw[frame.id];
+            if (existing instanceof Uint8Array) {
+                tags.raw[frame.id] = [existing, bytes];
+            }
+            else if (Array.isArray(existing)) {
+                existing.push(bytes);
+            }
+            else {
+                tags.raw[frame.id] ??= bytes;
+            }
         }
         reader.pos = frameStartPos;
         switch (frame.id) {
@@ -161224,8 +161329,9 @@ class Id3V2Writer {
                 if (value == null || key.length !== 4 || writtenTags.has(key)) {
                     continue;
                 }
-                let bytes;
+                let frames;
                 if (typeof value === 'string') {
+                    let bytes;
                     const useIso88591 = (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isIso88591Compatible */ .H9)(value);
                     if (useIso88591) {
                         bytes = new Uint8Array(value.length + 2);
@@ -161242,9 +161348,14 @@ class Id3V2Writer {
                         bytes.set(encoded, 1);
                         // Last byte is the null terminator
                     }
+                    frames = [bytes];
                 }
                 else if (value instanceof Uint8Array) {
-                    bytes = value;
+                    frames = [value];
+                }
+                else if (Array.isArray(value) && value.every(x => x instanceof Uint8Array)) {
+                    // Write one frame per element
+                    frames = value;
                 }
                 else if (key === 'TXXX' && (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isRecordStringString */ .eA)(value)) {
                     for (const description in value) {
@@ -161275,10 +161386,12 @@ class Id3V2Writer {
                 else {
                     continue;
                 }
-                this.writeAscii(key);
-                this.writeSynchsafeU32(bytes.byteLength);
-                this.writeU16(0x0000);
-                this.writer.write(bytes);
+                for (const bytes of frames) {
+                    this.writeAscii(key);
+                    this.writeSynchsafeU32(bytes.byteLength);
+                    this.writeU16(0x0000);
+                    this.writer.write(bytes);
+                }
             }
         }
         const framesEndPos = this.writer.getPos();
@@ -162304,6 +162417,7 @@ var EBMLId;
     EBMLId[EBMLId["CueTrackPositions"] = 183] = "CueTrackPositions";
     EBMLId[EBMLId["CueTrack"] = 247] = "CueTrack";
     EBMLId[EBMLId["CueClusterPosition"] = 241] = "CueClusterPosition";
+    EBMLId[EBMLId["CueRelativePosition"] = 240] = "CueRelativePosition";
     EBMLId[EBMLId["Colour"] = 21936] = "Colour";
     EBMLId[EBMLId["MatrixCoefficients"] = 21937] = "MatrixCoefficients";
     EBMLId[EBMLId["TransferCharacteristics"] = 21946] = "TransferCharacteristics";
@@ -163293,8 +163407,9 @@ class BaseMediaSampleSink {
             });
             decoder.onDequeue = () => onQueueDequeue();
             const packetSink = this._createPacketSink();
-            const keyPacket = await packetSink.getKeyPacket(startTimestamp, packetRetrievalOptions)
-                ?? await packetSink.getFirstKeyPacket(packetRetrievalOptions);
+            const preRollDuration = await this._getPreRollDuration();
+            const startPacket = await packetSink.getPacket(startTimestamp, packetRetrievalOptions);
+            const keyPacket = await packetSink.getKeyPacket((startPacket?.timestamp ?? startTimestamp) - preRollDuration, packetRetrievalOptions) ?? await packetSink.getFirstKeyPacket(packetRetrievalOptions);
             let currentPacket = keyPacket;
             // B-frames make it exceedingly difficult to properly define an upper bound for packet iteration if an end
             // timestamp is set, so we just don't do it. The case that makes it especially tricky is when the frames
@@ -163415,6 +163530,20 @@ class BaseMediaSampleSink {
             onQueueNotEmpty();
             ({ promise: queueNotEmpty, resolve: onQueueNotEmpty } = (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .promiseWithResolvers */ .nJ)());
         };
+        // The answer to a query timestamp is the last sample starting at or before it, but we only know a sample is the
+        // last one once the next one comes in (or the decoder is flushed). So, we hold on to the most recent one until
+        // then.
+        let heldSample = null;
+        const emitHeldSample = (count) => {
+            for (let i = 0; i < count; i++) {
+                // Clone the sample if we need to emit it multiple times
+                pushToQueue(heldSample && (i < count - 1 ? heldSample.clone() : heldSample));
+            }
+            if (count === 0) {
+                heldSample?.close();
+            }
+            heldSample = null;
+        };
         const retrievalOptions = {
             ...options,
             verifyKeyPackets: true,
@@ -163428,22 +163557,16 @@ class BaseMediaSampleSink {
                     sample.close();
                     return;
                 }
-                let sampleUses = 0;
+                // Every query timestamp this sample starts after is answered by the sample before it
+                let heldSampleUses = 0;
                 while (timestampsOfInterest.length > 0
-                    && sample.timestamp - timestampsOfInterest[0] > -1e-10 // Give it a little epsilon
+                    && sample.timestamp - timestampsOfInterest[0] > 1e-10 // Give it a little epsilon
                 ) {
-                    sampleUses++;
+                    heldSampleUses++;
                     timestampsOfInterest.shift();
                 }
-                if (sampleUses > 0) {
-                    for (let i = 0; i < sampleUses; i++) {
-                        // Clone the sample if we need to emit it multiple times
-                        pushToQueue((i < sampleUses - 1 ? sample.clone() : sample));
-                    }
-                }
-                else {
-                    sample.close();
-                }
+                emitHeldSample(heldSampleUses);
+                heldSample = sample;
             }, (error) => {
                 if (!hasOutOfBandError) {
                     outOfBandError = error;
@@ -163453,17 +163576,23 @@ class BaseMediaSampleSink {
             });
             decoder.onDequeue = () => onQueueDequeue();
             const packetSink = this._createPacketSink();
+            const preRollDuration = await this._getPreRollDuration();
             let lastPacket = null;
+            let lastTimestamp = -Infinity;
             let lastKeyPacket = null;
-            // The end sequence number (inclusive) in the next batch of packets that will be decoded. The batch starts
-            // at the last key frame and goes until this sequence number.
+            let lastDecodedPacket = null;
+            // The end sequence number (inclusive) of the current batch of packets. The batch starts at the last key
+            // frame and goes until this sequence number.
             let maxSequenceNumber = -1;
             const decodePackets = async () => {
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(lastKeyPacket);
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(decoder);
-                // Start at the current key packet
-                let currentPacket = lastKeyPacket;
-                decoder.decode(currentPacket);
+                // Continue where we left off, or start at the current key packet
+                let currentPacket = lastDecodedPacket;
+                if (!currentPacket) {
+                    currentPacket = lastKeyPacket;
+                    decoder.decode(currentPacket);
+                }
                 while (currentPacket.sequenceNumber < maxSequenceNumber) {
                     while (sampleQueue.length + decoder.getDecodeQueueSize() >= MAX_QUEUE_SIZE && !terminated) {
                         ({ promise: queueDequeue, resolve: onQueueDequeue } = (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .promiseWithResolvers */ .nJ)());
@@ -163479,16 +163608,13 @@ class BaseMediaSampleSink {
                     decoder.decode(nextPacket);
                     currentPacket = nextPacket;
                 }
-                maxSequenceNumber = -1;
+                lastDecodedPacket = currentPacket;
             };
             const flushDecoder = async () => {
                 (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(decoder);
                 await decoder.flush();
-                // We don't expect this list to have any elements in it anymore, but in case it does, let's emit
-                // nulls for every remaining element, then clear it.
-                for (let i = 0; i < timestampsOfInterest.length; i++) {
-                    pushToQueue(null);
-                }
+                // No sample starts after the remaining query timestamps, so the last one answers all of them
+                emitHeldSample(timestampsOfInterest.length);
                 timestampsOfInterest.length = 0;
             };
             for await (const timestamp of timestampIterator) {
@@ -163497,33 +163623,44 @@ class BaseMediaSampleSink {
                     break;
                 }
                 const targetPacket = await packetSink.getPacket(timestamp, retrievalOptions);
-                const keyPacket = targetPacket && await packetSink.getKeyPacket(timestamp, retrievalOptions);
-                if (!keyPacket) {
-                    if (maxSequenceNumber !== -1) {
-                        await decodePackets();
+                let keyPacket = targetPacket && await packetSink.getKeyPacket(targetPacket.timestamp - preRollDuration, retrievalOptions);
+                if (targetPacket && !keyPacket) {
+                    // The track doesn't reach back far enough for the full pre-roll, so this is the best we can do
+                    const firstKeyPacket = await packetSink.getFirstKeyPacket(retrievalOptions);
+                    if (firstKeyPacket && firstKeyPacket.timestamp <= targetPacket.timestamp) {
+                        keyPacket = firstKeyPacket;
+                    }
+                }
+                if (!targetPacket || !keyPacket) {
+                    if (lastPacket) {
                         await flushDecoder();
                     }
                     pushToQueue(null);
                     lastPacket = null;
                     continue;
                 }
-                // Check if the key packet has changed or if we're going back in time
-                if (lastPacket
-                    && (keyPacket.sequenceNumber !== lastKeyPacket.sequenceNumber
-                        || targetPacket.timestamp < lastPacket.timestamp)) {
-                    await decodePackets();
-                    await flushDecoder(); // Always flush here, improves decoder compatibility
+                // Keep extending the current batch as long as it reaches the key packet anyway (always the case for an
+                // unchanged key packet), so that consecutive timestamps don't redo their pre-roll. Otherwise, or if
+                // we're going back in time, start a new batch at the key packet. The query timestamps within a batch
+                // must not decrease, since the sample matching relies on that.
+                if (!lastPacket
+                    || keyPacket.sequenceNumber > maxSequenceNumber + 1
+                    || timestamp < lastTimestamp) {
+                    if (lastPacket) {
+                        await flushDecoder(); // Always flush here, improves decoder compatibility
+                    }
+                    lastKeyPacket = keyPacket;
+                    lastDecodedPacket = null;
+                    maxSequenceNumber = -1;
                 }
-                timestampsOfInterest.push(targetPacket.timestamp);
+                timestampsOfInterest.push(timestamp);
                 maxSequenceNumber = Math.max(targetPacket.sequenceNumber, maxSequenceNumber);
                 lastPacket = targetPacket;
-                lastKeyPacket = keyPacket;
+                lastTimestamp = timestamp;
+                // Decode right away so that samples come out while the timestamps are still coming in
+                await decodePackets();
             }
             if (!terminated && !this._track.input._disposed) {
-                if (maxSequenceNumber !== -1) {
-                    // We still need to decode packets
-                    await decodePackets();
-                }
                 await flushDecoder();
             }
             decoderIsFlushed = true;
@@ -163539,6 +163676,8 @@ class BaseMediaSampleSink {
         });
         const track = this._track;
         const closeSamples = () => {
+            heldSample?.close();
+            heldSample = null;
             for (const sample of sampleQueue) {
                 sample?.close();
             }
@@ -164361,6 +164500,10 @@ class VideoSampleSink extends BaseMediaSampleSink {
     _createPacketSink() {
         return new EncodedPacketSink(this._track);
     }
+    /** @internal */
+    async _getPreRollDuration() {
+        return 0;
+    }
     /**
      * Retrieves the video sample (frame) corresponding to the given timestamp, in seconds. More specifically, returns
      * the last video sample (in presentation order) with a start timestamp less than or equal to the given timestamp.
@@ -164610,11 +164753,14 @@ class AudioDecoderWrapper extends DecoderWrapper {
         // Chromium does not respect negative packet timestamps, so we must do the fixin' ourselves
         this.expectedFirstTimestamp = null;
         this.timestampOffset = 0;
+        // WebCodecs impls discards the preskip (correct) but doesn't advance the timestamp (incorrect)
+        const opusPreSkip = codec === 'opus' && decoderConfig.description
+            ? (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .parseOpusIdentificationHeader */ .Qf)((0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .toUint8Array */ .Fo)(decoderConfig.description)).preSkip / _codec_js__WEBPACK_IMPORTED_MODULE_0__/* .OPUS_SAMPLE_RATE */ .yo
+            : 0;
         const sampleHandler = (sample) => {
             let sampleTimestamp = sample.timestamp;
             if (this.expectedFirstTimestamp !== null && this.currentTimestamp === null) {
-                this.timestampOffset = this.expectedFirstTimestamp - sampleTimestamp;
-                ;
+                this.timestampOffset = this.expectedFirstTimestamp + opusPreSkip - sampleTimestamp;
             }
             sampleTimestamp += this.timestampOffset;
             if (this.currentTimestamp === null
@@ -164970,6 +165116,12 @@ class AudioSampleSink extends BaseMediaSampleSink {
     _createPacketSink() {
         return new EncodedPacketSink(this._track);
     }
+    /** @internal */
+    async _getPreRollDuration() {
+        const preRollDuration = await this._track.getPreRollDuration();
+        (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(preRollDuration !== null); // The decoder was created, so the codec is known
+        return preRollDuration;
+    }
     /**
      * Retrieves the audio sample corresponding to the given timestamp, in seconds. More specifically, returns
      * the last audio sample (in presentation order) with a start timestamp less than or equal to the given timestamp.
@@ -165296,11 +165448,12 @@ class AudioResampler {
         const sourceDataSize = audioSample.allocationSize({ planeIndex: 0, format: 'f32' });
         const sourceView = new Float32Array(this.tempSourceBuffer.buffer, 0, sourceDataSize / 4);
         audioSample.copyTo(sourceView, { planeIndex: 0, format: 'f32' });
-        const inputStartTime = audioSample.timestamp - this.startTime;
-        const inputEndTime = inputStartTime + audioSample.duration;
+        // Audio sample is snapped to the input sample rate grid
+        const sourceStartFrame = Math.round((audioSample.timestamp - this.startTime) * this.sourceSampleRate);
+        const sourceEndFrame = sourceStartFrame + audioSample.numberOfFrames;
         // Compute which output frames are affected by this sample
-        const outputStartFrame = Math.floor((inputStartTime - 1 / this.sourceSampleRate) * this.targetSampleRate) + 1;
-        const outputEndFrame = Math.ceil(inputEndTime * this.targetSampleRate);
+        const outputStartFrame = Math.floor((sourceStartFrame - 1) * this.targetSampleRate / this.sourceSampleRate) + 1;
+        const outputEndFrame = Math.ceil(sourceEndFrame * this.targetSampleRate / this.sourceSampleRate);
         for (let outputFrame = outputStartFrame; outputFrame < outputEndFrame; outputFrame++) {
             if (outputFrame < this.bufferStartFrame) {
                 continue; // Skip writes to the past
@@ -165312,9 +165465,7 @@ class AudioResampler {
             }
             const bufferFrameIndex = outputFrame - this.bufferStartFrame;
             (0,misc/* assert */.vA)(bufferFrameIndex < this.bufferCapacityInFrames);
-            const outputTime = outputFrame / this.targetSampleRate;
-            const inputTime = outputTime - inputStartTime;
-            const sourcePosition = inputTime * this.sourceSampleRate;
+            const sourcePosition = outputFrame * this.sourceSampleRate / this.targetSampleRate - sourceStartFrame;
             const sourceLowerFrame = Math.floor(sourcePosition);
             const sourceUpperFrame = Math.ceil(sourcePosition);
             const fraction = sourcePosition - sourceLowerFrame;
@@ -167316,7 +167467,7 @@ class AudioEncoderWrapper {
     }
     ensureEncoder(audioSample) {
         this.ensureEncoderPromise = (async () => {
-            const { numberOfChannels, sampleRate } = audioSample;
+            const { numberOfChannels, sampleRate, timestamp } = audioSample;
             // eslint-disable-next-line @typescript-eslint/no-deprecated
             const quality = (0,encode/* resolveQuality */.WS)(this.encodingConfig.quality, this.encodingConfig.bitrate);
             const encoderConfig = (0,encode/* buildAudioEncoderConfig */.XU)({
@@ -167377,46 +167528,33 @@ class AudioEncoderWrapper {
                         + ` supported in this environment. Consider using another codec or changing your`
                         + ` audio parameters.`);
                 }
+                const primingShiftInSamples = await detectAudioEncoderPrimingShift(this.encodingConfig.codec, encoderConfig.codec);
+                const primingShift = primingShiftInSamples / encoderConfig.sampleRate;
+                let opusPreSkip = 0; // In seconds
                 const stack = new Error('Encoding error').stack;
                 this.encoder = new AudioEncoder({
                     output: (chunk, meta) => {
-                        // WebKit emits an invalid description for AAC (https://bugs.webkit.org/show_bug.cgi?id=302253),
-                        // which we try to detect here. If detected, we'll provide our own description instead, derived
-                        // from the codec string and audio parameters.
-                        if (this.encodingConfig.codec === 'aac' && meta?.decoderConfig) {
-                            if (meta.decoderConfig.description
-                                && meta.decoderConfig.description.byteLength > 0
-                                && (0,misc/* toUint8Array */.Fo)(meta.decoderConfig.description)[0] === 0x03) {
-                                // We were handed an ES descriptor instead of an AudioSpecificConfig
-                                const { decoderSpecificInfo } = (0,isobmff_reader/* readEsDescriptor */.m)(reader/* FileSlice */.x$.tempFromBytes((0,misc/* toUint8Array */.Fo)(meta.decoderConfig.description)));
-                                meta.decoderConfig.description = decoderSpecificInfo ?? undefined;
-                            }
-                            let needsDescriptionOverwrite = false;
-                            if (!meta.decoderConfig.description || meta.decoderConfig.description.byteLength < 2) {
-                                needsDescriptionOverwrite = true;
-                            }
-                            else {
-                                const audioSpecificConfig = (0,aac_misc/* parseAacAudioSpecificConfig */.zF)((0,misc/* toUint8Array */.Fo)(meta.decoderConfig.description));
-                                needsDescriptionOverwrite = audioSpecificConfig.objectType === 0;
-                            }
-                            if (needsDescriptionOverwrite) {
-                                const objectType = Number((0,misc/* last */._g)(encoderConfig.codec.split('.')));
-                                meta.decoderConfig.description = (0,aac_misc/* buildAacAudioSpecificConfig */.Wz)({
-                                    objectType,
-                                    outputNumberOfChannels: meta.decoderConfig.numberOfChannels,
-                                    outputSampleRate: meta.decoderConfig.sampleRate,
-                                });
+                        if (meta?.decoderConfig) {
+                            fixAudioDecoderConfig(this.encodingConfig.codec, encoderConfig, meta.decoderConfig);
+                            // We want Opus packet timestamps to include the pre-skip
+                            if (this.encodingConfig.codec === 'opus' && meta.decoderConfig.description) {
+                                const description = (0,misc/* toUint8Array */.Fo)(meta.decoderConfig.description);
+                                opusPreSkip = (0,codec_data/* parseOpusIdentificationHeader */.Qf)(description).preSkip / src_codec/* OPUS_SAMPLE_RATE */.yo;
                             }
                         }
                         let packet = src_packet/* EncodedPacket */.Z.fromEncodedChunk(chunk);
                         // Snap the timing information to the sample rate to recover information lost in microsecond
                         // conversion
                         packet = packet.clone({
-                            timestamp: (0,misc/* roundToDivisor */.gl)(packet.timestamp, encoderConfig.sampleRate),
+                            timestamp: (0,misc/* roundToDivisor */.gl)(packet.timestamp - primingShift - opusPreSkip, encoderConfig.sampleRate),
                             duration: chunk.duration != null
                                 ? (0,misc/* roundToDivisor */.gl)(packet.duration, encoderConfig.sampleRate)
                                 : undefined,
                         });
+                        if ((0,misc/* isFirefox */.gm)()) {
+                            // For Firefox, we only need to offset the first timestamp
+                            opusPreSkip = 0;
+                        }
                         this.encodingConfig.onEncodedPacket?.(packet, meta);
                         this.lastMuxerPromise
                             = this.muxer.addEncodedAudioPacket(this.source._connectedTrack, packet, meta)
@@ -167430,6 +167568,9 @@ class AudioEncoderWrapper {
                     },
                 });
                 this.encoder.configure(encoderConfig);
+                if (this.encodingConfig.codec === 'aac' && (0,misc/* isWebKit */.Tc)()) {
+                    encodeAacSilencePrefix(this.encoder, numberOfChannels, sampleRate, timestamp);
+                }
             }
             ;(0,misc/* assert */.vA)(this.source._connectedTrack);
             this.muxer = this.source._connectedTrack.output._muxer;
@@ -167588,6 +167729,150 @@ class AudioEncoderWrapper {
         }
     }
 }
+const audioEncoderPrimingShiftPromises = new Map();
+// WebCodecs audio encoders have encoder priming delay but don't surface this delay whatsoever, meaning they typically
+// just emit audio at incorrect timestamps. This priming delay depends heavily on the browser-OS combo, so instead of
+// hardcoding it, we simply detect it locally.
+const detectAudioEncoderPrimingShift = (codec, codecString) => {
+    let promise = audioEncoderPrimingShiftPromises.get(codecString);
+    if (promise) {
+        return promise;
+    }
+    promise = (async () => {
+        const numberOfChannels = 1;
+        const sampleRate = 48000;
+        const encoderConfig = {
+            codec: codecString,
+            numberOfChannels,
+            sampleRate,
+            ...(0,src_codec/* getAudioEncoderConfigExtension */.IJ)(codec),
+        };
+        const impulseIndex = 4096;
+        const numberOfFrames = 2 * impulseIndex;
+        const chunks = [];
+        let decoderConfig = null;
+        let peakIndex = null;
+        let peakValue = -Infinity;
+        let decodedFrames = 0;
+        let codecError = null;
+        const encoder = new AudioEncoder({
+            output: (chunk, meta) => {
+                if (meta?.decoderConfig) {
+                    decoderConfig ??= meta.decoderConfig;
+                }
+                chunks.push(chunk);
+            },
+            error: (error) => {
+                codecError ??= error;
+            },
+        });
+        const decoder = new AudioDecoder({
+            output: (audioData) => {
+                const values = new Float32Array(audioData.numberOfFrames);
+                audioData.copyTo(values, { planeIndex: 0, format: 'f32-planar' });
+                audioData.close();
+                for (let i = 0; i < values.length; i++) {
+                    if (values[i] > peakValue) {
+                        peakValue = values[i];
+                        peakIndex = decodedFrames + i;
+                    }
+                }
+                decodedFrames += values.length;
+            },
+            error: (error) => {
+                codecError ??= error;
+            },
+        });
+        try {
+            encoder.configure(encoderConfig);
+            if (codec === 'aac' && (0,misc/* isWebKit */.Tc)()) {
+                encodeAacSilencePrefix(encoder, numberOfChannels, sampleRate, 0);
+            }
+            const data = new Float32Array(numberOfChannels * numberOfFrames);
+            data[impulseIndex] = 1;
+            const audioData = new AudioData({
+                data,
+                format: 'f32-planar',
+                numberOfChannels,
+                numberOfFrames,
+                sampleRate,
+                timestamp: 0,
+            });
+            encoder.encode(audioData);
+            audioData.close();
+            await encoder.flush();
+            (0,misc/* assert */.vA)(decoderConfig);
+            fixAudioDecoderConfig(codec, encoderConfig, decoderConfig);
+            decoder.configure(decoderConfig);
+            for (const chunk of chunks) {
+                decoder.decode(chunk);
+            }
+            await decoder.flush();
+        }
+        catch (error) {
+            throw codecError ?? error;
+        }
+        finally {
+            if (encoder.state !== 'closed') {
+                encoder.close();
+            }
+            if (decoder.state !== 'closed') {
+                decoder.close();
+            }
+        }
+        ;(0,misc/* assert */.vA)(peakIndex !== null);
+        const firstChunkTimestampInSamples = Math.round(chunks[0].timestamp / 1e6 * sampleRate);
+        return peakIndex - impulseIndex + firstChunkTimestampInSamples;
+    })();
+    audioEncoderPrimingShiftPromises.set(codecString, promise);
+    // Don't remember failures because they _could_ be transient
+    promise.catch(() => audioEncoderPrimingShiftPromises.delete(codecString));
+    return promise;
+};
+/** Works around https://bugs.webkit.org/show_bug.cgi?id=328491 */
+const encodeAacSilencePrefix = (encoder, numberOfChannels, sampleRate, timestamp) => {
+    const numberOfFrames = 1024;
+    const audioData = new AudioData({
+        data: new Float32Array(numberOfChannels * numberOfFrames),
+        format: 'f32-planar',
+        numberOfChannels,
+        numberOfFrames,
+        sampleRate,
+        timestamp: Math.round(1e6 * (timestamp - numberOfFrames / sampleRate)),
+    });
+    encoder.encode(audioData);
+    audioData.close();
+};
+const fixAudioDecoderConfig = (codec, encoderConfig, decoderConfig) => {
+    // WebKit emits an invalid description for AAC (https://bugs.webkit.org/show_bug.cgi?id=302253), which we try to
+    // detect here. If detected, we'll provide our own description instead, derived from the codec string and audio
+    // parameters.
+    if (codec === 'aac') {
+        if (decoderConfig.description
+            && decoderConfig.description.byteLength > 0
+            && (0,misc/* toUint8Array */.Fo)(decoderConfig.description)[0] === 0x03) {
+            // We were handed an ES descriptor instead of an AudioSpecificConfig
+            const { decoderSpecificInfo } = (0,isobmff_reader/* readEsDescriptor */.m)(reader/* FileSlice */.x$.tempFromBytes((0,misc/* toUint8Array */.Fo)(decoderConfig.description)));
+            decoderConfig.description = decoderSpecificInfo ?? undefined;
+        }
+        let needsDescriptionOverwrite = false;
+        if (!decoderConfig.description || decoderConfig.description.byteLength < 2) {
+            needsDescriptionOverwrite = true;
+        }
+        else {
+            const audioSpecificConfig = (0,aac_misc/* parseAacAudioSpecificConfig */.zF)((0,misc/* toUint8Array */.Fo)(decoderConfig.description));
+            needsDescriptionOverwrite = audioSpecificConfig.objectType === 0;
+        }
+        if (needsDescriptionOverwrite) {
+            const objectType = Number((0,misc/* last */._g)(encoderConfig.codec.split('.')));
+            decoderConfig.description = (0,aac_misc/* buildAacAudioSpecificConfig */.Wz)({
+                objectType,
+                outputNumberOfChannels: decoderConfig.numberOfChannels,
+                outputSampleRate: decoderConfig.sampleRate,
+            });
+        }
+    }
+};
 /**
  * This source can be used to add raw, unencoded audio samples to an output audio track. These samples will
  * automatically be encoded and then piped into the output.
@@ -167600,7 +167885,7 @@ class AudioSampleSource extends AudioSource {
      * {@link AudioEncodingConfig}.
      */
     constructor(encodingConfig) {
-        ;(0,encode/* validateAudioEncodingConfig */.Kk)(encodingConfig);
+        (0,encode/* validateAudioEncodingConfig */.Kk)(encodingConfig);
         super(encodingConfig.codec);
         this._encoder = new AudioEncoderWrapper(this, encodingConfig);
     }
@@ -168208,11 +168493,12 @@ const validateMetadataTags = (tags) => {
                 && typeof value !== 'string'
                 && !(Array.isArray(value) && value.every(x => typeof x === 'string'))
                 && !(value instanceof Uint8Array)
+                && !(Array.isArray(value) && value.every(x => x instanceof Uint8Array))
                 && !(value instanceof RichImageData)
                 && !(value instanceof AttachedFile)
                 && !(0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .isRecordStringString */ .eA)(value)) {
-                throw new TypeError('Each value in tags.raw must be a string, string array, Uint8Array, RichImageData, AttachedFile, '
-                    + 'Record<string, string>, or null.');
+                throw new TypeError('Each value in tags.raw must be a string, string array, Uint8Array, Uint8Array array,'
+                    + ' RichImageData, AttachedFile, Record<string, string>, or null.');
             }
         }
     }
@@ -169415,7 +169701,7 @@ const arrayArgmin = (array, getValue) => {
     let minValue = Infinity;
     for (let i = 0; i < array.length; i++) {
         const value = getValue(array[i]);
-        if (value < minValue) {
+        if (minIndex === -1 || value < minValue) {
             minValue = value;
             minIndex = i;
         }
@@ -169427,7 +169713,7 @@ const arrayArgmax = (array, getValue) => {
     let maxValue = -Infinity;
     for (let i = 0; i < array.length; i++) {
         const value = getValue(array[i]);
-        if (value > maxValue) {
+        if (maxIndex === -1 || value > maxValue) {
             maxValue = value;
             maxIndex = i;
         }
@@ -169724,6 +170010,64 @@ const isRecordStringString = (value) => {
 
 /***/ },
 
+/***/ 2490
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3912);
+/*!
+ * Copyright (c) 2026-present, Vanilagy and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+const MPEG_TS_TIMESCALE = 90_000; // MPEG-TS timestamps run on a 90 kHz clock
+const TIMESTAMP_MODULUS = 2 ** 33;
+const TS_PACKET_SIZE = 188;
+const buildMpegTsMimeType = (codecStrings) => {
+    let string = 'video/MP2T';
+    const uniqueCodecStrings = [...new Set(codecStrings.filter(Boolean))];
+    if (uniqueCodecStrings.length > 0) {
+        string += `; codecs="${uniqueCodecStrings.join(', ')}"`;
+    }
+    return string;
+};
+const secondsToMpegTsTimestamp = (seconds) => {
+    // This supports writing negative timestamps by simply Euclid-modding them. It is then up to the demuxer to
+    // interpret them as negative, if it wants to.
+    return (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .modEuclid */ .pX)(Math.round(MPEG_TS_TIMESCALE * seconds), TIMESTAMP_MODULUS);
+};
+const createTimestampWrapInfo = (firstTimestamp) => {
+    const tolerance = 60 * MPEG_TS_TIMESCALE;
+    return {
+        reference: firstTimestamp - tolerance,
+        offset: firstTimestamp >= TIMESTAMP_MODULUS - tolerance
+            ? -TIMESTAMP_MODULUS // Timestamps close to the modulus are treated as negative
+            : TIMESTAMP_MODULUS,
+    };
+};
+const normalizeWrappedTimestamp = (timestamp, wrapInfo) => {
+    const { reference, offset } = wrapInfo;
+    if ((offset < 0 && timestamp >= reference)
+        || (offset > 0 && timestamp < reference)) {
+        return timestamp + offset;
+    }
+    return timestamp;
+};
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "H5", 0, /* binding */ secondsToMpegTsTimestamp,
+/* harmony export */   "Tx", 0, /* binding */ TIMESTAMP_MODULUS,
+/* harmony export */   "Vx", 0, /* binding */ buildMpegTsMimeType,
+/* harmony export */   "dV", 0, /* binding */ createTimestampWrapInfo,
+/* harmony export */   "hD", 0, /* binding */ normalizeWrappedTimestamp
+/* harmony export */ ]);
+
+
+/***/ },
+
 /***/ 9730
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
@@ -169777,8 +170121,9 @@ const extractSampleMetadata = (data, codecInfo, vorbisLastBlocksize) => {
             if (modeNumber >= codecInfo.vorbisInfo.modeBlockflags.length) {
                 throw new Error('Invalid mode number.');
             }
-            // In Vorbis, packet duration also depends on the blocksize of the previous packet
-            let prevBlocksize = vorbisLastBlocksize;
+            // In Vorbis, packet duration also depends on the blocksize of the previous packet. The first packet has
+            // none and decodes to nothing; like FFmpeg, we give it the duration it'd have after a short block
+            let prevBlocksize = vorbisLastBlocksize ?? codecInfo.vorbisInfo.blocksizes[0];
             const blockflag = codecInfo.vorbisInfo.modeBlockflags[modeNumber];
             currentBlocksize = codecInfo.vorbisInfo.blocksizes[blockflag];
             if (blockflag === 1) {
@@ -169786,9 +170131,7 @@ const extractSampleMetadata = (data, codecInfo, vorbisLastBlocksize) => {
                 const flag = data[0] & prevMask ? 1 : 0;
                 prevBlocksize = codecInfo.vorbisInfo.blocksizes[flag];
             }
-            durationInSamples = prevBlocksize !== null
-                ? (prevBlocksize + currentBlocksize) >> 2
-                : 0; // The first sample outputs no audio data and therefore has a duration of 0
+            durationInSamples = (prevBlocksize + currentBlocksize) >> 2;
         }
         else if (codecInfo.codec === 'opus') {
             const toc = (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_0__/* .parseOpusTocByte */ .ls)(data);
@@ -170805,6 +171148,7 @@ const stbl = (trackData) => {
         stsz(trackData),
         stco(trackData),
         stss(trackData),
+        ...sgpdAndSbgp(trackData.samples, false),
     ]);
 };
 /**
@@ -171096,8 +171440,7 @@ const enda = (trackData) => {
 /** Opus Specific Box. */
 const dOps = (trackData) => {
     let outputChannelCount = trackData.info.numberOfChannels;
-    // Default PreSkip, should be at least 80 milliseconds worth of playback, measured in 48000 Hz samples
-    let preSkip = 3840;
+    let preSkip = 312; // Default
     let inputSampleRate = trackData.info.sampleRate;
     let outputGain = 0;
     let channelMappingFamily = 0;
@@ -171351,6 +171694,50 @@ const cslg = (trackData) => {
         i32(compositionEndTime), // Composition end time
     ]);
 };
+const sgpdAndSbgp = (samples, inTrackFragment) => {
+    const entries = [];
+    for (const sample of samples) {
+        if (entries.length === 0) {
+            entries.push({
+                sampleCount: 1,
+                prerollSamples: sample.prerollSamples,
+            });
+        }
+        else {
+            const lastEntry = entries[entries.length - 1];
+            if (lastEntry.prerollSamples === sample.prerollSamples) {
+                lastEntry.sampleCount++;
+            }
+            else {
+                entries.push({
+                    sampleCount: 1,
+                    prerollSamples: sample.prerollSamples,
+                });
+            }
+        }
+    }
+    const rollEntries = entries.filter(x => x.prerollSamples !== 0);
+    if (rollEntries.length === 0) {
+        return [];
+    }
+    let nextGroupIndex = inTrackFragment ? 0x10001 : 1;
+    return [
+        fullBox('sgpd', 1, 0, [
+            ascii('roll'), // Grouping type
+            u32(2), // Default length
+            u32(rollEntries.length), // Entry count
+            ...rollEntries.map(x => i16(x.prerollSamples)),
+        ]),
+        fullBox('sbgp', 0, 0, [
+            ascii('roll'), // Grouping type
+            u32(entries.length), // Entry count
+            ...entries.map(x => [
+                u32(x.sampleCount), // Sample count
+                u32(x.prerollSamples !== 0 ? nextGroupIndex++ : 0), // Samples with no preroll belong to no group
+            ]),
+        ]),
+    ];
+};
 /**
  * Movie Extends Box: This box signals to readers that the file is fragmented. Contains a single Track Extends Box
  * for each track in the movie.
@@ -171406,6 +171793,7 @@ const traf = (trackData) => {
         tfhd(trackData),
         tfdt(trackData),
         trun(trackData),
+        ...sgpdAndSbgp(trackData.currentChunk.samples, true),
     ]);
 };
 /** Track Fragment Header Box: Provides a reference to the extended track, and flags. */
@@ -172366,6 +172754,11 @@ class IsobmffMuxer extends Muxer {
                 expectedNextPcmPacketTimestamp: null,
                 requiresAdtsStripping,
                 primingPacket: packet,
+                preroll: {
+                    packetCount: 0,
+                    accumulatedAudioSamples: 0,
+                    audioSampleDurationHistory: [],
+                },
             },
             timescale: decoderConfig.sampleRate,
             samples: [],
@@ -172450,7 +172843,7 @@ class IsobmffMuxer extends Muxer {
                 packetData = (0,codec_data/* concatNalUnitsInLengthPrefixed */.pc)(nalUnits, 4);
             }
             this.validateTimestamp(trackData.track, packet.timestamp, packet.type === 'key');
-            const internalSample = this.createSampleForTrack(trackData, packetData, packet.timestamp, packet.duration, packet.type);
+            const internalSample = this.createSampleForTrack(trackData, packetData, packet.timestamp, packet.duration, packet.type, 0);
             await this.registerSample(trackData, internalSample);
         }
         finally {
@@ -172494,7 +172887,32 @@ class IsobmffMuxer extends Muxer {
                 }
                 trackData.info.expectedNextPcmPacketTimestamp = timestamp + duration;
             }
-            const internalSample = this.createSampleForTrack(trackData, packetData, timestamp, duration, packet.type);
+            const { preroll } = trackData.info;
+            // Let's specify how many samples (packets) worth of preroll are needed to decode audio properly, based on
+            // the codec.
+            let prerollSamples = 0;
+            if (track.source._codec === 'aac' || track.source._codec === 'vorbis') {
+                prerollSamples = -Math.min(1, preroll.packetCount);
+            }
+            else if (track.source._codec === 'mp3') {
+                // One packet of overlap plus one for the bit reservoir, which usually doesn't reach back further.
+                // ESTIMATE!!
+                prerollSamples = -Math.min(2, preroll.packetCount);
+            }
+            else if (track.source._codec === 'opus') {
+                const OPUS_PREROLL_SAMPLES = 0.08 * src_codec/* OPUS_SAMPLE_RATE */.yo; // 80 ms
+                prerollSamples = -preroll.audioSampleDurationHistory.length;
+                const toc = (0,codec_data/* parseOpusTocByte */.ls)(packetData);
+                preroll.accumulatedAudioSamples += toc.durationInSamples;
+                preroll.audioSampleDurationHistory.push(toc.durationInSamples);
+                while (preroll.accumulatedAudioSamples - preroll.audioSampleDurationHistory[0]
+                    >= OPUS_PREROLL_SAMPLES) {
+                    preroll.accumulatedAudioSamples -= preroll.audioSampleDurationHistory.shift();
+                    (0,misc/* assert */.vA)(preroll.audioSampleDurationHistory.length > 0);
+                }
+            }
+            preroll.packetCount++;
+            const internalSample = this.createSampleForTrack(trackData, packetData, timestamp, duration, packet.type, prerollSamples);
             await this.registerSample(trackData, internalSample);
         }
         finally {
@@ -172508,7 +172926,7 @@ class IsobmffMuxer extends Muxer {
             const { sampleSize, silentValue } = (0,src_codec/* parsePcmCodec */.Ei)(trackData.info.decoderConfig.codec);
             const samplesNeeded = deltaInTimescale * trackData.info.numberOfChannels;
             const data = new Uint8Array(sampleSize * samplesNeeded).fill(silentValue);
-            const paddingSample = this.createSampleForTrack(trackData, new Uint8Array(data.buffer), timestamp, duration, 'key');
+            const paddingSample = this.createSampleForTrack(trackData, new Uint8Array(data.buffer), timestamp, duration, 'key', 0);
             await this.registerSample(trackData, paddingSample);
         }
         return duration;
@@ -172555,7 +172973,7 @@ class IsobmffMuxer extends Muxer {
                 const box = vtte();
                 this.auxBoxWriter.writeBox(box);
                 const body = this.auxTarget._getSlice(0, this.auxWriter.getPos());
-                const sample = this.createSampleForTrack(trackData, body, trackData.lastCueEndTimestamp, sampleStart - trackData.lastCueEndTimestamp, 'key');
+                const sample = this.createSampleForTrack(trackData, body, trackData.lastCueEndTimestamp, sampleStart - trackData.lastCueEndTimestamp, 'key', 0);
                 await this.registerSample(trackData, sample);
                 trackData.lastCueEndTimestamp = sampleStart;
             }
@@ -172588,12 +173006,12 @@ class IsobmffMuxer extends Muxer {
                 }
             }
             const body = this.auxTarget._getSlice(0, this.auxWriter.getPos());
-            const sample = this.createSampleForTrack(trackData, body, sampleStart, sampleEnd - sampleStart, 'key');
+            const sample = this.createSampleForTrack(trackData, body, sampleStart, sampleEnd - sampleStart, 'key', 0);
             await this.registerSample(trackData, sample);
             trackData.lastCueEndTimestamp = sampleEnd;
         }
     }
-    createSampleForTrack(trackData, data, timestamp, duration, type) {
+    createSampleForTrack(trackData, data, timestamp, duration, type, prerollSamples) {
         const sample = {
             timestamp,
             decodeTimestamp: timestamp, // This may be refined later
@@ -172602,6 +173020,7 @@ class IsobmffMuxer extends Muxer {
             size: data.byteLength,
             type,
             timescaleUnitsToNextSample: intoTimescale(duration, trackData.timescale), // Will be refined
+            prerollSamples,
         };
         return sample;
     }
@@ -173302,7 +173721,6 @@ var logging = __webpack_require__(6103);
 
 
 
-
 const MIN_CLUSTER_TIMESTAMP_MS = -(2 ** 15);
 const MAX_CLUSTER_TIMESTAMP_MS = 2 ** 15 - 1;
 const SEGMENT_SIZE_BYTES = 6;
@@ -173325,10 +173743,9 @@ class MatroskaMuxer extends Muxer {
         this.attachmentsElement = null;
         this.segmentDuration = null;
         this.cues = null;
-        this.currentCluster = null;
+        this.currentClusterBlocks = [];
         this.currentClusterStartMsTimestamp = null;
         this.currentClusterMaxMsTimestamp = null;
-        this.trackDatasInCurrentCluster = new Map();
         this.startTimestamp = Infinity;
         this.endTimestamp = -Infinity;
         this.warnedAboutTooNegativeTimestamp = false;
@@ -173469,16 +173886,10 @@ class MatroskaMuxer extends Muxer {
                     codecId = 'A_DTS/LOSSLESS';
                 }
             }
-            let seekPreRollNs = 0;
-            if (trackData.type === 'audio' && trackData.track.source._codec === 'opus') {
-                seekPreRollNs = 1e6 * 80; // In "Matroska ticks" (nanoseconds)
-                const description = trackData.info.decoderConfig.description;
-                if (description) {
-                    const bytes = (0,misc/* toUint8Array */.Fo)(description);
-                    const header = (0,codec_data/* parseOpusIdentificationHeader */.Qf)(bytes);
-                    // Use the preSkip value from the header
-                    seekPreRollNs = Math.round(1e9 * (header.preSkip / src_codec/* OPUS_SAMPLE_RATE */.yo));
-                }
+            let seekPreRollNs = 0; // In "Matroska ticks" (nanoseconds)
+            if (trackData.type === 'audio') {
+                const preRollDuration = (0,src_codec/* getAudioPreRollDuration */.$c)(trackData.track.source._codec, trackData.info.decoderConfig);
+                seekPreRollNs = Math.round(1e9 * preRollDuration);
             }
             tracksElement.data.push({ id: ebml/* EBMLId */.Cl.TrackEntry, data: [
                     { id: ebml/* EBMLId */.Cl.TrackNumber, data: trackData.track.id },
@@ -173507,6 +173918,9 @@ class MatroskaMuxer extends Muxer {
                     { id: ebml/* EBMLId */.Cl.CodecID, data: codecId },
                     trackData.codecPrivate
                         ? { id: ebml/* EBMLId */.Cl.CodecPrivate, data: (0,misc/* toUint8Array */.Fo)(trackData.codecPrivate) }
+                        : null,
+                    trackData.type === 'audio' && trackData.info.codecDelay
+                        ? { id: ebml/* EBMLId */.Cl.CodecDelay, data: Math.round(1e9 * trackData.info.codecDelay) }
                         : null,
                     seekPreRollNs > 0 ? { id: ebml/* EBMLId */.Cl.SeekPreRoll, data: seekPreRollNs } : null,
                     trackData.track.metadata.name !== undefined
@@ -174019,6 +174433,7 @@ class MatroskaMuxer extends Muxer {
                 sampleRate: meta.decoderConfig.sampleRate,
                 decoderConfig,
                 requiresAdtsStripping,
+                codecDelay: null,
             },
             chunkQueue: [],
             lastWrittenMsTimestamp: null,
@@ -174111,7 +174526,9 @@ class MatroskaMuxer extends Muxer {
             }
             const isKeyFrame = packet.type === 'key';
             this.validateTimestamp(trackData.track, packet.timestamp, isKeyFrame);
-            const audioChunk = this.createInternalChunk(packetData, packet.timestamp, packet.duration, packet.type);
+            // A negative start (like from encoder priming) is expressed this way.
+            trackData.info.codecDelay ??= Math.max(-packet.timestamp, 0);
+            const audioChunk = this.createInternalChunk(packetData, packet.timestamp + trackData.info.codecDelay, packet.duration, packet.type);
             trackData.chunkQueue.push(audioChunk);
             await this.interleaveChunks();
         }
@@ -174163,7 +174580,7 @@ class MatroskaMuxer extends Muxer {
                 break;
             }
             const chunk = trackWithMinTimestamp.chunkQueue.shift();
-            this.writeBlock(trackWithMinTimestamp, chunk);
+            this.addBlock(trackWithMinTimestamp, chunk);
         }
         if (!isFinalCall) {
             await this.writer.flush();
@@ -174219,8 +174636,8 @@ class MatroskaMuxer extends Muxer {
         };
         return internalChunk;
     }
-    /** Writes a block containing media data to the file. */
-    writeBlock(trackData, chunk) {
+    /** Adds a block containing media data to the current cluster. */
+    addBlock(trackData, chunk) {
         // Due to the interlacing algorithm, this code will be run once we've seen one chunk from every media track.
         if (!this.segment) {
             this.createSegment();
@@ -174239,11 +174656,10 @@ class MatroskaMuxer extends Muxer {
             return otherTrackData.closed;
         });
         let shouldCreateNewCluster = false;
-        if (!this.currentCluster) {
+        if (this.currentClusterStartMsTimestamp === null) {
             shouldCreateNewCluster = true;
         }
         else {
-            (0,misc/* assert */.vA)(this.currentClusterStartMsTimestamp !== null);
             (0,misc/* assert */.vA)(this.currentClusterMaxMsTimestamp !== null);
             const relativeTimestamp = msTimestamp - this.currentClusterStartMsTimestamp;
             shouldCreateNewCluster = (keyFrameQueuedEverywhere
@@ -174258,7 +174674,7 @@ class MatroskaMuxer extends Muxer {
                 || relativeTimestamp > MAX_CLUSTER_TIMESTAMP_MS;
         }
         if (shouldCreateNewCluster) {
-            this.createNewCluster(msTimestamp);
+            this.startNewCluster(msTimestamp);
         }
         const relativeTimestamp = msTimestamp - this.currentClusterStartMsTimestamp;
         if (relativeTimestamp < MIN_CLUSTER_TIMESTAMP_MS) {
@@ -174271,117 +174687,129 @@ class MatroskaMuxer extends Muxer {
             }
             return;
         }
-        const prelude = new Uint8Array(4);
-        const view = new DataView(prelude.buffer);
-        // 0x80 to indicate it's the last byte of a multi-byte number
-        view.setUint8(0, 0x80 | trackData.track.id);
-        view.setInt16(1, relativeTimestamp, false);
-        const msDuration = Math.round(1000 * chunk.duration);
-        // Subtitle cues need an explicit BlockDuration (a SimpleBlock has none)
-        const needsBlockGroup = !!chunk.additions || trackData.type === 'subtitle';
-        if (!needsBlockGroup) {
-            // No additions, we can write out a SimpleBlock
-            view.setUint8(3, Number(chunk.type === 'key') << 7); // Flags (keyframe flag only present for SimpleBlock)
-            const simpleBlock = { id: ebml/* EBMLId */.Cl.SimpleBlock, data: [
-                    prelude,
-                    chunk.data,
-                ] };
-            this.ebmlWriter.writeEBML(simpleBlock);
-        }
-        else {
-            const blockGroup = { id: ebml/* EBMLId */.Cl.BlockGroup, data: [
-                    { id: ebml/* EBMLId */.Cl.Block, data: [
-                            prelude,
-                            chunk.data,
-                        ] },
-                    chunk.type === 'delta'
-                        ? {
-                            id: ebml/* EBMLId */.Cl.ReferenceBlock,
-                            data: new ebml/* EBMLSignedInt */.ys(trackData.lastWrittenMsTimestamp - msTimestamp),
-                        }
-                        : null,
-                    chunk.additions
-                        ? { id: ebml/* EBMLId */.Cl.BlockAdditions, data: [
-                                { id: ebml/* EBMLId */.Cl.BlockMore, data: [
-                                        { id: ebml/* EBMLId */.Cl.BlockAddID, data: 1 }, // Some players expect BlockAddID to come first
-                                        { id: ebml/* EBMLId */.Cl.BlockAdditional, data: chunk.additions },
-                                    ] },
-                            ] }
-                        : null,
-                    msDuration > 0 ? { id: ebml/* EBMLId */.Cl.BlockDuration, data: msDuration } : null,
-                ] };
-            this.ebmlWriter.writeEBML(blockGroup);
-        }
+        this.currentClusterBlocks.push({
+            trackData,
+            chunk,
+            msTimestamp,
+            previousMsTimestamp: trackData.lastWrittenMsTimestamp,
+        });
         this.startTimestamp = Math.min(this.startTimestamp, msTimestamp);
-        this.endTimestamp = Math.max(this.endTimestamp, msTimestamp + msDuration);
+        this.endTimestamp = Math.max(this.endTimestamp, msTimestamp + Math.round(1000 * chunk.duration));
         trackData.lastWrittenMsTimestamp = msTimestamp;
-        if (!this.trackDatasInCurrentCluster.has(trackData)) {
-            this.trackDatasInCurrentCluster.set(trackData, {
-                firstMsTimestamp: msTimestamp,
-            });
-        }
         this.currentClusterMaxMsTimestamp = Math.max(this.currentClusterMaxMsTimestamp, msTimestamp);
     }
-    /** Creates a new Cluster element to contain media chunks. */
-    createNewCluster(msTimestamp) {
-        msTimestamp = Math.max(0, msTimestamp); // Cluster timestamps cannot be negative
-        if (this.currentCluster) {
-            this.finalizeCurrentCluster();
+    /** Writes out the current cluster, if any, and begins a new one. */
+    startNewCluster(msTimestamp) {
+        if (this.currentClusterStartMsTimestamp !== null) {
+            this.writeCurrentCluster();
         }
-        if (this.format._options.onCluster) {
-            this.writer.startTrackingWrites();
+        const clusterMsTimestamp = Math.max(0, msTimestamp); // Cluster timestamps cannot be negative
+        this.currentClusterStartMsTimestamp = clusterMsTimestamp;
+        this.currentClusterMaxMsTimestamp = clusterMsTimestamp;
+    }
+    /** Writes the current cluster with all of its blocks to the file. */
+    writeCurrentCluster() {
+        ;(0,misc/* assert */.vA)(this.currentClusterStartMsTimestamp !== null);
+        const clusterMsTimestamp = this.currentClusterStartMsTimestamp;
+        const firstKeyBlockPerTrack = new Map();
+        const lastBlockPerTrack = new Map();
+        for (const block of this.currentClusterBlocks) {
+            if (block.chunk.type === 'key' && !firstKeyBlockPerTrack.has(block.trackData)) {
+                firstKeyBlockPerTrack.set(block.trackData, block);
+            }
+            lastBlockPerTrack.set(block.trackData, block);
         }
-        this.currentCluster = {
+        const blockElements = new Map();
+        for (const block of this.currentClusterBlocks) {
+            blockElements.set(block, this.createBlockElement(block, clusterMsTimestamp, lastBlockPerTrack.get(block.trackData) === block));
+        }
+        const cluster = {
             id: ebml/* EBMLId */.Cl.Cluster,
             size: this.format._options.appendOnly ? -1 : CLUSTER_SIZE_BYTES,
             data: [
-                { id: ebml/* EBMLId */.Cl.Timestamp, data: msTimestamp },
+                { id: ebml/* EBMLId */.Cl.Timestamp, data: clusterMsTimestamp },
+                ...blockElements.values(),
             ],
         };
-        this.ebmlWriter.writeEBML(this.currentCluster);
-        this.currentClusterStartMsTimestamp = msTimestamp;
-        this.currentClusterMaxMsTimestamp = msTimestamp;
-        this.trackDatasInCurrentCluster.clear();
-    }
-    finalizeCurrentCluster() {
-        ;(0,misc/* assert */.vA)(this.currentCluster);
-        if (!this.format._options.appendOnly) {
-            const clusterSize = this.writer.getPos() - this.ebmlWriter.dataOffsets.get(this.currentCluster);
-            const endPos = this.writer.getPos();
-            // Write the size now that we know it
-            this.writer.seek(this.ebmlWriter.offsets.get(this.currentCluster) + 4);
-            this.ebmlWriter.writeVarInt(clusterSize, CLUSTER_SIZE_BYTES);
-            this.writer.seek(endPos);
-        }
         if (this.format._options.onCluster) {
-            (0,misc/* assert */.vA)(this.currentClusterStartMsTimestamp !== null);
-            const { data, start } = this.writer.stopTrackingWrites();
-            this.format._options.onCluster(data, start, this.currentClusterStartMsTimestamp / 1000);
+            this.writer.startTrackingWrites();
         }
-        const clusterOffsetFromSegment = this.ebmlWriter.offsets.get(this.currentCluster) - this.segmentDataOffset;
-        // Group tracks by their first timestamp and create a CuePoint for each unique timestamp
+        this.ebmlWriter.writeEBML(cluster);
+        this.currentClusterBlocks = [];
+        if (this.format._options.onCluster) {
+            const { data, start } = this.writer.stopTrackingWrites();
+            this.format._options.onCluster(data, start, clusterMsTimestamp / 1000);
+        }
+        const clusterOffsetFromSegment = this.ebmlWriter.offsets.get(cluster) - this.segmentDataOffset;
+        const clusterDataOffset = this.ebmlWriter.dataOffsets.get(cluster);
+        // Group tracks by their first key packet's timestamp and create a CuePoint for each unique timestamp
         const groupedByTimestamp = new Map();
-        for (const [trackData, { firstMsTimestamp }] of this.trackDatasInCurrentCluster) {
-            if (!groupedByTimestamp.has(firstMsTimestamp)) {
-                groupedByTimestamp.set(firstMsTimestamp, []);
+        for (const block of firstKeyBlockPerTrack.values()) {
+            if (!groupedByTimestamp.has(block.msTimestamp)) {
+                groupedByTimestamp.set(block.msTimestamp, []);
             }
-            groupedByTimestamp.get(firstMsTimestamp).push(trackData);
+            groupedByTimestamp.get(block.msTimestamp).push(block);
         }
         const groupedAndSortedByTimestamp = [...groupedByTimestamp.entries()].sort((a, b) => a[0] - b[0]);
         // Add CuePoints to the Cues element for better seeking
-        for (const [msTimestamp, trackDatas] of groupedAndSortedByTimestamp) {
+        for (const [msTimestamp, blocks] of groupedAndSortedByTimestamp) {
             (0,misc/* assert */.vA)(this.cues);
             this.cues.data.push({ id: ebml/* EBMLId */.Cl.CuePoint, data: [
                     { id: ebml/* EBMLId */.Cl.CueTime, data: Math.max(0, msTimestamp) }, // CueTime is unsigned
-                    // Create CueTrackPositions for each track that starts at this timestamp
-                    ...trackDatas.map((trackData) => {
+                    // Create CueTrackPositions for each track whose first key packet is at this timestamp
+                    ...blocks.map((block) => {
+                        const blockOffset = this.ebmlWriter.offsets.get(blockElements.get(block));
                         return { id: ebml/* EBMLId */.Cl.CueTrackPositions, data: [
-                                { id: ebml/* EBMLId */.Cl.CueTrack, data: trackData.track.id },
+                                { id: ebml/* EBMLId */.Cl.CueTrack, data: block.trackData.track.id },
                                 { id: ebml/* EBMLId */.Cl.CueClusterPosition, data: clusterOffsetFromSegment },
+                                { id: ebml/* EBMLId */.Cl.CueRelativePosition, data: blockOffset - clusterDataOffset },
                             ] };
                     }),
                 ] });
         }
+    }
+    createBlockElement(block, clusterMsTimestamp, isLastOfTrack) {
+        const { trackData, chunk, msTimestamp } = block;
+        const prelude = new Uint8Array(4);
+        const view = new DataView(prelude.buffer);
+        // 0x80 to indicate it's the last byte of a multi-byte number
+        view.setUint8(0, 0x80 | trackData.track.id);
+        view.setInt16(1, msTimestamp - clusterMsTimestamp, false);
+        const msDuration = Math.round(1000 * chunk.duration);
+        // A SimpleBlock has no duration; readers infer it from the track's next block. So subtitle cues need an
+        // explicit BlockDuration, and so does the last block of each track in the cluster, which has no next block
+        // to infer it from
+        const needsBlockGroup = !!chunk.additions
+            || trackData.type === 'subtitle'
+            || (isLastOfTrack && msDuration > 0);
+        if (!needsBlockGroup) {
+            view.setUint8(3, Number(chunk.type === 'key') << 7); // Flags (keyframe flag only present for SimpleBlock)
+            return { id: ebml/* EBMLId */.Cl.SimpleBlock, data: [
+                    prelude,
+                    chunk.data,
+                ] };
+        }
+        return { id: ebml/* EBMLId */.Cl.BlockGroup, data: [
+                { id: ebml/* EBMLId */.Cl.Block, data: [
+                        prelude,
+                        chunk.data,
+                    ] },
+                chunk.type === 'delta'
+                    ? {
+                        id: ebml/* EBMLId */.Cl.ReferenceBlock,
+                        data: new ebml/* EBMLSignedInt */.ys(block.previousMsTimestamp - msTimestamp),
+                    }
+                    : null,
+                chunk.additions
+                    ? { id: ebml/* EBMLId */.Cl.BlockAdditions, data: [
+                            { id: ebml/* EBMLId */.Cl.BlockMore, data: [
+                                    { id: ebml/* EBMLId */.Cl.BlockAddID, data: 1 }, // Some players expect BlockAddID to come first
+                                    { id: ebml/* EBMLId */.Cl.BlockAdditional, data: chunk.additions },
+                                ] },
+                        ] }
+                    : null,
+                msDuration > 0 ? { id: ebml/* EBMLId */.Cl.BlockDuration, data: msDuration } : null,
+            ] };
     }
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     async onTrackClose(track) {
@@ -174409,8 +174837,8 @@ class MatroskaMuxer extends Muxer {
         }
         // Flush any remaining queued chunks to the file
         await this.interleaveChunks(true);
-        if (this.currentCluster) {
-            this.finalizeCurrentCluster();
+        if (this.currentClusterStartMsTimestamp !== null) {
+            this.writeCurrentCluster();
         }
         ;(0,misc/* assert */.vA)(this.cues);
         this.ebmlWriter.writeEBML(this.cues);
@@ -174495,7 +174923,7 @@ class Mp3Writer {
         this.writer.write(this.helper.subarray(0, 4));
         const xingOffset = (0,mp3_misc/* getXingOffset */.EZ)(data.mpegVersionId, data.channel);
         this.writer.seek(startPos + xingOffset);
-        this.writeU32(mp3_misc/* XING */.hY);
+        this.writeU32(data.isCbr ? mp3_misc/* INFO */.rD : mp3_misc/* XING */.hY); // Following LAME's convention
         let flags = 0;
         if (data.frameCount !== null) {
             flags |= mp3_misc/* XingFlags */.MJ.FrameCount;
@@ -174536,6 +174964,8 @@ class Mp3Muxer extends Muxer {
         super(output);
         this.xingFrameData = null;
         this.frameCount = 0;
+        this.frameBitrate = null;
+        this.hasVariableBitrate = false;
         this.framePositions = [];
         this.xingFramePos = null;
         this.format = format;
@@ -174560,7 +174990,7 @@ class Mp3Muxer extends Muxer {
     async addEncodedAudioPacket(track, packet) {
         const release = await this.mutex.acquire();
         try {
-            if (!this.xingFrameData && this.writeXingHeader) {
+            if (this.writeXingHeader) {
                 const view = (0,misc/* toDataView */.Zc)(packet.data);
                 if (view.byteLength < 4) {
                     throw new Error('Invalid MP3 header in sample.');
@@ -174570,34 +175000,44 @@ class Mp3Muxer extends Muxer {
                 if (!header) {
                     throw new Error('Invalid MP3 header in sample.');
                 }
-                const xingOffset = (0,mp3_misc/* getXingOffset */.EZ)(header.mpegVersionId, header.channel);
-                if (view.byteLength >= xingOffset + 4) {
-                    const word = view.getUint32(xingOffset, false);
-                    const isXing = word === mp3_misc/* XING */.hY || word === mp3_misc/* INFO */.rD;
-                    if (isXing) {
-                        // This is not a data frame, so let's completely ignore this sample
-                        return;
+                if (!this.xingFrameData) {
+                    const xingOffset = (0,mp3_misc/* getXingOffset */.EZ)(header.mpegVersionId, header.channel);
+                    if (view.byteLength >= xingOffset + 4) {
+                        const word = view.getUint32(xingOffset, false);
+                        const isXing = word === mp3_misc/* XING */.hY || word === mp3_misc/* INFO */.rD;
+                        if (isXing) {
+                            // This is not a data frame, so let's completely ignore this sample
+                            return;
+                        }
                     }
+                    this.xingFrameData = {
+                        mpegVersionId: header.mpegVersionId,
+                        layer: header.layer,
+                        frequencyIndex: header.frequencyIndex,
+                        sampleRate: header.sampleRate,
+                        channel: header.channel,
+                        modeExtension: header.modeExtension,
+                        copyright: header.copyright,
+                        original: header.original,
+                        emphasis: header.emphasis,
+                        isCbr: false,
+                        frameCount: null,
+                        fileSize: null,
+                        toc: null,
+                    };
+                    // This muxer doesn't make any bitrate constraints, meaning we don't know yet if this will be a
+                    // constant or variable bitrate file. So, we always write the frame, and only once we've seen every
+                    // frame do we know whether it should say Xing or Info.
+                    this.xingFramePos = this.writer.getPos();
+                    this.mp3Writer.writeXingFrame(this.xingFrameData);
+                    this.frameCount++;
                 }
-                this.xingFrameData = {
-                    mpegVersionId: header.mpegVersionId,
-                    layer: header.layer,
-                    frequencyIndex: header.frequencyIndex,
-                    sampleRate: header.sampleRate,
-                    channel: header.channel,
-                    modeExtension: header.modeExtension,
-                    copyright: header.copyright,
-                    original: header.original,
-                    emphasis: header.emphasis,
-                    frameCount: null,
-                    fileSize: null,
-                    toc: null,
-                };
-                // Write a Xing frame because this muxer doesn't make any bitrate constraints, meaning we don't know if
-                // this will be a constant or variable bitrate file. Therefore, always write the Xing frame.
-                this.xingFramePos = this.writer.getPos();
-                this.mp3Writer.writeXingFrame(this.xingFrameData);
-                this.frameCount++;
+                if (this.frameBitrate === null) {
+                    this.frameBitrate = header.bitrate;
+                }
+                else if (header.bitrate !== this.frameBitrate) {
+                    this.hasVariableBitrate = true;
+                }
             }
             this.validateTimestamp(track, packet.timestamp, packet.type === 'key');
             if (this.writeXingHeader) {
@@ -174649,6 +175089,7 @@ class Mp3Muxer extends Muxer {
                     copyright: header.copyright,
                     original: header.original,
                     emphasis: header.emphasis,
+                    isCbr: false,
                     frameCount: null,
                     fileSize: null,
                     toc: null,
@@ -174681,6 +175122,7 @@ class Mp3Muxer extends Muxer {
                     copyright: 0,
                     original: 0,
                     emphasis: 0,
+                    isCbr: false,
                     frameCount: null,
                     fileSize: null,
                     toc: null,
@@ -174710,6 +175152,7 @@ class Mp3Muxer extends Muxer {
                 }
                 this.xingFrameData.toc = toc;
             }
+            this.xingFrameData.isCbr = this.frameBitrate !== null && !this.hasVariableBitrate;
             this.xingFrameData.frameCount = this.frameCount;
             this.xingFrameData.fileSize = audioDataEndPos;
             if (this.format._options.onXingFrame) {
@@ -174801,7 +175244,7 @@ class OggMuxer extends Muxer {
             },
             vorbisLastBlocksize: null,
             packetQueue: [],
-            startTimestampInSamples: null,
+            startOffsetInSamples: null,
             currentTimestampInSamples: 0,
             audioPacketCount: 0,
             pagesWritten: 0,
@@ -174922,19 +175365,22 @@ class OggMuxer extends Muxer {
         try {
             const trackData = this.getTrackData(track, meta);
             this.validateTimestamp(trackData.track, packet.timestamp, packet.type === 'key');
-            if (trackData.startTimestampInSamples === null) {
-                // The first packet determines where the stream begins. A packet at zero means the stream starts at
-                // zero, with the pre-skip preceding it. A later timestamp is treated as the start of the packet's
-                // decoded output, which the first page's granule position then signals as a start offset.
+            const { durationInSamples, vorbisBlockSize } = (0,ogg_misc/* extractSampleMetadata */.nL)(packet.data, trackData.codecInfo, trackData.vorbisLastBlocksize);
+            if (trackData.startOffsetInSamples === null) {
+                // The first packet determines where the stream begins. Its timestamp includes the Opus pre-skip, which
+                // offsets the granule position. For Vorbis, it is the priming packet that decodes to nothing. Granule
+                // positions can't be negative, so the earliest representable start is the one where the audible part
+                // begins at zero.
                 const timestampInSamples = Math.round(packet.timestamp * trackData.internalSampleRate);
                 const preSkip = trackData.codecInfo.opusInfo?.preSkip ?? 0;
-                trackData.startTimestampInSamples = timestampInSamples > 0
-                    ? timestampInSamples + preSkip
-                    : 0;
-                trackData.currentTimestampInSamples = trackData.startTimestampInSamples;
+                const minTimestampInSamples = trackData.codecInfo.codec === 'vorbis'
+                    ? -durationInSamples
+                    : -preSkip;
+                const startTimestampInSamples = Math.max(timestampInSamples, minTimestampInSamples);
+                trackData.startOffsetInSamples = startTimestampInSamples - minTimestampInSamples;
+                trackData.currentTimestampInSamples = startTimestampInSamples + preSkip;
             }
             const currentTimestampInSamples = trackData.currentTimestampInSamples;
-            const { durationInSamples, vorbisBlockSize } = (0,ogg_misc/* extractSampleMetadata */.nL)(packet.data, trackData.codecInfo, trackData.vorbisLastBlocksize);
             trackData.currentTimestampInSamples += durationInSamples;
             trackData.vorbisLastBlocksize = vorbisBlockSize;
             // A shorter packet duration signals trailing samples to discard, which only the final packet can express
@@ -174944,7 +175390,7 @@ class OggMuxer extends Muxer {
             // With a start offset, the second audio packet flushes the page. This keeps the offset from sharing a page
             // with end trimming, as both are signaled through the granule position and would be indistinguishable.
             // This mirrors a requirement of the Vorbis spec.
-            const forcePageFlush = trackData.startTimestampInSamples > 0 && trackData.audioPacketCount === 1;
+            const forcePageFlush = trackData.startOffsetInSamples > 0 && trackData.audioPacketCount === 1;
             trackData.audioPacketCount++;
             trackData.packetQueue.push({
                 data: packet.data,
@@ -175187,6 +175633,7 @@ class MpegTsMuxer extends Muxer {
         this.adaptationFieldBuffer = new Uint8Array(184);
         this.payloadBuffer = new Uint8Array(184);
         this.format = format;
+        this.timestampOffset = format._options.timestampOffset ?? 0;
     }
     async start() {
         const release = await this.mutex.acquire();
@@ -175195,7 +175642,7 @@ class MpegTsMuxer extends Muxer {
     }
     async getMimeType() {
         await this.allTracksKnown.promise;
-        return (0,mpeg_ts_misc/* buildMpegTsMimeType */.V)(this.trackDatas.map(x => x.codecString));
+        return (0,mpeg_ts_misc/* buildMpegTsMimeType */.Vx)(this.trackDatas.map(x => x.codecString));
     }
     getVideoTrackData(track, meta) {
         const existingTrackData = this.trackDatas.find(x => x.track === track);
@@ -175581,10 +176028,7 @@ class MpegTsMuxer extends Muxer {
         pesView.setUint8(6, 0x84);
         pesView.setUint8(7, includeDts ? 0xC0 : 0x80); // PTS_DTS_flags, other flags=0
         pesView.setUint8(8, headerDataLength); // PES_header_data_length
-        // This logic supports writing negative timestamps by simplying Euclid-modding them. It is then up to the
-        // demuxer to interpret them as negative, if it wasnts to.
-        const unwrappedPts = Math.round(queuedPacket.presentationTimestamp * (/* inlined export .TIMESCALE */90000));
-        const pts = (0,misc/* modEuclid */.pX)(unwrappedPts, mpeg_ts_misc/* TIMESTAMP_MODULUS */.T);
+        const pts = (0,mpeg_ts_misc/* secondsToMpegTsTimestamp */.H5)(queuedPacket.presentationTimestamp + this.timestampOffset);
         ptsDtsBitstream.pos = 0;
         ptsDtsBitstream.writeBits(4, includeDts ? 0b0011 : 0b0010); // marker
         ptsDtsBitstream.writeBits(3, Math.floor(pts / 2 ** 30)); // PTS[32:30]
@@ -175595,8 +176039,7 @@ class MpegTsMuxer extends Muxer {
         ptsDtsBitstream.writeBits(1, 1); // marker_bit
         if (includeDts) {
             (0,misc/* assert */.vA)(queuedPacket.decodeTimestamp !== null);
-            const unwrappedDts = Math.round(queuedPacket.decodeTimestamp * (/* inlined export .TIMESCALE */90000));
-            const dts = (0,misc/* modEuclid */.pX)(unwrappedDts, mpeg_ts_misc/* TIMESTAMP_MODULUS */.T);
+            const dts = (0,mpeg_ts_misc/* secondsToMpegTsTimestamp */.H5)(queuedPacket.decodeTimestamp + this.timestampOffset);
             ptsDtsBitstream.writeBits(4, 0b0001);
             ptsDtsBitstream.writeBits(3, Math.floor(dts / 2 ** 30)); // DTS[32:30]
             ptsDtsBitstream.writeBits(1, 1); // marker_bit
@@ -176192,6 +176635,7 @@ var hls_misc = __webpack_require__(3622);
 
 
 
+
 // Maps from WebCodecs to what HLS wants
 const toHlsCodecString = (codecString) => {
     if (codecString === 'opus') {
@@ -176206,6 +176650,7 @@ class HlsMuxer extends Muxer {
         }
         super(output);
         this.trackDatas = [];
+        this.firstPacketTimestamp = null;
         this.isRelativeToUnixEpoch = false;
         this.numWrittenMasterPlaylists = 0;
         this.playlists = [];
@@ -176215,6 +176660,7 @@ class HlsMuxer extends Muxer {
         this.singleFilePerPlaylist = format._options.singleFilePerPlaylist ?? false;
         this.isLive = format._options.live ?? false;
         this.maxLiveSegmentCount = format._options.maxLiveSegmentCount ?? Infinity;
+        this.mediaTimestampBase = format._options.mediaTimestampBase ?? 10;
         this.globalTargetDuration = this.targetSegmentDuration;
         this.getPlaylistPath = format._options.getPlaylistPath
             ?? (({ n }) => `playlist-${n}.m3u8`);
@@ -176613,6 +177059,7 @@ class HlsMuxer extends Muxer {
         try {
             this.validateTimestamp(track, packet.timestamp, packet.type === 'key');
             trackData.packets.push(packet);
+            this.firstPacketTimestamp ??= packet.timestamp;
             if (playlist.currentSegmentStartTimestamp === null) {
                 playlist.currentSegmentStartTimestamp = packet.timestamp;
             }
@@ -176632,6 +177079,7 @@ class HlsMuxer extends Muxer {
         try {
             this.validateTimestamp(track, packet.timestamp, packet.type === 'key');
             trackData.packets.push(packet);
+            this.firstPacketTimestamp ??= packet.timestamp;
             if (playlist.currentSegmentStartTimestamp === null) {
                 playlist.currentSegmentStartTimestamp = packet.timestamp;
             }
@@ -177004,6 +177452,18 @@ class HlsMuxer extends Muxer {
                             decoderConfig: audioTrack.info.decoderConfig,
                             primingPacket: audioTrack.info.primingPacket ?? undefined,
                         });
+                        if (!playlist.segmentFormat.supportsTimestampedMediaData && audioEndIndex > 0) {
+                            // The media itself carries no timestamps, so let's write an ID3v2 PRIV frame. The formats
+                            // that the spec permits (MP3, ADTS) understand this just fine.
+                            const firstTimestamp = this.toMediaTimestamp(audioTrack.packets[0].timestamp);
+                            const pts = (0,mpeg_ts_misc/* secondsToMpegTsTimestamp */.H5)(firstTimestamp);
+                            const priv = new Uint8Array(hls_misc/* TIMESTAMP_PRIV_OWNER */.$j.length + 1 + 8);
+                            priv.set(misc/* textEncoder */.UG.encode(hls_misc/* TIMESTAMP_PRIV_OWNER */.$j), 0);
+                            const view = (0,misc/* toDataView */.Zc)(priv);
+                            view.setUint32(hls_misc/* TIMESTAMP_PRIV_OWNER */.$j.length + 1, Math.floor(pts / 2 ** 32));
+                            view.setUint32(hls_misc/* TIMESTAMP_PRIV_OWNER */.$j.length + 5, pts % 2 ** 32);
+                            output.setMetadataTags({ raw: { PRIV: priv } });
+                        }
                     }
                     await output.start();
                 }
@@ -177013,7 +177473,10 @@ class HlsMuxer extends Muxer {
                     const meta = { decoderConfig: videoTrack.info.decoderConfig };
                     for (let i = 0; i < videoEndIndex; i++) {
                         const packet = videoTrack.packets[i];
-                        await videoSource.add(packet, meta);
+                        const offsetPacket = packet.clone({
+                            timestamp: this.toMediaTimestamp(packet.timestamp),
+                        });
+                        await videoSource.add(offsetPacket, meta);
                         maxEndTimestamp = Math.max(maxEndTimestamp, packet.timestamp + packet.duration);
                     }
                 }
@@ -177022,7 +177485,10 @@ class HlsMuxer extends Muxer {
                     const meta = { decoderConfig: audioTrack.info.decoderConfig };
                     for (let i = 0; i < audioEndIndex; i++) {
                         const packet = audioTrack.packets[i];
-                        await audioSource.add(packet, meta);
+                        const offsetPacket = packet.clone({
+                            timestamp: this.toMediaTimestamp(packet.timestamp),
+                        });
+                        await audioSource.add(offsetPacket, meta);
                         maxEndTimestamp = Math.max(maxEndTimestamp, packet.timestamp + packet.duration);
                     }
                 }
@@ -177106,6 +177572,11 @@ class HlsMuxer extends Muxer {
                 await this.tryWriteMasterPlaylist();
             }
         }
+    }
+    toMediaTimestamp(timestamp) {
+        // The media's own timestamps are decoupled from the input timestamps (which may well be huge Unix timestamps)
+        ;(0,misc/* assert */.vA)(this.firstPacketTimestamp !== null);
+        return timestamp - this.firstPacketTimestamp + this.mediaTimestampBase;
     }
     async onPlaylistDone(playlist) {
         ;(0,misc/* assert */.vA)(!playlist.done);
@@ -178122,6 +178593,10 @@ class MpegTsOutputFormat extends OutputFormat {
         if (!options || typeof options !== 'object') {
             throw new TypeError('options must be an object.');
         }
+        if (options.timestampOffset !== undefined
+            && (!Number.isFinite(options.timestampOffset) || options.timestampOffset < 0)) {
+            throw new TypeError('options.timestampOffset, when provided, must be a non-negative number.');
+        }
         if (options.onPacket !== undefined && typeof options.onPacket !== 'function') {
             throw new TypeError('options.onPacket, when provided, must be a function.');
         }
@@ -178212,6 +178687,9 @@ class HlsOutputFormat extends OutputFormat {
             && (typeof options.maxLiveSegmentCount !== 'number' || options.maxLiveSegmentCount < 1
                 || (Number.isFinite(options.maxLiveSegmentCount) && !Number.isInteger(options.maxLiveSegmentCount)))) {
             throw new TypeError('options.maxLiveSegmentCount, when provided, must be a positive integer or Infinity.');
+        }
+        if (options.mediaTimestampBase !== undefined && !Number.isFinite(options.mediaTimestampBase)) {
+            throw new TypeError('options.mediaTimestampBase, when provided, must be a finite number.');
         }
         if (options.getPlaylistPath !== undefined && typeof options.getPlaylistPath !== 'function') {
             throw new TypeError('options.getPlaylistPath, when provided, must be a function.');
@@ -183958,6 +184436,8 @@ class BufferTarget extends Target {
     }
     /** @internal */
     _ensureSize(size) {
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._buffer);
+        (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._bytes);
         let newLength = this._buffer.byteLength;
         while (newLength < size)
             newLength *= 2;
@@ -183986,6 +184466,7 @@ class BufferTarget extends Target {
     _start() { }
     /** @internal */
     _write(data, pos) {
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._bytes);
         this._ensureSize(pos + data.byteLength);
         this._bytes.set(data, pos);
         this._maxPos = Math.max(this._maxPos, pos + data.byteLength);
@@ -183995,7 +184476,18 @@ class BufferTarget extends Target {
     async _flush() { }
     /** @internal */
     async _finalize() {
-        this.buffer = this._buffer.slice(0, this._maxPos);
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._buffer);
+        if ('transferToFixedLength' in this._buffer) {
+            // Transferring detaches the internal buffer so its memory doesn't stick around
+            // @ts-expect-error Don't want to bump "lib" in tsconfig
+            this.buffer = this._buffer.transferToFixedLength(this._maxPos);
+        }
+        else {
+            // If transferToFixedLength doesn't exist then neither does transfer (they were added together)
+            this.buffer = this._buffer.slice(0, this._maxPos);
+        }
+        this._buffer = null;
+        this._bytes = null;
         if (this._options.onFinalize) {
             await this._options.onFinalize(this.buffer);
         }
@@ -184005,6 +184497,7 @@ class BufferTarget extends Target {
     async _close() { }
     /** @internal */
     _getSlice(start, end) {
+        ;(0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .assert */ .vA)(this._bytes);
         return this._bytes.slice(start, end);
     }
 }
@@ -184495,7 +184988,7 @@ class PathedTarget {
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 // This file is generated by scripts/write-version.ts. Do not edit manually.
-const VERSION = '1.62.1';
+const VERSION = '1.63.0';
 const VERSIONED_NAME = `Mediabunny v${VERSION}`;
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, [

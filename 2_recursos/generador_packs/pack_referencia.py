@@ -96,6 +96,21 @@ BARRA_AL_RAS = (('Offset8 = Input { Value = { 0, -0.042 }, }', 'Offset8 = Input 
                 ('CharacterSpacing = Input { Value = 0.958, }, TransformRotation = Input { Value = 1, }, TransformPivot',
                  'CharacterSpacing = Input { Value = 0.958, Expression = "Text1.CharacterSpacing", }, TransformRotation = Input { Value = 1, }, TransformPivot'))
 
+# v5.53 (pedido: «Amro Fire corta las palabras largas»): el Fire de Amro dibuja las letras en un cuadro de 1080 y las encoge DESPUÉS (Transform1
+# al 0,66): una palabra más ancha que el cuadro antes de encoger («PRINCIPAL») salía sin los bordes («Principa»). Ahora las letras nacen ya al 0,66
+# y el Transform se queda en 1. El tamaño de cada letra lo da la curva del Follower («Follower1Tamaño»), no el Size del Text+ ni el «tam» de la
+# variante (medido: cambiarlos no cambia nada); lo que dependía de esa escala (rejilla, ruido, difuminado, sombra) se ajusta igual para que se vea lo mismo.
+FUEGO_SIN_RECORTE = (('[0] = { 0, RH = { 0, 0.576 }, Flags = { Linear = true } }', '[0] = { 0, RH = { 0, 0.3802 }, Flags = { Linear = true } }'),
+                     ('[10] = { 0.409, LH = { 6.66667, 0.409 } }', '[10] = { 0.2699, LH = { 6.66667, 0.2699 } }'),
+                     ('Size = Input { Value = 0.66, }', 'Size = Input { Value = 1, }'),
+                     ('SoftnessX1 = Input { Value = 16.85, }', 'SoftnessX1 = Input { Value = 11.12, }'),
+                     ('SoftnessY1 = Input { Value = 17.17, }', 'SoftnessY1 = Input { Value = 11.33, }'),
+                     ('vernum = Input { Value = 31, }', 'vernum = Input { Value = 47, }'),
+                     ('hornum = Input { Value = 70, }', 'hornum = Input { Value = 106, }'),
+                     ('XScale = Input { Value = 5.04, }', 'XScale = Input { Value = 7.64, }'),
+                     ('ShadowDistance = Input { Value = 0.0898, }', 'ShadowDistance = Input { Value = 0.0593, }'),
+                     ('shadowBlur = Input { Value = 0.882, }', 'shadowBlur = Input { Value = 0.582, }'))
+
 
 def combinaciones(ruta_amro):
     base = [
@@ -104,7 +119,7 @@ def combinaciones(ruta_amro):
         _combo('Amro Highlight naranja', _rol(('Inter', 'Black'), 0.17, (1.0, 0.55, 0.15), mayus=True), amro=(ruta_amro, 1)),
         _combo('Moderno blanco', _rol(('Poppins', 'Bold'), 0.18, BLANCO, esp=ESPACIADO), entrada='sube', barrido=BARRIDO_BRILLO),
         _combo('Editorial azul', _rol(('DM Serif Text', 'Italic'), 0.28, AZUL, esp=ESPACIADO), entrada='abre', barrido=BARRIDO_BRILLO),
-        _combo('Amro Fire', _rol(('Inter', 'Black'), 0.17, (1.0, 0.30, 0.15), mayus=True), amro=(ruta_amro, 5)),
+        _combo('Amro Fire', _rol(('Inter', 'Black'), 0.17, (1.0, 0.30, 0.15), mayus=True), amro=(ruta_amro, 5, FUEGO_SIN_RECORTE)),
         _combo('Amro Strike rojo', _rol(('Inter', 'Black'), 0.17, (1.0, 0.28, 0.28), mayus=True), amro=(ruta_amro, 6)),
         _combo('Amro Underline lima', _rol(('Inter', 'Black'), 0.17, (0.62, 1.0, 0.30), mayus=True), amro=(ruta_amro, 3, BARRA_AL_RAS)),
     ]

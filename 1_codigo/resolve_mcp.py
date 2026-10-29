@@ -139,20 +139,31 @@ class _Cliente:
         self.esperas = {}
         self.lock = threading.Lock()
         self.instrucciones = ''
+        self.cerrado = False          # v5.53: se llamó a cerrar()
+        self.fin = False              # v5.53: ResolveMCP y su ResolvePython soltaron el stdout (ya no contestará nadie)
         threading.Thread(target=self._leer, daemon=True, name='resolve-mcp').start()
 
     def _leer(self):
-        for linea in iter(self.p.stdout.readline, b''):
-            try:
-                r = json.loads(linea)
-            except Exception:
-                continue
-            ev = self.esperas.pop(r.get('id'), None)
-            if ev:
-                ev[1] = r
+        try:
+            for linea in iter(self.p.stdout.readline, b''):
+                try:
+                    r = json.loads(linea)
+                except Exception:
+                    continue
+                ev = self.esperas.pop(r.get('id'), None)
+                if ev:
+                    ev[1] = r
+                    ev[0].set()
+        except (OSError, ValueError):
+            pass
+        finally:
+            self.fin = True
+            for ev in list(self.esperas.values()):
                 ev[0].set()
-        for ev in list(self.esperas.values()):
-            ev[0].set()
+            try:
+                self.p.stdout.close()
+            except Exception:
+                pass
 
     def vivo(self):
         return self.p.poll() is None
@@ -176,7 +187,14 @@ class _Cliente:
             i = self.n
             ev = [threading.Event(), None]
             self.esperas[i] = ev
-            self._escribir({'jsonrpc': '2.0', 'id': i, 'method': metodo, 'params': params or {}})
+            if self.cerrado or self.fin:                       # v5.53: cerrado: falla ya (antes esperaba el tiempo entero a nadie)
+                self.esperas.pop(i, None)
+                raise ConnectionError('ResolveMCP se cerró')
+            try:
+                self._escribir({'jsonrpc': '2.0', 'id': i, 'method': metodo, 'params': params or {}})
+            except (OSError, ValueError) as e:                 # stdin roto o ya cerrado: como ConnectionError, para que _tras_fallo reconecte
+                self.esperas.pop(i, None)
+                raise ConnectionError(f'ResolveMCP se cerró ({e})') from None
         finally:
             self.lock.release()
         if not ev[0].wait(timeout):
@@ -211,8 +229,32 @@ class _Cliente:
         return datos
 
     def cerrar(self):
+        """v5.53: cierre ORDENADO. Antes era kill() a ResolveMCP y su hijo ResolvePython.exe seguía vivo (MEDIDO): retenía el stdout, a veces
+        con un trabajo tocando el timeline, y cada reconexión dejaba uno huérfano. Cerrando stdin, ResolveMCP y su hijo salen solos (~0,02 s);
+        si en 2 s no salió, kill(). Vuelve al momento (vale desde cualquier hilo) y quien esperaba respuesta falla ya con ConnectionError."""
+        if self.cerrado:
+            return
+        self.cerrado = True
+        for ev in list(self.esperas.values()):
+            ev[0].set()
+        threading.Thread(target=self._terminar, daemon=True, name='resolve-mcp-cierre').start()
+
+    def _terminar(self):
+        # stdin se cierra en otro hilo: si alguien está bloqueado escribiendo (ResolveMCP no lee), close() esperaría su candado; el kill de los 2 s lo suelta
+        threading.Thread(target=self._cerrar_stdin, daemon=True, name='resolve-mcp-stdin').start()
         try:
-            self.p.kill()
+            self.p.wait(2.0)
+        except subprocess.TimeoutExpired:
+            try:
+                self.p.kill()
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    def _cerrar_stdin(self):
+        try:
+            self.p.stdin.close()
         except Exception:
             pass
 
@@ -241,6 +283,8 @@ def cliente(arrancar=True):
         c = _ESTADO['cliente']
         if c is not None and c.vivo():
             return c
+        if c is not None:
+            c.cerrar()                     # v5.53: el que murió suelta su stdin (y su ResolvePython, si quedó vivo)
         _ESTADO['cliente'] = None
         if not arrancar or time.time() - _ESTADO['ultimo_fallo'] < espera_tras_fallo():
             return None
@@ -272,12 +316,32 @@ def cliente(arrancar=True):
         return c
 
 
-def cerrar():
+def cerrar(c=None, esperar_s=0.0):
+    """Cierra la conexión con ResolveMCP (la siguiente llamada arranca otra).
+    v5.53: con `c`, solo si sigue siendo el cliente actual: el fallo de uno viejo (cerrar() lo despierta al momento) no cierra el que vino después.
+    `esperar_s` (al salir del programa): espera a que salga y si no, kill(); sin eso, el hilo del cierre moriría con el programa."""
     with _LOCK:
-        c = _ESTADO['cliente']
-        _ESTADO['cliente'] = None
-    if c is not None:
-        c.cerrar()
+        actual = _ESTADO['cliente']
+        if c is None or actual is c:
+            _ESTADO['cliente'] = None
+        if c is None:
+            c = actual
+    if c is None:
+        return
+    c.cerrar()
+    if esperar_s:
+        try:
+            c.p.wait(esperar_s)
+        except Exception:
+            try:
+                c.p.kill()
+            except Exception:
+                pass
+
+
+def trabajo_en_marcha():
+    """v5.53: ¿hay un trabajo de ejecutar_py corriendo dentro de Resolve? Cerrar la conexión ahora lo mataría a medias."""
+    return _TRABAJO.locked()
 
 
 MENSAJE_COLGADO = 'Resolve no responde (su ventana está colgada). Ciérralo desde el Administrador de tareas y ábrelo de nuevo.'
@@ -287,8 +351,12 @@ _VISTO_ABIERTO = {'t': 0.0}
 
 def _resolve_cerrado(resolve_bridge):
     """v5.47 (Windows): con Resolve cerrado, ResolveMCP tardaba 4 s en contestar CADA script (medido). Si no hay ningún Resolve.exe, se
-    contesta al momento. Mirar los procesos cuesta ~7 ms: si hace menos de 2 s que se vio abierto no se vuelve a mirar."""
-    if not sys.platform.startswith('win') or time.time() - _VISTO_ABIERTO['t'] < 2.0:
+    contesta al momento. Mirar los procesos cuesta ~7 ms: si hace menos de 2 s que se vio abierto no se vuelve a mirar.
+    v5.53: también en Mac (pgrep), salvo desde el hilo de la ventana (allí no se lanzan procesos: se pregunta al MCP como antes)."""
+    es_mac = sys.platform == 'darwin'
+    if not (sys.platform.startswith('win') or es_mac) or time.time() - _VISTO_ABIERTO['t'] < 2.0:
+        return False
+    if es_mac and _en_hilo_de_ventana():
         return False
     pids = resolve_bridge._listar_pids_resolve()
     if pids:
@@ -314,7 +382,7 @@ def script(codigo, timeout=20):
                           timeout=timeout + 15)
     except Exception as e:
         _anotar_fallo(f'{type(e).__name__}: {e}', codigo)
-        _tras_fallo(e)
+        _tras_fallo(e, c)
         return False, None, str(e)
     _ESTADO['sin_contestar'] = 0
     if 'error' in r:
@@ -329,14 +397,16 @@ def script(codigo, timeout=20):
 _ULTIMO_FALLO = {}
 
 
-def _tras_fallo(e):
+def _tras_fallo(e, c=None):
     """v5.4.8: recuperarse solo cuando Resolve se reinicia. Si ResolveMCP no contesta dos veces seguidas y Resolve NO está colgado (un Resolve colgado no se arregla
     reiniciando nuestro lado), se cierra el cliente: la próxima llamada arranca uno nuevo y se engancha a la instancia de Resolve de ahora. Si el cliente se cerró solo,
-    cliente() ya lo detecta (vivo())."""
+    cliente() ya lo detecta (vivo()).
+    v5.53: con un trabajo en marcha (ejecutar_py) no se reinicia: cerrar() ya no deja vivo a ResolvePython y el trabajo moriría a medias;
+    se reinicia en el siguiente fallo, cuando acabe. Solo se cierra `c`, el cliente que falló, si sigue siendo el actual."""
     try:
         if isinstance(e, TimeoutError):
             _ESTADO['sin_contestar'] = _ESTADO.get('sin_contestar', 0) + 1
-            if _ESTADO['sin_contestar'] >= 2:
+            if _ESTADO['sin_contestar'] >= 2 and not trabajo_en_marcha():
                 try:
                     import resolve_bridge
                     colgado = resolve_bridge.resolve_colgado(10.0)
@@ -349,9 +419,9 @@ def _tras_fallo(e):
                         registro.aviso('ResolveMCP no contestó dos veces seguidas: lo reinicio por si Resolve se reinició.', 'Resolve')
                     except Exception:
                         pass
-                    cerrar()
+                    cerrar(c)
         elif isinstance(e, ConnectionError):
-            cerrar()
+            cerrar(c)
     except Exception:
         pass
 
@@ -791,6 +861,38 @@ def _anotar_hilo(r):
         pass
 
 
+_AVISO_CARPETA = {}
+
+
+def _aviso_de_carpeta(carpeta):
+    """v5.53: una función esperar(s) que vuelve en cuanto se crea o escribe un archivo en `carpeta` (Windows: FindFirstChangeNotification,
+    un aviso por carpeta que se reutiliza: ejecutar_py va de uno en uno por _TRABAJO) o, como mucho, a los `s` segundos. Fuera de Windows,
+    o si la API falla, es time.sleep."""
+    clave = str(carpeta)
+    if clave in _AVISO_CARPETA:
+        return _AVISO_CARPETA[clave]
+    esperar = time.sleep
+    if sys.platform.startswith('win'):
+        try:
+            import ctypes
+            from ctypes import wintypes
+            k32 = ctypes.WinDLL('kernel32', use_last_error=True)
+            k32.FindFirstChangeNotificationW.restype = wintypes.HANDLE
+            k32.FindFirstChangeNotificationW.argtypes = [wintypes.LPCWSTR, wintypes.BOOL, wintypes.DWORD]
+            k32.FindNextChangeNotification.argtypes = [wintypes.HANDLE]
+            k32.WaitForSingleObject.restype = wintypes.DWORD
+            k32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+            h = k32.FindFirstChangeNotificationW(clave, False, 0x1 | 0x10)       # FILE_NOTIFY_CHANGE_FILE_NAME | _LAST_WRITE
+            if h and h != wintypes.HANDLE(-1).value:
+                def esperar(s, h=h, k32=k32):
+                    if k32.WaitForSingleObject(h, max(1, int(s * 1000))) == 0:     # WAIT_OBJECT_0: algo cambió; se rearma para la próxima
+                        k32.FindNextChangeNotification(h)
+        except Exception:
+            esperar = time.sleep
+    _AVISO_CARPETA[clave] = esperar
+    return esperar
+
+
 def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
     """Corre un script gemelo dentro de Resolve. Devuelve (ok, mensaje).
     v5.33 (el usuario: «se cierra Resolve con Listo», 2 volcados: std::out_of_range en el hilo de la interfaz de Resolve mientras el script,
@@ -815,6 +917,8 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
         if not ok and not (sincrono and 'no contest' in str(err)):
             return False, f'MCP: {err}'
         _anotar_hilo(r0)                                       # (síncrono y largo: el MCP dejó de esperar, pero el trabajo sigue y deja su archivo)
+        c0 = _ESTADO['cliente']
+        cortado_desde = None
         inicio = time.time()
         ultima_pregunta = inicio
         ultima_mirada = 0.0
@@ -824,8 +928,11 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
         # coincidiendo con MediaPool.ImportMedia en el hilo del trabajo, Resolve se quedaba bloqueado (el sondeo no contestaba en 25 s y GO lo
         # cerraba). El trabajo deja su resultado en un archivo; aquí solo se mira ese archivo y que Resolve.exe siga vivo. El MCP solo se usa
         # si el trabajo no pudo escribir su archivo «vivo» al empezar.
+        # v5.53: en Windows se espera con un aviso del sistema sobre la carpeta (despierta en ~1 ms al aparecer el archivo, en vez de hasta
+        # 50/150 ms tarde); los mismos topes siguen marcando el ritmo de las demás comprobaciones. Sin aviso (Mac/Linux o si falla): sleep.
+        esperar = _aviso_de_carpeta(carpeta)
         while time.time() - inicio < timeout:
-            time.sleep(0.05 if time.time() - inicio < 3 else 0.15)
+            esperar(0.05 if time.time() - inicio < 3 else 0.15)
             r = None
             if estado.exists():
                 try:
@@ -838,6 +945,13 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
                             f.unlink()
                         except OSError:
                             pass
+            if r is None and c0 is not None and getattr(c0, 'fin', False):
+                # v5.53: stdout cerrado = ResolveMCP y ResolvePython salieron (parar_todo, reparar Resolve o se cayó) y el trabajo ya no existe.
+                # 1 s de gracia por si alcanzó a dejar su archivo; antes se esperaba hasta el tope (600 s). Si cerrar() tuvo que matar a
+                # ResolveMCP y quedó un ResolvePython vivo, `fin` no llega y se sigue esperando su archivo, como antes.
+                cortado_desde = cortado_desde or time.time()
+                if time.time() - cortado_desde > 1.0:
+                    return False, 'ResolveMCP se cerró mientras trabajaba; el trabajo se detuvo'
             if r is None and sys.platform.startswith('win') and time.time() - ultima_mirada >= 0.5:
                 ultima_mirada = time.time()
                 try:

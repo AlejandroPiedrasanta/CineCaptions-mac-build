@@ -7,6 +7,7 @@ El MCP del programa: deja que Claude (u otro cliente MCP) hable con CineCaptions
 
     mapa / simbolo / modulo / cambios / resumen   CONSULTAR el proyecto sin leer archivos (v5.3.2): temas con archivos y símbolos, el código de UNA función, qué es un archivo,
                       los últimos cambios y la página de resumen (usan 1_codigo/mapa_codigo.py y DOCUMENTACION/)
+    llamadas / ruta   quién llama a una función (o a qué llama ella, o la cadena entera) y cómo se llega de una a otra (grafo de llamadas de mapa_codigo.py)
     estado            Resolve (proyecto, timeline, fps), versión del programa, banco de pruebas
     packs             los packs de estilos (variantes, formatos, si son de estilo «guion»)
     transcribir       video/audio -> palabras con tiempos (el mismo motor de voz de la app)
@@ -560,6 +561,14 @@ def t_modulo(a):
     return _mc().modulo(a['nombre'])
 
 
+def t_llamadas(a):
+    return _mc().llamadas(a['nombre'], a.get('sentido', 'entra'), int(a.get('niveles', 1)), a.get('archivo', ''))
+
+
+def t_ruta(a):
+    return _mc().ruta(a['desde'], a['hasta'])
+
+
 def t_cambios(a):
     return _mc().cambios(int(a.get('n', 6)))
 
@@ -595,6 +604,11 @@ HERRAMIENTAS = {
     'simbolo': ('Devuelve SOLO el código de una función, clase o método (p. ej. "_go_generar", "WordTagWindow._continuar", "Instalacion.Desinstalar") con archivo:líneas; las clases grandes dan la lista de métodos. '
                 'Evita leer el script principal (13 600 líneas).', _esq({'nombre': _S, 'lineas': _N, 'archivo': _S}, ['nombre']), t_simbolo),
     'modulo': ('Qué es un archivo de código (descripción, clases y funciones con su línea), p. ej. "vigilancia", "sfx_rules", "principal".', _esq({'nombre': _S}, ['nombre']), t_modulo),
+    'llamadas': ('Quién llama a una función o clase o la pasa como callback (con archivo:línea de cada llamada), sin Grep. sentido="sale": a qué llama ella. '
+                 'niveles=3: la cadena entera, lo que se puede romper al cambiarla. Solo .py y .lua del proyecto; «?» = deducido por el nombre.',
+                 _esq({'nombre': _S, 'sentido': {'type': 'string', 'enum': ['entra', 'sale']}, 'niveles': _N, 'archivo': _S}, ['nombre']), t_llamadas),
+    'ruta': ('Cómo se llega de una función a otra: la cadena de llamadas más corta (p. ej. del botón GO a una función de Resolve), con la línea de cada llamada.',
+             _esq({'desde': _S, 'hasta': _S}, ['desde', 'hasta']), t_ruta),
     'cambios': ('Las últimas n entradas EXPLICADAS del registro de cambios (el porqué de cada cambio reciente).', _esq({'n': _N}), t_cambios),
     'resumen': ('Una página: qué es CineCaptions, flujo de GO, pantallas, quién decide qué y reglas que no se rompen.', _esq({}), t_resumen),
     'estado': ('Estado de CineCaptions: versión, Resolve (proyecto, timeline, fps), packs y banco de pruebas.', _esq({}), t_estado),
@@ -631,9 +645,9 @@ HERRAMIENTAS = {
                 _esq({'pack': _S, 'ancla': _S}), t_evaluar),
     'registro': ('Últimas líneas del registro de la app (cinecaptions.log).', _esq({'lineas': _N}), t_registro),
 }
-_SOLO_LECTURA = {'mapa', 'simbolo', 'modulo', 'cambios', 'resumen', 'estado', 'packs', 'registro'}
+_SOLO_LECTURA = {'mapa', 'simbolo', 'modulo', 'llamadas', 'ruta', 'cambios', 'resumen', 'estado', 'packs', 'registro'}
 _DESTRUCTIVAS = {'go_real', 'arrastrar_video', 'limpiar_banco', 'colocar'}
-_SIN_RESOLVE = {'mapa', 'simbolo', 'modulo', 'cambios', 'resumen', 'registro', 'packs', 'planificar', 'evaluar', 'cuadros', 'comparar', 'medir'}   # corren en paralelo
+_SIN_RESOLVE = {'mapa', 'simbolo', 'modulo', 'llamadas', 'ruta', 'cambios', 'resumen', 'registro', 'packs', 'planificar', 'evaluar', 'cuadros', 'comparar', 'medir'}   # corren en paralelo
 
 
 def _anotaciones(nombre):

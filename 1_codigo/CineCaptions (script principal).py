@@ -7746,8 +7746,13 @@ class SubtitleApp(QWidget):
                                    'vuelve a abrir CineCaptions; el Registro tiene la pila del hilo para diagnosticarlo.', 'vigilancia')
             elif paso in ('timeline', 'resolve', 'colocar', 'sfx'):
                 import resolve_mcp
-                resolve_mcp.cerrar()
-                registro.aviso('Destrabado: cerré la conexión con Resolve que no respondía; se reintenta al siguiente paso.', 'vigilancia')
+                if resolve_mcp.trabajo_en_marcha():
+                    # v5.53: cerrar ya no deja vivo a ResolvePython y el trabajo (efectos, PRO: hasta 300-600 s sin latidos) moriría a medias;
+                    # ejecutar_py tiene su propio tope y ve solo si Resolve se cierra, se cae o se cuelga
+                    registro.aviso('Hay un trabajo en marcha dentro de Resolve: no corto la conexión (si Resolve se cuelga o se cierra, el trabajo lo detecta solo).', 'vigilancia')
+                else:
+                    resolve_mcp.cerrar()
+                    registro.aviso('Destrabado: cerré la conexión con Resolve que no respondía; se reintenta al siguiente paso.', 'vigilancia')
         except Exception:
             registro.excepcion(origen='vigilancia · destrabar')
     def _chequeo_de_arranque(self):
@@ -14031,6 +14036,12 @@ class SubtitleApp(QWidget):
                     words = None
                 if words:
                     registro.info(f'Voz: transcripción reutilizada ({len(words)} palabras)', 'voz')
+                    try:                       # v5.53: el motor de voz precargado al pulsar GO no se usará: soltarlo sin esperar
+                        import motor_voz       # (si no, cuenta 6 GB «liberables» en vram_para_ia_gb y cambia la IA de texto → falla la caché de la IA)
+                        if motor_voz.modo_gpu() != 'residente':
+                            motor_voz.soltar()
+                    except Exception:
+                        pass
                     self.msg_queue.put(('status', tr('Este video ya estaba transcrito: uso esa transcripción.')))
                     self.msg_queue.put(('progress', transcribe_share))
                 else:
@@ -14846,7 +14857,7 @@ def main():
     app.exec()
     try:
         import resolve_mcp
-        resolve_mcp.cerrar()
+        resolve_mcp.cerrar(esperar_s=2.0)          # v5.53: el cierre es en un hilo; al salir se espera (si ResolveMCP está atascado, kill a los 2 s)
     except Exception:
         pass
     # v5.5.10: salida limpia. Al volver de app.exec() siguen vivos hilos de fondo (la vista de Creativo, los emojis animados, el vigía de

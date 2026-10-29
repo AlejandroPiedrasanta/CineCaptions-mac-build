@@ -246,7 +246,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     mantenimiento.py
         límite y limpieza automática de las cachés del programa (secuencias, vistas, voz, emojis…).
     mapa_codigo.py
-        consulta el código y la documentación POR TEMA sin leer archivos enteros (mapa, símbolo, módulo, cambios); lo usan el MCP y la línea de comandos.
+        consulta el código y la documentación POR TEMA sin leer archivos enteros (mapa, símbolo, módulo, llamadas, ruta, cambios); lo usan el MCP y la línea de comandos.
     mcp_cinecaptions.py
         servidor MCP (stdio, sin dependencias) de CineCaptions: estado, packs, transcribir, planificar, colocar, renderizar y comparar.
     medir_barrido.py
