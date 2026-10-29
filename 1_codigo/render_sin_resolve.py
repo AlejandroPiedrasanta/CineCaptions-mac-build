@@ -56,8 +56,10 @@ def encaje(ancho, alto):
     return s, (ancho - 1080.0 * s) / 2.0, HORIZONTAL_Y * alto - centro_y * s
 
 
-def _sprite_texto(texto, em):
-    """(rgb float32 HxWx3, alfa float32 HxWx1, x_inicio, linea_de_base, ancho_tinta) de una palabra blanca con su halo."""
+def _sprite_texto(texto, em, color=None, degradado=None):
+    """(rgb float32 HxWx3, alfa float32 HxWx1, x_inicio, linea_de_base, ancho_tinta) de una palabra con su halo (blanca si no se dice otra cosa).
+    v5.54 «B · Premium»: color / degradado = los del pack «Tema4» (_roles_tema4: la clave en lima con su degradado, lo demás al 90 %); el halo, de su color."""
+    import render_temas as RT
     f = GC._fuente(T.FUENTE, em)
     if f is None:
         return None
@@ -66,19 +68,33 @@ def _sprite_texto(texto, em):
     asc, desc = f.getmetrics()
     pad = int(em * 0.5) + 4
     w, h = int(total + 2 * pad + em * 0.25) + 1, int(asc + desc + 2 * pad) + 1
-    img = Image.new('RGBA', (w, h), (255, 255, 255, 0))
-    d = ImageDraw.Draw(img)
+    masc = Image.new('L', (w, h), 0)
+    d = ImageDraw.Draw(masc)
     x, base = float(pad), float(pad + asc)
     for ch, a in zip(texto, anchos):
-        d.text((x, base), ch, font=f, fill=(255, 255, 255, 255), anchor='ls')
+        d.text((x, base), ch, font=f, fill=255, anchor='ls')
         x += a
-    alfa = img.getchannel('A')
-    halo = alfa.filter(ImageFilter.GaussianBlur(max(1.5, em * HALO[0]))).point(lambda v: int(v * HALO[1]))
-    capa = Image.new('RGBA', img.size, (255, 255, 255, 0))
-    capa.putalpha(halo)
-    capa.alpha_composite(img)
+    color = color or (1.0, 1.0, 1.0)
+    color_halo = min(degradado, key=lambda pc: abs(float(pc[0]) - 0.5))[1] if degradado else color
+    halo = masc.filter(ImageFilter.GaussianBlur(max(1.5, em * HALO[0]))).point(lambda v: int(v * HALO[1]))
+    capa = RT._relleno(halo, base, em * 0.72, color=color_halo)
+    capa.alpha_composite(RT._relleno(masc, base, em * 0.72, color=color, degradado=degradado))
     arr = np.asarray(capa, dtype=np.float32)
     return arr[..., :3].copy(), arr[..., 3:4] / 255.0, float(pad), base, total
+
+
+_ROLES_T4 = {}
+
+
+def _roles_tema4():
+    """{rol: {'color', 'degradado'?}} de la variante del pack «Tema4» (su .variantes.json); {} si no se puede leer (todo blanco, como antes)."""
+    if 'r' not in _ROLES_T4:
+        try:
+            import render_temas as RT
+            _ROLES_T4['r'] = RT._variantes('Tema4').get(1) or {}
+        except Exception:
+            _ROLES_T4['r'] = {}
+    return _ROLES_T4['r']
 
 
 def _sprite_emoji(ruta, lado):
@@ -147,7 +163,9 @@ def preparar(cues, ancho, alto, emoji_arriba=True, estilo=None):
             if not texto:
                 continue
             em = T.EM_BASE * float(r.get('zoom', 1.0)) * s
-            sp = _sprite_texto(texto, em)
+            d_rol = _roles_tema4().get(r.get('rol')) or _roles_tema4().get('complement') or {}
+            degradado = [(float(p), c) for p, c in d_rol['degradado']] if (r.get('rol') == 'main' and d_rol.get('degradado')) else None
+            sp = _sprite_texto(texto, em, color=d_rol.get('color'), degradado=degradado)
             if sp is None:
                 continue
             rgb, a, x_ini, base, total = sp

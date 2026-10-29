@@ -114,16 +114,26 @@ def con_sombra(origen, prefijo, x, y, alfa=0.5, dy=-0.004, blur=6):
 
 
 # ------------------------------------------------------------------------------------------------------------------ línea fina y negrita
+# v5.54 «B · Premium» (la propuesta que eligió el usuario para los 6 temas): la fina al 90 % de blanco; la negrita con un degradado frío (blanca
+# arriba, azul hielo en la base: la parada 0 es la base de la letra) y un brillo suave de ese azul detrás de su contorno.
+FINA_COLOR = (0.9, 0.9, 0.9)
+NEGRITA_DEGRADADO = [(0.0, (0.812, 0.878, 1.0)), (0.6, (1.0, 1.0, 1.0)), (1.0, (1.0, 1.0, 1.0))]      # #CFE0FF → blanco
+NEGRITA_BRILLO = ((0.75, 0.85, 1.0), 0.38, 24)                                                         # (color, opacidad, difuminado)
+
+
 def comp_fina():
     extra = E._sombra(2, 0.80, -0.004, 10) + E._contorno(3, 0.019, 0.92)
-    t = texto_plus('Template', -220, 40, 'fina', FINA[0], FINA[1], 0.09, color=(1, 1, 1), esp=1.0, extra=extra)
+    t = texto_plus('Template', -220, 40, 'fina', FINA[0], FINA[1], 0.09, color=FINA_COLOR, esp=1.0, extra=extra)
     p = _p(0, 7)
     t += cadena('Template', dict(dy=f'(1 - {_suave(p)}) * (-0.014)', size=f'(0.96 + 0.04 * {_suave(p)}) * (0.92 + 0.08 * {SALIDA})', blend=f'math.min(1, {p} * 2.0) * {SALIDA}'))
     return K.armar_comp(t, 'CineCaptions VIRAL - fina')
 
 
 def comp_negrita():
-    extra = E._sombra(2, 0.85, -0.006, 9) + E._contorno(3, 0.013, 0.95) + _inclinar(1, 2, 3)
+    color_b, op_b, blur_b = NEGRITA_BRILLO
+    extra = (['Type1 = Input { Value = 2, },', f'ShadingGradient1 = Input {{ Value = {degradado(NEGRITA_DEGRADADO)}, }},'] + E._sombra(2, 0.85, -0.006, 9)
+             + E._contorno(3, 0.013, 0.95) + E._sombra(4, op_b, 0.0, blur_b, color=color_b) + ['ElementShape4 = Input { Value = 0, },']   # (4: forma de LETRA, no la caja)
+             + _inclinar(1, 2, 3, 4))
     t = texto_plus('Template', -220, 40, 'negrita', NEGRITA[0], NEGRITA[1], 0.16, color=(1, 1, 1), esp=0.99, extra=extra)
     p = _p(0, 9)
     t += cadena('Template', dict(dx=f'(1 - {_suave(p)}) * (-0.018)', size=f'(0.82 + 0.18 * {_rebote(p)}) * (0.9 + 0.1 * {SALIDA})', blend=f'math.min(1, {p} * 2.4) * {SALIDA}'))

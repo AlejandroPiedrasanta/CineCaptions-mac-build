@@ -7,7 +7,7 @@ Version en Lua para Resolve FREE (el Puente la corre con dofile) de pausas._CORT
 que se quedan pegados uno tras otro. Solo toca un timeline con UN unico clip en V1 (el que GO armo con el video soltado).
 ]]
 
-local VERSION = "5.53 (pausas)"
+local VERSION = "5.54 (pausas)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -304,7 +304,12 @@ local function cargar_tabla(ruta)
         local ok, t = pcall(parsear_json, txt)
         return (ok and type(t) == "table") and t or nil, true
     end
-    local chunk = loadfile(ruta .. ".lua")
+    local chunk = loadfile and loadfile(ruta .. ".lua")
+    if not chunk and not loadfile and dofile then              -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
+        local ok, t = pcall(dofile, ruta .. ".lua")
+        if not ok then return nil, false end
+        return (type(t) == "table") and t or nil, true
+    end
     if not chunk then return nil, false end
     local ok, t = pcall(chunk)
     return (ok and type(t) == "table") and t or nil, true

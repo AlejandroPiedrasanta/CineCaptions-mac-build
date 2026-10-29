@@ -3996,7 +3996,12 @@
     "Tu clave de licencia (CC-…) aparece al pagar en cinecaptions.shop y te llega por correo.": "A sua chave de licença (CC-…) aparece ao pagar em cinecaptions.shop e chega por e-mail.",
     "Licencias de cinecaptions.shop: pega tu clave CC- y se activa al momento, en hasta 2 computadoras. Desactivar este equipo lo libera enseguida para usarla en otra.": "Licenças de cinecaptions.shop: cole a sua chave CC- e ela ativa-se no momento, em até 2 computadores. Desativar este computador liberta-o logo para a usar noutro.",
     "Tu clave de cinecaptions.shop. Desactiva este equipo para activarla en otra computadora.": "A sua chave de cinecaptions.shop. Desative este computador para a ativar noutro.",
-    "Ajustes más simples: GO siempre arma el timeline en vertical, reproduce al terminar y deja Resolve con tu vista.": "Definições mais simples: o GO monta sempre a timeline na vertical, reproduz no fim e deixa o Resolve com a sua vista."
+    "Ajustes más simples: GO siempre arma el timeline en vertical, reproduce al terminar y deja Resolve con tu vista.": "Definições mais simples: o GO monta sempre a timeline na vertical, reproduz no fim e deixa o Resolve com a sua vista.",
+    "A un motor de IA le faltan librerías": "Faltam bibliotecas a um motor de IA",
+    "Al abrirse, CineCaptions comprobó sus motores de IA y a uno le faltan librerías o no tiene la versión que necesita: una instalación o una actualización quedó a medias. Todavía no se ha transcrito nada; al pulsar GO la voz prueba con el otro motor.": "Ao abrir, o CineCaptions verificou os seus motores de IA e a um deles faltam bibliotecas ou não tem a versão de que precisa: uma instalação ou uma atualização ficou pela metade. Ainda não foi transcrito nada; ao carregar em GO, a voz tenta o outro motor.",
+    "Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).": "Se for o motor de IA (Qwen3): em Ajustes › Geral › Motor de voz, carregue em «Reparar o motor» (descarrega o que falta; precisa de internet).",
+    "Si es el motor auxiliar (Whisper): reinstala CineCaptions con el último instalador, que pone al día sus librerías (se conservan tus ajustes).": "Se for o motor auxiliar (Whisper): reinstale o CineCaptions com o instalador mais recente, que atualiza as suas bibliotecas (as suas definições são mantidas).",
+    "Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.": "Se o antivírus ou o Controlo Inteligente de Aplicações do Windows bloquear a transferência, permita o CineCaptions e repita."
   },
   "Suave": "Suave",
   "Media": "Média",

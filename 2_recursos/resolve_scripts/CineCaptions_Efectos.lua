@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos».
 ]]
 
-local VERSION = "5.53 (efectos)"
+local VERSION = "5.54 (efectos)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -308,7 +308,12 @@ local function cargar_tabla(ruta)
         local ok, t = pcall(parsear_json, txt)
         return (ok and type(t) == "table") and t or nil, true
     end
-    local chunk = loadfile(ruta .. ".lua")
+    local chunk = loadfile and loadfile(ruta .. ".lua")
+    if not chunk and not loadfile and dofile then              -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
+        local ok, t = pcall(dofile, ruta .. ".lua")
+        if not ok then return nil, false end
+        return (type(t) == "table") and t or nil, true
+    end
     if not chunk then return nil, false end
     local ok, t = pcall(chunk)
     return (ok and type(t) == "table") and t or nil, true

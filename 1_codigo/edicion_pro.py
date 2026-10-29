@@ -99,15 +99,13 @@ def activado():
     return bool(_prefs().get('go_edicion_pro', False))
 
 
-# v5.49 (pedido del usuario): los temas de esta lista solo ponen emojis con la Edición PRO encendida Y su opción «Emojis animados»
-TEMAS_EMOJI_SOLO_PRO = ('Referencia',)          # el Tema 2
-
-
-def emojis_del_tema(pack):
-    """¿Puede el tema `pack` poner emojis? Los de TEMAS_EMOJI_SOLO_PRO solo con la Edición PRO encendida y «Emojis animados» activado."""
-    if str(pack or '') not in TEMAS_EMOJI_SOLO_PRO:
-        return True
-    return activado() and bool(opciones_guardadas().get('pro_emojis', True))
+# v5.49 (pedido del usuario): el Tema 2 solo ponía emojis con la Edición PRO encendida Y su opción «Emojis animados».
+# v5.54 (pedido: «los emojis solo se activan con la Edición PRO si activo la función de emoji»): TODOS los temas, packs propios, mezclas y el diseño de
+# siempre. Los Temas 5 y 6 ya son la PRO (TEMAS_PRO): con ellos basta la opción.
+def emojis_del_tema(pack=None):
+    """¿Puede GO poner emojis con el tema `pack` (None = el elegido en Inicio)? Solo con la Edición PRO en juego y «Emojis animados» activado."""
+    pack = str(pack if pack is not None else tema_actual())
+    return (activado() or pack in TEMAS_PRO) and bool(opciones_guardadas().get('pro_emojis', True))
 
 
 TEMAS_PRO = ('Tema5', 'Tema6')            # edicion_pro_tema5.activo: estos temas SON la Edición PRO completa, aunque su interruptor esté apagado

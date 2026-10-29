@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.53 (subtitulos)"
+local VERSION = "5.54 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -579,7 +579,10 @@ local function leer_archivo(ruta)
         -- de la pista normal/traducida) la app deja "<ruta>.lua" con
         -- `return { texto = ... }` (subtitle_transcriber.write_srt). Los
         -- .json van por cargar_tabla, que es tabla directa.
-        local chunk = loadfile(ruta .. ".lua")
+        local chunk = loadfile and loadfile(ruta .. ".lua")
+        if not chunk and not loadfile and dofile then          -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
+            chunk = function() return dofile(ruta .. ".lua") end
+        end
         local ok, t = pcall(chunk or function() end)
         return (ok and type(t) == "table") and t.texto or nil
     end
@@ -684,7 +687,11 @@ local function cargar_tabla(ruta)
         local ok, t = pcall(parsear_json, txt)
         return (ok and type(t) == "table") and t or nil
     end
-    local chunk = loadfile(ruta .. ".lua")
+    local chunk = loadfile and loadfile(ruta .. ".lua")
+    if not chunk and not loadfile and dofile then              -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
+        local ok, t = pcall(dofile, ruta .. ".lua")
+        return (ok and type(t) == "table") and t or nil
+    end
     if not chunk then return nil end
     local ok, t = pcall(chunk)
     return (ok and type(t) == "table") and t or nil
@@ -692,6 +699,7 @@ end
 
 local function dato_existe(ruta)
     if not SIN_IO then return archivo_existe(ruta) end
+    if not loadfile then return dofile ~= nil and (pcall(dofile, ruta .. ".lua")) end      -- v5.54: Free sin loadfile (solo dofile)
     return loadfile(ruta .. ".lua") ~= nil
 end
 
@@ -1013,7 +1021,7 @@ end
 -- el floor pierde precision en clips cortos) y el clip se recoloca.
 local FACTORES = {}     -- nombre del clip -> fotogramas de timeline por fotograma de origen
 local CALIBRADOS = {}   -- nombres ya verificados con una medida real
-local OFF = { valor = 0 }  -- 1 si este Resolve CUENTA el fotograma final (inclusivo)
+local OFF = { valor = 0, exactos = {} }  -- valor: 1 si este Resolve CUENTA el fotograma final (inclusivo) · exactos (v5.54): nombre -> hasta que fotograma de su origen cayo EXACTO
 local FPS_CLIP_CANDIDATOS = { 23.976, 24.0, 25.0, 29.97, 30.0, 48.0, 50.0,
                               59.94, 60.0, 120.0 }
 
@@ -1173,6 +1181,14 @@ local function colocar_medido(media_pool, timeline, plantilla, desde,
 
     local item, span = pedir(k)
     if item == nil then return nil, 0 end
+    -- v5.54 (gemelo del .py): GetDuration cuesta 13-180 ms por clip medido por el MCP. Si esta plantilla ya cayo EXACTA con factor 1
+    -- pidiendo hasta este punto de su origen, cabe igual: se da por puesta sin preguntar. Con otro frame rate se sigue midiendo.
+    local tope = (desde or 0) + duracion
+    if k == 1.0 and OFF.exactos[nombre] and tope <= OFF.exactos[nombre] then
+        COLORES_CC.pintar(item, color)
+        COLORES_CC.cachear(item)
+        return item, duracion
+    end
     local puesto = duracion_de(item)
     if timeline ~= nil and puesto > 0 and puesto ~= duracion
             and duracion > 1 and not CALIBRADOS[nombre] then
@@ -1202,6 +1218,7 @@ local function colocar_medido(media_pool, timeline, plantilla, desde,
         -- 2) ¿Fin inclusivo? Un fotograma de MAS con el factor bueno.
         if puesto == duracion + 1 and OFF.valor == 0 then
             OFF.valor = 1
+            OFF.exactos = {}                 -- lo medido con el otro fin ya no vale
             local span2
             item, span2, puesto = recolocar(item, k)
             if item == nil then return nil, 0 end
@@ -1214,6 +1231,9 @@ local function colocar_medido(media_pool, timeline, plantilla, desde,
         end
     elseif puesto > 0 and puesto == duracion then
         CALIBRADOS[nombre] = true
+    end
+    if puesto == duracion and k == 1.0 and (FACTORES[nombre] or 1.0) == 1.0 then
+        OFF.exactos[nombre] = math.max(OFF.exactos[nombre] or 0, tope)
     end
     COLORES_CC.pintar(item, color)
     COLORES_CC.cachear(item)
@@ -1930,8 +1950,42 @@ end
 -- cualquier 'contexto' suelto que el usuario tuviera en otro lado del
 -- proyecto le ganaria al pack que acaba de elegir, sin una linea que lo
 -- explique.
-local function find_clip_by_name(media_pool, nombre, carpeta)
+-- v5.54 (gemelo de indice_de_clips del .py): {nombre normalizado = primer clip} con el MISMO recorrido que find_clip_by_name, pidiendo
+-- cada nombre UNA vez. buscar_sets_de_plantillas probaba cientos de nombres y cada uno recorria el bin entero (Tema 2: ~21 s de 28
+-- medido por el MCP). Solo vale mientras no cambie el Media Pool. (En NOMBRES: el archivo esta al limite de 200 locales.)
+function NOMBRES.indice_de_clips(media_pool, carpeta)
+    local indice = {}
+    local acotada = carpeta ~= nil
+    local function recorrer(folder)
+        for _, clip in ipairs(lista_api(folder:GetClipList())) do
+            local ok, nom = pcall(function() return clip:GetName() end)
+            if ok and nom then
+                local k = nom:lower():gsub("^%s*(.-)%s*$", "%1")
+                if indice[k] == nil then indice[k] = clip end
+            end
+        end
+        for _, sub in ipairs(lista_api(folder:GetSubFolderList())) do
+            local saltar = false
+            if not acotada then
+                local ok_n, n = pcall(function() return sub:GetName() end)
+                saltar = ok_n and n ~= nil and n:sub(1, #PREFIJO_BIN_PACK) == PREFIJO_BIN_PACK
+            end
+            if not saltar then recorrer(sub) end
+        end
+    end
+    local raiz = carpeta
+    if raiz == nil then
+        local ok
+        ok, raiz = pcall(function() return media_pool:GetRootFolder() end)
+        if not ok or not raiz then return indice end
+    end
+    recorrer(raiz)
+    return indice
+end
+
+local function find_clip_by_name(media_pool, nombre, carpeta, indice)
     local objetivo = nombre:lower():gsub("^%s*(.-)%s*$", "%1")
+    if indice then return indice[objetivo] end      -- v5.54: con el indice de ese mismo bin no se pregunta a Resolve
     local acotada = carpeta ~= nil
     local function buscar(folder)
         for _, clip in ipairs(lista_api(folder:GetClipList())) do
@@ -1970,15 +2024,15 @@ local function find_clip_by_name(media_pool, nombre, carpeta)
 end
 
 -- Busca "contexto 3" probando las formas de numerar mas comunes.
-local function buscar_plantilla_numerada(media_pool, base, numero, carpeta)
+local function buscar_plantilla_numerada(media_pool, base, numero, carpeta, indice)
     -- El set 1 es el nombre a secas ('arriba'), pero tambien vale con el 1 puesto ('arriba 1', 'arriba1'...)
     if numero == 1 then
-        local clip = find_clip_by_name(media_pool, base, carpeta)
+        local clip = find_clip_by_name(media_pool, base, carpeta, indice)
         if clip then return clip end
     end
     for _, patron in ipairs(SUFIJOS_DE_SET) do
         local clip = find_clip_by_name(
-            media_pool, base .. string.format(patron, numero), carpeta)
+            media_pool, base .. string.format(patron, numero), carpeta, indice)
         if clip then return clip end
     end
     return nil
@@ -2019,13 +2073,14 @@ end
 -- 'principal' era el aviso de "falta x texto" en la cara del usuario.
 local function buscar_sets_de_plantillas(media_pool, carpeta)
     local crudos = {}
+    local indice = NOMBRES.indice_de_clips(media_pool, carpeta)     -- v5.54: un recorrido del bin, no uno por nombre probado
     for numero = 1, MAX_SETS do
         local encontrado, faltan, hay = {}, {}, false
         for _, rol in ipairs(DYNAMIC_ORDER) do
             local nombres_rol = NOMBRES.rol[rol] or { DYNAMIC_TEMPLATES[rol] }
             local clip = nil
             for _, nombre_base in ipairs(nombres_rol) do
-                clip = buscar_plantilla_numerada(media_pool, nombre_base, numero, carpeta)
+                clip = buscar_plantilla_numerada(media_pool, nombre_base, numero, carpeta, indice)
                 if clip then break end
             end
             if clip then
@@ -5577,12 +5632,17 @@ local function place_kinetic(timeline, media_pool, track, fps, start_frame, proj
         if not ok_x then print("  Aviso: pack extra de la mezcla: " .. tostring(err_x)) end
     end
     local clips = {}
+    local indices = {}        -- v5.54: cada bin se recorre UNA vez (antes, un recorrido entero por cada nombre de clip)
+    local function indice_de(c)
+        if indices[c] == nil then indices[c] = NOMBRES.indice_de_clips(media_pool, c) end
+        return indices[c]
+    end
     local function clip_de(nombre)
         if clips[nombre] == nil then
-            local c = find_clip_by_name(media_pool, nombre, carpeta)
+            local c = find_clip_by_name(media_pool, nombre, carpeta, indice_de(carpeta))
             if not c then
                 for _, c2 in ipairs(carpetas_extra) do
-                    c = find_clip_by_name(media_pool, nombre, c2)
+                    c = find_clip_by_name(media_pool, nombre, c2, indice_de(c2))
                     if c then break end
                 end
             end

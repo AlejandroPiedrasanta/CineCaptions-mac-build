@@ -112,9 +112,56 @@ def _n(v):
     return f'{v:.6g}'
 
 
-def comp_luxe_shine(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None, brillo=None, trama=None):
+# v5.54 — «B · Premium» (la propuesta que eligió el usuario para los 6 temas): la palabra principal con un DEGRADADO de su propio color (más clara
+# arriba, más honda abajo) y un brillo suave de su color; todas las letras con una segunda sombra ancha y muy suave (se leen sobre cualquier video).
+# El degradado es el modo «Gradient» del propio macro (lo que hace su botón TextShading: Type1 = 2 y Overlap1 = 2; el grafo no se toca). Las paradas
+# van de la BASE de la letra (0) a su parte de arriba (1), como en cualquier Text+ (kinetic_paleta).
+SOMBRA_PREMIUM = (0.30, -0.012, 30)        # (opacidad, desplazamiento hacia abajo, difuminado): la sombra ancha, debajo de la de siempre (elemento 5)
+
+
+def degradado_premium(color):
+    """Las paradas del degradado de una principal a partir de su color: [(0, más honda), (0,5, el color), (1, más clara)]. Un blanco baja a gris frío."""
+    import colorsys
+    r, g_, b = (float(c) for c in color[:3])
+    h, s, v = colorsys.rgb_to_hsv(r, g_, b)
+    if s < 0.08:
+        honda = (v * 0.84, v * 0.86, v * 0.93)
+    else:
+        honda = colorsys.hsv_to_rgb(h, min(1.0, s * 1.15 + 0.08), v * 0.92)
+    clara = tuple(c + (1.0 - c) * 0.5 for c in (r, g_, b))
+    return [(0.0, tuple(round(c, 4) for c in honda)), (0.5, (round(r, 4), round(g_, 4), round(b, 4))), (1.0, tuple(round(c, 4) for c in clara))]
+
+
+def _gradiente(paradas):
+    cuerpo = ', '.join(f'[{_n(p)}] = {{ {_n(c[0])}, {_n(c[1])}, {_n(c[2])}, 1 }}' for p, c in paradas)
+    return f'Gradient {{ Colors = {{ {cuerpo} }} }}'
+
+
+def _premium(t1, premium):
+    """El Text1 del macro con lo de «B · Premium»: premium = {'degradado': paradas, 'sombra2': (opacidad, dy, difuminado)} (cualquiera de los dos)."""
+    # (se puede aplicar sobre un Text1 que ya lo lleva: construir_pack.premium_sobre_drb retoca el .drb de fábrica)
+    if premium.get('degradado'):
+        t1, n = re.subn(r'ShadingGradient1 = Input \{ Value = Gradient \{ Colors = \{.*?\} \} \}, \},',
+                        lambda m: f'ShadingGradient1 = Input {{ Value = {_gradiente(premium["degradado"])}, }},', t1, count=1, flags=re.S)
+        tipo = '' if re.search(r'\bType1 = Input', t1) else ', Type1 = Input { Value = 2, }'
+        t1, n2 = re.subn(r'Overlap1 = Input \{ Value = [0-9]+, \}', 'Overlap1 = Input { Value = 2, }' + tipo, t1, count=1)
+        if not (n and n2):
+            raise SystemExit('el Text1 del macro no trae ShadingGradient1 / Overlap1 con la forma esperada (degradado premium)')
+    if premium.get('sombra2') and not re.search(r'\bEnabled5 = Input', t1):
+        import kinetic_elementos as E
+        opacidad, dy, blur = premium['sombra2']
+        sombra2 = ' '.join(E._sombra(5, opacidad, dy, blur) + ['ElementShape5 = Input { Value = 0, },']) + ' '
+        marca = 'UseFrameFormatSettings = Input { Value = 1, }, '
+        if marca not in t1:
+            raise SystemExit('el Text1 del macro no trae UseFrameFormatSettings (sombra premium)')
+        t1 = t1.replace(marca, marca + sombra2, 1)
+    return t1
+
+
+def comp_luxe_shine(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None, brillo=None, trama=None,
+                    premium=None):
     """Texto de la comp completa (cabecera + Tools) con el macro Luxe Shine ya personalizado."""
-    t = comp_luxe('shine', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, barrido, brillo)
+    t = comp_luxe('shine', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, barrido, brillo, premium)
     return _trama(t, tam, y, trama) if trama else t
 
 
@@ -158,9 +205,9 @@ def _trama(texto, tam, y, trama):
     return texto[:m.start()] + nodo.replace('{fuente}', m.group(1)) + nuevo + texto[m.end():]
 
 
-def comp_luxe_slide(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None, deslizar=None):
+def comp_luxe_slide(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None, deslizar=None, premium=None):
     """Lo mismo con el macro Luxe Slide (contexto, complemento). deslizar='derecha': entra y sale moviéndose hacia la derecha (ver _deslizar)."""
-    t = comp_luxe('slide', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, None, brillo)
+    t = comp_luxe('slide', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, None, brillo, premium)
     return _deslizar(t) if deslizar == 'derecha' else t
 
 
@@ -183,9 +230,9 @@ def _deslizar(texto):
     return texto.replace(ang, 'Angle = Input { Value = 180, Expression = "AnimEngine.Output2 == 0 and positionCtrl.StartDirection or positionCtrl.EndDirection", }', 1)
 
 
-def comp_luxe_count(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None):
+def comp_luxe_count(familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, brillo=None, premium=None):
     """v5.48: el macro Luxe Count (números): cuenta de 0 hasta la cifra que lleve el texto del clip."""
-    return comp_luxe('count', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, None, brillo)
+    return comp_luxe('count', familia, estilo, tam, color, y, texto, mayus, esp, ajustar, anim, None, brillo, premium)
 
 
 # v5.5 — EL BARRIDO DE LUZ del macro Luxe Shine. De fábrica empieza a los 0,25 s y tarda 1,5 s (termina a los 1,75 s): las palabras grandes de «Referencia» se ven 0,3-0,9 s (mediana
@@ -234,7 +281,7 @@ def _barrido(tools, b):
     return tools
 
 
-def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None, brillo=None):
+def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, esp=0.985, ajustar=True, anim=None, barrido=None, brillo=None, premium=None):
     """Texto de la comp completa (cabecera + Tools) con el macro del Luxe Title Pack (tipo 'shine' o 'slide') ya personalizado.
     ajustar=False deja el tamaño en reposo como un valor suelto (sin la expresión que encoge el texto largo): así se puede cambiar desde fuera
     con sizeCtrl.RestingSize (lo hace la guía «Crea tu estilo» en Resolve)."""
@@ -265,6 +312,8 @@ def comp_luxe(tipo, familia, estilo, tam, color, y, texto='Texto', mayus=True, e
     import kinetic_elementos as E
     sombra = ' '.join(E._sombra(4, 0.55, -0.006, 12) + ['ElementShape4 = Input { Value = 0, },']) + ' '
     t1 = t1.replace('UseFrameFormatSettings = Input { Value = 1, }, ', 'UseFrameFormatSettings = Input { Value = 1, }, ' + colores + sombra, 1)
+    if premium:
+        t1 = _premium(t1, premium)
     tools = tools[:i] + t1 + tools[j:]
     # el tamaño se reduce solo si el texto (varias palabras principales) no cabe en el 90 % del ancho
     # ancho aproximado por numero de letras (el DataWindow de un Text+ suelto no llega dentro del macro): 0,80 em por letra

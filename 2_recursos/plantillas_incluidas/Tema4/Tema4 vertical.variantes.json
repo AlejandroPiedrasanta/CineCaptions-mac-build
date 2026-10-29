@@ -1,7 +1,7 @@
 {
  "1": {
   "nombre": "Blanco",
-  "color": "#FFFFFF",
+  "color": "#B9E25B",
   "roles": {
    "context": {
     "f1": [
@@ -13,7 +13,7 @@
      "Bold"
     ],
     "tam": 0.14,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -26,8 +26,22 @@
      "Bold"
     ],
     "tam": 0.14,
-    "color": "#FFFFFF",
-    "mayus": false
+    "color": "#B9E25B",
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#A0D030"
+     ],
+     [
+      0.5,
+      "#B9E25B"
+     ],
+     [
+      1.0,
+      "#DCF0AD"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -39,10 +53,11 @@
      "Bold"
     ],
     "tam": 0.14,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  }
 }

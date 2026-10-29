@@ -34,7 +34,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.53 (insertar SFX)"
+local VERSION = "5.54 (insertar SFX)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -390,7 +390,12 @@ local function cargar_tabla(ruta)
         local ok, t = pcall(parsear_json, txt)
         return (ok and type(t) == "table") and t or nil, true
     end
-    local chunk = loadfile(ruta .. ".lua")
+    local chunk = loadfile and loadfile(ruta .. ".lua")
+    if not chunk and not loadfile and dofile then              -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
+        local ok, t = pcall(dofile, ruta .. ".lua")
+        if not ok then return nil, false end
+        return (type(t) == "table") and t or nil, true
+    end
     if not chunk then return nil, false end
     local ok, t = pcall(chunk)
     return (ok and type(t) == "table") and t or nil, true

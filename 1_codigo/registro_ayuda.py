@@ -172,6 +172,14 @@ _REGLAS = [
      ['Abre el proyecto en Resolve y haz clic en el timeline que quieres subtitular.',
       'Comprueba que el timeline tiene audio (no está silenciado ni vacío).',
       'También puedes soltar un vídeo en la ventana de CineCaptions y pulsar GO otra vez.'], 'bloquea'),
+    # v5.54: el chequeo de arranque de un motor («Falla al iniciar: Motor de IA (Qwen3) — faltan 63 librerías…») caía en la de abajo por «Qwen»
+    # y salía como «La transcripción no pudo terminar», con pasos de un audio dañado, sin haber transcrito nada
+    (r'Falla al iniciar: Motor (de IA|auxiliar)',
+     'A un motor de IA le faltan librerías',
+     'Al abrirse, CineCaptions comprobó sus motores de IA y a uno le faltan librerías o no tiene la versión que necesita: una instalación o una actualización quedó a medias. Todavía no se ha transcrito nada; al pulsar GO la voz prueba con el otro motor.',
+     ['Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
+      'Si es el motor auxiliar (Whisper): reinstala CineCaptions con el último instalador, que pone al día sus librerías (se conservan tus ajustes).',
+      'Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.'], 'parcial'),
     (r'GO · voz|transcri|whisper|qwen|motor de voz',
      'La transcripción no pudo terminar',
      'El motor de voz se detuvo antes de entregar el texto.',

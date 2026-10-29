@@ -13,7 +13,7 @@
      "Medium"
     ],
     "tam": 0.065,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -27,7 +27,21 @@
     ],
     "tam": 0.15,
     "color": "#4C7DFF",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#1A53EB"
+     ],
+     [
+      0.5,
+      "#4C7DFF"
+     ],
+     [
+      1.0,
+      "#A5BEFF"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -39,11 +53,12 @@
      "Medium"
     ],
     "tam": 0.065,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "2": {
   "nombre": "Ámbar",
@@ -59,7 +74,7 @@
      "Medium"
     ],
     "tam": 0.065,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -73,7 +88,21 @@
     ],
     "tam": 0.15,
     "color": "#F5A524",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#E18B00"
+     ],
+     [
+      0.5,
+      "#F5A524"
+     ],
+     [
+      1.0,
+      "#FAD292"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -85,11 +114,12 @@
      "Medium"
     ],
     "tam": 0.065,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "3": {
   "nombre": "Lima",
@@ -105,7 +135,7 @@
      "Medium"
     ],
     "tam": 0.065,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -119,7 +149,21 @@
     ],
     "tam": 0.15,
     "color": "#B9E25B",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#A0D030"
+     ],
+     [
+      0.5,
+      "#B9E25B"
+     ],
+     [
+      1.0,
+      "#DCF0AD"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -131,11 +175,12 @@
      "Medium"
     ],
     "tam": 0.065,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "4": {
   "nombre": "Lila",
@@ -151,7 +196,7 @@
      "Medium"
     ],
     "tam": 0.065,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -165,7 +210,21 @@
     ],
     "tam": 0.15,
     "color": "#A98BFF",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#825DEB"
+     ],
+     [
+      0.5,
+      "#A98BFF"
+     ],
+     [
+      1.0,
+      "#D4C5FF"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -177,10 +236,11 @@
      "Medium"
     ],
     "tam": 0.065,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  }
 }

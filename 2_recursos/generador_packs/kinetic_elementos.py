@@ -204,20 +204,31 @@ def _contorno(num, grosor, opacidad=0.9):
 
 
 def comp_texto(nombre, texto, fuente, tam, relleno, esp=1.0, entrada='pop', retardo=0, sombra=True, interlineado=None, contorno=0.0, kit=None, trama=False,
-               vivo=False):
+               vivo=False, premium=False):
     """Un Text+ con relleno (color liso o degradado), sombra y la entrada animada. relleno = (r,g,b) o [(pos, (r,g,b))…].
     v5.44: `kit` = las expresiones de animacion_kit (la entrada/salida del motor del kit en vez de `entrada`).
-    v5.47: `vivo` = el relleno se mueve por dentro (_vivo)."""
+    v5.47: `vivo` = el relleno se mueve por dentro (_vivo).
+    v5.54: `premium` («B · Premium», las grandes) = el degradado con el reflejo de arriba (PAL.con_reflejo) y un brillo de su color delante del halo oscuro."""
     extra = []
     color = (1, 1, 1)
-    if isinstance(relleno, (list, tuple)) and relleno and isinstance(relleno[0], (list, tuple)) and len(relleno[0]) == 2 and isinstance(relleno[0][1], (list, tuple)):
-        extra += ['Type1 = Input { Value = 2, },', f'ShadingGradient1 = Input {{ Value = {degradado(relleno)}, }},']
+    degradado_ = isinstance(relleno, (list, tuple)) and relleno and isinstance(relleno[0], (list, tuple)) and len(relleno[0]) == 2 and isinstance(relleno[0][1], (list, tuple))
+    if degradado_:
+        extra += ['Type1 = Input { Value = 2, },', f'ShadingGradient1 = Input {{ Value = {degradado(PAL.con_reflejo(relleno) if premium else relleno)}, }},']
     else:
         color = relleno
+    def brillo(num):
+        return _sombra(num, PAL.BRILLO_HEROE[0], 0.0, PAL.BRILLO_HEROE[1], color=PAL.color_medio(relleno) if degradado_ else relleno)
+    # (del elemento 4 en adelante Text+ dibuja por defecto una CAJA, no la letra: ElementShape = 0. Medido en Resolve 21.1.2: sin él salía un
+    # recuadro gris u oscuro detrás de la grande)
+    letra4 = ['ElementShape4 = Input { Value = 0, },']
     if sombra:
         extra += _sombra(2, 0.8, -0.0065, 7)                 # sombra firme debajo de la letra…
         if contorno > 0:
             extra += _contorno(3, contorno)                  # …y, en el texto pequeño, un contorno oscuro: se lee también sobre una pared blanca
+            if premium:
+                extra += brillo(4) + letra4
+        elif premium:
+            extra += brillo(3) + _sombra(4, 0.55, -0.002, 34) + letra4      # el brillo de su color (3) delante del halo oscuro ancho (4)
         else:
             extra += _sombra(3, 0.55, -0.002, 34)            # (los héroes llevan un halo ancho)
     t = texto_plus('Template', -220, 40, texto, fuente[0], fuente[1], tam, color=color, esp=esp, extra=extra)
@@ -333,10 +344,12 @@ EM = 640.0 / 1080.0                                                             
 
 
 def comp_cinta(nombre, texto, fuente, tam, caja, color_texto, entrada='giro', retardo=0, esp=1.0, alto_k=1.55, pad_k=0.5, dy_k=0.03, sombra_caja=0.5, radio=0.15,
-               kit=None):
+               kit=None, premium=False):
     """Texto sobre una caja de color que SE AJUSTA AL TEXTO: un RectangleMask cuyo ancho sale del DataWindow del Text+ «Template» más el relleno y cuyo alto
     sale de su Size (alto_k × la altura de las mayúsculas; pad_k × esa altura a cada lado). Así la caja sigue al texto aunque la app cambie el Size o el
-    texto, y una cinta de varias palabras es UNA sola caja (la forma «caja por carácter» de Text+ dejaba un hueco en cada espacio)."""
+    texto, y una cinta de varias palabras es UNA sola caja (la forma «caja por carácter» de Text+ dejaba un hueco en cada espacio).
+    v5.54 `premium` («B · Premium»): la caja con un degradado de su color (PAL.cinta_degradado): una franja clara de borde suave en su mitad de arriba
+    y una más honda en la de abajo, recortadas con la propia caja (las mismas piezas del relleno vivo: máscara, fondo, Merge «In»)."""
     cap = CAP[fuente[0]]
     em = f'(Template.Size * {n(EM)})'
     dw = 'Template.Output.DataWindow'
@@ -351,7 +364,22 @@ def comp_cinta(nombre, texto, fuente, tam, caja, color_texto, entrada='giro', re
         f'Height = Input {{ Value = 0.05, Expression = "{K.lua(alto)}", }},',
         f'CornerRadius = Input {{ Value = {n(radio)}, }},'])                  # v5.5.13: las pegatinas del neón tienen las esquinas algo redondeadas
     t += K._fondo('Caja', -60, 120, caja, 'Rec')
-    t += herramienta('Merge', 'Juntas', 40, 80, [enlace('Background', 'Caja'), enlace('Foreground', 'Template')])
+    fondo_caja = 'Caja'
+    if premium:
+        centro = f'0.5 + {em} * {n(dy_k * ASPECTO)}'
+        for k, (parte, color_parte, signo) in enumerate(zip(('Luz', 'Honda'), PAL.cinta_degradado(caja), ('+', '-'))):
+            y0 = 200 + 80 * k
+            t += K._mascara('RectangleMask', f'Rec{parte}', -220, y0, [
+                f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5, {K.lua(centro)} {signo} {K.lua(alto)} * 0.3)", }},',
+                f'Width = Input {{ Value = 0.3, Expression = "{K.lua(ancho)}", }},',
+                f'Height = Input {{ Value = 0.03, Expression = "{K.lua(alto)} * 0.5", }},',
+                'SoftEdge = Input { Value = 0.012, },'])
+            t += K._fondo(f'Caja{parte}', -60, y0, color_parte, f'Rec{parte}')
+            t += _dentro(f'Caja{parte}En', f'Caja{parte}', 'Caja', 40, y0)
+            t += herramienta('Merge', f'CajaCon{parte}', 120, y0, [enlace('Background', fondo_caja), enlace('Foreground', f'Caja{parte}En'),
+                                                                  'Blend = Input { Value = 0.85, },'])
+            fondo_caja = f'CajaCon{parte}'
+    t += herramienta('Merge', 'Juntas', 40, 80, [enlace('Background', fondo_caja), enlace('Foreground', 'Template')])
     # sombra suave de toda la cinta (el mismo recurso que las comps viejas: silueta negra, difuminada y un poco más abajo)
     t += herramienta('BrightnessContrast', 'Negro', 40, 160, [enlace('Input', 'Juntas'), 'Gain = Input { Value = 0, },', f'Alpha = Input {{ Value = {n(sombra_caja)}, }},'])
     t += herramienta('Blur', 'Difumina', 40, 200, [enlace('Input', 'Negro'), 'XBlurSize = Input { Value = 6, },', 'Filter = Input { Value = FuID { "Gaussian" }, },'])
@@ -456,7 +484,7 @@ def todos():
     grande, chica, serif = animacion_kit('revela', direccion=-1, giro=-4), animacion_kit('revela'), animacion_kit('revela', giro=4)
     for var in ('blanco', 'lima', 'amarillo', 'magenta', 'rojo'):
         c[f'k hero {var}'] = comp_texto(f'héroe {var}', 'HERO', HEROE, 0.30, GRADIENTES[var], esp=1.0, contorno=(0.007 if var == 'blanco' else 0.0), kit=grande,
-                                        trama=(var == 'blanco'), vivo=TINTE_BLANCO if var == 'blanco' else GRADIENTES[var][-1][1])
+                                        trama=(var == 'blanco'), vivo=TINTE_BLANCO if var == 'blanco' else GRADIENTES[var][-1][1], premium=True)
     c['k sup'] = comp_texto('sup', 'SUP', HEROE, 0.12, (1.0, 1.0, 1.0), esp=1.04, sombra=True, contorno=0.010, kit=chica)
     c['k serif blanco'] = comp_texto('serif', 'Serif', SERIF, 0.20, GRADIENTES['serif'], esp=1.0, contorno=0.012, kit=serif)
     for var, grad in COLOR_GUION.items():
@@ -465,10 +493,10 @@ def todos():
         c[f'k script yt {var}'] = comp_texto(f'pluma {var}', 'script', PLUMA, 0.22, COLOR_GUION[var], esp=1.0, contorno=0.0, kit=animacion_kit('pluma'))
     c['k label'] = comp_texto('etiqueta', 'LABEL', ETIQUETA, 0.07, (1.0, 1.0, 1.0), esp=1.218, sombra=True, contorno=0.008, kit=chica)   # versalitas espaciadas (kit: .42em = 1 + 0,42/1,93 en Text+, v5.45)
     for var, (caja, texto) in COLOR_CINTA.items():
-        c[f'k tape {var}'] = comp_cinta(f'cinta {var}', 'TAPE', HEROE, 0.10, caja, texto, kit=animacion_kit('pega'))
+        c[f'k tape {var}'] = comp_cinta(f'cinta {var}', 'TAPE', HEROE, 0.10, caja, texto, kit=animacion_kit('pega'), premium=True)
     for var in ('amarillo', 'magenta', 'blanco'):
         caja, texto = COLOR_CINTA[var]
-        c[f'k tapes {var}'] = comp_cinta(f'cinta serif {var}', 'Tape', SERIF, 0.16, caja, texto, alto_k=1.6, pad_k=0.4, kit=animacion_kit('pega'))
+        c[f'k tapes {var}'] = comp_cinta(f'cinta serif {var}', 'Tape', SERIF, 0.16, caja, texto, alto_k=1.6, pad_k=0.4, kit=animacion_kit('pega'), premium=True)
     for var, col in COLOR_ANILLO.items():
         c[f'k ring {var}'] = comp_anillo(f'anillo {var}', col)
     for var, col in COLOR_LINEA.items():

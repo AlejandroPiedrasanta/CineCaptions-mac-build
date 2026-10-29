@@ -7,7 +7,7 @@ Guarda («guardar») o aplica («cargar») la disposicion de pantalla de Resolve
 la vista expandida. En Studio lo hace el MCP; en Resolve FREE (sin MCP) el Puente la corre con dofile. La orden: vista_orden.json (sidecar .lua en Free).
 ]]
 
-local VERSION = "5.53 (vista)"
+local VERSION = "5.54 (vista)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -304,7 +304,12 @@ local function cargar_tabla(ruta)
         local ok, t = pcall(parsear_json, txt)
         return (ok and type(t) == "table") and t or nil, true
     end
-    local chunk = loadfile(ruta .. ".lua")
+    local chunk = loadfile and loadfile(ruta .. ".lua")
+    if not chunk and not loadfile and dofile then              -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
+        local ok, t = pcall(dofile, ruta .. ".lua")
+        if not ok then return nil, false end
+        return (type(t) == "table") and t or nil, true
+    end
     if not chunk then return nil, false end
     local ok, t = pcall(chunk)
     return (ok and type(t) == "table") and t or nil, true

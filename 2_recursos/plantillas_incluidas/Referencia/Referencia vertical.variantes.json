@@ -13,7 +13,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -27,7 +27,21 @@
     ],
     "tam": 0.257,
     "color": "#4C94F5",
-    "mayus": true
+    "mayus": true,
+    "degradado": [
+     [
+      0.0,
+      "#1D70E1"
+     ],
+     [
+      0.5,
+      "#4C94F5"
+     ],
+     [
+      1.0,
+      "#A6C9FA"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -39,11 +53,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "2": {
   "nombre": "Editorial rosa",
@@ -59,7 +74,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -73,7 +88,21 @@
     ],
     "tam": 0.28,
     "color": "#FF75B2",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#EB468F"
+     ],
+     [
+      0.5,
+      "#FF75B2"
+     ],
+     [
+      1.0,
+      "#FFBAD9"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -85,11 +114,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "3": {
   "nombre": "Amro Highlight naranja",
@@ -105,7 +135,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -131,11 +161,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": true
+  "amro": true,
+  "premium": true
  },
  "5": {
   "nombre": "Editorial azul",
@@ -151,7 +182,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -165,7 +196,21 @@
     ],
     "tam": 0.28,
     "color": "#5C9EF5",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#2D7BE1"
+     ],
+     [
+      0.5,
+      "#5C9EF5"
+     ],
+     [
+      1.0,
+      "#ADCFFA"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -177,11 +222,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "6": {
   "nombre": "Amro Fire",
@@ -197,7 +243,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -223,11 +269,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": true
+  "amro": true,
+  "premium": true
  },
  "7": {
   "nombre": "Amro Strike rojo",
@@ -243,7 +290,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -269,11 +316,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": true
+  "amro": true,
+  "premium": true
  },
  "8": {
   "nombre": "Amro Underline lima",
@@ -289,7 +337,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -315,11 +363,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": true
+  "amro": true,
+  "premium": true
  },
  "9": {
   "nombre": "Impacto cian · Screen",
@@ -335,7 +384,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -349,7 +398,21 @@
     ],
     "tam": 0.257,
     "color": "#4C94F5",
-    "mayus": true
+    "mayus": true,
+    "degradado": [
+     [
+      0.0,
+      "#1D70E1"
+     ],
+     [
+      0.5,
+      "#4C94F5"
+     ],
+     [
+      1.0,
+      "#A6C9FA"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -361,11 +424,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "10": {
   "nombre": "Editorial rosa · Screen",
@@ -381,7 +445,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -395,7 +459,21 @@
     ],
     "tam": 0.28,
     "color": "#FF75B2",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#EB468F"
+     ],
+     [
+      0.5,
+      "#FF75B2"
+     ],
+     [
+      1.0,
+      "#FFBAD9"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -407,11 +485,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "12": {
   "nombre": "Editorial azul · Screen",
@@ -427,7 +506,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -441,7 +520,21 @@
     ],
     "tam": 0.28,
     "color": "#5C9EF5",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#2D7BE1"
+     ],
+     [
+      0.5,
+      "#5C9EF5"
+     ],
+     [
+      1.0,
+      "#ADCFFA"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -453,11 +546,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "13": {
   "nombre": "Impacto cian · Sólido",
@@ -473,7 +567,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -487,7 +581,21 @@
     ],
     "tam": 0.257,
     "color": "#4C94F5",
-    "mayus": true
+    "mayus": true,
+    "degradado": [
+     [
+      0.0,
+      "#1D70E1"
+     ],
+     [
+      0.5,
+      "#4C94F5"
+     ],
+     [
+      1.0,
+      "#A6C9FA"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -499,11 +607,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "14": {
   "nombre": "Editorial rosa · Sólido",
@@ -519,7 +628,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -533,7 +642,21 @@
     ],
     "tam": 0.28,
     "color": "#FF75B2",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#EB468F"
+     ],
+     [
+      0.5,
+      "#FF75B2"
+     ],
+     [
+      1.0,
+      "#FFBAD9"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -545,11 +668,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "16": {
   "nombre": "Editorial azul · Sólido",
@@ -565,7 +689,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -579,7 +703,21 @@
     ],
     "tam": 0.28,
     "color": "#5C9EF5",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#2D7BE1"
+     ],
+     [
+      0.5,
+      "#5C9EF5"
+     ],
+     [
+      1.0,
+      "#ADCFFA"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -591,11 +729,12 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "17": {
   "nombre": "Count naranja",
@@ -611,7 +750,7 @@
      "Light"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -625,7 +764,21 @@
     ],
     "tam": 0.257,
     "color": "#FF9E33",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#EB7B00"
+     ],
+     [
+      0.5,
+      "#FF9E33"
+     ],
+     [
+      1.0,
+      "#FFCF99"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -637,10 +790,11 @@
      "Bold"
     ],
     "tam": 0.118,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  }
 }

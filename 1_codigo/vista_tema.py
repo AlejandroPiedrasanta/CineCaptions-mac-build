@@ -62,7 +62,16 @@ def planificar(palabras, roles, pack, estilo, idioma='es', fin_video=None, ancla
         cues = res['cues']
     else:
         return []
-    if tipo != 'kinetic':                     # (Kinetic no lleva emojis): el emoji elegido en Creativo para una palabra del bloque
+    try:
+        import edicion_pro
+        con_emojis = edicion_pro.emojis_del_tema(pack)
+    except Exception:
+        con_emojis = False
+    if not con_emojis:                        # v5.54: como GO, sin la Edición PRO y su opción «Emojis animados» no hay emojis
+        for c in cues:
+            for k in ('emoji', 'emoji_ini', 'emoji_fin', 'emoji_linea'):
+                c.pop(k, None)
+    elif tipo != 'kinetic':                   # (Kinetic no lleva emojis): el emoji elegido en Creativo para una palabra del bloque
         for c in cues:
             if c.get('emoji'):
                 continue

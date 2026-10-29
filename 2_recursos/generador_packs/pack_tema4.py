@@ -11,7 +11,7 @@ El pack «Tema4» replica TEMA 4.mp4 del usuario (v5.4.33):
     rasteriza al tamaño mayor y se REDUCE (nunca se amplía).
 
 Todos los clips van CENTRADOS en el cuadro (Tilt 0): la posición de cada palabra la pone el script (Pan/Tilt por palabra, estilo «guion»).
-Uso:  python pack_tema4.py [<carpeta de salida>]
+Uso:  python pack_tema4.py [<carpeta de salida>] [--retocar <.drb ya armado>]   (--retocar: solo el acabado, sin generar los macros otra vez)
 """
 import json
 import os
@@ -24,6 +24,11 @@ import generar_comps as g
 import construir_pack as C
 
 BLANCO = (1.0, 1.0, 1.0)
+# v5.54 «B · Premium» (la propuesta que eligió el usuario): la palabra clave en LIMA con el degradado de su color y su brillo (luxe_macro._premium);
+# lo demás al 90 % de blanco. Todas con la sombra ancha.
+LIMA = (0.7255, 0.8863, 0.3569)            # #B9E25B (el lima de edicion_pro_tema5.ACENTOS)
+PEQUENA = (0.9, 0.9, 0.9)
+PREMIUM = {'brillo_principal': (28.0, 1.0)}
 FUENTE = ('Inter 24pt', 'Bold')
 TAM_BASE = 0.14                  # «Size» base (≈ 90 px de letra a 1080 de ancho): el mayor tamaño que pide el planificador (la clave ≈ 84 px); el resto se reduce con el zoom
 ESPACIADO = 0.97                 # letras apretadas, como la referencia
@@ -36,14 +41,16 @@ def _rol(tam=TAM_BASE, color=BLANCO):
 
 
 def combinaciones():
-    c = {'nombre': 'Blanco', 'context': _rol(), 'main': _rol(), 'complement': _rol(), 'entrada': 'sube', 'luxe': True, 'mayus_real': True, 'anim': ANIM,
-         'barrido': {'modo': 'brillo', 'inicio': 0.04, 'largo': 0.30}, 'brillo': BRILLO}
+    c = {'nombre': 'Blanco', 'context': _rol(color=PEQUENA), 'main': _rol(color=LIMA), 'complement': _rol(color=PEQUENA), 'entrada': 'sube', 'luxe': True,
+         'mayus_real': True, 'anim': ANIM, 'barrido': {'modo': 'brillo', 'inicio': 0.04, 'largo': 0.30}, 'brillo': BRILLO, 'premium': PREMIUM}
     return [c]
 
 
-def construir(carpeta_salida, nombre='Tema4', contenedor=None, combos=None, guion='tema4'):
+def construir(carpeta_salida, nombre='Tema4', contenedor=None, combos=None, guion='tema4', retocar=None):
     """Genera <carpeta_salida>/<nombre> vertical.drb (+ .variantes.json, pack.json y .posiciones.json). Devuelve la ruta del .drb.
-    combos/guion: los de otro pack con este mismo armado (pack_tema5.py: Temas 5 y 6)."""
+    combos/guion: los de otro pack con este mismo armado (pack_tema5.py: Temas 5 y 6).
+    retocar (v5.54): la ruta de un .drb ya armado (el de fábrica): en vez de generar los macros otra vez, solo le pone el acabado de `combos`
+    (colores y «B · Premium», construir_pack.premium_sobre_drb)."""
     import plantillas
     incluidas = plantillas.carpeta_incluida()
     contenedor = contenedor or str(incluidas / 'Viral Superior' / 'Viral Superior vertical.drb')
@@ -54,8 +61,11 @@ def construir(carpeta_salida, nombre='Tema4', contenedor=None, combos=None, guio
     try:
         for k, c in enumerate(combos, 1):
             g.COMBINACIONES[k] = c
-        C.construir(contenedor, destino, f'{nombre} vertical', 'superior', tuple(range(1, len(combos) + 1)), y_por_comb='centro', nombres_nuevos=True,
-                    guia=True)       # guia=True: sin ajuste automático de ancho ni mayúsculas del macro (el tamaño lo manda el zoom de cada palabra)
+        if retocar:
+            C.premium_sobre_drb(retocar, destino, tuple(range(1, len(combos) + 1)))
+        else:
+            C.construir(contenedor, destino, f'{nombre} vertical', 'superior', tuple(range(1, len(combos) + 1)), y_por_comb='centro', nombres_nuevos=True,
+                        guia=True)   # guia=True: sin ajuste automático de ancho ni mayúsculas del macro (el tamaño lo manda el zoom de cada palabra)
     finally:
         for k, v in guardadas.items():
             if v is None:
@@ -75,5 +85,8 @@ def construir(carpeta_salida, nombre='Tema4', contenedor=None, combos=None, guio
 
 
 if __name__ == '__main__':
-    salida = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.expanduser('~'), 'DaVinciSubtitles', 'plantillas', 'Tema4')
-    print(construir(salida))
+    args = sys.argv[1:]
+    retocar = args.pop(args.index('--retocar') + 1) if '--retocar' in args else None
+    args = [a for a in args if a != '--retocar']
+    salida = args[0] if args else os.path.join(os.path.expanduser('~'), 'DaVinciSubtitles', 'plantillas', 'Tema4')
+    print(construir(salida, retocar=retocar))

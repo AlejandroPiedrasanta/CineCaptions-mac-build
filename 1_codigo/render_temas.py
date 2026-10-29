@@ -49,6 +49,14 @@ BISEL_V = {'': (0.05, 0.38, 0.86), 'rosa': (0.72, 0.05, 0.34), 'lima': (0.18, 0.
 CAJA_V = {'': (1.0, 0.04, 0.04), 'azul': (0.10, 0.45, 1.0), 'verde': (0.05, 0.85, 0.35), 'naranja': (1.0, 0.50, 0.05)}
 TINTE_V = {'': (1.0, 1.0, 1.0), 'amarillo': (1.0, 0.92, 0.25), 'cian': (0.30, 0.92, 1.0), 'rosa': (1.0, 0.55, 0.80)}
 INCLINACION_V = 0.21                   # ShearX de la negrita (cursiva sintética)
+# v5.54 «B · Premium» (= viral_elementos.FINA_COLOR / NEGRITA_DEGRADADO / NEGRITA_BRILLO): la fina al 90 %, la negrita blanca → azul hielo con brillo frío
+FINA_V = (0.9, 0.9, 0.9)
+NEGRITA_V = [(0.0, (0.812, 0.878, 1.0)), (0.6, (1.0, 1.0, 1.0)), (1.0, (1.0, 1.0, 1.0))]
+BRILLO_NEGRITA_V = (0.18, 0.38, (0.75, 0.85, 1.0))
+# v5.54 «B · Premium»: la sombra ancha de todos (luxe_macro.SOMBRA_PREMIUM: opacidad, bajada × em, desenfoque × em) y el brillo de la principal de
+# cada pack «guion» (radio × em, intensidad), comparado con el render de Resolve 21.1.2 (el glow1 de su macro es más suave que el primer cálculo)
+SOMBRA_ANCHA = (0.30, 0.10, 0.30)
+BRILLO_GUION = {'Referencia': (0.16, 0.32), 'Tema4': (0.16, 0.40), 'Tema5': (0.14, 0.30), 'Tema6': (0.14, 0.30)}
 
 
 # ------------------------------------------------------------------------------------------------------------------ utilidades
@@ -119,15 +127,22 @@ def _relleno(mascara, base_y, alto_tinta, color=None, degradado=None):
 
 
 def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, color_contorno=(0, 0, 0), sombra=None, halo=None, inclinacion=0.0,
-          caja=None):
+          caja=None, apretar=0.0, brillo=None, sombra2=None):
     """El sprite de una palabra. em = letra en px; esp = espaciado de letras (× avance); contorno = grosor (× em); sombra = (opacidad, bajada × em,
     desenfoque × em); halo = (radio × em, intensidad); inclinacion = cursiva sintética (× alto); caja = dict(color, pad_x, arriba, abajo (× em),
-    punteada, dy (× em, + = arriba)). Ancla: centro del avance en x, línea de base en y."""
+    punteada, dy (× em, + = arriba), degradado (clara, honda)). Ancla: centro del avance en x, línea de base en y.
+    v5.54: apretar = px que el Character Spacing de Fusion quita entre cada dos letras (guion_captions._apretado); brillo = (radio × em, intensidad
+    [, color]) del color de la letra (con degradado, el de su mitad); sombra2 = la sombra ancha («B · Premium»), como `sombra`."""
     em = float(em)
     f = _fuente(par, em)
     if f is None:
         return None
     avances = [f.getlength(ch) * esp for ch in txt]
+    if apretar and len(txt) > 1:
+        # el ancho que mide el planificador (guion_captions.ancho_px: la palabra entera, con su kerning, menos el Character Spacing): letra a letra
+        # sin kerning salía más ancha y las palabras se pegaban en la vista
+        k = (f.getlength(txt) * esp - apretar * (len(txt) - 1)) / max(1.0, sum(avances))
+        avances = [a * k for a in avances]
     total = sum(avances)
     asc, desc = f.getmetrics()
     pad = int(em * (0.9 + abs(inclinacion))) + 6
@@ -156,16 +171,32 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
             for y0 in np.arange(cy0, cy1, paso * 2):
                 for xx in (cx0, cx1 - grosor):
                     dc.rectangle([xx, y0, xx + grosor, min(cy1, y0 + paso)], fill=col)
+        elif caja.get('degradado'):                                  # v5.54: la pegatina clara arriba, su color en medio y más honda abajo
+            clara, honda = caja['degradado']
+            alto_c = max(1, int(round(cy1 - cy0)))
+            p = np.linspace(0.0, 1.0, alto_c, dtype=np.float32)
+            cols = np.array([_rgb255(clara), _rgb255(caja['color']), _rgb255(honda)], dtype=np.float32)
+            fila = np.stack([np.interp(p, [0.0, 0.5, 1.0], cols[:, k]) for k in range(3)], axis=1)
+            ancho_c = max(1, int(round(cx1 - cx0)))
+            banda = Image.fromarray(np.ascontiguousarray(np.broadcast_to(fila[:, None, :], (alto_c, ancho_c, 3)).astype(np.uint8)), 'RGB').convert('RGBA')
+            img.alpha_composite(banda, (int(round(cx0)), int(round(cy0))))
         else:
             dc.rectangle([cx0, cy0, cx1, cy1], fill=col)
-    if sombra:
-        op, baja, blur = sombra
-        s = masc.filter(ImageFilter.GaussianBlur(max(1.0, blur * em))).point(lambda v: int(v * op))
+    for sm in (sombra2, sombra):
+        if not sm:
+            continue
+        op, baja, blur = sm
+        s = masc.filter(ImageFilter.GaussianBlur(max(1.0, blur * em))).point(lambda v, op=op: int(v * op))
         capa_s = Image.new('RGBA', (W, H), (0, 0, 0, 0))
         capa_s.putalpha(s)
         desplazada = Image.new('RGBA', (W, H), (0, 0, 0, 0))
         desplazada.alpha_composite(capa_s, (0, int(round(baja * em))))
         img.alpha_composite(desplazada)
+    if brillo:
+        radio, fuerza = brillo[:2]
+        color_b = brillo[2] if len(brillo) > 2 else (min(degradado, key=lambda pc: abs(float(pc[0]) - 0.5))[1] if degradado else color)
+        b_m = masc.filter(ImageFilter.GaussianBlur(max(1.5, radio * em))).point(lambda v: int(min(255, v * fuerza * 1.6)))
+        img.alpha_composite(_relleno(b_m, base, cap, color=color_b))
     if halo:
         radio, fuerza = halo
         h_m = masc.filter(ImageFilter.GaussianBlur(max(1.5, radio * em))).point(lambda v: int(v * fuerza))
@@ -264,12 +295,20 @@ def _elemento_guion(estilo, cue, r, s):
                 em = 100.0 * k_amro * f100.getlength(str(r.get('texto') or '')) * float(r.get('zoom') or 1.0) / f100.getlength(txt)
             em = min(em, 100.0 * 0.92 * 1080.0 / (f100.getlength(txt) * esp))     # nunca más ancha que el cuadro
     color = d.get('color') or '#FFFFFF'
+    # v5.54 «B · Premium» (lo que diga el .variantes.json del pack): la principal con el degradado de su color y su brillo; todas con la sombra ancha
+    premium = bool((roles.get('main') or {}).get('degradado'))
+    degradado = [(float(p), c) for p, c in d['degradado']] if (rol == 'main' and d.get('degradado')) else None
+    brillo = BRILLO_GUION.get(pack) if degradado else None
+    extra = dict(degradado=degradado, brillo=brillo, sombra2=SOMBRA_ANCHA if premium else None)
     if pack == 'Tema4':
-        sp = texto(txt, par, em * s, color=color, esp=esp, halo=(0.14, 0.7))            # el de siempre: blanco con halo suave
+        sp = texto(txt, par, em * s, color=color, esp=esp, halo=(0.14, 0.7), **extra)            # el de siempre: blanco con halo suave
     elif dis:
-        sp = texto(txt, par, em * s, color=color, esp=esp, sombra=(0.6, 0.04, 0.22), halo=(0.10, 0.25))   # Temas 5/6: la sombra de Remotion y el halo suave del pack
+        sp = texto(txt, par, em * s, color=color, esp=esp, sombra=(0.6, 0.04, 0.22), halo=(0.10, 0.25), **extra)   # Temas 5/6: la sombra de Remotion y el halo suave del pack
     else:
-        sp = texto(txt, par, em * s, color=color, esp=esp, sombra=(0.75, 0.05, 0.08))  # Tema 2: sombra firme
+        # Tema 2 (sombra firme): las letras tan juntas como las deja el Character Spacing del pack en Fusion (lo que mide el planificador,
+        # guion_captions.ancho_px). v5.54: sin eso las palabras salían pegadas en la vista («delreconocido»), no en Resolve.
+        apretar = (1.0 - GC.AFINADO['espaciado']) * GC.AFINADO['k_espaciado'] * em * s
+        sp = texto(txt, par, em * s, color=color, esp=esp, sombra=(0.75, 0.05, 0.08), apretar=apretar, **extra)
     return sp, em, _centro(par)
 
 
@@ -302,11 +341,14 @@ def _elemento_kinetic(r, s):
         alto_k, pad_k = e.get('caja', (1.55, 0.5))
         cap, c = KC.CAP.get(par[0], 0.7), _centro(par)
         # la caja (kinetic_elementos.comp_cinta): alto = alto_k × mayúsculas, centrada 0,03 em por encima del centro del Text+, que está c em sobre la base
-        caja = dict(color=caja_c, pad_x=cap * pad_k, arriba=c + 0.03 + cap * alto_k / 2.0, abajo=cap * alto_k / 2.0 - c - 0.03)
+        caja = dict(color=caja_c, pad_x=cap * pad_k, arriba=c + 0.03 + cap * alto_k / 2.0, abajo=cap * alto_k / 2.0 - c - 0.03,
+                    degradado=PAL_K.cinta_degradado(caja_c))                    # v5.54 «B · Premium»: la pegatina con el degradado de su color
         sp = texto(txt, par, em * s, color=texto_c, esp=e.get('esp', 1.0), caja=caja, sombra=(0.5, 0.03, 0.05))
     elif k.startswith('k hero'):
-        sp = texto(txt, par, em * s, degradado=GRADIENTES_K.get(var, GRADIENTES_K['blanco']), esp=e.get('esp', 1.0),
-                   contorno=0.02 if var == 'blanco' else 0.0, sombra=(0.8, 0.03, 0.05), halo=None)
+        # v5.54 «B · Premium» (= kinetic_elementos.comp_texto premium): el reflejo claro de arriba y el brillo de su color
+        grad = GRADIENTES_K.get(var, GRADIENTES_K['blanco'])
+        sp = texto(txt, par, em * s, degradado=PAL_K.con_reflejo(grad), esp=e.get('esp', 1.0),
+                   contorno=0.02 if var == 'blanco' else 0.0, sombra=(0.8, 0.03, 0.05), halo=None, brillo=(0.13, PAL_K.BRILLO_HEROE[0], PAL_K.color_medio(grad)))
     elif k.startswith('k serif'):
         sp = texto(txt, par, em * s, degradado=GRADIENTES_K['serif'], contorno=0.03, sombra=(0.8, 0.03, 0.05))
     elif k.startswith('k script'):
@@ -325,7 +367,7 @@ def _elemento_viral(r, s):
     em = float(r.get('size') or 0.05) * VC.K_PX
     txt = str(r.get('texto') or '')
     if base == 'v negrita':
-        sp = texto(txt, par, em * s, color=(1, 1, 1), esp=esp, inclinacion=INCLINACION_V, sombra=(0.5, 0.03, 0.06))
+        sp = texto(txt, par, em * s, degradado=NEGRITA_V, esp=esp, inclinacion=INCLINACION_V, sombra=(0.5, 0.03, 0.06), brillo=BRILLO_NEGRITA_V)
     elif base == 'v shatter':
         sp = texto(txt, par, em * s, degradado=SHATTER_V.get(var, SHATTER_V['']), esp=esp, contorno=0.025, color_contorno=BISEL_V.get(var, BISEL_V['']),
                    halo=(0.12, 0.45), sombra=(0.5, 0.03, 0.06))
@@ -336,9 +378,31 @@ def _elemento_viral(r, s):
     elif base == 'v drag':
         tinte = TINTE_V.get(var, TINTE_V[''])
         sp = texto(txt, par, em * s, color=tinte, esp=esp, sombra=(0.5, 0.03, 0.06))
-    else:
-        sp = texto(txt, par, em * s, color=(1, 1, 1), esp=esp, sombra=(0.5, 0.03, 0.06))
+    else:                                                          # v fina (v5.54: al 90 %)
+        sp = texto(txt, par, em * s, color=FINA_V if base == 'v fina' else (1, 1, 1), esp=esp, sombra=(0.5, 0.03, 0.06))
     return sp, em, _centro(par)
+
+
+# v5.54: en Resolve cada clip del Tema 2 lleva su propio margen (guion_captions.distribuir solo deja 0,2 espacios entre tramos: «los clips ya llevan
+# su propio margen»). Sin él, en la vista los tramos de una línea («con las bandas» + «Glass») salían pegados. MEDIDO en el render del slider (hecho
+# con 0,55 espacios): el hueco entre dos tramos era ~0,22 em mayor que el que deja el planificador.
+MARGEN_CLIP_EM = 0.22
+
+
+def _margenes_guion(estilo, cue):
+    """{índice del run: desplazamiento en x (fracción del ancho)} que abre los tramos de cada línea pequeña del Tema 2 como en Resolve (la línea sigue centrada)."""
+    if (estilo or {}).get('pack') != 'Referencia':
+        return {}
+    lineas = {}
+    for k, r in enumerate(cue.get('runs') or []):
+        if isinstance(r, dict) and r.get('rol') != 'main' and str(r.get('texto') or '').strip():
+            lineas.setdefault(round(float(r.get('y', 0.5)), 3), []).append((float(r.get('x', 0.5)), k, float(r.get('zoom') or 1.0)))
+    mover = {}
+    for runs in lineas.values():
+        runs.sort()
+        for i, (_x, k, z) in enumerate(runs):
+            mover[k] = (i - (len(runs) - 1) / 2.0) * MARGEN_CLIP_EM * GC.TAM_PEQUENA * K_PX * z / 1080.0
+    return mover
 
 
 def capas_de_cue(estilo, cue, s, dx, dy):
@@ -347,7 +411,8 @@ def capas_de_cue(estilo, cue, s, dx, dy):
     s, dx, dy = float(s), float(dx), float(dy)                 # (un número de numpy rompe los filtros de Pillow)
     ini, fin = float(cue.get('start') or 0.0), float(cue.get('end') or 0.0)
     capas = []
-    for r in cue.get('runs') or []:
+    mover = _margenes_guion(estilo, cue) if tipo == 'guion' else {}
+    for k_run, r in enumerate(cue.get('runs') or []):
         if not isinstance(r, dict):
             continue
         try:
@@ -366,7 +431,7 @@ def capas_de_cue(estilo, cue, s, dx, dy):
         sp.girar(float(r.get('rot') or 0.0) if tipo == 'kinetic' else 0.0)
         img = sp.img
         W, H = img.size
-        cx = dx + float(r.get('x', 0.5)) * 1080.0 * s
+        cx = dx + (float(r.get('x', 0.5)) + mover.get(k_run, 0.0)) * 1080.0 * s
         cy = dy + float(r.get('y', 0.5)) * 1920.0 * s + c * em * s          # el ancla del sprite es la línea de base (o el centro, en los trazos)
         rgb, a = _a_rgba(img, img.getchannel('A'))
         t0 = max(ini, float(r.get('t', ini)))

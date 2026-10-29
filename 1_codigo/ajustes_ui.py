@@ -495,6 +495,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.54', [
+        'Resolve Free: GO ya no se detiene con «El Puente murió a mitad» en los Free que no dejan a sus scripts leer archivos como antes.',
+        'Captions más premium en los 6 temas: la palabra principal con el degradado y el brillo de su color, las pequeñas más finas y una sombra que se lee sobre cualquier fondo.',
+        'Los emojis salen solo con la Edición PRO y su opción «Emojis animados», en todos los temas.',
+        'Resolve Studio: los subtítulos de los Temas 2, 4, 5 y 6 se colocan más rápido (el Tema 2, de 11 a 7 segundos).',
+        'Registro más claro: si a un motor de IA le faltan librerías al abrir CineCaptions, ahora lo dice así y explica cómo repararlo.',
+    ]),
     ('5.53', [
         'Las animaciones de la Edición PRO y del Tema 1 se crean unas 3 veces más rápido (los personajes 3D, hasta 7): ahora usan la tarjeta gráfica.',
         'Repetir GO con un video ya transcrito vuelve a aprovechar el resultado de la IA: unos 10 segundos en vez de 2-3 minutos.',

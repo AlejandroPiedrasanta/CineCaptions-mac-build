@@ -10750,6 +10750,23 @@ class SubtitleApp(QWidget):
             return min(5, max(2, int(self.basico_var.get())))
         except (ValueError, AttributeError):
             return 2
+    def _emojis_permitidos(self, pack_nombre, *listas):
+        """v5.54 (pedido: «los emojis solo se activan con la Edición PRO si activo la función de emoji»): ¿GO pone emojis con este tema (None = el
+        de Inicio)? Solo con la Edición PRO en juego y su opción «Emojis animados». Si no, quita de `listas` (bloques, cues) el emoji que ya dejó
+        el planificador o Creativo, y lo dice en el Registro."""
+        try:
+            import edicion_pro
+            if edicion_pro.emojis_del_tema(pack_nombre):
+                return True
+        except Exception:
+            registro.excepcion(origen='emojis solo con la PRO')
+        for lista in listas:
+            for b_e in lista or []:
+                for k_e in ('emoji', 'emoji_ini', 'emoji_fin', 'emoji_linea'):
+                    b_e.pop(k_e, None)
+        if listas:
+            registro.info(tr('Sin emojis: salen con la Edición PRO y su opción «Emojis animados».'), 'GO')
+        return False
     def _preparar_emojis(self, bloques, palabras, roles=None):
         """Los emojis de las palabras clave (v3.3.0): los pasa de las
         palabras a sus bloques (cue['emoji'] + cue['emoji_linea']), mide el
@@ -13346,7 +13363,7 @@ class SubtitleApp(QWidget):
                 if con_sfx:
                     pista_sfx = self._preparar_sfx(bloques)
                 self.msg_queue.put(('gen_fase', 'emojis'))
-                pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales)
+                pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales) if self._emojis_permitidos(None, bloques) else {}
                 if con_sfx:
                     pista_sfx = self._sfx_de_emojis(bloques, pista_sfx)
                 pista_composicion = self._pista_composicion(bloques)
@@ -13628,16 +13645,9 @@ class SubtitleApp(QWidget):
                 self.msg_queue.put(('status', tr('Eligiendo los efectos de sonido...')))
                 pista_sfx = self._preparar_sfx(bloques, self._instantes_main(bloques, cues))
             self.msg_queue.put(('gen_fase', 'emojis'))
-            import edicion_pro
-            if edicion_pro.emojis_del_tema(pack.nombre):
+            if self._emojis_permitidos(pack.nombre, bloques, cues):     # (el planificador ya deja el emoji en cada bloque: sin la PRO, fuera también de ahí)
                 pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales)
                 self._emojis_con_la_palabra_grande(bloques)
-            else:
-                # v5.49 (pedido): el Tema 2 solo pone emojis con la Edición PRO encendida y su opción «Emojis animados»
-                for b_e in list(bloques) + list(cues):       # (el planificador ya deja el emoji en cada bloque: fuera también de ahí)
-                    for k_e in ('emoji', 'emoji_ini', 'emoji_fin', 'emoji_linea'):
-                        b_e.pop(k_e, None)
-                registro.info(tr('Tema 2: sin emojis (salen con la Edición PRO y su opción «Emojis animados»).'), 'GO')
             if con_sfx:
                 pista_sfx = self._sfx_de_emojis(bloques, pista_sfx)
         except Exception:
@@ -13719,7 +13729,7 @@ class SubtitleApp(QWidget):
             if con_sfx:
                 self.msg_queue.put(('status', tr('Eligiendo los efectos de sonido...')))
                 pista_sfx = self._preparar_sfx(bloques, self._instantes_main(bloques, cues))
-            if es_viral:                                          # VIRAL sí lleva emojis (Kinetic no): con la palabra clave, y su sonido, como el estilo «guion»
+            if es_viral and self._emojis_permitidos(pack.nombre, bloques, cues):   # VIRAL sí lleva emojis (Kinetic no), con la PRO: con la palabra clave y su sonido
                 self.msg_queue.put(('gen_fase', 'emojis'))
                 pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales)
                 self._emojis_con_la_palabra_grande(bloques)
@@ -13834,7 +13844,7 @@ class SubtitleApp(QWidget):
                 pista_sfx = self._preparar_sfx(bloques, self._instantes_main(bloques, cues_orden))
             self.msg_queue.put(('gen_fase', 'emojis'))
             con_emoji = [b for b, (m, _c) in zip(bloques, orden) if m != 'kinetic']
-            if con_emoji:
+            if con_emoji and self._emojis_permitidos(pack.nombre, bloques, cues_orden):
                 pista_emojis = self._preparar_emojis(con_emoji, palabras_finales, roles_finales)
                 self._emojis_con_la_palabra_grande(con_emoji)
             if con_sfx:
@@ -14144,7 +14154,7 @@ class SubtitleApp(QWidget):
                             palabras, base_lang, progreso=lambda f: self.msg_queue.put(('progress', f)),
                             estado=lambda t: self.msg_queue.put(('status', t)),
                             tamanos=getattr(self, 'tamanos_grupo', None), peso_conector=getattr(self, 'peso_conectores', None),
-                            con_emojis=self._go_emojis())           # auditoría v5.11: el chip «Emojis: no» de Inicio se respetaba solo de palabra
+                            con_emojis=self._go_emojis() and self._emojis_permitidos(None))   # auditoría v5.11 · v5.54: sin la PRO y su opción de emojis, la IA no los elige
                         self._resumen_ia = resumen_ia
                         self._words_corregidas = texto_corregido(words, palabras_finales)
                         roles_guardar = roles_finales
@@ -14198,7 +14208,7 @@ class SubtitleApp(QWidget):
                             self.msg_queue.put(('status', tr('Eligiendo los efectos de sonido...')))
                             pista_sfx = self._preparar_sfx(bloques)
                         self.msg_queue.put(('gen_fase', 'emojis'))
-                        pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales)
+                        pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales) if self._emojis_permitidos(None, bloques) else {}
                         if con_sfx:
                             pista_sfx = self._sfx_de_emojis(bloques, pista_sfx)
                         pista_composicion = self._pista_composicion(bloques)

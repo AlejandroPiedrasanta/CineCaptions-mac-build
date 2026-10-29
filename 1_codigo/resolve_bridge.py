@@ -828,7 +828,7 @@ def limpiar_resultado_viejo():
             ruta.rename(destino)
         except OSError:
             pass
-VERSION_PUENTE_ESPERADA = '1.0.40'
+VERSION_PUENTE_ESPERADA = '1.0.41'
 VERSION_PUENTE_MINIMA = '1.0.21'
 # Desde que version del Puente existe cada accion: un residente mas viejo (el que quedo corriendo en Resolve tras actualizar el programa) responde «Accion desconocida».
 VERSION_DE_ACCION = {'importar_estilos': (1, 0, 25), 'sfx_marcadores': (1, 0, 31), 'sfx_reemplazar': (1, 0, 32), 'efectos': (1, 0, 38), 'armar_video': (1, 0, 38), 'pausas': (1, 0, 38), 'vista': (1, 0, 39), 'edicion_pro': (1, 0, 40)}

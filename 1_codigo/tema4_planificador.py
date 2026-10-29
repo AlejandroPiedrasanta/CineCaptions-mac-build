@@ -29,10 +29,11 @@ LINEA1_Y = 0.576                          # línea de base de la primera línea 
 EM_M_MAX = 58.0                           # tamaño de letra máximo de una palabra normal (px a 1080)
 EM_MIN = 38.0                             # por debajo de esto una línea se lee mal: se prefiere otro corte
 EM_BASE = 0.14 * GC.K_PX                  # el «Size» del pack × 640 px: lo que mide la letra a zoom 1
-F_CLAVE, F_NORMAL, F_PEQ = 1.4, 1.0, 0.62  # tamaño relativo de cada clase
+F_CLAVE, F_NORMAL, F_PEQ = 1.4, 1.0, 0.70  # tamaño relativo de cada clase (v5.54 «B · Premium»: las conectoras 0,62 → 0,70, nunca diminutas)
 ESPACIADO = 0.95                          # CharacterSpacing del pack
 HUECO = 0.28                              # hueco entre palabras (× la letra normal de la línea). v5.5.8: era 0,12; MEDIDO en el render a 1080 de Resolve: 7 px con letra de 58 px y se leían pegadas («Numberone», «stopoversizing»)
 INTERLINEA = 0.92                         # de línea de base a línea de base (× la letra mayor de las dos líneas)
+AIRE_T4 = 0.10                            # v5.54 «B · Premium»: aire mínimo entre las letras de dos líneas (× la letra normal): la «g» de «Bridget» tocaba la «l» de «welcome»
 CENTRO_CAP = 0.364                        # el centro del texto está medio «alto de mayúscula» por encima de la línea de base
 MAX_PESO = 5.5                            # un bloque pesa lo que sus palabras: normal 1, conectora 0,5 (la referencia parte «paquete de redes sociales más | vendido»)
 MAX_PALABRAS = 7
@@ -58,7 +59,7 @@ DISENOS = {
 HUECO_SKILL = 0.27                        # hueco entre palabras (× la letra de la palabra que sigue), como Subtitulo.tsx
 MAX_ANCHO_SKILL = 0.86                    # la línea más ancha cabe en el 86 % del ancho
 LETRAS_SANS = 34                          # una línea de la letra pequeña lleva ~34 letras
-AIRE_SKILL = 0.12                         # aire mínimo entre las letras de dos líneas (× la letra pequeña)
+AIRE_SKILL = 0.30                         # aire mínimo entre las letras de dos líneas (× la letra pequeña). v5.54 «B · Premium»: 0,12 → 0,30 (en el Tema 6 «editor» tocaba la «g» de «beginner»)
 # Lo que mide de verdad cada tipografía en el render de Resolve frente a Pillow: 'em' (la letra que pinta Fusion por unidad de «Size» × K_PX) y
 # 'ancho' (lo que queda: ancho de la palabra a esa letra). Fusion escala cada tipografía por su alto de línea (ascendente + descendente de hhea):
 # em ≈ 1,30 / (asc + desc). MEDIDO (v5.5.8, render a 1080 de Resolve Studio): Instrument Serif (1,30) sale con el ancho de Pillow (tinta = 0,955 del
@@ -211,12 +212,18 @@ def _disponer(palabras):
     sal = []
     base = LINEA1_Y * ALTO
     em_prev = None
+    tinta_prev = None
     for n_l, linea in enumerate(lineas):
         em_m = _em_linea(linea)
         ems = [em_m * {'L': F_CLAVE, 'M': F_NORMAL, 'S': F_PEQ}[c] for _t, c in linea]
         em_l = max(ems)
+        tintas = [_tinta(texto, FUENTE) for texto, _c in linea]
         if n_l:
             base += INTERLINEA * max(em_l, em_prev)
+            pisa = tinta_prev + AIRE_T4 * em_m - (base + min(t[0] * em for t, em in zip(tintas, ems)))
+            if pisa > 0:                                            # (solo se abre cuando una descendente cae sobre una ascendente)
+                base += pisa
+        tinta_prev = base + max(t[1] * em for t, em in zip(tintas, ems))
         anchos = [_ancho_em(texto) * em for (texto, _c), em in zip(linea, ems)]
         huecos = [HUECO * em_m * (0.8 if linea[i + 1][1] == 'S' else 1.0) for i in range(len(linea) - 1)]
         total = sum(anchos) + sum(huecos)

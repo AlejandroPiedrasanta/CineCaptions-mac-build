@@ -43,6 +43,34 @@ GUION = {
     'cian': [(0.0, (0.15, 0.62, 1.0)), (1.0, (0.35, 0.95, 1.0))],
     'rosa': [(0.0, (0.95, 0.30, 0.75)), (1.0, (1.0, 0.55, 0.85))],
 }
+# v5.54 «B · Premium» (la propuesta que eligió el usuario para los 6 temas): la grande lleva un REFLEJO claro en lo alto de la letra y un brillo de su
+# color alrededor; la pegatina, un degradado de su color (más clara arriba, más honda abajo). El pack y la vista leen estas mismas funciones.
+REFLEJO = (0.86, 0.55)           # el degradado de siempre hasta el 86 % de la letra y, arriba del todo, su color de arriba un 55 % hacia el blanco
+BRILLO_HEROE = (0.42, 30)        # (opacidad, difuminado en px de Text+) del brillo del color de la grande
+
+
+def con_reflejo(paradas):
+    """Las paradas de un degradado de grande con el reflejo de arriba."""
+    hasta, k = REFLEJO
+    arriba = paradas[-1][1]
+    return [(round(p * hasta, 4), c) for p, c in paradas] + [(1.0, tuple(round(v + (1.0 - v) * k, 4) for v in arriba))]
+
+
+def color_medio(paradas):
+    """El color del degradado más cercano a la mitad de la letra (el del brillo)."""
+    return min(paradas, key=lambda pc: abs(pc[0] - 0.5))[1]
+
+
+def cinta_degradado(caja):
+    """(clara, honda) de una pegatina: arriba su color un 40 % hacia el blanco; abajo un poco más hondo y cálido (un blanco baja a gris frío)."""
+    clara = tuple(round(v + (1.0 - v) * 0.4, 4) for v in caja)
+    if max(caja) - min(caja) < 0.08:
+        honda = (round(caja[0] * 0.9, 4), round(caja[1] * 0.9, 4), round(caja[2] * 0.93, 4))
+    else:
+        honda = (round(caja[0] * 0.95, 4), round(caja[1] * 0.88, 4), round(caja[2] * 0.85, 4))
+    return clara, honda
+
+
 ANILLO = {'lima': LIMA, 'magenta': MAGENTA, 'naranja': (1.0, 0.45, 0.15), 'amarillo': (1.0, 0.92, 0.10), 'rosa': (0.95, 0.30, 0.65)}
 LINEA = {'lima': LIMA, 'magenta': MAGENTA, 'amarillo': (1.0, 0.90, 0.05)}
 

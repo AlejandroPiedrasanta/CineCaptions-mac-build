@@ -3996,7 +3996,12 @@
     "Tu clave de licencia (CC-…) aparece al pagar en cinecaptions.shop y te llega por correo.": "Your license key (CC-…) appears when you pay at cinecaptions.shop and is also emailed to you.",
     "Licencias de cinecaptions.shop: pega tu clave CC- y se activa al momento, en hasta 2 computadoras. Desactivar este equipo lo libera enseguida para usarla en otra.": "cinecaptions.shop licenses: paste your CC- key and it activates instantly, on up to 2 computers. Deactivating this computer frees it right away so you can use the license on another one.",
     "Tu clave de cinecaptions.shop. Desactiva este equipo para activarla en otra computadora.": "Your cinecaptions.shop key. Deactivate this computer to activate it on another one.",
-    "Ajustes más simples: GO siempre arma el timeline en vertical, reproduce al terminar y deja Resolve con tu vista.": "Simpler Settings: GO always builds the timeline vertically, plays it when it finishes and leaves Resolve with your layout."
+    "Ajustes más simples: GO siempre arma el timeline en vertical, reproduce al terminar y deja Resolve con tu vista.": "Simpler Settings: GO always builds the timeline vertically, plays it when it finishes and leaves Resolve with your layout.",
+    "A un motor de IA le faltan librerías": "An AI engine is missing libraries",
+    "Al abrirse, CineCaptions comprobó sus motores de IA y a uno le faltan librerías o no tiene la versión que necesita: una instalación o una actualización quedó a medias. Todavía no se ha transcrito nada; al pulsar GO la voz prueba con el otro motor.": "On startup, CineCaptions checked its AI engines and one of them is missing libraries or doesn’t have the version it needs: an installation or an update was left unfinished. Nothing has been transcribed yet; when you press GO, the voice tries the other engine.",
+    "Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).": "If it’s the AI engine (Qwen3): in Settings › General › Speech engine, press “Repair the engine” (it downloads what’s missing; needs internet).",
+    "Si es el motor auxiliar (Whisper): reinstala CineCaptions con el último instalador, que pone al día sus librerías (se conservan tus ajustes).": "If it’s the auxiliary engine (Whisper): reinstall CineCaptions with the latest installer, which updates its libraries (your settings are kept).",
+    "Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.": "If the antivirus or Windows Smart App Control blocks the download, allow CineCaptions and try again."
   },
   "Suave": "Subtle",
   "Media": "Medium",

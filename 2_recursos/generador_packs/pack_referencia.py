@@ -31,6 +31,7 @@ import generar_comps as g
 import construir_pack as C
 
 BLANCO = (1.0, 1.0, 1.0)
+PEQUENA = (0.9, 0.9, 0.9)            # v5.54 «B · Premium»: las líneas pequeñas al 90 % de blanco (la principal resalta más)
 AZUL = (0.36, 0.62, 0.96)
 ROSA = (1.0, 0.46, 0.70)
 CIAN = (0.30, 0.58, 0.96)
@@ -46,8 +47,10 @@ def _rol(fuente, tam, color=BLANCO, mayus=False, esp=ESPACIADO, retardo=0):
 
 # tamaños iniciales (fracción del «Size» de Fusion); se afinan midiendo el render contra la referencia (ver AFINADO en el JSON del pack)
 TAM_FINA, TAM_NEGRITA = 0.118, 0.118          # ~75 px a 1080 de ancho (medido en la referencia)
-FINA = _rol(('Poppins', 'Light'), TAM_FINA)
-NEGRITA = _rol(('Poppins', 'Bold'), TAM_NEGRITA)
+FINA = _rol(('Poppins', 'Light'), TAM_FINA, PEQUENA)
+NEGRITA = _rol(('Poppins', 'Bold'), TAM_NEGRITA, PEQUENA)
+# v5.54 «B · Premium» (luxe_macro.degradado_premium): la principal Luxe con el degradado de su color y un brillo algo mayor que el de fábrica (17,3 · 0,48)
+PREMIUM = {'brillo_principal': (22.0, 0.70)}
 
 AMRO = 'Amro principales.drb'
 # entrada y salida del macro en segundos. v5.48: 0,14/0,10 -> 0,28/0,22, el deslizado con desenfoque de las referencias nuevas del usuario (ya no hay
@@ -71,7 +74,7 @@ VARIANTES_BARRIDO = ((1, (1.00, 0.86, 0.50), (1.00, 1.00, 1.00)),     # Impacto 
 def _combo(nombre, main, amro=None, entrada='pop', barrido=None):
     # deslizar: las líneas pequeñas (Luxe Slide, Poppins Light / Bold) entran y salen hacia la derecha, sin «Mirror Out» (v5.48, pedido del usuario)
     c = {'nombre': nombre, 'context': dict(FINA), 'main': main, 'complement': dict(NEGRITA), 'entrada': entrada, 'luxe': True, 'mayus_real': True,
-         'anim': ANIM, 'deslizar': 'derecha'}
+         'anim': ANIM, 'deslizar': 'derecha', 'premium': PREMIUM}
     if barrido is not None and not amro:
         c['barrido'] = barrido
     if amro:

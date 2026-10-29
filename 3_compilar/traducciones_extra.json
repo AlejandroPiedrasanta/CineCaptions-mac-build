@@ -9000,5 +9000,40 @@
   "fr": "La page SON applique seule chaque changement dans Resolve et vous dit si tout est à jour. Elle est activée.",
   "de": "Die Seite SOUND überträgt jede Änderung selbst nach Resolve und zeigt, ob alles aktuell ist. Sie ist eingeschaltet.",
   "it": "La pagina SUONO applica da sola ogni modifica in Resolve e ti dice se è tutto aggiornato. È attiva."
+ },
+ "A un motor de IA le faltan librerías": {
+  "en": "An AI engine is missing libraries",
+  "pt": "Faltam bibliotecas a um motor de IA",
+  "fr": "Il manque des bibliothèques à un moteur d’IA",
+  "de": "Einer KI-Engine fehlen Bibliotheken",
+  "it": "A un motore di IA mancano delle librerie"
+ },
+ "Al abrirse, CineCaptions comprobó sus motores de IA y a uno le faltan librerías o no tiene la versión que necesita: una instalación o una actualización quedó a medias. Todavía no se ha transcrito nada; al pulsar GO la voz prueba con el otro motor.": {
+  "en": "On startup, CineCaptions checked its AI engines and one of them is missing libraries or doesn’t have the version it needs: an installation or an update was left unfinished. Nothing has been transcribed yet; when you press GO, the voice tries the other engine.",
+  "pt": "Ao abrir, o CineCaptions verificou os seus motores de IA e a um deles faltam bibliotecas ou não tem a versão de que precisa: uma instalação ou uma atualização ficou pela metade. Ainda não foi transcrito nada; ao carregar em GO, a voz tenta o outro motor.",
+  "fr": "Au démarrage, CineCaptions a vérifié ses moteurs d’IA et il manque des bibliothèques à l’un d’eux, ou il n’a pas la version nécessaire : une installation ou une mise à jour est restée inachevée. Rien n’a encore été transcrit ; quand vous appuyez sur GO, la voix essaie l’autre moteur.",
+  "de": "Beim Start hat CineCaptions seine KI-Engines geprüft: Einer fehlen Bibliotheken oder sie hat nicht die nötige Version – eine Installation oder ein Update wurde nicht abgeschlossen. Es wurde noch nichts transkribiert; wenn du GO drückst, versucht die Sprache es mit der anderen Engine.",
+  "it": "All’avvio, CineCaptions ha controllato i suoi motori di IA e a uno mancano delle librerie o non ha la versione necessaria: un’installazione o un aggiornamento è rimasto a metà. Non è stato ancora trascritto nulla; premendo GO la voce prova con l’altro motore."
+ },
+ "Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).": {
+  "en": "If it’s the AI engine (Qwen3): in Settings › General › Speech engine, press “Repair the engine” (it downloads what’s missing; needs internet).",
+  "pt": "Se for o motor de IA (Qwen3): em Ajustes › Geral › Motor de voz, carregue em «Reparar o motor» (descarrega o que falta; precisa de internet).",
+  "fr": "S’il s’agit du moteur d’IA (Qwen3) : dans Réglages › Général › Moteur vocal, appuyez sur « Réparer le moteur » (il télécharge ce qui manque ; Internet requis).",
+  "de": "Wenn es die KI-Engine (Qwen3) ist: Unter Einstellungen › Allgemein › Sprach-Engine auf „Engine reparieren“ drücken (lädt herunter, was fehlt; braucht Internet).",
+  "it": "Se è il motore di IA (Qwen3): in Impostazioni › Generale › Motore vocale premi «Ripara il motore» (scarica ciò che manca; serve internet)."
+ },
+ "Si es el motor auxiliar (Whisper): reinstala CineCaptions con el último instalador, que pone al día sus librerías (se conservan tus ajustes).": {
+  "en": "If it’s the auxiliary engine (Whisper): reinstall CineCaptions with the latest installer, which updates its libraries (your settings are kept).",
+  "pt": "Se for o motor auxiliar (Whisper): reinstale o CineCaptions com o instalador mais recente, que atualiza as suas bibliotecas (as suas definições são mantidas).",
+  "fr": "S’il s’agit du moteur auxiliaire (Whisper) : réinstallez CineCaptions avec le dernier installateur, qui met ses bibliothèques à jour (vos réglages sont conservés).",
+  "de": "Wenn es die Hilfs-Engine (Whisper) ist: CineCaptions mit dem neuesten Installationsprogramm neu installieren; es aktualisiert ihre Bibliotheken (deine Einstellungen bleiben erhalten).",
+  "it": "Se è il motore ausiliario (Whisper): reinstalla CineCaptions con l’ultimo programma di installazione, che aggiorna le sue librerie (le tue impostazioni restano)."
+ },
+ "Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.": {
+  "en": "If the antivirus or Windows Smart App Control blocks the download, allow CineCaptions and try again.",
+  "pt": "Se o antivírus ou o Controlo Inteligente de Aplicações do Windows bloquear a transferência, permita o CineCaptions e repita.",
+  "fr": "Si l’antivirus ou le Contrôle intelligent des applications de Windows bloque le téléchargement, autorisez CineCaptions et réessayez.",
+  "de": "Wenn der Virenschutz oder die intelligente App-Steuerung von Windows den Download blockiert, CineCaptions zulassen und erneut versuchen.",
+  "it": "Se l’antivirus o il Controllo intelligente delle app di Windows blocca il download, consenti CineCaptions e riprova."
  }
 }

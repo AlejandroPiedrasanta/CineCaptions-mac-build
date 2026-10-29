@@ -82,7 +82,8 @@ def comp_de_drb(ruta, clip):
 
 
 def retocar_comp(hex_comp, cambios):
-    """v5.50: el CompositionBA (hex) con textos de sus Tools cambiados [(viejo, nuevo), …] (la comp de Amro se copia tal cual salvo esto)."""
+    """v5.50: el CompositionBA (hex) con textos de sus Tools cambiados [(viejo, nuevo), …] (la comp de Amro se copia tal cual salvo esto).
+    v5.54: `cambios` también puede ser una función tools -> tools."""
     if not cambios:
         return hex_comp
     cab = zlib.decompress(binascii.unhexlify(hex_comp)[4:])
@@ -91,10 +92,13 @@ def retocar_comp(hex_comp, cambios):
     j = datos.index(b'\x00')
     z = zlib.decompressobj()
     tools = z.decompress(datos[j + 5:]).decode('utf-8')
-    for viejo, nuevo in cambios:
-        if viejo not in tools:
-            raise SystemExit(f'no encuentro {viejo!r} en la comp a retocar')
-        tools = tools.replace(viejo, nuevo, 1)
+    if callable(cambios):
+        tools = cambios(tools)
+    else:
+        for viejo, nuevo in cambios:
+            if viejo not in tools:
+                raise SystemExit(f'no encuentro {viejo!r} en la comp a retocar')
+            tools = tools.replace(viejo, nuevo, 1)
     tools_b = tools.encode('utf-8')
     datos = datos[:j] + b'\x00' + struct.pack('<I', len(tools_b)) + zlib.compress(tools_b, 9) + z.unused_data
     cab = prefijo + struct.pack('>I', len(datos)) + datos
@@ -258,19 +262,29 @@ def construir(plantilla, salida, nombre_bin, pack, combinaciones=(1, 2, 3), y_po
         if y_por_comb != 'centro':
             y_abs = y_grupo + g.y_relativa(comb, rol) - y_tilt
         fuente = g.COMBINACIONES[comb].get('principal_drb') if rol in ('main', 'base') else None
+        # v5.54 «B · Premium» (combo['premium'] = {'brillo_principal': (tamaño, intensidad)}): la principal con el degradado de su color y su brillo;
+        # todas con la sombra ancha (luxe_macro._premium)
+        prem = g.COMBINACIONES[comb].get('premium')
+        brillo = g.COMBINACIONES[comb].get('brillo')
+        prem_rol = None
+        if prem:
+            prem_rol = {'sombra2': luxe_macro.SOMBRA_PREMIUM}
+            if rol in ('main', 'base'):
+                prem_rol['degradado'] = luxe_macro.degradado_premium(r['color'])
+                brillo = prem.get('brillo_principal') or brillo
         if fuente:
             texto = None                                    # el principal es un preset de Amro.Films Captions: su comp se copia tal cual
         elif rol == 'main' and g.COMBINACIONES[comb].get('count'):     # v5.48: variante de números = macro Luxe Count
             texto = luxe_macro.comp_luxe_count(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=False, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'),
-                                               brillo=g.COMBINACIONES[comb].get('brillo'))
+                                               brillo=brillo, premium=prem_rol)
         elif rol in ('main', 'base'):
             mayus = r['mayus'] if g.COMBINACIONES[comb].get('mayus_real') else True
             texto = luxe_macro.comp_luxe_shine(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=mayus and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'),
-                                               barrido=g.COMBINACIONES[comb].get('barrido'), brillo=g.COMBINACIONES[comb].get('brillo'),
-                                               trama=g.COMBINACIONES[comb].get('trama') if rol == 'main' else None)
+                                               barrido=g.COMBINACIONES[comb].get('barrido'), brillo=brillo,
+                                               trama=g.COMBINACIONES[comb].get('trama') if rol == 'main' else None, premium=prem_rol)
         else:
-            texto = luxe_macro.comp_luxe_slide(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=r['mayus'] and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'), brillo=g.COMBINACIONES[comb].get('brillo'),
-                                              deslizar=g.COMBINACIONES[comb].get('deslizar'))
+            texto = luxe_macro.comp_luxe_slide(r['f1'][0], r['f1'][1], r['tam'], r['color'], y_abs, mayus=r['mayus'] and not guia, esp=r['esp'], ajustar=not guia, anim=g.COMBINACIONES[comb].get('anim'), brillo=brillo,
+                                              deslizar=g.COMBINACIONES[comb].get('deslizar'), premium=prem_rol)
         bloque = m.group(0)
         hex_viejo = _BA.search(bloque).group(2)
         hex_nuevo = retocar_comp(comp_de_drb(fuente['drb'], fuente['clip']), fuente.get('cambios')) if fuente else blob_de_comp(texto, hex_viejo)
@@ -305,8 +319,14 @@ def construir(plantilla, salida, nombre_bin, pack, combinaciones=(1, 2, 3), y_po
                 datos = nuevo.encode('utf-8')
                 nombre_zip = carpeta_nueva + '/MpFolder.xml'
             zout.writestr(nombre_zip, datos)
-    # <salida>.variantes.json: nombre, color y la tipografia de cada rol (la vista previa de la app dibuja las dos palabras con sus dos pesos)
+    _escribir_variantes(salida, combinaciones)
+    return sorted(nombres), {n: pos.get(n) for n in nombres}
+
+
+def _escribir_variantes(salida, combinaciones):
+    """<salida>.variantes.json: nombre, color y la tipografia de cada rol (la vista previa de la app dibuja las dos palabras con sus dos pesos)."""
     import json
+    import luxe_macro
     def hexa(c):
         return '#%02X%02X%02X' % tuple(int(round(v * 255)) for v in c[:3])
     extra = {}
@@ -317,10 +337,71 @@ def construir(plantilla, salida, nombre_bin, pack, combinaciones=(1, 2, 3), y_po
             r = c[rol]
             # el macro real lleva UNA sola tipografia por linea: la vista previa tambien (f2 = f1)
             roles[rol] = {'f1': list(r['f1']), 'f2': list(r['f1']), 'tam': r['tam'], 'color': hexa(r['color']), 'mayus': bool(r['mayus'])}
+            if c.get('premium') and rol == 'main' and not c.get('principal_drb'):      # v5.54: la vista dibuja el mismo degradado
+                roles[rol]['degradado'] = [[p, hexa(col)] for p, col in luxe_macro.degradado_premium(r['color'])]
         extra[str(comb)] = {'nombre': c['nombre'], 'color': hexa(c['main']['color']), 'roles': roles, 'amro': bool(c.get('principal_drb'))}
+        if c.get('premium'):
+            extra[str(comb)]['premium'] = True
     with open(os.path.splitext(salida)[0] + '.variantes.json', 'w', encoding='utf-8') as fh:
         json.dump(extra, fh, ensure_ascii=False, indent=1)
-    return sorted(nombres), {n: pos.get(n) for n in nombres}
+
+
+def _retoque_premium(color, premium, brillo):
+    """La función tools -> tools que pone el acabado «B · Premium» en el Text1 de un macro Luxe YA armado: su color (Red1/Green1/Blue1), el degradado
+    y la sombra ancha (luxe_macro._premium) y, si `brillo`, el halo de su glow1."""
+    import luxe_macro
+
+    def retocar(tools):
+        i = tools.index('Text1 = TextPlus {')
+        j = tools.index('glow1 = Glow', i)
+        t1 = tools[i:j]
+        for canal, v in zip(('Red1', 'Green1', 'Blue1'), color):
+            t1, n = re.subn(rf'\b{canal} = Input \{{ Value = [0-9.eE+-]+, \}}', f'{canal} = Input {{ Value = {luxe_macro._n(v)}, }}', t1, count=1)
+            if not n:
+                raise SystemExit(f'el Text1 del macro no trae {canal} (retoque premium)')
+        tools = tools[:i] + luxe_macro._premium(t1, premium) + tools[j:]
+        if brillo:
+            tamano_b, intensidad_b = brillo
+            tools = re.sub(r'(glow1 = Glow \{.*?GlowSize = Input \{ Value = )[0-9.eE+-]+(, \})', lambda m: m.group(1) + luxe_macro._n(tamano_b) + m.group(2), tools, count=1, flags=re.S)
+            tools = re.sub(r'(glow1 = Glow \{.*?GlowIntensity = Input \{ Value = )[0-9.eE+-]+(, \})', lambda m: m.group(1) + luxe_macro._n(intensidad_b) + m.group(2), tools, count=1, flags=re.S)
+        return tools
+    return retocar
+
+
+def premium_sobre_drb(origen, salida, combinaciones):
+    """v5.54 «B · Premium» SIN regenerar los macros: copia el .drb `origen` (el de fábrica) y retoca solo el acabado de cada clip con
+    g.COMBINACIONES[comb] (colores de cada rol y combo['premium']). Los Temas 4, 5 y 6 se armaron con los macros Luxe de antes de la v1.09: volver a
+    generarlos cambiaría también sus animaciones. Clips: «principal N» / «simple» = la principal de la variante N (1); «arriba N» / «abajo N» = las pequeñas."""
+    import luxe_macro
+    zin = zipfile.ZipFile(origen)
+    ruta_xml = next(n for n in zin.namelist() if n.endswith('MpFolder.xml') and '/Master/0' in '/' + n)
+    xml = zin.read(ruta_xml).decode('utf-8')
+    nuevo = xml
+    roles = {'principal': 'main', 'simple': 'main', 'arriba': 'context', 'abajo': 'complement'}
+    for m in _ELEMENTO.finditer(xml):
+        nombre = _NOMBRE.search(m.group(0)).group(1)
+        palabra, _, resto = nombre.partition(' ')
+        comb = int(resto) if resto.isdigit() else 1
+        rol = roles.get(palabra)
+        if rol is None or comb not in combinaciones:
+            raise SystemExit(f'clip inesperado en {origen}: {nombre!r}')
+        c = g.COMBINACIONES[comb]
+        prem = {'sombra2': luxe_macro.SOMBRA_PREMIUM}
+        brillo = None
+        if rol == 'main':
+            prem['degradado'] = luxe_macro.degradado_premium(c['main']['color'])
+            brillo = (c.get('premium') or {}).get('brillo_principal')
+        bloque = m.group(0)
+        hex_nuevo = retocar_comp(_BA.search(bloque).group(2), _retoque_premium(c[rol]['color'], prem, brillo))
+        nuevo = nuevo.replace(bloque, _BA.sub(lambda mm: mm.group(1) + hex_nuevo + mm.group(3), bloque, count=1), 1)
+    tmp = salida + '.tmp'
+    with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as zout:
+        for info in zin.infolist():
+            zout.writestr(info.filename, nuevo.encode('utf-8') if info.filename == ruta_xml else zin.read(info.filename))
+    zin.close()
+    os.replace(tmp, salida)
+    _escribir_variantes(salida, combinaciones)
+    return salida
 
 
 if __name__ == '__main__':

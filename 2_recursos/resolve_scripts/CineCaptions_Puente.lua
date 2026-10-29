@@ -57,7 +57,8 @@ en sus propios archivos (subtitles_manifest.json, sfx_pendiente.json).
 -- VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
 -- v1.0.40: la accion nueva edicion_pro (la Edicion PRO en Resolve Free: CineCaptions_EdicionPro.lua, gemela de 2_recursos/edicion_pro/colocar_pro.py).
 -- Un Puente viejo no la conoce: la version sube y con ella VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
-local VERSION = "1.0.40"
+-- v1.0.41: los sidecars se leen con dofile si este Resolve ya no trae loadfile (un Free nuevo: el Puente moria en leer() con «attempt to call»).
+local VERSION = "1.0.41"
 
 -- La version del PROGRAMA con la que se distribuyo este archivo. Existe
 -- porque el propio creador leyo el 1.0.28 de arriba como "quedo una copia
@@ -66,7 +67,7 @@ local VERSION = "1.0.40"
 -- regla que los tres auxiliares). OJO: no va en el latido — las apps
 -- viejas parten el latido en dos campos y un tercero las haria declarar
 -- INCOMPATIBLE a un Puente sano.
-local PAQUETE = "5.53"
+local PAQUETE = "5.54"
 
 -- El resolve VALIDADO del arranque. Es un local a proposito: si mas tarde
 -- algo pisa el global 'resolve' (el veneno clasico de la sesion), este
@@ -387,7 +388,10 @@ local function leer(ruta)
     if SIN_IO then
         -- Solo se puede leer un sidecar "<ruta>.lua" con `return {texto=...}`
         -- (la app los deja junto a lo que el Puente necesita leer).
-        local chunk = loadfile(ruta .. ".lua")
+        local chunk = loadfile and loadfile(ruta .. ".lua")
+        if not chunk and not loadfile and dofile then          -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
+            chunk = function() return dofile(ruta .. ".lua") end
+        end
         local ok, t = pcall(chunk or function() end)
         return (ok and type(t) == "table") and t.texto or nil
     end
@@ -453,7 +457,10 @@ end
 local function tomar_trabajo()
     if not existe(JOB_PENDIENTE) then return nil end
     if SIN_IO then
-        local chunk = loadfile(JOB_PENDIENTE .. ".lua")
+        local chunk = loadfile and loadfile(JOB_PENDIENTE .. ".lua")
+        if not chunk and not loadfile and dofile then          -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
+            chunk = function() return dofile(JOB_PENDIENTE .. ".lua") end
+        end
         local ok, t = pcall(chunk or function() end)
         if not ok or type(t) ~= "table" or t.id == nil then return nil end
         if t.id == ULTIMO_ID then return nil end

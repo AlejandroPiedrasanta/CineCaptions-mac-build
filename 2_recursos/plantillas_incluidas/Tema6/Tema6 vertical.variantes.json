@@ -13,7 +13,7 @@
      "Regular"
     ],
     "tam": 0.085,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -27,7 +27,21 @@
     ],
     "tam": 0.19,
     "color": "#DDF25E",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#C6DF30"
+     ],
+     [
+      0.5,
+      "#DDF25E"
+     ],
+     [
+      1.0,
+      "#EEF8AE"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -39,11 +53,12 @@
      "Regular"
     ],
     "tam": 0.085,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  },
  "2": {
   "nombre": "Blanco",
@@ -59,7 +74,7 @@
      "Regular"
     ],
     "tam": 0.085,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    },
    "main": {
@@ -73,7 +88,21 @@
     ],
     "tam": 0.19,
     "color": "#FFFFFF",
-    "mayus": false
+    "mayus": false,
+    "degradado": [
+     [
+      0.0,
+      "#D6DBED"
+     ],
+     [
+      0.5,
+      "#FFFFFF"
+     ],
+     [
+      1.0,
+      "#FFFFFF"
+     ]
+    ]
    },
    "complement": {
     "f1": [
@@ -85,10 +114,11 @@
      "Regular"
     ],
     "tam": 0.085,
-    "color": "#FFFFFF",
+    "color": "#E6E6E6",
     "mayus": false
    }
   },
-  "amro": false
+  "amro": false,
+  "premium": true
  }
 }

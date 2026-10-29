@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.53 (subtitulos)"
+VERSION = "5.54 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -522,7 +522,33 @@ def _es_bin_nuestro(folder):
         return False
 
 
-def find_clips_by_name_ci(media_pool, name, carpeta=None):
+def indice_de_clips(media_pool, carpeta=None):
+    """v5.54: {nombre normalizado: [clips]} con el MISMO recorrido (y orden) que find_clips_by_name_ci, pidiendo cada nombre a Resolve
+    UNA vez. MEDIDO (Tema 2, MCP): buscar_sets_de_plantillas hacía 669 búsquedas que recorrían el bin entero cada una (28 819
+    GetName, ~21 s de 28); con el índice es un solo recorrido. Solo vale mientras no cambie el Media Pool: quien lo usa lo arma
+    justo antes de buscar y lo tira al acabar."""
+    acotada = carpeta is not None
+    raiz = carpeta if acotada else media_pool.GetRootFolder()
+    indice = {}
+    if raiz is None:
+        return indice
+
+    def recorrer(folder):
+        for clip in folder.GetClipList() or []:
+            try:
+                indice.setdefault(clip.GetName().strip().lower(), []).append(clip)
+            except Exception:
+                continue
+        for sub in folder.GetSubFolderList() or []:
+            if not acotada and _es_bin_nuestro(sub):
+                continue
+            recorrer(sub)
+
+    recorrer(raiz)
+    return indice
+
+
+def find_clips_by_name_ci(media_pool, name, carpeta=None, indice=None):
     """Busca TODOS los clips cuyo nombre coincide, sin importar mayusculas/
     minusculas ni espacios de mas al principio/final (evita que 'Principal 2'
     no matchee 'principal 2'). Devuelve la lista completa, para poder avisar
@@ -533,7 +559,11 @@ def find_clips_by_name_ci(media_pool, name, carpeta=None):
     a todo el Media Pool, cualquier Text+ suelto llamado 'contexto' que el
     usuario tuviera en su proyecto ganaria sobre el pack que acaba de
     elegir — se aplicaria otro diseño sin una sola linea que lo explicara.
+
+    Con 'indice' (de indice_de_clips, de la misma carpeta) no se pregunta a Resolve.
     """
+    if indice is not None:
+        return list(indice.get(name.strip().lower(), ()))
     acotada = carpeta is not None
     raiz = carpeta if acotada else media_pool.GetRootFolder()
     if raiz is None:
@@ -572,11 +602,11 @@ def find_clips_by_name_ci(media_pool, name, carpeta=None):
 _AVISADOS_DUPLICADOS = set()
 
 
-def find_clip_by_name(media_pool, name, carpeta=None):
+def find_clip_by_name(media_pool, name, carpeta=None, indice=None):
     """Busca un clip por nombre (sin importar mayusculas/minusculas). Si hay
     varios clips con el mismo nombre, usa el primero que encuentra y avisa
     una sola vez por nombre para no llenar la consola de avisos repetidos."""
-    encontrados = find_clips_by_name_ci(media_pool, name, carpeta)
+    encontrados = find_clips_by_name_ci(media_pool, name, carpeta, indice)
     if not encontrados:
         return None
     if len(encontrados) > 1 and name not in _AVISADOS_DUPLICADOS:
@@ -924,6 +954,7 @@ def ajustar_barrido(item, visible_s, salto_s=0.0, ancho_rel=None):
 _FACTORES = {}      # nombre del clip -> fotogramas de timeline por fotograma de origen
 _CALIBRADOS = set()  # nombres ya verificados con una medida real
 _OFF = {"valor": 0}   # 1 si este Resolve CUENTA el fotograma final (inclusivo)
+_EXACTOS = {}        # v5.54: nombre del clip -> hasta qué fotograma de su origen cayó EXACTO (con factor 1): no se vuelve a medir
 _FPS_CLIP_CANDIDATOS = (23.976, 24.0, 25.0, 29.97, 30.0, 48.0, 50.0,
                         59.94, 60.0, 120.0)
 
@@ -1030,6 +1061,12 @@ def _colocar_medido_base(media_pool, timeline, plantilla, desde, duracion, pista
     item, span = _pedir(k)
     if item is None:
         return None, 0
+    # v5.54: MEDIDO por el MCP, GetDuration cuesta 13-180 ms por clip (Tema 2: 2,4 s en 39). Si esta plantilla ya cayó EXACTA con el
+    # mismo factor 1 pidiendo hasta este punto de su origen, cabe igual: se da por puesta sin preguntar. Con otro frame rate (k != 1)
+    # el redondeo cambia con la duración y se sigue midiendo cada clip, como antes.
+    tope = (desde or 0) + duracion
+    if k == 1.0 and tope <= _EXACTOS.get(nombre, -1):
+        return item, duracion
     puesto = _duracion_de(item)
     if (timeline is not None and puesto > 0 and puesto != duracion
             and duracion > 1 and nombre not in _CALIBRADOS):
@@ -1054,6 +1091,7 @@ def _colocar_medido_base(media_pool, timeline, plantilla, desde, duracion, pista
         # 2) ¿Fin inclusivo? Un fotograma de MAS con el factor bueno.
         if puesto == duracion + 1 and _OFF["valor"] == 0:
             _OFF["valor"] = 1
+            _EXACTOS.clear()               # lo medido con el otro fin ya no vale
             item, span2, puesto = _recolocar(item, k)
             if item is None:
                 return None, 0
@@ -1064,6 +1102,8 @@ def _colocar_medido_base(media_pool, timeline, plantilla, desde, duracion, pista
                       "en todos los clips.")
     elif puesto > 0 and puesto == duracion:
         _CALIBRADOS.add(nombre)
+    if puesto == duracion and k == 1.0 and _FACTORES.get(nombre, 1.0) == 1.0:
+        _EXACTOS[nombre] = max(_EXACTOS.get(nombre, 0), tope)
     return item, puesto
 
 
@@ -1741,16 +1781,16 @@ def obtener_text_plus_base(timeline, media_pool):
     return crear_text_plus_en_zona_vacia(timeline, media_pool)
 
 
-def _buscar_plantilla_numerada(media_pool, base, numero, carpeta=None):
+def _buscar_plantilla_numerada(media_pool, base, numero, carpeta=None, indice=None):
     """Busca 'contexto 3' probando las formas de numerar mas comunes. El set 1 es el nombre a secas ('arriba'),
     pero tambien vale con el 1 puesto ('arriba 1', 'arriba1'...): quien arma un pack sigue la misma regla en los tres."""
     if numero == 1:
-        clip = find_clip_by_name(media_pool, base, carpeta)
+        clip = find_clip_by_name(media_pool, base, carpeta, indice)
         if clip:
             return clip
     for patron in SUFIJOS_DE_SET:
         clip = find_clip_by_name(media_pool, base + patron.format(n=numero),
-                                 carpeta)
+                                 carpeta, indice)
         if clip:
             return clip
     return None
@@ -1784,13 +1824,14 @@ def buscar_sets_de_plantillas(media_pool, carpeta=None):
     por 'principal' era el aviso de "falta x texto" en la cara del usuario.
     """
     crudos = []
+    indice = indice_de_clips(media_pool, carpeta)       # v5.54: un recorrido del bin, no uno por nombre probado
     for numero in range(1, MAX_SETS + 1):
         encontrado = {}
         faltan = []
         for rol, base in DYNAMIC_TEMPLATES.items():
             clip = None
             for nombre_base in NOMBRES_ROL.get(rol, (base,)):
-                clip = _buscar_plantilla_numerada(media_pool, nombre_base, numero, carpeta)
+                clip = _buscar_plantilla_numerada(media_pool, nombre_base, numero, carpeta, indice)
                 if clip:
                     break
             if clip:
@@ -3957,13 +3998,19 @@ def place_kinetic_track(timeline, media_pool, track_info, base_template,
         except Exception as exc:
             print(f"  Aviso: pack extra de la mezcla ({type(exc).__name__}: {exc}).")
     clips = {}
+    indices = {}              # v5.54: cada bin se recorre UNA vez (antes, un recorrido entero por cada nombre de clip)
+
+    def _indice(c):
+        if id(c) not in indices:
+            indices[id(c)] = (c, indice_de_clips(media_pool, c))
+        return indices[id(c)][1]
 
     def _clip(nombre):
         if nombre not in clips:
-            c = find_clip_by_name(media_pool, nombre, carpeta)
+            c = find_clip_by_name(media_pool, nombre, carpeta, _indice(carpeta))
             if c is None:
                 for c2 in carpetas_extra:
-                    c = find_clip_by_name(media_pool, nombre, c2)
+                    c = find_clip_by_name(media_pool, nombre, c2, _indice(c2))
                     if c is not None:
                         break
             clips[nombre] = c
