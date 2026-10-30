@@ -79,7 +79,7 @@ def retirar_orden(ruta):
     colocar en la siguiente corrida manual. Con io el script ya borro el
     .json; el sidecar lo borra esto igual.
     """
-    for f in [ruta, ruta.with_name(ruta.name + '.lua')]:
+    for f in [ruta, *sidecar_lua.rutas_sidecar(ruta)]:          # .lua y .free.lua (Puente 1.0.42)
         try:
             f.unlink()
         except OSError:

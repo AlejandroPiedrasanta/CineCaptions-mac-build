@@ -50,7 +50,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     copias.py
         copias de seguridad de ~/DaVinciSubtitles (crear y restaurar un .zip).
     crea_estilo_ui.py
-        «Crea tu estilo»: la galería de 48 ejemplos (con su vista real de Resolve) para armar un pack en un clic y el popup que explica la estructura de nombres.
+        «Crea tu estilo»: la lista de los Temas 1-6 sobre negro (se tocan en el orden que se quiera) con el cajón de letra y colores, y el popup de la estructura de nombres.
     cuda_libs.py
         las librerías CUDA que necesita Whisper en la GPU: detectarlas, registrarlas y repararlas.
     descargas.py
@@ -254,7 +254,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     medir_texto.py
         mide cuánto ocupa cada palabra en pantalla (look «pintado»).
     mezcla_planificador.py
-        «Crea tu estilo» con los estilos de los TRES temas: Tema 1 (títulos de gancho), Tema 2 (palabra a palabra) y Tema 3 (viral), mezclados por frases.
+        «Crea tu estilo»: los Temas 1 a 6 ENTEROS mezclados por frases (y los looks sueltos de los packs de antes) y el estilo del usuario en el disco (pack.json).
     mezcla_vista.py
         las vistas aproximadas (Pillow) de los looks de los TRES temas para «Crea tu estilo»: cada look se ve sobre una foto de muestra, dibujado con el plan REAL de su tema.
     mograf_ui.py
@@ -280,6 +280,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         revisión ortográfica del editor (marca y propone, nunca corrige solo).
     ortografia_es.py
         ¿es español de verdad aunque el diccionario no la traiga? (v5.5.7)
+    pack_personalizado.py
+        v5.55 «Crea tu estilo»: el pack DERIVADO de un tema de fábrica (Kinetic, Referencia, VIRAL, Tema4/5/6) con la letra y
     packs_drt.py
         lee los packs .drt/.drb SIN abrir Resolve (sets, formatos, tipografías).
     pausas.py
@@ -404,6 +406,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         estilo «VIRAL»: la geometría de la pila (tamaños con la tipografía real, posiciones, tiempos) y el .json para Resolve.
     viral_planificador.py
         del texto con tiempos (ASR) a los bloques del estilo «VIRAL»: frases, palabra con efecto, líneas finas y negritas, y momentos.
+    vista_estilos.py
+        v5.55 «Crea tu estilo»: la imagen quieta del caption de cada tema (Tema 1…6) sobre NEGRO, con la misma frase en los seis.
     vista_previa_fx.py
         la vista previa de 3 segundos de la página «Efectos» (v5.4.8): TODO lo que está encendido, sobre fotos de muestra, sin abrir Resolve.
     vista_tema.py

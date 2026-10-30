@@ -26,6 +26,10 @@ import hacer_vistas_mezcla as H
 
 def una(video, pack, prefs):
     """Una vuelta de GO en ESTE proceso. Devuelve el código de salida: 0 GO bien · 2 GO falló."""
+    if prefs.get('go_emojis'):
+        # v5.55: go_emojis ya no enciende nada (el juez es edicion_pro.emojis_permitidos: PRO + «Emojis animados»); --emojis = emojis de verdad
+        import edicion_pro
+        edicion_pro.emojis_permitidos = lambda *a, **k: True
     ok = H._go(video, None, None, pack=pack, prefs_extra=prefs, tope_s=300)
     print('RESULTADO:', 'GO terminó bien' if ok else 'GO FALLÓ', flush=True)
     return 0 if ok else 2

@@ -828,7 +828,7 @@ def limpiar_resultado_viejo():
             ruta.rename(destino)
         except OSError:
             pass
-VERSION_PUENTE_ESPERADA = '1.0.41'
+VERSION_PUENTE_ESPERADA = '1.0.42'
 VERSION_PUENTE_MINIMA = '1.0.21'
 # Desde que version del Puente existe cada accion: un residente mas viejo (el que quedo corriendo en Resolve tras actualizar el programa) responde «Accion desconocida».
 VERSION_DE_ACCION = {'importar_estilos': (1, 0, 25), 'sfx_marcadores': (1, 0, 31), 'sfx_reemplazar': (1, 0, 32), 'efectos': (1, 0, 38), 'armar_video': (1, 0, 38), 'pausas': (1, 0, 38), 'vista': (1, 0, 39), 'edicion_pro': (1, 0, 40)}
@@ -892,7 +892,38 @@ def _cuanto_hace(seg):
                 return f'{seg / 3600:.0f} horas'
             else:
                 return f'{seg / 86400:.0f} dias'
-DESENLACES_PUENTE = {'arrancando': 'SE QUEDO A MEDIAS (murio nada mas lanzarlo)', 'ok': 'arranco bien', 'sin_resolve': 'MURIO: Resolve no le respondio (hay que relanzarlo)', 'relevo_fallido': 'MURIO: otro Puente no solto el turno', 'sin_latido': 'ARRANCO PERO NO PUEDE ESCRIBIR SU LATIDO', 'sin_canal': 'MURIO: este Resolve no le deja escribir ni señales (usa CineCaptions_DetectarVideo y CineCaptions_Subtitulos a mano)', 'relevado': 'se retiro: otro Puente mas nuevo tomo el relevo', 'cerrado': 'se cerro bien', 'murio': 'MURIO a mitad del arranque (el error esta en «Que respondio Resolve»)'}
+DESENLACES_PUENTE = {'arrancando': 'SE QUEDO A MEDIAS (murio nada mas lanzarlo)', 'ok': 'arranco bien', 'sin_resolve': 'MURIO: Resolve no le respondio (hay que relanzarlo)', 'relevo_fallido': 'MURIO: otro Puente no solto el turno', 'sin_latido': 'ARRANCO PERO NO PUEDE ESCRIBIR SU LATIDO', 'sin_canal': 'MURIO: este Resolve no le deja escribir ni señales (usa CineCaptions_DetectarVideo y CineCaptions_Subtitulos a mano)', 'relevado': 'se retiro: otro Puente mas nuevo tomo el relevo', 'cerrado': 'se cerro bien', 'murio': 'MURIO a mitad del arranque (el error esta en «Que respondio Resolve»)', 'sin_lectura': 'ARRANCO, PERO ESTE RESOLVE NO LE DEJA LEER LOS TRABAJOS (ni loadfile, ni dofile, ni bmd.readfile, ni RunScript, ni la consola)', 'sin_cargador': 'MURIO: este Resolve no le deja leer ni ejecutar scripts (sin loadfile, dofile, bmd.readfile, RunScript ni consola)'}
+# v5.55 (Puente 1.0.42): lo que el Puente dice cuando este Resolve no le deja leer o ejecutar NADA (un Free sin loadfile ni dofile en el que
+# tampoco funcionan bmd.readfile, RunScript ni la consola). Antes eso acababa en «El puente no respondió en 240 s» sin ninguna pista.
+DESENLACES_SIN_LECTURA = ('sin_lectura', 'sin_cargador')
+SENAL_ILEGIBLE = 'pendiente.ilegible'          # en jobs/: hay trabajo y ningun camino lo leyo
+SENAL_SIN_CARGADOR = 'puente.sin_cargador'     # en la carpeta compartida: el Puente se cerro al arrancar (ni leer ni ejecutar)
+MENSAJE_PUENTE_SIN_LECTURA = tr('Este DaVinci Resolve no deja al Puente leer ni ejecutar los trabajos de CineCaptions: a sus scripts les faltan loadfile y dofile, y bmd.readfile, RunScript y la consola tampoco respondieron. Actualiza DaVinci Resolve a su última versión y vuelve a lanzar CineCaptions_Puente; si sigue igual, manda el informe a soporte (Ajustes › Registro).')
+
+
+def _puente_sin_lectura(desde, senal):
+    """(v5.55) El motivo si el Puente dijo que NO puede leer/ejecutar los trabajos, o None. Dos pistas: la señal jobs/pendiente.ilegible
+    (la deja el Puente aunque no tenga consola) posterior a 'desde', y su ultimo reporte en el registro de Resolve: 'sin_cargador' (murio
+    al arrancar: vale siempre) o 'sin_lectura' posterior a 'desde'. El detalle de caminos del Puente va detras, entre parentesis."""
+    rep = _reporte_del_puente()
+    desenlace = str((rep or {}).get('arranque') or '')
+    por_reporte = desenlace == 'sin_cargador' or (desenlace == 'sin_lectura' and (rep.get('cuando') or 0) >= desde - 2)
+    por_senal = False
+    try:
+        por_senal = senal.exists() and senal.stat().st_mtime >= desde - 2
+    except OSError:
+        pass
+    try:                                    # el Puente que murio al arrancar sin cargador: su señal es mas nueva que el ultimo latido
+        sc = CARPETA_COMPARTIDA / SENAL_SIN_CARGADOR
+        if sc.exists():
+            latido = ARCHIVO_LATIDO.stat().st_mtime if ARCHIVO_LATIDO.exists() else 0.0
+            por_senal = por_senal or sc.stat().st_mtime >= latido - 1.0
+    except OSError:
+        pass
+    if not (por_reporte or por_senal):
+        return None
+    detalle = str(rep.get('mensaje') or '').strip() if por_reporte else ''
+    return MENSAJE_PUENTE_SIN_LECTURA + (f'\n\n({detalle})' if detalle else '')
 def arranque_del_puente():
     """(cuando, version, desenlace) del ultimo lanzamiento, o None.\n\n    None significa que el Puente no se ha lanzado NUNCA en este equipo -o al\n    menos no desde la v3.1.3-, que es justo lo que no se podia distinguir de\n    \"se lanzo y murio\" antes de que existiera este archivo.\n    """
     try:
@@ -1131,10 +1162,13 @@ def _barrer_respuestas_huerfanas(max_edad_s=3600):
                         f.unlink()
                 except Exception:
                     pass
-        sidecar = JOB_PENDIENTE.with_name(JOB_PENDIENTE.name + '.lua')
-        if (sidecar.exists() and not JOB_PENDIENTE.exists()
-                and sidecar.stat().st_mtime < time.time() - 60):
-            sidecar.unlink()
+        for sidecar in sidecar_lua.rutas_sidecar(JOB_PENDIENTE) + [CARPETA_TRABAJOS / SENAL_ILEGIBLE]:       # .lua, .free.lua (Puente 1.0.42) y la señal de «no pude leer»
+            try:
+                if (sidecar.exists() and not JOB_PENDIENTE.exists()
+                        and sidecar.stat().st_mtime < time.time() - 60):
+                    sidecar.unlink()
+            except Exception:
+                pass
     except Exception:
         pass
     _podar_relevo()
@@ -1144,7 +1178,8 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
     _barrer_respuestas_huerfanas()
     job_id = f'{accion}-{int(time.time() * 1000)}'
     respuesta = CARPETA_TRABAJOS / f'{job_id}.done.json'
-    sidecar = JOB_PENDIENTE.with_name(JOB_PENDIENTE.name + '.lua')
+    sidecar, sidecar_free = sidecar_lua.rutas_sidecar(JOB_PENDIENTE)
+    senal_ilegible = CARPETA_TRABAJOS / SENAL_ILEGIBLE
     try:
         sidecar_lua.escribir_par(JOB_PENDIENTE, {
             'id': job_id,
@@ -1174,30 +1209,37 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
     sin_latido = 0
     pendiente_retirado = False
     proxima_mirada = inicio + 8.0
+    proxima_lectura = inicio + 1.0
     while time.time() - inicio < timeout:
         if time.time() >= proxima_mirada:                       # v5.4.40: no se espera los {timeout} s enteros a un Resolve colgado o cerrado: se avisa en cuanto se sabe
             proxima_mirada = time.time() + 4.0
             est = estado_resolve()
             if est != 'ok' and not respuesta.exists():
-                limpiar(JOB_PENDIENTE, sidecar, JOB_TOMADO)
+                limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO)
                 return (False, ERR_RESOLVE_COLGADO if est == 'colgado' else ERR_RESOLVE_CAIDO)
+        if time.time() >= proxima_lectura and not respuesta.exists():         # v5.55: el Puente dijo que no puede leer el trabajo: se dice YA, no a los {timeout} s
+            proxima_lectura = time.time() + 2.0
+            motivo = _puente_sin_lectura(inicio, senal_ilegible)
+            if motivo:
+                limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO, senal_ilegible)
+                return (False, motivo)
         if respuesta.exists():
             try:
                 r = json.loads(respuesta.read_text(encoding='utf-8'))
             except Exception:
                 time.sleep(0.2)
                 continue
-            limpiar(respuesta, sidecar)
+            limpiar(respuesta, sidecar, sidecar_free)
             return (bool(r.get('ok')), r.get('mensaje') or '')
         senal = hecho_por_senal()
         if senal is not None:
-            limpiar(JOB_PENDIENTE, sidecar, JOB_TOMADO)
+            limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO)
             return senal
         if not pendiente_retirado:
             try:
                 if (JOB_PENDIENTE.exists() and JOB_TOMADO.exists()
                         and JOB_TOMADO.stat().st_mtime >= inicio - 2):
-                    limpiar(JOB_PENDIENTE, sidecar)
+                    limpiar(JOB_PENDIENTE, sidecar, sidecar_free)
                     pendiente_retirado = True
             except OSError:
                 pass
@@ -1219,7 +1261,7 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
                 if volvio:
                     sin_latido = 0
                     continue
-                limpiar(JOB_PENDIENTE, sidecar, JOB_TOMADO)
+                limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO)
                 if est_r != 'ok':
                     return (False, ERR_RESOLVE_COLGADO if est_r == 'colgado' else ERR_RESOLVE_CAIDO)
                 return (False, tr('El puente dejó de responder. Vuelve a correrlo en Resolve: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente.'))
@@ -1231,7 +1273,7 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
             except Exception:
                 pass
         time.sleep(0.25)
-    limpiar(JOB_PENDIENTE, sidecar, JOB_TOMADO)
+    limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO)
     return (False, tr('El puente no respondió en {timeout} segundos. Revisa la ventana de la consola de scripts en Resolve.',
                       timeout=timeout))
 MENSAJE_SIN_PUENTE = tr('Para colocar los subtítulos, en Resolve pulsa una vez:\n\n    Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Subtitulos\n\n(En inglés el menú es Workspace > Scripts.)\nAparecen en tu línea de tiempo al pulsarlo, y este programa se entera solo cuando el script termine.\n\nPara que se coloquen SOLOS cada vez, deja corriendo CineCaptions_Puente (en esa misma carpeta; desde la v3.1.7 también en DaVinci Resolve 21.1).\n\n(Los archivos están en: {carpeta})\n\n(Si no ves los scripts en el menú, cierra Resolve y vuelve a abrirlo: arma el menú de Scripts al arrancar.)', carpeta=CARPETA_COMPARTIDA)

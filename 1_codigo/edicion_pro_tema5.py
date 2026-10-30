@@ -237,15 +237,20 @@ def marcar_claves(ps, editorial=False):
 
 
 def planificar(plan, vertical=True, densidad='media', video='', det_de=None, foto_de=None, ia=True, idioma='es', estado=None,
-               recorte_de=None, cara_de=None, usuario='', estilo='skill'):
+               recorte_de=None, cara_de=None, usuario='', estilo='skill', con_emojis=None):
     """Todas las piezas del Tema 5 (captions, elementos en pantalla, escenas) y las ventanas de pantalla dividida [{'ini', 'fin', 'bajar'}]
     (bajar: fracción del alto que baja la persona). `det_de(t)` → la detección de personas en ese segundo (fracciones del timeline) o None;
     `foto_de(t)` → ese fotograma como 'data:image/jpeg;base64,…' (para la tarjeta) o None; `recorte_de(t)` / `cara_de(t)` → las imágenes del
-    sticker y de la pantalla final (edicion_pro_tema5_mm) o None. `estilo`: 'skill' (Tema 5) o 'editorial' (Tema 6, edicion_pro_tema6)."""
+    sticker y de la pantalla final (edicion_pro_tema5_mm) o None. `estilo`: 'skill' (Tema 5) o 'editorial' (Tema 6, edicion_pro_tema6).
+    `con_emojis` (v5.55): ¿píldoras con emoji y la del equipo del Tema 6? Solo con «Emojis animados»; None = lo que diga el plan
+    (edicion_pro.emojis_del_plan)."""
     bl = bloques()
     if not bl:
         return [], []
     editorial = estilo == 'editorial'
+    if con_emojis is None:
+        import edicion_pro as EP
+        con_emojis = EP.emojis_del_plan(plan, pack='Tema6' if editorial else 'Tema5')
     import edicion_pro_tema6 as T6
     acento = acento_de_video(video) if video else ACENTOS['azul']
     velo = False                                                          # v5.4.52: sin el velo oscuro ovalado detrás del caption (se veía como una sombra fea); las letras llevan su sombra fina
@@ -374,7 +379,7 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
             def caras_de(t):
                 return EP._caras(det_de(t)) if det_de else []
             extra += T6.elementos(bl, dur, idioma, libre=lambda a, b: libre(a, b, [(e['ini'], e['fin']) for e in elementos + extra]), det_de=det_de,
-                                  cara_de=cara_de, usuario=usuario, debiles=frozenset(DEBILES), caras_de=caras_de)
+                                  cara_de=cara_de, usuario=usuario, debiles=frozenset(DEBILES), caras_de=caras_de, con_emojis=con_emojis)
         except Exception:
             pass
     ocupado += [(p['ini'] - 0.3, p['fin'] + 0.3) for p in extra]
@@ -614,7 +619,7 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
         tapado += [(p['ini'] - 0.1, p['fin'] + 0.1) for p in piezas if p.get('capa') == 'detras']
         tapado += list(ocupado)
         aspecto = 'blanco' if editorial or (analisis.get('oscuro') and int(hashlib.sha1(str(video).encode('utf-8')).hexdigest()[:2], 16) % 2) else 'cristal'
-        piezas += AC.acompanantes(bl, idioma, tapado, acento, aspecto, dur, frozenset(DEBILES))
+        piezas += AC.acompanantes(bl, idioma, tapado, acento, aspecto, dur, frozenset(DEBILES), con_emojis=bool(con_emojis))   # (v5.55)
     except Exception:
         pass
     return piezas, divididas

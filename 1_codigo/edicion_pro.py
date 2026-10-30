@@ -60,7 +60,8 @@ OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_masc
                         # v5.20: el estilo y los colores de cada función (página Efectos › Edición PRO; estilos_pro.py): {clave: {'v': id, 'c': {hueco: hex}}}
                         'pro_estilos': {},
                         # v5.25: «Emojis animados» (2D Lottie / 3D en movimiento) con lo que se dice: encendido, intensidad y dónde
-                        'pro_emojis': True, 'pro_emoji_intensidad': 'media', 'pro_emoji_donde': 'auto'}
+                        # v5.55 (pedido: «ningún tema del 1 al 6 debe tener emojis hasta que se lo active»): APAGADO de fábrica (emojis_permitidos)
+                        'pro_emojis': False, 'pro_emoji_intensidad': 'media', 'pro_emoji_donde': 'auto'}
 NIVEL_SONIDOS_DB = {'suave': -5.0, 'normal': 0.0, 'fuerte': 3.0}
 FAMILIA_DE_PISTA = {'PRO-WHOOSH': 'whoosh', 'PRO-TEXTURA': 'textura', 'PRO-RISER': 'riser', 'PRO-HIT': 'riser'}
 NOMBRES_GENERO = {'auto': 'Automático', 'general': 'General', 'inmobiliaria': 'Inmobiliaria / venta de casas', 'boda': 'Bodas', 'xv': 'XV años',
@@ -102,18 +103,129 @@ def activado():
 # v5.49 (pedido del usuario): el Tema 2 solo ponía emojis con la Edición PRO encendida Y su opción «Emojis animados».
 # v5.54 (pedido: «los emojis solo se activan con la Edición PRO si activo la función de emoji»): TODOS los temas, packs propios, mezclas y el diseño de
 # siempre. Los Temas 5 y 6 ya son la PRO (TEMAS_PRO): con ellos basta la opción.
-def emojis_del_tema(pack=None):
-    """¿Puede GO poner emojis con el tema `pack` (None = el elegido en Inicio)? Solo con la Edición PRO en juego y «Emojis animados» activado."""
-    pack = str(pack if pack is not None else tema_actual())
-    return (activado() or pack in TEMAS_PRO) and bool(opciones_guardadas().get('pro_emojis', True))
+# v5.55 (pedido: «ningún tema del 1 al 6 debe tener emojis hasta que se lo active en edición con emoji activado»): UN SOLO JUEZ para todo lo que pone
+# emojis (los captions de GO, Generar y Creativo, y las piezas de la PRO: emojis animados, píldoras, plantillas, kit, escenas, Motions completo). La
+# opción viene APAGADA de fábrica y solo vale True explícito; el Tema 1 neón mira SU interruptor «emoji» del menú (pro_neon_extras), como aplicar().
+def emojis_permitidos(pack=None, op=None):
+    """¿Lleva emojis el video con el tema `pack` (None = el elegido en Inicio)? Solo con la Edición PRO en juego (su interruptor, o los Temas 5/6, que
+    son la PRO) y «Emojis animados» ACTIVADO a mano. `op`: las opciones de la PRO a mirar (None = las guardadas). Ante cualquier duda, no."""
+    try:
+        pack = str(_tema(pack) if pack is not None else tema_actual())      # (un estilo derivado de «Crea tu estilo» = su tema; una mezcla, no)
+        if not (activado() or pack in TEMAS_PRO):
+            return False
+        op = opciones_guardadas() if op is None else op
+        if pack == 'Kinetic':
+            return 'emoji' in neon_extras(op)
+        return op.get('pro_emojis') is True
+    except Exception:
+        return False
+
+
+emojis_del_tema = emojis_permitidos       # (el nombre de la v5.54; en el código ya nadie lo usa: queda por arneses o herramientas de fuera)
+
+
+def emojis_del_plan(plan, op=None, pack=None):
+    """v5.55: ¿lleva emojis la PRO de este plan? Manda la decisión que GO guardó al planificar (plan['emojis']: así, si la opción cambia antes de
+    «Listo» en Efectos › Posición, captions y PRO no se contradicen). Un plan sin ella (de antes de la 5.55, o de una herramienta) se juzga como
+    GO: el pase ligero no es la PRO (nunca); los demás, por su tema (`pack`, o el que se deduce del plan) y su opción."""
+    plan = plan or {}
+    if 'emojis' in plan:
+        return plan.get('emojis') is True
+    if plan.get('ligero'):
+        return False
+    if pack is None:
+        pack = (('Tema6' if plan.get('estilo_t5') == 'editorial' else 'Tema5') if plan.get('tema5')
+                else 'Kinetic' if plan.get('tema') == 'neon' else '')
+    return emojis_permitidos(pack, plan.get('opciones') or op)
+
+
+# v5.55: las piezas de la PRO que enseñan emojis y cómo quedan sin ellos. Las plantillas que pintan su sticker SIEMPRE (si no lo traen, uno de
+# fábrica: Plantillas.tsx) se quitan enteras: vaciarlo dejaría una imagen rota; en Titulo y Pastilla el sticker es opcional y solo se vacía.
+PLANTILLAS_CON_STICKER = ('Saludo', 'Fecha', 'Pareja', 'Sesion', 'Ninas')
+PLANTILLAS_STICKER_OPCIONAL = ('Titulo', 'Pastilla')
+# Motions que pintan emojis FIJOS en su dibujo (no vienen en sus valores): sin «Emojis animados» se quitan enteros. Escenas9.tsx: TableroE (chinchetas
+# 📌), CuadernoE (⏰ 📷, 📌 y el clip 📎) y MovilE (el dedo 👆 del toque); Kit8.tsx: SeleccionK (la chispa ✨). (RecorteK pasa a su variante neón, y la
+# tarjeta «tachado» de TarjetaT5 —la ❌— se quita en _valores_sin_emojis.)
+PIEZAS_CON_EMOJI_FIJO = ('TableroE', 'CuadernoE', 'MovilE', 'SeleccionK')
+
+
+def _es_emoji(valor):
+    """¿Es un emoji ('emoji:x', 'rcs_emoji_x.png', 'stickers/rcs_emoji_x.png', 'fluent/x.png' o 'recortes/color/x.webp', que es el mismo emoji 3D
+    con borde blanco: generar_recortes.color)? Los iconos '3d:x', 'iconos3d/…' y los recortes en trama o línea, no."""
+    s = str(valor or '')
+    return s.startswith(('emoji:', 'rcs_emoji_', 'stickers/rcs_emoji_', 'fluent/', 'recortes/color/'))
+
+
+def _valores_sin_emojis(comp, v):
+    """Copia de los valores de una pieza `comp` sin sus emojis, o None si la pieza no se puede enseñar sin ellos."""
+    v = dict(v or {})
+    st = v.get('sticker')
+    if comp == 'AcompananteT5' and (str(v.get('tipo') or 'sticker') in ('sticker', 'saludo') or st):
+        return None                                  # la píldora del concepto, el saludo 👋 y la fecha / hora / sitio (_dato)
+    if comp == 'EditorialT6' and v.get('tipo') == 'equipo':
+        return None                                  # (Tema 6: tres caras emoji)
+    if comp in PIEZAS_CON_EMOJI_FIJO:
+        return None
+    if comp == 'TarjetaT5' and v.get('tipo') == 'tachado':
+        return None                                  # (la frase tachada lleva siempre la ❌ emoji: Efectos5.tsx)
+    if comp == 'PolaroidE' and not v.get('foto'):
+        return None                                  # sin foto, PolaroidE pinta la cámara emoji (y con imagen '' el <Img> vacío tumba el render)
+    if comp == 'RecorteK' and str(v.get('variante') or 'trama') != 'neon':
+        v['variante'] = 'neon'                       # (trama lleva la chincheta 📌 y color ES el emoji; el neón es su contorno)
+    if comp in PLANTILLAS_CON_STICKER and (not st or _es_emoji(st)):
+        return None
+    if comp in PLANTILLAS_STICKER_OPCIONAL and (not st or _es_emoji(st)):
+        v['sticker'] = ''                            # (Pastilla sin la clave pinta un emoji de fábrica: se pone vacío)
+    if comp == 'ConceptoK' and _es_emoji(v.get('icono')):
+        v['icono'] = 'diamante'                      # (el icono del propio kit cuando no hay emoji)
+    if comp == 'AbanicoK' and v.get('iconos'):
+        v['iconos'] = ''                             # (los iconos animados de Noto son emojis: las cartas llevan su número)
+    if _es_emoji(v.get('imagen')):
+        v['imagen'] = ''                             # el pictograma de las escenas (edicion_pro_escenas.ruta_emoji); en PolaroidE manda la foto
+    if isinstance(v.get('imagenes'), (list, tuple)) and any(_es_emoji(x) for x in v['imagenes']):
+        v['imagenes'] = [x for x in v['imagenes'] if not _es_emoji(x)]
+    return v
+
+
+def quitar_emojis(piezas):
+    """v5.55: las piezas de un plan de la PRO sin ningún emoji: fuera los emojis animados (EmojiPro), la órbita, las píldoras con emoji, la del
+    equipo del Tema 6 y las plantillas que no se entienden sin su sticker; al resto se le quita el emoji (sticker, icono, imagen). No cambia las
+    piezas de entrada (las que cambian, van copiadas)."""
+    out = []
+    for p in piezas or []:
+        if not isinstance(p, dict):
+            out.append(p)
+            continue
+        comp = str(p.get('remotion') or '')
+        if p.get('pieza') in ('emoji', 'orbita') or comp in ('EmojiPro', 'OrbitaT5'):
+            continue
+        v = _valores_sin_emojis(comp, p.get('valores'))
+        if v is None:
+            continue
+        antes = p.get('valores') or {}
+        if any(v.get(k) != antes.get(k) for k in ('sticker', 'icono', 'iconos', 'imagen', 'imagenes', 'variante')):
+            p = dict(p, valores=v)
+            if p.get('_valores0'):
+                p['_valores0'] = _valores_sin_emojis(comp, p['_valores0']) or v
+        out.append(p)
+    return out
 
 
 TEMAS_PRO = ('Tema5', 'Tema6')            # edicion_pro_tema5.activo: estos temas SON la Edición PRO completa, aunque su interruptor esté apagado
 
 
+def _tema(pack):
+    """v5.55: un estilo de «Crea tu estilo» con UN tema (pack derivado) cuenta como ese tema (plantillas.tema_base); los demás nombres, tal cual."""
+    try:
+        import plantillas
+        return plantillas.tema_base(pack)
+    except Exception:
+        return pack
+
+
 def tema_actual():
-    """El tema elegido en el chip «Estilo» de Inicio (preferencia go_pack), o ''."""
-    return str(_prefs().get('go_pack') or '')
+    """El tema elegido en el chip «Estilo» de Inicio (preferencia go_pack), o ''. (Un estilo derivado de «Crea tu estilo», con el nombre de su tema.)"""
+    return str(_tema(str(_prefs().get('go_pack') or '')) or '')
 
 
 def en_juego():
@@ -125,7 +237,7 @@ def en_juego():
 def neon_elegido():
     """v5.5.13: ¿el tema elegido es el Tema 1 (pack «Kinetic»: su PRO es el estilo neón del kit)?"""
     p = _prefs()
-    return str(p.get('go_pack') or p.get('plantilla') or '') == 'Kinetic'
+    return str(_tema(str(p.get('go_pack') or p.get('plantilla') or '')) or '') == 'Kinetic'
 
 
 # v5.5.13 (el usuario: «si solo es captions, solo captions; si activo el modo PRO lo hará como el de referencia y si activo cosas del menú
@@ -1714,6 +1826,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     vertical = H > W
     studio = 'studio' in str(info.get('producto') or '').lower() and info.get('via') == 'mcp'
     op = plan.get('opciones') or opciones_guardadas()
+    # v5.55: ¿emojis? La decisión que GO guardó en el plan (el pase ligero, nunca); sin ella, ninguna pieza lleva emojis (quitar_emojis, abajo)
+    con_emojis = emojis_del_plan(plan, op)
     modo_mascara = op.get('pro_mascara') or 'auto'
     try:                                             # v5.20: la sombra / orilla / resplandor de la silueta (página Efectos › Captions detrás de ti)
         import estilos_pro as EST
@@ -1795,7 +1909,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         nuevas, divididas = T5.planificar(plan, vertical, op.get('pro_densidad') or 'media', video, det_de=det5, foto_de=foto5,
                                           ia=op.get('pro_ia_local', True) is not False, idioma=plan.get('idioma') or 'es', estado=decir,
                                           recorte_de=recorte5, cara_de=cara5, usuario=str(op.get('pro_usuario') or ''),
-                                          estilo=plan.get('estilo_t5') or 'skill')
+                                          estilo=plan.get('estilo_t5') or 'skill', con_emojis=con_emojis)
         if not cap_t5:                               # captions editables: fuera los captions de Remotion (y sus velos); los Text+ de GO se quedan
             nuevas = [q for q in nuevas if q.get('pieza') not in ('subtitulo', 'velo_caption')]
         plan['piezas'] = quedan + nuevas
@@ -1805,6 +1919,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             pool = list(plan.get('_pool') or [])
             if t5:                                   # (Temas 5/6: solo piezas de SU sistema; del plan general, las que quedan)
                 pool = [p for p in pool if p.get('pieza') in T5.PIEZAS_QUE_QUEDAN]
+            if not con_emojis:                       # v5.55: la pieza de cada marca, de las que no llevan emojis
+                pool = quitar_emojis(pool)
             puestas = _marcas_libres(plan, dur_m, pool)
             m_pil = _marca(plan, 'pildora')
             if t5 and m_pil:                         # la píldora de los Temas 5/6 viene en sus piezas: la de cada marca
@@ -1821,6 +1937,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 registro.excepcion(origen='edición PRO (posiciones)')
             except Exception:
                 pass
+    if not con_emojis:                               # v5.55: sin «Emojis animados», ninguna pieza con emojis (antes de colocarlas: no ocupan sitio)
+        plan['piezas'] = quitar_emojis(plan.get('piezas') or [])
     clave = hashlib.sha1(f'{video}|{W}x{H}@{fps}'.encode('utf-8')).hexdigest()[:10]
     carpeta = OG.ruta_larga(CARPETA / clave)
     carpeta.mkdir(parents=True, exist_ok=True)
@@ -1868,7 +1986,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 fondo['mc_neon'] = True
             else:
                 fondo['mc'] = MCO.crear(bl, dur_mc, W, H, fps, carpeta, plan.get('idioma') or 'es', plan.get('perfil') or {}, video_img, decir,
-                                        ia=bool(op.get('pro_motions_ia', False)), estilo=estilo_mc) if bl and dur_mc > 1.0 else None
+                                        ia=bool(op.get('pro_motions_ia', False)), estilo=estilo_mc,
+                                        emojis=con_emojis) if bl and dur_mc > 1.0 else None     # v5.55: sus iconos, sin emojis si no tocan
         except Exception as e:
             fondo['mc_error'] = e
 
@@ -2089,7 +2208,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         caras_de.update({round(c['ini'], 2): c['caras'] for c in sin_cara})
         ocupado3d = [(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p.get('pantalla')] + [(t['_s'], t['_s'] + t['dur']) for t in tomas]
         # v5.25: «Emojis animados» (Lottie 2D / 3D en movimiento) SUSTITUYEN a los iconos 3D fijos; apagados en el menú, no va ninguno
-        emo_on = ('emoji' in ex_neon) if neon_tema else bool(op.get('pro_emojis', True))
+        # v5.55: lo decide el juez único (emojis_del_plan: en el Tema 1, su «emoji» del menú; en los demás, pro_emojis True a mano)
+        emo_on = con_emojis
         if emo_on and not ligero and not cap_t5:
             bl_emo = _bloques_captions()
             if neon_tema and not neon_texto:
@@ -2124,12 +2244,12 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 import kit_neon_motions as KM
                 extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, [],
                                   dict(plan, piezas=list(plan.get('piezas') or []) + KM.piezas(plan.get('kitneon_motions') or [])),
-                                  maximo=3, bloques=_bloques_captions() if neon_texto else KN.bloques_pro(plan['kitneon']))
-            else:
-                extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None if ligero else 3)
+                                  maximo=3, bloques=_bloques_captions() if neon_texto else KN.bloques_pro(plan['kitneon']), con_emojis=con_emojis)
+            else:                                    # (v5.55: sin emojis, la píldora de ese bloque es otra: lugar, cifra o redes)
+                extra = TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None if ligero else 3, con_emojis=con_emojis)
             m_pil = _marca(plan, 'pildora') if not neon_tema else None
             if m_pil:                                # v5.22: Efectos › «Posición»: la píldora de los captions que suenan en cada marca
-                todas = extra if ligero else TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None)
+                todas = extra if ligero else TM.piezas(info, video, plan.get('idioma') or 'es', W, H, fps, mover, plan, maximo=None, con_emojis=con_emojis)
                 elegidas = _ligadas([p for p in todas if _seccion(p) == 'pildora'], m_pil, 'píldora')
                 for e in elegidas:
                     e['_marca'] = True
@@ -2139,11 +2259,13 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                     extra = extra + [e for e in elegidas if not any(abs(p['ini'] - e['ini']) < 0.05 for p in extra)]
             extra = [p for p in extra if p.get('_marca') or not any(p['ini'] < t['fin'] and t['ini'] < p['fin'] for t in tramos)]   # (no bajo un caption que va detrás; la marcada, sí)
             plan['piezas'] = list(plan.get('piezas') or []) + extra
-            if ligero:
+            if ligero and not plan.get('sin_color_claves'):       # (v5.55: con un color elegido en «Crea tu estilo» no se pisa con el del video)
                 color_claves = TM.color_claves(info, video, fps)
         except Exception:
             pass
     gris = [[int(round(a * fps)), int(round(b * fps))] for a, b in plan.get('gris') or []]
+    if not con_emojis:                               # v5.55: el seguro final (lo añadido al aplicar): nada con emojis llega a renderizarse
+        plan['piezas'] = quitar_emojis(plan.get('piezas') or [])
     try:                                             # v5.5.7: también lo que se añadió al aplicar (Tema 5/6, acompañantes): solo motions permitidos
         import motions_catalogo as MC
         plan['piezas'] = MC.filtrar(plan.get('piezas') or [], op)

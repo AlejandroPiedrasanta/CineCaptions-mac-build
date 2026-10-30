@@ -8,11 +8,118 @@ crea un proyecto NUEVO «CineCaptions» (guardando y cerrando el que hubiera abi
 que su audio suena en A1 y reserva la pista FX-BROLL si hace falta. Sin esto, en Free los captions de un video soltado caian en el timeline que hubiera abierto.
 ]]
 
-local VERSION = "5.54 (armar video)"
+local VERSION = "5.55 (armar video)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
 if type(ENTREGA_PUENTE) ~= "table" then ENTREGA_PUENTE = nil end
+
+-- v1.0.42 (Puente): Free SIN loadfile ni dofile (el de un cliente; medido en Studio 21.1.2 imitandolo). Ahi el Puente corre este
+-- script con fusion:RunScript o fusion:Execute, que no pasan argumentos: la entrega llega por fusion:GetData("CineCaptions_trabajo"),
+-- el arranque se avisa con SetData("CineCaptions_inicio") y el final con SetData("CineCaptions_fin") (lo que se devuelva se pierde).
+-- Los sidecars se leen con CC_FREE.leer: loadfile -> dofile -> bmd.readfile(<x>.free.lua) -> RunScript(<x>.free.lua) -> consola
+-- (ver FREE en CineCaptions_Puente.lua y sidecar_lua.py). Todo cuelga de UNA tabla: hay scripts al limite de 200 locales.
+-- Copia identica en los 11 scripts de accion: si cambias una, cambialas todas.
+local CC_FREE = { por_datos = false, K_SIDECAR = "CineCaptions_sidecar" }
+function CC_FREE.dato(k)
+    local ok, v = pcall(function() return fusion:GetData(k) end)
+    if ok then return v end
+    return nil
+end
+function CC_FREE.poner(k, v)
+    return (pcall(function() fusion:SetData(k, v) end))
+end
+function CC_FREE.reloj()
+    local ok, t = pcall(function() return bmd.gettime() end)
+    if ok and type(t) == "number" then return t end
+    return os.time()
+end
+function CC_FREE.misma_ruta(a, b)
+    local function n(r) return (tostring(r or ""):gsub("/", "\\"):gsub("\\+", "\\"):lower()) end
+    return n(a) == n(b)
+end
+-- bmd.readfile le pone __flags a cada tabla (medido): fuera, antes de recorrerla con pairs.
+function CC_FREE.sin_flags(t, vistos)
+    if type(t) ~= "table" then return t end
+    vistos = vistos or {}
+    if vistos[t] then return t end
+    vistos[t] = true
+    t.__flags = nil
+    for _, v in pairs(t) do CC_FREE.sin_flags(v, vistos) end
+    return t
+end
+-- RunScript y Execute son ASINCRONOS: se lanza y se espera (maximo 3 s) la tabla de 'ruta' en GetData; la clave se borra al leerla.
+function CC_FREE.por_bus(lanzar, ruta)
+    CC_FREE.poner(CC_FREE.K_SIDECAR, nil)
+    if not pcall(lanzar) then return nil end
+    local t0, v = CC_FREE.reloj(), nil
+    repeat
+        v = CC_FREE.dato(CC_FREE.K_SIDECAR)
+        if type(v) == "table" and type(v.t) == "table" and CC_FREE.misma_ruta(v.ruta, ruta) then break end
+        v = nil
+        pcall(function() bmd.wait(0.01) end)
+    until CC_FREE.reloj() - t0 > 3
+    CC_FREE.poner(CC_FREE.K_SIDECAR, nil)
+    return v and CC_FREE.sin_flags(v.t) or nil
+end
+-- La tabla del sidecar de 'ruta' (la ruta del .json) y el camino que funciono; nil, "ninguno" si ninguno.
+function CC_FREE.leer(ruta)
+    if loadfile then
+        local okc, chunk = pcall(loadfile, ruta .. ".lua")
+        if okc and chunk then
+            local ok, t = pcall(chunk)
+            if ok and type(t) == "table" then return t, "loadfile" end
+        end
+    end
+    if dofile then
+        local ok, t = pcall(dofile, ruta .. ".lua")
+        if ok and type(t) == "table" then return t, "dofile" end
+    end
+    local hib = ruta .. ".free.lua"
+    local okr, t = pcall(function() return bmd.readfile(hib) end)
+    if okr and type(t) == "table" then return CC_FREE.sin_flags(t), "readfile" end
+    if fusion == nil then return nil, "ninguno" end
+    local hay = true
+    pcall(function() hay = bmd.fileexists(hib) ~= false end)
+    local okrs, rs = pcall(function() return fusion.RunScript end)
+    if hay and okrs and rs ~= nil then
+        t = CC_FREE.por_bus(function() fusion:RunScript(hib) end, ruta)
+        if t then return t, "runscript" end
+    end
+    -- La consola solo si el Puente dice que su ping volvio y que este script NO corre dentro de ella (un Execute anidado queda en cola).
+    if type(ENTREGA_PUENTE) == "table" and ENTREGA_PUENTE.ejecutar_ok == true then
+        local p = ruta .. ".lua"
+        t = CC_FREE.por_bus(function() fusion:Execute('local f = loadfile and loadfile([==[' .. p .. ']==]) local ok, t '
+            .. 'if f then ok, t = pcall(f) else ok, t = pcall(dofile, [==[' .. p .. ']==]) end '
+            .. 'if ok and type(t) == "table" then fusion:SetData("' .. CC_FREE.K_SIDECAR .. '", {ruta = [==['
+            .. ruta .. ']==], t = t}) end') end, ruta)
+        if t then return t, "execute" end
+    end
+    return nil, "ninguno"
+end
+-- ¿Hay sidecar de 'ruta'? (para distinguir «no hay orden» de «no la pude leer»; sin bmd.fileexists: no se sabe -> false)
+function CC_FREE.existe(ruta)
+    local hay = false
+    pcall(function() hay = bmd.fileexists(ruta .. ".lua") == true or bmd.fileexists(ruta .. ".free.lua") == true end)
+    return hay
+end
+-- La entrega por GetData: solo si es de los ultimos 2 min (una mas vieja es un resto de un Puente que murio, y una corrida a mano no
+-- debe creerse bajo el Puente).
+if ENTREGA_PUENTE == nil and fusion ~= nil then
+    local t = CC_FREE.dato("CineCaptions_trabajo")
+    if type(t) == "table" and t.id ~= nil and math.abs(os.time() - (tonumber(t.creado) or 0)) <= 120 then
+        ENTREGA_PUENTE, CC_FREE.por_datos = t, true
+        CC_FREE.poner("CineCaptions_inicio", { id = t.id })
+    end
+end
+-- Al final: con la entrega por GetData el final se PUBLICA. true = publicado (el script termina ahi, sin error() ni return de reporte).
+function CC_FREE.publicar(ok, err, reporte)
+    if not CC_FREE.por_datos then return false end
+    CC_FREE.por_datos = false
+    CC_FREE.poner("CineCaptions_fin", { id = ENTREGA_PUENTE.id, ok = ok and true or false,
+        mensaje = (not ok) and tostring(err) or nil, reporte = reporte })
+    return true
+end
 
 -- Free 21.1 capo io en el menu de Scripts: sin io la orden se lee de su sidecar .lua y el resultado viaja por el registro de Resolve (ver el epilogo).
 local SIN_IO = (io == nil)
@@ -305,15 +412,10 @@ local function cargar_tabla(ruta)
         local ok, t = pcall(parsear_json, txt)
         return (ok and type(t) == "table") and t or nil, true
     end
-    local chunk = loadfile and loadfile(ruta .. ".lua")
-    if not chunk and not loadfile and dofile then              -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
-        local ok, t = pcall(dofile, ruta .. ".lua")
-        if not ok then return nil, false end
-        return (type(t) == "table") and t or nil, true
-    end
-    if not chunk then return nil, false end
-    local ok, t = pcall(chunk)
-    return (ok and type(t) == "table") and t or nil, true
+    -- v1.0.42: por la cadena de CC_FREE (loadfile, dofile, bmd.readfile, RunScript, consola): sirve tambien al Free sin loadfile ni dofile.
+    local t = CC_FREE.leer(ruta)
+    if t ~= nil then return t, true end
+    return nil, CC_FREE.existe(ruta)
 end
 
 local function nombre_de_archivo(ruta)
@@ -605,11 +707,14 @@ print = _print_original
 -- OJO: el texto del reporte lleva SOLO lo ultimo del registro (1300 caracteres): la linea «ARMADO {json}» tiene que caber ahi; por eso el JSON va tambien en un campo propio.
 if SIN_IO then
     local reporte = "CINECAPTIONS_REPORTE|" .. reporte_con_armado(ok, ok and "Timeline armado" or tostring(err), texto_para_reporte(), RESULTADO)
+    if CC_FREE.publicar(ok, err, reporte) then return end
     if ENTREGA_PUENTE ~= nil then return reporte end
     error(reporte, 0)
 end
 
 -- Un script que falla tiene que fallar hacia afuera (el pcall(dofile) del Puente daria el trabajo por bueno).
+-- v1.0.42: con la entrega por GetData (RunScript/Execute del Puente) el final se publica en vez de lanzarse.
+if CC_FREE.publicar(ok, err) then return end
 if not ok then
     error(err, 0)
 end

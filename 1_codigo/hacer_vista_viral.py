@@ -66,7 +66,7 @@ def main():
     if not ruta:
         return
     DESTINO.mkdir(parents=True, exist_ok=True)
-    for viejo in DESTINO.glob('*'):
+    for viejo in DESTINO.glob('vir_*.jpg'):              # (solo sus fotos: la carpeta lleva también su icono, .cf/ y desktop.ini)
         viejo.unlink()
     c = av.open(str(ruta))
     s = c.streams.video[0]

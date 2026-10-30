@@ -80,8 +80,9 @@ def _cifra_con_mil(todas, i):
     return valor
 
 
-def elementos(bl, dur, idioma='es', libre=None, det_de=None, cara_de=None, usuario='', debiles=frozenset(), caras_de=None):
-    """Las piezas propias del Tema 6 (EditorialT6). `caras_de(t)` → las cajas de las caras en ese segundo (fracciones del timeline)."""
+def elementos(bl, dur, idioma='es', libre=None, det_de=None, cara_de=None, usuario='', debiles=frozenset(), caras_de=None, con_emojis=False):
+    """Las piezas propias del Tema 6 (EditorialT6). `caras_de(t)` → las cajas de las caras en ese segundo (fracciones del timeline).
+    `con_emojis` (v5.55): la píldora del equipo lleva tres caras emoji: solo con la Edición PRO y «Emojis animados»."""
     todas = [(b['ini'] + w['t'], _p(w['texto']), w['texto'], n, j) for n, b in enumerate(bl) for j, w in enumerate(b['palabras'])]
     out = []
 
@@ -144,9 +145,9 @@ def elementos(bl, dur, idioma='es', libre=None, det_de=None, cara_de=None, usuar
                     'valores': {'tipo': 'perfil', 'valor': valor, 'etiqueta': etiqueta, 'cara': img.get('cara', ''), 'usuario': str(usuario or '')[:28],
                                 'y': 18.0}})
         break
-    # 4) la píldora del equipo, bajo el caption («el equipo», «mis clientes»)
+    # 4) la píldora del equipo, bajo el caption («el equipo», «mis clientes»); sus caras son emojis (Editorial6.tsx): solo con emojis (v5.55)
     n_eq, ult = 0, -99.0
-    for nb, b in enumerate(bl):
+    for nb, b in enumerate(bl if con_emojis else []):
         if n_eq >= 2 or b['ini'] - ult < 12.0 or b['ini'] < 1.0:
             continue
         w = next((w for w in b['palabras'] if _p(w['texto']) in EQUIPO), None)

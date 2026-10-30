@@ -97,6 +97,10 @@ REEL = {k: set(v.split()) for k, v in REEL.items()}
 CON_FOTO = {'movil', 'buscar', 'rec', 'largo', 'post', 'antesdespues'}
 # las generales (si nada encaja): van rotando, con tope y descanso
 GENERALES = ('aviso', 'chat', 'buscar', 'lista', 'nota', 'post')
+# v5.55: las tarjetas que pintan emojis FIJOS en su dibujo (Reel.tsx: la campana del aviso, las caras del mensaje, las reacciones del móvil, la luna
+# y la nube del reloj, la bombilla de las ideas, los corazones, el trofeo, los iconos de compartir, el ❤️ y el 💬 del post): sin «Emojis animados»,
+# no se eligen nunca; el relleno de un tramo sin nada pasa a ser el «buscar» (sin emojis)
+REEL_CON_EMOJI = frozenset({'aviso', 'chat', 'post', 'compartir', 'movil', 'personas', 'premio', 'reloj', 'ideas'})
 PALETAS = ('azul', 'naranja', 'morado', 'verde', 'rosa')
 DIAS = set('lunes martes miercoles jueves viernes sabado domingo monday tuesday wednesday thursday friday saturday sunday'.split())
 MESES = set('enero febrero marzo abril mayo junio julio agosto septiembre setiembre octubre noviembre diciembre january february march april may june july august september october november december'.split())
@@ -275,16 +279,25 @@ def _activos():
     return _ACTIVOS
 
 
-def _mapas():
-    out = []
+class _Mapas(list):
+    """Los mapas palabra → icono de _mapas(). `emojis` (v5.55) = False: solo los iconos 3D, ningún emoji (sin «Emojis animados»; los recortes a
+    color son el mismo emoji 3D con borde blanco: generar_recortes.color)."""
+    emojis = True
+
+
+def _mapas(emojis=True):
+    out = _Mapas()
+    out.emojis = bool(emojis)
     try:
-        import edicion_pro_tema5_acomp as AC
-        out.append(('emoji', AC.CONCEPTOS_ACOMP))
+        if emojis:
+            import edicion_pro_tema5_acomp as AC
+            out.append(('emoji', AC.CONCEPTOS_ACOMP))
     except Exception:
         pass
     try:
-        import edicion_pro_kit7 as K7
-        out.append(('recorte', K7.RECORTES))
+        if emojis:
+            import edicion_pro_kit7 as K7
+            out.append(('recorte', K7.RECORTES))
     except Exception:
         pass
     try:
@@ -309,14 +322,17 @@ def _variantes(pleg):
 
 
 def _icono_de(pleg, mapas=None):
-    """{'emoji': id} | {'img': 'recortes/color/x.webp'} | {'img': 'iconos3d/x.png'} | None para una palabra plegada (y sus formas base)."""
+    """{'emoji': id} | {'img': 'recortes/color/x.webp'} | {'img': 'iconos3d/x.png'} | None para una palabra plegada (y sus formas base).
+    v5.55: con unos `mapas` sin emojis (_mapas(False)), nunca {'emoji': …}."""
     a = _activos()
+    mapas = mapas if mapas is not None else _mapas()
+    con_emoji = getattr(mapas, 'emojis', True)
     for w in _variantes(pleg):
-        for tipo, mapa in (mapas if mapas is not None else _mapas()) + [('emoji', SUPLEMENTO)]:
+        for tipo, mapa in list(mapas) + ([('emoji', SUPLEMENTO)] if con_emoji else []):
             n = mapa.get(w)
             if not n:
                 continue
-            if n in a['emoji']:
+            if con_emoji and n in a['emoji']:
                 return {'emoji': n}
             if tipo == 'recorte' and n in a['recorte']:
                 return {'img': f'recortes/color/{n}.webp'}
@@ -773,7 +789,8 @@ def _evidencia(nombre, idx, cont, textos, plegadas):
     return True
 
 
-def planificar(bloques, dur, idioma='es', perfil=None, video='', vertical=True, ia=True, estado=None):
+def planificar(bloques, dur, idioma='es', perfil=None, video='', vertical=True, ia=True, estado=None, emojis=False):
+    """`emojis` (v5.55): los iconos pueden ser emojis solo con la Edición PRO y «Emojis animados»; sin ellos, recortes e iconos 3D."""
     bloques = _partir(bloques)
     segs = _segmentos(bloques, dur)
     if not segs:
@@ -782,7 +799,7 @@ def planificar(bloques, dur, idioma='es', perfil=None, video='', vertical=True, 
     textos, plegadas, tiempos, frases = _palabras_globales(bloques)
     crudos = [str(w['texto']).strip() for b in bloques for w in b['palabras'] if _limpio(w['texto'])]   # con su puntuación, para el titular
     con_video = bool(video) and os.path.isfile(str(video))
-    mapas = _mapas()
+    mapas = _mapas(emojis)
     L = _textos(idioma)
     cands = [[] for _ in segs]
 
@@ -818,7 +835,7 @@ def planificar(bloques, dur, idioma='es', perfil=None, video='', vertical=True, 
                 vistos.add(c['pleg'])
                 items.append({'texto': c['texto'].capitalize() if c['texto'].isupper() else c['texto'], 'icono': c['icono']})
         cands[k] += [c for c in _reel(idx, cont, textos, plegadas, crudos, L) if c['reel'] != 'antesdespues' or con_video]
-        cands[k] += _widgets(idx, cont, items, textos, plegadas)
+        cands[k] += _widgets(idx, cont, items, textos, plegadas, emojis)
         cands[k] += _generales(idx, cont, textos, plegadas, crudos, L)
         clave = _clave(cont)                                               # el GOLPE: un momento corto y fuerte = solo la palabra, enorme
         fuerte = bool(idx) and (crudos[idx[-1]].endswith('!') or len(idx) <= 4)
@@ -828,6 +845,8 @@ def planificar(bloques, dur, idioma='es', perfil=None, video='', vertical=True, 
             cands[k].append(g)
         if k > 0:
             cands[k].append({'tipo': 'reel', 'reel': '_sigue', 'wp': {}, 'peso': PESO['sigue'], '_sigue': True})
+    if not emojis:                                                         # v5.55: ninguna tarjeta con emojis fijos en su dibujo
+        cands = [[c for c in cs if not (c.get('tipo') == 'reel' and c.get('reel') in REEL_CON_EMOJI)] for cs in cands]
     # la idea que no cupo en un tramo puede seguir en el siguiente si este no pide nada («¿otra versión?» → «claro que sí»: las A/B/C)
     for k in range(len(segs) - 1, 0, -1):
         if any(c['tipo'] == 'reel' and c['peso'] >= PESO['reel'] for c in cands[k]):
@@ -840,7 +859,7 @@ def planificar(bloques, dur, idioma='es', perfil=None, video='', vertical=True, 
                     h['peso'] = c['peso'] - 3.0
                     cands[k].append(h)
     # 3) una por tramo: la que más vale, nunca la misma seguida y con variedad
-    elegidas = _elegir(segs, cands)
+    elegidas = _elegir(segs, cands, emojis)
     escenas, titulares = [], []
     for k, (s, e) in enumerate(zip(segs, elegidas)):
         quitar = set()
@@ -853,7 +872,7 @@ def planificar(bloques, dur, idioma='es', perfil=None, video='', vertical=True, 
         primero = idx_de[k][0] if idx_de[k] else None                     # «Zane, …»: el nombre al que se habla va en la píldora de arriba
         if not arriba and primero is not None and crudos[primero].endswith(',') and textos[primero][:1].isupper() and not _comun(textos[primero], idioma) \
                 and plegadas[primero] not in VACIAS:
-            arriba = textos[primero] + ' 👋'
+            arriba = textos[primero] + (' 👋' if emojis else '')            # (v5.55: la mano es un emoji)
             quitar.add(primero)
         if e.get('_cita') or e.get('reel') == 'golpe':                     # el mensaje y el golpe YA son lo que se dice
             titular = []
@@ -902,8 +921,8 @@ def _numero(texto):
     return (int(m.group(1)), (m.group(2) or '').replace('k', 'K')) if m else (None, '')
 
 
-def _widgets(idx, cont, items, textos, plegadas):
-    """Los widgets que encajan con lo que se dice en el tramo (órbita, ruta, conectores, contador, versiones)."""
+def _widgets(idx, cont, items, textos, plegadas, emojis=False):
+    """Los widgets que encajan con lo que se dice en el tramo (órbita, ruta, conectores, contador, versiones). `emojis` (v5.55): el ✅ del resultado."""
     out = []
     pleg = [plegadas[j] for j in idx]
     nombres = [c for c in cont if not c['verbo'] or c['raro']]
@@ -952,7 +971,8 @@ def _widgets(idx, cont, items, textos, plegadas):
         res = nombres[-1] if nombres else clave
         if len(opciones) >= 2 and res:
             out.append({'tipo': 'conectores', 'entradas': entradas, 'opciones': opciones,
-                        'resultado': {'texto': _corto(res['texto'], 16), 'icono': {'emoji': 'check_mark_button'}}, 'peso': PESO['conectores']})
+                        'resultado': {'texto': _corto(res['texto'], 16), **({'icono': {'emoji': 'check_mark_button'}} if emojis else {})},
+                        'peso': PESO['conectores']})
     return out
 
 
@@ -970,9 +990,10 @@ def _idea(c):
     return _IDEA.get(f, f)
 
 
-def _elegir(segs, cands):
+def _elegir(segs, cands, emojis=True):
     """Una por tramo: la que más vale, nunca la misma seguida, con TOPE por video (~12 % de los tramos, mínimo 2) y DESCANSO (lo usado en los
-    4 últimos tramos vale menos); «_sigue» = la tarjeta anterior continúa (solo tras una que no sea general y si cabe en ~5,4 s)."""
+    4 últimos tramos vale menos); «_sigue» = la tarjeta anterior continúa (solo tras una que no sea general y si cabe en ~5,4 s).
+    `emojis` (v5.55) = False: el relleno de un tramo sin nada es el «buscar», no el aviso (su campana es un emoji)."""
     out, cuenta = [], {}
     tope = max(2, round(0.12 * len(segs)))
     golpes = []
@@ -1003,7 +1024,7 @@ def _elegir(segs, cands):
                 n -= 40                                                    # el golpe, pocas veces
             if n > nota:
                 mejor, nota = c, n
-        mejor = dict(mejor) if mejor else {'tipo': 'reel', 'reel': 'aviso', 'wp': {}, 'peso': 0, '_general': True}
+        mejor = dict(mejor) if mejor else {'tipo': 'reel', 'reel': 'aviso' if emojis else 'buscar', 'wp': {}, 'peso': 0, '_general': True}
         out.append(mejor)
         if not mejor.get('_sigue'):
             f = _familia(mejor)
@@ -1107,9 +1128,10 @@ def sonidos(mp4, fps, rng=None, voz_db=None):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------- render
-def crear(bloques, dur, W, H, fps, carpeta, idioma='es', perfil=None, video='', decir=None, ia=True, estilo=None):
+def crear(bloques, dur, W, H, fps, carpeta, idioma='es', perfil=None, video='', decir=None, ia=True, estilo=None, emojis=False):
     """Planifica y renderiza el video de motions (H.264 opaco, del largo del video). Devuelve su ruta o None. Con caché por contenido.
-    v5.20: `estilo` (estilos_pro.motions_completo: fondo, tema, acento, paleta fija) = el que el usuario eligió en Efectos."""
+    v5.20: `estilo` (estilos_pro.motions_completo: fondo, tema, acento, paleta fija) = el que el usuario eligió en Efectos.
+    v5.55: `emojis` = la Edición PRO con «Emojis animados» (edicion_pro.emojis_del_plan); si no, sus iconos no son emojis."""
     decir = decir or (lambda t: None)
     try:
         import edicion_pro_remotion as RM
@@ -1119,7 +1141,7 @@ def crear(bloques, dur, W, H, fps, carpeta, idioma='es', perfil=None, video='', 
         decir('Motions completo: falta el motor de animaciones (Remotion)')
         return None
     decir('Motions completo: eligiendo una tarjeta para cada momento…')
-    props = planificar(bloques, dur, idioma, perfil, video, H > W, ia, decir)
+    props = planificar(bloques, dur, idioma, perfil, video, H > W, ia, decir, emojis=emojis)
     if not props or not props['escenas']:
         return None
     props.update(estilo or {})

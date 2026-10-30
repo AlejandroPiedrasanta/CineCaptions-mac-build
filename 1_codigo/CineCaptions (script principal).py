@@ -1910,7 +1910,6 @@ class PlantillasWindow(QWidget):
         # «Crea tu estilo»: el único botón de la cabecera (las vistas reales de Resolve se piden solas)
         import proyecto_ui                            # v5.32 (maqueta del usuario): botón luminoso, como «Obtener»
         self.crear_btn = proyecto_ui.BotonLuz(tr('Crea tu estilo'), self._crear_estilo, 'sparkle')
-        Tooltip(self.crear_btn, tr('Elige hasta 3 estilos de una galería y crea tu propio pack en un clic.'))
         capa_audio = getattr(master, '_capa_franja_audio', None) if franja is not None else None
         if capa_audio is not None:                    # v5.5.10 (el usuario: «sube Crea tu estilo, a la par de Whisper»): a la franja del audio
             capa_audio.addWidget(proyecto_ui.Separador())
@@ -2010,58 +2009,85 @@ class PlantillasWindow(QWidget):
     def cerrar(self):
         return None
     def _crear_estilo(self):
-        """«Crea tu estilo»: una galería simple de ejemplos con imagen. Se tocan hasta 3, se le pone nombre y «Crear mi pack» arma el pack en el acto."""
+        """«Crea tu estilo» (v5.55): la página de los Temas 1-6 sobre negro (crea_estilo_ui.CreaEstiloDialogo). Se tocan los temas en el orden en que
+        se turnarán, se elige (si se quiere) la letra y los colores en su cajón, se le pone nombre y «Crear mi pack» lo guarda (_crear_mi_estilo)."""
         import crea_estilo_ui
         actual = getattr(self, '_galeria_estilo', None)
         if actual is not None and vivo(actual):
             actual.traer()
             return
-        self._galeria_estilo = crea_estilo_ui.CreaEstiloDialogo(self.app, self._crear_pack_de_ejemplos, self._abrir_guia_resolve, self._ayuda_estilo,
-                                                                al_resolve_uno=lambda i: self._abrir_guia_resolve([i]))
+        self._galeria_estilo = crea_estilo_ui.CreaEstiloDialogo(self.app, self._crear_mi_estilo)
         self._galeria_estilo.show()
-    def _ayuda_estilo(self):
-        """El «!»: por qué los clips se llaman principal / arriba / abajo / simple, qué son las variantes 2 y 3 y cómo se exporta."""
-        import crea_estilo_ui
-        actual = getattr(self, '_ayuda_dlg', None)
-        if actual is not None and vivo(actual):
-            actual.traer()
-            return
-        self._ayuda_dlg = crea_estilo_ui.AyudaEstilo(self.app)
-        self._ayuda_dlg.show()
-    def _abrir_guia_resolve(self, ids=None):
-        crear = getattr(self.app, '_crear_tu_estilo', None)
-        if crear:
-            crear(ids)
-    def _crear_pack_de_ejemplos(self, nombre, ids, terminado):
-        """Arma el pack con los ejemplos elegidos (en un hilo) y avisa a la galería con terminado(ok)."""
-        existente = plantillas.buscar_pack(nombre)
-        if existente is not None and getattr(existente, 'incorporado', False):
-            ui.error_con_acciones(tr('Crea tu estilo'), tr('«{n}» es el nombre de un pack del programa. Elige otro nombre.', n=nombre), parent=self)
-            terminado(False)
-            return
-        if existente is not None and not messagebox.askyesno(tr('Crea tu estilo'), tr('Ya tienes un pack llamado «{n}». ¿Lo reemplazo por este?', n=nombre), parent=self):
-            terminado(False)
-            return
+    @staticmethod
+    def _poster_estilo(temas, ajustes):
+        """La foto vertical de la tarjeta del estilo (540×960): las imágenes de sus filas en la página (vista_estilos, la misma frase en cada tema
+        con su letra y sus colores), una debajo de otra en el orden de los temas, sobre el fondo de la fila. En el hilo de trabajo; None si falla."""
+        try:
+            from PIL import Image
+            import vista_estilos
+            numeros = [int(str(t)[1:]) for t in temas if str(t)[1:].isdigit()]
+            if not numeros:
+                return None
+            ancho, alto = 540, 960
+            fondo = tuple(vista_estilos.fondo(ajustes))
+            lienzo = Image.new('RGB', (ancho, alto), fondo)
+            fila_w = 500
+            fila_h = min(200, int((alto - 120) / len(numeros)))
+            y = int((alto - fila_h * len(numeros)) / 2)
+            for n in numeros:
+                im = vista_estilos.imagen(n, ajustes, fila_w, fila_h)
+                lienzo.paste(im.convert('RGB'), (int((ancho - fila_w) / 2), y))
+                y += fila_h
+            return lienzo
+        except Exception:
+            registro.excepcion(origen='Crea tu estilo · foto de la tarjeta')
+            return None
+    def _crear_mi_estilo(self, nombre, temas, terminado, ajustes=None):
+        """al_crear de la página «Crea tu estilo»: temas = ['t3', 't1', …] (orden de toque) y ajustes = la letra y los colores ('' = del tema).
+        En un hilo: la foto de la tarjeta, mezcla_planificador.crear_estilo (1 tema = pack derivado; 2-6 = mezcla) y, con letra o colores, los
+        packs personalizados de cada tema ya armados (GO los reutiliza). Avisa en el Registro (sin globos) y pone el estilo en el centro del slider."""
+        ajustes = dict(ajustes or {})
+
         def trabajo():
-            if ids and isinstance(ids[0], str):                      # v5.4.30: looks de los tres temas (mezcla_planificador): un pack de mezcla
-                import mezcla_planificador
-                return mezcla_planificador.crear_pack(nombre, ids)
-            import ejemplos_estilo
-            return ejemplos_estilo.crear_pack(nombre, ids)
+            import mezcla_planificador
+            poster = self._poster_estilo(temas, ajustes)
+            nombre_final, carpeta = mezcla_planificador.crear_estilo(nombre, temas, ajustes, poster=poster)
+            if any(ajustes.values()):
+                try:
+                    import pack_personalizado
+                    for t in temas:
+                        pack_personalizado.preparar(t, ajustes)
+                except Exception as e:                   # (GO lo intentará otra vez; si tampoco puede, va con los packs de fábrica)
+                    registro.aviso(tr('«Crea tu estilo»: no pude preparar todavía tu letra y tus colores ({e}).', e=str(e)[:160]), 'crea tu estilo')
+            return nombre_final, carpeta
+
         def fin(resultado, error):
             if not vivo(self):
                 return
             if error or not resultado:
-                ui.error_con_acciones(tr('Crea tu estilo'), tr('No pude armar el pack: {e}', e=error or '?'), parent=self)
+                texto = tr('«Crea tu estilo»: no pude crear «{n}»: {e}', n=nombre, e=error or '?')
+                registro.aviso(texto, 'crea tu estilo')
+                try:
+                    self.app.status_var.set(texto)
+                except Exception:
+                    pass
                 terminado(False)
                 return
             nombre_final, _carpeta = resultado
             try:
                 self._recargar(self.seleccion.get())
+                self.carrusel.ir_a_valor(nombre_final)
+            except Exception:
+                registro.excepcion(origen='Crea tu estilo · slider')
+            propios = any(ajustes.values())
+            texto = tr('Estilo «{n}» creado con {t}{a}. Está en el slider: tócalo para usarlo.', n=nombre_final,
+                       t=' → '.join(tr('Tema {n}', n=str(i)[1:]) for i in temas),
+                       a=tr(' · tu letra y tus colores') if propios else '')
+            registro.info(texto, 'crea tu estilo')
+            try:
+                self.app.status_var.set(texto)
             except Exception:
                 pass
-            import ui_toast
-            ui_toast.mostrar(self.app, tr('Pack «{n}» creado con {k} variantes. Búscalo en «Pack de estilos».', n=nombre_final, k=len(ids)), duracion_ms=6000)
             terminado(True)
         _correr_en_hilo(self, trabajo, fin)
     def _ajustar_wrap(self, evento=None):
@@ -2516,23 +2542,33 @@ class PlantillasWindow(QWidget):
                                     aviso=aviso, acciones=self._acciones_de(pack, quitable=not plantillas.es_de_fabrica(pack.nombre)), menu=menu, estructura=est, pack=pack)
     @staticmethod
     def _nota_mezcla(pack):
-        """Lo que mezcla un estilo propio de «Crea tu estilo» (sus looks, con el tema de cada uno); '' si no es de mezcla."""
+        """Lo que lleva un estilo propio de «Crea tu estilo» (sus temas o looks y, si la eligió, «tu letra y tus colores»); '' si no es uno."""
+        propios = tr(' · tu letra y tus colores') if getattr(pack, 'con_ajustes', False) else ''
+        if getattr(pack, 'base', None):                  # v5.55: un tema con su letra y sus colores (pack derivado)
+            return plantillas.nombre_visible(pack.base) + propios
         if not getattr(pack, 'mezcla', False):
             return ''
         try:
             import mezcla_planificador
-            partes = [f"T{l['tema']} · {l['nombre']}" for l in (mezcla_planificador.look_de(i) for i in pack.looks) if l]
-            return tr('Mezcla: {l}', l='  ·  '.join(partes)) if partes else ''
+            looks = [mezcla_planificador.look_de(i) for i in pack.looks]
+            if looks and all(l and l.get('entero') for l in looks):          # v5.55: temas enteros, en el orden en que se turnan
+                return tr('Mezcla: {l}', l=' → '.join(tr('Tema {n}', n=l['tema']) for l in looks)) + propios
+            partes = [f"T{l['tema']} · {l['nombre']}" for l in looks if l]
+            return tr('Mezcla: {l}', l='  ·  '.join(partes)) + propios if partes else ''
         except Exception:
             return ''
     @staticmethod
     def _poster_mezcla(pack):
-        """La foto de la tarjeta de un estilo mezclado («Crea tu estilo»): vista_mezcla.jpg, que se hizo al crearlo (o se rehace si falta)."""
-        if not getattr(pack, 'mezcla', False):
+        """La foto de la tarjeta de un estilo de «Crea tu estilo» (mezcla o derivado): vista_mezcla.jpg, la que se hizo al crearlo con las imágenes de
+        sus filas. Si falta, solo se rehace la de una mezcla de looks que mezcla_vista sabe dibujar (los Temas 4-6 los dibujaría como el 2)."""
+        if not (getattr(pack, 'mezcla', False) or getattr(pack, 'base', None)):
             return None
         ruta = Path(pack.carpeta) / 'vista_mezcla.jpg'
         if not ruta.is_file():
             try:
+                import mezcla_planificador
+                if not getattr(pack, 'mezcla', False) or not pack.looks or not all(mezcla_planificador._dibujable(i) for i in pack.looks):
+                    return None
                 import mezcla_vista
                 mezcla_vista.poster(pack.looks, foto=0, ancho=540).save(ruta, quality=88)
             except Exception:
@@ -2540,7 +2576,7 @@ class PlantillasWindow(QWidget):
         return ruta
     def _acciones_de(self, pack, quitable=True):
         """Los botones de la tarjeta de un estilo: ✎ editar en Resolve y 🗑 quitar (los incluidos no se borran del disco: se quitan de la lista)."""
-        acciones = [] if getattr(pack, 'mezcla', False) else [('ph.pencil-simple-bold', '✎', tr('Editar en Resolve: abre el timeline de este estilo para cambiar fuente, color, tamaño o posición. Luego lo exportas (.drt) y lo añades de nuevo. También con doble clic.'),
+        acciones = [] if (getattr(pack, 'mezcla', False) or getattr(pack, 'base', None)) else [('ph.pencil-simple-bold', '✎', tr('Editar en Resolve: abre el timeline de este estilo para cambiar fuente, color, tamaño o posición. Luego lo exportas (.drt) y lo añades de nuevo. También con doble clic.'),
                      lambda p=pack: self._editar_en_resolve(p))]          # (un estilo mezclado no se edita en Resolve: se vuelve a crear en «Crea tu estilo»)
         if quitable:
             ayuda = tr('Quitar de la lista (es un pack incluido en el programa: no se borra del disco)') if pack.incorporado else tr('Quitar este estilo')
@@ -2570,7 +2606,7 @@ class PlantillasWindow(QWidget):
         self._recargar()
     def _editar_en_resolve(self, pack):
         """✎ / doble clic: abre el timeline del pack en Resolve para modificarlo (edicion_pack.py)."""
-        if getattr(self, '_editando_pack', False) or pack is None or getattr(pack, 'mezcla', False):          # (un estilo mezclado no tiene timeline que editar)
+        if getattr(self, '_editando_pack', False) or pack is None or getattr(pack, 'mezcla', False) or getattr(pack, 'base', None):     # (un estilo de «Crea tu estilo» no tiene timeline que editar)
             return
         self._editando_pack = True
         formato = self._formato_edicion(pack) or (pack.formatos[0] if pack.formatos else 'v')
@@ -5212,7 +5248,15 @@ class WordTagWindow(QWidget):
             return
         import copy
         cue = copy.deepcopy(bloques[k]['cue'])
-        pack = getattr(self.master, 'plantilla_sel', 'Referencia')
+        pack = plantillas.tema_base(getattr(self.master, 'plantilla_sel', 'Referencia'))
+        try:                                                  # v5.55: el render real, como GO: sin la Edición PRO y «Emojis animados», sin emoji
+            import edicion_pro
+            con_emojis = edicion_pro.emojis_permitidos(pack)
+        except Exception:
+            con_emojis = False
+        if not con_emojis:
+            import emojis
+            emojis.quitar([cue])
         try:
             import ajustes_ui
             posicion = str(ajustes_ui.leer_prefs().get('emoji_posicion') or 'abajo')
@@ -5280,13 +5324,13 @@ class WordTagWindow(QWidget):
         return self._fin_video_memo
     def _planear_guion(self, automatico=False):
         import guion_editor
-        pack = getattr(self.master, 'plantilla_sel', 'Referencia')
+        pack = plantillas.tema_base(getattr(self.master, 'plantilla_sel', 'Referencia'))
         return guion_editor.planear(self.palabras, self.roles, pack, ancla=self._ancla_guion(), fin_video=self._fin_video_guion(), idioma=self.idioma,
                                     automatico=automatico)
     def _roles_del_planificador(self):
         """Los roles que el planificador elegiría solo (Principal = grande, Abajo = negrita, el resto Simple), listos para pintar."""
         import guion_editor
-        pack = getattr(self.master, 'plantilla_sel', 'Referencia')
+        pack = plantillas.tema_base(getattr(self.master, 'plantilla_sel', 'Referencia'))
         return guion_editor.roles_automaticos(self.palabras, pack, ancla=self._ancla_guion(), fin_video=self._fin_video_guion(), idioma=self.idioma)
     def _bloques_actuales(self):
         """(bloques, indice_de_bloque_por_palabra) con las marcas de AHORA:
@@ -5323,7 +5367,7 @@ class WordTagWindow(QWidget):
         return (bloques, indice)
     def _estilos_pack(self):
         """Las variantes (estilos) del pack elegido para el formato en juego: [{'n', 'nombre', 'color', 'y'…}]. [] si no hay pack (Media Pool, diseño)."""
-        pack = getattr(self.master, 'plantilla_sel', 'auto')
+        pack = plantillas.tema_base(getattr(self.master, 'plantilla_sel', 'auto'))
         try:
             formato = self.master._formato_en_juego()
         except Exception:
@@ -5418,7 +5462,7 @@ class WordTagWindow(QWidget):
         for linea in b.get('lines') or []:
             textos.append(linea.get('text') or '')
             roles.append(linea.get('role') or 'base')
-        pack = getattr(self.master, 'plantilla_sel', 'auto')
+        pack = plantillas.tema_base(getattr(self.master, 'plantilla_sel', 'auto'))
         try:
             formato = self.master._formato_en_juego()
         except Exception:
@@ -5449,7 +5493,7 @@ class WordTagWindow(QWidget):
     #    planificador del TEMA ELEGIDO (con las marcas de ahora) dibujados como GO sin Resolve (vista_tema.py). Se replanifica en un hilo cuando cambian
     #    las marcas (_version), el tema o el tamaño del móvil; mientras tanto se ve el cuadro anterior (o, la primera vez, la vista aproximada).
     def _vt_estilo(self):
-        pack = getattr(self.master, 'plantilla_sel', '') or ''
+        pack = plantillas.tema_base(getattr(self.master, 'plantilla_sel', '') or '') or ''
         if self.modo != self.MODO_MARCAS:
             return pack, None
         try:
@@ -5617,7 +5661,7 @@ class WordTagWindow(QWidget):
             for linea in b.get('lines') or []:
                 textos.append(linea.get('text') or '')
                 roles.append(linea.get('role') or 'base')
-            pack = getattr(self.master, 'plantilla_sel', 'auto')
+            pack = plantillas.tema_base(getattr(self.master, 'plantilla_sel', 'auto'))
             try:
                 formato = self.master._formato_en_juego()
             except Exception:
@@ -5674,7 +5718,7 @@ class WordTagWindow(QWidget):
 
     def _imagen_guion(self, k, indice, pack, formato):
         """El emoji del bloque k en la vista del estilo «guion»: solo si el bloque lo lleva, encima o debajo de la pila según «Emoji: posición» de
-        Ajustes (como lo coloca Resolve). None si no hay."""
+        Ajustes (como lo coloca Resolve). None si no hay (v5.55: tampoco sin la Edición PRO y «Emojis animados»: _imagen_del_bloque)."""
         img = self._imagen_del_bloque(k, indice, pack, formato)
         if not img or img.get('pix') is None:
             return None
@@ -5687,7 +5731,14 @@ class WordTagWindow(QWidget):
         return img
     def _imagen_del_bloque(self, k, indice, pack, formato):
         """El espacio «imagen» del bloque k: donde caera el emoji (el bloque «imagen» del pack o, sin el, debajo del
-        texto) y el emoji de la palabra si ya lo tiene. Nunca lanza."""
+        texto) y el emoji de la palabra si ya lo tiene. Nunca lanza. v5.55: None si el video no llevará emojis (sin la Edición PRO
+        y «Emojis animados», edicion_pro.emojis_permitidos): ni el emoji ni su hueco, en la vista quieta, la del guion y al reproducir."""
+        try:
+            import edicion_pro
+            if not edicion_pro.emojis_permitidos(pack):
+                return None
+        except Exception:
+            return None
         try:
             info = plantillas.bloque_imagen(pack, formato)
         except Exception:
@@ -5741,12 +5792,18 @@ class WordTagWindow(QWidget):
         variante = getattr(self, '_variante_ia', (-1))
         variante = (variante + 1) % sugerencias_ia.VARIANTES
         self._variante_ia = variante
+        try:                                  # v5.55: pone emojis solo si el video los llevará (la Edición PRO con «Emojis animados»)
+            import edicion_pro
+            con_emojis = edicion_pro.emojis_permitidos(getattr(self.master, 'plantilla_sel', None))
+        except Exception:
+            con_emojis = False
         modal = Dialogo(self, tr('Asistencia'), 500, 430, redimensionable=False)
         capa = _capa_dialogo(modal, (0, 0, 0, 0), 0)
         import editor_ui
         panel = editor_ui.PanelAsistencia(
             tr('La asistencia está trabajando'), tr('Listo'), tr('Leyendo tu guion…'),
-            (tr('Leer y entender el guion'), tr('Corregir texto y ortografía'), tr('Elegir las palabras clave'), tr('Quitar signos y poner emojis')),
+            (tr('Leer y entender el guion'), tr('Corregir texto y ortografía'), tr('Elegir las palabras clave'),
+             tr('Quitar signos y poner emojis') if con_emojis else tr('Quitar signos')),
             tr('Versión {v} de {t}', v=variante + 1, t=sugerencias_ia.VARIANTES),
             tr('Otra pulsación = otra versión · Ctrl+Z deshace'))
         capa.addWidget(panel, 1)
@@ -5770,7 +5827,7 @@ class WordTagWindow(QWidget):
         peso_conector = 1.0
         # auditoría v5.11: con el estilo «guion» las palabras clave las elige el planificador (igual que «Auto (como GO)» y que Generar),
         # no los roles de 3 líneas de la IA, que aquí se leerían como grande / fina / negrita al azar
-        guion_pack = getattr(self.master, 'plantilla_sel', 'Referencia') if getattr(self, '_guion', False) else None
+        guion_pack = plantillas.tema_base(getattr(self.master, 'plantilla_sel', 'Referencia')) if getattr(self, '_guion', False) else None
         guion_ancla, guion_fin = (self._ancla_guion(), self._fin_video_guion()) if guion_pack else ('medio', None)
         def _trabajar():
             try:
@@ -5814,14 +5871,15 @@ class WordTagWindow(QWidget):
                     import dynamic_subtitles as dyn
                     roles = list(dyn.suggest_roles(palabras))
                 estado['fase'] = 3
-                estado['texto'] = tr('Quitando signos y poniendo emojis…')
+                estado['texto'] = tr('Quitando signos y poniendo emojis…') if con_emojis else tr('Quitando signos…')
                 resultado['signos'] = ia_texto.sin_signos(palabras)
                 if guion_pack:
                     import guion_editor
                     roles = guion_editor.roles_automaticos(palabras, guion_pack, ancla=guion_ancla, fin_video=guion_fin, idioma=idioma)
-                elegidos = (ia_texto.emojis_de_ia(palabras, propuestos, idioma, roles) if propuestos is not None
-                            else ia_texto.emojis_sin_ia(palabras, roles, idioma))
-                resultado['emojis'] = ia_texto.poner_emojis(palabras, elegidos)
+                if con_emojis:                    # v5.55: sin la Edición PRO y «Emojis animados», la Asistencia no pone emojis (GO los quitaría)
+                    elegidos = (ia_texto.emojis_de_ia(palabras, propuestos, idioma, roles) if propuestos is not None
+                                else ia_texto.emojis_sin_ia(palabras, roles, idioma))
+                    resultado['emojis'] = ia_texto.poner_emojis(palabras, elegidos)
                 resultado['palabras'], resultado['roles'] = palabras, roles
             except Exception as e:
                 guardar_log_de_error(traceback.format_exc())
@@ -5859,9 +5917,15 @@ class WordTagWindow(QWidget):
             marcadas = sum(1 for r in self.roles if r)
             import ui_toast
             motor = 'Qwen3' if resultado['ia'] else tr('motor clásico')
-            ui_toast.mostrar(self, tr('Asistencia ({motor}): {c} correcciones · {n} palabras marcadas · {e} emojis · {s} signos fuera · versión {v} de {t}. Ctrl+Z deshace.',
-                                      motor=motor, c=resultado['correcciones'], n=marcadas, e=resultado['emojis'],
-                                      s=resultado['signos'], v=variante + 1, t=sugerencias_ia.VARIANTES), duracion_ms=6000)
+            if resultado.get('emojis'):
+                aviso = tr('Asistencia ({motor}): {c} correcciones · {n} palabras marcadas · {e} emojis · {s} signos fuera · versión {v} de {t}. Ctrl+Z deshace.',
+                           motor=motor, c=resultado['correcciones'], n=marcadas, e=resultado['emojis'],
+                           s=resultado['signos'], v=variante + 1, t=sugerencias_ia.VARIANTES)
+            else:                                    # v5.55: sin «Emojis animados» no se ponen: el aviso no cuenta «0 emojis»
+                aviso = tr('Asistencia ({motor}): {c} correcciones · {n} palabras marcadas · {s} signos fuera · versión {v} de {t}. Ctrl+Z deshace.',
+                           motor=motor, c=resultado['correcciones'], n=marcadas,
+                           s=resultado['signos'], v=variante + 1, t=sugerencias_ia.VARIANTES)
+            ui_toast.mostrar(self, aviso, duracion_ms=6000)
         despues(300, _revisar, self)
     def _al_cambiar_tamano(self, indice, valor):
         self._tamanos_vars[indice].set(str(valor))
@@ -8151,8 +8215,15 @@ class SubtitleApp(QWidget):
                 elegido = self._plantilla_un_clic()
             except Exception:
                 elegido = None
-            if elegido not in plantillas.FABRICA:
+            if plantillas.tema_base(elegido) not in plantillas.FABRICA:    # (v5.55: un estilo derivado de «Crea tu estilo» va con su tema y su letra/colores)
                 self._go_pack_forzado = 'Tema4'
+                try:
+                    p_el = plantillas.buscar_pack(elegido) if elegido else None
+                    if p_el is not None and getattr(p_el, 'mezcla', False):
+                        registro.aviso(tr('«{p}» mezcla temas y solo se coloca en DaVinci Resolve: sin Resolve, GO graba el video con el Tema 4.',
+                                          p=plantillas.nombre_visible(elegido)), 'crea tu estilo')
+                except Exception:
+                    pass
         self._go_cues_render = None
         self._go_render_estilo = None
         self._textos_pasos_go()
@@ -8181,9 +8252,11 @@ class SubtitleApp(QWidget):
         try:                                              # v5.4.27: una línea con el contexto de ESTE GO, para entender cualquier error que venga después
             import efectos_visuales as _fxl
             import plantillas as _pl
+            import edicion_pro as _epl                     # v5.55: los emojis los decide el juez único (la PRO + «Emojis animados»), no go_emojis
             registro.info('GO empieza · %s · tema «%s» · Resolve %s · efectos %s · emojis %s' % (
                 ('video «%s»' % Path(str(archivo)).name) if archivo else 'audio del timeline de Resolve', _pl.nombre_visible(self._plantilla_un_clic()),
-                'Studio (MCP)' if hay_mcp else 'Free (Puente)', 'sí' if _fxl.activado() else 'no', 'sí' if self._go_emojis() else 'no'), 'GO')
+                'Studio (MCP)' if hay_mcp else 'Free (Puente)', 'sí' if _fxl.activado() else 'no',
+                'sí' if _epl.emojis_permitidos(self._plantilla_un_clic()) else 'no'), 'GO')
         except Exception:
             pass
         if archivo and Path(archivo).exists():
@@ -10548,48 +10621,6 @@ class SubtitleApp(QWidget):
         menu.agregar(tr('Elegir un archivo…'), self._browse)
         menu.agregar(tr('Proyectos guardados'), self._abrir_proyectos_guardados_main)
         menu.mostrar(QCursor.pos())
-    def _crear_tu_estilo(self, ids=None):
-        """«Crea tu estilo»: abre en Resolve (por MCP) el timeline-guía con la estructura de un pack: los bloques
-        arriba · principal · abajo uno encima del otro. Con 'ids' (el botón «Vista real · Resolve» de una tarjeta) carga SOLO esos ejemplos."""
-        if getattr(self, '_creando_estilo', False):
-            return
-        import ejemplos_estilo
-        solo = [int(i) for i in ids] if ids else None
-        uno = ejemplos_estilo.por_id(solo[0]) if solo and len(solo) == 1 else None
-        nombre_tl = f"Estilo \u00b7 {uno['nombre']}" if uno else 'Crea tu estilo'
-        guia = BASE_RECURSOS / 'guia_estilo' / 'construir_guia.py'
-        bloques = BASE_RECURSOS / 'guia_estilo' / 'Crea tu estilo.drb'
-        if not guia.is_file() or not bloques.is_file():
-            messagebox.showwarning(tr('Crea tu estilo'), tr('No encuentro la guía incluida:\n{ruta}', ruta=guia), parent=self)
-            return
-        self._creando_estilo = True
-        if uno:
-            self.status_var.set(tr('Cargando «{n}» en la línea de tiempo de Resolve…', n=ejemplos_estilo.nombre_visible(uno)))
-        else:
-            self.status_var.set(tr('Armando la guía «Crea tu estilo» en Resolve (48 ejemplos, unos segundos)…'))
-        def trabajo():
-            import resolve_mcp
-            prep = resolve_mcp.preparar_resolve(abrir=True, al_estado=lambda t: self.msg_queue.put(('status', t)))
-            if not prep.get('ok'):
-                return (False, prep.get('motivo') or tr('No pude preparar Resolve.'))
-            return resolve_mcp.abrir_guia(guia, nombre_tl, ejemplos_estilo.datos_guia(bloques, amro=bloques.with_name('Amro principales.drb'), solo=solo))
-        def fin(resultado, error):
-            self._creando_estilo = False
-            if not vivo(self):
-                return
-            ok, mensaje = resultado if (resultado and not error) else (False, str(error or ''))
-            if ok and uno:
-                self.status_var.set(tr('«{n}» está cargado en la línea de tiempo de Resolve: solo ese estilo. Retócalo, ponle el nombre exacto y exporta el timeline (.drt).', n=ejemplos_estilo.nombre_visible(uno)))
-                import ui_toast
-                ui_toast.mostrar(self, tr('«{n}» está en la línea de tiempo de Resolve', n=ejemplos_estilo.nombre_visible(uno)))
-            elif ok:
-                self.status_var.set(tr('Timeline «Crea tu estilo» listo en Resolve: 48 ejemplos con Luxe Shine, Luxe Slide y Amro. Quédate con los que quieras, ponles el nombre exacto y exporta el timeline (.drt).'))
-                import ui_toast
-                ui_toast.mostrar(self, tr('La guía «Crea tu estilo» está abierta en Resolve'))
-            else:
-                self.status_var.set(tr('No pude abrir la guía: {m}', m=mensaje))
-                messagebox.showwarning(tr('Crea tu estilo'), tr('No pude armar la guía en Resolve: {m}', m=mensaje), parent=self)
-        _correr_en_hilo(self, trabajo, fin)
     def _basicos_actual(self):
         return f'{self.basicos_pack}||{self.basicos_sel}' if self.basicos_sel else ''
     def _vistas_reales_solas(self):
@@ -10751,19 +10782,23 @@ class SubtitleApp(QWidget):
         except (ValueError, AttributeError):
             return 2
     def _emojis_permitidos(self, pack_nombre, *listas):
-        """v5.54 (pedido: «los emojis solo se activan con la Edición PRO si activo la función de emoji»): ¿GO pone emojis con este tema (None = el
-        de Inicio)? Solo con la Edición PRO en juego y su opción «Emojis animados». Si no, quita de `listas` (bloques, cues) el emoji que ya dejó
-        el planificador o Creativo, y lo dice en el Registro."""
+        """v5.54 (pedido: «los emojis solo se activan con la Edición PRO si activo la función de emoji»): ¿GO pone emojis con este tema? Solo con la
+        Edición PRO en juego y su opción «Emojis animados». Si no, quita de `listas` (bloques, cues) el emoji que ya dejó el planificador o
+        Creativo, y lo dice en el Registro. v5.55: el juez único (edicion_pro.emojis_permitidos) con el tema REAL de este GO / Generar
+        (None = plantilla_sel; antes, el chip de Inicio: con Generar o Creativo en otro tema, los Temas 5/6 se juzgaban mal)."""
+        if pack_nombre is None:
+            pack_nombre = getattr(self, 'plantilla_sel', None)
         try:
             import edicion_pro
-            if edicion_pro.emojis_del_tema(pack_nombre):
+            if edicion_pro.emojis_permitidos(pack_nombre):
                 return True
         except Exception:
             registro.excepcion(origen='emojis solo con la PRO')
-        for lista in listas:
-            for b_e in lista or []:
-                for k_e in ('emoji', 'emoji_ini', 'emoji_fin', 'emoji_linea'):
-                    b_e.pop(k_e, None)
+        try:
+            import emojis as _emj
+            _emj.quitar(*listas)
+        except Exception:
+            registro.excepcion(origen='emojis solo con la PRO (quitar)')
         if listas:
             registro.info(tr('Sin emojis: salen con la Edición PRO y su opción «Emojis animados».'), 'GO')
         return False
@@ -12052,7 +12087,12 @@ class SubtitleApp(QWidget):
         try:
             import edicion_pro
             tema5 = self._es_tema5()                   # el Tema 5 es la Edición PRO completa (captions incluidos): va aunque el interruptor esté apagado
-            tema_pro = 'neon' if (getattr(self, 'plantilla_sel', '') or '') == 'Kinetic' else None    # v5.5.13: con el Tema 1 la PRO va en neón
+            tema_pro = 'neon' if plantillas.tema_base(getattr(self, 'plantilla_sel', '') or '') == 'Kinetic' else None    # v5.5.13: con el Tema 1 la PRO va en neón
+            try:                                       # v5.55: con un color elegido en «Crea tu estilo» el pase ligero no recolorea las palabras clave
+                aj_sel = self._ajustes_de_pack(plantillas.buscar_pack(getattr(self, 'plantilla_sel', '') or ''))
+                sin_color_claves = bool(aj_sel.get('color_principal') or aj_sel.get('color_secundario'))
+            except Exception:
+                sin_color_claves = False
             if not words:
                 return
             if not (edicion_pro.activado() or tema5):
@@ -12067,19 +12107,22 @@ class SubtitleApp(QWidget):
                     if ajustes_ui.leer_prefs().get('temas_mejoras', True) is False or tema_pro == 'neon':
                         if tema_pro == 'neon':                       # v5.5.13: el Tema 1 neón pone sus captions aunque no haya mejoras
                             self._pro_plan = {'ligero': True, 'solo_captions': True, 'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es',
-                                              'opciones': op_go, 'tema': tema_pro}
+                                              'opciones': op_go, 'tema': tema_pro, 'emojis': False}
                         elif op_go.get('pro_motions_completo'):      # v5.5.8: solo «Motions completo»
                             try:
                                 import posiciones_pro           # v5.22: sus tramos marcados en Efectos › «Posición»
                                 marcas_mc = posiciones_pro.para_plan(str(media_path), getattr(self, '_recorte', None))
                             except Exception:
                                 marcas_mc = {}
-                            self._pro_plan = {'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es', 'opciones': op_go, '_marcas': marcas_mc}
+                            self._pro_plan = {'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es', 'opciones': op_go, '_marcas': marcas_mc,
+                                              'emojis': False}
                         return
                 except Exception:
                     pass
+                # v5.55 (pedido: «ningún tema del 1 al 6 debe tener emojis hasta que se active»): sin la PRO, ni un emoji (las píldoras del pase
+                # ligero, sin el saludo, la fecha ni el concepto; Motions completo, con iconos 3D y sin las tarjetas que dibujan emojis: REEL_CON_EMOJI)
                 self._pro_plan = {'ligero': True, 'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es',
-                                  'opciones': op_go, 'tema': tema_pro}
+                                  'opciones': op_go, 'tema': tema_pro, 'emojis': False, 'sin_color_claves': sin_color_claves}
                 return
             self.msg_queue.put(('status', tr('Edición PRO: pensando la edición de este video…')))
             cortes = None
@@ -12103,13 +12146,18 @@ class SubtitleApp(QWidget):
                                           al_estado=lambda t: self.msg_queue.put(('status', tr(t))), tema=tema_pro, marcas=marcas)
             plan['_recorte'] = recorte                 # v5.29: «Listo» en Efectos › Posición pasa las marcas a ESTE timeline sin rehacer GO
             plan['tema5'] = tema5
-            if tema5 and (getattr(self, 'plantilla_sel', '') or '') == 'Tema6':
+            plan['sin_color_claves'] = sin_color_claves
+            if tema5 and plantillas.tema_base(getattr(self, 'plantilla_sel', '') or '') == 'Tema6':
                 plan['estilo_t5'] = 'editorial'        # Tema 6: el mismo motor, con el estilo editorial (serif fina, melocotón, visor, búsqueda…)
+            # v5.55: la decisión de los emojis viaja en el plan (con el tema REAL de este GO): aplicar() y «Listo» de Efectos › Posición la respetan
+            # aunque la opción cambie después, así captions y PRO nunca se contradicen
+            plan['emojis'] = edicion_pro.emojis_permitidos(getattr(self, 'plantilla_sel', None), plan.get('opciones'))
             solo_motions = bool((plan.get('opciones') or edicion_pro.opciones_guardadas()).get('pro_motions_completo'))
             # v5.5.13: el Tema 1 neón también sin piezas genéricas (sus motions del kit y sus captions se suman al aplicar)
             if plan.get('piezas') or tema5 or solo_motions or plan.get('tema') == 'neon':   # v5.5.9: con «Motions completo», aunque la PRO no tenga gráficos para este video
                 self._pro_plan = plan
-            registro.info('Edición PRO: ' + plan.get('resumen', '') + (' · Tema 5 (captions propios)' if tema5 else ''), 'edición pro')
+            registro.info('Edición PRO: ' + plan.get('resumen', '') + (' · Tema 5 (captions propios)' if tema5 else '')
+                          + ('' if plan['emojis'] else ' · sin emojis (se activan con «Emojis animados»)'), 'edición pro')
         except Exception:
             registro.excepcion(origen='edición PRO (plan)')
 
@@ -12117,7 +12165,7 @@ class SubtitleApp(QWidget):
         """¿Este GO / Generar usa el Tema 5? (la edición completa a criterio del programa, con sus propios captions animados)."""
         try:
             import edicion_pro_tema5
-            return edicion_pro_tema5.activo(getattr(self, 'plantilla_sel', '') or '')
+            return edicion_pro_tema5.activo(plantillas.tema_base(getattr(self, 'plantilla_sel', '') or ''))    # (un estilo derivado del Tema 5/6 = su Edición total)
         except Exception:
             return False
 
@@ -13625,7 +13673,8 @@ class SubtitleApp(QWidget):
             video_g = self.video_var.get().strip().strip('"') or None     # v5.5.8: el Tema 5 saca de él el color de la frase clave
         except Exception:
             video_g = None
-        res_plan = guion_editor.planear(palabras_finales, roles_finales, pack.nombre, ancla=ancla, fin_video=self._fin_video(), idioma=base_lang,
+        tema = getattr(pack, 'base', None) or pack.nombre               # v5.55: un estilo derivado de «Crea tu estilo» planifica como su tema
+        res_plan = guion_editor.planear(palabras_finales, roles_finales, tema, ancla=ancla, fin_video=self._fin_video(), idioma=base_lang,
                                         automatico=bool(getattr(self, '_un_clic', False)), video=video_g)
         cues, plan = res_plan['cues'], res_plan['plan']
         if not cues:
@@ -13645,7 +13694,7 @@ class SubtitleApp(QWidget):
                 self.msg_queue.put(('status', tr('Eligiendo los efectos de sonido...')))
                 pista_sfx = self._preparar_sfx(bloques, self._instantes_main(bloques, cues))
             self.msg_queue.put(('gen_fase', 'emojis'))
-            if self._emojis_permitidos(pack.nombre, bloques, cues):     # (el planificador ya deja el emoji en cada bloque: sin la PRO, fuera también de ahí)
+            if self._emojis_permitidos(tema, bloques, cues):            # (el planificador ya deja el emoji en cada bloque: sin la PRO, fuera también de ahí)
                 pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales)
                 self._emojis_con_la_palabra_grande(bloques)
             if con_sfx:
@@ -13658,9 +13707,10 @@ class SubtitleApp(QWidget):
                 if k in b:
                     c[k] = b[k]
         json_path = gc.escribir(cues, st.SHARED_FOLDER / f'{project_name}.{base_lang}.guion.json', base_lang)
+        pista_plantilla = self._con_pack_personalizado(pack, pista_plantilla)
         if sin_resolve:
             self._go_cues_render = cues                              # GO sin Resolve: render_sin_resolve los graba en el video
-            self._go_render_estilo = {'tipo': 'guion', 'pack': pack.nombre}
+            self._go_render_estilo = self._estilo_render('guion', pack)
         srt_path = st.SHARED_FOLDER / f'{project_name}.{base_lang}.srt'
         try:
             st.write_srt([st.Cue(start=b['start'], end=b['end'], text=' '.join(l['text'] for l in b['lines'])) for b in bloques], 42, 2, srt_path)
@@ -13729,7 +13779,7 @@ class SubtitleApp(QWidget):
             if con_sfx:
                 self.msg_queue.put(('status', tr('Eligiendo los efectos de sonido...')))
                 pista_sfx = self._preparar_sfx(bloques, self._instantes_main(bloques, cues))
-            if es_viral and self._emojis_permitidos(pack.nombre, bloques, cues):   # VIRAL sí lleva emojis (Kinetic no), con la PRO: con la palabra clave y su sonido
+            if es_viral and self._emojis_permitidos(getattr(pack, 'base', None) or pack.nombre, bloques, cues):   # VIRAL sí lleva emojis (Kinetic no), con la PRO
                 self.msg_queue.put(('gen_fase', 'emojis'))
                 pista_emojis = self._preparar_emojis(bloques, palabras_finales, roles_finales)
                 self._emojis_con_la_palabra_grande(bloques)
@@ -13744,9 +13794,10 @@ class SubtitleApp(QWidget):
         if not es_viral and not sin_resolve:
             kc.variantes_trazo(cues)                                  # v5.45: el aro con su forma y zoom igual en x e y (el trazo no se deforma)
         json_path = kc.escribir(cues, st.SHARED_FOLDER / f'{project_name}.{base_lang}.kinetic.json', base_lang)
+        pista_plantilla = self._con_pack_personalizado(pack, pista_plantilla)
         if sin_resolve:
             self._go_cues_render = cues                              # GO sin Resolve: render_sin_resolve los graba en el video (render_temas.py)
-            self._go_render_estilo = {'tipo': 'viral' if es_viral else 'kinetic', 'pack': pack.nombre}
+            self._go_render_estilo = self._estilo_render('viral' if es_viral else 'kinetic', pack)
         srt_path = st.SHARED_FOLDER / f'{project_name}.{base_lang}.srt'
         try:
             st.write_srt([st.Cue(start=b['start'], end=b['end'], text=' '.join(l['text'] for l in b['lines'])) for b in bloques], 42, 2, srt_path)
@@ -13761,7 +13812,9 @@ class SubtitleApp(QWidget):
             # la hacen en sus últimos 0,32 s, así que se alargan eso (antes salían 0,32 s antes y el aro, que tarda 0,45 s, no acababa de dibujarse)
             import kit_neon as _kn
             track['extra_fin_s'] = _kn.EXTRA_FIN_TEXTO
-            track['fuente_del_tema'] = True                       # (la tipografía de «Crea tu estilo» no cambia la letra del kit; los clips neón tampoco)
+            if not (getattr(pack, 'ajustes', None) or {}).get('fuente_principal') and not (getattr(pack, 'ajustes', None) or {}).get('fuente_secundaria'):
+                track['fuente_del_tema'] = True                   # (el Tema 1 de fábrica guarda la letra del kit; un estilo derivado con letra elegida la lleva
+                                                                  # en sus clips y aquí se encajan sus tamaños: _poner_pistas_motor)
         try:                                                     # v5.43 (el usuario: «el Tema 1 en Resolve no tiene el formato Text+ para poder
             import edicion_pro as _ep                            # trabajar»): por defecto sus captions son estos Text+ neón, EDITABLES; la PRO
             editables = _ep.opciones_guardadas().get('pro_captions_editables', True) is not False   # pone motions y placa y los ajusta (sin clips neón)
@@ -13793,15 +13846,59 @@ class SubtitleApp(QWidget):
         except Exception:
             return None
         return p if p is not None and getattr(p, 'mezcla', False) else None
+    @staticmethod
+    def _ajustes_de_pack(pack):
+        """v5.55: la letra y los colores que el usuario eligió en «Crea tu estilo» para ese pack (derivado o mezcla); {} si ninguno (los temas de
+        fábrica y los packs importados nunca llevan: la letra ya no sale de las prefs globales)."""
+        aj = getattr(pack, 'ajustes', None) or {}
+        return dict(aj) if isinstance(aj, dict) and any(aj.values()) else {}
+    def _plantilla_personalizada(self, base, ajustes):
+        """v5.55: el campo 'plantilla' del pack personalizado de `base` ('VIRAL', 'Tema4'…) con la letra y los colores ya en sus clips
+        (pack_personalizado; en el hilo de generar: la primera vez tarda 0,1-0,7 s), o None sin ajustes o si no se pudo (va el pack de fábrica y
+        se dice en el Registro)."""
+        if not ajustes:
+            return None
+        try:
+            import pack_personalizado
+            return pack_personalizado.plantilla(base, ajustes, formato_forzado=self._formato_forzado()) or None
+        except Exception as e:
+            registro.aviso(tr('«Crea tu estilo»: no pude poner tu letra y tus colores en {t} ({e}); va con los del tema.',
+                              t=plantillas.nombre_visible(base), e=str(e)[:160]), 'crea tu estilo')
+            return None
+    def _con_pack_personalizado(self, pack, pista_plantilla):
+        """v5.55: un estilo DERIVADO de «Crea tu estilo» (un tema + letra y colores) sale por el camino normal de su tema; aquí su pista cambia el
+        pack de fábrica por el personalizado. Sin ajustes, sin Resolve (GO sin Resolve los pinta él: _estilo_render) o si falla, tal cual."""
+        base = getattr(pack, 'base', None)
+        aj = self._ajustes_de_pack(pack)
+        if not base or not aj or getattr(self, '_go_sin_resolve', False):
+            return pista_plantilla
+        plantilla = self._plantilla_personalizada(base, aj)
+        if not plantilla:
+            return pista_plantilla
+        registro.info(f'«Crea tu estilo»: {pack.nombre} = {plantillas.nombre_visible(base)} con el pack {plantilla.get("pack")}', 'crea tu estilo')
+        return dict(pista_plantilla or {}, plantilla=plantilla)
+    def _estilo_render(self, tipo, pack):
+        """GO sin Resolve: {'tipo', 'pack' (el tema), 'ajustes' (la letra y los colores de «Crea tu estilo», si hay)} para render_sin_resolve."""
+        estilo = {'tipo': tipo, 'pack': getattr(pack, 'base', None) or pack.nombre}
+        aj = self._ajustes_de_pack(pack)
+        if aj:
+            estilo['ajustes'] = aj
+        return estilo
     def _generar_con_mezcla(self, pack, palabras_finales, roles_finales, pista_plantilla, project_name, base_lang, avisar, con_sfx=False):
         """v5.4.30, «Crea tu estilo» con looks de los TRES temas: mezcla_planificador.py parte lo hablado en tramos (una o varias frases) y a cada uno le pone un look de la lista del pack
         (Tema 1 = Kinetic, Tema 2 = Referencia, Tema 3 = VIRAL) con el planificador de ESE tema. Salen dos listas de bloques: las de formato «kinetic» (Tema 1 y Tema 3, mismo colocador de
         Resolve) y las de formato «guion» (Tema 2): dos pistas de datos en el manifiesto (manifest['mezcla'] = True: Resolve las coloca en la misma corrida sin que una borre a la otra).
         Los sonidos van por todos los bloques; los emojis, solo en los de VIRAL y «guion» (los títulos de Kinetic no llevan).
+        v5.55: también los temas ENTEROS 't1'…'t6' del «Crea tu estilo» nuevo: UNA pista «guion» con el primer pack guion de plantilla y el resto en
+        plantillas_extra (cada bloque lleva c['pack']); con letra o colores elegidos, cada tema va con su pack personalizado (pack_personalizado).
         Devuelve (bloques, track, pista_sfx) como los demás generadores; las pistas de más viajan en track['mezcla_pistas'] (las separa _poner_pistas_motor), o None si no se puede."""
+        self._kitneon = None                                            # (la mezcla no lleva los clips neón del Tema 1: van sus Text+)
         formato = self._formato_forzado() or self._formato_en_juego() or 'v'
         if formato != 'v':
-            avisar(tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
+            texto = tr('«{p}» mezcla temas y solo existe en vertical: en este timeline horizontal uso el diseño de siempre. Para un video horizontal elige un Tema.',
+                       p=plantillas.nombre_visible(pack.nombre))
+            avisar(texto)
+            registro.aviso(texto, 'crea tu estilo')
             return None
         import guion_captions as gc
         import kinetic_captions as kc
@@ -13821,8 +13918,12 @@ class SubtitleApp(QWidget):
         ancho_tl, alto_tl = int(getattr(self, '_ancho_timeline', 0) or 0), int(getattr(self, '_alto_timeline', 0) or 0)
         if not (ancho_tl > 0 and alto_tl > 0):
             ancho_tl, alto_tl = 1080, 1920
+        try:
+            video_m = self.video_var.get().strip().strip('"') or None   # (el Tema 5 saca de él el color de su frase clave)
+        except Exception:
+            video_m = None
         res = mp.planificar(palabras_finales, pack.looks, base_lang, ancho_tl, alto_tl, ancla_kinetic=str(prefs.get('kinetic_ancla', 'bajo')), ancla_viral=str(prefs.get('viral_ancla', 'bajo')),
-                            ancla_guion=str(prefs.get('guion_ancla', 'medio')), mains=mains, fin_video=self._fin_video())
+                            ancla_guion=str(prefs.get('guion_ancla', 'medio')), mains=mains, fin_video=self._fin_video(), video=video_m)
         orden = res['orden']                                            # [(motor, cue)] por tiempo: 'kinetic' | 'viral' | 'guion'
         if not orden:
             avisar(tr('No encontré palabras para armar el estilo «{p}»: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
@@ -13866,20 +13967,64 @@ class SubtitleApp(QWidget):
         pistas = []
         lado_k = [c for m, c in orden if m in ('kinetic', 'viral')]
         lado_g = [c for m, c in orden if m == 'guion']
+        packs_k = list(res.get('packs_kinetic') or [])                 # (los nombres de pack de FÁBRICA, en el orden del usuario; antes de renombrar)
+        packs_g = list(res.get('packs_guion') or []) or ['Referencia']
+        hay_t1, hay_t3 = 'Kinetic' in packs_k, 'VIRAL' in packs_k
+        if hay_t1 and 't1' in pack.looks:                               # el Tema 1 ENTERO va con la composición del kit, como en su GO
+            import kit_neon as _kn
+            cues_t1 = [c for c in lado_k if c.get('pack') == 'Kinetic']
+            try:
+                kc.variantes_trazo(cues_t1)                             # (el aro con su forma y zoom igual en x e y)
+            except Exception:
+                registro.excepcion(origen='estilo mezclado · aros del Tema 1')
+            # su salida (0,33 s) va DESPUÉS del bloque: se alarga cada clip, pero sin pisar el bloque siguiente si es de otro tema (la pista la comparte VIRAL)
+            alargar = max(0.0, float(_kn.EXTRA_FIN_TEXTO) - 0.05)
+            siguiente = {id(c): orden[i + 1][1] for i, (_m, c) in enumerate(orden[:-1])}
+            for c in cues_t1:
+                sig = siguiente.get(id(c))
+                extra_s = alargar
+                if sig is not None and sig.get('pack') != 'Kinetic':
+                    extra_s = min(alargar, max(0.0, float(sig.get('start') or 0) - float(c.get('end') or 0) - 0.03))
+                if extra_s > 0:
+                    for r in c.get('runs') or []:
+                        fin = r.get('fin')
+                        r['fin'] = round(float(fin if isinstance(fin, (int, float)) else c['end']) + extra_s, 3)
+        aj = self._ajustes_de_pack(pack)                                # v5.55: la letra y los colores elegidos -> el pack personalizado de cada tema
+        personal = {}
+        if aj:
+            for base in packs_k + packs_g:
+                pl = self._plantilla_personalizada(base, aj)
+                if pl:
+                    personal[base] = pl
+            mp.renombrar_packs(res, {b: pl.get('pack') for b, pl in personal.items() if pl.get('pack')})   # (c['pack'] de cada bloque = su pack personalizado)
+
+        def plantilla_de(base):
+            return personal.get(base) or (plantillas.para_manifiesto(base, formato_forzado=forzado) or {}).get('plantilla')
         if lado_k:
-            hay_t1, hay_t3 = 'kinetic' in res['packs'], 'viral' in res['packs']
             json_k = kc.escribir(lado_k, st.SHARED_FOLDER / f'{project_name}.{base_lang}.kinetic.json', base_lang)
-            track_k = {**comun, 'style': 'kinetic', 'data_path': str(json_k), **plantillas.para_manifiesto('Kinetic' if hay_t1 else 'VIRAL', formato_forzado=forzado)}
+            track_k = {**comun, 'style': 'kinetic', 'data_path': str(json_k)}
+            pl_k = plantilla_de('Kinetic' if hay_t1 else 'VIRAL')
+            if pl_k:
+                track_k['plantilla'] = pl_k
             if not hay_t1:
                 track_k['clip_prueba'] = 'v fina'                       # el clip que prueba que el bin del pack VIRAL está completo (el de Kinetic es «k hero blanco»)
             elif hay_t3:
-                extra = plantillas.para_manifiesto('VIRAL', formato_forzado=forzado)
-                if extra.get('plantilla'):
-                    track_k['plantillas_extra'] = [{'plantilla': extra['plantilla'], 'clip_prueba': 'v fina'}]      # los clips «v …» de VIRAL junto a los «k …» de Kinetic
+                pl_v = plantilla_de('VIRAL')
+                if pl_v:
+                    track_k['plantillas_extra'] = [{'plantilla': pl_v, 'clip_prueba': 'v fina'}]      # los clips «v …» de VIRAL junto a los «k …» de Kinetic
             pistas.append(track_k)
         if lado_g:
+            # UNA sola pista «guion» (los gemelos reparten una vez las pistas L-T y retiran las sobrantes): el primer pack guion del usuario de plantilla,
+            # el resto en plantillas_extra; cada bloque elige su set por c['pack']
             json_g = gc.escribir(lado_g, st.SHARED_FOLDER / f'{project_name}.{base_lang}.guion.json', base_lang)
-            pistas.append({**comun, 'style': 'guion', 'data_path': str(json_g), **plantillas.para_manifiesto('Referencia', formato_forzado=forzado)})
+            track_g = {**comun, 'style': 'guion', 'data_path': str(json_g)}
+            pl_g = plantilla_de(packs_g[0])
+            if pl_g:
+                track_g['plantilla'] = pl_g
+            extras_g = [{'plantilla': pl} for pl in (plantilla_de(b) for b in packs_g[1:]) if pl]
+            if extras_g:
+                track_g['plantillas_extra'] = extras_g
+            pistas.append(track_g)
         track = pistas[0]
         track['mezcla_pistas'] = pistas[1:]
         n_sonidos = sum(len(b.get('sfx_eventos') or [1]) for b in bloques if b.get('sfx'))
@@ -13892,10 +14037,12 @@ class SubtitleApp(QWidget):
         pistas = [track_motor] + list(extra or [])
         try:
             import fuente_usuario                                  # v5.5.12: la tipografía elegida en «Crea tu estilo» (principal / arriba y abajo)
-            import ajustes_ui as _aj
-            prefs = _aj.leer_prefs()
-            for p in pistas:
-                fuente_usuario.aplicar_a_pista(p, prefs)
+            # v5.55: SOLO la del estilo elegido (sus ajustes, en su pack.json); las prefs globales 'fuente_principal'/'fuente_secundaria' ya no
+            # cuentan: un tema de fábrica sale siempre con su letra (antes una letra elegida salía en todos los temas)
+            letra = self._ajustes_de_pack(plantillas.buscar_pack(getattr(self, 'plantilla_sel', '') or ''))
+            if letra.get('fuente_principal') or letra.get('fuente_secundaria'):
+                for p in pistas:
+                    fuente_usuario.aplicar_a_pista(p, letra)
         except Exception:
             registro.excepcion(origen='tipografía elegida')
         if extra is not None:

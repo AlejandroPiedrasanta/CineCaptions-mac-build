@@ -3,12 +3,14 @@
 # (Remotion «AcompananteT5»). Pedido del usuario: «hoy estamos en Guatemala → la animación abajo de los captions», «hola amigos → un motion
 # relacionado», «crea más estilos para no repetir las tomas con lo mismo».
 """
-    acompanantes(bloques, idioma, ocupado, acento, aspecto, dur) -> piezas 'acomp' (capa delante; su `y` la pone coordinar() bajo su caption)
+    acompanantes(bloques, idioma, ocupado, acento, aspecto, dur, debiles, con_emojis) -> piezas 'acomp' (capa delante; su `y` la pone coordinar()
+    bajo su caption)
 
 Qué entiende (es/en/pt), en este orden: un PAÍS (pin + bandera + «Estamos en …»), un SALUDO («¡Hola amigos!» con la mano), una acción de REDES
 (seguir, like, suscribirse, comentar, compartir, guardar: el botón que se pulsa), una CIFRA con su unidad (tiempo · dinero · %), y si no, el
 CONCEPTO de la frase como emoji 3D (el catálogo de emojis del programa: boda, maquillaje, iglesia, café, lluvia…). Nunca dos seguidos, nunca el
 mismo tipo dos veces seguidas, nunca el mismo emoji dos veces, y nunca encima de una escena, de un elemento en pantalla o de una clave detrás.
+v5.55: las que enseñan un emoji (el saludo, la fecha / hora / sitio y el concepto) solo con `con_emojis` (la Edición PRO con «Emojis animados»).
 """
 import re
 import unicodedata
@@ -241,7 +243,10 @@ def _tramo_libre(a, z, ocupado):
     return max(tramos, key=lambda r: r[1] - r[0], default=None)
 
 
-def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cristal', dur=0.0, debiles=frozenset()):
+def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cristal', dur=0.0, debiles=frozenset(), con_emojis=False):
+    """Una píldora por bloque, como mucho. `con_emojis` (v5.55, pedido: «ningún tema debe tener emojis hasta que se active»): sin él no salen
+    las que enseñan un emoji (el saludo 👋, la fecha 📅 / hora ⏰ / sitio 📍 y el concepto como emoji 3D); ese bloque lleva la que haya sin emoji
+    (país, redes, cifra) en vez de quedarse vacío, salvo con una fecha, hora o sitio (ninguna: nunca el «10» suelto de «10 de octubre»)."""
     try:
         import edicion_pro_planificador as PL
         paises = PL.paises()
@@ -275,8 +280,8 @@ def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cr
                     break
             if prop:
                 break
-        # 2) un saludo
-        if prop is None:
+        # 2) un saludo (con la mano 👋: solo con emojis)
+        if prop is None and con_emojis:
             for k, (t, p, x) in enumerate(ps[:4]):
                 if p in SALUDOS:
                     quien = ps[k + 1][2] if k + 1 < len(ps) and ps[k + 1][1] in A_QUIEN else ''
@@ -291,9 +296,12 @@ def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cr
                 if accion:
                     prop = ('redes', t, {'accion': accion})
                     break
-        # 3b) v5.5.17: fecha, hora o sitio (antes que la cifra suelta: «10 de octubre» es una fecha, no «10»)
+        # 3b) v5.5.17: fecha, hora o sitio (antes que la cifra suelta: «10 de octubre» es una fecha, no «10»); llevan su emoji: sin emojis
+        #     (v5.55), ese bloque se queda sin píldora (nunca el «10» suelto de una fecha o una hora)
         if prop is None:
             prop = _dato(ps, lang)
+            if prop is not None and not con_emojis:
+                continue
         # 4) una cifra con su unidad
         if prop is None:
             for k, (t, p, x) in enumerate(ps):
@@ -313,8 +321,8 @@ def acompanantes(bloques, idioma='es', ocupado=(), acento='#4C7DFF', aspecto='cr
                     etiqueta = next((q[2] for q in sig if q[1] not in DIR.CONECTORAS and len(q[1]) >= 3), '')
                     prop = ('cifra', t, {'valor': valor, 'signo': '', 'unidad': etiqueta.lower()})
                 break
-        # 5) el concepto, como emoji 3D (primero la frase clave del caption, luego el resto)
-        if prop is None:
+        # 5) el concepto, como emoji 3D (primero la frase clave del caption, luego el resto): solo con emojis
+        if prop is None and con_emojis:
             # v5.5.17: nunca la palabra que el caption ya enseña EN GRANDE (la píldora diría lo mismo dos veces)
             orden = sorted(range(len(ps)), key=lambda k: (bool(palabras[k].get('grande')), not palabras[k].get('clave'), -len(ps[k][1])))
             for k in orden:

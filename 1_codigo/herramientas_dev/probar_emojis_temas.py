@@ -9,6 +9,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 import hacer_vistas_mezcla as H
 from PIL import Image
+import edicion_pro
+# v5.55: go_emojis ya no enciende nada (el juez es edicion_pro.emojis_permitidos: PRO + «Emojis animados»); esta prueba quiere los emojis
+edicion_pro.emojis_permitidos = lambda *a, **k: True
 
 SP = Path.home() / 'DaVinciSubtitles' / 'pruebas_emojis'
 SP.mkdir(parents=True, exist_ok=True)

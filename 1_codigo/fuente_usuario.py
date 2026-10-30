@@ -1,5 +1,6 @@
 # 1_codigo/fuente_usuario.py — v5.5.12: la tipografía que el usuario elige en «Crea tu estilo» para los Temas (texto principal y, aparte, el de
-# arriba y abajo). Se guarda en las prefs ('fuente_principal', 'fuente_secundaria': "Familia|Estilo"; vacío = la del tema) y viaja en cada pista
+# arriba y abajo). v5.55: se guarda EN EL PACK del estilo (pack.json 'ajustes': 'fuente_principal', 'fuente_secundaria': "Familia|Estilo"; vacío =
+# la del tema; las prefs globales con esos nombres ya no se leen: GO pasa los ajustes del pack como `prefs`) y viaja en cada pista
 # de los temas como track['fuente_usuario'] = {'main': [familia, estilo], 'extra': [familia, estilo]}; los gemelos de Resolve escriben Font/Style
 # DESPUÉS del texto. Cada run del .json lleva 'fu' = 'main' | 'extra' para saber cuál es cuál (lo marca `marcar_runs`).
 import json

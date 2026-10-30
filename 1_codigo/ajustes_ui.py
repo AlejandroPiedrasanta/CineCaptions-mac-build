@@ -495,6 +495,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.55', [
+        'Tema 3: el «Select» y el «Drag» ahora se ven como en los videos virales: la palabra con un brillo suave y sin borde gris, la caja roja de guiones gruesos con un cursor grande, y en el «Drag» una mano que entra, agarra la palabra y la arrastra a su sitio.',
+        'Al verificar la licencia, CineCaptions le dice a la tienda qué versión y qué sistema usas, para avisarte por correo cuando salga una versión nueva (puedes darte de baja de esos avisos desde el mismo correo).',
+        'Ningún tema pone emojis hasta que actives «Emojis animados» en la Edición PRO (antes se colaban algunos aunque estuviera apagada).',
+        'Resolve Free: GO ya funciona en los Free que no dejan a sus scripts leer archivos (antes salía «El puente no respondió en 240 segundos»).',
+        '«Crea tu estilo» nuevo: tocas los temas que quieras (del 1 al 6) en el orden en que se turnan y, si quieres, eliges tu letra y tus colores; tu estilo los guarda y GO lo usa tal cual. Los temas de fábrica siempre salen con su propia letra.',
+    ]),
     ('5.54', [
         'Resolve Free: GO ya no se detiene con «El Puente murió a mitad» en los Free que no dejan a sus scripts leer archivos como antes.',
         'Captions más premium en los 6 temas: la palabra principal con el degradado y el brillo de su color, las pequeñas más finas y una sombra que se lee sobre cualquier fondo.',
@@ -2339,7 +2346,7 @@ class VentanaAjustes(_Panel):
         # v5.4.48: GO sin Resolve también a petición (render_sin_resolve.py): sin Resolve instalado ya lo hace solo
         mp4_var = BooleanVar(bool(leer_prefs().get('go_salida_mp4', False)))
         f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
-                      tr('GO graba los subtítulos del tema elegido (con sus sonidos y emojis) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
+                      tr('GO graba los subtítulos del tema elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
                          'Si Resolve no está instalado lo hace siempre.'),
                       Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})), ultima=True)
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso

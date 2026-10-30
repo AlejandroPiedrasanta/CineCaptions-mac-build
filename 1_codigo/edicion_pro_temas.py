@@ -2,7 +2,8 @@
 # 1_codigo/edicion_pro_temas.py — el «pase ligero» de los Temas 1–4 (pedido del usuario, v5.4.51): sus captions (los Text+ de su pack, que se
 # respetan) se ven mejor sin necesidad de la Edición PRO completa:
 #   * legibilidad: en un video claro, un velo oscuro suave detrás de cada pila de captions (Remotion «VeloCaptionT», pista PRO-VELO);
-#   * acompañantes: la animación pequeña bajo el caption del Tema 5 (país, saludo, redes, cifra, emoji 3D del concepto);
+#   * acompañantes: la animación pequeña bajo el caption del Tema 5 (país, saludo, redes, cifra, emoji 3D del concepto); v5.55: las que enseñan
+#     un emoji (saludo, fecha / hora / sitio, concepto) solo con la Edición PRO y «Emojis animados»: este pase, que va SIN la PRO, nunca las pone;
 #   * color según el video: la palabra DESTACADA (rol principal) toma el acento que va con el video (estilo «guion»: Temas 2 y 4);
 #   * nunca tapar la cara: la regla de la cara de la PRO (edicion_pro._captions_sin_cara) también sin la PRO.
 """
@@ -38,10 +39,15 @@ def _con_emoji():
         return []
 
 
-def piezas(info, video, idioma, W, H, fps, mover, plan, maximo=None, bloques=None):
+def piezas(info, video, idioma, W, H, fps, mover, plan, maximo=None, bloques=None, con_emojis=None):
     """`maximo` (v5.5.4, Temas 1–4 CON la Edición PRO): como mucho tantos acompañantes, repartidos por el video (la PRO ya pone sus motions).
-    `bloques` (v5.5.13): los de los captions neón del Tema 1 (kit_neon.bloques_pro) en vez de los del manifiesto."""
-    out = _piezas(info, video, idioma, W, H, fps, mover, plan, bloques)
+    `bloques` (v5.5.13): los de los captions neón del Tema 1 (kit_neon.bloques_pro) en vez de los del manifiesto.
+    `con_emojis` (v5.55): ¿píldoras con emoji? Solo con la Edición PRO y «Emojis animados»; None = lo que diga el plan (edicion_pro.emojis_del_plan:
+    el pase ligero, que corre SIN la PRO, nunca)."""
+    if con_emojis is None:
+        import edicion_pro as EP
+        con_emojis = EP.emojis_del_plan(plan)
+    out = _piezas(info, video, idioma, W, H, fps, mover, plan, bloques, bool(con_emojis))
     if maximo is None:
         return out
     acomp = [p for p in out if p.get('pieza') != 'velo_caption']
@@ -52,7 +58,7 @@ def piezas(info, video, idioma, W, H, fps, mover, plan, maximo=None, bloques=Non
     return out
 
 
-def _piezas(info, video, idioma, W, H, fps, mover, plan, bloques=None):
+def _piezas(info, video, idioma, W, H, fps, mover, plan, bloques=None, con_emojis=False):
     import edicion_pro as EP
     import edicion_pro_tema5 as T5
     import edicion_pro_tema5_acomp as AC
@@ -95,7 +101,7 @@ def _piezas(info, video, idioma, W, H, fps, mover, plan, bloques=None):
         ocupado = [(p['ini'] - 0.2, p['fin'] + 0.2) for p in plan.get('piezas') or [] if p.get('capa') in ('delante', 'fondo')
                    or (p.get('pieza') == 'neon_motion' and p.get('capa') != 'iconos')]      # v5.5.17: el Tema 1 reparte sus motions en velo/detrás/delante
         ocupado += _con_emoji()                                          # donde el tema ya enseña su emoji, no: serían dos cosas a la vez
-        for c in AC.acompanantes(conv, idioma, ocupado, acento, aspecto, dur, frozenset(T5.DEBILES)):
+        for c in AC.acompanantes(conv, idioma, ocupado, acento, aspecto, dur, frozenset(T5.DEBILES), con_emojis=con_emojis):
             b = next((x['_b'] for x in conv if abs(x['ini'] - c['_bajo'][0]) < 0.05), None)
             if b is None:
                 continue

@@ -66,13 +66,35 @@ def _tabla(d):
 def a_lua(obj):
     """Devuelve el texto `return { ... }` para escribir en el sidecar."""
     return 'return ' + _valor(obj) + '\n'
+# v5.55 (Puente 1.0.42): el Free de un cliente llego SIN loadfile ni dofile en los scripts del menu y no leia ningun `<x>.json.lua`
+# («Trabajos atendidos: 0»). Se AÑADE un segundo sidecar «<x>.json.free.lua» (el `.json.lua` de siempre se queda: lo leen los Puentes
+# 1.0.41 o anteriores y loadfile/dofile, que no escriben en Fusion.prefs). Es UNA expresion-llamada, medida en Studio 21.1.2:
+#   - bmd.readfile la evalua en su entorno aislado (fusion ahi es simbolico) y devuelve t, sincrono y sin escribir nada;
+#   - fusion:RunScript la ejecuta con el fusion real y publica {ruta, t} en GetData("CineCaptions_sidecar") (asincrono).
+# Reglas medidas: extension .lua (RunScript no corre otra), UTF-8 SIN BOM, nada de `return`/`local` fuera de la funcion ni sentencias
+# detras (readfile da nil) y nada de valores funcion. `ruta` es la del .json: el lector la compara (sin mayusculas ni tipo de barra).
+CLAVE_FREE = 'CineCaptions_sidecar'
+def a_lua_free(obj, ruta_json):
+    """Devuelve el texto del sidecar hibrido «<ruta_json>.free.lua» (ver arriba)."""
+    return ('(function() local t = ' + _valor(obj) + ' if fusion then fusion:SetData("' + CLAVE_FREE + '", {ruta = '
+            + _cadena(str(ruta_json)) + ', t = t}) end return t end)()\n')
+def rutas_sidecar(ruta_json):
+    """Los sidecars que acompañan a un .json: [<ruta>.lua, <ruta>.free.lua] (para borrarlos junto con el .json)."""
+    from pathlib import Path
+    ruta = Path(ruta_json)
+    return [ruta.with_name(ruta.name + '.lua'), ruta.with_name(ruta.name + '.free.lua')]
+def _escribir_sidecars(ruta, obj):
+    import archivos_seguros
+    archivos_seguros.escribir_texto(ruta.with_name(ruta.name + '.lua'), a_lua(obj))
+    try:
+        archivos_seguros.escribir_texto(ruta.with_name(ruta.name + '.free.lua'), a_lua_free(obj, ruta))
+    except Exception:
+        return None
 def escribir_sidecar(ruta_json, obj):
-    """Escribe SOLO el sidecar `<ruta_json>.lua` (el .json ya lo escribio quien\n    llama). Nunca lanza: si falla, el .json sigue sirviendo a 21.0.x/Studio."""
+    """Escribe SOLO los sidecars `<ruta_json>.lua` y `<ruta_json>.free.lua` (el .json ya lo escribio quien\n    llama). Nunca lanza: si falla, el .json sigue sirviendo a 21.0.x/Studio."""
     from pathlib import Path
     try:
-        ruta = Path(ruta_json)
-        import archivos_seguros
-        archivos_seguros.escribir_texto(ruta.with_name(ruta.name + '.lua'), a_lua(obj))
+        _escribir_sidecars(Path(ruta_json), obj)
     except Exception:
         return None
 def escribir_par(ruta_json, obj):
@@ -83,7 +105,7 @@ def escribir_par(ruta_json, obj):
     ruta = Path(ruta_json)
     archivos_seguros.escribir_json(ruta, obj, indent=2)
     try:
-        archivos_seguros.escribir_texto(ruta.with_name(ruta.name + '.lua'), a_lua(obj))
+        _escribir_sidecars(ruta, obj)
     except Exception:
         return None
 if __name__ == '__main__':

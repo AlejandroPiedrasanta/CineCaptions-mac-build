@@ -56,11 +56,12 @@ def encaje(ancho, alto):
     return s, (ancho - 1080.0 * s) / 2.0, HORIZONTAL_Y * alto - centro_y * s
 
 
-def _sprite_texto(texto, em, color=None, degradado=None):
+def _sprite_texto(texto, em, color=None, degradado=None, fuente=None):
     """(rgb float32 HxWx3, alfa float32 HxWx1, x_inicio, linea_de_base, ancho_tinta) de una palabra con su halo (blanca si no se dice otra cosa).
-    v5.54 «B · Premium»: color / degradado = los del pack «Tema4» (_roles_tema4: la clave en lima con su degradado, lo demás al 90 %); el halo, de su color."""
+    v5.54 «B · Premium»: color / degradado = los del pack «Tema4» (_roles_tema4: la clave en lima con su degradado, lo demás al 90 %); el halo, de su color.
+    v5.55: fuente = (familia, estilo) elegida en «Crea tu estilo» (None = la del Tema 4)."""
     import render_temas as RT
-    f = GC._fuente(T.FUENTE, em)
+    f = GC._fuente(tuple(fuente) if fuente else T.FUENTE, em)
     if f is None:
         return None
     anchos = [f.getlength(ch) * T.ESPACIADO for ch in texto]
@@ -151,10 +152,16 @@ def preparar(cues, ancho, alto, emoji_arriba=True, estilo=None):
     s, dx, dy = encaje(ancho, alto)
     capas = []
     otro_tema = bool(estilo) and not (estilo.get('tipo', 'guion') == 'guion' and estilo.get('pack', 'Tema4') == 'Tema4')
+    por_rol = {}
+    if not otro_tema and estilo and estilo.get('ajustes'):         # v5.55: la letra y los colores de «Crea tu estilo» en el Tema 4 (render_temas los lee él solo)
+        import render_temas as RT
+        por_rol = RT.ajustes_por_rol(estilo)
+    con_letra = any((v or {}).get('fuente') for v in por_rol.values())
     for cue in cues or []:
         ini, fin = float(cue.get('start') or 0.0), float(cue.get('end') or 0.0)
         if fin <= ini:
             continue
+        lineas = []
         if otro_tema:
             import render_temas
             capas += _encajar(lambda s_, dx_, dy_, c=cue: render_temas.capas_de_cue(estilo, c, s_, dx_, dy_), s, dx, dy, ancho, alto)
@@ -165,7 +172,15 @@ def preparar(cues, ancho, alto, emoji_arriba=True, estilo=None):
             em = T.EM_BASE * float(r.get('zoom', 1.0)) * s
             d_rol = _roles_tema4().get(r.get('rol')) or _roles_tema4().get('complement') or {}
             degradado = [(float(p), c) for p, c in d_rol['degradado']] if (r.get('rol') == 'main' and d_rol.get('degradado')) else None
-            sp = _sprite_texto(texto, em, color=d_rol.get('color'), degradado=degradado)
+            color, fuente, em_tema = d_rol.get('color'), None, em
+            aj = por_rol.get('main' if r.get('rol') == 'main' else 'extra') if por_rol else None
+            if aj:
+                fuente = RT.par_usuario(T.FUENTE, aj) if aj.get('fuente') else None
+                if fuente:                                         # la letra elegida no ocupa más que la del tema (no pisa a sus vecinas)
+                    em *= RT.factor_encaje(T.FUENTE, em, fuente, em, texto)
+                if aj.get('color'):
+                    color, degradado = RT.color_usuario(color or (0.9, 0.9, 0.9), degradado, aj['color'], premium=(r.get('rol') == 'main'))
+            sp = _sprite_texto(texto, em, color=color, degradado=degradado, fuente=fuente)
             if sp is None:
                 continue
             rgb, a, x_ini, base, total = sp
@@ -176,6 +191,12 @@ def preparar(cues, ancho, alto, emoji_arriba=True, estilo=None):
             capas.append({'rgb': rgb, 'a': a, 'x': int(round(izq)), 'y': int(round(arriba)),
                           't0': max(ini, float(r.get('t', ini))), 't1': fin, 'entrada': ENTRADA_S,
                           'tipo': 'tema4', 'rol': r.get('rol'), 'em': em, 'cue_t0': ini})          # (v5.5.10: para animarla en Creativo)
+            if con_letra:                                          # v5.55: la línea se recoloca con los huecos del planificador (render_temas.reespaciar)
+                an = RT.anchos(T.FUENTE, em_tema, fuente or T.FUENTE, em, texto)
+                if an:
+                    lineas.append((cx, cy, max(1.0, em), an[0], an[1], [capas[-1]]))
+        if lineas:
+            RT.reespaciar(lineas)
         if cue.get('emoji'):
             try:
                 import emojis

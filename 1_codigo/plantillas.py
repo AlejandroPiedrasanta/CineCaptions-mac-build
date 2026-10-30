@@ -135,6 +135,23 @@ class Pack:
         """Los looks que rotan en un pack de mezcla (ids de mezcla_planificador.catalogo(): 't1:lima', 't2:3', 't3:shatter'…); [] si no es de mezcla."""
         return [str(i) for i in (self.datos.get('looks') or [])] if self.mezcla else []
     @property
+    def base(self):
+        """v5.55 «Crea tu estilo» con UN tema: el tema de fábrica del que sale este pack DERIVADO ('VIRAL', 'Tema4'…), o None. Un derivado no lleva
+        clips propios: se comporta como su tema (cargar le copia guion y formatos del de fábrica) y GO le pone sus ajustes (pack_personalizado)."""
+        b = self.datos.get('base')
+        return b if isinstance(b, str) and b in FABRICA else None
+    @property
+    def ajustes(self):
+        """v5.55: la letra y los colores del estilo del usuario ({'fuente_principal', 'fuente_secundaria', 'color_principal', 'color_secundario'},
+        '' = lo del tema). Solo los derivados y las mezclas de «Crea tu estilo» los llevan; el resto, todo ''."""
+        aj = self.datos.get('ajustes')
+        claves = ('fuente_principal', 'fuente_secundaria', 'color_principal', 'color_secundario')
+        return {k: str((aj or {}).get(k) or '') for k in claves} if isinstance(aj, dict) else {k: '' for k in claves}
+    @property
+    def con_ajustes(self):
+        """¿Eligió el usuario alguna letra o color para este estilo?"""
+        return any(self.ajustes.values())
+    @property
     def kinetic(self):
         """True si es el estilo «Kinetic» (títulos de gancho: kinetic_planificador.py; sus clips son elementos —héroe, cinta, anillo…— y no sets arriba/principal/abajo)."""
         return self.datos.get('guion') in ('kinetic', 'viral')
@@ -346,6 +363,30 @@ def cargar(carpeta, incorporado=False):
             datos['guion'] = str(nuevo['guion'])
         if nuevo.get('guion') == 'mezcla' and isinstance(nuevo.get('looks'), list):
             datos['looks'] = [str(i) for i in nuevo['looks']]
+        if isinstance(nuevo.get('ajustes'), dict) and (nuevo.get('guion') == 'mezcla' or nuevo.get('base')):   # v5.55: la letra y los colores de «Crea tu estilo»
+            try:
+                import mezcla_planificador
+                datos['ajustes'] = mezcla_planificador.normalizar_ajustes(nuevo['ajustes'])
+            except Exception:
+                datos['ajustes'] = None                       # (unos ajustes rotos no tumban el pack: va con lo del tema)
+        if not incorporado and not nuevo.get('guion') and nuevo.get('base') in FABRICA:
+            # v5.55: pack DERIVADO de «Crea tu estilo» ({"base": "VIRAL", "ajustes"}): sin archivos propios, es su tema de fábrica (guion y formatos
+            # con las rutas del de fábrica) y GO le pone la letra y los colores (pack_personalizado). Sin el tema de fábrica, el pack queda sin formatos.
+            datos['base'] = nuevo['base']
+            fab = next((p for p in packs_incorporados() if p.nombre == nuevo['base']), None)
+            if fab is not None:
+                if fab.datos.get('guion'):
+                    datos['guion'] = str(fab.datos['guion'])
+                for formato, bloque in (fab.datos.get('formatos') or {}).items():
+                    if formato in FORMATOS and isinstance(bloque, dict):
+                        copia = dict(bloque)
+                        for clave in ('drt', 'drb'):
+                            if copia.get(clave) and not Path(copia[clave]).is_absolute():
+                                copia[clave] = str(fab.carpeta / copia[clave])
+                        datos['formatos'][formato] = copia
+            pack = Pack(datos['nombre'], carpeta, datos, incorporado=False)
+            pack.revisar()
+            return pack
         for origen in [viejo, nuevo]:
             for formato, bloque in (origen.get('formatos') or {}).items():
                 if formato in FORMATOS and isinstance(bloque, dict):
@@ -364,7 +405,7 @@ SOLO_TEMAS = True
 TEMAS_INFO = {
     'Kinetic': ('Títulos de gancho', 'Títulos neón: palabra enorme lima o magenta, pegatinas inclinadas, letra a mano y círculos que se dibujan, con un golpe de sonido.'),
     'Referencia': ('Captions palabra a palabra', 'Una línea fina con la palabra importante en negrita y en grande, al ritmo de la voz.'),
-    'VIRAL': ('Subtítulos virales', 'Texto fino con negrita cursiva, efectos de impacto y emojis que aparecen con la voz.'),
+    'VIRAL': ('Subtítulos virales', 'Texto fino con negrita cursiva y efectos de impacto que aparecen con la voz.'),   # (v5.55: sin «emojis»: solo con la Edición PRO y «Emojis animados»)
     'Tema4': ('Captions limpios', 'Texto blanco que se arma palabra a palabra en un recuadro, con la palabra clave grande y las conectoras pequeñas.'),
     'Tema5': ('Edición total', 'Lo edito todo con el sistema de los reels virales: captions sans + serif, pasos y deslizador en pantalla, escenas de papel, pantalla dividida y sonido.'),
     'Tema6': ('Editorial', 'Edición elegante y cálida: captions en serif fina con la frase clave grande en lima, escenas melocotón con tarjetas blancas, visor de cámara, barra de búsqueda y perfil que cuenta.'),
@@ -397,9 +438,21 @@ def es_de_fabrica(nombre):
     return nombre in FABRICA
 
 
+def tema_base(nombre):
+    """v5.55: el nombre del tema de fábrica de un estilo de «Crea tu estilo» con UN tema (pack derivado {"base": "VIRAL", "ajustes"}): lo que se
+    compara con 'Kinetic', 'Tema5'… (planificadores, PRO, emojis, vistas) y el pack cuyos archivos se usan. Cualquier otro nombre, tal cual."""
+    if not isinstance(nombre, str) or not nombre or nombre in FABRICA or nombre in ('auto', 'media_pool', 'dinamico'):
+        return nombre
+    try:
+        p = buscar_pack(nombre)
+    except Exception:
+        return nombre
+    return p.base if p is not None and getattr(p, 'base', None) else nombre
+
+
 # v5.8: los packs que cambiaron de contenido llevan una «revisión»; los scripts de Resolve la suman al nombre del bin del pack
 # ('RCS · <pack> · <revisión> · v'), asi un bin viejo que ya estaba en el proyecto (con los clips anteriores) no se reutiliza.
-REVISION_BIN = {'Viral · superior': 'Luxe 5', 'Viral · inferior': 'Luxe 5', 'Referencia': 'Ref 20', 'Kinetic': 'Kin 18', 'VIRAL': 'Vir 7', 'Tema4': 'T4 7', 'Tema5': 'T5 7', 'Tema6': 'T6 7'}   # v5.54: Ref 20 / Kin 18 / Vir 7 / T4-T6 7 = «B · Premium» (degradado y brillo de la principal, pequeñas al 90 %, sombra ancha; Kin 18 / Vir 7 = el elemento 4 con forma de letra, no caja). v5.5.8: T5/T6 2 = su diseño propio (pack_tema5.py); 3 = el banner de CineCaptions en el Inspector (banner_inspector.py); 4 = el banner arriba de todo (encima de las pestañas); 5 = el banner con el LOGO en el Text+ «Template» (el que enseña el Inspector); 6 = sombra oscura para leerse sobre fondos claros (v5.5.10); Ref 7-10 = macros Luxe v1.09 + Luxe Count (17) + anim auto + Slide hacia la derecha sin Mirror Out + letras algo más juntas, 0,99 + color del estilo (el Shine v1.09 traía el suyo) + sin las variantes 4, 11, 15 (Moderno blanco) ; Ref 15 = vuelve el 17 (Luxe Count con moneda, % y decimales del texto) (v5.48) ; Ref 19 = el Amro Fire (6) sin cortar las palabras largas (v5.53)
+REVISION_BIN = {'Viral · superior': 'Luxe 5', 'Viral · inferior': 'Luxe 5', 'Referencia': 'Ref 20', 'Kinetic': 'Kin 18', 'VIRAL': 'Vir 8', 'Tema4': 'T4 7', 'Tema5': 'T5 7', 'Tema6': 'T6 7'}   # v5.55: Vir 8 = Select y Drag como TEMA3 (1)/(2).mp4 (letra con brillo y sin contorno, caja gruesa, cursor grande, la mano arrastra la palabra). v5.54: Ref 20 / Kin 18 / Vir 7 / T4-T6 7 = «B · Premium» (degradado y brillo de la principal, pequeñas al 90 %, sombra ancha; Kin 18 / Vir 7 = el elemento 4 con forma de letra, no caja). v5.5.8: T5/T6 2 = su diseño propio (pack_tema5.py); 3 = el banner de CineCaptions en el Inspector (banner_inspector.py); 4 = el banner arriba de todo (encima de las pestañas); 5 = el banner con el LOGO en el Text+ «Template» (el que enseña el Inspector); 6 = sombra oscura para leerse sobre fondos claros (v5.5.10); Ref 7-10 = macros Luxe v1.09 + Luxe Count (17) + anim auto + Slide hacia la derecha sin Mirror Out + letras algo más juntas, 0,99 + color del estilo (el Shine v1.09 traía el suyo) + sin las variantes 4, 11, 15 (Moderno blanco) ; Ref 15 = vuelve el 17 (Luxe Count con moneda, % y decimales del texto) (v5.48) ; Ref 19 = el Amro Fire (6) sin cortar las palabras largas (v5.53)
 NOMBRE_BASICOS = 'Subtítulos básicos'
 POSICIONES_BASICOS = ('inferior', 'superior')
 _PISTAS_FORMATO = (('horizontal', 'h'), ('vertical', 'v'), ('cuadrado', 'c'), ('square', 'c'))
@@ -596,6 +649,7 @@ def estilos_para_medir(nombre):
         if nombre in ('media_pool', '', None):
             return {}
         else:
+            nombre = tema_base(nombre)                  # (un estilo derivado de «Crea tu estilo» mide con su tema)
             pack = pack_incorporado() if nombre == 'auto' else buscar_pack(nombre)
             if pack is None or pack.es_basicos:
                 return {}
@@ -823,6 +877,7 @@ def para_manifiesto(nombre, formato_forzado=None):
     else:
         if formato_forzado not in FORMATOS:
             formato_forzado = None
+        nombre = tema_base(nombre)                      # v5.55: un estilo derivado viaja con el pack de su tema (GO lo cambia por el personalizado)
         if nombre == 'auto':
             pack = pack_incorporado()
         else:
@@ -925,6 +980,7 @@ def bloque_imagen(nombre, formato=None):
     'bloque' dice si el pack lo trae. Sin el (o sin pack) el emoji va DEBAJO del texto, a su tamaño normal. Es lo que
     dibujan las vistas previas (Creativo, Proyecto, Composicion) para que se vea donde caera el icono. Nunca lanza.
     """
+    nombre = tema_base(nombre)
     por_defecto = {'donde': 'arriba' if nombre in EMOJI_ARRIBA else 'abajo', 'zoom': 1.0, 'bloque': False}
     try:
         if nombre in ('media_pool', '', None, 'dinamico'):
@@ -954,6 +1010,7 @@ def roles_de_variante(nombre, formato, n):
     try:
         if nombre in ('media_pool', '', None, 'dinamico') or not n:
             return {}
+        nombre = tema_base(nombre)
         pack = pack_incorporado() if nombre == 'auto' else buscar_pack(nombre)
         if pack is None or not pack.formatos:
             return {}
@@ -972,6 +1029,7 @@ def variantes_de(nombre, formato=None):
     try:
         if nombre in ('media_pool', '', None, 'dinamico'):
             return []
+        nombre = tema_base(nombre)
         pack = pack_incorporado() if nombre == 'auto' else buscar_pack(nombre)
         if pack is None or pack.es_basicos or not pack.formatos:
             return []

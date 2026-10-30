@@ -41,7 +41,7 @@ OPCIONES = [
     {'clave': 'emoji', 'nombre': 'Emojis animados', 'icono': 'ph.smiley', 'pref': 'pro_emojis', 'niveles': 'pro_emoji_intensidad',
      'detalle': 'Un emoji animado (2D o 3D) con lo que dices, junto a los captions y sin tapar caras.'},
     {'clave': 'pildora', 'nombre': 'Píldora bajo captions', 'icono': 'ph.chat-centered-text', 'motions': ['acompanante'],
-     'detalle': 'Una píldora animada justo debajo del texto con el lugar, la cifra o el emoji de lo que dices.'},
+     'detalle': 'Una píldora animada justo debajo del texto con el lugar o la cifra de lo que dices.'},    # (v5.55: con emoji, solo con «Emojis animados»)
     {'clave': 'broll', 'nombre': 'B-roll con fotos', 'icono': 'ph.image-square', 'motions': ['escena:foto'], 'pref': 'pro_internet',
      'detalle': 'Fotos de internet con licencia a pantalla completa cuando nombras algo.'},
     {'clave': 'motions_completo', 'nombre': 'Motions completo', 'icono': 'ph.film-strip', 'pref': 'pro_motions_completo',

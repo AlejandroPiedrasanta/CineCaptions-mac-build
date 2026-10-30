@@ -58,7 +58,10 @@ en sus propios archivos (subtitles_manifest.json, sfx_pendiente.json).
 -- v1.0.40: la accion nueva edicion_pro (la Edicion PRO en Resolve Free: CineCaptions_EdicionPro.lua, gemela de 2_recursos/edicion_pro/colocar_pro.py).
 -- Un Puente viejo no la conoce: la version sube y con ella VERSION_PUENTE_ESPERADA en resolve_bridge.py (las dos a la vez).
 -- v1.0.41: los sidecars se leen con dofile si este Resolve ya no trae loadfile (un Free nuevo: el Puente moria en leer() con «attempt to call»).
-local VERSION = "1.0.41"
+-- v1.0.42: Free SIN loadfile NI dofile (caso real: «Trabajos atendidos: 0» y la app esperando 240 s). Lee los sidecars por bmd.readfile o
+-- fusion:RunScript del «<x>.json.free.lua» y corre los scripts por RunScript/Execute con la entrega por GetData (ver FREE). Si nada funciona,
+-- lo dice con un reporte claro (arranque "sin_lectura"/"sin_cargador") y la señal jobs/pendiente.ilegible. Sube con VERSION_PUENTE_ESPERADA.
+local VERSION = "1.0.42"
 
 -- La version del PROGRAMA con la que se distribuyo este archivo. Existe
 -- porque el propio creador leyo el 1.0.28 de arriba como "quedo una copia
@@ -67,7 +70,7 @@ local VERSION = "1.0.41"
 -- regla que los tres auxiliares). OJO: no va en el latido — las apps
 -- viejas parten el latido en dos campos y un tercero las haria declarar
 -- INCOMPATIBLE a un Puente sano.
-local PAQUETE = "5.54"
+local PAQUETE = "5.55"
 
 -- El resolve VALIDADO del arranque. Es un local a proposito: si mas tarde
 -- algo pisa el global 'resolve' (el veneno clasico de la sesion), este
@@ -190,8 +193,12 @@ local JOB_TOMADO = CARPETA_JOBS .. SEP .. "pendiente.tomado"
 --     lo lee (la app acepta el latido por mtime desde la v1.0.25).
 --   * bmd.fileexists / bmd.direxists / bmd.wait existen (readdir y createdir
 --     NO: sin listar, todo va por nombres fijos, que ya era la regla).
---   * loadfile lee los sidecars .lua que deja la app (sidecar_lua.py).
---   * fusion:Execute(codigo) corre Lua en OTRO estado, sincrono: un error()
+--   * loadfile lee los sidecars .lua que deja la app (sidecar_lua.py); sin
+--     loadfile ni dofile, la cadena de FREE (v1.0.42).
+--   * fusion:Execute(codigo) corre Lua en OTRO estado (el de la consola),
+--     ASINCRONO: vuelve al instante y el codigo corre unos ms despues (medido
+--     en Studio 21.1.2; hasta la v1.0.41 aqui decia «sincrono», y no lo es).
+--     relatar() no espera respuesta, asi que no le afecta. Un error()
 --     sin capturar ahi sale al registro de Resolve (ResolveDebug.txt, con
 --     prefijo "[Fusion] ERROR") y ESTE script sigue vivo. Por ahi viaja todo
 --     lo que tiene contenido: los CINECAPTIONS_REPORTE de los scripts (la app los lee
@@ -200,6 +207,10 @@ local JOB_TOMADO = CARPETA_JOBS .. SEP .. "pendiente.tomado"
 -- (pendiente.json, .tomado, las señales .hecho, puente.relevo).
 -- Con io (21.0.x) nada de esto entra: el backend de siempre, intacto.
 local SIN_IO = (io == nil)
+-- Los caminos de un Free sin loadfile ni dofile (v1.0.42). Es UNA tabla (no
+-- locales sueltos: limite de 200 por funcion); sus funciones se definen mas
+-- abajo, despues de dormir() y latir(), que usan.
+local FREE = {}
 local RELEVO = CARPETA .. SEP .. "puente.relevo"
 local KB_PRESET = nil          -- el preset de teclado que se exporta como señal
 local RELEVO_MIO = false       -- puente.relevo lo escribi yo (ver el bucle)
@@ -333,6 +344,9 @@ local function capacidades()
     return "bmd: " .. table.concat(partes, " ")
         .. " fileexists=" .. (CAP.fileexists and "si" or "NO")
         .. "  |  " .. globales_lua()
+        -- v1.0.42: los caminos de un Free sin loadfile ni dofile (y por cual
+        -- se lee y se ejecuta): el proximo registro de un cliente lo dice solo.
+        .. "  |  " .. FREE.cabecera()
 end
 
 -- En Windows NUNCA se ejecuta shell.
@@ -387,13 +401,12 @@ end
 local function leer(ruta)
     if SIN_IO then
         -- Solo se puede leer un sidecar "<ruta>.lua" con `return {texto=...}`
-        -- (la app los deja junto a lo que el Puente necesita leer).
-        local chunk = loadfile and loadfile(ruta .. ".lua")
-        if not chunk and not loadfile and dofile then          -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
-            chunk = function() return dofile(ruta .. ".lua") end
-        end
-        local ok, t = pcall(chunk or function() end)
-        return (ok and type(t) == "table") and t.texto or nil
+        -- (la app los deja junto a lo que el Puente necesita leer). v1.0.42:
+        -- por la cadena de FREE (loadfile, dofile, readfile, RunScript...).
+        local t, camino = FREE.leer_sidecar(ruta)
+        if type(t) ~= "table" then return nil end
+        FREE.anotar("leer", camino)
+        return t.texto
     end
     local f = io.open(ruta, "r")
     if not f then return nil end
@@ -428,8 +441,14 @@ end
 -- es de donde la app la lee cuando el archivo no es suyo.
 local function marcar(desenlace)
     if SIN_IO then
-        reportar(desenlace == "ok" or desenlace == "arrancando",
-                 "Puente " .. desenlace, ', "arranque": "' .. desenlace .. '"')
+        -- v1.0.42: el arranque bueno lleva la linea de capacidades (con los
+        -- caminos de FREE): en modo señales la consola no la ve nadie.
+        local extra = ', "arranque": "' .. desenlace .. '"'
+        if desenlace == "ok" then
+            local okc, cap = pcall(capacidades)
+            if okc then extra = extra .. ', "capacidades": "' .. json_escapar(cap) .. '"' end
+        end
+        reportar(desenlace == "ok" or desenlace == "arrancando", "Puente " .. desenlace, extra)
         return
     end
     escribir(ARRANQUE, os.time() .. "|" .. VERSION .. "|" .. desenlace)
@@ -457,13 +476,25 @@ end
 local function tomar_trabajo()
     if not existe(JOB_PENDIENTE) then return nil end
     if SIN_IO then
-        local chunk = loadfile and loadfile(JOB_PENDIENTE .. ".lua")
-        if not chunk and not loadfile and dofile then          -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
-            chunk = function() return dofile(JOB_PENDIENTE .. ".lua") end
+        -- v1.0.42: la cadena de FREE. RunScript y Execute cuestan (estado
+        -- nuevo + SetData, que reescribe Fusion.prefs): un pendiente que ya
+        -- se leyo asi no se relee mas de una vez por segundo, y uno ilegible
+        -- se reintenta cada 15 s (con un aviso claro, ver FREE.no_pude_leer).
+        if FREE.reintento and FREE.reloj() < FREE.reintento then return nil end
+        local t, camino = FREE.leer_sidecar(JOB_PENDIENTE)
+        if type(t) ~= "table" then
+            FREE.no_pude_leer(camino)
+            return nil
         end
-        local ok, t = pcall(chunk or function() end)
-        if not ok or type(t) ~= "table" or t.id == nil then return nil end
-        if t.id == ULTIMO_ID then return nil end
+        local caro = (camino == "runscript" or camino == "execute")
+        FREE.reintento = caro and (FREE.reloj() + 1) or nil
+        FREE.anotar("leer", camino)
+        if t.id == nil then return nil end
+        if t.id == ULTIMO_ID then
+            -- el mismo de antes (la app aun no lo borro): por RunScript, mas espaciado
+            if caro then FREE.reintento = FREE.reloj() + 3 end
+            return nil
+        end
         ULTIMO_ID = t.id
         local creado = tonumber(t.creado_en)
         if creado and os.time() - creado > 300 then return nil end
@@ -549,6 +580,344 @@ local function latir()
         print("         y se pueda escribir.")
         print("")
     end
+end
+
+-- ---------------------------------------------------------------------
+-- FREE SIN loadfile NI dofile (v1.0.42)
+-- ---------------------------------------------------------------------
+-- El Free de un cliente llego sin io, sin loadfile y sin dofile en los
+-- scripts del menu: el Puente arrancaba y latia, pero no leia ni un trabajo
+-- («Trabajos atendidos: 0»; la app esperaba 240 s sin una pista). Medido en
+-- Studio 21.1.2 imitando ese Free (sonda de la fase 2, e6_puente_mini.lua):
+--   * bmd.readfile lee una tabla escrita SIN return, sincrono y sin escribir
+--     nada. La app deja ademas «<x>.json.free.lua» (sidecar_lua.a_lua_free):
+--     una expresion-llamada que readfile evalua y que, EJECUTADA, publica
+--     {ruta, t} en fusion:SetData("CineCaptions_sidecar"). readfile le pone
+--     __flags a cada tabla: se quita antes de recorrerla.
+--   * fusion:RunScript(<x>.free.lua) la ejecuta en un estado NUEVO: es
+--     ASINCRONO (vuelve en 2-5 ms; la tabla llega a los 40-120 ms) y un
+--     archivo roto o ausente no avisa: tiempo maximo, siempre.
+--   * fusion:Execute corre en el estado de la consola, tambien ASINCRONO. Si
+--     el Puente corre DENTRO de la consola (F6 + dofile) su Execute queda en
+--     cola hasta que el Puente termina: solo se usa si el «ping» del arranque
+--     volvio, y si esa consola tiene dofile o loadfile.
+--   * Un script de accion lanzado con RunScript/Execute no recibe argumentos:
+--     la entrega viaja por SetData("CineCaptions_trabajo"), el script avisa
+--     que arranco con "CineCaptions_inicio" y su final (con su reporte) llega
+--     por "CineCaptions_fin".
+--   * OJO: CADA SetData reescribe Fusion.prefs. Nunca para latidos ni esperas;
+--     claves fijas que se borran en cuanto se leen y se barren al arrancar.
+-- Con loadfile (Studio, 21.0.x, el Free de siempre) nada de esto corre.
+FREE.K_SIDECAR = "CineCaptions_sidecar"
+FREE.K_TRABAJO = "CineCaptions_trabajo"
+FREE.K_INICIO = "CineCaptions_inicio"
+FREE.K_FIN = "CineCaptions_fin"
+FREE.K_PING = "CineCaptions_ping"
+FREE.ESPERA_LECTURA = 3          -- s maximos para un sidecar por RunScript/Execute (lo normal: 40-120 ms)
+FREE.ESPERA_PING = 1.5           -- s para el ping de la consola (lo normal: 7-60 ms)
+FREE.ESPERA_INICIO = 10          -- s para que un script lanzado avise que arranco (lo normal: 50 ms)
+FREE.ACCION_MAX = 30 * 60        -- s maximos de un trabajo que arranco y no termina
+FREE.ping = nil                  -- nil: sin probar; false: no volvio; tabla: lo que tiene la consola
+FREE.camino = {}                 -- por donde funciono de verdad: camino.leer, camino.correr
+
+function FREE.reloj()
+    local ok, t = pcall(function() return bmd.gettime() end)
+    if ok and type(t) == "number" then return t end
+    return os.time()
+end
+
+-- ¿Tiene 'fusion' este metodo? (sin lanzar si fusion no existe)
+function FREE.hay(metodo)
+    local ok, m = pcall(function() return fusion[metodo] end)
+    return ok and m ~= nil
+end
+
+function FREE.hay_readfile()
+    local ok, m = pcall(function() return bmd.readfile end)
+    return ok and m ~= nil
+end
+
+function FREE.dato(clave)
+    local ok, v = pcall(function() return fusion:GetData(clave) end)
+    if ok then return v end
+    return nil
+end
+
+function FREE.poner(clave, valor)
+    return (pcall(function() fusion:SetData(clave, valor) end))
+end
+
+-- Borrar SOLO si esta: cada SetData reescribe Fusion.prefs.
+function FREE.borrar(clave)
+    if FREE.dato(clave) ~= nil then FREE.poner(clave, nil) end
+end
+
+-- Dos rutas son la misma sin mirar mayusculas ni el tipo de barra (la app
+-- escribe la suya con Path y el Lua arma la suya con CARPETA).
+function FREE.misma_ruta(a, b)
+    local function n(r) return (tostring(r or ""):gsub("/", "\\"):gsub("\\+", "\\"):lower()) end
+    return n(a) == n(b)
+end
+
+function FREE.sin_flags(t, vistos)
+    if type(t) ~= "table" then return t end
+    vistos = vistos or {}
+    if vistos[t] then return t end
+    vistos[t] = true
+    t.__flags = nil
+    for _, v in pairs(t) do FREE.sin_flags(v, vistos) end
+    return t
+end
+
+-- Espera (maximo 'lim' s) a que 'clave' traiga una tabla que cumpla 'vale'.
+function FREE.esperar(clave, vale, lim)
+    local t0 = FREE.reloj()
+    while true do
+        local v = FREE.dato(clave)
+        if type(v) == "table" and vale(v) then return v end
+        if FREE.reloj() - t0 >= lim then return nil end
+        dormir(0.01)
+    end
+end
+
+-- Lanza algo que publica {ruta, t} en K_SIDECAR y espera la tabla de 'ruta'.
+function FREE.por_bus(lanzar, ruta)
+    FREE.borrar(FREE.K_SIDECAR)
+    if not pcall(lanzar) then return nil end
+    local v = FREE.esperar(FREE.K_SIDECAR, function(x)
+        return type(x.t) == "table" and FREE.misma_ruta(x.ruta, ruta)
+    end, FREE.ESPERA_LECTURA)
+    FREE.borrar(FREE.K_SIDECAR)
+    return v and FREE.sin_flags(v.t) or nil
+end
+
+-- La tabla del sidecar de 'ruta' (la ruta del .json) y el camino por el que
+-- se leyo; nil y lo que se probo si ningun camino funciono.
+function FREE.leer_sidecar(ruta)
+    if loadfile then
+        local okc, chunk = pcall(loadfile, ruta .. ".lua")
+        if okc and chunk then
+            local ok, t = pcall(chunk)
+            if ok and type(t) == "table" then return t, "loadfile" end
+        end
+    end
+    if dofile then
+        local ok, t = pcall(dofile, ruta .. ".lua")
+        if ok and type(t) == "table" then return t, "dofile" end
+    end
+    local hib = ruta .. ".free.lua"
+    local probados = {}
+    if FREE.hay_readfile() then
+        probados[#probados + 1] = "readfile"
+        local ok, t = pcall(function() return bmd.readfile(hib) end)
+        if ok and type(t) == "table" then return FREE.sin_flags(t), "readfile" end
+    end
+    if FREE.hay("RunScript") then
+        if existe(hib) then
+            probados[#probados + 1] = "runscript"
+            local t = FREE.por_bus(function() fusion:RunScript(hib) end, ruta)
+            if t then return t, "runscript" end
+        else
+            -- Sin el .free.lua (una app anterior a la 5.55 no lo escribe) RunScript no tiene que correr.
+            probados[#probados + 1] = "runscript (no hay " .. (hib:match("[^/\\]+$") or hib) .. ": ¿programa sin actualizar?)"
+        end
+    end
+    if FREE.consola_lee() and existe(ruta .. ".lua") then
+        probados[#probados + 1] = "execute"
+        local p = ruta .. ".lua"
+        local codigo = 'local f = loadfile and loadfile([==[' .. p .. ']==]) local ok, t '
+            .. 'if f then ok, t = pcall(f) else ok, t = pcall(dofile, [==[' .. p .. ']==]) end '
+            .. 'if ok and type(t) == "table" then fusion:SetData("' .. FREE.K_SIDECAR
+            .. '", {ruta = [==[' .. ruta .. ']==], t = t}) end'
+        local t = FREE.por_bus(function() fusion:Execute(codigo) end, ruta)
+        if t then return t, "execute" end
+    end
+    return nil, (#probados > 0) and ("probe " .. table.concat(probados, ", ") .. " y no volvio nada")
+                                 or "no tengo ningun camino de lectura"
+end
+
+-- La consola puede leer por nosotros (ping vuelto, con dofile o loadfile).
+function FREE.consola_lee()
+    return type(FREE.ping) == "table" and (FREE.ping.dofile or FREE.ping.loadfile) and FREE.hay("Execute") or false
+end
+
+-- El ping: ¿corre el Execute de la consola, y con que? Solo sin loadfile.
+function FREE.hacer_ping()
+    FREE.ping = false
+    if not (FREE.hay("Execute") and FREE.hay("SetData") and FREE.hay("GetData")) then return end
+    local marca = MI_TOKEN
+    FREE.borrar(FREE.K_PING)
+    local codigo = 'fusion:SetData("' .. FREE.K_PING .. '", {marca = [==[' .. marca .. ']==], io = io ~= nil, '
+        .. 'dofile = dofile ~= nil, loadfile = loadfile ~= nil})'
+    if not pcall(function() fusion:Execute(codigo) end) then return end
+    local v = FREE.esperar(FREE.K_PING, function(x) return x.marca == marca end, FREE.ESPERA_PING)
+    FREE.borrar(FREE.K_PING)
+    if v then FREE.ping = { io = v.io == true, dofile = v.dofile == true, loadfile = v.loadfile == true } end
+end
+
+-- Fuera las claves "CineCaptions_*" que dejo una sesion anterior (un Puente
+-- que murio a mitad de un trabajo): GetData() sin argumentos las lista.
+function FREE.barrer()
+    local ok, claves = pcall(function() return fusion:GetData() end)
+    if not ok or type(claves) ~= "table" then return 0 end
+    local n = 0
+    for _, k in pairs(claves) do
+        if type(k) == "string" and k:sub(1, 13) == "CineCaptions_" then
+            FREE.poner(k, nil)
+            n = n + 1
+        end
+    end
+    return n
+end
+
+-- Cuenta por donde funciono cada cosa (una vez por cambio, en la consola).
+function FREE.anotar(que, camino)
+    if camino and FREE.camino[que] ~= camino then
+        FREE.camino[que] = camino
+        if camino ~= "loadfile" then
+            print("[Puente] " .. (que == "leer" and "leo los trabajos" or "corro los scripts") .. " por " .. camino)
+        end
+    end
+end
+
+-- Lo que este Resolve deja hacer sin loadfile, para la cabecera.
+function FREE.cabecera()
+    local function sn(v) return v and "si" or "NO" end
+    local p = FREE.ping
+    local ping = (p == nil) and "sin probar" or ((p == false) and "NO volvio"
+        or ("si (dofile=" .. sn(p.dofile) .. " loadfile=" .. sn(p.loadfile) .. " io=" .. sn(p.io) .. ")"))
+    local leer = FREE.camino.leer or (loadfile and "loadfile") or (dofile and "dofile")
+    local correr = FREE.camino.correr or (loadfile and "loadfile") or (dofile and "dofile")
+    if not leer then
+        local posibles = {}
+        if not SIN_IO then posibles[#posibles + 1] = "io" end
+        if FREE.hay_readfile() then posibles[#posibles + 1] = "readfile" end
+        if FREE.hay("RunScript") then posibles[#posibles + 1] = "runscript" end
+        if FREE.consola_lee() then posibles[#posibles + 1] = "execute" end
+        leer = (#posibles > 0) and ("sin probar: " .. table.concat(posibles, "/")) or "NINGUNO"
+    end
+    if not correr then
+        local posibles = {}
+        if FREE.hay("RunScript") then posibles[#posibles + 1] = "runscript" end
+        if FREE.consola_lee() then posibles[#posibles + 1] = "execute" end
+        correr = (#posibles > 0) and ("sin probar: " .. table.concat(posibles, "/")) or "NINGUNO"
+    end
+    return "free: readfile=" .. sn(FREE.hay_readfile()) .. " runscript=" .. sn(FREE.hay("RunScript"))
+        .. " execute=" .. sn(FREE.hay("Execute")) .. " setdata=" .. sn(FREE.hay("SetData") and FREE.hay("GetData"))
+        .. " ping=" .. ping .. "  |  lectura: " .. leer .. "  |  ejecucion: " .. correr
+end
+
+-- Que NO queda ningun camino (texto) o nil. Solo tiene sentido sin loadfile.
+function FREE.sin_camino()
+    if loadfile or dofile then return nil end
+    local lee = (not SIN_IO) or FREE.hay_readfile() or FREE.hay("RunScript") or FREE.consola_lee()
+    local corre = FREE.hay("RunScript") or FREE.consola_lee()
+    if not lee then return "no puedo leer los trabajos" end
+    if not corre then return "no puedo ejecutar los scripts" end
+    return nil
+end
+
+-- Hay pendiente.json pero ningun camino lo leyo: se dice CLARO (reporte con
+-- arranque "sin_lectura" + la señal pendiente.ilegible, que la app ve aunque
+-- no haya consola) en vez de dejar a la app esperando su tiempo maximo.
+-- Se reintenta cada 15 s y se avisa como mucho una vez por minuto.
+function FREE.no_pude_leer(que)
+    local ahora = FREE.reloj()
+    -- Si el pendiente ya no esta, no era ilegible: la app lo borro mientras se
+    -- leia (lo hace al recoger la respuesta del trabajo anterior). Sin esta
+    -- guarda salia una falsa alarma que tumbaba el trabajo SIGUIENTE.
+    if not existe(JOB_PENDIENTE) then return end
+    FREE.reintento = ahora + 15
+    if FREE.avisado and ahora - FREE.avisado < 60 then return end
+    FREE.avisado = ahora
+    local msg = "Este Resolve no deja al Puente leer los trabajos de CineCaptions (" .. tostring(que)
+        .. "). " .. FREE.cabecera()
+    print("[Puente] PROBLEMA: " .. msg)
+    escribir(CARPETA_JOBS .. SEP .. "pendiente.ilegible", msg)
+    reportar(false, msg, ', "arranque": "sin_lectura"')
+end
+
+-- El envoltorio para correr un script en la consola: toma la entrega de
+-- GetData, avisa el inicio, se la pasa al script como argumento (si la
+-- consola tiene loadfile) y publica el final si el script no lo hizo.
+function FREE.envoltorio(ruta)
+    return 'local T = fusion:GetData("' .. FREE.K_TRABAJO .. '") if type(T) == "table" then '
+        .. 'fusion:SetData("' .. FREE.K_INICIO .. '", {id = T.id}) '
+        .. 'local f = loadfile and loadfile([==[' .. ruta .. ']==]) local ok, r '
+        .. 'if f then ok, r = pcall(f, T) else ok, r = pcall(dofile, [==[' .. ruta .. ']==]) end '
+        .. 'local fin = fusion:GetData("' .. FREE.K_FIN .. '") '
+        .. 'if not (type(fin) == "table" and fin.id == T.id) then '
+        .. 'fusion:SetData("' .. FREE.K_FIN .. '", {id = T.id, ok = ok, texto = tostring(r)}) end end'
+end
+
+-- Espera el final del trabajo T latiendo. nil si el script ni arranco en
+-- ESPERA_INICIO s (se prueba el siguiente camino).
+function FREE.esperar_fin(T)
+    local t0 = FREE.reloj()
+    local empezo, ultimo_latido = false, t0
+    while true do
+        local fin = FREE.dato(FREE.K_FIN)
+        if type(fin) == "table" and fin.id == T.id then return fin end
+        local ahora = FREE.reloj()
+        if not empezo then
+            local ini = FREE.dato(FREE.K_INICIO)
+            empezo = type(ini) == "table" and ini.id == T.id
+            if not empezo and ahora - t0 > FREE.ESPERA_INICIO then return nil end
+        end
+        if ahora - t0 > FREE.ACCION_MAX then
+            local cuanto = (FREE.ACCION_MAX >= 120) and (math.floor(FREE.ACCION_MAX / 60) .. " min")
+                or (math.floor(FREE.ACCION_MAX) .. " s")
+            return { ok = false, mensaje = "El script arranco pero no termino en " .. cuanto
+                .. " (Puente " .. VERSION .. "). Si Resolve sigue ocupado, espera; si no, vuelve a lanzar CineCaptions_Puente." }
+        end
+        if ahora - ultimo_latido >= LATIDO_CADA then
+            latir()
+            ultimo_latido = ahora
+        end
+        dormir(0.05)
+    end
+end
+
+-- Corre el script 'ruta' SIN loadfile: dofile (sincrono), RunScript o
+-- Execute (asincronos). Devuelve (fin, camino); fin = {ok, reporte | texto |
+-- mensaje} o nil si ningun camino lo arranco.
+function FREE.correr_por(ruta, T)
+    if dofile then
+        local ok, r = pcall(dofile, ruta)
+        local fin = FREE.dato(FREE.K_FIN)
+        if type(fin) == "table" and fin.id == T.id then return fin, "dofile" end
+        return { ok = ok, texto = tostring(r) }, "dofile"
+    end
+    if FREE.hay("RunScript") and pcall(function() fusion:RunScript(ruta) end) then
+        local fin = FREE.esperar_fin(T)
+        if fin ~= nil then return fin, "runscript" end
+    end
+    if FREE.consola_lee() then
+        T.ejecutar_ok = false           -- dentro de la consola, un Execute anidado queda en cola: el script no debe usarlo
+        FREE.poner(FREE.K_TRABAJO, T)
+        if pcall(function() fusion:Execute(FREE.envoltorio(ruta)) end) then
+            local fin = FREE.esperar_fin(T)
+            if fin ~= nil then return fin, "execute" end
+        end
+    end
+    return nil, (FREE.hay("RunScript") or FREE.consola_lee())
+        and "ni RunScript ni la consola llegaron a arrancar el script"
+        or "este Resolve no tiene loadfile, dofile, RunScript ni consola"
+end
+
+function FREE.correr(ruta, job_id)
+    local T = { id = tostring(job_id or ("trabajo-" .. os.time())), creado = os.time(), resolve = RESOLVE_BUENO,
+                puente = VERSION, paquete = PAQUETE, ejecutar_ok = FREE.consola_lee() and true or false }
+    FREE.borrar(FREE.K_FIN)
+    FREE.borrar(FREE.K_INICIO)
+    FREE.poner(FREE.K_TRABAJO, T)
+    local ok, fin, camino = pcall(FREE.correr_por, ruta, T)
+    FREE.borrar(FREE.K_TRABAJO)
+    FREE.borrar(FREE.K_INICIO)
+    FREE.borrar(FREE.K_FIN)
+    if not ok then return nil, tostring(fin) end
+    if fin ~= nil then FREE.anotar("correr", camino) end
+    return fin, camino
 end
 
 -- Todas las carpetas donde pueden estar nuestros .lua, en orden de
@@ -684,7 +1053,7 @@ end
 -- ---------------------------------------------------------------------
 -- Ejecutar una accion (corriendo su script .lua)
 -- ---------------------------------------------------------------------
-local function correr_accion(accion, dir_scripts)
+local function correr_accion(accion, dir_scripts, job_id)
     local nombre = SCRIPTS[accion]
     if not nombre then
         return false, "Accion desconocida: " .. tostring(accion)
@@ -766,15 +1135,24 @@ local function correr_accion(accion, dir_scripts)
     -- Un script viejo que no lea argumentos los ignora sin efecto.
     local chunk = nil
     pcall(function() chunk = loadfile(ruta) end)
+    local ok, err
     if chunk == nil then
-        -- loadfile capado o archivo ilegible: el dofile de siempre, sin
-        -- entrega (el script usara su global 'resolve', que esta vivo).
-        local ok, err = pcall(dofile, ruta)
-        if ok then return true, "" end
-        return false, tostring(err)
+        -- loadfile capado o archivo ilegible: dofile y, sin dofile, RunScript
+        -- o la consola (v1.0.42, ver FREE). La entrega viaja por GetData
+        -- ("CineCaptions_trabajo") y el final vuelve por "CineCaptions_fin".
+        local fin, camino = FREE.correr(ruta, job_id)
+        if fin == nil then
+            ok, err = false, "No pude ejecutar " .. nombre .. " (Puente " .. VERSION .. "): " .. tostring(camino)
+                .. ". " .. FREE.cabecera()
+        else
+            ok = fin.ok == true
+            err = fin.reporte or fin.mensaje or fin.texto
+            if err == "nil" then err = nil end      -- tostring(nil) del envoltorio o de dofile: no dijo nada
+        end
+    else
+        ok, err = pcall(chunk, {
+            resolve = RESOLVE_BUENO, puente = VERSION, paquete = PAQUETE })
     end
-    local ok, err = pcall(chunk, {
-        resolve = RESOLVE_BUENO, puente = VERSION, paquete = PAQUETE })
     -- Modo señales: el script no pudo escribir ultimo_resultado.* y DEVUELVE
     -- su reporte "CINECAPTIONS_REPORTE|json" (un script viejo lo lanzaria por
     -- error(): se acepta igual). Se relata al registro de Resolve TAL CUAL
@@ -810,8 +1188,12 @@ local function responder(job_id, ok, mensaje)
         -- app la recoge y la borra (_encolar).
         local corto = (tostring(mensaje or ""):gsub('[\\/:%*%?"<>|\r\n\t]', " "))
         corto = (corto:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))
+        -- v1.0.42: sin dejar un caracter UTF-8 partido al final del corte (un
+        -- «…» cortado a medias daba un nombre invalido y la señal no se creaba:
+        -- la app esperaba hasta su tiempo maximo con el trabajo ya hecho).
+        corto = corto:sub(1, 120):gsub("[\192-\255][\128-\191]*$", "")
         senal(CARPETA_JOBS .. SEP .. job_id .. ".hecho." .. (ok and "ok" or "err")
-              .. "." .. corto:sub(1, 120))
+              .. "." .. corto)
         return
     end
     -- json_escapar, no el gsub de comillas de antes: un mensaje con una ruta
@@ -924,6 +1306,28 @@ local function main()
                 ', "arranque": "sin_canal"'), 0)
         end
         marcar("arrancando")
+    end
+
+    -- v1.0.42: sin loadfile (el Free sin cargador) entran los caminos de FREE:
+    -- fuera los restos de claves de otra sesion, el ping de la consola, y si no
+    -- queda NINGUN camino para leer o ejecutar se dice claro y se sale (antes:
+    -- un Puente que latia y no atendia nada, y la app esperando 240 s).
+    if loadfile == nil then
+        FREE.barrer()
+        FREE.hacer_ping()
+        local falta = FREE.sin_camino()
+        if falta then
+            local msg = "Este Resolve no deja al Puente leer ni ejecutar los trabajos de CineCaptions ("
+                .. falta .. "): " .. FREE.cabecera()
+            print("[Puente] ERROR: " .. msg)
+            if not SIN_IO then marcar("sin_cargador") end
+            -- La señal puente.sin_cargador (mas nueva que el latido = el ultimo
+            -- Puente lanzado es este) llega a la app aunque no haya consola
+            -- para el reporte (resolve_bridge._puente_sin_lectura).
+            escribir(CARPETA .. SEP .. "puente.sin_cargador", msg)
+            reportar(false, msg, ', "arranque": "sin_cargador"')
+            return
+        end
     end
 
     -- Sin primitiva de espera, sondear cuatro veces por segundo cuesta un
@@ -1103,7 +1507,7 @@ local function main()
                 responder(job_id, false, "trabajo sin campo 'accion' o ilegible")
             else
                 print("\n[Puente] -> " .. tostring(accion))
-                local ok, mensaje = correr_accion(accion, dir_scripts)
+                local ok, mensaje = correr_accion(accion, dir_scripts, job_id)
                 print("[Puente] " .. (ok and "OK" or
                       ("FALLO: " .. tostring(mensaje))))
                 responder(job_id, ok, mensaje)
@@ -1123,6 +1527,10 @@ local function main()
             -- curso y espera. (Modo señales: lo borra la app al recoger la
             -- señal .hecho; aqui no se puede.)
             if not SIN_IO then os.remove(JOB_TOMADO) end
+            -- v1.0.42: en modo señales el pendiente sigue ahi hasta que la app
+            -- recoge la respuesta y lo borra: no se relee en 1 s (por RunScript
+            -- costaria un estado nuevo y dos SetData por vuelta para nada).
+            if SIN_IO then FREE.reintento = FREE.reloj() + 1 end
 
             atendidos = atendidos + 1
             ultima_actividad = os.time()

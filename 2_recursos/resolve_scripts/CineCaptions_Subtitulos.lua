@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.54 (subtitulos)"
+local VERSION = "5.55 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -52,6 +52,113 @@ local VERSION = "5.54 (subtitulos)"
 -- llegan argumentos y esto queda en nil.
 local ENTREGA_PUENTE = ({...})[1]
 if type(ENTREGA_PUENTE) ~= "table" then ENTREGA_PUENTE = nil end
+
+-- v1.0.42 (Puente): Free SIN loadfile ni dofile (el de un cliente; medido en Studio 21.1.2 imitandolo). Ahi el Puente corre este
+-- script con fusion:RunScript o fusion:Execute, que no pasan argumentos: la entrega llega por fusion:GetData("CineCaptions_trabajo"),
+-- el arranque se avisa con SetData("CineCaptions_inicio") y el final con SetData("CineCaptions_fin") (lo que se devuelva se pierde).
+-- Los sidecars se leen con CC_FREE.leer: loadfile -> dofile -> bmd.readfile(<x>.free.lua) -> RunScript(<x>.free.lua) -> consola
+-- (ver FREE en CineCaptions_Puente.lua y sidecar_lua.py). Todo cuelga de UNA tabla: hay scripts al limite de 200 locales.
+-- Copia identica en los 11 scripts de accion: si cambias una, cambialas todas.
+local CC_FREE = { por_datos = false, K_SIDECAR = "CineCaptions_sidecar" }
+function CC_FREE.dato(k)
+    local ok, v = pcall(function() return fusion:GetData(k) end)
+    if ok then return v end
+    return nil
+end
+function CC_FREE.poner(k, v)
+    return (pcall(function() fusion:SetData(k, v) end))
+end
+function CC_FREE.reloj()
+    local ok, t = pcall(function() return bmd.gettime() end)
+    if ok and type(t) == "number" then return t end
+    return os.time()
+end
+function CC_FREE.misma_ruta(a, b)
+    local function n(r) return (tostring(r or ""):gsub("/", "\\"):gsub("\\+", "\\"):lower()) end
+    return n(a) == n(b)
+end
+-- bmd.readfile le pone __flags a cada tabla (medido): fuera, antes de recorrerla con pairs.
+function CC_FREE.sin_flags(t, vistos)
+    if type(t) ~= "table" then return t end
+    vistos = vistos or {}
+    if vistos[t] then return t end
+    vistos[t] = true
+    t.__flags = nil
+    for _, v in pairs(t) do CC_FREE.sin_flags(v, vistos) end
+    return t
+end
+-- RunScript y Execute son ASINCRONOS: se lanza y se espera (maximo 3 s) la tabla de 'ruta' en GetData; la clave se borra al leerla.
+function CC_FREE.por_bus(lanzar, ruta)
+    CC_FREE.poner(CC_FREE.K_SIDECAR, nil)
+    if not pcall(lanzar) then return nil end
+    local t0, v = CC_FREE.reloj(), nil
+    repeat
+        v = CC_FREE.dato(CC_FREE.K_SIDECAR)
+        if type(v) == "table" and type(v.t) == "table" and CC_FREE.misma_ruta(v.ruta, ruta) then break end
+        v = nil
+        pcall(function() bmd.wait(0.01) end)
+    until CC_FREE.reloj() - t0 > 3
+    CC_FREE.poner(CC_FREE.K_SIDECAR, nil)
+    return v and CC_FREE.sin_flags(v.t) or nil
+end
+-- La tabla del sidecar de 'ruta' (la ruta del .json) y el camino que funciono; nil, "ninguno" si ninguno.
+function CC_FREE.leer(ruta)
+    if loadfile then
+        local okc, chunk = pcall(loadfile, ruta .. ".lua")
+        if okc and chunk then
+            local ok, t = pcall(chunk)
+            if ok and type(t) == "table" then return t, "loadfile" end
+        end
+    end
+    if dofile then
+        local ok, t = pcall(dofile, ruta .. ".lua")
+        if ok and type(t) == "table" then return t, "dofile" end
+    end
+    local hib = ruta .. ".free.lua"
+    local okr, t = pcall(function() return bmd.readfile(hib) end)
+    if okr and type(t) == "table" then return CC_FREE.sin_flags(t), "readfile" end
+    if fusion == nil then return nil, "ninguno" end
+    local hay = true
+    pcall(function() hay = bmd.fileexists(hib) ~= false end)
+    local okrs, rs = pcall(function() return fusion.RunScript end)
+    if hay and okrs and rs ~= nil then
+        t = CC_FREE.por_bus(function() fusion:RunScript(hib) end, ruta)
+        if t then return t, "runscript" end
+    end
+    -- La consola solo si el Puente dice que su ping volvio y que este script NO corre dentro de ella (un Execute anidado queda en cola).
+    if type(ENTREGA_PUENTE) == "table" and ENTREGA_PUENTE.ejecutar_ok == true then
+        local p = ruta .. ".lua"
+        t = CC_FREE.por_bus(function() fusion:Execute('local f = loadfile and loadfile([==[' .. p .. ']==]) local ok, t '
+            .. 'if f then ok, t = pcall(f) else ok, t = pcall(dofile, [==[' .. p .. ']==]) end '
+            .. 'if ok and type(t) == "table" then fusion:SetData("' .. CC_FREE.K_SIDECAR .. '", {ruta = [==['
+            .. ruta .. ']==], t = t}) end') end, ruta)
+        if t then return t, "execute" end
+    end
+    return nil, "ninguno"
+end
+-- ¿Hay sidecar de 'ruta'? (para distinguir «no hay orden» de «no la pude leer»; sin bmd.fileexists: no se sabe -> false)
+function CC_FREE.existe(ruta)
+    local hay = false
+    pcall(function() hay = bmd.fileexists(ruta .. ".lua") == true or bmd.fileexists(ruta .. ".free.lua") == true end)
+    return hay
+end
+-- La entrega por GetData: solo si es de los ultimos 2 min (una mas vieja es un resto de un Puente que murio, y una corrida a mano no
+-- debe creerse bajo el Puente).
+if ENTREGA_PUENTE == nil and fusion ~= nil then
+    local t = CC_FREE.dato("CineCaptions_trabajo")
+    if type(t) == "table" and t.id ~= nil and math.abs(os.time() - (tonumber(t.creado) or 0)) <= 120 then
+        ENTREGA_PUENTE, CC_FREE.por_datos = t, true
+        CC_FREE.poner("CineCaptions_inicio", { id = t.id })
+    end
+end
+-- Al final: con la entrega por GetData el final se PUBLICA. true = publicado (el script termina ahi, sin error() ni return de reporte).
+function CC_FREE.publicar(ok, err, reporte)
+    if not CC_FREE.por_datos then return false end
+    CC_FREE.por_datos = false
+    CC_FREE.poner("CineCaptions_fin", { id = ENTREGA_PUENTE.id, ok = ok and true or false,
+        mensaje = (not ok) and tostring(err) or nil, reporte = reporte })
+    return true
+end
 local FADE_OUT_SECONDS = 0.35
 -- La animacion de entrada del camino por valores (v1.0.51). Corta a
 -- proposito: es un "aparecer con suavidad", no un efecto — los packs traen
@@ -105,8 +212,12 @@ local SUFIJOS_DE_SET = { " %d", "%d", "-%d", "_%d", " %02d" }
 --
 -- Se dejan como constantes, en vez de quitarlas del codigo, para que volver a
 -- meter aire entre bloques sea cambiar un numero.
-local GAP_BASICO_FRAMES = 0   -- entre palabras sueltas (rol 'base')
-local GAP_BLOQUE_FRAMES = 0   -- entre bloques de 2 o 3 lineas
+-- v5.55: en UNA tabla (antes GAP_BASICO_FRAMES y GAP_BLOQUE_FRAMES): el chunk
+-- principal estaba en el limite de 200 locales y CC_FREE necesitaba uno.
+local GAP_FRAMES = {
+    basico = 0,   -- entre palabras sueltas (rol 'base')
+    bloque = 0,   -- entre bloques de 2 o 3 lineas
+}
 
 -- Donde va SIEMPRE la linea principal, y de ahi cuelgan las otras dos.
 --
@@ -578,13 +689,10 @@ local function leer_archivo(ruta)
         -- Free 21.1: solo queda loadfile. Para un archivo de TEXTO (el .srt
         -- de la pista normal/traducida) la app deja "<ruta>.lua" con
         -- `return { texto = ... }` (subtitle_transcriber.write_srt). Los
-        -- .json van por cargar_tabla, que es tabla directa.
-        local chunk = loadfile and loadfile(ruta .. ".lua")
-        if not chunk and not loadfile and dofile then          -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
-            chunk = function() return dofile(ruta .. ".lua") end
-        end
-        local ok, t = pcall(chunk or function() end)
-        return (ok and type(t) == "table") and t.texto or nil
+        -- .json van por cargar_tabla, que es tabla directa. v1.0.42: por la
+        -- cadena de CC_FREE (tambien un Free sin loadfile ni dofile).
+        local t = CC_FREE.leer(ruta)
+        return type(t) == "table" and t.texto or nil
     end
     local f = io.open(ruta, "r")
     if not f then return nil end
@@ -687,20 +795,19 @@ local function cargar_tabla(ruta)
         local ok, t = pcall(parsear_json, txt)
         return (ok and type(t) == "table") and t or nil
     end
-    local chunk = loadfile and loadfile(ruta .. ".lua")
-    if not chunk and not loadfile and dofile then              -- v5.54: hay Free sin loadfile (solo dofile): sin esto el script se caia aqui
-        local ok, t = pcall(dofile, ruta .. ".lua")
-        return (ok and type(t) == "table") and t or nil
-    end
-    if not chunk then return nil end
-    local ok, t = pcall(chunk)
-    return (ok and type(t) == "table") and t or nil
+    -- v1.0.42: por la cadena de CC_FREE (loadfile, dofile, bmd.readfile, RunScript, consola).
+    local t = CC_FREE.leer(ruta)
+    return type(t) == "table" and t or nil
 end
 
 local function dato_existe(ruta)
     if not SIN_IO then return archivo_existe(ruta) end
-    if not loadfile then return dofile ~= nil and (pcall(dofile, ruta .. ".lua")) end      -- v5.54: Free sin loadfile (solo dofile)
-    return loadfile(ruta .. ".lua") ~= nil
+    if loadfile then return loadfile(ruta .. ".lua") ~= nil end
+    -- v1.0.42: sin loadfile, bmd.fileexists de los sidecars (no ejecuta nada); sin el, lo de antes y la cadena de CC_FREE.
+    local ok_fe, hay = pcall(function() return bmd.fileexists(ruta .. ".lua") end)
+    if ok_fe and type(hay) == "boolean" then return hay or CC_FREE.existe(ruta) end
+    if dofile then return (pcall(dofile, ruta .. ".lua")) end      -- v5.54: Free sin loadfile (solo dofile)
+    return CC_FREE.leer(ruta) ~= nil
 end
 
 local function fail(msg)
@@ -975,8 +1082,8 @@ end
 -- termina antes de que la palabra salga (dura 0,18-0,50 s). Si el clip no es un Luxe Shine (presets de Amro) no hace nada.
 -- El macro calcula el RECORRIDO de la banda con el DataWindow del texto, que dentro de un macro no llega: recorre siempre ~0,31 del ancho del cuadro y en una palabra ancha sólo pasaba
 -- por el centro. Medido en Resolve: recorrido (en anchos de cuadro) ~ 2,17 x (0,193 + inputShine). Gemela de BARRIDO_K / BARRIDO_BASE de CineCaptions.py.
-local BARRIDO_K = 2.17
-local BARRIDO_BASE = 0.193
+-- v5.55: en UNA tabla (limite de 200 locales del chunk principal).
+local BARRIDO = { K = 2.17, BASE = 0.193 }
 local function ajustar_barrido(item, visible_s, salto_s, ancho_rel)
     local hecho = false
     pcall(function()
@@ -997,7 +1104,7 @@ local function ajustar_barrido(item, visible_s, salto_s, ancho_rel)
         local a = set_input(macro, "inputOffset", (salto_s or 0) + 0.10)
         local b = set_input(macro, "inputLength", largo)
         if type(ancho_rel) == "number" and ancho_rel > 0 then
-            set_input(macro, "inputShine", math.max(-0.05, (ancho_rel + 0.16) / BARRIDO_K - BARRIDO_BASE))
+            set_input(macro, "inputShine", math.max(-0.05, (ancho_rel + 0.16) / BARRIDO.K - BARRIDO.BASE))
         end
         hecho = a and b
     end)
@@ -3944,7 +4051,7 @@ local function place_dynamic(timeline, media_pool, track, fps, start_frame, proj
 
         -- Separacion con el bloque siguiente. Antes los clips quedaban
         -- pegados (el final de uno era el primer frame del otro).
-        local gap = usa_set and GAP_BLOQUE_FRAMES or GAP_BASICO_FRAMES
+        local gap = usa_set and GAP_FRAMES.bloque or GAP_FRAMES.basico
         local fin_frame = start_frame + math.floor(cue["end"] * fps + 0.5) - gap
 
         -- Cortar solo si de verdad invade. Cuando hay silencio de por medio
@@ -5324,6 +5431,68 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
     print(string.format("\nIdioma '%s': %d bloques (estilo guion), %d sets en el pack.", lang, #cues, #sets))
     for _, linea in ipairs(informe_sets) do print(linea) end
 
+    -- v5.55 — «Crea tu estilo» (gemela de place_guion_track de CineCaptions.py): una MEZCLA puede juntar varios temas «guion» (Referencia,
+    -- Tema4, Tema5, Tema6) en ESTA pista. Cada pack de plantillas_extra va a su bin (como los extra de place_kinetic) y cada bloque usa los
+    -- sets de SU pack (cue.pack); sin pack, o si el suyo falla, los del principal. Una sola pista = un solo reparto de huecos ES-T y el retiro
+    -- final sigue valiendo. Un pack extra que falla se avisa y la corrida sigue (nunca fail()). Todo local de ESTA funcion (el chunk esta
+    -- al limite de 200 locales).
+    local sets_por_pack, preparados = {}, {}
+    local function anotar_sets(nombre, juegos, base)
+        -- por su nombre y, si es un pack personalizado («VIRAL · a1b2c3»), tambien por el de su tema base: los bloques traen el nombre BASE
+        if type(nombre) ~= "string" or not nombre:find("%S") or type(juegos) ~= "table" or #juegos == 0 then return end
+        sets_por_pack[nombre] = juegos
+        for _, alias in ipairs({ (type(base) == "string") and base or "", nombre:match("^(.-) · ") or nombre }) do
+            if alias:find("%S") and sets_por_pack[alias] == nil then sets_por_pack[alias] = juegos end
+        end
+    end
+    if type(track.plantilla) == "table" then anotar_sets(track.plantilla.pack, sets, track.plantilla.base) end
+    -- los extra, a prueba de formas raras (igual que en CineCaptions.py): solo una LISTA, en su orden y sin huecos. El sidecar de Free 21.1
+    -- escribe un None como nil ({nil, {...}}) e ipairs paraba en el hueco (Python sigue con el siguiente); un texto en vez de la lista tumbaba
+    -- la corrida en ipairs (main llama a place_guion sin pcall). Un objeto ({plantilla = ...}) no es una lista: no se recorre.
+    local extras_x = {}
+    if type(track.plantillas_extra) == "table" then
+        local claves_x = {}
+        for k in pairs(track.plantillas_extra) do
+            if type(k) == "number" and k >= 1 and k == math.floor(k) then claves_x[#claves_x + 1] = k end
+        end
+        table.sort(claves_x)
+        for _, k in ipairs(claves_x) do extras_x[#extras_x + 1] = track.plantillas_extra[k] end
+    end
+    local hay_extras = #extras_x > 0
+    if pack_previo then preparados[tostring(pack_previo.nombre)] = true end
+    for _, extra in ipairs(extras_x) do
+        local p_x = (type(extra) == "table" and type(extra.plantilla) == "table") and extra.plantilla or extra
+        if type(p_x) == "table" then
+            local nombre_x = tostring(p_x.pack or "?")
+            local ok_x, err_x = pcall(function()
+                local pp = pack_del_manifiesto({ plantilla = p_x }, ancho_tl, alto_tl)
+                if not project or not pp or not (pp.drt or pp.drb) then
+                    print("  Aviso: el pack «" .. nombre_x .. "» de la mezcla no trae bin que preparar: sus palabras van con el pack principal.")
+                    return
+                end
+                if preparados[tostring(pp.nombre)] then return end
+                preparados[tostring(pp.nombre)] = true
+                local carpeta_x, aviso_x = preparar_pack_drt(project, media_pool, pp.nombre, pp.formato, pp.drt, pp.drb)
+                if aviso_x then print("  Aviso (pack '" .. tostring(pp.nombre) .. "'): " .. tostring(aviso_x)) end
+                if not carpeta_x then        -- NUNCA buscar en todo el Media Pool: saldrian los sets de OTRO pack (todos tienen un set 1)
+                    print("  Aviso: no pude preparar el pack «" .. nombre_x .. "» de la mezcla: sus palabras van con el pack principal.")
+                    return
+                end
+                local sets_x, informe_x = buscar_sets_de_plantillas(media_pool, carpeta_x)
+                if #sets_x == 0 then
+                    print("  Aviso: el pack «" .. nombre_x .. "» de la mezcla no tiene sets: sus palabras van con el pack principal.")
+                    return
+                end
+                anotar_sets(p_x.pack, sets_x, p_x.base)
+                print(string.format("  Pack «%s» de la mezcla: %d sets.", nombre_x, #sets_x))
+                for _, linea in ipairs(informe_x or {}) do print(linea) end
+            end)
+            if not ok_x then
+                print("  Aviso: pack extra de la mezcla «" .. nombre_x .. "» (" .. tostring(err_x) .. "): sus palabras van con el pack principal.")
+            end
+        end
+    end
+
     -- fuera lo de otras corridas (dinamico / normal) y lo propio de la anterior
     do
         local nombres_g = { L .. "-CTX", L .. "-MAIN", L .. "-CMP", L, L .. "-EMOJI" }
@@ -5347,8 +5516,16 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
     local extra_fin = tonumber(track.extra_fin_s) or 0.04
     local min_frames = a_fotogramas(0.3)
     local pendientes = {}
+    local con_el_principal = {}        -- v5.55: packs de la mezcla que no se pudieron preparar -> cuantos bloques van con el principal
     for _, cue in ipairs(cues) do
         local estilo_cue = cue.estilo
+        local sets_cue = (type(cue.pack) == "string") and sets_por_pack[cue.pack] or nil      -- v5.55: los sets de SU pack (mezcla)
+        if sets_cue == nil then
+            sets_cue = sets
+            if hay_extras and type(cue.pack) == "string" and cue.pack ~= "" then
+                con_el_principal[cue.pack] = (con_el_principal[cue.pack] or 0) + 1
+            end
+        end
         for _, run in ipairs(cue.runs or {}) do
             local texto = recortar(run.texto)
             if texto ~= "" then
@@ -5357,15 +5534,15 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
                 local n_estilo = run.estilo or estilo_cue
                 local juego = nil
                 if n_estilo then
-                    for _, s in ipairs(sets) do
+                    for _, s in ipairs(sets_cue) do
                         if s.numero == n_estilo then juego = s; break end
                     end
                 end
                 if juego == nil then
-                    for _, s in ipairs(sets) do
+                    for _, s in ipairs(sets_cue) do
                         if s[rol] then juego = s; break end
                     end
-                    juego = juego or sets[1]
+                    juego = juego or sets_cue[1]
                 end
                 local plantilla = juego[rol] or juego.main
                 if not plantilla then
@@ -5507,6 +5684,12 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
     end
     if sin_pista > 0 then
         print(string.format("  Aviso: %d palabra(s) no se colocaron (sin pista o sin clip para ese rol).", sin_pista))
+    end
+    local packs_sueltos = {}
+    for p in pairs(con_el_principal) do packs_sueltos[#packs_sueltos + 1] = p end
+    table.sort(packs_sueltos)
+    for _, p in ipairs(packs_sueltos) do
+        print(string.format("  Aviso: %d bloque(s) del pack «%s» van con el pack principal (el suyo no esta listo en Resolve).", con_el_principal[p], p))
     end
     return colocados, 0
 end
@@ -5956,8 +6139,8 @@ local EMOJI_MARGEN = { v = 0.065, h = 0.10 }
 -- alto de la letra de esa linea (Size del Text+ por el zoom del clip) por
 -- este factor; entre el ultimo caracter y el emoji, 0.3 lados. Es LA
 -- perilla: se ajusta con una captura, no a ciegas.
-local FACTOR_EMOJI_LINEA = 1.15
-local HUECO_EMOJI_LINEA = 0.3
+-- (v5.55: en UNA tabla, limite de 200 locales del chunk principal.)
+local EMOJI_LINEA = { factor = 1.15, hueco = 0.3 }
 
 local function importar_emoji(media_pool, ruta)
     -- La MISMA ruta se reusa; otro clip con el mismo nombre no (la leccion
@@ -6235,10 +6418,10 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
                     local ancho_em, alto_em = tonumber(par[1]), tonumber(par[2])
                     local zx = tonumber(p.zx) or 1
                     local lado_l = math.max(0.04, math.min(EMOJI_ALTO[f],
-                        alto_em * zx * FACTOR_EMOJI_LINEA))
+                        alto_em * zx * EMOJI_LINEA.factor))
                     local borde = 0.5 + (tonumber(p.x) or 0)
                         + (ancho_em * zx * razon) / 2
-                    local cx_l = borde + (HUECO_EMOJI_LINEA * lado_l + lado_l / 2)
+                    local cx_l = borde + (EMOJI_LINEA.hueco * lado_l + lado_l / 2)
                         * razon
                     if cx_l + (lado_l * razon) / 2 <= 0.99 then
                         lado, cx, y = lado_l, cx_l, tonumber(p.y) or 0
@@ -7363,6 +7546,9 @@ local function recomponer(timeline, orden, fps, start_frame)
 end
 
 local function main()
+    -- v5.55: la GLOBAL de la mezcla nunca cruza de una corrida a otra. Bajo el Puente el entorno sigue vivo, y una mezcla que murio a medias
+    -- (fail() antes del volcado final) dejaba MEZCLA_ACUM puesto: la corrida siguiente desviaba sus emojis y sonidos y volcaba los de la rota.
+    MEZCLA_ACUM = nil
     -- OJO: NO se toca el global hasta tener algo valido. Antes esto era
     -- `resolve = obtener_resolve()` a secas, y como es una asignacion GLOBAL,
     -- al fallar escribia _G.resolve = nil y se cargaba el objeto para TODA la
@@ -7648,6 +7834,7 @@ if SIN_IO then
     -- Bajo el Puente (v3.1.7, modo señales) se DEVUELVE en vez de lanzarse:
     -- el Puente lo relata al registro por fusion:Execute y saca el veredicto
     -- del json. Un error() aqui se leeria como fallo del trabajo.
+    if CC_FREE.publicar(ok, err, reporte) then return end
     if ENTREGA_PUENTE ~= nil then return reporte end
     error(reporte, 0)
 end
@@ -7658,6 +7845,8 @@ end
 -- con pcall(dofile, ...), asi que al no salir ningun error daba el trabajo
 -- por BUENO y la app anunciaba "ya quedaron puestos en tu timeline" con el
 -- timeline vacio. Un script que falla tiene que fallar hacia afuera.
+-- v1.0.42: con la entrega por GetData (RunScript/Execute del Puente) el final se publica en vez de lanzarse.
+if CC_FREE.publicar(ok, err) then return end
 if not ok then
     error(err, 0)
 end

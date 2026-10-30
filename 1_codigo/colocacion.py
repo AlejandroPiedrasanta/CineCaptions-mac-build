@@ -1120,12 +1120,13 @@ def recuperar_resolve(motivo='', decir=None):
             registro.aviso(tr('No pude cerrar Resolve: ciérralo tú (ventana «No responde») y repite.'), 'GO · Resolve')
             return False
         for f in (getattr(b, 'ARCHIVO_LATIDO', None), getattr(b, 'JOB_TOMADO', None), getattr(b, 'JOB_PENDIENTE', None)):          # lo que dejó el Puente muerto
-            try:
-                if f is not None:
-                    f.unlink()
-                    f.with_name(f.name + '.lua').unlink()
-            except Exception:
-                pass
+            if f is None:
+                continue
+            for g in (f, f.with_name(f.name + '.lua'), f.with_name(f.name + '.free.lua')):      # y sus sidecars (.free.lua: Free sin loadfile, Puente 1.0.42)
+                try:
+                    g.unlink()
+                except Exception:
+                    pass
         if decir:
             decir(tr('Reabriendo Resolve…'))
         ok = bool(b.lanzar_puente_auto(forzar=True))

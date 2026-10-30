@@ -13,19 +13,21 @@ Para qué: que quien trabaje en el proyecto (una persona o un asistente) contest
 Funciones (las mismas por MCP —herramientas mapa, simbolo, modulo, cambios, resumen— y por línea de comandos):
 
     mapa(consulta)      temas que encajan con las palabras, con archivos y símbolos (compacto); mapa(id='go-inicio') da el detalle de ese tema
-    simbolo(nombre)     el CÓDIGO de esa función/clase/método (solo ella; las clases dan la lista de métodos), con archivo:líneas
-    modulo(nombre)      qué es un archivo: su descripción, clases y funciones con línea
+    donde(nombre)       una línea por coincidencia: archivo:líneas, tipo y docstring (sin código); o el archivo de un tema
+    simbolo(nombre)     el CÓDIGO de esa función/clase/método (solo ella; las clases dan la lista de métodos), con archivo:líneas; desde=N sigue por páginas
+    modulo(nombre)      qué es un archivo: su descripción, clases y funciones con línea (filtro=palabra: solo esas)
     llamadas(nombre)    quién usa esa función/clase (sentido='sale': qué usa ella; niveles=3: la cadena entera, lo que se puede romper al cambiarla)
     ruta(desde, hasta)  la cadena de llamadas más corta entre dos funciones, con la línea de cada llamada
     cambios(n)          las últimas n entradas explicadas del registro de cambios
     resumen()           DOCUMENTACION/RESUMEN.md (una página: qué hace el programa)
     generar()           reescribe el mapa de CLAUDE.md desde mapa.json y avisa de lo que ya no existe (archivos/símbolos/secciones)
 
-Línea de comandos (sin MCP):  6_compilacion/venv315/Scripts/python.exe 1_codigo/mapa_codigo.py mapa go sonido  |  simbolo _go_generar  |  modulo vigilancia  |  generar
+Línea de comandos (sin MCP):  6_compilacion/venv315/Scripts/python.exe 1_codigo/mapa_codigo.py mapa go sonido  |  simbolo _go_generar [lineas] [desde]  |  donde _go_generar  |  modulo vigilancia [filtro]  |  generar
                               llamadas _go_generar [entra|sale] [niveles] [archivo]  |  ruta desde hasta
 """
 import ast
 import json
+import math
 import re
 import sys
 import unicodedata
@@ -202,10 +204,26 @@ def _buscar(nombre, archivo=''):
     return hallados
 
 
-def simbolo(nombre, lineas=70, archivo=''):
-    """El código de una función, clase o método: «_go_generar», «WordTagWindow._continuar», «Instalacion.Desinstalar». Solo ese trozo."""
+def donde(nombre, archivo=''):
+    """«Dónde está X» en una línea por coincidencia (archivo:ini-fin  nombre  tipo  docstring), sin código. Si no es código, el tema de mapa.json."""
+    nombre = re.sub(r'^(class|def)\s+', '', str(nombre).strip()).rstrip('()')
+    t = next((t for t in _mapa()['temas'] if t['id'] == nombre), None)
+    filas = [f"tema [{t['id']}]: DOCUMENTACION/temas/{t['grupo']}.md · archivos: {_lista(t['archivos'], 4, t['id'], 'archivos')}"] if t and not archivo else []
+    hallados = _buscar(nombre, archivo)
+    filas += [f"{rel}:{e['ini']}-{e['fin']}  {e['qual']}  ({e['tipo']}, {e['fin'] - e['ini'] + 1} lín.)" + (f"  {_corta(e['doc'], 80)}" if e['doc'] else '')
+              for rel, e in hallados[:12]]
+    if len(hallados) > 12:
+        filas.append(f'… +{len(hallados) - 12} (afina con archivo=)')
+    return '\n'.join(filas) or f'«{nombre}» no está en el código ni es un tema. Prueba mapa("{nombre}").'
+
+
+def simbolo(nombre, lineas=70, archivo='', desde=0):
+    """El código de una función, clase o método: «_go_generar», «WordTagWindow._continuar», «Instalacion.Desinstalar». Solo ese trozo.
+    desde=N (línea del archivo) sigue leyendo una función larga por páginas de `lineas`."""
     nombre = re.sub(r'^(class|def)\s+', '', str(nombre).strip()).rstrip('()')
     lineas = max(10, min(int(lineas or 70), 400))
+    desde = int(desde or 0)
+    extra = f", archivo='{archivo}'" if archivo else ''
     idx = indice()
     hallados = _buscar(nombre, archivo)
     if not hallados:
@@ -217,6 +235,11 @@ def simbolo(nombre, lineas=70, archivo=''):
     for rel, e in hallados[:3]:
         todas = _lineas(rel)
         ini, fin = e['ini'], e['fin']
+        if desde and ini < desde <= fin:                                  # página siguiente de una función larga
+            tope = min(fin, desde + lineas - 1)
+            sigue = f"\n# … faltan {fin - tope} líneas: simbolo('{nombre}'{extra}, desde={tope + 1})" if tope < fin else ''
+            salida.append(f"# {rel}:{desde}-{tope} de {ini}-{fin}  {e['qual']}\n" + '\n'.join(todas[desde - 1: tope]) + sigue)
+            continue
         if e['tipo'] == 'class' and rel.endswith('.py') and fin - ini > lineas:
             metodos = [x for x in idx[rel] if x['qual'].startswith(e['qual'] + '.') and x['qual'].count('.') == e['qual'].count('.') + 1]
             cab = '\n'.join(todas[ini - 1: min(fin, ini + 12)])
@@ -226,12 +249,16 @@ def simbolo(nombre, lineas=70, archivo=''):
         tope = min(fin, ini + lineas - 1)
         cuerpo = '\n'.join(todas[ini - 1: tope])
         resto = fin - tope
-        salida.append(f"# {rel}:{ini}-{fin}  {e['qual']}" + (f"\n{cuerpo}\n# … faltan {resto} líneas: simbolo('{nombre}', lineas={min(fin - ini + 1, 400)})" if resto > 0 else f"\n{cuerpo}"))
+        if resto > 0:                                                     # lo que queda: sus funciones de dentro con línea, para saltar directo
+            dentro = [f'{m.group(1) or m.group(2)}:{i}' for i in range(tope + 1, fin + 1)
+                      if (m := re.match(r'\s+(?:async\s+)?def\s+(\w+)|\s*(?:local\s+)?function\s+([\w.:]+)', todas[i - 1]))]
+            cuerpo += (f"\n# … faltan {resto} líneas: simbolo('{nombre}'{extra}, desde={tope + 1})" + (f"  · dentro: {', '.join(dentro[:15])}" if dentro else ''))
+        salida.append(f"# {rel}:{ini}-{fin}  {e['qual']}\n{cuerpo}")
     return '\n\n'.join(salida)
 
 
-def modulo(nombre):
-    """Qué es un archivo: descripción, clases y funciones con su línea."""
+def modulo(nombre, filtro=''):
+    """Qué es un archivo: descripción, clases y funciones con su línea. filtro="palabra": solo las clases/funciones cuyo nombre la lleva."""
     n = _norm(nombre).replace('.py', '').strip()
     cand = []
     for p in _archivos_de_codigo():
@@ -250,11 +277,16 @@ def modulo(nombre):
             return 'varios archivos coinciden: ' + ', '.join(cand)
     rel = cand[0]
     idx = indice().get(rel, [])
+    if filtro:
+        f = _norm(filtro)
+        idx = [e for e in idx if re.search(r'(?:^|[_.])' + re.escape(f), _norm(e['qual']))]      # «go» casa con _go_fin, no con LOGO
     texto = (RAIZ / rel).read_text(encoding='utf-8', errors='replace').split('\n')
     desc = texto[1].lstrip('#/- ').strip() if len(texto) > 1 else ''
     nl = len(texto)
     sal = [f'{rel} ({nl} líneas)', desc]
-    clases = [e for e in idx if e['tipo'] == 'class']
+    if filtro:
+        return '\n'.join(sal + [f'  «{filtro}» ({len(idx)}): ' + (', '.join(f"{e['qual']}:{e['ini']}" for e in idx[:150]) or '—')])
+    clases =[e for e in idx if e['tipo'] == 'class']
     if len(clases) > 30:
         sal.append(f'  ({len(clases)} clases; se muestran las 30 más grandes)')
         clases = sorted(sorted(clases, key=lambda c: c['fin'] - c['ini'], reverse=True)[:30], key=lambda c: c['ini'])
@@ -263,7 +295,7 @@ def modulo(nombre):
         sal.append(f"  class {c['qual']}:{c['ini']}-{c['fin']} ({len(ms)} métodos){('  ' + c['doc']) if c['doc'] else ''}")
     libres = [e for e in idx if e['tipo'] == 'def' and '.' not in e['qual']]
     if libres:
-        sal.append('  funciones: ' + ', '.join(f"{e['nombre']}:{e['ini']}" for e in libres[:80]) + (' …' if len(libres) > 80 else ''))
+        sal.append('  funciones: ' + ', '.join(f"{e['nombre']}:{e['ini']}" for e in libres[:80]) + (f' … +{len(libres) - 80}: modulo(…, filtro="palabra")' if len(libres) > 80 else ''))
     consts = [e for e in idx if e['tipo'] == 'const']
     if consts:
         sal.append('  constantes: ' + ', '.join(e['nombre'] for e in consts[:25]))
@@ -592,69 +624,120 @@ def _partes(texto, id_, parte='', completo=False):
     trozos = [p.strip() for p in re.split(r'\n\s*\n', texto) if p.strip()]
     if parte:
         p = str(parte).strip()
-        if p.isdigit():
-            elegidos = [trozos[int(p) - 1]] if 0 < int(p) <= len(trozos) else []
+        if re.fullmatch(r'[\d\s,-]+', p):                                # «3», «2-4», «2,5»
+            nums = []
+            for r in re.findall(r'(\d+)(?:\s*-\s*(\d+))?', p):
+                nums += range(int(r[0]), int(r[1] or r[0]) + 1)
+            elegidos = [trozos[i - 1] for i in dict.fromkeys(nums) if 0 < i <= len(trozos)]
         else:
             ter = _terminos(p)
             elegidos = [x for x in trozos if ter and all(_cuenta(_palabras(x), w) for w in ter)]
         return '\n\n'.join(elegidos) if elegidos else f'ninguna parte de «{id_}» con «{p}»; mapa(id="{id_}") da el índice.'
     def rotulo(x):
         r = re.match(r'\*\*(.+?)\*\*', x)
-        return (r.group(1) if r else x.replace('\n', ' '))[:90]
+        return _corta(r.group(1) if r else x, 70)
     indice = '\n'.join(f'  {i}. {rotulo(x)}' for i, x in enumerate(trozos[1:], 2))
-    return (f'{trozos[0]}\n\n— Sección larga ({len(texto)} car.): pide solo lo que necesites con '
-            f'mapa(id="{id_}", parte="N" o "palabras"); completo=True la da entera.\n{indice}')
+    return (f'{trozos[0]}\n\n— {_kcar(len(texto))} en {len(trozos)} partes: parte="N" | "2-4" | "palabras"; completo=True entera.\n{indice}')
+
+
+def _corta(texto, n):
+    texto = ' '.join(str(texto).split())
+    return texto if len(texto) <= n else texto[:n - 1].rstrip() + '…'
+
+
+def _lista(cosas, n, id_, que):
+    """Los primeros n; si hay más, cuántos faltan y cómo pedirlos (parte="archivos"/"simbolos")."""
+    if not cosas:
+        return '—'
+    return ', '.join(cosas[:n]) + (f' (+{len(cosas) - n}: parte="{que}")' if len(cosas) > n and id_ else f' (+{len(cosas) - n})' if len(cosas) > n else '')
+
+
+def _kcar(n):
+    return f'{n / 1000:.1f}k car.' if n >= 1000 else f'{n} car.'
+
+
+_UMBRAL = 0.35                                       # un tema que saca menos de esta fracción de los puntos del primero no sale (ruido)
 
 
 def mapa(consulta='', id='', completo=False, maximo=5, parte=''):
-    """Busca temas por palabras (compacto), o con id= da el detalle de ese tema (si es largo, un índice; parte= elige)."""
+    """Busca temas por palabras (compacto), o con id= da el detalle de ese tema (si es largo, un índice; parte= elige;
+    parte="resumen"/"archivos"/"simbolos" da ese campo entero de mapa.json)."""
     m = _mapa()
     temas = {t['id']: t for t in m['temas']}
     secs = secciones()
     if id:
         id_ = str(id).strip()
         if id_ in m.get('grupos', {}):
-            return f"{id_}: {m['grupos'][id_]}\n" + '\n'.join(f"  {s['id']} — {s['titulo']} ({len(s['texto'])} car.)" for s in secs if s['grupo'] == id_)
+            return f"{id_}: {m['grupos'][id_]}\n" + '\n'.join(f"  {s['id']} — {_corta(s['titulo'], 90)} ({_kcar(len(s['texto']))})" for s in secs if s['grupo'] == id_)
         elegidas = [s for s in secs if s['id'] == id_ or _norm(s['titulo']) == _norm(id_)]
+        t = temas.get(elegidas[0]['id'] if elegidas else id_)
+        campo = _norm(parte).strip() if parte else ''
+        if t and campo in ('resumen', 'archivos', 'simbolos'):
+            v = t[campo]
+            return f"[{t['id']}] {campo}: " + (', '.join(v) if isinstance(v, list) else v)
         if not elegidas:
             return f'no hay tema «{id_}». Temas: ' + ', '.join(sorted(temas)) + '. Grupos: ' + ', '.join(m.get('grupos', {}))
-        t = temas.get(elegidas[0]['id'])
-        cab = f"[{t['id']}] {t['tema']}  (DOCUMENTACION/temas/{t['grupo']}.md)\n  archivos: {', '.join(t['archivos']) or '—'}\n  símbolos: {', '.join(t['simbolos']) or '—'}\n" if t else ''
+        if t and not completo and not parte:
+            cab = (f"[{t['id']}] {_corta(t['tema'], 140)}  (DOCUMENTACION/temas/{t['grupo']}.md)\n"
+                   f"  archivos: {_lista(t['archivos'], 8, id_, 'archivos')}\n  símbolos: {_lista(t['simbolos'], 12, id_, 'simbolos')}\n")
+        elif t and completo:
+            cab = f"[{t['id']}] {t['tema']}  (DOCUMENTACION/temas/{t['grupo']}.md)\n  resumen: {t['resumen']}\n  archivos: {', '.join(t['archivos']) or '—'}\n  símbolos: {', '.join(t['simbolos']) or '—'}\n"
+        else:
+            cab = ''                                 # parte= ya sabe de qué tema es: solo el trozo pedido
         return cab + _partes('\n\n'.join(s['texto'] for s in elegidas), id_, parte, completo)
     ter = _terminos(consulta)
     if not ter:
         return 'Grupos: ' + ' | '.join(f'{g}: {d}' for g, d in m.get('grupos', {}).items()) + '\nPasa palabras (consulta="sonido emoji") o id="go-inicio".'
-    puntos = {}
+    # cada tema (su renglón de mapa.json + su sección) es UN documento; una palabra que sale en casi todos pesa poco (idf)
+    docs = {}
     for t in m['temas']:
-        base = _palabras(' '.join(t['claves'] + [t['id'].replace('-', ' ')]))
-        medio = _palabras(t['tema'] + ' ' + t['resumen'])
-        fuentes = _palabras(' '.join(t['archivos'] + t['simbolos']))
-        p = sum((4 if _cuenta(base, w) else 0) + (2 if _cuenta(medio, w) else 0) + (1 if _cuenta(fuentes, w) else 0) for w in ter)
-        if p:
-            puntos[t['id']] = puntos.get(t['id'], 0) + p
+        docs[t['id']] = {'base': _palabras(' '.join(t['claves'] + [t['id'].replace('-', ' ')])), 'medio': _palabras(t['tema'] + ' ' + t['resumen']),
+                         'fuentes': _palabras(' '.join(t['archivos'] + t['simbolos'])), 'tit': [], 'texto': []}
     for s in secs:
-        pal, tit = _palabras(s['titulo'] + ' ' + s['texto']), _palabras(s['titulo'])
-        p = sum(min(_cuenta(pal, w), 3) + (3 if _cuenta(tit, w) else 0) for w in ter)
+        clave = s['id'] if s['id'] in temas else f"{s['grupo']}#{s['titulo'][:40]}"
+        d = docs.setdefault(clave, {'base': [], 'medio': [], 'fuentes': [], 'tit': [], 'texto': []})
+        d['tit'] += _palabras(s['titulo'])
+        d['texto'] += _palabras(s['texto'])
+    total = max(1, len(docs))
+    peso = {}
+    for w in ter:
+        df = sum(1 for d in docs.values() if any(_cuenta(d[c], w) for c in ('base', 'medio', 'fuentes', 'tit', 'texto')))
+        peso[w] = 1 + math.log(total / df) if df else 0
+    puntos = {}
+    for clave, d in docs.items():
+        p, aciertos = 0.0, 0
+        for w in ter:
+            q = (4 if _cuenta(d['base'], w) else 0) + (2 if _cuenta(d['medio'], w) else 0) + (1 if _cuenta(d['fuentes'], w) else 0) \
+                + (3 if _cuenta(d['tit'], w) else 0) + min(_cuenta(d['texto'], w), 3)
+            if q:
+                aciertos += 1
+                p += q * peso[w]
         if p:
-            clave = s['id'] if s['id'] in temas else f"{s['grupo']}#{s['titulo'][:40]}"
-            puntos[clave] = puntos.get(clave, 0) + p
+            puntos[clave] = p * (aciertos / len(ter)) ** 2      # que encaje con TODAS las palabras pesa más que repetir una
     if not puntos:
         return f'nada para «{consulta}». Prueba otras palabras o mapa() sin argumentos para ver los grupos.'
-    orden = sorted(puntos, key=lambda k: -puntos[k])[:int(maximo)]
+    tope = max(puntos.values())
+    orden = [k for k in sorted(puntos, key=lambda k: -puntos[k]) if puntos[k] >= tope * _UMBRAL][:int(maximo)]
     salida = []
     for k in orden:
         if k in temas:
             t = temas[k]
             sec = next((s for s in secs if s['id'] == k), None)
-            linea = f"[{k}] {t['tema']} — {t['resumen']}\n    archivos: {', '.join(t['archivos'][:6]) or '—'} · símbolos: {', '.join(t['simbolos'][:6]) or '—'} · detalle: mapa(id='{k}') ({len(sec['texto']) if sec else 0} car.)"
-            if completo and sec:
-                linea += '\n' + sec['texto'][:3500]
+            if completo:
+                linea = f"[{k}] {t['tema']} — {t['resumen']}\n    archivos: {', '.join(t['archivos']) or '—'} · símbolos: {', '.join(t['simbolos']) or '—'}"
+                if sec:
+                    linea += '\n' + sec['texto'][:3500]
+            else:
+                linea = (f"[{k}] {_corta(t['tema'], 90)} — {_corta(t['resumen'], 160)}\n"
+                         f"    {_lista(t['archivos'], 3, '', 'archivos')} · {_lista(t['simbolos'], 4, '', 'simbolos')} · {_kcar(len(sec['texto']) if sec else 0)}")
         else:
             g, _, tit = k.partition('#')
             sec = next((s for s in secs if s['grupo'] == g and s['titulo'].startswith(tit)), None)
-            linea = f"[nota · {g}] {sec['titulo'] if sec else tit}\n    " + ((sec['texto'] if completo else sec['texto'][:300].replace('\n', ' ') + ('…' if len(sec['texto']) > 300 else '')) if sec else '')
+            linea = f"[nota · {g}] {sec['titulo'] if sec else tit}\n    " + ((sec['texto'] if completo else _corta(sec['texto'], 200) + f' (id="{sec["titulo"]}")') if sec else '')
         salida.append(linea)
-    return '\n'.join(salida)
+    resto = len([k for k in puntos if puntos[k] >= tope * _UMBRAL]) - len(orden)
+    pie = 'detalle: mapa(id="…")' + (f' · {resto} tema(s) más: maximo={int(maximo) + resto}' if resto > 0 else '')
+    return '\n'.join(salida) + '\n' + pie
 
 
 def _version():
@@ -739,9 +822,8 @@ def generar(escribir=True):
         if not ts:
             continue
         partes = []
-        for t in ts:
-            fuentes = [_nombre_corto(a) for a in t['archivos'][:1]] or t['simbolos'][:1]
-            partes.append(f"`{t['id']}`" + (f" [{' '.join(fuentes)}]" if fuentes else ''))
+        for t in ts:                                 # solo el id: el archivo lo da donde(id) o mapa(id=…) (el bloque se carga en CADA sesión)
+            partes.append(t['id'])
             for a in t['archivos']:
                 if a not in archivos_reales and not any(r.endswith('/' + a) for r in archivos_reales if '/' in r):
                     avisos.append(f"{t['id']}: archivo «{a}» no existe")
@@ -750,7 +832,7 @@ def generar(escribir=True):
                     avisos.append(f"{t['id']}: símbolo «{s_}» ya no existe")
             if t['id'] not in secs:
                 avisos.append(f"{t['id']}: sin sección en DOCUMENTACION/temas/{g}.md")
-        lineas.append(f'- **{g}** ({titulo}): ' + ' · '.join(partes))
+        lineas.append(f'- **{g}** ({titulo}): ' + ' '.join(partes))
     for t in m['temas']:
         if t.get('_faltan'):
             avisos.append(f"{t['id']}: a mapa.json le falta la clave {', '.join(t['_faltan'])}")
@@ -780,9 +862,11 @@ def main(argv):
     elif orden == 'tema':
         print(mapa(id=args[0], parte=' '.join(args[1:]), completo='--completo' in args) if '--completo' not in args[1:] else mapa(id=args[0], completo=True))
     elif orden == 'simbolo':
-        print(simbolo(args[0], int(args[1]) if len(args) > 1 else 70))
+        print(simbolo(args[0], int(args[1]) if len(args) > 1 else 70, desde=int(args[2]) if len(args) > 2 else 0))
+    elif orden == 'donde':
+        print(donde(args[0], args[1] if len(args) > 1 else ''))
     elif orden == 'modulo':
-        print(modulo(args[0]))
+        print(modulo(args[0], args[1] if len(args) > 1 else ''))
     elif orden == 'llamadas':
         print(llamadas(args[0], args[1] if len(args) > 1 else 'entra', int(args[2]) if len(args) > 2 else 1, args[3] if len(args) > 3 else ''))
     elif orden == 'ruta':
@@ -797,7 +881,7 @@ def main(argv):
         av = generar()
         print('CLAUDE.md al día.' + (f' {len(av)} aviso(s):\n  ' + '\n  '.join(av) if av else ' Sin avisos.'))
     else:
-        print('órdenes: mapa, tema, simbolo, modulo, llamadas, ruta, cambios, resumen, sin_tema, generar')
+        print('órdenes: mapa, tema, donde, simbolo, modulo, llamadas, ruta, cambios, resumen, sin_tema, generar')
     return 0
 
 

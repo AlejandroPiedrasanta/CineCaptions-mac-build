@@ -159,6 +159,81 @@ def _bloques(pal, frase):
     return bloques
 
 
+# v5.55 (pulir los captions): GP.frases corta en las pausas y en su tope de palabras, así que un bloque podía quedar colgado de la frase que
+# sigue («…and welcome to | the Canopy House», «make your | edits», «the next | time») o partir «in all | the best ways». _pulir_cortes repasa
+# cada ORACIÓN y elige sus cortes por el menor coste: los de antes salen gratis, mover uno cuesta poco y un defecto mucho; mismos topes de siempre.
+# La palabra suelta al FINAL de la oración se queda (es el estilo de la referencia: «…más | vendido»).
+COLGANTES = PEQ | GP.DET | {'que', 'como', 'cuando', 'porque', 'si', 'when', 'because', 'than', 'you', 'dont', 'cant', 'wont', 'doesnt', 'didnt'}
+ARTICULOS = set('''the a an this these those my your our their his her its el la los las un una unos unas este esta estos estas ese esa esos esas
+                   mi mis tu tus su sus nuestro nuestra'''.split())        # «the next | time»: SOLO artículos, demostrativos y posesivos (GP.DET trae «that» y preposiciones)
+CORTE = {'cambio': 1.5, 'colgada': 6.0, 'det': 4.0, 'suelta': 4.0, 'pausa': 1.0, 'pausa_dentro': 3.0}   # 'det' > 2 cambios: «the next | time» se arregla aunque haya que mover dos cortes
+
+
+def _fin_de_oracion(pal, k):
+    w = pal[k]
+    return bool(w['signo'] and w['signo'] in GP._FUERTE) or bool(w.get('fin_frase'))
+
+
+def _empieza_oracion(pal, k):
+    """La palabra k abre una oración (la primera, o tras un signo fuerte o un fin de frase marcado): solo entonces va con mayúscula."""
+    return k == 0 or _fin_de_oracion(pal, k - 1)
+
+
+def _pulir_cortes(pal, bloques):
+    """[(n_frase, [k…])] -> lo mismo con los cortes de cada oración repasados (una pausa de 1 s también cierra la oración)."""
+    frase_de = {k: f for f, b in bloques for k in b}
+    salida, grupo = [], []
+    for f, b in bloques:
+        if grupo and (_fin_de_oracion(pal, grupo[-1][1][-1]) or pal[b[0]]['t'] - pal[grupo[-1][1][-1]]['fin'] >= 1.0):
+            salida += _cortes_oracion(pal, grupo, frase_de) if len(grupo) > 1 else grupo
+            grupo = []
+        grupo.append((f, b))
+    salida += _cortes_oracion(pal, grupo, frase_de) if len(grupo) > 1 else grupo
+    return salida
+
+
+def _cortes_oracion(pal, grupo, frase_de):
+    C = CORTE
+    ks = [k for _f, b in grupo for k in b]
+    n = len(ks)
+    de_antes, originales, pos = set(), set(), 0
+    for _f, b in grupo:
+        de_antes.add((pos, pos + len(b)))
+        pos += len(b)
+        originales.add(pos)
+
+    def coste(j, i):
+        """Lo que cuesta el bloque ks[j:i] (None si no cabe; los bloques de antes siempre caben)."""
+        trozo = ks[j:i]
+        if (j, i) not in de_antes and (sum(_peso(pal, k) for k in trozo) > MAX_PESO or len(trozo) > MAX_PALABRAS
+                                       or sum(len(pal[k]['texto']) for k in trozo) + len(trozo) - 1 > MAX_CARACTERES):
+            return None
+        c = sum(C['pausa_dentro'] for a, b in zip(trozo, trozo[1:]) if pal[b]['t'] - pal[a]['fin'] >= 0.6)
+        if i < n:                                                   # el corte de después de este bloque (el último de la oración no corta nada)
+            hueco = pal[ks[i]]['t'] - pal[ks[i - 1]]['fin']
+            c += 0.0 if i in originales else C['cambio']
+            if pal[ks[i - 1]]['plano'] in COLGANTES:
+                c += C['colgada']                                   # «…welcome to | the Canopy House»
+            elif i - j >= 2 and pal[ks[i - 2]]['plano'] in ARTICULOS and hueco < 0.2 and pal[ks[i]]['plano'] not in COLGANTES:
+                c += C['det']                                       # «the next | time»
+            if i - j == 1:
+                c += C['suelta']                                    # una palabra sola a mitad de oración
+            if hueco >= 0.45:
+                c -= C['pausa']                                     # cortar en una pausa de verdad
+        return c
+    mejor, desde = [0.0] + [None] * n, [0] * (n + 1)
+    for i in range(1, n + 1):
+        for j in range(i):
+            c = coste(j, i) if mejor[j] is not None else None
+            if c is not None and (mejor[i] is None or mejor[j] + c < mejor[i] - 1e-9):
+                mejor[i], desde[i] = mejor[j] + c, j
+    cortes, i = [], n
+    while i > 0:
+        cortes.append((desde[i], i))
+        i = desde[i]
+    return [(frase_de[ks[j]], ks[j:i]) for j, i in reversed(cortes)]
+
+
 # ----------------------------------------------------------------------------------------------------------------------------- composición
 def _ancho_linea(palabras):
     """Ancho (en «em de una palabra normal») de una línea: cada palabra a su tamaño relativo más el hueco entre ellas."""
@@ -279,6 +354,7 @@ def planificar(palabras, idioma='es', pack=PACK, ancho_tl=1080, ancla='medio', m
     for n_frase, frase in enumerate(GP.frases(pal)):
         for b in _bloques(pal, frase):
             bloques.append((n_frase, b))
+    bloques = _pulir_cortes(pal, bloques)
     if pack in DISENOS:                                          # v5.5.8: Temas 5 y 6 (Text+ editables con el diseño de sus captions de Remotion)
         return _planificar_skill(pal, bloques, DISENOS[pack], forzados, fin_video, video)
     sin_clave = 0
@@ -301,7 +377,7 @@ def planificar(palabras, idioma='es', pack=PACK, ancho_tl=1080, ancla='medio', m
             sin_clave = 0 if clave is not None else sin_clave + 1
         clases = [_clase(pal, k, clave, pesos_orig) for k in idx_b]
         textos = [pal[k]['texto'] for k in idx_b]
-        if textos:
+        if textos and _empieza_oracion(pal, idx_b[0]):              # v5.55: mayúscula solo al empezar una oración («and coveted», no «And coveted»)
             textos[0] = textos[0][:1].upper() + textos[0][1:]
         disp, caja = _disponer(list(zip(textos, clases)))
         t0, t1 = _tiempos(pal, bloques, n, fin_video)
@@ -417,7 +493,7 @@ def _planificar_skill(pal, bloques, D, forzados, fin_video, video):
     A = AFINADO
     grupos = []
     for n, (n_frase, idx_b) in enumerate(bloques):
-        inicio = n == 0 or bloques[n - 1][0] != n_frase              # a mitad de frase el bloque sigue en minúscula (como Remotion)
+        inicio = _empieza_oracion(pal, idx_b[0])                     # a mitad de oración el bloque sigue en minúscula (v5.55: antes, tras cada coma o pausa: «Si es así»)
         ps = []
         for j, k in enumerate(idx_b):
             texto = pal[k]['texto']

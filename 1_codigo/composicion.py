@@ -247,7 +247,7 @@ def dejar_orden(orden):
 def retirar_orden():
     """Fuera la orden y su sidecar (exito o fallo: una orden huerfana no
     puede convertir el proximo clic de colocar en una recomposicion)."""
-    for f in (ARCHIVO_ORDEN, ARCHIVO_ORDEN.with_name(ARCHIVO_ORDEN.name + '.lua')):
+    for f in (ARCHIVO_ORDEN, *sidecar_lua.rutas_sidecar(ARCHIVO_ORDEN)):        # .lua y .free.lua (Puente 1.0.42)
         try:
             f.unlink()
         except OSError:

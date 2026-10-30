@@ -9035,5 +9035,278 @@
   "fr": "Si l’antivirus ou le Contrôle intelligent des applications de Windows bloque le téléchargement, autorisez CineCaptions et réessayez.",
   "de": "Wenn der Virenschutz oder die intelligente App-Steuerung von Windows den Download blockiert, CineCaptions zulassen und erneut versuchen.",
   "it": "Se l’antivirus o il Controllo intelligente delle app di Windows blocca il download, consenti CineCaptions e riprova."
+ },
+ "Quitar signos": {
+  "en": "Remove punctuation",
+  "pt": "Retirar sinais",
+  "fr": "Retirer la ponctuation",
+  "de": "Satzzeichen entfernen",
+  "it": "Togliere i segni"
+ },
+ "Quitando signos…": {
+  "en": "Removing punctuation…",
+  "pt": "A retirar sinais…",
+  "fr": "Retrait de la ponctuation…",
+  "de": "Satzzeichen werden entfernt…",
+  "it": "Tolgo i segni…"
+ },
+ "Sin emojis: salen con la Edición PRO y su opción «Emojis animados».": {
+  "en": "No emojis: they come with the PRO Edit and its «Animated emojis» option.",
+  "pt": "Sem emojis: aparecem com a Edição PRO e a opção «Emojis animados».",
+  "fr": "Pas d’emojis : ils viennent avec l’Édition PRO et son option «Emojis animés».",
+  "de": "Keine Emojis: Sie kommen mit der PRO-Bearbeitung und ihrer Option «Animierte Emojis».",
+  "it": "Niente emoji: arrivano con l’Edizione PRO e la sua opzione «Emoji animate»."
+ },
+ "Toca los captions que quieras, en el orden que quieras: se turnan por frases.": {
+  "en": "Tap the captions you like, in any order: they take turns by sentence.",
+  "pt": "Toque nas legendas que quiser, na ordem que quiser: elas se revezam por frases.",
+  "fr": "Touchez les sous-titres que vous voulez, dans l’ordre que vous voulez : ils alternent par phrases.",
+  "de": "Tippe die Untertitel an, die du willst, in beliebiger Reihenfolge: Sie wechseln sich satzweise ab.",
+  "it": "Tocca i sottotitoli che vuoi, nell’ordine che vuoi: si alternano per frasi."
+ },
+ "Personalizar letra y colores": {
+  "en": "Customize font and colors",
+  "pt": "Personalizar fonte e cores",
+  "fr": "Personnaliser police et couleurs",
+  "de": "Schrift und Farben anpassen",
+  "it": "Personalizza carattere e colori"
+ },
+ "Tipografía": {
+  "en": "Typography",
+  "pt": "Tipografia",
+  "fr": "Typographie",
+  "de": "Typografie",
+  "it": "Tipografia"
+ },
+ "Texto principal": {
+  "en": "Main text",
+  "pt": "Texto principal",
+  "fr": "Texte principal",
+  "de": "Haupttext",
+  "it": "Testo principale"
+ },
+ "Arriba y abajo": {
+  "en": "Above and below",
+  "pt": "Acima e abaixo",
+  "fr": "Dessus et dessous",
+  "de": "Oben und unten",
+  "it": "Sopra e sotto"
+ },
+ "Volver a la letra y los colores del tema": {
+  "en": "Back to the theme’s font and colors",
+  "pt": "Voltar à fonte e às cores do tema",
+  "fr": "Revenir à la police et aux couleurs du thème",
+  "de": "Zurück zu Schrift und Farben des Themas",
+  "it": "Torna al carattere e ai colori del tema"
+ },
+ "Tu estilo:": {
+  "en": "Your style:",
+  "pt": "Seu estilo:",
+  "fr": "Votre style :",
+  "de": "Dein Stil:",
+  "it": "Il tuo stile:"
+ },
+ "letra y colores del tema": {
+  "en": "theme font and colors",
+  "pt": "fonte e cores do tema",
+  "fr": "police et couleurs du thème",
+  "de": "Schrift und Farben des Themas",
+  "it": "carattere e colori del tema"
+ },
+ "tu letra y tus colores": {
+  "en": "your font and colors",
+  "pt": "sua fonte e suas cores",
+  "fr": "votre police et vos couleurs",
+  "de": "deine Schrift und deine Farben",
+  "it": "il tuo carattere e i tuoi colori"
+ },
+ "El círculo de colores = los del tema. Se aplica a todos los captions que elijas.": {
+  "en": "The color wheel = the theme’s colors. It applies to every caption you choose.",
+  "pt": "O círculo de cores = as do tema. Vale para todas as legendas que você escolher.",
+  "fr": "Le cercle de couleurs = celles du thème. S’applique à tous les sous-titres choisis.",
+  "de": "Der Farbkreis = die Farben des Themas. Gilt für alle gewählten Untertitel.",
+  "it": "Il cerchio dei colori = quelli del tema. Vale per tutti i sottotitoli che scegli."
+ },
+ "Puesto": {
+  "en": "Added",
+  "pt": "Adicionado",
+  "fr": "Ajouté",
+  "de": "Hinzugefügt",
+  "it": "Aggiunto"
+ },
+ "ninguno todavía: toca los temas que quieras": {
+  "en": "none yet: tap the themes you like",
+  "pt": "nenhum ainda: toque nos temas que quiser",
+  "fr": "aucun pour l’instant : touchez les thèmes que vous voulez",
+  "de": "noch keiner: tippe die gewünschten Themen an",
+  "it": "nessuno per ora: tocca i temi che vuoi"
+ },
+ "«Crea tu estilo» no pudo dibujar algún caption: {e}": {
+  "en": "«Create your style» could not draw some captions: {e}",
+  "pt": "«Crie seu estilo» não conseguiu desenhar alguma legenda: {e}",
+  "fr": "«Crée ton style» n’a pas pu dessiner certains sous-titres : {e}",
+  "de": "«Erstelle deinen Stil» konnte einige Untertitel nicht zeichnen: {e}",
+  "it": "«Crea il tuo stile» non è riuscito a disegnare alcuni sottotitoli: {e}"
+ },
+ "«Crea tu estilo» no pudo recordar la letra y los colores: {e}": {
+  "en": "«Create your style» could not remember the font and colors: {e}",
+  "pt": "«Crie seu estilo» não conseguiu lembrar a fonte e as cores: {e}",
+  "fr": "«Crée ton style» n’a pas pu mémoriser la police et les couleurs : {e}",
+  "de": "«Erstelle deinen Stil» konnte Schrift und Farben nicht speichern: {e}",
+  "it": "«Crea il tuo stile» non è riuscito a ricordare carattere e colori: {e}"
+ },
+ "«Crea tu estilo»: la letra {f} no está instalada; se usa la del tema.": {
+  "en": "«Create your style»: the font {f} is not installed; the theme's font is used.",
+  "pt": "«Crie seu estilo»: a fonte {f} não está instalada; usa-se a do tema.",
+  "fr": "«Crée ton style» : la police {f} n’est pas installée ; celle du thème est utilisée.",
+  "de": "«Erstelle deinen Stil»: Die Schrift {f} ist nicht installiert; die des Themas wird verwendet.",
+  "it": "«Crea il tuo stile»: il carattere {f} non è installato; si usa quello del tema."
+ },
+ "IA: corregir, quitar signos y elegir palabras": {
+  "en": "AI: fix, remove punctuation and pick words",
+  "pt": "IA: corrigir, tirar sinais e escolher palavras",
+  "fr": "IA : corriger, retirer la ponctuation et choisir les mots",
+  "de": "KI: korrigieren, Satzzeichen weg und Wörter wählen",
+  "it": "IA: correggere, togliere segni e scegliere parole"
+ },
+ "GO graba los subtítulos del tema elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, sin usar Resolve. Si Resolve no está instalado lo hace siempre.": {
+  "en": "GO renders the captions of the chosen theme (with their sounds) into an MP4 copy of your video, next to the original, without using Resolve. If Resolve is not installed it always does this.",
+  "pt": "O GO grava as legendas do tema escolhido (com os seus sons) numa cópia MP4 do teu vídeo, junto ao original, sem usar o Resolve. Se o Resolve não estiver instalado, fá-lo sempre.",
+  "fr": "GO incruste les sous-titres du thème choisi (avec leurs sons) dans une copie MP4 de ta vidéo, à côté de l'original, sans utiliser Resolve. Si Resolve n'est pas installé, il le fait toujours.",
+  "de": "GO brennt die Untertitel des gewählten Themas (mit ihren Sounds) in eine MP4-Kopie deines Videos neben dem Original, ohne Resolve. Ist Resolve nicht installiert, macht es das immer.",
+  "it": "GO imprime i sottotitoli del tema scelto (con i loro suoni) in una copia MP4 del tuo video, accanto all'originale, senza usare Resolve. Se Resolve non è installato lo fa sempre."
+ },
+ "Asistencia ({motor}): {c} correcciones · {n} palabras marcadas · {s} signos fuera · versión {v} de {t}. Ctrl+Z deshace.": {
+  "en": "Assistant ({motor}): {c} fixes · {n} words marked · {s} punctuation marks removed · version {v} of {t}. Ctrl+Z undoes.",
+  "pt": "Assistente ({motor}): {c} correções · {n} palavras marcadas · {s} sinais retirados · versão {v} de {t}. Ctrl+Z desfaz.",
+  "fr": "Assistant ({motor}) : {c} corrections · {n} mots marqués · {s} signes retirés · version {v} sur {t}. Ctrl+Z annule.",
+  "de": "Assistent ({motor}): {c} Korrekturen · {n} Wörter markiert · {s} Satzzeichen entfernt · Version {v} von {t}. Strg+Z macht rückgängig.",
+  "it": "Assistente ({motor}): {c} correzioni · {n} parole segnate · {s} segni tolti · versione {v} di {t}. Ctrl+Z annulla."
+ },
+ "La píldora animada que sale debajo del texto con lo que dices (un lugar, una cifra o tus redes; con «Emojis animados», también un emoji). Su contenido cambia con el video; aquí eliges cómo se ve.": {
+  "en": "The animated pill under the text with what you say (a place, a number or your socials; with «Animated emojis», also an emoji). Its content changes with the video; here you choose how it looks.",
+  "pt": "A pílula animada que aparece por baixo do texto com o que dizes (um lugar, um número ou as tuas redes; com «Emojis animados», também um emoji). O conteúdo muda com o vídeo; aqui escolhes o aspeto.",
+  "fr": "La pilule animée qui apparaît sous le texte avec ce que tu dis (un lieu, un chiffre ou tes réseaux ; avec «Emojis animés», aussi un emoji). Son contenu change avec la vidéo ; ici tu choisis son apparence.",
+  "de": "Die animierte Pille unter dem Text mit dem, was du sagst (ein Ort, eine Zahl oder deine Netzwerke; mit «Animierte Emojis» auch ein Emoji). Ihr Inhalt ändert sich mit dem Video; hier wählst du ihr Aussehen.",
+  "it": "La pillola animata che appare sotto il testo con ciò che dici (un luogo, una cifra o i tuoi social; con «Emoji animate», anche un'emoji). Il contenuto cambia con il video; qui scegli come appare."
+ },
+ "La letra de «{c}» no es válida (va como \"Familia|Estilo\").": {
+  "en": "The font for «{c}» is not valid (it goes as \"Family|Style\").",
+  "pt": "A letra de «{c}» não é válida (vai como \"Família|Estilo\").",
+  "fr": "La police de «{c}» n'est pas valide (elle s'écrit \"Famille|Style\").",
+  "de": "Die Schrift für «{c}» ist ungültig (Format \"Familie|Stil\").",
+  "it": "Il carattere di «{c}» non è valido (va come \"Famiglia|Stile\")."
+ },
+ "El color de «{c}» no es válido (va como \"#RRGGBB\").": {
+  "en": "The colour for «{c}» is not valid (it goes as \"#RRGGBB\").",
+  "pt": "A cor de «{c}» não é válida (vai como \"#RRGGBB\").",
+  "fr": "La couleur de «{c}» n'est pas valide (elle s'écrit \"#RRGGBB\").",
+  "de": "Die Farbe für «{c}» ist ungültig (Format \"#RRGGBB\").",
+  "it": "Il colore di «{c}» non è valido (va come \"#RRGGBB\")."
+ },
+ "Los ajustes del estilo no son válidos.": {
+  "en": "The style settings are not valid.",
+  "pt": "Os ajustes do estilo não são válidos.",
+  "fr": "Les réglages du style ne sont pas valides.",
+  "de": "Die Stileinstellungen sind ungültig.",
+  "it": "Le impostazioni dello stile non sono valide."
+ },
+ "Ajuste desconocido: {k}": {
+  "en": "Unknown setting: {k}",
+  "pt": "Ajuste desconhecido: {k}",
+  "fr": "Réglage inconnu : {k}",
+  "de": "Unbekannte Einstellung: {k}",
+  "it": "Impostazione sconosciuta: {k}"
+ },
+ "Elige al menos un tema.": {
+  "en": "Choose at least one theme.",
+  "pt": "Escolhe pelo menos um tema.",
+  "fr": "Choisis au moins un thème.",
+  "de": "Wähle mindestens ein Thema.",
+  "it": "Scegli almeno un tema."
+ },
+ "Cada tema va una sola vez.": {
+  "en": "Each theme goes only once.",
+  "pt": "Cada tema vai só uma vez.",
+  "fr": "Chaque thème ne va qu'une seule fois.",
+  "de": "Jedes Thema kommt nur einmal vor.",
+  "it": "Ogni tema va una sola volta."
+ },
+ "Como mucho {n} temas.": {
+  "en": "At most {n} themes.",
+  "pt": "No máximo {n} temas.",
+  "fr": "{n} thèmes au maximum.",
+  "de": "Höchstens {n} Themen.",
+  "it": "Al massimo {n} temi."
+ },
+ "«{n}» es el nombre de un tema del programa: elige otro.": {
+  "en": "«{n}» is the name of one of the program's themes: choose another one.",
+  "pt": "«{n}» é o nome de um tema do programa: escolhe outro.",
+  "fr": "«{n}» est le nom d'un thème du programme : choisis-en un autre.",
+  "de": "«{n}» ist der Name eines Programmthemas: wähle einen anderen.",
+  "it": "«{n}» è il nome di un tema del programma: scegline un altro."
+ },
+ "Ya hay un pack que se llama «{n}»: elige otro nombre.": {
+  "en": "There is already a pack called «{n}»: choose another name.",
+  "pt": "Já existe um pack chamado «{n}»: escolhe outro nome.",
+  "fr": "Il existe déjà un pack nommé «{n}» : choisis un autre nom.",
+  "de": "Es gibt bereits ein Pack namens «{n}»: wähle einen anderen Namen.",
+  "it": "Esiste già un pack chiamato «{n}»: scegli un altro nome."
+ },
+ "No conozco el tema «{t}».": {
+  "en": "I don't know the theme «{t}».",
+  "pt": "Não conheço o tema «{t}».",
+  "fr": "Je ne connais pas le thème «{t}».",
+  "de": "Das Thema «{t}» kenne ich nicht.",
+  "it": "Non conosco il tema «{t}»."
+ },
+ "Estilo «{n}» creado con {t}{a}. Está en el slider: tócalo para usarlo.": {
+  "en": "Style «{n}» created with {t}{a}. It is in the slider: tap it to use it.",
+  "pt": "Estilo «{n}» criado com {t}{a}. Está no slider: toca nele para o usar.",
+  "fr": "Style «{n}» créé avec {t}{a}. Il est dans le carrousel : touche-le pour l'utiliser.",
+  "de": "Stil «{n}» erstellt mit {t}{a}. Er ist im Slider: tippe ihn an, um ihn zu verwenden.",
+  "it": "Stile «{n}» creato con {t}{a}. È nello slider: toccalo per usarlo."
+ },
+ " · tu letra y tus colores": {
+  "en": " · your font and your colours",
+  "pt": " · a tua letra e as tuas cores",
+  "fr": " · ta police et tes couleurs",
+  "de": " · deine Schrift und deine Farben",
+  "it": " · il tuo carattere e i tuoi colori"
+ },
+ "«Crea tu estilo»: no pude crear «{n}»: {e}": {
+  "en": "«Create your style»: I couldn't create «{n}»: {e}",
+  "pt": "«Cria o teu estilo»: não consegui criar «{n}»: {e}",
+  "fr": "«Crée ton style» : je n'ai pas pu créer «{n}» : {e}",
+  "de": "«Erstelle deinen Stil»: «{n}» konnte nicht erstellt werden: {e}",
+  "it": "«Crea il tuo stile»: non sono riuscito a creare «{n}»: {e}"
+ },
+ "«Crea tu estilo»: no pude preparar todavía tu letra y tus colores ({e}).": {
+  "en": "«Create your style»: I couldn't prepare your font and colours yet ({e}).",
+  "pt": "«Cria o teu estilo»: ainda não consegui preparar a tua letra e as tuas cores ({e}).",
+  "fr": "«Crée ton style» : je n'ai pas encore pu préparer ta police et tes couleurs ({e}).",
+  "de": "«Erstelle deinen Stil»: Schrift und Farben konnten noch nicht vorbereitet werden ({e}).",
+  "it": "«Crea il tuo stile»: non sono ancora riuscito a preparare il tuo carattere e i tuoi colori ({e})."
+ },
+ "«Crea tu estilo»: no pude poner tu letra y tus colores en {t} ({e}); va con los del tema.": {
+  "en": "«Create your style»: I couldn't apply your font and colours to {t} ({e}); it uses the theme's.",
+  "pt": "«Cria o teu estilo»: não consegui pôr a tua letra e as tuas cores em {t} ({e}); vai com as do tema.",
+  "fr": "«Crée ton style» : je n'ai pas pu mettre ta police et tes couleurs dans {t} ({e}) ; il garde celles du thème.",
+  "de": "«Erstelle deinen Stil»: Schrift und Farben konnten nicht auf {t} angewendet werden ({e}); es bleiben die des Themas.",
+  "it": "«Crea il tuo stile»: non sono riuscito a mettere il tuo carattere e i tuoi colori in {t} ({e}); restano quelli del tema."
+ },
+ "«{p}» mezcla temas y solo existe en vertical: en este timeline horizontal uso el diseño de siempre. Para un video horizontal elige un Tema.": {
+  "en": "«{p}» mixes themes and only exists in vertical: on this horizontal timeline I use the usual design. For a horizontal video choose a Theme.",
+  "pt": "«{p}» mistura temas e só existe na vertical: nesta timeline horizontal uso o design de sempre. Para um vídeo horizontal escolhe um Tema.",
+  "fr": "«{p}» mélange des thèmes et n'existe qu'en vertical : sur cette timeline horizontale j'utilise le design habituel. Pour une vidéo horizontale, choisis un Thème.",
+  "de": "«{p}» mischt Themen und gibt es nur im Hochformat: in dieser horizontalen Timeline nutze ich das übliche Design. Für ein horizontales Video wähle ein Thema.",
+  "it": "«{p}» mescola temi ed esiste solo in verticale: in questa timeline orizzontale uso il design di sempre. Per un video orizzontale scegli un Tema."
+ },
+ "«{p}» mezcla temas y solo se coloca en DaVinci Resolve: sin Resolve, GO graba el video con el Tema 4.": {
+  "en": "«{p}» mixes themes and can only be placed in DaVinci Resolve: without Resolve, GO records the video with Theme 4.",
+  "pt": "«{p}» mistura temas e só se coloca no DaVinci Resolve: sem o Resolve, o GO grava o vídeo com o Tema 4.",
+  "fr": "«{p}» mélange des thèmes et ne se place que dans DaVinci Resolve : sans Resolve, GO enregistre la vidéo avec le Thème 4.",
+  "de": "«{p}» mischt Themen und wird nur in DaVinci Resolve platziert: ohne Resolve nimmt GO das Video mit Thema 4 auf.",
+  "it": "«{p}» mescola temi e si posiziona solo in DaVinci Resolve: senza Resolve, GO registra il video con il Tema 4."
  }
 }

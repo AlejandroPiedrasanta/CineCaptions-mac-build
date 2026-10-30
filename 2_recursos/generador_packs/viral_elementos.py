@@ -54,6 +54,11 @@ def tt(frames_necesarios):
     return f'(time / math.min(1, math.max(0.4, (comp.RenderEnd - 5) / {frames_necesarios})))'
 
 
+def t24(fotogramas):
+    """v5.55: como tt() pero en fotogramas de 24 fps (los de las referencias TEMA3 (1) y (2)): la animación dura lo mismo a 24, 30 o 60 fps."""
+    return f'(time * 24 / {E.FPS} / math.min(1, math.max(0.4, (comp.RenderEnd - 5) * 24 / {E.FPS} / {fotogramas})))'
+
+
 def _p(retardo, dur, t='time'):
     return f'math.min(1, math.max(0, ({t} - {retardo}) / {dur}))'
 
@@ -105,11 +110,15 @@ def vacio(nombre, x, y):
 
 
 def con_sombra(origen, prefijo, x, y, alfa=0.5, dy=-0.004, blur=6):
-    """Silueta negra desenfocada y un poco más abajo, debajo de `origen` (lo que hacía la cinta de Kinetic). Devuelve (nodos, nombre del Merge final)."""
-    t = herramienta('BrightnessContrast', prefijo + 'Negro', x, y, [enlace('Input', origen), 'Gain = Input { Value = 0, },', f'Alpha = Input {{ Value = {n(alfa)}, }},'])
+    """Silueta negra desenfocada y un poco más abajo, debajo de `origen` (lo que hacía la cinta de Kinetic). Devuelve (nodos, nombre del Merge final).
+    v5.55: la opacidad va en un Merge. El «Alpha» de BrightnessContrast es la CASILLA del canal alfa: con Gain 0 dejaba el alfa en 0 y la sombra no se veía
+    (render de Resolve 21.1.2)."""
+    t = herramienta('BrightnessContrast', prefijo + 'Negro', x, y, [enlace('Input', origen), 'Gain = Input { Value = 0, },'])
     t += herramienta('Blur', prefijo + 'Difumina', x, y + 40, [enlace('Input', prefijo + 'Negro'), f'XBlurSize = Input {{ Value = {n(blur)}, }},', 'Filter = Input { Value = FuID { "Gaussian" }, },'])
     t += herramienta('Transform', prefijo + 'Baja', x, y + 80, [enlace('Input', prefijo + 'Difumina'), f'Center = Input {{ Value = {{ 0.5, {n(0.5 + dy)} }}, }},'])
-    t += herramienta('Merge', prefijo + 'Con', x, y + 120, [enlace('Background', prefijo + 'Baja'), enlace('Foreground', origen)])
+    t += vacio(prefijo + 'Vacio', x - 120, y + 120)
+    t += herramienta('Merge', prefijo + 'Op', x, y + 120, [enlace('Background', prefijo + 'Vacio'), enlace('Foreground', prefijo + 'Baja'), f'Blend = Input {{ Value = {n(alfa)}, }},'])
+    t += herramienta('Merge', prefijo + 'Con', x, y + 160, [enlace('Background', prefijo + 'Op'), enlace('Foreground', origen)])
     return t, prefijo + 'Con'
 
 
@@ -154,6 +163,17 @@ PALETAS_SHATTER = {
 }
 CAJAS_SELECT = {'': (1.0, 0.04, 0.04), 'azul': (0.10, 0.45, 1.0), 'verde': (0.05, 0.85, 0.35), 'naranja': (1.0, 0.50, 0.05)}          # el color de la caja punteada
 TINTES_DRAG = {'': (1.0, 1.0, 1.0), 'amarillo': (1.0, 0.92, 0.25), 'cian': (0.30, 0.92, 1.0), 'rosa': (1.0, 0.55, 0.80)}              # el color del relleno y del contorno
+# v5.55 (pedido: «pule más el Tema 3, no se parece a estos captions»: TEMA3 (1).mp4 = Select, TEMA3 (2).mp4 = Drag, 1920×1080 a 24 fps). Medido en ellas:
+# la palabra NO lleva contorno: blanco roto (~0,95) con un brillo blanco suave que se apaga a ~0,1 de su alto; caja roja de guiones GRUESOS (~0,05 em);
+# cursor grande (~0,55 em) con una sombra ancha que oscurece la esquina de la caja. Drag: una mano entra abierta por la derecha, agarra la palabra punteada
+# y la arrastra ~0,9 em desde arriba a la izquierda; ya en su sitio se rellena de gris oscuro a blanco y la mano se va por detrás.
+# El espaciado (0,97) ya era el de la referencia: Text+ SUMA (CharacterSpacing − 1) × ~1,5 em por letra («Select» mide 3,82 de ancho/alto; la referencia, 3,79).
+EFECTO_RELLENO = 0.955
+EFECTO_BRILLO = (0.21, 14)                  # el brillo blanco de la letra: opacidad, difuminado (Softness del Text+; medido en Resolve: 41/15/9/4 como la referencia)
+EFECTO_SOMBRA = (0.55, -0.006, 12)          # la sombra oscura debajo (se ve solo sobre un fondo claro): opacidad, bajada, difuminado
+SIZE_CALIBRADO = 0.3035                     # el Size del Text+ con el que se midieron esos difuminados: el Softness de Text+ va contra el CUADRO, no contra la letra,
+                                            # así que crece con Template.Size (una palabra pequeña salía con el brillo el doble de ancho, en proporción)
+VOLUMEN_EFECTO = [(0.0, 0.92), (0.5, 0.965), (1.0, 0.92)]      # el relleno del Select de abajo (parada 0) a arriba: el leve volumen de la referencia
 
 
 def _region(nombre, x0, x1, y0, y1, angulo, y_pos):
@@ -282,33 +302,53 @@ def comp_shatter(paleta=''):
 
 # ------------------------------------------------------------------------------------------------------------------ select
 def _flecha(nombre, y):
-    """La flecha del ratón (punta arriba a la izquierda) en el espacio de la máscara: x en fracción del ancho; y se corrige por el aspecto para que no se deforme. La punta es el origen."""
-    rejilla = [(0, 0), (0, -16), (4.2, -12.2), (7, -19), (9.4, -17.8), (6.6, -11.2), (11.4, -11.2)]       # una flecha clásica en una cuadrícula de 12 × 19
+    """La flecha del ratón (punta arriba a la izquierda) en el espacio de la máscara: x en fracción del ancho; y se corrige por el aspecto para que no se deforme. La punta es el origen.
+    v5.55: la punta de flecha SIN cola de TEMA3 (1).mp4 (medida: 0,37 × 0,54 em, con la muesca abajo a la derecha)."""
+    rejilla = [(0, 0), (0, -19), (4.94, -12.73), (12.8, -13.8)]                                          # en una cuadrícula de 12,8 × 19
     k = 0.0062
     return V.poligono(nombre, [(px * k, py * k * ASPECTO) for px, py in rejilla], -220, y)
 
 
+def _halo(num, color, opacidad, dy, blur):
+    """Un elemento de sombreado con la forma de la LETRA (ElementShape 0; si no, del 3 en adelante sale como un rectángulo) desenfocado: brillo o sombra.
+    v5.55: con SoftnessBlend 1. El 0 de E._sombra deja el elemento SIN desenfocar (en el render de Resolve el «brillo» era una copia nítida de la letra).
+    El difuminado sigue al tamaño de la palabra: `blur` es el de Size = SIZE_CALIBRADO."""
+    cambios = {f'SoftnessBlend{num} = Input {{ Value = Number {{ Value = 0 }}, }},': f'SoftnessBlend{num} = Input {{ Value = Number {{ Value = 1 }}, }},'}
+    for eje in ('X', 'Y'):
+        cambios[f'Softness{eje}{num} = Input {{ Value = Number {{ Value = {n(blur)} }}, }},'] = (
+            f'Softness{eje}{num} = Input {{ Value = Number {{ Value = {n(blur)} }}, Expression = "Template.Size * {n(blur / SIZE_CALIBRADO)}", }},')
+    return [cambios.get(l, l) for l in E._sombra(num, opacidad, dy, blur, color=color)] + [f'ElementShape{num} = Input {{ Value = 0, }},']
+
+
+def _letra_efecto(primero):
+    """v5.55: el acabado de la palabra de Select y Drag (como la referencia): brillo blanco suave y, debajo, la sombra oscura (sin contorno).
+    `primero`: el nº del elemento del brillo (la sombra va en el siguiente: el de nº menor se dibuja encima)."""
+    return (_halo(primero, (1, 1, 1), EFECTO_BRILLO[0], 0.0, EFECTO_BRILLO[1])
+            + _halo(primero + 1, (0.0, 0.0, 0.0), EFECTO_SOMBRA[0], EFECTO_SOMBRA[1], EFECTO_SOMBRA[2]))
+
+
 def comp_select(color_caja=''):
-    """Máquina de escribir (Write On) → cursor → caja punteada (roja, o azul / verde / naranja: CAJAS_SELECT) que se dibuja desde la esquina de arriba a la izquierda hasta la de abajo a la derecha."""
+    """Máquina de escribir (Write On) → cursor → caja punteada (roja, o azul / verde / naranja: CAJAS_SELECT) que se dibuja desde la esquina de arriba a la izquierda hasta la de abajo a la derecha.
+    v5.55: tiempos de la referencia (24 fps): la «S» sale en el fotograma 1-2, escribe en ~10, el cursor aparece a media palabra y la caja se abre en 8.
+    La letra lleva un leve volumen (más oscura arriba y abajo: 235 / 245 / 235 en la referencia)."""
     dw_m = 'Medida.Output.DataWindow'
     letras = f'(({dw_m} and (({dw_m}[3] - {dw_m}[1]) / {ANCHO_CUADRO}) or 0.2) / ({EM_W} * 0.62))'      # nº de letras estimado por el ancho
-    T = tt(34)
-    T0 = 3                                                                                        # empieza a escribir
-    dur = f'(3 + 1.2 * {letras})'
+    T = t24(26)
+    T0 = 0.5                                                                                      # empieza a escribir
+    dur = f'(2.5 + 1.15 * {letras})'
     escribe = f'math.min(1, math.max(0, ({T} - {T0}) / {dur}))'
     fin_esc = f'({T0} + {dur})'
-    caja = f'math.min(1, math.max(0, ({T} - {fin_esc} - 2) / 10))'                                  # progreso de la caja y del cursor
+    caja = f'math.min(1, math.max(0, ({T} - {fin_esc} - 1) / 8))'                                   # progreso de la caja y del cursor
     caja_e = f'(1 - (1 - {caja})^3)'
-    extra = ['End = Input { Value = 1, Expression = "%s", },' % K.lua(escribe)]
-    extra += _color(E._sombra(2, 0.40, 0.0, 22), 2, (1, 1, 1))                                   # brillo blanco suave (sobre un fondo claro, uno fuerte borra el borde)
-    extra += E._contorno(3, 0.012, 0.95) + E._sombra(4, 0.70, -0.008, 14) + ['ElementShape4 = Input { Value = 0, },']      # contorno oscuro y sombra (forma de LETRA: sin esto el elemento 4 sale como un rectángulo)
-    t = texto_plus('Template', -220, 40, 'Select', EFECTO[0], EFECTO[1], 0.30, color=(1, 1, 1), esp=0.97, extra=extra)
+    extra = (['End = Input { Value = 1, Expression = "%s", },' % K.lua(escribe), 'Type1 = Input { Value = 2, },',
+              f'ShadingGradient1 = Input {{ Value = {degradado([(p, (v,) * 3) for p, v in VOLUMEN_EFECTO])}, }},'] + _letra_efecto(2))
+    t = texto_plus('Template', -220, 40, 'Select', EFECTO[0], EFECTO[1], 0.30, color=(EFECTO_RELLENO,) * 3, esp=0.97, extra=extra)
     ligado = 'StyledText = Input { Value = "Select", Expression = "Template.StyledText", },'
     t += texto_plus('Medida', -220, 120, 'Select', EFECTO[0], EFECTO[1], 0.30, esp=0.97, expr={'Size': 'Template.Size'}).replace('StyledText = Input { Value = "Select", },', ligado)
     rojo = CAJAS_SELECT[color_caja]
     borde = ['Enabled1 = Input { Value = 0, },', 'Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 3, },', 'Level2 = Input { Value = Number { Value = 0 }, },',
              'LineStyle2 = Input { Value = Number { Value = 1 }, },', 'JoinStyle2 = Input { Value = 1, },',
-             'Thickness2 = Input { Value = Number { Value = 0.02 }, Expression = "Template.Size * 0.075", },',
+             'Thickness2 = Input { Value = Number { Value = 0.04 }, Expression = "Template.Size * 0.135", },',              # v5.55: guiones gruesos (0,075 → 0,135, ~0,05 em)
              'ExtendHorizontal2 = Input { Value = Number { Value = 0.03 }, Expression = "Template.Size * 0.1", },', 'ExtendVertical2 = Input { Value = Number { Value = 0.02 }, Expression = "Template.Size * 0.07", },',
              f'Red2 = Input {{ Value = Number {{ Value = {n(rojo[0])} }}, }},', f'Green2 = Input {{ Value = Number {{ Value = {n(rojo[1])} }}, }},', f'Blue2 = Input {{ Value = Number {{ Value = {n(rojo[2])} }}, }},']
     t += texto_plus('Caja', -220, 200, 'Select', EFECTO[0], EFECTO[1], 0.30, esp=0.97, extra=borde, expr={'Size': 'Template.Size'}).replace('StyledText = Input { Value = "Select", },', ligado)
@@ -328,12 +368,22 @@ def comp_select(color_caja=''):
         enlace('Input', 'Cursor'),
         f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "{K.lua(centro)}", }},',
         'Pivot = Input { Value = { 0.5, 0.5 }, },',
-        f'Size = Input {{ Value = 1, Expression = "{K.lua(f"{EM_W} * 3.2")}", }},'])
-    sombra, ult = con_sombra('Raton', 'Cs', 140, 300, alfa=0.55, dy=-0.004, blur=5)
+        f'Size = Input {{ Value = 1, Expression = "{K.lua(f"{EM_W} * 4.6")}", }},'])            # v5.55: más grande (3,2 → 4,6: ~0,55 em, como la referencia)
+    sombra, ult = con_sombra('Raton', 'Cs', 140, 300, alfa=0.8, dy=-0.012, blur=40)                 # … y con la sombra ancha que oscurece la esquina de la caja
     t += sombra
-    t += herramienta('Merge', 'Fundido', 260, 300, [enlace('Background', 'VacioCursor'), enlace('Foreground', ult), f'Blend = Input {{ Value = 0, Expression = "{K.lua(_p(fin_esc, 3, T))}", }},'])
+    t += herramienta('Merge', 'Fundido', 260, 300, [enlace('Background', 'VacioCursor'), enlace('Foreground', ult),
+                                                   f'Blend = Input {{ Value = 0, Expression = "{K.lua(_p(f"({T0} + 0.5 * {dur})", 4, T))}", }},'])     # aparece a media palabra
     t += vacio('VacioCursor', 260, 380)
-    t += herramienta('Merge', 'M1', 380, 120, [enlace('Background', 'Template'), enlace('Foreground', 'Crece')])
+    # v5.55: la caja se oscurece junto al cursor, como en la referencia (medido: su esquina a 1/4 de luz, 41 % más oscura a 0,64 em y 26 % a 0,88 em): una elipse
+    # muy suave en la punta del cursor que oscurece SOLO la caja (no el video). Medido en Resolve: el SoftEdge desenfoca con sigma ≈ 0,45 × su valor y, como el
+    # Height de una EllipseMask, va contra el ANCHO del cuadro (ver _mano). Disco de 0,75 em + SoftEdge 0,8 em + Gain 0,15 ≈ 75/43/24 % (medido: 77/34/21 %)
+    t += K._mascara('EllipseMask', 'Penumbra', -60, 250, [
+        f'Center = Input {{ Value = {{ 0.7, 0.4 }}, Expression = "{K.lua(centro)}", }},',
+        f'Width = Input {{ Value = 0.25, Expression = "{K.lua(f"{EM_W} * 1.5")}", }},',
+        f'Height = Input {{ Value = 0.25, Expression = "{K.lua(f"{EM_W} * 1.5")}", }},',
+        f'SoftEdge = Input {{ Value = 0.13, Expression = "{K.lua(f"{EM_W} * 0.8")}", }},'])
+    t += herramienta('BrightnessContrast', 'Oscura', 40, 200, [enlace('Input', 'Crece'), 'Gain = Input { Value = 0.15, },', enlace('EffectMask', 'Penumbra', 'Mask')])
+    t += herramienta('Merge', 'M1', 380, 120, [enlace('Background', 'Template'), enlace('Foreground', 'Oscura')])
     t += herramienta('Merge', 'M2', 380, 200, [enlace('Background', 'M1'), enlace('Foreground', 'Fundido')])
     p = _p(0, 6)
     t += cadena('M2', dict(size=f'(0.96 + 0.04 * {_suave(p)}) * (0.92 + 0.08 * {SALIDA})', blend=f'math.min(1, {p} * 2.0) * {SALIDA}'), x0=520)
@@ -341,25 +391,69 @@ def comp_select(color_caja=''):
 
 
 # ------------------------------------------------------------------------------------------------------------------ drag
-def _mano(nombre, y):
-    """Una mano (puño con cuatro dedos y pulgar) hecha con rectángulos redondeados: primero todo en negro un poco más grande (el contorno y las separaciones) y encima en blanco.
-    Devuelve (nodos, nombre de la salida). Medidas en fracción del ANCHO; la altura de cada máscara se pasa a fracción del alto con ASPECTO."""
-    piezas = [  # cx, cy, ancho, alto, radio, ángulo
-        (0.0, -0.014, 0.064, 0.066, 0.30, 0), (-0.0235, 0.034, 0.0125, 0.040, 0.5, 0), (-0.0078, 0.040, 0.0125, 0.046, 0.5, 0),
-        (0.0078, 0.040, 0.0125, 0.046, 0.5, 0), (0.0235, 0.034, 0.0125, 0.040, 0.5, 0), (-0.036, -0.006, 0.015, 0.036, 0.5, 38)]
+MANO_EM = 0.25          # en la máscara de la mano, 1 em de la palabra = esta fracción del ancho del cuadro (el Transform «Lleva» la escala con EM_W / MANO_EM)
+# v5.55: la mano de TEMA3 (2).mp4 medida en em de la palabra, cada forma sobre su caja (x a la derecha, y hacia ABAJO) y con su origen = el centro de la palma
+# (el punto por el que agarra). ABIERTA (f_010, 0,43 × 0,60 em): cuatro dedos finos de 0,047 em con rayas negras igual de anchas, el corazón el más alto,
+# el pulgar abajo a la izquierda separado de la palma y el fondo redondo. CERRADA (f_015, 0,48 × 0,56 em): dedos cortos de 0,07 em, la punta del pulgar
+# asomando a la izquierda y el fondo ovalado y cortado en diagonal abajo a la izquierda (la elipse casa con sus filas medidas al 1-2 %).
+# palma = (x0, x1, y0, y1, radio de las esquinas o None = redondo del todo); elipse = (cx, cy, ancho, alto) (en la abierta queda dentro de la palma);
+# dedos = (x0, x1, punta) hasta base_dedos; pulgar = (x0, x1, y0, y1); corte = su contorno negro, que lo separa de la palma (va encima de ella).
+MANO_ABIERTA = dict(origen=(0.215, 0.4505), palma=(0.0, 0.430, 0.325, 0.601, 0.13), elipse=(0.215, 0.47, 0.30, 0.20), base_dedos=0.47,
+                    dedos=[(0.095, 0.142, 0.078), (0.189, 0.237, 0.0), (0.284, 0.331, 0.051), (0.380, 0.430, 0.198)],
+                    pulgar=(0.0, 0.047, 0.337, 0.560), corte=(-0.022, 0.094, 0.290, 0.500))
+MANO_CERRADA = dict(origen=(0.242, 0.354), palma=(0.077, 0.484, 0.150, 0.400, 0.03), elipse=(0.26, 0.358, 0.46, 0.40), base_dedos=0.25,
+                    dedos=[(0.077, 0.145, 0.050), (0.189, 0.257, 0.0), (0.300, 0.373, 0.050), (0.416, 0.484, 0.073)],
+                    pulgar=(0.0, 0.045, 0.234, 0.310), corte=(-0.022, 0.067, 0.212, 0.270))
+MANO_CONTORNO = 0.022   # el contorno negro (em)
 
-    def rect(nom, cx, cy, ancho, alto, radio, ang, color, yy):
-        m = K._mascara('RectangleMask', nom + 'M', -220, yy, [
-            f'Center = Input {{ Value = {{ {n(0.5 + cx)}, {n(0.5 + cy * ASPECTO)} }}, }},', f'Width = Input {{ Value = {n(ancho)}, }},', f'Height = Input {{ Value = {n(alto * ASPECTO)}, }},',
-            f'CornerRadius = Input {{ Value = {n(radio)}, }},', f'Angle = Input {{ Value = {n(ang)}, }},'])
+
+def _piezas_mano(forma):
+    """Las 14 piezas de una forma de la mano, en el orden en que se apilan: el contorno negro de la palma, la elipse y los dedos; lo mismo en blanco; el corte del
+    pulgar y el pulgar. Cada una (máscara, cx, cy, ancho, alto, CornerRadius) en em desde el origen, y hacia ARRIBA (CornerRadius 1 = el lado corto redondo del todo)."""
+    ox, oy = forma['origen']
+    O = MANO_CONTORNO
+
+    def caja(x0, x1, y0, y1, radio=None):
+        w, h = x1 - x0, y1 - y0
+        return ('RectangleMask', (x0 + x1) / 2 - ox, oy - (y0 + y1) / 2, w, h, 1.0 if radio is None else min(1.0, radio / (min(w, h) / 2)))
+
+    def elipse(cx, cy, w, h, crece=0.0):
+        return ('EllipseMask', cx - ox, oy - cy, w + 2 * crece, h + 2 * crece, 0.0)
+    x0, x1, y0, y1, r = forma['palma']
+    base = forma['base_dedos']
+    piezas = [caja(x0 - O, x1 + O, y0 - O, y1 + O, None if r is None else r + O), elipse(*forma['elipse'], crece=O)]
+    piezas += [caja(a - O, b + O, punta - O, base) for a, b, punta in forma['dedos']]
+    piezas += [caja(x0, x1, y0, y1, r), elipse(*forma['elipse'])] + [caja(a, b, punta, base) for a, b, punta in forma['dedos']]
+    return piezas + [caja(*forma['corte']), caja(*forma['pulgar'])]
+
+
+def _mano(nombre, y, cierra='0'):
+    """La mano del Drag hecha con rectángulos redondeados (RectangleMask + Background), apilados: debajo en negro y un poco más grandes (el contorno y las rayas
+    entre los dedos), encima en blanco, y al final el pulgar con su propio contorno. Devuelve (nodos, nombre de la salida).
+    v5.55: la mano de la referencia (MANO_ABIERTA → MANO_CERRADA): `cierra` = expresión 0 → 1 que lleva cada pieza de una forma a la otra."""
+    negro, blanco = (0, 0, 0), (0.98, 0.98, 0.98)
+    colores = [negro] * 6 + [blanco] * 6 + [negro, blanco]
+
+    def entre(a, b):
+        return n(a) if abs(a - b) < 1e-9 else f'({n(a)} + {n(b - a)} * {cierra})'
+
+    def rect(nom, abierta, cerrada, color, yy):
+        (tipo, ax, ay, aw, ah, ar), (_t, bx, by, bw, bh, br) = abierta, cerrada
+        # el centro va en fracciones del ancho y del alto; el Height de una RectangleMask es fracción del ALTO del cuadro, pero el de una EllipseMask lo es del
+        # ANCHO (medido en Resolve 21.1.2: con «× aspecto» la elipse salía 1,78 veces más alta en horizontal y 0,56 veces más baja en vertical)
+        k, ky = MANO_EM, MANO_EM * ASPECTO
+        kh = ky if tipo == 'RectangleMask' else MANO_EM
+        m = K._mascara(tipo, nom + 'M', -220, yy, [
+            f'Center = Input {{ Value = {{ {n(0.5 + k * ax)}, {n(0.5 + ky * ay)} }}, Expression = "{K.lua(f"Point(0.5 + {n(k)} * {entre(ax, bx)}, 0.5 + {n(ky)} * {entre(ay, by)})")}", }},',
+            f'Width = Input {{ Value = {n(k * aw)}, Expression = "{K.lua(f"{n(k)} * {entre(aw, bw)}")}", }},',
+            f'Height = Input {{ Value = {n(kh * ah)}, Expression = "{K.lua(f"{n(kh)} * {entre(ah, bh)}")}", }},']
+            + ([f'CornerRadius = Input {{ Value = {n(ar)}, Expression = "{K.lua(entre(ar, br))}", }},'] if tipo == 'RectangleMask' else []))
         return m + K._fondo(nom, -60, yy, color, nom + 'M')
     t, nombres = '', []
-    for k, (cx, cy, w, h, r, ang) in enumerate(piezas):          # el contorno negro
-        t += rect(f'{nombre}N{k}', cx, cy, w + 0.012, h + 0.012, r, ang, (0, 0, 0), y + 40 * k)
-        nombres.append(f'{nombre}N{k}')
-    for k, (cx, cy, w, h, r, ang) in enumerate(piezas):          # el relleno blanco
-        t += rect(f'{nombre}B{k}', cx, cy, w, h, r, ang, (1, 1, 1), y + 40 * (k + len(piezas)))
-        nombres.append(f'{nombre}B{k}')
+    for k, (a, b, color) in enumerate(zip(_piezas_mano(MANO_ABIERTA), _piezas_mano(MANO_CERRADA), colores)):
+        nom = f'{nombre}{"N" if color == negro else "B"}{k}'
+        t += rect(nom, a, b, color, y + 40 * k)
+        nombres.append(nom)
     prev = nombres[0]
     for k, nom in enumerate(nombres[1:], 1):
         t += herramienta('Merge', f'{nombre}U{k}', 80, y + 40 * k, [enlace('Background', prev), enlace('Foreground', nom)])
@@ -368,41 +462,66 @@ def _mano(nombre, y):
 
 
 def comp_drag(tinte=''):
-    """Contorno punteado de la palabra; una mano baja, la agarra y la arrastra de izquierda a derecha mientras el relleno (blanco, o amarillo / cian / rosa: TINTES_DRAG) sube y brilla; la mano se va."""
+    """Contorno punteado de la palabra; una mano entra abierta por la derecha, la agarra y la ARRASTRA a su sitio (llega desde arriba a la izquierda); ya en su sitio
+    se rellena de gris oscuro a blanco (o amarillo / cian / rosa: TINTES_DRAG) con su brillo y la mano se va por DETRÁS de la palabra.
+    v5.55: tiempos y recorridos medidos en TEMA3 (2).mp4 (fotogramas de 24 fps): la mano llega en 1-9 (desde 0,78 em a la derecha y 0,24 más abajo), la palabra
+    asoma en 8-11, la mano la agarra en 10-13 y la arrastra en 10-19 (0,9 em a la derecha y 0,36 hacia abajo); se rellena en 18-24 y la mano se va en 21-30."""
     color = TINTES_DRAG[tinte]
-    T = tt(40)
-    llena = f'math.min(1, math.max(0, ({T} - 12) / 18))'
-    mano = _p(2, 26, T)
-    extra = [f'Opacity1 = Input {{ Value = Number {{ Value = 1 }}, Expression = "{K.lua(llena)}", }},']
-    extra += ['Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 1, },', 'LineStyle2 = Input { Value = Number { Value = 1 }, },', 'JoinStyle2 = Input { Value = 1, },',
-              'Thickness2 = Input { Value = Number { Value = 0.01 }, Expression = "Template.Size * 0.022", },',
-              f'Red2 = Input {{ Value = Number {{ Value = {n(color[0])} }}, }},', f'Green2 = Input {{ Value = Number {{ Value = {n(color[1])} }}, }},', f'Blue2 = Input {{ Value = Number {{ Value = {n(color[2])} }}, }},',
-              f'Opacity2 = Input {{ Value = Number {{ Value = 0.85 }}, Expression = "{K.lua(f"0.85 * math.min(1, {T} / 5) * (1 - {llena}^2)")}", }},']
-    extra += _color(E._sombra(3, 0.8, 0.0, 24), 3, (1, 1, 1))
-    extra += E._contorno(4, 0.012, 0.95) + E._sombra(5, 0.70, -0.008, 14) + ['ElementShape5 = Input { Value = 0, },']        # contorno y sombra oscuros (forma de LETRA): aparecen al rellenarse
-    exprs = {'Opacity3': f"0.40 * {llena}", 'Opacity4': f"0.95 * {llena}", 'Opacity5': f"0.70 * {llena}"}
-    extra = [l if not any(l.startswith(k) for k in exprs) else
-             f'{next(k for k in exprs if l.startswith(k))} = Input {{ Value = Number {{ Value = 0 }}, Expression = "{K.lua(exprs[next(k for k in exprs if l.startswith(k))])}", }},' for l in extra]
-    t = texto_plus('Template', -220, 40, 'Drag', EFECTO[0], EFECTO[1], 0.30, color=color, esp=0.97, extra=extra)
-    nodos, mano_out = _mano('Mano', 300)
+    T = t24(32)
+    llega = _suave(_p(1, 8, T))                   # la mano abierta llega
+    cierra = _suave(_p(10, 3, T))                 # … la agarra
+    q = _p(10, 9, T)
+    mov = f'(0.5 * math.sin({q} * 1.5708) + 0.25 * (1 - math.cos({q} * 3.1416)))'      # … y la arrastra (curva de la referencia: 10, 25, 40, 55, 69, 82, 92, 98 %)
+    llena = _p(18, 6, T)                          # ya en su sitio: de gris oscuro a su color (lineal, como la referencia)
+    se_va = _p(21, 9, T)                          # la mano se va…
+    detras = _p(21, 2, T)                         # … por detrás de la palabra
+    G0 = 0.08
+    fin = [EFECTO_RELLENO * c for c in color]
+    gris = [0.85 * c for c in color]
+    # el contorno punteado es el elemento 1 y el relleno el 2: en Text+ el de número menor va encima y en la referencia los guiones se ven SOBRE el relleno gris,
+    # hasta que está casi blanco. «CleanIntersections»: sin trazos de más donde la fuente solapa piezas (el palo y la panza de la «D» salían con una raya dentro)
+    extra = ['ElementShape1 = Input { Value = 1, },', 'LineStyle1 = Input { Value = Number { Value = 1 }, },', 'JoinStyle1 = Input { Value = 1, },',
+             'CleanIntersections1 = Input { Value = 1, },',
+             'Thickness1 = Input { Value = Number { Value = 0.013 }, Expression = "Template.Size * 0.046", },',                  # v5.55: guiones gruesos (0,022 → 0,046)
+             f'Opacity1 = Input {{ Value = Number {{ Value = 0.95 }}, Expression = "{K.lua(f"0.95 * {_p(8, 10, T)} * math.min(1, (1 - {llena}) * 5)")}", }},']
+    extra += ['Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 0, },',
+              f'Opacity2 = Input {{ Value = Number {{ Value = 1 }}, Expression = "{K.lua(f"math.min(1, {llena} * 5)")}", }},']
+    extra += [f'{canal}2 = Input {{ Value = Number {{ Value = {n(v)} }}, Expression = "{K.lua(f"{n(G0)} + {n(v - G0)} * {llena}")}", }},'
+              for canal, v in zip(('Red', 'Green', 'Blue'), fin)]                    # el relleno va del gris oscuro a su color
+    extra += _letra_efecto(3)                     # brillo (3) y sombra (4): aparecen al rellenarse
+    exprs = {'Opacity3': f'{n(EFECTO_BRILLO[0])} * {llena}^2', 'Opacity4': f'{n(EFECTO_SOMBRA[0])} * {llena}'}
+    extra = [l if not any(l.startswith(k + ' ') for k in exprs) else
+             f'{next(k for k in exprs if l.startswith(k + " "))} = Input {{ Value = Number {{ Value = 0 }}, Expression = "{K.lua(exprs[next(k for k in exprs if l.startswith(k + " "))])}", }},' for l in extra]
+    t = texto_plus('Template', -220, 40, 'Drag', EFECTO[0], EFECTO[1], 0.30, color=gris, esp=0.97, extra=extra)
+    # la medida de la palabra (el Template está transparente hasta que asoma): un Text+ igual que no se compone
+    ligado = 'StyledText = Input { Value = "Drag", Expression = "Template.StyledText", },'
+    t += texto_plus('Medida', -220, 120, 'Drag', EFECTO[0], EFECTO[1], 0.30, esp=0.97, expr={'Size': 'Template.Size'}).replace('StyledText = Input { Value = "Drag", },', ligado)
+    # la palabra llega arrastrada (desde arriba a la izquierda) hasta su sitio
+    dx = f'(-0.90 * {EM_W} * (1 - {mov}))'
+    dy = f'(0.36 * {EM_H} * (1 - {mov}))'
+    t += herramienta('Transform', 'Arrastre', -60, 40, [enlace('Input', 'Template'),
+                                                       f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5 + {K.lua(dx)}, 0.5 + {K.lua(dy)})", }},'])
+    nodos, mano_out = _mano('Mano', 300, cierra)
     t += nodos
-    dw = 'Template.Output.DataWindow'
-    ancho_t = f'({dw} and (({dw}[3] - {dw}[1]) / {ANCHO_CUADRO}) or 0.4)'
+    dw = 'Medida.Output.DataWindow'
     cx = f'({dw} and (({dw}[1] + {dw}[3]) / 2 / {ANCHO_CUADRO}) or 0.5)'
     cy = f'({dw} and (({dw}[2] + {dw}[4]) / 2 / {ALTO_CUADRO}) or 0.5)'
-    e = _suave(mano)
-    # recorrido: arranca encima de la palabra, a la izquierda; baja hasta ella y la arrastra hacia la derecha
-    x = f'{cx} + {ancho_t} * (-0.32 + 0.52 * {e})'
-    y = f'{cy} + {EM_H} * (0.72 - 0.32 * {_p(2, 8, T)} + 0.06 * math.sin({e} * 6.28))'
-    aparece = f'math.min(1, math.max(0, ({T} - 1) / 4)) * (1 - math.min(1, math.max(0, ({T} - 30) / 5)))'
+    # la mano: llega a su punto de agarre (el centro de la palabra, un poco arriba) desde la derecha y algo más abajo, y luego va con la palabra
+    x = f'{cx} + {dx} + {EM_W} * 0.78 * (1 - {llega})'
+    y = f'{cy} + {EM_H} * 0.05 + {dy} - {EM_H} * 0.24 * (1 - {llega})'
+    aparece = f'{_p(1, 6, T)} * (1 - {se_va})'
     t += herramienta('Transform', 'Lleva', 40, 300, [
         enlace('Input', mano_out),
         'Pivot = Input { Value = { 0.5, 0.5 }, },',
         f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point({K.lua(x)} , {K.lua(y)})", }},',
-        f'Size = Input {{ Value = 1, Expression = "{K.lua(f"{EM_W} * 4.6 * (1 - 0.18 * {_p(14, 12, T)})")}", }},'])
+        f'Size = Input {{ Value = 1, Expression = "{K.lua(f"{EM_W} / {n(MANO_EM)}")}", }},'])
     t += vacio('VacioMano', 160, 380)
-    t += herramienta('Merge', 'ManoFin', 160, 300, [enlace('Background', 'VacioMano'), enlace('Foreground', 'Lleva'), f'Blend = Input {{ Value = 0, Expression = "{K.lua(aparece)}", }},'])
-    t += herramienta('Merge', 'M1', 280, 120, [enlace('Background', 'Template'), enlace('Foreground', 'ManoFin')])
+    t += herramienta('Merge', 'ManoEncima', 160, 300, [enlace('Background', 'VacioMano'), enlace('Foreground', 'Lleva'),
+                                                       f'Blend = Input {{ Value = 0, Expression = "{K.lua(f"{aparece} * (1 - {detras})")}", }},'])
+    t += herramienta('Merge', 'ManoDebajo', 160, 220, [enlace('Background', 'VacioMano'), enlace('Foreground', 'Lleva'),
+                                                       f'Blend = Input {{ Value = 0, Expression = "{K.lua(f"{aparece} * {detras}")}", }},'])
+    t += herramienta('Merge', 'M0', 280, 40, [enlace('Background', 'ManoDebajo'), enlace('Foreground', 'Arrastre')])
+    t += herramienta('Merge', 'M1', 280, 120, [enlace('Background', 'M0'), enlace('Foreground', 'ManoEncima')])
     p = _p(0, 6)
     t += cadena('M1', dict(size=f'(0.97 + 0.03 * {_suave(p)}) * (0.92 + 0.08 * {SALIDA})', blend=f'math.min(1, {p} * 2.0) * {SALIDA}'), x0=420)
     return K.armar_comp(t, 'CineCaptions VIRAL - drag')

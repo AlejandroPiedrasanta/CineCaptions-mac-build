@@ -16,7 +16,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         movil.json
         movil_fondo.jpg
         movil_marco.png
-    edicion_pro\   (4466 archivos)
+    edicion_pro\   (4467 archivos)
     efectos\   (161 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)

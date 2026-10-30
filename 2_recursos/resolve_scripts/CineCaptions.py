@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.54 (subtitulos)"
+VERSION = "5.55 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -3721,6 +3721,59 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
     for linea in informe_sets:
         print(linea)
 
+    # v5.55 — «Crea tu estilo»: una MEZCLA puede juntar varios temas «guion» (Referencia, Tema4, Tema5, Tema6) en ESTA misma pista. Cada pack de
+    # plantillas_extra va a su propio bin (como los extra de place_kinetic_track) y cada bloque usa los sets de SU pack (cue['pack']); sin pack, o
+    # si el suyo falla, los del principal. Una sola pista = un solo reparto de huecos ES-T (sin choques) y el retiro final de las pistas sobrantes
+    # sigue valiendo. Un pack extra que falla se avisa y la corrida sigue (nunca fail()). Gemela de place_guion del .lua.
+    sets_por_pack = {}
+
+    def _anotar_sets(nombre, juegos, base=None):
+        # por su nombre y, si es un pack personalizado («VIRAL · a1b2c3»), también por el de su tema base: los bloques traen el nombre BASE
+        if not isinstance(nombre, str) or not nombre.strip() or not juegos:
+            return
+        sets_por_pack[nombre] = juegos
+        for alias in (base, nombre.split(" · ")[0]):
+            if isinstance(alias, str) and alias.strip() and alias not in sets_por_pack:
+                sets_por_pack[alias] = juegos
+
+    if isinstance(p_manifiesto, dict):
+        _anotar_sets(p_manifiesto.get("pack"), sets, p_manifiesto.get("base"))
+    # los extra, a prueba de formas raras (igual que en el .lua): solo una LISTA, en su orden y sin los None (el sidecar de Free 21.1 los escribe
+    # como nil y el Lua los salta); un texto o un objeto en lugar de la lista no se recorren
+    extras_x = track_info.get("plantillas_extra")
+    extras_x = [e for e in extras_x if e is not None] if isinstance(extras_x, (list, tuple)) else []
+    hay_extras = bool(extras_x)
+    preparados = {pack_previo["nombre"]} if pack_previo else set()
+    for extra in extras_x:
+        p_x = extra.get("plantilla") if isinstance(extra, dict) and isinstance(extra.get("plantilla"), dict) else extra
+        if not isinstance(p_x, dict):
+            continue
+        nombre_x = str(p_x.get("pack") or "?")
+        try:
+            pp = pack_del_manifiesto({"plantilla": p_x}, ancho_tl, alto_tl)
+            if project is None or not pp or not (pp.get("drt") or pp.get("drb")):
+                print(f"  Aviso: el pack «{nombre_x}» de la mezcla no trae bin que preparar: sus palabras van con el pack principal.")
+                continue
+            if pp["nombre"] in preparados:
+                continue
+            preparados.add(pp["nombre"])
+            carpeta_x, aviso_x = preparar_pack_drt(project, media_pool, pp["nombre"], pp["formato"], pp["drt"], pp.get("drb"))
+            if aviso_x:
+                print(f"  Aviso (pack '{pp['nombre']}'): {aviso_x}")
+            if carpeta_x is None:          # NUNCA buscar en todo el Media Pool: saldrían los sets de OTRO pack (todos tienen un set 1)
+                print(f"  Aviso: no pude preparar el pack «{nombre_x}» de la mezcla: sus palabras van con el pack principal.")
+                continue
+            sets_x, informe_x = buscar_sets_de_plantillas(media_pool, carpeta_x)
+            if not sets_x:
+                print(f"  Aviso: el pack «{nombre_x}» de la mezcla no tiene sets: sus palabras van con el pack principal.")
+                continue
+            _anotar_sets(p_x.get("pack"), sets_x, p_x.get("base"))
+            print(f"  Pack «{nombre_x}» de la mezcla: {len(sets_x)} sets.")
+            for linea in informe_x:
+                print(linea)
+        except Exception as exc:
+            print(f"  Aviso: pack extra de la mezcla «{nombre_x}» ({type(exc).__name__}: {exc}): sus palabras van con el pack principal.")
+
     # fuera lo de otras corridas (dinámico / normal) y lo propio de la anterior
     if not track_info.get("no_retirar"):          # v5.4.30: en una mezcla la limpieza se hizo una vez al principio
         _retirar_pistas_nuestras(
@@ -3739,17 +3792,24 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
         extra_fin = 0.04
     min_frames = a_fotogramas(0.3, fps)
     pendientes = []
+    con_el_principal = {}          # v5.55: packs de la mezcla que no se pudieron preparar -> cuántos bloques van con el principal
     for cue in cues:
         estilo_cue = cue.get("estilo")
+        pack_cue = cue.get("pack")
+        sets_cue = sets_por_pack.get(pack_cue) if isinstance(pack_cue, str) else None      # v5.55: los sets de SU pack (mezcla)
+        if sets_cue is None:
+            sets_cue = sets
+            if hay_extras and isinstance(pack_cue, str) and pack_cue:
+                con_el_principal[pack_cue] = con_el_principal.get(pack_cue, 0) + 1
         for run in cue.get("runs") or []:
             texto = (run.get("texto") or "").strip()
             if not texto:
                 continue
             rol = run.get("rol") if run.get("rol") in ("main", "context", "complement") else "context"
             n_estilo = run.get("estilo") or estilo_cue
-            juego = next((s for s in sets if s.get("numero") == n_estilo), None) if n_estilo else None
+            juego = next((s for s in sets_cue if s.get("numero") == n_estilo), None) if n_estilo else None
             if juego is None:
-                juego = next((s for s in sets if s.get(rol)), sets[0])
+                juego = next((s for s in sets_cue if s.get(rol)), sets_cue[0])
             plantilla = juego.get(rol) or juego.get("main")
             if not plantilla:
                 sin_pista += 1
@@ -3860,6 +3920,8 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
         print(f"  Aviso: {sin_texto} palabra(s) se colocaron pero no pude escribir su texto.")
     if sin_pista:
         print(f"  Aviso: {sin_pista} palabra(s) no se colocaron (sin pista o sin clip para ese rol).")
+    for pack_cue, n_bloques in sorted(con_el_principal.items()):
+        print(f"  Aviso: {n_bloques} bloque(s) del pack «{pack_cue}» van con el pack principal (el suyo no está listo en Resolve).")
     if colocados:
         _ALGO_COLOCADO[0] = True
         _TOTAL[0] += colocados
@@ -6966,6 +7028,7 @@ def _orden_de_composicion():
 
 
 def main():
+    _MEZCLA_ACUM.clear()      # v5.55: lo apartado de una mezcla NUNCA cruza de una corrida a otra (gemelo del MEZCLA_ACUM = nil del .lua)
     try:
         resolve
     except NameError:

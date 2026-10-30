@@ -18,6 +18,8 @@ El centro del Text+ de Resolve = (x, y) del run: la línea de base queda (asc �
 tema4_planificador.CENTRO_CAP, medido). Las animaciones de los macros de Fusion no se copian: cada elemento entra con un fundido corto y sube un poco.
 
     capas_de_cue(estilo, cue, s, dx, dy) -> [{'rgb', 'a', 'x', 'y', 't0', 't1', 'entrada', 'sube'}]   (coordenadas del video: diseño × s + (dx, dy))
+
+v5.55: estilo['ajustes'] (opcional, el de «Crea tu estilo») = la letra y los colores elegidos, pintados como en el pack derivado (ajustes_por_rol).
 """
 import math
 
@@ -53,6 +55,14 @@ INCLINACION_V = 0.21                   # ShearX de la negrita (cursiva sintétic
 FINA_V = (0.9, 0.9, 0.9)
 NEGRITA_V = [(0.0, (0.812, 0.878, 1.0)), (0.6, (1.0, 1.0, 1.0)), (1.0, (1.0, 1.0, 1.0))]
 BRILLO_NEGRITA_V = (0.18, 0.38, (0.75, 0.85, 1.0))
+# v5.55 (= viral_elementos.EFECTO_RELLENO / EFECTO_BRILLO): Select y Drag como TEMA3 (1)/(2).mp4: blanco roto sin contorno y un brillo blanco suave
+# (medido en la referencia: 41/15/9/4/2 de luz a 0,02/0,04/0,06/0,08/0,10 de su alto; esta vista da 39/16/8/3/1); guiones de la caja ~0,15 em y huecos ~0,055
+EFECTO_V = 0.955
+BRILLO_EFECTO_V = (0.04, 0.14, (1.0, 1.0, 1.0))
+# v5.55, medido en el render de Resolve del «select» (5.54): Text+ SUMA (CharacterSpacing − 1) × K_ESP_TEXTPLUS em por letra (−0,046 em por letra con 0,97;
+# «× avance» salía un 6 % más ancha), y su caja sale de las métricas de línea: (a los lados del avance, sobre el ascendente, bajo el descendente) en em
+K_ESP_TEXTPLUS = 1.53
+CAJA_SELECT_V = (0.30, 0.037, 0.043)
 # v5.54 «B · Premium»: la sombra ancha de todos (luxe_macro.SOMBRA_PREMIUM: opacidad, bajada × em, desenfoque × em) y el brillo de la principal de
 # cada pack «guion» (radio × em, intensidad), comparado con el render de Resolve 21.1.2 (el glow1 de su macro es más suave que el primer cálculo)
 SOMBRA_ANCHA = (0.30, 0.10, 0.30)
@@ -127,12 +137,14 @@ def _relleno(mascara, base_y, alto_tinta, color=None, degradado=None):
 
 
 def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, color_contorno=(0, 0, 0), sombra=None, halo=None, inclinacion=0.0,
-          caja=None, apretar=0.0, brillo=None, sombra2=None):
+          caja=None, apretar=0.0, brillo=None, sombra2=None, solo_caja=False):
     """El sprite de una palabra. em = letra en px; esp = espaciado de letras (× avance); contorno = grosor (× em); sombra = (opacidad, bajada × em,
     desenfoque × em); halo = (radio × em, intensidad); inclinacion = cursiva sintética (× alto); caja = dict(color, pad_x, arriba, abajo (× em),
     punteada, dy (× em, + = arriba), degradado (clara, honda)). Ancla: centro del avance en x, línea de base en y.
     v5.54: apretar = px que el Character Spacing de Fusion quita entre cada dos letras (guion_captions._apretado); brillo = (radio × em, intensidad
-    [, color]) del color de la letra (con degradado, el de su mitad); sombra2 = la sombra ancha («B · Premium»), como `sombra`."""
+    [, color]) del color de la letra (con degradado, el de su mitad); sombra2 = la sombra ancha («B · Premium»), como `sombra`.
+    v5.55: solo_caja = solo la caja, en el mismo lienzo y con el mismo anclaje que la palabra (la vista anima la caja del «select» aparte);
+    el sprite lleva `total` = el avance de la palabra en px."""
     em = float(em)
     f = _fuente(par, em)
     if f is None:
@@ -162,15 +174,16 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
         cy0, cy1 = base - caja.get('arriba', 1.0) * em - dy, base + caja.get('abajo', 0.3) * em - dy
         dc = ImageDraw.Draw(img)
         col = _rgb255(caja['color']) + (255,)
-        if caja.get('punteada'):
+        if caja.get('punteada'):                                     # v5.55: guiones de la referencia (TEMA3 (1).mp4): largos, huecos cortos, puntas redondas
             grosor = max(2, int(em * 0.05))
-            paso = max(6, int(em * 0.16))
-            for x0 in np.arange(cx0, cx1, paso * 2):
+            guion, hueco = max(6, int(em * 0.15)), max(3, int(em * 0.055))
+            radio = grosor / 2.0
+            for x0 in np.arange(cx0, cx1, guion + hueco):
                 for yy in (cy0, cy1 - grosor):
-                    dc.rectangle([x0, yy, min(cx1, x0 + paso), yy + grosor], fill=col)
-            for y0 in np.arange(cy0, cy1, paso * 2):
+                    dc.rounded_rectangle([x0, yy, min(cx1, x0 + guion), yy + grosor], radius=radio, fill=col)
+            for y0 in np.arange(cy0, cy1, guion + hueco):
                 for xx in (cx0, cx1 - grosor):
-                    dc.rectangle([xx, y0, xx + grosor, min(cy1, y0 + paso)], fill=col)
+                    dc.rounded_rectangle([xx, y0, xx + grosor, min(cy1, y0 + guion)], radius=radio, fill=col)
         elif caja.get('degradado'):                                  # v5.54: la pegatina clara arriba, su color en medio y más honda abajo
             clara, honda = caja['degradado']
             alto_c = max(1, int(round(cy1 - cy0)))
@@ -182,6 +195,10 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
             img.alpha_composite(banda, (int(round(cx0)), int(round(cy0))))
         else:
             dc.rectangle([cx0, cy0, cx1, cy1], fill=col)
+    if solo_caja:
+        sp = Sprite(_lienzo_centrado(img, pad + total / 2.0, base))
+        sp.total = total
+        return sp
     for sm in (sombra2, sombra):
         if not sm:
             continue
@@ -212,7 +229,9 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
         extra = int(abs(k) * base) + 2
         ancho = img.size[0] + extra
         img = img.transform((ancho, H), Image.AFFINE, (1, k, -k * base, 0, 1, 0), resample=Image.BICUBIC)
-    return Sprite(_lienzo_centrado(img, ax, base))
+    sp = Sprite(_lienzo_centrado(img, ax, base))
+    sp.total = total
+    return sp
 
 
 def anillo(color, ancho_px, alto_px, grosor_px):
@@ -243,6 +262,178 @@ def raya(color, ancho_px, alto_px):
     return Sprite(_lienzo_centrado(img, W / 2.0, H / 2.0))
 
 
+# ------------------------------------------------------------------------------------------------------------------ v5.55 letra y color del usuario
+# «Crea tu estilo»: estilo['ajustes'] = {'fuente_principal': 'Familia|Estilo' o '', 'fuente_secundaria', 'color_principal': '#RRGGBB' o '',
+# 'color_secundario'} (vacío = lo del tema). Principal = la palabra grande (rol 'main'; en Kinetic y VIRAL, fuente_usuario.es_principal: héroe,
+# pegatinas serif, negrita y efectos); secundaria = la de arriba y abajo. Se pinta COMO lo deja pack_personalizado en las comps del pack derivado y con
+# sus mismas funciones (derivar / derivar_brillo / degradado_premium): el color base del texto pasa a ser el elegido y sus degradados, brillos, halos,
+# bisel y caja de pegatina, versiones más claras u hondas del MISMO tono. No cambian: sombras y contornos oscuros, aros y rayas de Kinetic, la caja del
+# select, ni el color de los principales Amro del Tema 2 (sí su letra). Sin estilo['ajustes'] todo sale exactamente igual que antes.
+def _pp():
+    try:
+        import pack_personalizado
+        return pack_personalizado
+    except Exception:
+        return None
+
+
+def _rgb01(c):
+    """'#rrggbb' o (r, g, b) en 0–1 -> (r, g, b) en 0–1."""
+    if isinstance(c, str):
+        return tuple(v / 255.0 for v in _rgb255(c))
+    return tuple(float(v) for v in c[:3])
+
+
+def ajustes_por_rol(estilo):
+    """{'main' | 'extra': {'fuente': (familia, estilo) o None, 'color': (r, g, b) en 0–1 o None}} de estilo['ajustes']; {} si no hay nada elegido."""
+    aj = (estilo or {}).get('ajustes')
+    if not isinstance(aj, dict):
+        return {}
+    out = {}
+    for rol, clave_f, clave_c in (('main', 'fuente_principal', 'color_principal'), ('extra', 'fuente_secundaria', 'color_secundario')):
+        partes = [p.strip() for p in str(aj.get(clave_f) or '').split('|')]
+        fuente = (partes[0], partes[1] if len(partes) > 1 and partes[1] else 'Regular') if partes[0] else None
+        h = str(aj.get(clave_c) or '').strip().lstrip('#')
+        if len(h) == 3:
+            h = ''.join(ch * 2 for ch in h)
+        try:
+            color = tuple(int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4)) if len(h) == 6 else None
+        except ValueError:
+            color = None
+        if fuente or color:
+            out[rol] = {'fuente': fuente, 'color': color}
+    return out
+
+
+def rol_de_run(tipo, r):
+    """'main' (letra y color principales), 'extra' (los de arriba y abajo) o None (aros y rayas de Kinetic: no son texto), como pack_personalizado.rol_de."""
+    if tipo in ('kinetic', 'viral'):
+        k = str(r.get('k') or '')
+        if k.lower().startswith(('k ring', 'k line')):
+            return None
+        import fuente_usuario
+        return 'main' if fuente_usuario.es_principal({'k': k}) else 'extra'
+    return 'main' if r.get('rol') == 'main' else 'extra'
+
+
+def par_usuario(par, aj):
+    """La letra elegida para ese texto si Pillow la encuentra (fuentes_sistema); si no, la del tema."""
+    f = (aj or {}).get('fuente')
+    if f and _fuente(tuple(f), 100) is not None:
+        return tuple(f)
+    return tuple(par)
+
+
+def factor_encaje(par_tema, em_tema, par, em, txt):
+    """v5.55 (la letra elegida en «Crea tu estilo» pisaba las palabras vecinas: «Disfrutaremdelritmde»): los planificadores colocan cada palabra
+    con las medidas de la letra del TEMA; con otra más ancha o más alta la palabra se reduce lo justo para no ocupar más (ni de ancho ni de alto de
+    mayúsculas) que con la del tema. Nunca crece (como fuente_usuario._encajar). 1.0 si es la misma letra o no se puede medir."""
+    try:
+        if tuple(par) == tuple(par_tema) or not str(txt).strip():
+            return 1.0
+        ft, fu = _fuente(tuple(par_tema), 100), _fuente(tuple(par), 100)
+        if ft is None or fu is None:
+            return 1.0
+        wt, wu = ft.getlength(txt) * float(em_tema), fu.getlength(txt) * float(em)
+
+        def _cap(f):
+            b = f.getbbox('H', anchor='ls')
+            return float(b[3] - b[1])
+        ht, hu = _cap(ft) * float(em_tema), _cap(fu) * float(em)
+        k = min(1.0, wt / wu if wu > 0 else 1.0, ht / hu if hu > 0 else 1.0)
+        return max(0.05, k)
+    except Exception:
+        return 1.0
+
+
+def anchos(par_tema, em_tema, par, em, txt):
+    """(ancho con la letra del tema, ancho con la que se dibuja) de un texto, en px del diseño (aproximado con el avance de Pillow)."""
+    try:
+        ft = _fuente(tuple(par_tema), 100)
+        fu = ft if tuple(par) == tuple(par_tema) else _fuente(tuple(par), 100)
+        wt = ft.getlength(txt) * float(em_tema) / 100.0 if ft is not None else None
+        wu = fu.getlength(txt) * float(em) / 100.0 if fu is not None else None
+        if wt is None or wu is None:
+            return None
+        return wt, wu
+    except Exception:
+        return None
+
+
+def _anotar(sp, par_tema, em_tema, par, em, txt):
+    if sp is not None:
+        try:
+            sp.anchos = anchos(par_tema, em_tema, par, em, txt)
+        except Exception:
+            pass
+
+
+def reespaciar(lineas):
+    """v5.55: con la letra elegida cada palabra mide otra cosa que la del tema con la que la colocó el planificador; en cada línea (varias palabras a
+    la misma altura) se recolocan con los MISMOS huecos que dejó el planificador y la línea centrada donde estaba (sin pisarse ni abrir agujeros).
+    lineas = [(centro_x, y, em, ancho_tema, ancho_nuevo, [capas])] (px): van en la misma línea las que están a menos de 0,4 em de alto (las
+    pequeñas y las medianas de una línea del Tema 4 se alinean por la base con y algo distintas). Mueve capa['x']; una línea sin cambios no se toca."""
+    grupos = []
+    for it in sorted(lineas, key=lambda it: it[1]):
+        g = grupos[-1] if grupos else None
+        if g and abs(it[1] - g[-1][1]) < 0.4 * min(it[2], g[-1][2]):
+            g.append(it)
+        else:
+            grupos.append([it])
+    for g in grupos:
+        items = [(cx, wt, wu, capas) for cx, _y, _em, wt, wu, capas in g]
+        if len(items) < 2 or all(abs(wt - wu) < 0.5 for _cx, wt, wu, _c in items):
+            continue
+        items = sorted(items, key=lambda it: it[0])
+        huecos = [(items[i + 1][0] - items[i + 1][1] / 2.0) - (items[i][0] + items[i][1] / 2.0) for i in range(len(items) - 1)]
+        if any(h < -0.25 * min(items[i][1], items[i + 1][1]) for i, h in enumerate(huecos)):
+            continue                                               # (se montan a propósito, p. ej. el trazo a mano sobre el héroe: no es una línea)
+        centro = ((items[0][0] - items[0][1] / 2.0) + (items[-1][0] + items[-1][1] / 2.0)) / 2.0
+        total = sum(it[2] for it in items) + sum(huecos)
+        x = centro - total / 2.0
+        for i, (cx, _wt, wu, capas) in enumerate(items):
+            mover = int(round(x + wu / 2.0 - cx))
+            for c in capas:
+                c['x'] += mover
+            x += wu + (huecos[i] if i < len(huecos) else 0.0)
+
+
+def _derivar(base, color, nuevo, brillo=False):
+    """`color` se dibujó a partir de `base` (el color del texto en el tema): el mismo papel con el color `nuevo` (pack_personalizado.derivar)."""
+    pp = _pp()
+    b, c, n = _rgb01(base), _rgb01(color), _rgb01(nuevo)
+    if pp is None:
+        return n
+    return tuple(pp.derivar_brillo(b, c, n) if brillo else pp.derivar(b, c, n))
+
+
+def _base_de(paradas):
+    """El color BASE de un degradado: la parada más cercana a la mitad de la letra (pack_personalizado._Retoque.base_texto)."""
+    return _rgb01(min(paradas, key=lambda pc: (abs(float(pc[0]) - 0.5), -float(pc[0])))[1])
+
+
+def degradado_usuario(paradas, nuevo, premium=False):
+    """Las paradas de un degradado del tema con el color elegido: el «B · Premium» de fábrica de una principal pasa a degradado_premium(elegido); lo
+    demás, cada parada derivada del elegido (más clara u honda, como era respecto del color base)."""
+    pp = _pp()
+    par = [(float(p), _rgb01(c)) for p, c in paradas]
+    base = _base_de(par)
+    if premium and pp is not None:
+        ref = pp.degradado_premium(base)
+        if len(ref) == len(par) and all(abs(p - float(rp)) < 1e-6 and max(abs(a - float(b)) for a, b in zip(c, rc)) <= 0.006
+                                        for (p, c), (rp, rc) in zip(par, ref)):
+            return [(float(p), _rgb01(c)) for p, c in pp.degradado_premium(_rgb01(nuevo))]
+    return [(p, _derivar(base, c, nuevo)) for p, c in par]
+
+
+def color_usuario(color, degradado, nuevo, premium=False):
+    """(color, degradado) de un texto del tema con el color elegido `nuevo` (degradado None = color liso)."""
+    if degradado:
+        base = _base_de(degradado)
+        return _derivar(base, color or base, nuevo), degradado_usuario(degradado, nuevo, premium)
+    return _rgb01(nuevo), None
+
+
 # ------------------------------------------------------------------------------------------------------------------ cada tema
 def _variantes(pack):
     """{n: {rol: {'f1', 'tam', 'color', 'mayus'}}} del .variantes.json del pack (vertical)."""
@@ -262,8 +453,8 @@ def _variantes(pack):
 _CACHE_VAR = {}
 
 
-def _elemento_guion(estilo, cue, r, s):
-    """(sprite, centro en el diseño) de una palabra de un pack «guion» (Temas 2, 4, 5, 6)."""
+def _elemento_guion(estilo, cue, r, s, aj=None):
+    """(sprite, centro en el diseño) de una palabra de un pack «guion» (Temas 2, 4, 5, 6). aj (v5.55): la letra y el color elegidos para su rol."""
     pack = estilo.get('pack') or 'Tema4'
     if pack not in _CACHE_VAR:
         _CACHE_VAR[pack] = _variantes(pack)
@@ -275,29 +466,48 @@ def _elemento_guion(estilo, cue, r, s):
     par = tuple(d.get('f1') or ('Poppins', 'Bold'))
     if d.get('f1') is None and rol == 'main':
         par = ('Inter', 'Black')                                   # (los presets de Amro llevan su tipografía dentro del macro)
+    par_tema = par
+    par = par_usuario(par, aj)
     tam = float(d.get('tam') or 0.14)
     try:
         import tema4_planificador as T4
         dis = T4.DISENOS.get(pack)
-        calib = T4._calibrado(par)['em'] if dis else 1.0
         esp = (dis['esp_serif'] if rol == 'main' else dis['esp_sans']) if dis else (T4.ESPACIADO if pack == 'Tema4' else 1.0)
     except Exception:
-        dis, calib, esp = None, 1.0, 1.0
-    em = tam * K_PX * float(r.get('zoom') or 1.0) * calib
+        T4, dis, esp = None, None, 1.0
     txt = str(r.get('texto') or '')
     if d.get('mayus'):
         txt = txt.upper()
-    if rol == 'main':
-        f100 = _fuente(par, 100)
-        if f100 is not None and f100.getlength(txt) > 0:
-            k_amro = GC.AFINADO['amro_k'].get(int(n)) if (GC.datos_variantes(pack).get(int(n)) or {}).get('amro') else None
-            if k_amro:                                             # Amro (Tema 2): el ancho que midió el planificador (k × Inter Black a 100 px)
-                em = 100.0 * k_amro * f100.getlength(str(r.get('texto') or '')) * float(r.get('zoom') or 1.0) / f100.getlength(txt)
-            em = min(em, 100.0 * 0.92 * 1080.0 / (f100.getlength(txt) * esp))     # nunca más ancha que el cuadro
+
+    def _em(p):
+        try:
+            calib = T4._calibrado(p)['em'] if dis else 1.0
+        except Exception:
+            calib = 1.0
+        e = tam * K_PX * float(r.get('zoom') or 1.0) * calib
+        if rol == 'main':
+            f100 = _fuente(p, 100)
+            if f100 is not None and f100.getlength(txt) > 0:
+                k_amro = GC.AFINADO['amro_k'].get(int(n)) if (GC.datos_variantes(pack).get(int(n)) or {}).get('amro') else None
+                if k_amro:                                         # Amro (Tema 2): el ancho que midió el planificador (k × Inter Black a 100 px)
+                    e = 100.0 * k_amro * f100.getlength(str(r.get('texto') or '')) * float(r.get('zoom') or 1.0) / f100.getlength(txt)
+                e = min(e, 100.0 * 0.92 * 1080.0 / (f100.getlength(txt) * esp))     # nunca más ancha que el cuadro
+        return e
+    em = em_tema = _em(par)
+    if par != tuple(par_tema):                                     # v5.55: la letra elegida no ocupa más que la del tema (no pisa a sus vecinas)
+        em_tema = _em(tuple(par_tema))
+        em *= factor_encaje(par_tema, em_tema, par, em, txt)
     color = d.get('color') or '#FFFFFF'
     # v5.54 «B · Premium» (lo que diga el .variantes.json del pack): la principal con el degradado de su color y su brillo; todas con la sombra ancha
     premium = bool((roles.get('main') or {}).get('degradado'))
     degradado = [(float(p), c) for p, c in d['degradado']] if (rol == 'main' and d.get('degradado')) else None
+    if (aj or {}).get('color'):
+        try:                                                       # v5.55: los principales Amro (Tema 2) conservan su color (pack_personalizado)
+            amro = rol == 'main' and bool((GC.datos_variantes(pack).get(int(n)) or {}).get('amro'))
+        except Exception:
+            amro = False
+        if not amro:
+            color, degradado = color_usuario(color, degradado, aj['color'], premium=(rol == 'main'))
     brillo = BRILLO_GUION.get(pack) if degradado else None
     extra = dict(degradado=degradado, brillo=brillo, sombra2=SOMBRA_ANCHA if premium else None)
     if pack == 'Tema4':
@@ -309,12 +519,14 @@ def _elemento_guion(estilo, cue, r, s):
         # guion_captions.ancho_px). v5.54: sin eso las palabras salían pegadas en la vista («delreconocido»), no en Resolve.
         apretar = (1.0 - GC.AFINADO['espaciado']) * GC.AFINADO['k_espaciado'] * em * s
         sp = texto(txt, par, em * s, color=color, esp=esp, sombra=(0.75, 0.05, 0.08), apretar=apretar, **extra)
+    _anotar(sp, par_tema, em_tema, par, em, txt)
     return sp, em, _centro(par)
 
 
-def _elemento_kinetic(r, s):
+def _elemento_kinetic(r, s, aj=None):
     import kinetic_captions as KC
     k = str(r.get('k') or '')
+    nuevo = (aj or {}).get('color')                                # v5.55: el color elegido para su rol (los aros y las rayas no lo reciben)
     e = KC._espec(k)
     var = k.split(' ')[-1] if ' ' in k else ''
     tipo = e.get('tipo')
@@ -334,53 +546,102 @@ def _elemento_kinetic(r, s):
         w, h = LINEA_GEO
         return raya(LINEA_K.get(var, (1.0, 0.9, 0.05)), w * 1080 * zx * s, h * 1080 * zy * s), 0.0, 0.0
     em = float(r.get('size') or 0.1) * KC.K_PX
-    par = e['par']
+    par = par_usuario(e['par'], aj)
     txt = KC.texto_visible(k, str(r.get('texto') or ''))
+    em_tema = em
+    em *= factor_encaje(e['par'], em, par, em, txt)               # v5.55: la letra elegida no ocupa más que la del tema
     if tipo == 'cinta':
         caja_c, texto_c = CINTA_K.get(var, CINTA_K['amarillo'])
+        clara, honda = PAL_K.cinta_degradado(caja_c)
+        if nuevo:                                                  # v5.55: la caja del color elegido (su luz y su sombra derivadas); el texto, tinta o blanco
+            clara, honda = _derivar(caja_c, clara, nuevo), _derivar(caja_c, honda, nuevo)
+            oscuro = (0.2126 * nuevo[0] + 0.7152 * nuevo[1] + 0.0722 * nuevo[2]) > 0.55
+            lum_t = 0.2126 * texto_c[0] + 0.7152 * texto_c[1] + 0.0722 * texto_c[2]
+            caja_c, texto_c = nuevo, ((PAL_K.TINTA if oscuro else PAL_K.BLANCO) if (lum_t < 0.5) != oscuro else texto_c)
         alto_k, pad_k = e.get('caja', (1.55, 0.5))
-        cap, c = KC.CAP.get(par[0], 0.7), _centro(par)
+        cap, c = KC.CAP.get(e['par'][0], 0.7), _centro(par)        # (la caja de la comp se mide con la letra del tema aunque cambie la del texto)
         # la caja (kinetic_elementos.comp_cinta): alto = alto_k × mayúsculas, centrada 0,03 em por encima del centro del Text+, que está c em sobre la base
         caja = dict(color=caja_c, pad_x=cap * pad_k, arriba=c + 0.03 + cap * alto_k / 2.0, abajo=cap * alto_k / 2.0 - c - 0.03,
-                    degradado=PAL_K.cinta_degradado(caja_c))                    # v5.54 «B · Premium»: la pegatina con el degradado de su color
+                    degradado=(clara, honda))                                  # v5.54 «B · Premium»: la pegatina con el degradado de su color
         sp = texto(txt, par, em * s, color=texto_c, esp=e.get('esp', 1.0), caja=caja, sombra=(0.5, 0.03, 0.05))
     elif k.startswith('k hero'):
         # v5.54 «B · Premium» (= kinetic_elementos.comp_texto premium): el reflejo claro de arriba y el brillo de su color
         grad = GRADIENTES_K.get(var, GRADIENTES_K['blanco'])
-        sp = texto(txt, par, em * s, degradado=PAL_K.con_reflejo(grad), esp=e.get('esp', 1.0),
-                   contorno=0.02 if var == 'blanco' else 0.0, sombra=(0.8, 0.03, 0.05), halo=None, brillo=(0.13, PAL_K.BRILLO_HEROE[0], PAL_K.color_medio(grad)))
+        paradas, medio = PAL_K.con_reflejo(grad), PAL_K.color_medio(grad)
+        if nuevo:                                                  # v5.55: el degradado y el brillo, del color elegido (base = su parada de la mitad)
+            base = _base_de(paradas)
+            paradas, medio = degradado_usuario(paradas, nuevo), _derivar(base, medio, nuevo, brillo=True)
+        sp = texto(txt, par, em * s, degradado=paradas, esp=e.get('esp', 1.0),
+                   contorno=0.02 if var == 'blanco' else 0.0, sombra=(0.8, 0.03, 0.05), halo=None, brillo=(0.13, PAL_K.BRILLO_HEROE[0], medio))
     elif k.startswith('k serif'):
-        sp = texto(txt, par, em * s, degradado=GRADIENTES_K['serif'], contorno=0.03, sombra=(0.8, 0.03, 0.05))
+        grad = GRADIENTES_K['serif']
+        sp = texto(txt, par, em * s, degradado=degradado_usuario(grad, nuevo) if nuevo else grad, contorno=0.03, sombra=(0.8, 0.03, 0.05))
     elif k.startswith('k script'):
-        sp = texto(txt, par, em * s, degradado=GUION_K.get(var, GUION_K['amarillo']), contorno=0.0 if k.startswith('k script yt') else 0.03, sombra=(0.8, 0.03, 0.05))
+        grad = GUION_K.get(var, GUION_K['amarillo'])
+        sp = texto(txt, par, em * s, degradado=degradado_usuario(grad, nuevo) if nuevo else grad, contorno=0.0 if k.startswith('k script yt') else 0.03,
+                   sombra=(0.8, 0.03, 0.05))
     else:                                                          # k sup / k label: blanco con contorno oscuro
-        sp = texto(txt, par, em * s, color=(1, 1, 1), esp=e.get('esp', 1.0), contorno=0.04, sombra=(0.8, 0.03, 0.05))
+        sp = texto(txt, par, em * s, color=_rgb01(nuevo) if nuevo else (1, 1, 1), esp=e.get('esp', 1.0), contorno=0.04, sombra=(0.8, 0.03, 0.05))
+    _anotar(sp, e['par'], em_tema, par, em, txt)
     return sp, em, _centro(par)
 
 
-def _elemento_viral(r, s):
+def _elemento_viral(r, s, aj=None):
     import viral_captions as VC
     k = str(r.get('k') or '')
     base = VC.base_de(k)
     var = k[len(base):].strip()
-    par, esp = VC.CLIPS.get(base, (VC.INTER_18, 1.0))
+    par_tema, esp = VC.CLIPS.get(base, (VC.INTER_18, 1.0))
+    par = par_usuario(par_tema, aj)
+    nuevo = (aj or {}).get('color')                                # v5.55: el color elegido para su rol (la caja del select no lo recibe)
     em = float(r.get('size') or 0.05) * VC.K_PX
     txt = str(r.get('texto') or '')
+    em_tema = em
+    em *= factor_encaje(par_tema, em, par, em, txt)               # v5.55: la letra elegida no ocupa más que la del tema
+    apretar = (1.0 - esp) * K_ESP_TEXTPLUS * em * s                # v5.55: el Character Spacing de Text+ SUMA por letra (medido); la vista lo imita
     if base == 'v negrita':
-        sp = texto(txt, par, em * s, degradado=NEGRITA_V, esp=esp, inclinacion=INCLINACION_V, sombra=(0.5, 0.03, 0.06), brillo=BRILLO_NEGRITA_V)
+        grad, brillo = NEGRITA_V, BRILLO_NEGRITA_V
+        if nuevo:
+            grad, brillo = degradado_usuario(NEGRITA_V, nuevo), BRILLO_NEGRITA_V[:2] + (_derivar(_base_de(NEGRITA_V), BRILLO_NEGRITA_V[2], nuevo, brillo=True),)
+        sp = texto(txt, par, em * s, degradado=grad, esp=1.0, apretar=apretar, inclinacion=INCLINACION_V, sombra=(0.5, 0.03, 0.06), brillo=brillo)
     elif base == 'v shatter':
-        sp = texto(txt, par, em * s, degradado=SHATTER_V.get(var, SHATTER_V['']), esp=esp, contorno=0.025, color_contorno=BISEL_V.get(var, BISEL_V['']),
+        grad, bisel = SHATTER_V.get(var, SHATTER_V['']), BISEL_V.get(var, BISEL_V[''])
+        if nuevo:                                                  # (el bisel es el elemento 2 del Template: un brillo más hondo del mismo tono)
+            grad, bisel = degradado_usuario(grad, nuevo), _derivar(_base_de(grad), bisel, nuevo, brillo=True)
+        sp = texto(txt, par, em * s, degradado=grad, esp=1.0, apretar=apretar, contorno=0.025, color_contorno=bisel,
                    halo=(0.12, 0.45), sombra=(0.5, 0.03, 0.06))
-    elif base == 'v select':
-        sp = texto(txt, par, em * s, color=(1, 1, 1), esp=esp, sombra=(0.5, 0.03, 0.06),
-                   caja=dict(color=CAJA_V.get(var, CAJA_V['']), pad_x=0.18, arriba=0.73 * (1.0 + VC.SOBRESALE['v select'][0]), abajo=0.73 * VC.SOBRESALE['v select'][1],
-                             punteada=True))
+    elif base == 'v select':                                       # (su caja punteada es otra capa: _caja_select)
+        color = _rgb01(nuevo) if nuevo else (EFECTO_V,) * 3
+        brillo = BRILLO_EFECTO_V[:2] + (_derivar((EFECTO_V,) * 3, BRILLO_EFECTO_V[2], nuevo, brillo=True),) if nuevo else BRILLO_EFECTO_V
+        sp = texto(txt, par, em * s, color=color, esp=1.0, apretar=apretar, sombra=(0.5, 0.03, 0.06), brillo=brillo)
     elif base == 'v drag':
-        tinte = TINTE_V.get(var, TINTE_V[''])
-        sp = texto(txt, par, em * s, color=tinte, esp=esp, sombra=(0.5, 0.03, 0.06))
+        relleno = tuple(EFECTO_V * c for c in TINTE_V.get(var, TINTE_V['']))
+        color = _rgb01(nuevo) if nuevo else relleno                # (el relleno que arrastra la mano pasa al color elegido)
+        brillo = BRILLO_EFECTO_V[:2] + (_derivar(relleno, BRILLO_EFECTO_V[2], nuevo, brillo=True),) if nuevo else BRILLO_EFECTO_V
+        sp = texto(txt, par, em * s, color=color, esp=1.0, apretar=apretar, sombra=(0.5, 0.03, 0.06), brillo=brillo)
     else:                                                          # v fina (v5.54: al 90 %)
-        sp = texto(txt, par, em * s, color=FINA_V if base == 'v fina' else (1, 1, 1), esp=esp, sombra=(0.5, 0.03, 0.06))
+        color = FINA_V if base == 'v fina' else (1, 1, 1)
+        sp = texto(txt, par, em * s, color=_rgb01(nuevo) if nuevo else color, esp=esp, sombra=(0.5, 0.03, 0.06))
+    _anotar(sp, par_tema, em_tema, par, em, txt)
     return sp, em, _centro(par)
+
+
+def _caja_select(r, s, aj=None):
+    """v5.55: la caja punteada del «v select», sola, en el mismo lienzo y con el mismo anclaje que su palabra (la vista la anima aparte, como en Resolve:
+    crece desde su esquina de arriba a la izquierda cuando acaba de escribirse). Medidas de CAJA_SELECT_V y las métricas de línea de la fuente.
+    aj: con la letra elegida la caja se mide con ella (pack_personalizado le pone la letra al Text+ «Caja»); su color no cambia."""
+    import viral_captions as VC
+    k = str(r.get('k') or '')
+    var = k[len(VC.base_de(k)):].strip()
+    par_tema, esp = VC.CLIPS['v select']
+    par = par_usuario(par_tema, aj)
+    em = float(r.get('size') or 0.05) * VC.K_PX
+    em *= factor_encaje(par_tema, em, par, em, str(r.get('texto') or ''))     # (la misma reducción que su palabra)
+    f = _fuente(par, 200)
+    asc, desc = f.getmetrics() if f is not None else (194, 48)
+    pad_x, sobre, bajo = CAJA_SELECT_V
+    return texto(str(r.get('texto') or ''), par, em * s, esp=1.0, apretar=(1.0 - esp) * K_ESP_TEXTPLUS * em * s, solo_caja=True,
+                 caja=dict(color=CAJA_V.get(var, CAJA_V['']), pad_x=pad_x, arriba=asc / 200.0 + sobre, abajo=desc / 200.0 + bajo, punteada=True))
 
 
 # v5.54: en Resolve cada clip del Tema 2 lleva su propio margen (guion_captions.distribuir solo deja 0,2 espacios entre tramos: «los clips ya llevan
@@ -412,18 +673,23 @@ def capas_de_cue(estilo, cue, s, dx, dy):
     ini, fin = float(cue.get('start') or 0.0), float(cue.get('end') or 0.0)
     capas = []
     mover = _margenes_guion(estilo, cue) if tipo == 'guion' else {}
+    por_rol = ajustes_por_rol(estilo)                          # v5.55: la letra y los colores de «Crea tu estilo» ({} = los del tema)
+    con_letra = any((v or {}).get('fuente') for v in por_rol.values())
+    lineas = []
     for k_run, r in enumerate(cue.get('runs') or []):
         if not isinstance(r, dict):
             continue
+        n_antes = len(capas)
+        aj = por_rol.get(rol_de_run(tipo, r)) if por_rol else None
         try:
             if tipo == 'kinetic':
-                sp, em, c = _elemento_kinetic(r, s)
+                sp, em, c = _elemento_kinetic(r, s, aj)
             elif tipo == 'viral':
-                sp, em, c = _elemento_viral(r, s)
+                sp, em, c = _elemento_viral(r, s, aj)
             else:
                 if not str(r.get('texto') or '').strip():
                     continue
-                sp, em, c = _elemento_guion(estilo, cue, r, s)
+                sp, em, c = _elemento_guion(estilo, cue, r, s, aj)
         except Exception:
             continue
         if sp is None:
@@ -436,9 +702,26 @@ def capas_de_cue(estilo, cue, s, dx, dy):
         rgb, a = _a_rgba(img, img.getchannel('A'))
         t0 = max(ini, float(r.get('t', ini)))
         t1 = float(r['fin']) if isinstance(r.get('fin'), (int, float)) and float(r['fin']) > t0 else fin
-        capas.append({'rgb': rgb, 'a': a, 'x': int(round(cx - W / 2.0)), 'y': int(round(cy - H / 2.0)), 't0': t0, 't1': max(t0 + 0.05, t1),
-                      'entrada': ENTRADA_S, 'sube': SUBE_EM * em * s,
-                      # v5.5.10: qué es cada capa, para que la vista de Creativo (vista_tema.py) la anime como su macro (el MP4 no lo usa)
-                      'tipo': tipo, 'k': str(r.get('k') or ''), 'rol': r.get('rol'), 'pack': (estilo or {}).get('pack'), 'em': em * s,
-                      'cue_t0': ini})
+        capa = {'rgb': rgb, 'a': a, 'x': int(round(cx - W / 2.0)), 'y': int(round(cy - H / 2.0)), 't0': t0, 't1': max(t0 + 0.05, t1),
+                'entrada': ENTRADA_S, 'sube': SUBE_EM * em * s,
+                # v5.5.10: qué es cada capa, para que la vista de Creativo (vista_tema.py) la anime como su macro (el MP4 no lo usa)
+                'tipo': tipo, 'k': str(r.get('k') or ''), 'rol': r.get('rol'), 'pack': (estilo or {}).get('pack'), 'em': em * s,
+                'cue_t0': ini}
+        total = getattr(sp, 'total', 0.0)
+        if tipo == 'viral' and total:                               # v5.55: dónde va la palabra dentro del sprite y cuántas letras «mide» (lo que escribe el «select»)
+            capa.update(tinta=(0.5 - total / (2.0 * W), 0.5 + total / (2.0 * W)), letras=total / (0.62 * em * s))
+        capas.append(capa)
+        if tipo == 'viral' and capa['k'].startswith('v select'):   # v5.55: la caja punteada del «select», capa aparte encima de la palabra
+            try:
+                sc = _caja_select(r, s, aj)
+                rgb_c, a_c = _a_rgba(sc.img, sc.img.getchannel('A'))
+                Wc, Hc = sc.img.size
+                capas.append(dict(capa, rgb=rgb_c, a=a_c, x=int(round(cx - Wc / 2.0)), y=int(round(cy - Hc / 2.0)), parte='caja'))
+            except Exception:
+                pass
+        an = getattr(sp, 'anchos', None) if con_letra else None
+        if an:                                                     # (para reespaciar la línea con la letra elegida)
+            lineas.append((cx, float(r.get('y', 0.5)) * 1920.0 * s, max(1.0, em * s), an[0] * s, an[1] * s, capas[n_antes:]))
+    if lineas:
+        reespaciar(lineas)
     return capas

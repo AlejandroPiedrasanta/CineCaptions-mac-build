@@ -152,6 +152,14 @@ _REGLAS = [
      'El script de Resolve no encontró un timeline activo donde colocar los títulos.',
      ['En Resolve, abre el timeline que quieres subtitular (doble clic en el Media Pool).',
       'O suelta el video en la ventana de CineCaptions y deja que prepare él mismo el proyecto.'], 'bloquea'),
+    # v5.55 (Puente 1.0.42): un Free sin loadfile ni dofile en el que tampoco funcionan bmd.readfile, RunScript ni la consola. Va ANTES que la
+    # del Puente perdido: antes esto llegaba como «El puente no respondió en 240 s» y su tarjeta mandaba a relanzar un Puente que no puede leer.
+    (r'no deja al Puente leer|sin_lectura|sin_cargador',
+     'El Puente no puede leer los trabajos en este Resolve',
+     'A los scripts de esta versión de DaVinci Resolve les faltan las funciones con las que el Puente lee los trabajos de CineCaptions (loadfile y dofile), y los caminos de respaldo (bmd.readfile, RunScript y la consola de Resolve) tampoco respondieron.',
+     ['Actualiza DaVinci Resolve a su última versión y vuelve a abrirlo.',
+      'Vuelve a lanzar CineCaptions_Puente: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente.',
+      'Si sigue igual, manda el informe a soporte (Ajustes › Registro): la primera línea del Puente dice qué caminos tiene tu Resolve.'], 'bloquea'),
     (r'Puente perdi|caduca sola|Puente dej[oó] de responder|puente no respondi|Bridge lost',
      'El Puente de Resolve perdió la conexión',
      'En la versión gratuita de Resolve el Puente (el script que deja trabajar a CineCaptions dentro de Resolve) pierde su conexión solo, cada cierto tiempo.',

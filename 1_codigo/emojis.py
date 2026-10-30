@@ -777,6 +777,24 @@ def _linea_de(cue, rol, t):
     return k_ult
 
 
+CLAVES_DEL_BLOQUE = ('emoji', 'emoji_ini', 'emoji_fin', 'emoji_linea')     # lo que asignar() y los planificadores dejan en cada bloque / cue
+
+
+def quitar(*listas):
+    """v5.55 (pedido: «ningún tema debe tener emojis hasta que se lo active»): quita el emoji de cada bloque o cue de `listas` (las claves de
+    CLAVES_DEL_BLOQUE; el 'emoji' de cada PALABRA, que es una marca del usuario, se queda). Lo usan GO / Generar (_emojis_permitidos), la vista
+    del tema y «Comprobar en Resolve» de Creativo cuando edicion_pro.emojis_permitidos dice que no. Devuelve cuántos llevaban uno."""
+    n = 0
+    for lista in listas:
+        for b in lista or []:
+            if not isinstance(b, dict):
+                continue
+            n += 1 if b.get('emoji') else 0
+            for k in CLAVES_DEL_BLOQUE:
+                b.pop(k, None)
+    return n
+
+
 def asignar(bloques, palabras, roles=None):
     """Copia a cada bloque el emoji de sus palabras (w['emoji']).
 

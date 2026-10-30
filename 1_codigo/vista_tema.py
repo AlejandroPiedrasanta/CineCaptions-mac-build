@@ -13,6 +13,7 @@ exactamente como ese tema y que, si cambio la principal, se vea en tiempo real»
 
 planificar() y Cuadros() rasterizan con Pillow: van en un hilo (correr_en_hilo). cuadro(t) solo compone arrays pequeños: va en el hilo de la interfaz.
 """
+import math
 from pathlib import Path
 
 import numpy as np
@@ -64,13 +65,12 @@ def planificar(palabras, roles, pack, estilo, idioma='es', fin_video=None, ancla
         return []
     try:
         import edicion_pro
-        con_emojis = edicion_pro.emojis_del_tema(pack)
+        con_emojis = edicion_pro.emojis_permitidos(pack)
     except Exception:
         con_emojis = False
-    if not con_emojis:                        # v5.54: como GO, sin la Edición PRO y su opción «Emojis animados» no hay emojis
-        for c in cues:
-            for k in ('emoji', 'emoji_ini', 'emoji_fin', 'emoji_linea'):
-                c.pop(k, None)
+    if not con_emojis:                        # v5.54: como GO, sin la Edición PRO y su opción «Emojis animados» no hay emojis (v5.55: el juez único)
+        import emojis
+        emojis.quitar(cues)
     elif tipo != 'kinetic':                   # (Kinetic no lleva emojis): el emoji elegido en Creativo para una palabra del bloque
         for c in cues:
             if c.get('emoji'):
@@ -149,6 +149,13 @@ def _rebote(x, s=1.70158):
     return 1.0 + (s + 1.0) * x ** 3 + s * x ** 2
 
 
+def _t24(c, e, fotogramas):
+    """v5.55: el fotograma (de 24 fps) de la animación de la comp a los e segundos de la capa c: como t24() de viral_elementos, en una palabra corta el tiempo
+    corre más deprisa (hasta ×2,5) para que la animación de `fotogramas` llegue al final antes de la salida."""
+    k = min(1.0, max(0.4, (float(c['t1']) - float(c['t0']) - SALIDA_S) * 24.0 / fotogramas))
+    return e * 24.0 / k
+
+
 def estado_animado(c, t):
     """{'a', 'dx', 'dy', 's', 'rot', 'barrido', 'brillo'} de la capa c en el instante t (None si no se ve). dx/dy en píxeles de la capa."""
     e = t - c['t0']
@@ -177,10 +184,23 @@ def estado_animado(c, t):
     elif tipo == 'viral':
         if 'shatter' in k:
             st.update(s=1.55 - 0.55 * _ease(q(0.36)), a=q(0.14), brillo=e / 0.55 if e < 0.55 else None)
-        elif 'select' in k:
-            st.update(barrido=_ease(q(0.34)))
-        elif 'drag' in k:
-            st.update(dx=0.45 * w * (1.0 - _ease(q(0.36))), a=q(0.16))
+        elif 'select' in k:                                             # v5.55: los tiempos de comp_select (fotogramas de 24 fps): escribe en lineal desde T 0,5
+            T = _t24(c, e, 26)                                          # en 2,5 + 1,15·letras; luego la caja (capa aparte) crece desde su esquina de arriba a
+            dur = 2.5 + 1.15 * float(c.get('letras') or 6.0)            # la izquierda en 8 fotogramas
+            if c.get('parte') == 'caja':
+                q = max(0.0, min(1.0, (T - 0.5 - dur - 1.0) / 8.0))
+                s_ = 1.0 - (1.0 - q) ** 3
+                h = float(c.get('h') or 100.0)
+                st.update(s=max(0.001, s_), dx=-(1.0 - s_) * w / 2.0, dy=-(1.0 - s_) * h / 2.0, a=1.0 if q > 0.0 else 0.0)
+            else:
+                x0, x1 = c.get('tinta') or (0.0, 1.0)
+                st.update(barrido=x0 + (x1 - x0) * max(0.0, min(1.0, (T - 0.5) / dur)))
+        elif 'drag' in k:                                               # v5.55 (como el Drag de Resolve): asoma en 8-11 tenue (en Resolve, solo el contorno),
+            T = _t24(c, e, 32)                                          # llega arrastrada 0,9 em desde arriba a la izquierda en 10-19 y se enciende en 18-24
+            p = max(0.0, min(1.0, (T - 10.0) / 9.0))
+            m = 0.5 * math.sin(p * math.pi / 2) + 0.25 * (1.0 - math.cos(p * math.pi))
+            llena = max(0.0, min(1.0, (T - 18.0) / 6.0))
+            st.update(dx=-0.90 * em * (1.0 - m), dy=-0.36 * em * (1.0 - m), a=max(0.0, min(1.0, (T - 8.0) / 3.0)) * (0.3 + 0.7 * llena))
         elif 'negrita' in k:
             st.update(s=0.6 + 0.4 * _rebote(q(0.32), 2.0), a=q(0.12))
         else:

@@ -197,6 +197,27 @@ def unir_fragmentos(palabras, idioma='es'):
     return sal
 
 
+# v5.55 (pulir los captions): un bloque no acaba en una palabra que pide la siguiente («This Is What / Happens / When You Don't | Overprice»):
+# su cola de conectoras, pronombres y negaciones pasa al bloque siguiente si la voz sigue (< 1 s) y cabe; en el bloque quedan al menos 2 palabras
+COLGANTES = G.STOP | {'dont', 'doesnt', 'didnt', 'cant', 'wont', 'isnt', 'arent', 'wasnt', 'werent', 'when', 'because', 'cuando', 'porque', 'que'}
+
+
+def _sin_colgantes(pal, bloques_idx, forzados=()):
+    bloques = [list(b) for b in bloques_idx]
+    for n in range(len(bloques) - 1):
+        b, sig = bloques[n], bloques[n + 1]
+        cola = 0
+        while len(b) - cola > 2:
+            w = pal[b[-1 - cola]]
+            if w['plano'] not in COLGANTES or b[-1 - cola] in forzados or (w['signo'] and w['signo'] in G._FUERTE) or w.get('fin_frase'):
+                break
+            cola += 1
+        if cola and pal[sig[0]]['t'] - pal[b[-1]]['fin'] < 1.0 and len(sig) + cola <= G.MAX_PALABRAS:
+            bloques[n + 1] = b[-cola:] + sig
+            bloques[n] = b[:-cola]
+    return bloques
+
+
 def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo', mains=None, efectos=None, fin_video=None, cada=None):
     """palabras [{'word','start','end'}] -> {'cues': [...], 'plan': [...]} . `mains`: palabras (texto) o índices forzados (llevan efecto). `efectos`: {índice de bloque: clip}."""
     unidas = unir_fragmentos(palabras, idioma)
@@ -220,6 +241,7 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
     for k_frase, frase in enumerate(G.frases(pal)):
         mp = G.elegir_mains(pal, frase, primera=(k_frase == 0), forzados=forzados or None)
         bloques_idx += G._partir(pal, frase, mp)
+    bloques_idx = _sin_colgantes(pal, bloques_idx, forzados)
     ultimo_fin = pal[-1]['fin']
     # 1) qué bloques llevan efecto (y cuál): los forzados siempre; el resto cada `cada` bloques, si hay tiempo
     tipos, rot = [], 0

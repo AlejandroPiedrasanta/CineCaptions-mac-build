@@ -197,9 +197,26 @@ def _normalizar(clave):
     return re.sub(r'\s+', '', str(clave or '')).upper()
 
 
+def _sistema():
+    """El sistema de esta computadora, p. ej. «Windows 11 (10.0.26100)» o «macOS 15.1 (arm64)». La tienda lo guarda junto a la
+    versión (telemetría de pagos/licencia.php) para que el vendedor sepa quién usa qué y a quién avisar de una versión nueva."""
+    try:
+        if sys.platform.startswith('win'):
+            v = sys.getwindowsversion()
+            nombre = 'Windows 11' if v.major == 10 and v.build >= 22000 else 'Windows %s' % (platform.release() or v.major)
+            return '%s (%d.%d.%d)' % (nombre, v.major, v.minor, v.build)
+        if sys.platform == 'darwin':
+            return 'macOS %s (%s)' % (platform.mac_ver()[0] or '?', platform.machine() or '?')
+        return ('%s %s' % (platform.system(), platform.release())).strip()
+    except Exception:
+        return ''
+
+
 def _pedir(accion, clave):
-    """accion = activar | verificar | desactivar, para ESTA computadora."""
-    return _llamar(LIC_API, {'accion': accion, 'clave': clave, 'equipo': id_equipo(), 'nombre_equipo': nombre_equipo()})
+    """accion = activar | verificar | desactivar, para ESTA computadora. Manda también la versión y el sistema (la tienda los
+    guarda por equipo; un servidor que no los conozca los ignora)."""
+    return _llamar(LIC_API, {'accion': accion, 'clave': clave, 'equipo': id_equipo(), 'nombre_equipo': nombre_equipo(),
+                             'version': _version(), 'so': _sistema()})
 
 
 def _motivo(r):

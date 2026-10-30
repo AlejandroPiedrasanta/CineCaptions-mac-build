@@ -1107,7 +1107,7 @@ class PanelGo(QWidget):
     def __init__(self, al_detalles=None, padre=None):
         super().__init__(padre)
         self.PASOS = (('timeline', tr('Traer el timeline de Resolve')), ('voz', tr('Transcribir la voz')),
-                      ('ia', tr('IA: corregir, quitar signos, palabras y emojis')),
+                      ('ia', tr('IA: corregir, quitar signos y elegir palabras')),
                       ('diseno', tr('Diseño de los captions')),
                       ('sfx', tr('Efectos de sonido')),
                       ('resolve', tr('Colocar en el timeline')))

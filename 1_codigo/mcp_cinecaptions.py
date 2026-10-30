@@ -554,11 +554,15 @@ def t_mapa(a):
 
 
 def t_simbolo(a):
-    return _mc().simbolo(a['nombre'], int(a.get('lineas', 70)), a.get('archivo', ''))
+    return _mc().simbolo(a['nombre'], int(a.get('lineas', 70)), a.get('archivo', ''), int(a.get('desde', 0)))
+
+
+def t_donde(a):
+    return _mc().donde(a['nombre'], a.get('archivo', ''))
 
 
 def t_modulo(a):
-    return _mc().modulo(a['nombre'])
+    return _mc().modulo(a['nombre'], a.get('filtro', ''))
 
 
 def t_llamadas(a):
@@ -570,7 +574,7 @@ def t_ruta(a):
 
 
 def t_cambios(a):
-    return _mc().cambios(int(a.get('n', 6)))
+    return _mc().cambios(int(a.get('n', 4)))
 
 
 def t_resumen(a):
@@ -599,11 +603,13 @@ _PLAN = {'palabras': {'description': 'ruta de un .json de palabras [{word,start,
          'estilos': {'type': 'object', 'description': '{"índice de bloque": n de variante} para forzar el estilo de un bloque'},
          'fin_video': _N, 'idioma': _S}
 HERRAMIENTAS = {
-    'mapa': ('USAR ANTES DE ABRIR ARCHIVOS. Busca por palabras qué tema del programa tiene lo que buscas y devuelve sus archivos y símbolos (compacto); con id="go-inicio" da el detalle de ese tema (si es largo, un índice: pide parte="3" o parte="palabras"); '
-             'con completo=true incluye el texto entero. Sin argumentos lista los grupos.', _esq({'consulta': _S, 'id': _S, 'parte': _S, 'completo': {'type': 'boolean'}, 'maximo': _N}), t_mapa),
-    'simbolo': ('Devuelve SOLO el código de una función, clase o método (p. ej. "_go_generar", "WordTagWindow._continuar", "Instalacion.Desinstalar") con archivo:líneas; las clases grandes dan la lista de métodos. '
-                'Evita leer el script principal (13 600 líneas).', _esq({'nombre': _S, 'lineas': _N, 'archivo': _S}, ['nombre']), t_simbolo),
-    'modulo': ('Qué es un archivo de código (descripción, clases y funciones con su línea), p. ej. "vigilancia", "sfx_rules", "principal".', _esq({'nombre': _S}, ['nombre']), t_modulo),
+    'mapa': ('USAR ANTES DE ABRIR ARCHIVOS. consulta="palabras": temas que encajan (compacto). id="go-inicio": detalle del tema (largo → índice; '
+             'parte="3"|"2-4"|"palabras"|"resumen"|"archivos"|"simbolos"; completo=true entero). Sin argumentos: grupos.',_esq({'consulta': _S, 'id': _S, 'parte': _S, 'completo': {'type': 'boolean'}, 'maximo': _N}), t_mapa),
+    'simbolo': ('SOLO el código de una función, clase o método ("_go_generar", "WordTagWindow._continuar") con archivo:líneas; clases grandes → lista de métodos; '
+                'desde=N (línea) sigue una función larga por páginas.', _esq({'nombre': _S, 'lineas': _N, 'archivo': _S, 'desde': _N}, ['nombre']), t_simbolo),
+    'donde': ('Dónde está X en una línea (archivo:ini-fin, tipo, tamaño, docstring), sin código; o el archivo de un tema. Lo más barato antes de simbolo o Read.',
+              _esq({'nombre': _S, 'archivo': _S}, ['nombre']), t_donde),
+    'modulo': ('Qué es un archivo (descripción, clases y funciones con línea): "vigilancia", "principal". filtro="palabra": solo esas.', _esq({'nombre': _S, 'filtro': _S}, ['nombre']), t_modulo),
     'llamadas': ('Quién llama a una función o clase o la pasa como callback (con archivo:línea de cada llamada), sin Grep. sentido="sale": a qué llama ella. '
                  'niveles=3: la cadena entera, lo que se puede romper al cambiarla. Solo .py y .lua del proyecto; «?» = deducido por el nombre.',
                  _esq({'nombre': _S, 'sentido': {'type': 'string', 'enum': ['entra', 'sale']}, 'niveles': _N, 'archivo': _S}, ['nombre']), t_llamadas),
@@ -645,9 +651,9 @@ HERRAMIENTAS = {
                 _esq({'pack': _S, 'ancla': _S}), t_evaluar),
     'registro': ('Últimas líneas del registro de la app (cinecaptions.log).', _esq({'lineas': _N}), t_registro),
 }
-_SOLO_LECTURA = {'mapa', 'simbolo', 'modulo', 'llamadas', 'ruta', 'cambios', 'resumen', 'estado', 'packs', 'registro'}
+_SOLO_LECTURA = {'mapa', 'simbolo', 'donde','modulo', 'llamadas', 'ruta', 'cambios', 'resumen', 'estado', 'packs', 'registro'}
 _DESTRUCTIVAS = {'go_real', 'arrastrar_video', 'limpiar_banco', 'colocar'}
-_SIN_RESOLVE = {'mapa', 'simbolo', 'modulo', 'llamadas', 'ruta', 'cambios', 'resumen', 'registro', 'packs', 'planificar', 'evaluar', 'cuadros', 'comparar', 'medir'}   # corren en paralelo
+_SIN_RESOLVE = {'mapa', 'simbolo', 'donde','modulo', 'llamadas', 'ruta', 'cambios', 'resumen', 'registro', 'packs', 'planificar', 'evaluar', 'cuadros', 'comparar', 'medir'}   # corren en paralelo
 
 
 def _anotaciones(nombre):

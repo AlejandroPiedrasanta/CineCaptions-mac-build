@@ -52,7 +52,7 @@ def _v(ident, nombre, detalle, paleta=None, **extra):
 
 SECCIONES = [
     {'clave': 'pildora', 'titulo': 'Píldora bajo captions',
-     'detalle': 'La píldora animada que sale debajo del texto con lo que dices (un lugar, una cifra, un emoji). Su contenido cambia con el video; aquí eliges cómo se ve.',
+     'detalle': 'La píldora animada que sale debajo del texto con lo que dices (un lugar, una cifra o tus redes; con «Emojis animados», también un emoji). Su contenido cambia con el video; aquí eliges cómo se ve.',
      'colores': [('fondo', 'Fondo'), ('texto', 'Texto'), ('acento', 'Acento')],
      'variantes': [
          _v('cristal', 'Cristal oscuro', 'Oscura y translúcida, con un brillo del acento.'),
