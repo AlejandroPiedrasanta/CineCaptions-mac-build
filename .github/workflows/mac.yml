@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - nombre: AppleSilicon
-            runner: macos-14          # arm64
+            runner: macos-15          # arm64 (v5.55: macos-14 se retira el 2026-11-02 y ya tenía apagones programados)
             python: '3.14'
           - nombre: Intel
             runner: macos-15-intel    # x86_64 (onnxruntime Intel solo existe hasta Python 3.13)
