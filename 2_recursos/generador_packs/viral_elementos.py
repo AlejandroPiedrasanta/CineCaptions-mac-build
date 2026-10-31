@@ -13,6 +13,8 @@ La pila de líneas finas + negrita (ESTILO VIRAL (3)) la arma viral_captions.py 
 Todo es relativo al TAMAÑO del Text+ (Size) y al cuadro (se lee con comp:GetPrefs), así el mismo clip sirve a cualquier tamaño de palabra.
 Entrada y salida van dentro de cada comp (la salida, vía comp.RenderEnd: los 5 últimos fotogramas del clip). Las animaciones largas (select, drag) se COMPRIMEN en el tiempo si
 el clip dura menos de lo que necesitan (TT): una palabra dicha deprisa llega igual al estado final. Las expresiones NO pueden usar string.len ni # (ver viral_comps.py).
+v5.57 («Sí, en los 6»): cada comp va dentro del macro «CineCaptions» de macro_kinetic, como el Tema 1: el Inspector enseña los controles de Luxe Slide con DROP
+SHADOW / GLOW apagados y solo el banner. Las copias del texto (Medida, BrilloTxt, Caja) siguen también su Tracking, y el relleno del drag sigue al «Color».
 """
 import math
 import os
@@ -22,6 +24,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
 import kinetic_comps as K
 import kinetic_elementos as E
+import macro_kinetic as MK
 import viral_comps as V
 from kinetic_comps import degradado, enlace, herramienta, media_out, n, texto_plus
 
@@ -135,7 +138,7 @@ def comp_fina():
     t = texto_plus('Template', -220, 40, 'fina', FINA[0], FINA[1], 0.09, color=FINA_COLOR, esp=1.0, extra=extra)
     p = _p(0, 7)
     t += cadena('Template', dict(dy=f'(1 - {_suave(p)}) * (-0.014)', size=f'(0.96 + 0.04 * {_suave(p)}) * (0.92 + 0.08 * {SALIDA})', blend=f'math.min(1, {p} * 2.0) * {SALIDA}'))
-    return K.armar_comp(t, 'CineCaptions VIRAL - fina')
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - fina')
 
 
 def comp_negrita():
@@ -146,7 +149,7 @@ def comp_negrita():
     t = texto_plus('Template', -220, 40, 'negrita', NEGRITA[0], NEGRITA[1], 0.16, color=(1, 1, 1), esp=0.99, extra=extra)
     p = _p(0, 9)
     t += cadena('Template', dict(dx=f'(1 - {_suave(p)}) * (-0.018)', size=f'(0.82 + 0.18 * {_rebote(p)}) * (0.9 + 0.1 * {SALIDA})', blend=f'math.min(1, {p} * 2.4) * {SALIDA}'))
-    return K.armar_comp(t, 'CineCaptions VIRAL - negrita')
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - negrita')
 
 
 # ------------------------------------------------------------------------------------------------------------------ shatter
@@ -174,6 +177,19 @@ EFECTO_SOMBRA = (0.55, -0.006, 12)          # la sombra oscura debajo (se ve sol
 SIZE_CALIBRADO = 0.3035                     # el Size del Text+ con el que se midieron esos difuminados: el Softness de Text+ va contra el CUADRO, no contra la letra,
                                             # así que crece con Template.Size (una palabra pequeña salía con el brillo el doble de ancho, en proporción)
 VOLUMEN_EFECTO = [(0.0, 0.92), (0.5, 0.965), (1.0, 0.92)]      # el relleno del Select de abajo (parada 0) a arriba: el leve volumen de la referencia
+GRIS_DRAG = 0.85                            # el contorno punteado del drag (y el gris de antes de rellenarse) = 0,85 × su tinte
+
+
+def _copia(nombre, y, texto, color=(1, 1, 1), extra=None):
+    """v5.57: una copia del Template (Medida, BrilloTxt, Caja) que sigue su texto, su Size y su Tracking (CharacterSpacing): con el «Tracking» del Inspector
+    (macro_kinetic) la medida de la palabra, el brillo y la caja siguen a las letras. La letra NO: con Font/Style por expresión la comp salía negra."""
+    t = texto_plus(nombre, -220, y, texto, EFECTO[0], EFECTO[1], 0.30, color=color, esp=0.97, extra=extra, expr={'Size': 'Template.Size'})
+    for campo, valor in (('StyledText', f'"{texto}"'), ('CharacterSpacing', '0.97')):
+        viejo = f'{campo} = Input {{ Value = {valor}, }},'
+        if viejo not in t:
+            raise ValueError(f'viral_elementos: la copia {nombre} no trae «{viejo}»')
+        t = t.replace(viejo, f'{campo} = Input {{ Value = {valor}, Expression = "Template.{campo}", }},', 1)
+    return t
 
 
 def _region(nombre, x0, x1, y0, y1, angulo, y_pos):
@@ -197,13 +213,12 @@ def comp_shatter(paleta=''):
               f'Blue2 = Input {{ Value = Number {{ Value = {n(P["bisel"][2])} }}, }},', 'Opacity2 = Input { Value = Number { Value = 0.9 }, },']
     extra += _color(E._sombra(3, 0.65, 0.0, 26), 3, P['halo'])                          # 3: el halo del color de la palabra
     t = texto_plus('Template', -220, 40, 'Shatter', EFECTO[0], EFECTO[1], 0.30, color=P['base'], esp=0.97, extra=extra)
-    ligado = 'StyledText = Input { Value = "Shatter", Expression = "Template.StyledText", },'
-    t += texto_plus('Medida', -220, 120, 'Shatter', EFECTO[0], EFECTO[1], 0.30, esp=0.97, expr={'Size': 'Template.Size'}).replace('StyledText = Input { Value = "Shatter", },', ligado)
+    t += _copia('Medida', 120, 'Shatter')
     dw = 'Medida.Output.DataWindow'
     WW = f'(({dw} and (({dw}[3] - {dw}[1]) / {ANCHO_CUADRO})) or 0.4)'                # el ancho de la palabra (fracción del ancho del cuadro)
     T = tt(28)
     # --- brillo fijo: una copia blanca del texto, translúcida, solo en la mitad de arriba de las letras
-    t += texto_plus('BrilloTxt', -220, 320, 'Shatter', EFECTO[0], EFECTO[1], 0.30, color=P['brillo'], esp=0.97, expr={'Size': 'Template.Size'}).replace('StyledText = Input { Value = "Shatter", },', ligado)
+    t += _copia('BrilloTxt', 320, 'Shatter', color=P['brillo'])
     t += K._mascara('RectangleMask', 'MBrillo', -220, 400, [
         f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5, 0.5 + 0.20 * {K.lua(EM_H)})", }},', 'Width = Input { Value = 3, },',
         f'Height = Input {{ Value = 0.05, Expression = "0.30 * {K.lua(EM_H)}", }},', 'Angle = Input { Value = 0, },', 'CornerRadius = Input { Value = 0, },'])
@@ -297,7 +312,7 @@ def comp_shatter(paleta=''):
     t += herramienta('Merge', 'Rota', 640, 560, [enlace('Background', 'Entera'), enlace('Foreground', prev), f'Blend = Input {{ Value = 0, Expression = "1 - ({K.lua(antes)})", }},'])
     pa = _p(0, 5)
     t += cadena('Rota', dict(size=f'(0.94 + 0.06 * {_suave(pa)}) * (0.9 + 0.1 * {SALIDA})', blend=f'math.min(1, {pa} * 1.6) * {SALIDA}'), x0=800)
-    return K.armar_comp(t, 'CineCaptions VIRAL - shatter')
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - shatter')
 
 
 # ------------------------------------------------------------------------------------------------------------------ select
@@ -343,15 +358,14 @@ def comp_select(color_caja=''):
     extra = (['End = Input { Value = 1, Expression = "%s", },' % K.lua(escribe), 'Type1 = Input { Value = 2, },',
               f'ShadingGradient1 = Input {{ Value = {degradado([(p, (v,) * 3) for p, v in VOLUMEN_EFECTO])}, }},'] + _letra_efecto(2))
     t = texto_plus('Template', -220, 40, 'Select', EFECTO[0], EFECTO[1], 0.30, color=(EFECTO_RELLENO,) * 3, esp=0.97, extra=extra)
-    ligado = 'StyledText = Input { Value = "Select", Expression = "Template.StyledText", },'
-    t += texto_plus('Medida', -220, 120, 'Select', EFECTO[0], EFECTO[1], 0.30, esp=0.97, expr={'Size': 'Template.Size'}).replace('StyledText = Input { Value = "Select", },', ligado)
+    t += _copia('Medida', 120, 'Select')
     rojo = CAJAS_SELECT[color_caja]
     borde = ['Enabled1 = Input { Value = 0, },', 'Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 3, },', 'Level2 = Input { Value = Number { Value = 0 }, },',
              'LineStyle2 = Input { Value = Number { Value = 1 }, },', 'JoinStyle2 = Input { Value = 1, },',
              'Thickness2 = Input { Value = Number { Value = 0.04 }, Expression = "Template.Size * 0.135", },',              # v5.55: guiones gruesos (0,075 → 0,135, ~0,05 em)
              'ExtendHorizontal2 = Input { Value = Number { Value = 0.03 }, Expression = "Template.Size * 0.1", },', 'ExtendVertical2 = Input { Value = Number { Value = 0.02 }, Expression = "Template.Size * 0.07", },',
              f'Red2 = Input {{ Value = Number {{ Value = {n(rojo[0])} }}, }},', f'Green2 = Input {{ Value = Number {{ Value = {n(rojo[1])} }}, }},', f'Blue2 = Input {{ Value = Number {{ Value = {n(rojo[2])} }}, }},']
-    t += texto_plus('Caja', -220, 200, 'Select', EFECTO[0], EFECTO[1], 0.30, esp=0.97, extra=borde, expr={'Size': 'Template.Size'}).replace('StyledText = Input { Value = "Select", },', ligado)
+    t += _copia('Caja', 200, 'Select', extra=borde)
     dw_c = 'Caja.Output.DataWindow'
     arriba_izq = f'Point(({dw_c} and ({dw_c}[1] / {ANCHO_CUADRO}) or 0.3), ({dw_c} and ({dw_c}[4] / {ALTO_CUADRO}) or 0.6))'
     abajo_der = f'Point(({dw_c} and ({dw_c}[3] / {ANCHO_CUADRO}) or 0.7), ({dw_c} and ({dw_c}[2] / {ALTO_CUADRO}) or 0.4))'
@@ -387,7 +401,7 @@ def comp_select(color_caja=''):
     t += herramienta('Merge', 'M2', 380, 200, [enlace('Background', 'M1'), enlace('Foreground', 'Fundido')])
     p = _p(0, 6)
     t += cadena('M2', dict(size=f'(0.96 + 0.04 * {_suave(p)}) * (0.92 + 0.08 * {SALIDA})', blend=f'math.min(1, {p} * 2.0) * {SALIDA}'), x0=520)
-    return K.armar_comp(t, 'CineCaptions VIRAL - select')
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - select')
 
 
 # ------------------------------------------------------------------------------------------------------------------ drag
@@ -477,7 +491,7 @@ def comp_drag(tinte=''):
     detras = _p(21, 2, T)                         # … por detrás de la palabra
     G0 = 0.08
     fin = [EFECTO_RELLENO * c for c in color]
-    gris = [0.85 * c for c in color]
+    gris = [GRIS_DRAG * c for c in color]
     # el contorno punteado es el elemento 1 y el relleno el 2: en Text+ el de número menor va encima y en la referencia los guiones se ven SOBRE el relleno gris,
     # hasta que está casi blanco. «CleanIntersections»: sin trazos de más donde la fuente solapa piezas (el palo y la panza de la «D» salían con una raya dentro)
     extra = ['ElementShape1 = Input { Value = 1, },', 'LineStyle1 = Input { Value = Number { Value = 1 }, },', 'JoinStyle1 = Input { Value = 1, },',
@@ -486,16 +500,17 @@ def comp_drag(tinte=''):
              f'Opacity1 = Input {{ Value = Number {{ Value = 0.95 }}, Expression = "{K.lua(f"0.95 * {_p(8, 10, T)} * math.min(1, (1 - {llena}) * 5)")}", }},']
     extra += ['Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 0, },',
               f'Opacity2 = Input {{ Value = Number {{ Value = 1 }}, Expression = "{K.lua(f"math.min(1, {llena} * 5)")}", }},']
-    extra += [f'{canal}2 = Input {{ Value = Number {{ Value = {n(v)} }}, Expression = "{K.lua(f"{n(G0)} + {n(v - G0)} * {llena}")}", }},'
-              for canal, v in zip(('Red', 'Green', 'Blue'), fin)]                    # el relleno va del gris oscuro a su color
+    # el relleno va del gris oscuro a su color. v5.57: su color sale del «Color» del Inspector (Red1, el del contorno: × EFECTO_RELLENO / GRIS_DRAG; con el
+    # de fábrica, el de siempre; math.min: con un «Color» blanco no pasa de 1). pack_personalizado.color_viral lee esa razón de la expresión
+    extra += [f'{canal}2 = Input {{ Value = Number {{ Value = {n(v)} }}, Expression = "{K.lua(f"{n(G0)} + (math.min(1, Template.{canal}1 / {n(GRIS_DRAG)} * {n(EFECTO_RELLENO)}) - {n(G0)}) * {llena}")}", }},'
+              for canal, v in zip(('Red', 'Green', 'Blue'), fin)]
     extra += _letra_efecto(3)                     # brillo (3) y sombra (4): aparecen al rellenarse
     exprs = {'Opacity3': f'{n(EFECTO_BRILLO[0])} * {llena}^2', 'Opacity4': f'{n(EFECTO_SOMBRA[0])} * {llena}'}
     extra = [l if not any(l.startswith(k + ' ') for k in exprs) else
              f'{next(k for k in exprs if l.startswith(k + " "))} = Input {{ Value = Number {{ Value = 0 }}, Expression = "{K.lua(exprs[next(k for k in exprs if l.startswith(k + " "))])}", }},' for l in extra]
     t = texto_plus('Template', -220, 40, 'Drag', EFECTO[0], EFECTO[1], 0.30, color=gris, esp=0.97, extra=extra)
     # la medida de la palabra (el Template está transparente hasta que asoma): un Text+ igual que no se compone
-    ligado = 'StyledText = Input { Value = "Drag", Expression = "Template.StyledText", },'
-    t += texto_plus('Medida', -220, 120, 'Drag', EFECTO[0], EFECTO[1], 0.30, esp=0.97, expr={'Size': 'Template.Size'}).replace('StyledText = Input { Value = "Drag", },', ligado)
+    t += _copia('Medida', 120, 'Drag')
     # la palabra llega arrastrada (desde arriba a la izquierda) hasta su sitio
     dx = f'(-0.90 * {EM_W} * (1 - {mov}))'
     dy = f'(0.36 * {EM_H} * (1 - {mov}))'
@@ -524,7 +539,7 @@ def comp_drag(tinte=''):
     t += herramienta('Merge', 'M1', 280, 120, [enlace('Background', 'M0'), enlace('Foreground', 'ManoEncima')])
     p = _p(0, 6)
     t += cadena('M1', dict(size=f'(0.97 + 0.03 * {_suave(p)}) * (0.92 + 0.08 * {SALIDA})', blend=f'math.min(1, {p} * 2.0) * {SALIDA}'), x0=420)
-    return K.armar_comp(t, 'CineCaptions VIRAL - drag')
+    return K.armar_comp(MK.envolver(t, color='solo'), 'CineCaptions VIRAL - drag')     # (el degradado solo pintaría el contorno punteado)
 
 
 # ------------------------------------------------------------------------------------------------------------------ el catálogo

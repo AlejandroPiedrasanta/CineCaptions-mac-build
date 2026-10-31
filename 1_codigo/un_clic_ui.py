@@ -916,10 +916,23 @@ def perfil_del_equipo():
 class EstimadorGo:
     """Cuánto falta en GO. Cada paso tiene una duración esperada (base + lo que cuesta por minuto de video, escalada por lo que tardó en las últimas veces en
     ESTE equipo: se aprende y se guarda en las preferencias, «go_ritmo»). Con eso el porcentaje avanza con el reloj dentro de cada paso (no se queda quieto
-    entre un paso y otro) y debajo sale el tiempo que queda; si un paso tarda mucho más de lo normal lo dice."""
+    entre un paso y otro) y debajo sale el tiempo que queda; si un paso tarda mucho más de lo normal lo dice.
+    v5.56: el ritmo se aprende APARTE con la Edición PRO y sin ella («go_ritmo_modos»: {perfil: {'pro' | 'captions': {paso: factor}}}). Antes
+    un GO del Tema 1 con PRO (13 min) dejaba los factores al tope y el de solo captions (53 s) se anunciaba como ~5 min (el usuario: «cuando es
+    de solo captions debe ser menos de 2 minutos ya con SFX»; luego: «menos de un minuto solo captions»). Y la voz y la IA reutilizadas
+    (`reutilizado`) cuentan lo que de verdad tardan (REUSO), no lo de correr el modelo."""
     ORDEN = ('timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve')
     BASE = {'timeline': 8.0, 'voz': 8.0, 'ia': 22.0, 'diseno': 3.0, 'sfx': 6.0, 'resolve': 18.0}
     POR_MIN = {'timeline': 0.0, 'voz': 5.0, 'ia': 6.0, 'diseno': 0.5, 'sfx': 3.0, 'resolve': 6.0}
+    # solo captions, medido con el Tema 1 (1 min de video, efectos sí, voz e IA reutilizadas: 53 s = timeline 4 · ia 8 · diseño 1 · sfx 25 ·
+    # resolve 18); voz e IA como BASE (por eso heredan su factor de antes de la v5.56)
+    BASE_CAPTIONS = {'timeline': 4.0, 'voz': 8.0, 'ia': 22.0, 'diseno': 1.0, 'sfx': 10.0, 'resolve': 10.0}
+    POR_MIN_CAPTIONS = {'timeline': 0.0, 'voz': 5.0, 'ia': 6.0, 'diseno': 0.3, 'sfx': 12.0, 'resolve': 8.0}
+    REUSO = {'voz': 1.0, 'ia': 7.0}       # segundos cuando su resultado ya estaba guardado (transcripción en caché / IA reutilizada)
+    # lo que suma la PRO (base, por minuto de video): plan + Remotion + placa antes de Resolve; Magic Mask y colocar después (medido: un video
+    # de 1 min con el Tema 1 neón, «sfx» 5 min 37 s y «resolve» 7 min 49 s)
+    PRO_EXTRA = {'sfx': (60.0, 60.0), 'resolve': (90.0, 120.0)}
+    HEREDA = {'captions': ('voz', 'ia'), 'pro': ('timeline', 'voz', 'ia', 'diseno')}     # (los otros pasos cambiaron de base: su factor viejo no vale)
 
     def __init__(self):
         import time as _t
@@ -927,6 +940,7 @@ class EstimadorGo:
         self._factor = None
         self._perfil = None
         self.efectos = False
+        self.modo = 'captions'
         self.minutos = 1.0
         self.reiniciar()
         # v5.39: el perfil (nvidia-smi + motor auxiliar, ~0,3 s) ya no frena el arranque: se calcula en un hilo y el ritmo se lee al primer uso
@@ -946,7 +960,10 @@ class EstimadorGo:
             try:
                 import ajustes_ui
                 prefs = ajustes_ui.leer_prefs()
-                guardado = (prefs.get('go_ritmo_perfiles') or {}).get(self.perfil) or prefs.get('go_ritmo') or {}
+                guardado = ((prefs.get('go_ritmo_modos') or {}).get(self.perfil) or {}).get(self.modo)
+                if guardado is None:                                   # sin historia propia: del ritmo de antes de la v5.56 solo los pasos
+                    viejo = (prefs.get('go_ritmo_perfiles') or {}).get(self.perfil) or prefs.get('go_ritmo') or {}     # cuya base no cambió
+                    guardado = {k: viejo[k] for k in self.HEREDA[self.modo] if k in viejo}
                 for k in self.ORDEN:
                     v = float(guardado.get(k, 1.0))
                     if 0.2 <= v <= 6.0:
@@ -966,6 +983,7 @@ class EstimadorGo:
         self.t_paso = None
         self.hechos = {}              # clave -> segundos reales (0 si se saltó)
         self.saltados = set()
+        self.reusados = set()         # v5.56: voz / ia con su resultado guardado (cuentan REUSO y no se aprende de ellos)
         self.dentro_f = 0.0
 
     def empezar(self):
@@ -982,13 +1000,31 @@ class EstimadorGo:
         """Con los efectos visuales encendidos, colocar en Resolve cuesta más (secuencias, intro, transiciones, iconos)."""
         self.efectos = bool(activos)
 
+    def poner_pro(self, activa):
+        """v5.56: con la Edición PRO GO tarda mucho más y su ritmo se aprende aparte (ver la clase)."""
+        modo = 'pro' if activa else 'captions'
+        if modo != self.modo:
+            self.modo, self._factor = modo, None
+
+    def reutilizado(self, clave):
+        """v5.56: la voz o la IA de este GO ya estaban hechas (caché): su paso dura segundos."""
+        if clave in self.REUSO:
+            self.reusados.add(clave)
+
     def _base(self, k):
+        if self.modo != 'pro':
+            return self.BASE_CAPTIONS[k] + self.POR_MIN_CAPTIONS[k] * self.minutos     # (ya medido con los efectos encendidos)
         extra = (10.0 + 1.5 * self.minutos) if (k == 'resolve' and self.efectos) else 0.0
+        if k in self.PRO_EXTRA:
+            base, por_min = self.PRO_EXTRA[k]
+            extra += base + por_min * self.minutos
         return self.BASE[k] + self.POR_MIN[k] * self.minutos + extra
 
     def esperado(self, k):
         if k in self.saltados:
             return 0.0
+        if k in self.reusados:
+            return self.REUSO[k]
         return max(1.0, self._base(k) * self.factor[k])
 
     def paso(self, clave, estado):
@@ -1080,14 +1116,16 @@ class EstimadorGo:
         try:
             nuevo = dict(self.factor)
             for k, real in self.hechos.items():
-                if k in self.saltados or real < 0.5:
+                if k in self.saltados or k in self.reusados or real < 0.5:
                     continue
-                razon = real / max(1.0, self._base(k))
+                # v5.56: un GO raro (Resolve que arranca o se repara a mitad, un reintento) cuenta como mucho el doble de lo aprendido: un
+                # solo GO así ya no deja el siguiente anunciando minutos de más (un equipo de verdad lento llega igual, en unos GO más)
+                razon = min(real / max(1.0, self._base(k)), 2.0 * self.factor[k])
                 nuevo[k] = round(max(0.2, min(6.0, 0.6 * self.factor[k] + 0.4 * razon)), 3)
             import ajustes_ui
-            perfiles = dict(ajustes_ui.leer_prefs().get('go_ritmo_perfiles') or {})
-            perfiles[self.perfil] = nuevo
-            ajustes_ui.guardar_prefs({'go_ritmo': nuevo, 'go_ritmo_perfiles': perfiles})
+            modos = dict(ajustes_ui.leer_prefs().get('go_ritmo_modos') or {})
+            modos[self.perfil] = dict(modos.get(self.perfil) or {}, **{self.modo: nuevo})
+            ajustes_ui.guardar_prefs({'go_ritmo_modos': modos})
             self.factor = nuevo
         except Exception:
             pass

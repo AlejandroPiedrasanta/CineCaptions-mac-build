@@ -54,13 +54,28 @@ def disponible() -> bool:
         return False
 
 
+def _a_modelo(rgb, alto):
+    """v5.57: la imagen YA al tamaño con que el motor la pasa al modelo (worker._mate_activo: múltiplos de 32, BILINEAR): el modelo ve
+    exactamente lo mismo (alfa idéntico, medido) y por el disco viaja ~1/14 del cuadro; antes iba el fotograma entero (6 MB) en cada pasada y el
+    recorte de «detrás de ti» tardaba casi el doble (953 → 537 ms por fotograma)."""
+    from PIL import Image
+    alto = max(32, int(round(int(alto) / 32.0)) * 32)
+    h, w = rgb.shape[:2]
+    ancho = max(32, int(round(w * alto / h / 32.0)) * 32)
+    rgb = np.ascontiguousarray(rgb, dtype=np.uint8)
+    if (w, h) == (ancho, alto):
+        return rgb
+    return np.asarray(Image.fromarray(rgb).resize((ancho, alto), Image.BILINEAR))
+
+
 def mate(rgb: np.ndarray, alto=None) -> np.ndarray:
     """Calcula la silueta en el motor auxiliar Python 3.14."""
     import motor_compat
     ruta = ruta_modelo()
     if ruta is None:
         raise RuntimeError('falta el modelo de recorte (modnet.onnx)')
-    return motor_compat.mate(rgb, alto=int(alto or ALTO_MODELO), modelo=ruta)
+    alto = int(alto or ALTO_MODELO)
+    return motor_compat.mate(_a_modelo(rgb, alto), alto=alto, modelo=ruta)
 
 def fotograma(video, t):
     """El fotograma del video en el segundo t (RGB uint8) o None."""
@@ -96,20 +111,41 @@ def _dilatar(m):
     return d
 
 
+def _tramos(m):
+    """Cada tramo seguido de True de cada fila, con su número (1, 2, …; 0 fuera)."""
+    inicio = m.copy()
+    inicio[:, 1:] &= ~m[:, :-1]
+    return np.cumsum(inicio, dtype=np.int32).reshape(m.shape) * m
+
+
 def _inundar(semilla, dentro, maximo=4000):
-    """Lo alcanzable desde `semilla` sin salir de `dentro` (reconstrucción geodésica)."""
+    """Lo alcanzable desde `semilla` sin salir de `dentro` (reconstrucción geodésica, vecindad de 4). v5.57: por TRAMOS de filas y de columnas
+    (un tramo tocado se llena entero de una vez) en vez de crecer un píxel por vuelta: lo mismo exacto (medido en 60 fotogramas y 300 casos al
+    azar) y ~6 veces más rápido a 512."""
     r = semilla & dentro
+    if not r.any():
+        return r
+    filas, columnas = _tramos(dentro), _tramos(dentro.T).T
+    en_fila, en_columna = np.zeros(int(filas.max()) + 1, bool), np.zeros(int(columnas.max()) + 1, bool)
+    total = int(np.count_nonzero(r))
     for _ in range(maximo):
-        n = _dilatar(r) & dentro
-        if n.sum() == r.sum():
-            return n
-        r = n
+        en_fila[filas[r]] = True
+        en_fila[0] = False
+        r = en_fila[filas]
+        en_columna[columnas[r]] = True
+        en_columna[0] = False
+        r = en_columna[columnas]
+        nuevo = int(np.count_nonzero(r))
+        if nuevo == total:
+            return r
+        total = nuevo
     return r
 
 
 def rellenar_huecos(m):
     """Cierra los agujeros de la silueta (una cara que el modelo dejó medio transparente). (v5.31: el relleno de Pillow va en Python píxel a
-    píxel y era 5 veces más lento; a 512 px esto tarda ~30 ms: por eso matte_persona rellena la FORMA, a 512, y no la pasada fina.)"""
+    píxel y era 5 veces más lento; a 512 px esto tarda ~6 ms (v5.57; antes ~30): por eso matte_persona rellena la FORMA, a 512, y no la pasada
+    fina.)"""
     fuera = ~m
     borde = np.zeros_like(m)
     borde[0, :] = borde[-1, :] = True
@@ -227,15 +263,23 @@ def personas_de_imagen(img, max_personas=4):
             'izq': min(p['bbox'][0] for p in salida), 'der': max(p['bbox'][2] for p in salida)}
 
 
+def _curva_alfa():
+    """La curva de refinar_alfa para cada nivel 0..255 (v5.57: las MISMAS cuentas en float32, hechas una vez: el alfa sale idéntico y ya no son
+    dos millones de cuentas por fotograma)."""
+    x = np.clip((np.arange(256, dtype=np.float32) / 255.0 - 0.12) / 0.76, 0.0, 1.0)
+    return ((x * x * (3.0 - 2.0 * x)) * 255).astype(np.uint8).tolist()
+
+
+_CURVA_ALFA = _curva_alfa()
+
+
 def refinar_alfa(a, ancho, alto):
     """El alfa del modelo (a ALTO_MODELO px) al tamaño final con el borde pulido (v5.4.52): escalado bicúbico (sin escalones), una curva suave
-    que quita el halo gris de fuera y los huecos claros de dentro, y menos de un píxel de desenfoque en el borde (pelo y hombros). uint8."""
+    que quita el halo gris de fuera y los huecos claros de dentro, y menos de un píxel de desenfoque en el borde (pelo y hombros). uint8 (de solo
+    lectura)."""
     from PIL import Image, ImageFilter
     img = Image.fromarray((np.clip(a, 0.0, 1.0) * 255).astype(np.uint8), 'L').resize((int(ancho), int(alto)), Image.BICUBIC)
-    x = np.clip((np.asarray(img).astype(np.float32) / 255.0 - 0.12) / 0.76, 0.0, 1.0)
-    x = x * x * (3.0 - 2.0 * x)
-    img = Image.fromarray((x * 255).astype(np.uint8), 'L').filter(ImageFilter.GaussianBlur(max(0.6, int(ancho) / 1800.0)))
-    return np.asarray(img)
+    return np.asarray(img.point(_CURVA_ALFA).filter(ImageFilter.GaussianBlur(max(0.6, int(ancho) / 1800.0))))
 
 
 def puntos_fusion(det):
@@ -245,7 +289,9 @@ def puntos_fusion(det):
 
 ALTO_MATTE = 1024                        # v5.31: el BORDE del recorte con el modelo a 1024 px (a 512 el pelo y las orejas llevaban halo de fondo)
 ALTO_FORMA = 512                         # …y la FORMA de la persona a 512 (a 1024 el modelo a veces deja huecos dentro del cuerpo)
-VERSION_MATTE = 3
+VERSION_MATTE = 4                        # v5.57: 4 = el borde estable (las máscaras guardadas con la 3 se rehacen)
+QUIETO_NIVELES = 4.0                     # v5.57: si la luz cambia menos que esto (0-255, suavizada) entre dos fotogramas, ese sitio está QUIETO…
+MARGEN_CAMBIO = 0.4                      # …y ahí un píxel solo cambia de lado si la IA lo dice claro (alfa a más de esto de 0,5)
 MASCARAS = Path.home() / 'DaVinciSubtitles' / 'mascaras_persona'   # v5.31: los mattes de «detrás de ti», FUERA de la caché (Resolve los usa)
 DIAS_MASCARAS = 120
 
@@ -300,20 +346,30 @@ def _caja_persona(forma, h, w, caja=None):
     return nueva
 
 
-def matte_persona(rgb, previo=None, estado=None):
-    """v5.31 (el usuario: «la máscara perfecta para humanos, sin bugs ni fallas»): la silueta de las personas para el recorte, en DOS pasadas
-    del modelo: la FORMA a ALTO_FORMA px (robusta: ni huecos en el cuerpo ni manchas de fondo) y el BORDE a ALTO_MATTE px (pelo, orejas,
-    dedos), que solo cuenta en una franja alrededor del contorno de la forma; sin manchas sueltas (_limpiar_islas), sin agujeros dentro (la cara,
-    una mano delante) y estable de un fotograma a otro sin dejar estela (se suaviza solo donde casi no cambió). Devuelve el alfa (0..1) a la
-    resolución de la pasada fina."""
+def _forma_persona(rgb):
+    """La FORMA de matte_persona (su 1.ª pasada, a ALTO_FORMA px: sin manchas sueltas ni huecos) ya en la rejilla fina (el cuadro entero a
+    ALTO_MATTE px de alto). No depende del fotograma anterior: v5.57, recorte_prores la calcula en otro hilo, un fotograma por delante."""
     from PIL import Image
     forma = mate(rgb, ALTO_FORMA)
     forma = _limpiar_islas(forma, forma > 0.5)
-    forma = _rellenar_huecos_persona(forma)                            # (los huecos, en la forma: ~30 ms a 512)
+    forma = _rellenar_huecos_persona(forma)                            # (los huecos, en la forma: ~6 ms a 512)
     H0, W0 = rgb.shape[:2]
-    h = ALTO_MATTE                                                     # (la rejilla fina: el cuadro entero a ALTO_MATTE px de alto)
+    h = ALTO_MATTE
     w = max(1, int(round(W0 * h / float(H0))))
-    forma = np.asarray(Image.fromarray(forma.astype(np.float32)).resize((w, h), Image.BILINEAR), dtype=np.float32)
+    return np.asarray(Image.fromarray(forma.astype(np.float32)).resize((w, h), Image.BILINEAR), dtype=np.float32)
+
+
+def matte_persona(rgb, previo=None, estado=None, forma=None):
+    """v5.31 (el usuario: «la máscara perfecta para humanos, sin bugs ni fallas»): la silueta de las personas para el recorte, en DOS pasadas
+    del modelo: la FORMA a ALTO_FORMA px (robusta: ni huecos en el cuerpo ni manchas de fondo) y el BORDE a ALTO_MATTE px (pelo, orejas,
+    dedos), que solo cuenta en una franja alrededor del contorno de la forma; sin manchas sueltas (_limpiar_islas), sin agujeros dentro (la cara,
+    una mano delante) y estable de un fotograma a otro sin dejar estela (v5.57: se suaviza solo donde la IMAGEN está quieta). Devuelve el alfa
+    (0..1) a la resolución de la pasada fina. `forma`: la de _forma_persona(rgb) si ya está hecha (v5.57). `estado` guarda entre fotogramas la
+    zona de la persona y la luz del fotograma anterior."""
+    from PIL import Image, ImageFilter
+    forma = _forma_persona(rgb) if forma is None else forma
+    H0, W0 = rgb.shape[:2]
+    h, w = forma.shape                                                 # (la rejilla fina)
     fino = np.zeros((h, w), np.float32)
     estado = estado if estado is not None else {}
     caja = _caja_persona(forma, h, w, estado.get('caja'))
@@ -331,9 +387,19 @@ def matte_persona(rgb, previo=None, estado=None):
     for _ in range(max(2, h // 220)):                                  # (≈4-5 px a 1024 por lado: el pelo suelto; con numpy, unos ms)
         franja = _dilatar(franja)
     a = np.where(franja, fino, forma)
-    if previo is not None and previo.shape == a.shape:
-        quieto = np.abs(a - previo) < 0.25
-        a = np.where(quieto, previo * 0.35 + a * 0.65, a)
+    # v5.57 (el usuario: «verifica que está en máxima calidad»; eligió el borde «muy estable»): donde la IMAGEN no se movió, un píxel solo
+    # cambia de lado (alfa por encima o por debajo de 0,5) si la IA lo dice claro; si no, se queda como en el fotograma anterior. Sin mezclar
+    # alfas: no crea grises nuevos. La mezcla con el anterior (el «C» de los ejemplos) quitaba más temblor pero volvía translúcido el borde de
+    # lo que se mueve despacio (4K de boda: grises visibles del 3,5 al 8,9 % de la persona, y 2 → 6 islas); la mediana de 3 fotogramas también
+    # creaba islas. Medido en 5 tramos: lo que cambia de lado en lo quieto baja un 17-29 %, mismas islas y mismo halo, y sin la estela de antes
+    # (2,8-4,8 /255 → 0). Antes: 35 % del anterior donde el ALFA cambió < 0,25, también en lo que se movía.
+    luma = np.asarray(Image.fromarray(rgb).convert('L').resize((w, h), Image.BILINEAR), np.float32)
+    luma_ant, estado['luma'] = estado.get('luma'), luma
+    if previo is not None and previo.shape == a.shape and luma_ant is not None and luma_ant.shape == luma.shape:
+        dif = np.clip(np.abs(luma - luma_ant), 0, 255).astype(np.uint8)
+        quieto = np.asarray(Image.fromarray(dif).filter(ImageFilter.GaussianBlur(2)), np.float32) < QUIETO_NIVELES
+        dudoso = ((a >= 0.5) != (previo >= 0.5)) & (np.abs(a - 0.5) <= MARGEN_CAMBIO)
+        a = np.where(quieto & dudoso, previo, a)
     return a
 
 
@@ -404,10 +470,51 @@ def recorte_prores(video, t0, t1, destino, al_progreso=None, lado_max=1920, cort
                 c.seek(max(0, int((t0 - 0.5) / tb)), stream=vs, backward=True, any_frame=False)
                 previo, n, total = None, 0, max(1, int((t1 - t0) * float(fps)))
                 estado = {}                                            # (la zona de la persona, la misma en todo el tramo)
-                # v5.31: el ProRes se codifica en otro hilo mientras la IA recorta el fotograma siguiente (en orden; la cola es corta)
+                # v5.57: el recorte en cadena, en orden y con colas cortas, cada paso en su hilo: leer el fotograma y su FORMA (la 1.ª pasada de la
+                # IA, que no depende del anterior) → el BORDE y la estela (que sí dependen: en este hilo) → pulir el alfa y componer → el ProRes
+                # (v5.31). Mientras el motor corre la IA, la CPU ya hace lo del fotograma de al lado; sale lo mismo que en serie (medido: idéntico)
                 import queue
                 import threading
-                cola, fallo = queue.Queue(maxsize=4), []
+                formas, pulir, cola, fallo = queue.Queue(maxsize=3), queue.Queue(maxsize=3), queue.Queue(maxsize=4), []
+
+                def leer():
+                    try:
+                        for f in RV.fotogramas(c, vs):
+                            ts = float(f.pts * tb) if f.pts is not None else 0.0
+                            if ts < t0 - 0.5 / float(fps):
+                                continue
+                            if ts >= t1 or fallo:
+                                break
+                            rgb = RV.derecho_nd(f.to_ndarray(format='rgb24'), k)
+                            formas.put((rgb, _forma_persona(rgb)))
+                    except Exception as e:
+                        fallo.append(e)
+                    finally:
+                        formas.put(None)
+
+                def componer():
+                    try:
+                        while True:
+                            x = pulir.get()
+                            if x is None:
+                                break
+                            if fallo:
+                                continue
+                            rgb, a = x
+                            alfa = refinar_alfa(a, ow, oh)
+                            img = rgb if (ow, oh) == (W, H) else np.asarray(Image.fromarray(rgb).resize((ow, oh), Image.BILINEAR))
+                            rgba = np.empty((oh, ow, 4), np.uint8)
+                            np.multiply(img, (alfa > 0)[..., None], out=rgba[..., :3])   # (el fondo, alfa 0, en NEGRO: casi no pesa)
+                            rgba[..., 3] = alfa
+                            if corte < 0.999:
+                                rgba[int(round(max(0.0, corte) * oh)):] = 0
+                            cola.put(rgba)
+                    except Exception as e:                             # (se sigue vaciando: nadie se queda esperando)
+                        fallo.append(e)
+                        while pulir.get() is not None:
+                            pass
+                    finally:
+                        cola.put(None)
 
                 def codificar():
                     try:
@@ -415,38 +522,42 @@ def recorte_prores(video, t0, t1, destino, al_progreso=None, lado_max=1920, cort
                             x = cola.get()
                             if x is None:
                                 break
+                            if fallo:
+                                continue
                             for pk in os_.encode(av.VideoFrame.from_ndarray(x, format='rgba')):
                                 o.mux(pk)
                         for pk in os_.encode():
                             o.mux(pk)
-                    except Exception as e:                             # (se sigue vaciando la cola: el hilo de la IA no se queda esperando)
+                    except Exception as e:
                         fallo.append(e)
                         while cola.get() is not None:
                             pass
-                hilo = threading.Thread(target=codificar, daemon=True)
-                hilo.start()
+
+                hilos = [threading.Thread(target=f, daemon=True) for f in (leer, componer, codificar)]
+                for hilo in hilos:
+                    hilo.start()
                 try:
-                    for f in RV.fotogramas(c, vs):
-                        ts = float(f.pts * tb) if f.pts is not None else 0.0
-                        if ts < t0 - 0.5 / float(fps):
-                            continue
-                        if ts >= t1 or fallo:
+                    while True:
+                        x = formas.get()
+                        if x is None:
                             break
-                        rgb = RV.derecho_nd(f.to_ndarray(format='rgb24'), k)
-                        a = matte_persona(rgb, previo, estado)
+                        if fallo:                                      # (algo falló: se vacía la cola y se acaba)
+                            continue
+                        rgb, forma = x
+                        a = matte_persona(rgb, previo, estado, forma=forma)
                         previo = a
-                        alfa = refinar_alfa(a, ow, oh)
-                        if corte < 0.999:
-                            alfa[int(round(max(0.0, corte) * oh)):, :] = 0
-                        img = rgb if (ow, oh) == (W, H) else np.asarray(Image.fromarray(rgb).resize((ow, oh), Image.BILINEAR))
-                        img = np.where((alfa > 0)[..., None], img, 0).astype(np.uint8)   # (el fondo, negro: casi no pesa)
-                        cola.put(np.dstack([img, alfa]))
+                        pulir.put((rgb, a))
                         n += 1
                         if al_progreso and n % 10 == 0:
                             al_progreso(min(1.0, n / total))
+                except BaseException as e:
+                    fallo.append(e)
+                    while formas.get() is not None:
+                        pass
                 finally:
-                    cola.put(None)
-                    hilo.join()
+                    pulir.put(None)
+                    for hilo in hilos:
+                        hilo.join()
                 if fallo:
                     raise fallo[0]
         if n == 0:

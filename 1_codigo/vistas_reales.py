@@ -197,6 +197,15 @@ def _es_temporal_de_vista(nombre):
     return 'temporal' in str(nombre or '') and ' vista ' in str(nombre or '')
 
 
+def esperar_libre(max_s=90.0):
+    """v5.56: GO espera (en su hilo) a que acabe una vista real en curso antes de tocar Resolve: mientras dura, el timeline ACTUAL es el temporal
+    «· vista …» y GO tomaba ese como destino (sus SFX: «Sonido no se aplicó: abre el timeline 'RCS · temporal … vista 180331'»). True si quedó libre."""
+    t0 = time.time()
+    while _ACTIVOS[0] and time.time() - t0 < max_s:
+        time.sleep(0.25)
+    return not _ACTIVOS[0]
+
+
 def anotar_previo():
     """Guarda en que proyecto/timeline estabas antes de que Resolve cree el timeline temporal de la vista."""
     try:

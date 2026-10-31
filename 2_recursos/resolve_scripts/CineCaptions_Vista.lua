@@ -7,7 +7,7 @@ Guarda («guardar») o aplica («cargar») la disposicion de pantalla de Resolve
 la vista expandida. En Studio lo hace el MCP; en Resolve FREE (sin MCP) el Puente la corre con dofile. La orden: vista_orden.json (sidecar .lua en Free).
 ]]
 
-local VERSION = "5.55 (vista)"
+local VERSION = "5.57 (vista)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -545,17 +545,168 @@ local function render_estado(orden)
     print("VISTA " .. RESULTADO)
 end
 
+-- v5.56 «fluidez» (gemelo de fluidez_resolve._PASADA, que es la de Studio): al final de GO, «Render Cache Fusion Output» en NUESTROS clips con
+-- Fusion y la cache del proyecto lista. Proyecto de GO («CineCaptions», «CineCaptions N», «CineCaptions_nuevo…»): cache smart, en segundo plano a los
+-- 2 s de reposo y cachear efectos de Fusion, transiciones y composiciones. Proyecto del usuario: solo «none» -> «user» y la cache en segundo plano
+-- si estaba apagada. Pistas nuestras: <LANG>, <LANG>-CTX/-MAIN/-CMP/-EMOJI/-K1/-T1, FX-*, PRO-* (o «descripcion · PRO-…»); en V1 solo clips con
+-- una comp «CineCaptions …» (en un proyecto de GO, todo V2+ y V1 con comps). El valor del clip: el primero de orden.valores que Resolve acepte
+-- y que al leerlo no diga Off/Auto. Devuelve el informe en JSON (la app lo lee en vista.fluidez). Sin io.
+local function fluidez(orden)
+    local p = proyecto_actual()
+    if p == nil then return '{"ok": false, "error": "sin proyecto"}' end
+    local tl = p:GetCurrentTimeline()
+    if tl == nil then return '{"ok": false, "error": "sin timeline"}' end
+    local nombre_p = tostring(p:GetName() or "")
+    local go = orden.go
+    if go == nil then
+        go = (nombre_p == "CineCaptions") or (nombre_p:match("^CineCaptions %d+$") ~= nil) or (nombre_p:match("^CineCaptions_nuevo") ~= nil)
+    end
+    local function leer(k)
+        local ok, v = pcall(function() return p:GetSetting(k) end)
+        if ok and v ~= nil then return tostring(v) end
+        return ""
+    end
+    local function poner(k, v)
+        pcall(function() p:SetSetting(k, v) end)
+        if leer(k) ~= v then pcall(function() p:SetSettings({ [k] = v }) end) end
+        return leer(k) == v
+    end
+    local despues = tostring(orden.despues or "2")
+    local modo = string.lower(leer("perfRenderCacheMode"))
+    local pedidos = {}
+    if go then
+        if modo ~= "smart" then pedidos[#pedidos + 1] = { "perfRenderCacheMode", "smart" } end
+        for _, k in ipairs({ "perfAutoRenderCacheEnable", "perfAutoRenderCacheFuEffect", "perfAutoRenderCacheTransition", "perfAutoRenderCacheComposite" }) do
+            pedidos[#pedidos + 1] = { k, "1" }
+        end
+        local t = tonumber(leer("perfAutoRenderCacheAfterTime"))
+        if t ~= nil and t > (tonumber(despues) or 2) then pedidos[#pedidos + 1] = { "perfAutoRenderCacheAfterTime", despues } end
+    else
+        if modo == "none" then pedidos[#pedidos + 1] = { "perfRenderCacheMode", "user" } end
+        if leer("perfAutoRenderCacheEnable") == "0" then pedidos[#pedidos + 1] = { "perfAutoRenderCacheEnable", "1" } end
+    end
+    local cambios, fallidos = {}, {}
+    for _, kv in ipairs(pedidos) do
+        local antes = leer(kv[1])
+        if antes ~= kv[2] then
+            if poner(kv[1], kv[2]) then
+                cambios[#cambios + 1] = string.format('"%s": ["%s", "%s"]', kv[1], json_escapar(antes), json_escapar(kv[2]))
+            else
+                fallidos[#fallidos + 1] = '"' .. kv[1] .. '"'
+            end
+        end
+    end
+    local function nuestra(nombre)
+        local cod = tostring(nombre or "")
+        local k = cod:find(" \194\183 ", 1, true)                        -- « · » (UTF-8): el código va detrás del último
+        while k do cod = cod:sub(k + 4); k = cod:find(" \194\183 ", 1, true) end
+        cod = string.upper((cod:gsub("^%s+", ""):gsub("%s+$", "")))
+        if cod:sub(1, 4) == "PRO-" or cod:sub(1, 3) == "FX-" then return true end
+        local base, suf = cod:match("^(%u%u%u?)%-(.+)$")
+        if base == nil then return cod:match("^%u%u%u?$") ~= nil end
+        return suf == "CTX" or suf == "MAIN" or suf == "CMP" or suf == "EMOJI" or suf:match("^[KT]%d+$") ~= nil
+    end
+    local function es_on(v)
+        local s = string.lower(tostring(v))
+        if s == "off" or s == "false" or s == "0" or s == "0.0" or s == "none" or s == "-1" or s == "-1.0" then return false end
+        return not (s:find("disabl", 1, true) or s:find("auto", 1, true))
+    end
+    -- v5.56: la constante resolve.CACHE_ENABLED (1.0) PRIMERO (gemelo de fluidez_resolve): en Studio 21.1.2 las cadenas devuelven false
+    local valores = {}
+    pcall(function() if resolve.CACHE_ENABLED ~= nil then table.insert(valores, resolve.CACHE_ENABLED) end end)
+    table.insert(valores, 1)
+    for _, v in ipairs((type(orden.valores) == "table" and #orden.valores > 0) and orden.valores or { "On", "enabled", "Enabled", "on" }) do
+        table.insert(valores, v)
+    end
+    local F = { sondeos = 0 }
+    local function marcar(it)
+        if F.valor ~= nil then
+            local ok, r = pcall(function() return it:SetFusionOutputCache(F.valor) end)
+            return (ok and r) and true or false
+        end
+        if F.sondeos >= 3 then return false end
+        F.sondeos = F.sondeos + 1
+        local ok0, g0 = pcall(function() return it:GetIsFusionOutputCacheEnabled() end)
+        if ok0 then F.antes = tostring(g0) end
+        for _, v in ipairs(valores) do
+            local ok, r = pcall(function() return it:SetFusionOutputCache(v) end)
+            if ok and r then
+                local okg, g = pcall(function() return it:GetIsFusionOutputCacheEnabled() end)
+                if (not okg) or g == nil or g == "" or es_on(g) then
+                    F.valor = v
+                    if okg and g ~= nil then F.lectura = tostring(g) end
+                    return true
+                end
+            end
+        end
+        return false
+    end
+    local marcados, fallos, cuadros, pistas = 0, 0, 0, {}
+    local n = tonumber(tl:GetTrackCount("video")) or 0
+    for i = 1, n do
+        local nombre = tostring(tl:GetTrackName("video", i) or "")
+        local okp, activa = pcall(function() return tl:GetIsTrackEnabled("video", i) end)
+        if not (okp and activa == false) and (i == 1 or go or nuestra(nombre)) then
+            local n_pista = 0
+            for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do
+                local oke, en = pcall(function() return it:GetClipEnabled() end)
+                local vale = not (oke and en == false)
+                if vale and i == 1 then
+                    local okn, lista = pcall(function() return it:GetFusionCompNameList() end)
+                    local n_comps, de_cc = 0, false                      -- (nombres = cadenas: lista_api solo guarda objetos)
+                    if okn and type(lista) == "table" then
+                        for _, c in pairs(lista) do
+                            n_comps = n_comps + 1
+                            if tostring(c):sub(1, 12) == "CineCaptions" then de_cc = true end
+                        end
+                    end
+                    vale = n_comps > 0 and (go or de_cc)
+                elseif vale then
+                    local okc, nc = pcall(function() return it:GetFusionCompCount() end)
+                    vale = not (okc and tonumber(nc) == 0)
+                end
+                if vale then
+                    if marcar(it) then
+                        marcados = marcados + 1
+                        n_pista = n_pista + 1
+                        local okd, d = pcall(function() return it:GetDuration() end)
+                        if okd and tonumber(d) then cuadros = cuadros + math.floor(tonumber(d)) end
+                    else
+                        fallos = fallos + 1
+                    end
+                end
+            end
+            if n_pista > 0 then pistas[#pistas + 1] = string.format('["%s", %d]', json_escapar(nombre), n_pista) end
+        end
+    end
+    local okid, uid = pcall(function() return p:GetUniqueId() end)
+    local okf, fps = pcall(function() return tl:GetSetting("timelineFrameRate") end)
+    local function q(s) if s == nil then return "null" end return '"' .. json_escapar(tostring(s)) .. '"' end
+    return string.format('{"ok": true, "proyecto": %s, "go": %s, "uid": %s, "ubicacion": %s, "modo": %s, "despues_s": %s, "fondo": %s, '
+        .. '"cambios": {%s}, "fallidos": [%s], "marcados": %d, "fallos": %d, "cuadros": %d, "valor": %s, "lectura": %s, "antes": %s, "pistas": [%s], "fps": %s}',
+        q(nombre_p), tostring(go and true or false), q(okid and uid or ""), q(leer("perfCacheClipsLocation")), q(leer("perfRenderCacheMode")),
+        q(leer("perfAutoRenderCacheAfterTime")), q(leer("perfAutoRenderCacheEnable")), table.concat(cambios, ", "), table.concat(fallidos, ", "),
+        marcados, fallos, cuadros, q(F.valor), q(F.lectura), q(F.antes), table.concat(pistas, ", "), q(okf and fps or ""))
+end
+
 -- v5.4.40: lleva el cabezal al PRIMER fotograma del timeline actual (la app luego manda «reproducir»: Resolve no tiene llamada de script para reproducir ni la tecla Inicio llega siempre)
+-- v5.56: con orden.fluidez = true, antes la pasada de «fluidez» (su informe va en el campo "fluidez"); un Vista.lua viejo ignora el campo.
 local function cabezal_al_inicio(orden)
     local proyecto = proyecto_actual()
     if proyecto == nil then fail("No hay ningun proyecto abierto en Resolve.") end
+    local flu = nil
+    if orden.fluidez == true then
+        local okf, rf = pcall(fluidez, orden)
+        flu = okf and rf or string.format('{"ok": false, "error": "%s"}', json_escapar(tostring(rf)))
+    end
     local tl = proyecto:GetCurrentTimeline()
     if tl == nil then fail("No hay timeline abierto.") end
     local tc = tl:GetStartTimecode()
     local ok = false
     if tc ~= nil then ok = tl:SetCurrentTimecode(tc) and true or false end
     pcall(function() resolve:OpenPage("edit") end)
-    RESULTADO = string.format('{"ok": %s, "accion": "cabezal", "timecode": "%s"}', tostring(ok), json_escapar(tostring(tc)))
+    RESULTADO = string.format('{"ok": %s, "accion": "cabezal", "timecode": "%s"%s}', tostring(ok), json_escapar(tostring(tc)),
+        flu and (', "fluidez": ' .. flu) or "")
     print("VISTA " .. RESULTADO)
 end
 

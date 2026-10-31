@@ -2341,6 +2341,11 @@ class PlantillasWindow(QWidget):
         la tienen (o de 'solo'). En un hilo; la cuadricula se rehace al final."""
         if getattr(self, '_renderizando', False):
             return
+        app = getattr(self, 'app', None)
+        def go_ocupa_resolve():         # v5.56: nunca con GO en Resolve (su timeline temporal pasaba a ser el actual y GO dejaba sin poner los SFX)
+            return app is not None and getattr(app, '_go_ocupa_resolve', None) is not None and app._go_ocupa_resolve(silencioso)
+        if go_ocupa_resolve():
+            return
         import vistas_slider
         packs = []
         if solo is not None:
@@ -2362,16 +2367,22 @@ class PlantillasWindow(QWidget):
         estado = {'texto': tr('Abriendo Resolve…'), 'hechos': 0, 'errores': []}
         def trabajo():
             import vistas_reales
-            for pack in packs:
-                estado['texto'] = tr('Resolve renderiza «{p}» ({n} de {t})…', p=pack.nombre, n=estado['hechos'] + 1, t=len(packs))
-                formato = self._formato_vista(pack) or (pack.formatos[0] if pack.formatos else 'v')
-                ok, r = vistas_reales.renderizar_pack(pack.nombre, formato, al_estado=lambda t: estado.__setitem__('texto', t),
-                                                      abrir_resolve=not silencioso)
-                if not ok:
-                    estado['errores'].append(f'{pack.nombre}: {r}')
-                    if 'Resolve' in str(r) and not estado['hechos']:
+            vistas_reales._ACTIVOS[0] += 1          # v5.56: el lote ENTERO cuenta (entre un pack y otro GO veía 0 y colocaba mientras empezaba el siguiente)
+            try:
+                for pack in packs:
+                    if go_ocupa_resolve():          # v5.56: empezó un GO: el lote se corta aquí
                         break
-                estado['hechos'] += 1
+                    estado['texto'] = tr('Resolve renderiza «{p}» ({n} de {t})…', p=pack.nombre, n=estado['hechos'] + 1, t=len(packs))
+                    formato = self._formato_vista(pack) or (pack.formatos[0] if pack.formatos else 'v')
+                    ok, r = vistas_reales.renderizar_pack(pack.nombre, formato, al_estado=lambda t: estado.__setitem__('texto', t),
+                                                          abrir_resolve=not silencioso)
+                    if not ok:
+                        estado['errores'].append(f'{pack.nombre}: {r}')
+                        if 'Resolve' in str(r) and not estado['hechos']:
+                            break
+                    estado['hechos'] += 1
+            finally:
+                vistas_reales._ACTIVOS[0] -= 1
         def avance():
             if getattr(self, '_renderizando', False) and vivo(self):
                 self._poner_cuenta(estado['texto'], silencioso=silencioso)
@@ -7507,15 +7518,9 @@ class SubtitleApp(QWidget):
         pack = self._plantilla_un_clic()
         nombre_pack = tr('Diseño automático') if pack in ('auto', 'dinamico', 'Base títulos dinámicos') else plantillas.nombre_visible(pack)
         formato = self.formato_var.get() if hasattr(self, 'formato_var') else tr('Detectar solo')
-        # v5.5.7 (coherencia entre páginas): los Temas 5 y 6 SON la Edición PRO aunque su interruptor esté apagado, y con la PRO los efectos visuales
-        # clásicos no se aplican: los chips lo dicen en vez de «PRO: no» / «Visuales: sí». El chip del sonido por palabra se llamaba «Efectos» (se
-        # confundía con la página Efectos, que es lo visual): ahora «Sonido».
-        try:
-            import edicion_pro as _ep
-            pro_tema = pack in _ep.TEMAS_PRO
-        except Exception:
-            pro_tema = False
-        txt_pro = tr('sí') if self._go_pro() else (tr('la del tema') if pro_tema else tr('no'))
+        # v5.5.7: el chip del sonido por palabra se llamaba «Efectos» (se confundía con la página Efectos, que es lo visual): ahora «Sonido».
+        # v5.57: los Temas 5 y 6 ya no son la PRO con el interruptor apagado («la del tema»): sí o no, como los demás
+        txt_pro = tr('sí') if self._go_pro() else tr('no')
         chips = [(tr('Estilo: {p}', p=nombre_pack), self._menu_estilo_go,
                   tr('Clic: elegir el tema de GO (Tema 1 a Tema 6).') if plantillas.SOLO_TEMAS
                   else tr('Clic: elegir el estilo de GO (Referencia = captions palabra a palabra, línea fina y negrita + palabra grande; Diseño automático = 3 líneas).')),
@@ -7679,6 +7684,14 @@ class SubtitleApp(QWidget):
         try:
             import edicion_pro
             return edicion_pro.activado()
+        except Exception:
+            return False
+    def _go_pro_efectiva(self):
+        """v5.56: ¿hace algo la PRO en este GO? (edicion_pro.activa_en_go: el Tema 1 con la PRO encendida y nada en su menú = solo captions).
+        `_go_pro` sigue siendo el interruptor que se enseña."""
+        try:
+            import edicion_pro
+            return edicion_pro.activa_en_go()
         except Exception:
             return False
     def _alternar_pro_go(self):
@@ -8228,6 +8241,8 @@ class SubtitleApp(QWidget):
         self._go_render_estilo = None
         self._textos_pasos_go()
         self.go_panel.empezar()
+        self._go_n = getattr(self, '_go_n', 0) + 1       # v5.56: un GO nuevo cancela la reproducción pendiente del anterior (fluidez_resolve)
+        self._configurar_estimador()                     # v5.56: el modo de la ETA desde el primer paso (antes, el del GO anterior hasta _go_generar)
         self.go_panel.paso('timeline')
         self._go_decir_edicion()
         self._precargar_motores()          # v5.3: la voz y la IA de texto se cargan y se calientan mientras Resolve da el audio
@@ -8454,7 +8469,11 @@ class SubtitleApp(QWidget):
             self._esperar_vistas_reales()
             nombre_proyecto = self._go_proyecto()
             al_estado = lambda t: self.msg_queue.put(('status', t))
+            self._go_resolve_trabado = None
             self._go_reparar_resolve(al_estado, inmediato=True)              # v5.4.52: en Studio también se revisa Resolve ANTES de empezar
+            if self._go_resolve_trabado:                                     # v5.56: trabado y «Reparar Resolve solo si se traba» apagado: GO se detiene con el diagnóstico
+                self._go_tl_error = self._go_resolve_trabado
+                return
             try:
                 import efectos_visuales as _fx
                 con_broll = bool(_fx.activado() and _fx.opciones_guardadas().get('fx_broll') and _fx.broll_clave(_fx.opciones_guardadas()))
@@ -8467,9 +8486,16 @@ class SubtitleApp(QWidget):
                     prep = resolve_mcp.preparar_proyecto(nombre_proyecto, abrir=True, al_estado=al_estado)
                     listo = bool(prep.get('ok'))
                 else:
-                    # «Proyecto: el abierto»: se usa el que tenga Resolve (aunque esté vacío: ahí se arma el timeline)
-                    prep = resolve_mcp.preparar_resolve(abrir=True, pagina=None, al_estado=al_estado)
+                    # «Proyecto: el abierto»: se usa el que tenga Resolve (aunque esté vacío: ahí se arma el timeline). v5.56: tras reparar Resolve (arranca en un
+                    # «Untitled Project») se vuelve al proyecto más reciente del usuario, no se arma en el vacío
+                    prep = resolve_mcp.preparar_resolve(abrir=True, pagina=None, al_estado=al_estado, forzar_reciente=bool(getattr(self, '_go_reparado', False)))
                     listo = bool(prep.get('proyecto'))
+                    if listo:
+                        self._go_reparado = False
+                        if not str(prep.get('proyecto')).startswith('Untitled Project'):
+                            self._go_proyecto_previo = prep.get('proyecto')
+                if listo and nombre_proyecto:
+                    self._go_reparado = False
                 if listo:
                     self.msg_queue.put(('status', tr('Armando en Resolve un timeline con tu video…')))
                     r = resolve_mcp.crear_timeline_con_video(self._go_video_para_resolve(archivo, al_estado), ancho=medio['tl_ancho'], alto=medio['tl_alto'],
@@ -8483,6 +8509,11 @@ class SubtitleApp(QWidget):
                     registro.info(tr('Resolve falló armando tu proyecto: lo reparé y lo intento otra vez ({n} de 3).', n=intento + 1), 'GO · Resolve')
                     continue
                 break
+            if self._go_resolve_trabado:                                     # v5.56: trabado y la preferencia no deja cerrarlo: el diagnóstico es el motivo
+                self._go_tl_error = self._go_resolve_trabado
+                registro.aviso(tr('No pude preparar Resolve para tu video ({m}): GO se detiene (no se toca ningún otro timeline).', m=self._go_tl_error),
+                               'GO · timeline del video')
+                return
             if not listo:
                 self._go_tl_error = prep.get('motivo') or tr('Resolve no está listo')
                 registro.aviso(tr('No pude preparar Resolve para tu video ({m}): GO se detiene (no se toca ningún otro timeline).', m=self._go_tl_error),
@@ -8515,14 +8546,20 @@ class SubtitleApp(QWidget):
         mientras se transcribía (minutos), se repara y se vuelve a armar el proyecto con el video; antes la colocación caía al camino de Free y pedía
         «un clic en Resolve». Nunca lanza."""
         try:
-            if not (getattr(self, '_go_corriendo', False) and getattr(self, '_go_tl_args', None) and not getattr(self, '_go_tl_libre', True)):
+            if not (getattr(self, '_go_corriendo', False) and getattr(self, '_go_tl_args', None)):
                 return
             import colocacion as _col
-            import resolve_mcp as _rm
-            if _col.pids_resolve() and (_rm.responde(timeout=30) or _rm.responde(timeout=30)):
+            import salud_resolve
+            # v5.56: el diagnóstico único, también en Free (antes: dos pings de hasta 30 s cada uno, solo Studio). Sano → al momento; fantasma → segundos;
+            # sin responder → hasta 60 s sin señales de vida antes de repararlo
+            libre = getattr(self, '_go_tl_libre', True)
+            d = salud_resolve.diagnosticar(ping=None if libre else salud_resolve.ping_mcp, decir=lambda t: self.msg_queue.put(('status', t)))
+            if _col.pids_resolve() and d['estado'] == 'ok':
                 return
-            registro.aviso(tr('Resolve se cerró o no contesta antes de colocar: lo reparo y vuelvo a armar tu proyecto.'), 'GO · Resolve')
-            if self._go_rearmar_en_resolve(tr('Resolve se cerró o no contesta')):
+            if libre and d['estado'] == 'caido' and not d.get('caida'):
+                return                                                   # (Free cerrado: el paso de colocar lo abre con el Puente, como siempre)
+            registro.aviso(tr('Resolve no está bien antes de colocar ({m}): lo reparo y vuelvo a armar tu proyecto.', m=d.get('texto') or d['estado']), 'GO · Resolve')
+            if self._go_rearmar_en_resolve(d.get('texto') or tr('Resolve se cerró o no contesta')):
                 self.msg_queue.put(('status', tr('Vuelvo a colocar los subtítulos en Resolve…')))
                 try:
                     import resolve_bridge as _rb
@@ -8545,13 +8582,18 @@ class SubtitleApp(QWidget):
                                     'no terminó en', 'resolvemcp', 'resolve no responde', 'dejó de responder'))
     def _go_reparar_resolve(self, al_estado=None, motivo='', inmediato=False):
         """v5.5.1 (Studio por el MCP; Windows y Mac): deja Resolve en condiciones de repetir el paso que falló. True = repetir.
-        · inmediato=True (antes de empezar GO): solo si Resolve está colgado de verdad («No responde» y su registro mudo, en Windows) se cierra a la fuerza.
-        · después de un fallo: la conexión MCP se reinicia; si Resolve no está abierto (se cayó) se repite y lo abre preparar_proyecto; si está abierto
-          pero NO contesta a un script mínimo (colgado; en Mac es la única forma de saberlo) se cierra a la fuerza y se repite; si contesta, se repite tal cual.
+        v5.56 (Resolve «fantasma» real del usuario: proceso vivo sin ventana; el MCP contestaba y esto decía «pero contesta: repito» tres veces, 7 min, sin cerrarlo
+        nunca): el diagnóstico único salud_resolve.diagnosticar (ventanas + registro de Resolve + ping corto al MCP) dice ok / fantasma / colgado / caído:
+        · fantasma (se nota en segundos) o colgado (60 s seguidos sin señales de vida, nunca antes) → se cierra TODO lo de Resolve (por las buenas y, si no, a la
+          fuerza), se reabre, se vuelve al proyecto del usuario si GO trabaja en él y se repite el paso. Con «Reparar Resolve solo si se traba» apagado: no se
+          cierra nada, el diagnóstico queda en el Registro y en self._go_resolve_trabado, y GO se detiene (False).
+        · inmediato=True (antes de cada paso): sano → False al momento (nada que repetir).
+        · después de un fallo con Resolve sano: se reinicia la conexión MCP y se repite; cerrado → lo reabre el paso siguiente.
         Lo que Resolve tuviera sin guardar del proyecto de GO se pierde, pero GO lo vuelve a armar entero (el proyecto anterior ya quedó guardado)."""
         try:
             import colocacion
             import resolve_mcp
+            import salud_resolve
             if not colocacion.pids_resolve():
                 if inmediato:
                     return False
@@ -8560,29 +8602,45 @@ class SubtitleApp(QWidget):
                 if al_estado:
                     al_estado(tr('Reabriendo Resolve…'))
                 return True
-            colgado = False
-            if sys.platform.startswith('win'):
-                import resolve_bridge as _rb
-                est = _rb.estado_resolve_ahora() if inmediato else _rb.esperar_estado_resolve(12.0)
-                colgado = est == 'colgado'
-            if inmediato and not colgado:
+            r = salud_resolve.revisar_y_reparar(ping=salud_resolve.ping_mcp, decir=al_estado, camino='mcp', volver_a=self._go_proyecto_usuario(),
+                                                motivo='' if inmediato else motivo)
+            if r['parar']:
+                self._go_resolve_trabado = r['texto']
                 return False
-            if not colgado:
-                resolve_mcp.cerrar()                                      # un MCP atascado también da «no contestó»: se arranca de nuevo
-                colgado = not resolve_mcp.responde(timeout=30) and not resolve_mcp.responde(timeout=30)
-            if not colgado:
-                registro.aviso(tr('Resolve falló ({m}) pero contesta: repito el paso.', m=str(motivo or '—')[:160]), 'GO · Resolve')
+            if r['reparado']:
+                self._go_reparado = True
                 return True
-            registro.aviso(tr('Resolve dejó de responder ({m}): lo cierro y vuelvo a empezar.', m=str(motivo or 'colgado')[:160]), 'GO · Resolve')
-            if not colocacion.cerrar_resolve_a_la_fuerza(al_estado):
+            if r['estado'] in ('fantasma', 'colgado'):                   # (cerrado, pero no terminó de abrirse: lo reabre el paso siguiente)
+                self._go_reparado = True
+                return not inmediato
+            if inmediato:
                 return False
-            resolve_mcp.cerrar()
-            if al_estado:
-                al_estado(tr('Reabriendo Resolve…'))
+            if r['estado'] == 'caido':
+                resolve_mcp.cerrar()
+                registro.aviso(tr('Resolve se cerró solo ({m}): lo vuelvo a abrir y repito.', m=str(motivo or '—')[:160]), 'GO · Resolve')
+                return True
+            resolve_mcp.cerrar()                                          # un MCP atascado también da «no contestó»: se arranca de nuevo
+            registro.aviso(tr('Resolve falló ({m}) pero da señales de vida: no lo cierro y repito el paso.', m=str(motivo or '—')[:160]), 'GO · Resolve')
             return True
         except Exception:
             registro.excepcion(origen='GO · reparar Resolve')
             return False
+    def _go_proyecto_usuario(self):
+        """v5.56: el proyecto del USUARIO al que volver tras reparar Resolve, o None. Solo cuando GO trabaja en el proyecto que ya estaba abierto (chip
+        «Proyecto: el abierto», o GO sobre el timeline de Resolve): con «CineCaptions» GO crea uno nuevo igualmente."""
+        try:
+            nombre = None
+            if getattr(self, '_go_tl_args', None):
+                if self._go_proyecto():
+                    return None
+                nombre = (getattr(self, '_go_tl_info', None) or {}).get('proyecto') or getattr(self, '_go_proyecto_previo', None)
+            else:
+                import resolve_bridge
+                nombre = (resolve_bridge.video_detectado() or {}).get('proyecto') or getattr(self, '_go_proyecto_previo', None)
+            nombre = str(nombre or '').strip()
+            return nombre if nombre and not nombre.startswith('Untitled Project') else None
+        except Exception:
+            return None
     def _go_video_para_resolve(self, archivo, al_estado=None):
         """v5.4.52: el video que se lleva a Resolve. Si su audio es HE-AAC (videos bajados de Pinterest / Instagram / TikTok), Resolve lo renderiza MUDO:
         se usa una copia con la misma imagen y el audio en AAC-LC (audio_compatible). Si no hace falta o falla, el original."""
@@ -8609,11 +8667,20 @@ class SubtitleApp(QWidget):
                 pass
             self._esperar_vistas_reales()
             al_estado = lambda t: self.msg_queue.put(('status', t))
+            t_revision = time.time()
             try:                                                   # v5.4.41: Resolve se revisa ANTES de empezar (colgado, sin ventana, o Puente que latía pero no contesta): se arregla YA, sin esperar minutos
                 import colocacion
                 colocacion.preparar_resolve_para_go(decir=al_estado)
             except Exception:
                 registro.excepcion(origen='GO · revisar Resolve antes de empezar')
+            try:                                                   # v5.56: trabado y «Reparar Resolve solo si se traba» apagado: GO se detiene con el diagnóstico
+                import salud_resolve
+                trabado = salud_resolve.trabado_sin_permiso(t_revision)
+            except Exception:
+                trabado = ''
+            if trabado:
+                self._go_tl_error = trabado
+                return
             if resolve_bridge.modo_actual() == 'manual':
                 al_estado(tr('Lanzando el Puente en Resolve…'))
                 if not resolve_bridge.lanzar_puente_auto() and not resolve_bridge.relanzar_puente_tras_detener():   # v5.5.7: plan B si Resolve seguía reproduciendo
@@ -8652,8 +8719,14 @@ class SubtitleApp(QWidget):
             colocacion.PROYECTO_INICIAL = None                       # (ya se uso: ArmarVideo borró ese proyecto vacío)
             rep = next((r for r in reversed(resolve_bridge.reportes_del_registro()) if r.get('script') == 'CineCaptions_ArmarVideo' and (r.get('cuando') or 0) >= desde - 2), None)
             info = (rep or {}).get('armado')
+            if not ok:
+                try:                                                 # v5.56: la preferencia no dejó repararlo: el diagnóstico es el motivo
+                    import salud_resolve
+                    err = salud_resolve.trabado_sin_permiso(t_revision) or err
+                except Exception:
+                    pass
             if not ok or not isinstance(info, dict):
-                self._go_tl_error = str(err or (rep or {}).get('mensaje') or tr('Resolve no armó el timeline'))[:300]
+                self._go_tl_error = str(err or (rep or {}).get('mensaje') or tr('Resolve no armó el timeline'))[:400]
                 registro.aviso(tr('Resolve no armó el timeline con tu video ({m}): GO se detiene (no se toca ningún otro timeline).', m=self._go_tl_error), 'GO · timeline del video')
                 return
             self._go_tl_info = info
@@ -8693,6 +8766,11 @@ class SubtitleApp(QWidget):
                 # v5.5.4: GO sobre el timeline de Resolve (sin video propio) y Resolve sin timeline abierto (se reabrió tras cerrarse): en Studio se abre el
                 # proyecto más reciente con su timeline y se repite, en vez de rendirse con «No hay ningún timeline activo»
                 import resolve_mcp
+                if self._es_fallo_de_resolve(motivo) and (getattr(self, '_go_resolve', None) or {}).get('edicion') == 'Studio' and resolve_mcp.ruta_exe() is not None:
+                    # v5.56: Studio trabado (fantasma o colgado) con GO sobre tu timeline: se repara (cierra, reabre y vuelve a TU proyecto) y luego se abre su timeline
+                    if not self._go_reparar_resolve(decir, motivo=motivo):
+                        return False
+                    motivo = 'timeline activo'
                 if 'timeline activo' not in str(motivo or '').lower() or resolve_mcp.cliente() is None:
                     return False
                 decir(tr('Resolve no tenía ningún timeline abierto: abro tu proyecto más reciente…'))
@@ -8802,8 +8880,10 @@ class SubtitleApp(QWidget):
         self._set_inputs_enabled(False)
         self._guardar_preferencias()
         self._arrancar_reloj()
-        try:
-            self.go_panel.estimador.poner_efectos(self._go_visuales())
+        self._configurar_estimador()
+        try:                                                           # v5.56: Temas 1/3 sin la PRO no corren la IA de texto (ver _run_pipeline)
+            import ia_texto
+            ia_texto.precarga_en_este_go(not self._sin_ia_en_go())
         except Exception:
             pass
         self._go_paso_actual = 'voz'
@@ -8812,6 +8892,26 @@ class SubtitleApp(QWidget):
         self.worker = threading.Thread(target=self._run_pipeline, args=(media_path.resolve(), source_lang, False, 0, 0, 'dinamico', bool(self.sfx_var.get()), None, None), daemon=True)
         self.worker.start()
     # -- v5.4.8: pausar, cancelar y reanudar GO ---------------------------------------------------------------------------------------------------------------
+    def _sin_ia_en_go(self):
+        """v5.56: ¿este GO se salta el modelo de la IA de texto? Los Temas 1 y 3 (packs de elementos) eligen su palabra grande con su planificador
+        (en GO, mains = None) y sin la PRO el modelo solo daba la ortografía (~30 s con un video nuevo): se queda la del diccionario."""
+        try:
+            p = plantillas.buscar_pack(self._plantilla_un_clic() or '')
+            return bool(p is not None and getattr(p, 'kinetic', False) and not self._go_pro_efectiva())
+        except Exception:
+            return False
+    def _configurar_estimador(self):
+        """v5.56: el modo de la ETA («Motions completo» tarda como la PRO aunque su interruptor esté apagado; v5.57: los Temas 5/6 ya no) y la
+        IA que no correrá. Se llama al empezar a contar (_go, también con el audio del timeline, que empieza antes de _go_generar) y otra vez en
+        _go_generar."""
+        try:
+            e = self.go_panel.estimador
+            e.poner_efectos(self._go_visuales())
+            e.poner_pro(self._go_pro_efectiva() or self._go_motions_completo())
+            if self._sin_ia_en_go():
+                e.reutilizado('ia')
+        except Exception:
+            pass
     def _go_pausar(self):
         self._pausa_go = not getattr(self, '_pausa_go', False)
         self.go_panel.poner_pausa(self._pausa_go)
@@ -11868,7 +11968,7 @@ class SubtitleApp(QWidget):
             import efectos_visuales
             try:
                 import edicion_pro
-                pro = edicion_pro.activado()
+                pro = edicion_pro.activa_en_go()           # (v5.56: la PRO que de verdad hace algo en este GO)
             except Exception:
                 pro = False
             if (efectos_visuales.activado() and efectos_visuales.opciones_guardadas().get('fx_cortes')) or pro:          # v5.4.49: la Edición PRO también los usa
@@ -11917,7 +12017,12 @@ class SubtitleApp(QWidget):
     def _planificar_efectos(self, media_path, words, cortes_fx, avisar=True):
         """El plan de efectos de ESTE video (nunca rompe GO: si algo falla, se sigue sin efectos). Con avisar=False (en segundo plano, mientras la IA corrige el texto) no toca la línea de estado."""
         self._efectos_plan = None
-        if self._es_tema5():                           # v5.4.51: el Tema 5 hace TODA la edición (también el sonido): Efectos no pone nada…
+        try:
+            import edicion_pro
+            pro_t5 = self._es_tema5() and edicion_pro.activa_en_go()     # (v5.57: sin la PRO, los Temas 5/6 llevan los efectos como los demás)
+        except Exception:
+            pro_t5 = False
+        if pro_t5:                                     # v5.4.51: el Tema 5 hace TODA la edición (también el sonido): Efectos no pone nada…
             try:                                       # …salvo, v5.33, la intro del «Gancho del inicio» (primer segundo: luz, zoom y su golpe)
                 import efectos_visuales
                 plan = {'eventos': [], 'duracion': None, 'resumen': '', 'zonas': [], 'solo_audio': True, 'video': str(media_path)}
@@ -11932,7 +12037,7 @@ class SubtitleApp(QWidget):
             import edicion_pro
             # v5.4.49: con la Edición PRO activa, los efectos VISUALES se apagan: la PRO hace la intro, el gancho, los punch-ins y los motion graphics
             # (y el zoom de Efectos sobre V1 desalinearía el recorte de la persona). El audio extra (música, riser del gancho) sigue.
-            visuales = efectos_visuales.activado() and not edicion_pro.activado() and not self._es_tema5()
+            visuales = efectos_visuales.activado() and not edicion_pro.activa_en_go()     # (v5.56: la PRO sin nada = solo captions; v5.57: en los 6 temas)
             if visuales:
                 if avisar:
                     self.msg_queue.put(('status', tr('Preparando los efectos visuales…')))
@@ -11996,6 +12101,9 @@ class SubtitleApp(QWidget):
             import director_sonido
             import sonido_skill                          # v5.43: el sonido lo diseña la biblioteca del autor con las reglas de MAPA_SFX.md
             usar_skill = sonido_skill.activo()
+            if usar_skill and not sonido_skill.disponible():      # v5.56: sin biblioteca salían 0 sonidos y los de siempre ya estaban apagados
+                sonido_skill.log('No encuentro la biblioteca de sonidos (ni la que trae el programa): este GO lleva los sonidos de siempre.', 'aviso')
+                return
             if usar_skill and not director_sonido.activo():
                 sonido_skill.poner_pref(ai_sound_director=True)      # la tubería de colocación (pistas AI SFX, apagar Simple) es la del director
             if not (usar_skill or director_sonido.activo()):
@@ -12039,6 +12147,9 @@ class SubtitleApp(QWidget):
                 if hilo.is_alive():
                     director_sonido.log('límite de espera: uso lo que ya terminó; el trabajo tardío no cambiará el diseño colocado', 'aviso')
                 res = director_sonido.cerrar_preparacion(res)
+            if res:
+                import vistas_reales
+                vistas_reales.esperar_libre()      # v5.56: si no, el destino de los SFX era el timeline temporal de una vista real
             destino = director_sonido.destino_actual_resolve() if res else None
             self._efectos_plan = director_sonido.al_colocar(getattr(self, '_efectos_plan', None), res, self.video_var.get().strip().strip('"'),
                                                             plan_pro=getattr(self, '_pro_plan', None), destino=destino)
@@ -12086,7 +12197,9 @@ class SubtitleApp(QWidget):
         self._pro_plan = None
         try:
             import edicion_pro
-            tema5 = self._es_tema5()                   # el Tema 5 es la Edición PRO completa (captions incluidos): va aunque el interruptor esté apagado
+            # v5.57 (el usuario: «esa misma lógica para los 6 temas, para que los captions de solo captions lo hagan rápido»): los Temas 5 y 6 ya no
+            # son la PRO completa por sí solos: su motor (escenas, pasos, zooms…) solo con la PRO encendida y algo en su menú, como los demás
+            tema5 = self._es_tema5()
             tema_pro = 'neon' if plantillas.tema_base(getattr(self, 'plantilla_sel', '') or '') == 'Kinetic' else None    # v5.5.13: con el Tema 1 la PRO va en neón
             try:                                       # v5.55: con un color elegido en «Crea tu estilo» el pase ligero no recolorea las palabras clave
                 aj_sel = self._ajustes_de_pack(plantillas.buscar_pack(getattr(self, 'plantilla_sel', '') or ''))
@@ -12095,13 +12208,15 @@ class SubtitleApp(QWidget):
                 sin_color_claves = False
             if not words:
                 return
-            if not (edicion_pro.activado() or tema5):
+            if not edicion_pro.activa_en_go():         # v5.56/v5.57: la PRO encendida y nada en su menú = solo captions (en los 6 temas)
                 # v5.4.51: los Temas 1–4 sin la PRO llevan un pase LIGERO (edicion_pro_temas): velo de legibilidad en videos claros, acompañantes
                 # bajo el caption, la palabra destacada en el color del video y la regla de la cara. Se apaga con la preferencia 'temas_mejoras'.
                 # v5.5.13: el Tema 1 sin la PRO = SOLO sus captions neón («si solo es captions, solo captions»); «Motions completo» solo si lo encendió
                 op_go = edicion_pro.opciones_guardadas()
                 if tema_pro == 'neon':
                     op_go = edicion_pro.opciones_neon(op_go)
+                else:                                      # v5.57: el pase ligero es parte de SOLO CAPTIONS: sus acompañantes no dependen de lo
+                    op_go = dict(op_go, pro_motions_modo='auto', pro_motions=[])    # elegido en el menú de la PRO (de fábrica, ahora nada)
                 try:
                     import ajustes_ui
                     if ajustes_ui.leer_prefs().get('temas_mejoras', True) is False or tema_pro == 'neon':
@@ -12123,6 +12238,8 @@ class SubtitleApp(QWidget):
                 # ligero, sin el saludo, la fecha ni el concepto; Motions completo, con iconos 3D y sin las tarjetas que dibujan emojis: REEL_CON_EMOJI)
                 self._pro_plan = {'ligero': True, 'video': str(media_path), 'piezas': [], 'idioma': idioma or 'es',
                                   'opciones': op_go, 'tema': tema_pro, 'emojis': False, 'sin_color_claves': sin_color_claves}
+                if tema5:                                  # v5.57: los Temas 5/6 sin la PRO: sus captions y la regla de la cara (sin el velo, los
+                    self._pro_plan['solo_captions'] = True  # acompañantes ni el color del pase de los Temas 1–4: no son de su diseño)
                 return
             self.msg_queue.put(('status', tr('Edición PRO: pensando la edición de este video…')))
             cortes = None
@@ -12152,10 +12269,9 @@ class SubtitleApp(QWidget):
             # v5.55: la decisión de los emojis viaja en el plan (con el tema REAL de este GO): aplicar() y «Listo» de Efectos › Posición la respetan
             # aunque la opción cambie después, así captions y PRO nunca se contradicen
             plan['emojis'] = edicion_pro.emojis_permitidos(getattr(self, 'plantilla_sel', None), plan.get('opciones'))
-            solo_motions = bool((plan.get('opciones') or edicion_pro.opciones_guardadas()).get('pro_motions_completo'))
-            # v5.5.13: el Tema 1 neón también sin piezas genéricas (sus motions del kit y sus captions se suman al aplicar)
-            if plan.get('piezas') or tema5 or solo_motions or plan.get('tema') == 'neon':   # v5.5.9: con «Motions completo», aunque la PRO no tenga gráficos para este video
-                self._pro_plan = plan
+            # v5.57: aquí la PRO SIEMPRE tiene algo encendido en su menú (activa_en_go): el plan va aunque no lleve ni un motion (p. ej. solo
+            # «detrás de ti» o la píldora, que se arman al aplicar); antes, sin piezas, los Temas 2–4 se quedaban sin «detrás de ti»
+            self._pro_plan = plan
             registro.info('Edición PRO: ' + plan.get('resumen', '') + (' · Tema 5 (captions propios)' if tema5 else '')
                           + ('' if plan['emojis'] else ' · sin emojis (se activan con «Emojis animados»)'), 'edición pro')
         except Exception:
@@ -12213,7 +12329,13 @@ class SubtitleApp(QWidget):
             plan['kitneon'] = neon['escena']
             plan['kitneon_texto'] = bool(neon.get('texto'))     # v5.43: los captions ya son los Text+ de GO (editables): la PRO no pone clips neón
         neon_pro = bool(plan and plan.get('kitneon') and not (plan.get('kitneon_texto') and plan.get('kitneon_motions') is None))   # (Text+ sin la PRO: nada que poner)
-        if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or solo_motions or neon_pro):   # (v5.5.9: «Motions completo» también)
+        # v5.56 (la PRO solo pone lo que se activa en su menú): también se lanza con «detrás de ti», B-roll, emojis o píldora aunque no haya ni un
+        # motion (antes solo con motions: con el Tema 1 sin «Kit de motions», «detrás de ti» no se aplicaba)
+        # (v5.57: en los 6 temas, cualquier cosa encendida en su menú: `_menu`)
+        op_plan = (plan or {}).get('opciones') or {}
+        otras = bool(plan and (plan.get('broll') or str(op_plan.get('pro_mascara') or 'no') != 'no' or op_plan.get('pro_emojis') or op_plan.get('_menu')
+                               or set(op_plan.get('_neon_extras') or []) & {'detras', 'emoji', 'pildora', 'broll'}))
+        if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or solo_motions or neon_pro or otras):   # (v5.5.9: «Motions completo» también)
             return ''
         try:                                   # el plan es de un video: si ahora hay otro cargado (regenerar), no se aplica el de antes
             actual = self.video_var.get().strip().strip('"')
@@ -12260,8 +12382,19 @@ class SubtitleApp(QWidget):
             return False
         self.status_var.set(tr('Colocando los subtítulos en Resolve...'))
         self._gen_fase('colocar')
+        self._go_n = getattr(self, '_go_n', 0) + 1      # v5.56: toda colocación nueva (también desde el editor) cancela la reproducción pendiente del GO anterior
         def worker():
             empezo = time.time()
+            try:
+                import vistas_reales
+                vistas_reales.esperar_libre()          # v5.56: una vista real en curso deja SU timeline temporal como el actual
+            except Exception:
+                pass
+            try:                                       # v5.56: si la reproducción diferida de un GO anterior ya arrancó, se para (reproduciendo, Resolve
+                import colocacion as _col              # no contesta a los scripts); si no la lanzó CineCaptions no hace nada
+                _col.detener_reproduccion()
+            except Exception:
+                pass
             try:
                 resolve_bridge.limpiar_resultado_viejo()
             except Exception:
@@ -12296,6 +12429,12 @@ class SubtitleApp(QWidget):
                 except Exception:
                     pass
                 ok, err = resolve_bridge.ejecutar('subtitulos')
+            if not ok:
+                try:                                                     # v5.56: Resolve trabado y «Reparar Resolve solo si se traba» apagado: el diagnóstico claro es el error
+                    import salud_resolve
+                    err = salud_resolve.trabado_sin_permiso(inicio_total) or err
+                except Exception:
+                    pass
             veredicto, reparado = None, []
             if colocacion and ok:
                 try:
@@ -12359,9 +12498,41 @@ class SubtitleApp(QWidget):
                 pass
             if ok and colocacion and getattr(self, '_go_corriendo', False):
                 try:                                   # v5.52: «Reproducir al terminar» va siempre activada
-                    self.msg_queue.put(('status', tr('Reproduciendo el timeline desde el principio…')))
-                    rep_ok, rep_txt = colocacion.reproducir_desde_inicio()
-                    (registro.info if rep_ok else registro.aviso)(rep_txt, 'GO · reproducir')
+                    # v5.56 (el usuario: «mejora el render cache para que la preview en Resolve sea fluida sin lags»): aquí solo se MARCA la caché de
+                    # nuestros clips (fluidez_resolve.preparar, ~1 s) y GO termina; la espera a que Resolve la llene va en un hilo y la reproducción
+                    # empieza cuando está lista (antes empezaba al instante, con la caché vacía: a tirones). Sin nada que cachear, se reproduce ya.
+                    import fluidez_resolve
+                    desde_cache, gen = time.time() - 2, getattr(self, '_go_n', 0)
+                    self.msg_queue.put(('status', tr('Preparando la reproducción fluida en Resolve…')))
+                    info_fl = fluidez_resolve.preparar()
+
+                    def sigue():
+                        return getattr(self, '_go_n', 0) == gen       # otro GO o colocación (editor, regenerar) cancela esta reproducción
+
+                    def reproducir(diferida=False):
+                        # diferida: nunca por teclado y mirando otra vez `sigue` antes de pulsar (colocacion.reproducir_desde_inicio)
+                        rep_ok, rep_txt = colocacion.reproducir_desde_inicio(fluidez=False, teclas=not diferida, seguir=sigue if diferida else None)
+                        (registro.info if rep_ok else registro.aviso)(rep_txt, 'GO · reproducir')
+                        if rep_ok and diferida:                          # mientras dura, las vistas reales siguen esperando (_go_ocupa_resolve)
+                            self._fluidez_fin_play = time.time() + float(info_fl.get('dur_s') or 60) + 10
+                        return rep_ok
+
+                    if info_fl.get('ok') and int(info_fl.get('cuadros') or 0) > 0:
+                        testigo = object()                               # (el finally solo limpia la marca de SU espera, no la de un GO posterior)
+
+                        def esperar_y_reproducir():
+                            try:
+                                fluidez_resolve.esperar_y_reproducir(info_fl, lambda: reproducir(diferida=True), sigue=sigue, desde=desde_cache,
+                                                                     al_estado=lambda t: self.msg_queue.put(('status', t)))
+                            finally:
+                                if getattr(self, '_fluidez_hilo', None) is testigo:
+                                    self._fluidez_esperando = False
+                        self._fluidez_hilo, self._fluidez_esperando = testigo, True     # (las vistas reales esperan: _go_ocupa_resolve)
+                        threading.Thread(target=esperar_y_reproducir, daemon=True, name='fluidez-reproducir').start()
+                    else:
+                        registro.info(fluidez_resolve.resumen(info_fl), 'GO · fluidez')
+                        self.msg_queue.put(('status', tr('Reproduciendo el timeline desde el principio…')))
+                        reproducir()
                 except Exception:
                     registro.excepcion(origen='GO · reproducir')
             extra = ''
@@ -12393,7 +12564,14 @@ class SubtitleApp(QWidget):
             if nota_fx:
                 extra = (extra + ' · ' if extra else ' (') + nota_fx + ('' if extra else ')')
             self.msg_queue.put(('colocado_en_resolve', (ok, err, extra, n_cues, langs, veredicto)))
-        threading.Thread(target=worker, daemon=True).start()
+
+        def con_marca():
+            try:
+                worker()
+            finally:
+                self._colocando = False
+        self._colocando = True                           # v5.56: mientras coloca, las vistas reales esperan (_go_ocupa_resolve; tras «Revisar en el
+        threading.Thread(target=con_marca, daemon=True).start()     # editor», _go_corriendo ya está en False)
         return True
     def _avisar_correr_a_mano(self, titulo, cabecera):
         """Manda a correr el script a mano, diciendo POR QUE hizo falta.
@@ -13200,6 +13378,14 @@ class SubtitleApp(QWidget):
         """True mientras se transcribe o se genera (no se corta un trabajo a medias)."""
         w = getattr(self, 'worker', None)
         return bool(getattr(self, '_go_corriendo', False) or (w is not None and w.is_alive()))
+    def _go_ocupa_resolve(self, silencioso=True):
+        """v5.56: ¿Resolve está con GO? Trabajando, colocando (también tras «Revisar en el editor», con _go_corriendo ya en False) o, para lo que se
+        lanza solo (silencioso), los 2 minutos tras un GO, con Resolve reproduciendo el resultado. Las vistas reales esperan."""
+        if self._trabajando() or getattr(self, '_colocando', False) or getattr(self, '_fluidez_esperando', False):
+            return True
+        t_fin = getattr(getattr(self, 'go_panel', None), '_t_fin', None)
+        reproduciendo = time.time() < float(getattr(self, '_fluidez_fin_play', 0) or 0)     # (la reproducción diferida tras esperar la caché)
+        return bool(silencioso and ((t_fin and time.time() - t_fin < 120) or reproduciendo))
     def _licencia_revisar(self, forzar=True, manual=False):
         """Verifica la licencia con la tienda en un hilo. forzar=False (reloj de 30 min): solo si la
         última verificación correcta tiene más de LIC_REVALIDAR_HORAS horas."""
@@ -13594,7 +13780,8 @@ class SubtitleApp(QWidget):
                 return {}
             try:                                       # v5.37: con el AI Sound Director encendido, él es el único dueño del sonido: las reglas de
                 import director_sonido                 # siempre solo le dicen qué había (sfx_eventos en los bloques) y Resolve no recibe sus «Hit»
-                if director_sonido.activo() and not getattr(self, '_go_sin_resolve', False):     # (sin Resolve, el MP4 lleva los de siempre)
+                import sonido_skill                    # (v5.56: sin biblioteca el sonido no pondría nada: entonces van los de siempre)
+                if director_sonido.activo() and not getattr(self, '_go_sin_resolve', False) and not (sonido_skill.activo() and not sonido_skill.disponible()):     # (sin Resolve, el MP4 lleva los de siempre)
                     director_sonido.log(f"Simple: {sum(len(b.get('sfx_eventos') or []) for b in bloques)} sonidos de las reglas de siempre NO van a Resolve (los decide el director)")
                     return {}
             except Exception:
@@ -14193,6 +14380,7 @@ class SubtitleApp(QWidget):
                     words = None
                 if words:
                     registro.info(f'Voz: transcripción reutilizada ({len(words)} palabras)', 'voz')
+                    self.msg_queue.put(('reutilizado', 'voz'))         # v5.56: la ETA de GO no cuenta el tiempo de transcribir
                     try:                       # v5.53: el motor de voz precargado al pulsar GO no se usará: soltarlo sin esperar
                         import motor_voz       # (si no, cuenta 6 GB «liberables» en vram_para_ia_gb y cambia la IA de texto → falla la caché de la IA)
                         if motor_voz.modo_gpu() != 'residente':
@@ -14294,6 +14482,12 @@ class SubtitleApp(QWidget):
                         # palabras (sin abrir el editor); queda guardado para
                         # retocarlo luego con «Editar marcas»
                         import ia_texto
+                        # v5.56 (el usuario: «menos de un minuto solo captions»; «tiene que hacerlo rápido»): los Temas 1 y 3 eligen su palabra grande
+                        # con su planificador (en GO, mains = None: los roles de la IA no se usan); sin la PRO el modelo solo daba la ortografía y
+                        # costaba ~30 s con un video nuevo. Se queda la corrección por diccionario; si el resultado de la IA ya estaba guardado, se usa
+                        con_modelo = not self._sin_ia_en_go()
+                        if not ia_texto.disponible() or not con_modelo or ia_texto.en_cache(palabras, base_lang):
+                            self.msg_queue.put(('reutilizado', 'ia'))          # v5.56: el modelo no va a correr: la ETA no lo cuenta
                         self.msg_queue.put(('paso', 'ia'))
                         self.msg_queue.put(('phase_determinate', None))
                         self.msg_queue.put(('status', tr('La IA corrige el texto y elige las palabras clave…')))
@@ -14301,7 +14495,9 @@ class SubtitleApp(QWidget):
                             palabras, base_lang, progreso=lambda f: self.msg_queue.put(('progress', f)),
                             estado=lambda t: self.msg_queue.put(('status', t)),
                             tamanos=getattr(self, 'tamanos_grupo', None), peso_conector=getattr(self, 'peso_conectores', None),
-                            con_emojis=self._go_emojis() and self._emojis_permitidos(None))   # auditoría v5.11 · v5.54: sin la PRO y su opción de emojis, la IA no los elige
+                            con_emojis=self._go_emojis() and self._emojis_permitidos(None),   # auditoría v5.11 · v5.54: sin la PRO y su opción de emojis, la IA no los elige
+                            con_modelo=con_modelo)
+                        ia_texto.precarga_en_este_go(True)                 # (pasado este paso, la precarga vuelve a ser la de siempre)
                         self._resumen_ia = resumen_ia
                         self._words_corregidas = texto_corregido(words, palabras_finales)
                         roles_guardar = roles_finales
@@ -14500,6 +14696,9 @@ class SubtitleApp(QWidget):
                 elif kind == 'duracion':
                     if un_clic:
                         self.go_panel.estimar_duracion(payload)
+                elif kind == 'reutilizado':                      # v5.56: voz / IA ya hechas (caché): su paso dura segundos
+                    if un_clic:
+                        self.go_panel.estimador.reutilizado(payload)
                 elif kind == 'paso':
                     # v5.1: los pasos de GO (los manda el hilo de trabajo)
                     if un_clic:

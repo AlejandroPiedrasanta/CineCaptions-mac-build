@@ -500,7 +500,7 @@ class PaginaEfectos(QWidget):
         """Con la Edición PRO activa (o «Visuales: no» en Inicio) los efectos clásicos no se aplican y no se enseñan; sin ella, se ven como siempre."""
         try:
             import edicion_pro
-            pro = bool(edicion_pro.en_juego())                  # el interruptor, o el Tema 5 / 6 (que siempre son la PRO)
+            pro = bool(edicion_pro.en_juego())                  # el interruptor (v5.57: también con el Tema 5 / 6)
         except Exception:
             pro = False
         pliega = pro or not F.activado()                        # F.activado(): el chip «Visuales» de Inicio

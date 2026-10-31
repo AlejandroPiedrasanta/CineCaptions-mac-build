@@ -192,12 +192,25 @@ def _respaldos(modelo):
     return [m for m in hay if _rango(m) > _rango(modelo) and m != '4B'] or (['1.7B'] if modelo != '1.7B' else [])
 
 
+_SIN_PRECARGA = [False]           # v5.56: este GO no correrá el modelo (Temas 1/3 sin la PRO): no cargarlo en segundo plano
+
+
+def precarga_en_este_go(hace_falta):
+    """v5.56: lo dice GO al empezar; si el modelo no hace falta, precargar() no lo carga (gastaría la GPU mientras Resolve coloca)."""
+    _SIN_PRECARGA[0] = not hace_falta
+
+
+def hace_falta():
+    """v5.56: False si este GO no correrá el modelo (no se carga ni se le hace sitio descargando la voz; al final GO suelta las dos igual)."""
+    return not _SIN_PRECARGA[0]
+
+
 def precargar():
     """v5.3: arranca la IA de texto EN SEGUNDO PLANO (modelo + calentamiento) sin bloquear a nadie. Se llama al pulsar GO
     (mientras la voz trabaja) o al terminar la voz: cuando llegan las palabras, el modelo ya esta listo. True si quedo en
     marcha o ya estaba."""
     try:
-        if not disponible():
+        if not disponible() or _SIN_PRECARGA[0]:
             return False
         if not _LOCK.acquire(blocking=False):          # un pedido esta corriendo: el servidor ya existe
             return True
@@ -291,6 +304,15 @@ def _sin_traducciones(textos, resultado, idioma):
             continue
         buenas[i] = nueva
     return dict(resultado, correcciones=buenas)
+
+
+def en_cache(palabras, idioma='es', modo=None):
+    """v5.56: ¿analizar() reutilizaría su resultado guardado? (la ETA de GO no cuenta entonces el tiempo del modelo). Nunca lanza."""
+    try:
+        textos = [str(p.get('word', '')).strip() for p in palabras]
+        return _leer_cache(_clave_cache(textos, idioma, modo, motor_voz.modelo_texto())) is not None
+    except Exception:
+        return False
 
 
 def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
@@ -1032,15 +1054,16 @@ def emojis_sin_ia(palabras, roles, idioma='es', cada=10):
 
 
 def marcar_todo(palabras, idioma='es', progreso=None, estado=None, tamanos=None, peso_conector=None,
-                con_emojis=True, quitar_signos=True):
+                con_emojis=True, quitar_signos=True, con_modelo=True):
     """Lo que hace el un-clic: corregir + elegir + emojis + sin signos.
     Devuelve (palabras_corregidas, roles, resumen) — sin IA instalada, el
-    motor de siempre (y los emojis por las claves del catalogo)."""
+    motor de siempre (y los emojis por las claves del catalogo).
+    v5.56: con_modelo=False = el modelo solo si su resultado ya está guardado (GO de solo captions con un tema que no usa los roles de la IA)."""
     resumen = {'ia': False, 'cambios': 0, 'modelo': None, 'emojis': 0, 'signos': 0}
     pesos, propuestos = None, None
     palabras = [dict(p) for p in palabras]
     marcar_fin_de_frase(palabras)
-    if disponible():
+    if disponible() and (con_modelo or en_cache(palabras, idioma)):
         try:
             r = analizar(palabras, idioma, progreso=progreso, estado=estado)
             buenas = filtrar_correcciones(palabras, r['correcciones'], idioma)      # v5.5.17: nada de «corregir» lo que estaba bien

@@ -27,13 +27,15 @@ svg.i { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: rou
 .hk { width: 1000px; left: 40px; text-align: center; }
 .hk > div { line-height: 1; }
 .hk .cnt { display: inline-block; position: relative; }
-.hl-esp { font: 800 34px Inter; letter-spacing: .42em; color: #fff; text-transform: uppercase; margin-bottom: 10px; filter: drop-shadow(0 3px 10px var(--sombra)); }
+/* v5.56 (el usuario: «el Tema 1 tiene un efecto sombra, quítaselo»): los captions (hook) sin sombra oscura, como el pack (Kin 19).
+   isolation hace lo que hacía el filter con el apilado: el .mk (z-index 1) queda dentro de su línea y los aros siguen ENCIMA de las palabras */
+.hl-esp { font: 800 34px Inter; letter-spacing: .42em; color: #fff; text-transform: uppercase; margin-bottom: 10px; isolation: isolate; }
 .hl-esp .cnt { margin-right: -.42em; }
-.hl-big { font-family: Cond; line-height: .86; text-transform: uppercase; color: #fff; filter: drop-shadow(0 8px 22px var(--sombra)); }
-.hl-serif { font-family: Serif; color: #fff; line-height: 1.04; filter: drop-shadow(0 4px 14px var(--sombra)); }
+.hl-big { font-family: Cond; line-height: .86; text-transform: uppercase; color: #fff; isolation: isolate; }
+.hl-serif { font-family: Serif; color: #fff; line-height: 1.04; isolation: isolate; }
 .hl-script { font-family: Script; line-height: .95; }
-.scr { padding: 0 .14em; filter: drop-shadow(0 4px 12px var(--sombra)); }
-.stk { font-family: Cond; text-transform: uppercase; line-height: 1; padding: .12em .32em .03em; border-radius: 8px; box-shadow: 0 14px 32px var(--sombra); }
+.scr { padding: 0 .14em; isolation: isolate; }
+.stk { font-family: Cond; text-transform: uppercase; line-height: 1; padding: .12em .32em .03em; border-radius: 8px; }
 .f-lima, .f-acento, .f-mag, .f-acento2, .f-blanco { -webkit-background-clip: text; background-clip: text; color: transparent; }
 .noti { width: 940px; height: 150px; border-radius: 40px; background: rgba(255,255,255,.97); box-shadow: 0 22px 54px var(--sombra);
         display: flex; align-items: center; gap: 24px; padding: 0 34px 0 24px; box-sizing: border-box; }

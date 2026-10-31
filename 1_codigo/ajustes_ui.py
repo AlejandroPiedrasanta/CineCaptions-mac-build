@@ -495,6 +495,23 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.57', [
+        'Edición PRO a tu medida en los 6 temas: solo pone lo que enciendes en su menú (Captions detrás de ti, Píldora, B-roll, Escenas, Kit, Gráficos, Emojis animados o Motions completo). Encendida y sin nada activado, GO va tan rápido como solo captions.',
+        'El menú de la Edición PRO viene sin nada encendido (salvo el Gancho del inicio) y ya se puede apagar todo.',
+        'Temas 5 y 6 en solo captions: sin la Edición PRO ponen sus captions y nada más, igual de rápido que los otros temas (antes hacían siempre la edición completa).',
+        'Tema 1 con la Edición PRO: sus motions del kit y la placa con cámara van en el botón «Kit de motions» del menú; sin él, nada de eso (antes iban siempre y el GO podía tardar de 4 a 13 minutos).',
+        '«Captions detrás de ti» mucho más rápido: en Windows el recorte de la persona usa la tarjeta gráfica (hasta unas 6 veces más rápido; sin ella, casi el doble) y sale igual de fino.',
+        'Los 6 temas en el Inspector de Resolve: los controles de Luxe Slide (texto editable, tamaño, posición, color, DROP SHADOW y GLOW, entre otros) y arriba solo el banner de CineCaptions.',
+    ]),
+    ('5.56', [
+        'Si DaVinci Resolve se queda trabado, GO lo repara solo: cuando Resolve sigue abierto pero sin ventana (se cerró a medias) lo nota en segundos, y si pasa un minuto sin responder también. Lo cierra del todo, lo vuelve a abrir, vuelve a tu proyecto y repite el paso. Antes GO se quedaba unos 7 minutos en el 70 % y terminaba con «Resolve no creó el proyecto».',
+        'Nuevo en Ajustes: «Reparar Resolve solo si se traba» (encendido). Si lo apagas, GO no cierra Resolve: te dice en el Registro qué le pasa y se detiene.',
+        'Un Resolve que solo está ocupado (renderizando o colocando mucho) nunca se cierra: GO solo actúa si de verdad no da señales de vida.',
+        'Los efectos de sonido vuelven a salir siempre: ahora vienen dentro del programa. Antes, en algunos equipos el Tema 1 quedaba sin ningún SFX.',
+        'GO de solo captions mucho más rápido (un video de 24 segundos, en unos 20) y el tiempo que anuncia ya es el real: el de la Edición PRO se calcula aparte.',
+        'Reproducción fluida en Resolve: los captions, los efectos y la Edición PRO por fin entran en la caché de Resolve, y la reproducción empieza cuando está lista, sin tirones. Si mientras tanto usas Resolve, no te reproduce encima.',
+        'Tema 1 sin la sombra oscura y más ligero para Resolve: su caché está lista un 20 % antes.',
+    ]),
     ('5.55', [
         'Tema 3: el «Select» y el «Drag» ahora se ven como en los videos virales: la palabra con un brillo suave y sin borde gris, la caja roja de guiones gruesos con un cursor grande, y en el «Drag» una mano que entra, agarra la palabra y la arrastra a su sitio.',
         'Al verificar la licencia, CineCaptions le dice a la tienda qué versión y qué sistema usas, para avisarte por correo cuando salga una versión nueva (puedes darte de baja de esos avisos desde el mismo correo).',
@@ -2343,6 +2360,12 @@ class VentanaAjustes(_Panel):
         f_avisos = _Fila(tr('Avisarme al terminar'),
                          tr('Cuando GO termina y CineCaptions no está al frente (estás en Resolve u otro programa), sale un aviso del sistema.'),
                          Interruptor('', var=avisos_var, comando=lambda: self._cambio('avisos_sistema', bool(avisos_var.get()))))
+        # v5.56 (el usuario: «pon un parámetro para cerrar todo lo de Resolve si se traba, que se auto repare»): salud_resolve.reparar lo lee en cada reparación
+        reparar_var = BooleanVar(bool(leer_prefs().get('reparar_resolve_auto', True)))
+        f_reparar = _Fila(tr('Reparar Resolve solo si se traba'),
+                          tr('Si Resolve se queda abierto sin ventana o pasa un minuto sin responder, GO lo cierra del todo, lo vuelve a abrir y repite el paso. '
+                             'Apagado, GO solo te dice qué le pasa y se detiene.'),
+                          Interruptor('', var=reparar_var, comando=lambda: guardar_prefs({'reparar_resolve_auto': bool(reparar_var.get())})))
         # v5.4.48: GO sin Resolve también a petición (render_sin_resolve.py): sin Resolve instalado ya lo hace solo
         mp4_var = BooleanVar(bool(leer_prefs().get('go_salida_mp4', False)))
         f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
@@ -2352,7 +2375,7 @@ class VentanaAjustes(_Panel):
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
         # v5.52: quitadas «Reproducir al terminar», «Abrir siempre en vertical» y «Vista de Resolve al terminar» (el usuario lo pidió): van SIEMPRE
         # activadas (go_reproducir / go_vertical / go_vista_resolve ya no se leen); la vista que GO aplica es la que ya estuviera guardada
-        capa.addWidget(_grupo(f_motor, f_ia, f_otras, f_gpu, f_cache, f_avisos, f_mp4))
+        capa.addWidget(_grupo(f_motor, f_ia, f_otras, f_gpu, f_cache, f_avisos, f_reparar, f_mp4))
 
     def _pintar_motor(self):
         import motor_voz

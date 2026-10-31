@@ -809,10 +809,11 @@ def transcribir(media_path, codigo_idioma, progress_callback=None, model_loaded_
         else:
             _fallo_de_qwen('no devolvió ninguna palabra')
         # la voz ya hizo su parte: en una GPU que no aguanta las dos IA se libera para la IA de texto (que se carga ya)
+        # v5.56: salvo que este GO no vaya a correr la IA de texto (Temas 1/3 sin la PRO): no se carga para nada (al final GO suelta las dos: soltar_gpu)
         try:
-            if modo_gpu() != 'residente':
+            import ia_texto
+            if modo_gpu() != 'residente' and ia_texto.hace_falta():
                 liberar()
-                import ia_texto
                 ia_texto.precargar()
         except Exception:
             pass

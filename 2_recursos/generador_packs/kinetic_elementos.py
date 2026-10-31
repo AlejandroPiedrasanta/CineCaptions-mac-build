@@ -17,6 +17,8 @@ El texto lo recibe el Text+ «Template» (get_text_plus_tool de los scripts de R
 fija por clip, así el texto siempre se rasteriza al tamaño final (nada de ampliar un bitmap). La posición, el giro y el zoom de los trazos son
 propiedades del clip (Pan / Tilt / RotationAngle / ZoomX / ZoomY).
 Entrada con rebote y salida (los 5 últimos fotogramas del clip, vía comp.RenderEnd) van dentro de cada comp.
+v5.57: cada comp va dentro del macro «CineCaptions» (macro_kinetic.envolver): el Inspector enseña los controles de Luxe Slide con el banner de
+CineCaptions, y DROP SHADOW / GLOW, apagados de fábrica, los enciende el usuario.
 """
 import os
 import sys
@@ -26,6 +28,7 @@ sys.path.insert(0, AQUI)
 sys.path.insert(0, os.path.join(AQUI, '..', '..', '1_codigo'))
 import kinetic_comps as K
 import kinetic_paleta as PAL
+import macro_kinetic as MK
 from kinetic_comps import degradado, enlace, herramienta, media_out, n, punto, texto_plus
 
 HEROE = ('Owners Narrow', 'Black')
@@ -90,19 +93,22 @@ def animacion_kit(tipo, retardo=0, direccion=1, giro=0.0):
         s = _muelle(p)
         h = f'(1.12 * {EM_ALTO})'
         return dict(size='1', dy=f'(-({direccion}) * {h} * (1 - {s}) + 1.08 * {h} * {_sale(q)})', ang=f'(-({n(giro)}) * (1 - {s}))',
-                    blend=f'math.min(1, (time - {retardo}) / (0.06 * {FPS}))', mascara=f'(1.6 * {EM_ALTO})', desenfoque=True)
+                    blend=f'math.min(1, (time - {retardo}) / (0.06 * {FPS}))', mascara=f'(1.6 * {EM_ALTO})', desenfoque=True,
+                    mueve=(retardo, 0.55, 0.32))
     if tipo == 'pega':
         p, q = _ent(retardo, 0.55), _fuera(0.30)
         s = _muelle(p, 0.62, 8)
         return dict(size='1', dy=f'(0.036458 * (1 - {s}))', ang=f'(18 * (1 - {s}))',
-                    blend=f'math.min(1, math.max(0, (time - {retardo}) / (0.07 * {FPS}))) * (1 - {_sale(q)})', desenfoque=True)
+                    blend=f'math.min(1, math.max(0, (time - {retardo}) / (0.07 * {FPS}))) * (1 - {_sale(q)})', desenfoque=True,
+                    mueve=(retardo, 0.55, 0.30))
     # 'pluma'
     p, q = _ent(retardo, 0.55), _fuera(0.30)
     s = _muelle(p)
     po = _sale(q)
     return dict(size='1', dy=f'(-0.008333 * (1 - {s}) + 0.036458 * {po})', ang='0',
                 blend=f'math.min(1, math.max(0, (time - {retardo}) / (0.06 * {FPS}))) * (1 - ({po})^2)',
-                pluma=(f'(1 - (1 - math.min(1, math.max(0, (time - {retardo}) / (0.5 * {FPS}))))^2.2)', po), desenfoque=True)
+                pluma=(f'(1 - (1 - math.min(1, math.max(0, (time - {retardo}) / (0.5 * {FPS}))))^2.2)', po), desenfoque=True,
+                mueve=(retardo, 0.55, 0.30))
 
 
 def animacion(tipo, retardo=0):
@@ -131,16 +137,34 @@ def _vacio(x, y):
         'TopLeftRed = Input { Value = 0, },', 'TopLeftGreen = Input { Value = 0, },', 'TopLeftBlue = Input { Value = 0, },', 'TopLeftAlpha = Input { Value = 0, },'])
 
 
+DESENFOQUE_SOLO_AL_MOVERSE = True   # v5.56: las 3 muestras solo en la entrada y la salida (ver _calidad_desenfoque)
+
+
+def _calidad_desenfoque(anim):
+    """v5.56 (el usuario: «aligera las comps del Tema 1» para que la caché de Resolve esté antes): el desenfoque de movimiento renderiza el texto
+    3 veces por cuadro (Quality 3) TAMBIÉN con el texto quieto, que es ~2/3 del clip. Ahora 3 muestras solo mientras entra (los `entra` s del muelle
+    del kit, que acaba quieto) y sale (los `sale` s finales), y 1 en el resto y en los 2 últimos cuadros (sus muestras caían después del final del
+    clip: de ahí venían los «Salida cannot get foreground image» en el tiempo 21.75–23 del registro de Resolve).
+    Medido en Studio 21.1.2 con el mismo GO (24 s, 30 clips): caché de los captions en 56,1 s frente a 70,4 s (−20 %); el render, igual a la vista
+    (728 cuadros: 284 idénticos, el peor a 43 dB y solo por el ruido de la codificación del video)."""
+    retardo, entra, sale = anim['mueve']
+    return (f'((time - {retardo}) < {n(entra + 0.05)} * {FPS} or time > comp.RenderEnd - {n(sale + 0.04)} * {FPS})'
+            f' and time < comp.RenderEnd - 1 and 3 or 1')
+
+
 def _cadena(origen, anim, x0=140, y0=40, despues=None):
     """Transform (rebote) + Merge sin fondo (la opacidad) + MediaOut: lo que cierra cada comp.
     v5.47: `despues(nodo, anim)` -> (texto, nodo final) se pone DETRÁS del Transform (el relleno vivo): delante, el desenfoque de movimiento lo renderizaba
     3 veces por fotograma sin caché posible (la ronda de 33 s pasó de ~5 a ~18 min en Resolve)."""
+    calidad = 'Quality = Input { Value = 3, },'
+    if DESENFOQUE_SOLO_AL_MOVERSE and anim.get('mueve'):
+        calidad = f'Quality = Input {{ Value = 3, Expression = "{K.lua(_calidad_desenfoque(anim))}", }},'
     t = herramienta('Transform', 'Anim', x0, y0, [
         enlace('Input', origen),
         f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5, 0.5 + {K.lua(anim["dy"])})", }},',
         f'Size = Input {{ Value = 1, Expression = "{K.lua(anim["size"])}", }},',
         f'Angle = Input {{ Value = 0, Expression = "{K.lua(anim["ang"])}", }},',
-    ] + (['MotionBlur = Input { Value = 1, },', 'Quality = Input { Value = 3, },', 'ShutterAngle = Input { Value = 180, },']
+    ] + (['MotionBlur = Input { Value = 1, },', calidad, 'ShutterAngle = Input { Value = 180, },']
          if anim.get('desenfoque') else []))      # v5.45: el kit se mueve con desenfoque de movimiento (KitNeon: 5 muestras; aquí 3: con 5 el render tardaba 3,6× y la reproducción en Resolve se resiente)
     t += _vacio(x0 + 160, y0 + 90)
     mascara = []
@@ -208,7 +232,8 @@ def comp_texto(nombre, texto, fuente, tam, relleno, esp=1.0, entrada='pop', reta
     """Un Text+ con relleno (color liso o degradado), sombra y la entrada animada. relleno = (r,g,b) o [(pos, (r,g,b))…].
     v5.44: `kit` = las expresiones de animacion_kit (la entrada/salida del motor del kit en vez de `entrada`).
     v5.47: `vivo` = el relleno se mueve por dentro (_vivo).
-    v5.54: `premium` («B · Premium», las grandes) = el degradado con el reflejo de arriba (PAL.con_reflejo) y un brillo de su color delante del halo oscuro."""
+    v5.54: `premium` («B · Premium», las grandes) = el degradado con el reflejo de arriba (PAL.con_reflejo) y un brillo de su color delante del halo oscuro.
+    v5.56: sin sombra ni halo oscuro; `sombra` solo decide si van el contorno y el brillo."""
     extra = []
     color = (1, 1, 1)
     degradado_ = isinstance(relleno, (list, tuple)) and relleno and isinstance(relleno[0], (list, tuple)) and len(relleno[0]) == 2 and isinstance(relleno[0][1], (list, tuple))
@@ -221,23 +246,22 @@ def comp_texto(nombre, texto, fuente, tam, relleno, esp=1.0, entrada='pop', reta
     # (del elemento 4 en adelante Text+ dibuja por defecto una CAJA, no la letra: ElementShape = 0. Medido en Resolve 21.1.2: sin él salía un
     # recuadro gris u oscuro detrás de la grande)
     letra4 = ['ElementShape4 = Input { Value = 0, },']
+    # v5.56 (el usuario: «el Tema 1 tiene un efecto sombra, quítaselo»): fuera la sombra firme de abajo (era el 2) y el halo oscuro ancho (el 3 o
+    # el 4). Quedan el contorno fino (legibilidad, no sombra) y el brillo de su color. Sin renumerar: cada elemento conserva su número
     if sombra:
-        extra += _sombra(2, 0.8, -0.0065, 7)                 # sombra firme debajo de la letra…
         if contorno > 0:
-            extra += _contorno(3, contorno)                  # …y, en el texto pequeño, un contorno oscuro: se lee también sobre una pared blanca
+            extra += _contorno(3, contorno)                  # en el texto pequeño, un contorno oscuro: se lee también sobre una pared blanca
             if premium:
                 extra += brillo(4) + letra4
         elif premium:
-            extra += brillo(3) + _sombra(4, 0.55, -0.002, 34) + letra4      # el brillo de su color (3) delante del halo oscuro ancho (4)
-        else:
-            extra += _sombra(3, 0.55, -0.002, 34)            # (los héroes llevan un halo ancho)
+            extra += brillo(3)                               # el brillo de su color
     t = texto_plus('Template', -220, 40, texto, fuente[0], fuente[1], tam, color=color, esp=esp, extra=extra)
     despues = None
     if vivo or trama:                            # vivo = el tinte (el otro tono del degradado) que sube y baja dentro de la letra
         t += _relleno()
         despues = _vivo_despues('Relleno', vivo or None, trama)
     t += _cadena('Template', kit or animacion(entrada, retardo), despues=despues)
-    return K.armar_comp(t, f'CineCaptions Kinetic - {nombre}')
+    return K.armar_comp(MK.envolver(t), f'CineCaptions Kinetic - {nombre}')
 
 
 def _custom(nombre, origen, r, g, b, a, x, y):
@@ -325,6 +349,9 @@ def _trama(origen, matte, x=-60, y=-60):
     fy = f'(y * h - floor(y * h / {celda}) * {celda} - {celda} / 2)'
     radio = '(1.65 * w / 1080)'
     punto = f'max(0, min(1, ({radio} - sqrt({fx}*{fx} + {fy}*{fy})) / (0.5 * w / 1080 + 0.0001)))'
+    # (v5.56, medido en Resolve 21.1.2: calcular los puntos solo dentro de la letra —el matte como entrada del Custom Tool— fue MÁS lento que esto
+    # —caché 63,5 s frente a 56,1 s—: la rejilla sobre el Lienzo no cambia con el tiempo y Fusion la reutiliza entre cuadros; la de la letra se
+    # recalculaba en cada uno porque la letra se mueve)
     alfa = f'{punto} * 0.24'
     t = herramienta('Background', 'Lienzo', x - 100, y - 80, [
         f'Width = Input {{ Value = {K.ANCHO}, }},', f'Height = Input {{ Value = {K.ALTO}, }},', 'UseFrameFormatSettings = Input { Value = 1, },',
@@ -380,14 +407,11 @@ def comp_cinta(nombre, texto, fuente, tam, caja, color_texto, entrada='giro', re
                                                                   'Blend = Input { Value = 0.85, },'])
             fondo_caja = f'CajaCon{parte}'
     t += herramienta('Merge', 'Juntas', 40, 80, [enlace('Background', fondo_caja), enlace('Foreground', 'Template')])
-    # sombra suave de toda la cinta (el mismo recurso que las comps viejas: silueta negra, difuminada y un poco más abajo)
-    t += herramienta('BrightnessContrast', 'Negro', 40, 160, [enlace('Input', 'Juntas'), 'Gain = Input { Value = 0, },', f'Alpha = Input {{ Value = {n(sombra_caja)}, }},'])
-    t += herramienta('Blur', 'Difumina', 40, 200, [enlace('Input', 'Negro'), 'XBlurSize = Input { Value = 6, },', 'Filter = Input { Value = FuID { "Gaussian" }, },'])
-    t += herramienta('Transform', 'Baja', 40, 240, [enlace('Input', 'Difumina'), 'Center = Input { Value = { 0.5, 0.4965 }, },'])
-    t += herramienta('Merge', 'ConSombra', 40, 280, [enlace('Background', 'Baja'), enlace('Foreground', 'Juntas')])
+    # v5.56 (el usuario: «el Tema 1 tiene un efecto sombra, quítaselo»): sin la sombra suave de la cinta (Negro → Difumina → Baja → ConSombra);
+    # `sombra_caja` se queda en la firma y ya no hace nada
     # v5.47: el color de la pegatina se mueve por dentro (como las grandes), detrás del Transform y recortado con su caja
-    t += _cadena('ConSombra', kit or animacion(entrada, retardo), despues=_vivo_despues('Caja', tuple(c + (1 - c) * 0.45 for c in caja), prefijo='Caja'))
-    return K.armar_comp(t, f'CineCaptions Kinetic - {nombre}')
+    t += _cadena('Juntas', kit or animacion(entrada, retardo), despues=_vivo_despues('Caja', tuple(c + (1 - c) * 0.45 for c in caja), prefijo='Caja'))
+    return K.armar_comp(MK.envolver(t), f'CineCaptions Kinetic - {nombre}')
 
 
 # ------------------------------------------------------------------------------------------------------------------ trazos (sin texto)
@@ -400,7 +424,7 @@ def comp_anillo(nombre, color, ancho=0.42, alto=0.16, grosor=0.012, retardo=0):
     a = animacion('pop', retardo)
     a['size'] = a['size']
     t += _cadena('Trazo', a)
-    return K.armar_comp(t, f'CineCaptions Kinetic - {nombre}')
+    return K.armar_comp(MK.envolver(t), f'CineCaptions Kinetic - {nombre}')
 
 
 def comp_linea(nombre, color, ancho=0.34, alto=0.0075, retardo=0):
@@ -417,7 +441,7 @@ def comp_linea(nombre, color, ancho=0.34, alto=0.0075, retardo=0):
     t += _vacio(140, 130)
     t += herramienta('Merge', 'Salida', 140, 40, [enlace('Background', 'Vacio'), enlace('Foreground', 'Trazo'), f'Blend = Input {{ Value = 1, Expression = "{K.lua(SALIDA)}", }},'])
     t += media_out('Salida', 300, 40)
-    return K.armar_comp(t, f'CineCaptions Kinetic - {nombre}')
+    return K.armar_comp(MK.envolver(t), f'CineCaptions Kinetic - {nombre}')
 
 
 # v5.47: cuánto se ha BORRADO un trazo (0 → 1 entre 0,46 y 0,16 s antes del final del clip, con la curva sale() del kit)
@@ -472,7 +496,7 @@ def comp_trazo(nombre, color, puntos, grosor=PAL.TRAZO_GROSOR):
     t += herramienta('Merge', 'Salida', 140, 40, [enlace('Background', 'Vacio'), enlace('Foreground', 'ConHalo'),
                                                   f'Blend = Input {{ Value = 1, Expression = "{K.lua(apaga)}", }},'])
     t += media_out('Salida', 300, 40)
-    return K.armar_comp(t, f'CineCaptions Kinetic - {nombre}')
+    return K.armar_comp(MK.envolver(t), f'CineCaptions Kinetic - {nombre}')
 
 
 # ------------------------------------------------------------------------------------------------------------------ el catálogo

@@ -387,9 +387,15 @@ class _Retoque:
         self.ediciones, self.cambios, self.notas = [], [], []
 
     def tool(self, ruta, tipo=None):
+        """La herramienta de esa ruta («Template», «LuxeShine/Text1»). v5.57: un nombre suelto también vale dentro de un macro (el Tema 1 lleva
+        toda su comp dentro del macro que enseña el Inspector: «CineCaptions/Template»); gana el de primer nivel si lo hay."""
         for r, t, n in self.lista:
             if r == ruta and (tipo is None or t == tipo):
                 return n
+        if '/' not in ruta:
+            for r, t, n in self.lista:
+                if r.rsplit('/', 1)[-1] == ruta and (tipo is None or t == tipo):
+                    return n
         return None
 
     @staticmethod
@@ -611,8 +617,19 @@ class _Retoque:
                 self.notas.append('el drag no trae su relleno')
                 return
             b = self.valores(t2)
-            self._trio_derivado('Template', tpl, 1, b, nuevo)
             color = _r4(nuevo)
+            cad = self.entrada(tpl, 'Red2').campo('Expression')
+            razon = re.search(r'Template\.Red1 / (\d*\.?\d+) \* (\d*\.?\d+)', cad.valor) if (cad is not None and cad.tipo == 'cadena') else None
+            t1 = self.trio(tpl, 1)
+            if razon and t1:                                  # v5.57: el relleno sigue al «Color» del Inspector (Red1, el contorno: × relleno / gris)
+                k = float(razon.group(1)) / float(razon.group(2))
+                for canal, x1, x2, v in zip(('Red', 'Green', 'Blue'), t1, t2, color):
+                    self._poner_num(x1, v * k, 'Template', f'{canal}1')
+                    self._poner_num(x2, v, 'Template', f'{canal}2')
+                for n in range(3, 9):
+                    self._trio_derivado('Template', tpl, n, b, nuevo, brillo=True)
+                return
+            self._trio_derivado('Template', tpl, 1, b, nuevo)
             for canal, x, v in zip(('Red', 'Green', 'Blue'), t2, color):
                 self._poner_num(x, v, 'Template', f'{canal}2')
                 cad = self.entrada(tpl, f'{canal}2').campo('Expression')

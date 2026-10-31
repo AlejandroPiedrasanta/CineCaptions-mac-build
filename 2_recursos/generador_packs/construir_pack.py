@@ -139,7 +139,8 @@ def blob_de_comp(texto_comp, hex_plantilla):
     cierra = _cerrar_llave(texto_comp, abre)
     tools = texto_comp[abre:cierra + 1]
     import banner_inspector                                                # v5.5.8: el banner de CineCaptions arriba de los controles del Inspector
-    tools = banner_inspector.con_banner(tools)
+    import inspector_luxe                                                  # v5.57: con macro Luxe, el macro primero (sus controles) y solo el banner
+    tools = inspector_luxe.retocar(banner_inspector.con_banner(tools))[0]
     resto = texto_comp[:k] + texto_comp[cierra + 1:].lstrip(',')
     cabecera = re.sub(r'\s+', ' ', resto).strip()
     cabecera = re.sub(r',\s*}$', ' }', cabecera) if False else cabecera
@@ -287,7 +288,11 @@ def construir(plantilla, salida, nombre_bin, pack, combinaciones=(1, 2, 3), y_po
                                               deslizar=g.COMBINACIONES[comb].get('deslizar'), premium=prem_rol)
         bloque = m.group(0)
         hex_viejo = _BA.search(bloque).group(2)
-        hex_nuevo = retocar_comp(comp_de_drb(fuente['drb'], fuente['clip']), fuente.get('cambios')) if fuente else blob_de_comp(texto, hex_viejo)
+        if fuente:                                          # v5.57: el banner en los UserControls del grupo de Amro (inspector_luxe)
+            import inspector_luxe
+            hex_nuevo = retocar_comp(retocar_comp(comp_de_drb(fuente['drb'], fuente['clip']), fuente.get('cambios')), lambda t: inspector_luxe.retocar(t)[0])
+        else:
+            hex_nuevo = blob_de_comp(texto, hex_viejo)
         bloque_nuevo = _BA.sub(lambda mm: mm.group(1) + hex_nuevo + mm.group(3), bloque, count=1)
         if nombres_nuevos:
             bloque_nuevo = bloque_nuevo.replace(f'<Name>{nombre}</Name>', f'<Name>{nombre_de_estructura(nombre)}</Name>', 1)

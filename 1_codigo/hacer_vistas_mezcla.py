@@ -143,6 +143,8 @@ def _go(video, palabras, carpeta_packs, tope_s=600, pack=PACK_NOMBRE, prefs_extr
     licencia.vigente = lambda: True
     if os.environ.get('CC_REPRODUCIR') != '1':                                            # (CC_REPRODUCIR=1: se prueba también esa parte del GO real)
         colocacion.reproducir_desde_inicio = lambda *a, **k: (True, 'sin reproducir')       # GO reproduce el timeline al terminar: con 70+ comps de Fusion y el render a la vez, Resolve Free se cierra solo
+        import fluidez_resolve                                                              # v5.56: la pasada de caché ya no va dentro de reproducir_desde_inicio:
+        fluidez_resolve.preparar = lambda *a, **k: {'ok': False, 'error': 'arnés sin reproducir'}   # sin ella Resolve no cachea 70+ comps mientras se renderiza
     M.SubtitleApp._revisar_licencia_al_arrancar = lambda s: None
     if carpeta_packs:
         plantillas.CARPETA_PACKS = Path(carpeta_packs)

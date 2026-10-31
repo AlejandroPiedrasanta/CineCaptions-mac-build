@@ -10,6 +10,8 @@ el PRIMER tool es el Text+ «Template» (el macro Luxe lee su texto con la expre
   · con macro (Luxe Shine / Slide): además, un banner de solo texto dentro de su Text+ y publicado como PRIMER control del macro (por si se abre
     el macro en la página Fusion).
 No cambia nada más de la comp (ni el diseño ni la animación). Idempotente: si ya lleva el banner, lo deja al día.
+v5.57: con un macro (o un grupo) PRIMERO y el banner en sus UserControls (Temas 1 y 3: macro_kinetic; Temas 2, 4-6: inspector_luxe), el Inspector
+enseña ese macro: solo se pone al día ahí.
 
     banner_png() -> ruta             el PNG del banner (icono + «CINECAPTIONS» + «By Cinema Productions»), hecho una vez desde el logo
     con_banner(tools) -> tools       la comp (texto de Tools) con el banner
@@ -110,7 +112,51 @@ def _con_label(tools, ini, fin, label):
     return tools[:ini] + bloque + tools[fin + 1:]
 
 
+def _a_su_nivel(texto, abre, marca):
+    """Dónde está `marca` en el bloque que abre la llave de `abre`, a SU nivel (no dentro de las llaves de sus tools ni de una cadena); -1 si no."""
+    n, i, en_cadena = 0, abre, False
+    while i < len(texto):
+        c = texto[i]
+        if en_cadena:
+            if c == '\\':
+                i += 2
+                continue
+            if c == '"':
+                en_cadena = False
+        elif c == '"':
+            en_cadena = True
+        elif c == '{':
+            n += 1
+        elif c == '}':
+            n -= 1
+            if n == 0:
+                return -1
+        elif n == 1 and texto.startswith(marca, i):
+            return i
+        i += 1
+    return -1
+
+
+def banner_en_el_primero(tools):
+    """¿El PRIMER tool es un macro o un grupo con el banner en SUS UserControls (los suyos, no los de sus tools)? v5.57: los Temas 1 y 3
+    (macro_kinetic: la comp entera dentro del macro «CineCaptions»), los macros Luxe de los Temas 2, 4-6 con el Template dentro y los grupos
+    de Amro (inspector_luxe)."""
+    m = re.match(r'\s*\{\s*\w+ = (?:Macro|Group)Operator \{', tools)
+    if not m:
+        return False
+    marca = 'UserControls = ordered() {'
+    k = _a_su_nivel(tools, m.end() - 1, marca)
+    if k < 0:
+        return False
+    a = k + len(marca) - 1
+    return (NOMBRE + ' = {') in tools[a:_cerrar(tools, a)]
+
+
 def con_banner(tools):
+    # v5.57: si el primer tool es un macro o un grupo con el banner del logo en sus UserControls (lo que enseña el Inspector), solo se pone al
+    # día ahí (lo de abajo lo pasaría a solo texto y metería otro en el Template de dentro, que en el Inspector no se ve)
+    if banner_en_el_primero(tools):
+        return _VIEJO.sub(lambda m: LABEL, tools)
     tools = _VIEJO.sub(lambda m: LABEL_TEXTO, tools)                      # los que ya había, al día (de texto; el del Template, abajo)
     # 1) el Text+ que enseña el Inspector del Edit: «Template» (o el primero si no hay): el banner con el LOGO
     t = re.search(r'(?m)^\s*Template = TextPlus \{', tools) or re.search(r'\w+ = TextPlus \{', tools)

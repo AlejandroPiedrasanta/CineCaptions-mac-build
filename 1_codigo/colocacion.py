@@ -875,8 +875,14 @@ def abrir_resolve_windows(decir=None, espera_s=240):
             try:                                                   # v5.4.41: un Resolve.exe sin ninguna ventana y de hace rato es uno que se cerró por dentro: bloquea al nuevo (240 s de espera inútil)
                 import resolve_bridge as _rb
                 if _rb._pids_de_resolve() and _rb._edad_proceso_resolve_s() >= 90.0:
-                    registro.aviso(tr('Había un Resolve sin ventana (cerrado por dentro): lo cierro del todo y lo vuelvo a abrir.'), 'Puente · Windows')
-                    cerrar_resolve_a_la_fuerza(decir)
+                    # v5.56: confirmado con el diagnóstico único (fantasma = sin ventana y su registro quieto unos segundos: uno que se está cerrando escribe) y
+                    # solo si la preferencia «Reparar Resolve solo si se traba» lo deja
+                    import salud_resolve
+                    d = salud_resolve.diagnosticar(decir=decir)
+                    if d['estado'] == 'fantasma':
+                        r = salud_resolve.reparar(d, decir=decir, camino='puente', relanzar=False)
+                        if r.get('parar'):
+                            return False
             except Exception:
                 pass
             import os
@@ -1027,30 +1033,17 @@ def parar_todo(decir=None):
     return out
 
 
-def cerrar_resolve_a_la_fuerza(decir=None, espera_s=30):
+def cerrar_resolve_a_la_fuerza(decir=None, espera_s=30, gracia_s=0):
     """v5.4.40 (Windows): cierra Resolve AUNQUE esté colgado («No responde»: un cierre normal no le llega). Devuelve True si ya no queda ningún Resolve.exe. Nunca lanza.
-    Solo se llama cuando el GO ya comprobó que Resolve dejó de contestar (resolve_bridge.estado_resolve); lo que Resolve tuviera sin guardar de ese proyecto de GO se pierde,
-    pero el GO lo vuelve a armar entero.
-    v5.5.1: también en Mac (kill -9 del proceso «Resolve»)."""
+    Solo se llama cuando el GO ya comprobó que Resolve dejó de contestar (salud_resolve) o el usuario pulsó Cancelar; lo que Resolve tuviera sin guardar de ese proyecto de GO
+    se pierde, pero el GO lo vuelve a armar entero. v5.5.1: también en Mac.
+    v5.56: por PID (salud_resolve.cerrar_resolve_del_todo): Resolve, sus procesos hijos y el ResolveMCP de CineCaptions; nunca los ResolveMCP de otros clientes
+    (antes `taskkill /F /T /IM Resolve.exe`). `gracia_s` > 0 = primero por las buenas."""
     if not (sys.platform.startswith('win') or sys.platform == 'darwin'):
         return False
     try:
-        import subprocess
-        if not pids_resolve():
-            return True
-        if decir:
-            decir(tr('Cerrando Resolve…'))
-        if sys.platform == 'darwin':
-            subprocess.run(['pkill', '-9', '-x', 'Resolve'], capture_output=True, timeout=20)
-        else:
-            subprocess.run(['taskkill', '/F', '/T', '/IM', 'Resolve.exe'], capture_output=True, creationflags=0x08000000, timeout=40)         # CREATE_NO_WINDOW
-        t0 = time.time()
-        while time.time() - t0 < espera_s:
-            if not pids_resolve():
-                time.sleep(3.0)                                        # (Resolve suelta su base de datos y sus archivos un instante después de morir)
-                return True
-            time.sleep(0.5)
-        return not pids_resolve()
+        import salud_resolve
+        return bool(salud_resolve.cerrar_resolve_del_todo(decir, gracia_s=gracia_s, espera_s=espera_s).get('ok'))
     except Exception:
         try:
             import registro
@@ -1072,9 +1065,14 @@ def preparar_resolve_para_go(decir=None):
         import resolve_bridge as b
         if not pids_resolve():
             return True                                              # Resolve cerrado: lo abre el camino de siempre
-        est = b.estado_resolve_ahora()
-        if est != 'ok':
-            return recuperar_resolve(tr('Resolve no estaba sano antes de empezar ({e})', e=est), decir=decir)
+        # v5.56: el diagnóstico único (salud_resolve): sano → al momento; sin ventana → fantasma confirmado en segundos; «No responde» → se espera hasta
+        # UMBRAL_SIN_RESPONDER_S sin señales de vida antes de tocarlo (antes bastaban 10 s de registro quieto: se cerraba un Resolve solo ocupado)
+        import salud_resolve
+        d = salud_resolve.diagnosticar(decir=decir)
+        if d['estado'] in ('fantasma', 'colgado'):
+            return recuperar_resolve(d.get('texto') or d['estado'], decir=decir, diag=d)
+        if not pids_resolve():
+            return True
         if not b.puente_activo():
             return True                                              # sin Puente: GO lo lanza (menú o consola)
         import archivos_seguros
@@ -1105,33 +1103,38 @@ def preparar_resolve_para_go(decir=None):
         return False
 
 
-def recuperar_resolve(motivo='', decir=None):
+def recuperar_resolve(motivo='', decir=None, diag=None):
     """v5.4.40 (Windows, Resolve Free): Resolve se colgó o se cerró solo a mitad del GO → se cierra del todo, se vuelve a abrir (proyecto u Organizador) y se relanza el Puente.
-    Devuelve True si el Puente late otra vez (el GO entonces re-arma el timeline y repite). Nunca lanza. v5.5.1: también en Mac."""
+    Devuelve True si el Puente late otra vez (el GO entonces re-arma el timeline y repite). Nunca lanza. v5.5.1: también en Mac.
+    v5.56: antes de cerrar nada, el diagnóstico único (salud_resolve.diagnosticar, o `diag` si ya se hizo): si Resolve vuelve a dar señales de vida no se cierra
+    (solo se relanza el Puente); fantasma o colgado (60 s sin señales de vida) → se cierra por las buenas y, si no, a la fuerza, solo si la preferencia
+    «Reparar Resolve solo si se traba» lo deja (apagada: diagnóstico en el Registro y False: GO se detiene)."""
     if not (sys.platform.startswith('win') or sys.platform == 'darwin'):
         return False
     try:
         import registro
         import resolve_bridge as b
-        registro.aviso(tr('Resolve dejó de responder ({m}): lo cierro y vuelvo a empezar.', m=str(motivo or '—')), 'GO · Resolve')
-        if decir:
-            decir(tr('Resolve se quedó colgado: lo cierro y lo vuelvo a abrir…'))
-        if not cerrar_resolve_a_la_fuerza(decir):
-            registro.aviso(tr('No pude cerrar Resolve: ciérralo tú (ventana «No responde») y repite.'), 'GO · Resolve')
-            return False
-        for f in (getattr(b, 'ARCHIVO_LATIDO', None), getattr(b, 'JOB_TOMADO', None), getattr(b, 'JOB_PENDIENTE', None)):          # lo que dejó el Puente muerto
-            if f is None:
-                continue
-            for g in (f, f.with_name(f.name + '.lua'), f.with_name(f.name + '.free.lua')):      # y sus sidecars (.free.lua: Free sin loadfile, Puente 1.0.42)
-                try:
-                    g.unlink()
-                except Exception:
-                    pass
-        if decir:
-            decir(tr('Reabriendo Resolve…'))
-        ok = bool(b.lanzar_puente_auto(forzar=True))
-        registro.info(tr('Resolve reabierto y Puente {e}.', e=tr('listo') if ok else tr('NO listo')), 'GO · Resolve')
-        return ok
+        import salud_resolve
+        d = diag or salud_resolve.diagnosticar(decir=decir)
+        if d['estado'] == 'ok' and d.get('pids'):
+            registro.aviso(tr('El paso falló ({m}) pero Resolve da señales de vida: no lo cierro; relanzo el Puente y repito.', m=str(motivo or '—')[:160]), 'GO · Resolve')
+            if b.puente_activo():
+                return True
+            if decir:
+                decir(tr('Relanzando el Puente en Resolve…'))
+            if b.lanzar_puente_auto(forzar=True):
+                return True
+            # el Puente tampoco arranca: si además su registro lleva UMBRAL_SIN_RESPONDER_S sin moverse, Resolve no da señales de vida a los scripts (en Mac es la
+            # única forma de saberlo: no hay «No responde» que mirar) → trabado
+            mudo = b._registro_resolve_callado_s()
+            if not (pids_resolve() and mudo >= salud_resolve.UMBRAL_SIN_RESPONDER_S):
+                return False
+            d = dict(d, estado='colgado', mudo_s=mudo, sin_respuesta_s=mudo)
+            d['texto'] = salud_resolve.texto_diagnostico(d)
+        r = salud_resolve.reparar(d, decir=decir, camino='puente', motivo=motivo if d['estado'] not in ('fantasma', 'colgado') else '')
+        if not r.get('parar'):
+            registro.info(tr('Resolve reabierto y Puente {e}.', e=tr('listo') if r.get('ok') else tr('NO listo')), 'GO · Resolve')
+        return bool(r.get('ok'))
     except Exception:
         try:
             import registro
@@ -1291,9 +1294,27 @@ def _lanzar_puente_windows(espera_s=30, forzar=False):
     return False
 
 
-def reproducir_desde_inicio(esperar_s=0.5):
+def _fluidez_antes_de_reproducir(al_estado):
+    """v5.56: la caché de render de Fusion en nuestros clips y la espera a que Resolve la llene (fluidez_resolve), antes de pulsar «Reproducir»."""
+    try:
+        import fluidez_resolve
+        fluidez_resolve.antes_de_reproducir(al_estado=al_estado)
+    except Exception:
+        pass
+
+
+def reproducir_desde_inicio(esperar_s=0.5, al_estado=None, fluidez=True, teclas=True, seguir=None):
     """Al terminar GO: trae Resolve al frente, va al principio del timeline (tecla Inicio) y pulsa «reproducir» (Espacio). Resolve no tiene una llamada de script para reproducir, así que
-    se manda la tecla a SU ventana; si no se puede asegurar que Resolve tiene el foco, NO se manda nada (el Espacio iría a otra ventana). Devuelve (ok, texto)."""
+    se manda la tecla a SU ventana; si no se puede asegurar que Resolve tiene el foco, NO se manda nada (el Espacio iría a otra ventana). Devuelve (ok, texto).
+    v5.56: antes, la reproducción fluida (_fluidez_antes_de_reproducir; `al_estado` recibe el avance de la caché). fluidez=False: ya la hizo GO
+    (fluidez_resolve.preparar + esperar_y_reproducir, que llama aquí cuando la caché está lista). En ese camino diferido: teclas=False (nunca
+    el plan B de Inicio + Espacio: el usuario puede estar escribiendo en Resolve) y `seguir()` se vuelve a mirar justo antes de pulsar (otro GO
+    pudo empezar mientras se movía el cabezal: reproducir encima lo dejaría sin contestar a los scripts)."""
+    def sigue():
+        try:
+            return seguir is None or bool(seguir())
+        except Exception:
+            return False
     try:
         if sys.platform.startswith('win'):
             import ctypes
@@ -1310,18 +1331,25 @@ def reproducir_desde_inicio(esperar_s=0.5):
                 (registro.info if ok_v else registro.aviso)(txt_v, 'GO · vista')
             except Exception:
                 pass
+            if fluidez:
+                _fluidez_antes_de_reproducir(al_estado)           # v5.56: (antes de cerrar la consola: en Free la pasada va por el Puente, que imprime)
             _cerrar_consola_de_resolve()                          # (la consola del Puente reaparece sola cada vez que imprime y tapa el timeline: Inicio y Espacio tienen que ir a la ventana principal)
             try:                                                   # v5.4.40: camino fiable (sin teclas): cabezal al inicio por la API + «Reproducir hacia adelante» del menú
                 import registro as _reg
                 ok_c = cabezal_al_inicio_resolve()
+                if not sigue():
+                    return False, tr('No reproduzco: empezó otro trabajo en Resolve.')
                 ok_m, cod_m = reproducir_por_menu_windows()
                 if ok_m:
                     if not ok_c:
                         _reg.aviso(tr('Reproduje desde donde estaba el cabezal: Resolve no confirmó que lo llevara al inicio.'), 'GO · reproducir')
                     return True, tr('Reproduciendo el timeline desde el principio.')
-                _reg.aviso(tr('No pude pulsar «Reproducir» en el menú de Resolve ({c}): pruebo con el teclado.', c=cod_m), 'GO · reproducir')
+                if teclas:
+                    _reg.aviso(tr('No pude pulsar «Reproducir» en el menú de Resolve ({c}): pruebo con el teclado.', c=cod_m), 'GO · reproducir')
             except Exception:
                 pass
+            if not teclas or not sigue():                          # v5.56: el camino diferido nunca manda teclas
+                return False, tr('No reproduzco solo: pulsa Reproducir en Resolve (la caché ya está lista).')
             h = _ventana_principal() or _hwnd_de_resolve()
             if not h:
                 return False, tr('No encontré la ventana de DaVinci Resolve para reproducir.')
@@ -1338,6 +1366,10 @@ def reproducir_desde_inicio(esperar_s=0.5):
             return True, tr('Reproduciendo el timeline desde el principio.')
         if sys.platform == 'darwin':
             import subprocess
+            if fluidez:
+                _fluidez_antes_de_reproducir(al_estado)           # v5.56
+            if not teclas or not sigue():                          # v5.56: en Mac solo hay teclas: el camino diferido no las manda
+                return False, tr('No reproduzco solo: pulsa Reproducir en Resolve (la caché ya está lista).')
             guion = ('tell application "DaVinci Resolve" to activate\ndelay 0.6\ntell application "System Events"\n'
                      'if (name of first process whose frontmost is true) is not "DaVinci Resolve" then error "sin foco"\n'
                      'key code 115\ndelay 0.25\nkey code 49\nend tell')

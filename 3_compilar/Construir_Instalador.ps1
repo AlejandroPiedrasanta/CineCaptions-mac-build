@@ -128,6 +128,10 @@ if ($verPy -notmatch "APP_VERSION = '([\d.]+)'") { throw 'No encontre APP_VERSIO
 $version = $matches[1]
 Write-Host "CineCaptions $version"
 
+# 2b) v5.56: los SFX curados de 5_SFX que viajan en el .exe (2_recursos\biblioteca_sonido); sin 5_SFX queda la copia de Git
+& $vpy (Join-Path $aqui 'empaquetar_sonidos.py')
+if ($LASTEXITCODE -ne 0) { throw 'No pude preparar los sonidos del programa (empaquetar_sonidos.py)' }
+
 # 3) PyInstaller ------------------------------------------------------------------------
 Paso 'Compilando el programa (PyInstaller, 3-6 min)'
 $env:CINECAPTIONS_FUENTES = $fuentes

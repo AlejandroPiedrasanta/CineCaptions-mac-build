@@ -118,13 +118,12 @@ def main():
             fila._lados()
         comprobar(True, f'{tema}: la fila se adapta a 1280/900/700 px sin error')
         fila.close()
-    if 'Kinetic':
-        PREFS.update(go_pack='Referencia')
-        for o in LAT.OPCIONES[-4:]:
+    if 'Kinetic':                           # v5.57: se puede apagar TODO; con nada encendido, GO hace solo captions (edicion_pro.activa_en_go)
+        PREFS.update(go_pack='Referencia', plantilla='Referencia')
+        for o in LAT.opciones_visibles():
             LAT.poner(o['clave'], False)
-        r = LAT.poner(LAT.OPCIONES[-1]['clave'], False)
-        quedan = [o['clave'] for o in LAT.OPCIONES if LAT.estado(o['clave'])]
-        comprobar(bool(quedan), f'Tema 2: nunca se queda la PRO sin ningún motion (quedan {len(quedan)})')
+        quedan = EP.encendidas()
+        comprobar(not quedan and not EP.activa_en_go(), f'Tema 2: todo apagado → la PRO no hace nada en GO (quedan {quedan})')
 
     # ------------------------------------------------------------------------------------------------------------- 2) funciones
     print('== 2) Funciones (plan de la PRO con cada interruptor)', flush=True)

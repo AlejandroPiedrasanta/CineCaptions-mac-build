@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
 ]]
 
-local VERSION = "5.55 (edicion pro)"
+local VERSION = "5.57 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -785,12 +785,15 @@ local function cachear_al_final(tl, project)
             print("Cache de render: «user» (la Edicion PRO se pre-renderiza en segundo plano).")
         end
     end)
-    for _, it in ipairs(PEND_CACHE.fusion) do pcall(function() it:SetFusionOutputCache("enabled") end) end
+    -- v5.56: la constante resolve.CACHE_ENABLED (1.0): con "enabled" Resolve 21 devolvia false y nada se cacheaba (gemelo de colocar_pro.py)
+    local cache_on = 1
+    pcall(function() cache_on = resolve.CACHE_ENABLED or 1 end)
+    for _, it in ipairs(PEND_CACHE.fusion) do pcall(function() it:SetFusionOutputCache(cache_on) end) end
     for _, it in ipairs(PEND_CACHE.color) do pcall(function() it:SetColorOutputCache(true) end) end
     PEND_CACHE.fusion, PEND_CACHE.color = {}, {}
     for _, i in ipairs(pistas_captions(tl)) do
         if not nombre_pista(tl, "video", i):upper():find("EMOJI", 1, true) then
-            for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do pcall(function() it:SetFusionOutputCache("enabled") end) end
+            for _, it in ipairs(lista_api(tl:GetItemListInTrack("video", i))) do pcall(function() it:SetFusionOutputCache(cache_on) end) end
         end
     end
 end

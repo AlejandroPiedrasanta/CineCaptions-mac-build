@@ -567,11 +567,13 @@ DENSIDAD = {'sobria': 6.5, 'media': 3.6, 'espectaculo': 2.0}        # segundos m
 
 
 def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media', cortes=None, vertical=True, pesos=None, semilla=0, tema=None, video='',
-               con_captions=True, bloqueado=None):
+               con_captions=True, bloqueado=None, con_ia=True):
     """`con_captions` (GO con los Temas 1–4: siempre): los captions ya escriben lo que se dice, así que la PRO NO lo repite (ni titulares ni rótulos
     con las mismas palabras; esos momentos fuertes pasan a `plan['detras_pref']`: ahí los captions van detrás de la persona) y pone lo que los
     captions no dan: escenas de motion graphics e infografía (iconos, cifras, listas, lugares), con la persona recortada delante del fondo
-    animado («fondo sustituido») o a pantalla completa, nombres, secciones, marcos y la ficha final."""
+    animado («fondo sustituido») o a pantalla completa, nombres, secciones, marcos y la ficha final.
+    v5.56: `con_ia=False` (ningún grupo de motions encendido en el menú de la PRO, p. ej. solo «detrás de ti»): sin la IA local (el perfil del
+    video y el director de motions: ~25 s); los momentos de `detras_pref` salen igual, de las reglas."""
     palabras = unir_partidas([p for p in (palabras or []) if _txt(p) and p.get('start') is not None])
     # cortes: segundos sueltos o (segundo, fuerza) como los da efectos_visuales.detectar_cortes, o {'t': …}
     cortes = sorted(float(c['t'] if isinstance(c, dict) else c[0] if isinstance(c, (list, tuple)) else c) for c in (cortes or []))
@@ -583,7 +585,7 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
         genero, puntos_genero = detectar_genero(palabras)
         try:                                                          # v5.5.2: la IA local entiende de qué va el video (categoría, tono, iconos)
             import ia_texto
-            perfil = ia_texto.perfil([_txt(w) for w in palabras], idioma) or {}
+            perfil = (ia_texto.perfil([_txt(w) for w in palabras], idioma) or {}) if con_ia else {}
             g_ia = GENERO_DE_CATEGORIA.get(perfil.get('categoria') or '')
             if g_ia and genero in ('general', 'auto'):                # las palabras clave no lo vieron claro y la IA sí: manda la IA
                 genero = g_ia
@@ -671,7 +673,7 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
         import edicion_pro_kit7 as K7
         ya = {p.get('plantilla') for p in piezas if p.get('plantilla')}
         for m in K7.planificar([_txt(w) for w in palabras], [plegar(_txt(w)) for w in palabras], [st(i) for i in range(len(palabras))],
-                               frases, lang, video, duracion, K7.tema_de(d.get('acento')), genero=g, perfil=perfil):
+                               frases, lang, video, duracion, K7.tema_de(d.get('acento')), genero=g, perfil=perfil, ia=con_ia):
             if m['id'] in ya:                                              # (esa plantilla ya la puso la biblioteca por su frase)
                 continue
             if m.get('pantalla'):                                         # v5.5.3: escena a pantalla completa: se coloca con las escenas (abajo)

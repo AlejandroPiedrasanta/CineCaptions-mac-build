@@ -57,7 +57,9 @@ def _texto_img(txt, par, px, abajo, arriba, esp=1.0):
     return cuerpo
 
 
-def _pegar(lienzo, im, cx, cy, rot=0.0, sombra=0.55):
+def _pegar(lienzo, im, cx, cy, rot=0.0, sombra=0.0):
+    # v5.56 (el usuario: «el Tema 1 tiene un efecto sombra, quítaselo»): sin sombra por defecto, como el pack (Kin 19); antes 0,55 el texto,
+    # 0,4 la cinta y 0,3 la raya
     if rot:
         im = im.rotate(rot, expand=True, resample=Image.BICUBIC)
     if sombra:
@@ -93,7 +95,7 @@ def dibujar_cue(cue, ancho=1080, alto=1920, fondo=(40, 40, 46)):
             d = ImageDraw.Draw(im)
             d.rounded_rectangle((4, 4, 4 + w, 4 + h), radius=max(2, int(h * 0.08)), fill=_rgb(caja) + (255,))
             d.text((4 + w / 2, 4 + h / 2 + px * 0.02), txt, font=f, fill=_rgb(tinta) + (255,), anchor='mm')
-            _pegar(lienzo, im, cx, cy, r.get('rot', 0.0), 0.4)
+            _pegar(lienzo, im, cx, cy, r.get('rot', 0.0))
         elif e['tipo'] == 'trazo' or (e['tipo'] == 'linea' and e.get('curva')):        # v5.5.13: trazos a mano del neón
             if e['tipo'] == 'trazo':
                 im, ox, oy = _trazo(PAL.puntos_circulo(lazo='lazo' in k), ANILLOS.get(k.split()[-1], PAL.LIMA), ancho * r['zx'], ancho * r['zy'],
@@ -112,5 +114,5 @@ def dibujar_cue(cue, ancho=1080, alto=1920, fondo=(40, 40, 46)):
             w, h = int(nw * ancho * r['zx']), max(4, int(nh * ancho * r['zy']))
             im = Image.new('RGBA', (w + 4, h + 4), (0, 0, 0, 0))
             ImageDraw.Draw(im).rounded_rectangle((2, 2, 2 + w, 2 + h), radius=h // 2, fill=_rgb(LINEAS.get(k.split()[-1], (1, 0.9, 0.05))) + (255,))
-            _pegar(lienzo, im, cx, cy, r.get('rot', 0.0), 0.3)
+            _pegar(lienzo, im, cx, cy, r.get('rot', 0.0))
     return lienzo.convert('RGB')

@@ -129,15 +129,42 @@ def _entorno_proceso():
     return entorno
 
 
-def _pip(argumentos, timeout=TIEMPO_MAX_PIP_S):
-    p = subprocess.run([str(python_motor()), '-s', '-m', 'pip', 'install', '--no-warn-script-location',
-                        '--progress-bar', 'off', '--disable-pip-version-check', *argumentos],
+def _pip_orden(argumentos, timeout=TIEMPO_MAX_PIP_S):
+    p = subprocess.run([str(python_motor()), '-s', '-m', 'pip', '--disable-pip-version-check', *argumentos],
                        capture_output=True, text=True, encoding='utf-8', errors='replace',
                        env=_entorno_proceso(), creationflags=SIN_VENTANA, timeout=timeout,
                        cwd=str(carpeta()))
     if p.returncode:
         cola = (p.stderr or p.stdout or '').strip().splitlines()[-8:]
         raise RuntimeError('pip: ' + ' | '.join(cola))
+
+
+def _pip(argumentos, timeout=TIEMPO_MAX_PIP_S):
+    _pip_orden(['install', '--no-warn-script-location', '--progress-bar', 'off', *argumentos], timeout)
+
+
+_ONNXRUNTIMES = ('onnxruntime', 'onnxruntime-directml', 'onnxruntime-gpu')
+
+
+def _cambiar_onnxruntime(actuales):
+    """v5.57: onnxruntime, onnxruntime-directml (la GPU de «detrás de ti») y onnxruntime-gpu son el MISMO módulo con otro nombre: instalar uno
+    encima de otro mezcla sus archivos y quitar el viejo después borraría los del nuevo. Si el fijado es otro, primero se BAJA su rueda (sin
+    red, el motor se queda como estaba y sigue funcionando), luego se quita el viejo y se instala la rueda bajada."""
+    fijados = _fijados()
+    nuevo = next((n for n in _ONNXRUNTIMES if n in fijados), None)
+    viejos = [n for n in _ONNXRUNTIMES if n != nuevo and actuales.get(n)]
+    if not nuevo or not viejos:
+        return
+    ruedas = carpeta() / 'ruedas'
+    shutil.rmtree(ruedas, ignore_errors=True)
+    try:
+        _pip_orden(['download', '--no-deps', '--only-binary=:all:', '--progress-bar', 'off', '--dest', str(ruedas),
+                    f'{nuevo}=={fijados[nuevo]}'])
+        _pip_orden(['uninstall', '-y', *viejos])                       # (si ya estaban los dos, esto borró también archivos del nuevo:
+        _pip(['--no-deps', '--no-index', '--find-links', str(ruedas), '--force-reinstall',   # por eso se reinstala entero)
+              f'{nuevo}=={fijados[nuevo]}'])
+    finally:
+        shutil.rmtree(ruedas, ignore_errors=True)
 
 
 def _versiones():
@@ -158,6 +185,15 @@ def faltan_requisitos():
     return [f'{n}=={v}' for n, v in _fijados().items() if actuales.get(n) != v]
 
 
+def _appdata_de_claude():
+    """v5.57: ¿el código fuente corre desde Claude desktop (app MSIX) sobre el %LOCALAPPDATA% de verdad? Ahí es una mezcla de la carpeta real y
+    una privada: lo que pip BORRA se borra de la real y lo nuevo va a la privada (así se rompió el motor Qwen el 2026-10-15). Las pruebas desde
+    Claude usan una copia (LOCALAPPDATA a otra carpeta) o la ruta \\\\localhost\\c$, que no se virtualiza. El programa instalado, nunca."""
+    if getattr(sys, 'frozen', False) or not os.environ.get('CLAUDE_CODE_DESKTOP_APP_VERSION'):
+        return False
+    return str(carpeta()).lower().startswith(str(Path.home() / 'AppData' / 'Local').lower())
+
+
 def instalar(progreso=None, aviso=None):
     """Prepara el último Python 3.14 y sus ruedas fijadas. No toca el motor Qwen."""
     def pr(f, texto):
@@ -166,6 +202,13 @@ def instalar(progreso=None, aviso=None):
 
     if sys.platform != 'win32':
         raise RuntimeError('El motor auxiliar Python 3.14 está configurado para Windows x64.')
+    if _appdata_de_claude():
+        datos = info_instalado()
+        if datos:
+            return datos
+        raise RuntimeError('El motor auxiliar hay que prepararlo o ponerlo al día, y desde Claude el AppData está virtualizado (pip lo '
+                           'dejaría roto): pruébalo con una copia (LOCALAPPDATA a otra carpeta) o con la ruta \\\\localhost\\c$; el '
+                           'programa instalado lo pone al día solo.')
     base = carpeta()
     base.mkdir(parents=True, exist_ok=True)
     py = python_motor()
@@ -206,9 +249,13 @@ def instalar(progreso=None, aviso=None):
             get_pip.unlink(missing_ok=True)
         if r.returncode:
             raise RuntimeError('get-pip: ' + (r.stderr or r.stdout)[-500:])
-    pendientes = faltan_requisitos()
-    if pendientes:
+    actuales = _versiones()
+    fijados = _fijados()
+    pendientes = [n for n, v in fijados.items() if actuales.get(n) != v]
+    otro_onnxruntime = any(actuales.get(n) for n in _ONNXRUNTIMES if n not in fijados)   # (dos a la vez: archivos mezclados)
+    if pendientes or otro_onnxruntime:
         pr(0.22, f'Instalando Whisper, traducción y ONNX Runtime para Python {_PY}')
+        _cambiar_onnxruntime(actuales)
         _pip(['--no-deps', '-r', str(requisitos())])
         _pip(['--no-deps', 'argostranslate==1.11.0'])
     versiones = _versiones()
@@ -409,7 +456,7 @@ def traducir(textos, from_code, to_code, progress_callback=None, status_callback
     def linea(tipo, texto):
         if tipo == 'PROGRESO' and progress_callback:
             try:
-                progress_callback(float(texto))
+                progress_callback(float(texto.partition('|')[0]))     # (v5.57: «0.5|Traduciendo», como en transcribir)
             except ValueError:
                 pass
         elif tipo == 'ESTADO' and status_callback:

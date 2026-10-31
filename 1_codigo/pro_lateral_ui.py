@@ -11,10 +11,11 @@ Efectos para que no se contradigan».
     estado(clave, op=None)   -> bool
     poner(clave, si)         -> guarda en las MISMAS preferencias que la página Efectos (pro_motions_modo / pro_motions, pro_internet,
                                 pro_mascara, pro_motions_completo) con edicion_pro.guardar_opciones; Efectos las vuelve a leer al abrirse
-    FilaPro(carrusel, …)     -> [ejemplo | slider | interruptores]; los lados solo con la PRO en juego (interruptor o Temas 5/6)
+    FilaPro(carrusel, …)     -> [ejemplo | slider | interruptores]; los lados solo con la PRO en juego (su interruptor; v5.57: también Temas 5/6)
 
 Cada interruptor de motions es un GRUPO del carrusel de Efectos: apagarlo en Automático pasa a «Solo los que elija» con todos menos ese grupo;
-encenderlo los vuelve a marcar y, si quedan todos, vuelve a Automático. Nunca deja la lista vacía (motions_catalogo.modo la trataría como «todos»).
+encenderlo los vuelve a marcar y, si quedan todos, vuelve a Automático. v5.57: de fábrica no hay nada encendido y se puede apagar todo (la lista
+vacía = ninguno); la PRO solo hace lo encendido aquí (edicion_pro.encendidas / activa_en_go), en los 6 temas.
 Los ejemplos: 2_recursos/edicion_pro/ejemplos_pro/<clave>.mp4 (+ .jpg), hechos con herramientas_dev/hacer_ejemplos_pro.py.
 """
 import math
@@ -182,7 +183,8 @@ def _neon():
         return False
 
 
-def estado(clave, op=None):
+def estado(clave, op=None, neon=None):
+    """`neon` (v5.57): True/False = los interruptores del Tema 1 o los de los demás temas, sin mirar el tema elegido (None = el elegido)."""
     o = _POR_CLAVE[clave]
     if clave == 'plantillas':
         return False                                    # v5.20: «Plantillas por frase» quitado: siempre apagado
@@ -191,10 +193,10 @@ def estado(clave, op=None):
     op = _op() if op is None else op
     if o.get('solo_pref'):                              # (v5.33: el gancho = la intro, solo su preferencia; también en el Tema 1, encendido por
         return bool(op.get(o['pref'], o.get('defecto', False)))         # defecto: el usuario lo pidió)
-    if _neon():
+    if (_neon() if neon is None else neon):
         return clave in (op.get('pro_neon_extras') or [])
     if o.get('mascara'):
-        return str(op.get('pro_mascara') or 'auto') != 'no'
+        return str(op.get('pro_mascara') or 'no') != 'no'
     ids = ids_de(clave) if o.get('motions') is not None or 'pref' not in o else []
     try:
         import motions_catalogo as MC
@@ -202,12 +204,13 @@ def estado(clave, op=None):
     except Exception:
         motion = True
     if o.get('pref'):
-        return bool(op.get(o['pref'], o['pref'] == 'pro_internet')) and motion
+        return bool(op.get(o['pref'], False)) and motion          # (v5.57: de fábrica, apagado; también «B-roll con fotos»)
     return motion
 
 
 def poner(clave, si):
-    """Guarda el interruptor. Devuelve False si no se pudo (apagar el último grupo de motions dejaría la lista vacía = «todos»)."""
+    """Guarda el interruptor. v5.57 (el usuario: «si no se activa nada, seguirá funcionando como solo captions»): también se puede apagar el
+    último grupo de motions («elegidos» sin ninguno = ninguno: motions_catalogo.modo). Devuelve True (False solo por compatibilidad)."""
     import edicion_pro
     import motions_catalogo as MC
     o = _POR_CLAVE[clave]
@@ -233,8 +236,6 @@ def poner(clave, si):
         else:
             fuera = set(ids)
             lista = [i for i in lista if i not in fuera]
-            if not lista:
-                return False
         if set(lista) >= set(todos):
             cambios.update(pro_motions_modo='auto', pro_motions=[])
         else:
@@ -525,15 +526,11 @@ class PanelMotionsPro(QWidget):
 
     def _tocar(self, clave):
         si = not self.encendido(clave)
-        ok = False
         try:
-            ok = poner(clave, si)
+            poner(clave, si)                         # (v5.57: también se apaga el último: con nada encendido, GO hace solo captions)
         except Exception:
             import registro
             registro.excepcion(origen='Proyecto · motions de la PRO')
-        if not ok and not si:
-            import registro
-            registro.aviso(tr('La Edición PRO necesita al menos un tipo de motion. Para no poner ninguno, apaga la Edición PRO.'), 'edición pro')
         self.refrescar()
         self.cambiado.emit()
 

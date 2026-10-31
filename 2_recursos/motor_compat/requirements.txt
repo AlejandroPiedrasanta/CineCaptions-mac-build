@@ -20,7 +20,10 @@ idna==3.20
 joblib==1.6.0
 minisbd==0.9.5
 numpy==2.5.4
-onnxruntime==1.31.1
+# v5.57: onnxruntime con DirectML (no el de solo CPU): el recorte de «detrás de ti» en la GPU (cualquier tarjeta DX12: NVIDIA, AMD,
+# Intel; sin las librerías de CUDA) y, sin tarjeta, en la CPU como antes. 1.24.4 es la última con DirectML (rueda cp314: 25,6 MB).
+# Este archivo solo lo usa el motor de Windows; motor_compat._cambiar_onnxruntime quita el onnxruntime viejo antes de instalarlo.
+onnxruntime-directml==1.24.4
 packaging==26.3
 pillow==13.0.0
 protobuf==7.36.2

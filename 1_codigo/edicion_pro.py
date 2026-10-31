@@ -40,11 +40,13 @@ import edicion_pro_planificador as PL
 CARPETA = Path.home() / 'DaVinciSubtitles' / 'edicion_pro'
 PLAN_JSON = Path.home() / 'DaVinciSubtitles' / 'edicion_pro_plan.json'
 DETRAS_CTX = Path.home() / 'DaVinciSubtitles' / 'detras_contexto.json'    # v5.29: lo del último GO que hace falta para «detrás de ti» al momento
-OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_mascara': 'auto', 'pro_sonidos': True, 'pro_ia_local': True, 'pro_variacion': 0,
-                        'pro_internet': True,          # v5.5.3: fotos de internet con licencia (fuentes_web) para las escenas
+# v5.57 (el usuario: «la misma lógica para los 6 temas… cuando se active la PRO, pongo lo que se desea»): de fábrica NADA encendido en el menú de
+# la PRO (sin «detrás de ti», B-roll ni motions): con la PRO encendida y nada activado, GO es el de solo captions (activa_en_go)
+OPCIONES_POR_DEFECTO = {'pro_genero': 'auto', 'pro_densidad': 'media', 'pro_mascara': 'no', 'pro_sonidos': True, 'pro_ia_local': True, 'pro_variacion': 0,
+                        'pro_internet': False,         # v5.5.3: fotos de internet con licencia (fuentes_web) para las escenas
                         'pro_motions_completo': False,  # v5.5.8: «Motions completo» (motions_completo.py): un video de motions encima de todo, al final
                         'pro_gancho_intro': True,       # v5.33: «Gancho del inicio» = la intro del primer segundo (intros_gancho)
-                        'pro_motions_modo': 'auto', 'pro_motions': [],     # v5.5.7: 'auto' (la IA elige entre todos) o 'elegidos' (solo los de la lista)
+                        'pro_motions_modo': 'elegidos', 'pro_motions': [],  # v5.5.7: 'auto' (la IA elige entre todos) o 'elegidos' (solo los de la lista)
                         'pro_sonidos_nivel': 'normal',  # v5.5.7 (página Sonido › Edición PRO): 'suave' | 'normal' | 'fuerte'
                         'pro_sonidos_familias': {'whoosh': True, 'textura': True, 'riser': True},   # movimiento · apariciones · riser + golpe
                         # v5.5.8: Temas 5 y 6 con captions de Fusion EDITABLES (Inspector › texto) en vez de las animaciones de Remotion
@@ -100,18 +102,54 @@ def activado():
     return bool(_prefs().get('go_edicion_pro', False))
 
 
+def hay_motions(op=None):
+    """v5.56: ¿algún motion del catálogo permitido? (modo «elegidos» con la lista vacía o ['-'] = ninguno). Sin ninguno la PRO no le pide a la IA
+    que elija motions (edicion_pro_planificador.planificar con_ia=False)."""
+    op = opciones_guardadas() if op is None else op
+    try:
+        import motions_catalogo as MC
+        if MC.modo(op) == 'elegidos':
+            return any(i != '-' for i in op.get('pro_motions') or [])
+    except Exception:
+        pass
+    return True
+
+
+def encendidas(op=None, neon=None):
+    """v5.57: lo que está ENCENDIDO en el menú de la PRO (pro_lateral_ui.estado: el Tema 1, sus interruptores; los demás, las preferencias que
+    comparte con Efectos), sin el «Gancho del inicio» (una intro de Efectos, no un proceso de la PRO) ni lo que no se ve (sin Studio, «detrás
+    de ti»). `neon`: True/False = el menú del Tema 1 o el de los demás (None = el del tema elegido). Ante cualquier duda, nada."""
+    op = opciones_guardadas() if op is None else op
+    try:
+        import pro_lateral_ui as LAT
+        return [o['clave'] for o in LAT.opciones_visibles() if o['clave'] != 'gancho' and LAT.estado(o['clave'], op, neon=neon)]
+    except Exception:
+        return []
+
+
+def activa_en_go():
+    """v5.56 (el usuario: «en Edición PRO debe ser lo mismo que con solo captions, ya que va a depender de qué es lo que sí active; si no se
+    activa nada, aunque esté activa, seguirá funcionando como solo captions; y si se activa detrás de ti, entonces empieza ese proceso»):
+    ¿hace algo la PRO en ESTE GO? Solo si hay algo encendido en su menú (`encendidas`): sin nada, GO es exactamente el de solo captions (antes,
+    con el Tema 1, ponía siempre los motions del kit y la placa: de 4 a 13 min).
+    v5.57 (el usuario: «esa misma lógica para los 6 temas»): igual en los Temas 1 a 6 (los 5 y 6 ya no van con la PRO completa por sí solos).
+    `activado()` sigue siendo el interruptor que se ve en Inicio y en Proyecto; las decisiones de GO usan esta."""
+    return activado() and bool(encendidas())
+
+
 # v5.49 (pedido del usuario): el Tema 2 solo ponía emojis con la Edición PRO encendida Y su opción «Emojis animados».
 # v5.54 (pedido: «los emojis solo se activan con la Edición PRO si activo la función de emoji»): TODOS los temas, packs propios, mezclas y el diseño de
 # siempre. Los Temas 5 y 6 ya son la PRO (TEMAS_PRO): con ellos basta la opción.
 # v5.55 (pedido: «ningún tema del 1 al 6 debe tener emojis hasta que se lo active en edición con emoji activado»): UN SOLO JUEZ para todo lo que pone
 # emojis (los captions de GO, Generar y Creativo, y las piezas de la PRO: emojis animados, píldoras, plantillas, kit, escenas, Motions completo). La
 # opción viene APAGADA de fábrica y solo vale True explícito; el Tema 1 neón mira SU interruptor «emoji» del menú (pro_neon_extras), como aplicar().
+# v5.57: también los Temas 5 y 6, solo con el interruptor de la PRO (ya no son la PRO por sí solos)
 def emojis_permitidos(pack=None, op=None):
-    """¿Lleva emojis el video con el tema `pack` (None = el elegido en Inicio)? Solo con la Edición PRO en juego (su interruptor, o los Temas 5/6, que
-    son la PRO) y «Emojis animados» ACTIVADO a mano. `op`: las opciones de la PRO a mirar (None = las guardadas). Ante cualquier duda, no."""
+    """¿Lleva emojis el video con el tema `pack` (None = el elegido en Inicio)? Solo con la Edición PRO encendida y «Emojis animados» ACTIVADO a
+    mano. `op`: las opciones de la PRO a mirar (None = las guardadas). Ante cualquier duda, no."""
     try:
         pack = str(_tema(pack) if pack is not None else tema_actual())      # (un estilo derivado de «Crea tu estilo» = su tema; una mezcla, no)
-        if not (activado() or pack in TEMAS_PRO):
+        if not activado():
             return False
         op = opciones_guardadas() if op is None else op
         if pack == 'Kinetic':
@@ -211,7 +249,9 @@ def quitar_emojis(piezas):
     return out
 
 
-TEMAS_PRO = ('Tema5', 'Tema6')            # edicion_pro_tema5.activo: estos temas SON la Edición PRO completa, aunque su interruptor esté apagado
+# edicion_pro_tema5.activo: estos temas hacen su edición con el motor del Tema 5 (v5.57: solo con la PRO encendida y algo en su menú, como los
+# demás; sin ella, sus captions y nada más)
+TEMAS_PRO = ('Tema5', 'Tema6')
 
 
 def _tema(pack):
@@ -229,9 +269,9 @@ def tema_actual():
 
 
 def en_juego():
-    """v5.5.7: ¿la PRO actúa en el próximo GO? Su interruptor, o el tema elegido es el 5 o el 6 (la usan siempre). Las páginas Efectos y Sonido lo
-    miran para decir la verdad sobre lo que se aplica (antes, con el Tema 5 y el interruptor apagado, decían «PRO apagada»)."""
-    return activado() or tema_actual() in TEMAS_PRO
+    """v5.5.7: ¿la PRO actúa en el próximo GO? Las páginas Efectos y Sonido lo miran para decir la verdad sobre lo que se aplica.
+    v5.57: solo su interruptor, también con los Temas 5 y 6 (antes la usaban siempre). Lo que de verdad hace en un GO: activa_en_go."""
+    return activado()
 
 
 def neon_elegido():
@@ -242,7 +282,9 @@ def neon_elegido():
 
 # v5.5.13 (el usuario: «si solo es captions, solo captions; si activo el modo PRO lo hará como el de referencia y si activo cosas del menú
 # también lo aplicará; pero el tema por defecto será como la referencia»): con el Tema 1, los interruptores del menú lateral de Proyecto
-# (pro_lateral_ui) son SUYOS: 'pro_neon_extras', por defecto ninguno = la referencia exacta; los de los demás temas no cambian.
+# (pro_lateral_ui) son SUYOS: 'pro_neon_extras'; los de los demás temas no cambian.
+# v5.56 (el usuario: «si no se activa nada, aunque esté activa, seguirá funcionando como solo captions»): ninguno = SOLO CAPTIONS (activa_en_go);
+# la referencia del kit (sus motions y la placa con la cámara) es ahora el interruptor «Kit de motions» ('kit'), solo el kit «TEMA 1».
 # v5.33: sin 'gancho': ahora es la intro del primer segundo (intros_gancho) con su propia preferencia (pro_gancho_intro, encendida por defecto
 # también en el Tema 1, pedido del usuario); un 'gancho' guardado aquí de antes ya no cuenta (cambiaría la densidad de la PRO del Tema 1)
 NEON_EXTRAS = ('pildora', 'broll', 'detras', 'motions_completo', 'escenas', 'kit', 'graficos', 'emoji')   # v5.20: sin 'plantillas' · v5.25: + emoji
@@ -266,9 +308,31 @@ def opciones_neon(op):
     op['pro_mascara'] = (antes if antes != 'no' else 'auto') if 'detras' in ex else 'no'
     op['pro_internet'] = 'broll' in ex
     op['pro_motions_completo'] = 'motions_completo' in ex
-    ids = [i for c in sorted(ex) for i in LAT.ids_de(c)]
+    # (v5.56: «Kit de motions» del Tema 1 = los motions del kit «TEMA 1» —planificar— y no los del catálogo genérico)
+    ids = [i for c in sorted(ex) if c != 'kit' for i in LAT.ids_de(c)]
     op['pro_motions_modo'], op['pro_motions'] = 'elegidos', ids or ['-']      # ('-': ninguno; una lista vacía sería «todos»)
     op['_neon_extras'] = sorted(ex)
+    return op
+
+
+def opciones_menu(op):
+    """v5.57 (el usuario: «esa misma lógica para los 6 temas… cuando se active la PRO, pongo lo que se desea»): las opciones de la PRO de los Temas
+    2 a 6 con su menú lateral (pro_lateral_ui) como ÚNICA fuente: lo que no está encendido allí no va. Ni los motions de un grupo apagado o que
+    ya no se enseña («Plantillas por frase», los retirados del gancho) aunque sigan en la lista guardada, ni el B-roll de stock sin «B-roll con
+    fotos», ni la persona recortada sin «detrás de ti». De un grupo encendido, los motions que el usuario dejó marcados en Efectos.
+    '_menu' = lo encendido (encendidas)."""
+    import motions_catalogo as MC
+    import pro_lateral_ui as LAT
+    on = encendidas(op, neon=False)
+    op = dict(op)
+    ids = list(dict.fromkeys(i for c in on for i in LAT.ids_de(c) if MC.permitido(i, op)))
+    if 'detras' not in on:
+        op['pro_mascara'] = 'no'
+    op['pro_internet'] = 'broll' in on
+    op['pro_motions_completo'] = 'motions_completo' in on
+    op['pro_emojis'] = 'emoji' in on and op.get('pro_emojis') is True
+    op['pro_motions_modo'], op['pro_motions'] = 'elegidos', ids or ['-']
+    op['_menu'] = on
     return op
 
 
@@ -324,38 +388,39 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
     """v5.22: `marcas` = posiciones_pro.para_plan (Efectos › «Posición»): van a plan['_marcas'] y, si hacen falta, se arma también el plan
     MÁS DENSO (`_pool`, `_pool_broll`) del que aplicar() saca la pieza de cada marca."""
     op = dict(OPCIONES_POR_DEFECTO, **(opciones or opciones_guardadas()))
-    if tema == 'neon':
-        op = opciones_neon(op)
+    op = opciones_neon(op) if tema == 'neon' else opciones_menu(op)      # (v5.57: en los 6 temas, solo lo encendido en el menú de la PRO)
     w, h, dur, _fps = medir(video)
     pesos = _pesos_ia(palabras, idioma, al_estado) if op.get('pro_ia_local') else None
-    neon_mot = None
-    if tema == 'neon':
+    neon_mot = None                                  # (None, no []: con una lista, aplicar() renderiza la placa del kit aunque esté vacía)
+    if tema == 'neon' and 'kit' in (op.get('_neon_extras') or []):
         try:                                         # v5.5.13: la PRO del Tema 1 = los motions del kit «TEMA 1» (kit_neon_motions), no los gráficos genéricos
-            import kit_neon_motions as KM
+            import kit_neon_motions as KM            # v5.56: solo con «Kit de motions» encendido (sin él, ni motions ni placa: 4-13 min menos)
             neon_mot = KM.escena_motions(palabras, idioma, duracion or dur, cortes=cortes, video=str(video),
                                          usuario=str(op.get('pro_usuario') or '') or None)
         except Exception:
             neon_mot = []
     ocup_neon = [(m['ini'] - 0.3, m['fin'] + 0.3) for m in neon_mot or [] if m.get('capa') != 'iconos']
     densidad = op.get('pro_densidad') or 'media'
-    grupos_neon = [c for c in op.get('_neon_extras') or [] if c not in ('detras', 'motions_completo', 'pildora')] if tema == 'neon' else []
+    grupos_neon = [c for c in op.get('_neon_extras') or [] if c not in ('detras', 'motions_completo', 'pildora', 'kit')] if tema == 'neon' else []
     if grupos_neon:                                  # v5.5.17: con el Tema 1 solo quedan los HUECOS entre los motions del kit: más densidad, o no cabía
         densidad = 'espectaculo'                     # nada y lo encendido en el menú «no hacía nada» (probar_pro_lateral.py)
+    # v5.56: sin ningún grupo de motions encendido (p. ej. solo «detrás de ti») la IA no elige motions que no van a salir: ~25 s menos
+    con_ia = bool(grupos_neon) if tema == 'neon' else hay_motions(op)
     plan = PL.planificar(palabras, duracion or dur, idioma=idioma, genero=op.get('pro_genero') or 'auto', densidad=densidad,
                          cortes=cortes, vertical=bool(h and w and h > w), pesos=pesos, semilla=int(op.get('pro_variacion') or 0), video=str(video),   # v5.5.3: la RUTA (colores y fotogramas del video para el kit y las escenas)
-                         tema=tema, bloqueado=ocup_neon)
+                         tema=tema, bloqueado=ocup_neon, con_ia=con_ia)
     plan['tema'] = tema
     plan['_cortes'] = list(cortes or [])
     if tema == 'neon':
         neonizar(plan)
         plan['kitneon_motions'] = neon_mot
         plan['_palabras'] = [{k: p.get(k) for k in ('word', 'start', 'end')} for p in palabras or [] if p.get('start') is not None]
-        extras = [c for c in op['_neon_extras'] if c not in ('detras', 'motions_completo', 'pildora')]
+        extras = [c for c in op['_neon_extras'] if c not in ('detras', 'motions_completo', 'pildora', 'kit')]
         if extras:                                   # lo encendido en el menú lateral: los motions de siempre, SOLO donde no hay uno del kit
             plan['piezas'] = [p for p in plan.get('piezas') or [] if not any(p['ini'] < b and a < p['fin'] for a, b in ocup_neon)]
         else:
             plan['piezas'] = []
-        plan['resumen'] = 'Tema 1 neón: ' + ', '.join(m['fn'] for m in neon_mot)
+        plan['resumen'] = 'Tema 1 neón: ' + (', '.join(m['fn'] for m in neon_mot) if neon_mot else 'sin los motions del kit')
         if op['_neon_extras']:
             plan['resumen'] += ' + menú: ' + ', '.join(op['_neon_extras'])
     plan['video'] = str(video)
@@ -365,6 +430,12 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
     try:                                             # v5.5.7: solo los motions que el usuario permitió (el seguro final; la IA y las reglas ya no los proponen)
         import motions_catalogo as MC
         plan['piezas'] = MC.filtrar(plan.get('piezas') or [], op)
+        if op.get('_menu') is not None:              # v5.57: el resumen con lo que QUEDA (las reglas proponen de todo) y lo encendido en el menú
+            cuenta = {}
+            for p in plan['piezas']:
+                cuenta[p['pieza']] = cuenta.get(p['pieza'], 0) + 1
+            plan['resumen'] = (f"estilo {plan.get('genero') or 'general'}: " + (', '.join(f'{n} {k}' for k, n in sorted(cuenta.items())) or 'sin gráficos')
+                               + ' · menú: ' + (', '.join(op['_menu']) or 'nada'))
         if grupos_neon:                              # v5.5.17: cuánto puso cada grupo del menú (al Registro): sin momentos para él, dicho, no «falla»
             import pro_lateral_ui as LAT
             cuenta = {c: sum(1 for p in plan['piezas'] if MC.id_de_pieza(p) in set(LAT.ids_de(c))) for c in grupos_neon}
@@ -374,7 +445,7 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
                                                            'libre para eso)' for c, n in cuenta.items())
     except Exception:
         pass
-    plan['broll'] = _broll_de(palabras, duracion or dur, idioma, op, plan) if (tema != 'neon' or op.get('pro_internet')) else []
+    plan['broll'] = _broll_de(palabras, duracion or dur, idioma, op, plan) if op.get('pro_internet') else []   # (v5.57: solo con «B-roll con fotos»)
     if tema == 'neon' and plan['broll']:            # (Tema 1: el B-roll del menú, nunca encima de un motion del kit)
         plan['broll'] = [m for m in plan['broll'] if not any(m['ini'] < b and a < m['ini'] + m['dur'] for a, b in ocup_neon)]
     plan['_marcas'] = {k: v for k, v in (marcas or {}).items() if v and v.get('ts')}
@@ -382,7 +453,7 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
         try:
             denso = PL.planificar(palabras, duracion or dur, idioma=idioma, genero=plan.get('genero') or op.get('pro_genero') or 'auto',
                                   densidad='espectaculo', cortes=cortes, vertical=bool(h and w and h > w), pesos=pesos,
-                                  semilla=int(op.get('pro_variacion') or 0) + 1, video=str(video), tema=tema)
+                                  semilla=int(op.get('pro_variacion') or 0) + 1, video=str(video), tema=tema, con_ia=con_ia)
             plan['_pool'] = denso.get('piezas') or []
         except Exception:
             plan['_pool'] = []
@@ -1815,8 +1886,10 @@ def _ajustes_texto_neon(antes, despues, bloques, fps, H, alto_kit=1920.0):
 def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     """Pone la Edición PRO en el timeline actual. Devuelve (ok, mensaje)."""
     decir = al_estado or (lambda t: None)
+    op_plan = (plan or {}).get('opciones') or opciones_guardadas()
     if not plan or not (plan.get('piezas') or plan.get('tema5') or plan.get('ligero') or plan.get('kitneon')
-                        or (plan.get('opciones') or opciones_guardadas()).get('pro_motions_completo')):        # v5.5.8: también solo motions
+                        or op_plan.get('pro_motions_completo')        # v5.5.8: también solo motions
+                        or op_plan.get('_menu')):                     # v5.57: lo encendido en el menú (p. ej. solo «detrás de ti», sin ningún motion)
         return True, ''
     info = info or _info_timeline()
     if not info:
@@ -1848,6 +1921,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     # las mismas mecánicas de captions que los Temas 1–4 (detrás de la persona, sin tapar caras, abajo en las escenas); sus gráficos siguen igual.
     # `cap_t5` = el Tema 5/6 con sus captions de Remotion (no editables), solo si el usuario lo apaga.
     cap_t5 = t5 and (plan.get('opciones') or {}).get('pro_captions_editables', True) is False
+    if t5 and not cap_t5 and not hay_motions(op):
+        t5 = False                                   # v5.57: sin ningún motion encendido en el menú (p. ej. solo «detrás de ti») nada de su motor saldría
     soltar_gpu(texto=not t5)                         # v5.5.4: la GPU para Resolve y el Magic Mask (el Tema 5 aún usa la IA de texto: la suelta él al acabar)
     ligero = bool(plan.get('ligero'))              # Temas 1–4 sin la PRO: solo legibilidad, acompañantes, color y la regla de la cara (edicion_pro_temas)
     neon_tema = bool(plan.get('kitneon'))          # v5.5.13: Tema 1 neón = el estilo del kit: sin persona encima, iconos 3D, acompañantes ni punch-in alterno
@@ -2236,7 +2311,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         sin_emoji.append([int(round(c['ini'] * fps)) - 2, int(round(c['fin'] * fps))])
     plan['_iconos3d'] = iconos3d
     color_claves = None
-    if (ligero or not t5) and not plan.get('solo_captions') and (not neon_tema or 'pildora' in ex_neon):   # Temas 1–4: el velo de legibilidad y los acompañantes, YA con la regla de la cara aplicada (mover)
+    if (ligero or not plan.get('tema5')) and not plan.get('solo_captions') and (not neon_tema or 'pildora' in ex_neon):   # Temas 1–4: el velo de legibilidad y los acompañantes, YA con la regla de la cara aplicada (mover)
         try:                                         # v5.5.4: también CON la Edición PRO (pedido: «algún motion debajo de los captions, aunque sea 1 o 2»)
             import edicion_pro_temas as TM
             if neon_tema:                            # v5.5.13: Tema 1 con «Píldora» en el menú: bajo SUS captions neón y nunca con un motion del kit

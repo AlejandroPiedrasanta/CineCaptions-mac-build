@@ -180,6 +180,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         el carrusel horizontal de «Pack de estilos»: tarjetas verticales sobre fotos de video con los captions de Resolve encima.
     firma_ed25519.py
         firma Ed25519 (RFC 8032) en Python puro: el programa comprueba que el version.json lo publicó Cinema Productions.
+    fluidez_resolve.py
+        reproducción fluida al terminar GO: caché de render de Fusion en nuestros clips y espera a que Resolve la llene.
     fuente_usuario.py
         v5.5.12: la tipografía que el usuario elige en «Crea tu estilo» para los Temas (texto principal y, aparte, el de
     fuentes_sistema.py
@@ -354,6 +356,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         los videos del celular vienen «acostados» con su giro guardado aparte (display matrix): Resolve lo aplica, PyAV no.
     salud.py
         chequeo de librerías al arrancar (versiones fijadas, motor de IA, MCP).
+    salud_resolve.py
+        ¿Resolve está sano? Diagnóstico único (ok / fantasma / colgado / caído) para Studio (MCP) y Free (Puente), Windows y Mac,
     sentimiento.py
         si una frase suena positiva o negativa (listas de palabras, sin modelos), para el sonido de los emojis (v5.4.8).
     sfx_audio.py

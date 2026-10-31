@@ -9308,5 +9308,432 @@
   "fr": "«{p}» mélange des thèmes et ne se place que dans DaVinci Resolve : sans Resolve, GO enregistre la vidéo avec le Thème 4.",
   "de": "«{p}» mischt Themen und wird nur in DaVinci Resolve platziert: ohne Resolve nimmt GO das Video mit Thema 4 auf.",
   "it": "«{p}» mescola temi e si posiziona solo in DaVinci Resolve: senza Resolve, GO registra il video con il Tema 4."
+ },
+ "Reparar Resolve solo si se traba": {
+  "en": "Repair Resolve only if it gets stuck",
+  "pt": "Reparar o Resolve só se travar",
+  "fr": "Réparer Resolve seulement s’il se bloque",
+  "de": "Resolve nur reparieren, wenn es hängt",
+  "it": "Riparare Resolve solo se si blocca"
+ },
+ "Si Resolve se queda abierto sin ventana o pasa un minuto sin responder, GO lo cierra del todo, lo vuelve a abrir y repite el paso. Apagado, GO solo te dice qué le pasa y se detiene.": {
+  "en": "If Resolve stays open with no window or goes a minute without responding, GO closes it completely, opens it again and repeats the step. Off, GO only tells you what is wrong and stops.",
+  "pt": "Se o Resolve fica aberto sem janela ou passa um minuto sem responder, o GO o fecha por completo, abre de novo e repete o passo. Desligado, o GO só diz o que acontece e para.",
+  "fr": "Si Resolve reste ouvert sans fenêtre ou ne répond plus pendant une minute, GO le ferme complètement, le rouvre et répète l’étape. Désactivé, GO vous dit seulement ce qui se passe et s’arrête.",
+  "de": "Bleibt Resolve ohne Fenster offen oder reagiert eine Minute lang nicht, schließt GO es komplett, öffnet es neu und wiederholt den Schritt. Aus: GO sagt dir nur, was los ist, und hält an.",
+  "it": "Se Resolve resta aperto senza finestra o non risponde per un minuto, GO lo chiude del tutto, lo riapre e ripete il passaggio. Spento, GO ti dice solo cosa succede e si ferma."
+ },
+ "{n} s": {
+  "en": "{n} s",
+  "pt": "{n} s",
+  "fr": "{n} s",
+  "de": "{n} s",
+  "it": "{n} s"
+ },
+ "{m} min {s} s": {
+  "en": "{m} min {s} s",
+  "pt": "{m} min {s} s",
+  "fr": "{m} min {s} s",
+  "de": "{m} min {s} s",
+  "it": "{m} min {s} s"
+ },
+ "Resolve está «fantasma»: su proceso sigue abierto pero sin ninguna ventana desde hace {s} y su registro no se mueve (se cerró a medias).": {
+  "en": "Resolve is a “ghost”: its process is still open but has had no window for {s} and its log is not moving (it closed halfway).",
+  "pt": "O Resolve está «fantasma»: o processo continua aberto mas sem nenhuma janela há {s} e o registro não se mexe (fechou pela metade).",
+  "fr": "Resolve est « fantôme » : son processus est toujours ouvert mais sans aucune fenêtre depuis {s} et son journal ne bouge plus (il s’est fermé à moitié).",
+  "de": "Resolve ist ein „Geist“: Sein Prozess läuft noch, hat aber seit {s} kein Fenster und sein Protokoll bewegt sich nicht (halb geschlossen).",
+  "it": "Resolve è «fantasma»: il suo processo è ancora aperto ma senza nessuna finestra da {s} e il suo registro non si muove (si è chiuso a metà)."
+ },
+ "Resolve no responde: lleva {s} sin dar señales de vida (ventana «No responde» o sin contestar a CineCaptions) y su registro no se mueve.": {
+  "en": "Resolve is not responding: no sign of life for {s} (window “Not responding” or not answering CineCaptions) and its log is not moving.",
+  "pt": "O Resolve não responde: está há {s} sem sinais de vida (janela «Não está respondendo» ou sem responder ao CineCaptions) e o registro não se mexe.",
+  "fr": "Resolve ne répond pas : aucun signe de vie depuis {s} (fenêtre « Ne répond pas » ou pas de réponse à CineCaptions) et son journal ne bouge plus.",
+  "de": "Resolve reagiert nicht: seit {s} kein Lebenszeichen (Fenster „Keine Rückmeldung“ oder keine Antwort an CineCaptions) und sein Protokoll bewegt sich nicht.",
+  "it": "Resolve non risponde: da {s} nessun segno di vita (finestra «Non risponde» o nessuna risposta a CineCaptions) e il suo registro non si muove."
+ },
+ "Resolve se cayó (dejó un volcado de error en su registro).": {
+  "en": "Resolve crashed (it left a crash dump in its log).",
+  "pt": "O Resolve caiu (deixou um despejo de erro no registro).",
+  "fr": "Resolve a planté (il a laissé un vidage d’erreur dans son journal).",
+  "de": "Resolve ist abgestürzt (Absturzabbild im Protokoll).",
+  "it": "Resolve si è bloccato (ha lasciato un dump di errore nel registro)."
+ },
+ "Resolve no está abierto.": {
+  "en": "Resolve is not open.",
+  "pt": "O Resolve não está aberto.",
+  "fr": "Resolve n’est pas ouvert.",
+  "de": "Resolve ist nicht geöffnet.",
+  "it": "Resolve non è aperto."
+ },
+ "Resolve responde.": {
+  "en": "Resolve is responding.",
+  "pt": "O Resolve responde.",
+  "fr": "Resolve répond.",
+  "de": "Resolve reagiert.",
+  "it": "Resolve risponde."
+ },
+ "(Falló: {m})": {
+  "en": "(Failed: {m})",
+  "pt": "(Falhou: {m})",
+  "fr": "(Échec : {m})",
+  "de": "(Fehlgeschlagen: {m})",
+  "it": "(Non riuscito: {m})"
+ },
+ "Resolve tardó {s} en dar señales de vida, pero contestó: sigo.": {
+  "en": "Resolve took {s} to show signs of life, but it answered: continuing.",
+  "pt": "O Resolve demorou {s} para dar sinais de vida, mas respondeu: sigo.",
+  "fr": "Resolve a mis {s} à donner signe de vie, mais il a répondu : je continue.",
+  "de": "Resolve brauchte {s} für ein Lebenszeichen, hat aber geantwortet: weiter.",
+  "it": "Resolve ha impiegato {s} a dare segni di vita, ma ha risposto: continuo."
+ },
+ "Resolve lleva {s} ocupado (su registro se mueve) pero no está trabado: no lo toco y sigo.": {
+  "en": "Resolve has been busy for {s} (its log is moving) but it is not stuck: I leave it alone and continue.",
+  "pt": "O Resolve está ocupado há {s} (o registro se mexe) mas não travou: não mexo nele e sigo.",
+  "fr": "Resolve est occupé depuis {s} (son journal bouge) mais il n’est pas bloqué : je n’y touche pas et je continue.",
+  "de": "Resolve ist seit {s} beschäftigt (sein Protokoll bewegt sich), hängt aber nicht: ich lasse es in Ruhe und mache weiter.",
+  "it": "Resolve è occupato da {s} (il suo registro si muove) ma non è bloccato: non lo tocco e continuo."
+ },
+ "Resolve sigue abierto sin ventana: compruebo si se quedó a medias…": {
+  "en": "Resolve is still open with no window: checking whether it got stuck halfway…",
+  "pt": "O Resolve continua aberto sem janela: verifico se ficou pela metade…",
+  "fr": "Resolve est toujours ouvert sans fenêtre : je vérifie s’il est resté à moitié fermé…",
+  "de": "Resolve ist ohne Fenster offen: ich prüfe, ob es halb geschlossen hängt…",
+  "it": "Resolve è ancora aperto senza finestra: controllo se è rimasto a metà…"
+ },
+ "Resolve no responde desde hace {s}: espero hasta {u} antes de repararlo…": {
+  "en": "Resolve has not responded for {s}: waiting up to {u} before repairing it…",
+  "pt": "O Resolve não responde há {s}: espero até {u} antes de repará-lo…",
+  "fr": "Resolve ne répond plus depuis {s} : j’attends jusqu’à {u} avant de le réparer…",
+  "de": "Resolve reagiert seit {s} nicht: ich warte bis zu {u}, bevor ich es repariere…",
+  "it": "Resolve non risponde da {s}: aspetto fino a {u} prima di ripararlo…"
+ },
+ "No pude cerrar Resolve ({n} proceso(s) siguen vivos tras {s}).": {
+  "en": "I could not close Resolve ({n} process(es) still alive after {s}).",
+  "pt": "Não consegui fechar o Resolve ({n} processo(s) ainda vivos após {s}).",
+  "fr": "Je n’ai pas pu fermer Resolve ({n} processus encore actif(s) après {s}).",
+  "de": "Ich konnte Resolve nicht schließen ({n} Prozess(e) laufen nach {s} noch).",
+  "it": "Non sono riuscito a chiudere Resolve ({n} processo/i ancora attivi dopo {s})."
+ },
+ "Resolve se cerró por las buenas en {s} ({h} proceso(s) suyos más).": {
+  "en": "Resolve closed normally in {s} ({h} more of its processes).",
+  "pt": "O Resolve fechou normalmente em {s} (mais {h} processo(s) dele).",
+  "fr": "Resolve s’est fermé normalement en {s} ({h} autre(s) processus à lui).",
+  "de": "Resolve wurde in {s} normal geschlossen ({h} weitere eigene Prozesse).",
+  "it": "Resolve si è chiuso normalmente in {s} ({h} suoi processi in più)."
+ },
+ "Cerré Resolve a la fuerza en {s} ({h} proceso(s) suyos más).": {
+  "en": "I force-closed Resolve in {s} ({h} more of its processes).",
+  "pt": "Fechei o Resolve à força em {s} (mais {h} processo(s) dele).",
+  "fr": "J’ai fermé Resolve de force en {s} ({h} autre(s) processus à lui).",
+  "de": "Ich habe Resolve in {s} zwangsweise geschlossen ({h} weitere eigene Prozesse).",
+  "it": "Ho chiuso Resolve forzatamente in {s} ({h} suoi processi in più)."
+ },
+ "Resolve no se cerró por las buenas en {g}: lo cerré a la fuerza en {s} ({h} proceso(s) suyos más).": {
+  "en": "Resolve did not close normally within {g}: I force-closed it in {s} ({h} more of its processes).",
+  "pt": "O Resolve não fechou normalmente em {g}: fechei à força em {s} (mais {h} processo(s) dele).",
+  "fr": "Resolve ne s’est pas fermé normalement en {g} : je l’ai fermé de force en {s} ({h} autre(s) processus à lui).",
+  "de": "Resolve schloss sich in {g} nicht normal: ich habe es in {s} zwangsweise geschlossen ({h} weitere eigene Prozesse).",
+  "it": "Resolve non si è chiuso normalmente in {g}: l’ho chiuso forzatamente in {s} ({h} suoi processi in più)."
+ },
+ "ciérralo tú (menú Apple > Forzar salida > DaVinci Resolve)": {
+  "en": "close it yourself (Apple menu > Force Quit > DaVinci Resolve)",
+  "pt": "feche-o você (menu Apple > Forçar encerrar > DaVinci Resolve)",
+  "fr": "fermez-le vous-même (menu Apple > Forcer à quitter > DaVinci Resolve)",
+  "de": "schließe es selbst (Apple-Menü > Sofort beenden > DaVinci Resolve)",
+  "it": "chiudilo tu (menu Apple > Uscita forzata > DaVinci Resolve)"
+ },
+ "ciérralo tú (Administrador de tareas > DaVinci Resolve > Finalizar tarea)": {
+  "en": "close it yourself (Task Manager > DaVinci Resolve > End task)",
+  "pt": "feche-o você (Gerenciador de Tarefas > DaVinci Resolve > Finalizar tarefa)",
+  "fr": "fermez-le vous-même (Gestionnaire des tâches > DaVinci Resolve > Fin de tâche)",
+  "de": "schließe es selbst (Task-Manager > DaVinci Resolve > Task beenden)",
+  "it": "chiudilo tu (Gestione attività > DaVinci Resolve > Termina attività)"
+ },
+ "{d} No lo cierro porque «Reparar Resolve solo si se traba» está apagado en Ajustes: {como} y pulsa GO otra vez.": {
+  "en": "{d} I am not closing it because “Repair Resolve only if it gets stuck” is off in Settings: {como} and press GO again.",
+  "pt": "{d} Não o fecho porque «Reparar o Resolve só se travar» está desligado em Ajustes: {como} e aperte GO de novo.",
+  "fr": "{d} Je ne le ferme pas car « Réparer Resolve seulement s’il se bloque » est désactivé dans Réglages : {como} et appuyez de nouveau sur GO.",
+  "de": "{d} Ich schließe es nicht, weil „Resolve nur reparieren, wenn es hängt“ in den Einstellungen aus ist: {como} und drücke erneut GO.",
+  "it": "{d} Non lo chiudo perché «Riparare Resolve solo se si blocca» è spento in Impostazioni: {como} e premi di nuovo GO."
+ },
+ "{d} Lo noté en {e}: lo cierro del todo y lo vuelvo a abrir.": {
+  "en": "{d} I noticed in {e}: closing it completely and opening it again.",
+  "pt": "{d} Percebi em {e}: fecho por completo e abro de novo.",
+  "fr": "{d} Je l’ai remarqué en {e} : je le ferme complètement et je le rouvre.",
+  "de": "{d} Nach {e} bemerkt: ich schließe es komplett und öffne es neu.",
+  "it": "{d} Me ne sono accorto in {e}: lo chiudo del tutto e lo riapro."
+ },
+ "{d} Esperé {e} a que diera señales de vida: lo cierro del todo y lo vuelvo a abrir.": {
+  "en": "{d} I waited {e} for a sign of life: closing it completely and opening it again.",
+  "pt": "{d} Esperei {e} por sinais de vida: fecho por completo e abro de novo.",
+  "fr": "{d} J’ai attendu {e} un signe de vie : je le ferme complètement et je le rouvre.",
+  "de": "{d} Ich habe {e} auf ein Lebenszeichen gewartet: ich schließe es komplett und öffne es neu.",
+  "it": "{d} Ho aspettato {e} un segno di vita: lo chiudo del tutto e lo riapro."
+ },
+ "Resolve se trabó: lo cierro y lo vuelvo a abrir…": {
+  "en": "Resolve got stuck: closing it and opening it again…",
+  "pt": "O Resolve travou: fecho e abro de novo…",
+  "fr": "Resolve s’est bloqué : je le ferme et je le rouvre…",
+  "de": "Resolve hängt: ich schließe es und öffne es neu…",
+  "it": "Resolve si è bloccato: lo chiudo e lo riapro…"
+ },
+ "No pude cerrar Resolve: {como} y pulsa GO otra vez.": {
+  "en": "I could not close Resolve: {como} and press GO again.",
+  "pt": "Não consegui fechar o Resolve: {como} e aperte GO de novo.",
+  "fr": "Je n’ai pas pu fermer Resolve : {como} et appuyez de nouveau sur GO.",
+  "de": "Ich konnte Resolve nicht schließen: {como} und drücke erneut GO.",
+  "it": "Non sono riuscito a chiudere Resolve: {como} e premi di nuovo GO."
+ },
+ "Vuelvo a abrir tu proyecto «{p}»…": {
+  "en": "Reopening your project “{p}”…",
+  "pt": "Abro de novo seu projeto «{p}»…",
+  "fr": "Je rouvre votre projet « {p} »…",
+  "de": "Ich öffne dein Projekt „{p}“ wieder…",
+  "it": "Riapro il tuo progetto «{p}»…"
+ },
+ "Proyecto «{p}» abierto otra vez.": {
+  "en": "Project “{p}” open again.",
+  "pt": "Projeto «{p}» aberto de novo.",
+  "fr": "Projet « {p} » rouvert.",
+  "de": "Projekt „{p}“ wieder geöffnet.",
+  "it": "Progetto «{p}» di nuovo aperto."
+ },
+ "No pude volver a abrir tu proyecto «{p}»: GO abre el más reciente.": {
+  "en": "I could not reopen your project “{p}”: GO opens the most recent one.",
+  "pt": "Não consegui abrir de novo seu projeto «{p}»: o GO abre o mais recente.",
+  "fr": "Je n’ai pas pu rouvrir votre projet « {p} » : GO ouvre le plus récent.",
+  "de": "Ich konnte dein Projekt „{p}“ nicht wieder öffnen: GO öffnet das neueste.",
+  "it": "Non sono riuscito a riaprire il tuo progetto «{p}»: GO apre il più recente."
+ },
+ "Resolve reabierto en {s}: repito el paso (reparación completa en {t}).": {
+  "en": "Resolve reopened in {s}: repeating the step (full repair in {t}).",
+  "pt": "Resolve reaberto em {s}: repito o passo (reparo completo em {t}).",
+  "fr": "Resolve rouvert en {s} : je répète l’étape (réparation complète en {t}).",
+  "de": "Resolve in {s} wieder geöffnet: ich wiederhole den Schritt (Reparatur komplett in {t}).",
+  "it": "Resolve riaperto in {s}: ripeto il passaggio (riparazione completa in {t})."
+ },
+ "Cerré Resolve pero no terminó de abrirse otra vez ({s}): GO lo intenta en el paso siguiente.": {
+  "en": "I closed Resolve but it did not finish opening again ({s}): GO tries in the next step.",
+  "pt": "Fechei o Resolve mas ele não terminou de abrir de novo ({s}): o GO tenta no próximo passo.",
+  "fr": "J’ai fermé Resolve mais il n’a pas fini de se rouvrir ({s}) : GO réessaie à l’étape suivante.",
+  "de": "Ich habe Resolve geschlossen, aber es hat sich nicht fertig neu geöffnet ({s}): GO versucht es im nächsten Schritt.",
+  "it": "Ho chiuso Resolve ma non ha finito di riaprirsi ({s}): GO ci riprova al passaggio successivo."
+ },
+ "El paso falló ({m}) pero Resolve da señales de vida: no lo cierro; relanzo el Puente y repito.": {
+  "en": "The step failed ({m}) but Resolve shows signs of life: I am not closing it; relaunching the Bridge and repeating.",
+  "pt": "O passo falhou ({m}) mas o Resolve dá sinais de vida: não o fecho; relanço a Ponte e repito.",
+  "fr": "L’étape a échoué ({m}) mais Resolve donne signe de vie : je ne le ferme pas ; je relance le Pont et je répète.",
+  "de": "Der Schritt schlug fehl ({m}), aber Resolve zeigt Lebenszeichen: ich schließe es nicht; ich starte die Brücke neu und wiederhole.",
+  "it": "Il passaggio non è riuscito ({m}) ma Resolve dà segni di vita: non lo chiudo; rilancio il Ponte e ripeto."
+ },
+ "Resolve falló ({m}) pero da señales de vida: no lo cierro y repito el paso.": {
+  "en": "Resolve failed ({m}) but shows signs of life: I am not closing it and I repeat the step.",
+  "pt": "O Resolve falhou ({m}) mas dá sinais de vida: não o fecho e repito o passo.",
+  "fr": "Resolve a échoué ({m}) mais donne signe de vie : je ne le ferme pas et je répète l’étape.",
+  "de": "Resolve schlug fehl ({m}), zeigt aber Lebenszeichen: ich schließe es nicht und wiederhole den Schritt.",
+  "it": "Resolve non è riuscito ({m}) ma dà segni di vita: non lo chiudo e ripeto il passaggio."
+ },
+ "Resolve no está bien antes de colocar ({m}): lo reparo y vuelvo a armar tu proyecto.": {
+  "en": "Resolve is not well before placing ({m}): repairing it and rebuilding your project.",
+  "pt": "O Resolve não está bem antes de colocar ({m}): reparo e monto seu projeto de novo.",
+  "fr": "Resolve ne va pas bien avant le placement ({m}) : je le répare et je remonte votre projet.",
+  "de": "Resolve ist vor dem Platzieren nicht in Ordnung ({m}): ich repariere es und baue dein Projekt neu auf.",
+  "it": "Resolve non sta bene prima di posizionare ({m}): lo riparo e rimonto il tuo progetto."
+ },
+ "Reproducción fluida: no pude preparar la caché de Resolve ({e}).": {
+  "en": "Smooth playback: I could not prepare the Resolve cache ({e}).",
+  "pt": "Reprodução fluida: não consegui preparar o cache do Resolve ({e}).",
+  "fr": "Lecture fluide : impossible de préparer le cache de Resolve ({e}).",
+  "de": "Flüssige Wiedergabe: Ich konnte den Resolve-Cache nicht vorbereiten ({e}).",
+  "it": "Riproduzione fluida: non sono riuscito a preparare la cache di Resolve ({e})."
+ },
+ "{n} clips con caché de Fusion": {
+  "en": "{n} clips with Fusion cache",
+  "pt": "{n} clipes com cache do Fusion",
+  "fr": "{n} clips avec cache Fusion",
+  "de": "{n} Clips mit Fusion-Cache",
+  "it": "{n} clip con cache di Fusion"
+ },
+ "valor «{v}»": {
+  "en": "value «{v}»",
+  "pt": "valor «{v}»",
+  "fr": "valeur « {v} »",
+  "de": "Wert „{v}“",
+  "it": "valore «{v}»"
+ },
+ "Resolve no aceptó ningún valor de caché ({n} clips)": {
+  "en": "Resolve accepted no cache value ({n} clips)",
+  "pt": "O Resolve não aceitou nenhum valor de cache ({n} clipes)",
+  "fr": "Resolve n'a accepté aucune valeur de cache ({n} clips)",
+  "de": "Resolve hat keinen Cache-Wert akzeptiert ({n} Clips)",
+  "it": "Resolve non ha accettato nessun valore di cache ({n} clip)"
+ },
+ "caché del proyecto «{m}»": {
+  "en": "project cache «{m}»",
+  "pt": "cache do projeto «{m}»",
+  "fr": "cache du projet « {m} »",
+  "de": "Projekt-Cache „{m}“",
+  "it": "cache del progetto «{m}»"
+ },
+ "cambié {k}": {
+  "en": "I changed {k}",
+  "pt": "mudei {k}",
+  "fr": "j'ai changé {k}",
+  "de": "geändert: {k}",
+  "it": "ho cambiato {k}"
+ },
+ "Resolve no aceptó {k}": {
+  "en": "Resolve did not accept {k}",
+  "pt": "O Resolve não aceitou {k}",
+  "fr": "Resolve n'a pas accepté {k}",
+  "de": "Resolve hat {k} nicht akzeptiert",
+  "it": "Resolve non ha accettato {k}"
+ },
+ "no encontré la carpeta de caché: reproduzco sin esperar": {
+  "en": "I could not find the cache folder: playing without waiting",
+  "pt": "não encontrei a pasta de cache: reproduzo sem esperar",
+  "fr": "dossier de cache introuvable : lecture sans attendre",
+  "de": "Cache-Ordner nicht gefunden: Wiedergabe ohne Warten",
+  "it": "non ho trovato la cartella della cache: riproduco senza aspettare"
+ },
+ "caché: {h} de {o} cuadros en {s} s ({e})": {
+  "en": "cache: {h} of {o} frames in {s} s ({e})",
+  "pt": "cache: {h} de {o} quadros em {s} s ({e})",
+  "fr": "cache : {h} sur {o} images en {s} s ({e})",
+  "de": "Cache: {h} von {o} Frames in {s} s ({e})",
+  "it": "cache: {h} di {o} fotogrammi in {s} s ({e})"
+ },
+ "no reproduzco: {m}": {
+  "en": "not playing: {m}",
+  "pt": "não reproduzo: {m}",
+  "fr": "pas de lecture : {m}",
+  "de": "keine Wiedergabe: {m}",
+  "it": "non riproduco: {m}"
+ },
+ "Reproducción fluida: ": {
+  "en": "Smooth playback: ",
+  "pt": "Reprodução fluida: ",
+  "fr": "Lecture fluide : ",
+  "de": "Flüssige Wiedergabe: ",
+  "it": "Riproduzione fluida: "
+ },
+ "Resolve se usó mientras guardaba la caché": {
+  "en": "Resolve was in use while it was caching",
+  "pt": "O Resolve foi usado enquanto guardava o cache",
+  "fr": "Resolve a été utilisé pendant la mise en cache",
+  "de": "Resolve wurde während des Cachens benutzt",
+  "it": "Resolve è stato usato mentre salvava la cache"
+ },
+ "Resolve no contestó ({e})": {
+  "en": "Resolve did not answer ({e})",
+  "pt": "O Resolve não respondeu ({e})",
+  "fr": "Resolve n'a pas répondu ({e})",
+  "de": "Resolve hat nicht geantwortet ({e})",
+  "it": "Resolve non ha risposto ({e})"
+ },
+ "cambiaste de proyecto": {
+  "en": "you switched project",
+  "pt": "você mudou de projeto",
+  "fr": "vous avez changé de projet",
+  "de": "du hast das Projekt gewechselt",
+  "it": "hai cambiato progetto"
+ },
+ "cambiaste de timeline": {
+  "en": "you switched timeline",
+  "pt": "você mudou de timeline",
+  "fr": "vous avez changé de timeline",
+  "de": "du hast die Timeline gewechselt",
+  "it": "hai cambiato timeline"
+ },
+ "moviste el cabezal": {
+  "en": "you moved the playhead",
+  "pt": "você moveu o cursor de reprodução",
+  "fr": "vous avez déplacé la tête de lecture",
+  "de": "du hast den Abspielkopf bewegt",
+  "it": "hai spostato la testina"
+ },
+ "estás en otra página de Resolve": {
+  "en": "you are on another Resolve page",
+  "pt": "você está em outra página do Resolve",
+  "fr": "vous êtes sur une autre page de Resolve",
+  "de": "du bist auf einer anderen Resolve-Seite",
+  "it": "sei in un'altra pagina di Resolve"
+ },
+ "Preparando la reproducción fluida en Resolve…": {
+  "en": "Preparing smooth playback in Resolve…",
+  "pt": "Preparando a reprodução fluida no Resolve…",
+  "fr": "Préparation de la lecture fluide dans Resolve…",
+  "de": "Flüssige Wiedergabe in Resolve wird vorbereitet…",
+  "it": "Preparo la riproduzione fluida in Resolve…"
+ },
+ "Preparando la reproducción fluida: Resolve guarda los captions en caché ({p} %)…": {
+  "en": "Preparing smooth playback: Resolve is caching the captions ({p} %)…",
+  "pt": "Preparando a reprodução fluida: o Resolve guarda as legendas em cache ({p} %)…",
+  "fr": "Préparation de la lecture fluide : Resolve met les sous-titres en cache ({p} %)…",
+  "de": "Flüssige Wiedergabe wird vorbereitet: Resolve speichert die Untertitel im Cache ({p} %)…",
+  "it": "Preparo la riproduzione fluida: Resolve salva i sottotitoli in cache ({p} %)…"
+ },
+ "No reproduzco: empezó otro trabajo en Resolve.": {
+  "en": "Not playing: another job started in Resolve.",
+  "pt": "Não reproduzo: começou outro trabalho no Resolve.",
+  "fr": "Pas de lecture : une autre tâche a commencé dans Resolve.",
+  "de": "Keine Wiedergabe: In Resolve hat eine andere Aufgabe begonnen.",
+  "it": "Non riproduco: è iniziato un altro lavoro in Resolve."
+ },
+ "No reproduzco solo: pulsa Reproducir en Resolve (la caché ya está lista).": {
+  "en": "I will not play it by myself: press Play in Resolve (the cache is ready).",
+  "pt": "Não reproduzo sozinho: aperte Reproduzir no Resolve (o cache já está pronto).",
+  "fr": "Je ne lance pas la lecture seul : appuyez sur Lecture dans Resolve (le cache est prêt).",
+  "de": "Ich spiele nicht selbst ab: Drücke in Resolve auf Wiedergabe (der Cache ist bereit).",
+  "it": "Non avvio da solo: premi Riproduci in Resolve (la cache è pronta)."
+ },
+ "Ninguno marcado: la PRO no pone motions": {
+  "en": "None marked: the PRO adds no motions",
+  "pt": "Nenhum marcado: a PRO não coloca motions",
+  "fr": "Aucun coché : la PRO n'ajoute aucun motion",
+  "de": "Keiner markiert: Die PRO setzt keine Motions",
+  "it": "Nessuno segnato: la PRO non mette motion"
+ },
+ "Edición PRO a tu medida en los 6 temas: solo pone lo que enciendes en su menú (Captions detrás de ti, Píldora, B-roll, Escenas, Kit, Gráficos, Emojis animados o Motions completo). Encendida y sin nada activado, GO va tan rápido como solo captions.": {
+  "en": "PRO Edit your way in all 6 themes: it only adds what you turn on in its menu (Captions behind you, Pill, B-roll, Scenes, Kit, Graphics, Animated emojis or Full motions). Turned on with nothing selected, GO is as fast as captions only.",
+  "pt": "Edição PRO do seu jeito nos 6 temas: só coloca o que você liga no menu dela (Legendas atrás de você, Pílula, B-roll, Cenas, Kit, Gráficos, Emojis animados ou Motions completo). Ligada e sem nada ativado, o GO fica tão rápido quanto só legendas.",
+  "fr": "Édition PRO sur mesure dans les 6 thèmes : elle n'ajoute que ce que vous activez dans son menu (Sous-titres derrière vous, Pastille, B-roll, Scènes, Kit, Graphiques, Emojis animés ou Motions complet). Activée sans rien de coché, GO est aussi rapide que les sous-titres seuls.",
+  "de": "PRO-Bearbeitung nach deinem Wunsch in allen 6 Themes: Sie setzt nur, was du in ihrem Menü einschaltest (Untertitel hinter dir, Pille, B-Roll, Szenen, Kit, Grafiken, Animierte Emojis oder Komplette Motions). Eingeschaltet und nichts aktiviert, ist GO so schnell wie nur Untertitel.",
+  "it": "Edizione PRO su misura nei 6 temi: mette solo ciò che accendi nel suo menu (Sottotitoli dietro di te, Pillola, B-roll, Scene, Kit, Grafiche, Emoji animate o Motions completo). Accesa e senza niente attivato, GO è veloce come solo sottotitoli."
+ },
+ "El menú de la Edición PRO viene sin nada encendido (salvo el Gancho del inicio) y ya se puede apagar todo.": {
+  "en": "The PRO Edit menu now starts with nothing turned on (except the Opening hook), and you can turn everything off.",
+  "pt": "O menu da Edição PRO agora vem sem nada ligado (exceto o Gancho do início) e já dá para desligar tudo.",
+  "fr": "Le menu de l'Édition PRO arrive sans rien d'activé (sauf l'Accroche du début) et on peut désormais tout désactiver.",
+  "de": "Das Menü der PRO-Bearbeitung startet ohne etwas Eingeschaltetes (außer dem Hook am Anfang), und du kannst jetzt alles ausschalten.",
+  "it": "Il menu dell'Edizione PRO arriva senza niente acceso (tranne il Gancio iniziale) e ora si può spegnere tutto."
+ },
+ "Temas 5 y 6 en solo captions: sin la Edición PRO ponen sus captions y nada más, igual de rápido que los otros temas (antes hacían siempre la edición completa).": {
+  "en": "Themes 5 and 6 in captions only: without PRO Edit they add their captions and nothing else, as fast as the other themes (before, they always did the full edit).",
+  "pt": "Temas 5 e 6 só com legendas: sem a Edição PRO colocam suas legendas e nada mais, tão rápido quanto os outros temas (antes sempre faziam a edição completa).",
+  "fr": "Thèmes 5 et 6 en sous-titres seuls : sans l'Édition PRO ils mettent leurs sous-titres et rien d'autre, aussi vite que les autres thèmes (avant, ils faisaient toujours le montage complet).",
+  "de": "Themes 5 und 6 nur mit Untertiteln: Ohne PRO-Bearbeitung setzen sie ihre Untertitel und sonst nichts, so schnell wie die anderen Themes (vorher machten sie immer die komplette Bearbeitung).",
+  "it": "Temi 5 e 6 con solo sottotitoli: senza l'Edizione PRO mettono i loro sottotitoli e nient'altro, veloci come gli altri temi (prima facevano sempre il montaggio completo)."
+ },
+ "Tema 1 con la Edición PRO: sus motions del kit y la placa con cámara van en el botón «Kit de motions» del menú; sin él, nada de eso (antes iban siempre y el GO podía tardar de 4 a 13 minutos).": {
+  "en": "Theme 1 with PRO Edit: its kit motions and the camera plate are now the «Motion kit» button in the menu; without it, none of that (before, they always ran and GO could take 4 to 13 minutes).",
+  "pt": "Tema 1 com a Edição PRO: os motions do kit e a placa com câmera agora ficam no botão «Kit de motions» do menu; sem ele, nada disso (antes iam sempre e o GO podia levar de 4 a 13 minutos).",
+  "fr": "Thème 1 avec l'Édition PRO : ses motions du kit et la plaque avec caméra sont désormais le bouton « Kit de motions » du menu ; sans lui, rien de tout ça (avant, ils étaient toujours là et GO pouvait prendre de 4 à 13 minutes).",
+  "de": "Theme 1 mit PRO-Bearbeitung: Seine Kit-Motions und die Kamera-Platte sind jetzt der Knopf «Motion-Kit» im Menü; ohne ihn nichts davon (vorher liefen sie immer und GO konnte 4 bis 13 Minuten dauern).",
+  "it": "Tema 1 con l'Edizione PRO: i motion del kit e la lastra con la camera ora sono il pulsante «Kit di motion» del menu; senza, niente di tutto ciò (prima c'erano sempre e GO poteva durare da 4 a 13 minuti)."
+ },
+ "«Captions detrás de ti» mucho más rápido: en Windows el recorte de la persona usa la tarjeta gráfica (hasta unas 6 veces más rápido; sin ella, casi el doble) y sale igual de fino.": {
+  "en": "«Captions behind you» much faster: on Windows the person cutout uses the graphics card (up to about 6 times faster; without one, almost twice as fast) and comes out just as clean.",
+  "pt": "«Legendas atrás de você» muito mais rápido: no Windows o recorte da pessoa usa a placa de vídeo (até umas 6 vezes mais rápido; sem ela, quase o dobro) e sai igual de fino.",
+  "fr": "« Sous-titres derrière vous » beaucoup plus rapide : sous Windows, le détourage de la personne utilise la carte graphique (jusqu'à environ 6 fois plus rapide ; sans elle, presque deux fois) et reste aussi précis.",
+  "de": "«Untertitel hinter dir» viel schneller: Unter Windows nutzt das Freistellen der Person die Grafikkarte (bis zu etwa 6-mal schneller; ohne sie fast doppelt so schnell), genauso sauber.",
+  "it": "«Sottotitoli dietro di te» molto più veloce: su Windows il ritaglio della persona usa la scheda grafica (fino a circa 6 volte più veloce; senza, quasi il doppio) e viene altrettanto preciso."
+ },
+ "Los 6 temas en el Inspector de Resolve: los controles de Luxe Slide (texto editable, tamaño, posición, color, DROP SHADOW y GLOW, entre otros) y arriba solo el banner de CineCaptions.": {
+  "en": "All 6 themes in the Resolve Inspector: the Luxe Slide controls (editable text, size, position, color, DROP SHADOW and GLOW, among others) and only the CineCaptions banner on top.",
+  "pt": "Os 6 temas no Inspector do Resolve: os controles do Luxe Slide (texto editável, tamanho, posição, cor, DROP SHADOW e GLOW, entre outros) e em cima só o banner do CineCaptions.",
+  "fr": "Les 6 thèmes dans l'Inspecteur de Resolve : les contrôles de Luxe Slide (texte modifiable, taille, position, couleur, DROP SHADOW et GLOW, entre autres) et en haut seulement la bannière CineCaptions.",
+  "de": "Alle 6 Themes im Inspector von Resolve: die Regler von Luxe Slide (bearbeitbarer Text, Größe, Position, Farbe, DROP SHADOW und GLOW u. a.) und oben nur das CineCaptions-Banner.",
+  "it": "I 6 temi nell'Inspector di Resolve: i controlli di Luxe Slide (testo modificabile, dimensione, posizione, colore, DROP SHADOW e GLOW, tra gli altri) e in alto solo il banner di CineCaptions."
  }
 }

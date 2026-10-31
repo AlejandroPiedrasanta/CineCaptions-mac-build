@@ -68,11 +68,11 @@ def rasgos_del_tema(pack, formato='v', prefs=None, pro=None, plan_efectos=None):
           'fx_intro_zoom': v1.get('zoom_intro') if v1.get('zoom_intro') in ('suave', 'normal', 'fuerte') else None,
           'fx_intro_sonido': next((e.get('asset') for e in evs if e.get('tipo') == 'sonido' and e.get('ini') is not None and float(e['ini']) < 1.0), None)}
     pro = pro or {}
-    completa = pack in getattr(edicion_pro, 'TEMAS_PRO', ())
-    try:
-        activa = completa or bool(edicion_pro.activado())
+    try:                                         # (v5.56/v5.57: la PRO encendida y nada en su menú = solo captions, también con los Temas 5 y 6)
+        activa = bool(edicion_pro.activa_en_go())
     except Exception:
-        activa = completa
+        activa = False
+    completa = activa and pack in getattr(edicion_pro, 'TEMAS_PRO', ())
     modo_pro = None
     if pack == 'Tema6' or pro.get('estilo_t5') == 'editorial':
         modo_pro = 'editorial'

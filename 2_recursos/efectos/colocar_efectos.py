@@ -212,7 +212,8 @@ def _poner_movimiento(tl, entradas):
                 except Exception:
                     pass
             try:
-                it.SetFusionOutputCache('enabled')                     # v5.5.4: se pre-renderiza en segundo plano (la reproducción, fluida)
+                # v5.5.4: se pre-renderiza en segundo plano (la reproducción, fluida). v5.56: con la CONSTANTE (con 'enabled' Resolve 21 decía False)
+                it.SetFusionOutputCache(getattr(globals().get('resolve'), 'CACHE_ENABLED', 1.0))
             except Exception:
                 pass
             puestas += 1

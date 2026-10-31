@@ -26,7 +26,8 @@ AQUI = os.path.dirname(os.path.abspath(SPEC))
 datas = []
 for carpeta in ('resolve_scripts', 'locales', 'plantillas_incluidas', 'fonts',
                 'sfx_library', 'sfx_emoji', 'emojis', 'motor_qwen', 'motor_compat', 'guia_estilo', 'generador_packs', 'fondos_estilos', 'vistas_slider', 'efectos', 'edicion_pro',          # v5.4.49: Edición PRO (plantillas OGraf, modelo de recorte, colocador)
-                'motions_resolve', 'creativo'):          # v5.5.9: los motions editables de Resolve (Efectos › Títulos › CineCaptions; generador_packs/drfx_motions.py)
+                'motions_resolve', 'creativo',          # v5.5.9: los motions editables de Resolve (Efectos › Títulos › CineCaptions; generador_packs/drfx_motions.py)
+                'biblioteca_sonido'):                   # v5.56: los SFX curados del sonido de GO (3_compilar/empaquetar_sonidos.py; sin ellos el Tema 1 salía sin sonidos)
     origen = os.path.join(RECURSOS, carpeta)
     if not os.path.isdir(origen):
         raise SystemExit(f'Falta {origen}: sin eso el programa queda cojo')

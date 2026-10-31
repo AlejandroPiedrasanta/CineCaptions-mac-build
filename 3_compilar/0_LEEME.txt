@@ -33,6 +33,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     desktop.ini
     documentar.py
         regenera el índice y el mapa del código del LEEME y anota los cambios en el registro.
+    empaquetar_sonidos.py
+        copia a 2_recursos/biblioteca_sonido los sonidos de 5_SFX que GO puede poner (y su catálogo): viajan en el .exe.
     encabezados.py
         pone (o actualiza) el encabezado de autor y la descripción en cada archivo de código.
     firmar_manifiesto.py

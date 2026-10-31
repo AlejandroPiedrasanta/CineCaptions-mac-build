@@ -333,7 +333,7 @@ class SeccionMotions(Tarjeta):
         self._pintar()
         try:
             import edicion_pro
-            pro = edicion_pro.en_juego()                         # (los Temas 5 y 6 usan la PRO aunque su interruptor esté apagado)
+            pro = edicion_pro.en_juego()                         # (su interruptor; v5.57: también con los Temas 5 y 6)
         except Exception:
             pro = True
         self._lbl_pro.setText('' if pro else tr('La Edición PRO está apagada: estos motions se usan cuando la actives en Inicio.'))
@@ -351,7 +351,7 @@ class SeccionMotions(Tarjeta):
         if auto:
             txt = tr('La IA elige entre los {n}', n=total)
         elif not n:
-            txt = tr('Ninguno marcado: la IA elige entre todos')
+            txt = tr('Ninguno marcado: la PRO no pone motions')         # (v5.57: motions_catalogo.modo; antes la IA elegía entre todos)
         else:
             txt = tr('{a} de {b} · la IA usará solo estos', a=n, b=total)
         self._lbl_cuenta.setText(txt)

@@ -563,7 +563,9 @@ def _elemento_kinetic(r, s, aj=None):
         # la caja (kinetic_elementos.comp_cinta): alto = alto_k × mayúsculas, centrada 0,03 em por encima del centro del Text+, que está c em sobre la base
         caja = dict(color=caja_c, pad_x=cap * pad_k, arriba=c + 0.03 + cap * alto_k / 2.0, abajo=cap * alto_k / 2.0 - c - 0.03,
                     degradado=(clara, honda))                                  # v5.54 «B · Premium»: la pegatina con el degradado de su color
-        sp = texto(txt, par, em * s, color=texto_c, esp=e.get('esp', 1.0), caja=caja, sombra=(0.5, 0.03, 0.05))
+        # v5.56 (el usuario: «el Tema 1 tiene un efecto sombra, quítaselo»): el Tema 1 va sin sombra oscura, como el pack (Kin 19); quedan el
+        # contorno fino y el brillo de su color
+        sp = texto(txt, par, em * s, color=texto_c, esp=e.get('esp', 1.0), caja=caja)
     elif k.startswith('k hero'):
         # v5.54 «B · Premium» (= kinetic_elementos.comp_texto premium): el reflejo claro de arriba y el brillo de su color
         grad = GRADIENTES_K.get(var, GRADIENTES_K['blanco'])
@@ -572,16 +574,15 @@ def _elemento_kinetic(r, s, aj=None):
             base = _base_de(paradas)
             paradas, medio = degradado_usuario(paradas, nuevo), _derivar(base, medio, nuevo, brillo=True)
         sp = texto(txt, par, em * s, degradado=paradas, esp=e.get('esp', 1.0),
-                   contorno=0.02 if var == 'blanco' else 0.0, sombra=(0.8, 0.03, 0.05), halo=None, brillo=(0.13, PAL_K.BRILLO_HEROE[0], medio))
+                   contorno=0.02 if var == 'blanco' else 0.0, halo=None, brillo=(0.13, PAL_K.BRILLO_HEROE[0], medio))
     elif k.startswith('k serif'):
         grad = GRADIENTES_K['serif']
-        sp = texto(txt, par, em * s, degradado=degradado_usuario(grad, nuevo) if nuevo else grad, contorno=0.03, sombra=(0.8, 0.03, 0.05))
+        sp = texto(txt, par, em * s, degradado=degradado_usuario(grad, nuevo) if nuevo else grad, contorno=0.03)
     elif k.startswith('k script'):
         grad = GUION_K.get(var, GUION_K['amarillo'])
-        sp = texto(txt, par, em * s, degradado=degradado_usuario(grad, nuevo) if nuevo else grad, contorno=0.0 if k.startswith('k script yt') else 0.03,
-                   sombra=(0.8, 0.03, 0.05))
+        sp = texto(txt, par, em * s, degradado=degradado_usuario(grad, nuevo) if nuevo else grad, contorno=0.0 if k.startswith('k script yt') else 0.03)
     else:                                                          # k sup / k label: blanco con contorno oscuro
-        sp = texto(txt, par, em * s, color=_rgb01(nuevo) if nuevo else (1, 1, 1), esp=e.get('esp', 1.0), contorno=0.04, sombra=(0.8, 0.03, 0.05))
+        sp = texto(txt, par, em * s, color=_rgb01(nuevo) if nuevo else (1, 1, 1), esp=e.get('esp', 1.0), contorno=0.04)
     _anotar(sp, e['par'], em_tema, par, em, txt)
     return sp, em, _centro(par)
 

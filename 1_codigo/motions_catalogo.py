@@ -114,9 +114,10 @@ def _op(op):
 
 
 def modo(op=None):
-    """'elegidos' solo con «Solo los que elija» Y al menos uno marcado: sin ninguno, la IA elige entre todos (nunca una PRO sin motions por descuido)."""
+    """'elegidos' con «Solo los que elija». v5.57 (el usuario: «cuando se active la PRO, pongo lo que se desea»): sin ninguno marcado, NINGUNO
+    (antes la IA elegía entre todos: una PRO sin motions ahora es legítima, p. ej. solo «detrás de ti»)."""
     op = _op(op)
-    return 'elegidos' if str(op.get('pro_motions_modo') or 'auto') == 'elegidos' and op.get('pro_motions') else 'auto'
+    return 'elegidos' if str(op.get('pro_motions_modo') or 'auto') == 'elegidos' else 'auto'
 
 
 RETIRADOS = {'ograf:orbita', 't5:orbita', 't5:sticker'}     # v5.33: el «Gancho del inicio» ya es una intro (intros_gancho): ni órbita ni sticker

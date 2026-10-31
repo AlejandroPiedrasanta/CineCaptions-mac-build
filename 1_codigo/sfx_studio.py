@@ -1419,7 +1419,7 @@ class SfxStudio(QWidget):
         ejemplo. Se guarda en las opciones de la PRO (pro_sonidos, pro_sonidos_nivel, pro_sonidos_familias) y lo aplica edicion_pro.aplicar."""
         import edicion_pro
         op = edicion_pro.opciones_guardadas()
-        activa = edicion_pro.en_juego()                      # (los Temas 5 y 6 usan la PRO aunque su interruptor esté apagado)
+        activa = edicion_pro.en_juego()                      # (su interruptor; v5.57: también con los Temas 5 y 6)
         encendido = bool(op.get('pro_sonidos', True))
         familias = dict(op.get('pro_sonidos_familias') or {})
 
@@ -1446,7 +1446,7 @@ class SfxStudio(QWidget):
             tema = ''
         if not activa:
             cv.addWidget(_Nota(tr('La Edición PRO está apagada: estos sonidos se usan cuando la actives en Inicio.'), 12, lineas=2, color=ui.AMBAR))
-        elif edicion_pro.tema_actual() in edicion_pro.TEMAS_PRO:
+        elif edicion_pro.tema_actual() in edicion_pro.TEMAS_PRO and edicion_pro.activa_en_go():
             cv.addWidget(_Nota(tr('Tema actual: {t}. En este tema todo el sonido lo pone la Edición PRO (sin toques por palabra).', t=tema), 12, lineas=2, color='#8FC7FF'))
         elif tema:
             cv.addWidget(_Nota(tr('Tema actual: {t}. La PRO suena con sus gráficos; los captions, con lo que elijas en «Simple».', t=tema), 12, lineas=2, color='#8FC7FF'))

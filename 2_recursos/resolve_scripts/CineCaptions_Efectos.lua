@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos».
 ]]
 
-local VERSION = "5.55 (efectos)"
+local VERSION = "5.57 (efectos)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -672,7 +672,8 @@ local function poner_movimiento(tl, entradas)
                         it:LoadFusionCompByName(nombre)
                     end)
                 end
-                pcall(function() it:SetFusionOutputCache("enabled") end)   -- v5.5.4: se pre-renderiza en segundo plano (gemelo de colocar_efectos.py)
+                -- v5.5.4: se pre-renderiza en segundo plano (gemelo de colocar_efectos.py). v5.56: con la CONSTANTE (con "enabled" Resolve 21 decia false)
+                pcall(function() local c = 1; pcall(function() c = resolve.CACHE_ENABLED or 1 end); it:SetFusionOutputCache(c) end)
                 puestas = puestas + 1
             end)
             if not ok then print("  (movimiento sobre V1: " .. tostring(err) .. ")") end

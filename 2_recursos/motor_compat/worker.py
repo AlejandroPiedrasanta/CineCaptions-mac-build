@@ -46,11 +46,18 @@ def _compat_av():
     av.open = abrir_compat
 
 
+_SALIDA = sys.stdout                      # la tubería con la app (atender() corre con stdout desviado a stderr: lo que imprima una librería no la ensucia)
+_SALIDA_LOCK = threading.Lock()
+
+
 def emitir(tipo, valor=''):
+    """v5.57: SIEMPRE a la tubería. Antes, dentro de atender(), ESTADO y PROGRESO iban a stderr con todo lo demás: la app no los veía (ni la
+    barra ni el Registro) y, sin señal, cortaba a los 180 s una transcripción en CPU o una descarga larga del modelo."""
     if not isinstance(valor, str):
         valor = json.dumps(valor, ensure_ascii=False)
-    sys.stdout.write(f'{tipo}|{valor}\n')
-    sys.stdout.flush()
+    with _SALIDA_LOCK:
+        _SALIDA.write(f'{tipo}|{valor}\n')
+        _SALIDA.flush()
 
 
 def progreso(valor, detalle=''):
@@ -319,6 +326,65 @@ def _mate(datos):
             _ULTIMO_USO = time.monotonic()
 
 
+_MATE_PIXELES = 3_000_000                 # tope de las sesiones de MODNet guardadas en la GPU, en píxeles de entrada: cada millón ocupa ~0,55 GB
+                                          # de memoria de vídeo (medido: 1824×1024 = 1,1 GB); con Resolve abierto, tres sesiones de un 4K la
+                                          # desbordaban y cada pasada iba a 0,9 s en vez de 0,03
+_MATE = {'gpu': None, 'dims': {}}         # gpu: proveedor elegido ('' = CPU) · dims: nombres de las dimensiones de la entrada por modelo
+
+
+def _sesion_mate(ort, clave, alto, ancho):
+    """v5.57 (el usuario: «no debería tardar 8 minutos»): MODNet en la GPU si este onnxruntime la trae (en Windows, onnxruntime-directml:
+    cualquier tarjeta DX12, sin las librerías de CUDA) y, si no, en la CPU como siempre. DirectML solo va rápido con la PRIMERA forma que ve
+    una sesión (las demás, 45-50 ms en vez de 3-6): con GPU, una sesión por forma con las dimensiones FIJAS (las _MATE_FORMAS últimas). El alfa
+    sale igual que en la CPU (medido: 0,03/255). En CUDA, sin TF32: con TF32 el alfa cambiaba hasta 127/255 en los bordes. Las sesiones de la
+    GPU se guardan mientras quepan en _MATE_PIXELES (fuera la usada hace más; antes de crear la nueva, para dejarle sitio). Llamar con _LOCK."""
+    opciones = ort.SessionOptions()
+    opciones.log_severity_level = 3
+    if _MATE['gpu'] is None:
+        _MATE['gpu'] = next((p for p in ('DmlExecutionProvider', 'CUDAExecutionProvider', 'CoreMLExecutionProvider')
+                             if p in ort.get_available_providers()), '')
+    gpu = _MATE['gpu']
+    if not gpu:
+        sesion = _MODELOS.get(('onnx', clave))
+        if sesion is None:
+            sesion = _MODELOS[('onnx', clave)] = ort.InferenceSession(clave, sess_options=opciones,
+                                                                      providers=['CPUExecutionProvider'])
+        return sesion
+    k = ('onnx', clave, alto, ancho)
+    sesion = _MODELOS.pop(k, None)
+    if sesion is None:
+        ocupado = alto * ancho
+        for x in reversed([x for x in _MODELOS if len(x) == 4 and x[:2] == ('onnx', clave)]):     # (de la más reciente a la más vieja)
+            if ocupado + x[2] * x[3] > _MATE_PIXELES:
+                del _MODELOS[x]
+            else:
+                ocupado += x[2] * x[3]
+        dims = _MATE['dims'].get(clave)
+        if dims is None:                                               # (los nombres que fijar: los de la entrada del modelo)
+            dims = _MATE['dims'][clave] = ort.InferenceSession(clave, sess_options=opciones,
+                                                               providers=['CPUExecutionProvider']).get_inputs()[0].shape
+        for nombre, valor in zip(dims, (1, 3, alto, ancho)):
+            if isinstance(nombre, str):
+                opciones.add_free_dimension_override_by_name(nombre, valor)
+        ajustes = {}
+        if gpu == 'DmlExecutionProvider':                             # (DirectML no admite ni lo uno ni lo otro; la tarjeta: la más potente
+            opciones.enable_mem_pattern = False                        # de verdad, la dedicada en un portátil con dos)
+            opciones.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+            ajustes = {'performance_preference': 'high_performance', 'device_filter': 'gpu'}
+        elif gpu == 'CUDAExecutionProvider':
+            ajustes = {'use_tf32': '0'}
+        try:
+            sesion = ort.InferenceSession(clave, sess_options=opciones, providers=[(gpu, ajustes), 'CPUExecutionProvider'])
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
+            sesion = None
+        if sesion is None or sesion.get_providers()[0] != gpu:         # (la GPU no arrancó: este motor sigue en la CPU)
+            _MATE['gpu'] = ''
+            return _sesion_mate(ort, clave, alto, ancho)
+    _MODELOS[k] = sesion                                               # (al final: la usada más hace poco)
+    return sesion
+
+
 def _mate_activo(datos):
     global _ULTIMO_USO
     import numpy as np
@@ -337,26 +403,30 @@ def _mate_activo(datos):
     imagen = ((imagen / 255.0 - .5) / .5).transpose(2, 0, 1)[None]
     clave = str(Path(modelo).resolve())
     with _LOCK:
-        sesion = _MODELOS.get(('onnx', clave))
-        if sesion is None:
-            opciones = ort.SessionOptions()
-            opciones.log_severity_level = 3
-            preferidos = [p for p in ('CUDAExecutionProvider', 'DmlExecutionProvider', 'CoreMLExecutionProvider')
-                          if p in ort.get_available_providers()]
-            sesion = ort.InferenceSession(clave, sess_options=opciones,
-                                          providers=preferidos + ['CPUExecutionProvider'])
-            _MODELOS[('onnx', clave)] = sesion
+        sesion = _sesion_mate(ort, clave, alto, ancho)
         _ULTIMO_USO = time.monotonic()
-    alfa = np.clip(sesion.run(None, {sesion.get_inputs()[0].name: imagen})[0][0, 0], 0, 1)
+    try:
+        alfa = sesion.run(None, {sesion.get_inputs()[0].name: imagen})[0][0, 0]
+    except Exception:
+        if not _MATE['gpu']:
+            raise
+        traceback.print_exc(file=sys.stderr)                           # (la GPU falló en marcha: este fotograma y los demás, en la CPU)
+        with _LOCK:
+            _MATE['gpu'] = ''
+            for x in [x for x in _MODELOS if x[0] == 'onnx']:
+                del _MODELOS[x]
+            sesion = _sesion_mate(ort, clave, alto, ancho)
+        alfa = sesion.run(None, {sesion.get_inputs()[0].name: imagen})[0][0, 0]
+    alfa = np.clip(alfa, 0, 1)
     np.save(salida, alfa, allow_pickle=False)
-    return {'alto': int(alfa.shape[0]), 'ancho': int(alfa.shape[1])}
+    return {'alto': int(alfa.shape[0]), 'ancho': int(alfa.shape[1]), 'gpu': _MATE['gpu'] or ''}
 
 
 def _versiones():
     paquetes = ('anyio', 'av', 'certifi', 'click', 'cloudpickle', 'colorama',
                 'ctranslate2', 'faster-whisper', 'filelock', 'flatbuffers', 'fsspec',
                 'h11', 'hf-xet', 'httpcore2', 'httpx2', 'huggingface-hub', 'idna',
-                'joblib', 'minisbd', 'numpy', 'onnxruntime', 'packaging', 'pillow',
+                'joblib', 'minisbd', 'numpy', 'onnxruntime', 'onnxruntime-directml', 'onnxruntime-gpu', 'packaging', 'pillow',
                 'protobuf', 'PyYAML', 'regex', 'sacremoses', 'sentencepiece', 'six',
                 'tokenizers', 'truststore', 'tqdm', 'typing-extensions', 'argostranslate')
     salida = {}
@@ -377,6 +447,7 @@ def atender(op, datos):
         import onnxruntime  # noqa: F401
         _preparar_argos()
         import argostranslate.translate  # noqa: F401
+        versiones.setdefault('onnxruntime', versiones.get('onnxruntime-directml') or versiones.get('onnxruntime-gpu'))   # (v5.57: el chequeo lo muestra igual)
         return {'instalado': True, 'python': versiones.get('_python'), 'versiones': versiones,
                 'cuda': int(ctranslate2.get_cuda_device_count())}
     if op == 'cuda':

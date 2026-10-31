@@ -372,6 +372,13 @@ def script(codigo, timeout=20):
             return False, None, MENSAJE_COLGADO
         if _resolve_cerrado(resolve_bridge):
             return False, None, MENSAJE_CERRADO
+        # v5.56: Resolve «fantasma» (proceso vivo sin ventana, se cerró a medias): su MCP aún contesta pero no hace nada (CreateProject → None 150 s × 3).
+        # Se dice al momento, con la marca que GO reconoce para repararlo (salud_resolve). En Mac no desde la ventana (pgrep).
+        if not (sys.platform == 'darwin' and _en_hilo_de_ventana()):
+            import salud_resolve
+            d = salud_resolve.diagnostico_rapido()
+            if d['estado'] == 'fantasma':
+                return False, None, salud_resolve.mensaje_atascado(d)
     except Exception:
         pass
     c = cliente()
@@ -595,6 +602,18 @@ def se_cerro(err) -> bool:
     return 'not running' in t or 'no está abierto' in t or 'está cerrado' in t
 
 
+def _resolve_atascado():
+    """v5.56: '' si Resolve está bien; si está «fantasma» o colgado (salud_resolve, mirada de ms), el texto con la marca que GO reconoce para repararlo."""
+    try:
+        import salud_resolve
+        d = salud_resolve.diagnostico_rapido()
+        if d['estado'] in ('fantasma', 'colgado'):
+            return salud_resolve.mensaje_atascado(d)
+    except Exception:
+        pass
+    return ''
+
+
 def responde(timeout=20) -> bool:
     """v5.5.1: ¿Resolve contesta a un script mínimo? (False = colgado o cerrado). Sirve en Windows y en Mac."""
     try:
@@ -736,6 +755,10 @@ def preparar_resolve(abrir=True, al_estado=None, forzar_reciente=False, pagina='
             arrancar_resolve(decir, max(espera_s, 240))
             codigo = f'PERMITIR_CAMBIO = True\nPAGINA = {pagina!r}\n' + _PREPARAR
             continue
+        atascado = _resolve_atascado()
+        if atascado:                                               # v5.56: fantasma o colgado: GO lo repara (no se insiste contra él)
+            salida['motivo'] = atascado
+            return salida
         time.sleep(2.5)
     else:
         salida['motivo'] = f'MCP: {err}'
@@ -952,7 +975,7 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
                 cortado_desde = cortado_desde or time.time()
                 if time.time() - cortado_desde > 1.0:
                     return False, 'ResolveMCP se cerró mientras trabajaba; el trabajo se detuvo'
-            if r is None and sys.platform.startswith('win') and time.time() - ultima_mirada >= 0.5:
+            if r is None and (sys.platform.startswith('win') or sys.platform == 'darwin') and time.time() - ultima_mirada >= (0.5 if sys.platform.startswith('win') else 2.0):
                 ultima_mirada = time.time()
                 try:
                     import resolve_bridge
@@ -960,8 +983,12 @@ def ejecutar_py(ruta_script, timeout=600, on_progreso=None, sincrono=False):
                         return False, 'Resolve se cerró mientras trabajaba'
                     if resolve_bridge.resolve_se_cayo(inicio):          # v5.32: al momento (el proceso tarda ~70 s en morir guardando el volcado)
                         return False, 'Resolve se cayó mientras trabajaba'
-                    if resolve_bridge.resolve_colgado(120) and resolve_bridge._registro_resolve_callado_s() > 120:
-                        return False, 'Resolve dejó de responder mientras trabajaba (2 min «No responde» y sin escribir en su registro)'
+                    # v5.56: el diagnóstico único (salud_resolve): fantasma en segundos; colgado tras UMBRAL_SIN_RESPONDER_S (60 s) «No responde» Y sin escribir
+                    # en su registro (antes 120 s). Un trabajo largo con Resolve vivo (su registro avanza) nunca cuenta.
+                    import salud_resolve
+                    d = salud_resolve.diagnostico_rapido()
+                    if d['estado'] in ('fantasma', 'colgado'):
+                        return False, salud_resolve.mensaje_atascado(d)
                 except Exception:
                     pass
             if r is None and not vivo.exists() and time.time() - inicio > 8 and time.time() - ultima_pregunta > 1.5:
@@ -1298,6 +1325,10 @@ def preparar_proyecto(nombre='CineCaptions', abrir=True, al_estado=None, espera_
             if arrancar_resolve(decir, max(espera_s, 240))[0]:
                 limite = time.time() + 150
             continue
+        atascado = _resolve_atascado()
+        if atascado:                                               # v5.56: un Resolve «fantasma» contesta pero nunca crea el proyecto: se dice ya (GO lo repara), no a los 150 s
+            salida['motivo'] = atascado
+            return salida
         decir(tr('Resolve termina de arrancar…'))
         time.sleep(5.0)
     if not (ok and isinstance(r, dict)):
@@ -1311,6 +1342,49 @@ def preparar_proyecto(nombre='CineCaptions', abrir=True, al_estado=None, espera_
     else:
         decir(tr('Proyecto nuevo «{p}» creado.', p=r.get('proyecto')))
     return salida
+
+
+# v5.56: tras reparar un Resolve trabado (salud_resolve.reparar), GO vuelve al proyecto del usuario: Resolve arranca en un «Untitled Project» y, si GO
+# trabaja en «el proyecto abierto», sin esto armaría el timeline ahí. Se busca por nombre en todas las carpetas de la base de datos.
+_ABRIR_PROYECTO = r'''
+BUSCADO = %(nombre)r
+pm = resolve.GetProjectManager()
+p = pm.GetCurrentProject()
+res = {'previo': p.GetName() if p else None, 'abierto': False}
+if p is not None and p.GetName() == BUSCADO:
+    res['abierto'] = True
+else:
+    def buscar(prof):
+        if BUSCADO in (pm.GetProjectListInCurrentFolder() or []):
+            return True
+        if prof < 6:
+            for c in (pm.GetFolderListInCurrentFolder() or []):
+                if pm.OpenFolder(c):
+                    if buscar(prof + 1):
+                        return True
+                    pm.GotoParentFolder()
+        return False
+    pm.GotoRootFolder()
+    if buscar(0):
+        res['abierto'] = bool(pm.LoadProject(BUSCADO))
+q = pm.GetCurrentProject()
+res['proyecto'] = q.GetName() if q else None
+if q is not None and q.GetCurrentTimeline() is None and (q.GetTimelineCount() or 0) > 0:
+    q.SetCurrentTimeline(q.GetTimelineByIndex(1))
+result = res
+'''
+
+
+def abrir_proyecto(nombre, intentos=6):
+    """v5.56: abre el proyecto `nombre` (búsqueda en todas las carpetas). Recién abierto Resolve, el gestor de proyectos tarda unos segundos: se reintenta.
+    True si queda abierto."""
+    for _ in range(max(1, intentos)):
+        ok, r, _err = script(_ABRIR_PROYECTO % {'nombre': str(nombre)}, timeout=60)
+        if ok and isinstance(r, dict) and r.get('abierto') and r.get('proyecto') == str(nombre):
+            _refrescar_estado()
+            return True
+        time.sleep(3.0)
+    return False
 
 
 _FPS_COMUNES = (23.976, 24.0, 25.0, 29.97, 30.0, 48.0, 50.0, 59.94, 60.0)

@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.55 (subtitulos)"
+VERSION = "5.57 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -858,6 +858,12 @@ def get_text_plus_tool(timeline_item):
     comp = timeline_item.GetFusionCompByIndex(1)
     if not comp:
         return None
+    return text_plus_de_comp(comp)
+
+
+def text_plus_de_comp(comp):
+    """El Text+ de la comp que recibe el texto: «Template» (v5.57: en los 6 temas va DENTRO del macro, el primer tool; FindTool lo encuentra ahí)
+    o, si no hay, el primero de la lista (Amro, packs del usuario)."""
     # los packs viralized llevan varios Text+ de apoyo: el que recibe el texto se llama «Template»
     plantilla = comp.FindTool("Template")
     if plantilla:
@@ -1136,6 +1142,77 @@ def _color_sfx(categoria):
 
 
 _CACHE = {"modo": False}
+# v5.56: el valor de SetFusionOutputCache no esta documentado («auto, enabled
+# or disabled»; el menu dice Auto/On/Off): el primero que Resolve acepte y que
+# al leerlo no diga Off/Auto. Gemelo: COLORES_CC.VALORES_CACHE del .lua y
+# fluidez_resolve.VALORES_ON (la pasada de GO al final).
+_VALORES_CACHE = ("On", "enabled", "Enabled", "on")
+
+
+def _valores_cache():
+    """v5.56: la constante resolve.CACHE_ENABLED (1.0) primero: en Studio 21.1.2
+    las cadenas devuelven False y ningun clip entraba en cache (medido)."""
+    try:
+        return (resolve.CACHE_ENABLED, 1.0) + _VALORES_CACHE   # noqa: F821
+    except Exception:
+        return (1.0,) + _VALORES_CACHE
+
+
+def _cache_es_on(v):
+    s = str(v).strip().lower()
+    return not (s in ("off", "false", "0", "0.0", "none", "-1", "-1.0") or "disabl" in s or "auto" in s)
+
+
+def _marcar_cache(item):
+    """v5.56 (gemelo del .lua, COLORES_CC.marcar_cache): «Render Cache Fusion
+    Output» = On en un clip con Fusion. El valor se prueba en los primeros
+    clips (como mucho 3) y se lee de vuelta; el bueno se usa en el resto.
+    Antes se mandaba 'enabled' sin mirar si Resolve lo aceptaba."""
+    try:
+        if int(item.GetFusionCompCount() or 0) == 0:
+            return False
+    except Exception:
+        pass
+    valor = _CACHE.get("valor")
+    if valor is not None:
+        try:
+            return bool(item.SetFusionOutputCache(valor))
+        except Exception:
+            return False
+    if _CACHE.get("sondeos", 0) >= 3:
+        return False
+    _CACHE["sondeos"] = _CACHE.get("sondeos", 0) + 1
+    for v in _valores_cache():
+        try:
+            ok = bool(item.SetFusionOutputCache(v))
+        except Exception:
+            ok = False
+        if not ok:
+            continue
+        try:
+            g = item.GetIsFusionOutputCacheEnabled()
+        except Exception:
+            g = None
+        if g is None or g == "" or _cache_es_on(g):
+            _CACHE["valor"] = v
+            return True
+    return False
+
+
+def _poner_ajuste(p, k, v):
+    """v5.56: un ajuste del proyecto con SetSetting (todas las versiones) y,
+    si no quedo, con SetSettings (la forma de Resolve 21). True si quedo."""
+    for intento in (lambda: p.SetSetting(k, v), lambda: p.SetSettings({k: v})):
+        try:
+            intento()
+        except Exception:
+            pass
+        try:
+            if str(p.GetSetting(k) or "") == v:
+                return True
+        except Exception:
+            return False
+    return False
 
 
 def _cachear(item):
@@ -1156,17 +1233,17 @@ def _cachear_pendientes(manifest):
         return
     if not _CACHE["modo"]:
         _CACHE["modo"] = True
-        try:
+        try:                                     # v5.56: y la cache en segundo plano, si estaba apagada (sin ella solo se cachea al reproducir)
             p = resolve.GetProjectManager().GetCurrentProject()
             if str(p.GetSetting("perfRenderCacheMode") or "").lower() == "none":
-                p.SetSetting("perfRenderCacheMode", "user")
+                _poner_ajuste(p, "perfRenderCacheMode", "user")
+            if str(p.GetSetting("perfAutoRenderCacheEnable") or "") == "0":
+                _poner_ajuste(p, "perfAutoRenderCacheEnable", "1")
         except Exception:
             pass
-    for item in pendientes:
-        try:
-            item.SetFusionOutputCache("enabled")
-        except Exception:
-            pass
+    marcados = sum(1 for item in pendientes if _marcar_cache(item))
+    print(f"  Cache de render: {marcados} de {len(pendientes)} clips con Fusion Output Cache "
+          f"(valor {_CACHE.get('valor')!r}).")
 
 
 def colocar_medido(media_pool, timeline, plantilla, desde, duracion, pista,
@@ -3350,14 +3427,7 @@ def apply_fades(timeline_item, entrada_frames, salida_frames):
     if not comp:
         return False, False
 
-    tool = None
-    for _, t in comp.GetToolList().items():
-        try:
-            if t.ID == "TextPlus":
-                tool = t
-                break
-        except Exception:
-            continue
+    tool = text_plus_de_comp(comp)          # v5.57: el «Template», como el .lua (con el macro primero, el primer Text+ de la lista puede ser otro)
     if tool is None:
         return False, False
 
@@ -3609,17 +3679,7 @@ def apply_auto_style(tool, estilo, y):
 
 def set_text_on_clip(timeline_item, text):
     """Busca el nodo Text+ dentro del clip y le cambia el texto."""
-    comp = timeline_item.GetFusionCompByIndex(1)
-    if not comp:
-        return False
-    tool = None
-    for name, t in comp.GetToolList().items():
-        try:
-            if t.ID == "TextPlus":
-                tool = t
-                break
-        except Exception:
-            continue
+    tool = get_text_plus_tool(timeline_item)    # v5.57: el «Template», como el .lua (con el macro primero, el primer Text+ de la lista puede ser otro)
     if tool is None:
         return False
     try:

@@ -122,6 +122,11 @@ def _toolhelp():
     return par
 
 
+# v5.56: el nombre del proceso de Resolve. Las pruebas de salud_resolve lo cambian (CC_PROCESO_RESOLVE) por el de un proceso FALSO: así nunca miran, cierran
+# ni matan el Resolve real del usuario.
+NOMBRE_PROCESO_RESOLVE = (os.environ.get('CC_PROCESO_RESOLVE') or ('Resolve' if sys.platform == 'darwin' else 'Resolve.exe'))
+
+
 def _listar_pids_resolve():
     """Los PID de Resolve.exe (Windows, ToolHelp32: ~2 ms; v5.53 Mac: pgrep); None si no se pudo mirar."""
     if sys.platform == 'darwin':
@@ -134,12 +139,13 @@ def _listar_pids_resolve():
         if not snap or snap == wintypes.HANDLE(-1).value:
             return None
         pids = []
+        nombre = NOMBRE_PROCESO_RESOLVE.lower()
         try:
             e = _Proc()
             e.dwSize = ctypes.sizeof(_Proc)
             ok = k32.Process32FirstW(snap, ctypes.byref(e))
             while ok:
-                if e.szExeFile.lower() == 'resolve.exe':
+                if e.szExeFile.lower() == nombre:
                     pids.append(int(e.th32ProcessID))
                 ok = k32.Process32NextW(snap, ctypes.byref(e))
         finally:
@@ -154,7 +160,8 @@ def _listar_pids_resolve_mac():
     por la ruta del .app principal (ResolveMCP vive en Contents/Applications y otras apps de Blackmagic, como «DaVinci Resolve Project
     Server.app», no coinciden). [] = cerrado; None = no se pudo mirar."""
     import subprocess
-    for patron in (['-x', 'Resolve'], ['-f', r'/DaVinci Resolve( Studio)?\.app/Contents/MacOS/']):
+    patrones = [['-x', NOMBRE_PROCESO_RESOLVE]] + ([['-f', r'/DaVinci Resolve( Studio)?\.app/Contents/MacOS/']] if NOMBRE_PROCESO_RESOLVE == 'Resolve' else [])
+    for patron in patrones:
         try:
             r = subprocess.run(['/usr/bin/pgrep', *patron], capture_output=True, text=True, timeout=3)
         except Exception:
@@ -191,8 +198,16 @@ def _muestrear_colgado():
     mensaje de prueba (SendMessageTimeout con SMTO_ABORTIFHUNG) a su ventana principal aunque esté oculta: cuando Windows le pone la «ventana fantasma» a un Resolve colgado, la original deja de
     ser visible y la primera prueba ya no lo ve (medido con Resolve suspendido)."""
     try:
+        if sys.platform == 'darwin':                                          # v5.56: en Mac solo se sabe si hay ventanas (CoreGraphics); «No responde» no
+            pids = set(_listar_pids_resolve() or [])
+            _MIRADA['hay_proceso'] = bool(pids)
+            _MIRADA['pids'] = frozenset(pids)
+            n = _ventanas_mac(pids) if pids else 0
+            _MIRADA['hay_ventana'] = True if n is None else bool(n)          # (sin datos fiables, se supone que tiene: nunca se declara fantasma a ciegas)
+            return False
         pids = set(_pids_de_resolve())
         _MIRADA['hay_proceso'] = bool(pids)
+        _MIRADA['pids'] = frozenset(pids)
         if not pids:
             _MIRADA['hay_ventana'] = False
             return False
@@ -201,6 +216,8 @@ def _muestrear_colgado():
         user32 = ctypes.windll.user32
         user32.IsHungAppWindow.argtypes = [wintypes.HWND]
         user32.IsWindowVisible.argtypes = [wintypes.HWND]
+        user32.IsIconic.argtypes = [wintypes.HWND]
+        user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
         user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
         user32.SendMessageTimeoutW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM, wintypes.UINT, wintypes.UINT, ctypes.POINTER(ctypes.c_size_t)]
         enum_proc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
@@ -212,7 +229,11 @@ def _muestrear_colgado():
             if pid.value not in pids:
                 return True
             if user32.IsWindowVisible(hwnd):
-                visto['ventana'] = True
+                # v5.56: solo cuenta una ventana de verdad (minimizada, o de al menos 120×60): un Resolve «fantasma» puede dejar alguna ventanita auxiliar
+                # visible de 0-1 px que no es su interfaz
+                r = wintypes.RECT()
+                if user32.IsIconic(hwnd) or (user32.GetWindowRect(hwnd, ctypes.byref(r)) and r.right - r.left >= 120 and r.bottom - r.top >= 60):
+                    visto['ventana'] = True
             if user32.IsWindowVisible(hwnd) and user32.IsHungAppWindow(hwnd):
                 visto['colgado'] = True
                 return True
@@ -228,11 +249,82 @@ def _muestrear_colgado():
         return False
 
 
-_MIRADA = {'hay_ventana': True, 'hay_proceso': True}                 # lo que vio la última mirada de _muestrear_colgado: ¿había alguna ventana visible de Resolve?
+_MIRADA = {'hay_ventana': True, 'hay_proceso': True, 'pids': frozenset()}     # lo que vio la última mirada de _muestrear_colgado: ¿había alguna ventana visible de Resolve?
+
+
+def _ventanas_mac(pids):
+    """v5.56 (Mac): cuántas ventanas normales (capa 0) tienen esos procesos según CoreGraphics (CGWindowListCopyWindowInfo con «todas», también las
+    minimizadas y las de otros escritorios; dueño y capa no piden permisos). None si no se pudo mirar o la lista no es fiable: tiene que aparecer al menos
+    una ventana de CineCaptions (siempre tiene la suya), si no, no se sabe leer bien y NUNCA se declara a Resolve fantasma a ciegas."""
+    try:
+        import ctypes
+        cg = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics')
+        cf = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation')
+        vp = ctypes.c_void_p
+        cg.CGWindowListCopyWindowInfo.restype = vp
+        cg.CGWindowListCopyWindowInfo.argtypes = [ctypes.c_uint32, ctypes.c_uint32]
+        cf.CFArrayGetCount.restype = ctypes.c_long
+        cf.CFArrayGetCount.argtypes = [vp]
+        cf.CFArrayGetValueAtIndex.restype = vp
+        cf.CFArrayGetValueAtIndex.argtypes = [vp, ctypes.c_long]
+        cf.CFDictionaryGetValue.restype = vp
+        cf.CFDictionaryGetValue.argtypes = [vp, vp]
+        cf.CFStringCreateWithCString.restype = vp
+        cf.CFStringCreateWithCString.argtypes = [vp, ctypes.c_char_p, ctypes.c_uint32]
+        cf.CFNumberGetValue.restype = ctypes.c_bool
+        cf.CFNumberGetValue.argtypes = [vp, ctypes.c_int, vp]
+        cf.CFRelease.argtypes = [vp]
+        utf8, sint64 = 0x08000100, 4
+        k_pid = cf.CFStringCreateWithCString(None, b'kCGWindowOwnerPID', utf8)
+        k_capa = cf.CFStringCreateWithCString(None, b'kCGWindowLayer', utf8)
+        lista = cg.CGWindowListCopyWindowInfo(0, 0)                          # kCGWindowListOptionAll, kCGNullWindowID
+        if not lista or not k_pid or not k_capa:
+            return None
+        objetivo, yo = set(int(p) for p in pids), os.getpid()
+        suyas = propias = 0
+        try:
+            for i in range(int(cf.CFArrayGetCount(lista))):
+                dic = cf.CFArrayGetValueAtIndex(lista, i)
+                n_pid, n_capa = ctypes.c_int64(-1), ctypes.c_int64(-1)
+                v = cf.CFDictionaryGetValue(dic, k_pid)
+                if not v or not cf.CFNumberGetValue(v, sint64, ctypes.byref(n_pid)):
+                    continue
+                v = cf.CFDictionaryGetValue(dic, k_capa)
+                if v:
+                    cf.CFNumberGetValue(v, sint64, ctypes.byref(n_capa))
+                if n_pid.value == yo:
+                    propias += 1
+                elif n_pid.value in objetivo and n_capa.value == 0:
+                    suyas += 1
+        finally:
+            cf.CFRelease(lista)
+            cf.CFRelease(k_pid)
+            cf.CFRelease(k_capa)
+        return suyas if propias else None
+    except Exception:
+        return None
 
 
 def _edad_proceso_resolve_s():
     """Segundos que lleva abierto el Resolve MÁS VIEJO (0 si no se sabe): un Resolve recién lanzado tarda en enseñar su ventana y no es un Resolve «caído»."""
+    if sys.platform == 'darwin':                                          # v5.56: «ps -o etime» ([[dd-]hh:]mm:ss)
+        try:
+            import subprocess
+            pids = _listar_pids_resolve() or []
+            if not pids:
+                return 0.0
+            r = subprocess.run(['/bin/ps', '-o', 'etime=', '-p', ','.join(str(p) for p in pids)], capture_output=True, text=True, timeout=5)
+            edad = 0.0
+            for linea in r.stdout.split():
+                dias, _, resto = linea.rpartition('-')
+                partes = [int(x) for x in resto.split(':')]
+                s = 0
+                for x in partes:
+                    s = s * 60 + x
+                edad = max(edad, s + (int(dias) * 86400 if dias else 0))
+            return float(edad)
+        except Exception:
+            return 0.0
     try:
         import ctypes
         from ctypes import wintypes
@@ -262,6 +354,13 @@ def _tomar_muestra(maxima_edad_s=3.0):
         return
     colgado = _muestrear_colgado()
     _COLGADO['t'] = ahora
+    pids = _MIRADA.get('pids') or frozenset()
+    if pids and _COLGADO.get('pids') and pids != _COLGADO['pids']:
+        # v5.56: es OTRO Resolve (se cerró y se abrió uno nuevo): lo que se contaba del anterior no vale. (Una lista vacía no cuenta: puede ser un fallo de un instante.)
+        _COLGADO['desde'] = None
+        _COLGADO['sin_ventana_desde'] = None
+    if pids:
+        _COLGADO['pids'] = pids
     if colgado:
         _COLGADO['desde'] = _COLGADO['desde'] or ahora
     else:
@@ -281,16 +380,22 @@ def _vigia_colgado():
             pass
 
 
+def iniciar_vigia():
+    """v5.56: el hilo vigía (cada 3 s mira si Resolve tiene ventana y si «No responde»; ms de coste) en Windows y Mac. Así, cuando GO pregunta, ya se sabe
+    cuánto lleva Resolve sin ventana o sin responder (un fantasma viejo se reconoce al momento)."""
+    if _COLGADO['hilo'] is None and (sys.platform.startswith('win') or sys.platform == 'darwin'):
+        import threading
+        _COLGADO['hilo'] = threading.Thread(target=_vigia_colgado, daemon=True, name='vigia-resolve-colgado')
+        _COLGADO['hilo'].start()
+
+
 def resolve_colgado(umbral_s=0.0):
     """v5.4.8: True si Resolve está abierto pero su ventana «No responde» desde hace al menos `umbral_s` s (0 = ahora mismo). Llamar a fusionscript con Resolve colgado deja TODO
     el proceso congelado (no suelta el GIL), así que ni se intenta; y esperar 75 s a un MCP que no va a contestar tampoco ayuda. Un hilo vigía mira cada 3 s (ms de coste) para
     medir cuánto lleva así. En Mac devuelve False."""
     if not sys.platform.startswith('win'):
         return False
-    if _COLGADO['hilo'] is None:
-        import threading
-        _COLGADO['hilo'] = threading.Thread(target=_vigia_colgado, daemon=True, name='vigia-resolve-colgado')
-        _COLGADO['hilo'].start()
+    iniciar_vigia()
     _tomar_muestra()
     desde = _COLGADO['desde']
     return desde is not None and (time.time() - desde) >= float(umbral_s)
@@ -298,12 +403,17 @@ def resolve_colgado(umbral_s=0.0):
 
 ERR_RESOLVE_COLGADO = 'RESOLVE_COLGADO'      # marcas que `ejecutar` devuelve cuando Resolve dejó de contestar mientras se le esperaba (el GO lo reinicia y repite)
 ERR_RESOLVE_CAIDO = 'RESOLVE_CAIDO'
+ERR_RESOLVE_FANTASMA = 'RESOLVE_FANTASMA'    # v5.56: proceso vivo sin ventana (salud_resolve)
+
+
+def _err_de_estado(est):
+    return {'colgado': ERR_RESOLVE_COLGADO, 'fantasma': ERR_RESOLVE_FANTASMA}.get(est, ERR_RESOLVE_CAIDO)
 
 
 def es_resolve_atascado(mensaje):
-    """True si el mensaje de `ejecutar` dice que Resolve se colgó o se cerró solo a mitad (v5.4.40)."""
+    """True si el mensaje de `ejecutar` dice que Resolve se colgó, quedó «fantasma» o se cerró solo a mitad (v5.4.40; v5.56 fantasma)."""
     t = str(mensaje or '')
-    return ERR_RESOLVE_COLGADO in t or ERR_RESOLVE_CAIDO in t
+    return ERR_RESOLVE_COLGADO in t or ERR_RESOLVE_CAIDO in t or ERR_RESOLVE_FANTASMA in t
 
 
 def _registro_resolve_callado_s():
@@ -352,47 +462,43 @@ def resolve_se_cayo(desde):
         return False
 
 
-UMBRAL_COLGADO_S =float(os.environ.get('CC_UMBRAL_COLGADO_S') or 60.0)                       # cuánto tiene que llevar Resolve «sin responder» Y sin escribir en su registro para darlo por colgado (las pruebas lo bajan)
+UMBRAL_COLGADO_S = float(os.environ.get('CC_UMBRAL_COLGADO_S') or os.environ.get('CC_UMBRAL_SIN_RESPONDER_S') or 60.0)    # = salud_resolve.UMBRAL_SIN_RESPONDER_S: cuánto tiene que llevar Resolve «sin responder» Y sin escribir en su registro para darlo por colgado (las pruebas lo bajan)
 
 
 def estado_resolve(colgado_s=None, callado_s=None):
-    """'ok' | 'colgado' | 'caido' (solo Windows; en lo demás siempre 'ok'). 'colgado' = su ventana «No responde» desde hace `colgado_s` s Y su registro lleva `callado_s` s
-    sin escribir nada: mientras un script trabaja la ventana también puede marcar «No responde», pero el registro sigue moviéndose; un Resolve de verdad colgado se queda mudo."""
+    """'ok' | 'colgado' | 'fantasma' | 'caido' (Windows; v5.56 en Mac: 'caido' y 'fantasma'). 'colgado' = su ventana «No responde» desde hace `colgado_s` s Y su registro lleva
+    `callado_s` s sin escribir nada: mientras un script trabaja la ventana también puede marcar «No responde», pero el registro sigue moviéndose; un Resolve de verdad colgado se
+    queda mudo. 'fantasma' (v5.56; antes 'caido') = proceso vivo sin ninguna ventana y con el registro quieto (salud_resolve.diagnostico_rapido)."""
     colgado_s = UMBRAL_COLGADO_S if colgado_s is None else colgado_s
     callado_s = UMBRAL_COLGADO_S if callado_s is None else callado_s
-    if not sys.platform.startswith('win'):
+    es_win, es_mac = sys.platform.startswith('win'), sys.platform == 'darwin'
+    if not (es_win or es_mac):
         return 'ok'
     try:
-        if not _resolve_en_ejecucion():
+        if es_win and not _resolve_en_ejecucion():
             return 'caido'
-        if resolve_colgado(colgado_s) and _registro_resolve_callado_s() >= callado_s:
+        if es_mac and _listar_pids_resolve() == []:
+            return 'caido'
+        if es_win and resolve_colgado(colgado_s) and _registro_resolve_callado_s() >= callado_s:
             return 'colgado'
-        # v5.4.41: el proceso sigue ahí pero SIN ninguna ventana (Resolve se cerró por dentro y el proceso quedó vivo, 9 GB, sin responder a nadie): está caído. Se pide que lleve rato sin
-        # ventana y que el proceso no sea recién lanzado (un Resolve que arranca tarda en enseñar la suya).
-        desde = _COLGADO.get('sin_ventana_desde')
-        if desde is not None and time.time() - desde >= 20.0 and _edad_proceso_resolve_s() >= 90.0:
-            return 'caido'
+        # v5.4.41: el proceso sigue ahí pero SIN ninguna ventana (Resolve se cerró por dentro y el proceso quedó vivo, 9 GB, sin responder a nadie). v5.56: el mismo criterio
+        # que el resto de GO (salud_resolve): FANTASMA_CONFIRMAR_S sin ventana, proceso de más de EDAD_MINIMA_S y su registro quieto (uno que se cierra escribe en él).
+        import salud_resolve
+        if salud_resolve.es_fantasma():
+            return 'fantasma'
     except Exception:
         pass
     return 'ok'
 
 
 def estado_resolve_ahora():
-    """v5.4.41: mirada INMEDIATA (sin esperar a que pase el tiempo): 'caido' si hay un Resolve de más de 90 s SIN ninguna ventana visible; 'colgado' si ahora mismo no contesta y su registro lleva
-    10 s sin escribir; si no, 'ok'. Para revisar Resolve justo antes de empezar un GO. Solo Windows."""
-    if not sys.platform.startswith('win'):
-        return 'ok'
+    """v5.4.41: mirada INMEDIATA. v5.56: la de salud_resolve.diagnostico_rapido ('ok' | 'fantasma' | 'colgado' | 'caido'); colgado solo tras
+    salud_resolve.UMBRAL_SIN_RESPONDER_S sin señales de vida (antes 10 s: se cerraba un Resolve que solo estaba ocupado). Para esperar a estar seguro: salud_resolve.diagnosticar."""
     try:
-        if not _pids_de_resolve():
-            return 'caido'
-        colgado = _muestrear_colgado()
-        if colgado and _registro_resolve_callado_s() >= 10.0:
-            return 'colgado'
-        if not _MIRADA['hay_ventana'] and _edad_proceso_resolve_s() >= 90.0:
-            return 'caido'
+        import salud_resolve
+        return salud_resolve.diagnostico_rapido()['estado']
     except Exception:
-        pass
-    return 'ok'
+        return 'ok'
 
 
 def esperar_estado_resolve(segundos=15.0):
@@ -1216,7 +1322,7 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
             est = estado_resolve()
             if est != 'ok' and not respuesta.exists():
                 limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO)
-                return (False, ERR_RESOLVE_COLGADO if est == 'colgado' else ERR_RESOLVE_CAIDO)
+                return (False, _err_de_estado(est))
         if time.time() >= proxima_lectura and not respuesta.exists():         # v5.55: el Puente dijo que no puede leer el trabajo: se dice YA, no a los {timeout} s
             proxima_lectura = time.time() + 2.0
             motivo = _puente_sin_lectura(inicio, senal_ilegible)
@@ -1263,7 +1369,7 @@ def _encolar(accion, datos=None, timeout=90, on_progreso=None):
                     continue
                 limpiar(JOB_PENDIENTE, sidecar, sidecar_free, JOB_TOMADO)
                 if est_r != 'ok':
-                    return (False, ERR_RESOLVE_COLGADO if est_r == 'colgado' else ERR_RESOLVE_CAIDO)
+                    return (False, _err_de_estado(est_r))
                 return (False, tr('El puente dejó de responder. Vuelve a correrlo en Resolve: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente.'))
         else:
             sin_latido = 0
@@ -1314,6 +1420,13 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
         return (False, tr('Acción desconocida: {accion}', accion=accion))
     else:
         empezo = time.time()
+        try:                                                        # v5.56: antes de cada paso, una mirada (ms): con Resolve fantasma o colgado no se le manda nada; GO lo repara y repite
+            import salud_resolve
+            d = salud_resolve.diagnostico_rapido()
+            if d['estado'] in ('fantasma', 'colgado'):
+                return (False, salud_resolve.mensaje_atascado(d))
+        except Exception:
+            pass
         if _mcp_conectado():
             import resolve_mcp
             ok, mensaje = resolve_mcp.ejecutar_py(str(ruta), timeout=max(timeout, 120), on_progreso=on_progreso)
@@ -1361,7 +1474,7 @@ def ejecutar(accion, carpeta_scripts=None, datos=None, timeout=90, on_progreso=N
                         return _con_motivo_real(ok, mensaje, empezo)
                     est_y = esperar_estado_resolve(15.0)            # v5.4.40: ¿no se pudo lanzar el Puente porque Resolve está colgado o cerrado?
                     if est_y != 'ok':
-                        return (False, ERR_RESOLVE_COLGADO if est_y == 'colgado' else ERR_RESOLVE_CAIDO)
+                        return (False, _err_de_estado(est_y))
                     traer_resolve_al_frente()
                     return (False, mensaje_para_el_usuario())
 def ejecutar_script_o_menu(ruta_script, datos=None, timeout=90):

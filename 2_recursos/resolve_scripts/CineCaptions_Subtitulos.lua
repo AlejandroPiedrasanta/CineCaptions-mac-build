@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.55 (subtitulos)"
+local VERSION = "5.57 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -1235,20 +1235,77 @@ COLORES_CC.cachear = function(item)
     COLORES_CC.pendientes = COLORES_CC.pendientes or {}
     table.insert(COLORES_CC.pendientes, item)
 end
+-- v5.56 (gemelo del .py: _VALORES_CACHE, _marcar_cache, _poner_ajuste; y de fluidez_resolve): el valor de SetFusionOutputCache no esta
+-- documentado («auto, enabled or disabled»; el menu dice Auto/On/Off): el primero que Resolve acepte y que al leerlo no diga Off/Auto,
+-- probado en los primeros clips con Fusion (como mucho 3); antes se mandaba "enabled" sin mirar. Todo en COLORES_CC (limite de 200 locales).
+COLORES_CC.VALORES_CACHE = { "On", "enabled", "Enabled", "on" }
+-- v5.56: la constante resolve.CACHE_ENABLED (1.0) va PRIMERO: en Studio 21.1.2 las cadenas devuelven false y ningun clip entraba en cache (medido)
+COLORES_CC.valores_cache = function()
+    local lista = {}
+    pcall(function() if resolve.CACHE_ENABLED ~= nil then table.insert(lista, resolve.CACHE_ENABLED) end end)
+    table.insert(lista, 1)
+    for _, v in ipairs(COLORES_CC.VALORES_CACHE) do table.insert(lista, v) end
+    return lista
+end
+COLORES_CC.cache_es_on = function(v)
+    local s = string.lower(tostring(v))
+    if s == "off" or s == "false" or s == "0" or s == "0.0" or s == "none" or s == "-1" or s == "-1.0" then return false end
+    return not (s:find("disabl", 1, true) or s:find("auto", 1, true))
+end
+COLORES_CC.marcar_cache = function(item)
+    if item == nil then return false end
+    local okc, nc = pcall(function() return item:GetFusionCompCount() end)
+    if okc and tonumber(nc) == 0 then return false end
+    local st = COLORES_CC.estado_cache or { sondeos = 0 }
+    COLORES_CC.estado_cache = st
+    if st.valor ~= nil then
+        local ok, r = pcall(function() return item:SetFusionOutputCache(st.valor) end)
+        return (ok and r) and true or false
+    end
+    if st.sondeos >= 3 then return false end
+    st.sondeos = st.sondeos + 1
+    for _, v in ipairs(COLORES_CC.valores_cache()) do
+        local ok, r = pcall(function() return item:SetFusionOutputCache(v) end)
+        if ok and r then
+            local okg, g = pcall(function() return item:GetIsFusionOutputCacheEnabled() end)
+            if (not okg) or g == nil or g == "" or COLORES_CC.cache_es_on(g) then
+                st.valor = v
+                return true
+            end
+        end
+    end
+    return false
+end
+COLORES_CC.poner_ajuste = function(p, k, v)
+    pcall(function() p:SetSetting(k, v) end)
+    local ok, g = pcall(function() return p:GetSetting(k) end)
+    if ok and tostring(g) == v then return true end
+    pcall(function() p:SetSettings({ [k] = v }) end)
+    ok, g = pcall(function() return p:GetSetting(k) end)
+    return ok and tostring(g) == v
+end
 COLORES_CC.cachear_pendientes = function(manifest)
     local pendientes = COLORES_CC.pendientes or {}
     COLORES_CC.pendientes = {}
     if #pendientes == 0 or (type(manifest) == "table" and manifest.cache_captions == false) then return end
     if not COLORES_CC.cache_hecho then
         COLORES_CC.cache_hecho = true
-        pcall(function()
+        pcall(function()                -- v5.56: y la cache en segundo plano, si estaba apagada (sin ella solo se cachea al reproducir)
             local p = resolve:GetProjectManager():GetCurrentProject()
             if string.lower(tostring(p:GetSetting("perfRenderCacheMode") or "")) == "none" then
-                p:SetSetting("perfRenderCacheMode", "user")
+                COLORES_CC.poner_ajuste(p, "perfRenderCacheMode", "user")
+            end
+            if tostring(p:GetSetting("perfAutoRenderCacheEnable") or "") == "0" then
+                COLORES_CC.poner_ajuste(p, "perfAutoRenderCacheEnable", "1")
             end
         end)
     end
-    for _, item in ipairs(pendientes) do pcall(function() item:SetFusionOutputCache("enabled") end) end
+    local marcados = 0
+    for _, item in ipairs(pendientes) do
+        if COLORES_CC.marcar_cache(item) then marcados = marcados + 1 end
+    end
+    print(string.format("  Cache de render: %d de %d clips con Fusion Output Cache (valor %s).", marcados, #pendientes,
+        tostring((COLORES_CC.estado_cache or {}).valor)))
 end
 
 local function colocar_medido(media_pool, timeline, plantilla, desde,

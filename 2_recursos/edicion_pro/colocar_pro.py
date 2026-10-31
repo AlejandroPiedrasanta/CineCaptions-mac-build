@@ -278,9 +278,10 @@ def _cachear_al_final(tl):
     """v5.5.8: con TODO ya colocado y movido: la caché del proyecto a «user» (si estaba en «none»), los gráficos de la PRO y los captions de GO
     (que GO dejó sin marcar porque la PRO los iba a mover)."""
     _modo_cache()
+    cache_on = getattr(globals().get('resolve'), 'CACHE_ENABLED', 1.0)     # v5.56: la constante (con 'enabled' Resolve 21 decía False: nada se cacheaba)
     for it in _PEND_CACHE['fusion']:
         try:
-            it.SetFusionOutputCache('enabled')
+            it.SetFusionOutputCache(cache_on)
         except Exception:
             pass
     for it in _PEND_CACHE['color']:
@@ -294,7 +295,7 @@ def _cachear_al_final(tl):
             continue
         for it in tl.GetItemListInTrack('video', i) or []:
             try:
-                it.SetFusionOutputCache('enabled')
+                it.SetFusionOutputCache(cache_on)
             except Exception:
                 pass
 

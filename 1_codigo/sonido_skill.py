@@ -19,8 +19,9 @@ Elección (v5.48, lo aprendido de 70 videos de creadores): solo sonidos curados,
 misma familia seguida, lo APROBADO por el usuario primero y la densidad de los creadores por estilo (max10).
     rehacer(video, …)   la página Sonido rediseña con la foto guardada de GO (estilo, gancho, fiesta) sin volver a hacer GO
 Biblioteca: preferencia 'sonido_biblioteca'; si no, 5_SFX de la carpeta de CineCaptions (v5.48, fuera de Git), luego Desktop\\SFX (enlace a
-5_SFX; lo usan el .exe y la skill) y por último «Mis sonidos» del director. Si la carpeta trae
-catalogo_sfx.json (lo escribe la skill) se usa; si no, se mide aquí con PyAV y se guarda en caché.
+5_SFX; lo usa la skill), luego la copia que viaja en el .exe (v5.56: 2_recursos/biblioteca_sonido, 3_compilar/empaquetar_sonidos.py) y por
+último «Mis sonidos» del director. Si la carpeta trae catalogo_sfx.json (lo escribe la skill) se usa; si no, se mide aquí con PyAV y se guarda
+en caché. Sin ninguna biblioteca (disponible() = False) GO se queda con los sonidos de siempre.
 """
 import json
 import math
@@ -35,7 +36,8 @@ PREF_ON, PREF_LIB, PREF_ESTILO, PREF_GANCHO, PREF_FIESTA = 'sonido_skill', 'soni
 ORIGEN = 'Sonido (biblioteca)'
 SR = 48000
 LIB_PROPIA = Path(__file__).resolve().parent.parent / '5_SFX'   # v5.48: la biblioteca vive en la carpeta de CineCaptions (fuera de Git)
-LIB_AUTOR = Path.home() / 'Desktop' / 'SFX'                     # enlace a 5_SFX (el .exe y la skill la encuentran aquí)
+LIB_AUTOR = Path.home() / 'Desktop' / 'SFX'                     # enlace a 5_SFX (la skill la encuentra aquí)
+INCLUIDA = 'biblioteca_sonido'                                   # v5.56: la copia curada que viaja en el .exe (base_recursos() / INCLUIDA)
 AUDIO_EXT = ('.wav', '.mp3', '.aif', '.aiff', '.flac', '.ogg', '.m4a')
 VERSION = 1
 
@@ -116,13 +118,39 @@ def log(texto, nivel='info'):
 
 def biblioteca(prefs=None):
     p = (prefs if prefs is not None else _prefs()).get(PREF_LIB)
-    if p and Path(p).is_dir():
+    if p and (Path(p) / '01_SFX').is_dir():                    # v5.56: una carpeta elegida sin 01_SFX no tapa a las demás
         return Path(p)
-    for lib in (LIB_PROPIA, LIB_AUTOR):
+    for lib in (LIB_PROPIA, LIB_AUTOR, lib_incluida()):
         if (lib / '01_SFX').is_dir():
             return lib
     import director_sonido_estado as E
     return E.CARPETA / 'biblioteca'
+
+
+def lib_incluida():
+    """v5.56 (el usuario: «los SFX ya deben de venir en el exe»): los sonidos curados que viajan con el programa. Antes el .exe solo miraba
+    5_SFX y Desktop\\SFX: con el enlace del Escritorio roto salían 0 sonidos y el Tema 1 se quedaba sin ninguno."""
+    import sfx_rules
+    return sfx_rules.base_recursos() / INCLUIDA
+
+
+_DISPONIBLE = {}
+
+
+def disponible(prefs=None):
+    """¿Hay una biblioteca de la que salen sonidos (algún grupo de POOLS con archivos curados)? Sin ella GO se queda con los sonidos de siempre (no
+    los apaga para no poner nada). Se recuerda por carpeta y fecha de su 01_SFX y de su catálogo."""
+    lib = biblioteca(prefs)
+    try:
+        firma = (str(lib), (lib / '01_SFX').stat().st_mtime, (lib / 'catalogo_sfx.json').stat().st_mtime if (lib / 'catalogo_sfx.json').is_file() else 0)
+    except OSError:
+        return False
+    if firma not in _DISPONIBLE:
+        try:
+            _DISPONIBLE[firma] = any(pools_de(catalogo(lib), lib).values())
+        except Exception:
+            _DISPONIBLE[firma] = False
+    return _DISPONIBLE[firma]
 
 
 # ---------------------------------------------------------------------------------------------------- audio (PyAV, ya va en el programa)
