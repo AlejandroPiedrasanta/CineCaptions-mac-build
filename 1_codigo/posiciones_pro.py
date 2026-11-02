@@ -53,7 +53,9 @@ ZONA_X = (0.15, 0.85)                    # la cabeza, no pegada a un lado (el ca
 MOVIMIENTO_ZONA = (0.06, 0.08)           # lo que puede moverse la cabeza entre dos miradas seguidas (alto, ancho) sin cortar la zona
 DERIVA_ZONA = (0.08, 0.096)              # v5.31: y en TODA la zona (el 80 % de edicion_pro.DETRAS_QUIETA marcado): quien camina despacio no salta
                                          # entre dos miradas pero en un caption de 2 s se mueve más de lo que GO deja (PRUEBAS (4): sugería y GO lo quitaba)
-VERSION_ZONAS = 4                        # (2: los cortes con su fuerza; 4: v5.31, leídos aunque el video traiga un paquete dañado y la cabeza hasta 0,12)
+VERSION_ZONAS = 6                        # (2: los cortes con su fuerza; 4: v5.31, leídos aunque el video traiga un paquete dañado y la cabeza hasta 0,12;
+                                         # 5: v5.58, solo humanos —una cara en la cabeza—: los análisis de antes contaban cojines o un balón;
+                                         # 6: v5.58, también quien sale de espaldas —NanoDet lo ve como persona—)
 
 
 # ======================================================================================================================== datos
@@ -838,15 +840,19 @@ def bloques_neon(ruta, pal, imagen=None, analisis=None, con_plan=False):
         dur = float((an or {}).get('dur') or 0.0) or None
         cortes = [tuple(c) if isinstance(c, (list, tuple)) else (float(c), 30.0) for c in (an or {}).get('cortes') or []]
         idioma = _idioma_de(pal)
+        # v5.58: como GO desde la 5.56 (edicion_pro.planificar): los motions del kit y la placa con cámara, SOLO con «Kit de motions» encendido
+        # en el menú del Tema 1; sin él, los captions tal cual y la persona de V1 (antes la tira contaba siempre con la placa y sus zooms)
+        op = EP.opciones_neon(dict(EP.OPCIONES_POR_DEFECTO, **EP.opciones_guardadas()))
+        con_kit = 'kit' in (op.get('_neon_extras') or [])
         mot = KM.escena_motions(pal, idioma, dur, cortes=cortes, video=str(img[0] or ruta),
-                                usuario=str(EP.opciones_guardadas().get('pro_usuario') or '') or None)
+                                usuario=str(op.get('pro_usuario') or '') or None) if con_kit else []
         caps = KM.ajustar_captions(KN.escena_captions(pal, idioma, fin_video=dur), mot)
         out = []
         for b in KN.bloques_pro(caps):
             ws = [str(p[0]) for p in b.get('palabras') or []]
             out.append({'start': b['ini'], 'end': b['fin'], 'caja': [b['arriba'], b['abajo']], 'grande': bool(b.get('grande_abajo')),
                         'texto': ' '.join(ws[:4]) + ('…' if len(ws) > 4 else ''), '_go': b})
-        plan = {'kitneon': caps, 'kitneon_motions': mot, '_cortes': cortes, 'duracion': dur, '_neon_ajustado': True}
+        plan = {'kitneon': caps, 'kitneon_motions': mot, '_cortes': cortes, 'duracion': dur, '_neon_ajustado': True} if con_kit else None
         return (out, plan) if con_plan else out
     except Exception:
         return (None, None) if con_plan else None
@@ -1101,13 +1107,6 @@ if _QT:
                 return
             EP.guardar_opciones({'pro_detras_posicion': posicion})
             self._posicion = posicion
-            self._rehacer_regla()
-
-        def poner_intensidad(self, nivel):
-            import edicion_pro as EP
-            if nivel not in EP.INTENSIDAD_DETRAS or nivel == EP.intensidad_detras():
-                return
-            EP.guardar_opciones({'pro_detras_intensidad': nivel})
             self._rehacer_regla()
 
         def deteccion(self):

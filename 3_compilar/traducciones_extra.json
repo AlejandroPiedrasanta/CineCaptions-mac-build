@@ -9735,5 +9735,40 @@
   "fr": "Les 6 thèmes dans l'Inspecteur de Resolve : les contrôles de Luxe Slide (texte modifiable, taille, position, couleur, DROP SHADOW et GLOW, entre autres) et en haut seulement la bannière CineCaptions.",
   "de": "Alle 6 Themes im Inspector von Resolve: die Regler von Luxe Slide (bearbeitbarer Text, Größe, Position, Farbe, DROP SHADOW und GLOW u. a.) und oben nur das CineCaptions-Banner.",
   "it": "I 6 temi nell'Inspector di Resolve: i controlli di Luxe Slide (testo modificabile, dimensione, posizione, colore, DROP SHADOW e GLOW, tra gli altri) e in alto solo il banner di CineCaptions."
+ },
+ "«Crea tu estilo» en el Inspector de Resolve: al reiniciar el color de un caption vuelve a tu color, no al de fábrica del tema.": {
+  "en": "«Create your style» in the Resolve Inspector: resetting a caption's colour brings back your colour, not the theme's factory colour.",
+  "pt": "«Crie o seu estilo» no Inspector do Resolve: ao redefinir a cor de uma legenda, volta a sua cor, não a cor de fábrica do tema.",
+  "fr": "« Créez votre style » dans l'Inspecteur de Resolve : réinitialiser la couleur d'un sous-titre remet votre couleur, et non celle d'origine du thème.",
+  "de": "«Erstelle deinen Stil» im Inspector von Resolve: Beim Zurücksetzen der Farbe eines Untertitels kommt deine Farbe zurück, nicht die Werksfarbe des Themes.",
+  "it": "«Crea il tuo stile» nell'Inspector di Resolve: reimpostando il colore di un sottotitolo torna il tuo colore, non quello di fabbrica del tema."
+ },
+ "Mac: vuelve la transcripción. GO ya no se para en «Transcribiendo» con el error del motor de Windows: el programa de Mac trae dentro su motor de voz (Whisper) y de traducción.": {
+  "en": "Mac: transcription is back. GO no longer stops at «Transcribing» with the Windows engine error: the Mac app now carries its own speech (Whisper) and translation engine inside.",
+  "pt": "Mac: a transcrição está de volta. O GO já não para em «Transcrevendo» com o erro do motor do Windows: o programa para Mac traz dentro o seu motor de voz (Whisper) e de tradução.",
+  "fr": "Mac : la transcription est de retour. GO ne s'arrête plus à « Transcription » avec l'erreur du moteur Windows : l'application Mac embarque son propre moteur de voix (Whisper) et de traduction.",
+  "de": "Mac: Die Transkription ist zurück. GO bleibt nicht mehr bei «Transkribieren» mit dem Fehler der Windows-Engine stehen: Das Mac-Programm bringt seine eigene Sprach- (Whisper) und Übersetzungs-Engine mit.",
+  "it": "Mac: torna la trascrizione. GO non si ferma più a «Trascrizione» con l'errore del motore di Windows: il programma per Mac include il proprio motore vocale (Whisper) e di traduzione."
+ },
+ "Subtítulos traducidos: la pista traducida vuelve a salir con las frases traducidas (desde la 5.34 salía mal).": {
+  "en": "Translated subtitles: the translated track comes out with the translated sentences again (it came out wrong since 5.34).",
+  "pt": "Legendas traduzidas: a faixa traduzida volta a sair com as frases traduzidas (desde a 5.34 saía errada).",
+  "fr": "Sous-titres traduits : la piste traduite ressort avec les phrases traduites (depuis la 5.34 elle sortait mal).",
+  "de": "Übersetzte Untertitel: Die übersetzte Spur enthält wieder die übersetzten Sätze (seit 5.34 kam sie falsch heraus).",
+  "it": "Sottotitoli tradotti: la traccia tradotta torna a uscire con le frasi tradotte (dalla 5.34 usciva sbagliata)."
+ },
+ "Cancelar GO mientras transcribe ya no estropea el siguiente GO (antes podía salir sin palabras hasta reiniciar el programa).": {
+  "en": "Cancelling GO while it transcribes no longer spoils the next GO (it could come out with no words until the program was restarted).",
+  "pt": "Cancelar o GO durante a transcrição já não estraga o GO seguinte (antes podia sair sem palavras até reiniciar o programa).",
+  "fr": "Annuler GO pendant la transcription n'abîme plus le GO suivant (avant, il pouvait sortir sans mots jusqu'au redémarrage du programme).",
+  "de": "GO während der Transkription abzubrechen, verdirbt das nächste GO nicht mehr (vorher konnte es bis zum Neustart des Programms ohne Wörter herauskommen).",
+  "it": "Annullare GO mentre trascrive non rovina più il GO successivo (prima poteva uscire senza parole fino al riavvio del programma)."
+ },
+ "El instalador de Mac pide macOS 14 (Sonoma) o posterior, lo que el programa necesita de verdad: en versiones anteriores se instalaba y luego no abría.": {
+  "en": "The Mac installer requires macOS 14 (Sonoma) or later, which is what the app really needs: on older versions it installed and then would not open.",
+  "pt": "O instalador para Mac pede macOS 14 (Sonoma) ou posterior, o que o programa precisa de verdade: em versões anteriores instalava e depois não abria.",
+  "fr": "L'installateur Mac demande macOS 14 (Sonoma) ou ultérieur, ce dont l'application a vraiment besoin : sur les versions antérieures il s'installait puis ne s'ouvrait pas.",
+  "de": "Das Mac-Installationsprogramm verlangt macOS 14 (Sonoma) oder neuer, was das Programm wirklich braucht: Auf älteren Versionen ließ es sich installieren, startete dann aber nicht.",
+  "it": "Il programma di installazione per Mac richiede macOS 14 (Sonoma) o successivo, ciò di cui il programma ha davvero bisogno: nelle versioni precedenti si installava e poi non si apriva."
  }
 }

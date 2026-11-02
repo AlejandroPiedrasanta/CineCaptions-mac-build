@@ -83,7 +83,8 @@ def comp_de_drb(ruta, clip):
 
 def retocar_comp(hex_comp, cambios):
     """v5.50: el CompositionBA (hex) con textos de sus Tools cambiados [(viejo, nuevo), …] (la comp de Amro se copia tal cual salvo esto).
-    v5.54: `cambios` también puede ser una función tools -> tools."""
+    v5.54: `cambios` también puede ser una función tools -> tools; v5.58: entonces los reinicios del Inspector que seguían al clip siguen al valor
+    nuevo (pack_personalizado.reinicios_al_dia)."""
     if not cambios:
         return hex_comp
     cab = zlib.decompress(binascii.unhexlify(hex_comp)[4:])
@@ -93,8 +94,9 @@ def retocar_comp(hex_comp, cambios):
     z = zlib.decompressobj()
     tools = z.decompress(datos[j + 5:]).decode('utf-8')
     if callable(cambios):
-        tools = cambios(tools)
-    else:
+        import pack_personalizado                # v5.58: el «reinicio» de los controles del Inspector sigue al valor nuevo (el premium)
+        tools = pack_personalizado.reinicios_al_dia(tools, cambios(tools))
+    else:                                        # (las listas de Amro, no: regenerar la Referencia da el mismo .drb de fábrica)
         for viejo, nuevo in cambios:
             if viejo not in tools:
                 raise SystemExit(f'no encuentro {viejo!r} en la comp a retocar')
@@ -376,7 +378,9 @@ def _retoque_premium(color, premium, brillo):
 def premium_sobre_drb(origen, salida, combinaciones):
     """v5.54 «B · Premium» SIN regenerar los macros: copia el .drb `origen` (el de fábrica) y retoca solo el acabado de cada clip con
     g.COMBINACIONES[comb] (colores de cada rol y combo['premium']). Los Temas 4, 5 y 6 se armaron con los macros Luxe de antes de la v1.09: volver a
-    generarlos cambiaría también sus animaciones. Clips: «principal N» / «simple» = la principal de la variante N (1); «arriba N» / «abajo N» = las pequeñas."""
+    generarlos cambiaría también sus animaciones. Clips: «principal N» / «simple» = la principal de la variante N (1); «arriba N» / «abajo N» = las pequeñas.
+    v5.58: también pasa por inspector_luxe.retocar (el macro primero) y deja al día los reinicios del Inspector (retocar_comp)."""
+    import inspector_luxe
     import luxe_macro
     zin = zipfile.ZipFile(origen)
     ruta_xml = next(n for n in zin.namelist() if n.endswith('MpFolder.xml') and '/Master/0' in '/' + n)
@@ -397,7 +401,9 @@ def premium_sobre_drb(origen, salida, combinaciones):
             prem['degradado'] = luxe_macro.degradado_premium(c['main']['color'])
             brillo = (c.get('premium') or {}).get('brillo_principal')
         bloque = m.group(0)
-        hex_nuevo = retocar_comp(_BA.search(bloque).group(2), _retoque_premium(c[rol]['color'], prem, brillo))
+        premium = _retoque_premium(c[rol]['color'], prem, brillo)
+        # v5.58: y el macro primero con sus controles (inspector_luxe; idempotente): un .drb de antes de la 5.57 no sale sin ellos
+        hex_nuevo = retocar_comp(_BA.search(bloque).group(2), lambda t, f=premium: inspector_luxe.retocar(f(t))[0])
         nuevo = nuevo.replace(bloque, _BA.sub(lambda mm: mm.group(1) + hex_nuevo + mm.group(3), bloque, count=1), 1)
     tmp = salida + '.tmp'
     with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as zout:

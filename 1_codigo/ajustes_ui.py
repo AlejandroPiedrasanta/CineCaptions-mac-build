@@ -495,6 +495,21 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.58', [
+        '«Captions detrás de ti» con el borde más estable: donde la imagen está quieta, el contorno de la persona tiembla menos de un fotograma a otro (hasta un 30 % menos) y, cuando se mueve, ya no deja estela.',
+        '«Captions detrás de ti» ya no pide intensidad: al encenderlo, el programa decide solo qué captions van detrás y cuánto los tapa la cabeza.',
+        'La Edición PRO completa también en DaVinci Resolve Free, con «Captions detrás de ti» (antes solo en Studio) y su «Listo» desde Efectos › Posición.',
+        '«Captions detrás de ti» sin destellos y más rápido: ya no se cuela un trozo del fondo pegado a la cabeza ni la sombra del suelo, el recorte no pasa de un cambio de toma y tarda menos que antes.',
+        '«Captions detrás de ti» solo con personas (de frente, de lado o de espaldas): ya no toma por persona un cojín, una cama, un balón ni una mesa de DJ, y un tramo cuyo recorte no salga limpio va sin la persona delante.',
+        '«Crea tu estilo» en el Inspector de Resolve: al reiniciar el color de un caption vuelve a tu color, no al de fábrica del tema.',
+        'Reproducción fluida también en videos largos: tras GO, la reproducción automática espera a que Resolve termine la caché de los captions mientras siga avanzando (antes se rendía a los 4 minutos y el final iba a tirones).',
+        'Temas 1 y 3: la reproducción fluida llega antes: cada caption renderiza sus partes a la vez y Resolve los guarda en caché entre un 6 y un 12 % más rápido (en un video de 1 minuto, unos 15 segundos antes).',
+        'Tiempo de GO exacto y sin saltos: la cuenta atrás baja de segundo en segundo, sale de lo que tardaron tus últimos GO en este equipo y, si GO va más rápido o más lento, se corrige poco a poco (antes anunciaba «2 minutos» y caía de golpe). Y tras GO dice cuánto falta para que la reproducción empiece fluida.',
+        'Mac: vuelve la transcripción. GO ya no se para en «Transcribiendo» con el error del motor de Windows: el programa de Mac trae dentro su motor de voz (Whisper) y de traducción.',
+        'Subtítulos traducidos: la pista traducida vuelve a salir con las frases traducidas (desde la 5.34 salía mal).',
+        'Cancelar GO mientras transcribe ya no estropea el siguiente GO (antes podía salir sin palabras hasta reiniciar el programa).',
+        'El instalador de Mac pide macOS 14 (Sonoma) o posterior, lo que el programa necesita de verdad: en versiones anteriores se instalaba y luego no abría.',
+    ]),
     ('5.57', [
         'Edición PRO a tu medida en los 6 temas: solo pone lo que enciendes en su menú (Captions detrás de ti, Píldora, B-roll, Escenas, Kit, Gráficos, Emojis animados o Motions completo). Encendida y sin nada activado, GO va tan rápido como solo captions.',
         'El menú de la Edición PRO viene sin nada encendido (salvo el Gancho del inicio) y ya se puede apagar todo.',

@@ -6,7 +6,7 @@ v5.32 (el usuario, con su maqueta: «aplica ese diseño»): la vista «Posición
   · VISOR (VisorDetras): cómo queda el caption detrás de ti en el cabezal (posiciones_pro.vista_detras) y, al darle a reproducir, el video con
     su sonido (ReproductorVisor: PyAV en un hilo, sin Qt multimedia); debajo, reproducir, el tiempo, la barra para moverse, sonido y ampliar.
   · PANEL (PanelDetras) con pestañas: Ajustes (modo de marcas; posición del caption —en vertical, siempre arriba; en horizontal arriba,
-    izquierda o derecha (edicion_pro.posicion_detras)—; intensidad; el estado de la detección de la persona; una sugerencia), Marcas y
+    izquierda o derecha (edicion_pro.posicion_detras)—; el estado de la detección de la persona; una sugerencia; v5.58: sin intensidad), Marcas y
     Sugerencias.
   · TIRA: posiciones_pro.LineaTiempo en modo compacto (solo fotogramas, marcas y el cabezal).
 Los datos y las reglas siguen en posiciones_pro (LineaTiempo) y edicion_pro; aquí solo se dibuja y se reparte. armar(vista) lo monta dentro de
@@ -798,16 +798,7 @@ class PanelDetras(QWidget):
             self.mosaicos[clave] = m
         ft.addStretch(1)
         ca.addLayout(ft)
-        fi = QHBoxLayout()
-        fi.addWidget(Etiqueta(tr('Intensidad / tamaño'), 14, peso='medio', color=CLARO))
-        fi.addStretch(1)
-        self.lbl_int = Etiqueta('', 13, peso='medio', color='#FFFFFF')
-        fi.addWidget(self.lbl_int)
-        ca.addLayout(fi)
-        self._niveles = list(EP.NIVELES_DETRAS)
-        self._v_int = StringVar(EP.intensidad_detras())
-        self.desl = ui.DeslizadorValores(self._niveles, self._v_int, self._cambio_intensidad)
-        ca.addWidget(self.desl)
+        # (v5.58, el usuario: «elimina eso de intensidad: si se activa, ya sabrá en qué momento aplicarlo»: sin «Intensidad / tamaño»)
         self.estado = _TarjetaEstado()
         ca.addWidget(self.estado)
         self.ayuda = _TarjetaAyuda()
@@ -827,7 +818,6 @@ class PanelDetras(QWidget):
         self.pila.addWidget(_scroll(self.pag_sug))
         self._firma_marcas = None
         self._nota = None
-        self._pintar_intensidad()
         self.refrescar()
         self.pintar_sugeridas()
 
@@ -866,14 +856,6 @@ class PanelDetras(QWidget):
         self.linea.poner_posicion(clave)
         self.refrescar()
 
-    def _pintar_intensidad(self):
-        nombres = {'suave': tr('Suave'), 'media': tr('Media'), 'fuerte': tr('Fuerte')}
-        self.lbl_int.setText(nombres.get(str(self._v_int.get()), str(self._v_int.get())))
-
-    def _cambio_intensidad(self, *_a):
-        self._pintar_intensidad()
-        self.linea.poner_intensidad(str(self._v_int.get()))
-
     def sincronizar(self):
         """Lo que depende de la tira (se llama cada vez que se pinta: solo cambia lo que cambió)."""
         ln = self.linea
@@ -895,7 +877,7 @@ class PanelDetras(QWidget):
                 self.ayuda.show()
             else:
                 self.ayuda.poner(tr('Coloca las marcas en los momentos clave donde quieras que aparezca un caption detrás de ti. '
-                                    'Puedes ajustar la posición y la intensidad.'))
+                                    'Sin marcas, el programa elige solo dónde queda bien.'))
         if self.op_solo.isChecked() != (ln.modo == 'solo') or self.mosaicos['izquierda'].isVisible() != ln.horizontal():
             self.refrescar()
         self.pintar_marcas()

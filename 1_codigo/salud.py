@@ -118,7 +118,18 @@ def comprobar():
         filas.append({'nombre': 'Motor de IA (Qwen3)', 'ok': False, 'detalle': str(e)[:160]})
     try:
         import motor_compat
-        if not motor_compat.instalado():
+        if getattr(motor_compat, 'EN_PROCESO', False):
+            # v5.58 (Mac): el motor va DENTRO del programa. Sin cargar sus librerías nativas al arrancar (subían la RAM para siempre y daban
+            # tirones a la animación de Inicio): basta con que estén dentro y sus versiones (importlib.metadata); las carga el primer GO
+            import sys
+            faltan = motor_compat.faltan_requisitos()
+            paquetes = motor_compat._versiones() if not faltan else {}
+            filas.append({'nombre': 'Motor auxiliar (Whisper/Argos/ONNX)', 'ok': not faltan,
+                          'detalle': ('falta ' + ', '.join(faltan) + ': reinstala CineCaptions') if faltan else
+                          ('Python ' + '.'.join(map(str, sys.version_info[:3])) + ' · Whisper ' + str(paquetes.get('faster-whisper', '?'))
+                           + ' · ONNX ' + str(paquetes.get('onnxruntime') or paquetes.get('onnxruntime-directml') or '?')
+                           + ' · Argos ' + str(paquetes.get('argostranslate', '?')))})
+        elif not motor_compat.instalado():
             filas.append({'nombre': 'Motor auxiliar (Whisper/Argos/ONNX)', 'ok': None,
                           'detalle': 'no instalado (se prepara desde el instalador o al usar esas funciones)'})
         else:

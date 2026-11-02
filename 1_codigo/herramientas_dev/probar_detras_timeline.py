@@ -225,7 +225,8 @@ def main():
     tmp = Path(tempfile.mkdtemp(prefix='ccdetras_tl_'))
     print('Carpeta temporal:', tmp, flush=True)
     import ajustes_ui
-    PREFS = {'go_edicion_pro': True, 'pro_ia_local': False, 'go_pack': 'Kinetic', 'plantilla': 'Kinetic', 'pro_neon_extras': ['detras'],
+    PREFS = {'go_edicion_pro': True, 'pro_ia_local': False, 'go_pack': 'Kinetic', 'plantilla': 'Kinetic',
+             'pro_neon_extras': ['detras', 'kit'],              # (v5.56: la placa del Tema 1, solo con «Kit de motions»)
              'pro_mascara': 'auto', 'pro_detras_intensidad': 'media'}
     real = ajustes_ui.leer_prefs
     ajustes_ui.leer_prefs = lambda: {**real(), **PREFS}
@@ -288,7 +289,7 @@ def main():
     idioma = POS._idioma_de(w)
     cortes = efectos_visuales.detectar_cortes(str(video)) or []
     plan = EP.planificar(str(video), w, dur, cortes=cortes, idioma=idioma, opciones=EP.opciones_guardadas(), tema='neon')
-    plan['kitneon'] = KM.ajustar_captions(KN.escena_captions(w, idioma, fin_video=dur), plan['kitneon_motions'])
+    plan['kitneon'] = KM.ajustar_captions(KN.escena_captions(w, idioma, fin_video=dur), plan.get('kitneon_motions') or [])   # (v5.56: None sin «Kit de motions»)
     plan['_neon_ajustado'] = True
     plan['duracion'] = dur
     bl = KN.bloques_pro(plan['kitneon'])
@@ -303,7 +304,7 @@ def main():
             'nombre': f'CineCaptions · {video.stem}', 'ocupado': [],
             'v1': [{'ruta': str(video), 'ini': inicio, 'fin': inicio + total, 'izq': 0, 'fps': fps, 'res': f'{_w}x{_h}', 'zx': 1.0, 'zy': 1.0,
                     'pan': 0.0, 'tilt': 0.0}]}
-    ocup = [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan['kitneon_motions']]
+    ocup = [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan.get('kitneon_motions') or []]
     EP._guardar_contexto_detras(plan, info, str(video), str(video), fps, 1080, 1920, carpeta, True, placa,
                                 {'ocupado': ocup, 'bloques': bl, 'preferidos': []}, EP.opciones_guardadas())
     ctx = EP.contexto_detras(str(video))

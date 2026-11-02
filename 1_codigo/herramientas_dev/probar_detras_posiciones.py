@@ -145,7 +145,7 @@ def main():
         cortes = efectos_visuales.detectar_cortes(str(v)) or []
         idioma = POS._idioma_de(w)
         plan = EP.planificar(str(v), w, dur, cortes=cortes, idioma=idioma, opciones=EP.opciones_guardadas(), tema='neon')
-        plan['kitneon'] = KM.ajustar_captions(KN.escena_captions(w, idioma, fin_video=dur), plan['kitneon_motions'])
+        plan['kitneon'] = KM.ajustar_captions(KN.escena_captions(w, idioma, fin_video=dur), plan.get('kitneon_motions') or [])   # (v5.56: None sin el kit)
         bl = KN.bloques_pro(plan['kitneon'])
         orig_assets = EP._assets_emoji                                # (sin bajar nada de internet: solo que lea las palabras sin fallar)
         EP._assets_emoji = lambda c, var: None

@@ -420,8 +420,7 @@ class SeccionEstilo(Tarjeta):
         cuerpo.setContentsMargins(0, 4, 0, 6)
         cuerpo.setSpacing(12)
         self.capa.addWidget(self._cuerpo)
-        cuerpo.addWidget(Etiqueta(tr(seccion['detalle']) + (' ' + tr('Solo con DaVinci Resolve Studio.') if opcion and opcion.get('solo_studio') else ''),
-                                  13, color=TEXT_MUTED, envolver=True))
+        cuerpo.addWidget(Etiqueta(tr(seccion['detalle']), 13, color=TEXT_MUTED, envolver=True))   # (v5.58: «detrás de ti» ya no es solo de Studio)
         self._lbl_estado = Etiqueta('', 12, color='#8EA2C6', envolver=True)
         cuerpo.addWidget(self._lbl_estado)
         self.cartas = {}

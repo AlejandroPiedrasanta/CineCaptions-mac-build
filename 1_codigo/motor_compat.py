@@ -5,6 +5,10 @@
 El programa principal corre en Python 3.15.2. Este servicio usa un Python
 3.14.10 embebido en %LOCALAPPDATA% y un protocolo JSON por stdin/stdout; no
 comparte módulos ni DLL con el proceso de Qt.
+
+v5.58, Mac (EN_PROCESO): ese Python aparte es solo de Windows. El programa de Mac (Python 3.14 en Apple Silicon, 3.13 en Intel) lleva las
+librerías DENTRO (7_mac: requirements del motor + PyInstaller) y aquí worker.atender corre en este mismo proceso (_EnProceso, misma interfaz
+que _Servidor). Desde la 5.34 el Mac no tenía motor de voz: GO fallaba en «Transcribiendo» con «configurado para Windows x64».
 """
 from __future__ import annotations
 
@@ -38,9 +42,13 @@ def _misma_rama(version):
     return str(version or '').startswith('%d.%d.' % PYTHON_VERSION[:2])
 _SERVIDOR = {'s': None}
 _LOCK = threading.RLock()
+EN_PROCESO = sys.platform != 'win32'      # v5.58: fuera de Windows el worker corre dentro del programa (ver arriba)
+_LIBRERIAS = ('faster_whisper', 'ctranslate2', 'onnxruntime', 'argostranslate')
 
 
 def carpeta() -> Path:
+    if EN_PROCESO:                        # (en el Mac solo guarda temporales: el audio a 16 kHz y los .npy del recorte)
+        return Path(tempfile.gettempdir()) / 'CineCaptions' / 'motor_compat'
     local = os.environ.get('LOCALAPPDATA') or str(Path.home() / 'AppData' / 'Local')
     return Path(local) / 'CineCaptions' / 'motor_compat'
 
@@ -76,8 +84,25 @@ def _fijados() -> dict[str, str]:
     return fijados
 
 
+def _faltan_en_proceso():
+    """v5.58 (Mac): las librerías del worker que este programa NO trae dentro."""
+    import importlib.util
+    faltan = []
+    for modulo in _LIBRERIAS:
+        try:
+            if importlib.util.find_spec(modulo) is None:
+                faltan.append(modulo)
+        except (ImportError, ValueError):
+            faltan.append(modulo)
+    return faltan
+
+
 def info_instalado():
     """Marca del entorno separado; no implica que sus DLL ya se hayan cargado."""
+    if EN_PROCESO:
+        if _faltan_en_proceso():
+            return None
+        return {'version': VERSION, 'python': '.'.join(map(str, sys.version_info[:3])), 'en_proceso': True}
     if sys.platform != 'win32' or not python_motor().is_file():
         return None
     try:
@@ -168,6 +193,11 @@ def _cambiar_onnxruntime(actuales):
 
 
 def _versiones():
+    if EN_PROCESO:
+        try:
+            return _worker()._versiones()
+        except Exception:
+            return {}
     try:
         p = subprocess.run([str(python_motor()), '-s', str(script_motor()), '--versiones'],
                            capture_output=True, text=True, encoding='utf-8', errors='replace',
@@ -181,6 +211,8 @@ def _versiones():
 
 
 def faltan_requisitos():
+    if EN_PROCESO:                        # (Mac: las versiones las fija su compilación; aquí solo cuenta que estén dentro)
+        return _faltan_en_proceso()
     actuales = _versiones()
     return [f'{n}=={v}' for n, v in _fijados().items() if actuales.get(n) != v]
 
@@ -200,8 +232,12 @@ def instalar(progreso=None, aviso=None):
         if progreso:
             progreso(max(0.0, min(1.0, f)), texto)
 
-    if sys.platform != 'win32':
-        raise RuntimeError('El motor auxiliar Python 3.14 está configurado para Windows x64.')
+    if EN_PROCESO:                        # v5.58: en el Mac no se instala nada: viene dentro del programa
+        datos = info_instalado()
+        if datos:
+            return datos
+        raise RuntimeError('Este CineCaptions no trae dentro el motor de voz (Whisper, Argos y ONNX: falta '
+                           + ', '.join(_faltan_en_proceso()) + '). Reinstálalo con el instalador de la última versión.')
     if _appdata_de_claude():
         datos = info_instalado()
         if datos:
@@ -325,7 +361,17 @@ class _Servidor:
                 if tipo in ('ESTADO', 'PROGRESO', 'CARGADO'):
                     ultima = time.time()
                     if on_linea:
-                        on_linea(tipo, resto)
+                        try:
+                            on_linea(tipo, resto)
+                        except BaseException:
+                            # v5.58: cancelar GO sale de aquí (SystemExit) con el pedido a medias: su LISTO se quedaba en la cola y desde ese
+                            # momento cada pedido leía la respuesta del anterior (el GO siguiente: 0 palabras) hasta reiniciar el programa. Se
+                            # cierra este servicio; el próximo pedido arranca uno limpio
+                            try:
+                                self.p.kill()
+                            except Exception:
+                                pass
+                            raise
                     continue
                 if tipo == 'LISTO':
                     try:
@@ -360,13 +406,114 @@ class _Servidor:
             pass
 
 
+_WORKER = {'m': None}
+
+
+def _worker():
+    """v5.58 (Mac): el módulo worker.py cargado en ESTE proceso (una vez), con el entorno que le pone _Servidor."""
+    with _LOCK:
+        if _WORKER['m'] is None:
+            for clave, valor in (('HF_HUB_DISABLE_SYMLINKS', '1'), ('HF_HUB_DISABLE_XET', '1'), ('HF_HUB_ETAG_TIMEOUT', '20'),
+                                 ('HF_HUB_DOWNLOAD_TIMEOUT', '30'), ('ARGOS_COMPUTE_TYPE', 'float32'), ('ARGOS_CHUNK_TYPE', 'MINISBD')):
+                os.environ.setdefault(clave, valor)
+            import importlib.util
+            spec = importlib.util.spec_from_file_location('cinecaptions_worker_compat', str(script_motor()))
+            modulo = importlib.util.module_from_spec(spec)
+            antes, sys.dont_write_bytecode = sys.dont_write_bytecode, True     # (nada de __pycache__ dentro de la .app firmada)
+            try:
+                spec.loader.exec_module(modulo)
+            finally:
+                sys.dont_write_bytecode = antes
+            _WORKER['m'] = modulo
+        return _WORKER['m']
+
+
+_SIN_MAC = ('mate', 'caras', 'cuerpos', 'descargar_modnet')   # «Captions detrás de ti»: no existe en el Mac (sin probar con su onnxruntime)
+_SIN_CANDADO = ('verificar', 'cuda', 'paquetes_instalados')    # no emiten ni tocan los modelos: no esperan a que acabe una transcripción
+
+
+class _EnProceso:
+    """v5.58 (Mac): worker.atender en este proceso, con la interfaz de _Servidor (pedir / vivo / cerrar). Lo que el worker emite (ESTADO,
+    PROGRESO, CARGADO) llega a on_linea igual que por la tubería. Sin corte por tiempo: un hilo no se puede matar (la barra sigue con
+    PROGRESO). Un pedido cada vez, como el servidor."""
+
+    def __init__(self):
+        self.w = _worker()
+        self.pedido = threading.Lock()
+        self._on_linea = None
+        self._resto = ''
+        self.w._SALIDA = self                 # (emitir escribe «TIPO|valor\n» aquí en vez de en la tubería)
+        threading.Thread(target=self._soltar_inactivo, daemon=True, name='compat-modelos-inactivos').start()
+
+    def _soltar_inactivo(self):
+        """Como worker.servidor: un modelo sin usar 240 s se suelta (si no, Whisper se quedaba en la RAM del programa para siempre)."""
+        w = self.w
+        while True:
+            time.sleep(20)
+            try:
+                with w._LOCK:
+                    if w._MODELOS and not w._ACTIVOS and time.monotonic() - w._ULTIMO_USO > 240:
+                        w._MODELOS.clear()
+                        w._ULTIMO_USO = 0.0
+            except Exception:
+                pass
+
+    def write(self, texto):
+        self._resto += texto
+        while '\n' in self._resto:
+            linea, self._resto = self._resto.split('\n', 1)
+            tipo, _, resto = linea.partition('|')
+            if tipo in ('ESTADO', 'PROGRESO', 'CARGADO') and self._on_linea:
+                try:
+                    self._on_linea(tipo, resto)
+                except Exception:
+                    pass
+        return len(texto)
+
+    def flush(self):
+        pass
+
+    def vivo(self):
+        return True
+
+    def _atender(self, operacion, datos):
+        try:
+            resultado = self.w.atender(operacion, {'operacion': operacion, **(datos or {})})
+        except Exception as exc:              # (como el servidor: un fallo vuelve como RuntimeError con su tipo; el SystemExit de cancelar GO,
+            raise RuntimeError(f'{type(exc).__name__}: {exc}') from exc    # que sale de on_linea, pasa tal cual: cancelar no es un fallo)
+        return json.loads(json.dumps(resultado, ensure_ascii=False))
+
+    def pedir(self, operacion, datos=None, on_linea=None, timeout=3600, sin_senal=180):
+        if operacion in _SIN_MAC:
+            raise RuntimeError('«Captions detrás de ti» no está en el Mac.')
+        if operacion in _SIN_CANDADO:
+            return self._atender(operacion, datos)
+        with self.pedido:
+            self._on_linea, self._resto = on_linea, ''
+            try:
+                return self._atender(operacion, datos)
+            finally:
+                self._on_linea = None
+
+    def cerrar(self):
+        """Al salir (atexit): sin esperar si el worker está bajando o cargando un modelo con su candado (el programa no se quedaba abierto)."""
+        try:
+            if self.w._LOCK.acquire(timeout=0.5):
+                try:
+                    self.w._MODELOS.clear()
+                finally:
+                    self.w._LOCK.release()
+        except Exception:
+            pass
+
+
 def _servidor():
     if not instalado():
         instalar()
     with _LOCK:
         s = _SERVIDOR['s']
         if s is None or not s.vivo():
-            _SERVIDOR['s'] = s = _Servidor()
+            _SERVIDOR['s'] = s = _EnProceso() if EN_PROCESO else _Servidor()
         return s
 
 
@@ -462,8 +609,11 @@ def traducir(textos, from_code, to_code, progress_callback=None, status_callback
         elif tipo == 'ESTADO' and status_callback:
             status_callback(texto)
 
-    return _pedir('traducir', {'textos': list(textos), 'origen': from_code, 'destino': to_code},
-                  on_linea=linea, timeout=3600, sin_senal=180)
+    r = _pedir('traducir', {'textos': list(textos), 'origen': from_code, 'destino': to_code},
+               on_linea=linea, timeout=3600, sin_senal=180)
+    # v5.58: el worker devuelve {'textos': [...]}; desde la 5.34 se devolvía el dict entero y translate_cues lo recorría como lista (la pista
+    # traducida salía con la palabra «textos»)
+    return r.get('textos', []) if isinstance(r, dict) else r
 
 
 def paquetes_instalados():
@@ -537,6 +687,34 @@ def mate(rgb, alto=512, modelo=None):
         return np.load(salida, allow_pickle=False)
     finally:
         shutil.rmtree(trabajo, ignore_errors=True)
+
+
+def _detectar(op, rgb, modelo, umbral):
+    if not instalado():
+        instalar()
+    import numpy as np
+    ipc = carpeta() / 'ipc'
+    ipc.mkdir(parents=True, exist_ok=True)
+    trabajo = Path(tempfile.mkdtemp(prefix=f'{op}_', dir=ipc))
+    entrada = trabajo / 'entrada.npy'
+    try:
+        np.save(entrada, np.asarray(rgb, dtype=np.uint8), allow_pickle=False)
+        return _pedir(op, {'entrada': str(entrada), 'modelo': str(modelo), 'umbral': float(umbral)},
+                      timeout=120, sin_senal=60).get(op) or []
+    finally:
+        shutil.rmtree(trabajo, ignore_errors=True)
+
+
+def caras(rgb, modelo, umbral=0.6):
+    """v5.58: las caras de una imagen con YuNet en el servicio 3.14 (worker._caras_activo): [[x0, y0, x1, y1, puntuación, 10 coordenadas de
+    los 5 puntos]] en fracciones. Mejor mandarla ya pequeña (unos 640 px de lado: así se mide)."""
+    return _detectar('caras', rgb, modelo, umbral)
+
+
+def cuerpos(rgb, modelo, umbral=0.5):
+    """v5.58: las personas (de frente, de lado o de espaldas) de una imagen con NanoDet en el servicio 3.14 (worker._cuerpos_activo):
+    [[x0, y0, x1, y1, puntuación]] en fracciones. Mejor mandarla ya con el lado mayor a 416 px (la entrada del modelo)."""
+    return _detectar('cuerpos', rgb, modelo, umbral)
 
 
 def descargar_modnet(destino):

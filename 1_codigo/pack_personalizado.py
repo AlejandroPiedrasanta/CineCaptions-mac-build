@@ -9,7 +9,8 @@ Contrato 5 de «Crea tu estilo»:  preparar(base, ajustes) -> carpeta del pack d
 
 Nada se escribe en Resolve en vivo: los gemelos importan el .drb derivado en su propio bin («RCS · VIRAL · a1b2c3d4 · v») como cualquier pack, y
 para_manifiesto(carpeta) da su campo 'plantilla' (con 'base' = el tema). Se RETOCA el .drb de fábrica, como construir_pack.premium_sobre_drb: cada comp se
-descomprime, se cambian SOLO sus entradas de letra y de color (sobre el texto de la comp, por posición: el resto queda byte a byte) y se vuelve a comprimir.
+descomprime, se cambian SOLO sus entradas de letra y de color (y los reinicios del Inspector que las seguían; sobre el texto de la comp, por posición: el
+resto queda byte a byte) y se vuelve a comprimir.
 No se regenera nada: los Temas 4-6 llevan macros Luxe de antes de la v1.09 y regenerarlos cambiaría también sus animaciones.
 
 Qué cambia (rol del clip: en los packs Luxe «principal N»/«simple» = principal y «arriba N»/«abajo N» = secundaria; en Kinetic y VIRAL,
@@ -21,6 +22,8 @@ fuente_usuario.es_principal, la misma regla que marca los runs 'fu'):
          degradados (versiones más claras u oscuras), los brillos y halos (del mismo tono), el tinte vivo, la caja de las pegatinas con su luz y su
          sombra (el texto de encima pasa a tinta o a blanco si deja de leerse), el bisel y la luz del shatter, el relleno del drag (también su
          expresión) y la trama del Impacto. La principal Luxe lleva exactamente el «B · Premium» de fábrica: degradado_premium(elegido).
+Y los «reinicios» del Inspector (v5.58, reinicios_al_dia): el Default de cada control que valía lo mismo que su entrada (el valor del clip) la sigue al
+recolorear; si no, la flecha de reiniciar volvía al color de fábrica del tema.
 Qué NO cambia: animaciones, máscaras, tamaños y posiciones; sombras y contornos oscuros; las luces blancas (VivoLuz, cursor, mano); aros y subrayados
 de Kinetic (no son texto: el planificador los pone del color contrario); la caja del Select; las bandas de barrido de Referencia (elegidas para
 contrastar); y el COLOR de los cuatro principales Amro de Referencia (3, 6, 7 y 8: degradado metálico + ColorCorrector + fuego; reciben la letra).
@@ -46,7 +49,7 @@ import zipfile
 import zlib
 from pathlib import Path
 
-GENERADOR = 'per 1'           # súbelo si cambia lo que se escribe en las comps (la huella cambia: carpeta nueva y bin nuevo en Resolve)
+GENERADOR = 'per 2'           # súbelo si cambia lo que se escribe en las comps (la huella cambia: carpeta nueva y bin nuevo en Resolve). per 2 (v5.58): los reinicios del Inspector al día
 BASES = {'t1': 'Kinetic', 't2': 'Referencia', 't3': 'VIRAL', 't4': 'Tema4', 't5': 'Tema5', 't6': 'Tema6'}
 CLAVES = ('fuente_principal', 'fuente_secundaria', 'color_principal', 'color_secundario')
 SEPARADOR = ' · '             # «VIRAL · a1b2c3d4»: los gemelos sacan el tema con nombre.split(" · ")[0]
@@ -376,13 +379,62 @@ def _numero(entrada):
     return v if (v is not None and v.tipo == 'numero') else None
 
 
+def _tabla(nodo):
+    return nodo.tabla if nodo.tipo == 'llamada' else nodo
+
+
+def _publicados(raiz):
+    """{clave: (nodo Default, valor, nodo del valor)} de los controles del PRIMER tool de la comp (el macro o el grupo que enseña el Inspector) que
+    llevan un Default numérico y cuya entrada (SourceOp.Source; la de un «…Clone», CharacterSpacingClone -> CharacterSpacing) tiene un valor fijo.
+    {} si no hay macro. `raiz` = arbol(texto)."""
+    top = [v for k, v in raiz.pares() if k is not None and not k.startswith('[') and v.tipo == 'llamada']
+    if not top or top[0].nombre not in ('MacroOperator', 'GroupOperator') or top[0].campo('Inputs') is None:
+        return {}
+    porn = {r.rsplit('/', 1)[-1]: n for r, _t, n in herramientas(raiz)}
+    fuera = {}
+    for clave, ii in _tabla(top[0].campo('Inputs')).pares():
+        if clave is None or ii.tipo != 'llamada':
+            continue
+        d, so, src = ii.campo('Default'), ii.campo('SourceOp'), ii.campo('Source')
+        if d is None or d.tipo != 'numero' or so is None or src is None or so.valor not in porn:
+            continue
+        ins = porn[so.valor].campo('Inputs')
+        nombre = src.valor[:-len('Clone')] if src.valor.endswith('Clone') else src.valor
+        entrada = _tabla(ins).campo(nombre) if ins is not None else None
+        valor = _numero(entrada) if entrada is not None and entrada.campo('Expression') is None else None
+        if valor is not None:
+            fuera[clave] = (d, float(valor.valor), valor)
+    return fuera
+
+
+def reinicios_al_dia(antes, despues):
+    """v5.58: los «reinicios» (Default) del Inspector tras un retoque. El Default de cada control que en `antes` valía lo mismo que su entrada (el
+    valor del clip: macro_kinetic / inspector_luxe) pasa al valor nuevo de esa entrada en `despues` (el premium de construir_pack; «Crea tu estilo»
+    hace lo mismo sin volver a leer la comp: _Retoque.reinicios); si no, la flecha de reiniciar volvía al color de fábrica. Los Default que ya eran
+    distintos de su entrada (muchos de fábrica de Luxe y de Amro) no se tocan."""
+    if antes == despues:
+        return despues
+    viejos = _publicados(arbol(antes))
+    ediciones = []
+    for clave, (d, valor, _n) in _publicados(arbol(despues)).items():
+        if clave not in viejos:
+            continue
+        d_viejo, valor_viejo, _n = viejos[clave]
+        if abs(float(d_viejo.valor) - valor_viejo) < 5e-5 and abs(float(d.valor) - valor) >= 5e-5:
+            ediciones.append((d.a, d.b, _num(valor)))
+    for a, b, nuevo in sorted(ediciones, reverse=True):
+        despues = despues[:a] + nuevo + despues[b:]
+    return despues
+
+
 # ------------------------------------------------------------------------------------------------------------------ retoque de una comp
 class _Retoque:
     """Las ediciones (posición, texto nuevo) de UNA comp y la lista de lo que cambió: (herramienta, entrada, antes, después)."""
 
     def __init__(self, texto, clip):
         self.texto, self.clip = texto, clip
-        self.lista = herramientas(arbol(texto))
+        self.raiz = arbol(texto)
+        self.lista = herramientas(self.raiz)
         self.tipos = {r: t for r, t, _ in self.lista}
         self.ediciones, self.cambios, self.notas = [], [], []
 
@@ -413,6 +465,19 @@ class _Retoque:
     def _poner_num(self, nodo, valor, ruta, entrada):
         if abs(float(nodo.valor) - round(float(valor), 4)) >= 5e-5:
             self._editar(nodo, _num(valor), ruta, entrada)
+
+    def reinicios(self):
+        """v5.58: el Default de cada control del Inspector que valía lo mismo que su entrada sigue a la edición de esa entrada (como
+        reinicios_al_dia, pero con el árbol ya leído: los nodos Default van en el macro, nunca se pisan con las ediciones de las entradas)."""
+        nuevos = {(a, b): nuevo for a, b, nuevo in self.ediciones}
+        for d, valor, nodo in _publicados(self.raiz).values():
+            nuevo = nuevos.get((nodo.a, nodo.b))
+            try:
+                nuevo = float(nuevo) if nuevo is not None else None
+            except ValueError:
+                continue
+            if nuevo is not None and abs(float(d.valor) - valor) < 5e-5 and abs(nuevo - valor) >= 5e-5:
+                self.ediciones.append((d.a, d.b, _num(nuevo)))
 
     def aplicar(self):
         texto = self.texto
@@ -686,6 +751,7 @@ def retocar_tools(tools, tipo, clip, rol, ajuste):
             r.color_viral(ajuste['color'])
         else:
             r.color_luxe(ajuste['color'], rol)
+    r.reinicios()
     return r.aplicar(), r.cambios, r.notas
 
 

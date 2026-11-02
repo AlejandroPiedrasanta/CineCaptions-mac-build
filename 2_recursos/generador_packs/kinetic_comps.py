@@ -92,7 +92,10 @@ def media_out(origen, x=1120, y=160):
 
 
 def armar_comp(herramientas, id_plantilla, fin=FIN):
-    """La comp completa (cabecera + Tools + pie) con las herramientas ya escritas (la última debe ser MediaOut1)."""
+    """La comp completa (cabecera + Tools + pie) con las herramientas ya escritas (la última debe ser MediaOut1).
+    v5.58 (el usuario: «hacer más rápido el render cache… usar el 100 % de la PC»): Prefs.Comp.Memory con las ramas de la comp en paralelo
+    (Simultaneous Branching; de fábrica apagado). Medido en Studio 21.1.2: la caché de Resolve se llena un 12 % antes en el Tema 1 y un 7 % en el
+    Tema 3; ponerlo en GO costaba 0,26 s por clip (comp.SetPrefs guarda el proyecto en cada uno): dentro de la plantilla no cuesta nada."""
     cabecera = f'''Composition {{
 	CurrentTime = 0,
 	RenderRange = {{ 0, {fin} }},
@@ -123,6 +126,14 @@ def armar_comp(herramientas, id_plantilla, fin=FIN):
 			Interactive = {
 				Proxy = {
 					Scale = 1,
+				},
+			},
+			Memory = {
+				Render = {
+					SimultaneousBranching = true,
+				},
+				Interactive = {
+					SimultaneousBranching = true,
 				},
 			},
 			Views = {

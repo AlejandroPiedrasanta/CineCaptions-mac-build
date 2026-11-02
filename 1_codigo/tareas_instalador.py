@@ -210,17 +210,56 @@ def _tarea_verificar(estado):
                 if next(contenedor.decode(audio=audio.index), None) is None:
                     raise RuntimeError('no decodificó el silencio de prueba')
 
-    @prueba('Motor auxiliar Whisper, Argos y ONNX', critica=False)
+    # v5.58: fuera de Windows (el Mac) el motor va DENTRO del programa (motor_compat.EN_PROCESO): sin él no hay voz, así que la prueba es
+    # crítica y una compilación de Mac sin Whisper falla en GitHub (desde la 5.34 salía sin voz y solo quedaba un aviso). En Windows, igual.
+    @prueba('Motor auxiliar Whisper, Argos y ONNX', critica=sys.platform != 'win32')
     def _():
         import motor_compat
+        en_proceso = getattr(motor_compat, 'EN_PROCESO', False)
         if not motor_compat.instalado():
+            if en_proceso:
+                raise RuntimeError('el programa no trae dentro: ' + ', '.join(motor_compat.faltan_requisitos()))
             raise RuntimeError('Python 3.14 auxiliar aún no está instalado')
         datos = motor_compat.verificar()
         faltan = motor_compat.faltan_requisitos()
         if faltan:
             raise RuntimeError('faltan versiones: ' + ', '.join(faltan[:5]))
-        if not str(datos.get('python') or '').startswith('3.14.'):
+        if en_proceso:
+            _motor_en_proceso_sin_red()
+        elif not str(datos.get('python') or '').startswith('3.14.'):
             raise RuntimeError('se esperaba Python 3.14, encontrado ' + str(datos.get('python')))
+
+    def _motor_en_proceso_sin_red():
+        """v5.58 (Mac): lo que GO usa al transcribir y que verificar() no toca, sin red: la VAD (silero en onnxruntime), int8 en la CPU, el
+        audio a 16 kHz por el camino de GO (motor_compat.audio_16k: el worker parchea av.open para el decodificador de Whisper con PyAV 19), las
+        descargas de huggingface_hub (submódulos perezosos) y Argos."""
+        import numpy
+        import ctranslate2
+        import faster_whisper.vad
+        import huggingface_hub
+        import motor_compat
+        import argostranslate.package  # noqa: F401
+        import argostranslate.translate  # noqa: F401
+        import minisbd  # noqa: F401
+        faster_whisper.vad.get_speech_timestamps(numpy.zeros(16000, numpy.float32))
+        if 'int8' not in ctranslate2.get_supported_compute_types('cpu'):
+            raise RuntimeError('ctranslate2 no hace int8 en la CPU')
+        for nombre in ('snapshot_download', 'hf_hub_download'):
+            getattr(huggingface_hub, nombre)
+        with tempfile.TemporaryDirectory() as tmp:
+            ruta = Path(tmp) / 'silencio.wav'
+            with wave.open(str(ruta), 'wb') as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(16000)
+                w.writeframes(b'\x00\x00' * 8000)
+            salida = Path(motor_compat.audio_16k(ruta))
+            try:
+                with wave.open(str(salida)) as w:
+                    if w.getframerate() != 16000 or w.getnframes() == 0:
+                        raise RuntimeError('el audio a 16 kHz del motor salió vacío')
+            finally:
+                salida.unlink(missing_ok=True)
 
     @prueba('Revisor de ortografía')
     def _():

@@ -29,16 +29,17 @@ import qt_kit as ui
 from i18n import tr
 
 OPCIONES = [
-    # v5.26 (el usuario lo pidió): «Gancho del inicio» la primera, «Captions detrás de ti» la segunda (no se ve en Free) y «Emojis animados» la tercera
+    # v5.26 (el usuario lo pidió): «Gancho del inicio» la primera, «Captions detrás de ti» la segunda y «Emojis animados» la tercera
+    # (v5.58: «detrás de ti» también en Resolve Free, con el recorte de la IA; solo falta en el video MP4 sin Resolve: 'con_resolve')
     # v5.33: el gancho es una INTRO (intros_gancho: luz, zoom hacia fuera y golpe en el primer segundo) con su propia preferencia; la órbita y
     # el sticker del gancho quedan retirados (motions_catalogo.RETIRADOS: siguen nombrados aquí para no caer en otro interruptor) y el titular
     # detrás de la persona pasa a «Gráficos»
     {'clave': 'gancho', 'nombre': 'Gancho del inicio', 'icono': 'ph.lightning', 'motions': ['ograf:orbita', 't5:orbita', 't5:sticker'],
      'pref': 'pro_gancho_intro', 'solo_pref': True, 'defecto': True,
      'detalle': 'El primer segundo: un destello de luz, el video que se aleja con un zoom y un golpe de sonido.'},
-    {'clave': 'detras', 'nombre': 'Captions detrás de ti', 'icono': 'ph.user-focus', 'mascara': True, 'solo_studio': True,
-     'detalle': 'Solo con DaVinci Resolve Studio: Magic Mask recorta a la persona (solo personas) y el texto pasa por detrás.'},
-    # v5.25: los emojis animados (2D Lottie / 3D en movimiento) con lo que dices; con su intensidad en la píldora, como «detrás de ti»
+    {'clave': 'detras', 'nombre': 'Captions detrás de ti', 'icono': 'ph.user-focus', 'mascara': True, 'con_resolve': True,
+     'detalle': 'La IA recorta a la persona (solo personas) y el texto pasa por detrás.'},
+    # v5.25: los emojis animados (2D Lottie / 3D en movimiento) con lo que dices; con su intensidad en la píldora
     {'clave': 'emoji', 'nombre': 'Emojis animados', 'icono': 'ph.smiley', 'pref': 'pro_emojis', 'niveles': 'pro_emoji_intensidad',
      'detalle': 'Un emoji animado (2D o 3D) con lo que dices, junto a los captions y sin tapar caras.'},
     {'clave': 'pildora', 'nombre': 'Píldora bajo captions', 'icono': 'ph.chat-centered-text', 'motions': ['acompanante'],
@@ -57,11 +58,12 @@ OPCIONES = [
      'detalle': '«¡Hola amigos!», «Guárdalo», encuestas… justo cuando dices esa frase.'},
 ]
 _POR_CLAVE = {o['clave']: o for o in OPCIONES}
-# v5.5.20: la intensidad de «Captions detrás de ti» (edicion_pro.INTENSIDAD_DETRAS), en la píldora del nombre
+# v5.5.20: la intensidad de una opción, en la píldora del nombre (v5.25: la de «Emojis animados»; la de «Captions detrás de ti» se quitó en la
+# v5.58: el usuario: «si se activa, ya sabrá en qué momento aplicarlo»)
 NIVELES = (('suave', 'Suave'), ('media', 'Media'), ('fuerte', 'Fuerte'))
 
 
-def _studio():
+def _con_resolve():
     try:
         import edicion_pro
         return bool(edicion_pro.detras_disponible())
@@ -70,24 +72,21 @@ def _studio():
 
 
 def opciones_visibles():
-    """v5.5.20 (el usuario: «en la versión Free no aparece la opción, para evitar que el usuario la active»): las que se enseñan; «Captions
-    detrás de ti» solo con Resolve Studio (en Free y en el MP4 sin Resolve no hay Magic Mask)."""
-    st = _studio()
-    return [o for o in OPCIONES if (st or not o.get('solo_studio')) and o['clave'] != 'plantillas']   # v5.20: «Plantillas por frase» quitado (el usuario lo pidió)
+    """Las que se enseñan: «Captions detrás de ti» con cualquier Resolve, Free o Studio (v5.58; de la 5.5.20 a la 5.57, solo Studio); en el
+    video MP4 sin Resolve no se enseña (la persona recortada va en el timeline de Resolve)."""
+    cr = _con_resolve()
+    return [o for o in OPCIONES if (cr or not o.get('con_resolve')) and o['clave'] != 'plantillas']   # v5.20: «Plantillas por frase» quitado (el usuario lo pidió)
 
 
 def _pref_niveles(clave):
-    """La preferencia de la intensidad de esa opción («detrás de ti» y, v5.25, «Emojis animados»), o None si no tiene."""
-    o = _POR_CLAVE.get(clave) or {}
-    return 'pro_detras_intensidad' if clave == 'detras' else o.get('niveles')
+    """La preferencia de la intensidad de esa opción (v5.25: «Emojis animados»), o None si no tiene."""
+    return (_POR_CLAVE.get(clave) or {}).get('niveles')
 
 
-def intensidad(clave='detras'):
+def intensidad(clave='emoji'):
     try:
         import edicion_pro
-        if clave == 'emoji':
-            return edicion_pro.intensidad_emoji()
-        return edicion_pro.intensidad_detras()
+        return edicion_pro.intensidad_emoji()
     except Exception:
         return 'media'
 
@@ -106,7 +105,7 @@ def _posiciones(clave):
     return (tr('1 posición') if n == 1 else tr('{n} posiciones', n=n)) + ('' if modo == 'solo' else tr(' + auto'))
 
 
-def poner_intensidad(nivel, clave='detras'):
+def poner_intensidad(nivel, clave='emoji'):
     import edicion_pro
     pref = _pref_niveles(clave)
     if pref and nivel in dict(NIVELES):
@@ -188,8 +187,8 @@ def estado(clave, op=None, neon=None):
     o = _POR_CLAVE[clave]
     if clave == 'plantillas':
         return False                                    # v5.20: «Plantillas por frase» quitado: siempre apagado
-    if o.get('solo_studio') and not _studio():
-        return False                                    # (v5.5.20: sin Studio no va, aunque estuviera guardada encendida)
+    if o.get('con_resolve') and not _con_resolve():
+        return False                                    # (sin Resolve no va, aunque estuviera guardada encendida)
     op = _op() if op is None else op
     if o.get('solo_pref'):                              # (v5.33: el gancho = la intro, solo su preferencia; también en el Tema 1, encendido por
         return bool(op.get(o['pref'], o.get('defecto', False)))         # defecto: el usuario lo pidió)
@@ -446,7 +445,7 @@ class PanelMotionsPro(QWidget):
             self.activa = self._ops[0]['clave']
         try:
             import edicion_pro
-            self._nivel = edicion_pro.intensidad_emoji(op) if self.activa == 'emoji' else edicion_pro.intensidad_detras(op)
+            self._nivel = edicion_pro.intensidad_emoji(op)
         except Exception:
             self._nivel = 'media'
         for o in OPCIONES:
@@ -465,7 +464,8 @@ class PanelMotionsPro(QWidget):
         return ui.fuente(13 * se, peso='medio'), ui.fuente(10 * se), se
 
     def _con_niveles(self):
-        """v5.5.20: la píldora de «Captions detrás de ti» (y, v5.25, de «Emojis animados») encendido lleva debajo «Suave · Media · Fuerte»."""
+        """v5.5.20: la píldora de una opción con niveles (v5.25: «Emojis animados»; v5.58: ya no «Captions detrás de ti») encendida lleva debajo
+        «Suave · Media · Fuerte»."""
         return bool(_pref_niveles(self.activa)) and self.encendido(self.activa)
 
     def _ancho_etiqueta(self, nombre, sub):
@@ -566,7 +566,7 @@ class PanelMotionsPro(QWidget):
         ui.motor_resortes.pedir(self)
 
     def _nivel_en(self, pos):
-        """v5.5.20: el nivel de intensidad bajo el ratón (en la píldora de «Captions detrás de ti»), o None."""
+        """v5.5.20: el nivel de intensidad bajo el ratón (en la píldora de una opción con niveles), o None."""
         if self._info.x < 0.6 or not self._con_niveles():
             return None
         return next((n for r, n in self._niveles_rects if r.adjusted(-3, -4, 3, 4).contains(pos)), None)
@@ -783,7 +783,7 @@ class PanelMotionsPro(QWidget):
         p.restore()
 
     def _pintar_niveles(self, p, et, se, nivel, opacidad):
-        """v5.5.20: «Suave · Media · Fuerte» (la intensidad de «Captions detrás de ti»): el elegido en verde; clic = elegir."""
+        """v5.5.20: «Suave · Media · Fuerte» (la intensidad de la opción: hoy, «Emojis animados»): el elegido en verde; clic = elegir."""
         _f1, f2, _se = self._fuentes()
         fm = QFontMetricsF(f2)
         x = et.left() + 32 * se

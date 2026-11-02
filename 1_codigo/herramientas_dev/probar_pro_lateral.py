@@ -149,7 +149,9 @@ def main():
         piezas = plan.get('piezas') or []
         ids = [MC.id_de_pieza(p) for p in piezas]
         suyos = set(LAT.ids_de(clave))
-        comprobar(len(mot) >= 10, f'Tema 1 + «{clave}»: siguen los motions del kit ({len(mot)})')
+        # (v5.56: los motions del kit «TEMA 1» —y su placa— solo con «Kit de motions» encendido; con otro interruptor, ninguno)
+        comprobar(len(mot) >= 10 if clave == 'kit' else plan.get('kitneon_motions') is None,
+                  f'Tema 1 + «{clave}»: los motions del kit solo con «Kit de motions» ({len(mot)})')
         comprobar(not any(p['ini'] < b and a_ < p['fin'] for p in piezas for a_, b in ocup),
                   f'Tema 1 + «{clave}»: lo añadido no pisa ningún motion del kit ({len(piezas)} piezas)')
         if clave in ('gancho', 'escenas', 'kit', 'graficos', 'plantillas', 'broll'):
@@ -199,7 +201,7 @@ def seccion_detras(a, app, PREFS, w, dur, fps, cortes):
     import kit_neon_motions as KM
     import kit_neon_placa as PLA
     import pro_lateral_ui as LAT
-    print('== 3) Captions detrás de ti (solo Studio · intensidad · Tema 1 desde la placa)', flush=True)
+    print('== 3) Captions detrás de ti (Free y Studio · sin intensidad · Tema 1 desde la placa)', flush=True)
 
     def clic(lista, pos):
         QApplication.sendEvent(lista, QMouseEvent(QEvent.Type.MouseMove, pos, pos, Qt.MouseButton.NoButton, Qt.MouseButton.NoButton,
@@ -212,11 +214,17 @@ def seccion_detras(a, app, PREFS, w, dur, fps, cortes):
     for ed in ('free', 'studio'):
         INS._CACHE_EDICION['valor'] = ed
         INS._edicion_guardada = (lambda ed=ed: ed)
-        PREFS.update(go_pack='Referencia', plantilla='Referencia', pro_mascara='auto', pro_detras_intensidad='media')
+        PREFS.update(go_pack='Referencia', plantilla='Referencia', pro_mascara='auto', pro_detras_intensidad='media', go_salida_mp4=False)
         vis = [o['clave'] for o in LAT.opciones_visibles()]
-        comprobar(('detras' in vis) == (ed == 'studio'), f'Resolve {ed}: «Captions detrás de ti» {"está" if ed == "studio" else "NO está"} en el menú ({len(vis)} interruptores)')
-        comprobar(LAT.estado('detras') == (ed == 'studio'), f'Resolve {ed}: guardado encendido, cuenta como {ed == "studio"}')
-        comprobar(EP.detras_disponible() == (ed == 'studio'), f'Resolve {ed}: edicion_pro.detras_disponible() = {ed == "studio"}')
+        # v5.58 (el usuario: «el menú PRO debe funcionar en Resolve Free… y detrás de ti igual»): con cualquier Resolve; Magic Mask, solo Studio
+        comprobar('detras' in vis, f'Resolve {ed}: «Captions detrás de ti» está en el menú ({len(vis)} interruptores)')
+        comprobar(LAT.estado('detras'), f'Resolve {ed}: guardado encendido, cuenta como encendido')
+        comprobar(EP.detras_disponible() and EP.magic_mask_disponible() == (ed == 'studio'),
+                  f'Resolve {ed}: detras_disponible() = True · magic_mask_disponible() = {ed == "studio"}')
+        PREFS['go_salida_mp4'] = True
+        comprobar('detras' not in [o['clave'] for o in LAT.opciones_visibles()] and not LAT.estado('detras') and not EP.detras_disponible(),
+                  f'Resolve {ed} con el video MP4 (sin Resolve): «detrás de ti» no se enseña ni cuenta')
+        PREFS['go_salida_mp4'] = False
         centro = QWidget()
         fila = LAT.FilaPro(centro)
         fila.resize(1500, 760)
@@ -227,8 +235,6 @@ def seccion_detras(a, app, PREFS, w, dur, fps, cortes):
         claves = [lista._icono_en(QPointF(barra.center().x(), y0 + paso * (k + 0.5))) for k in range(len(vis))]
         comprobar(claves == vis, f'Resolve {ed}: cada icono cae en su interruptor')
         comprobar(not lista.grab().isNull(), f'Resolve {ed}: la barra se dibuja')
-        if ed == 'free':
-            continue
         pos = QPointF(barra.center().x(), y0 + paso * (vis.index('detras') + 0.5))
         QApplication.sendEvent(lista, QMouseEvent(QEvent.Type.MouseMove, pos, pos, Qt.MouseButton.NoButton, Qt.MouseButton.NoButton,
                                                   Qt.KeyboardModifier.NoModifier))
@@ -236,27 +242,24 @@ def seccion_detras(a, app, PREFS, w, dur, fps, cortes):
         while lista.paso_resorte(1 / 60) and time.time() - t0 < 5:
             pass
         lista.grab()
-        comprobar([n for _r, n in lista._niveles_rects] == ['suave', 'media', 'fuerte'], 'Studio: la píldora de «detrás de ti» enseña Suave · Media · Fuerte')
-        lista.grab().save(str(Path(os.environ.get('TEMP', '.')) / 'ccpro_detras_pildora.png'))
-        for nivel in ('fuerte', 'suave', 'media'):
-            r = next((r for r, n in lista._niveles_rects if n == nivel), None)
-            if r is None:
-                comprobar(False, f'Studio: el botón «{nivel}» se ve')
-                continue
-            clic(lista, r.center())
-            lista.grab()
-            comprobar(PREFS.get('pro_detras_intensidad') == nivel and LAT.estado('detras') and lista._info.x > 0.5,
-                      f'Studio: clic en «{nivel}» lo guarda, «detrás de ti» sigue encendido y la píldora sigue abierta')
+        # v5.58 (el usuario: «elimina eso de intensidad: si se activa, ya sabrá en qué momento aplicarlo»): sin Suave · Media · Fuerte
+        comprobar(lista._niveles_rects == [] and 'intensidad' not in (lista._et_txt or ('', ''))[1] and 'Studio' not in (lista._et_txt or ('', ''))[1],
+                  f'Resolve {ed}: la píldora de «detrás de ti» sin intensidad ni «solo Studio» ({lista._et_txt[1] if lista._et_txt else "sin texto"})')
+        lista.grab().save(str(Path(os.environ.get('TEMP', '.')) / f'ccpro_detras_pildora_{ed}.png'))
+        PREFS['pro_detras_intensidad'] = 'fuerte'                      # (una guardada de antes ya no cuenta)
+        comprobar(EP.intensidad_detras() == 'media' and EP.intensidad_detras(EP.opciones_guardadas()) == 'media',
+                  f'Resolve {ed}: la intensidad de «detrás de ti» es siempre la de fábrica (media), aunque quede guardada otra')
+        PREFS['pro_detras_intensidad'] = 'media'
     # la elección de momentos por intensidad (Tema 1 con la placa y la vía común de V1)
-    PREFS.update(go_pack='Kinetic', plantilla='Kinetic', pro_neon_extras=['detras'])
+    PREFS.update(go_pack='Kinetic', plantilla='Kinetic', pro_neon_extras=['detras', 'kit'])      # (v5.56: la placa, solo con «Kit de motions»)
     plan = EP.planificar(a.video, w, dur, cortes=cortes, idioma='es', opciones=EP.opciones_guardadas(), tema='neon')
-    plan['kitneon'] = KM.ajustar_captions(KN.escena_captions(w, 'es', fin_video=dur), plan['kitneon_motions'])     # (GO los añade)
+    plan['kitneon'] = KM.ajustar_captions(KN.escena_captions(w, 'es', fin_video=dur), plan.get('kitneon_motions') or [])     # (GO los añade; v5.56: None sin el kit)
     plan['_neon_ajustado'] = True
     bl = KN.bloques_pro(plan['kitneon'])
     comprobar(all('linea' in b and 'grande_abajo' in b and len(b['xs']) == 3 for b in bl), f'Tema 1: sus {len(bl)} bloques traen línea de abajo, si es grande y su ancho')
     mapa = PLA.mapa_camara(a.video, plan, 1080, 1920)
     info = {'fps': fps, 'inicio': 0, 'base': 0, 'v1': [{'ruta': a.video, 'ini': 0, 'fin': int(dur * fps) + 1, 'izq': 0, 'fps': fps, 'res': '1080x1920'}]}
-    ocup = [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan['kitneon_motions']]
+    ocup = [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan.get('kitneon_motions') or []]
     for via, a_cuadro in (('Tema 1 (placa)', mapa), ('vía común (V1)', None)):
         cuantos = []
         for nivel in EP.NIVELES_DETRAS:

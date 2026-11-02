@@ -11,7 +11,7 @@ Para cada video (ya transcrito por GO: la caché de la voz) y cada tema:
   4. la vista de cada tramo COMO QUEDA (fotograma + caption subido con su Tilt + la persona del matte encima, con su recorte de abajo) en una
      hoja por video y tema, para mirarla.
 
-    python probar_detras_temas.py <carpeta_salida> <video> [<video> …] [--temas 1,2,3,4,5,6] [--sin-mascara]
+    python probar_detras_temas.py <carpeta_salida> <video> [<video> …] [--temas=1,2,3,4,5,6] [--sin-mascara] [--kit] [--auto]
 
 No toca Resolve ni las preferencias reales (se parchean); las máscaras van a <salida>/mascaras (se reutilizan entre pasadas)."""
 import json
@@ -61,8 +61,30 @@ def _encajar(img, w, h):
     return out
 
 
-def medir_matte(ruta, fps):
-    """Lo que delata un matte malo: islas (manchas sueltas que no son la persona), halo (franja semitransparente ancha), parpadeo."""
+def _lumas(fuente, t0, n, w, h):
+    """La luma (suavizada) de n fotogramas de `fuente` desde el segundo t0, al tamaño del recorte."""
+    import numpy as np
+    import av
+    from PIL import ImageFilter
+    out = []
+    with av.open(str(fuente)) as c:
+        vs = c.streams.video[0]
+        k0 = int(round(float(t0) * float(vs.average_rate or 30)))
+        for i, fr in enumerate(c.decode(vs)):
+            if i >= k0:
+                img = fr.to_image().convert('L')
+                out.append(np.asarray((img if img.size == (w, h) else img.resize((w, h))).filter(ImageFilter.GaussianBlur(2)), np.float32))
+            if len(out) >= n:
+                break
+    return out
+
+
+def medir_matte(ruta, fps, recorte_px=0, fuente=None, t0=0.0, diag=None, n_max=None):
+    """Lo que delata un matte malo: islas (manchas sueltas que no son la persona), halo (franja semitransparente ancha), parpadeo.
+    v5.58: solo lo que SE VE (por encima de `recorte_px`: «detrás de ti» recorta a la persona por debajo del caption: los pies, su sombra en el
+    suelo y el hueco entre el brazo y la cintura no se ven) y el parpadeo de VERDAD: con `fuente` (el video del recorte, desde `t0`), el % del
+    área de la persona cuyo alfa cambia donde la imagen está QUIETA, en el peor fotograma. Antes era la media del cambio donde no era fijo:
+    con una persona que camina o mueve las manos daba 170-180 aunque el recorte estuviera bien (ESPAÑOL.mov, Tema 1)."""
     import numpy as np
     import av
     import edicion_pro_persona as PE
@@ -70,9 +92,17 @@ def medir_matte(ruta, fps):
         vs = c.streams.video[0]
         fmt = f'{vs.codec_context.name}/{vs.codec_context.pix_fmt}'
         alfas = [fr.to_ndarray(format='rgba')[..., 3].astype(np.float32) / 255.0 for fr in c.decode(vs)]
+    if n_max:                                                          # (v5.58: el archivo lleva 0,1 s de más que Resolve no enseña)
+        alfas = alfas[:int(n_max)]
     if not alfas:
         return {'fmt': fmt, 'n': 0}
+    h, w = alfas[0].shape
+    corte = h - max(0, min(h, int(recorte_px or 0)))
+    for a in alfas:
+        a[corte:] = 0.0
+    lumas = _lumas(fuente, t0, len(alfas), w, h) if fuente else []
     islas, halo, cubre, parpadeo = 0, 0.0, 0.0, 0.0
+    peor = None                                                        # (el fotograma del peor parpadeo y sus píxeles: para --diag)
     prev = None
     for i, a in enumerate(alfas):
         dura = a > 0.5
@@ -85,11 +115,24 @@ def medir_matte(ruta, fps):
                 grande = float(trozos[0].sum())
                 islas = max(islas, sum(1 for t in trozos[1:] if t.sum() < 0.08 * grande))
             halo = max(halo, float(((a > 0.04) & (a < 0.96)).sum()) / max(1.0, float(area)))
-        if prev is not None:
-            fijo = (a > 0.9) & (prev > 0.9) | (a < 0.1) & (prev < 0.1)
-            parpadeo = max(parpadeo, float(np.abs(a - prev)[~fijo].mean() * 255) if (~fijo).any() else 0.0)
+        if prev is not None and i < len(lumas):
+            quieto = np.abs(lumas[i] - lumas[i - 1]) < 4.0
+            quieto[corte:] = False
+            malo = (np.abs(a - prev) > 0.3) & quieto
+            p = 100.0 * float(malo.sum()) / max(1.0, float(area))
+            if p > parpadeo:
+                parpadeo, peor = p, (i, malo, a > 0.5)
         prev = a
-    return {'fmt': fmt, 'n': len(alfas), 'islas': islas, 'halo': round(halo, 3), 'cubre': round(cubre, 3), 'parpadeo': round(parpadeo, 1)}
+    if diag and peor is not None:                                      # el peor fotograma: rojo = cambia con la imagen quieta; verde = la persona
+        from PIL import Image
+        i, malo, dentro = peor
+        base = np.repeat(lumas[i][..., None], 3, axis=2).astype(np.uint8)
+        base[dentro] = (base[dentro] * 0.5 + np.array([0, 110, 0])).astype(np.uint8)
+        base[malo] = [255, 0, 0]
+        base[corte:] = (base[corte:] * 0.35).astype(np.uint8)
+        Image.fromarray(base).resize((w // 2, h // 2)).save(str(diag))
+    return {'fmt': fmt, 'n': len(alfas), 'islas': islas, 'halo': round(halo, 3), 'cubre': round(cubre, 3), 'parpadeo': round(parpadeo, 2),
+            'visible': round(corte / float(h), 2), 'peor': peor[0] if peor else None}
 
 
 def main():
@@ -107,7 +150,9 @@ def main():
     videos = [Path(v) for v in args[1:]]
     tmp = Path(tempfile.mkdtemp(prefix='ccdetras_temas_'))
     import ajustes_ui
-    PREFS = {'go_edicion_pro': True, 'pro_ia_local': False, 'pro_mascara': 'auto', 'pro_detras_intensidad': 'media', 'pro_neon_extras': ['detras']}
+    # (v5.58: con --kit, el Tema 1 también con «Kit de motions»: sus motions y la PLACA; sin él, como GO desde la 5.56: ni motions ni placa)
+    PREFS = {'go_edicion_pro': True, 'pro_ia_local': False, 'pro_mascara': 'auto', 'pro_detras_intensidad': 'media',
+             'pro_neon_extras': ['detras'] + (['kit'] if '--kit' in sys.argv else [])}
     real = ajustes_ui.leer_prefs
     ajustes_ui.leer_prefs = lambda: {**real(), **PREFS}
     ajustes_ui.guardar_prefs = lambda d=None, *x, **k: PREFS.update(d or {})
@@ -169,15 +214,18 @@ def main():
             placa, a_cuadro, cues = None, None, []
             t0 = time.time()
             if neon:
-                plan['kitneon'] = KM.ajustar_captions(KN.escena_captions(w, idioma, fin_video=dur), plan['kitneon_motions'])
+                plan['kitneon'] = KM.ajustar_captions(KN.escena_captions(w, idioma, fin_video=dur), plan.get('kitneon_motions') or [])
                 plan['_neon_ajustado'] = True
                 plan['duracion'] = dur
                 bl = KN.bloques_pro(plan['kitneon'])
                 ocupado += [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan.get('kitneon_motions') or []]
-                placa = PLA.para_pro(str(video), plan, carpeta, W, H, fps)
-                if not comprobar(placa is not None and Path(placa).is_file(), f'la placa del Tema 1 ({time.time() - t0:.0f} s)'):
-                    continue
-                a_cuadro = PLA.mapa_camara(str(video), plan, W, H)
+                if plan.get('kitneon_motions') is not None:            # (como GO: la placa solo con «Kit de motions»)
+                    placa = PLA.para_pro(str(video), plan, carpeta, W, H, fps)
+                    if not comprobar(placa is not None and Path(placa).is_file(), f'la placa del Tema 1 ({time.time() - t0:.0f} s)'):
+                        continue
+                    a_cuadro = PLA.mapa_camara(str(video), plan, W, H)
+                else:
+                    print('     Tema 1 sin «Kit de motions»: sin placa, la persona sale de V1 (como GO)', flush=True)
                 cues = vista_tema.planificar(w, [], pack, estilo, idioma=idioma, fin_video=dur, video=str(video))
             else:
                 cues = vista_tema.planificar(w, [], pack, estilo, idioma=idioma, fin_video=dur, video=str(video))
@@ -206,10 +254,13 @@ def main():
                       + (f' · {fuera} · tramos {[(round(t["ini"], 1), round(t["fin"], 1)) for t in tr_sug]}' if len(con) != len(sug) else ''),
                       aviso=not sug)
             # (b) GO en automático
+            EP._DETECCIONES.clear()                                    # (v5.58: medir la detección de verdad, sin lo que miró la tira)
+            t_sel = time.time()
             tramos = EP._captions_detras(info, str(video), fps, ocupado, 'media', lambda t: None, W=W, H=H, intensidad='media', bloques=bl,
                                          a_cuadro=a_cuadro, marcas=None, cortes=cortes)
-            print(f'     automático: {len(tramos)} tramos {[(round(t["ini"], 1), round(t["fin"], 1)) for t in tramos]}', flush=True)
-            usar = tr_sug or tramos
+            print(f'     automático: {len(tramos)} tramos {[(round(t["ini"], 1), round(t["fin"], 1)) for t in tramos]} '
+                  f'(elegidos en {time.time() - t_sel:.1f} s)', flush=True)
+            usar = tramos if '--auto' in sys.argv else (tr_sug or tramos)     # (--auto: los tramos que GO elige solo, sin marcas)
             fila = {'video': video.name, 'tema': tema, 'bloques': len(bl), 'sugeridas': sug, 'entran': len(con), 'auto': len(tramos)}
             for tr in usar:
                 for c in tr['cues']:
@@ -222,22 +273,41 @@ def main():
                 continue
             # (c) el matte de la IA y lo que se mide
             t0 = time.time()
+            n_reg = len(REG)
             encima = EP._encima_de(usar, info, str(video), fps, W, H, carpeta, a_cuadro, neon, None, False, placa=placa)
             t_m = time.time() - t0
             seg = sum(tr['fin'] - tr['ini'] for tr in usar)
-            comprobar(len(encima) == len(usar), f'{len(encima)} de {len(usar)} tramos con su matte ({t_m:.0f} s para {seg:.1f} s de video)')
-            fila.update(matte_s=round(t_m, 1), video_s=round(seg, 1))
+            # v5.58: un tramo cuyo recorte no sale limpio lo quita a propósito el control de calidad de _encima_de (lo dice en el Registro):
+            # eso es un AVISO con su % (mirar que sea un recorte malo de verdad); un tramo que falta sin ese motivo, un FALLO. Cada matte va
+            # con SU tramo (por tiempo: si se quita uno del medio, zip los cruzaba)
+            pares = [(e, min(usar, key=lambda tr: abs(tr['ini'] * fps - e['ini']))) for e in encima]
+            quitados = [m for _, m in REG[n_reg:] if 'no salía limpio' in m]
+            for tr in usar:
+                if any(t_ is tr for _, t_ in pares):
+                    continue
+                motivo = next((m for m in quitados if f' en {float(tr["ini"]):.1f} s:' in m), None)
+                comprobar(False, f'tramo {tr["ini"]:.1f}–{tr["fin"]:.1f} s sin la persona delante: '
+                                 + (motivo or 'sin motivo (¿falló el recorte?)'), aviso=motivo is not None)
+            comprobar(len(encima) + len(quitados) == len(usar),
+                      f'{len(encima)} de {len(usar)} tramos con su matte ({len(quitados)} quitados por el control de calidad; '
+                      f'{t_m:.0f} s para {seg:.1f} s de video)')
+            fila.update(matte_s=round(t_m, 1), video_s=round(seg, 1), quitados=len(quitados))
             celdas = []
-            for e, tr in zip(encima, usar):
-                m = medir_matte(e['archivo'], fps)
+            for e, tr in pares:
+                m = medir_matte(e['archivo'], fps, e.get('recorte_px'), placa if (neon and placa) else video, tr['ini'],
+                                diag=salida / f'{video.stem}_T{tema}_parpadeo_{tr["ini"]:.1f}.png', n_max=e['fin'] - e['ini'])
                 ok = ('prores' in m['fmt'] and 'a' in m['fmt'].split('/')[1] and m['n'] > 0 and m['islas'] == 0 and m['cubre'] < 0.7
-                      and m['parpadeo'] < 6.0 and m['halo'] < 0.35)
-                comprobar(ok, f'matte {tr["ini"]:.1f}–{tr["fin"]:.1f} s: {m}')
+                      and m['halo'] < 0.35)
+                # (v5.58: parpadeo = % del área que cambia con la imagen quieta: el temblor del borde del pelo da ≤ 2,5; un trozo de fondo,
+                # 12-24. Entre 3 y PE.PARPADEO_MAX GO lo deja: AVISO para mirar el peor fotograma —con solo la cabeza a la vista, el borde del
+                # pelo ya da 4-5, PRUEBAS (4) a los 35 s—; por encima, GO lo habría quitado: FALLO)
+                comprobar(ok and m['parpadeo'] < 3.0, f'matte {tr["ini"]:.1f}–{tr["fin"]:.1f} s: {m}',
+                          aviso=ok and m['parpadeo'] <= PE.PARPADEO_MAX)
                 fila.setdefault('mattes', []).append(m)
                 # la vista: al medio del primer caption y al final del tramo
                 for t in (tr['cues'][0]['ini'] + 0.6, tr['fin'] - 0.1):
                     t = max(tr['ini'], min(tr['fin'] - 0.04, t))
-                    base = PE.fotograma(str(placa if neon else video), t)
+                    base = PE.fotograma(str(placa if (neon and placa) else video), t)
                     if base is None:
                         continue
                     base = _encajar(base, W, H)

@@ -913,6 +913,12 @@ def perfil_del_equipo():
     return _PERFIL['v']
 
 
+def _mediana(valores):
+    v = sorted(valores)
+    n = len(v)
+    return 0.0 if not n else (v[n // 2] if n % 2 else 0.5 * (v[n // 2 - 1] + v[n // 2]))
+
+
 class EstimadorGo:
     """Cuánto falta en GO. Cada paso tiene una duración esperada (base + lo que cuesta por minuto de video, escalada por lo que tardó en las últimas veces en
     ESTE equipo: se aprende y se guarda en las preferencias, «go_ritmo»). Con eso el porcentaje avanza con el reloj dentro de cada paso (no se queda quieto
@@ -920,7 +926,12 @@ class EstimadorGo:
     v5.56: el ritmo se aprende APARTE con la Edición PRO y sin ella («go_ritmo_modos»: {perfil: {'pro' | 'captions': {paso: factor}}}). Antes
     un GO del Tema 1 con PRO (13 min) dejaba los factores al tope y el de solo captions (53 s) se anunciaba como ~5 min (el usuario: «cuando es
     de solo captions debe ser menos de 2 minutos ya con SFX»; luego: «menos de un minuto solo captions»). Y la voz y la IA reutilizadas
-    (`reutilizado`) cuentan lo que de verdad tardan (REUSO), no lo de correr el modelo."""
+    (`reutilizado`) cuentan lo que de verdad tardan (REUSO), no lo de correr el modelo.
+    v5.58 (el usuario: «dice 2 minutos pero vas 40 segundos y baja a 30 y luego 20… dar el tiempo exacto sin salto de segundo»): (1) cada paso se
+    prevé con los últimos GO de ESTE equipo («go_historial»: {perfil: {modo: {paso: [[minutos de video, segundos], …]}}}) con una recta robusta
+    (`_prevision`: medianas, un GO raro con Resolve arrancando no la mueve; la media móvil de antes dejó la voz en ×5,3: ~68 s anunciados para
+    ~26 reales); (2) lo que se enseña es una CUENTA ATRÁS de segundo en segundo (`eta_segundos`): baja como un reloj y, si la previsión cambia,
+    se corrige sin saltos (como mucho el doble de rápido, sin saltarse números, o se frena)."""
     ORDEN = ('timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve')
     BASE = {'timeline': 8.0, 'voz': 8.0, 'ia': 22.0, 'diseno': 3.0, 'sfx': 6.0, 'resolve': 18.0}
     POR_MIN = {'timeline': 0.0, 'voz': 5.0, 'ia': 6.0, 'diseno': 0.5, 'sfx': 3.0, 'resolve': 6.0}
@@ -933,11 +944,16 @@ class EstimadorGo:
     # de 1 min con el Tema 1 neón, «sfx» 5 min 37 s y «resolve» 7 min 49 s)
     PRO_EXTRA = {'sfx': (60.0, 60.0), 'resolve': (90.0, 120.0)}
     HEREDA = {'captions': ('voz', 'ia'), 'pro': ('timeline', 'voz', 'ia', 'diseno')}     # (los otros pasos cambiaron de base: su factor viejo no vale)
+    HISTORIA = 9                          # v5.58: GO que se recuerdan por paso (los últimos)
+    RARO = 8.0                            # un paso que tarda más de 8 veces lo previsto (Resolve reparado, un fallo) no entra en la historia
+    ACELERA, SUBE = 3.0, 0.5              # la cuenta atrás: hasta 3 s más por segundo si va rápido (con el tic de 250 ms, ≤ 1 por tic); si va
+    SUBE_DESDE = 10.0                     # lenta se frena y solo sube (0,5 s por segundo) cuando la previsión la pasa en más de 10 s
 
     def __init__(self):
         import time as _t
         self._time = _t
         self._factor = None
+        self._historia = None
         self._perfil = None
         self.efectos = False
         self.modo = 'captions'
@@ -977,6 +993,23 @@ class EstimadorGo:
     def factor(self, valor):
         self._factor = valor
 
+    @property
+    def historia(self):
+        """v5.58: {paso: [(minutos de video, segundos reales), …]} de los últimos GO de este equipo en este modo."""
+        if self._historia is None:
+            h = {}
+            try:
+                import ajustes_ui
+                guardada = (((ajustes_ui.leer_prefs().get('go_historial') or {}).get(self.perfil) or {}).get(self.modo) or {})
+                for k in self.ORDEN + tuple(f'{r}_reuso' for r in self.REUSO):       # (lo que tardan la voz y la IA reutilizadas, aparte)
+                    obs = [(float(m), float(s)) for m, s in (guardada.get(k) or []) if 0.0 < float(m) <= 90.0 and 0.0 <= float(s) < 7200.0]
+                    if obs:
+                        h[k] = obs[-self.HISTORIA:]
+            except Exception:
+                h = {}
+            self._historia = h
+        return self._historia
+
     def reiniciar(self):
         self.t0 = None
         self.actual = None
@@ -985,6 +1018,8 @@ class EstimadorGo:
         self.saltados = set()
         self.reusados = set()         # v5.56: voz / ia con su resultado guardado (cuentan REUSO y no se aprende de ellos)
         self.dentro_f = 0.0
+        self._visto = None            # v5.58: los segundos que enseña la cuenta atrás y cuándo se pusieron
+        self._t_visto = None
 
     def empezar(self):
         self.reiniciar()
@@ -1004,28 +1039,45 @@ class EstimadorGo:
         """v5.56: con la Edición PRO GO tarda mucho más y su ritmo se aprende aparte (ver la clase)."""
         modo = 'pro' if activa else 'captions'
         if modo != self.modo:
-            self.modo, self._factor = modo, None
+            self.modo, self._factor, self._historia = modo, None, None
 
     def reutilizado(self, clave):
         """v5.56: la voz o la IA de este GO ya estaban hechas (caché): su paso dura segundos."""
         if clave in self.REUSO:
             self.reusados.add(clave)
 
-    def _base(self, k):
+    def _base(self, k, minutos=None):
+        minutos = self.minutos if minutos is None else minutos
         if self.modo != 'pro':
-            return self.BASE_CAPTIONS[k] + self.POR_MIN_CAPTIONS[k] * self.minutos     # (ya medido con los efectos encendidos)
-        extra = (10.0 + 1.5 * self.minutos) if (k == 'resolve' and self.efectos) else 0.0
+            return self.BASE_CAPTIONS[k] + self.POR_MIN_CAPTIONS[k] * minutos     # (ya medido con los efectos encendidos)
+        extra = (10.0 + 1.5 * minutos) if (k == 'resolve' and self.efectos) else 0.0
         if k in self.PRO_EXTRA:
             base, por_min = self.PRO_EXTRA[k]
-            extra += base + por_min * self.minutos
-        return self.BASE[k] + self.POR_MIN[k] * self.minutos + extra
+            extra += base + por_min * minutos
+        return self.BASE[k] + self.POR_MIN[k] * minutos + extra
+
+    def _prevision(self, k):
+        """v5.58: segundos del paso en ESTE equipo según sus últimos GO. Con videos de distinta duración, la recta segundos = a + b × minutos
+        por medianas (Theil–Sen: la mediana de las pendientes entre cada par y la de lo que sobra; un GO raro no la mueve); si todos duraban
+        parecido, la tabla escalada por la mediana de lo que tardó respecto a ella; sin historia, la tabla × el ritmo aprendido de antes."""
+        obs = self.historia.get(k) or []
+        if len(obs) >= 3:
+            pend = [(s2 - s1) / (m2 - m1) for i, (m1, s1) in enumerate(obs) for (m2, s2) in obs[i + 1:] if abs(m2 - m1) >= 0.15]
+            if len(pend) >= 3:
+                b = max(0.0, _mediana(pend))
+                a = max(0.0, _mediana([s - b * m for m, s in obs]))
+                return a + b * self.minutos
+        if obs:
+            return self._base(k) * _mediana([s / max(1.0, self._base(k, m)) for m, s in obs])
+        return self._base(k) * self.factor[k]
 
     def esperado(self, k):
         if k in self.saltados:
             return 0.0
-        if k in self.reusados:
-            return self.REUSO[k]
-        return max(1.0, self._base(k) * self.factor[k])
+        if k in self.reusados:                       # v5.58: lo que tardó reutilizada en este equipo (en GO sin la PRO la IA ni corre: ~0,3 s)
+            obs = self.historia.get(f'{k}_reuso') or []
+            return max(0.2, _mediana([s for _m, s in obs])) if obs else self.REUSO[k]
+        return max(0.2, self._prevision(k))
 
     def paso(self, clave, estado):
         if clave not in self.ORDEN or self.t0 is None:
@@ -1071,28 +1123,43 @@ class EstimadorGo:
         r = sum(self.esperado(k) for k in self.ORDEN if k not in self.hechos and k != self.actual)
         if self.actual:
             e = self.esperado(self.actual)
-            r += max(e * (1.0 - self._f_actual()), min(5.0, e * 0.25))
+            r += max(e * (1.0 - self._f_actual()), min(2.0, e * 0.1))     # (v5.58: suelo de 2 s, no 5: la cuenta acaba casi en cero)
         return r
 
     def tarda_mas(self):
         return bool(self.actual) and self._en_paso() > max(25.0, 2.2 * self.esperado(self.actual))
+
+    def eta_segundos(self):
+        """v5.58: los segundos que ENSEÑA la cuenta atrás. Baja con el reloj; si la previsión (`restante`) queda por debajo, baja hasta 4×
+        (con el reloj de 250 ms de PanelGo, de uno en uno: sin saltarse números); si queda por encima, se frena hasta pararse y solo sube
+        (despacio) si la previsión ya la pasa en más de SUBE_DESDE. Nunca baja de 1 mientras GO trabaja."""
+        ahora = self._time.perf_counter()
+        objetivo = self.restante()
+        if self._visto is None:
+            self._visto, self._t_visto = max(1.0, objetivo), ahora
+            return self._visto
+        dt = max(0.0, ahora - self._t_visto)
+        self._t_visto = ahora
+        v = self._visto - dt
+        dif = objetivo - v
+        if dif < 0:                                  # (con el reloj, como mucho 1 s por vez: un tic que llega tarde no salta un número)
+            v += max(dif, -min(self.ACELERA * dt, max(0.0, 1.0 - dt)))
+        elif dif > 0:
+            v += min(dif, dt + (self.SUBE * dt if dif > self.SUBE_DESDE else 0.0))
+        self._visto = max(1.0, v)
+        return self._visto
 
     def eta_texto(self):
         if self.t0 is None:
             return ''
         if self._time.perf_counter() - self.t0 < 1.2:
             return tr('calculando…')
+        r = int(math.ceil(self.eta_segundos() - 1e-6))        # (siempre, también con el aviso: la cuenta sigue al día por debajo)
         if self.tarda_mas():
             return tr('tarda más de lo normal…')
-        r = self.restante()
-        if r < 8:
-            return tr('unos segundos')
-        if r < 90:
-            return tr('~ {s} s', s=int(round(r / 5.0) * 5))
-        m, s = int(r // 60), int(round((r % 60) / 10.0) * 10)
-        if s >= 60:
-            m, s = m + 1, 0
-        return tr('~ {m} min {s} s', m=m, s=s) if s else tr('~ {m} min', m=m)
+        if r < 60:
+            return tr('{s} s', s=r)
+        return tr('{m} min {s} s', m=r // 60, s=f'{r % 60:02d}')
 
     def numero_de_paso(self, clave):
         pend = [k for k in self.ORDEN if k not in self.saltados]
@@ -1112,21 +1179,35 @@ class EstimadorGo:
         return salida
 
     def guardar(self):
-        """Aprende: cuánto tardó cada paso respecto a lo esperado sin escalar (media móvil) y lo guarda."""
+        """Aprende: cuánto tardó cada paso respecto a lo esperado sin escalar (media móvil) y lo guarda. v5.58: y lo apunta en la historia
+        de este equipo (minutos de video, segundos), de la que sale la previsión (`_prevision`)."""
         try:
             nuevo = dict(self.factor)
+            hist = {k: list(v) for k, v in self.historia.items()}
             for k, real in self.hechos.items():
-                if k in self.saltados or k in self.reusados or real < 0.5:
+                if k in self.saltados:
                     continue
-                # v5.56: un GO raro (Resolve que arranca o se repara a mitad, un reintento) cuenta como mucho el doble de lo aprendido: un
-                # solo GO así ya no deja el siguiente anunciando minutos de más (un equipo de verdad lento llega igual, en unos GO más)
-                razon = min(real / max(1.0, self._base(k)), 2.0 * self.factor[k])
-                nuevo[k] = round(max(0.2, min(6.0, 0.6 * self.factor[k] + 0.4 * razon)), 3)
+                if k in self.reusados:                 # v5.58: lo que tardó reutilizada, aparte (de ella no aprende el ritmo)
+                    if real <= 60.0:
+                        clave = f'{k}_reuso'
+                        hist[clave] = (hist.get(clave, []) + [(round(self.minutos, 3), round(real, 1))])[-self.HISTORIA:]
+                    continue
+                if real >= 0.5:
+                    # v5.56: un GO raro (Resolve que arranca o se repara a mitad, un reintento) cuenta como mucho el doble de lo aprendido: un
+                    # solo GO así ya no deja el siguiente anunciando minutos de más (un equipo de verdad lento llega igual, en unos GO más)
+                    razon = min(real / max(1.0, self._base(k)), 2.0 * self.factor[k])
+                    nuevo[k] = round(max(0.2, min(6.0, 0.6 * self.factor[k] + 0.4 * razon)), 3)
+                if real <= self.RARO * max(1.0, self._prevision(k)):     # (v5.58: también los pasos de un instante: si no, se preveían 1-4 s de más)
+                    hist[k] = (hist.get(k, []) + [(round(self.minutos, 3), round(real, 1))])[-self.HISTORIA:]
             import ajustes_ui
-            modos = dict(ajustes_ui.leer_prefs().get('go_ritmo_modos') or {})
+            prefs = ajustes_ui.leer_prefs()
+            modos = dict(prefs.get('go_ritmo_modos') or {})
             modos[self.perfil] = dict(modos.get(self.perfil) or {}, **{self.modo: nuevo})
-            ajustes_ui.guardar_prefs({'go_ritmo_modos': modos})
+            historial = dict(prefs.get('go_historial') or {})
+            historial[self.perfil] = dict(historial.get(self.perfil) or {}, **{self.modo: {k: [list(o) for o in v] for k, v in hist.items() if v}})
+            ajustes_ui.guardar_prefs({'go_ritmo_modos': modos, 'go_historial': historial})
             self.factor = nuevo
+            self._historia = hist
         except Exception:
             pass
 
@@ -1185,7 +1266,7 @@ class PanelGo(QWidget):
         self.estimador = EstimadorGo()
         self.paso_fallido = None                # el paso en que falló GO (lo pone la app antes de terminar(False))
         self._reloj_eta = QTimer(self)
-        self._reloj_eta.setInterval(500)
+        self._reloj_eta.setInterval(250)            # v5.58: la cuenta atrás corrige hasta 4× sin saltarse números (≤ 1 s por tic)
         self._reloj_eta.timeout.connect(self._tic_eta)
         # las opciones rapidas de GO (fuente, idioma, estilo, efectos): las pone la app
         self.opciones = QWidget()

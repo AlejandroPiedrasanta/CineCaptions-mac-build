@@ -7746,7 +7746,7 @@ class SubtitleApp(QWidget):
             marca = '✓  ' if op.get('pro_genero', 'auto') == clave else '      '
             menu.agregar(marca + tr('Estilo de video: {n}', n=tr(nombre)), lambda c=clave: self._poner_pro_go('pro_genero', c))
         menu.separador()
-        studio = edicion_pro.detras_disponible()        # v5.5.20: Magic Mask solo existe en Studio: en Free (o el MP4) esa opción no se enseña
+        studio = edicion_pro.magic_mask_disponible()    # v5.5.20: Magic Mask solo existe en Studio: en Free (o el MP4) esa opción no se enseña
         for clave, nombre in (('auto', 'Persona: recorte con IA local (recomendado)'), ('magic', 'Persona: Magic Mask de Resolve Studio (más pesado)'),
                               ('no', 'Persona: sin recortar')):
             if clave == 'magic' and not studio:

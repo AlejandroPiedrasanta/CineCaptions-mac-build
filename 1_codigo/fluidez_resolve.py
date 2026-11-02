@@ -36,7 +36,12 @@ espera a la caché. Al final de GO solo marca (preparar, ~1 s) y termina; `esper
 Resolve llene la caché en reposo y ENTONCES pulsa «Reproducir». Medido con un video de 24 s del Tema 1: Resolve cachea ~25–35 cuadros/s
 (carpetas SourceOne = la salida de cada clip y Sequence = el compuesto); reproducir al instante iba a tirones porque la caché aún no existía.
 Arnés de la prueba real: ver DOCUMENTACION/temas/resolve.md (sección «fluidez»).
+
+v5.58 (el usuario: «hacer más rápido el render cache… usar el 100 % de la PC»): medido en Studio 21.1.2 (i5-12400 de 12 hilos, RTX 5070 Ti,
+NVMe): mientras llena la caché Resolve usa ~3,8 hilos (31 % de la CPU), la GPU ~8 % y el disco ~8 MB/s; el límite es Resolve (un cuadro del
+timeline tras otro), no el equipo ni el disco. La espera en un hilo ya no se corta a los 240 s mientras los clips avancen (`mientras_avance`).
 """
+import math
 import os
 import re
 import time
@@ -47,8 +52,10 @@ from i18n import tr
 VALORES_ON = ('On', 'enabled', 'Enabled', 'on')     # (tras la constante resolve.CACHE_ENABLED: versiones viejas) el primero que acepte y lea On
 DESPUES_S_GO = '2'                                 # proyecto de GO: la caché en segundo plano empieza a los 2 s de reposo (Resolve trae 5)
 FPS_CACHE = 16.0                                   # cuadros/s de la SALIDA de clips en Studio 21.1.2 (medido 19–24 con el compuesto intercalado:
-                                                   # 26–34 en total; Tema 1, 1080×1920, ProRes 422 HQ), con margen
+                                                   # 26–34 en total; Tema 1, 1080×1920, ProRes 422 HQ), con margen. v5.58: Tema 1 21–22,
+                                                   # Tema 2 37, Tema 3 53 (video de 24 s, i5-12400)
 TOPE_MIN_S, TOPE_MAX_S = 15.0, 240.0               # (ya no frena GO: se espera en un hilo, después de «Listo»)
+TOPE_FONDO_S = 1200.0                              # v5.58: la espera en un hilo sigue pasado el tope MIENTRAS los clips avancen (máx. 20 min)
 QUIETO_S = 8.0                                     # sin cuadros nuevos en ese tiempo (tras empezar): Resolve terminó o se paró
 ARRANQUE_EXTRA_S = 12.0                            # margen sobre perfAutoRenderCacheAfterTime para el primer cuadro
 SALIDA_CLIPS, COMPUESTO = 'SourceOne', 'Sequence'  # carpeta que CONTIENE los .dvcc: la salida de un clip (CacheClip/<uid>/<timeline>/<clip>/<…>/
@@ -336,10 +343,47 @@ def tope_espera(cuadros):
     return min(TOPE_MAX_S, max(TOPE_MIN_S, 10.0 + float(cuadros) / FPS_CACHE))
 
 
-def esperar_cache(info, al_estado=None, desde=None, tope_s=None, arranque_s=None, quieto_s=None, paso_s=1.0, carpeta=None, cancelar=None):
+def falta_cache(clips, objetivo, desde_primero_s):
+    """v5.58 (el usuario: «el tiempo exacto sin salto de segundo»): segundos hasta que la caché esté lista y GO reproduzca, con el ritmo REAL
+    de Resolve desde su primer cuadro (medido: muy estable, ~21 cuadros/s el Tema 1). None hasta que haya ritmo (10 s y 100 cuadros)."""
+    if desde_primero_s < 10.0 or clips < 100:
+        return None
+    ritmo = clips / desde_primero_s
+    return max(0.0, objetivo * 0.99 - clips) / max(0.5, ritmo) + 2.0     # (+ comprobar y pulsar «Reproducir»)
+
+
+def cuenta_atras(cuenta, objetivo, ahora, acelera=0.5):
+    """v5.58: la cuenta atrás que se ENSEÑA (como un_clic_ui.EstimadorGo.eta_segundos): baja con el reloj y se acerca a `objetivo` sin
+    saltos (si va rápido, hasta `acelera` s más por segundo; si va lento, se frena sin subir). `cuenta` = [segundos, cuándo] (se actualiza)."""
+    if objetivo is None:
+        return None
+    visto, t = cuenta
+    if visto is None:
+        cuenta[:] = [max(1.0, objetivo), ahora]
+        return cuenta[0]
+    dt = max(0.0, ahora - t)
+    v = visto - dt
+    dif = objetivo - v
+    v += max(dif, -min(acelera * dt, max(0.0, 1.0 - dt))) if dif < 0 else min(dif, dt)     # (como mucho 1 s por vez con el reloj)
+    cuenta[:] = [max(1.0, v), ahora]
+    return cuenta[0]
+
+
+def texto_tiempo(segundos):
+    """«45 s» / «2 min 05 s», al segundo."""
+    r = int(math.ceil(max(0.0, float(segundos)) - 1e-6))
+    return tr('{s} s', s=r) if r < 60 else tr('{m} min {s} s', m=r // 60, s=f'{r % 60:02d}')
+
+
+def esperar_cache(info, al_estado=None, desde=None, tope_s=None, arranque_s=None, quieto_s=None, paso_s=1.0, carpeta=None, cancelar=None,
+                  mientras_avance=False, tope_fondo_s=None):
     """Espera a que Resolve llene la caché de nuestros clips. Devuelve {'estado': lista|quieta|tiempo|no_empezo|nada|sin_carpeta|cancelada,
     'cuadros' (salida de los clips), 'total', 'objetivo', 'segundos', 'carpeta'}. Solo mira el disco: no habla con Resolve (la caché en segundo
-    plano necesita a Resolve en reposo). `cancelar()` True = deja de esperar (otro GO empezó)."""
+    plano necesita a Resolve en reposo). `cancelar()` True = deja de esperar (otro GO empezó).
+    v5.58 `mientras_avance` (la espera en un hilo, tras «Listo»): pasado el tope estimado se sigue esperando mientras la SALIDA de los clips
+    avance (el compuesto no cuenta: puede seguir creciendo), hasta `tope_fondo_s` (TOPE_FONDO_S). Medido en el GO real de un usuario (Tema 1 con
+    la PRO, 137 clips, 5622 cuadros, ~19 cuadros/s): el tope de 240 s cortaba en el 86 % y la reproducción iba a tirones al final; Resolve llegó
+    al 98 % a los ~290 s."""
     objetivo = int((info or {}).get('cuadros') or 0) if isinstance(info, dict) else 0
     if objetivo <= 0:
         return {'estado': 'nada', 'cuadros': 0, 'objetivo': 0, 'segundos': 0.0}
@@ -354,21 +398,31 @@ def esperar_cache(info, al_estado=None, desde=None, tope_s=None, arranque_s=None
     tope = tope_s if tope_s is not None else tope_espera(objetivo)
     arranque = arranque_s if arranque_s is not None else despues + ARRANQUE_EXTRA_S
     quieto = quieto_s if quieto_s is not None else QUIETO_S
+    tope_fondo = tope_fondo_s if tope_fondo_s is not None else TOPE_FONDO_S
     t0 = time.monotonic()
     ultimo_cambio, previos, avisado = t0, -1, -10.0
+    ultimo_clip, clips_previos = t0, -1
     estado, hechos, clips = 'tiempo', 0, 0
+    t_primero, cuenta = None, [None, None]                  # v5.58: cuándo llegó el primer cuadro de clip y la cuenta atrás (segundos, cuándo)
+    t_conteo = None                                         # v5.58: el disco se mira cada `paso_s`; el aviso con la cuenta, cada medio segundo
     while True:
         if cancelar is not None and cancelar():
             estado = 'cancelada'
             break
         ahora = time.monotonic()
-        hechos, por = contar_cuadros(carpeta, desde, por_carpeta=True)
-        if SALIDA_CLIPS in por or COMPUESTO in por:
-            clips = por.get(SALIDA_CLIPS, 0)                # (el compuesto nunca cuenta como salida de clips)
-        else:
-            clips = hechos                                  # (otra versión, con otras carpetas: el total)
-        if hechos != previos:
-            previos, ultimo_cambio = hechos, ahora
+        if t_conteo is None or ahora - t_conteo >= paso_s - 1e-3:
+            t_conteo = ahora
+            hechos, por = contar_cuadros(carpeta, desde, por_carpeta=True)
+            if SALIDA_CLIPS in por or COMPUESTO in por:
+                clips = por.get(SALIDA_CLIPS, 0)            # (el compuesto nunca cuenta como salida de clips)
+            else:
+                clips = hechos                              # (otra versión, con otras carpetas: el total)
+            if hechos != previos:
+                previos, ultimo_cambio = hechos, ahora
+            if clips != clips_previos:
+                clips_previos, ultimo_clip = clips, ahora
+            if clips > 0 and t_primero is None:
+                t_primero = ahora
         # v5.56: lista = la salida de NUESTROS clips en caché (el objetivo es la suma de sus duraciones); antes se comparaba el total (salida +
         # compuesto) con el objetivo y se daba por lista con un 30 % de los clips sin cachear. El compuesto no se espera: crece sin parar hasta
         # el tope y con los clips en caché Resolve ya reproduce fluido
@@ -381,16 +435,22 @@ def esperar_cache(info, al_estado=None, desde=None, tope_s=None, arranque_s=None
         if hechos > 0 and ahora - ultimo_cambio > quieto:
             estado = 'quieta'
             break
-        if ahora - t0 > tope:
-            estado = 'tiempo'
+        if ahora - t0 > tope and not (mientras_avance and ahora - ultimo_clip <= quieto and ahora - t0 <= tope_fondo):
+            estado = 'quieta' if mientras_avance and ahora - ultimo_clip > quieto else 'tiempo'     # (los clips ya no avanzan: Resolve terminó)
             break
-        if al_estado and ahora - avisado >= 2.0:
+        if al_estado and ahora - avisado >= 0.5 - 1e-3:
             avisado = ahora
             try:
-                al_estado(tr('Preparando la reproducción fluida: Resolve guarda los captions en caché ({p} %)…', p=min(99, int(100 * clips / objetivo))))
+                p = min(99, int(100 * clips / objetivo))
+                falta = cuenta_atras(cuenta, falta_cache(clips, objetivo, t_conteo - t_primero) if t_primero else None, ahora)
+                if falta is None:
+                    al_estado(tr('Preparando la reproducción fluida: Resolve guarda los captions en caché ({p} %)…', p=p))
+                else:
+                    al_estado(tr('Preparando la reproducción fluida: Resolve guarda los captions en caché ({p} %, falta {t})…', p=p,
+                                 t=texto_tiempo(falta)))
             except Exception:
                 pass
-        time.sleep(paso_s)
+        time.sleep(min(paso_s, 0.5) if al_estado else paso_s)
     return {'estado': estado, 'cuadros': clips, 'total': hechos, 'objetivo': objetivo, 'segundos': round(time.monotonic() - t0, 1),
             'carpeta': str(carpeta)}
 
@@ -461,7 +521,8 @@ def esperar_y_reproducir(info, reproducir, al_estado=None, sigue=None, desde=Non
     Devuelve el informe con 'espera' y 'reproducido'. Nunca lanza; lo deja en el Registro."""
     info = dict(info or {})
     try:
-        info['espera'] = esperar_cache(info, al_estado=al_estado, desde=desde, cancelar=(lambda: not sigue()) if sigue else None)
+        info['espera'] = esperar_cache(info, al_estado=al_estado, desde=desde, cancelar=(lambda: not sigue()) if sigue else None,
+                                       mientras_avance=True)
     except Exception as e:
         info['espera'] = {'estado': f'error {type(e).__name__}'}
     info['reproducido'] = False

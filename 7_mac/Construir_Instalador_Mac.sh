@@ -66,15 +66,21 @@ if [ ! -x "$VPY" ]; then
     "$PY" -m venv "$VENV"
 fi
 "$VPY" -c "import sys; assert '%d.%d' % sys.version_info[:2] == '$PYVER', sys.version" || falla "El venv no es Python $PYVER: borra 6_compilacion_mac y repite."
-REQ="$RAIZ/3_compilar/requirements.txt"
-if [ "$ARQ" = x86_64 ]; then
-    # onnxruntime no publica version Intel de Mac para Python 3.14: la ultima con Intel es 1.23.2 (Python <= 3.13)
-    REQ="$OBRA/requirements_intel.txt"
-    sed 's/^onnxruntime==.*/onnxruntime==1.23.2/' "$RAIZ/3_compilar/requirements.txt" > "$REQ"
-fi
-"$VPY" -m pip install --progress-bar off -q -r "$REQ"
-# argostranslate SIN dependencias (declara stanza+spacy, que arrastran torch): ver requirements.txt
-"$VPY" -m pip install --progress-bar off -q --no-deps 'argostranslate==1.11.0'
+"$VPY" -m pip install --progress-bar off -q -r "$RAIZ/3_compilar/requirements.txt"
+# v5.58: el motor de voz (Whisper, Argos y ONNX) va DENTRO del programa en el Mac (motor_compat.EN_PROCESO; en Windows corre en un Python
+# 3.14 aparte): sus librerias fijadas, las de 2_recursos/motor_compat/requirements.txt, con onnxruntime en vez de onnxruntime-directml (solo
+# Windows). La 1.24.4 de Windows solo existe para Apple Silicon; para Intel la ultima es 1.23.2. Sin dependencias, como en Windows (onnxruntime
+# arrastraria sympy y argostranslate stanza+spacy+torch). Desde la 5.34 el Mac salia SIN voz: GO fallaba en «Transcribiendo».
+ORT=1.24.4
+if [ "$ARQ" = x86_64 ]; then ORT=1.23.2; fi
+REQM="$OBRA/requirements_motor_mac.txt"
+sed "s/^onnxruntime-directml==.*/onnxruntime==$ORT/" "$RECURSOS/motor_compat/requirements.txt" > "$REQM"
+grep -qx "onnxruntime==$ORT" "$REQM" || falla "requirements del motor: no encontre la linea de onnxruntime-directml para cambiarla"
+"$VPY" -m pip install --progress-bar off -q --no-deps --only-binary=:all: -r "$REQM"
+"$VPY" -m pip install --progress-bar off -q --no-deps --only-binary=:all: 'argostranslate==1.11.0'
+"$VPY" -c "import sys, types; s = types.ModuleType('stanza'); s.Pipeline = None; sys.modules['stanza'] = s
+import faster_whisper, ctranslate2, onnxruntime, tokenizers, huggingface_hub, httpx2, av, sentencepiece, minisbd, sacremoses, argostranslate.translate
+print('    motor de voz:', 'ctranslate2', ctranslate2.__version__, '· onnxruntime', onnxruntime.__version__)" || falla "Faltan las librerias del motor de voz (Whisper, Argos y ONNX)"
 
 # 2) fuentes preparadas ---------------------------------------------------------------------
 paso "Codigo fuente"
@@ -177,7 +183,7 @@ cat > "$OBRA/distribucion.xml" <<XML
     <welcome file="welcome.html"/>
     <conclusion file="conclusion.html"/>
     <options customize="never" require-scripts="false" hostArchitectures="$ARQ"/>
-    <allowed-os-versions><os-version min="12.0"/></allowed-os-versions>
+    <allowed-os-versions><os-version min="14.0"/></allowed-os-versions>
     <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
     <choices-outline><line choice="default"><line choice="com.cinemaproductions.cinecaptions"/></line></choices-outline>
     <choice id="default"/>

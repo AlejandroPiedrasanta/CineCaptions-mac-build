@@ -422,6 +422,135 @@ def _mate_activo(datos):
     return {'alto': int(alfa.shape[0]), 'ancho': int(alfa.shape[1]), 'gpu': _MATE['gpu'] or ''}
 
 
+def _detector(activo, datos):
+    """_caras_activo / _cuerpos_activo contando como trabajo en curso (el servicio no se cierra por inactividad a mitad)."""
+    global _ACTIVOS, _ULTIMO_USO
+    with _LOCK:
+        _ACTIVOS += 1
+        _ULTIMO_USO = time.monotonic()
+    try:
+        return activo(datos)
+    finally:
+        with _LOCK:
+            _ACTIVOS = max(0, _ACTIVOS - 1)
+            _ULTIMO_USO = time.monotonic()
+
+
+def _sesion_cpu(tipo, modelo):
+    """La sesión de ONNX Runtime en la CPU de un detector pequeño (caras, personas), cargada una vez."""
+    global _ULTIMO_USO
+    import onnxruntime as ort
+    clave = (tipo, str(Path(modelo).resolve()))
+    with _LOCK:
+        sesion = _MODELOS.get(clave)
+        if sesion is None:
+            opciones = ort.SessionOptions()
+            opciones.log_severity_level = 3
+            sesion = _MODELOS[clave] = ort.InferenceSession(clave[1], sess_options=opciones, providers=['CPUExecutionProvider'])
+        _ULTIMO_USO = time.monotonic()
+    return sesion
+
+
+def _iou(a, b):
+    x0, y0, x1, y1 = max(a[0], b[0]), max(a[1], b[1]), min(a[2], b[2]), min(a[3], b[3])
+    inter = max(0.0, x1 - x0) * max(0.0, y1 - y0)
+    union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
+    return inter / union if union > 0 else 0.0
+
+
+def _caras_activo(datos):
+    """v5.58 (el usuario: «que solo detecte humanos»): las CARAS de una imagen con YuNet (OpenCV Zoo, licencia MIT) sin OpenCV: la entrada en
+    BGR 0-255 sin normalizar, con el alto y el ancho múltiplos de 32 (relleno abajo y a la derecha), y la decodificación de FaceDetectorYN
+    (por paso 8/16/32: puntuación = √(cls·obj), centro = (celda + desplazamiento)·paso, lado = e^x·paso) con NMS 0,3. En la CPU: es pequeño
+    (10-20 ms un fotograma a 640 px) y no se pelea con MODNet por la tarjeta. → {'caras': [[x0, y0, x1, y1, puntuación, y los 5 puntos (ojo
+    derecho, ojo izquierdo, nariz, boca derecha, boca izquierda) en x, y]]}, en fracciones de la imagen."""
+    import numpy as np
+    modelo = datos.get('modelo')
+    if not modelo or not Path(modelo).is_file():
+        raise RuntimeError('Falta el detector de caras (YuNet).')
+    rgb = np.load(Path(datos['entrada']), allow_pickle=False)
+    h, w = rgb.shape[:2]
+    umbral = float(datos.get('umbral') or 0.6)
+    pw, ph = (w + 31) // 32 * 32, (h + 31) // 32 * 32
+    lienzo = np.zeros((ph, pw, 3), np.float32)
+    lienzo[:h, :w] = rgb[..., ::-1]
+    sesion = _sesion_cpu('caras', modelo)
+    salidas = dict(zip([o.name for o in sesion.get_outputs()],
+                       sesion.run(None, {sesion.get_inputs()[0].name: lienzo.transpose(2, 0, 1)[None]})))
+    caras = []
+    for paso in (8, 16, 32):
+        cols = pw // paso
+        cls, obj = salidas[f'cls_{paso}'].reshape(-1), salidas[f'obj_{paso}'].reshape(-1)
+        caja, puntos = salidas[f'bbox_{paso}'].reshape(-1, 4), salidas[f'kps_{paso}'].reshape(-1, 10)
+        puntuacion = np.sqrt(np.clip(cls, 0, 1) * np.clip(obj, 0, 1))
+        for i in np.nonzero(puntuacion >= umbral)[0]:
+            r, c = divmod(int(i), cols)
+            cx, cy = (c + caja[i, 0]) * paso, (r + caja[i, 1]) * paso
+            bw, bh = np.exp(caja[i, 2]) * paso, np.exp(caja[i, 3]) * paso
+            f = [(cx - bw / 2) / w, (cy - bh / 2) / h, (cx + bw / 2) / w, (cy + bh / 2) / h, float(puntuacion[i])]
+            for j in range(5):
+                f += [(puntos[i, 2 * j] + c) * paso / w, (puntos[i, 2 * j + 1] + r) * paso / h]
+            caras.append([round(float(x), 5) for x in f])
+    caras.sort(key=lambda f: -f[4])
+    quedan = []
+    for f in caras:
+        if all(_iou(f, g) < 0.3 for g in quedan):
+            quedan.append(f)
+    return {'caras': quedan}
+
+
+def _cuerpos_activo(datos):
+    """v5.58 (que cuenten también las personas de ESPALDAS, que no tienen cara): las PERSONAS de una imagen con NanoDet-Plus (OpenCV Zoo,
+    licencia Apache 2.0; solo la clase 0 de COCO) sin OpenCV: la imagen (lado mayor ≤ 416) centrada en un lienzo negro de 416 × 416, en BGR
+    normalizada como se entrenó (media 103,53/116,28/123,675; desviación 57,375/57,12/58,395), y la decodificación de NanoDet (por paso
+    8/16/32: las clases ya salen con sigmoide; cada lado de la caja, la esperanza de sus 8 casillas con softmax × paso desde el centro de la
+    celda) con NMS 0,6. En la CPU (15-25 ms). → {'cuerpos': [[x0, y0, x1, y1, puntuación]]}, en fracciones de la imagen."""
+    import numpy as np
+    modelo = datos.get('modelo')
+    if not modelo or not Path(modelo).is_file():
+        raise RuntimeError('Falta el detector de personas (NanoDet).')
+    rgb = np.load(Path(datos['entrada']), allow_pickle=False)
+    lado = 416
+    h, w = rgb.shape[:2]
+    if max(h, w) > lado:
+        from PIL import Image
+        k = lado / float(max(h, w))
+        rgb = np.asarray(Image.fromarray(rgb).resize((max(1, round(w * k)), max(1, round(h * k))), Image.BILINEAR))
+        h, w = rgb.shape[:2]
+    umbral = float(datos.get('umbral') or 0.5)
+    x0, y0 = (lado - w) // 2, (lado - h) // 2
+    lienzo = np.zeros((lado, lado, 3), np.float32)
+    lienzo[y0:y0 + h, x0:x0 + w] = rgb[..., ::-1]
+    lienzo = (lienzo - np.array([103.53, 116.28, 123.675], np.float32)) / np.array([57.375, 57.12, 58.395], np.float32)
+    sesion = _sesion_cpu('cuerpos', modelo)
+    por_n = {}
+    for o in sesion.run(None, {sesion.get_inputs()[0].name: lienzo.transpose(2, 0, 1)[None]}):
+        por_n.setdefault(int(o.shape[1]), {})[int(o.shape[2])] = o[0]          # (clases [1, n, 80] y cajas [1, n, 32] de cada paso, por n)
+    cuerpos = []
+    for paso in (8, 16, 32):
+        n = lado // paso
+        par = por_n.get(n * n) or {}
+        if 80 not in par or 32 not in par:
+            continue
+        p = par[80][:, 0]
+        k = np.nonzero(p >= umbral)[0]
+        if not len(k):
+            continue
+        r = par[32][k].reshape(-1, 8)
+        e = np.exp(r - r.max(axis=1, keepdims=True))
+        d = ((e / e.sum(axis=1, keepdims=True)) @ np.arange(8, dtype=np.float32)).reshape(-1, 4) * paso
+        cx, cy = (k % n) * paso + 0.5 * (paso - 1), (k // n) * paso + 0.5 * (paso - 1)
+        for i in range(len(k)):
+            caja = [(cx[i] - d[i, 0] - x0) / w, (cy[i] - d[i, 1] - y0) / h, (cx[i] + d[i, 2] - x0) / w, (cy[i] + d[i, 3] - y0) / h]
+            cuerpos.append([round(float(min(1.0, max(0.0, v))), 5) for v in caja] + [round(float(p[k[i]]), 4)])
+    cuerpos.sort(key=lambda f: -f[4])
+    quedan = []
+    for f in cuerpos:
+        if all(_iou(f, g) < 0.6 for g in quedan):
+            quedan.append(f)
+    return {'cuerpos': quedan}
+
+
 def _versiones():
     paquetes = ('anyio', 'av', 'certifi', 'click', 'cloudpickle', 'colorama',
                 'ctranslate2', 'faster-whisper', 'filelock', 'flatbuffers', 'fsspec',
@@ -491,6 +620,10 @@ def atender(op, datos):
         return {'salida': datos['salida']}
     if op == 'mate':
         return _mate(datos)
+    if op == 'caras':
+        return _detector(_caras_activo, datos)
+    if op == 'cuerpos':
+        return _detector(_cuerpos_activo, datos)
     if op == 'descargar_modnet':
         from huggingface_hub import hf_hub_download
         destino = Path(datos['destino'])
