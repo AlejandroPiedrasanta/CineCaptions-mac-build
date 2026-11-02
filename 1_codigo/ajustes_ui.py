@@ -495,6 +495,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.59', [
+        'Resolve Studio: GO ya no termina en «Falta un clic en Resolve» cuando Studio tarda en contestar justo después de armar el timeline: sigue solo y coloca los captions sin esperar a esa comprobación.',
+    ]),
     ('5.58', [
         '«Captions detrás de ti» con el borde más estable: donde la imagen está quieta, el contorno de la persona tiembla menos de un fotograma a otro (hasta un 30 % menos) y, cuando se mueve, ya no deja estela.',
         '«Captions detrás de ti» ya no pide intensidad: al encenderlo, el programa decide solo qué captions van detrás y cuánto los tapa la cabeza.',

@@ -521,16 +521,63 @@ def estado(pasivo=False, refrescar=False):
     try:
         st = c.herramienta('get_resolve_status', timeout=10)
     except Exception as e:
+        if isinstance(e, TimeoutError) and _sigue_ocupado():            # v5.59: ResolveMCP atiende de una en una: con un script largo delante, esperar no es «no hay Resolve»
+            return dict(_ESTADO['cache'], ocupado=True)
         return {'conectado': False, 'mcp': True, 'motivo': str(e)}
     if not st.get('running'):
         d = {'conectado': False, 'mcp': True, 'motivo': 'Resolve está cerrado', 'version': st.get('version')}
     else:
         ok, info, err = script(_INFO, timeout=10)
-        d = dict(info or {}) if ok else {'motivo': err}
-        d.update(conectado=ok, mcp=True)
+        if not ok and _ocupado(err) and _sigue_ocupado():
+            # v5.59 (Registro del usuario, Studio 21.1.2: «Script timed out after 10s» justo tras armar el timeline y GO acabó en «Falta un clic en
+            # Resolve» —el camino de Free— aunque colocó 27 s después): Resolve abierto que tarda en contestar está OCUPADO, no desconectado
+            d = dict(_ESTADO['cache'], ocupado=True)
+        else:
+            d = dict(info or {}) if ok else {'motivo': err}
+            d.update(conectado=ok, mcp=True)
+            if ok:
+                _ESTADO['ok_t'] = time.time()
     _ESTADO['cache'] = d
     _ESTADO['cache_t'] = time.time()
     return dict(d)
+
+
+OCUPADO_S = 120.0
+
+
+def _ocupado(err):
+    """El script no acabó a tiempo (Resolve trabajando o con otra llamada delante), no un «no hay Resolve»."""
+    e = str(err or '').lower()
+    return 'timed out' in e or 'está ocupado' in e or 'no contestó a' in e
+
+
+def _sigue_ocupado():
+    """¿Se puede tomar una espera como «ocupado»? Solo si Resolve contestó hace poco (OCUPADO_S) y no está colgado, «fantasma» ni cerrado (eso lo
+    repara GO). Colgado = el criterio de resolve_bridge.estado_resolve (ventana «No responde» Y registro mudo 60 s: un Resolve ocupado importando
+    calla su registro hasta 34 s, MEDIDO); en Mac la ventana no avisa y queda el registro mudo."""
+    if not (_ESTADO['cache'] or {}).get('conectado') or time.time() - _ESTADO.get('ok_t', 0) >= OCUPADO_S:
+        return False
+    try:
+        import resolve_bridge
+        if resolve_bridge.estado_resolve() != 'ok':
+            return False
+        return sys.platform.startswith('win') or resolve_bridge._registro_resolve_callado_s() < resolve_bridge.UMBRAL_COLGADO_S
+    except Exception:
+        return True
+
+
+def _anotar_estado(**campos):
+    """v5.59: tras crear el proyecto o el timeline se anota lo que el propio script devolvió, sin preguntarle otra vez a Resolve (esa pregunta
+    llegaba con Resolve aún ocupado importando el video: 10 s de espera y la caché decía «desconectado»)."""
+    d = {k: v for k, v in (_ESTADO['cache'] or {}).items() if k not in ('motivo', 'ocupado', 'comprobando')}
+    if 'timeline' in campos:
+        for k in ('fps', 'ancho', 'alto', 'inicio', 'fin', 'timecode', 'pistas_video', 'pistas_audio', 'pistas_subtitulos', 'aviso'):
+            d.pop(k, None)
+    d.update({k: v for k, v in campos.items() if v is not None or k == 'timeline'}, conectado=True, mcp=True)
+    _ESTADO['cache'] = d
+    _ESTADO['cache_t'] = time.time()
+    if d.get('producto'):                       # (sin saber qué Resolve es, «ocupado» no se fía de esta caché: Studio saldría como Free)
+        _ESTADO['ok_t'] = _ESTADO['cache_t']
 
 
 def conectado_recientemente():
@@ -1208,6 +1255,10 @@ if clip:
                     res['pista_broll'] = bool(tl.SetTrackLock('video', n, True))
             except Exception as e:
                 res['pista_broll_error'] = repr(e)
+try:                                    # v5.59: quién es Resolve, para la caché (_anotar_estado) sin otro script de estado
+    res['producto'], res['version'], res['pagina'] = resolve.GetProductName(), resolve.GetVersionString(), resolve.GetCurrentPage()
+except Exception:
+    pass
 result = res
 '''
 
@@ -1269,6 +1320,10 @@ q = pm.GetCurrentProject()
 res['proyecto'] = q.GetName() if q else None
 try:
     resolve.OpenPage('edit')
+except Exception:
+    pass
+try:                                    # v5.59: quién es Resolve, para la caché (_anotar_estado) sin otro script de estado
+    res['producto'], res['version'], res['pagina'] = resolve.GetProductName(), resolve.GetVersionString(), resolve.GetCurrentPage()
 except Exception:
     pass
 result = res
@@ -1334,9 +1389,12 @@ def preparar_proyecto(nombre='CineCaptions', abrir=True, al_estado=None, espera_
     if not (ok and isinstance(r, dict)):
         salida['motivo'] = f'MCP: {err}'
         return salida
-    _refrescar_estado()
     salida.update(proyecto=r.get('proyecto'), accion=r.get('accion'), previo=r.get('previo'), cerrado=r.get('cerrado'), guardado=r.get('guardado'))
     salida['ok'] = bool(r.get('proyecto')) and r.get('accion') == 'creado'
+    if salida['ok']:
+        _anotar_estado(timeline=None, **{k: r.get(k) for k in ('proyecto', 'producto', 'version', 'pagina')})
+    else:
+        _refrescar_estado()
     if not salida['ok']:
         salida['motivo'] = tr('Resolve no creó el proyecto «{p}» ({a}).', p=nombre, a=r.get('accion') or '—')
     else:
@@ -1429,7 +1487,10 @@ def crear_timeline_con_video(ruta, nombre=None, ancho=1080, alto=1920, fps=30.0,
     nombre = nombre or ('CineCaptions · ' + Path(str(ruta)).stem)
     codigo = _CREAR_TIMELINE % {'ruta': str(ruta), 'nombre': str(nombre)[:60], 'ancho': int(ancho), 'alto': int(alto), 'fps': '%g' % float(fps), 'pista_broll': bool(pista_broll)}      # «30», «29.97»: Resolve no acepta «30.0»
     ok, r, err = script(codigo, timeout=60)
-    _refrescar_estado()
+    if ok and isinstance(r, dict) and r.get('timeline'):
+        _anotar_estado(timeline=r['timeline'], **{k: r.get(k) for k in ('proyecto', 'producto', 'version', 'pagina', 'ancho', 'alto', 'fps', 'inicio', 'fin')})
+    else:
+        _refrescar_estado()
     if not ok or not isinstance(r, dict):
         return {'error': err or 'Resolve no contestó'}
     if not r.get('clip'):

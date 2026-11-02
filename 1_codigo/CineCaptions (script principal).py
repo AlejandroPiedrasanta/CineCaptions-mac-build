@@ -9133,7 +9133,11 @@ class SubtitleApp(QWidget):
             return
         try:
             import resolve_bridge
-            if resolve_bridge.modo_actual(pasivo=True) == 'manual':
+            det = getattr(self, '_go_resolve', None) or {}
+            # v5.59: con Studio (o un camino MCP/API) nunca «Falta un clic»: lo decide el hilo que coloca, que reconecta el MCP si no contesta.
+            # Esta mirada pasiva lo anunciaba con Studio ocupado tras armar el timeline (y GO colocaba igual 27 s después, marcado como fallo)
+            if (det.get('edicion') != 'Studio' and det.get('camino') not in ('mcp', 'api')
+                    and resolve_bridge.modo_actual(pasivo=True) == 'manual'):
                 self._go_fin(False, tr('Generado. Falta un clic en Resolve: Scripts > CineCaptions_Subtitulos.'))
         except Exception:
             pass

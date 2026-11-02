@@ -1724,7 +1724,8 @@ def _reconectar_mcp(espera_s=45.0):
         resolve_mcp.cerrar()
         t0 = time.time()
         while time.time() - t0 < espera_s:
-            if resolve_mcp.estado(refrescar=True).get('conectado'):
+            e = resolve_mcp.estado(refrescar=True)
+            if e.get('conectado') and not e.get('ocupado'):          # v5.59: «ocupado» (no contestó a tiempo) no es «volvió a contestar»
                 try:
                     import registro
                     registro.info(tr('Resolve no contestaba: lo volví a conectar y sigo.'), 'GO · Resolve')

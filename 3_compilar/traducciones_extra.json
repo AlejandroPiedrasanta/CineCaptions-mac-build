@@ -9770,5 +9770,12 @@
   "fr": "L'installateur Mac demande macOS 14 (Sonoma) ou ultérieur, ce dont l'application a vraiment besoin : sur les versions antérieures il s'installait puis ne s'ouvrait pas.",
   "de": "Das Mac-Installationsprogramm verlangt macOS 14 (Sonoma) oder neuer, was das Programm wirklich braucht: Auf älteren Versionen ließ es sich installieren, startete dann aber nicht.",
   "it": "Il programma di installazione per Mac richiede macOS 14 (Sonoma) o successivo, ciò di cui il programma ha davvero bisogno: nelle versioni precedenti si installava e poi non si apriva."
+ },
+ "Resolve Studio: GO ya no termina en «Falta un clic en Resolve» cuando Studio tarda en contestar justo después de armar el timeline: sigue solo y coloca los captions sin esperar a esa comprobación.": {
+  "en": "Resolve Studio: GO no longer ends with «One click left in Resolve» when Studio is slow to answer right after building the timeline: it carries on by itself and places the captions without waiting for that check.",
+  "pt": "Resolve Studio: o GO já não termina em «Falta um clique no Resolve» quando o Studio demora a responder logo depois de montar a timeline: continua sozinho e coloca as legendas sem esperar por essa verificação.",
+  "fr": "Resolve Studio : GO ne se termine plus par « Il manque un clic dans Resolve » quand Studio tarde à répondre juste après avoir monté la timeline : il continue tout seul et place les sous-titres sans attendre cette vérification.",
+  "de": "Resolve Studio: GO endet nicht mehr mit «Ein Klick in Resolve fehlt», wenn Studio direkt nach dem Aufbau der Timeline langsam antwortet: Es macht von selbst weiter und setzt die Untertitel, ohne auf diese Prüfung zu warten.",
+  "it": "Resolve Studio: GO non termina più con «Manca un clic in Resolve» quando Studio tarda a rispondere subito dopo aver montato la timeline: prosegue da solo e posiziona i sottotitoli senza aspettare quel controllo."
  }
 }
