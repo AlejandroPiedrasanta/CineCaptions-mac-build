@@ -4178,6 +4178,9 @@
     "A tu tarjeta NVIDIA le faltan las librerías de CUDA (cuBLAS y cuDNN) con las que Whisper transcribe en la GPU. CineCaptions las descarga solo (≈1,3 GB, una vez); mientras, la voz se transcribe en la CPU, más despacio. No hace falta hacer nada.": "À tua placa NVIDIA faltam as bibliotecas CUDA (cuBLAS e cuDNN) com que o Whisper transcreve na GPU. O CineCaptions descarrega-as sozinho (≈1,3 GB, uma vez); entretanto, a voz é transcrita na CPU, mais devagar. Não precisas de fazer nada.",
     "Si la descarga no pudo terminar, abre CineCaptions con internet: lo reintenta solo y sigue donde quedó.": "Se a descarga não conseguiu terminar, abre o CineCaptions com internet: volta a tentar sozinho e continua onde parou.",
     "También puedes pulsar «Reparar GPU» en Ajustes › General.": "Também podes carregar em «Reparar GPU» em Definições › Geral.",
-    "Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.": "Se o antivírus bloquear a descarga, permite o CineCaptions e volta a abri-lo."
+    "Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.": "Se o antivírus bloquear a descarga, permite o CineCaptions e volta a abri-lo.",
+    "Falta una librería de CineCaptions": "Falta uma biblioteca do CineCaptions",
+    "Una parte del programa (casi siempre un motor de IA) no encontró una de sus librerías: una instalación o una actualización quedó a medias, o el antivirus la quitó. No es un problema de tu video.": "Uma parte do programa (quase sempre um motor de IA) não encontrou uma das suas bibliotecas: uma instalação ou uma atualização ficou a meio, ou o antivírus removeu-a. Não é um problema do teu vídeo.",
+    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Caso contrário, reinstala o CineCaptions com o instalador mais recente (as tuas definições mantêm-se)."
   }
 }

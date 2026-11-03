@@ -159,10 +159,14 @@ class Motor:
         self.lote = _lote(self.dispositivo, vram)
         decir('ESTADO', f'Cargando Qwen3-ASR {self.modelo} en {"GPU" if self.dispositivo != "cpu" else "CPU"}')
         t0 = time.time()
-        self.proc = AutoProcessor.from_pretrained(REPO_ASR[self.modelo])
-        self.asr = AutoModelForMultimodalLM.from_pretrained(REPO_ASR[self.modelo], dtype=self.dtype, device_map=self.dispositivo).eval()
-        self.proc_al = AutoProcessor.from_pretrained(REPO_ALINEADOR)
-        self.alineador = AutoModelForTokenClassification.from_pretrained(REPO_ALINEADOR, dtype=self.dtype,
+        # v5.64: desde lo que ya está en el equipo (motor_texto.ruta_local), sin preguntar a Hugging Face: una versión nueva del modelo ya no
+        # se baja en mitad de GO ni, sin conexión, se espera el tiempo de espera de cada archivo
+        from motor_texto import ruta_local
+        asr, alineador = ruta_local(REPO_ASR[self.modelo]) or REPO_ASR[self.modelo], ruta_local(REPO_ALINEADOR) or REPO_ALINEADOR
+        self.proc = AutoProcessor.from_pretrained(asr)
+        self.asr = AutoModelForMultimodalLM.from_pretrained(asr, dtype=self.dtype, device_map=self.dispositivo).eval()
+        self.proc_al = AutoProcessor.from_pretrained(alineador)
+        self.alineador = AutoModelForTokenClassification.from_pretrained(alineador, dtype=self.dtype,
                                                                          device_map=self.dispositivo).eval()
         decir('ESTADO', f'Modelo listo en {time.time() - t0:.1f} s')
 

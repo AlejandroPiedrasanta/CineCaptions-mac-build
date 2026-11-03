@@ -179,6 +179,13 @@ def reparar(aviso=None, permitir_descarga=True):
         return False, 'Faltan las librerías de CUDA y no hay copia en el motor Qwen.'
     import descargas
     CARPETA_PROPIA.mkdir(parents=True, exist_ok=True)
+    try:                                   # v5.64: ~1,3 GB de ruedas + lo que se extrae: no empezar si no cabe (fallaba a medias)
+        import shutil
+        libre = shutil.disk_usage(CARPETA_PROPIA).free / 1024 ** 3
+        if libre < 3.5:
+            return False, f'No hay espacio: hacen falta unos 3,5 GB libres y quedan {libre:.1f} GB en el disco de tu carpeta de usuario.'
+    except OSError:
+        pass
     for paquete in PAQUETES_PYPI:
         decir(f'Buscando {paquete} en PyPI…')
         try:

@@ -194,6 +194,15 @@ _REGLAS = [
      ['Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
       'Si es el motor auxiliar (Whisper): reinstala CineCaptions con el último instalador, que pone al día sus librerías (se conservan tus ajustes).',
       'Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.'], 'parcial'),
+    # v5.64: una librería que falta en GO («el motor de IA (Qwen3) no arrancó: ModuleNotFoundError: No module named 'transformers'») caía en la
+    # de la voz de abajo y mandaba a revisar el audio; la regla de «Falta un componente» llegaba tarde
+    (r'ModuleNotFoundError|No module named',
+     'Falta una librería de CineCaptions',
+     'Una parte del programa (casi siempre un motor de IA) no encontró una de sus librerías: una instalación o una actualización quedó a medias, '
+     'o el antivirus la quitó. No es un problema de tu video.',
+     ['Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
+      'Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).',
+      'Añade la carpeta de CineCaptions a las excepciones de tu antivirus.'], 'bloquea'),
     # v5.64: las librerías de CUDA que faltan se bajan solas (vigilancia.preparar_gpu_voz); antes caía en «Falla al iniciar» con pasos de reinstalar
     (r'GPU para la voz',
      'La voz va por la CPU mientras se prepara la GPU',

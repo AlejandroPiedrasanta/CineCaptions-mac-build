@@ -120,14 +120,13 @@ def decir(tipo, texto=''):
     sys.stdout.flush()
 
 
-def ya_descargado(repo):
-    """v5.64: ¿ese repo ya está entero en la caché de Hugging Face (config + todos sus pesos)? Sin preguntar a internet. Con la caché sin enlaces
-    (HF_HUB_DISABLE_SYMLINKS) un archivo solo llega al snapshot cuando terminó de bajar."""
-    from huggingface_hub import snapshot_download
-    try:
-        ruta = snapshot_download(repo_id=repo, local_files_only=True)
-    except Exception:
-        return False
+# v5.64: lo que ocupa cada IA de texto al bajarla (GB), para no empezar una descarga que no cabe en el disco
+TAMANO_GB = {'gemma4': 16.1, 'qwen3.5': 9.4, '4B': 8.1, '1.7B': 4.1}
+
+
+def _completo(ruta):
+    """¿Ese snapshot tiene config.json y TODOS sus pesos? Con la caché sin enlaces (HF_HUB_DISABLE_SYMLINKS) un archivo solo llega al snapshot
+    cuando terminó de bajar."""
     if not os.path.isfile(os.path.join(ruta, 'config.json')):
         return False
     indice = os.path.join(ruta, 'model.safetensors.index.json')
@@ -139,6 +138,46 @@ def ya_descargado(repo):
             return False
         return bool(pesos) and all(os.path.isfile(os.path.join(ruta, p)) for p in pesos)
     return os.path.isfile(os.path.join(ruta, 'model.safetensors'))
+
+
+def ruta_local(repo):
+    """v5.64: la carpeta de un snapshot ENTERO de ese repo en la caché de Hugging Face (el de refs/main si lo está; si no, el más reciente que lo
+    esté), o None. Cargar desde ahí no pregunta a internet: si Hugging Face publica otra versión (Google lo hizo con Gemma 4 E4B el 2026-11-03),
+    GO no se pone a bajar 16 GB en mitad del trabajo, y sin conexión no espera el tiempo de espera de cada archivo."""
+    try:
+        from huggingface_hub import constants
+        base = os.path.join(constants.HF_HUB_CACHE, 'models--' + repo.replace('/', '--'))
+        snaps = os.path.join(base, 'snapshots')
+        if not os.path.isdir(snaps):
+            return None
+        try:
+            with open(os.path.join(base, 'refs', 'main'), encoding='utf-8') as f:
+                principal = f.read().strip()
+        except OSError:
+            principal = ''
+        candidatos = sorted((os.path.join(snaps, d) for d in os.listdir(snaps)), key=lambda r: (os.path.basename(r) != principal, -os.path.getmtime(r)))
+        return next((r for r in candidatos if os.path.isdir(r) and _completo(r)), None)
+    except Exception:
+        return None
+
+
+def ya_descargado(repo):
+    """v5.64: ¿ese repo ya está entero en la caché (alguna versión)? Sin preguntar a internet."""
+    return ruta_local(repo) is not None
+
+
+def cabe_en_disco(clave):
+    """v5.64: (cabe, GB libres) en el disco de la caché de Hugging Face para bajar esa IA (+ 2 GB de margen)."""
+    try:
+        import shutil
+        from huggingface_hub import constants
+        carpeta = constants.HF_HUB_CACHE
+        while carpeta and not os.path.isdir(carpeta):
+            carpeta = os.path.dirname(carpeta)
+        libre = shutil.disk_usage(carpeta or '.').free / 1024 ** 3
+    except Exception:
+        return True, None
+    return libre >= TAMANO_GB.get(clave, 10.0) + 2.0, round(libre, 1)
 
 
 def elegir(pedido):
@@ -325,12 +364,13 @@ def cargar(pedido):
     repo = REPOS[modelo_clave]
     decir('ESTADO', f'Cargando la IA de texto ({repo.split("/")[1]})')
     t0 = time.time()
-    tok = AutoTokenizer.from_pretrained(repo)
+    fuente = ruta_local(repo) or repo                      # (v5.64: lo que ya está en el equipo, sin preguntar a Hugging Face)
+    tok = AutoTokenizer.from_pretrained(fuente)
     tok.padding_side = 'left'
     if modelo_clave == 'gemma4' and str(dispositivo).startswith('cuda'):
-        modelo = _cargar_gemma(repo, dtype)
+        modelo = _cargar_gemma(fuente, dtype)
     else:
-        modelo = AutoModelForCausalLM.from_pretrained(repo, dtype=dtype, device_map=dispositivo)
+        modelo = AutoModelForCausalLM.from_pretrained(fuente, dtype=dtype, device_map=dispositivo)
     modelo.eval()
     decir('ESTADO', f'IA de texto lista en {time.time() - t0:.1f} s')
     return tok, modelo, repo, dispositivo
@@ -783,6 +823,10 @@ def main():
                     if ya_descargado(REPOS[c]):
                         decir('ESTADO', f'Ya está: {REPOS[c]}')
                         listas.append(c)
+                        continue
+                    cabe, libre = cabe_en_disco(c)
+                    if not cabe:                     # (v5.64: antes empezaba y fallaba a medias, dejando GB de archivos sin terminar)
+                        decir('ESTADO', f'No descargo {REPOS[c]}: necesita unos {TAMANO_GB.get(c, 10):.0f} GB y en el disco quedan {libre} GB libres')
                         continue
                     decir('ESTADO', f'Descargando {REPOS[c]}')
                     snapshot_download(repo_id=REPOS[c])

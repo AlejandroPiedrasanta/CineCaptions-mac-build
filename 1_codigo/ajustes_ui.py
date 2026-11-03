@@ -499,6 +499,7 @@ NOTAS_VERSION = [
         'De fábrica, la interfaz vuelve al azul noche con el verde como color de resaltado. ¿Prefieres el negro y blanco? Ajustes › Interfaz › «Fondo de la interfaz»: Negro.',
         'Tarjetas NVIDIA sin las librerías de CUDA: ya no sale «Falla al iniciar: GPU para la voz» en cada arranque; CineCaptions las descarga solo una vez (≈1,3 GB) y mientras la voz va por la CPU.',
         'El instalador ya no se queda minutos en «Comprobando la IA de texto»: si Gemma 4 o Qwen ya están en el equipo, no los vuelve a descargar aunque salga una versión nueva.',
+        'La voz y la IA de texto se cargan de lo que ya está en tu equipo: si Hugging Face publica otra versión de un modelo, GO ya no se pone a descargarla en mitad del trabajo, y sin internet arrancan igual de rápido. Las descargas grandes comprueban antes que haya espacio en el disco.',
         'Registro: «Copiar este error» y «Copiar todo» dan un informe ordenado (qué pasó, qué significa, qué hacer, detalle técnico, lo que pasó justo antes, tu equipo y los motores), sin tu nombre de usuario en las rutas y sin congelar la ventana.',
     ]),
     ('5.63', [
