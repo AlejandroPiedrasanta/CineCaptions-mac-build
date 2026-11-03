@@ -315,7 +315,7 @@ def lottie_de(eid, bajar=True):
     """('programa', None) si ese emoji animado viene en el programa (Remotion lo lee de su public/lottie), ('datos', dict) si está en la caché
     o se acaba de bajar (va en las props), o (None, None) si no tiene versión animada (o no hay red). En un HILO: puede bajar."""
     import json
-    n = str(eid or '').replace('emoji:', '').replace('rcs_emoji_', '').replace('.png', '')
+    n = str(eid or '').replace('emoji:', '').replace('rcs_emoji_', '').replace('cc_emoji_', '').replace('.png', '')
     try:
         import edicion_pro
         if (Path(edicion_pro.carpeta_recursos()) / 'lottie' / f'{n}.json').is_file():

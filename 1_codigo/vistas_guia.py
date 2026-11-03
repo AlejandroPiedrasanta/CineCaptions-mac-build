@@ -21,7 +21,7 @@ import ejemplos_estilo as E
 import resolve_mcp
 
 CARPETA = E.CARPETA_VISTAS
-MARCA_TEMPORAL = 'RCS · temporal (se limpia solo)'      # la misma marca que borra el siguiente trabajo del programa
+MARCA_TEMPORAL = 'CC · temporal (se limpia solo)'      # la misma marca que borra el siguiente trabajo del programa
 ALTO_VISTA = 640
 
 

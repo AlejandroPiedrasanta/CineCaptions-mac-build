@@ -13,7 +13,7 @@ Pool en cualquier edicion (Free incluida) es importar un BIN EXPORTADO
 adentro de Resolve, con el bin ya armado. Este script hace exactamente eso:
 
   1. Busca en el proyecto abierto los bins del pack ya preparados
-     (los que empiezan por "RCS · ", uno por formato).
+     (los que empiezan por "CC · ", uno por formato).
   2. Exporta cada uno a ~/DaVinciSubtitles/pack_<h|v|c>.drb.
   3. Escribe un informe en ~/DaVinciSubtitles/exportar_drb.txt.
 
@@ -23,7 +23,7 @@ ahi, Free importa el bin directo, con posicion, color y tipografia.
 
 COMO SE CORRE (una vez, en un Resolve donde el pack YA se preparo — el Mac
 con Studio es el seguro; se nota porque el Media Pool tiene los bins
-"RCS · Base títulos dinámicos · v" con los 31 clips adentro)
+"CC · Base títulos dinámicos · v" con los 31 clips adentro)
 ============================================================
 1. Abre el proyecto donde generaste subtitulos con el diseño automatico.
    Si solo tienes el bin de UN formato, genera una vez en un timeline de
@@ -122,7 +122,7 @@ local function archivo_existe(ruta)
     return false, 0
 end
 
--- El formato de un bin "RCS · <pack> · <h|v|c>": la ultima letra.
+-- El formato de un bin "CC · <pack> · <h|v|c>": la ultima letra.
 -- Copia IDENTICA del slug_pack de CineCaptions_Subtitulos.lua (un test compara
 -- las tres copias byte a byte de comportamiento).
 local function slug_pack(nombre)
@@ -194,12 +194,12 @@ local function main()
         return
     end
 
-    -- Buscar los bins RCS · en todo el arbol.
+    -- Buscar nuestros bins («CC · …»; v5.66: también los «RCS · …» de antes) en todo el arbol.
     local bins = {}
     local function recorrer(folder)
         for _, sub in ipairs(lista_api(folder:GetSubFolderList())) do
             local ok, nom = pcall(function() return sub:GetName() end)
-            if ok and nom and nom:sub(1, 4) == "RCS " then
+            if ok and nom and (nom:sub(1, 3) == "CC " or nom:sub(1, 4) == "RCS ") then
                 local cuantos = 0
                 pcall(function()
                     cuantos = #lista_api(sub:GetClipList())
@@ -218,7 +218,7 @@ local function main()
     recorrer(raiz)
 
     if #bins == 0 then
-        apuntar("No encontre ningun bin 'RCS · ...' en este proyecto.")
+        apuntar("No encontre ningun bin 'CC · ...' en este proyecto.")
         apuntar("Genera primero subtitulos con el diseño automatico (asi se")
         apuntar("prepara el bin del pack) y vuelve a correr esta herramienta.")
         return
@@ -280,7 +280,7 @@ local function main()
                     -- ' · ' en el nombre producia un nombre que los
                     -- gemelos jamas leerian (y podia pisar el respaldo
                     -- de otro).
-                    local pack = b.nombre:match("^RCS · (.*) · ")
+                    local pack = b.nombre:match("^CC · (.*) · ") or b.nombre:match("^RCS · (.*) · ")
                     if pack then
                         local fe = io.open(destino, "rb")
                         if fe then
@@ -315,7 +315,7 @@ local function main()
                 apuntar(string.format("  '%s' -> la API de tu Resolve no "
                         .. "exporta bandejas (ni ExportFolder ni "
                         .. "Folder:Export).", b.nombre))
-                local pack = b.nombre:match("^RCS · (.*) · ")
+                local pack = b.nombre:match("^CC · (.*) · ") or b.nombre:match("^RCS · (.*) · ")
                 if pack then
                     apuntar("     HAZLO A MANO (una vez): clic derecho "
                             .. "sobre ese bin en el Media Pool ->")

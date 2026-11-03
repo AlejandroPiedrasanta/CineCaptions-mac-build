@@ -75,7 +75,7 @@ for c in (raiz.GetSubFolderList() or []):
 # packs que se acaban de reconstruir: su bin del proyecto es de la versión vieja
 renovar = %(renovar)r
 for c in list(raiz.GetSubFolderList() or []):
-    if any(c.GetName().startswith('RCS · ' + n) for n in renovar):
+    if any(c.GetName().startswith(p + n) for n in renovar for p in ('CC · ', 'RCS · ')):
         mp.DeleteFolders([c])
 carpeta = mp.AddSubFolder(raiz, NOMBRE)
 mp.SetCurrentFolder(carpeta)

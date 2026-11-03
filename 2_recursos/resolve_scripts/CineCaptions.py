@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.65 (subtitulos)"
+VERSION = "5.66 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -511,13 +511,17 @@ def parse_srt(path: str):
 
 # El prefijo de los bins que crea este programa para los packs .drt. Se
 # compara por prefijo y no por nombre exacto porque cada pack y formato tiene
-# el suyo ('RCS · Base titulos dinamicos · v').
-PREFIJO_BIN_PACK = "RCS · "
+# el suyo ('CC · Base titulos dinamicos · v').
+# v5.66 (el usuario: «cambia las abreviaturas RCS por CC en todo»): «CC · ».
+# Los bins que ya hay en los proyectos con el prefijo de antes («RCS · », la
+# marca anterior) siguen siendo nuestros: PREFIJOS_NUESTROS.
+PREFIJO_BIN_PACK = "CC · "
+PREFIJOS_NUESTROS = (PREFIJO_BIN_PACK, "RCS · ")
 
 
 def _es_bin_nuestro(folder):
     try:
-        return (folder.GetName() or "").startswith(PREFIJO_BIN_PACK)
+        return (folder.GetName() or "").startswith(PREFIJOS_NUESTROS)
     except Exception:
         return False
 
@@ -580,7 +584,7 @@ def find_clips_by_name_ci(media_pool, name, carpeta=None, indice=None):
             # cuentan: son NUESTROS, no plantillas del usuario.
             #
             # Sin esto, despues de usar un pack .drt una vez, su bin
-            # 'RCS · <pack> · <formato>' se queda en el proyecto con clips
+            # 'CC · <pack> · <formato>' se queda en el proyecto con clips
             # llamados 'contexto'/'principal'/'complemento'. En la siguiente
             # generacion SIN pack la busqueda los encontraba, daba
             # modo_plantillas por bueno, y el diseño automatico no llegaba a
@@ -623,7 +627,7 @@ def find_template_clip(media_pool):
 
 
 def plantilla_base_del_pack(media_pool):
-    """El clip 'base' de un bin RCS (el pack ya preparado), o None.
+    """El clip 'base' de un bin nuestro (el pack ya preparado), o None.
 
     La busqueda global EXCLUYE los bins nuestros a proposito (son del pack,
     no plantillas del usuario); para la pista TRADUCIDA es al reves: se
@@ -636,7 +640,7 @@ def plantilla_base_del_pack(media_pool):
                 nombre = sub.GetName() or ""
             except Exception:
                 continue
-            if not str(nombre).startswith(PREFIJO_BIN_PACK):
+            if not str(nombre).startswith(PREFIJOS_NUESTROS):
                 continue
             clip = _buscar_base(media_pool, sub)
             if clip:
@@ -750,7 +754,7 @@ def preparar_bin_basicos(media_pool, pb):
     SetCurrentFolder(bin) + ImportFolderFromFile + restaurar (leccion
     v1.0.33). Verificacion PROPIA re-buscando el clip — NUNCA
     buscar_sets_de_plantillas, que busca contexto/principal. El bin
-    lleva el prefijo RCS: la busqueda global de plantillas del usuario
+    lleva nuestro prefijo: la busqueda global de plantillas del usuario
     lo salta sola, y no confunde a plantilla_base_del_pack (no trae
     ningun clip 'base').
     """
@@ -1627,13 +1631,13 @@ def _es_clip_texto_nuestro(item):
             return True
     except Exception:
         pass
-    # v3.3.0: tambien NUESTROS emojis (rcs_emoji_*.png); sin esto la pista
+    # v3.3.0: tambien NUESTROS emojis (cc_emoji_*.png; antes rcs_emoji_); sin esto la pista
     # EMOJI contaba como ajena y cada corrida apilaba otra (ver el .lua).
     # v5.8: y las SECUENCIAS animadas (e_[0001-0023].png, en .../emojis_secuencia/<emoji>/): su nombre no
     # empieza por rcs_emoji_, asi que al volver a generar la pista de emojis se apilaba otra (se ve doble).
     try:
         nombre = str(item.GetName() or "").lower()
-        if nombre.startswith("rcs_emoji_"):
+        if nombre.startswith(("cc_emoji_", "rcs_emoji_")):         # (v5.66: «cc_», antes «rcs_»)
             return True
         if nombre.startswith("e_["):
             mpi = item.GetMediaPoolItem()
@@ -2191,7 +2195,9 @@ def _sirve_para_subtitulos(timeline_desechable, media_pool, clip):
 # Como se marca el timeline importado que ya cumplio su proposito. Se borra
 # en la corrida siguiente (ver _limpiar_temporales y el comentario de
 # preparar_pack_drt): borrarlo en caliente cerraba Resolve.
-MARCA_TIMELINE_TEMPORAL = "RCS · temporal (se limpia solo)"
+MARCA_TIMELINE_TEMPORAL = "CC · temporal (se limpia solo)"
+# (v5.66: los que dejó una versión de antes, con «RCS · », también se limpian)
+MARCAS_TEMPORALES = (MARCA_TIMELINE_TEMPORAL, "RCS · temporal (se limpia solo)")
 
 
 def _limpiar_temporales(project, media_pool):
@@ -2213,7 +2219,7 @@ def _limpiar_temporales(project, media_pool):
             if tl is None:
                 continue
             nombre = tl.GetName() or ""
-            if nombre.startswith(MARCA_TIMELINE_TEMPORAL) and nombre != nombre_actual:
+            if nombre.startswith(MARCAS_TEMPORALES) and nombre != nombre_actual:
                 sobras.append(tl)
     except Exception:
         return 0
@@ -2609,7 +2615,7 @@ def respaldar_bin_drb(media_pool, carpeta_bin, nombre_pack, formato,
             ruta_manual = _ruta_respaldo_manual(nombre_pack, formato)
             print("  Tu Resolve no exporta bandejas por script. Para dejar "
                   "el automático permanente hazlo tú UNA vez: clic derecho "
-                  f"sobre el bin «RCS · {nombre_pack} · {formato}» en el "
+                  f"sobre el bin «{PREFIJO_BIN_PACK}{nombre_pack} · {formato}» en el "
                   "Media Pool → Exportar bandeja… → guarda EXACTO como:")
             print(f"    {ruta_manual}")
             print("  Desde ahí, cada corrida (y cada proyecto nuevo) lo "
@@ -2713,7 +2719,7 @@ def _preparar_pack_drt_nucleo(project, media_pool, nombre_pack, formato,
             # El peldaño CREO el bin: recordarlo. Sin esto, un drb que
             # falla al importar dejaba 'existente' en None y la escalera
             # de abajo llamaba AddSubFolder OTRA VEZ — dos bins
-            # «RCS · <pack> · <f>» duplicados en el proyecto. Camino
+            # «CC · <pack> · <f>» duplicados en el proyecto. Camino
             # inalcanzable hasta la v1.0.55 (el manifiesto nunca traia
             # drb); lo cazo test_v1039 al embeber los .drb de verdad.
             existente = carpeta_bin
@@ -2794,7 +2800,7 @@ def _preparar_pack_drt_nucleo(project, media_pool, nombre_pack, formato,
     # vez): la limpieza de la corrida siguiente se lo lleva cuando no es
     # el current de nadie. Y si es el timeline ACTUAL, se deja en paz.
     try:
-        objetivo = f"RCS · {nombre_pack} · {formato} (arrastrar a mano)"
+        objetivos = {f"{p}{nombre_pack} · {formato} (arrastrar a mano)" for p in PREFIJOS_NUESTROS}
         try:
             actual = project.GetCurrentTimeline().GetName()
         except Exception:
@@ -2805,7 +2811,7 @@ def _preparar_pack_drt_nucleo(project, media_pool, nombre_pack, formato,
                 nombre_tl = tl.GetName()
             except Exception:
                 continue
-            if nombre_tl == objetivo and nombre_tl != actual:
+            if nombre_tl in objetivos and nombre_tl != actual:
                 try:
                     tl.SetName(MARCA_TIMELINE_TEMPORAL)
                 except Exception:
@@ -3039,7 +3045,7 @@ def _preparar_pack_drt_nucleo(project, media_pool, nombre_pack, formato,
             # el mismo flujo de hoy: arrastrar del timeline al Media Pool.
             try:
                 importado.SetName(
-                    f"RCS · {nombre_pack} · {formato} (arrastrar a mano)")
+                    f"{PREFIJO_BIN_PACK}{nombre_pack} · {formato} (arrastrar a mano)")
             except Exception:
                 pass
             try:
@@ -4368,7 +4374,7 @@ def place_dynamic_track(timeline, media_pool, track_info, base_template,
     modo_plantillas = bool(sets)
 
     # Plantilla para las palabras sueltas sin marcar (rol 'base'). La del
-    # BIN DEL PACK manda: la busqueda global salta los bins RCS a proposito
+    # BIN DEL PACK manda: la busqueda global salta nuestros bins a proposito
     # (un pack de ayer no debe contaminar una generacion sin pack), y por
     # eso el 'base' del propio pack era INVISIBLE aqui — 55 de 65 bloques
     # de un video real salieron pintados de principal (reporte del 01-09).

@@ -202,7 +202,7 @@ def _es_emoji(valor):
     """¿Es un emoji ('emoji:x', 'rcs_emoji_x.png', 'stickers/rcs_emoji_x.png', 'fluent/x.png' o 'recortes/color/x.webp', que es el mismo emoji 3D
     con borde blanco: generar_recortes.color)? Los iconos '3d:x', 'iconos3d/…' y los recortes en trama o línea, no."""
     s = str(valor or '')
-    return s.startswith(('emoji:', 'rcs_emoji_', 'stickers/rcs_emoji_', 'fluent/', 'recortes/color/'))
+    return s.startswith(('emoji:', 'rcs_emoji_', 'cc_emoji_', 'stickers/rcs_emoji_', 'fluent/', 'recortes/color/'))
 
 
 def _valores_sin_emojis(comp, v):

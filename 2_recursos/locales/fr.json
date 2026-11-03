@@ -4190,6 +4190,21 @@
     "Tema: tus estilos": "Thème : tes styles",
     "Ir a Tema": "Aller à Thème",
     " · ahora está apagada (enciéndela aquí o en el menú de Tema)": " · elle est désactivée (activez-la ici ou dans le menu Thème)",
-    "Audio detectado": "Audio détecté"
+    "Audio detectado": "Audio détecté",
+    "Corrector": "Correcteur",
+    "Los {n} estilos se alternan entre los bloques (en Corrector ves cuál lleva cada uno y puedes cambiarlo).": "Les {n} styles alternent entre les blocs (dans Correcteur, vous voyez lequel reçoit chacun et vous pouvez le changer).",
+    "Corrector: no pude dibujar la vista exacta del tema; uso la aproximada.": "Correcteur : impossible de dessiner l'aperçu exact du thème ; j'utilise l'approximatif.",
+    "Aquí cambias de pantalla: Inicio, Tema (estilos), Corrector (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.": "Ici, vous changez d’écran : Accueil, Thème (styles), Correcteur (retoucher les mots) et Son (effets). À droite, l’état de Resolve, les Réglages et l’épingle pour garder CineCaptions au-dessus de Resolve.",
+    "Corrector: retoca las palabras": "Correcteur : retouchez les mots",
+    "Ya conoces CineCaptions. Para empezar, abre tu timeline en Resolve y pulsa GO. Si algo no queda como quieres, retócalo en Corrector.": "Vous connaissez CineCaptions. Pour commencer, ouvrez votre timeline dans Resolve et appuyez sur GO. Si quelque chose ne vous convient pas, retouchez-le dans Correcteur.",
+    "Los atajos de Corrector funcionan mientras el editor está abierto.": "Les raccourcis de Correcteur fonctionnent tant que l'éditeur est ouvert.",
+    "Corrector: cerré la sesión abierta para seguir; tus marcas quedaron guardadas.": "Correcteur : j’ai fermé la session ouverte pour continuer ; tes marques ont été enregistrées.",
+    "Corrector: DaVinci Resolve se cerró; cerré la sesión y tus marcas quedaron guardadas.": "Correcteur : DaVinci Resolve s’est fermé ; j’ai fermé la session et tes marques ont été enregistrées.",
+    "Todavía no hay palabras para corregir": "Pas encore de mots à corriger",
+    "Aquí retocas cada palabra de tus subtítulos: corriges lo que se oyó mal y eliges cuál va grande. Se llena solo en cuanto hay audio:": "Ici tu retouches chaque mot de tes sous-titres : corrige ce qui a été mal entendu et choisis celui qui va en grand. Ça se remplit tout seul dès qu’il y a de l’audio :",
+    "Abre tu timeline en Resolve o suelta un video en esta ventana.": "Ouvre ta timeline dans Resolve ou dépose une vidéo dans cette fenêtre.",
+    "Pulsa GO en Inicio: transcribe y coloca los subtítulos.": "Appuie sur GO dans Accueil : il transcrit et place les sous-titres.",
+    "Vuelve aquí: las palabras aparecen solas para retocarlas.": "Reviens ici : les mots apparaissent tout seuls pour les retoucher.",
+    "Abre el Media Pool en Resolve y borra el bin «CC · …» de ese estilo si está a medias; se recrea solo.": "Ouvre le Media Pool dans Resolve et supprime le bin « CC · … » de ce style s'il est incomplet ; il se recrée tout seul."
   }
 }

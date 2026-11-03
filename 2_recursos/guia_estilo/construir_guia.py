@@ -21,8 +21,8 @@ import os
 import time
 
 RUTA_JSON = os.path.join(os.path.expanduser('~'), 'DaVinciSubtitles', 'guia_estilo_ejemplos.json')
-BIN_AMRO = 'RCS · Crea tu estilo (Amro)'
-BIN = 'RCS · Crea tu estilo (bloques)'      # «RCS · »: los scripts de subtítulos no cuentan los bins con ese prefijo como plantillas del usuario
+BIN_AMRO = 'CC · Crea tu estilo (Amro)'
+BIN = 'CC · Crea tu estilo (bloques)'      # «CC · »: los scripts de subtítulos no cuentan los bins con ese prefijo como plantillas del usuario
 ALIAS = {'arriba': 'arriba', 'contexto': 'arriba', 'principal': 'principal', 'abajo': 'abajo', 'complemento': 'abajo'}
 
 

@@ -495,6 +495,12 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.66', [
+        'La página Creativo ahora se llama «Corrector».',
+        'Corrector sin bloqueos: si pulsas GO (o retocas otro video) con una sesión abierta, se cierra sola con tus marcas guardadas y sigue; ya no sale «Termina o cancela primero la sesión». Y si cierras DaVinci Resolve con una sesión abierta, también se cierra sola.',
+        'Corrector sin audio: un aviso más claro sobre el cielo de constelaciones (como Inicio y Tema), con los tres pasos para empezar y una frase de ejemplo animada: las palabras entran una a una, una mal oída se corrige sola y la principal se pinta con su brillo.',
+        'En Resolve, las carpetas y timelines que crea CineCaptions se llaman «CC · …» (antes «RCS · …») y los emojis «cc_emoji_…»; los de proyectos anteriores se siguen reconociendo.',
+    ]),
     ('5.65', [
         'La página Proyecto ahora se llama «Tema» (en el menú de arriba y en los textos que la nombran).',
         'Tema con el cielo de constelaciones de borde a borde de la ventana, también detrás del menú de arriba, igual que Inicio.',
@@ -2803,7 +2809,7 @@ class VentanaAjustes(_Panel):
     # -- Atajos ---------------------------------------------------------------
     def _pag_atajos(self, capa):
         self._cabeza_pagina(capa, tr('Teclado'), tr('Atajos'),
-                            tr('Los atajos de Creativo funcionan mientras el editor está abierto.'))
+                            tr('Los atajos de Corrector funcionan mientras el editor está abierto.'))
         filas = []
         atajos = [('1', tr('Pincel «Contexto»')), ('2', tr('Pincel «Principal»')), ('3', tr('Pincel «Complemento»')),
                   ('4  ·  0', tr('Pincel «Base» (quitar el rol)')), ('5', tr('Editar el texto de una palabra')),
@@ -2811,7 +2817,7 @@ class VentanaAjustes(_Panel):
                   ('Ctrl + Y  ·  Ctrl + Shift + Z', tr('Rehacer')), ('Esc', tr('Cerrar el panel o globo abierto'))]
         for i, (tecla, que) in enumerate(atajos):
             filas.append(_FilaAtajo(tecla, que, ultima=i == len(atajos) - 1))
-        capa.addWidget(_etiqueta_seccion(tr('Creativo')))
+        capa.addWidget(_etiqueta_seccion(tr('Corrector')))
         capa.addWidget(_grupo(*filas))
         capa.addWidget(_etiqueta_seccion(tr('Sonido')))
         capa.addWidget(_grupo(_FilaAtajo(tr('Tu atajo'), tr('Insertar el efecto elegido en Resolve. Se configura en '

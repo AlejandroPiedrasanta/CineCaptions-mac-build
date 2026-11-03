@@ -7,10 +7,10 @@ Version en Lua para Resolve FREE (el Puente la corre con dofile) de "2_recursos/
 Lee el plan que deja la app (edicion_pro_plan.json; sin io, su sidecar .lua) y pone los graficos animados (.ograf), la persona recortada con IA local
 (ProRes 4444 con alfa: en Free no hay Magic Mask) y los sonidos en pistas «PRO-…» encima de V1 y debajo de los captions.
 Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los captions; las pistas «PRO-…» se vacian y se vuelven a llenar en cada corrida;
-los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Edición PRO».
+los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «CC · Edición PRO».
 ]]
 
-local VERSION = "5.65 (edicion pro)"
+local VERSION = "5.66 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -450,7 +450,7 @@ local PEND_CACHE = { fusion = {}, color = {} }
 local MARCA_EMOJI = "ccpro-emoji-off"    -- el emoji del tema que se apago porque en ese bloque va un icono 3D
 local MARCA = "ccpro-subir"              -- marca en cada clip de captions que se subio: "ccpro-subir:<Tilt antes>:<Tilt despues>"
 local PISTA_SONIDO = "PRO-SONIDO"
-local BIN = "RCS · Edición PRO"
+local BIN = "CC · Edición PRO"
 local RESUMEN = ""
 -- v5.24 (gemelo de colocar_pro.py, el usuario: «que cada pista indique que hace»): en Resolve cada pista se ve «que hace · CODIGO»; se busca
 -- SIEMPRE por el codigo (nombre_pista lo devuelve), asi re-aplicar y los timelines de antes (solo el codigo) siguen funcionando.

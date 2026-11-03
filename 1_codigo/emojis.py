@@ -17,7 +17,7 @@ parte inferior, a elección».
     ~/DaVinciSubtitles/emojis/ (carpeta_usuario): un archivo llamado como
     el emoji reemplaza la imagen de ese id y cualquier otro es un emoji
     «mio». Lo que viaja a Resolve sale SIEMPRE de copia_para_resolve
-    (nombre rcs_emoji_<id>.png: el prefijo que reconocen los gemelos).
+    (nombre cc_emoji_<id>.png, antes rcs_emoji_: los prefijos que reconocen los gemelos).
   - v3.3.3: el catalogo trae ~1 400 emojis de Unicode con claves CLDR y
     solo 271 con PNG Fluent; el resto se dibuja con la FUENTE DEL SISTEMA
     (Apple Color Emoji / Segoe UI Emoji) en cache local, y catalogo() solo
@@ -562,7 +562,8 @@ def ruta_mini(eid, fabricar=True):
 
 
 def copia_para_resolve(eid):
-    """La ruta que viaja a Resolve: emojis_usados/rcs_emoji_<id>.png.
+    """La ruta que viaja a Resolve: emojis_usados/cc_emoji_<id>.png (v5.66: antes rcs_emoji_, la marca anterior; el usuario: «cambia las
+    abreviaturas RCS por CC en todo». Es el nombre que se ve en el Media Pool; los archivos del programa siguen con su nombre de siempre).
 
     El nombre lleva el prefijo que los gemelos reconocen como NUESTRO
     (es_clip_texto_nuestro: sin el, la pista EMOJI contaria como ajena y
@@ -579,9 +580,7 @@ def copia_para_resolve(eid):
     origen, png = origen_de(eid)
     if png is None or not png.is_file():
         return None
-    if origen == 'fluent':
-        return str(sfx_rules.ruta_persistente(str(png), carpeta=CARPETA_EMOJIS_USADOS))
-    destino = CARPETA_EMOJIS_USADOS / f'rcs_emoji_{eid}.png'
+    destino = CARPETA_EMOJIS_USADOS / f'cc_emoji_{eid}.png'      # (v5.66: también los Fluent del programa, antes con su nombre rcs_emoji_)
     try:
         st_o = png.stat()
         if (not destino.is_file()

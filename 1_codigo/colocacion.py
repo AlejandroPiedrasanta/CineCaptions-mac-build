@@ -134,7 +134,7 @@ CAUSAS = [
     (r'no encontr[eé] ning[uú]n Text\+|necesita un pack con sets|no pude preparar el pack|0 sets|sin clip para ese rol',
      'pack', 'Resolve no tiene las piezas del estilo',
      'El estilo elegido guarda sus piezas (los títulos) en un bin del Media Pool y Resolve no las tiene o quedaron a medias.',
-     ['Lo intento una vez más solo; si sigue igual, en el Media Pool renombra o borra el bin «RCS · …» de ese estilo (CineCaptions lo vuelve a crear) y pulsa GO otra vez.',
+     ['Lo intento una vez más solo; si sigue igual, en el Media Pool renombra o borra el bin «CC · …» de ese estilo (CineCaptions lo vuelve a crear) y pulsa GO otra vez.',
       'En Resolve Free, arrastra una vez los clips del pack al Media Pool (Estilos ▸ «Abrir en Resolve»).'], 'pack'),
     (r'no pude crear la pista|no pude preparar (las|la) pistas?|no pude crear la pista de audio',
      'pistas', 'Resolve no dejó crear las pistas de los subtítulos',
@@ -250,7 +250,7 @@ def frase_de_fallo(v):
 
 # ------------------------------------------------------------------------------------------------------------------------------- 3) reparar solo
 def reparar(v, pack=None, al_estado=None):
-    """Arregla lo que se puede arreglar sin molestar y SIN borrar nada del proyecto del usuario (los bins «RCS · …» del Media Pool no se tocan: el script de Resolve ya rehace él mismo
+    """Arregla lo que se puede arreglar sin molestar y SIN borrar nada del proyecto del usuario (los bins «CC · …» del Media Pool no se tocan: el script de Resolve ya rehace él mismo
     un bin del pack que quedó a medias). Devuelve lo que hizo, en frases; lista vacía = no hay nada que reparar y repetir no serviría (p. ej. scripting externo cerrado)."""
     hecho = []
     c = v.get('causa')

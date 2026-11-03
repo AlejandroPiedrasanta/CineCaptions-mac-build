@@ -9,7 +9,7 @@
 import math
 import time
 
-from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QBrush, QConicalGradient, QFontMetricsF, QLinearGradient, QPainter, QPainterPath, QPen, QRadialGradient
 from PySide6.QtWidgets import QAbstractButton, QFrame, QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget
 
@@ -384,6 +384,235 @@ class MarcoPapel(QFrame):
         p.setBrush(QColor(ui.CARD_COLOR))
         p.drawRoundedRect(r, self.RADIO, self.RADIO)
         p.end()
+
+
+def _suave(x):
+    x = max(0.0, min(1.0, x))
+    return x * x * (3.0 - 2.0 * x)
+
+
+def _tramo(u, a, b):
+    """0 antes de a, 1 después de b y suave entre medias."""
+    return _suave((u - a) / (b - a)) if b > a else float(u >= a)
+
+
+class MuestraPalabras(QWidget):
+    """v5.66 (el usuario: «si no hay sesión o audio, pulir mejor el aviso»): la cabecera del aviso del Corrector sin sesión: una frase de
+    ejemplo como se ve aquí, cada palabra en su píldora con el color de su rol (Arriba / Principal / Abajo / sin marcar) y, debajo, qué
+    significa cada color.
+    v5.66 (el usuario: «púlelo más, que se corta el sombreado, y métele más animaciones»): el halo de la principal cabe en el widget (antes
+    se cortaba arriba y abajo) y la frase ENSEÑA lo que hace el Corrector en un bucle de 8 s: las palabras entran una a una; «ganamoz»
+    sale subrayada en rojo, el puntero va, la corrige («ganamos», con su ✓) y luego pinta «10.000» como Principal (el color entra de
+    izquierda a derecha, el halo respira y un brillo la cruza); al final vuelve a empezar. Solo se repinta ella, a 30/s mientras se ve;
+    quieta (corregida y pintada) con «Reducir animaciones»."""
+    FRASE = (('Así', 'context'), ('ganamos', 'context'), ('10.000', 'main'), ('euros', 'complement'), ('en', None), ('un', None), ('mes', 'complement'))
+    ERRATA, PRINCIPAL = (1, 'ganamoz'), 2
+    ALTO, Y, H, HUECO = 124.0, 34.0, 36.0, 8.0               # (el halo de la principal llega a Y + H/2 ± H: cabe entre 0 y la leyenda)
+    ENTRADA, CICLO, FPS = 1.0, 8.0, 30
+
+    def __init__(self, padre=None):
+        super().__init__(padre)
+        self.setFixedHeight(int(self.ALTO))
+        self.setMinimumWidth(460)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._t0 = time.perf_counter()
+        self._reloj = QTimer(self)
+        self._reloj.timeout.connect(self._tic)
+
+    # -- reloj --------------------------------------------------------------------------------------------------------------------------
+    def showEvent(self, e):
+        super().showEvent(e)
+        self._t0 = time.perf_counter()                              # (cada vez que se ve, entra de nuevo)
+        if not self._quieto():
+            self._reloj.start(int(1000 / self.FPS))
+        self.update()
+
+    def hideEvent(self, e):
+        super().hideEvent(e)
+        self._reloj.stop()
+
+    @staticmethod
+    def _quieto():
+        try:
+            import mograf_ui
+            return bool(mograf_ui.quieto())
+        except Exception:
+            return False
+
+    def _tic(self):
+        v = self.window()
+        if v is not None and v.isMinimized():
+            return
+        if self._quieto():
+            self._reloj.stop()
+        self.update()
+
+    def _estado(self):
+        """Lo que se ve en este instante: entrada por palabra, errata, ✓, pintado de la principal, puntero, brillo y halo."""
+        if self._quieto():
+            return {'entrada': 1.0, 'errata': 0.0, 'visto': 0.0, 'pintado': 1.0, 'puntero': None, 'brillo': None, 'halo': 0.85}
+        t = time.perf_counter() - self._t0
+        u = max(0.0, t - self.ENTRADA) % self.CICLO if t > self.ENTRADA else 0.0
+        vuelta = 1.0 - _tramo(u, 7.0, 7.6)
+        errata = 1.0 - _tramo(u, 2.1, 2.35) * vuelta
+        pintado = _tramo(u, 3.3, 3.9) * vuelta
+        visto = math.sin(math.pi * _tramo(u, 2.1, 2.9)) if 2.1 <= u <= 2.9 else 0.0
+        puntero = None
+        alfa = _tramo(u, 1.0, 1.3) * (1.0 - _tramo(u, 3.9, 4.3))
+        if alfa > 0.0:                                       # (de antes de la 1.ª palabra a la errata y de ahí a la principal)
+            puntero = (_tramo(u, 1.4, 2.1), _tramo(u, 2.6, 3.3), alfa)
+        brillo = None
+        for a in (4.4, 6.0):
+            if a <= u <= a + 0.6:
+                brillo = (u - a) / 0.6
+        halo = pintado * (0.78 + 0.22 * math.sin(2.0 * math.pi * t / 2.4))
+        return {'entrada': t, 'errata': errata, 'visto': visto, 'pintado': pintado, 'puntero': puntero, 'brillo': brillo, 'halo': halo}
+
+    # -- dibujo -------------------------------------------------------------------------------------------------------------------------
+    @staticmethod
+    def _color(rol):
+        return QColor({'context': ui.ROL_CONTEXTO, 'main': ui.ROL_PRINCIPAL, 'complement': ui.ROL_COMPLEMENTO}.get(rol, ui.ROL_BASE))
+
+    def _cajas(self, fm):
+        """[(QRectF, palabra, rol)] con el ancho de la palabra MÁS LARGA entre la errata y la buena (no salta al corregir)."""
+        x, cajas = 1.0, []
+        for i, (palabra, rol) in enumerate(self.FRASE):
+            texto = max((palabra, self.ERRATA[1]) if i == self.ERRATA[0] else (palabra,), key=fm.horizontalAdvance)
+            ancho = fm.horizontalAdvance(texto) + 26.0
+            cajas.append((QRectF(x, self.Y, ancho, self.H), palabra, rol))
+            x += ancho + self.HUECO
+        return cajas
+
+    def _pildora(self, p, r, c, lleno, alfa):
+        if alfa <= 0.0:
+            return
+        p.save()
+        p.setOpacity(p.opacity() * alfa)
+        if lleno:
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(c)
+            p.drawRoundedRect(r, self.H / 2, self.H / 2)
+        else:
+            rol = c != QColor(ui.ROL_BASE)
+            p.setBrush(QColor(c.red(), c.green(), c.blue(), 30 if rol else 14))
+            p.setPen(QPen(QColor(c.red(), c.green(), c.blue(), 150 if rol else 70), 1.2))
+            p.drawRoundedRect(r.adjusted(0.6, 0.6, -0.6, -0.6), self.H / 2, self.H / 2)
+        p.restore()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        f = fuente(15, peso='negrita')
+        fm = QFontMetricsF(f)
+        p.setFont(f)
+        st = self._estado()
+        cajas = self._cajas(fm)
+        principal = self._color('main')
+        for i, (r, palabra, rol) in enumerate(cajas):
+            a = _suave((st['entrada'] - i * 0.09) / 0.38)            # entrada: sube y aparece, una tras otra
+            if a <= 0.0:
+                continue
+            p.save()
+            p.setOpacity(a)
+            p.translate(0.0, (1.0 - a) * 9.0)
+            if i == self.PRINCIPAL:
+                if st['halo'] > 0.0:                              # el halo que respira (dentro del widget: Y + H/2 ± H)
+                    c = principal
+                    halo = QRadialGradient(r.center(), r.width() * 0.8)
+                    halo.setColorAt(0.0, QColor(c.red(), c.green(), c.blue(), int(95 * st['halo'])))
+                    halo.setColorAt(1.0, QColor(c.red(), c.green(), c.blue(), 0))
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(halo)
+                    p.drawEllipse(r.center(), r.width() * 0.8, self.H * 0.95)
+                self._pildora(p, r, self._color(None), False, 1.0 - st['pintado'])
+                if st['pintado'] > 0.0:                           # el color entra de izquierda a derecha
+                    p.save()
+                    p.setClipRect(QRectF(r.left() - 1.0, r.top() - 1.0, (r.width() + 2.0) * st['pintado'], r.height() + 2.0))
+                    self._pildora(p, r, principal, True, 1.0)
+                    p.restore()
+                if st['brillo'] is not None and st['pintado'] > 0.99:
+                    camino = QPainterPath()
+                    camino.addRoundedRect(r, self.H / 2, self.H / 2)
+                    p.save()
+                    p.setClipPath(camino)
+                    x = r.left() - 30.0 + (r.width() + 60.0) * st['brillo']
+                    lg = QLinearGradient(QPointF(x - 22.0, r.top()), QPointF(x + 22.0, r.bottom()))
+                    lg.setColorAt(0.0, QColor(255, 255, 255, 0))
+                    lg.setColorAt(0.5, QColor(255, 255, 255, 120))
+                    lg.setColorAt(1.0, QColor(255, 255, 255, 0))
+                    p.fillRect(r, lg)
+                    p.restore()
+                fondo = principal if st['pintado'] > 0.5 else None
+                p.setPen(QColor(ui._texto_sobre(principal.name())) if fondo is not None else QColor('#8A97AE'))
+                p.drawText(r, Qt.AlignmentFlag.AlignCenter, palabra)
+            else:
+                self._pildora(p, r, self._color(rol), False, 1.0)
+                if i == self.ERRATA[0]:
+                    e = st['errata']
+                    for texto, alfa in ((self.ERRATA[1], e), (palabra, 1.0 - e)):
+                        if alfa > 0.0:
+                            p.save()
+                            p.setOpacity(p.opacity() * alfa)
+                            p.setPen(QColor('#E8EEF8'))
+                            p.drawText(r, Qt.AlignmentFlag.AlignCenter, texto)
+                            p.restore()
+                    if e > 0.0:                                   # la ola roja de «mal oída»
+                        ancho = fm.horizontalAdvance(self.ERRATA[1])
+                        x0, y0 = r.center().x() - ancho / 2, r.bottom() - 7.0
+                        ola = QPainterPath(QPointF(x0, y0))
+                        k = 0.0
+                        while k < ancho:
+                            k += 3.0
+                            ola.lineTo(QPointF(x0 + k, y0 + (1.6 if int(k / 3) % 2 else -1.6)))
+                        p.setPen(QPen(QColor(255, 107, 107, int(220 * e)), 1.3))
+                        p.setBrush(Qt.BrushStyle.NoBrush)
+                        p.drawPath(ola)
+                    if st['visto'] > 0.0:                         # el ✓ verde que salta encima
+                        v = st['visto']
+                        centro = QPointF(r.center().x(), r.top() - 13.0 + (1.0 - v) * 4.0)
+                        p.setPen(Qt.PenStyle.NoPen)
+                        p.setBrush(QColor(36, 209, 143, int(235 * v)))
+                        p.drawEllipse(centro, 9.0 * (0.7 + 0.3 * v), 9.0 * (0.7 + 0.3 * v))
+                        lapiz = QPen(QColor(11, 18, 34, int(255 * v)), 2.0)
+                        lapiz.setCapStyle(Qt.PenCapStyle.RoundCap)
+                        p.setPen(lapiz)
+                        p.drawPolyline([centro + QPointF(-4.0, 0.2), centro + QPointF(-1.0, 3.2), centro + QPointF(4.2, -2.8)])
+                else:
+                    p.setPen(QColor('#E8EEF8') if rol else QColor('#8A97AE'))
+                    p.drawText(r, Qt.AlignmentFlag.AlignCenter, palabra)
+            p.restore()
+        if st['puntero'] is not None:                             # el puntero: entra, va a la errata y luego a la principal
+            ida, vuelta, alfa = st['puntero']
+            def punta(r):
+                return QPointF(r.center().x() + r.width() * 0.18, r.top() + self.H * 0.62)
+            a0 = QPointF(cajas[0][0].left() - 6.0, self.Y + self.H + 6.0)
+            a1, a2 = punta(cajas[self.ERRATA[0]][0]), punta(cajas[self.PRINCIPAL][0])
+            pos = a0 + (a1 - a0) * ida + (a2 - a1) * vuelta
+            flecha = [QPointF(0, 0), QPointF(0, 17), QPointF(4.2, 13.2), QPointF(7.2, 19.4), QPointF(9.8, 18.2), QPointF(6.9, 12.2), QPointF(12.2, 12.2)]
+            p.save()
+            p.setOpacity(alfa)
+            p.translate(pos)
+            p.setPen(QPen(QColor(8, 12, 22, 200), 1.4))
+            p.setBrush(QColor('#FFFFFF'))
+            p.drawPolygon(flecha)
+            p.restore()
+        f2 = fuente(11.5, peso='medio')                             # la leyenda
+        p.setFont(f2)
+        fm2 = QFontMetricsF(f2)
+        x, y = 3.0, self.Y + self.H + 32.0
+        p.setOpacity(_suave((st['entrada'] - 0.6) / 0.5))
+        for rol, nombre in (('context', tr('Arriba')), ('main', tr('Principal')), ('complement', tr('Abajo')), (None, tr('Sin marcar'))):
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(self._color(rol))
+            p.drawEllipse(QPointF(x + 4.0, y - 4.0), 4.0, 4.0)
+            p.setPen(QColor('#9AA8C0'))
+            p.drawText(QPointF(x + 13.0, y), nombre)
+            x += 13.0 + fm2.horizontalAdvance(nombre) + 18.0
+        p.end()
+
+    def sizeHint(self):
+        fm = QFontMetricsF(fuente(15, peso='negrita'))
+        return QSize(int(sum(r.width() + self.HUECO for r, _p, _r in self._cajas(fm)) + 4), int(self.ALTO))
 
 
 class PistaPincel(QWidget):

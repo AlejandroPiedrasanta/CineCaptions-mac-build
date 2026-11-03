@@ -1053,3 +1053,22 @@ class TarjetaCielo(ui.Tarjeta):
         p.drawPixmap(0, 0, self._cuadro)                                  # (Qt recorta a lo que pidió repintar: barato)
         self._pintar_fugaz(p, self._t())
         p.end()
+
+
+class CieloDePagina(TarjetaCielo):
+    """v5.66 (el usuario, del Corrector: «un poco de fondo de interfaz siguiendo el patrón de la página de Inicio y Tema»): el mismo cielo de
+    constelaciones como FONDO de una página entera, sin entrar en su layout: hijo de la página, detrás de todo y con su tamaño (lo sigue al
+    redimensionar). `zonas_vivas` (la página): lo que ya se repinta solo encima, para no repintarlo en cada tic del cielo."""
+
+    def __init__(self, pagina):
+        super().__init__(sin_marco=True, margenes=(0, 0, 0, 0))
+        self.setParent(pagina)
+        self.setGeometry(pagina.rect())
+        self.lower()
+        pagina.installEventFilter(self)
+
+    def eventFilter(self, obj, ev):
+        if obj is self.parent() and ev.type() == QEvent.Type.Resize:
+            self.setGeometry(obj.rect())
+            self.lower()
+        return False

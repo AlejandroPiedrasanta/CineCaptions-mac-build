@@ -75,7 +75,7 @@ def _etiquetar(tl):
                 except Exception:
                     pass
     return n
-BIN = 'RCS · Edición PRO'
+BIN = 'CC · Edición PRO'
 NOMBRE_COMP = 'CineCaptions PRO · persona'
 NOMBRE_ZOOM = 'CineCaptions PRO · zoom'
 NOMBRE_FOCO = 'PRO · fondo en blanco y negro'

@@ -1563,7 +1563,7 @@ class ComposicionWindow(QWidget):
             elif fijo and fijo <= n:
                 self.modo_estilos_lbl.configure(text=tr('Ahora TODOS los bloques usan solo el estilo {k}. Para volver a alternar los {n} estilos pulsa «Fijo en este estilo» otra vez.', k=fijo, n=n), text_color=ui.AMBAR)
             else:
-                self.modo_estilos_lbl.configure(text=tr('Los {n} estilos se alternan entre los bloques (en Creativo ves cuál lleva cada uno y puedes cambiarlo).', n=n), text_color=TEXT_MUTED)
+                self.modo_estilos_lbl.configure(text=tr('Los {n} estilos se alternan entre los bloques (en Corrector ves cuál lleva cada uno y puedes cambiarlo).', n=n), text_color=TEXT_MUTED)
         if hasattr(self, 'fijo_chip'):
             self.fijo_chip.setText(tr('Fijo en este estilo') if (fijo and fijo == self._k + 1) else (tr('Usar solo este') if n > 1 else tr('Alternando')))
             self.fijo_chip.setVisible(n > 1)
@@ -5516,7 +5516,7 @@ class WordTagWindow(QWidget):
                 return                                          # llegó otra petición después: esta ya no vale
             self.vista_bloque.esperando_tema = False
             if error is not None or cuadros is None:
-                registro.aviso(tr('Creativo: no pude dibujar la vista exacta del tema; uso la aproximada.'), 'creativo', detalle=str(error or ''))
+                registro.aviso(tr('Corrector: no pude dibujar la vista exacta del tema; uso la aproximada.'), 'corrector', detalle=str(error or ''))
                 self._vt = {'clave': clave, 'cuadros': None}
                 self.vista_bloque.poner_animador(None)
                 self.vista_bloque.poner_cuadro(None)
@@ -6369,7 +6369,7 @@ class SubtitleApp(QWidget):
     # «Nuevo proyecto» y «Estilos y composición» son UNA entrada del menú
     # («Proyecto»), con un conmutador arriba; Inicio elige pack, idioma, efectos
     # y formato con chips debajo de GO.
-    PAGINAS = (('inicio', 'Inicio'), ('nuevo', 'Tema'), ('editor', 'Creativo'),          # (v5.64: «Proyecto» pasa a «Tema», pedido del usuario)
+    PAGINAS = (('inicio', 'Inicio'), ('nuevo', 'Tema'), ('editor', 'Corrector'),         # (v5.65: «Proyecto» → «Tema»; v5.66: «Creativo» → «Corrector», pedidos del usuario)
                ('sfx', 'Sonido'), ('efectos', 'Efectos'))
     ANCHO_PLEGAR = 1400
     def __init__(self, initial_video=None):
@@ -8162,7 +8162,7 @@ class SubtitleApp(QWidget):
                 return self.GO_PACK_DEFECTO
         return actual if actual in nombres and sirve(actual) and plantillas.pack_permitido(actual) else base
     def _go(self):
-        if getattr(self, '_go_corriendo', False) or self._editor_abierto():
+        if getattr(self, '_go_corriendo', False) or self._editor_abierto(luego=self._go):
             return
         if getattr(self, '_cancelando', False):       # v5.5.8: aún cerrando lo del GO cancelado: no se mezclan dos GO
             self.status_var.set(tr('Terminando de cancelar el GO anterior: un momento…'))
@@ -9303,7 +9303,7 @@ class SubtitleApp(QWidget):
               tr('Te enseño la interfaz en un minuto: dónde está cada cosa y para qué sirve. Puedes salir cuando quieras con Esc, y volver a verlo o desactivarlo desde Ajustes.'),
               None, 'inicio'),
             P(tr('Tu barra de navegación'),
-              tr('Aquí cambias de pantalla: Inicio, Tema (estilos), Creativo (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.'),
+              tr('Aquí cambias de pantalla: Inicio, Tema (estilos), Corrector (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.'),
               isla, 'inicio', lado='abajo', margen=8),
             P(tr('GO: todo en un clic'),
               tr('Pulsa GO y CineCaptions pide el audio a Resolve, lo transcribe, arma los bloques con su estilo, añade sonidos y emojis y lo coloca todo en tu timeline. También puedes soltar un video sobre la ventana.'),
@@ -9315,7 +9315,7 @@ class SubtitleApp(QWidget):
             P(tr('Tema: tus estilos'),
               tr('Cada tarjeta es un tema: haz clic en uno para elegirlo (el resaltado es el que usas). La última, «Crea tu estilo», mezcla los temas con tu letra y tus colores y lo guarda como un estilo más.'),
               aqui('_plantillas_ventana'), 'estilos', lado='derecha'),
-            P(tr('Creativo: retoca las palabras'),
+            P(tr('Corrector: retoca las palabras'),
               tr('Después de GO se abre aquí el editor: pinta cada palabra con su rol (Arriba, Principal, Abajo o Simple). Al tocar un texto ves qué estilo lleva y dónde cae, y puedes cambiarlo. «Generar» lo vuelve a colocar en Resolve.'),
               editor, 'editor', lado='abajo'),
             P(tr('Sonido'),
@@ -9328,7 +9328,7 @@ class SubtitleApp(QWidget):
               tr('Idioma, tema, animaciones, motor de voz y más. Aquí también puedes volver a ver este recorrido o desactivarlo para que no aparezca.'),
               lambda: self.isla.rect_de('ajustes'), 'inicio', lado='abajo', margen=6),
             P(tr('Todo listo'),
-              tr('Ya conoces CineCaptions. Para empezar, abre tu timeline en Resolve y pulsa GO. Si algo no queda como quieres, retócalo en Creativo.'),
+              tr('Ya conoces CineCaptions. Para empezar, abre tu timeline en Resolve y pulsa GO. Si algo no queda como quieres, retócalo en Corrector.'),
               None, 'inicio'),
         ]
 
@@ -10421,16 +10421,38 @@ class SubtitleApp(QWidget):
         self._editor_capa = capa
         self._editor_vacio = QWidget()
         cv = QVBoxLayout(self._editor_vacio)
-        cv.setContentsMargins(0, 40, 0, 0)
-        t = Tarjeta(margenes=(36, 32, 36, 32), espacio=12)
-        t.setMaximumWidth(640)
+        cv.setContentsMargins(0, 0, 0, 0)
+        cv.addStretch(2)
+        # v5.66 (el usuario: «si no hay sesión o audio, pulir mejor el aviso»): centrado en la página, con una frase de ejemplo como se ve en el
+        # Corrector (editor_ui.MuestraPalabras) y los tres pasos cuando aún no hay audio
+        t = Tarjeta(margenes=(40, 34, 40, 34), espacio=12)
+        t.setMaximumWidth(720)
+        t.setMinimumWidth(640)    # (v5.66: con el ancho del contenido, los pasos largos se partían y salían cortados)
         t.setMinimumHeight(236)   # el texto largo con salto de línea dejaba los botones cortados
+        self._ev_tarjeta = t      # (v5.66: con los tres pasos se le da más alto: _refrescar_editor_vacio)
         # v5.3.2: esta tarjeta MIRA lo que hay en Proyecto (el audio traído de Resolve o el video elegido, y si ya tiene palabras transcritas / la línea de
         # tiempo abierta en Resolve) y se adapta sola; si ya hay palabras, el editor se abre solo al entrar (ver _refrescar_editor_vacio)
-        self._ev_titulo = Etiqueta(tr('No hay ninguna sesión abierta'), 20, peso='extra', color='#FFFFFF')
+        import editor_ui
+        t.capa.addWidget(editor_ui.MuestraPalabras(), 0, Qt.AlignmentFlag.AlignLeft)
+        t.capa.addSpacing(4)
+        self._ev_titulo = Etiqueta(tr('Todavía no hay palabras para corregir'), 22, peso='extra', color='#FFFFFF')
         t.capa.addWidget(self._ev_titulo)
-        self._ev_texto = Etiqueta(tr('Se abre solo después de transcribir con GO. Para retocar un video ya transcrito, pulsa «Editar marcas»: no se vuelve a transcribir.'), 14, color=TEXT_MUTED, envolver=True)
+        self._ev_texto = Etiqueta('', 14, color=TEXT_MUTED, envolver=True)
         t.capa.addWidget(self._ev_texto)
+        self._ev_pasos, cp = caja_v(espacio=8)
+        for i, paso in enumerate((tr('Abre tu timeline en Resolve o suelta un video en esta ventana.'),
+                                  tr('Pulsa GO en Inicio: transcribe y coloca los subtítulos.'),
+                                  tr('Vuelve aquí: las palabras aparecen solas para retocarlas.')), 1):
+            fp, cpp = caja_h(espacio=12)
+            fp.setMinimumHeight(28)
+            num = Etiqueta(str(i), 12, peso='negrita', color=ui.ACCENT_CLARO, alineacion=Qt.AlignmentFlag.AlignCenter)
+            num.setFixedSize(26, 26)
+            num.setStyleSheet(ui.traducir_hoja('QLabel { background: rgba(34, 181, 115, 0.12); border: 1px solid rgba(34, 181, 115, 0.45); border-radius: 13px; padding: 0px; }'))
+            cpp.addWidget(num, 0, Qt.AlignmentFlag.AlignVCenter)
+            cpp.addWidget(Etiqueta(paso, 14, color='#DCE4F2', envolver=True), 1)
+            cp.addWidget(fp)
+        self._ev_pasos.setMinimumHeight(3 * 28 + 2 * 8 + 6)        # (con el texto que se parte, la última fila salía recortada)
+        t.capa.addWidget(self._ev_pasos)
         self._ev_detalle = Etiqueta('', 13, color=ui.ACCENT_CLARO, envolver=True)
         t.capa.addWidget(self._ev_detalle)
         t.capa.addSpacing(8)
@@ -10442,8 +10464,14 @@ class SubtitleApp(QWidget):
         cf.addStretch(1)
         t.capa.addWidget(fila)
         cv.addWidget(t, 0, Qt.AlignmentFlag.AlignHCenter)
-        cv.addStretch(1)
+        cv.addStretch(3)
         capa.addWidget(self._editor_vacio, 1)
+        # v5.66 (el usuario: «un poco de fondo de interfaz siguiendo el patrón de la página de Inicio y Tema»): el cielo de constelaciones de
+        # borde a borde detrás del aviso (solo sin sesión: con el editor abierto no se ve, para no repintar debajo de sus palabras). La tarjeta
+        # no se repinta en cada tic del cielo (zonas_vivas); su frase animada se repinta sola
+        import proyecto_ui
+        self._cielo_corrector = proyecto_ui.CieloDePagina(_pag)
+        self._cielo_corrector.zonas_vivas = lambda: [QRect(t.mapTo(_pag, QPoint(0, 0)), t.size())] if t.isVisible() else []
     # -- v5.3.2: Creativo detecta solo el audio / la línea de tiempo de Proyecto ----------------------------------------
     def _estado_creativo(self):
         """Qué hay disponible para retocar, SIN tocar Resolve ni leer archivos grandes (corre en el hilo de la interfaz):
@@ -10483,7 +10511,10 @@ class SubtitleApp(QWidget):
         b2.configure(text=tr('Ir a Tema'))
         b2.poner_comando(lambda: self.ir_a('estilos'))
         b1.setVisible(True)
+        b2.setVisible(True)
         b1.configure(state='normal')
+        self._ev_pasos.setVisible(modo == 'nada')              # (v5.66: los tres pasos, solo sin audio)
+        self._ev_tarjeta.setMinimumHeight(430 if modo == 'nada' else 300)
         if modo == 'ocupado':
             titulo, texto = tr('Transcribiendo…'), tr('En cuanto termine la transcripción, el editor se abre solo con todas las palabras para que pintes su rol.')
             b1.setVisible(False)
@@ -10503,12 +10534,12 @@ class SubtitleApp(QWidget):
             b1.configure(text=tr('Traer el audio de Resolve'))
             b1.poner_comando(lambda: self._detectar_desde_resolve(silencioso=False))
         else:
-            titulo = tr('No hay ninguna sesión abierta')
-            # (v5.63: «Obtener» ya no está en Proyecto: se quitó la franja del audio)
-            texto = tr('Aún no hay audio. Pulsa GO en Inicio (o suelta un video en la ventana) y vuelve aquí: lo detecto solo.')
-            b1.setVisible(False)
-            b2.configure(text=tr('Ir a Inicio'))
-            b2.poner_comando(lambda: self.ir_a('inicio'))
+            titulo = tr('Todavía no hay palabras para corregir')
+            # (v5.63: «Obtener» ya no está en Proyecto: se quitó la franja del audio. v5.66: tres pasos y «Elegir un video…»)
+            texto = tr('Aquí retocas cada palabra de tus subtítulos: corriges lo que se oyó mal y eliges cuál va grande. Se llena solo en cuanto hay audio:')
+            b1.configure(text=tr('Ir a Inicio'))               # (el botón principal; el oculto deja su hueco: va el primero)
+            b1.poner_comando(lambda: self.ir_a('inicio'))
+            b2.setVisible(False)                               # (v5.66: sin «Elegir un video…», lo pidió el usuario)
         self._ev_titulo.configure(text=titulo)
         self._ev_texto.configure(text=texto)
         self._ev_detalle.configure(text=detalle)
@@ -10543,6 +10574,7 @@ class SubtitleApp(QWidget):
         «Cancelar» (ventana.esperar) y lo retira. Devuelve su resultado."""
         self._editor = ventana
         self._editor_vacio.hide()
+        self._cielo_corrector.hide()                     # (v5.66: el cielo, solo detrás del aviso sin sesión)
         self._editor_capa.addWidget(ventana, 1)
         try:
             ventana.ajustar_densidad(getattr(self, '_densidad', 0) or 0)
@@ -10554,10 +10586,15 @@ class SubtitleApp(QWidget):
         self.ir_a('editor')
         elegido = None
         resultado = None
+        self._tras_sesion = None
+        self._resolve_en_sesion = False                 # (v5.66: ¿se vio Resolve abierto durante la sesión? ver _vigilar_resolve_sesion)
+        self._sesion_n = getattr(self, '_sesion_n', 0) + 1
+        despues(3000, lambda n=self._sesion_n: self._vigilar_resolve_sesion(n), self)
         try:
             resultado = ventana.esperar()
             elegido = getattr(ventana, '_proyecto_elegido', None)
         finally:
+            tras, self._tras_sesion = self._tras_sesion, None
             self._editor = None
             try:
                 ventana.hide()
@@ -10567,9 +10604,11 @@ class SubtitleApp(QWidget):
             except Exception:
                 pass
             self._editor_vacio.show()
+            self._cielo_corrector.show()
+            self._cielo_corrector.lower()
             t.configure(text=tr('Retocar las palabras'))
             s.configure(text=tr('Pinta cada palabra con su rol; el bloque se arma solo'))
-            if vivo(self) and self.isVisible():
+            if vivo(self) and self.isVisible() and tras is None:
                 # v5.5.10 (pedido: «al dar Generar pasa a Inicio y empieza el proceso con las correcciones de Creativo»)
                 self.ir_a('inicio' if resultado is not None else volver)
         if elegido:
@@ -10577,6 +10616,8 @@ class SubtitleApp(QWidget):
             self.status_var.set(tr('Proyecto cargado: {nombre}', nombre=Path(elegido).name))
         if resultado is not None:
             self._receta_generar()
+        if tras is not None:                            # v5.66: lo que se pidió con la sesión abierta (GO…), ya con la sesión cerrada
+            despues(0, tras, self)
         return resultado
     # -- v5.7: el popup de «Generar» del editor ---------------------------------------
     def _receta_generar(self):
@@ -10645,14 +10686,47 @@ class SubtitleApp(QWidget):
                 panel.paso_fallido = g['fase']
             panel.paso(g['fase'], 'hecho' if ok else 'error')
         panel.terminar(ok, detalle or (tr('Ya está en tu timeline.') if ok else tr('No se pudo generar: mira el Registro.')))
-    def _editor_abierto(self):
+    def _editor_abierto(self, luego=None):
         """Una sola sesion del editor a la vez (la v4 lo garantizaba con el
-        modal; ahora el resto de pantallas sigue a mano)."""
+        modal; ahora el resto de pantallas sigue a mano).
+        v5.66 (el usuario: «si hay una sesión abierta, que se cancele la sesión del editor de palabras»): antes un cuadro pedía terminarla o
+        cancelarla a mano; ahora se cierra sola con sus marcas guardadas (el «Cancelar» del editor las guarda) y `luego` (lo que se pidió: GO,
+        retocar, transcribir) corre en cuanto la sesión terminó de cerrarse (_sesion_editor: su bucle de espera tiene que soltarse antes)."""
         if self._editor is None:
             return False
-        messagebox.showinfo(tr('El editor está abierto'), tr('Termina o cancela primero la sesión del editor de palabras.'), parent=self)
-        self.ir_a('editor')
+        self._cerrar_sesion_editor(tr('Corrector: cerré la sesión abierta para seguir; tus marcas quedaron guardadas.'), luego)
         return True
+    def _vigilar_resolve_sesion(self, n):
+        """v5.66 (el usuario: «si se cierra Resolve, cerrar la sesión»): mientras hay una sesión en el Corrector, cada 4 s (en un hilo: tasklist)
+        mira si Resolve sigue abierto; si se vio abierto durante la sesión y se cierra, la sesión se cierra sola con sus marcas guardadas y se
+        queda en el Corrector. Si empezó con Resolve cerrado (retocar un audio suelto), no se cierra por eso. `n`: la sesión que se vigila."""
+        if not vivo(self) or self._editor is None or n != getattr(self, '_sesion_n', 0):
+            return
+        def trabajo():
+            import colocacion
+            return colocacion.resolve_en_proceso()
+        def fin(abierto, error):
+            if not vivo(self) or self._editor is None or n != getattr(self, '_sesion_n', 0):
+                return
+            if error is None and abierto is True:
+                self._resolve_en_sesion = True
+            elif error is None and abierto is False and self._resolve_en_sesion:
+                self._cerrar_sesion_editor(tr('Corrector: DaVinci Resolve se cerró; cerré la sesión y tus marcas quedaron guardadas.'),
+                                           luego=lambda: self.ir_a('editor'))
+                return
+            despues(4000, lambda: self._vigilar_resolve_sesion(n), self)
+        _correr_en_hilo(self, trabajo, fin, baja=True)
+    def _cerrar_sesion_editor(self, motivo, luego=None):
+        """v5.66: cierra la sesión abierta del Corrector como su «Cancelar» (guarda las marcas) y anota el motivo en el Registro."""
+        ed = self._editor
+        if ed is None:
+            return
+        registro.info(motivo, 'corrector')
+        self._tras_sesion = luego
+        try:
+            ed._cancelar()
+        except Exception:
+            registro.excepcion(origen='corrector · cerrar la sesión')
     # -- Estilos y composición -------------------------------------------------
     def _pagina_estilos(self):
         _pag, capa = self._nueva_pagina('estilos', tr('Elegir audio y tema') if plantillas.SOLO_TEMAS else tr('Elegir audio y estilo'),
@@ -13356,7 +13430,7 @@ class SubtitleApp(QWidget):
         Es lo que permite retocar un bloque despues de verlo en Resolve: se
         corrige, se regenera, y se vuelve a correr el script de Resolve.
         """
-        if self._editor_abierto():
+        if self._editor_abierto(luego=self._on_update):
             return
         if not self._licencia_lista():
             return
@@ -13564,7 +13638,7 @@ class SubtitleApp(QWidget):
             ejecutar_en_ui(en_ui)
         threading.Thread(target=traducir_y_terminar, daemon=True).start()
     def _on_generate(self):
-        if self._editor_abierto():
+        if self._editor_abierto(luego=self._on_generate):
             return
         if not self._licencia_lista():
             return

@@ -11,7 +11,7 @@ copia quedó puesta; si algo falla, A1 queda encendida) y sonidos con 'pista' en
 sus pistas se quitan y A1 vuelve a sonar; 'solo_ai' = solo eso (la limpieza cuando el director se apaga).
 
 Reglas: nunca toca V1/A1 ni las pistas de los captions (salvo apagar A1 con AI VOICE ya puesta); las pistas FX-INTRO / FX-CORTES / FX-ICONOS (video) y FX-SONIDO (audio, el sonido de la intro) se vacían y se vuelven a llenar en cada corrida (re-aplicar no apila
-nada); los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos» (el prefijo «RCS · » hace que CineCaptions no lo
+nada); los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «CC · Efectos» (el prefijo «CC · » hace que CineCaptions no lo
 cuente como plantillas del usuario). Nada de InsertFusionTitleIntoTimeline ni de stills: solo importar medios y AppendToTimeline.
 """
 import json
@@ -26,7 +26,7 @@ PISTA_VOZ_AI = 'AI VOICE'                    # v5.34, AI Sound Director: la voz 
 PISTAS_AI = ('AI MUSIC', 'AI AMBIENCE', 'AI SFX MOTION', 'AI SFX UI', 'AI SFX IMPACTS', 'AI SFX TONAL', 'AI SFX TEXTURE')
 PROPIAS = ('FX-', 'PRO-', 'AI ', 'SFX')       # las pistas de audio que pone CineCaptions (las demás son del usuario)
 MAX_CARRILES = 8
-BIN = 'RCS · Efectos'
+BIN = 'CC · Efectos'
 
 
 def _norm(r):

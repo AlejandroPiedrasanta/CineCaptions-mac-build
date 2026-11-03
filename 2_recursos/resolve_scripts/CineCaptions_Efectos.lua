@@ -7,10 +7,10 @@ Version en Lua para Resolve FREE (el Puente la corre con dofile) de "2_recursos/
 Lee el plan que deja la app (efectos_plan.json; sin io, su sidecar .lua) y pone la intro, las transiciones de los cortes, los iconos flotantes, el
 B-roll, los sonidos de la intro/cortes/gancho, la musica de fondo y la composicion de Fusion de cada clip de V1 (zoom, temblor, transiciones, fondo).
 Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los captions; las pistas «FX-…» se vacian y se vuelven a llenar en cada corrida;
-los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «RCS · Efectos».
+los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «CC · Efectos».
 ]]
 
-local VERSION = "5.65 (efectos)"
+local VERSION = "5.66 (efectos)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -446,7 +446,7 @@ local PISTA_VOZ_AI = "AI VOICE"              -- v5.34, AI Sound Director: la voz
 local PISTAS_AI = { "AI MUSIC", "AI AMBIENCE", "AI SFX MOTION", "AI SFX UI", "AI SFX IMPACTS", "AI SFX TONAL", "AI SFX TEXTURE" }
 local PROPIAS = { "FX-", "PRO-", "AI ", "SFX" }  -- las pistas de audio que pone CineCaptions (las demas son del usuario)
 local MAX_CARRILES = 8
-local BIN = "RCS · Efectos"
+local BIN = "CC · Efectos"
 local NOMBRE_COMP = "CineCaptions FX"
 
 local function redondear(x) return math.floor(x + 0.5) end

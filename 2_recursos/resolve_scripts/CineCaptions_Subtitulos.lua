@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.65 (subtitulos)"
+local VERSION = "5.66 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -237,7 +237,10 @@ local GAP_FRAMES = {
 -- El prefijo de los bins que crea este programa para los packs .drt. Va aca
 -- arriba y no junto a nombre_bin_pack() porque find_clip_by_name() lo usa
 -- mucho antes: en Lua un local solo existe a partir de su linea.
-local PREFIJO_BIN_PACK = "RCS · "
+-- v5.66 (el usuario: «cambia las abreviaturas RCS por CC en todo»): «CC · ».
+-- Los bins que ya hay con el de antes («RCS · ») siguen siendo nuestros: se
+-- comparan los dos (sin otro local: este archivo esta al limite de 200).
+local PREFIJO_BIN_PACK = "CC · "
 
 local ANCLA_Y = 0.196
 -- 0.54 (v1.0.51, antes 0.66): el 0.66 salia de la caja em teorica de
@@ -2004,14 +2007,14 @@ end
 
 local function es_clip_texto_nuestro(item)
     -- True si un item del timeline es un Text+ (lo que nosotros ponemos)
-    -- o, desde la v3.3.0, uno de NUESTROS emojis (rcs_emoji_*.png): sin
+    -- o, desde la v3.3.0, uno de NUESTROS emojis (cc_emoji_*.png; antes rcs_): sin
     -- esto la pista EMOJI contaba como ajena y cada corrida apilaba otra.
     local ok, tool = pcall(get_text_plus, item)
     if ok and tool ~= nil then return true end
     local ok_n, nombre = pcall(function() return item:GetName() end)
     if not (ok_n and type(nombre) == "string") then return false end
     nombre = nombre:lower()
-    if nombre:sub(1, 10) == "rcs_emoji_" then return true end
+    if nombre:sub(1, 9) == "cc_emoji_" or nombre:sub(1, 10) == "rcs_emoji_" then return true end     -- (v5.66: «cc_», antes «rcs_»)
     -- v5.8: tambien las SECUENCIAS animadas (e_[0001-0023].png, en .../emojis_secuencia/<emoji>/): sin esto
     -- al volver a generar la pista de emojis se apilaba otra
     if nombre:sub(1, 3) == "e_[" then
@@ -2132,7 +2135,7 @@ function NOMBRES.indice_de_clips(media_pool, carpeta)
             local saltar = false
             if not acotada then
                 local ok_n, n = pcall(function() return sub:GetName() end)
-                saltar = ok_n and n ~= nil and n:sub(1, #PREFIJO_BIN_PACK) == PREFIJO_BIN_PACK
+                saltar = ok_n and n ~= nil and (n:sub(1, #PREFIJO_BIN_PACK) == PREFIJO_BIN_PACK or n:sub(1, #"RCS · ") == "RCS · ")
             end
             if not saltar then recorrer(sub) end
         end
@@ -2169,7 +2172,7 @@ local function find_clip_by_name(media_pool, nombre, carpeta, indice)
             local saltar = false
             if not acotada then
                 local ok_n, n = pcall(function() return sub:GetName() end)
-                saltar = ok_n and n ~= nil and n:sub(1, #PREFIJO_BIN_PACK) == PREFIJO_BIN_PACK
+                saltar = ok_n and n ~= nil and (n:sub(1, #PREFIJO_BIN_PACK) == PREFIJO_BIN_PACK or n:sub(1, #"RCS · ") == "RCS · ")
             end
             if not saltar then
                 local encontrado = buscar(sub)
@@ -2653,7 +2656,7 @@ end
 -- Devuelve (cuantos_entraron, metodo), o (0, nil) si no se pudo.
 -- Como se marca el timeline importado que ya cumplio su proposito. Se borra
 -- en la corrida siguiente: borrarlo en caliente cerraba Resolve.
-local MARCA_TIMELINE_TEMPORAL = "RCS · temporal (se limpia solo)"
+local MARCA_TIMELINE_TEMPORAL = "CC · temporal (se limpia solo)"     -- (v5.66: antes «RCS · …»: también se limpian)
 
 -- Borra los timelines temporales de corridas anteriores. Se llama al
 -- ARRANCAR, no al terminar: aqui ninguno es el timeline actual del usuario,
@@ -2671,7 +2674,8 @@ local function limpiar_temporales(project, media_pool)
             local tl = project:GetTimelineByIndex(i)
             if tl then
                 local nom = tl:GetName() or ""
-                if nom:sub(1, #MARCA_TIMELINE_TEMPORAL) == MARCA_TIMELINE_TEMPORAL
+                if (nom:sub(1, #MARCA_TIMELINE_TEMPORAL) == MARCA_TIMELINE_TEMPORAL
+                        or nom:sub(1, #"RCS · temporal (se limpia solo)") == "RCS · temporal (se limpia solo)")
                         and nom ~= nombre_actual then
                     sobras[#sobras + 1] = tl
                 end
@@ -3030,7 +3034,7 @@ local function respaldar_bin_drb(media_pool, carpeta_bin, nombre_pack,
             local ruta_manual = ruta_respaldo_manual(nombre_pack, formato)
             print("  Tu Resolve no exporta bandejas por script. Para dejar "
                 .. "el automatico permanente hazlo tu UNA vez: clic "
-                .. "derecho sobre el bin «RCS · " .. tostring(nombre_pack)
+                .. "derecho sobre el bin «" .. PREFIJO_BIN_PACK .. tostring(nombre_pack)
                 .. " · " .. tostring(formato) .. "» en el Media Pool -> "
                 .. "Exportar bandeja... -> guarda EXACTO como:")
             print("    " .. ruta_manual)
@@ -3136,7 +3140,7 @@ local function preparar_pack_drt(project, media_pool, nombre_pack, formato, ruta
             -- El peldaño CREO el bin: recordarlo. Sin esto, un drb que
             -- falla al importar dejaba 'existente' en nil y la escalera
             -- de abajo llamaba AddSubFolder OTRA VEZ — dos bins
-            -- «RCS · <pack> · <f>» duplicados en el proyecto. Camino
+            -- «CC · <pack> · <f>» duplicados en el proyecto. Camino
             -- inalcanzable hasta la v1.0.55 (el manifiesto nunca traia
             -- drb); lo cazo test_v1039 al embeber los .drb de verdad.
             if carpeta_bin then existente = carpeta_bin end
@@ -3189,14 +3193,13 @@ local function preparar_pack_drt(project, media_pool, nombre_pack, formato, ruta
     -- vez): la limpieza de la corrida siguiente se lo lleva cuando no es
     -- el current de nadie. Y si es el timeline ACTUAL, se deja en paz.
     pcall(function()
-        local objetivo = "RCS · " .. nombre_pack .. " · " .. formato
-            .. " (arrastrar a mano)"
+        local objetivo = nombre_pack .. " · " .. formato .. " (arrastrar a mano)"      -- (v5.66: con «CC · » o el «RCS · » de antes)
         local actual = nil
         pcall(function() actual = project:GetCurrentTimeline():GetName() end)
         for i = 1, (project:GetTimelineCount() or 0) do
             local tl = project:GetTimelineByIndex(i)
             local ok_n, nom = pcall(function() return tl:GetName() end)
-            if ok_n and nom == objetivo and nom ~= actual then
+            if ok_n and (nom == PREFIJO_BIN_PACK .. objetivo or nom == "RCS · " .. objetivo) and nom ~= actual then
                 pcall(function() tl:SetName(MARCA_TIMELINE_TEMPORAL) end)
             end
         end
@@ -3466,7 +3469,7 @@ local function preparar_pack_drt(project, media_pool, nombre_pack, formato, ruta
                     -- Ultimo peldaño: se deja el timeline importado, con
                     -- nombre claro, y se dice el paso manual exacto.
                     pcall(function()
-                        importado:SetName("RCS · " .. nombre_pack .. " · "
+                        importado:SetName(PREFIJO_BIN_PACK .. nombre_pack .. " · "
                             .. formato .. " (arrastrar a mano)")
                     end)
                     local ok_nom, nom = pcall(function() return importado:GetName() end)
@@ -3673,7 +3676,7 @@ local function place_dynamic(timeline, media_pool, track, fps, start_frame, proj
     local modo_plantillas = #sets > 0
 
     -- Plantilla para las palabras sueltas sin marcar (rol 'base'). La del
-    -- BIN DEL PACK manda: la busqueda global salta los bins RCS a proposito
+    -- BIN DEL PACK manda: la busqueda global salta nuestros bins a proposito
     -- (un pack de ayer no debe contaminar una generacion sin pack), y por
     -- eso el 'base' del propio pack era INVISIBLE aqui — 55 de 65 bloques
     -- de un video real salieron pintados de principal (reporte del 01-09).
@@ -6988,7 +6991,7 @@ local function parse_srt(ruta)
     return cues
 end
 
--- El clip 'base' de un bin RCS (el pack ya preparado), o nil. La busqueda
+-- El clip 'base' de un bin nuestro (el pack ya preparado), o nil. La busqueda
 -- global EXCLUYE los bins nuestros a proposito; para la pista TRADUCIDA es
 -- al reves: se quiere justamente la 'base' del pack.
 local function plantilla_base_del_pack(media_pool)
@@ -6997,7 +7000,8 @@ local function plantilla_base_del_pack(media_pool)
     for _, sub in ipairs(lista_api(raiz:GetSubFolderList())) do
         local ok_n, nombre = pcall(function() return sub:GetName() end)
         if ok_n and nombre
-                and tostring(nombre):sub(1, #PREFIJO_BIN_PACK) == PREFIJO_BIN_PACK then
+                and (tostring(nombre):sub(1, #PREFIJO_BIN_PACK) == PREFIJO_BIN_PACK
+                     or tostring(nombre):sub(1, #"RCS · ") == "RCS · ") then
             local clip = NOMBRES.buscar_base(media_pool, sub)
             if clip then return clip end
         end

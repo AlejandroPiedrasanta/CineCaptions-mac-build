@@ -23,8 +23,8 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 
-MARCA = 'RCS · temporal (se limpia solo)'
-BINS = ('RCS · Crea tu estilo (bloques)', 'RCS · Crea tu estilo (Amro)')
+MARCA = 'CC · temporal (se limpia solo)'
+BINS = ('CC · Crea tu estilo (bloques)', 'CC · Crea tu estilo (Amro)')
 
 _PONER = r"""
 nombre = %(nombre)r

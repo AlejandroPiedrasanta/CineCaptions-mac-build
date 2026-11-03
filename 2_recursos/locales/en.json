@@ -4190,6 +4190,21 @@
     "Tema: tus estilos": "Theme: your styles",
     "Ir a Tema": "Go to Theme",
     " · ahora está apagada (enciéndela aquí o en el menú de Tema)": " · it's off now (turn it on here or in the Theme menu)",
-    "Audio detectado": "Audio detected"
+    "Audio detectado": "Audio detected",
+    "Corrector": "Proofreader",
+    "Los {n} estilos se alternan entre los bloques (en Corrector ves cuál lleva cada uno y puedes cambiarlo).": "The {n} styles alternate between blocks (in Proofreader you see which one each one gets and you can change it).",
+    "Corrector: no pude dibujar la vista exacta del tema; uso la aproximada.": "Proofreader: I couldn't draw the exact theme preview; using the approximate one.",
+    "Aquí cambias de pantalla: Inicio, Tema (estilos), Corrector (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.": "Here you switch screens: Home, Theme (styles), Proofreader (touch up words) and Sound (effects). On the right, the Resolve status, Settings and the pin to keep CineCaptions on top of Resolve.",
+    "Corrector: retoca las palabras": "Proofreader: touch up the words",
+    "Ya conoces CineCaptions. Para empezar, abre tu timeline en Resolve y pulsa GO. Si algo no queda como quieres, retócalo en Corrector.": "You now know CineCaptions. To start, open your timeline in Resolve and press GO. If something does not look the way you want, touch it up in Proofreader.",
+    "Los atajos de Corrector funcionan mientras el editor está abierto.": "Proofreader shortcuts work while the editor is open.",
+    "Corrector: cerré la sesión abierta para seguir; tus marcas quedaron guardadas.": "Proofreader: I closed the open session to continue; your marks were saved.",
+    "Corrector: DaVinci Resolve se cerró; cerré la sesión y tus marcas quedaron guardadas.": "Proofreader: DaVinci Resolve closed; I closed the session and your marks were saved.",
+    "Todavía no hay palabras para corregir": "No words to proofread yet",
+    "Aquí retocas cada palabra de tus subtítulos: corriges lo que se oyó mal y eliges cuál va grande. Se llena solo en cuanto hay audio:": "Here you touch up every word of your subtitles: fix what was misheard and choose which one goes big. It fills itself as soon as there is audio:",
+    "Abre tu timeline en Resolve o suelta un video en esta ventana.": "Open your timeline in Resolve or drop a video on this window.",
+    "Pulsa GO en Inicio: transcribe y coloca los subtítulos.": "Press GO on Home: it transcribes and places the subtitles.",
+    "Vuelve aquí: las palabras aparecen solas para retocarlas.": "Come back here: the words appear on their own to touch them up.",
+    "Abre el Media Pool en Resolve y borra el bin «CC · …» de ese estilo si está a medias; se recrea solo.": "Open the Media Pool in Resolve and delete the \"CC · …\" bin of that style if it is half-done; it is recreated automatically."
   }
 }

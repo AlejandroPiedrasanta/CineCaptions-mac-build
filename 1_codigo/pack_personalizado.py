@@ -7,7 +7,7 @@ Contrato 5 de «Crea tu estilo»:  preparar(base, ajustes) -> carpeta del pack d
     ajustes = {"fuente_principal": "Familia|Estilo" | "", "fuente_secundaria": ..., "color_principal": "#RRGGBB" | "", "color_secundario": ...}
     vacío = lo del tema; principal = la palabra grande (rol main, héroe); secundaria = la de arriba y abajo (context / complement).
 
-Nada se escribe en Resolve en vivo: los gemelos importan el .drb derivado en su propio bin («RCS · VIRAL · a1b2c3d4 · v») como cualquier pack, y
+Nada se escribe en Resolve en vivo: los gemelos importan el .drb derivado en su propio bin («CC · VIRAL · a1b2c3d4 · v») como cualquier pack, y
 para_manifiesto(carpeta) da su campo 'plantilla' (con 'base' = el tema). Se RETOCA el .drb de fábrica, como construir_pack.premium_sobre_drb: cada comp se
 descomprime, se cambian SOLO sus entradas de letra y de color (y los reinicios del Inspector que las seguían; sobre el texto de la comp, por posición: el
 resto queda byte a byte) y se vuelve a comprimir.

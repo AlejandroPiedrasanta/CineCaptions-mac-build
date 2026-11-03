@@ -9840,5 +9840,12 @@
   "fr": "« Sous-titres derrière vous » prévient dans le Journal quand, dans une vidéo, aucun sous-titre ne peut passer derrière la personne (elle est petite, de dos ou en mouvement, ou le plan change) et explique pourquoi : avant, GO se terminait comme sans l'option et on aurait dit qu'elle ne marchait pas.",
   "de": "«Untertitel hinter dir» meldet im Protokoll, wenn in einem Video kein Untertitel hinter die Person passt (sie ist klein, von hinten zu sehen oder bewegt sich, oder die Einstellung wechselt), und sagt warum: Vorher endete GO wie ohne die Funktion und es sah aus, als würde sie nicht funktionieren.",
   "it": "«Sottotitoli dietro di te» avvisa nel Registro quando in un video nessun sottotitolo può andare dietro la persona (è piccola, di spalle o in movimento, o cambia l'inquadratura) e dice perché: prima GO finiva come senza la funzione e sembrava che non funzionasse."
+ },
+ "Abre el Media Pool en Resolve y borra el bin «CC · …» de ese estilo si está a medias; se recrea solo.": {
+  "en": "Open the Media Pool in Resolve and delete the \"CC · …\" bin of that style if it is half-done; it is recreated automatically.",
+  "pt": "Abra o Media Pool no Resolve e apague o bin «CC · …» desse estilo se estiver incompleto; ele é recriado sozinho.",
+  "fr": "Ouvre le Media Pool dans Resolve et supprime le bin « CC · … » de ce style s'il est incomplet ; il se recrée tout seul.",
+  "de": "Öffne den Media Pool in Resolve und lösche den Ordner „CC · …“ dieses Stils, falls er unvollständig ist; er wird automatisch neu erstellt.",
+  "it": "Apri il Media Pool in Resolve ed elimina il bin «CC · …» di quello stile se è incompleto; si ricrea da solo."
  }
 }

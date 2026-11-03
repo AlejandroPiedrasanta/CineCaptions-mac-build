@@ -121,7 +121,7 @@ _REGLAS = [
      'Resolve no pudo cargar el pack de estilos',
      'El estilo elegido guarda sus piezas en un bin del Media Pool y Resolve no dejó crearlo o importarlo.',
      ['Espera unos segundos a que Resolve termine lo que esté haciendo y vuelve a pulsar GO.',
-      'Abre el Media Pool en Resolve y borra el bin «RCS · …» de ese estilo si está a medias; se recrea solo.',
+      'Abre el Media Pool en Resolve y borra el bin «CC · …» de ese estilo si está a medias; se recrea solo.',
       'Si sigue fallando, elige otro estilo en el chip «Estilo» de Inicio y avisa a soporte con el informe.'], 'bloquea'),
     (r'no cre[oó] el proyecto|no_creo|CreateProject',
      'Resolve no pudo crear el proyecto de CineCaptions',

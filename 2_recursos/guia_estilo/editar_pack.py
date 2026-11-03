@@ -4,7 +4,7 @@
 Lo lanza la app por el MCP (edicion_pack.abrir_en_resolve) justo después de escribir ~/DaVinciSubtitles/editar_pack.json.
 
   * Si el pack trae su timeline (.drt) se importa tal cual: es el archivo que el usuario ya conoce, con todos sus clips apilados y nombrados.
-  * Si solo trae el bin (.drb), se importa en el bin «RCS · Editar · <pack>» y se arma el timeline como en un pack: por cada variante
+  * Si solo trae el bin (.drb), se importa en el bin «CC · Editar · <pack>» y se arma el timeline como en un pack: por cada variante
     V1 principal · V2 arriba · V3 abajo · V4 imagen (una variante tras otra) y al final «simple»; cada clip ya lleva el NOMBRE EXACTO que lee CineCaptions
     (principal, arriba 2, abajo 3…) y su posición, para exportarlo sin tocar los nombres.
 
@@ -103,7 +103,7 @@ def main():
     drb = datos.get('drb') or ''
     if not drb or not os.path.isfile(drb):
         raise SystemExit('este pack no trae ni timeline (.drt) ni bin (.drb) que pueda abrir')
-    bin_ = 'RCS · Editar · ' + datos['nombre']
+    bin_ = 'CC · Editar · ' + datos['nombre']
     caja = next((f for f in (raiz.GetSubFolderList() or []) if f.GetName() == bin_), None)
     clips = _clips(caja) if caja is not None else {}
     if not clips:
