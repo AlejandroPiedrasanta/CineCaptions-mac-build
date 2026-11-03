@@ -1892,7 +1892,9 @@ class PlantillasWindow(QWidget):
         # v5.3.6: «Pack de estilos» = un slider horizontal de tarjetas VERTICALES sobre fotos de video (estilos_slider) y, debajo, el panel del
         # estilo que está al centro. Sin filtro de formato (las vistas son siempre verticales) y sin la tarjeta de tipografías.
         import proyecto_ui                            # v5.63 (el usuario eligió el fondo C): la tarjeta con el cielo de constelaciones
-        self.tarjeta = proyecto_ui.TarjetaCielo(espacio=8, margenes=(18, 12, 18, 10))
+        # v5.64 (el usuario: «que el fondo tipo astral abarque toda la página, así como la de Inicio»): de borde a borde de la ventana, también
+        # detrás de la isla; la página no tiene márgenes (_pagina_estilos) y estos llevan los de antes (página 40/86/40/22 + tarjeta 18/12/18/10)
+        self.tarjeta = proyecto_ui.TarjetaCielo(sin_marco=True, espacio=8, margenes=(58, 98, 58, 32))
         if franja is not None:                        # v5.62 (el usuario: «elimina esto»): la franja del audio (Obtener · archivo · onda · duración ·
             franja.setParent(self)                    # motor · «Crea tu estilo») ya no se ve; sigue construida y escondida porque el resto del programa
             franja.hide()                             # lee sus valores (video_var, motor_var…). GO trae el audio solo; el motor, en Ajustes › General
@@ -3944,7 +3946,7 @@ class WordTagWindow(QWidget):
         self.mini_pos = editor_ui.MiniPosicion()          # v5.8: dónde cae el bloque en el cuadro del video (arriba / centro / abajo)
         self.mini_pos.setFixedHeight(156)
         self.mini_pos.hide()
-        Tooltip(self.mini_pos, tr('Dónde cae este estilo en el cuadro del video. La posición la pone el estilo que elegiste en Proyecto (aproximada).'))
+        Tooltip(self.mini_pos, tr('Dónde cae este estilo en el cuadro del video. La posición la pone el estilo que elegiste en Tema (aproximada).'))
         cfv.addWidget(self.mini_pos)
         self.tarjeta_bloque.capa.addWidget(fila_v)
         fila_b = QWidget()                     # v5.5.10: salta de línea (el tiempo + «SFX: …» largo desbordaba la columna de 400 px)
@@ -5372,7 +5374,7 @@ class WordTagWindow(QWidget):
             partes.append(actual['nombre'])
         partes.append(quien)
         if not composicion.es_defecto(getattr(self.master, 'composicion', None)):
-            partes.append(tr('con tu ajuste fino de Proyecto'))
+            partes.append(tr('con tu ajuste fino de Tema'))
         self.estilo_lbl.configure(text='  ·  '.join(partes))
         limpiar_capa(self.estilo_chips)
         if len(estilos) > 1:
@@ -6367,7 +6369,7 @@ class SubtitleApp(QWidget):
     # «Nuevo proyecto» y «Estilos y composición» son UNA entrada del menú
     # («Proyecto»), con un conmutador arriba; Inicio elige pack, idioma, efectos
     # y formato con chips debajo de GO.
-    PAGINAS = (('inicio', 'Inicio'), ('nuevo', 'Proyecto'), ('editor', 'Creativo'),
+    PAGINAS = (('inicio', 'Inicio'), ('nuevo', 'Tema'), ('editor', 'Creativo'),          # (v5.64: «Proyecto» pasa a «Tema», pedido del usuario)
                ('sfx', 'Sonido'), ('efectos', 'Efectos'))
     ANCHO_PLEGAR = 1400
     def __init__(self, initial_video=None):
@@ -7006,8 +7008,13 @@ class SubtitleApp(QWidget):
                     s.setVisible(nivel < 2 and clave != 'inicio')
             except Exception:
                 pass
-        for capa in getattr(self, '_capas_pagina', {}).values():
+        self._margenes_pagina = margenes
+        for clave, capa in getattr(self, '_capas_pagina', {}).items():
             try:
+                if clave == 'estilos':                 # v5.64: el cielo de Tema va de borde a borde: sus márgenes van dentro de la tarjeta
+                    capa.setContentsMargins(0, 0, 0, 0)
+                    self._margenes_cielo()
+                    continue
                 capa.setContentsMargins(*margenes)
                 capa.setSpacing(18 if nivel == 0 else 12)
             except Exception:
@@ -7513,7 +7520,7 @@ class SubtitleApp(QWidget):
             es_guion = False
         if not es_guion and not composicion.es_defecto(getattr(self, 'composicion', None)):
             chips.append(('ph.arrows-out-cardinal', tr('Posición ajustada'), None, 'aviso', self._quitar_ajuste_fino,
-                          tr('Tu «Ajuste fino» de Proyecto mueve los subtítulos ({d}) respecto a la posición exacta del estilo. Clic: quitarlo.',
+                          tr('Tu «Ajuste fino» de Tema mueve los subtítulos ({d}) respecto a la posición exacta del estilo. Clic: quitarlo.',
                              d=resumen_composicion(getattr(self, 'composicion', None))), 'cerrar'))
         try:
             hay_varios = len(plantillas.variantes_de(pack, self._formato_en_juego())) > 1
@@ -9296,7 +9303,7 @@ class SubtitleApp(QWidget):
               tr('Te enseño la interfaz en un minuto: dónde está cada cosa y para qué sirve. Puedes salir cuando quieras con Esc, y volver a verlo o desactivarlo desde Ajustes.'),
               None, 'inicio'),
             P(tr('Tu barra de navegación'),
-              tr('Aquí cambias de pantalla: Inicio, Proyecto (estilos), Creativo (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.'),
+              tr('Aquí cambias de pantalla: Inicio, Tema (estilos), Creativo (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.'),
               isla, 'inicio', lado='abajo', margen=8),
             P(tr('GO: todo en un clic'),
               tr('Pulsa GO y CineCaptions pide el audio a Resolve, lo transcribe, arma los bloques con su estilo, añade sonidos y emojis y lo coloca todo en tu timeline. También puedes soltar un video sobre la ventana.'),
@@ -9305,7 +9312,7 @@ class SubtitleApp(QWidget):
               tr('Debajo de GO eliges el estilo, los emojis, los efectos de sonido y el formato. Si algo cambia el resultado sin que se vea (una posición ajustada, un estilo fijo) aparece en ámbar: un clic lo quita.'),
               aqui('go_panel', 'opciones'), 'inicio', lado='arriba'),
             # v5.62: sin los pasos de la franja del audio y del botón «Crea tu estilo» (se quitaron de Proyecto)
-            P(tr('Proyecto: tus estilos'),
+            P(tr('Tema: tus estilos'),
               tr('Cada tarjeta es un tema: haz clic en uno para elegirlo (el resaltado es el que usas). La última, «Crea tu estilo», mezcla los temas con tu letra y tus colores y lo guarda como un estilo más.'),
               aqui('_plantillas_ventana'), 'estilos', lado='derecha'),
             P(tr('Creativo: retoca las palabras'),
@@ -10430,7 +10437,7 @@ class SubtitleApp(QWidget):
         fila, cf = caja_h(espacio=12)
         self.editar_btn2 = Boton(tr('Editar marcas del video elegido'), self._on_update, tipo='primario', alto=42)
         cf.addWidget(self.editar_btn2)
-        self._ev_btn2 = Boton(tr('Ir a Proyecto'), lambda: self.ir_a('estilos'), alto=42)
+        self._ev_btn2 = Boton(tr('Ir a Tema'), lambda: self.ir_a('estilos'), alto=42)
         cf.addWidget(self._ev_btn2)
         cf.addStretch(1)
         t.capa.addWidget(fila)
@@ -10473,7 +10480,7 @@ class SubtitleApp(QWidget):
         if tl:
             detalle += ('   ·   ' if detalle else '') + tr('Resolve: «{t}»', t=tl) + (tr(' (proyecto «{p}»)', p=proy) if proy else '')
         b1, b2 = self.editar_btn2, self._ev_btn2
-        b2.configure(text=tr('Ir a Proyecto'))
+        b2.configure(text=tr('Ir a Tema'))
         b2.poner_comando(lambda: self.ir_a('estilos'))
         b1.setVisible(True)
         b1.configure(state='normal')
@@ -10481,12 +10488,12 @@ class SubtitleApp(QWidget):
             titulo, texto = tr('Transcribiendo…'), tr('En cuanto termine la transcripción, el editor se abre solo con todas las palabras para que pintes su rol.')
             b1.setVisible(False)
         elif modo == 'marcas':
-            titulo = tr('Audio detectado en Proyecto')
+            titulo = tr('Audio detectado')
             texto = tr('Ya está transcrito y tiene tus marcas guardadas: retócalas aquí. No se vuelve a transcribir.')
             b1.configure(text=tr('Retocar las palabras'))
             b1.poner_comando(self._on_update)
         elif modo == 'audio':
-            titulo = tr('Audio detectado en Proyecto')
+            titulo = tr('Audio detectado')
             texto = tr('Todavía no está transcrito. Se transcribe y el editor se abre solo para que pintes cada palabra.')
             b1.configure(text=tr('Transcribir y retocar'))
             b1.poner_comando(self._on_generate)
@@ -10653,6 +10660,16 @@ class SubtitleApp(QWidget):
                                         else tr('Obtén el audio de tu timeline, elige el pack de estilos y mira cómo queda cada estilo en tu bloque'), desplazable=False,
                                         con_barra=False)
         self._estilos_capa = capa                     # v5.4.3: la página NO se desplaza: todo cabe y el slider se lleva el alto que sobra
+        capa.setContentsMargins(0, 0, 0, 0)           # v5.64: el cielo de la tarjeta va de borde a borde (los márgenes van dentro de ella)
+        self._capas_pagina['estilos'].setContentsMargins(0, 0, 0, 0)
+        self._capas_pagina['estilos'].setSpacing(0)
+    def _margenes_cielo(self):
+        """v5.64: los márgenes de la página (según el ancho: _densidad) + los de la tarjeta, DENTRO del cielo de Tema (que va de borde a borde)."""
+        pv = getattr(self, '_plantillas_ventana', None)
+        if pv is None:
+            return
+        m = getattr(self, '_margenes_pagina', (40, 86, 28, 22))
+        pv.tarjeta.capa.setContentsMargins(m[0] + 18, m[1] + 12, m[2] + 12 + 18, m[3] + 10)
         # el audio («Fuente», se construye en _pagina_nuevo) va dentro de la tarjeta de «Pack de estilos» (ver _asegurar_estilos)
     def _cambio_motor_voz(self, _v=None):
         motor = self._motores_voz.get(self.motor_var.get(), 'qwen3')
@@ -10706,6 +10723,7 @@ class SubtitleApp(QWidget):
         cuerpo, cc = caja_h(espacio=20)
         self._plantillas_ventana = PlantillasWindow(self, seleccion=self.plantilla_sel, on_elegir=self._plantilla_elegida, on_importar=self._importar_estilos, formato=self._formato_en_juego(), diseno_actual=getattr(self, 'diseno_dinamico', None), on_diseno=self._plantilla_diseno, basicos_actual=self._basicos_actual(), on_basicos=self._plantilla_basicos, modo=self._modo(), franja=self._tarjeta_fuente)
         cc.addWidget(self._plantillas_ventana, 8)
+        self._margenes_cielo()                        # (v5.64: los de la densidad de ahora, dentro del cielo)
         # v5.2: con Resolve conectado, las vistas reales que falten se renderizan solas
         try:
             import resolve_mcp

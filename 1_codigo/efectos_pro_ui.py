@@ -721,7 +721,7 @@ class SeccionEstilo(Tarjeta):
         if bool(self._var_on.get()) != on:
             self._var_on.set(on)
         nombre = tr(v['nombre']) if v else tr('Automático')
-        self._lbl_estado.setText(tr('GO usará: ') + nombre + extra_s + ('' if on else tr(' · ahora está apagada (enciéndela aquí o en el menú de Proyecto)')))
+        self._lbl_estado.setText(tr('GO usará: ') + nombre + extra_s + ('' if on else tr(' · ahora está apagada (enciéndela aquí o en el menú de Tema)')))
         extra = extra_s
         try:                                             # v5.22: las posiciones marcadas para el video de Inicio
             import posiciones_pro as POS

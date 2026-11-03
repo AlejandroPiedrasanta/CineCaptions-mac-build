@@ -833,9 +833,13 @@ class TarjetaCielo(ui.Tarjeta):
     PERIODO_FUGAZ, DURA_FUGAZ = 11.0, 1.4
     BRILLOS = 8                                            # (niveles de brillo para los lotes: el titilar va por niveles)
 
-    def __init__(self, **kw):
+    def __init__(self, sin_marco=False, **kw):
         super().__init__(**kw)
         ui.Tarjeta._vivas.discard(self)
+        # v5.64 (el usuario: «que el fondo tipo astral abarque toda la página, así como la página de Inicio»): sin_marco = el cielo de borde a
+        # borde de la ventana (sin esquinas redondeadas, borde ni filo de luz); la página le quita sus márgenes y la tarjeta los lleva dentro
+        self._sin_marco = sin_marco
+        self._radio = 0.0 if sin_marco else self.RADIO
         self._pal = _paleta_cielo()                         # (v5.63: negro puro con el tema Negro profundo; el tema cambia al reiniciar)
         azar = random.Random(7)
         # por capa: [(x, y, fase, grueso)] en dos grosores (para dibujarlas por lotes)
@@ -935,7 +939,10 @@ class TarjetaCielo(ui.Tarjeta):
     # -- dibujo -----------------------------------------------------------------------------------------------------------------------------
     def _camino(self, w, h):
         c = QPainterPath()
-        c.addRoundedRect(QRectF(0.5, 0.5, w - 1.0, h - 1.0), self.RADIO, self.RADIO)
+        if self._sin_marco:
+            c.addRect(QRectF(0.0, 0.0, w, h))
+        else:
+            c.addRoundedRect(QRectF(0.5, 0.5, w - 1.0, h - 1.0), self._radio, self._radio)
         return c
 
     def _fijo_pm(self, w, h, dpr):
@@ -1025,11 +1032,12 @@ class TarjetaCielo(ui.Tarjeta):
                 for c in ps:
                     p.drawPixmap(QPointF(c.x() - 7.0, c.y() - 7.0), nodo)
         p.setClipping(False)
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(QPen(QColorReal(255, 255, 255, 18), 1.0))              # el borde de la tarjeta y su filo de luz arriba
-        p.drawPath(self._camino(w, h))
-        p.setPen(QPen(QColorReal(255, 255, 255, 26), 1.0))
-        p.drawLine(QPointF(self.RADIO, 1.5), QPointF(w - self.RADIO, 1.5))
+        if not self._sin_marco:
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(QColorReal(255, 255, 255, 18), 1.0))          # el borde de la tarjeta y su filo de luz arriba
+            p.drawPath(self._camino(w, h))
+            p.setPen(QPen(QColorReal(255, 255, 255, 26), 1.0))
+            p.drawLine(QPointF(self._radio, 1.5), QPointF(w - self._radio, 1.5))
         p.end()
 
     def resizeEvent(self, e):

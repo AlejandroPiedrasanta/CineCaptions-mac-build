@@ -4181,6 +4181,15 @@
     "Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.": "Se o antivírus bloquear a descarga, permite o CineCaptions e volta a abri-lo.",
     "Falta una librería de CineCaptions": "Falta uma biblioteca do CineCaptions",
     "Una parte del programa (casi siempre un motor de IA) no encontró una de sus librerías: una instalación o una actualización quedó a medias, o el antivirus la quitó. No es un problema de tu video.": "Uma parte do programa (quase sempre um motor de IA) não encontrou uma das suas bibliotecas: uma instalação ou uma atualização ficou a meio, ou o antivírus removeu-a. Não é um problema do teu vídeo.",
-    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Caso contrário, reinstala o CineCaptions com o instalador mais recente (as tuas definições mantêm-se)."
+    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Caso contrário, reinstala o CineCaptions com o instalador mais recente (as tuas definições mantêm-se).",
+    "Tema": "Tema",
+    "Dónde cae este estilo en el cuadro del video. La posición la pone el estilo que elegiste en Tema (aproximada).": "Onde este estilo cai no quadro do vídeo. A posição vem do estilo que escolheu em Tema (aproximada).",
+    "con tu ajuste fino de Tema": "com o seu ajuste fino de Tema",
+    "Tu «Ajuste fino» de Tema mueve los subtítulos ({d}) respecto a la posición exacta del estilo. Clic: quitarlo.": "O seu «Ajuste fino» de Tema move as legendas ({d}) em relação à posição exata do estilo. Clique: removê-lo.",
+    "Aquí cambias de pantalla: Inicio, Tema (estilos), Creativo (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.": "Aqui muda de ecrã: Início, Tema (estilos), Criativo (retocar palavras) e Som (efeitos). À direita, o estado do Resolve, as Definições e o pino para manter o CineCaptions por cima do Resolve.",
+    "Tema: tus estilos": "Tema: os teus estilos",
+    "Ir a Tema": "Ir para Tema",
+    " · ahora está apagada (enciéndela aquí o en el menú de Tema)": " · agora está desligada (ligue aqui ou no menu de Tema)",
+    "Audio detectado": "Áudio detetado"
   }
 }

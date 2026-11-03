@@ -4181,6 +4181,15 @@
     "Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.": "Si l’antivirus bloque le téléchargement, autorise CineCaptions et rouvre-le.",
     "Falta una librería de CineCaptions": "Il manque une bibliothèque de CineCaptions",
     "Una parte del programa (casi siempre un motor de IA) no encontró una de sus librerías: una instalación o una actualización quedó a medias, o el antivirus la quitó. No es un problema de tu video.": "Une partie du programme (presque toujours un moteur d’IA) n’a pas trouvé une de ses bibliothèques : une installation ou une mise à jour est restée à moitié, ou l’antivirus l’a supprimée. Ce n’est pas un problème de ta vidéo.",
-    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Sinon, réinstalle CineCaptions avec le dernier installateur (tes réglages sont conservés)."
+    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Sinon, réinstalle CineCaptions avec le dernier installateur (tes réglages sont conservés).",
+    "Tema": "Thème",
+    "Dónde cae este estilo en el cuadro del video. La posición la pone el estilo que elegiste en Tema (aproximada).": "Où ce style tombe dans le cadre de la vidéo. La position vient du style choisi dans Thème (approximative).",
+    "con tu ajuste fino de Tema": "avec votre réglage fin de Thème",
+    "Tu «Ajuste fino» de Tema mueve los subtítulos ({d}) respecto a la posición exacta del estilo. Clic: quitarlo.": "Votre « Réglage fin » de Thème déplace les sous-titres ({d}) par rapport à la position exacte du style. Clic : le retirer.",
+    "Aquí cambias de pantalla: Inicio, Tema (estilos), Creativo (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.": "Ici, vous changez d’écran : Accueil, Thème (styles), Créatif (retoucher les mots) et Son (effets). À droite, l’état de Resolve, les Réglages et l’épingle pour garder CineCaptions au-dessus de Resolve.",
+    "Tema: tus estilos": "Thème : tes styles",
+    "Ir a Tema": "Aller à Thème",
+    " · ahora está apagada (enciéndela aquí o en el menú de Tema)": " · elle est désactivée (activez-la ici ou dans le menu Thème)",
+    "Audio detectado": "Audio détecté"
   }
 }

@@ -4181,6 +4181,15 @@
     "Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.": "If your antivirus blocks the download, allow CineCaptions and open it again.",
     "Falta una librería de CineCaptions": "A CineCaptions library is missing",
     "Una parte del programa (casi siempre un motor de IA) no encontró una de sus librerías: una instalación o una actualización quedó a medias, o el antivirus la quitó. No es un problema de tu video.": "A part of the program (almost always an AI engine) could not find one of its libraries: an installation or an update was left half done, or the antivirus removed it. It is not a problem with your video.",
-    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Otherwise, reinstall CineCaptions with the latest installer (your settings are kept)."
+    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Otherwise, reinstall CineCaptions with the latest installer (your settings are kept).",
+    "Tema": "Theme",
+    "Dónde cae este estilo en el cuadro del video. La posición la pone el estilo que elegiste en Tema (aproximada).": "Where this style lands in the video frame. The position comes from the style you chose in Theme (approximate).",
+    "con tu ajuste fino de Tema": "with your fine tuning from Theme",
+    "Tu «Ajuste fino» de Tema mueve los subtítulos ({d}) respecto a la posición exacta del estilo. Clic: quitarlo.": "Your “Fine tuning” from Theme moves the subtitles ({d}) away from the style’s exact position. Click: remove it.",
+    "Aquí cambias de pantalla: Inicio, Tema (estilos), Creativo (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.": "Here you switch screens: Home, Theme (styles), Creative (touch up words) and Sound (effects). On the right, the Resolve status, Settings and the pin to keep CineCaptions on top of Resolve.",
+    "Tema: tus estilos": "Theme: your styles",
+    "Ir a Tema": "Go to Theme",
+    " · ahora está apagada (enciéndela aquí o en el menú de Tema)": " · it's off now (turn it on here or in the Theme menu)",
+    "Audio detectado": "Audio detected"
   }
 }

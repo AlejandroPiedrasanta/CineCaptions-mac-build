@@ -4181,6 +4181,15 @@
     "Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.": "Wenn dein Virenschutz den Download blockiert, erlaube CineCaptions und öffne es erneut.",
     "Falta una librería de CineCaptions": "Eine Bibliothek von CineCaptions fehlt",
     "Una parte del programa (casi siempre un motor de IA) no encontró una de sus librerías: una instalación o una actualización quedó a medias, o el antivirus la quitó. No es un problema de tu video.": "Ein Teil des Programms (fast immer eine KI-Engine) hat eine seiner Bibliotheken nicht gefunden: eine Installation oder ein Update ist unvollständig geblieben, oder der Virenschutz hat sie entfernt. Es liegt nicht an deinem Video.",
-    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Andernfalls installiere CineCaptions mit dem neuesten Installer neu (deine Einstellungen bleiben erhalten)."
+    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Andernfalls installiere CineCaptions mit dem neuesten Installer neu (deine Einstellungen bleiben erhalten).",
+    "Tema": "Thema",
+    "Dónde cae este estilo en el cuadro del video. La posición la pone el estilo que elegiste en Tema (aproximada).": "Wo dieser Stil im Videobild landet. Die Position kommt vom Stil, den du in Thema gewählt hast (ungefähr).",
+    "con tu ajuste fino de Tema": "mit deiner Feinabstimmung aus Thema",
+    "Tu «Ajuste fino» de Tema mueve los subtítulos ({d}) respecto a la posición exacta del estilo. Clic: quitarlo.": "Deine «Feinabstimmung» aus Thema verschiebt die Untertitel ({d}) gegenüber der exakten Position des Stils. Klick: entfernen.",
+    "Aquí cambias de pantalla: Inicio, Tema (estilos), Creativo (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.": "Hier wechselst du den Bildschirm: Start, Thema (Stile), Kreativ (Wörter überarbeiten) und Sound (Effekte). Rechts: der Resolve-Status, die Einstellungen und die Pin-Taste, die CineCaptions über Resolve hält.",
+    "Tema: tus estilos": "Thema: deine Stile",
+    "Ir a Tema": "Zu Thema",
+    " · ahora está apagada (enciéndela aquí o en el menú de Tema)": " · gerade ausgeschaltet (hier oder im Thema-Menü einschalten)",
+    "Audio detectado": "Audio erkannt"
   }
 }

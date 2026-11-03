@@ -4181,6 +4181,15 @@
     "Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.": "Se l’antivirus blocca il download, consenti CineCaptions e riaprilo.",
     "Falta una librería de CineCaptions": "Manca una libreria di CineCaptions",
     "Una parte del programa (casi siempre un motor de IA) no encontró una de sus librerías: una instalación o una actualización quedó a medias, o el antivirus la quitó. No es un problema de tu video.": "Una parte del programma (quasi sempre un motore di IA) non ha trovato una delle sue librerie: un’installazione o un aggiornamento è rimasto a metà, oppure l’antivirus l’ha rimossa. Non è un problema del tuo video.",
-    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Altrimenti, reinstalla CineCaptions con il programma di installazione più recente (le tue impostazioni restano)."
+    "Si no, reinstala CineCaptions con el instalador más reciente (se conservan tus ajustes).": "Altrimenti, reinstalla CineCaptions con il programma di installazione più recente (le tue impostazioni restano).",
+    "Tema": "Tema",
+    "Dónde cae este estilo en el cuadro del video. La posición la pone el estilo que elegiste en Tema (aproximada).": "Dove cade questo stile nel quadro del video. La posizione viene dallo stile scelto in Tema (approssimativa).",
+    "con tu ajuste fino de Tema": "con la tua regolazione fine di Tema",
+    "Tu «Ajuste fino» de Tema mueve los subtítulos ({d}) respecto a la posición exacta del estilo. Clic: quitarlo.": "La tua «Regolazione fine» di Tema sposta i sottotitoli ({d}) rispetto alla posizione esatta dello stile. Clic: rimuoverla.",
+    "Aquí cambias de pantalla: Inicio, Tema (estilos), Creativo (retocar palabras) y Sonido (efectos). A la derecha, el estado de Resolve, los Ajustes y el pin para mantener CineCaptions encima de Resolve.": "Qui cambi schermata: Home, Tema (stili), Creativo (ritoccare le parole) e Suono (effetti). A destra, lo stato di Resolve, le Impostazioni e il pin per tenere CineCaptions sopra Resolve.",
+    "Tema: tus estilos": "Tema: i tuoi stili",
+    "Ir a Tema": "Vai a Tema",
+    " · ahora está apagada (enciéndela aquí o en el menú de Tema)": " · ora è spenta (accendila qui o nel menu Tema)",
+    "Audio detectado": "Audio rilevato"
   }
 }

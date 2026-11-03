@@ -495,6 +495,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.65', [
+        'La página Proyecto ahora se llama «Tema» (en el menú de arriba y en los textos que la nombran).',
+        'Tema con el cielo de constelaciones de borde a borde de la ventana, también detrás del menú de arriba, igual que Inicio.',
+    ]),
     ('5.64', [
         'De fábrica, la interfaz vuelve al azul noche con el verde como color de resaltado. ¿Prefieres el negro y blanco? Ajustes › Interfaz › «Fondo de la interfaz»: Negro.',
         'Tarjetas NVIDIA sin las librerías de CUDA: ya no sale «Falla al iniciar: GPU para la voz» en cada arranque; CineCaptions las descarga solo una vez (≈1,3 GB) y mientras la voz va por la CPU.',
