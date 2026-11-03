@@ -194,6 +194,14 @@ _REGLAS = [
      ['Si es el motor de IA (Qwen3): en Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
       'Si es el motor auxiliar (Whisper): reinstala CineCaptions con el último instalador, que pone al día sus librerías (se conservan tus ajustes).',
       'Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.'], 'parcial'),
+    # v5.64: las librerías de CUDA que faltan se bajan solas (vigilancia.preparar_gpu_voz); antes caía en «Falla al iniciar» con pasos de reinstalar
+    (r'GPU para la voz',
+     'La voz va por la CPU mientras se prepara la GPU',
+     'A tu tarjeta NVIDIA le faltan las librerías de CUDA (cuBLAS y cuDNN) con las que Whisper transcribe en la GPU. CineCaptions las descarga solo '
+     '(≈1,3 GB, una vez); mientras, la voz se transcribe en la CPU, más despacio. No hace falta hacer nada.',
+     ['Si la descarga no pudo terminar, abre CineCaptions con internet: lo reintenta solo y sigue donde quedó.',
+      'También puedes pulsar «Reparar GPU» en Ajustes › General.',
+      'Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.'], 'ninguno'),
     (r'GO · voz|transcri|whisper|qwen|motor de voz',
      'La transcripción no pudo terminar',
      'El motor de voz se detuvo antes de entregar el texto.',

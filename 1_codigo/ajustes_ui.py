@@ -497,6 +497,9 @@ def desactivar_licencia(app, al_terminar=None):
 NOTAS_VERSION = [
     ('5.64', [
         'De fábrica, la interfaz vuelve al azul noche con el verde como color de resaltado. ¿Prefieres el negro y blanco? Ajustes › Interfaz › «Fondo de la interfaz»: Negro.',
+        'Tarjetas NVIDIA sin las librerías de CUDA: ya no sale «Falla al iniciar: GPU para la voz» en cada arranque; CineCaptions las descarga solo una vez (≈1,3 GB) y mientras la voz va por la CPU.',
+        'El instalador ya no se queda minutos en «Comprobando la IA de texto»: si Gemma 4 o Qwen ya están en el equipo, no los vuelve a descargar aunque salga una versión nueva.',
+        'Registro: «Copiar este error» y «Copiar todo» dan un informe ordenado (qué pasó, qué significa, qué hacer, detalle técnico, lo que pasó justo antes, tu equipo y los motores), sin tu nombre de usuario en las rutas y sin congelar la ventana.',
     ]),
     ('5.63', [
         'CineCaptions en negro y blanco: todas las páginas (Inicio, Proyecto, Creativo, Sonido, Efectos y Ajustes) en negros neutros con el blanco como color de resaltado; lo elegido, «en uso» y encendido, en blanco, sin verdes sueltos.',

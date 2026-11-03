@@ -120,6 +120,27 @@ def decir(tipo, texto=''):
     sys.stdout.flush()
 
 
+def ya_descargado(repo):
+    """v5.64: ¿ese repo ya está entero en la caché de Hugging Face (config + todos sus pesos)? Sin preguntar a internet. Con la caché sin enlaces
+    (HF_HUB_DISABLE_SYMLINKS) un archivo solo llega al snapshot cuando terminó de bajar."""
+    from huggingface_hub import snapshot_download
+    try:
+        ruta = snapshot_download(repo_id=repo, local_files_only=True)
+    except Exception:
+        return False
+    if not os.path.isfile(os.path.join(ruta, 'config.json')):
+        return False
+    indice = os.path.join(ruta, 'model.safetensors.index.json')
+    if os.path.isfile(indice):
+        try:
+            with open(indice, encoding='utf-8') as f:
+                pesos = set(json.load(f)['weight_map'].values())
+        except Exception:
+            return False
+        return bool(pesos) and all(os.path.isfile(os.path.join(ruta, p)) for p in pesos)
+    return os.path.isfile(os.path.join(ruta, 'model.safetensors'))
+
+
 def elegir(pedido):
     import torch
     if not torch.cuda.is_available():
@@ -757,6 +778,12 @@ def main():
             listas = []
             for c in claves:
                 try:
+                    # v5.64 (el usuario: «se quedó trabado el exe» 12 min en «Comprobando la IA de texto… menos de un minuto»): Google publicó otra
+                    # versión de Gemma 4 E4B y snapshot_download volvía a bajar sus 16 GB en cada instalación; lo que ya está, se queda
+                    if ya_descargado(REPOS[c]):
+                        decir('ESTADO', f'Ya está: {REPOS[c]}')
+                        listas.append(c)
+                        continue
                     decir('ESTADO', f'Descargando {REPOS[c]}')
                     snapshot_download(repo_id=REPOS[c])
                     listas.append(c)

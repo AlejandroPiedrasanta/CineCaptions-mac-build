@@ -154,7 +154,10 @@ def comprobar():
         import cuda_libs
         d = cuda_libs.diagnostico()
         if d['estado'] in ('ok', 'faltan'):
-            filas.append({'nombre': 'GPU para la voz (CUDA)', 'ok': d['estado'] == 'ok', 'detalle': cuda_libs.texto_diagnostico(d)})
+            # v5.64 (un usuario con una RTX 3050 Ti: «Falla al iniciar: GPU para la voz (CUDA) — faltan cublas64_12.dll…» en cada arranque): sin
+            # ellas la voz va por la CPU, no es una falla: aviso, y vigilancia.revisar_salud_al_arrancar las descarga sola ('cuda')
+            filas.append({'nombre': 'GPU para la voz (CUDA)', 'ok': True if d['estado'] == 'ok' else None, 'detalle': cuda_libs.texto_diagnostico(d),
+                          'cuda': d['estado']})
         elif d['estado'] == 'sin_gpu':
             filas.append({'nombre': 'GPU para la voz (CUDA)', 'ok': None, 'detalle': cuda_libs.texto_diagnostico(d)})
     except Exception as e:

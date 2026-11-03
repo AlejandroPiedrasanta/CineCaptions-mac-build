@@ -139,7 +139,7 @@ def texto_diagnostico(d=None):
     if d['estado'] == 'ok':
         return f"{d['gpu']} · {d['vram_gb']} GB · CUDA lista"
     if d['estado'] == 'faltan':
-        return f"{d['gpu']}: faltan {', '.join(d['faltan'])} (Ajustes › General › Reparar GPU)"
+        return f"{d['gpu']}: faltan {', '.join(d['faltan'])}; la voz va por la CPU hasta que se descarguen (solas al abrir, o Ajustes › General › Reparar GPU)"
     if d['estado'] == 'sin_gpu':
         return 'sin GPU NVIDIA (se usa la CPU)'
     return 'no aplica en este sistema'

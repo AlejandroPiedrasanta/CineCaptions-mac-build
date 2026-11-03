@@ -423,4 +423,36 @@ def revisar_salud_al_arrancar():
             r.error(f"Falla al iniciar: {f['nombre']} — {f['detalle']}", 'arranque')
     if not fallas:
         r.info('Chequeo de arranque: todo en orden (' + salud.resumen(filas)[0] + ').', 'arranque')
+    if any(f.get('cuda') == 'faltan' for f in filas):
+        preparar_gpu_voz()
     return fallas
+
+
+_GPU_VOZ = {'v': None}
+
+
+def preparar_gpu_voz():
+    """v5.64 (un usuario con una RTX 3050 Ti veía «Falla al iniciar: GPU para la voz (CUDA) — faltan cublas64_12.dll…» en cada arranque y la voz
+    iba por la CPU): las librerías de NVIDIA que usa Whisper (cuBLAS y cuDNN, ≈1,3 GB de PyPI, con reanudación) se bajan SOLAS en un hilo, una
+    vez por sesión; si no se puede (sin internet), aviso y se reintenta al volver a abrir. Lo mismo que «Reparar GPU» de Ajustes, sin preguntar."""
+    r = _registro()
+    with _LOCK:
+        if _GPU_VOZ['v'] is not None:
+            return
+        _GPU_VOZ['v'] = threading.current_thread()
+
+    def trabajo():
+        import cuda_libs
+        r.info('GPU para la voz: faltan las librerías de NVIDIA (cuBLAS y cuDNN). Las descargo una sola vez (≈1,3 GB); mientras, la voz va por la CPU.',
+               'arranque')
+        try:
+            ok, msg = cuda_libs.reparar(permitir_descarga=True)
+        except Exception as e:
+            ok, msg = False, f'{type(e).__name__}: {e}'
+        if ok:
+            r.ok(f'GPU para la voz lista: {msg}', 'arranque')
+        else:
+            r.aviso(f'GPU para la voz: no pude preparar las librerías de NVIDIA ({msg}). La voz sigue por la CPU; lo reintento la próxima vez que '
+                    'abras CineCaptions.', 'arranque')
+    _GPU_VOZ['v'] = threading.Thread(target=trabajo, daemon=True, name='gpu-voz')
+    _GPU_VOZ['v'].start()

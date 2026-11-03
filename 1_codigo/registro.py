@@ -17,7 +17,9 @@ Se puede usar desde cualquier hilo: la escritura va con candado y la señal viaj
 import collections
 import datetime
 import os
+import re
 import sys
+import textwrap
 import threading
 import time
 import traceback
@@ -37,10 +39,11 @@ RUIDO_QT = ('QFont::', 'QWindowsContext', 'QPainter::', 'propagateSizeHints', 'Q
 
 
 class Entrada:
-    __slots__ = ('tiempo', 'nivel', 'mensaje', 'origen', 'detalle', 'veces', 'leida')
+    __slots__ = ('tiempo', 'primera', 'nivel', 'mensaje', 'origen', 'detalle', 'veces', 'leida')
 
     def __init__(self, nivel, mensaje, origen='', detalle=''):
         self.tiempo = time.time()
+        self.primera = self.tiempo          # (v5.64: si se repite, `tiempo` es la última vez y esta la primera)
         self.nivel = nivel if nivel in NIVELES else 'info'
         self.mensaje = str(mensaje).strip()
         self.origen = str(origen or '')
@@ -457,6 +460,7 @@ def entorno_detallado():
         lineas.append(f'idioma del sistema {locale.getlocale()[0]} · datos en {CARPETA}')
     except Exception:
         pass
+    _ENTORNO['lineas'] = lineas
     return lineas
 
 
@@ -476,36 +480,218 @@ def _cola(ruta, n):
         return '(no hay)\n'
 
 
-def reporte_soporte(lineas_log=150):
-    """El informe que se manda para reportar un fallo (Windows o Mac): entorno, estado de librerías y motores, tareas en curso, los últimos errores y avisos
-    (errores.log, que no se pierde con la rotación), el final del log y, si lo hay, el volcado del fallo nativo / los informes de caída de macOS."""
-    partes = [f'CineCaptions · informe de soporte · {datetime.datetime.now():%Y-%m-%d %H:%M:%S}']
+# ---------------------------------------------------------------------------
+# v5.64 (el usuario: «pule más los reportes de logs: que si el usuario copia el error esté más especificado y ordenado»): «Copiar este error» y
+# «Copiar todo» por secciones (qué pasó, qué significa, qué hacer, detalle técnico, lo de justo antes, equipo, motores). Sin subprocess: se
+# copian desde el hilo de la interfaz (antes «Copiar todo» llamaba a nvidia-smi ahí: hasta 6 s parado); la GPU sale de entorno_detallado(), que
+# corre en un hilo al abrir. Las rutas llevan «~» en lugar de la carpeta del usuario (su nombre no viaja en un informe).
+# ---------------------------------------------------------------------------
+_ENTORNO = {'lineas': None}
+ANCHO = 100
+NOMBRE_NIVEL = {'info': 'Nota', 'ok': 'Hecho', 'aviso': 'Aviso', 'error': 'Error'}
+
+
+def _tr(texto, **valores):
+    try:
+        from i18n import tr
+        return tr(texto, **valores)
+    except Exception:
+        return texto.format(**valores) if valores else texto
+
+
+def _formas_de_casa():
+    """La carpeta del usuario como puede salir en un texto: tal cual, con /, con las barras dobles de un repr y en forma corta 8.3 de Windows."""
+    if _ENTORNO.get('casas') is None:
+        casa = str(Path.home())
+        formas = {casa, casa.replace('\\', '/'), casa.replace('\\', '\\\\')}
+        if sys.platform.startswith('win'):
+            try:
+                import ctypes
+                b = ctypes.create_unicode_buffer(600)
+                if ctypes.windll.kernel32.GetShortPathNameW(casa, b, 600):
+                    formas |= {b.value, b.value.replace('\\', '/'), b.value.replace('\\', '\\\\')}
+            except Exception:
+                pass
+        _ENTORNO['casas'] = sorted((f for f in formas if len(f) >= 4), key=len, reverse=True)
+    return _ENTORNO['casas']
+
+
+def _sin_usuario(texto):
+    for c in _formas_de_casa():
+        texto = re.sub(re.escape(c), '~', texto, flags=re.IGNORECASE)
+    return texto
+
+
+def _seccion(nombre):
+    t = f'── {nombre.upper()} '
+    return '\n' + t + '─' * max(4, 64 - len(t))
+
+
+def _parrafo(texto, sangria='  ', siguiente=None):
+    """El texto partido a ANCHO columnas con su sangría; sin el usuario ANTES de partir (una ruta partida ya no se reconoce)."""
+    return textwrap.fill(' '.join(_sin_usuario(str(texto)).split()), ANCHO, initial_indent=sangria, subsequent_indent=siguiente or sangria,
+                         break_long_words=False, break_on_hyphens=False)
+
+
+def _fecha(t, formato='%Y-%m-%d %H:%M:%S'):
+    return datetime.datetime.fromtimestamp(t).strftime(formato)
+
+
+def _sistema():
+    import platform
+    if sys.platform.startswith('win'):
+        try:
+            edicion = platform.win32_edition() or ''
+        except Exception:
+            edicion = ''
+        return f'Windows {platform.release()} {edicion}'.replace('  ', ' ').strip() + f' · compilación {platform.version().split(".")[-1]} · {platform.machine()}'
+    if sys.platform == 'darwin':
+        return f'macOS {platform.mac_ver()[0]} · {platform.machine()}'
+    return platform.platform()
+
+
+def equipo():
+    """Las líneas del equipo para un informe, al momento y sin subprocess: versión, sistema, CPU y memoria (Windows), la GPU (y Rosetta) que dejó
+    entorno_detallado() al abrir y DaVinci Resolve según lo último que supo resolve_mcp (sin preguntarle)."""
     try:
         import version
-        partes.append(f'versión {version.APP_VERSION}')
+        v = version.APP_VERSION
     except Exception:
-        pass
+        v = '?'
+    lineas = [f'CineCaptions {v} · ' + ('programa instalado' if getattr(sys, 'frozen', False) else 'desde el código'), _sistema()]
+    memoria = None
+    if sys.platform.startswith('win'):
+        try:
+            import vigilancia
+            memoria = vigilancia.memoria_libre_mb()
+        except Exception:
+            pass
+    lineas.append(f'CPU {os.cpu_count()} núcleos' + (f' · memoria libre {memoria:,} MB'.replace(',', '.') if memoria else ''))
+    lineas += [l for l in (_ENTORNO['lineas'] or []) if l.startswith(('GPU', 'ATENCIÓN'))]
+    rm = sys.modules.get('resolve_mcp')
+    if rm is not None:
+        try:
+            st = rm.estado_cacheado(max_edad_s=900)
+        except Exception:
+            st = {}
+        if st.get('conectado'):
+            lineas.append('DaVinci Resolve: ' + ' '.join(str(x) for x in (st.get('producto'), st.get('version')) if x) + ' · conectado'
+                          + (f" · página {st['pagina']}" if st.get('pagina') else ''))
     try:
-        partes.extend(entorno_detallado())
+        import locale
+        from i18n import idioma
+        lineas.append(f'Idioma del sistema {locale.getlocale()[0]} · interfaz {idioma()}')
     except Exception:
         pass
+    return lineas
+
+
+def _motores(solo_problemas=True):
+    """El chequeo de arranque (salud.ultimo(): ya hecho, no se repite aquí): un resumen y las filas que no están bien (o todas)."""
     try:
         import salud
-        filas = salud.ultimo()          # (el chequeo de arranque ya lo dejó hecho; no se vuelve a correr aquí: puede estar en el hilo de la interfaz)
-        if filas:
-            partes.append('\n== Librerías y motores ==\n' + salud.informe(filas))
+        filas = salud.ultimo()
     except Exception:
-        pass
+        return []
+    if not filas:
+        return ['  (el chequeo de arranque aún no terminó)']
+    lineas = ['  ' + salud.resumen(filas)[0]]
+    for f in filas:
+        if not solo_problemas or f['ok'] is not True:
+            marca = 'OK ' if f['ok'] else ('-- ' if f['ok'] is None else 'MAL')
+            lineas.append(_parrafo(f"{f['nombre']}: {f['detalle']}", f'  {marca} ', '      '))
+    return lineas
+
+
+def _linea_corta(x):
+    v = f' (x{x.veces})' if x.veces > 1 else ''
+    texto = ' '.join(x.mensaje.split())
+    texto = texto if len(texto) <= 160 else texto[:157] + '…'
+    return f'  {x.hora()}  {NOMBRE_NIVEL.get(x.nivel, x.nivel):<5}  {x.origen or "—"}: {texto}{v}'
+
+
+def _antes(e, n):
+    """Las n anotaciones (de cualquier nivel) que llegaron justo antes de `e` en esta sesión."""
+    datos = registro().lista()
+    i = next((k for k, x in enumerate(datos) if x is e), None)
+    return datos[max(0, i - n):i] if i else []
+
+
+def informe_de_error(e, antes=8):
+    """El texto de «Copiar este error»: una entrada del Registro, explicada y con todo lo que hace falta para diagnosticarla sin preguntar nada."""
+    import registro_ayuda
+    a = registro_ayuda.explicar(e)
+    nivel = _tr(NOMBRE_NIVEL.get(e.nivel, e.nivel))
+    gravedad = _tr(registro_ayuda.ETIQUETA_IMPACTO.get(a.impacto, ''))
+    cuando = _fecha(e.tiempo)
+    if e.veces > 1:
+        cuando += '  ' + _tr('(se repitió {n} veces desde las {h})', n=e.veces, h=_fecha(e.primera, '%H:%M:%S'))
+    partes = [_tr('CineCaptions · informe de un {nivel}', nivel=nivel.lower()), '═' * 64,
+              f"{_tr('Cuándo'):<10} {cuando}",
+              f"{_tr('Dónde'):<10} {e.origen or '—'}",
+              f"{_tr('Gravedad'):<10} {nivel}" + (f' · {gravedad}' if gravedad else ''),
+              _seccion(_tr('Qué pasó')), _parrafo(e.mensaje),
+              _seccion(_tr('Qué significa')), _parrafo(a.titulo)]
+    if a.que:
+        partes.append(_parrafo(a.que))
+    if a.pasos:
+        partes.append(_seccion(_tr('Qué hacer')))
+        partes += [_parrafo(p, f'  {i}. ', '     ') for i, p in enumerate(a.pasos, 1)]
+    partes.append(_seccion(_tr('Detalle técnico')))
+    if e.detalle.strip():
+        partes += ['  ' + l.rstrip() for l in e.detalle.strip().splitlines()[-60:]]
+    else:
+        partes.append('  ' + _tr('(sin más datos: el mensaje de arriba es todo lo que dejó el programa)'))
+    previas = _antes(e, antes)
+    if previas:
+        partes.append(_seccion(_tr('Lo que pasó justo antes')))
+        partes += [_linea_corta(x) for x in previas]
+    partes.append(_seccion(_tr('Equipo')))
+    partes += ['  ' + l for l in equipo()]
+    partes.append(_seccion(_tr('Librerías y motores')))
+    partes += _motores()
+    return _sin_usuario('\n'.join(partes)) + '\n'
+
+
+def _entrada_resumida(i, e):
+    """Una entrada en «Copiar todo»: hora, dónde, gravedad, el mensaje, qué significa y la última línea técnica."""
+    import registro_ayuda
+    rep = ('  ' + _tr('(se repitió {n} veces desde las {h})', n=e.veces, h=_fecha(e.primera, '%H:%M:%S'))) if e.veces > 1 else ''
+    cabeza = f"{i}) {_fecha(e.tiempo)} · {e.origen or '—'} · {_tr(NOMBRE_NIVEL.get(e.nivel, e.nivel))}"
+    if e.nivel in ('info', 'ok'):                       # (una nota no necesita explicación)
+        return '\n'.join([cabeza + rep, _parrafo(e.mensaje, '   ', '   ')])
+    a = registro_ayuda.explicar(e)
+    gravedad = _tr(registro_ayuda.ETIQUETA_IMPACTO.get(a.impacto, ''))
+    lineas = [cabeza + (f' · {gravedad}' if gravedad else '') + rep, _parrafo(e.mensaje, '   ', '   '), _parrafo('→ ' + a.titulo, '   ', '     ')]
+    if a.tecnica and a.tecnica.strip() != e.mensaje.strip():
+        lineas.append(_parrafo(_tr('técnico:') + ' ' + a.tecnica, '   ', '     '))
+    return '\n'.join(lineas)
+
+
+def reporte_soporte(lineas_log=150, entradas=None):
+    """El informe que se manda para reportar un fallo (Windows o Mac): equipo, librerías y motores, las anotaciones de la pantalla (`entradas`, la
+    más reciente primero), tareas en curso, los últimos errores y avisos (errores.log, que no se pierde con la rotación), el final del log y, si lo
+    hay, el volcado del fallo nativo / los informes de caída de macOS. Sin subprocess (v5.64)."""
+    partes = [_tr('CineCaptions · informe de soporte · {f}', f=_fecha(time.time())), '═' * 64]
+    partes.append(_seccion(_tr('Equipo')))
+    partes += ['  ' + l for l in equipo()]
+    partes.append(_seccion(_tr('Librerías y motores')))
+    partes += _motores(solo_problemas=False)
+    if entradas:
+        orden = sorted(entradas, key=lambda x: x.tiempo, reverse=True)
+        partes.append(_seccion(_tr('Anotaciones de esta sesión ({n}, la más reciente primero)', n=len(orden))))
+        partes += [_entrada_resumida(i, x) + '\n' for i, x in enumerate(orden, 1)]
     try:
         import vigilancia
-        partes.append('\n== Tareas en curso ==\n' + (', '.join(vigilancia.en_curso()) or 'ninguna'))
+        partes.append(_seccion(_tr('Tareas en curso')))
+        partes.append('  ' + (', '.join(vigilancia.en_curso()) or _tr('ninguna')))
     except Exception:
         pass
-    partes.append('\n== Avisos y errores (errores.log) ==\n' + _cola(ARCHIVO_ERRORES, lineas_log))
-    partes.append('\n== Final del registro ==\n' + _cola(ARCHIVO, lineas_log))
+    partes.append(_seccion(_tr('Avisos y errores (errores.log)')) + '\n' + _cola(ARCHIVO_ERRORES, lineas_log).rstrip())
+    partes.append(_seccion(_tr('Final del registro')) + '\n' + _cola(ARCHIVO, lineas_log).rstrip())
     try:
         if FALLOS_NATIVOS.is_file() and FALLOS_NATIVOS.stat().st_size > 60:
-            partes.append('\n== Volcado de fallo nativo ==\n' + _cola(FALLOS_NATIVOS, 80))
+            partes.append(_seccion(_tr('Volcado de fallo nativo')) + '\n' + _cola(FALLOS_NATIVOS, 80).rstrip())
     except Exception:
         pass
     if sys.platform == 'darwin':
@@ -513,10 +699,10 @@ def reporte_soporte(lineas_log=150):
             carpeta = Path.home() / 'Library' / 'Logs' / 'DiagnosticReports'
             hay = sorted((p for p in carpeta.glob('*') if 'cinecaptions' in p.name.lower()), key=lambda p: p.stat().st_mtime, reverse=True)[:3]
             if hay:
-                partes.append('\n== Informes de caída de macOS ==\n' + '\n'.join(p.name for p in hay) + '\n' + _cola(hay[0], 60))
+                partes.append(_seccion(_tr('Informes de caída de macOS')) + '\n' + '\n'.join(p.name for p in hay) + '\n' + _cola(hay[0], 60).rstrip())
         except Exception:
             pass
-    return '\n'.join(partes)
+    return _sin_usuario('\n'.join(partes)) + '\n'
 
 
 def guardar_reporte():

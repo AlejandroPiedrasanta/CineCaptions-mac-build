@@ -551,39 +551,22 @@ class DialogoRegistro(Dialogo):
         self._cuenta.setText(tr('{n} anotaciones', n=len(datos)) + extra)
         registro.registro().marcar_leidas()
 
-    @staticmethod
-    def _bloque(e):
-        import registro_ayuda
-        a = registro_ayuda.explicar(e)
-        partes = [e.linea(), f'  {a.titulo}']
-        if a.que:
-            partes.append(f'  {a.que}')
-        partes += [f'  {i}. {p}' for i, p in enumerate(a.pasos, 1)]
-        if e.detalle:
-            partes.append('  --- detalle técnico ---')
-            partes += [f'  {l}' for l in e.detalle.strip().splitlines()]
-        return '\n'.join(partes)
-
     def _copiar_una(self, e):
-        ui.copiar_al_portapapeles(self._cabecera() + '\n\n' + self._bloque(e))
-
-    @staticmethod
-    def _cabecera():
+        # v5.64: por secciones (qué pasó, qué significa, qué hacer, detalle técnico, lo de justo antes, equipo, motores): registro.informe_de_error
         try:
-            import platform
-            from version import APP_VERSION
-            return f'CineCaptions v{APP_VERSION} · {platform.platform()}'
+            texto = registro.informe_de_error(e)
         except Exception:
-            return 'CineCaptions'
+            texto = e.linea() + ('\n' + e.detalle if e.detalle else '')
+        ui.copiar_al_portapapeles(texto)
 
     def _copiar(self):
         # v5.11: además de lo que se ve en pantalla, el informe de soporte (entorno Windows/Mac, librerías, errores.log, fallo nativo): lo que se necesita
-        # para diagnosticar sin pedir nada más
+        # para diagnosticar sin pedir nada más. v5.64: ordenado (equipo, motores, lo de la pantalla con lo más reciente primero, logs)
         try:
-            soporte = registro.reporte_soporte(80)
+            texto = registro.reporte_soporte(80, entradas=self._datos())
         except Exception:
-            soporte = ''
-        ui.copiar_al_portapapeles(self._cabecera() + '\n\n' + '\n\n'.join(self._bloque(e) for e in reversed(self._datos())) + ('\n\n' + soporte if soporte else ''))
+            texto = '\n'.join(e.linea() for e in self._datos())
+        ui.copiar_al_portapapeles(texto)
 
     def _abrir(self):
         try:
