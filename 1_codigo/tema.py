@@ -36,9 +36,10 @@ PERFILES = {
 }
 # v5.63 (el usuario eligió «negro + blanco» para TODO CineCaptions entre tres maquetas): de fábrica, el tema Negro profundo con el acento
 # blanco. Las prefs de antes (sin `tema_563`) se leen así aunque guardaran otro tema; al elegir uno en Ajustes se guarda la marca y manda
-# lo elegido
-TEMA_POR_DEFECTO = 'negro'
-ACENTO_POR_DEFECTO = 'blanco'         # (v5.22: el verde; antes el azul)
+# lo elegido. v5.64 (el usuario: «deja por default el azul de fondo de la interfaz» y, con captura de Ajustes, el verde «por default así»):
+# de fábrica, el azul noche con el acento verde; el negro + blanco queda como opción
+TEMA_POR_DEFECTO = 'noche'
+ACENTO_POR_DEFECTO = 'verde'          # (v5.22: el verde; v5.63: el blanco)
 ACENTOS = {
     'blanco': (tr('Blanco'), '#E6E8EB'),
     'verde': (tr('Verde'), '#22B573'),
@@ -70,7 +71,7 @@ def leer():
         p = json.loads(PREFS.read_text(encoding='utf-8'))
     except Exception:
         p = {}
-    if not p.get('tema_563'):                          # v5.63: lo de fábrica (negro + blanco) hasta que se elija otro en Ajustes
+    if not p.get('tema_563'):                          # v5.63: lo de fábrica (v5.64: azul noche + verde) hasta que se elija otro en Ajustes
         p = dict(p, tema=TEMA_POR_DEFECTO, acento=ACENTO_POR_DEFECTO)
     tema = p.get('tema') if p.get('tema') in PERFILES else TEMA_POR_DEFECTO
     acento = p.get('acento') if p.get('acento') in ACENTOS or p.get('acento') == 'personal' else ACENTO_POR_DEFECTO
