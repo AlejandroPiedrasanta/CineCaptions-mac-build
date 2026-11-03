@@ -591,7 +591,8 @@ def texto_cue(cue, n=4):
 
 def _grande_abajo(cue):
     """¿La palabra GRANDE del cue es la de abajo? (es la que tapa la cabeza: así la línea pequeña siempre se lee)."""
-    runs = [r for r in cue.get('runs') or [] if isinstance(r.get('y'), (int, float))]
+    runs = [r for r in cue.get('runs') or [] if isinstance(r.get('y'), (int, float))
+            and (r.get('texto') or 'k' not in r)]                     # (v5.61: sin los aros y subrayados del Tema 1, que no son texto)
     if not runs:
         return False
     tam = lambda r: float(r.get('size') or r.get('zoom') or (2.0 if r.get('rol') == 'main' or r.get('fu') == 'main' else 1.0))
@@ -975,7 +976,7 @@ def vista_detras(ruta, t, captions, imagen=None, alto=640, posicion=None):
     else:
         coronilla, cab_x, alto_p, cab = hcab
         cfg = EP.INTENSIDAD_DETRAS.get(EP.intensidad_detras()) or EP.INTENSIDAD_DETRAS['media']
-        tapa = max(0.012, min(cfg['tapa_max'], 0.4 * cab, cfg['tapa'] * linea))
+        tapa = EP.tapa_detras(cfg, cab, linea)                # (v5.61: la misma que GO)
         dy = coronilla + tapa - abajo
         xs = [(c['x'] + c['a'].shape[1] / 2.0) / W for c in letras]
         m = EP.motivo_cabeza(coronilla, alto_p)
@@ -1231,7 +1232,7 @@ if _QT:
                         self.modo = guardadas.get('modo') or 'solo'
                     self.cambio.emit()
                 if error is not None or not r or not r[0]:
-                    self.aviso = (tr('Este audio no trae imagen: pulsa «Obtener» con tu timeline abierto en Resolve (trae su video) o «Elegir video…».')
+                    self.aviso = (tr('Este audio no trae imagen: haz GO con tu timeline abierto en Resolve (trae su video) o pulsa «Elegir video…».')
                                   if Path(str(ruta)).suffix.lower() in AUDIO else tr('No pude leer la imagen de este video.'))
                     self.update()
                     return
@@ -2259,6 +2260,9 @@ if _QT:
             m = re.match(r'En Resolve está abierto otro timeline: abre «(.*)» y vuelve', t or '')
             if m:
                 return tr('En Resolve está abierto otro timeline: abre «{t}» y vuelve a darle a «Listo».', t=m.group(1))
+            m = re.match(r'DaVinci Resolve está cerrado o no contesta: ábrelo con el timeline «(.*)» y vuelve', t or '')
+            if m:                                                   # v5.61
+                return tr('DaVinci Resolve está cerrado o no contesta: ábrelo con el timeline «{t}» y vuelve a darle a «Listo».', t=m.group(1))
             if re.match(r'Resolve se (cay|cerr)', t or ''):          # v5.32: qué hacer, no solo qué pasó
                 return tr('DaVinci Resolve se cerró de golpe. Ábrelo con tu proyecto y pulsa «Listo» otra vez: tus marcas siguen aquí.')
             if (t or '').startswith('Resolve dejó de responder'):

@@ -56,7 +56,8 @@ def main():
     # ------------------------------------------------------------------------------------------------------------- 1) interfaz
     print('== 1) Interfaz', flush=True)
     for tema, pack in (('Tema 1', 'Kinetic'), ('Tema 2', 'Referencia')):
-        PREFS.update(go_pack=pack, plantilla=pack, pro_neon_extras=[], pro_motions_modo='auto', pro_motions=[], pro_mascara='auto',
+        PREFS.update(go_pack=pack, plantilla=pack, pro_neon_extras=[], pro_motions_modo='auto', pro_motions=[],
+                     pro_mascara='no' if pack == 'Kinetic' else 'auto',    # (v5.61: «detrás de ti» es el mismo en los 6 temas)
                      pro_internet=True, pro_motions_completo=False)
         efectos = []
         centro = QWidget()
@@ -76,6 +77,7 @@ def main():
             pos = QPointF(barra.center().x(), y0 + paso * (k + 0.5))
             comprobar(lista._icono_en(pos) == clave, f'{tema}: el clic en el icono {k + 1} cae en «{clave}»')
             antes = LAT.estado(clave)
+            masc0 = PREFS.get('pro_mascara')
             for tipo in (QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonRelease):
                 ev = QMouseEvent(tipo, pos, pos, Qt.MouseButton.LeftButton,
                                  Qt.MouseButton.LeftButton if tipo == QEvent.Type.MouseButtonPress else Qt.MouseButton.NoButton,
@@ -86,10 +88,15 @@ def main():
             if pack == 'Kinetic' and clave == 'gancho':
                 comprobar(despues != antes and PREFS.get('pro_gancho_intro') is despues,
                           f'{tema}: «gancho» se {"enciende" if despues else "apaga"} y se guarda en pro_gancho_intro (como en los otros temas)')
+            elif clave == 'detras':                 # v5.61: un solo interruptor para los 6 temas (se guarda en los dos sitios)
+                comprobar(despues != antes and ('detras' in PREFS['pro_neon_extras']) == despues and (PREFS.get('pro_mascara') != 'no') == despues,
+                          f'{tema}: «detras» se {"enciende" if despues else "apaga"} en los 6 temas (pro_neon_extras y pro_mascara)')
+                comprobar(LAT.estado('detras', neon=True) == LAT.estado('detras', neon=False) == despues,
+                          f'{tema}: «detras» se ve igual con el Tema 1 y con los Temas 2–6')
             elif pack == 'Kinetic':
                 comprobar(despues != antes and (clave in PREFS['pro_neon_extras']) == despues,
                           f'{tema}: «{clave}» se {"enciende" if despues else "apaga"} y se guarda en pro_neon_extras')
-                comprobar(PREFS.get('pro_motions_modo') == 'auto' and PREFS.get('pro_mascara') == 'auto',
+                comprobar(PREFS.get('pro_motions_modo') == 'auto' and PREFS.get('pro_mascara') == masc0,
                           f'{tema}: «{clave}» no toca los interruptores de los otros temas')
             else:
                 comprobar(despues != antes or not antes is False, f'{tema}: «{clave}» cambia ({antes} → {despues})')
@@ -138,7 +145,8 @@ def main():
     cortes = efectos_visuales.detectar_cortes(a.video) or []
     base = None
     for clave in [o['clave'] for o in LAT.OPCIONES]:
-        PREFS.update(go_pack='Kinetic', plantilla='Kinetic', pro_neon_extras=[clave], pro_motions_modo='auto', pro_motions=[], pro_densidad='media')
+        PREFS.update(go_pack='Kinetic', plantilla='Kinetic', pro_neon_extras=[clave], pro_motions_modo='auto', pro_motions=[], pro_densidad='media',
+                     pro_mascara='no')                  # (v5.61: si no, «detrás de ti» seguiría encendido desde los Temas 2–6)
         print(f'  · {clave}: opciones {EP.opciones_neon(EP.opciones_guardadas()).get("pro_motions")[:3]}…', flush=True)
         op = EP.opciones_neon(EP.opciones_guardadas())
         plan = EP.planificar(a.video, w, dur, cortes=cortes, idioma='es', opciones=EP.opciones_guardadas(), tema='neon')

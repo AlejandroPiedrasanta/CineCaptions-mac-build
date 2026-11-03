@@ -7097,6 +7097,62 @@
   "de": "In Resolve ist eine andere Timeline offen: Öffne „{t}“ und drücke erneut auf „Fertig“.",
   "it": "In Resolve è aperta un’altra timeline: apri «{t}» e premi di nuovo «Fatto»."
  },
+ "DaVinci Resolve está cerrado o no contesta: ábrelo con el timeline «{t}» y vuelve a darle a «Listo».": {
+  "en": "DaVinci Resolve is closed or not responding: open it with the timeline “{t}” and press “Done” again.",
+  "pt": "O DaVinci Resolve está fechado ou não responde: abra-o com a timeline «{t}» e pressione «Pronto» de novo.",
+  "fr": "DaVinci Resolve est fermé ou ne répond pas : ouvrez-le avec la timeline « {t} » et appuyez de nouveau sur « Terminé ».",
+  "de": "DaVinci Resolve ist geschlossen oder antwortet nicht: Öffne es mit der Timeline „{t}“ und drücke erneut auf „Fertig“.",
+  "it": "DaVinci Resolve è chiuso o non risponde: aprilo con la timeline «{t}» e premi di nuovo «Fatto»."
+ },
+ "«Captions detrás de ti» pone el caption de verdad DETRÁS de la persona: su cabeza tapa parte de la palabra grande (antes el texto quedaba apoyado encima de la cabeza).": {
+  "en": "“Captions behind you” now really puts the caption BEHIND the person: their head covers part of the big word (before, the text sat on top of the head).",
+  "pt": "«Legendas atrás de você» coloca a legenda de verdade ATRÁS da pessoa: a cabeça cobre parte da palavra grande (antes o texto ficava apoiado em cima da cabeça).",
+  "fr": "« Sous-titres derrière vous » place vraiment le sous-titre DERRIÈRE la personne : sa tête cache une partie du grand mot (avant, le texte restait posé au-dessus de la tête).",
+  "de": "„Untertitel hinter dir“ setzt den Untertitel jetzt wirklich HINTER die Person: Ihr Kopf verdeckt einen Teil des großen Wortes (vorher lag der Text auf dem Kopf).",
+  "it": "«Sottotitoli dietro di te» mette davvero il sottotitolo DIETRO la persona: la sua testa copre parte della parola grande (prima il testo restava appoggiato sopra la testa)."
+ },
+ "«Captions detrás de ti» es un solo interruptor para los Temas 1 a 6: si lo enciendes con un tema, también vale al hacer GO con otro.": {
+  "en": "“Captions behind you” is a single switch for Themes 1 to 6: if you turn it on with one theme, it also applies when you press GO with another.",
+  "pt": "«Legendas atrás de você» é um único interruptor para os Temas 1 a 6: se você o ativar com um tema, também vale ao fazer GO com outro.",
+  "fr": "« Sous-titres derrière vous » est un seul interrupteur pour les Thèmes 1 à 6 : si vous l’activez avec un thème, il vaut aussi quand vous faites GO avec un autre.",
+  "de": "„Untertitel hinter dir“ ist ein einziger Schalter für die Themen 1 bis 6: Schaltest du ihn bei einem Thema ein, gilt er auch beim GO mit einem anderen.",
+  "it": "«Sottotitoli dietro di te» è un solo interruttore per i Temi da 1 a 6: se lo attivi con un tema, vale anche quando fai GO con un altro."
+ },
+ "Efectos › «Listo» de «Captions detrás de ti» funciona después de cualquier GO (aunque lo tuvieras apagado) y, si Resolve está cerrado, lo dice en vez de «otro timeline».": {
+  "en": "Effects › “Done” in “Captions behind you” works after any GO (even if it was off) and, if Resolve is closed, says so instead of “another timeline”.",
+  "pt": "Efeitos › «Pronto» de «Legendas atrás de você» funciona depois de qualquer GO (mesmo que estivesse desligado) e, se o Resolve estiver fechado, avisa isso em vez de «outra timeline».",
+  "fr": "Effets › « Terminé » de « Sous-titres derrière vous » fonctionne après n’importe quel GO (même s’il était désactivé) et, si Resolve est fermé, le dit au lieu de « une autre timeline ».",
+  "de": "Effekte › „Fertig“ bei „Untertitel hinter dir“ funktioniert nach jedem GO (auch wenn es aus war) und sagt, wenn Resolve geschlossen ist, genau das statt „andere Timeline“.",
+  "it": "Effetti › «Fatto» di «Sottotitoli dietro di te» funziona dopo qualsiasi GO (anche se era spento) e, se Resolve è chiuso, lo dice invece di «un’altra timeline»."
+ },
+ "En Resolve está abierto otro timeline": {
+  "en": "Another timeline is open in Resolve",
+  "pt": "Há outra timeline aberta no Resolve",
+  "fr": "Une autre timeline est ouverte dans Resolve",
+  "de": "In Resolve ist eine andere Timeline offen",
+  "it": "In Resolve è aperta un’altra timeline"
+ },
+ "Lo que hay en V1 del timeline abierto en Resolve no es lo que dejó tu último GO de este video.": {
+  "en": "What is on V1 of the timeline open in Resolve is not what your last GO with this video left there.",
+  "pt": "O que está na V1 da timeline aberta no Resolve não é o que o seu último GO com este vídeo deixou.",
+  "fr": "Ce qui se trouve sur V1 de la timeline ouverte dans Resolve n’est pas ce qu’a laissé votre dernier GO avec cette vidéo.",
+  "de": "Was auf V1 der in Resolve geöffneten Timeline liegt, ist nicht das, was dein letztes GO mit diesem Video dort gelassen hat.",
+  "it": "Ciò che c’è su V1 della timeline aperta in Resolve non è quello che ha lasciato il tuo ultimo GO con questo video."
+ },
+ "En Resolve, abre el timeline que dice el aviso (el de tu último GO con este video).": {
+  "en": "In Resolve, open the timeline named in the notice (the one from your last GO with this video).",
+  "pt": "No Resolve, abra a timeline indicada no aviso (a do seu último GO com este vídeo).",
+  "fr": "Dans Resolve, ouvrez la timeline indiquée dans l’avis (celle de votre dernier GO avec cette vidéo).",
+  "de": "Öffne in Resolve die Timeline aus dem Hinweis (die deines letzten GO mit diesem Video).",
+  "it": "In Resolve, apri la timeline indicata nell’avviso (quella del tuo ultimo GO con questo video)."
+ },
+ "Vuelve a darle a «Listo».": {
+  "en": "Press “Done” again.",
+  "pt": "Pressione «Pronto» de novo.",
+  "fr": "Appuyez de nouveau sur « Terminé ».",
+  "de": "Drücke erneut auf „Fertig“.",
+  "it": "Premi di nuovo «Fatto»."
+ },
  "Listo: ya está en tu timeline de Resolve.": {
   "en": "Done: it is now in your Resolve timeline.",
   "pt": "Pronto: já está na sua timeline do Resolve.",
@@ -9777,5 +9833,12 @@
   "fr": "Resolve Studio : GO ne se termine plus par « Il manque un clic dans Resolve » quand Studio tarde à répondre juste après avoir monté la timeline : il continue tout seul et place les sous-titres sans attendre cette vérification.",
   "de": "Resolve Studio: GO endet nicht mehr mit «Ein Klick in Resolve fehlt», wenn Studio direkt nach dem Aufbau der Timeline langsam antwortet: Es macht von selbst weiter und setzt die Untertitel, ohne auf diese Prüfung zu warten.",
   "it": "Resolve Studio: GO non termina più con «Manca un clic in Resolve» quando Studio tarda a rispondere subito dopo aver montato la timeline: prosegue da solo e posiziona i sottotitoli senza aspettare quel controllo."
+ },
+ "«Captions detrás de ti» avisa en el Registro cuando en un video ningún caption puede ir detrás de la persona (sale pequeña, de espaldas o moviéndose, o cambia la toma) y dice por qué: antes GO terminaba igual que sin él y parecía que no funcionaba.": {
+  "en": "«Captions behind you» warns in the Log when no caption in a video can go behind the person (they are small, turned away or moving, or the shot changes) and says why: before, GO ended as if it were off and it looked like it did not work.",
+  "pt": "«Legendas atrás de você» avisa no Registo quando num vídeo nenhuma legenda pode ir atrás da pessoa (aparece pequena, de costas ou em movimento, ou muda o plano) e diz porquê: antes o GO terminava igual que sem ela e parecia que não funcionava.",
+  "fr": "« Sous-titres derrière vous » prévient dans le Journal quand, dans une vidéo, aucun sous-titre ne peut passer derrière la personne (elle est petite, de dos ou en mouvement, ou le plan change) et explique pourquoi : avant, GO se terminait comme sans l'option et on aurait dit qu'elle ne marchait pas.",
+  "de": "«Untertitel hinter dir» meldet im Protokoll, wenn in einem Video kein Untertitel hinter die Person passt (sie ist klein, von hinten zu sehen oder bewegt sich, oder die Einstellung wechselt), und sagt warum: Vorher endete GO wie ohne die Funktion und es sah aus, als würde sie nicht funktionieren.",
+  "it": "«Sottotitoli dietro di te» avvisa nel Registro quando in un video nessun sottotitolo può andare dietro la persona (è piccola, di spalle o in movimento, o cambia l'inquadratura) e dice perché: prima GO finiva come senza la funzione e sembrava che non funzionasse."
  }
 }

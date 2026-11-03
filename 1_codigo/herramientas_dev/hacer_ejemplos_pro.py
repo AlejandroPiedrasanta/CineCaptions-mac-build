@@ -43,6 +43,7 @@ GUION = Path.home() / 'DaVinciSubtitles' / 'CineCaptions _ PRUEBA ESPAÑOL_audio
 LETRA_CAP = RAIZ / '2_recursos' / 'fonts' / 'Inter_24pt-Bold.ttf'
 LETRA_TIT = RAIZ / '2_recursos' / 'edicion_pro' / 'fuentes_extra' / 'Anton-Regular.ttf'
 ICONOS = ['3d:crown-dynamic-color', '3d:bell-dynamic-color', '3d:camera-dynamic-premium', '3d:calendar-dynamic-color']
+TAM_DETRAS, ANCHO_DETRAS = 100, 0.8     # v5.62 («no está bien posicionado ni en proporciones»): la palabra, a lo más el 80 % del ancho (antes 118 y 90 %: tocaba los bordes de la pantalla)
 
 # el tramo del video (s) de cada ejemplo, elegido por lo que se dice en PRUEBA ESPAÑOL (un video real de un festival en Xela)
 # (con la persona en cámara: 10–13, 16–21, 43–46, 52–62 s; 47–51 es el cartel del festival y 32–41 el concierto)
@@ -143,7 +144,7 @@ def _fuente(ruta, tam):
     return ImageFont.truetype(str(ruta), int(tam))
 
 
-def texto_rgba(lineas, letra, tam, y, color=(255, 255, 255), sombra=True, escala=1.0, alfa=1.0):
+def texto_rgba(lineas, letra, tam, y, color=(255, 255, 255), sombra=True, escala=1.0, alfa=1.0, ancho_max=0.9):
     """Una capa RGBA float (H, W, 4) con líneas centradas (y = centro de la primera línea, fracción del alto) y una sombra suave debajo."""
     from PIL import Image, ImageDraw, ImageFilter
     out = np.zeros((H, W, 4), np.float32)
@@ -153,8 +154,8 @@ def texto_rgba(lineas, letra, tam, y, color=(255, 255, 255), sombra=True, escala
     f = _fuente(letra, tam * escala)
     d = ImageDraw.Draw(img)
     ancho = max(d.textlength(ln, font=f) for ln in lineas)
-    if ancho > 0.9 * W:                                  # que quepa: se achica la letra
-        escala *= 0.9 * W / ancho
+    if ancho > ancho_max * W:                            # que quepa: se achica la letra
+        escala *= ancho_max * W / ancho
         f = _fuente(letra, tam * escala)
     for k, ln in enumerate(lineas):
         d.text((W / 2, y * H + k * tam * escala * 1.05), ln, font=f, fill=255, anchor='mm')
@@ -205,6 +206,43 @@ def _partir(texto, n):
     return out + ([ln] if ln else [])
 
 
+def grupos_detras(pal, n=10):
+    """Los captions grandes de «detrás de ti»: una sola línea (dos palabras solo si caben en n letras; si no, la palabra sola) → [(texto, t)]."""
+    out = []
+    for w, a in pal:
+        if out and out[-1][2] < 2 and len(out[-1][0]) + 1 + len(w) <= n:
+            out[-1] = (out[-1][0] + ' ' + w, out[-1][1], out[-1][2] + 1, a)
+        else:
+            out.append((w, a, 1, a))
+    return [(txt.upper(), a, z) for txt, a, _k, z in out]
+
+
+def sitio_detras(fr):
+    """(coronilla, alto de la cabeza) en fracción del alto, leídos COMO GO (edicion_pro._cabeza de personas_de_imagen) y con la cabeza en su
+    punto MÁS ALTO del ejemplo (como _detras_bloque: la pila no se mueve y nunca tapa más de lo que deja la intensidad)."""
+    import edicion_pro as EP
+    hs = [EP._cabeza(PE.personas_de_imagen(fr[k])) for k in (3, N // 3, 2 * N // 3, N - 4)]
+    hs = [h for h in hs if h]
+    if not hs:
+        return 0.2, 0.07
+    return min(h[0] for h in hs), min(h[3] for h in hs)
+
+
+def y_detras(linea_txt, tam, coronilla, cab):
+    """y (centro de la línea, como texto_rgba) para que el PIE de la palabra quede donde lo pone GO: tapa_detras por debajo de la coronilla
+    (v5.61: a la vista la cabeza tapa casi la mitad de la palabra y la parte de arriba de las letras se lee)."""
+    from PIL import Image, ImageDraw
+    import edicion_pro as EP
+    d = ImageDraw.Draw(Image.new('L', (W, H), 0))
+    f = _fuente(LETRA_TIT, tam)
+    esc = min(1.0, ANCHO_DETRAS * W / max(1.0, d.textlength(linea_txt, font=f)))
+    _x0, a, _x1, b = d.textbbox((W / 2, 0), linea_txt, font=_fuente(LETRA_TIT, tam * esc), anchor='mm')
+    linea = (b - a) / H
+    # (aquí la coronilla es la de verdad, la del recorte; la de GO queda algo por encima del pelo: lo que se VE en GO es la mitad de la palabra)
+    tapa = min(EP.tapa_detras(EP.INTENSIDAD_DETRAS['media'], cab, linea), 0.5 * linea)
+    return ((coronilla + tapa) * H - b) / H
+
+
 def foto_data(ruta):
     from PIL import Image
     im = Image.open(ruta).convert('RGB')
@@ -247,6 +285,9 @@ def hacer(clave, video, guion, carpeta):
     detras = clave in ('gancho', 'detras')
     alfa = mates(fr) if detras else None
     capas = {}
+    if clave == 'detras':                               # v5.62: la palabra donde la pone GO (antes, a una altura fija: la cara tapaba el centro entero)
+        coronilla, cab = sitio_detras(fr)
+        grandes = [(txt, a, y_detras(txt, TAM_DETRAS, coronilla, cab)) for txt, a, _z in grupos_detras(pal)]
     if clave == 'gancho':
         cx, cy = cabeza(alfa[int(FPS)])
         orb = {'iconos': ICONOS, 'x': cx, 'y': cy, 'rx': 30, 'ry': 6, 'escala': 1.3, 'vuelta': 2.8, 'inclinacion': -6}
@@ -286,12 +327,11 @@ def hacer(clave, video, guion, carpeta):
             if c is not None:
                 img = sobre(img, c)
         elif clave == 'detras':
-            dichas = [(w, a) for w, a in pal if a <= t]
+            dichas = [g for g in grandes if g[1] <= t]
             if dichas:
-                grupo = dichas[(len(dichas) - 1) // 2 * 2:]             # de dos en dos, como los captions grandes de la PRO
-                q = (t - grupo[-1][1]) / 0.2
-                cap = texto_rgba(_partir(' '.join(w for w, _a in grupo).upper(), 9), LETRA_TIT, 118, 0.27, escala=0.9 + 0.1 * _pop(q),
-                                 alfa=min(1.0, 0.3 + q))
+                txt, a0, y = dichas[-1]
+                q = (t - a0) / 0.2
+                cap = texto_rgba([txt], LETRA_TIT, TAM_DETRAS, y, escala=0.9 + 0.1 * _pop(q), alfa=min(1.0, 0.3 + q), ancho_max=ANCHO_DETRAS)
                 img = sobre(img, cap)
             a = alfa[i][..., None]
             img = img * (1.0 - a) + base[i] * a

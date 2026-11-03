@@ -1212,6 +1212,196 @@ class EstimadorGo:
             pass
 
 
+class ChipGo(QAbstractButton):
+    """v5.62 (el usuario eligió la propuesta A para la zona de debajo de «Un clic y listo»): un chip de las opciones de GO. Antes, ui.Chip con
+    solo borde: el anillo del astrolabio pasaba por DETRÁS de las letras («Edición PRO: sí» con el VII encima) y «sí» y «no» se veían igual.
+    Ahora, cristal OSCURO (el anillo no se ve a través), icono, el nombre en gris y el valor en negrita. tono: 'verde', 'pro' (dorado, como
+    «Edición PRO activada» de Proyecto), 'apagado' (gris: GO no lo hará) o 'aviso' (ámbar). menu=True: la flecha de «elegir»; cerrar=True:
+    una ✕ dibujada (la de texto no está en Inter Bold: salía un cuadro)."""
+    ALTO = 38
+
+    def __init__(self, icono, nombre, valor=None, tono='verde', comando=None, menu=False, cerrar=False, padre=None):
+        super().__init__(padre)
+        self._icono, self._nombre, self._valor, self._tono, self._menu = icono, nombre, valor, tono, bool(menu)
+        self._cerrar = bool(cerrar)
+        self._pix = {}                                 # el icono rasterizado por (color, dpr): icono_linea dibuja el glifo en cada llamada
+        self._h = 0.0
+        self._a_h = QVariantAnimation(self)
+        self._a_h.setDuration(150)
+        self._a_h.valueChanged.connect(self._paso_h)
+        self._f_nombre, self._f_valor = fuente(13), fuente(13, peso='negrita')
+        self.setFixedHeight(self.ALTO)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        if comando:
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+            self.clicked.connect(comando)
+
+    def _colores(self):
+        """(borde, icono, valor) del tono; los del tema se leen al pintar (cambian con Ajustes › Interfaz)."""
+        if self._tono in ('pro', 'aviso'):
+            c = QColor(ui.AMBAR)
+            return c, c, (c if self._tono == 'pro' else QColor('#FFFFFF'))
+        if self._tono == 'apagado':
+            return QColor(ui.TEXT_MUTED), QColor('#6F7D97'), QColor(ui.TEXT_MUTED)
+        c = QColor(ui.ACCENT_CLARO)
+        return c, c, QColor('#FFFFFF')
+
+    def _anchos(self):
+        n = QFontMetricsF(self._f_nombre).horizontalAdvance(self._nombre)
+        v = QFontMetricsF(self._f_valor).horizontalAdvance(self._valor) if self._valor else 0.0
+        return n, v
+
+    def sizeHint(self):
+        n, v = self._anchos()
+        return QSize(int(math.ceil(13 + 16 + 8 + n + (8 + v if self._valor else 0) + (14 if self._menu else 0) + (16 if self._cerrar else 0)
+                                   + 15)), self.ALTO)
+
+    def minimumSizeHint(self):
+        return self.sizeHint()
+
+    def _paso_h(self, v):
+        self._h = float(v)
+        self.update()
+
+    def _ir_h(self, meta):
+        self._a_h.stop()
+        self._a_h.setStartValue(self._h)
+        self._a_h.setEndValue(float(meta))
+        self._a_h.start()
+
+    def enterEvent(self, e):
+        self._ir_h(1.0)
+        super().enterEvent(e)
+
+    def leaveEvent(self, e):
+        self._ir_h(0.0)
+        super().leaveEvent(e)
+
+    def _icono_pm(self, color):
+        dpr = self.devicePixelRatioF()
+        clave = (color.name(), round(dpr, 2))
+        if clave not in self._pix:
+            ic = ui.icono_linea(self._icono, color.name())
+            self._pix[clave] = ic.pixmap(QSize(16, 16), dpr) if ic is not None else None
+        return self._pix[clave]
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        borde, c_ico, c_val = self._colores()
+        h = self._h
+        r = QRectF(0.5, 0.5, self.width() - 1.0, self.height() - 1.0)
+        rad = r.height() / 2.0
+        g = QLinearGradient(0, 0, 0, self.height())
+        arriba, abajo = QColor('#142236').lighter(int(100 + 35 * h)), QColor('#09111F')       # (v5.63: del tema: neutros en Negro profundo)
+        arriba.setAlpha(235)
+        abajo.setAlpha(235)
+        g.setColorAt(0.0, arriba)
+        g.setColorAt(1.0, abajo)
+        b = QColor(borde)
+        b.setAlphaF(min(1.0, (0.30 if self._tono == 'apagado' else 0.45) + 0.35 * h))
+        p.setPen(QPen(b, 1.0))
+        p.setBrush(g)
+        p.drawRoundedRect(r, rad, rad)
+        p.setPen(QPen(QColor(255, 255, 255, 18), 1.0))              # el filo de arriba del cristal
+        p.drawLine(QPointF(rad, 1.5), QPointF(self.width() - rad, 1.5))
+        x = 13.0
+        pm = self._icono_pm(c_ico)
+        if pm is not None and not pm.isNull():
+            p.drawPixmap(QPointF(x, (self.height() - 16) / 2.0), pm)
+        x += 16 + 8
+        n, v = self._anchos()
+        alto = float(self.height())
+        p.setFont(self._f_nombre)
+        p.setPen(QColor(ui.TEXT_MUTED))
+        p.drawText(QRectF(x, 0, n + 2, alto), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), self._nombre)
+        x += n
+        if self._valor:
+            x += 8
+            p.setFont(self._f_valor)
+            p.setPen(c_val)
+            p.drawText(QRectF(x, 0, v + 2, alto), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), self._valor)
+            x += v
+        if self._menu:                                                # la flecha de «elegir» (un chevrón, como el de Phosphor)
+            x += 7
+            cy = alto / 2.0
+            p.setPen(QPen(QColor(ui.TEXT_MUTED), 1.4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+            p.drawLine(QPointF(x, cy - 2.0), QPointF(x + 3.5, cy + 1.8))
+            p.drawLine(QPointF(x + 3.5, cy + 1.8), QPointF(x + 7.0, cy - 2.0))
+        if self._cerrar:                                              # la ✕ de «quitar»
+            x += 8
+            cy = alto / 2.0
+            p.setPen(QPen(QColor('#FFFFFF'), 1.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawLine(QPointF(x, cy - 3.5), QPointF(x + 7.0, cy + 3.5))
+            p.drawLine(QPointF(x, cy + 3.5), QPointF(x + 7.0, cy - 3.5))
+        p.end()
+
+
+class LineaGo(ui.Elidida):
+    """La línea de debajo de «Un clic y listo». v5.62 (propuesta A): en reposo con un tono (poner_estado), un punto de ese color con halo
+    delante y, si hay `resalto` («detectado»), el nombre de Resolve en claro y desde el resalto en el color del estado. Cualquier otro texto
+    (progreso, consejos) la deja como una Elidida de siempre."""
+
+    def __init__(self, *a, **kw):
+        self._estado = None                            # (color, resalto) o None
+        super().__init__(*a, **kw)
+
+    def configure(self, text=None, text_color=None, **kw):
+        if text is not None:
+            self._estado = None
+        super().configure(text=text, text_color=text_color, **kw)
+
+    def setText(self, texto):
+        self._estado = None
+        super().setText(texto)
+
+    def poner_estado(self, color, resalto=None):
+        self._estado = (QColor(color), resalto)
+        self.update()
+
+    def paintEvent(self, e):
+        if self._estado is None:
+            return super().paintEvent(e)
+        color, resalto = self._estado
+        texto = self.text()
+        f = QFont(self.font())
+        f.setWeight(QFont.Weight.Medium)
+        fm = QFontMetricsF(f)
+        k = texto.rfind(resalto) if resalto else -1
+        claro, fuerte = (texto[:k].rstrip(), texto[k:]) if k > 0 else ('', texto)
+        sep = max(9.0, fm.horizontalAdvance(' '))
+        w_claro = fm.horizontalAdvance(claro) + sep if claro else 0.0
+        ancho = 17.0 + w_claro + fm.horizontalAdvance(fuerte)
+        if ancho > self.width():
+            return super().paintEvent(e)
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        x = (self.width() - ancho) / 2.0
+        alto = float(self.height())
+        centro = QPointF(x + 4.0, alto / 2.0)
+        halo = QRadialGradient(centro, 9.0)
+        c0, c1 = QColor(color), QColor(color)
+        c0.setAlpha(110)
+        c1.setAlpha(0)
+        halo.setColorAt(0.3, c0)
+        halo.setColorAt(1.0, c1)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(halo)
+        p.drawEllipse(centro, 9.0, 9.0)
+        p.setBrush(color)
+        p.drawEllipse(centro, 4.0, 4.0)
+        x += 17.0
+        p.setFont(f)
+        alin = int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        if claro:
+            p.setPen(QColor('#E6EEFA'))
+            p.drawText(QRectF(x, 0, w_claro + 2, alto), alin, claro)
+            x += w_claro
+        p.setPen(color)
+        p.drawText(QRectF(x, 0, fm.horizontalAdvance(fuerte) + 2, alto), alin, fuerte)
+        p.end()
+
+
 class PanelGo(QWidget):
     """Inicio: el boton, una demo viva en reposo, una linea de estado, las
     opciones rapidas (las pone SubtitleApp), los pasos y «Detalles».
@@ -1242,7 +1432,8 @@ class PanelGo(QWidget):
         self.titulo = TituloGo(tr('Un clic y listo'))
         c.addWidget(self.titulo)
         c.addSpacing(2)
-        self.linea = ui.Elidida('', 15, color=ui.TEXT_MUTED, alineacion=Qt.AlignmentFlag.AlignCenter)
+        self.linea = LineaGo('', 15, color=ui.TEXT_MUTED, alineacion=Qt.AlignmentFlag.AlignCenter)
+        self._velo = None                       # v5.62: el velo oscuro detrás de la línea y los chips (dpr, QPixmap); ver paintEvent
         self.linea.setFixedWidth(640)
         c.addWidget(self.linea, 0, Qt.AlignmentFlag.AlignHCenter)
         c.addSpacing(14)
@@ -1272,7 +1463,7 @@ class PanelGo(QWidget):
         self.opciones = QWidget()
         self.opciones_capa = QHBoxLayout(self.opciones)
         self.opciones_capa.setContentsMargins(0, 0, 0, 0)
-        self.opciones_capa.setSpacing(8)
+        self.opciones_capa.setSpacing(10)
         c.addWidget(self.opciones, 0, Qt.AlignmentFlag.AlignHCenter)
         c.addSpacing(16)
         self.pasos = PasosAnimados(self.PASOS)
@@ -1288,6 +1479,37 @@ class PanelGo(QWidget):
                                    color_hover=ui.ACCENT_CLARO, subrayada=False, peso='medio')
             c.addWidget(self.detalles, 0, Qt.AlignmentFlag.AlignHCenter)
         self.setMinimumHeight(420)
+
+    VELO = (820, 190)                           # el velo de detrás de la línea y los chips (px lógicos)
+
+    def paintEvent(self, _e):
+        """v5.62 (propuesta A): un velo oscuro y suave (elipse que se apaga hacia fuera) detrás de la línea de Resolve y los chips: el anillo
+        del astrolabio pasa por ahí. Solo en reposo (con los chips); una imagen por dpr, porque se pinta en cada cuadro de la escena de debajo."""
+        if not self.opciones.isVisible():
+            return
+        w, h = self.VELO
+        dpr = self.devicePixelRatioF()
+        if self._velo is None or self._velo[0] != round(dpr, 2):
+            pm = QPixmap(int(w * dpr), int(h * dpr))
+            pm.setDevicePixelRatio(dpr)
+            pm.fill(Qt.GlobalColor.transparent)
+            q = QPainter(pm)
+            q.setRenderHint(QPainter.RenderHint.Antialiasing)
+            g = QRadialGradient(QPointF(0, 0), 1.0)
+            for pos, a in ((0.0, 184), (0.55, 115), (1.0, 0)):            # (v5.63: QColor del tema: negro neutro en Negro profundo)
+                c = QColor('#040912')
+                c.setAlpha(a)
+                g.setColorAt(pos, c)
+            q.translate(w / 2.0, h / 2.0)
+            q.scale(w / 2.0, h / 2.0)
+            q.setPen(Qt.PenStyle.NoPen)
+            q.setBrush(g)
+            q.drawEllipse(QPointF(0, 0), 1.0, 1.0)
+            q.end()
+            self._velo = (round(dpr, 2), pm)
+        p = QPainter(self)
+        p.drawPixmap(QPointF(self.width() / 2.0 - w / 2.0, self.opciones.geometry().top() - h / 2.0), self._velo[1])
+        p.end()
 
     # -- la escena 3D de fondo ----------------------------------------------------
     ALTO_ETIQUETAS = 34
@@ -1627,9 +1849,12 @@ class PanelGo(QWidget):
         if self.escena is not None:
             self.escena.reposo()
         self.boton.poner_estado('listo' if listo else 'apagado')
-        self.linea.poner_color({'ok': ui.VERDE, 'aviso': ui.AMBAR, 'error': ui.ROJO}.get(tono, ui.TEXT_MUTED))
+        color = {'ok': ui.VERDE, 'aviso': ui.AMBAR, 'error': ui.ROJO}.get(tono, ui.TEXT_MUTED)
+        self.linea.poner_color(color)
         self.titulo.configure(text=tr('Un clic y listo'))
         self.linea.configure(text=texto)
+        if tono in ('ok', 'aviso', 'error'):            # v5.62 (propuesta A): el punto del estado; con Resolve listo, su nombre en claro
+            self.linea.poner_estado(color, tr('detectado') if tono == 'ok' else None)
         self.opciones.show()
         self._relayout()
 

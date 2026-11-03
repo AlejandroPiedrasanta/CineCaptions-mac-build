@@ -19,12 +19,12 @@ Datos: sonido_skill.resumen (diseño) + sonido_skill.visual (miniaturas, voz, on
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPixmap
+from PySide6.QtGui import QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 import qt_kit as ui
 from i18n import tr
-from qt_kit import Boton, Etiqueta, Interruptor, Tarjeta, caja_h
+from qt_kit import Boton, Etiqueta, Interruptor, QColor, Tarjeta, caja_h  # (v5.63: el QColor del tema: los azules siguen a Negro profundo)
 
 MUT = ui.TEXT_MUTED
 ESTILOS = (('auto', 'Automático', 'según el tema'), ('elegante', 'Elegante', 'pocos y suaves'), ('dinamico', 'Dinámico', 'pop en cada clave'),
@@ -712,8 +712,8 @@ class PaginaSonido(QWidget):
         self._scroll.setWidget(self._linea)
         self._scroll.setWidgetResizable(False)
         self._scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._scroll.setStyleSheet('QScrollArea{background:#0B1424;border:none;border-radius:10px}')
-        self._scroll.viewport().setStyleSheet('background:#0B1424')
+        self._scroll.setStyleSheet(ui.traducir_hoja('QScrollArea{background:#0B1424;border:none;border-radius:10px}'))   # (v5.63: sigue al tema)
+        self._scroll.viewport().setStyleSheet(ui.traducir_hoja('background:#0B1424'))
         self._scroll.setFixedHeight(self._linea.alto_total() + 16)
         lt.capa.addWidget(self._scroll)
         bloques['linea'] = lt

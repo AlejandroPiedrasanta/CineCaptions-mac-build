@@ -272,7 +272,7 @@ class IslaNav(QWidget):
                 p.setPen(Qt.PenStyle.NoPen)
                 p.setBrush(QColor(255, 255, 255, int(26 * h)))
                 p.drawRoundedRect(r, H_ITEM / 2, H_ITEM / 2)
-            color = '#FFFFFF' if elegida else ('#E8EEF8' if h > 0.3 else '#9FB0CC')
+            color = ui.texto_acento() if elegida else ('#E8EEF8' if h > 0.3 else '#9FB0CC')     # (v5.63: oscuro sobre el acento blanco)
             if it.clave == 'marca':
                 color = ui.ACCENT_CLARO
             lado = 20
@@ -300,7 +300,9 @@ class IslaNav(QWidget):
             p.restore()
             if it.tipo == 'nav' and it.sel.x > 0.02:
                 a = max(0.0, min(1.0, (it.sel.x - 0.15) / 0.85))
-                p.setPen(QColor(255, 255, 255, int(255 * a)))
+                tinta = QColor(ui.texto_acento())                  # (v5.63: oscura sobre el acento blanco)
+                tinta.setAlpha(int(255 * a))
+                p.setPen(tinta)
                 p.setFont(fuente(13, peso='medio'))
                 caja = QRectF(r.left() + W_ICONO - 4, r.top(), r.width() - W_ICONO + 2, r.height())
                 p.setClipRect(caja.adjusted(-2, 0, 0, 0))

@@ -159,7 +159,7 @@ def main():
         mapa = PLA.mapa_camara(str(v), plan, 1080, 1920)
         info = {'fps': fps, 'inicio': 0, 'base': 0, 'v1': [{'ruta': str(v), 'ini': 0, 'fin': int(dur * fps) + 1, 'izq': 0, 'fps': fps,
                                                             'res': f'{_w}x{_h}'}]}
-        ocup = [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan['kitneon_motions'] if m.get('capa') != 'iconos']
+        ocup = [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan.get('kitneon_motions') or [] if m.get('capa') != 'iconos']   # (v5.56: None sin «Kit de motions»)
         zonas_c, _mc = POS.zonas_detras(an, pals, [{'start': x['ini'], 'end': x['fin']} for x in bl])     # (el verde de la tira con los captions del Tema 1: solo donde HAY caption)
         marcas = []
         for a, b in zonas_c:
@@ -225,7 +225,7 @@ def main():
     resolve_bridge.video_detectado = lambda: {}
     INICIO = [str(cliente)]
     POS.poner_proveedor(lambda: INICIO[0], poner=lambda r: INICIO.__setitem__(0, r))
-    PREFS['pro_neon_extras'] = []                                     # («detrás de ti» apagado: «Listo» lo enciende)
+    PREFS.update(pro_neon_extras=[], pro_mascara='no')                # («detrás de ti» apagado —v5.61: en los 6 temas—: «Listo» lo enciende)
     s = next(x for x in EST.SECCIONES if x['clave'] == 'detras')
     sec = EPU.SeccionEstilo(s, LAT._POR_CLAVE['detras'])
     sec.resize(1400, 760)
@@ -294,7 +294,7 @@ def main():
     if sug_v is not None:
         INICIO[0] = str(sug_v)
         vista._a_mano = False
-        PREFS['pro_neon_extras'] = []                                 # (apagado: la sugerencia lo enciende)
+        PREFS.update(pro_neon_extras=[], pro_mascara='no')            # (apagado: la sugerencia lo enciende)
         sec.mostrar_posiciones(True)
         vista.abrir(str(sug_v))
         listo = esperar(lambda: lin.ruta == str(sug_v) and lin.zonas is not None and lin.captions_listos and lin.captions is not None and lin.sugeridas)

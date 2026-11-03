@@ -495,6 +495,26 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.63', [
+        'CineCaptions en negro y blanco: todas las páginas (Inicio, Proyecto, Creativo, Sonido, Efectos y Ajustes) en negros neutros con el blanco como color de resaltado; lo elegido, «en uso» y encendido, en blanco, sin verdes sueltos.',
+        '¿Prefieres el azul de siempre? Ajustes › Interfaz › «Fondo de la interfaz»: Negro o Azul (con su verde).',
+        'Elegir una escena de Inicio (Nebulosa, Astrolabio, Proceso) ya no cambia el fondo ni el color de resaltado.',
+        'Proyecto con cielo de constelaciones: estrellas que derivan despacio y titilan, las constelaciones de Inicio y, de vez en cuando, una estrella fugaz detrás del slider (sin gastar más que antes; quieto con «Reducir animaciones»).',
+    ]),
+    ('5.62', [
+        'Proyecto más limpio y con la tarjeta más grande: el nombre del tema, «En uso» y «Edición PRO» van en una barra compacta debajo del slider, con puntos que dicen en qué tarjeta estás (un clic en un punto te lleva a ella).',
+        'La última tarjeta del slider es «Crea tu estilo»: mezcla los temas con tu letra y tus colores. Ya no hay franja de audio arriba (GO trae el audio solo; el motor de voz se elige en Ajustes).',
+        'Inicio: las opciones de GO (Estilo, Edición PRO, Motions completo) en píldoras de cristal que se leen bien sobre el astrolabio, y la línea de Resolve con su punto de estado.',
+        'El ejemplo de «Captions detrás de ti» en el móvil de Proyecto se ve como lo pone GO (la cabeza tapa la mitad de la palabra) y el móvil ya no queda en la esquina: se centra junto al slider.',
+    ]),
+    ('5.61', [
+        '«Captions detrás de ti» pone el caption de verdad DETRÁS de la persona: su cabeza tapa parte de la palabra grande (antes el texto quedaba apoyado encima de la cabeza).',
+        '«Captions detrás de ti» es un solo interruptor para los Temas 1 a 6: si lo enciendes con un tema, también vale al hacer GO con otro.',
+        'Efectos › «Listo» de «Captions detrás de ti» funciona después de cualquier GO (aunque lo tuvieras apagado) y, si Resolve está cerrado, lo dice en vez de «otro timeline».',
+    ]),
+    ('5.60', [
+        '«Captions detrás de ti» avisa en el Registro cuando en un video ningún caption puede ir detrás de la persona (sale pequeña, de espaldas o moviéndose, o cambia la toma) y dice por qué: antes GO terminaba igual que sin él y parecía que no funcionaba.',
+    ]),
     ('5.59', [
         'Resolve Studio: GO ya no termina en «Falta un clic en Resolve» cuando Studio tarda en contestar justo después de armar el timeline: sigue solo y coloca los captions sin esperar a esa comprobación.',
     ]),
@@ -1856,10 +1876,7 @@ class _TarjetaEstilo(QAbstractButton):
         p.setPen(QColor('#FFFFFF'))
         p.setFont(fuente(15, peso='negrita'))
         p.drawText(QRectF(r.left() + 14, y, r.width() - 80, 22), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self._clase.nombre)
-        # el color de resaltado que trae
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColorReal(self._clase.acento))
-        p.drawEllipse(QPointF(r.right() - 22, y + 11), 7, 7)
+        # (v5.63: sin el punto del color que traía: la escena ya no cambia el color de resaltado; va en «Color de resaltado»)
         p.setPen(QColor('#8D9BB5'))
         p.setFont(fuente(11))
         p.drawText(QRectF(r.left() + 14, y + 23, r.width() - 28, 32), int(Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap), self._clase.descr)
@@ -2698,6 +2715,15 @@ class VentanaAjustes(_Panel):
                           tr('Tres escenas para Inicio, las tres con el astrolabio de bronce: cada una con sus animaciones y su manera de '
                              'enseñar el proceso de GO. También cambian la luz de fondo de TODAS las páginas. Pasa el ratón por una tarjeta para verla en movimiento.'),
                           caja_est, vertical=True, expandir=True)
+        # v5.63 (el usuario: «deja la opción de azul en Ajustes › Interfaz por si el usuario no quiere tanto negro»): el fondo de toda la
+        # interfaz, Negro (de fábrica, con el acento blanco) o Azul (el azul noche de siempre, con el verde)
+        fondos = {'negro': tr('Negro'), 'noche': tr('Azul')}
+        fondo_var = StringVar(fondos.get(self._borrador['tema'], fondos['negro']))
+        f_fondo = _Fila(tr('Fondo de la interfaz'),
+                        tr('Negro (de fábrica) o el azul noche de siempre, en todas las páginas. Se aplica al reiniciar.'),
+                        Segmentado(list(fondos.values()), fondo_var,
+                                   lambda *_: self._elegir_fondo(next((k for k, v in fondos.items() if v == fondo_var.get()), 'negro')),
+                                   alto=34, tam=13))
         # acentos (v5.22: una fila de muestras a la derecha, como los demás ajustes)
         self._muestras = _MuestrasAcento(self._borrador['acento'], self._borrador['acento_personal'],
                                          self._elegir_acento, self._elegir_personal)
@@ -2722,29 +2748,29 @@ class VentanaAjustes(_Panel):
                         'Con la ventana inactiva Inicio baja solo a 30 fps.'),
                      Segmentado(list(etiquetas_go.values()), go_var,
                                 lambda *_: guardar_prefs({'go_animaciones': inverso_go.get(go_var.get(), 'completo')}), alto=34, tam=13))
-        capa.addWidget(_grupo(f_estilos, f_go, f_anim, f_lat, f_tam, f_acento))
+        capa.addWidget(_grupo(f_estilos, f_go, f_anim, f_lat, f_tam, f_fondo, f_acento))
 
     def _elegir_estilo(self, clave):
-        """Un estilo de Inicio = un conjunto: el diseño de Inicio, el tema de la interfaz y el color de resaltado."""
+        """El estilo de Inicio (su escena y su proceso de GO). v5.63: ya no cambia el tema ni el color de resaltado (antes los ponía en
+        «Noche» y verde, y deshacía el negro + blanco de fábrica): esos van en «Fondo de la interfaz» y «Color de resaltado»."""
         import estilos_inicio
-        est = estilos_inicio.ESTILOS[clave]
         for t in self._tarjetas_estilo:
             t.setChecked(t.clave == clave)
             t.update()
         self._cambio('go_estilo', clave)
-        self._cambio('tema', est.tema)
         try:
             self._carrusel.poner_elegido(estilos_inicio.ORDEN.index(clave))
             self._carrusel.ir_a(estilos_inicio.ORDEN.index(clave))
         except Exception:
             pass
-        clave_acento = next((k for k, (_n, col) in tema.ACENTOS.items() if col.lower() == est.acento.lower()), None)
-        if clave_acento:
-            self._elegir_acento(clave_acento)
-        else:
-            self._borrador['acento_personal'] = est.acento.upper()
-            self._muestras.poner('personal', est.acento.upper())
-            self._cambio('acento', 'personal')
+
+    def _elegir_fondo(self, clave):
+        """v5.63: Negro o Azul (noche). Con su color de siempre: el blanco va con el negro y el verde con el azul (si tenías el otro de los dos,
+        cambia con el fondo; un color elegido aparte se respeta)."""
+        self._cambio('tema', clave)
+        pareja = {'negro': ('verde', 'blanco'), 'noche': ('blanco', 'verde')}[clave]
+        if self._borrador.get('acento') == pareja[0]:
+            self._elegir_acento(pareja[1])
 
     def _elegir_tema(self, clave):
         for t in self._tarjetas_tema:
@@ -2917,7 +2943,7 @@ class VentanaAjustes(_Panel):
     # -- aplicar / cerrar -----------------------------------------------------
     def aplicar(self):
         b = self._borrador
-        guardar_prefs({'tema': b['tema'], 'acento': b['acento'], 'acento_personal': b['acento_personal'],
+        guardar_prefs({'tema': b['tema'], 'acento': b['acento'], 'acento_personal': b['acento_personal'], 'tema_563': True,     # (v5.63: lo elegido manda)
                        'tamano_interfaz': b['tamano'], 'lateral_inicio': b['lateral'], 'motor_voz': b['motor_voz'], 'ia_texto': b.get('ia_texto', 'gemma4'),
                        'canal_beta': False, 'actualizaciones_auto': b.get('actualizaciones_auto', True), 'ventana_encima': b['ventana_encima'], 'avisos_sistema': b['avisos_sistema'], 'go_estilo': b['go_estilo']})
         reiniciar = any(b.get(k) != self._inicial.get(k) for k in ('tema', 'acento', 'acento_personal', 'tamano'))

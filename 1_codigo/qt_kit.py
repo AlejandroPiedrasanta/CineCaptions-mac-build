@@ -489,7 +489,7 @@ def _imagenes_estilo():
     abajo = ('<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">'
              '<path d="M2.2 4 L9.8 4 L6 8.6 Z" fill="{c}"/></svg>')
     palomita = ('<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14">'
-                '<path d="M3 7.4 L5.8 10 L11 4.2" fill="none" stroke="#FFFFFF" stroke-width="2" '
+                f'<path d="M3 7.4 L5.8 10 L11 4.2" fill="none" stroke="{texto_acento()}" stroke-width="2" '
                 'stroke-linecap="round" stroke-linejoin="round"/></svg>')
     return {
         'FLECHA': _svg('flecha.svg', flecha.format(c=tc('#8FA3C7'))),
@@ -518,7 +518,7 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0px; }
 QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal { background: none; }
 
 QLineEdit { background-color: #111D33; border: 1px solid #1E2A42; border-radius: 10px;
-            padding: 4px 12px; color: #FFFFFF; selection-background-color: #0F62FE; }
+            padding: 4px 12px; color: #FFFFFF; selection-background-color: #0F62FE; selection-color: TEXTO_ACENTO; }
 QLineEdit:hover { border-color: #2A3F66; }
 QLineEdit:focus { border-color: #0F62FE; }
 QLineEdit:disabled { color: #5A6B87; background-color: #0C1424; border-color: #172238; }
@@ -549,18 +549,18 @@ QRadioButton::indicator { width: 16px; height: 16px; border-radius: 9px;
 QRadioButton::indicator:hover { border-color: #0F62FE; }
 QRadioButton::indicator:checked { border-color: #0F62FE;
     background-color: qradialgradient(cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
-        stop:0 #FFFFFF, stop:0.34 #FFFFFF, stop:0.42 #0F62FE, stop:1 #0F62FE); }
+        stop:0 TEXTO_ACENTO, stop:0.34 TEXTO_ACENTO, stop:0.42 #0F62FE, stop:1 #0F62FE); }
 
 QMenu { background-color: #0F192D; border: 1px solid #22324F; padding: 5px; color: #E8F1FF; }
 QMenu::item { padding: 7px 24px 7px 14px; border-radius: 6px; background: transparent; }
-QMenu::item:selected { background-color: #0F62FE; color: #FFFFFF; }
+QMenu::item:selected { background-color: #0F62FE; color: TEXTO_ACENTO; }
 QMenu::item:disabled { color: #5A6B87; }
 QMenu::separator { height: 1px; background: #1E2A42; margin: 4px 6px; }
 QMenu[pildora="true"] { background-color: #0F192D; border: 1px solid #22324F; border-radius: 14px; padding: 8px; }
 QMenu[pildora="true"]::item { padding: 9px 26px 9px 20px; margin: 3px 0px; border: 1px solid #1E2A42; border-radius: 14px; background: transparent; }
 QMenu[pildora="true"]::item:selected { background-color: #13203A; border-color: #2C4068; color: #FFFFFF; }
-QMenu[pildora="true"]::item:checked { background-color: #0F62FE; border-color: #0F62FE; color: #FFFFFF; }
-QMenu[pildora="true"]::item:checked:selected { background-color: #2A74FF; border-color: #2A74FF; color: #FFFFFF; }
+QMenu[pildora="true"]::item:checked { background-color: #0F62FE; border-color: #0F62FE; color: TEXTO_ACENTO; }
+QMenu[pildora="true"]::item:checked:selected { background-color: #2A74FF; border-color: #2A74FF; color: TEXTO_ACENTO; }
 QMenu[pildora="true"]::item:disabled { color: #5A6B87; border-color: #172238; background: transparent; }
 QMenu[pildora="true"]::indicator { width: 0px; height: 0px; image: none; }
 QMenu[pildora="true"]::separator { height: 1px; background: #1E2A42; margin: 6px 14px; }
@@ -575,7 +575,7 @@ QSlider::sub-page:horizontal:disabled { background: #2A3550; }
 QSlider::handle:horizontal:disabled { border-color: #2A3550; background: #5A6B87; }
 
 QPlainTextEdit { background-color: #0A0F1E; border: 1px solid #1E2A42; border-radius: 10px;
-                 color: #C9D6EC; selection-background-color: #0F62FE; padding: 4px; }
+                 color: #C9D6EC; selection-background-color: #0F62FE; selection-color: TEXTO_ACENTO; padding: 4px; }
 
 QTreeWidget, QListWidget { background-color: transparent; border: none; color: #C9D6EC; outline: 0; }
 QTreeWidget::item, QListWidget::item { min-height: 32px; padding: 0px 6px; border-radius: 8px; }
@@ -604,7 +604,7 @@ QPushButton { border-radius: 10px; padding: 0px 16px; color: #C9D6EC; background
 QPushButton:hover { background-color: #14223C; border-color: #34507F; color: #FFFFFF; }
 QPushButton:pressed { background-color: #0F1830; }
 QPushButton:disabled { color: #4F607A; background-color: transparent; border-color: #1A2438; }
-QPushButton[tipo="primario"] { color: #FFFFFF; border: none; background-color: #0F62FE; }
+QPushButton[tipo="primario"] { color: TEXTO_ACENTO; border: none; background-color: #0F62FE; }
 QPushButton[tipo="primario"]:hover { background-color: #2A74FF; }
 QPushButton[tipo="primario"]:pressed { background-color: #0B4FD0; }
 QPushButton[tipo="primario"]:disabled { background-color: #17284A; color: #6E82A6; }
@@ -632,8 +632,23 @@ QPushButton[tipo="icono"] { padding: 0px; }
 """
 
 
+def texto_acento():
+    """v5.63: el color del texto SOBRE el acento (botones primarios, menú, selección): casi negro con un acento claro (el blanco de
+    fábrica), blanco como siempre con uno oscuro."""
+    return _texto_sobre(ACCENT)
+
+
+def _texto_sobre(color):
+    """El texto sobre un relleno de ese color (de la casa, ya en el tema): oscuro si es claro, blanco si no."""
+    try:
+        import tema
+        return tema.texto_sobre(_color(color))
+    except Exception:
+        return '#FFFFFF'
+
+
 def hoja_de_estilo():
-    hoja = traducir_hoja(_HOJA)
+    hoja = traducir_hoja(_HOJA).replace('TEXTO_ACENTO', texto_acento())
     for clave, ruta in _imagenes_estilo().items():
         hoja = hoja.replace(f'url({clave})', f'url("{ruta}")')
     return hoja
@@ -656,7 +671,7 @@ def paleta():
     poner(R.ButtonText, TEXT_COLOR)
     poner(R.BrightText, '#FFFFFF')
     poner(R.Highlight, ACCENT)
-    poner(R.HighlightedText, '#FFFFFF')
+    poner(R.HighlightedText, texto_acento())
     poner(R.ToolTipBase, '#101A2E')
     poner(R.ToolTipText, '#E0EBFB')
     poner(R.PlaceholderText, '#5A6B87')
@@ -1647,7 +1662,8 @@ class Interruptor(QAbstractButton):
         p.setBrush(color)
         p.drawRoundedRect(pista, 11, 11)
         x = pista.left() + 3 + t * (pista.width() - 22)
-        p.setBrush(QColor('#FFFFFF' if self.isEnabled() else '#5A6B87'))
+        # (v5.63: con un acento claro la pista encendida es blanca: la bolita se oscurece al encender)
+        p.setBrush(mezclar(texto_acento(), '#FFFFFF', t) if self.isEnabled() else QColor('#5A6B87'))
         p.drawEllipse(QRectF(x, pista.top() + 3, 16, 16))
         if self.text():
             p.setPen(QColor(self._color if self.isEnabled() else '#5A6B87'))
@@ -1862,7 +1878,7 @@ class Segmentado(QWidget):
         for i, v in enumerate(self._valores):
             rr = self._rect(i)
             if i == elegido:
-                c = '#FFFFFF' if en else '#8D9BB5'
+                c = texto_acento() if en else '#8D9BB5'                 # (v5.63: oscuro sobre el acento blanco)
             elif i == self._hover and en:
                 c = '#E0EBFB'
             else:
@@ -2544,7 +2560,7 @@ class Pasos(QWidget):
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(QColor(color))
             p.drawEllipse(QRectF(x, cy - 14, 28, 28))
-            p.setPen(QColor('#FFFFFF' if estado != 'pendiente' else '#C9D6EC'))
+            p.setPen(QColor(_texto_sobre(color) if estado != 'pendiente' else '#C9D6EC'))       # (v5.63: oscuro sobre un círculo claro)
             p.setFont(fuente(13, peso='negrita'))
             p.drawText(QRectF(x, cy - 14, 28, 28), int(Qt.AlignmentFlag.AlignCenter), str(i + 1))
             p.setFont(self.font())
@@ -3383,7 +3399,7 @@ class BotonNav(QAbstractButton):
             p.setPen(QPen(halo, 2.0))
             gr = 3.0 + 9.0 * self._pop
             p.drawRoundedRect(cuadro.adjusted(-gr, -gr, gr, gr), 6 + gr, 6 + gr)
-        blanco = '#FFFFFF' if activo else ('#C9D6EC' if h > 0.5 else '#7F8DA8')
+        blanco = texto_acento() if activo else ('#C9D6EC' if h > 0.5 else '#7F8DA8')      # (v5.63: oscuro sobre el acento blanco)
         dibujar_icono_nav(p, self._clave, cuadro.adjusted(2, 2, -2, -2), blanco)
         p.restore()
         if not self.plegado:
@@ -3944,7 +3960,7 @@ def _aplicar_tema_guardado():
         return
     g = globals()
     for nombre in ('ACCENT', 'ACCENT_HOVER', 'ACCENT_CLARO', 'CIAN', 'BG_COLOR', 'LATERAL', 'CARD_COLOR',
-                   'CARD_2', 'BORDER_COLOR', 'TEXT_COLOR', 'TEXT_MUTED'):
+                   'CARD_2', 'BORDER_COLOR', 'TEXT_COLOR', 'TEXT_MUTED', 'VERDE'):      # (v5.63: VERDE solo cambia con un acento claro)
         g[nombre] = _TRADUCTOR(g[nombre])
 
 

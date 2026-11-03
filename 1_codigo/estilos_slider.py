@@ -691,12 +691,15 @@ class CarruselPacks(QWidget):
         col.setAlpha(34)
         p.setBrush(col)
         p.drawEllipse(QPointF(c.x(), c.y() - 26 * esc), r, r)
-        p.setPen(QPen(QColor(ui.VERDE), 3.2 * esc, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        p.drawLine(QPointF(c.x() - 11 * esc, c.y() - 26 * esc), QPointF(c.x() + 11 * esc, c.y() - 26 * esc))
-        p.drawLine(QPointF(c.x(), c.y() - 37 * esc), QPointF(c.x(), c.y() - 15 * esc))
+        # v5.62 (el usuario: «cámbialo por Crea tu estilo»): la carta del final abre «Crea tu estilo» (antes, «Añadir plantilla (.drb)»; la
+        # importación se quitó), con la chispa del botón «Crea tu estilo» de arriba
+        pm = self._chispa()
+        if pm is not None:
+            lado = 30 * esc
+            p.drawPixmap(QRectF(c.x() - lado / 2, c.y() - 26 * esc - lado / 2, lado, lado), pm, QRectF(pm.rect()))
         p.setPen(QColor(255, 255, 255, 235))
         # v5.5.10: el título se achica hasta caber en la tarjeta (en pantallas pequeñas se salía por los lados)
-        titulo, tam = tr('Añadir plantilla (.drb)'), 16 * esc
+        titulo, tam = tr('Crea tu estilo'), 16 * esc
         p.setFont(ui.fuente(tam, peso='negrita'))
         while tam > 8 and p.fontMetrics().horizontalAdvance(titulo) > rect.width() - 28:
             tam -= 0.5
@@ -705,7 +708,16 @@ class CarruselPacks(QWidget):
         p.setPen(QColor(ui.TEXT_MUTED))
         p.setFont(ui.fuente(min(12 * esc, tam * 0.78)))
         p.drawText(QRectF(rect.left() + 22, c.y() + 48 * esc, rect.width() - 44, 70 * esc),
-                   int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop) | int(Qt.TextFlag.TextWordWrap), tr('En Resolve: clic derecho sobre el bin > Exportar bandeja…'))
+                   int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop) | int(Qt.TextFlag.TextWordWrap),
+                   tr('Mezcla los temas con tu letra y tus colores'))
+
+    def _chispa(self):
+        """La chispa de la carta «Crea tu estilo», rasterizada una vez (64 px × dpr; se pinta escalada con la carta)."""
+        dpr = self.devicePixelRatioF()
+        if getattr(self, '_chispa_pm', None) is None or self._chispa_pm[0] != (round(dpr, 2), ui.VERDE):
+            ic = ui.icono_linea('ph.sparkle', ui.VERDE)
+            self._chispa_pm = ((round(dpr, 2), ui.VERDE), ic.pixmap(QSize(64, 64), dpr) if ic is not None else None)
+        return self._chispa_pm[1]
 
     # -- elegir (la animación) y la píldora ------------------------------------------------------------------------------
     def _progreso_sel(self, carta):

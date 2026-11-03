@@ -43,6 +43,30 @@ def _c(hexa, a=255):
     return c
 
 
+_TEMA = {}
+
+
+def _negro():
+    """v5.63 (el usuario eligió negro + blanco para todo CineCaptions): ¿tema «Negro profundo»? Entonces el cielo de Inicio va en negros
+    neutros (estas escenas pintan con QColor de Qt, que el traductor del tema no toca). Se mira una vez: el tema cambia al reiniciar."""
+    if 'negro' not in _TEMA:
+        try:
+            import tema
+            _TEMA['negro'] = tema.leer()['tema'] == 'negro'
+        except Exception:
+            _TEMA['negro'] = False
+    return _TEMA['negro']
+
+
+def _cielo_negro(q, W, H, c, e, radio=0.8):
+    """El degradado de fondo en negro neutro (lo que en el tema Noche es verde azulado oscuro)."""
+    g = QRadialGradient(c, max(W, H) * radio)
+    g.setColorAt(0.0, QColor(16 + int(10 * e), 16 + int(10 * e), 17 + int(10 * e)))
+    g.setColorAt(0.5, QColor(6, 6, 7))
+    g.setColorAt(1.0, QColor(1, 1, 1))
+    q.fillRect(QRectF(0, 0, W, H), g)
+
+
 def _suave(x):
     x = max(0.0, min(1.0, x))
     return x * x * (3 - 2 * x)
@@ -313,6 +337,9 @@ class Estilo:
         self._pintar_fondo(e, p, W, H, c)
 
     def fondo(self, q, W, H, c, e, t, estado):
+        if _negro():
+            _cielo_negro(q, W, H, c, e)
+            return
         g = QRadialGradient(c, max(W, H) * 0.8)
         g.setColorAt(0.0, QColor(6, 34 + int(36 * e), 30 + int(30 * e)))
         g.setColorAt(0.5, QColor(3, 16, 16))
@@ -472,11 +499,14 @@ class Nebulosa(Estilo):
         fcol = st.fcol if st else '#7DFFB2'
         reap = st.reap if st else 1.0
         Rs = min(W * 0.28, H * 0.32) if st is None else self._rs
-        g = QRadialGradient(c, max(W, H) * 0.75)
-        g.setColorAt(0.0, QColor(6, 40 + int(30 * e), 36 + int(20 * e)))
-        g.setColorAt(0.45, QColor(3, 18, 20))
-        g.setColorAt(1.0, QColor(1, 5, 8))
-        q.fillRect(QRectF(0, 0, W, H), g)
+        if _negro():                                                    # (v5.63: la base en negro; las nubes de color siguen: son el estilo)
+            _cielo_negro(q, W, H, c, e, 0.75)
+        else:
+            g = QRadialGradient(c, max(W, H) * 0.75)
+            g.setColorAt(0.0, QColor(6, 40 + int(30 * e), 36 + int(20 * e)))
+            g.setColorAt(0.45, QColor(3, 18, 20))
+            g.setColorAt(1.0, QColor(1, 5, 8))
+            q.fillRect(QRectF(0, 0, W, H), g)
         q.setCompositionMode(PLUS)
         # v5.49 pulido: detrás de todo un velo grande violeta y azul que gira al revés (más color y profundidad que solo verde)
         self._texturas()
@@ -672,15 +702,21 @@ class Astrolabio(Estilo):
         self._destello = [-9.0, -9.0, -9.0]
 
     def fondo(self, q, W, H, c, e, t, estado):
-        g = QRadialGradient(c, max(W, H) * 0.8)
-        g.setColorAt(0.0, QColor(10, 36 + int(26 * e), 46 + int(20 * e)))
-        g.setColorAt(0.5, QColor(4, 14, 26))
-        g.setColorAt(1.0, QColor(1, 4, 10))
-        q.fillRect(QRectF(0, 0, W, H), g)
+        negro = _negro()                                                # v5.63: en Negro profundo, cielo, velos y vía láctea sin azul
+        if negro:
+            _cielo_negro(q, W, H, c, e)
+        else:
+            g = QRadialGradient(c, max(W, H) * 0.8)
+            g.setColorAt(0.0, QColor(10, 36 + int(26 * e), 46 + int(20 * e)))
+            g.setColorAt(0.5, QColor(4, 14, 26))
+            g.setColorAt(1.0, QColor(1, 4, 10))
+            q.fillRect(QRectF(0, 0, W, H), g)
         q.setCompositionMode(PLUS)
         # v5.49 pulido: dos velos de nebulosa muy tenues (azul y oro) que derivan despacio: el cielo gana profundidad
         Nebulosa._texturas()
-        for k, (hexa, op, cx, cy, ang) in enumerate((('#2C5C9A', 0.42, 0.24, 0.36, -24), ('#A97B32', 0.26, 0.78, 0.62, 14))):
+        velos = (('#8C8C8C', 0.20, 0.24, 0.36, -24), ('#7A7A7A', 0.14, 0.78, 0.62, 14)) if negro else \
+            (('#2C5C9A', 0.42, 0.24, 0.36, -24), ('#A97B32', 0.26, 0.78, 0.62, 14))
+        for k, (hexa, op, cx, cy, ang) in enumerate(velos):
             velo = Nebulosa._tinte(hexa)
             q.save()
             q.translate(W * cx, H * cy)
@@ -693,7 +729,7 @@ class Astrolabio(Estilo):
         via = QLinearGradient(QPointF(0, 0), QPointF(0, 1))                 # una vía láctea tenue en diagonal
         via.setCoordinateMode(QLinearGradient.CoordinateMode.ObjectBoundingMode)
         via.setColorAt(0.0, QColor(0, 0, 0, 0))
-        via.setColorAt(0.5, QColor(40, 70, 90, 70))
+        via.setColorAt(0.5, QColor(70, 70, 70, 55) if negro else QColor(40, 70, 90, 70))
         via.setColorAt(1.0, QColor(0, 0, 0, 0))
         q.save()
         q.translate(W / 2, H / 2)
@@ -1107,15 +1143,19 @@ class Proceso(Estilo):
         st = self._st
         fcol = st.fcol if st else '#7DFFB2'
         Rs = getattr(self, '_rs', min(W * 0.28, H * 0.32))
-        g = QRadialGradient(c, max(W, H) * 0.8)
-        g.setColorAt(0.0, QColor(6, 40 + int(26 * e), 36 + int(16 * e)))
-        g.setColorAt(0.5, QColor(3, 16, 18))
-        g.setColorAt(1.0, QColor(1, 5, 8))
-        q.fillRect(QRectF(0, 0, W, H), g)
+        negro = _negro()
+        if negro:                                                       # (v5.63: Negro profundo)
+            _cielo_negro(q, W, H, c, e)
+        else:
+            g = QRadialGradient(c, max(W, H) * 0.8)
+            g.setColorAt(0.0, QColor(6, 40 + int(26 * e), 36 + int(16 * e)))
+            g.setColorAt(0.5, QColor(3, 16, 18))
+            g.setColorAt(1.0, QColor(1, 5, 8))
+            q.fillRect(QRectF(0, 0, W, H), g)
         q.setCompositionMode(PLUS)
         self._charco(q, c, Rs, fcol, 80 + 60 * e, 2.6)
         q.setCompositionMode(OVER)
-        q.setPen(QPen(_c('#2E8A72', 26), 1.0))                       # el «suelo» del estudio: una rejilla tenue en perspectiva
+        q.setPen(QPen(_c('#6A6A6A' if negro else '#2E8A72', 26), 1.0))  # el «suelo» del estudio: una rejilla tenue en perspectiva
         hz = c.y() + Rs * 1.15
         for i in range(-14, 15):
             q.drawLine(QPointF(c.x() + i * 60, hz), QPointF(c.x() + i * 260, H + 40))

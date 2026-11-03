@@ -34,8 +34,13 @@ PERFILES = {
     'negro': (tr('Negro profundo'), tr('Negros neutros en capas que realzan el color de resaltado.')),
     'grafito': (tr('Grafito'), tr('Gris carbón cálido, con menos contraste.')),
 }
-ACENTO_POR_DEFECTO = 'verde'          # v5.22: el verde, de fábrica (el usuario lo pidió; antes el azul)
+# v5.63 (el usuario eligió «negro + blanco» para TODO CineCaptions entre tres maquetas): de fábrica, el tema Negro profundo con el acento
+# blanco. Las prefs de antes (sin `tema_563`) se leen así aunque guardaran otro tema; al elegir uno en Ajustes se guarda la marca y manda
+# lo elegido
+TEMA_POR_DEFECTO = 'negro'
+ACENTO_POR_DEFECTO = 'blanco'         # (v5.22: el verde; antes el azul)
 ACENTOS = {
+    'blanco': (tr('Blanco'), '#E6E8EB'),
     'verde': (tr('Verde'), '#22B573'),
     'azul': (tr('Azul CineCaptions'), '#0F62FE'),
     'naranja': (tr('Naranja cine'), '#F5832F'),
@@ -53,6 +58,10 @@ LATERAL = {
 # colores con significado propio: no siguen al tema
 EXCLUIDOS = {'#4589FE', '#F5B84B', '#B388FF', '#6B7A99', '#24D18F', '#FF6B6B', '#E0A030',
              '#62D196', '#FFD166', '#FFB86B', '#00C8FF'}
+# v5.63 (el usuario: «que los colores sean armoniosos ya que hay un verde en la selección del slide»): con un acento CLARO (el blanco de
+# fábrica) los verdes de la interfaz («en uso», elegido, encendido, conectado: qt_kit.VERDE y sus primos) van al acento; los roles del
+# editor y el ámbar/rojo de aviso siguen con su color
+VERDES_UI = {'#24D18F', '#3FDC95', '#22B573', '#7FE0B5', '#2BD4A4'}
 
 
 def leer():
@@ -61,7 +70,9 @@ def leer():
         p = json.loads(PREFS.read_text(encoding='utf-8'))
     except Exception:
         p = {}
-    tema = p.get('tema') if p.get('tema') in PERFILES else 'noche'
+    if not p.get('tema_563'):                          # v5.63: lo de fábrica (negro + blanco) hasta que se elija otro en Ajustes
+        p = dict(p, tema=TEMA_POR_DEFECTO, acento=ACENTO_POR_DEFECTO)
+    tema = p.get('tema') if p.get('tema') in PERFILES else TEMA_POR_DEFECTO
     acento = p.get('acento') if p.get('acento') in ACENTOS or p.get('acento') == 'personal' else ACENTO_POR_DEFECTO
     personal = p.get('acento_personal') if _es_hex(p.get('acento_personal')) else ACENTOS[ACENTO_POR_DEFECTO][1]
     try:
@@ -78,6 +89,19 @@ def leer():
 def color_acento(ajustes=None):
     a = ajustes or leer()
     return a['acento_personal'] if a['acento'] == 'personal' else ACENTOS[a['acento']][1]
+
+
+def es_claro(c):
+    """¿Un color '#RRGGBB' es claro (luminancia > 0,6)? Sobre él el texto va oscuro (el acento blanco de la v5.63)."""
+    if not _es_hex(c):
+        return False
+    r, g, b = (int(c[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6
+
+
+def texto_sobre(c):
+    """El color del texto sobre un relleno `c`: casi negro si es claro, blanco si no."""
+    return '#0B0B0B' if es_claro(c) else '#FFFFFF'
 
 
 def _es_hex(c):
@@ -103,11 +127,14 @@ def traductor(ajustes=None):
     hb, lb, sb = _hls(BASE_ACENTO)
     ha, la, sa = _hls(acento)
     tema = a['tema']
+    claro = es_claro(acento)
     # un color ya traducido no se vuelve a traducir (las constantes del tema
     # pasan otra vez por _color() y por QColor al dibujarse)
     salidas = set()
 
     def _calcular(cu):
+        if claro and cu in VERDES_UI:                  # (v5.63: el verde de «en uso» / elegido, al acento claro)
+            return _hex(ha, min(0.97, la + 0.03), sa)
         h, l, s = _hls(cu)
         tono = h * 360
         croma = (1 - abs(2 * l - 1)) * s
@@ -124,7 +151,7 @@ def traductor(ajustes=None):
     @lru_cache(maxsize=None)
     def traducir(c):
         cu = c.upper()
-        if cu in EXCLUIDOS or cu in salidas or not _es_hex(cu):
+        if (cu in EXCLUIDOS and not (claro and cu in VERDES_UI)) or cu in salidas or not _es_hex(cu):
             return c
         nuevo = _calcular(cu)
         if nuevo != cu:

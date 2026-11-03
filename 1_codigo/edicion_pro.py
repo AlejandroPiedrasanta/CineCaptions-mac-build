@@ -74,10 +74,20 @@ DETRAS_CAPTIONS = {'sobria': 0.35, 'media': 0.55, 'espectaculo': 0.8}       # de
 # v5.5.20 (el usuario: «que exista en el menú la intensidad… que se aprecien los captions, que no los tape tanto la Magic Mask»): de los momentos
 # que valen, cuántos van detrás (frac); cuánto de la palabra GRANDE de abajo puede tapar la cabeza (tapa, fracción de su alto; tapa_max, del
 # cuadro) y cuántos tramos de Magic Mask como mucho (cada uno se rastrea en Resolve: pocos y cortos = Resolve estable). v5.58: ya no se elige
-# (intensidad_detras: siempre 'media')
-INTENSIDAD_DETRAS = {'suave': {'frac': 0.25, 'tapa': 0.2, 'tapa_max': 0.035, 'tramos': 3},
-                     'media': {'frac': 0.45, 'tapa': 0.3, 'tapa_max': 0.045, 'tramos': 5},
-                     'fuerte': {'frac': 0.7, 'tapa': 0.4, 'tapa_max': 0.06, 'tramos': 8}}
+# (intensidad_detras: siempre 'media'). v5.61: la cabeza tapa más de la mitad de la palabra grande (tapa_detras)
+INTENSIDAD_DETRAS = {'suave': {'frac': 0.25, 'tapa': 0.7, 'tapa_max': 0.08, 'tramos': 3},
+                     'media': {'frac': 0.45, 'tapa': 1.0, 'tapa_max': 0.12, 'tramos': 5},
+                     'fuerte': {'frac': 0.7, 'tapa': 1.2, 'tapa_max': 0.14, 'tramos': 8}}
+
+
+def tapa_detras(cfg, cab, linea):
+    """v5.61 (el usuario: «detrás de ti debe ser detrás de la persona, no solo ponerlo arriba»): cuánto baja el pie de la pila por debajo de
+    la coronilla (fracción del alto). Antes, hasta el 30 % de la palabra de abajo, el 40 % de la cabeza y el 4,5 % del cuadro: en ESPAÑOL.mov
+    el borde del texto quedaba entre −1 y +2 % de la coronilla, apoyado ENCIMA de la cabeza. Ahora, una palabra grande entera (sin pasar del
+    80 % de la cabeza): como la coronilla de la IA queda algo por encima del pelo, la cabeza tapa a la vista casi la mitad de la palabra
+    (medido con la vista de Efectos en ESPAÑOL.mov: XELA, VIVO, SÁBADO 10, GRATUITA) y la parte de arriba de las letras se sigue leyendo."""
+    cfg = cfg or INTENSIDAD_DETRAS['media']
+    return max(0.012, min(cfg['tapa_max'], 0.8 * cab, cfg['tapa'] * linea))
 NIVELES_DETRAS = ('suave', 'media', 'fuerte')
 TRAMO_DETRAS_MAX_S = 12.0                                                    # un recorte de la persona no pasa de esto (el rastreo del Magic Mask va por tramos)
 PUNCH_IN = 1.08                                                              # el «punch-in» que alterna en cada salto de V1 (pausas quitadas), como en la skill
@@ -300,10 +310,28 @@ def poner_neon_extra(clave, si):
     guardar_opciones({'pro_neon_extras': [c for c in neon_extras() if c != clave] + ([clave] if si else [])})
 
 
+def detras_encendido(op=None):
+    """v5.61 (el usuario: «sí, unificarlo»): «Captions detrás de ti» es UN interruptor para los Temas 1 a 6. Se guardaba en dos sitios (el Tema 1
+    en pro_neon_extras, los Temas 2–6 en pro_mascara) y encenderlo con un tema y pulsar GO con otro lo dejaba apagado: vale cualquiera de los
+    dos (poner_detras escribe los dos)."""
+    op = opciones_guardadas() if op is None else op
+    return str(op.get('pro_mascara') or 'no') != 'no' or 'detras' in neon_extras(op)
+
+
+def poner_detras(si, modo=None):
+    """v5.61: enciende o apaga «detrás de ti» en los 6 temas a la vez. `modo` = el recorte ('auto' | 'magic' | 'ia'); sin él, el que había."""
+    op = opciones_guardadas()
+    antes = str(op.get('pro_mascara') or 'auto')
+    guardar_opciones({'pro_mascara': (modo or (antes if antes != 'no' else 'auto')) if si else 'no',
+                      'pro_neon_extras': [c for c in neon_extras(op) if c != 'detras'] + (['detras'] if si else [])})
+
+
 def opciones_neon(op):
     """Las opciones de la PRO del Tema 1: las del usuario, con lo del menú lateral sacado de SUS interruptores ('_neon_extras')."""
     import pro_lateral_ui as LAT
-    ex = set(neon_extras(op))
+    ex = set(neon_extras(op)) - {'detras'}
+    if detras_encendido(op):                                          # v5.61: el de los 6 temas
+        ex.add('detras')
     op = dict(op)
     antes = str(op.get('pro_mascara') or 'auto')
     op['pro_mascara'] = (antes if antes != 'no' else 'auto') if 'detras' in ex else 'no'
@@ -329,6 +357,8 @@ def opciones_menu(op):
     ids = list(dict.fromkeys(i for c in on for i in LAT.ids_de(c) if MC.permitido(i, op)))
     if 'detras' not in on:
         op['pro_mascara'] = 'no'
+    elif str(op.get('pro_mascara') or 'no') == 'no':                  # v5.61: encendido desde el Tema 1 (pro_neon_extras): el recorte de siempre
+        op['pro_mascara'] = 'auto'
     op['pro_internet'] = 'broll' in on
     op['pro_motions_completo'] = 'motions_completo' in on
     op['pro_emojis'] = 'emoji' in on and op.get('pro_emojis') is True
@@ -600,6 +630,24 @@ def _avisar_marcas(avisos):
             registro.aviso('Posiciones de Efectos: ' + ' · '.join(avisos), 'edición pro')
         except Exception:
             pass
+
+
+def _avisar_sin_detras(motivos, quitados=False):
+    """v5.60 (el usuario: «activo detrás de ti y no funciona»): «detrás de ti» encendido y NINGÚN caption detrás de la persona: el Registro dice
+    por qué (antes GO acababa igual que sin él y parecía roto). `motivos` = {clave de MOTIVOS_DETRAS: captions} de _captions_detras; `quitados` =
+    hubo tramos, pero ningún recorte de la persona salió limpio (_encima_de). Sin motivos (solo marcas: ya los dijo _avisar_marcas), nada."""
+    if quitados:
+        por = 'el recorte de la persona no salía limpio en ninguno'
+    elif motivos:
+        por = ' · '.join(f'{MOTIVOS_DETRAS.get(k, k)} (en {n})' for k, n in sorted(motivos.items(), key=lambda x: -x[1])[:3])
+    else:
+        return
+    try:
+        import registro
+        registro.aviso(f'Captions detrás de ti: en este video ningún caption pudo ir detrás de la persona: {por}. Van normales; funciona '
+                       'cuando la persona sale grande y quieta, sin cambiar de toma durante el caption.', 'edición pro')
+    except Exception:
+        pass
 
 
 def _grande(p):
@@ -1226,7 +1274,14 @@ def bloques_de_cues(cues):
         fin = max([fin] + [float(r['fin']) for r in runs if isinstance(r.get('fin'), (int, float))])
         if fin - ini >= 0.5 and 0 <= arriba < abajo <= 1:
             linea = 2.0 * (abajo - max(ys)) if ys and max(ys) < abajo else abajo - arriba     # el alto de la línea de ABAJO (la que tapa la cabeza)
+            # v5.61: los Text+ del Tema 1 (runs con su clip 'k' y su 'size') dicen si abajo va la palabra GRANDE: con una línea pequeña abajo
+            # («porque»), la cabeza solo la rozaba y el texto quedaba encima de la persona (lo automático no lo elige; una marca, sí)
+            textos = [r for r in runs if 'k' in r and r.get('texto') and isinstance(r.get('y'), (int, float)) and r.get('size')]
+            grande = None
+            if textos:
+                grande = float(max(textos, key=lambda r: float(r['y']))['size']) >= 0.8 * max(float(r['size']) for r in textos)
             out.append({'ini': ini, 'fin': fin, 'arriba': arriba, 'abajo': abajo, 'linea': max(0.02, linea), 'xs': xs or [0.5],
+                        **({'grande_abajo': grande} if grande is not None else {}),
                         'palabras': [(str(r.get('texto') or ''), float(r['t']) if isinstance(r.get('t'), (int, float)) else ini) for r in runs],
                         'emoji': c.get('emoji') if isinstance(c.get('emoji'), str) else None})    # (v5.25: el del tema, ya elegido con coherencia)
     out.sort(key=lambda b: b['ini'])
@@ -1275,6 +1330,7 @@ MOTIVOS_DETRAS = {
     'corto': 'el caption dura muy poco',
     'linea': 'ese caption no tiene la palabra grande abajo',
     'no_cabe_lado': 'a ese lado de la persona no cabe el texto',
+    'ocupado': 'ahí va otro gráfico de la Edición PRO',
 }
 CORONILLA_LADO_MAX = 0.75             # v5.32: con el texto a un lado (horizontal) la cabeza puede ir pegada arriba, no tan abajo que el texto se salga
 
@@ -1362,9 +1418,9 @@ def _detras_bloque(b, info, video, W, H, cfg, a_cuadro, cortes, forzado, posicio
         return dict(b, subir=-r[1], mover=r[0], clip=fuentes[0][2], det=vs[0] if a_cuadro is not None else ds[0], t_det=ts[0], caras=caras), None
     if not (min(b['xs']) - 0.16 <= cab_x <= max(b['xs']) + 0.16):
         return None, MOTIVOS_DETRAS['lado']
-    # cuánto de la pila tapa la cabeza: hasta la frente (~40 % de la cabeza), sin pasar del 45 % de la línea de abajo (la palabra se sigue
-    # leyendo); en un plano entero (cabeza pequeña) tapa poco y en un primer plano mucho más
-    tapa = max(0.012, min(cfg['tapa_max'] if cfg else 0.055, 0.4 * cab, (cfg['tapa'] if cfg else 0.45) * b['linea']))
+    # cuánto de la pila tapa la cabeza (tapa_detras): a la vista, casi la mitad de la palabra de abajo; en un plano entero (cabeza pequeña)
+    # tapa menos y en un primer plano más
+    tapa = tapa_detras(cfg, cab, b['linea'])
     if linea_chica:                                                   # (una línea pequeña abajo: la cabeza solo le roza el pie, se sigue leyendo)
         tapa = max(0.006, min(tapa, 0.28 * b['linea']))
     dy = coronilla + tapa - b['abajo']
@@ -1378,7 +1434,7 @@ def _detras_bloque(b, info, video, W, H, cfg, a_cuadro, cortes, forzado, posicio
 
 
 def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), W=1080, H=1920, intensidad=None, bloques=None, a_cuadro=None,
-                     marcas=None, cortes=None):
+                     marcas=None, cortes=None, motivos=None):
     """Qué bloques de captions van DETRÁS de la persona y cuánto suben. Un bloque vale si la persona es grande, su cabeza no se sale por arriba,
     está quieta en todo el bloque (misma toma), la pila le cae encima en horizontal y no hay otro gráfico ni B-roll en ese momento. La pila sube (o
     baja) hasta que su borde de abajo queda un poco por debajo de la coronilla: la cabeza tapa la parte de abajo de la palabra grande y el resto se lee.
@@ -1390,7 +1446,8 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
     v5.22: `marcas` = {'modo', 'ts'} de Efectos › «Posición»: el bloque que suena en cada segundo marcado va detrás SIEMPRE que la persona
     lo permita (aunque haya otro gráfico o le toque descansar); con 'solo', ninguno más. Lo que no se pudo queda en el Registro.
     v5.27: cada bloque lo decide _detras_bloque (con su motivo); `cortes` (s) = los cambios de toma DENTRO del clip; una marca que no puede va
-    al caption más cercano que sí (RADIO_MARCA_DETRAS_S)."""
+    al caption más cercano que sí (RADIO_MARCA_DETRAS_S).
+    v5.60: `motivos` (dict) suma por qué no valió cada caption probado en automático ({clave de MOTIVOS_DETRAS: captions}): _avisar_sin_detras."""
     bloques = _bloques_captions() if bloques is None else bloques
     if not bloques:
         return []
@@ -1438,13 +1495,17 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
             continue
         a, z = b['ini'], b['fin']
         if any(a < o1 and o0 < z for o0, o1 in ocupado):
+            if motivos is not None:
+                motivos['ocupado'] = motivos.get('ocupado', 0) + 1
             continue
         acum += frac
         pref = any(a < p1 and p0 < z for p0, p1 in preferidos)
         if acum < 0.999 and not pref:
             continue
-        e, _motivo = probar(k, False)
+        e, motivo = probar(k, False)
         if e is None:
+            if motivos is not None and motivo:
+                motivos[motivo] = motivos.get(motivo, 0) + 1
             continue
         acum = max(0.0, acum - 1.0)
         elegidos.append(dict(e, k=k, forzado=False))
@@ -2242,12 +2303,17 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     # captions DETRÁS de la persona (lo que hace que valga la pena el Magic Mask)
     encima, tramos = [], []
     a_cuadro_detras, ctx_detras = None, None
+    motivos_detras = None                                          # v5.60: con «detrás de ti» encendido, por qué no valió cada caption
     # v5.5.20 (el usuario: «más inteligente… igual en los Temas 1 a 6»): la persona solo sobre PERSONAS (la IA local; nunca objetos). v5.58 (el
     # usuario: «el menú PRO debe funcionar en Resolve Free… y detrás de ti igual»): Free y Studio, con el recorte de la IA (ProRes con alfa; Magic
     # Mask solo si se elige a mano, y solo en Studio); en el MP4 no hay «detrás de ti». Cuántos y cuánto tapan, la intensidad de fábrica.
     # El Tema 1 da sus bloques (los clips neón) y, con la placa, la detección y el recorte salen de la PLACA (lo que se ve, con sus zooms).
-    if hay_ia and modo_mascara != 'no' and not cap_t5 and not ligero and (not neon_tema or 'detras' in ex_neon):
-        ocupado = [(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p['pieza'] != 'marco']
+    # v5.61 (el usuario: «activo detrás de ti y no lo aplica… y en Efectos tampoco me deja»): el contexto para «Listo» se guarda en TODOS los GO,
+    # también con «detrás de ti» apagado (el pase ligero): antes «Listo» usaba el de un GO viejo de ese video y decía «otro timeline»
+    quiere_detras = modo_mascara != 'no' and not ligero and (not neon_tema or 'detras' in ex_neon)
+    if hay_ia and not cap_t5:
+        motivos_detras = {} if quiere_detras else None
+        ocupado =[(p['ini'] - 0.1, p['fin'] + 0.1) for p in plan['piezas'] if p['pieza'] != 'marco']
         ocupado += [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan.get('kitneon_motions') or [] if neon_tema]   # (Tema 1: nunca tapa un motion del kit)
         ocupado += [(t['_s'] - 0.1, t['_s'] + t['dur'] + 0.1) for t in tomas]
         ocupado += [((a - info['base']) / fps, (b - info['base']) / fps) for a, b in info.get('ocupado') or []]
@@ -2268,10 +2334,11 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 except Exception:
                     bloques_tema = []                                    # sin saber dónde queda la persona en la placa, nada detrás
         try:
-            tramos = _captions_detras(info, video, fps, ocupado, op.get('pro_densidad') or 'media', decir,
-                                      preferidos=[tuple(x) for x in plan.get('detras_pref') or []], W=W, H=H,
-                                      intensidad=intensidad_detras(op), bloques=bloques_tema, a_cuadro=a_cuadro,
-                                      marcas=_marca(plan, 'detras'), cortes=plan.get('_cortes'))
+            if quiere_detras:
+                tramos = _captions_detras(info, video, fps, ocupado, op.get('pro_densidad') or 'media', decir,
+                                          preferidos=[tuple(x) for x in plan.get('detras_pref') or []], W=W, H=H,
+                                          intensidad=intensidad_detras(op), bloques=bloques_tema, a_cuadro=a_cuadro,
+                                          marcas=_marca(plan, 'detras'), cortes=plan.get('_cortes'), motivos=motivos_detras)
         except Exception:
             try:                                 # (v5.27: antes se callaba y las marcas «no hacían nada» sin decir por qué)
                 import registro
@@ -2576,6 +2643,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                         mover.append(m)
             except Exception:
                 pass
+    if motivos_detras is not None and not encima:
+        _avisar_sin_detras(motivos_detras, quitados=bool(tramos))
     if 'mc' in hilos_fondo:                                        # v5.5.8: «Motions completo», encima de todo (v5.5.9: se hacía en paralelo)
         try:
             import motions_completo as MCO
@@ -2785,8 +2854,15 @@ def aplicar_detras(ruta, al_estado=None, marcas_tira=None, modo='solo', al_progr
     if ctx is None:
         return False, 'Pulsa GO una vez con este video: después, «Listo» pone «detrás de ti» directo en tu timeline.', 0
     info = _info_timeline()
-    if not info:
-        return False, 'Abre DaVinci Resolve con el timeline de este video.', 0
+    if info and info.get('via') != 'mcp':                             # v5.61: con Resolve cerrado, _info_timeline daba lo VIEJO del Puente y
+        try:                                                          # el aviso era «está abierto otro timeline» (registro del 02-11, 18:22)
+            import resolve_bridge
+            if resolve_bridge._listar_pids_resolve() == []:
+                info = None
+        except Exception:
+            pass
+    if not info or ((ctx.get('info') or {}).get('via') == 'mcp' and info.get('via') != 'mcp'):   # (Studio que no contesta: lo del Puente es viejo)
+        return False, f'DaVinci Resolve está cerrado o no contesta: ábrelo con el timeline «{ctx.get("timeline") or "de tu último GO"}» y vuelve a darle a «Listo».', 0
     por_puente = info.get('via') != 'mcp'                             # v5.58: también en Free (CineCaptions_EdicionPro.lua, por el Puente)
     if por_puente:                                                    # (los clips de V1 como los dejó GO: _v1_libre, con los mismos datos)
         info['v1'] = _v1_libre(info.get('v1'), info['fps'], info.get('inicio') or 0, ctx.get('media'), ctx.get('recorte'))
@@ -2806,9 +2882,10 @@ def aplicar_detras(ruta, al_estado=None, marcas_tira=None, modo='solo', al_progr
             return False, 'Falta la placa del Tema 1 de tu último GO: pulsa GO otra vez.', 0
         import kit_neon_placa as PLA
         a_cuadro = PLA.mapa_camara(ctx['imagen'], ctx.get('plan_placa') or {}, W, H)
+    motivos = {}
     tramos = _captions_detras(ci, ctx['media'], fps, [tuple(x) for x in ctx.get('ocupado') or []], ctx.get('densidad') or 'media', decir,
                               preferidos=[tuple(x) for x in ctx.get('preferidos') or []], W=W, H=H, intensidad=intensidad_detras(),
-                              bloques=ctx.get('bloques'), a_cuadro=a_cuadro, marcas=marcas, cortes=ctx.get('cortes'))
+                              bloques=ctx.get('bloques'), a_cuadro=a_cuadro, marcas=marcas, cortes=ctx.get('cortes'), motivos=motivos)
     op = opciones_guardadas()
     try:
         import estilos_pro as EST
@@ -2823,6 +2900,8 @@ def aplicar_detras(ruta, al_estado=None, marcas_tira=None, modo='solo', al_progr
     encima = _encima_de(tramos, ci, ctx['media'], fps, W, H, carpeta, a_cuadro, bool(ctx.get('neon')), fx_persona,
                         magic, placa=ctx.get('placa'), decir=decir,
                         progreso=lambda f, texto: progreso(0.05 + 0.8 * f, texto))
+    if not encima:
+        _avisar_sin_detras(motivos, quitados=bool(tramos))
     try:
         datos = json.loads(PLAN_JSON.read_text(encoding='utf-8'))
     except Exception:

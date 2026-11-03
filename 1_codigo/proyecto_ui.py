@@ -14,12 +14,13 @@ Todo pintado (sin efectos de Qt: regla de rendimiento). Lo que late usa UN reloj
 nunca con «Reducir animaciones» (mograf_ui.quieto); cada pieza repinta solo su rectángulo. Los verdes salen del color de acento del tema.
 """
 import math
+import random
 import time
 import weakref
 
-from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, QSizeF, Qt, QTimer
-from PySide6.QtGui import QFont, QFontMetricsF, QLinearGradient, QPainter, QPainterPath, QPen, QRadialGradient
-from PySide6.QtWidgets import QAbstractButton, QWidget
+from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, QRectF, QSize, QSizeF, Qt, QTimer
+from PySide6.QtGui import QFont, QFontMetricsF, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap, QRadialGradient, QRegion
+from PySide6.QtWidgets import QAbstractButton, QHBoxLayout, QSizePolicy, QWidget
 
 import qt_kit as ui
 from qt_kit import Boton, QColor, QColorReal, fuente
@@ -523,4 +524,524 @@ class BotonEstado(_Latente, QAbstractButton):
         else:
             p.setPen(col['texto'] if on else QColorReal(214, 224, 240))
         p.drawText(QRectF(x + d + self.HUECO, r.top(), w_txt + 8, r.height()), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self.text())
+        p.end()
+
+
+# ======================================================================================================================== v5.62: el tema en una barra
+# El usuario eligió la propuesta C («Tarjeta más grande»): el nombre grande, los dos botones grandes y su halo con arcos (TituloGo, BotonEstado,
+# FondoTema) ocupaban ~170 px debajo del slider. Ahora van en UNA barra de cristal compacta, con unos puntos que dicen en qué tarjeta va. El
+# slider gana ese alto (la tarjeta crece donde manda el alto, como en su monitor de 2293×960).
+class BarraTema(QWidget):
+    """La barra de cristal: [nombre del tema] [En uso / Usar este tema] | [Edición PRO y las acciones de la tarjeta]. `poner(usar, acciones)`
+    mete los botones que maneja la página; `nombre(texto)` cambia el nombre; la raya del medio solo se ve si hay algo a la derecha."""
+    ALTO = 56
+
+    def __init__(self, padre=None):
+        super().__init__(padre)
+        self.setFixedHeight(self.ALTO)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self._capa = QHBoxLayout(self)
+        self._capa.setContentsMargins(22, 8, 8, 8)
+        self._capa.setSpacing(16)
+        self._nombre = NombreTema()
+        self._capa.addWidget(self._nombre)
+        self._sep = Separador(alto=26)
+        self._derecha = None
+
+    def poner(self, usar, acciones):
+        self._capa.addWidget(usar)
+        self._capa.addWidget(self._sep)
+        self._capa.addWidget(acciones)
+        self._derecha = acciones
+
+    def nombre(self, texto):
+        self._nombre.poner(texto)
+
+    def ajustar(self):
+        """Tras cambiar los botones: la raya solo con algo a la derecha, y el ancho justo."""
+        capa = self._derecha.layout() if self._derecha is not None else None
+        hay = bool(capa is not None and capa.count() > 0)
+        self._sep.setVisible(hay)
+        if self._derecha is not None:
+            self._derecha.setVisible(hay)                                     # (vacío seguía ocupando su hueco en la capa)
+        self.adjustSize()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+        rad = r.height() / 2.0
+        g = QLinearGradient(0, 0, 0, self.height())
+        for pos, hexa in ((0.0, '#142236'), (1.0, '#09111F')):            # (QColor del tema: neutros con Negro profundo)
+            c = QColor(hexa)
+            c.setAlpha(235)
+            g.setColorAt(pos, c)
+        p.setPen(QPen(QColorReal(255, 255, 255, 23), 1.0))
+        p.setBrush(g)
+        p.drawRoundedRect(r, rad, rad)
+        p.setPen(QPen(QColorReal(255, 255, 255, 18), 1.0))                    # el filo de arriba del cristal
+        p.drawLine(QPointF(rad, 1.5), QPointF(self.width() - rad, 1.5))
+        p.end()
+
+
+class NombreTema(QWidget):
+    """El nombre del tema en la barra: ExtraBold 24 con el degradado del título de antes (blanco → celeste → lila)."""
+    def __init__(self, padre=None):
+        super().__init__(padre)
+        self._texto = ''
+        self._f = fuente(24, peso='extra')
+        self.setFixedHeight(40)
+
+    def poner(self, texto):
+        self._texto = str(texto or '')
+        self.updateGeometry()
+        self.update()
+
+    def sizeHint(self):
+        return QSize(int(math.ceil(QFontMetricsF(self._f).horizontalAdvance(self._texto))) + 2, 40)
+
+    def minimumSizeHint(self):
+        return self.sizeHint()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        p.setFont(self._f)
+        g = QLinearGradient(0, 0, max(1, self.width()), 0)
+        g.setColorAt(0.0, QColorReal(255, 255, 255))
+        g.setColorAt(0.55, QColorReal(191, 227, 255))
+        g.setColorAt(1.0, QColorReal(201, 181, 255))
+        p.setPen(QPen(g, 1))
+        p.drawText(QRectF(self.rect()), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self._texto)
+        p.end()
+
+
+class BotonCompacto(QAbstractButton):
+    """Los botones de la barra. tipo 'uso': activo = «✓ En uso» (texto verde, sin relleno: es una confirmación), si no, la píldora verde
+    rellena («Usar este tema», «Crear mi estilo»); tipo 'pro': la píldora dorada («Edición PRO activada»; apagada, «Activar edición PRO» con
+    el borde tenue). Misma API que BotonEstado: poner(activo, texto, icono)."""
+
+    def __init__(self, tipo, texto, comando=None, activo=False, padre=None):
+        super().__init__(padre)
+        self.tipo = tipo
+        self._activo = bool(activo)
+        self._icono_n = 'crown' if tipo == 'pro' else 'check'
+        self._h = 0.0
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
+        self.setText(texto)
+        if comando is not None:
+            self.clicked.connect(lambda _c=False: comando())
+        self._cursor()
+
+    def poner(self, activo, texto=None, icono=None):
+        self._activo = bool(activo)
+        if texto is not None:
+            self.setText(texto)
+        if icono is not None:
+            self._icono_n = icono
+        self._cursor()
+        self.updateGeometry()
+        self.update()
+
+    def setEnabled(self, si):
+        super().setEnabled(si)
+        self._cursor()
+
+    def _cursor(self):
+        quieto = self.tipo == 'uso' and self._activo
+        self.setCursor(Qt.CursorShape.ArrowCursor if quieto or not self.isEnabled() else Qt.CursorShape.PointingHandCursor)
+
+    def _fuente(self):
+        return fuente(13, peso='medio') if (self.tipo == 'uso' and self._activo) else fuente(13, peso='negrita')
+
+    def sizeHint(self):
+        w = QFontMetricsF(self._fuente()).horizontalAdvance(self.text())
+        if self.tipo == 'uso' and self._activo:
+            return QSize(int(math.ceil(20 + 7 + w + 4)), 36)
+        return QSize(int(math.ceil((12 if self.tipo == 'pro' else 14) + 16 + 8 + w + 16)), 40 if self.tipo == 'pro' else 36)
+
+    def minimumSizeHint(self):
+        return self.sizeHint()
+
+    def enterEvent(self, e):
+        self._h = 1.0
+        self.update()
+        super().enterEvent(e)
+
+    def leaveEvent(self, e):
+        self._h = 0.0
+        self.update()
+        super().leaveEvent(e)
+
+    def _glifo(self, color, lado):
+        ic = _icono(self._icono_n, color)
+        return ic.pixmap(QSize(lado, lado), self.devicePixelRatioF()) if ic is not None else None
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+        alin = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        p.setFont(self._fuente())
+        w_txt = QFontMetricsF(self._fuente()).horizontalAdvance(self.text())
+        verde = _real(ui.ACCENT_CLARO)
+        if self.tipo == 'uso' and self._activo:                              # «✓ En uso»
+            c = QColorReal(verde)
+            c.setAlpha(41)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(c)
+            p.drawEllipse(QPointF(10.0, r.center().y()), 10.0, 10.0)
+            pm = self._glifo(verde.name(), 12)
+            if pm is not None:
+                p.drawPixmap(QPointF(4.0, r.center().y() - 6.0), pm)
+            p.setPen(verde)
+            p.drawText(QRectF(27.0, 0, w_txt + 4, self.height()), alin, self.text())
+            p.end()
+            return
+        rad = r.height() / 2.0
+        if self.tipo == 'pro':
+            oro = _real(ui.AMBAR)
+            fondo = QColorReal(oro)
+            fondo.setAlpha(int((26 if self._activo else 0) + 20 * self._h))
+            borde = QColorReal(oro)
+            borde.setAlpha(140 if self._activo else 77 + int(50 * self._h))
+            p.setPen(QPen(borde, 1.0))
+            p.setBrush(fondo)
+            p.drawRoundedRect(r, rad, rad)
+            tinta = QColorReal(oro)
+            if not self._activo:
+                tinta.setAlpha(215)
+            pm = self._glifo(oro.name(), 16)
+            if pm is not None:
+                p.drawPixmap(QPointF(12.0, r.center().y() - 8.0), pm)
+            p.setPen(tinta)
+            p.drawText(QRectF(36.0, 0, w_txt + 4, self.height()), alin, self.text())
+            p.end()
+            return
+        g = QLinearGradient(r.topLeft(), r.topRight())                       # «Usar este tema» / «Crear mi estilo»
+        g.setColorAt(0.0, _mezcla(verde, QColorReal(255, 255, 255), 0.12 * self._h))
+        g.setColorAt(1.0, _mezcla(_real(ui.ACCENT), QColorReal(255, 255, 255), 0.12 * self._h))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(g)
+        p.drawRoundedRect(r, rad, rad)
+        oscuro = QColorReal(11, 20, 36)
+        pm = self._glifo(oscuro.name(), 14)
+        if pm is not None:
+            p.drawPixmap(QPointF(14.0, r.center().y() - 7.0), pm)
+        p.setPen(oscuro)
+        p.drawText(QRectF(36.0, 0, w_txt + 4, self.height()), alin, self.text())
+        p.end()
+
+
+class PuntosSlider(QWidget):
+    """Los puntos de debajo de la barra: uno por tarjeta del slider; el de la que está al centro se alarga en verde y lo sigue mientras se
+    desliza (lee CarruselPacks._pos al repintarse el slider). El de «Crea tu estilo», verde tenue. Un clic en un punto lleva a esa tarjeta."""
+    LADO, HUECO, LARGO = 6.0, 7.0, 12.0
+
+    def __init__(self, carrusel, padre=None):
+        super().__init__(padre)
+        self._car = carrusel
+        self._visto = None
+        self._xs = []
+        self.setFixedHeight(14)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        carrusel.installEventFilter(self)
+
+    def _n(self):
+        return len(getattr(self._car, '_cartas', None) or [])
+
+    def sizeHint(self):
+        n = self._n()
+        return QSize(int(n * self.LADO + self.LARGO + max(0, n - 1) * self.HUECO) + 2, 14)
+
+    def eventFilter(self, obj, e):
+        if obj is self._car and e.type() == QEvent.Type.Paint:
+            ahora = (round(float(getattr(self._car, '_pos', 0.0)), 3), self._n())
+            if ahora != self._visto:
+                if self._visto is None or ahora[1] != self._visto[1]:
+                    self.updateGeometry()
+                self._visto = ahora
+                self.update()
+        return False
+
+    def mousePressEvent(self, e):
+        x = e.position().x()
+        if self._xs:
+            k = min(range(len(self._xs)), key=lambda i: abs(self._xs[i] - x))
+            self._car._ir_a(k)
+
+    def paintEvent(self, _e):
+        n = self._n()
+        if not n:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pos = float(getattr(self._car, '_pos', 0.0))
+        anchos = [self.LADO + self.LARGO * max(0.0, 1.0 - abs(pos - i)) for i in range(n)]
+        x = (self.width() - (sum(anchos) + self.HUECO * (n - 1))) / 2.0
+        y = (self.height() - self.LADO) / 2.0
+        verde = _real(ui.ACCENT_CLARO)
+        self._xs = []
+        p.setPen(Qt.PenStyle.NoPen)
+        for i, w in enumerate(anchos):
+            q = max(0.0, 1.0 - abs(pos - i))
+            carta = self._car._cartas[i]
+            base = _mezcla(verde, QColorReal(9, 17, 31), 0.55) if getattr(carta, 'tipo', '') == 'anadir' else QColorReal(57, 64, 82)
+            p.setBrush(_mezcla(base, verde, q))
+            p.drawRoundedRect(QRectF(x, y, w, self.LADO), self.LADO / 2.0, self.LADO / 2.0)
+            self._xs.append(x + w / 2.0)
+            x += w + self.HUECO
+        p.end()
+
+
+# ======================================================================================================================== v5.63: el cielo de Proyecto
+# (estrellas de cada capa: cuántas, px/s de deriva, radio, brillo) y constelaciones (puntos en fracción del ancho y del alto), como en Inicio
+_CAPAS_CIELO = ((300, 2.0, 0.7, 0.55), (150, 4.0, 1.1, 0.8), (60, 7.0, 1.7, 1.0))
+_CONSTELACIONES = (((0.08, 0.18), (0.13, 0.12), (0.19, 0.16), (0.24, 0.10), (0.27, 0.19)), ((0.70, 0.14), (0.75, 0.22), (0.81, 0.18), (0.86, 0.25)),
+                   ((0.06, 0.74), (0.11, 0.82), (0.17, 0.78), (0.15, 0.90)), ((0.88, 0.64), (0.92, 0.72), (0.96, 0.66)))
+# los colores del cielo por tema: «noche» (el azul de siempre) y «negro» (v5.63, el usuario eligió el tono A, negro puro, y negro + blanco
+# para todo CineCaptions): fondo (centro, medio, borde), nebulosas (r, g, b, alfa), viñeta, estrellas, rayas y nodos
+_PALETAS_CIELO = {
+    'noche': {'fondo': ('#121B31', '#0B1222', '#060A14'), 'nebulosas': ((139, 92, 246, 20), (34, 181, 115, 18)), 'vineta': (3, 6, 12),
+              'estrella': (215, 228, 255), 'raya': (170, 195, 255, 51), 'nodo': (210, 225, 255)},
+    'negro': {'fondo': ('#131313', '#0A0A0A', '#040404'), 'nebulosas': ((255, 255, 255, 7), (255, 255, 255, 5)), 'vineta': (0, 0, 0),
+              'estrella': (255, 255, 255), 'raya': (255, 255, 255, 38), 'nodo': (255, 255, 255)},
+}
+
+
+def _paleta_cielo():
+    try:
+        import tema
+        return _PALETAS_CIELO['negro' if tema.leer()['tema'] in ('negro', 'grafito') else 'noche']
+    except Exception:
+        return _PALETAS_CIELO['noche']
+
+
+class TarjetaCielo(ui.Tarjeta):
+    """v5.63 (el usuario eligió el fondo C, «Constelaciones», entre tres maquetas animadas): la tarjeta de Proyecto con un cielo como el de
+    Inicio: degradado de espacio con dos nebulosas tenues (lila y verde), tres capas de estrellas que derivan a distinta velocidad
+    (paralaje) y titilan, cuatro constelaciones con su raya fina y, cada 11 s, una estrella fugaz.
+    Rendimiento (medido sin pantalla a 2293×960 al 1,5: repintar la tarjeta ENTERA, con el slider, el móvil y las barras encima, cuesta
+    ~32 ms; antes la tarjeta de vidrio se repintaba así 2 veces por segundo para refrescar la aurora, ~64 ms/s): lo fijo (degradado,
+    nebulosas, viñeta, esquinas) es UNA imagen por tamaño; las estrellas se componen en un cuadro (QPixmap) FPS veces por segundo (~5 ms),
+    por lotes (drawPoints por capa, grosor y brillo; el halo de las constelaciones es un sprite), y en cada tic se repinta solo lo que NO se
+    repinta ya solo (`zonas_vivas`: el slider y el móvil van a 30/s y, al repintarse, copian su trozo del cuadro): ~10 ms → ~74 ms/s. La
+    fugaz NO va en el cuadro: paintEvent la pinta encima y, mientras cruza, solo su rectángulo se repinta a FPS_FUGAZ. Fuera de
+    Tarjeta._vivas (sin el refresco de la aurora). Quieto con «Reducir animaciones»; parado si no se ve o la ventana está minimizada."""
+    FPS, FPS_FUGAZ = 5, 24
+    RADIO = 18.0
+    PERIODO_FUGAZ, DURA_FUGAZ = 11.0, 1.4
+    BRILLOS = 8                                            # (niveles de brillo para los lotes: el titilar va por niveles)
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        ui.Tarjeta._vivas.discard(self)
+        self._pal = _paleta_cielo()                         # (v5.63: negro puro con el tema Negro profundo; el tema cambia al reiniciar)
+        azar = random.Random(7)
+        # por capa: [(x, y, fase, grueso)] en dos grosores (para dibujarlas por lotes)
+        self._estrellas = [[(azar.random(), azar.random(), azar.random() * 6.283, 0 if azar.random() < 0.5 else 1) for _ in range(n)]
+                           for n, _v, _tam, _a in _CAPAS_CIELO]
+        self._fijo = None                                  # ((ancho, alto, dpr), QPixmap)
+        self._cuadro = None
+        self._nodo = None                                  # (dpr, QPixmap) el halo de un punto de constelación
+        self.zonas_vivas = None                            # la página: [QRect] de lo que ya se repinta solo (coordenadas de esta tarjeta)
+        self._t_cuadro = -1.0                              # cuándo se compuso el cuadro (s del reloj del cielo)
+        self._caja_fugaz = None                            # el rectángulo de la fugaz en el tic anterior (para borrarla)
+        self._t0 = time.perf_counter()
+        self._reloj = QTimer(self)
+        self._reloj.timeout.connect(self._tic)
+
+    # -- reloj ------------------------------------------------------------------------------------------------------------------------------
+    def showEvent(self, e):
+        super().showEvent(e)
+        self._cuadro = None
+        if not self._quieto():
+            self._reloj.start(int(1000 / self.FPS))
+
+    def hideEvent(self, e):
+        super().hideEvent(e)
+        self._reloj.stop()
+
+    @staticmethod
+    def _quieto():
+        try:
+            import mograf_ui
+            return bool(mograf_ui.quieto())
+        except Exception:
+            return False
+
+    def _t(self):
+        return 0.0 if self._quieto() else time.perf_counter() - self._t0
+
+    def _tic(self):
+        v = self.window()
+        if not self.isVisible() or (v is not None and v.isMinimized()):
+            return
+        if self._quieto():
+            self._reloj.stop()
+            return
+        t = self._t()
+        if t - self._t_cuadro >= 1.0 / self.FPS - 0.02:
+            self._t_cuadro = t
+            self._componer(t)
+            zona = QRegion(self.rect())
+            try:
+                for r in (self.zonas_vivas() if self.zonas_vivas is not None else []):
+                    zona = zona.subtracted(QRegion(r))
+            except Exception:
+                zona = QRegion(self.rect())
+            self.update(zona)
+        f = self._fugaz(t)                                                 # la fugaz: solo su rectángulo (y el de antes, para borrarla)
+        caja = self._caja(f) if f is not None else None
+        for c in (self._caja_fugaz, caja):
+            if c is not None:
+                self.update(c)
+        self._caja_fugaz = caja
+        ms = int(1000 / (self.FPS_FUGAZ if f is not None or self._fugaz(t + 0.25) is not None else self.FPS))
+        if self._reloj.interval() != ms:
+            self._reloj.setInterval(ms)
+
+    def _fugaz(self, t):
+        """(q 0..1, semilla) de la estrella fugaz que cruza ahora, o None."""
+        n = int(t // self.PERIODO_FUGAZ)
+        q = (t - n * self.PERIODO_FUGAZ - 2.0) / self.DURA_FUGAZ
+        return (q, n) if 0.0 < q < 1.0 else None
+
+    def _puntas(self, f):
+        """(cola, cabeza) de la fugaz f = (q, semilla)."""
+        q, semilla = f
+        azar = random.Random(semilla)
+        w, h = self.width(), self.height()
+        x0, y0 = w * (0.15 + 0.5 * azar.random()) + q * 520.0, h * (0.05 + 0.2 * azar.random()) + q * 190.0
+        return QPointF(x0 - 180.0, y0 - 66.0), QPointF(x0, y0)
+
+    def _caja(self, f):
+        a, b = self._puntas(f)
+        return QRectF(a, b).normalized().adjusted(-4, -4, 4, 4).toAlignedRect()
+
+    def _pintar_fugaz(self, p, t):
+        f = self._fugaz(t)
+        if f is None:
+            return
+        a, b = self._puntas(f)
+        lg = QLinearGradient(a, b)
+        lg.setColorAt(0.0, QColorReal(255, 255, 255, 0))
+        lg.setColorAt(1.0, QColorReal(255, 255, 255, int(204 * math.sin(f[0] * math.pi))))
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setClipPath(self._camino(self.width(), self.height()))
+        p.setPen(QPen(lg, 1.6))
+        p.drawLine(a, b)
+
+    # -- dibujo -----------------------------------------------------------------------------------------------------------------------------
+    def _camino(self, w, h):
+        c = QPainterPath()
+        c.addRoundedRect(QRectF(0.5, 0.5, w - 1.0, h - 1.0), self.RADIO, self.RADIO)
+        return c
+
+    def _fijo_pm(self, w, h, dpr):
+        clave = (w, h, round(dpr, 2))
+        if self._fijo is not None and self._fijo[0] == clave:
+            return self._fijo[1]
+        pm = QPixmap(int(math.ceil(w * dpr)), int(math.ceil(h * dpr)))
+        pm.setDevicePixelRatio(dpr)
+        pm.fill(Qt.GlobalColor.transparent)
+        p = QPainter(pm)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setClipPath(self._camino(w, h))
+        pal = self._pal
+        g = QRadialGradient(QPointF(w * 0.5, h * 0.42), max(w, h) * 0.8)
+        for pos, hexa in zip((0.0, 0.6, 1.0), pal['fondo']):
+            g.setColorAt(pos, QColorReal(hexa))
+        p.fillRect(QRectF(0, 0, w, h), g)
+        for (fx, fy, radio), (r_, g_, b_, a) in zip(((0.18, 0.25, 620.0), (0.82, 0.70, 640.0)), pal['nebulosas']):
+            n = QRadialGradient(QPointF(w * fx, h * fy), radio)
+            n.setColorAt(0.0, QColorReal(r_, g_, b_, a))
+            n.setColorAt(0.45, QColorReal(r_, g_, b_, int(a * 0.55)))
+            n.setColorAt(1.0, QColorReal(r_, g_, b_, 0))
+            p.fillRect(QRectF(0, 0, w, h), n)
+        v = QRadialGradient(QPointF(w * 0.5, h * 0.45), max(w, h) * 0.75)
+        v.setColorAt(min(w, h) * 0.35 / (max(w, h) * 0.75), QColorReal(*pal['vineta'], 0))
+        v.setColorAt(1.0, QColorReal(*pal['vineta'], 115))
+        p.fillRect(QRectF(0, 0, w, h), v)
+        p.end()
+        self._fijo = (clave, pm)
+        return pm
+
+    def _nodo_pm(self, dpr):
+        """El halo de un punto de constelación (14×14), pintado una vez por dpr."""
+        if self._nodo is None or abs(self._nodo[0] - dpr) > 0.01:
+            pm = QPixmap(int(math.ceil(14 * dpr)), int(math.ceil(14 * dpr)))
+            pm.setDevicePixelRatio(dpr)
+            pm.fill(Qt.GlobalColor.transparent)
+            q = QPainter(pm)
+            q.setRenderHint(QPainter.RenderHint.Antialiasing)
+            halo = QRadialGradient(QPointF(7.0, 7.0), 7.0)
+            nodo = self._pal['nodo']
+            halo.setColorAt(0.0, QColorReal(*nodo, 230))
+            halo.setColorAt(0.45, QColorReal(*nodo, 126))
+            halo.setColorAt(1.0, QColorReal(*nodo, 0))
+            q.setPen(Qt.PenStyle.NoPen)
+            q.setBrush(halo)
+            q.drawEllipse(QPointF(7.0, 7.0), 7.0, 7.0)
+            q.end()
+            self._nodo = (dpr, pm)
+        return self._nodo[1]
+
+    def _componer(self, t):
+        w, h, dpr = self.width(), self.height(), self.devicePixelRatioF()
+        if w < 4 or h < 4:
+            return
+        fijo = self._fijo_pm(w, h, dpr)
+        if self._cuadro is None or self._cuadro.size() != fijo.size() or abs(self._cuadro.devicePixelRatio() - dpr) > 0.01:
+            self._cuadro = QPixmap(fijo.size())
+            self._cuadro.setDevicePixelRatio(dpr)
+            self._cuadro.fill(Qt.GlobalColor.transparent)                  # (sin esto el QPixmap no tiene alfa: esquinas negras)
+        p = QPainter(self._cuadro)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Source)      # (pisa el cuadro entero: sin borrarlo antes)
+        p.drawPixmap(0, 0, fijo)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setClipPath(self._camino(w, h))
+        n = self.BRILLOS
+        for k, ((_n, vel, tam, alfa), capa) in enumerate(zip(_CAPAS_CIELO, self._estrellas)):
+            lotes = {}
+            for fx, fy, fase, grueso in capa:
+                nivel = int((0.5 + 0.5 * math.sin(t * (1.5 + k) + fase)) * (n - 1) + 0.5)
+                lotes.setdefault((grueso, nivel), []).append(QPointF((fx * w - t * vel) % w, fy * h))
+            for (grueso, nivel), puntos in lotes.items():
+                a = alfa * (0.55 + 0.45 * (nivel / (n - 1) * 2.0 - 1.0))
+                lapiz = QPen(QColorReal(*self._pal['estrella'], int(255 * a)), 2.0 * tam * (0.8 if grueso == 0 else 1.2))
+                lapiz.setCapStyle(Qt.PenCapStyle.RoundCap)
+                p.setPen(lapiz)
+                p.drawPoints(puntos)
+        desplaza = (t * _CAPAS_CIELO[0][1]) % w                       # las constelaciones van con la capa lenta (y dan la vuelta)
+        p.setPen(QPen(QColorReal(*self._pal['raya']), 1.0))
+        nodo = self._nodo_pm(dpr)
+        for copia in (0.0, w):
+            for puntos in _CONSTELACIONES:
+                ps = [QPointF(fx * w - desplaza + copia, fy * h) for fx, fy in puntos]
+                for a_, b_ in zip(ps, ps[1:]):
+                    p.drawLine(a_, b_)
+                for c in ps:
+                    p.drawPixmap(QPointF(c.x() - 7.0, c.y() - 7.0), nodo)
+        p.setClipping(False)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(QColorReal(255, 255, 255, 18), 1.0))              # el borde de la tarjeta y su filo de luz arriba
+        p.drawPath(self._camino(w, h))
+        p.setPen(QPen(QColorReal(255, 255, 255, 26), 1.0))
+        p.drawLine(QPointF(self.RADIO, 1.5), QPointF(w - self.RADIO, 1.5))
+        p.end()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._cuadro = None
+
+    def paintEvent(self, _e):
+        if self._cuadro is None or self._fijo is None or self._fijo[0][:2] != (self.width(), self.height()):
+            self._componer(self._t())
+        if self._cuadro is None:
+            return
+        p = QPainter(self)
+        p.drawPixmap(0, 0, self._cuadro)                                  # (Qt recorta a lo que pidió repintar: barato)
+        self._pintar_fugaz(p, self._t())
         p.end()
