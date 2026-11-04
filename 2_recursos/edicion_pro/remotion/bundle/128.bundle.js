@@ -1,7 +1,7 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[598],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[128],{
 
-/***/ 4598
+/***/ 7128
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 
@@ -10,18 +10,18 @@ __webpack_require__.d(__webpack_exports__, {
   CaptionQueueProcessor: () => (/* binding */ CaptionQueueProcessor)
 });
 
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-gjr0ae8m.mjs
-var index_gjr0ae8m = __webpack_require__(5293);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-0rhz1ydw.mjs
+var index_0rhz1ydw = __webpack_require__(9754);
 // EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-ts7drhwc.mjs
 var index_ts7drhwc = __webpack_require__(7449);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-kwxewaaz.mjs
-var index_kwxewaaz = __webpack_require__(6929);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-6k01te75.mjs
+var index_6k01te75 = __webpack_require__(82);
 // EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-7shemw90.mjs
 var index_7shemw90 = __webpack_require__(8335);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-kewagct1.mjs + 7 modules
-var index_kewagct1 = __webpack_require__(8083);
-// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-fa0wsc5r.mjs
-var index_fa0wsc5r = __webpack_require__(5576);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-k22tz863.mjs + 7 modules
+var index_k22tz863 = __webpack_require__(4497);
+// EXTERNAL MODULE: ./node_modules/@remotion/studio/dist/esm/index-xpkpdkfn.mjs
+var index_xpkpdkfn = __webpack_require__(7721);
 // EXTERNAL MODULE: ./node_modules/react/index.js
 var react = __webpack_require__(6540);
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/input.js
@@ -32,8 +32,8 @@ var input_format = __webpack_require__(5608);
 var source = __webpack_require__(4709);
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/output.js
 var src_output = __webpack_require__(9917);
-// EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/output-format.js + 13 modules
-var output_format = __webpack_require__(2697);
+// EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/output-format.js + 12 modules
+var output_format = __webpack_require__(2243);
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/target.js
 var target = __webpack_require__(917);
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/codec.js
@@ -52,6 +52,8 @@ var misc = __webpack_require__(3912);
 var src_sample = __webpack_require__(4166);
 // EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/metadata.js
 var metadata = __webpack_require__(5165);
+// EXTERNAL MODULE: ./node_modules/mediabunny/dist/modules/src/muxer.js
+var muxer = __webpack_require__(831);
 ;// ./node_modules/mediabunny/dist/modules/src/conversion.js
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
@@ -112,6 +114,7 @@ var __disposeResources = (undefined && undefined.__disposeResources) || (functio
     var e = new Error(message);
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 });
+
 
 
 
@@ -214,6 +217,10 @@ const validateVideoOptions = (videoOptions) => {
             || (Array.isArray(videoOptions.group) && videoOptions.group.every(x => x instanceof src_output/* OutputTrackGroup */.Q6)))) {
         throw new TypeError('options.video.group, when provided, must be an OutputTrackGroup or an array of OutputTrackGroups.');
     }
+    if (videoOptions?.maximumPacketCount !== undefined
+        && (!Number.isInteger(videoOptions.maximumPacketCount) || videoOptions.maximumPacketCount < 0)) {
+        throw new TypeError('options.video.maximumPacketCount, when provided, must be a non-negative integer.');
+    }
 };
 const validateAudioOptions = (audioOptions) => {
     if (!audioOptions || typeof audioOptions !== 'object') {
@@ -267,9 +274,14 @@ const validateAudioOptions = (audioOptions) => {
             || (Array.isArray(audioOptions.group) && audioOptions.group.every(x => x instanceof src_output/* OutputTrackGroup */.Q6)))) {
         throw new TypeError('options.audio.group, when provided, must be an OutputTrackGroup or an array of OutputTrackGroups.');
     }
+    if (audioOptions?.maximumPacketCount !== undefined
+        && (!Number.isInteger(audioOptions.maximumPacketCount) || audioOptions.maximumPacketCount < 0)) {
+        throw new TypeError('options.audio.maximumPacketCount, when provided, must be a non-negative integer.');
+    }
 };
 const FALLBACK_NUMBER_OF_CHANNELS = 2;
 const FALLBACK_SAMPLE_RATE = 48000;
+const PACKET_STATS_PACKET_COUNT = 256;
 /**
  * Represents a media file conversion process, used to convert one media file into another. In addition to conversion,
  * this class can be used to resize and rotate video, resample audio, drop tracks, or trim to a specific time range.
@@ -306,6 +318,8 @@ class Conversion {
         this._copyTimestampPossible = new Map();
         /** @internal */
         this._copyStartPackets = new Map();
+        /** @internal */
+        this._trackDurations = new Map();
         /** @internal */
         this._nextOutputTrackId = 0;
         /** @internal */
@@ -655,7 +669,8 @@ class Conversion {
         // Now, let's deal with metadata tags. A composable conversion does not touch the output's metadata tags; that
         // remains the responsibility of whoever owns the output.
         if (!this._composable) {
-            const inputTags = await this.input.getMetadataTags();
+            const inputTags = { ...await this.input.getMetadataTags() };
+            delete inputTags.creationTime; // Makes no sense to inherit this one
             let outputTags;
             if (this._options.tags) {
                 const result = typeof this._options.tags === 'function'
@@ -820,12 +835,7 @@ class Conversion {
             if (this.onProgress) {
                 // Compute duration using only the utilized tracks
                 const uniqueUtilizedTracks = new Set(this.utilizedTracks);
-                const durationPromises = [...uniqueUtilizedTracks].map(async (track) => {
-                    if (await track.isLive()) {
-                        return Infinity; // Upper bound (assuming no universe heat death)
-                    }
-                    return (await track.getDurationFromMetadata()) ?? (await track.computeDuration());
-                });
+                const durationPromises = [...uniqueUtilizedTracks].map(track => this._getTrackDuration(track));
                 const duration = Math.max(0, ...await Promise.all(durationPromises));
                 this._computeProgress = true;
                 this._totalDuration = Math.min(duration - this._startTimestamp, this._endTimestamp - this._startTimestamp);
@@ -908,6 +918,17 @@ class Conversion {
             this.discardedTracks.push({
                 track,
                 reason: 'unknown_source_codec',
+                trackOptions,
+            });
+            return;
+        }
+        if (this.output.format.requiresMaximumPacketCount
+            && trackOptions.maximumPacketCount === undefined
+            && this._endTimestamp === Infinity
+            && await track.isLive()) {
+            this.discardedTracks.push({
+                track,
+                reason: 'unknown_maximum_packet_count',
                 trackOptions,
             });
             return;
@@ -1053,7 +1074,9 @@ class Conversion {
                 const sink = new media_sink/* EncodedPacketSink */.kQ(track);
                 const decoderConfig = await track.getDecoderConfig();
                 const meta = { decoderConfig: decoderConfig ?? undefined };
-                let maxTimestamp = null;
+                const packetOrderValidator = new muxer/* PacketOrderValidator */.N();
+                let droppingGop = false;
+                let warnedAboutDroppedPackets = false;
                 // eslint-disable-next-line curly
                 if (copyStartPacket)
                     for await (const packet of sink.packets(copyStartPacket, undefined, { verifyKeyPackets: true })) {
@@ -1095,14 +1118,27 @@ class Conversion {
                         }
                         packetStartTimestamp += this._timestampOffset;
                         packetEndTimestamp += this._timestampOffset;
-                        // The muxer rejects key packets with a timestamp smaller than the largest timestamp of the
-                        // previous GOP. Some files in the wild actually violate this, so we demote such packets to delta
-                        // packets to keep them in the previous GOP and keep the rule satisfied
+                        if (packet.type === 'key') {
+                            droppingGop = false; // Key packets reset it
+                        }
+                        if (droppingGop) {
+                            continue;
+                        }
+                        // Check the packets against the same validator used by muxers. If a key packet validates it,
+                        // we demote it to a delta packet and try again. If the packet still doesn't pass, we simply drop
+                        // it entirely.
                         let packetType = packet.type;
-                        if (packetType === 'key' && maxTimestamp !== null && packetStartTimestamp < maxTimestamp) {
+                        if (packetType === 'key' && !packetOrderValidator.check(packetStartTimestamp, 'key')) {
                             packetType = 'delta';
                         }
-                        maxTimestamp = Math.max(maxTimestamp ?? -Infinity, packetStartTimestamp);
+                        if (!packetOrderValidator.digest(packetStartTimestamp, packetType)) {
+                            droppingGop = packet.type === 'key';
+                            if (!warnedAboutDroppedPackets) {
+                                logging/* Logging */.y._warn('Some video packets had to be dropped in order to produce correct output timestamps.');
+                                warnedAboutDroppedPackets = true;
+                            }
+                            continue;
+                        }
                         const modifiedPacket = packet.clone({
                             timestamp: packetStartTimestamp,
                             duration: packetEndTimestamp - packetStartTimestamp,
@@ -1192,7 +1228,7 @@ class Conversion {
                     tempOutput.addVideoTrack(tempSource);
                     await tempOutput.start();
                     // Let's just use the first sample to test
-                    const sink = new media_sink/* VideoSampleSink */.lc(track);
+                    const sink = new media_sink/* VideoSampleSink */.lc(track, { hardwareAcceleration: trackOptions.hardwareAcceleration });
                     const firstSample = __addDisposableResource(env_1, await sink.getSample(await track.getFirstTimestamp()), false);
                     if (firstSample) {
                         try {
@@ -1247,7 +1283,7 @@ class Conversion {
             const source = new media_source/* VideoSampleSource */.Fl(encodingConfig);
             videoSource = source;
             this._registerTrackPump(async (pump) => {
-                const sink = new media_sink/* VideoSampleSink */.lc(track);
+                const sink = new media_sink/* VideoSampleSink */.lc(track, { hardwareAcceleration: trackOptions.hardwareAcceleration });
                 for await (const sample_1 of sink.samples(this._startTimestamp, this._endTimestamp)) {
                     const env_2 = { stack: [], error: void 0, hasError: false };
                     try {
@@ -1298,6 +1334,16 @@ class Conversion {
         const bitrate = needsTranscode ? null : await track.getBitrate();
         const averageBitrate = needsTranscode ? null : await track.getAverageBitrate();
         const canBeTransparent = alpha === 'keep' && await track.canBeTransparent();
+        let maximumPacketCount = trackOptions.maximumPacketCount;
+        if (this.output.format.requiresMaximumPacketCount && maximumPacketCount === undefined) {
+            // Frames map 1:1 to packets, so the input's packet rate is a good stand-in unless the frame rate is changed
+            const packetRate = trackOptions.frameRate
+                ?? (await track.computePacketStats(PACKET_STATS_PACKET_COUNT)).averagePacketRate;
+            const startTimestamp = needsTranscode
+                ? this._startTimestamp
+                : copyStartPacket?.timestamp ?? this._startTimestamp;
+            maximumPacketCount = await this._estimateMaximumPacketCount(track, startTimestamp, packetRate);
+        }
         this.output.addVideoTrack(videoSource, {
             frameRate: trackOptions.frameRate,
             // TODO: This condition can be removed when all demuxers properly homogenize to BCP47 in v2
@@ -1313,6 +1359,7 @@ class Conversion {
             group: ownGroup ?? trackOptions.group,
             bitrate: bitrate ?? undefined,
             averageBitrate: averageBitrate ?? undefined,
+            maximumPacketCount,
         });
         this.utilizedTracks.push(track);
         this._outputTrackIds.push(outputTrackId);
@@ -1329,11 +1376,23 @@ class Conversion {
             });
             return;
         }
+        if (this.output.format.requiresMaximumPacketCount
+            && trackOptions.maximumPacketCount === undefined
+            && this._endTimestamp === Infinity
+            && await track.isLive()) {
+            this.discardedTracks.push({
+                track,
+                reason: 'unknown_maximum_packet_count',
+                trackOptions,
+            });
+            return;
+        }
         let audioSource;
         const originalNumberOfChannels = await track.getNumberOfChannels();
         const originalSampleRate = await track.getSampleRate();
         let numberOfChannels = trackOptions.numberOfChannels ?? originalNumberOfChannels;
         let sampleRate = trackOptions.sampleRate ?? originalSampleRate;
+        let outputCodec = null;
         let audioCodecs = this.output.format.getSupportedAudioCodecs();
         let needsTranscode = !this._copyMode
             || !!trackOptions.forceTranscode
@@ -1350,24 +1409,21 @@ class Conversion {
         if (!needsTranscode) {
             // Check if we can copy it
             const sink = new media_sink/* EncodedPacketSink */.kQ(track);
-            let startPacket = await sink.getKeyPacket(this._startTimestamp)
-                ?? await sink.getFirstKeyPacket();
+            let startPacket = await sink.getKeyPacket(this._startTimestamp, { verifyKeyPackets: true })
+                ?? await sink.getFirstKeyPacket({ verifyKeyPackets: true });
             if (startPacket
                 && ((this._copyBoundaryPolicy === 'shrink'
                     && startPacket.timestamp < this._startTimestamp)
                     || (this._copyBoundaryPolicy === 'expand'
                         // Check if packet is wholly before the start
                         && startPacket.timestamp + startPacket.duration <= this._startTimestamp))) {
-                startPacket = await sink.getNextKeyPacket(startPacket);
+                startPacket = await sink.getNextKeyPacket(startPacket, { verifyKeyPackets: true });
             }
-            const hasDecoderWarmup = src_codec/* NON_PCM_AUDIO_CODECS */.YB.includes(sourceCodec)
-                && sourceCodec !== 'flac';
-            if (startPacket && this._copyBoundaryPolicy === 'expand' && hasDecoderWarmup) {
-                // Go one packet back
-                const previousPacket = await sink.getKeyPacket(startPacket.timestamp - 1 / (await track.getTimeResolution()));
-                if (previousPacket) {
-                    startPacket = previousPacket;
-                }
+            const preRollDuration = await track.getPreRollDuration();
+            (0,misc/* assert */.vA)(preRollDuration !== null); // Because the codec is known
+            if (startPacket && this._copyBoundaryPolicy === 'expand' && preRollDuration > 0) {
+                // Reach back far enough for the decoder to have converged by the start, or as far as the track goes
+                startPacket = await sink.getKeyPacket(startPacket.timestamp - preRollDuration, { verifyKeyPackets: true }) ?? await sink.getFirstKeyPacket({ verifyKeyPackets: true });
             }
             copyStartPacket = startPacket;
             if (startPacket) {
@@ -1431,7 +1487,9 @@ class Conversion {
                 const sink = new media_sink/* EncodedPacketSink */.kQ(track);
                 const decoderConfig = await track.getDecoderConfig();
                 const meta = { decoderConfig: decoderConfig ?? undefined };
-                let maxTimestamp = null;
+                const packetOrderValidator = new muxer/* PacketOrderValidator */.N();
+                let droppingGop = false;
+                let warnedAboutDroppedPackets = false;
                 // eslint-disable-next-line curly
                 if (copyStartPacket)
                     for await (const packet of sink.packets(copyStartPacket)) {
@@ -1446,11 +1504,21 @@ class Conversion {
                             break;
                         }
                         const packetTimestamp = packet.timestamp + this._timestampOffset;
-                        // Drop packets that would violate the GOP timestamp monotonicity rule
-                        if (maxTimestamp !== null && packetTimestamp < maxTimestamp) {
+                        if (packet.type === 'key') {
+                            droppingGop = false;
+                        }
+                        if (droppingGop) {
                             continue;
                         }
-                        maxTimestamp = packetTimestamp;
+                        // If packets violate the ordering rule (and would throw in the muxer), drop 'em
+                        if (!packetOrderValidator.digest(packetTimestamp, packet.type)) {
+                            droppingGop = packet.type === 'key';
+                            if (!warnedAboutDroppedPackets) {
+                                logging/* Logging */.y._warn('Some audio packets had to be dropped in order to produce correct output timestamps.');
+                                warnedAboutDroppedPackets = true;
+                            }
+                            continue;
+                        }
                         const modifiedPacket = packet.clone({
                             timestamp: packetTimestamp,
                             duration: packet.duration,
@@ -1477,7 +1545,6 @@ class Conversion {
                 });
                 return;
             }
-            let codecOfChoice = null;
             if (trackOptions.codec) {
                 audioCodecs = audioCodecs.filter(codec => codec === trackOptions.codec);
             }
@@ -1508,15 +1575,15 @@ class Conversion {
                     .find(codec => src_codec/* NON_PCM_AUDIO_CODECS */.YB.includes(codec));
                 if (nonPcmCodec) {
                     // We are able to encode using a non-PCM codec, but it'll require resampling
-                    codecOfChoice = nonPcmCodec;
+                    outputCodec = nonPcmCodec;
                     numberOfChannels = FALLBACK_NUMBER_OF_CHANNELS;
                     sampleRate = FALLBACK_SAMPLE_RATE;
                 }
             }
             else {
-                codecOfChoice = encodableCodecs[0] ?? null;
+                outputCodec = encodableCodecs[0] ?? null;
             }
-            if (codecOfChoice === null) {
+            if (outputCodec === null) {
                 this.discardedTracks.push({
                     track,
                     reason: 'no_encodable_target_codec',
@@ -1525,7 +1592,7 @@ class Conversion {
                 return;
             }
             const encodingConfig = {
-                codec: codecOfChoice,
+                codec: outputCodec,
                 quality,
                 transform: {
                     sampleFormat: trackOptions.sampleFormat,
@@ -1646,6 +1713,21 @@ class Conversion {
         // The input's bitrate metadata only stays meaningful when packets are copied
         const bitrate = needsTranscode ? null : await track.getBitrate();
         const averageBitrate = needsTranscode ? null : await track.getAverageBitrate();
+        let maximumPacketCount = trackOptions.maximumPacketCount;
+        if (this.output.format.requiresMaximumPacketCount && maximumPacketCount === undefined) {
+            let packetRate;
+            if (needsTranscode) {
+                (0,misc/* assert */.vA)(outputCodec);
+                packetRate = sampleRate / (0,src_codec/* getMinimumAudioPacketSize */.gZ)(outputCodec, sampleRate);
+            }
+            else {
+                packetRate = (await track.computePacketStats(PACKET_STATS_PACKET_COUNT)).averagePacketRate;
+            }
+            const startTimestamp = needsTranscode
+                ? this._startTimestamp
+                : copyStartPacket?.timestamp ?? this._startTimestamp;
+            maximumPacketCount = await this._estimateMaximumPacketCount(track, startTimestamp, packetRate);
+        }
         this.output.addAudioTrack(audioSource, {
             // TODO: This condition can be removed when all demuxers properly homogenize to BCP47 in v2
             languageCode: (0,misc/* isIso639Dash2LanguageCode */.Nu)(audioTrackLanguageCode)
@@ -1656,10 +1738,32 @@ class Conversion {
             group: ownGroup ?? trackOptions.group,
             bitrate: bitrate ?? undefined,
             averageBitrate: averageBitrate ?? undefined,
+            maximumPacketCount,
         });
         this.utilizedTracks.push(track);
         this._outputTrackIds.push(outputTrackId);
         this._outputOwnTrackGroups.push(ownGroup);
+    }
+    /** @internal */
+    async _estimateMaximumPacketCount(track, startTimestamp, packetRate) {
+        const endTimestamp = Math.min(await this._getTrackDuration(track), this._endTimestamp);
+        const duration = Math.max(endTimestamp - startTimestamp, 0);
+        // Let's give this a generous margin
+        return Math.ceil(1.5 * packetRate * duration) + 64;
+    }
+    /** @internal */
+    _getTrackDuration(track) {
+        let promise = this._trackDurations.get(track);
+        if (!promise) {
+            promise = (async () => {
+                if (await track.isLive()) {
+                    return Infinity; // Upper bound (assuming no universe heat death)
+                }
+                return (await track.getDurationFromMetadata()) ?? (await track.computeDuration());
+            })();
+            this._trackDurations.set(track, promise);
+        }
+        return promise;
     }
     /** @internal */
     async _registerAudioSample(pump, sample, source, outputTrackId, getLastSampleTimestamp) {
@@ -1809,7 +1913,7 @@ class TrackSynchronizer {
     }
 }
 
-;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-m1y3j802.mjs
+;// ./node_modules/@remotion/studio/dist/esm/CaptionQueueProcessor-apfvqd8d.mjs
 Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/whisper-webgpu'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 
 
@@ -1932,7 +2036,7 @@ var CaptionQueueProcessor = () => {
     markCaptionJobSaving,
     getAbortController,
     setProcessCaptionJobCallback
-  } = (0,react.useContext)(index_kwxewaaz/* RenderQueueContext */.x7);
+  } = (0,react.useContext)(index_6k01te75/* RenderQueueContext */.x7);
   const processJob = (0,react.useCallback)(async (job) => {
     const { signal } = getAbortController(job.id);
     let captionCount = null;
@@ -2015,7 +2119,7 @@ var CaptionQueueProcessor = () => {
           message: `Saving ${job.outName}...`,
           value: 0.95
         });
-        await (0,index_fa0wsc5r/* writeStaticFile2 */.g4)({
+        await (0,index_xpkpdkfn/* writeStaticFile2 */.g4)({
           contents: JSON.stringify(captions, null, 2),
           filePath: job.outName
         });
@@ -2032,7 +2136,7 @@ var CaptionQueueProcessor = () => {
         for (let index = 0;index < 1000; index++) {
           signal.throwIfAborted();
           const installationName = `${baseName}${index === 0 ? "" : `-copy${index === 1 ? "" : `-${index}`}`}`;
-          const preflight = await (0,index_kewagct1/* prepareElementInstall */.Rl)({
+          const preflight = await (0,index_k22tz863/* prepareElementInstall */.Rl)({
             installationName,
             destination: {
               type: "selected-media",
@@ -2047,11 +2151,11 @@ var CaptionQueueProcessor = () => {
           if (expectedFileState.exists && expectedFileState.sourceHash !== sourceHash) {
             continue;
           }
-          if ((0,index_gjr0ae8m/* getBrowserStudioOperations */.P3)() === null) {
-            await (0,index_gjr0ae8m/* installRequiredPackages */.oX)(element.dependencies);
+          if ((0,index_0rhz1ydw/* getBrowserStudioOperations */.P3)() === null) {
+            await (0,index_0rhz1ydw/* installRequiredPackages */.oX)(element.dependencies);
           }
           signal.throwIfAborted();
-          const response = await (0,index_kewagct1/* installElement */.iW)({
+          const response = await (0,index_k22tz863/* installElement */.iW)({
             installationName,
             compositionFile: null,
             compositionId: null,
@@ -2083,7 +2187,7 @@ var CaptionQueueProcessor = () => {
           message: "Adding Basic captions...",
           value: 0.95
         });
-        await (0,index_gjr0ae8m/* installRequiredPackages */.oX)([
+        await (0,index_0rhz1ydw/* installRequiredPackages */.oX)([
           { name: "@remotion/captions", version: null }
         ]);
         const request = {
@@ -2092,8 +2196,8 @@ var CaptionQueueProcessor = () => {
           durationInFrames: job.target.durationInFrames,
           captions
         };
-        const browserStudioOperations = (0,index_gjr0ae8m/* getBrowserStudioOperations */.P3)();
-        const response = browserStudioOperations ? await browserStudioOperations.insertBasicCaptions(request) : await (0,index_gjr0ae8m/* callApi */.px)("/api/insert-basic-captions", request);
+        const browserStudioOperations = (0,index_0rhz1ydw/* getBrowserStudioOperations */.P3)();
+        const response = browserStudioOperations ? await browserStudioOperations.insertBasicCaptions(request) : await (0,index_0rhz1ydw/* callApi */.px)("/api/insert-basic-captions", request);
         if (!response.success) {
           throw new Error(response.reason);
         }
@@ -2167,4 +2271,4 @@ var loadModelForJob = async ({
 /***/ }
 
 }]);
-//# sourceMappingURL=598.bundle.js.map
+//# sourceMappingURL=128.bundle.js.map

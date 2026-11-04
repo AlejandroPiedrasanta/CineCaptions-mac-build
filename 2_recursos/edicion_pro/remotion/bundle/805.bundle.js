@@ -526,98 +526,84 @@ function setQuaternionFromProperEuler( q, a, b, c, order ) {
 }
 
 /**
- * Denormalizes the given value according to the given typed array.
+ * Returns the factor used by {@link normalize} and {@link denormalize} for the given typed array,
+ * or `undefined` if the values are not scaled (float arrays) or the array type is not supported.
  *
- * @param {number} value - The value to denormalize.
  * @param {TypedArray} array - The typed array that defines the data type of the value.
- * @return {number} The denormalize (float) value in the range `[0,1]`.
+ * @return {number|undefined} The normalization factor.
  */
-function denormalize( value, array ) {
+function getNormalizationScale( array ) {
 
 	switch ( array.constructor ) {
 
-		case Float32Array:
-
-			return value;
-
 		case Uint32Array:
 
-			return value / 4294967295.0;
+			return 4294967295.0;
 
 		case Uint16Array:
 
-			return value / 65535.0;
+			return 65535.0;
 
 		case Uint8Array:
 		case Uint8ClampedArray:
 
-			return value / 255.0;
+			return 255.0;
 
 		case Int32Array:
 
-			return Math.max( value / 2147483647.0, - 1.0 );
+			return 2147483647.0;
 
 		case Int16Array:
 
-			return Math.max( value / 32767.0, - 1.0 );
+			return 32767.0;
 
 		case Int8Array:
 
-			return Math.max( value / 127.0, - 1.0 );
+			return 127.0;
 
 		default:
 
-			throw new Error( 'THREE.MathUtils: Invalid component type.' );
+			return undefined;
 
 	}
 
 }
 
 /**
+ * Denormalizes the given value according to the given typed array.
+ *
+ * @param {number} value - The value to denormalize.
+ * @param {TypedArray} array - The typed array that defines the data type of the value.
+ * @return {number} The denormalized (float) value in the range `[0,1]` or `[-1,1]`
+ */
+function denormalize( value, array ) {
+
+	if ( array.constructor === Float32Array ) return value;
+
+	const scale = getNormalizationScale( array );
+
+	if ( scale === undefined ) throw new Error( 'THREE.MathUtils: Invalid component type.' );
+
+	return Math.max( value / scale, - 1.0 );
+
+}
+
+/**
  * Normalizes the given value according to the given typed array.
  *
- * @param {number} value - The float value in the range `[0,1]` to normalize.
+ * @param {number} value - The float value in the range `[0,1]` or `[-1,1]` to normalize.
  * @param {TypedArray} array - The typed array that defines the data type of the value.
- * @return {number} The normalize value.
+ * @return {number} The normalized value.
  */
 function normalize( value, array ) {
 
-	switch ( array.constructor ) {
+	if ( array.constructor === Float32Array ) return value;
 
-		case Float32Array:
+	const scale = getNormalizationScale( array );
 
-			return value;
+	if ( scale === undefined ) throw new Error( 'THREE.MathUtils: Invalid component type.' );
 
-		case Uint32Array:
-
-			return Math.round( value * 4294967295.0 );
-
-		case Uint16Array:
-
-			return Math.round( value * 65535.0 );
-
-		case Uint8Array:
-		case Uint8ClampedArray:
-
-			return Math.round( value * 255.0 );
-
-		case Int32Array:
-
-			return Math.round( value * 2147483647.0 );
-
-		case Int16Array:
-
-			return Math.round( value * 32767.0 );
-
-		case Int8Array:
-
-			return Math.round( value * 127.0 );
-
-		default:
-
-			throw new Error( 'THREE.MathUtils: Invalid component type.' );
-
-	}
+	return Math.round( value * scale );
 
 }
 
@@ -912,7 +898,7 @@ class Vector2 {
 		 * @readonly
 		 * @default true
 		 */
-		Vector2.prototype.isVector2 = true;
+		this.prototype.isVector2 = true;
 
 	}
 
@@ -2697,7 +2683,7 @@ class Vector3 {
 		 * @readonly
 		 * @default true
 		 */
-		Vector3.prototype.isVector3 = true;
+		this.prototype.isVector3 = true;
 
 	}
 
@@ -3964,7 +3950,7 @@ class Matrix3 {
 		 * @readonly
 		 * @default true
 		 */
-		Matrix3.prototype.isMatrix3 = true;
+		this.prototype.isMatrix3 = true;
 
 	}
 
@@ -4558,8 +4544,6 @@ const _m3 = /*@__PURE__*/ new Matrix3();
 /* unused harmony import specifier */ var LinearTransfer;
 /* unused harmony import specifier */ var SRGBColorSpace;
 /* unused harmony import specifier */ var ColorManagement_Matrix3;
-/* unused harmony import specifier */ var warnOnce;
-
 
 
 
@@ -4687,8 +4671,8 @@ function createColorManagement() {
 		_getMatrix: function ( targetMatrix, sourceColorSpace, targetColorSpace ) {
 
 			return targetMatrix
-				.copy( this.spaces[ sourceColorSpace ].toXYZ )
-				.multiply( this.spaces[ targetColorSpace ].fromXYZ );
+				.copy( this.spaces[ targetColorSpace ].fromXYZ )
+				.multiply( this.spaces[ sourceColorSpace ].toXYZ );
 
 		},
 
@@ -4701,24 +4685,6 @@ function createColorManagement() {
 		_getUnpackColorSpace: function ( colorSpace = this.workingColorSpace ) {
 
 			return this.spaces[ colorSpace ].workingColorSpaceConfig.unpackColorSpace;
-
-		},
-
-		// Deprecated
-
-		fromWorkingColorSpace: function ( color, targetColorSpace ) {
-
-			warnOnce( 'ColorManagement: .fromWorkingColorSpace() has been renamed to .workingToColorSpace().' ); // @deprecated, r177
-
-			return ColorManagement.workingToColorSpace( color, targetColorSpace );
-
-		},
-
-		toWorkingColorSpace: function ( color, sourceColorSpace ) {
-
-			warnOnce( 'ColorManagement: .toWorkingColorSpace() has been renamed to .colorSpaceToWorking().' ); // @deprecated, r177
-
-			return ColorManagement.colorSpaceToWorking( color, sourceColorSpace );
 
 		},
 
@@ -5011,7 +4977,7 @@ class TextureSource {
 
 		} else if ( data !== null ) {
 
-			target.set( data.width, data.height, data.depth || 0 );
+			target.set( data.width || 0, data.height || 0, data.depth || 0 );
 
 		} else {
 
@@ -5273,7 +5239,7 @@ class Texture extends EventDispatcher {
 		 * How the texture is applied to the object. The value `UVMapping`
 		 * is the default, where texture or uv coordinates are used to apply the map.
 		 *
-		 * @type {(UVMapping|CubeReflectionMapping|CubeRefractionMapping|EquirectangularReflectionMapping|EquirectangularRefractionMapping|CubeUVReflectionMapping)}
+		 * @type {(UVMapping|CubeReflectionMapping|CubeRefractionMapping|EquirectangularReflectionMapping|EquirectangularRefractionMapping)}
 		 * @default UVMapping
 		*/
 		this.mapping = mapping;
@@ -5427,6 +5393,17 @@ class Texture extends EventDispatcher {
 		this.generateMipmaps = true;
 
 		/**
+		 * Whether the renderer regenerates the mipmaps automatically whenever the
+		 * texture is uploaded, rendered to or copied into. Set this to `false` to
+		 * pause the regeneration and write the mip levels yourself. Requires
+		 * {@link Texture#generateMipmaps}.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.mipmapsAutoUpdate = true;
+
+		/**
 		 * If set to `true`, the alpha channel, if present, is multiplied into the
 		 * color channels when the texture is uploaded to the GPU.
 		 *
@@ -5537,6 +5514,16 @@ class Texture extends EventDispatcher {
 		 * @default 0
 		 */
 		this.pmremVersion = 0;
+
+		/**
+		 * Indicates whether this texture is a prefiltered cube environment map generated
+		 * by {@link PMREMGenerator}.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default false
+		 */
+		this.isPMREMTexture = false;
 
 		/**
 		 * Whether the texture should use one of the 16 bit integer formats which are normalized
@@ -5673,6 +5660,7 @@ class Texture extends EventDispatcher {
 		this.matrix.copy( source.matrix );
 
 		this.generateMipmaps = source.generateMipmaps;
+		this.mipmapsAutoUpdate = source.mipmapsAutoUpdate;
 		this.premultiplyAlpha = source.premultiplyAlpha;
 		this.flipY = source.flipY;
 		this.unpackAlignment = source.unpackAlignment;
@@ -5680,6 +5668,7 @@ class Texture extends EventDispatcher {
 
 		this.renderTarget = source.renderTarget;
 		this.isRenderTargetTexture = source.isRenderTargetTexture;
+		this.isPMREMTexture = source.isPMREMTexture;
 		this.isArrayTexture = source.isArrayTexture;
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
@@ -5791,6 +5780,7 @@ class Texture extends EventDispatcher {
 			flipY: this.flipY,
 
 			generateMipmaps: this.generateMipmaps,
+			mipmapsAutoUpdate: this.mipmapsAutoUpdate,
 			premultiplyAlpha: this.premultiplyAlpha,
 			unpackAlignment: this.unpackAlignment
 
@@ -5811,6 +5801,10 @@ class Texture extends EventDispatcher {
 	/**
 	 * Frees the GPU-related resources allocated by this instance. Call this
 	 * method whenever this instance is no longer used in your app.
+	 *
+	 * Textures that belong to a render target are managed by the render target.
+	 * Calling this method on such a texture only dispatches the dispose event but
+	 * does not free any GPU resources. Use {@link RenderTarget#dispose} instead.
 	 *
 	 * @fires Texture#dispose
 	 */
@@ -5994,13 +5988,13 @@ Texture.DEFAULT_ANISOTROPY = 1;
 /* harmony export */ });
 /* unused harmony exports arrayMin, arrayMax, arrayNeedsUint32, getTypedArray, createCanvasElement, setConsoleFunction, getConsoleFunction, log, error, probeAsync, yieldToMain, toNormalizedProjectionMatrix, toReversedProjectionMatrix, isTypedArray, ReversedDepthFuncs */
 /* unused harmony import specifier */ var NeverDepth;
-/* unused harmony import specifier */ var AlwaysDepth;
 /* unused harmony import specifier */ var LessDepth;
 /* unused harmony import specifier */ var GreaterDepth;
 /* unused harmony import specifier */ var EqualDepth;
-/* unused harmony import specifier */ var NotEqualDepth;
 /* unused harmony import specifier */ var LessEqualDepth;
 /* unused harmony import specifier */ var GreaterEqualDepth;
+/* unused harmony import specifier */ var AlwaysDepth;
+/* unused harmony import specifier */ var NotEqualDepth;
 
 
 /**
@@ -6482,14 +6476,14 @@ function toReversedProjectionMatrix( projectionMatrix ) {
  * @type {Object}
  */
 const ReversedDepthFuncs = (/* unused pure expression or super */ null && ({
-	[ NeverDepth ]: AlwaysDepth,
+	[ NeverDepth ]: NeverDepth,
 	[ LessDepth ]: GreaterDepth,
-	[ EqualDepth ]: NotEqualDepth,
+	[ EqualDepth ]: EqualDepth,
 	[ LessEqualDepth ]: GreaterEqualDepth,
 
-	[ AlwaysDepth ]: NeverDepth,
+	[ AlwaysDepth ]: AlwaysDepth,
 	[ GreaterDepth ]: LessDepth,
-	[ NotEqualDepth ]: EqualDepth,
+	[ NotEqualDepth ]: NotEqualDepth,
 	[ GreaterEqualDepth ]: LessEqualDepth,
 }));
 

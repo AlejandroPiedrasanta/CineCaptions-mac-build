@@ -26,7 +26,7 @@ SRC = RAIZ / '1_codigo' / 'remotion'
 DEST = RAIZ / '2_recursos' / 'edicion_pro' / 'remotion'
 RT = DEST / 'runtime'
 WIN = sys.platform == 'win32'
-CHROME = '157.0.8080.0'          # v5.53: la TESTED_VERSION de Remotion 4.0.539 (antes, el 156.0.8078.4 de Playwright)
+CHROME = '158.0.8127.2'          # la TESTED_VERSION de Remotion (v5.67: 4.0.540; v5.53: 157.0.8080.0 con la 4.0.539; antes, el 156 de Playwright)
 CFT = 'https://storage.googleapis.com/chrome-for-testing-public'
 
 

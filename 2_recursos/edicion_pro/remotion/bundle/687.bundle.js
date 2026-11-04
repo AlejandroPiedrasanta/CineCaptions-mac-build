@@ -122,100 +122,102 @@ const safeDecodeAsync = /* @__PURE__ */ _core_index_js__WEBPACK_IMPORTED_MODULE_
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Ak: () => (/* binding */ nanoid),
-/* harmony export */   BN: () => (/* binding */ float64),
-/* harmony export */   E$: () => (/* binding */ intersection),
-/* harmony export */   Fs: () => (/* binding */ pipe),
-/* harmony export */   Gk: () => (/* binding */ int64),
-/* harmony export */   Gl: () => (/* binding */ cuid2),
-/* harmony export */   HA: () => (/* binding */ int32),
-/* harmony export */   HR: () => (/* binding */ symbol),
-/* harmony export */   I8: () => (/* binding */ xor),
-/* harmony export */   Ie: () => (/* binding */ custom),
-/* harmony export */   Ik: () => (/* binding */ object),
-/* harmony export */   In: () => (/* binding */ float32),
-/* harmony export */   K3: () => (/* binding */ base64),
-/* harmony export */   KC: () => (/* binding */ union),
-/* harmony export */   KR: () => (/* binding */ _function),
-/* harmony export */   L1: () => (/* binding */ invertCodec),
-/* harmony export */   L5: () => (/* binding */ unknown),
-/* harmony export */   Md: () => (/* binding */ mac),
-/* harmony export */   Mf: () => (/* binding */ _catch),
-/* harmony export */   NJ: () => (/* binding */ file),
-/* harmony export */   Nl: () => (/* binding */ _instanceof),
-/* harmony export */   Np: () => (/* binding */ stringFormat),
-/* harmony export */   OI: () => (/* binding */ hostname),
-/* harmony export */   OZ: () => (/* binding */ url),
-/* harmony export */   Os: () => (/* binding */ guid),
-/* harmony export */   PV: () => (/* binding */ tuple),
-/* harmony export */   Pq: () => (/* binding */ json),
-/* harmony export */   RZ: () => (/* binding */ lazy),
-/* harmony export */   Rp: () => (/* binding */ email),
-/* harmony export */   Rv: () => (/* binding */ _default),
-/* harmony export */   S8: () => (/* binding */ uint32),
-/* harmony export */   Sd: () => (/* binding */ prefault),
-/* harmony export */   Tj: () => (/* binding */ map),
-/* harmony export */   Uy: () => (/* binding */ templateLiteral),
-/* harmony export */   VV: () => (/* binding */ uint64),
-/* harmony export */   Vx: () => (/* binding */ _undefined),
-/* harmony export */   Wh: () => (/* binding */ int),
-/* harmony export */   YO: () => (/* binding */ array),
-/* harmony export */   YP: () => (/* binding */ refine),
-/* harmony export */   Yj: () => (/* binding */ string),
-/* harmony export */   Z0: () => (/* binding */ ulid),
-/* harmony export */   ZE: () => (/* binding */ keyof),
-/* harmony export */   Zg: () => (/* binding */ emoji),
-/* harmony export */   Zm: () => (/* binding */ never),
-/* harmony export */   _H: () => (/* binding */ looseObject),
-/* harmony export */   a$: () => (/* binding */ jwt),
-/* harmony export */   ai: () => (/* binding */ number),
-/* harmony export */   bz: () => (/* binding */ any),
-/* harmony export */   ch: () => (/* binding */ _null),
-/* harmony export */   cl: () => (/* binding */ nullish),
-/* harmony export */   eY: () => (/* binding */ nonoptional),
-/* harmony export */   eu: () => (/* binding */ literal),
-/* harmony export */   fH: () => (/* binding */ _function),
-/* harmony export */   fO: () => (/* binding */ ksuid),
+/* harmony export */   AkI: () => (/* binding */ nanoid),
+/* harmony export */   BNo: () => (/* binding */ float64),
+/* harmony export */   E$q: () => (/* binding */ intersection),
+/* harmony export */   FsL: () => (/* binding */ pipe),
+/* harmony export */   Gkc: () => (/* binding */ int64),
+/* harmony export */   GlQ: () => (/* binding */ cuid2),
+/* harmony export */   HA5: () => (/* binding */ int32),
+/* harmony export */   HRO: () => (/* binding */ symbol),
+/* harmony export */   I86: () => (/* binding */ xor),
+/* harmony export */   IeY: () => (/* binding */ custom),
+/* harmony export */   Ikc: () => (/* binding */ object),
+/* harmony export */   In1: () => (/* binding */ float32),
+/* harmony export */   K39: () => (/* binding */ base64),
+/* harmony export */   KCZ: () => (/* binding */ union),
+/* harmony export */   KR7: () => (/* binding */ _function),
+/* harmony export */   L1c: () => (/* binding */ invertCodec),
+/* harmony export */   L5J: () => (/* binding */ unknown),
+/* harmony export */   Mdg: () => (/* binding */ mac),
+/* harmony export */   MfU: () => (/* binding */ _catch),
+/* harmony export */   NJF: () => (/* binding */ file),
+/* harmony export */   Nlp: () => (/* binding */ _instanceof),
+/* harmony export */   NpN: () => (/* binding */ stringFormat),
+/* harmony export */   OIJ: () => (/* binding */ hostname),
+/* harmony export */   OZ5: () => (/* binding */ url),
+/* harmony export */   OsD: () => (/* binding */ guid),
+/* harmony export */   PVZ: () => (/* binding */ tuple),
+/* harmony export */   Pq9: () => (/* binding */ json),
+/* harmony export */   RZV: () => (/* binding */ lazy),
+/* harmony export */   Rpp: () => (/* binding */ email),
+/* harmony export */   Rvf: () => (/* binding */ _default),
+/* harmony export */   S8h: () => (/* binding */ uint32),
+/* harmony export */   SdS: () => (/* binding */ prefault),
+/* harmony export */   TjK: () => (/* binding */ map),
+/* harmony export */   Uy$: () => (/* binding */ templateLiteral),
+/* harmony export */   VV_: () => (/* binding */ uint64),
+/* harmony export */   Vxk: () => (/* binding */ _undefined),
+/* harmony export */   Whr: () => (/* binding */ int),
+/* harmony export */   Xyz: () => (/* binding */ currencyCode),
+/* harmony export */   YOg: () => (/* binding */ array),
+/* harmony export */   YPB: () => (/* binding */ refine),
+/* harmony export */   YjP: () => (/* binding */ string),
+/* harmony export */   Z09: () => (/* binding */ ulid),
+/* harmony export */   ZEF: () => (/* binding */ keyof),
+/* harmony export */   ZgG: () => (/* binding */ emoji),
+/* harmony export */   Zkx: () => (/* binding */ iban),
+/* harmony export */   ZmZ: () => (/* binding */ never),
+/* harmony export */   _H3: () => (/* binding */ looseObject),
+/* harmony export */   a$Y: () => (/* binding */ jwt),
+/* harmony export */   aig: () => (/* binding */ number),
+/* harmony export */   bzn: () => (/* binding */ any),
+/* harmony export */   chJ: () => (/* binding */ _null),
+/* harmony export */   cl6: () => (/* binding */ nullish),
+/* harmony export */   eYS: () => (/* binding */ nonoptional),
+/* harmony export */   euz: () => (/* binding */ literal),
+/* harmony export */   fHH: () => (/* binding */ _function),
+/* harmony export */   fOD: () => (/* binding */ ksuid),
 /* harmony export */   fc: () => (/* binding */ nativeEnum),
-/* harmony export */   g1: () => (/* binding */ record),
+/* harmony export */   g1P: () => (/* binding */ record),
 /* harmony export */   gE: () => (/* binding */ uuidv6),
-/* harmony export */   gF: () => (/* binding */ cuid),
-/* harmony export */   gM: () => (/* binding */ discriminatedUnion),
-/* harmony export */   gZ: () => (/* binding */ uuidv4),
-/* harmony export */   hQ: () => (/* binding */ e164),
-/* harmony export */   hZ: () => (/* binding */ set),
-/* harmony export */   iv: () => (/* binding */ promise),
-/* harmony export */   jg: () => (/* binding */ partialRecord),
-/* harmony export */   k5: () => (/* binding */ _enum),
-/* harmony export */   kM: () => (/* binding */ xid),
-/* harmony export */   kX: () => (/* binding */ success),
-/* harmony export */   l7: () => (/* binding */ cidrv6),
-/* harmony export */   lq: () => (/* binding */ optional),
-/* harmony export */   me: () => (/* binding */ nullable),
-/* harmony export */   nH: () => (/* binding */ uuidv7),
-/* harmony export */   o: () => (/* binding */ bigint),
-/* harmony export */   oi: () => (/* binding */ nan),
-/* harmony export */   p6: () => (/* binding */ date),
-/* harmony export */   pd: () => (/* binding */ transform),
-/* harmony export */   q3: () => (/* binding */ httpUrl),
-/* harmony export */   qW: () => (/* binding */ looseRecord),
-/* harmony export */   r0: () => (/* binding */ base64url),
-/* harmony export */   rI: () => (/* binding */ _void),
-/* harmony export */   rL: () => (/* binding */ codec),
-/* harmony export */   re: () => (/* binding */ strictObject),
-/* harmony export */   tB: () => (/* binding */ readonly),
-/* harmony export */   tW: () => (/* binding */ hash),
-/* harmony export */   uR: () => (/* binding */ uuid),
-/* harmony export */   uX: () => (/* binding */ ipv4),
-/* harmony export */   ug: () => (/* binding */ ipv6),
-/* harmony export */   uh: () => (/* binding */ hex),
-/* harmony export */   vk: () => (/* binding */ preprocess),
-/* harmony export */   w8: () => (/* binding */ creditCard),
-/* harmony export */   yq: () => (/* binding */ exactOptional),
-/* harmony export */   z6: () => (/* binding */ check),
-/* harmony export */   zM: () => (/* binding */ boolean),
-/* harmony export */   zn: () => (/* binding */ superRefine),
-/* harmony export */   zr: () => (/* binding */ cidrv4)
+/* harmony export */   gF3: () => (/* binding */ cuid),
+/* harmony export */   gMt: () => (/* binding */ discriminatedUnion),
+/* harmony export */   gZm: () => (/* binding */ uuidv4),
+/* harmony export */   hQe: () => (/* binding */ e164),
+/* harmony export */   hZp: () => (/* binding */ set),
+/* harmony export */   ivC: () => (/* binding */ promise),
+/* harmony export */   jgl: () => (/* binding */ partialRecord),
+/* harmony export */   k5n: () => (/* binding */ _enum),
+/* harmony export */   kMC: () => (/* binding */ xid),
+/* harmony export */   kXE: () => (/* binding */ success),
+/* harmony export */   l7s: () => (/* binding */ cidrv6),
+/* harmony export */   lqM: () => (/* binding */ optional),
+/* harmony export */   mee: () => (/* binding */ nullable),
+/* harmony export */   nHE: () => (/* binding */ uuidv7),
+/* harmony export */   oad: () => (/* binding */ bigint),
+/* harmony export */   oit: () => (/* binding */ nan),
+/* harmony export */   p6U: () => (/* binding */ date),
+/* harmony export */   pdi: () => (/* binding */ transform),
+/* harmony export */   q36: () => (/* binding */ httpUrl),
+/* harmony export */   qWX: () => (/* binding */ looseRecord),
+/* harmony export */   r0z: () => (/* binding */ base64url),
+/* harmony export */   rIH: () => (/* binding */ _void),
+/* harmony export */   rLB: () => (/* binding */ codec),
+/* harmony export */   rej: () => (/* binding */ strictObject),
+/* harmony export */   tBZ: () => (/* binding */ readonly),
+/* harmony export */   tWU: () => (/* binding */ hash),
+/* harmony export */   uRe: () => (/* binding */ uuid),
+/* harmony export */   uXy: () => (/* binding */ ipv4),
+/* harmony export */   ugL: () => (/* binding */ ipv6),
+/* harmony export */   uhr: () => (/* binding */ hex),
+/* harmony export */   vkY: () => (/* binding */ preprocess),
+/* harmony export */   w8K: () => (/* binding */ creditCard),
+/* harmony export */   yqP: () => (/* binding */ exactOptional),
+/* harmony export */   z6Y: () => (/* binding */ check),
+/* harmony export */   zMY: () => (/* binding */ boolean),
+/* harmony export */   zni: () => (/* binding */ superRefine),
+/* harmony export */   zrY: () => (/* binding */ cidrv4)
 /* harmony export */ });
 /* harmony import */ var _core_index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5435);
 /* harmony import */ var _core_index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(666);
@@ -229,6 +231,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_to_json_schema_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(9958);
 /* harmony import */ var _locales_en_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(1101);
 /* harmony import */ var _parse_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(5852);
+/* harmony import */ var _parse_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(2373);
+
 
 
 
@@ -380,6 +384,12 @@ const ZodType = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$co
     set spa(value) {
         _core_index_js__WEBPACK_IMPORTED_MODULE_4__.own(this, "spa", value);
     },
+    validate(data, params) {
+        return _parse_js__WEBPACK_IMPORTED_MODULE_12__/* .validate */ .tf(this, data, params);
+    },
+    validateAsync(data, params) {
+        return _parse_js__WEBPACK_IMPORTED_MODULE_12__/* .validateAsync */ .F0(this, data, params);
+    },
     encode: function _encode(data, params) {
         return _parse_js__WEBPACK_IMPORTED_MODULE_11__/* .encode */ .lF(this, data, params, { callee: _encode });
     },
@@ -421,10 +431,11 @@ const _ZodString = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .
     _core_index_js__WEBPACK_IMPORTED_MODULE_1__/* .$ZodString */ .$v.init(inst, def);
     ZodType.init(inst, def);
     inst._zod.processJSONSchema = (ctx, json, params) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .stringProcessor */ .SW(inst, ctx, json, params);
-    const bag = inst._zod.bag;
-    inst.format = bag.format ?? null;
-    inst.minLength = bag.minimum ?? null;
-    inst.maxLength = bag.maximum ?? null;
+}, 
+/*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_4__.derived({
+    format: (inst) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst).format ?? null,
+    minLength: (inst) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst).minimum ?? null,
+    maxLength: (inst) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst).maximum ?? null,
 }, {
     regex(...args) {
         return this.check(_core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._regex */ .Fk(...args));
@@ -471,7 +482,7 @@ const _ZodString = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .
     slugify() {
         return this.check(_core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._slugify */ .TL());
     },
-});
+}));
 const ZodString = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$constructor */ .xI("ZodString", (inst, def) => {
     _core_index_js__WEBPACK_IMPORTED_MODULE_1__/* .$ZodString */ .$v.init(inst, def);
     _ZodString.init(inst, def);
@@ -765,6 +776,13 @@ const ZodCreditCard = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/
 function creditCard(params) {
     return _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._creditCard */ .vN(ZodCreditCard, params);
 }
+const ZodIBAN = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$constructor */ .xI("ZodIBAN", (inst, def) => {
+    _core_index_js__WEBPACK_IMPORTED_MODULE_1__/* .$ZodIBAN */ .ew.init(inst, def);
+    ZodStringFormat.init(inst, def);
+});
+function iban(params) {
+    return _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._iban */ .aZ(ZodIBAN, params);
+}
 const ZodJWT = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$constructor */ .xI("ZodJWT", (inst, def) => {
     // ZodStringFormat.init(inst, def);
     _core_index_js__WEBPACK_IMPORTED_MODULE_1__/* .$ZodJWT */ .h8.init(inst, def);
@@ -787,6 +805,9 @@ function hostname(_params) {
 function hex(_params) {
     return _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._stringFormat */ .Af(ZodCustomStringFormat, "hex", _core_index_js__WEBPACK_IMPORTED_MODULE_5__.hex, _params);
 }
+function currencyCode(_params) {
+    return _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._stringFormat */ .Af(ZodCustomStringFormat, "currency_code", _core_index_js__WEBPACK_IMPORTED_MODULE_5__.currencyCode, _params);
+}
 function hash(alg, params) {
     const enc = params?.enc ?? "hex";
     const format = `${alg}_${enc}`;
@@ -799,14 +820,22 @@ const ZodNumber = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$
     _core_index_js__WEBPACK_IMPORTED_MODULE_1__/* .$ZodNumber */ .vz.init(inst, def);
     ZodType.init(inst, def);
     inst._zod.processJSONSchema = (ctx, json, params) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .numberProcessor */ .Wg(inst, ctx, json, params);
-    const bag = inst._zod.bag;
-    inst.minValue =
-        Math.max(bag.minimum ?? Number.NEGATIVE_INFINITY, bag.exclusiveMinimum ?? Number.NEGATIVE_INFINITY) ?? null;
-    inst.maxValue =
-        Math.min(bag.maximum ?? Number.POSITIVE_INFINITY, bag.exclusiveMaximum ?? Number.POSITIVE_INFINITY) ?? null;
-    inst.isInt = (bag.format ?? "").includes("int") || Number.isSafeInteger(bag.multipleOf ?? 0.5);
     inst.isFinite = true;
-    inst.format = bag.format ?? null;
+}, 
+/*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_4__.derived({
+    minValue: (inst) => {
+        const { minimum, exclusiveMinimum } = _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst);
+        return Math.max(minimum ?? Number.NEGATIVE_INFINITY, exclusiveMinimum ?? Number.NEGATIVE_INFINITY);
+    },
+    maxValue: (inst) => {
+        const { maximum, exclusiveMaximum } = _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst);
+        return Math.min(maximum ?? Number.POSITIVE_INFINITY, exclusiveMaximum ?? Number.POSITIVE_INFINITY);
+    },
+    isInt: (inst) => {
+        const { isInt, multipleOf } = _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst);
+        return !!isInt || !!multipleOf?.some(Number.isSafeInteger);
+    },
+    format: (inst) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst).format ?? null,
 }, {
     gt(value, params) {
         return this.check(_core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._gt */ .Tx(value, params));
@@ -853,7 +882,7 @@ const ZodNumber = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$
     finite() {
         return this;
     },
-});
+}));
 function number(params) {
     return _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._number */ .F7(ZodNumber, params);
 }
@@ -888,10 +917,11 @@ const ZodBigInt = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$
     _core_index_js__WEBPACK_IMPORTED_MODULE_1__/* .$ZodBigInt */ .BN.init(inst, def);
     ZodType.init(inst, def);
     inst._zod.processJSONSchema = (ctx, json, params) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .bigintProcessor */ .Y8(inst, ctx, json, params);
-    const bag = inst._zod.bag;
-    inst.minValue = bag.minimum ?? null;
-    inst.maxValue = bag.maximum ?? null;
-    inst.format = bag.format ?? null;
+}, 
+/*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_4__.derived({
+    minValue: (inst) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst).minimum ?? null,
+    maxValue: (inst) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst).maximum ?? null,
+    format: (inst) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst).format ?? null,
 }, {
     gte(value, params) {
         return this.check(_core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._gte */ .qm(value, params));
@@ -926,7 +956,7 @@ const ZodBigInt = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$
     multipleOf(value, params) {
         return this.check(_core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._multipleOf */ .Hi(value, params));
     },
-});
+}));
 function bigint(params) {
     return _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._bigint */ .z$(ZodBigInt, params);
 }
@@ -1005,10 +1035,17 @@ const ZodDate = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$co
     inst._zod.processJSONSchema = (ctx, json, params) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .dateProcessor */ .Fl(inst, ctx, json, params);
     inst.min = (value, params) => inst.check(_core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._gte */ .qm(value, params));
     inst.max = (value, params) => inst.check(_core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._lte */ .Zm(value, params));
-    const c = inst._zod.bag;
-    inst.minDate = c.minimum ? new Date(c.minimum) : null;
-    inst.maxDate = c.maximum ? new Date(c.maximum) : null;
-});
+}, 
+/*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_4__.derived({
+    minDate: (inst) => {
+        const { minimum } = _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst);
+        return minimum ? new Date(minimum) : null;
+    },
+    maxDate: (inst) => {
+        const { maximum } = _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .aggregateChecks */ .Fs(inst);
+        return maximum ? new Date(maximum) : null;
+    },
+}, {}));
 function date(params) {
     return _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._date */ .YY(ZodDate, params);
 }
@@ -1054,19 +1091,20 @@ const ZodObject = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$
         return _enum(Object.keys(this._zod.def.shape));
     },
     catchall(catchall) {
-        return this.clone({ ...this._zod.def, catchall: catchall });
+        // `mergeDefs` rather than a spread: spreading reads `shape`, and resolving it can mint a whole fresh subtree
+        return this.clone(_core_index_js__WEBPACK_IMPORTED_MODULE_4__.mergeDefs(this._zod.def, { catchall: catchall }));
     },
     passthrough() {
-        return this.clone({ ...this._zod.def, catchall: unknown() });
+        return this.clone(_core_index_js__WEBPACK_IMPORTED_MODULE_4__.mergeDefs(this._zod.def, { catchall: unknown() }));
     },
     loose() {
-        return this.clone({ ...this._zod.def, catchall: unknown() });
+        return this.clone(_core_index_js__WEBPACK_IMPORTED_MODULE_4__.mergeDefs(this._zod.def, { catchall: unknown() }));
     },
     strict() {
-        return this.clone({ ...this._zod.def, catchall: never() });
+        return this.clone(_core_index_js__WEBPACK_IMPORTED_MODULE_4__.mergeDefs(this._zod.def, { catchall: never() }));
     },
     strip() {
-        return this.clone({ ...this._zod.def, catchall: undefined });
+        return this.clone(_core_index_js__WEBPACK_IMPORTED_MODULE_4__.mergeDefs(this._zod.def, { catchall: undefined }));
     },
     extend(incoming) {
         return _core_index_js__WEBPACK_IMPORTED_MODULE_4__.extend(this, incoming);
@@ -1294,7 +1332,8 @@ const ZodEnum = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$co
     ZodType.init(inst, def);
     inst._zod.processJSONSchema = (ctx, json, params) => _core_json_schema_processors_js__WEBPACK_IMPORTED_MODULE_8__/* .enumProcessor */ .C0(inst, ctx, json, params);
     inst.enum = def.entries;
-    inst.options = Object.values(def.entries);
+    // reuse the parsed value set so a numeric TS enum's reverse-mapping keys stay out
+    inst.options = [...inst._zod.values];
     const keys = new Set(Object.keys(def.entries));
     inst.extract = (values, params) => {
         const newEntries = {};
@@ -1676,8 +1715,16 @@ function superRefine(fn, params) {
 // Re-export describe and meta from core
 const describe = _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* .describe */ .q0;
 const meta = _core_index_js__WEBPACK_IMPORTED_MODULE_7__/* .meta */ .mI;
+const ZodInstanceOf = /*@__PURE__*/ _core_index_js__WEBPACK_IMPORTED_MODULE_0__/* .$constructor */ .xI("ZodInstanceOf", (inst, def) => {
+    ZodCustom.init(inst, def);
+}, {
+    properties(shape, params) {
+        // asserts in place, so the narrowed output type is truthful without a wrapper
+        return this.check(_core_index_js__WEBPACK_IMPORTED_MODULE_7__/* ._properties */ .T2(shape, params));
+    },
+});
 function _instanceof(cls, params = {}) {
-    const inst = new ZodCustom({
+    const inst = new ZodInstanceOf({
         type: "custom",
         check: "custom",
         fn: (data) => data instanceof cls,
@@ -1722,84 +1769,86 @@ function preprocess(fn, schema) {
 }
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, [
-/* harmony export */   "$A", 0, /* binding */ ZodISODuration,
-/* harmony export */   "$i", 0, /* binding */ ZodPromise,
-/* harmony export */   "A8", 0, /* binding */ ZodBigIntFormat,
-/* harmony export */   "Bo", 0, /* binding */ ZodIPv4,
-/* harmony export */   "Br", 0, /* binding */ ZodISODate,
-/* harmony export */   "Bu", 0, /* binding */ ZodSuccess,
-/* harmony export */   "CL", 0, /* binding */ ZodTransform,
+/* harmony export */   "$A2", 0, /* binding */ ZodISODuration,
+/* harmony export */   "$i$", 0, /* binding */ ZodPromise,
+/* harmony export */   "A8m", 0, /* binding */ ZodBigIntFormat,
+/* harmony export */   "Bo6", 0, /* binding */ ZodIPv4,
+/* harmony export */   "Brp", 0, /* binding */ ZodISODate,
+/* harmony export */   "Bui", 0, /* binding */ ZodSuccess,
+/* harmony export */   "CLY", 0, /* binding */ ZodTransform,
 /* harmony export */   "CZ", 0, /* binding */ ZodFunction,
-/* harmony export */   "DN", 0, /* binding */ ZodLiteral,
-/* harmony export */   "EB", 0, /* binding */ ZodStringFormat,
-/* harmony export */   "EV", 0, /* binding */ ZodReadonly,
-/* harmony export */   "GS", 0, /* binding */ ZodCodec,
-/* harmony export */   "Gp", 0, /* binding */ ZodIPv6,
-/* harmony export */   "Ih", 0, /* binding */ ZodLazy,
-/* harmony export */   "Ii", 0, /* binding */ ZodOptional,
-/* harmony export */   "JE", 0, /* binding */ ZodCustom,
-/* harmony export */   "Jj", 0, /* binding */ ZodCUID,
-/* harmony export */   "Jv", 0, /* binding */ ZodIntersection,
-/* harmony export */   "K5", 0, /* binding */ ZodSymbol,
-/* harmony export */   "Kf", 0, /* binding */ ZodKSUID,
-/* harmony export */   "Kq", 0, /* binding */ ZodNumberFormat,
-/* harmony export */   "Kz", 0, /* binding */ ZodSet,
-/* harmony export */   "LE", 0, /* binding */ ZodCustomStringFormat,
-/* harmony export */   "Lq", 0, /* binding */ ZodXID,
-/* harmony export */   "Lr", 0, /* binding */ ZodBigInt,
-/* harmony export */   "Ml", 0, /* binding */ ZodAny,
-/* harmony export */   "ND", 0, /* binding */ ZodString,
+/* harmony export */   "DN5", 0, /* binding */ ZodLiteral,
+/* harmony export */   "EB4", 0, /* binding */ ZodStringFormat,
+/* harmony export */   "EVz", 0, /* binding */ ZodReadonly,
+/* harmony export */   "GSc", 0, /* binding */ ZodCodec,
+/* harmony export */   "Ihb", 0, /* binding */ ZodLazy,
+/* harmony export */   "IiU", 0, /* binding */ ZodOptional,
+/* harmony export */   "JEJ", 0, /* binding */ ZodCustom,
+/* harmony export */   "JjC", 0, /* binding */ ZodCUID,
+/* harmony export */   "JvG", 0, /* binding */ ZodIntersection,
+/* harmony export */   "K5M", 0, /* binding */ ZodSymbol,
+/* harmony export */   "KfN", 0, /* binding */ ZodKSUID,
+/* harmony export */   "Kqw", 0, /* binding */ ZodNumberFormat,
+/* harmony export */   "KzS", 0, /* binding */ ZodSet,
+/* harmony export */   "LEJ", 0, /* binding */ ZodCustomStringFormat,
+/* harmony export */   "Lqq", 0, /* binding */ ZodXID,
+/* harmony export */   "Lr4", 0, /* binding */ ZodBigInt,
+/* harmony export */   "Mlh", 0, /* binding */ ZodAny,
+/* harmony export */   "NDH", 0, /* binding */ ZodString,
 /* harmony export */   "PQ", 0, /* binding */ ZodNull,
-/* harmony export */   "Tq", 0, /* binding */ ZodNaN,
-/* harmony export */   "UC", 0, /* binding */ _ZodString,
-/* harmony export */   "Ut", 0, /* binding */ ZodMap,
-/* harmony export */   "VY", 0, /* binding */ ZodMAC,
-/* harmony export */   "Vb", 0, /* binding */ ZodEnum,
-/* harmony export */   "W5", 0, /* binding */ ZodCIDRv4,
-/* harmony export */   "WF", 0, /* binding */ ZodBoolean,
-/* harmony export */   "WV", 0, /* binding */ ZodISOTime,
-/* harmony export */   "Xi", 0, /* binding */ ZodDefault,
-/* harmony export */   "Yl", 0, /* binding */ ZodCIDRv6,
-/* harmony export */   "Yo", 0, /* binding */ ZodISODateTime,
-/* harmony export */   "Zw", 0, /* binding */ ZodExactOptional,
-/* harmony export */   "_", 0, /* binding */ ZodUnknown,
-/* harmony export */   "_$", 0, /* binding */ ZodBase64URL,
-/* harmony export */   "_Z", 0, /* binding */ ZodUndefined,
-/* harmony export */   "a0", 0, /* binding */ ZodVoid,
-/* harmony export */   "a2", 0, /* binding */ ZodPreprocess,
-/* harmony export */   "aP", 0, /* binding */ ZodDate,
-/* harmony export */   "aR", 0, /* binding */ ZodType,
-/* harmony export */   "b8", 0, /* binding */ ZodRecord,
-/* harmony export */   "bv", 0, /* binding */ ZodObject,
-/* harmony export */   "cM", 0, /* binding */ ZodEmail,
-/* harmony export */   "dd", 0, /* binding */ ZodTemplateLiteral,
-/* harmony export */   "fZ", 0, /* binding */ ZodUnion,
-/* harmony export */   "fi", 0, /* binding */ ZodJWT,
-/* harmony export */   "hw", 0, /* binding */ ZodCatch,
-/* harmony export */   "iS", 0, /* binding */ ZodNever,
-/* harmony export */   "im", 0, /* binding */ ZodFile,
-/* harmony export */   "jn", 0, /* binding */ ZodCreditCard,
-/* harmony export */   "jv", 0, /* binding */ ZodDiscriminatedUnion,
-/* harmony export */   "l1", 0, /* binding */ ZodNullable,
-/* harmony export */   "m7", 0, /* binding */ ZodE164,
-/* harmony export */   "mI", 0, /* binding */ meta,
-/* harmony export */   "n", 0, /* binding */ ZodArray,
-/* harmony export */   "n$", 0, /* binding */ ZodNanoID,
-/* harmony export */   "n4", 0, /* binding */ ZodGUID,
-/* harmony export */   "nL", 0, /* binding */ ZodBase64,
-/* harmony export */   "q0", 0, /* binding */ describe,
-/* harmony export */   "qX", 0, /* binding */ ZodULID,
-/* harmony export */   "rS", 0, /* binding */ ZodNumber,
-/* harmony export */   "tr", 0, /* binding */ ZodCUID2,
-/* harmony export */   "uE", 0, /* binding */ stringbool,
-/* harmony export */   "ut", 0, /* binding */ ZodPipe,
-/* harmony export */   "vX", 0, /* binding */ ZodUUID,
-/* harmony export */   "vZ", 0, /* binding */ ZodNonOptional,
-/* harmony export */   "xg", 0, /* binding */ ZodPrefault,
-/* harmony export */   "y0", 0, /* binding */ ZodTuple,
-/* harmony export */   "yC", 0, /* binding */ ZodEmoji,
-/* harmony export */   "zA", 0, /* binding */ ZodXor,
-/* harmony export */   "zY", 0, /* binding */ ZodURL
+/* harmony export */   "TqK", 0, /* binding */ ZodNaN,
+/* harmony export */   "UCp", 0, /* binding */ _ZodString,
+/* harmony export */   "UtG", 0, /* binding */ ZodMap,
+/* harmony export */   "VYb", 0, /* binding */ ZodMAC,
+/* harmony export */   "Vb4", 0, /* binding */ ZodEnum,
+/* harmony export */   "W5S", 0, /* binding */ ZodCIDRv4,
+/* harmony export */   "WFD", 0, /* binding */ ZodBoolean,
+/* harmony export */   "WV4", 0, /* binding */ ZodISOTime,
+/* harmony export */   "XiL", 0, /* binding */ ZodDefault,
+/* harmony export */   "YVl", 0, /* binding */ ZodInstanceOf,
+/* harmony export */   "Yll", 0, /* binding */ ZodCIDRv6,
+/* harmony export */   "You", 0, /* binding */ ZodISODateTime,
+/* harmony export */   "ZwT", 0, /* binding */ ZodExactOptional,
+/* harmony export */   "_$L", 0, /* binding */ ZodBase64URL,
+/* harmony export */   "_ZT", 0, /* binding */ ZodUndefined,
+/* harmony export */   "_aJ", 0, /* binding */ ZodUnknown,
+/* harmony export */   "a0N", 0, /* binding */ ZodVoid,
+/* harmony export */   "a2A", 0, /* binding */ ZodPreprocess,
+/* harmony export */   "aPP", 0, /* binding */ ZodDate,
+/* harmony export */   "aRx", 0, /* binding */ ZodType,
+/* harmony export */   "b8S", 0, /* binding */ ZodRecord,
+/* harmony export */   "bvH", 0, /* binding */ ZodObject,
+/* harmony export */   "cM4", 0, /* binding */ ZodEmail,
+/* harmony export */   "ddM", 0, /* binding */ ZodTemplateLiteral,
+/* harmony export */   "fZ7", 0, /* binding */ ZodUnion,
+/* harmony export */   "fiS", 0, /* binding */ ZodJWT,
+/* harmony export */   "hw4", 0, /* binding */ ZodCatch,
+/* harmony export */   "iSc", 0, /* binding */ ZodNever,
+/* harmony export */   "im9", 0, /* binding */ ZodFile,
+/* harmony export */   "jn4", 0, /* binding */ ZodCreditCard,
+/* harmony export */   "jvo", 0, /* binding */ ZodDiscriminatedUnion,
+/* harmony export */   "l1C", 0, /* binding */ ZodNullable,
+/* harmony export */   "m7I", 0, /* binding */ ZodE164,
+/* harmony export */   "mDl", 0, /* binding */ ZodIBAN,
+/* harmony export */   "mIj", 0, /* binding */ meta,
+/* harmony export */   "n$i", 0, /* binding */ ZodNanoID,
+/* harmony export */   "n49", 0, /* binding */ ZodGUID,
+/* harmony export */   "n4A", 0, /* binding */ ZodIPv6,
+/* harmony export */   "nLo", 0, /* binding */ ZodBase64,
+/* harmony export */   "naA", 0, /* binding */ ZodArray,
+/* harmony export */   "q0y", 0, /* binding */ describe,
+/* harmony export */   "qXy", 0, /* binding */ ZodULID,
+/* harmony export */   "rSt", 0, /* binding */ ZodNumber,
+/* harmony export */   "trZ", 0, /* binding */ ZodCUID2,
+/* harmony export */   "uEf", 0, /* binding */ stringbool,
+/* harmony export */   "utH", 0, /* binding */ ZodPipe,
+/* harmony export */   "vXr", 0, /* binding */ ZodUUID,
+/* harmony export */   "vZX", 0, /* binding */ ZodNonOptional,
+/* harmony export */   "xgV", 0, /* binding */ ZodPrefault,
+/* harmony export */   "y0Q", 0, /* binding */ ZodTuple,
+/* harmony export */   "yC$", 0, /* binding */ ZodEmoji,
+/* harmony export */   "zAI", 0, /* binding */ ZodXor,
+/* harmony export */   "zYv", 0, /* binding */ ZodURL
 /* harmony export */ ]);
 
 
@@ -1809,14 +1858,110 @@ function preprocess(fn, schema) {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Fs: () => (/* binding */ aggregateChecks),
 /* harmony export */   bl: () => (/* binding */ toJSONSchema)
 /* harmony export */ });
 /* harmony import */ var _regexes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3705);
-/* harmony import */ var _to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9958);
-/* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7048);
+/* harmony import */ var _schemas_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(666);
+/* harmony import */ var _to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9958);
+/* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7048);
 
 
 
+
+const narrowMin = (agg, key, value) => {
+    if (agg[key] === undefined || value > agg[key])
+        agg[key] = value;
+};
+const narrowMax = (agg, key, value) => {
+    if (agg[key] === undefined || value < agg[key])
+        agg[key] = value;
+};
+const narrowBoth = (agg, value) => {
+    narrowMin(agg, "minimum", value);
+    narrowMax(agg, "maximum", value);
+};
+const addDivisor = (agg, value) => {
+    agg.multipleOf ?? (agg.multipleOf = []);
+    if (!agg.multipleOf.includes(value))
+        agg.multipleOf.push(value);
+};
+const addPattern = (agg, pattern) => {
+    agg.patterns ?? (agg.patterns = new Set());
+    agg.patterns.add(pattern);
+};
+const intersectMime = (agg, mime) => {
+    agg.mime = agg.mime ? agg.mime.filter((m) => mime.includes(m)) : [...mime];
+};
+// last-wins, matching the bag's historical write order; the flag keeps an integer format from being lost to a later float one
+const setFormat = (agg, format) => {
+    agg.format = format;
+    if (format.includes("int"))
+        agg.isInt = true;
+};
+const minContributor = (agg, def) => narrowMin(agg, "minimum", def.minimum);
+const maxContributor = (agg, def) => narrowMax(agg, "maximum", def.maximum);
+const formatContributor = (ranges) => (agg, def) => {
+    setFormat(agg, def.format);
+    const [minimum, maximum] = ranges[def.format];
+    narrowMin(agg, "minimum", minimum);
+    narrowMax(agg, "maximum", maximum);
+};
+const contributors = {
+    greater_than: (agg, def) => narrowMin(agg, def.inclusive ? "minimum" : "exclusiveMinimum", def.value),
+    less_than: (agg, def) => narrowMax(agg, def.inclusive ? "maximum" : "exclusiveMaximum", def.value),
+    multiple_of: (agg, def) => addDivisor(agg, def.value),
+    number_format: formatContributor(_util_js__WEBPACK_IMPORTED_MODULE_3__.NUMBER_FORMAT_RANGES),
+    bigint_format: formatContributor(_util_js__WEBPACK_IMPORTED_MODULE_3__.BIGINT_FORMAT_RANGES),
+    min_length: minContributor,
+    max_length: maxContributor,
+    length_equals: (agg, def) => narrowBoth(agg, def.length),
+    min_size: minContributor,
+    max_size: maxContributor,
+    size_equals: (agg, def) => narrowBoth(agg, def.size),
+    string_format: (agg, def) => {
+        setFormat(agg, def.format);
+        if (def.pattern)
+            addPattern(agg, def.pattern);
+        if (def.format === "base64" || def.format === "base64url")
+            agg.contentEncoding = def.format;
+        if (def.local || def.precision === -1)
+            agg.laxFormat = true;
+    },
+    mime_type: (agg, def) => intersectMime(agg, def.mime),
+};
+function aggregateChecks(schema) {
+    const agg = {};
+    const def = schema._zod.def;
+    // a format schema is its own first check, same rule as $ZodType init
+    const list = schema._zod.traits.has("$ZodCheck")
+        ? [schema, ...(def.checks ?? [])]
+        : (def.checks ?? []);
+    for (const ch of list)
+        contributors[ch._zod.def.check]?.(agg, ch._zod.def);
+    // reconcile with the bag so third-party onattach contributions still land; first-party residue is never tighter than the fold, so merging it back is idempotent for one and additive for the other
+    const bag = schema._zod.bag;
+    if (bag.minimum !== undefined)
+        narrowMin(agg, "minimum", bag.minimum);
+    if (bag.exclusiveMinimum !== undefined)
+        narrowMin(agg, "exclusiveMinimum", bag.exclusiveMinimum);
+    if (bag.maximum !== undefined)
+        narrowMax(agg, "maximum", bag.maximum);
+    if (bag.exclusiveMaximum !== undefined)
+        narrowMax(agg, "exclusiveMaximum", bag.exclusiveMaximum);
+    if (bag.multipleOf !== undefined)
+        addDivisor(agg, bag.multipleOf);
+    if (bag.format !== undefined) {
+        agg.format ?? (agg.format = bag.format);
+        if (bag.format.includes("int"))
+            agg.isInt = true;
+    }
+    if (bag.mime)
+        intersectMime(agg, bag.mime);
+    for (const pattern of bag.patterns ?? [])
+        addPattern(agg, pattern);
+    return agg;
+}
 const formatMap = {
     guid: "uuid",
     url: "uri",
@@ -1825,11 +1970,16 @@ const formatMap = {
     regex: "", // do not set
 };
 // ==================== SIMPLE TYPE PROCESSORS ====================
+// the runtime patterns are lax so parse paths never overflow the regex stack; the emitted schema swaps in the exact block forms, which zod itself never executes
+const exactPatterns = new Map([
+    [_schemas_js__WEBPACK_IMPORTED_MODULE_1__/* .base64Charset */ .cq, _regexes_js__WEBPACK_IMPORTED_MODULE_0__.base64],
+    [_schemas_js__WEBPACK_IMPORTED_MODULE_1__/* .base64urlCharset */ .xE, _regexes_js__WEBPACK_IMPORTED_MODULE_0__.base64url],
+]);
+const exactPattern = (p) => exactPatterns.get(p) ?? p;
 const stringProcessor = (schema, ctx, _json, _params) => {
     const json = _json;
     json.type = "string";
-    const { minimum, maximum, format, patterns, contentEncoding, laxFormat } = schema._zod
-        .bag;
+    const { minimum, maximum, format, patterns, contentEncoding, laxFormat } = aggregateChecks(schema);
     if (typeof minimum === "number")
         json.minLength = minimum;
     if (typeof maximum === "number")
@@ -1847,7 +1997,7 @@ const stringProcessor = (schema, ctx, _json, _params) => {
     if (contentEncoding)
         json.contentEncoding = contentEncoding;
     if (patterns && patterns.size > 0) {
-        const patternList = [...patterns];
+        const patternList = [...patterns].map(exactPattern);
         if (patternList.length === 1)
             json.pattern = patternList[0].source;
         else if (patternList.length > 1) {
@@ -1864,11 +2014,8 @@ const stringProcessor = (schema, ctx, _json, _params) => {
 };
 const numberProcessor = (schema, ctx, _json, params) => {
     const json = _json;
-    const { minimum, maximum, format, multipleOf, exclusiveMaximum, exclusiveMinimum } = schema._zod.bag;
-    if (typeof format === "string" && format.includes("int"))
-        json.type = "integer";
-    else
-        json.type = "number";
+    const { minimum, maximum, multipleOf, exclusiveMaximum, exclusiveMinimum, isInt } = aggregateChecks(schema);
+    json.type = isInt ? "integer" : "number";
     // when both minimum and exclusiveMinimum exist, pick the more restrictive one
     const exMin = typeof exclusiveMinimum === "number" && exclusiveMinimum >= (minimum ?? Number.NEGATIVE_INFINITY);
     const exMax = typeof exclusiveMaximum === "number" && exclusiveMaximum <= (maximum ?? Number.POSITIVE_INFINITY);
@@ -1897,22 +2044,31 @@ const numberProcessor = (schema, ctx, _json, params) => {
     else if (typeof maximum === "number") {
         json.maximum = maximum;
     }
-    if (typeof multipleOf === "number") {
+    if (multipleOf) {
         // JSON Schema requires a divisor strictly greater than zero, and a non-finite one does not survive JSON at all. A negative divisor accepts exactly what its absolute value accepts, so it still maps; zero, NaN and Infinity have no keyword form.
-        if (Number.isFinite(multipleOf) && multipleOf !== 0)
-            json.multipleOf = Math.abs(multipleOf);
-        else
-            (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, `A multipleOf divisor of ${multipleOf} cannot be represented in JSON Schema`);
+        const divisors = new Set();
+        for (const divisor of multipleOf) {
+            if (Number.isFinite(divisor) && divisor !== 0)
+                divisors.add(Math.abs(divisor));
+            else
+                (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, `A multipleOf divisor of ${divisor} cannot be represented in JSON Schema`);
+        }
+        // chained divisors are a conjunction the keyword cannot carry alone, so extras ride an allOf, same as stacked patterns
+        const [first, ...rest] = divisors;
+        if (first !== undefined)
+            json.multipleOf = first;
+        if (rest.length)
+            json.allOf = [...(json.allOf ?? []), ...rest.map((m) => ({ multipleOf: m }))];
     }
 };
 const booleanProcessor = (_schema, _ctx, json, _params) => {
     json.type = "boolean";
 };
 const bigintProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "BigInt cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "BigInt cannot be represented in JSON Schema");
 };
 const symbolProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Symbols cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Symbols cannot be represented in JSON Schema");
 };
 const nullProcessor = (_schema, ctx, json, _params) => {
     if (ctx.target === "openapi-3.0") {
@@ -1925,10 +2081,10 @@ const nullProcessor = (_schema, ctx, json, _params) => {
     }
 };
 const undefinedProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Undefined cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Undefined cannot be represented in JSON Schema");
 };
 const voidProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Void cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Void cannot be represented in JSON Schema");
 };
 const neverProcessor = (_schema, _ctx, json, _params) => {
     json.not = {};
@@ -1940,11 +2096,11 @@ const unknownProcessor = (_schema, _ctx, _json, _params) => {
     // empty schema accepts anything
 };
 const dateProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Date cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Date cannot be represented in JSON Schema");
 };
 const enumProcessor = (schema, _ctx, json, _params) => {
     const def = schema._zod.def;
-    const values = (0,_util_js__WEBPACK_IMPORTED_MODULE_2__.getEnumValues)(def.entries);
+    const values = (0,_util_js__WEBPACK_IMPORTED_MODULE_3__.getEnumValues)(def.entries);
     // an empty enum accepts nothing, same as z.never()
     if (values.length === 0) {
         json.not = {};
@@ -1968,12 +2124,12 @@ const literalProcessor = (schema, ctx, json, params) => {
     for (const val of def.values) {
         if (val === undefined) {
             // a custom schema replaces the whole literal, so there is nothing left to accumulate
-            if ((0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Literal `undefined` cannot be represented in JSON Schema"))
+            if ((0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Literal `undefined` cannot be represented in JSON Schema"))
                 return;
             // otherwise do not add to vals
         }
         else if (typeof val === "bigint") {
-            if ((0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "BigInt literals cannot be represented in JSON Schema"))
+            if ((0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "BigInt literals cannot be represented in JSON Schema"))
                 return;
             vals.push(Number(val));
         }
@@ -2007,7 +2163,7 @@ const literalProcessor = (schema, ctx, json, params) => {
     }
 };
 const nanProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "NaN cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "NaN cannot be represented in JSON Schema");
 };
 const templateLiteralProcessor = (schema, _ctx, json, _params) => {
     const _json = json;
@@ -2019,59 +2175,54 @@ const templateLiteralProcessor = (schema, _ctx, json, _params) => {
 };
 const fileProcessor = (schema, _ctx, json, _params) => {
     const _json = json;
-    const file = {
-        type: "string",
-        format: "binary",
-        contentEncoding: "binary",
-    };
-    const { minimum, maximum, mime } = schema._zod.bag;
+    _json.type = "string";
+    _json.format = "binary";
+    _json.contentEncoding = "binary";
+    const { minimum, maximum, mime } = aggregateChecks(schema);
     if (minimum !== undefined)
-        file.minLength = minimum;
+        _json.minLength = minimum;
     if (maximum !== undefined)
-        file.maxLength = maximum;
-    if (mime) {
-        if (mime.length === 1) {
-            file.contentMediaType = mime[0];
-            Object.assign(_json, file);
-        }
-        else {
-            Object.assign(_json, file); // shared props at root
-            _json.anyOf = mime.map((m) => ({ contentMediaType: m })); // only contentMediaType differs
-        }
-    }
-    else {
-        Object.assign(_json, file);
-    }
+        _json.maxLength = maximum;
+    if (!mime)
+        return;
+    // an empty intersection means the mime checks share no value, so nothing passes at runtime; `anyOf` must be non-empty, so the false schema is `not: {}`
+    if (mime.length === 0)
+        _json.not = {};
+    else if (mime.length === 1)
+        _json.contentMediaType = mime[0];
+    // only contentMediaType differs, so the shared props stay at the root
+    else
+        _json.anyOf = mime.map((m) => ({ contentMediaType: m }));
 };
 const successProcessor = (_schema, _ctx, json, _params) => {
     json.type = "boolean";
 };
 const customProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Custom types cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Custom types cannot be represented in JSON Schema");
 };
 const functionProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Function types cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Function types cannot be represented in JSON Schema");
 };
 const transformProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Transforms cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Transforms cannot be represented in JSON Schema");
 };
 const mapProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Map cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Map cannot be represented in JSON Schema");
 };
 const setProcessor = (schema, ctx, json, params) => {
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Set cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Set cannot be represented in JSON Schema");
 };
 // ==================== COMPOSITE TYPE PROCESSORS ====================
 const arrayProcessor = (schema, ctx, _json, params) => {
     const json = _json;
     const def = schema._zod.def;
-    const { minimum, maximum } = schema._zod.bag;
+    const { minimum, maximum } = aggregateChecks(schema);
     if (typeof minimum === "number")
         json.minItems = minimum;
     if (typeof maximum === "number")
         json.maxItems = maximum;
     json.type = "array";
-    json.items = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.element, ctx, {
+    json.items = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.element, ctx, {
         ...params,
         path: [...params.path, "items"],
     });
@@ -2098,31 +2249,28 @@ const objectProcessor = (schema, ctx, _json, params) => {
     // dropping it while still emitting `additionalProperties: false` would emit a schema that rejects data this one requires
     const symbolKeys = Object.getOwnPropertySymbols(shape);
     if (symbolKeys.length &&
-        (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Symbol keys cannot be represented in JSON Schema")) {
+        (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Symbol keys cannot be represented in JSON Schema")) {
         return;
     }
     json.type = "object";
     json.properties = {};
     for (const key in shape) {
         // assignProp so a __proto__ key becomes an own property instead of hitting the inherited setter on the plain {} we build into
-        (0,_util_js__WEBPACK_IMPORTED_MODULE_2__.assignProp)(json.properties, key, (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(shape[key], ctx, {
+        (0,_util_js__WEBPACK_IMPORTED_MODULE_3__.assignProp)(json.properties, key, (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(shape[key], ctx, {
             ...params,
             path: [...params.path, "properties", key],
         }));
     }
     // required keys
-    const allKeys = new Set(Object.keys(shape));
-    const requiredKeys = new Set([...allKeys].filter((key) => {
+    const requiredKeys = [];
+    for (const key of Object.keys(shape)) {
         const field = def.shape[key];
-        if (ctx.io === "input") {
-            return inputOptin(field) === undefined;
+        if (ctx.io === "input" ? inputOptin(field) === undefined : field._zod.optout === undefined) {
+            requiredKeys.push(key);
         }
-        else {
-            return field._zod.optout === undefined;
-        }
-    }));
-    if (requiredKeys.size > 0) {
-        json.required = Array.from(requiredKeys);
+    }
+    if (requiredKeys.length > 0) {
+        json.required = requiredKeys;
     }
     // catchall
     if (def.catchall?._zod.def.type === "never") {
@@ -2135,7 +2283,7 @@ const objectProcessor = (schema, ctx, _json, params) => {
             json.additionalProperties = false;
     }
     else if (def.catchall) {
-        json.additionalProperties = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.catchall, ctx, {
+        json.additionalProperties = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.catchall, ctx, {
             ...params,
             path: [...params.path, "additionalProperties"],
         });
@@ -2145,7 +2293,7 @@ const unionProcessor = (schema, ctx, json, params) => {
     const def = schema._zod.def;
     // Exclusive unions (inclusive === false) use oneOf (exactly one match) instead of anyOf (one or more matches). This includes both z.xor() and discriminated unions
     const isExclusive = def.inclusive === false;
-    const options = def.options.map((x, i) => (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(x, ctx, {
+    const options = def.options.map((x, i) => (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(x, ctx, {
         ...params,
         path: [...params.path, isExclusive ? "oneOf" : "anyOf", i],
     }));
@@ -2158,11 +2306,11 @@ const unionProcessor = (schema, ctx, json, params) => {
 };
 const intersectionProcessor = (schema, ctx, json, params) => {
     const def = schema._zod.def;
-    const a = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.left, ctx, {
+    const a = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.left, ctx, {
         ...params,
         path: [...params.path, "allOf", 0],
     });
-    const b = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.right, ctx, {
+    const b = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.right, ctx, {
         ...params,
         path: [...params.path, "allOf", 1],
     });
@@ -2181,12 +2329,12 @@ const tupleProcessor = (schema, ctx, _json, params) => {
     json.type = "array";
     const prefixPath = ctx.target === "draft-2020-12" ? "prefixItems" : "items";
     const restPath = ctx.target === "draft-2020-12" ? "items" : ctx.target === "openapi-3.0" ? "items" : "additionalItems";
-    const prefixItems = def.items.map((x, i) => (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(x, ctx, {
+    const prefixItems = def.items.map((x, i) => (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(x, ctx, {
         ...params,
         path: [...params.path, prefixPath, i],
     }));
     const rest = def.rest
-        ? (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.rest, ctx, {
+        ? (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.rest, ctx, {
             ...params,
             path: [...params.path, restPath, ...(ctx.target === "openapi-3.0" ? [def.items.length] : [])],
         })
@@ -2240,7 +2388,7 @@ const tupleProcessor = (schema, ctx, _json, params) => {
             json.maxItems = maxItems;
     }
     // explicit user-defined length checks take precedence
-    const { minimum, maximum } = schema._zod.bag;
+    const { minimum, maximum } = aggregateChecks(schema);
     if (typeof minimum === "number")
         json.minItems = minimum;
     if (typeof maximum === "number")
@@ -2333,23 +2481,22 @@ const recordProcessor = (schema, ctx, _json, params) => {
     json.type = "object";
     // For looseRecord with regex patterns, use patternProperties. This correctly represents "only validate keys matching the pattern" semantics and composes well with allOf (intersections)
     const keyType = def.keyType;
-    const keyBag = keyType._zod.bag;
-    const patterns = keyBag?.patterns;
+    const patterns = aggregateChecks(keyType).patterns;
     if (def.mode === "loose" && patterns && patterns.size > 0) {
         // Use patternProperties for looseRecord with regex patterns
-        const valueSchema = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.valueType, ctx, {
+        const valueSchema = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.valueType, ctx, {
             ...params,
             path: [...params.path, "patternProperties", "*"],
         });
         json.patternProperties = {};
         for (const pattern of patterns) {
-            (0,_util_js__WEBPACK_IMPORTED_MODULE_2__.assignProp)(json.patternProperties, pattern.source, valueSchema);
+            (0,_util_js__WEBPACK_IMPORTED_MODULE_3__.assignProp)(json.patternProperties, exactPattern(pattern).source, valueSchema);
         }
     }
     else {
         // Default behavior: use propertyNames + additionalProperties
         if (ctx.target === "draft-07" || ctx.target === "draft-2020-12") {
-            json.propertyNames = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.keyType, ctx, {
+            json.propertyNames = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.keyType, ctx, {
                 ...params,
                 path: [...params.path, "propertyNames"],
             });
@@ -2361,7 +2508,7 @@ const recordProcessor = (schema, ctx, _json, params) => {
             }
             pending.push(schema);
         }
-        json.additionalProperties = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.valueType, ctx, {
+        json.additionalProperties = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.valueType, ctx, {
             ...params,
             path: [...params.path, "additionalProperties"],
         });
@@ -2379,7 +2526,7 @@ const recordProcessor = (schema, ctx, _json, params) => {
 };
 const nullableProcessor = (schema, ctx, json, params) => {
     const def = schema._zod.def;
-    const inner = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.innerType, ctx, params);
+    const inner = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     if (ctx.target === "openapi-3.0") {
         seen.ref = def.innerType;
@@ -2391,7 +2538,7 @@ const nullableProcessor = (schema, ctx, json, params) => {
 };
 const nonoptionalProcessor = (schema, ctx, _json, params) => {
     const def = schema._zod.def;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = def.innerType;
 };
@@ -2409,12 +2556,12 @@ function serializeDefaultValue(value, schema, ctx, json, params) {
     });
     if (!unrepresentable)
         return JSON.parse(serialized);
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "BigInt defaults cannot be represented in JSON Schema");
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "BigInt defaults cannot be represented in JSON Schema");
     return UNREPRESENTABLE_DEFAULT;
 }
 const defaultProcessor = (schema, ctx, json, params) => {
     const def = schema._zod.def;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = def.innerType;
     const value = serializeDefaultValue(def.defaultValue, schema, ctx, json, params);
@@ -2423,7 +2570,7 @@ const defaultProcessor = (schema, ctx, json, params) => {
 };
 const prefaultProcessor = (schema, ctx, json, params) => {
     const def = schema._zod.def;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = def.innerType;
     if (ctx.io !== "input")
@@ -2434,7 +2581,7 @@ const prefaultProcessor = (schema, ctx, json, params) => {
 };
 const catchProcessor = (schema, ctx, json, params) => {
     const def = schema._zod.def;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = def.innerType;
     let catchValue;
@@ -2442,7 +2589,7 @@ const catchProcessor = (schema, ctx, json, params) => {
         catchValue = def.catchValue(undefined);
     }
     catch {
-        ;(0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Dynamic catch values are not supported in JSON Schema");
+        ;(0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .handleUnrepresentable */ ._S)(schema, ctx, json, params, "Dynamic catch values are not supported in JSON Schema");
         return;
     }
     json.default = catchValue;
@@ -2451,32 +2598,32 @@ const pipeProcessor = (schema, ctx, _json, params) => {
     const def = schema._zod.def;
     const inIsTransform = def.in._zod.traits.has("$ZodTransform");
     const innerType = ctx.io === "input" ? (inIsTransform ? def.out : def.in) : def.out;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = innerType;
 };
 const readonlyProcessor = (schema, ctx, json, params) => {
     const def = schema._zod.def;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = def.innerType;
     json.readOnly = true;
 };
 const promiseProcessor = (schema, ctx, _json, params) => {
     const def = schema._zod.def;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = def.innerType;
 };
 const optionalProcessor = (schema, ctx, _json, params) => {
     const def = schema._zod.def;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(def.innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(def.innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = def.innerType;
 };
 const lazyProcessor = (schema, ctx, _json, params) => {
     const innerType = schema._zod.innerType;
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(innerType, ctx, params);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(innerType, ctx, params);
     const seen = ctx.seen.get(schema);
     seen.ref = innerType;
 };
@@ -2526,12 +2673,12 @@ function toJSONSchema(input, params) {
     if ("_idmap" in input) {
         // Registry case
         const registry = input;
-        const ctx = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .initializeContext */ .az)({ ...params, processors: allProcessors });
+        const ctx = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .initializeContext */ .az)({ ...params, processors: allProcessors });
         const defs = {};
         // First pass: process all schemas to build the seen map
         for (const entry of registry._idmap.entries()) {
             const [_, schema] = entry;
-            (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(schema, ctx);
+            (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(schema, ctx);
         }
         const schemas = {};
         const external = {
@@ -2544,8 +2691,8 @@ function toJSONSchema(input, params) {
         // Second pass: emit each schema
         for (const entry of registry._idmap.entries()) {
             const [key, schema] = entry;
-            (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .extractDefs */ .Wb)(ctx, schema);
-            (0,_util_js__WEBPACK_IMPORTED_MODULE_2__.assignProp)(schemas, key, (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .finalize */ .jE)(ctx, schema));
+            (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .extractDefs */ .Wb)(ctx, schema);
+            (0,_util_js__WEBPACK_IMPORTED_MODULE_3__.assignProp)(schemas, key, (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .finalize */ .jE)(ctx, schema));
         }
         if (Object.keys(defs).length > 0) {
             const defsSegment = ctx.target === "draft-2020-12" ? "$defs" : "definitions";
@@ -2556,10 +2703,10 @@ function toJSONSchema(input, params) {
         return { schemas };
     }
     // Single schema case
-    const ctx = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .initializeContext */ .az)({ ...params, processors: allProcessors });
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .process */ .eh)(input, ctx);
-    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .extractDefs */ .Wb)(ctx, input);
-    return (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_1__/* .finalize */ .jE)(ctx, input);
+    const ctx = (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .initializeContext */ .az)({ ...params, processors: allProcessors });
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .processSchema */ .Lp)(input, ctx);
+    (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .extractDefs */ .Wb)(ctx, input);
+    return (0,_to_json_schema_js__WEBPACK_IMPORTED_MODULE_2__/* .finalize */ .jE)(ctx, input);
 }
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, [
@@ -2617,6 +2764,8 @@ function toJSONSchema(input, params) {
 /* harmony export */   TE: () => (/* binding */ isBackEdge),
 /* harmony export */   x3: () => (/* binding */ memoizer)
 /* harmony export */ });
+/* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7048);
+
 class $ZodCyclicError extends Error {
     constructor() {
         super(`Cannot parse a reference cycle that closes through a transform`);
@@ -2626,32 +2775,62 @@ class $ZodCyclicError extends Error {
 /** Keyed off the context object every schema in one parse call already shares. */
 const STATE = "~memo";
 const NO_ISSUES = [];
+// a value a cycle can close through
+function isRef(value) {
+    return value !== null && typeof value === "object";
+}
 // Receivers prefix paths in place, so the cache and every hand-out need their own copies.
 function cloneIssues(issues) {
     return issues.map((iss) => (iss.path ? { ...iss, path: iss.path.slice() } : { ...iss }));
 }
 const recursive = /*@__PURE__*/ new WeakMap();
+/** What the walk established, in order of certainty: ordered so the strongest answer among children wins. */
+const NONE = 0;
+const ASSUMED = 1;
+const PROVEN = 2;
 /** Whether this schema's subtree contains a cycle, so one parse can re-enter it. */
-function isRecursive(inst, stack) {
+function isRecursive(inst, stack, resolve) {
     const cached = recursive.get(inst);
     if (cached !== undefined)
-        return cached;
+        return cached ? PROVEN : NONE;
     // Relative to the walk in progress, so not cached.
     if (stack.has(inst))
-        return true;
+        return PROVEN;
     stack.add(inst);
-    let result = false;
+    let result = NONE;
     const check = (child) => {
-        if (!result && child?._zod && isRecursive(child, stack))
-            result = true;
+        if (result !== PROVEN && child?._zod) {
+            const answer = isRecursive(child, stack, resolve);
+            if (answer > result)
+                result = answer;
+        }
+    };
+    // `Reflect.ownKeys` rather than `Object.keys`, so a cycle through a declared symbol key is still seen
+    const shape = (sh, spread) => {
+        let answer = NONE;
+        for (const key of Reflect.ownKeys(sh)) {
+            const desc = Object.getOwnPropertyDescriptor(sh, key);
+            // an object resolves its shape by spread, so a key it does not enumerate is never parsed; `z.properties` reads every own key and so keeps them all
+            if (spread && !desc.enumerable)
+                continue;
+            // resolving runs user code, and a factory mints a fresh subtree per read, so an edge the walk can't follow counts as a cycle
+            const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve) : NONE;
+            if (child > answer)
+                answer = child;
+        }
+        return answer;
+    };
+    const merge = (answer) => {
+        if (answer > result)
+            result = answer;
     };
     const def = inst._zod.def;
     const kind = def.type;
     switch (kind) {
         case "object": {
-            // `Reflect.ownKeys` rather than `Object.keys`, so a cycle through a declared symbol key is still seen
-            for (const key of Reflect.ownKeys(def.shape))
-                check(def.shape[key]);
+            const raw = _util_js__WEBPACK_IMPORTED_MODULE_0__.rawShape(def);
+            // a def with no raw shape answers `shape` from an accessor of its own, and running that can mint a whole fresh subtree
+            merge(raw ? shape(raw, true) : ASSUMED);
             check(def.catchall);
             break;
         }
@@ -2698,10 +2877,13 @@ function isRecursive(inst, stack) {
             check(def.input);
             check(def.output);
             break;
-        // reading `_zod.innerType` resolves the getter once and caches it
-        case "lazy":
-            check(inst._zod.innerType);
+        // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
+        case "lazy": {
+            const inner = def._cachedInner ?? (resolve ? inst._zod.innerType : undefined);
+            // walked with resolution off: one hop sees past the deferral, and a lazy that yields only another unresolved lazy is generative, so it stops there
+            merge(inner ? isRecursive(inner, stack, false) : ASSUMED);
             break;
+        }
         // a leaf by choice: `parts` are regex fragments, not data positions
         case "template_literal":
         // leaves
@@ -2745,8 +2927,13 @@ function isRecursive(inst, stack) {
         }
     }
     stack.delete(inst);
-    recursive.set(inst, result);
-    return result;
+    return settle(inst, result);
+}
+/** An assumed answer must not outlive the resolution that settles it, so only a certain one is cached. */
+function settle(inst, answer) {
+    if (answer !== ASSUMED)
+        recursive.set(inst, answer === PROVEN);
+    return answer;
 }
 /**
  * Whether one parse can re-enter this schema, i.e. its subtree contains a cycle.
@@ -2755,12 +2942,13 @@ function isRecursive(inst, stack) {
  * generated fast path has no context to key on.
  */
 function isRecursiveSchema(inst) {
-    return isRecursive(inst, new Set());
+    // z.compile never parses, so nothing would ever resolve a lazy for it; it runs once and already treats a throw here as recursive
+    return isRecursive(inst, new Set(), true) !== NONE;
 }
 function bucketFor(state, inst) {
     let bucket = state.buckets.get(inst);
     if (!bucket) {
-        bucket = new Map();
+        bucket = new WeakMap();
         state.buckets.set(inst, bucket);
     }
     return bucket;
@@ -2799,7 +2987,8 @@ const memo = {
     attach(inst) {
         var _a;
         let isRecursiveInst;
-        // `bucket` memoized for one parse; a recursive schema is re-entered many times and its bucket never changes
+        let rechecked = false;
+        // a recursive schema is re-entered many times per parse and its bucket never changes
         let lastCtx;
         let lastBucket;
         // Wraps `parse` in a deferred so it sees the container's final parse. Core's own deferred copies `parse` into `run` when there are no checks, and it ran first, so `run` is patched to match; with checks, `run` reads `parse` dynamically.
@@ -2808,21 +2997,26 @@ const memo = {
             const base = inst._zod.parse;
             const wrapped = (payload, ctx) => {
                 if (isRecursiveInst === undefined) {
-                    isRecursiveInst = isRecursive(inst, new Set());
-                    if (!isRecursiveInst) {
+                    const walked = isRecursive(inst, new Set(), false);
+                    if (walked === NONE) {
                         // Nothing here can ever fire, so take it back out.
                         inst._zod.parse = base;
                         if (inst._zod.run === wrapped)
                             inst._zod.run = base;
                         return base(payload, ctx);
                     }
+                    // this parse resolves the deferred edges on its own path, so ask once more before latching
+                    if (walked === PROVEN || rechecked)
+                        isRecursiveInst = true;
+                    else
+                        rechecked = true;
                 }
                 const input = payload.value;
-                if (input === null || typeof input !== "object")
+                if (!isRef(input))
                     return base(payload, ctx);
                 let state = ctx[STATE];
                 if (!state) {
-                    state = { buckets: new Map(), backEdges: undefined };
+                    state = { buckets: new WeakMap(), backEdges: undefined };
                     ctx[STATE] = state;
                 }
                 let bucket;
@@ -2844,7 +3038,7 @@ const memo = {
                     else {
                         // Still being parsed: its own checks cover it, so skip them here.
                         payload.memo = true;
-                        state.backEdges ?? (state.backEdges = new Set());
+                        state.backEdges ?? (state.backEdges = new WeakSet());
                         state.backEdges.add(hit.value);
                     }
                     return payload;
@@ -2880,7 +3074,7 @@ function memoizer() {
 /** Whether this value is a node a back-edge resolved to before it finished. */
 function isBackEdge(ctx, value) {
     const backEdges = ctx[STATE]?.backEdges;
-    return backEdges !== undefined && value !== null && typeof value === "object" && backEdges.has(value);
+    return backEdges !== undefined && isRef(value) && backEdges.has(value);
 }
 
 
@@ -2890,10 +3084,11 @@ function isBackEdge(ctx, value) {
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Lp: () => (/* binding */ processSchema),
 /* harmony export */   Wb: () => (/* binding */ extractDefs),
 /* harmony export */   _S: () => (/* binding */ handleUnrepresentable),
 /* harmony export */   az: () => (/* binding */ initializeContext),
-/* harmony export */   eh: () => (/* binding */ process),
+/* harmony export */   eh: () => (/* binding */ processSchema),
 /* harmony export */   jE: () => (/* binding */ finalize)
 /* harmony export */ });
 /* harmony import */ var _registries_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3795);
@@ -2959,7 +3154,8 @@ function handleUnrepresentable(schema, ctx, json, params, message) {
     Object.assign(json, result);
     return true;
 }
-function process(schema, ctx, _params = { path: [], schemaPath: [] }) {
+// never rename this back to `process`: bundler polyfills inject a top-level `const process` that a lexical declaration of the same name collides with (#6397)
+function processSchema(schema, ctx, _params = { path: [], schemaPath: [] }) {
     var _a;
     const def = schema._zod.def;
     // check for schema in seens
@@ -3005,7 +3201,7 @@ function process(schema, ctx, _params = { path: [], schemaPath: [] }) {
             // Also set ref if processor didn't (for inheritance)
             if (!result.ref)
                 result.ref = parent;
-            process(parent, ctx, params);
+            processSchema(parent, ctx, params);
             ctx.seen.get(parent).isParent = true;
         }
     }
@@ -3026,6 +3222,8 @@ function process(schema, ctx, _params = { path: [], schemaPath: [] }) {
     const _result = ctx.seen.get(schema);
     return _result.schema;
 }
+/** @deprecated Renamed to `processSchema`. An export alias declares no binding, so it is safe to keep. */
+
 // Escape a reference token for use in a JSON Pointer fragment (RFC 6901): `~` becomes `~0` and `/` becomes `~1`. The `~` replacement must run first.
 function encodeJSONPointerSegment(segment) {
     return segment.replace(/~/g, "~0").replace(/\//g, "~1");
@@ -3142,8 +3340,6 @@ function extractDefs(ctx, schema
         if (seen.count > 1) {
             if (ctx.reused === "ref") {
                 extractToDef(entry);
-                // biome-ignore lint:
-                continue;
             }
         }
     }
@@ -3537,14 +3733,14 @@ function isTransforming(_schema, _ctx) {
  */
 const createToJSONSchemaMethod = (schema, processors = {}) => (params) => {
     const ctx = initializeContext({ ...params, processors });
-    process(schema, ctx);
+    processSchema(schema, ctx);
     extractDefs(ctx, schema);
     return finalize(ctx, schema);
 };
 const createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) => {
     const { libraryOptions, target } = params ?? {};
     const ctx = initializeContext({ ...(libraryOptions ?? {}), target, io, processors });
-    process(schema, ctx);
+    processSchema(schema, ctx);
     extractDefs(ctx, schema);
     return finalize(ctx, schema);
 };
@@ -3605,7 +3801,9 @@ const error = () => {
         base64url: "base64url-encoded string",
         json_string: "JSON string",
         e164: "E.164 number",
+        currency_code: "currency code",
         credit_card: "credit card number",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };

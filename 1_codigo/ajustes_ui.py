@@ -495,6 +495,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.67', [
+        'Página Sonido nueva, tipo mezclador: a la izquierda el estilo, las opciones y la biblioteca; en el centro la mezcla a lo ancho (tu voz, los captions, cada carril de sonidos y la música) con zoom y un panel que dice por qué suena cada sonido; a la derecha el video en vertical y las 3 músicas. Todo sobre el cielo de constelaciones, como Inicio y Tema.',
+        'Sonido con un audio suelto (.wav o .mp3): la página ya no se queda vacía.',
+        'Librerías al día: motores de voz e IA con transformers 5.22.1, huggingface_hub 2.4.0, CTranslate2 4.8.5 y más; animaciones de la Edición PRO con Remotion 4.0.540 y su Chrome 158. Python sigue en la última versión (3.15.2 y 3.14.10).',
+    ]),
     ('5.66', [
         'La página Creativo ahora se llama «Corrector».',
         'Corrector sin bloqueos: si pulsas GO (o retocas otro video) con una sesión abierta, se cierra sola con tus marcas guardadas y sigue; ya no sale «Termina o cancela primero la sesión». Y si cierras DaVinci Resolve con una sesión abierta, también se cierra sola.',

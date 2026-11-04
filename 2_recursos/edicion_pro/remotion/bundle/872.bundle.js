@@ -29,6 +29,7 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
 
 // shared/mp3-misc.ts
 var MP3_FRAME_HEADER_SIZE = 4;
+var MP3_DECODER_DELAY = 529;
 var SAMPLING_RATES = [44100, 48e3, 32e3];
 var KILOBIT_RATES = [
   // lowSamplingFrequency === 0
@@ -362,7 +363,7 @@ var Mp3Encoder = class extends mediabunny__WEBPACK_IMPORTED_MODULE_2__/* .Custom
   }
   async encode(audioSample) {
     if (this.currentTimestamp === null) {
-      this.currentTimestamp = audioSample.timestamp;
+      this.currentTimestamp = audioSample.timestamp - (576 + MP3_DECODER_DELAY) / this.config.sampleRate;
     }
     const sizePerChannel = audioSample.allocationSize({
       format: "s16-planar",

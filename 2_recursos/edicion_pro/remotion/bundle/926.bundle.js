@@ -551,6 +551,7 @@ const writeAdtsFrameLength = (bitstream, frameLength) => {
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 const MP3_FRAME_HEADER_SIZE = 4;
+const MP3_DECODER_DELAY = 529; // Inherent, and not included by LAME-style metadata
 const SAMPLING_RATES = [44100, 48000, 32000];
 const KILOBIT_RATES = [
     // lowSamplingFrequency === 0
@@ -710,6 +711,7 @@ var XingFlags;
     XingFlags[XingFlags["FrameCount"] = 1] = "FrameCount";
     XingFlags[XingFlags["FileSize"] = 2] = "FileSize";
     XingFlags[XingFlags["Toc"] = 4] = "Toc";
+    XingFlags[XingFlags["Quality"] = 8] = "Quality";
 })(XingFlags || (XingFlags = {}));
 const getMp3ChannelCount = (channel) => {
     return channel === 3 ? 1 : 2;
@@ -749,6 +751,7 @@ const getMp3ChannelCount = (channel) => {
 /* harmony export */   PK: () => (/* binding */ getEac3SampleRate),
 /* harmony export */   PR: () => (/* binding */ determineVideoPacketType),
 /* harmony export */   Pl: () => (/* binding */ AC3_FRAME_SIZES),
+/* harmony export */   Qb: () => (/* binding */ determineAudioPacketType),
 /* harmony export */   Qf: () => (/* binding */ parseOpusIdentificationHeader),
 /* harmony export */   RF: () => (/* binding */ iterateHevcNalUnits),
 /* harmony export */   RO: () => (/* binding */ iterateAvcNalUnits),
@@ -791,6 +794,7 @@ const getMp3ChannelCount = (channel) => {
 /* harmony import */ var _logging_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6103);
 /* harmony import */ var _shared_ac3_misc_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7553);
 /* harmony import */ var _shared_bitstream_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(1390);
+/* harmony import */ var _shared_truehd_misc_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3898);
 /*!
  * Copyright (c) 2026-present, Vanilagy and contributors
  *
@@ -798,6 +802,7 @@ const getMp3ChannelCount = (channel) => {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+
 
 
 
@@ -2950,6 +2955,16 @@ const determineVideoPacketType = (codec, decoderConfig, packetData) => {
             ;
     }
 };
+const determineAudioPacketType = (codec, packetData) => {
+    if (codec === 'truehd') {
+        // Only access units carrying a major sync are restart points
+        const syncWord = packetData.byteLength >= 8 ? (0,_misc_js__WEBPACK_IMPORTED_MODULE_1__/* .toDataView */ .Zc)(packetData).getUint32(4) : null;
+        return syncWord === _shared_truehd_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .TRUEHD_MAJOR_SYNC_WORD */ .sl ? 'key' : 'delta';
+    }
+    else {
+        return 'key';
+    }
+};
 var FlacBlockType;
 (function (FlacBlockType) {
     FlacBlockType[FlacBlockType["STREAMINFO"] = 0] = "STREAMINFO";
@@ -3294,6 +3309,12 @@ const createVorbisComments = (headerBytes, tags, writeImages) => {
             case 'raw':
                 {
                     // Handled later
+                }
+                ;
+                break;
+            case 'creationTime':
+                {
+                    // Not supported in Vorbis comments
                 }
                 ;
                 break;
@@ -3960,19 +3981,22 @@ const getDtsChannelCount = (channelLayout) => {
 /* harmony export */   X0: () => (/* binding */ extractAudioCodecString),
 /* harmony export */   Y2: () => (/* binding */ PRORES_FOURCCS),
 /* harmony export */   oU: () => (/* binding */ inferCodecFromCodecString),
+/* harmony export */   rp: () => (/* binding */ AUDIO_CODECS_WITH_DELTA_PACKETS),
 /* harmony export */   ye: () => (/* binding */ VP9_LEVEL_TABLE),
 /* harmony export */   yo: () => (/* binding */ OPUS_SAMPLE_RATE)
 /* harmony export */ });
-/* unused harmony exports NON_PCM_AUDIO_CODECS, SUBTITLE_CODECS, buildVideoCodecString, generateVp9CodecConfigurationFromCodecString, generateAv1CodecConfigurationFromCodecString, buildAudioCodecString, guessDescriptionForVideo, guessDescriptionForAudio, getVideoEncoderConfigExtension, getAudioEncoderConfigExtension, validateVideoChunkMetadata, validateAudioChunkMetadata, validateSubtitleMetadata */
+/* unused harmony exports NON_PCM_AUDIO_CODECS, SUBTITLE_CODECS, buildVideoCodecString, generateVp9CodecConfigurationFromCodecString, generateAv1CodecConfigurationFromCodecString, buildAudioCodecString, guessDescriptionForVideo, guessDescriptionForAudio, getMinimumAudioPacketSize, OPUS_PRE_ROLL_DURATION, getVideoEncoderConfigExtension, getAudioEncoderConfigExtension, validateVideoChunkMetadata, validateAudioChunkMetadata, validateSubtitleMetadata */
 /* unused harmony import specifier */ var isWebKit;
 /* unused harmony import specifier */ var last;
 /* unused harmony import specifier */ var assertNever;
 /* unused harmony import specifier */ var base64ToBytes;
 /* unused harmony import specifier */ var toDataView;
+/* unused harmony import specifier */ var assert;
 /* unused harmony import specifier */ var isAllowSharedBufferSource;
 /* unused harmony import specifier */ var COLOR_PRIMARIES_MAP;
 /* unused harmony import specifier */ var TRANSFER_CHARACTERISTICS_MAP;
 /* unused harmony import specifier */ var MATRIX_COEFFICIENTS_MAP;
+/* unused harmony import specifier */ var PCM_ENCODER_PACKET_SIZE;
 /* harmony import */ var _shared_aac_misc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1299);
 /* harmony import */ var _codec_data_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6297);
 /* harmony import */ var _misc_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3912);
@@ -3983,6 +4007,7 @@ const getDtsChannelCount = (channelLayout) => {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+
 
 
 
@@ -4035,6 +4060,7 @@ const NON_PCM_AUDIO_CODECS = [
     'ac3',
     'eac3',
     'dts',
+    'truehd',
 ];
 /**
  * List of known audio codecs, ordered by encoding preference.
@@ -4053,6 +4079,7 @@ const AUDIO_CODECS = [
 const SUBTITLE_CODECS = (/* unused pure expression or super */ null && ([
     'webvtt',
 ])); // TODO add the rest
+const AUDIO_CODECS_WITH_DELTA_PACKETS = ['truehd'];
 // https://en.wikipedia.org/wiki/Advanced_Video_Coding
 const AVC_LEVEL_TABLE = [
     { maxMacroblocks: 99, maxBitrate: 64000, maxDpbMbs: 396, level: 0x0A }, // Level 1
@@ -4568,6 +4595,9 @@ const buildAudioCodecString = (codec, numberOfChannels, sampleRate) => {
     else if (codec === 'dts') {
         return 'dtsc';
     }
+    else if (codec === 'truehd') {
+        return 'mlpa';
+    }
     else if (PCM_AUDIO_CODECS.includes(codec)) {
         return codec;
     }
@@ -4614,6 +4644,9 @@ const extractAudioCodecString = (trackInfo) => {
     }
     else if (codec === 'dts') {
         return dtsFormat ?? 'dtsc';
+    }
+    else if (codec === 'truehd') {
+        return 'mlpa';
     }
     else if (codec && PCM_AUDIO_CODECS.includes(codec)) {
         return codec;
@@ -4668,7 +4701,7 @@ const getAudioPreRollDuration = (codec, decoderConfig) => {
             return audioSpecificConfig.frameLength / audioSpecificConfig.coreSampleRate;
         }
         case 'opus': {
-            return 0.08;
+            return OPUS_PRE_ROLL_DURATION;
         }
         case 'mp3': {
             // The bit reservoir reaches back a fixed number of bytes, so it spans the most frames when a (VBR)
@@ -4711,6 +4744,7 @@ const getAudioPreRollDuration = (codec, decoderConfig) => {
             return 512 / decoderConfig.sampleRate;
         }
         case 'flac':
+        case 'truehd':
         case 'pcm-s16':
         case 'pcm-s16be':
         case 'pcm-s24':
@@ -4733,7 +4767,44 @@ const getAudioPreRollDuration = (codec, decoderConfig) => {
         }
     }
 };
+/** Returns the shortest packet length, in samples, that encoders commonly produce for the given codec */
+const getMinimumAudioPacketSize = (codec, sampleRate) => {
+    switch (codec) {
+        case 'aac': return 1024;
+        case 'opus': return 0.02 * sampleRate; // Fixed 20 ms frames, regardless of sample rate
+        case 'mp3': return 576;
+        case 'vorbis': return 256;
+        case 'flac': return 1152;
+        case 'ac3': return 1536;
+        case 'eac3': return 256;
+        case 'dts': return 512;
+        case 'truehd': return 40;
+        case 'pcm-s16':
+        case 'pcm-s16be':
+        case 'pcm-s24':
+        case 'pcm-s24be':
+        case 'pcm-s32':
+        case 'pcm-s32be':
+        case 'pcm-f32':
+        case 'pcm-f32be':
+        case 'pcm-f64':
+        case 'pcm-f64be':
+        case 'pcm-u8':
+        case 'pcm-s8':
+        case 'ulaw':
+        case 'alaw': {
+            return PCM_ENCODER_PACKET_SIZE;
+        }
+        default: {
+            assertNever(codec);
+            assert(false);
+        }
+    }
+};
 const OPUS_SAMPLE_RATE = 48_000;
+// RFC 7845 recommends 80 ms, but that one's very far from convergence (gives around -30 dBFS error). 400 ms was found
+// empirically to almost always give an error well below -100 dBFS, so we're using that
+const OPUS_PRE_ROLL_DURATION = 0.4;
 const PCM_CODEC_REGEX = /^pcm-([usf])(\d+)(be)?$/;
 const parsePcmCodec = (codec) => {
     (0,_misc_js__WEBPACK_IMPORTED_MODULE_3__/* .assert */ .vA)(PCM_AUDIO_CODECS.includes(codec));
@@ -4808,6 +4879,9 @@ const inferCodecFromCodecString = (codecString) => {
     }
     else if (DTS_FOURCCS.includes(codecString)) {
         return 'dts';
+    }
+    else if (codecString === 'mlpa') {
+        return 'truehd';
     }
     else if (codecString === 'ulaw') {
         return 'ulaw';
@@ -4987,7 +5061,7 @@ const validateVideoChunkMetadata = (metadata, trackCodec) => {
     }
 };
 const VALID_AUDIO_CODEC_STRING_PREFIXES = (/* unused pure expression or super */ null && ([
-    'mp4a', 'mp3', 'opus', 'vorbis', 'flac', 'ulaw', 'alaw', 'pcm', 'ac-3', 'ec-3', 'dts',
+    'mp4a', 'mp3', 'opus', 'vorbis', 'flac', 'ulaw', 'alaw', 'pcm', 'ac-3', 'ec-3', 'dts', 'mlpa',
 ]));
 const validateAudioChunkMetadata = (metadata, trackCodec) => {
     if (!metadata) {
@@ -5095,6 +5169,12 @@ const validateAudioChunkMetadata = (metadata, trackCodec) => {
         if (!DTS_FOURCCS.includes(metadata.decoderConfig.codec)) {
             throw new TypeError('Audio chunk metadata decoder configuration codec string for DTS must be one of the following'
                 + ` four-character codes: ${DTS_FOURCCS.join(', ')}.`);
+        }
+    }
+    else if (metadata.decoderConfig.codec.startsWith('mlpa')) {
+        // TrueHD-specific validation
+        if (metadata.decoderConfig.codec !== 'mlpa') {
+            throw new TypeError('Audio chunk metadata decoder configuration codec string for TrueHD must be "mlpa".');
         }
     }
     else if (metadata.decoderConfig.codec.startsWith('pcm')
@@ -6040,6 +6120,12 @@ class Id3V2Writer {
                 case 'raw':
                     {
                         // Handled later
+                    }
+                    ;
+                    break;
+                case 'creationTime':
+                    {
+                        // Not supported in ID3
                     }
                     ;
                     break;
@@ -7013,6 +7099,7 @@ const validateInputFormatOptions = (options, prefix) => {
 /* harmony export */   IX: () => (/* binding */ readAsciiString),
 /* harmony export */   K9: () => (/* binding */ LEVEL_0_AND_1_EBML_IDS),
 /* harmony export */   Kb: () => (/* binding */ readElementSize),
+/* harmony export */   O9: () => (/* binding */ EBML_DATE_EPOCH),
 /* harmony export */   Ry: () => (/* binding */ readUnsignedBigInt),
 /* harmony export */   SR: () => (/* binding */ readElementId),
 /* harmony export */   VE: () => (/* binding */ LEVEL_1_EBML_IDS),
@@ -7024,6 +7111,7 @@ const validateInputFormatOptions = (options, prefix) => {
 /* harmony export */   p: () => (/* binding */ assertDefinedSize),
 /* harmony export */   pT: () => (/* binding */ readVarInt),
 /* harmony export */   r1: () => (/* binding */ MAX_HEADER_SIZE),
+/* harmony export */   ss: () => (/* binding */ readSignedBigInt),
 /* harmony export */   ur: () => (/* binding */ readElementHeader),
 /* harmony export */   zH: () => (/* binding */ readFloat)
 /* harmony export */ });
@@ -7084,6 +7172,7 @@ var EBMLId;
     EBMLId[EBMLId["Duration"] = 17545] = "Duration";
     EBMLId[EBMLId["Info"] = 357149030] = "Info";
     EBMLId[EBMLId["TimestampScale"] = 2807729] = "TimestampScale";
+    EBMLId[EBMLId["DateUTC"] = 17505] = "DateUTC";
     EBMLId[EBMLId["MuxingApp"] = 19840] = "MuxingApp";
     EBMLId[EBMLId["WritingApp"] = 22337] = "WritingApp";
     EBMLId[EBMLId["Tracks"] = 374648427] = "Tracks";
@@ -7482,6 +7571,7 @@ class EBMLWriter {
         }
     }
 }
+const EBML_DATE_EPOCH = Date.UTC(2001, 0, 1); // In milliseconds since the Unix epoch
 const MAX_VAR_INT_SIZE = 8;
 const MIN_HEADER_SIZE = 2; // 1-byte ID and 1-byte size
 const MAX_HEADER_SIZE = 2 * MAX_VAR_INT_SIZE; // 8-byte ID and 8-byte size
@@ -7566,6 +7656,13 @@ const readSignedInt = (slice, width) => {
         value -= 2 ** (width * 8);
     }
     return value;
+};
+const readSignedBigInt = (slice, width) => {
+    // Zero width is valid and means zero
+    if (width === 0) {
+        return 0n;
+    }
+    return BigInt.asIntN(8 * width, readUnsignedBigInt(slice, width));
 };
 const readElementId = (slice) => {
     const size = readVarIntSize(slice);
@@ -7704,6 +7801,7 @@ const CODEC_STRING_MAP = {
     'ac3': 'A_AC3',
     'eac3': 'A_EAC3',
     'dts': 'A_DTS',
+    'truehd': 'A_TRUEHD',
     'pcm-u8': 'A_PCM/INT/LIT',
     'pcm-s16': 'A_PCM/INT/LIT',
     'pcm-s16be': 'A_PCM/INT/BIG',
@@ -8482,6 +8580,9 @@ class VideoDecoderWrapper extends DecoderWrapper {
         this.alphaRaslSkipped = false; // For HEVC stuff
         this.finalSamples = [];
         this.mergeAlphaPromises = [];
+        this.flushing = false;
+        // Needed for a Chromium for Android workaround
+        this.frameCopyContext = null;
         const MatchingCustomDecoder = _custom_coder_js__WEBPACK_IMPORTED_MODULE_2__/* .customVideoDecoders */ .wb.find(x => x.supports(codec, decoderConfig));
         if (MatchingCustomDecoder) {
             // @ts-expect-error "Can't create instance of abstract class 🤓"
@@ -8566,7 +8667,7 @@ class VideoDecoderWrapper extends DecoderWrapper {
             this.decoder = new VideoDecoder({
                 output: (frame) => {
                     try {
-                        colorHandler(frame);
+                        colorHandler(this.copyFrameIfNeeded(frame));
                     }
                     catch (error) {
                         this.onError(error);
@@ -8709,7 +8810,7 @@ class VideoDecoderWrapper extends DecoderWrapper {
             this.alphaDecoder = new VideoDecoder({
                 output: (frame) => {
                     try {
-                        alphaHandler(frame);
+                        alphaHandler(this.copyFrameIfNeeded(frame));
                     }
                     catch (error) {
                         this.onError(error);
@@ -8858,16 +8959,65 @@ class VideoDecoderWrapper extends DecoderWrapper {
             resolver.resolve();
         }
     }
+    /**
+     * This is a workaround for https://issues.chromium.org/issues/579043455. It circumvents the problem by instantly
+     * drawing a frame to a new region of GPU memory (a canvas), which we know for certain won't get fucked up by
+     * other draws.
+     * Also see: https://github.com/Vanilagy/mediabunny/issues/573
+     */
+    copyFrameIfNeeded(frame) {
+        if (!(0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isChromium */ .F2)() || !(0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .isAndroid */ .m0)()) {
+            return frame;
+        }
+        const visibleRect = frame.visibleRect;
+        const width = visibleRect.width;
+        const height = visibleRect.height;
+        if (!this.frameCopyContext) {
+            let context;
+            if (typeof OffscreenCanvas !== 'undefined') {
+                context = new OffscreenCanvas(width, height).getContext('2d', { alpha: false });
+            }
+            else {
+                context = document.createElement('canvas').getContext('2d', { alpha: false });
+            }
+            if (!context) {
+                throw new Error('The \'2d\' canvas context is required to decode video on Chromium for Android.');
+            }
+            this.frameCopyContext = context;
+        }
+        const canvas = this.frameCopyContext.canvas;
+        if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+        }
+        // TODO: might need to make this more sophisticated once `rotation` and `flip` on VideoFrame are handled
+        this.frameCopyContext.drawImage(frame, 0, 0, width, height);
+        if (this.flushing) {
+            // The draw only runs on the GPU later, so a codec reset could beat it and leave us copying a stale picture.
+            // Reading back a pixel forces the draw to complete right now.
+            this.frameCopyContext.getImageData(0, 0, 1, 1);
+        }
+        const copy = new VideoFrame(canvas, {
+            timestamp: frame.timestamp,
+            duration: frame.duration ?? undefined,
+            displayWidth: frame.displayWidth,
+            displayHeight: frame.displayHeight,
+        });
+        frame.close();
+        return copy;
+    }
     async flush() {
         if (this.customDecoder) {
             await this.customDecoderCallSerializer.call(() => this.customDecoder.flush());
         }
         else {
             (0,_misc_js__WEBPACK_IMPORTED_MODULE_5__/* .assert */ .vA)(this.decoder);
+            this.flushing = true;
             await Promise.all([
                 this.decoder.flush(),
                 this.alphaDecoder?.flush(),
             ]);
+            this.flushing = false;
             await Promise.all(this.mergeAlphaPromises);
             this.colorQueue.forEach(x => x.close());
             this.colorQueue.length = 0;
@@ -10066,6 +10216,11 @@ const validateMetadataTags = (tags) => {
     if (tags.date !== undefined && (!(tags.date instanceof Date) || Number.isNaN(tags.date.getTime()))) {
         throw new TypeError('tags.date, when provided, must be a valid Date.');
     }
+    if (tags.creationTime !== undefined
+        && tags.creationTime !== null
+        && (!(tags.creationTime instanceof Date) || Number.isNaN(tags.creationTime.getTime()))) {
+        throw new TypeError('tags.creationTime, when provided, must be a valid Date or null.');
+    }
     if (tags.beatsPerMinute !== undefined
         && (!Number.isInteger(tags.beatsPerMinute) || tags.beatsPerMinute <= 0)) {
         throw new TypeError('tags.beatsPerMinute, when provided, must be a positive integer.');
@@ -10238,6 +10393,7 @@ const validateTrackDisposition = (disposition) => {
 /* harmony export */   jD: () => (/* binding */ setUint24),
 /* harmony export */   jW: () => (/* binding */ EMPTY_COLOR_SPACE),
 /* harmony export */   ju: () => (/* binding */ uint8ArraysAreEqual),
+/* harmony export */   m0: () => (/* binding */ isAndroid),
 /* harmony export */   nJ: () => (/* binding */ promiseWithResolvers),
 /* harmony export */   o8: () => (/* binding */ rotationMatrix),
 /* harmony export */   oX: () => (/* binding */ closedIntervalsOverlap),
@@ -11081,6 +11237,13 @@ const getChromiumVersion = () => {
     }
     return chromiumVersionCache = Number(match[1]);
 };
+let isAndroidCache = null;
+const isAndroid = () => {
+    if (isAndroidCache !== null) {
+        return isAndroidCache;
+    }
+    return isAndroidCache = typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent);
+};
 const missingWebCodecsClassMessage = (className) => {
     if (typeof globalThis.isSecureContext !== 'undefined' && !globalThis.isSecureContext) {
         // WebCodecs is not exposed in insecure contexts
@@ -11653,6 +11816,11 @@ const normalizeWrappedTimestamp = (timestamp, wrapInfo) => {
 /***/ 9730
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Ob: () => (/* binding */ buildOggMimeType),
+/* harmony export */   Zk: () => (/* binding */ OGGS),
+/* harmony export */   nL: () => (/* binding */ extractSampleMetadata)
+/* harmony export */ });
 /* unused harmony export computeOggPageCrc */
 /* unused harmony import specifier */ var toDataView;
 /* harmony import */ var _codec_data_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6297);
@@ -11734,12 +11902,6 @@ const buildOggMimeType = (info) => {
     }
     return string;
 };
-
-/* harmony export */ __webpack_require__.d(__webpack_exports__, [
-/* harmony export */   "Ob", 0, /* binding */ buildOggMimeType,
-/* harmony export */   "Zk", 0, /* binding */ OGGS,
-/* harmony export */   "nL", 0, /* binding */ extractSampleMetadata
-/* harmony export */ ]);
 
 
 /***/ },
@@ -14037,7 +14199,7 @@ class AudioSample {
                 numberOfChannels: this.numberOfChannels,
                 timestamp: this.microsecondTimestamp,
                 data: this._data.buffer instanceof ArrayBuffer
-                    ? this._data.buffer
+                    ? this._data
                     : this._data.slice(), // In the case of SharedArrayBuffer, convert to ArrayBuffer
             });
         }
@@ -15036,6 +15198,7 @@ class UrlSource extends PathedSource {
     }
     /** @internal */
     async _runWorker(worker) {
+        let consecutiveEmptyResponses = 0;
         // The outer loop is for resuming a request if it dies mid-response
         while (true) {
             if (worker.aborted) {
@@ -15119,6 +15282,7 @@ class UrlSource extends PathedSource {
                 return;
             }
             const reader = response.body.getReader();
+            const responseStartPos = worker.currentPos;
             while (true) {
                 if (worker.currentPos >= worker.targetPos || worker.aborted) {
                     abortController.abort();
@@ -15158,6 +15322,20 @@ class UrlSource extends PathedSource {
                         // The response stopped early, before the target. This can happen if server decides to cap range
                         // requests arbitrarily, even if the request had an uncapped end. In this case, let's fetch the
                         // rest of the data using a new request.
+                        if (worker.currentPos > responseStartPos) {
+                            // Response still moved us forward; keep going immediately
+                            consecutiveEmptyResponses = 0;
+                            break;
+                        }
+                        // The response didn't get us any further, so back off instead of hammering the server
+                        consecutiveEmptyResponses++;
+                        const error = new Error('Range response ended without delivering any data.');
+                        const retryDelayInSeconds = this._getRetryDelay(consecutiveEmptyResponses, error, this._url);
+                        if (retryDelayInSeconds === null) {
+                            throw error;
+                        }
+                        _logging_js__WEBPACK_IMPORTED_MODULE_3__/* .Logging */ .y._error('Retrying range request that ended without delivering any data.');
+                        await (0,_misc_js__WEBPACK_IMPORTED_MODULE_0__/* .wait */ .uk)(1000 * retryDelayInSeconds);
                         break;
                     }
                     else {

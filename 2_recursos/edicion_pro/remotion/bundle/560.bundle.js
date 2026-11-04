@@ -1,7 +1,7 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[328],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[560],{
 
-/***/ 9328
+/***/ 7560
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 
@@ -10,7 +10,7 @@ __webpack_require__.d(__webpack_exports__, {
   z: () => (/* reexport */ external_namespaceObject)
 });
 
-// UNUSED EXPORTS: $brand, $input, $output, NEVER, TimePrecision, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodExactOptional, ZodFile, ZodFirstPartyTypeKind, ZodFunction, ZodGUID, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodIntersection, ZodIssueCode, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodReadonly, ZodRealError, ZodRecord, ZodSet, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodString, _default, _function, any, array, base64, base64url, bigint, boolean, catch, check, cidrv4, cidrv6, clone, codec, coerce, compile, config, core, creditCard, cuid, cuid2, custom, date, decode, decodeAsync, deepPartial, default, describe, discriminatedUnion, e164, email, emoji, encode, encodeAsync, endsWith, enum, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, function, getDiscriminatedOption, getErrorMap, globalRegistry, gt, gte, guid, hash, hex, hostname, httpUrl, includes, input, instanceof, int, int32, int64, intersection, invertCodec, ipv4, ipv6, iso, json, jwt, keyof, ksuid, lazy, length, literal, locales, looseObject, looseRecord, lowercase, lt, lte, mac, map, maxLength, maxSize, memoizer, meta, mime, minLength, minSize, multipleOf, nan, nanoid, nativeEnum, negative, never, nonnegative, nonoptional, nonpositive, normalize, null, nullable, nullish, number, object, optional, output, overwrite, parse, parseAsync, partialRecord, pipe, positive, prefault, preprocess, prettifyError, promise, properties, property, readonly, record, refine, regex, regexes, registry, safeDecode, safeDecodeAsync, safeEncode, safeEncodeAsync, safeParse, safeParseAsync, set, setErrorMap, size, slugify, startsWith, strictObject, string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toLowerCase, toUpperCase, toZod, transform, treeifyError, trim, tuple, uint32, uint64, ulid, undefined, union, unknown, uppercase, url, util, uuid, uuidv4, uuidv6, uuidv7, validate, validateAsync, void, xid, xor
+// UNUSED EXPORTS: $brand, $input, $output, INVALID, NEVER, TimePrecision, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodExactOptional, ZodFile, ZodFirstPartyTypeKind, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodIntersection, ZodIssueCode, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodReadonly, ZodRealError, ZodRecord, ZodSet, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodString, _default, _function, any, array, base64, base64url, bigint, boolean, catch, check, cidrv4, cidrv6, clone, codec, coerce, compile, config, core, creditCard, cuid, cuid2, currencyCode, custom, date, decode, decodeAsync, deepPartial, default, describe, discriminatedUnion, e164, email, emoji, encode, encodeAsync, endsWith, enum, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, function, getDiscriminatedOption, getErrorMap, globalRegistry, gt, gte, guid, hash, hex, hostname, httpUrl, iban, includes, input, instanceof, int, int32, int64, intersection, invertCodec, ipv4, ipv6, iso, json, jwt, keyof, ksuid, lazy, length, literal, locales, looseObject, looseRecord, lowercase, lt, lte, mac, map, maxLength, maxSize, memoizer, meta, mime, minLength, minSize, multipleOf, nan, nanoid, nativeEnum, negative, never, nonnegative, nonoptional, nonpositive, normalize, null, nullable, nullish, number, object, optional, output, overwrite, parse, parseAsync, partialRecord, pipe, positive, prefault, preprocess, prettifyError, promise, properties, property, readonly, record, refine, regex, regexes, registry, safeDecode, safeDecodeAsync, safeEncode, safeEncodeAsync, safeParse, safeParseAsync, set, setErrorMap, size, slugify, startsWith, strictObject, string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toLowerCase, toUpperCase, toZod, transform, treeifyError, trim, tuple, uint32, uint64, ulid, undefined, union, unknown, uppercase, url, util, uuid, uuidv4, uuidv6, uuidv7, validate, validateAsync, void, withParser, xid, xor
 
 // NAMESPACE OBJECT: ./node_modules/zod/v4/locales/index.js
 var locales_namespaceObject = {};
@@ -67,6 +67,7 @@ __webpack_require__.d(locales_namespaceObject, {
   sl: () => (sl),
   sv: () => (sv),
   ta: () => (ta),
+  tg: () => (tg),
   th: () => (th),
   tk: () => (tk),
   tr: () => (tr),
@@ -117,6 +118,7 @@ __webpack_require__.d(core_namespaceObject, {
   $ZodCheckMultipleOf: () => (checks/* $ZodCheckMultipleOf */.Jk),
   $ZodCheckNumberFormat: () => (checks/* $ZodCheckNumberFormat */.KH),
   $ZodCheckOverwrite: () => (checks/* $ZodCheckOverwrite */.v$),
+  $ZodCheckProperties: () => (checks/* $ZodCheckProperties */.nJ),
   $ZodCheckProperty: () => (checks/* $ZodCheckProperty */.XF),
   $ZodCheckRegex: () => (checks/* $ZodCheckRegex */.DG),
   $ZodCheckSizeEquals: () => (checks/* $ZodCheckSizeEquals */.e2),
@@ -141,6 +143,7 @@ __webpack_require__.d(core_namespaceObject, {
   $ZodFile: () => (schemas/* $ZodFile */.CT),
   $ZodFunction: () => (schemas/* $ZodFunction */._A),
   $ZodGUID: () => (schemas/* $ZodGUID */.Zc),
+  $ZodIBAN: () => (schemas/* $ZodIBAN */.ew),
   $ZodIPv4: () => (schemas/* $ZodIPv4 */.Lc),
   $ZodIPv6: () => (schemas/* $ZodIPv6 */.Zy),
   $ZodISODate: () => (schemas/* $ZodISODate */.v1),
@@ -242,6 +245,7 @@ __webpack_require__.d(core_namespaceObject, {
   _gt: () => (api/* _gt */.Tx),
   _gte: () => (api/* _gte */.qm),
   _guid: () => (api/* _guid */.tB),
+  _iban: () => (api/* _iban */.aZ),
   _includes: () => (api/* _includes */.dR),
   _int: () => (api/* _int */.LK),
   _int32: () => (api/* _int32 */.sw),
@@ -333,6 +337,9 @@ __webpack_require__.d(core_namespaceObject, {
   _void: () => (api/* _void */.OC),
   _xid: () => (api/* _xid */.Pw),
   _xor: () => (api/* _xor */.f0),
+  base64Charset: () => (schemas/* base64Charset */.cq),
+  base64urlCharset: () => (schemas/* base64urlCharset */.xE),
+  canParseURL: () => (schemas/* canParseURL */.L$),
   clone: () => (schemas/* clone */.o8),
   compile: () => (compile),
   compileFn: () => (compileFn),
@@ -359,6 +366,7 @@ __webpack_require__.d(core_namespaceObject, {
   isValidBase64URL: () => (schemas/* isValidBase64URL */.tV),
   isValidCIDRv6: () => (schemas/* isValidCIDRv6 */.Xe),
   isValidCreditCard: () => (schemas/* isValidCreditCard */.uv),
+  isValidIBAN: () => (schemas/* isValidIBAN */.DT),
   isValidIPv6: () => (schemas/* isValidIPv6 */.SW),
   isValidJWT: () => (schemas/* isValidJWT */.c2),
   locales: () => (locales_namespaceObject),
@@ -370,6 +378,7 @@ __webpack_require__.d(core_namespaceObject, {
   parseURLObject: () => (schemas/* parseURLObject */.y5),
   prettifyError: () => (errors/* prettifyError */.S1),
   process: () => (to_json_schema/* process */.eh),
+  processSchema: () => (to_json_schema/* processSchema */.Lp),
   regexes: () => (regexes),
   registry: () => (registries/* registry */.u5),
   safeDecode: () => (parse/* safeDecode */.ex),
@@ -389,7 +398,9 @@ __webpack_require__.d(core_namespaceObject, {
   util: () => (util),
   validate: () => (parse/* validate */.tf),
   validateAsync: () => (parse/* validateAsync */.F0),
-  version: () => (versions/* version */.r)
+  validateURL: () => (schemas/* validateURL */.qU),
+  version: () => (versions/* version */.r),
+  withParser: () => (withParser)
 });
 
 // NAMESPACE OBJECT (decoupled): ./node_modules/zod/v4/classic/checks.js
@@ -432,10 +443,10 @@ __webpack_require__.d(checks_namespaceObject, {
 var classic_iso_namespaceObject = {};
 __webpack_require__.r(classic_iso_namespaceObject);
 __webpack_require__.d(classic_iso_namespaceObject, {
-  ZodISODate: () => (classic_schemas/* ZodISODate */.Br),
-  ZodISODateTime: () => (classic_schemas/* ZodISODateTime */.Yo),
-  ZodISODuration: () => (classic_schemas/* ZodISODuration */.$A),
-  ZodISOTime: () => (classic_schemas/* ZodISOTime */.WV),
+  ZodISODate: () => (classic_schemas/* ZodISODate */.Brp),
+  ZodISODateTime: () => (classic_schemas/* ZodISODateTime */.You),
+  ZodISODuration: () => (classic_schemas/* ZodISODuration */.$A2),
+  ZodISOTime: () => (classic_schemas/* ZodISOTime */.WV4),
   date: () => (date),
   datetime: () => (datetime),
   duration: () => (duration),
@@ -446,10 +457,10 @@ __webpack_require__.d(classic_iso_namespaceObject, {
 var iso_namespaceObject = {};
 __webpack_require__.r(iso_namespaceObject);
 __webpack_require__.d(iso_namespaceObject, {
-  ZodISODate: () => (classic_schemas/* ZodISODate */.Br),
-  ZodISODateTime: () => (classic_schemas/* ZodISODateTime */.Yo),
-  ZodISODuration: () => (classic_schemas/* ZodISODuration */.$A),
-  ZodISOTime: () => (classic_schemas/* ZodISOTime */.WV),
+  ZodISODate: () => (classic_schemas/* ZodISODate */.Brp),
+  ZodISODateTime: () => (classic_schemas/* ZodISODateTime */.You),
+  ZodISODuration: () => (classic_schemas/* ZodISODuration */.$A2),
+  ZodISOTime: () => (classic_schemas/* ZodISOTime */.WV4),
   date: () => (date),
   datetime: () => (datetime),
   duration: () => (duration),
@@ -474,207 +485,212 @@ __webpack_require__.d(external_namespaceObject, {
   $brand: () => (core/* $brand */._e),
   $input: () => (registries/* $input */.nP),
   $output: () => (registries/* $output */.UY),
+  INVALID: () => (INVALID),
   NEVER: () => (core/* NEVER */.tm),
   TimePrecision: () => (api/* TimePrecision */.So),
-  ZodAny: () => (classic_schemas/* ZodAny */.Ml),
-  ZodArray: () => (classic_schemas/* ZodArray */.n),
-  ZodBase64: () => (classic_schemas/* ZodBase64 */.nL),
-  ZodBase64URL: () => (classic_schemas/* ZodBase64URL */._$),
-  ZodBigInt: () => (classic_schemas/* ZodBigInt */.Lr),
-  ZodBigIntFormat: () => (classic_schemas/* ZodBigIntFormat */.A8),
-  ZodBoolean: () => (classic_schemas/* ZodBoolean */.WF),
-  ZodCIDRv4: () => (classic_schemas/* ZodCIDRv4 */.W5),
-  ZodCIDRv6: () => (classic_schemas/* ZodCIDRv6 */.Yl),
-  ZodCUID: () => (classic_schemas/* ZodCUID */.Jj),
-  ZodCUID2: () => (classic_schemas/* ZodCUID2 */.tr),
-  ZodCatch: () => (classic_schemas/* ZodCatch */.hw),
-  ZodCodec: () => (classic_schemas/* ZodCodec */.GS),
+  ZodAny: () => (classic_schemas/* ZodAny */.Mlh),
+  ZodArray: () => (classic_schemas/* ZodArray */.naA),
+  ZodBase64: () => (classic_schemas/* ZodBase64 */.nLo),
+  ZodBase64URL: () => (classic_schemas/* ZodBase64URL */._$L),
+  ZodBigInt: () => (classic_schemas/* ZodBigInt */.Lr4),
+  ZodBigIntFormat: () => (classic_schemas/* ZodBigIntFormat */.A8m),
+  ZodBoolean: () => (classic_schemas/* ZodBoolean */.WFD),
+  ZodCIDRv4: () => (classic_schemas/* ZodCIDRv4 */.W5S),
+  ZodCIDRv6: () => (classic_schemas/* ZodCIDRv6 */.Yll),
+  ZodCUID: () => (classic_schemas/* ZodCUID */.JjC),
+  ZodCUID2: () => (classic_schemas/* ZodCUID2 */.trZ),
+  ZodCatch: () => (classic_schemas/* ZodCatch */.hw4),
+  ZodCodec: () => (classic_schemas/* ZodCodec */.GSc),
   ZodCompileAsyncError: () => (ZodCompileAsyncError),
   ZodCompileUnsupportedError: () => (ZodCompileUnsupportedError),
-  ZodCreditCard: () => (classic_schemas/* ZodCreditCard */.jn),
-  ZodCustom: () => (classic_schemas/* ZodCustom */.JE),
-  ZodCustomStringFormat: () => (classic_schemas/* ZodCustomStringFormat */.LE),
-  ZodDate: () => (classic_schemas/* ZodDate */.aP),
-  ZodDefault: () => (classic_schemas/* ZodDefault */.Xi),
-  ZodDiscriminatedUnion: () => (classic_schemas/* ZodDiscriminatedUnion */.jv),
-  ZodE164: () => (classic_schemas/* ZodE164 */.m7),
-  ZodEmail: () => (classic_schemas/* ZodEmail */.cM),
-  ZodEmoji: () => (classic_schemas/* ZodEmoji */.yC),
-  ZodEnum: () => (classic_schemas/* ZodEnum */.Vb),
+  ZodCreditCard: () => (classic_schemas/* ZodCreditCard */.jn4),
+  ZodCustom: () => (classic_schemas/* ZodCustom */.JEJ),
+  ZodCustomStringFormat: () => (classic_schemas/* ZodCustomStringFormat */.LEJ),
+  ZodDate: () => (classic_schemas/* ZodDate */.aPP),
+  ZodDefault: () => (classic_schemas/* ZodDefault */.XiL),
+  ZodDiscriminatedUnion: () => (classic_schemas/* ZodDiscriminatedUnion */.jvo),
+  ZodE164: () => (classic_schemas/* ZodE164 */.m7I),
+  ZodEmail: () => (classic_schemas/* ZodEmail */.cM4),
+  ZodEmoji: () => (classic_schemas/* ZodEmoji */.yC$),
+  ZodEnum: () => (classic_schemas/* ZodEnum */.Vb4),
   ZodError: () => (classic_errors/* ZodError */.G),
-  ZodExactOptional: () => (classic_schemas/* ZodExactOptional */.Zw),
-  ZodFile: () => (classic_schemas/* ZodFile */.im),
+  ZodExactOptional: () => (classic_schemas/* ZodExactOptional */.ZwT),
+  ZodFile: () => (classic_schemas/* ZodFile */.im9),
   ZodFirstPartyTypeKind: () => (ZodFirstPartyTypeKind),
   ZodFunction: () => (classic_schemas/* ZodFunction */.CZ),
-  ZodGUID: () => (classic_schemas/* ZodGUID */.n4),
-  ZodIPv4: () => (classic_schemas/* ZodIPv4 */.Bo),
-  ZodIPv6: () => (classic_schemas/* ZodIPv6 */.Gp),
-  ZodISODate: () => (classic_schemas/* ZodISODate */.Br),
-  ZodISODateTime: () => (classic_schemas/* ZodISODateTime */.Yo),
-  ZodISODuration: () => (classic_schemas/* ZodISODuration */.$A),
-  ZodISOTime: () => (classic_schemas/* ZodISOTime */.WV),
-  ZodIntersection: () => (classic_schemas/* ZodIntersection */.Jv),
+  ZodGUID: () => (classic_schemas/* ZodGUID */.n49),
+  ZodIBAN: () => (classic_schemas/* ZodIBAN */.mDl),
+  ZodIPv4: () => (classic_schemas/* ZodIPv4 */.Bo6),
+  ZodIPv6: () => (classic_schemas/* ZodIPv6 */.n4A),
+  ZodISODate: () => (classic_schemas/* ZodISODate */.Brp),
+  ZodISODateTime: () => (classic_schemas/* ZodISODateTime */.You),
+  ZodISODuration: () => (classic_schemas/* ZodISODuration */.$A2),
+  ZodISOTime: () => (classic_schemas/* ZodISOTime */.WV4),
+  ZodInstanceOf: () => (classic_schemas/* ZodInstanceOf */.YVl),
+  ZodIntersection: () => (classic_schemas/* ZodIntersection */.JvG),
   ZodIssueCode: () => (ZodIssueCode),
-  ZodJWT: () => (classic_schemas/* ZodJWT */.fi),
-  ZodKSUID: () => (classic_schemas/* ZodKSUID */.Kf),
-  ZodLazy: () => (classic_schemas/* ZodLazy */.Ih),
-  ZodLiteral: () => (classic_schemas/* ZodLiteral */.DN),
-  ZodMAC: () => (classic_schemas/* ZodMAC */.VY),
-  ZodMap: () => (classic_schemas/* ZodMap */.Ut),
-  ZodNaN: () => (classic_schemas/* ZodNaN */.Tq),
-  ZodNanoID: () => (classic_schemas/* ZodNanoID */.n$),
-  ZodNever: () => (classic_schemas/* ZodNever */.iS),
-  ZodNonOptional: () => (classic_schemas/* ZodNonOptional */.vZ),
+  ZodJWT: () => (classic_schemas/* ZodJWT */.fiS),
+  ZodKSUID: () => (classic_schemas/* ZodKSUID */.KfN),
+  ZodLazy: () => (classic_schemas/* ZodLazy */.Ihb),
+  ZodLiteral: () => (classic_schemas/* ZodLiteral */.DN5),
+  ZodMAC: () => (classic_schemas/* ZodMAC */.VYb),
+  ZodMap: () => (classic_schemas/* ZodMap */.UtG),
+  ZodNaN: () => (classic_schemas/* ZodNaN */.TqK),
+  ZodNanoID: () => (classic_schemas/* ZodNanoID */.n$i),
+  ZodNever: () => (classic_schemas/* ZodNever */.iSc),
+  ZodNonOptional: () => (classic_schemas/* ZodNonOptional */.vZX),
   ZodNull: () => (classic_schemas/* ZodNull */.PQ),
-  ZodNullable: () => (classic_schemas/* ZodNullable */.l1),
-  ZodNumber: () => (classic_schemas/* ZodNumber */.rS),
-  ZodNumberFormat: () => (classic_schemas/* ZodNumberFormat */.Kq),
-  ZodObject: () => (classic_schemas/* ZodObject */.bv),
-  ZodOptional: () => (classic_schemas/* ZodOptional */.Ii),
-  ZodPipe: () => (classic_schemas/* ZodPipe */.ut),
-  ZodPrefault: () => (classic_schemas/* ZodPrefault */.xg),
-  ZodPreprocess: () => (classic_schemas/* ZodPreprocess */.a2),
-  ZodPromise: () => (classic_schemas/* ZodPromise */.$i),
-  ZodReadonly: () => (classic_schemas/* ZodReadonly */.EV),
+  ZodNullable: () => (classic_schemas/* ZodNullable */.l1C),
+  ZodNumber: () => (classic_schemas/* ZodNumber */.rSt),
+  ZodNumberFormat: () => (classic_schemas/* ZodNumberFormat */.Kqw),
+  ZodObject: () => (classic_schemas/* ZodObject */.bvH),
+  ZodOptional: () => (classic_schemas/* ZodOptional */.IiU),
+  ZodPipe: () => (classic_schemas/* ZodPipe */.utH),
+  ZodPrefault: () => (classic_schemas/* ZodPrefault */.xgV),
+  ZodPreprocess: () => (classic_schemas/* ZodPreprocess */.a2A),
+  ZodPromise: () => (classic_schemas/* ZodPromise */.$i$),
+  ZodReadonly: () => (classic_schemas/* ZodReadonly */.EVz),
   ZodRealError: () => (classic_errors/* ZodRealError */.g),
-  ZodRecord: () => (classic_schemas/* ZodRecord */.b8),
-  ZodSet: () => (classic_schemas/* ZodSet */.Kz),
-  ZodString: () => (classic_schemas/* ZodString */.ND),
-  ZodStringFormat: () => (classic_schemas/* ZodStringFormat */.EB),
-  ZodSuccess: () => (classic_schemas/* ZodSuccess */.Bu),
-  ZodSymbol: () => (classic_schemas/* ZodSymbol */.K5),
-  ZodTemplateLiteral: () => (classic_schemas/* ZodTemplateLiteral */.dd),
-  ZodTransform: () => (classic_schemas/* ZodTransform */.CL),
-  ZodTuple: () => (classic_schemas/* ZodTuple */.y0),
-  ZodType: () => (classic_schemas/* ZodType */.aR),
-  ZodULID: () => (classic_schemas/* ZodULID */.qX),
-  ZodURL: () => (classic_schemas/* ZodURL */.zY),
-  ZodUUID: () => (classic_schemas/* ZodUUID */.vX),
-  ZodUndefined: () => (classic_schemas/* ZodUndefined */._Z),
-  ZodUnion: () => (classic_schemas/* ZodUnion */.fZ),
-  ZodUnknown: () => (classic_schemas/* ZodUnknown */._),
-  ZodVoid: () => (classic_schemas/* ZodVoid */.a0),
-  ZodXID: () => (classic_schemas/* ZodXID */.Lq),
-  ZodXor: () => (classic_schemas/* ZodXor */.zA),
-  _ZodString: () => (classic_schemas/* _ZodString */.UC),
-  _default: () => (classic_schemas/* _default */.Rv),
-  _function: () => (classic_schemas/* _function */.KR),
-  any: () => (classic_schemas/* any */.bz),
-  array: () => (classic_schemas/* array */.YO),
-  base64: () => (classic_schemas/* base64 */.K3),
-  base64url: () => (classic_schemas/* base64url */.r0),
-  bigint: () => (classic_schemas/* bigint */.o),
-  boolean: () => (classic_schemas/* boolean */.zM),
-  "catch": () => (classic_schemas/* catch */.Mf),
-  check: () => (classic_schemas/* check */.z6),
-  cidrv4: () => (classic_schemas/* cidrv4 */.zr),
-  cidrv6: () => (classic_schemas/* cidrv6 */.l7),
+  ZodRecord: () => (classic_schemas/* ZodRecord */.b8S),
+  ZodSet: () => (classic_schemas/* ZodSet */.KzS),
+  ZodString: () => (classic_schemas/* ZodString */.NDH),
+  ZodStringFormat: () => (classic_schemas/* ZodStringFormat */.EB4),
+  ZodSuccess: () => (classic_schemas/* ZodSuccess */.Bui),
+  ZodSymbol: () => (classic_schemas/* ZodSymbol */.K5M),
+  ZodTemplateLiteral: () => (classic_schemas/* ZodTemplateLiteral */.ddM),
+  ZodTransform: () => (classic_schemas/* ZodTransform */.CLY),
+  ZodTuple: () => (classic_schemas/* ZodTuple */.y0Q),
+  ZodType: () => (classic_schemas/* ZodType */.aRx),
+  ZodULID: () => (classic_schemas/* ZodULID */.qXy),
+  ZodURL: () => (classic_schemas/* ZodURL */.zYv),
+  ZodUUID: () => (classic_schemas/* ZodUUID */.vXr),
+  ZodUndefined: () => (classic_schemas/* ZodUndefined */._ZT),
+  ZodUnion: () => (classic_schemas/* ZodUnion */.fZ7),
+  ZodUnknown: () => (classic_schemas/* ZodUnknown */._aJ),
+  ZodVoid: () => (classic_schemas/* ZodVoid */.a0N),
+  ZodXID: () => (classic_schemas/* ZodXID */.Lqq),
+  ZodXor: () => (classic_schemas/* ZodXor */.zAI),
+  _ZodString: () => (classic_schemas/* _ZodString */.UCp),
+  _default: () => (classic_schemas/* _default */.Rvf),
+  _function: () => (classic_schemas/* _function */.KR7),
+  any: () => (classic_schemas/* any */.bzn),
+  array: () => (classic_schemas/* array */.YOg),
+  base64: () => (classic_schemas/* base64 */.K39),
+  base64url: () => (classic_schemas/* base64url */.r0z),
+  bigint: () => (classic_schemas/* bigint */.oad),
+  boolean: () => (classic_schemas/* boolean */.zMY),
+  "catch": () => (classic_schemas/* catch */.MfU),
+  check: () => (classic_schemas/* check */.z6Y),
+  cidrv4: () => (classic_schemas/* cidrv4 */.zrY),
+  cidrv6: () => (classic_schemas/* cidrv6 */.l7s),
   clone: () => (util.clone),
-  codec: () => (classic_schemas/* codec */.rL),
+  codec: () => (classic_schemas/* codec */.rLB),
   coerce: () => (coerce_namespaceObject),
   compile: () => (compile),
   config: () => (core/* config */.$W),
   core: () => (core_namespaceObject),
-  creditCard: () => (classic_schemas/* creditCard */.w8),
-  cuid: () => (classic_schemas/* cuid */.gF),
-  cuid2: () => (classic_schemas/* cuid2 */.Gl),
-  custom: () => (classic_schemas/* custom */.Ie),
-  date: () => (classic_schemas/* date */.p6),
+  creditCard: () => (classic_schemas/* creditCard */.w8K),
+  cuid: () => (classic_schemas/* cuid */.gF3),
+  cuid2: () => (classic_schemas/* cuid2 */.GlQ),
+  currencyCode: () => (classic_schemas/* currencyCode */.Xyz),
+  custom: () => (classic_schemas/* custom */.IeY),
+  date: () => (classic_schemas/* date */.p6U),
   decode: () => (classic_parse/* decode */.D4),
   decodeAsync: () => (classic_parse/* decodeAsync */.Re),
   deepPartial: () => (deepPartial),
-  describe: () => (classic_schemas/* describe */.q0),
-  discriminatedUnion: () => (classic_schemas/* discriminatedUnion */.gM),
-  e164: () => (classic_schemas/* e164 */.hQ),
-  email: () => (classic_schemas/* email */.Rp),
-  emoji: () => (classic_schemas/* emoji */.Zg),
+  describe: () => (classic_schemas/* describe */.q0y),
+  discriminatedUnion: () => (classic_schemas/* discriminatedUnion */.gMt),
+  e164: () => (classic_schemas/* e164 */.hQe),
+  email: () => (classic_schemas/* email */.Rpp),
+  emoji: () => (classic_schemas/* emoji */.ZgG),
   encode: () => (classic_parse/* encode */.lF),
   encodeAsync: () => (classic_parse/* encodeAsync */.X$),
   endsWith: () => (api/* _endsWith */.ER),
-  "enum": () => (classic_schemas/* enum */.k5),
-  exactOptional: () => (classic_schemas/* exactOptional */.yq),
-  file: () => (classic_schemas/* file */.NJ),
+  "enum": () => (classic_schemas/* enum */.k5n),
+  exactOptional: () => (classic_schemas/* exactOptional */.yqP),
+  file: () => (classic_schemas/* file */.NJF),
   flattenError: () => (errors/* flattenError */.JM),
-  float32: () => (classic_schemas/* float32 */.In),
-  float64: () => (classic_schemas/* float64 */.BN),
+  float32: () => (classic_schemas/* float32 */.In1),
+  float64: () => (classic_schemas/* float64 */.BNo),
   formatError: () => (errors/* formatError */.Wk),
   fromJSONSchema: () => (fromJSONSchema),
-  "function": () => (classic_schemas/* function */.fH),
+  "function": () => (classic_schemas/* function */.fHH),
   getDiscriminatedOption: () => (schemas/* getDiscriminatedOption */.IB),
   getErrorMap: () => (getErrorMap),
   globalRegistry: () => (registries/* globalRegistry */.fd),
   gt: () => (api/* _gt */.Tx),
   gte: () => (api/* _gte */.qm),
-  guid: () => (classic_schemas/* guid */.Os),
-  hash: () => (classic_schemas/* hash */.tW),
-  hex: () => (classic_schemas/* hex */.uh),
-  hostname: () => (classic_schemas/* hostname */.OI),
-  httpUrl: () => (classic_schemas/* httpUrl */.q3),
+  guid: () => (classic_schemas/* guid */.OsD),
+  hash: () => (classic_schemas/* hash */.tWU),
+  hex: () => (classic_schemas/* hex */.uhr),
+  hostname: () => (classic_schemas/* hostname */.OIJ),
+  httpUrl: () => (classic_schemas/* httpUrl */.q36),
+  iban: () => (classic_schemas/* iban */.Zkx),
   includes: () => (api/* _includes */.dR),
   input: () => (input),
-  "instanceof": () => (classic_schemas/* instanceof */.Nl),
-  int: () => (classic_schemas/* int */.Wh),
-  int32: () => (classic_schemas/* int32 */.HA),
-  int64: () => (classic_schemas/* int64 */.Gk),
-  intersection: () => (classic_schemas/* intersection */.E$),
-  invertCodec: () => (classic_schemas/* invertCodec */.L1),
-  ipv4: () => (classic_schemas/* ipv4 */.uX),
-  ipv6: () => (classic_schemas/* ipv6 */.ug),
+  "instanceof": () => (classic_schemas/* instanceof */.Nlp),
+  int: () => (classic_schemas/* int */.Whr),
+  int32: () => (classic_schemas/* int32 */.HA5),
+  int64: () => (classic_schemas/* int64 */.Gkc),
+  intersection: () => (classic_schemas/* intersection */.E$q),
+  invertCodec: () => (classic_schemas/* invertCodec */.L1c),
+  ipv4: () => (classic_schemas/* ipv4 */.uXy),
+  ipv6: () => (classic_schemas/* ipv6 */.ugL),
   iso: () => (classic_iso_namespaceObject),
-  json: () => (classic_schemas/* json */.Pq),
-  jwt: () => (classic_schemas/* jwt */.a$),
-  keyof: () => (classic_schemas/* keyof */.ZE),
-  ksuid: () => (classic_schemas/* ksuid */.fO),
-  lazy: () => (classic_schemas/* lazy */.RZ),
+  json: () => (classic_schemas/* json */.Pq9),
+  jwt: () => (classic_schemas/* jwt */.a$Y),
+  keyof: () => (classic_schemas/* keyof */.ZEF),
+  ksuid: () => (classic_schemas/* ksuid */.fOD),
+  lazy: () => (classic_schemas/* lazy */.RZV),
   length: () => (api/* _length */.YA),
-  literal: () => (classic_schemas/* literal */.eu),
+  literal: () => (classic_schemas/* literal */.euz),
   locales: () => (locales_namespaceObject),
-  looseObject: () => (classic_schemas/* looseObject */._H),
-  looseRecord: () => (classic_schemas/* looseRecord */.qW),
+  looseObject: () => (classic_schemas/* looseObject */._H3),
+  looseRecord: () => (classic_schemas/* looseRecord */.qWX),
   lowercase: () => (api/* _lowercase */.hH),
   lt: () => (api/* _lt */.Au),
   lte: () => (api/* _lte */.Zm),
-  mac: () => (classic_schemas/* mac */.Md),
-  map: () => (classic_schemas/* map */.Tj),
+  mac: () => (classic_schemas/* mac */.Mdg),
+  map: () => (classic_schemas/* map */.TjK),
   maxLength: () => (api/* _maxLength */.Eb),
   maxSize: () => (api/* _maxSize */.vL),
   memoizer: () => (memoizer/* memoizer */.x3),
-  meta: () => (classic_schemas/* meta */.mI),
+  meta: () => (classic_schemas/* meta */.mIj),
   mime: () => (api/* _mime */.GZ),
   minLength: () => (api/* _minLength */.m9),
   minSize: () => (api/* _minSize */.Nd),
   multipleOf: () => (api/* _multipleOf */.Hi),
-  nan: () => (classic_schemas/* nan */.oi),
-  nanoid: () => (classic_schemas/* nanoid */.Ak),
+  nan: () => (classic_schemas/* nan */.oit),
+  nanoid: () => (classic_schemas/* nanoid */.AkI),
   nativeEnum: () => (classic_schemas/* nativeEnum */.fc),
   negative: () => (api/* _negative */.bR),
-  never: () => (classic_schemas/* never */.Zm),
+  never: () => (classic_schemas/* never */.ZmZ),
   nonnegative: () => (api/* _nonnegative */.UI),
-  nonoptional: () => (classic_schemas/* nonoptional */.eY),
+  nonoptional: () => (classic_schemas/* nonoptional */.eYS),
   nonpositive: () => (api/* _nonpositive */.ej),
   normalize: () => (api/* _normalize */.lo),
-  "null": () => (classic_schemas/* null */.ch),
-  nullable: () => (classic_schemas/* nullable */.me),
-  nullish: () => (classic_schemas/* nullish */.cl),
-  number: () => (classic_schemas/* number */.ai),
-  object: () => (classic_schemas/* object */.Ik),
-  optional: () => (classic_schemas/* optional */.lq),
+  "null": () => (classic_schemas/* null */.chJ),
+  nullable: () => (classic_schemas/* nullable */.mee),
+  nullish: () => (classic_schemas/* nullish */.cl6),
+  number: () => (classic_schemas/* number */.aig),
+  object: () => (classic_schemas/* object */.Ikc),
+  optional: () => (classic_schemas/* optional */.lqM),
   output: () => (output),
   overwrite: () => (api/* _overwrite */.bS),
   parse: () => (classic_parse/* parse */.qg),
   parseAsync: () => (classic_parse/* parseAsync */.EJ),
-  partialRecord: () => (classic_schemas/* partialRecord */.jg),
-  pipe: () => (classic_schemas/* pipe */.Fs),
+  partialRecord: () => (classic_schemas/* partialRecord */.jgl),
+  pipe: () => (classic_schemas/* pipe */.FsL),
   positive: () => (api/* _positive */.NC),
-  prefault: () => (classic_schemas/* prefault */.Sd),
-  preprocess: () => (classic_schemas/* preprocess */.vk),
+  prefault: () => (classic_schemas/* prefault */.SdS),
+  preprocess: () => (classic_schemas/* preprocess */.vkY),
   prettifyError: () => (errors/* prettifyError */.S1),
-  promise: () => (classic_schemas/* promise */.iv),
+  promise: () => (classic_schemas/* promise */.ivC),
   properties: () => (api/* _properties */.T2),
   property: () => (api/* _property */.Jf),
-  readonly: () => (classic_schemas/* readonly */.tB),
-  record: () => (classic_schemas/* record */.g1),
-  refine: () => (classic_schemas/* refine */.YP),
+  readonly: () => (classic_schemas/* readonly */.tBZ),
+  record: () => (classic_schemas/* record */.g1P),
+  refine: () => (classic_schemas/* refine */.YPB),
   regex: () => (api/* _regex */.Fk),
   regexes: () => (regexes),
   registry: () => (registries/* registry */.u5),
@@ -684,45 +700,46 @@ __webpack_require__.d(external_namespaceObject, {
   safeEncodeAsync: () => (classic_parse/* safeEncodeAsync */.EM),
   safeParse: () => (classic_parse/* safeParse */.xL),
   safeParseAsync: () => (classic_parse/* safeParseAsync */.bp),
-  set: () => (classic_schemas/* set */.hZ),
+  set: () => (classic_schemas/* set */.hZp),
   setErrorMap: () => (setErrorMap),
   size: () => (api/* _size */.d$),
   slugify: () => (api/* _slugify */.TL),
   startsWith: () => (api/* _startsWith */.$S),
-  strictObject: () => (classic_schemas/* strictObject */.re),
-  string: () => (classic_schemas/* string */.Yj),
-  stringFormat: () => (classic_schemas/* stringFormat */.Np),
-  stringbool: () => (classic_schemas/* stringbool */.uE),
-  success: () => (classic_schemas/* success */.kX),
-  superRefine: () => (classic_schemas/* superRefine */.zn),
-  symbol: () => (classic_schemas/* symbol */.HR),
-  templateLiteral: () => (classic_schemas/* templateLiteral */.Uy),
+  strictObject: () => (classic_schemas/* strictObject */.rej),
+  string: () => (classic_schemas/* string */.YjP),
+  stringFormat: () => (classic_schemas/* stringFormat */.NpN),
+  stringbool: () => (classic_schemas/* stringbool */.uEf),
+  success: () => (classic_schemas/* success */.kXE),
+  superRefine: () => (classic_schemas/* superRefine */.zni),
+  symbol: () => (classic_schemas/* symbol */.HRO),
+  templateLiteral: () => (classic_schemas/* templateLiteral */.Uy$),
   toJSONSchema: () => (json_schema_processors/* toJSONSchema */.bl),
   toLowerCase: () => (api/* _toLowerCase */.Il),
   toUpperCase: () => (api/* _toUpperCase */.xY),
   toZod: () => (util.toZod),
-  transform: () => (classic_schemas/* transform */.pd),
+  transform: () => (classic_schemas/* transform */.pdi),
   treeifyError: () => (errors/* treeifyError */.ZC),
   trim: () => (api/* _trim */.WN),
-  tuple: () => (classic_schemas/* tuple */.PV),
-  uint32: () => (classic_schemas/* uint32 */.S8),
-  uint64: () => (classic_schemas/* uint64 */.VV),
-  ulid: () => (classic_schemas/* ulid */.Z0),
-  undefined: () => (classic_schemas/* undefined */.Vx),
-  union: () => (classic_schemas/* union */.KC),
-  unknown: () => (classic_schemas/* unknown */.L5),
+  tuple: () => (classic_schemas/* tuple */.PVZ),
+  uint32: () => (classic_schemas/* uint32 */.S8h),
+  uint64: () => (classic_schemas/* uint64 */.VV_),
+  ulid: () => (classic_schemas/* ulid */.Z09),
+  undefined: () => (classic_schemas/* undefined */.Vxk),
+  union: () => (classic_schemas/* union */.KCZ),
+  unknown: () => (classic_schemas/* unknown */.L5J),
   uppercase: () => (api/* _uppercase */.qF),
-  url: () => (classic_schemas/* url */.OZ),
+  url: () => (classic_schemas/* url */.OZ5),
   util: () => (util),
-  uuid: () => (classic_schemas/* uuid */.uR),
-  uuidv4: () => (classic_schemas/* uuidv4 */.gZ),
+  uuid: () => (classic_schemas/* uuid */.uRe),
+  uuidv4: () => (classic_schemas/* uuidv4 */.gZm),
   uuidv6: () => (classic_schemas/* uuidv6 */.gE),
-  uuidv7: () => (classic_schemas/* uuidv7 */.nH),
+  uuidv7: () => (classic_schemas/* uuidv7 */.nHE),
   validate: () => (classic_parse/* validate */.tf),
   validateAsync: () => (classic_parse/* validateAsync */.F0),
-  "void": () => (classic_schemas/* void */.rI),
-  xid: () => (classic_schemas/* xid */.kM),
-  xor: () => (classic_schemas/* xor */.I8)
+  "void": () => (classic_schemas/* void */.rIH),
+  withParser: () => (withParser),
+  xid: () => (classic_schemas/* xid */.kMC),
+  xor: () => (classic_schemas/* xor */.I86)
 });
 
 // EXTERNAL MODULE: ./node_modules/zod/v4/core/core.js
@@ -786,6 +803,8 @@ const error = () => {
         json_string: "نَص على هيئة JSON",
         e164: "رقم هاتف بمعيار E.164",
         credit_card: "رقم بطاقة الائتمان",
+        currency_code: "رمز العملة",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "مدخل",
     };
@@ -898,6 +917,8 @@ const az_error = () => {
         json_string: "JSON string",
         e164: "E.164 number",
         credit_card: "kredit kartı nömrəsi",
+        currency_code: "valyuta kodu",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };
@@ -1059,6 +1080,8 @@ const be_error = () => {
         json_string: "JSON радок",
         e164: "нумар E.164",
         credit_card: "нумар крэдытнай карты",
+        currency_code: "код валюты",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "увод",
     };
@@ -1178,6 +1201,8 @@ const bg_error = () => {
         json_string: "JSON низ",
         e164: "E.164 номер",
         credit_card: "номер на кредитна карта",
+        currency_code: "код на валута",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "вход",
     };
@@ -1304,6 +1329,8 @@ const bn_error = () => {
         json_string: "JSON স্ট্রিং",
         e164: "E.164 নম্বর",
         credit_card: "ক্রেডিট কার্ড নম্বর",
+        currency_code: "মুদ্রা কোড",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "ইনপুট",
     };
@@ -1418,6 +1445,8 @@ const ca_error = () => {
         json_string: "cadena JSON",
         e164: "número E.164",
         credit_card: "número de targeta de crèdit",
+        currency_code: "codi de moneda",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "entrada",
     };
@@ -1531,6 +1560,8 @@ const ckb_error = () => {
         json_string: "دەقی JSON",
         e164: "ژمارەی E.164",
         credit_card: "ژمارەی کارتی کرێدیت",
+        currency_code: "کۆدی دراو",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "تێکردە",
     };
@@ -1665,6 +1696,8 @@ const cs_error = () => {
         json_string: "řetězec ve formátu JSON",
         e164: "číslo E.164",
         credit_card: "číslo kreditní karty",
+        currency_code: "kód měny",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "vstup",
     };
@@ -1782,6 +1815,8 @@ const da_error = () => {
         json_string: "JSON-streng",
         e164: "E.164-nummer",
         credit_card: "kreditkortnummer",
+        currency_code: "valutakode",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };
@@ -1903,6 +1938,8 @@ const de_error = () => {
         json_string: "JSON-String",
         e164: "E.164-Nummer",
         credit_card: "Kreditkartennummer",
+        currency_code: "Währungscode",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "Eingabe",
     };
@@ -2017,6 +2054,8 @@ const el_error = () => {
         json_string: "συμβολοσειρά JSON",
         e164: "αριθμός E.164",
         credit_card: "αριθμός πιστωτικής κάρτας",
+        currency_code: "κωδικός νομίσματος",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "είσοδος",
     };
@@ -2132,6 +2171,8 @@ const eo_error = () => {
         json_string: "JSON-karaktraro",
         e164: "E.164-nombro",
         credit_card: "kreditkarta numero",
+        currency_code: "valuta kodo",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "enigo",
     };
@@ -2246,6 +2287,8 @@ const es_error = () => {
         json_string: "cadena JSON",
         e164: "número E.164",
         credit_card: "número de tarjeta de crédito",
+        currency_code: "código de moneda",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "entrada",
     };
@@ -2384,6 +2427,8 @@ const fa_error = () => {
         json_string: "JSON رشته",
         e164: "E.164 عدد",
         credit_card: "شماره کارت اعتباری",
+        currency_code: "کد ارز",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "ورودی",
     };
@@ -2508,6 +2553,8 @@ const fi_error = () => {
         json_string: "JSON-merkkijono",
         e164: "E.164-luku",
         credit_card: "luottokortin numero",
+        currency_code: "valuuttakoodi",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "templaattimerkkijono",
     };
@@ -2621,6 +2668,8 @@ const fr_error = () => {
         json_string: "chaîne de caractères JSON",
         e164: "numéro au format E.164",
         credit_card: "numéro de carte de crédit",
+        currency_code: "code de devise",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "entrée",
     };
@@ -2752,6 +2801,8 @@ const fr_CA_error = () => {
         json_string: "chaîne JSON",
         e164: "numéro E.164",
         credit_card: "numéro de carte de crédit",
+        currency_code: "code de devise",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "entrée",
     };
@@ -2865,6 +2916,8 @@ const gu_error = () => {
         json_string: "JSON સ્ટ્રિંગ",
         e164: "E.164 નંબર",
         credit_card: "ક્રેડિટ કાર્ડ નંબર",
+        currency_code: "ચલણ કોડ",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "ઇનપુટ",
     };
@@ -3018,6 +3071,8 @@ const he_error = () => {
         json_string: { label: "מחרוזת JSON", gender: "f" },
         e164: { label: "מספר E.164", gender: "m" },
         credit_card: { label: "מספר כרטיס אשראי", gender: "m" },
+        currency_code: { label: "קוד מטבע", gender: "m" },
+        iban: { label: "IBAN", gender: "m" },
         jwt: { label: "JWT", gender: "m" },
         template_literal: { label: "קלט", gender: "m" },
         ends_with: { label: "קלט", gender: "m" },
@@ -3201,6 +3256,8 @@ const hi_error = () => {
         json_string: "JSON स्ट्रिंग",
         e164: "E.164 संख्या",
         credit_card: "क्रेडिट कार्ड संख्या",
+        currency_code: "मुद्रा कोड",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "इनपुट",
     };
@@ -3312,6 +3369,8 @@ const hr_error = () => {
         json_string: "JSON tekst",
         e164: "E.164 broj",
         credit_card: "broj kreditne kartice",
+        currency_code: "kod valute",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "unos",
     };
@@ -3440,6 +3499,8 @@ const hu_error = () => {
         json_string: "JSON string",
         e164: "E.164 szám",
         credit_card: "hitelkártyaszám",
+        currency_code: "pénznemkód",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "bemenet",
     };
@@ -3594,6 +3655,8 @@ const hy_error = () => {
         json_string: "JSON տող",
         e164: "E.164 համար",
         credit_card: "կրեդիտ քարտի համար",
+        currency_code: "արժույթի կոդ",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "մուտք",
     };
@@ -3713,6 +3776,8 @@ const id_error = () => {
         json_string: "string JSON",
         e164: "angka E.164",
         credit_card: "nomor kartu kredit",
+        currency_code: "kode mata uang",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };
@@ -3825,6 +3890,8 @@ const is_error = () => {
         json_string: "JSON strengur",
         e164: "E.164 tölugildi",
         credit_card: "kreditkortanúmer",
+        currency_code: "gjaldmiðilskóði",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "gildi",
     };
@@ -3940,6 +4007,8 @@ const it_error = () => {
         json_string: "stringa JSON",
         e164: "numero E.164",
         credit_card: "numero di carta di credito",
+        currency_code: "codice valuta",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };
@@ -4054,6 +4123,8 @@ const ja_error = () => {
         json_string: "JSON文字列",
         e164: "E.164番号",
         credit_card: "クレジットカード番号",
+        currency_code: "通貨コード",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "入力値",
     };
@@ -4167,6 +4238,8 @@ const ka_error = () => {
         json_string: "JSON ველი",
         e164: "E.164 ნომერი",
         credit_card: "საკრედიტო ბარათის ნომერი",
+        currency_code: "ვალუტის კოდი",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "შეყვანა",
     };
@@ -4285,6 +4358,8 @@ const km_error = () => {
         json_string: "ខ្សែអក្សរ JSON",
         e164: "លេខ E.164",
         credit_card: "លេខប័ណ្ណឥណទាន",
+        currency_code: "កូដរូបិយប័ណ្ណ",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "ទិន្នន័យបញ្ចូល",
     };
@@ -4409,6 +4484,8 @@ const kn_error = () => {
         json_string: "JSONಸ್ಟ್ರಿಂಗ್",
         e164: "E.164 ಸಂಖ್ಯೆ",
         credit_card: "ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್ ಸಂಖ್ಯೆ",
+        currency_code: "ಕರೆನ್ಸಿ ಕೋಡ್",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "ಇನ್ಪುಟ್",
     };
@@ -4526,6 +4603,8 @@ const ko_error = () => {
         json_string: "JSON 문자열",
         e164: "E.164 번호",
         credit_card: "신용카드 번호",
+        currency_code: "통화 코드",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "입력",
     };
@@ -4725,6 +4804,8 @@ const lt_error = () => {
         json_string: "JSON eilutė",
         e164: "E.164 numeris",
         credit_card: "kredito kortelės numeris",
+        currency_code: "valiutos kodas",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "įvestis",
     };
@@ -4851,6 +4932,8 @@ const mk_error = () => {
         json_string: "JSON низа",
         e164: "E.164 број",
         credit_card: "број на кредитна картичка",
+        currency_code: "код на валута",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "внес",
     };
@@ -4966,6 +5049,8 @@ const ms_error = () => {
         json_string: "string JSON",
         e164: "nombor E.164",
         credit_card: "nombor kad kredit",
+        currency_code: "kod mata wang",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };
@@ -5079,6 +5164,8 @@ const ne_error = () => {
         json_string: "JSON स्ट्रिङ",
         e164: "E.164 नम्बर",
         credit_card: "क्रेडिट कार्ड नम्बर",
+        currency_code: "मुद्रा कोड",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "इनपुट",
     };
@@ -5191,6 +5278,8 @@ const nl_error = () => {
         json_string: "JSON string",
         e164: "E.164-nummer",
         credit_card: "creditcardnummer",
+        currency_code: "valutacode",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "invoer",
     };
@@ -5307,6 +5396,8 @@ const nn_error = () => {
         json_string: "JSON-streng",
         e164: "E.164-nummer",
         credit_card: "kredittkortnummer",
+        currency_code: "valutakode",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };
@@ -5421,6 +5512,8 @@ const no_error = () => {
         json_string: "JSON-streng",
         e164: "E.164-nummer",
         credit_card: "kredittkortnummer",
+        currency_code: "valutakode",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };
@@ -5535,6 +5628,8 @@ const ota_error = () => {
         json_string: "JSON metin",
         e164: "E.164 sayısı",
         credit_card: "i'tibâr kartı numarası",
+        currency_code: "para birimi kodu",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "giren",
     };
@@ -5650,6 +5745,8 @@ const ps_error = () => {
         json_string: "JSON متن",
         e164: "د E.164 شمېره",
         credit_card: "د کریډیټ کارت شمیره",
+        currency_code: "د اسعارو کوډ",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "ورودي",
     };
@@ -5770,6 +5867,8 @@ const pl_error = () => {
         json_string: "ciąg znaków w formacie JSON",
         e164: "liczba E.164",
         credit_card: "numer karty kredytowej",
+        currency_code: "kod waluty",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "wejście",
     };
@@ -5885,6 +5984,8 @@ const pt_error = () => {
         json_string: "o texto JSON",
         e164: "o número E.164",
         credit_card: "o número de cartão de crédito",
+        currency_code: "o código de moeda",
+        iban: "o IBAN",
         jwt: "o JWT",
         template_literal: "a entrada",
     };
@@ -6028,6 +6129,8 @@ const pt_BR_error = () => {
         json_string: "o texto JSON",
         e164: "o número E.164",
         credit_card: "o número de cartão de crédito",
+        currency_code: "o código de moeda",
+        iban: "o IBAN",
         jwt: "o JWT",
         template_literal: "a entrada",
     };
@@ -6172,6 +6275,8 @@ const ro_error = () => {
         json_string: "șir JSON",
         e164: "număr E.164",
         credit_card: "număr de card de credit",
+        currency_code: "cod valutar",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "intrare",
     };
@@ -6345,6 +6450,8 @@ const ru_error = () => {
         json_string: "JSON строка",
         e164: "номер E.164",
         credit_card: "номер кредитной карты",
+        currency_code: "код валюты",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "ввод",
     };
@@ -6464,6 +6571,8 @@ const sk_error = () => {
         json_string: "reťazec vo formáte JSON",
         e164: "číslo E.164",
         credit_card: "číslo kreditnej karty",
+        currency_code: "kód meny",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "vstup",
     };
@@ -6581,6 +6690,8 @@ const sl_error = () => {
         json_string: "JSON niz",
         e164: "E.164 številka",
         credit_card: "številka kreditne kartice",
+        currency_code: "koda valute",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "vnos",
     };
@@ -6696,6 +6807,8 @@ const sv_error = () => {
         json_string: "JSON-sträng",
         e164: "E.164-nummer",
         credit_card: "kreditkortsnummer",
+        currency_code: "valutakod",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "mall-literal",
     };
@@ -6812,6 +6925,8 @@ const ta_error = () => {
         json_string: "JSON சரம்",
         e164: "E.164 எண்",
         credit_card: "கடன் அட்டை எண்",
+        currency_code: "நாணயக் குறியீடு",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "input",
     };
@@ -6885,6 +7000,126 @@ const ta_error = () => {
     };
 }
 
+;// ./node_modules/zod/v4/locales/tg.js
+__webpack_require__.dn(tg);
+
+const tg_error = () => {
+    // singular units after numerals in Tajik
+    const Sizable = {
+        string: { unit: "аломат", verb: "дошта бошад" },
+        file: { unit: "байт", verb: "дошта бошад" },
+        array: { unit: "унсур", verb: "дошта бошад" },
+        set: { unit: "унсур", verb: "дошта бошад" },
+        map: { unit: "сабт", verb: "дошта бошад" },
+    };
+    function getSizing(origin) {
+        return Sizable[origin] ?? null;
+    }
+    const FormatDictionary = {
+        regex: "вуруд",
+        email: "суроғаи email",
+        url: "URL",
+        emoji: "эмоҷи",
+        uuid: "UUID",
+        uuidv4: "UUIDv4",
+        uuidv6: "UUIDv6",
+        nanoid: "nanoid",
+        guid: "GUID",
+        cuid: "cuid",
+        cuid2: "cuid2",
+        ulid: "ULID",
+        xid: "XID",
+        ksuid: "KSUID",
+        datetime: "санаву вақти ISO",
+        date: "санаи ISO",
+        time: "вақти ISO",
+        duration: "давомнокии ISO",
+        ipv4: "суроғаи IPv4",
+        ipv6: "суроғаи IPv6",
+        mac: "суроғаи MAC",
+        cidrv4: "маҳдудаи IPv4",
+        cidrv6: "маҳдудаи IPv6",
+        base64: "сатри дар формати base64",
+        base64url: "сатри дар формати base64url",
+        json_string: "сатри JSON",
+        e164: "рақами E.164",
+        credit_card: "рақами корти кредитӣ",
+        currency_code: "рамзи асъор",
+        iban: "IBAN",
+        jwt: "JWT",
+        template_literal: "вуруд",
+    };
+    const TypeDictionary = {
+        nan: "NaN",
+        number: "рақам",
+        string: "сатр",
+        array: "массив",
+        object: "объект",
+        date: "сана",
+    };
+    return (issue) => {
+        switch (issue.code) {
+            case "invalid_type": {
+                const expected = TypeDictionary[issue.expected] ?? issue.expected;
+                const receivedType = util.parsedType(issue.input);
+                const received = TypeDictionary[receivedType] ?? receivedType;
+                return `Вуруди нодуруст: ${expected} интизор мерафт, ${received} гирифта шуд`;
+            }
+            case "invalid_value":
+                if (issue.values.length === 1)
+                    return `Вуруди нодуруст: ${util.stringifyPrimitive(issue.values[0])} интизор мерафт`;
+                return `Интихоби нодуруст: яке аз ${util.joinValues(issue.values, "|")} интизор мерафт`;
+            case "too_big": {
+                const adj = issue.inclusive ? "<=" : "<";
+                const sizing = getSizing(issue.origin);
+                if (sizing)
+                    return `Хеле калон: ${issue.origin ?? "қимат"} бояд ${adj}${issue.maximum.toString()} ${sizing.unit} ${sizing.verb}`;
+                return `Хеле калон: ${issue.origin ?? "қимат"} бояд ${adj}${issue.maximum.toString()} бошад`;
+            }
+            case "too_small": {
+                const adj = issue.inclusive ? ">=" : ">";
+                const sizing = getSizing(issue.origin);
+                if (sizing)
+                    return `Хеле хурд: ${issue.origin} бояд ${adj}${issue.minimum.toString()} ${sizing.unit} ${sizing.verb}`;
+                return `Хеле хурд: ${issue.origin} бояд ${adj}${issue.minimum.toString()} бошад`;
+            }
+            case "invalid_format": {
+                const _issue = issue;
+                if (_issue.format === "starts_with")
+                    return `Сатри нодуруст: бояд бо "${_issue.prefix}" оғоз шавад`;
+                if (_issue.format === "ends_with")
+                    return `Сатри нодуруст: бояд бо "${_issue.suffix}" анҷом ёбад`;
+                if (_issue.format === "includes")
+                    return `Сатри нодуруст: бояд "${_issue.includes}"-ро дар бар гирад`;
+                if (_issue.format === "regex")
+                    return `Сатри нодуруст: бояд ба намунаи ${_issue.pattern} мувофиқат кунад`;
+                return `${FormatDictionary[_issue.format] ?? issue.format}-и нодуруст`;
+            }
+            case "not_multiple_of":
+                return `Рақами нодуруст: бояд ба ${issue.divisor} бе бақия тақсим шавад`;
+            case "unrecognized_keys":
+                return `Калид${issue.keys.length > 1 ? "ҳои" : "и"} номаълум: ${util.joinValues(issue.keys, ", ")}`;
+            case "invalid_key":
+                return `Калиди нодуруст дар ${issue.origin}`;
+            case "invalid_union":
+                if (issue.options && Array.isArray(issue.options) && issue.options.length > 0) {
+                    const opts = issue.options.map((o) => `'${o}'`).join(" | ");
+                    return `Қимати нодурусти дискриминатор: ${opts} интизор мерафт`;
+                }
+                return "Вуруди нодуруст";
+            case "invalid_element":
+                return `Қимати нодуруст дар ${issue.origin}`;
+            default:
+                return `Вуруди нодуруст`;
+        }
+    };
+};
+/* harmony default export */ function tg() {
+    return {
+        localeError: tg_error(),
+    };
+}
+
 ;// ./node_modules/zod/v4/locales/th.js
 __webpack_require__.dn(th);
 
@@ -6928,6 +7163,8 @@ const th_error = () => {
         json_string: "ข้อความแบบ JSON",
         e164: "เบอร์โทรศัพท์ระหว่างประเทศ (E.164)",
         credit_card: "หมายเลขบัตรเครดิต",
+        currency_code: "รหัสสกุลเงิน",
+        iban: "IBAN",
         jwt: "โทเคน JWT",
         template_literal: "ข้อมูลที่ป้อน",
     };
@@ -7044,6 +7281,8 @@ const tk_error = () => {
         json_string: "JSON setiri",
         e164: "E.164 nomeri",
         credit_card: "kredit kartynyň nomeri",
+        currency_code: "walýuta kody",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "şablon",
     };
@@ -7152,6 +7391,8 @@ const tr_error = () => {
         json_string: "JSON dizesi",
         e164: "E.164 sayısı",
         credit_card: "kredi kartı numarası",
+        currency_code: "para birimi kodu",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "Şablon dizesi",
     };
@@ -7263,6 +7504,8 @@ const uk_error = () => {
         json_string: "рядок JSON",
         e164: "номер E.164",
         credit_card: "номер кредитної картки",
+        currency_code: "код валюти",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "вхідні дані",
     };
@@ -7385,6 +7628,8 @@ const ur_error = () => {
         json_string: "جے ایس او این سٹرنگ",
         e164: "ای 164 نمبر",
         credit_card: "کریڈٹ کارڈ نمبر",
+        currency_code: "کرنسی کوڈ",
+        iban: "IBAN",
         jwt: "جے ڈبلیو ٹی",
         template_literal: "ان پٹ",
     };
@@ -7501,6 +7746,8 @@ const uz_error = () => {
         json_string: "JSON satr",
         e164: "E.164 raqam",
         credit_card: "kredit karta raqami",
+        currency_code: "valyuta kodi",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "kirish",
     };
@@ -7615,6 +7862,8 @@ const vi_error = () => {
         json_string: "chuỗi JSON",
         e164: "số E.164",
         credit_card: "số thẻ tín dụng",
+        currency_code: "mã tiền tệ",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "đầu vào",
     };
@@ -7729,6 +7978,8 @@ const zh_CN_error = () => {
         json_string: "JSON字符串",
         e164: "E.164号码",
         credit_card: "信用卡号",
+        currency_code: "货币代码",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "输入",
     };
@@ -7844,6 +8095,8 @@ const zh_TW_error = () => {
         json_string: "JSON 字串",
         e164: "E.164 數值",
         credit_card: "信用卡號",
+        currency_code: "貨幣代碼",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "輸入",
     };
@@ -7957,6 +8210,8 @@ const yo_error = () => {
         json_string: "ọ̀rọ̀ JSON",
         e164: "nọ́mbà E.164",
         credit_card: "nọmba kaadi gbese",
+        currency_code: "koodu owó",
+        iban: "IBAN",
         jwt: "JWT",
         template_literal: "ẹ̀rọ ìbáwọlé",
     };
@@ -8091,6 +8346,7 @@ const yo_error = () => {
 
 
 
+
 // EXTERNAL MODULE: ./node_modules/zod/v4/core/registries.js
 var registries = __webpack_require__(3795);
 // EXTERNAL MODULE: ./node_modules/zod/v4/core/doc.js
@@ -8102,7 +8358,7 @@ var core_doc = __webpack_require__(8424);
 
 
 
-/** Sentinel value returned by the compiled fast path when validation fails. Internal. */
+/** @internal Sentinel the compiled fast path returns when validation fails. */
 const INVALID = Symbol.for("zod.compile.invalid");
 // Set on the parse ctx when a compiled wrapper falls back to the runtime, so nested compiled wrappers skip their fast paths for the rest of that parse.
 const FALLBACK_FLAG = Symbol.for("zod.compile.fallback");
@@ -8153,45 +8409,9 @@ function compileValidator(schema, parser) {
 function compile(schema, options) {
     try {
         const parser = compileFn(schema);
-        const clone = util.clone(schema);
-        // Capture the source-of-truth runtime eagerly. If schema._zod.run is itself a shim installed by global-mode (`__originalRun` set), unwrap past it. Otherwise capturing the live property lazily would let a later self- replacement of schema._zod.run feed our wrapper back into itself.
-        const liveRun = schema._zod.run;
-        const originalRun = liveRun.__originalRun ?? liveRun;
-        // Delegate to the *original* schema's run on bypass/fallback (not the
-        // clone's). The original closed over its own `inst` at construction time;
-        // issue payloads use that reference to derive things like the class name
-        // for `z.instanceof(Test)`. Calling the clone's freshly-initialized run
-        // would push issues with `inst === clone`, producing diverging error
-        // messages from the original schema.
-        const wrapped = (payload, ctx) => {
-            if (ctx?.async ||
-                ctx?.direction === "backward" ||
-                ctx?.skipChecks ||
-                ctx?.[FALLBACK_FLAG]) {
-                return originalRun(payload, ctx);
-            }
-            // A memoized back-edge: only the runtime can close a reference cycle, and a transform on one must raise $ZodCyclicError from its own parse.
-            if (ctx && (0,memoizer/* isBackEdge */.TE)(ctx, payload.value)) {
-                return originalRun(payload, ctx);
-            }
-            const out = parser(payload.value);
-            if (out !== INVALID) {
-                payload.value = out;
-                return payload;
-            }
-            // Mark this parse as runtime-driven: under global mode every nested schema carries its own compiled wrapper, and without the flag the parent's runtime fallback re-enters each child's fast path, running user callbacks a third time on invalid input.
-            if (ctx)
-                ctx[FALLBACK_FLAG] = true;
-            return originalRun(payload, ctx);
-        };
-        // Let later compiles of (or through) this run unwrap to the true runtime — both the global shim and repeated z.compile calls rely on this. The bag also carries the parser and the validator, so the standalone validate can skip the payload and wrapper on the happy path.
-        wrapped.__originalRun = originalRun;
-        clone._zod.bag.fallbackRun = originalRun;
+        const clone = withParser(schema, parser);
+        // withParser leaves the parser as its own validator; the generated assert-only variant is better when we have one
         clone._zod.bag.validator = compileValidator(schema, parser);
-        clone._zod.run = wrapped;
-        // The fast parse/safeParse closures fall back through the source schema's methods. If the source is shim- or wrapper-managed, those methods route into a compiled run and would execute user callbacks a third time on invalid input — the plain method → wrapper path is exactly 2x, so skip.
-        if (!liveRun.__originalRun)
-            installCompiledUserMethods(clone, schema, parser);
         return clone;
     }
     catch (err) {
@@ -8200,6 +8420,59 @@ function compile(schema, options) {
         // a schema we can't compile still has to work, so hand it back untouched on the runtime parser — the same silent fallback global mode already does
         return schema;
     }
+}
+/**
+ * Install an already-generated parser as a schema's fast path. Returns a clone; the original is
+ * unchanged.
+ *
+ * The parser takes the input and returns the parsed value, or `INVALID` to hand the parse to the
+ * runtime. It must be synchronous and forward-direction, and it must build fresh output rather than
+ * return its input — Zod cannot check either, and a wrong *success* is returned to the caller as-is.
+ *
+ * `compile()` is the ordinary entry point. This is for a build-time or native compiler that produces
+ * a parser where `new Function` is unavailable.
+ */
+function withParser(schema, parser) {
+    // generated code never receives the parse context, so only the runtime can close a reference cycle; compileFn refuses these too
+    if ((0,memoizer/* isRecursiveSchema */.Kw)(schema)) {
+        throw new ZodCompileUnsupportedError("a schema whose subtree contains a reference cycle");
+    }
+    const clone = util.clone(schema);
+    // Capture the source-of-truth runtime eagerly. If schema._zod.run is itself a shim installed by global-mode (`__originalRun` set), unwrap past it. Otherwise capturing the live property lazily would let a later self- replacement of schema._zod.run feed our wrapper back into itself.
+    const liveRun = schema._zod.run;
+    const originalRun = liveRun.__originalRun ?? liveRun;
+    // Delegate to the *original* schema's run on bypass/fallback, not the clone's. The original closed over its own `inst` at construction time, and issue payloads use that reference to derive things like the class name for `z.instanceof(Test)`; calling the clone's freshly-initialized run would push issues with `inst === clone` and diverge from the original schema's error messages.
+    const wrapped = (payload, ctx) => {
+        if (ctx?.async ||
+            ctx?.direction === "backward" ||
+            ctx?.skipChecks ||
+            ctx?.[FALLBACK_FLAG]) {
+            return originalRun(payload, ctx);
+        }
+        // A memoized back-edge: only the runtime can close a reference cycle, and a transform on one must raise $ZodCyclicError from its own parse.
+        if (ctx && (0,memoizer/* isBackEdge */.TE)(ctx, payload.value)) {
+            return originalRun(payload, ctx);
+        }
+        const out = parser(payload.value);
+        if (out !== INVALID) {
+            payload.value = out;
+            return payload;
+        }
+        // Mark this parse as runtime-driven: under global mode every nested schema carries its own compiled wrapper, and without the flag the parent's runtime fallback re-enters each child's fast path, running user callbacks a third time on invalid input.
+        if (ctx)
+            ctx[FALLBACK_FLAG] = true;
+        return originalRun(payload, ctx);
+    };
+    // Let later compiles of (or through) this run unwrap to the true runtime — both the global shim and repeated z.compile calls rely on this. The bag also carries the parser and the validator, so the standalone validate can skip the payload and wrapper on the happy path.
+    wrapped.__originalRun = originalRun;
+    clone._zod.bag.fallbackRun = originalRun;
+    // a supplied parser answers `validate` too: one implementation means parse and validate cannot disagree, and its undefined `definite` keeps the runtime re-parse on every rejection
+    clone._zod.bag.validator = parser;
+    clone._zod.run = wrapped;
+    // The fast parse/safeParse closures fall back through the source schema's methods. If the source is shim- or wrapper-managed, those methods route into a compiled run and would execute user callbacks a third time on invalid input — the plain method → wrapper path is exactly 2x, so skip.
+    if (!liveRun.__originalRun)
+        installCompiledUserMethods(clone, schema, parser);
+    return clone;
 }
 function installCompiledUserMethods(target, source, parser) {
     const targetAny = target;
@@ -8226,9 +8499,8 @@ function installCompiledUserMethods(target, source, parser) {
     }
 }
 /**
- * Generate the standalone compiled function: a parser by default, a validator under
- * `assertOnly`. Returns either the parsed value, `true` where nothing reads the output,
- * or the `INVALID` sentinel. Internal — consumers should use `compile()`.
+ * @internal Generate the standalone compiled function: a parser by default, a validator under
+ * `assertOnly`. Returns the parsed value, `true` where nothing reads the output, or `INVALID`. Consumers use `compile()`.
  */
 function compileFn(schema, options) {
     // Cycle-breaking is keyed on the parse context, which generated code never receives. `shape` can be a getter that throws (z.pick() with an unrecognized mask key), so treat "can't tell" as recursive.
@@ -8244,6 +8516,7 @@ function compileFn(schema, options) {
         constants: new Map(),
         constantCounter: 0,
         varCounter: 0,
+        definite: true,
     };
     const doc = new core_doc/* Doc */.J(["input"]);
     const outputAccessor = generateCheck(doc, ctx, schema, "input", !options?.assertOnly);
@@ -8272,6 +8545,7 @@ function compileFn(schema, options) {
     if (options?.debug) {
         fn.code = fullCode;
     }
+    fn.definite = ctx.definite;
     return fn;
 }
 function addConstant(ctx, value) {
@@ -8283,6 +8557,11 @@ function addConstant(ctx, value) {
     const name = `c${ctx.constantCounter++}`;
     ctx.constants.set(name, value);
     return name;
+}
+/** Hoists a user-supplied callback. Anything the schema's author wrote can throw, and generated code can reject an earlier sibling before ever reaching it, so this clears `definite` — a rejection is then no longer proof that the interpreter would have rejected rather than thrown. */
+function addUserConstant(ctx, fn) {
+    ctx.definite = false;
+    return addConstant(ctx, fn);
 }
 function newVar(ctx) {
     return `v${ctx.varCounter++}`;
@@ -8319,6 +8598,8 @@ function compileChild(doc, ctx, schema, accessor, needsValue = true) {
     }
 }
 function emitRuntimeIsland(doc, ctx, schema, accessor) {
+    // an islanded child answers INVALID for an async run too, which the interpreter throws for
+    ctx.definite = false;
     const schemaConst = addConstant(ctx, schema);
     const runConst = addConstant(ctx, runtimeRun);
     const outVar = newVar(ctx);
@@ -8401,6 +8682,9 @@ function generateChecks(doc, ctx, schema, accessor) {
                 break;
             case "property":
                 generatePropertyCheck(doc, ctx, def, currentAccessor);
+                break;
+            case "properties":
+                generatePropertiesChecks(doc, ctx, def, currentAccessor);
                 break;
             case "overwrite": {
                 // Overwrite transforms the value - create new variable for transformed result
@@ -8527,6 +8811,24 @@ function generateMimeTypeCheck(doc, ctx, def, accessor) {
         doc.write(`if (!${mimeSet}.has(${accessor}.type)) return INVALID;`);
     }
 }
+// asserts each named property in place; children compile assert-only because z.properties never rebuilds its input
+function generatePropertiesChecks(doc, ctx, def, accessor) {
+    // a custom `when` gates the assertion at runtime; inside a union a wrongly-run branch is absorbed as a branch failure rather than falling back, so refuse at codegen
+    if (def.when) {
+        throw new ZodCompileUnsupportedError(`check with a custom "when" condition`);
+    }
+    // matches the runtime gate: the base schema already typed the value, so only a nullish one is rejected
+    doc.write(`if (${accessor} == null) return INVALID;`);
+    const shape = def.shape;
+    for (const key of Reflect.ownKeys(shape)) {
+        // a symbol has no source literal, so it is hoisted as a constant
+        const keyExpr = typeof key === "symbol" ? addConstant(ctx, key) : util.esc(key);
+        // cache the property read so a getter runs exactly once, matching the runtime
+        const inputVar = newVar(ctx);
+        doc.write(`const ${inputVar} = ${accessor}[${keyExpr}];`);
+        compileChild(doc, ctx, shape[key], inputVar, false);
+    }
+}
 function generatePropertyCheck(doc, ctx, def, accessor) {
     const propAccessor = `${accessor}[${JSON.stringify(def.property)}]`;
     generateCheck(doc, ctx, def.schema, propAccessor);
@@ -8559,7 +8861,7 @@ function generateCustomRefineCheck(doc, ctx, check, accessor) {
         if (isAsyncFunction(def.fn)) {
             throw new ZodCompileAsyncError("z.compile: async .refine() predicates are not supported");
         }
-        const fnConst = addConstant(ctx, def.fn);
+        const fnConst = addUserConstant(ctx, def.fn);
         const throwAsyncConst = addConstant(ctx, throwAsync);
         const resVar = newVar(ctx);
         doc.write(`const ${resVar} = ${fnConst}(${accessor});`);
@@ -8587,7 +8889,7 @@ function generateCustomRefineCheck(doc, ctx, check, accessor) {
                 throwAsync();
             return fakePayload.issues.length === 0 ? fakePayload.value : INVALID;
         };
-        const helperConst = addConstant(ctx, helperFn);
+        const helperConst = addUserConstant(ctx, helperFn);
         const outVar = newVar(ctx);
         doc.write(`const ${outVar} = ${helperConst}(${accessor});`);
         doc.write(`if (${outVar} === INVALID) return INVALID;`);
@@ -8629,8 +8931,7 @@ const PATTERN_IS_COMPLETE = new Set([
     "uuid",
     "xid",
 ]);
-// Returns the accessor holding the (possibly normalized) value after the check — url/normalize formats produce a new value like overwrite does. Never assigns to the incoming accessor: it may be a `const` or a property expression on user input.
-function generateStringFormatCheck(doc, ctx, def, accessor) {
+function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
     // Some string formats do runtime validation beyond their advertised pattern. For cheap pure utility checks, hoist the runtime function and call it so the fast path stays correct without cloning the utility logic into codegen.
     const fmt = def.format;
     if (fmt === "base64") {
@@ -8664,6 +8965,11 @@ function generateStringFormatCheck(doc, ctx, def, accessor) {
         doc.write(`if (!${validator}(${accessor})) return INVALID;`);
         return accessor;
     }
+    if (fmt === "iban") {
+        const validator = addConstant(ctx, schemas/* isValidIBAN */.DT);
+        doc.write(`if (!${validator}(${accessor})) return INVALID;`);
+        return accessor;
+    }
     const formatDef = def;
     if (fmt === "url" ||
         fmt === "httpurl" ||
@@ -8671,7 +8977,7 @@ function generateStringFormatCheck(doc, ctx, def, accessor) {
         formatDef.hostname !== undefined ||
         formatDef.protocol !== undefined) {
         // Same three predicates the runtime calls, in the same order, so there is no second URL implementation to drift. Which options exist is known now, so the calls the runtime makes conditionally are emitted conditionally instead.
-        const parseConst = addConstant(ctx, schemas/* parseURLObject */.y5);
+        const parseConst = addConstant(ctx, schemas/* validateURL */.qU);
         const defConst = addConstant(ctx, def);
         const trimVar = newVar(ctx);
         const urlVar = newVar(ctx);
@@ -8686,6 +8992,8 @@ function generateStringFormatCheck(doc, ctx, def, accessor) {
             const protocolConst = addConstant(ctx, schemas/* urlProtocolOk */.Yf);
             doc.write(`if (!${protocolConst}(${urlVar}, ${defConst}.protocol)) return INVALID;`);
         }
+        if (!needsValue)
+            return null;
         const outputVar = newVar(ctx);
         const outputExpr = formatDef.normalize ? `${urlVar}.href` : `${addConstant(ctx, schemas/* stripTabAndNewline */.NH)}(${trimVar})`;
         doc.write(`const ${outputVar} = ${outputExpr};`);
@@ -8750,7 +9058,7 @@ function generateCheck(doc, ctx, schema, accessor, needsValue = true) {
     let typeAccessor;
     switch (type) {
         case "string":
-            typeAccessor = generateStringCheck(doc, ctx, schema, accessor);
+            typeAccessor = generateStringCheck(doc, ctx, schema, accessor, buildsValue);
             break;
         case "number":
             typeAccessor = generateNumberCheck(doc, schema, accessor);
@@ -8879,13 +9187,13 @@ function generateCheck(doc, ctx, schema, accessor, needsValue = true) {
     // Generate checks after the type-specific validation (may transform value)
     return generateChecks(doc, ctx, schema, typeAccessor);
 }
-function generateStringCheck(doc, ctx, schema, accessor) {
+function generateStringCheck(doc, ctx, schema, accessor, needsValue = true) {
     doc.write(`if (typeof ${accessor} !== "string") return INVALID;`);
     // z.email() carries its format on the def, z.string().email() in def.checks; both route here so the format table has no second copy to drift from.
     const def = schema._zod.def;
     if (def.format === undefined)
         return accessor;
-    return generateStringFormatCheck(doc, ctx, def, accessor);
+    return generateStringFormatCheck(doc, ctx, def, accessor, needsValue);
 }
 function generateNumberCheck(doc, schema, accessor) {
     // Runtime z.number() rejects NaN and ±Infinity. Number.isFinite covers both.
@@ -9020,9 +9328,9 @@ function generateObjectCheck(doc, ctx, schema, accessor, buildsValue = true) {
         }
     }
     // else: strip mode (no catchall) - unknown keys ignored, only include known keys
-    // Shape keys in declared order, then unknown keys in for...in order. A middle-rung key is included iff present on the input, else iff its output is not undefined.
+    // defaulted required outputs keep their keys even when undefined
     const outputVar = newVar(ctx);
-    const hasConditionalKeys = allKeys.some((k) => mayOutputUndefined(propShape[k]) || dropsWhenAbsent(propShape[k]));
+    const hasConditionalKeys = allKeys.some((k) => mayOmitUndefined(propShape[k]) || dropsWhenAbsent(propShape[k]));
     // Assert mode: every declared key is validated above, so the output literal and the unknown-key copy are pure waste. A `never` catchall already emitted its rejection loop; a schema catchall still has to validate the values it would otherwise have stored.
     if (!buildsValue) {
         if (unknownKeysMode === "schema") {
@@ -9052,7 +9360,7 @@ function generateObjectCheck(doc, ctx, schema, accessor, buildsValue = true) {
             if (dropsWhenAbsent(propShape[k])) {
                 doc.write(`if (${kx} in ${accessor}) ${outputVar}[${kx}] = ${out};`);
             }
-            else if (mayOutputUndefined(propShape[k])) {
+            else if (mayOmitUndefined(propShape[k])) {
                 doc.write(`if (${out} !== undefined || ${kx} in ${accessor}) ${outputVar}[${kx}] = ${out};`);
             }
             else {
@@ -9195,9 +9503,10 @@ function fastPathAcceptsAbsence(schema) {
 function dropsWhenAbsent(schema) {
     return schema._zod.optin === "optional" && schema._zod.optout === "optional";
 }
-// Whether a schema's success-path output can be `undefined`. Object output
-// assembly gives such props the runtime's value-or-presence inclusion rule;
-// everything else keeps the unconditional object-literal slot.
+function mayOmitUndefined(schema) {
+    return (schema._zod.optin !== "defaulted" || schema._zod.optout === "optional") && mayOutputUndefined(schema);
+}
+// whether a schema's success-path output can be undefined
 function mayOutputUndefined(schema) {
     const def = schema._zod.def;
     switch (def.type) {
@@ -9255,9 +9564,15 @@ function generateNullableCheck(doc, ctx, schema, accessor, buildsValue = true) {
     doc.write(`}`);
     return outputVar;
 }
+function generateSizeGate(doc, schema, size) {
+    for (const [max, check] of util.sizeCaps(schema._zod.def.checks)) {
+        doc.write(`if (${size} > ${numericOperand(max, check._zod.def.check)}) return INVALID;`);
+    }
+}
 function generateArrayCheck(doc, ctx, schema, accessor, buildsValue = true) {
     const def = schema._zod.def;
     doc.write(`if (!Array.isArray(${accessor})) return INVALID;`);
+    generateSizeGate(doc, schema, `${accessor}.length`);
     // Build a new array with validated/transformed elements.
     const outputVar = buildsValue ? newVar(ctx) : null;
     const iVar = newVar(ctx);
@@ -9535,7 +9850,7 @@ function generateDiscriminatedUnionCheck(doc, ctx, def, accessor) {
         if (!values || values.size === 0) {
             throw new ZodCompileUnsupportedError("discriminated union option without static discriminator values");
         }
-        // Two options claiming one value are not discriminable, and the branch chain below would silently give it to the first. Declining to compile hands that back to the interpreter, whose own map build reports it.
+        // let the interpreter handle collisions instead of compiling first-match dispatch
         for (const value of values) {
             if (claimed.has(value)) {
                 throw new ZodCompileUnsupportedError(`duplicate discriminator value ${String(value)}`);
@@ -9579,6 +9894,8 @@ function literalEquality(ctx, accessor, value) {
 }
 function generateIntersectionCheck(doc, ctx, schema, accessor) {
     const def = schema._zod.def;
+    // An unmergeable merge, and a child failing before the merge is even reached, both return INVALID for a case the interpreter answers with a throw.
+    ctx.definite = false;
     const leftOutput = compileChild(doc, ctx, def.left, accessor);
     const rightOutput = compileChild(doc, ctx, def.right, accessor);
     // Hoist the runtime merge helper so recursive object/array merge semantics stay in one place. If the merge is invalid, return INVALID and let the runtime fallback construct canonical errors.
@@ -9648,14 +9965,15 @@ function generateRecordCheck(doc, ctx, schema, accessor) {
         // The runtime runs it against each own enumerable key and writes the value
         // under the key it produced, so compile it once and call it per key.
         const isLoose = def.mode === "loose";
-        const keyFast = addConstant(ctx, compileFn(def.keyType));
+        // the key compiles in its own context, so carry its verdict out: a key schema that can answer INVALID undecidably makes this validator undecidable too
+        const keyFn = compileFn(def.keyType);
+        if (keyFn.definite === false)
+            ctx.definite = false;
+        const keyFast = addConstant(ctx, keyFn);
         const numericConst = addConstant(ctx, regexes.number);
-        const propIsEnumerableConst = addConstant(ctx, Object.prototype.propertyIsEnumerable);
         const outKeyVar = newVar(ctx);
-        doc.write(`for (const ${kVar} of Reflect.ownKeys(${accessor})) {`);
-        doc.indented((d) => {
-            d.write(`if (${kVar} === "__proto__") continue;`);
-            d.write(`if (!${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
+        // the body runs once per string key and once per symbol key, since a key schema can accept symbols
+        emitOwnKeys(doc, ctx, accessor, kVar, (d) => {
             d.write(`let ${outKeyVar} = ${keyFast}(${kVar});`);
             // Numeric-string retry, mirroring the runtime: a key the schema rejects as a string is tried again as a number, so z.record(z.number(), …) matches the numeric keys JavaScript stringified on the way in.
             d.write(`if (${outKeyVar} === INVALID && typeof ${kVar} === "string" && ${numericConst}.test(${kVar})) ${outKeyVar} = ${keyFast}(Number(${kVar}));`);
@@ -9674,22 +9992,41 @@ function generateRecordCheck(doc, ctx, schema, accessor) {
             const valOutput = compileChild(d, ctx, def.valueType, valueVar);
             d.write(`${outputVar}[${outKeyVar}] = ${valOutput};`);
         });
-        doc.write(`}`);
         return outputVar;
     }
-    // Plain z.string() keys: iterate enumerable own keys and validate each value. Runtime uses Reflect.ownKeys so symbol keys participate in validation; matching that here prevents silently accepting objects with enumerable Symbol keys under z.record(z.string(), ...).
-    const propIsEnumerable = addConstant(ctx, Object.prototype.propertyIsEnumerable);
-    doc.write(`for (const ${kVar} of Reflect.ownKeys(${accessor})) {`);
-    doc.indented((d) => {
-        d.write(`if (${kVar} === "__proto__") continue;`);
-        d.write(`if (!${propIsEnumerable}.call(${accessor}, ${kVar})) continue;`);
-        d.write(`if (typeof ${kVar} !== "string") return INVALID;`);
+    // Plain z.string() keys: every own enumerable string key's value is validated, and an own enumerable symbol key fails the string key schema, as it does in the runtime's Reflect.ownKeys walk.
+    emitOwnKeys(doc, ctx, accessor, kVar, (d) => {
         d.write(`const ${valVar} = ${accessor}[${kVar}];`);
         const valOutput = compileChild(d, ctx, def.valueType, valVar);
         d.write(`${outputVar}[${kVar}] = ${valOutput};`);
+    }, `return INVALID;`);
+    return outputVar;
+}
+// Walks the own enumerable keys of a plain object in Reflect.ownKeys order — strings from getOwnPropertyNames, then symbols — instead of Reflect.ownKeys, whose accumulator made that walk 3–6x the cost of the loop it fed. Both snapshots are taken before any value is read and every key is rechecked with propertyIsEnumerable when visited, exactly the runtime's walk, so a getter that adds, deletes, hides or reveals a key mid-walk sees the runtime's verdict; for-in and Object.keys were no faster and each lost a case (for-in enumerates the prototype chain after the own keys, Object.keys drops a key that is non-enumerable at snapshot time). `body` is written once for the string loop and once for the symbol loop unless `onSymbol` replaces the latter.
+function emitOwnKeys(doc, ctx, accessor, kVar, body, onSymbol) {
+    const propIsEnumerableConst = addConstant(ctx, Object.prototype.propertyIsEnumerable);
+    const symsVar = newVar(ctx);
+    const keysVar = newVar(ctx);
+    const iVar = newVar(ctx);
+    doc.write(`const ${symsVar} = Object.getOwnPropertySymbols(${accessor});`);
+    doc.write(`const ${keysVar} = Object.getOwnPropertyNames(${accessor});`);
+    doc.write(`for (let ${iVar} = 0; ${iVar} < ${keysVar}.length; ${iVar}++) {`);
+    doc.indented((d) => {
+        d.write(`const ${kVar} = ${keysVar}[${iVar}];`);
+        d.write(`if (${kVar} === "__proto__" || !${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
+        body(d);
     });
     doc.write(`}`);
-    return outputVar;
+    doc.write(`for (let ${iVar} = 0; ${iVar} < ${symsVar}.length; ${iVar}++) {`);
+    doc.indented((d) => {
+        d.write(`const ${kVar} = ${symsVar}[${iVar}];`);
+        d.write(`if (!${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
+        if (onSymbol)
+            d.write(onSymbol);
+        else
+            body(d);
+    });
+    doc.write(`}`);
 }
 function literalPropertyKey(ctx, key) {
     if (typeof key === "string")
@@ -9699,6 +10036,7 @@ function literalPropertyKey(ctx, key) {
 function generateMapCheck(doc, ctx, schema, accessor) {
     const def = schema._zod.def;
     doc.write(`if (!(${accessor} instanceof Map)) return INVALID;`);
+    generateSizeGate(doc, schema, `${accessor}.size`);
     const outputVar = newVar(ctx);
     const kVar = newVar(ctx);
     const valVar = newVar(ctx);
@@ -9715,6 +10053,7 @@ function generateMapCheck(doc, ctx, schema, accessor) {
 function generateSetCheck(doc, ctx, schema, accessor) {
     const def = schema._zod.def;
     doc.write(`if (!(${accessor} instanceof Set)) return INVALID;`);
+    generateSizeGate(doc, schema, `${accessor}.size`);
     const outputVar = newVar(ctx);
     const valVar = newVar(ctx);
     doc.write(`const ${outputVar} = new Set();`);
@@ -9745,7 +10084,7 @@ function generateTemplateLiteralCheck(doc, ctx, schema, accessor) {
 function generateLazyCheck(doc, ctx, schema, accessor) {
     // For lazy schemas, we use a cached parser that falls back to runtime Zod parsing This handles recursive schemas correctly by avoiding infinite compilation loops
     const def = schema._zod.def;
-    const getterConst = addConstant(ctx, def.getter);
+    const getterConst = addUserConstant(ctx, def.getter);
     const cacheConst = addConstant(ctx, { parser: null });
     doc.write(`if (!${cacheConst}.parser) {`);
     doc.indented((d) => {
@@ -9769,7 +10108,7 @@ function generatePipeCheck(doc, ctx, schema, accessor) {
     // Validate input type first
     const inputOutput = generateCheck(doc, ctx, def.in, accessor);
     if (def.transform) {
-        // Apply transform and validate output. The transform may read its second `payload` argument (codec transforms like z.stringbool() push issues there) so wrap the call in a helper that spoofs a payload. Pushed issues signal INVALID and the wrapper falls back to the runtime.
+        // Apply transform and validate output. The transform may read its second `payload` argument (codec transforms like z.stringbool() push issues there) so wrap the call in a helper that spoofs a payload. Pushed issues signal INVALID and the wrapper falls back to the runtime, and a plain function handing back a promise answers INVALID too — union parity, but not a decidable rejection at the top level.
         if (isAsyncFunction(def.transform)) {
             throw new ZodCompileAsyncError("z.compile: async transforms in pipes are not supported");
         }
@@ -9783,7 +10122,7 @@ function generatePipeCheck(doc, ctx, schema, accessor) {
                 return INVALID;
             return fakePayload.issues.length === 0 ? result : INVALID;
         };
-        const helperConst = addConstant(ctx, helperFn);
+        const helperConst = addUserConstant(ctx, helperFn);
         const transformedVar = newVar(ctx);
         doc.write(`const ${transformedVar} = ${helperConst}(${inputOutput});`);
         doc.write(`if (${transformedVar} === INVALID) return INVALID;`);
@@ -9807,7 +10146,7 @@ function generateCustomCheck(doc, ctx, schema, accessor) {
             throw new ZodCompileAsyncError("z.compile: async custom predicates are not supported");
         }
         // Custom schema with a predicate function (e.g. z.instanceof). `isAsyncFunction` above is syntactic, so a plain function returning a promise reaches here, and a promise is truthy — it would read as a pass where the interpreter throws.
-        const fnConst = addConstant(ctx, def.fn);
+        const fnConst = addUserConstant(ctx, def.fn);
         const throwAsyncConst = addConstant(ctx, throwAsync);
         const resVar = newVar(ctx);
         doc.write(`const ${resVar} = ${fnConst}(${accessor});`);
@@ -9844,7 +10183,7 @@ function generateCatchCheck(doc, ctx, schema, accessor) {
     });
     doc.write(`})();`);
     const innerConst = addConstant(ctx, def.innerType);
-    const catchConst = addConstant(ctx, def.catchValue);
+    const catchConst = addUserConstant(ctx, def.catchValue);
     const catchHelperConst = addConstant(ctx, runtimeCatch);
     doc.write(`if (${outputVar} === INVALID) {`);
     doc.indented((d) => {
@@ -9871,7 +10210,7 @@ function generateTransformCheck(doc, ctx, schema, accessor) {
                 return INVALID;
             return fakePayload.issues.length === 0 ? result : INVALID;
         };
-        const helperConst = addConstant(ctx, helperFn);
+        const helperConst = addUserConstant(ctx, helperFn);
         const outputVar = newVar(ctx);
         doc.write(`const ${outputVar} = ${helperConst}(${accessor});`);
         doc.write(`if (${outputVar} === INVALID) return INVALID;`);
@@ -9960,7 +10299,7 @@ class JSONSchemaGenerator {
      * This must be called before emit().
      */
     process(schema, _params = { path: [], schemaPath: [] }) {
-        return (0,to_json_schema/* process */.eh)(schema, this.ctx, _params);
+        return (0,to_json_schema/* processSchema */.Lp)(schema, this.ctx, _params);
     }
     /**
      * Emit the final JSON Schema after processing.
@@ -10017,178 +10356,182 @@ var classic_schemas = __webpack_require__(6687);
 var schemas_namespaceObject = {};
 __webpack_require__.r(schemas_namespaceObject);
 __webpack_require__.d(schemas_namespaceObject, {
-  ZodAny: () => (classic_schemas.Ml),
-  ZodArray: () => (classic_schemas.n),
-  ZodBase64: () => (classic_schemas.nL),
-  ZodBase64URL: () => (classic_schemas._$),
-  ZodBigInt: () => (classic_schemas.Lr),
-  ZodBigIntFormat: () => (classic_schemas.A8),
-  ZodBoolean: () => (classic_schemas.WF),
-  ZodCIDRv4: () => (classic_schemas.W5),
-  ZodCIDRv6: () => (classic_schemas.Yl),
-  ZodCUID: () => (classic_schemas.Jj),
-  ZodCUID2: () => (classic_schemas.tr),
-  ZodCatch: () => (classic_schemas.hw),
-  ZodCodec: () => (classic_schemas.GS),
-  ZodCreditCard: () => (classic_schemas.jn),
-  ZodCustom: () => (classic_schemas.JE),
-  ZodCustomStringFormat: () => (classic_schemas.LE),
-  ZodDate: () => (classic_schemas.aP),
-  ZodDefault: () => (classic_schemas.Xi),
-  ZodDiscriminatedUnion: () => (classic_schemas.jv),
-  ZodE164: () => (classic_schemas.m7),
-  ZodEmail: () => (classic_schemas.cM),
-  ZodEmoji: () => (classic_schemas.yC),
-  ZodEnum: () => (classic_schemas.Vb),
-  ZodExactOptional: () => (classic_schemas.Zw),
-  ZodFile: () => (classic_schemas.im),
+  ZodAny: () => (classic_schemas.Mlh),
+  ZodArray: () => (classic_schemas.naA),
+  ZodBase64: () => (classic_schemas.nLo),
+  ZodBase64URL: () => (classic_schemas._$L),
+  ZodBigInt: () => (classic_schemas.Lr4),
+  ZodBigIntFormat: () => (classic_schemas.A8m),
+  ZodBoolean: () => (classic_schemas.WFD),
+  ZodCIDRv4: () => (classic_schemas.W5S),
+  ZodCIDRv6: () => (classic_schemas.Yll),
+  ZodCUID: () => (classic_schemas.JjC),
+  ZodCUID2: () => (classic_schemas.trZ),
+  ZodCatch: () => (classic_schemas.hw4),
+  ZodCodec: () => (classic_schemas.GSc),
+  ZodCreditCard: () => (classic_schemas.jn4),
+  ZodCustom: () => (classic_schemas.JEJ),
+  ZodCustomStringFormat: () => (classic_schemas.LEJ),
+  ZodDate: () => (classic_schemas.aPP),
+  ZodDefault: () => (classic_schemas.XiL),
+  ZodDiscriminatedUnion: () => (classic_schemas.jvo),
+  ZodE164: () => (classic_schemas.m7I),
+  ZodEmail: () => (classic_schemas.cM4),
+  ZodEmoji: () => (classic_schemas.yC$),
+  ZodEnum: () => (classic_schemas.Vb4),
+  ZodExactOptional: () => (classic_schemas.ZwT),
+  ZodFile: () => (classic_schemas.im9),
   ZodFunction: () => (classic_schemas.CZ),
-  ZodGUID: () => (classic_schemas.n4),
-  ZodIPv4: () => (classic_schemas.Bo),
-  ZodIPv6: () => (classic_schemas.Gp),
-  ZodISODate: () => (classic_schemas.Br),
-  ZodISODateTime: () => (classic_schemas.Yo),
-  ZodISODuration: () => (classic_schemas.$A),
-  ZodISOTime: () => (classic_schemas.WV),
-  ZodIntersection: () => (classic_schemas.Jv),
-  ZodJWT: () => (classic_schemas.fi),
-  ZodKSUID: () => (classic_schemas.Kf),
-  ZodLazy: () => (classic_schemas.Ih),
-  ZodLiteral: () => (classic_schemas.DN),
-  ZodMAC: () => (classic_schemas.VY),
-  ZodMap: () => (classic_schemas.Ut),
-  ZodNaN: () => (classic_schemas.Tq),
-  ZodNanoID: () => (classic_schemas.n$),
-  ZodNever: () => (classic_schemas.iS),
-  ZodNonOptional: () => (classic_schemas.vZ),
+  ZodGUID: () => (classic_schemas.n49),
+  ZodIBAN: () => (classic_schemas.mDl),
+  ZodIPv4: () => (classic_schemas.Bo6),
+  ZodIPv6: () => (classic_schemas.n4A),
+  ZodISODate: () => (classic_schemas.Brp),
+  ZodISODateTime: () => (classic_schemas.You),
+  ZodISODuration: () => (classic_schemas.$A2),
+  ZodISOTime: () => (classic_schemas.WV4),
+  ZodInstanceOf: () => (classic_schemas.YVl),
+  ZodIntersection: () => (classic_schemas.JvG),
+  ZodJWT: () => (classic_schemas.fiS),
+  ZodKSUID: () => (classic_schemas.KfN),
+  ZodLazy: () => (classic_schemas.Ihb),
+  ZodLiteral: () => (classic_schemas.DN5),
+  ZodMAC: () => (classic_schemas.VYb),
+  ZodMap: () => (classic_schemas.UtG),
+  ZodNaN: () => (classic_schemas.TqK),
+  ZodNanoID: () => (classic_schemas.n$i),
+  ZodNever: () => (classic_schemas.iSc),
+  ZodNonOptional: () => (classic_schemas.vZX),
   ZodNull: () => (classic_schemas.PQ),
-  ZodNullable: () => (classic_schemas.l1),
-  ZodNumber: () => (classic_schemas.rS),
-  ZodNumberFormat: () => (classic_schemas.Kq),
-  ZodObject: () => (classic_schemas.bv),
-  ZodOptional: () => (classic_schemas.Ii),
-  ZodPipe: () => (classic_schemas.ut),
-  ZodPrefault: () => (classic_schemas.xg),
-  ZodPreprocess: () => (classic_schemas.a2),
-  ZodPromise: () => (classic_schemas.$i),
-  ZodReadonly: () => (classic_schemas.EV),
-  ZodRecord: () => (classic_schemas.b8),
-  ZodSet: () => (classic_schemas.Kz),
-  ZodString: () => (classic_schemas.ND),
-  ZodStringFormat: () => (classic_schemas.EB),
-  ZodSuccess: () => (classic_schemas.Bu),
-  ZodSymbol: () => (classic_schemas.K5),
-  ZodTemplateLiteral: () => (classic_schemas.dd),
-  ZodTransform: () => (classic_schemas.CL),
-  ZodTuple: () => (classic_schemas.y0),
-  ZodType: () => (classic_schemas.aR),
-  ZodULID: () => (classic_schemas.qX),
-  ZodURL: () => (classic_schemas.zY),
-  ZodUUID: () => (classic_schemas.vX),
-  ZodUndefined: () => (classic_schemas._Z),
-  ZodUnion: () => (classic_schemas.fZ),
-  ZodUnknown: () => (classic_schemas._),
-  ZodVoid: () => (classic_schemas.a0),
-  ZodXID: () => (classic_schemas.Lq),
-  ZodXor: () => (classic_schemas.zA),
-  _ZodString: () => (classic_schemas.UC),
-  _default: () => (classic_schemas.Rv),
-  _function: () => (classic_schemas.KR),
-  any: () => (classic_schemas.bz),
-  array: () => (classic_schemas.YO),
-  base64: () => (classic_schemas.K3),
-  base64url: () => (classic_schemas.r0),
-  bigint: () => (classic_schemas.o),
-  boolean: () => (classic_schemas.zM),
-  "catch": () => (classic_schemas.Mf),
-  check: () => (classic_schemas.z6),
-  cidrv4: () => (classic_schemas.zr),
-  cidrv6: () => (classic_schemas.l7),
-  codec: () => (classic_schemas.rL),
-  creditCard: () => (classic_schemas.w8),
-  cuid: () => (classic_schemas.gF),
-  cuid2: () => (classic_schemas.Gl),
-  custom: () => (classic_schemas.Ie),
-  date: () => (classic_schemas.p6),
-  describe: () => (classic_schemas.q0),
-  discriminatedUnion: () => (classic_schemas.gM),
-  e164: () => (classic_schemas.hQ),
-  email: () => (classic_schemas.Rp),
-  emoji: () => (classic_schemas.Zg),
-  "enum": () => (classic_schemas.k5),
-  exactOptional: () => (classic_schemas.yq),
-  file: () => (classic_schemas.NJ),
-  float32: () => (classic_schemas.In),
-  float64: () => (classic_schemas.BN),
-  "function": () => (classic_schemas.fH),
-  guid: () => (classic_schemas.Os),
-  hash: () => (classic_schemas.tW),
-  hex: () => (classic_schemas.uh),
-  hostname: () => (classic_schemas.OI),
-  httpUrl: () => (classic_schemas.q3),
-  "instanceof": () => (classic_schemas.Nl),
-  int: () => (classic_schemas.Wh),
-  int32: () => (classic_schemas.HA),
-  int64: () => (classic_schemas.Gk),
-  intersection: () => (classic_schemas.E$),
-  invertCodec: () => (classic_schemas.L1),
-  ipv4: () => (classic_schemas.uX),
-  ipv6: () => (classic_schemas.ug),
-  json: () => (classic_schemas.Pq),
-  jwt: () => (classic_schemas.a$),
-  keyof: () => (classic_schemas.ZE),
-  ksuid: () => (classic_schemas.fO),
-  lazy: () => (classic_schemas.RZ),
-  literal: () => (classic_schemas.eu),
-  looseObject: () => (classic_schemas._H),
-  looseRecord: () => (classic_schemas.qW),
-  mac: () => (classic_schemas.Md),
-  map: () => (classic_schemas.Tj),
-  meta: () => (classic_schemas.mI),
-  nan: () => (classic_schemas.oi),
-  nanoid: () => (classic_schemas.Ak),
+  ZodNullable: () => (classic_schemas.l1C),
+  ZodNumber: () => (classic_schemas.rSt),
+  ZodNumberFormat: () => (classic_schemas.Kqw),
+  ZodObject: () => (classic_schemas.bvH),
+  ZodOptional: () => (classic_schemas.IiU),
+  ZodPipe: () => (classic_schemas.utH),
+  ZodPrefault: () => (classic_schemas.xgV),
+  ZodPreprocess: () => (classic_schemas.a2A),
+  ZodPromise: () => (classic_schemas.$i$),
+  ZodReadonly: () => (classic_schemas.EVz),
+  ZodRecord: () => (classic_schemas.b8S),
+  ZodSet: () => (classic_schemas.KzS),
+  ZodString: () => (classic_schemas.NDH),
+  ZodStringFormat: () => (classic_schemas.EB4),
+  ZodSuccess: () => (classic_schemas.Bui),
+  ZodSymbol: () => (classic_schemas.K5M),
+  ZodTemplateLiteral: () => (classic_schemas.ddM),
+  ZodTransform: () => (classic_schemas.CLY),
+  ZodTuple: () => (classic_schemas.y0Q),
+  ZodType: () => (classic_schemas.aRx),
+  ZodULID: () => (classic_schemas.qXy),
+  ZodURL: () => (classic_schemas.zYv),
+  ZodUUID: () => (classic_schemas.vXr),
+  ZodUndefined: () => (classic_schemas._ZT),
+  ZodUnion: () => (classic_schemas.fZ7),
+  ZodUnknown: () => (classic_schemas._aJ),
+  ZodVoid: () => (classic_schemas.a0N),
+  ZodXID: () => (classic_schemas.Lqq),
+  ZodXor: () => (classic_schemas.zAI),
+  _ZodString: () => (classic_schemas.UCp),
+  _default: () => (classic_schemas.Rvf),
+  _function: () => (classic_schemas.KR7),
+  any: () => (classic_schemas.bzn),
+  array: () => (classic_schemas.YOg),
+  base64: () => (classic_schemas.K39),
+  base64url: () => (classic_schemas.r0z),
+  bigint: () => (classic_schemas.oad),
+  boolean: () => (classic_schemas.zMY),
+  "catch": () => (classic_schemas.MfU),
+  check: () => (classic_schemas.z6Y),
+  cidrv4: () => (classic_schemas.zrY),
+  cidrv6: () => (classic_schemas.l7s),
+  codec: () => (classic_schemas.rLB),
+  creditCard: () => (classic_schemas.w8K),
+  cuid: () => (classic_schemas.gF3),
+  cuid2: () => (classic_schemas.GlQ),
+  currencyCode: () => (classic_schemas.Xyz),
+  custom: () => (classic_schemas.IeY),
+  date: () => (classic_schemas.p6U),
+  describe: () => (classic_schemas.q0y),
+  discriminatedUnion: () => (classic_schemas.gMt),
+  e164: () => (classic_schemas.hQe),
+  email: () => (classic_schemas.Rpp),
+  emoji: () => (classic_schemas.ZgG),
+  "enum": () => (classic_schemas.k5n),
+  exactOptional: () => (classic_schemas.yqP),
+  file: () => (classic_schemas.NJF),
+  float32: () => (classic_schemas.In1),
+  float64: () => (classic_schemas.BNo),
+  "function": () => (classic_schemas.fHH),
+  guid: () => (classic_schemas.OsD),
+  hash: () => (classic_schemas.tWU),
+  hex: () => (classic_schemas.uhr),
+  hostname: () => (classic_schemas.OIJ),
+  httpUrl: () => (classic_schemas.q36),
+  iban: () => (classic_schemas.Zkx),
+  "instanceof": () => (classic_schemas.Nlp),
+  int: () => (classic_schemas.Whr),
+  int32: () => (classic_schemas.HA5),
+  int64: () => (classic_schemas.Gkc),
+  intersection: () => (classic_schemas.E$q),
+  invertCodec: () => (classic_schemas.L1c),
+  ipv4: () => (classic_schemas.uXy),
+  ipv6: () => (classic_schemas.ugL),
+  json: () => (classic_schemas.Pq9),
+  jwt: () => (classic_schemas.a$Y),
+  keyof: () => (classic_schemas.ZEF),
+  ksuid: () => (classic_schemas.fOD),
+  lazy: () => (classic_schemas.RZV),
+  literal: () => (classic_schemas.euz),
+  looseObject: () => (classic_schemas._H3),
+  looseRecord: () => (classic_schemas.qWX),
+  mac: () => (classic_schemas.Mdg),
+  map: () => (classic_schemas.TjK),
+  meta: () => (classic_schemas.mIj),
+  nan: () => (classic_schemas.oit),
+  nanoid: () => (classic_schemas.AkI),
   nativeEnum: () => (classic_schemas.fc),
-  never: () => (classic_schemas.Zm),
-  nonoptional: () => (classic_schemas.eY),
-  "null": () => (classic_schemas.ch),
-  nullable: () => (classic_schemas.me),
-  nullish: () => (classic_schemas.cl),
-  number: () => (classic_schemas.ai),
-  object: () => (classic_schemas.Ik),
-  optional: () => (classic_schemas.lq),
-  partialRecord: () => (classic_schemas.jg),
-  pipe: () => (classic_schemas.Fs),
-  prefault: () => (classic_schemas.Sd),
-  preprocess: () => (classic_schemas.vk),
-  promise: () => (classic_schemas.iv),
-  readonly: () => (classic_schemas.tB),
-  record: () => (classic_schemas.g1),
-  refine: () => (classic_schemas.YP),
-  set: () => (classic_schemas.hZ),
-  strictObject: () => (classic_schemas.re),
-  string: () => (classic_schemas.Yj),
-  stringFormat: () => (classic_schemas.Np),
-  stringbool: () => (classic_schemas.uE),
-  success: () => (classic_schemas.kX),
-  superRefine: () => (classic_schemas.zn),
-  symbol: () => (classic_schemas.HR),
-  templateLiteral: () => (classic_schemas.Uy),
-  transform: () => (classic_schemas.pd),
-  tuple: () => (classic_schemas.PV),
-  uint32: () => (classic_schemas.S8),
-  uint64: () => (classic_schemas.VV),
-  ulid: () => (classic_schemas.Z0),
-  undefined: () => (classic_schemas.Vx),
-  union: () => (classic_schemas.KC),
-  unknown: () => (classic_schemas.L5),
-  url: () => (classic_schemas.OZ),
-  uuid: () => (classic_schemas.uR),
-  uuidv4: () => (classic_schemas.gZ),
+  never: () => (classic_schemas.ZmZ),
+  nonoptional: () => (classic_schemas.eYS),
+  "null": () => (classic_schemas.chJ),
+  nullable: () => (classic_schemas.mee),
+  nullish: () => (classic_schemas.cl6),
+  number: () => (classic_schemas.aig),
+  object: () => (classic_schemas.Ikc),
+  optional: () => (classic_schemas.lqM),
+  partialRecord: () => (classic_schemas.jgl),
+  pipe: () => (classic_schemas.FsL),
+  prefault: () => (classic_schemas.SdS),
+  preprocess: () => (classic_schemas.vkY),
+  promise: () => (classic_schemas.ivC),
+  readonly: () => (classic_schemas.tBZ),
+  record: () => (classic_schemas.g1P),
+  refine: () => (classic_schemas.YPB),
+  set: () => (classic_schemas.hZp),
+  strictObject: () => (classic_schemas.rej),
+  string: () => (classic_schemas.YjP),
+  stringFormat: () => (classic_schemas.NpN),
+  stringbool: () => (classic_schemas.uEf),
+  success: () => (classic_schemas.kXE),
+  superRefine: () => (classic_schemas.zni),
+  symbol: () => (classic_schemas.HRO),
+  templateLiteral: () => (classic_schemas.Uy$),
+  transform: () => (classic_schemas.pdi),
+  tuple: () => (classic_schemas.PVZ),
+  uint32: () => (classic_schemas.S8h),
+  uint64: () => (classic_schemas.VV_),
+  ulid: () => (classic_schemas.Z09),
+  undefined: () => (classic_schemas.Vxk),
+  union: () => (classic_schemas.KCZ),
+  unknown: () => (classic_schemas.L5J),
+  url: () => (classic_schemas.OZ5),
+  uuid: () => (classic_schemas.uRe),
+  uuidv4: () => (classic_schemas.gZm),
   uuidv6: () => (classic_schemas.gE),
-  uuidv7: () => (classic_schemas.nH),
-  "void": () => (classic_schemas.rI),
-  xid: () => (classic_schemas.kM),
-  xor: () => (classic_schemas.I8)
+  uuidv7: () => (classic_schemas.nHE),
+  "void": () => (classic_schemas.rIH),
+  xid: () => (classic_schemas.kMC),
+  xor: () => (classic_schemas.I86)
 });
 
 ;// ./node_modules/zod/v4/classic/checks.js
@@ -10236,16 +10579,16 @@ var ZodFirstPartyTypeKind;
 
 
 function datetime(params) {
-    return api/* _isoDateTime */.G1(classic_schemas/* ZodISODateTime */.Yo, params);
+    return api/* _isoDateTime */.G1(classic_schemas/* ZodISODateTime */.You, params);
 }
 function date(params) {
-    return api/* _isoDate */.db(classic_schemas/* ZodISODate */.Br, params);
+    return api/* _isoDate */.db(classic_schemas/* ZodISODate */.Brp, params);
 }
 function time(params) {
-    return api/* _isoTime */.Kn(classic_schemas/* ZodISOTime */.WV, params);
+    return api/* _isoTime */.Kn(classic_schemas/* ZodISOTime */.WV4, params);
 }
 function duration(params) {
-    return api/* _isoDuration */.f2(classic_schemas/* ZodISODuration */.$A, params);
+    return api/* _isoDuration */.f2(classic_schemas/* ZodISODuration */.$A2, params);
 }
 
 ;// ./node_modules/zod/v4/classic/from-json-schema.js
@@ -10374,12 +10717,13 @@ function resolveRef(ref, ctx) {
     throw new Error(`Reference not found: ${ref}`);
 }
 /**
- * Rejects every own key that fails `keySchema`, before `objectSchema` runs. The
- * guard has to see the raw input: an object parse drops `__proto__` and can add
- * keys from a property `default`, so its output is not the set of names the
- * instance actually carried.
+ * Enforces the keywords that constrain an object's own keys — `propertyNames`,
+ * `minProperties`, `maxProperties` — before `objectSchema` runs. The guard has
+ * to see the raw input: an object parse drops `__proto__` and can add keys from
+ * a property `default`, so its output is not the set of names the instance
+ * actually carried.
  */
-function checkPropertyNames(objectSchema, keySchema) {
+function checkObjectGuards(objectSchema, guards) {
     // An identity transform, not z.any(), so `toJSONSchema` reports the object on both the input and the output side of the pipe.
     const guard = z
         .transform((value) => value)
@@ -10387,21 +10731,208 @@ function checkPropertyNames(objectSchema, keySchema) {
         const value = payload.value;
         if (typeof value !== "object" || value === null || Array.isArray(value))
             return;
-        for (const key of Object.getOwnPropertyNames(value)) {
-            const result = keySchema.safeParse(key);
-            if (result.success)
-                continue;
+        const keys = Object.getOwnPropertyNames(value);
+        if (guards.minProperties !== undefined && keys.length < guards.minProperties) {
             payload.issues.push({
-                code: "invalid_key",
-                origin: "record",
-                issues: result.error.issues,
-                input: key,
-                path: [key],
+                origin: "object",
+                code: "too_small",
+                minimum: guards.minProperties,
+                inclusive: true,
+                message: `Too small: expected object to have >=${guards.minProperties} properties`,
+                input: value,
+                inst: objectSchema,
                 continue: true,
             });
         }
+        if (guards.maxProperties !== undefined && keys.length > guards.maxProperties) {
+            payload.issues.push({
+                origin: "object",
+                code: "too_big",
+                maximum: guards.maxProperties,
+                inclusive: true,
+                message: `Too big: expected object to have <=${guards.maxProperties} properties`,
+                input: value,
+                inst: objectSchema,
+                continue: true,
+            });
+        }
+        if (guards.keySchema) {
+            for (const key of keys) {
+                const result = guards.keySchema.safeParse(key);
+                if (result.success)
+                    continue;
+                payload.issues.push({
+                    code: "invalid_key",
+                    origin: "record",
+                    issues: result.error.issues,
+                    input: key,
+                    path: [key],
+                    continue: true,
+                });
+            }
+        }
     });
     return guard.pipe(objectSchema);
+}
+/**
+ * An injective string for JSON data: two values share a key exactly when `uniqueItems` calls them
+ * equal, so duplicate detection is a Map lookup rather than a pairwise walk. Strings and keys are
+ * length-prefixed so no value can spell another one. `null` means "never equal to anything" — a
+ * cycle or a NaN, neither of which JSON can express.
+ */
+function canonicalKey(value, seen) {
+    if (value === null)
+        return "z";
+    const type = typeof value;
+    if (type !== "object") {
+        if (type === "number" && Number.isNaN(value))
+            return null;
+        const raw = String(value);
+        return `${type[0]}${raw.length}:${raw}`;
+    }
+    if (seen.has(value))
+        return null;
+    seen.add(value);
+    try {
+        if (Array.isArray(value)) {
+            const parts = [];
+            for (const item of value) {
+                const key = canonicalKey(item, seen);
+                if (key === null)
+                    return null;
+                parts.push(key);
+            }
+            return `a${parts.length}:[${parts.join(",")}]`;
+        }
+        const keys = Object.keys(value).sort();
+        const parts = [];
+        for (const k of keys) {
+            const key = canonicalKey(value[k], seen);
+            if (key === null)
+                return null;
+            parts.push(`${k.length}:${k}=${key}`);
+        }
+        return `o${parts.length}:{${parts.join(",")}}`;
+    }
+    finally {
+        seen.delete(value);
+    }
+}
+// keywords whose value is a schema or an array of them
+const SCHEMA_KEYWORDS = /*@__PURE__*/ new Set([
+    "items",
+    "prefixItems",
+    "additionalItems",
+    "additionalProperties",
+    "contains",
+    "propertyNames",
+    "not",
+    "if",
+    "then",
+    "else",
+    "allOf",
+    "anyOf",
+    "oneOf",
+    "unevaluatedItems",
+    "unevaluatedProperties",
+    "contentSchema",
+]);
+// keywords whose value maps names to schemas. draft-7 `dependencies` also allows an array of property names, which holds no schema to walk
+const SCHEMA_MAP_KEYWORDS = /*@__PURE__*/ new Set([
+    "properties",
+    "patternProperties",
+    "dependentSchemas",
+    "dependencies",
+    "$defs",
+    "definitions",
+]);
+/**
+ * True when a subschema holds a `$ref` anywhere a schema can appear. Only those positions are
+ * walked: `$ref` under `default` or an `x-` annotation is instance data with an ordinary key, and
+ * reading it as a reference would drop a constraint that resolves perfectly well.
+ */
+function containsRef(value) {
+    if (typeof value !== "object" || value === null)
+        return false;
+    if (Array.isArray(value))
+        return value.some(containsRef);
+    if (typeof value.$ref === "string")
+        return true;
+    return Object.entries(value).some(([key, sub]) => {
+        if (SCHEMA_KEYWORDS.has(key))
+            return containsRef(sub);
+        if (!SCHEMA_MAP_KEYWORDS.has(key) || typeof sub !== "object" || sub === null)
+            return false;
+        return Object.values(sub).some(containsRef);
+    });
+}
+function plural(n) {
+    return n === 1 ? "element" : "elements";
+}
+/**
+ * Enforces `uniqueItems` and the `contains` family before `arraySchema` runs, for the same reason
+ * `checkObjectGuards` runs pre-pipe: an item parse can apply a nested `default`, so the parsed
+ * array is not the instance the keywords are defined over. A guard issue aborts the pipe, so
+ * `minItems`/`maxItems` are not also reported on the same parse — instance correctness is worth
+ * more than co-reporting two issues.
+ */
+function checkArrayGuards(arraySchema, guards) {
+    // An identity transform, not z.any(), so `toJSONSchema` reports the array on both the input and the output side of the pipe.
+    const guard = z
+        .transform((value) => value)
+        .check((payload) => {
+        const items = payload.value;
+        if (!Array.isArray(items))
+            return;
+        if (guards.uniqueItems === true) {
+            const firstSeen = new Map();
+            for (let i = 0; i < items.length; i++) {
+                const key = canonicalKey(items[i], new Set());
+                if (key === null)
+                    continue;
+                const first = firstSeen.get(key);
+                if (first === undefined) {
+                    firstSeen.set(key, i);
+                    continue;
+                }
+                payload.issues.push({
+                    code: "custom",
+                    message: `Array items must be unique: element at index ${i} duplicates the one at index ${first}`,
+                    input: items,
+                    path: [i],
+                    continue: true,
+                });
+            }
+        }
+        if (guards.containsSchema) {
+            const minContains = guards.minContains ?? 1;
+            // one past the ceiling already proves the failure, and nothing above it changes the verdict
+            const ceiling = guards.maxContains !== undefined ? guards.maxContains + 1 : Number.POSITIVE_INFINITY;
+            let matches = 0;
+            for (const item of items) {
+                if (guards.containsSchema.safeParse(item).success && ++matches >= ceiling)
+                    break;
+            }
+            if (matches < minContains) {
+                // the scan ran to the end, so this count is exact
+                payload.issues.push({
+                    code: "custom",
+                    message: `Array must contain at least ${minContains} matching ${plural(minContains)}; found ${matches}`,
+                    input: items,
+                    continue: true,
+                });
+            }
+            if (guards.maxContains !== undefined && matches > guards.maxContains) {
+                payload.issues.push({
+                    code: "custom",
+                    message: `Array must contain at most ${guards.maxContains} matching ${plural(guards.maxContains)}`,
+                    input: items,
+                    continue: true,
+                });
+            }
+        }
+    });
+    return guard.pipe(arraySchema);
 }
 function getTupleRest(restSchema, ctx) {
     if (restSchema === false) {
@@ -10566,6 +11097,9 @@ function convertBaseSchema(schema, ctx) {
                 }
                 else if (format === "credit_card") {
                     stringSchema = stringSchema.check(z.creditCard());
+                }
+                else if (format === "iban") {
+                    stringSchema = stringSchema.check(z.iban());
                 }
                 else if (format === "jwt") {
                     stringSchema = stringSchema.check(z.jwt());
@@ -10734,17 +11268,23 @@ function convertBaseSchema(schema, ctx) {
                 }
             }
             // propertyNames constrains key *names* only, and says nothing about which keys are required or how their values validate. Layering it on top of the result keeps properties/patternProperties/additionalProperties composing underneath. `true` allows every name, so it needs no guard.
-            if (schema.propertyNames !== undefined && schema.propertyNames !== true) {
-                // Keys are always strings, so a propertyNames subschema that omits `type` still constrains them — without this it would convert to z.any().
-                const keyJSONSchema = typeof schema.propertyNames === "object" && schema.propertyNames.type === undefined
-                    ? { type: "string", ...schema.propertyNames }
-                    : schema.propertyNames;
-                zodSchema = checkPropertyNames(zodSchema, convertSchema(keyJSONSchema, ctx));
+            const hasKeyGuard = schema.propertyNames !== undefined && schema.propertyNames !== true;
+            const minProperties = typeof schema.minProperties === "number" ? schema.minProperties : undefined;
+            const maxProperties = typeof schema.maxProperties === "number" ? schema.maxProperties : undefined;
+            if (hasKeyGuard || minProperties !== undefined || maxProperties !== undefined) {
+                let keySchema;
+                if (hasKeyGuard) {
+                    // Keys are always strings, so a propertyNames subschema that omits `type` still constrains them — without this it would convert to z.any().
+                    const keyJSONSchema = typeof schema.propertyNames === "object" && schema.propertyNames.type === undefined
+                        ? { type: "string", ...schema.propertyNames }
+                        : schema.propertyNames;
+                    keySchema = convertSchema(keyJSONSchema, ctx);
+                }
+                zodSchema = checkObjectGuards(zodSchema, { keySchema, minProperties, maxProperties });
             }
             break;
         }
         case "array": {
-            // TODO: uniqueItems and contains/minContains/maxContains are not supported
             // Check if this is a tuple (prefixItems or items as array)
             const prefixItems = schema.prefixItems;
             const items = schema.items;
@@ -10796,6 +11336,15 @@ function convertBaseSchema(schema, ctx) {
             else {
                 // No items specified - array of any
                 zodSchema = z.array(z.any());
+            }
+            // minContains/maxContains only constrain anything when `contains` itself is present
+            if (schema.uniqueItems === true || schema.contains !== undefined) {
+                zodSchema = checkArrayGuards(zodSchema, {
+                    uniqueItems: schema.uniqueItems === true,
+                    containsSchema: schema.contains !== undefined ? convertSchema(schema.contains, ctx) : undefined,
+                    minContains: typeof schema.minContains === "number" ? schema.minContains : undefined,
+                    maxContains: typeof schema.maxContains === "number" ? schema.maxContains : undefined,
+                });
             }
             break;
         }
@@ -10864,9 +11413,24 @@ function convertSchema(schema, ctx) {
             extraMeta[key] = schema[key];
         }
     }
-    // `propertyNames` is enforced by a key guard, which `toJSONSchema` cannot infer, so the original keyword is carried as metadata to keep the round-trip lossless. Only where it was actually applied: on any other type it is inert, and on a `$ref` the metadata would land on the target every reference shares.
-    if (schema.propertyNames !== undefined && schema.type === "object" && schema.$ref === undefined) {
-        extraMeta.propertyNames = schema.propertyNames;
+    // `propertyNames` and `contains` are enforced by a guard, which `toJSONSchema` cannot infer, so the original keyword is carried as metadata to keep the round-trip lossless. Only where it was actually applied: on any other type it is inert, and on a `$ref` the metadata would land on the target every reference shares. A carried subschema is copied verbatim while the root `$defs` stay behind, so one holding a `$ref` is dropped rather than emitted as a dangling reference.
+    if (schema.type === "object" && schema.$ref === undefined) {
+        if (schema.propertyNames !== undefined && !containsRef(schema.propertyNames)) {
+            extraMeta.propertyNames = schema.propertyNames;
+        }
+        for (const key of ["minProperties", "maxProperties"]) {
+            if (schema[key] !== undefined)
+                extraMeta[key] = schema[key];
+        }
+    }
+    if (schema.type === "array" && schema.$ref === undefined) {
+        if (schema.contains !== undefined && !containsRef(schema.contains)) {
+            extraMeta.contains = schema.contains;
+        }
+        for (const key of ["uniqueItems", "minContains", "maxContains"]) {
+            if (schema[key] !== undefined)
+                extraMeta[key] = schema[key];
+        }
     }
     for (const key of Object.keys(schema)) {
         if (!RECOGNIZED_KEYS.has(key)) {
@@ -11091,7 +11655,7 @@ function deepPartial(schema) {
         // Every partialed option now admits `undefined`, which the constructor rejects as a duplicate.
         union: (s) => {
             const def = s._zod.def;
-            return def.discriminator === undefined ? s : classic_schemas/* union */.KC(def.options);
+            return def.discriminator === undefined ? s : classic_schemas/* union */.KCZ(def.options);
         },
     });
 }
@@ -11120,7 +11684,7 @@ function input(schema) {
     return visit(schema, {
         pipe: (s) => inSide(s._zod.def),
         // A default value belongs to the output side, so a rewritten inner type leaves it stranded. `.default()` widens the declared input type with `undefined`, and `optional` is what carries that across.
-        default: (s, rewritten) => (rewritten ? classic_schemas/* optional */.lq(s._zod.def.innerType) : s),
+        default: (s, rewritten) => (rewritten ? classic_schemas/* optional */.lqM(s._zod.def.innerType) : s),
         // A catch value is output-side too, but `.catch()` leaves the declared input type alone, so the inner schema stands on its own.
         catch: (s, rewritten) => (rewritten ? s._zod.def.innerType : s),
     });
@@ -11138,19 +11702,19 @@ function output(schema) {
 
 
 function string(params) {
-    return api/* _coercedString */.K_(classic_schemas/* ZodString */.ND, params);
+    return api/* _coercedString */.K_(classic_schemas/* ZodString */.NDH, params);
 }
 function number(params) {
-    return api/* _coercedNumber */.qG(classic_schemas/* ZodNumber */.rS, params);
+    return api/* _coercedNumber */.qG(classic_schemas/* ZodNumber */.rSt, params);
 }
 function coerce_boolean(params) {
-    return api/* _coercedBoolean */.dN(classic_schemas/* ZodBoolean */.WF, params);
+    return api/* _coercedBoolean */.dN(classic_schemas/* ZodBoolean */.WFD, params);
 }
 function bigint(params) {
-    return api/* _coercedBigint */.St(classic_schemas/* ZodBigInt */.Lr, params);
+    return api/* _coercedBigint */.St(classic_schemas/* ZodBigInt */.Lr4, params);
 }
 function coerce_date(params) {
-    return api/* _coercedDate */.B4(classic_schemas/* ZodDate */.aP, params);
+    return api/* _coercedDate */.B4(classic_schemas/* ZodDate */.aPP, params);
 }
 
 ;// ./node_modules/zod/v4/classic/external.js
@@ -11185,4 +11749,4 @@ function coerce_date(params) {
 /***/ }
 
 }]);
-//# sourceMappingURL=328.bundle.js.map
+//# sourceMappingURL=560.bundle.js.map

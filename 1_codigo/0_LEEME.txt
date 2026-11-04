@@ -13,7 +13,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     .cf\   (1 archivos)
         icono.ico
     herramientas_dev\   (42 archivos)
-    remotion\   (16238 archivos)
+    remotion\   (16142 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     actualizar_ui.py

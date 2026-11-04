@@ -1,5 +1,5 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[155],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[716],{
 
 /***/ 7553
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
@@ -108,6 +108,28 @@ class Bitstream {
         return clone;
     }
 }
+
+
+/***/ },
+
+/***/ 3898
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+/* unused harmony exports TRUEHD_SAMPLE_RATES, TRUEHD_CHANNEL_COUNTS */
+/*!
+ * Copyright (c) 2026-present, Vanilagy and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+const TRUEHD_MAJOR_SYNC_WORD = 0xf8726fba;
+const TRUEHD_SAMPLE_RATES = (/* unused pure expression or super */ null && ([44100, 48000, 88200, 96000, 176400, 192000])); // Accepted by FFmpeg's encoder
+const TRUEHD_CHANNEL_COUNTS = (/* unused pure expression or super */ null && ([1, 2, 3, 4, 5, 6])); // FFmpeg's encoder has a layout for these
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "sl", 0, /* binding */ TRUEHD_MAJOR_SYNC_WORD
+/* harmony export */ ]);
 
 
 /***/ },
@@ -2783,7 +2805,10 @@ class HlsSegmentedInput extends SegmentedInput {
                 continue;
             }
             const timestamp = 2 ** 32 * timestampHigh + timestampLow;
-            return (0,mpeg_ts_misc/* normalizeWrappedTimestamp */.hD)(timestamp, (0,mpeg_ts_misc/* createTimestampWrapInfo */.dV)(timestamp)) / (/* inlined export .MPEG_TS_TIMESCALE */90000);
+            const privTimestamp = (0,mpeg_ts_misc/* normalizeWrappedTimestamp */.hD)(timestamp, (0,mpeg_ts_misc/* createTimestampWrapInfo */.dV)(timestamp))
+                / (/* inlined export .MPEG_TS_TIMESCALE */90000);
+            // The PRIV timestamp is that of the first packet
+            return privTimestamp - await input.getFirstTimestamp();
         }
         return null;
     }
@@ -4548,7 +4573,9 @@ class InputAudioTrack extends InputTrack {
         return requireSync(this._backing.getCodec(), 'codec', 'getCodec');
     }
     async hasOnlyKeyPackets() {
-        return (await this._backing.getHasOnlyKeyPackets?.()) ?? true;
+        const codec = await this._backing.getCodec();
+        return (await this._backing.getHasOnlyKeyPackets?.())
+            ?? (codec === null || !_codec_js__WEBPACK_IMPORTED_MODULE_0__/* .AUDIO_CODECS_WITH_DELTA_PACKETS */ .rp.includes(codec));
     }
     /** Returns the number of audio channels in the track. */
     async getNumberOfChannels() {
@@ -4633,10 +4660,14 @@ class InputAudioTrack extends InputTrack {
         if (!(packet instanceof _packet_js__WEBPACK_IMPORTED_MODULE_6__/* .EncodedPacket */ .Z)) {
             throw new TypeError('packet must be an EncodedPacket.');
         }
-        if ((await this.getCodec()) === null) {
+        if (packet.isMetadataOnly) {
+            throw new TypeError('packet must not be metadata-only to determine its type.');
+        }
+        const codec = await this.getCodec();
+        if (codec === null) {
             return null;
         }
-        return 'key'; // No audio codec with delta packets
+        return (0,_codec_data_js__WEBPACK_IMPORTED_MODULE_1__/* .determineAudioPacketType */ .Qb)(codec, packet.data);
     }
 }
 /**
@@ -5458,6 +5489,7 @@ class InputDisposedError extends Error {
 
 
 
+const TRUEHD_CHANNEL_ASSIGNMENT_COUNTS = [2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 1, 1];
 // Anything beyond this is malicious
 const MAX_BOX_NESTING_DEPTH = 64;
 class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer */ .B {
@@ -5976,15 +6008,24 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                 {
                     const version = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU8 */ .eo)(slice);
                     slice.skip(3); // Flags
+                    let creationTime;
                     if (version === 1) {
-                        slice.skip(8 + 8);
+                        creationTime = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU64Be */ .th)(slice);
+                        slice.skip(8); // Modification time
                         this.movieTimescale = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         this.movieDurationInTimescale = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU64Be */ .th)(slice);
                     }
                     else {
-                        slice.skip(4 + 4);
+                        creationTime = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
+                        slice.skip(4); // Modification time
                         this.movieTimescale = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
                         this.movieDurationInTimescale = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
+                    }
+                    if (creationTime !== 0) {
+                        this.metadataTags.creationTime = new Date(1000 * (creationTime - _isobmff_misc_js__WEBPACK_IMPORTED_MODULE_6__/* .TIMESTAMP_OFFSET */ .dp));
+                    }
+                    else {
+                        // Assume this means the creation time isn't set (I doubt the file was created in 1904)
                     }
                     if (this.movieTimescale === 0) {
                         throw new Error('Invalid mvhd box: timescale must not be 0.');
@@ -6335,6 +6376,9 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                             else if (_codec_js__WEBPACK_IMPORTED_MODULE_1__/* .DTS_FOURCCS */ .Sf.includes(codecName)) {
                                 track.info.codec = 'dts';
                                 track.info.dtsFormat = codecName;
+                            }
+                            else if (codecName === 'mlpa') {
+                                track.info.codec = 'truehd';
                             }
                             else if (codecName === 'twos') {
                                 if (sampleSize === 8) {
@@ -6943,6 +6987,33 @@ class IsobmffDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_3__/* .Demuxer
                     if (config.numberOfChannels !== null) {
                         track.info.numberOfChannels = config.numberOfChannels;
                     }
+                }
+                ;
+                break;
+            case 'dmlp':
+                { // MLPSpecificBox
+                    const track = this.currentTrack;
+                    if (!track || track.info?.type !== 'audio') {
+                        break;
+                    }
+                    const formatInfo = (0,_reader_js__WEBPACK_IMPORTED_MODULE_8__/* .readU32Be */ .cN)(slice);
+                    const rateBits = formatInfo >>> 28;
+                    if (rateBits === 0xf) {
+                        _logging_js__WEBPACK_IMPORTED_MODULE_13__/* .Logging */ .y._warn('Invalid dmlp box contents, ignoring.');
+                        break;
+                    }
+                    track.info.sampleRate = (rateBits & 0x8 ? 44100 : 48000) << (rateBits & 0x7);
+                    // Prefer the 8-channel presentation's assignment, falling back to the 6-channel one
+                    const sixChannelAssignment = (formatInfo >>> 15) & 0x1f;
+                    const eightChannelAssignment = formatInfo & 0x1fff;
+                    const channelAssignment = eightChannelAssignment || sixChannelAssignment;
+                    let numberOfChannels = 0;
+                    for (let i = 0; i < TRUEHD_CHANNEL_ASSIGNMENT_COUNTS.length; i++) {
+                        if (channelAssignment & (1 << i)) {
+                            numberOfChannels += TRUEHD_CHANNEL_ASSIGNMENT_COUNTS[i];
+                        }
+                    }
+                    track.info.numberOfChannels = numberOfChannels;
                 }
                 ;
                 break;
@@ -9053,6 +9124,7 @@ const collectCryptRanges = (subsamples, cryptByteBlock, skipByteBlock, dataLengt
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+const TIMESTAMP_OFFSET = 2_082_844_800; // Seconds between Jan 1 1904 and Jan 1 1970
 const buildIsobmffMimeType = (info) => {
     const base = info.hasVideo
         ? 'video/'
@@ -9106,6 +9178,7 @@ const psshBoxesAreEqual = (a, b) => (a.systemId === b.systemId
 /* harmony export */ __webpack_require__.d(__webpack_exports__, [
 /* harmony export */   "MG", 0, /* binding */ psshBoxesAreEqual,
 /* harmony export */   "Xh", 0, /* binding */ buildIsobmffMimeType,
+/* harmony export */   "dp", 0, /* binding */ TIMESTAMP_OFFSET,
 /* harmony export */   "j1", 0, /* binding */ parsePsshBoxContents
 /* harmony export */ ]);
 
@@ -10117,6 +10190,15 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                 }
                 ;
                 break;
+            case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.DateUTC:
+                {
+                    if (!this.currentSegment)
+                        break;
+                    const nanoseconds = (0,_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .readSignedBigInt */ .ss)(slice, size);
+                    this.currentSegment.metadataTags.creationTime = new Date(_ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBML_DATE_EPOCH */ .O9 + Number(nanoseconds / 1000000n));
+                }
+                ;
+                break;
             case _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .EBMLId */ .Cl.TrackEntry:
                 {
                     if (!this.currentSegment)
@@ -10264,6 +10346,9 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                                 else if (this.currentTrack.codecId === 'A_DTS/LOSSLESS') {
                                     this.currentTrack.info.dtsFormat = 'dtsl';
                                 }
+                            }
+                            else if (codecIdWithoutSuffix === _ebml_js__WEBPACK_IMPORTED_MODULE_7__/* .CODEC_STRING_MAP */ .oo.truehd) {
+                                this.currentTrack.info.codec = 'truehd';
                             }
                             else if (this.currentTrack.codecId === 'A_PCM/INT/LIT') {
                                 if (this.currentTrack.info.bitDepth === 8) {
@@ -10763,10 +10848,12 @@ class MatroskaDemuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_2__/* .Demuxe
                     const flags = (0,_reader_js__WEBPACK_IMPORTED_MODULE_9__/* .readU8 */ .eo)(blockSlice);
                     const lacing = (flags >> 1) & 0x3; // If the block is laced, we'll expand it later
                     let isKeyFrame = !!(flags & 0x80);
-                    if (trackData.track.info?.type === 'audio' && trackData.track.info.codec) {
+                    if (trackData.track.info?.type === 'audio'
+                        && trackData.track.info.codec
+                        && !_codec_js__WEBPACK_IMPORTED_MODULE_1__/* .AUDIO_CODECS_WITH_DELTA_PACKETS */ .rp.includes(trackData.track.info.codec)) {
                         // Some files don't mark their audio packets as key packets (I'm looking at you, Firefox). But, we
-                        // can fix this in most cases: if we recognize the codec of the track, then we know every packet is
-                        // necessarily a key packet, no matter what the container says.
+                        // can fix this in most cases: if we recognize the codec of the track and it has no delta packets,
+                        // then we know every packet is necessarily a key packet, no matter what the container says.
                         // https://github.com/Vanilagy/mediabunny/issues/192
                         isKeyFrame = true;
                     }
@@ -11899,6 +11986,7 @@ class Mp3Demuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */ 
         this.lastSampleLoaded = false;
         this.lastLoadedPos = 0;
         this.nextTimestampInSamples = 0;
+        this.primingDelay = 0;
         this.reader = input._reader;
     }
     async readMetadata() {
@@ -11975,6 +12063,24 @@ class Mp3Demuxer extends _demuxer_js__WEBPACK_IMPORTED_MODULE_0__/* .Demuxer */ 
                                 ? view.getUint32(8, false)
                                 : null,
                         };
+                        const lameOffset = result.startPos + xingOffset + 8
+                            + ((flags & _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .XingFlags */ .MJ.FrameCount) ? 4 : 0)
+                            + ((flags & _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .XingFlags */ .MJ.FileSize) ? 4 : 0)
+                            + ((flags & _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .XingFlags */ .MJ.Toc) ? 100 : 0)
+                            + ((flags & _shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .XingFlags */ .MJ.Quality) ? 4 : 0);
+                        if (!this.firstFrameHeader && lameOffset + 24 <= result.startPos + header.totalSize) {
+                            let lameSlice = this.reader.requestSlice(lameOffset, 24);
+                            if ((0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .isThenable */ .Qg)(lameSlice))
+                                lameSlice = await lameSlice;
+                            if (lameSlice) {
+                                const lame = (0,_reader_js__WEBPACK_IMPORTED_MODULE_7__/* .readBytes */ .io)(lameSlice, 24);
+                                const encoder = String.fromCharCode(...lame.subarray(0, 4));
+                                if (encoder === 'LAME' || encoder === 'Lavf' || encoder === 'Lavc') {
+                                    this.primingDelay = (lame[21] << 4 | lame[22] >> 4) + (/* inlined export .MP3_DECODER_DELAY */529);
+                                    this.nextTimestampInSamples = -this.primingDelay;
+                                }
+                            }
+                        }
                     }
                 }
                 return;
@@ -12086,18 +12192,14 @@ class Mp3AudioTrackBacking {
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(demuxer.firstFrameHeader !== null);
         (0,_misc_js__WEBPACK_IMPORTED_MODULE_2__/* .assert */ .vA)(demuxer.firstFrameHeaderPos !== null);
         if (demuxer.xingData && demuxer.xingData.frameCount !== null) {
-            return demuxer.xingData.frameCount
-                * demuxer.firstFrameHeader.audioSamplesInFrame
-                / demuxer.firstFrameHeader.sampleRate;
+            return (demuxer.xingData.frameCount * demuxer.firstFrameHeader.audioSamplesInFrame - demuxer.primingDelay) / demuxer.firstFrameHeader.sampleRate;
         }
         else if (!demuxer.xingData?.isVbr) {
             // Not tagged as VBR, assuming CBR
             if (demuxer.reader.fileSize !== null) {
                 const averageFrameSize = (0,_shared_mp3_misc_js__WEBPACK_IMPORTED_MODULE_4__/* .computeAverageMp3FrameSize */ .hD)(demuxer.firstFrameHeader.lowSamplingFrequency, demuxer.firstFrameHeader.layer, demuxer.firstFrameHeader.bitrate, demuxer.firstFrameHeader.sampleRate);
                 const frameCount = (demuxer.reader.fileSize - demuxer.firstFrameHeaderPos) / averageFrameSize;
-                return Math.round(frameCount)
-                    * demuxer.firstFrameHeader.audioSamplesInFrame
-                    / demuxer.firstFrameHeader.sampleRate;
+                return (Math.round(frameCount) * demuxer.firstFrameHeader.audioSamplesInFrame - demuxer.primingDelay) / demuxer.firstFrameHeader.sampleRate;
             }
         }
         return null;
@@ -15857,4 +15959,4 @@ const readAllLines = (slice, length, options) => {
 /***/ }
 
 }]);
-//# sourceMappingURL=155.bundle.js.map
+//# sourceMappingURL=716.bundle.js.map

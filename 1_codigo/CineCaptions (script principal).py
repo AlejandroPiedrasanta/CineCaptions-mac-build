@@ -10842,8 +10842,19 @@ class SubtitleApp(QWidget):
     # -- SFX Lab ---------------------------------------------------------------
     def _pagina_sfx(self):
         _pag, capa = self._nueva_pagina('sfx', tr('AI Sound Director'), tr('La IA diseña el sonido de cada video; tú lo diriges · se aplica al generar con GO'),
-                                        con_barra=False)         # v5.5.10: sin barra de título, como Proyecto (lo pidió el usuario); v5.34: AI Sound Director
+                                        desplazable=False, con_barra=False)   # v5.5.10: sin barra de título; v5.67: la C no se desplaza
         self._sfx_capa = capa
+        # v5.67 (el usuario eligió la propuesta C de Sonido): el cielo de constelaciones de borde a borde, como Inicio, Tema y Corrector; las tres
+        # columnas de la página no se repintan en cada tic del cielo (zonas_vivas)
+        import proyecto_ui
+        self._cielo_sonido = proyecto_ui.CieloDePagina(_pag)
+
+        def zonas():
+            pag = getattr(self, '_director_pagina', None)
+            if pag is None or not pag.isVisible():
+                return []
+            return [QRect(pag.mapTo(_pag, r.topLeft()), r.size()) for r in pag.zonas()]
+        self._cielo_sonido.zonas_vivas = zonas
     # -- Efectos visuales (v5.4.6): intro, transiciones en los cortes e iconos flotantes -------------------------------------------------------------------
     def _pagina_efectos(self):
         _pag, capa = self._nueva_pagina('efectos', tr('Efectos visuales'), tr('Intro, transiciones en los cortes e iconos flotantes que acompañan a los captions · se aplican al generar con GO'),

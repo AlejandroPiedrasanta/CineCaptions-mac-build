@@ -9847,5 +9847,264 @@
   "fr": "Ouvre le Media Pool dans Resolve et supprime le bin « CC · … » de ce style s'il est incomplet ; il se recrée tout seul.",
   "de": "Öffne den Media Pool in Resolve und lösche den Ordner „CC · …“ dieses Stils, falls er unvollständig ist; er wird automatisch neu erstellt.",
   "it": "Apri il Media Pool in Resolve ed elimina il bin «CC · …» di quello stile se è incompleto; si ricrea da solo."
+ },
+ "1 fotograma ▶": {
+  "en": "1 frame ▶",
+  "pt": "1 quadro ▶",
+  "fr": "1 image ▶",
+  "de": "1 Frame ▶",
+  "it": "1 fotogramma ▶"
+ },
+ "◀ 1 fotograma": {
+  "en": "◀ 1 frame",
+  "pt": "◀ 1 quadro",
+  "fr": "◀ 1 image",
+  "de": "◀ 1 Frame",
+  "it": "◀ 1 fotogramma"
+ },
+ "Ajustar": {
+  "en": "Fit",
+  "pt": "Ajustar",
+  "fr": "Ajuster",
+  "de": "Anpassen",
+  "it": "Adatta"
+ },
+ "Al día en Resolve ({f}).": {
+  "en": "Up to date in Resolve ({f}).",
+  "pt": "Atualizado no Resolve ({f}).",
+  "fr": "À jour dans Resolve ({f}).",
+  "de": "Aktuell in Resolve ({f}).",
+  "it": "Aggiornato in Resolve ({f})."
+ },
+ "Algo falló: {e}": {
+  "en": "Something failed: {e}",
+  "pt": "Algo falhou: {e}",
+  "fr": "Un problème est survenu : {e}",
+  "de": "Etwas ist schiefgelaufen: {e}",
+  "it": "Qualcosa non ha funzionato: {e}"
+ },
+ "Apagada: enciéndela y pulsa «Rehacer».": {
+  "en": "Off: turn it on and press “Redo”.",
+  "pt": "Desligada: ligue-a e clique em «Refazer».",
+  "fr": "Désactivée : activez-la et appuyez sur « Refaire ».",
+  "de": "Aus: schalte sie ein und drücke „Neu machen“.",
+  "it": "Spenta: accendila e premi «Rifai»."
+ },
+ "Biblioteca cambiada. Pulsa «Rehacer».": {
+  "en": "Library changed. Press “Redo”.",
+  "pt": "Biblioteca alterada. Clique em «Refazer».",
+  "fr": "Bibliothèque changée. Appuyez sur « Refaire ».",
+  "de": "Bibliothek geändert. Drücke „Neu machen“.",
+  "it": "Libreria cambiata. Premi «Rifai»."
+ },
+ "Cambiando el sonido…": {
+  "en": "Changing the sound…",
+  "pt": "Alterando o som…",
+  "fr": "Changement du son…",
+  "de": "Sound wird geändert…",
+  "it": "Cambio il suono…"
+ },
+ "Cambiando la música…": {
+  "en": "Changing the music…",
+  "pt": "Alterando a música…",
+  "fr": "Changement de la musique…",
+  "de": "Musik wird geändert…",
+  "it": "Cambio la musica…"
+ },
+ "Cambiar carpeta…": {
+  "en": "Change folder…",
+  "pt": "Mudar pasta…",
+  "fr": "Changer de dossier…",
+  "de": "Ordner ändern…",
+  "it": "Cambia cartella…"
+ },
+ "Captions": {
+  "en": "Captions",
+  "pt": "Legendas",
+  "fr": "Sous-titres",
+  "de": "Untertitel",
+  "it": "Sottotitoli"
+ },
+ "Crédito obligatorio en la descripción: {c}": {
+  "en": "Required credit in the description: {c}",
+  "pt": "Crédito obrigatório na descrição: {c}",
+  "fr": "Crédit obligatoire dans la description : {c}",
+  "de": "Pflichtnennung in der Beschreibung: {c}",
+  "it": "Credito obbligatorio nella descrizione: {c}"
+ },
+ "Elige la carpeta de tu biblioteca de sonidos (la que tiene MAPA_SFX.md)": {
+  "en": "Choose your sound library folder (the one with MAPA_SFX.md)",
+  "pt": "Escolha a pasta da sua biblioteca de sons (a que tem MAPA_SFX.md)",
+  "fr": "Choisissez le dossier de votre bibliothèque de sons (celui avec MAPA_SFX.md)",
+  "de": "Wähle den Ordner deiner Sound-Bibliothek (der mit MAPA_SFX.md)",
+  "it": "Scegli la cartella della tua libreria di suoni (quella con MAPA_SFX.md)"
+ },
+ "Estilo guardado. Pulsa «Rehacer» para oírlo en este video.": {
+  "en": "Style saved. Press “Redo” to hear it on this video.",
+  "pt": "Estilo salvo. Clique em «Refazer» para ouvi-lo neste vídeo.",
+  "fr": "Style enregistré. Appuyez sur « Refaire » pour l’entendre sur cette vidéo.",
+  "de": "Stil gespeichert. Drücke „Neu machen“, um ihn in diesem Video zu hören.",
+  "it": "Stile salvato. Premi «Rifai» per sentirlo in questo video."
+ },
+ "Fiesta o mar": {
+  "en": "Party or sea",
+  "pt": "Festa ou mar",
+  "fr": "Fête ou mer",
+  "de": "Party oder Meer",
+  "it": "Festa o mare"
+ },
+ "Gancho al inicio": {
+  "en": "Hook at the start",
+  "pt": "Gancho no início",
+  "fr": "Accroche au début",
+  "de": "Hook am Anfang",
+  "it": "Gancio all’inizio"
+ },
+ "Haz GO con este video: el sonido sale de tu biblioteca y aquí ves cada decisión.": {
+  "en": "Run GO with this video: the sound comes from your library and you see every decision here.",
+  "pt": "Faça GO com este vídeo: o som vem da sua biblioteca e aqui você vê cada decisão.",
+  "fr": "Lancez GO avec cette vidéo : le son vient de votre bibliothèque et vous voyez ici chaque décision.",
+  "de": "Starte GO mit diesem Video: Der Sound kommt aus deiner Bibliothek und hier siehst du jede Entscheidung.",
+  "it": "Fai GO con questo video: il suono viene dalla tua libreria e qui vedi ogni decisione."
+ },
+ "Haz GO con un video: aquí ves qué sonido va en cada momento y por qué.": {
+  "en": "Run GO with a video: here you see which sound goes at each moment and why.",
+  "pt": "Faça GO com um vídeo: aqui você vê qual som vai em cada momento e por quê.",
+  "fr": "Lancez GO avec une vidéo : vous voyez ici quel son va à chaque moment et pourquoi.",
+  "de": "Starte GO mit einem Video: Hier siehst du, welcher Sound wann kommt und warum.",
+  "it": "Fai GO con un video: qui vedi quale suono va in ogni momento e perché."
+ },
+ "Haz GO o «Rehacer»: aquí eliges entre 3 músicas de tu biblioteca.": {
+  "en": "Run GO or “Redo”: here you choose between 3 tracks from your library.",
+  "pt": "Faça GO ou «Refazer»: aqui você escolhe entre 3 músicas da sua biblioteca.",
+  "fr": "Lancez GO ou « Refaire » : ici vous choisissez parmi 3 musiques de votre bibliothèque.",
+  "de": "Starte GO oder „Neu machen“: Hier wählst du zwischen 3 Musikstücken aus deiner Bibliothek.",
+  "it": "Fai GO o «Rifai»: qui scegli tra 3 brani della tua libreria."
+ },
+ "Música en los próximos GO": {
+  "en": "Music in the next GOs",
+  "pt": "Música nos próximos GO",
+  "fr": "Musique dans les prochains GO",
+  "de": "Musik bei den nächsten GOs",
+  "it": "Musica nei prossimi GO"
+ },
+ "Sonido en los próximos GO": {
+  "en": "Sound in the next GOs",
+  "pt": "Som nos próximos GO",
+  "fr": "Son dans les prochains GO",
+  "de": "Sound bei den nächsten GOs",
+  "it": "Suono nei prossimi GO"
+ },
+ "No pude leer el sonido del video: {e}": {
+  "en": "Couldn’t read the video’s sound: {e}",
+  "pt": "Não consegui ler o som do vídeo: {e}",
+  "fr": "Impossible de lire le son de la vidéo : {e}",
+  "de": "Konnte den Ton des Videos nicht lesen: {e}",
+  "it": "Non sono riuscito a leggere l’audio del video: {e}"
+ },
+ "No pude reproducirlo: {e}": {
+  "en": "Couldn’t play it: {e}",
+  "pt": "Não consegui reproduzi-lo: {e}",
+  "fr": "Impossible de le lire : {e}",
+  "de": "Konnte es nicht abspielen: {e}",
+  "it": "Non sono riuscito a riprodurlo: {e}"
+ },
+ "Opciones": {
+  "en": "Options",
+  "pt": "Opções",
+  "fr": "Options",
+  "de": "Optionen",
+  "it": "Opzioni"
+ },
+ "Otra variante": {
+  "en": "Another variant",
+  "pt": "Outra variante",
+  "fr": "Autre variante",
+  "de": "Andere Variante",
+  "it": "Altra variante"
+ },
+ "Primero carga un video en Inicio.": {
+  "en": "First load a video in Home.",
+  "pt": "Primeiro carregue um vídeo em Início.",
+  "fr": "Chargez d’abord une vidéo dans Accueil.",
+  "de": "Lade zuerst ein Video in Start.",
+  "it": "Prima carica un video in Home."
+ },
+ "Puesto en Resolve: los sonidos de la biblioteca en sus pistas; los de siempre, apagados.": {
+  "en": "Placed in Resolve: the library sounds on their tracks; the usual ones, muted.",
+  "pt": "Colocado no Resolve: os sons da biblioteca nas suas faixas; os de sempre, desligados.",
+  "fr": "Placé dans Resolve : les sons de la bibliothèque sur leurs pistes ; les habituels, coupés.",
+  "de": "In Resolve platziert: die Bibliotheks-Sounds auf ihren Spuren; die üblichen stummgeschaltet.",
+  "it": "Messo in Resolve: i suoni della libreria sulle loro tracce; quelli di sempre, spenti."
+ },
+ "Rehaciendo el sonido con tu biblioteca…": {
+  "en": "Redoing the sound with your library…",
+  "pt": "Refazendo o som com a sua biblioteca…",
+  "fr": "Refaire le son avec votre bibliothèque…",
+  "de": "Sound wird mit deiner Bibliothek neu gemacht…",
+  "it": "Rifaccio il suono con la tua libreria…"
+ },
+ "Revisión: todo en orden.": {
+  "en": "Check: all good.",
+  "pt": "Revisão: tudo em ordem.",
+  "fr": "Vérification : tout est en ordre.",
+  "de": "Prüfung: alles in Ordnung.",
+  "it": "Revisione: tutto a posto."
+ },
+ "Sin música": {
+  "en": "No music",
+  "pt": "Sem música",
+  "fr": "Sans musique",
+  "de": "Ohne Musik",
+  "it": "Senza musica"
+ },
+ "Toca un sonido de la mezcla para ver por qué suena ahí.": {
+  "en": "Tap a sound in the mix to see why it plays there.",
+  "pt": "Toque um som da mixagem para ver por que ele toca ali.",
+  "fr": "Touchez un son du mixage pour voir pourquoi il est là.",
+  "de": "Tippe auf einen Sound im Mix, um zu sehen, warum er dort spielt.",
+  "it": "Tocca un suono del mix per vedere perché suona lì."
+ },
+ "Video": {
+  "en": "Video",
+  "pt": "Vídeo",
+  "fr": "Vidéo",
+  "de": "Video",
+  "it": "Video"
+ },
+ "de fondo": {
+  "en": "in the background",
+  "pt": "de fundo",
+  "fr": "en fond",
+  "de": "im Hintergrund",
+  "it": "di sottofondo"
+ },
+ "debajo de tu voz, baja sola al hablar": {
+  "en": "under your voice, ducks by itself when you speak",
+  "pt": "abaixo da sua voz, abaixa sozinha quando você fala",
+  "fr": "sous votre voix, baisse toute seule quand vous parlez",
+  "de": "unter deiner Stimme, wird beim Sprechen von selbst leiser",
+  "it": "sotto la tua voce, si abbassa da sola quando parli"
+ },
+ "sonidos": {
+  "en": "sounds",
+  "pt": "sons",
+  "fr": "sons",
+  "de": "Sounds",
+  "it": "suoni"
+ },
+ "▶ Escuchar": {
+  "en": "▶ Listen",
+  "pt": "▶ Ouvir",
+  "fr": "▶ Écouter",
+  "de": "▶ Anhören",
+  "it": "▶ Ascolta"
+ },
+ "● cambios sin aplicar": {
+  "en": "● unapplied changes",
+  "pt": "● alterações não aplicadas",
+  "fr": "● modifications non appliquées",
+  "de": "● nicht angewendete Änderungen",
+  "it": "● modifiche non applicate"
  }
 }

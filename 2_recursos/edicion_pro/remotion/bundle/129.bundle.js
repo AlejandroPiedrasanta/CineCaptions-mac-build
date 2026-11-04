@@ -529,6 +529,23 @@ class Loader {
 		 */
 		this.requestHeader = {};
 
+		/**
+		 * The request priority hint. Image loaders use `HTMLImageElement.fetchPriority`.
+		 *
+		 * @type {('high'|'low'|'auto')}
+		 * @default 'auto'
+		 */
+		this.priority = 'auto';
+
+		/**
+		 * The HTTP cache mode passed to `fetch()`. This does not affect {@link Cache}
+		 * or loaders using `HTMLImageElement`.
+		 *
+		 * @type {('default'|'no-store'|'reload'|'no-cache'|'force-cache')}
+		 * @default 'default'
+		 */
+		this.cache = 'default';
+
 		if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 
 			__THREE_DEVTOOLS__.dispatchEvent( new CustomEvent( 'observe', { detail: this } ) );
@@ -643,6 +660,36 @@ class Loader {
 	setRequestHeader( requestHeader ) {
 
 		this.requestHeader = requestHeader;
+		return this;
+
+	}
+
+	/**
+	 * Sets a browser scheduling hint. Browsers may ignore this hint.
+	 * Internally created loaders inherit it. Loaders supplied by the application
+	 * (for example decoder loaders or loading manager handlers) retain their own settings.
+	 *
+	 * @param {('high'|'low'|'auto')} value - The request priority hint.
+	 * @return {Loader} A reference to this instance.
+	 */
+	setPriority( value ) {
+
+		this.priority = value;
+		return this;
+
+	}
+
+	/**
+	 * Sets the HTTP cache mode for fetch requests. `no-cache` revalidates cached
+	 * responses; `no-store` bypasses the HTTP cache. This does not affect
+	 * {@link Cache} or image element requests.
+	 *
+	 * @param {('default'|'no-store'|'reload'|'no-cache'|'force-cache')} value - The HTTP cache mode.
+	 * @return {Loader} A reference to this instance.
+	 */
+	setCache( value ) {
+
+		this.cache = value;
 		return this;
 
 	}
@@ -850,6 +897,7 @@ class ImageLoader extends Loader {
 		Cache.add( `image:${url}`, image );
 		scope.manager.itemStart( url );
 
+		image.fetchPriority = this.priority;
 		image.src = url;
 
 		return image;
@@ -904,9 +952,9 @@ class TextureLoader extends Loader {
 	 * may pop up in your scene once the respective loading process is finished.
 	 *
 	 * @param {string} url - The path/URL of the file to be loaded. This can also be a data URI.
-	 * @param {function(Texture)} onLoad - Executed when the loading process has been finished.
-	 * @param {onProgressCallback} onProgress - Unsupported in this loader.
-	 * @param {onErrorCallback} onError - Executed when errors occur.
+	 * @param {function(Texture)} [onLoad] - Executed when the loading process has been finished.
+	 * @param {onProgressCallback} [onProgress] - Unsupported in this loader.
+	 * @param {onErrorCallback} [onError] - Executed when errors occur.
 	 * @return {Texture} The texture.
 	 */
 	load( url, onLoad, onProgress, onError ) {
@@ -914,6 +962,8 @@ class TextureLoader extends Loader {
 		const texture = new Texture/* Texture */.g();
 
 		const loader = new ImageLoader( this.manager );
+		loader.setPriority( this.priority );
+		loader.setCache( this.cache );
 		loader.setCrossOrigin( this.crossOrigin );
 		loader.setPath( this.path );
 

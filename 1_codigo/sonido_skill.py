@@ -889,15 +889,17 @@ def visual(video, filas=None, ancho=120):
     carpeta = E.carpeta_de(video) / 'miniaturas'
     cache = E.carpeta_de(video) / 'visual.json'
     d = archivos_seguros.leer_json(cache, None)
-    if not (isinstance(d, dict) and d.get('v') == 1 and d.get('miniaturas') and all(Path(m).is_file() for m in d['miniaturas'][:3])):
+    if not (isinstance(d, dict) and d.get('v') == 1 and (d.get('solo_audio') or d.get('miniaturas'))
+            and all(Path(m).is_file() for m in d['miniaturas'][:3])):
         import av
         carpeta.mkdir(parents=True, exist_ok=True)
         tomas = {}
         with av.open(str(video)) as c:
-            vs = c.streams.video[0]
-            vs.codec_context.skip_frame = 'NONKEY'                # solo los fotogramas clave: rápido aun en HEVC 4K
+            imagen = bool(c.streams.video)                        # v5.67: un audio suelto (.wav/.mp3) no tiene imágenes (antes rompía la página)
+            if imagen:
+                c.streams.video[0].codec_context.skip_frame = 'NONKEY'   # solo los fotogramas clave: rápido aun en HEVC 4K
             dur = float(c.duration or 0) / 1e6
-            for f in c.decode(video=0):
+            for f in (c.decode(video=0) if imagen else ()):
                 if f.time is None:
                     continue
                 s = int(round(float(f.time)))
@@ -921,7 +923,7 @@ def visual(video, filas=None, ancho=120):
             voz = _envolvente(leer_audio(video, 8000), 1200)
         except Exception:
             voz = []
-        d = {'v': 1, 'miniaturas': mini, 'voz': voz, 'duracion': dur}
+        d = {'v': 1, 'miniaturas': mini, 'voz': voz, 'duracion': dur, 'solo_audio': not imagen}
         archivos_seguros.escribir_json(cache, d)
     ondas = {}
     for f in filas or []:

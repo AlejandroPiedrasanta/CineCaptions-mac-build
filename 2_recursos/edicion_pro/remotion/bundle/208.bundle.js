@@ -117,6 +117,7 @@ var aacFrequencyTable = [
   7350
 ];
 var aacChannelMap = [-1, 1, 2, 3, 4, 5, 6, 8];
+var generalAudioObjectTypes = [1, 2, 3, 4, 6, 7, 17, 19, 20, 21, 22];
 var parseAacAudioSpecificConfig = (bytes) => {
   if (!bytes || bytes.byteLength < 2) {
     throw new TypeError("AAC description must be at least 2 bytes long.");
@@ -139,7 +140,12 @@ var parseAacAudioSpecificConfig = (bytes) => {
     if (coreObjectType === 22) {
       bitstream.skipBits(4);
     }
-  } else {
+  }
+  let frameLength = 1024;
+  if (generalAudioObjectTypes.includes(coreObjectType)) {
+    frameLength = bitstream.readBits(1) ? 960 : 1024;
+  }
+  if (objectType !== 5 && objectType !== 29) {
     while (bitstream.getBitsLeft() > 15) {
       const searchStart = bitstream.pos;
       if (bitstream.readBits(11) !== 695) {
@@ -163,8 +169,10 @@ var parseAacAudioSpecificConfig = (bytes) => {
     coreObjectType,
     frequencyIndex,
     channelConfiguration,
+    coreSampleRate: sampleRate,
     outputSampleRate,
-    outputNumberOfChannels: psPresent && numberOfChannels === 1 ? 2 : numberOfChannels
+    outputNumberOfChannels: psPresent && numberOfChannels === 1 ? 2 : numberOfChannels,
+    frameLength
   };
 };
 var readAacObjectType = (bitstream) => {
@@ -3335,7 +3343,6 @@ var AacEncoder = class extends mediabunny__WEBPACK_IMPORTED_MODULE_2__/* .Custom
     this.pendingBuffer = new Float32Array(2 ** 16);
     this.pendingFrames = 0;
     this.nextSampleTimestampInSamples = null;
-    this.nextPacketTimestampInSamples = null;
   }
   static supports(codec, config) {
     return codec === "aac" && config.numberOfChannels >= 1 && config.numberOfChannels <= 8 && AAC_SAMPLE_RATES.includes(config.sampleRate) && config.bitrate !== void 0;
@@ -3397,7 +3404,6 @@ var AacEncoder = class extends mediabunny__WEBPACK_IMPORTED_MODULE_2__/* .Custom
   resetInternalState() {
     this.pendingFrames = 0;
     this.nextSampleTimestampInSamples = null;
-    this.nextPacketTimestampInSamples = null;
     this.chunkMetadata = {
       decoderConfig: {
         codec: "mp4a.40.2",
@@ -3410,7 +3416,6 @@ var AacEncoder = class extends mediabunny__WEBPACK_IMPORTED_MODULE_2__/* .Custom
   async encode(audioSample) {
     if (this.nextSampleTimestampInSamples === null) {
       this.nextSampleTimestampInSamples = Math.round(audioSample.timestamp * this.sampleRate);
-      this.nextPacketTimestampInSamples = this.nextSampleTimestampInSamples;
     }
     const channels = this.numberOfChannels;
     const incomingFrames = audioSample.numberOfFrames;
@@ -3453,7 +3458,6 @@ var AacEncoder = class extends mediabunny__WEBPACK_IMPORTED_MODULE_2__/* .Custom
   }
   async encodeOneFrame() {
     assert(this.nextSampleTimestampInSamples !== null);
-    assert(this.nextPacketTimestampInSamples !== null);
     const channels = this.numberOfChannels;
     const frameSize = this.encoderFrameSize;
     const frameSamples = frameSize * channels;
@@ -3475,7 +3479,6 @@ var AacEncoder = class extends mediabunny__WEBPACK_IMPORTED_MODULE_2__/* .Custom
     this.emitPackets(result.packets);
   }
   emitPackets(packets) {
-    assert(this.nextPacketTimestampInSamples !== null);
     for (const p of packets) {
       let data = new Uint8Array(p.encodedData);
       if (this.useAdts) {
@@ -3491,10 +3494,9 @@ var AacEncoder = class extends mediabunny__WEBPACK_IMPORTED_MODULE_2__/* .Custom
       const packet = new mediabunny__WEBPACK_IMPORTED_MODULE_1__/* .EncodedPacket */ .Z(
         data,
         "key",
-        this.nextPacketTimestampInSamples / this.sampleRate,
+        p.pts / this.sampleRate,
         p.duration / this.sampleRate
       );
-      this.nextPacketTimestampInSamples += p.duration;
       this.onPacket(
         packet,
         this.chunkMetadata
