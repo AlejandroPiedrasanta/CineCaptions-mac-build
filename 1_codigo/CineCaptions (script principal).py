@@ -1930,6 +1930,10 @@ class PlantillasWindow(QWidget):
         import pro_lateral_ui
         self.lateral_pro = pro_lateral_ui.FilaPro(self.carrusel, ir_efectos=lambda: self.app.ir_a('efectos'))
         self.lateral_pro.cambiado.connect(self._cambio_lateral_pro)
+        # v5.70: los interruptores son los del tema que se ve al centro (con el Tema 1 al centro y otro elegido, lo encendido se guardaba en
+        # los de los demás temas y el Tema 1 «no hacía nada»); al mover el slider, el menú se vuelve a leer
+        self.lateral_pro.lista.tema_vista = lambda: getattr(self.carrusel.carta_central(), 'valor', None)
+        self.carrusel.centrada.connect(lambda _c: self.lateral_pro.refrescar() if self.lateral_pro.isVisible() else None)
         self.tarjeta.capa.addWidget(self.lateral_pro, 1)
         self.tarjeta.zonas_vivas = self._zonas_vivas_cielo
         # el panel del estilo que está al centro: nombre, aviso de tipografías, nota, estructura y botones

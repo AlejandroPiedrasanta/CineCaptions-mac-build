@@ -26,7 +26,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QEasingCurve, QEvent, QPointF, QRect, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal
 from PySide6.QtGui import QConicalGradient, QFontMetricsF, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import (QAbstractButton, QFrame, QGraphicsOpacityEffect,
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QFrame, QGraphicsOpacityEffect,
                                QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget)
 
 import qt_kit as ui
@@ -495,6 +495,15 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.70', [
+        'Ajustes renovado: cada pestaña y cada ajuste con su ícono, y sin el título repetido en cada página (el menú ya dice dónde estás): lo importante empieza arriba.',
+        'Ayuda: tarjeta de soporte con «Escribir por WhatsApp» (copia el informe de tu equipo y abre el chat con el mensaje ya escrito) y «Visitar cinecaptions.shop».',
+        'Acerca de muestra que CineCaptions se actualiza solo, y Atajos ya no enseña un atajo de sonido que no existía.',
+        'Edición PRO: con el «Gancho del inicio» encendido, una marca de «Captions detrás de ti» ya no cae sobre la intro (salía un recuadro con la cabeza de la persona encima del destello); el Registro dice por qué.',
+        'Slider de estilos: nuevos ejemplos del Tema 3 (solo captions y con PRO: detrás de ti y gancho del inicio).',
+        'Video MP4 sin Resolve con un audio suelto (.wav, .mp3…): ya no se detiene con «el archivo no tiene imagen»; sale un video vertical con los captions sobre un fondo oscuro. Y el Registro ya no lo confunde con «Resolve no está listo».',
+        'Edición PRO en la página Tema: el menú de al lado del slider ahora es el del tema que ves al centro. Con el Tema 1 al centro y otro tema elegido, lo que encendías se guardaba en los demás temas y el Tema 1 «no hacía nada». Para la PRO de siempre del Tema 1, enciende «Kit de motions».',
+    ]),
     ('5.69', [
         'Registro: nuevo botón «Enviar informe»: copia el informe completo y abre WhatsApp de soporte con un resumen ya escrito (tu equipo y los errores); solo pegas el informe y lo envías.',
         'El Registro ya no tiene «Limpiar» ni «Abrir el archivo»: lo que pasó queda siempre ahí para el informe.',
@@ -1637,11 +1646,14 @@ class PanelRapido(_Panel):
 # ---------------------------------------------------------------------------
 # Ajustes completos (imagen 3 de la referencia)
 class _Pestanas(QWidget):
-    """La fila de pestañas con la raya de color que se desliza a la elegida."""
+    """La fila de pestañas con la raya de color que se desliza a la elegida. v5.70: cada nombre puede ser (texto, ícono Phosphor)."""
+    ICONO = 18
 
     def __init__(self, nombres, al_elegir):
         super().__init__()
-        self._nombres = list(nombres)
+        self._iconos = [n[1] if isinstance(n, tuple) else None for n in nombres]
+        self._nombres = [n[0] if isinstance(n, tuple) else n for n in nombres]
+        self._pix = {}
         self._al_elegir = al_elegir
         self._sel = 0
         self._hover = -1
@@ -1659,11 +1671,17 @@ class _Pestanas(QWidget):
     def _cajas(self):
         fm = QFontMetricsF(self.font())
         x, cajas = 34.0, []
-        for n in self._nombres:
-            w = fm.horizontalAdvance(n) + 28
+        for n, ic in zip(self._nombres, self._iconos):
+            w = fm.horizontalAdvance(n) + 28 + (self.ICONO + 9 if ic else 0)
             cajas.append(QRectF(x, 0, w, self.height()))
-            x += w + 18
+            x += w + 14
         return cajas
+
+    def _icono(self, nombre, color):
+        k = (nombre, color)
+        if k not in self._pix:
+            self._pix[k] = _pixmap_icono(nombre, color, self.ICONO)
+        return self._pix[k]
 
     def elegir(self, i, animar=True):
         self._sel = i
@@ -1710,32 +1728,92 @@ class _Pestanas(QWidget):
         p.setPen(QColor('#1A2438'))
         p.drawLine(0, self.height() - 1, self.width(), self.height() - 1)
         p.setFont(self.font())
-        for i, (n, c) in enumerate(zip(self._nombres, self._cajas())):
+        for i, (n, ic, c) in enumerate(zip(self._nombres, self._iconos, self._cajas())):
             color = '#FFFFFF' if i == self._sel else ('#E0EBFB' if i == self._hover else '#8D9BB5')
             p.setPen(QColor(color))
-            p.drawText(c, int(Qt.AlignmentFlag.AlignCenter), n)
+            if ic:
+                pm = self._icono(ic, ui.ACCENT_CLARO if i == self._sel else QColor(color).name())
+                x = c.left() + 14
+                if pm is not None:
+                    p.drawPixmap(QPointF(x, (self.height() - self.ICONO) / 2.0), pm)
+                p.drawText(QRectF(x + self.ICONO + 9, 0, c.right() - x - self.ICONO - 9, self.height()),
+                           int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), n)
+            else:
+                p.drawText(c, int(Qt.AlignmentFlag.AlignCenter), n)
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QColor(ui.ACCENT))
         p.drawRoundedRect(QRectF(self._x, self.height() - 3, self._w, 3), 1.5, 1.5)
         p.end()
 
 
-class _Fila(QFrame):
-    """Una fila de ajuste: titulo y explicacion a la izquierda, control a la derecha."""
+def _pixmap_icono(nombre, color, lado):
+    """Un ícono Phosphor («ph.<nombre>-bold») a la resolución de la pantalla, o None."""
+    ic = ui.icono_linea(f'ph.{nombre}-bold', color)
+    if ic is None:
+        return None
+    app = QApplication.instance()
+    dpr = max(1.0, float(app.devicePixelRatio())) if app is not None else 1.0
+    return ic.pixmap(QSize(int(lado), int(lado)), dpr)
 
-    def __init__(self, titulo, explicacion='', control=None, ancho_control=None, ultima=False, vertical=False, expandir=False):
+
+def _azulejo(nombre, lado=44, glifo=22, color=None):
+    """v5.70: el cuadrito con el ícono de cada ajuste y de cada página: tinte del color de resaltado (o `color`) y el ícono en su tono claro."""
+    base = QColorReal(color or ui.ACCENT)
+    r, g, b = base.red(), base.green(), base.blue()
+    lbl = QLabel()
+    lbl.setFixedSize(lado, lado)
+    lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    lbl.setStyleSheet(f'QLabel {{ background-color: rgba({r},{g},{b},34); border: 1px solid rgba({r},{g},{b},80); '
+                      f'border-radius: {max(8, lado // 3 - 2)}px; }}')
+    pm = _pixmap_icono(nombre, color or ui.ACCENT_CLARO, glifo)
+    if pm is not None:
+        lbl.setPixmap(pm)
+    return lbl
+
+
+def _pastilla(icono, texto, color=None):
+    """v5.70: una pastilla de estado (ícono + texto) con un tinte suave del color (de fábrica, el verde de «todo bien»)."""
+    base = QColorReal(color or ui.VERDE)
+    r, g, b = base.red(), base.green(), base.blue()
+    f = QFrame()
+    f.setObjectName('pastillaAjuste')
+    f.setFixedHeight(32)                                  # (Qt no redondea si el radio pasa de la mitad del alto)
+    f.setStyleSheet(f'QFrame#pastillaAjuste {{ background-color: rgba({r},{g},{b},26); border: 1px solid rgba({r},{g},{b},72); '
+                    f'border-radius: 15px; }}')
+    c = QHBoxLayout(f)
+    c.setContentsMargins(12, 0, 15, 0)
+    c.setSpacing(7)
+    ic = QLabel()
+    ic.setStyleSheet('background: transparent; border: none;')
+    pm = _pixmap_icono(icono, base.name(), 15)
+    if pm is not None:
+        ic.setPixmap(pm)
+    c.addWidget(ic, 0, Qt.AlignmentFlag.AlignVCenter)
+    c.addWidget(Etiqueta(texto, 13, peso='medio', color=base.name()), 0, Qt.AlignmentFlag.AlignVCenter)
+    return f
+
+
+class _Fila(QFrame):
+    """Una fila de ajuste: titulo y explicacion a la izquierda, control a la derecha. v5.70: con `icono` (Phosphor) lleva su cuadrito delante."""
+
+    def __init__(self, titulo, explicacion='', control=None, ancho_control=None, ultima=False, vertical=False, expandir=False, icono=None):
         super().__init__()
         self.setObjectName('filaAjuste')
         if not ultima:
             self.setStyleSheet(ui.traducir_hoja('QFrame#filaAjuste { border: none; border-bottom: 1px solid #1A2438; }'))
         c = (QVBoxLayout if vertical else QHBoxLayout)(self)
-        c.setContentsMargins(30, 26, 30, 26)
+        c.setContentsMargins(26, 22, 28, 22)
         c.setSpacing(16 if vertical else 30)
-        col, cc = caja_v(espacio=6)
+        col, cc = caja_v(espacio=5)
         cc.addWidget(Etiqueta(titulo, 17, peso='negrita', color='#FFFFFF'))
         if explicacion:
             self.explicacion = TextoAjustable(explicacion, 14)
             cc.addWidget(self.explicacion)
+        if icono:
+            envoltura, ce = caja_h(espacio=18)
+            ce.addWidget(_azulejo(icono), 0, Qt.AlignmentFlag.AlignVCenter)
+            ce.addWidget(col, 1)
+            col = envoltura
         if vertical:
             c.addWidget(col)
         else:
@@ -2282,16 +2360,18 @@ class VentanaAjustes(_Panel):
         c.setSpacing(0)
         cab = QWidget()
         cc = QVBoxLayout(cab)
-        cc.setContentsMargins(46, 36, 34, 18)
-        cc.addWidget(_cabecera(tr('Ajustes de la aplicación'), tr('Ajustes de CineCaptions'), self.cerrar, tam=38))
+        cc.setContentsMargins(46, 30, 34, 12)
+        cc.addWidget(_cabecera(tr('Ajustes de la aplicación'), tr('Ajustes de CineCaptions'), self.cerrar, tam=32))   # (v5.70: más baja)
         c.addWidget(cab)
-        nombres = [tr('General'), tr('Interfaz'), tr('Atajos'), tr('Acerca de CineCaptions'), tr('Ayuda')]
+        nombres = [(tr('General'), 'gear-six'), (tr('Interfaz'), 'paint-brush'), (tr('Atajos'), 'keyboard'),
+                   (tr('Acerca de CineCaptions'), 'info'), (tr('Ayuda'), 'lifebuoy')]          # v5.70: con su ícono
         self.pila = QStackedWidget()
         self.pestanas = _Pestanas(nombres, self.pila.setCurrentIndex)
         c.addWidget(self.pestanas)
         for armar in (self._pag_general, self._pag_interfaz, self._pag_atajos, self._pag_acerca, self._pag_ayuda):
-            d = Desplazable(espacio=22, margenes=(60, 34, 56, 34), estirar_final=True)
+            d = Desplazable(espacio=22, margenes=(60, 30, 56, 34), estirar_final=False)
             armar(d.capa)
+            d.capa.addStretch(1)               # v5.70: el sobrante va ABAJO (con estirar_final las páginas cortas quedaban empujadas hacia abajo)
             self.pila.addWidget(d)
         c.addWidget(self.pila, 1)
         pie = QFrame()
@@ -2330,16 +2410,15 @@ class VentanaAjustes(_Panel):
         self.aplicar_btn.setEnabled(pendiente)
         self.estado.configure(text=tr('Hay cambios sin aplicar.') if pendiente else tr('Las preferencias están actualizadas.'))
 
-    def _cabeza_pagina(self, capa, sobre, titulo, texto):
-        capa.addWidget(_etiqueta_seccion(sobre))
-        capa.addWidget(Etiqueta(titulo, 34, peso='extra', color='#FFFFFF'))
-        capa.addWidget(TextoAjustable(texto, 16))
-        capa.addSpacing(6)
+    def _cabeza_pagina(self, capa, sobre, titulo, texto, icono=None):
+        """v5.70 (el usuario: «quita los títulos de cada página, solo deja los del menú, es redundante»): las páginas ya no llevan encabezado;
+        la pestaña dice dónde estás. Se deja la llamada en cada página por si vuelve."""
+        return
 
     # -- General --------------------------------------------------------------
     def _pag_general(self, capa):
         self._cabeza_pagina(capa, tr('Preferencias generales'), tr('General'),
-                            tr('Motor de voz, espacio de las cachés y video MP4.'))     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
+                            tr('Motor de voz, espacio de las cachés y video MP4.'), icono='gear-six')     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
         # motor de voz
         motores ={'qwen3': tr('Qwen3-ASR (recomendado)'), 'whisper': tr('Whisper large-v3-turbo')}
         motor_var = StringVar(motores.get(self._borrador['motor_voz'], motores['qwen3']))
@@ -2354,7 +2433,7 @@ class VentanaAjustes(_Panel):
                         tr('Qwen3-ASR (2026) transcribe y mide cada palabra en 11 idiomas: español, inglés, '
                            'portugués, francés, alemán, italiano, japonés, coreano, ruso, chino y cantonés. '
                            'Para los demás idiomas, o si no está instalado, se usa Whisper large-v3-turbo.'),
-                        caja_motor, 340)
+                        caja_motor, 340, icono='microphone')
         self._pintar_motor()
         # v5.69: quitadas «IA de texto», «Otras IA (análisis, sonido y efectos)» y «GPU para la voz» (el usuario lo pidió): la IA de texto es
         # siempre la recomendada (Gemma 4 E4B, que baja sola a Qwen3.5-4B / Qwen3-1.7B si no cabe) y la GPU se repara sola al abrir
@@ -2367,7 +2446,7 @@ class VentanaAjustes(_Panel):
         cch.addWidget(self.cache_btn)
         f_cache = _Fila(tr('Espacio de las cachés'),
                         tr('Efectos animados, emojis, vistas de los packs y transcripciones se guardan para no rehacerlos. Cada una tiene un tope y se borra sola lo menos usado; «Limpiar ahora» aplica los topes ya. Todo se vuelve a crear cuando hace falta.'),
-                        caja_cache, 340)
+                        caja_cache, 340, icono='hard-drives')
         self._pintar_cache()
         # conexion con Resolve
         caja_con, cc = caja_v(espacio=10)
@@ -2397,7 +2476,8 @@ class VentanaAjustes(_Panel):
         f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
                       tr('GO graba los subtítulos del tema elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
                          'Si Resolve no está instalado lo hace siempre.'),
-                      Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})), ultima=True)
+                      Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})), ultima=True,
+                      icono='film-strip')
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
         # v5.52: quitadas «Reproducir al terminar», «Abrir siempre en vertical» y «Vista de Resolve al terminar» (el usuario lo pidió): van SIEMPRE
         # activadas (go_reproducir / go_vertical / go_vista_resolve ya no se leen); la vista que GO aplica es la que ya estuviera guardada
@@ -2523,16 +2603,17 @@ class VentanaAjustes(_Panel):
     # -- Interfaz -------------------------------------------------------------
     def _pag_interfaz(self, capa):
         self._cabeza_pagina(capa, tr('Preferencias de interfaz'), tr('Interfaz'),
-                            tr('Controla cómo se presenta el espacio de trabajo de CineCaptions al abrirse.'))
+                            tr('Controla cómo se presenta el espacio de trabajo de CineCaptions al abrirse.'), icono='paint-brush')
         import i18n
         idioma_var = StringVar(self._idioma_inicial)
         combo_idioma = Combo(list(i18n.IDIOMAS_UI.values()), var=idioma_var, alto=52, tam=16,
                              comando=lambda v: self._cambio('idioma_ui', v))
-        f_lat = _Fila(tr('Idioma de la interfaz'), tr('Cambia el idioma de TODA la interfaz. Se aplica al reiniciar CineCaptions.'), combo_idioma, 380)
+        f_lat = _Fila(tr('Idioma de la interfaz'), tr('Cambia el idioma de TODA la interfaz. Se aplica al reiniciar CineCaptions.'), combo_idioma, 380,
+                      icono='translate')
         tam_var = StringVar(f"{self._borrador['tamano']}%")
         f_tam = _Fila(tr('Tamaño de interfaz'), tr('Agranda o achica todo el programa. Se aplica al reiniciar.'),
                       Combo([f'{t}%' for t in tema.TAMANOS], var=tam_var, alto=52, tam=16,
-                            comando=lambda v: self._cambio('tamano', int(v.rstrip('%')))), 380)
+                            comando=lambda v: self._cambio('tamano', int(v.rstrip('%')))), 380, icono='text-aa')
         # v5.49: 3 estilos de Inicio (Nebulosa, Astrolabio de fábrica, Proceso), todos con el astrolabio; cada uno trae su aurora
         import estilos_inicio
         self._tarjetas_tema = []
@@ -2552,7 +2633,7 @@ class VentanaAjustes(_Panel):
         f_estilos = _Fila(tr('Estilo de la interfaz'),
                           tr('Tres escenas para Inicio, las tres con el astrolabio de bronce: cada una con sus animaciones y su manera de '
                              'enseñar el proceso de GO. También cambian la luz de fondo de TODAS las páginas. Pasa el ratón por una tarjeta para verla en movimiento.'),
-                          caja_est, vertical=True, expandir=True)
+                          caja_est, vertical=True, expandir=True, icono='sparkle')
         # v5.63 (el usuario: «deja la opción de azul en Ajustes › Interfaz por si el usuario no quiere tanto negro»): el fondo de toda la
         # interfaz, Azul (el azul noche, con su acento verde; de fábrica desde la v5.64) o Negro (con el acento blanco)
         fondos = {'noche': tr('Azul'), 'negro': tr('Negro')}
@@ -2561,14 +2642,14 @@ class VentanaAjustes(_Panel):
                         tr('Azul noche (de fábrica) o negro, en todas las páginas. Se aplica al reiniciar.'),
                         Segmentado(list(fondos.values()), fondo_var,
                                    lambda *_: self._elegir_fondo(next((k for k, v in fondos.items() if v == fondo_var.get()), 'negro')),
-                                   alto=34, tam=13))
+                                   alto=34, tam=13), icono='moon-stars')
         # acentos (v5.22: una fila de muestras a la derecha, como los demás ajustes)
         self._muestras = _MuestrasAcento(self._borrador['acento'], self._borrador['acento_personal'],
                                          self._elegir_acento, self._elegir_personal)
         f_acento = _Fila(tr('Color de resaltado'),
                          tr('Se usa en acciones principales, controles seleccionados y navegación activa. '
                             'Los colores de estado y de los roles del editor no cambian.'),
-                         self._muestras, ultima=True)
+                         self._muestras, ultima=True, icono='drop')
         # v5.69: quitadas «Animaciones» y «Animaciones de Inicio» (el usuario lo pidió): siempre encendidas y en «Completo»
         # (efectos_ui.reducir_animaciones → False; escena_go ya no lee 'go_animaciones'); Inicio se aligera solo con su calidad adaptativa
         capa.addWidget(_grupo(f_estilos, f_lat, f_tam, f_fondo, f_acento))
@@ -2615,7 +2696,7 @@ class VentanaAjustes(_Panel):
     # -- Atajos ---------------------------------------------------------------
     def _pag_atajos(self, capa):
         self._cabeza_pagina(capa, tr('Teclado'), tr('Atajos'),
-                            tr('Los atajos de Corrector funcionan mientras el editor está abierto.'))
+                            tr('Los atajos de Corrector funcionan mientras el editor está abierto.'), icono='keyboard')
         filas = []
         atajos = [('1', tr('Pincel «Contexto»')), ('2', tr('Pincel «Principal»')), ('3', tr('Pincel «Complemento»')),
                   ('4  ·  0', tr('Pincel «Base» (quitar el rol)')), ('5', tr('Editar el texto de una palabra')),
@@ -2624,16 +2705,14 @@ class VentanaAjustes(_Panel):
         for i, (tecla, que) in enumerate(atajos):
             filas.append(_FilaAtajo(tecla, que, ultima=i == len(atajos) - 1))
         capa.addWidget(_etiqueta_seccion(tr('Corrector')))
+        capa.addWidget(TextoAjustable(tr('Los atajos de Corrector funcionan mientras el editor está abierto.'), 14))   # (v5.70: era la línea del encabezado)
         capa.addWidget(_grupo(*filas))
-        capa.addWidget(_etiqueta_seccion(tr('Sonido')))
-        capa.addWidget(_grupo(_FilaAtajo(tr('Tu atajo'), tr('Insertar el efecto elegido en Resolve. Se configura en '
-                                                             'SFX Lab y funciona aunque CineCaptions no tenga el foco.'),
-                                         ultima=True)))
+        # v5.70: quitada la sección «Sonido» («Tu atajo … se configura en SFX Lab»): ese atajo global ya no existe en el programa
 
     # -- Acerca de ------------------------------------------------------------
     def _pag_acerca(self, capa):
         self._cabeza_pagina(capa, tr('Información'), tr('Acerca de CineCaptions'),
-                            tr('Versión, licencia, novedades y actualizaciones.'))
+                            tr('Versión, licencia y créditos.'), icono='info')
         cab, cc = caja_h(espacio=18, margenes=(30, 26, 30, 26))
         logo = QLabel()
         try:
@@ -2649,6 +2728,7 @@ class VentanaAjustes(_Panel):
         self.acerca_version = Etiqueta(f'v{_version()} · ' + texto_canal(self._borrador['canal_beta']), 15, color=ui.TEXT_MUTED)
         ccol.addWidget(self.acerca_version)
         cc.addWidget(col, 1)
+        cc.addWidget(_pastilla('arrows-clockwise', tr('Se actualiza sola')), 0, Qt.AlignmentFlag.AlignVCenter)   # v5.70: el aviso va siempre
         g_cab = _grupo(cab)
         # licencia
         caja_lic, cl = caja_v(espacio=8)
@@ -2668,7 +2748,7 @@ class VentanaAjustes(_Panel):
         cfb.addWidget(self.lic_desact)
         cl.addWidget(fb)
         f_lic = _Fila(tr('Licencia'), tr('Tu clave de cinecaptions.shop. Desactiva este equipo para activarla en otra computadora.'),
-                      caja_lic, 380)
+                      caja_lic, 380, icono='key')
         self._pintar_licencia()
         # v5.69: quitadas «Notas de la versión» y «Actualizaciones» (el usuario lo pidió): las novedades salen solas tras actualizar, la versión
         # nueva se vigila sola (cada 10 s) y el panel rápido de Ajustes conserva «Leer notas de la versión» y el botón de actualizar
@@ -2696,7 +2776,7 @@ class VentanaAjustes(_Panel):
             ccr.addWidget(Etiqueta('By Cinema Productions', 15, peso='negrita', color='#FFFFFF'))
         ccr.addWidget(Etiqueta('© 2026 Cinema Productions', 13, color=ui.TEXT_MUTED))
         f_cred = _Fila(tr('Créditos'), tr('Transcripción: Qwen3-ASR y Whisper · Traducción: Argos · Interfaz: Qt (PySide6).'),
-                       cred, 380, ultima=True)
+                       cred, 380, ultima=True, icono='heart')
         capa.addWidget(g_cab)
         capa.addWidget(_grupo(f_lic, f_cred))
 
@@ -2727,7 +2807,8 @@ class VentanaAjustes(_Panel):
     # -- Ayuda ----------------------------------------------------------------
     def _pag_ayuda(self, capa):
         self._cabeza_pagina(capa, tr('Soporte'), tr('Ayuda'),
-                            tr('Si algo no funciona, el diagnóstico junta todo lo necesario para resolverlo.'))
+                            tr('¿Algo no funciona? Escríbenos: el informe de tu equipo va listo para enviar.'), icono='lifebuoy')
+        capa.addWidget(self._tarjeta_soporte())
         app = self.app
 
         def llamar(nombre):
@@ -2737,16 +2818,50 @@ class VentanaAjustes(_Panel):
                 fn()
         f_diag = _Fila(tr('Diagnóstico'), tr('Revisa Resolve, la conexión MCP, el Puente, los scripts, el motor de voz y '
                                              'la licencia, y lo deja listo para copiar y enviar.'),
-                       Boton(tr('Ejecutar diagnóstico'), lambda: llamar('_ejecutar_diagnostico'), tipo='neutro', alto=46, tam=15), 340)
+                       Boton(tr('Ejecutar diagnóstico'), lambda: llamar('_ejecutar_diagnostico'), tipo='neutro', alto=46, tam=15), 340,
+                       icono='heartbeat')
         f_scripts = _Fila(tr('Scripts de Resolve'), tr('Vuelve a poner los scripts de CineCaptions en Área de trabajo > '
                                                       'Scripts (para Resolve Free).'),
-                          Boton(tr('Reinstalar scripts'), lambda: llamar('_instalar_en_resolve'), tipo='neutro', alto=46, tam=15), 340)
-        # v5.69: quitadas «Qué respondió Resolve» y «Carpeta de datos» (el usuario lo pidió)
-        f_contacto = _Fila(tr('Contacto'), tr('Copia el diagnóstico y envíalo a Cinema Productions por el canal donde '
-                                             'compraste CineCaptions.'),
-                           Boton(tr('Copiar diagnóstico'), lambda: llamar('_ejecutar_diagnostico'),
-                                 tipo='neutro', alto=46, tam=15), 340, ultima=True)
-        capa.addWidget(_grupo(f_diag, f_scripts, f_contacto))
+                          Boton(tr('Reinstalar scripts'), lambda: llamar('_instalar_en_resolve'), tipo='neutro', alto=46, tam=15), 340,
+                          ultima=True, icono='code')
+        # v5.69: quitadas «Qué respondió Resolve» y «Carpeta de datos» (el usuario lo pidió). v5.70: «Contacto» (copiaba el diagnóstico,
+        # igual que la fila de arriba) pasa a la tarjeta de soporte con WhatsApp y la web
+        capa.addWidget(_etiqueta_seccion(tr('Herramientas')))
+        capa.addWidget(_grupo(f_diag, f_scripts))
+
+    def _tarjeta_soporte(self):
+        """v5.70 (pedido del usuario): arriba de Ayuda, WhatsApp de soporte (copia el informe y abre el chat con el resumen ya escrito, lo
+        mismo que «Enviar informe» del Registro) y la web cinecaptions.shop."""
+        import registro
+        import registro_ui
+        t = QFrame()
+        t.setObjectName('tarjetaSoporte')
+        t.setStyleSheet(ui.traducir_hoja('QFrame#tarjetaSoporte { background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, '
+                                         'stop:0 rgba(37,211,102,30), stop:0.55 #0D1627, stop:1 #0D1627); '
+                                         'border: 1px solid rgba(37,211,102,70); border-radius: 14px; }'))
+        c = QHBoxLayout(t)
+        c.setContentsMargins(28, 26, 28, 26)
+        c.setSpacing(24)
+        c.addWidget(_azulejo('chat-circle-dots', 56, 28, color='#25D366'), 0, Qt.AlignmentFlag.AlignTop)
+        col, cc = caja_v(espacio=6)
+        cc.addWidget(Etiqueta(tr('¿Necesitas ayuda?'), 21, peso='extra', color='#FFFFFF'))
+        cc.addWidget(TextoAjustable(tr('Escríbenos por WhatsApp: el informe de tu equipo se copia solo y el mensaje ya va escrito; '
+                                       'pegas el informe y lo envías.'), 14))
+        cc.addSpacing(2)
+        cc.addWidget(Etiqueta('WhatsApp  +502 3657 3658   ·   cinecaptions.shop', 13, color=ui.TEXT_MUTED))
+        c.addWidget(col, 1, Qt.AlignmentFlag.AlignVCenter)
+        botones, cb = caja_v(espacio=10)
+        wa = Boton(tr('Escribir por WhatsApp'), lambda: registro_ui.enviar_informe(self), alto=50, tam=15, negrita=True,
+                   icono=ui.icono_linea('ph.whatsapp-logo-bold', '#04220F'), lado_icono=21)
+        wa.setStyleSheet('QPushButton { background-color: #25D366; color: #04220F; border: none; border-radius: 12px; padding: 0 18px; }'
+                         'QPushButton:hover { background-color: #3EE07C; } QPushButton:pressed { background-color: #1EB858; }')
+        cb.addWidget(wa)
+        web = Boton(tr('Visitar cinecaptions.shop'), lambda: registro_ui.abrir_web(registro.WEB_SOPORTE, self), tipo='neutro', alto=46,
+                    tam=14, icono=ui.icono_linea('ph.globe-bold', '#C9D6EC'), lado_icono=19)
+        cb.addWidget(web)
+        botones.setFixedWidth(300)
+        c.addWidget(botones, 0, Qt.AlignmentFlag.AlignVCenter)
+        return t
 
     # -- aplicar / cerrar -----------------------------------------------------
     def aplicar(self):

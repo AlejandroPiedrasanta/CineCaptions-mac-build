@@ -4252,6 +4252,20 @@
     "No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.": "Impossible d’ouvrir WhatsApp ({e}). Le rapport est déjà copié : envoyez-le au +502 3657 3658.",
     "sin navegador": "aucun navigateur",
     "Motor de voz, espacio de las cachés y video MP4.": "Moteur vocal, espace des caches et vidéo MP4.",
-    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "Le GPU a échoué ; je continue sur le CPU (plus lent). Il se répare tout seul à la prochaine ouverture de CineCaptions."
+    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "Le GPU a échoué ; je continue sur le CPU (plus lent). Il se répare tout seul à la prochaine ouverture de CineCaptions.",
+    "Se actualiza sola": "Se met à jour tout seul",
+    "Versión, licencia y créditos.": "Version, licence et crédits.",
+    "¿Algo no funciona? Escríbenos: el informe de tu equipo va listo para enviar.": "Quelque chose ne marche pas ? Écrivez-nous : le rapport de votre ordinateur est prêt à envoyer.",
+    "Herramientas": "Outils",
+    "¿Necesitas ayuda?": "Besoin d’aide ?",
+    "Escríbenos por WhatsApp: el informe de tu equipo se copia solo y el mensaje ya va escrito; pegas el informe y lo envías.": "Écrivez-nous sur WhatsApp : le rapport de votre ordinateur est copié tout seul et le message est déjà écrit ; collez le rapport et envoyez-le.",
+    "Escribir por WhatsApp": "Écrire sur WhatsApp",
+    "Visitar cinecaptions.shop": "Visiter cinecaptions.shop",
+    "No pude abrir {u} ({e}).": "Impossible d’ouvrir {u} ({e}).",
+    "No se pudo grabar el video MP4": "Impossible d’enregistrer la vidéo MP4",
+    "GO sin Resolve graba los subtítulos en una copia MP4 de tu archivo (sin usar DaVinci Resolve) y algo falló al leer tu archivo o al escribir el MP4.": "GO sans Resolve incruste les sous-titres dans une copie MP4 de votre fichier (sans DaVinci Resolve) et quelque chose a échoué en lisant le fichier ou en écrivant le MP4.",
+    "Comprueba que tu archivo se reproduce bien en la computadora (video o audio).": "Vérifiez que votre fichier se lit bien sur l’ordinateur (vidéo ou audio).",
+    "Si el disco está casi lleno, libera espacio: el MP4 se guarda junto a tu archivo (o en Videos › CineCaptions).": "Si le disque est presque plein, libérez de l’espace : le MP4 est enregistré à côté de votre fichier (ou dans Vidéos › CineCaptions).",
+    "Si se repite, pulsa «Enviar informe» en el Registro.": "Si cela se reproduit, appuyez sur « Envoyer le rapport » dans le Journal."
   }
 }

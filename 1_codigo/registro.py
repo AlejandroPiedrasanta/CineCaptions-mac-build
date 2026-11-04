@@ -706,6 +706,7 @@ def reporte_soporte(lineas_log=150, entradas=None):
 
 
 WHATSAPP_SOPORTE = '50236573658'          # v5.69: «Enviar informe» del Registro abre este chat de soporte
+WEB_SOPORTE = 'https://cinecaptions.shop/'  # v5.70: la web (Ajustes › Ayuda)
 
 
 def mensaje_whatsapp(entradas=None, tope=1800):

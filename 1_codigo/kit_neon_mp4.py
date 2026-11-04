@@ -116,6 +116,12 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
     if vw and vh and vw > vh:
         raise NoVertical('el Tema 1 neón es vertical')
     dur = float(dur or 0.0)
+    if not dur:                                          # v5.70: un audio suelto (medir no ve imagen): su duración, para no cortar la voz
+        try:
+            with av.open(str(video)) as c:
+                dur = float(c.duration or 0) / 1e6
+        except Exception:
+            pass
     fps = Fraction(float(fps_f or 30)).limit_denominator(1001)
     fps_f = float(fps)
     con_pro = bool(plan and plan.get('tema') == 'neon' and not plan.get('ligero') and plan.get('kitneon_motions'))
@@ -212,14 +218,18 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
     entrada = av.open(str(base_ruta))
     out = None
     try:
-        vin = entrada.streams.video[0]
-        vin.thread_type = 'AUTO'
+        # v5.70 (un cliente: «el archivo no tiene imagen»; aquí, IndexError): con un AUDIO suelto la base es el fondo oscuro de
+        # render_sin_resolve.fondo_solo_audio y encima los captions neón, como un video de solo voz
+        vin = entrada.streams.video[0] if entrada.streams.video else None
+        if vin is not None:
+            vin.thread_type = 'AUTO'
         try:
             import rotacion_video as RV
-            rot = RV.giro(str(base_ruta)) if base_ruta == video else 0
+            rot = RV.giro(str(base_ruta)) if base_ruta == video and vin is not None else 0
         except Exception:
             rot = 0
-        cuadros = entrada.decode(vin)
+        cuadros = entrada.decode(vin) if vin is not None else None
+        fondo_audio = RSR.fondo_solo_audio(W, H) if vin is None else None
         out = av.open(str(temporal), 'w', format='mp4', options={'movflags': '+faststart'})
         vs, codec = RSR._abrir_codificador(out, fps, W, H)
         aus = None
@@ -263,7 +273,9 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
                         break
                     t = n / fps_f
                     fondo = None
-                    if t < dur:
+                    if cuadros is None:
+                        fondo = fondo_audio
+                    elif t < dur:
                         try:
                             fondo = base_de(next(cuadros))
                             ultimo = fondo

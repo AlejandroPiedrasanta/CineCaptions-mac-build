@@ -10176,5 +10176,103 @@
   "fr": "Le GPU a échoué ; je continue sur le CPU (plus lent). Il se répare tout seul à la prochaine ouverture de CineCaptions.",
   "de": "Die GPU ist ausgefallen; ich mache mit der CPU weiter (langsamer). Beim nächsten Öffnen von CineCaptions repariert sie sich selbst.",
   "it": "La GPU non ha funzionato; continuo con la CPU (più lento). Si ripara da sola alla prossima apertura di CineCaptions."
+ },
+ "Se actualiza sola": {
+  "en": "Updates itself",
+  "pt": "Atualiza-se sozinho",
+  "fr": "Se met à jour tout seul",
+  "de": "Aktualisiert sich selbst",
+  "it": "Si aggiorna da solo"
+ },
+ "Versión, licencia y créditos.": {
+  "en": "Version, license and credits.",
+  "pt": "Versão, licença e créditos.",
+  "fr": "Version, licence et crédits.",
+  "de": "Version, Lizenz und Mitwirkende.",
+  "it": "Versione, licenza e crediti."
+ },
+ "¿Algo no funciona? Escríbenos: el informe de tu equipo va listo para enviar.": {
+  "en": "Something not working? Write to us: your computer’s report is ready to send.",
+  "pt": "Algo não funciona? Escreva para nós: o relatório do seu computador já vai pronto.",
+  "fr": "Quelque chose ne marche pas ? Écrivez-nous : le rapport de votre ordinateur est prêt à envoyer.",
+  "de": "Funktioniert etwas nicht? Schreib uns: der Bericht deines Computers ist versandbereit.",
+  "it": "Qualcosa non funziona? Scrivici: il report del tuo computer è pronto da inviare."
+ },
+ "Herramientas": {
+  "en": "Tools",
+  "pt": "Ferramentas",
+  "fr": "Outils",
+  "de": "Werkzeuge",
+  "it": "Strumenti"
+ },
+ "¿Necesitas ayuda?": {
+  "en": "Need help?",
+  "pt": "Precisa de ajuda?",
+  "fr": "Besoin d’aide ?",
+  "de": "Brauchst du Hilfe?",
+  "it": "Ti serve aiuto?"
+ },
+ "Escríbenos por WhatsApp: el informe de tu equipo se copia solo y el mensaje ya va escrito; pegas el informe y lo envías.": {
+  "en": "Write to us on WhatsApp: your computer’s report is copied automatically and the message is already written; just paste the report and send it.",
+  "pt": "Escreva para nós no WhatsApp: o relatório do seu computador é copiado sozinho e a mensagem já vai escrita; cole o relatório e envie.",
+  "fr": "Écrivez-nous sur WhatsApp : le rapport de votre ordinateur est copié tout seul et le message est déjà écrit ; collez le rapport et envoyez-le.",
+  "de": "Schreib uns auf WhatsApp: der Bericht deines Computers wird automatisch kopiert und die Nachricht ist schon geschrieben; füge den Bericht ein und sende ihn.",
+  "it": "Scrivici su WhatsApp: il report del tuo computer si copia da solo e il messaggio è già scritto; incolla il report e invialo."
+ },
+ "Escribir por WhatsApp": {
+  "en": "Message on WhatsApp",
+  "pt": "Escrever pelo WhatsApp",
+  "fr": "Écrire sur WhatsApp",
+  "de": "Über WhatsApp schreiben",
+  "it": "Scrivi su WhatsApp"
+ },
+ "Visitar cinecaptions.shop": {
+  "en": "Visit cinecaptions.shop",
+  "pt": "Visitar cinecaptions.shop",
+  "fr": "Visiter cinecaptions.shop",
+  "de": "cinecaptions.shop besuchen",
+  "it": "Visita cinecaptions.shop"
+ },
+ "No pude abrir {u} ({e}).": {
+  "en": "Couldn’t open {u} ({e}).",
+  "pt": "Não consegui abrir {u} ({e}).",
+  "fr": "Impossible d’ouvrir {u} ({e}).",
+  "de": "{u} ließ sich nicht öffnen ({e}).",
+  "it": "Non sono riuscito ad aprire {u} ({e})."
+ },
+ "No se pudo grabar el video MP4": {
+  "en": "Couldn’t write the MP4 video",
+  "pt": "Não foi possível gravar o vídeo MP4",
+  "fr": "Impossible d’enregistrer la vidéo MP4",
+  "de": "Das MP4-Video konnte nicht geschrieben werden",
+  "it": "Impossibile registrare il video MP4"
+ },
+ "GO sin Resolve graba los subtítulos en una copia MP4 de tu archivo (sin usar DaVinci Resolve) y algo falló al leer tu archivo o al escribir el MP4.": {
+  "en": "GO without Resolve burns the subtitles into an MP4 copy of your file (without DaVinci Resolve) and something failed while reading your file or writing the MP4.",
+  "pt": "O GO sem Resolve grava as legendas numa cópia MP4 do seu arquivo (sem o DaVinci Resolve) e algo falhou ao ler o arquivo ou ao gravar o MP4.",
+  "fr": "GO sans Resolve incruste les sous-titres dans une copie MP4 de votre fichier (sans DaVinci Resolve) et quelque chose a échoué en lisant le fichier ou en écrivant le MP4.",
+  "de": "GO ohne Resolve brennt die Untertitel in eine MP4-Kopie deiner Datei (ohne DaVinci Resolve) und beim Lesen der Datei oder Schreiben des MP4 ist etwas schiefgelaufen.",
+  "it": "GO senza Resolve imprime i sottotitoli in una copia MP4 del tuo file (senza DaVinci Resolve) e qualcosa non ha funzionato leggendo il file o scrivendo l’MP4."
+ },
+ "Comprueba que tu archivo se reproduce bien en la computadora (video o audio).": {
+  "en": "Check that your file plays correctly on the computer (video or audio).",
+  "pt": "Verifique se o arquivo toca bem no computador (vídeo ou áudio).",
+  "fr": "Vérifiez que votre fichier se lit bien sur l’ordinateur (vidéo ou audio).",
+  "de": "Prüfe, ob sich deine Datei am Computer richtig abspielen lässt (Video oder Audio).",
+  "it": "Controlla che il file si riproduca bene sul computer (video o audio)."
+ },
+ "Si el disco está casi lleno, libera espacio: el MP4 se guarda junto a tu archivo (o en Videos › CineCaptions).": {
+  "en": "If the disk is almost full, free up space: the MP4 is saved next to your file (or in Videos › CineCaptions).",
+  "pt": "Se o disco estiver quase cheio, libere espaço: o MP4 é salvo junto ao arquivo (ou em Vídeos › CineCaptions).",
+  "fr": "Si le disque est presque plein, libérez de l’espace : le MP4 est enregistré à côté de votre fichier (ou dans Vidéos › CineCaptions).",
+  "de": "Wenn die Festplatte fast voll ist, schaffe Platz: das MP4 wird neben deiner Datei gespeichert (oder in Videos › CineCaptions).",
+  "it": "Se il disco è quasi pieno, libera spazio: l’MP4 si salva accanto al tuo file (o in Video › CineCaptions)."
+ },
+ "Si se repite, pulsa «Enviar informe» en el Registro.": {
+  "en": "If it happens again, press “Send report” in the Log.",
+  "pt": "Se acontecer de novo, clique em «Enviar relatório» no Registro.",
+  "fr": "Si cela se reproduit, appuyez sur « Envoyer le rapport » dans le Journal.",
+  "de": "Wenn es wieder passiert, drücke „Bericht senden“ im Protokoll.",
+  "it": "Se si ripete, premi «Invia il report» nel Registro."
  }
 }

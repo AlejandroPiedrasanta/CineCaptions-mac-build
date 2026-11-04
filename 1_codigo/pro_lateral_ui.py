@@ -208,9 +208,22 @@ def estado(clave, op=None, neon=None):
     return motion
 
 
-def poner(clave, si):
+def neon_de_pack(valor):
+    """v5.70: ¿ese pack (la tarjeta del slider) es el Tema 1, o un estilo de «Crea tu estilo» hecho con él? None si no es un tema (la tarjeta
+    «Crea tu estilo», una mezcla…)."""
+    if not valor or valor in ('anadir', '__clasica__', 'media_pool', 'auto'):
+        return None
+    try:
+        import edicion_pro
+        return str(edicion_pro._tema(str(valor)) or '') == 'Kinetic'
+    except Exception:
+        return None
+
+
+def poner(clave, si, neon=None):
     """Guarda el interruptor. v5.57 (el usuario: «si no se activa nada, seguirá funcionando como solo captions»): también se puede apagar el
-    último grupo de motions («elegidos» sin ninguno = ninguno: motions_catalogo.modo). Devuelve True (False solo por compatibilidad)."""
+    último grupo de motions («elegidos» sin ninguno = ninguno: motions_catalogo.modo). Devuelve True (False solo por compatibilidad).
+    `neon` (v5.70): True/False = guardarlo en los interruptores del Tema 1 o en los de los demás (None = los del tema elegido)."""
     import edicion_pro
     import motions_catalogo as MC
     o = _POR_CLAVE[clave]
@@ -220,7 +233,7 @@ def poner(clave, si):
     if o.get('mascara'):                                # v5.61: «detrás de ti», el mismo en los 6 temas (pro_mascara y pro_neon_extras)
         edicion_pro.poner_detras(si)
         return True
-    if _neon():
+    if (_neon() if neon is None else neon):
         edicion_pro.poner_neon_extra(clave, si)
         return True
     op = edicion_pro.opciones_guardadas()
@@ -449,9 +462,10 @@ class PanelMotionsPro(QWidget):
             self._nivel = edicion_pro.intensidad_emoji(op)
         except Exception:
             self._nivel = 'media'
+        neon = self._neon_vista()
         for o in OPCIONES:
             k = o['clave']
-            self._on[k] = estado(k, op)
+            self._on[k] = estado(k, op, neon=neon)
             self._k[k].objetivo = 1.0 if self._on[k] else 0.0
             if not animar:
                 self._k[k].poner(self._k[k].objetivo)
@@ -525,10 +539,22 @@ class PanelMotionsPro(QWidget):
         self.update()
         return sigue
 
+    def _neon_vista(self):
+        """v5.70 (el usuario: «el Tema 1… ya activé todo lo de PRO y no sirve nada»): los interruptores son los del tema que se VE al centro
+        del slider (`tema_vista`, lo pone la página Tema), no los del tema elegido: con el Tema 5 elegido y el Tema 1 al centro, encender
+        «Kit de motions» se guardaba en los de los demás temas y el Tema 1 no lo veía. None = los del tema elegido."""
+        fn = getattr(self, 'tema_vista', None)
+        if fn is None:
+            return None
+        try:
+            return neon_de_pack(fn())
+        except Exception:
+            return None
+
     def _tocar(self, clave):
         si = not self.encendido(clave)
         try:
-            poner(clave, si)                         # (v5.57: también se apaga el último: con nada encendido, GO hace solo captions)
+            poner(clave, si, neon=self._neon_vista())     # (v5.57: también se apaga el último: con nada encendido, GO hace solo captions)
         except Exception:
             import registro
             registro.excepcion(origen='Proyecto · motions de la PRO')

@@ -4252,6 +4252,20 @@
     "No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.": "WhatsApp ließ sich nicht öffnen ({e}). Der Bericht ist schon kopiert: sende ihn an +502 3657 3658.",
     "sin navegador": "kein Browser",
     "Motor de voz, espacio de las cachés y video MP4.": "Sprach-Engine, Cache-Speicher und MP4-Video.",
-    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "Die GPU ist ausgefallen; ich mache mit der CPU weiter (langsamer). Beim nächsten Öffnen von CineCaptions repariert sie sich selbst."
+    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "Die GPU ist ausgefallen; ich mache mit der CPU weiter (langsamer). Beim nächsten Öffnen von CineCaptions repariert sie sich selbst.",
+    "Se actualiza sola": "Aktualisiert sich selbst",
+    "Versión, licencia y créditos.": "Version, Lizenz und Mitwirkende.",
+    "¿Algo no funciona? Escríbenos: el informe de tu equipo va listo para enviar.": "Funktioniert etwas nicht? Schreib uns: der Bericht deines Computers ist versandbereit.",
+    "Herramientas": "Werkzeuge",
+    "¿Necesitas ayuda?": "Brauchst du Hilfe?",
+    "Escríbenos por WhatsApp: el informe de tu equipo se copia solo y el mensaje ya va escrito; pegas el informe y lo envías.": "Schreib uns auf WhatsApp: der Bericht deines Computers wird automatisch kopiert und die Nachricht ist schon geschrieben; füge den Bericht ein und sende ihn.",
+    "Escribir por WhatsApp": "Über WhatsApp schreiben",
+    "Visitar cinecaptions.shop": "cinecaptions.shop besuchen",
+    "No pude abrir {u} ({e}).": "{u} ließ sich nicht öffnen ({e}).",
+    "No se pudo grabar el video MP4": "Das MP4-Video konnte nicht geschrieben werden",
+    "GO sin Resolve graba los subtítulos en una copia MP4 de tu archivo (sin usar DaVinci Resolve) y algo falló al leer tu archivo o al escribir el MP4.": "GO ohne Resolve brennt die Untertitel in eine MP4-Kopie deiner Datei (ohne DaVinci Resolve) und beim Lesen der Datei oder Schreiben des MP4 ist etwas schiefgelaufen.",
+    "Comprueba que tu archivo se reproduce bien en la computadora (video o audio).": "Prüfe, ob sich deine Datei am Computer richtig abspielen lässt (Video oder Audio).",
+    "Si el disco está casi lleno, libera espacio: el MP4 se guarda junto a tu archivo (o en Videos › CineCaptions).": "Wenn die Festplatte fast voll ist, schaffe Platz: das MP4 wird neben deiner Datei gespeichert (oder in Videos › CineCaptions).",
+    "Si se repite, pulsa «Enviar informe» en el Registro.": "Wenn es wieder passiert, drücke „Bericht senden“ im Protokoll."
   }
 }

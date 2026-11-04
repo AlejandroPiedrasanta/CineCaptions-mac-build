@@ -1331,6 +1331,7 @@ MOTIVOS_DETRAS = {
     'linea': 'ese caption no tiene la palabra grande abajo',
     'no_cabe_lado': 'a ese lado de la persona no cabe el texto',
     'ocupado': 'ahí va otro gráfico de la Edición PRO',
+    'intro': 'ahí va la intro del gancho (su zoom movería a la persona)',
 }
 CORONILLA_LADO_MAX = 0.75             # v5.32: con el texto a un lado (horizontal) la cabeza puede ir pegada arriba, no tan abajo que el texto se salga
 
@@ -1434,7 +1435,7 @@ def _detras_bloque(b, info, video, W, H, cfg, a_cuadro, cortes, forzado, posicio
 
 
 def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), W=1080, H=1920, intensidad=None, bloques=None, a_cuadro=None,
-                     marcas=None, cortes=None, motivos=None):
+                     marcas=None, cortes=None, motivos=None, vetado=None):
     """Qué bloques de captions van DETRÁS de la persona y cuánto suben. Un bloque vale si la persona es grande, su cabeza no se sale por arriba,
     está quieta en todo el bloque (misma toma), la pila le cae encima en horizontal y no hay otro gráfico ni B-roll en ese momento. La pila sube (o
     baja) hasta que su borde de abajo queda un poco por debajo de la coronilla: la cabeza tapa la parte de abajo de la palabra grande y el resto se lee.
@@ -1466,6 +1467,10 @@ def _captions_detras(info, video, fps, ocupado, densidad, decir, preferidos=(), 
     posicion = posicion_detras(W=W, H=H)                              # v5.32: en horizontal, arriba o a un lado de la persona
 
     def probar(k, forzado):
+        # v5.70: `vetado` (la intro del gancho) no se salta ni con una marca: su zoom mueve V1 y el recorte de la persona quedaba como un
+        # recuadro con su cabeza encima del destello (Tema 3, una marca llevada al caption de 0,0 s «lo más cerca donde queda bien»)
+        if any(bloques[k]['ini'] < v1 and v0 < bloques[k]['fin'] for v0, v1 in vetado or []):
+            return None, MOTIVOS_DETRAS['intro']
         return _detras_bloque(bloques[k], info, video, W, H, cfg, a_cuadro, cortes_t, forzado, posicion=posicion)
 
     # v5.27: las marcas del usuario primero. Si su caption no puede ir detrás, el más cercano que sí (a ±RADIO_MARCA_DETRAS_S de la marca):
@@ -2317,10 +2322,12 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
         ocupado += [(m['ini'] - 0.1, m['fin'] + 0.1) for m in plan.get('kitneon_motions') or [] if neon_tema]   # (Tema 1: nunca tapa un motion del kit)
         ocupado += [(t['_s'] - 0.1, t['_s'] + t['dur'] + 0.1) for t in tomas]
         ocupado += [((a - info['base']) / fps, (b - info['base']) / fps) for a, b in info.get('ocupado') or []]
+        vetado = []
         try:                                     # v5.33: durante el zoom de la intro del gancho la persona recortada no casaría con V1
             import intros_gancho
             if intros_gancho.activa(op):
-                ocupado.append((0.0, intros_gancho.fin_zoom_s(op) + 0.05))
+                vetado.append((0.0, intros_gancho.fin_zoom_s(op) + 0.05))     # (v5.70: también para las marcas: _captions_detras)
+                ocupado += vetado
         except Exception:
             pass
         bloques_tema, a_cuadro = None, None
@@ -2338,7 +2345,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 tramos = _captions_detras(info, video, fps, ocupado, op.get('pro_densidad') or 'media', decir,
                                           preferidos=[tuple(x) for x in plan.get('detras_pref') or []], W=W, H=H,
                                           intensidad=intensidad_detras(op), bloques=bloques_tema, a_cuadro=a_cuadro,
-                                          marcas=_marca(plan, 'detras'), cortes=plan.get('_cortes'), motivos=motivos_detras)
+                                          marcas=_marca(plan, 'detras'), cortes=plan.get('_cortes'), motivos=motivos_detras,
+                                          vetado=vetado)
         except Exception:
             try:                                 # (v5.27: antes se callaba y las marcas «no hacían nada» sin decir por qué)
                 import registro
@@ -2347,7 +2355,8 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 pass
             tramos = []
         a_cuadro_detras = a_cuadro                                       # (v5.29: las entradas «encima» se arman al final, con la placa ya hecha)
-        ctx_detras = {'ocupado': ocupado, 'bloques': bloques_tema, 'preferidos': [list(x) for x in plan.get('detras_pref') or []]}
+        ctx_detras = {'ocupado': ocupado, 'bloques': bloques_tema, 'preferidos': [list(x) for x in plan.get('detras_pref') or []],
+                      'vetado': vetado}
     # el resto de los bloques de captions: ninguno tapa una cara (y colocar_pro aparta sus emojis)
     mover, pantallas = [], []
     if hay_ia and not cap_t5 and not neon_tema:
@@ -2764,6 +2773,7 @@ def _guardar_contexto_detras(plan, info, video, video_img, fps, W, H, carpeta, n
         d = {'version': 1, 'hecho': round(_t.time()), 'media': str(video), 'imagen': str(video_img or video),
              'clave': POS.clave_video(video_img or video), 'fps': fps, 'W': W, 'H': H, 'info': info, 'timeline': info.get('nombre'),
              'bloques': bloques, 'ocupado': [list(x) for x in ctx.get('ocupado') or []], 'preferidos': ctx.get('preferidos') or [],
+             'vetado': [list(x) for x in ctx.get('vetado') or []],                                      # (v5.70: la intro del gancho)
              'densidad': op.get('pro_densidad') or 'media', 'cortes': [list(c) if isinstance(c, (list, tuple)) else c for c in plan.get('_cortes') or []],
              'neon': bool(neon_tema), 'placa': str(placa) if placa else None, 'carpeta': str(carpeta), 'recorte': plan.get('_recorte'),
              'aplicados': ctx.get('aplicados') or [],
@@ -2885,7 +2895,8 @@ def aplicar_detras(ruta, al_estado=None, marcas_tira=None, modo='solo', al_progr
     motivos = {}
     tramos = _captions_detras(ci, ctx['media'], fps, [tuple(x) for x in ctx.get('ocupado') or []], ctx.get('densidad') or 'media', decir,
                               preferidos=[tuple(x) for x in ctx.get('preferidos') or []], W=W, H=H, intensidad=intensidad_detras(),
-                              bloques=ctx.get('bloques'), a_cuadro=a_cuadro, marcas=marcas, cortes=ctx.get('cortes'), motivos=motivos)
+                              bloques=ctx.get('bloques'), a_cuadro=a_cuadro, marcas=marcas, cortes=ctx.get('cortes'), motivos=motivos,
+                              vetado=[tuple(x) for x in ctx.get('vetado') or []])
     op = opciones_guardadas()
     try:
         import estilos_pro as EST

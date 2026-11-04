@@ -167,7 +167,16 @@ _REGLAS = [
       'Con Resolve gratuito: Área de trabajo > Scripts («Secuencias de comandos» si tu Resolve está en español) > CineCaptions_Puente (en inglés: Workspace > Scripts). En Mac, CineCaptions intenta pulsarlo solo si le das el permiso de Accesibilidad.',
       'Vuelve a pulsar GO.',
       'Si sigue pasando, cierra DaVinci Resolve por completo y ábrelo otra vez.'], 'bloquea'),
-    (r'sin_resolve|resolve.*(no está abierto|no responde|cerrado|no se (pudo|puede) conectar)|no (pude|se pudo) (abrir|conectar).*resolve|scripting.*(desactiv|disabled)',
+    # v5.70 (un cliente: «GO sin Resolve · render: el archivo no tiene imagen» salía como «Resolve no está listo… abre Resolve»): un fallo del
+    # video MP4 SIN Resolve no tiene que ver con Resolve (antes, «sin_resolve» de abajo lo atrapaba por el nombre render_sin_resolve.py)
+    (r'GO sin Resolve|render_sin_resolve',
+     'No se pudo grabar el video MP4',
+     'GO sin Resolve graba los subtítulos en una copia MP4 de tu archivo (sin usar DaVinci Resolve) y algo falló al leer tu archivo o al escribir el MP4.',
+     ['Comprueba que tu archivo se reproduce bien en la computadora (video o audio).',
+      'Si el disco está casi lleno, libera espacio: el MP4 se guarda junto a tu archivo (o en Videos › CineCaptions).',
+      'Vuelve a pulsar GO.',
+      'Si se repite, pulsa «Enviar informe» en el Registro.'], 'bloquea'),
+    (r'(?<!render_)sin_resolve|resolve.*(no está abierto|no responde|cerrado|no se (pudo|puede) conectar)|no (pude|se pudo) (abrir|conectar).*resolve|scripting.*(desactiv|disabled)',
      'Resolve no está listo',
      'CineCaptions habla con DaVinci Resolve a través de su API de scripting y no obtuvo respuesta.',
      ['Abre DaVinci Resolve y espera a que cargue por completo.',

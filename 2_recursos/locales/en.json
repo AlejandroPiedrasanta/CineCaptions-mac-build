@@ -4252,6 +4252,20 @@
     "No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.": "Couldn’t open WhatsApp ({e}). The report is already copied: send it to +502 3657 3658.",
     "sin navegador": "no browser",
     "Motor de voz, espacio de las cachés y video MP4.": "Voice engine, cache space and MP4 video.",
-    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "The GPU failed; continuing on the CPU (slower). It repairs itself the next time you open CineCaptions."
+    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "The GPU failed; continuing on the CPU (slower). It repairs itself the next time you open CineCaptions.",
+    "Se actualiza sola": "Updates itself",
+    "Versión, licencia y créditos.": "Version, license and credits.",
+    "¿Algo no funciona? Escríbenos: el informe de tu equipo va listo para enviar.": "Something not working? Write to us: your computer’s report is ready to send.",
+    "Herramientas": "Tools",
+    "¿Necesitas ayuda?": "Need help?",
+    "Escríbenos por WhatsApp: el informe de tu equipo se copia solo y el mensaje ya va escrito; pegas el informe y lo envías.": "Write to us on WhatsApp: your computer’s report is copied automatically and the message is already written; just paste the report and send it.",
+    "Escribir por WhatsApp": "Message on WhatsApp",
+    "Visitar cinecaptions.shop": "Visit cinecaptions.shop",
+    "No pude abrir {u} ({e}).": "Couldn’t open {u} ({e}).",
+    "No se pudo grabar el video MP4": "Couldn’t write the MP4 video",
+    "GO sin Resolve graba los subtítulos en una copia MP4 de tu archivo (sin usar DaVinci Resolve) y algo falló al leer tu archivo o al escribir el MP4.": "GO without Resolve burns the subtitles into an MP4 copy of your file (without DaVinci Resolve) and something failed while reading your file or writing the MP4.",
+    "Comprueba que tu archivo se reproduce bien en la computadora (video o audio).": "Check that your file plays correctly on the computer (video or audio).",
+    "Si el disco está casi lleno, libera espacio: el MP4 se guarda junto a tu archivo (o en Videos › CineCaptions).": "If the disk is almost full, free up space: the MP4 is saved next to your file (or in Videos › CineCaptions).",
+    "Si se repite, pulsa «Enviar informe» en el Registro.": "If it happens again, press “Send report” in the Log."
   }
 }

@@ -566,23 +566,45 @@ class DialogoRegistro(Dialogo):
         ui.copiar_al_portapapeles(texto)
 
     def _enviar(self):
-        """v5.69 (pedido del usuario, en lugar de «Abrir el archivo»): copia el informe completo y abre WhatsApp de soporte con un resumen ya
-        escrito (equipo y errores); el mensaje pide pegar debajo el informe copiado. El cliente solo pulsa enviar."""
-        self._copiar()
-        try:
-            url = registro.enlace_whatsapp(registro.mensaje_whatsapp(registro.registro().lista()))
-        except Exception:
-            url = registro.enlace_whatsapp(tr('Hola, te envío el informe de CineCaptions.'))
+        """v5.69 (pedido del usuario, en lugar de «Abrir el archivo»): ver `enviar_informe`."""
+        enviar_informe(self, self._datos())
 
-        def abrir():
-            import webbrowser
-            return webbrowser.open(url)
 
-        def fin(ok, err):
-            if err is not None or not ok:
-                registro.aviso(tr('No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.',
-                                  e=err or tr('sin navegador')), 'registro')
-        ui.correr_en_hilo(self, abrir, fin)
+def abrir_web(url, contexto=None):
+    """Abre un enlace en el navegador desde un hilo (el de la interfaz no espera al sistema); si no se puede, aviso al Registro."""
+    def abrir():
+        import webbrowser
+        return webbrowser.open(url)
+
+    def fin(ok, err):
+        if err is not None or not ok:
+            registro.aviso(tr('No pude abrir {u} ({e}).', u=url, e=err or tr('sin navegador')), 'registro')
+    ui.correr_en_hilo(contexto, abrir, fin)
+
+
+def enviar_informe(contexto=None, entradas=None):
+    """v5.69: copia el informe de soporte COMPLETO y abre WhatsApp de soporte con un resumen ya escrito (equipo y errores); el mensaje pide
+    pegar debajo el informe copiado y el cliente solo pulsa enviar. Lo usan el Registro («Enviar informe») y Ajustes › Ayuda."""
+    lista = registro.registro().lista()
+    try:
+        texto = registro.reporte_soporte(80, entradas=entradas if entradas is not None else lista)
+    except Exception:
+        texto = '\n'.join(e.linea() for e in lista)
+    ui.copiar_al_portapapeles(texto)
+    try:
+        url = registro.enlace_whatsapp(registro.mensaje_whatsapp(lista))
+    except Exception:
+        url = registro.enlace_whatsapp(tr('Hola, te envío el informe de CineCaptions.'))
+
+    def abrir():
+        import webbrowser
+        return webbrowser.open(url)
+
+    def fin(ok, err):
+        if err is not None or not ok:
+            registro.aviso(tr('No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.',
+                              e=err or tr('sin navegador')), 'registro')
+    ui.correr_en_hilo(contexto, abrir, fin)
 
 
 _ABIERTO = [None]

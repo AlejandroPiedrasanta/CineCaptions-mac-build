@@ -340,6 +340,20 @@ def _abrir_codificador(out, fps, ancho, alto):
     raise RuntimeError('no hay ningún codificador de video H.264 ni MPEG-4 en este equipo')
 
 
+FONDO_SOLO_AUDIO = ((14, 22, 40), (4, 7, 14))     # v5.70: arriba / abajo del degradado (el azul noche de la interfaz hacia negro)
+
+
+def fondo_solo_audio(ancho=1080, alto=1920):
+    """El fotograma de un audio suelto (rgb, alto×ancho): un degradado vertical oscuro con un brillo suave al centro, para que los captions
+    (blancos) se lean como en un video."""
+    y = np.linspace(0.0, 1.0, alto, dtype=np.float32)[:, None]
+    x = np.linspace(-1.0, 1.0, ancho, dtype=np.float32)[None, :]
+    a, b = (np.array(c, dtype=np.float32) for c in FONDO_SOLO_AUDIO)
+    base = a[None, None, :] * (1.0 - y[..., None]) + b[None, None, :] * y[..., None]
+    brillo = np.exp(-((x ** 2) / 0.5 + ((y - 0.45) ** 2) / 0.08))[..., None] * np.array((10.0, 18.0, 30.0), dtype=np.float32)
+    return np.ascontiguousarray(np.clip(base + brillo, 0, 255).astype(np.uint8))
+
+
 def ruta_de_salida(video):
     """«<video> (CineCaptions).mp4» junto al original (si ya existe: «… 2», «… 3»…)."""
     video = Path(video)
@@ -389,15 +403,29 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
     entrada = av.open(str(video))
     out = None
     try:
-        if not entrada.streams.video:
-            raise RuntimeError('el archivo no tiene imagen (¿es solo audio?)')
-        vin = entrada.streams.video[0]
-        vin.thread_type = 'AUTO'
-        tb = vin.time_base
-        inicio_pts = vin.start_time or 0
-        fps = vin.average_rate or vin.guessed_rate or Fraction(30, 1)
-        dur = float(vin.duration * tb) if vin.duration else (float(entrada.duration) / 1e6 if entrada.duration else 0.0)
-        total_cuadros = int(vin.frames or 0) or max(1, int(dur * float(fps)))
+        # v5.70 (un cliente: «RuntimeError: el archivo no tiene imagen (¿es solo audio?)»): con un AUDIO suelto (.wav, .mp3…) el MP4 sale en
+        # vertical (1080×1920) con un fondo oscuro y los captions del tema encima, como un video de solo voz; antes GO se detenía
+        solo_audio = not entrada.streams.video
+        vin = None
+        if solo_audio:
+            fps = Fraction(30, 1)
+            tb = Fraction(1, 30)
+            inicio_pts = 0
+            dur = float(entrada.duration) / 1e6 if entrada.duration else 0.0
+            if not dur and entrada.streams.audio:
+                a = entrada.streams.audio[0]
+                dur = float(a.duration * a.time_base) if a.duration else 0.0
+            if dur <= 0.0:
+                raise RuntimeError('el archivo no tiene imagen ni una duración que se pueda leer')
+            total_cuadros = max(1, int(round(dur * float(fps))))
+        else:
+            vin = entrada.streams.video[0]
+            vin.thread_type = 'AUTO'
+            tb = vin.time_base
+            inicio_pts = vin.start_time or 0
+            fps = vin.average_rate or vin.guessed_rate or Fraction(30, 1)
+            dur = float(vin.duration * tb) if vin.duration else (float(entrada.duration) / 1e6 if entrada.duration else 0.0)
+            total_cuadros = int(vin.frames or 0) or max(1, int(dur * float(fps)))
 
         avisar(0.0, 'Preparando el sonido…')
         mezcla = mezclar_audio(video, cues, dur)
@@ -438,12 +466,23 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
         avisar(0.02, 'Grabando los subtítulos en el video…')
         n = 0
         ultimo_aviso = 0.0
-        for fr in entrada.decode(vin):
+
+        def cuadros():
+            """(fotograma rgb, pts relativo) del video; con un audio suelto, el fondo de `fondo_solo_audio` una vez por fotograma."""
+            if solo_audio:
+                fondo = fondo_solo_audio()
+                for i in range(total_cuadros):
+                    yield fondo.copy(), i
+                return
+            for fr in entrada.decode(vin):
+                rot = int(getattr(fr, 'rotation', 0) or 0)
+                arr = fr.to_ndarray(format='rgb24')
+                if rot % 360:
+                    arr = np.ascontiguousarray(np.rot90(arr, k=int(round(rot / 90.0)) % 4))
+                yield arr, ((fr.pts - inicio_pts) if fr.pts is not None else None)
+
+        for arr, pts in cuadros():
             mirar_cancelar()
-            rot = int(getattr(fr, 'rotation', 0) or 0)
-            arr = fr.to_ndarray(format='rgb24')
-            if rot % 360:
-                arr = np.ascontiguousarray(np.rot90(arr, k=int(round(rot / 90.0)) % 4))
             if arr.shape[0] % 2 or arr.shape[1] % 2:          # yuv420p pide lados pares
                 arr = np.ascontiguousarray(arr[:arr.shape[0] // 2 * 2, :arr.shape[1] // 2 * 2])
             alto, ancho = arr.shape[:2]
@@ -454,7 +493,6 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
                 except Exception:
                     pass
                 capas = preparar(cues, ancho, alto, emoji_arriba=emoji_arriba, estilo=estilo)
-            pts = (fr.pts - inicio_pts) if fr.pts is not None else None
             t = float(pts * tb) if pts is not None else n / float(fps)
             componer(arr, capas, t)
             nf = av.VideoFrame.from_ndarray(arr, format='rgb24')
@@ -483,7 +521,7 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
         os.replace(temporal, destino)
         avisar(1.0, 'Listo')
         return {'ok': True, 'ruta': str(destino), 'segundos': round(time.time() - t_inicio, 1), 'codec': nombre_codec,
-                'cuadros': n, 'con_audio': mezcla is not None}
+                'cuadros': n, 'con_audio': mezcla is not None, 'solo_audio': solo_audio}
     except Cancelado:
         return {'ok': False, 'cancelado': True, 'ruta': None}
     finally:
