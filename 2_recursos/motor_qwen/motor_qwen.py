@@ -160,7 +160,12 @@ class Motor:
         decir('ESTADO', f'Cargando Qwen3-ASR {self.modelo} en {"GPU" if self.dispositivo != "cpu" else "CPU"}')
         t0 = time.time()
         # v5.64: desde lo que ya está en el equipo (motor_texto.ruta_local), sin preguntar a Hugging Face: una versión nueva del modelo ya no
-        # se baja en mitad de GO ni, sin conexión, se espera el tiempo de espera de cada archivo
+        # se baja en mitad de GO ni, sin conexión, se espera el tiempo de espera de cada archivo.
+        # v5.67: el Python del motor es «embebido» (su ._pth) y NO pone la carpeta del script en sys.path: sin esto el import fallaba y,
+        # desde la 5.64, Qwen3-ASR caía siempre a Whisper («No module named 'motor_texto'»).
+        aqui = os.path.dirname(os.path.abspath(__file__))
+        if aqui not in sys.path:
+            sys.path.insert(0, aqui)
         from motor_texto import ruta_local
         asr, alineador = ruta_local(REPO_ASR[self.modelo]) or REPO_ASR[self.modelo], ruta_local(REPO_ALINEADOR) or REPO_ALINEADOR
         self.proc = AutoProcessor.from_pretrained(asr)

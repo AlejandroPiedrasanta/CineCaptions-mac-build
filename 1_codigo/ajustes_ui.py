@@ -495,6 +495,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.68', [
+        'La voz vuelve a transcribirse con Qwen3-ASR (más precisa): desde la 5.64 fallaba en silencio y GO, tras tres intentos, seguía con Whisper. Un GO de 1 minuto pasa de unos 7 minutos a menos de 3.',
+    ]),
     ('5.67', [
         'Página Sonido nueva, tipo mezclador: a la izquierda el estilo, las opciones y la biblioteca; en el centro la mezcla a lo ancho (tu voz, los captions, cada carril de sonidos y la música) con zoom y un panel que dice por qué suena cada sonido; a la derecha el video en vertical y las 3 músicas. Todo sobre el cielo de constelaciones, como Inicio y Tema.',
         'Sonido con un audio suelto (.wav o .mp3): la página ya no se queda vacía.',
