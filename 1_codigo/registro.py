@@ -705,6 +705,40 @@ def reporte_soporte(lineas_log=150, entradas=None):
     return _sin_usuario('\n'.join(partes)) + '\n'
 
 
+WHATSAPP_SOPORTE = '50236573658'          # v5.69: «Enviar informe» del Registro abre este chat de soporte
+
+
+def mensaje_whatsapp(entradas=None, tope=1800):
+    """v5.69: el texto que «Enviar informe» deja escrito en WhatsApp: saludo, equipo y los errores (el más reciente primero; si no hay, los
+    avisos). Un enlace wa.me no admite el informe entero (Windows corta los enlaces de más de ~2000 caracteres), así que se recorta para que el
+    enlace codificado quepa en `tope`; el informe COMPLETO va copiado y el mensaje pide pegarlo."""
+    from urllib.parse import quote
+    cabeza = [_tr('Hola, te envío el informe de CineCaptions.')] + equipo()[:2]
+    orden = sorted(entradas or [], key=lambda x: x.tiempo, reverse=True)
+    malos = [e for e in orden if e.nivel == 'error'] or [e for e in orden if e.nivel == 'aviso']
+    lineas = []
+    for i, e in enumerate(malos[:6], 1):
+        rep = f' (x{e.veces})' if e.veces > 1 else ''
+        lineas.append(f"{i}) {_fecha(e.tiempo, '%H:%M')} · {e.origen or '—'}: {' '.join(e.mensaje.split())}{rep}")
+    titulo = ([_tr('Errores:') if malos[0].nivel == 'error' else _tr('Avisos:')] if malos else [_tr('Sin errores en esta sesión.')])
+    pie = [_tr('El informe completo ya está copiado: lo pego aquí abajo.')]
+
+    def armar(n, corte=None):
+        cuerpo = [(l if corte is None or len(l) <= corte else l[:corte - 1].rstrip() + '…') for l in lineas[:n]]
+        return _sin_usuario('\n'.join(cabeza + [''] + titulo + cuerpo + [''] + pie))
+    for corte in (None, 240, 140, 80):                    # primero enteros quitando los más viejos; si ni uno cabe, cada línea más corta
+        for n in range(len(lineas), 0 if lineas else -1, -1):
+            texto = armar(n, corte)
+            if len(quote(texto, safe='')) <= tope:
+                return texto
+    return _sin_usuario('\n'.join(cabeza[:1] + pie))
+
+
+def enlace_whatsapp(texto, numero=WHATSAPP_SOPORTE):
+    from urllib.parse import quote
+    return f'https://wa.me/{numero}?text={quote(texto, safe="")}'
+
+
 def guardar_reporte():
     """Escribe reporte_soporte.txt en la carpeta de datos y devuelve su ruta (o None)."""
     try:

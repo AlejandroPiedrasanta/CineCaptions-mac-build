@@ -260,14 +260,9 @@ NOMBRES_TEXTO = {'gemma4': 'Gemma 4 E4B', 'qwen3.5': 'Qwen3.5-4B', '4B': 'Qwen3-
 
 
 def ia_texto_preferida():
-    """v5.47 (Ajustes > General > IA de texto): la que eligió el usuario; de fábrica Gemma 4 E4B. Es la PRIMERA que se intenta: si no cabe en la
-    GPU o no está, se baja por la lista (MODELOS_TEXTO), nunca se sube a una más grande."""
-    try:
-        prefs = json.loads((Path.home() / 'DaVinciSubtitles' / 'preferencias.json').read_text(encoding='utf-8'))
-        v = str(prefs.get('ia_texto') or 'gemma4')
-    except Exception:
-        v = 'gemma4'
-    return v if v in NOMBRES_TEXTO else 'gemma4'
+    """La PRIMERA IA de texto que se intenta: si no cabe en la GPU o no está, se baja por la lista (MODELOS_TEXTO), nunca se sube a una más
+    grande. v5.69: SIEMPRE Gemma 4 E4B (el usuario quitó el selector de Ajustes; 'ia_texto' de las preferencias ya no se lee)."""
+    return 'gemma4'
 
 
 def ia_texto_para_esta_gpu():

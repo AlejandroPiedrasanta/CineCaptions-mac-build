@@ -49,12 +49,8 @@ _LOCK_REPARAR = threading.Lock()            # dos hilos de GO no reparan a la ve
 # ---------------------------------------------------------------------------
 
 def reparar_permitido():
-    """Ajustes > «Reparar Resolve solo si se traba» (encendido por defecto)."""
-    try:
-        import ajustes_ui
-        return bool(ajustes_ui.leer_prefs().get(PREF, True))
-    except Exception:
-        return True
+    """v5.69: SIEMPRE (el usuario pidió quitar «Reparar Resolve solo si se traba» de Ajustes y dejarlo encendido); `PREF` ya no se lee."""
+    return True
 
 
 def trabado_sin_permiso(desde=0.0):

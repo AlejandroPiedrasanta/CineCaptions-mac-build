@@ -4242,6 +4242,16 @@
     "debajo de tu voz, baja sola al hablar": "unter deiner Stimme, wird beim Sprechen von selbst leiser",
     "sonidos": "Sounds",
     "▶ Escuchar": "▶ Anhören",
-    "● cambios sin aplicar": "● nicht angewendete Änderungen"
+    "● cambios sin aplicar": "● nicht angewendete Änderungen",
+    "Enviar informe": "Bericht senden",
+    "Hola, te envío el informe de CineCaptions.": "Hallo, hier ist mein CineCaptions-Bericht.",
+    "Errores:": "Fehler:",
+    "Avisos:": "Warnungen:",
+    "Sin errores en esta sesión.": "Keine Fehler in dieser Sitzung.",
+    "El informe completo ya está copiado: lo pego aquí abajo.": "Der vollständige Bericht ist schon kopiert: ich füge ihn unten ein.",
+    "No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.": "WhatsApp ließ sich nicht öffnen ({e}). Der Bericht ist schon kopiert: sende ihn an +502 3657 3658.",
+    "sin navegador": "kein Browser",
+    "Motor de voz, espacio de las cachés y video MP4.": "Sprach-Engine, Cache-Speicher und MP4-Video.",
+    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "Die GPU ist ausgefallen; ich mache mit der CPU weiter (langsamer). Beim nächsten Öffnen von CineCaptions repariert sie sich selbst."
   }
 }

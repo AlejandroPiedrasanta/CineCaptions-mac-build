@@ -495,6 +495,15 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.69', [
+        'Registro: nuevo botón «Enviar informe»: copia el informe completo y abre WhatsApp de soporte con un resumen ya escrito (tu equipo y los errores); solo pegas el informe y lo envías.',
+        'El Registro ya no tiene «Limpiar» ni «Abrir el archivo»: lo que pasó queda siempre ahí para el informe.',
+        'Ajustes más simple: «Avisarme al terminar» y «Reparar Resolve solo si se traba» van siempre encendidos y ya no salen en Ajustes.',
+        'Acerca de CineCaptions sin «Notas de la versión», «Actualizaciones» ni «Avisarme de las actualizaciones»: la versión nueva se avisa siempre sola y las novedades salen al actualizar (el panel rápido de Ajustes conserva notas y botón).',
+        'Ayuda sin «Qué respondió Resolve» ni «Carpeta de datos».',
+        'General sin «IA de texto», «Otras IA» ni «GPU para la voz»: la IA de texto es siempre la recomendada (Gemma 4 E4B, que pasa sola a una más ligera si no cabe) y la GPU se prepara sola al abrir.',
+        'Interfaz sin «Animaciones» ni «Animaciones de Inicio»: siempre completas; Inicio se aligera solo si el equipo va justo.',
+    ]),
     ('5.68', [
         'La voz vuelve a transcribirse con Qwen3-ASR (más precisa): desde la 5.64 fallaba en silencio y GO, tras tres intentos, seguía con Whisper. Un GO de 1 minuto pasa de unos 7 minutos a menos de 3.',
     ]),
@@ -2330,7 +2339,7 @@ class VentanaAjustes(_Panel):
     # -- General --------------------------------------------------------------
     def _pag_general(self, capa):
         self._cabeza_pagina(capa, tr('Preferencias generales'), tr('General'),
-                            tr('Motor de voz, conexión con Resolve y copias de seguridad.'))     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
+                            tr('Motor de voz, espacio de las cachés y video MP4.'))     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
         # motor de voz
         motores ={'qwen3': tr('Qwen3-ASR (recomendado)'), 'whisper': tr('Whisper large-v3-turbo')}
         motor_var = StringVar(motores.get(self._borrador['motor_voz'], motores['qwen3']))
@@ -2347,44 +2356,9 @@ class VentanaAjustes(_Panel):
                            'Para los demás idiomas, o si no está instalado, se usa Whisper large-v3-turbo.'),
                         caja_motor, 340)
         self._pintar_motor()
-        # v5.47 (el usuario: «otra opción abajo para que aparezcan las otras IA… por defecto Gemma, así el usuario puede verificar que las IA locales
-        # estén»): la IA de texto que corrige y elige palabras clave y emojis, cuáles hay instaladas y cuál se está usando
-        ias = {'gemma4': tr('Gemma 4 E4B (recomendado)'), 'qwen3.5': tr('Qwen3.5-4B'), '1.7B': tr('Qwen3-1.7B (ligera)')}
-        ia_var = StringVar(ias.get(self._borrador['ia_texto'], ias['gemma4']))
-        caja_ia, ci = caja_v(espacio=10)
-        ci.addWidget(Combo(list(ias.values()), var=ia_var, alto=52, tam=16,
-                           comando=lambda v: (self._cambio('ia_texto', next(k for k, n in ias.items() if n == v)), self._pintar_ia_texto())))
-        self.ia_estado = TextoAjustable(tr('Comprobando las IA de texto…'), 13, ancho=340)
-        ci.addWidget(self.ia_estado)
-        self.ia_btn = Boton(tr('Descargar las que faltan'), self._descargar_ia_texto, tipo='neutro', alto=42, tam=14)
-        self.ia_btn.hide()
-        ci.addWidget(self.ia_btn)
-        f_ia = _Fila(tr('IA de texto'),
-                     tr('Corrige la transcripción y elige las palabras clave y los emojis, en tu PC. Gemma 4 E4B (2026) es la principal; '
-                        'si no cabe en la tarjeta (con Resolve abierto) o falla, se usa Qwen3.5-4B y, al final, Qwen3-1.7B.'),
-                     caja_ia, 340)
-        self._pintar_ia_texto()
-        # v5.47 (el usuario: «y abajo de eso las otras IA de análisis o lo que pone el SFX»): qué más corre en el PC y para qué
-        caja_otras, co = caja_v(espacio=6)
-        self.otras_estado = TextoAjustable(tr('Comprobando…'), 13, ancho=340)
-        co.addWidget(self.otras_estado)
-        f_otras = _Fila(tr('Otras IA (análisis, sonido y efectos)'),
-                        tr('Whisper es la voz de respaldo (y la de Mac); MODNet recorta a la persona para los captions detrás de ti y las posiciones; '
-                           'Argos traduce a otros idiomas. Los efectos de sonido los elige el motor de reglas de CineCaptions con tu biblioteca, '
-                           'y el Sound Director y la Edición PRO deciden con la IA de texto.'),
-                        caja_otras, 340)
-        self._pintar_otras_ia()
-        # GPU para la voz (v5.4.8)
-        caja_gpu, cg = caja_v(espacio=10)
-        self.gpu_estado = TextoAjustable(tr('Comprobando la GPU…'), 13, ancho=340)
-        cg.addWidget(self.gpu_estado)
-        self.gpu_btn = Boton(tr('Reparar GPU'), self._reparar_gpu, tipo='neutro', alto=42, tam=14)
-        self.gpu_btn.hide()
-        cg.addWidget(self.gpu_btn)
-        f_gpu = _Fila(tr('GPU para la voz'),
-                      tr('Whisper usa tu tarjeta NVIDIA si encuentra las librerías de CUDA; si faltan, la voz se transcribe en la CPU (mucho más lenta). «Reparar GPU» usa las que ya trae el motor Qwen o descarga las oficiales de NVIDIA (≈1,3 GB).'),
-                      caja_gpu, 340)
-        self._pintar_gpu()
+        # v5.69: quitadas «IA de texto», «Otras IA (análisis, sonido y efectos)» y «GPU para la voz» (el usuario lo pidió): la IA de texto es
+        # siempre la recomendada (Gemma 4 E4B, que baja sola a Qwen3.5-4B / Qwen3-1.7B si no cabe) y la GPU se repara sola al abrir
+        # (vigilancia.preparar_gpu_voz)
         # espacio de las cachés (v5.4.8)
         caja_cache, cch = caja_v(espacio=10)
         self.cache_texto = TextoAjustable(tr('Calculando…'), 13, ancho=340)
@@ -2416,16 +2390,8 @@ class VentanaAjustes(_Panel):
         f_con.setParent(self)                            # v5.21: «Conexión con DaVinci Resolve» quitada de Ajustes (el usuario lo pidió); GO se conecta solo
         f_con.hide()
         # v5.22: «Mantener CineCaptions encima» quitada de Ajustes (el usuario lo pidió); sigue el alfiler del menú lateral
-        avisos_var = BooleanVar(self._borrador['avisos_sistema'])
-        f_avisos = _Fila(tr('Avisarme al terminar'),
-                         tr('Cuando GO termina y CineCaptions no está al frente (estás en Resolve u otro programa), sale un aviso del sistema.'),
-                         Interruptor('', var=avisos_var, comando=lambda: self._cambio('avisos_sistema', bool(avisos_var.get()))))
-        # v5.56 (el usuario: «pon un parámetro para cerrar todo lo de Resolve si se traba, que se auto repare»): salud_resolve.reparar lo lee en cada reparación
-        reparar_var = BooleanVar(bool(leer_prefs().get('reparar_resolve_auto', True)))
-        f_reparar = _Fila(tr('Reparar Resolve solo si se traba'),
-                          tr('Si Resolve se queda abierto sin ventana o pasa un minuto sin responder, GO lo cierra del todo, lo vuelve a abrir y repite el paso. '
-                             'Apagado, GO solo te dice qué le pasa y se detiene.'),
-                          Interruptor('', var=reparar_var, comando=lambda: guardar_prefs({'reparar_resolve_auto': bool(reparar_var.get())})))
+        # v5.69: quitados «Avisarme al terminar» y «Reparar Resolve solo si se traba» (el usuario lo pidió): van SIEMPRE encendidos
+        # (avisos_sistema.activado y salud_resolve.reparar_permitido ya no leen 'avisos_sistema' / 'reparar_resolve_auto')
         # v5.4.48: GO sin Resolve también a petición (render_sin_resolve.py): sin Resolve instalado ya lo hace solo
         mp4_var = BooleanVar(bool(leer_prefs().get('go_salida_mp4', False)))
         f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
@@ -2435,7 +2401,7 @@ class VentanaAjustes(_Panel):
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
         # v5.52: quitadas «Reproducir al terminar», «Abrir siempre en vertical» y «Vista de Resolve al terminar» (el usuario lo pidió): van SIEMPRE
         # activadas (go_reproducir / go_vertical / go_vista_resolve ya no se leen); la vista que GO aplica es la que ya estuviera guardada
-        capa.addWidget(_grupo(f_motor, f_ia, f_otras, f_gpu, f_cache, f_avisos, f_reparar, f_mp4))
+        capa.addWidget(_grupo(f_motor, f_cache, f_mp4))
 
     def _pintar_motor(self):
         import motor_voz
@@ -2450,95 +2416,6 @@ class VentanaAjustes(_Panel):
         else:
             self.motor_estado.configure(text=tr('No instalado (descarga de 4 a 15 GB): mientras tanto se usa Whisper.'),
                                         text_color=ui.AMBAR)
-
-    def _pintar_ia_texto(self):
-        """v5.47: «Instaladas: Gemma 4 E4B ✓ · …» y la que se usaría ahora (con la VRAM libre de verdad: nvidia-smi, en un hilo)."""
-        def trabajo():
-            import motor_voz
-            if sys.platform != 'win32':
-                return None
-            return motor_voz.estado_ia_texto(self._borrador.get('ia_texto'))
-
-        def fin(e, error):
-            if not ui.vivo(self.ia_estado):
-                return
-            if sys.platform != 'win32':
-                self.ia_estado.configure(text=tr('En Mac la IA de texto local aún no está disponible: se usan las reglas.'), text_color=ui.TEXT_MUTED)
-                return
-            if error is not None or not e:
-                self.ia_estado.configure(text=tr('No pude comprobar las IA de texto.'), text_color=ui.AMBAR)
-                return
-            import motor_voz
-            nombre = motor_voz.NOMBRES_TEXTO
-            partes = [f'{nombre[c]} ✓' for c in e['descargadas'] if c != '4B' or '4B' not in e['faltan']]
-            partes += [tr('{m} falta', m=nombre[c]) for c in e['faltan']]
-            texto = tr('Instaladas: {l}', l=' · '.join(partes)) if e['descargadas'] else tr('Ninguna instalada: se usan las reglas.')
-            if e['en_uso']:
-                texto += '\n' + tr('Ahora se usaría: {m}', m=nombre.get(e['en_uso'], e['en_uso']))
-                if e['en_uso'] != e['elegida'] and e['elegida'] in e['descargadas']:
-                    texto += tr(' (la elegida no cabe en la GPU libre: {g} GB)', g=e['libre_gb'])
-            self.ia_estado.configure(text=texto, text_color=ui.AMBAR if e['faltan'] else ui.VERDE)
-            self.ia_btn.setVisible(bool(e['faltan']))
-        correr_en_hilo(self.app, trabajo, fin)
-
-    def _pintar_otras_ia(self):
-        """v5.47: una línea por IA (✓ instalada o lo que pasa si falta) y los efectos de sonido; en un hilo (mira la caché y cuenta la biblioteca)."""
-        def trabajo():
-            import motor_voz
-            lineas = []
-            snaps = motor_voz._cache_hf() / 'models--mobiuslabsgmbh--faster-whisper-large-v3-turbo' / 'snapshots'   # (CTranslate2: model.bin, no .safetensors)
-            whisper = snaps.is_dir() and any((d / 'model.bin').is_file() and (d / 'model.bin').stat().st_size > 1_000_000_000 for d in snaps.iterdir())
-            lineas.append((tr('Whisper large-v3-turbo · voz de respaldo') + (' ✓' if whisper else ' · ' + tr('se descarga al transcribir')), whisper))
-            try:
-                import edicion_pro_persona
-                modnet = edicion_pro_persona.ruta_modelo() is not None
-            except Exception:
-                modnet = False
-            lineas.append((tr('MODNet · recorta a la persona') + (' ✓' if modnet else ' · ' + tr('falta')), modnet))
-            argos = Path.home() / '.local' / 'share' / 'argos-translate' / 'packages'
-            n = sum(1 for p in argos.iterdir() if p.is_dir()) if argos.is_dir() else 0
-            lineas.append((tr('Argos Translate · traducción') + ' · ' + (tr('{n} idioma(s) instalados', n=n) if n else tr('los idiomas se bajan al traducir')), True))
-            try:
-                import sonido_skill
-                lib = sonido_skill.biblioteca()
-                sonidos = sum(1 for p in lib.rglob('*') if p.suffix.lower() in ('.wav', '.mp3', '.aif', '.aiff', '.flac', '.ogg')) if lib.is_dir() else 0
-            except Exception:
-                sonidos = 0
-            lineas.append((tr('Efectos de sonido · reglas de CineCaptions + tu biblioteca ({n} sonidos)', n=f'{sonidos:,}'.replace(',', '.')), sonidos > 0))
-            texto = motor_voz.NOMBRES_TEXTO.get(motor_voz.modelo_texto(), '') if motor_voz.modelos_texto_descargados() else ''
-            lineas.append((tr('Sound Director y Edición PRO · deciden con {m}', m=texto or tr('las reglas (sin IA de texto)')), bool(texto)))
-            return lineas
-
-        def fin(lineas, error):
-            if not ui.vivo(self.otras_estado):
-                return
-            if error is not None or not lineas:
-                self.otras_estado.configure(text=tr('No pude comprobarlas.'), text_color=ui.AMBAR)
-                return
-            self.otras_estado.configure(text='\n'.join(t for t, _ok in lineas),
-                                        text_color=ui.VERDE if all(ok for _t, ok in lineas) else ui.AMBAR)
-        correr_en_hilo(self.app, trabajo, fin)
-
-    def _descargar_ia_texto(self):
-        """v5.47: baja las IA de texto que faltan (motor_texto --descargar, el mismo paso del instalador; Gemma 4 E4B pesa 16 GB)."""
-        import motor_voz
-        if not motor_voz.info_instalado():
-            self.ia_estado.configure(text=tr('Primero instala el motor de voz (arriba): la IA de texto va en el mismo motor.'), text_color=ui.AMBAR)
-            return
-        self.ia_btn.setEnabled(False)
-
-        def aviso(texto):
-            ejecutar_en_ui(lambda: self.ia_estado.configure(text=str(texto), text_color=ui.ACCENT_CLARO) if ui.vivo(self.ia_estado) else None)
-
-        def fin(_r, error):
-            if not ui.vivo(self.ia_btn):
-                return
-            self.ia_btn.setEnabled(True)
-            if error is not None:
-                self.ia_estado.configure(text=tr('No pude descargar la IA de texto: {e}', e=str(error)[:120]), text_color=ui.AMBAR)
-                return
-            self._pintar_ia_texto()
-        correr_en_hilo(self.app, lambda: motor_voz.completar_ia_texto(aviso=aviso), fin)
 
     def _pintar_cache(self):
         def trabajo():
@@ -2568,70 +2445,6 @@ class VentanaAjustes(_Panel):
             if error is None and r:
                 self.cache_texto.configure(text=tr('Liberados {mb} MB.', mb=f'{r[0]:,.0f}'.replace(',', '.')), text_color=ui.VERDE)
                 ui.despues(2500, self._pintar_cache, self)
-        correr_en_hilo(self.app, trabajo, fin)
-
-    def _pintar_gpu(self):
-        def trabajo():
-            import cuda_libs
-            return cuda_libs.diagnostico()
-
-        def fin(d, error):
-            if not ui.vivo(self.gpu_estado):
-                return
-            if error is not None or not d:
-                self.gpu_estado.configure(text=tr('No pude comprobar la GPU.'), text_color=ui.AMBAR)
-                return
-            import cuda_libs
-            texto = cuda_libs.texto_diagnostico(d)
-            if d['estado'] == 'ok':
-                self.gpu_estado.configure(text=texto, text_color=ui.VERDE)
-                self.gpu_btn.hide()
-            elif d['estado'] == 'faltan':
-                self.gpu_estado.configure(text=texto, text_color=ui.AMBAR)
-                self.gpu_btn.show()
-            else:
-                self.gpu_estado.configure(text=texto, text_color=ui.TEXT_MUTED)
-                self.gpu_btn.hide()
-        correr_en_hilo(self.app, trabajo, fin)
-
-    def _reparar_gpu(self):
-        import cuda_libs
-        self.gpu_btn.setEnabled(False)
-
-        def progreso(texto):
-            ejecutar_en_ui(lambda: self.gpu_estado.configure(text=str(texto), text_color=ui.ACCENT_CLARO) if ui.vivo(self.gpu_estado) else None)
-
-        def trabajo():
-            ok, msg = cuda_libs.reparar(aviso=progreso, permitir_descarga=False)
-            return ok, msg, False
-
-        def fin(r, error):
-            if not ui.vivo(self.gpu_btn):
-                return
-            self.gpu_btn.setEnabled(True)
-            if error is None and r and r[0]:
-                self._pintar_gpu()
-                return
-            # sin copia local: se ofrece la descarga oficial (≈1 GB)
-            if not messagebox.askyesno(tr('Reparar GPU'), tr('No encuentro las librerías de CUDA en el equipo. ¿Descargo las oficiales de NVIDIA (cuBLAS y cuDNN, ≈1,3 GB desde PyPI)? Se puede reanudar si se corta.'), parent=self.app):
-                self._pintar_gpu()
-                return
-            self.gpu_btn.setEnabled(False)
-
-            def trabajo2():
-                return cuda_libs.reparar(aviso=progreso, permitir_descarga=True)
-
-            def fin2(r2, e2):
-                if not ui.vivo(self.gpu_btn):
-                    return
-                self.gpu_btn.setEnabled(True)
-                if e2 is not None:
-                    self.gpu_estado.configure(text=tr('No se pudo reparar: {e}', e=str(e2)[:160]), text_color=ui.ROJO)
-                else:
-                    self.gpu_estado.configure(text=str(r2[1])[:200], text_color=ui.VERDE if r2[0] else ui.AMBAR)
-                    if r2[0]:
-                        self.gpu_btn.hide()
-            correr_en_hilo(self.app, trabajo2, fin2)
         correr_en_hilo(self.app, trabajo, fin)
 
     def _instalar_motor(self):
@@ -2756,24 +2569,9 @@ class VentanaAjustes(_Panel):
                          tr('Se usa en acciones principales, controles seleccionados y navegación activa. '
                             'Los colores de estado y de los roles del editor no cambian.'),
                          self._muestras, ultima=True)
-        # v5.2: el movimiento de la interfaz (fondo vivo, particulas, confeti)
-        anim_var = BooleanVar(not bool(leer_prefs().get('reducir_animaciones')))
-        f_anim = _Fila(tr('Animaciones'), tr('El fondo vivo, las partículas, el confeti de GO y las transiciones. '
-                                             'Apágalas en equipos lentos. Se aplica al reiniciar.'),
-                       Interruptor('', var=anim_var,
-                                   comando=lambda: guardar_prefs({'reducir_animaciones': not bool(anim_var.get())})))
-        # v5.6: cuánto se mueve Inicio (el astrolabio, las partículas, el final): completo 60 fps / suave 30 fps y la mitad de partículas /
-        # mínimo (casi quieto). Se aplica en vivo; además, con la ventana inactiva Inicio baja solo a 30 fps.
-        etiquetas_go = {'completo': tr('Completo'), 'suave': tr('Suave'), 'minimo': tr('Mínimo')}
-        actual_go = str(leer_prefs().get('go_animaciones') or 'completo')
-        go_var = StringVar(etiquetas_go.get(actual_go, etiquetas_go['completo']))
-        inverso_go = {v: k for k, v in etiquetas_go.items()}
-        f_go = _Fila(tr('Animaciones de Inicio'),
-                     tr('Completo: 60 fps con todos los efectos. Suave: 30 fps y la mitad de partículas. Mínimo: casi sin movimiento. '
-                        'Con la ventana inactiva Inicio baja solo a 30 fps.'),
-                     Segmentado(list(etiquetas_go.values()), go_var,
-                                lambda *_: guardar_prefs({'go_animaciones': inverso_go.get(go_var.get(), 'completo')}), alto=34, tam=13))
-        capa.addWidget(_grupo(f_estilos, f_go, f_anim, f_lat, f_tam, f_fondo, f_acento))
+        # v5.69: quitadas «Animaciones» y «Animaciones de Inicio» (el usuario lo pidió): siempre encendidas y en «Completo»
+        # (efectos_ui.reducir_animaciones → False; escena_go ya no lee 'go_animaciones'); Inicio se aligera solo con su calidad adaptativa
+        capa.addWidget(_grupo(f_estilos, f_lat, f_tam, f_fondo, f_acento))
 
     def _elegir_estilo(self, clave):
         """El estilo de Inicio (su escena y su proceso de GO). v5.63: ya no cambia el tema ni el color de resaltado (antes los ponía en
@@ -2872,20 +2670,9 @@ class VentanaAjustes(_Panel):
         f_lic = _Fila(tr('Licencia'), tr('Tu clave de cinecaptions.shop. Desactiva este equipo para activarla en otra computadora.'),
                       caja_lic, 380)
         self._pintar_licencia()
-        # notas
-        f_notas = _Fila(tr('Notas de la versión'), tr('Lo nuevo de esta versión, también sin conexión.'),
-                        Boton(tr('Leer notas de la versión'), lambda: mostrar_notas(self.app), tipo='neutro', alto=46, tam=15), 380)
-        # actualizaciones automáticas (v5.3.5): el aviso de Inicio y la descarga con un clic
-        auto_var = BooleanVar(bool(self._borrador.get('actualizaciones_auto', True)))
-        f_auto = _Fila(tr('Avisarme de las actualizaciones'),
-                       tr('CineCaptions mira solo si hay una versión nueva (cada 10 segundos) y te lo dice al momento; tú decides cuándo instalarla.'),
-                       Interruptor('', var=auto_var, comando=lambda: self._cambio('actualizaciones_auto', bool(auto_var.get()))))
-        # actualizaciones
-        caja_act, ca = caja_v(espacio=8)
-        self.control_act = ControlActualizacion(self.app)
-        self.act_estado = self.control_act.estado
-        ca.addWidget(self.control_act)
-        f_act = _Fila(tr('Actualizaciones'), tr('CineCaptions vigila solo si hay una versión nueva (cada 10 segundos) y te avisa; aquí puedes buscarla a mano y leer sus mejoras.'), caja_act, 380)
+        # v5.69: quitadas «Notas de la versión» y «Actualizaciones» (el usuario lo pidió): las novedades salen solas tras actualizar, la versión
+        # nueva se vigila sola (cada 10 s) y el panel rápido de Ajustes conserva «Leer notas de la versión» y el botón de actualizar
+        # v5.69: quitada también «Avisarme de las actualizaciones»: el aviso de una versión nueva va SIEMPRE ('actualizaciones_auto' ya no se lee)
         # creditos
         cred, ccr = caja_v(espacio=6)
         # v5.3.5: el logo «CINEMA PRODUCTIONS» en vez del texto (si el archivo faltara, vuelve el texto)
@@ -2911,7 +2698,7 @@ class VentanaAjustes(_Panel):
         f_cred = _Fila(tr('Créditos'), tr('Transcripción: Qwen3-ASR y Whisper · Traducción: Argos · Interfaz: Qt (PySide6).'),
                        cred, 380, ultima=True)
         capa.addWidget(g_cab)
-        capa.addWidget(_grupo(f_lic, f_notas, f_auto, f_act, f_cred))
+        capa.addWidget(_grupo(f_lic, f_cred))
 
     def _pintar_licencia(self):
         if not ui.vivo(getattr(self, 'lic_estado', None)):
@@ -2954,16 +2741,12 @@ class VentanaAjustes(_Panel):
         f_scripts = _Fila(tr('Scripts de Resolve'), tr('Vuelve a poner los scripts de CineCaptions en Área de trabajo > '
                                                       'Scripts (para Resolve Free).'),
                           Boton(tr('Reinstalar scripts'), lambda: llamar('_instalar_en_resolve'), tipo='neutro', alto=46, tam=15), 340)
-        f_resp = _Fila(tr('Qué respondió Resolve'), tr('El último resultado que dejó un script dentro de Resolve.'),
-                       Boton(tr('Ver respuesta'), lambda: llamar('_ver_ultimo_resultado'), tipo='neutro', alto=46, tam=15), 340)
-        f_datos = _Fila(tr('Carpeta de datos'), str(Path.home() / 'DaVinciSubtitles'),
-                        Boton(tr('Abrir carpeta'), lambda: abrir_carpeta(Path.home() / 'DaVinciSubtitles'), tipo='neutro',
-                              alto=46, tam=15), 340)
+        # v5.69: quitadas «Qué respondió Resolve» y «Carpeta de datos» (el usuario lo pidió)
         f_contacto = _Fila(tr('Contacto'), tr('Copia el diagnóstico y envíalo a Cinema Productions por el canal donde '
                                              'compraste CineCaptions.'),
                            Boton(tr('Copiar diagnóstico'), lambda: llamar('_ejecutar_diagnostico'),
                                  tipo='neutro', alto=46, tam=15), 340, ultima=True)
-        capa.addWidget(_grupo(f_diag, f_scripts, f_resp, f_datos, f_contacto))
+        capa.addWidget(_grupo(f_diag, f_scripts, f_contacto))
 
     # -- aplicar / cerrar -----------------------------------------------------
     def aplicar(self):

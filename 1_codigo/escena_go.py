@@ -858,7 +858,7 @@ class EscenaGo(QWidget):
         import ajustes_ui
         import efectos_ui
         import estilos_inicio
-        modo = str(ajustes_ui.leer_prefs().get('go_animaciones') or 'completo')
+        modo = 'completo'                      # v5.69: sin «Animaciones de Inicio» en Ajustes ('go_animaciones' ya no se lee): la calidad adaptativa decide
         return modo, estilos_inicio.clave_guardada(), bool(efectos_ui.reducir_animaciones())
 
     def _aplicar_prefs_escena(self, r, error):

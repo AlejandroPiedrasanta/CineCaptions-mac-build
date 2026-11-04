@@ -7826,7 +7826,7 @@ class SubtitleApp(QWidget):
     # -- v5.3.5: actualizaciones automáticas (actualizaciones.py) ----------------------------------------------------------
     def _iniciar_vigia_actualizaciones(self):
         """v5.4.2: un reloj que cada 10 s (actualizaciones.INTERVALO_AUTO_S) pregunta por una versión nueva. Con ETag casi no gasta red; sin internet pasa a un
-        minuto y no llena el Registro. Se apaga con Ajustes > Acerca de > «Avisarme de las actualizaciones»."""
+        minuto y no llena el Registro. Siempre encendido desde la v5.69 (sin interruptor en Ajustes)."""
         if getattr(self, '_reloj_actualizaciones', None) is not None:
             return
         import actualizaciones
@@ -7849,7 +7849,7 @@ class SubtitleApp(QWidget):
             prefs = ajustes_ui.leer_prefs()
         except Exception:
             return
-        if prefs.get('actualizaciones_auto', True) is False or not actualizaciones.configurado():
+        if not actualizaciones.configurado():                 # (v5.69: siempre vigila; 'actualizaciones_auto' ya no se lee: el usuario quitó el interruptor)
             return
         pendiente = prefs.get('actualizacion_pendiente')
         if getattr(self, '_actualizacion', None) is None and isinstance(pendiente, dict) and pendiente.get('version'):

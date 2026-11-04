@@ -243,7 +243,7 @@ def transcribe(media_path: str, source_lang: str, model_size: str, progress_call
             print(f'CUDA falló durante la transcripción ({e}). Repito en CPU...')
             _al_registro('aviso', f'La GPU (CUDA) falló en la transcripción: {str(e)[:200]}. Cambio automáticamente a la CPU (más lenta).', 'voz')
             if status_callback:
-                status_callback(tr('La GPU falló; sigo con la CPU (más lento). Se arregla en Ajustes › General › Reparar GPU.'))
+                status_callback(tr('La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.'))
             if progress_callback:
                 progress_callback(0.0)
 

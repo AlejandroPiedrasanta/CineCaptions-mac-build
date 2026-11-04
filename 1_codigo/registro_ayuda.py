@@ -209,7 +209,6 @@ _REGLAS = [
      'A tu tarjeta NVIDIA le faltan las librerías de CUDA (cuBLAS y cuDNN) con las que Whisper transcribe en la GPU. CineCaptions las descarga solo '
      '(≈1,3 GB, una vez); mientras, la voz se transcribe en la CPU, más despacio. No hace falta hacer nada.',
      ['Si la descarga no pudo terminar, abre CineCaptions con internet: lo reintenta solo y sigue donde quedó.',
-      'También puedes pulsar «Reparar GPU» en Ajustes › General.',
       'Si el antivirus bloquea la descarga, permite CineCaptions y vuelve a abrirlo.'], 'ninguno'),
     (r'GO · voz|transcri|whisper|qwen|motor de voz',
      'La transcripción no pudo terminar',

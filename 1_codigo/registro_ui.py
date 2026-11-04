@@ -7,12 +7,10 @@ registro_ui.py
                       cuando llega una nota, un aviso o un error (registro.py) el texto sube y entra el aviso con su icono,
                       un barrido de luz del color del nivel, y vuelve solo a la línea de apoyo. Un clic abre el Registro.
   * BotonRegistro   — el botón junto al «?»: un contador (rojo = errores, ámbar = avisos) que da un saltito al llegar uno nuevo.
-  * DialogoRegistro — el historial completo: filtros, copiar, abrir el archivo (cinecaptions.log) y limpiar.
+  * DialogoRegistro — el historial completo: filtros, copiar el informe y enviarlo por WhatsApp a soporte (v5.69).
 """
 import html
 import math
-import os
-import sys
 
 from PySide6.QtCore import QEasingCurve, QPointF, QRectF, Qt, QTimer, QVariantAnimation, Signal
 from PySide6.QtGui import QFontMetricsF, QLinearGradient, QPainter, QPen
@@ -487,8 +485,7 @@ class DialogoRegistro(Dialogo):
         self._cuenta = Etiqueta('', 12, color='#8D9BB5')
         cp.addWidget(self._cuenta, 1)
         cp.addWidget(Boton(tr('Copiar informe'), self._copiar, alto=38, ancho=140, tam=13))
-        cp.addWidget(Boton(tr('Abrir el archivo'), self._abrir, alto=38, ancho=140, tam=13))
-        cp.addWidget(Boton(tr('Limpiar'), self._limpiar, alto=38, ancho=100, tam=13))
+        cp.addWidget(Boton(tr('Enviar informe'), self._enviar, alto=38, ancho=150, tam=13))
         cp.addWidget(Boton(tr('Cerrar'), self.close, tipo='primario', alto=38, ancho=110, tam=13, negrita=True))
         capa.addWidget(pie)
         self._pendiente = QTimer(self)
@@ -568,20 +565,24 @@ class DialogoRegistro(Dialogo):
             texto = '\n'.join(e.linea() for e in self._datos())
         ui.copiar_al_portapapeles(texto)
 
-    def _abrir(self):
+    def _enviar(self):
+        """v5.69 (pedido del usuario, en lugar de «Abrir el archivo»): copia el informe completo y abre WhatsApp de soporte con un resumen ya
+        escrito (equipo y errores); el mensaje pide pegar debajo el informe copiado. El cliente solo pulsa enviar."""
+        self._copiar()
         try:
-            if registro.ruta_archivo().exists():
-                if sys.platform.startswith('win'):
-                    os.startfile(str(registro.ruta_archivo()))
-                else:
-                    import subprocess
-                    subprocess.Popen(['open' if sys.platform == 'darwin' else 'xdg-open', str(registro.ruta_archivo())])
-        except Exception as ex:
-            registro.aviso(tr('No pude abrir el archivo del registro: {e}', e=ex), 'registro')
+            url = registro.enlace_whatsapp(registro.mensaje_whatsapp(registro.registro().lista()))
+        except Exception:
+            url = registro.enlace_whatsapp(tr('Hola, te envío el informe de CineCaptions.'))
 
-    def _limpiar(self):
-        registro.registro().limpiar()
-        self._refrescar()
+        def abrir():
+            import webbrowser
+            return webbrowser.open(url)
+
+        def fin(ok, err):
+            if err is not None or not ok:
+                registro.aviso(tr('No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.',
+                                  e=err or tr('sin navegador')), 'registro')
+        ui.correr_en_hilo(self, abrir, fin)
 
 
 _ABIERTO = [None]

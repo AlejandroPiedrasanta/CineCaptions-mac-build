@@ -1,5 +1,5 @@
 """Avisos del sistema operativo (v5.4.8): cuando GO termina y CineCaptions no está al frente (estás en Resolve, en otro programa o con la ventana
-minimizada), sale una notificación del sistema («Tus subtítulos están listos»). Se apaga en Ajustes › General › «Avisarme al terminar».
+minimizada), sale una notificación del sistema («Tus subtítulos están listos»). Siempre encendido desde la v5.69 (sin interruptor en Ajustes).
 
 Usa la bandeja del sistema de Qt (QSystemTrayIcon): en Windows sale como notificación, en macOS como aviso del Centro de notificaciones. Si el sistema no
 tiene bandeja, no hace nada. Todo es de mejor esfuerzo: un aviso que falla nunca estropea un GO.
@@ -10,11 +10,8 @@ _BANDEJA = {'icono': None}
 
 
 def activado() -> bool:
-    try:
-        import ajustes_ui
-        return ajustes_ui.leer_prefs().get('avisos_sistema', True) is not False
-    except Exception:
-        return True
+    """v5.69: SIEMPRE (el usuario pidió quitar «Avisarme al terminar» de Ajustes y dejarlo encendido); la preferencia ya no se lee."""
+    return True
 
 
 def ventana_al_frente(ventana) -> bool:

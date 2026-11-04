@@ -4242,6 +4242,16 @@
     "debajo de tu voz, baja sola al hablar": "sous votre voix, baisse toute seule quand vous parlez",
     "sonidos": "sons",
     "▶ Escuchar": "▶ Écouter",
-    "● cambios sin aplicar": "● modifications non appliquées"
+    "● cambios sin aplicar": "● modifications non appliquées",
+    "Enviar informe": "Envoyer le rapport",
+    "Hola, te envío el informe de CineCaptions.": "Bonjour, voici mon rapport CineCaptions.",
+    "Errores:": "Erreurs :",
+    "Avisos:": "Avertissements :",
+    "Sin errores en esta sesión.": "Aucune erreur dans cette session.",
+    "El informe completo ya está copiado: lo pego aquí abajo.": "Le rapport complet est déjà copié : je le colle ci-dessous.",
+    "No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.": "Impossible d’ouvrir WhatsApp ({e}). Le rapport est déjà copié : envoyez-le au +502 3657 3658.",
+    "sin navegador": "aucun navigateur",
+    "Motor de voz, espacio de las cachés y video MP4.": "Moteur vocal, espace des caches et vidéo MP4.",
+    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "Le GPU a échoué ; je continue sur le CPU (plus lent). Il se répare tout seul à la prochaine ouverture de CineCaptions."
   }
 }

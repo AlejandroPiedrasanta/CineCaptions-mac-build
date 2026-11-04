@@ -4242,6 +4242,16 @@
     "debajo de tu voz, baja sola al hablar": "under your voice, ducks by itself when you speak",
     "sonidos": "sounds",
     "▶ Escuchar": "▶ Listen",
-    "● cambios sin aplicar": "● unapplied changes"
+    "● cambios sin aplicar": "● unapplied changes",
+    "Enviar informe": "Send report",
+    "Hola, te envío el informe de CineCaptions.": "Hi, here is my CineCaptions report.",
+    "Errores:": "Errors:",
+    "Avisos:": "Warnings:",
+    "Sin errores en esta sesión.": "No errors in this session.",
+    "El informe completo ya está copiado: lo pego aquí abajo.": "The full report is already copied: I’m pasting it below.",
+    "No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.": "Couldn’t open WhatsApp ({e}). The report is already copied: send it to +502 3657 3658.",
+    "sin navegador": "no browser",
+    "Motor de voz, espacio de las cachés y video MP4.": "Voice engine, cache space and MP4 video.",
+    "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": "The GPU failed; continuing on the CPU (slower). It repairs itself the next time you open CineCaptions."
   }
 }

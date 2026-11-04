@@ -10106,5 +10106,75 @@
   "fr": "● modifications non appliquées",
   "de": "● nicht angewendete Änderungen",
   "it": "● modifiche non applicate"
+ },
+ "Enviar informe": {
+  "en": "Send report",
+  "pt": "Enviar relatório",
+  "fr": "Envoyer le rapport",
+  "de": "Bericht senden",
+  "it": "Invia il report"
+ },
+ "Hola, te envío el informe de CineCaptions.": {
+  "en": "Hi, here is my CineCaptions report.",
+  "pt": "Olá, envio o relatório do CineCaptions.",
+  "fr": "Bonjour, voici mon rapport CineCaptions.",
+  "de": "Hallo, hier ist mein CineCaptions-Bericht.",
+  "it": "Ciao, ti invio il report di CineCaptions."
+ },
+ "Errores:": {
+  "en": "Errors:",
+  "pt": "Erros:",
+  "fr": "Erreurs :",
+  "de": "Fehler:",
+  "it": "Errori:"
+ },
+ "Avisos:": {
+  "en": "Warnings:",
+  "pt": "Avisos:",
+  "fr": "Avertissements :",
+  "de": "Warnungen:",
+  "it": "Avvisi:"
+ },
+ "Sin errores en esta sesión.": {
+  "en": "No errors in this session.",
+  "pt": "Sem erros nesta sessão.",
+  "fr": "Aucune erreur dans cette session.",
+  "de": "Keine Fehler in dieser Sitzung.",
+  "it": "Nessun errore in questa sessione."
+ },
+ "El informe completo ya está copiado: lo pego aquí abajo.": {
+  "en": "The full report is already copied: I’m pasting it below.",
+  "pt": "O relatório completo já está copiado: colo aqui embaixo.",
+  "fr": "Le rapport complet est déjà copié : je le colle ci-dessous.",
+  "de": "Der vollständige Bericht ist schon kopiert: ich füge ihn unten ein.",
+  "it": "Il report completo è già copiato: lo incollo qui sotto."
+ },
+ "No pude abrir WhatsApp ({e}). El informe ya está copiado: mándalo a +502 3657 3658.": {
+  "en": "Couldn’t open WhatsApp ({e}). The report is already copied: send it to +502 3657 3658.",
+  "pt": "Não consegui abrir o WhatsApp ({e}). O relatório já está copiado: envie para +502 3657 3658.",
+  "fr": "Impossible d’ouvrir WhatsApp ({e}). Le rapport est déjà copié : envoyez-le au +502 3657 3658.",
+  "de": "WhatsApp ließ sich nicht öffnen ({e}). Der Bericht ist schon kopiert: sende ihn an +502 3657 3658.",
+  "it": "Non sono riuscito ad aprire WhatsApp ({e}). Il report è già copiato: invialo al +502 3657 3658."
+ },
+ "sin navegador": {
+  "en": "no browser",
+  "pt": "sem navegador",
+  "fr": "aucun navigateur",
+  "de": "kein Browser",
+  "it": "nessun browser"
+ },
+ "Motor de voz, espacio de las cachés y video MP4.": {
+  "en": "Voice engine, cache space and MP4 video.",
+  "pt": "Motor de voz, espaço dos caches e vídeo MP4.",
+  "fr": "Moteur vocal, espace des caches et vidéo MP4.",
+  "de": "Sprach-Engine, Cache-Speicher und MP4-Video.",
+  "it": "Motore vocale, spazio delle cache e video MP4."
+ },
+ "La GPU falló; sigo con la CPU (más lento). Al volver a abrir CineCaptions se repara sola.": {
+  "en": "The GPU failed; continuing on the CPU (slower). It repairs itself the next time you open CineCaptions.",
+  "pt": "A GPU falhou; sigo com a CPU (mais lento). Ela se repara sozinha ao abrir o CineCaptions de novo.",
+  "fr": "Le GPU a échoué ; je continue sur le CPU (plus lent). Il se répare tout seul à la prochaine ouverture de CineCaptions.",
+  "de": "Die GPU ist ausgefallen; ich mache mit der CPU weiter (langsamer). Beim nächsten Öffnen von CineCaptions repariert sie sich selbst.",
+  "it": "La GPU non ha funzionato; continuo con la CPU (più lento). Si ripara da sola alla prossima apertura di CineCaptions."
  }
 }

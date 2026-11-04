@@ -36,11 +36,9 @@ from qt_kit import QColor, QColorReal
 
 
 def reducir_animaciones():
-    try:
-        import ajustes_ui
-        return bool(ajustes_ui.leer_prefs().get('reducir_animaciones'))
-    except Exception:
-        return False
+    """v5.69: NUNCA (el usuario quitó «Animaciones» de Ajustes: van siempre; 'reducir_animaciones' ya no se lee). Inicio se aligera solo con
+    su calidad adaptativa (escena_go._politica)."""
+    return False
 
 
 def _paleta_de(clave):
