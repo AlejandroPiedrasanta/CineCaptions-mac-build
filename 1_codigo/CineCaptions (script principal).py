@@ -7889,7 +7889,7 @@ class SubtitleApp(QWidget):
                 except Exception:
                     pass
             if r.get('estado') == 'nueva':
-                nueva = {k: r.get(k) for k in ('version', 'url', 'notas', 'fecha', 'archivo')}
+                nueva = {k: r.get(k) for k in ('version', 'url', 'notas', 'fecha', 'archivo', 'obligatoria', 'minima')}
                 cambio = (getattr(self, '_actualizacion', None) or {}).get('version') != nueva['version']
                 self._actualizacion = nueva
                 if cambio:
@@ -7916,6 +7916,8 @@ class SubtitleApp(QWidget):
         """Avisa de la versión nueva con sus mejoras, UNA vez por versión en cada sesión: «Actualizar ahora» / «Más tarde». Si GO o el editor están trabajando
         espera al siguiente sondeo (10 s) para no interrumpirlos."""
         r = getattr(self, '_actualizacion', None)
+        if r and r.get('obligatoria'):
+            return self._exigir_actualizacion(r)
         if not r or not r.get('version') or getattr(self, '_aviso_act_visto', None) == r['version'] or getattr(self, '_dlg_act_abierto', False):
             return
         if self._trabajando_ahora():
@@ -7937,6 +7939,28 @@ class SubtitleApp(QWidget):
             self._dlg_act_abierto = False
         if quiere:
             self._ofrecer_actualizacion(r, confirmado=True)
+    def _exigir_actualizacion(self, r):
+        """v5.72 (pedido del usuario: «force update» con versión mínima): la instalada es menor que `version_minima` del version.json firmado.
+        Aviso fijo y modal con «Actualizar ahora» / «Cerrar CineCaptions»: la ✕, Esc o «Cerrar» cierran el programa. Solo tras una consulta
+        que SÍ llegó al servidor (sin internet no se bloquea: no podría descargar). Espera a que terminen GO o el editor. Si la descarga se
+        cancela o falla, el aviso vuelve enseguida."""
+        if (getattr(self, '_dlg_act_abierto', False) or getattr(self, '_descargando_actualizacion', False) or getattr(self, '_instalador_lanzado', False)
+                or self._trabajando_ahora()):
+            return
+        self._dlg_act_abierto = True
+        try:
+            import ajustes_ui
+            quiere = ajustes_ui.exigir_actualizacion(self, r)
+        except Exception:
+            registro.excepcion(origen='actualizar · obligatoria')
+            return
+        finally:
+            self._dlg_act_abierto = False
+        if quiere:
+            self._descargar_actualizacion(r)
+            return
+        registro.info(f"Actualización obligatoria a la {r.get('version')} (mínima {r.get('minima')}): el usuario cerró el aviso y se cierra CineCaptions.", 'actualizaciones')
+        despues(0, lambda: QApplication.instance().quit(), self)
     def _mostrar_novedades_si_toca(self):
         """Tras instalar una versión nueva (o la primera vez que se abre una instalación): el cuadro con las mejoras de lo nuevo, una sola vez."""
         try:
@@ -7989,6 +8013,8 @@ class SubtitleApp(QWidget):
             # sin la barra de título de Windows (pedido: «quítale eso, deja metida la X»): el panel pinta el fondo redondeado y lleva la ✕
             dlg.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
             dlg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+            if r.get('obligatoria'):                                    # v5.72: con la actualización obligatoria, el programa no se usa mientras baja
+                dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
             capa = _capa_dialogo(dlg, (0, 0, 0, 0), 0)
             panel = actualizar_ui.PanelActualizacion(APP_VERSION, r['version'], r.get('notas') or '', al_cancelar=lambda: dlg.cerrar(), sin_marco=True)
             capa.addWidget(panel, 1)
@@ -8021,6 +8047,9 @@ class SubtitleApp(QWidget):
                 self._descargando_actualizacion = False
         hilo = threading.Thread(target=trabajo_y_liberar, daemon=True, name='descarga-actualizacion')
         hilo.start()
+        def otra_vez():
+            if r.get('obligatoria'):                                    # v5.72: cancelada o fallida, el aviso obligatorio vuelve
+                despues(300, lambda: self._exigir_actualizacion(r), self)
         def revisar():
             if hilo.is_alive():
                 if vivo(dlg):
@@ -8029,6 +8058,7 @@ class SubtitleApp(QWidget):
                     despues(150, revisar, self)
                 return
             if est['cancelado'] and not est['lanzado']:
+                otra_vez()
                 return
             if est['error'] or not est['ruta']:
                 try:
@@ -8039,6 +8069,7 @@ class SubtitleApp(QWidget):
                 if messagebox.askyesno(tr('No se pudo actualizar'), tr('La descarga o la comprobación falló: {e}', e=str(est['error'])[:200]) + '\n\n' +
                                        tr('Tu versión sigue como estaba. ¿Abrir la descarga en el navegador?'), parent=self) and r.get('url'):
                     webbrowser.open(r['url'])
+                otra_vez()
                 return
             panel.poner_fase(2)
             ok = est['lanzado']
@@ -8049,13 +8080,17 @@ class SubtitleApp(QWidget):
                 except Exception:
                     pass
                 messagebox.showerror(tr('No se pudo actualizar'), tr('No pude abrir el instalador descargado: {r}', r=str(est['ruta'])), parent=self)
+                otra_vez()
                 return
             panel.terminar(tr('Instalando…'))
+            self._instalador_lanzado = True
             if sys.platform.startswith('win'):
                 despues(1500, lambda: QApplication.instance().quit(), self)       # el instalador ya está en marcha: CineCaptions se cierra y él lo vuelve a abrir
             else:
                 despues(1200, lambda: dlg.cerrar(), self)
                 messagebox.showinfo(tr('Actualización descargada'), tr('Se abrió el disco de CineCaptions {v}: abre «Instalar_CineCaptions.pkg» para terminar.', v=r['version']), parent=self)
+                if r.get('obligatoria'):                                # v5.72: obligatoria en Mac: el programa se cierra para que el .pkg lo reemplace
+                    despues(500, lambda: QApplication.instance().quit(), self)
         despues(150, revisar, self)
     def _sincronizar_sfx(self):
         """Auditoría v5.11: «Efectos» de Inicio (go_sfx) manda sobre la casilla vieja (sfx_var), que es la que miran los puntos de sonido del editor."""

@@ -17,6 +17,19 @@ Reglas:
 - Sin licencia activada en este equipo no se manda (el servidor solo acepta equipos activados): queda pendiente hasta que la haya.
 - Desde el código fuente (no el .exe) NO se manda, para no llenar la tabla con las pruebas del autor; CINECAPTIONS_TELEMETRIA=1 lo
   fuerza. CINECAPTIONS_SIN_TELEMETRIA=1 o la preferencia oculta «enviar_errores»: false lo apagan.
+
+v5.72 (pedido del usuario: «captura de pantalla completa en el instante del fallo» + GPU y RAM): con cada error DISTINTO va una captura
+(como mucho CAPTURAS_SESION por sesión). En Windows, la pantalla entera donde está CineCaptions (`QScreen.grabWindow(0)`); en Mac solo la
+ventana del programa (capturar la pantalla pide el permiso «Grabación de pantalla» y saldría ese cuadro del sistema en mitad del fallo).
+El hilo de la interfaz SOLO toma la imagen (la señal llega en cola: un instante después del error, nunca dentro del gancho); reducirla a
+CAPTURA_ANCHO, pasarla a JPEG, guardarla en `errores_capturas/` y mandarla (multipart, `captura_<firma>`) lo hace el hilo de la telemetría.
+Los errores que ya estaban en el Registro al abrir (los de la sesión que se cortó) van sin captura: la pantalla de ahora no es la del fallo.
+`equipo_datos` (GPU, RAM total y libre, CPU, pantalla) va en cada petición, sin subprocess en Windows.
+
+v5.72 (pedido: «que la app Ventas reciba la telemetría con más información del equipo»): `equipo_datos` sale de la ficha del equipo
+(`ficha_equipo`: también la memoria de vídeo y el driver) y la ficha ENTERA (sistema, CPU, RAM, GPU con su driver, pantallas, discos,
+Resolve, motores, Visual C++, revisión y lo que el instalador puso al día) va a `pagos/equipo.php` FICHA_ESPERA_S después de abrir,
+una vez al día o cuando cambia (`ficha_enviada.json` guarda su huella). Mismas reglas: solo con licencia, pasada por privado().
 """
 import hashlib
 import json
@@ -41,13 +54,26 @@ CADUCA_S = 7 * 86400        # lo pendiente de hace más de una semana ya no se m
 POR_PETICION = 20           # lo mismo que acepta errores.php
 TIMEOUT_S = 15
 DETALLE_MAX = 7500          # caracteres del informe (errores.php guarda 8 000)
+CAPTURAS = registro.CARPETA / 'errores_capturas'
+CAPTURAS_SESION = 6         # capturas por sesión (cada una ~150-400 KB)
+CAPTURA_ANCHO = 1920        # una pantalla 4K se reduce a 1920 de ancho: se lee la interfaz y pesa poco
+CAPTURA_MAX_BYTES = 700_000  # errores.php acepta hasta 900 KB por captura
+CAPTURAS_POR_PETICION = 3   # (≈2 MB como mucho por petición; el resto va en la siguiente)
+URL_FICHA = 'https://cinecaptions.shop/pagos/equipo.php'      # v5.72: la ficha del equipo
+FICHA_ENVIADA = registro.CARPETA / 'ficha_enviada.json'       # {huella, cuando} de la última que aceptó el servidor
+FICHA_ESPERA_S = 90         # se manda 90 s después de abrir (el arranque ya pasó)
+FICHA_CADA_S = 86400        # la misma ficha, como mucho una vez al día
+FICHA_MAX = 16000           # lo que acepta equipo.php
 
 _CANDADO = threading.Lock()
 _DESPERTAR = threading.Event()
-_ESTADO = {'iniciado': False, 'enviados': 0, 'pausa_hasta': 0.0, 'ultimo_envio': {}, 'hilo': None}
+_ESTADO = {'iniciado': False, 'enviados': 0, 'pausa_hasta': 0.0, 'ultimo_envio': {}, 'hilo': None, 'capturas': 0, 'capturador': None,
+           'pantalla': '', 'equipo_fijo': None}
 _COLA = []                  # Entradas del Registro recién llegadas (las procesa el hilo)
 _PENDIENTES = {}            # firma -> dict listo para mandar (también en ARCHIVO)
 _CONTADAS = {}              # id(Entrada) -> (Entrada, veces ya contadas)
+_CAPTURADAS = set()         # firmas que ya pidieron su captura en esta sesión
+_CAPTURAS_MEM = {}          # firma -> (QImage, {tipo, pantalla}) recién tomadas en el hilo de la interfaz (el hilo las pasa a JPEG)
 
 
 def activo():
@@ -78,15 +104,17 @@ def iniciar():
         if _ESTADO['iniciado'] or not activo():
             return False
         _ESTADO.update(iniciado=True, parar=False)
+        _ESTADO['capturador'] = _crear_capturador()     # (iniciar corre en el hilo de la interfaz, con la QApplication ya creada)
         try:
             from PySide6.QtCore import Qt
             registro.registro().nueva.connect(_al_anotar, Qt.DirectConnection)
         except Exception:
             registro.registro().nueva.connect(_al_anotar)
         # los errores que llegaron ANTES de conectarse (instalar_ganchos anota ahí «la sesión anterior se cortó / no terminó de abrir»,
-        # justo los cuelgues y caídas que más interesa ver: en la sesión que se cayó no dio tiempo a mandarlos)
+        # justo los cuelgues y caídas que más interesa ver: en la sesión que se cayó no dio tiempo a mandarlos). Sin captura: la
+        # pantalla de ahora no es la de ese fallo.
         for e in registro.registro().lista('error'):
-            _al_anotar(e)
+            _al_anotar(e, capturar=False)
         # al cerrar (main() corre atexit antes de os._exit): lo que aún esté en la cola se guarda en disco y sale en la sesión siguiente
         import atexit
         atexit.register(_al_salir)
@@ -101,11 +129,12 @@ def iniciar():
 def _al_salir():
     try:
         _procesar_cola()
+        _guardar_capturas()
     except Exception:
         pass
 
 
-def _al_anotar(e):
+def _al_anotar(e, capturar=True):
     """Lo llama el Registro (desde cualquier hilo, también el de la interfaz): solo memoria, nada de disco ni red."""
     try:
         if getattr(e, 'nivel', '') != 'error':
@@ -113,9 +142,281 @@ def _al_anotar(e):
         with _CANDADO:
             if e not in _COLA:
                 _COLA.append(e)
+        if capturar:
+            _pedir_captura(e)
         _DESPERTAR.set()
     except Exception:
         pass
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# la captura (v5.72)
+# ---------------------------------------------------------------------------------------------------------------------------------------
+def _crear_capturador():
+    """Un QObject del hilo de la interfaz con una señal en cola: `_pedir_captura` (desde cualquier hilo) la emite y la captura se toma en
+    la siguiente vuelta del bucle de Qt, fuera del gancho del error. None si no hay Qt (pruebas sin interfaz)."""
+    try:
+        from PySide6.QtCore import QObject, Qt, Signal
+        from PySide6.QtGui import QGuiApplication
+        if QGuiApplication.instance() is None:
+            return None
+
+        class _Capturador(QObject):
+            pedir = Signal(str)
+
+            def __init__(self):
+                super().__init__()
+                self.pedir.connect(self._capturar, Qt.QueuedConnection)
+
+            def _capturar(self, f):
+                try:
+                    img, info = _tomar_captura()
+                    if img is not None and not img.isNull():
+                        with _CANDADO:
+                            _CAPTURAS_MEM[f] = (img, info)
+                        _DESPERTAR.set()
+                except Exception:
+                    pass
+
+        c = _Capturador()
+        c.moveToThread(QGuiApplication.instance().thread())
+        try:
+            p = QGuiApplication.primaryScreen()
+            if p is not None:
+                g, dpr = p.geometry(), p.devicePixelRatio()
+                _ESTADO['pantalla'] = '%d×%d al %d %%' % (round(g.width() * dpr), round(g.height() * dpr), round(dpr * 100))
+            # v5.72: todas las pantallas para la ficha del equipo (Qt solo se toca aquí, en el hilo de la interfaz)
+            _ESTADO['pantallas'] = [{'ancho': round(s.geometry().width() * s.devicePixelRatio()),
+                                     'alto': round(s.geometry().height() * s.devicePixelRatio()),
+                                     'escala': round(s.devicePixelRatio() * 100), 'hz': round(s.refreshRate())}
+                                    | ({'principal': True} if s is p else {}) for s in QGuiApplication.screens()]
+        except Exception:
+            pass
+        return c
+    except Exception:
+        return None
+
+
+def _pedir_captura(e):
+    """Una captura por error DISTINTO y como mucho CAPTURAS_SESION por sesión. Solo memoria (se puede llamar desde cualquier hilo)."""
+    c = _ESTADO.get('capturador')
+    if c is None or _ESTADO['capturas'] >= CAPTURAS_SESION or os.environ.get('CINECAPTIONS_SIN_CAPTURA') == '1':
+        return
+    f = firma(e.origen, e.mensaje)
+    with _CANDADO:
+        if f in _CAPTURADAS or _ESTADO['capturas'] >= CAPTURAS_SESION:
+            return
+        _CAPTURADAS.add(f)
+        _ESTADO['capturas'] += 1
+    c.pedir.emit(f)
+
+
+def _ventana_principal():
+    from PySide6.QtWidgets import QApplication
+    w = QApplication.activeWindow()
+    if w is not None:
+        return w.window()
+    visibles = [v for v in QApplication.topLevelWidgets() if v.isVisible() and v.isWindow() and not v.isMinimized()]
+    return max(visibles, key=lambda v: v.width() * v.height(), default=None)
+
+
+def _tomar_captura():
+    """(QImage, info) en el hilo de la interfaz. Windows: la pantalla entera donde está CineCaptions. Mac: solo su ventana."""
+    from PySide6.QtGui import QGuiApplication
+    ventana = _ventana_principal()
+    if sys.platform == 'darwin':
+        if ventana is None:
+            return None, None
+        pix, tipo = ventana.grab(), 'ventana'
+    else:
+        pantalla = (ventana.screen() if ventana is not None else None) or QGuiApplication.primaryScreen()
+        if pantalla is None:
+            return None, None
+        pix, tipo = pantalla.grabWindow(0), 'pantalla'
+    img = pix.toImage()
+    return img, {'tipo': tipo, 'ancho': img.width(), 'alto': img.height()}
+
+
+def _jpeg(img):
+    """La QImage reducida a CAPTURA_ANCHO y en JPEG (hilo de la telemetría: QImage se puede usar fuera del de la interfaz); PNG más
+    pequeño si no hay JPEG. bytes o None."""
+    from PySide6.QtCore import QBuffer, QByteArray, QIODevice, Qt
+    if img.width() > CAPTURA_ANCHO:
+        img = img.scaledToWidth(CAPTURA_ANCHO, Qt.SmoothTransformation)
+
+    def codificar(imagen, formato, calidad):
+        ba = QByteArray()
+        buf = QBuffer(ba)
+        buf.open(QIODevice.WriteOnly)
+        ok = imagen.save(buf, formato, calidad)
+        buf.close()
+        return bytes(ba.data()) if ok else b''
+
+    for calidad in (72, 55, 40):
+        datos = codificar(img, 'JPEG', calidad)
+        if not datos:
+            break
+        if len(datos) <= CAPTURA_MAX_BYTES:
+            return datos
+    chica = img.scaledToWidth(min(img.width(), 1280), Qt.SmoothTransformation)
+    datos = codificar(chica, 'PNG', -1)
+    return datos if datos and len(datos) <= CAPTURA_MAX_BYTES else None
+
+
+def _archivo_captura(f):
+    return CAPTURAS / f'{f}.jpg'
+
+
+def _borrar_captura(f):
+    try:
+        _archivo_captura(f).unlink(missing_ok=True)
+    except Exception:
+        pass
+
+
+def _guardar_capturas():
+    """Las capturas recién tomadas → JPEG en disco, unidas a su error pendiente. Si el error ya se mandó (la interfaz estaba parada más
+    de ESPERA_LOTE_S), la captura se descarta."""
+    with _CANDADO:
+        nuevas = dict(_CAPTURAS_MEM)
+        _CAPTURAS_MEM.clear()
+    hubo = False
+    for f, (img, info) in nuevas.items():
+        d = _PENDIENTES.get(f)
+        if d is None:
+            continue
+        try:
+            datos = _jpeg(img)
+            if not datos:
+                continue
+            CAPTURAS.mkdir(parents=True, exist_ok=True)
+            destino = _archivo_captura(f)
+            tmp = destino.with_suffix('.tmp')
+            tmp.write_bytes(datos)
+            os.replace(tmp, destino)
+            d['captura'] = dict(info or {}, bytes=len(datos))
+            hubo = True
+        except Exception:
+            pass
+    if hubo:
+        _guardar()
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# el equipo (v5.72): GPU, RAM, CPU y pantalla en una línea, sin subprocess en Windows
+# ---------------------------------------------------------------------------------------------------------------------------------------
+def _gpus_windows():
+    import ctypes
+    from ctypes import wintypes
+
+    class DD(ctypes.Structure):
+        _fields_ = [('cb', wintypes.DWORD), ('DeviceName', wintypes.WCHAR * 32), ('DeviceString', wintypes.WCHAR * 128),
+                    ('StateFlags', wintypes.DWORD), ('DeviceID', wintypes.WCHAR * 128), ('DeviceKey', wintypes.WCHAR * 128)]
+    nombres = []
+    for i in range(16):
+        d = DD()
+        d.cb = ctypes.sizeof(DD)
+        if not ctypes.windll.user32.EnumDisplayDevicesW(None, i, ctypes.byref(d), 0):
+            break
+        n = ' '.join(d.DeviceString.split())
+        if n and n not in nombres and not any(x in n for x in ('Basic Display', 'Basic Render', 'Remote', 'Parsec', 'Virtual')):
+            if d.StateFlags & 4:                       # DISPLAY_DEVICE_PRIMARY_DEVICE: la que da imagen, primero
+                nombres.insert(0, n)
+            else:
+                nombres.append(n)
+    return nombres
+
+
+def _cpu():
+    try:
+        if sys.platform.startswith('win'):
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'HARDWARE\DESCRIPTION\System\CentralProcessor\0') as k:
+                return ' '.join(str(winreg.QueryValueEx(k, 'ProcessorNameString')[0]).split())
+        if sys.platform == 'darwin':
+            import subprocess
+            return subprocess.run(['sysctl', '-n', 'machdep.cpu.brand_string'], capture_output=True, text=True, timeout=3).stdout.strip()
+    except Exception:
+        pass
+    return ''
+
+
+def _ram_mb():
+    """(total, libre) en MB o (None, None)."""
+    try:
+        if sys.platform.startswith('win'):
+            import ctypes
+
+            class MS(ctypes.Structure):
+                _fields_ = [('dwLength', ctypes.c_ulong), ('dwMemoryLoad', ctypes.c_ulong), ('ullTotalPhys', ctypes.c_ulonglong),
+                            ('ullAvailPhys', ctypes.c_ulonglong), ('ullTotalPageFile', ctypes.c_ulonglong), ('ullAvailPageFile', ctypes.c_ulonglong),
+                            ('ullTotalVirtual', ctypes.c_ulonglong), ('ullAvailVirtual', ctypes.c_ulonglong), ('ullAvailExtendedVirtual', ctypes.c_ulonglong)]
+            m = MS()
+            m.dwLength = ctypes.sizeof(MS)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)):
+                return int(m.ullTotalPhys / 1048576), int(m.ullAvailPhys / 1048576)
+            return None, None
+        total = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / 1048576)
+        import vigilancia
+        return total, vigilancia.memoria_libre_mb()
+    except Exception:
+        return None, None
+
+
+def _gb(mb):
+    return ('%.1f GB' % (mb / 1024)).replace('.0 GB', ' GB').replace('.', ',')
+
+
+def _ficha_ahora():
+    """v5.72: la ficha del equipo de esta sesión con la RAM libre y las pantallas de AHORA (copia: la de la sesión no se toca)."""
+    import copy
+    import ficha_equipo
+    f = copy.deepcopy(ficha_equipo.de_esta_sesion(pantallas=_ESTADO.get('pantallas')))
+    total, libre = _ram_mb()
+    if total:
+        f['ram'] = {'total_mb': total, 'libre_mb': libre}
+    return f
+
+
+def datos_equipo():
+    """«GPU NVIDIA GeForce RTX 4070 (12 GB, driver 596.36) · RAM 32 GB (libre 14,2 GB) · CPU AMD Ryzen 9 5900X (24 hilos) · Pantalla
+    3840×2160 al 150 %». v5.72: sale de la ficha del equipo (con la memoria de vídeo y el driver); si no se puede, la línea de antes."""
+    try:
+        import ficha_equipo
+        linea = ficha_equipo.resumen(_ficha_ahora())
+        if linea:
+            return privado(linea)[:300]
+    except Exception:
+        pass
+    return _datos_equipo_simple()
+
+
+def _datos_equipo_simple():
+    if _ESTADO['equipo_fijo'] is None:
+        partes = []
+        gpus = []
+        try:
+            gpus = _gpus_windows() if sys.platform.startswith('win') else []
+        except Exception:
+            gpus = []
+        # la línea de entorno_detallado() (nvidia-smi al abrir, con la memoria de vídeo) es más precisa que el nombre del adaptador
+        nvidia = [l.split(':', 1)[1].strip() for l in (registro._ENTORNO.get('lineas') or [])
+                  if l.startswith('GPU') and ':' in l and 'no detectada' not in l]
+        if nvidia:
+            gpus = nvidia[:1] + [g for g in gpus if 'nvidia' not in g.lower()]
+        if gpus:
+            partes.append('GPU ' + ' + '.join(gpus[:3]))
+        cpu = _cpu()
+        partes.append('CPU %s(%s hilos)' % (cpu + ' ' if cpu else '', os.cpu_count() or '?'))
+        _ESTADO['equipo_fijo'] = partes
+    partes = list(_ESTADO['equipo_fijo'])
+    total, libre = _ram_mb()
+    if total:
+        partes.insert(1 if partes and partes[0].startswith('GPU') else 0,
+                      'RAM %s' % _gb(total) + (' (libre %s)' % _gb(libre) if libre is not None else ''))
+    if _ESTADO.get('pantalla'):
+        partes.append('Pantalla ' + _ESTADO['pantalla'])
+    return privado(' · '.join(partes))[:300]
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------
@@ -132,15 +433,21 @@ def detener(espera_s=5.0):
     hilo = _ESTADO.get('hilo')
     if hilo is not None and hilo is not threading.current_thread():
         hilo.join(espera_s)
-    _ESTADO.update(iniciado=False, hilo=None)
+    _ESTADO.update(iniciado=False, hilo=None, capturas=0, capturador=None)
+    with _CANDADO:
+        _CAPTURADAS.clear()
+        _CAPTURAS_MEM.clear()
 
 
 def _bucle():
     _cargar()
     if _PENDIENTES:
         _DESPERTAR.set()                       # lo que quedó de una sesión anterior (sin red, sin licencia)
+    _ESTADO['ficha_en'] = time.time() + FICHA_ESPERA_S
     while not _ESTADO.get('parar'):
-        _DESPERTAR.wait(timeout=600)           # cada 10 min se reintenta lo pendiente aunque no haya errores nuevos
+        # cada 10 min se reintenta lo pendiente aunque no haya errores nuevos; la ficha del equipo, a su hora
+        espera = 600.0 if _ESTADO.get('ficha_hecha') else max(1.0, min(600.0, _ESTADO['ficha_en'] - time.time()))
+        _DESPERTAR.wait(timeout=espera)
         _DESPERTAR.clear()
         if _ESTADO.get('parar'):
             break
@@ -148,9 +455,74 @@ def _bucle():
             if _COLA:
                 time.sleep(ESPERA_LOTE_S)
             _procesar_cola()
+            _guardar_capturas()
             _enviar()
         except Exception:
             pass
+        try:
+            _enviar_ficha()
+        except Exception:
+            _ESTADO['ficha_hecha'] = True
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# la ficha del equipo (v5.72): a pagos/equipo.php una vez al día o cuando cambia; la app Ventas la muestra por equipo
+# ---------------------------------------------------------------------------------------------------------------------------------------
+def _privada(obj):
+    """Cada texto de la ficha pasado por privado() (un fallo de la puesta al día puede llevar una ruta)."""
+    if isinstance(obj, str):
+        return privado(obj)
+    if isinstance(obj, list):
+        return [_privada(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _privada(v) for k, v in obj.items()}
+    return obj
+
+
+def _ficha_json(f):
+    """La ficha en JSON compacto de FICHA_MAX bytes como mucho (si no cabe, primero se cortan las listas largas)."""
+    f = _privada(f)
+    texto = json.dumps(f, ensure_ascii=False, separators=(',', ':'))
+    if len(texto.encode('utf-8')) > FICHA_MAX:
+        puesta = f.get('puesta_al_dia') or {}
+        for k in ('hecho', 'pendiente', 'fallos'):
+            puesta[k] = [t[:200] for t in (puesta.get(k) or [])[:5]]
+        for k in ('gpus', 'pantallas', 'discos'):
+            f[k] = (f.get(k) or [])[:4]
+        texto = json.dumps(f, ensure_ascii=False, separators=(',', ':'))
+    return texto if len(texto.encode('utf-8')) <= FICHA_MAX else ''
+
+
+def _enviar_ficha():
+    if _ESTADO.get('ficha_hecha') or time.time() < _ESTADO.get('ficha_en', 0):
+        return
+    import archivos_seguros
+    import ficha_equipo
+    import licencia
+    datos = licencia.local()
+    if not datos or not datos.get('clave'):
+        _ESTADO['ficha_hecha'] = True          # sin licencia activada: el servidor no la aceptaría (va en la próxima sesión)
+        return
+    f = _ficha_ahora()
+    huella = ficha_equipo.huella(f)
+    previo = archivos_seguros.leer_json(FICHA_ENVIADA, defecto={}) or {}
+    if previo.get('huella') == huella and time.time() - float(previo.get('cuando') or 0) < FICHA_CADA_S:
+        _ESTADO['ficha_hecha'] = True
+        return
+    texto = _ficha_json(f)
+    if not texto:
+        _ESTADO['ficha_hecha'] = True
+        return
+    codigo, espera, _r = _post({'clave': datos['clave'], 'equipo': licencia.id_equipo(), 'version': licencia._version(),
+                                'so': licencia._sistema(), 'resumen': privado(ficha_equipo.resumen(f))[:300], 'ficha': texto},
+                               url=URL_FICHA)
+    if codigo == 200:
+        archivos_seguros.escribir_json(FICHA_ENVIADA, {'huella': huella, 'cuando': time.time()})
+        _ESTADO['ficha_hecha'] = True
+    elif codigo in (400, 404, 405, 413):
+        _ESTADO['ficha_hecha'] = True          # no la quiere (o un servidor sin equipo.php): reintentar en esta sesión no sirve
+    else:
+        _ESTADO['ficha_en'] = time.time() + (espera or 1800)      # sin red, 429, 5xx
 
 
 def _procesar_cola():
@@ -244,9 +616,11 @@ def _recortar():
     ahora = time.time()
     for f in [f for f, d in _PENDIENTES.items() if ahora - float(d.get('cuando', 0)) > CADUCA_S]:
         _PENDIENTES.pop(f, None)
+        _borrar_captura(f)
     if len(_PENDIENTES) > PENDIENTES_MAX:
         for f, _d in sorted(_PENDIENTES.items(), key=lambda kv: kv[1].get('cuando', 0))[:len(_PENDIENTES) - PENDIENTES_MAX]:
             _PENDIENTES.pop(f, None)
+            _borrar_captura(f)
 
 
 def _cargar():
@@ -256,8 +630,17 @@ def _cargar():
         for f, d in (datos.get('pendientes') or {}).items():
             if isinstance(d, dict) and re.fullmatch(r'[0-9a-f]{40}', str(f)) and d.get('mensaje'):
                 d['veces'] = max(1, int(d.get('veces') or 1))
+                if d.get('captura') and not _archivo_captura(f).exists():
+                    d.pop('captura', None)
                 _PENDIENTES[f] = d
         _recortar()
+    except Exception:
+        pass
+    try:                                        # capturas sueltas (su error ya se mandó o caducó, o se cortó al guardarla)
+        if CAPTURAS.is_dir():
+            for p in CAPTURAS.iterdir():
+                if p.stem not in _PENDIENTES or not _PENDIENTES[p.stem].get('captura') or p.suffix != '.jpg':
+                    p.unlink(missing_ok=True)
     except Exception:
         pass
 
@@ -291,8 +674,31 @@ def _enviar():
         _ESTADO['pausa_hasta'] = time.time() + 60
         return
     campos = [{k: d[k] for k in ('firma', 'nivel', 'titulo', 'mensaje', 'origen', 'detalle', 'veces')} for d in lote]
+    archivos = []
+    for d, c in zip(lote, campos):              # v5.72: la captura de cada error (multipart «captura_<firma>»)
+        if d.get('captura') and len(archivos) < CAPTURAS_POR_PETICION:
+            try:
+                archivos.append(('captura_' + d['firma'], _archivo_captura(d['firma']).read_bytes()))
+                c['captura'] = d['captura'].get('tipo') or 'pantalla'
+            except OSError:
+                d.pop('captura', None)
+    try:
+        equipo_datos = datos_equipo()
+    except Exception:
+        equipo_datos = ''
     codigo, espera, respuesta = _post({'clave': datos['clave'], 'equipo': licencia.id_equipo(), 'version': licencia._version(),
-                                       'so': licencia._sistema(), 'errores': json.dumps(campos, ensure_ascii=False)})
+                                       'so': licencia._sistema(), 'equipo_datos': equipo_datos,
+                                       'errores': json.dumps(campos, ensure_ascii=False)}, archivos)
+    if codigo in (400, 413) and archivos:
+        # demasiado grande para el servidor (su tope de subida; si pasa post_max_size PHP tira todo el formulario y un errores.php viejo
+        # daría 400 «Faltan datos»): esos errores se mandan sin captura en la siguiente vuelta
+        for d in lote:
+            if d.pop('captura', None) is not None:
+                _borrar_captura(d['firma'])
+        _guardar()
+        _ESTADO['pausa_hasta'] = time.time() + 30
+        _DESPERTAR.set()
+        return
     if codigo == 200 or codigo in (400, 404, 413):
         # 200 = guardados; 400/404/413 = el servidor no los quiere (datos raros, equipo no activado): reintentar no sirve.
         # Con 200 el servidor dice cuántos guardó (por el tope por hora pueden ser menos): el resto se queda y se reintenta en una hora.
@@ -302,6 +708,7 @@ def _enviar():
         ahora = time.time()
         for d in lote[:hechos] if codigo == 200 else lote:
             _PENDIENTES.pop(d['firma'], None)
+            _borrar_captura(d['firma'])
             _ESTADO['ultimo_envio'][d['firma']] = ahora
         _ESTADO['enviados'] += 1
         _guardar()
@@ -313,14 +720,35 @@ def _enviar():
     _ESTADO['pausa_hasta'] = time.time() + (espera or 300)      # sin red, 429, 503, 500: se reintenta más tarde
 
 
-def _post(campos):
-    """(código HTTP o 0 sin red, segundos de Retry-After o None, el JSON de la respuesta o None)."""
+def _multipart(campos, archivos):
+    """(cuerpo, Content-Type) de un formulario multipart con los campos y las capturas [(nombre, bytes)]."""
+    limite = '----CineCaptions' + os.urandom(12).hex()
+    partes = []
+    for k, v in campos.items():
+        partes += [('--%s\r\nContent-Disposition: form-data; name="%s"\r\n\r\n' % (limite, k)).encode('ascii'),
+                   str(v).encode('utf-8'), b'\r\n']
+    for nombre, datos in archivos:
+        png = datos[:8] == b'\x89PNG\r\n\x1a\n'
+        partes += [('--%s\r\nContent-Disposition: form-data; name="%s"; filename="%s.%s"\r\nContent-Type: %s\r\n\r\n'
+                    % (limite, nombre, nombre, 'png' if png else 'jpg', 'image/png' if png else 'image/jpeg')).encode('ascii'),
+                   datos, b'\r\n']
+    partes.append(('--%s--\r\n' % limite).encode('ascii'))
+    return b''.join(partes), 'multipart/form-data; boundary=' + limite
+
+
+def _post(campos, archivos=None, url=None):
+    """(código HTTP o 0 sin red, segundos de Retry-After o None, el JSON de la respuesta o None). Con `archivos` va en multipart
+    (errores.php anterior a la 5.72 lo lee igual: PHP pone los campos en $_POST y no mira las capturas)."""
     import licencia
-    req = urllib.request.Request(URL, data=urllib.parse.urlencode(campos).encode('utf-8'), method='POST',
-                                 headers={'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded',
+    if archivos:
+        cuerpo, tipo = _multipart(campos, archivos)
+    else:
+        cuerpo, tipo = urllib.parse.urlencode(campos).encode('utf-8'), 'application/x-www-form-urlencoded'
+    req = urllib.request.Request(url or URL, data=cuerpo, method='POST',
+                                 headers={'Accept': 'application/json', 'Content-Type': tipo,
                                           'User-Agent': 'CineCaptions/%s' % licencia._version()})
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_S, context=licencia._ssl()) as r:
+        with urllib.request.urlopen(req, timeout=TIMEOUT_S + (45 if archivos else 0), context=licencia._ssl()) as r:
             cuerpo = r.read(65536)
             try:
                 respuesta = json.loads(cuerpo or b'{}')

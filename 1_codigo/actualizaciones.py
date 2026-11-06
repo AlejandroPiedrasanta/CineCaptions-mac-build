@@ -216,9 +216,22 @@ def _interpretar(datos, version_local, canal_beta=False):
     mejor = max((c for c in candidatos if c.get('version')), key=lambda c: _partes(c['version']), default=None)
     if mejor and es_mas_nueva(mejor['version'], version_local):
         archivo = (mejor.get('archivos') or {}).get(clave_plataforma())
-        return {'estado': 'nueva', 'version': corta(mejor['version']), 'url': (archivo or {}).get('url') or mejor.get('url') or '',
-                'notas': mejor.get('notas') or '', 'fecha': mejor.get('fecha') or '', 'archivo': archivo if isinstance(archivo, dict) and archivo.get('url') else None}
+        archivo = archivo if isinstance(archivo, dict) and archivo.get('url') else None
+        r = {'estado': 'nueva', 'version': corta(mejor['version']), 'url': (archivo or {}).get('url') or mejor.get('url') or '',
+             'notas': mejor.get('notas') or '', 'fecha': mejor.get('fecha') or '', 'archivo': archivo}
+        r.update(_obligatoria(datos, version_local, archivo))
+        return r
     return {'estado': 'al_dia', 'version': version_local}
+
+
+def _obligatoria(datos, version_local, archivo):
+    """v5.72 (pedido del usuario: «force_update» + versión mínima): `"force_update": true` y `"version_minima": "5.71"` en la RAÍZ del
+    version.json (dentro de lo firmado: nadie los cambia sin la clave). Obligatoria solo si la instalada es MENOR que la mínima y hay
+    instalador de ESTA plataforma (sin él, el programa no podría actualizarse y quedaría bloqueado para nada)."""
+    minima = str(datos.get('version_minima') or '').strip()
+    if datos.get('force_update') is True and minima and archivo and es_mas_nueva(minima, version_local):
+        return {'obligatoria': True, 'minima': corta(minima)}
+    return {}
 
 
 def carpeta_descargas():

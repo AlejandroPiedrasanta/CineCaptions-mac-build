@@ -98,6 +98,7 @@ class _Servidor:
         entorno['PYTHONUNBUFFERED'] = '1'
         entorno.pop('PYTHONPATH', None)
         entorno.pop('PYTHONHOME', None)
+        motor_voz.esperar_puesta_al_dia()      # v5.72: no arrancar mientras pip pone al día sus librerías
         self.p = subprocess.Popen([str(motor_voz.python_motor()), '-s', '-u', str(script()), '--servidor',
                                    '--modelo', modelo, '--inactivo', str(INACTIVO_S)],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,

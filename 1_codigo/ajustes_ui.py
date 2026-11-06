@@ -495,6 +495,14 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.72', [
+        'El instalador revisa tu equipo (procesador, memoria, tarjeta gráfica y su driver) y lo pone al día solo, sin abrir ventanas: instala Microsoft Visual C++ si falta y, con DaVinci Resolve cerrado, el driver más nuevo de tu tarjeta desde Windows Update. Windows pide permiso una sola vez.',
+        'En los portátiles con dos tarjetas gráficas, CineCaptions y su IA usan la de alto rendimiento.',
+        'Si a la voz o a la IA les falta alguna librería, se ponen al día solas al abrir CineCaptions, sin reinstalar.',
+        'Lo que le falte a tu equipo (un driver antiguo, poca memoria o poco disco) aparece en el Registro.',
+        'Para darte soporte, CineCaptions envía una ficha técnica de tu equipo y, con cada error, una captura de la pantalla (sin tus videos, nombres ni archivos).',
+        'Cuando una versión deja de poder usarse, CineCaptions pide actualizar antes de seguir.',
+    ]),
     ('5.71', [
         'Siete idiomas nuevos para la interfaz: japonés, coreano, chino, ruso, neerlandés, turco y polaco (13 en total).',
         'Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.',
@@ -1388,6 +1396,19 @@ def pedir_actualizacion(app, r):
     d = DialogoNotasVersion(app, tr('Hay una versión nueva: {v}', v=r.get('version')),
                             tr('Estás en la {a}. Estas son las mejoras de la {v}:', a=_version(), v=r.get('version')),
                             [(r.get('version'), lineas)], [(tr('Más tarde'), 'luego', 'neutro'), (tr('Actualizar ahora'), 'actualizar', 'primario')], tr('Actualización'))
+    d.exec()
+    return d.valor == 'actualizar'
+
+
+def exigir_actualizacion(app, r):
+    """v5.72 («force update»): la instalada es menor que la mínima. Sin «Más tarde»: «Cerrar CineCaptions» / «Actualizar ahora». True solo si
+    quiere actualizar; la ✕, Esc o «Cerrar» devuelven False y el programa se cierra (lo hace SubtitleApp._exigir_actualizacion)."""
+    lineas = lineas_de_notas(r.get('notas')) or [tr('Mejoras y correcciones.')]
+    d = DialogoNotasVersion(app, tr('Hace falta actualizar a la {v}', v=r.get('version')),
+                            tr('La {a} ya no se puede usar: para seguir hace falta la {m} o una más nueva. La actualización tarda un par de minutos y '
+                               'no toca tus proyectos ni tus ajustes.', a=_version(), m=r.get('minima') or r.get('version')),
+                            [(r.get('version'), lineas)], [(tr('Cerrar CineCaptions'), 'salir', 'neutro'), (tr('Actualizar ahora'), 'actualizar', 'primario')],
+                            tr('Actualización obligatoria'))
     d.exec()
     return d.valor == 'actualizar'
 

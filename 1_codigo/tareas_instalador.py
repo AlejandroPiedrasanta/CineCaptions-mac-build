@@ -11,6 +11,8 @@ programa YA INSTALADO, sin abrir la ventana:
     "CineCaptions.exe" --tarea quitar_scripts <estado.txt>   (al desinstalar)
     "CineCaptions.exe" --tarea fuentes   <estado.txt>
     "CineCaptions.exe" --tarea modelo    <estado.txt>
+    "CineCaptions.exe" --tarea equipo    <estado.txt> interactivo|silencioso   (v5.72: ficha + poner el equipo al día)
+    "CineCaptions.exe" --tarea equipo_admin <estado.txt> <plan.json> <salida.json>   (la lanza «equipo», elevada)
 
 Y una para soporte (no la usa el instalador): transcribe un audio de punta a
 punta con el .exe compilado, sin tocar la ventana ni Resolve:
@@ -48,7 +50,8 @@ import time
 import traceback
 from pathlib import Path
 
-TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'motor_compat', 'transcribir', 'sonda_resolve')
+TAREAS = ('verificar', 'scripts', 'quitar_scripts', 'fuentes', 'modelo', 'motor_ia', 'motor_compat', 'transcribir', 'sonda_resolve',
+          'equipo', 'equipo_admin')
 # v5.1: Whisper queda de respaldo (el motor principal es Qwen3-ASR, motor_ia)
 MODELO_WHISPER = 'large-v3-turbo'
 MODELO_BYTES_APROX = 1_620_000_000
@@ -116,6 +119,57 @@ def _tarea_sonda_resolve(estado):
     no congela la ventana. Escribe OK|ok, OK|none, OK|hueco u OK|error: ..."""
     import resolve_bridge
     estado.ok(resolve_bridge._sondear_aqui())
+
+
+# ---------------------------------------------------------------------------
+# equipo (v5.72): la ficha del equipo + ponerlo al día (equipo_al_dia)
+# ---------------------------------------------------------------------------
+def _tarea_equipo(estado, modo='interactivo', *_resto):
+    """«Tu equipo»: lee el hardware, revisa lo que CineCaptions necesita y lo pone al día (Visual C++, driver de la GPU por Windows
+    Update, GPU de alto rendimiento). `modo` = 'silencioso' en las actualizaciones automáticas: entonces nada que pida permiso. Guarda
+    la ficha (con lo hecho y lo pendiente) para la telemetría y el Registro. Nunca falla la instalación: lo que no se pudo, va de aviso."""
+    import equipo_al_dia
+    import ficha_equipo
+    estado.progreso(5, 'Mirando el procesador, la memoria y la tarjeta gráfica')
+    ficha = ficha_equipo.recoger(origen='instalador')
+    estado.info(ficha_equipo.resumen(ficha, ram_libre=False))
+    for r in ficha_equipo.pendientes(ficha):
+        estado.info(('Falta: ' if r['estado'] == 'falta' else 'Aviso: ') + r['texto'])
+    puesta = equipo_al_dia.poner_al_dia(ficha, interactivo=(modo != 'silencioso'), info=estado.info,
+                                        progreso=lambda p, t='': estado.progreso(10 + p * 0.85, t))
+    for t in puesta['hecho']:
+        estado.info('Puesto al día: ' + t)
+    for t in puesta['pendiente'] + puesta['fallos']:
+        estado.info('Pendiente: ' + t)
+    if puesta['hecho']:
+        ficha = ficha_equipo.recoger(origen='instalador')       # (Visual C++ o el driver ya cambiaron)
+    ficha['puesta_al_dia'] = puesta
+    ficha_equipo.guardar(ficha)
+    g = (ficha.get('gpus') or [{}])[0]
+    partes = [g.get('nombre', '')] + ([f"driver {g['driver']}"] if g.get('driver') else [])
+    ram = (ficha.get('ram') or {}).get('total_mb')
+    if ram:
+        partes.append(f'{round(ram / 1024)} GB')
+    faltan = [r for r in ficha.get('revision') or [] if r['estado'] == 'falta']
+    if puesta['hecho']:
+        partes.append('puesto al día: ' + '; '.join(puesta['hecho'])[:120])
+    if faltan or puesta['fallos']:
+        partes.append('revisa el Registro: ' + (faltan[0]['texto'] if faltan else puesta['fallos'][0])[:120])
+    elif not puesta['pendiente']:
+        partes.append('todo listo')
+    estado.ok(' · '.join(p for p in partes if p))
+
+
+def _tarea_equipo_admin(estado, plan=None, salida=None, *_resto):
+    """El proceso ELEVADO que lanza `_tarea_equipo` (una sola ventana de permiso de Windows): instala lo que el plan pide y escribe el
+    resultado en `salida` (lo lee el proceso normal)."""
+    import json
+    import equipo_al_dia
+    datos = json.loads(Path(plan).read_text(encoding='utf-8')) if plan else {}
+    res = equipo_al_dia.ejecutar_admin(datos, info=estado.info)
+    if salida:
+        Path(salida).write_text(json.dumps(res, ensure_ascii=False), encoding='utf-8')
+    estado.ok('; '.join(res['hecho']) or 'nada que instalar')
 
 
 # ---------------------------------------------------------------------------

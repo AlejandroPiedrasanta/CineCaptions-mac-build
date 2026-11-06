@@ -425,7 +425,66 @@ def revisar_salud_al_arrancar():
         r.info('Chequeo de arranque: todo en orden (' + salud.resumen(filas)[0] + ').', 'arranque')
     if any(f.get('cuda') == 'faltan' for f in filas):
         preparar_gpu_voz()
+    poner_motores_al_dia()
+    avisar_equipo()
     return fallas
+
+
+_MOTORES_AL_DIA = {'v': None}
+
+
+def poner_motores_al_dia():
+    """v5.72 (pedido: «que el .exe actualice las dependencias en segundo plano, sin ventanas ni interrumpir»): si una instalación anterior
+    dejó un motor con librerías que no son las fijadas (la tarea del instalador se cortó o se omitió), se ponen al día AL ABRIR, en un
+    hilo, con pip sin ventana y solo lo que falta (--no-deps). Mientras, los arranques del motor esperan (motor_voz.esperar_puesta_al_dia;
+    motor_compat.instalar va de uno en uno). Solo el programa instalado en Windows; desde Claude el AppData está virtualizado (no)."""
+    if not sys.platform.startswith('win') or not getattr(sys, 'frozen', False):
+        return
+    with _LOCK:
+        if _MOTORES_AL_DIA['v'] is not None:
+            return
+        _MOTORES_AL_DIA['v'] = True
+    r = _registro()
+
+    def trabajo():
+        try:
+            import motor_compat
+            if motor_compat.python_motor().is_file() and not motor_compat.instalado() and not motor_compat._appdata_de_claude():
+                r.info('Motor auxiliar: le faltan librerías de esta versión; las pongo al día en segundo plano.', 'arranque')
+                motor_compat.instalar()
+                r.ok('Motor auxiliar al día.', 'arranque')
+        except Exception as e:
+            r.aviso(f'Motor auxiliar: no pude ponerlo al día ({type(e).__name__}: {e}); lo reintento al usarlo.', 'arranque')
+        try:
+            import motor_voz
+            puestas = motor_voz.completar_requisitos()          # (sin motor instalado o ya al día: no hace nada)
+            if puestas:
+                r.ok(f'Motor de voz e IA: {len(puestas)} librerías puestas al día en segundo plano '
+                     f'({", ".join(p.split("==")[0] for p in puestas[:6])}{"…" if len(puestas) > 6 else ""}).', 'arranque')
+        except Exception as e:
+            r.aviso(f'Motor de voz e IA: no pude poner al día sus librerías ({type(e).__name__}: {e}). Si la voz falla, «Reparar el motor» '
+                    'en Ajustes.', 'arranque')
+    _MOTORES_AL_DIA['v'] = threading.Thread(target=trabajo, daemon=True, name='motores-al-dia')
+    _MOTORES_AL_DIA['v'].start()
+
+
+def avisar_equipo():
+    """v5.72: lo que le falta al equipo (ficha_equipo.revisar: driver de la GPU, Visual C++, RAM, disco…) y lo que el instalador no pudo
+    poner al día, al Registro (sin cuadros). Una vez por sesión, en el hilo de la comprobación de arranque."""
+    r = _registro()
+    try:
+        import ficha_equipo
+        f = ficha_equipo.de_esta_sesion()
+    except Exception:
+        return
+    for x in f.get('revision') or []:
+        if x.get('estado') == 'falta':
+            r.aviso(f"Tu equipo: {x['texto']}.", 'equipo')
+        elif x.get('estado') == 'aviso' and x.get('id') == 'driver_gpu':
+            r.info(f"Tu equipo: {x['texto']}.", 'equipo')
+    puesta = f.get('puesta_al_dia') or {}
+    for t in (puesta.get('fallos') or [])[:4]:
+        r.aviso(f'Tu equipo: el instalador no pudo poner al día esto: {t}.', 'equipo')
 
 
 _GPU_VOZ = {'v': None}

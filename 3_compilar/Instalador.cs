@@ -648,7 +648,7 @@ class Instalacion
     volatile Process tareaActual;
     volatile bool omitirModelo;
 
-    Paso pPreparar, pCopiar, pMotorCompat, pVerificar, pScripts, pFuentes, pModelo, pMotorIA, pAccesos;
+    Paso pPreparar, pCopiar, pEquipo, pMotorCompat, pVerificar, pScripts, pFuentes, pModelo, pMotorIA, pAccesos;
     Paso dCerrar, dLicencia, dScripts, dFuentes, dAccesos, dArchivos, dDatos, dRastros;
 
     public bool DescargarModelo = true, AccesoEscritorio = true;
@@ -674,6 +674,7 @@ class Instalacion
         {
             pPreparar = Nuevo("Preparar el equipo", "Preparando el equipo...", 1);
             pCopiar = Nuevo("Programa CineCaptions", "Copiando el programa...", 10);
+            pEquipo = Nuevo("Tu equipo", "Revisando y poniendo al día tu equipo...", 2);
             pMotorCompat = Nuevo("Motor compatible con Whisper y traducción", "Instalando Python 3.14 auxiliar...", 8);
             pVerificar = Nuevo("Comprobar que funciona en este equipo", "Comprobando que todo funciona...", 2);
             pScripts = Nuevo("Scripts de DaVinci Resolve", "Instalando los scripts en Resolve...", 1);
@@ -687,10 +688,12 @@ class Instalacion
     Paso Nuevo(string t, string accion, double peso) { Paso p = new Paso(t, accion, peso); Pasos.Add(p); return p; }
 
     // ---- avisos a la ventana -------------------------------------------------
+    // v5.72: «Tu equipo» corre en otro hilo a la vez que el motor: el registro y los avisos van con candado
+    readonly object candado = new object();
     void Cambio(Paso p) { if (ventana != null) ventana.PasoCambiado(p); }
     void Log(string texto)
     {
-        Registro.Escribir(texto);
+        lock (candado) Registro.Escribir(texto);
         if (ventana != null) ventana.AgregarLog(texto);
     }
     void Empezar(Paso p, string detalle) { p.Estado = EstadoPaso.EnCurso; p.Detalle = detalle; p.Progreso = -1; Log(">> " + p.Titulo); Cambio(p); }
@@ -699,9 +702,12 @@ class Instalacion
     {
         if (p.Estado == EstadoPaso.Pendiente) Log(">> " + p.Titulo);
         p.Estado = e; p.Detalle = detalle; p.Progreso = 100;
-        if (e == EstadoPaso.Error) HuboError = true;
-        if (e == EstadoPaso.Aviso) { HuboAviso = true; Avisos.Add(p.Titulo + ": " + detalle); }
-        if (e == EstadoPaso.Error) Avisos.Add(p.Titulo + ": " + detalle);
+        lock (candado)
+        {
+            if (e == EstadoPaso.Error) HuboError = true;
+            if (e == EstadoPaso.Aviso) { HuboAviso = true; Avisos.Add(p.Titulo + ": " + detalle); }
+            if (e == EstadoPaso.Error) Avisos.Add(p.Titulo + ": " + detalle);
+        }
         Log("   " + e + ": " + detalle);
         Cambio(p);
     }
@@ -784,10 +790,27 @@ class Instalacion
         Empezar(pCopiar, "Abriendo el paquete");
         CopiarPrograma(tamPrograma);
 
+        // 2b) v5.72: tu equipo (tareas_instalador._tarea_equipo): la ficha del hardware y lo que le falta para CineCaptions, puesto al
+        // día con las ventanas ocultas: Visual C++ y el driver de la GPU por Windows Update (UNA ventana de permiso de Windows, solo si
+        // hace falta y nunca en /silencioso) y la GPU de alto rendimiento. EN PARALELO con el motor compatible (pedido: «que instale y en
+        // paralelo actualice»); la autoprueba lo espera, porque las DLL del programa necesitan Visual C++.
+        Empezar(pEquipo, "Mirando el procesador, la memoria y la tarjeta gráfica");
+        string modoEquipo = op.Silencioso ? "silencioso" : "interactivo";
+        Thread hiloEquipo = new Thread(delegate()
+        {
+            try { Tarea(pEquipo, "equipo", 60 * 60, EstadoPaso.Aviso, modoEquipo, false); }
+            catch (Exception ex) { Terminar(pEquipo, EstadoPaso.Aviso, ex.Message); }
+        });
+        hiloEquipo.IsBackground = true;
+        hiloEquipo.Start();
+
         // 3) motor compatible ----------------------------------------------------------
         // Whisper, Argos y ONNX se ejecutan en su Python 3.14 aislado; el programa/UI usan Python 3.15.2.
         Empezar(pMotorCompat, "Preparando Python 3.14 y sus librerías nativas");
         Tarea(pMotorCompat, "motor_compat", 60 * 60, EstadoPaso.Aviso);
+
+        if (hiloEquipo.IsAlive) Detalle(pVerificar, "Esperando a que termine «Tu equipo» (Visual C++ y el driver)", -1);
+        hiloEquipo.Join();
 
         // 4) autoprueba ---------------------------------------------------------------
         Empezar(pVerificar, "Cargando cada parte del programa");
@@ -1173,11 +1196,12 @@ class Instalacion
     }
 
     // ---- tareas del programa instalado ---------------------------------------------------
-    // Corre "<exe> --tarea <nombre> <estado.txt>" y va leyendo el estado. Devuelve true si termino OK.
-    bool Tarea(Paso paso, string nombre, int timeoutSeg, EstadoPaso siFalla)
+    // Corre "<exe> --tarea <nombre> <estado.txt> [extra]" y va leyendo el estado. Devuelve true si termino OK.
+    // esActual = false: una tarea en paralelo (v5.72, «Tu equipo») no ocupa tareaActual, que es la que «Omitir» corta (las descargas).
+    bool Tarea(Paso paso, string nombre, int timeoutSeg, EstadoPaso siFalla, string extra = null, bool esActual = true)
     {
         string exe = ExeInstalado;
-        if (Sitio.EsPrueba && (nombre == "fuentes" || nombre == "modelo" || nombre == "motor_ia" || nombre == "motor_compat"))      // pruebas del instalador: nada que toque el sistema real
+        if (Sitio.EsPrueba && (nombre == "fuentes" || nombre == "modelo" || nombre == "motor_ia" || nombre == "motor_compat" || nombre == "equipo"))      // pruebas del instalador: nada que toque el sistema real
         {
             Terminar(paso, EstadoPaso.Omitido, "Omitido en la prueba");
             return true;
@@ -1186,13 +1210,13 @@ class Instalacion
         string final = null, finalTexto = "";
         try
         {
-            ProcessStartInfo psi = new ProcessStartInfo(exe, "--tarea " + nombre + " \"" + estado + "\"");
+            ProcessStartInfo psi = new ProcessStartInfo(exe, "--tarea " + nombre + " \"" + estado + "\"" + (extra != null ? " " + extra : ""));
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
             psi.WorkingDirectory = op.Dir;
             if (Sitio.EsPrueba) EntornoDePrueba(psi);
             Process p = Process.Start(psi);
-            tareaActual = p;
+            if (esActual) tareaActual = p;
             long leido = 0;
             DateTime inicio = DateTime.Now;
             bool termino = false;
@@ -1209,7 +1233,7 @@ class Instalacion
                 }
             }
             leido = LeerEstado(estado, leido, paso, ref final, ref finalTexto);
-            tareaActual = null;
+            if (esActual) tareaActual = null;
             if (final == null)
             {
                 final = "ERROR";
@@ -1223,7 +1247,7 @@ class Instalacion
         }
         finally
         {
-            tareaActual = null;
+            if (esActual) tareaActual = null;
             try { File.Delete(estado); } catch { }
         }
         if (final == "OK") { Terminar(paso, EstadoPaso.Hecho, finalTexto); return true; }

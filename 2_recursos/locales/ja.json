@@ -4277,6 +4277,16 @@
     "La IA de texto ya no se corta en equipos con poca memoria de video (por ejemplo, 8 GB con Resolve abierto): sigue trabajando aunque vaya más lenta, y si de verdad falla la ortografía se corrige con el diccionario sin llenar el Registro de errores.": "ビデオメモリが少ないパソコン（Resolve を開いた 8 GB など）でもテキスト AI が途中で止まらなくなりました。遅くても処理を続け、本当に失敗した場合は辞書でスペルを直し、ログをエラーで埋めません。",
     "Si te sale un error, CineCaptions le envía el informe a soporte en segundo plano (sin tus videos ni la carpeta de tu usuario), para arreglarlo antes de que tengas que escribirnos.": "エラーが起きると、CineCaptions がレポートをバックグラウンドでサポートに送ります（動画やユーザーフォルダーは送りません）。ご連絡いただく前に修正するためです。",
     "Siete idiomas nuevos para la interfaz: japonés, coreano, chino, ruso, neerlandés, turco y polaco (13 en total).": "インターフェースに 7 つの言語を追加：日本語、韓国語、中国語、ロシア語、オランダ語、トルコ語、ポーランド語（全 13 言語）。",
-    "Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.": "インターフェース言語を一新：設定 › インターフェースで、各言語の国旗・あいさつ・名前が並ぶカードから選べます。選んだ旗がはためきます。"
+    "Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.": "インターフェース言語を一新：設定 › インターフェースで、各言語の国旗・あいさつ・名前が並ぶカードから選べます。選んだ旗がはためきます。",
+    "Hace falta actualizar a la {v}": "{v} へのアップデートが必要です",
+    "La {a} ya no se puede usar: para seguir hace falta la {m} o una más nueva. La actualización tarda un par de minutos y no toca tus proyectos ni tus ajustes.": "{a} はもう使用できません。続けるには {m} 以降が必要です。アップデートは数分で終わり、プロジェクトや設定は変更されません。",
+    "Cerrar CineCaptions": "CineCaptions を閉じる",
+    "Actualización obligatoria": "必須アップデート",
+    "El instalador revisa tu equipo (procesador, memoria, tarjeta gráfica y su driver) y lo pone al día solo, sin abrir ventanas: instala Microsoft Visual C++ si falta y, con DaVinci Resolve cerrado, el driver más nuevo de tu tarjeta desde Windows Update. Windows pide permiso una sola vez.": "インストーラーがパソコン（プロセッサー、メモリー、グラフィックカードとそのドライバー）を確認し、ウィンドウを開かずに自動で最新の状態にします。Microsoft Visual C++ がなければインストールし、DaVinci Resolve を閉じていれば、Windows Update からカードの最新ドライバーを入れます。Windows の許可確認は 1 回だけです。",
+    "En los portátiles con dos tarjetas gráficas, CineCaptions y su IA usan la de alto rendimiento.": "グラフィックカードが 2 枚あるノートパソコンでは、CineCaptions と AI が高性能な方を使います。",
+    "Si a la voz o a la IA les falta alguna librería, se ponen al día solas al abrir CineCaptions, sin reinstalar.": "音声や AI にライブラリーが足りない場合は、CineCaptions を開いたときに再インストールなしで自動更新されます。",
+    "Lo que le falte a tu equipo (un driver antiguo, poca memoria o poco disco) aparece en el Registro.": "パソコンに足りないもの（古いドライバー、メモリーやディスクの不足）はログに表示されます。",
+    "Para darte soporte, CineCaptions envía una ficha técnica de tu equipo y, con cada error, una captura de la pantalla (sin tus videos, nombres ni archivos).": "サポートのため、CineCaptions はパソコンの技術情報と、エラーごとに画面のスクリーンショットを送信します（動画、名前、ファイルは含みません）。",
+    "Cuando una versión deja de poder usarse, CineCaptions pide actualizar antes de seguir.": "使えなくなったバージョンでは、CineCaptions は続ける前にアップデートを求めます。"
   }
 }

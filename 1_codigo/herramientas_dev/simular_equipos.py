@@ -627,17 +627,37 @@ import telemetria_errores as tel  # noqa: E402
 
 
 class _ServidorErrores:
+    """Como errores.php: formulario normal o (v5.72, con capturas) multipart. `archivos` = [{nombre: bytes}] por petición.
+    `codigo_con_archivos`: el código que da si la petición trae capturas (413 = «demasiado grande»)."""
     def __init__(self):
         self.peticiones = []
+        self.archivos = []
         self.codigo = 200
+        self.codigo_con_archivos = None
         dueno = self
 
         class H(http.server.BaseHTTPRequestHandler):
             def do_POST(self):
-                cuerpo = self.rfile.read(int(self.headers.get('Content-Length') or 0)).decode('utf-8')
-                campos = {k: v[0] for k, v in urllib.parse.parse_qs(cuerpo).items()}
+                crudo = self.rfile.read(int(self.headers.get('Content-Length') or 0))
+                tipo = self.headers.get('Content-Type') or ''
+                campos, archivos = {}, {}
+                if tipo.startswith('multipart/form-data'):
+                    import email.parser
+                    import email.policy
+                    msg = email.parser.BytesParser(policy=email.policy.HTTP).parsebytes(
+                        b'Content-Type: ' + tipo.encode('ascii') + b'\r\n\r\n' + crudo)
+                    for parte in msg.iter_parts():
+                        nombre = parte.get_param('name', header='content-disposition')
+                        if parte.get_filename():
+                            archivos[nombre] = parte.get_payload(decode=True)
+                        else:
+                            campos[nombre] = parte.get_payload(decode=True).decode('utf-8')
+                else:
+                    campos = {k: v[0] for k, v in urllib.parse.parse_qs(crudo.decode('utf-8')).items()}
                 dueno.peticiones.append(campos)
-                self.send_response(dueno.codigo)
+                dueno.archivos.append(archivos)
+                codigo = dueno.codigo_con_archivos if archivos and dueno.codigo_con_archivos else dueno.codigo
+                self.send_response(codigo)
                 if dueno.codigo in (429, 503):
                     self.send_header('Retry-After', '3600')
                 self.send_header('Content-Type', 'application/json')
@@ -663,15 +683,17 @@ def telemetria(con_licencia=True, codigo=200):
     srv.codigo = codigo
     carpeta = tempfile.mkdtemp(prefix='cc_tel_')
     lic = {'clave': 'CC-AAAA-BBBB-CCCC-DDDD', 'plataforma': 'cinecaptions'} if con_licencia else None
-    tel._PENDIENTES.clear(), tel._COLA.clear(), tel._CONTADAS.clear()
-    tel._ESTADO.update(enviados=0, pausa_hasta=0.0, ultimo_envio={})
+    tel._PENDIENTES.clear(), tel._COLA.clear(), tel._CONTADAS.clear(), tel._CAPTURADAS.clear(), tel._CAPTURAS_MEM.clear()
+    tel._ESTADO.update(enviados=0, pausa_hasta=0.0, ultimo_envio={}, capturas=0)
+    # (v5.72: las capturas, también en la carpeta temporal: nunca en ~/DaVinciSubtitles/errores_capturas del usuario)
     with parches((tel, 'URL', srv.url), (tel, 'ARCHIVO', pathlib.Path(carpeta) / 'errores_por_enviar.json'), (tel, 'ESPERA_LOTE_S', 0),
+                 (tel, 'CAPTURAS', pathlib.Path(carpeta) / 'errores_capturas'),
                  (licencia, 'local', lambda: lic), (licencia, 'id_equipo', lambda: '3F2A-91BC-04DE-77A1')):
         try:
             yield srv
         finally:
             srv.cerrar()
-            tel._PENDIENTES.clear(), tel._COLA.clear(), tel._CONTADAS.clear()
+            tel._PENDIENTES.clear(), tel._COLA.clear(), tel._CONTADAS.clear(), tel._CAPTURADAS.clear(), tel._CAPTURAS_MEM.clear()
             __import__('shutil').rmtree(carpeta, ignore_errors=True)
 
 
@@ -748,7 +770,7 @@ def tel_al_cerrar_lo_de_la_cola_queda_en_disco():
 def tel_servidor_guarda_solo_una_parte():
     with telemetria() as srv:
         viejo = tel._post
-        tel._post = lambda campos: (srv.peticiones.append(campos), (200, None, {'ok': True, 'guardados': 1}))[1]
+        tel._post = lambda campos, archivos=None: (srv.peticiones.append(campos), (200, None, {'ok': True, 'guardados': 1}))[1]
         try:
             _ciclo(_error('uno'), _error('dos', 'otro'), _error('tres', 'otro más'))
         finally:
@@ -875,6 +897,134 @@ def tel_hilo_de_punta_a_punta():
         esperar(tel.esperar_envios(20) and len(srv.errores()) == 1, f'{len(srv.errores())} errores recibidos')
         tel.detener()                                  # (el hilo no debe seguir vivo en los casos siguientes)
     __import__('shutil').rmtree(logs, ignore_errors=True)
+
+
+def _imagen_prueba(ancho=3440, alto=1440):
+    from PySide6.QtGui import QColor, QImage, QPainter
+    img = QImage(ancho, alto, QImage.Format.Format_RGB32)
+    img.fill(QColor('#13121a'))
+    p = QPainter(img)
+    p.fillRect(100, 100, ancho // 3, alto // 3, QColor('#e0246e'))
+    p.end()
+    return img
+
+
+def _con_captura(e):
+    """Lo que hace el capturador del hilo de la interfaz (sin pantalla de verdad): la imagen en memoria para ese error."""
+    tel._al_anotar(e)
+    tel._procesar_cola()
+    tel._CAPTURAS_MEM[tel.firma(e.origen, e.mensaje)] = (_imagen_prueba(), {'tipo': 'pantalla', 'ancho': 3440, 'alto': 1440})
+    tel._guardar_capturas()
+
+
+@caso('Telemetría de errores')
+def tel_captura_va_con_su_error():
+    """v5.72: la captura (JPEG reducido a 1920) viaja en multipart como «captura_<firma>», con equipo_datos, y se borra al llegar."""
+    with telemetria() as srv:
+        e = _error()
+        _con_captura(e)
+        f = tel.firma(e.origen, e.mensaje)
+        esperar(tel._archivo_captura(f).exists() and tel._PENDIENTES[f].get('captura'), 'la captura debía quedar en disco con su error')
+        tel._enviar()
+        esperar(len(srv.peticiones) == 1, f'{len(srv.peticiones)} peticiones')
+        arch = srv.archivos[0].get('captura_' + f)
+        esperar(arch and arch[:3] == b'\xff\xd8\xff' and len(arch) <= tel.CAPTURA_MAX_BYTES, 'debía llegar un JPEG')
+        from PySide6.QtGui import QImage
+        img = QImage.fromData(arch)
+        esperar(img.width() == tel.CAPTURA_ANCHO, f'ancho {img.width()} (debía reducirse a {tel.CAPTURA_ANCHO})')
+        esperar(srv.errores()[0].get('captura') == 'pantalla', str(srv.errores()[0])[:200])
+        datos = srv.peticiones[0].get('equipo_datos') or ''
+        esperar('RAM' in datos and 'CPU' in datos and len(datos) <= 300, f'equipo_datos: {datos!r}')
+        esperar(not tel._archivo_captura(f).exists() and not tel._PENDIENTES, 'enviada: la captura debía borrarse')
+
+
+@caso('Telemetría de errores')
+def tel_captura_grande_reintenta_sin_ella():
+    """v5.72: si el servidor dice 413 (o 400: PHP tiró el formulario por post_max_size), el error sale sin captura."""
+    with telemetria() as srv:
+        srv.codigo_con_archivos = 413
+        e = _error()
+        _con_captura(e)
+        tel._enviar()
+        esperar(len(srv.peticiones) == 1 and len(tel._PENDIENTES) == 1, 'con 413 el error debía quedarse')
+        esperar(not any(d.get('captura') for d in tel._PENDIENTES.values()) and not list(tel.CAPTURAS.glob('*.jpg')), 'sin su captura')
+        tel._ESTADO['pausa_hasta'] = 0
+        tel._enviar()
+        esperar(len(srv.peticiones) == 2 and not srv.archivos[1] and not tel._PENDIENTES, 'la segunda vez, sin captura y guardado')
+
+
+@caso('Telemetría de errores')
+def tel_capturas_una_por_error_y_tope():
+    """v5.72: una captura por error DISTINTO y CAPTURAS_SESION por sesión; nada de capturas sin capturador (sin Qt)."""
+    pedidas = []
+
+    class Falso:
+        class pedir:
+            emit = staticmethod(pedidas.append)
+    with telemetria(), parches((tel, '_ESTADO', dict(tel._ESTADO, capturador=Falso(), capturas=0))):
+        for i in range(3):
+            tel._al_anotar(_error('el mismo fallo'))
+        esperar(len(pedidas) == 1, f'el mismo error pidió {len(pedidas)} capturas')
+        for i in range(20):
+            tel._al_anotar(_error(f'fallo distinto', origen=f'origen {chr(65 + i)}'))
+        esperar(len(pedidas) == tel.CAPTURAS_SESION, f'{len(pedidas)} capturas (tope {tel.CAPTURAS_SESION})')
+    with telemetria(), parches((tel, '_ESTADO', dict(tel._ESTADO, capturador=Falso(), capturas=0))):
+        pedidas.clear()
+        tel._al_anotar(_error('de la sesión anterior'), capturar=False)
+        esperar(not pedidas, 'los errores de arranque no llevan captura')
+
+
+@caso('Telemetría de errores')
+def tel_capturas_sueltas_se_borran_al_abrir():
+    with telemetria():
+        tel.CAPTURAS.mkdir(parents=True, exist_ok=True)
+        suelta = tel.CAPTURAS / ('a' * 40 + '.jpg')
+        suelta.write_bytes(b'x')
+        tel._cargar()
+        esperar(not suelta.exists(), 'una captura sin su error pendiente debía borrarse')
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# G2. Actualización obligatoria (v5.72): force_update + version_minima del version.json firmado
+# ---------------------------------------------------------------------------------------------------------------------------------------
+import actualizaciones  # noqa: E402
+
+
+def _manifiesto(version='5.72.0', **raiz):
+    archivos = {actualizaciones.clave_plataforma(): {'url': 'https://x/Instalar.exe', 'sha256': '0' * 64, 'tam': 1}}
+    return dict({'estable': {'version': version, 'notas': 'x', 'fecha': '2026-11-05', 'archivos': archivos}}, **raiz)
+
+
+@caso('Actualización obligatoria')
+def obligatoria_solo_por_debajo_de_la_minima():
+    with parches((actualizaciones, 'firma_valida', lambda d: True)):
+        r = actualizaciones._interpretar(_manifiesto(force_update=True, version_minima='5.72'), '5.71')
+        esperar(r['estado'] == 'nueva' and r.get('obligatoria') and r.get('minima') == '5.72', str(r))
+        r = actualizaciones._interpretar(_manifiesto('5.73.0', force_update=True, version_minima='5.72'), '5.72')
+        esperar(r['estado'] == 'nueva' and not r.get('obligatoria'), f'5.72 >= mínima: aviso normal, no obligatoria ({r})')
+        r = actualizaciones._interpretar(_manifiesto(force_update=False, version_minima='5.72'), '5.71')
+        esperar(not r.get('obligatoria'), 'force_update false: no obligatoria')
+        r = actualizaciones._interpretar(_manifiesto(version_minima='5.72'), '5.71')
+        esperar(not r.get('obligatoria'), 'sin force_update: no obligatoria')
+        r = actualizaciones._interpretar(_manifiesto(force_update='true', version_minima='5.72'), '5.71')
+        esperar(not r.get('obligatoria'), 'force_update tiene que ser true de verdad (no un texto)')
+
+
+@caso('Actualización obligatoria')
+def obligatoria_sin_instalador_no_bloquea():
+    """Sin instalador para ESTA plataforma el programa no podría actualizarse: no se bloquea para nada."""
+    with parches((actualizaciones, 'firma_valida', lambda d: True)):
+        m = _manifiesto(force_update=True, version_minima='5.72')
+        m['estable']['archivos'] = {}
+        r = actualizaciones._interpretar(m, '5.71')
+        esperar(r['estado'] == 'nueva' and not r.get('obligatoria'), str(r))
+
+
+@caso('Actualización obligatoria')
+def obligatoria_sin_firma_no_vale():
+    """force_update va dentro de lo firmado: un manifiesto sin firma válida no obliga (ni ofrece) nada."""
+    r = actualizaciones._interpretar(_manifiesto(force_update=True, version_minima='9.0'), '5.71')
+    esperar(r['estado'] == 'error' and not r.get('obligatoria'), str(r))
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------

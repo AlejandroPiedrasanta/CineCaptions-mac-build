@@ -167,18 +167,38 @@ def _faltan_requisitos():
     return [f'{n}=={v}' for n, v in _requisitos_fijados() if _dist_instalada(n, v) is None]
 
 
+_LOCK_REQUISITOS = threading.Lock()
+
+
 def completar_requisitos(aviso=None):
     """v5.5.8: un motor YA instalado se pone al dia con requisitos_motor_qwen.txt: SOLO las librerias que no estan en su
     version fijada (--no-deps; ni torch ni modelos: segundos). Lo llama la tarea motor_ia del instalador, con el programa
-    y sus motores ya cerrados (nada tiene abiertos sus archivos). Devuelve lo instalado ([] si ya estaba al dia)."""
+    y sus motores ya cerrados (nada tiene abiertos sus archivos). Devuelve lo instalado ([] si ya estaba al dia).
+    v5.72: también al abrir el programa (vigilancia.poner_motores_al_dia, antes de cualquier GO): mientras dura, los arranques del
+    motor esperan (esperar_puesta_al_dia) para que pip no cambie archivos que un servidor recién lanzado está cargando."""
     if sys.platform != 'win32' or not python_motor().exists() or not _python_al_dia():
         return []
     if not _torch_valido(_dist_instalada('torch')):
         return []                                                          # otro torch: eso lo rehace instalar() entero
-    faltan = _faltan_requisitos()
-    if faltan:
-        _pip(['--no-deps', *faltan], aviso)
+    with _LOCK_REQUISITOS:
+        faltan = _faltan_requisitos()
+        if faltan:
+            _pip(['--no-deps', *faltan], aviso)
     return faltan
+
+
+def poniendo_al_dia():
+    """¿Está pip poniendo al día las librerías del motor ahora mismo?"""
+    return _LOCK_REQUISITOS.locked()
+
+
+def esperar_puesta_al_dia(timeout_s=600):
+    """v5.72: antes de lanzar un proceso del motor (voz o IA de texto) espera a que termine completar_requisitos. En el hilo de la
+    interfaz NO espera (nunca se bloquea la ventana): quien llama desde ahí mira poniendo_al_dia() y no precarga."""
+    if not _LOCK_REQUISITOS.locked() or threading.current_thread() is threading.main_thread():
+        return
+    if _LOCK_REQUISITOS.acquire(timeout=timeout_s):
+        _LOCK_REQUISITOS.release()
 
 
 def _cache_hf():
@@ -538,6 +558,7 @@ class _ServidorVoz:
         entorno.pop('PYTHONPATH', None)
         entorno.pop('PYTHONHOME', None)
         self.modelo = modelo
+        esperar_puesta_al_dia()
         self.p = subprocess.Popen([str(python_motor()), '-s', '-u', str(script_motor()), '--servidor',
                                    '--inactivo', str(INACTIVO_VOZ_S)] + (['--modelo', modelo] if modelo else []),
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -618,6 +639,8 @@ def precargar():
     try:
         if _leer_preferencia() != 'qwen3' or not instalado():
             return False
+        if poniendo_al_dia():
+            return False                       # v5.72: sus librerías se están poniendo al día; transcribir() lo lanza al terminar
         with _LOCK_VOZ:
             s = _SRV_VOZ['s']
             if s is not None and s.vivo():
@@ -672,6 +695,7 @@ def _lanzar_script(script, argumentos, on_linea, timeout=None, sin_senal=None):
     entorno.pop('PYTHONHOME', None)
     # v5.5.8: -s = sin la carpeta de paquetes del USUARIO (%APPDATA%\Python\Python314): con el Python 3.14 del motor, lo que otro
     # programa dejara ahí (otro torchaudio, numpy…) se mezclaba con el motor, y pip daba por instalado lo que solo estaba ahí
+    esperar_puesta_al_dia()
     p = subprocess.Popen([str(python_motor()), '-s', '-u', str(script), *argumentos],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=entorno,
                          creationflags=SIN_VENTANA, cwd=str(carpeta()))

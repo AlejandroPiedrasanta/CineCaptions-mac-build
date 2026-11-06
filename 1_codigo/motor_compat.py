@@ -226,8 +226,18 @@ def _appdata_de_claude():
     return str(carpeta()).lower().startswith(str(Path.home() / 'AppData' / 'Local').lower())
 
 
+_LOCK_INSTALAR = threading.RLock()
+
+
 def instalar(progreso=None, aviso=None):
-    """Prepara el último Python 3.14 y sus ruedas fijadas. No toca el motor Qwen."""
+    """Prepara el último Python 3.14 y sus ruedas fijadas. No toca el motor Qwen.
+    v5.72: de uno en uno (al abrir el programa lo pone al día vigilancia.poner_motores_al_dia en segundo plano, y _servidor() lo llama si
+    hace falta): el segundo espera y, como ya no queda nada pendiente, termina en un momento."""
+    with _LOCK_INSTALAR:
+        return _instalar(progreso, aviso)
+
+
+def _instalar(progreso=None, aviso=None):
     def pr(f, texto):
         if progreso:
             progreso(max(0.0, min(1.0, f)), texto)

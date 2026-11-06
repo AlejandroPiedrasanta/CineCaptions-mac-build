@@ -166,6 +166,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         la «curva de energía» del habla: cuánta intensidad tiene cada tramo del video, calculada desde las palabras.
     ensure_lang_pack.py
         instala los paquetes de traducción sin internet (Argos Translate) que falten.
+    equipo_al_dia.py
+        pone el equipo al día para CineCaptions (lo llama la tarea «equipo» del instalador).
     escena_go.py
         la escena de Inicio: esfera de partículas 3D, absorción, cometas de pasos y explosión final.
     estilo_desde_imagen.py
@@ -178,6 +180,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         v5.20: los ESTILOS y COLORES de cada función de la Edición PRO (página Efectos › Edición PRO), en un solo sitio.
     estilos_slider.py
         el carrusel horizontal de «Pack de estilos»: tarjetas verticales sobre fotos de video con los captions de Resolve encima.
+    ficha_equipo.py
+        la ficha técnica del equipo (sistema, CPU, RAM, GPU con su driver, pantallas, discos, Resolve, motores).
     firma_ed25519.py
         firma Ed25519 (RFC 8032) en Python puro: el programa comprueba que el version.json lo publicó Cinema Productions.
     fluidez_resolve.py

@@ -4277,6 +4277,16 @@
     "La IA de texto ya no se corta en equipos con poca memoria de video (por ejemplo, 8 GB con Resolve abierto): sigue trabajando aunque vaya más lenta, y si de verdad falla la ortografía se corrige con el diccionario sin llenar el Registro de errores.": "비디오 메모리가 적은 컴퓨터(예: Resolve를 연 상태의 8GB)에서도 텍스트 AI가 더 이상 중간에 끊기지 않습니다. 느려도 계속 작업하며, 정말 실패하면 사전으로 맞춤법을 고치고 로그를 오류로 채우지 않습니다.",
     "Si te sale un error, CineCaptions le envía el informe a soporte en segundo plano (sin tus videos ni la carpeta de tu usuario), para arreglarlo antes de que tengas que escribirnos.": "오류가 나면 CineCaptions가 보고서를 백그라운드에서 지원팀에 보냅니다(동영상과 사용자 폴더는 보내지 않습니다). 연락하시기 전에 고치기 위해서입니다.",
     "Siete idiomas nuevos para la interfaz: japonés, coreano, chino, ruso, neerlandés, turco y polaco (13 en total).": "인터페이스 언어 7개 추가: 일본어, 한국어, 중국어, 러시아어, 네덜란드어, 터키어, 폴란드어(총 13개).",
-    "Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.": "인터페이스 언어 화면 개편: 설정 › 인터페이스에서 각 언어의 국기, 인사말, 이름이 있는 카드 패널에서 고릅니다. 고른 국기가 펄럭입니다."
+    "Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.": "인터페이스 언어 화면 개편: 설정 › 인터페이스에서 각 언어의 국기, 인사말, 이름이 있는 카드 패널에서 고릅니다. 고른 국기가 펄럭입니다.",
+    "Hace falta actualizar a la {v}": "{v}(으)로 업데이트해야 합니다",
+    "La {a} ya no se puede usar: para seguir hace falta la {m} o una más nueva. La actualización tarda un par de minutos y no toca tus proyectos ni tus ajustes.": "{a}은(는) 더 이상 사용할 수 없습니다. 계속하려면 {m} 이상이 필요합니다. 업데이트는 몇 분이면 끝나며 프로젝트와 설정은 그대로 유지됩니다.",
+    "Cerrar CineCaptions": "CineCaptions 닫기",
+    "Actualización obligatoria": "필수 업데이트",
+    "El instalador revisa tu equipo (procesador, memoria, tarjeta gráfica y su driver) y lo pone al día solo, sin abrir ventanas: instala Microsoft Visual C++ si falta y, con DaVinci Resolve cerrado, el driver más nuevo de tu tarjeta desde Windows Update. Windows pide permiso una sola vez.": "설치 프로그램이 컴퓨터(프로세서, 메모리, 그래픽 카드와 드라이버)를 확인하고 창을 열지 않고 알아서 최신 상태로 만듭니다. Microsoft Visual C++가 없으면 설치하고, DaVinci Resolve가 닫혀 있으면 Windows Update에서 그래픽 카드의 최신 드라이버를 설치합니다. Windows는 권한을 한 번만 묻습니다.",
+    "En los portátiles con dos tarjetas gráficas, CineCaptions y su IA usan la de alto rendimiento.": "그래픽 카드가 두 개인 노트북에서는 CineCaptions와 AI가 고성능 카드를 사용합니다.",
+    "Si a la voz o a la IA les falta alguna librería, se ponen al día solas al abrir CineCaptions, sin reinstalar.": "음성이나 AI에 라이브러리가 빠져 있으면 CineCaptions를 열 때 다시 설치하지 않고 알아서 업데이트됩니다.",
+    "Lo que le falte a tu equipo (un driver antiguo, poca memoria o poco disco) aparece en el Registro.": "컴퓨터에 부족한 것(오래된 드라이버, 부족한 메모리나 디스크)은 기록에 표시됩니다.",
+    "Para darte soporte, CineCaptions envía una ficha técnica de tu equipo y, con cada error, una captura de la pantalla (sin tus videos, nombres ni archivos).": "지원을 위해 CineCaptions는 컴퓨터의 기술 정보와 오류마다 화면 캡처를 보냅니다(동영상, 이름, 파일은 포함하지 않음).",
+    "Cuando una versión deja de poder usarse, CineCaptions pide actualizar antes de seguir.": "더 이상 사용할 수 없는 버전이면 CineCaptions가 계속하기 전에 업데이트를 요청합니다."
   }
 }
