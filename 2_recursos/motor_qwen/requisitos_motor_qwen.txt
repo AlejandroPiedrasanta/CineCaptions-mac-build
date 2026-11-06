@@ -11,6 +11,7 @@
 # mpmath 1.4.1 aunque sympy 1.14.0 pide <1.4 (pedido: «todo sin excepciones»; probado con el motor de voz y la IA de texto).
 # 2026-10-28 (v5.53): hf-xet 1.7.1 y platformdirs 4.14.0; torch 2.15.0 (CUDA 13.2) con driver ≥ 595 en instalaciones nuevas y «Reparar» (los motores con 2.14.1 siguen valiendo).
 # 2026-11-03 (v5.67, pedido: «busca actualizaciones en todas las librerías y actualiza todo»): transformers 5.22.1, huggingface_hub 2.4.0, hf-xet 1.8.0, nagisa 0.3.1, Cython 3.3.1, platformdirs 4.14.3, filelock 4.2.7, anyio 4.16.0 (probadas con Qwen3-ASR + alineador y la IA de texto: mismo resultado).
+# 2026-11-05 (pedido: «todas las librerías actualizadas, sin excepción»): filelock 4.2.9, platformdirs 4.14.5, threadpoolctl 3.8.0 (parches; el resto ya era lo último).
 accelerate==1.15.0
 annotated-doc==0.0.5
 anyio==4.16.0
@@ -23,7 +24,7 @@ colorama==0.4.6
 Cython==3.3.1
 decorator==5.3.1
 dyNET38==2.2
-filelock==4.2.7
+filelock==4.2.9
 fsspec==2026.9.0
 h11==0.16.0
 hf-xet==1.8.0
@@ -47,7 +48,7 @@ networkx==3.7
 numba==0.68.1
 numpy==2.5.4
 packaging==26.3
-platformdirs==4.14.3
+platformdirs==4.14.5
 pooch==1.9.0
 psutil==7.2.2
 pycparser==3.12
@@ -66,7 +67,7 @@ soundfile==0.14.0
 soxr==1.1.0
 soynlp==0.0.493
 sympy==1.14.0
-threadpoolctl==3.7.0
+threadpoolctl==3.8.0
 tokenizers==0.23.3
 tqdm==4.70.1
 transformers==5.22.1

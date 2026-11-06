@@ -69,9 +69,10 @@ fi
 "$VPY" -m pip install --progress-bar off -q -r "$RAIZ/3_compilar/requirements.txt"
 # v5.58: el motor de voz (Whisper, Argos y ONNX) va DENTRO del programa en el Mac (motor_compat.EN_PROCESO; en Windows corre en un Python
 # 3.14 aparte): sus librerias fijadas, las de 2_recursos/motor_compat/requirements.txt, con onnxruntime en vez de onnxruntime-directml (solo
-# Windows). La 1.24.4 de Windows solo existe para Apple Silicon; para Intel la ultima es 1.23.2. Sin dependencias, como en Windows (onnxruntime
+# Windows). Apple Silicon: la ultima onnxruntime (2026-11-05: 1.31.1, rueda cp314 macosx_14_0_arm64; Windows sigue en la 1.24.4, la ultima
+# con DirectML); para Intel la ultima es 1.23.2. Sin dependencias, como en Windows (onnxruntime
 # arrastraria sympy y argostranslate stanza+spacy+torch). Desde la 5.34 el Mac salia SIN voz: GO fallaba en «Transcribiendo».
-ORT=1.24.4
+ORT=1.31.1
 if [ "$ARQ" = x86_64 ]; then ORT=1.23.2; fi
 REQM="$OBRA/requirements_motor_mac.txt"
 sed "s/^onnxruntime-directml==.*/onnxruntime==$ORT/" "$RECURSOS/motor_compat/requirements.txt" > "$REQM"

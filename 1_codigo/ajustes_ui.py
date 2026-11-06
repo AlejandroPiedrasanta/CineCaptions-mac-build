@@ -495,6 +495,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.71', [
+        'Siete idiomas nuevos para la interfaz: japonés, coreano, chino, ruso, neerlandés, turco y polaco (13 en total).',
+        'Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.',
+        'DaVinci Resolve instalado en otro disco o en otra carpeta ya se encuentra: antes GO decía «No hay DaVinci Resolve en este equipo».',
+        'La IA de texto ya no se corta en equipos con poca memoria de video (por ejemplo, 8 GB con Resolve abierto): sigue trabajando aunque vaya más lenta, y si de verdad falla la ortografía se corrige con el diccionario sin llenar el Registro de errores.',
+        'Si te sale un error, CineCaptions le envía el informe a soporte en segundo plano (sin tus videos ni la carpeta de tu usuario), para arreglarlo antes de que tengas que escribirnos.',
+    ]),
     ('5.70', [
         'Ajustes renovado: cada pestaña y cada ajuste con su ícono, y sin el título repetido en cada página (el menú ya dice dónde estás): lo importante empieza arriba.',
         'Ayuda: tarjeta de soporte con «Escribir por WhatsApp» (copia el informe de tu equipo y abre el chat con el mensaje ya escrito) y «Visitar cinecaptions.shop».',
@@ -2601,15 +2608,34 @@ class VentanaAjustes(_Panel):
         correr_en_hilo(self.app, trabajo, lambda _r, _e: self._comprobar_conexion())
 
     # -- Interfaz -------------------------------------------------------------
+    def _abrir_idiomas(self):
+        """v5.71: el panel de tarjetas del idioma (idioma_ui.HojaIdioma) sobre la ventana; «Usar …» lo deja como cambio pendiente de Ajustes."""
+        import i18n
+        import idioma_ui
+        capa = {}
+
+        def usar(codigo):
+            self.boton_idioma.poner(codigo)
+            self._cambio('idioma_ui', i18n.IDIOMAS_UI.get(codigo, 'Español'))
+            capa['c'].cerrar()
+
+        hoja = idioma_ui.HojaIdioma(self.boton_idioma.codigo(), i18n.idioma(), usar, lambda: capa['c'].cerrar())
+
+        def posicion(w, h, _panel):
+            ancho, alto = min(760, w - 40), min(770, h - 40)
+            return QRect((w - ancho) // 2, (h - alto) // 2, ancho, alto)
+        capa['c'] = CapaModal(self.window(), hoja, posicion=posicion)
+
     def _pag_interfaz(self, capa):
         self._cabeza_pagina(capa, tr('Preferencias de interfaz'), tr('Interfaz'),
                             tr('Controla cómo se presenta el espacio de trabajo de CineCaptions al abrirse.'), icono='paint-brush')
         import i18n
-        idioma_var = StringVar(self._idioma_inicial)
-        combo_idioma = Combo(list(i18n.IDIOMAS_UI.values()), var=idioma_var, alto=52, tam=16,
-                             comando=lambda v: self._cambio('idioma_ui', v))
-        f_lat = _Fila(tr('Idioma de la interfaz'), tr('Cambia el idioma de TODA la interfaz. Se aplica al reiniciar CineCaptions.'), combo_idioma, 380,
-                      icono='translate')
+        import idioma_ui
+        # v5.71 (propuesta B): bandera + nombre; abre el panel de tarjetas con los 13 idiomas
+        self.boton_idioma = idioma_ui.BotonIdioma(i18n.idioma())
+        self.boton_idioma.clicked.connect(lambda _=False: self._abrir_idiomas())
+        f_lat = _Fila(tr('Idioma de la interfaz'), tr('Cambia el idioma de TODA la interfaz. Se aplica al reiniciar CineCaptions.'),
+                      self.boton_idioma, 380, icono='translate')
         tam_var = StringVar(f"{self._borrador['tamano']}%")
         f_tam = _Fila(tr('Tamaño de interfaz'), tr('Agranda o achica todo el programa. Se aplica al reiniciar.'),
                       Combo([f'{t}%' for t in tema.TAMANOS], var=tam_var, alto=52, tam=16,

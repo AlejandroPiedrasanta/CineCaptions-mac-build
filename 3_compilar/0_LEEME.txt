@@ -19,7 +19,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         astro_runas.png
         desktop.ini
     aplicar_traducciones.py
-        mete los textos nuevos de traducciones_extra.json en los catálogos de 2_recursos/locales (en, pt, fr, de, it).
+        mete los textos nuevos de traducciones_extra.json en los catálogos de 2_recursos/locales (los 12 idiomas).
     app.manifest
         manifiesto del instalador (sin permisos de administrador)
     auditar_traducciones.py

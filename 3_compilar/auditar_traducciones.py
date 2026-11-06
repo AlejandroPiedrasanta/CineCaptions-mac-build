@@ -13,7 +13,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding='utf-8')
 RAIZ = Path(__file__).resolve().parent.parent
 faltan = {}
-for idioma in ('en', 'pt', 'fr', 'de', 'it'):
+for idioma in sorted(p.stem for p in (RAIZ / '2_recursos' / 'locales').glob('*.json')):     # v5.71: todos los catálogos
     textos = json.loads((RAIZ / '2_recursos' / 'locales' / f'{idioma}.json').read_text(encoding='utf-8'))['textos']
     faltan[idioma] = set()
     for f in sorted((RAIZ / '1_codigo').glob('*.py')):

@@ -41,6 +41,14 @@ IDIOMAS_UI = {
     'fr': 'Français',
     'de': 'Deutsch',
     'it': 'Italiano',
+    # v5.71: siete más (catálogos traducidos con Gemma 4 E4B desde el español y el inglés; lo que falte sale en español)
+    'ja': '日本語',
+    'ko': '한국어',
+    'zh': '中文',
+    'ru': 'Русский',
+    'nl': 'Nederlands',
+    'tr': 'Türkçe',
+    'pl': 'Polski',
 }
 
 POR_DEFECTO = 'es'
@@ -95,6 +103,7 @@ def idioma_del_sistema():
             primario = langid & 1023
             return {
                 10: 'es', 9: 'en', 22: 'pt', 12: 'fr', 7: 'de', 16: 'it',
+                17: 'ja', 18: 'ko', 4: 'zh', 25: 'ru', 19: 'nl', 31: 'tr', 21: 'pl',
             }.get(primario)
         if sys.platform == 'darwin':
             salida = subprocess.run(

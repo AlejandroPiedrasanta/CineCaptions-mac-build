@@ -17,7 +17,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         movil.json
         movil_fondo.jpg
         movil_marco.png
-    edicion_pro\   (4472 archivos)
+    edicion_pro\   (4474 archivos)
     efectos\   (161 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
@@ -89,14 +89,18 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         preparar_sonidos.py
             prepara los sonidos que el usuario aportó para los estilos (riser de gancho, golpecito del iPhone, obturadores de transición).
     guia_estilo\   (411 archivos)
-    locales\   (7 archivos)  — textos de la interfaz en en, pt, fr, de, it (la clave es el español)
+    locales\   (11 archivos)  — textos de la interfaz en en, pt, fr, de, it, ja, ko, zh, ru, nl, tr, pl (la clave es el español)
         .cf\   (1 archivos)
         de.json
         desktop.ini
         en.json
         fr.json
         it.json
+        ja.json
+        ko.json
         pt.json
+        ru.json
+        zh.json
     motions_resolve\   (17 archivos)
         Edit\   (15 archivos)
         CineCaptions Motions.drfx

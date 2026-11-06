@@ -42,7 +42,8 @@ PESO_IA = 0.7          # cuanto manda el modelo frente al puntaje de siempre
 DENSIDAD_UN_CLIC = 0.9
 INACTIVO_S = 180       # segundos que el modelo queda cargado sin trabajo
 SIN_SENAL_S = 100      # v5.11: sin ninguna línea del modelo durante tanto = colgado (una pasada normal da una línea cada pocos segundos; antes 240 s: se veía «cargando» 4 min)
-AVISO_LENTA_S = 35     # a partir de aquí se le dice al usuario que la IA tarda y cuánto falta para probar el modelo ligero
+SIN_AVANCE_S = 420     # v5.71: con LATIDO (vivo) pero sin ninguna tanda terminada en tanto = colgado de verdad (antes 100 s mataban tandas lentas en CPU)
+AVISO_LENTA_S = 35    # a partir de aquí se le dice al usuario que la IA tarda y cuánto falta para probar el modelo ligero
 FALLOS_SEGUIDOS_MAX = 2
 _FALLOS = {'n': 0, 'avisado': False}
 
@@ -79,6 +80,11 @@ def script():
 def disponible():
     info = motor_voz.info_instalado()
     return bool(info and info.get('modelo_texto'))
+
+
+def activa():
+    """v5.71: instalada Y no desactivada en esta sesión por fallos seguidos (quien tiene respaldo lo usa sin pasar por un error)."""
+    return _FALLOS['n'] < FALLOS_SEGUIDOS_MAX and disponible()
 
 
 # ---------------------------------------------------------------------------
@@ -119,7 +125,7 @@ class _Servidor:
         hasta 15 min con el candado tomado)."""
         self.p.stdin.write((json.dumps({'entrada': entrada, 'salida': salida}) + '\n').encode('utf-8'))
         self.p.stdin.flush()
-        inicio = ultima = time.time()
+        inicio = ultima = avance = time.time()
         ultimo_aviso = 0.0
         while time.time() - inicio < timeout:
             try:
@@ -128,13 +134,16 @@ class _Servidor:
                 if not self.vivo():
                     break
                 callada = time.time() - ultima
-                if callada > sin_senal:
+                quieta = time.time() - avance
+                if callada > sin_senal or quieta > SIN_AVANCE_S:
                     self.cerrar()
-                    return False, f'la IA de texto se quedó sin responder {int(sin_senal)} s'
-                if callada > AVISO_LENTA_S and time.time() - ultimo_aviso > 10:
+                    return False, (f'la IA de texto se quedó sin responder {int(sin_senal)} s' if callada > sin_senal else
+                                   f'la IA de texto no avanzó en {int(SIN_AVANCE_S)} s')
+                if quieta > AVISO_LENTA_S and time.time() - ultimo_aviso > 10:
                     ultimo_aviso = time.time()
                     try:
-                        linea_cb('ESTADO', f'La IA de texto tarda más de lo normal… si no responde en {max(1, int(sin_senal - callada))} s pruebo con el modelo ligero.')
+                        linea_cb('ESTADO', 'La IA de texto va lenta en este equipo, sigue trabajando…' if callada < quieta else
+                                 f'La IA de texto tarda más de lo normal… si no responde en {max(1, int(sin_senal - callada))} s pruebo con el modelo ligero.')
                     except Exception:
                         pass
                 continue
@@ -142,6 +151,12 @@ class _Servidor:
             if linea is None:
                 break
             tipo, _, resto = linea.partition('|')
+            if tipo == 'LATIDO':                      # v5.71: el modelo sigue vivo calculando una tanda (no es avance, pero no está colgado)
+                if ultima - avance > SIN_AVANCE_S:     # (latidos seguidos no pueden esconder un cuelgue: lo cazó simular_equipos.py)
+                    self.cerrar()
+                    return False, f'la IA de texto no avanzó en {int(SIN_AVANCE_S)} s'
+                continue
+            avance = ultima
             if tipo == 'LISTO':
                 return True, resto
             if tipo == 'ERROR':
@@ -353,7 +368,8 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
             if not _FALLOS['avisado']:
                 _FALLOS['avisado'] = True
                 if r:
-                    r.error('La IA de texto falló %d veces seguidas: sigo con el motor de reglas (sin corrección por IA) hasta reiniciar el programa. '
+                    # v5.71: aviso, no error: los subtítulos salen igual (motor de reglas / diccionario)
+                    r.aviso('La IA de texto falló %d veces seguidas: sigo con el motor de reglas (sin corrección por IA) hasta reiniciar el programa. '
                             'Revisa Ajustes > General > Motor de voz > Reparar.' % _FALLOS['n'], 'IA de texto')
             raise RuntimeError('la IA de texto está desactivada en esta sesión tras fallar varias veces')
         # v5.11: si el modelo grande falla, se cambia SOLO al ligero (1.7B) antes de rendirse; cada intento queda en el Registro

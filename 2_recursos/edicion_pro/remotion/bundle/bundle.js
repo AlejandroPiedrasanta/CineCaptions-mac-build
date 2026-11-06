@@ -141058,7 +141058,7 @@ var setComponentIdentityResolver = (resolver) => {
 var resolveComponentIdentity = (component) => {
   return componentIdentityResolver?.(component) ?? component;
 };
-var getSingleChildComponent = (children) => {
+var getSingleChildElement = (children) => {
   const mountedChildren = react__WEBPACK_IMPORTED_MODULE_0__.Children.toArray(children);
   if (mountedChildren.length !== 1) {
     return null;
@@ -141068,12 +141068,19 @@ var getSingleChildComponent = (children) => {
     return null;
   }
   if (child.type === IsNotInsideSeriesProvider) {
-    return getSingleChildComponent(child.props.children);
+    return getSingleChildElement(child.props.children);
   }
   if (typeof child.type !== "function" && typeof child.type !== "object") {
     return null;
   }
-  return resolveComponentIdentity(child.type);
+  return child;
+};
+var getSingleChildComponent = (children) => {
+  const child = getSingleChildElement(children);
+  return child === null ? null : resolveComponentIdentity(child.type);
+};
+var getSingleChildProps = (children) => {
+  return getSingleChildElement(children)?.props ?? null;
 };
 
 // src/composition-registry-fallback.ts
@@ -142624,9 +142631,11 @@ var makeOriginalSourceStack = ({
   fileName,
   lineNumber,
   columnNumber
-}) => {
-  return `Error
+}, compiledSourceHash = null) => {
+  const location = `Error
     at remotionOriginalSource (${ORIGINAL_SOURCE_STACK_PREFIX}${encodeURIComponent(fileName)}:${lineNumber}:${columnNumber})`;
+  return compiledSourceHash === null ? location : `${location}
+    at remotionCompiledSource (remotion-source-sha256:${compiledSourceHash})`;
 };
 var parseOriginalSourceStack = (stack) => {
   if (!stack) {
@@ -142658,7 +142667,7 @@ var getStackForControls = (controls) => {
 };
 
 // src/version.ts
-var VERSION = "4.0.540";
+var VERSION = "4.0.541";
 
 // src/multiple-versions-warning.ts
 var checkMultipleRemotionVersions = () => {
@@ -146555,7 +146564,7 @@ function hslToRgb(h, s, l) {
   return Math.round(r * 255) << 24 | Math.round(g * 255) << 16 | Math.round(b * 255) << 8;
 }
 function parse255(str) {
-  const int = Number.parseInt(str, 10);
+  const int = Math.round(Number.parseFloat(str));
   if (int < 0) {
     return 0;
   }
@@ -148338,6 +148347,7 @@ var setSequenceWrapperRef = (ref, wrapperRef, node) => {
     ref.current = node;
   }
 };
+var getSingleChildPropsFromRef = (childrenRef) => getSingleChildProps(childrenRef.current);
 var RegularSequenceContentRefForwardingFunction = ({
   timing,
   from = 0,
@@ -148358,6 +148368,7 @@ var RegularSequenceContentRefForwardingFunction = ({
   _remotionInternalLoopDisplay: loopDisplay,
   _remotionInternalStack: stack,
   _remotionInternalSingleChildComponent: childComponentOverride,
+  _remotionInternalSingleChildren: authoredChildrenOverride,
   _remotionInternalDocumentationLink: documentationLink,
   _remotionInternalPremountDisplay: premountDisplay,
   _remotionInternalPostmountDisplay: postmountDisplay,
@@ -148408,6 +148419,7 @@ var RegularSequenceContentRefForwardingFunction = ({
     loopPeriod,
     loopIteration,
     contentVisible,
+    inheritedFrozenFrame,
     currentFrameRef
   } = timing;
   if (typeof contentDurationInFrames !== "number") {
@@ -148532,7 +148544,13 @@ var RegularSequenceContentRefForwardingFunction = ({
   }, [name]);
   const resolvedDocumentationLink = documentationLink ?? "https://www.remotion.dev/docs/sequence";
   const isInsideSeries = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(IsInsideSeriesContext);
-  const singleChildComponent = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => childComponentOverride === undefined ? getSingleChildComponent(children) : childComponentOverride, [children, childComponentOverride]);
+  const authoredChildren = authoredChildrenOverride === undefined ? children : authoredChildrenOverride;
+  const singleChildComponent = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => childComponentOverride === undefined ? getSingleChildComponent(authoredChildren) : childComponentOverride, [authoredChildren, childComponentOverride]);
+  const childrenRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(authoredChildren);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    childrenRef.current = authoredChildren;
+  }, [authoredChildren]);
+  const getRegisteredSingleChildProps = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => childComponentOverride === undefined ? getSingleChildPropsFromRef.bind(null, childrenRef) : null, [childComponentOverride]);
   const registrationStack = controls ? getStackForControls(controls) ?? stack ?? null : stack ?? null;
   const getStack = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => getSequenceStack.bind(null, registrationStack), [registrationStack]);
   const registeredFrozenFrame = typeof freeze === "number" ? freeze : null;
@@ -148541,7 +148559,8 @@ var RegularSequenceContentRefForwardingFunction = ({
   const parentCumulatedNegativeFrom = parentSequence?.cumulatedNegativeFrom ?? 0;
   const startMediaFrom = isMedia && isMedia.type !== "image" ? isMedia.data.startMediaFrom + parentCumulatedNegativeFrom - cumulatedNegativeFrom : null;
   const mediaFrameAtSequenceZero = isMedia && isMedia.type !== "image" ? isMedia.data.startMediaFrom + parentCumulatedNegativeFrom : null;
-  const frozenMediaFrame = isMedia && isMedia.type !== "image" && mediaFrameAtSequenceZero !== null ? registeredFrozenFrame === null ? null : mediaFrameAtSequenceZero + (resolvedLoopDisplay ? registeredFrozenFrame % resolvedLoopDisplay.durationInFrames : registeredFrozenFrame) * isMedia.data.playbackRate : null;
+  const mediaFreezeFrame = registeredFrozenFrame ?? (contentVisible && !parentDormant && !premounting && !postmounting ? inheritedFrozenFrame : null);
+  const frozenMediaFrame = isMedia && isMedia.type !== "image" && mediaFrameAtSequenceZero !== null && mediaFreezeFrame !== null ? mediaFrameAtSequenceZero + (resolvedLoopDisplay ? mediaFreezeFrame % resolvedLoopDisplay.durationInFrames : mediaFreezeFrame) * isMedia.data.playbackRate : null;
   const controlsSchema = controls?.schema;
   const controlsRuntimeValues = controls?.runtimeValues;
   const controlsOverrideId = controls?.overrideId;
@@ -148549,8 +148568,7 @@ var RegularSequenceContentRefForwardingFunction = ({
   const controlsComponentIdentity = controls?.componentIdentity;
   const controlsComponentName = controls?.componentName;
   const controlsVideoConfigValues = controls?.videoConfigValues;
-  const isInsideNonPremountFreeze = useIsInsideNonPremountFreeze();
-  const canInferDuration = (controlsComponentIdentity === "dev.remotion.remotion.Series" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries") && !loop && registeredFrozenFrame === null && !isInsideNonPremountFreeze && !hidden;
+  const canInferDuration = (controlsComponentIdentity === "dev.remotion.remotion.Series" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries") && !loop && registeredFrozenFrame === null && inheritedFrozenFrame === null && !hidden;
   const autoDuration = canInferDuration && durationInFrames === undefined;
   const isSeriesChild = controlsComponentIdentity === "dev.remotion.remotion.Series.Sequence" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries.Sequence" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries.Transition" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries.Overlay";
   const effectRuntimeValues = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => _remotionInternalEffects?.runtimeValues ?? null, [_remotionInternalEffects]);
@@ -148612,7 +148630,8 @@ var RegularSequenceContentRefForwardingFunction = ({
           refForOutline: refForOutline ?? null,
           isInsideSeries,
           frozenFrame: registeredFrozenFrame,
-          singleChildComponent: singleChildComponent ?? null
+          singleChildComponent: singleChildComponent ?? null,
+          getSingleChildProps: getRegisteredSingleChildProps
         };
       }
       return {
@@ -148645,7 +148664,8 @@ var RegularSequenceContentRefForwardingFunction = ({
         isInsideSeries,
         frozenFrame: registeredFrozenFrame,
         frozenMediaFrame,
-        singleChildComponent: singleChildComponent ?? null
+        singleChildComponent: singleChildComponent ?? null,
+        getSingleChildProps: getRegisteredSingleChildProps
       };
     }
     return {
@@ -148675,7 +148695,8 @@ var RegularSequenceContentRefForwardingFunction = ({
       refForOutline: refForOutline ?? null,
       isInsideSeries,
       frozenFrame: registeredFrozenFrame,
-      singleChildComponent: singleChildComponent ?? null
+      singleChildComponent: singleChildComponent ?? null,
+      getSingleChildProps: getRegisteredSingleChildProps
     };
   }, [
     id,
@@ -148709,7 +148730,8 @@ var RegularSequenceContentRefForwardingFunction = ({
     startMediaFrom,
     mediaFrameAtSequenceZero,
     frozenMediaFrame,
-    singleChildComponent
+    singleChildComponent,
+    getRegisteredSingleChildProps
   ]);
   const getSequenceForRegistration = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => getSequenceRegistration.bind(null, sequenceForRegistration), [sequenceForRegistration]);
   const registration = useSequenceRegistration({
@@ -148873,6 +148895,7 @@ var RegularSequenceRefForwardingFunction = (props, ref) => {
   const loopOffset = loopPeriod === null ? 0 : loopIteration * loopPeriod;
   const currentSequenceStart = cumulatedFrom + (from + loopOffset - trimBefore / playbackRate) / parentPlaybackRate;
   const currentFrame = typeof freeze === "number" ? freeze : (absoluteFrame - currentSequenceStart) * (parentPlaybackRate * playbackRate);
+  const inheritedFrozenFrame = useIsInsideNonPremountFreeze() ? currentFrame : null;
   const currentFrameRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(currentFrame);
   const timing = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({
     contentDurationInFrames,
@@ -148881,6 +148904,7 @@ var RegularSequenceRefForwardingFunction = (props, ref) => {
     loopPeriod,
     loopIteration,
     contentVisible,
+    inheritedFrozenFrame,
     currentFrameRef
   }), [
     contentDurationInFrames,
@@ -148888,7 +148912,8 @@ var RegularSequenceRefForwardingFunction = (props, ref) => {
     actualDurationInFrames,
     loopPeriod,
     loopIteration,
-    contentVisible
+    contentVisible,
+    inheritedFrozenFrame
   ]);
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     children: [
@@ -149174,6 +149199,18 @@ var AbsoluteFill = withInteractivitySchema({
 addSequenceStackTraces(AbsoluteFill);
 // src/animated-image/AnimatedImage.tsx
 
+
+// src/get-canvas-props-from-sequence-props.ts
+var getCanvasPropsFromSequenceProps = (props) => {
+  const canvasProps = {};
+  const mutableCanvasProps = canvasProps;
+  for (const key in props) {
+    if (Object.prototype.hasOwnProperty.call(props, key) && (key.startsWith("data-") || key.startsWith("aria-"))) {
+      mutableCanvasProps[key] = props[key];
+    }
+  }
+  return canvasProps;
+};
 
 // src/use-crop-style.ts
 
@@ -150514,16 +150551,6 @@ var animatedImageSchema = {
   ...borderSchema,
   ...borderRadiusSchema
 };
-var getCanvasPropsFromSequenceProps = (props) => {
-  const canvasProps = {};
-  const mutableCanvasProps = canvasProps;
-  for (const key in props) {
-    if (Object.prototype.hasOwnProperty.call(props, key) && (key.startsWith("data-") || key.startsWith("aria-"))) {
-      mutableCanvasProps[key] = props[key];
-    }
-  }
-  return canvasProps;
-};
 var AnimatedImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   src,
   width,
@@ -151022,6 +151049,16 @@ var RenderAssetManagerProvider = ({ children, collectAssets }) => {
 
 // src/Artifact.tsx
 var ArtifactThumbnail = Symbol("Thumbnail");
+var encodeBinaryArtifact = (bytes) => {
+  if ("toBase64" in bytes && typeof bytes.toBase64 === "function") {
+    return bytes.toBase64();
+  }
+  let binary = "";
+  for (let offset = 0;offset < bytes.length; offset += 32768) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 32768));
+  }
+  return btoa(binary);
+};
 var Artifact = ({ filename, content, downloadBehavior }) => {
   const { registerRenderAsset, unregisterRenderAsset } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(RenderAssetManager);
   const env = useRemotionEnvironment();
@@ -151037,7 +151074,7 @@ var Artifact = ({ filename, content, downloadBehavior }) => {
       registerRenderAsset({
         type: "artifact",
         id,
-        content: btoa(new TextDecoder("utf8").decode(content)),
+        content: encodeBinaryArtifact(content),
         filename,
         frame,
         contentType: "binary",
@@ -153105,9 +153142,7 @@ var getMediaSyncAction = (input) => {
     ended,
     desiredUnclampedTime,
     mediaTagTime,
-    mediaTagLastUpdate,
     rvcTime,
-    rvcLastUpdate,
     isVariableFpsVideo,
     acceptableTimeShift,
     lastSeekDueToShift,
@@ -153119,13 +153154,11 @@ var getMediaSyncAction = (input) => {
     onlyWarnForMediaSeekingError,
     isPremounting,
     isPostmounting,
-    pauseWhenBuffering
+    pauseWhenBuffering,
+    mediaType
   } = input;
   const shouldBeTime = !Number.isNaN(duration) && Number.isFinite(duration) ? Math.min(duration, desiredUnclampedTime) : desiredUnclampedTime;
-  const timeShiftMediaTag = Math.abs(shouldBeTime - mediaTagTime);
-  const timeShiftRvcTag = rvcTime ? Math.abs(shouldBeTime - rvcTime) : null;
-  const mostRecentTimeshift = rvcLastUpdate && rvcTime > mediaTagLastUpdate ? timeShiftRvcTag : timeShiftMediaTag;
-  const timeShift = timeShiftRvcTag && !isVariableFpsVideo ? mostRecentTimeshift : timeShiftMediaTag;
+  const timeShift = Math.abs(shouldBeTime - mediaTagTime);
   if (timeShift > acceptableTimeShift && lastSeekDueToShift !== shouldBeTime) {
     return {
       type: "seek-due-to-shift",
@@ -153138,18 +153171,23 @@ var getMediaSyncAction = (input) => {
   }
   const seekThreshold = playing ? 0.15 : 0.01;
   const makesSenseToSeek = Math.abs(currentTime - shouldBeTime) > seekThreshold;
+  const audioLead = currentTime - shouldBeTime;
+  const holdAudioUntilTimelineCatchesUp = mediaType === "audio" && playing && playbackRate > 0 && makesSenseToSeek && audioLead > 0 && audioLead <= acceptableTimeShift;
   const isSomethingElseBuffering = playerBuffering && !mediaTagBufferingOrStalled;
   if (!playing || isSomethingElseBuffering) {
     return {
       type: "seek-if-not-playing",
       shouldBeTime,
-      why: makesSenseToSeek ? `not playing or something else is buffering. time offset is over seek threshold (${seekThreshold})` : null
+      why: makesSenseToSeek && !holdAudioUntilTimelineCatchesUp ? `not playing or something else is buffering. time offset is over seek threshold (${seekThreshold})` : null
     };
   }
   if (!playing || playerBuffering) {
     return { type: "none" };
   }
   const pausedCondition = paused && !ended;
+  if (pausedCondition && holdAudioUntilTimelineCatchesUp) {
+    return { type: "none" };
+  }
   const firstFrameCondition = absoluteFrame === 0;
   if (pausedCondition || firstFrameCondition) {
     const reason = pausedCondition ? "media tag is paused" : "absolute frame is 0";
@@ -153166,19 +153204,15 @@ var getMediaSyncAction = (input) => {
 
 // src/media-tag-current-time-timestamp.ts
 
-var useCurrentTimeOfMediaTagWithUpdateTimeStamp = (mediaRef) => {
-  const lastUpdate = react__WEBPACK_IMPORTED_MODULE_0__.useRef({
-    time: mediaRef.current?.currentTime ?? 0,
-    lastUpdate: performance.now()
+var useCurrentTimeOfMediaTag = (mediaRef) => {
+  const currentTime = react__WEBPACK_IMPORTED_MODULE_0__.useRef({
+    time: mediaRef.current?.currentTime ?? 0
   });
   const nowCurrentTime = mediaRef.current?.currentTime ?? null;
   if (nowCurrentTime !== null) {
-    if (lastUpdate.current.time !== nowCurrentTime) {
-      lastUpdate.current.time = nowCurrentTime;
-      lastUpdate.current.lastUpdate = performance.now();
-    }
+    currentTime.current.time = nowCurrentTime;
   }
-  return lastUpdate;
+  return currentTime;
 };
 
 // src/seek.ts
@@ -153353,8 +153387,7 @@ var useRequestVideoCallbackTime = ({
     const { current } = mediaRef;
     if (current) {
       currentTime.current = {
-        time: current.currentTime,
-        lastUpdate: performance.now()
+        time: current.currentTime
       };
     } else {
       currentTime.current = null;
@@ -153384,8 +153417,7 @@ var useRequestVideoCallbackTime = ({
           }
         }
         currentTime.current = {
-          time: info.mediaTime,
-          lastUpdate: performance.now()
+          time: info.mediaTime
         };
         request();
       });
@@ -153522,7 +153554,7 @@ var useMediaPlayback = ({
     lastSeek,
     onVariableFpsVideoDetected
   });
-  const mediaTagCurrentTime = useCurrentTimeOfMediaTagWithUpdateTimeStamp(mediaRef);
+  const mediaTagCurrentTime = useCurrentTimeOfMediaTag(mediaRef);
   const desiredUnclampedTime = getMediaTime({
     frame,
     playbackRate: localPlaybackRate,
@@ -153603,9 +153635,7 @@ var useMediaPlayback = ({
       ended: current.ended,
       desiredUnclampedTime,
       mediaTagTime: mediaTagCurrentTime.current.time,
-      mediaTagLastUpdate: mediaTagCurrentTime.current.lastUpdate,
       rvcTime: rvcCurrentTime.current?.time ?? null,
-      rvcLastUpdate: rvcCurrentTime.current?.lastUpdate ?? null,
       isVariableFpsVideo: Boolean(isVariableFpsVideoMap.current[src]),
       acceptableTimeShift: acceptableTimeShiftButLessThanDuration,
       lastSeekDueToShift: lastSeekDueToShift.current,
@@ -153617,7 +153647,8 @@ var useMediaPlayback = ({
       onlyWarnForMediaSeekingError,
       isPremounting,
       isPostmounting,
-      pauseWhenBuffering
+      pauseWhenBuffering,
+      mediaType
     });
     if (action.type === "none") {
       return;
@@ -154494,7 +154525,8 @@ var SolidInner = ({
   pixelDensity,
   overrideId,
   videoConfigValues,
-  reference
+  reference,
+  canvasProps
 }) => {
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const resolvedPixelDensity = resolveSolidPixelDensity(pixelDensity);
@@ -154582,6 +154614,7 @@ var SolidInner = ({
     };
   }, [height, style, width]);
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("canvas", {
+    ...canvasProps,
     ref: canvasRef,
     width: canvasWidth,
     height: canvasHeight,
@@ -154678,6 +154711,7 @@ var SolidOuter = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
       _remotionInternalIsPostmounting: postmountingActive,
       children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SequenceContent, {
         children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SolidInner, {
+          canvasProps: getCanvasPropsFromSequenceProps(props),
           reference: actualRef,
           videoConfigValues: controls?.videoConfigValues ?? null,
           overrideId: controls?.overrideId ?? null,
@@ -157162,7 +157196,7 @@ var createElementSourceProxy = (api, sourceArgumentIndex, getSourceFileName) => 
               fileName: getSourceFileName(source.fileName),
               lineNumber: source.lineNumber,
               columnNumber: source.columnNumber - 1
-            });
+            }, typeof source.__remotionCompiledSourceHash === "string" ? source.__remotionCompiledSourceHash : null);
           } else {
             const { stackTraceLimit } = Error;
             const canLimitStack = typeof stackTraceLimit === "number" && stackTraceLimit > 2 && Object.getOwnPropertyDescriptor(Error, "stackTraceLimit")?.writable;
@@ -161898,7 +161932,7 @@ function hslToRgb(h, s, l) {
   return Math.round(r * 255) << 24 | Math.round(g * 255) << 16 | Math.round(b * 255) << 8;
 }
 function parse255(str) {
-  const int = Number.parseInt(str, 10);
+  const int = Math.round(Number.parseFloat(str));
   if (int < 0) {
     return 0;
   }
@@ -162644,6 +162678,9 @@ var NoReactInternals = {
 /******/ 	/* webpack/runtime/get javascript chunk filename */
 /******/ 	// This function allow to reference async chunks
 /******/ 	__webpack_require__.u = (chunkId) => (chunkId + ".bundle.js");
+/******/ 	
+/******/ 	/* webpack/runtime/getFullHash */
+/******/ 	__webpack_require__.h = () => ("30e3d296ec7e6faa");
 /******/ 	
 /******/ 	/* webpack/runtime/global */
 /******/ 	__webpack_require__.g = (function() {

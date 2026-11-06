@@ -176,6 +176,28 @@ def familia_ui():
     return 'Sans Serif'
 
 
+def _respaldo_cjk():
+    """v5.71 (interfaz en japonés, coreano y chino): Inter no trae esas letras; estas familias del sistema las ponen (Qt solo las usa
+    para lo que falta). Primero la del idioma de la interfaz, para que los ideogramas salgan con la forma de ese idioma."""
+    r = _FAMILIAS.get('respaldo')
+    if r is None:
+        try:
+            import i18n
+            idioma = i18n.idioma()
+        except Exception:
+            idioma = 'es'
+        if sys.platform.startswith('win'):
+            propias = {'ja': ['Yu Gothic UI', 'Meiryo UI'], 'ko': ['Malgun Gothic'], 'zh': ['Microsoft YaHei UI']}
+            orden = propias.get(idioma, []) + ['Yu Gothic UI', 'Malgun Gothic', 'Microsoft YaHei UI', 'Segoe UI']
+        elif sys.platform == 'darwin':
+            propias = {'ja': ['Hiragino Sans'], 'ko': ['Apple SD Gothic Neo'], 'zh': ['PingFang SC']}
+            orden = propias.get(idioma, []) + ['Hiragino Sans', 'Apple SD Gothic Neo', 'PingFang SC']
+        else:
+            orden = ['Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK SC']
+        r = _FAMILIAS['respaldo'] = list(dict.fromkeys(orden))
+    return r
+
+
 def fuente(tam=13, negrita=False, italica=False, subrayada=False, familia=None, peso=None):
     """Una QFont en PIXELES (tamaño 13 = 13 px a 100 % de escala; Qt la
     escala sola con el monitor). peso: 'medio' | 'negrita' | 'extra'."""
@@ -189,6 +211,7 @@ def fuente(tam=13, negrita=False, italica=False, subrayada=False, familia=None, 
         else:
             familia = familia_ui()
     f = QFont(familia)
+    f.setFamilies([familia] + _respaldo_cjk())
     f.setPixelSize(max(6, int(round(tam))))
     if peso == 'medio':
         f.setWeight(QFont.Weight.Medium)

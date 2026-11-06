@@ -238,7 +238,7 @@ def _idioma_en_frase(nombre):
     """Un nombre de idioma DENTRO de una frase (v3.3.0): en minuscula donde
     la lengua lo pide («al inglés», «em inglês», «en anglais», «in
     inglese»); en ingles y aleman llevan mayuscula («to English»)."""
-    if idioma_ui() in ['en', 'de']:
+    if idioma_ui() in ['en', 'de', 'nl', 'tr', 'ja', 'ko', 'zh']:      # v5.71: neerlandés y turco también con mayúscula; CJK no tiene
         return nombre
     return nombre.lower()
 def _combinacion_visible(combinacion):
@@ -4899,18 +4899,24 @@ class WordTagWindow(QWidget):
         self.modo_hint.configure(text=tr('Corrigiendo la ortografía con IA…'), text_color='#8FC7FF')
 
         def _trabajar():
+            cambios = None
             try:
                 import ia_texto
-                if ia_texto.disponible():
-                    cambios = dict(ia_texto.correcciones_ortografia(base, idioma))      # solo de ortografia, y solo los trozos nuevos (el resto sale del guardado)
-                    resultado['via'] = 'IA'
+                if ia_texto.activa():
+                    try:
+                        cambios = dict(ia_texto.correcciones_ortografia(base, idioma))      # solo de ortografia, y solo los trozos nuevos (el resto sale del guardado)
+                        resultado['via'] = 'IA'
+                    except Exception as e:
+                        # v5.71 (reporte de un cliente): la IA lenta o caída dejaba un ERROR en el Registro en cada corrección; ahora se sigue con el diccionario
+                        registro.aviso('La IA de texto no pudo corregir la ortografía; la corrijo con el diccionario. (' + f'{type(e).__name__}: {e}'[:160] + ')', 'ortografía')
+                        cambios = None
+                if cambios is not None:
                     try:
                         for i, nueva in ortografia.corregir_fonetico(base, idioma).items():     # lo que la IA dejo y suena igual que otra palabra
                             cambios.setdefault(i, nueva)
                     except Exception:
                         pass
                 else:
-                    cambios = {}
                     resultado['via'] = 'diccionario'
                     cambios = ortografia.corregir_fonetico(base, idioma)      # sin IA: diccionario + fonetica del español
                 resultado['cambios'] = cambios
@@ -8275,6 +8281,9 @@ class SubtitleApp(QWidget):
             self._go_generar()
             return
         if self._go_sin_resolve:
+            if self._motivo_mp4() == 'ajuste':      # v5.71: con Resolve instalado y «Video MP4» encendido, no decir «No hay DaVinci Resolve»
+                self._go_fallo('timeline', tr('Tienes encendido «Video MP4 en lugar de Resolve» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o apágalo para trabajar con el timeline de Resolve.'))
+                return
             self._go_fallo('timeline', tr('No hay DaVinci Resolve en este equipo. Suelta un video en CineCaptions y pulsa GO: te lo devuelvo con los subtítulos puestos.'))
             return
         self.go_panel.linea.configure(text=tr('Pidiéndole a Resolve el audio del timeline…'))
@@ -15170,6 +15179,11 @@ def main():
     app = ui.crear_app(sys.argv[:1], carpeta_fuentes=BASE_RECURSOS / 'fonts')
     ui.AL_ERROR = guardar_log_de_error
     registro.instalar_ganchos()
+    try:                                              # v5.71: cada error del Registro le llega al vendedor (pagos/errores.php), en segundo plano
+        import telemetria_errores
+        telemetria_errores.iniciar()
+    except Exception:
+        pass
     _vigia_ui = registro.vigilar_congelaciones()      # v5.4: anota cuando la interfaz se queda sin responder y donde
     import vigilancia
     vigilancia.iniciar_monitor()                      # v5.11: disco, memoria y escritura cada 60 s (solo anota lo que cambia)

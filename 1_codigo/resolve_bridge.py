@@ -13,15 +13,121 @@ from i18n import tr
 def _rutas_probables():
     """Ubicaciones tipicas de la libreria de scripting de Resolve por SO."""
     if sys.platform.startswith('win'):
-        yield (Path('C:\\ProgramData\\Blackmagic Design\\DaVinci Resolve\\Support\\Developer\\Scripting\\Modules'), Path('C:\\Program Files\\Blackmagic Design\\DaVinci Resolve\\fusionscript.dll'))
+        # v5.71: la DLL donde de verdad esté Resolve (instalado en D:\… no la encontraba)
+        yield (Path('C:\\ProgramData\\Blackmagic Design\\DaVinci Resolve\\Support\\Developer\\Scripting\\Modules'), Path(_resolve_dir_windows()) / 'fusionscript.dll')
     else:
         if sys.platform == 'darwin':
             yield (Path('/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Modules'), Path('/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/Libraries/Fusion/fusionscript.so'))
         else:
             yield (Path('/opt/resolve/Developer/Scripting/Modules'), Path('/opt/resolve/libs/Fusion/fusionscript.so'))
+_DIR_RESOLVE = [None]       # v5.71: la carpeta hallada fuera de C:\Program Files (no se vuelve a buscar)
+
+
+def _resolve_en_marcha():
+    """v5.71: la carpeta del Resolve.exe que esté corriendo (API de Windows, sin subprocess), o None."""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        psapi, k32 = ctypes.windll.psapi, ctypes.windll.kernel32
+        ids = (wintypes.DWORD * 4096)()
+        usados = wintypes.DWORD()
+        if not psapi.EnumProcesses(ids, ctypes.sizeof(ids), ctypes.byref(usados)):
+            return None
+        k32.OpenProcess.restype = wintypes.HANDLE
+        for pid in ids[:usados.value // ctypes.sizeof(wintypes.DWORD)]:
+            h = k32.OpenProcess(0x1000, False, pid)            # PROCESS_QUERY_LIMITED_INFORMATION
+            if not h:
+                continue
+            try:
+                buf = ctypes.create_unicode_buffer(1024)
+                n = wintypes.DWORD(1024)
+                if k32.QueryFullProcessImageNameW(wintypes.HANDLE(h), 0, buf, ctypes.byref(n)) and buf.value.lower().endswith('\\resolve.exe'):
+                    return os.path.dirname(buf.value)
+            finally:
+                k32.CloseHandle(wintypes.HANDLE(h))
+    except Exception:
+        pass
+    return None
+
+
+def _resolve_dir_extra():
+    """v5.71: la carpeta de Resolve.exe cuando NO está en C:\\Program Files: claves del registro, acceso del menú Inicio (la ruta va dentro
+    del .lnk) y «<disco fijo>:\\Program Files\\Blackmagic Design\\DaVinci Resolve». Solo existencia de archivos (barato). None si no está."""
+    def _vale(carpeta):
+        try:
+            return bool(carpeta) and os.path.isfile(os.path.join(carpeta, 'Resolve.exe'))
+        except Exception:
+            return False
+    try:
+        import winreg
+        for hive in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+            for key_path in ('SOFTWARE\\Blackmagic Design\\DaVinci Resolve', 'SOFTWARE\\WOW6432Node\\Blackmagic Design\\DaVinci Resolve',
+                             'SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Resolve.exe'):
+                try:
+                    with winreg.OpenKey(hive, key_path) as k:
+                        for value_name in ('ProgramFilesPath', 'InstallDir', 'InstallLocation', 'Path', ''):
+                            try:
+                                val, _ = winreg.QueryValueEx(k, value_name)
+                            except OSError:
+                                continue
+                            val = str(val or '').strip('"')
+                            if val.lower().endswith('.exe'):
+                                val = os.path.dirname(val)
+                            if _vale(val):
+                                return val
+                except OSError:
+                    continue
+    except Exception:
+        pass
+    abierto = _resolve_en_marcha()                 # Resolve abierto ahora: su proceso dice dónde está
+    if _vale(abierto):
+        return abierto
+    # el acceso «DaVinci Resolve.lnk» del menú Inicio guarda la ruta de Resolve.exe (en ANSI y/o UTF-16)
+    for base in (os.environ.get('ProgramData'), os.environ.get('APPDATA')):
+        if not base:
+            continue
+        lnk = os.path.join(base, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Blackmagic Design', 'DaVinci Resolve', 'DaVinci Resolve.lnk')
+        try:
+            datos = open(lnk, 'rb').read()
+        except OSError:
+            continue
+        for texto in (datos.decode('latin-1', 'ignore'), datos.decode('utf-16-le', 'ignore'), datos[1:].decode('utf-16-le', 'ignore')):
+            for m in re.finditer(r'([A-Za-z]:\\[^\x00-\x1f"*?<>|]*?)\\Resolve\.exe', texto, re.IGNORECASE):
+                if _vale(m.group(1)):
+                    return m.group(1)
+    # otros discos fijos (sin tocar unidades de red ni extraíbles: podrían tardar)
+    for letra in _discos_fijos():
+        for rel in ('Program Files\\Blackmagic Design\\DaVinci Resolve', 'Blackmagic Design\\DaVinci Resolve', 'DaVinci Resolve'):
+            carpeta = f'{letra}:\\{rel}'
+            if _vale(carpeta):
+                return carpeta
+    return None
+
+
+def _discos_fijos():
+    """v5.71: letras de los discos FIJOS (ni red ni extraíbles: podrían tardar), sin A/B. [] si no se puede mirar."""
+    try:
+        import ctypes
+        k32 = ctypes.windll.kernel32
+        mascara = k32.GetLogicalDrives()
+        return [chr(65 + i) for i in range(2, 26) if (mascara >> i) & 1 and k32.GetDriveTypeW(f'{chr(65 + i)}:\\') == 3]     # 3 = DRIVE_FIXED
+    except Exception:
+        return []
+
+
 def _resolve_dir_windows():
     """Devuelve la carpeta de instalacion de DaVinci Resolve en Windows.\n\n    Prueba primero la ruta default (C:\\Program Files\\...), y si no\n    existe, lee la clave del registro que Blackmagic escribe al instalar.\n    Sirve para instalaciones en D:\\, en Program Files (x86), etc.\n    """
     default = 'C:\\Program Files\\Blackmagic Design\\DaVinci Resolve'
+    if _DIR_RESOLVE[0]:
+        return _DIR_RESOLVE[0]
+    if os.path.isfile(os.path.join(default, 'Resolve.exe')):
+        return default
+    # v5.71 (cliente con Resolve Studio 21 en otro disco: «No hay DaVinci Resolve en este equipo»): el instalador de Blackmagic solo deja
+    # «Version» en el registro, sin la carpeta. Se mira también el acceso del menú Inicio y los discos fijos.
+    otra = _resolve_dir_extra()
+    if otra:
+        _DIR_RESOLVE[0] = otra
+        return otra
     if os.path.isdir(default):
         return default
     try:

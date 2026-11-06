@@ -1,5 +1,5 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[210],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[74],{
 
 /***/ 8033
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
@@ -503,7 +503,7 @@ var __require = /* @__PURE__ */ (/* unused pure expression or super */ null && (
 
 /***/ },
 
-/***/ 6210
+/***/ 9074
 (__webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
@@ -16885,32 +16885,33 @@ var recast18 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */
 var recast20 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast22 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast23 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-var recast25 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast24 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+var recast25 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+
 var recast26 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast27 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-
 var recast28 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast29 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast30 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast31 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-var recast34 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-
-var recast33 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast32 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast35 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+
+var recast34 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+var recast33 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast36 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast37 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast38 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast39 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast40 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-var recast43 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 var recast41 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-var recast42 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
-
-
 var recast44 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+var recast42 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+var recast43 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+
+
 var recast45 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
+var recast46 = (0,_index_ertrwccy_mjs__WEBPACK_IMPORTED_MODULE_0__/* .__toESM */ .f1)(require_main2(), 1);
 
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
@@ -34073,7 +34074,7 @@ function hslToRgb(h, s, l) {
   return Math.round(r * 255) << 24 | Math.round(g * 255) << 16 | Math.round(b * 255) << 8;
 }
 function parse255(str) {
-  const int = Number.parseInt(str, 10);
+  const int = Math.round(Number.parseFloat(str));
   if (int < 0) {
     return 0;
   }
@@ -34825,11 +34826,15 @@ var ensureOfficialNamedImport = ({
 }) => {
   const boundNames = new Set;
   recast2.types.visit(ast, {
-    visitNode(path) {
-      if (path.scope?.path === path && path.node.type !== "Program") {
-        for (const name of Object.keys(path.scope.getBindings())) {
-          boundNames.add(name);
-        }
+    visitFunction(path) {
+      for (const name of Object.keys(path.scope.getBindings())) {
+        boundNames.add(name);
+      }
+      this.traverse(path);
+    },
+    visitCatchClause(path) {
+      for (const name of Object.keys(path.scope.getBindings())) {
+        boundNames.add(name);
       }
       this.traverse(path);
     }
@@ -34873,10 +34878,26 @@ var n = recast3.types.namedTypes;
 var isFunctionNode = (value) => {
   return n.FunctionDeclaration.check(value) || n.FunctionExpression.check(value) || n.ArrowFunctionExpression.check(value);
 };
+var isComponentFunctionPath = (path) => {
+  if (!isFunctionNode(path.value)) {
+    return false;
+  }
+  let argument = path;
+  let parent = path.parentPath;
+  while (parent && (parent.value.type === "TSAsExpression" || parent.value.type === "TSSatisfiesExpression" || parent.value.type === "TSNonNullExpression" || parent.value.type === "ParenthesizedExpression")) {
+    argument = parent;
+    parent = parent.parentPath;
+  }
+  while (parent && Array.isArray(parent.value)) {
+    parent = parent.parentPath;
+  }
+  const owner = parent?.value;
+  return !(owner?.type === "CallExpression" && owner.arguments.includes(argument.value) && owner.callee.type === "MemberExpression" && !owner.callee.computed && (owner.callee.property.name === "map" || owner.callee.property.name === "flatMap"));
+};
 var findEnclosingFunctionPath = (path) => {
   let current = path.parentPath;
   while (current) {
-    if (isFunctionNode(current.value)) {
+    if (isComponentFunctionPath(current)) {
       return current;
     }
     current = current.parentPath;
@@ -34886,62 +34907,114 @@ var findEnclosingFunctionPath = (path) => {
 var ensureRemotionImports = (ast, names) => {
   ensureNamedImports({ ast, importedNames: names, sourcePath: "remotion" });
 };
-var componentBodyHasFrameDeclaration = ({
-  body,
+var ensureUseCurrentFrameHook = ({
+  referencePath,
   hookName
 }) => {
-  if (!n.BlockStatement.check(body)) {
-    return false;
+  const functionPath = findEnclosingFunctionPath(referencePath);
+  if (!functionPath) {
+    throw new Error("Cannot add keyframes outside a component function because useCurrentFrame() needs a function scope");
   }
-  for (const stmt of body.body) {
-    if (stmt.type !== "VariableDeclaration") {
-      continue;
-    }
-    for (const decl of stmt.declarations) {
-      if (decl.type !== "VariableDeclarator") {
+  const fn = functionPath.value;
+  if (n.BlockStatement.check(fn.body)) {
+    for (const statement of fn.body.body) {
+      if (statement.type !== "VariableDeclaration") {
         continue;
       }
-      if (decl.id.type === "Identifier" && decl.id.name === "frame" && decl.init && decl.init.type === "CallExpression" && decl.init.callee.type === "Identifier" && decl.init.callee.name === hookName) {
-        return true;
+      for (const declaration of statement.declarations) {
+        if (declaration.type !== "VariableDeclarator" || declaration.id.type !== "Identifier" || declaration.init?.type !== "CallExpression" || declaration.init.callee.type !== "Identifier" || declaration.init.callee.name !== hookName) {
+          continue;
+        }
+        const existingFrameName = declaration.id.name;
+        let shadowed = false;
+        const checkPattern = (pattern) => {
+          recast3.types.visit(pattern, {
+            visitIdentifier(path) {
+              if (path.node.name === existingFrameName) {
+                shadowed = true;
+              }
+              return false;
+            }
+          });
+        };
+        recast3.types.visit(fn, {
+          visitVariableDeclarator(path) {
+            if (path.node !== declaration) {
+              checkPattern(path.node.id);
+            }
+            return this.traverse(path);
+          },
+          visitFunction(path) {
+            if (path.node.id) {
+              checkPattern(path.node.id);
+            }
+            for (const param of path.node.params) {
+              checkPattern(param);
+            }
+            return this.traverse(path);
+          },
+          visitClassDeclaration(path) {
+            if (path.node.id) {
+              checkPattern(path.node.id);
+            }
+            return this.traverse(path);
+          },
+          visitCatchClause(path) {
+            if (path.node.param) {
+              checkPattern(path.node.param);
+            }
+            return this.traverse(path);
+          }
+        });
+        if (!shadowed) {
+          return declaration.id.name;
+        }
       }
     }
   }
-  return false;
-};
-var ensureUseCurrentFrameHook = (functionPath, hookName = "useCurrentFrame") => {
-  const fn = functionPath.value;
+  const usedNames = new Set([hookName]);
+  recast3.types.visit(fn, {
+    visitIdentifier(path) {
+      usedNames.add(path.node.name);
+      return false;
+    }
+  });
+  let frameName = "frame";
+  let suffix = 2;
+  while (usedNames.has(frameName) || referencePath.scope.lookup(frameName)) {
+    frameName = `frame${suffix++}`;
+  }
   if (!n.BlockStatement.check(fn.body)) {
-    const expression = fn.body;
     fn.body = b3.blockStatement([
-      b3.returnStatement(expression)
+      b3.returnStatement(fn.body)
     ]);
   }
-  if (componentBodyHasFrameDeclaration({ body: fn.body, hookName })) {
-    return;
-  }
   const block = fn.body;
-  const frameDecl = b3.variableDeclaration("const", [
-    b3.variableDeclarator(b3.identifier("frame"), b3.callExpression(b3.identifier(hookName), []))
-  ]);
-  block.body.unshift(frameDecl);
+  block.body.unshift(b3.variableDeclaration("const", [
+    b3.variableDeclarator(b3.identifier(frameName), b3.callExpression(b3.identifier(hookName), []))
+  ]));
+  return frameName;
 };
 var RECAST_TAB_WIDTH = 4;
-var lineStartsBySource = new Map;
+var sourceLines = new Map;
 var maximumCachedSources = 8;
-var recastLocToOffset = (input, loc) => {
-  let lineStarts = lineStartsBySource.get(input);
-  if (!lineStarts) {
-    lineStarts = [0];
+var getSourceLines = (input) => {
+  let lines = sourceLines.get(input);
+  if (!lines) {
+    lines = { starts: [0], jsxColumnAdjustments: new Map };
     for (const match of input.matchAll(/\r\n|[\r\n\u2028\u2029]/g)) {
-      lineStarts.push(match.index + match[0].length);
+      lines.starts.push(match.index + match[0].length);
     }
   }
-  lineStartsBySource.delete(input);
-  lineStartsBySource.set(input, lineStarts);
-  if (lineStartsBySource.size > maximumCachedSources) {
-    lineStartsBySource.delete(lineStartsBySource.keys().next().value);
+  sourceLines.delete(input);
+  sourceLines.set(input, lines);
+  if (sourceLines.size > maximumCachedSources) {
+    sourceLines.delete(sourceLines.keys().next().value);
   }
-  let sourceOffset = lineStarts[loc.line - 1];
+  return lines;
+};
+var recastLocToOffset = (input, loc) => {
+  let sourceOffset = getSourceLines(input).starts[loc.line - 1];
   if (sourceOffset === undefined) {
     return input.length;
   }
@@ -34981,6 +35054,15 @@ var recastLocToOffset = (input, loc) => {
     isLeadingWhitespace = isLeadingWhitespace && /\s/.test(character);
   }
   return sourceOffset;
+};
+var getJsxSourceLocation = (input, loc) => {
+  const { starts, jsxColumnAdjustments } = getSourceLines(input);
+  let adjustment = jsxColumnAdjustments.get(loc.line);
+  if (adjustment === undefined) {
+    adjustment = recastLocToOffset(input, loc) - starts[loc.line - 1] - loc.column;
+    jsxColumnAdjustments.set(loc.line, adjustment);
+  }
+  return { line: loc.line, column: loc.column + adjustment };
 };
 var getPreferredQuote = (input, prettierConfigOverride) => {
   if (typeof prettierConfigOverride?.singleQuote === "boolean") {
@@ -37663,7 +37745,7 @@ var getFrameDisplayOffsetAdjustmentBetweenPaths = ({
   let playbackRateAdjustment = 1;
   while (current && current.value !== endPath.value) {
     const currentNode = current.value;
-    if (currentNode.type === "FunctionDeclaration" || currentNode.type === "FunctionExpression" || currentNode.type === "ArrowFunctionExpression") {
+    if (isComponentFunctionPath(current)) {
       return null;
     }
     if (currentNode.type === "JSXElement") {
@@ -37709,14 +37791,7 @@ var getDefaultFrameDisplayOffsetAdjustment = ({
   ast,
   videoConfigValues
 }) => {
-  let functionPath = jsxPath.parentPath;
-  while (functionPath) {
-    const node = functionPath.value;
-    if (node.type === "FunctionDeclaration" || node.type === "FunctionExpression" || node.type === "ArrowFunctionExpression") {
-      break;
-    }
-    functionPath = functionPath.parentPath;
-  }
+  const functionPath = findEnclosingFunctionPath(jsxPath);
   if (!functionPath) {
     return { adjustment: 0, playbackRateAdjustment: 1, canKeyframe: true };
   }
@@ -38200,39 +38275,17 @@ var findNodePathForJsxElement = (ast, target) => {
   });
   return foundPath;
 };
-var RECAST_TAB_WIDTH2 = 4;
-var sourceColumnToRecastColumn = ({
-  sourceLine,
-  column
-}) => {
-  if (sourceLine === undefined) {
-    return column;
-  }
-  let recastColumn = 0;
-  for (let index = 0;index < column; index++) {
-    if (sourceLine[index] === "\t") {
-      recastColumn += RECAST_TAB_WIDTH2 - recastColumn % RECAST_TAB_WIDTH2;
-    } else {
-      recastColumn++;
-    }
-  }
-  return recastColumn;
-};
 var lineColumnToNodePath = (ast, targetLine, targetColumn, fileContents) => {
   const lineMatches = [];
   const exactMatches = [];
-  const recastTargetColumn = targetColumn === undefined || fileContents === undefined ? targetColumn : sourceColumnToRecastColumn({
-    sourceLine: fileContents.split(`
-`)[targetLine - 1],
-    column: targetColumn
-  });
   recast13.types.visit(ast, {
     visitJSXOpeningElement(p) {
       const { node } = p;
       if (node.loc && node.loc.start.line === targetLine) {
         const nodePath = getNodePathForRecastPath(p, ast);
         lineMatches.push(nodePath);
-        if (node.loc.start.column === recastTargetColumn) {
+        const column = fileContents === undefined ? node.loc.start.column : getJsxSourceLocation(fileContents, node.loc.start).column;
+        if (column === targetColumn) {
           exactMatches.push(nodePath);
         }
       }
@@ -38244,11 +38297,11 @@ var lineColumnToNodePath = (ast, targetLine, targetColumn, fileContents) => {
   }
   return lineMatches.at(-1) ?? null;
 };
-var PIXEL_VALUE_REGEX = /^-?\d+(\.\d+)?px$/;
+var TRANSLATE_VALUE_REGEX = /^-?\d+(\.\d+)?(px|%)$/;
 var isSupportedTranslateValue = (value) => {
   const parts = value.split(/\s+/);
   if (parts.length >= 1 && parts.length <= 3) {
-    return parts.every((part) => PIXEL_VALUE_REGEX.test(part));
+    return parts.every((part, index) => TRANSLATE_VALUE_REGEX.test(part) && (index < 2 || part.endsWith("px")));
   }
   return false;
 };
@@ -38482,7 +38535,7 @@ var computeSequenceOnlyPropsRecord = ({
         allowSpecialValues: assetKeys.includes(key),
         lastSpreadIndex
       });
-      filteredProps[key] = key === "style.translate" && (status.status === "static" && typeof status.codeValue === "string" && status.codeValue.includes("%") || status.status === "keyframed" && status.keyframes.some((keyframe) => typeof keyframe.value === "string" && keyframe.value.includes("%"))) ? computedStatus() : status;
+      filteredProps[key] = status;
     } else if (key in allProps) {
       filteredProps[key] = allProps[key];
     } else if (lastSpreadIndex !== -1) {
@@ -38495,6 +38548,7 @@ var computeSequenceOnlyPropsRecord = ({
 };
 var computeSequencePropsStatusFromAstAndIdentifiers = ({
   ast,
+  sourceForLocation,
   nodePath,
   componentIdentity,
   keys,
@@ -38556,6 +38610,9 @@ var computeSequencePropsStatusFromAstAndIdentifiers = ({
   };
   return {
     canUpdate: true,
+    ...sourceForLocation === null ? {} : {
+      sourceLocation: jsxElement.loc ? getJsxSourceLocation(sourceForLocation, jsxElement.loc.start) : null
+    },
     durationDependentKeyframes: null,
     props: Object.fromEntries(Object.entries(filteredProps).map(([key, status]) => [
       key,
@@ -38572,6 +38629,7 @@ var computeSequencePropsStatusFromAstAndIdentifiers = ({
 };
 var computeSequencePropsStatusFromContent = ({
   fileContents,
+  includeSourceLocation,
   nodePath,
   componentIdentity,
   keys,
@@ -38584,6 +38642,7 @@ var computeSequencePropsStatusFromContent = ({
   cachedAst.videoConfigIdentifierValues = videoConfigIdentifierValues;
   return computeSequencePropsStatusFromAstAndIdentifiers({
     ast,
+    sourceForLocation: includeSourceLocation ? fileContents : null,
     nodePath,
     componentIdentity,
     keys,
@@ -38596,6 +38655,7 @@ var computeSequencePropsSubscriptionFromContent = ({
   fileContents,
   absolutePath,
   line,
+  column,
   preferredNodePath,
   componentIdentity,
   keys,
@@ -38608,6 +38668,7 @@ var computeSequencePropsSubscriptionFromContent = ({
         success: true,
         status: computeSequencePropsStatusFromContent({
           fileContents,
+          includeSourceLocation: true,
           nodePath: preferredNodePath,
           componentIdentity,
           keys,
@@ -38633,7 +38694,7 @@ var computeSequencePropsSubscriptionFromContent = ({
   }
   try {
     const { ast } = getReadOnlySourceSnapshot(fileContents);
-    const resolvedNodePath = lineColumnToNodePath(ast, line);
+    const resolvedNodePath = lineColumnToNodePath(ast, line, column, fileContents);
     if (!resolvedNodePath) {
       return {
         success: false,
@@ -38644,6 +38705,7 @@ var computeSequencePropsSubscriptionFromContent = ({
       success: true,
       status: computeSequencePropsStatusFromContent({
         fileContents,
+        includeSourceLocation: true,
         nodePath: resolvedNodePath,
         componentIdentity,
         keys,
@@ -38819,13 +38881,13 @@ var ensureClipboardParamRemotionImports = ({
   ast,
   requiredImports
 }) => {
-  const localNames = {};
+  const localNames = { frameName: null };
   for (const importedName of requiredImports) {
-    localNames[importedName] = ensureNamedImport({
+    localNames[importedName] = ensureOfficialNamedImport({
       ast,
       importedName,
       sourcePath: importedName === "interpolatePaths" ? "@remotion/paths" : "remotion",
-      localName: importedName
+      preferredLocalName: importedName
     });
   }
   return localNames;
@@ -38898,7 +38960,7 @@ var makeClipboardParamExpression = ({
     throw new Error("Cannot paste property: invalid easing metadata");
   }
   const args = [
-    b6.identifier("frame"),
+    b6.identifier(localNames.frameName ?? "frame"),
     b6.arrayExpression(param.keyframes.map((keyframe) => parseValueExpression(keyframe.frame))),
     b6.arrayExpression(param.keyframes.map((keyframe) => parseValueExpression(keyframe.value)))
   ];
@@ -39330,10 +39392,10 @@ var ensureFrameHook = ({
   if (!jsxPath) {
     return;
   }
-  const functionPath = findEnclosingFunctionPath(jsxPath);
-  if (functionPath) {
-    ensureUseCurrentFrameHook(functionPath, localNames.useCurrentFrame ?? "useCurrentFrame");
-  }
+  localNames.frameName = ensureUseCurrentFrameHook({
+    referencePath: jsxPath,
+    hookName: localNames.useCurrentFrame ?? "useCurrentFrame"
+  });
 };
 var pasteEffects = ({
   effects,
@@ -46971,6 +47033,494 @@ var getCanUpdateDefaultPropsForProject = ({
   const filePath = findProjectFile({ filePath: compositionFile, project });
   return computeCanUpdateDefaultPropsFromContent(project.files[filePath], compositionId);
 };
+var getCodemodResult = ({
+  project,
+  edits
+}) => {
+  const seen = new Set;
+  const changes = edits.flatMap(({ filePath, nextContents }) => {
+    if (seen.has(filePath)) {
+      throw new Error(`Multiple edits for ${filePath}`);
+    }
+    seen.add(filePath);
+    const previousContents = project.files[filePath] ?? null;
+    return previousContents === nextContents ? [] : [{ filePath, previousContents, nextContents }];
+  });
+  return { changes };
+};
+var applyCodemodChanges = (project, changes) => {
+  if (changes.length === 0) {
+    return project;
+  }
+  const seen = new Set;
+  for (const { filePath, previousContents } of changes) {
+    if (seen.has(filePath)) {
+      throw new Error(`Multiple changes for ${filePath}`);
+    }
+    seen.add(filePath);
+    if ((project.files[filePath] ?? null) !== previousContents) {
+      throw new Error(`Source changed before applying codemod: ${filePath}`);
+    }
+  }
+  const files = { ...project.files };
+  for (const { filePath, nextContents } of changes) {
+    if (nextContents === null) {
+      delete files[filePath];
+    } else {
+      files[filePath] = nextContents;
+    }
+  }
+  return { ...project, files };
+};
+var getInsertedNodeReferences = (remappings) => {
+  const inserted = remappings.flatMap(({ filePath, oldNodePath, newNodePath }) => oldNodePath === null && newNodePath !== null ? [{ filePath, nodePath: newNodePath }] : []);
+  return inserted.filter((node) => !inserted.some((parent) => {
+    if (parent === node || parent.filePath !== node.filePath)
+      return false;
+    const prefix = parent.nodePath.slice(0, -1);
+    return prefix.length < node.nodePath.length && prefix.every((part, index) => node.nodePath[index] === part);
+  }));
+};
+var getNodeEditResult = ({
+  project,
+  edits
+}) => {
+  return {
+    ...getCodemodResult({
+      project,
+      edits: edits.map(({ filePath, output }) => ({
+        filePath,
+        nextContents: output
+      }))
+    }),
+    nodePathRemappings: edits.flatMap(({ filePath, nodePathRemappings }) => nodePathRemappings.map((remapping) => ({ filePath, ...remapping })))
+  };
+};
+var isUnchangedNode = (node, next) => JSON.stringify(node.nodePath) === JSON.stringify(next.nodePath) && node.signature === next.signature;
+var nodesByAst = new WeakMap;
+var getSourceNodes = (source) => {
+  const { ast } = getReadOnlySourceSnapshot(source);
+  const cached = nodesByAst.get(ast);
+  if (cached)
+    return cached;
+  const nodes = getJsxNodesWithPaths(ast);
+  nodesByAst.set(ast, nodes);
+  return nodes;
+};
+var getUnchangedStructureRemappings = ({
+  input,
+  output
+}) => {
+  const before = getSourceNodes(input);
+  const after = getSourceNodes(output);
+  if (before.length !== after.length) {
+    throw new Error("The edit unexpectedly changed the JSX structure");
+  }
+  return before.flatMap((node, index) => {
+    const next = after[index];
+    const unchanged = JSON.stringify(node.nodePath) === JSON.stringify(next.nodePath) && recast22.prettyPrint(node.node).code === recast22.prettyPrint(next.node).code;
+    return unchanged ? [] : [
+      {
+        oldNodePath: node.nodePath.slice(),
+        newNodePath: next.nodePath.slice()
+      }
+    ];
+  });
+};
+var getKeyframeSourceLocationRemappings = ({
+  input,
+  output,
+  remappings
+}) => {
+  const result = remappings.slice();
+  const oldPathIndices = new Map(remappings.map((m, i) => [JSON.stringify(m.oldNodePath), i]));
+  const destinations = new Set(remappings.map((m) => JSON.stringify(m.newNodePath)));
+  const finalOpenings = new Map(getSourceNodes(output).map(({ nodePath, node }) => [
+    JSON.stringify(nodePath),
+    node
+  ]));
+  for (const { nodePath, node } of getSourceNodes(input)) {
+    const oldKey = JSON.stringify(nodePath);
+    const index = oldPathIndices.get(oldKey);
+    const remapping = index === undefined ? null : remappings[index];
+    if (!remapping && destinations.has(oldKey))
+      continue;
+    const newKey = remapping ? JSON.stringify(remapping.newNodePath) : oldKey;
+    const final = finalOpenings.get(newKey);
+    if (!node.loc || !final?.loc)
+      continue;
+    const before = getJsxSourceLocation(input, node.loc.start);
+    const after = getJsxSourceLocation(output, final.loc.start);
+    if (oldKey === newKey && before.line === after.line && before.column === after.column)
+      continue;
+    const sourceLocations = { before, after };
+    if (index !== undefined) {
+      result[index] = { ...remappings[index], sourceLocations };
+    } else {
+      result.push({
+        oldNodePath: nodePath.slice(),
+        newNodePath: nodePath.slice(),
+        sourceLocations
+      });
+    }
+  }
+  return result;
+};
+var getSubtreeEditRemappings = ({
+  before,
+  after,
+  subtrees
+}) => {
+  const remainingBefore = before.filter(({ node }) => !subtrees.some((subtree) => subtree.before.has(node)));
+  const remainingAfter = after.filter(({ node }) => !subtrees.some((subtree) => subtree.after.has(node)));
+  if (remainingBefore.length !== remainingAfter.length) {
+    throw new Error("Could not remap JSX nodes after editing the registrations");
+  }
+  const pairs = remainingBefore.map((node, index) => ({
+    node,
+    next: remainingAfter[index]
+  }));
+  for (const subtree of subtrees) {
+    const nodes = before.filter(({ node }) => subtree.before.has(node));
+    const nextNodes = after.filter(({ node }) => subtree.after.has(node));
+    if (nodes.length > 0 && nextNodes.length > 0 && nodes.length !== nextNodes.length) {
+      throw new Error("Could not remap JSX nodes after editing the registrations");
+    }
+    for (let i = 0;i < Math.max(nodes.length, nextNodes.length); i++) {
+      pairs.push({ node: nodes[i] ?? null, next: nextNodes[i] ?? null });
+    }
+  }
+  return pairs.flatMap(({ node, next }) => node !== null && next !== null && isUnchangedNode(node, next) ? [] : [
+    {
+      oldNodePath: node?.nodePath ?? null,
+      newNodePath: next?.nodePath ?? null
+    }
+  ]);
+};
+var getUpdatedNodeReference = ({
+  project,
+  node,
+  nodePathRemappings
+}) => {
+  const filePath = findProjectFile({ project, filePath: node.filePath });
+  const remapping = nodePathRemappings.find((entry) => entry.filePath === filePath && JSON.stringify(entry.oldNodePath) === JSON.stringify(node.nodePath));
+  if (remapping?.newNodePath === null) {
+    throw new Error("The JSX node was removed");
+  }
+  return { filePath, nodePath: remapping?.newNodePath ?? node.nodePath };
+};
+var getUpdatedNodeReferences = ({
+  project,
+  nodes,
+  nodePathRemappings
+}) => {
+  if (nodes.length === 1) {
+    return [
+      getUpdatedNodeReference({ project, node: nodes[0], nodePathRemappings })
+    ];
+  }
+  const pathsByFile = new Map;
+  for (const { filePath, oldNodePath, newNodePath } of nodePathRemappings) {
+    if (oldNodePath === null) {
+      continue;
+    }
+    const paths = pathsByFile.get(filePath) ?? new Map;
+    const key = JSON.stringify(oldNodePath);
+    if (!paths.has(key)) {
+      paths.set(key, newNodePath);
+    }
+    pathsByFile.set(filePath, paths);
+  }
+  return nodes.map((node) => {
+    const filePath = findProjectFile({ project, filePath: node.filePath });
+    const nodePath = pathsByFile.get(filePath)?.get(JSON.stringify(node.nodePath));
+    if (nodePath === null) {
+      throw new Error("The JSX node was removed");
+    }
+    return { filePath, nodePath: nodePath ?? node.nodePath };
+  });
+};
+var groupNodeReferencesByFile = ({
+  project,
+  nodes
+}) => {
+  if (nodes.length === 0) {
+    throw new Error("Expected at least one JSX node");
+  }
+  const groups = new Map;
+  const seenPathsByFile = new Map;
+  for (const node of nodes) {
+    const filePath = findProjectFile({ project, filePath: node.filePath });
+    const paths = groups.get(filePath) ?? [];
+    const seenPaths = seenPathsByFile.get(filePath) ?? new Set;
+    const key = JSON.stringify(node.nodePath);
+    if (!seenPaths.has(key)) {
+      paths.push(node.nodePath);
+      seenPaths.add(key);
+    }
+    groups.set(filePath, paths);
+    seenPathsByFile.set(filePath, seenPaths);
+  }
+  return groups;
+};
+var collectReferencedNames = (node) => {
+  const names = new Set;
+  recast23.types.visit(node, {
+    visitImportDeclaration() {
+      return false;
+    },
+    visitIdentifier(path) {
+      const isJsxAttributeName = path.parent?.node.type === "JSXAttribute" && path.name === "name";
+      if (!isJsxAttributeName) {
+        names.add(path.node.name);
+      }
+      this.traverse(path);
+    }
+  });
+  return names;
+};
+var removeUnusedImports = ({
+  input,
+  localNames
+}) => {
+  const ast = parseAst(input);
+  const referenced = collectReferencedNames(ast);
+  const edits = [];
+  for (const statement of ast.program.body) {
+    if (statement.type !== "ImportDeclaration" || !statement.loc) {
+      continue;
+    }
+    const specifiers = statement.specifiers ?? [];
+    const kept = specifiers.filter((specifier) => !localNames.has(specifier.local.name) || referenced.has(specifier.local.name));
+    if (kept.length === specifiers.length) {
+      continue;
+    }
+    const start = recastLocToOffset(input, statement.loc.start);
+    const end = recastLocToOffset(input, statement.loc.end);
+    if (kept.length === 0) {
+      const lineBreak = input.slice(end).match(/^\r?\n/)?.[0] ?? "";
+      edits.push({ start, end: end + lineBreak.length, replacement: "" });
+      continue;
+    }
+    const original = input.slice(start, end);
+    edits.push({
+      start,
+      end,
+      replacement: renderImportDeclaration({
+        bracketSpacing: getImportBracketSpacing({
+          declaration: statement,
+          input,
+          prettierConfigOverride: null
+        }),
+        declaration: { ...statement, specifiers: kept },
+        quote: original.includes('"') ? '"' : "'",
+        semicolon: original.trimEnd().endsWith(";") ? ";" : ""
+      })
+    });
+  }
+  return applySourceEdits({ input, edits });
+};
+var replaceJsxElementWithSource = ({
+  project,
+  node,
+  source,
+  importStatements
+}) => {
+  const filePath = findProjectFile({ project, filePath: node.filePath });
+  const input = project.files[filePath];
+  const ast = parseAst(input);
+  const captured = captureJsxNodePaths(ast);
+  const importSnapshots = captureImportSnapshots(ast);
+  const target = findJsxElementPathForDeletion(ast, node.nodePath);
+  const targetNode = target?.node;
+  if (!target || !targetNode?.loc) {
+    throw new Error("Could not find a JSX element at the target node path");
+  }
+  const declaration = parseAst(`const restored = (${source});`).program.body[0];
+  const restored = declaration.type === "VariableDeclaration" ? declaration.declarations[0].init : null;
+  if (restored?.type !== "JSXElement") {
+    throw new Error("The source to restore must be a single JSX element");
+  }
+  const targetNames = collectReferencedNames(targetNode);
+  target.replace(restored);
+  const edits = [];
+  const start = recastLocToOffset(input, targetNode.loc.start);
+  edits.push({
+    start,
+    end: recastLocToOffset(input, targetNode.loc.end),
+    replacement: indentContinuationLines({
+      indent: getLineIndent({ input, offset: start }),
+      input,
+      printed: source
+    })
+  });
+  const imports = ast.program.body.filter((statement) => statement.type === "ImportDeclaration");
+  const appendedImports = [];
+  for (const importStatement of importStatements) {
+    const savedImport = parseAst(importStatement).program.body[0];
+    if (savedImport?.type !== "ImportDeclaration") {
+      continue;
+    }
+    const importedNames = new Set(imports.flatMap((statement) => (statement.specifiers ?? []).map((specifier) => specifier.local.name)));
+    const missing = savedImport.specifiers.filter((specifier) => !importedNames.has(specifier.local.name));
+    if (missing.length === 0) {
+      continue;
+    }
+    const existing = imports.find((statement) => statement.source.value === savedImport.source.value && statement.importKind === savedImport.importKind && (statement.specifiers ?? []).every((specifier) => specifier.type !== "ImportNamespaceSpecifier"));
+    if (!existing && missing.length === savedImport.specifiers.length) {
+      appendedImports.push(importStatement);
+      continue;
+    }
+    const namespaceSpecifiers = missing.filter((specifier) => specifier.type === "ImportNamespaceSpecifier");
+    const defaultSpecifiers = (existing?.specifiers ?? []).some((specifier) => specifier.type === "ImportDefaultSpecifier") ? missing.filter((specifier) => specifier.type === "ImportDefaultSpecifier") : [];
+    const otherSpecifiers = missing.filter((specifier) => specifier.type !== "ImportNamespaceSpecifier" && !defaultSpecifiers.includes(specifier));
+    if (existing && otherSpecifiers.length > 0) {
+      existing.specifiers = [
+        ...existing.specifiers ?? [],
+        ...otherSpecifiers
+      ];
+    }
+    for (const specifiers of [
+      namespaceSpecifiers,
+      defaultSpecifiers,
+      existing ? [] : otherSpecifiers
+    ]) {
+      if (specifiers.length > 0) {
+        appendedImports.push(renderImportDeclaration({
+          bracketSpacing: /\{\s/.test(importStatement),
+          declaration: { ...savedImport, specifiers },
+          quote: importStatement.includes('"') ? '"' : "'",
+          semicolon: importStatement.trimEnd().endsWith(";") ? ";" : ""
+        }));
+      }
+    }
+  }
+  edits.push(...getInsertImportSourceEdits({
+    ast,
+    input,
+    prettierConfigOverride: null,
+    snapshots: importSnapshots
+  }));
+  if (appendedImports.length > 0) {
+    const lastImport = imports[imports.length - 1];
+    const offset = lastImport?.loc ? recastLocToOffset(input, lastImport.loc.end) : 0;
+    const endOfLine = getEndOfLine(input);
+    const rendered = appendedImports.join(endOfLine);
+    edits.push({
+      start: offset,
+      end: offset,
+      replacement: offset === 0 ? `${rendered}${endOfLine}` : `${endOfLine}${rendered}`
+    });
+  }
+  const output = removeUnusedImports({
+    input: applySourceEdits({ input, edits }),
+    localNames: targetNames
+  });
+  const { nodePathRemappings } = getNodePathRemappings({ ast, captured, output });
+  return {
+    ...getNodeEditResult({
+      project,
+      edits: [{ filePath, output, nodePathRemappings }]
+    }),
+    logLine: targetNode.loc.start.line
+  };
+};
+var replaceNodeChild = ({
+  project,
+  node,
+  element
+}) => {
+  const filePath = findProjectFile({ project, filePath: node.filePath });
+  const input = project.files[filePath];
+  const ast = parseAst(input);
+  const captured = captureJsxNodePaths(ast);
+  const importSnapshots = captureImportSnapshots(ast);
+  const parent = findJsxElementPathForDeletion(ast, node.nodePath)?.node;
+  if (!parent) {
+    throw new Error("Could not find a JSX element at the target node path");
+  }
+  const meaningfulChildren = parent.children.filter((c) => c.type !== "JSXText" || c.value.trim() !== "");
+  const child = meaningfulChildren[0];
+  if (meaningfulChildren.length !== 1 || child.type !== "JSXElement" || !child.loc) {
+    throw new Error("The target element must have exactly one JSX child");
+  }
+  const childNames = collectReferencedNames(child);
+  let rootName = child.openingElement.name;
+  while (rootName.type === "JSXMemberExpression") {
+    rootName = rootName.object;
+  }
+  let sceneImportSource = null;
+  const replacedImports = [];
+  for (const statement of ast.program.body) {
+    if (statement.type !== "ImportDeclaration" || !statement.loc) {
+      continue;
+    }
+    const usedSpecifiers = (statement.specifiers ?? []).filter((specifier) => childNames.has(specifier.local.name));
+    if (usedSpecifiers.length === 0) {
+      continue;
+    }
+    if (rootName.type === "JSXIdentifier" && usedSpecifiers.some((specifier) => specifier.local.name === rootName.name)) {
+      sceneImportSource = statement.source.value;
+    }
+    const original = input.slice(recastLocToOffset(input, statement.loc.start), recastLocToOffset(input, statement.loc.end));
+    replacedImports.push(renderImportDeclaration({
+      bracketSpacing: getImportBracketSpacing({
+        declaration: statement,
+        input,
+        prettierConfigOverride: null
+      }),
+      declaration: { ...statement, specifiers: usedSpecifiers },
+      quote: original.includes('"') ? '"' : "'",
+      semicolon: original.trimEnd().endsWith(";") ? ";" : ""
+    }));
+  }
+  const childStart = recastLocToOffset(input, child.loc.start);
+  const childIndent = getLineIndent({ input, offset: childStart });
+  const replacedSource = input.slice(childStart, recastLocToOffset(input, child.loc.end)).split(`
+`).map((line, i) => i > 0 && line.startsWith(childIndent) ? line.slice(childIndent.length) : line).join(`
+`);
+  const jsx = buildJsxElement({ ast, element });
+  parent.children[parent.children.indexOf(child)] = jsx;
+  const output = removeUnusedImports({
+    input: applySourceEdits({
+      input,
+      edits: [
+        ...getInsertImportSourceEdits({
+          ast,
+          input,
+          prettierConfigOverride: null,
+          snapshots: importSnapshots
+        }),
+        {
+          start: childStart,
+          end: recastLocToOffset(input, child.loc.end),
+          replacement: indentContinuationLines({
+            indent: childIndent,
+            input,
+            printed: printInsertedJsx({
+              compactLiteralProps: true,
+              element: jsx,
+              input,
+              prettierConfigOverride: null
+            })
+          })
+        }
+      ]
+    }),
+    localNames: childNames
+  });
+  const { nodePathRemappings } = getNodePathRemappings({ ast, captured, output });
+  return {
+    ...getNodeEditResult({
+      project,
+      edits: [{ filePath, output, nodePathRemappings }]
+    }),
+    logLine: child.loc.start.line,
+    replacedSource,
+    replacedImports,
+    sceneImportSource
+  };
+};
 var resolveNodePathsFromLocations = ({
   fileContents,
   targets
@@ -46982,17 +47532,13 @@ var resolveNodePathsFromLocations = ({
       matchesByLine.set(line, { lastNodePath: null, byColumn: new Map });
     }
   }
-  const lineStarts = [0];
-  for (const match of fileContents.matchAll(/\r\n|[\r\n\u2028\u2029]/g)) {
-    lineStarts.push(match.index + match[0].length);
-  }
-  recast22.visit(ast, {
+  recast24.visit(ast, {
     visitJSXOpeningElement(p) {
       const location2 = p.node.loc?.start;
       const matches = location2 ? matchesByLine.get(location2.line) : undefined;
       if (location2 && matches) {
         const nodePath = getNodePathForRecastPath(p, ast);
-        const column = recastLocToOffset(fileContents, location2) - lineStarts[location2.line - 1];
+        const { column } = getJsxSourceLocation(fileContents, location2);
         const previous = matches.byColumn.get(column);
         matches.lastNodePath = nodePath;
         matches.byColumn.set(column, {
@@ -47066,7 +47612,7 @@ var getDurationDependentKeyframes = ({
   if (cache2.has(scopeNode))
     return cache2.get(scopeNode);
   const inputRanges = [];
-  recast23.types.visit(scopePath, {
+  recast25.types.visit(scopePath, {
     visitCallExpression(path) {
       const { callee } = path.node;
       if (callee.type !== "Identifier" || !path.node.arguments[1] || getKeyframeInterpolationFunctionForCallee({
@@ -47083,7 +47629,7 @@ var getDurationDependentKeyframes = ({
         if (seen.has(rangePath.node))
           continue;
         seen.add(rangePath.node);
-        recast23.types.visit(rangePath, {
+        recast25.types.visit(rangePath, {
           visitIdentifier(identifierPath) {
             const binding = videoConfigIdentifierValues instanceof Map ? videoConfigIdentifierValues.get(identifierPath.node) : videoConfigIdentifierValues[identifierPath.node.name];
             if (binding?.type === "video-config" && binding.field === "durationInFrames") {
@@ -47461,183 +48007,7 @@ ${indentation}${insertedSource},` : `${hasTrailingComma ? "" : ","} ${insertedSo
     changedFields
   };
 };
-var getCodemodResult = ({
-  project,
-  edits
-}) => {
-  const seen = new Set;
-  const changes = edits.flatMap(({ filePath, nextContents }) => {
-    if (seen.has(filePath)) {
-      throw new Error(`Multiple edits for ${filePath}`);
-    }
-    seen.add(filePath);
-    const previousContents = project.files[filePath] ?? null;
-    return previousContents === nextContents ? [] : [{ filePath, previousContents, nextContents }];
-  });
-  return { changes };
-};
-var applyCodemodChanges = (project, changes) => {
-  if (changes.length === 0) {
-    return project;
-  }
-  const seen = new Set;
-  for (const { filePath, previousContents } of changes) {
-    if (seen.has(filePath)) {
-      throw new Error(`Multiple changes for ${filePath}`);
-    }
-    seen.add(filePath);
-    if ((project.files[filePath] ?? null) !== previousContents) {
-      throw new Error(`Source changed before applying codemod: ${filePath}`);
-    }
-  }
-  const files = { ...project.files };
-  for (const { filePath, nextContents } of changes) {
-    if (nextContents === null) {
-      delete files[filePath];
-    } else {
-      files[filePath] = nextContents;
-    }
-  }
-  return { ...project, files };
-};
-var getInsertedNodeReferences = (remappings) => {
-  const inserted = remappings.flatMap(({ filePath, oldNodePath, newNodePath }) => oldNodePath === null && newNodePath !== null ? [{ filePath, nodePath: newNodePath }] : []);
-  return inserted.filter((node) => !inserted.some((parent) => {
-    if (parent === node || parent.filePath !== node.filePath)
-      return false;
-    const prefix = parent.nodePath.slice(0, -1);
-    return prefix.length < node.nodePath.length && prefix.every((part, index) => node.nodePath[index] === part);
-  }));
-};
-var getNodeEditResult = ({
-  project,
-  edits
-}) => {
-  return {
-    ...getCodemodResult({
-      project,
-      edits: edits.map(({ filePath, output }) => ({
-        filePath,
-        nextContents: output
-      }))
-    }),
-    nodePathRemappings: edits.flatMap(({ filePath, nodePathRemappings }) => nodePathRemappings.map((remapping) => ({ filePath, ...remapping })))
-  };
-};
-var isUnchangedNode = (node, next) => JSON.stringify(node.nodePath) === JSON.stringify(next.nodePath) && node.signature === next.signature;
-var getUnchangedStructureRemappings = ({
-  input,
-  output
-}) => {
-  const before = getJsxNodesWithPaths(getReadOnlySourceSnapshot(input).ast);
-  const after = getJsxNodesWithPaths(getReadOnlySourceSnapshot(output).ast);
-  if (before.length !== after.length) {
-    throw new Error("The edit unexpectedly changed the JSX structure");
-  }
-  return before.flatMap((node, index) => {
-    const next = after[index];
-    const unchanged = JSON.stringify(node.nodePath) === JSON.stringify(next.nodePath) && recast24.prettyPrint(node.node).code === recast24.prettyPrint(next.node).code;
-    return unchanged ? [] : [{ oldNodePath: node.nodePath, newNodePath: next.nodePath }];
-  });
-};
-var getSubtreeEditRemappings = ({
-  before,
-  after,
-  subtrees
-}) => {
-  const remainingBefore = before.filter(({ node }) => !subtrees.some((subtree) => subtree.before.has(node)));
-  const remainingAfter = after.filter(({ node }) => !subtrees.some((subtree) => subtree.after.has(node)));
-  if (remainingBefore.length !== remainingAfter.length) {
-    throw new Error("Could not remap JSX nodes after editing the registrations");
-  }
-  const pairs = remainingBefore.map((node, index) => ({
-    node,
-    next: remainingAfter[index]
-  }));
-  for (const subtree of subtrees) {
-    const nodes = before.filter(({ node }) => subtree.before.has(node));
-    const nextNodes = after.filter(({ node }) => subtree.after.has(node));
-    if (nodes.length > 0 && nextNodes.length > 0 && nodes.length !== nextNodes.length) {
-      throw new Error("Could not remap JSX nodes after editing the registrations");
-    }
-    for (let i = 0;i < Math.max(nodes.length, nextNodes.length); i++) {
-      pairs.push({ node: nodes[i] ?? null, next: nextNodes[i] ?? null });
-    }
-  }
-  return pairs.flatMap(({ node, next }) => node !== null && next !== null && isUnchangedNode(node, next) ? [] : [
-    {
-      oldNodePath: node?.nodePath ?? null,
-      newNodePath: next?.nodePath ?? null
-    }
-  ]);
-};
-var getUpdatedNodeReference = ({
-  project,
-  node,
-  nodePathRemappings
-}) => {
-  const filePath = findProjectFile({ project, filePath: node.filePath });
-  const remapping = nodePathRemappings.find((entry) => entry.filePath === filePath && JSON.stringify(entry.oldNodePath) === JSON.stringify(node.nodePath));
-  if (remapping?.newNodePath === null) {
-    throw new Error("The JSX node was removed");
-  }
-  return { filePath, nodePath: remapping?.newNodePath ?? node.nodePath };
-};
-var getUpdatedNodeReferences = ({
-  project,
-  nodes,
-  nodePathRemappings
-}) => {
-  if (nodes.length === 1) {
-    return [
-      getUpdatedNodeReference({ project, node: nodes[0], nodePathRemappings })
-    ];
-  }
-  const pathsByFile = new Map;
-  for (const { filePath, oldNodePath, newNodePath } of nodePathRemappings) {
-    if (oldNodePath === null) {
-      continue;
-    }
-    const paths = pathsByFile.get(filePath) ?? new Map;
-    const key = JSON.stringify(oldNodePath);
-    if (!paths.has(key)) {
-      paths.set(key, newNodePath);
-    }
-    pathsByFile.set(filePath, paths);
-  }
-  return nodes.map((node) => {
-    const filePath = findProjectFile({ project, filePath: node.filePath });
-    const nodePath = pathsByFile.get(filePath)?.get(JSON.stringify(node.nodePath));
-    if (nodePath === null) {
-      throw new Error("The JSX node was removed");
-    }
-    return { filePath, nodePath: nodePath ?? node.nodePath };
-  });
-};
-var groupNodeReferencesByFile = ({
-  project,
-  nodes
-}) => {
-  if (nodes.length === 0) {
-    throw new Error("Expected at least one JSX node");
-  }
-  const groups = new Map;
-  const seenPathsByFile = new Map;
-  for (const node of nodes) {
-    const filePath = findProjectFile({ project, filePath: node.filePath });
-    const paths = groups.get(filePath) ?? [];
-    const seenPaths = seenPathsByFile.get(filePath) ?? new Set;
-    const key = JSON.stringify(node.nodePath);
-    if (!seenPaths.has(key)) {
-      paths.push(node.nodePath);
-      seenPaths.add(key);
-    }
-    groups.set(filePath, paths);
-    seenPathsByFile.set(filePath, seenPaths);
-  }
-  return groups;
-};
-var b10 = recast25.types.builders;
+var b10 = recast26.types.builders;
 var getCompositionRootSourceEdit = ({
   ast,
   exportName,
@@ -47838,24 +48208,14 @@ var getNodes2 = ({
   const { ast } = getReadOnlySourceSnapshot(input);
   const captured = getJsxNodesWithPaths(ast);
   const nodePathByNode = new Map(captured.map(({ node, nodePath }) => [node, nodePath]));
-  const lineStarts = [0];
-  for (const match of input.matchAll(/\r\n|[\r\n\u2028\u2029]/g)) {
-    lineStarts.push(match.index + match[0].length);
-  }
-  return captured.map(({ node, nodePath, parentNode }) => {
-    const offset = node.loc ? recastLocToOffset(input, node.loc.start) : null;
-    return {
-      filePath: resolvedFilePath,
-      nodePath,
-      tagName: recast26.print(node.name).code,
-      componentIdentity: getJsxComponentIdentity({ ast, jsxElement: node }),
-      location: node.loc && offset !== null ? {
-        line: node.loc.start.line,
-        column: offset - lineStarts[node.loc.start.line - 1]
-      } : null,
-      parentNodePath: parentNode === null ? null : nodePathByNode.get(parentNode) ?? null
-    };
-  });
+  return captured.map(({ node, nodePath, parentNode }) => ({
+    filePath: resolvedFilePath,
+    nodePath,
+    tagName: recast27.print(node.name).code,
+    componentIdentity: getJsxComponentIdentity({ ast, jsxElement: node }),
+    location: node.loc ? getJsxSourceLocation(input, node.loc.start) : null,
+    parentNodePath: parentNode === null ? null : nodePathByNode.get(parentNode) ?? null
+  }));
 };
 var getNodeProps = ({
   project,
@@ -47883,6 +48243,7 @@ var getNodeProps = ({
   }
   const result = computeSequencePropsStatusFromContent({
     fileContents: project.files[filePath],
+    includeSourceLocation: false,
     nodePath: node.nodePath,
     componentIdentity: componentIdentity ?? null,
     assetKeys,
@@ -47891,7 +48252,7 @@ var getNodeProps = ({
   });
   return result;
 };
-var b11 = recast27.types.builders;
+var b11 = recast28.types.builders;
 var ensureImportsForUpdates = ({
   ast,
   updates
@@ -47927,7 +48288,7 @@ var snapshotTopLevelAttrs = (node) => {
   for (const a of node.attributes ?? []) {
     if (a.type === "JSXAttribute" && a.name.type === "JSXIdentifier") {
       const { name } = a.name;
-      const printed = recast27.print(a).code.replace(/\s+/g, " ").replace(/,(\s*[}\]])/g, "$1").trim();
+      const printed = recast28.print(a).code.replace(/\s+/g, " ").replace(/,(\s*[}\]])/g, "$1").trim();
       const prefix = `${name}=`;
       let valueOnly = printed.startsWith(prefix) ? printed.slice(prefix.length) : printed;
       if (valueOnly.startsWith("{") && valueOnly.endsWith("}")) {
@@ -47937,52 +48298,6 @@ var snapshotTopLevelAttrs = (node) => {
     }
   }
   return result;
-};
-var isFunctionNode3 = (value) => {
-  return recast27.types.namedTypes.FunctionDeclaration.check(value) || recast27.types.namedTypes.FunctionExpression.check(value) || recast27.types.namedTypes.ArrowFunctionExpression.check(value);
-};
-var ensureUseCurrentFrameHook2 = ({
-  ast,
-  jsxElement,
-  hookName
-}) => {
-  let functionPath = null;
-  recast27.types.visit(ast, {
-    visitJSXElement(path) {
-      if (path.node !== jsxElement) {
-        return this.traverse(path);
-      }
-      let current = path.parentPath;
-      while (current) {
-        if (isFunctionNode3(current.value)) {
-          functionPath = current;
-          return false;
-        }
-        current = current.parentPath;
-      }
-      return false;
-    }
-  });
-  const enclosingFunctionPath = functionPath;
-  if (enclosingFunctionPath === null) {
-    return;
-  }
-  const fn = enclosingFunctionPath.value;
-  if (!recast27.types.namedTypes.BlockStatement.check(fn.body)) {
-    fn.body = b11.blockStatement([
-      b11.returnStatement(fn.body)
-    ]);
-  }
-  const block = fn.body;
-  const hasFrame = block.body.some((statement) => {
-    return statement.type === "VariableDeclaration" && statement.declarations.some((declaration) => declaration.type === "VariableDeclarator" && declaration.id.type === "Identifier" && declaration.id.name === "frame" && declaration.init?.type === "CallExpression" && declaration.init.callee.type === "Identifier" && declaration.init.callee.name === hookName);
-  });
-  if (hasFrame) {
-    return;
-  }
-  block.body.unshift(b11.variableDeclaration("const", [
-    b11.variableDeclarator(b11.identifier("frame"), b11.callExpression(b11.identifier(hookName), []))
-  ]));
 };
 var prepareClipboardParamSourceEdits = ({
   ast,
@@ -47994,18 +48309,26 @@ var prepareClipboardParamSourceEdits = ({
     ast,
     requiredImports
   });
+  const namesByNode = new Map(changes.map(({ jsxElement }) => [jsxElement, { ...localNames }]));
   if (requiredImports.has("useCurrentFrame")) {
-    for (const { jsxElement, updates } of changes) {
-      if (updates.some((update) => update.clipboardParam?.type === "keyframed")) {
-        ensureUseCurrentFrameHook2({
-          ast,
-          jsxElement,
-          hookName: localNames.useCurrentFrame ?? "useCurrentFrame"
-        });
+    const animatedNodes = new Set(changes.filter(({ updates }) => updates.some((update) => update.clipboardParam?.type === "keyframed")).map(({ jsxElement }) => jsxElement));
+    const paths = [];
+    recast28.types.visit(ast, {
+      visitJSXElement(path) {
+        if (animatedNodes.has(path.node)) {
+          paths.push(path);
+        }
+        return this.traverse(path);
       }
+    });
+    for (const path of paths) {
+      namesByNode.get(path.node).frameName = ensureUseCurrentFrameHook({
+        referencePath: path,
+        hookName: localNames.useCurrentFrame ?? "useCurrentFrame"
+      });
     }
   }
-  return localNames;
+  return namesByNode;
 };
 var escapeJsxText = (value) => {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/{/g, "&#123;").replace(/}/g, "&#125;");
@@ -48051,7 +48374,7 @@ var updateJsxTextContent = ({
 };
 var collectTopLevelIdentifierNames = (ast) => {
   const names = new Set;
-  recast27.types.visit(ast, {
+  recast28.types.visit(ast, {
     visitIdentifier(path) {
       names.add(path.node.name);
       this.traverse(path);
@@ -48223,7 +48546,7 @@ var collectUsedFontFamilyNames = (ast) => {
       used.add(normalizeFontFamilyName(primary));
     }
   };
-  recast27.types.visit(ast, {
+  recast28.types.visit(ast, {
     visitObjectProperty(path) {
       const { node } = path;
       if (node.key.type === "Identifier" && node.key.name === "fontFamily") {
@@ -48257,7 +48580,7 @@ var hasNonImportIdentifierReference = ({
   name
 }) => {
   let hasReference = false;
-  recast27.types.visit(ast, {
+  recast28.types.visit(ast, {
     visitIdentifier(path) {
       if (path.node.name !== name) {
         this.traverse(path);
@@ -48472,7 +48795,7 @@ var updateSequencePropsNode = ({
       });
       const attr = attrIndex !== undefined && attrIndex !== -1 ? node.attributes?.[attrIndex] : undefined;
       if (attr && attr.type !== "JSXSpreadAttribute" && attr.value) {
-        const printed = recast27.print(attr.value).code;
+        const printed = recast28.print(attr.value).code;
         oldValueString = printed.startsWith("{") && printed.endsWith("}") ? printed.slice(1, -1) : printed;
       } else if (attr && attr.type !== "JSXSpreadAttribute" && !attr.value) {
         oldValueString = "true";
@@ -48636,7 +48959,7 @@ var updateMultipleSequenceProps = ({
     if (!updates.some((update) => update.retimeKeyframes)) {
       continue;
     }
-    recast27.types.visit(jsxElement, {
+    recast28.types.visit(jsxElement, {
       visitJSXElement(p) {
         elementsToPrint.add(p.node);
         return this.traverse(p);
@@ -48677,7 +49000,7 @@ var updateMultipleSequenceProps = ({
         updates,
         schema,
         videoConfigValues: updates.some(({ value, clipboardParam }) => typeof value === "number" && !clipboardParam) ? getVideoConfigIdentifierValues({ ast, videoConfigValues }) : new Map,
-        clipboardParamLocalNames
+        clipboardParamLocalNames: clipboardParamLocalNames.get(jsxElement)
       })
     };
   });
@@ -48686,7 +49009,7 @@ var updateMultipleSequenceProps = ({
   const updatedOpeningElements = new Set(updateResults.map(({ jsxElement }) => jsxElement.openingElement));
   const updatedNodePaths = new Map;
   if (updatedOpeningElements.size > 0) {
-    recast27.types.visit(ast, {
+    recast28.types.visit(ast, {
       visitJSXOpeningElement(path) {
         if (updatedOpeningElements.has(path.node)) {
           updatedNodePaths.set(path.node, getNodePathForRecastPath(path, ast));
@@ -48726,7 +49049,7 @@ var updateMultipleSequenceProps = ({
       continue;
     }
     const original = input.slice(start, end);
-    if (recast27.print(openingElement).code === original) {
+    if (recast28.print(openingElement).code === original) {
       continue;
     }
     elementEdits.push({
@@ -48755,7 +49078,7 @@ var updateMultipleSequenceProps = ({
       continue;
     }
     const original = input.slice(start, end);
-    if (recast27.print(element).code === original) {
+    if (recast28.print(element).code === original) {
       continue;
     }
     elementEdits.push({
@@ -48938,7 +49261,7 @@ var parseJsxElement = (source) => {
   }
   return cloned;
 };
-var cloneJsxElement = (element) => parseJsxElement(recast28.print(element).code);
+var cloneJsxElement = (element) => parseJsxElement(recast29.print(element).code);
 var uniquifyNamePropOnClone = (clone) => {
   for (const attr of clone.openingElement.attributes) {
     if (attr.type !== "JSXAttribute" || attr.name.type !== "JSXIdentifier" || attr.name.name !== "name" || !attr.value) {
@@ -49196,7 +49519,7 @@ var duplicateNodes = ({
         }
         const showInTimeline = openingElement.attributes.find((attribute) => attribute.type === "JSXAttribute" && attribute.name.name === "showInTimeline");
         const explicitlyVisible = showInTimeline?.type === "JSXAttribute" && (showInTimeline.value === null || showInTimeline.value?.type === "JSXExpressionContainer" && showInTimeline.value.expression.type === "BooleanLiteral" && showInTimeline.value.expression.value);
-        if (identity !== null && /^dev\.remotion\.(remotion\.(Sequence|Video|OffthreadVideo|Audio|experimental_Video|experimental_Audio|Interactive\.[A-Za-z]+)|media\.(Video|Audio))$/.test(identity) && !openingElement.attributes.some((attribute) => attribute.type === "JSXSpreadAttribute") && (showInTimeline === undefined || explicitlyVisible)) {
+        if (identity !== null && /^dev\.remotion\.(remotion\.(Sequence|Video|OffthreadVideo|Audio|experimental_Video|experimental_Audio|Interactive\.[A-Za-z][A-Za-z0-9]*)|media\.(Video|Audio))$/.test(identity) && !openingElement.attributes.some((attribute) => attribute.type === "JSXSpreadAttribute") && (showInTimeline === undefined || explicitlyVisible)) {
           break;
         }
         crossesExpression = true;
@@ -49335,7 +49658,7 @@ var duplicateNodes2 = async ({
     duplicatedNodes: edits.flatMap(({ filePath, duplicatedNodePaths }) => duplicatedNodePaths.map((nodePath) => ({ filePath, nodePath })))
   };
 };
-var { namedTypes: namedTypes2 } = recast29.types;
+var { namedTypes: namedTypes2 } = recast30.types;
 var getJsxChildrenParent = (path) => {
   const parent = path.parentPath?.node;
   if (!parent) {
@@ -49460,7 +49783,7 @@ var reorderNodes = async ({
     updatedNodes: getUpdatedNodeReferences({ project, ...result, nodes })
   };
 };
-var { builders: b12, namedTypes: namedTypes3 } = recast30.types;
+var { builders: b12, namedTypes: namedTypes3 } = recast31.types;
 var normalizeComputedTiming = (value) => {
   return Number.isInteger(value) ? value : Number(value.toPrecision(15));
 };
@@ -49622,19 +49945,6 @@ var jsxNameToString = (name) => {
 var getSplittableSequenceTagName = (element) => {
   return jsxNameToString(element.openingElement.name);
 };
-var cloneJsxElement2 = (element) => {
-  const printed = recast30.print(element).code;
-  const file = parseAstForReadOnly(`<>${printed}</>;`);
-  const statement = file.program.body[0];
-  if (statement?.type !== "ExpressionStatement" || statement.expression.type !== "JSXFragment") {
-    throw new Error("Could not clone the JSX sequence to split");
-  }
-  const cloned = statement.expression.children.find((child) => child.type === "JSXElement");
-  if (!cloned) {
-    throw new Error("Could not clone the JSX sequence to split");
-  }
-  return cloned;
-};
 var makeFragment2 = (first, second) => ({
   type: "JSXFragment",
   openingFragment: { type: "JSXOpeningFragment" },
@@ -49673,7 +49983,7 @@ var getSplitSourceEdit = ({
   track,
   wrapInFragment
 }) => {
-  if (!left.loc) {
+  if (!left.loc || !left.openingElement.loc) {
     throw new Error("Cannot split a JSX sequence without a source location");
   }
   const start = recastLocToOffset(input, left.loc.start);
@@ -49684,18 +49994,25 @@ var getSplitSourceEdit = ({
   const lineIndent = getLineIndent({ input, offset: start });
   const isOnlyElementOnLine = beforeElement.trim() === "";
   const endOfLine = getEndOfLine(input);
-  const formattingConfig = prettierConfigOverride ?? null;
-  const print = (element) => indentContinuationLines({
-    indent: lineIndent,
+  const wrapped = track !== null || wrapInFragment;
+  const clipIndent = wrapped ? lineIndent + getIndentationUnit(input, prettierConfigOverride) : lineIndent;
+  const printOpening = (element, indent) => indentContinuationLines({
+    indent,
     input,
-    printed: printInsertedJsx({
+    printed: printJsxOpeningElement({
       compactLiteralProps: false,
-      element,
+      openingElement: element.openingElement,
       input,
-      prettierConfigOverride: formattingConfig
+      prettierConfigOverride
     })
   });
-  const replacement = track ? print(track) : wrapInFragment ? print(makeFragment2(left, right)) : `${print(left)}${isOnlyElementOnLine ? `${endOfLine}${lineIndent}` : " "}${print(right)}`;
+  const childrenAndClosingTag = input.slice(recastLocToOffset(input, left.openingElement.loc.end), end);
+  const clips = [left, right].map((element) => printOpening(element, clipIndent) + childrenAndClosingTag).join(wrapped || isOnlyElementOnLine ? endOfLine + clipIndent : "");
+  const replacement = wrapped ? [
+    track ? printOpening(track, lineIndent) : "<>",
+    clipIndent + clips,
+    lineIndent + (track ? `</${getSplittableSequenceTagName(track)}>` : "</>")
+  ].join(endOfLine) : clips;
   return { end, replacement, start };
 };
 var splitJsxSequences = ({
@@ -49707,6 +50024,7 @@ var splitJsxSequences = ({
     throw new Error("No JSX sequences were specified for splitting");
   }
   const ast = parseAst(input);
+  const copies = parseAstForReadOnly(input);
   const capturedNodePaths = captureJsxNodePaths(ast);
   const importSnapshots = captureImportSnapshots(ast);
   const targets = splits.map(({ nodePath, sequenceKeys, splitFrame, videoConfigValues }) => {
@@ -49714,7 +50032,8 @@ var splitJsxSequences = ({
       throw new Error("Split frame must be finite");
     }
     const jsxPath = findJsxElementPathForDeletion(ast, nodePath);
-    if (!jsxPath) {
+    const copy = findJsxElementPathForDeletion(copies, nodePath);
+    if (!jsxPath || !copy) {
       throw new Error("Could not find a JSX sequence at the specified location to split");
     }
     const jsxElement = jsxPath.node;
@@ -49757,6 +50076,7 @@ var splitJsxSequences = ({
       from,
       jsxElement,
       jsxPath,
+      right: copy.node,
       splitFrame,
       timing
     };
@@ -49770,10 +50090,10 @@ var splitJsxSequences = ({
     isInsideTrack,
     jsxElement,
     jsxPath,
+    right,
     splitFrame,
     timing
   }) => {
-    const right = cloneJsxElement2(jsxElement);
     insertedElements.push(right);
     const leftTimelineDuration = normalizeComputedTiming(splitFrame - from);
     const leftDuration = normalizeComputedTiming(leftTimelineDuration * timing.playbackRate);
@@ -49935,7 +50255,7 @@ var splitSequences = async ({
         nodesByFile.set(filePath, nodesByPath);
       }
       const target = nodesByPath.get(JSON.stringify(split.node.nodePath));
-      if (!target?.componentIdentity || !/^dev\.remotion\.(remotion\.(Sequence|Video|OffthreadVideo|Audio|experimental_Video|experimental_Audio|Interactive\.[A-Za-z]+)|media\.(Video|Audio))$/.test(target.componentIdentity)) {
+      if (!target?.componentIdentity || !/^dev\.remotion\.(remotion\.(Sequence|Video|OffthreadVideo|Audio|experimental_Video|experimental_Audio|Interactive\.[A-Za-z][A-Za-z0-9]*)|media\.(Video|Audio))$/.test(target.componentIdentity)) {
         throw new Error("Only Remotion sequences, interactive elements, and timeline media can be split");
       }
       const status = getNodeProps({
@@ -49981,7 +50301,7 @@ var splitSequences = async ({
     insertedNodes: edits.flatMap(({ filePath, insertedNodePaths }) => insertedNodePaths.map((nodePath) => ({ filePath, nodePath })))
   };
 };
-var { namedTypes: namedTypes4 } = recast31.types;
+var { namedTypes: namedTypes4 } = recast32.types;
 var audioProps = [
   "src",
   "from",
@@ -50270,7 +50590,7 @@ var splitVideoFromAudio = ({
         return name !== null && audioProps.includes(name);
       }).map((attribute) => {
         const clone = cloneAstValue2(attribute);
-        originalAttributeSources.set(clone, recast31.print(clone).code);
+        originalAttributeSources.set(clone, recast32.print(clone).code);
         return clone;
       }),
       selfClosing: true
@@ -50661,7 +50981,7 @@ var setComponentIdentityResolver = (resolver) => {
 var resolveComponentIdentity = (component) => {
   return componentIdentityResolver?.(component) ?? component;
 };
-var getSingleChildComponent = (children) => {
+var getSingleChildElement = (children) => {
   const mountedChildren = import_react5.default.Children.toArray(children);
   if (mountedChildren.length !== 1) {
     return null;
@@ -50671,12 +50991,19 @@ var getSingleChildComponent = (children) => {
     return null;
   }
   if (child.type === IsNotInsideSeriesProvider) {
-    return getSingleChildComponent(child.props.children);
+    return getSingleChildElement(child.props.children);
   }
   if (typeof child.type !== "function" && typeof child.type !== "object") {
     return null;
   }
-  return resolveComponentIdentity(child.type);
+  return child;
+};
+var getSingleChildComponent = (children) => {
+  const child = getSingleChildElement(children);
+  return child === null ? null : resolveComponentIdentity(child.type);
+};
+var getSingleChildProps = (children) => {
+  return getSingleChildElement(children)?.props ?? null;
 };
 var CompositionRegistryFallbackContext = import_react7.createContext(null);
 var useIsomorphicLayoutEffect = typeof window === "undefined" ? import_react7.useEffect : import_react7.useLayoutEffect;
@@ -52084,9 +52411,11 @@ var makeOriginalSourceStack = ({
   fileName,
   lineNumber,
   columnNumber
-}) => {
-  return `Error
+}, compiledSourceHash = null) => {
+  const location2 = `Error
     at remotionOriginalSource (${ORIGINAL_SOURCE_STACK_PREFIX}${encodeURIComponent(fileName)}:${lineNumber}:${columnNumber})`;
+  return compiledSourceHash === null ? location2 : `${location2}
+    at remotionCompiledSource (remotion-source-sha256:${compiledSourceHash})`;
 };
 var parseOriginalSourceStack = (stack) => {
   if (!stack) {
@@ -52116,7 +52445,7 @@ var setStackForControls = (controls, stack) => {
 var getStackForControls = (controls) => {
   return stacksByControls.get(controls) ?? null;
 };
-var VERSION = "4.0.540";
+var VERSION = "4.0.541";
 var checkMultipleRemotionVersions = () => {
   if (typeof globalThis === "undefined") {
     return;
@@ -55872,7 +56201,7 @@ function hslToRgb2(h, s, l) {
   return Math.round(r * 255) << 24 | Math.round(g * 255) << 16 | Math.round(b * 255) << 8;
 }
 function parse2552(str) {
-  const int = Number.parseInt(str, 10);
+  const int = Math.round(Number.parseFloat(str));
   if (int < 0) {
     return 0;
   }
@@ -57624,6 +57953,7 @@ var setSequenceWrapperRef = (ref, wrapperRef, node) => {
     ref.current = node;
   }
 };
+var getSingleChildPropsFromRef = (childrenRef) => getSingleChildProps(childrenRef.current);
 var RegularSequenceContentRefForwardingFunction = ({
   timing,
   from = 0,
@@ -57644,6 +57974,7 @@ var RegularSequenceContentRefForwardingFunction = ({
   _remotionInternalLoopDisplay: loopDisplay,
   _remotionInternalStack: stack,
   _remotionInternalSingleChildComponent: childComponentOverride,
+  _remotionInternalSingleChildren: authoredChildrenOverride,
   _remotionInternalDocumentationLink: documentationLink,
   _remotionInternalPremountDisplay: premountDisplay,
   _remotionInternalPostmountDisplay: postmountDisplay,
@@ -57694,6 +58025,7 @@ var RegularSequenceContentRefForwardingFunction = ({
     loopPeriod,
     loopIteration,
     contentVisible,
+    inheritedFrozenFrame,
     currentFrameRef
   } = timing;
   if (typeof contentDurationInFrames !== "number") {
@@ -57818,7 +58150,13 @@ var RegularSequenceContentRefForwardingFunction = ({
   }, [name]);
   const resolvedDocumentationLink = documentationLink ?? "https://www.remotion.dev/docs/sequence";
   const isInsideSeries = import_react25.useContext(IsInsideSeriesContext);
-  const singleChildComponent = import_react25.useMemo(() => childComponentOverride === undefined ? getSingleChildComponent(children) : childComponentOverride, [children, childComponentOverride]);
+  const authoredChildren = authoredChildrenOverride === undefined ? children : authoredChildrenOverride;
+  const singleChildComponent = import_react25.useMemo(() => childComponentOverride === undefined ? getSingleChildComponent(authoredChildren) : childComponentOverride, [authoredChildren, childComponentOverride]);
+  const childrenRef = import_react25.useRef(authoredChildren);
+  import_react25.useLayoutEffect(() => {
+    childrenRef.current = authoredChildren;
+  }, [authoredChildren]);
+  const getRegisteredSingleChildProps = import_react25.useMemo(() => childComponentOverride === undefined ? getSingleChildPropsFromRef.bind(null, childrenRef) : null, [childComponentOverride]);
   const registrationStack = controls ? getStackForControls(controls) ?? stack ?? null : stack ?? null;
   const getStack = import_react25.useMemo(() => getSequenceStack.bind(null, registrationStack), [registrationStack]);
   const registeredFrozenFrame = typeof freeze === "number" ? freeze : null;
@@ -57827,7 +58165,8 @@ var RegularSequenceContentRefForwardingFunction = ({
   const parentCumulatedNegativeFrom = parentSequence?.cumulatedNegativeFrom ?? 0;
   const startMediaFrom = isMedia && isMedia.type !== "image" ? isMedia.data.startMediaFrom + parentCumulatedNegativeFrom - cumulatedNegativeFrom : null;
   const mediaFrameAtSequenceZero = isMedia && isMedia.type !== "image" ? isMedia.data.startMediaFrom + parentCumulatedNegativeFrom : null;
-  const frozenMediaFrame = isMedia && isMedia.type !== "image" && mediaFrameAtSequenceZero !== null ? registeredFrozenFrame === null ? null : mediaFrameAtSequenceZero + (resolvedLoopDisplay ? registeredFrozenFrame % resolvedLoopDisplay.durationInFrames : registeredFrozenFrame) * isMedia.data.playbackRate : null;
+  const mediaFreezeFrame = registeredFrozenFrame ?? (contentVisible && !parentDormant && !premounting && !postmounting ? inheritedFrozenFrame : null);
+  const frozenMediaFrame = isMedia && isMedia.type !== "image" && mediaFrameAtSequenceZero !== null && mediaFreezeFrame !== null ? mediaFrameAtSequenceZero + (resolvedLoopDisplay ? mediaFreezeFrame % resolvedLoopDisplay.durationInFrames : mediaFreezeFrame) * isMedia.data.playbackRate : null;
   const controlsSchema = controls?.schema;
   const controlsRuntimeValues = controls?.runtimeValues;
   const controlsOverrideId = controls?.overrideId;
@@ -57835,8 +58174,7 @@ var RegularSequenceContentRefForwardingFunction = ({
   const controlsComponentIdentity = controls?.componentIdentity;
   const controlsComponentName = controls?.componentName;
   const controlsVideoConfigValues = controls?.videoConfigValues;
-  const isInsideNonPremountFreeze = useIsInsideNonPremountFreeze();
-  const canInferDuration = (controlsComponentIdentity === "dev.remotion.remotion.Series" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries") && !loop && registeredFrozenFrame === null && !isInsideNonPremountFreeze && !hidden;
+  const canInferDuration = (controlsComponentIdentity === "dev.remotion.remotion.Series" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries") && !loop && registeredFrozenFrame === null && inheritedFrozenFrame === null && !hidden;
   const autoDuration = canInferDuration && durationInFrames === undefined;
   const isSeriesChild = controlsComponentIdentity === "dev.remotion.remotion.Series.Sequence" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries.Sequence" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries.Transition" || controlsComponentIdentity === "dev.remotion.transitions.TransitionSeries.Overlay";
   const effectRuntimeValues = import_react25.useMemo(() => _remotionInternalEffects?.runtimeValues ?? null, [_remotionInternalEffects]);
@@ -57898,7 +58236,8 @@ var RegularSequenceContentRefForwardingFunction = ({
           refForOutline: refForOutline ?? null,
           isInsideSeries,
           frozenFrame: registeredFrozenFrame,
-          singleChildComponent: singleChildComponent ?? null
+          singleChildComponent: singleChildComponent ?? null,
+          getSingleChildProps: getRegisteredSingleChildProps
         };
       }
       return {
@@ -57931,7 +58270,8 @@ var RegularSequenceContentRefForwardingFunction = ({
         isInsideSeries,
         frozenFrame: registeredFrozenFrame,
         frozenMediaFrame,
-        singleChildComponent: singleChildComponent ?? null
+        singleChildComponent: singleChildComponent ?? null,
+        getSingleChildProps: getRegisteredSingleChildProps
       };
     }
     return {
@@ -57961,7 +58301,8 @@ var RegularSequenceContentRefForwardingFunction = ({
       refForOutline: refForOutline ?? null,
       isInsideSeries,
       frozenFrame: registeredFrozenFrame,
-      singleChildComponent: singleChildComponent ?? null
+      singleChildComponent: singleChildComponent ?? null,
+      getSingleChildProps: getRegisteredSingleChildProps
     };
   }, [
     id,
@@ -57995,7 +58336,8 @@ var RegularSequenceContentRefForwardingFunction = ({
     startMediaFrom,
     mediaFrameAtSequenceZero,
     frozenMediaFrame,
-    singleChildComponent
+    singleChildComponent,
+    getRegisteredSingleChildProps
   ]);
   const getSequenceForRegistration = import_react25.useMemo(() => getSequenceRegistration.bind(null, sequenceForRegistration), [sequenceForRegistration]);
   const registration = useSequenceRegistration({
@@ -58159,6 +58501,7 @@ var RegularSequenceRefForwardingFunction = (props, ref) => {
   const loopOffset = loopPeriod === null ? 0 : loopIteration * loopPeriod;
   const currentSequenceStart = cumulatedFrom + (from + loopOffset - trimBefore / playbackRate) / parentPlaybackRate;
   const currentFrame = typeof freeze === "number" ? freeze : (absoluteFrame - currentSequenceStart) * (parentPlaybackRate * playbackRate);
+  const inheritedFrozenFrame = useIsInsideNonPremountFreeze() ? currentFrame : null;
   const currentFrameRef = import_react25.useRef(currentFrame);
   const timing = import_react25.useMemo(() => ({
     contentDurationInFrames,
@@ -58167,6 +58510,7 @@ var RegularSequenceRefForwardingFunction = (props, ref) => {
     loopPeriod,
     loopIteration,
     contentVisible,
+    inheritedFrozenFrame,
     currentFrameRef
   }), [
     contentDurationInFrames,
@@ -58174,7 +58518,8 @@ var RegularSequenceRefForwardingFunction = (props, ref) => {
     actualDurationInFrames,
     loopPeriod,
     loopIteration,
-    contentVisible
+    contentVisible,
+    inheritedFrozenFrame
   ]);
   return /* @__PURE__ */ import_jsx_runtime17.jsxs(import_react25.default.Fragment, {
     children: [
@@ -58454,6 +58799,16 @@ var AbsoluteFill = withInteractivitySchema({
   supportsEffects: false
 });
 addSequenceStackTraces(AbsoluteFill);
+var getCanvasPropsFromSequenceProps = (props) => {
+  const canvasProps = {};
+  const mutableCanvasProps = canvasProps;
+  for (const key in props) {
+    if (Object.prototype.hasOwnProperty.call(props, key) && (key.startsWith("data-") || key.startsWith("aria-"))) {
+      mutableCanvasProps[key] = props[key];
+    }
+  }
+  return canvasProps;
+};
 var useCropStyle = ({
   cropLeft,
   cropRight,
@@ -59741,16 +60096,6 @@ var animatedImageSchema = {
   ...borderSchema2,
   ...borderRadiusSchema2
 };
-var getCanvasPropsFromSequenceProps = (props) => {
-  const canvasProps = {};
-  const mutableCanvasProps = canvasProps;
-  for (const key in props) {
-    if (Object.prototype.hasOwnProperty.call(props, key) && (key.startsWith("data-") || key.startsWith("aria-"))) {
-      mutableCanvasProps[key] = props[key];
-    }
-  }
-  return canvasProps;
-};
 var AnimatedImageContent = import_react55.forwardRef(({
   src,
   width,
@@ -60236,6 +60581,16 @@ var RenderAssetManagerProvider = ({ children, collectAssets }) => {
   });
 };
 var ArtifactThumbnail = Symbol("Thumbnail");
+var encodeBinaryArtifact = (bytes) => {
+  if ("toBase64" in bytes && typeof bytes.toBase64 === "function") {
+    return bytes.toBase64();
+  }
+  let binary = "";
+  for (let offset = 0;offset < bytes.length; offset += 32768) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 32768));
+  }
+  return btoa(binary);
+};
 var Artifact = ({ filename, content, downloadBehavior }) => {
   const { registerRenderAsset, unregisterRenderAsset } = import_react61.useContext(RenderAssetManager);
   const env = useRemotionEnvironment();
@@ -60251,7 +60606,7 @@ var Artifact = ({ filename, content, downloadBehavior }) => {
       registerRenderAsset({
         type: "artifact",
         id,
-        content: btoa(new TextDecoder("utf8").decode(content)),
+        content: encodeBinaryArtifact(content),
         filename,
         frame,
         contentType: "binary",
@@ -62032,9 +62387,7 @@ var getMediaSyncAction = (input) => {
     ended,
     desiredUnclampedTime,
     mediaTagTime,
-    mediaTagLastUpdate,
     rvcTime,
-    rvcLastUpdate,
     isVariableFpsVideo,
     acceptableTimeShift,
     lastSeekDueToShift,
@@ -62046,13 +62399,11 @@ var getMediaSyncAction = (input) => {
     onlyWarnForMediaSeekingError,
     isPremounting,
     isPostmounting,
-    pauseWhenBuffering
+    pauseWhenBuffering,
+    mediaType
   } = input;
   const shouldBeTime = !Number.isNaN(duration) && Number.isFinite(duration) ? Math.min(duration, desiredUnclampedTime) : desiredUnclampedTime;
-  const timeShiftMediaTag = Math.abs(shouldBeTime - mediaTagTime);
-  const timeShiftRvcTag = rvcTime ? Math.abs(shouldBeTime - rvcTime) : null;
-  const mostRecentTimeshift = rvcLastUpdate && rvcTime > mediaTagLastUpdate ? timeShiftRvcTag : timeShiftMediaTag;
-  const timeShift = timeShiftRvcTag && !isVariableFpsVideo ? mostRecentTimeshift : timeShiftMediaTag;
+  const timeShift = Math.abs(shouldBeTime - mediaTagTime);
   if (timeShift > acceptableTimeShift && lastSeekDueToShift !== shouldBeTime) {
     return {
       type: "seek-due-to-shift",
@@ -62065,18 +62416,23 @@ var getMediaSyncAction = (input) => {
   }
   const seekThreshold = playing ? 0.15 : 0.01;
   const makesSenseToSeek = Math.abs(currentTime - shouldBeTime) > seekThreshold;
+  const audioLead = currentTime - shouldBeTime;
+  const holdAudioUntilTimelineCatchesUp = mediaType === "audio" && playing && playbackRate > 0 && makesSenseToSeek && audioLead > 0 && audioLead <= acceptableTimeShift;
   const isSomethingElseBuffering = playerBuffering && !mediaTagBufferingOrStalled;
   if (!playing || isSomethingElseBuffering) {
     return {
       type: "seek-if-not-playing",
       shouldBeTime,
-      why: makesSenseToSeek ? `not playing or something else is buffering. time offset is over seek threshold (${seekThreshold})` : null
+      why: makesSenseToSeek && !holdAudioUntilTimelineCatchesUp ? `not playing or something else is buffering. time offset is over seek threshold (${seekThreshold})` : null
     };
   }
   if (!playing || playerBuffering) {
     return { type: "none" };
   }
   const pausedCondition = paused && !ended;
+  if (pausedCondition && holdAudioUntilTimelineCatchesUp) {
+    return { type: "none" };
+  }
   const firstFrameCondition = absoluteFrame === 0;
   if (pausedCondition || firstFrameCondition) {
     const reason = pausedCondition ? "media tag is paused" : "absolute frame is 0";
@@ -62090,19 +62446,15 @@ var getMediaSyncAction = (input) => {
   }
   return { type: "none" };
 };
-var useCurrentTimeOfMediaTagWithUpdateTimeStamp = (mediaRef) => {
-  const lastUpdate = import_react81.default.useRef({
-    time: mediaRef.current?.currentTime ?? 0,
-    lastUpdate: performance.now()
+var useCurrentTimeOfMediaTag = (mediaRef) => {
+  const currentTime = import_react81.default.useRef({
+    time: mediaRef.current?.currentTime ?? 0
   });
   const nowCurrentTime = mediaRef.current?.currentTime ?? null;
   if (nowCurrentTime !== null) {
-    if (lastUpdate.current.time !== nowCurrentTime) {
-      lastUpdate.current.time = nowCurrentTime;
-      lastUpdate.current.lastUpdate = performance.now();
-    }
+    currentTime.current.time = nowCurrentTime;
   }
-  return lastUpdate;
+  return currentTime;
 };
 var seek = ({
   mediaRef,
@@ -62269,8 +62621,7 @@ var useRequestVideoCallbackTime = ({
     const { current } = mediaRef;
     if (current) {
       currentTime.current = {
-        time: current.currentTime,
-        lastUpdate: performance.now()
+        time: current.currentTime
       };
     } else {
       currentTime.current = null;
@@ -62300,8 +62651,7 @@ var useRequestVideoCallbackTime = ({
           }
         }
         currentTime.current = {
-          time: info.mediaTime,
-          lastUpdate: performance.now()
+          time: info.mediaTime
         };
         request();
       });
@@ -62432,7 +62782,7 @@ var useMediaPlayback = ({
     lastSeek,
     onVariableFpsVideoDetected
   });
-  const mediaTagCurrentTime = useCurrentTimeOfMediaTagWithUpdateTimeStamp(mediaRef);
+  const mediaTagCurrentTime = useCurrentTimeOfMediaTag(mediaRef);
   const desiredUnclampedTime = getMediaTime({
     frame,
     playbackRate: localPlaybackRate,
@@ -62513,9 +62863,7 @@ var useMediaPlayback = ({
       ended: current.ended,
       desiredUnclampedTime,
       mediaTagTime: mediaTagCurrentTime.current.time,
-      mediaTagLastUpdate: mediaTagCurrentTime.current.lastUpdate,
       rvcTime: rvcCurrentTime.current?.time ?? null,
-      rvcLastUpdate: rvcCurrentTime.current?.lastUpdate ?? null,
       isVariableFpsVideo: Boolean(isVariableFpsVideoMap.current[src]),
       acceptableTimeShift: acceptableTimeShiftButLessThanDuration,
       lastSeekDueToShift: lastSeekDueToShift.current,
@@ -62527,7 +62875,8 @@ var useMediaPlayback = ({
       onlyWarnForMediaSeekingError,
       isPremounting,
       isPostmounting,
-      pauseWhenBuffering
+      pauseWhenBuffering,
+      mediaType
     });
     if (action.type === "none") {
       return;
@@ -63371,7 +63720,8 @@ var SolidInner = ({
   pixelDensity,
   overrideId,
   videoConfigValues,
-  reference
+  reference,
+  canvasProps
 }) => {
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const resolvedPixelDensity = resolveSolidPixelDensity(pixelDensity);
@@ -63459,6 +63809,7 @@ var SolidInner = ({
     };
   }, [height, style, width]);
   return /* @__PURE__ */ import_jsx_runtime31.jsx("canvas", {
+    ...canvasProps,
     ref: canvasRef,
     width: canvasWidth,
     height: canvasHeight,
@@ -63555,6 +63906,7 @@ var SolidOuter = import_react88.forwardRef(({
       _remotionInternalIsPostmounting: postmountingActive,
       children: /* @__PURE__ */ import_jsx_runtime31.jsx(SequenceContent, {
         children: /* @__PURE__ */ import_jsx_runtime31.jsx(SolidInner, {
+          canvasProps: getCanvasPropsFromSequenceProps(props),
           reference: actualRef,
           videoConfigValues: controls?.videoConfigValues ?? null,
           overrideId: controls?.overrideId ?? null,
@@ -65965,7 +66317,7 @@ var createElementSourceProxy = (api, sourceArgumentIndex, getSourceFileName) => 
               fileName: getSourceFileName(source.fileName),
               lineNumber: source.lineNumber,
               columnNumber: source.columnNumber - 1
-            });
+            }, typeof source.__remotionCompiledSourceHash === "string" ? source.__remotionCompiledSourceHash : null);
           } else {
             const { stackTraceLimit } = Error;
             const canLimitStack = typeof stackTraceLimit === "number" && stackTraceLimit > 2 && Object.getOwnPropertyDescriptor(Error, "stackTraceLimit")?.writable;
@@ -68648,7 +69000,7 @@ var findRegistrationRoot = ({
   if (folder) {
     const folders = [];
     const matches = [];
-    recast32.visit(ast, {
+    recast33.visit(ast, {
       visitJSXElement(path) {
         const element = path.node;
         const name = getFolderNameFromJSXElement(element, ast);
@@ -68671,13 +69023,13 @@ var findRegistrationRoot = ({
     root = matches[0];
   } else {
     const functions = new Map;
-    recast32.visit(ast, {
+    recast33.visit(ast, {
       visitNode(path) {
         const { node } = path;
         if (node.type === "JSXElement" || node.type === "JSXFragment") {
           let parent = path.parentPath;
           while (parent) {
-            if (recast32.types.namedTypes.Function.check(parent.node)) {
+            if (recast33.types.namedTypes.Function.check(parent.node)) {
               functions.set(parent.node, {
                 path: parent,
                 hasRegistration: functions.get(parent.node)?.hasRegistration === true || getRegistrationComponentType(node, ast) !== null
@@ -68711,10 +69063,10 @@ var findRegistrationRoot = ({
     }
     const target = candidates[0].path.node;
     const roots = [];
-    recast32.visit(target, {
+    recast33.visit(target, {
       visitNode(path) {
         const { node } = path;
-        if (recast32.types.namedTypes.Function.check(node) && node !== target) {
+        if (recast33.types.namedTypes.Function.check(node) && node !== target) {
           return false;
         }
         const returned = node.type === "ReturnStatement" ? node.argument : node.type === "ArrowFunctionExpression" ? node.body : null;
@@ -68757,7 +69109,7 @@ var getRegistrationInsertionSourceEdit = ({
 var getTreeEntries = ({ ast }) => {
   const entries = [];
   const folders = [];
-  recast33.visit(ast, {
+  recast34.visit(ast, {
     visitJSXElement(path) {
       const node = path.node;
       const name = getFolderNameFromJSXElement(node, ast);
@@ -68947,7 +69299,7 @@ var addComposition = ({
     sourcePath: component.importPath,
     localName: component.importName
   });
-  const b = recast34.types.builders;
+  const b = recast35.types.builders;
   const insertion = b.jsxElement(b.jsxOpeningElement(b.jsxIdentifier(tag), [
     b.jsxAttribute(b.jsxIdentifier("id"), b.stringLiteral(compositionId)),
     b.jsxAttribute(b.jsxIdentifier("component"), b.jsxExpressionContainer(b.identifier(componentName))),
@@ -69022,7 +69374,7 @@ var renameComposition = ({
     })
   };
 };
-var b14 = recast35.types.builders;
+var b14 = recast36.types.builders;
 var changeComposition = ({
   jsxElement,
   newId,
@@ -69354,11 +69706,11 @@ var formatSerializedValue = ({
     throw new Error("Could not parse the serialized value");
   }
   const expression = statement.expression.right;
-  recast36.types.visit(expression, {
+  recast37.types.visit(expression, {
     visitObjectProperty(path) {
       const { node } = path;
       if (!node.computed && node.key.type === "StringLiteral" && identifierRegex4.test(node.key.value)) {
-        node.key = recast36.types.builders.identifier(node.key.value);
+        node.key = recast37.types.builders.identifier(node.key.value);
       }
       this.traverse(path);
     }
@@ -69367,7 +69719,7 @@ var formatSerializedValue = ({
     trailingComma,
     wrapColumn
   }) => {
-    const printed = recast36.prettyPrint(expression, {
+    const printed = recast37.prettyPrint(expression, {
       objectCurlySpacing: formattingConfig.bracketSpacing,
       quote: formattingConfig.quote,
       tabWidth: formattingConfig.tabWidth,
@@ -69505,7 +69857,7 @@ var addFolder = ({
     sourcePath: "remotion",
     localName: "Folder"
   });
-  const b = recast37.types.builders;
+  const b = recast38.types.builders;
   const insertion = b.jsxElement(b.jsxOpeningElement(b.jsxIdentifier(localName), [b.jsxAttribute(b.jsxIdentifier("name"), b.stringLiteral(folder.name))], true), null, []);
   const parentParts = folder.parentName?.split("/") ?? [];
   const parentName = parentParts.pop();
@@ -69895,7 +70247,7 @@ var reorderEffect2 = async ({
     }
   };
 };
-var b15 = recast38.types.builders;
+var b15 = recast39.types.builders;
 var getOpeningElementSourceEdit = ({
   originalAttributeSources,
   input,
@@ -69932,22 +70284,15 @@ var getKeyframeFunctionSourceEdits = ({
   functionSnapshots,
   input,
   jsxPath,
-  needsFrameHook,
   openingElement
 }) => {
   const reprintBlockBodies = new Set;
   const fnPath = findEnclosingFunctionPath(jsxPath);
-  if (needsFrameHook && !fnPath) {
-    throw new Error("Cannot add keyframes outside a component function because useCurrentFrame() needs a function scope");
-  }
   if (fnPath) {
     const functionNode = fnPath.value;
     const snapshot = functionSnapshots.find((candidate) => candidate.functionNode === functionNode);
     if (snapshot?.body.type === "BlockStatement" && snapshot.body.loc && openingElement.loc && snapshot.body.loc.start.line === openingElement.loc.start.line) {
       reprintBlockBodies.add(snapshot.body);
-    }
-    if (needsFrameHook) {
-      ensureUseCurrentFrameHook(fnPath);
     }
   }
   return getFunctionSourceEditsForPrependedStatements({
@@ -71123,6 +71468,34 @@ var getEffectPropsObjectExpression = (call) => {
   }
   return call.arguments[0];
 };
+var prepareIntroducedKeyframeIdentifiers = ({
+  ast,
+  expression,
+  introduced,
+  jsxPath
+}) => {
+  if (expression.type === "CallExpression") {
+    if (introduced.calleeName && introduced.calleeName !== "interpolatePaths") {
+      expression.callee = b15.identifier(ensureOfficialNamedImport({
+        ast,
+        importedName: introduced.calleeName,
+        sourcePath: "remotion",
+        preferredLocalName: introduced.calleeName
+      }));
+    }
+    if (introduced.needsFrameHook) {
+      expression.arguments[0] = b15.identifier(ensureUseCurrentFrameHook({
+        referencePath: jsxPath,
+        hookName: ensureOfficialNamedImport({
+          ast,
+          importedName: "useCurrentFrame",
+          sourcePath: "remotion",
+          preferredLocalName: "useCurrentFrame"
+        })
+      }));
+    }
+  }
+};
 var updateSequenceKeyframesAst = ({
   input,
   nodePath,
@@ -71152,7 +71525,6 @@ var updateSequenceKeyframesAst = ({
   }
   const originalAttributeSources = captureJsxAttributeSources(node);
   const requiredImports = new Set;
-  let needsFrameHook = false;
   const oldValueStrings = [];
   const newValueStrings = [];
   for (const update of updates) {
@@ -71167,7 +71539,7 @@ var updateSequenceKeyframesAst = ({
         })
       } : null
     });
-    oldValueStrings.push(recast38.print(prop.expression).code);
+    oldValueStrings.push(recast39.print(prop.expression).code);
     const { expression: nextExpression, introduced } = applyKeyframeOperation({
       ast,
       expression: prop.expression,
@@ -71176,7 +71548,13 @@ var updateSequenceKeyframesAst = ({
       schema: schema ?? null,
       videoConfigValues: videoConfigIdentifierValues
     });
-    newValueStrings.push(recast38.print(nextExpression).code);
+    prepareIntroducedKeyframeIdentifiers({
+      ast,
+      expression: nextExpression,
+      introduced,
+      jsxPath
+    });
+    newValueStrings.push(recast39.print(nextExpression).code);
     if (shouldRemovePropAfterKeyframeOperation({
       ast,
       expression: prop.expression,
@@ -71188,13 +71566,6 @@ var updateSequenceKeyframesAst = ({
       prop.remove();
     } else {
       prop.setExpression(nextExpression);
-    }
-    if (introduced.calleeName && introduced.calleeName !== "interpolatePaths") {
-      requiredImports.add(introduced.calleeName);
-    }
-    if (introduced.needsFrameHook) {
-      requiredImports.add("useCurrentFrame");
-      needsFrameHook = true;
     }
     if (introduced.needsEasingImport) {
       requiredImports.add("Easing");
@@ -71208,7 +71579,6 @@ var updateSequenceKeyframesAst = ({
     functionSnapshots,
     input,
     jsxPath,
-    needsFrameHook,
     openingElement: node
   });
   ensureRemotionImports(ast, requiredImports);
@@ -71304,7 +71674,6 @@ var updateEffectKeyframesAst = ({
   const oldValueStrings = [];
   const newValueStrings = [];
   const requiredImports = new Set;
-  let needsFrameHook = false;
   for (const update of updates) {
     const prop = getEffectWritableProp({
       objExpr,
@@ -71317,7 +71686,7 @@ var updateEffectKeyframesAst = ({
         })
       } : null
     });
-    oldValueStrings.push(recast38.print(prop.expression).code);
+    oldValueStrings.push(recast39.print(prop.expression).code);
     const { expression: nextExpression, introduced } = applyKeyframeOperation({
       ast,
       expression: prop.expression,
@@ -71326,7 +71695,13 @@ var updateEffectKeyframesAst = ({
       schema: schema ?? null,
       videoConfigValues: videoConfigIdentifierValues
     });
-    newValueStrings.push(recast38.print(nextExpression).code);
+    prepareIntroducedKeyframeIdentifiers({
+      ast,
+      expression: nextExpression,
+      introduced,
+      jsxPath
+    });
+    newValueStrings.push(recast39.print(nextExpression).code);
     if (shouldRemovePropAfterKeyframeOperation({
       ast,
       expression: prop.expression,
@@ -71338,13 +71713,6 @@ var updateEffectKeyframesAst = ({
       prop.remove();
     } else {
       prop.setExpression(nextExpression);
-    }
-    if (introduced.calleeName && introduced.calleeName !== "interpolatePaths") {
-      requiredImports.add(introduced.calleeName);
-    }
-    if (introduced.needsFrameHook) {
-      requiredImports.add("useCurrentFrame");
-      needsFrameHook = true;
     }
     if (introduced.needsEasingImport) {
       requiredImports.add("Easing");
@@ -71358,7 +71726,6 @@ var updateEffectKeyframesAst = ({
     functionSnapshots,
     input,
     jsxPath,
-    needsFrameHook,
     openingElement: jsx
   });
   ensureRemotionImports(ast, requiredImports);
@@ -71549,7 +71916,7 @@ var unwrapNode = ({
   const closingStart = recastLocToOffset(input, element.closingElement.loc.start);
   let firstChild = null;
   for (const child of element.children) {
-    recast39.types.visit(child, {
+    recast40.types.visit(child, {
       visitJSXOpeningElement(childPath) {
         firstChild ??= childPath.node;
         return false;
@@ -71565,7 +71932,7 @@ var unwrapNode = ({
   const needsFragment = !isJsxChild && singleChild === null;
   let replacement = input.slice(openingEnd, closingStart);
   if (needsFragment) {
-    path.replace(recast39.types.builders.jsxFragment(recast39.types.builders.jsxOpeningFragment(), recast39.types.builders.jsxClosingFragment(), element.children));
+    path.replace(recast40.types.builders.jsxFragment(recast40.types.builders.jsxOpeningFragment(), recast40.types.builders.jsxClosingFragment(), element.children));
     replacement = `<>${replacement}</>`;
   } else {
     if (isJsxChild) {
@@ -71574,7 +71941,7 @@ var unwrapNode = ({
       path.replace(singleChild);
     }
     const preservedRanges = [];
-    recast39.types.visit(element, {
+    recast40.types.visit(element, {
       visitNode(literalPath) {
         const literal = literalPath.node;
         if (literal.loc && (literal.type === "TemplateLiteral" || literal.type === "StringLiteral" || literal.type === "JSXText" && literal.value.trim() !== "")) {
@@ -71659,7 +72026,7 @@ var canWrapNode = ({
     current = current.parentPath;
   }
   let containsHtmlInCanvas = false;
-  recast40.types.visit(path.node, {
+  recast41.types.visit(path.node, {
     visitJSXElement(elementPath) {
       if (isHtmlInCanvasElement(elementPath.node)) {
         containsHtmlInCanvas = true;
@@ -71714,7 +72081,7 @@ var wrapNode = ({
   const childIndent = `${indent}${unit}`;
   const source = input.slice(start, end);
   const preservedRanges = [];
-  recast40.types.visit(original, {
+  recast41.types.visit(original, {
     visitTemplateLiteral(templatePath) {
       if (templatePath.node.loc) {
         preservedRanges.push({
@@ -71763,11 +72130,11 @@ var wrapNode = ({
     }
     return `${childIndent}${line.startsWith(closingIndent) ? line.slice(closingIndent.length) : line.trimStart()}`;
   });
-  const b = recast40.types.builders;
+  const b = recast41.types.builders;
   const wrapperElement = buildJsxElement({ ast, element: wrapper });
   const opening = wrapperElement.openingElement;
   opening.selfClosing = false;
-  const localName = recast40.print(opening.name).code;
+  const localName = recast41.print(opening.name).code;
   const openingLines = printJsxOpeningElement({
     compactLiteralProps: true,
     openingElement: opening,
@@ -71952,7 +72319,7 @@ var getPureTopLevelFunctionAnalysis = ({
         break;
     }
   };
-  recast41.visit(ast, {
+  recast42.visit(ast, {
     visitAssignmentExpression(path) {
       collectAssignedNames(path.node.left);
       this.traverse(path);
@@ -72026,7 +72393,7 @@ var getPureTopLevelFunctionAnalysis = ({
     return remotionImports.get(objectName) === "Easing" && topLevelBindings.has(objectName) && !duplicateBindings.has(objectName) && easingMethods.has(propertyName);
   };
   function isPureExpression(node, params) {
-    if (!recast41.types.namedTypes.Expression.check(node)) {
+    if (!recast42.types.namedTypes.Expression.check(node)) {
       return false;
     }
     const expression = node;
@@ -72144,7 +72511,7 @@ var getPureTopLevelFunctionAnalysis = ({
     return primitive;
   };
   function isPrimitiveExpression(node, params) {
-    if (!recast41.types.namedTypes.Expression.check(node)) {
+    if (!recast42.types.namedTypes.Expression.check(node)) {
       return false;
     }
     switch (node.type) {
@@ -72231,7 +72598,7 @@ var getStyleablePrecompositionRoot = ({
     return null;
   }
   let isTopLevelBinding = false;
-  recast42.visit(ast, {
+  recast43.visit(ast, {
     visitJSXElement(path) {
       if (path.node === element) {
         isTopLevelBinding = path.scope.lookup(identifier.name)?.path.node === ast.program;
@@ -72576,7 +72943,7 @@ var getPrecompositionPlan = ({
   ]);
   const scanSafePath = (path) => {
     let containsUnsupportedSyntax = false;
-    recast43.visit(path, {
+    recast44.visit(path, {
       visitNode(p) {
         if (unsupportedSyntax.has(p.node.type)) {
           containsUnsupportedSyntax = true;
@@ -72592,7 +72959,7 @@ var getPrecompositionPlan = ({
       unsafeReason = "The selected JSX contains unsupported syntax";
       return;
     }
-    recast43.visit(path, {
+    recast44.visit(path, {
       visitIdentifier(p) {
         if (isReferenced(p.node, p.parentPath.node, p.parentPath.parentPath?.node)) {
           const binding = p.scope.lookup(p.node.name);
@@ -73117,7 +73484,7 @@ var precomposeJsxNodes = ({
   const registrationAst = registrationFile === filePath ? ast : parseAst(project.files[registrationFile]);
   const occupiedNames = new Set;
   for (const candidateAst of new Set([ast, registrationAst])) {
-    recast43.visit(candidateAst, {
+    recast44.visit(candidateAst, {
       visitIdentifier(path) {
         occupiedNames.add(path.node.name);
         this.traverse(path);
@@ -73244,7 +73611,7 @@ var precomposeJsxNodes = ({
   const contentReferences = new Set;
   if (styleRoot) {
     const collectReferences = (node) => {
-      recast43.visit(node, {
+      recast44.visit(node, {
         visitJSXAttribute(path) {
           if (rootTimingAttributes.includes(path.node)) {
             return false;
@@ -73366,7 +73733,7 @@ var precomposeJsxNodes = ({
   if (styleRoot) {
     const { openingElement } = styleRoot.element;
     const originalAttributeSources = captureJsxAttributeSources(openingElement);
-    const b = recast43.types.builders;
+    const b = recast44.types.builders;
     const originalStyle = styleAttribute?.type === "JSXAttribute" && styleAttribute.value?.type === "JSXExpressionContainer" ? styleAttribute.value.expression : null;
     const mergedStyle = b.objectExpression([
       ...originalStyle?.type === "ObjectExpression" ? originalStyle.properties : originalStyle && originalStyle.type !== "NullLiteral" ? [b.spreadElement(originalStyle)] : [],
@@ -73451,7 +73818,7 @@ var precomposeJsxNodes = ({
   if (functionBody?.type === "BlockStatement") {
     while (true) {
       const referencedNames = new Set;
-      recast43.visit(functionBody, {
+      recast44.visit(functionBody, {
         visitIdentifier(path) {
           if (isReferenced(path.node, path.parentPath.node, path.parentPath.parentPath?.node)) {
             referencedNames.add(path.node.name);
@@ -73673,7 +74040,7 @@ var getCursorName = (cursor) => {
 };
 var serialize = (value) => {
   if (typeof value === "string") {
-    return recast44.prettyPrint(recast44.types.builders.stringLiteral(value), {
+    return recast45.prettyPrint(recast45.types.builders.stringLiteral(value), {
       quote: "single"
     }).code;
   }
@@ -73914,7 +74281,7 @@ var updateVisualControls = ({
   const file = parseAst(input);
   const updatedControls = [];
   const edits = [];
-  recast45.types.visit(file.program, {
+  recast46.types.visit(file.program, {
     visitCallExpression(path) {
       const { node } = path;
       if (node.type !== "CallExpression") {
@@ -74006,6 +74373,7 @@ var CodemodsInternals = {
   JsxElementNotFoundAtLocationError,
   basicCaptionsElementSource,
   computeCanUpdateDefaultPropsFromContent,
+  computeSequencePropsStatusFromContent,
   computeSequencePropsSubscriptionFromContent,
   createElementFromInsertable,
   enumerateEffectArrayElements,
@@ -74016,12 +74384,16 @@ var CodemodsInternals = {
   getCompositionComponentInfo,
   getCompositionFile,
   getFolderFile,
+  getJsxSourceLocation,
+  getKeyframeSourceLocationRemappings,
   getKeyframeInterpolationFunctionForCallee,
   getRootFileForProject,
   insertBasicCaptions,
   insertJsxElementIntoComposition,
   insertJsxElementIntoProjectWithNodePathRemappings,
   pasteEffects,
+  replaceJsxElementWithSource,
+  replaceNodeChild,
   resolveCompositionComponent,
   resolveCompositionComponentWithFile,
   resolveNodePathsFromLocations,
@@ -74033,4 +74405,4 @@ var CodemodsInternals = {
 /***/ }
 
 }]);
-//# sourceMappingURL=210.bundle.js.map
+//# sourceMappingURL=74.bundle.js.map

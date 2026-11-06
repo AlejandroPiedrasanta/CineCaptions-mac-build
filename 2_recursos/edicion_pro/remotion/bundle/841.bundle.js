@@ -1,17 +1,17 @@
 "use strict";
-(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[504],{
+(self["webpackChunkcinecaptions_pro_remotion"] = self["webpackChunkcinecaptions_pro_remotion"] || []).push([[841],{
 
-/***/ 4504
+/***/ 2841
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   VideoMattingQueueProcessor: () => (/* binding */ VideoMattingQueueProcessor)
 /* harmony export */ });
-/* harmony import */ var _index_0rhz1ydw_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9754);
+/* harmony import */ var _index_hbzdkgeb_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4352);
 /* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7449);
-/* harmony import */ var _index_6k01te75_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(82);
+/* harmony import */ var _index_rqfw7p03_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2923);
 /* harmony import */ var _index_7shemw90_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8335);
-/* harmony import */ var _index_xpkpdkfn_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7721);
+/* harmony import */ var _index_212b6p4m_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8363);
 Object(function webpackMissingModule() { const e = new Error("Cannot find module '@remotion/video-matting'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(6540);
 
@@ -32,7 +32,7 @@ var VideoMattingQueueProcessor = () => {
     getAbortController,
     setProcessVideoMattingJobCallback,
     updateVideoMattingJobProgress
-  } = (0,react__WEBPACK_IMPORTED_MODULE_6__.useContext)(_index_6k01te75_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderQueueContext */ .x7);
+  } = (0,react__WEBPACK_IMPORTED_MODULE_6__.useContext)(_index_rqfw7p03_mjs__WEBPACK_IMPORTED_MODULE_2__/* .RenderQueueContext */ .x7);
   const processJob = (0,react__WEBPACK_IMPORTED_MODULE_6__.useCallback)(async (job) => {
     const { signal } = getAbortController(job.id);
     let output = null;
@@ -97,14 +97,14 @@ var VideoMattingQueueProcessor = () => {
       const video = await output.video.getBlob();
       signal.throwIfAborted();
       markVideoMattingJobSaving(job.id);
-      await video.arrayBuffer().then((contents) => (0,_index_xpkpdkfn_mjs__WEBPACK_IMPORTED_MODULE_4__/* .writeStaticFile2 */ .g4)({ contents, filePath: job.outName }));
+      await video.arrayBuffer().then((contents) => (0,_index_212b6p4m_mjs__WEBPACK_IMPORTED_MODULE_4__/* .writeStaticFile2 */ .g4)({ contents, filePath: job.outName }));
       if (job.target !== null) {
         updateVideoMattingJobProgress(job.id, {
           detail: null,
           message: "Replacing video source...",
           value: 0.97
         });
-        const browserStudioOperations = (0,_index_0rhz1ydw_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)();
+        const browserStudioOperations = (0,_index_hbzdkgeb_mjs__WEBPACK_IMPORTED_MODULE_0__/* .getBrowserStudioOperations */ .P3)();
         const request = {
           fileName: job.target.fileName,
           nodePath: job.target.nodePath.nodePath,
@@ -114,7 +114,7 @@ var VideoMattingQueueProcessor = () => {
         if (browserStudioOperations && !replaceSource) {
           throw new Error("Browser Studio cannot replace the video source.");
         }
-        const response = replaceSource ? await replaceSource(request) : await (0,_index_0rhz1ydw_mjs__WEBPACK_IMPORTED_MODULE_0__/* .callApi */ .px)("/api/replace-video-source", request);
+        const response = replaceSource ? await replaceSource(request) : await (0,_index_hbzdkgeb_mjs__WEBPACK_IMPORTED_MODULE_0__/* .callApi */ .px)("/api/replace-video-source", request);
         if (!response.success) {
           throw new Error(response.reason);
         }
@@ -190,4 +190,4 @@ var loadModelForJob = async ({
 /***/ }
 
 }]);
-//# sourceMappingURL=504.bundle.js.map
+//# sourceMappingURL=841.bundle.js.map

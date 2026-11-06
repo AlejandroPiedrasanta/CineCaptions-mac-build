@@ -37,6 +37,7 @@ DESCRIPCIONES = {
     '1_codigo/firma_ed25519.py': 'firma Ed25519 (RFC 8032) en Python puro: el programa comprueba que el version.json lo publicó Cinema Productions.',
     '1_codigo/fuentes_sistema.py': 'encuentra en el disco el archivo .ttf/.otf de una familia y estilo.',
     '1_codigo/i18n.py': 'idiomas de la interfaz: tr("texto en español") y los catálogos de 2_recursos/locales.',
+    '1_codigo/idioma_ui.py': 'el idioma de la interfaz en Ajustes: panel de tarjetas con banderas dibujadas que ondean (13 idiomas).',
     '1_codigo/ia_texto.py': 'IA de texto local (Qwen3): corrige, elige palabras clave y emojis virales, quita signos.',
     '1_codigo/instalador_scripts.py': 'copia los scripts de CineCaptions al menú de DaVinci Resolve y comprueba que estén al día.',
     '1_codigo/instalar_fuentes.py': 'instala en el sistema las tipografías de las plantillas (para que Resolve/Fusion las vea).',

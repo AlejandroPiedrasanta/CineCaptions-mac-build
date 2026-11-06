@@ -12,8 +12,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (42 archivos)
-    remotion\   (16142 archivos)
+    herramientas_dev\   (43 archivos)
+    remotion\   (16190 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     actualizar_ui.py
@@ -217,6 +217,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         idiomas de la interfaz: tr("texto en español") y los catálogos de 2_recursos/locales.
     ia_texto.py
         IA de texto local (Qwen3): corrige, elige palabras clave y emojis virales, quita signos.
+    idioma_ui.py
+        el idioma de la interfaz en Ajustes: panel de tarjetas con banderas dibujadas que ondean (13 idiomas).
     instalador_scripts.py
         copia los scripts de CineCaptions al menú de DaVinci Resolve y comprueba que estén al día.
     instalar_fuentes.py
@@ -384,6 +386,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         sugiere la palabra PRINCIPAL de cada bloque (motor clásico, sin IA instalada).
     tareas_instalador.py
         lo que el instalador pide al programa (--tarea verificar/scripts/fuentes/modelo/motor_ia...).
+    telemetria_errores.py
+        manda al vendedor (cinecaptions.shop/pagos/errores.php) cada error que le sale a un cliente, en segundo plano.
     tema.py
         temas de la interfaz (superficies, color de resaltado, tamaño) y su traductor de colores.
     tema4_planificador.py

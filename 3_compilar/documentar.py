@@ -193,7 +193,7 @@ CARPETAS = {
 FIJAS = {
     '2_recursos/emojis': 'emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt',
     '2_recursos/fonts': 'tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt',
-    '2_recursos/locales': 'textos de la interfaz en en, pt, fr, de, it (la clave es el español)',
+    '2_recursos/locales': 'textos de la interfaz en en, pt, fr, de, it, ja, ko, zh, ru, nl, tr, pl (la clave es el español)',
     '2_recursos/motor_qwen': 'motor de voz e IA (corren en su propio Python 3.12) y sus versiones fijas',
     '2_recursos/plantillas_incluidas': 'los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)',
     '2_recursos/resolve_scripts': 'los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json',

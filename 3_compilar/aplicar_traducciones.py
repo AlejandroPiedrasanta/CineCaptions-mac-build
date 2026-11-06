@@ -1,9 +1,9 @@
 # CineCaptions · By Cinema Productions
-# 3_compilar/aplicar_traducciones.py — mete los textos nuevos de traducciones_extra.json en los catálogos de 2_recursos/locales (en, pt, fr, de, it).
+# 3_compilar/aplicar_traducciones.py — mete los textos nuevos de traducciones_extra.json en los catálogos de 2_recursos/locales (los 12 idiomas).
 """
 Uso:   python 3_compilar/aplicar_traducciones.py          (no pisa lo que ya estaba traducido)
        python 3_compilar/aplicar_traducciones.py --forzar  (sí lo pisa)
-traducciones_extra.json = {"texto en español": {"en": ..., "pt": ..., "fr": ..., "de": ..., "it": ...}}
+traducciones_extra.json = {"texto en español": {"en": ..., "pt": ..., "fr": ..., "de": ..., "it": ..., "ja": ..., …}} (el idioma que falte sale en español)
 Para ver qué textos del código faltan en los catálogos: python 3_compilar/auditar_traducciones.py
 """
 import json
@@ -14,7 +14,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 LOCALES = RAIZ / '2_recursos' / 'locales'
 forzar = '--forzar' in sys.argv
 nuevos = json.loads((Path(__file__).with_name('traducciones_extra.json')).read_text(encoding='utf-8'))
-for idioma in ('en', 'pt', 'fr', 'de', 'it'):
+for idioma in sorted(p.stem for p in LOCALES.glob('*.json')):          # v5.71: los 12 catálogos (en, pt, fr, de, it + ja, ko, zh, ru, nl, tr, pl)
     ruta = LOCALES / f'{idioma}.json'
     datos = json.loads(ruta.read_text(encoding='utf-8'))
     textos = datos['textos']

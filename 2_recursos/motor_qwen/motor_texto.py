@@ -115,9 +115,13 @@ SISTEMA_ORTO = (
 )
 
 
+_DECIR = __import__('threading').Lock()      # v5.71: los latidos salen de otro hilo; una línea nunca se mezcla con otra
+
+
 def decir(tipo, texto=''):
-    sys.stdout.write(f'{tipo}|{texto}\n')
-    sys.stdout.flush()
+    with _DECIR:
+        sys.stdout.write(f'{tipo}|{texto}\n')
+        sys.stdout.flush()
 
 
 # v5.64: lo que ocupa cada IA de texto al bajarla (GB), para no empezar una descarga que no cabe en el disco
@@ -439,6 +443,14 @@ def servidor(pedido, inactivo):
         linea = linea.strip()
         if not linea:
             continue
+        # v5.71: LATIDO mientras trabaja. En un equipo lento (CPU, GPU ocupada) una tanda de generate() pasa de 100 s sin ninguna línea e
+        # ia_texto la mataba por «colgada» (SIN_SENAL_S): dos veces = IA desactivada toda la sesión (lo reportó un cliente)
+        trabajando = threading.Event()
+
+        def latido_trabajo():
+            while not trabajando.wait(15):
+                decir('LATIDO', '')
+        threading.Thread(target=latido_trabajo, daemon=True).start()
         try:
             orden = json.loads(linea)
             analizar_con(tok, modelo, repo, dispositivo, orden['entrada'], orden['salida'])
@@ -446,6 +458,8 @@ def servidor(pedido, inactivo):
             import traceback
             traceback.print_exc(file=sys.stderr)
             decir('ERROR', f'{type(e).__name__}: {e}'.replace('\n', ' ')[:500])
+        finally:
+            trabajando.set()
     decir('FIN', 'inactivo')
 
 
