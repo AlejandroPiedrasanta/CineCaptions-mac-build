@@ -4300,6 +4300,7 @@
     "Resolve trabajó, pero el audio exportado de tu timeline no llegó a CineCaptions.": "Resolve did its part, but the exported audio of your timeline didn’t reach CineCaptions.",
     "Haz clic en tu timeline en Resolve y pulsa GO otra vez.": "Click your timeline in Resolve and press GO again.",
     "Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).": "If your videos are on the Desktop, in Documents, Downloads or on an external drive, allow that folder for CineCaptions (on Mac: System Settings > Privacy & Security > Files and Folders).",
-    "O suelta el video en la ventana de CineCaptions y pulsa GO.": "Or drop the video into the CineCaptions window and press GO."
+    "O suelta el video en la ventana de CineCaptions y pulsa GO.": "Or drop the video into the CineCaptions window and press GO.",
+    "Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).": "If something fails, the report for support includes two screenshots: the full screen and the CineCaptions window (captured even if another window covers it or it is minimized)."
   }
 }

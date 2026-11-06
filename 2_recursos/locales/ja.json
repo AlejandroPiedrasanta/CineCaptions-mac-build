@@ -4300,6 +4300,7 @@
     "Resolve trabajó, pero el audio exportado de tu timeline no llegó a CineCaptions.": "Resolve は処理しましたが、書き出したタイムラインの音声が CineCaptions に届きませんでした。",
     "Haz clic en tu timeline en Resolve y pulsa GO otra vez.": "Resolve でタイムラインをクリックし、もう一度 GO を押します。",
     "Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).": "動画がデスクトップ、書類、ダウンロード、または外部ディスクにある場合は、そのフォルダーを CineCaptions に許可します（Mac：「システム設定」>「プライバシーとセキュリティ」>「ファイルとフォルダ」）。",
-    "O suelta el video en la ventana de CineCaptions y pulsa GO.": "または動画を CineCaptions のウィンドウにドロップして GO を押します。"
+    "O suelta el video en la ventana de CineCaptions y pulsa GO.": "または動画を CineCaptions のウィンドウにドロップして GO を押します。",
+    "Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).": "問題が起きたとき、サポート用のレポートには 2 枚のスクリーンショットが入ります：画面全体と CineCaptions のウィンドウ（ほかのウィンドウに隠れていても、最小化されていても撮れます）。"
   }
 }

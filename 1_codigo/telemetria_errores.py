@@ -30,6 +30,11 @@ v5.72 (pedido: «que la app Ventas reciba la telemetría con más información d
 (`ficha_equipo`: también la memoria de vídeo y el driver) y la ficha ENTERA (sistema, CPU, RAM, GPU con su driver, pantallas, discos,
 Resolve, motores, Visual C++, revisión y lo que el instalador puso al día) va a `pagos/equipo.php` FICHA_ESPERA_S después de abrir,
 una vez al día o cuando cambia (`ficha_enviada.json` guarda su huella). Mismas reglas: solo con licencia, pasada por privado().
+
+v5.73 (pedido: «2 capturas, una del programa y una de la pantalla completa, para garantizar la captura»): `_tomar_capturas` saca, cada
+una por separado, la pantalla entera (Windows) y la ventana PRINCIPAL del programa (`grab()` de Qt: sale aunque esté tapada o minimizada).
+La primera que salga va como siempre («captura_<firma>», `<firma>.jpg`: un errores.php anterior la guarda); la del programa, cuando
+también hay pantalla, como «ventana_<firma>» (`<firma>.ventana.jpg`, `ventana: true` en su error). IMAGENES_POR_PETICION = 4.
 """
 import hashlib
 import json
@@ -58,7 +63,7 @@ CAPTURAS = registro.CARPETA / 'errores_capturas'
 CAPTURAS_SESION = 6         # capturas por sesión (cada una ~150-400 KB)
 CAPTURA_ANCHO = 1920        # una pantalla 4K se reduce a 1920 de ancho: se lee la interfaz y pesa poco
 CAPTURA_MAX_BYTES = 700_000  # errores.php acepta hasta 900 KB por captura
-CAPTURAS_POR_PETICION = 3   # (≈2 MB como mucho por petición; el resto va en la siguiente)
+IMAGENES_POR_PETICION = 4   # v5.73: imágenes por petición (dos por error: ≈2,8 MB como mucho; el resto va en la siguiente)
 URL_FICHA = 'https://cinecaptions.shop/pagos/equipo.php'      # v5.72: la ficha del equipo
 FICHA_ENVIADA = registro.CARPETA / 'ficha_enviada.json'       # {huella, cuando} de la última que aceptó el servidor
 FICHA_ESPERA_S = 90         # se manda 90 s después de abrir (el arranque ya pasó)
@@ -170,10 +175,10 @@ def _crear_capturador():
 
             def _capturar(self, f):
                 try:
-                    img, info = _tomar_captura()
-                    if img is not None and not img.isNull():
+                    tomas = _tomar_capturas()
+                    if tomas:
                         with _CANDADO:
-                            _CAPTURAS_MEM[f] = (img, info)
+                            _CAPTURAS_MEM[f] = tomas
                         _DESPERTAR.set()
                 except Exception:
                     pass
@@ -220,21 +225,45 @@ def _ventana_principal():
     return max(visibles, key=lambda v: v.width() * v.height(), default=None)
 
 
-def _tomar_captura():
-    """(QImage, info) en el hilo de la interfaz. Windows: la pantalla entera donde está CineCaptions. Mac: solo su ventana."""
+def _ventana_del_programa():
+    """v5.73: la ventana PRINCIPAL de CineCaptions (la mayor de primer nivel, visible o minimizada), no un cuadro de diálogo que tenga el
+    foco; si no hay ninguna, la de _ventana_principal()."""
+    from PySide6.QtWidgets import QApplication, QDialog
+    candidatas = [v for v in QApplication.topLevelWidgets()
+                  if v.isWindow() and (v.isVisible() or v.isMinimized()) and not isinstance(v, QDialog)]
+    if candidatas:
+        return max(candidatas, key=lambda v: v.width() * v.height())
+    return _ventana_principal()
+
+
+def _tomar_capturas():
+    """[(cual, QImage, info)] en el hilo de la interfaz. v5.73 (pedido del usuario: «2 capturas, una del programa y una de la pantalla
+    completa, para garantizar la captura»): Windows → 'pantalla' (la pantalla entera donde está CineCaptions) y 'ventana' (la ventana del
+    programa dibujada por Qt con grab(): sale aunque otra ventana la tape, esté minimizada o la de pantalla falle). Mac → solo 'ventana'
+    (la pantalla entera pide el permiso «Grabación de pantalla» y saldría ese cuadro en mitad del fallo). Cada una por separado: si una
+    falla, la otra va igual."""
     from PySide6.QtGui import QGuiApplication
-    ventana = _ventana_principal()
-    if sys.platform == 'darwin':
-        if ventana is None:
-            return None, None
-        pix, tipo = ventana.grab(), 'ventana'
-    else:
-        pantalla = (ventana.screen() if ventana is not None else None) or QGuiApplication.primaryScreen()
-        if pantalla is None:
-            return None, None
-        pix, tipo = pantalla.grabWindow(0), 'pantalla'
-    img = pix.toImage()
-    return img, {'tipo': tipo, 'ancho': img.width(), 'alto': img.height()}
+    tomas = []
+    try:
+        ventana = _ventana_del_programa()
+    except Exception:
+        ventana = None
+    if sys.platform != 'darwin':
+        try:
+            pantalla = (ventana.screen() if ventana is not None else None) or QGuiApplication.primaryScreen()
+            img = pantalla.grabWindow(0).toImage() if pantalla is not None else None
+            if img is not None and not img.isNull():
+                tomas.append(('pantalla', img, {'tipo': 'pantalla', 'ancho': img.width(), 'alto': img.height()}))
+        except Exception:
+            pass
+    if ventana is not None:
+        try:
+            img = ventana.grab().toImage()
+            if not img.isNull():
+                tomas.append(('ventana', img, {'tipo': 'ventana', 'ancho': img.width(), 'alto': img.height()}))
+        except Exception:
+            pass
+    return tomas
 
 
 def _jpeg(img):
@@ -263,41 +292,47 @@ def _jpeg(img):
     return datos if datos and len(datos) <= CAPTURA_MAX_BYTES else None
 
 
-def _archivo_captura(f):
-    return CAPTURAS / f'{f}.jpg'
+def _archivo_captura(f, cual='captura'):
+    """'captura' = la principal (`<firma>.jpg`, va como «captura_<firma>»); 'ventana' = la segunda (`<firma>.ventana.jpg`, «ventana_<firma>»)."""
+    return CAPTURAS / (f'{f}.jpg' if cual == 'captura' else f'{f}.ventana.jpg')
 
 
 def _borrar_captura(f):
-    try:
-        _archivo_captura(f).unlink(missing_ok=True)
-    except Exception:
-        pass
+    for cual in ('captura', 'ventana'):
+        try:
+            _archivo_captura(f, cual).unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 def _guardar_capturas():
     """Las capturas recién tomadas → JPEG en disco, unidas a su error pendiente. Si el error ya se mandó (la interfaz estaba parada más
-    de ESPERA_LOTE_S), la captura se descarta."""
+    de ESPERA_LOTE_S), la captura se descarta.
+    v5.73: la PRIMERA toma va como la de siempre (`captura`: la pantalla en Windows, la ventana en Mac o si la pantalla falló), así un
+    errores.php anterior la sigue guardando; la ventana del programa, cuando también hay pantalla, va aparte (`ventana`)."""
     with _CANDADO:
         nuevas = dict(_CAPTURAS_MEM)
         _CAPTURAS_MEM.clear()
     hubo = False
-    for f, (img, info) in nuevas.items():
+    for f, tomas in nuevas.items():
         d = _PENDIENTES.get(f)
         if d is None:
             continue
-        try:
-            datos = _jpeg(img)
-            if not datos:
-                continue
-            CAPTURAS.mkdir(parents=True, exist_ok=True)
-            destino = _archivo_captura(f)
-            tmp = destino.with_suffix('.tmp')
-            tmp.write_bytes(datos)
-            os.replace(tmp, destino)
-            d['captura'] = dict(info or {}, bytes=len(datos))
-            hubo = True
-        except Exception:
-            pass
+        for i, (_cual, img, info) in enumerate(tomas[:2]):
+            clave = 'captura' if i == 0 else 'ventana'
+            try:
+                datos = _jpeg(img)
+                if not datos:
+                    continue
+                CAPTURAS.mkdir(parents=True, exist_ok=True)
+                destino = _archivo_captura(f, clave)
+                tmp = destino.with_name(destino.name + '.tmp')
+                tmp.write_bytes(datos)
+                os.replace(tmp, destino)
+                d[clave] = dict(info or {}, bytes=len(datos))
+                hubo = True
+            except Exception:
+                pass
     if hubo:
         _guardar()
 
@@ -630,8 +665,9 @@ def _cargar():
         for f, d in (datos.get('pendientes') or {}).items():
             if isinstance(d, dict) and re.fullmatch(r'[0-9a-f]{40}', str(f)) and d.get('mensaje'):
                 d['veces'] = max(1, int(d.get('veces') or 1))
-                if d.get('captura') and not _archivo_captura(f).exists():
-                    d.pop('captura', None)
+                for cual in ('captura', 'ventana'):
+                    if d.get(cual) and not _archivo_captura(f, cual).exists():
+                        d.pop(cual, None)
                 _PENDIENTES[f] = d
         _recortar()
     except Exception:
@@ -639,7 +675,9 @@ def _cargar():
     try:                                        # capturas sueltas (su error ya se mandó o caducó, o se cortó al guardarla)
         if CAPTURAS.is_dir():
             for p in CAPTURAS.iterdir():
-                if p.stem not in _PENDIENTES or not _PENDIENTES[p.stem].get('captura') or p.suffix != '.jpg':
+                firma_p, _, resto = p.name.partition('.')
+                cual = {'jpg': 'captura', 'ventana.jpg': 'ventana'}.get(resto)       # (v5.73: «<firma>.ventana.jpg» es la 2.ª)
+                if cual is None or firma_p not in _PENDIENTES or not _PENDIENTES[firma_p].get(cual):
                     p.unlink(missing_ok=True)
     except Exception:
         pass
@@ -676,12 +714,19 @@ def _enviar():
     campos = [{k: d[k] for k in ('firma', 'nivel', 'titulo', 'mensaje', 'origen', 'detalle', 'veces')} for d in lote]
     archivos = []
     for d, c in zip(lote, campos):              # v5.72: la captura de cada error (multipart «captura_<firma>»)
-        if d.get('captura') and len(archivos) < CAPTURAS_POR_PETICION:
+        if d.get('captura') and len(archivos) < IMAGENES_POR_PETICION:
             try:
                 archivos.append(('captura_' + d['firma'], _archivo_captura(d['firma']).read_bytes()))
                 c['captura'] = d['captura'].get('tipo') or 'pantalla'
             except OSError:
                 d.pop('captura', None)
+        # v5.73: la ventana del programa, la 2.ª («ventana_<firma>»; un errores.php anterior la ignora y guarda solo la 1.ª)
+        if d.get('ventana') and len(archivos) < IMAGENES_POR_PETICION:
+            try:
+                archivos.append(('ventana_' + d['firma'], _archivo_captura(d['firma'], 'ventana').read_bytes()))
+                c['ventana'] = True
+            except OSError:
+                d.pop('ventana', None)
     try:
         equipo_datos = datos_equipo()
     except Exception:
@@ -693,7 +738,7 @@ def _enviar():
         # demasiado grande para el servidor (su tope de subida; si pasa post_max_size PHP tira todo el formulario y un errores.php viejo
         # daría 400 «Faltan datos»): esos errores se mandan sin captura en la siguiente vuelta
         for d in lote:
-            if d.pop('captura', None) is not None:
+            if (d.pop('captura', None) is not None) | (d.pop('ventana', None) is not None):
                 _borrar_captura(d['firma'])
         _guardar()
         _ESTADO['pausa_hasta'] = time.time() + 30

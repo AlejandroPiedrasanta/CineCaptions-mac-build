@@ -688,6 +688,8 @@ def telemetria(con_licencia=True, codigo=200):
     # (v5.72: las capturas, también en la carpeta temporal: nunca en ~/DaVinciSubtitles/errores_capturas del usuario)
     with parches((tel, 'URL', srv.url), (tel, 'ARCHIVO', pathlib.Path(carpeta) / 'errores_por_enviar.json'), (tel, 'ESPERA_LOTE_S', 0),
                  (tel, 'CAPTURAS', pathlib.Path(carpeta) / 'errores_capturas'),
+                 # v5.72: la ficha del equipo NUNCA al servidor real desde las pruebas (puerto cerrado) ni su huella en ~/DaVinciSubtitles
+                 (tel, 'URL_FICHA', 'http://127.0.0.1:9/nada'), (tel, 'FICHA_ENVIADA', pathlib.Path(carpeta) / 'ficha_enviada.json'),
                  (licencia, 'local', lambda: lic), (licencia, 'id_equipo', lambda: '3F2A-91BC-04DE-77A1')):
         try:
             yield srv
@@ -909,11 +911,14 @@ def _imagen_prueba(ancho=3440, alto=1440):
     return img
 
 
-def _con_captura(e):
-    """Lo que hace el capturador del hilo de la interfaz (sin pantalla de verdad): la imagen en memoria para ese error."""
+def _con_captura(e, tomas=('pantalla',)):
+    """Lo que hace el capturador del hilo de la interfaz (sin pantalla de verdad): las imágenes en memoria para ese error. v5.73: `tomas`
+    = las que salieron ('pantalla' y/o 'ventana', en ese orden, como _tomar_capturas)."""
     tel._al_anotar(e)
     tel._procesar_cola()
-    tel._CAPTURAS_MEM[tel.firma(e.origen, e.mensaje)] = (_imagen_prueba(), {'tipo': 'pantalla', 'ancho': 3440, 'alto': 1440})
+    medidas = {'pantalla': (3440, 1440), 'ventana': (2293, 960)}
+    tel._CAPTURAS_MEM[tel.firma(e.origen, e.mensaje)] = [
+        (c, _imagen_prueba(*medidas[c]), {'tipo': c, 'ancho': medidas[c][0], 'alto': medidas[c][1]}) for c in tomas]
     tel._guardar_capturas()
 
 
@@ -939,15 +944,65 @@ def tel_captura_va_con_su_error():
 
 
 @caso('Telemetría de errores')
+def tel_dos_capturas_pantalla_y_programa():
+    """v5.73 (pedido: «2 capturas, una del programa y una de la pantalla completa»): en Windows van las dos, «captura_<firma>» (pantalla) y
+    «ventana_<firma>» (la ventana del programa), con ventana: true en su error; al llegar se borran las dos."""
+    with telemetria() as srv:
+        e = _error()
+        _con_captura(e, ('pantalla', 'ventana'))
+        f = tel.firma(e.origen, e.mensaje)
+        esperar(tel._archivo_captura(f).exists() and tel._archivo_captura(f, 'ventana').exists(), 'las dos debían quedar en disco')
+        tel._enviar()
+        esperar(len(srv.peticiones) == 1, f'{len(srv.peticiones)} peticiones')
+        a = srv.archivos[0]
+        esperar(a.get('captura_' + f, b'')[:3] == b'\xff\xd8\xff' and a.get('ventana_' + f, b'')[:3] == b'\xff\xd8\xff', f'archivos: {list(a)}')
+        err = srv.errores()[0]
+        esperar(err.get('captura') == 'pantalla' and err.get('ventana') is True, str(err)[:200])
+        esperar(not list(tel.CAPTURAS.glob('*.jpg')) and not tel._PENDIENTES, 'enviadas: las dos debían borrarse')
+
+
+@caso('Telemetría de errores')
+def tel_solo_la_del_programa_va_como_captura():
+    """v5.73: si la de pantalla falla (o en Mac), la del programa va como «captura_<firma>» con captura='ventana': un errores.php anterior
+    la guarda igual."""
+    with telemetria() as srv:
+        e = _error()
+        _con_captura(e, ('ventana',))
+        f = tel.firma(e.origen, e.mensaje)
+        tel._enviar()
+        a = srv.archivos[0]
+        esperar(('captura_' + f) in a and ('ventana_' + f) not in a, f'archivos: {list(a)}')
+        err = srv.errores()[0]
+        esperar(err.get('captura') == 'ventana' and not err.get('ventana'), str(err)[:200])
+
+
+@caso('Telemetría de errores')
+def tel_capturas_sueltas_se_limpian():
+    """v5.73: al abrir, «<firma>.ventana.jpg» de un error pendiente se conserva; las que no tienen su error se borran."""
+    with telemetria():
+        e = _error()
+        _con_captura(e, ('pantalla', 'ventana'))
+        f = tel.firma(e.origen, e.mensaje)
+        tel._guardar()
+        huerfana = tel.CAPTURAS / (('0' * 40) + '.ventana.jpg')
+        huerfana.write_bytes(b'\xff\xd8\xff')
+        tel._PENDIENTES.clear()
+        tel._cargar()
+        esperar(tel._archivo_captura(f).exists() and tel._archivo_captura(f, 'ventana').exists(), 'las del error pendiente debían quedarse')
+        esperar(tel._PENDIENTES.get(f, {}).get('ventana') and not huerfana.exists(), 'la huérfana debía borrarse')
+
+
+@caso('Telemetría de errores')
 def tel_captura_grande_reintenta_sin_ella():
-    """v5.72: si el servidor dice 413 (o 400: PHP tiró el formulario por post_max_size), el error sale sin captura."""
+    """v5.72: si el servidor dice 413 (o 400: PHP tiró el formulario por post_max_size), el error sale sin captura (v5.73: sin las dos)."""
     with telemetria() as srv:
         srv.codigo_con_archivos = 413
         e = _error()
-        _con_captura(e)
+        _con_captura(e, ('pantalla', 'ventana'))
         tel._enviar()
         esperar(len(srv.peticiones) == 1 and len(tel._PENDIENTES) == 1, 'con 413 el error debía quedarse')
-        esperar(not any(d.get('captura') for d in tel._PENDIENTES.values()) and not list(tel.CAPTURAS.glob('*.jpg')), 'sin su captura')
+        esperar(not any(d.get('captura') or d.get('ventana') for d in tel._PENDIENTES.values()) and not list(tel.CAPTURAS.glob('*.jpg')),
+                'sin sus capturas')
         tel._ESTADO['pausa_hasta'] = 0
         tel._enviar()
         esperar(len(srv.peticiones) == 2 and not srv.archivos[1] and not tel._PENDIENTES, 'la segunda vez, sin captura y guardado')

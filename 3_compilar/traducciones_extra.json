@@ -10689,5 +10689,16 @@
   "ko": "또는 동영상을 CineCaptions 창에 놓고 GO를 누르세요.",
   "zh": "或者把视频拖到 CineCaptions 窗口中，再按 GO。",
   "ru": "Или перетащите видео в окно CineCaptions и нажмите GO."
+ },
+ "Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).": {
+  "en": "If something fails, the report for support includes two screenshots: the full screen and the CineCaptions window (captured even if another window covers it or it is minimized).",
+  "pt": "Se algo falhar, o relatório para o suporte leva duas capturas: a tela inteira e a janela do CineCaptions (sai mesmo que outra janela a cubra ou esteja minimizada).",
+  "fr": "Si quelque chose échoue, le rapport pour l’assistance contient deux captures : l’écran entier et la fenêtre de CineCaptions (elle sort même si une autre fenêtre la couvre ou si elle est réduite).",
+  "de": "Wenn etwas schiefgeht, enthält der Bericht für den Support zwei Screenshots: den ganzen Bildschirm und das CineCaptions-Fenster (auch wenn ein anderes Fenster es verdeckt oder es minimiert ist).",
+  "it": "Se qualcosa va storto, il rapporto per l’assistenza contiene due catture: lo schermo intero e la finestra di CineCaptions (esce anche se un’altra finestra la copre o è ridotta a icona).",
+  "ja": "問題が起きたとき、サポート用のレポートには 2 枚のスクリーンショットが入ります：画面全体と CineCaptions のウィンドウ（ほかのウィンドウに隠れていても、最小化されていても撮れます）。",
+  "ko": "문제가 생기면 지원용 보고서에 화면 캡처 두 장이 들어갑니다: 전체 화면과 CineCaptions 창(다른 창에 가려지거나 최소화되어 있어도 찍힙니다).",
+  "zh": "出现问题时，发给支持的报告会附上两张截图：整个屏幕和 CineCaptions 窗口（即使被其他窗口遮住或已最小化也能截到）。",
+  "ru": "Если что-то пойдёт не так, отчёт для поддержки содержит два снимка: весь экран и окно CineCaptions (снимается, даже если его закрывает другое окно или оно свёрнуто)."
  }
 }

@@ -4300,6 +4300,7 @@
     "Resolve trabajó, pero el audio exportado de tu timeline no llegó a CineCaptions.": "Resolve 已经处理，但导出的时间线音频没有送到 CineCaptions。",
     "Haz clic en tu timeline en Resolve y pulsa GO otra vez.": "在 Resolve 中点击你的时间线，再按一次 GO。",
     "Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).": "如果你的视频在桌面、文稿、下载或外置磁盘中，请允许 CineCaptions 访问该文件夹（Mac：“系统设置”>“隐私与安全性”>“文件和文件夹”）。",
-    "O suelta el video en la ventana de CineCaptions y pulsa GO.": "或者把视频拖到 CineCaptions 窗口中，再按 GO。"
+    "O suelta el video en la ventana de CineCaptions y pulsa GO.": "或者把视频拖到 CineCaptions 窗口中，再按 GO。",
+    "Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).": "出现问题时，发给支持的报告会附上两张截图：整个屏幕和 CineCaptions 窗口（即使被其他窗口遮住或已最小化也能截到）。"
   }
 }

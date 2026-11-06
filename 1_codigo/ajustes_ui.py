@@ -495,6 +495,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.73', [
+        'Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).',
+    ]),
     ('5.72', [
         'El instalador revisa tu equipo (procesador, memoria, tarjeta gráfica y su driver) y lo pone al día solo, sin abrir ventanas: instala Microsoft Visual C++ si falta y, con DaVinci Resolve cerrado, el driver más nuevo de tu tarjeta desde Windows Update. Windows pide permiso una sola vez.',
         'En los portátiles con dos tarjetas gráficas, CineCaptions y su IA usan la de alto rendimiento.',
