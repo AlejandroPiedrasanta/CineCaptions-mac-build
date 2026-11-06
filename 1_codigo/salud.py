@@ -148,8 +148,12 @@ def comprobar():
                     detalle += ' · faltan ' + ', '.join(faltan[:4])
             filas.append({'nombre': 'Motor auxiliar (Whisper/Argos/ONNX)', 'ok': ok, 'detalle': detalle})
     except Exception as e:
-        filas.append({'nombre': 'Motor auxiliar (Whisper/Argos/ONNX)', 'ok': False,
-                      'detalle': str(e)[:160]})
+        # v5.72: «[WinError 4551] Una directiva de Control de aplicaciones bloqueó este archivo» (cliente con la 5.71): es Smart App Control,
+        # no una librería que falte; dicho así, el Registro da los pasos correctos (registro_ayuda) en vez de «reinstala»
+        detalle = str(e)[:160]
+        if '4551' in detalle or 'Control de aplicaciones' in detalle or 'Application Control' in detalle or _bloqueo_de_windows(e):
+            detalle = 'Windows la bloqueó (Control inteligente de aplicaciones / Smart App Control)'
+        filas.append({'nombre': 'Motor auxiliar (Whisper/Argos/ONNX)', 'ok': False, 'detalle': detalle})
     try:                                   # v5.4.8: la GPU para Whisper (antes el chequeo decía «todo en orden» aunque faltara cuBLAS y la voz cayera a la CPU)
         import cuda_libs
         d = cuda_libs.diagnostico()

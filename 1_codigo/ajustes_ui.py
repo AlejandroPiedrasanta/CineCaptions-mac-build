@@ -500,6 +500,8 @@ NOTAS_VERSION = [
         'En los portátiles con dos tarjetas gráficas, CineCaptions y su IA usan la de alto rendimiento.',
         'Si a la voz o a la IA les falta alguna librería, se ponen al día solas al abrir CineCaptions, sin reinstalar.',
         'Lo que le falte a tu equipo (un driver antiguo, poca memoria o poco disco) aparece en el Registro.',
+        'Mac con DaVinci Resolve gratuito: GO espera bien el audio del timeline y, si algo falla, dice el motivo real (por ejemplo, un permiso de macOS que hay que volver a dar).',
+        'Windows: si el «Control inteligente de aplicaciones» bloquea una parte de CineCaptions, el Registro lo explica y dice cómo resolverlo.',
         'Para darte soporte, CineCaptions envía una ficha técnica de tu equipo y, con cada error, una captura de la pantalla (sin tus videos, nombres ni archivos).',
         'Cuando una versión deja de poder usarse, CineCaptions pide actualizar antes de seguir.',
     ]),

@@ -4287,6 +4287,19 @@
     "Si a la voz o a la IA les falta alguna librería, se ponen al día solas al abrir CineCaptions, sin reinstalar.": "음성이나 AI에 라이브러리가 빠져 있으면 CineCaptions를 열 때 다시 설치하지 않고 알아서 업데이트됩니다.",
     "Lo que le falte a tu equipo (un driver antiguo, poca memoria o poco disco) aparece en el Registro.": "컴퓨터에 부족한 것(오래된 드라이버, 부족한 메모리나 디스크)은 기록에 표시됩니다.",
     "Para darte soporte, CineCaptions envía una ficha técnica de tu equipo y, con cada error, una captura de la pantalla (sin tus videos, nombres ni archivos).": "지원을 위해 CineCaptions는 컴퓨터의 기술 정보와 오류마다 화면 캡처를 보냅니다(동영상, 이름, 파일은 포함하지 않음).",
-    "Cuando una versión deja de poder usarse, CineCaptions pide actualizar antes de seguir.": "더 이상 사용할 수 없는 버전이면 CineCaptions가 계속하기 전에 업데이트를 요청합니다."
+    "Cuando una versión deja de poder usarse, CineCaptions pide actualizar antes de seguir.": "더 이상 사용할 수 없는 버전이면 CineCaptions가 계속하기 전에 업데이트를 요청합니다.",
+    "El «Control inteligente de aplicaciones» (Smart App Control) de Windows 11 no deja cargar archivos de programas que aún no conoce y que no llevan firma digital. Bloqueó una librería de CineCaptions (la que lee el video o la del motor de voz) y sin ella GO no puede trabajar. No es un virus ni un archivo dañado, y reinstalar o «Reparar el motor» no lo arregla.": "Windows 11의 «Smart App Control»은 아직 알지 못하거나 디지털 서명이 없는 프로그램 파일 로드를 허용하지 않습니다. CineCaptions 라이브러리(비디오를 읽는 라이브러리 또는 음성 엔진의 라이브러리)가 차단되었고, 이 라이브러리 없이는 GO가 작동할 수 없습니다. 바이러스나 손상된 파일이 아니며, 다시 설치하거나 «엔진 복구»를 해도 해결되지 않습니다.",
+    "Mac con DaVinci Resolve gratuito: GO espera bien el audio del timeline y, si algo falla, dice el motivo real (por ejemplo, un permiso de macOS que hay que volver a dar).": "무료 DaVinci Resolve를 쓰는 Mac: GO가 타임라인 오디오를 제대로 기다리고, 문제가 생기면 실제 원인(예: 다시 허용해야 하는 macOS 권한)을 알려 줍니다.",
+    "Windows: si el «Control inteligente de aplicaciones» bloquea una parte de CineCaptions, el Registro lo explica y dice cómo resolverlo.": "Windows: «Smart App Control»이 CineCaptions의 일부를 차단하면 기록에서 설명하고 해결 방법을 알려 줍니다.",
+    "macOS no deja a CineCaptions manejar Resolve": "macOS가 CineCaptions의 Resolve 제어를 허용하지 않습니다",
+    "En la versión gratuita de Resolve, CineCaptions arranca su Puente pulsando el menú Scripts de Resolve, y para eso macOS pide dos permisos: Accesibilidad y Automatización. Tras una actualización de CineCaptions, macOS puede dejarlos marcados pero sin efecto.": "무료 버전의 Resolve에서 CineCaptions는 Resolve의 Scripts 메뉴를 눌러 브리지를 시작하며, 이를 위해 macOS는 손쉬운 사용과 자동화 두 가지 권한을 요구합니다. CineCaptions를 업데이트한 뒤 macOS가 체크는 남겨 두고 효과는 없게 만들 수 있습니다.",
+    "Abre Ajustes del Sistema > Privacidad y seguridad > Accesibilidad: selecciona CineCaptions, quítalo con «−», vuelve a añadirlo con «+» y actívalo.": "시스템 설정 > 개인정보 보호 및 보안 > 손쉬운 사용을 열고 CineCaptions를 선택해 «−»로 제거한 뒤 «+»로 다시 추가하고 켜세요.",
+    "En Privacidad y seguridad > Automatización > CineCaptions, activa «System Events».": "개인정보 보호 및 보안 > 자동화 > CineCaptions에서 «System Events»를 켜세요.",
+    "Cierra y vuelve a abrir CineCaptions y pulsa GO otra vez. O lanza tú el Puente en Resolve: Área de trabajo > Scripts > CineCaptions_Puente.": "CineCaptions를 닫았다가 다시 열고 GO를 다시 누르세요. 또는 Resolve에서 직접 브리지를 시작하세요: Workspace > Scripts > CineCaptions_Puente.",
+    "Resolve no me pasó el audio del timeline": "Resolve가 타임라인 오디오를 넘겨주지 않았습니다",
+    "Resolve trabajó, pero el audio exportado de tu timeline no llegó a CineCaptions.": "Resolve는 작업했지만 내보낸 타임라인 오디오가 CineCaptions에 도착하지 않았습니다.",
+    "Haz clic en tu timeline en Resolve y pulsa GO otra vez.": "Resolve에서 타임라인을 클릭하고 GO를 다시 누르세요.",
+    "Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).": "동영상이 데스크탑, 문서, 다운로드 또는 외장 디스크에 있다면 그 폴더를 CineCaptions에 허용하세요(Mac: 시스템 설정 > 개인정보 보호 및 보안 > 파일 및 폴더).",
+    "O suelta el video en la ventana de CineCaptions y pulsa GO.": "또는 동영상을 CineCaptions 창에 놓고 GO를 누르세요."
   }
 }

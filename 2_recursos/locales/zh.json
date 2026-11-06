@@ -4287,6 +4287,19 @@
     "Si a la voz o a la IA les falta alguna librería, se ponen al día solas al abrir CineCaptions, sin reinstalar.": "如果语音或 AI 缺少某个库，打开 CineCaptions 时会自动更新，无需重新安装。",
     "Lo que le falte a tu equipo (un driver antiguo, poca memoria o poco disco) aparece en el Registro.": "电脑缺少的东西（旧驱动、内存或磁盘空间不足）会显示在日志中。",
     "Para darte soporte, CineCaptions envía una ficha técnica de tu equipo y, con cada error, una captura de la pantalla (sin tus videos, nombres ni archivos).": "为了提供支持，CineCaptions 会发送你电脑的技术信息，并在每次出错时附上一张屏幕截图（不含你的视频、名称或文件）。",
-    "Cuando una versión deja de poder usarse, CineCaptions pide actualizar antes de seguir.": "当某个版本不能再使用时，CineCaptions 会要求先更新再继续。"
+    "Cuando una versión deja de poder usarse, CineCaptions pide actualizar antes de seguir.": "当某个版本不能再使用时，CineCaptions 会要求先更新再继续。",
+    "El «Control inteligente de aplicaciones» (Smart App Control) de Windows 11 no deja cargar archivos de programas que aún no conoce y que no llevan firma digital. Bloqueó una librería de CineCaptions (la que lee el video o la del motor de voz) y sin ella GO no puede trabajar. No es un virus ni un archivo dañado, y reinstalar o «Reparar el motor» no lo arregla.": "Windows 11 的“智能应用控制”无法加载它不认识且没有数字签名的程序文件。它阻止了一个 CineCaptions 库（读取视频的那个或语音引擎的那个），没有它 GO 就无法工作。这不是病毒或损坏的文件，重新安装或“修复引擎”也无法解决。",
+    "Mac con DaVinci Resolve gratuito: GO espera bien el audio del timeline y, si algo falla, dice el motivo real (por ejemplo, un permiso de macOS que hay que volver a dar).": "使用免费版 DaVinci Resolve 的 Mac：GO 会正确等待时间线音频；如果出错，会说明真正的原因（例如需要重新授予的 macOS 权限）。",
+    "Windows: si el «Control inteligente de aplicaciones» bloquea una parte de CineCaptions, el Registro lo explica y dice cómo resolverlo.": "Windows：如果“智能应用控制”阻止了 CineCaptions 的某个部分，日志会说明原因并告诉你如何解决。",
+    "macOS no deja a CineCaptions manejar Resolve": "macOS 不允许 CineCaptions 控制 Resolve",
+    "En la versión gratuita de Resolve, CineCaptions arranca su Puente pulsando el menú Scripts de Resolve, y para eso macOS pide dos permisos: Accesibilidad y Automatización. Tras una actualización de CineCaptions, macOS puede dejarlos marcados pero sin efecto.": "在免费版 Resolve 中，CineCaptions 通过点击 Resolve 的“脚本”菜单来启动它的桥接程序，为此 macOS 需要两项权限：辅助功能和自动化。更新 CineCaptions 之后，macOS 可能仍显示已勾选但实际无效。",
+    "Abre Ajustes del Sistema > Privacidad y seguridad > Accesibilidad: selecciona CineCaptions, quítalo con «−», vuelve a añadirlo con «+» y actívalo.": "打开“系统设置”>“隐私与安全性”>“辅助功能”：选中 CineCaptions，用“−”移除，再用“+”重新添加并打开。",
+    "En Privacidad y seguridad > Automatización > CineCaptions, activa «System Events».": "在“隐私与安全性”>“自动化”>“CineCaptions”中，打开“System Events”。",
+    "Cierra y vuelve a abrir CineCaptions y pulsa GO otra vez. O lanza tú el Puente en Resolve: Área de trabajo > Scripts > CineCaptions_Puente.": "关闭并重新打开 CineCaptions，再按一次 GO。或者在 Resolve 中自己启动桥接程序：Workspace > Scripts > CineCaptions_Puente。",
+    "Resolve no me pasó el audio del timeline": "Resolve 没有把时间线音频交给我",
+    "Resolve trabajó, pero el audio exportado de tu timeline no llegó a CineCaptions.": "Resolve 已经处理，但导出的时间线音频没有送到 CineCaptions。",
+    "Haz clic en tu timeline en Resolve y pulsa GO otra vez.": "在 Resolve 中点击你的时间线，再按一次 GO。",
+    "Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).": "如果你的视频在桌面、文稿、下载或外置磁盘中，请允许 CineCaptions 访问该文件夹（Mac：“系统设置”>“隐私与安全性”>“文件和文件夹”）。",
+    "O suelta el video en la ventana de CineCaptions y pulsa GO.": "或者把视频拖到 CineCaptions 窗口中，再按 GO。"
   }
 }

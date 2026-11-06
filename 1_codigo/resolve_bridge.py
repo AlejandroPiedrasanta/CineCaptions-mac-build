@@ -1010,6 +1010,36 @@ def _reporte_del_puente():
     except Exception:
         pass
     return _REP_PUENTE_MEMO['rep']
+def esperar_video_detectado(desde, espera_s=6.0):
+    """v5.72 (cliente de Mac con Resolve Free y la 5.71: «Abre DaVinci Resolve con tu timeline…» aunque el Puente dijo que todo fue bien): en Free sin
+    `io` el resultado de DetectarVideo llega por el registro de Resolve, que se escribe EN DIFERIDO (fusion:Execute) justo antes de la señal de hecho,
+    y se leía una sola vez. Se reintenta hasta `espera_s` a que aparezca una detección de esta vez (detectado_en >= desde - 5 s) con el archivo en
+    disco. Fuera del hilo de la interfaz. Devuelve (datos o None, motivo para el usuario si no llegó)."""
+    fin = time.time() + espera_s
+    datos = None
+    while True:
+        try:
+            datos = video_detectado()
+        except Exception:
+            datos = None
+        if datos and (datos.get('detectado_en') or 0) >= desde - 5:
+            ruta = datos.get('video_path') or ''
+            if ruta and Path(ruta).exists():
+                return datos, ''
+        if time.time() >= fin:
+            break
+        time.sleep(0.5)
+    if not datos:
+        return None, ('Resolve terminó, pero su resultado no llegó a CineCaptions (el registro de Resolve no traía el audio). Repite GO; si sigue '
+                      'igual, suelta el video en la ventana de CineCaptions.')
+    if (datos.get('detectado_en') or 0) < desde - 5:
+        return None, ('Resolve terminó, pero no entregó un resultado nuevo (el último es de hace %d min). Haz clic en tu timeline en Resolve y repite GO.'
+                      % max(1, int((time.time() - (datos.get('detectado_en') or 0)) / 60)))
+    return None, ('Resolve exportó el audio del timeline, pero no encuentro el archivo: %s. Si la ruta lleva acentos o está en una carpeta protegida '
+                  '(Escritorio, Documentos, Descargas o un disco externo), dale permiso a CineCaptions en Privacidad y seguridad o suelta el video en la ventana.'
+                  % (datos.get('video_path') or '(vacío)'))
+
+
 def video_detectado():
     """Lo que dejo CineCaptions_DetectarVideo: video_detectado.json (con io) o el\n    ultimo reporte del registro que traiga \'video\' (Free 21.1). Gana el mas\n    nuevo por \'detectado_en\'. None si no hay nada legible."""
     datos = None
@@ -1741,17 +1771,46 @@ def _esperar_latido(segundos, version=None):
     return False
 
 
+_MOTIVO_MAC = {'texto': ''}
+# v5.72: los permisos de macOS que hacen falta para pulsar el menú de Resolve. -25211/-1719 = Accesibilidad; -1743 = Automatización
+# («no autorizado a enviar Apple Events a System Events»). Un cliente de Mac con la 5.71 recibía solo «Abre DaVinci Resolve con tu timeline…»
+_SIN_ACCESIBILIDAD = ('sin permiso de Accesibilidad para CineCaptions (Ajustes del Sistema > Privacidad y seguridad > Accesibilidad: quita '
+                      'CineCaptions con «−», vuelve a añadirlo y actívalo; tras cada actualización macOS puede dejarlo marcado pero sin efecto)')
+_SIN_AUTOMATIZACION = ('sin permiso de Automatización para CineCaptions (Ajustes del Sistema > Privacidad y seguridad > Automatización > CineCaptions: '
+                       'activa «System Events»)')
+
+
+def motivo_lanzar_mac():
+    """v5.72: por qué falló el último lanzar_puente_mac() ('' si no falló o no se sabe), para decírselo al usuario en GO."""
+    return _MOTIVO_MAC['texto']
+
+
+def _motivo_de_permiso(err):
+    t = (err or '').lower()
+    if '-1743' in t or 'not authorized' in t or 'no está autorizad' in t or 'no esta autorizad' in t:
+        return _SIN_AUTOMATIZACION
+    if '-25211' in t or '-1719' in t or 'assistive' in t or 'asistencia' in t:
+        return _SIN_ACCESIBILIDAD
+    return ''
+
+
 def lanzar_puente_mac(espera_s=25, espera_abrir_s=180, forzar=False):
     """Mac: pulsa solo el menu de Resolve (Workspace > Scripts > CineCaptions_Puente) por «System Events» y espera a que el Puente
     lata. Hace falta el permiso de Accesibilidad para CineCaptions (macOS lo pide la primera vez). Si Resolve esta cerrado lo abre
     (`open -a`, Free no tiene MCP que lo abra) y espera a que muestre el menu de Scripts (= con un proyecto abierto). Devuelve True si el Puente
     quedo vivo. Con `forzar` lo lanza aunque ya haya uno latiendo (uno de una version anterior: el nuevo le pide el relevo) y espera a que lata el de la version actual. Nunca lanza;
-    si algo falla deja una linea en el Registro y se sigue con el aviso de siempre."""
+    si algo falla deja una linea en el Registro y se sigue con el aviso de siempre. v5.72: el motivo queda en motivo_lanzar_mac()."""
+    _MOTIVO_MAC['texto'] = ''
     if sys.platform != 'darwin':
+        return False
+    import registro
+
+    def fallo(texto, nivel='aviso'):
+        _MOTIVO_MAC['texto'] = texto
+        (registro.aviso if nivel == 'aviso' else registro.info)(texto, 'Puente · Mac')
         return False
     try:
         import subprocess
-        import registro
         version = VERSION_PUENTE_ESPERADA if forzar else None
         if puente_activo() and not forzar:
             return True
@@ -1767,8 +1826,7 @@ def lanzar_puente_mac(espera_s=25, espera_abrir_s=180, forzar=False):
             if salida == 'sin_resolve':
                 ab = subprocess.run(['open', '-a', 'DaVinci Resolve'], capture_output=True, text=True, errors='replace', timeout=30)
                 if ab.returncode != 0:
-                    registro.aviso('No encuentro DaVinci Resolve en este Mac (open -a): abrelo tu con un proyecto y repite.', 'Puente · Mac')
-                    return False
+                    return fallo('No encuentro DaVinci Resolve en este Mac (open -a): ábrelo tú con un proyecto y repite.')
                 registro.info('Abro DaVinci Resolve para lanzar el Puente.', 'Puente · Mac')
             inicio = time.time()
             ultimo_org, intentos_org = time.time() + 6.0, 0
@@ -1781,34 +1839,34 @@ def lanzar_puente_mac(espera_s=25, espera_abrir_s=180, forzar=False):
                     if res_org != 'SIN_ORGANIZADOR':
                         intentos_org += 1
                         registro.info('Resolve estaba en el Organizador de proyectos: ' + res_org, 'Puente · Mac')
-                if codigo != 0 and ('-25211' in err or '-1719' in err or 'assistive' in err.lower()):
-                    registro.aviso('No pude lanzar el Puente en Resolve por el menu: sin permiso de Accesibilidad para CineCaptions (Ajustes del Sistema > Privacidad y seguridad > Accesibilidad)', 'Puente · Mac')
-                    return False
+                permiso = _motivo_de_permiso(err) if codigo != 0 else ''
+                if permiso:
+                    return fallo('No pude lanzar el Puente en Resolve por el menú: ' + permiso)
                 if codigo == 0 and salida == 'ok':
                     if _esperar_latido(espera_s, version):
                         registro.info('El Puente se lanzo solo desde el menu de Resolve.', 'Puente · Mac')
                         return True
                     # el menu estaba pero Resolve aun cargaba su proyecto: se vuelve a intentar
-            registro.aviso('Resolve no mostro un proyecto abierto en %d s: abrelo tu (la pantalla de proyectos no vale) y repite.' % int(espera_abrir_s), 'Puente · Mac')
-            return False
+            return fallo('Resolve no mostró un proyecto abierto en %d s: ábrelo tú (la pantalla de proyectos no vale) y repite.' % int(espera_abrir_s))
         if codigo != 0 or salida != 'ok':
-            if '-25211' in err or '-1719' in err or 'asistencia' in err.lower() or 'assistive' in err.lower():
-                motivo = 'sin permiso de Accesibilidad para CineCaptions (Ajustes del Sistema > Privacidad y seguridad > Accesibilidad)'
-            else:
-                motivo = {'sin_menu': 'Resolve esta abierto pero no muestra el menu Scripts > CineCaptions_Puente (¿sin proyecto abierto, o scripts sin instalar? Ajustes > Reinstalar scripts)',
-                          'sin_resolve': 'Resolve no esta abierto'}.get(salida) or salida or err.strip()[-200:] or 'sin respuesta'
-            registro.aviso('No pude lanzar el Puente en Resolve por el menu: ' + motivo, 'Puente · Mac')
-            return False
+            motivo = _motivo_de_permiso(err) if codigo != 0 else ''
+            if not motivo:
+                motivo = {'sin_menu': 'Resolve está abierto pero no muestra el menú Scripts > CineCaptions_Puente (¿sin proyecto abierto, o scripts sin instalar? Ajustes > Reinstalar scripts)',
+                          'sin_resolve': 'Resolve no está abierto'}.get(salida) or salida or err.strip()[-200:] or 'sin respuesta'
+            return fallo('No pude lanzar el Puente en Resolve por el menú: ' + motivo)
         if _esperar_latido(espera_s, version):
             registro.info('El Puente se lanzo solo desde el menu de Resolve.', 'Puente · Mac')
             return True
-        registro.aviso('Pulse el menu del Puente pero no empezo a latir en %d s.' % espera_s, 'Puente · Mac')
+        return fallo('Pulsé el menú del Puente en Resolve pero no empezó a trabajar en %d s (¿Resolve estaba reproduciendo o con un cuadro abierto? '
+                     'Detén la reproducción, cierra los cuadros de Resolve y repite).' % espera_s)
+    except subprocess.TimeoutExpired:
+        return fallo('Resolve tardó más de 30 s en dejarme abrir su menú Scripts (¿estaba ocupado renderizando o reproduciendo?). Repite cuando termine.')
     except Exception:
         try:
-            import registro
             registro.excepcion(origen='Puente · Mac')
         except Exception:
             pass
+        _MOTIVO_MAC['texto'] = _MOTIVO_MAC['texto'] or 'Falló el lanzamiento del Puente en Resolve (detalle en el Registro, origen «Puente · Mac»).'
     return False
 
 

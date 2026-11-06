@@ -8356,8 +8356,22 @@ class SubtitleApp(QWidget):
                     return ('sin_resolve', '')
                 self.msg_queue.put(('status', tr('Lanzando el Puente en Resolve…')))
                 if not resolve_bridge.lanzar_puente_auto() and not resolve_bridge.relanzar_puente_tras_detener():   # (Free; v5.5.7: plan B si Resolve seguía reproduciendo)
-                    return ('sin_resolve', '')
+                    # v5.72 (cliente de Mac con la 5.71): el motivo real (permisos de Accesibilidad/Automatización, menú, latido) en vez del genérico
+                    return ('sin_resolve', resolve_bridge.motivo_lanzar_mac() if sys.platform == 'darwin' else '')
+            if sys.platform == 'darwin':
+                # v5.72: la carpeta donde DetectarVideo.lua deja el audio; Resolve Free (sin io ni createdir) no puede crearla y el render fallaba
+                try:
+                    (Path.home() / 'Library' / 'Application Support' / 'CineCaptions' / 'audio').mkdir(parents=True, exist_ok=True)
+                except OSError:
+                    pass
+            inicio = time.time()
             ok, err = resolve_bridge.ejecutar('detectar', timeout=600)
+            if ok:
+                # v5.72: el resultado de Free llega por el registro de Resolve, que se escribe en diferido: se espera a que aparezca (y si no, el porqué)
+                _datos, motivo = resolve_bridge.esperar_video_detectado(inicio)
+                if motivo:
+                    registro.aviso('GO · timeline: ' + motivo, 'GO · timeline')
+                    return ('ok', motivo)
             return ('ok' if ok else 'error', err)
         def fin(r, error):
             estado, err = r if r else ('error', str(error))

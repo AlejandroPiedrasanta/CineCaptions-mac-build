@@ -30,10 +30,13 @@ _REGLAS = [
       'Cierra cualquier cuadro de diálogo que Resolve tenga abierto (novedades, licencia, actualización).',
       'Vuelve a soltar el video o a pulsar GO.'], 'bloquea'),
     # v5.5.6: Smart App Control de Windows 11 (error 0xc0e90002, «Bad Image») no deja cargar una librería sin firma digital (salud._bloqueo_de_windows)
-    (r'Control inteligente de aplicaciones|Smart App Control|0xc0e90002',
+    # v5.72: también «[WinError 4551] Una directiva de Control de aplicaciones bloqueó este archivo» (en inglés «An Application Control policy has
+    # blocked this file»): así llega desde el motor auxiliar (Whisper) en un cliente con la 5.71 y salía como «error interno» o «faltan librerías»
+    (r'Control inteligente de aplicaciones|Smart App Control|0xc0e90002|WinError 4551|directiva de Control de aplicaciones|Application Control policy',
      'Windows bloqueó una parte de CineCaptions',
      'El «Control inteligente de aplicaciones» (Smart App Control) de Windows 11 no deja cargar archivos de programas que aún no conoce y que no llevan '
-     'firma digital. Bloqueó una librería de CineCaptions (la que lee el video) y sin ella GO no puede trabajar. No es un virus ni un archivo dañado.',
+     'firma digital. Bloqueó una librería de CineCaptions (la que lee el video o la del motor de voz) y sin ella GO no puede trabajar. No es un virus ni '
+     'un archivo dañado, y reinstalar o «Reparar el motor» no lo arregla.',
      ['Abre Configuración > Privacidad y seguridad > Seguridad de Windows > Control de aplicaciones y navegador > Configuración del control inteligente de aplicaciones y elige «Desactivado».',
       'Ojo: Windows no deja volver a activarlo sin reinstalar el sistema. Si prefieres no apagarlo, usa CineCaptions en otro equipo.',
       'Cierra y vuelve a abrir CineCaptions.'], 'bloquea'),
@@ -200,6 +203,19 @@ _REGLAS = [
      'En Ajustes está encendido «Video MP4 en lugar de Resolve»: GO no usa el timeline de Resolve, trabaja con un video que sueltes en CineCaptions.',
      ['Para usar el timeline de Resolve: Ajustes > General, apaga «Video MP4 en lugar de Resolve» y pulsa GO.',
       'O arrastra tu video a la ventana de CineCaptions y pulsa GO.'], 'bloquea'),
+    # v5.72 (cliente de Mac con Resolve Free y la 5.71: solo veía «Abre DaVinci Resolve con tu timeline…»): los motivos concretos, antes de la comodín
+    (r'sin permiso de (Accesibilidad|Automatización) para CineCaptions',
+     'macOS no deja a CineCaptions manejar Resolve',
+     'En la versión gratuita de Resolve, CineCaptions arranca su Puente pulsando el menú Scripts de Resolve, y para eso macOS pide dos permisos: Accesibilidad y Automatización. Tras una actualización de CineCaptions, macOS puede dejarlos marcados pero sin efecto.',
+     ['Abre Ajustes del Sistema > Privacidad y seguridad > Accesibilidad: selecciona CineCaptions, quítalo con «−», vuelve a añadirlo con «+» y actívalo.',
+      'En Privacidad y seguridad > Automatización > CineCaptions, activa «System Events».',
+      'Cierra y vuelve a abrir CineCaptions y pulsa GO otra vez. O lanza tú el Puente en Resolve: Área de trabajo > Scripts > CineCaptions_Puente.'], 'bloquea'),
+    (r'su resultado no llegó a CineCaptions|no entregó un resultado nuevo|exportó el audio del timeline, pero no encuentro el archivo',
+     'Resolve no me pasó el audio del timeline',
+     'Resolve trabajó, pero el audio exportado de tu timeline no llegó a CineCaptions.',
+     ['Haz clic en tu timeline en Resolve y pulsa GO otra vez.',
+      'Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).',
+      'O suelta el video en la ventana de CineCaptions y pulsa GO.'], 'bloquea'),
     (r'GO · timeline|timeline|línea de tiempo',
      'No pude traer el audio del timeline',
      'Resolve no entregó el audio de tu timeline (o no hay uno activo con clips de audio).',

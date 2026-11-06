@@ -513,7 +513,15 @@ def _app():
 def _componentes():
     if not _es_windows():
         return {}
-    return {'vcredist_x64': vcredist_x64() or 'no', 'winget': 'sí' if winget() else 'no'}
+    datos = {'vcredist_x64': vcredist_x64() or 'no', 'winget': 'sí' if winget() else 'no'}
+    try:
+        import salud
+        sac = salud.smart_app_control()
+        if sac:
+            datos['smart_app_control'] = sac     # 'activado' bloquea las librerías sin firma (WinError 4551 / 0xc0e90002)
+    except Exception:
+        pass
+    return datos
 
 
 def _nvidia(f):
@@ -572,6 +580,14 @@ def revisar(f):
             anotar('vcredist', 'falta', f'Visual C++ {vc} es antiguo: hace falta 14.40 o más (la IA puede cerrarse al cargar)')
         else:
             anotar('vcredist', 'ok', f'Visual C++ {vc}')
+        # v5.72 (cliente con la 5.71: «[WinError 4551] Una directiva de Control de aplicaciones bloqueó este archivo» en el motor auxiliar)
+        sac = (f.get('componentes') or {}).get('smart_app_control')
+        if sac == 'activado':
+            anotar('smart_app_control', 'falta', 'El «Control inteligente de aplicaciones» de Windows está activado y bloquea librerías de CineCaptions '
+                                                 'que aún no llevan firma digital: la voz puede no funcionar (se apaga en Seguridad de Windows)')
+        elif sac == 'evaluacion':
+            anotar('smart_app_control', 'aviso', 'El «Control inteligente de aplicaciones» de Windows está en evaluación: puede llegar a bloquear '
+                                                 'librerías de CineCaptions')
     ram = (f.get('ram') or {}).get('total_mb') or 0
     if ram:
         gb = round(ram / 1024)

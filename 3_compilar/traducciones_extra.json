@@ -10546,5 +10546,148 @@
   "ko": "더 이상 사용할 수 없는 버전이면 CineCaptions가 계속하기 전에 업데이트를 요청합니다.",
   "zh": "当某个版本不能再使用时，CineCaptions 会要求先更新再继续。",
   "ru": "Если версией больше нельзя пользоваться, CineCaptions попросит обновиться, прежде чем продолжить."
+ },
+ "El «Control inteligente de aplicaciones» (Smart App Control) de Windows 11 no deja cargar archivos de programas que aún no conoce y que no llevan firma digital. Bloqueó una librería de CineCaptions (la que lee el video o la del motor de voz) y sin ella GO no puede trabajar. No es un virus ni un archivo dañado, y reinstalar o «Reparar el motor» no lo arregla.": {
+  "en": "Windows 11's Smart App Control won't load files from programs it doesn't know yet and that have no digital signature. It blocked a CineCaptions library (the one that reads the video or the voice engine's), and without it GO can't work. It's not a virus or a damaged file, and reinstalling or «Repair the engine» won't fix it.",
+  "pt": "O Controle Inteligente de Aplicativos (Smart App Control) do Windows 11 não deixa carregar arquivos de programas que ainda não conhece e que não têm assinatura digital. Ele bloqueou uma biblioteca do CineCaptions (a que lê o vídeo ou a do motor de voz) e sem ela o GO não funciona. Não é vírus nem arquivo danificado, e reinstalar ou «Reparar o motor» não resolve.",
+  "fr": "Le Contrôle intelligent des applications (Smart App Control) de Windows 11 ne laisse pas charger les fichiers de programmes qu'il ne connaît pas encore et qui n'ont pas de signature numérique. Il a bloqué une bibliothèque de CineCaptions (celle qui lit la vidéo ou celle du moteur vocal) et sans elle GO ne peut pas travailler. Ce n'est ni un virus ni un fichier endommagé, et réinstaller ou « Réparer le moteur » ne le corrige pas.",
+  "de": "Die intelligente App-Steuerung (Smart App Control) von Windows 11 lädt keine Dateien von Programmen, die sie noch nicht kennt und die keine digitale Signatur haben. Sie hat eine Bibliothek von CineCaptions blockiert (die das Video liest oder die der Sprach-Engine), ohne sie kann GO nicht arbeiten. Es ist kein Virus und keine beschädigte Datei, und Neuinstallieren oder «Engine reparieren» behebt es nicht.",
+  "it": "Il Controllo intelligente delle app (Smart App Control) di Windows 11 non lascia caricare file di programmi che non conosce ancora e senza firma digitale. Ha bloccato una libreria di CineCaptions (quella che legge il video o quella del motore vocale) e senza di essa GO non può lavorare. Non è un virus né un file danneggiato, e reinstallare o «Ripara il motore» non lo risolve.",
+  "ja": "Windows 11の「Smart App Control」は、まだ認識していない、デジタル署名のないプログラムファイルを開くことを拒否します。CineCaptionsのライブラリ（動画を読み込むもの、または音声エンジンのもの）がブロックされ、それがないとGOは動作しません。ウイルスや破損ファイルではなく、再インストールや「エンジンを修復」では直りません。",
+  "ko": "Windows 11의 «Smart App Control»은 아직 알지 못하거나 디지털 서명이 없는 프로그램 파일 로드를 허용하지 않습니다. CineCaptions 라이브러리(비디오를 읽는 라이브러리 또는 음성 엔진의 라이브러리)가 차단되었고, 이 라이브러리 없이는 GO가 작동할 수 없습니다. 바이러스나 손상된 파일이 아니며, 다시 설치하거나 «엔진 복구»를 해도 해결되지 않습니다.",
+  "zh": "Windows 11 的“智能应用控制”无法加载它不认识且没有数字签名的程序文件。它阻止了一个 CineCaptions 库（读取视频的那个或语音引擎的那个），没有它 GO 就无法工作。这不是病毒或损坏的文件，重新安装或“修复引擎”也无法解决。",
+  "ru": "«Smart App Control» в Windows 11 не позволяет загружать файлы из программ, которые он еще не знает и у которых нет цифровой подписи. Он заблокировал библиотеку CineCaptions (ту, что считывает видео, или библиотеку голосового движка), и без нее GO не может работать. Это не вирус и не поврежденный файл, и переустановка или «Восстановить движок» не помогут."
+ },
+ "Mac con DaVinci Resolve gratuito: GO espera bien el audio del timeline y, si algo falla, dice el motivo real (por ejemplo, un permiso de macOS que hay que volver a dar).": {
+  "en": "Mac with the free DaVinci Resolve: GO properly waits for the timeline audio and, if something fails, tells you the real reason (for example, a macOS permission that needs to be granted again).",
+  "pt": "Mac com o DaVinci Resolve gratuito: o GO espera corretamente o áudio da timeline e, se algo falhar, diz o motivo real (por exemplo, uma permissão do macOS que precisa ser dada de novo).",
+  "fr": "Mac avec DaVinci Resolve gratuit : GO attend correctement l’audio de la timeline et, si quelque chose échoue, indique la vraie raison (par exemple une autorisation de macOS à redonner).",
+  "de": "Mac mit dem kostenlosen DaVinci Resolve: GO wartet korrekt auf das Audio der Timeline und nennt bei einem Fehler den echten Grund (zum Beispiel eine macOS-Berechtigung, die erneut erteilt werden muss).",
+  "it": "Mac con DaVinci Resolve gratuito: GO attende correttamente l’audio della timeline e, se qualcosa non va, indica il motivo reale (per esempio un permesso di macOS da concedere di nuovo).",
+  "ja": "無料版 DaVinci Resolve を使う Mac：GO がタイムラインの音声をきちんと待ち、失敗したときは本当の原因（たとえば、もう一度許可が必要な macOS の権限）を表示します。",
+  "ko": "무료 DaVinci Resolve를 쓰는 Mac: GO가 타임라인 오디오를 제대로 기다리고, 문제가 생기면 실제 원인(예: 다시 허용해야 하는 macOS 권한)을 알려 줍니다.",
+  "zh": "使用免费版 DaVinci Resolve 的 Mac：GO 会正确等待时间线音频；如果出错，会说明真正的原因（例如需要重新授予的 macOS 权限）。",
+  "ru": "Mac с бесплатным DaVinci Resolve: GO правильно дожидается звука таймлайна и, если что-то не так, называет настоящую причину (например, разрешение macOS, которое нужно выдать заново)."
+ },
+ "Windows: si el «Control inteligente de aplicaciones» bloquea una parte de CineCaptions, el Registro lo explica y dice cómo resolverlo.": {
+  "en": "Windows: if Smart App Control blocks part of CineCaptions, the Log explains it and tells you how to fix it.",
+  "pt": "Windows: se o Controle Inteligente de Aplicativos bloquear uma parte do CineCaptions, o Registro explica e diz como resolver.",
+  "fr": "Windows : si le Contrôle intelligent des applications bloque une partie de CineCaptions, le Journal l’explique et indique comment résoudre le problème.",
+  "de": "Windows: Wenn die intelligente App-Steuerung einen Teil von CineCaptions blockiert, erklärt das Protokoll es und sagt, wie man es löst.",
+  "it": "Windows: se il Controllo intelligente delle app blocca una parte di CineCaptions, il Registro lo spiega e dice come risolverlo.",
+  "ja": "Windows：「Smart App Control」が CineCaptions の一部をブロックした場合、ログが説明し、解決方法を示します。",
+  "ko": "Windows: «Smart App Control»이 CineCaptions의 일부를 차단하면 기록에서 설명하고 해결 방법을 알려 줍니다.",
+  "zh": "Windows：如果“智能应用控制”阻止了 CineCaptions 的某个部分，日志会说明原因并告诉你如何解决。",
+  "ru": "Windows: если «Smart App Control» блокирует часть CineCaptions, Журнал объяснит это и подскажет, как решить."
+ },
+ "macOS no deja a CineCaptions manejar Resolve": {
+  "en": "macOS won’t let CineCaptions control Resolve",
+  "pt": "O macOS não deixa o CineCaptions controlar o Resolve",
+  "fr": "macOS ne laisse pas CineCaptions piloter Resolve",
+  "de": "macOS lässt CineCaptions Resolve nicht steuern",
+  "it": "macOS non lascia che CineCaptions controlli Resolve",
+  "ja": "macOS が CineCaptions による Resolve の操作を許可していません",
+  "ko": "macOS가 CineCaptions의 Resolve 제어를 허용하지 않습니다",
+  "zh": "macOS 不允许 CineCaptions 控制 Resolve",
+  "ru": "macOS не даёт CineCaptions управлять Resolve"
+ },
+ "En la versión gratuita de Resolve, CineCaptions arranca su Puente pulsando el menú Scripts de Resolve, y para eso macOS pide dos permisos: Accesibilidad y Automatización. Tras una actualización de CineCaptions, macOS puede dejarlos marcados pero sin efecto.": {
+  "en": "In the free version of Resolve, CineCaptions starts its Bridge by clicking Resolve’s Scripts menu, and for that macOS requires two permissions: Accessibility and Automation. After a CineCaptions update, macOS may leave them checked but without effect.",
+  "pt": "Na versão gratuita do Resolve, o CineCaptions inicia a sua Ponte clicando no menu Scripts do Resolve, e para isso o macOS pede duas permissões: Acessibilidade e Automação. Depois de uma atualização do CineCaptions, o macOS pode deixá-las marcadas mas sem efeito.",
+  "fr": "Dans la version gratuite de Resolve, CineCaptions lance son Pont en cliquant sur le menu Scripts de Resolve, et pour cela macOS demande deux autorisations : Accessibilité et Automatisation. Après une mise à jour de CineCaptions, macOS peut les laisser cochées mais sans effet.",
+  "de": "In der kostenlosen Version von Resolve startet CineCaptions seine Brücke über das Scripts-Menü von Resolve, und dafür verlangt macOS zwei Berechtigungen: Bedienungshilfen und Automation. Nach einem Update von CineCaptions kann macOS sie angehakt, aber wirkungslos lassen.",
+  "it": "Nella versione gratuita di Resolve, CineCaptions avvia il suo Ponte cliccando il menu Scripts di Resolve, e per farlo macOS chiede due permessi: Accessibilità e Automazione. Dopo un aggiornamento di CineCaptions, macOS può lasciarli spuntati ma senza effetto.",
+  "ja": "無料版の Resolve では、CineCaptions は Resolve の「スクリプト」メニューを押してブリッジを起動します。そのため macOS は「アクセシビリティ」と「オートメーション」の 2 つの権限を求めます。CineCaptions を更新すると、macOS がチェックを残したまま無効にしてしまうことがあります。",
+  "ko": "무료 버전의 Resolve에서 CineCaptions는 Resolve의 Scripts 메뉴를 눌러 브리지를 시작하며, 이를 위해 macOS는 손쉬운 사용과 자동화 두 가지 권한을 요구합니다. CineCaptions를 업데이트한 뒤 macOS가 체크는 남겨 두고 효과는 없게 만들 수 있습니다.",
+  "zh": "在免费版 Resolve 中，CineCaptions 通过点击 Resolve 的“脚本”菜单来启动它的桥接程序，为此 macOS 需要两项权限：辅助功能和自动化。更新 CineCaptions 之后，macOS 可能仍显示已勾选但实际无效。",
+  "ru": "В бесплатной версии Resolve CineCaptions запускает свой Мост через меню Scripts в Resolve, и для этого macOS требует два разрешения: Универсальный доступ и Автоматизация. После обновления CineCaptions macOS может оставить их отмеченными, но без действия."
+ },
+ "Abre Ajustes del Sistema > Privacidad y seguridad > Accesibilidad: selecciona CineCaptions, quítalo con «−», vuelve a añadirlo con «+» y actívalo.": {
+  "en": "Open System Settings > Privacy & Security > Accessibility: select CineCaptions, remove it with «−», add it again with «+» and turn it on.",
+  "pt": "Abra Ajustes do Sistema > Privacidade e Segurança > Acessibilidade: selecione o CineCaptions, remova com «−», adicione de novo com «+» e ative.",
+  "fr": "Ouvrez Réglages Système > Confidentialité et sécurité > Accessibilité : sélectionnez CineCaptions, retirez-le avec « − », ajoutez-le de nouveau avec « + » et activez-le.",
+  "de": "Öffne Systemeinstellungen > Datenschutz & Sicherheit > Bedienungshilfen: Wähle CineCaptions, entferne es mit «−», füge es mit «+» wieder hinzu und aktiviere es.",
+  "it": "Apri Impostazioni di Sistema > Privacy e sicurezza > Accessibilità: seleziona CineCaptions, rimuovilo con «−», aggiungilo di nuovo con «+» e attivalo.",
+  "ja": "「システム設定」>「プライバシーとセキュリティ」>「アクセシビリティ」を開き、CineCaptions を選んで「−」で削除し、「+」で追加し直してオンにします。",
+  "ko": "시스템 설정 > 개인정보 보호 및 보안 > 손쉬운 사용을 열고 CineCaptions를 선택해 «−»로 제거한 뒤 «+»로 다시 추가하고 켜세요.",
+  "zh": "打开“系统设置”>“隐私与安全性”>“辅助功能”：选中 CineCaptions，用“−”移除，再用“+”重新添加并打开。",
+  "ru": "Откройте Системные настройки > Конфиденциальность и безопасность > Универсальный доступ: выберите CineCaptions, удалите его кнопкой «−», добавьте снова кнопкой «+» и включите."
+ },
+ "En Privacidad y seguridad > Automatización > CineCaptions, activa «System Events».": {
+  "en": "In Privacy & Security > Automation > CineCaptions, turn on «System Events».",
+  "pt": "Em Privacidade e Segurança > Automação > CineCaptions, ative «System Events».",
+  "fr": "Dans Confidentialité et sécurité > Automatisation > CineCaptions, activez « System Events ».",
+  "de": "Aktiviere unter Datenschutz & Sicherheit > Automation > CineCaptions «System Events».",
+  "it": "In Privacy e sicurezza > Automazione > CineCaptions, attiva «System Events».",
+  "ja": "「プライバシーとセキュリティ」>「オートメーション」>「CineCaptions」で「System Events」をオンにします。",
+  "ko": "개인정보 보호 및 보안 > 자동화 > CineCaptions에서 «System Events»를 켜세요.",
+  "zh": "在“隐私与安全性”>“自动化”>“CineCaptions”中，打开“System Events”。",
+  "ru": "В разделе Конфиденциальность и безопасность > Автоматизация > CineCaptions включите «System Events»."
+ },
+ "Cierra y vuelve a abrir CineCaptions y pulsa GO otra vez. O lanza tú el Puente en Resolve: Área de trabajo > Scripts > CineCaptions_Puente.": {
+  "en": "Close and reopen CineCaptions and press GO again. Or start the Bridge yourself in Resolve: Workspace > Scripts > CineCaptions_Puente.",
+  "pt": "Feche e abra de novo o CineCaptions e pressione GO outra vez. Ou inicie você a Ponte no Resolve: Workspace > Scripts > CineCaptions_Puente.",
+  "fr": "Fermez puis rouvrez CineCaptions et appuyez de nouveau sur GO. Ou lancez vous-même le Pont dans Resolve : Workspace > Scripts > CineCaptions_Puente.",
+  "de": "Schließe CineCaptions, öffne es wieder und drücke erneut GO. Oder starte die Brücke selbst in Resolve: Workspace > Scripts > CineCaptions_Puente.",
+  "it": "Chiudi e riapri CineCaptions e premi di nuovo GO. Oppure avvia tu il Ponte in Resolve: Workspace > Scripts > CineCaptions_Puente.",
+  "ja": "CineCaptions を閉じて開き直し、もう一度 GO を押します。または Resolve で自分でブリッジを起動します：Workspace > Scripts > CineCaptions_Puente。",
+  "ko": "CineCaptions를 닫았다가 다시 열고 GO를 다시 누르세요. 또는 Resolve에서 직접 브리지를 시작하세요: Workspace > Scripts > CineCaptions_Puente.",
+  "zh": "关闭并重新打开 CineCaptions，再按一次 GO。或者在 Resolve 中自己启动桥接程序：Workspace > Scripts > CineCaptions_Puente。",
+  "ru": "Закройте и снова откройте CineCaptions и ещё раз нажмите GO. Или запустите Мост сами в Resolve: Workspace > Scripts > CineCaptions_Puente."
+ },
+ "Resolve no me pasó el audio del timeline": {
+  "en": "Resolve didn’t hand me the timeline audio",
+  "pt": "O Resolve não me passou o áudio da timeline",
+  "fr": "Resolve ne m’a pas transmis l’audio de la timeline",
+  "de": "Resolve hat mir das Audio der Timeline nicht übergeben",
+  "it": "Resolve non mi ha passato l’audio della timeline",
+  "ja": "Resolve からタイムラインの音声を受け取れませんでした",
+  "ko": "Resolve가 타임라인 오디오를 넘겨주지 않았습니다",
+  "zh": "Resolve 没有把时间线音频交给我",
+  "ru": "Resolve не передал мне звук таймлайна"
+ },
+ "Resolve trabajó, pero el audio exportado de tu timeline no llegó a CineCaptions.": {
+  "en": "Resolve did its part, but the exported audio of your timeline didn’t reach CineCaptions.",
+  "pt": "O Resolve trabalhou, mas o áudio exportado da sua timeline não chegou ao CineCaptions.",
+  "fr": "Resolve a travaillé, mais l’audio exporté de votre timeline n’est pas arrivé à CineCaptions.",
+  "de": "Resolve hat gearbeitet, aber das exportierte Audio deiner Timeline ist nicht bei CineCaptions angekommen.",
+  "it": "Resolve ha lavorato, ma l’audio esportato della tua timeline non è arrivato a CineCaptions.",
+  "ja": "Resolve は処理しましたが、書き出したタイムラインの音声が CineCaptions に届きませんでした。",
+  "ko": "Resolve는 작업했지만 내보낸 타임라인 오디오가 CineCaptions에 도착하지 않았습니다.",
+  "zh": "Resolve 已经处理，但导出的时间线音频没有送到 CineCaptions。",
+  "ru": "Resolve выполнил работу, но экспортированный звук таймлайна не дошёл до CineCaptions."
+ },
+ "Haz clic en tu timeline en Resolve y pulsa GO otra vez.": {
+  "en": "Click your timeline in Resolve and press GO again.",
+  "pt": "Clique na sua timeline no Resolve e pressione GO outra vez.",
+  "fr": "Cliquez sur votre timeline dans Resolve et appuyez de nouveau sur GO.",
+  "de": "Klicke in Resolve auf deine Timeline und drücke erneut GO.",
+  "it": "Fai clic sulla tua timeline in Resolve e premi di nuovo GO.",
+  "ja": "Resolve でタイムラインをクリックし、もう一度 GO を押します。",
+  "ko": "Resolve에서 타임라인을 클릭하고 GO를 다시 누르세요.",
+  "zh": "在 Resolve 中点击你的时间线，再按一次 GO。",
+  "ru": "Щёлкните по своему таймлайну в Resolve и ещё раз нажмите GO."
+ },
+ "Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).": {
+  "en": "If your videos are on the Desktop, in Documents, Downloads or on an external drive, allow that folder for CineCaptions (on Mac: System Settings > Privacy & Security > Files and Folders).",
+  "pt": "Se os seus vídeos estão na Mesa, em Documentos, Downloads ou num disco externo, permita essa pasta ao CineCaptions (no Mac: Ajustes do Sistema > Privacidade e Segurança > Arquivos e Pastas).",
+  "fr": "Si vos vidéos sont sur le Bureau, dans Documents, Téléchargements ou sur un disque externe, autorisez ce dossier pour CineCaptions (sur Mac : Réglages Système > Confidentialité et sécurité > Fichiers et dossiers).",
+  "de": "Wenn deine Videos auf dem Schreibtisch, in Dokumente, Downloads oder auf einem externen Laufwerk liegen, erlaube CineCaptions diesen Ordner (auf dem Mac: Systemeinstellungen > Datenschutz & Sicherheit > Dateien und Ordner).",
+  "it": "Se i tuoi video sono sulla Scrivania, in Documenti, Download o su un disco esterno, consenti quella cartella a CineCaptions (su Mac: Impostazioni di Sistema > Privacy e sicurezza > File e cartelle).",
+  "ja": "動画がデスクトップ、書類、ダウンロード、または外部ディスクにある場合は、そのフォルダーを CineCaptions に許可します（Mac：「システム設定」>「プライバシーとセキュリティ」>「ファイルとフォルダ」）。",
+  "ko": "동영상이 데스크탑, 문서, 다운로드 또는 외장 디스크에 있다면 그 폴더를 CineCaptions에 허용하세요(Mac: 시스템 설정 > 개인정보 보호 및 보안 > 파일 및 폴더).",
+  "zh": "如果你的视频在桌面、文稿、下载或外置磁盘中，请允许 CineCaptions 访问该文件夹（Mac：“系统设置”>“隐私与安全性”>“文件和文件夹”）。",
+  "ru": "Если ваши видео лежат на Рабочем столе, в Документах, Загрузках или на внешнем диске, разрешите CineCaptions доступ к этой папке (на Mac: Системные настройки > Конфиденциальность и безопасность > Файлы и папки)."
+ },
+ "O suelta el video en la ventana de CineCaptions y pulsa GO.": {
+  "en": "Or drop the video into the CineCaptions window and press GO.",
+  "pt": "Ou solte o vídeo na janela do CineCaptions e pressione GO.",
+  "fr": "Ou déposez la vidéo dans la fenêtre de CineCaptions et appuyez sur GO.",
+  "de": "Oder zieh das Video in das CineCaptions-Fenster und drücke GO.",
+  "it": "Oppure trascina il video nella finestra di CineCaptions e premi GO.",
+  "ja": "または動画を CineCaptions のウィンドウにドロップして GO を押します。",
+  "ko": "또는 동영상을 CineCaptions 창에 놓고 GO를 누르세요.",
+  "zh": "或者把视频拖到 CineCaptions 窗口中，再按 GO。",
+  "ru": "Или перетащите видео в окно CineCaptions и нажмите GO."
  }
 }
