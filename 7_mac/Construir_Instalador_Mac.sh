@@ -77,6 +77,11 @@ if [ "$ARQ" = x86_64 ]; then ORT=1.23.2; fi
 REQM="$OBRA/requirements_motor_mac.txt"
 sed "s/^onnxruntime-directml==.*/onnxruntime==$ORT/" "$RECURSOS/motor_compat/requirements.txt" > "$REQM"
 grep -qx "onnxruntime==$ORT" "$REQM" || falla "requirements del motor: no encontre la linea de onnxruntime-directml para cambiarla"
+# v5.71: sentencepiece 0.2.3 no tiene rueda para Mac Intel (cp313 macosx x86_64; la compilacion de la 5.71 fallo ahi): Intel se queda en la 0.2.2
+if [ "$ARQ" = x86_64 ]; then
+    sed -i '' "s/^sentencepiece==.*/sentencepiece==0.2.2/" "$REQM"
+    grep -qx "sentencepiece==0.2.2" "$REQM" || falla "requirements del motor: no encontre la linea de sentencepiece para Intel"
+fi
 "$VPY" -m pip install --progress-bar off -q --no-deps --only-binary=:all: -r "$REQM"
 "$VPY" -m pip install --progress-bar off -q --no-deps --only-binary=:all: 'argostranslate==1.11.0'
 "$VPY" -c "import sys, types; s = types.ModuleType('stanza'); s.Pipeline = None; sys.modules['stanza'] = s
