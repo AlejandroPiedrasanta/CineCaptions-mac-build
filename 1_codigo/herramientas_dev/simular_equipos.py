@@ -161,9 +161,20 @@ LNK = r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Blackmagic Design\D
 
 
 def lnk_hacia(carpeta):
-    """Un .lnk con la ruta dentro como la guarda Windows (ANSI y UTF-16)."""
-    exe = carpeta + '\\Resolve.exe'
-    return b'L\x00\x00\x00\x01\x14\x02\x00' + b'\x00' * 60 + exe.encode('latin-1', 'replace') + b'\x00' + exe.encode('utf-16-le') + b'\x00\x00'
+    """Un .lnk con el formato REAL del acceso de Blackmagic (Resolve 21, MSI; revisado 2026-11-05): banderas 0x40dd = IDList + nombre +
+    ruta relativa + carpeta de trabajo + ícono, en Unicode y SIN LinkInfo (no trae LocalBasePath). La ruta relativa sube desde el .lnk."""
+    import struct
+    banderas = 0x1 | 0x4 | 0x8 | 0x10 | 0x40 | 0x80
+    cab = struct.pack('<I', 0x4C) + b'\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46' + struct.pack('<I', banderas)
+    cab += b'\x00' * (0x4C - len(cab))
+    idlist = b'\x14\x00' + b'\x00' * 20
+    profundidad = len([p for p in LNK.split('\\')[:-1] if p]) - 1          # carpetas desde la raíz del disco hasta la del .lnk
+    relativa = '..\\' * profundidad + carpeta.split(':\\', 1)[1] + '\\Resolve.exe' if carpeta[:3].upper() == LNK[:3].upper() else ''
+
+    def cadena(t):
+        return struct.pack('<H', len(t)) + t.encode('utf-16-le')
+    datos = cab + struct.pack('<H', len(idlist)) + idlist + cadena('DaVinci Resolve') + cadena(relativa) + cadena(carpeta + '\\')
+    return datos + cadena('C:\\WINDOWS\\Installer\\{1E0A7C6D-0000}\\ResolveIcon.exe') + b'\x00' * 4
 
 
 def motivo_mp4(prefs=None):
@@ -174,7 +185,7 @@ def motivo_mp4(prefs=None):
 
 
 def detectar_win(archivos=(), carpetas=(), contenido=None, proceso=None, discos=('C',), prefs=None):
-    resolve_bridge._DIR_RESOLVE[0] = None
+    resolve_bridge._DIR_RESOLVE[:] = [None, 0.0]
     with disco_falso(archivos, carpetas, contenido, 'win32', {'ProgramData': r'C:\ProgramData', 'APPDATA': r'C:\Users\Cliente\AppData\Roaming'}), \
             parches((resolve_bridge, '_resolve_en_marcha', lambda: proceso), (resolve_bridge, '_discos_fijos', lambda: list(discos))):
         try:
@@ -182,7 +193,7 @@ def detectar_win(archivos=(), carpetas=(), contenido=None, proceso=None, discos=
             with parches((winreg, 'OpenKey', _sin_registro)):
                 return motivo_mp4(prefs), resolve_bridge._resolve_dir_windows()
         finally:
-            resolve_bridge._DIR_RESOLVE[0] = None
+            resolve_bridge._DIR_RESOLVE[:] = [None, 0.0]
 
 
 def _sin_registro(*a, **k):
@@ -253,23 +264,45 @@ def win_ajuste_mp4_con_resolve():
 @caso('Resolve Windows')
 def win_fusionscript_sale_de_la_carpeta_real():
     otra = r'D:\DaVinci Resolve'
-    resolve_bridge._DIR_RESOLVE[0] = None
+    resolve_bridge._DIR_RESOLVE[:] = [None, 0.0]
     with disco_falso([otra + r'\Resolve.exe', otra + r'\fusionscript.dll'], plataforma='win32'), \
             parches((resolve_bridge, '_resolve_en_marcha', lambda: otra), (resolve_bridge, '_discos_fijos', lambda: ['C', 'D'])):
         libs = [str(lib) for _m, lib in resolve_bridge._rutas_probables()]
-    resolve_bridge._DIR_RESOLVE[0] = None
+    resolve_bridge._DIR_RESOLVE[:] = [None, 0.0]
     esperar(any(_norm(l) == _norm(otra + r'\fusionscript.dll') for l in libs), str(libs))
 
 
 @caso('Resolve Windows')
 def win_mcp_en_otro_disco():
     otra = r'D:\DaVinci Resolve'
-    resolve_bridge._DIR_RESOLVE[0] = None
+    resolve_bridge._DIR_RESOLVE[:] = [None, 0.0]
     with disco_falso([otra + r'\Resolve.exe', otra + r'\ResolveMCP.exe'], plataforma='win32'), \
             parches((resolve_bridge, '_resolve_en_marcha', lambda: otra), (resolve_bridge, '_discos_fijos', lambda: ['C', 'D'])):
         r = resolve_mcp.ruta_exe()
-    resolve_bridge._DIR_RESOLVE[0] = None
+    resolve_bridge._DIR_RESOLVE[:] = [None, 0.0]
     esperar(r is not None and _norm(r) == _norm(otra + r'\ResolveMCP.exe'), str(r))
+
+
+@caso('Resolve Windows')
+def win_lnk_real_de_este_equipo():
+    """El acceso REAL del menú Inicio de este equipo (solo se lee): sin LinkInfo, la carpeta sale de WORKING_DIR / la ruta relativa."""
+    real = os.path.join(os.environ.get('ProgramData', r'C:\ProgramData'), r'Microsoft\Windows\Start Menu\Programs\Blackmagic Design\DaVinci Resolve\DaVinci Resolve.lnk')
+    if not os.path.isfile(real):
+        AVISOS.append('este equipo no tiene el acceso de Resolve en el menú Inicio: caso del .lnk real sin probar')
+        return
+    carpetas = resolve_bridge._carpetas_del_lnk(real)
+    esperar(any(os.path.isfile(os.path.join(c, 'Resolve.exe')) for c in carpetas), f'el .lnk real no dio la carpeta de Resolve: {carpetas}')
+
+
+@caso('Resolve Windows')
+def win_sin_resolve_no_repite_la_busqueda():
+    llamadas = []
+    resolve_bridge._DIR_RESOLVE[:] = [None, 0.0]
+    with disco_falso(plataforma='win32'), parches((resolve_bridge, '_resolve_dir_extra', lambda: llamadas.append(1))):
+        for _ in range(20):
+            resolve_bridge._resolve_dir_windows()
+    resolve_bridge._DIR_RESOLVE[:] = [None, 0.0]
+    esperar(len(llamadas) == 1, f'sin Resolve se buscó {len(llamadas)} veces en 20 consultas (debía 1 por minuto)')
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------
@@ -360,6 +393,14 @@ def ia_colgada_en_silencio_se_corta():
     t0 = time.time()
     ok, t = _ServidorFalso(_fake('time.sleep(60)')).pedir('a', 'b', lambda *a: None, timeout=60, sin_senal=3)
     esperar(not ok and 'sin responder' in t and time.time() - t0 < 30, f'{ok} {t}')
+
+
+@caso('IA de texto', lento=True)
+def ia_tope_total_da_un_motivo_claro():
+    """Revisión 5.71: al agotarse el tope total (con latidos) se informaba la última línea de stderr (la barra de carga) como motivo."""
+    cuerpo = 'import sys\nsys.stderr.write("Loading checkpoint shards: 100%\\n"); sys.stderr.flush()\nfor _ in range(30):\n    print("LATIDO|", flush=True); time.sleep(1)'
+    ok, t = _ServidorFalso(_fake(cuerpo)).pedir('a', 'b', lambda *a: None, timeout=4, sin_senal=3)
+    esperar(not ok and 'no terminó en 4 s' in t, f'{ok} {t}')
 
 
 @caso('IA de texto')
@@ -662,6 +703,61 @@ def tel_manda_el_error_sin_la_carpeta_del_usuario():
 
 
 @caso('Telemetría de errores')
+def tel_sin_rutas_ni_nombres_de_archivos_ni_lo_de_antes():
+    """Revisión 5.71: «lo que pasó justo antes» decía de qué trata el video y el nombre del proyecto; las rutas de otros discos y los
+    nombres de los videos salían tal cual."""
+    logs = pathlib.Path(tempfile.mkdtemp(prefix='cc_log_'))           # (registro.info escribe en los logs: nunca en los del usuario)
+    with telemetria() as srv, parches((registro, 'ARCHIVO', logs / 'cinecaptions.log'), (registro, 'ARCHIVO_ERRORES', logs / 'errores.log')):
+        registro.info('La IA entendió el video: boda · discurso del padrino · tono emotivo', 'IA')
+        registro.info('Timeline «Boda Maria Lopez» armado con tu video en el proyecto «Boda Maria Lopez»', 'GO')
+        e = registro.Entrada('error', "FileNotFoundError: [Errno 2] No such file: 'D:\\Clientes\\Maria Lopez\\boda final.mp4'", 'GO · colocar',
+                             'Traceback (most recent call last):\n  File "C:\\Program Files\\CineCaptions\\_internal\\colocacion.py", line 9\n'
+                             '  File "E:\\Proyectos\\Juan\\entrevista.mov"\nFileNotFoundError: boda_final.MP4')
+        _ciclo(e)
+        todo = json.dumps(srv.peticiones, ensure_ascii=False)
+        for prohibido in ('Maria', 'Lopez', 'boda', 'padrino', 'Clientes', 'Juan', 'entrevista', 'Proyectos'):
+            esperar(prohibido.lower() not in todo.lower(), f'el informe lleva «{prohibido}»')
+        esperar('colocacion.py' in todo and 'Program Files' in todo, 'las rutas del PROGRAMA deben quedarse (sirven para el fallo)')
+        esperar('archivo.mp4' in todo.lower(), 'debía decir la extensión del archivo anonimizado')
+    __import__('shutil').rmtree(logs, ignore_errors=True)
+
+
+@caso('Telemetría de errores')
+def tel_errores_de_arranque_se_mandan():
+    """Revisión 5.71: «la sesión anterior se cortó» se anota antes de iniciar() y nunca salía."""
+    logs = pathlib.Path(tempfile.mkdtemp(prefix='cc_log_'))
+    with telemetria() as srv, parches((tel, 'activo', lambda: True), (tel, '_ESTADO', dict(tel._ESTADO, iniciado=False)),
+                                      (registro, 'ARCHIVO', logs / 'cinecaptions.log'), (registro, 'ARCHIVO_ERRORES', logs / 'errores.log')):
+        registro.registro().limpiar()
+        registro.error('La sesión anterior se cortó en mitad de «GO» (prueba de arranque)', 'arranque')
+        esperar(tel.iniciar(), 'iniciar() debía arrancar')
+        esperar(tel.esperar_envios(20) and any('se cortó' in x['mensaje'] for x in srv.errores()), f'{srv.errores()}')
+        tel.detener()                                  # (el hilo no debe seguir vivo en los casos siguientes)
+    __import__('shutil').rmtree(logs, ignore_errors=True)
+
+
+@caso('Telemetría de errores')
+def tel_al_cerrar_lo_de_la_cola_queda_en_disco():
+    with telemetria():
+        tel._al_anotar(_error('Fallo justo antes de cerrar'))
+        tel._al_salir()                                 # lo que corre atexit
+        esperar(tel.ARCHIVO.exists() and len(tel._PENDIENTES) == 1, 'al cerrar, la cola debía quedar en disco')
+
+
+@caso('Telemetría de errores')
+def tel_servidor_guarda_solo_una_parte():
+    with telemetria() as srv:
+        viejo = tel._post
+        tel._post = lambda campos: (srv.peticiones.append(campos), (200, None, {'ok': True, 'guardados': 1}))[1]
+        try:
+            _ciclo(_error('uno'), _error('dos', 'otro'), _error('tres', 'otro más'))
+        finally:
+            tel._post = viejo
+        esperar(len(tel._PENDIENTES) == 2 and tel._ESTADO['pausa_hasta'] - time.time() > 3000,
+                f'quedaban {len(tel._PENDIENTES)} (debían 2) y en pausa una hora')
+
+
+@caso('Telemetría de errores')
 def tel_repeticiones_sin_contar_doble():
     with telemetria() as srv:
         e = _error()
@@ -773,10 +869,11 @@ def tel_hilo_de_punta_a_punta():
     logs = pathlib.Path(tempfile.mkdtemp(prefix='cc_log_'))           # (registro.error escribe en los logs: nunca en los del usuario)
     with telemetria() as srv, parches((tel, 'activo', lambda: True), (tel, '_ESTADO', dict(tel._ESTADO, iniciado=False)),
                                       (registro, 'ARCHIVO', logs / 'cinecaptions.log'), (registro, 'ARCHIVO_ERRORES', logs / 'errores.log')):
+        registro.registro().limpiar()                 # (iniciar() manda lo que ya haya en el Registro: solo lo de este caso)
         esperar(tel.iniciar(), 'iniciar() debía arrancar')
         registro.error('Algo salió mal en la prueba de punta a punta', 'prueba')
         esperar(tel.esperar_envios(20) and len(srv.errores()) == 1, f'{len(srv.errores())} errores recibidos')
-        registro.registro().nueva.disconnect(tel._al_anotar)
+        tel.detener()                                  # (el hilo no debe seguir vivo en los casos siguientes)
     __import__('shutil').rmtree(logs, ignore_errors=True)
 
 

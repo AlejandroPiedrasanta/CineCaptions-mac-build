@@ -483,8 +483,10 @@ def analizar_con(tok, modelo, repo, dispositivo, entrada, salida):
     correcciones, pesos, emojis = {}, {}, {}
     hechos = 0
     decir('PROGRESO', '0.0')
-    for k in range(0, len(trozos), LOTE):
-        lote = trozos[k:k + LOTE]
+    # v5.71: en CPU un lote de 12 tarda más que el corte por «no avanza» de ia_texto (SIN_AVANCE_S): lotes de 2 dan PROGRESO cada ~1 min
+    n_lote = 2 if str(dispositivo).startswith('cpu') else LOTE
+    for k in range(0, len(trozos), n_lote):
+        lote = trozos[k:k + n_lote]
         mensajes = []
         for desde, hasta in lote:
             lineas = []

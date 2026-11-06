@@ -4266,6 +4266,17 @@
     "GO sin Resolve graba los subtítulos en una copia MP4 de tu archivo (sin usar DaVinci Resolve) y algo falló al leer tu archivo o al escribir el MP4.": "GO ohne Resolve brennt die Untertitel in eine MP4-Kopie deiner Datei (ohne DaVinci Resolve) und beim Lesen der Datei oder Schreiben des MP4 ist etwas schiefgelaufen.",
     "Comprueba que tu archivo se reproduce bien en la computadora (video o audio).": "Prüfe, ob sich deine Datei am Computer richtig abspielen lässt (Video oder Audio).",
     "Si el disco está casi lleno, libera espacio: el MP4 se guarda junto a tu archivo (o en Videos › CineCaptions).": "Wenn die Festplatte fast voll ist, schaffe Platz: das MP4 wird neben deiner Datei gespeichert (oder in Videos › CineCaptions).",
-    "Si se repite, pulsa «Enviar informe» en el Registro.": "Wenn es wieder passiert, drücke „Bericht senden“ im Protokoll."
+    "Si se repite, pulsa «Enviar informe» en el Registro.": "Wenn es wieder passiert, drücke „Bericht senden“ im Protokoll.",
+    "Idioma actual": "Aktuelle Sprache",
+    "{n} idiomas · se aplica al reiniciar": "{n} Sprachen · gilt nach dem Neustart",
+    "NUEVO": "NEU",
+    "Usar {idioma}": "{idioma} verwenden",
+    "{idioma} seguirá hasta que reinicies": "{idioma} bleibt bis zum Neustart",
+    "Tienes encendido «Video MP4 en lugar de Resolve» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o apágalo para trabajar con el timeline de Resolve.": "„MP4-Video statt Resolve“ ist eingeschaltet (Einstellungen > Allgemein). Zieh ein Video in CineCaptions und drück GO, oder schalte es aus, um mit der Resolve-Timeline zu arbeiten.",
+    "DaVinci Resolve instalado en otro disco o en otra carpeta ya se encuentra: antes GO decía «No hay DaVinci Resolve en este equipo».": "DaVinci Resolve auf einem anderen Laufwerk oder in einem anderen Ordner wird jetzt gefunden: Vorher meldete GO „Kein DaVinci Resolve auf diesem Computer“.",
+    "La IA de texto ya no se corta en equipos con poca memoria de video (por ejemplo, 8 GB con Resolve abierto): sigue trabajando aunque vaya más lenta, y si de verdad falla la ortografía se corrige con el diccionario sin llenar el Registro de errores.": "Die Text-KI wird auf Computern mit wenig Grafikspeicher (zum Beispiel 8 GB bei geöffnetem Resolve) nicht mehr abgebrochen: Sie arbeitet weiter, auch wenn sie langsamer ist, und wenn sie wirklich scheitert, wird die Rechtschreibung mit dem Wörterbuch korrigiert, ohne das Protokoll mit Fehlern zu füllen.",
+    "Si te sale un error, CineCaptions le envía el informe a soporte en segundo plano (sin tus videos ni la carpeta de tu usuario), para arreglarlo antes de que tengas que escribirnos.": "Wenn ein Fehler auftritt, sendet CineCaptions den Bericht im Hintergrund an den Support (ohne deine Videos und ohne deinen Benutzerordner), damit er behoben werden kann, bevor du uns schreiben musst.",
+    "Siete idiomas nuevos para la interfaz: japonés, coreano, chino, ruso, neerlandés, turco y polaco (13 en total).": "Sieben neue Sprachen für die Oberfläche: Japanisch, Koreanisch, Chinesisch, Russisch, Niederländisch, Türkisch und Polnisch (insgesamt 13).",
+    "Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.": "Neu gestaltete Oberflächensprache: In Einstellungen › Oberfläche wählst du sie aus Karten mit der Flagge jeder Sprache, ihrem Gruß und ihrem Namen; die gewählte weht."
   }
 }

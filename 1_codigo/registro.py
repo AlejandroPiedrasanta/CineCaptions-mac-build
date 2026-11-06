@@ -605,7 +605,7 @@ def _motores(solo_problemas=True):
 
 def _linea_corta(x):
     v = f' (x{x.veces})' if x.veces > 1 else ''
-    texto = ' '.join(x.mensaje.split())
+    texto = ' '.join(_sin_usuario(x.mensaje).split())          # (v5.71: la carpeta del usuario se quita ANTES de cortar; cortada ya no se reconoce)
     texto = texto if len(texto) <= 160 else texto[:157] + '…'
     return f'  {x.hora()}  {NOMBRE_NIVEL.get(x.nivel, x.nivel):<5}  {x.origen or "—"}: {texto}{v}'
 

@@ -4266,6 +4266,17 @@
     "GO sin Resolve graba los subtítulos en una copia MP4 de tu archivo (sin usar DaVinci Resolve) y algo falló al leer tu archivo o al escribir el MP4.": "GO senza Resolve imprime i sottotitoli in una copia MP4 del tuo file (senza DaVinci Resolve) e qualcosa non ha funzionato leggendo il file o scrivendo l’MP4.",
     "Comprueba que tu archivo se reproduce bien en la computadora (video o audio).": "Controlla che il file si riproduca bene sul computer (video o audio).",
     "Si el disco está casi lleno, libera espacio: el MP4 se guarda junto a tu archivo (o en Videos › CineCaptions).": "Se il disco è quasi pieno, libera spazio: l’MP4 si salva accanto al tuo file (o in Video › CineCaptions).",
-    "Si se repite, pulsa «Enviar informe» en el Registro.": "Se si ripete, premi «Invia il report» nel Registro."
+    "Si se repite, pulsa «Enviar informe» en el Registro.": "Se si ripete, premi «Invia il report» nel Registro.",
+    "Idioma actual": "Lingua attuale",
+    "{n} idiomas · se aplica al reiniciar": "{n} lingue · si applica al riavvio",
+    "NUEVO": "NUOVO",
+    "Usar {idioma}": "Usa {idioma}",
+    "{idioma} seguirá hasta que reinicies": "{idioma} resta fino al riavvio",
+    "Tienes encendido «Video MP4 en lugar de Resolve» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o apágalo para trabajar con el timeline de Resolve.": "«Video MP4 invece di Resolve» è attivo (Impostazioni > Generale). Trascina un video in CineCaptions e premi GO, oppure disattivalo per lavorare con la timeline di Resolve.",
+    "DaVinci Resolve instalado en otro disco o en otra carpeta ya se encuentra: antes GO decía «No hay DaVinci Resolve en este equipo».": "DaVinci Resolve installato su un altro disco o in un’altra cartella ora viene trovato: prima GO diceva «DaVinci Resolve non è su questo computer».",
+    "La IA de texto ya no se corta en equipos con poca memoria de video (por ejemplo, 8 GB con Resolve abierto): sigue trabajando aunque vaya más lenta, y si de verdad falla la ortografía se corrige con el diccionario sin llenar el Registro de errores.": "L’IA di testo non viene più interrotta sui computer con poca memoria video (per esempio 8 GB con Resolve aperto): continua a lavorare anche se più lenta e, se fallisce davvero, l’ortografia viene corretta con il dizionario senza riempire il Registro di errori.",
+    "Si te sale un error, CineCaptions le envía el informe a soporte en segundo plano (sin tus videos ni la carpeta de tu usuario), para arreglarlo antes de que tengas que escribirnos.": "Se compare un errore, CineCaptions invia il rapporto all’assistenza in background (senza i tuoi video né la cartella del tuo utente), per correggerlo prima che tu debba scriverci.",
+    "Siete idiomas nuevos para la interfaz: japonés, coreano, chino, ruso, neerlandés, turco y polaco (13 en total).": "Sette nuove lingue per l’interfaccia: giapponese, coreano, cinese, russo, olandese, turco e polacco (13 in totale).",
+    "Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.": "Lingua dell’interfaccia rinnovata: in Impostazioni › Interfaccia si sceglie da un pannello di schede con la bandiera di ogni lingua, il suo saluto e il suo nome; quella scelta sventola."
   }
 }

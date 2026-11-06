@@ -10358,5 +10358,71 @@
   "nl": "{idioma} blijft tot je herstart",
   "tr": "Yeniden başlatana kadar {idioma} kalır",
   "pl": "Do ponownego uruchomienia zostaje: {idioma}"
+ },
+ "Tienes encendido «Video MP4 en lugar de Resolve» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o apágalo para trabajar con el timeline de Resolve.": {
+  "en": "“MP4 video instead of Resolve” is turned on (Settings > General). Drop a video into CineCaptions and press GO, or turn it off to work with the Resolve timeline.",
+  "pt": "“Vídeo MP4 em vez do Resolve” está ligado (Ajustes > Geral). Solte um vídeo no CineCaptions e aperte GO, ou desligue-o para trabalhar com a timeline do Resolve.",
+  "fr": "« Vidéo MP4 au lieu de Resolve » est activé (Réglages > Général). Déposez une vidéo dans CineCaptions et appuyez sur GO, ou désactivez-le pour travailler avec la timeline de Resolve.",
+  "de": "„MP4-Video statt Resolve“ ist eingeschaltet (Einstellungen > Allgemein). Zieh ein Video in CineCaptions und drück GO, oder schalte es aus, um mit der Resolve-Timeline zu arbeiten.",
+  "it": "«Video MP4 invece di Resolve» è attivo (Impostazioni > Generale). Trascina un video in CineCaptions e premi GO, oppure disattivalo per lavorare con la timeline di Resolve.",
+  "ja": "「Resolve の代わりに MP4 動画」がオンになっています（設定 > 一般）。CineCaptions に動画をドロップして GO を押すか、オフにして Resolve のタイムラインで作業してください。",
+  "ko": "“Resolve 대신 MP4 동영상”이 켜져 있습니다(설정 > 일반). CineCaptions에 동영상을 끌어다 놓고 GO를 누르거나, 끄고 Resolve 타임라인으로 작업하세요.",
+  "zh": "已开启“用 MP4 视频代替 Resolve”（设置 > 常规）。把视频拖进 CineCaptions 并按 GO，或关闭它以使用 Resolve 时间线。",
+  "ru": "Включено «Видео MP4 вместо Resolve» (Настройки > Общие). Перетащите видео в CineCaptions и нажмите GO или выключите эту опцию, чтобы работать с таймлайном Resolve."
+ },
+ "DaVinci Resolve instalado en otro disco o en otra carpeta ya se encuentra: antes GO decía «No hay DaVinci Resolve en este equipo».": {
+  "en": "DaVinci Resolve installed on another drive or in another folder is now found: GO used to say “DaVinci Resolve isn’t on this computer”.",
+  "pt": "O DaVinci Resolve instalado em outro disco ou em outra pasta agora é encontrado: antes o GO dizia “Não há DaVinci Resolve neste computador”.",
+  "fr": "DaVinci Resolve installé sur un autre disque ou dans un autre dossier est maintenant trouvé : avant, GO disait « DaVinci Resolve n’est pas sur cet ordinateur ».",
+  "de": "DaVinci Resolve auf einem anderen Laufwerk oder in einem anderen Ordner wird jetzt gefunden: Vorher meldete GO „Kein DaVinci Resolve auf diesem Computer“.",
+  "it": "DaVinci Resolve installato su un altro disco o in un’altra cartella ora viene trovato: prima GO diceva «DaVinci Resolve non è su questo computer».",
+  "ja": "別のドライブや別のフォルダーにインストールした DaVinci Resolve も見つかるようになりました（以前は GO が「このパソコンに DaVinci Resolve がありません」と表示していました）。",
+  "ko": "다른 드라이브나 다른 폴더에 설치한 DaVinci Resolve도 이제 찾습니다. 전에는 GO가 “이 컴퓨터에 DaVinci Resolve가 없습니다”라고 했습니다.",
+  "zh": "现在能找到安装在其他磁盘或其他文件夹中的 DaVinci Resolve：以前 GO 会提示“这台电脑上没有 DaVinci Resolve”。",
+  "ru": "Теперь находится DaVinci Resolve, установленный на другом диске или в другой папке: раньше GO писал «На этом компьютере нет DaVinci Resolve»."
+ },
+ "La IA de texto ya no se corta en equipos con poca memoria de video (por ejemplo, 8 GB con Resolve abierto): sigue trabajando aunque vaya más lenta, y si de verdad falla la ortografía se corrige con el diccionario sin llenar el Registro de errores.": {
+  "en": "The text AI no longer gets cut off on computers with little video memory (for example 8 GB with Resolve open): it keeps working even if it’s slower, and if it really fails, spelling is fixed with the dictionary without filling the Log with errors.",
+  "pt": "A IA de texto não é mais interrompida em computadores com pouca memória de vídeo (por exemplo, 8 GB com o Resolve aberto): continua trabalhando mesmo que mais devagar e, se falhar de verdade, a ortografia é corrigida com o dicionário sem encher o Registro de erros.",
+  "fr": "L’IA de texte n’est plus coupée sur les ordinateurs avec peu de mémoire vidéo (par exemple 8 Go avec Resolve ouvert) : elle continue même si elle est plus lente, et si elle échoue vraiment, l’orthographe est corrigée avec le dictionnaire sans remplir le Journal d’erreurs.",
+  "de": "Die Text-KI wird auf Computern mit wenig Grafikspeicher (zum Beispiel 8 GB bei geöffnetem Resolve) nicht mehr abgebrochen: Sie arbeitet weiter, auch wenn sie langsamer ist, und wenn sie wirklich scheitert, wird die Rechtschreibung mit dem Wörterbuch korrigiert, ohne das Protokoll mit Fehlern zu füllen.",
+  "it": "L’IA di testo non viene più interrotta sui computer con poca memoria video (per esempio 8 GB con Resolve aperto): continua a lavorare anche se più lenta e, se fallisce davvero, l’ortografia viene corretta con il dizionario senza riempire il Registro di errori.",
+  "ja": "ビデオメモリが少ないパソコン（Resolve を開いた 8 GB など）でもテキスト AI が途中で止まらなくなりました。遅くても処理を続け、本当に失敗した場合は辞書でスペルを直し、ログをエラーで埋めません。",
+  "ko": "비디오 메모리가 적은 컴퓨터(예: Resolve를 연 상태의 8GB)에서도 텍스트 AI가 더 이상 중간에 끊기지 않습니다. 느려도 계속 작업하며, 정말 실패하면 사전으로 맞춤법을 고치고 로그를 오류로 채우지 않습니다.",
+  "zh": "文本 AI 在显存较小的电脑上（例如开着 Resolve 的 8 GB）不再被中断：即使变慢也会继续工作；如果真的失败，会用词典修正拼写，而不会让日志充满错误。",
+  "ru": "Текстовый ИИ больше не прерывается на компьютерах с малым объёмом видеопамяти (например, 8 ГБ при открытом Resolve): он продолжает работать, даже если медленнее, а если действительно не справится, орфография исправляется по словарю, не засоряя Журнал ошибками."
+ },
+ "Si te sale un error, CineCaptions le envía el informe a soporte en segundo plano (sin tus videos ni la carpeta de tu usuario), para arreglarlo antes de que tengas que escribirnos.": {
+  "en": "If you get an error, CineCaptions sends the report to support in the background (without your videos or your user folder), so it can be fixed before you have to write to us.",
+  "pt": "Se aparecer um erro, o CineCaptions envia o relatório ao suporte em segundo plano (sem seus vídeos nem a pasta do seu usuário), para corrigi-lo antes que você precise nos escrever.",
+  "fr": "En cas d’erreur, CineCaptions envoie le rapport au support en arrière-plan (sans vos vidéos ni votre dossier utilisateur), pour la corriger avant que vous ayez à nous écrire.",
+  "de": "Wenn ein Fehler auftritt, sendet CineCaptions den Bericht im Hintergrund an den Support (ohne deine Videos und ohne deinen Benutzerordner), damit er behoben werden kann, bevor du uns schreiben musst.",
+  "it": "Se compare un errore, CineCaptions invia il rapporto all’assistenza in background (senza i tuoi video né la cartella del tuo utente), per correggerlo prima che tu debba scriverci.",
+  "ja": "エラーが起きると、CineCaptions がレポートをバックグラウンドでサポートに送ります（動画やユーザーフォルダーは送りません）。ご連絡いただく前に修正するためです。",
+  "ko": "오류가 나면 CineCaptions가 보고서를 백그라운드에서 지원팀에 보냅니다(동영상과 사용자 폴더는 보내지 않습니다). 연락하시기 전에 고치기 위해서입니다.",
+  "zh": "出现错误时，CineCaptions 会在后台把报告发送给支持团队（不包含你的视频和用户文件夹），以便在你联系我们之前就修复它。",
+  "ru": "Если возникнет ошибка, CineCaptions отправит отчёт в поддержку в фоновом режиме (без ваших видео и папки пользователя), чтобы исправить её до того, как вам придётся нам писать."
+ },
+ "Siete idiomas nuevos para la interfaz: japonés, coreano, chino, ruso, neerlandés, turco y polaco (13 en total).": {
+  "en": "Seven new interface languages: Japanese, Korean, Chinese, Russian, Dutch, Turkish and Polish (13 in total).",
+  "pt": "Sete novos idiomas para a interface: japonês, coreano, chinês, russo, holandês, turco e polonês (13 no total).",
+  "fr": "Sept nouvelles langues pour l’interface : japonais, coréen, chinois, russe, néerlandais, turc et polonais (13 au total).",
+  "de": "Sieben neue Sprachen für die Oberfläche: Japanisch, Koreanisch, Chinesisch, Russisch, Niederländisch, Türkisch und Polnisch (insgesamt 13).",
+  "it": "Sette nuove lingue per l’interfaccia: giapponese, coreano, cinese, russo, olandese, turco e polacco (13 in totale).",
+  "ja": "インターフェースに 7 つの言語を追加：日本語、韓国語、中国語、ロシア語、オランダ語、トルコ語、ポーランド語（全 13 言語）。",
+  "ko": "인터페이스 언어 7개 추가: 일본어, 한국어, 중국어, 러시아어, 네덜란드어, 터키어, 폴란드어(총 13개).",
+  "zh": "界面新增七种语言：日语、韩语、中文、俄语、荷兰语、土耳其语和波兰语（共 13 种）。",
+  "ru": "Семь новых языков интерфейса: японский, корейский, китайский, русский, нидерландский, турецкий и польский (всего 13)."
+ },
+ "Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.": {
+  "en": "Redesigned interface language: in Settings › Interface you choose it from a panel of cards with each language’s flag, greeting and name; the chosen one waves.",
+  "pt": "Idioma da interface renovado: em Ajustes › Interface você escolhe num painel de cartões com a bandeira de cada idioma, sua saudação e seu nome; o escolhido tremula.",
+  "fr": "Langue de l’interface repensée : dans Réglages › Interface, on la choisit dans un panneau de cartes avec le drapeau de chaque langue, sa salutation et son nom ; celle choisie flotte.",
+  "de": "Neu gestaltete Oberflächensprache: In Einstellungen › Oberfläche wählst du sie aus Karten mit der Flagge jeder Sprache, ihrem Gruß und ihrem Namen; die gewählte weht.",
+  "it": "Lingua dell’interfaccia rinnovata: in Impostazioni › Interfaccia si sceglie da un pannello di schede con la bandiera di ogni lingua, il suo saluto e il suo nome; quella scelta sventola.",
+  "ja": "インターフェース言語を一新：設定 › インターフェースで、各言語の国旗・あいさつ・名前が並ぶカードから選べます。選んだ旗がはためきます。",
+  "ko": "인터페이스 언어 화면 개편: 설정 › 인터페이스에서 각 언어의 국기, 인사말, 이름이 있는 카드 패널에서 고릅니다. 고른 국기가 펄럭입니다.",
+  "zh": "界面语言焕然一新：在“设置 › 界面”中，从带有各语言国旗、问候语和名称的卡片面板中选择；选中的国旗会飘动。",
+  "ru": "Обновлён выбор языка интерфейса: в Настройки › Интерфейс он выбирается на панели карточек с флагом, приветствием и названием каждого языка; выбранный флаг развевается."
  }
 }

@@ -4266,6 +4266,17 @@
     "GO sin Resolve graba los subtítulos en una copia MP4 de tu archivo (sin usar DaVinci Resolve) y algo falló al leer tu archivo o al escribir el MP4.": "Resolve 없이 GO를 사용하면 파일의 MP4 사본에 자막이 구워지지만 (DaVinci Resolve를 사용하지 않음), 파일 읽기 또는 MP4 쓰기 중 오류가 발생했습니다.",
     "Comprueba que tu archivo se reproduce bien en la computadora (video o audio).": "컴퓨터에서 파일(비디오 또는 오디오)이 제대로 재생되는지 확인하세요.",
     "Si el disco está casi lleno, libera espacio: el MP4 se guarda junto a tu archivo (o en Videos › CineCaptions).": "디스크 공간이 거의 가득 찼다면 공간을 확보하세요: MP4 파일은 파일 옆(또는 Videos › CineCaptions)에 저장됩니다.",
-    "Si se repite, pulsa «Enviar informe» en el Registro.": "다시 발생하면 로그에서 “보고서 보내기”를 누르세요."
+    "Si se repite, pulsa «Enviar informe» en el Registro.": "다시 발생하면 로그에서 “보고서 보내기”를 누르세요.",
+    "Idioma actual": "현재 언어",
+    "{n} idiomas · se aplica al reiniciar": "{n}개 언어 · 다시 시작하면 적용",
+    "NUEVO": "신규",
+    "Usar {idioma}": "{idioma} 사용",
+    "{idioma} seguirá hasta que reinicies": "다시 시작할 때까지 {idioma}(으)로 유지됩니다",
+    "Tienes encendido «Video MP4 en lugar de Resolve» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o apágalo para trabajar con el timeline de Resolve.": "“Resolve 대신 MP4 동영상”이 켜져 있습니다(설정 > 일반). CineCaptions에 동영상을 끌어다 놓고 GO를 누르거나, 끄고 Resolve 타임라인으로 작업하세요.",
+    "DaVinci Resolve instalado en otro disco o en otra carpeta ya se encuentra: antes GO decía «No hay DaVinci Resolve en este equipo».": "다른 드라이브나 다른 폴더에 설치한 DaVinci Resolve도 이제 찾습니다. 전에는 GO가 “이 컴퓨터에 DaVinci Resolve가 없습니다”라고 했습니다.",
+    "La IA de texto ya no se corta en equipos con poca memoria de video (por ejemplo, 8 GB con Resolve abierto): sigue trabajando aunque vaya más lenta, y si de verdad falla la ortografía se corrige con el diccionario sin llenar el Registro de errores.": "비디오 메모리가 적은 컴퓨터(예: Resolve를 연 상태의 8GB)에서도 텍스트 AI가 더 이상 중간에 끊기지 않습니다. 느려도 계속 작업하며, 정말 실패하면 사전으로 맞춤법을 고치고 로그를 오류로 채우지 않습니다.",
+    "Si te sale un error, CineCaptions le envía el informe a soporte en segundo plano (sin tus videos ni la carpeta de tu usuario), para arreglarlo antes de que tengas que escribirnos.": "오류가 나면 CineCaptions가 보고서를 백그라운드에서 지원팀에 보냅니다(동영상과 사용자 폴더는 보내지 않습니다). 연락하시기 전에 고치기 위해서입니다.",
+    "Siete idiomas nuevos para la interfaz: japonés, coreano, chino, ruso, neerlandés, turco y polaco (13 en total).": "인터페이스 언어 7개 추가: 일본어, 한국어, 중국어, 러시아어, 네덜란드어, 터키어, 폴란드어(총 13개).",
+    "Idioma de la interfaz renovado: en Ajustes › Interfaz se elige en un panel de tarjetas con la bandera de cada idioma, su saludo y su nombre; la elegida ondea.": "인터페이스 언어 화면 개편: 설정 › 인터페이스에서 각 언어의 국기, 인사말, 이름이 있는 카드 패널에서 고릅니다. 고른 국기가 펄럭입니다."
   }
 }

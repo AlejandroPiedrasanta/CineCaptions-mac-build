@@ -164,6 +164,11 @@ class _Servidor:
             if tipo == 'FIN':
                 break
             linea_cb(tipo, resto)
+        if time.time() - inicio >= timeout and self.vivo():
+            # v5.71: con LATIDO el corte normal de un modo lento es este tope; antes se informaba la última línea de stderr (p. ej. la barra
+            # «Loading checkpoint shards: 100%») como si fuera el motivo
+            self.cerrar()
+            return False, f'la IA de texto no terminó en {int(timeout)} s'
         return False, (self.errores[-1] if self.errores else 'la IA de texto se cerró')
 
     def cerrar(self):
@@ -386,7 +391,8 @@ def analizar(palabras, idioma='es', progreso=None, estado=None, modo=None):
                     s = _Servidor(m)
                     _SRV['s'] = s
                 try:
-                    ok, texto = s.pedir(entrada, salida, linea)
+                    # v5.71: el tope total crece con el largo (en CPU van ~1,8 s por palabra; 900 s fijos cortaban un video largo vivo)
+                    ok, texto = s.pedir(entrada, salida, linea, timeout=max(900, 3 * len(textos)))
                 except Exception as e:                 # p. ej. el proceso murió antes de aceptar el pedido (tubería rota)
                     ok, texto = False, f'{type(e).__name__}: {e}'
                 if not ok:

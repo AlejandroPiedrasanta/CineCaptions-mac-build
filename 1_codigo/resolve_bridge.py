@@ -20,7 +20,8 @@ def _rutas_probables():
             yield (Path('/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Modules'), Path('/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/Libraries/Fusion/fusionscript.so'))
         else:
             yield (Path('/opt/resolve/Developer/Scripting/Modules'), Path('/opt/resolve/libs/Fusion/fusionscript.so'))
-_DIR_RESOLVE = [None]       # v5.71: la carpeta hallada fuera de C:\Program Files (no se vuelve a buscar)
+_DIR_RESOLVE = [None, 0.0]  # v5.71: [la carpeta hallada fuera de C:\Program Files (no se vuelve a buscar), cuándo se buscó sin hallarla]
+NO_ESTA_S = 60.0            # sin hallarla, no se repite la búsqueda en este tiempo (un Resolve que se instale o se abra se ve al minuto)
 
 
 def _resolve_en_marcha():
@@ -82,19 +83,14 @@ def _resolve_dir_extra():
     abierto = _resolve_en_marcha()                 # Resolve abierto ahora: su proceso dice dónde está
     if _vale(abierto):
         return abierto
-    # el acceso «DaVinci Resolve.lnk» del menú Inicio guarda la ruta de Resolve.exe (en ANSI y/o UTF-16)
+    # el acceso «DaVinci Resolve.lnk» del menú Inicio: la carpeta de trabajo y la ruta relativa dicen dónde está Resolve.exe
     for base in (os.environ.get('ProgramData'), os.environ.get('APPDATA')):
         if not base:
             continue
         lnk = os.path.join(base, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Blackmagic Design', 'DaVinci Resolve', 'DaVinci Resolve.lnk')
-        try:
-            datos = open(lnk, 'rb').read()
-        except OSError:
-            continue
-        for texto in (datos.decode('latin-1', 'ignore'), datos.decode('utf-16-le', 'ignore'), datos[1:].decode('utf-16-le', 'ignore')):
-            for m in re.finditer(r'([A-Za-z]:\\[^\x00-\x1f"*?<>|]*?)\\Resolve\.exe', texto, re.IGNORECASE):
-                if _vale(m.group(1)):
-                    return m.group(1)
+        for carpeta in _carpetas_del_lnk(lnk):
+            if _vale(carpeta):
+                return carpeta
     # otros discos fijos (sin tocar unidades de red ni extraíbles: podrían tardar)
     for letra in _discos_fijos():
         for rel in ('Program Files\\Blackmagic Design\\DaVinci Resolve', 'Blackmagic Design\\DaVinci Resolve', 'DaVinci Resolve'):
@@ -102,6 +98,53 @@ def _resolve_dir_extra():
             if _vale(carpeta):
                 return carpeta
     return None
+
+
+def _carpetas_del_lnk(ruta):
+    """v5.71: las carpetas candidatas que guarda un acceso directo .lnk (formato MS-SHLLINK): LocalBasePath del LinkInfo (si lo trae), la
+    carpeta de trabajo (WORKING_DIR) y la de la ruta relativa al .lnk (RELATIVE_PATH). El de Blackmagic (Resolve 21, MSI) NO trae LinkInfo:
+    solo «..\\..\\…\\Program Files\\Blackmagic Design\\DaVinci Resolve\\Resolve.exe» y la carpeta de trabajo, sin buscar texto suelto
+    (antes una expresión regular sobre los bytes no encontraba nada en el acceso real). [] si no se puede leer."""
+    import struct
+    try:
+        with open(ruta, 'rb') as f:
+            d = f.read(65536)
+        if len(d) < 0x4C or struct.unpack_from('<I', d, 0)[0] != 0x4C:
+            return []
+        banderas = struct.unpack_from('<I', d, 0x14)[0]
+        pos, salida = 0x4C, []
+
+        def _sin_exe(p):
+            p = os.path.expandvars(str(p or '').strip().strip('"').rstrip('\\/'))
+            return os.path.dirname(p) if p.lower().endswith('.exe') else p
+        if banderas & 0x1:                                    # HasLinkTargetIDList
+            pos += 2 + struct.unpack_from('<H', d, pos)[0]
+        if banderas & 0x2:                                    # HasLinkInfo
+            tam = struct.unpack_from('<I', d, pos)[0]
+            if tam >= 0x1C and pos + tam <= len(d):
+                info_banderas = struct.unpack_from('<I', d, pos + 8)[0]
+                base_off = struct.unpack_from('<I', d, pos + 16)[0]
+                if info_banderas & 0x1 and base_off:          # VolumeIDAndLocalBasePath
+                    fin = d.find(b'\0', pos + base_off)
+                    if fin > 0:
+                        salida.append(_sin_exe(d[pos + base_off:fin].decode('mbcs' if os.name == 'nt' else 'latin-1', 'replace')))
+            pos += tam
+        unicode = bool(banderas & 0x80)
+        cadenas = {}
+        for bit, nombre in ((0x4, 'nombre'), (0x8, 'relativa'), (0x10, 'trabajo'), (0x20, 'argumentos'), (0x40, 'icono')):
+            if banderas & bit:
+                n = struct.unpack_from('<H', d, pos)[0]
+                pos += 2
+                largo = n * 2 if unicode else n
+                cadenas[nombre] = d[pos:pos + largo].decode('utf-16-le' if unicode else 'mbcs' if os.name == 'nt' else 'latin-1', 'replace')
+                pos += largo
+        if cadenas.get('trabajo'):
+            salida.append(_sin_exe(cadenas['trabajo']))
+        if cadenas.get('relativa'):
+            salida.append(_sin_exe(os.path.normpath(os.path.join(os.path.dirname(ruta), cadenas['relativa']))))
+        return [s for s in dict.fromkeys(salida) if s]
+    except Exception:
+        return []
 
 
 def _discos_fijos():
@@ -123,11 +166,14 @@ def _resolve_dir_windows():
     if os.path.isfile(os.path.join(default, 'Resolve.exe')):
         return default
     # v5.71 (cliente con Resolve Studio 21 en otro disco: «No hay DaVinci Resolve en este equipo»): el instalador de Blackmagic solo deja
-    # «Version» en el registro, sin la carpeta. Se mira también el acceso del menú Inicio y los discos fijos.
-    otra = _resolve_dir_extra()
-    if otra:
-        _DIR_RESOLVE[0] = otra
-        return otra
+    # «Version» en el registro, sin la carpeta. Se mira también el proceso abierto, el acceso del menú Inicio y los discos fijos.
+    # El «no está» se recuerda NO_ESTA_S: sin Resolve, cada consulta (algunas en el hilo de la interfaz) repetía procesos y discos.
+    if time.time() - _DIR_RESOLVE[1] >= NO_ESTA_S:
+        otra = _resolve_dir_extra()
+        if otra:
+            _DIR_RESOLVE[0] = otra
+            return otra
+        _DIR_RESOLVE[1] = time.time()
     if os.path.isdir(default):
         return default
     try:

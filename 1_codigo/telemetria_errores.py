@@ -40,7 +40,7 @@ PENDIENTES_MAX = 50
 CADUCA_S = 7 * 86400        # lo pendiente de hace más de una semana ya no se manda
 POR_PETICION = 20           # lo mismo que acepta errores.php
 TIMEOUT_S = 15
-DETALLE_MAX = 11000         # caracteres del informe (errores.php guarda 12 000)
+DETALLE_MAX = 7500          # caracteres del informe (errores.php guarda 8 000)
 
 _CANDADO = threading.Lock()
 _DESPERTAR = threading.Event()
@@ -77,18 +77,32 @@ def iniciar():
     try:
         if _ESTADO['iniciado'] or not activo():
             return False
-        _ESTADO['iniciado'] = True
+        _ESTADO.update(iniciado=True, parar=False)
         try:
             from PySide6.QtCore import Qt
             registro.registro().nueva.connect(_al_anotar, Qt.DirectConnection)
         except Exception:
             registro.registro().nueva.connect(_al_anotar)
+        # los errores que llegaron ANTES de conectarse (instalar_ganchos anota ahí «la sesión anterior se cortó / no terminó de abrir»,
+        # justo los cuelgues y caídas que más interesa ver: en la sesión que se cayó no dio tiempo a mandarlos)
+        for e in registro.registro().lista('error'):
+            _al_anotar(e)
+        # al cerrar (main() corre atexit antes de os._exit): lo que aún esté en la cola se guarda en disco y sale en la sesión siguiente
+        import atexit
+        atexit.register(_al_salir)
         hilo = threading.Thread(target=_bucle, daemon=True, name='telemetria-errores')
         _ESTADO['hilo'] = hilo
         hilo.start()
         return True
     except Exception:
         return False
+
+
+def _al_salir():
+    try:
+        _procesar_cola()
+    except Exception:
+        pass
 
 
 def _al_anotar(e):
@@ -107,13 +121,29 @@ def _al_anotar(e):
 # ---------------------------------------------------------------------------------------------------------------------------------------
 # el hilo
 # ---------------------------------------------------------------------------------------------------------------------------------------
+def detener(espera_s=5.0):
+    """Para el hilo (pruebas; al cerrar basta atexit). Desconecta la señal del Registro."""
+    _ESTADO['parar'] = True
+    _DESPERTAR.set()
+    try:
+        registro.registro().nueva.disconnect(_al_anotar)
+    except Exception:
+        pass
+    hilo = _ESTADO.get('hilo')
+    if hilo is not None and hilo is not threading.current_thread():
+        hilo.join(espera_s)
+    _ESTADO.update(iniciado=False, hilo=None)
+
+
 def _bucle():
     _cargar()
     if _PENDIENTES:
         _DESPERTAR.set()                       # lo que quedó de una sesión anterior (sin red, sin licencia)
-    while True:
+    while not _ESTADO.get('parar'):
         _DESPERTAR.wait(timeout=600)           # cada 10 min se reintenta lo pendiente aunque no haya errores nuevos
         _DESPERTAR.clear()
+        if _ESTADO.get('parar'):
+            break
         try:
             if _COLA:
                 time.sleep(ESPERA_LOTE_S)
@@ -150,8 +180,48 @@ def _procesar_cola():
     _guardar()
 
 
+# Rutas del PROGRAMA (se quedan: dicen dónde falló el código); cualquier otra ruta es del usuario y se anonimiza
+_DEL_PROGRAMA = ('program files', '\\_internal', '/_internal', 'site-packages', 'blackmagic', 'cinecaptions', '\\windows\\', 'programdata',
+                 '\\appdata\\', '/appdata/', '.app/contents', 'davincisubtitles\\motor', '1_codigo', '2_recursos', 'motor_qwen', 'motor_compat')
+_EXT_MEDIOS = r'mp4|mov|mkv|m4v|avi|webm|mxf|wav|mp3|m4a|aac|flac|ogg|drp|drt|drb|srt|png|jpe?g|psd|aep|prproj'
+# Una sola pasada: primero la ruta ENTRE comillas (puede llevar espacios), si no, la suelta (hasta el primer espacio). Con dos pasadas la
+# segunda volvía a cortar una ruta ya conservada («C:\Program» de «C:\Program Files\…») y la anonimizaba a medias.
+_RUTA = re.compile(r'''(['"«“])((?:[A-Za-z]:[\\/]|\\\\|~[\\/]|/(?:Users|Volumes|home|media|mnt|private|tmp)/)[^'"»”\n]*)(['"»”])'''
+                   r'''|(?:[A-Za-z]:[\\/]|\\\\[^\s\\]+\\|~[\\/]|/(?:Volumes|home|media|mnt|private|tmp)/)[^\s'"«»“”<>|]*''')
+_ARCHIVO_MEDIO = re.compile(r'''(?<![\\/\w])[^\s\\/'"«»“”<>|:]+\.(?:''' + _EXT_MEDIOS + r''')\b''', re.IGNORECASE)
+
+
+def _ruta_anonima(ruta):
+    """«D:\\Clientes\\Maria Lopez\\boda.mp4» → «D:\\…\\archivo.mp4 (33 car.)»: queda lo que sirve para el fallo (disco, extensión, largo, si
+    lleva letras no ASCII) y nada de nombres. Las del programa, tal cual."""
+    if any(m in ruta.lower().replace('/', '\\') or m in ruta.lower() for m in _DEL_PROGRAMA):
+        return ruta
+    partes = [p for p in re.split(r'[\\/]', ruta) if p]
+    nombre = partes[-1] if partes else ''
+    ext = os.path.splitext(nombre)[1] if '.' in nombre[1:] else ''
+    sep = '\\' if '\\' in ruta else '/'
+    raiz = ruta[:2] if re.match(r'[A-Za-z]:', ruta) else ('~' if ruta.startswith('~') else ('\\\\' if ruta.startswith('\\\\') else ''))
+    tildes = ', con letras no ASCII' if any(ord(c) > 127 for c in ruta) else ''
+    return f'{raiz}{sep}…{sep}archivo{ext} ({len(ruta)} car.{tildes})'
+
+
+def privado(texto):
+    """El texto sin la carpeta del usuario, sin sus rutas en otros discos y sin nombres de sus videos, audios o proyectos."""
+    texto = registro._sin_usuario(str(texto or ''))
+    texto = _RUTA.sub(lambda m: (m.group(1) + _ruta_anonima(m.group(2)) + m.group(3)) if m.group(1) else _ruta_anonima(m.group(0)), texto)
+    # los nombres sueltos de videos/audios/proyectos (sin carpeta), salvo dentro de una ruta del programa que se conservó
+    return _ARCHIVO_MEDIO.sub(lambda m: m.group(0) if _es_del_programa(texto, m) else 'archivo' + os.path.splitext(m.group(0))[1], texto)
+
+
+def _es_del_programa(texto, m):
+    """¿El nombre de archivo `m` está dentro de una ruta del programa (que se deja tal cual)?"""
+    inicio = max(texto.rfind(c, 0, m.start()) for c in (' ', '"', "'", '«', '\n', '('))
+    return any(x in texto[inicio + 1:m.end()].lower() for x in _DEL_PROGRAMA)
+
+
 def _armar(e, f):
-    """El dict que se manda: el informe de «Copiar este error» sin la carpeta del usuario."""
+    """El dict que se manda: el informe de «Copiar este error» SIN «lo que pasó justo antes» (antes=0: esas notas dicen de qué trata el
+    video, el nombre del proyecto y del timeline) y pasado por privado()."""
     titulo = ''
     try:
         import registro_ayuda
@@ -159,13 +229,14 @@ def _armar(e, f):
     except Exception:
         pass
     try:
-        detalle = registro.informe_de_error(e)
+        detalle = registro.informe_de_error(e, antes=0)
     except Exception:
-        detalle = registro._sin_usuario(e.detalle or '')
+        detalle = e.detalle or ''
+    detalle = privado(detalle)
     if len(detalle) > DETALLE_MAX:
         detalle = detalle[:DETALLE_MAX] + '\n…'
-    return {'firma': f, 'nivel': 'error', 'titulo': str(titulo)[:190], 'mensaje': registro._sin_usuario(e.mensaje)[:600],
-            'origen': registro._sin_usuario(e.origen or '')[:120], 'detalle': detalle, 'veces': max(1, int(getattr(e, 'veces', 1))),
+    return {'firma': f, 'nivel': 'error', 'titulo': privado(titulo)[:190], 'mensaje': privado(e.mensaje)[:600],
+            'origen': privado(e.origen or '')[:120], 'detalle': detalle, 'veces': max(1, int(getattr(e, 'veces', 1))),
             'cuando': time.time()}
 
 
@@ -220,40 +291,50 @@ def _enviar():
         _ESTADO['pausa_hasta'] = time.time() + 60
         return
     campos = [{k: d[k] for k in ('firma', 'nivel', 'titulo', 'mensaje', 'origen', 'detalle', 'veces')} for d in lote]
-    codigo, espera = _post({'clave': datos['clave'], 'equipo': licencia.id_equipo(), 'version': licencia._version(),
-                            'so': licencia._sistema(), 'errores': json.dumps(campos, ensure_ascii=False)})
+    codigo, espera, respuesta = _post({'clave': datos['clave'], 'equipo': licencia.id_equipo(), 'version': licencia._version(),
+                                       'so': licencia._sistema(), 'errores': json.dumps(campos, ensure_ascii=False)})
     if codigo == 200 or codigo in (400, 404, 413):
-        # 200 = guardados; 400/404/413 = el servidor no los quiere (datos raros, equipo no activado): reintentar no sirve
+        # 200 = guardados; 400/404/413 = el servidor no los quiere (datos raros, equipo no activado): reintentar no sirve.
+        # Con 200 el servidor dice cuántos guardó (por el tope por hora pueden ser menos): el resto se queda y se reintenta en una hora.
+        hechos = len(lote)
+        if codigo == 200 and isinstance(respuesta, dict) and isinstance(respuesta.get('guardados'), int):
+            hechos = max(0, min(len(lote), respuesta['guardados']))
         ahora = time.time()
-        for d in lote:
+        for d in lote[:hechos] if codigo == 200 else lote:
             _PENDIENTES.pop(d['firma'], None)
             _ESTADO['ultimo_envio'][d['firma']] = ahora
         _ESTADO['enviados'] += 1
         _guardar()
-        if codigo == 200 and _PENDIENTES:
+        if codigo == 200 and hechos < len(lote):
+            _ESTADO['pausa_hasta'] = time.time() + 3600
+        elif codigo == 200 and _PENDIENTES:
             _DESPERTAR.set()                    # quedan más (más de POR_PETICION o repetidos que ya pueden ir)
         return
     _ESTADO['pausa_hasta'] = time.time() + (espera or 300)      # sin red, 429, 503, 500: se reintenta más tarde
 
 
 def _post(campos):
-    """(código HTTP o 0 sin red, segundos de Retry-After o None)."""
+    """(código HTTP o 0 sin red, segundos de Retry-After o None, el JSON de la respuesta o None)."""
     import licencia
     req = urllib.request.Request(URL, data=urllib.parse.urlencode(campos).encode('utf-8'), method='POST',
                                  headers={'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded',
                                           'User-Agent': 'CineCaptions/%s' % licencia._version()})
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT_S, context=licencia._ssl()) as r:
-            r.read()
-            return r.status, None
+            cuerpo = r.read(65536)
+            try:
+                respuesta = json.loads(cuerpo or b'{}')
+            except ValueError:
+                respuesta = None
+            return r.status, None, respuesta
     except urllib.error.HTTPError as e:
         try:
             espera = int(e.headers.get('Retry-After') or 0) or None
         except (TypeError, ValueError):
             espera = None
-        return e.code, espera
+        return e.code, espera, None
     except Exception:
-        return 0, None
+        return 0, None, None
 
 
 def esperar_envios(segundos=30.0):
