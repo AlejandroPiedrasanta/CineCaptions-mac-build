@@ -4301,6 +4301,16 @@
     "Haz clic en tu timeline en Resolve y pulsa GO otra vez.": "在 Resolve 中点击你的时间线，再按一次 GO。",
     "Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).": "如果你的视频在桌面、文稿、下载或外置磁盘中，请允许 CineCaptions 访问该文件夹（Mac：“系统设置”>“隐私与安全性”>“文件和文件夹”）。",
     "O suelta el video en la ventana de CineCaptions y pulsa GO.": "或者把视频拖到 CineCaptions 窗口中，再按 GO。",
-    "Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).": "出现问题时，发给支持的报告会附上两张截图：整个屏幕和 CineCaptions 窗口（即使被其他窗口遮住或已最小化也能截到）。"
+    "Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).": "出现问题时，发给支持的报告会附上两张截图：整个屏幕和 CineCaptions 窗口（即使被其他窗口遮住或已最小化也能截到）。",
+    "Mac con DaVinci Resolve gratuito: antes de pedirle el audio del timeline, CineCaptions detiene la reproducción que dejó el GO anterior, y si Resolve se cierra lo dice claro en vez de un código.": "使用免费版 DaVinci Resolve 的 Mac：在请求时间线音频之前，CineCaptions 会停止上一次 GO 留下的播放；如果 Resolve 关闭，会清楚地说明，而不是显示代码。",
+    "Los informes de error traen un diagnóstico de Resolve del momento del fallo, para arreglarlo antes sin tener que preguntarte.": "错误报告会附上出错那一刻的 Resolve 诊断，无需询问你就能更快修复。",
+    "DaVinci Resolve se cerró mientras le pedía el audio del timeline (Resolve se cayó). Pasa sobre todo si estaba reproduciendo o con poca memoria. Ábrelo otra vez con tu proyecto, deja el timeline parado y pulsa GO.": "我在请求时间线音频时 DaVinci Resolve 关闭了（Resolve 崩溃了）。这主要发生在它正在播放或内存不足时。请重新打开你的项目，让时间线保持停止状态，然后按 GO。",
+    "DaVinci Resolve dejó de responder mientras le pedía el audio del timeline. Espera a que vuelva a responder (o ciérralo y ábrelo otra vez con tu proyecto) y pulsa GO.": "我在请求时间线音频时 DaVinci Resolve 停止了响应。请等它恢复响应（或关闭后重新打开你的项目），然后按 GO。",
+    "DaVinci Resolve quedó abierto pero sin ventana (no responde). Ciérralo del todo, ábrelo otra vez con tu proyecto y pulsa GO.": "DaVinci Resolve 仍在运行但没有窗口（无响应）。请完全关闭它，重新打开你的项目，然后按 GO。",
+    "DaVinci Resolve se cerró o dejó de responder": "DaVinci Resolve 已关闭或停止响应",
+    "Mientras CineCaptions le pedía algo, DaVinci Resolve se cerró, se quedó sin ventana o dejó de responder. Suele pasar si estaba reproduciendo, renderizando o con poca memoria.": "在 CineCaptions 向它请求时，DaVinci Resolve 关闭了、失去了窗口或停止了响应。这通常发生在它正在播放、渲染或内存不足时。",
+    "Abre DaVinci Resolve con tu proyecto y espera a que cargue por completo (hasta ver el timeline).": "用你的项目打开 DaVinci Resolve，等它完全加载（直到看到时间线）。",
+    "Deja el timeline parado (sin reproducir) y vuelve a pulsar GO.": "让时间线保持停止（不要播放），然后再按一次 GO。",
+    "Si se repite, cierra otros programas que usen mucha memoria y avisa a soporte con el informe.": "如果再次发生，请关闭其他占用大量内存的程序，并把报告发给支持人员。"
   }
 }

@@ -132,6 +132,15 @@ _REGLAS = [
      ['Cierra los cuadros de diálogo que haya abiertos en Resolve y vuelve a pulsar GO.',
       'Comprueba en el Project Manager de Resolve que no haya un proyecto «CineCaptions» a medio borrar.',
       'En Ajustes puedes elegir que GO trabaje en el proyecto que tengas abierto.'], 'bloquea'),
+    # v5.74: los códigos de resolve_bridge.ejecutar y su texto para el usuario (resolve_bridge.texto_de_atasco), ANTES de «se cayó»: un
+    # cliente de Mac veía solo «RESOLVE_CAIDO» con los pasos de «abre tu timeline»
+    (r'RESOLVE_CAIDO|RESOLVE_FANTASMA|RESOLVE_COLGADO|se cerró mientras le pedía|dejó de responder mientras le pedía|quedó abierto pero sin ventana',
+     'DaVinci Resolve se cerró o dejó de responder',
+     'Mientras CineCaptions le pedía algo, DaVinci Resolve se cerró, se quedó sin ventana o dejó de responder. Suele pasar si estaba '
+     'reproduciendo, renderizando o con poca memoria.',
+     ['Abre DaVinci Resolve con tu proyecto y espera a que cargue por completo (hasta ver el timeline).',
+      'Deja el timeline parado (sin reproducir) y vuelve a pulsar GO.',
+      'Si se repite, cierra otros programas que usen mucha memoria y avisa a soporte con el informe.'], 'bloquea'),
     (r'Resolve se cay[oó]',
      'DaVinci Resolve se cerró de golpe (se cayó)',
      'Resolve tuvo un error interno mientras CineCaptions cambiaba el timeline y se cerró solo (deja un volcado en su carpeta de registros).',

@@ -568,6 +568,85 @@ def es_resolve_atascado(mensaje):
     return ERR_RESOLVE_COLGADO in t or ERR_RESOLVE_CAIDO in t or ERR_RESOLVE_FANTASMA in t
 
 
+def _cuelgues_recientes_de_resolve(minutos=30):
+    """v5.74: los informes de cuelgue de Resolve de los últimos `minutos` [(nombre, hace_s)]: Mac ~/Library/Logs/DiagnosticReports
+    (Resolve*.ips/.crash), Windows WER (AppCrash_Resolve.exe_*) y CrashDumps (Resolve.exe*.dmp). Solo nombre y hora, nunca el contenido.
+    Dice si un «RESOLVE_CAIDO» fue un cierre de verdad o una mirada falsa."""
+    ahora, salida = time.time(), []
+    carpetas = []
+    if sys.platform == 'darwin':
+        carpetas = [(Path.home() / 'Library' / 'Logs' / 'DiagnosticReports', ('Resolve', 'DaVinci'))]
+    elif sys.platform.startswith('win'):
+        carpetas = [(Path(os.environ.get('ProgramData', r'C:\ProgramData')) / 'Microsoft' / 'Windows' / 'WER' / 'ReportArchive', ('AppCrash_Resolve',)),
+                    (Path(os.environ.get('LOCALAPPDATA', '')) / 'Microsoft' / 'Windows' / 'WER' / 'ReportArchive', ('AppCrash_Resolve',)),
+                    (Path(os.environ.get('LOCALAPPDATA', '')) / 'CrashDumps', ('Resolve.exe',))]
+    for carpeta, prefijos in carpetas:
+        try:
+            for p in carpeta.iterdir():
+                if p.name.startswith(prefijos):
+                    hace = ahora - p.stat().st_mtime
+                    if 0 <= hace <= minutos * 60:
+                        salida.append((p.name[:80], hace))
+        except OSError:
+            continue
+    return sorted(salida, key=lambda x: x[1])[:5]
+
+
+def informe_de_fallo(error=''):
+    """v5.74 (pedido del usuario: «mejora los logs para que sepas qué pasa y lo resuelvas más rápido»): lo que se sabe de Resolve y del
+    Puente JUSTO al fallar un paso de GO, para el detalle técnico del error (lo ve el Registro, «Copiar este error» y la telemetría, que
+    lo pasa por privado()). Antes, un «RESOLVE_CAIDO» llegaba sin nada más. Mira procesos y archivos: fuera del hilo de la interfaz. Nunca lanza."""
+    lineas = ['── Diagnóstico de Resolve al fallar ──']
+
+    def poner(etiqueta, valor):
+        lineas.append(f'  {etiqueta:30} {valor}')
+    try:
+        poner('código', error if es_resolve_atascado(error) else '—')
+        pids = _listar_pids_resolve()
+        poner('procesos de Resolve', 'no se pudo mirar' if pids is None else (', '.join(map(str, pids)) or 'NINGUNO (cerrado)'))
+        poner('estado ahora', estado_resolve(colgado_s=5.0, callado_s=5.0))
+    except Exception as e:
+        poner('estado', f'no se pudo mirar ({type(e).__name__})')
+    try:
+        poner('registro de Resolve', f'última escritura hace {_registro_resolve_callado_s():.0f} s')
+    except Exception:
+        pass
+    try:
+        import colocacion
+        t = colocacion._REPRODUCCION['t']
+        poner('reproducción lanzada por GO', f'hace {time.time() - t:.0f} s (sin detener)' if t else 'no (o ya detenida)')
+    except Exception:
+        pass
+    if sys.platform == 'darwin':
+        poner('lanzamiento del Puente (Mac)', motivo_lanzar_mac() or 'sin fallos')
+    try:
+        cuelgues = _cuelgues_recientes_de_resolve()
+        poner('cuelgues de Resolve (30 min)', '; '.join(f'{n} (hace {h:.0f} s)' for n, h in cuelgues) if cuelgues else 'ninguno')
+    except Exception:
+        pass
+    try:
+        lineas += [''] + diagnostico().splitlines()
+    except Exception as e:
+        lineas.append(f'(diagnóstico del Puente: {type(e).__name__})')
+    return '\n'.join(lineas)[:5000]
+
+
+def texto_de_atasco(mensaje):
+    """v5.74: el código de `ejecutar` (RESOLVE_CAIDO/COLGADO/FANTASMA) dicho para el usuario; '' si no es uno de ellos. Un cliente de Mac
+    veía en GO solo «RESOLVE_CAIDO», con los pasos de «abre tu timeline», que no servían."""
+    t = str(mensaje or '')
+    if ERR_RESOLVE_CAIDO in t:
+        return tr('DaVinci Resolve se cerró mientras le pedía el audio del timeline (Resolve se cayó). Pasa sobre todo si estaba '
+                  'reproduciendo o con poca memoria. Ábrelo otra vez con tu proyecto, deja el timeline parado y pulsa GO.')
+    if ERR_RESOLVE_COLGADO in t:
+        return tr('DaVinci Resolve dejó de responder mientras le pedía el audio del timeline. Espera a que vuelva a responder (o ciérralo '
+                  'y ábrelo otra vez con tu proyecto) y pulsa GO.')
+    if ERR_RESOLVE_FANTASMA in t:
+        return tr('DaVinci Resolve quedó abierto pero sin ventana (no responde). Ciérralo del todo, ábrelo otra vez con tu proyecto y '
+                  'pulsa GO.')
+    return ''
+
+
 def _registro_resolve_callado_s():
     """Segundos desde la última línea que Resolve escribió en su registro (un script en marcha escribe cada pocos segundos; un Resolve colgado, nada)."""
     try:
@@ -630,7 +709,11 @@ def estado_resolve(colgado_s=None, callado_s=None):
         if es_win and not _resolve_en_ejecucion():
             return 'caido'
         if es_mac and _listar_pids_resolve() == []:
-            return 'caido'
+            # v5.74 (cliente de Mac con la 5.72: «RESOLVE_CAIDO» en «Trayendo el timeline» con Resolve abierto): una sola mirada de pgrep
+            # vacía daba el GO por perdido; se confirma con una segunda 1,5 s después (si Resolve sigue ahí, era un falso «cerrado»)
+            time.sleep(1.5)
+            if _listar_pids_resolve() == []:
+                return 'caido'
         if es_win and resolve_colgado(colgado_s) and _registro_resolve_callado_s() >= callado_s:
             return 'colgado'
         # v5.4.41: el proceso sigue ahí pero SIN ninguna ventana (Resolve se cerró por dentro y el proceso quedó vivo, 9 GB, sin responder a nadie). v5.56: el mismo criterio

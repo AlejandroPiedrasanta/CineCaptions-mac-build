@@ -8373,8 +8373,23 @@ class SubtitleApp(QWidget):
                     registro.aviso('GO · timeline: ' + motivo, 'GO · timeline')
                     return ('ok', motivo)
             return ('ok' if ok else 'error', err)
+        _trabajo_timeline = trabajo
+
+        def trabajo():
+            # v5.74 (pedido: «mejora los logs para saber qué pasó»): si este paso falla, el diagnóstico de Resolve y del Puente de ESE
+            # momento (procesos, latido, reproducción, cuelgues recientes) va al detalle técnico del error; aquí, fuera de la interfaz
+            estado, err = _trabajo_timeline()
+            diag = ''
+            if estado != 'ok' or err:
+                try:
+                    import resolve_bridge
+                    diag = resolve_bridge.informe_de_fallo(err)
+                except Exception:
+                    diag = ''
+            return (estado, err, diag)
+
         def fin(r, error):
-            estado, err = r if r else ('error', str(error))
+            estado, err, diag = r if r else ('error', str(error), '')
             if estado == 'ok':
                 try:
                     self._detectar_desde_resolve_archivo(silencioso=True)
@@ -8388,7 +8403,13 @@ class SubtitleApp(QWidget):
                 self.go_panel.paso('timeline', 'saltado', tr('uso tu archivo'))
                 self._go_generar()
             else:
-                self._go_fallo('timeline', (tr('Resolve no entregó el audio del timeline (código {c}).', c=str(err).strip()) if str(err or '').strip().isdigit() else err) or tr('Abre DaVinci Resolve con tu timeline, o suelta un vídeo en la ventana, y pulsa GO otra vez.'))
+                try:                                       # v5.74: «RESOLVE_CAIDO» y compañía, dichos para el usuario (no el código)
+                    import resolve_bridge as _rb
+                    err = _rb.texto_de_atasco(err) or err
+                except Exception:
+                    pass
+                self._go_fallo('timeline', (tr('Resolve no entregó el audio del timeline (código {c}).', c=str(err).strip()) if str(err or '').strip().isdigit() else err) or tr('Abre DaVinci Resolve con tu timeline, o suelta un vídeo en la ventana, y pulsa GO otra vez.'),
+                               diagnostico=diag)
         _correr_en_hilo(self, trabajo, fin)
     def _motivo_mp4(self):
         """Por qué GO entregaría AHORA un MP4 con los subtítulos grabados en vez de colocarlos en Resolve: 'prueba' (CINECAPTIONS_SIN_RESOLVE=1),
@@ -9044,12 +9065,15 @@ class SubtitleApp(QWidget):
                 self.go_panel.reposo(tr('Quedó a medias el GO de «{n}»: pulsa GO para reanudarlo.', n=Path(ruta).name), forzar=True)
         except Exception:
             pass
-    def _go_fallo(self, clave, mensaje):
+    def _go_fallo(self, clave, mensaje, diagnostico=''):
+        """v5.74: `diagnostico` (resolve_bridge.informe_de_fallo, calculado en el hilo de trabajo) va al detalle técnico del error: el Registro,
+        «Copiar este error» y la telemetría lo traen, y se sabe qué pasó sin pedirle nada al cliente."""
         if getattr(self, '_cancelar_go', False) or getattr(self, '_cancelando', False):
             self._go_cancelado()                      # v5.5.8: lo que falla porque se cerró Resolve al cancelar no es un error
             return
         self._borrar_go_en_curso()
-        registro.error(str(mensaje).splitlines()[0][:200] if mensaje else tr('GO no pudo terminar'), f'GO · {clave}', detalle=str(mensaje or ''))
+        registro.error(str(mensaje).splitlines()[0][:200] if mensaje else tr('GO no pudo terminar'), f'GO · {clave}',
+                       detalle=str(mensaje or '') + (f'\n\n{diagnostico}' if diagnostico else ''))
         self._fin_tarea(False, str(mensaje).splitlines()[0][:160] if mensaje else '')
         self.go_panel.paso_fallido = clave
         self.go_panel.paso(clave, 'error')

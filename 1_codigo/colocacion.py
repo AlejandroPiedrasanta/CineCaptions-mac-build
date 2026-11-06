@@ -679,13 +679,49 @@ def reproducir_por_menu_windows(espera_s=20):
 _REPRODUCCION = {'t': 0.0}
 _ITEM_DETENER = 'Detener|Stop|Parar|Arrêter|Arrêt|Anhalten|Stopp|Interrompi|Ferma|Стоп|停止'
 
+# v5.74 (SIN probar en un Mac real; si algo falla queda en el Registro y GO sigue como antes): «Reproducción > Detener» en el menú de
+# Resolve por System Events, con los nombres del menú en los idiomas de Resolve. Devuelve DETENIDO | SIN_MENU | NO_RESOLVE.
+_AS_DETENER = """
+on run argv
+    set nombresMenu to {"Playback", "Reproducción", "Reproducir", "Lecture", "Wiedergabe", "Riproduzione", "Reprodução"}
+    set nombresItem to {"Stop", "Detener", "Parar", "Arrêter", "Arrêt", "Anhalten", "Stopp", "Interrompi", "Ferma"}
+    tell application "System Events"
+        if not (exists process "DaVinci Resolve") then return "NO_RESOLVE"
+        tell process "DaVinci Resolve"
+            repeat with nm in nombresMenu
+                set m to nm as text
+                if exists menu bar item m of menu bar 1 then
+                    repeat with ni in nombresItem
+                        set i to ni as text
+                        if exists menu item i of menu 1 of menu bar item m of menu bar 1 then
+                            click menu item i of menu 1 of menu bar item m of menu bar 1
+                            return "DETENIDO"
+                        end if
+                    end repeat
+                end if
+            end repeat
+        end tell
+    end tell
+    return "SIN_MENU"
+end run
+"""
+
+
+def _detener_mac():
+    """v5.74: Mac: «Reproducción > Detener» de Resolve (System Events). El código de _AS_DETENER, o ERROR: … si osascript falló."""
+    try:
+        return str(_osascript(_AS_DETENER, timeout=15)).strip() or 'SIN_RESPUESTA'
+    except Exception as e:
+        return f'ERROR: {type(e).__name__}'
+
 
 def detener_reproduccion(siempre=False, dura_s=None):
     """v5.5.7 (Windows): si CineCaptions lanzó la reproducción (o `siempre`), la detiene con «Reproducir > Detener». MEDIDO: mientras dura la
     reproducción lanzada desde el menú, Resolve no contesta a los scripts (el MCP daba «no contestó en 45 s» justo después de cada GO y el GO
     siguiente creía que Resolve estaba cerrado: «Falta un clic»). Detener cuando no reproduce no hace nada. Devuelve el código. Nunca lanza.
     v5.32: `dura_s` (lo que dura el timeline): pasada la reproducción entera ya paró sola y no se abre el menú de Resolve para nada."""
-    if not sys.platform.startswith('win') or not (siempre or _REPRODUCCION['t']):
+    es_mac = sys.platform == 'darwin'
+    if not (sys.platform.startswith('win') or es_mac) or not (siempre or _REPRODUCCION['t']):
         return 'NADA'
     if not siempre and dura_s and time.time() - _REPRODUCCION['t'] > float(dura_s) + 5.0:
         _REPRODUCCION['t'] = 0.0
@@ -693,7 +729,10 @@ def detener_reproduccion(siempre=False, dura_s=None):
     _REPRODUCCION['t'] = 0.0
     if not pids_resolve():
         return 'NO_RESOLVE'
-    res = _uia('detener', _MENU_REPRODUCIR, _ITEM_DETENER)
+    # v5.74 (cliente de Mac con la 5.72: «RESOLVE_CAIDO» al pedir el audio después de un GO): en Mac la reproducción que deja GO no se
+    # detenía nunca y el render del audio arrancaba con Resolve reproduciendo (en Windows eso ya lo tumbó). «Reproducción > Detener» por
+    # System Events: detener sin reproducir no hace nada
+    res = _detener_mac() if es_mac else _uia('detener', _MENU_REPRODUCIR, _ITEM_DETENER)
     if res == 'DETENIDO':
         time.sleep(0.6)
         _cerrar_menu_de_resolve()
@@ -1376,6 +1415,7 @@ def reproducir_desde_inicio(esperar_s=0.5, al_estado=None, fluidez=True, teclas=
             r = subprocess.run(['osascript', '-e', guion], capture_output=True, text=True, errors='replace', timeout=20)
             if r.returncode != 0:
                 return False, tr('No pude reproducir en Resolve ({e}). Si macOS lo pide, da permiso de Accesibilidad a CineCaptions.', e=(r.stderr or '').strip()[-100:])
+            _REPRODUCCION['t'] = time.time()          # v5.74: como en Windows, para detenerla antes del siguiente GO (detener_reproduccion)
 
             def _expandir():                                       # v5.4.24: la vista vertical y expandida SIEMPRE (sin probar en un Mac real; si falla solo queda en el Registro)
                 try:

@@ -495,6 +495,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.74', [
+        'Mac con DaVinci Resolve gratuito: antes de pedirle el audio del timeline, CineCaptions detiene la reproducción que dejó el GO anterior, y si Resolve se cierra lo dice claro en vez de un código.',
+        'Los informes de error traen un diagnóstico de Resolve del momento del fallo, para arreglarlo antes sin tener que preguntarte.',
+    ]),
     ('5.73', [
         'Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).',
     ]),

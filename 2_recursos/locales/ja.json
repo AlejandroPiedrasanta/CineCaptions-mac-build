@@ -4301,6 +4301,16 @@
     "Haz clic en tu timeline en Resolve y pulsa GO otra vez.": "Resolve でタイムラインをクリックし、もう一度 GO を押します。",
     "Si tus videos están en Escritorio, Documentos, Descargas o un disco externo, permite esa carpeta a CineCaptions (en Mac: Ajustes del Sistema > Privacidad y seguridad > Archivos y carpetas).": "動画がデスクトップ、書類、ダウンロード、または外部ディスクにある場合は、そのフォルダーを CineCaptions に許可します（Mac：「システム設定」>「プライバシーとセキュリティ」>「ファイルとフォルダ」）。",
     "O suelta el video en la ventana de CineCaptions y pulsa GO.": "または動画を CineCaptions のウィンドウにドロップして GO を押します。",
-    "Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).": "問題が起きたとき、サポート用のレポートには 2 枚のスクリーンショットが入ります：画面全体と CineCaptions のウィンドウ（ほかのウィンドウに隠れていても、最小化されていても撮れます）。"
+    "Si algo falla, el informe para soporte lleva dos capturas: la pantalla completa y la ventana de CineCaptions (sale aunque otra ventana la tape o esté minimizada).": "問題が起きたとき、サポート用のレポートには 2 枚のスクリーンショットが入ります：画面全体と CineCaptions のウィンドウ（ほかのウィンドウに隠れていても、最小化されていても撮れます）。",
+    "Mac con DaVinci Resolve gratuito: antes de pedirle el audio del timeline, CineCaptions detiene la reproducción que dejó el GO anterior, y si Resolve se cierra lo dice claro en vez de un código.": "無料版 DaVinci Resolve を使う Mac：タイムラインの音声を求める前に、前回の GO で始まった再生を止めます。Resolve が終了した場合は、コードではなくわかりやすく伝えます。",
+    "Los informes de error traen un diagnóstico de Resolve del momento del fallo, para arreglarlo antes sin tener que preguntarte.": "エラーレポートには障害発生時の Resolve の診断が含まれるため、あなたに尋ねなくても早く直せます。",
+    "DaVinci Resolve se cerró mientras le pedía el audio del timeline (Resolve se cayó). Pasa sobre todo si estaba reproduciendo o con poca memoria. Ábrelo otra vez con tu proyecto, deja el timeline parado y pulsa GO.": "タイムラインの音声を求めている間に DaVinci Resolve が終了しました（Resolve がクラッシュしました）。主に再生中やメモリー不足のときに起こります。プロジェクトを開き直し、タイムラインを止めた状態で GO を押してください。",
+    "DaVinci Resolve dejó de responder mientras le pedía el audio del timeline. Espera a que vuelva a responder (o ciérralo y ábrelo otra vez con tu proyecto) y pulsa GO.": "タイムラインの音声を求めている間に DaVinci Resolve が応答しなくなりました。応答が戻るまで待つか（またはいったん閉じてプロジェクトを開き直し）、GO を押してください。",
+    "DaVinci Resolve quedó abierto pero sin ventana (no responde). Ciérralo del todo, ábrelo otra vez con tu proyecto y pulsa GO.": "DaVinci Resolve がウィンドウのない状態で開いたままです（応答しません）。完全に終了し、プロジェクトを開き直して GO を押してください。",
+    "DaVinci Resolve se cerró o dejó de responder": "DaVinci Resolve が終了したか、応答しなくなりました",
+    "Mientras CineCaptions le pedía algo, DaVinci Resolve se cerró, se quedó sin ventana o dejó de responder. Suele pasar si estaba reproduciendo, renderizando o con poca memoria.": "CineCaptions が処理を求めている間に、DaVinci Resolve が終了したか、ウィンドウを失ったか、応答しなくなりました。再生中、レンダリング中、メモリー不足のときによく起こります。",
+    "Abre DaVinci Resolve con tu proyecto y espera a que cargue por completo (hasta ver el timeline).": "プロジェクトを開いた DaVinci Resolve が完全に読み込まれるまで（タイムラインが見えるまで）待ってください。",
+    "Deja el timeline parado (sin reproducir) y vuelve a pulsar GO.": "タイムラインを止めた状態（再生しない）で、もう一度 GO を押してください。",
+    "Si se repite, cierra otros programas que usen mucha memoria y avisa a soporte con el informe.": "繰り返す場合は、メモリーを多く使うほかのプログラムを閉じ、レポートを添えてサポートに連絡してください。"
   }
 }
