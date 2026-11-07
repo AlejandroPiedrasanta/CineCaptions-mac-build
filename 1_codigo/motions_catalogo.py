@@ -17,7 +17,7 @@ Se aplica en la fuente (el menú de la IA y las reglas no proponen lo que no est
 """
 
 GRUPOS = [('plantilla', 'Plantillas por frase'), ('kit', 'Kit de motions'), ('escena', 'Escenas a pantalla completa'),
-          ('grafico', 'Gráficos sobre el video'), ('t5', 'Temas 5 y 6')]
+          ('grafico', 'Gráficos sobre el video'), ('t5', 'Estilos 5 y 6')]
 
 NOMBRES_KIT = {'lista': 'Lista de razones', 'ruta': 'Ruta de errores', 'misterio': 'Cajas misterio', 'abanico': 'Abanico de cartas',
                'rueda': 'Rueda de opciones', 'concepto': 'Concepto con icono', 'titulo': 'Título neón', 'mixto': 'Texto + icono',
@@ -34,8 +34,8 @@ GRAFICOS = [('ograf:titular', 'Titular detrás de la persona'), ('ograf:rotulo',
             ('ograf:cta', 'Llamada a la acción'), ('ograf:nombres', 'Nombres de la pareja'), ('acompanante', 'Acompañante bajo el caption')]
 T5 = [('t5:escena', 'Escenas de papel'), ('t5:orbita', 'Órbita de iconos 3D'), ('t5:tarjeta', 'Tarjeta sobre la cabeza'),
       ('t5:sticker', 'Sticker congelado del gancho'), ('t5:final', 'Pantalla final con botón'), ('t5:foco', 'Foco en blanco y negro'),
-      ('t5:pasos', 'Indicador de pasos'), ('t5:deslizador', 'Deslizador de cristal'), ('t6:visor', 'Visor de cámara (Tema 6)'),
-      ('t6:buscar', 'Barra de búsqueda (Tema 6)'), ('t6:perfil', 'Perfil con seguidores (Tema 6)'), ('t6:equipo', 'Píldora del equipo (Tema 6)')]
+      ('t5:pasos', 'Indicador de pasos'), ('t5:deslizador', 'Deslizador de cristal'), ('t6:visor', 'Visor de cámara (Estilo 6)'),
+      ('t6:buscar', 'Barra de búsqueda (Estilo 6)'), ('t6:perfil', 'Perfil con seguidores (Estilo 6)'), ('t6:equipo', 'Píldora del equipo (Estilo 6)')]
 _COMP_T5 = {'OrbitaT5': 't5:orbita', 'TarjetaT5': 't5:tarjeta', 'AcompananteT5': 'acompanante', 'StickerT5': 't5:sticker', 'FinalT5': 't5:final',
             'PasosT5': 't5:pasos', 'DeslizadorT5': 't5:deslizador', 'EscenaT5': 't5:escena', 'Ubicacion': 'ograf:ubicacion'}
 _SIN_MOTION = {'subtitulo', 'velo', 'velo_caption', 'emoji'}     # (v5.25: los emojis animados tienen su propio interruptor, no son del catálogo)

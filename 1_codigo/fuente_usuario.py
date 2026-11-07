@@ -51,7 +51,7 @@ def es_principal(run):
     if run.get('heroe') or run.get('rol') == 'main' or run.get('principal'):
         return True
     k = str(run.get('k') or '').lower()
-    return any(p in k for p in ('hero', 'tapes', 'negrita', 'shatter', 'select', 'drag', 'corte', 'shine', 'resalta', 'linea'))   # v5.75
+    return any(p in k for p in ('hero', 'tapes', 'negrita', 'shatter', 'select', 'drag', 'corte', 'shine', 'resalta', 'linea', 'tipo'))   # v5.75; v5.76 «v tipo»
 
 
 def _encajar(run, fuente):
@@ -61,7 +61,7 @@ def _encajar(run, fuente):
     try:
         import kinetic_captions as KC
         clave, size0 = str(run.get('k') or ''), float(run.get('size0') or run.get('size') or 0)
-        if not clave or size0 <= 0:
+        if not clave or size0 <= 0 or clave == 'v tipo':          # (v5.76: el bloque del Tema 5 lleva sus letras y tamaños dentro de su texto)
             return False
         e = KC._espec(clave)
         tema = KC.ancho_px(clave, run['texto'], size0)

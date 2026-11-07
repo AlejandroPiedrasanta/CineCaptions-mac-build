@@ -227,7 +227,7 @@ def _fuerza(c, t):
         return 0.0
     k = min(1.0, (t - c['t0']) / c['entrada']) if c['entrada'] > 0 else 1.0
     k = k * k * (3.0 - 2.0 * k)
-    if SALIDA_S > 0:
+    if SALIDA_S > 0 and not c.get('seco'):                      # (v5.76: un estado del Tema 5 que reemplaza el siguiente se va de golpe)
         k *= min(1.0, (c['t1'] - t) / SALIDA_S)
     return k
 

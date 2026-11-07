@@ -591,7 +591,9 @@ def texto_cue(cue, n=4):
 
 def _grande_abajo(cue):
     """¿La palabra GRANDE del cue es la de abajo? (es la que tapa la cabeza: así la línea pequeña siempre se lee)."""
-    runs = [r for r in cue.get('runs') or [] if isinstance(r.get('y'), (int, float))
+    if isinstance(cue.get('grande_abajo'), bool):                      # (v5.76: el Tema 5 «v tipo» lo dice su planificador)
+        return cue['grande_abajo']
+    runs =[r for r in cue.get('runs') or [] if isinstance(r.get('y'), (int, float))
             and (r.get('texto') or 'k' not in r)]                     # (v5.61: sin los aros y subrayados del Tema 1, que no son texto)
     if not runs:
         return False

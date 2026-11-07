@@ -80,6 +80,8 @@ def _interesa(look, motor, cue):
         return any(k.startswith(('k hero', 'k tape', 'k serif', 'k script')) for k in claves)
     if motor == 'guion':
         return any(r.get('rol') == 'main' for r in (cue.get('runs') or []))
+    if 'v tipo' in claves:                                       # v5.76: el Tema 5 (un bloque con serif encima o debajo, mejor)
+        return len(cue.get('lines') or []) >= 2
     if look.get('efecto'):
         return any(k.startswith(look['efecto']) for k in claves)
     return 'v negrita' in claves and len(claves) >= 4
@@ -197,6 +199,14 @@ def _dibujar_viral(lienzo, cue, esc):
     for i, run in enumerate(sorted(cue.get('runs') or [], key=lambda r: float(r.get('t') or 0))):
         clave, txt = str(run.get('k') or ''), str(run.get('texto') or '')
         if not txt:
+            continue
+        if clave == 'v tipo':                                     # v5.76: el bloque del Tema 5 entero, ya dicho (tipo_vista; su sitio va en su texto)
+            import tipo_vista as TV
+            capa_t = TV.dibujar(str(run.get('codigo') or txt), ancho, alto)
+            dy = int(round((float(run.get('y', 0.5)) - 0.5) * alto))  # (_desplazado lo mueve con la y del run)
+            if dy:
+                capa_t = capa_t.transform(capa_t.size, Image.AFFINE, (1, 0, 0, 0, 1, -dy))
+            texto.alpha_composite(capa_t)
             continue
         base = VC.base_de(clave)
         variante = clave[len(base):].strip() if clave.startswith(base) else ''

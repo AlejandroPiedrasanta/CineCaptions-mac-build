@@ -278,15 +278,15 @@ def etiquetas_tema1(cues, frases):
         cinta = next((r for r in runs if str(r.get('k') or '').startswith('k tape')), None)
         if trazo:
             ev.append({'segundo': round(float(trazo['t']), 3), 'tipo': 'aro', 'fuerza': 9,
-                       'detalle': f"Tema 1: {'aro' if 'ring' in str(trazo['k']) else 'subrayado'} que se dibuja · «{texto}»"})
+                       'detalle': f"Estilo 1: {'aro' if 'ring' in str(trazo['k']) else 'subrayado'} que se dibuja · «{texto}»"})
         elif heroe:
             t, palabra = float(heroe['t']), str(heroe.get('texto') or '')[:30]
             rol, importancia, _ = EV._rol_en(frases, t) if frases else ('EXPLANATION', 0.3, '')
             tipo = 'numero_precio' if re.search(DINERO_RX, palabra.lower()) else 'texto_grande'
-            ev.append({'segundo': round(t + HEROE_GOLPE, 3), 'tipo': tipo, 'detalle': f'Tema 1: héroe «{palabra}» ({rol})',
+            ev.append({'segundo': round(t + HEROE_GOLPE, 3), 'tipo': tipo, 'detalle': f'Estilo 1: héroe «{palabra}» ({rol})',
                        'fuerza': round(8 + 5 * (EV.PESO_ROL.get(rol, 0.0) + float(importancia)), 2)})
         elif cinta:
-            ev.append({'segundo': round(float(cinta['t']), 3), 'tipo': 'pegatina', 'detalle': f"Tema 1: pegatina «{str(cinta.get('texto') or '')[:30]}»",
+            ev.append({'segundo': round(float(cinta['t']), 3), 'tipo': 'pegatina', 'detalle': f"Estilo 1: pegatina «{str(cinta.get('texto') or '')[:30]}»",
                        'fuerza': 8})
     return ev
 
@@ -317,7 +317,7 @@ def etiquetas_neon(motions):
 
     def poner(t, tipo, que):
         if t is not None:
-            ev.append({'segundo': round(float(t), 3), 'tipo': tipo, 'detalle': f'motion Tema 1: {que}', 'fuerza': 8})
+            ev.append({'segundo': round(float(t), 3), 'tipo': tipo, 'detalle': f'motion Estilo 1: {que}', 'fuerza': 8})
 
     for m in motions or []:
         fn, a, ini = m.get('fn'), m.get('a') or {}, float(m.get('ini') or 0.0)
@@ -572,7 +572,7 @@ def elegir(ev, estilo):
     ev = [dict(e) for e in ev if cfg['chicos'] or e['tipo'] != 'texto_chico']
     # Tema 1: el héroe suena SIEMPRE con su pop al entrar; el acento (sube 0,34 s ANTES de la palabra) sonaba sobre las letras chicas que
     # la preceden (el usuario, 50–54 s de ESPAÑOL: «hay sonido que no va» = ACENTO en «PERDER» desde 53,50 s)
-    textos = [e for e in ev if e['tipo'] == 'texto_grande' and not str(e.get('detalle') or '').startswith('Tema 1')]
+    textos = [e for e in ev if e['tipo'] == 'texto_grande' and not str(e.get('detalle') or '').startswith('Estilo 1')]
     ult = -10
     for w in range(0, int(max([e['segundo'] for e in ev] or [0])) + 4, 4):
         grupo = [e for e in textos if w <= e['segundo'] < w + 4]

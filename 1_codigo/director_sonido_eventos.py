@@ -231,7 +231,7 @@ def disenar_kinetic(cues, narrativa, cortes, paleta, duracion, fps=30.0):
         if s < umbral:
             info['decision'] = 'LEAVE_SILENT'
             info['por_que'] = (f'score {s:.2f} < {umbral:.2f}' + (f' (otro golpe hace {hueco:.1f} s)' if hueco < 5 else '') +
-                               f': {rol.lower()}, lo dice la voz y el tema ya lo anima')
+                               f': {rol.lower()}, lo dice la voz y el estilo ya lo anima')
             for e in viejos:
                 decisiones.append({'cue': i, 'viejo': e.get('sfx_nombre') or e.get('sfx'), 't': e.get('t'), 'decision': 'REMOVE',
                                    'por_que': 'un «Hit» genérico en casi cada caption cansa y tapa la voz: este caption va en silencio'})

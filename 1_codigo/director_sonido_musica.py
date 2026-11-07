@@ -100,7 +100,7 @@ def necesidad(paleta=None, narrativa=None, motions=None, duracion=0.0, voz=None)
     if paleta:
         e = float(paleta.get('energia_musica', 0.5))
         s += 0.4 * (e - 0.5)
-        motivos.append(f'energía musical del tema {e:.2f}')
+        motivos.append(f'energía musical del estilo {e:.2f}')
     if motions:
         m = float(motions.get('por_minuto', 0.0))
         if m >= 6:

@@ -15,9 +15,11 @@ mide cada una con su tipografía real (Pillow), las apila centradas en un ancla 
     x, y = centro del elemento (fracción del cuadro; y desde ARRIBA) · size = «Size» del Text+ · zx/zy = zoom de los trazos (anillo, subrayado).
 """
 import json
+import math
 from pathlib import Path
 
 import kinetic_paleta as PAL
+import zona_segura as ZS
 
 K_PX = 640.0                        # px del em por unidad de «Size» de Text+ a 1080 px de ancho (medido contra Resolve)
 TINTA = 0.955                        # lo que se ve de una palabra respecto a su avance tipográfico (Pillow mide el avance)
@@ -119,7 +121,7 @@ def _medir(linea, ancho_tl, alto_tl):
         return linea
     size = size_para_cap(clave, cap_px, ancho_tl)
     w = ancho_px(clave, linea['texto'], size, ancho_tl)
-    maximo = float(linea.get('ancho', AFINADO['ancho_max'])) * ancho_tl
+    maximo = ZS.ancho(float(linea.get('ancho', AFINADO['ancho_max'])), ancho_tl, alto_tl) * ancho_tl      # (v5.76: dentro de la zona segura)
     caja_w = 0.0
     if e['tipo'] == 'cinta':
         alto_k, pad_k = e['caja']
@@ -216,6 +218,7 @@ def apilar(lineas, ancla_y, ancho_tl=1080, alto_tl=1920):
         previo = l
     total = y
     arriba = ancla_y * alto_tl - total / 2.0
+    arriba += ZS.meter_y(arriba / alto_tl, (arriba + total) / alto_tl, ancho_tl, alto_tl) * alto_tl      # (v5.76: la pila, dentro de la zona segura)
     for l in textos:
         centro = arriba + l['_y0'] + l['h'] / 2.0
         l['y'] = round(centro / alto_tl, 4)
@@ -261,7 +264,7 @@ def _trazos(ls, textos, ancho_tl, alto_tl):
             y0 = min(r['y'] * alto_tl - r.get('h_vis', r['h']) / 2.0 for r in refs)
             y1 = max(r['y'] * alto_tl + r.get('h_vis', r['h']) / 2.0 for r in refs)
             px, py = _pads_trazo(l, refs, ancho_tl, alto_tl)
-            ancho = min(x1 - x0 + 2 * px, 0.96 * ancho_tl)
+            ancho = min(x1 - x0 + 2 * px, ZS.ancho(0.96, ancho_tl, alto_tl) * ancho_tl)
             alto = y1 - y0 + 2 * py
             nw, nh = PAL.TRAZO_NOMINAL
             l.update(x=round((x0 + x1) / 2.0 / ancho_tl, 4), y=round((y0 + y1) / 2.0 / alto_tl, 4),
@@ -272,7 +275,7 @@ def _trazos(ls, textos, ancho_tl, alto_tl):
         ref = _refs(l, textos)[-1]
         if e['tipo'] == 'anillo':
             nw, nh = AFINADO['nominal_anillo']
-            ancho = min(ref['w'] * 1.22 + 0.04 * ancho_tl, 0.9 * ancho_tl)             # nunca más ancho que el cuadro
+            ancho = min(ref['w'] * 1.22 + 0.04 * ancho_tl, ZS.ancho(0.9, ancho_tl, alto_tl) * ancho_tl)      # nunca más ancho que el cuadro (ni que la zona segura)
             alto = ref['h'] * 2.0
             l.update(x=ref['x'], y=ref['y'], zx=round(ancho / (nw * ancho_tl), 3), zy=round(alto / (nh * ancho_tl), 3))
         else:
@@ -283,11 +286,66 @@ def _trazos(ls, textos, ancho_tl, alto_tl):
     return ls
 
 
+def _extension(l, ancho_tl, alto_tl):
+    """(x0, y0, x1, y1) en px de lo que dibuja una línea de la pila ya colocada (texto o cinta con su caja; trazo, anillo o subrayado a su zoom)."""
+    e = _espec(l['k'])
+    x, y = float(l.get('x', 0.5)) * ancho_tl, float(l.get('y', 0.5)) * alto_tl
+    if e['tipo'] in ('texto', 'cinta'):
+        w, h = float(l.get('w') or 0.0), float(l.get('h_vis', l.get('h')) or 0.0)
+        giro = abs(math.radians(float(l.get('rot') or 0.0)))
+        if giro:                                                           # (girada, una cinta también se ensancha)
+            w = w * math.cos(giro) + float(l.get('h') or 0.0) * math.sin(giro)
+        w += 2.0 * ZS.AIRE_TINTA * ancho_tl if w > 0 else 0.0           # (el degradado y el contorno de la grande sobresalen de lo medido)
+        if w <= 0 or h <= 0:
+            return None
+        return x - w / 2.0, y - h / 2.0 - 0.15 * h, x + w / 2.0, y + h / 2.0 + 0.30 * h      # (h = mayúsculas: tildes arriba, descendentes abajo)
+    elif e['tipo'] in ('trazo', 'anillo', 'linea'):
+        nw, nh = PAL.TRAZO_NOMINAL if e['tipo'] == 'trazo' else AFINADO['nominal_anillo'] if e['tipo'] == 'anillo' else AFINADO['nominal_linea']
+        w = float(l.get('zx') or 0.0) * nw * ancho_tl + 2.0 * ZS.AIRE_TINTA * ancho_tl          # (+ el grosor del trazo)
+        h = (float(l.get('zy') or 0.0) * nh * ancho_tl if e['tipo'] != 'linea' else AFINADO['grosor_linea'] * ancho_tl) + 2.0 * ZS.AIRE_TINTA * ancho_tl
+    else:
+        return None
+    if w <= 0 or h <= 0:
+        return None
+    return x - w / 2.0, y - h / 2.0, x + w / 2.0, y + h / 2.0
+
+
+def en_zona(ls, caja, ancho_tl=1080, alto_tl=1920):
+    """v5.76 (zona segura): el bloque ENTERO (texto, cintas, anillos y trazos) cabe en la zona que deja libre la interfaz del reel
+    (zona_segura): si no cabe, se achica alrededor de su centro y se corre lo justo. En horizontal no cambia nada. Devuelve (ls, caja)."""
+    if not ZS.vertical(ancho_tl, alto_tl):
+        return ls, caja
+    ext = [x for x in (_extension(l, ancho_tl, alto_tl) for l in ls) if x]
+    if not ext:
+        return ls, caja
+    x0, y0 = min(e[0] for e in ext) / ancho_tl, min(e[1] for e in ext) / alto_tl
+    x1, y1 = max(e[2] for e in ext) / ancho_tl, max(e[3] for e in ext) / alto_tl
+    y0, y1 = min(y0, float(caja[0])), max(y1, float(caja[1]))
+    t = ZS.encaje(x0, y0, x1, y1, ancho_tl, alto_tl)
+    if ZS.sin_cambio(t):
+        return ls, caja
+    s = t[0]
+    for l in ls:
+        if 'x' in l and 'y' in l:
+            x, y = ZS.mover_punto(l['x'], l['y'], t)
+            l['x'], l['y'] = round(x, 4), round(y, 4)
+        for k in ('size', 'w', 'h', 'h_vis', 'cap_px'):
+            if isinstance(l.get(k), (int, float)):
+                l[k] = l[k] * s
+        for k in ('zx', 'zy'):
+            if isinstance(l.get(k), (int, float)):
+                l[k] = round(l[k] * s, 3)
+    a = ZS.mover_punto(0.5, caja[0], t)[1]
+    b = ZS.mover_punto(0.5, caja[1], t)[1]
+    return ls, (round(a, 4), round(b, 4))
+
+
 def construir_cues(bloques, ancho_tl=1080, alto_tl=1920):
     """bloques: [{'t0', 't1', 'ancla', 'lineas': [...]}] -> cues con 'runs' listos para el .json. Una línea: ver el docstring del módulo."""
     cues = []
     for b in bloques:
         ls, caja = apilar(b['lineas'], b.get('ancla', 0.6), ancho_tl, alto_tl)
+        ls, caja = en_zona(ls, caja, ancho_tl, alto_tl)
         runs = []
         for l in ls:
             e = _espec(l['k'])

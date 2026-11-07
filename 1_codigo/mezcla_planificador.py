@@ -9,7 +9,8 @@ Un estilo propio es la LISTA de temas que el usuario tocó, en ese orden. Desde 
     t2 · Tema 2 (pack «Referencia»)   motor «guion»    palabra a palabra, con su rotación de estilos y sus barridos de luz
     t3 · Tema 3 (pack «VIRAL»)        motor «viral»    pila fina + negrita y un efecto (select, shatter, drag) cada dos bloques, en su orden
     t4 · Tema 4 (pack «Tema4»)        motor «guion»    el recuadro limpio; la palabra clave en una de cada tres frases
-    t5 · Tema 5 (pack «Tema5»)        motor «guion»    sus captions Text+ (el color de la frase clave sale del video); sin la «Edición total»
+    t5 · Tema 5 (pack «Tema5»)        motor «viral»    (v5.76) la palabra clave grande y la serif cursiva que la muerde, palabra a palabra
+                                                       (tipo_planificador, clip «v tipo» del pack Tema5); sin la «Edición total»
     t6 · Tema 6 (pack «Tema6»)        motor «guion»    sus captions Text+ (lima o blanco según de qué hable el video); sin la «Edición total»
 
 Los ids de los packs de antes siguen valiendo (catalogo(): 't1:<receta>', 't2:<n>', 't3:pila|shatter|select|drag'): un look FIJO de un tema.
@@ -21,7 +22,8 @@ al siguiente, como si el tema fuera solo (si no, todos los tramos de un tema emp
   · Tema 1: la receta. KP pide recetas.get(i) una vez por bloque: un _Ciclo con un contador compartido.
   · Tema 3: «un efecto cada `cada` bloques» cuenta también los bloques del Tema 3 de los tramos anteriores, y la rotación de efectos sigue donde
     se quedó (_EfectosTema3 los pide bloque a bloque: NO se toca el global VP.ROTACION, así dos hilos pueden planificar a la vez).
-  · Temas 2, 4, 5 y 6: UNA sola llamada a su planificador con las palabras de TODOS sus tramos, cada tramo cerrado con 'fin_frase' (entre dos
+  · Tema 5 (v5.76, «v tipo»): tramo a tramo, cada tramo con sus bloques (tipo_planificador); si un bloque espera, TP.reajustar corrige sus tiempos.
+  · Temas 2, 4 y 6: UNA sola llamada a su planificador con las palabras de TODOS sus tramos, cada tramo cerrado con 'fin_frase' (entre dos
     tramos del mismo tema siempre hay otro tramo, así que nunca se juntan): su rotación de estilos, sus barridos, el ritmo de la palabra clave
     y el color del Tema 6 siguen solos. Los Temas 1 y 3 van tramo a tramo porque lo que deciden (el aro que se dibuja, el efecto que cabe)
     depende de cuándo acaba el bloque, y eso solo se sabe tramo a tramo. Con marcas «Principal» de Creativo, los Temas 2, 4, 5 y 6 también van
@@ -66,12 +68,12 @@ MIN_VIEJO = 0.25                    # (los looks sueltos de los packs de antes s
 # ----------------------------------------------------------------------------------------------------------------------------- los temas enteros (v5.56)
 # NO van en catalogo(): esa la usan la galería vieja y hacer_vistas_mezcla. look_de() mira las dos.
 TEMAS_ENTEROS = (
-    {'id': 't1', 'tema': 1, 'motor': 'kinetic', 'pack': 'Kinetic', 'entero': True, 'nombre': 'Tema 1'},
-    {'id': 't2', 'tema': 2, 'motor': 'guion', 'pack': 'Referencia', 'entero': True, 'nombre': 'Tema 2'},
-    {'id': 't3', 'tema': 3, 'motor': 'viral', 'pack': 'VIRAL', 'entero': True, 'nombre': 'Tema 3'},
-    {'id': 't4', 'tema': 4, 'motor': 'guion', 'pack': 'Tema4', 'entero': True, 'nombre': 'Tema 4'},
-    {'id': 't5', 'tema': 5, 'motor': 'guion', 'pack': 'Tema5', 'entero': True, 'nombre': 'Tema 5'},
-    {'id': 't6', 'tema': 6, 'motor': 'guion', 'pack': 'Tema6', 'entero': True, 'nombre': 'Tema 6'},
+    {'id': 't1', 'tema': 1, 'motor': 'kinetic', 'pack': 'Kinetic', 'entero': True, 'nombre': 'Estilo 1'},
+    {'id': 't2', 'tema': 2, 'motor': 'guion', 'pack': 'Referencia', 'entero': True, 'nombre': 'Estilo 2'},
+    {'id': 't3', 'tema': 3, 'motor': 'viral', 'pack': 'VIRAL', 'entero': True, 'nombre': 'Estilo 3'},
+    {'id': 't4', 'tema': 4, 'motor': 'guion', 'pack': 'Tema4', 'entero': True, 'nombre': 'Estilo 4'},
+    {'id': 't5', 'tema': 5, 'motor': 'viral', 'pack': 'Tema5', 'entero': True, 'nombre': 'Estilo 5'},       # v5.76: «v tipo» (antes «guion»)
+    {'id': 't6', 'tema': 6, 'motor': 'guion', 'pack': 'Tema6', 'entero': True, 'nombre': 'Estilo 6'},
 )
 MAX_TEMAS = len(TEMAS_ENTEROS)       # un estilo lleva de 1 a 6 temas, sin repetir
 PACK_DE_MOTOR = {'kinetic': 'Kinetic', 'viral': 'VIRAL', 'guion': 'Referencia'}          # el pack de los looks sueltos de antes
@@ -130,7 +132,7 @@ PRINCIPALES_CREA = (
     {'id': 'p_t3_resalta', 'tema': 3, 'look': 't3:resalta', 'efecto': 'Resaltado'},   # v5.75: la selección azul del iPhone con su asa
     {'id': 'p_t3_linea', 'tema': 3, 'look': 't3:linea', 'efecto': 'Línea'},            # v5.75: el Tema 3 nuevo (una línea, caja que salta); caja azul
     {'id': 'p_t4', 'tema': 4, 'look': 't4', 'efecto': 'Brillo'},
-    {'id': 'p_t5', 'tema': 5, 'look': 't5', 'efecto': 'Brillo'},
+    {'id': 'p_t5', 'tema': 5, 'look': 't5', 'efecto': 'Tipografía'},                # v5.76: el Tema 5 nuevo (grande + serif que la muerde)
     {'id': 'p_t6', 'tema': 6, 'look': 't6', 'efecto': 'Brillo'},
 )
 
@@ -151,8 +153,8 @@ def nombre_crea(item):
     if not item:
         return ''
     if 'efecto' in item:
-        return tr('Tema {n} · {e}', n=item['tema'], e=tr(item['efecto']))
-    return tr('Tema {n} · {k}', n=item['tema'], k=item['n']) if item.get('n') else tr('Tema {n}', n=item['tema'])
+        return tr('Estilo {n} · {e}', n=item['tema'], e=tr(item['efecto']))
+    return tr('Estilo {n} · {k}', n=item['tema'], k=item['n']) if item.get('n') else tr('Estilo {n}', n=item['tema'])
 
 
 def temas_enteros():
@@ -564,6 +566,9 @@ def _de_una_vez(look, palabras, idioma, ancho_tl, alto_tl, anclas, mains, fin_vi
     m = [x for x in (mains or []) if x is not None and not isinstance(x, bool)] or None
     if look['motor'] == 'kinetic':
         return KP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=anclas['kinetic'], mains=m, fin_video=fin_video, kit=True)['cues']
+    if look['id'] == 't5':
+        import tipo_planificador as TP
+        return TP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, mains=m, fin_video=fin_video)['cues']
     if look['motor'] == 'viral':
         return VP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=anclas['viral'], mains=m, fin_video=fin_video)['cues']
     kw = {'ancla': anclas['guion'], 'mains': m, 'fin_video': fin_video}
@@ -712,6 +717,8 @@ def _etiqueta(motor, c):
     if motor == 'kinetic':
         return str(c.get('plantilla') or '?')
     if motor == 'viral':
+        if any(r.get('k') == 'v tipo' for r in c.get('runs') or []):
+            return 'tipo'
         efectos = [_base_efecto(r.get('k')) for r in c.get('runs') or [] if _base_efecto(r.get('k')) in VP.DURACION]
         return efectos[0] if efectos else 'pila'
     grande = any(r.get('rol') == 'main' for r in c.get('runs') or [])
@@ -754,6 +761,10 @@ def planificar(palabras, looks, idioma='es', ancho_tl=1080, alto_tl=1920, ancla_
             m_sub = _mains_tramo(mains, palabras, t['i0'], t['i1']) or None
             if look.get('entero') and look['motor'] == 'kinetic':
                 cues, _plan = _tema1(sub, idioma, ancho_tl, alto_tl, ancla_kinetic, m_sub, t['fin'], estado['t1'])
+            elif look['id'] == 't5':                      # v5.76: el Tema 5 nuevo, tramo a tramo (sus bloques no dependen de los de antes)
+                import tipo_planificador as TP
+                res_t = TP.planificar(sub, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, mains=m_sub, fin_video=t['fin'])
+                cues, _plan = res_t['cues'], res_t['plan']
             elif look.get('entero'):
                 cues, _plan = _tema3(sub, idioma, ancho_tl, alto_tl, ancla_viral, m_sub, t['fin'], estado)
             elif look['motor'] == 'kinetic':
@@ -792,6 +803,8 @@ def planificar(palabras, looks, idioma='es', ancho_tl=1080, alto_tl=1920, ancla_
     if not (len(elegidos) == 1 and elegidos[0].get('entero')):       # (un solo tema entero: tal cual lo hace el tema)
         salida.sort(key=lambda x: (x[2], float(x[1].get('start', 0) or 0)))     # los bloques de un tramo, siempre antes que los del siguiente
         _sin_pisarse(salida, [por_n[n]['look'] for _m, _c, n in salida])
+        import tipo_planificador as TP
+        TP.reajustar([c for _m, c, _n in salida])      # (un «v tipo» que tuvo que esperar: sus palabras siguen saliendo cuando se dicen)
     salida.sort(key=lambda x: float(x[1].get('start', 0) or 0))
     bloques_de, detalle = {}, {}
     for m, c, n in salida:
@@ -991,7 +1004,7 @@ def crear_estilo(nombre, temas, ajustes=None, carpeta_packs=None, poster=None, b
         raise ValueError(tr('Elige al menos un texto principal.'))
     for i in ids:
         if not es_tema_entero(i) and principal_crea(i) is None:
-            raise ValueError(tr('No conozco el tema «{t}».', t=i))
+            raise ValueError(tr('No conozco el estilo «{t}».', t=i))
     if len(set(ids)) != len(ids):
         raise ValueError(tr('Cada texto principal va una sola vez.'))
     if len(ids) > len(PRINCIPALES_CREA):
@@ -1005,7 +1018,7 @@ def crear_estilo(nombre, temas, ajustes=None, carpeta_packs=None, poster=None, b
     ajustes = normalizar_ajustes(ajustes)
     nombre = _nombre_del_estilo(nombre)
     if _nombre_reservado(nombre):
-        raise ValueError(tr('«{n}» es el nombre de un tema del programa: elige otro.', n=nombre))
+        raise ValueError(tr('«{n}» es el nombre de un estilo del programa: elige otro.', n=nombre))
     base = Path(carpeta_packs) if carpeta_packs else plantillas.carpeta_de_packs()
     carpeta = base / plantillas.nombre_seguro(nombre)          # la misma carpeta que plantillas.buscar_pack(nombre) mira
     if _es_pack_ajeno(carpeta):

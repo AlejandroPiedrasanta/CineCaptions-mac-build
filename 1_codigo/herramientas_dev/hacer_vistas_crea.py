@@ -42,7 +42,7 @@ OW, OH = 384, 216
 QUIETO = 0.9
 # tramo -> (principal, base, fin de la base relativo al tramo)
 CORTES = {0: ('p_t1_circulo', 'b_t1_serif', T_MAIN - 0.05), 1: ('p_t1_subrayado', None, 0), 2: (None, 'b_t1_amano', T_MAIN - 0.05),
-          3: ('p_t2_impacto', 'b_t2', 1.62), 4: ('p_t2_editorial', None, 0), 5: ('p_t2_highlight', None, 0), 6: ('p_t2_fire', None, 0),
+          3: ('p_t2_impacto', None, 0),      # (v5.76: la base del Estilo 2 la dibuja hacer_base_t2.py: el render traía su principal azul y su atenuado) 4: ('p_t2_editorial', None, 0), 5: ('p_t2_highlight', None, 0), 6: ('p_t2_fire', None, 0),
           7: ('p_t2_strike', None, 0), 8: ('p_t2_underline', None, 0), 9: (None, 'b_t3', T_MAIN - 0.05), 10: ('p_t3_select', None, 0),
           11: ('p_t3_shatter', None, 0), 12: ('p_t3_drag', None, 0), 13: ('p_t3_corte', None, 0), 14: ('p_t3_shine', None, 0),
           15: ('p_t3_resalta', None, 0), 16: ('p_t4', 'b_t4', 2.34), 17: ('p_t5', None, 0), 18: ('p_t6', 'b_t6', 2.34)}

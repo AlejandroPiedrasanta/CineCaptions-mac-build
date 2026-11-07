@@ -168,7 +168,7 @@ def _energia(analisis, controles):
     c = (controles or {}).get('musica')
     if c in ENERGIA:
         return ENERGIA[c], f'pediste música «{c}»'
-    return float(((analisis.get('paleta') or {}).get('valores') or {}).get('energia_musica', 0.5)), 'la energía de la paleta del tema'
+    return float(((analisis.get('paleta') or {}).get('valores') or {}).get('energia_musica', 0.5)), 'la energía de la paleta del estilo'
 
 
 def _consulta_musica(analisis, energia):

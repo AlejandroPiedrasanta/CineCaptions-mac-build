@@ -17,12 +17,18 @@ from functools import lru_cache
 from pathlib import Path
 
 import kinetic_planificador as KP
+import zona_segura as ZS
 
 FUENTES = Path(__file__).resolve().parent.parent / '2_recursos' / 'edicion_pro' / 'kit_neon' / 'fuentes'
 ANCHO_UTIL = 900.0                  # px que puede ocupar una línea (el bloque mide 1000 y las letras grandes casi lo llenan)
 TOP = 1150                          # arriba del bloque (kit: 1130–1180)
 SUELO = 1560                        # nada importante por debajo (interfaz de Instagram)
 TECHO = 220
+# v5.76 (zona segura, «APLICA ZONA SEGURA PARA TODOS LOS ESTILOS»): ni a los lados (iconos del reel), ni abajo (descripción), ni arriba (búsqueda)
+ANCHO_UTIL = min(ANCHO_UTIL, ZS.ancho_tinta(1.0) * 1080.0)       # (con lo que sobresale el degradado de la grande)
+ANCHO_STK, ANCHO_ESP = min(760.0, ANCHO_UTIL), min(940.0, ANCHO_UTIL)
+SUELO = min(SUELO, int(ZS.ABAJO * 1920))
+TECHO = max(TECHO, int(round(ZS.ARRIBA * 1920)))
 # v5.44 (el usuario, con la 5.43: «le falta pulir, no es igual que antes… textos que se salen, efecto fantasma, faltan los halftone… no lo
 # arruines»): mientras los Text+ no igualen a los clips, GO pone los clips neón EXACTOS (la vía de antes). True = Text+ editables (v5.43).
 EXTRA_FIN_TEXTO = 0.33      # v5.45: cuánto dura cada clip Text+ tras su bloque (la salida del kit, 0,32 s, va DESPUÉS del bloque)
@@ -144,15 +150,15 @@ def bloque_hook(b, pal, primero=False, ultimo=False):
             bg = BG.get(var, 'rojo')
             heroe = next((x for x in items if x['k'] == 'big'), None)
             px = int((heroe['size'] if heroe else 170) * 0.6)
-            it = {'k': 'stk', 'txt': texto, 't': ts[0], 'bg': bg, 'size': _encaja(texto, 'stk', px, 760), 'rot': GIRO_STK.get(bg, -4), 'mt': -0.18}
+            it = {'k': 'stk', 'txt': texto, 't': ts[0], 'bg': bg, 'size': _encaja(texto, 'stk', px, ANCHO_STK), 'rot': GIRO_STK.get(bg, -4), 'mt': -0.18}
         elif clave.startswith('k script'):
-            it = {'k': 'script', 'txt': texto, 't': ts[0], 'size': _encaja(texto, 'script', 120, 760), 'fill': FILL.get(var, 'acento'), 'rot': -7}
+            it = {'k': 'script', 'txt': texto, 't': ts[0], 'size': _encaja(texto, 'script', 120, ANCHO_STK), 'fill': FILL.get(var, 'acento'), 'rot': -7}
             if items and items[-1]['k'] == 'big':
                 it['mt'] = -0.22                                   # (kit: «CONCIERTOS / en vivo» se monta un poco sobre la grande)
         elif clave.startswith('k serif'):
             it = {'k': 'serif', 'txt': texto, 't': ts if len(ts) > 1 else ts[0], 'size': _encaja(texto, 'serif', 80)}
         else:                                                      # k label / k sup: versalitas espaciadas
-            it = {'k': 'esp', 'txt': texto, 't': ts[0], 'size': _encaja(texto, 'esp', 34, 940, 22)}
+            it = {'k': 'esp', 'txt': texto, 't': ts[0], 'size': _encaja(texto, 'esp', 34, ANCHO_ESP, 22)}
         it['_ts'] = ts
         pos[k] = len(items)
         items.append(it)
@@ -171,7 +177,7 @@ def bloque_hook(b, pal, primero=False, ultimo=False):
         if prev is not None and prev['k'] == it['k'] and it['k'] in ('esp', 'serif'):
             prev['txt'] = f"{prev['txt']} {it['txt']}"
             prev['_ts'] = prev['_ts'] + it['_ts']
-            prev['size'] = _encaja(prev['txt'], prev['k'], 80 if prev['k'] == 'serif' else 34, 940 if prev['k'] == 'esp' else ANCHO_UTIL, 22 if prev['k'] == 'esp' else 40)
+            prev['size'] = _encaja(prev['txt'], prev['k'], 80 if prev['k'] == 'serif' else 34, ANCHO_ESP if prev['k'] == 'esp' else ANCHO_UTIL, 22 if prev['k'] == 'esp' else 40)
         else:
             juntos.append(dict(it))
         nuevo_pos[k_src] = len(juntos) - 1
@@ -212,7 +218,7 @@ def escena_captions(palabras, idioma='es', fin_video=None, mains=None):
                 it0 = a['items'][0]
                 it0['txt'] = '¿' + str(it0['txt']).lstrip()
                 if it0['k'] in ('esp', 'serif') and it0.get('size'):
-                    it0['size'] = min(int(it0['size']), _encaja(it0['txt'], it0['k'], 34 if it0['k'] == 'esp' else 80, 940 if it0['k'] == 'esp' else ANCHO_UTIL,
+                    it0['size'] = min(int(it0['size']), _encaja(it0['txt'], it0['k'], 34 if it0['k'] == 'esp' else 80, ANCHO_ESP if it0['k'] == 'esp' else ANCHO_UTIL,
                                                               22 if it0['k'] == 'esp' else 40))
         if a:
             t0 = round(float(b['t0']), 3)

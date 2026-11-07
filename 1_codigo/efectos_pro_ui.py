@@ -427,7 +427,7 @@ class SeccionEstilo(Tarjeta):
         cuerpo.addWidget(self._lbl_estado)
         self.cartas = {}
         lista = []
-        for ident, nombre, detalle in [('', tr('Automático'), tr('Lo decide el tema y el video, como siempre.'))] + \
+        for ident, nombre, detalle in [('', tr('Automático'), tr('Lo deciden el estilo y el video, como siempre.'))] + \
                                       [(v['id'], tr(v['nombre']), tr(v['detalle'])) for v in seccion['variantes']]:
             mp4, jpg = EST.previa(self.clave, ident)
             c = TarjetaEfecto(ident, nombre, detalle, mp4, jpg)
@@ -721,7 +721,7 @@ class SeccionEstilo(Tarjeta):
         if bool(self._var_on.get()) != on:
             self._var_on.set(on)
         nombre = tr(v['nombre']) if v else tr('Automático')
-        self._lbl_estado.setText(tr('GO usará: ') + nombre + extra_s + ('' if on else tr(' · ahora está apagada (enciéndela aquí o en el menú de Tema)')))
+        self._lbl_estado.setText(tr('GO usará: ') + nombre + extra_s + ('' if on else tr(' · ahora está apagada (enciéndela aquí o en el menú de Estilo)')))
         extra = extra_s
         try:                                             # v5.22: las posiciones marcadas para el video de Inicio
             import posiciones_pro as POS

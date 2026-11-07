@@ -15,6 +15,7 @@ runs que lee place_kinetic_track (CineCaptions.py / .lua; el mismo colocador que
     x, y = centro del elemento (fracción del cuadro; y desde ARRIBA) · size = «Size» del Text+.
 """
 import kinetic_captions as KC
+import zona_segura as ZS
 
 K_PX = 691.0                         # px del em por unidad de «Size» de Text+ a 1080 px de ancho: Inter rinde ~8 % más que el 640 de las fuentes de Kinetic (medido con 'HHHH' a Size 0,2: mayúsculas 102 px)
 INTER_18 = ('Inter 18pt', 'Medium')
@@ -113,17 +114,18 @@ def _medir_linea(items, ancho_tl, alto_tl):
         it['w'] = ancho_px(it['k'], it['texto'], it['size'], ancho_tl)
     gap = AFINADO['espacio'] * min(it['cap_px'] for it in items)
     total = sum(it['w'] for it in items) + gap * (len(items) - 1)
-    maximo = AFINADO['ancho_max'] * ancho_tl
+    maximo = ZS.ancho(AFINADO['ancho_max'], ancho_tl, alto_tl) * ancho_tl      # (v5.76: en vertical, la zona segura)
+    util = ZS.ancho(1 - 2 * MARGEN_CUADRO, ancho_tl, alto_tl) * ancho_tl
     f = 1.0
     if total > maximo:
         f = maximo / total
     sel = next((it for it in items if base_de(it['k']) == 'v select'), None)
     if sel is not None:         # v5.55: la fila del «select» cabe en el cuadro con la caja a los dos lados y el cursor a la derecha (crecen con la letra)
         extra = (2 * CURSOR_SELECT[1] + CURSOR_SELECT[2]) * sel['cap_px']
-        f = min(f, ancho_tl * (1 - 2 * MARGEN_CUADRO) / (total + extra))
+        f = min(f, util / (total + extra))
     lados = sum(2 * LADOS[base_de(it['k'])] * it['cap_px'] for it in items if base_de(it['k']) in LADOS)
     if lados:                   # v5.75: la fila cabe con los trozos del «corte» ya separados o la caja y el asa del «resalta»
-        f = min(f, ancho_tl * (1 - 2 * MARGEN_CUADRO) / (total + lados))
+        f = min(f, util / (total + lados))
     if f < 1.0:
         for it in items:
             it['size'] *= f
@@ -134,21 +136,22 @@ def _medir_linea(items, ancho_tl, alto_tl):
     return gap, total
 
 
-def _inicio_x(items, gap, total, ancho_tl):
+def _inicio_x(items, gap, total, ancho_tl, alto_tl=None):
     """Dónde empieza (px) la fila: centrada; v5.55: si lleva un «select» cuyo cursor se saldría por la derecha, corrida a la izquierda lo justo."""
     x0 = 0.5 * ancho_tl - total / 2.0
     x = x0
     for it in items:
         if base_de(it['k']) == 'v select':
             derecha = x + it['w'] + (CURSOR_SELECT[1] + CURSOR_SELECT[2]) * it['cap_px']
-            return x0 - max(0.0, derecha - ancho_tl * (1 - MARGEN_CUADRO))
+            borde = ZS.limites_x(ancho_tl, alto_tl if alto_tl else ancho_tl, (MARGEN_CUADRO, 1 - MARGEN_CUADRO))[1]     # (v5.76: los iconos del reel)
+            return x0 - max(0.0, derecha - ancho_tl * borde)
         x += it['w'] + gap
     return x0
 
 
-def _cursor(items, gap, total, ancho_tl):
+def _cursor(items, gap, total, ancho_tl, alto_tl=None):
     """(dónde empieza en x el cursor del «select» de la fila, la mayúscula del «select») en px, o None si la fila no lleva «select»."""
-    x = _inicio_x(items, gap, total, ancho_tl)
+    x = _inicio_x(items, gap, total, ancho_tl, alto_tl)
     for it in items:
         if base_de(it['k']) == 'v select':
             return x + it['w'] + CURSOR_SELECT[1] * it['cap_px'], it['cap_px']
@@ -178,18 +181,18 @@ def apilar(lineas, ancla_y, ancho_tl=1080, alto_tl=1920):
         y += cap
         previo = cap
         abajo_previo = abajo_l
-        cursor_previo = _cursor(items, gap, total, ancho_tl)
+        cursor_previo = _cursor(items, gap, total, ancho_tl, alto_tl)
     alto_total = y
     arriba = ancla_y * alto_tl - alto_total / 2.0
     if lineas:                  # v5.55: contando lo que sobresale arriba de la primera línea y abajo de la última (con el cursor), la pila no se sale del cuadro
         sobra_arriba = max((SOBRESALE.get(base_de(it['k']), (0, 0))[0] * it['cap_px'] for it in lineas[0]), default=0.0)
         sobra_abajo = abajo_previo + (CURSOR_SELECT[0] * cursor_previo[1] if cursor_previo else 0.0)
-        margen = MARGEN_CUADRO * alto_tl
-        arriba -= max(0.0, arriba + alto_total + sobra_abajo - (alto_tl - margen))
-        arriba += max(0.0, margen - (arriba - sobra_arriba))
+        lo, hi = ZS.limites_y(ancho_tl, alto_tl, (MARGEN_CUADRO, 1 - MARGEN_CUADRO))      # (v5.76: en vertical, la zona segura del reel)
+        arriba -= max(0.0, arriba + alto_total + sobra_abajo - hi * alto_tl)
+        arriba += max(0.0, lo * alto_tl - (arriba - sobra_arriba))
     for items, (gap, total, cap), top in zip(lineas, medidas, tops):
         base = arriba + top + cap                       # la línea de base de la fila
-        x = _inicio_x(items, gap, total, ancho_tl)
+        x = _inicio_x(items, gap, total, ancho_tl, alto_tl)
         for it in items:
             (par, _e) = _par(it['k'])
             centro_y = base - it['cap_px'] / 2.0 + DY_EM[par[0]] * it['cap_px'] / CAP[par[0]]

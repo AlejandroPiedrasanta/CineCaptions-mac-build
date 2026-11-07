@@ -148,7 +148,7 @@ SECCIONES = [
          _v('rojo', 'Rojo', 'Rojo y coral, con fuerza.', None, tema='rojo', a=('#FF3344', '#FF8A5C')),
          _v('oro', 'Oro', 'Dorado cálido.', None, tema='oro', a=('#E9B949', '#FFE7A3')),
          _v('editorial', 'Editorial', 'Papel claro y tinta, de revista.', None, tema='editorial'),
-         _v('neoncc', 'Magenta y lima', 'El neón del Tema 1: magenta y lima.', None, tema='neoncc'),
+         _v('neoncc', 'Magenta y lima', 'El neón del Estilo 1: magenta y lima.', None, tema='neoncc'),
          _v('cristal', 'Cristal', 'Piezas de cristal translúcido.', 'indigo', tema='neon',
             prefiere=('cristal', 'cajas', 'flotante', 'limpio', 'arco', 'fila', 'ola')),
          _v('linea', 'Línea fina', 'Diseños de línea, ligeros.', 'noche', tema='neon',

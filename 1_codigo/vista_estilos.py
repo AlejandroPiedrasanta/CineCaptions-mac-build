@@ -189,7 +189,7 @@ def cue_de_muestra(n):
     pack = TEMAS[int(n)]
     est = VT.estilo_de_pack(pack, 'v')
     if est is None:
-        raise ValueError(f'Tema {n}: sin estilo de dibujo')
+        raise ValueError(f'Estilo {n}: sin estilo de dibujo')
     pal = palabras_de_muestra(n)
     ip = PRINCIPAL
     fin = pal[-1]['end'] + 0.6
@@ -207,7 +207,7 @@ def cue_de_muestra(n):
         import kinetic_planificador as kp
         cues = kp.planificar(pal, idioma='es', ancla='bajo', mains=[ip], recetas={0: RECETA_T1}, fin_video=fin)['cues']
     if not cues:
-        raise ValueError(f'Tema {n}: el planificador no dio bloques')
+        raise ValueError(f'Estilo {n}: el planificador no dio bloques')
     k = VT.cue_de_palabra(cues, pal[ip]['word'], pal[ip]['start'] + 0.05)
     cue = dict(cues[k if k is not None else -1])
     for c in (cue,):                       # SIN emojis, nunca
@@ -265,7 +265,7 @@ def _dibujar(n, ajustes, ancho, alto):
     capas, t = _capas(est, cue, ajustes, s0)
     hecho = _recorte(capas, t, bg)
     if hecho is None:
-        raise ValueError(f'Tema {n}: el bloque no tiene tinta')
+        raise ValueError(f'Estilo {n}: el bloque no tiene tinta')
     arr, (ix0, iy0, ix1, iy1) = hecho
     f0 = min(libre_w / (ix1 - ix0), libre_h / (iy1 - iy0))
     s = max(0.2, min(3.0, s0 * f0 * SUPER))                       # 2) dibujar a ~2× el tamaño final (si la medida no vale ya)
@@ -273,7 +273,7 @@ def _dibujar(n, ajustes, ancho, alto):
         capas, t = _capas(est, cue, ajustes, s)
         hecho = _recorte(capas, t, bg) if capas else None
         if hecho is None:
-            raise ValueError(f'Tema {n}: el bloque no tiene tinta')
+            raise ValueError(f'Estilo {n}: el bloque no tiene tinta')
         arr, (ix0, iy0, ix1, iy1) = hecho
     im = Image.fromarray(arr, 'RGB')
     f = min(libre_w / (ix1 - ix0), libre_h / (iy1 - iy0))           # la TINTA encaja en la fila; el brillo que sobra se sale por los bordes
@@ -290,7 +290,7 @@ def imagen(n, ajustes=None, ancho=480, alto=120, cache=True):
     """La imagen RGB ancho×alto del Tema n (1…6) con esos ajustes; de la caché si ya se hizo. Lanza si el tema no se puede dibujar."""
     n, ancho, alto = int(n), max(16, int(ancho)), max(16, int(alto))
     if n not in TEMAS:
-        raise ValueError(f'Tema {n}: no existe')
+        raise ValueError(f'Estilo {n}: no existe')
     ruta = carpeta_cache() / f't{n}_{clave(n, ajustes, ancho, alto)}.png'
     if cache:
         im = _leer_cache(ruta, ancho, alto)
@@ -316,6 +316,6 @@ def imagenes(ajustes=None, ancho=480, alto=120, cache=True, errores=None):
             fuera[n] = imagen(n, ajustes, ancho, alto, cache=cache)
         except Exception as e:
             if isinstance(errores, list):
-                errores.append(f'Tema {n}: {e}')
+                errores.append(f'Estilo {n}: {e}')
             fuera[n] = Image.new('RGB', (max(16, int(ancho)), max(16, int(alto))), bg)
     return fuera

@@ -709,7 +709,7 @@ class CarruselPacks(QWidget):
         p.setFont(ui.fuente(min(12 * esc, tam * 0.78)))
         p.drawText(QRectF(rect.left() + 22, c.y() + 48 * esc, rect.width() - 44, 70 * esc),
                    int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop) | int(Qt.TextFlag.TextWordWrap),
-                   tr('Mezcla los temas con tu letra y tus colores'))
+                   tr('Mezcla los estilos con tu letra y tus colores'))
 
     def _chispa(self):
         """La chispa de la carta «Crea tu estilo», rasterizada una vez (64 px × dpr; se pinta escalada con la carta)."""

@@ -20,6 +20,7 @@ tipografía de verdad (Pillow). Salen los mismos datos que lee place_guion (un c
 """
 import guion_captions as GC
 import guion_planificador as GP
+import zona_segura as ZS
 
 PACK = 'Tema4'
 FUENTE = ('Inter 24pt', 'Bold')
@@ -435,8 +436,9 @@ def _disponer_skill(ps, D):
     def ancho_linea(idx, s):
         return sum(anchos[i] * rel[i] * s + (HUECO_SKILL * rel[i] * s if n else 0.0) for n, i in enumerate(idx))
     mayor = max(ancho_linea(idx, S) for idx, _c in lineas)
-    if mayor > MAX_ANCHO_SKILL * ANCHO:
-        S *= MAX_ANCHO_SKILL * ANCHO / mayor
+    tope = ZS.ancho(MAX_ANCHO_SKILL) * ANCHO                     # v5.76: nunca más ancha que la zona segura (los iconos del reel)
+    if mayor > tope:
+        S *= tope / mayor
     altos = [max(rel[i] for i in idx) * S * D['alto_serif'] if es_clave else S * D['alto_sans'] for idx, es_clave in lineas]
     sal = [None] * len(ps)
     top, tinta_prev = 0.0, None
@@ -459,6 +461,7 @@ def _disponer_skill(ps, D):
         tinta_prev = base + max(t[1] * rel[i] * S for t, i in zip(tintas, idx))
         top += h
     arriba = D['y'] * ALTO - top / 2.0                            # el bloque, centrado en `y`
+    arriba += ZS.meter_y(arriba / ALTO, (arriba + top) / ALTO) * ALTO      # (v5.76: y dentro de la zona segura)
     for s in sal:
         s['y'] += arriba
     return sal, (arriba, arriba + top)

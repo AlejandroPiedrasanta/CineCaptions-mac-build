@@ -73,7 +73,7 @@ def nombre_base(base):
     for nombre in BASES.values():
         if b.lower() == nombre.lower():
             return nombre
-    m = re.fullmatch(r'tema\s*([1-6])', b, re.I)
+    m = re.fullmatch(r'(?:tema|estilo)\s*([1-6])', b, re.I)          # (v5.76: en la interfaz los temas se llaman «Estilo N»)
     if m:
         return BASES['t' + m.group(1)]
     return _base_de_look(b) if ':' in b else None
@@ -903,7 +903,7 @@ def origen(nombre):
                     drbs[formato] = ruta
         if drbs:
             return carpeta, datos, drbs
-    raise ErrorPersonalizado(f'no encuentro el .drb del tema «{nombre}»')
+    raise ErrorPersonalizado(f'no encuentro el .drb del estilo «{nombre}»')
 
 
 def _sha1(ruta):
@@ -1044,7 +1044,7 @@ def _armar(tmp, nombre, h, norm, datos_origen, drbs):
         # tendrían rol. Saldría un «derivado» igual al de origen, sin avisar: mejor un error claro, y GO sigue con el pack de siempre)
         que = 'principal' if pedidos == {'main'} else 'secundario' if pedidos == {'extra'} else ''
         raise ErrorPersonalizado(f'el pack «{nombre}» de {next(iter(drbs.values())).parent} no tiene ningún texto {que + " " if que else ""}que se pueda '
-                                 f'personalizar (guion={datos_origen.get("guion")!r}: ¿un pack viejo o importado con el nombre del tema?)')
+                                 f'personalizar (guion={datos_origen.get("guion")!r}: ¿un pack viejo o importado con el nombre del estilo?)')
     datos = {'version': datos_origen.get('version', 2), 'nombre': nombre_pack(nombre, h), 'formatos': {}}
     for formato, ruta in drbs.items():
         bloque = dict((datos_origen.get('formatos') or {}).get(formato) or {})
@@ -1071,7 +1071,7 @@ def preparar(base, ajustes, cache=None, forzar=False):
         return None
     nombre = nombre_base(base)
     if nombre is None:
-        raise ValueError(f'tema desconocido: {base!r}')
+        raise ValueError(f'estilo desconocido: {base!r}')
     _, datos_origen, drbs = origen(nombre)
     try:
         h = huella(nombre, norm, drbs, datos_origen)

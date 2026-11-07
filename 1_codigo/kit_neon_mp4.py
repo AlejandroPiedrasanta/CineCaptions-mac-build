@@ -114,7 +114,7 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
 
     vw, vh, dur, fps_f = EP.medir(str(video))
     if vw and vh and vw > vh:
-        raise NoVertical('el Tema 1 neón es vertical')
+        raise NoVertical('el Estilo 1 neón es vertical')
     dur = float(dur or 0.0)
     if not dur:                                          # v5.70: un audio suelto (medir no ve imagen): su duración, para no cortar la voz
         try:
@@ -180,7 +180,7 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
     if hilo_placa is not None:
         while hilo_placa.is_alive():
             mirar_cancelar()
-            avisar(0.55 + 0.1 * placa['f'], 'Preparando la cámara del Tema 1…')
+            avisar(0.55 + 0.1 * placa['f'], 'Preparando la cámara del Estilo 1…')
             hilo_placa.join(0.5)
     base_ruta = placa['ruta'] or video
 
@@ -336,7 +336,7 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
                                 out.mux(pk)
                             pos_audio += bloque
                     if n % 15 == 0:
-                        avisar(0.68 + 0.31 * n / max(1, n_total), f'Grabando el Tema 1 en el video… {int(100 * n / max(1, n_total))} %')
+                        avisar(0.68 + 0.31 * n / max(1, n_total), f'Grabando el Estilo 1 en el video… {int(100 * n / max(1, n_total))} %')
         finally:
             parar.set()
             try:

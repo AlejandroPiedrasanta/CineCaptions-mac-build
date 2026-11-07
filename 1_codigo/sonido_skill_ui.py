@@ -31,7 +31,7 @@ from i18n import tr
 from qt_kit import Boton, Etiqueta, Interruptor, QColor, Tarjeta, caja_h  # (v5.63: el QColor del tema: los azules siguen a Negro profundo)
 
 MUT = ui.TEXT_MUTED
-ESTILOS = (('auto', 'Automático', 'según el tema'), ('elegante', 'Elegante', 'pocos y suaves'), ('dinamico', 'Dinámico', 'pop en cada clave'),
+ESTILOS = (('auto', 'Automático', 'según el estilo'), ('elegante', 'Elegante', 'pocos y suaves'), ('dinamico', 'Dinámico', 'pop en cada clave'),
            ('lista', 'Lista', 'mismo sonido por ítem'), ('cinetica', 'Cinética', 'palabra por palabra'))
 NOMBRE_TIPO = {'gancho': 'Gancho', 'acento': 'Acento', 'texto_grande': 'Palabra clave', 'texto_chico': 'Subtítulo', 'aro': 'Aro',
                'corte': 'Corte', 'corte_fuerte': 'Cambio de escena', 'transicion': 'Transición', 'flash': 'Flash', 'logo': 'Logo',

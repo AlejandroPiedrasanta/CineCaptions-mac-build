@@ -227,7 +227,7 @@ def crear(palabras, dur, W, H, fps, carpeta, idioma='es', video='', decir=None):
     if not RM.disponible():
         decir('Motions completo: falta el motor de animaciones (Remotion)')
         return None
-    decir('Motions completo (Tema 1): eligiendo una pieza del kit para cada idea…')
+    decir('Motions completo (Estilo 1): eligiendo una pieza del kit para cada idea…')
     plan = planificar(palabras, dur, idioma, video)
     if not plan or not plan['escena']:
         return None
@@ -244,14 +244,14 @@ def crear(palabras, dur, W, H, fps, carpeta, idioma='es', video='', decir=None):
     if salida.exists() and salida.stat().st_size > 50_000:
         return salida
     resumen = ', '.join(f'{n} {f}' for f, n in sorted(plan['resumen'].items(), key=lambda x: -x[1])) or 'solo captions'
-    decir(f"Motions completo (Tema 1): {len(plan['tramos'])} ideas ({resumen}); animando…")
+    decir(f"Motions completo (Estilo 1): {len(plan['tramos'])} ideas ({resumen}); animando…")
     ok = MCO._renderizar(RM, props, salida, plan['duracion'], decir, comp='KitNeon')
     try:
         import registro
         if ok:
-            registro.info(f"Motions completo (Tema 1): {len(plan['tramos'])} ideas en {salida.name}: {resumen}.", 'motions')
+            registro.info(f"Motions completo (Estilo 1): {len(plan['tramos'])} ideas en {salida.name}: {resumen}.", 'motions')
         else:
-            registro.aviso('Motions completo (Tema 1): Remotion no pudo hacer el video; el resto de la edición queda igual.', 'motions')
+            registro.aviso('Motions completo (Estilo 1): Remotion no pudo hacer el video; el resto de la edición queda igual.', 'motions')
     except Exception:
         pass
     return salida if ok else None

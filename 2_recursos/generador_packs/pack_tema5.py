@@ -15,6 +15,8 @@ base de cada rol es el de su letra a zoom ≈ 1; el planificador pone el zoom de
 Uso:  python pack_tema5.py [Tema5|Tema6] [<carpeta de salida>] [--retocar <.drb ya armado>]     (sin carpeta: 2_recursos/plantillas_incluidas/<pack>)
       --retocar (v5.54): solo el acabado sobre ese .drb, sin generar los macros otra vez (los de fábrica son los Luxe de antes de la v1.09)
       Al cambiar un pack, subir plantillas.REVISION_BIN['<pack>'].
+v5.76: el pack «Tema5» de fábrica ya NO sale de aquí (su estilo nuevo es el clip «v tipo»: pack_viral.py --tema5); este generador solo arma el
+Tema 6 en la carpeta de fábrica (el Tema5 de antes, solo en otra carpeta: para comparar).
 """
 import os
 import sys
@@ -62,6 +64,8 @@ def combinaciones(pack):
 def construir(pack, carpeta_salida=None, retocar=None):
     """retocar: ver pack_tema4.construir (v5.54: el acabado «B · Premium» sobre el .drb de fábrica)."""
     import plantillas
+    if pack == 'Tema5' and not carpeta_salida:
+        raise SystemExit('v5.76: el Tema5 de fábrica es ahora «v tipo» (python pack_viral.py --tema5); el de antes, solo en otra carpeta')
     carpeta_salida = carpeta_salida or str(plantillas.carpeta_incluida() / pack)
     return pack_tema4.construir(carpeta_salida, nombre=pack, combos=combinaciones(pack), guion=pack.lower(), retocar=retocar)
 
@@ -70,4 +74,4 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     retocar = args.pop(args.index('--retocar') + 1) if '--retocar' in args else None
     args = [a for a in args if a != '--retocar']
-    print(construir(args[0] if args else 'Tema5', args[1] if len(args) > 1 else None, retocar=retocar))
+    print(construir(args[0] if args else 'Tema6', args[1] if len(args) > 1 else None, retocar=retocar))

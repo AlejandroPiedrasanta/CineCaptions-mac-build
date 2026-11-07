@@ -219,7 +219,7 @@ def disenar(analisis, ctx, fps=30.0, controles=None, ajustes=None, ronda=0):
         if s < umbral:
             info['decision'] = 'LEAVE_SILENT'
             info['por_que'] = (f'score {s:.2f} < {umbral:.2f}' + (f' (otro acento hace {hueco:.1f} s)' if hueco < 5 else '') +
-                               (' (suena la intro)' if t < fin_intro else '') + f': {rol.lower()}, lo dice la voz y el tema ya lo anima')
+                               (' (suena la intro)' if t < fin_intro else '') + f': {rol.lower()}, lo dice la voz y el estilo ya lo anima')
             for e in viejos_c:
                 viejos.append({'cue': i, 'viejo': e.get('sfx_nombre') or e.get('sfx'), 't': e.get('t'), 'decision': 'REMOVE',
                                'por_que': 'un sonido en casi cada caption cansa y tapa la voz: este caption va en silencio'})
@@ -291,7 +291,7 @@ def disenar(analisis, ctx, fps=30.0, controles=None, ajustes=None, ronda=0):
                 motions.append({'t': round(float(t), 3), 'que': que, 'decision': 'LEAVE_SILENT', 'por_que': 'se ve solo; un sonido aquí sobra'})
                 continue
             if car['sobrio'] and tipo == 'whoosh' and str(que).startswith('sale'):
-                motions.append({'t': round(float(t), 3), 'que': que, 'decision': 'LEAVE_SILENT', 'por_que': 'tema sobrio: solo suena lo que entra'})
+                motions.append({'t': round(float(t), 3), 'que': que, 'decision': 'LEAVE_SILENT', 'por_que': 'estilo sobrio: solo suena lo que entra'})
                 continue
             grande = k_pro == 'whoosh' and nivel >= -10.5
             imp = IMPORTANCIA_MOTION['whoosh_grande' if grande else tipo]

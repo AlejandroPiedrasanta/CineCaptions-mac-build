@@ -304,7 +304,7 @@ class SeccionMotions(Tarjeta):
         c.addWidget(self._b_todos)
         c.addWidget(self._b_ninguno)
         self.capa.addWidget(fila)
-        cortos = {'plantilla': tr('Por frase'), 'kit': tr('Kit'), 'escena': tr('Escenas'), 'grafico': tr('Gráficos'), 't5': tr('Temas 5 y 6')}
+        cortos = {'plantilla': tr('Por frase'), 'kit': tr('Kit'), 'escena': tr('Escenas'), 'grafico': tr('Gráficos'), 't5': tr('Estilos 5 y 6')}
         self._grupos = [('', tr('Todos') + f' {len(self._todos)}')] + [
             (g, cortos.get(g, g) + f' {sum(1 for m in self._todos if m["grupo"] == g)}') for g in sorted(dict(MC.GRUPOS), key=lambda g: orden.get(g, 9)) if any(m['grupo'] == g for m in self._todos)]
         self._v_grupo = StringVar(self._grupos[0][1])

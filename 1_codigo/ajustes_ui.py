@@ -495,6 +495,14 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.76', [
+        'Guía con videos: después de cada actualización, cada página te enseña una vez cómo se usa. En Ajustes › Tutoriales están todos los videos y puedes apagar la guía.',
+        'Zona segura en todos los estilos, también en los que creas: los subtítulos ya no quedan debajo de los botones y textos de TikTok, Reels y Shorts.',
+        'Estilo 5 nuevo: una palabra grande que muerde otra en cursiva, palabra a palabra. También está en «Crea tu estilo» como texto principal «Tipografía».',
+        '«Crea tu estilo» renovada: la vista vertical a la derecha y, debajo, «Letra» y «Color» para verlos al momento.',
+        'Estilo 2: los subtítulos siempre van al centro y solo los textos principales llevan color.',
+        'Ahora todo se llama «Estilo»: la página Estilo y del Estilo 1 al Estilo 6.',
+    ]),
     ('5.75', [
         '«Crea tu estilo» nueva: eliges un texto base y los textos principales que quieras viéndolos animados, y la letra entre todas las de tu computadora.',
         'El Tema 3 ahora es una sola línea con una caja que resalta cada palabra mientras se dice.',
@@ -2376,7 +2384,7 @@ class _MuestrasAcento(QWidget):
 
 
 class VentanaAjustes(_Panel):
-    PESTANAS = ('general', 'interfaz', 'atajos', 'acerca', 'ayuda')
+    PESTANAS = ('general', 'interfaz', 'atajos', 'acerca', 'tutoriales', 'ayuda')     # v5.76: «Tutoriales» (los videos de cada página y la guía)
 
     def __init__(self, app, pestana='general'):
         super().__init__(radio=22)
@@ -2406,11 +2414,11 @@ class VentanaAjustes(_Panel):
         cc.addWidget(_cabecera(tr('Ajustes de la aplicación'), tr('Ajustes de CineCaptions'), self.cerrar, tam=32))   # (v5.70: más baja)
         c.addWidget(cab)
         nombres = [(tr('General'), 'gear-six'), (tr('Interfaz'), 'paint-brush'), (tr('Atajos'), 'keyboard'),
-                   (tr('Acerca de CineCaptions'), 'info'), (tr('Ayuda'), 'lifebuoy')]          # v5.70: con su ícono
+                   (tr('Acerca de CineCaptions'), 'info'), (tr('Tutoriales'), 'play-circle'), (tr('Ayuda'), 'lifebuoy')]          # v5.70: con su ícono
         self.pila = QStackedWidget()
         self.pestanas = _Pestanas(nombres, self.pila.setCurrentIndex)
         c.addWidget(self.pestanas)
-        for armar in (self._pag_general, self._pag_interfaz, self._pag_atajos, self._pag_acerca, self._pag_ayuda):
+        for armar in (self._pag_general, self._pag_interfaz, self._pag_atajos, self._pag_acerca, self._pag_tutoriales, self._pag_ayuda):
             d = Desplazable(espacio=22, margenes=(60, 30, 56, 34), estirar_final=False)
             armar(d.capa)
             d.capa.addStretch(1)               # v5.70: el sobrante va ABAJO (con estirar_final las páginas cortas quedaban empujadas hacia abajo)
@@ -2516,7 +2524,7 @@ class VentanaAjustes(_Panel):
         # v5.4.48: GO sin Resolve también a petición (render_sin_resolve.py): sin Resolve instalado ya lo hace solo
         mp4_var = BooleanVar(bool(leer_prefs().get('go_salida_mp4', False)))
         f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
-                      tr('GO graba los subtítulos del tema elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
+                      tr('GO graba los subtítulos del estilo elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
                          'Si Resolve no está instalado lo hace siempre.'),
                       Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})), ultima=True,
                       icono='film-strip')
@@ -2864,6 +2872,33 @@ class VentanaAjustes(_Panel):
             self.app._abrir_licencia()
         except Exception:
             pass
+
+    # -- Tutoriales (v5.76) ---------------------------------------------------
+    def _pag_tutoriales(self, capa):
+        """v5.76 (el usuario: «en la página de Ajustes crea la sección Tutoriales y ahí subes los videos de cómo funciona cada sección»;
+        eligió la propuesta B2): el video de la página elegida en grande con la lista de todas a la derecha (tutoriales_ui.PanelTutoriales)
+        y debajo la guía: el interruptor «Guía en cada versión nueva» (se guarda al tocarlo) y «Empezar la guía»."""
+        import tutoriales
+        import tutoriales_ui
+        self._tut_panel = tutoriales_ui.PanelTutoriales()
+        self._tut_filas = self._tut_panel.filas
+        capa.addWidget(self._tut_panel)
+        guia_var = BooleanVar(tutoriales.guia_activa())
+        self._tut_interruptor = Interruptor('', var=guia_var, comando=lambda: tutoriales.poner_guia_activa(bool(guia_var.get())))
+        f_guia = _Fila(tr('Guía en cada versión nueva'),
+                       tr('Sale sola una vez, la primera vez que abres una versión nueva de CineCaptions. Apágala si ya conoces el '
+                          'programa: los videos siguen aquí.'),
+                       self._tut_interruptor, icono='map-trifold')
+        app = self.app
+
+        def empezar():
+            self.cerrar()
+            fn = getattr(app, 'iniciar_recorrido', None)
+            if callable(fn):
+                ui.despues(350, lambda: fn(manual=True), app)
+        f_ver = _Fila(tr('Ver la guía ahora'), tr('Recorre todas las páginas paso a paso, cada una con su video.'),
+                      Boton(tr('Empezar la guía'), empezar, tipo='neutro', alto=46, tam=15), 300, ultima=True, icono='compass')
+        capa.addWidget(_grupo(f_guia, f_ver))
 
     # -- Ayuda ----------------------------------------------------------------
     def _pag_ayuda(self, capa):

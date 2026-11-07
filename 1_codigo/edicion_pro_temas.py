@@ -4,7 +4,8 @@
 #   * legibilidad: en un video claro, un velo oscuro suave detrás de cada pila de captions (Remotion «VeloCaptionT», pista PRO-VELO);
 #   * acompañantes: la animación pequeña bajo el caption del Tema 5 (país, saludo, redes, cifra, emoji 3D del concepto); v5.55: las que enseñan
 #     un emoji (saludo, fecha / hora / sitio, concepto) solo con la Edición PRO y «Emojis animados»: este pase, que va SIN la PRO, nunca las pone;
-#   * color según el video: la palabra DESTACADA (rol principal) toma el acento que va con el video (estilo «guion»: Temas 2 y 4);
+#   * color según el video: la palabra DESTACADA (rol principal) toma el acento que va con el video (estilo «guion»: Temas 2 y 4); v5.76: SOLO
+#     la principal, el texto base o simple (arriba / abajo) no se colorea;
 #   * nunca tapar la cara: la regla de la cara de la PRO (edicion_pro._captions_sin_cara) también sin la PRO.
 """
     piezas(info, video, idioma, W, H, fps, mover, plan) -> piezas para el plan (velos + acompañantes)
@@ -133,7 +134,9 @@ def color_claves(info, video, fps):
         momentos = []
         for t in pistas[:1]:
             pack = str(((t.get('plantilla') or {}).get('pack')) or '')
-            roles = {'main', 'complement'} if pack == 'Referencia' else {'main'}      # Tema 2: la negrita es lo destacado; Tema 4: solo la grande
+            # v5.76 (el usuario: «que no tenga color el texto base o simple, solo los principales»): solo la grande; antes en el Estilo 2
+            # también la negrita pequeña («abajo») tomaba el acento del video (salía naranja/amarilla junto a la principal)
+            roles = {'main'}
             for c in json.loads(Path(t['data_path']).read_text(encoding='utf-8')).get('cues') or []:
                 for r in c.get('runs') or []:
                     if isinstance(r, dict) and r.get('rol') in roles and isinstance(r.get('t'), (int, float)):

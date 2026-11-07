@@ -884,6 +884,89 @@ def comp_linea(activa=False, color_caja=None):
     return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - linea' + (' activa' if activa else '') + (' azul' if color_caja else ''))
 
 
+# «Tipo» (v5.76, el Tema 5 nuevo: referencia del usuario «cómo hacer ESTA TIPOGRAFÍA en capcut», propuesta B con bisel): un bloque de hasta 3 líneas,
+# la palabra clave GRANDE (Montserrat Black, mayúsculas) y lo demás en serif cursiva (DM Serif Text Italic) encima y debajo, que se va escribiendo
+# palabra a palabra con la voz; la serif «muerde» la grande (un hueco con su contorno) y todo lleva un bisel de luz y una sombra suave.
+# UN clip por bloque: el texto del Template (invisible) trae el bloque entero codificado (tipo_planificador.codificar):
+#     «arriba|GRANDE|abajo|size;cx;cy|size;cx;cy|size;cx;cy|t:f,t:f|t:f|t:f,t:f»
+# los 3 textos, el Size y el centro de cada línea (fracciones del cuadro, y desde abajo) y cuándo se escribe cada palabra (segundos desde el inicio del
+# clip : fracción de letras del Write On). Cada pieza saca lo suyo con una función de Lua en su expresión (laboratorio, Resolve 21.2: rondas 8 y 9).
+TIPO_GRANDE = ('Montserrat', 'Black')
+TIPO_SERIF = ('DM Serif Text', 'Italic')
+TIPO_HUECO = 0.08                               # Thickness del contorno de la copia de la serif que hace el hueco en la grande
+TIPO_VOLUMEN = (0.012, 1.0, 0.45, 0.30)         # bisel: difuminado (em de la grande), fuerza, cuánto aclara la luz, cuánto oscurece la sombra
+TIPO_TONO_SOMBRA = (0.10, 0.13, 0.22)           # hacia dónde va la cara en la sombra del bisel (azul noche: blanco → #B5B8C2 como la propuesta)
+TIPO_SOMBRA = (0.40, -0.003, 14)                # sombra suave debajo: opacidad, bajada (fracción del alto), difuminado
+
+
+def _campo_tipo(k):
+    """Expresión de Lua: el campo k (1…9) del texto del Template, partido por «|»."""
+    return ('(function() local s = Template.StyledText.Value .. "|"; local i = 0; for c in s:gmatch("([^|]*)|") do i = i + 1; '
+            f'if i == {k} then return c end end; return "" end)()')
+
+
+def _num_tipo(k, j, defecto):
+    """Expresión: el número j del campo k («size;cx;cy»)."""
+    return ('(function() local s = Template.StyledText.Value .. "|"; local i = 0; for c in s:gmatch("([^|]*)|") do i = i + 1; '
+            f'if i == {k} then local j = 0; for v in c:gmatch("([^;]+)") do j = j + 1; if j == {j} then return tonumber(v) or {defecto} end end end end; '
+            f'return {defecto} end)()')
+
+
+def _escrito_tipo(k):
+    """Expresión: la fracción de letras escritas (Write On «End») de la tabla «t:f,t:f» del campo k en el segundo actual del clip."""
+    return ('(function() local s = Template.StyledText.Value .. "|"; local i = 0; local tab = ""; for c in s:gmatch("([^|]*)|") do i = i + 1; '
+            f'if i == {k} then tab = c end end; local t = time / {E.FPS}; local e = 0; '
+            'for tt, ff in tab:gmatch("([%d%.]+):([%d%.]+)") do if t >= tonumber(tt) then e = tonumber(ff) end end; return e end)()')
+
+
+def _pieza_tipo(nombre, x, y, k, fuente, hueco=False):
+    """La línea k (1 arriba, 2 la grande, 3 abajo) con sus expresiones. `hueco`: la copia de la serif con un contorno grueso (su silueta es el
+    hueco que muerde a la grande); la cara normal toma el color del Template (el «color principal» de «Crea tu estilo»)."""
+    extra = [f'End = Input {{ Value = 1, Expression = "{K.lua(_escrito_tipo(k + 6))}", }},']
+    if hueco:
+        extra += ['Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 1, },', f'Thickness2 = Input {{ Value = Number {{ Value = {n(TIPO_HUECO)} }}, }},',
+                  'Opacity2 = Input { Value = Number { Value = 1 }, },']
+    t = texto_plus(nombre, x, y, 'x', fuente[0], fuente[1], 0.1, centro=(0.5, 0.5),
+                   expr={'Center': f'Point({_num_tipo(k + 3, 2, 0.5)}, {_num_tipo(k + 3, 3, 0.5)})', 'Size': _num_tipo(k + 3, 1, 0.1)}, extra=extra)
+    viejo = 'StyledText = Input { Value = "x", },'
+    assert viejo in t
+    t = t.replace(viejo, f'StyledText = Input {{ Value = Text {{ Value = "x" }}, Expression = "{K.lua("Text(" + _campo_tipo(k) + ")")}", }},')
+    if not hueco:
+        for c in ('Red', 'Green', 'Blue'):
+            viejo = f'{c}1 = Input {{ Value = 1, }},'
+            assert viejo in t
+            t = t.replace(viejo, f'{c}1 = Input {{ Value = 1, Expression = "Template.{c}1", }},')
+    return t
+
+
+def comp_tipo():
+    """«v tipo»: el bloque entero del Tema 5 (ver arriba). La grande pierde lo que tapa el contorno de las serif (Custom «Muerde»), las tres se juntan,
+    llevan el bisel (_relieve, a la escala de la grande: el Size del Template = el de la grande) y la sombra; el bloque aparece en 2 fotogramas y se va
+    con la salida de siempre."""
+    t = texto_plus('Template', -220, 40, 'que esto|IMPORTA|de verdad|0.09;0.42;0.6|0.2;0.5;0.53|0.09;0.6;0.45|0:0.5,0.3:1|0.6:1|0.9:1',
+                   TIPO_GRANDE[0], TIPO_GRANDE[1], 0.2, extra=['Opacity1 = Input { Value = 0, },'])
+    t += _pieza_tipo('P1', -60, 120, 1, TIPO_SERIF)
+    t += _pieza_tipo('P2', -60, 200, 2, TIPO_GRANDE)
+    t += _pieza_tipo('P3', -60, 280, 3, TIPO_SERIF)
+    t += _pieza_tipo('H1', -60, 360, 1, TIPO_SERIF, hueco=True)
+    t += _pieza_tipo('H3', -60, 440, 3, TIPO_SERIF, hueco=True)
+    t += herramienta('Merge', 'Huecos', 60, 400, [enlace('Background', 'H1'), enlace('Foreground', 'H3')])
+    t += herramienta('Custom', 'Muerde', 60, 200, [enlace('Image1', 'P2'), enlace('Image2', 'Huecos'),
+                                                   'RedExpression = Input { Value = "r1 * (1 - a2)", },', 'GreenExpression = Input { Value = "g1 * (1 - a2)", },',
+                                                   'BlueExpression = Input { Value = "b1 * (1 - a2)", },', 'AlphaExpression = Input { Value = "a1 * (1 - a2)", },'])
+    t += herramienta('Merge', 'Con1', 180, 160, [enlace('Background', 'Muerde'), enlace('Foreground', 'P1')])
+    t += herramienta('Merge', 'Con3', 180, 240, [enlace('Background', 'Con1'), enlace('Foreground', 'P3')])
+    blur, fuerza, k_luz, k_sombra = TIPO_VOLUMEN
+    nodos, vol = _relieve('Con3', 'Vol', 300, 200, (1.0, 1.0, 1.0), TIPO_TONO_SOMBRA, blur, fuerza, k_luz=k_luz, k_sombra=k_sombra)
+    t += nodos
+    alfa, dy, difu = TIPO_SOMBRA
+    sombra, ult = con_sombra(vol, 'Sm', 640, 200, alfa=alfa, dy=dy, blur=difu)
+    t += sombra
+    entra = _p(0, 2, t=f'(time * 24 / {E.FPS})')
+    t += cadena(ult, dict(size=f'(0.98 + 0.02 * {SALIDA})', blend=f'{entra} * {SALIDA}'), x0=820)
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - tipo')
+
+
 # ------------------------------------------------------------------------------------------------------------------ el catálogo
 def todos(formato='v'):
     """{nombre del clip: texto de la comp} para el formato 'v' (vertical) o 'h' (horizontal). Los tamaños (Size) son los de partida: la app fija el real por clip."""
@@ -899,6 +982,7 @@ def todos(formato='v'):
     comps['v linea'] = comp_linea()                         # v5.75: el Tema 3 nuevo (una línea y la caja negra que salta de palabra en palabra)
     comps['v linea activa'] = comp_linea(True)
     comps['v linea activa azul'] = comp_linea(True, LINEA_CAJA_AZUL)  # (el look 't3:linea' de «Crea tu estilo»)
+    comps['v tipo'] = comp_tipo()                           # v5.76: el Tema 5 nuevo (grande + serif que la muerde, palabra a palabra, con bisel)
     return comps
 
 

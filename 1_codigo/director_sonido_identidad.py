@@ -102,7 +102,7 @@ def perfil(rasgos, captions=None, motions=None, perfil_ia=None):
             por[r].append(f'{motivo} ({d:+.2f})')
     aplicar(('estilo', rasgos['estilo']), f"estilo de dibujo «{rasgos['estilo']}»")
     if rasgos.get('donde'):
-        aplicar(('donde', rasgos['donde']), f"el tema suena en «{rasgos['donde']}»")
+        aplicar(('donde', rasgos['donde']), f"el estilo suena en «{rasgos['donde']}»")
     if rasgos.get('fx_cortes'):
         aplicar(('fx_cortes', rasgos['fx_cortes']), f"transición «{rasgos['fx_cortes']}»")
     if rasgos.get('fx_intro_zoom'):

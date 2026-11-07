@@ -1,18 +1,21 @@
 # CineCaptions · By Cinema Productions
-# 1_codigo/crea_estilo_ui.py — «Crea tu estilo»: texto base + textos principales con su previa ANIMADA sobre negro, el cajón de letra y colores, y el popup de la estructura de nombres.
+# 1_codigo/crea_estilo_ui.py — «Crea tu estilo»: texto base + textos principales con su previa ANIMADA sobre negro, la previa vertical con letra y color, y el popup de la estructura de nombres.
 """
 Dos ventanas:
 
   * CreaEstiloDialogo : v5.75 (la maqueta animada que eligió el usuario: «que no sean repetidos; en base 4-6 como mucho y en principales todo lo
     que tenga efecto»). 1 · TEXTO BASE: 6 previas (mezcla_planificador.BASES_CREA), una o ninguna; su letra va en las líneas de arriba y abajo de
     todos los principales. 2 · TEXTOS PRINCIPALES: 18 previas con efecto (PRINCIPALES_CREA: círculo, barrido, fondo, fuego, tachado, caja, cristal,
-    arrastre, corte, giro 3D, resaltado, línea, brillo…), las que se quieran, numeradas en el orden en que se turnan por frases. Lo que solo cambiaba de color sale una vez. Cada previa
-    es 2_recursos/guia_estilo/crea/<id>.mp4 (el caption solo, animado sobre negro; vistas_slider.Reproductor, solo mientras la ventana se ve). Abajo
-    «Así queda» (la base y los principales turnándose), «Tu tema», el nombre y «Crear mi tema» → al_crear(nombre, looks, terminado, ajustes, base):
+    arrastre, corte, giro 3D, resaltado, línea, brillo…), las que se quieran, numeradas en el orden en que se turnan por frases. Lo que solo cambiaba
+    de color sale una vez. Cada previa es 2_recursos/guia_estilo/crea/<id>.mp4 (el caption solo, animado sobre negro; vistas_slider.Reproductor,
+    solo mientras la ventana se ve), sin texto debajo.
+    v5.76 (el usuario: «rediseña la página… más moderna, la preview a la derecha en formato vertical, y la opción letra y color que se abra abajo
+    de la preview para verse en la preview»): a la DERECHA la previa vertical 9:16 (la base y los principales turnándose, con el color elegido
+    aplicado en vivo y la palabra principal con la letra elegida) y debajo «Letra» y «Color», que abren su panel bajo la previa (alto con resorte
+    amortiguado, sin rebote). Arriba a la derecha, el nombre y «Crear mi tema» → al_crear(nombre, looks, terminado, ajustes, base):
     looks = ['t2:6', 't3:select', 't5'], base = 'b_t2' | None, ajustes = {'fuente_principal': 'Familia|Estilo' | '', 'fuente_secundaria': '' (la
-    pone el texto base), 'color_principal': '#RRGGBB' | '', 'color_secundario'} (vacío = lo del tema). El botón «Letra y colores» abre el CAJÓN a
-    la derecha (resorte amortiguado, sin rebote). terminado(ok) cierra la ventana si salió bien. Lo último del cajón se recuerda en
-    ~/DaVinciSubtitles/crea_tu_estilo.json (archivos_seguros; NO en las prefs globales de fuente).
+    pone el texto base), 'color_principal': '#RRGGBB' | '', 'color_secundario'} (vacío = lo del tema). terminado(ok) cierra la ventana si salió
+    bien. Lo último de letra y color se recuerda en ~/DaVinciSubtitles/crea_tu_estilo.json (archivos_seguros; NO en las prefs globales de fuente).
   * AyudaEstilo       : el popup del «!»: por qué los clips se llaman principal / arriba / abajo / simple, qué son principal 2 y principal 3,
     qué pasa si falta una pieza y cómo se exporta. Con dibujos, porque «sin esa estructura el estilo no funciona».
 """
@@ -22,8 +25,8 @@ from pathlib import Path
 
 from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, QSortFilterProxyModel, Qt, QTimer
 from PySide6.QtGui import QColor as QColorReal
-from PySide6.QtGui import (QBrush, QConicalGradient, QFont, QFontDatabase, QFontMetricsF, QPainter, QPainterPath, QPen, QStandardItem,
-                           QStandardItemModel, QTransform)
+from PySide6.QtGui import (QBrush, QConicalGradient, QFont, QFontDatabase, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath, QPen,
+                           QStandardItem, QStandardItemModel, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QFrame, QHBoxLayout, QListView, QScrollArea, QSizePolicy, QStyle, QStyledItemDelegate,
                                QVBoxLayout, QWidget)
 
@@ -202,18 +205,20 @@ def poster(base, principales, ancho=540, alto=960):
 
 class _Rejilla(_UnToque, QWidget):
     """Una rejilla de tarjetas 16:9 con el caption animado sobre negro (vistas_slider.Reproductor: un hilo por tarjeta, solo mientras la página se
-    ve) y su etiqueta debajo («Tema 2» y la píldora del efecto). varios=False (texto base): se elige una o ninguna (✓); varios=True (principales):
-    las que se quieran, numeradas en el orden de toque. Todo en UN widget pintado a mano (sin una capa por tarjeta)."""
+    ve), SIN texto debajo (v5.76, el usuario: «solo deja la preview y que no tenga texto abajo… se verá más limpio»). varios=False (texto base):
+    se elige una o ninguna (✓); varios=True (principales): las que se quieran, numeradas en el orden de toque. Todo en UN widget pintado a mano
+    (sin una capa por tarjeta)."""
     HALO = 4
     GAP_X = 12
     GAP_Y = 12
-    ETQ = 30
+    ETQ = 0                                           # (antes 30: la etiqueta «Tema 2» y la píldora del efecto)
 
-    def __init__(self, items, columnas, varios, al_tocar):
+    def __init__(self, items, columnas, varios, al_tocar, ancho_min=None):
         super().__init__()
         import vistas_slider
         self._items = list(items)                     # [{'id', 'texto', 'efecto' ('' en las bases)}]
         self._cols = max(1, int(columnas))
+        self._ancho_min = ancho_min                   # v5.76: con él, las columnas salen del ancho (cada tarjeta ≥ ancho_min px)
         self._varios = bool(varios)
         self._al_tocar = al_tocar
         self._orden = []
@@ -222,9 +227,6 @@ class _Rejilla(_UnToque, QWidget):
         for it in self._items:
             ruta = ruta_clip(it['id'])
             self._reprod[it['id']] = vistas_slider.Reproductor(ruta, pausa_s=0) if ruta else None
-        self._f_etq = ui.fuente(12)
-        self._f_etq_on = ui.fuente(12, peso='negrita')
-        self._f_ef = ui.fuente(10, peso='negrita')
         self._f_num = ui.fuente(12, peso='extra')
         self._f_falta = ui.fuente(11)
         self._t_falta = tr('Sin previa')
@@ -243,14 +245,22 @@ class _Rejilla(_UnToque, QWidget):
         return QSize(960, self._alto_para(960))
 
     # -- medidas
+    def _cols_para(self, ancho):
+        if not self._ancho_min:
+            return self._cols
+        util = max(10.0, float(ancho) - 2 * self.HALO)
+        return max(2, min(max(1, len(self._items)), int((util + self.GAP_X) // (self._ancho_min + self.GAP_X))))
+
     def _tarjeta_wh(self, ancho):
         util = max(10.0, float(ancho) - 2 * self.HALO)
-        cw = (util - (self._cols - 1) * self.GAP_X) / self._cols
+        cols = self._cols_para(ancho)
+        cw = (util - (cols - 1) * self.GAP_X) / cols
         return cw, cw * 9.0 / 16.0
 
     def _alto_para(self, ancho):
         _cw, ch = self._tarjeta_wh(ancho)
-        filas = (len(self._items) + self._cols - 1) // self._cols
+        cols = self._cols_para(ancho)
+        filas = (len(self._items) + cols - 1) // cols
         return int(round(2 * self.HALO + filas * (ch + self.ETQ) + max(0, filas - 1) * self.GAP_Y))
 
     def resizeEvent(self, e):
@@ -266,7 +276,7 @@ class _Rejilla(_UnToque, QWidget):
     def _rect(self, k):
         """La tarjeta k AJUSTADA a píxeles reales de la pantalla (con escala 1,5 una esquina fraccionaria dejaba una costura en el borde)."""
         cw, ch = self._tarjeta_wh(self.width())
-        fila, col = divmod(k, self._cols)
+        fila, col = divmod(k, self._cols_para(self.width()))
         dpr = self.devicePixelRatioF() or 1.0
         x = round((self.HALO + col * (cw + self.GAP_X)) * dpr)
         y = round((self.HALO + fila * (ch + self.ETQ + self.GAP_Y)) * dpr)
@@ -358,30 +368,6 @@ class _Rejilla(_UnToque, QWidget):
             p.setPen(QPen(QColorReal(255, 255, 255, 110), 1.6))
             p.setBrush(QColorReal(0, 0, 0, 40))
             p.drawEllipse(marca.adjusted(1.5, 1.5, -1.5, -1.5))
-        # la etiqueta: «Tema 2» y, en los principales, la píldora del efecto
-        y = r.bottom() + 7
-        p.setFont(self._f_etq_on if elegido else self._f_etq)
-        p.setPen(QColor(VERDE if elegido else GRIS))
-        fm = QFontMetricsF(p.font())
-        texto = it['texto']
-        tw = fm.horizontalAdvance(texto)
-        p.drawText(QRectF(r.x(), y, tw + 2, 18), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), texto)
-        efecto = it.get('efecto') or ''
-        if efecto:
-            p.setFont(self._f_ef)
-            fe = QFontMetricsF(self._f_ef)
-            ew = fe.horizontalAdvance(efecto) + 14
-            pild = QRectF(r.x() + tw + 7, y, min(ew, max(0.0, r.width() - tw - 7)), 18)
-            if pild.width() > 20:
-                if elegido:
-                    p.setPen(Qt.PenStyle.NoPen)
-                    p.setBrush(QColor(VERDE))
-                else:
-                    p.setPen(QPen(QColor('#233150'), 1))
-                    p.setBrush(QColorReal(255, 255, 255, 15))
-                p.drawRoundedRect(pild.adjusted(0.5, 0.5, -0.5, -0.5), 8.5, 8.5)
-                p.setPen(QColorReal('#03140D') if elegido else QColorReal('#C9D4E8'))
-                p.drawText(pild, int(Qt.AlignmentFlag.AlignCenter), fe.elidedText(efecto, Qt.TextElideMode.ElideRight, pild.width() - 8))
 
     # -- ratón
     def mouseMoveEvent(self, e):
@@ -441,89 +427,6 @@ class _Paso(QWidget):
         resto = max(0.0, self.width() - x)
         p.drawText(QRectF(x, 0, resto, self.height()), medio, QFontMetricsF(self._f_d).elidedText(self._d, Qt.TextElideMode.ElideRight, resto))
         p.end()
-
-
-class _Interruptor(_UnToque, QWidget):
-    """«Personalizar letra y colores ▾/▴»: la pastilla de la cabecera que abre y cierra el cajón (encendida = verde)."""
-    def __init__(self, al_tocar):
-        super().__init__()
-        self._al_tocar = al_tocar
-        self._on = False
-        self._hover = False
-        self._texto = tr('Letra y colores')
-        self._f = ui.fuente(13, peso='negrita')
-        self._f_aa = ui.fuente(10, peso='extra')
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFixedSize(int(10 + 22 + 8 + QFontMetricsF(self._f).horizontalAdvance(self._texto) + 6 + 7 + 14 + 1), 34)
-
-    def poner(self, si):
-        if bool(si) != self._on:
-            self._on = bool(si)
-            self.update()
-
-    def encendido(self):
-        return self._on
-
-    def paintEvent(self, _e):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
-        if self._on:
-            p.setPen(QPen(QColor(VERDE), 1))
-            p.setBrush(QColorReal(52, 211, 153, 26))
-            color = QColor(VERDE)
-        else:
-            p.setPen(QPen(QColor('#3A4A66' if self._hover else ANILLO), 1))
-            p.setBrush(QColor(PANEL))
-            color = QColor('#E8F1FF')
-        p.drawRoundedRect(r, 16.5, 16.5)
-        ico = QRectF(10, 6, 22, 22)
-        g = QConicalGradient(ico.center(), 90.0)
-        for pos, c in ((0.0, '#FDE047'), (0.2, '#A3E635'), (0.4, '#22D3EE'), (0.6, '#3B82F6'), (0.8, '#F472B6'), (1.0, '#FDE047')):
-            g.setColorAt(pos, QColorReal(c))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(g)
-        p.drawEllipse(ico)
-        p.setFont(self._f_aa)
-        p.setPen(QColorReal('#000000'))
-        p.drawText(ico, int(Qt.AlignmentFlag.AlignCenter), 'Aa')
-        p.setFont(self._f)
-        p.setPen(color)
-        tw = QFontMetricsF(self._f).horizontalAdvance(self._texto)
-        p.drawText(QRectF(40, 0, tw + 2, self.height()), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self._texto)
-        x, cy = 40 + tw + 6, self.height() / 2.0
-        flecha = QPainterPath()
-        if self._on:                                   # ▴
-            flecha.moveTo(x, cy + 2)
-            flecha.lineTo(x + 7, cy + 2)
-            flecha.lineTo(x + 3.5, cy - 2)
-        else:                                          # ▾
-            flecha.moveTo(x, cy - 2)
-            flecha.lineTo(x + 7, cy - 2)
-            flecha.lineTo(x + 3.5, cy + 2)
-        flecha.closeSubpath()
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(color)
-        p.drawPath(flecha)
-        p.end()
-
-    def enterEvent(self, e):
-        self._hover = True
-        self.update()
-        super().enterEvent(e)
-
-    def leaveEvent(self, e):
-        self._hover = False
-        self.update()
-        super().leaveEvent(e)
-
-    def mousePressEvent(self, e):
-        if e.button() == Qt.MouseButton.LeftButton:
-            self._al_tocar()
-            e.accept()
-            return
-        super().mousePressEvent(e)
 
 
 # ====================================================================================== la lista de letras del equipo (v5.75)
@@ -664,10 +567,11 @@ class _ListaLetras(QWidget):
     primera) = la letra de cada tema. al_elegir(valor): '' o 'Familia|Estilo'."""
     ALTO_LISTA = 252
 
-    def __init__(self, al_elegir):
+    def __init__(self, al_elegir, alto_lista=None):
         super().__init__()
         self._al_elegir = al_elegir
         self._valor = ''
+        self._alto_lista = int(alto_lista or self.ALTO_LISTA)
         self.familias = letras_instaladas()
         self._en_minusculas = {f.lower(): f for f in self.familias}
         capa = QVBoxLayout(self)
@@ -680,7 +584,7 @@ class _ListaLetras(QWidget):
         self._buscar.textChanged.connect(self._filtrar)
         capa.addWidget(self._buscar)
         self._modelo = QStandardItemModel(self)
-        tema = QStandardItem(tr('Del tema'))
+        tema = QStandardItem(tr('Del estilo'))
         tema.setData('', Qt.ItemDataRole.UserRole)
         self._modelo.appendRow(tema)
         for f in self.familias:
@@ -699,7 +603,7 @@ class _ListaLetras(QWidget):
         self._vista.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._vista.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self._vista.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self._vista.setFixedHeight(self.ALTO_LISTA)
+        self._vista.setFixedHeight(self._alto_lista)
         self._vista.setStyleSheet(_hoja('QListView#listaLetras { background-color: %s; border: 1px solid %s; border-radius: 10px; padding: 3px; '
                                         'outline: none; }' % (CAMPO, BORDE)))
         self._vista.clicked.connect(self._tocada)
@@ -898,23 +802,52 @@ def _dibujar_centro(p, destino, img, ancho_rel=0.92, alto_rel=0.70):
     p.drawImage(QRectF(destino.center().x() - w / 2, destino.center().y() - h / 2, w, h), img, fuente)
 
 
-class _AsiQueda(QWidget):
-    """«Así queda»: la base elegida arriba (más pequeña) y debajo los principales elegidos TURNÁNDOSE (una vuelta de su previa cada uno), sobre negro.
-    Sus propios Reproductor (dos hilos), solo mientras la página se ve."""
-    ANCHO, ALTO = 300, 190
+def _tenido(img, hexa):
+    """La previa con el color elegido, en vivo: su luminancia × el color (las previas son captions claros sobre negro: el negro sigue negro y el
+    blanco sale del color elegido, como en el pack derivado). Sin color, la previa tal cual."""
+    if img is None or img.isNull() or not hexa:
+        return img
+    g = img.convertToFormat(QImage.Format.Format_Grayscale8).convertToFormat(QImage.Format.Format_ARGB32_Premultiplied)
+    p = QPainter(g)
+    p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Multiply)
+    p.fillRect(g.rect(), QColorReal(hexa))
+    p.end()
+    return g
+
+
+def _letra_de(valor):
+    """'Familia|Estilo' -> QFont de esa letra (o None: la del tema)."""
+    partes = str(valor or '').split('|')
+    familia = partes[0].strip()
+    if not familia:
+        return None
+    f = QFont(familia)
+    if len(partes) > 1 and partes[1].strip():
+        f.setStyleName(partes[1].strip())
+    return f
+
+
+class _Previa(QWidget):
+    """La previa VERTICAL de la derecha (v5.76, el usuario: «la preview a la derecha en formato vertical… letra y color… para verse en la
+    preview»): un cuadro 9:16 con la base elegida arriba y los principales TURNÁNDOSE debajo (una vuelta de su previa cada uno), con el color
+    elegido aplicado en vivo (_tenido) y, con una letra elegida, la palabra principal escrita con ella debajo (las previas son videos de Resolve:
+    la letra no cambia dentro de ellos). Sus propios Reproductor (dos hilos), solo mientras la ventana se ve. El cuadro encoge al abrirse
+    Letra o Color debajo: siempre el 9:16 más grande que cabe."""
+    MUESTRA = 'Increíbles'                         # la palabra de las previas de los principales
+    RADIO = 18
 
     def __init__(self):
         super().__init__()
-        self.setFixedSize(self.ANCHO, self.ALTO)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setMinimumHeight(200)
         self._base = None
         self._principales = []
+        self._ajustes = {}
         self._k = 0
         self._rb = None
         self._rp = None
         self._visible = False
-        self._f_tag = ui.fuente(10, peso='extra')
-        self._f_vacio = ui.fuente(12)
-        self._t_tag = tr('Así queda')
+        self._f_vacio = ui.fuente(13)
         self._t_vacio = tr('Elige un texto principal')
 
     @staticmethod
@@ -931,10 +864,12 @@ class _AsiQueda(QWidget):
             nuevo = self._rb = self._nuevo(self._base)
         else:
             nuevo = self._rp = self._nuevo(self._principales[self._k] if self._principales else None)
+        self._tam()
         if self._visible and nuevo is not None:
             nuevo.arrancar()
 
-    def poner(self, base, principales):
+    def poner(self, base, principales, ajustes=None):
+        self._ajustes = dict(ajustes or {})
         if base != self._base:
             self._base = base
             self._cambiar('b')
@@ -969,203 +904,232 @@ class _AsiQueda(QWidget):
             if r is not None:
                 r.parar()
 
-    def paintEvent(self, _e):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
-        camino = QPainterPath()
-        camino.addRoundedRect(r, 12, 12)
-        p.save()
-        p.setClipPath(camino)
-        p.fillRect(r, QColorReal('#000000'))
-        if self._principales:
-            if self._base:
-                _dibujar_centro(p, QRectF(16, 26, r.width() - 32, 50), self._rb.imagen() if self._rb else None)
-                _dibujar_centro(p, QRectF(10, 74, r.width() - 20, 108), self._rp.imagen() if self._rp else None)
-            else:
-                _dibujar_centro(p, QRectF(10, 30, r.width() - 20, 150), self._rp.imagen() if self._rp else None)
-        else:
-            p.setFont(self._f_vacio)
-            p.setPen(QColor(GRIS))
-            p.drawText(r, int(Qt.AlignmentFlag.AlignCenter), self._t_vacio)
-        p.restore()
-        p.setPen(QPen(QColor('#2A3A5C'), 1))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawRoundedRect(r, 12, 12)
-        p.setFont(self._f_tag)
-        tw = QFontMetricsF(self._f_tag).horizontalAdvance(self._t_tag)
-        tag = QRectF(9, 9, tw + 16, 19)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(VERDE))
-        p.drawRoundedRect(tag, 9.5, 9.5)
-        p.setPen(QColorReal('#03140D'))
-        p.drawText(tag, int(Qt.AlignmentFlag.AlignCenter), self._t_tag)
-        p.end()
+    # -- medidas
+    def tarjeta(self):
+        """El 9:16 más grande que cabe, centrado a lo ancho y pegado arriba."""
+        w, h = float(self.width()), float(self.height())
+        ch = max(10.0, min(h - 1.0, (w - 1.0) * 16.0 / 9.0))
+        cw = ch * 9.0 / 16.0
+        return QRectF(round((w - cw) / 2.0) + 0.5, 0.5, cw, ch)
 
-
-class _ResumenTema(QWidget):
-    """«Tu tema»: el texto base (o «el de cada tema») y los principales en el orden en que se turnan, cada uno con su miniatura animada, su
-    número y su efecto; los que no caben, «+N». `imagen_de(id)` da el cuadro actual de una previa (el de su tarjeta)."""
-    MINI_W, MINI_H = 64, 36
-
-    def __init__(self, imagen_de):
-        super().__init__()
-        self._imagen_de = imagen_de
-        self._base = None
-        self._orden = []
-        self._f_tit = ui.fuente(15, peso='extra')
-        self._f_sub = ui.fuente(12)
-        self._f_k = ui.fuente(12)
-        self._f_chip = ui.fuente(12, peso='negrita')
-        self._f_chip2 = ui.fuente(10)
-        self._f_num = ui.fuente(11, peso='extra')
-        self._t_tit, self._t_sub = tr('Tu tema'), tr('se turnan frase a frase')
-        self._t_base, self._t_prin = tr('Texto base'), tr('Principales')
-        self._t_cada = tr('el de cada tema')
-        self._t_ninguno = tr('toca los que quieras')
-        self.setMinimumWidth(360)
-        self.setFixedHeight(150)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
-    def poner(self, base, orden):
-        self._base, self._orden = base, list(orden)
-        self.update()
-
-    def _chip(self, p, x, cy, ident, arriba, abajo=None, numero=None):
-        """Una píldora [miniatura][n][texto]; devuelve su ancho."""
-        fc, f2 = QFontMetricsF(self._f_chip), QFontMetricsF(self._f_chip2)
-        tw = max(fc.horizontalAdvance(arriba), f2.horizontalAdvance(abajo) if abajo else 0)
-        ancho = 4 + self.MINI_W + 8 + (19 + 7 if numero else 0) + tw + 12
-        caja = QRectF(x, cy - 22, ancho, 44)
-        p.setPen(QPen(QColor('#233150'), 1))
-        p.setBrush(QColor('#111D33'))
-        p.drawRoundedRect(caja.adjusted(0.5, 0.5, -0.5, -0.5), 10.5, 10.5)
-        mini = QRectF(x + 4, cy - self.MINI_H / 2, self.MINI_W, self.MINI_H)
-        camino = QPainterPath()
-        camino.addRoundedRect(mini, 6, 6)
-        p.save()
-        p.setClipPath(camino)
-        p.fillRect(mini, QColorReal('#000000'))
-        _dibujar_centro(p, mini, self._imagen_de(ident))
-        p.restore()
-        x2 = mini.right() + 8
-        if numero:
-            num = QRectF(x2, cy - 9.5, 19, 19)
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QColor(VERDE))
-            p.drawEllipse(num)
-            p.setFont(self._f_num)
-            p.setPen(QColorReal('#03140D'))
-            p.drawText(num, int(Qt.AlignmentFlag.AlignCenter), str(numero))
-            x2 += 26
-        medio = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        p.setFont(self._f_chip)
-        p.setPen(QColorReal('#E8F1FF'))
-        if abajo:
-            p.drawText(QRectF(x2, cy - 17, tw + 4, 18), medio, arriba)
-            p.setFont(self._f_chip2)
-            p.setPen(QColor(GRIS))
-            p.drawText(QRectF(x2, cy + 1, tw + 4, 15), medio, abajo)
-        else:
-            p.drawText(QRectF(x2, cy - 10, tw + 4, 20), medio, arriba)
-        return ancho
-
-    def paintEvent(self, _e):
-        import mezcla_planificador as MP
-        p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        medio = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        p.setFont(self._f_tit)
-        p.setPen(QColorReal('#FFFFFF'))
-        tw = QFontMetricsF(self._f_tit).horizontalAdvance(self._t_tit)
-        p.drawText(QRectF(0, 0, tw + 2, 26), medio, self._t_tit)
-        p.setFont(self._f_sub)
-        p.setPen(QColor(GRIS))
-        p.drawText(QRectF(tw + 10, 0, 300, 26), medio, self._t_sub)
-        # el texto base
-        cy = 62
-        p.setFont(self._f_k)
-        p.setPen(QColor(ETIQUETA))
-        p.drawText(QRectF(0, cy - 10, 86, 20), medio, self._t_base)
-        if self._base:
-            self._chip(p, 92, cy, self._base, MP.nombre_crea(MP.base_crea(self._base)))
-        else:
-            p.setPen(QColor('#7F8BA3'))
-            p.drawText(QRectF(92, cy - 10, 300, 20), medio, self._t_cada)
-        # los principales
-        cy = 120
-        p.setFont(self._f_k)
-        p.setPen(QColor(ETIQUETA))
-        p.drawText(QRectF(0, cy - 10, 86, 20), medio, self._t_prin)
-        if not self._orden:
-            p.setPen(QColor('#7F8BA3'))
-            p.drawText(QRectF(92, cy - 10, 300, 20), medio, self._t_ninguno)
-            p.end()
-            return
-        x = 92.0
-        limite = self.width() - 4
-        for k, ident in enumerate(self._orden):
-            it = MP.principal_crea(ident) or {}
-            arriba, abajo = tr(it.get('efecto') or ''), tr('Tema {n}', n=it.get('tema', '?'))
-            fc, f2 = QFontMetricsF(self._f_chip), QFontMetricsF(self._f_chip2)
-            ancho = 4 + self.MINI_W + 8 + 26 + max(fc.horizontalAdvance(arriba), f2.horizontalAdvance(abajo)) + 12
-            resto = len(self._orden) - k
-            if x + ancho + (22 if k else 0) + (44 if resto > 1 else 0) > limite:
-                p.setFont(self._f_chip)
-                p.setPen(QColor(GRIS))
-                p.drawText(QRectF(x + 4, cy - 10, 60, 20), medio, f'+{resto}')
-                break
-            if k:
-                p.setPen(QPen(QColor('#5E6B85'), 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-                p.drawLine(QPointF(x + 4, cy), QPointF(x + 14, cy))
-                p.drawLine(QPointF(x + 10, cy - 4), QPointF(x + 14, cy))
-                p.drawLine(QPointF(x + 10, cy + 4), QPointF(x + 14, cy))
-                x += 22
-            x += self._chip(p, x, cy, ident, arriba, abajo, numero=k + 1) + 6
-        p.end()
-
-
-class _Cajon(QWidget):
-    """El hueco del cajón: su ANCHO se anima (0 → 14 de separación + 372 + 4) y el panel de dentro no cambia de tamaño (no se recoloca nada al
-    animar): queda pegado a la izquierda del hueco, así que entra deslizándose desde la derecha."""
-    ANCHO = 372
-    IZQ = 10                      # 14 de hueco con la fila menos los 4 px del halo de la lista
-    DER = 4
-
-    def __init__(self, panel):
-        super().__init__()
-        self.panel = panel
-        panel.setParent(self)
-        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
-
-    def ancho_total(self):
-        return self.IZQ + self.ANCHO + self.DER
+    def _tam(self):
+        """Cada previa se decodifica ya a su tamaño en pantalla (Reproductor.tam): pintar es copiar."""
+        r = self.tarjeta()
+        dpr = self.devicePixelRatioF() or 1.0
+        ancho = max(64, int(r.width() * 0.96 * dpr / 0.92)) // 2 * 2
+        tam = (ancho, int(ancho * 9 / 16) // 2 * 2)
+        for rep in (self._rb, self._rp):
+            if rep is not None:
+                rep.tam = tam
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
-        self.panel.setGeometry(self.IZQ, 4, self.ANCHO, max(0, self.height() - 8))
+        self._tam()
+
+    # -- dibujo
+    def _muestra(self, p, rect, letra, color):
+        """La palabra principal escrita con la letra elegida, encajada en `rect`."""
+        f = QFont(letra)
+        f.setPixelSize(max(8, int(rect.height() * 0.62)))
+        ancho = QFontMetricsF(f).horizontalAdvance(self.MUESTRA)
+        if ancho > rect.width():
+            f.setPixelSize(max(8, int(f.pixelSize() * rect.width() / ancho)))
+        p.setFont(f)
+        p.setPen(QColorReal(color or '#FFFFFF'))
+        p.drawText(rect, int(Qt.AlignmentFlag.AlignCenter), self.MUESTRA)
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        r = self.tarjeta()
+        camino = QPainterPath()
+        camino.addRoundedRect(r, self.RADIO, self.RADIO)
+        p.save()
+        p.setClipPath(camino)
+        fondo = QLinearGradient(r.topLeft(), r.bottomLeft())
+        for pos, c in ((0.0, '#0C1424'), (0.45, '#05080F'), (1.0, '#000000')):
+            fondo.setColorAt(pos, QColorReal(c))
+        p.fillRect(r, fondo)
+        if self._principales:
+            ancho = r.width() * 0.96
+            alto_p = ancho / 2.336                      # (el centro de una previa 16:9 que dibuja _dibujar_centro: 92 % × 70 %)
+            letra = _letra_de(self._ajustes.get('fuente_principal'))
+            cy = r.top() + r.height() * (0.50 if letra else 0.54)
+            p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Screen)     # (el negro de las previas desaparece sobre el fondo)
+            if self._base:
+                alto_b = alto_p * 0.62
+                _dibujar_centro(p, QRectF(r.center().x() - ancho * 0.41, cy - alto_p / 2 - alto_b * 0.9, ancho * 0.82, alto_b),
+                                _tenido(self._rb.imagen() if self._rb else None, self._ajustes.get('color_secundario')))
+            _dibujar_centro(p, QRectF(r.center().x() - ancho / 2, cy - alto_p / 2, ancho, alto_p),
+                            _tenido(self._rp.imagen() if self._rp else None, self._ajustes.get('color_principal')))
+            p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+            if letra is not None:
+                self._muestra(p, QRectF(r.left() + r.width() * 0.08, cy + alto_p / 2 + 4, r.width() * 0.84, alto_p * 0.62), letra,
+                              self._ajustes.get('color_principal'))
+        else:
+            p.setFont(self._f_vacio)
+            p.setPen(QColor(GRIS))
+            p.drawText(r.adjusted(16, 0, -16, 0), int(Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap), self._t_vacio)
+        p.restore()
+        p.setPen(QPen(QColorReal(255, 255, 255, 34), 1))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawRoundedRect(r, self.RADIO, self.RADIO)
+        p.end()
+
+
+class _Pestana(_UnToque, QWidget):
+    """«Letra» / «Color» bajo la previa: una pastilla que abre su panel debajo (abierta = verde). La de letra enseña «Aa» con la letra elegida; la
+    de color, un círculo con el color elegido (el degradado = el del tema)."""
+    ALTO = 40
+
+    def __init__(self, texto, tipo, al_tocar):
+        super().__init__()
+        self._texto = texto
+        self._tipo = tipo
+        self._al_tocar = al_tocar
+        self._on = False
+        self._hover = False
+        self.valor = ''
+        self._f = ui.fuente(13, peso='negrita')
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedHeight(self.ALTO)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+    def poner(self, on=None, valor=None):
+        if on is not None:
+            self._on = bool(on)
+        if valor is not None:
+            self.valor = str(valor or '')
+        self.update()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
+        if self._on:
+            p.setPen(QPen(QColor(VERDE), 1.2))
+            p.setBrush(QColorReal(52, 211, 153, 30))
+            color = QColor(VERDE)
+        else:
+            p.setPen(QPen(QColorReal('#3A4A66') if self._hover else QColorReal('#243049'), 1))
+            p.setBrush(QColorReal('#101826') if self._hover else QColorReal('#0C1320'))
+            color = QColorReal('#E8F1FF')
+        p.drawRoundedRect(r, r.height() / 2, r.height() / 2)
+        fm = QFontMetricsF(self._f)
+        tw = fm.horizontalAdvance(self._texto)
+        ancho_ico = 22
+        x = (self.width() - (ancho_ico + 8 + tw + 6 + 8)) / 2.0
+        cy = self.height() / 2.0
+        ico = QRectF(x, cy - ancho_ico / 2, ancho_ico, ancho_ico)
+        if self._tipo == 'color':
+            p.setPen(QPen(QColorReal(255, 255, 255, 70), 1))
+            p.setBrush(QColorReal(self.valor) if self.valor else _degradado_tema(ico))
+            p.drawEllipse(ico.adjusted(2, 2, -2, -2))
+        else:
+            letra = _letra_de(self.valor)
+            f = QFont(letra) if letra is not None else ui.fuente(14, peso='extra')
+            f.setPixelSize(17)
+            p.setFont(f)
+            p.setPen(color)
+            p.drawText(ico, int(Qt.AlignmentFlag.AlignCenter), 'Aa')
+        p.setFont(self._f)
+        p.setPen(color)
+        p.drawText(QRectF(ico.right() + 8, 0, tw + 2, self.height()), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self._texto)
+        fx = ico.right() + 8 + tw + 7
+        flecha = QPainterPath()
+        if self._on:                                   # ▴
+            flecha.moveTo(fx, cy + 2)
+            flecha.lineTo(fx + 7, cy + 2)
+            flecha.lineTo(fx + 3.5, cy - 2)
+        else:                                          # ▾
+            flecha.moveTo(fx, cy - 2)
+            flecha.lineTo(fx + 7, cy - 2)
+            flecha.lineTo(fx + 3.5, cy + 2)
+        flecha.closeSubpath()
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(color)
+        p.drawPath(flecha)
+        p.end()
+
+    def enterEvent(self, e):
+        self._hover = True
+        self.update()
+        super().enterEvent(e)
+
+    def leaveEvent(self, e):
+        self._hover = False
+        self.update()
+        super().leaveEvent(e)
+
+    def mousePressEvent(self, e):
+        if e.button() == Qt.MouseButton.LeftButton:
+            self._al_tocar()
+            e.accept()
+            return
+        super().mousePressEvent(e)
+
+
+class _Desplegable(QWidget):
+    """El panel que se abre bajo la previa: su ALTO se anima y la página de dentro no cambia de tamaño (no se recoloca nada al animar): queda pegada
+    arriba, así que se descubre de arriba abajo."""
+
+    def __init__(self, paginas):
+        super().__init__()
+        self.paginas = dict(paginas)
+        for w in self.paginas.values():
+            w.setParent(self)
+            w.hide()
+        self.actual = None
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.setFixedHeight(0)
+
+    def alto_de(self, nombre):
+        w = self.paginas.get(nombre)
+        if w is None:
+            return 0
+        capa = w.layout()
+        ancho = max(1, self.width())
+        if capa is not None and capa.hasHeightForWidth():
+            return int(capa.totalHeightForWidth(ancho))
+        return int(w.sizeHint().height())
+
+    def mostrar(self, nombre):
+        self.actual = nombre
+        for k, w in self.paginas.items():
+            w.setVisible(k == nombre)
+        self._colocar()
+
+    def _colocar(self):
+        w = self.paginas.get(self.actual)
+        if w is not None:
+            w.setGeometry(0, 0, self.width(), self.alto_de(self.actual))
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._colocar()
 
 
 class CreaEstiloDialogo(Dialogo):
-    """«Crea tu estilo» (v5.75, la maqueta animada que eligió el usuario): 1 · TEXTO BASE (6 previas; una o ninguna) y 2 · TEXTOS PRINCIPALES (18
-    previas con efecto; las que se quieran, numeradas en el orden en que se turnan), todo animado sobre negro; abajo «Así queda» (la base y los
-    principales turnándose), «Tu tema», el nombre y «Crear mi tema». El cajón «Letra y colores» elige la letra del texto principal y los colores
-    (la letra de arriba y abajo la da el texto base). al_crear(nombre, looks, terminado, ajustes, base): looks = ['t2:6', 't3:select', 't5'] en el
-    orden de toque, base = 'b_t2' o None (mezcla_planificador.crear_estilo pone su letra en 'fuente_secundaria'). El resto de argumentos (al_resolve,
-    al_ayuda, al_resolve_uno) se aceptan solo por compatibilidad con la llamada de la app y no se usan."""
+    """«Crea tu estilo» (v5.75, la maqueta animada que eligió el usuario; v5.76, rediseño con la previa vertical a la derecha): a la izquierda
+    1 · TEXTO BASE (6 previas; una o ninguna) y 2 · TEXTOS PRINCIPALES (18 previas con efecto; las que se quieran, numeradas en el orden en que se
+    turnan), todo animado sobre negro y sin texto debajo; a la derecha la previa vertical (la base y los principales turnándose, con el color y la
+    letra elegidos) y debajo «Letra» y «Color», que abren su panel bajo la previa; arriba a la derecha el nombre y «Crear mi tema». La letra es la
+    del texto principal (la de arriba y abajo la da el texto base). al_crear(nombre, looks, terminado, ajustes, base): looks = ['t2:6', 't3:select',
+    't5'] en el orden de toque, base = 'b_t2' o None (mezcla_planificador.crear_estilo pone su letra en 'fuente_secundaria'). El resto de argumentos
+    (al_resolve, al_ayuda, al_resolve_uno) se aceptan solo por compatibilidad con la llamada de la app y no se usan."""
     K_RESORTE = 300.0
-    C_RESORTE = 34.6              # 2·√k: amortiguado crítico (el ancho no rebota)
+    C_RESORTE = 34.6              # 2·√k: amortiguado crítico (el alto del panel no rebota)
     TIC_MS = 40
+    ANCHO_DER = 392               # la columna de la previa (la paleta de 10 círculos mide 340)
 
     def __init__(self, padre, al_crear, *_compat, **_compat_kw):
         import mezcla_planificador as MP
-        super().__init__(padre, tr('Crea tu estilo'), 1280, 820, minimo=(1040, 620))
+        super().__init__(padre, tr('Crea tu estilo'), 1320, 840, minimo=(1060, 640))
         self.setObjectName('creaEstilo')
-        self.setStyleSheet(_hoja('QDialog#creaEstilo { background-color: #080C14; }'))
+        self.setStyleSheet(_hoja('QDialog#creaEstilo { background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0B1220, stop:1 #070A11); }'))
         self._al_crear = al_crear
         self._base = None
         self._orden = []
@@ -1176,37 +1140,52 @@ class CreaEstiloDialogo(Dialogo):
         self._ajustes['fuente_secundaria'] = ''        # (v5.75: la letra de arriba y abajo la pone el TEXTO BASE)
         self._propios = estado['propios']
         self._resorte = ui.Resorte(0.0, self.K_RESORTE, self.C_RESORTE)
-        self._abierto = False
+        self._abierto = None                           # 'letra' | 'color' | None: lo que está abierto bajo la previa
 
         capa = QVBoxLayout(self)
-        capa.setContentsMargins(22, 18, 20, 16)
+        capa.setContentsMargins(24, 20, 24, 20)
         capa.setSpacing(0)
+        # cabecera: el título | el nombre y «Crear mi tema»
         cab, cc = caja_h(espacio=12)
         textos, tv = caja_v(espacio=4)
-        tv.addWidget(Etiqueta(tr('Crea tu estilo'), 22, peso='extra', color='#FFFFFF'))
-        tv.addWidget(Etiqueta(tr('Arma tu tema: un texto base y los textos principales que quieras. El color y la letra los eliges aparte.'), 13,
+        tv.addWidget(Etiqueta(tr('Crea tu estilo'), 24, peso='extra', color='#FFFFFF'))
+        tv.addWidget(Etiqueta(tr('Arma tu estilo: un texto base y los textos principales que quieras. El color y la letra los eliges aparte.'), 13,
                               color='#A9B4C8', envolver=True))
         cc.addWidget(textos, 1)
-        self._interruptor = _Interruptor(self._alternar_cajon)
-        cc.addWidget(self._interruptor, 0, Qt.AlignmentFlag.AlignTop)
+        self._nombre = Entrada(placeholder=tr('Nombre de tu estilo'), alto=44, tam=14)
+        self._nombre.setObjectName('nombreEstilo')
+        self._nombre.setStyleSheet(_hoja('QLineEdit#nombreEstilo { background-color: %s; border: 1px solid %s; border-radius: 22px; padding: 0px 18px; '
+                                         'color: #FFFFFF; } QLineEdit#nombreEstilo:focus { border-color: #34D399; }' % ('#0C1320', '#243049')))
+        self._nombre.setText(tr('Mi estilo'))
+        self._nombre.setFixedWidth(232)
+        self._nombre.returnPressed.connect(self._crear)
+        cc.addWidget(self._nombre, 0, Qt.AlignmentFlag.AlignVCenter)
+        self._b_crear = Boton(tr('Crear mi estilo'), self._crear, tipo='primario', alto=44, ancho=184, tam=14, negrita=True)
+        self._b_crear.setFixedWidth(184)
+        self._b_crear.setObjectName('crearEstilo')                  # (pastilla verde, como lo elegido en las tarjetas)
+        self._b_crear.setStyleSheet(_hoja('QPushButton#crearEstilo { background-color: #34D399; color: #03140D; border: none; border-radius: 22px; } '
+                                          'QPushButton#crearEstilo:hover { background-color: #4ADEA9; } '
+                                          'QPushButton#crearEstilo:disabled { background-color: #13231F; color: #4E6B62; }'))
+        cc.addWidget(self._b_crear, 0, Qt.AlignmentFlag.AlignVCenter)
         capa.addWidget(cab)
-        capa.addSpacing(14)
+        capa.addSpacing(18)
 
-        cuerpo, cb = caja_h(espacio=0)
+        cuerpo, cb = caja_h(espacio=22)
+        # izquierda: las dos rejillas (se desplazan)
         contenido = QWidget()
         cv = QVBoxLayout(contenido)
-        cv.setContentsMargins(0, 0, 6, 0)
+        cv.setContentsMargins(0, 0, 8, 0)
         cv.setSpacing(0)
-        cv.addWidget(_Paso(1, tr('Texto base'), tr('las palabras normales de arriba y abajo · elige uno (o ninguno: cada tema con el suyo)')))
-        cv.addSpacing(8)
+        cv.addWidget(_Paso(1, tr('Texto base'), tr('las palabras normales de arriba y abajo · elige uno (o ninguno: cada estilo con el suyo)')))
+        cv.addSpacing(10)
         bases = [{'id': b['id'], 'texto': MP.nombre_crea(b), 'efecto': ''} for b in MP.BASES_CREA]
-        self._rej_base = _Rejilla(bases, 6, False, self._tocar_base)
+        self._rej_base = _Rejilla(bases, 6, False, self._tocar_base, ancho_min=118)
         cv.addWidget(self._rej_base)
-        cv.addSpacing(16)
+        cv.addSpacing(22)
         cv.addWidget(_Paso(2, tr('Textos principales'), tr('la palabra con efecto · elige los que quieras: se turnan frase a frase')))
-        cv.addSpacing(8)
-        principales = [{'id': q['id'], 'texto': tr('Tema {n}', n=q['tema']), 'efecto': tr(q['efecto'])} for q in MP.PRINCIPALES_CREA]
-        self._rej_prin = _Rejilla(principales, 7, True, self._tocar_principal)
+        cv.addSpacing(10)
+        principales = [{'id': q['id'], 'texto': tr('Estilo {n}', n=q['tema']), 'efecto': tr(q['efecto'])} for q in MP.PRINCIPALES_CREA]
+        self._rej_prin = _Rejilla(principales, 5, True, self._tocar_principal, ancho_min=150)
         cv.addWidget(self._rej_prin)
         cv.addStretch(1)
         desp = QScrollArea()
@@ -1218,13 +1197,27 @@ class CreaEstiloDialogo(Dialogo):
         desp.viewport().setAutoFillBackground(False)
         contenido.setAutoFillBackground(False)
         cb.addWidget(desp, 1)
-        self._cajon = _Cajon(self._armar_panel())
-        self._cajon.setFixedWidth(0)
-        self._cajon.hide()
-        cb.addWidget(self._cajon)
+        # derecha: la previa vertical y, debajo, Letra / Color con su panel
+        der = QFrame()
+        der.setObjectName('columnaPrevia')
+        der.setStyleSheet(_hoja('QFrame#columnaPrevia { background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0F1828, stop:1 #0A101B); '
+                                'border: 1px solid #1B2740; border-radius: 22px; }'))
+        der.setFixedWidth(self.ANCHO_DER)
+        dv = QVBoxLayout(der)
+        dv.setContentsMargins(14, 14, 14, 14)
+        dv.setSpacing(12)
+        self._previa = _Previa()
+        dv.addWidget(self._previa, 1)
+        fila, fh = caja_h(espacio=8)
+        self._p_letra = _Pestana(tr('Letra'), 'letra', lambda: self._alternar('letra'))
+        self._p_color = _Pestana(tr('Color'), 'color', lambda: self._alternar('color'))
+        fh.addWidget(self._p_letra, 1)
+        fh.addWidget(self._p_color, 1)
+        dv.addWidget(fila)
+        self._desp = _Desplegable({'letra': self._armar_letra(), 'color': self._armar_color()})
+        dv.addWidget(self._desp)
+        cb.addWidget(der)
         capa.addWidget(cuerpo, 1)
-        capa.addSpacing(10)
-        capa.addWidget(self._armar_pie())
 
         self._reloj = QTimer(self)
         self._reloj.setInterval(self.TIC_MS)
@@ -1233,39 +1226,35 @@ class CreaEstiloDialogo(Dialogo):
         self._marcar_cajon()
         self._resumir()
 
-    # ------------------------------------------------------------------ el cajón
-    def _armar_panel(self):
-        panel = QFrame()
-        panel.setObjectName('cajonEstilo')
-        panel.setStyleSheet(_hoja('QFrame#cajonEstilo { background-color: %s; border: 1px solid %s; border-radius: 16px; }' % (PANEL, BORDE)))
-        pv = QVBoxLayout(panel)
-        pv.setContentsMargins(1, 1, 1, 1)
-        desp = Desplazable(margenes=(15, 13, 15, 13), espacio=10, estirar_final=False)
-        pv.addWidget(desp)
-        desp.agregar(self._titulo(tr('Tipografía')))
-        desp.agregar(Etiqueta(tr('Texto principal'), 11.5, color=ETIQUETA))
-        self._letras = _ListaLetras(lambda v: self._poner_ajuste('fuente_principal', v))    # todas las letras instaladas en el equipo
-        desp.agregar(self._letras)
-        desp.agregar(Etiqueta(tr('La letra de arriba y abajo la pone el texto base.'), 11, color='#6B7891', envolver=True))
-        desp.agregar(self._titulo(tr('Colores')))
+    # ------------------------------------------------------------------ Letra y Color (bajo la previa)
+    def _armar_letra(self):
+        pag = QWidget()
+        v = QVBoxLayout(pag)
+        v.setContentsMargins(0, 2, 0, 2)
+        v.setSpacing(8)
+        self._letras = _ListaLetras(lambda val: self._poner_ajuste('fuente_principal', val), alto_lista=176)    # todas las letras del equipo
+        v.addWidget(self._letras)
+        v.addWidget(Etiqueta(tr('La letra de arriba y abajo la pone el texto base.'), 11, color='#6B7891', envolver=True))
+        return pag
+
+    def _armar_color(self):
+        pag = QWidget()
+        v = QVBoxLayout(pag)
+        v.setContentsMargins(0, 2, 0, 2)
+        v.setSpacing(10)
         self._paletas = {}
         for clave, etq, colores in (('color_principal', tr('Texto principal'), COLORES_PRINCIPAL),
                                     ('color_secundario', tr('Arriba y abajo'), COLORES_SECUNDARIO)):
-            bloque, bv = caja_v(espacio=2)              # (la paleta lleva 4 px alrededor para el anillo: 2 + 4 = los 6 de la maqueta)
+            bloque, bv = caja_v(espacio=2)              # (la paleta lleva 4 px alrededor para el anillo)
             bv.addWidget(Etiqueta(etq, 11.5, color=ETIQUETA))
-            paleta = _Paleta(colores, lambda v, c=clave: self._poner_ajuste(c, v), lambda c=clave: self._color_propio(c))
+            paleta = _Paleta(colores, lambda val, c=clave: self._poner_ajuste(c, val), lambda c=clave: self._color_propio(c))
             self._paletas[clave] = paleta
             bv.addWidget(paleta)
-            desp.agregar(bloque)
-        desp.agregar(Etiqueta(tr('El círculo de colores = los del tema. Se aplica a todos los captions que elijas.'), 11, color='#6B7891', envolver=True))
-        desp.capa.addStretch(1)
-        self._volver = Enlace(tr('Volver a la letra y los colores del tema'), self._volver_al_tema, tam=12, color=ETIQUETA)
-        desp.capa.addWidget(self._volver, 0, Qt.AlignmentFlag.AlignLeft)
-        return panel
-
-    @staticmethod
-    def _titulo(texto):
-        return Etiqueta(texto, 13, peso='extra', color='#FFFFFF')
+            v.addWidget(bloque)
+        v.addWidget(Etiqueta(tr('El círculo de colores = los del estilo. Se aplica a todos los captions que elijas.'), 11, color='#6B7891', envolver=True))
+        self._volver = Enlace(tr('Volver a la letra y los colores del estilo'), self._volver_al_tema, tam=12, color=ETIQUETA)
+        v.addWidget(self._volver, 0, Qt.AlignmentFlag.AlignLeft)
+        return pag
 
     def _solo_letras_instaladas(self):
         """Una letra recordada que ya no está en el equipo (desinstalada, o de otro equipo) vuelve a «Del tema»: así siempre hay una fila marcada
@@ -1278,7 +1267,7 @@ class CreaEstiloDialogo(Dialogo):
         if quitadas:
             try:
                 import registro
-                registro.aviso(tr('«Crea tu estilo»: la letra {f} no está instalada; se usa la del tema.', f=', '.join(quitadas)), 'crea_estilo_ui')
+                registro.aviso(tr('«Crea tu estilo»: la letra {f} no está instalada; se usa la del estilo.', f=', '.join(quitadas)), 'crea_estilo_ui')
             except Exception:
                 pass
 
@@ -1286,16 +1275,28 @@ class CreaEstiloDialogo(Dialogo):
         self._letras.marcar(self._ajustes.get('fuente_principal', ''))
         for clave, paleta in self._paletas.items():
             paleta.poner(self._ajustes.get(clave, ''), self._propios.get(clave, ''))
+        self._p_letra.poner(valor=self._ajustes.get('fuente_principal', ''))
+        self._p_color.poner(valor=self._ajustes.get('color_principal', ''))
+        if self._abierto:                              # (los estilos de la letra elegida cambian el alto del panel)
+            QTimer.singleShot(0, self._reajustar)
 
-    def _alternar_cajon(self):
-        self._abrir_cajon(not self._abierto)
+    def _alternar(self, nombre):
+        self._abrir(None if self._abierto == nombre else nombre)
 
-    def _abrir_cajon(self, si):
-        self._abierto = bool(si)
-        self._interruptor.poner(self._abierto)
-        self._resorte.objetivo = 1.0 if self._abierto else 0.0
-        if self._abierto:
-            self._cajon.show()
+    def _abrir(self, nombre):
+        self._abierto = nombre
+        self._p_letra.poner(on=(nombre == 'letra'))
+        self._p_color.poner(on=(nombre == 'color'))
+        if nombre:
+            self._desp.mostrar(nombre)
+        self._resorte.objetivo = float(self._desp.alto_de(nombre)) if nombre else 0.0
+        ui.motor_resortes.pedir(self)
+
+    def _reajustar(self):
+        if self._cerrado or not ui.vivo(self) or not self._abierto:
+            return
+        self._desp.mostrar(self._abierto)
+        self._resorte.objetivo = float(self._desp.alto_de(self._abierto))
         ui.motor_resortes.pedir(self)
 
     def paso_resorte(self, dt):
@@ -1304,23 +1305,24 @@ class CreaEstiloDialogo(Dialogo):
         sigue = self._resorte.paso(dt)
         if not sigue:
             self._resorte.poner(self._resorte.objetivo)
-        self._aplicar_cajon(self._resorte.x)
+        self._aplicar_alto(self._resorte.x)
         return sigue
 
-    def _aplicar_cajon(self, x):
-        x = max(0.0, min(1.0, x))
-        self._cajon.setFixedWidth(int(round(self._cajon.ancho_total() * x)))
-        self._cajon.setVisible(x > 0.002)
+    def _aplicar_alto(self, x):
+        alto = max(0, int(round(x)))
+        self._desp.setFixedHeight(alto)
+        if alto == 0 and not self._abierto:
+            self._desp.mostrar(None)
 
     def _parar_animacion(self):
-        """El cajón salta a donde iba y sale del motor de resortes (al cerrar u ocultar la ventana)."""
+        """El panel salta a donde iba y sale del motor de resortes (al cerrar u ocultar la ventana)."""
         self._resorte.poner(self._resorte.objetivo)
         try:
             ui.motor_resortes._activos.discard(self)
         except Exception:
             pass
         if not self._cerrado and ui.vivo(self):
-            self._aplicar_cajon(self._resorte.x)
+            self._aplicar_alto(self._resorte.x)
 
     # ------------------------------------------------------------------ letra y colores
     def _poner_ajuste(self, clave, valor):
@@ -1387,14 +1389,10 @@ class CreaEstiloDialogo(Dialogo):
     def _resumir(self):
         self._rej_base.poner_orden([self._base] if self._base else [])
         self._rej_prin.poner_orden(self._orden)
-        self._resumen.poner(self._base, self._orden)
-        self._asi.poner(self._base, self._orden)
+        self._previa.poner(self._base, self._orden, self._ajustes)
         self._b_crear.setEnabled(bool(self._orden) and not self._creando)
 
     # ------------------------------------------------------------------ las previas: solo mientras se ven
-    def _imagen_de(self, ident):
-        return self._rej_base.imagen(ident) if ident and ident.startswith('b_') else self._rej_prin.imagen(ident)
-
     def _tic(self):
         visible = self.isVisible() and not self.isMinimized()
         for rej in (self._rej_base, self._rej_prin):
@@ -1402,10 +1400,9 @@ class CreaEstiloDialogo(Dialogo):
             rej.poner_visible(ve)
             if ve:
                 rej.update()
-        self._asi.poner_visible(visible)
+        self._previa.poner_visible(visible)
         if visible:
-            self._asi.tic()
-            self._resumen.update()
+            self._previa.tic()
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -1419,35 +1416,9 @@ class CreaEstiloDialogo(Dialogo):
             pass
         for rej in (self._rej_base, self._rej_prin):
             rej.poner_visible(False)
-        self._asi.cerrar()
+        self._previa.cerrar()
 
-    # ------------------------------------------------------------------ el pie y crear
-    def _armar_pie(self):
-        pie = QFrame()
-        pie.setObjectName('pieCreaEstilo')
-        pie.setStyleSheet(_hoja('QFrame#pieCreaEstilo { background-color: %s; border: 1px solid %s; border-radius: 16px; }' % ('#0D1627', '#1E2A42')))
-        ph = QHBoxLayout(pie)
-        ph.setContentsMargins(12, 12, 16, 12)
-        ph.setSpacing(20)
-        self._asi = _AsiQueda()
-        ph.addWidget(self._asi, 0, Qt.AlignmentFlag.AlignVCenter)
-        self._resumen = _ResumenTema(self._imagen_de)
-        ph.addWidget(self._resumen, 1, Qt.AlignmentFlag.AlignVCenter)
-        acc, av = caja_v(espacio=10)
-        self._nombre = Entrada(placeholder=tr('Nombre de tu tema'), alto=44, tam=14)
-        self._nombre.setObjectName('nombreEstilo')
-        self._nombre.setStyleSheet(_hoja('QLineEdit#nombreEstilo { background-color: %s; border: 1px solid %s; border-radius: 12px; padding: 0px 13px; '
-                                         'color: #FFFFFF; } QLineEdit#nombreEstilo:focus { border-color: #0F62FE; }' % ('#0A1120', '#1E2A42')))
-        self._nombre.setText(tr('Mi tema'))
-        self._nombre.returnPressed.connect(self._crear)
-        av.addWidget(self._nombre)
-        self._b_crear = Boton(tr('Crear mi tema'), self._crear, tipo='primario', alto=46, ancho=214, tam=14, negrita=True)
-        self._b_crear.setFixedWidth(214)
-        av.addWidget(self._b_crear)
-        acc.setFixedWidth(214)
-        ph.addWidget(acc, 0, Qt.AlignmentFlag.AlignVCenter)
-        return pie
-
+    # ------------------------------------------------------------------ crear
     def _llamar_al_crear(self, nombre, temas, ajustes, base):
         """al_crear(nombre, looks, terminado, ajustes, base). (Una app de antes recibe solo los argumentos que acepta: 4 o 3.)"""
         fn = self._al_crear
@@ -1470,7 +1441,7 @@ class CreaEstiloDialogo(Dialogo):
     def _crear(self):
         if not self._orden or self._creando:
             return
-        nombre = self._nombre.text().strip() or tr('Mi tema')
+        nombre = self._nombre.text().strip() or tr('Mi estilo')
         self._creando = True
         self._b_crear.setEnabled(False)
         self._b_crear.setText(tr('Creando…'))
@@ -1487,7 +1458,7 @@ class CreaEstiloDialogo(Dialogo):
         if not ui.vivo(self):
             return
         self._creando = False
-        self._b_crear.setText(tr('Crear mi tema'))
+        self._b_crear.setText(tr('Crear mi estilo'))
         self._resumir()
         if ok:
             self.cerrar()

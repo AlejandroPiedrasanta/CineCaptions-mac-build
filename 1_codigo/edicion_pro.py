@@ -36,6 +36,7 @@ from pathlib import Path
 
 import edicion_pro_ograf as OG
 import edicion_pro_planificador as PL
+import zona_segura as ZS
 
 CARPETA = Path.home() / 'DaVinciSubtitles' / 'edicion_pro'
 PLAN_JSON = Path.home() / 'DaVinciSubtitles' / 'edicion_pro_plan.json'
@@ -451,7 +452,7 @@ def planificar(video, palabras, duracion=None, cortes=None, idioma='es', opcione
             plan['piezas'] = [p for p in plan.get('piezas') or [] if not any(p['ini'] < b and a < p['fin'] for a, b in ocup_neon)]
         else:
             plan['piezas'] = []
-        plan['resumen'] = 'Tema 1 neón: ' + (', '.join(m['fn'] for m in neon_mot) if neon_mot else 'sin los motions del kit')
+        plan['resumen'] = 'Estilo 1 neón: ' + (', '.join(m['fn'] for m in neon_mot) if neon_mot else 'sin los motions del kit')
         if op['_neon_extras']:
             plan['resumen'] += ' + menú: ' + ', '.join(op['_neon_extras'])
     plan['video'] = str(video)
@@ -1247,9 +1248,23 @@ def _bloques_captions():
             cues = json.loads(Path(t['data_path']).read_text(encoding='utf-8')).get('cues') or []
         except Exception:
             continue
-        out += bloques_de_cues(cues)
+        pack_pista = str(((t.get('plantilla') or {}) if isinstance(t.get('plantilla'), dict) else {}).get('pack') or '')
+        for b in bloques_de_cues(cues):
+            b.setdefault('pack', pack_pista)                       # (v5.76: el estilo de cada bloque: la regla de la cara no mueve los CENTRADOS)
+            out.append(b)
     out.sort(key=lambda b: b['ini'])
     return out
+
+
+# v5.76 (el usuario, con el video «Solo captions» del Estilo 2: «los captions deben de ir en el centro, no arriba ni abajo, corrige eso»): los
+# bloques de estos estilos NO los mueve la regla de la cara (_captions_sin_cara): se quedan a la altura de su planificador (el centro, 56 %)
+CENTRADOS = ('Referencia',)
+
+
+def _es_centrado(pack):
+    """¿El bloque es de un estilo que siempre va al centro? (también su pack personalizado «Referencia · …» y un derivado de «Crea tu estilo»)."""
+    nombre = str(pack or '').split(' · ')[0].strip()
+    return bool(nombre) and (nombre in CENTRADOS or _tema(nombre) in CENTRADOS)
 
 
 def bloques_de_cues(cues):
@@ -1280,8 +1295,15 @@ def bloques_de_cues(cues):
             grande = None
             if textos:
                 grande = float(max(textos, key=lambda r: float(r['y']))['size']) >= 0.8 * max(float(r['size']) for r in textos)
+            # v5.76: el bloque del Tema 5 («v tipo») es UN clip centrado con sus líneas dentro: su planificador dice el alto de la línea de abajo
+            # y si es la grande (con la y del run salía una «línea» de 0,24 del cuadro y la cabeza tapaba el bloque entero)
+            if isinstance(c.get('linea_abajo'), (int, float)) and c['linea_abajo'] > 0:
+                linea = float(c['linea_abajo'])
+            if isinstance(c.get('grande_abajo'), bool):
+                grande = c['grande_abajo']
             out.append({'ini': ini, 'fin': fin, 'arriba': arriba, 'abajo': abajo, 'linea': max(0.02, linea), 'xs': xs or [0.5],
                         **({'grande_abajo': grande} if grande is not None else {}),
+                        **({'pack': c['pack']} if isinstance(c.get('pack'), str) and c['pack'] else {}),     # (v5.76: el de su estilo en una mezcla)
                         'palabras': [(str(r.get('texto') or ''), float(r['t']) if isinstance(r.get('t'), (int, float)) else ini) for r in runs],
                         'emoji': c.get('emoji') if isinstance(c.get('emoji'), str) else None})    # (v5.25: el del tema, ya elegido con coherencia)
     out.sort(key=lambda b: b['ini'])
@@ -1425,9 +1447,10 @@ def _detras_bloque(b, info, video, W, H, cfg, a_cuadro, cortes, forzado, posicio
     if linea_chica:                                                   # (una línea pequeña abajo: la cabeza solo le roza el pie, se sigue leyendo)
         tapa = max(0.006, min(tapa, 0.28 * b['linea']))
     dy = coronilla + tapa - b['abajo']
-    if b['arriba'] + dy < 0.08:
+    lo, hi = ZS.limites_y(W, H, (0.08, 0.9))                         # v5.76: tampoco sale de la zona segura del reel (vertical)
+    if b['arriba'] + dy < lo:
         return None, MOTIVOS_DETRAS['cabeza_arriba']                  # (v5.5.20: no sube al borde de arriba del cuadro —«EMPRESA» pegado arriba—)
-    if b['abajo'] + dy < coronilla + min(0.012, tapa) - 1e-6 or b['abajo'] + dy > 0.9 or b['abajo'] + dy - coronilla > tapa + 0.004:
+    if b['abajo'] + dy < coronilla + min(0.012, tapa) - 1e-6 or b['abajo'] + dy > hi or b['abajo'] + dy - coronilla > tapa + 0.004:
         return None, MOTIVOS_DETRAS['no_cabe']
     # (v5.5.20: si la pila no puede subir más —choca arriba— la cabeza taparía más de lo que deja la intensidad: ese bloque no va detrás)
     caras = [c for v in vs for c in _caras(v)]
@@ -1661,6 +1684,8 @@ def _captions_sin_cara(info, video, ocupado, detras, W, H):
         a, z = b['ini'], b['fin']
         if round(a, 3) in ya or any(a < o1 and o0 < z for o0, o1 in ocupado):
             continue
+        if _es_centrado(b.get('pack')):                     # v5.76: el Estilo 2 siempre en el centro (pedido del usuario)
+            continue
         caras = []
         for t in (a + 0.12, max(a + 0.12, z - 0.15)):
             ruta, t_src, clip = _fuente_de(info, video, t)
@@ -1674,7 +1699,7 @@ def _captions_sin_cara(info, video, ocupado, detras, W, H):
         filas.append({'ini': a, 'fin': z, 'yc': yc, 'medio': medio, 'caras': caras,
                       'x0': max(0.0, min(b['xs']) - 0.2), 'x1': min(1.0, max(b['xs']) + 0.2)})
     out = []
-    for f, y in zip(filas, _lado_coherente(filas)):
+    for f, y in zip(filas, _lado_coherente(filas, lim=ZS.limites_y(W, H, (0.04, 0.96)))):      # (v5.76: dentro de la zona segura)
         yc, medio = f['yc'], f['medio']
         caja = [round(y - medio, 4), round(y + medio, 4)] if y is not None else [round(yc - medio, 4), round(yc + medio, 4)]
         out.append({'ini': f['ini'], 'fin': f['fin'], 'subir': round(yc - y, 4) if y is not None else 0.0, 'caras': f['caras'], 'caja': caja})
@@ -1734,13 +1759,13 @@ def _motions_a_ograf(piezas, W, H):
     return len(nuevas)
 
 
-def _opciones_fuera(yc, medio, caras, x0=0.0, x1=1.0):
+def _opciones_fuera(yc, medio, caras, x0=0.0, x1=1.0, lim=(0.04, 0.96)):
     """{'queda': y si no pisa ninguna cara, 'abajo': centro justo debajo de la barbilla más baja, 'arriba': justo encima de la coronilla más
     alta} (None el que no quepa): lo que `_fuera_de_la_cara` elegía por cercanía, por separado."""
     malas = [c for c in caras if c[0] < x1 and x0 < c[2]]
 
     def libre(yy):
-        return 0.04 + medio <= yy <= 0.96 - medio and all(yy + medio + MARGEN_CARA <= c[1] or yy - medio - MARGEN_CARA >= c[3] for c in malas)
+        return lim[0] + medio <= yy <= lim[1] - medio and all(yy + medio + MARGEN_CARA <= c[1] or yy - medio - MARGEN_CARA >= c[3] for c in malas)
     if not malas or libre(yc):
         return {'queda': yc, 'abajo': None, 'arriba': None}
     abajo = max(c[3] for c in malas) + MARGEN_CARA + medio
@@ -1748,10 +1773,10 @@ def _opciones_fuera(yc, medio, caras, x0=0.0, x1=1.0):
     return {'queda': None, 'abajo': abajo if libre(abajo) else None, 'arriba': arriba if libre(arriba) else None}
 
 
-def _lado_coherente(filas, hueco_s=1.2):
+def _lado_coherente(filas, hueco_s=1.2, lim=(0.04, 0.96)):
     """El centro final de cada fila ({'yc', 'medio', 'caras', 'x0', 'x1', 'ini', 'fin'}) o None si no cabe: UN lado para todo el video (abajo
     salvo que arriba quepa en más bloques) y una misma altura para los bloques seguidos (a menos de `hueco_s`) que se mueven al mismo lado."""
-    ops = [_opciones_fuera(f['yc'], f['medio'], f['caras'], f['x0'], f['x1']) for f in filas]
+    ops = [_opciones_fuera(f['yc'], f['medio'], f['caras'], f['x0'], f['x1'], lim) for f in filas]
     n_abajo = sum(1 for o in ops if o['queda'] is None and o['abajo'] is not None)
     n_arriba = sum(1 for o in ops if o['queda'] is None and o['arriba'] is not None)
     lado, otro = ('abajo', 'arriba') if n_abajo >= n_arriba else ('arriba', 'abajo')
@@ -1768,7 +1793,7 @@ def _lado_coherente(filas, hueco_s=1.2):
             j += 1
         if lados[i] and j > i:
             comun = (max if lados[i] == 'abajo' else min)(ys[i:j + 1])
-            if all(_opciones_fuera(comun, filas[k]['medio'], filas[k]['caras'], filas[k]['x0'], filas[k]['x1'])['queda'] is not None
+            if all(_opciones_fuera(comun, filas[k]['medio'], filas[k]['caras'], filas[k]['x0'], filas[k]['x1'], lim)['queda'] is not None
                    for k in range(i, j + 1)):
                 ys[i:j + 1] = [comun] * (j + 1 - i)
         i = j + 1
@@ -1866,7 +1891,7 @@ def _choca(cx, cy, ancho, alto, caja, margen=0.012):
     return cx - ancho / 2 < x1 + margen and x0 - margen < cx + ancho / 2 and cy - alto / 2 < y1 + margen and y0 - margen < cy + alto / 2
 
 
-def _sitio_emoji(b, sube, caras, tam, ancho, donde):
+def _sitio_emoji(b, sube, caras, tam, ancho, donde, W=1080, H=1920):
     """(x, y) del centro del emoji (fracciones del cuadro) o None. «lado»: arriba a un lado de la pila de captions; «encima»: centrado sobre la
     pila; «cabeza»: junto a la cabeza (a su lado, a la altura de los ojos); «auto»: lado → encima → cabeza. Nunca sobre una cara ni fuera."""
     arriba = b['arriba'] - sube
@@ -1880,9 +1905,10 @@ def _sitio_emoji(b, sube, caras, tam, ancho, donde):
         cands['cabeza'] = [(c[2] + ancho * 0.62, cy), (c[0] - ancho * 0.62, cy)]
     orden = {'lado': ['lado', 'encima'], 'encima': ['encima', 'lado'], 'cabeza': ['cabeza', 'lado', 'encima'],
              'auto': ['lado', 'encima', 'cabeza']}.get(donde, ['lado', 'encima', 'cabeza'])
+    lx, ly = ZS.limites_x(W, H, (0.03, 0.97)), ZS.limites_y(W, H, (0.035, 0.95))     # (v5.76: en vertical, ni bajo los iconos ni bajo la descripción del reel)
     for clave in orden:
         for x, y in cands[clave]:
-            if not (0.03 + ancho / 2 <= x <= 0.97 - ancho / 2 and 0.035 + tam / 2 <= y <= 0.95 - tam / 2):
+            if not (lx[0] + ancho / 2 <= x <= lx[1] - ancho / 2 and ly[0] + tam / 2 <= y <= ly[1] - tam / 2):
                 continue
             if any(_choca(x, y, ancho, tam, k) for k in caras):
                 continue
@@ -1949,7 +1975,7 @@ def _emojis_pro(bloques, ocupado, subidas, caras_de, W, H, op, marcas=None):
         ini = max(a, t_pal - 0.08)
         if not forzado and (z - t_pal < 0.45 or ini - ultimo < cfg['cada']):
             continue                                                  # (la distancia se mide entre lo que de verdad se VE: cuándo sale cada uno)
-        pos = _sitio_emoji(b, subidas.get(round(a, 2), 0.0), caras_de.get(round(a, 2), []) or [], tam, ancho, donde)
+        pos = _sitio_emoji(b, subidas.get(round(a, 2), 0.0), caras_de.get(round(a, 2), []) or [], tam, ancho, donde, W, H)
         if pos is None:
             if forzado:
                 avisos.append(f'«emojis» en {forz[k]:.1f} s: no hay sitio sin tapar una cara o los captions')
@@ -1992,7 +2018,7 @@ def _ajustes_texto_neon(antes, despues, bloques, fps, H, alto_kit=1920.0):
         if abs(top1 - top0) < 1:
             continue
         alto = max(0.02, float(bq['abajo']) - float(bq['arriba']))
-        arriba = min(top1 / alto_kit, 0.95 - alto)
+        arriba = min(top1 / alto_kit, ZS.limites_y(defecto=(0.0, 0.95))[1] - alto)       # (v5.76: el Tema 1 es vertical: zona segura)
         mover.append({'ini': f0, 'fin': f1, 'subir': round((float(bq['arriba']) - arriba) * H, 1), 'caras': [],
                       'caja': [round(arriba, 4), round(arriba + alto, 4)]})
     return mover, sin
@@ -2381,7 +2407,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 if not any(a < e1 - 0.1 and e0 + 0.1 < z for e0, e1 in esc):
                     continue
                 yc, medio = (bq['arriba'] + bq['abajo']) / 2.0, (bq['abajo'] - bq['arriba']) / 2.0
-                y = min(ES.Y_CAPTIONS[vertical] / 100.0, 0.97 - medio)
+                y = min(ES.Y_CAPTIONS[vertical] / 100.0, ZS.limites_y(W, H, (0.0, 0.97))[1] - medio)     # (v5.76: no bajo la descripción del reel)
                 if yc >= y - 0.02:
                     continue                                          # ya iba abajo
                 clave = (int(round(a * fps)), int(round(z * fps)))
@@ -2626,13 +2652,13 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
     subs_ok = sum(1 for p in subs if rm_hechos.get(str(rm_salida.get(id(p)))))
     neon_ok = sum(1 for p in neon if rm_hechos.get(str(rm_salida.get(id(p)))))
     if hilo_placa is not None:
-        decir('Edición PRO: terminando la placa del Tema 1 neón (cámara y desenfoques)…')
+        decir('Edición PRO: terminando la placa del Estilo 1 neón (cámara y desenfoques)…')
         import time as _t
         hasta = _t.time() + 1800
         while hilo_placa.is_alive() and _t.time() < hasta:     # v5.5.13: con señales (el vigilante de GO la daba por atascada a los 4 min)
             hilo_placa.join(15)
             if hilo_placa.is_alive():
-                decir(f"Edición PRO: terminando la placa del Tema 1 neón ({int(100 * placa_res.get('f', 0.0))} %)…")
+                decir(f"Edición PRO: terminando la placa del Estilo 1 neón ({int(100 * placa_res.get('f', 0.0))} %)…")
         if placa_res.get('ruta'):
             graficos.append({'capa': 'placa', 'ini': 0, 'archivo': str(OG.ruta_larga(placa_res['ruta'])), 'alfa': False,
                              'dur': round(float(plan.get('duracion') or 0), 3), 'nombre': 'PRO · Placa neón (cámara)'})
@@ -2889,7 +2915,7 @@ def aplicar_detras(ruta, al_estado=None, marcas_tira=None, modo='solo', al_progr
     a_cuadro = None
     if ctx.get('neon') and ctx.get('placa'):                          # (v5.58: sin «Kit de motions» GO no hace placa —5.56—: la persona sale
         if not Path(ctx['placa']).exists():                           # de V1, como en GO; antes «Listo» del Tema 1 decía que faltaba la placa)
-            return False, 'Falta la placa del Tema 1 de tu último GO: pulsa GO otra vez.', 0
+            return False, 'Falta la placa del Estilo 1 de tu último GO: pulsa GO otra vez.', 0
         import kit_neon_placa as PLA
         a_cuadro = PLA.mapa_camara(ctx['imagen'], ctx.get('plan_placa') or {}, W, H)
     motivos = {}

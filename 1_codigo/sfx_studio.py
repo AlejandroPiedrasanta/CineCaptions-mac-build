@@ -1447,9 +1447,9 @@ class SfxStudio(QWidget):
         if not activa:
             cv.addWidget(_Nota(tr('La Edición PRO está apagada: estos sonidos se usan cuando la actives en Inicio.'), 12, lineas=2, color=ui.AMBAR))
         elif edicion_pro.tema_actual() in edicion_pro.TEMAS_PRO and edicion_pro.activa_en_go():
-            cv.addWidget(_Nota(tr('Tema actual: {t}. En este tema todo el sonido lo pone la Edición PRO (sin toques por palabra).', t=tema), 12, lineas=2, color='#8FC7FF'))
+            cv.addWidget(_Nota(tr('Estilo actual: {t}. En este estilo todo el sonido lo pone la Edición PRO (sin toques por palabra).', t=tema), 12, lineas=2, color='#8FC7FF'))
         elif tema:
-            cv.addWidget(_Nota(tr('Tema actual: {t}. La PRO suena con sus gráficos; los captions, con lo que elijas en «Simple».', t=tema), 12, lineas=2, color='#8FC7FF'))
+            cv.addWidget(_Nota(tr('Estilo actual: {t}. La PRO suena con sus gráficos; los captions, con lo que elijas en «Simple».', t=tema), 12, lineas=2, color='#8FC7FF'))
         fila_n, cn = caja_h(espacio=12)
         cn.addWidget(Etiqueta(tr('Volumen'), 14, peso='medio', color='#FFFFFF'))
         niveles = [('suave', tr('Suave')), ('normal', tr('Normal')), ('fuerte', tr('Fuerte'))]

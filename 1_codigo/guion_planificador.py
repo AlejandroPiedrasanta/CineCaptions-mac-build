@@ -24,9 +24,11 @@ Todo es determinista (mismo audio → mismos bloques) y se puede forzar a mano: 
 import re
 
 import guion_captions as G
+import zona_segura as ZS
 
 MAX_PALABRAS = 8
 ANCLAS = {'medio': 0.56, 'alto': 0.33, 'bajo': 0.68}
+TOPE_W = ZS.ancho_tinta(0.92)                # v5.76: lo más ancho que puede ser una línea (antes 0,92 del cuadro; ahora la zona segura, los iconos del reel)
 ESTILOS_BASE = (1, 2, 5)                     # (v5.48: sin el 4, «Moderno blanco», eliminado) Luxe: el estilo «de fondo» de cada oración (pack «Referencia»: en el orden en que los estrena la referencia)
 ESTILOS_ACENTO = (3, 8)                      # presets de Amro sueltos (pastilla, subrayado): el REMATE de la oración; fuego (6) y negación (7) van por significado
 ROTACION = ESTILOS_BASE + ESTILOS_ACENTO + (6, 7)
@@ -537,7 +539,7 @@ def _tramos(pal, indices, con_main, A=AFINADO, forzar=None):
 
 def _ancho_objetivo_main(texto, A=AFINADO):
     n = max(3, len(texto))
-    return max(0.5, min(0.86, 0.55 + 0.035 * (n - 4)))
+    return max(0.5, min(ZS.ancho_tinta(0.86), 0.55 + 0.035 * (n - 4)))      # (v5.76: nunca más ancha que la zona segura)
 
 
 def _cabe(pack, n, texto, ancho_tl):
@@ -800,8 +802,8 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
                         # sobre ella, casi al ras, y la de debajo nunca se sale de ella. Nunca más pequeña que su tamaño natural, ni más del 92 % del cuadro.
                         w_linea = max(_ancho_linea(pal, v[1], A, forzar_peso, ancho_tl) for v in vecinas)
                         minimo = natural / float(ancho_tl) if natural else 0.0
-                        tope = (A['zoom_max_cifra'] if est[m_a] == VARIANTE_COUNT else 2.4) * natural / float(ancho_tl) if natural else 0.92
-                        anchos[j] = min(0.92, max(A['grande_linea'] * w_linea, A['grande_min'] * minimo), tope)     # (una cifra corta no crece tanto)
+                        tope = (A['zoom_max_cifra'] if est[m_a] == VARIANTE_COUNT else 2.4) * natural / float(ancho_tl) if natural else TOPE_W
+                        anchos[j] = min(TOPE_W, max(A['grande_linea'] * w_linea, A['grande_min'] * minimo), tope)     # (una cifra corta no crece tanto)
                     elif natural:                                               # sola (sin línea pequeña): no se infla (la referencia: zoom 0,9-1,3)
                         anchos[j] = min(anchos[j], A['zoom_max'] * natural / float(ancho_tl))
                 aire = 2 * AIRE_EDITORIAL if (m_a < len(est) and est[m_a] in ESTILOS_EDITORIAL) else 0.0
@@ -820,7 +822,8 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
         yc = ANCLAS.get(ancla, ANCLAS['medio'])
         if ancla == 'alterna':
             yc = (ANCLAS['medio'], ANCLAS['medio'], ANCLAS['alto'])[n % 3]
-        top = max(0.10, min(0.90 - total, yc - total / 2.0))
+        lo, hi = ZS.limites_y(defecto=(0.10, 0.90))                 # v5.76: la pila entera dentro de la zona segura (en el centro, como siempre)
+        top = max(lo, min(hi - total, yc - total / 2.0))
         lineas, y, m_i = [], top, 0
         for j, ((tipo, ks), h) in enumerate(zip(segs, alturas)):
             centro = round(y + arriba.get(j, h / 2.0), 4)
@@ -834,9 +837,9 @@ def planificar(palabras, idioma='es', pack='Referencia', ancho_tl=1080, ancla='m
                     for o in pal[k_p]['orig']:
                         b.setdefault('pesos', {})[o] = peso_p          # para que el editor pinte lo que el planificador decide solo (negrita = «Abajo»)
                 natural = sum(G.ancho_px(t, G.FINA if p == 'L' else G.NEGRITA, G.TAM_PEQUENA, ancho_tl) for t, p, _ in tr) / float(ancho_tl)
-                # una línea pequeña más ancha que el cuadro se reduce hasta 0,92 del ancho
+                # una línea pequeña más ancha que el cuadro se reduce hasta 0,92 del ancho (v5.76: hasta el ancho de la zona segura, TOPE_W)
                 w_n = natural * G.AFINADO['tinta_pequena']
-                cx, w_l = 0.5, (0.92 if w_n > 0.92 else None)
+                cx, w_l = 0.5, (TOPE_W if w_n > TOPE_W else None)
                 if m_i > 0 and est[m_i - 1] not in ESTILOS_LINEA3_CENTRADA:
                     # v5.48 (pedido): la línea de DEBAJO de la grande va del centro hacia la derecha y NUNCA se sale del borde derecho de la grande
                     w_main = anchos[max(i for i in anchos if i < j)] - 0.03          # (margen: que la tinta quede DENTRO del borde, no justo en él)

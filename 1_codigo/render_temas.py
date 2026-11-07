@@ -693,6 +693,34 @@ def _margenes_guion(estilo, cue):
     return mover
 
 
+def _capas_tipo(r, s, dx, dy, ini, fin, aj, pack):
+    """v5.76: el «v tipo» del Tema 5 (tipo_vista.dibujar): una capa por cada palabra que aparece, cada una con el bloque entero tal como se ve
+    desde ese instante; entran y salen de golpe ('seco': la siguiente la reemplaza) salvo la primera (entra en 2 fotogramas) y la última (sale
+    con el bloque)."""
+    import tipo_vista as TV
+    texto = str(r.get('codigo') or r.get('texto') or '')        # (el bloque codificado; 'texto' es lo legible)
+    W, H = int(round(1080.0 * s)), int(round(1920.0 * s))
+    color = _rgb01(aj['color']) if (aj or {}).get('color') else (1.0, 1.0, 1.0)
+    t_clip = max(ini, float(r.get('t', ini)))
+    t_fin = float(r['fin']) if isinstance(r.get('fin'), (int, float)) and float(r['fin']) > t_clip else fin
+    todo = TV.dibujar(texto, W, H, None, color)
+    caja = todo.getchannel('A').getbbox()
+    if not caja:
+        return []
+    estados = [e for e in TV.estados(texto) if t_clip + e < t_fin - 0.02]
+    capas = []
+    for n, e in enumerate(estados):
+        img = TV.dibujar(texto, W, H, e, color).crop(caja)
+        if not img.getchannel('A').getbbox():
+            continue
+        rgb, a = _a_rgba(img, img.getchannel('A'))
+        t1 = t_clip + estados[n + 1] if n + 1 < len(estados) else t_fin
+        capas.append({'rgb': rgb, 'a': a, 'x': int(round(dx + caja[0])), 'y': int(round(dy + caja[1])), 't0': t_clip + e, 't1': max(t_clip + e + 0.02, t1),
+                      'entrada': 0.08 if not capas else 0.0, 'sube': 0.0, 'seco': n + 1 < len(estados),
+                      'tipo': 'viral', 'k': 'v tipo', 'rol': 'main', 'pack': pack, 'em': 60.0 * s, 'cue_t0': ini})
+    return capas
+
+
 def capas_de_cue(estilo, cue, s, dx, dy):
     """Las capas (sprites listos para componer) de los elementos de un cue, en coordenadas del video."""
     tipo = (estilo or {}).get('tipo') or 'guion'
@@ -708,6 +736,12 @@ def capas_de_cue(estilo, cue, s, dx, dy):
             continue
         n_antes = len(capas)
         aj = por_rol.get(rol_de_run(tipo, r)) if por_rol else None
+        if tipo == 'viral' and r.get('k') == 'v tipo':             # v5.76: el bloque del Tema 5 (todas sus líneas en un clip): una capa por estado
+            try:
+                capas += _capas_tipo(r, s, dx, dy, ini, fin, aj, (estilo or {}).get('pack'))
+            except Exception:
+                pass
+            continue
         try:
             if tipo == 'kinetic':
                 sp, em, c = _elemento_kinetic(r, s, aj)

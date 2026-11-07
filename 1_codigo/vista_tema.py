@@ -30,7 +30,7 @@ def estilo_de_pack(pack, formato='v'):
         return None
     if pack == 'Kinetic':
         return {'tipo': 'kinetic', 'pack': pack}
-    if pack == 'VIRAL':
+    if pack in ('VIRAL', 'Tema5'):                     # (v5.76: el Tema 5 es un pack de elementos como el VIRAL: su «v tipo»)
         return {'tipo': 'viral', 'pack': pack}
     if guion_editor.es_guion(pack, formato or 'v'):
         return {'tipo': 'guion', 'pack': pack}
@@ -54,7 +54,10 @@ def planificar(palabras, roles, pack, estilo, idioma='es', fin_video=None, ancla
         cues = guion_editor.planear(palabras, roles, pack, ancla=ancla_guion, fin_video=fin_video, idioma=idioma, video=video)['cues']
     elif tipo in ('kinetic', 'viral'):
         mains = guion_editor.parametros_de_marcas(palabras, roles)[0]
-        if tipo == 'viral':
+        if tipo == 'viral' and plantillas.tema_base(pack) == 'Tema5':
+            import tipo_planificador as kp        # v5.76: el Tema 5 nuevo (como GO)
+            res = kp.planificar(palabras, idioma=idioma, ancho_tl=1080, alto_tl=1920, mains=mains, fin_video=fin_video)
+        elif tipo == 'viral':
             import linea_planificador as kp       # v5.75: el Tema 3 es la línea con la caja negra (como GO)
             res = kp.planificar(palabras, idioma=idioma, ancho_tl=1080, alto_tl=1920, ancla=_ancla('viral_ancla', 'bajo'), mains=mains, fin_video=fin_video)
         else:
@@ -182,7 +185,11 @@ def estado_animado(c, t):
         else:
             st.update(dy=0.5 * em * (1.0 - _ease(q(0.32))), a=q(0.2))
     elif tipo == 'viral':
-        if 'shatter' in k:
+        if k == 'v tipo':                                               # v5.76: cada estado del bloque del Tema 5 aparece de golpe (el primero en 2 fotogramas)
+            st.update(a=q(c['entrada']) if c.get('entrada') else 1.0)
+            if c.get('seco'):
+                return st
+        elif 'shatter' in k:
             st.update(s=1.55 - 0.55 * _ease(q(0.36)), a=q(0.14), brillo=e / 0.55 if e < 0.55 else None)
         elif 'select' in k:                                             # v5.55: los tiempos de comp_select (fotogramas de 24 fps): escribe en lineal desde T 0,5
             T = _t24(c, e, 26)                                          # en 2,5 + 1,15·letras; luego la caja (capa aparte) crece desde su esquina de arriba a

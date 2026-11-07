@@ -12,7 +12,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (44 archivos)
+    herramientas_dev\   (46 archivos)
     remotion\   (16190 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
@@ -50,7 +50,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     copias.py
         copias de seguridad de ~/DaVinciSubtitles (crear y restaurar un .zip).
     crea_estilo_ui.py
-        «Crea tu estilo»: texto base + textos principales con su previa ANIMADA sobre negro, el cajón de letra y colores, y el popup de la estructura de nombres.
+        «Crea tu estilo»: texto base + textos principales con su previa ANIMADA sobre negro, la previa vertical con letra y color, y el popup de la estructura de nombres.
     cuda_libs.py
         las librerías CUDA que necesita Whisper en la GPU: detectarlas, registrarlas y repararlas.
     descargas.py
@@ -400,8 +400,16 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         Tema 4: captions blancos que se arman palabra a palabra en un recuadro, con la palabra clave grande y las conectoras pequeñas.
     tema4_vista.py
         vista aproximada (Pillow) de un bloque del Tema 4: las palabras ya dichas en su sitio, con el brillo suave. Para comparar con la referencia sin pasar por Resolve.
+    tipo_planificador.py
+        el Tema 5 (v5.76): bloques tipográficos con la palabra clave GRANDE y lo demás en serif cursiva que la muerde, palabra a palabra.
+    tipo_vista.py
+        el bloque del Tema 5 («v tipo») dibujado con Pillow: vistas, GO sin Resolve y la vista de Creativo.
     tts_prueba.ps1
         voz de prueba (Windows SAPI) → WAV: para probar los captions con un video SIN audio útil.
+    tutoriales.py
+        los videos de los tutoriales (uno por página, grabados con la interfaz real) y la guía que sale sola UNA vez por versión nueva.
+    tutoriales_ui.py
+        el reproductor de los videos tutoriales (guía y Ajustes) y el panel «Tutoriales» de Ajustes: el video grande y la lista de las páginas.
     ui_toast.py
         avisos que se cierran solos (toasts).
     uia_resolve.py
@@ -434,3 +442,5 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         los VIDEOS que se reproducen dentro de las tarjetas del slider «Pack de estilos» (captions reales de Resolve, no imágenes fijas).
     vocabulario.py
         v5.5.17: el vocabulario del usuario para la voz: los nombres que corrige en Creativo (lugares, marcas, personas,
+    zona_segura.py
+        la zona que la interfaz de TikTok / Reels / Shorts deja libre en un video vertical (v5.76): ningún caption sale de ella.

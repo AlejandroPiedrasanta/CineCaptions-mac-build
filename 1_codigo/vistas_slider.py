@@ -64,6 +64,9 @@ class Reproductor:
         self.fallo = False
         self.vueltas = 0              # v5.75: vueltas enteras desde arrancar() («Así queda» de «Crea tu estilo» pasa al siguiente principal)
         self.tam = None               # v5.75: (ancho, alto) en píxeles: el cuadro se escala AQUÍ (FFmpeg, en el hilo) y la tarjeta solo lo copia
+        self.posicion = 0.0           # v5.76: segundos del cuadro actual y duración del clip (la barra de avance de los tutoriales)
+        self.duracion = 0.0
+        self._en_pausa = threading.Event()
 
     def imagen(self):
         return self._img
@@ -77,13 +80,26 @@ class Reproductor:
         if self.activo or self.fallo:
             return
         self._parar = threading.Event()
+        self._en_pausa.clear()
         self._img = None
         self.vueltas = 0
+        self.posicion = 0.0
         self._hilo = threading.Thread(target=self._correr, args=(self._parar,), name='vista-slider', daemon=True)
         self._hilo.start()
 
     def parar(self):
         self._parar.set()
+
+    def pausar(self, si=True):
+        """v5.76 (tutoriales): congela el cuadro actual (el hilo sigue vivo y espera); pausar(False) sigue desde ahí."""
+        if si:
+            self._en_pausa.set()
+        else:
+            self._en_pausa.clear()
+
+    @property
+    def en_pausa(self):
+        return self._en_pausa.is_set()
 
     def _correr(self, parar):
         try:
@@ -97,6 +113,13 @@ class Reproductor:
                 flujo = contenedor.streams.video[0]
                 flujo.thread_type = 'NONE'
                 flujo.codec_context.thread_count = 1
+                try:
+                    if flujo.duration is not None:
+                        self.duracion = float(flujo.duration * flujo.time_base)
+                    elif contenedor.duration:
+                        self.duracion = float(contenedor.duration) / 1e6
+                except Exception:
+                    pass
                 primera = True
                 while not parar.is_set():
                     if not primera:
@@ -106,8 +129,15 @@ class Reproductor:
                     for cuadro in contenedor.decode(flujo):
                         if parar.is_set():
                             return
+                        if self._en_pausa.is_set():                    # v5.76: en pausa el reloj no corre (al seguir, sigue desde aquí)
+                            t_p = time.perf_counter()
+                            while self._en_pausa.is_set():
+                                if parar.wait(0.05):
+                                    return
+                            t0 += time.perf_counter() - t_p
                         if cuadro.pts is not None:
                             t = float(cuadro.pts * flujo.time_base)
+                            self.posicion = t
                             espera = t0 + t - time.perf_counter()
                             if espera > 0:
                                 if parar.wait(espera):

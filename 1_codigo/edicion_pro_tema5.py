@@ -27,6 +27,8 @@ import re
 import unicodedata
 from pathlib import Path
 
+import zona_segura as ZS
+
 PACK = 'Tema5'
 MANIFIESTO = Path.home() / 'DaVinciSubtitles' / 'subtitles_manifest.json'
 Y_NORMAL = {True: 56.0, False: 78.0}          # centro de los captions sobre el video (% del alto): a la altura del pecho
@@ -95,10 +97,12 @@ def _numero(t):
 
 
 def bloques():
-    """Los bloques de captions del idioma base que GO acaba de poner (pista «guion» del manifiesto), cada palabra con su momento RELATIVO al bloque."""
+    """Los bloques de captions del idioma base que GO acaba de poner (pista «guion» del manifiesto), cada palabra con su momento RELATIVO al bloque.
+    v5.76: el Tema 5 nuevo va en una pista «kinetic» (un clip «v tipo» por bloque con todo codificado en su texto): sus palabras salen de c['lines']."""
     try:
         m = json.loads(MANIFIESTO.read_text(encoding='utf-8'))
-        pista = next(t for t in m.get('tracks') or [] if t.get('style') == 'guion' and t.get('data_path'))
+        pistas = [t for t in m.get('tracks') or [] if t.get('data_path')]
+        pista = next((t for t in pistas if t.get('style') == 'guion'), None) or next(t for t in pistas if t.get('style') == 'kinetic')
         cues = json.loads(Path(pista['data_path']).read_text(encoding='utf-8')).get('cues') or []
     except (OSError, ValueError, StopIteration):
         return []
@@ -109,6 +113,9 @@ def bloques():
         except (KeyError, TypeError, ValueError):
             continue
         runs = sorted([r for r in c.get('runs') or [] if isinstance(r, dict) and str(r.get('texto') or '').strip()], key=lambda r: float(r.get('t') or ini))
+        if pista.get('style') != 'guion':          # (los runs de la pista «kinetic» son clips, no palabras: lo dicho está en las líneas del bloque)
+            runs = sorted([{'texto': l.get('dicho') or l.get('text'), 't': l.get('start'), 'rol': l.get('role')} for l in c.get('lines') or []
+                           if isinstance(l, dict) and str(l.get('text') or '').strip()], key=lambda r: float(r.get('t') or ini))
         palabras = []
         for r in runs:
             t = max(0.0, float(r.get('t') or ini) - ini)
@@ -609,6 +616,9 @@ def planificar(plan, vertical=True, densidad='media', video='', det_de=None, fot
                 valores.update(velo=False, tinta='clara' if cristal else 'oscura', y=Y_PAPEL_TEXTO, escala=1.1)   # la frase al centro y las fichas alrededor
             else:
                 valores.update(velo=False, tinta='clara' if cristal else 'oscura', y=Y_PAPEL, escala=1.2)
+        if vertical:                                                     # v5.76: la frase entera dentro de la zona segura del reel (~5 % de alto a cada lado)
+            medio = 5.0 * float(valores.get('escala') or 1.0)
+            valores['y'] = round(min(max(float(valores['y']), ZS.ARRIBA * 100.0 + medio), ZS.ABAJO * 100.0 - medio), 2)
         piezas.append({'pieza': 'subtitulo', 'remotion': 'Subtitulo', 'capa': 'subs', 'ajustar': ajustar, 'ini': a, 'fin': z, 'valores': valores,
                        'motivo': 'caption Tema 5' + (f" sobre la escena {esc['valores']['variante']}" if esc else '')})
 

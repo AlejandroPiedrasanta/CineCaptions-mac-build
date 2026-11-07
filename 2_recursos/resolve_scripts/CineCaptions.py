@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.75 (subtitulos)"
+VERSION = "5.76 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -4210,7 +4210,8 @@ def place_kinetic_track(timeline, media_pool, track_info, base_template,
             continue
         if run.get("texto") is not None:
             tool = get_text_plus_tool(item)
-            if tool is None or not set_input_safe(tool, "StyledText", str(run["texto"])):
+            # v5.76: run["codigo"] (el Tema 5, «v tipo»): el bloque entero codificado va al Template; run["texto"] es lo legible (lo leen la PRO y los demás)
+            if tool is None or not set_input_safe(tool, "StyledText", str(run.get("codigo") or run["texto"])):
                 sin_texto += 1
                 continue
             if isinstance(run.get("size"), (int, float)):
@@ -5671,7 +5672,7 @@ def colocar_emojis(timeline, media_pool, track_info, planes, fps):
                                        alto_em * zx * FACTOR_EMOJI_LINEA))
                 borde = 0.5 + float(p.get("x") or 0.0) + (ancho_em * zx * razon) / 2
                 cx_l = borde + (HUECO_EMOJI_LINEA * lado_l + lado_l / 2) * razon
-                if cx_l + (lado_l * razon) / 2 <= 0.99:
+                if cx_l + (lado_l * razon) / 2 <= (0.84 if f == "v" else 0.99):     # v5.76: en vertical, no bajo los iconos del reel (zona_segura.DER)
                     lado, cx, y = lado_l, cx_l, float(p.get("y") or 0.0)
                     junto += 1
         if y is None:
@@ -5683,6 +5684,8 @@ def colocar_emojis(timeline, media_pool, track_info, planes, fps):
             encima += 1
         tope = 0.5 - lado / 2 - 0.01
         y = max(-tope, min(tope, y))
+        if f == "v":                    # v5.76 (gemela del .lua): la zona segura del reel (zona_segura: 13 % arriba, 25 % abajo; y desde el centro, + = arriba)
+            y = max(-0.25 + lado / 2, min(0.37 - lado / 2, y))
         zoom = lado * alto / min(ancho, alto)
         # v5.4.36: Pan/Tilt de un PNG cuadrado «ajustado» (Fit) van en pixeles del clip ajustado, no del timeline (medido en Free 21.1: Pan x1, Tilt x1080/1920
         # en vertical; sin esto el emoji quedaba ENCIMA del texto). Gemela del .lua.

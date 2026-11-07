@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.75 (subtitulos)"
+local VERSION = "5.76 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -5973,7 +5973,8 @@ local function place_kinetic(timeline, media_pool, track, fps, start_frame, proj
                 local ok_texto = true
                 if run.texto ~= nil then
                     local tool = get_text_plus(item)
-                    if tool == nil or not set_input(tool, "StyledText", tostring(run.texto)) then
+                    -- v5.76: run.codigo (el Tema 5, «v tipo»): el bloque entero codificado va al Template; run.texto es lo legible
+                    if tool == nil or not set_input(tool, "StyledText", tostring(run.codigo or run.texto)) then
                         ok_texto = false
                         sin_texto = sin_texto + 1
                     else
@@ -6484,7 +6485,7 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
                         + (ancho_em * zx * razon) / 2
                     local cx_l = borde + (EMOJI_LINEA.hueco * lado_l + lado_l / 2)
                         * razon
-                    if cx_l + (lado_l * razon) / 2 <= 0.99 then
+                    if cx_l + (lado_l * razon) / 2 <= ((f == "v") and 0.84 or 0.99) then   -- v5.76: no bajo los iconos del reel
                         lado, cx, y = lado_l, cx_l, tonumber(p.y) or 0
                         junto = junto + 1
                     end
@@ -6502,6 +6503,9 @@ function colocar_emojis(timeline, media_pool, track, planes, fps)
             end
             local tope = 0.5 - lado / 2 - 0.01
             if y > tope then y = tope elseif y < -tope then y = -tope end
+            if f == "v" then   -- v5.76 (gemela del .py): zona segura del reel (13 % arriba, 25 % abajo)
+                if y > 0.37 - lado / 2 then y = 0.37 - lado / 2 elseif y < -0.25 + lado / 2 then y = -0.25 + lado / 2 end
+            end
             -- Con «Ajustar» el PNG cuadrado ocupa min(ancho, alto): de ahi
             -- el zoom.
             local zoom = lado * alto / math.min(ancho, alto)

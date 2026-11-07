@@ -106,6 +106,18 @@ def ancho_main(texto, n, pack='Referencia', ancho_tl=1080):
     return (f.getlength(txt) * AFINADO['ancho'] - _apretado(txt, px)) * AFINADO['tinta_principal']
 
 
+def ancho_aprox(texto, n, pack='Referencia', ancho_tl=1080):
+    """v5.76 (zona segura): ancho (px) de la palabra grande sin zoom; para un preset de Amro sin medir (AFINADO['amro_k'] None, el «Fondo»), el
+    APROXIMADO de la vista previa (render_temas: su tamaño × K_PX en Inter Black). Solo sirve para ACHICAR la que no cabe: agrandar un Amro lo recorta."""
+    a = ancho_main(texto, n, pack, ancho_tl)
+    d = datos_variantes(pack).get(int(n or 0))
+    if a is not None or not d or not d['amro']:
+        return a
+    px = d['tam'] * K_PX * ancho_tl / 1080.0
+    f = _fuente(('Inter', 'Black'), px)
+    return f.getlength(texto.upper()) if f is not None else None
+
+
 def extension_tinta(texto, n, w, pack='Referencia', ancho_tl=1080, alto_tl=None):
     """v5.48: (arriba, abajo) = cuánto sube y baja la TINTA de la palabra grande respecto a la y del clip (fracción del alto) cuando ocupa el ancho w.
     Medido en Resolve: Fusion centra la CAJA de la letra (de lo más alto a lo más bajo de la tipografía: ascent/descent), no la tinta; por eso
@@ -182,6 +194,10 @@ def construir_cues(bloques, pack='Referencia', ancho_tl=1080, tam=TAM_PEQUENA):
                     if z is None and w:
                         if a:
                             z = max(0.3, min(2.5, w * ancho_tl / a))
+                        elif d.get('amro'):                         # v5.76: un Amro sin medir solo se achica, si no cabe en w (la zona segura)
+                            a2 = ancho_aprox(texto, n, pack, ancho_tl)
+                            if a2 and a2 > w * ancho_tl:
+                                z = max(0.3, w * ancho_tl / a2)
                     if z and abs(z - 1.0) > 0.005:
                         r['zoom'] = round(z, 3)
                     if d.get('amro') and AFINADO['salto_amro'].get(int(n or 0)):

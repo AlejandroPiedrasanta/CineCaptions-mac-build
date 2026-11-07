@@ -12,26 +12,32 @@ late) sobre la zona del paso y pone al lado una tarjeta con el título, la expli
   * Teclado: → / Intro / Espacio = siguiente, ← = atrás, Esc = salir.
   * La capa se pinta ella misma (no usa QGraphicsOpacityEffect sobre páginas) y solo repinta el halo mientras late.
   * Quién lo lanza y los pasos concretos viven en el script principal (SubtitleApp.iniciar_recorrido / _pasos_recorrido); aquí solo el motor.
+  * v5.76 («la guía», propuesta C1 que eligió el usuario): cada paso puede llevar `video` (un id de tutoriales.py). La tarjeta es entonces una
+    tira ancha y baja: el video a la izquierda (tutoriales_ui.VideoTutorial, en bucle; un clic lo pausa) y el texto y los botones a la derecha.
 """
 import math
 import time
 
 from PySide6.QtCore import QAbstractAnimation, QEasingCurve, QEvent, QPoint, QRect, QRectF, Qt, QTimer, QVariantAnimation
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import QFrame, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget
 
 import qt_kit as ui
 from i18n import tr
 
 ANCHO_TARJETA = 410
+ANCHO_CON_VIDEO = 880                       # v5.76: la tira con el video (C1)
+ANCHO_SIN_VIDEO = 540
+VIDEO = (344, 215)                          # el video de la tira (16:10, como la ventana)
 MARGEN_VENTANA = 18
 
 
 class Paso:
-    """Un paso del recorrido. `objetivo` = función sin argumentos que devuelve un QWidget, un QRect/QRectF (coordenadas de la ventana) o None."""
-    __slots__ = ('titulo', 'texto', 'objetivo', 'pagina', 'lado', 'margen', 'antes', 'redondeo')
+    """Un paso del recorrido. `objetivo` = función sin argumentos que devuelve un QWidget, un QRect/QRectF (coordenadas de la ventana) o None.
+    `video` (v5.76): el id del tutorial que se reproduce en la tarjeta (tutoriales.TUTORIALES) o None."""
+    __slots__ = ('titulo', 'texto', 'objetivo', 'pagina', 'lado', 'margen', 'antes', 'redondeo', 'video')
 
-    def __init__(self, titulo, texto, objetivo=None, pagina=None, lado='auto', margen=10, antes=None, redondeo=16):
+    def __init__(self, titulo, texto, objetivo=None, pagina=None, lado='auto', margen=10, antes=None, redondeo=16, video=None):
         self.titulo = titulo
         self.texto = texto
         self.objetivo = objetivo
@@ -40,6 +46,7 @@ class Paso:
         self.margen = margen
         self.antes = antes
         self.redondeo = redondeo            # radio de las esquinas del foco (muy grande = círculo)
+        self.video = video
 
 
 class _Puntos(QWidget):
@@ -109,37 +116,46 @@ class Recorrido(QWidget):
 
     # ---------------------------------------------------------------- la tarjeta
     def _construir_tarjeta(self):
+        """v5.76 (C1): una tira ancha: el video del paso a la izquierda; a la derecha «Paso i de n», «No volver a mostrar esta guía» y
+        «Saltar guía», el título, el texto y abajo los puntos, Atrás y Siguiente. Sin video el video se oculta y la tira se estrecha."""
+        import tutoriales_ui
         c = QFrame(self)
         c.setObjectName('recTarjeta')
         c.setStyleSheet(ui.traducir_hoja(f'QFrame#recTarjeta {{ background-color: #0C1526; border: 1px solid {ui.ACCENT_CLARO}; border-radius: 18px; }}'))
-        c.setFixedWidth(ANCHO_TARJETA)
-        capa = QVBoxLayout(c)
-        capa.setContentsMargins(24, 20, 24, 18)
-        capa.setSpacing(10)
+        c.setFixedWidth(ANCHO_CON_VIDEO)
+        capa = QHBoxLayout(c)
+        capa.setContentsMargins(16, 16, 22, 16)
+        capa.setSpacing(20)
+        self.video = tutoriales_ui.VideoTutorial(*VIDEO, radio=12)
+        capa.addWidget(self.video, 0, Qt.AlignmentFlag.AlignVCenter)
+        col, cc = ui.caja_v(espacio=9)
         fila, cf = ui.caja_h(espacio=8)
         self.paso_lbl = ui.Etiqueta('', 12, peso='negrita', color=ui.ACCENT_CLARO)
         cf.addWidget(self.paso_lbl)
         cf.addStretch(1)
-        self.saltar = ui.Enlace(tr('Saltar recorrido'), lambda: self.cerrar(False), 12, color=ui.TEXT_MUTED, color_hover='#FFFFFF', subrayada=False)
+        self.nomas = ui.Enlace(tr('No volver a mostrar esta guía'), self._pedir_no_mostrar, 12, color='#6B7B97', color_hover='#FFFFFF', subrayada=False)
+        cf.addWidget(self.nomas)
+        cf.addSpacing(14)
+        self.saltar = ui.Enlace(tr('Saltar guía'), lambda: self.cerrar(False), 12, color=ui.TEXT_MUTED, color_hover='#FFFFFF', subrayada=False)
         cf.addWidget(self.saltar)
-        capa.addWidget(fila)
+        cc.addWidget(fila)
         self.titulo_lbl = ui.Etiqueta('', 19, peso='extra', color='#FFFFFF', envolver=True)
-        capa.addWidget(self.titulo_lbl)
+        cc.addWidget(self.titulo_lbl)
         self.texto_lbl = ui.Etiqueta('', 14, color='#C9D6EC', envolver=True)
-        capa.addWidget(self.texto_lbl)
-        self.puntos = _Puntos()
-        capa.addSpacing(2)
-        capa.addWidget(self.puntos)
-        capa.addSpacing(4)
+        cc.addWidget(self.texto_lbl)
+        cc.addStretch(1)
+        cc.addSpacing(6)
         fb, cb = ui.caja_h(espacio=10)
+        self.puntos = _Puntos()
+        self.puntos.setFixedWidth(130)
+        cb.addWidget(self.puntos, 0, Qt.AlignmentFlag.AlignVCenter)
+        cb.addStretch(1)
         self.atras_btn = ui.Boton(tr('Atrás'), self.anterior, alto=38, tam=14)
         self.sig_btn = ui.Boton(tr('Siguiente'), self.siguiente, tipo='primario', alto=38, tam=14, negrita=True)
         cb.addWidget(self.atras_btn)
-        cb.addStretch(1)
         cb.addWidget(self.sig_btn)
-        capa.addWidget(fb)
-        self.nomas = ui.Enlace(tr('No volver a mostrar este recorrido'), self._pedir_no_mostrar, 12, color='#6B7B97', color_hover='#FFFFFF', subrayada=False)
-        capa.addWidget(self.nomas, 0, Qt.AlignmentFlag.AlignHCenter)
+        cc.addWidget(fb)
+        capa.addWidget(col, 1)
         for w in (self.atras_btn, self.sig_btn):
             w.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.card = c
@@ -155,10 +171,19 @@ class Recorrido(QWidget):
         self.sig_btn.setText(tr('¡Listo!') if ultimo else tr('Siguiente'))
         self.saltar.setVisible(not ultimo)
         self.nomas.setVisible(True)
+        con_video = bool(getattr(paso, 'video', None))
+        if con_video:
+            self.video.poner(paso.video)
+        self.video.setVisible(con_video)
+        ancho = ANCHO_CON_VIDEO if con_video else ANCHO_SIN_VIDEO
+        self.card.setFixedWidth(ancho)
         lay = self.card.layout()
         lay.activate()
-        alto = lay.totalHeightForWidth(ANCHO_TARJETA)
-        self.card.setFixedHeight(alto if alto > 0 else self.card.sizeHint().height())
+        alto = lay.totalHeightForWidth(ancho)
+        alto = alto if alto > 0 else self.card.sizeHint().height()
+        if con_video:
+            alto = max(alto, VIDEO[1] + 32)
+        self.card.setFixedHeight(alto)
 
     # ---------------------------------------------------------------- navegación
     def siguiente(self):

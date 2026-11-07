@@ -118,7 +118,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
-    plantillas_incluidas\   (69 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    plantillas_incluidas\   (67 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
     resolve_scripts\   (25 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
         .cf\   (1 archivos)
         CineCaptions - Detectar Video.py
@@ -170,6 +170,23 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             cuándo suena cada efecto de sonido (editable sin tocar código)
     sfx_emoji\   (103 archivos)
     sfx_library\   (644 archivos)  — los efectos de sonido, una carpeta por categoría
+    tutoriales\   (16 archivos)
+        ajustes.jpg
+        ajustes.mp4
+        corrector.jpg
+        corrector.mp4
+        crea.jpg
+        crea.mp4
+        duraciones.json
+        efectos.jpg
+        efectos.mp4
+        estilo.jpg
+        estilo.mp4
+        inicio.jpg
+        inicio.mp4
+        sonido.jpg
+        sonido.mp4
+        subtitulos.json
     vistas_slider\   (26 archivos)
         .cf\   (1 archivos)
         desktop.ini

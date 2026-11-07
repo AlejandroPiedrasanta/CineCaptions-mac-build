@@ -1,0 +1,201 @@
+{
+ "ajustes": [
+  [
+   0.03,
+   3.78,
+   "El engranaje abre los ajustes"
+  ],
+  [
+   3.78,
+   7.64,
+   "«Expandir ajustes» los abre todos"
+  ],
+  [
+   7.64,
+   10.69,
+   "Idioma, fondo y estilo de la interfaz"
+  ],
+  [
+   10.69,
+   16.41,
+   "En Tutoriales están todos estos videos"
+  ],
+  [
+   16.41,
+   20.25,
+   "Aquí apagas o enciendes esta guía"
+  ]
+ ],
+ "corrector": [
+  [
+   0.15,
+   2.76,
+   "Después de GO tus palabras salen aquí"
+  ],
+  [
+   2.76,
+   4.71,
+   "Elige un pincel: Principal es la palabra grande"
+  ],
+  [
+   4.71,
+   6.86,
+   "Toca la palabra para marcarla"
+  ],
+  [
+   6.86,
+   14.04,
+   "Arriba: el texto pequeño de encima"
+  ],
+  [
+   14.04,
+   18.69,
+   "Doble clic para corregir lo que se oyó mal"
+  ],
+  [
+   18.69,
+   21.48,
+   "Palabra corregida"
+  ]
+ ],
+ "crea": [
+  [
+   0.0,
+   5.9,
+   "La última tarjeta: «Crea tu estilo»"
+  ],
+  [
+   5.9,
+   8.35,
+   "Elige un texto base: las palabras normales"
+  ],
+  [
+   8.35,
+   14.04,
+   "Elige los textos principales: se turnan"
+  ],
+  [
+   14.04,
+   16.64,
+   "La previa enseña cómo queda"
+  ],
+  [
+   16.64,
+   21.35,
+   "Ponle nombre y créalo"
+  ]
+ ],
+ "efectos": [
+  [
+   2.21,
+   3.81,
+   "El gancho del inicio: el primer segundo del video"
+  ],
+  [
+   3.81,
+   9.67,
+   "Toca una tarjeta para elegirla"
+  ],
+  [
+   9.67,
+   14.65,
+   "Apágalo o enciéndelo con su interruptor"
+  ],
+  [
+   14.65,
+   17.47,
+   "Más abajo: captions detrás de ti y más"
+  ],
+  [
+   17.47,
+   22.12,
+   "GO aplica solo lo que elijas"
+  ]
+ ],
+ "estilo": [
+  [
+   0.13,
+   2.33,
+   "Cada tarjeta es un estilo con subtítulos reales"
+  ],
+  [
+   2.33,
+   8.13,
+   "Toca una tarjeta de los lados para pasarlas"
+  ],
+  [
+   8.13,
+   9.98,
+   "Clic en la del centro para usarla"
+  ],
+  [
+   9.98,
+   11.81,
+   "La que usas dice «En uso»"
+  ],
+  [
+   11.81,
+   16.38,
+   "Puedes cambiarlo cuando quieras"
+  ]
+ ],
+ "inicio": [
+  [
+   0.02,
+   3.55,
+   "Arrastra tu video a la ventana"
+  ],
+  [
+   3.55,
+   6.7,
+   "CineCaptions crea el proyecto y empieza solo"
+  ],
+  [
+   6.7,
+   9.43,
+   "¿Ya tienes tu timeline abierto en Resolve?"
+  ],
+  [
+   9.43,
+   13.93,
+   "Pulsa GO: transcribe, diseña y coloca todo"
+  ],
+  [
+   13.93,
+   17.95,
+   "¡Listo! Todo queda en tu timeline"
+  ]
+ ],
+ "sonido": [
+  [
+   1.68,
+   3.54,
+   "Elige cómo suena tu video"
+  ],
+  [
+   3.54,
+   6.29,
+   "Dinámico: un efecto en cada palabra clave"
+  ],
+  [
+   6.29,
+   7.7,
+   "Elegante: pocos efectos y suaves"
+  ],
+  [
+   7.7,
+   11.05,
+   "Activa o quita opciones con su interruptor"
+  ],
+  [
+   11.05,
+   13.87,
+   "«Aplicar a Resolve» pone los cambios en tu timeline"
+  ],
+  [
+   13.87,
+   17.28,
+   "Automático: según el estilo elegido"
+  ]
+ ]
+}

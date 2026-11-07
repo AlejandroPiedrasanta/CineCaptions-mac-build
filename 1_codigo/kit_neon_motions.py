@@ -600,7 +600,10 @@ def ajustar_captions(escena, motions):
                     e = dict(e, a=dict(e['a'], deco=[], items=[{'k': 'serif', 'txt': txt, 't': tiempos, 'size': KN._encaja(txt, 'serif', 66)}]))
             k.append(len(out))
         elif sp:
-            e = dict(e, a=dict(e['a'], top=862, glide={'t': sp['a']['tout'], 'dy': 1150 - 862}))
+            e = dict(e, a=dict(e['a'], top=862, glide={'t': sp['a']['tout'], 'dy': int(float(e['a'].get('top') or KN.TOP)) - 862}))
+        alto = sum(KN._alto(it) for it in e['a'].get('items') or [])
+        if float(e['a'].get('top') or KN.TOP) + alto > KN.SUELO:           # v5.76: nunca bajo la descripción del reel (zona segura: kit_neon.SUELO)
+            e = dict(e, a=dict(e['a'], top=int(max(KN.TECHO, KN.SUELO - alto))))
         out.append(e)
     for (sid, ks) in en_cuatro.items():                     # (kit: el de arriba se queda mientras el de abajo se lee, si la pista lo permite)
         sp = next(m for m in splits if id(m) == sid)

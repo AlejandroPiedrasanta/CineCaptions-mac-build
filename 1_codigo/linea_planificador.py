@@ -17,6 +17,7 @@ viral_planificador y «Crea tu estilo» los usa igual; este planificador solo lo
 import guion_planificador as G
 import viral_captions as VC
 import viral_planificador as VP
+import zona_segura as ZS
 
 CLIP, CLIP_ACTIVA = 'v linea', 'v linea activa'
 CLIP_ACTIVA_CREA = 'v linea activa azul'   # el look 't3:linea' de «Crea tu estilo»: caja azul (su color = el «color principal»)
@@ -26,8 +27,9 @@ K_PX = 714.0                          # px del em por unidad de «Size» a 1080 
 RADIO_CAJA = 0.09                     # esquinas de la caja × su alto: sutiles, como la referencia (el usuario: «no es un óvalo»)
 CAP_EM = 0.70                         # altura de mayúsculas / em de la Barlow Semi Condensed (Pillow: «H» 700/1000)
 CAP_REFERENCIA = 0.031                # mayúsculas / lado de referencia (60 px a 1920)
-ANCHO_MAX = 0.90                      # lo que puede ocupar la línea del ancho del cuadro (la referencia: 0,84 con 5 palabras)
+ANCHO_MAX = 0.90                      # lo que puede ocupar la línea del ancho del cuadro (la referencia: 0,84 con 5 palabras); en vertical, la zona segura
 HUECO = 0.60                          # espacio entre palabras × altura de mayúsculas (la referencia: 0,62)
+CAJA_LADO = 0.36                      # lo que la caja de la palabra activa sobresale a cada lado × altura de mayúsculas (viral_elementos: sin Extend, 0,36)
 MAX_PALABRAS, MAX_SEGUNDOS = 6, 3.2
 ADELANTO, COLA, MINIMO = 0.03, 0.45, 0.6
 K_ESP_TEXTPLUS = 1.53                 # Text+ SUMA (CharacterSpacing − 1) × 1,53 em por letra (render_temas.K_ESP_TEXTPLUS)
@@ -49,9 +51,9 @@ def _size_para_cap(cap_px, ancho_tl):
     return cap_px / CAP_EM / (K_PX * ancho_tl / 1080.0)
 
 
-def _lineas_de_frase(pal, frase, size, ancho_tl):
+def _lineas_de_frase(pal, frase, size, ancho_tl, ancho_max=ANCHO_MAX):
     """Parte una frase (índices) en líneas que caben, de ≤ MAX_PALABRAS y ≤ MAX_SEGUNDOS."""
-    maximo = ANCHO_MAX * ancho_tl
+    maximo = ancho_max * ancho_tl
     cap_px = size * K_PX * ancho_tl / 1080.0 * CAP_EM
     lineas, actual, ancho = [], [], 0.0
     for k in frase:
@@ -84,9 +86,13 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
     y = tabla.get(ancla, tabla['bajo']) if not isinstance(ancla, (int, float)) else float(ancla)
     ref = VC.lado_de_referencia(ancho_tl, alto_tl)
     size0 = _size_para_cap(CAP_REFERENCIA * ref, ancho_tl)
+    # v5.76 (zona segura): en vertical la línea cabe entre los iconos del reel y el borde (zona_segura.ANCHO): se parte antes, con la misma letra
+    ancho_max = ZS.ancho(ANCHO_MAX, ancho_tl, alto_tl)
+    if ZS.vertical(ancho_tl, alto_tl):                    # (contando la caja de la primera y la última palabra, que sobresale del texto)
+        ancho_max -= 2 * CAJA_LADO * size0 * K_PX / 1080.0 * CAP_EM
     lineas = []
     for frase in G.frases(pal):
-        lineas += _lineas_de_frase(pal, frase, size0, ancho_tl)
+        lineas += _lineas_de_frase(pal, frase, size0, ancho_tl, ancho_max)
     fin_total = float(fin_video) if fin_video else pal[-1]['fin'] + 1.5
     # tiempos: cada línea desde su primera palabra (un pelín antes) hasta un poco después de la última, sin pisar a la siguiente
     t0s = [max(0.0, pal[l[0]]['t'] - ADELANTO) for l in lineas]
@@ -102,26 +108,27 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
         cap_px = size * K_PX * ancho_tl / 1080.0 * CAP_EM
         anchos = [_ancho(tx, size, ancho_tl) for tx in textos]
         total = sum(anchos) + HUECO * cap_px * (len(anchos) - 1)
-        if total > ANCHO_MAX * ancho_tl:
-            f = ANCHO_MAX * ancho_tl / total
+        if total > ancho_max * ancho_tl:
+            f = ancho_max * ancho_tl / total
             size *= f
             cap_px *= f
             anchos = [a * f for a in anchos]
             total *= f
         x = 0.5 * ancho_tl - total / 2.0
+        alto_px = cap_px * 2.1
+        y_l = y + ZS.meter_y(y - alto_px / 2 / alto_tl, y + alto_px / 2 / alto_tl, ancho_tl, alto_tl)     # (v5.76: la caja, dentro de la zona)
         runs, activas = [], []
         for j, (k, tx, a) in enumerate(zip(l, textos, anchos)):
             cx = (x + a / 2.0) / ancho_tl
-            runs.append({'k': CLIP, 't': round(t0, 3), 'fin': round(t1, 3), 'x': round(cx, 5), 'y': round(y, 5), 'texto': tx, 'size': round(size, 4)})
+            runs.append({'k': CLIP, 't': round(t0, 3), 'fin': round(t1, 3), 'x': round(cx, 5), 'y': round(y_l, 5), 'texto': tx, 'size': round(size, 4)})
             ini = max(t0, pal[k]['t'])
             fin = max(t0, pal[l[j + 1]]['t']) if j + 1 < len(l) else t1
             if fin - ini >= 0.03:
-                activas.append({'k': clip_activa, 't': round(ini, 3), 'fin': round(fin, 3), 'x': round(cx, 5), 'y': round(y, 5), 'texto': tx,
+                activas.append({'k': clip_activa, 't': round(ini, 3), 'fin': round(fin, 3), 'x': round(cx, 5), 'y': round(y_l, 5), 'texto': tx,
                                 'size': round(size, 4), 'exacto': True})
             x += a + HUECO * cap_px
-        alto_px = cap_px * 2.1
-        caja = [round((0.5 * ancho_tl - total / 2) / ancho_tl, 4), round(y - alto_px / 2 / alto_tl, 4), round((0.5 * ancho_tl + total / 2) / ancho_tl, 4),
-                round(y + alto_px / 2 / alto_tl, 4)]
+        caja = [round((0.5 * ancho_tl - total / 2) / ancho_tl, 4), round(y_l - alto_px / 2 / alto_tl, 4), round((0.5 * ancho_tl + total / 2) / ancho_tl, 4),
+                round(y_l + alto_px / 2 / alto_tl, 4)]
         texto = ' '.join(textos)
         cues.append({'start': round(t0, 3), 'end': round(t1, 3), 'plantilla': 'linea', 'caja': caja, 'runs': runs + activas,
                      'lines': [{'role': 'context', 'text': texto, 'start': round(t0, 3)}]})
