@@ -5,15 +5,16 @@
    "vir_01.jpg",
    "vir_02.jpg",
    "vir_03.jpg",
-   "vir_04.jpg"
+   "vir_04.jpg",
+   "vir_05.jpg"
   ]
  },
  "recortes": {
   "1": [
    0.0,
-   0.2778,
+   0.2768,
    1.0,
-   0.4427
+   0.447
   ]
  },
  "ancho_alto": [

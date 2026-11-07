@@ -51,7 +51,7 @@ def es_principal(run):
     if run.get('heroe') or run.get('rol') == 'main' or run.get('principal'):
         return True
     k = str(run.get('k') or '').lower()
-    return any(p in k for p in ('hero', 'tapes', 'negrita', 'shatter', 'select', 'drag'))
+    return any(p in k for p in ('hero', 'tapes', 'negrita', 'shatter', 'select', 'drag', 'corte', 'shine', 'resalta', 'linea'))   # v5.75
 
 
 def _encajar(run, fuente):

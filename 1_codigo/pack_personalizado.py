@@ -676,6 +676,12 @@ class _Retoque:
         if tpl is None:
             self.notas.append('sin Template')
             return
+        if self.clip.lower().startswith('v linea'):          # v5.75: la línea con caja: el color es el de la CAJA (elemento 4); la letra sigue blanca
+            caja = self.trio(tpl, 4) if 'activa' in self.clip.lower() else None
+            if caja is not None:
+                for canal, x, v in zip(('Red', 'Green', 'Blue'), caja, _r4(nuevo)):
+                    self._poner_num(x, v, 'Template', f'{canal}4')
+            return
         if self.clip.lower().startswith('v drag'):           # el relleno (elemento 2) va de gris oscuro a su color por expresión: «0.08 + 0.875 * …»
             t2 = self.trio(tpl, 2, con_expresion=True)
             if t2 is None:

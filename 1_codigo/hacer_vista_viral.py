@@ -3,7 +3,7 @@
 """
 Uso:  python hacer_vista_viral.py
 
-Coloca unas frases de muestra con el planificador real (viral_planificador: una pila y los tres efectos —shatter, select, drag—) en el timeline temporal zz_BANCO de
+Coloca unas frases de muestra con el planificador real (v5.75: linea_planificador, el Tema 3 de una línea con la caja negra) en el timeline temporal zz_BANCO de
 Resolve, sobre NEGRO (la tarjeta compone los fotogramas en modo Screen sobre una foto), lo renderiza y guarda 5 fotogramas reducidos en
 2_recursos/plantillas_incluidas/VIRAL/vista/ (+ indice.json con la caja del texto). El pack los lleva incluidos: la tarjeta se ve sin necesitar Resolve
 (vistas_reales.cacheadas los lee). Repetir cada vez que cambie el aspecto de los elementos (pack_viral.py) y subir plantillas.REVISION_BIN['VIRAL'].
@@ -37,20 +37,18 @@ def palabras_de_muestra():
 def main():
     import banco_pruebas
     import vistas_reales
-    import viral_planificador
+    import linea_planificador                              # v5.75: el Tema 3 es la línea con la caja negra que salta de palabra en palabra
     from PIL import Image
     import av
     pal = palabras_de_muestra()
-    res = viral_planificador.planificar(pal, idioma='es', ancla='medio', fin_video=10.4, efectos={1: 'v shatter', 2: 'v select', 3: 'v drag'}, mains=['mejor', 'selecciona', 'arrastra'])
-    print(viral_planificador.resumen(res))
+    res = linea_planificador.planificar(pal, idioma='es', ancla='medio', fin_video=10.4)
     cues = res['cues']
     tiempos = []
-    for c in cues:                                         # una foto por bloque en el momento más vistoso + una segunda de la pila
-        if c['plantilla'] in ('v shatter', 'v select', 'v drag'):
-            h = next(r['t'] for r in c['runs'] if r['k'] == c['plantilla'])
-            tiempos.append(min(h + {'v shatter': 0.55, 'v select': 1.0, 'v drag': 0.72}[c['plantilla']], c['end'] - 0.3))
-        else:
-            tiempos.append(c['end'] - 0.35)
+    for n, c in enumerate(cues):                           # una foto por línea con la caja en una palabra distinta (2.ª, 3.ª…) + la última del final
+        cajas = [r for r in c['runs'] if r['k'] == linea_planificador.CLIP_ACTIVA]
+        if cajas:
+            r = cajas[min(len(cajas) - 1, 1 + n % 2)]
+            tiempos.append(min(r['t'] + 0.1, r['fin'] - 0.05))
     tiempos.append(cues[-1]['end'] - 0.15)
     print('tiempos:', [round(t, 2) for t in tiempos])
     ruta = None

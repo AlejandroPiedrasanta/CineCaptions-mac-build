@@ -495,6 +495,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.75', [
+        '«Crea tu estilo» nueva: eliges un texto base y los textos principales que quieras viéndolos animados, y la letra entre todas las de tu computadora.',
+        'El Tema 3 ahora es una sola línea con una caja que resalta cada palabra mientras se dice.',
+        'Textos principales nuevos en «Crea tu estilo»: Corte, Giro 3D, Resaltado y Línea, con el color que elijas.',
+    ]),
     ('5.74', [
         'Mac con DaVinci Resolve gratuito: antes de pedirle el audio del timeline, CineCaptions detiene la reproducción que dejó el GO anterior, y si Resolve se cierra lo dice claro en vez de un código.',
         'Los informes de error traen un diagnóstico de Resolve del momento del fallo, para arreglarlo antes sin tener que preguntarte.',

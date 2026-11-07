@@ -62,6 +62,8 @@ class Reproductor:
         self._hilo = None
         self._parar = threading.Event()
         self.fallo = False
+        self.vueltas = 0              # v5.75: vueltas enteras desde arrancar() («Así queda» de «Crea tu estilo» pasa al siguiente principal)
+        self.tam = None               # v5.75: (ancho, alto) en píxeles: el cuadro se escala AQUÍ (FFmpeg, en el hilo) y la tarjeta solo lo copia
 
     def imagen(self):
         return self._img
@@ -76,6 +78,7 @@ class Reproductor:
             return
         self._parar = threading.Event()
         self._img = None
+        self.vueltas = 0
         self._hilo = threading.Thread(target=self._correr, args=(self._parar,), name='vista-slider', daemon=True)
         self._hilo.start()
 
@@ -111,9 +114,17 @@ class Reproductor:
                                     return
                             elif espera < -0.25:                      # el equipo se atrasó: se reajusta el reloj, sin acelerar para alcanzarlo
                                 t0 = time.perf_counter() - t
-                        a = np.ascontiguousarray(cuadro.to_ndarray(format='bgra'))
+                        tam = self.tam
+                        if tam and tam[0] > 8 and tam[1] > 8:
+                            # ancho MÚLTIPLO DE 16: PyAV 19 a 290 o 292 px de ancho dejaba basura en las primeras columnas cada 13 filas
+                            # (rayitas en el borde de la tarjeta); quien pinta encaja la imagen en su rectángulo (1-2 px de diferencia)
+                            ancho_d = max(16, int(round(tam[0] / 16.0)) * 16)
+                            a = np.ascontiguousarray(cuadro.to_ndarray(format='bgra', width=ancho_d, height=int(tam[1]), interpolation='AREA'))
+                        else:
+                            a = np.ascontiguousarray(cuadro.to_ndarray(format='bgra'))
                         alto, ancho = a.shape[0], a.shape[1]
                         self._img = QImage(a.data, ancho, alto, ancho * 4, QImage.Format.Format_RGB32).copy()
+                    self.vueltas += 1
                     if self._pausa > 0 and parar.wait(self._pausa):
                         return
         except Exception:

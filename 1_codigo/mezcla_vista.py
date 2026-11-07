@@ -211,6 +211,15 @@ def _dibujar_viral(lienzo, cue, esc):
         color = (255, 255, 255)
         if base == 'v shatter':
             color = _COLOR_SHATTER.get(variante, _COLOR_SHATTER[''])
+        elif base in ('v corte', 'v shine'):                     # v5.75: el rosa de EJEMPLO 2 / el naranja de EJEMPLO3
+            color = (250, 60, 205) if base == 'v corte' else (253, 125, 5)
+        elif base.startswith('v linea activa'):                   # v5.75: la línea con caja (Crea tu estilo: azul)
+            m_ = px * 0.25
+            ImageDraw.Draw(extra).rounded_rectangle((cx - f.getlength(txt) / 2 - m_, cy - px * 0.72, cx + f.getlength(txt) / 2 + m_, cy + px * 0.72),
+                                                    radius=px * 0.13, fill=(31, 92, 255, 255) if base.endswith('azul') else (19, 19, 19, 255))
+        elif base == 'v resalta':                                 # v5.75: la selección azul del iPhone (detrás de la palabra)
+            m_ = px * 0.05
+            ImageDraw.Draw(extra).rectangle((cx - f.getlength(txt) / 2 - m_, cy - px * 0.47, cx + f.getlength(txt) / 2 + m_, cy + px * 0.534), fill=(5, 0, 245, 255))
         ImageDraw.Draw(sombra).text((cx, cy + max(1.0, px * 0.04)), txt, font=f, fill=(0, 0, 0, 150), anchor='mm')
         if base == 'v negrita':                                  # cursiva sintética (como el clip del pack)
             capa_t = _capa(ancho, alto)
@@ -221,7 +230,7 @@ def _dibujar_viral(lienzo, cue, esc):
             continue
         _texto_centrado(texto, (cx, cy), txt, f, color)
         caja = (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
-        if base == 'v shatter':
+        if base in ('v shatter', 'v corte'):
             _grieta(de, caja, color, esc, i + len(txt))
         elif base == 'v select':
             c = _COLOR_SELECT.get(variante, _COLOR_SELECT[''])

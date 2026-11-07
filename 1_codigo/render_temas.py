@@ -48,6 +48,9 @@ SHATTER_V = {'': [(0.0, (0.10, 0.52, 0.98)), (0.5, (0.42, 0.74, 1.0)), (1.0, (0.
              'lima': [(0.0, (0.30, 0.74, 0.08)), (0.5, (0.60, 0.94, 0.28)), (1.0, (0.88, 1.0, 0.70))],
              'oro': [(0.0, (0.93, 0.50, 0.03)), (0.5, (1.0, 0.77, 0.24)), (1.0, (1.0, 0.94, 0.68))]}
 BISEL_V = {'': (0.05, 0.38, 0.86), 'rosa': (0.72, 0.05, 0.34), 'lima': (0.18, 0.50, 0.04), 'oro': (0.68, 0.32, 0.0)}
+# v5.75 (= viral_elementos.comp_corte / comp_shine, ya quietos): rosa con el centro claro y filo oscuro; naranja con franjas amarillas y filo rojo
+CORTE_V, BISEL_CORTE_V = [(0.0, (0.99, 0.13, 0.82)), (0.5, (1.0, 0.55, 0.90)), (1.0, (0.99, 0.13, 0.82))], (0.68, 0.10, 0.51)
+SHINE_V, BISEL_SHINE_V = [(0.0, (0.99, 0.30, 0.0)), (0.27, (0.99, 0.73, 0.03)), (0.5, (0.99, 0.30, 0.0)), (0.73, (0.99, 0.73, 0.03)), (1.0, (0.99, 0.30, 0.0))], (0.80, 0.16, 0.0)
 CAJA_V = {'': (1.0, 0.04, 0.04), 'azul': (0.10, 0.45, 1.0), 'verde': (0.05, 0.85, 0.35), 'naranja': (1.0, 0.50, 0.05)}
 TINTE_V = {'': (1.0, 1.0, 1.0), 'amarillo': (1.0, 0.92, 0.25), 'cian': (0.30, 0.92, 1.0), 'rosa': (1.0, 0.55, 0.80)}
 INCLINACION_V = 0.21                   # ShearX de la negrita (cursiva sintética)
@@ -193,6 +196,8 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
             ancho_c = max(1, int(round(cx1 - cx0)))
             banda = Image.fromarray(np.ascontiguousarray(np.broadcast_to(fila[:, None, :], (alto_c, ancho_c, 3)).astype(np.uint8)), 'RGB').convert('RGBA')
             img.alpha_composite(banda, (int(round(cx0)), int(round(cy0))))
+        elif caja.get('radio'):                                      # v5.75: la caja redondeada del Tema 3 (radio × alto de la caja)
+            dc.rounded_rectangle([cx0, cy0, cx1, cy1], radius=caja['radio'] * (cy1 - cy0), fill=col)
         else:
             dc.rectangle([cx0, cy0, cx1, cy1], fill=col)
     if solo_caja:
@@ -595,6 +600,19 @@ def _elemento_viral(r, s, aj=None):
     par_tema, esp = VC.CLIPS.get(base, (VC.INTER_18, 1.0))
     par = par_usuario(par_tema, aj)
     nuevo = (aj or {}).get('color')                                # v5.55: el color elegido para su rol (la caja del select no lo recibe)
+    if base.startswith('v linea'):                                 # v5.75: el Tema 3 de una línea (otra letra: su em por Size es el de linea_planificador)
+        import linea_planificador as LP
+        em = float(r.get('size') or 0.1) * LP.K_PX
+        par = par_usuario(par_tema, aj)
+        txt = str(r.get('texto') or '')
+        apretar = (1.0 - esp) * K_ESP_TEXTPLUS * em * s
+        color_caja = _rgb01(nuevo) if nuevo else ((0.12, 0.36, 1.0) if base.endswith('azul') else (0.075, 0.075, 0.075))
+        caja = (dict(color=color_caja, pad_x=0.35 * LP.CAP_EM, arriba=1.53 * LP.CAP_EM, abajo=0.52 * LP.CAP_EM, radio=LP.RADIO_CAJA)
+                if base.startswith('v linea activa') else None)
+        sp = texto(txt, par, em * s, color=(0.98, 0.98, 0.98), esp=1.0, apretar=apretar, contorno=0.045,
+                   color_contorno=(0.078, 0.078, 0.078), sombra=(0.65, 0.0, 0.1), caja=caja)
+        _anotar(sp, par_tema, em, par, em, txt)
+        return sp, em, _centro(par)
     em = float(r.get('size') or 0.05) * VC.K_PX
     txt = str(r.get('texto') or '')
     em_tema = em
@@ -611,6 +629,14 @@ def _elemento_viral(r, s, aj=None):
             grad, bisel = degradado_usuario(grad, nuevo), _derivar(_base_de(grad), bisel, nuevo, brillo=True)
         sp = texto(txt, par, em * s, degradado=grad, esp=1.0, apretar=apretar, contorno=0.025, color_contorno=bisel,
                    halo=(0.12, 0.45), sombra=(0.5, 0.03, 0.06))
+    elif base in ('v corte', 'v shine'):                           # v5.75 (la vista: ya quieta, sin trozos ni giro)
+        grad, bisel = (CORTE_V, BISEL_CORTE_V) if base == 'v corte' else (SHINE_V, BISEL_SHINE_V)
+        if nuevo:
+            grad, bisel = degradado_usuario(grad, nuevo), _derivar(_base_de(grad), bisel, nuevo, brillo=True)
+        sp = texto(txt, par, em * s, degradado=grad, esp=1.0, apretar=apretar, contorno=0.012, color_contorno=bisel, sombra=(0.5, 0.03, 0.06))
+    elif base == 'v resalta':                                      # v5.75: la selección del iPhone ya hecha (viral_elementos.RESALTA_*; sin el asa)
+        color = _rgb01(nuevo) if nuevo else (0.98, 0.98, 0.98)
+        sp = texto(txt, par, em * s, color=color, esp=1.0, apretar=apretar, caja=dict(color=(0.02, 0.0, 0.96), pad_x=0.05, arriba=0.834, abajo=0.17))
     elif base == 'v select':                                       # (su caja punteada es otra capa: _caja_select)
         color = _rgb01(nuevo) if nuevo else (EFECTO_V,) * 3
         brillo = BRILLO_EFECTO_V[:2] + (_derivar((EFECTO_V,) * 3, BRILLO_EFECTO_V[2], nuevo, brillo=True),) if nuevo else BRILLO_EFECTO_V
@@ -708,6 +734,8 @@ def capas_de_cue(estilo, cue, s, dx, dy):
                 # v5.5.10: qué es cada capa, para que la vista de Creativo (vista_tema.py) la anime como su macro (el MP4 no lo usa)
                 'tipo': tipo, 'k': str(r.get('k') or ''), 'rol': r.get('rol'), 'pack': (estilo or {}).get('pack'), 'em': em * s,
                 'cue_t0': ini}
+        if capa['k'].startswith('v linea activa'):                 # v5.75: la caja del Tema 3 salta de palabra en palabra (corte seco, como el clip)
+            capa.update(entrada=0.0, sube=0.0)
         total = getattr(sp, 'total', 0.0)
         if tipo == 'viral' and total:                               # v5.55: dónde va la palabra dentro del sprite y cuántas letras «mide» (lo que escribe el «select»)
             capa.update(tinta=(0.5 - total / (2.0 * W), 0.5 + total / (2.0 * W)), letras=total / (0.62 * em * s))

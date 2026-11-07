@@ -35,7 +35,8 @@ TIPOS = ('golpe', 'whoosh', 'giro', 'riser', 'trazo', 'acento', 'tick', 'pop')
 IMPORTANCIA_MOTION = {'escena': 0.7, 'whoosh_grande': 0.65, 'whoosh': 0.5, 'pop': 0.42, 'tick': 0.35, 'golpe': 0.6}
 CLAVE_PRO = {'whoosh': 'whoosh', 'pop': 'pop', 'pin': 'pop', 'click': 'tick', 'ui': 'tick', 'corte': 'tick', 'hit': 'golpe', 'tecla': 'tick',
              'cash': 'acento', 'error': None, 'riser': None}          # error: el modo gris ya se ve; un zumbido sobra · riser: lo decide el director
-CLIP_VIRAL = {'v shatter': ('golpe', 0.2), 'v drag': ('whoosh', 0.12), 'v select': ('tick', 0.1), 'v negrita': ('pop', 0.05)}
+CLIP_VIRAL = {'v shatter': ('golpe', 0.2), 'v drag': ('whoosh', 0.12), 'v select': ('tick', 0.1), 'v negrita': ('pop', 0.05),
+              'v corte': ('golpe', 0.2), 'v shine': ('whoosh', 0.15), 'v resalta': ('tick', 0.1)}
 VISUAL_FX = {'corte': ('whoosh', 0.55), 'enfasis': ('whoosh', 0.4), 'broll': ('whoosh', 0.45), 'icono': ('pop', 0.4), 'pegatina': ('pop', 0.4),
              'numero': ('tick', 0.42)}
 CHOQUE_S = 0.15                       # un motion menor no suena a menos de esto de un acento de caption

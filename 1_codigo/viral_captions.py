@@ -21,7 +21,10 @@ INTER_18 = ('Inter 18pt', 'Medium')
 INTER_28_EXTRA = ('Inter 28pt', 'ExtraBold')
 INTER_28_NEGRA = ('Inter 28pt', 'Black')
 # lo que sabe la geometría de cada clip del pack (debe coincidir con generador_packs/viral_elementos.py): (tipografía, espaciado de letras)
-CLIPS = {'v fina': (INTER_18, 1.0), 'v negrita': (INTER_28_EXTRA, 0.99), 'v shatter': (INTER_28_NEGRA, 0.97), 'v select': (INTER_28_NEGRA, 0.97), 'v drag': (INTER_28_NEGRA, 0.97)}
+CLIPS = {'v fina': (INTER_18, 1.0), 'v negrita': (INTER_28_EXTRA, 0.99), 'v shatter': (INTER_28_NEGRA, 0.97), 'v select': (INTER_28_NEGRA, 0.97), 'v drag': (INTER_28_NEGRA, 0.97),
+         'v corte': (INTER_28_NEGRA, 0.97), 'v shine': (INTER_28_NEGRA, 0.97), 'v resalta': (INTER_28_EXTRA, 0.97)}   # v5.75: «Crea tu estilo» (fuera de la rotación del Tema 3)
+BARLOW = ('Barlow Semi Condensed', 'Bold')
+CLIPS.update({'v linea': (BARLOW, 0.975), 'v linea activa': (BARLOW, 0.975), 'v linea activa azul': (BARLOW, 0.975)})      # v5.75: el Tema 3 nuevo (linea_planificador; su geometría va allí)
 EFECTOS = ('v shatter', 'v select', 'v drag')
 # v5.5: cada efecto viene en 4 COLORES (el primero es el de siempre: shatter azul cielo, select con caja roja, drag blanco); el planificador los va alternando para que el color no se repita.
 # El clip de la variante se llama «<efecto> <color>» («v shatter rosa»); la geometría (tipografía, tamaño, espacio) es la del efecto base.
@@ -48,14 +51,18 @@ def nombre_variante(base, k):
 def todos_los_clips():
     """Los nombres de todos los clips de efecto (cada efecto con sus variantes de color)."""
     return [nombre_variante(b, k) for b in COLORES for k in range(len(COLORES[b]))]
-CAP = {'Inter 18pt': 0.737, 'Inter 28pt': 0.728}            # altura de las mayúsculas / em (medida con Pillow)
+CAP = {'Inter 18pt': 0.737, 'Inter 28pt': 0.728, 'Barlow Semi Condensed': 0.70}            # altura de las mayúsculas / em (medida con Pillow)
 # el centro del cuadro de Text+ queda a esta fracción del em por ENCIMA/DEBAJO del centro de las mayúsculas (medido contra el render de Resolve; Inter: 0)
-DY_EM = {'Inter 18pt': 0.0, 'Inter 28pt': 0.0}
+DY_EM = {'Inter 18pt': 0.0, 'Inter 28pt': 0.0, 'Barlow Semi Condensed': 0.0}
 INCLINADA = {'v negrita': 0.21}                              # cuánto ensancha la cursiva sintética (× altura de mayúsculas)
 TINTA = 0.985                                                # lo que se ve de una palabra respecto a su avance tipográfico
 
 # lo que sobresale cada efecto de su línea (× altura de mayúsculas): la caja de «select» y la mano de «drag» no deben pisar a las líneas vecinas
-SOBRESALE = {'v select': (0.50, 0.55), 'v drag': (0.45, 0.10), 'v shatter': (0.08, 0.08)}
+SOBRESALE = {'v select': (0.50, 0.55), 'v drag': (0.45, 0.10), 'v shatter': (0.08, 0.08), 'v corte': (0.10, 0.14), 'v shine': (0.10, 0.10),
+             'v resalta': (0.20, 0.40)}
+# v5.75: lo que sale a cada lado de la tinta (× altura de mayúsculas): los trozos del «corte» se separan hasta ~0,41 em (izquierda) y ~0,35 em
+# (derecha); la caja del «resalta» sale 0,05 em y la bolita de su asa otros 0,08
+LADOS = {'v corte': 0.60, 'v resalta': 0.20}
 AFINADO = {'ancho_max': 0.88, 'hueco_linea': 0.55, 'hueco_min': 0.010, 'espacio': 0.42, 'min_size': 0.03}
 # v5.55: el cursor del «select» (viral_elementos.comp_select, ~0,54 × 0,37 em) cuelga de la esquina de abajo a la derecha de su caja hasta ~1,2 mayúsculas bajo la
 # base: (lo que baja más allá de SOBRESALE, lo que sale la caja a cada lado de la tinta, el ancho de la flecha), × su altura de mayúsculas. Abajo solo se le deja
@@ -114,6 +121,9 @@ def _medir_linea(items, ancho_tl, alto_tl):
     if sel is not None:         # v5.55: la fila del «select» cabe en el cuadro con la caja a los dos lados y el cursor a la derecha (crecen con la letra)
         extra = (2 * CURSOR_SELECT[1] + CURSOR_SELECT[2]) * sel['cap_px']
         f = min(f, ancho_tl * (1 - 2 * MARGEN_CUADRO) / (total + extra))
+    lados = sum(2 * LADOS[base_de(it['k'])] * it['cap_px'] for it in items if base_de(it['k']) in LADOS)
+    if lados:                   # v5.75: la fila cabe con los trozos del «corte» ya separados o la caja y el asa del «resalta»
+        f = min(f, ancho_tl * (1 - 2 * MARGEN_CUADRO) / (total + lados))
     if f < 1.0:
         for it in items:
             it['size'] *= f

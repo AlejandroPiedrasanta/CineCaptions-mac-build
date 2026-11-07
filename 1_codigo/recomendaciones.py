@@ -63,7 +63,7 @@ RECOMENDACIONES = {
 # v5.5: con «Solo la principal», el sonido de la palabra principal depende de QUÉ EFECTO lleva (clave = el clip de ese estilo, por prefijo): el cristal se parte (Slices), la caja se
 # selecciona (Click), la mano arrastra (Whoosh), el héroe de Kinetic cae (Hit). La principal que no lleva efecto (la clave en negrita de VIRAL, la palabra grande de «guion») usa los
 # tres toques del modo simple. Son categorías de la biblioteca de sonidos (sfx_library).
-SONIDO_POR_CLAVE = (('v shatter', 'Slices'), ('v select', 'Click'), ('v drag', 'Whoosh'), ('k hero', 'Hit'))
+SONIDO_POR_CLAVE = (('v shatter', 'Slices'), ('v select', 'Click'), ('v drag', 'Whoosh'), ('v corte', 'Slices'), ('v shine', 'Whoosh'), ('v resalta', 'Click'),('k hero', 'Hit'))
 
 
 def categoria_de_clave(clave):

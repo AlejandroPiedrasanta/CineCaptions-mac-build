@@ -79,7 +79,8 @@ MOTOR_DE_PACK = {l['pack']: l['motor'] for l in TEMAS_ENTEROS}
 
 # ----------------------------------------------------------------------------------------------------------------------------- el catálogo de looks (packs de antes)
 NOMBRES_T1 = {'lima': 'Círculo lima', 'blanco-rojo': 'Pegatina roja', 'magenta': 'Magenta subrayado', 'amarillo': 'A mano y pegatina', 'serif': 'Lazo magenta', 'blanco-cian': 'A mano subrayada'}   # v5.5.13: tema neón
-NOMBRES_T3 = {'pila': 'Pila y negrita', 'v shatter': 'Shatter (cristal)', 'v select': 'Select (caja)', 'v drag': 'Drag (mano)'}
+NOMBRES_T3 = {'pila': 'Pila y negrita', 'v shatter': 'Shatter (cristal)', 'v select': 'Select (caja)', 'v drag': 'Drag (mano)',
+              'v corte': 'Corte', 'v shine': 'Giro 3D', 'v resalta': 'Resaltado', 'v linea': 'Línea con caja'}   # v5.75: EJEMPLO 2 (se parte), EJEMPLO3 (letras con volumen que giran), selección del iPhone
 
 
 def catalogo():
@@ -97,6 +98,61 @@ def catalogo():
     for clave, nombre in NOMBRES_T3.items():
         salida.append({'id': f"t3:{clave.replace('v ', '')}", 'tema': 3, 'motor': 'viral', 'efecto': None if clave == 'pila' else clave, 'nombre': nombre})
     return salida
+
+
+# ----------------------------------------------------------------------------------------------------------------------------- «Crea tu estilo» v5.75
+# La página se divide en TEXTO BASE (las palabras normales de arriba y abajo: se elige una o ninguna) y TEXTOS PRINCIPALES (la palabra con efecto:
+# varias, se turnan por frases). Solo lo que se ve distinto en MOVIMIENTO: lo que solo cambia de color sale una vez (el color va en «Letra y colores»).
+#   · una base = la LETRA de arriba y abajo de su tema (ajustes['fuente_secundaria']) puesta en TODOS los principales; cada principal guarda su tamaño y su sitio
+#   · un principal = un look que la mezcla ya sabe turnar (un look suelto 't2:6' o un tema entero 't4'); su previa: 2_recursos/guia_estilo/crea/<id>.mp4
+BASES_CREA = (
+    {'id': 'b_t1_amano', 'tema': 1, 'n': 1, 'fuente': 'Yellowtail|Regular'},          # «k script yt» (a mano)
+    {'id': 'b_t1_serif', 'tema': 1, 'n': 2, 'fuente': 'DM Serif Text|Italic'},        # «k serif»
+    {'id': 'b_t2', 'tema': 2, 'fuente': 'Poppins|Light'},                             # guion_captions.FINA
+    {'id': 'b_t3', 'tema': 3, 'fuente': 'Inter 18pt|Medium'},                         # «v fina» (la del Tema 5 es la misma: no sale)
+    {'id': 'b_t4', 'tema': 4, 'fuente': 'Inter 24pt|Bold'},                           # tema4_planificador.FUENTE
+    {'id': 'b_t6', 'tema': 6, 'fuente': 'Instrument Serif|Regular'},                  # Tema6 vertical.variantes.json
+)
+PRINCIPALES_CREA = (
+    {'id': 'p_t1_circulo', 'tema': 1, 'look': 't1:lima', 'efecto': 'Círculo'},         # recetas 1 y 5 (idénticas)
+    {'id': 'p_t1_subrayado', 'tema': 1, 'look': 't1:magenta', 'efecto': 'Subrayado'},
+    {'id': 'p_t2_impacto', 'tema': 2, 'look': 't2:1', 'efecto': 'Barrido'},          # Luxe Shine (el 4 es el mismo en otro color)
+    {'id': 'p_t2_editorial', 'tema': 2, 'look': 't2:2', 'efecto': 'Barrido'},        # Luxe Shine (el 5 es el mismo en otro color)
+    {'id': 'p_t2_highlight', 'tema': 2, 'look': 't2:3', 'efecto': 'Fondo'},
+    {'id': 'p_t2_fire', 'tema': 2, 'look': 't2:6', 'efecto': 'Fuego'},
+    {'id': 'p_t2_strike', 'tema': 2, 'look': 't2:7', 'efecto': 'Tachado'},
+    {'id': 'p_t2_underline', 'tema': 2, 'look': 't2:8', 'efecto': 'Subrayado'},
+    {'id': 'p_t3_select', 'tema': 3, 'look': 't3:select', 'efecto': 'Caja'},
+    {'id': 'p_t3_shatter', 'tema': 3, 'look': 't3:shatter', 'efecto': 'Cristal'},
+    {'id': 'p_t3_drag', 'tema': 3, 'look': 't3:drag', 'efecto': 'Arrastre'},
+    {'id': 'p_t3_corte', 'tema': 3, 'look': 't3:corte', 'efecto': 'Corte'},           # v5.75: rosa con volumen que se parte en 6 trozos
+    {'id': 'p_t3_shine', 'tema': 3, 'look': 't3:shine', 'efecto': 'Giro 3D'},         # v5.75: naranja con volumen, letras que giran una tras otra
+    {'id': 'p_t3_resalta', 'tema': 3, 'look': 't3:resalta', 'efecto': 'Resaltado'},   # v5.75: la selección azul del iPhone con su asa
+    {'id': 'p_t3_linea', 'tema': 3, 'look': 't3:linea', 'efecto': 'Línea'},            # v5.75: el Tema 3 nuevo (una línea, caja que salta); caja azul
+    {'id': 'p_t4', 'tema': 4, 'look': 't4', 'efecto': 'Brillo'},
+    {'id': 'p_t5', 'tema': 5, 'look': 't5', 'efecto': 'Brillo'},
+    {'id': 'p_t6', 'tema': 6, 'look': 't6', 'efecto': 'Brillo'},
+)
+
+
+def base_crea(id_):
+    """La base de «Crea tu estilo» con ese id (copia) o None."""
+    return next((dict(b) for b in BASES_CREA if b['id'] == str(id_ or '')), None)
+
+
+def principal_crea(id_):
+    """El principal de «Crea tu estilo» con ese id o con ese look ('t2:6', 't4'); copia o None."""
+    id_ = str(id_ or '')
+    return next((dict(p) for p in PRINCIPALES_CREA if id_ in (p['id'], p['look'])), None)
+
+
+def nombre_crea(item):
+    """Lo que ve el usuario: «Tema 1 · 2» (base de un tema con dos) o «Tema 2 · Fuego» (principal). Solo «Tema N», sin apodos."""
+    if not item:
+        return ''
+    if 'efecto' in item:
+        return tr('Tema {n} · {e}', n=item['tema'], e=tr(item['efecto']))
+    return tr('Tema {n} · {k}', n=item['tema'], k=item['n']) if item.get('n') else tr('Tema {n}', n=item['tema'])
 
 
 def temas_enteros():
@@ -702,6 +758,10 @@ def planificar(palabras, looks, idioma='es', ancho_tl=1080, alto_tl=1920, ancla_
                 cues, _plan = _tema3(sub, idioma, ancho_tl, alto_tl, ancla_viral, m_sub, t['fin'], estado)
             elif look['motor'] == 'kinetic':
                 cues, _plan = _cues_kinetic(sub, look, idioma, ancho_tl, alto_tl, ancla_kinetic, m_sub, t['fin'])
+            elif look.get('efecto') == 'v linea':        # v5.75: la línea con la caja azul (linea_planificador; el color lo pone el «color principal»)
+                import linea_planificador as LP
+                res_l = LP.planificar(sub, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=ancla_viral, fin_video=t['fin'], clip_activa=LP.CLIP_ACTIVA_CREA)
+                cues, _plan = res_l['cues'], res_l['plan']
             elif look['motor'] == 'viral':
                 cues, _plan = _cues_viral(sub, look, idioma, ancho_tl, alto_tl, ancla_viral, m_sub, t['fin'])
                 _rotar_colores(cues, estado['colores'])   # (los looks sueltos de antes, como siempre)
@@ -912,11 +972,14 @@ def _es_pack_ajeno(carpeta):
         return False
 
 
-def crear_estilo(nombre, temas, ajustes=None, carpeta_packs=None, poster=None):
+def crear_estilo(nombre, temas, ajustes=None, carpeta_packs=None, poster=None, base_texto=None):
     """v5.56 «Crea tu estilo»: guarda el estilo del usuario como un pack (CONTRATO 3) en carpeta_de_packs()/nombre_seguro(nombre):
-        2-6 temas: {"version": 2, "nombre", "guion": "mezcla", "looks": ["t3", "t1", "t5"] (orden de toque), "formatos": {"v": {"mezcla": true}}, "ajustes"}
-        1 tema:    {"version": 2, "nombre", "base": "VIRAL", "ajustes"}   (pack DERIVADO: GO lo trata como ese tema con sus ajustes, no como mezcla)
-    `temas`: ids 't1'…'t6' sin repetir; `ajustes`: ver normalizar_ajustes(); `poster`: la foto de la tarjeta (PIL.Image o ruta), opcional.
+        2 o más:   {"version": 2, "nombre", "guion": "mezcla", "looks": ["t2:6", "t3:select", "t5"] (orden de toque), "formatos": {"v": {"mezcla": true}}, "ajustes"}
+        1 tema entero: {"version": 2, "nombre", "base": "VIRAL", "ajustes"}   (pack DERIVADO: GO lo trata como ese tema con sus ajustes, no como mezcla)
+        1 look suelto: una mezcla de un solo look (todo el video con ese efecto)
+    `temas`: ids sin repetir: temas enteros 't1'…'t6' o (v5.75) los looks de los principales ('t2:6', 't3:select'…, ver PRINCIPALES_CREA);
+    `ajustes`: ver normalizar_ajustes(); `base_texto`: el id de la base elegida (BASES_CREA) o None: su letra va en 'fuente_secundaria' (si el
+    usuario no eligió otra) y su id se guarda en el pack ('base_texto') para la nota de la tarjeta; `poster`: la foto de la tarjeta (PIL.Image o ruta).
     Escribe con archivos_seguros y avisa a plantillas (invalidar_packs). Llamarlo fuera del hilo de la interfaz (escribe en el disco y puede dibujar
     la foto). -> (nombre, carpeta). ValueError (con el texto para el usuario) si los temas, los ajustes o el nombre no valen."""
     import archivos_seguros
@@ -925,14 +988,20 @@ def crear_estilo(nombre, temas, ajustes=None, carpeta_packs=None, poster=None):
         temas = [temas]
     ids = [str(i or '').strip() for i in (temas or [])]
     if not ids:
-        raise ValueError(tr('Elige al menos un tema.'))
+        raise ValueError(tr('Elige al menos un texto principal.'))
     for i in ids:
-        if not es_tema_entero(i):
+        if not es_tema_entero(i) and principal_crea(i) is None:
             raise ValueError(tr('No conozco el tema «{t}».', t=i))
     if len(set(ids)) != len(ids):
-        raise ValueError(tr('Cada tema va una sola vez.'))
-    if len(ids) > MAX_TEMAS:
-        raise ValueError(tr('Como mucho {n} temas.', n=MAX_TEMAS))
+        raise ValueError(tr('Cada texto principal va una sola vez.'))
+    if len(ids) > len(PRINCIPALES_CREA):
+        raise ValueError(tr('Como mucho {n} textos principales.', n=len(PRINCIPALES_CREA)))
+    texto_base = base_crea(base_texto) if base_texto else None
+    if base_texto and texto_base is None:
+        raise ValueError(tr('No conozco el texto base «{t}».', t=base_texto))
+    ajustes = dict(ajustes or {})
+    if texto_base and not str(ajustes.get('fuente_secundaria') or '').strip():
+        ajustes['fuente_secundaria'] = texto_base['fuente']
     ajustes = normalizar_ajustes(ajustes)
     nombre = _nombre_del_estilo(nombre)
     if _nombre_reservado(nombre):
@@ -941,10 +1010,12 @@ def crear_estilo(nombre, temas, ajustes=None, carpeta_packs=None, poster=None):
     carpeta = base / plantillas.nombre_seguro(nombre)          # la misma carpeta que plantillas.buscar_pack(nombre) mira
     if _es_pack_ajeno(carpeta):
         raise ValueError(tr('Ya hay un pack que se llama «{n}»: elige otro nombre.', n=nombre))
-    if len(ids) == 1:
+    if len(ids) == 1 and es_tema_entero(ids[0]):
         datos = {'version': 2, 'nombre': nombre, 'base': look_de(ids[0])['pack'], 'ajustes': ajustes}
     else:
         datos = {'version': 2, 'nombre': nombre, 'guion': 'mezcla', 'looks': ids, 'formatos': {'v': {'mezcla': True}}, 'ajustes': ajustes}
+    if texto_base:
+        datos['base_texto'] = texto_base['id']
     carpeta.mkdir(parents=True, exist_ok=True)
     archivos_seguros.escribir_json(carpeta / 'pack.json', datos, indent=2)
     _guardar_poster(carpeta, ids, poster)

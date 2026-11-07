@@ -2010,44 +2010,42 @@ class PlantillasWindow(QWidget):
         self._galeria_estilo = crea_estilo_ui.CreaEstiloDialogo(self.app, self._crear_mi_estilo)
         self._galeria_estilo.show()
     @staticmethod
-    def _poster_estilo(temas, ajustes):
-        """La foto vertical de la tarjeta del estilo (540×960): las imágenes de sus filas en la página (vista_estilos, la misma frase en cada tema
-        con su letra y sus colores), una debajo de otra en el orden de los temas, sobre el fondo de la fila. En el hilo de trabajo; None si falla."""
+    def _poster_estilo(temas, base=None):
+        """La foto vertical de la tarjeta del estilo (540×960, negro): el último cuadro de la previa de su texto base y de cada principal (las de
+        la página, 2_recursos/guia_estilo/crea), uno debajo de otro en el orden en que se turnan. En el hilo de trabajo; None si falla."""
         try:
-            from PIL import Image
-            import vista_estilos
-            numeros = [int(str(t)[1:]) for t in temas if str(t)[1:].isdigit()]
-            if not numeros:
-                return None
-            ancho, alto = 540, 960
-            fondo = tuple(vista_estilos.fondo(ajustes))
-            lienzo = Image.new('RGB', (ancho, alto), fondo)
-            fila_w = 500
-            fila_h = min(200, int((alto - 120) / len(numeros)))
-            y = int((alto - fila_h * len(numeros)) / 2)
-            for n in numeros:
-                im = vista_estilos.imagen(n, ajustes, fila_w, fila_h)
-                lienzo.paste(im.convert('RGB'), (int((ancho - fila_w) / 2), y))
-                y += fila_h
-            return lienzo
+            import crea_estilo_ui
+            import mezcla_planificador as MP
+            principales = [(MP.principal_crea(t) or {}).get('id') for t in temas]
+            return crea_estilo_ui.poster(base, [p for p in principales if p])
         except Exception:
             registro.excepcion(origen='Crea tu estilo · foto de la tarjeta')
             return None
-    def _crear_mi_estilo(self, nombre, temas, terminado, ajustes=None):
-        """al_crear de la página «Crea tu estilo»: temas = ['t3', 't1', …] (orden de toque) y ajustes = la letra y los colores ('' = del tema).
-        En un hilo: la foto de la tarjeta, mezcla_planificador.crear_estilo (1 tema = pack derivado; 2-6 = mezcla) y, con letra o colores, los
-        packs personalizados de cada tema ya armados (GO los reutiliza). Avisa en el Registro (sin globos) y pone el estilo en el centro del slider."""
+    def _crear_mi_estilo(self, nombre, temas, terminado, ajustes=None, base=None):
+        """al_crear de la página «Crea tu estilo»: temas = los looks de los principales en el orden en que se turnan (['t2:6', 't3:select', 't5']),
+        ajustes = la letra y los colores ('' = del tema) y base = el texto base ('b_t2') o None (su letra va en las líneas de arriba y abajo).
+        En un hilo: la foto de la tarjeta, mezcla_planificador.crear_estilo (un tema entero solo = pack derivado; lo demás = mezcla) y, con letra o
+        colores, los packs personalizados de cada tema ya armados (GO los reutiliza). Avisa en el Registro (sin globos) y pone el estilo en el
+        centro del slider."""
         ajustes = dict(ajustes or {})
 
         def trabajo():
             import mezcla_planificador
-            poster = self._poster_estilo(temas, ajustes)
-            nombre_final, carpeta = mezcla_planificador.crear_estilo(nombre, temas, ajustes, poster=poster)
-            if any(ajustes.values()):
+            poster = self._poster_estilo(temas, base)
+            nombre_final, carpeta = mezcla_planificador.crear_estilo(nombre, temas, ajustes, poster=poster, base_texto=base)
+            aj = dict(ajustes)
+            b = mezcla_planificador.base_crea(base)
+            if b and not aj.get('fuente_secundaria'):
+                aj['fuente_secundaria'] = b['fuente']
+            if any(aj.values()):
                 try:
                     import pack_personalizado
+                    hechos = set()
                     for t in temas:
-                        pack_personalizado.preparar(t, ajustes)
+                        tema = pack_personalizado.nombre_base(t)
+                        if tema and tema not in hechos:
+                            hechos.add(tema)
+                            pack_personalizado.preparar(t, aj)
                 except Exception as e:                   # (GO lo intentará otra vez; si tampoco puede, va con los packs de fábrica)
                     registro.aviso(tr('«Crea tu estilo»: no pude preparar todavía tu letra y tus colores ({e}).', e=str(e)[:160]), 'crea tu estilo')
             return nombre_final, carpeta
@@ -2070,9 +2068,15 @@ class PlantillasWindow(QWidget):
                 self.carrusel.ir_a_valor(nombre_final)
             except Exception:
                 registro.excepcion(origen='Crea tu estilo · slider')
+            import mezcla_planificador
             propios = any(ajustes.values())
-            texto = tr('Estilo «{n}» creado con {t}{a}. Está en el slider: tócalo para usarlo.', n=nombre_final,
-                       t=' → '.join(tr('Tema {n}', n=str(i)[1:]) for i in temas),
+            partes = []
+            for i in temas:
+                q = mezcla_planificador.principal_crea(i)
+                partes.append(mezcla_planificador.nombre_crea(q) if q else tr('Tema {n}', n=str(i)[1:2]))
+            b = mezcla_planificador.base_crea(base)
+            texto = tr('Estilo «{n}» creado con {t}{b}{a}. Está en el slider: tócalo para usarlo.', n=nombre_final, t=' → '.join(partes),
+                       b=tr(' · texto base del {x}', x=mezcla_planificador.nombre_crea(b)) if b else '',
                        a=tr(' · tu letra y tus colores') if propios else '')
             registro.info(texto, 'crea tu estilo')
             try:
@@ -2557,6 +2561,8 @@ class PlantillasWindow(QWidget):
             looks = [mezcla_planificador.look_de(i) for i in pack.looks]
             if looks and all(l and l.get('entero') for l in looks):          # v5.55: temas enteros, en el orden en que se turnan
                 return tr('Mezcla: {l}', l=' → '.join(tr('Tema {n}', n=l['tema']) for l in looks)) + propios
+            if all(mezcla_planificador.principal_crea(i) for i in pack.looks):   # v5.75: los principales de «Crea tu estilo» (solo «Tema N · efecto»)
+                return ' → '.join(mezcla_planificador.nombre_crea(mezcla_planificador.principal_crea(i)) for i in pack.looks) + propios
             partes = [f"T{l['tema']} · {l['nombre']}" for l in looks if l]
             return tr('Mezcla: {l}', l='  ·  '.join(partes)) + propios if partes else ''
         except Exception:
@@ -13979,7 +13985,7 @@ class SubtitleApp(QWidget):
             return None          # el estilo «VIRAL» comparte este camino (mismo contrato de bloques, sonidos y colocador de Resolve): otro planificador y otros clips
         if es_viral:
             import viral_captions as kc
-            import viral_planificador as kp
+            import linea_planificador as kp       # v5.75: el Tema 3 es UNA línea con la caja negra que salta de palabra en palabra (los looks de antes siguen en «Crea tu estilo»)
         else:
             import kinetic_captions as kc
             import kinetic_planificador as kp
@@ -14047,7 +14053,7 @@ class SubtitleApp(QWidget):
         track = {'language': base_lang, 'style': 'kinetic', 'data_path': str(json_path), 'srt_path': str(srt_path), 'fonts': {}, 'adelanto_frames': 0,
                  'offset_frames': self._offset_frames(), **pista_plantilla, **pista_sfx, **pista_emojis}
         if es_viral:
-            track['clip_prueba'] = 'v fina'                       # el clip que prueba que el bin del pack VIRAL está completo (el de Kinetic es «k hero blanco»)
+            track['clip_prueba'] = 'v linea'                      # el clip que prueba que el bin del pack VIRAL está completo (el de Kinetic es «k hero blanco»; v5.75: el de la línea)
         else:
             # v5.45 (el usuario: «los rings se quedan a medias»): en el kit el bloque EMPIEZA a salir al acabar y la salida dura 0,32 s; los clips del pack
             # la hacen en sus últimos 0,32 s, así que se alargan eso (antes salían 0,32 s antes y el aro, que tarda 0,45 s, no acababa de dibujarse)

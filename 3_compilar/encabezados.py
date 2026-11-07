@@ -97,7 +97,7 @@ DESCRIPCIONES = {
     '1_codigo/estilos_bloque.py': 'qué estilo (variante del pack) lleva CADA bloque: lo decide la app y lo enseña Creativo, ya no el azar de Resolve.',
     '1_codigo/edicion_pack.py': '«Editar en Resolve»: abre un pack de «Pack de estilos» como timeline para modificarlo y exportarlo de nuevo.',
     '2_recursos/guia_estilo/editar_pack.py': 'corre DENTRO de Resolve: abre un pack de «Pack de estilos» como timeline para editarlo (y exportarlo de nuevo).',
-    '1_codigo/crea_estilo_ui.py': '«Crea tu estilo»: la lista de los Temas 1-6 sobre negro (se tocan en el orden que se quiera) con el cajón de letra y colores, y el popup de la estructura de nombres.',
+    '1_codigo/crea_estilo_ui.py': '«Crea tu estilo»: texto base + textos principales con su previa ANIMADA sobre negro, el cajón de letra y colores, y el popup de la estructura de nombres.',
     '2_recursos/guia_estilo/construir_guia.py': 'corre DENTRO de Resolve: arma el timeline «Crea tu estilo» con los 48 ejemplos (Luxe Shine o Amro de principal; Luxe Slide arriba y abajo) y saca sus vistas reales.',
     '1_codigo/archivos_seguros.py': 'escritura atómica de JSON/texto (preferencias, marcas, proyectos): un corte o dos hilos ya no dejan archivos a medias.',
     '1_codigo/editor_ui.py': 'piezas del editor Creativo: barra de herramientas, tarjeta del párrafo, palabras por línea, play y el panel de avance de Asistencia/Generar.',

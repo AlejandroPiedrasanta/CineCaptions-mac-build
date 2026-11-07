@@ -180,10 +180,11 @@ VOLUMEN_EFECTO = [(0.0, 0.92), (0.5, 0.965), (1.0, 0.92)]      # el relleno del 
 GRIS_DRAG = 0.85                            # el contorno punteado del drag (y el gris de antes de rellenarse) = 0,85 × su tinte
 
 
-def _copia(nombre, y, texto, color=(1, 1, 1), extra=None):
+def _copia(nombre, y, texto, color=(1, 1, 1), extra=None, fuente=None):
     """v5.57: una copia del Template (Medida, BrilloTxt, Caja) que sigue su texto, su Size y su Tracking (CharacterSpacing): con el «Tracking» del Inspector
     (macro_kinetic) la medida de la palabra, el brillo y la caja siguen a las letras. La letra NO: con Font/Style por expresión la comp salía negra."""
-    t = texto_plus(nombre, -220, y, texto, EFECTO[0], EFECTO[1], 0.30, color=color, esp=0.97, extra=extra, expr={'Size': 'Template.Size'})
+    fuente = fuente or EFECTO
+    t = texto_plus(nombre, -220, y, texto, fuente[0], fuente[1], 0.30, color=color, esp=0.97, extra=extra, expr={'Size': 'Template.Size'})
     for campo, valor in (('StyledText', f'"{texto}"'), ('CharacterSpacing', '0.97')):
         viejo = f'{campo} = Input {{ Value = {valor}, }},'
         if viejo not in t:
@@ -542,6 +543,347 @@ def comp_drag(tinte=''):
     return K.armar_comp(MK.envolver(t, color='solo'), 'CineCaptions VIRAL - drag')     # (el degradado solo pintaría el contorno punteado)
 
 
+# ------------------------------------------------------------------------------------------------------------------ v5.75: relieve, corte y shine
+# Pedido del usuario (2026-11-06): «crea este tal cual, exactamente igual» con Downloads/EJEMPLO 2.mp4 (Shatter rosa → «v corte») y EJEMPLO3.mp4
+# (shine → «v shine»), y «el ejemplo es volumétrico, tipo 3D en 2D». Medidas en scratchpad/crea/efectos/MEDIDAS.md (1920×1080 a 24 fps).
+# Probado en Resolve (laboratorio «v lab …»): el Follower de Text+ gira cada letra en Y con una expresión de tiempo, y un CustomTool ilumina la
+# forma desenfocada de la letra (bisel 2D de verdad; Merge con ApplyMode HardLight + Atop dejaba la letra gris: la luz se calcula DENTRO del Custom).
+
+
+def _curva(puntos, t):
+    """Expresión de una curva de TRAMOS RECTOS por `puntos` [(t, v)] en la variable `t` (plana antes del primero y después del último): suma de
+    «bisagras» math.max(0, t - ti) (sin tablas ni funciones de Lua: lo que Fusion evalúa seguro)."""
+    puntos = sorted(puntos)
+    t0, v0 = puntos[0]
+    pend = [(puntos[i + 1][1] - puntos[i][1]) / (puntos[i + 1][0] - puntos[i][0]) for i in range(len(puntos) - 1)] + [0.0]
+    partes = [n(v0)]
+    previa = 0.0
+    for (ti, _v), s in zip(puntos, pend):
+        c = s - previa
+        if abs(c) > 1e-9:
+            partes.append(f'{n(c)} * math.max(0, ({t}) - {n(ti)})')
+        previa = s
+    return '(' + ' + '.join(partes) + ')'
+
+
+def _relieve(origen, prefijo, x, y, luz, sombra, blur_em, fuerza, k_luz=1.0, k_sombra=1.0, signo=1, cara=None, numeros=None):
+    """Bisel 2D (volumen) sobre la imagen `origen` (letra ya de color, alfa premultiplicado): la ALTURA es su alfa desenfocado (`blur_em` em) y la luz
+    llega de arriba a la izquierda: donde da, el color va hacia `luz`; donde no, hacia `sombra` (solo dentro de la letra).
+    `cara`: (r, g, b) expresiones del color de la cara (sin premultiplicar) en lugar del de `origen`; `numeros`: {2: expr, ...} -> NumberIn2... (n2, ...).
+    Dos Custom: «Pend» calcula una vez por píxel la luz (R) y la sombra (G), topadas a 1; «Luz» colorea. Devuelve (nodos, nombre del último)."""
+    radio = f'({n(blur_em)} * {EM_W} * {ANCHO_CUADRO})'                 # en píxeles del cuadro: sigue al tamaño de la palabra
+    t = herramienta('Blur', prefijo + 'Alto', x, y + 80, [enlace('Input', origen), 'XBlurSize = Input { Value = 8, Expression = "%s", },' % K.lua(radio),
+                                                          'Filter = Input { Value = FuID { "Gaussian" }, },'])
+    # pendiente del alfa con 1,5 px de paso. Sin variables intermedias (i1 no salía: ronda 1) ni min/max: las partes y los topes, con abs
+    g = n(-fuerza * signo * 0.7071)        # (en Fusion la y crece hacia ARRIBA: sin el signo la luz salía abajo a la derecha; medido en la ronda 7)
+    s = f'({g} * n1 * ((geta1b(x - s1, y) - geta1b(x + s1, y)) - (geta1b(x, y - s1) - geta1b(x, y + s1))))'
+    pos, neg = f'(({s} + abs({s})) / 2)', f'((abs({s}) - {s}) / 2)'
+
+    def tope(p):
+        return f'(({p} + 1 - abs({p} - 1)) / 2)'
+    t += herramienta('Custom', prefijo + 'Pend', x + 140, y + 80, [
+        enlace('Image1', prefijo + 'Alto'), 'Setup1 = Input { Value = "1.5 / w", },', 'NumberIn1 = Input { Value = 10, Expression = "%s", },' % K.lua(radio),
+        f'RedExpression = Input {{ Value = "{K.lua(tope(pos))}", }},', f'GreenExpression = Input {{ Value = "{K.lua(tope(neg))}", }},',
+        'BlueExpression = Input { Value = "0", },', 'AlphaExpression = Input { Value = "1", },'])
+    kl, ks = (k if isinstance(k, str) else n(k) for k in (k_luz, k_sombra))
+    canal = []
+    for i, (c, lv, sv) in enumerate(zip('rgb', luz, sombra)):
+        base = f'{c}2' if cara is None else f'(({cara[i]}) * a2)'
+        canal.append(f'{base} + r1 * {kl} * ({n(lv)} * a2 - {base}) - g1 * {ks} * ({base} - {n(sv)} * a2)')
+    nums = [f'NumberIn{k} = Input {{ Value = 0, Expression = "{K.lua(e)}", }},' for k, e in sorted((numeros or {}).items())]
+    t += herramienta('Custom', prefijo + 'Luz', x + 280, y, [
+        enlace('Image1', prefijo + 'Pend'), enlace('Image2', origen)] + nums + [
+        f'RedExpression = Input {{ Value = "{K.lua(canal[0])}", }},', f'GreenExpression = Input {{ Value = "{K.lua(canal[1])}", }},',
+        f'BlueExpression = Input {{ Value = "{K.lua(canal[2])}", }},', 'AlphaExpression = Input { Value = "a2", },'])
+    return t, prefijo + 'Luz'
+
+
+CORTE_BASE = (0.992, 0.120, 0.820)          # #FD1FD1: el magenta de la entrada (interior medido #FD37D1 con la luz encima)
+CORTE_LUZ_CENTRO = (1.0, 0.86, 0.96)       # el claro del centro (#FBA5E9 medido con la luz encima)
+CORTE_BISEL = (0.706, 0.071, 0.541)        # #B4128A: el filo oscuro
+CORTE_BRILLO, CORTE_SOMBRA = (1.0, 0.95, 0.99), (0.62, 0.06, 0.46)
+# Trozos (em; y hacia ARRIBA), medidos en el cuadro 40 con em = 388 px: (dx, dy). La curva g(T) = 0,37 + 0,193·ln(T − 14) los separa desde el 15.
+CORTE_TROZOS = {'AI': (-0.222, 0.036), 'MI': (-0.443, 0.0), 'BI': (-0.103, -0.031), 'AD': (0.240, 0.0), 'MD': (0.376, -0.010), 'BD': (0.149, -0.067)}
+CORTE_ARRIBA = (0.027, 0.7)                 # el corte de arriba: altura (em sobre el centro) y giro (grados): de +0,005 em a la izquierda a +0,05 a la derecha
+CORTE_ABAJO = (-0.082, 0.0)
+CORTE_GRIETA = (0.046, 4.0)                 # la grieta: x (fracción del ANCHO de la palabra desde su centro) y giro
+
+
+def comp_corte():
+    """EJEMPLO 2 (Shatter rosa) tal cual: entra fundiéndose desde un magenta oscuro (c3-c9) mientras se desliza ~0,064 em a la izquierda y vuelve
+    0,031 em (c4-c14); la luz del centro sube en c7-c13; en el c15 se parte en 6 trozos (arriba / franja / abajo a cada lado de la grieta) que se
+    siguen separando: g = 0,37 + 0,193·ln(T − 14). Relieve 2D con luz de arriba a la izquierda y filos claros en los cortes."""
+    T = t24(32)
+    extra = ['Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 1, },', 'Thickness2 = Input { Value = Number { Value = 0.005 }, },',
+             f'Red2 = Input {{ Value = Number {{ Value = {n(CORTE_BISEL[0])} }}, }},', f'Green2 = Input {{ Value = Number {{ Value = {n(CORTE_BISEL[1])} }}, }},',
+             f'Blue2 = Input {{ Value = Number {{ Value = {n(CORTE_BISEL[2])} }}, }},', 'Opacity2 = Input { Value = Number { Value = 0.85 }, },']
+    t = texto_plus('Template', -220, 40, 'Corte', EFECTO[0], EFECTO[1], 0.31, color=CORTE_BASE, esp=0.97, extra=extra)
+    t += _copia('Medida', 120, 'Corte')
+    dw = 'Medida.Output.DataWindow'
+    WW = f'(({dw} and (({dw}[3] - {dw}[1]) / {ANCHO_CUADRO})) or 0.4)'
+    # --- la luz del centro (claro en el medio, magenta en los bordes): un fondo claro con una máscara suave, solo sobre las letras
+    t += K._mascara('RectangleMask', 'MLuz', -220, 200, [
+        'Center = Input { Value = { 0.5, 0.5 }, },', f'Width = Input {{ Value = 0.2, Expression = "0.50 * {K.lua(WW)}", }},',
+        'Height = Input { Value = 3, },', f'SoftEdge = Input {{ Value = 0.1, Expression = "0.50 * {K.lua(WW)}", }},', 'CornerRadius = Input { Value = 0, },'])
+    t += K._fondo('LuzFondo', -60, 200, CORTE_LUZ_CENTRO, 'MLuz')
+    luz = f'math.min(1, math.max(0, (({T}) - 7) / 5))'
+    t += herramienta('Merge', 'Luz', 60, 120, [enlace('Background', 'Template'), enlace('Foreground', 'LuzFondo'), 'Operator = Input { Value = FuID { "Atop" }, },',
+                                                f'Blend = Input {{ Value = 0, Expression = "{K.lua(f"1.0 * {luz}")}", }},'])
+    nodos, relieve = _relieve('Luz', 'Rel', 60, 280, CORTE_BRILLO, CORTE_SOMBRA, 0.009, 1.4, k_luz='(0.5 + 0.45 * n4)', k_sombra=0.85,
+                             numeros={4: luz})            # (el filo claro crece con la luz del centro: en c9 la referencia apenas brilla)
+    t += nodos
+    # --- los trozos: grieta (izq/der) × corte de arriba × corte de abajo; cada uno se RECORTA antes de moverse
+    t += vacio('VacioP', 420, 600)
+    LARGO = 4.0
+    cuenta = {'n': 0, 'y': 600}
+
+    def semiplano(px, py, ang, lado):
+        c, s = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+        nx, ny = {'izq': (-c, -s), 'der': (c, s), 'arr': (-s, c), 'aba': (s, -c)}[lado]
+        cuenta['n'] += 1
+        nombre = f'Cp{cuenta["n"]}'
+        nodos = K._mascara('RectangleMask', nombre, -220, cuenta['y'], [
+            f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5 + ({K.lua(px)}) + {n(nx * LARGO / 2)}, 0.5 + (({K.lua(py)}) + {n(ny * LARGO / 2)}) * {n(ASPECTO)})", }},',
+            f'Width = Input {{ Value = {n(LARGO)}, }},', f'Height = Input {{ Value = {n(LARGO * ASPECTO)}, }},', f'Angle = Input {{ Value = {n(ang)}, }},',
+            'CornerRadius = Input { Value = 0, },'])
+        cuenta['y'] += 80
+        return nombre, nodos
+
+    def recorta(origen, mascara, nombre):
+        return herramienta('Merge', nombre, 140, cuenta['y'] - 80, [enlace('Background', 'VacioP'), enlace('Foreground', origen),
+                                                                     f'EffectMask = Input {{ SourceOp = "{mascara}", Source = "Mask" }},'])
+    gx = f'({n(CORTE_GRIETA[0])} * {WW})'
+    ya, aa = f'({n(CORTE_ARRIBA[0])} * {EM_W})', CORTE_ARRIBA[1]
+    yb, ab = f'({n(CORTE_ABAJO[0])} * {EM_W})', CORTE_ABAJO[1]
+    hojas = {}
+    for lado, L in (('izq', 'I'), ('der', 'D')):
+        m, nd = semiplano(gx, '0', 90 + CORTE_GRIETA[1] - 90, lado)
+        t += nd + recorta(relieve, m, 'Lado' + L)
+        m, nd = semiplano('0', ya, aa, 'arr')
+        t += nd + recorta('Lado' + L, m, 'Trozo' + 'A' + L)
+        hojas['A' + L] = 'Trozo' + 'A' + L
+        m, nd = semiplano('0', ya, aa, 'aba')
+        t += nd + recorta('Lado' + L, m, 'Resto' + L)
+        m, nd = semiplano('0', yb, ab, 'arr')
+        t += nd + recorta('Resto' + L, m, 'Trozo' + 'M' + L)
+        hojas['M' + L] = 'Trozo' + 'M' + L
+        m, nd = semiplano('0', yb, ab, 'aba')
+        t += nd + recorta('Resto' + L, m, 'Trozo' + 'B' + L)
+        hojas['B' + L] = 'Trozo' + 'B' + L
+    # filos claros: una franja blanca finísima justo debajo de cada corte, solo sobre las letras de la franja y de abajo
+    for k, (corte_y, ang) in enumerate(((ya, aa), (yb, ab))):
+        t += K._mascara('RectangleMask', f'MFilo{k}', -220, cuenta['y'], [
+            f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5, 0.5 + (({K.lua(corte_y)}) - 0.006 * {K.lua(EM_W)}) * {n(ASPECTO)})", }},',
+            'Width = Input { Value = 3, },', f'Height = Input {{ Value = 0.01, Expression = "0.010 * {K.lua(EM_H)}", }},', f'Angle = Input {{ Value = {n(ang)}, }},',
+            'SoftEdge = Input { Value = 0.0015, },', 'CornerRadius = Input { Value = 0, },'])
+        t += K._fondo(f'Filo{k}', -60, cuenta['y'], (1.0, 0.96, 0.99), f'MFilo{k}')
+        cuenta['y'] += 80
+    roto = f'(({T}) >= 15 and 1 or 0)'
+    g = f'(({roto}) * (0.37 + 0.193 * math.log(math.max(1, ({T}) - 14))))'
+    salidas = []
+    for k, (hoja, nodo) in enumerate(hojas.items()):
+        origen = nodo
+        if hoja[0] in 'MB':                                                  # el filo del corte de encima de este trozo
+            filo = 'Filo0' if hoja[0] == 'M' else 'Filo1'
+            t += herramienta('Merge', 'F' + hoja, 260, 600 + 80 * k, [enlace('Background', nodo), enlace('Foreground', filo), 'Operator = Input { Value = FuID { "Atop" }, },',
+                                                                      f'Blend = Input {{ Value = 0, Expression = "{K.lua(f"0.85 * {roto}")}", }},'])
+            origen = 'F' + hoja
+        dx, dy = CORTE_TROZOS[hoja]
+        t += herramienta('Transform', 'T' + hoja, 380, 600 + 80 * k, [
+            enlace('Input', origen),
+            f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5 + {n(dx)} * {K.lua(EM_W)} * {K.lua(g)}, 0.5 + {n(dy)} * {K.lua(EM_H)} * {K.lua(g)})", }},'])
+        salidas.append('T' + hoja)
+    prev = salidas[0]
+    for k, nom in enumerate(salidas[1:], 1):
+        t += herramienta('Merge', f'U{k}', 520, 600 + 80 * k, [enlace('Background', prev), enlace('Foreground', nom)])
+        prev = f'U{k}'
+    t += herramienta('Merge', 'Entera', 640, 480, [enlace('Background', 'VacioP'), enlace('Foreground', relieve),
+                                                   f'Blend = Input {{ Value = 1, Expression = "{K.lua(f"1 - {roto}")}", }},'])
+    t += herramienta('Merge', 'Rota', 640, 560, [enlace('Background', 'Entera'), enlace('Foreground', prev), f'Blend = Input {{ Value = 0, Expression = "{K.lua(roto)}", }},'])
+    desliza = _curva([(4, 0), (10, -0.064), (14, -0.033), (16, -0.033)], T)
+    entra = f'math.min(1, math.max(0, (({T}) - 3) / 6))'
+    t += cadena('Rota', dict(dx=f'{desliza} * {EM_W}', size=f'(0.92 + 0.08 * {SALIDA})', blend=f'(3 - 2 * {entra}) * {entra} * {entra} * {SALIDA}'), x0=800)
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - corte')
+
+
+SHINE_BASE = (0.992, 0.30, 0.0)             # (solo da la forma: el color de la cara lo pone SHINE_CARA)
+# La CARA (medida en EJEMPLO3, c22): naranja #FD4D00 con dos franjas amarillas #FDBA08 inclinadas «/» a ±0,23 del ANCHO de la palabra
+# (anchura a media altura 0,2) que suben de intensidad en c3-c14; filo fino: claro amarillo arriba a la izquierda, rojo abajo a la derecha.
+SHINE_CARA = ((0.992, 0.30, 0.0), (0.992, 0.73, 0.03))
+SHINE_FRANJAS = [(3, 0.1), (7, 0.25), (9, 0.45), (14, 1.0)]
+SHINE_LUZ, SHINE_SOMBRA = (1.0, 0.85, 0.25), (0.85, 0.16, 0.0)
+SHINE_FILO = (7, 7)                          # el filo claro entra en c7-c14 (antes de c7 la referencia no tiene brillos: claro #FD8902)
+# La palabra (em; x a la derecha, y hacia ARRIBA) por fotogramas de 24 fps, medida en EJEMPLO3 (centro de la tinta respecto al de reposo, giro, tamaño)
+SHINE_X = [(1, -0.366), (2, -0.367), (3, -0.243), (4, -0.028), (5, 0.120), (6, 0.096), (7, 0.112), (8, 0.067), (9, 0.030), (10, 0.005), (11, -0.015), (12, -0.034),
+           (13, -0.047), (14, -0.052), (15, -0.050), (16, -0.044), (17, -0.033), (18, -0.024), (19, -0.015), (20, -0.008), (21, -0.002), (22, 0.0)]
+SHINE_Y = [(1, 0.465), (2, 0.339), (3, 0.212), (4, 0.084), (5, 0.0), (6, -0.073), (7, -0.092), (8, -0.066), (9, -0.014), (10, 0.029), (11, 0.060), (12, 0.078),
+           (13, 0.089), (14, 0.092), (15, 0.085), (16, 0.072), (17, 0.055), (18, 0.038), (19, 0.022), (20, 0.011), (21, 0.004), (22, 0.0)]
+SHINE_GIRO = [(1, 38.5), (2, 38.5), (3, 33.5), (4, 17.2), (5, 15.6), (6, 5.2), (7, -2.8), (8, -6.1), (9, -5.3), (10, -4.0), (11, -2.8), (12, -1.9), (13, -1.1),
+              (14, -0.4), (15, 0.3), (16, 0.7), (17, 0.8), (18, 0.8), (19, 0.5), (20, 0.1), (21, 0.0)]
+SHINE_TAM = [(0, 0.30), (2, 0.36), (3, 0.47), (4, 0.63), (5, 0.78), (6, 0.86), (7, 0.93), (8, 0.97), (9, 0.997), (10, 1.011), (11, 1.013), (12, 1.010),
+             (13, 1.006), (14, 1.004), (16, 1.003), (22, 1.0)]
+# Cada letra (fotogramas de 24 fps; la «s» empieza ya abierta en c1 y cada letra va 1,6 fotogramas detrás): se abre en Y, se endereza en Z y deja de
+# verse oscura. El Follower SOLO reparte el retraso con FOTOGRAMAS CLAVE y DelayType = 1 («entre cada letra»; con 0 no hay retraso; Order 0 = de
+# izquierda a derecha, 1 = al revés, 2 = desde el centro: laboratorio, rondas 3-6). Un TimeStretcher le da el tiempo en fotogramas de 24 fps (t24) MÁS
+# SHINE_ADELANTO, para que dure lo mismo a 24, 30 o 60 fps y las claves no tengan tiempos negativos.
+SHINE_LETRA_Y = [(-3.5, 90), (-2, 70), (-1, 48), (0, 30), (1, 16), (2, 6), (3, 0), (4, -3), (5, -2), (7, 0)]
+SHINE_LETRA_Z = [(-3.5, 22), (-1, 10), (1.5, -3), (3, -2), (5, 0)]
+SHINE_LETRA_OP = [(-3.5, 0.1), (-2, 0.3), (-1, 0.55), (0, 0.8), (1, 1.0)]
+SHINE_LETRA_ESP = [(-3.5, 0.66), (-2, 0.74), (-1, 0.87), (0, 0.95), (1, 0.985), (2, 0.996), (3, 1.0)]
+SHINE_RETRASO = 1.6
+SHINE_ADELANTO = 4.0
+
+
+def _spline(nombre, puntos):
+    """BezierSpline lineal con los `puntos` [(fotograma, valor)]."""
+    cuerpo = ', '.join(f'[{n(f)}] = {{ {n(v)}, Flags = {{ Linear = true }} }}' for f, v in puntos)
+    return f'\t\t{nombre} = BezierSpline {{\n\t\t\tSplineColor = {{ Red = 240, Green = 120, Blue = 20 }},\n\t\t\tKeyFrames = {{ {cuerpo} }}\n\t\t}},\n'
+
+
+def comp_shine():
+    """EJEMPLO3 (shine) tal cual: letras naranjas con VOLUMEN que se abren una tras otra (Follower: giro en Y y algo en Z, 1 fotograma de retraso)
+    mientras la palabra llega desde arriba a la izquierda girada +38°, crece, se pasa abajo a la derecha, vuelve y se queda quieta en el c22.
+    Relieve 2D ancho (luz amarilla, sombra rojiza) y un brillo naranja alrededor."""
+    T = t24(26)
+    t = texto_plus('Template', -220, 40, 'Shine', EFECTO[0], EFECTO[1], 0.31, color=SHINE_BASE, esp=0.97, extra=['Opacity1 = Input { Value = 0, },'])
+    t += herramienta('StyledTextFollower', 'Seguidor', -220, 120, [
+        'Text = Input { Value = StyledText { Value = "Shine" }, Expression = "Template.StyledText", },',
+        'Order = Input { Value = 0, },', 'DelayType = Input { Value = 1, },', f'Delay = Input {{ Value = {n(SHINE_RETRASO)}, }},',
+        'SelectTransform = Input { Value = 0, },',
+        'TransformRotation = Input { Value = 1, },',
+        'CharacterAngleY = Input { SourceOp = "SeguidorGiroY", Source = "Value", },',
+        'CharacterAngleZ = Input { SourceOp = "SeguidorGiroZ", Source = "Value", },',
+        'Opacity1 = Input { SourceOp = "SeguidorOpacidad", Source = "Value", },',
+        'CharacterSpacing = Input { SourceOp = "SeguidorEspacio", Source = "Value", },'])     # de canto se ve oscura (como la referencia)
+    t += ''.join(_spline(nombre, [(f + SHINE_ADELANTO, v) for f, v in puntos])
+                 for nombre, puntos in (('SeguidorGiroY', SHINE_LETRA_Y), ('SeguidorGiroZ', SHINE_LETRA_Z), ('SeguidorOpacidad', SHINE_LETRA_OP),
+                                         ('SeguidorEspacio', SHINE_LETRA_ESP)))
+    letras = texto_plus('Letras', -60, 120, 'Shine', EFECTO[0], EFECTO[1], 0.31, color=SHINE_BASE, esp=0.97, expr={'Size': 'Template.Size'})
+    letras = letras.replace('StyledText = Input { Value = "Shine", },', 'StyledText = Input { SourceOp = "Seguidor", Source = "StyledText", },')
+    letras = letras.replace('CharacterSpacing = Input { Value = 0.97, },', 'CharacterSpacing = Input { Value = 0.97, Expression = "Template.CharacterSpacing", },')
+    t += letras
+    # el tiempo de las letras en fotogramas de 24 fps (las claves del Follower son de 24 fps)
+    t += herramienta('TimeStretcher', 'Tiempo', 60, 120, [enlace('Input', 'Letras'), f'SourceTime = Input {{ Value = 0, Expression = "{K.lua(f"({T}) + {n(SHINE_ADELANTO)}")}", }},',
+                                                          'InterpolateBetweenFrames = Input { Value = 0, },'])
+    t += _copia('Medida', 280, 'Shine')
+    dw = 'Medida.Output.DataWindow'
+    WW = f'(({dw} and (({dw}[3] - {dw}[1]) / {ANCHO_CUADRO})) or 0.4)'
+    u = '(((x - 0.5) * w - 0.57 * (y - 0.5) * h) / (n2 * w))'          # a lo ancho de la palabra, inclinado «/»
+    q = f'(abs(abs({u}) - 0.23) / 0.1)'
+    franja = f'(n3 / (1 + {q} * {q} * {q} * {q}))'
+    (o, a_) = SHINE_CARA
+    cara = tuple(f'({n(o[i])} + {n(a_[i] - o[i])} * {franja})' for i in range(3))
+    nodos, relieve = _relieve('Tiempo', 'Rel', 60, 200, SHINE_LUZ, SHINE_SOMBRA, 0.007, 1.0, k_luz='(0.15 + 0.85 * n4)', k_sombra=0.6, cara=cara,
+                              numeros={2: WW, 3: _curva(SHINE_FRANJAS, T), 4: f'math.min(1, math.max(0, (({T}) - {SHINE_FILO[0]}) / {SHINE_FILO[1]}))'})
+    t += nodos
+    # el brillo naranja alrededor: la letra iluminada desenfocada, debajo
+    t += herramienta('Blur', 'Halo', 300, 280, [enlace('Input', relieve), 'XBlurSize = Input { Value = 20, Expression = "%s", },' % K.lua(f'0.03 * {EM_W} * {ANCHO_CUADRO}'),
+                                                'Filter = Input { Value = FuID { "Gaussian" }, },'])
+    t += vacio('VacioH', 300, 360)
+    t += herramienta('Merge', 'HaloOp', 420, 280, [enlace('Background', 'VacioH'), enlace('Foreground', 'Halo'), 'Blend = Input { Value = 0.15, },'])
+    t += herramienta('Merge', 'ConHalo', 540, 200, [enlace('Background', 'HaloOp'), enlace('Foreground', relieve)])
+    entra = f'math.min(1, math.max(0, ({T}) / 1.5))'
+    t += cadena('ConHalo', dict(dx=f'{_curva(SHINE_X, T)} * {EM_W}', dy=f'{_curva(SHINE_Y, T)} * {EM_H}', size=f'{_curva(SHINE_TAM, T)} * (0.92 + 0.08 * {SALIDA})',
+                                ang=_curva(SHINE_GIRO, T), blend=f'{entra} * {SALIDA}'), x0=700)
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - shine')
+
+
+# «Resaltado» (v5.75): la selección de texto del iPhone, de la imagen del usuario («hello» con «he» seleccionado), medida en em (Inter: el centro del
+# Text+ es el de las mayúsculas). Caja azul #0500F5 (v5.75: más fina a pedido del usuario: de 0,08 em sobre el ascendente a 0,17 em bajo la base
+# y 0,05 em a los lados); asa celeste: raya de 0,032 em desde arriba de la caja hasta una bolita de 0,16 em en su borde de abajo. Hasta que llegue el video del usuario, el movimiento es supuesto:
+# la palabra entra en c0-c3, el asa aparece en c4 y la selección barre la palabra de izquierda a derecha en c5-c17.
+RESALTA_FUENTE = ('Inter 28pt', 'ExtraBold')
+RESALTA_CAJA, RESALTA_ASA, RESALTA_TEXTO = (0.02, 0.0, 0.96), (0.10, 0.62, 0.90), (0.98, 0.98, 0.98)
+RESALTA_ARRIBA, RESALTA_ABAJO, RESALTA_LADO = 0.47, 0.534, 0.05      # em desde el centro del Text+ (arriba de la caja / abajo) y a cada lado de la tinta
+RESALTA_RAYA, RESALTA_BOLA, RESALTA_BOLA_Y = 0.032, 0.16, 0.56
+RESALTA_BARRE = (5, 17)
+
+
+def comp_resalta():
+    """Imagen del usuario (selección del iPhone): palabra blanca; una caja azul crece detrás de ella de izquierda a derecha y el asa celeste
+    (raya + bolita abajo) va en su borde derecho."""
+    T = t24(22)
+    t = texto_plus('Template', -220, 40, 'Resalta', RESALTA_FUENTE[0], RESALTA_FUENTE[1], 0.31, color=RESALTA_TEXTO, esp=0.97)
+    t += _copia('Medida', 120, 'Resalta', fuente=RESALTA_FUENTE)
+    dw = 'Medida.Output.DataWindow'
+    izq = f'((({dw} and ({dw}[1] / {ANCHO_CUADRO})) or 0.3) - {n(RESALTA_LADO)} * {EM_W})'
+    der = f'((({dw} and ({dw}[3] / {ANCHO_CUADRO})) or 0.7) + {n(RESALTA_LADO)} * {EM_W})'
+    p = f'math.min(1, math.max(0, (({T}) - {RESALTA_BARRE[0]}) / {RESALTA_BARRE[1] - RESALTA_BARRE[0]}))'
+    p = f'((3 - 2 * {p}) * {p} * {p})'
+    borde = f'({izq} + {p} * ({der} - {izq}))'
+    alto = RESALTA_ARRIBA + RESALTA_ABAJO
+    yc = (RESALTA_ARRIBA - RESALTA_ABAJO) / 2
+    t += K._mascara('RectangleMask', 'MCaja', -220, 200, [
+        f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "{K.lua(f"Point(({izq} + {borde}) / 2, 0.5 + {n(yc)} * {EM_H})")}", }},',
+        f'Width = Input {{ Value = 0, Expression = "{K.lua(f"{borde} - {izq}")}", }},',
+        f'Height = Input {{ Value = 0.1, Expression = "{K.lua(f"{n(alto)} * {EM_H}")}", }},',            # (RectangleMask: alto en fracción del ALTO; ronda 6)
+        'SoftEdge = Input { Value = 0.0006, },', 'CornerRadius = Input { Value = 0, },'])
+    t += K._fondo('Caja', -60, 200, RESALTA_CAJA, 'MCaja')
+    t += herramienta('Merge', 'ConTexto', 60, 120, [enlace('Background', 'Caja'), enlace('Foreground', 'Template')])
+    # el asa: raya desde arriba de la caja hasta la bolita
+    y_raya = (RESALTA_ARRIBA - RESALTA_BOLA_Y) / 2
+    t += K._mascara('RectangleMask', 'MRaya', -220, 280, [
+        f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "{K.lua(f"Point({borde}, 0.5 + {n(y_raya)} * {EM_H})")}", }},',
+        f'Width = Input {{ Value = 0.004, Expression = "{K.lua(f"{n(RESALTA_RAYA)} * {EM_W}")}", }},',
+        f'Height = Input {{ Value = 0.1, Expression = "{K.lua(f"{n(RESALTA_ARRIBA + RESALTA_BOLA_Y)} * {EM_H}")}", }},',
+        'SoftEdge = Input { Value = 0.0004, },', 'CornerRadius = Input { Value = 0, },'])
+    t += K._mascara('EllipseMask', 'MBola', -220, 360, [
+        f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "{K.lua(f"Point({borde}, 0.5 - {n(RESALTA_BOLA_Y)} * {EM_H})")}", }},',
+        f'Width = Input {{ Value = 0.02, Expression = "{K.lua(f"{n(RESALTA_BOLA)} * {EM_W}")}", }},',
+        f'Height = Input {{ Value = 0.02, Expression = "{K.lua(f"{n(RESALTA_BOLA)} * {EM_W}")}", }},',
+        'SoftEdge = Input { Value = 0.0004, },'])
+    t += K._fondo('Raya', -60, 280, RESALTA_ASA, 'MRaya')
+    t += K._fondo('Bola', -60, 360, RESALTA_ASA, 'MBola')
+    t += herramienta('Merge', 'Asa', 60, 320, [enlace('Background', 'Raya'), enlace('Foreground', 'Bola')])
+    asa = f'math.min(1, math.max(0, (({T}) - {RESALTA_BARRE[0] - 1}) / 1.5))'
+    t += herramienta('Merge', 'ConAsa', 180, 120, [enlace('Background', 'ConTexto'), enlace('Foreground', 'Asa'),
+                                                   f'Blend = Input {{ Value = 0, Expression = "{K.lua(asa)}", }},'])
+    entra = f'math.min(1, math.max(0, ({T}) / 3))'
+    t += cadena('ConAsa', dict(size=f'(0.94 + 0.06 * (3 - 2 * {entra}) * {entra} * {entra}) * (0.92 + 0.08 * {SALIDA})', blend=f'{entra} * {SALIDA}'), x0=400)
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - resalta')
+
+
+# «Línea» (v5.75, el Tema 3 nuevo: referencia del usuario «ESTE ES EL ACABADO FINO»): toda la frase en UNA línea de mayúsculas condensadas blancas
+# con contorno y sombra oscuros, y una caja negra redondeada que salta de palabra en palabra con la voz. Cada palabra es un clip «v linea» desde que
+# empieza el bloque; la que suena lleva ENCIMA un «v linea activa» (la misma palabra + la caja) que dura exactamente lo que dura (corte seco, sin
+# entrada ni salida: el colocador lo pone sin el mínimo de 0,45 s, run['exacto']). Caja medida en la referencia: 0,53 mayúsculas sobre ellas, 0,52 bajo
+# la base, 0,35 a los lados, esquinas de 0,17.
+LINEA_FUENTE = ('Barlow Semi Condensed', 'Bold')
+LINEA_ESP = 0.975
+LINEA_TEXTO, LINEA_BORDE, LINEA_CAJA = (0.98, 0.98, 0.98), (0.078, 0.078, 0.078), (0.075, 0.075, 0.075)
+LINEA_CAJA_AZUL = (0.12, 0.36, 1.0)            # #1F5CFF: la del look de «Crea tu estilo» (el usuario: «en el ejemplo deja azul para que se aprecie»)
+
+
+def _elementos_linea(caja, color_caja=None):
+    """Elementos de sombreado del Text+ de la línea: 2 contorno oscuro, 3 sombra suave alrededor (forma de letra) y, con caja, 4 = caja negra redondeada."""
+    r, g, b = LINEA_BORDE
+    e = ['Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 1, },', 'Thickness2 = Input { Value = Number { Value = 0.03 }, },',
+         f'Red2 = Input {{ Value = Number {{ Value = {n(r)} }}, }},', f'Green2 = Input {{ Value = Number {{ Value = {n(g)} }}, }},',
+         f'Blue2 = Input {{ Value = Number {{ Value = {n(b)} }}, }},', 'Opacity2 = Input { Value = Number { Value = 1 }, },']
+    e += _halo(3, (0.0, 0.0, 0.0), 0.65, 0.0, 9)
+    if caja:
+        r, g, b = color_caja or LINEA_CAJA
+        e += ['Enabled4 = Input { Value = 1, },', 'ElementShape4 = Input { Value = 2, },', 'Level4 = Input { Value = Number { Value = 0 }, },',
+              f'Red4 = Input {{ Value = Number {{ Value = {n(r)} }}, }},', f'Green4 = Input {{ Value = Number {{ Value = {n(g)} }}, }},',
+              f'Blue4 = Input {{ Value = Number {{ Value = {n(b)} }}, }},', 'Opacity4 = Input { Value = Number { Value = 1 }, },',
+              'ExtendHorizontal4 = Input { Value = Number { Value = 0 }, },',      # (el Extend va en em de la letra; sin él ya sale 0,36 mayúsculas a los lados)
+              'ExtendVertical4 = Input { Value = Number { Value = 0.067 }, },',
+              'Offset4 = Input { Value = { 0, -0.003 }, Expression = "Point(0, -Template.Size * 0.0301)", },',       # (fracción del ANCHO) 0,53 arriba y 0,52 abajo
+              'Round4 = Input { Value = Number { Value = 0.1 }, },']      # esquinas sutiles (el usuario: «no es un óvalo»; 0,25 daba radio de 0,45 mayúsculas)
+    return e
+
+
+def comp_linea(activa=False, color_caja=None):
+    """«v linea»: la palabra blanca (entra de golpe con la línea entera y se va con la salida de 5 fotogramas). «v linea activa»: la misma palabra con la
+    caja negra detrás, sin animación (va encima de su «v linea» mientras suena)."""
+    t = texto_plus('Template', -220, 40, 'LINEA', LINEA_FUENTE[0], LINEA_FUENTE[1], 0.09, color=LINEA_TEXTO, esp=LINEA_ESP, extra=_elementos_linea(activa, color_caja))
+    if activa:
+        t += cadena('Template', dict(size='1', blend='1'))
+    else:                        # (entra de golpe, como la caja: con un fundido la palabra con caja salía 1-2 fotogramas antes que las demás; GO real)
+        t += cadena('Template', dict(size=f'(0.96 + 0.04 * {SALIDA})', blend=f'{SALIDA}'))
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - linea' + (' activa' if activa else '') + (' azul' if color_caja else ''))
+
+
 # ------------------------------------------------------------------------------------------------------------------ el catálogo
 def todos(formato='v'):
     """{nombre del clip: texto de la comp} para el formato 'v' (vertical) o 'h' (horizontal). Los tamaños (Size) son los de partida: la app fija el real por clip."""
@@ -551,6 +893,12 @@ def todos(formato='v'):
     for base, hacer in (('v shatter', comp_shatter), ('v select', comp_select), ('v drag', comp_drag)):
         for color in VC.COLORES[base]:                       # cada efecto en sus 4 colores: 'v shatter', 'v shatter rosa', …
             comps[base + (' ' + color if color else '')] = hacer(color)
+    comps['v corte'] = comp_corte()                         # v5.75: copias exactas de EJEMPLO 2 y EJEMPLO3 (un solo color: el de la referencia)
+    comps['v shine'] = comp_shine()
+    comps['v resalta'] = comp_resalta()                     # v5.75: la selección del iPhone (imagen del usuario)
+    comps['v linea'] = comp_linea()                         # v5.75: el Tema 3 nuevo (una línea y la caja negra que salta de palabra en palabra)
+    comps['v linea activa'] = comp_linea(True)
+    comps['v linea activa azul'] = comp_linea(True, LINEA_CAJA_AZUL)  # (el look 't3:linea' de «Crea tu estilo»)
     return comps
 
 

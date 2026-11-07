@@ -55,7 +55,7 @@ def planificar(palabras, roles, pack, estilo, idioma='es', fin_video=None, ancla
     elif tipo in ('kinetic', 'viral'):
         mains = guion_editor.parametros_de_marcas(palabras, roles)[0]
         if tipo == 'viral':
-            import viral_planificador as kp
+            import linea_planificador as kp       # v5.75: el Tema 3 es la línea con la caja negra (como GO)
             res = kp.planificar(palabras, idioma=idioma, ancho_tl=1080, alto_tl=1920, ancla=_ancla('viral_ancla', 'bajo'), mains=mains, fin_video=fin_video)
         else:
             import kinetic_planificador as kp

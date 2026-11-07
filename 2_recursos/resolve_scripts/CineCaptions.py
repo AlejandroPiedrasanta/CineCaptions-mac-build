@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.74 (subtitulos)"
+VERSION = "5.75 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -4167,8 +4167,10 @@ def place_kinetic_track(timeline, media_pool, track_info, base_template,
                 continue
             ini = max(timeline_start_frame, timeline_start_frame + a_fotogramas(float(run.get("t") or cue["start"]), fps))
             fin_s = run.get("fin")
-            fin = timeline_start_frame + a_fotogramas(float(fin_s if isinstance(fin_s, (int, float)) else cue["end"]) + extra_fin, fps)
-            fin = max(fin, ini + min_frames)
+            # v5.75: run["exacto"] (la caja del Tema 3, «v linea activa»): dura justo lo que su palabra, sin cola ni mínimo (dos cajas nunca a la vez)
+            exacto = bool(run.get("exacto"))
+            fin = timeline_start_frame + a_fotogramas(float(fin_s if isinstance(fin_s, (int, float)) else cue["end"]) + (0.0 if exacto else extra_fin), fps)
+            fin = max(fin, ini + (1 if exacto else min_frames))
             pendientes.append({"run": run, "nombre": nombre, "plantilla": plantilla, "ini": ini, "fin": fin, "grupo": _grupo_kinetic(nombre)})
     pendientes.sort(key=lambda d: (d["grupo"], d["ini"]))
     huecos = {}               # capa -> [fotograma desde el que está libre cada hueco]

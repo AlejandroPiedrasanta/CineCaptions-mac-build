@@ -1,16 +1,18 @@
 # CineCaptions · By Cinema Productions
-# 1_codigo/crea_estilo_ui.py — «Crea tu estilo»: la lista de los Temas 1-6 sobre negro (se tocan en el orden que se quiera) con el cajón de letra y colores, y el popup de la estructura de nombres.
+# 1_codigo/crea_estilo_ui.py — «Crea tu estilo»: texto base + textos principales con su previa ANIMADA sobre negro, el cajón de letra y colores, y el popup de la estructura de nombres.
 """
 Dos ventanas:
 
-  * CreaEstiloDialogo : v5.56 (maqueta A aprobada por el usuario). Fondo negro, una FILA por tema (Tema 1…6) con su caption de verdad sobre negro
-    (vista_estilos.imagenes: la misma frase en los seis, dibujada con el render de GO sin Resolve). Se tocan los que se quieran y en el orden que se
-    quiera (número amarillo 1, 2, 3…; tocar otra vez lo quita): se turnan por frases. El botón «Personalizar letra y colores» abre un CAJÓN a la
-    derecha (resorte amortiguado, sin rebote) con la tipografía y los colores del texto principal y del de arriba y abajo; al cambiarlos las filas se
-    vuelven a dibujar en UN hilo. «Crear mi pack» llama a al_crear(nombre, temas, terminado, ajustes): temas = ['t3', 't1', …] en el orden de toque,
-    ajustes = {'fuente_principal': 'Familia|Estilo' | '', 'fuente_secundaria', 'color_principal': '#RRGGBB' | '', 'color_secundario'} (vacío = lo del
-    tema). terminado(ok) cierra la ventana si salió bien. Lo último del cajón se recuerda en ~/DaVinciSubtitles/crea_tu_estilo.json (archivos_seguros;
-    NO en las prefs globales de fuente).
+  * CreaEstiloDialogo : v5.75 (la maqueta animada que eligió el usuario: «que no sean repetidos; en base 4-6 como mucho y en principales todo lo
+    que tenga efecto»). 1 · TEXTO BASE: 6 previas (mezcla_planificador.BASES_CREA), una o ninguna; su letra va en las líneas de arriba y abajo de
+    todos los principales. 2 · TEXTOS PRINCIPALES: 18 previas con efecto (PRINCIPALES_CREA: círculo, barrido, fondo, fuego, tachado, caja, cristal,
+    arrastre, corte, giro 3D, resaltado, línea, brillo…), las que se quieran, numeradas en el orden en que se turnan por frases. Lo que solo cambiaba de color sale una vez. Cada previa
+    es 2_recursos/guia_estilo/crea/<id>.mp4 (el caption solo, animado sobre negro; vistas_slider.Reproductor, solo mientras la ventana se ve). Abajo
+    «Así queda» (la base y los principales turnándose), «Tu tema», el nombre y «Crear mi tema» → al_crear(nombre, looks, terminado, ajustes, base):
+    looks = ['t2:6', 't3:select', 't5'], base = 'b_t2' | None, ajustes = {'fuente_principal': 'Familia|Estilo' | '', 'fuente_secundaria': '' (la
+    pone el texto base), 'color_principal': '#RRGGBB' | '', 'color_secundario'} (vacío = lo del tema). El botón «Letra y colores» abre el CAJÓN a
+    la derecha (resorte amortiguado, sin rebote). terminado(ok) cierra la ventana si salió bien. Lo último del cajón se recuerda en
+    ~/DaVinciSubtitles/crea_tu_estilo.json (archivos_seguros; NO en las prefs globales de fuente).
   * AyudaEstilo       : el popup del «!»: por qué los clips se llaman principal / arriba / abajo / simple, qué son principal 2 y principal 3,
     qué pasa si falta una pieza y cómo se exporta. Con dibujos, porque «sin esa estructura el estilo no funciona».
 """
@@ -18,10 +20,12 @@ import sys
 import threading
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt
+from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, QSortFilterProxyModel, Qt, QTimer
 from PySide6.QtGui import QColor as QColorReal
-from PySide6.QtGui import QConicalGradient, QFont, QFontDatabase, QFontMetricsF, QImage, QPainter, QPainterPath, QPen, QPixmap
-from PySide6.QtWidgets import QFrame, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtGui import (QBrush, QConicalGradient, QFont, QFontDatabase, QFontMetricsF, QPainter, QPainterPath, QPen, QStandardItem,
+                           QStandardItemModel, QTransform)
+from PySide6.QtWidgets import (QAbstractItemView, QFrame, QHBoxLayout, QListView, QScrollArea, QSizePolicy, QStyle, QStyledItemDelegate,
+                               QVBoxLayout, QWidget)
 
 import fuente_usuario
 import qt_kit as ui
@@ -44,21 +48,14 @@ CAMPO = '#0B0F17'
 GRIS = '#8D9BB5'
 ETIQUETA = '#8AA0C2'
 
-TEMAS = (1, 2, 3, 4, 5, 6)
 CLAVES = ('fuente_principal', 'fuente_secundaria', 'color_principal', 'color_secundario')
 COLORES_PRINCIPAL = ('#FFFFFF', '#FDE047', '#A3E635', '#22D3EE', '#F472B6', '#EF4444', '#3B82F6', '#FB923C')
 COLORES_SECUNDARIO = ('#FFFFFF', '#E5E7EB', '#9CA3AF', '#FDE047', '#22D3EE', '#F472B6')
-LETRAS_SECUNDARIAS = ('Montserrat', 'Poppins')          # arriba y abajo: solo letras de texto corrido (como la maqueta aprobada)
 RUTA_ESTADO = Path.home() / 'DaVinciSubtitles' / 'crea_tu_estilo.json'
-ASPECTO_IMAGEN = 3.2                                    # las imágenes de las filas: ancho = 3,2 × alto (el caption más ancho cabe por alto)
 
 
 def _hoja(css):
     return ui.traducir_hoja(css)
-
-
-def _mezcla(a, b, p):
-    return a + (b - a) * p
 
 
 def _ajustes_limpios(datos):
@@ -75,28 +72,7 @@ def _ajustes_limpios(datos):
     return salida
 
 
-# ====================================================================================== memoria de las imágenes y del cajón
-_IMAGENES = {}                 # (ajustes, ancho, alto) -> {n: QImage}: volver a una letra o color ya visto (o reabrir la ventana) es al instante
-_MAX_IMAGENES = 8
-
-
-def _clave_imagenes(ajustes, ancho, alto):
-    return (tuple(ajustes.get(k, '') for k in CLAVES), int(ancho), int(alto))
-
-
-def _recordar_imagenes(clave, imagenes):
-    _IMAGENES.pop(clave, None)
-    _IMAGENES[clave] = imagenes
-    while len(_IMAGENES) > _MAX_IMAGENES:
-        _IMAGENES.pop(next(iter(_IMAGENES)))
-
-
-def _a_qimage(im):
-    """PIL.Image -> QImage propia (se hace en el hilo de trabajo; el QPixmap, en el de la interfaz)."""
-    im = im.convert('RGB')
-    return QImage(im.tobytes('raw', 'RGB'), im.width, im.height, im.width * 3, QImage.Format.Format_RGB888).copy()
-
-
+# ====================================================================================== memoria del cajón
 def leer_estado():
     """Lo último del cajón: {'ajustes': {...}, 'propios': {'color_principal': '#…', 'color_secundario': '#…'}} (un JSON de pocos bytes)."""
     try:
@@ -170,74 +146,156 @@ class _UnToque:
         return super().event(e)
 
 
-class _Lista(_UnToque, QWidget):
-    """Las seis filas en UN widget pintado a mano (sin una capa por fila: el cajón la redimensiona en cada cuadro y solo cuesta copiar seis imágenes).
-    Las medidas van de la lista sola (Lista_A: filas de 88, caption de 68, píldora «Añadir / Puesto») a la lista con el cajón (Panel_A: filas de 84,
-    caption de 62, sin píldora) según el avance del cajón."""
-    HALO = 4
-    SEP = 8
-    ALTO_MAX = 88
+# ====================================================================================== las previas animadas (v5.75)
+def ruta_clip(ident):
+    """2_recursos/guia_estilo/crea/<id>.mp4: el caption de esa base o ese principal SOLO, animado sobre negro (render real de Resolve:
+    herramientas_dev/hacer_vistas_crea.py); None si falta."""
+    try:
+        from sfx_rules import base_recursos
+        ruta = Path(base_recursos()) / 'guia_estilo' / 'crea' / f'{ident}.mp4'
+    except Exception:
+        ruta = Path(__file__).resolve().parent.parent / '2_recursos' / 'guia_estilo' / 'crea' / f'{ident}.mp4'
+    try:
+        return ruta if ruta.is_file() else None
+    except OSError:
+        return None
 
-    def __init__(self, al_tocar):
+
+def _ultimo_cuadro(ruta):
+    """El último cuadro del clip (el caption ya entero) como PIL.Image RGB, o None. Sin Qt: para el hilo de trabajo."""
+    try:
+        import av
+        ultimo = None
+        with av.open(str(ruta)) as contenedor:
+            flujo = contenedor.streams.video[0]
+            flujo.thread_type = 'NONE'
+            for cuadro in contenedor.decode(flujo):
+                ultimo = cuadro
+        return ultimo.to_image().convert('RGB') if ultimo is not None else None
+    except Exception:
+        return None
+
+
+def poster(base, principales, ancho=540, alto=960):
+    """La foto vertical de la tarjeta del estilo en el slider (negro): la base arriba y los principales debajo, cada uno con el último cuadro de su
+    previa (como mucho 6 piezas). None si no hay ninguna previa. Para el hilo de trabajo (decodifica)."""
+    from PIL import Image
+    piezas = []
+    for ident in ([base] if base else []) + list(principales or []):
+        ruta = ruta_clip(ident)
+        im = _ultimo_cuadro(ruta) if ruta else None
+        if im is not None:
+            piezas.append(im)
+    if not piezas:
+        return None
+    piezas = piezas[:6]
+    margen = 24
+    alto_fila = min(int((ancho - 2 * margen) * 9 / 16), int((alto - 2 * margen) / len(piezas)))
+    ancho_fila = int(round(alto_fila * 16 / 9))
+    lienzo = Image.new('RGB', (int(ancho), int(alto)), (0, 0, 0))
+    y = int((alto - alto_fila * len(piezas)) / 2)
+    for im in piezas:
+        lienzo.paste(im.resize((ancho_fila, alto_fila), Image.LANCZOS), (int((ancho - ancho_fila) / 2), y))
+        y += alto_fila
+    return lienzo
+
+
+class _Rejilla(_UnToque, QWidget):
+    """Una rejilla de tarjetas 16:9 con el caption animado sobre negro (vistas_slider.Reproductor: un hilo por tarjeta, solo mientras la página se
+    ve) y su etiqueta debajo («Tema 2» y la píldora del efecto). varios=False (texto base): se elige una o ninguna (✓); varios=True (principales):
+    las que se quieran, numeradas en el orden de toque. Todo en UN widget pintado a mano (sin una capa por tarjeta)."""
+    HALO = 4
+    GAP_X = 12
+    GAP_Y = 12
+    ETQ = 30
+
+    def __init__(self, items, columnas, varios, al_tocar):
         super().__init__()
+        import vistas_slider
+        self._items = list(items)                     # [{'id', 'texto', 'efecto' ('' en las bases)}]
+        self._cols = max(1, int(columnas))
+        self._varios = bool(varios)
         self._al_tocar = al_tocar
         self._orden = []
-        self._pix = {}
-        self._fondo = QColorReal('#000000')     # el fondo de la fila = el de sus imágenes (vista_estilos.fondo: gris si un color elegido es oscuro)
-        self._p = 0.0
         self._hover = None
-        self._rehaciendo = False
+        self._reprod = {}
+        for it in self._items:
+            ruta = ruta_clip(it['id'])
+            self._reprod[it['id']] = vistas_slider.Reproductor(ruta, pausa_s=0) if ruta else None
+        self._f_etq = ui.fuente(12)
+        self._f_etq_on = ui.fuente(12, peso='negrita')
+        self._f_ef = ui.fuente(10, peso='negrita')
+        self._f_num = ui.fuente(12, peso='extra')
+        self._f_falta = ui.fuente(11)
+        self._t_falta = tr('Sin previa')
         self.setMouseTracking(True)
-        self.setMinimumHeight(2 * self.HALO + 6 * self.ALTO_MAX + 5 * self.SEP)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self._f_tema = ui.fuente(13, peso='negrita')
-        self._f_num = ui.fuente(14, peso='extra')
-        self._f_pild = ui.fuente(13, peso='negrita')
-        self._textos = {n: tr('Tema {n}', n=n) for n in TEMAS}
-        self._t_puesto, self._t_anadir = tr('Puesto'), tr('Añadir')
-        fm = QFontMetricsF(self._f_pild)
-        self._ancho_pild = 14 + 10 + 6 + max(fm.horizontalAdvance(self._t_puesto), fm.horizontalAdvance(self._t_anadir)) + 14
+        politica = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        politica.setHeightForWidth(True)                # (el alto sale del ancho; forzarlo en resizeEvent hacía entrar y salir la barra sin fin)
+        self.setSizePolicy(politica)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, ancho):
+        return self._alto_para(ancho)
 
     def sizeHint(self):
-        return QSize(600, self.minimumHeight())
+        return QSize(960, self._alto_para(960))
+
+    # -- medidas
+    def _tarjeta_wh(self, ancho):
+        util = max(10.0, float(ancho) - 2 * self.HALO)
+        cw = (util - (self._cols - 1) * self.GAP_X) / self._cols
+        return cw, cw * 9.0 / 16.0
+
+    def _alto_para(self, ancho):
+        _cw, ch = self._tarjeta_wh(ancho)
+        filas = (len(self._items) + self._cols - 1) // self._cols
+        return int(round(2 * self.HALO + filas * (ch + self.ETQ) + max(0, filas - 1) * self.GAP_Y))
+
+    def resizeEvent(self, e):
+        """Cada previa se decodifica ya al tamaño de su tarjeta en píxeles reales (Reproductor.tam): pintar es copiar, sin escalar 20 videos."""
+        super().resizeEvent(e)
+        r0 = self._rect(0)
+        dpr = self.devicePixelRatioF() or 1.0
+        tam = (int(round(r0.width() * dpr)), int(round(r0.height() * dpr)))
+        for r in self._reprod.values():
+            if r is not None:
+                r.tam = tam
+
+    def _rect(self, k):
+        """La tarjeta k AJUSTADA a píxeles reales de la pantalla (con escala 1,5 una esquina fraccionaria dejaba una costura en el borde)."""
+        cw, ch = self._tarjeta_wh(self.width())
+        fila, col = divmod(k, self._cols)
+        dpr = self.devicePixelRatioF() or 1.0
+        x = round((self.HALO + col * (cw + self.GAP_X)) * dpr)
+        y = round((self.HALO + fila * (ch + self.ETQ + self.GAP_Y)) * dpr)
+        return QRectF(x / dpr, y / dpr, int(cw * dpr) / dpr, int(ch * dpr) / dpr)
+
+    def _en(self, pos):
+        for k, it in enumerate(self._items):
+            r = self._rect(k)
+            if r.adjusted(0, 0, 0, self.ETQ).contains(QPointF(pos)):
+                return it['id']
+        return None
 
     # -- estado
     def poner_orden(self, orden):
-        self._orden = list(orden)
+        self._orden = [i for i in orden if i in self._reprod]
         self.update()
 
-    def poner_imagenes(self, pix, fondo=None):
-        self._pix = dict(pix)
-        if fondo is not None:
-            self._fondo = QColorReal(*[int(v) for v in fondo[:3]])
-        self.update()
+    def imagen(self, ident):
+        r = self._reprod.get(ident)
+        return r.imagen() if r is not None else None
 
-    def poner_rehaciendo(self, si):
-        if bool(si) != self._rehaciendo:
-            self._rehaciendo = bool(si)
-            self.update()
-
-    def poner_avance(self, p):
-        p = max(0.0, min(1.0, float(p)))
-        if abs(p - self._p) > 1e-4:
-            self._p = p
-            self.update()
-
-    # -- medidas
-    def _medidas(self):
-        p = self._p
-        return {'alto': _mezcla(88, 84, p), 'pad': _mezcla(18, 16, p), 'gap': _mezcla(16, 14, p), 'etq': _mezcla(64, 60, p),
-                'caja': _mezcla(68, 62, p), 'pild': max(0.0, 1.0 - 2.0 * p)}
-
-    def _fila(self, k, m):
-        return QRectF(self.HALO, self.HALO + k * (m['alto'] + self.SEP), self.width() - 2 * self.HALO, m['alto'])
-
-    def _tema_en(self, pos):
-        m = self._medidas()
-        for k, n in enumerate(TEMAS):
-            if self._fila(k, m).contains(QPointF(pos)):
-                return n
-        return None
+    def poner_visible(self, visible):
+        for r in self._reprod.values():
+            if r is None:
+                continue
+            if visible:
+                r.arrancar()
+            else:
+                r.parar()
 
     # -- dibujo
     def paintEvent(self, _e):
@@ -245,87 +303,92 @@ class _Lista(_UnToque, QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
         p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        m = self._medidas()
-        for k, n in enumerate(TEMAS):
-            self._pintar_fila(p, self._fila(k, m), n, m)
+        for k, it in enumerate(self._items):
+            self._pintar(p, self._rect(k), it)
         p.end()
 
-    def _pintar_fila(self, p, r, n, m):
-        elegido = n in self._orden
-        if elegido:                                                     # el halo verde al 10 % (box-shadow 0 0 0 4px)
+    def _pintar(self, p, r, it):
+        ident = it['id']
+        elegido = ident in self._orden
+        if elegido:                                                         # el halo verde (box-shadow 0 0 0 4px al 16 %)
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QColorReal(52, 211, 153, 26))
-            p.drawRoundedRect(r.adjusted(-4, -4, 4, 4), 18, 18)
-        p.setBrush(self._fondo)
+            p.setBrush(QColorReal(36, 209, 143, 40))
+            p.drawRoundedRect(r.adjusted(-4, -4, 4, 4), 14, 14)
+        img = self.imagen(ident)
+        p.setPen(Qt.PenStyle.NoPen)
+        if img is not None and not img.isNull():
+            # la previa como TEXTURA del rectángulo redondeado (setClipPath con escala 1,5 dejaba una costura de rayitas en el borde)
+            pincel = QBrush(img)
+            t = QTransform()
+            t.translate(r.x(), r.y())
+            t.scale(r.width() / img.width(), r.height() / img.height())
+            pincel.setTransform(t)
+            p.setBrush(pincel)
+        else:
+            p.setBrush(QColorReal('#000000'))
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, False)       # (con antialias el relleno dejaba rayitas de 1 px en el borde izquierdo a 1,5)
+        p.drawRoundedRect(r, 10, 10)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)        # el borde de encima (con antialias) alisa la esquina
+        if img is None and self._reprod.get(ident) is None:
+            p.setFont(self._f_falta)
+            p.setPen(QColor(GRIS))
+            p.drawText(r, int(Qt.AlignmentFlag.AlignCenter), self._t_falta)
         if elegido:
             p.setPen(QPen(QColor(VERDE), 2))
-            p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 13, 13)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 9, 9)
         else:
-            p.setPen(QPen(QColor(BORDE_HOVER if self._hover == n else BORDE), 1))
-            p.drawRoundedRect(r.adjusted(0.5, 0.5, -0.5, -0.5), 13.5, 13.5)
-        cy = r.center().y()
-        x = r.x() + m['pad']
-        marca = QRectF(x, cy - 13, 26, 26)
+            p.setPen(QPen(QColor(BORDE_HOVER) if self._hover == ident else QColorReal(255, 255, 255, 24), 1))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawRoundedRect(r.adjusted(0.5, 0.5, -0.5, -0.5), 9.5, 9.5)
+        marca = QRectF(r.right() - 30, r.y() + 7, 23, 23)
         if elegido:
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QColor(AMARILLO))
+            p.setBrush(QColor(VERDE))
             p.drawEllipse(marca)
-            p.setFont(self._f_num)
-            p.setPen(QColor('#101626'))
-            p.drawText(marca, int(Qt.AlignmentFlag.AlignCenter), str(self._orden.index(n) + 1))
+            if self._varios:
+                p.setFont(self._f_num)
+                p.setPen(QColorReal('#03140D'))
+                p.drawText(marca, int(Qt.AlignmentFlag.AlignCenter), str(self._orden.index(ident) + 1))
+            else:
+                ix, iy = marca.center().x(), marca.center().y()
+                p.setPen(QPen(QColorReal('#03140D'), 2.4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+                p.drawPolyline([QPointF(ix - 5, iy + 0.5), QPointF(ix - 1.5, iy + 4), QPointF(ix + 5.5, iy - 4)])
         else:
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            p.setPen(QPen(QColor(ANILLO), 2))
-            p.drawEllipse(marca.adjusted(1, 1, -1, -1))
-        x += 26 + m['gap']
-        p.setFont(self._f_tema)
-        p.setPen(QColor(GRIS))
-        p.drawText(QRectF(x, r.y(), m['etq'] + 30, r.height()), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self._textos[n])
-        x += m['etq'] + m['gap']
-        derecha = r.right() - m['pad'] - (self._ancho_pild + m['gap']) * (1.0 - self._p)
-        if m['pild'] > 0.01:
-            self._pintar_pildora(p, r, m, elegido)
-        pm = self._pix.get(n)
-        if pm is not None and not pm.isNull() and derecha - x > 8:
-            dpr = pm.devicePixelRatio() or 1.0
-            pw, ph = pm.width() / dpr, pm.height() / dpr
-            f = min(m['caja'] / ph, (derecha - x) / pw)
-            w, h = pw * f, ph * f
-            p.setOpacity(0.45 if self._rehaciendo else 1.0)
-            p.drawPixmap(QRectF(x + (derecha - x - w) / 2.0, cy - h / 2.0, w, h), pm, QRectF(0, 0, pm.width(), pm.height()))
-            p.setOpacity(1.0)
-
-    def _pintar_pildora(self, p, r, m, elegido):
-        """«＋ Añadir» / «✓ Puesto» de la lista sola; se desvanece al abrir el cajón."""
-        p.setOpacity(m['pild'])
-        caja = QRectF(r.right() - m['pad'] - self._ancho_pild, r.center().y() - 16, self._ancho_pild, 32)
-        color = QColor(VERDE if elegido else '#E8F1FF')
-        if elegido:
-            p.setPen(QPen(QColor(VERDE), 1))
-            p.setBrush(QColorReal(52, 211, 153, 26))
-        else:
-            p.setPen(QPen(QColor(ANILLO), 1))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawRoundedRect(caja.adjusted(0.5, 0.5, -0.5, -0.5), 15.5, 15.5)
-        ix, iy = caja.x() + 14, caja.center().y()
-        p.setPen(QPen(color, 2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-        if elegido:
-            p.drawPolyline([QPointF(ix + 0.5, iy + 0.5), QPointF(ix + 3.8, iy + 3.6), QPointF(ix + 9.5, iy - 3.5)])
-        else:
-            p.drawLine(QPointF(ix + 5, iy - 4.5), QPointF(ix + 5, iy + 4.5))
-            p.drawLine(QPointF(ix + 0.5, iy), QPointF(ix + 9.5, iy))
-        p.setFont(self._f_pild)
-        p.setPen(color)
-        p.drawText(QRectF(ix + 16, caja.y(), caja.width() - 30, caja.height()), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-                   self._t_puesto if elegido else self._t_anadir)
-        p.setOpacity(1.0)
+            p.setPen(QPen(QColorReal(255, 255, 255, 110), 1.6))
+            p.setBrush(QColorReal(0, 0, 0, 40))
+            p.drawEllipse(marca.adjusted(1.5, 1.5, -1.5, -1.5))
+        # la etiqueta: «Tema 2» y, en los principales, la píldora del efecto
+        y = r.bottom() + 7
+        p.setFont(self._f_etq_on if elegido else self._f_etq)
+        p.setPen(QColor(VERDE if elegido else GRIS))
+        fm = QFontMetricsF(p.font())
+        texto = it['texto']
+        tw = fm.horizontalAdvance(texto)
+        p.drawText(QRectF(r.x(), y, tw + 2, 18), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), texto)
+        efecto = it.get('efecto') or ''
+        if efecto:
+            p.setFont(self._f_ef)
+            fe = QFontMetricsF(self._f_ef)
+            ew = fe.horizontalAdvance(efecto) + 14
+            pild = QRectF(r.x() + tw + 7, y, min(ew, max(0.0, r.width() - tw - 7)), 18)
+            if pild.width() > 20:
+                if elegido:
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(QColor(VERDE))
+                else:
+                    p.setPen(QPen(QColor('#233150'), 1))
+                    p.setBrush(QColorReal(255, 255, 255, 15))
+                p.drawRoundedRect(pild.adjusted(0.5, 0.5, -0.5, -0.5), 8.5, 8.5)
+                p.setPen(QColorReal('#03140D') if elegido else QColorReal('#C9D4E8'))
+                p.drawText(pild, int(Qt.AlignmentFlag.AlignCenter), fe.elidedText(efecto, Qt.TextElideMode.ElideRight, pild.width() - 8))
 
     # -- ratón
     def mouseMoveEvent(self, e):
-        n = self._tema_en(e.position())
-        if n != self._hover:
-            self._hover = n
-            self.setCursor(Qt.CursorShape.PointingHandCursor if n else Qt.CursorShape.ArrowCursor)
+        i = self._en(e.position())
+        if i != self._hover:
+            self._hover = i
+            self.setCursor(Qt.CursorShape.PointingHandCursor if i else Qt.CursorShape.ArrowCursor)
             self.update()
         super().mouseMoveEvent(e)
 
@@ -337,12 +400,47 @@ class _Lista(_UnToque, QWidget):
 
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
-            n = self._tema_en(e.position())
-            if n:
-                self._al_tocar(n)
+            i = self._en(e.position())
+            if i:
+                self._al_tocar(i)
                 e.accept()
                 return
         super().mousePressEvent(e)
+
+
+class _Paso(QWidget):
+    """El título de una sección: el número en su círculo verde, el nombre y la explicación en gris."""
+    def __init__(self, numero, titulo, detalle):
+        super().__init__()
+        self._n, self._t, self._d = str(numero), titulo, detalle
+        self._f_n = ui.fuente(12, peso='extra')
+        self._f_t = ui.fuente(15, peso='extra')
+        self._f_d = ui.fuente(12)
+        self.setFixedHeight(28)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        c = QRectF(4, 3, 22, 22)
+        p.setPen(QPen(QColorReal(36, 209, 143, 115), 1))
+        p.setBrush(QColorReal(36, 209, 143, 36))
+        p.drawEllipse(c)
+        p.setFont(self._f_n)
+        p.setPen(QColor(VERDE))
+        p.drawText(c, int(Qt.AlignmentFlag.AlignCenter), self._n)
+        medio = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        p.setFont(self._f_t)
+        p.setPen(QColorReal('#FFFFFF'))
+        tw = QFontMetricsF(self._f_t).horizontalAdvance(self._t)
+        p.drawText(QRectF(36, 0, tw + 2, self.height()), medio, self._t)
+        p.setFont(self._f_d)
+        p.setPen(QColor(GRIS))
+        x = 36 + tw + 12
+        resto = max(0.0, self.width() - x)
+        p.drawText(QRectF(x, 0, resto, self.height()), medio, QFontMetricsF(self._f_d).elidedText(self._d, Qt.TextElideMode.ElideRight, resto))
+        p.end()
 
 
 class _Interruptor(_UnToque, QWidget):
@@ -352,7 +450,7 @@ class _Interruptor(_UnToque, QWidget):
         self._al_tocar = al_tocar
         self._on = False
         self._hover = False
-        self._texto = tr('Personalizar letra y colores')
+        self._texto = tr('Letra y colores')
         self._f = ui.fuente(13, peso='negrita')
         self._f_aa = ui.fuente(10, peso='extra')
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -428,66 +526,253 @@ class _Interruptor(_UnToque, QWidget):
         super().mousePressEvent(e)
 
 
-class _Ficha(_UnToque, QWidget):
-    """Una ficha de letra del cajón (76×54): «Aa» con esa letra y su nombre debajo. Marcada = borde verde de 2 px."""
-    def __init__(self, familia, estilo, etiqueta, al_tocar):
-        super().__init__()
-        self.valor = fuente_usuario.a_texto(familia, estilo)
-        self._al_tocar = al_tocar
-        self._etiqueta = etiqueta
-        self._marcada = False
-        self._hover = False
-        if familia:
+# ====================================================================================== la lista de letras del equipo (v5.75)
+ESTILOS_GRUESOS = ('Bold', 'Black', 'ExtraBold', 'Extra Bold', 'Heavy', 'SemiBold', 'Semibold', 'Semi Bold', 'Medium', 'Regular', 'Normal', 'Book')
+
+
+def letras_instaladas():
+    """Las familias de letra del equipo (QFontDatabase: las del sistema y las del programa), sin las privadas ni las verticales «@…», por orden
+    alfabético. En el hilo de la interfaz (Qt)."""
+    vistas = set()
+    salida = []
+    for f in QFontDatabase.families():
+        if not f or f.startswith('@') or f.lower() in vistas:
+            continue
+        try:
+            if QFontDatabase.isPrivateFamily(f):
+                continue
+        except Exception:
+            pass
+        vistas.add(f.lower())
+        salida.append(f)
+    return sorted(salida, key=str.lower)
+
+
+def estilo_grueso(familia):
+    """El estilo con el que se aplica una letra al tocarla: el más grueso de los habituales (Bold, Black…); si no tiene ninguno, el primero."""
+    estilos = list(QFontDatabase.styles(familia) or [])
+    for e in ESTILOS_GRUESOS:
+        if e in estilos:
+            return e
+    return estilos[0] if estilos else 'Regular'
+
+
+class _DelegadoLetra(QStyledItemDelegate):
+    """Una fila de la lista: el nombre ESCRITO con su letra (y, a la derecha, en la letra del programa por si es de símbolos). Solo se dibujan
+    las filas que se ven: con mil letras abrir la lista no carga mil fuentes."""
+    ALTO = 36
+
+    def __init__(self, padre):
+        super().__init__(padre)
+        self._fuentes = {}
+        self._f_nombre = ui.fuente(10)
+        self._f_tema = ui.fuente(14, peso='negrita')
+
+    def sizeHint(self, _opcion, _indice):
+        return QSize(120, self.ALTO)
+
+    def _fuente(self, familia):
+        f = self._fuentes.get(familia)
+        if f is None:
             f = QFont(familia)
-            f.setStyleName(estilo)
-            f.setPixelSize(20)
-            self._f_aa = f
+            f.setPixelSize(18)
+            if len(self._fuentes) > 400:
+                self._fuentes.clear()
+            self._fuentes[familia] = f
+        return f
+
+    def paint(self, p, opcion, indice):
+        familia = indice.data(Qt.ItemDataRole.UserRole) or ''
+        texto = indice.data(Qt.ItemDataRole.DisplayRole) or ''
+        r = QRectF(opcion.rect).adjusted(2, 1, -2, -1)
+        elegida = bool(opcion.state & QStyle.StateFlag.State_Selected)
+        encima = bool(opcion.state & QStyle.StateFlag.State_MouseOver)
+        p.save()
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        if elegida:
+            p.setPen(QPen(QColor(VERDE), 1.2))
+            p.setBrush(QColorReal(36, 209, 143, 30))
+            p.drawRoundedRect(r.adjusted(0.5, 0.5, -0.5, -0.5), 8, 8)
+        elif encima:
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColorReal(255, 255, 255, 12))
+            p.drawRoundedRect(r, 8, 8)
+        medio = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        derecha = r.right() - 10
+        if familia:
+            p.setFont(self._f_nombre)
+            fm = QFontMetricsF(self._f_nombre)
+            corto = fm.elidedText(familia, Qt.TextElideMode.ElideRight, 110)
+            ancho = fm.horizontalAdvance(corto)
+            p.setPen(QColor(GRIS))
+            p.drawText(QRectF(derecha - ancho, r.y(), ancho + 2, r.height()), medio, corto)
+            derecha -= ancho + 10
+            p.setFont(self._fuente(familia))
         else:
-            self._f_aa = ui.fuente(20, peso='extra')
-        self._f_nom = ui.fuente(10)
-        self.setFixedSize(76, 54)
+            p.setFont(self._f_tema)
+        p.setPen(QColor(VERDE) if elegida else QColorReal('#FFFFFF'))
+        fm = QFontMetricsF(p.font())
+        p.drawText(QRectF(r.x() + 12, r.y(), max(0.0, derecha - r.x() - 12), r.height()), medio,
+                   fm.elidedText(texto, Qt.TextElideMode.ElideRight, max(0.0, derecha - r.x() - 12)))
+        p.restore()
+
+
+class _ChipEstilo(_UnToque, QWidget):
+    """Un estilo de la letra elegida («Bold», «Black», «Italic»…) escrito con ese estilo; marcado = verde."""
+    def __init__(self, familia, estilo, al_tocar):
+        super().__init__()
+        self.estilo = estilo
+        self._al_tocar = al_tocar
+        self._marcado = False
+        f = QFont(familia)
+        f.setStyleName(estilo)
+        f.setPixelSize(13)
+        self._f = f
+        self.setFixedSize(int(QFontMetricsF(f).horizontalAdvance(estilo) + 24), 28)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def marcar(self, si):
-        if bool(si) != self._marcada:
-            self._marcada = bool(si)
+        if bool(si) != self._marcado:
+            self._marcado = bool(si)
             self.update()
 
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-        p.setBrush(QColor(CAMPO))
-        if self._marcada:
-            p.setPen(QPen(QColor(VERDE), 2))
-            p.drawRoundedRect(QRectF(1, 1, 74, 52), 9, 9)
-        else:
-            p.setPen(QPen(QColor(BORDE_HOVER if self._hover else BORDE), 1))
-            p.drawRoundedRect(QRectF(0.5, 0.5, 75, 53), 9.5, 9.5)
-        p.setFont(self._f_aa)
-        p.setPen(QColorReal('#FFFFFF'))
-        p.drawText(QRectF(0, 6, 76, 27), int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom), 'Aa')
-        p.setFont(self._f_nom)
-        p.setPen(QColor(GRIS))
-        p.drawText(QRectF(2, 34, 72, 14), int(Qt.AlignmentFlag.AlignCenter), self._etiqueta)
+        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
+        p.setPen(QPen(QColor(VERDE) if self._marcado else QColor(BORDE), 1.2 if self._marcado else 1))
+        p.setBrush(QColorReal(36, 209, 143, 30) if self._marcado else QColor(CAMPO))
+        p.drawRoundedRect(r, 13.5, 13.5)
+        p.setFont(self._f)
+        p.setPen(QColor(VERDE) if self._marcado else QColorReal('#E8F1FF'))
+        p.drawText(r, int(Qt.AlignmentFlag.AlignCenter), self.estilo)
         p.end()
-
-    def enterEvent(self, e):
-        self._hover = True
-        self.update()
-        super().enterEvent(e)
-
-    def leaveEvent(self, e):
-        self._hover = False
-        self.update()
-        super().leaveEvent(e)
 
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
-            self._al_tocar(self.valor)
+            self._al_tocar(self.estilo)
             e.accept()
             return
         super().mousePressEvent(e)
+
+
+class _ListaLetras(QWidget):
+    """«Texto principal» del cajón: TODAS las letras instaladas en el equipo (200 o mil) en una lista con buscador; cada nombre escrito con su letra.
+    Tocar una la aplica («Familia|Estilo» con su estilo más grueso: estilo_grueso) y debajo salen sus estilos para cambiarlo. «Del tema» (la
+    primera) = la letra de cada tema. al_elegir(valor): '' o 'Familia|Estilo'."""
+    ALTO_LISTA = 252
+
+    def __init__(self, al_elegir):
+        super().__init__()
+        self._al_elegir = al_elegir
+        self._valor = ''
+        self.familias = letras_instaladas()
+        self._en_minusculas = {f.lower(): f for f in self.familias}
+        capa = QVBoxLayout(self)
+        capa.setContentsMargins(0, 0, 0, 0)
+        capa.setSpacing(6)
+        self._buscar = Entrada(placeholder=tr('Buscar entre tus {n} letras…', n=len(self.familias)), alto=32, tam=12)
+        self._buscar.setObjectName('buscarLetra')
+        self._buscar.setStyleSheet(_hoja('QLineEdit#buscarLetra { background-color: %s; border: 1px solid %s; border-radius: 9px; padding: 0px 10px; '
+                                         'color: #FFFFFF; } QLineEdit#buscarLetra:focus { border-color: #0F62FE; }' % (CAMPO, BORDE)))
+        self._buscar.textChanged.connect(self._filtrar)
+        capa.addWidget(self._buscar)
+        self._modelo = QStandardItemModel(self)
+        tema = QStandardItem(tr('Del tema'))
+        tema.setData('', Qt.ItemDataRole.UserRole)
+        self._modelo.appendRow(tema)
+        for f in self.familias:
+            it = QStandardItem(f)
+            it.setData(f, Qt.ItemDataRole.UserRole)
+            self._modelo.appendRow(it)
+        self._filtro = QSortFilterProxyModel(self)
+        self._filtro.setSourceModel(self._modelo)
+        self._filtro.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._vista = QListView()
+        self._vista.setObjectName('listaLetras')
+        self._vista.setModel(self._filtro)
+        self._vista.setItemDelegate(_DelegadoLetra(self._vista))
+        self._vista.setUniformItemSizes(True)
+        self._vista.setMouseTracking(True)
+        self._vista.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._vista.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self._vista.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self._vista.setFixedHeight(self.ALTO_LISTA)
+        self._vista.setStyleSheet(_hoja('QListView#listaLetras { background-color: %s; border: 1px solid %s; border-radius: 10px; padding: 3px; '
+                                        'outline: none; }' % (CAMPO, BORDE)))
+        self._vista.clicked.connect(self._tocada)
+        capa.addWidget(self._vista)
+        self._caja_estilos = QVBoxLayout()
+        self._caja_estilos.setContentsMargins(0, 0, 0, 0)
+        capa.addLayout(self._caja_estilos)
+        self._zona_estilos = None
+
+    # -- buscar y elegir
+    def _filtrar(self, texto):
+        self._filtro.setFilterFixedString(str(texto or '').strip())
+        self._seleccionar_actual(desplazar=False)
+
+    def _tocada(self, indice):
+        familia = indice.data(Qt.ItemDataRole.UserRole) or ''
+        valor = fuente_usuario.a_texto(familia, estilo_grueso(familia)) if familia else ''
+        if familia and self._valor.split('|')[0] == familia:
+            return                                                   # (la misma letra: se queda su estilo)
+        self._al_elegir(valor)
+
+    def _estilo_tocado(self, estilo):
+        familia = self._valor.split('|')[0]
+        if familia:
+            self._al_elegir(fuente_usuario.a_texto(familia, estilo))
+
+    def instalada(self, valor):
+        """¿Está esta letra («Familia|Estilo») en el equipo? '' (del tema) siempre."""
+        familia = str(valor or '').split('|')[0].strip()
+        return not familia or familia.lower() in self._en_minusculas
+
+    # -- marcar lo elegido
+    def marcar(self, valor):
+        self._valor = str(valor or '')
+        self._seleccionar_actual(desplazar=True)
+        self._poner_estilos()
+
+    def _seleccionar_actual(self, desplazar):
+        familia = self._valor.split('|')[0]
+        fila = 0
+        if familia:
+            real = self._en_minusculas.get(familia.lower())
+            fila = (self.familias.index(real) + 1) if real else 0
+        indice = self._filtro.mapFromSource(self._modelo.index(fila, 0))
+        sel = self._vista.selectionModel()
+        if indice.isValid():
+            sel.setCurrentIndex(indice, sel.SelectionFlag.ClearAndSelect)
+            if desplazar:
+                self._vista.scrollTo(indice, QAbstractItemView.ScrollHint.PositionAtCenter)
+        else:
+            sel.clearSelection()
+
+    def _poner_estilos(self):
+        """Los estilos de la letra elegida, en una zona NUEVA cada vez (la capa de flujo no sabe quitar piezas)."""
+        if self._zona_estilos is not None:
+            self._caja_estilos.removeWidget(self._zona_estilos)
+            self._zona_estilos.hide()
+            self._zona_estilos.deleteLater()
+            self._zona_estilos = None
+        partes = self._valor.split('|')
+        familia = partes[0]
+        estilos = list(QFontDatabase.styles(familia) or [])[:14] if familia else []
+        if not estilos:
+            return
+        actual = partes[1] if len(partes) > 1 else 'Regular'
+        zona = QWidget()
+        flujo = FlujoCapa(zona, espacio_h=6, espacio_v=6)
+        for estilo in estilos:
+            chip = _ChipEstilo(familia, estilo, self._estilo_tocado)
+            chip.marcar(estilo == actual)
+            flujo.addWidget(chip)
+        self._caja_estilos.addWidget(zona)
+        self._zona_estilos = zona
 
 
 class _Paleta(_UnToque, QWidget):
@@ -601,70 +886,246 @@ class _Paleta(_UnToque, QWidget):
             self._al_mas()
 
 
-class _Resumen(QWidget):
-    """«Tu estilo: (1) Tema 3 → (2) Tema 1 → … · letra y colores del tema»: los chips numerados en el orden de toque."""
+def _dibujar_centro(p, destino, img, ancho_rel=0.92, alto_rel=0.70):
+    """Dibuja el CENTRO de una previa 16:9 (donde está la tinta: las previas dejan ~84 % × 62 % para el caption) encajado (sin deformar) y centrado
+    en `destino`."""
+    if img is None or img.isNull():
+        return
+    sw, sh = float(img.width()), float(img.height())
+    fuente = QRectF(sw * (1 - ancho_rel) / 2, sh * (1 - alto_rel) / 2, sw * ancho_rel, sh * alto_rel)
+    f = min(destino.width() / fuente.width(), destino.height() / fuente.height())
+    w, h = fuente.width() * f, fuente.height() * f
+    p.drawImage(QRectF(destino.center().x() - w / 2, destino.center().y() - h / 2, w, h), img, fuente)
+
+
+class _AsiQueda(QWidget):
+    """«Así queda»: la base elegida arriba (más pequeña) y debajo los principales elegidos TURNÁNDOSE (una vuelta de su previa cada uno), sobre negro.
+    Sus propios Reproductor (dos hilos), solo mientras la página se ve."""
+    ANCHO, ALTO = 300, 190
+
     def __init__(self):
         super().__init__()
-        self._orden = []
-        self._sufijo = ''
-        self._f = ui.fuente(13)
-        self._f_chip = ui.fuente(12, peso='negrita')
-        self._f_num = ui.fuente(11, peso='extra')
-        self._t_estilo = tr('Tu estilo:')
-        self._t_vacio = tr('ninguno todavía: toca los temas que quieras')
-        self.setFixedHeight(24)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setFixedSize(self.ANCHO, self.ALTO)
+        self._base = None
+        self._principales = []
+        self._k = 0
+        self._rb = None
+        self._rp = None
+        self._visible = False
+        self._f_tag = ui.fuente(10, peso='extra')
+        self._f_vacio = ui.fuente(12)
+        self._t_tag = tr('Así queda')
+        self._t_vacio = tr('Elige un texto principal')
 
-    def poner(self, orden, sufijo):
-        self._orden, self._sufijo = list(orden), str(sufijo)
+    @staticmethod
+    def _nuevo(ident):
+        import vistas_slider
+        ruta = ruta_clip(ident) if ident else None
+        return vistas_slider.Reproductor(ruta, pausa_s=0) if ruta else None
+
+    def _cambiar(self, cual):
+        viejo = self._rb if cual == 'b' else self._rp
+        if viejo is not None:
+            viejo.parar()
+        if cual == 'b':
+            nuevo = self._rb = self._nuevo(self._base)
+        else:
+            nuevo = self._rp = self._nuevo(self._principales[self._k] if self._principales else None)
+        if self._visible and nuevo is not None:
+            nuevo.arrancar()
+
+    def poner(self, base, principales):
+        if base != self._base:
+            self._base = base
+            self._cambiar('b')
+        principales = list(principales)
+        if principales != self._principales:
+            actual = self._principales[self._k] if self._k < len(self._principales) else None
+            self._principales = principales
+            self._k = principales.index(actual) if actual in principales else 0
+            if actual is None or actual not in principales or self._rp is None:
+                self._cambiar('p')
         self.update()
+
+    def poner_visible(self, visible):
+        self._visible = bool(visible)
+        for r in (self._rb, self._rp):
+            if r is not None:
+                if visible:
+                    r.arrancar()
+                else:
+                    r.parar()
+
+    def tic(self):
+        """Cuando el principal que se ve termina su vuelta, entra el siguiente (como en el video: se turnan frase a frase)."""
+        if self._rp is not None and len(self._principales) > 1 and getattr(self._rp, 'vueltas', 0) >= 1:
+            self._k = (self._k + 1) % len(self._principales)
+            self._cambiar('p')
+        self.update()
+
+    def cerrar(self):
+        self._visible = False
+        for r in (self._rb, self._rp):
+            if r is not None:
+                r.parar()
 
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-        h = float(self.height())
-        medio = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        p.setFont(self._f)
-        p.setPen(QColor('#E0EBFB'))
-        fm = QFontMetricsF(self._f)
-        tw = fm.horizontalAdvance(self._t_estilo)
-        p.drawText(QRectF(0, 0, tw + 2, h), medio, self._t_estilo)
-        x = tw + 8
-        if not self._orden:
-            p.setPen(QColor('#7F8BA3'))
-            p.drawText(QRectF(x, 0, max(0.0, self.width() - x), h), medio, fm.elidedText(self._t_vacio, Qt.TextElideMode.ElideRight, max(0.0, self.width() - x)))
-            p.end()
-            return
-        fc = QFontMetricsF(self._f_chip)
-        for k, n in enumerate(self._orden):
-            if k:
-                p.setFont(self._f)
-                p.setPen(QColor('#4D5A72'))
-                p.drawText(QRectF(x, 0, 16, h), medio, '→')
-                x += fm.horizontalAdvance('→') + 8
-            texto = tr('Tema {n}', n=n)
-            ancho = 3 + 18 + 6 + fc.horizontalAdvance(texto) + 10
-            chip = QRectF(x, 0, ancho, 24)
-            p.setPen(QPen(QColor(BORDE), 1))
-            p.setBrush(QColor('#0E131D'))
-            p.drawRoundedRect(chip.adjusted(0.5, 0.5, -0.5, -0.5), 11.5, 11.5)
-            num = QRectF(x + 3, 3, 18, 18)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
+        camino = QPainterPath()
+        camino.addRoundedRect(r, 12, 12)
+        p.save()
+        p.setClipPath(camino)
+        p.fillRect(r, QColorReal('#000000'))
+        if self._principales:
+            if self._base:
+                _dibujar_centro(p, QRectF(16, 26, r.width() - 32, 50), self._rb.imagen() if self._rb else None)
+                _dibujar_centro(p, QRectF(10, 74, r.width() - 20, 108), self._rp.imagen() if self._rp else None)
+            else:
+                _dibujar_centro(p, QRectF(10, 30, r.width() - 20, 150), self._rp.imagen() if self._rp else None)
+        else:
+            p.setFont(self._f_vacio)
+            p.setPen(QColor(GRIS))
+            p.drawText(r, int(Qt.AlignmentFlag.AlignCenter), self._t_vacio)
+        p.restore()
+        p.setPen(QPen(QColor('#2A3A5C'), 1))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawRoundedRect(r, 12, 12)
+        p.setFont(self._f_tag)
+        tw = QFontMetricsF(self._f_tag).horizontalAdvance(self._t_tag)
+        tag = QRectF(9, 9, tw + 16, 19)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(VERDE))
+        p.drawRoundedRect(tag, 9.5, 9.5)
+        p.setPen(QColorReal('#03140D'))
+        p.drawText(tag, int(Qt.AlignmentFlag.AlignCenter), self._t_tag)
+        p.end()
+
+
+class _ResumenTema(QWidget):
+    """«Tu tema»: el texto base (o «el de cada tema») y los principales en el orden en que se turnan, cada uno con su miniatura animada, su
+    número y su efecto; los que no caben, «+N». `imagen_de(id)` da el cuadro actual de una previa (el de su tarjeta)."""
+    MINI_W, MINI_H = 64, 36
+
+    def __init__(self, imagen_de):
+        super().__init__()
+        self._imagen_de = imagen_de
+        self._base = None
+        self._orden = []
+        self._f_tit = ui.fuente(15, peso='extra')
+        self._f_sub = ui.fuente(12)
+        self._f_k = ui.fuente(12)
+        self._f_chip = ui.fuente(12, peso='negrita')
+        self._f_chip2 = ui.fuente(10)
+        self._f_num = ui.fuente(11, peso='extra')
+        self._t_tit, self._t_sub = tr('Tu tema'), tr('se turnan frase a frase')
+        self._t_base, self._t_prin = tr('Texto base'), tr('Principales')
+        self._t_cada = tr('el de cada tema')
+        self._t_ninguno = tr('toca los que quieras')
+        self.setMinimumWidth(360)
+        self.setFixedHeight(150)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+    def poner(self, base, orden):
+        self._base, self._orden = base, list(orden)
+        self.update()
+
+    def _chip(self, p, x, cy, ident, arriba, abajo=None, numero=None):
+        """Una píldora [miniatura][n][texto]; devuelve su ancho."""
+        fc, f2 = QFontMetricsF(self._f_chip), QFontMetricsF(self._f_chip2)
+        tw = max(fc.horizontalAdvance(arriba), f2.horizontalAdvance(abajo) if abajo else 0)
+        ancho = 4 + self.MINI_W + 8 + (19 + 7 if numero else 0) + tw + 12
+        caja = QRectF(x, cy - 22, ancho, 44)
+        p.setPen(QPen(QColor('#233150'), 1))
+        p.setBrush(QColor('#111D33'))
+        p.drawRoundedRect(caja.adjusted(0.5, 0.5, -0.5, -0.5), 10.5, 10.5)
+        mini = QRectF(x + 4, cy - self.MINI_H / 2, self.MINI_W, self.MINI_H)
+        camino = QPainterPath()
+        camino.addRoundedRect(mini, 6, 6)
+        p.save()
+        p.setClipPath(camino)
+        p.fillRect(mini, QColorReal('#000000'))
+        _dibujar_centro(p, mini, self._imagen_de(ident))
+        p.restore()
+        x2 = mini.right() + 8
+        if numero:
+            num = QRectF(x2, cy - 9.5, 19, 19)
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QColor(AMARILLO))
+            p.setBrush(QColor(VERDE))
             p.drawEllipse(num)
             p.setFont(self._f_num)
-            p.setPen(QColor('#101626'))
-            p.drawText(num, int(Qt.AlignmentFlag.AlignCenter), str(k + 1))
-            p.setFont(self._f_chip)
-            p.setPen(QColor('#E8F1FF'))
-            p.drawText(QRectF(x + 27, 0, ancho - 27, h), medio, texto)
-            x += ancho + 8
-        if self._sufijo and x < self.width() - 20:
-            p.setFont(self._f)
+            p.setPen(QColorReal('#03140D'))
+            p.drawText(num, int(Qt.AlignmentFlag.AlignCenter), str(numero))
+            x2 += 26
+        medio = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        p.setFont(self._f_chip)
+        p.setPen(QColorReal('#E8F1FF'))
+        if abajo:
+            p.drawText(QRectF(x2, cy - 17, tw + 4, 18), medio, arriba)
+            p.setFont(self._f_chip2)
+            p.setPen(QColor(GRIS))
+            p.drawText(QRectF(x2, cy + 1, tw + 4, 15), medio, abajo)
+        else:
+            p.drawText(QRectF(x2, cy - 10, tw + 4, 20), medio, arriba)
+        return ancho
+
+    def paintEvent(self, _e):
+        import mezcla_planificador as MP
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        medio = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        p.setFont(self._f_tit)
+        p.setPen(QColorReal('#FFFFFF'))
+        tw = QFontMetricsF(self._f_tit).horizontalAdvance(self._t_tit)
+        p.drawText(QRectF(0, 0, tw + 2, 26), medio, self._t_tit)
+        p.setFont(self._f_sub)
+        p.setPen(QColor(GRIS))
+        p.drawText(QRectF(tw + 10, 0, 300, 26), medio, self._t_sub)
+        # el texto base
+        cy = 62
+        p.setFont(self._f_k)
+        p.setPen(QColor(ETIQUETA))
+        p.drawText(QRectF(0, cy - 10, 86, 20), medio, self._t_base)
+        if self._base:
+            self._chip(p, 92, cy, self._base, MP.nombre_crea(MP.base_crea(self._base)))
+        else:
             p.setPen(QColor('#7F8BA3'))
-            resto = self.width() - x
-            p.drawText(QRectF(x, 0, resto, h), medio, fm.elidedText('· ' + self._sufijo, Qt.TextElideMode.ElideRight, resto))
+            p.drawText(QRectF(92, cy - 10, 300, 20), medio, self._t_cada)
+        # los principales
+        cy = 120
+        p.setFont(self._f_k)
+        p.setPen(QColor(ETIQUETA))
+        p.drawText(QRectF(0, cy - 10, 86, 20), medio, self._t_prin)
+        if not self._orden:
+            p.setPen(QColor('#7F8BA3'))
+            p.drawText(QRectF(92, cy - 10, 300, 20), medio, self._t_ninguno)
+            p.end()
+            return
+        x = 92.0
+        limite = self.width() - 4
+        for k, ident in enumerate(self._orden):
+            it = MP.principal_crea(ident) or {}
+            arriba, abajo = tr(it.get('efecto') or ''), tr('Tema {n}', n=it.get('tema', '?'))
+            fc, f2 = QFontMetricsF(self._f_chip), QFontMetricsF(self._f_chip2)
+            ancho = 4 + self.MINI_W + 8 + 26 + max(fc.horizontalAdvance(arriba), f2.horizontalAdvance(abajo)) + 12
+            resto = len(self._orden) - k
+            if x + ancho + (22 if k else 0) + (44 if resto > 1 else 0) > limite:
+                p.setFont(self._f_chip)
+                p.setPen(QColor(GRIS))
+                p.drawText(QRectF(x + 4, cy - 10, 60, 20), medio, f'+{resto}')
+                break
+            if k:
+                p.setPen(QPen(QColor('#5E6B85'), 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                p.drawLine(QPointF(x + 4, cy), QPointF(x + 14, cy))
+                p.drawLine(QPointF(x + 10, cy - 4), QPointF(x + 14, cy))
+                p.drawLine(QPointF(x + 10, cy + 4), QPointF(x + 14, cy))
+                x += 22
+            x += self._chip(p, x, cy, ident, arriba, abajo, numero=k + 1) + 6
         p.end()
 
 
@@ -690,66 +1151,87 @@ class _Cajon(QWidget):
 
 
 class CreaEstiloDialogo(Dialogo):
-    """«Crea tu estilo» (v5.56, maqueta A): las seis filas Tema 1…6 sobre negro, el cajón de letra y colores y el pie con «Tu estilo», el nombre y
-    «Crear mi pack». al_crear(nombre, temas, terminado, ajustes); el resto de argumentos (al_resolve, al_ayuda, al_resolve_uno) se aceptan solo por
-    compatibilidad con la llamada de la app y no se usan."""
+    """«Crea tu estilo» (v5.75, la maqueta animada que eligió el usuario): 1 · TEXTO BASE (6 previas; una o ninguna) y 2 · TEXTOS PRINCIPALES (18
+    previas con efecto; las que se quieran, numeradas en el orden en que se turnan), todo animado sobre negro; abajo «Así queda» (la base y los
+    principales turnándose), «Tu tema», el nombre y «Crear mi tema». El cajón «Letra y colores» elige la letra del texto principal y los colores
+    (la letra de arriba y abajo la da el texto base). al_crear(nombre, looks, terminado, ajustes, base): looks = ['t2:6', 't3:select', 't5'] en el
+    orden de toque, base = 'b_t2' o None (mezcla_planificador.crear_estilo pone su letra en 'fuente_secundaria'). El resto de argumentos (al_resolve,
+    al_ayuda, al_resolve_uno) se aceptan solo por compatibilidad con la llamada de la app y no se usan."""
     K_RESORTE = 300.0
     C_RESORTE = 34.6              # 2·√k: amortiguado crítico (el ancho no rebota)
+    TIC_MS = 40
 
     def __init__(self, padre, al_crear, *_compat, **_compat_kw):
-        super().__init__(padre, tr('Crea tu estilo'), 1040, 800, minimo=(960, 560))
+        import mezcla_planificador as MP
+        super().__init__(padre, tr('Crea tu estilo'), 1280, 820, minimo=(1040, 620))
         self.setObjectName('creaEstilo')
-        self.setStyleSheet(_hoja('QDialog#creaEstilo { background-color: #000000; }'))
+        self.setStyleSheet(_hoja('QDialog#creaEstilo { background-color: #080C14; }'))
         self._al_crear = al_crear
+        self._base = None
         self._orden = []
         self._creando = False
         self._cerrado = False
         estado = leer_estado()
         self._ajustes = estado['ajustes']
+        self._ajustes['fuente_secundaria'] = ''        # (v5.75: la letra de arriba y abajo la pone el TEXTO BASE)
         self._propios = estado['propios']
-        self._trabajando = False
-        self._pedido = None
-        self._clave_actual = None
         self._resorte = ui.Resorte(0.0, self.K_RESORTE, self.C_RESORTE)
         self._abierto = False
 
         capa = QVBoxLayout(self)
-        capa.setContentsMargins(16, 18, 16, 16)       # 20 de la maqueta menos los 4 px del halo de las filas (cabecera y pie llevan +4)
+        capa.setContentsMargins(22, 18, 20, 16)
         capa.setSpacing(0)
-        cab, cc = caja_h(espacio=12, margenes=(4, 0, 4, 0))
-        cc.addWidget(Etiqueta(tr('Crea tu estilo'), 22, peso='extra', color='#FFFFFF'))
-        cc.addStretch(1)
+        cab, cc = caja_h(espacio=12)
+        textos, tv = caja_v(espacio=4)
+        tv.addWidget(Etiqueta(tr('Crea tu estilo'), 22, peso='extra', color='#FFFFFF'))
+        tv.addWidget(Etiqueta(tr('Arma tu tema: un texto base y los textos principales que quieras. El color y la letra los eliges aparte.'), 13,
+                              color='#A9B4C8', envolver=True))
+        cc.addWidget(textos, 1)
         self._interruptor = _Interruptor(self._alternar_cajon)
-        cc.addWidget(self._interruptor)
+        cc.addWidget(self._interruptor, 0, Qt.AlignmentFlag.AlignTop)
         capa.addWidget(cab)
-        capa.addSpacing(10)
-        sub = Etiqueta(tr('Toca los captions que quieras, en el orden que quieras: se turnan por frases.'), 13, color='#A9B4C8', envolver=True)
-        sub.setContentsMargins(4, 0, 4, 0)
-        capa.addWidget(sub)
-        capa.addSpacing(6)
+        capa.addSpacing(14)
 
         cuerpo, cb = caja_h(espacio=0)
-        self._lista = _Lista(self._tocar)
+        contenido = QWidget()
+        cv = QVBoxLayout(contenido)
+        cv.setContentsMargins(0, 0, 6, 0)
+        cv.setSpacing(0)
+        cv.addWidget(_Paso(1, tr('Texto base'), tr('las palabras normales de arriba y abajo · elige uno (o ninguno: cada tema con el suyo)')))
+        cv.addSpacing(8)
+        bases = [{'id': b['id'], 'texto': MP.nombre_crea(b), 'efecto': ''} for b in MP.BASES_CREA]
+        self._rej_base = _Rejilla(bases, 6, False, self._tocar_base)
+        cv.addWidget(self._rej_base)
+        cv.addSpacing(16)
+        cv.addWidget(_Paso(2, tr('Textos principales'), tr('la palabra con efecto · elige los que quieras: se turnan frase a frase')))
+        cv.addSpacing(8)
+        principales = [{'id': q['id'], 'texto': tr('Tema {n}', n=q['tema']), 'efecto': tr(q['efecto'])} for q in MP.PRINCIPALES_CREA]
+        self._rej_prin = _Rejilla(principales, 7, True, self._tocar_principal)
+        cv.addWidget(self._rej_prin)
+        cv.addStretch(1)
         desp = QScrollArea()
         desp.setWidgetResizable(True)
         desp.setFrameShape(QFrame.Shape.NoFrame)
         desp.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        desp.setWidget(self._lista)
+        desp.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        desp.setWidget(contenido)
         desp.viewport().setAutoFillBackground(False)
-        self._lista.setAutoFillBackground(False)
+        contenido.setAutoFillBackground(False)
         cb.addWidget(desp, 1)
         self._cajon = _Cajon(self._armar_panel())
         self._cajon.setFixedWidth(0)
         self._cajon.hide()
         cb.addWidget(self._cajon)
         capa.addWidget(cuerpo, 1)
-        capa.addSpacing(6)
+        capa.addSpacing(10)
         capa.addWidget(self._armar_pie())
 
+        self._reloj = QTimer(self)
+        self._reloj.setInterval(self.TIC_MS)
+        self._reloj.timeout.connect(self._tic)     # las previas solo se mueven mientras la ventana se ve (showEvent / hideEvent)
         self._solo_letras_instaladas()
         self._marcar_cajon()
         self._resumir()
-        self._rehacer_imagenes()
 
     # ------------------------------------------------------------------ el cajón
     def _armar_panel(self):
@@ -760,13 +1242,11 @@ class CreaEstiloDialogo(Dialogo):
         pv.setContentsMargins(1, 1, 1, 1)
         desp = Desplazable(margenes=(15, 13, 15, 13), espacio=10, estirar_final=False)
         pv.addWidget(desp)
-        hay = {f.lower() for f in QFontDatabase.families()}
-        instaladas = [o for o in fuente_usuario.OPCIONES if o[0].lower() in hay]
-        tema = ('', '', tr('Del tema'))
-        self._fichas = {}
         desp.agregar(self._titulo(tr('Tipografía')))
-        desp.agregar(self._bloque_letras('fuente_principal', tr('Texto principal'), [tema] + instaladas))
-        desp.agregar(self._bloque_letras('fuente_secundaria', tr('Arriba y abajo'), [tema] + [o for o in instaladas if o[0] in LETRAS_SECUNDARIAS]))
+        desp.agregar(Etiqueta(tr('Texto principal'), 11.5, color=ETIQUETA))
+        self._letras = _ListaLetras(lambda v: self._poner_ajuste('fuente_principal', v))    # todas las letras instaladas en el equipo
+        desp.agregar(self._letras)
+        desp.agregar(Etiqueta(tr('La letra de arriba y abajo la pone el texto base.'), 11, color='#6B7891', envolver=True))
         desp.agregar(self._titulo(tr('Colores')))
         self._paletas = {}
         for clave, etq, colores in (('color_principal', tr('Texto principal'), COLORES_PRINCIPAL),
@@ -787,28 +1267,14 @@ class CreaEstiloDialogo(Dialogo):
     def _titulo(texto):
         return Etiqueta(texto, 13, peso='extra', color='#FFFFFF')
 
-    def _bloque_letras(self, clave, etiqueta, opciones):
-        bloque, bv = caja_v(espacio=6)
-        bv.addWidget(Etiqueta(etiqueta, 11.5, color=ETIQUETA))
-        zona = QWidget()
-        flujo = FlujoCapa(zona, espacio_h=6, espacio_v=6)
-        self._fichas[clave] = []
-        for familia, estilo, nombre in opciones:
-            ficha = _Ficha(familia, estilo, nombre, lambda v, c=clave: self._poner_ajuste(c, v))
-            self._fichas[clave].append(ficha)
-            flujo.addWidget(ficha)
-        bv.addWidget(zona)
-        return bloque
-
     def _solo_letras_instaladas(self):
-        """Una letra recordada que ya no está en el cajón (desinstalada, o de otro equipo) vuelve a «Del tema»: así siempre hay una ficha marcada,
-        el pie no dice «tu letra» de algo que no se ve y al_crear no recibe una letra que Resolve no tiene."""
+        """Una letra recordada que ya no está en el equipo (desinstalada, o de otro equipo) vuelve a «Del tema»: así siempre hay una fila marcada
+        y al_crear no recibe una letra que Resolve no tiene."""
         quitadas = []
-        for clave, fichas in self._fichas.items():
-            v = self._ajustes.get(clave, '')
-            if v and v not in {f.valor for f in fichas}:
-                self._ajustes[clave] = ''
-                quitadas.append(v.split('|')[0])
+        v = self._ajustes.get('fuente_principal', '')
+        if v and not self._letras.instalada(v):
+            self._ajustes['fuente_principal'] = ''
+            quitadas.append(v.split('|')[0])
         if quitadas:
             try:
                 import registro
@@ -817,9 +1283,7 @@ class CreaEstiloDialogo(Dialogo):
                 pass
 
     def _marcar_cajon(self):
-        for clave, fichas in self._fichas.items():
-            for f in fichas:
-                f.marcar(f.valor == self._ajustes.get(clave, ''))
+        self._letras.marcar(self._ajustes.get('fuente_principal', ''))
         for clave, paleta in self._paletas.items():
             paleta.poner(self._ajustes.get(clave, ''), self._propios.get(clave, ''))
 
@@ -847,7 +1311,6 @@ class CreaEstiloDialogo(Dialogo):
         x = max(0.0, min(1.0, x))
         self._cajon.setFixedWidth(int(round(self._cajon.ancho_total() * x)))
         self._cajon.setVisible(x > 0.002)
-        self._lista.poner_avance(x)
 
     def _parar_animacion(self):
         """El cajón salta a donde iba y sale del motor de resortes (al cerrar u ocultar la ventana)."""
@@ -894,7 +1357,6 @@ class CreaEstiloDialogo(Dialogo):
         self._marcar_cajon()
         self._resumir()
         self._guardar()
-        self._rehacer_imagenes()
 
     def _guardar(self):
         guardar_estado({'ajustes': dict(self._ajustes), 'propios': dict(self._propios)})
@@ -902,134 +1364,105 @@ class CreaEstiloDialogo(Dialogo):
     def ajustes(self):
         return dict(self._ajustes)
 
-    # ------------------------------------------------------------------ las imágenes de las filas (UN hilo)
-    def _tam_imagen(self):
-        dpr = self.devicePixelRatioF() or 1.0
-        alto = int(round(68 * dpr))
-        return int(round(alto * ASPECTO_IMAGEN)), alto
-
-    def _poner_pixmaps(self, qimagenes):
-        dpr = self.devicePixelRatioF() or 1.0
-        pix = {}
-        for n, q in (qimagenes or {}).items():
-            if not isinstance(n, int) or q is None or q.isNull():
-                continue
-            pm = QPixmap.fromImage(q)
-            pm.setDevicePixelRatio(dpr)
-            pix[n] = pm
-        self._lista.poner_imagenes(pix, (qimagenes or {}).get('fondo'))
-
-    def _rehacer_imagenes(self):
-        ancho, alto = self._tam_imagen()
-        clave = _clave_imagenes(self._ajustes, ancho, alto)
-        self._clave_actual = clave
-        hechas = _IMAGENES.get(clave)
-        if hechas is not None:
-            self._pedido = None
-            self._poner_pixmaps(hechas)
-            self._lista.poner_rehaciendo(False)
-            return
-        self._pedido = (dict(self._ajustes), ancho, alto, clave)
-        if not self._trabajando:
-            self._lanzar()
-        else:
-            self._lista.poner_rehaciendo(True)
-
-    def _lanzar(self):
-        ajustes, ancho, alto, clave = self._pedido
-        self._pedido = None
-        self._trabajando = True
-        self._lista.poner_rehaciendo(bool(self._lista._pix))
-
-        def trabajo():
-            errores = []
-            try:
-                import vista_estilos
-                imagenes = vista_estilos.imagenes(ajustes, ancho, alto, errores=errores)
-                salida = {int(n): _a_qimage(im) for n, im in imagenes.items() if im is not None}
-                salida['fondo'] = tuple(vista_estilos.fondo(ajustes))       # (la fila se pinta del mismo fondo que sus imágenes)
-            except Exception as e:
-                salida = None
-                errores.append(str(e))
-            if errores:
-                try:
-                    import registro
-                    registro.aviso(tr('«Crea tu estilo» no pudo dibujar algún caption: {e}', e='; '.join(errores)[:400]), 'crea_estilo_ui')
-                except Exception:
-                    pass
-            return salida
-
-        def fin(salida, _error):
-            self._trabajando = False
-            if self._cerrado:
-                return
-            if salida:
-                _recordar_imagenes(clave, salida)
-                if clave == self._clave_actual:
-                    self._poner_pixmaps(salida)
-            if self._pedido is not None:
-                if self._pedido[3] in _IMAGENES:
-                    self._rehacer_imagenes()
-                else:
-                    self._lanzar()
-                return
-            self._lista.poner_rehaciendo(False)
-        ui.correr_en_hilo(self, trabajo, fin)
-
     # ------------------------------------------------------------------ elegir
-    def _tocar(self, n):
-        if n in self._orden:
-            self._orden.remove(n)
-        else:
-            self._orden.append(n)
-        self._lista.poner_orden(self._orden)
+    def _tocar_base(self, ident):
+        self._base = None if self._base == ident else ident
         self._resumir()
 
+    def _tocar_principal(self, ident):
+        if ident in self._orden:
+            self._orden.remove(ident)
+        else:
+            self._orden.append(ident)
+        self._resumir()
+
+    def base(self):
+        return self._base
+
     def temas(self):
-        return [f't{n}' for n in self._orden]
+        """Los looks de los principales elegidos, en el orden en que se turnan ('t2:6', 't3:select', 't5'…)."""
+        import mezcla_planificador as MP
+        return [MP.principal_crea(i)['look'] for i in self._orden if MP.principal_crea(i)]
 
     def _resumir(self):
-        propios = any(self._ajustes.get(k) for k in CLAVES)
-        self._resumen.poner(self._orden, tr('tu letra y tus colores') if propios else tr('letra y colores del tema'))
+        self._rej_base.poner_orden([self._base] if self._base else [])
+        self._rej_prin.poner_orden(self._orden)
+        self._resumen.poner(self._base, self._orden)
+        self._asi.poner(self._base, self._orden)
         self._b_crear.setEnabled(bool(self._orden) and not self._creando)
+
+    # ------------------------------------------------------------------ las previas: solo mientras se ven
+    def _imagen_de(self, ident):
+        return self._rej_base.imagen(ident) if ident and ident.startswith('b_') else self._rej_prin.imagen(ident)
+
+    def _tic(self):
+        visible = self.isVisible() and not self.isMinimized()
+        for rej in (self._rej_base, self._rej_prin):
+            ve = visible and not rej.visibleRegion().isEmpty()
+            rej.poner_visible(ve)
+            if ve:
+                rej.update()
+        self._asi.poner_visible(visible)
+        if visible:
+            self._asi.tic()
+            self._resumen.update()
+
+    def showEvent(self, e):
+        super().showEvent(e)
+        if not self._cerrado and not self._reloj.isActive():
+            self._reloj.start()
+
+    def _parar_previas(self):
+        try:
+            self._reloj.stop()
+        except Exception:
+            pass
+        for rej in (self._rej_base, self._rej_prin):
+            rej.poner_visible(False)
+        self._asi.cerrar()
 
     # ------------------------------------------------------------------ el pie y crear
     def _armar_pie(self):
-        fuera, fv = caja_v(espacio=0, margenes=(4, 0, 4, 0))
         pie = QFrame()
         pie.setObjectName('pieCreaEstilo')
-        pie.setStyleSheet(_hoja('QFrame#pieCreaEstilo { background-color: %s; border: 1px solid %s; border-radius: 14px; }' % (PANEL, BORDE)))
-        pv = QVBoxLayout(pie)
-        pv.setContentsMargins(14, 10, 14, 12)
-        pv.setSpacing(8)
-        self._resumen = _Resumen()
-        pv.addWidget(self._resumen)
-        fila, cf = caja_h(espacio=10)
-        self._nombre = Entrada(placeholder=tr('Nombre de tu estilo'), alto=38, tam=14)
+        pie.setStyleSheet(_hoja('QFrame#pieCreaEstilo { background-color: %s; border: 1px solid %s; border-radius: 16px; }' % ('#0D1627', '#1E2A42')))
+        ph = QHBoxLayout(pie)
+        ph.setContentsMargins(12, 12, 16, 12)
+        ph.setSpacing(20)
+        self._asi = _AsiQueda()
+        ph.addWidget(self._asi, 0, Qt.AlignmentFlag.AlignVCenter)
+        self._resumen = _ResumenTema(self._imagen_de)
+        ph.addWidget(self._resumen, 1, Qt.AlignmentFlag.AlignVCenter)
+        acc, av = caja_v(espacio=10)
+        self._nombre = Entrada(placeholder=tr('Nombre de tu tema'), alto=44, tam=14)
         self._nombre.setObjectName('nombreEstilo')
-        self._nombre.setStyleSheet(_hoja('QLineEdit#nombreEstilo { background-color: %s; border: 1px solid %s; border-radius: 10px; padding: 0px 13px; '
-                                         'color: #FFFFFF; } QLineEdit#nombreEstilo:focus { border-color: #0F62FE; }' % (CAMPO, BORDE)))
-        self._nombre.setText(tr('Mi estilo'))
+        self._nombre.setStyleSheet(_hoja('QLineEdit#nombreEstilo { background-color: %s; border: 1px solid %s; border-radius: 12px; padding: 0px 13px; '
+                                         'color: #FFFFFF; } QLineEdit#nombreEstilo:focus { border-color: #0F62FE; }' % ('#0A1120', '#1E2A42')))
+        self._nombre.setText(tr('Mi tema'))
         self._nombre.returnPressed.connect(self._crear)
-        cf.addWidget(self._nombre, 1)
-        self._b_crear = Boton(tr('Crear mi pack'), self._crear, tipo='primario', alto=38, ancho=170, tam=14, negrita=True)
-        self._b_crear.setFixedWidth(170)
-        cf.addWidget(self._b_crear)
-        pv.addWidget(fila)
-        fv.addWidget(pie)
-        return fuera
+        av.addWidget(self._nombre)
+        self._b_crear = Boton(tr('Crear mi tema'), self._crear, tipo='primario', alto=46, ancho=214, tam=14, negrita=True)
+        self._b_crear.setFixedWidth(214)
+        av.addWidget(self._b_crear)
+        acc.setFixedWidth(214)
+        ph.addWidget(acc, 0, Qt.AlignmentFlag.AlignVCenter)
+        return pie
 
-    def _llamar_al_crear(self, nombre, temas, ajustes):
-        """al_crear(nombre, temas, terminado, ajustes). (Una app de antes con al_crear(nombre, ids, terminado) recibe solo los tres.)"""
+    def _llamar_al_crear(self, nombre, temas, ajustes, base):
+        """al_crear(nombre, looks, terminado, ajustes, base). (Una app de antes recibe solo los argumentos que acepta: 4 o 3.)"""
         fn = self._al_crear
         try:
             import inspect
             params = list(inspect.signature(fn).parameters.values())
-            cuatro = any(q.kind == q.VAR_POSITIONAL for q in params) or \
-                sum(q.kind in (q.POSITIONAL_ONLY, q.POSITIONAL_OR_KEYWORD) for q in params) >= 4
+            if any(q.kind == q.VAR_POSITIONAL for q in params):
+                n = 5
+            else:
+                n = sum(q.kind in (q.POSITIONAL_ONLY, q.POSITIONAL_OR_KEYWORD) for q in params)
         except (TypeError, ValueError):
-            cuatro = True
-        if cuatro:
+            n = 5
+        if n >= 5:
+            fn(nombre, temas, self._termino, ajustes, base)
+        elif n == 4:
             fn(nombre, temas, self._termino, ajustes)
         else:
             fn(nombre, temas, self._termino)
@@ -1037,12 +1470,14 @@ class CreaEstiloDialogo(Dialogo):
     def _crear(self):
         if not self._orden or self._creando:
             return
-        nombre = self._nombre.text().strip() or tr('Mi estilo')
+        nombre = self._nombre.text().strip() or tr('Mi tema')
         self._creando = True
         self._b_crear.setEnabled(False)
         self._b_crear.setText(tr('Creando…'))
+        ajustes = dict(self._ajustes)
+        ajustes['fuente_secundaria'] = ''                # (la pone crear_estilo con la letra del texto base)
         try:
-            self._llamar_al_crear(nombre, self.temas(), dict(self._ajustes))
+            self._llamar_al_crear(nombre, self.temas(), ajustes, self._base)
         except Exception:
             ui._registrar_excepcion(*sys.exc_info())
             self._termino(False)
@@ -1052,7 +1487,7 @@ class CreaEstiloDialogo(Dialogo):
         if not ui.vivo(self):
             return
         self._creando = False
-        self._b_crear.setText(tr('Crear mi pack'))
+        self._b_crear.setText(tr('Crear mi tema'))
         self._resumir()
         if ok:
             self.cerrar()
@@ -1060,12 +1495,13 @@ class CreaEstiloDialogo(Dialogo):
     # ------------------------------------------------------------------ cerrar
     def hideEvent(self, e):
         self._parar_animacion()
+        self._parar_previas()
         super().hideEvent(e)
 
     def closeEvent(self, e):
         self._parar_animacion()
+        self._parar_previas()
         self._cerrado = True
-        self._pedido = None
         super().closeEvent(e)
 
 

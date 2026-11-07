@@ -28,12 +28,14 @@ ANCLAS_HORIZONTAL = {'medio': 0.50, 'alto': 0.30, 'bajo': 0.72}      # un horizo
 AFINADO = {'adelanto': 0.03, 'hold': 0.30, 'min_bloque': 0.9, 'gap_minimo': 0.10, 'min_ultimo': 0.55, 'visible_min': 0.45, 'desfase_max': 0.4, 'max_palabras': 7,
            'cada': 2, 'max_fina': 3, 'max_efecto_letras': 14, 'holgura_efecto': 0.5}
 # cuánto tiene que verse cada efecto (s desde que entra la palabra) para llegar a su estado final
-DURACION = {'v shatter': 1.1, 'v select': 1.35, 'v drag': 1.4}
+DURACION = {'v shatter': 1.1, 'v select': 1.35, 'v drag': 1.4, 'v corte': 1.35, 'v shine': 0.95, 'v resalta': 0.9}
 # lo MÍNIMO que tiene que verse cada efecto (s desde que entra la palabra) para llegar a su estado final con el tiempo comprimido al máximo (×2)
-MINIMO = {'v shatter': 0.60, 'v select': 0.70, 'v drag': 0.70}
+# (v5.75: «corte», «shine» y «resalta», copias de EJEMPLO 2, EJEMPLO3 y la selección del iPhone, solo salen pedidos: un look de «Crea tu estilo»;
+# no están en ROTACION)
+MINIMO = {'v shatter': 0.60, 'v select': 0.70, 'v drag': 0.70, 'v corte': 0.75, 'v shine': 0.50, 'v resalta': 0.50}
 ROTAR_COLORES = False                                    # v5.5.4: un solo juego de colores por video (los que rotaban se veían feos)
 ROTACION = ('v select', 'v shatter', 'v drag')           # en este orden salen; si el que toca no cabe en el tiempo del bloque, se prueba el siguiente (antes se caía siempre a shatter)
-CAP = {'v fina': 0.0245, 'v negrita': 0.040, 'v shatter': 0.072, 'v select': 0.072, 'v drag': 0.072}
+CAP = {'v fina': 0.0245, 'v negrita': 0.040, 'v shatter': 0.072, 'v select': 0.072, 'v drag': 0.072, 'v corte': 0.072, 'v shine': 0.072, 'v resalta': 0.072}
 # la palabra con efecto es más grande cuanto más corta
 ESCALA_LARGO = ((4, 1.18), (6, 1.0), (9, 0.9), (99, 0.8))
 

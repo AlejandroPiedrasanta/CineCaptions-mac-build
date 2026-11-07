@@ -21,6 +21,11 @@ AwesomeSerifItalic-SemBdTall.otf   (30 KB)
 BalloryRegular-rgR3B.ttf   (20 KB)
   Copyright: Flawless And Co
 ------------------------------------------------------------------
+BarlowSemiCondensed-Bold.ttf   (109 KB)
+  Copyright: Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+  URL       : https://openfontlicense.org
+------------------------------------------------------------------
 Inter-Italic-VariableFont_opsz,wght.ttf   (883 KB)
   Copyright: Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
   Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org

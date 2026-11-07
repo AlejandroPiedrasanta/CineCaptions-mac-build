@@ -12,7 +12,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (43 archivos)
+    herramientas_dev\   (44 archivos)
     remotion\   (16190 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
@@ -50,7 +50,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     copias.py
         copias de seguridad de ~/DaVinciSubtitles (crear y restaurar un .zip).
     crea_estilo_ui.py
-        «Crea tu estilo»: la lista de los Temas 1-6 sobre negro (se tocan en el orden que se quiera) con el cajón de letra y colores, y el popup de la estructura de nombres.
+        «Crea tu estilo»: texto base + textos principales con su previa ANIMADA sobre negro, el cajón de letra y colores, y el popup de la estructura de nombres.
     cuda_libs.py
         las librerías CUDA que necesita Whisper en la GPU: detectarlas, registrarlas y repararlas.
     descargas.py
@@ -251,6 +251,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         v5.5.13: la PLACA de video del Tema 1 neón: el motor/plate.py del kit «TEMA 1» del usuario, portado a Pillow + numpy +
     licencia.py
         la licencia (claves CC- de cinecaptions.shop): activar, verificar, desactivar, estado firmado, 7 días sin internet.
+    linea_planificador.py
+        el Tema 3 (v5.75): toda la frase en UNA línea de mayúsculas condensadas y una caja negra que salta de palabra en palabra.
     mantenimiento.py
         límite y limpieza automática de las cachés del programa (secuencias, vistas, voz, emojis…).
     mapa_codigo.py
