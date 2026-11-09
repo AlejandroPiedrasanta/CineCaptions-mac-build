@@ -4462,6 +4462,7 @@
     "Estilo 2: los subtítulos siempre van al centro y solo los textos principales llevan color.": "스타일 2: 자막은 항상 가운데에 있고 메인 텍스트에만 색이 들어갑니다.",
     "Ahora todo se llama «Estilo»: la página Estilo y del Estilo 1 al Estilo 6.": "이제 모두 「스타일」이라고 부릅니다: 스타일 페이지와 스타일 1~6.",
     "Estilo «{n}» creado con {t}{b}{a}. Está en el slider: tócalo para usarlo.": "«{n}» 스타일은 {t}{b}{a}로 생성되었습니다. 슬라이더에 있습니다: 사용하려면 탭하세요.",
-    " · texto base del {x}": " · 기본 텍스트: {x}"
+    " · texto base del {x}": " · 기본 텍스트: {x}",
+    "Zona segura también en la Edición PRO: en videos verticales, los gráficos, títulos y etiquetas ya no quedan debajo de la barra de búsqueda, los botones ni la descripción de TikTok, Reels y Shorts.": "PRO 편집에도 안전 영역 적용: 세로 동영상에서 그래픽, 제목, 라벨이 더 이상 TikTok, Reels, Shorts의 검색창, 버튼, 설명 아래에 가려지지 않습니다."
   }
 }

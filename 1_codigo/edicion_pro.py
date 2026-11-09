@@ -903,6 +903,7 @@ def _y_en_fuente(y_tl, clip, W, H):
 
 
 ALTO_PIEZA = {'cifra': 0.17, 'rotulo': 0.12, 'lista': 0.25, 'etiqueta': 0.08, 'cta': 0.30, 'icono': 0.29, 'titular': 0.15, 'nombres': 0.17}
+ANCHO_PIEZA = {'lista': 0.80}            # v5.76: ancho a escala 1 (fracción del ancho; medido en un GO real: 0,86 a escala 1,1) de los que llegan a los iconos
 MARGEN_CARA = 0.02                       # aire entre la cara y cualquier cosa (fracción del alto)
 
 
@@ -919,17 +920,22 @@ def _caras(det):
     return out
 
 
-def _fuera_de_la_cara(y, medio, caras, x0=0.0, x1=1.0):
-    """El centro y (fracción) más cercano a `y` para algo de media altura `medio` (y ancho [x0, x1]) que no pise ninguna cara, o None si no cabe."""
+def _fuera_de_la_cara(y, medio, caras, x0=0.0, x1=1.0, zona=None):
+    """El centro y (fracción) más cercano a `y` para algo de media altura `medio` (y ancho [x0, x1]) que no pise ninguna cara, o None si no cabe.
+    v5.76 `zona` = (arriba, abajo): además, todo dentro de esos límites (la zona segura del reel en vertical); sin ella, 0,04–0,96 como siempre."""
     malas = [c for c in caras if c[0] < x1 and x0 < c[2]]
+    lo, hi = zona or (0.04, 0.96)
+    dentro = min(max(y, lo + medio), hi - medio) if zona else y      # (lo más cerca de `y` que queda en la zona)
+    if zona and hi - lo < 2 * medio:
+        return None
     if not malas:
-        return y
+        return dentro
 
     def libre(yy):
-        return 0.04 + medio <= yy <= 0.96 - medio and all(yy + medio + MARGEN_CARA <= c[1] or yy - medio - MARGEN_CARA >= c[3] for c in malas)
+        return lo + medio <= yy <= hi - medio and all(yy + medio + MARGEN_CARA <= c[1] or yy - medio - MARGEN_CARA >= c[3] for c in malas)
     if libre(y):
         return y
-    opciones = [c[1] - MARGEN_CARA - medio for c in malas] + [c[3] + MARGEN_CARA + medio for c in malas]
+    opciones = [dentro] + [c[1] - MARGEN_CARA - medio for c in malas] + [c[3] + MARGEN_CARA + medio for c in malas]
     opciones = [o for o in opciones if libre(o)]
     return min(opciones, key=lambda o: abs(o - y)) if opciones else None
 
@@ -959,14 +965,50 @@ def _obstaculos(pieza, bloques_cap, puestos):
     return out
 
 
+def _a_la_zona(pieza):
+    """v5.76 (zona segura, vertical): un gráfico de delante con su alto conocido que se saldría de la zona (barra de búsqueda arriba, descripción
+    abajo) se corre lo justo y, si es más alto que ella, se achica. No toca los de pantalla completa ni los que no dicen su alto."""
+    v = pieza.get('valores') or {}
+    alto_p = float(pieza.get('alto') or ALTO_PIEZA.get(pieza.get('pieza')) or 0.0)
+    if not alto_p and pieza.get('remotion'):
+        import edicion_pro_catalogo as PC
+        alto_p = float(PC.ALTO.get(pieza['remotion']) or 0.0)
+    if not alto_p or v.get('y') is None:
+        return
+
+    def caja_entera():                                                # (sin recortar al cuadro: la que se sale también cuenta)
+        y, medio = float(v['y']) / 100.0, alto_p * float(v.get('escala', 1) or 1) / 2.0
+        return y - medio, y + medio
+    if not pieza.get('pantalla'):                                     # (la infografía de una escena va donde la pone su escena: solo el ancho)
+        caja = caja_entera()
+        alto = caja[1] - caja[0]
+        if alto > ZS.ALTO and float(v.get('escala', 1) or 1) > 0:
+            v['escala'] = round(float(v.get('escala', 1) or 1) * ZS.ALTO / alto, 3)
+            caja = caja_entera()
+        d = ZS.meter_y(caja[0], caja[1], defecto=(0.0, 1.0))
+        if abs(d) > 1e-4:
+            v['y'] = round(float(v['y']) + d * 100.0, 1)
+    ancho = ANCHO_PIEZA.get(pieza.get('pieza'))
+    caja = caja_entera()
+    if ancho and caja[0] < 0.80 and caja[1] > 0.35:         # en la franja de la columna de iconos: no pasa de su borde
+        x = float(v.get('x', 50) or 50) / 100.0
+        tope = 2.0 * min(ZS.DER - x, x - ZS.IZQ)
+        esc = float(v.get('escala', 1) or 1)
+        if tope > 0 and ancho * esc > tope:
+            v['escala'] = round(tope / ancho, 3)
+
+
 def _ajustar_posiciones(pieza, det, vertical, extra=()):
     """Coloca cada gráfico SIN TAPAR NINGUNA CARA: los de delante, encima o debajo de la cara (o a un lado en horizontal, o más pequeños); el titular
     «detrás» un poco por debajo de la coronilla (la cabeza lo tapa a él, no al revés); la infografía de una escena con «fondo sustituido»,
     detrás de la persona y encima de su cabeza (si no cabe, la escena va a pantalla completa); la órbita, con la mitad de delante por el pecho.
     `det` ya en fracciones del timeline. `extra`: otras cajas que tampoco se pisan (v5.5.2: los captions, para las piezas del kit de la skill)."""
     v = pieza['valores']
+    zona = ZS.limites_y(defecto=(0.04, 0.96)) if vertical else None     # v5.76: en vertical, nada bajo la interfaz del reel (zona segura)
     if not det or not det.get('personas'):
         if not extra or not vertical:
+            if zona and pieza['capa'] not in ('detras', 'fondo', 'velo'):
+                _a_la_zona(pieza)
             return
         det = {'personas': [], 'arriba': 1.0}
     arriba = float(det['arriba']) * 100.0
@@ -990,15 +1032,17 @@ def _ajustar_posiciones(pieza, det, vertical, extra=()):
             if arriba < 24.0:                                         # primer plano: no hay sitio encima de la cabeza
                 pieza['forzar_pantalla'] = True
                 return
-            v['y'] = round(max(13.0, arriba - 11.0), 1)
             v['escala'] = round(min(float(v.get('escala', 1)), 0.78 if arriba < 32 else 0.92), 2)
+            medio_p = 100.0 * float(ALTO_PIEZA.get(pieza['pieza']) or 0.0) * float(v['escala']) / 2.0     # (v5.76: entera bajo la barra de búsqueda)
+            v['y'] = round(max(13.0, ZS.ARRIBA * 100.0 + medio_p, arriba - 11.0), 1)
         else:
             centro = (float(det['izq']) + float(det['der'])) / 2.0
             v['x'], v['y'] = (27 if centro >= 0.5 else 73), 45
             v['escala'] = round(min(float(v.get('escala', 1)), 0.85), 2)
         return
     if pieza['capa'] == 'detras':
-        v['y'] = round(min(48.0, max(15.0, arriba + 2.5)), 1)          # el centro del titular un poco por debajo de la coronilla: la cabeza tapa su parte de abajo
+        piso = ZS.ARRIBA * 100.0 + 100.0 * float(ALTO_PIEZA.get(pieza['pieza']) or 0.0) * float(v.get('escala', 1) or 1) / 2.0 if vertical else 15.0
+        v['y'] = round(min(48.0, max(15.0, piso, arriba + 2.5)), 1)    # el centro del titular un poco por debajo de la coronilla: la cabeza tapa su parte de abajo
         return
     alto = pieza.get('alto') or ALTO_PIEZA.get(pieza['pieza'])         # (las tarjetas del Tema 5 traen su alto: depende de lo que enseñan)
     if pieza.get('remotion') and not alto:                            # plantillas Remotion: su alto está en el catálogo
@@ -1019,7 +1063,7 @@ def _ajustar_posiciones(pieza, det, vertical, extra=()):
         return
     for k in (1.0, 0.85, 0.7, 0.58):                                  # vertical: encima o debajo de la cara; si no cabe, más pequeño
         esc = round(min(float(pieza['_valores0'].get('escala', 1)) if pieza.get('_valores0') else float(v.get('escala', 1)), 1.0) * k, 2)
-        y = _fuera_de_la_cara(float(v.get('y', 50)) / 100.0, alto * esc / 2.0, caras)
+        y = _fuera_de_la_cara(float(v.get('y', 50)) / 100.0, alto * esc / 2.0, caras, zona=zona)
         if y is not None:
             v['y'], v['escala'] = round(y * 100, 1), esc
             return
@@ -2254,7 +2298,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             if p['pieza'] == 'orbita' and p.get('remotion') and det:     # los iconos de Remotion son algo más grandes: un poco más abajo del mentón
                 p['valores']['ry'] = round(float(p['valores'].get('ry', 5.0)) + 1.3, 2)
             if p['pieza'] == 'subtitulo' and p.pop('quitar', False):  # sin sitio libre de caras: abajo y más pequeño (un caption no se quita)
-                p['valores'].update(y=84.0 if vertical else 86.0, escala=0.8)
+                p['valores'].update(y=min(84.0, ZS.ABAJO * 100.0 - 6.0) if vertical else 86.0, escala=0.8)     # (v5.76: en vertical, sobre la descripción)
             if t5:
                 T5.subir_detras(p)
                 # v5.5.10: la clave «detrás» solo se lee si va POR ENCIMA de la cabeza; si la persona está tan arriba que el centro del texto
@@ -2273,6 +2317,10 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 ventanas[k] = det
             if p.get('forzar_pantalla'):
                 forzadas.add(k)
+    if vertical:                                       # v5.76 (zona segura): todos los gráficos de delante, dentro (y no más anchos que ella junto a los iconos)
+        for p in plan['piezas']:
+            if not p.get('quitar') and p.get('capa') in ('delante', 'iconos') and p.get('pieza') not in ('orbita', 'subtitulo'):
+                _a_la_zona(p)
     # v5.5.3: una escena a pantalla completa del director solo tapa a QUIEN HABLA: si en ese tramo el video ya enseña otra cosa (su propio B-roll,
     #         un cartel, una foto: nadie en cuadro en al menos 2 de 3 fotogramas), se quita: no se tapa el material del usuario
     if hay_ia and not t5:

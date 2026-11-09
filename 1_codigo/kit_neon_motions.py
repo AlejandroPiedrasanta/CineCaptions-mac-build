@@ -19,6 +19,30 @@ import unicodedata
 import numpy as np
 
 import kit_neon as KN
+import zona_segura as ZS
+
+# v5.76 (zona segura del reel, vertical 1080×1920 del kit): las piezas de arriba bajo la barra de búsqueda, las de abajo sobre la descripción
+# (kit_neon.SUELO) y las tarjetas de borde a borde dentro de los lados (los iconos de la derecha)
+ARRIBA_KIT = int(round(ZS.ARRIBA * 1920)) + 12
+IZQ_KIT, ANCHO_KIT = int(round(ZS.IZQ * 1080)), int(ZS.ANCHO * 1080)
+TARJ_W = (ANCHO_KIT - 32) // 3
+TARJ_H = int(TARJ_W * 420 / 316)
+
+
+def _pills_en_zona(pills, x=70):
+    """v5.76: las píldoras de «filaEtiqueta» como las reparte KitNeon (ancho 110 + 19 por letra, salto de fila al pasar de 1010 px): solo las que
+    terminan dentro del lado derecho de la zona (los iconos del reel) y en dos filas como mucho. Devuelve (píldoras, filas)."""
+    der = IZQ_KIT + ANCHO_KIT
+    px, filas, out = x, 1, []
+    for p in pills:
+        w = 110 + len(str(p[0])) * 19
+        if px + w > 1010:
+            px, filas = x, filas + 1
+        if filas > 2 or px + w > der:
+            break
+        out.append(p)
+        px += w + 16
+    return out or pills[:1], max(1, filas if out and len(out) == len(pills) else min(filas, 2))
 
 ICONO_KIT = {'trophy': 'trophy', 'music': 'music', 'cubiertos': 'utensils', 'utensils': 'utensils', 'calendarDays': 'cal', 'cal': 'cal', 'clock': 'clock',
              'gift': 'gift', 'mic': 'mic', 'users': 'users', 'heart': 'heart', 'corazon': 'heart', 'star': 'star', 'estrella': 'star', 'globe': 'globe',
@@ -331,7 +355,8 @@ def escena_motions(palabras, idioma='es', duracion=None, cortes=None, imagen=Non
     if items:
         items = items[:3]
         tin, tout = items[0][1] - 0.15, items[-1][2] + 1.4
-        poner('checks', {'items': [[t, a] for t, a, _ in items], 'tout': round(tout, 3)}, tin, tout + 0.3, abajo=True)
+        poner('checks', {'items': [[t, a] for t, a, _ in items], 'tout': round(tout, 3), 'y': min(1170, KN.SUELO - 100 - (len(items) - 1) * 122)},
+              tin, tout + 0.3, abajo=True)                     # (v5.76: la pila entera sobre la descripción del reel: kit_neon.SUELO)
         envio = next((a for t, a, _ in items if _plano(t.split()[0]) in {_plano(v) for v in ENVIO}), None)
         if envio is not None:
             poner('avion', {'t0': round(envio + 0.07, 3)}, envio, envio + 1.3, capa='iconos')
@@ -372,15 +397,17 @@ def escena_motions(palabras, idioma='es', duracion=None, cortes=None, imagen=Non
             tin, tder = t_on[0] - 0.12, t_on[-1] + 1.0
             tout = tder + 0.55
             if _libre(tin, tout, bajos):
+                filas_i = [[_cap(x)[:18], ic, t] for x, ic, t in zip(cortos, iconos, t_on)]
                 poner('interruptores', {'tin': round(tin, 3), 'tout': round(tout, 3), 'tDerecha': round(tder, 3), 'etiqueta': T['incluido'],
-                                        'filas': [[_cap(x)[:18], ic, t] for x, ic, t in zip(cortos, iconos, t_on)], 'avatares': []},
+                                        'filas': filas_i, 'avatares': [], 'y': min(1066, KN.SUELO - 146 - (len(filas_i) - 1) * 136)},
                       tin, tout + 0.35, abajo=True)
                 continue
         titulo = next((x['texto'] for x in cands if x['tipo'] in ('fuerte', 'concepto') and 0 <= t_on[0] - st(x['i']) <= 4), cortos[0])
         tin, tout = t_on[0] - 0.4, t_on[-1] + 1.6
         if _libre(tin, tout, bajos):
-            poner('filaEtiqueta', {'titulo': str(titulo).upper()[:12], 't': round(tin, 3), 'tout': round(tout, 3),
-                                   'pills': [[_cap(' '.join(it['texto'].split()[:3]))[:22], ic, t] for it, ic, t in zip(its, iconos, t_on)]}, tin, tout + 0.35, abajo=True)
+            pills, filas_p = _pills_en_zona([[_cap(' '.join(it['texto'].split()[:3]))[:22], ic, t] for it, ic, t in zip(its, iconos, t_on)])
+            poner('filaEtiqueta', {'titulo': str(titulo).upper()[:12], 't': round(tin, 3), 'tout': round(tout, 3), 'pills': pills,
+                                   'y': min(1150, KN.SUELO - 240 - (filas_p - 1) * 96)}, tin, tout + 0.35, abajo=True)
     # 4) la notificación: la marca o el evento que se nombra al principio (dos palabras o más), con lo que la acompaña. Con el video y un «cartel»
     #    (el fotograma más colorido sin nadie: el póster, la toma de producto), como el kit: la notificación entra ANTES de adelanto y al nombrar
     #    el evento el video se encoge a la tarjeta de arriba (pantalla dividida, la placa) con el cartel abajo y sus píldoras; al salir, cortinilla.
@@ -409,9 +436,9 @@ def escena_motions(palabras, idioma='es', duracion=None, cortes=None, imagen=Non
             n_in = round(max(2.3, s_in - 2.55), 3)
             if _libre(n_in, s_out + 0.45, altos + bajos, 0.0):
                 poner('notificacion', {'img': imagen or insignia(marca['texto']), 'titulo': marca['texto'], 'texto': ' · '.join(extra[:2]),
-                                       'tin': n_in, 'tout': round(n_in + 2.23, 3)}, n_in, n_in + 2.6)
+                                       'tin': n_in, 'tout': round(n_in + 2.23, 3), 'y': ARRIBA_KIT}, n_in, n_in + 2.6)
                 chips = [[marca['texto'][:22], 'globe', round(t_m + 0.0, 3), -5]] + ([[extra[0][:22], 'link', round(t_m + 0.45, 3), 5]] if extra else [])
-                poner('tarjetaInferior', {'rect': [40, 1160, 1000, 400, 52], 'img': cartel, 'tin': s_in, 'tout': s_out, 'chips': chips}, s_in, s_out + 0.45,
+                poner('tarjetaInferior', {'rect': [IZQ_KIT, KN.SUELO - 294, ANCHO_KIT, 294, 40], 'img': cartel, 'tin': s_in, 'tout': s_out, 'chips': chips}, s_in, s_out + 0.45,
                       ocupa=(s_in, s_out))               # (kit: la órbita entra MIENTRAS la tarjeta se va)
                 out[-1]['split'] = True
                 poner('barrido', {'_args': [s_out]}, s_out - 0.5, s_out + 0.45, capa='iconos')
@@ -421,7 +448,7 @@ def escena_motions(palabras, idioma='es', duracion=None, cortes=None, imagen=Non
             tout = tin + 2.25
             if _libre(tin, tout, altos):
                 poner('notificacion', {'img': imagen or insignia(marca['texto']), 'titulo': marca['texto'], 'texto': ' · '.join(extra[:2]),
-                                       'tin': round(tin, 3), 'tout': round(tout, 3)}, tin, tout + 0.4)
+                                       'tin': round(tin, 3), 'tout': round(tout, 3), 'y': ARRIBA_KIT}, tin, tout + 0.4)
                 fin_noti = tout
     # 5) la órbita (kit: justo tras presentar el evento, los TEMAS de todo el video girando alrededor de su imagen): si el video nombra 3+ conceptos
     #    con icono, en la primera frase que empieza después de la notificación (o hacia el 15 % del video)
@@ -484,7 +511,7 @@ def _mirar_video(video, w, cands, fr, cortes, dur, st, en, planos, marca, poner,
     if nombre and st(0) < 1.5:
         foto = cara(video, max(0.5, st(pres['i']) if pres else 1.0))
         if foto and _libre(0.3, 2.6, altos, 0.1):
-            poner('etiqueta', {'img': foto, 'nombre': nombre[:26], 'sub': (marca or {}).get('texto', ''), 'tin': 0.3, 'tout': 2.55}, 0.3, 2.9)
+            poner('etiqueta', {'img': foto, 'nombre': nombre[:26], 'sub': (marca or {}).get('texto', ''), 'tin': 0.3, 'tout': 2.55, 'y': ARRIBA_KIT}, 0.3, 2.9)
     # b) «3 jóvenes influencers»: sus caras en arco, sacadas de los planos que siguen (una por plano)
     limites = sorted({0.0, dur} | {float(c[0] if isinstance(c, (list, tuple)) else c) for c in (cortes or [])})
     for c in [c for c in cands if c['tipo'] == 'cifra']:
@@ -519,7 +546,7 @@ def _mirar_video(video, w, cands, fr, cortes, dur, st, en, planos, marca, poner,
         if not (_libre(t_c, tout, bajos, 0.2) and _libre(t_c, tout, altos, 0.2)):
             continue
         frase = ' '.join(x for x in (_limpio(PL._txt(w[k])) for k in range(c['i'], min(len(w), c['i'] + 3))) if x)
-        poner('lineaIcono', {'icono': ICONO_KIT.get(c['icono'], 'star'), 'texto': _cap(frase)[:24], 'tin': round(t_c, 3), 'tout': round(tout, 3)},
+        poner('lineaIcono', {'icono': ICONO_KIT.get(c['icono'], 'star'), 'texto': _cap(frase)[:24], 'tin': round(t_c, 3), 'tout': round(tout, 3), 'y': ARRIBA_KIT},
               t_c, tout + 0.4)
         items = []
         for x in nombres[:3]:
@@ -532,7 +559,8 @@ def _mirar_video(video, w, cands, fr, cortes, dur, st, en, planos, marca, poner,
                           and 0 <= st(y['i']) - tx <= 3), '')
             sub = ' · '.join(s for s in (cat, lugar) if s and _plano(s) not in _plano(nombre))
             items.append([cara(video, tx + 0.3) or insignia(nombre), nombre[:24], sub[:24], round(tx, 3)])
-        poner('etiquetas', {'items': items, 'tout': round(tout, 3)}, items[0][3] - 0.1, tout + 0.4, abajo=True)
+        poner('etiquetas', {'items': items, 'tout': round(tout, 3), 'y': min(1150, KN.SUELO - 96 - (len(items) - 1) * 112)}, items[0][3] - 0.1, tout + 0.4,
+              abajo=True)
         break
     # d) tras la ruta, la pantalla de 4 (kit: el video arriba y tres tarjetas: el cartel, la FECHA en grande y el LUGAR) mientras se dice lo siguiente
     if ruta and ruta.get('fecha'):
@@ -547,14 +575,14 @@ def _mirar_video(video, w, cands, fr, cortes, dur, st, en, planos, marca, poner,
             if m and s_out - s_in >= 2.4 and _libre(s_in, s_out, otros, 0.0):
                 hora = (ruta.get('hora') or ('', 0))[0].replace(' a. m.', '').replace(' p. m.', '')
                 sub = ' · '.join(x for x in (_cap(dia_sem), hora) if x)
-                poner('tarjetasProducto', {'rects': [[40, 1030, 316, 420, 40], [382, 1030, 316, 420, 40], [724, 1030, 316, 420, 40]], 'tin': s_in, 'tout': s_out,
+                poner('tarjetasProducto', {'rects': [[IZQ_KIT + k * (TARJ_W + 16), 1030, TARJ_W, TARJ_H, 34] for k in range(3)], 'tin': s_in, 'tout': s_out,
                                            'contenidos': [{'img': foto}, {'grande': m.group(1), 'kick': m.group(2).upper(), 'sub': sub, 'icono': 'cal'},
                                                           {'texto': ruta['lugar'], 'sub': ruta.get('ciudad') or '', 'icono': 'pin'}]},
                       s_in, s_out + 0.45, abajo=True, ocupa=(s_in, s_out))
                 ult = getattr(poner, 'ultimo', None)
                 if ult is not None:
                     ult.update(split=True, split_tipo='cuatro',
-                               tarjeta={'top': [40, 200, 1000, 800, 52], 'zoom_t': round(s_in + 1.33, 3), 'zoom': 1.12, 'region_w_frac': 0.833, 'dy_cara': 0.04})
+                               tarjeta={'top': [IZQ_KIT, ARRIBA_KIT, ANCHO_KIT, int(ANCHO_KIT * 0.8), 40], 'zoom_t': round(s_in + 1.33, 3), 'zoom': 1.12, 'region_w_frac': 0.833, 'dy_cara': 0.04})
     # c) los planos sin nadie (B-roll): el degradado morado que sube desde abajo, para que los captions se lean (kit: influencers, gamers)
     puestos = 0
     for a, b in zip(limites, limites[1:]):

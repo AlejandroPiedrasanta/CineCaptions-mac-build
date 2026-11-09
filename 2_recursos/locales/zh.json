@@ -4462,6 +4462,7 @@
     "Estilo 2: los subtítulos siempre van al centro y solo los textos principales llevan color.": "样式 2：字幕始终居中，只有主文字带颜色。",
     "Ahora todo se llama «Estilo»: la página Estilo y del Estilo 1 al Estilo 6.": "现在统一叫「样式」：样式页面以及样式 1 到样式 6。",
     "Estilo «{n}» creado con {t}{b}{a}. Está en el slider: tócalo para usarlo.": "样式 «{n}» 使用 {t}{b}{a} 创建。它在滑块中：点击使用。",
-    " · texto base del {x}": " · 基础文字：{x}"
+    " · texto base del {x}": " · 基础文字：{x}",
+    "Zona segura también en la Edición PRO: en videos verticales, los gráficos, títulos y etiquetas ya no quedan debajo de la barra de búsqueda, los botones ni la descripción de TikTok, Reels y Shorts.": "PRO 编辑也有安全区：在竖屏视频中，图形、标题和标签不再被 TikTok、Reels 和 Shorts 的搜索栏、按钮和描述挡住。"
   }
 }

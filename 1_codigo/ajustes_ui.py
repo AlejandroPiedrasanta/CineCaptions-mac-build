@@ -495,6 +495,9 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.77', [
+        'Zona segura también en la Edición PRO: en videos verticales, los gráficos, títulos y etiquetas ya no quedan debajo de la barra de búsqueda, los botones ni la descripción de TikTok, Reels y Shorts.',
+    ]),
     ('5.76', [
         'Guía con videos: después de cada actualización, cada página te enseña una vez cómo se usa. En Ajustes › Tutoriales están todos los videos y puedes apagar la guía.',
         'Zona segura en todos los estilos, también en los que creas: los subtítulos ya no quedan debajo de los botones y textos de TikTok, Reels y Shorts.',

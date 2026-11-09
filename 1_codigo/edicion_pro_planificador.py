@@ -24,6 +24,8 @@ from pathlib import Path
 import re
 import unicodedata
 
+import zona_segura as ZS
+
 # ----------------------------------------------------------------------------------------------------------- géneros (estilos de video)
 _PAL = {
     'boda': ('boda bodas novia novio novios casamos casamiento matrimonio esposa esposo anillo anillos altar votos ceremonia recepcion '
@@ -931,7 +933,8 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
         if b2 - a2 < 1.8 or not libre(a2, b2, sep * 0.6):
             continue
         n_seccion += 1
-        if g in ('bts',) or (g in ('boda', 'xv') and rng.random() < 0.5) or rng.random() < 0.15:
+        # v5.76 (zona segura): en vertical, nada de marco (va de borde a borde: la interfaz del reel lo tapa); la etiqueta de sección, dentro de la zona
+        if not vertical and (g in ('bts',) or (g in ('boda', 'xv') and rng.random() < 0.5) or rng.random() < 0.15):
             poner({'pieza': 'marco', 'capa': 'delante', 'ini': a2, 'fin': b2, 'motivo': 'marco en plano sin voz',
                    'valores': {'estilo': d['marco'], 'texto': (f"{T['escena']} {n_seccion} · {T['toma']} {rng.randint(1, 4)}" if d['marco'] in ('visor', 'cinta') else ''),
                                'acento': d['acento'], 'colorTexto': d['colorTexto'], 'margen': 5, 'grosor': 1, 'tiempos': '0', 'tcInicio': round(a2, 2), 'fps': 30}})
@@ -939,7 +942,8 @@ def planificar(palabras, duracion, idioma='es', genero='auto', densidad='media',
             poner({'pieza': 'etiqueta', 'capa': 'delante', 'ini': a2, 'fin': b2, 'motivo': 'sección en plano sin voz',
                    'valores': {'kicker': '', 'texto': T['seccion'][g], 'indice': f'{n_seccion:02d}', 'icono': 'ninguno', 'alinear': d['etiquetaLado'],
                                'fuente': d['fuenteTitular'], 'acento': d['acento'], 'colorTexto': d['colorTexto'], 'escala': 1.0,
-                               'x': 7 if d['etiquetaLado'] == 'izq' else 93, 'y': 74 if vertical else 82, 'tiempos': '0'}})
+                               'x': (7 if d['etiquetaLado'] == 'izq' else 93) if not vertical else round((ZS.IZQ if d['etiquetaLado'] == 'izq' else ZS.DER) * 100),
+                               'y': round(ZS.ABAJO * 100 - 5) if vertical else 82, 'tiempos': '0'}})
     # --- 5) la ficha final ---
     if cta:
         a = st(cta['i']) - 0.1

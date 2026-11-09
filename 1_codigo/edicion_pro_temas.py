@@ -14,6 +14,8 @@
 import json
 from pathlib import Path
 
+import zona_segura as ZS
+
 VELO_CAPTIONS = False                                                     # v5.4.52: el velo ovalado detrás de los captions, apagado
 
 
@@ -108,9 +110,11 @@ def _piezas(info, video, idioma, W, H, fps, mover, plan, bloques=None, con_emoji
                 continue
             s = subir.get(round(b['ini'], 1), 0.0) / H
             y = (b['abajo'] - s) * 100.0 + 5.5
-            if y > 86.0:                                                 # no cabe debajo sin salirse por abajo: ENCIMA del caption, si cabe (v5.5.17)
+            # v5.76 (zona segura, vertical): la píldora (~5 % de alto) tampoco baja a la descripción del reel ni sube a la barra de búsqueda
+            tope_abajo, tope_arriba = (ZS.ABAJO * 100.0 - 2.8, ZS.ARRIBA * 100.0 + 2.8) if ZS.vertical(W, H) else (86.0, 14.0)
+            if y > tope_abajo:                                           # no cabe debajo sin salirse por abajo: ENCIMA del caption, si cabe (v5.5.17)
                 y = (b['arriba'] - s) * 100.0 - 7.5
-                if y < 14.0:
+                if y < tope_arriba:
                     continue
             c['valores']['y'] = round(y, 1)
             if c['fin'] > b['fin'] + 0.15 and b['fin'] + 0.15 - c['ini'] >= 1.2:
