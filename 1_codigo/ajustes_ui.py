@@ -495,6 +495,12 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.78', [                                       # (la 5.77 ya se publicó sin esto; se ve cuando version.py pase a 5.78)
+        'Adobe Premiere Pro: elige «Usar con Premiere Pro» en Ajustes › General y GO coloca todo en Premiere como en Resolve, en una secuencia nueva: tu video, los subtítulos del estilo elegido encima (con sus emojis), los sonidos en sus pistas y la música. Si Premiere está cerrado, se abre solo.',
+        'En Ajustes › General eliges con qué trabaja GO, uno a la vez: «Usar con DaVinci Resolve» (de fábrica), «Usar con Premiere Pro» o «Video sin editores (DaVinci y Premiere)», el antiguo «Video MP4 en lugar de Resolve».',
+        'Inicio dice con qué editor trabaja GO: con Premiere Pro, si está conectado, cerrado o sin instalar, como hace con DaVinci Resolve.',
+        'Librerías al día: motores de voz e IA con transformers 5.22.2 y las últimas de click, filelock, regex y typer; animaciones de la Edición PRO con Remotion 4.0.542. Lo demás ya estaba en su última versión.',
+    ]),
     ('5.77', [
         'Zona segura también en la Edición PRO: en videos verticales, los gráficos, títulos y etiquetas ya no quedan debajo de la barra de búsqueda, los botones ni la descripción de TikTok, Reels y Shorts.',
     ]),
@@ -2471,7 +2477,7 @@ class VentanaAjustes(_Panel):
     # -- General --------------------------------------------------------------
     def _pag_general(self, capa):
         self._cabeza_pagina(capa, tr('Preferencias generales'), tr('General'),
-                            tr('Motor de voz, espacio de las cachés y video MP4.'), icono='gear-six')     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
+                            tr('Motor de voz, espacio de las cachés y con qué trabaja GO.'), icono='gear-six')     # v5.4.45: el idioma está en Interfaz (aquí quedaba una fila muerta que nunca se mostraba)
         # motor de voz
         motores ={'qwen3': tr('Qwen3-ASR (recomendado)'), 'whisper': tr('Whisper large-v3-turbo')}
         motor_var = StringVar(motores.get(self._borrador['motor_voz'], motores['qwen3']))
@@ -2524,17 +2530,42 @@ class VentanaAjustes(_Panel):
         # v5.22: «Mantener CineCaptions encima» quitada de Ajustes (el usuario lo pidió); sigue el alfiler del menú lateral
         # v5.69: quitados «Avisarme al terminar» y «Reparar Resolve solo si se traba» (el usuario lo pidió): van SIEMPRE encendidos
         # (avisos_sistema.activado y salud_resolve.reparar_permitido ya no leen 'avisos_sistema' / 'reparar_resolve_auto')
-        # v5.4.48: GO sin Resolve también a petición (render_sin_resolve.py): sin Resolve instalado ya lo hace solo
-        mp4_var = BooleanVar(bool(leer_prefs().get('go_salida_mp4', False)))
-        f_mp4 = _Fila(tr('Video MP4 en lugar de Resolve'),
-                      tr('GO graba los subtítulos del estilo elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, sin usar Resolve. '
-                         'Si Resolve no está instalado lo hace siempre.'),
-                      Interruptor('', var=mp4_var, comando=lambda: guardar_prefs({'go_salida_mp4': bool(mp4_var.get())})), ultima=True,
-                      icono='film-strip')
+        # v5.78 (el usuario: «deja el botón Usar con DaVinci Resolve activado por defecto, el de Premiere Usar con Premiere Pro, y Video MP4 en
+        # lugar de Resolve cámbiale el nombre por Video sin editores (DaVinci y Premiere); no se pueden activar dos, solo uno a la vez»): tres
+        # interruptores que se excluyen (como botones de radio). Resolve = ni go_premiere ni go_salida_mp4; elegir uno apaga los otros;
+        # apagar Premiere o el video vuelve a Resolve; el de Resolve encendido no se apaga solo (se cambia eligiendo otro).
+        prefs_go = leer_prefs()
+        modo = 'premiere' if prefs_go.get('go_premiere') else ('mp4' if prefs_go.get('go_salida_mp4') else 'resolve')
+        vars_modo = {m: BooleanVar(m == modo) for m in ('resolve', 'premiere', 'mp4')}
+
+        def elegir(m):
+            if not vars_modo[m].get():                   # se apagó Premiere o el video: vuelve a Resolve (el de fábrica)
+                m = 'resolve'
+            for clave, var in vars_modo.items():
+                var.set(clave == m)
+            guardar_prefs({'go_premiere': m == 'premiere', 'go_salida_mp4': m == 'mp4'})
+            if m == 'premiere':
+                self._preparar_premiere()
+            try:                                         # Inicio y la barra pasan a hablar del editor elegido sin esperar a la vigilancia
+                self.app._refrescar_estado()
+            except Exception:
+                pass
+        f_resolve = _Fila(tr('Usar con DaVinci Resolve'),
+                          tr('GO coloca los subtítulos, los sonidos y los efectos en tu timeline de DaVinci Resolve (Studio o Free). '
+                             'Si Resolve no está instalado, te devuelve el video con los subtítulos grabados en un MP4.'),
+                          Interruptor('', var=vars_modo['resolve'], comando=lambda: elegir('resolve')), icono='film-strip')
+        f_premiere = _Fila(tr('Usar con Premiere Pro'),
+                           tr('GO coloca todo en Premiere Pro: una secuencia nueva con tu video, los subtítulos del estilo elegido encima '
+                              '(con sus emojis) y los sonidos en sus pistas. Suelta un video y pulsa GO; si Premiere está cerrado, se abre solo.'),
+                           Interruptor('', var=vars_modo['premiere'], comando=lambda: elegir('premiere')), icono='video-camera')
+        f_mp4 = _Fila(tr('Video sin editores (DaVinci y Premiere)'),
+                      tr('GO graba los subtítulos del estilo elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, '
+                         'sin usar DaVinci Resolve ni Premiere Pro.'),
+                      Interruptor('', var=vars_modo['mp4'], comando=lambda: elegir('mp4')), ultima=True, icono='monitor-play')
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
         # v5.52: quitadas «Reproducir al terminar», «Abrir siempre en vertical» y «Vista de Resolve al terminar» (el usuario lo pidió): van SIEMPRE
         # activadas (go_reproducir / go_vertical / go_vista_resolve ya no se leen); la vista que GO aplica es la que ya estuviera guardada
-        capa.addWidget(_grupo(f_motor, f_cache, f_mp4))
+        capa.addWidget(_grupo(f_motor, f_cache, f_resolve, f_premiere, f_mp4))
 
     def _pintar_motor(self):
         import motor_voz
@@ -2652,6 +2683,30 @@ class VentanaAjustes(_Panel):
             if not ok:
                 raise RuntimeError(texto)
         correr_en_hilo(self.app, trabajo, lambda _r, _e: self._comprobar_conexion())
+
+    def _preparar_premiere(self):
+        """v5.78: al encender «Adobe Premiere Pro» se instala el panel CineCaptions en Premiere (premiere.preparar, en un hilo: copia
+        archivos y toca el registro de Adobe). Lo que pasó va al Registro (sin cuadros ni globos)."""
+        def trabajo():
+            import premiere
+            return premiere.preparar()
+
+        def fin(r, e):
+            import registro
+            if e is not None or not r:
+                registro.error(tr('No pude preparar Premiere Pro'), 'Ajustes · Premiere Pro', detalle=str(e or ''))
+            elif not r.get('ok'):
+                registro.error(tr('No pude instalar el panel de CineCaptions en Premiere Pro'), 'Ajustes · Premiere Pro', detalle=r.get('texto') or '')
+            elif not r.get('premiere'):
+                registro.aviso(tr('No encuentro Adobe Premiere Pro en este equipo: instálalo para que GO coloque ahí. El panel de CineCaptions ya quedó listo.'),
+                               'Ajustes · Premiere Pro')
+            elif r.get('reiniciar'):
+                registro.aviso(tr('Cierra Premiere Pro y vuelve a abrirlo una vez: así carga el panel de CineCaptions. Después GO coloca ahí.'),
+                               'Ajustes · Premiere Pro')
+            else:
+                import premiere
+                registro.ok(tr('Premiere Pro listo: GO coloca tus videos ahí ({r}).', r=premiere.nombre_de(r['premiere'])), 'Ajustes · Premiere Pro')
+        correr_en_hilo(self.app, trabajo, fin)
 
     # -- Interfaz -------------------------------------------------------------
     def _abrir_idiomas(self):

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CineCaptions · By Cinema Productions — panel de Premiere Pro (v5.78): coloca lo que manda GO (1_codigo/premiere.py). -->
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.cinecaptions.premiere" ExtensionBundleVersion="1.0.0"
+                   ExtensionBundleName="CineCaptions" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ExtensionList>
+    <Extension Id="com.cinecaptions.premiere.panel" Version="1.0.0"/>
+    <Extension Id="com.cinecaptions.premiere.fondo" Version="1.0.0"/>
+  </ExtensionList>
+  <ExecutionEnvironment>
+    <HostList>
+      <Host Name="PPRO" Version="[13.0,99.9]"/>
+    </HostList>
+    <LocaleList>
+      <Locale Code="All"/>
+    </LocaleList>
+    <RequiredRuntimeList>
+      <RequiredRuntime Name="CSXS" Version="9.0"/>
+    </RequiredRuntimeList>
+  </ExecutionEnvironment>
+  <DispatchInfoList>
+    <!-- Ventana > Extensiones > CineCaptions: el estado de la conexión (y hace el trabajo si el de fondo no arrancó) -->
+    <Extension Id="com.cinecaptions.premiere.panel">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./index.html</MainPath>
+          <ScriptPath>./jsx/colocar.jsx</ScriptPath>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>CineCaptions</Menu>
+          <Geometry>
+            <Size>
+              <Height>200</Height>
+              <Width>320</Width>
+            </Size>
+            <MinSize>
+              <Height>120</Height>
+              <Width>220</Width>
+            </MinSize>
+          </Geometry>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+    <!-- Invisible: arranca con Premiere y espera los pedidos de GO sin que haya que abrir nada -->
+    <Extension Id="com.cinecaptions.premiere.fondo">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./fondo.html</MainPath>
+          <ScriptPath>./jsx/colocar.jsx</ScriptPath>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>false</AutoVisible>
+          <StartOn>
+            <Event>com.adobe.csxs.events.ApplicationActivate</Event>
+            <Event>applicationActivate</Event>
+          </StartOn>
+        </Lifecycle>
+        <UI>
+          <Type>Custom</Type>
+          <Geometry>
+            <Size>
+              <Height>1</Height>
+              <Width>1</Width>
+            </Size>
+          </Geometry>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+  </DispatchInfoList>
+</ExtensionManifest>

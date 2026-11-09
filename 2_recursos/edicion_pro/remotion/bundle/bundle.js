@@ -2831,6 +2831,10 @@ var Lottie = ({
     styleWhilePostmounted: styleWhilePostmounted ?? null,
     hideWhilePremounted: "opacity"
   });
+  const videoEnabled = esm.Internals.useVideoEnabled();
+  if (!videoEnabled) {
+    return null;
+  }
   return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* Freeze */.Kl, {
     frame: freezeFrame,
     active: isPremountingOrPostmounting,
@@ -97463,17 +97467,16 @@ var no_react = __webpack_require__(9382);
 /* unused harmony import specifier */ var useState2;
 /* unused harmony import specifier */ var useCallback2;
 /* unused harmony import specifier */ var useLayoutEffect3;
+/* unused harmony import specifier */ var Internals2;
 /* unused harmony import specifier */ var useCurrentFrame2;
 /* unused harmony import specifier */ var useVideoConfig;
-/* unused harmony import specifier */ var Internals2;
 /* unused harmony import specifier */ var useDelayRender3;
 /* unused harmony import specifier */ var useRemotionEnvironment2;
 /* unused harmony import specifier */ var NoReactInternals2;
 /* unused harmony import specifier */ var useState3;
-/* unused harmony import specifier */ var useCallback3;
 /* unused harmony import specifier */ var React3;
-/* unused harmony import specifier */ var useEffect2;
 /* unused harmony import specifier */ var useDelayRender4;
+/* unused harmony import specifier */ var Internals3;
 /* unused harmony import specifier */ var useRemotionEnvironment3;
 /* unused harmony import specifier */ var useCurrentFrame3;
 // src/ThreeCanvas.tsx
@@ -97549,6 +97552,7 @@ var ThreeCanvasContent = (props) => {
   const { isRendering } = (0,esm/* useRemotionEnvironment */.OK)();
   const { delayRender, continueRender } = (0,esm/* useDelayRender */.dB)();
   const contexts = esm.Internals.useRemotionContexts();
+  const videoEnabled = esm.Internals.useVideoEnabled();
   const frame = (0,esm/* useCurrentFrame */.UC)();
   const createdHold = (0,react_namespaceFn().useRef)(null);
   const created = (0,react_namespaceFn().useRef)(false);
@@ -97573,7 +97577,7 @@ var ThreeCanvasContent = (props) => {
     ...style
   };
   const remotion_onCreated = (0,react_namespaceFn().useCallback)((state) => {
-    if (isRendering && advanceOnCreated) {
+    if (isRendering && videoEnabled && advanceOnCreated) {
       state.advance(performance.now());
     }
     created.current = true;
@@ -97582,9 +97586,9 @@ var ThreeCanvasContent = (props) => {
       createdHold.current = null;
     }
     onCreated?.(state);
-  }, [onCreated, continueRender, isRendering, advanceOnCreated]);
+  }, [onCreated, continueRender, isRendering, videoEnabled, advanceOnCreated]);
   (0,react_namespaceFn().useLayoutEffect)(() => {
-    if (!isRendering || frame === 0) {
+    if (!isRendering || !videoEnabled || frame === 0) {
       return;
     }
     frameDelayHandle.current = delayRender(`Waiting for R3F to render frame ${frame}`);
@@ -97593,7 +97597,7 @@ var ThreeCanvasContent = (props) => {
         continueRender(frameDelayHandle.current);
       }
     };
-  }, [frame, isRendering, delayRender, continueRender]);
+  }, [frame, isRendering, videoEnabled, delayRender, continueRender]);
   const handleRendered = (0,react_namespaceFn().useCallback)(() => {
     if (frameDelayHandle.current !== null) {
       continueRender(frameDelayHandle.current);
@@ -97615,9 +97619,9 @@ var ThreeCanvasContent = (props) => {
         /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.Internals.RemotionContextProvider, {
           contexts,
           children: [
-            isRendering && /* @__PURE__ */ (0,jsx_runtime.jsx)(FrameRenderer, {
+            isRendering && videoEnabled ? /* @__PURE__ */ (0,jsx_runtime.jsx)(FrameRenderer, {
               onRendered: handleRendered
-            }),
+            }) : null,
             children
           ]
         })
@@ -97710,6 +97714,7 @@ var useInnerVideoTexture = ({
   delayRenderRetries,
   delayRenderTimeoutInMilliseconds
 }) => {
+  const videoEnabled = Internals2.useVideoEnabled();
   const frame = useCurrentFrame2();
   const { fps } = useVideoConfig();
   const mediaStartsAt = Internals2.useMediaStartsAt();
@@ -97728,7 +97733,7 @@ var useInnerVideoTexture = ({
       toneMapped
     });
   }, [toneMapped, currentTime, src, transparent]);
-  const [textLoaderPromise] = useState2(() => Promise.all(/* import() */[__webpack_require__.e(805), __webpack_require__.e(129)]).then(() => (__webpack_require__(9129))));
+  const [textLoaderPromise] = useState2(() => Promise.all(/* import() */[__webpack_require__.e(5805), __webpack_require__.e(9129)]).then(() => (__webpack_require__(9129))));
   const [imageTexture, setImageTexture] = useState2(null);
   const { delayRender, continueRender, cancelRender } = useDelayRender3();
   const fetchTexture = useCallback2(() => {
@@ -97765,12 +97770,16 @@ var useInnerVideoTexture = ({
     cancelRender
   ]);
   useLayoutEffect3(() => {
+    if (!videoEnabled) {
+      setImageTexture(null);
+      return;
+    }
     const cleanup = fetchTexture();
     return () => {
       cleanup();
     };
-  }, [offthreadVideoFrameSrc, fetchTexture]);
-  return imageTexture;
+  }, [offthreadVideoFrameSrc, fetchTexture, videoEnabled]);
+  return videoEnabled ? imageTexture : null;
 };
 function useOffthreadVideoTexture({
   src,
@@ -97814,49 +97823,67 @@ var warnAboutRequestVideoFrameCallback = () => {
 };
 var useVideoTexture = (videoRef) => {
   const { delayRender, continueRender, cancelRender } = useDelayRender4();
-  const [loaded] = useState3(() => {
-    if (typeof document === "undefined") {
-      return 0;
-    }
-    return delayRender(`Waiting for texture in useVideoTexture() to be loaded`);
-  });
+  const videoEnabled = Internals3.useVideoEnabled();
   const environment = useRemotionEnvironment3();
   const { isClientSideRendering } = environment;
   if (isClientSideRendering) {
     throw new Error("useVideoTexture() cannot be used in client side rendering.");
   }
   const [videoTexture, setVideoTexture] = useState3(null);
-  const [vidText] = useState3(() => Promise.all(/* import() */[__webpack_require__.e(805), __webpack_require__.e(702)]).then(() => (__webpack_require__(702))));
+  const [vidText] = useState3(() => Promise.all(/* import() */[__webpack_require__.e(5805), __webpack_require__.e(702)]).then(() => (__webpack_require__(702))));
   const frame = useCurrentFrame3();
-  const onReady = useCallback3(() => {
-    vidText.then(({ VideoTexture }) => {
-      if (!videoRef.current) {
-        throw new Error("Video not ready");
-      }
-      const vt = new VideoTexture(videoRef.current);
-      videoRef.current.width = videoRef.current.videoWidth;
-      videoRef.current.height = videoRef.current.videoHeight;
-      setVideoTexture(vt);
-      continueRender(loaded);
-    }).catch((err) => {
-      cancelRender(err);
-    });
-  }, [loaded, vidText, videoRef, continueRender, cancelRender]);
+  const supported = typeof HTMLVideoElement !== "undefined" && Boolean(HTMLVideoElement.prototype.requestVideoFrameCallback);
   React3.useLayoutEffect(() => {
-    if (!videoRef.current) {
+    if (!videoEnabled || !supported) {
+      setVideoTexture(null);
       return;
     }
-    if (videoRef.current.readyState >= 2) {
+    const loaded = delayRender(`Waiting for texture in useVideoTexture() to be loaded`);
+    const element = videoRef.current;
+    let cancelled = false;
+    let texture = null;
+    const onReady = () => {
+      vidText.then(({ VideoTexture }) => {
+        if (cancelled) {
+          return;
+        }
+        if (!element) {
+          throw new Error("Video not ready");
+        }
+        texture = new VideoTexture(element);
+        element.width = element.videoWidth;
+        element.height = element.videoHeight;
+        setVideoTexture(texture);
+        continueRender(loaded);
+      }).catch((err) => {
+        if (!cancelled) {
+          cancelRender(err);
+        }
+      });
+    };
+    if (element && element.readyState >= 2) {
       onReady();
-      return;
+    } else {
+      element?.addEventListener("loadeddata", onReady, { once: true });
     }
-    videoRef.current.addEventListener("loadeddata", () => {
-      onReady();
-    }, { once: true });
-  }, [loaded, onReady, videoRef]);
+    return () => {
+      cancelled = true;
+      element?.removeEventListener("loadeddata", onReady);
+      texture?.dispose();
+      continueRender(loaded);
+    };
+  }, [
+    videoEnabled,
+    supported,
+    vidText,
+    videoRef,
+    delayRender,
+    continueRender,
+    cancelRender
+  ]);
   React3.useEffect(() => {
     const { current } = videoRef;
-    if (!current) {
+    if (!videoEnabled || !current) {
       return;
     }
     if (!current.requestVideoFrameCallback) {
@@ -97865,17 +97892,11 @@ var useVideoTexture = (videoRef) => {
     }
     const ready = () => {};
     current.requestVideoFrameCallback(ready);
-  }, [frame, loaded, videoRef]);
-  useEffect2(() => {
-    return () => {
-      continueRender(loaded);
-    };
-  }, [loaded, continueRender]);
-  if (typeof HTMLVideoElement === "undefined" || !HTMLVideoElement.prototype.requestVideoFrameCallback) {
-    continueRender(loaded);
+  }, [frame, videoEnabled, videoRef]);
+  if (!supported) {
     return null;
   }
-  return videoTexture;
+  return videoEnabled ? videoTexture : null;
 };
 
 // src/index.ts
@@ -140091,122 +140112,7 @@ if (true) {
 
 /***/ },
 
-/***/ 6270
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   B: () => (/* binding */ studioCssVariables)
-/* harmony export */ });
-// src/helpers/studio-css-variables.ts
-var studioCssVariables = `
-:where(:root) {
-  --remotion-studio-black: black;
-  --remotion-studio-white: white;
-  --remotion-studio-red: red;
-  --remotion-studio-transparent: transparent;
-  --remotion-studio-current-color: currentColor;
-  --remotion-studio-background: rgb(31,36,40);
-  --remotion-studio-background-transparent: rgba(31,36,40, 0);
-  --remotion-studio-input-background: #2f363d;
-  --remotion-studio-tab-hover-background: #232629;
-  --remotion-studio-light-color: #ddd;
-  --remotion-studio-light-text: #A6A7A9;
-  --remotion-studio-ruler-color: #808080;
-  --remotion-studio-white-alpha-05: rgba(255, 255, 255, 0.05);
-  --remotion-studio-white-alpha-06: rgba(255, 255, 255, 0.06);
-  --remotion-studio-white-alpha-08: rgba(255, 255, 255, 0.08);
-  --remotion-studio-white-alpha-10: rgba(255, 255, 255, 0.1);
-  --remotion-studio-white-alpha-12: rgba(255, 255, 255, 0.12);
-  --remotion-studio-white-alpha-15: rgba(255, 255, 255, 0.15);
-  --remotion-studio-white-alpha-20: rgba(255, 255, 255, 0.2);
-  --remotion-studio-white-alpha-25: rgba(255, 255, 255, 0.25);
-  --remotion-studio-white-alpha-30: rgba(255, 255, 255, 0.3);
-  --remotion-studio-white-alpha-35: rgba(255, 255, 255, 0.35);
-  --remotion-studio-white-alpha-40: rgba(255, 255, 255, 0.4);
-  --remotion-studio-white-alpha-45: rgba(255, 255, 255, 0.45);
-  --remotion-studio-white-alpha-50: rgba(255, 255, 255, 0.5);
-  --remotion-studio-white-alpha-60: rgba(255, 255, 255, 0.6);
-  --remotion-studio-white-alpha-70: rgba(255, 255, 255, 0.7);
-  --remotion-studio-white-alpha-72: rgba(255, 255, 255, 0.72);
-  --remotion-studio-white-alpha-80: rgba(255, 255, 255, 0.8);
-  --remotion-studio-white-alpha-90: rgba(255, 255, 255, 0.9);
-  --remotion-studio-black-alpha-28: rgba(0, 0, 0, 0.28);
-  --remotion-studio-black-alpha-30: rgba(0, 0, 0, 0.3);
-  --remotion-studio-black-alpha-40: rgba(0, 0, 0, 0.4);
-  --remotion-studio-black-alpha-50: rgba(0, 0, 0, 0.5);
-  --remotion-studio-black-alpha-60: rgba(0, 0, 0, 0.6);
-  --remotion-studio-black-alpha-80: rgba(0, 0, 0, 0.8);
-  --remotion-studio-black-alpha-85: rgba(0, 0, 0, 0.85);
-  --remotion-studio-black-alpha-90: rgba(0, 0, 0, 0.9);
-  --remotion-studio-fail-color: #ff3232;
-  --remotion-studio-warning-color: #f1c40f;
-  --remotion-studio-blue: #0b84f3;
-  --remotion-studio-blue-hovered: #4da3f7;
-  --remotion-studio-blue-disabled: #284f73;
-  --remotion-studio-unselected-guide: #7e1219;
-  --remotion-studio-selected-guide: #d22d3a;
-  --remotion-studio-line-color: #363A3E;
-  --remotion-studio-timeline-track-separator: #13161B;
-  --remotion-studio-light-gray: #ccc;
-  --remotion-studio-keyboard-shortcut-key-color: #eee;
-  --remotion-studio-notification-background: #111111;
-  --remotion-studio-render-status-background: #222;
-  --remotion-studio-error-code-frame-background: #070707;
-  --remotion-studio-error-code-frame-line-background: #121212;
-  --remotion-studio-error-link-color: #58a6ff;
-  --remotion-studio-info-blue: #60a5fa;
-  --remotion-studio-server-disconnected-background: #e74c3c;
-  --remotion-studio-timeline-background-color: #15181B;
-  --remotion-studio-timeline-negative-start-background-color: #2C2F32;
-  --remotion-studio-timeline-negative-start-border-color: #414446;
-  --remotion-studio-timeline-selected-background-color: #3B3F42;
-  --remotion-studio-timeline-selected-label-background-color: #B0B0B0;
-  --remotion-studio-timeline-blue: #0b84ff;
-  --remotion-studio-timeline-playhead-color: #f02c00;
-  --remotion-studio-timeline-drop-blue-alpha-12: rgba(0, 155, 255, 0.12);
-  --remotion-studio-timeline-drop-blue-alpha-16: rgba(0, 155, 255, 0.16);
-  --remotion-studio-timeline-drop-blue-alpha-75: rgba(0, 155, 255, 0.75);
-  --remotion-studio-timeline-marquee-blue-alpha-16: rgba(70, 130, 255, 0.16);
-  --remotion-studio-timeline-marquee-blue-alpha-75: rgba(70, 130, 255, 0.75);
-  --remotion-studio-easing-selected-background: rgba(11, 132, 243, 0.18);
-  --remotion-studio-info-blue-background: rgba(59, 130, 246, 0.15);
-  --remotion-studio-color-picker-checker-background-color: var(--remotion-studio-background);
-  --remotion-studio-color-picker-hue-gradient: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
-  --remotion-studio-timeline-audio-gradient: linear-gradient(rgb(16 171 58), rgb(43 165 63) 60%);
-  --remotion-studio-timeline-video-gradient: linear-gradient(to top, #8e44ad, #9b59b6);
-  --remotion-studio-timeline-captions-gradient: linear-gradient(to top, #b96516, #cc7828);
-  --remotion-studio-focus-color: #555;
-  --remotion-studio-color-picker-checker-color: var(--remotion-studio-white-alpha-15);
-  --remotion-studio-info-blue-border-color: rgba(59, 130, 246, 0.4);
-  --remotion-studio-black-alpha-22: rgba(0, 0, 0, 0.22);
-  --remotion-studio-font-family-error-color: #ff8a8a;
-  --remotion-studio-selected-outline-snap-color: #ff00ff;
-  --remotion-studio-prism-text-color: #d4d4d4;
-  --remotion-studio-prism-selection-background: #264f78;
-  --remotion-studio-prism-background: #1e1e1e;
-  --remotion-studio-prism-inline-color: #db4c69;
-  --remotion-studio-prism-keyword-color: #569cd6;
-  --remotion-studio-prism-variable-color: #9cdcfe;
-  --remotion-studio-prism-comment-color: #6a9955;
-  --remotion-studio-prism-number-color: #b5cea8;
-  --remotion-studio-prism-string-color: #ce9178;
-  --remotion-studio-prism-control-flow-color: #c586c0;
-  --remotion-studio-prism-function-color: #dcdcaa;
-  --remotion-studio-prism-regex-color: #d16969;
-  --remotion-studio-prism-class-name-color: #4ec9b0;
-  --remotion-studio-prism-selector-color: #d7ba7d;
-  --remotion-studio-prism-line-highlight-background: #f7ebc6;
-  --remotion-studio-prism-line-highlight-border-color: #f7d87c;
-}
-`;
-
-
-
-
-/***/ },
-
-/***/ 7449
+/***/ 1695
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -140230,6 +140136,7 @@ var studioCssVariables = `
 /* harmony export */   EP: () => (/* binding */ FONT_FAMILY_ERROR_COLOR),
 /* harmony export */   ER: () => (/* binding */ PRISM_TEXT_COLOR),
 /* harmony export */   EX: () => (/* binding */ TIMELINE_SELECTED_LABEL_BACKGROUND_COLOR),
+/* harmony export */   Fl: () => (/* binding */ INTERACTIVE_TEXT),
 /* harmony export */   GX: () => (/* binding */ WHITE_ALPHA_40),
 /* harmony export */   Hc: () => (/* binding */ TIMELINE_BLUE),
 /* harmony export */   J$: () => (/* binding */ SELECTED_GUIDE),
@@ -140238,7 +140145,6 @@ var studioCssVariables = `
 /* harmony export */   Ju: () => (/* binding */ COLOR_PICKER_SATURATION_BLACK_GRADIENT),
 /* harmony export */   Jz: () => (/* binding */ COLOR_PICKER_SATURATION_VALUE_GRADIENT),
 /* harmony export */   Ku: () => (/* binding */ COLOR_PICKER_CHECKER_BACKGROUND_COLOR),
-/* harmony export */   Lr: () => (/* binding */ BORDER_CURRENT_COLOR),
 /* harmony export */   M: () => (/* binding */ PRISM_SELECTOR_COLOR),
 /* harmony export */   M7: () => (/* binding */ INPUT_BACKGROUND),
 /* harmony export */   Nh: () => (/* binding */ PRISM_BACKGROUND),
@@ -140247,6 +140153,7 @@ var studioCssVariables = `
 /* harmony export */   Ol: () => (/* binding */ CURRENT_COLOR),
 /* harmony export */   P1: () => (/* binding */ PRISM_LINE_HIGHLIGHT_BORDER_COLOR),
 /* harmony export */   P8: () => (/* binding */ COLOR_PICKER_HANDLE_SHADOW),
+/* harmony export */   QZ: () => (/* binding */ COMPUTED_VALUE_COLOR),
 /* harmony export */   RF: () => (/* binding */ LIGHT_COLOR),
 /* harmony export */   Rd: () => (/* binding */ TIMELINE_BACKGROUND_COLOR),
 /* harmony export */   Rv: () => (/* binding */ WHITE_ALPHA_72),
@@ -140277,7 +140184,6 @@ var studioCssVariables = `
 /* harmony export */   _9: () => (/* binding */ ERROR_CODE_FRAME_BACKGROUND),
 /* harmony export */   _B: () => (/* binding */ SELECTED_OUTLINE_SNAP_COLOR),
 /* harmony export */   _Y: () => (/* binding */ TIMELINE_NEGATIVE_START_BACKGROUND_COLOR),
-/* harmony export */   _c: () => (/* binding */ PRISM_SELECTION_BACKGROUND),
 /* harmony export */   _s: () => (/* binding */ WHITE_ALPHA_15),
 /* harmony export */   _u: () => (/* binding */ WHITE_ALPHA_20),
 /* harmony export */   a4: () => (/* binding */ PRISM_COMMENT_COLOR),
@@ -140305,10 +140211,12 @@ var studioCssVariables = `
 /* harmony export */   is: () => (/* binding */ ERROR_MESSAGE_MASK_IMAGE),
 /* harmony export */   jU: () => (/* binding */ LINE_COLOR),
 /* harmony export */   jc: () => (/* binding */ NOTIFICATION_BACKGROUND),
+/* harmony export */   ji: () => (/* binding */ PRIMARY_BUTTON_BACKGROUND),
 /* harmony export */   lJ: () => (/* binding */ CHECKERBOARD_BACKGROUND_IMAGE),
 /* harmony export */   lR: () => (/* binding */ BACKGROUND_HEX),
 /* harmony export */   lV: () => (/* binding */ BACKGROUND__TRANSPARENT),
 /* harmony export */   ld: () => (/* binding */ LIGHT_GRAY),
+/* harmony export */   m7: () => (/* binding */ SPLITTER_COLOR),
 /* harmony export */   nR: () => (/* binding */ PRISM_CLASS_NAME_COLOR),
 /* harmony export */   nj: () => (/* binding */ TRANSPARENT),
 /* harmony export */   no: () => (/* binding */ NOTIFICATION_SHADOW),
@@ -140326,6 +140234,7 @@ var studioCssVariables = `
 /* harmony export */   vu: () => (/* binding */ COLOR_PICKER_POPUP_SHADOW),
 /* harmony export */   vx: () => (/* binding */ TIMELINE_CAPTIONS_GRADIENT),
 /* harmony export */   wg: () => (/* binding */ TIMELINE_NEGATIVE_START_BORDER_COLOR),
+/* harmony export */   wn: () => (/* binding */ TEXT_SELECTION_BACKGROUND),
 /* harmony export */   xA: () => (/* binding */ PRISM_CONTROL_FLOW_COLOR),
 /* harmony export */   xB: () => (/* binding */ BLACK_ALPHA_30),
 /* harmony export */   xm: () => (/* binding */ SHADOW_BLACK),
@@ -140350,7 +140259,9 @@ var INPUT_BACKGROUND = "var(--remotion-studio-input-background)";
 var TAB_HOVER_BACKGROUND = "var(--remotion-studio-tab-hover-background)";
 var LIGHT_COLOR = "var(--remotion-studio-light-color)";
 var SELECTED_BACKGROUND = "var(--remotion-studio-white-alpha-15)";
+var TEXT_SELECTION_BACKGROUND = "var(--remotion-studio-text-selection-background)";
 var LIGHT_TEXT = "var(--remotion-studio-light-text)";
+var COMPUTED_VALUE_COLOR = "var(--remotion-studio-computed-value-color)";
 var RULER_COLOR = "var(--remotion-studio-ruler-color)";
 var WHITE_ALPHA_05 = "var(--remotion-studio-white-alpha-05)";
 var WHITE_ALPHA_06 = "var(--remotion-studio-white-alpha-06)";
@@ -140383,11 +140294,14 @@ var SELECTED_HOVER_BACKGROUND = "var(--remotion-studio-white-alpha-25)";
 var FAIL_COLOR = "var(--remotion-studio-fail-color)";
 var WARNING_COLOR = "var(--remotion-studio-warning-color)";
 var BLUE = "var(--remotion-studio-blue)";
+var PRIMARY_BUTTON_BACKGROUND = "var(--remotion-studio-primary-button-background)";
+var INTERACTIVE_TEXT = "var(--remotion-studio-interactive-text)";
 var BLUE_HOVERED = "var(--remotion-studio-blue-hovered)";
 var BLUE_DISABLED = "var(--remotion-studio-blue-disabled)";
 var UNSELECTED_GUIDE = "var(--remotion-studio-unselected-guide)";
 var SELECTED_GUIDE = "var(--remotion-studio-selected-guide)";
 var LINE_COLOR = "var(--remotion-studio-line-color)";
+var SPLITTER_COLOR = "var(--remotion-studio-splitter-color)";
 var TIMELINE_TRACK_SEPARATOR = "var(--remotion-studio-timeline-track-separator)";
 var LIGHT_GRAY = "var(--remotion-studio-light-gray)";
 var NOTIFICATION_BACKGROUND = "var(--remotion-studio-notification-background)";
@@ -140417,7 +140331,6 @@ var BLACK_ALPHA_22 = "var(--remotion-studio-black-alpha-22)";
 var FONT_FAMILY_ERROR_COLOR = "var(--remotion-studio-font-family-error-color)";
 var SELECTED_OUTLINE_SNAP_COLOR = "var(--remotion-studio-selected-outline-snap-color)";
 var PRISM_TEXT_COLOR = "var(--remotion-studio-prism-text-color)";
-var PRISM_SELECTION_BACKGROUND = "var(--remotion-studio-prism-selection-background)";
 var PRISM_BACKGROUND = "var(--remotion-studio-prism-background)";
 var PRISM_INLINE_COLOR = "var(--remotion-studio-prism-inline-color)";
 var PRISM_KEYWORD_COLOR = "var(--remotion-studio-prism-keyword-color)";
@@ -140435,7 +140348,7 @@ var PRISM_LINE_HIGHLIGHT_BORDER_COLOR = "var(--remotion-studio-prism-line-highli
 var BORDER_BLACK = `1px solid ${BLACK_HEX}`;
 var BORDER_WHITE = `1px solid ${WHITE_HEX}`;
 var BORDER_WHITE_2PX = `2px solid ${WHITE_HEX}`;
-var BORDER_CURRENT_COLOR = `1px solid ${CURRENT_COLOR}`;
+var BORDER_CURRENT_COLOR = (/* unused pure expression or super */ null && (`1px solid ${CURRENT_COLOR}`));
 var BORDER_TRANSPARENT_2PX = `2px solid ${TRANSPARENT}`;
 var BORDER_BLACK_ALPHA_50 = (/* unused pure expression or super */ null && (`1px solid ${BLACK_ALPHA_50}`));
 var BORDER_BLACK_ALPHA_60 = `1px solid ${BLACK_ALPHA_60}`;
@@ -140497,13 +140410,153 @@ var getBackgroundFromHoverState = ({
 
 /***/ },
 
+/***/ 7079
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   B: () => (/* binding */ studioCssVariables),
+/* harmony export */   V: () => (/* binding */ applyStudioHighContrast)
+/* harmony export */ });
+// src/helpers/studio-css-variables.ts
+var studioCssVariables = `
+:where(:root) {
+  --remotion-studio-black: black;
+  --remotion-studio-white: white;
+  --remotion-studio-red: red;
+  --remotion-studio-transparent: transparent;
+  --remotion-studio-current-color: currentColor;
+  --remotion-studio-background: rgb(31,36,40);
+  --remotion-studio-background-transparent: rgba(31,36,40, 0);
+  --remotion-studio-input-background: #2f363d;
+  --remotion-studio-tab-hover-background: #232629;
+  --remotion-studio-light-color: #ddd;
+  --remotion-studio-light-text: #BCBDBF;
+  --remotion-studio-computed-value-color: var(--remotion-studio-white-alpha-40);
+  --remotion-studio-explorer-shortcut-opacity: 0.6;
+  --remotion-studio-ruler-color: #808080;
+  --remotion-studio-white-alpha-05: rgba(255, 255, 255, 0.05);
+  --remotion-studio-white-alpha-06: rgba(255, 255, 255, 0.06);
+  --remotion-studio-white-alpha-08: rgba(255, 255, 255, 0.08);
+  --remotion-studio-white-alpha-10: rgba(255, 255, 255, 0.1);
+  --remotion-studio-white-alpha-12: rgba(255, 255, 255, 0.12);
+  --remotion-studio-white-alpha-15: rgba(255, 255, 255, 0.15);
+  --remotion-studio-white-alpha-20: rgba(255, 255, 255, 0.2);
+  --remotion-studio-white-alpha-25: rgba(255, 255, 255, 0.25);
+  --remotion-studio-white-alpha-30: rgba(255, 255, 255, 0.3);
+  --remotion-studio-white-alpha-35: rgba(255, 255, 255, 0.35);
+  --remotion-studio-white-alpha-40: rgba(255, 255, 255, 0.4);
+  --remotion-studio-white-alpha-45: rgba(255, 255, 255, 0.45);
+  --remotion-studio-white-alpha-50: rgba(255, 255, 255, 0.5);
+  --remotion-studio-white-alpha-60: rgba(255, 255, 255, 0.6);
+  --remotion-studio-white-alpha-70: rgba(255, 255, 255, 0.7);
+  --remotion-studio-white-alpha-72: rgba(255, 255, 255, 0.72);
+  --remotion-studio-text-selection-background: #4e4e4e;
+  --remotion-studio-white-alpha-80: rgba(255, 255, 255, 0.8);
+  --remotion-studio-white-alpha-90: rgba(255, 255, 255, 0.9);
+  --remotion-studio-black-alpha-28: rgba(0, 0, 0, 0.28);
+  --remotion-studio-black-alpha-30: rgba(0, 0, 0, 0.3);
+  --remotion-studio-black-alpha-40: rgba(0, 0, 0, 0.4);
+  --remotion-studio-black-alpha-50: rgba(0, 0, 0, 0.5);
+  --remotion-studio-black-alpha-60: rgba(0, 0, 0, 0.6);
+  --remotion-studio-black-alpha-80: rgba(0, 0, 0, 0.8);
+  --remotion-studio-black-alpha-85: rgba(0, 0, 0, 0.85);
+  --remotion-studio-black-alpha-90: rgba(0, 0, 0, 0.9);
+  --remotion-studio-fail-color: #ff3232;
+  --remotion-studio-warning-color: #f1c40f;
+  --remotion-studio-blue: #0b84f3;
+  --remotion-studio-primary-button-background: var(--remotion-studio-blue);
+  --remotion-studio-interactive-text: var(--remotion-studio-blue);
+  --remotion-studio-blue-hovered: #4da3f7;
+  --remotion-studio-blue-disabled: #284f73;
+  --remotion-studio-unselected-guide: #7e1219;
+  --remotion-studio-selected-guide: #d22d3a;
+  --remotion-studio-line-color: #363A3E;
+  --remotion-studio-splitter-color: var(--remotion-studio-black);
+  --remotion-studio-timeline-track-separator: #13161B;
+  --remotion-studio-light-gray: #ccc;
+  --remotion-studio-keyboard-shortcut-key-color: #eee;
+  --remotion-studio-notification-background: #111111;
+  --remotion-studio-render-status-background: #222;
+  --remotion-studio-error-code-frame-background: #070707;
+  --remotion-studio-error-code-frame-line-background: #121212;
+  --remotion-studio-error-link-color: #58a6ff;
+  --remotion-studio-info-blue: #60a5fa;
+  --remotion-studio-server-disconnected-background: #e74c3c;
+  --remotion-studio-timeline-background-color: #15181B;
+  --remotion-studio-timeline-negative-start-background-color: #2C2F32;
+  --remotion-studio-timeline-negative-start-border-color: #414446;
+  --remotion-studio-timeline-selected-background-color: #3B3F42;
+  --remotion-studio-timeline-selected-label-background-color: #B0B0B0;
+  --remotion-studio-timeline-blue: #0b84ff;
+  --remotion-studio-timeline-playhead-color: #f02c00;
+  --remotion-studio-timeline-drop-blue-alpha-12: rgba(0, 155, 255, 0.12);
+  --remotion-studio-timeline-drop-blue-alpha-16: rgba(0, 155, 255, 0.16);
+  --remotion-studio-timeline-drop-blue-alpha-75: rgba(0, 155, 255, 0.75);
+  --remotion-studio-timeline-marquee-blue-alpha-16: rgba(70, 130, 255, 0.16);
+  --remotion-studio-timeline-marquee-blue-alpha-75: rgba(70, 130, 255, 0.75);
+  --remotion-studio-easing-selected-background: rgba(11, 132, 243, 0.18);
+  --remotion-studio-info-blue-background: rgba(59, 130, 246, 0.15);
+  --remotion-studio-color-picker-checker-background-color: var(--remotion-studio-background);
+  --remotion-studio-color-picker-hue-gradient: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+  --remotion-studio-timeline-audio-gradient: linear-gradient(rgb(16 171 58), rgb(43 165 63) 60%);
+  --remotion-studio-timeline-video-gradient: linear-gradient(to top, #8e44ad, #9b59b6);
+  --remotion-studio-timeline-captions-gradient: linear-gradient(to top, #b96516, #cc7828);
+  --remotion-studio-focus-color: #555;
+  --remotion-studio-color-picker-checker-color: var(--remotion-studio-white-alpha-15);
+  --remotion-studio-info-blue-border-color: rgba(59, 130, 246, 0.4);
+  --remotion-studio-black-alpha-22: rgba(0, 0, 0, 0.22);
+  --remotion-studio-font-family-error-color: #ff8a8a;
+  --remotion-studio-selected-outline-snap-color: #ff00ff;
+  --remotion-studio-prism-text-color: #d4d4d4;
+  --remotion-studio-prism-background: #1e1e1e;
+  --remotion-studio-prism-inline-color: #db4c69;
+  --remotion-studio-prism-keyword-color: #569cd6;
+  --remotion-studio-prism-variable-color: #9cdcfe;
+  --remotion-studio-prism-comment-color: #6a9955;
+  --remotion-studio-prism-number-color: #b5cea8;
+  --remotion-studio-prism-string-color: #ce9178;
+  --remotion-studio-prism-control-flow-color: #c586c0;
+  --remotion-studio-prism-function-color: #dcdcaa;
+  --remotion-studio-prism-regex-color: #d16969;
+  --remotion-studio-prism-class-name-color: #4ec9b0;
+  --remotion-studio-prism-selector-color: #d7ba7d;
+  --remotion-studio-prism-line-highlight-background: #f7ebc6;
+  --remotion-studio-prism-line-highlight-border-color: #f7d87c;
+}
+
+html[data-remotion-high-contrast] {
+  --remotion-studio-background: #101214;
+  --remotion-studio-background-transparent: rgba(16, 18, 20, 0);
+  --remotion-studio-light-text: #eee;
+  --remotion-studio-computed-value-color: var(--remotion-studio-light-text);
+  --remotion-studio-explorer-shortcut-opacity: 1;
+  --remotion-studio-interactive-text: var(--remotion-studio-info-blue);
+  --remotion-studio-primary-button-background: #0976da;
+  --remotion-studio-ruler-color: #ccc;
+  --remotion-studio-line-color: #85898d;
+  --remotion-studio-splitter-color: var(--remotion-studio-line-color);
+  --remotion-studio-timeline-track-separator: #85898d;
+  --remotion-studio-focus-color: #ffe066;
+  --remotion-studio-info-blue: #a6d8ff;
+}
+`;
+var applyStudioHighContrast = (enabled) => {
+  document.documentElement.toggleAttribute("data-remotion-high-contrast", enabled);
+};
+
+
+
+
+/***/ },
+
 /***/ 3482
 (__unused_webpack___webpack_module__, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export setBundleModeAndUpdate */
-/* harmony import */ var _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7449);
-/* harmony import */ var _index_krw6n0z1_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6270);
+/* harmony import */ var _index_50s6bgpe_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1695);
+/* harmony import */ var _index_ety3p0fq_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7079);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6540);
 /* harmony import */ var react_dom_client__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5338);
 /* harmony import */ var remotion__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3947);
@@ -140527,8 +140580,8 @@ var setBundleMode = (state) => {
 var getBundleMode = () => {
   return currentBundleMode;
 };
-remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.CSSUtils.injectCSS(_index_krw6n0z1_mjs__WEBPACK_IMPORTED_MODULE_1__/* .studioCssVariables */ .B);
-remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.CSSUtils.injectCSS(remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.CSSUtils.makeDefaultPreviewCSS(null, _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .BACKGROUND_HEX */ .lR));
+remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.CSSUtils.injectCSS(_index_ety3p0fq_mjs__WEBPACK_IMPORTED_MODULE_1__/* .studioCssVariables */ .B);
+remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.CSSUtils.injectCSS(remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.CSSUtils.makeDefaultPreviewCSS(null, _index_50s6bgpe_mjs__WEBPACK_IMPORTED_MODULE_0__/* .BACKGROUND_HEX */ .lR));
 var getCanSerializeDefaultProps = (object) => {
   try {
     const str = JSON.stringify(object);
@@ -140562,7 +140615,7 @@ var DelayedSpinner = () => {
       alignItems: "center",
       fontSize: 13,
       opacity: 0.6,
-      color: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .WHITE */ .UE,
+      color: _index_50s6bgpe_mjs__WEBPACK_IMPORTED_MODULE_0__/* .WHITE */ .UE,
       fontFamily: "Helvetica, Arial, sans-serif"
     },
     children: "Loading Studio"
@@ -140627,8 +140680,45 @@ var GetVideoComposition = ({ state }) => {
       width: currentCompositionMetadata.width,
       height: currentCompositionMetadata.height,
       display: "flex",
-      backgroundColor: _index_ts7drhwc_mjs__WEBPACK_IMPORTED_MODULE_0__/* .TRANSPARENT */ .nj
+      backgroundColor: _index_50s6bgpe_mjs__WEBPACK_IMPORTED_MODULE_0__/* .TRANSPARENT */ .nj
     }
+  });
+};
+var CompositionRootContexts = ({ children }) => {
+  const [mediaEnabled, setMediaEnabled] = (0,react__WEBPACK_IMPORTED_MODULE_2__.useState)(() => ({
+    videoEnabled: window.remotion_videoEnabled,
+    audioEnabled: window.remotion_audioEnabled
+  }));
+  (0,react__WEBPACK_IMPORTED_MODULE_2__.useLayoutEffect)(() => {
+    window.remotion_setMediaEnabled = (videoEnabled, audioEnabled) => {
+      window.remotion_videoEnabled = videoEnabled;
+      window.remotion_audioEnabled = audioEnabled;
+      const handle = (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .delayRender */ .IH)(`Setting videoEnabled to ${videoEnabled} and audioEnabled to ${audioEnabled}`);
+      let asyncUpdate = true;
+      setMediaEnabled((previous) => {
+        if (previous.videoEnabled === videoEnabled && previous.audioEnabled === audioEnabled) {
+          asyncUpdate = false;
+          return previous;
+        }
+        return { videoEnabled, audioEnabled };
+      });
+      if (asyncUpdate) {
+        requestAnimationFrame(() => (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .continueRender */ ._8)(handle));
+      } else {
+        (0,remotion__WEBPACK_IMPORTED_MODULE_4__/* .continueRender */ ._8)(handle);
+      }
+    };
+  }, []);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.RemotionRootContexts, {
+    frameState: null,
+    audioEnabled: mediaEnabled.audioEnabled,
+    videoEnabled: mediaEnabled.videoEnabled,
+    logLevel: window.remotion_logLevel ?? "info",
+    numberOfAudioTags: 0,
+    audioLatencyHint: window.remotion_audioLatencyHint ?? "playback",
+    previewSampleRate: window.remotion_sampleRate,
+    _experimentalKeepAudioContextAlive: false,
+    children
   });
 };
 var DEFAULT_ROOT_COMPONENT_TIMEOUT = 1e4;
@@ -140674,15 +140764,7 @@ var renderContent = (Root) => {
         defaultSampleRate: bundleMode.compositionDefaultSampleRate
       },
       initialCompositions: [],
-      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.RemotionRootContexts, {
-        frameState: null,
-        audioEnabled: window.remotion_audioEnabled,
-        videoEnabled: window.remotion_videoEnabled,
-        logLevel: window.remotion_logLevel ?? "info",
-        numberOfAudioTags: 0,
-        audioLatencyHint: window.remotion_audioLatencyHint ?? "playback",
-        previewSampleRate: window.remotion_sampleRate,
-        _experimentalKeepAudioContextAlive: false,
+      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(CompositionRootContexts, {
         children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsxs)(remotion__WEBPACK_IMPORTED_MODULE_4__.Internals.RenderAssetManagerProvider, {
           collectAssets: null,
           children: [
@@ -140726,7 +140808,7 @@ var renderContent = (Root) => {
     renderToDOM(/* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)("div", {
       children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(DelayedSpinner, {})
     }));
-    Promise.all(/* import() */[__webpack_require__.e(716), __webpack_require__.e(428), __webpack_require__.e(226)]).then(() => (__webpack_require__(6428))).then(({ StudioInternals }) => {
+    Promise.all(/* import() */[__webpack_require__.e(4716), __webpack_require__.e(6428), __webpack_require__.e(4226)]).then(() => (__webpack_require__(6428))).then(({ StudioInternals }) => {
       window.remotion_isStudio = true;
       window.remotion_isReadOnlyStudio = true;
       window.remotion_inputProps = "{}";
@@ -140911,7 +140993,7 @@ if (typeof window !== "undefined") {
 /* harmony export */   zo: () => (/* binding */ cancelRender)
 /* harmony export */ });
 /* unused harmony exports AnimatedImage, Artifact, CanvasImage, Config, Experimental, Folder, FolderContext, HTML_IN_CANVAS_UNSUPPORTED_MESSAGE, IFrame, Series, Solid, Still, Track, Video, absoluteFillSchema, assertValidInterpolateEasingOption, assertValidInterpolatePosterizeOption, createEffect, createEffectImplementation, getHtmlInCanvasUnsupportedMessage, getStaticFiles, measureSpring, prefetch, useCurrentScale, useIsInsideNonPremountFreeze, usePixelDensity */
-/* unused harmony import specifier */ var useContext50;
+/* unused harmony import specifier */ var useContext51;
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6540);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(961);
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4848);
@@ -142667,7 +142749,7 @@ var getStackForControls = (controls) => {
 };
 
 // src/version.ts
-var VERSION = "4.0.541";
+var VERSION = "4.0.542";
 
 // src/multiple-versions-warning.ts
 var checkMultipleRemotionVersions = () => {
@@ -143170,7 +143252,7 @@ var transformSchema = {
     type: "transform-origin",
     step: 1,
     default: "50% 50%",
-    description: "Transform origin"
+    description: "Origin"
   },
   "style.translate": {
     type: "translate",
@@ -143458,8 +143540,7 @@ var sequenceStyleSchema = {
   ...transformSchema,
   ...backgroundSchema,
   ...borderSchema,
-  ...borderRadiusSchema,
-  ...sequencePremountSchema
+  ...borderRadiusSchema
 };
 var hiddenField = {
   type: "boolean",
@@ -143934,6 +144015,73 @@ var DisableSequenceRegistrationContext = react__WEBPACK_IMPORTED_MODULE_0__.crea
 var DisableSequenceRegistrationProvider = ({ children }) => {
   return react__WEBPACK_IMPORTED_MODULE_0__.createElement(DisableSequenceRegistrationContext.Provider, { value: true }, children);
 };
+// src/effects/effect-preview.tsx
+
+
+var EffectPreviewContext = react__WEBPACK_IMPORTED_MODULE_0__.createContext({
+  setPreview: () => {
+    return;
+  },
+  subscribe: () => () => {
+    return;
+  },
+  getSnapshot: () => null
+});
+var EffectPreviewProvider = ({ children }) => {
+  const [store] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    let preview = null;
+    const listeners = new Map;
+    return {
+      setPreview: (next) => {
+        if (preview?.runtimeValues === next?.runtimeValues && preview?.effect === next?.effect) {
+          return;
+        }
+        const previousTarget = preview?.runtimeValues;
+        preview = next;
+        const targets = new Set([previousTarget, next?.runtimeValues]);
+        for (const target of targets) {
+          if (target === undefined) {
+            continue;
+          }
+          for (const listener of listeners.get(target) ?? []) {
+            listener();
+          }
+        }
+      },
+      subscribe: (runtimeValues, listener) => {
+        if (runtimeValues === null) {
+          return () => {
+            return;
+          };
+        }
+        let targetListeners = listeners.get(runtimeValues);
+        if (targetListeners === undefined) {
+          targetListeners = new Set;
+          listeners.set(runtimeValues, targetListeners);
+        }
+        targetListeners.add(listener);
+        return () => {
+          targetListeners.delete(listener);
+          if (targetListeners.size === 0) {
+            listeners.delete(runtimeValues);
+          }
+        };
+      },
+      getSnapshot: (runtimeValues) => preview?.runtimeValues === runtimeValues ? preview.effect : null
+    };
+  });
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(EffectPreviewContext.Provider, {
+    value: store,
+    children
+  });
+};
+var useEffectPreview = (runtimeValues) => {
+  const store = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(EffectPreviewContext);
+  const subscribe = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((listener) => store.subscribe(runtimeValues, listener), [runtimeValues, store]);
+  const getSnapshot = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => store.getSnapshot(runtimeValues), [runtimeValues, store]);
+  return useSyncExternalStore2(subscribe, getSnapshot, getSnapshot);
+};
+
 // src/SequenceActivitySuspensionProvider.tsx
 
 
@@ -144867,24 +145015,26 @@ var SequenceManagerProvider = ({ children }) => {
   ]);
   const batchSettersContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({ setDragOverridesBatch, setEffectDragOverridesBatch }), [setDragOverridesBatch, setEffectDragOverridesBatch]);
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SequenceRegistryProvider, {
-    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesRefContext.Provider, {
-      value: propStatusesRef,
-      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesSubscriptionContext.Provider, {
-        value: propStatusesSubscription,
-        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesContext.Provider, {
-          value: propStatusesContext,
-          children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SequenceManagerScopeProviders, {
-            dragOverridesSubscription,
-            fromKeys: dragOverrideState.fromKeys,
-            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeDragOverridesContext.Provider, {
-              value: dragOverridesContext,
-              children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeDragOverridesRefContext.Provider, {
-                value: dragOverridesRef,
-                children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeSettersContext.Provider, {
-                  value: settersContext,
-                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeBatchSettersContext.Provider, {
-                    value: batchSettersContext,
-                    children
+    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(EffectPreviewProvider, {
+      children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesRefContext.Provider, {
+        value: propStatusesRef,
+        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesSubscriptionContext.Provider, {
+          value: propStatusesSubscription,
+          children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModePropStatusesContext.Provider, {
+            value: propStatusesContext,
+            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SequenceManagerScopeProviders, {
+              dragOverridesSubscription,
+              fromKeys: dragOverrideState.fromKeys,
+              children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeDragOverridesContext.Provider, {
+                value: dragOverridesContext,
+                children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeDragOverridesRefContext.Provider, {
+                  value: dragOverridesRef,
+                  children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeSettersContext.Provider, {
+                    value: settersContext,
+                    children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VisualModeBatchSettersContext.Provider, {
+                      value: batchSettersContext,
+                      children
+                    })
                   })
                 })
               })
@@ -147183,47 +147333,227 @@ var getEffectiveVisualModeValue = ({
   return propStatus.codeValue;
 };
 
-// src/optimistic-effect-deletion.ts
+// src/optimistic-effects.ts
 
-var entries = new Map;
-var acknowledged = new WeakSet;
+
+// src/optimistic-effect-prop-statuses.ts
+var nodes = new Map;
 var listeners = new Set;
+var keyForNode = (nodePath) => JSON.stringify([nodePath.absolutePath, nodePath.nodePath]);
+var OptimisticEffectPropStatuses = {
+  get: (nodePath, id) => nodes.get(keyForNode(nodePath))?.get(id) ?? null,
+  set: (nodePath, id, props) => {
+    const key = keyForNode(nodePath);
+    const current = nodes.get(key);
+    if ((current?.get(id) ?? null) === props)
+      return;
+    if (props === null) {
+      current?.delete(id);
+      if (current?.size === 0)
+        nodes.delete(key);
+    } else {
+      const next = current ?? new Map;
+      next.set(id, props);
+      nodes.set(key, next);
+    }
+    for (const listener of listeners)
+      listener(nodePath);
+  },
+  copy: (nodePath, fromId, toId) => {
+    const props = OptimisticEffectPropStatuses.get(nodePath, fromId);
+    if (props === null)
+      return;
+    OptimisticEffectPropStatuses.set(nodePath, toId, props);
+  },
+  removeNode: (nodePath) => {
+    if (!nodes.delete(keyForNode(nodePath)))
+      return;
+    for (const listener of listeners)
+      listener(nodePath);
+  },
+  remap: (remappings) => {
+    const moved = remappings.map(({ oldNodePath, nodePath }) => ({
+      oldNodePath,
+      nodePath,
+      props: nodes.get(keyForNode(oldNodePath))
+    }));
+    for (const { oldNodePath } of moved)
+      nodes.delete(keyForNode(oldNodePath));
+    for (const { nodePath, props } of moved) {
+      if (nodePath !== null && props)
+        nodes.set(keyForNode(nodePath), props);
+    }
+    for (const { oldNodePath, nodePath } of moved) {
+      for (const listener of listeners)
+        listener(oldNodePath);
+      if (nodePath !== null)
+        for (const listener of listeners)
+          listener(nodePath);
+    }
+  },
+  clear: () => nodes.clear(),
+  subscribe: (listener) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }
+};
+
+// src/optimistic-effects.ts
+var entries = new Map;
+var listeners2 = new Set;
 var nodeListeners = new Map;
-var nodeSnapshots = new Map;
-var empty = [];
-var snapshot = empty;
-var batchDepth = 0;
-var batchedKeys = new Set;
-var nodeKeys = new WeakMap;
-var keyForNode = (node) => {
-  const cached = nodeKeys.get(node);
-  if (cached !== undefined)
-    return cached;
-  const key = JSON.stringify([node.absolutePath, node.nodePath]);
-  nodeKeys.set(node, key);
-  return key;
+var installedMutations = new Set;
+var acknowledgedMutations = new Set;
+var activeSourceRevision = null;
+var nextId = 0;
+var nextOperation = 0;
+var snapshot = [];
+var emptyItems = [];
+var keyForNode2 = (node) => JSON.stringify([node.absolutePath, node.nodePath]);
+var apply = (entry, items, operation) => {
+  const { action } = operation;
+  if (action.type === "restore") {
+    const fromIds = new Set(action.fromItems.map((item) => item.id));
+    const targetIds = new Set(action.items.map((item) => item.id));
+    const restored = items.filter((item) => !fromIds.has(item.id) || targetIds.has(item.id));
+    for (let targetIndex = 0;targetIndex < action.items.length; targetIndex++) {
+      const target = action.items[targetIndex];
+      const existingIndex = restored.findIndex((item) => item.id === target.id);
+      const isMove = action.movedIds.includes(target.id) && existingIndex !== -1;
+      if (!isMove && (fromIds.has(target.id) || existingIndex !== -1))
+        continue;
+      const restoredItem = isMove ? restored.splice(existingIndex, 1)[0] : entry.recipes.get(target.id) ?? target;
+      const following = action.items.slice(targetIndex + 1).find((item) => restored.some((current) => current.id === item.id));
+      const preceding = action.items.slice(0, targetIndex).reverse().find((item) => restored.some((current) => current.id === item.id));
+      const position = following ? restored.findIndex((item) => item.id === following.id) : preceding ? restored.findIndex((item) => item.id === preceding.id) + 1 : restored.length;
+      restored.splice(position, 0, restoredItem);
+    }
+    return restored;
+  }
+  if (action.type === "delete") {
+    if (action.ids.some((id) => !items.some((item) => item.id === id)))
+      return null;
+    return items.filter((item) => !action.ids.includes(item.id));
+  }
+  if (action.type === "duplicate") {
+    if (action.ids.some((id) => !items.some((item) => item.id === id)))
+      return null;
+    return items.flatMap((item) => {
+      const index = action.ids.indexOf(item.id);
+      return index === -1 ? [item] : [item, entry.recipes.get(operation.addedIds[index])];
+    });
+  }
+  if (action.beforeId !== null && !items.some((item) => item.id === action.beforeId))
+    return null;
+  if (action.type === "add") {
+    const index = action.beforeId === null ? items.length : items.findIndex((item) => item.id === action.beforeId);
+    return [
+      ...items.slice(0, index),
+      entry.recipes.get(operation.addedIds[0]),
+      ...items.slice(index)
+    ];
+  }
+  const moving = items.find((candidate) => candidate.id === action.id);
+  if (!moving)
+    return null;
+  if (action.beforeId === action.id)
+    return items;
+  const remaining = items.filter((candidate) => candidate !== moving);
+  const destination = action.beforeId === null ? remaining.length : remaining.findIndex((candidate) => candidate.id === action.beforeId);
+  return [
+    ...remaining.slice(0, destination),
+    moving,
+    ...remaining.slice(destination)
+  ];
+};
+var update = (entry) => {
+  let items = entry.compiled;
+  let persisted = entry.compiled;
+  for (const operation of entry.operations) {
+    if (operation.status !== "queued" && operation.status !== "acknowledged")
+      continue;
+    const result = apply(entry, items, operation);
+    if (result === null) {
+      operation.status = "cancelled";
+      continue;
+    }
+    items = result;
+    if (operation.status === "acknowledged") {
+      persisted = apply(entry, persisted, operation) ?? persisted;
+    }
+  }
+  if (!entry.operations.some((operation) => operation.status === "queued" || operation.status === "acknowledged")) {
+    entry.frozenRuntime = false;
+    entry.refreshMutationIds.clear();
+  }
+  const compiledIndexes = new Map(entry.compiled.map((item, index) => [item.id, index]));
+  const persistedIndexes = new Map(persisted.map((item, index) => [item.id, index]));
+  const describe = (item) => {
+    let origin = item;
+    const visited = new Set;
+    while (!compiledIndexes.has(origin.id) && origin.originId !== null && !visited.has(origin.id)) {
+      visited.add(origin.id);
+      const previous = entry.recipes.get(origin.originId);
+      if (!previous)
+        break;
+      origin = previous;
+    }
+    const sourceIndex = compiledIndexes.get(origin.id) ?? null;
+    return {
+      ...item,
+      descriptor: sourceIndex === null ? origin.descriptor : null,
+      sourceIndex,
+      runtimeSourceIndex: sourceIndex,
+      persistedIndex: persistedIndexes.get(item.id) ?? null,
+      propStatuses: OptimisticEffectPropStatuses.get(entry.nodePath, item.id)
+    };
+  };
+  entry.snapshot = {
+    nodePath: entry.nodePath,
+    compiledItems: entry.compiled.map(describe),
+    persistedItems: persisted.map(describe),
+    items: items.map(describe),
+    operations: [...entry.operations]
+  };
 };
 var publish = (keys) => {
-  if (batchDepth > 0) {
-    for (const key of keys)
-      batchedKeys.add(key);
-    return;
-  }
-  const changedKeys = new Set(keys);
-  for (const key of changedKeys) {
-    const entry = entries.get(key);
-    if (entry)
-      nodeSnapshots.set(key, { entry: { ...entry } });
-    else
-      nodeSnapshots.delete(key);
-  }
-  snapshot = entries.size === 0 ? empty : [...entries.values()];
-  for (const key of changedKeys) {
+  snapshot = [...entries.values()].map((entry) => entry.snapshot);
+  for (const key of new Set(keys)) {
     for (const listener of nodeListeners.get(key) ?? [])
       listener();
   }
-  for (const listener of listeners)
+  for (const listener of listeners2)
     listener();
+};
+var settleEntry = (entry) => {
+  let last = -1;
+  for (let index = 0;index < entry.operations.length; index++) {
+    const operation = entry.operations[index];
+    if (operation.status === "queued")
+      break;
+    if (operation.status === "acknowledged" && operation.mutationId !== null && installedMutations.has(operation.mutationId))
+      last = index;
+  }
+  if (last === -1)
+    return false;
+  let { compiled } = entry;
+  for (const operation of entry.operations.splice(0, last + 1)) {
+    if (operation.status !== "acknowledged")
+      continue;
+    compiled = apply(entry, compiled, operation) ?? compiled;
+    operation.status = "settled";
+  }
+  entry.compiled = compiled.map((item) => ({
+    ...item,
+    originId: item.id,
+    descriptor: null
+  }));
+  for (const item of entry.compiled)
+    entry.recipes.set(item.id, item);
+  update(entry);
+  return true;
 };
 var subscribeToKey = (key, listener) => {
   if (key === null)
@@ -147239,115 +147569,361 @@ var subscribeToKey = (key, listener) => {
       nodeListeners.delete(key);
   };
 };
-var matches = (entry, definitions) => !entry.sourceChanged && entry.definitions.length === definitions.length && entry.definitions.every((definition, index) => definition === definitions[index]);
-var remove = (entry) => {
-  const key = keyForNode(entry.nodePath);
-  if (entries.get(key) !== entry)
-    return;
-  entries.delete(key);
-  acknowledged.delete(entry);
-  publish([key]);
+var ensure = (nodePath, definitions) => {
+  const key = keyForNode2(nodePath);
+  const previous = entries.get(key);
+  if (previous)
+    return previous;
+  const compiled = definitions.map((definition) => {
+    const id = `effect-${++nextId}`;
+    return { id, definition, originId: id, descriptor: null };
+  });
+  const entry = {
+    nodePath,
+    compiled,
+    operations: [],
+    recipes: new Map(compiled.map((item) => [item.id, item])),
+    frozenRuntime: false,
+    refreshPending: false,
+    refreshMutationIds: new Set,
+    refreshSourceRevision: null,
+    snapshot: {
+      nodePath,
+      compiledItems: [],
+      persistedItems: [],
+      items: [],
+      operations: []
+    }
+  };
+  update(entry);
+  entries.set(key, entry);
+  snapshot = [...entries.values()].map((item) => item.snapshot);
+  return entry;
 };
-var OptimisticEffectDeletion = {
-  batch: (run) => {
-    batchDepth++;
-    try {
-      return run();
-    } finally {
-      batchDepth--;
-      if (batchDepth === 0 && batchedKeys.size > 0) {
-        const keys = [...batchedKeys];
-        batchedKeys.clear();
-        publish(keys);
+OptimisticEffectPropStatuses.subscribe((nodePath) => {
+  const entry = entries.get(keyForNode2(nodePath));
+  if (!entry)
+    return;
+  update(entry);
+  publish([keyForNode2(nodePath)]);
+});
+var entryForEffect = (nodePath, id) => {
+  const entry = entries.get(keyForNode2(nodePath));
+  if (entry?.recipes.has(id))
+    return entry;
+  return [...entries.values()].find((candidate) => candidate.recipes.has(id));
+};
+var releaseRefreshedRuntimes = () => {
+  const changed = [];
+  for (const [key, entry] of entries) {
+    if (!entry.frozenRuntime || entry.refreshPending || entry.refreshSourceRevision !== null && entry.refreshSourceRevision === activeSourceRevision && [...entry.refreshMutationIds].some((id) => !acknowledgedMutations.has(id)))
+      continue;
+    entry.frozenRuntime = false;
+    entry.refreshMutationIds.clear();
+    update(entry);
+    changed.push(key);
+  }
+  return changed;
+};
+var acknowledgeOperations = (operations, mutationId) => {
+  const changedEntries = new Set;
+  for (const operation of operations) {
+    const entry = entries.get(keyForNode2(operation.nodePath));
+    if (!entry || operation.status !== "queued")
+      continue;
+    operation.status = "acknowledged";
+    operation.mutationId = mutationId;
+    changedEntries.add(entry);
+  }
+  acknowledgedMutations.add(mutationId);
+  const changedKeys = [];
+  for (const entry of changedEntries) {
+    update(entry);
+    settleEntry(entry);
+    changedKeys.push(keyForNode2(entry.nodePath));
+  }
+  changedKeys.push(...releaseRefreshedRuntimes());
+  if (changedKeys.length > 0)
+    publish(changedKeys);
+};
+var OptimisticEffects = {
+  get: (nodePath) => entries.get(keyForNode2(nodePath))?.snapshot ?? null,
+  getItems: (nodePath, definitions) => {
+    const entry = definitions === null ? entries.get(keyForNode2(nodePath)) : ensure(nodePath, definitions);
+    return entry?.snapshot.items ?? emptyItems;
+  },
+  getSnapshot: () => snapshot,
+  startSourceMutation: (revision) => {
+    activeSourceRevision = revision;
+  },
+  finishSourceMutation: (revision) => {
+    if (activeSourceRevision === revision)
+      activeSourceRevision = null;
+    const changed = releaseRefreshedRuntimes();
+    if (changed.length > 0)
+      publish(changed);
+  },
+  startRefresh: () => {
+    for (const entry of entries.values()) {
+      if (entry.operations.some((operation) => operation.status === "queued" || operation.status === "acknowledged")) {
+        entry.frozenRuntime = true;
+        entry.refreshPending = true;
+        entry.refreshSourceRevision = activeSourceRevision;
       }
     }
   },
-  clear: () => {
-    if (entries.size === 0)
-      return;
-    const keys = [...entries.keys()];
-    for (const entry of entries.values())
-      acknowledged.delete(entry);
-    entries.clear();
-    publish(keys);
+  acknowledgeMutation: (mutationId) => {
+    acknowledgedMutations.add(mutationId);
+    const changed = releaseRefreshedRuntimes();
+    if (changed.length > 0)
+      publish(changed);
   },
+  getPropStatuses: (nodePath, id) => {
+    const entry = entryForEffect(nodePath, id);
+    return entry ? OptimisticEffectPropStatuses.get(entry.nodePath, id) : null;
+  },
+  setPropStatuses: (nodePath, id, props) => {
+    const entry = entryForEffect(nodePath, id);
+    if (entry)
+      OptimisticEffectPropStatuses.set(entry.nodePath, id, props);
+  },
+  subscribe: (listener) => {
+    listeners2.add(listener);
+    return () => {
+      listeners2.delete(listener);
+    };
+  },
+  subscribeToNode: (nodePath, listener) => subscribeToKey(keyForNode2(nodePath), listener),
   begin: ({
     nodePath,
-    effectIndices,
-    definitions
+    definitions,
+    action
   }) => {
-    const key = keyForNode(nodePath);
-    if (entries.has(key) || effectIndices.length === 0 || effectIndices.some((index) => !Number.isInteger(index) || index < 0 || index >= definitions.length))
-      return null;
-    const entry = {
-      nodePath,
-      effectIndices: [...new Set(effectIndices)],
-      definitions: [...definitions],
-      sourceChanged: false
+    const entry = ensure(nodePath, definitions);
+    if (action.type === "restore") {
+      for (const item of action.items) {
+        if (!entry.recipes.has(item.id))
+          entry.recipes.set(item.id, item);
+      }
+    }
+    const added = action.type === "add" ? [
+      {
+        id: `effect-${++nextId}`,
+        definition: action.definition,
+        originId: null,
+        descriptor: action.descriptor
+      }
+    ] : action.type === "duplicate" ? action.ids.map((id) => {
+      const item = entry.snapshot.items.find((candidate) => candidate.id === id);
+      if (!item)
+        throw new Error("The effect is no longer available.");
+      return {
+        id: `effect-${++nextId}`,
+        definition: item.definition,
+        originId: id,
+        descriptor: null
+      };
+    }) : [];
+    for (const item of added)
+      entry.recipes.set(item.id, item);
+    const operation = {
+      id: ++nextOperation,
+      get nodePath() {
+        return entry.nodePath;
+      },
+      addedIds: added.map((item) => item.id),
+      action: action.type === "add" ? {
+        type: "add",
+        beforeId: action.index === null ? null : entry.snapshot.items[action.index]?.id ?? null
+      } : action,
+      status: "queued",
+      mutationId: null
     };
-    entries.set(key, entry);
-    publish([key]);
-    return entry;
+    entry.operations.push(operation);
+    if (action.type === "duplicate") {
+      action.ids.forEach((id, index) => OptimisticEffectPropStatuses.copy(entry.nodePath, id, added[index].id));
+    }
+    update(entry);
+    publish([keyForNode2(entry.nodePath)]);
+    return operation;
   },
-  remove,
-  acknowledge: (entry) => {
-    if (entries.get(keyForNode(entry.nodePath)) !== entry)
-      return;
-    acknowledged.add(entry);
-    if (entry.sourceChanged)
-      remove(entry);
+  resolveIndex: (nodePath, id) => {
+    const index = entries.get(keyForNode2(nodePath))?.snapshot.persistedItems.findIndex((item) => item.id === id) ?? -1;
+    return index < 0 ? null : index;
   },
-  get: (nodePath) => entries.get(keyForNode(nodePath)) ?? null,
-  getSnapshot: () => snapshot,
-  subscribe: (listener) => {
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
+  getOperationStatus: (operation) => operation.status,
+  setAddedDescriptor: (operation, descriptor) => {
+    const entry = entries.get(keyForNode2(operation.nodePath));
+    if (!entry || operation.action.type !== "add" || operation.status === "failed" || operation.status === "cancelled" || operation.status === "settled")
+      return;
+    const id = operation.addedIds[0];
+    const item = entry.recipes.get(id);
+    if (!item)
+      return;
+    for (const recipe of entry.recipes.values()) {
+      let origin = recipe;
+      const visited = new Set;
+      while (origin.id !== id && origin.originId !== null && !visited.has(origin.id)) {
+        visited.add(origin.id);
+        const previous = entry.recipes.get(origin.originId);
+        if (!previous)
+          break;
+        origin = previous;
+      }
+      if (origin.id !== id)
+        continue;
+      entry.recipes.set(recipe.id, {
+        ...recipe,
+        definition: descriptor.definition,
+        descriptor: recipe.id === id ? descriptor : recipe.descriptor
+      });
+    }
+    update(entry);
+    publish([keyForNode2(entry.nodePath)]);
   },
-  subscribeToNode: (nodePath, listener) => subscribeToKey(keyForNode(nodePath), listener),
-  matches,
-  reconcile: (nodePath, definitions) => {
-    if (nodePath === null || definitions === null)
+  acknowledge: (operation, mutationId) => acknowledgeOperations([operation], mutationId),
+  acknowledgeOperations,
+  settle: (mutationIds) => {
+    for (const id of mutationIds)
+      installedMutations.add(id);
+    const keys = [];
+    for (const [key, entry] of entries) {
+      if (entry.frozenRuntime) {
+        entry.refreshPending = false;
+        for (const id of mutationIds)
+          entry.refreshMutationIds.add(id);
+      }
+      if (settleEntry(entry))
+        keys.push(key);
+    }
+    keys.push(...releaseRefreshedRuntimes());
+    if (keys.length > 0)
+      publish(keys);
+  },
+  rollback: (operation) => {
+    const entry = entries.get(keyForNode2(operation.nodePath));
+    if (!entry || operation.status === "settled" || operation.status === "failed" || operation.status === "cancelled")
       return;
-    const key = keyForNode(nodePath);
-    const entry = entries.get(key);
-    if (!entry || entry.sourceChanged || matches(entry, definitions))
-      return;
-    entry.sourceChanged = true;
-    if (acknowledged.has(entry))
-      remove(entry);
-    else
-      publish([key]);
+    operation.status = "failed";
+    update(entry);
+    publish([keyForNode2(entry.nodePath)]);
   },
   remap: (remappings) => {
-    const moves = remappings.flatMap(({ entry, nodePath }) => {
-      const oldKey = keyForNode(entry.nodePath);
-      const newKey = nodePath === null ? null : keyForNode(nodePath);
-      return entries.get(oldKey) === entry && oldKey !== newKey ? [{ entry, nodePath, oldKey, newKey }] : [];
-    });
-    if (moves.length === 0)
-      return;
-    for (const { oldKey } of moves)
+    const changes = remappings.map(({ oldNodePath, nodePath }) => ({
+      oldKey: keyForNode2(oldNodePath),
+      nodePath,
+      entry: entries.get(keyForNode2(oldNodePath))
+    }));
+    for (const { oldKey } of changes)
       entries.delete(oldKey);
-    for (const { entry, nodePath, newKey } of moves) {
-      if (nodePath === null || newKey === null) {
-        acknowledged.delete(entry);
+    OptimisticEffectPropStatuses.remap(remappings);
+    const changedKeys = [];
+    for (const { oldKey, nodePath, entry } of changes) {
+      if (!entry)
+        continue;
+      changedKeys.push(oldKey);
+      if (nodePath === null) {
+        for (const operation of entry.operations)
+          if (operation.status === "queued")
+            operation.status = "cancelled";
         continue;
       }
       entry.nodePath = nodePath;
+      const newKey = keyForNode2(nodePath);
       entries.set(newKey, entry);
+      changedKeys.push(newKey);
+      update(entry);
     }
-    publish(moves.flatMap(({ oldKey, newKey }) => newKey === null ? [oldKey] : [oldKey, newKey]));
+    publish(changedKeys);
+  },
+  clear: () => {
+    const keys = [...entries.keys()];
+    for (const entry of entries.values())
+      for (const operation of entry.operations)
+        if (operation.status === "queued")
+          operation.status = "cancelled";
+    entries.clear();
+    OptimisticEffectPropStatuses.clear();
+    installedMutations.clear();
+    acknowledgedMutations.clear();
+    activeSourceRevision = null;
+    publish(keys);
+  },
+  invalidateFile: (absolutePath) => {
+    const keys = [];
+    for (const [key, entry] of entries) {
+      if (entry.nodePath.absolutePath !== absolutePath)
+        continue;
+      for (const operation of entry.operations) {
+        if (operation.status === "queued" || operation.status === "acknowledged")
+          operation.status = "cancelled";
+      }
+      entries.delete(key);
+      OptimisticEffectPropStatuses.removeNode(entry.nodePath);
+      keys.push(key);
+    }
+    if (keys.length > 0)
+      publish(keys);
+  },
+  reconcile: (nodePath, definitions) => {
+    const entry = entries.get(keyForNode2(nodePath));
+    if (!entry || entry.operations.some((operation) => operation.status === "queued" || operation.status === "acknowledged"))
+      return;
+    if (entry.compiled.length === definitions.length && entry.compiled.every((item, index) => item.definition === definitions[index]))
+      return;
+    const available = [...entry.compiled];
+    const sameOrder = entry.compiled.length === definitions.length && entry.compiled.every((item, index) => item.definition.type === definitions[index].type);
+    entry.compiled = definitions.map((definition, position) => {
+      if (sameOrder)
+        return { ...entry.compiled[position], definition };
+      const index = available.findIndex((item) => item.definition === definition);
+      if (index !== -1)
+        return available.splice(index, 1)[0];
+      const sameTypeIndex = available.findIndex((item) => item.definition.type === definition.type);
+      if (sameTypeIndex !== -1)
+        return { ...available.splice(sameTypeIndex, 1)[0], definition };
+      const id = `effect-${++nextId}`;
+      return { id, definition, originId: id, descriptor: null };
+    });
+    entry.operations = [];
+    entry.recipes = new Map(entry.compiled.map((item) => [item.id, item]));
+    update(entry);
+    publish([keyForNode2(entry.nodePath)]);
+  },
+  projectEffects: (nodePath, effects, history) => {
+    const entry = nodePath === null ? null : entries.get(keyForNode2(nodePath));
+    if (entry && history && !entry.frozenRuntime && entry.compiled.length === effects.length && entry.compiled.every((item, index) => item.definition === effects[index].definition)) {
+      entry.compiled.forEach((item, index) => history.set(item.id, effects[index]));
+    }
+    if (!entry || !entry.operations.some((operation) => operation.status === "queued" || operation.status === "acknowledged"))
+      return {
+        effects,
+        sourceIndices: null,
+        itemIds: entry?.snapshot.items.map((item) => item.id) ?? null
+      };
+    const projected = [];
+    const sourceIndices = [];
+    const itemIds = [];
+    for (const item of entry.snapshot.items) {
+      const compiledId = item.sourceIndex === null ? null : entry.compiled[item.sourceIndex]?.id;
+      const descriptor = compiledId !== null && entry.frozenRuntime ? history?.get(compiledId) : item.sourceIndex === null ? item.descriptor ?? history?.get(item.originId ?? item.id) ?? null : effects[item.sourceIndex];
+      if (!descriptor)
+        continue;
+      history?.set(item.id, descriptor);
+      projected.push(descriptor);
+      sourceIndices.push(item.sourceIndex);
+      itemIds.push(item.id);
+    }
+    return { effects: projected, sourceIndices, itemIds };
   }
 };
-var useOptimisticEffectDeletion = (nodePath) => {
-  const key = nodePath === null ? null : keyForNode(nodePath);
+var useOptimisticEffects = (nodePath) => {
+  const key = nodePath === null ? null : keyForNode2(nodePath);
   const observer = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({
     subscribe: (listener) => subscribeToKey(key, listener),
-    getSnapshot: () => key === null ? null : nodeSnapshots.get(key) ?? null
+    getSnapshot: () => key === null ? null : entries.get(key)?.snapshot ?? null
   }), [key]);
-  return useSyncExternalStore2(observer.subscribe, observer.getSnapshot, () => null)?.entry ?? null;
+  return useSyncExternalStore2(observer.subscribe, observer.getSnapshot, () => null);
 };
 
 // src/sequence-node-path.tsx
@@ -147648,51 +148224,63 @@ var getPropStatusesCtx = (propStatuses, nodePath) => {
   return getPropStatusesForSequenceStatus(propStatuses[makeSequencePropsSubscriptionKey(nodePath)] ?? null, nodePath.videoConfigValues);
 };
 var useMemoizedEffects = ({
-  effects,
+  effects: sourceEffects,
+  runtimeValues,
   overrideId,
   videoConfigValues
 }) => {
   const previousRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const preview = useEffectPreview(runtimeValues);
   const { isStudio, isRendering } = useRemotionEnvironment();
   const { overrideIdToNodePathMappings } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(OverrideIdsToNodePathsGettersContext);
   const previous = previousRef.current;
   const nodePath = overrideId ? overrideIdToNodePathMappings[overrideId] ?? null : null;
+  const optimisticNodePath = isStudio && !isRendering ? nodePath : null;
+  const optimistic = useOptimisticEffects(optimisticNodePath);
+  const optimisticHistory = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(new Map);
+  const projection = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => OptimisticEffects.projectEffects(optimistic?.nodePath ?? optimisticNodePath, sourceEffects, optimisticHistory.current), [optimistic, optimisticNodePath, sourceEffects]);
+  const { effects } = projection;
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    if (optimisticNodePath !== null)
+      OptimisticEffects.reconcile(optimisticNodePath, sourceEffects.map((effect) => effect.definition));
+  }, [optimisticNodePath, optimistic, sourceEffects]);
   const effectDragOverrides = useEffectDragOverridesForNodePath(nodePath);
   const sequenceStatus = usePropStatusForNodePath(nodePath);
-  const pendingDeletion = useOptimisticEffectDeletion(isStudio && !isRendering ? nodePath : null);
-  const definitions = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => pendingDeletion === null ? null : effects.map((effect) => effect.definition), [effects, pendingDeletion]);
-  const deletedIndices = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => new Set(pendingDeletion?.effectIndices ?? []), [pendingDeletion]);
-  const matchesPendingDeletion = pendingDeletion !== null && definitions !== null && OptimisticEffectDeletion.matches(pendingDeletion, definitions);
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
-    if (pendingDeletion !== null)
-      OptimisticEffectDeletion.reconcile(nodePath, definitions);
-  }, [definitions, nodePath, pendingDeletion]);
   const effectPropStatuses = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => Array.from({ length: effects.length }, (_, effectIndex) => {
     if (nodePath === null) {
       return null;
     }
-    const status = getEffectStatusForSequenceStatus({
+    const sourceIndex = projection.sourceIndices === null ? effectIndex : projection.sourceIndices[effectIndex];
+    const status = sourceIndex === null || sourceIndex === undefined ? null : getEffectStatusForSequenceStatus({
       status: sequenceStatus,
-      effectIndex,
+      effectIndex: sourceIndex,
       videoConfigValues
     });
-    return status.type === "can-update-effect" ? status.props : null;
-  }), [effects.length, nodePath, sequenceStatus, videoConfigValues]);
-  const animatedEffects = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => effectPropStatuses.map((status, index) => !(matchesPendingDeletion && deletedIndices.has(index)) && (Object.values(status ?? {}).some((prop) => prop.status === "keyframed") || Object.values(effectDragOverrides[index] ?? emptyDragOverrides2).some((override) => override.type === "keyframed"))), [
-    deletedIndices,
-    effectDragOverrides,
-    effectPropStatuses,
-    matchesPendingDeletion
+    const props = status?.type === "can-update-effect" ? status.props : null;
+    const id = projection.itemIds?.[effectIndex];
+    const overlay = id ? OptimisticEffects.getPropStatuses(nodePath, id) : null;
+    return overlay === null ? props : {
+      ...props,
+      ...evaluateSourcePropStatuses(overlay, videoConfigValues)
+    };
+  }), [
+    effects.length,
+    nodePath,
+    sequenceStatus,
+    videoConfigValues,
+    projection.sourceIndices,
+    projection.itemIds
   ]);
+  const animatedEffects = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => effectPropStatuses.map((status, index) => Object.values(status ?? {}).some((prop) => prop.status === "keyframed") || Object.values(effectDragOverrides[index] ?? emptyDragOverrides2).some((override) => override.type === "keyframed")), [effectDragOverrides, effectPropStatuses]);
   const frame = useCurrentFrameWithOptionalSubscription(animatedEffects.some(Boolean));
-  const prepared = effects.map((descriptor, index) => {
-    const deleted = matchesPendingDeletion && deletedIndices.has(index);
-    const propStatus = effectPropStatuses[index];
-    const dragOverridesMap = effectDragOverrides[index] ?? emptyDragOverrides2;
+  const effectsWithPreview = preview === null ? effects : [...effects, preview];
+  const prepared = effectsWithPreview.map((descriptor, index) => {
+    const propStatus = effectPropStatuses[index] ?? null;
+    const dragOverridesMap = index < effects.length ? effectDragOverrides[index] ?? emptyDragOverrides2 : emptyDragOverrides2;
     const dragOverrides = Object.keys(dragOverridesMap).length === 0 ? null : dragOverridesMap;
     const effectFrame = animatedEffects[index] ? frame : null;
     const cached = previous?.prepared[index];
-    if (cached && cached.deleted === deleted && cached.definition === descriptor.definition && cached.sourceKey === descriptor.effectKey && areEffectParamsEqual(cached.params, descriptor.params) && cached.propStatus === propStatus && cached.dragOverrides === dragOverrides && cached.frame === effectFrame) {
+    if (cached && cached.definition === descriptor.definition && cached.sourceKey === descriptor.effectKey && areEffectParamsEqual(cached.params, descriptor.params) && cached.propStatus === propStatus && cached.dragOverrides === dragOverrides && cached.frame === effectFrame) {
       return cached;
     }
     const propStatusOverrides = resolvePropStatusOverrides(propStatus ?? undefined, frame);
@@ -147702,17 +148290,15 @@ var useMemoizedEffects = ({
       dragOverrides,
       frame
     });
-    const params = deleted ? { ...merged.params, disabled: true } : merged.params;
-    const effectKey = deleted ? descriptor.definition.calculateKey(params) : merged.effectKey;
+    const { params, effectKey } = merged;
     return {
-      deleted,
       definition: descriptor.definition,
       sourceKey: descriptor.effectKey,
       params: descriptor.params !== null && typeof descriptor.params === "object" && Object.getPrototypeOf(descriptor.params) === Object.prototype ? { ...descriptor.params } : descriptor.params,
       propStatus,
       dragOverrides,
       frame: effectFrame,
-      value: cached?.deleted === deleted && cached.value.definition === descriptor.definition && cached.value.effectKey === effectKey ? cached.value : {
+      value: cached && cached.value.definition === descriptor.definition && cached.value.effectKey === effectKey ? cached.value : {
         definition: descriptor.definition,
         effectKey,
         params,
@@ -147776,37 +148362,37 @@ var getFlatSchemaWithAllKeys = (schema) => {
 
 var deletions = new Map;
 var stackToNode = new Map;
-var listeners2 = new Set;
-var empty2 = new Set;
-var snapshot2 = empty2;
-var keyForNode2 = (node) => JSON.stringify([node.absolutePath, node.nodePath]);
+var listeners3 = new Set;
+var empty = new Set;
+var snapshot2 = empty;
+var keyForNode3 = (node) => JSON.stringify([node.absolutePath, node.nodePath]);
 var publish2 = (force = false) => {
   const next = new Set([...deletions].filter(([, value]) => value.deleted).map(([key]) => key));
   if (!force && next.size === snapshot2.size && [...next].every((key) => snapshot2.has(key))) {
     return;
   }
-  snapshot2 = next.size === 0 ? empty2 : next;
-  for (const listener of listeners2) {
+  snapshot2 = next.size === 0 ? empty : next;
+  for (const listener of listeners3) {
     listener();
   }
 };
 var subscribe = (listener) => {
-  listeners2.add(listener);
+  listeners3.add(listener);
   return () => {
-    listeners2.delete(listener);
+    listeners3.delete(listener);
   };
 };
 var usePendingSequenceDeletions = () => {
   const environment = useRemotionEnvironment();
-  const value = useSyncExternalStore2(subscribe, () => snapshot2, () => empty2);
-  return environment.isStudio && !environment.isRendering ? value : empty2;
+  const value = useSyncExternalStore2(subscribe, () => snapshot2, () => empty);
+  return environment.isStudio && !environment.isRendering ? value : empty;
 };
 var OptimisticSequenceDeletion = {
   register: (stack, node) => {
     if (stack === null || node === null) {
       return;
     }
-    const key = keyForNode2(node);
+    const key = keyForNode3(node);
     if (stackToNode.get(stack) === key) {
       return;
     }
@@ -147815,7 +148401,7 @@ var OptimisticSequenceDeletion = {
       publish2(true);
     }
   },
-  isDeleted: (node, pending) => node !== null && pending.has(keyForNode2(node)),
+  isDeleted: (node, pending) => node !== null && pending.has(keyForNode3(node)),
   isElementDeleted: (element, pending) => {
     if (!(0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(element)) {
       return false;
@@ -147826,7 +148412,7 @@ var OptimisticSequenceDeletion = {
   },
   set: (nodes, revision, deleted) => {
     for (const node of nodes) {
-      const key = keyForNode2(node);
+      const key = keyForNode3(node);
       const previous = deletions.get(key);
       if (previous && previous.revision > revision) {
         continue;
@@ -147837,7 +148423,7 @@ var OptimisticSequenceDeletion = {
   },
   rollback: (nodes, revision) => {
     for (const node of nodes) {
-      const key = keyForNode2(node);
+      const key = keyForNode3(node);
       if (deletions.get(key)?.revision === revision) {
         deletions.delete(key);
       }
@@ -147854,12 +148440,12 @@ var OptimisticSequenceDeletion = {
   },
   remap: (remappings) => {
     const moves = remappings.flatMap((remapping) => {
-      const oldKey = keyForNode2(remapping.previousNodePath);
+      const oldKey = keyForNode3(remapping.previousNodePath);
       const deletion = deletions.get(oldKey);
       if (deletion?.id !== remapping.revision) {
         return [];
       }
-      const newKey = remapping.nodePath === null ? null : keyForNode2(remapping.nodePath);
+      const newKey = remapping.nodePath === null ? null : keyForNode3(remapping.nodePath);
       return oldKey === newKey ? [] : [{ oldKey, newKey, deletion }];
     });
     if (moves.length === 0) {
@@ -147882,7 +148468,7 @@ var OptimisticSequenceDeletion = {
   },
   restore: (nodes, revision, deleted) => {
     for (const node of nodes) {
-      const key = keyForNode2(node);
+      const key = keyForNode3(node);
       const previous = deletions.get(key);
       if (previous && previous.revision <= revision) {
         deletions.set(key, { ...previous, revision, deleted });
@@ -147891,7 +148477,7 @@ var OptimisticSequenceDeletion = {
     publish2();
   },
   prepareRetirement: (nodes, dispatchedRevision) => {
-    const keys = nodes.map(keyForNode2);
+    const keys = nodes.map(keyForNode3);
     return () => {
       let changed = false;
       for (const key of keys) {
@@ -149049,7 +149635,6 @@ var SequenceWithoutFrom = withInteractivitySchema({
 
 var absoluteFillSchema = {
   ...baseSchema,
-  ...premountSchema,
   ...transformSchema,
   ...backgroundSchema,
   ...borderSchema,
@@ -149233,6 +149818,39 @@ var useCropStyle = ({
     }
     return { ...style, clipPath: cropClipPath };
   }, [cropBottom, cropLeft, cropRight, cropTop, style]);
+};
+
+// src/use-media-enabled.tsx
+
+
+var MediaEnabledContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(null);
+var useVideoEnabled = () => {
+  const context = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(MediaEnabledContext);
+  if (context && context.videoEnabled !== null) {
+    return context.videoEnabled;
+  }
+  return typeof window === "undefined" ? true : window.remotion_videoEnabled !== false;
+};
+var useAudioEnabled = () => {
+  const context = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(MediaEnabledContext);
+  if (!context) {
+    return typeof window === "undefined" ? true : window.remotion_audioEnabled;
+  }
+  if (context.audioEnabled === null) {
+    return typeof window === "undefined" ? true : window.remotion_audioEnabled;
+  }
+  return context.audioEnabled;
+};
+var MediaEnabledProvider = ({
+  children,
+  videoEnabled,
+  audioEnabled
+}) => {
+  const value = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({ videoEnabled, audioEnabled }), [videoEnabled, audioEnabled]);
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(MediaEnabledContext.Provider, {
+    value,
+    children
+  });
 };
 
 // src/animated-image/canvas.tsx
@@ -149624,7 +150242,7 @@ var pools = [];
 var leased = false;
 var waiters = [];
 var cleanups = [];
-var listeners3 = new Set;
+var listeners4 = new Set;
 var release = () => {
   const errors = [];
   try {
@@ -149656,10 +150274,10 @@ var cleanupWithSharedWebGLPool = (cleanup) => {
   }
 };
 var subscribeToSharedWebGLContextLoss = (onContextLost) => {
-  listeners3.add(onContextLost);
+  listeners4.add(onContextLost);
   return () => {
-    listeners3.delete(onContextLost);
-    if (listeners3.size === 0) {
+    listeners4.delete(onContextLost);
+    if (listeners4.size === 0) {
       for (const entry of pools)
         entry.pool.dispose();
       pools.length = 0;
@@ -149688,7 +150306,7 @@ var acquireSharedWebGLPool = async (width, height) => {
     }
     const pool = new CanvasPool(width, height, (canvas) => {
       const errors = [];
-      for (const listener of [...listeners3]) {
+      for (const listener of [...listeners4]) {
         try {
           listener(canvas);
         } catch (error) {
@@ -150545,7 +151163,6 @@ var animatedImageSchema = {
   ...baseSchema,
   loop: loopField,
   ...cropSchema,
-  ...premountSchema,
   ...transformSchema,
   ...backgroundSchema,
   ...borderSchema,
@@ -150582,6 +151199,7 @@ var AnimatedImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const memoizedEffects = useMemoizedEffects({
     effects,
     overrideId: controls?.overrideId ?? null,
+    runtimeValues: controls?.runtimeValues ?? null,
     videoConfigValues: controls?.videoConfigValues ?? null
   });
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useImperativeHandle)(canvasRef, () => {
@@ -150889,6 +151507,10 @@ var AnimatedImageWithIntrinsicDuration = (props) => {
   });
 };
 var AnimatedImageComponent = (props) => {
+  const videoEnabled = useVideoEnabled();
+  if (videoEnabled === false) {
+    return null;
+  }
   if (props.loop && props.durationInFrames === undefined) {
     const resolvedSrc = resolveAnimatedImageSource(props.src);
     const requestInitKey = serializeRequestInit(props.requestInit);
@@ -152510,12 +153132,8 @@ var isSafari = () => {
   if (typeof window === "undefined") {
     return false;
   }
-  const isAppleWebKit = /AppleWebKit/.test(window.navigator.userAgent);
-  if (!isAppleWebKit) {
-    return false;
-  }
-  const isNotChrome = !window.navigator.userAgent.includes("Chrome/");
-  return isNotChrome;
+  const { userAgent } = window.navigator;
+  return /AppleWebKit/.test(userAgent) && !/Chrome\/|Chromium\/|Android/.test(userAgent);
 };
 var isIosSafari = () => {
   if (typeof window === "undefined") {
@@ -153040,10 +153658,6 @@ var useBufferState = () => {
 };
 
 // src/buffer-until-first-frame.ts
-var isSafariWebkit = () => {
-  const isSafari = /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
-  return isSafari;
-};
 var useBufferUntilFirstFrame = ({
   mediaRef,
   mediaType,
@@ -153065,7 +153679,7 @@ var useBufferUntilFirstFrame = ({
     if (!current) {
       return;
     }
-    if (current.readyState >= current.HAVE_FUTURE_DATA && !isSafariWebkit()) {
+    if (current.readyState >= current.HAVE_FUTURE_DATA && !isSafari()) {
       playbackLogging({
         logLevel,
         message: `Not using buffer until first frame, because readyState is ${current.readyState} and is not Safari or Desktop Chrome`,
@@ -154136,44 +154750,6 @@ var AudioForPreview = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(AudioFor
 // src/audio/AudioForRendering.tsx
 
 
-// src/use-media-enabled.tsx
-
-
-var MediaEnabledContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(null);
-var useVideoEnabled = () => {
-  const context = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(MediaEnabledContext);
-  if (!context) {
-    return window.remotion_videoEnabled;
-  }
-  if (context.videoEnabled === null) {
-    return window.remotion_videoEnabled;
-  }
-  return context.videoEnabled;
-};
-var useAudioEnabled = () => {
-  const context = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(MediaEnabledContext);
-  if (!context) {
-    return window.remotion_audioEnabled;
-  }
-  if (context.audioEnabled === null) {
-    return window.remotion_audioEnabled;
-  }
-  return context.audioEnabled;
-};
-var MediaEnabledProvider = ({
-  children,
-  videoEnabled,
-  audioEnabled
-}) => {
-  const value = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({ videoEnabled, audioEnabled }), [videoEnabled, audioEnabled]);
-  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(MediaEnabledContext.Provider, {
-    value,
-    children
-  });
-};
-
-// src/audio/AudioForRendering.tsx
-
 var AudioForRenderingRefForwardingFunction = (props, ref) => {
   const audioRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const {
@@ -154477,7 +155053,6 @@ var resolveSolidPixelDensity = (pixelDensity) => {
 };
 var solidSchema = {
   ...baseSchema,
-  ...premountSchema,
   color: {
     type: "color",
     default: "transparent",
@@ -154524,6 +155099,7 @@ var SolidInner = ({
   style,
   pixelDensity,
   overrideId,
+  runtimeValues,
   videoConfigValues,
   reference,
   canvasProps
@@ -154536,6 +155112,7 @@ var SolidInner = ({
   const memoizedEffects = useMemoizedEffects({
     effects,
     overrideId: overrideId ?? null,
+    runtimeValues,
     videoConfigValues
   });
   const sourceCanvas = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
@@ -154653,9 +155230,10 @@ var SolidOuter = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
 }, ref) => {
   const memoizedEffectDefinitions = useMemoizedEffectDefinitions(effects);
   const actualRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const videoEnabled = useVideoEnabled();
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useImperativeHandle)(ref, () => {
-    return actualRef.current;
-  }, []);
+    return videoEnabled ? actualRef.current : null;
+  }, [videoEnabled]);
   const {
     effectivePremountFor,
     effectivePostmountFor,
@@ -154686,6 +155264,9 @@ var SolidOuter = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
     style: premountingStyle,
     componentName: "<Solid />"
   });
+  if (!videoEnabled) {
+    return null;
+  }
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(Freeze, {
     frame: freezeFrame,
     active: isPremountingOrPostmounting,
@@ -154715,6 +155296,7 @@ var SolidOuter = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
           reference: actualRef,
           videoConfigValues: controls?.videoConfigValues ?? null,
           overrideId: controls?.overrideId ?? null,
+          runtimeValues: controls?.runtimeValues ?? null,
           color,
           height,
           width,
@@ -154740,9 +155322,13 @@ addSequenceStackTraces(Solid);
 // src/HtmlInCanvas.tsx
 
 
+// src/HtmlInCanvasAncestorContext.ts
+
+var HtmlInCanvasAncestorContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(null);
+
 // src/HtmlInCanvasFallback.tsx
 
-var HtmlInCanvasFallback = ({ children, style, label }) => {
+var HtmlInCanvasFallback = ({ children, style, label, title = "HTML-in-canvas is not available" }) => {
   const currentScale = useCurrentScale({ dontThrowIfOutsideOfRemotion: true });
   const scale = currentScale > 0 ? currentScale : 1;
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
@@ -154776,7 +155362,7 @@ var HtmlInCanvasFallback = ({ children, style, label }) => {
               lineHeight: 1.5,
               color: "#ffabb5"
             },
-            children: "HTML-in-canvas is not available"
+            children: title
           }),
           /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
             style: {
@@ -154902,7 +155488,6 @@ var defaultOnPaint = ({
   ctx.reset();
   ctx.drawElementImage(elementImage, 0, 0);
 };
-var HtmlInCanvasAncestorContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(null);
 var useHtmlInCanvasUnsupportedMessage = () => {
   const ancestorPaintState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(HtmlInCanvasAncestorContext);
   if (!isHtmlInCanvasSupported()) {
@@ -154935,6 +155520,8 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const resolvedPixelDensity = resolveHtmlInCanvasPixelDensity(pixelDensity);
   const canvasWidth = Math.ceil(width * resolvedPixelDensity);
   const canvasHeight = Math.ceil(height * resolvedPixelDensity);
+  const canvasSizeKey = `${canvasWidth}x${canvasHeight}@${resolvedPixelDensity}`;
+  const committedCanvasSizeRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(canvasSizeKey);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const { isClientSideRendering, isRendering } = useRemotionEnvironment();
   const canRetryMissingPaintRecord = !isRendering || isClientSideRendering;
@@ -154947,7 +155534,6 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const outputCanvasRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const paintTargetRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const divRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
-  const canvasSizeKey = `${width}x${height}@${resolvedPixelDensity}-${paintTargetMode}`;
   const paintState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     const state = {
       pendingChildren: 0,
@@ -154995,6 +155581,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const memoizedEffects = useMemoizedEffects({
     effects,
     overrideId: controls?.overrideId ?? null,
+    runtimeValues: controls?.runtimeValues ?? null,
     videoConfigValues: controls?.videoConfigValues ?? null
   });
   const effectsRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(memoizedEffects);
@@ -155003,7 +155590,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   onPaintRef.current = onPaint;
   const onInitRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(onInit);
   onInitRef.current = onInit;
-  const initializedRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
+  const initializedSizeRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const onInitCleanupRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const unmountedRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
   const effectScratchCanvasesRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
@@ -155022,12 +155609,13 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
       throw new Error("HtmlInCanvas: paint target is not ready because the canvas is remounting");
     }
     const inProgress = paintingTargets.current.get(paintTarget);
-    if (isRendering && inProgress) {
+    const serializePaint = isRendering || onInitRef.current !== undefined;
+    if (serializePaint && inProgress) {
       inProgress.repaint = true;
       return;
     }
     const painting = { repaint: false };
-    if (isRendering) {
+    if (serializePaint) {
       paintingTargets.current.set(paintTarget, painting);
     }
     resizePaintTarget({
@@ -155044,10 +155632,13 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
       }
       const outputCanvas = outputCanvasRef.current;
       const handle = delayRender("onPaint");
-      if (!initializedRef.current) {
+      if (initializedSizeRef.current !== canvasSizeKey) {
+        onInitCleanupRef.current?.();
+        onInitCleanupRef.current = null;
+        initializedSizeRef.current = null;
         const currentOnInit = onInitRef.current;
         if (!currentOnInit) {
-          initializedRef.current = true;
+          initializedSizeRef.current = canvasSizeKey;
         } else {
           let initImage;
           try {
@@ -155063,7 +155654,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
             }
             throw error;
           }
-          initializedRef.current = true;
+          initializedSizeRef.current = canvasSizeKey;
           try {
             if (paintTarget instanceof HTMLCanvasElement) {
               throw new Error("HtmlInCanvas: onInit requires an OffscreenCanvas paint target");
@@ -155077,8 +155668,12 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
             if (typeof cleanup !== "function") {
               throw new Error("HtmlInCanvas: when `onInit` is provided, it must return a cleanup function, or a Promise that resolves to one.");
             }
-            if (unmountedRef.current || paintTargetRef.current !== paintTarget) {
+            if (unmountedRef.current || paintTargetRef.current !== paintTarget || committedCanvasSizeRef.current !== canvasSizeKey) {
               cleanup();
+              if (paintTargetRef.current === paintTarget) {
+                initializedSizeRef.current = null;
+              }
+              painting.repaint = true;
               continueRender(handle);
               return;
             }
@@ -155117,6 +155712,11 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
           });
           if (paintResult) {
             await paintResult;
+          }
+          if (committedCanvasSizeRef.current !== canvasSizeKey) {
+            painting.repaint = true;
+            continueRender(handle);
+            return;
           }
         } else if (paintTarget instanceof HTMLCanvasElement && effectsRef.current.some((effect) => !effect.params.disabled)) {
           effectScratchCanvasesRef.current ??= {
@@ -155202,6 +155802,7 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   }, [
     canvasHeight,
     canvasWidth,
+    canvasSizeKey,
     chainState,
     continueRender,
     cancelRender,
@@ -155229,23 +155830,31 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
     divRef.current?.setAttribute("drawable", "");
     const paintTarget = paintTargetMode === "direct" ? placeholder : getTransferredOffscreenCanvas(placeholder);
     paintTargetRef.current = paintTarget;
-    resizePaintTarget({
-      target: paintTarget,
-      width: canvasWidth,
-      height: canvasHeight
-    });
-    initializedRef.current = false;
+    initializedSizeRef.current = null;
     unmountedRef.current = false;
-    placeholder.addEventListener("paint", onPaintCb);
     return () => {
-      placeholder.removeEventListener("paint", onPaintCb);
       paintTargetRef.current = null;
-      initializedRef.current = false;
+      initializedSizeRef.current = null;
       unmountedRef.current = true;
       onInitCleanupRef.current?.();
       onInitCleanupRef.current = null;
     };
-  }, [onPaintCb, cancelRender, canvasWidth, canvasHeight, paintTargetMode]);
+  }, [paintTargetMode]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    committedCanvasSizeRef.current = canvasSizeKey;
+    resizePaintTarget({
+      target: paintTargetRef.current,
+      width: canvasWidth,
+      height: canvasHeight
+    });
+  }, [canvasWidth, canvasHeight, canvasSizeKey, paintTargetMode]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    const placeholder = canvas2dRef.current;
+    placeholder.addEventListener("paint", onPaintCb);
+    return () => {
+      placeholder.removeEventListener("paint", onPaintCb);
+    };
+  }, [onPaintCb, paintTargetMode]);
   const onPaintChangedRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
     if (!onPaintChangedRef.current) {
@@ -155280,7 +155889,10 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
     height,
     continueRender,
     delayRender,
+    canvasWidth,
+    canvasHeight,
     canvasSizeKey,
+    paintTargetMode,
     renderFrame,
     isRendering,
     ancestorPaintState
@@ -155303,8 +155915,6 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
     children: [
       /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("canvas", {
         ref: paintTargetMode === "copied" ? canvas2dRef : setVisibleCanvasRef,
-        width: canvasWidth,
-        height: canvasHeight,
         style: paintTargetMode === "copied" ? {
           ...canvasStyle,
           position: "absolute",
@@ -155322,13 +155932,13 @@ var HtmlInCanvasContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
             canvasSiblings
           ]
         })
-      }, canvasSizeKey),
+      }, paintTargetMode),
       paintTargetMode === "copied" ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("canvas", {
         ref: setVisibleCanvasRef,
         width: canvasWidth,
         height: canvasHeight,
         style: canvasStyle
-      }, `output-${canvasSizeKey}`) : null
+      }, "output") : null
     ]
   });
 });
@@ -155368,7 +155978,10 @@ var HtmlInCanvasInner = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   ...sequenceProps
 }, ref) => {
   const { isRendering } = useRemotionEnvironment();
+  const videoEnabled = useVideoEnabled();
   const unsupportedMessage = useHtmlInCanvasUnsupportedMessage();
+  const ancestorPaintState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(HtmlInCanvasAncestorContext);
+  const isNestedUnsupported = Boolean(ancestorPaintState && !isHtmlInCanvasNestingSupported());
   assertHtmlInCanvasDimensions(width, height);
   resolveHtmlInCanvasPixelDensity(pixelDensity);
   const Content = isRendering ? HtmlInCanvasContentForRendering : HtmlInCanvasContent;
@@ -155428,8 +156041,12 @@ var HtmlInCanvasInner = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
       _remotionInternalPostmountDisplay: effectivePostmountFor || null,
       _remotionInternalIsPremounting: premountingActive,
       _remotionInternalIsPostmounting: postmountingActive,
-      children: !isRendering && unsupportedMessage !== null ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(HtmlInCanvasFallback, {
+      children: !videoEnabled ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(DefaultPremountContext.Provider, {
+        value: 0,
+        children
+      }) : !isRendering && unsupportedMessage !== null ? /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(HtmlInCanvasFallback, {
         style: { width, height, ...croppedStyle },
+        title: isNestedUnsupported ? "Nested HTML-in-canvas is unavailable" : "HTML-in-canvas is not available",
         label: _remotionInternalFallbackLabel,
         children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(DefaultPremountContext.Provider, {
           value: 0,
@@ -155459,7 +156076,6 @@ var HtmlInCanvasInner = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
 HtmlInCanvasInner.displayName = "HtmlInCanvas";
 var htmlInCanvasSchema = {
   ...baseSchema,
-  ...premountSchema,
   pixelDensity: {
     type: "number",
     min: 1,
@@ -155514,7 +156130,6 @@ var canvasImageSchema = {
   },
   ...baseSchemaWithoutPlaybackRate,
   ...cropSchema,
-  ...premountSchema,
   fit: {
     type: "enum",
     default: "fill",
@@ -155649,6 +156264,7 @@ var CanvasImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   const memoizedEffects = useMemoizedEffects({
     effects,
     overrideId: controls?.overrideId ?? null,
+    runtimeValues: controls?.runtimeValues ?? null,
     videoConfigValues: controls?.videoConfigValues ?? null
   });
   const sequenceContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceContext);
@@ -155762,7 +156378,12 @@ var CanvasImageContent = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
       colorSpace: "srgb"
     });
     if (!sourceContext) {
-      cancelRender(new Error("Could not get 2D context for <CanvasImage> source canvas"));
+      const error = new Error("Could not get 2D context for <CanvasImage> source canvas");
+      if (onError) {
+        onError(error);
+      } else {
+        cancelRender(error);
+      }
       continueRenderOnce();
       return () => {
         continueRenderOnce();
@@ -155884,9 +156505,10 @@ var CanvasImageInner = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
   }), [src]);
   const memoizedEffectDefinitions = useMemoizedEffectDefinitions(effects);
   const actualRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const videoEnabled = useVideoEnabled();
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useImperativeHandle)(ref, () => {
-    return actualRef.current;
-  }, []);
+    return videoEnabled ? actualRef.current : null;
+  }, [videoEnabled]);
   const {
     effectivePostmountFor,
     effectivePremountFor,
@@ -155917,6 +156539,9 @@ var CanvasImageInner = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(({
     style: premountingStyle,
     componentName: _remotionInternalCropComponentName ?? "<CanvasImage />"
   });
+  if (videoEnabled === false) {
+    return null;
+  }
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(Freeze, {
     frame: freezeFrame,
     active: isPremountingOrPostmounting,
@@ -156018,7 +156643,12 @@ var IFrameRefForwarding = ({
   const handle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const loadedSource = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const { src, srcDoc } = props;
+  const videoEnabled = useVideoEnabled();
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    if (!videoEnabled) {
+      loadedSource.current = null;
+      return;
+    }
     if (loadedSource.current?.src === src && loadedSource.current?.srcDoc === srcDoc && loadedSource.current !== null) {
       return;
     }
@@ -156038,7 +156668,8 @@ var IFrameRefForwarding = ({
     delayRenderRetries,
     delayRenderTimeoutInMilliseconds,
     src,
-    srcDoc
+    srcDoc,
+    videoEnabled
   ]);
   const didLoad = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((e) => {
     loadedSource.current = { src, srcDoc };
@@ -156060,6 +156691,9 @@ var IFrameRefForwarding = ({
       console.error("Error loading iframe:", e, "Handle the event using the onError() prop to make this message disappear.");
     }
   }, [onError, continueRender, src, srcDoc]);
+  if (!videoEnabled) {
+    return null;
+  }
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("iframe", {
     referrerPolicy: "strict-origin-when-cross-origin",
     ...props,
@@ -156071,6 +156705,107 @@ var IFrameRefForwarding = ({
 var IFrame = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(IFrameRefForwarding);
 // src/Img.tsx
 
+
+// src/effects/capture-effect-preview-snapshot.ts
+var captureEffectPreviewSnapshot = (element) => {
+  if (!element) {
+    return null;
+  }
+  let canvas = null;
+  try {
+    const view = element.ownerDocument.defaultView;
+    if (!view) {
+      return null;
+    }
+    const directSource = ["CANVAS", "IMG", "VIDEO"].includes(element.tagName);
+    const candidates = directSource ? [element] : Array.from(element.querySelectorAll("canvas, img, video")).filter((candidate) => {
+      if (candidate.parentElement?.closest("canvas")) {
+        return false;
+      }
+      for (let ancestor = candidate;ancestor && ancestor !== element; ancestor = ancestor.parentElement) {
+        const candidateStyle = view.getComputedStyle(ancestor);
+        if (candidateStyle.display === "none" || candidateStyle.visibility === "hidden" || candidateStyle.opacity === "0") {
+          return false;
+        }
+      }
+      return true;
+    });
+    if (candidates.length !== 1) {
+      return null;
+    }
+    const source = candidates[0];
+    let intrinsicWidth;
+    let intrinsicHeight;
+    if (source.tagName === "IMG") {
+      const image = source;
+      if (!image.complete) {
+        return null;
+      }
+      intrinsicWidth = image.naturalWidth;
+      intrinsicHeight = image.naturalHeight;
+    } else if (source.tagName === "VIDEO") {
+      const video = source;
+      if (video.readyState < 2) {
+        return null;
+      }
+      intrinsicWidth = video.videoWidth;
+      intrinsicHeight = video.videoHeight;
+    } else {
+      intrinsicWidth = source.width;
+      intrinsicHeight = source.height;
+    }
+    if (intrinsicWidth <= 0 || intrinsicHeight <= 0) {
+      return null;
+    }
+    const style = view.getComputedStyle(source);
+    const contentWidth = Number.parseFloat(style.width) - (style.boxSizing === "border-box" ? Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight) + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.borderRightWidth) : 0);
+    const contentHeight = Number.parseFloat(style.height) - (style.boxSizing === "border-box" ? Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom) + Number.parseFloat(style.borderTopWidth) + Number.parseFloat(style.borderBottomWidth) : 0);
+    const width = source.tagName === "CANVAS" ? intrinsicWidth : Number.isFinite(contentWidth) ? contentWidth : intrinsicWidth;
+    const height = source.tagName === "CANVAS" ? intrinsicHeight : Number.isFinite(contentHeight) ? contentHeight : intrinsicHeight;
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+      return null;
+    }
+    canvas = element.ownerDocument.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(width));
+    canvas.height = Math.max(1, Math.round(height));
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return null;
+    }
+    let drawWidth = canvas.width;
+    let drawHeight = canvas.height;
+    if (source.tagName !== "CANVAS" && style.objectFit !== "fill") {
+      const containScale = Math.min(canvas.width / intrinsicWidth, canvas.height / intrinsicHeight);
+      const scale = style.objectFit === "cover" ? Math.max(canvas.width / intrinsicWidth, canvas.height / intrinsicHeight) : style.objectFit === "contain" ? containScale : style.objectFit === "scale-down" ? Math.min(1, containScale) : style.objectFit === "none" ? 1 : null;
+      if (scale !== null) {
+        drawWidth = intrinsicWidth * scale;
+        drawHeight = intrinsicHeight * scale;
+      }
+    }
+    const position = source.tagName === "CANVAS" ? ["0px", "0px"] : style.objectPosition.split(" ");
+    const offsets = [canvas.width - drawWidth, canvas.height - drawHeight].map((remaining, index) => {
+      const value = position[index] ?? "50%";
+      if (value.endsWith("%")) {
+        return remaining * Number.parseFloat(value) / 100;
+      }
+      if (value.endsWith("px")) {
+        return Number.parseFloat(value);
+      }
+      return remaining / 2;
+    });
+    context.drawImage(source, offsets[0], offsets[1], drawWidth, drawHeight);
+    context.getImageData(0, 0, 1, 1);
+    return canvas;
+  } catch {
+    if (canvas) {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+    return null;
+  }
+};
+
+// src/Img.tsx
 
 function exponentialBackoff2(errorCount) {
   return 1000 * 2 ** (errorCount - 1);
@@ -156207,7 +156942,14 @@ var ImgContent = ({
   const errors = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)({});
   const { delayPlayback } = useBufferState();
   const sequenceContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceContext);
+  const htmlInCanvasContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(HtmlInCanvasAncestorContext);
   const [isLoading, setIsLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const { isClientSideRendering, isRendering } = useRemotionEnvironment();
+  const crossOriginValue = getCrossOriginValue({
+    crossOrigin: crossOrigin ?? (htmlInCanvasContext === null ? undefined : "anonymous"),
+    requestsVideoFrame: false,
+    isClientSideRendering
+  });
   const _propsValid = true;
   if (!_propsValid) {
     throw new Error("typecheck error");
@@ -156252,6 +156994,7 @@ var ImgContent = ({
       setIsLoading
     }), [
       actualSrc,
+      crossOriginValue,
       delayRenderRetries,
       delayRenderTimeoutInMilliseconds,
       onImageFrame,
@@ -156259,12 +157002,6 @@ var ImgContent = ({
       delayRender
     ]);
   }
-  const { isClientSideRendering, isRendering } = useRemotionEnvironment();
-  const crossOriginValue = getCrossOriginValue({
-    crossOrigin,
-    requestsVideoFrame: false,
-    isClientSideRendering
-  });
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("img", {
     ...props,
     ref: imageCallbackRef,
@@ -156375,7 +157112,6 @@ var imgSchema = {
   },
   ...baseSchemaWithoutPlaybackRate,
   ...cropSchema,
-  ...premountSchema,
   ...transformSchema,
   ...backgroundSchema,
   ...borderSchema,
@@ -156422,7 +157158,7 @@ var getFitFromObjectFit = (style) => {
   }
   return;
 };
-var ImgInner = ({
+var ImgWithPreview = ({
   effects = [],
   effectsOutputSize,
   ref,
@@ -156456,10 +157192,70 @@ var ImgInner = ({
   ...props
 }) => {
   const shouldPauseWhenLoading = resolveV5Default(pauseWhenLoading);
-  if (effects.length === 0) {
+  const nativeImageRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const nativeRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((image) => {
+    nativeImageRef.current = image;
+    if (typeof ref === "function") {
+      ref(image);
+    } else if (ref) {
+      ref.current = image;
+    }
+  }, [ref]);
+  const [nativePreview, setNativePreview] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+  const preview = useEffectPreview(controls?.runtimeValues ?? null);
+  const previewStore = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(EffectPreviewContext);
+  const onPreviewError = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
+    if (previewStore.getSnapshot(controls?.runtimeValues ?? null) !== null) {
+      previewStore.setPreview(null);
+    }
+  }, [controls?.runtimeValues, previewStore]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    if (preview === null || effects.length > 0) {
+      setNativePreview(null);
+      return;
+    }
+    const image = nativeImageRef.current;
+    if (image === null) {
+      return;
+    }
+    const captureNativeImage = () => {
+      const snapshot = captureEffectPreviewSnapshot(image);
+      if (snapshot === null) {
+        onPreviewError();
+        return;
+      }
+      try {
+        const computed = image.ownerDocument.defaultView.getComputedStyle(image);
+        setNativePreview({
+          source: src,
+          srcSet: props.srcSet ?? null,
+          sizes: props.sizes ?? null,
+          snapshotSrc: snapshot.toDataURL(),
+          width: snapshot.width,
+          height: snapshot.height,
+          cssWidth: computed.width,
+          cssHeight: computed.height
+        });
+      } catch {
+        onPreviewError();
+      } finally {
+        snapshot.width = 0;
+        snapshot.height = 0;
+      }
+    };
+    if (image.complete && image.naturalWidth > 0) {
+      captureNativeImage();
+    } else {
+      image.addEventListener("load", captureNativeImage);
+    }
+    return () => image.removeEventListener("load", captureNativeImage);
+  }, [effects.length, onPreviewError, preview, props.sizes, props.srcSet, src]);
+  const nativePreviewIsCurrent = nativePreview !== null && nativePreview.source === src && nativePreview.srcSet === (props.srcSet ?? null) && nativePreview.sizes === (props.sizes ?? null);
+  const nativeSnapshot = effects.length === 0 && preview !== null && nativePreviewIsCurrent ? nativePreview : null;
+  if (effects.length === 0 && nativeSnapshot === null) {
     return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(NativeImgInner, {
       ...props,
-      ref,
+      ref: nativeRef,
       hidden,
       name,
       showInTimeline,
@@ -156492,33 +157288,35 @@ var ImgInner = ({
   if (!src) {
     throw new Error('No "src" prop was passed to <Img>.');
   }
-  validateCanvasImageFallbackProps({
-    props,
-    ref,
-    width,
-    height
-  });
-  const canvasWidth = typeof width === "number" ? width : undefined;
-  const canvasHeight = typeof height === "number" ? height : undefined;
-  const canvasProps = props;
-  const canvasFit = getFitFromObjectFit(style) ?? "fill";
+  if (effects.length > 0) {
+    validateCanvasImageFallbackProps({ props, ref, width, height });
+  }
+  const canvasWidth = nativeSnapshot?.width ?? (typeof width === "number" ? width : undefined);
+  const canvasHeight = nativeSnapshot?.height ?? (typeof height === "number" ? height : undefined);
+  const canvasProps = effects.length === 0 ? Object.fromEntries(Object.entries(props).filter(([key]) => !imgCanvasFallbackIncompatibleProps.has(key))) : props;
+  const canvasFit = nativeSnapshot === null ? getFitFromObjectFit(style) ?? "fill" : "fill";
+  const canvasStyle = nativeSnapshot === null ? style : {
+    width: nativeSnapshot.cssWidth,
+    height: nativeSnapshot.cssHeight,
+    ...style
+  };
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(CanvasImageWithPrivateProps, {
-    src,
+    src: nativeSnapshot?.snapshotSrc ?? src,
     width: canvasWidth,
     height: canvasHeight,
     fit: canvasFit,
     effects,
     effectsOutputSize,
     className,
-    style,
+    style: canvasStyle,
     cropLeft,
     cropRight,
     cropTop,
     cropBottom,
     id,
-    onError: onImageError,
+    onError: preview === null ? onImageError : onPreviewError,
     pauseWhenLoading: shouldPauseWhenLoading,
-    maxRetries,
+    maxRetries: preview === null ? maxRetries : 0,
     delayRenderRetries,
     delayRenderTimeoutInMilliseconds,
     from,
@@ -156536,6 +157334,15 @@ var ImgInner = ({
     _remotionInternalCropComponentName: "<Img />",
     controls,
     ...canvasProps
+  });
+};
+var ImgInner = (props) => {
+  const videoEnabled = useVideoEnabled();
+  if (videoEnabled === false) {
+    return null;
+  }
+  return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(ImgWithPreview, {
+    ...props
   });
 };
 var Img = withInteractivitySchema({
@@ -156567,7 +157374,6 @@ var makeRemotionComponentIdentity = ({
 };
 var interactiveElementSchema = {
   ...baseSchema,
-  ...premountSchema,
   ...transformSchema,
   ...cropSchema
 };
@@ -156736,7 +157542,6 @@ var withSchema = (untypedOptions) => {
       ...schema,
       ...transformSchema,
       ...baseSchema,
-      ...premountSchema,
       ...cropSchema
     },
     supportsEffects: false
@@ -157486,7 +158291,7 @@ var PlaybackPitchContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(
 
 // src/register-root.ts
 var Root = null;
-var listeners4 = [];
+var listeners5 = [];
 var registerRoot = (comp) => {
   if (!comp) {
     throw new Error(`You must pass a React component to registerRoot(), but ${JSON.stringify(comp)} was passed.`);
@@ -157495,7 +158300,7 @@ var registerRoot = (comp) => {
     throw new Error("registerRoot() was called more than once.");
   }
   Root = comp;
-  listeners4.forEach((l) => {
+  listeners5.forEach((l) => {
     l(comp);
   });
 };
@@ -157509,9 +158314,9 @@ var waitForRoot = (fn) => {
       return;
     };
   }
-  listeners4.push(fn);
+  listeners5.push(fn);
   return () => {
-    listeners4 = listeners4.filter((l) => l !== fn);
+    listeners5 = listeners5.filter((l) => l !== fn);
   };
 };
 
@@ -157884,8 +158689,8 @@ var getBrowserPixelDensity = () => {
   return window.devicePixelRatio || 1;
 };
 var usePixelDensity = (options) => {
-  const pixelDensity = useContext50(PixelDensityContext);
-  const canUseRemotionHooks = useContext50(CanUseRemotionHooks);
+  const pixelDensity = useContext51(PixelDensityContext);
+  const canUseRemotionHooks = useContext51(CanUseRemotionHooks);
   if (pixelDensity !== null) {
     return pixelDensity;
   }
@@ -157963,6 +158768,7 @@ var OffthreadVideoForRendering = ({
   });
   warnAboutTooHighVolume(volume);
   const audioEnabled = useAudioEnabled();
+  const videoEnabled = useVideoEnabled();
   const { shouldUseAudio } = useMediaAudioState({
     muted,
     volume,
@@ -158026,11 +158832,11 @@ var OffthreadVideoForRendering = ({
   const [imageSrc, setImageSrc] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
-    if (!window.remotion_videoEnabled) {
+    setImageSrc(null);
+    if (!videoEnabled) {
       return;
     }
     const cleanup = [];
-    setImageSrc(null);
     const controller = new AbortController;
     const newHandle = delayRender(`Fetching ${actualSrc} from server`, {
       retries: delayRenderRetries ?? undefined,
@@ -158092,6 +158898,7 @@ var OffthreadVideoForRendering = ({
     };
   }, [
     actualSrc,
+    videoEnabled,
     delayRenderRetries,
     delayRenderTimeoutInMilliseconds,
     onError,
@@ -158114,7 +158921,7 @@ var OffthreadVideoForRendering = ({
       onVideoFrame(img);
     }
   }, [onVideoFrame]);
-  if (!imageSrc || !window.remotion_videoEnabled) {
+  if (!imageSrc || !videoEnabled) {
     return null;
   }
   continueRender(imageSrc.handle);
@@ -158236,6 +159043,7 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
   }
   const { fps, durationInFrames } = useVideoConfig();
   const parentSequence = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceContext);
+  const htmlInCanvasContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(HtmlInCanvasAncestorContext);
   const logLevel = useLogLevel();
   const mountTime = useMountTime();
   if (typeof acceptableTimeShift !== "undefined") {
@@ -158347,7 +159155,7 @@ var VideoForDevelopmentRefForwardingFunction = (props, ref) => {
     };
   }, [style]);
   const crossOriginValue = getCrossOriginValue({
-    crossOrigin,
+    crossOrigin: crossOrigin ?? (htmlInCanvasContext === null ? undefined : "anonymous"),
     requestsVideoFrame: Boolean(onVideoFrame),
     isClientSideRendering: false
   });
@@ -158652,6 +159460,7 @@ var watchStaticFile = (fileName, callback) => {
 
 
 function useRemotionContexts() {
+  const mediaEnabledContext = react__WEBPACK_IMPORTED_MODULE_0__.useContext(MediaEnabledContext);
   const compositionManagerCtx = react__WEBPACK_IMPORTED_MODULE_0__.useContext(CompositionManager);
   const videoContext = react__WEBPACK_IMPORTED_MODULE_0__.useContext(VideoContext);
   const timelineContext = react__WEBPACK_IMPORTED_MODULE_0__.useContext(TimelineContext);
@@ -158673,7 +159482,9 @@ function useRemotionContexts() {
   const visualModePropStatusesRefContext = react__WEBPACK_IMPORTED_MODULE_0__.useContext(VisualModePropStatusesRefContext);
   const bufferManagerContext = react__WEBPACK_IMPORTED_MODULE_0__.useContext(BufferingContextReact);
   const logLevelContext = react__WEBPACK_IMPORTED_MODULE_0__.useContext(LogLevelContext);
+  const effectPreviewContext = react__WEBPACK_IMPORTED_MODULE_0__.useContext(EffectPreviewContext);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => ({
+    mediaEnabledContext,
     compositionManagerCtx,
     videoContext,
     timelineContext,
@@ -158694,8 +159505,10 @@ function useRemotionContexts() {
     remotionEnvironmentContext,
     visualModePropStatusesRefContext,
     bufferManagerContext,
-    logLevelContext
+    logLevelContext,
+    effectPreviewContext
   }), [
+    mediaEnabledContext,
     compositionManagerCtx,
     videoContext,
     sequenceContext,
@@ -158716,7 +159529,8 @@ function useRemotionContexts() {
     remotionEnvironmentContext,
     visualModePropStatusesRefContext,
     bufferManagerContext,
-    logLevelContext
+    logLevelContext,
+    effectPreviewContext
   ]);
 }
 var SequenceRegistryScopeProvider = withCommittedMetadata(SequenceRegistryScopeContext.Provider);
@@ -158840,7 +159654,16 @@ var RemotionContextProvider = (props) => {
                                       value: contexts.defaultPremountInSeconds,
                                       children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(VideoContext.Provider, {
                                         value: contexts.videoContext,
-                                        children
+                                        children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(MediaEnabledContext.Provider, {
+                                          value: contexts.mediaEnabledContext,
+                                          children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(EffectPreviewContext.Provider, {
+                                            value: contexts.effectPreviewContext,
+                                            children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(SequenceActivityContext.Provider, {
+                                              value: false,
+                                              children
+                                            })
+                                          })
+                                        })
                                       })
                                     })
                                   })
@@ -158867,8 +159690,8 @@ var compositionSelectorRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.createRef)();
 var Internals = {
   HtmlInCanvasFallback,
   useHtmlInCanvasUnsupportedMessage,
-  OptimisticEffectDeletion,
-  useOptimisticEffectDeletion,
+  OptimisticEffects,
+  useOptimisticEffects,
   OptimisticSequenceDeletion,
   usePendingSequenceDeletions,
   createElementSourceProxy,
@@ -159061,6 +159884,8 @@ var Internals = {
   PreferredEffectBackendContext,
   validatePreferredEffectBackend,
   createEffect,
+  EffectPreviewContext,
+  captureEffectPreviewSnapshot,
   createEffectImplementation,
   createCurveSampler,
   createWebGLContextError,
@@ -159512,6 +160337,7 @@ var VideoForRenderingForwardFunction = ({
   audioStreamIndex,
   onVideoFrame,
   preservePitch,
+  crossOrigin,
   ...props
 }, ref) => {
   const absoluteFrame = useTimelinePosition();
@@ -159520,6 +160346,7 @@ var VideoForRenderingForwardFunction = ({
   const videoConfig = useUnsafeVideoConfig();
   const videoRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const sequenceContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SequenceContext);
+  const htmlInCanvasContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(HtmlInCanvasAncestorContext);
   const sequencePlaybackRate = sequenceContext?.playbackRate ?? 1;
   const audioStartFrame = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(Html5MediaTrimContext);
   const environment = useRemotionEnvironment();
@@ -159540,6 +160367,7 @@ var VideoForRenderingForwardFunction = ({
   });
   warnAboutTooHighVolume(volume);
   const audioEnabled = useAudioEnabled();
+  const videoEnabled = useVideoEnabled();
   const { shouldUseAudio } = useMediaAudioState({
     muted: props.muted ?? false,
     volume,
@@ -159588,9 +160416,12 @@ var VideoForRenderingForwardFunction = ({
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useImperativeHandle)(ref, () => {
     return videoRef.current;
   }, []);
-  useEmitVideoFrame({ ref: videoRef, onVideoFrame });
+  useEmitVideoFrame({
+    ref: videoRef,
+    onVideoFrame: videoEnabled ? onVideoFrame : null
+  });
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (!window.remotion_videoEnabled) {
+    if (!videoEnabled) {
       return;
     }
     const { current } = videoRef;
@@ -159663,6 +160494,7 @@ var VideoForRenderingForwardFunction = ({
       continueRender(handle);
     };
   }, [
+    videoEnabled,
     volumePropsFrame,
     props.src,
     playbackRate,
@@ -159681,6 +160513,9 @@ var VideoForRenderingForwardFunction = ({
   if (environment.isRendering) {
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
       if (window.process?.env?.NODE_ENV === "test") {
+        return;
+      }
+      if (!videoEnabled && !shouldUseAudio) {
         return;
       }
       const newHandle = delayRender("Loading <Html5Video> duration with src=" + src, {
@@ -159706,6 +160541,8 @@ var VideoForRenderingForwardFunction = ({
       };
     }, [
       src,
+      videoEnabled,
+      shouldUseAudio,
       onDuration,
       delayRenderRetries,
       delayRenderTimeoutInMilliseconds,
@@ -159716,7 +160553,8 @@ var VideoForRenderingForwardFunction = ({
   return /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("video", {
     ref: videoRef,
     disableRemotePlayback: true,
-    ...props
+    ...props,
+    crossOrigin: crossOrigin ?? (htmlInCanvasContext === null ? undefined : "anonymous")
   });
 };
 var VideoForRendering = (0,react__WEBPACK_IMPORTED_MODULE_0__.forwardRef)(VideoForRenderingForwardFunction);
@@ -161534,7 +162372,7 @@ var transformSchema = {
     type: "transform-origin",
     step: 1,
     default: "50% 50%",
-    description: "Transform origin"
+    description: "Origin"
   },
   "style.translate": {
     type: "translate",
@@ -161749,8 +162587,7 @@ var sequenceStyleSchema = {
   ...transformSchema,
   ...backgroundSchema,
   ...borderSchema,
-  ...borderRadiusSchema,
-  ...sequencePremountSchema
+  ...borderRadiusSchema
 };
 var hiddenField = {
   type: "boolean",
@@ -162680,7 +163517,7 @@ var NoReactInternals = {
 /******/ 	__webpack_require__.u = (chunkId) => (chunkId + ".bundle.js");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
-/******/ 	__webpack_require__.h = () => ("30e3d296ec7e6faa");
+/******/ 	__webpack_require__.h = () => ("2609a9d160417a9f");
 /******/ 	
 /******/ 	/* webpack/runtime/global */
 /******/ 	__webpack_require__.g = (function() {
@@ -162787,7 +163624,7 @@ var NoReactInternals = {
 /******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
 /******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
 /******/ 		const installedChunks = {
-/******/ 			792: 0
+/******/ 			8792: 0
 /******/ 		};
 /******/ 		
 /******/ 		__webpack_require__.f.j = (chunkId, promises) => {

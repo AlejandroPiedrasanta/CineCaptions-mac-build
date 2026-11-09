@@ -17,7 +17,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         movil.json
         movil_fondo.jpg
         movil_marco.png
-    edicion_pro\   (4474 archivos)
+    edicion_pro\   (4672 archivos)
     efectos\   (161 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
     fondos_estilos\   (13 archivos)
@@ -119,6 +119,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
     plantillas_incluidas\   (67 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    premiere\   (5 archivos)
+        com.cinecaptions.premiere\   (5 archivos)
     resolve_scripts\   (25 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
         .cf\   (1 archivos)
         CineCaptions - Detectar Video.py

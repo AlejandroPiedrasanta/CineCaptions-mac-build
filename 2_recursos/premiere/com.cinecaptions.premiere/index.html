@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CineCaptions</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0B1220; color: #E8EEF8; font: 13px/1.45 "Segoe UI", -apple-system, sans-serif; }
+  .caja { padding: 18px 18px 14px; }
+  .marca { font-weight: 700; font-size: 15px; letter-spacing: .2px; }
+  .linea { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .punto { width: 9px; height: 9px; border-radius: 50%; background: #6B7A90; flex: none; }
+  .punto.ok { background: #3DDC84; }
+  .punto.mal { background: #FF6B6B; }
+  .detalle { color: #8C9AB0; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="caja">
+  <div class="marca">CineCaptions</div>
+  <div class="linea"><span id="punto" class="punto"></span><span id="estado">Conectando…</span></div>
+  <div id="detalle" class="detalle">Pulsa GO en CineCaptions: el video, los subtítulos y los sonidos se colocan en una secuencia nueva.</div>
+</div>
+<script src="./js/cc.js"></script>
+</body>
+</html>

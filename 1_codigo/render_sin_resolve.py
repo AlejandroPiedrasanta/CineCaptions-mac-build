@@ -261,6 +261,12 @@ def componer(arr, capas, t):
 
 
 # ------------------------------------------------------------------------------------------------------------------ sonido
+def eventos_sfx(cues):
+    """[(t, ruta)] de los sonidos de cada palabra (`sfx_eventos[].sfx_archivo`): los que se mezclan en el MP4 y los que GO pone en Premiere."""
+    return [(float(ev.get('t') or 0.0), ev.get('sfx_archivo') or ev.get('sfx_original'))
+            for cue in cues or [] for ev in (cue.get('sfx_eventos') or []) if ev.get('sfx_archivo') or ev.get('sfx_original')]
+
+
 def _leer_audio(ruta):
     """Audio de un archivo como float32 (2, N) a 48 kHz; None si no tiene."""
     import av
@@ -291,8 +297,7 @@ def mezclar_audio(video, cues, duracion):
     """El audio original + los sonidos de cada palabra, (2, N) float32 a 48 kHz, o None si no hay nada que sonar."""
     base = _leer_audio(video)
     largo = int(max(duracion, (base.shape[1] / SR) if base is not None else 0.0) * SR) + 1
-    eventos = [(float(ev.get('t') or 0.0), ev.get('sfx_archivo') or ev.get('sfx_original'))
-               for cue in cues or [] for ev in (cue.get('sfx_eventos') or []) if ev.get('sfx_archivo') or ev.get('sfx_original')]
+    eventos = eventos_sfx(cues)
     if base is None and not eventos:
         return None
     mezcla = np.zeros((2, largo), dtype=np.float32)
@@ -531,6 +536,226 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
                     c.close()
             except Exception:
                 pass
+        try:
+            if temporal.exists():
+                temporal.unlink()
+        except OSError:
+            pass
+
+
+# ------------------------------------------------------------------------------------------------------------------ capa para Premiere
+def _visibles(capas, t):
+    """[(capa, fuerza, y)] de lo que se ve en t (la misma cuenta que componer)."""
+    vis = []
+    for c in capas:
+        if c['t0'] > t:
+            break
+        k = _fuerza(c, t)
+        if k <= 0.0:
+            continue
+        cy = c['y']
+        if c.get('sube') and c['entrada'] > 0 and t - c['t0'] < c['entrada']:
+            q = max(0.0, min(1.0, (t - c['t0']) / c['entrada']))
+            cy += int(round(c['sube'] * (1.0 - q) ** 2))
+        vis.append((c, k, cy))
+    return vis
+
+
+def componer_rgba(arr, visibles):
+    """Como componer, sobre un lienzo TRANSPARENTE (HxWx4 uint8: color sin premultiplicar + alfa; se modifica): «encima» de verdad, para
+    que lo que se solapa (halo sobre halo, emoji sobre texto) se vea igual que sobre el video."""
+    alto, ancho = arr.shape[:2]
+    for c, k, cy in visibles:
+        h, w = c['a'].shape[:2]
+        x0, y0 = max(0, c['x']), max(0, cy)
+        x1, y1 = min(ancho, c['x'] + w), min(alto, cy + h)
+        if x1 <= x0 or y1 <= y0:
+            continue
+        sx, sy = x0 - c['x'], y0 - cy
+        a = c['a'][sy:sy + (y1 - y0), sx:sx + (x1 - x0)] * k
+        reg = arr[y0:y1, x0:x1].astype(np.float32)
+        da = reg[..., 3:4] / 255.0
+        oa = a + da * (1.0 - a)
+        reg[..., :3] = (c['rgb'][sy:sy + (y1 - y0), sx:sx + (x1 - x0)] * a + reg[..., :3] * da * (1.0 - a)) / np.maximum(oa, 1e-6)
+        reg[..., 3:4] = oa * 255.0
+        arr[y0:y1, x0:x1] = np.clip(reg + 0.5, 0, 255).astype(np.uint8)
+
+
+def ruta_de_capa(video):
+    """«<video> (CineCaptions capa).mov» junto al original (si ya existe: «… capa 2», «… capa 3»…)."""
+    video = Path(video)
+    for n in range(1, 200):
+        cand = video.with_name(video.stem + (' (CineCaptions capa)' if n == 1 else f' (CineCaptions capa {n})') + '.mov')
+        if not cand.exists():
+            return cand
+    return video.with_name(video.stem + f' (CineCaptions capa {int(time.time())}).mov')
+
+
+def medir_video(ruta):
+    """{'ancho', 'alto', 'fps' (Fraction), 'cuadros', 'duracion', 'solo_audio'} del video tal como se VE (con la rotación del celular).
+    Lee solo el primer fotograma."""
+    import av
+    entrada = av.open(str(ruta))
+    try:
+        if not entrada.streams.video:
+            dur = float(entrada.duration) / 1e6 if entrada.duration else 0.0
+            if not dur and entrada.streams.audio:
+                a = entrada.streams.audio[0]
+                dur = float(a.duration * a.time_base) if a.duration else 0.0
+            if dur <= 0.0:
+                raise RuntimeError('el archivo no tiene imagen ni una duración que se pueda leer')
+            return {'ancho': 1080, 'alto': 1920, 'fps': Fraction(30, 1), 'cuadros': max(1, int(round(dur * 30))), 'duracion': dur,
+                    'solo_audio': True}
+        vin = entrada.streams.video[0]
+        tb = vin.time_base
+        fps = vin.average_rate or vin.guessed_rate or Fraction(30, 1)
+        dur = float(vin.duration * tb) if vin.duration else (float(entrada.duration) / 1e6 if entrada.duration else 0.0)
+        ancho, alto = vin.codec_context.width, vin.codec_context.height
+        for fr in entrada.decode(vin):
+            ancho, alto = fr.width, fr.height
+            if int(round(int(getattr(fr, 'rotation', 0) or 0) / 90.0)) % 2:
+                ancho, alto = alto, ancho
+            break
+        cuadros = int(vin.frames or 0) or max(1, int(round(dur * float(fps))))
+        return {'ancho': int(ancho), 'alto': int(alto), 'fps': Fraction(fps), 'cuadros': cuadros, 'duracion': dur or cuadros / float(fps),
+                'solo_audio': False}
+    finally:
+        entrada.close()
+
+
+def planos_yuva10(arr):
+    """RGBA uint8 (sin premultiplicar) → los 4 planos de yuva444p10le (uint16) en BT.709 de rango limitado, con numpy. NO con swscale
+    (frame.reformat): su conversión por franjas pone alfa 512/1023 en los 8 primeros píxeles de la primera fila de cada franja (medido con
+    PyAV 19: 96 píxeles por cuadro a 1080×1920, manchas semitransparentes en el borde izquierdo)."""
+    rgb = arr[..., :3].astype(np.float32) * (1.0 / 255.0)
+    kr, kb = 0.2126, 0.0722
+    y = kr * rgb[..., 0] + (1.0 - kr - kb) * rgb[..., 1] + kb * rgb[..., 2]
+    cb = (rgb[..., 2] - y) / (2.0 * (1.0 - kb))
+    cr = (rgb[..., 0] - y) / (2.0 * (1.0 - kr))
+    return [np.round(64.0 + 876.0 * y).astype(np.uint16), np.round(512.0 + 896.0 * cb).astype(np.uint16),
+            np.round(512.0 + 896.0 * cr).astype(np.uint16), np.round(arr[..., 3].astype(np.float32) * (1023.0 / 255.0)).astype(np.uint16)]
+
+
+def _cuadro_yuva10(planos, ancho, alto):
+    import av
+    nf = av.VideoFrame(ancho, alto, 'yuva444p10le')
+    for plano, datos in zip(nf.planes, planos):
+        paso = plano.line_size // 2
+        if paso == ancho:
+            plano.update(datos.tobytes())
+        else:
+            lleno = np.zeros((alto, paso), dtype=np.uint16)
+            lleno[:, :ancho] = datos
+            plano.update(lleno.tobytes())
+    return nf
+
+
+def _abrir_codificador_alfa(out, fps, ancho, alto):
+    """ProRes 4444 con alfa (Premiere lo lee de serie en Windows y Mac), etiquetado Rec.709; si faltara, QuickTime Animation."""
+    import av
+    try:
+        av.codec.Codec('prores_ks', 'w')
+        vs = out.add_stream('prores_ks', rate=fps)
+        vs.width, vs.height = ancho, alto
+        vs.pix_fmt = 'yuva444p10le'
+        vs.options = {'profile': '4444', 'vendor': 'apl0'}
+        cc = vs.codec_context
+        cc.thread_count = 0
+        cc.thread_type = 'AUTO'                          # medido: 48 → 24 ms por fotograma 1080×1920
+        for clave in ('color_primaries', 'color_trc', 'colorspace', 'color_range'):
+            try:
+                setattr(cc, clave, 1)                    # BT.709, rango limitado: lo que Premiere da por hecho en un ProRes
+            except Exception:
+                pass
+        return vs, 'prores_ks', 'yuva444p10le'
+    except Exception:
+        vs = out.add_stream('qtrle', rate=fps)
+        vs.width, vs.height = ancho, alto
+        vs.pix_fmt = 'argb'
+        return vs, 'qtrle', None
+
+
+def renderizar_capa(video, cues, salida=None, progreso=None, cancelado=None, emoji_arriba=True, estilo=None):
+    """v5.78 (GO en Adobe Premiere Pro): SOLO los subtítulos del estilo (con sus emojis) sobre TRANSPARENTE, del tamaño, la cadencia y la
+    duración del video, en un .mov ProRes 4444 con alfa, para ponerlo en V2 encima del video. Mismo dibujo que renderizar (preparar /
+    render_temas). Con un audio suelto: 1080×1920 a 30 fps con el fondo de fondo_solo_audio (opaco), que en Premiere hace de imagen.
+    → {'ok', 'ruta', 'ancho', 'alto', 'fps', 'cuadros', 'duracion', 'solo_audio', 'segundos', 'codec'} · {'ok': False, 'cancelado': True}"""
+    import av
+    t_inicio = time.time()
+    video = Path(video)
+    destino = Path(salida) if salida else ruta_de_capa(video)
+    if not _carpeta_escribible(destino):
+        casa = Path.home() / ('Movies' if sys.platform == 'darwin' else 'Videos')
+        destino = ruta_de_capa(casa / 'CineCaptions' / video.name)
+        destino.parent.mkdir(parents=True, exist_ok=True)
+    temporal = destino.with_name(f'.~{destino.stem}.{os.getpid()}.mov')
+
+    def avisar(f, texto=''):
+        if progreso:
+            try:
+                progreso(max(0.0, min(1.0, f)), texto)
+            except Exception:
+                pass
+
+    m = medir_video(video)
+    ancho, alto, fps, total = m['ancho'], m['alto'], m['fps'], m['cuadros']
+    tb = Fraction(fps.denominator, fps.numerator)
+    out = None
+    try:
+        avisar(0.0, 'Dibujando los subtítulos…')
+        capas = preparar(cues, ancho, alto, emoji_arriba=emoji_arriba, estilo=estilo)
+        out = av.open(str(temporal), 'w', format='mov')
+        vs, codec, formato = _abrir_codificador_alfa(out, fps, ancho, alto)
+        fondo = fondo_solo_audio(ancho, alto) if m['solo_audio'] else None
+        vacio = np.zeros((alto, ancho, 4), dtype=np.uint8)
+        firma_previa, arr, planos = None, vacio, None
+        ultimo_aviso = 0.0
+        for i in range(total):
+            if cancelado and cancelado():
+                raise Cancelado()
+            t = i * float(tb)
+            vis = _visibles(capas, t)
+            firma = tuple((id(c), round(k, 3), cy) for c, k, cy in vis)
+            if firma != firma_previa:                   # entre una entrada y la siguiente el fotograma no cambia: no se recompone
+                firma_previa = firma
+                if not vis and fondo is None:
+                    arr = vacio
+                else:
+                    arr = np.zeros((alto, ancho, 4), dtype=np.uint8)
+                    if fondo is not None:
+                        arr[..., :3] = fondo
+                        arr[..., 3] = 255
+                    componer_rgba(arr, vis)
+                planos = planos_yuva10(arr) if formato else None
+            if formato:
+                nf = _cuadro_yuva10(planos, ancho, alto)
+            else:
+                nf = av.VideoFrame.from_ndarray(arr, format='rgba')
+            nf.pts = i
+            nf.time_base = tb
+            for p in vs.encode(nf):
+                out.mux(p)
+            ahora = time.time()
+            if ahora - ultimo_aviso > 0.25:
+                ultimo_aviso = ahora
+                avisar(0.02 + 0.96 * (i + 1) / total, f'Dibujando los subtítulos… {min(99, int(100 * (i + 1) / total))} %')
+        for p in vs.encode(None):
+            out.mux(p)
+        out.close()
+        out = None
+        os.replace(temporal, destino)
+        avisar(1.0, 'Listo')
+        return {'ok': True, 'ruta': str(destino), 'ancho': ancho, 'alto': alto, 'fps': float(fps), 'cuadros': total,
+                'duracion': round(total * float(tb), 3), 'solo_audio': m['solo_audio'], 'segundos': round(time.time() - t_inicio, 1),
+                'codec': codec}
+    except Cancelado:
+        return {'ok': False, 'cancelado': True, 'ruta': None}
+    finally:
+        try:
+            if out is not None:
+                out.close()
+        except Exception:
+            pass
         try:
             if temporal.exists():
                 temporal.unlink()

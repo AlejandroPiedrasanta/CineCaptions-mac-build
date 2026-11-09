@@ -222,17 +222,18 @@ def seccion_detras(a, app, PREFS, w, dur, fps, cortes):
     for ed in ('free', 'studio'):
         INS._CACHE_EDICION['valor'] = ed
         INS._edicion_guardada = (lambda ed=ed: ed)
-        PREFS.update(go_pack='Referencia', plantilla='Referencia', pro_mascara='auto', pro_detras_intensidad='media', go_salida_mp4=False)
+        PREFS.update(go_pack='Referencia', plantilla='Referencia', pro_mascara='auto', pro_detras_intensidad='media', go_salida_mp4=False, go_premiere=False)
         vis = [o['clave'] for o in LAT.opciones_visibles()]
         # v5.58 (el usuario: «el menú PRO debe funcionar en Resolve Free… y detrás de ti igual»): con cualquier Resolve; Magic Mask, solo Studio
         comprobar('detras' in vis, f'Resolve {ed}: «Captions detrás de ti» está en el menú ({len(vis)} interruptores)')
         comprobar(LAT.estado('detras'), f'Resolve {ed}: guardado encendido, cuenta como encendido')
         comprobar(EP.detras_disponible() and EP.magic_mask_disponible() == (ed == 'studio'),
                   f'Resolve {ed}: detras_disponible() = True · magic_mask_disponible() = {ed == "studio"}')
-        PREFS['go_salida_mp4'] = True
-        comprobar('detras' not in [o['clave'] for o in LAT.opciones_visibles()] and not LAT.estado('detras') and not EP.detras_disponible(),
-                  f'Resolve {ed} con el video MP4 (sin Resolve): «detrás de ti» no se enseña ni cuenta')
-        PREFS['go_salida_mp4'] = False
+        for clave, nombre in (('go_salida_mp4', 'Video sin editores'), ('go_premiere', 'Usar con Premiere Pro')):     # v5.78: Premiere tampoco lleva la PRO
+            PREFS[clave] = True
+            comprobar('detras' not in [o['clave'] for o in LAT.opciones_visibles()] and not LAT.estado('detras') and not EP.detras_disponible(),
+                      f'Resolve {ed} con «{nombre}»: «detrás de ti» no se enseña ni cuenta')
+            PREFS[clave] = False
         centro = QWidget()
         fila = LAT.FilaPro(centro)
         fila.resize(1500, 760)

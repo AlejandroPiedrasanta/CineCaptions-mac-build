@@ -10810,5 +10810,537 @@
   "ko": "반복되면 메모리를 많이 쓰는 다른 프로그램을 닫고 보고서와 함께 지원팀에 알려 주세요.",
   "zh": "如果再次发生，请关闭其他占用大量内存的程序，并把报告发给支持人员。",
   "ru": "Если повторится, закройте другие программы, которые используют много памяти, и сообщите в поддержку, приложив отчёт."
+ },
+ "GO coloca todo en Premiere Pro: una secuencia nueva con tu video, los subtítulos del estilo elegido encima (con sus emojis) y los sonidos en sus pistas. Suelta un video y pulsa GO; si Premiere está cerrado, se abre solo.": {
+  "en": "GO places everything in Premiere Pro: a new sequence with your video, the captions of the chosen style on top (with their emojis) and the sounds on their tracks. Drop a video and press GO; if Premiere is closed, it opens by itself.",
+  "pt": "O GO coloca tudo no Premiere Pro: uma sequência nova com o seu vídeo, as legendas do estilo escolhido por cima (com os emojis) e os sons nas suas faixas. Solte um vídeo e pressione GO; se o Premiere estiver fechado, ele abre sozinho.",
+  "fr": "GO place tout dans Premiere Pro : une nouvelle séquence avec votre vidéo, les sous-titres du style choisi par-dessus (avec leurs emojis) et les sons sur leurs pistes. Déposez une vidéo et appuyez sur GO ; si Premiere est fermé, il s’ouvre tout seul.",
+  "de": "GO legt alles in Premiere Pro an: eine neue Sequenz mit deinem Video, den Untertiteln des gewählten Stils darüber (mit ihren Emojis) und den Sounds auf ihren Spuren. Video ablegen und GO drücken; ist Premiere geschlossen, öffnet es sich von selbst.",
+  "it": "GO mette tutto in Premiere Pro: una nuova sequenza con il tuo video, i sottotitoli dello stile scelto sopra (con le loro emoji) e i suoni sulle loro tracce. Trascina un video e premi GO; se Premiere è chiuso, si apre da solo."
+ },
+ "GO coloca en Adobe Premiere Pro (Ajustes)": {
+  "en": "GO places in Adobe Premiere Pro (Settings)",
+  "pt": "O GO coloca no Adobe Premiere Pro (Ajustes)",
+  "fr": "GO place dans Adobe Premiere Pro (Réglages)",
+  "de": "GO legt in Adobe Premiere Pro an (Einstellungen)",
+  "it": "GO inserisce in Adobe Premiere Pro (Impostazioni)"
+ },
+ "Colocar en Premiere Pro": {
+  "en": "Place in Premiere Pro",
+  "pt": "Colocar no Premiere Pro",
+  "fr": "Placer dans Premiere Pro",
+  "de": "In Premiere Pro anlegen",
+  "it": "Inserire in Premiere Pro"
+ },
+ "Colocando en Premiere": {
+  "en": "Placing in Premiere",
+  "pt": "Colocando no Premiere",
+  "fr": "Placement dans Premiere",
+  "de": "Lege in Premiere an",
+  "it": "Inserimento in Premiere"
+ },
+ "GO coloca tu video en Adobe Premiere Pro": {
+  "en": "GO places your video in Adobe Premiere Pro",
+  "pt": "O GO coloca o seu vídeo no Adobe Premiere Pro",
+  "fr": "GO place votre vidéo dans Adobe Premiere Pro",
+  "de": "GO legt dein Video in Adobe Premiere Pro an",
+  "it": "GO inserisce il tuo video in Adobe Premiere Pro"
+ },
+ "Dibujando los subtítulos para Premiere Pro…": {
+  "en": "Drawing the captions for Premiere Pro…",
+  "pt": "Desenhando as legendas para o Premiere Pro…",
+  "fr": "Dessin des sous-titres pour Premiere Pro…",
+  "de": "Zeichne die Untertitel für Premiere Pro…",
+  "it": "Disegno i sottotitoli per Premiere Pro…"
+ },
+ "Dibujando los subtítulos para Premiere Pro… {p} %": {
+  "en": "Drawing the captions for Premiere Pro… {p} %",
+  "pt": "Desenhando as legendas para o Premiere Pro… {p} %",
+  "fr": "Dessin des sous-titres pour Premiere Pro… {p} %",
+  "de": "Zeichne die Untertitel für Premiere Pro… {p} %",
+  "it": "Disegno i sottotitoli per Premiere Pro… {p} %"
+ },
+ "Listo: en Premiere Pro, secuencia «{s}». Pulsa GO para otro.": {
+  "en": "Done: in Premiere Pro, sequence «{s}». Press GO for another one.",
+  "pt": "Pronto: no Premiere Pro, sequência «{s}». Pressione GO para outro.",
+  "fr": "Terminé : dans Premiere Pro, séquence «{s}». Appuyez sur GO pour une autre.",
+  "de": "Fertig: in Premiere Pro, Sequenz «{s}». Drücke GO für das nächste.",
+  "it": "Fatto: in Premiere Pro, sequenza «{s}». Premi GO per un altro."
+ },
+ "No pude colocar en Premiere Pro: {e}": {
+  "en": "I couldn’t place it in Premiere Pro: {e}",
+  "pt": "Não consegui colocar no Premiere Pro: {e}",
+  "fr": "Impossible de placer dans Premiere Pro : {e}",
+  "de": "Konnte nicht in Premiere Pro anlegen: {e}",
+  "it": "Non sono riuscito a inserire in Premiere Pro: {e}"
+ },
+ "No pude preparar los subtítulos para Premiere Pro (¿el video tiene voz?).": {
+  "en": "I couldn’t prepare the captions for Premiere Pro (does the video have speech?).",
+  "pt": "Não consegui preparar as legendas para o Premiere Pro (o vídeo tem voz?).",
+  "fr": "Impossible de préparer les sous-titres pour Premiere Pro (la vidéo contient-elle de la voix ?).",
+  "de": "Konnte die Untertitel für Premiere Pro nicht vorbereiten (hat das Video Sprache?).",
+  "it": "Non sono riuscito a preparare i sottotitoli per Premiere Pro (il video ha la voce?)."
+ },
+ "Abriendo Adobe Premiere Pro…": {
+  "en": "Opening Adobe Premiere Pro…",
+  "pt": "Abrindo o Adobe Premiere Pro…",
+  "fr": "Ouverture d’Adobe Premiere Pro…",
+  "de": "Öffne Adobe Premiere Pro…",
+  "it": "Apro Adobe Premiere Pro…"
+ },
+ "Esperando a Premiere Pro…": {
+  "en": "Waiting for Premiere Pro…",
+  "pt": "Aguardando o Premiere Pro…",
+  "fr": "En attente de Premiere Pro…",
+  "de": "Warte auf Premiere Pro…",
+  "it": "In attesa di Premiere Pro…"
+ },
+ "Colocando en Premiere Pro…": {
+  "en": "Placing in Premiere Pro…",
+  "pt": "Colocando no Premiere Pro…",
+  "fr": "Placement dans Premiere Pro…",
+  "de": "Lege in Premiere Pro an…",
+  "it": "Inserimento in Premiere Pro…"
+ },
+ "Premiere Pro conectado…": {
+  "en": "Premiere Pro connected…",
+  "pt": "Premiere Pro conectado…",
+  "fr": "Premiere Pro connecté…",
+  "de": "Premiere Pro verbunden…",
+  "it": "Premiere Pro collegato…"
+ },
+ "Terminando el sonido…": {
+  "en": "Finishing the sound…",
+  "pt": "Terminando o som…",
+  "fr": "Finalisation du son…",
+  "de": "Stelle den Sound fertig…",
+  "it": "Completo il suono…"
+ },
+ "Tu video está en Premiere Pro: «{s}»": {
+  "en": "Your video is in Premiere Pro: «{s}»",
+  "pt": "Seu vídeo está no Premiere Pro: «{s}»",
+  "fr": "Votre vidéo est dans Premiere Pro : «{s}»",
+  "de": "Dein Video ist in Premiere Pro: «{s}»",
+  "it": "Il tuo video è in Premiere Pro: «{s}»"
+ },
+ "Cierra Premiere Pro y vuelve a abrirlo: el panel de CineCaptions se acaba de instalar y Premiere solo lo carga al arrancar. Luego pulsa GO otra vez.": {
+  "en": "Close Premiere Pro and open it again: the CineCaptions panel was just installed and Premiere only loads it at startup. Then press GO again.",
+  "pt": "Feche o Premiere Pro e abra-o de novo: o painel do CineCaptions acabou de ser instalado e o Premiere só o carrega ao iniciar. Depois pressione GO outra vez.",
+  "fr": "Fermez Premiere Pro et rouvrez-le : le panneau CineCaptions vient d’être installé et Premiere ne le charge qu’au démarrage. Puis appuyez de nouveau sur GO.",
+  "de": "Schließe Premiere Pro und öffne es erneut: Das CineCaptions-Panel wurde gerade installiert und Premiere lädt es nur beim Start. Drücke dann erneut GO.",
+  "it": "Chiudi Premiere Pro e riaprilo: il pannello di CineCaptions è appena stato installato e Premiere lo carica solo all’avvio. Poi premi di nuovo GO."
+ },
+ "Premiere Pro no contestó. Ábrelo con un proyecto y, si no se conecta, abre una vez Ventana > Extensiones > CineCaptions. Luego pulsa GO otra vez.": {
+  "en": "Premiere Pro didn’t answer. Open it with a project and, if it doesn’t connect, open Window > Extensions > CineCaptions once. Then press GO again.",
+  "pt": "O Premiere Pro não respondeu. Abra-o com um projeto e, se não conectar, abra uma vez Janela > Extensões > CineCaptions. Depois pressione GO outra vez.",
+  "fr": "Premiere Pro n’a pas répondu. Ouvrez-le avec un projet et, s’il ne se connecte pas, ouvrez une fois Fenêtre > Extensions > CineCaptions. Puis appuyez de nouveau sur GO.",
+  "de": "Premiere Pro hat nicht geantwortet. Öffne es mit einem Projekt und, falls es sich nicht verbindet, öffne einmal Fenster > Erweiterungen > CineCaptions. Drücke dann erneut GO.",
+  "it": "Premiere Pro non ha risposto. Aprilo con un progetto e, se non si collega, apri una volta Finestra > Estensioni > CineCaptions. Poi premi di nuovo GO."
+ },
+ "Motor de voz, espacio de las cachés y con qué trabaja GO.": {
+  "en": "Speech engine, cache space and what GO works with.",
+  "pt": "Motor de voz, espaço dos caches e com o que o GO trabalha.",
+  "fr": "Moteur vocal, espace des caches et avec quoi GO travaille.",
+  "de": "Sprach-Engine, Cache-Speicher und womit GO arbeitet.",
+  "it": "Motore vocale, spazio delle cache e con cosa lavora GO."
+ },
+ "Video sin editores (DaVinci y Premiere)": {
+  "en": "Video without editors (DaVinci and Premiere)",
+  "pt": "Vídeo sem editores (DaVinci e Premiere)",
+  "fr": "Vidéo sans logiciel de montage (DaVinci et Premiere)",
+  "de": "Video ohne Schnittprogramm (DaVinci und Premiere)",
+  "it": "Video senza editor (DaVinci e Premiere)"
+ },
+ "GO graba los subtítulos del estilo elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, sin usar DaVinci Resolve ni Premiere Pro.": {
+  "en": "GO burns the captions of the chosen style (with their sounds) into an MP4 copy of your video, next to the original, without using DaVinci Resolve or Premiere Pro.",
+  "pt": "O GO grava as legendas do estilo escolhido (com os sons) numa cópia MP4 do seu vídeo, ao lado do original, sem usar o DaVinci Resolve nem o Premiere Pro.",
+  "fr": "GO incruste les sous-titres du style choisi (avec leurs sons) dans une copie MP4 de votre vidéo, à côté de l’original, sans utiliser DaVinci Resolve ni Premiere Pro.",
+  "de": "GO brennt die Untertitel des gewählten Stils (mit ihren Sounds) in eine MP4-Kopie deines Videos neben dem Original, ohne DaVinci Resolve oder Premiere Pro.",
+  "it": "GO imprime i sottotitoli dello stile scelto (con i loro suoni) in una copia MP4 del tuo video, accanto all’originale, senza usare DaVinci Resolve né Premiere Pro."
+ },
+ "GO entrega un video MP4 (Ajustes > General: «Video sin editores (DaVinci y Premiere)»).": {
+  "en": "GO delivers an MP4 video (Settings > General: «Video without editors (DaVinci and Premiere)»).",
+  "pt": "O GO entrega um vídeo MP4 (Ajustes > Geral: «Vídeo sem editores (DaVinci e Premiere)»).",
+  "fr": "GO livre une vidéo MP4 (Réglages > Général : «Vidéo sans logiciel de montage (DaVinci et Premiere)»).",
+  "de": "GO liefert ein MP4-Video (Einstellungen > Allgemein: «Video ohne Schnittprogramm (DaVinci und Premiere)»).",
+  "it": "GO consegna un video MP4 (Impostazioni > Generali: «Video senza editor (DaVinci e Premiere)»)."
+ },
+ "Tienes elegido «Video sin editores (DaVinci y Premiere)» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o elige «Usar con DaVinci Resolve» para trabajar con el timeline de Resolve.": {
+  "en": "You have «Video without editors (DaVinci and Premiere)» selected (Settings > General). Drop a video into CineCaptions and press GO, or choose «Use with DaVinci Resolve» to work with the Resolve timeline.",
+  "pt": "Você escolheu «Vídeo sem editores (DaVinci e Premiere)» (Ajustes > Geral). Solte um vídeo no CineCaptions e pressione GO, ou escolha «Usar com o DaVinci Resolve» para trabalhar com a timeline do Resolve.",
+  "fr": "Vous avez choisi «Vidéo sans logiciel de montage (DaVinci et Premiere)» (Réglages > Général). Déposez une vidéo dans CineCaptions et appuyez sur GO, ou choisissez «Utiliser avec DaVinci Resolve» pour travailler avec la timeline de Resolve.",
+  "de": "Du hast «Video ohne Schnittprogramm (DaVinci und Premiere)» gewählt (Einstellungen > Allgemein). Lege ein Video in CineCaptions ab und drücke GO, oder wähle «Mit DaVinci Resolve verwenden», um mit der Resolve-Timeline zu arbeiten.",
+  "it": "Hai scelto «Video senza editor (DaVinci e Premiere)» (Impostazioni > Generali). Trascina un video in CineCaptions e premi GO, oppure scegli «Usa con DaVinci Resolve» per lavorare con la timeline di Resolve."
+ },
+ "GO está en modo «Video sin editores»": {
+  "en": "GO is in «Video without editors» mode",
+  "pt": "O GO está no modo «Vídeo sem editores»",
+  "fr": "GO est en mode «Vidéo sans logiciel de montage»",
+  "de": "GO ist im Modus «Video ohne Schnittprogramm»",
+  "it": "GO è in modalità «Video senza editor»"
+ },
+ "En Ajustes está elegido «Video sin editores (DaVinci y Premiere)»: GO no usa el timeline de Resolve, trabaja con un video que sueltes en CineCaptions.": {
+  "en": "«Video without editors (DaVinci and Premiere)» is selected in Settings: GO doesn’t use the Resolve timeline, it works with a video you drop into CineCaptions.",
+  "pt": "Em Ajustes está escolhido «Vídeo sem editores (DaVinci e Premiere)»: o GO não usa a timeline do Resolve, trabalha com um vídeo que você soltar no CineCaptions.",
+  "fr": "Dans les Réglages, «Vidéo sans logiciel de montage (DaVinci et Premiere)» est choisi : GO n’utilise pas la timeline de Resolve, il travaille avec une vidéo que vous déposez dans CineCaptions.",
+  "de": "In den Einstellungen ist «Video ohne Schnittprogramm (DaVinci und Premiere)» gewählt: GO nutzt nicht die Resolve-Timeline, sondern arbeitet mit einem Video, das du in CineCaptions ablegst.",
+  "it": "Nelle Impostazioni è scelto «Video senza editor (DaVinci e Premiere)»: GO non usa la timeline di Resolve, lavora con un video che trascini in CineCaptions."
+ },
+ "En Ajustes › General eliges con qué trabaja GO, uno a la vez: «Usar con DaVinci Resolve» (de fábrica), «Usar con Premiere Pro» o «Video sin editores (DaVinci y Premiere)», el antiguo «Video MP4 en lugar de Resolve».": {
+  "en": "In Settings › General you choose what GO works with, one at a time: «Use with DaVinci Resolve» (default), «Use with Premiere Pro» or «Video without editors (DaVinci and Premiere)», the former «MP4 video instead of Resolve».",
+  "pt": "Em Ajustes › Geral você escolhe com o que o GO trabalha, um de cada vez: «Usar com o DaVinci Resolve» (padrão), «Usar com o Premiere Pro» ou «Vídeo sem editores (DaVinci e Premiere)», o antigo «Vídeo MP4 em vez do Resolve».",
+  "fr": "Dans Réglages › Général, vous choisissez avec quoi GO travaille, un seul à la fois : «Utiliser avec DaVinci Resolve» (par défaut), «Utiliser avec Premiere Pro» ou «Vidéo sans logiciel de montage (DaVinci et Premiere)», l’ancien «Vidéo MP4 au lieu de Resolve».",
+  "de": "Unter Einstellungen › Allgemein wählst du, womit GO arbeitet, immer nur eins: «Mit DaVinci Resolve verwenden» (Standard), «Mit Premiere Pro verwenden» oder «Video ohne Schnittprogramm (DaVinci und Premiere)», das frühere «MP4-Video statt Resolve».",
+  "it": "In Impostazioni › Generali scegli con cosa lavora GO, uno alla volta: «Usa con DaVinci Resolve» (predefinito), «Usa con Premiere Pro» o «Video senza editor (DaVinci e Premiere)», il vecchio «Video MP4 al posto di Resolve»."
+ },
+ "Usar con DaVinci Resolve": {
+  "en": "Use with DaVinci Resolve",
+  "pt": "Usar com o DaVinci Resolve",
+  "fr": "Utiliser avec DaVinci Resolve",
+  "de": "Mit DaVinci Resolve verwenden",
+  "it": "Usa con DaVinci Resolve"
+ },
+ "Usar con Premiere Pro": {
+  "en": "Use with Premiere Pro",
+  "pt": "Usar com o Premiere Pro",
+  "fr": "Utiliser avec Premiere Pro",
+  "de": "Mit Premiere Pro verwenden",
+  "it": "Usa con Premiere Pro"
+ },
+ "GO coloca los subtítulos, los sonidos y los efectos en tu timeline de DaVinci Resolve (Studio o Free). Si Resolve no está instalado, te devuelve el video con los subtítulos grabados en un MP4.": {
+  "en": "GO places the captions, sounds and effects on your DaVinci Resolve timeline (Studio or Free). If Resolve isn’t installed, it gives you back the video with the captions burned into an MP4.",
+  "pt": "O GO coloca as legendas, os sons e os efeitos na sua timeline do DaVinci Resolve (Studio ou Free). Se o Resolve não estiver instalado, ele devolve o vídeo com as legendas gravadas num MP4.",
+  "fr": "GO place les sous-titres, les sons et les effets sur votre timeline DaVinci Resolve (Studio ou Free). Si Resolve n’est pas installé, il vous rend la vidéo avec les sous-titres incrustés dans un MP4.",
+  "de": "GO legt Untertitel, Sounds und Effekte in deiner DaVinci-Resolve-Timeline an (Studio oder Free). Ist Resolve nicht installiert, bekommst du das Video mit eingebrannten Untertiteln als MP4 zurück.",
+  "it": "GO mette sottotitoli, suoni ed effetti nella tua timeline di DaVinci Resolve (Studio o Free). Se Resolve non è installato, ti restituisce il video con i sottotitoli impressi in un MP4."
+ },
+ "GO coloca en Adobe Premiere Pro (Ajustes > General: «Usar con Premiere Pro»).": {
+  "en": "GO places in Adobe Premiere Pro (Settings > General: «Use with Premiere Pro»).",
+  "pt": "O GO coloca no Adobe Premiere Pro (Ajustes > Geral: «Usar com o Premiere Pro»).",
+  "fr": "GO place dans Adobe Premiere Pro (Réglages > Général : «Utiliser avec Premiere Pro»).",
+  "de": "GO legt in Adobe Premiere Pro an (Einstellungen > Allgemein: «Mit Premiere Pro verwenden»).",
+  "it": "GO inserisce in Adobe Premiere Pro (Impostazioni > Generali: «Usa con Premiere Pro»)."
+ },
+ "Tienes elegido «Usar con Premiere Pro» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO: lo coloco en Premiere Pro.": {
+  "en": "You have «Use with Premiere Pro» selected (Settings > General). Drop a video into CineCaptions and press GO: I’ll place it in Premiere Pro.",
+  "pt": "Você escolheu «Usar com o Premiere Pro» (Ajustes > Geral). Solte um vídeo no CineCaptions e pressione GO: eu o coloco no Premiere Pro.",
+  "fr": "Vous avez choisi «Utiliser avec Premiere Pro» (Réglages > Général). Déposez une vidéo dans CineCaptions et appuyez sur GO : je la place dans Premiere Pro.",
+  "de": "Du hast «Mit Premiere Pro verwenden» gewählt (Einstellungen > Allgemein). Lege ein Video in CineCaptions ab und drücke GO: ich lege es in Premiere Pro an.",
+  "it": "Hai scelto «Usa con Premiere Pro» (Impostazioni > Generali). Trascina un video in CineCaptions e premi GO: lo inserisco in Premiere Pro."
+ },
+ "No encuentro Adobe Premiere Pro en este equipo. Instálalo (o elige «Usar con DaVinci Resolve» en Ajustes > General).": {
+  "en": "I can’t find Adobe Premiere Pro on this computer. Install it (or choose «Use with DaVinci Resolve» in Settings > General).",
+  "pt": "Não encontro o Adobe Premiere Pro neste computador. Instale-o (ou escolha «Usar com o DaVinci Resolve» em Ajustes > Geral).",
+  "fr": "Adobe Premiere Pro est introuvable sur cet ordinateur. Installez-le (ou choisissez «Utiliser avec DaVinci Resolve» dans Réglages > Général).",
+  "de": "Adobe Premiere Pro ist auf diesem Computer nicht zu finden. Installiere es (oder wähle «Mit DaVinci Resolve verwenden» in Einstellungen > Allgemein).",
+  "it": "Non trovo Adobe Premiere Pro su questo computer. Installalo (o scegli «Usa con DaVinci Resolve» in Impostazioni > Generali)."
+ },
+ "Adobe Premiere Pro: elige «Usar con Premiere Pro» en Ajustes › General y GO coloca todo en Premiere como en Resolve, en una secuencia nueva: tu video, los subtítulos del estilo elegido encima (con sus emojis), los sonidos en sus pistas y la música. Si Premiere está cerrado, se abre solo.": {
+  "en": "Adobe Premiere Pro: choose «Use with Premiere Pro» in Settings › General and GO places everything in Premiere just like in Resolve, in a new sequence: your video, the captions of the chosen style on top (with their emojis), the sounds on their tracks and the music. If Premiere is closed, it opens by itself.",
+  "pt": "Adobe Premiere Pro: escolha «Usar com o Premiere Pro» em Ajustes › Geral e o GO coloca tudo no Premiere como no Resolve, numa sequência nova: o seu vídeo, as legendas do estilo escolhido por cima (com os emojis), os sons nas suas faixas e a música. Se o Premiere estiver fechado, ele abre sozinho.",
+  "fr": "Adobe Premiere Pro : choisissez «Utiliser avec Premiere Pro» dans Réglages › Général et GO place tout dans Premiere comme dans Resolve, dans une nouvelle séquence : votre vidéo, les sous-titres du style choisi par-dessus (avec leurs emojis), les sons sur leurs pistes et la musique. Si Premiere est fermé, il s’ouvre tout seul.",
+  "de": "Adobe Premiere Pro: Wähle «Mit Premiere Pro verwenden» unter Einstellungen › Allgemein und GO legt alles in Premiere an wie in Resolve, in einer neuen Sequenz: dein Video, die Untertitel des gewählten Stils darüber (mit ihren Emojis), die Sounds auf ihren Spuren und die Musik. Ist Premiere geschlossen, öffnet es sich von selbst.",
+  "it": "Adobe Premiere Pro: scegli «Usa con Premiere Pro» in Impostazioni › Generali e GO mette tutto in Premiere come in Resolve, in una nuova sequenza: il tuo video, i sottotitoli dello stile scelto sopra (con le loro emoji), i suoni sulle loro tracce e la musica. Se Premiere è chiuso, si apre da solo."
+ },
+ "GO trabaja con Premiere Pro": {
+  "en": "GO works with Premiere Pro",
+  "pt": "O GO trabalha com o Premiere Pro",
+  "fr": "GO travaille avec Premiere Pro",
+  "de": "GO arbeitet mit Premiere Pro",
+  "it": "GO lavora con Premiere Pro"
+ },
+ "En Ajustes está elegido «Usar con Premiere Pro»: GO no usa el timeline de Resolve, coloca en Premiere un video que sueltes en CineCaptions.": {
+  "en": "«Use with Premiere Pro» is selected in Settings: GO doesn’t use the Resolve timeline, it places in Premiere a video you drop into CineCaptions.",
+  "pt": "Em Ajustes está escolhido «Usar com o Premiere Pro»: o GO não usa a timeline do Resolve, coloca no Premiere um vídeo que você soltar no CineCaptions.",
+  "fr": "Dans les Réglages, «Utiliser avec Premiere Pro» est choisi : GO n’utilise pas la timeline de Resolve, il place dans Premiere une vidéo que vous déposez dans CineCaptions.",
+  "de": "In den Einstellungen ist «Mit Premiere Pro verwenden» gewählt: GO nutzt nicht die Resolve-Timeline, sondern legt ein Video, das du in CineCaptions ablegst, in Premiere an.",
+  "it": "Nelle Impostazioni è scelto «Usa con Premiere Pro»: GO non usa la timeline di Resolve, inserisce in Premiere un video che trascini in CineCaptions."
+ },
+ "Arrastra tu video a la ventana de CineCaptions y pulsa GO.": {
+  "en": "Drag your video onto the CineCaptions window and press GO.",
+  "pt": "Arraste o seu vídeo para a janela do CineCaptions e pressione GO.",
+  "fr": "Faites glisser votre vidéo dans la fenêtre de CineCaptions et appuyez sur GO.",
+  "de": "Ziehe dein Video in das CineCaptions-Fenster und drücke GO.",
+  "it": "Trascina il tuo video nella finestra di CineCaptions e premi GO."
+ },
+ "Para trabajar con Resolve: Ajustes > General, elige «Usar con DaVinci Resolve».": {
+  "en": "To work with Resolve: Settings > General, choose «Use with DaVinci Resolve».",
+  "pt": "Para trabalhar com o Resolve: Ajustes > Geral, escolha «Usar com o DaVinci Resolve».",
+  "fr": "Pour travailler avec Resolve : Réglages > Général, choisissez «Utiliser avec DaVinci Resolve».",
+  "de": "Um mit Resolve zu arbeiten: Einstellungen > Allgemein, wähle «Mit DaVinci Resolve verwenden».",
+  "it": "Per lavorare con Resolve: Impostazioni > Generali, scegli «Usa con DaVinci Resolve»."
+ },
+ "No está Adobe Premiere Pro": {
+  "en": "Adobe Premiere Pro isn’t installed",
+  "pt": "O Adobe Premiere Pro não está instalado",
+  "fr": "Adobe Premiere Pro n’est pas installé",
+  "de": "Adobe Premiere Pro ist nicht installiert",
+  "it": "Adobe Premiere Pro non è installato"
+ },
+ "GO tiene que colocar en Premiere Pro, pero no está instalado en este equipo.": {
+  "en": "GO has to place in Premiere Pro, but it isn’t installed on this computer.",
+  "pt": "O GO precisa colocar no Premiere Pro, mas ele não está instalado neste computador.",
+  "fr": "GO doit placer dans Premiere Pro, mais il n’est pas installé sur cet ordinateur.",
+  "de": "GO soll in Premiere Pro anlegen, aber es ist auf diesem Computer nicht installiert.",
+  "it": "GO deve inserire in Premiere Pro, ma non è installato su questo computer."
+ },
+ "Instala Adobe Premiere Pro y pulsa GO otra vez.": {
+  "en": "Install Adobe Premiere Pro and press GO again.",
+  "pt": "Instale o Adobe Premiere Pro e pressione GO outra vez.",
+  "fr": "Installez Adobe Premiere Pro et appuyez de nouveau sur GO.",
+  "de": "Installiere Adobe Premiere Pro und drücke erneut GO.",
+  "it": "Installa Adobe Premiere Pro e premi di nuovo GO."
+ },
+ "O en Ajustes > General elige «Usar con DaVinci Resolve».": {
+  "en": "Or choose «Use with DaVinci Resolve» in Settings > General.",
+  "pt": "Ou em Ajustes > Geral escolha «Usar com o DaVinci Resolve».",
+  "fr": "Ou choisissez «Utiliser avec DaVinci Resolve» dans Réglages > Général.",
+  "de": "Oder wähle «Mit DaVinci Resolve verwenden» in Einstellungen > Allgemein.",
+  "it": "Oppure scegli «Usa con DaVinci Resolve» in Impostazioni > Generali."
+ },
+ "Reinicia Premiere Pro una vez": {
+  "en": "Restart Premiere Pro once",
+  "pt": "Reinicie o Premiere Pro uma vez",
+  "fr": "Redémarrez Premiere Pro une fois",
+  "de": "Starte Premiere Pro einmal neu",
+  "it": "Riavvia Premiere Pro una volta"
+ },
+ "El panel de CineCaptions se acaba de instalar en Premiere Pro, y Premiere solo lo carga al arrancar.": {
+  "en": "The CineCaptions panel was just installed in Premiere Pro, and Premiere only loads it at startup.",
+  "pt": "O painel do CineCaptions acabou de ser instalado no Premiere Pro, e o Premiere só o carrega ao iniciar.",
+  "fr": "Le panneau CineCaptions vient d’être installé dans Premiere Pro, et Premiere ne le charge qu’au démarrage.",
+  "de": "Das CineCaptions-Panel wurde gerade in Premiere Pro installiert, und Premiere lädt es nur beim Start.",
+  "it": "Il pannello di CineCaptions è appena stato installato in Premiere Pro, e Premiere lo carica solo all’avvio."
+ },
+ "Cierra Premiere Pro y vuelve a abrirlo.": {
+  "en": "Close Premiere Pro and open it again.",
+  "pt": "Feche o Premiere Pro e abra-o de novo.",
+  "fr": "Fermez Premiere Pro et rouvrez-le.",
+  "de": "Schließe Premiere Pro und öffne es erneut.",
+  "it": "Chiudi Premiere Pro e riaprilo."
+ },
+ "Pulsa GO otra vez.": {
+  "en": "Press GO again.",
+  "pt": "Pressione GO outra vez.",
+  "fr": "Appuyez de nouveau sur GO.",
+  "de": "Drücke erneut GO.",
+  "it": "Premi di nuovo GO."
+ },
+ "Premiere Pro no contestó": {
+  "en": "Premiere Pro didn’t answer",
+  "pt": "O Premiere Pro não respondeu",
+  "fr": "Premiere Pro n’a pas répondu",
+  "de": "Premiere Pro hat nicht geantwortet",
+  "it": "Premiere Pro non ha risposto"
+ },
+ "CineCaptions dejó el pedido, pero el panel de Premiere Pro no respondió a tiempo.": {
+  "en": "CineCaptions left the request, but the Premiere Pro panel didn’t answer in time.",
+  "pt": "O CineCaptions deixou o pedido, mas o painel do Premiere Pro não respondeu a tempo.",
+  "fr": "CineCaptions a laissé la demande, mais le panneau de Premiere Pro n’a pas répondu à temps.",
+  "de": "CineCaptions hat den Auftrag abgelegt, aber das Premiere-Pro-Panel hat nicht rechtzeitig geantwortet.",
+  "it": "CineCaptions ha lasciato la richiesta, ma il pannello di Premiere Pro non ha risposto in tempo."
+ },
+ "Abre Premiere Pro con un proyecto.": {
+  "en": "Open Premiere Pro with a project.",
+  "pt": "Abra o Premiere Pro com um projeto.",
+  "fr": "Ouvrez Premiere Pro avec un projet.",
+  "de": "Öffne Premiere Pro mit einem Projekt.",
+  "it": "Apri Premiere Pro con un progetto."
+ },
+ "Si no se conecta, abre una vez en Premiere Ventana > Extensiones > CineCaptions (luego se abre solo).": {
+  "en": "If it doesn’t connect, open Window > Extensions > CineCaptions in Premiere once (then it opens by itself).",
+  "pt": "Se não conectar, abra uma vez no Premiere Janela > Extensões > CineCaptions (depois abre sozinho).",
+  "fr": "S’il ne se connecte pas, ouvrez une fois dans Premiere Fenêtre > Extensions > CineCaptions (ensuite il s’ouvre tout seul).",
+  "de": "Wenn es sich nicht verbindet, öffne in Premiere einmal Fenster > Erweiterungen > CineCaptions (danach öffnet es sich von selbst).",
+  "it": "Se non si collega, apri una volta in Premiere Finestra > Estensioni > CineCaptions (poi si apre da solo)."
+ },
+ "No se pudo colocar en Premiere Pro": {
+  "en": "It couldn’t be placed in Premiere Pro",
+  "pt": "Não foi possível colocar no Premiere Pro",
+  "fr": "Impossible de placer dans Premiere Pro",
+  "de": "Konnte nicht in Premiere Pro angelegt werden",
+  "it": "Non è stato possibile inserire in Premiere Pro"
+ },
+ "Premiere Pro recibió el pedido pero no terminó de colocarlo. Los subtítulos quedaron junto a tu video («… (CineCaptions capa).mov»).": {
+  "en": "Premiere Pro got the request but didn’t finish placing it. The captions were left next to your video («… (CineCaptions capa).mov»).",
+  "pt": "O Premiere Pro recebeu o pedido, mas não terminou de colocá-lo. As legendas ficaram ao lado do seu vídeo («… (CineCaptions capa).mov»).",
+  "fr": "Premiere Pro a reçu la demande mais n’a pas fini de la placer. Les sous-titres sont restés à côté de votre vidéo («… (CineCaptions capa).mov»).",
+  "de": "Premiere Pro hat den Auftrag erhalten, aber nicht fertig angelegt. Die Untertitel liegen neben deinem Video («… (CineCaptions capa).mov»).",
+  "it": "Premiere Pro ha ricevuto la richiesta ma non ha finito di inserirla. I sottotitoli sono rimasti accanto al tuo video («… (CineCaptions capa).mov»)."
+ },
+ "Mira que Premiere no tenga una ventana abierta esperando una respuesta.": {
+  "en": "Check that Premiere doesn’t have a window open waiting for an answer.",
+  "pt": "Veja se o Premiere não tem uma janela aberta esperando uma resposta.",
+  "fr": "Vérifiez que Premiere n’a pas une fenêtre ouverte qui attend une réponse.",
+  "de": "Prüfe, ob in Premiere ein Fenster offen ist, das auf eine Antwort wartet.",
+  "it": "Controlla che Premiere non abbia una finestra aperta in attesa di una risposta."
+ },
+ "O pon a mano la capa .mov en la pista V2, encima de tu video.": {
+  "en": "Or place the .mov layer by hand on track V2, above your video.",
+  "pt": "Ou coloque à mão a camada .mov na faixa V2, acima do seu vídeo.",
+  "fr": "Ou placez à la main le calque .mov sur la piste V2, au-dessus de votre vidéo.",
+  "de": "Oder lege die .mov-Ebene von Hand auf Spur V2, über dein Video.",
+  "it": "Oppure metti a mano il livello .mov sulla traccia V2, sopra il tuo video."
+ },
+ "En Premiere Pro {v}: secuencia «{s}» en el proyecto «{p}» (captions en V2, {n} de {t} sonidos).": {
+  "en": "In Premiere Pro {v}: sequence «{s}» in project «{p}» (captions on V2, {n} of {t} sounds).",
+  "pt": "No Premiere Pro {v}: sequência «{s}» no projeto «{p}» (legendas na V2, {n} de {t} sons).",
+  "fr": "Dans Premiere Pro {v} : séquence «{s}» dans le projet «{p}» (sous-titres sur V2, {n} sons sur {t}).",
+  "de": "In Premiere Pro {v}: Sequenz «{s}» im Projekt «{p}» (Untertitel auf V2, {n} von {t} Sounds).",
+  "it": "In Premiere Pro {v}: sequenza «{s}» nel progetto «{p}» (sottotitoli su V2, {n} di {t} suoni)."
+ },
+ " Con música.": {
+  "en": " With music.",
+  "pt": " Com música.",
+  "fr": " Avec musique.",
+  "de": " Mit Musik.",
+  "it": " Con musica."
+ },
+ "Premiere Pro no aceptó {f} de los {t} sonidos.": {
+  "en": "Premiere Pro didn’t accept {f} of the {t} sounds.",
+  "pt": "O Premiere Pro não aceitou {f} dos {t} sons.",
+  "fr": "Premiere Pro n’a pas accepté {f} des {t} sons.",
+  "de": "Premiere Pro hat {f} der {t} Sounds nicht angenommen.",
+  "it": "Premiere Pro non ha accettato {f} dei {t} suoni."
+ },
+ "Los subtítulos quedaron en «{r}» (ProRes con transparencia): puedes ponerlos a mano en V2.": {
+  "en": "The captions were left in «{r}» (ProRes with transparency): you can place them by hand on V2.",
+  "pt": "As legendas ficaram em «{r}» (ProRes com transparência): você pode colocá-las à mão na V2.",
+  "fr": "Les sous-titres sont restés dans «{r}» (ProRes avec transparence) : vous pouvez les placer à la main sur V2.",
+  "de": "Die Untertitel liegen in «{r}» (ProRes mit Transparenz): du kannst sie von Hand auf V2 legen.",
+  "it": "I sottotitoli sono rimasti in «{r}» (ProRes con trasparenza): puoi metterli a mano su V2."
+ },
+ "No pude preparar Premiere Pro": {
+  "en": "I couldn’t prepare Premiere Pro",
+  "pt": "Não consegui preparar o Premiere Pro",
+  "fr": "Impossible de préparer Premiere Pro",
+  "de": "Konnte Premiere Pro nicht vorbereiten",
+  "it": "Non sono riuscito a preparare Premiere Pro"
+ },
+ "No pude instalar el panel de CineCaptions en Premiere Pro": {
+  "en": "I couldn’t install the CineCaptions panel in Premiere Pro",
+  "pt": "Não consegui instalar o painel do CineCaptions no Premiere Pro",
+  "fr": "Impossible d’installer le panneau CineCaptions dans Premiere Pro",
+  "de": "Konnte das CineCaptions-Panel nicht in Premiere Pro installieren",
+  "it": "Non sono riuscito a installare il pannello di CineCaptions in Premiere Pro"
+ },
+ "No encuentro Adobe Premiere Pro en este equipo: instálalo para que GO coloque ahí. El panel de CineCaptions ya quedó listo.": {
+  "en": "I can’t find Adobe Premiere Pro on this computer: install it so GO can place there. The CineCaptions panel is already set up.",
+  "pt": "Não encontro o Adobe Premiere Pro neste computador: instale-o para que o GO coloque lá. O painel do CineCaptions já está pronto.",
+  "fr": "Adobe Premiere Pro est introuvable sur cet ordinateur : installez-le pour que GO y place. Le panneau CineCaptions est déjà prêt.",
+  "de": "Adobe Premiere Pro ist auf diesem Computer nicht zu finden: Installiere es, damit GO dort anlegen kann. Das CineCaptions-Panel ist schon bereit.",
+  "it": "Non trovo Adobe Premiere Pro su questo computer: installalo perché GO possa inserire lì. Il pannello di CineCaptions è già pronto."
+ },
+ "Cierra Premiere Pro y vuelve a abrirlo una vez: así carga el panel de CineCaptions. Después GO coloca ahí.": {
+  "en": "Close Premiere Pro and open it again once: that way it loads the CineCaptions panel. Then GO places there.",
+  "pt": "Feche o Premiere Pro e abra-o de novo uma vez: assim ele carrega o painel do CineCaptions. Depois o GO coloca lá.",
+  "fr": "Fermez Premiere Pro et rouvrez-le une fois : il chargera ainsi le panneau CineCaptions. Ensuite GO y place.",
+  "de": "Schließe Premiere Pro und öffne es einmal erneut: So lädt es das CineCaptions-Panel. Danach legt GO dort an.",
+  "it": "Chiudi Premiere Pro e riaprilo una volta: così carica il pannello di CineCaptions. Poi GO inserisce lì."
+ },
+ "Premiere Pro listo: GO coloca tus videos ahí ({r}).": {
+  "en": "Premiere Pro ready: GO places your videos there ({r}).",
+  "pt": "Premiere Pro pronto: o GO coloca os seus vídeos lá ({r}).",
+  "fr": "Premiere Pro prêt : GO y place vos vidéos ({r}).",
+  "de": "Premiere Pro bereit: GO legt deine Videos dort an ({r}).",
+  "it": "Premiere Pro pronto: GO inserisce lì i tuoi video ({r})."
+ },
+ "{n} detectado · conectado": {
+  "en": "{n} detected · connected",
+  "pt": "{n} detectado · conectado",
+  "fr": "{n} détecté · connecté",
+  "de": "{n} erkannt · verbunden",
+  "it": "{n} rilevato · collegato"
+ },
+ "proyecto «{p}»": {
+  "en": "project «{p}»",
+  "pt": "projeto «{p}»",
+  "fr": "projet «{p}»",
+  "de": "Projekt «{p}»",
+  "it": "progetto «{p}»"
+ },
+ "{n} abierto · conectando… (si no conecta, reinícialo una vez)": {
+  "en": "{n} open · connecting… (if it doesn’t connect, restart it once)",
+  "pt": "{n} aberto · conectando… (se não conectar, reinicie-o uma vez)",
+  "fr": "{n} ouvert · connexion… (s’il ne se connecte pas, redémarrez-le une fois)",
+  "de": "{n} geöffnet · verbinde… (falls es sich nicht verbindet, einmal neu starten)",
+  "it": "{n} aperto · collegamento… (se non si collega, riavvialo una volta)"
+ },
+ "{n} detectado · cerrado: GO lo abre solo": {
+  "en": "{n} detected · closed: GO opens it by itself",
+  "pt": "{n} detectado · fechado: o GO abre sozinho",
+  "fr": "{n} détecté · fermé : GO l’ouvre tout seul",
+  "de": "{n} erkannt · geschlossen: GO öffnet es von selbst",
+  "it": "{n} rilevato · chiuso: GO lo apre da solo"
+ },
+ "No encuentro Adobe Premiere Pro · instálalo o elige «Usar con DaVinci Resolve» en Ajustes": {
+  "en": "I can’t find Adobe Premiere Pro · install it or choose «Use with DaVinci Resolve» in Settings",
+  "pt": "Não encontro o Adobe Premiere Pro · instale-o ou escolha «Usar com o DaVinci Resolve» em Ajustes",
+  "fr": "Adobe Premiere Pro introuvable · installez-le ou choisissez «Utiliser avec DaVinci Resolve» dans Réglages",
+  "de": "Adobe Premiere Pro nicht gefunden · installiere es oder wähle «Mit DaVinci Resolve verwenden» in den Einstellungen",
+  "it": "Non trovo Adobe Premiere Pro · installalo o scegli «Usa con DaVinci Resolve» in Impostazioni"
+ },
+ "Premiere Pro conectado": {
+  "en": "Premiere Pro connected",
+  "pt": "Premiere Pro conectado",
+  "fr": "Premiere Pro connecté",
+  "de": "Premiere Pro verbunden",
+  "it": "Premiere Pro collegato"
+ },
+ "Premiere Pro · conectando…": {
+  "en": "Premiere Pro · connecting…",
+  "pt": "Premiere Pro · conectando…",
+  "fr": "Premiere Pro · connexion…",
+  "de": "Premiere Pro · verbinde…",
+  "it": "Premiere Pro · collegamento…"
+ },
+ "Si no conecta: reinícialo una vez": {
+  "en": "If it doesn’t connect: restart it once",
+  "pt": "Se não conectar: reinicie-o uma vez",
+  "fr": "S’il ne se connecte pas : redémarrez-le une fois",
+  "de": "Falls keine Verbindung: einmal neu starten",
+  "it": "Se non si collega: riavvialo una volta"
+ },
+ "Premiere Pro cerrado": {
+  "en": "Premiere Pro closed",
+  "pt": "Premiere Pro fechado",
+  "fr": "Premiere Pro fermé",
+  "de": "Premiere Pro geschlossen",
+  "it": "Premiere Pro chiuso"
+ },
+ "GO lo abre solo": {
+  "en": "GO opens it by itself",
+  "pt": "O GO abre sozinho",
+  "fr": "GO l’ouvre tout seul",
+  "de": "GO öffnet es von selbst",
+  "it": "GO lo apre da solo"
+ },
+ "Premiere Pro no encontrado": {
+  "en": "Premiere Pro not found",
+  "pt": "Premiere Pro não encontrado",
+  "fr": "Premiere Pro introuvable",
+  "de": "Premiere Pro nicht gefunden",
+  "it": "Premiere Pro non trovato"
+ },
+ "Comprobando Premiere Pro…": {
+  "en": "Checking Premiere Pro…",
+  "pt": "Verificando o Premiere Pro…",
+  "fr": "Vérification de Premiere Pro…",
+  "de": "Prüfe Premiere Pro…",
+  "it": "Controllo Premiere Pro…"
+ },
+ "Inicio dice con qué editor trabaja GO: con Premiere Pro, si está conectado, cerrado o sin instalar, como hace con DaVinci Resolve.": {
+  "en": "Home shows which editor GO works with: with Premiere Pro, whether it’s connected, closed or not installed, just like with DaVinci Resolve.",
+  "pt": "O Início mostra com qual editor o GO trabalha: com o Premiere Pro, se está conectado, fechado ou não instalado, como faz com o DaVinci Resolve.",
+  "fr": "L’accueil indique avec quel logiciel GO travaille : avec Premiere Pro, s’il est connecté, fermé ou non installé, comme pour DaVinci Resolve.",
+  "de": "Start zeigt, mit welchem Schnittprogramm GO arbeitet: bei Premiere Pro, ob es verbunden, geschlossen oder nicht installiert ist, wie bei DaVinci Resolve.",
+  "it": "Home mostra con quale editor lavora GO: con Premiere Pro, se è collegato, chiuso o non installato, come fa con DaVinci Resolve."
+ },
+ "Librerías al día: motores de voz e IA con transformers 5.22.2 y las últimas de click, filelock, regex y typer; animaciones de la Edición PRO con Remotion 4.0.542. Lo demás ya estaba en su última versión.": {
+  "en": "Libraries up to date: speech and AI engines with transformers 5.22.2 and the latest click, filelock, regex and typer; PRO Edit animations with Remotion 4.0.542. Everything else was already on its latest version.",
+  "pt": "Bibliotecas em dia: motores de voz e IA com transformers 5.22.2 e as últimas versões de click, filelock, regex e typer; animações da Edição PRO com Remotion 4.0.542. O resto já estava na última versão.",
+  "fr": "Bibliothèques à jour : moteurs vocal et IA avec transformers 5.22.2 et les dernières versions de click, filelock, regex et typer ; animations de l’Édition PRO avec Remotion 4.0.542. Le reste était déjà à jour.",
+  "de": "Bibliotheken aktuell: Sprach- und KI-Engines mit transformers 5.22.2 und den neuesten click, filelock, regex und typer; Animationen der PRO-Bearbeitung mit Remotion 4.0.542. Alles andere war bereits auf dem neuesten Stand.",
+  "it": "Librerie aggiornate: motori vocale e IA con transformers 5.22.2 e le ultime click, filelock, regex e typer; animazioni dell’Edizione PRO con Remotion 4.0.542. Il resto era già all’ultima versione."
  }
 }

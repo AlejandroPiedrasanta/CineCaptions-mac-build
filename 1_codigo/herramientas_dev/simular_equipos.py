@@ -257,8 +257,15 @@ def win_sin_resolve():
 
 @caso('Resolve Windows')
 def win_ajuste_mp4_con_resolve():
-    m, _d = detectar_win([WIN_DEF + r'\Resolve.exe'], prefs={'go_salida_mp4': True})
+    m, _d = detectar_win([WIN_DEF + r'\Resolve.exe'], prefs={'go_salida_mp4': True})        # «Video sin editores (DaVinci y Premiere)»
     esperar(m == 'ajuste', f'motivo={m}')
+
+
+@caso('Resolve Windows')
+def win_usar_con_premiere():
+    # v5.78: «Usar con Premiere Pro»; si por algo quedaran los dos guardados, gana Premiere
+    m, _d = detectar_win([WIN_DEF + r'\Resolve.exe'], prefs={'go_premiere': True, 'go_salida_mp4': True})
+    esperar(m == 'premiere', f'motivo={m}')
 
 
 @caso('Resolve Windows')
@@ -589,8 +596,12 @@ def torch_soporta_rtx_50():
 TARJETAS = [
     ('error', 'GO · timeline', 'No hay DaVinci Resolve en este equipo. Suelta un video en CineCaptions y pulsa GO: te lo devuelvo con los subtítulos puestos.',
      'Falta el video'),
-    ('error', 'GO · timeline', 'Tienes encendido «Video MP4 en lugar de Resolve» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o apágalo.',
-     'modo «Video MP4»'),
+    ('error', 'GO · timeline', 'Tienes elegido «Video sin editores (DaVinci y Premiere)» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o elige «Usar con DaVinci Resolve» para trabajar con el timeline de Resolve.',
+     'modo «Video sin editores»'),
+    ('error', 'GO · timeline', 'Tienes elegido «Usar con Premiere Pro» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO: lo coloco en Premiere Pro.',
+     'GO trabaja con Premiere Pro'),
+    ('error', 'GO · resolve', 'No pude colocar en Premiere Pro: Premiere Pro no contestó. Ábrelo con un proyecto y, si no se conecta, abre una vez Ventana > Extensiones > CineCaptions. Luego pulsa GO otra vez.',
+     'Premiere Pro no contestó'),
     ('aviso', 'IA de texto', 'La IA de texto (1.7B) falló: la IA de texto se quedó sin responder 100 s', 'IA de texto'),
     ('aviso', 'IA de texto', 'La IA de texto falló 2 veces seguidas: sigo con el motor de reglas (sin corrección por IA) hasta reiniciar el programa.', 'IA de texto'),
     ('aviso', 'ortografía', 'La IA de texto no pudo corregir la ortografía; la corrijo con el diccionario. (RuntimeError: x)', 'IA de texto'),

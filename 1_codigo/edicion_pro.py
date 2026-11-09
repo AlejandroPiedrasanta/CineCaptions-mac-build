@@ -1250,12 +1250,14 @@ def donde_emoji(op=None):
 def detras_disponible():
     """v5.58 (el usuario: «el menú PRO debe funcionar en Resolve Free, todas sus funciones, y detrás de ti igual»): «Captions detrás de ti» va
     con cualquier DaVinci Resolve, Free o Studio: la persona la recorta la IA local (ProRes con alfa) y Resolve solo la reproduce. Solo falta
-    en el video MP4 sin Resolve. (v5.5.20–5.57: solo Studio, con Magic Mask.) Barato y sin preguntar a Resolve: se llama desde la interfaz."""
+    en el video MP4 sin Resolve («Video sin editores») y en Premiere Pro (v5.78: la PRO no viaja a Premiere). (v5.5.20–5.57: solo Studio, con
+    Magic Mask.) Barato y sin preguntar a Resolve: se llama desde la interfaz."""
     if os.environ.get('CINECAPTIONS_SIN_RESOLVE') == '1':
         return False
     try:
         import ajustes_ui
-        return not ajustes_ui.leer_prefs().get('go_salida_mp4')
+        prefs = ajustes_ui.leer_prefs()
+        return not (prefs.get('go_salida_mp4') or prefs.get('go_premiere'))
     except Exception:
         return True
 

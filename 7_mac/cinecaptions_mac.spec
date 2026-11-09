@@ -29,7 +29,8 @@ for carpeta in ('resolve_scripts', 'locales', 'plantillas_incluidas', 'fonts',
                 'sfx_library', 'sfx_emoji', 'emojis', 'motor_qwen', 'motor_compat', 'guia_estilo', 'generador_packs', 'fondos_estilos', 'vistas_slider', 'efectos', 'edicion_pro',          # v5.4.49: Edición PRO (plantillas OGraf, modelo de recorte, colocador)
                 'motions_resolve', 'creativo',          # v5.5.10: 'creativo' = el móvil de «Así se verá este bloque»; v5.5.9: los motions editables de Resolve (Efectos › Títulos › CineCaptions; generador_packs/drfx_motions.py)
                 'biblioteca_sonido',                    # v5.56: los SFX curados del sonido de GO (3_compilar/empaquetar_sonidos.py)
-                'tutoriales'):                          # v5.76: los videos de la guía y de Ajustes › Tutoriales (herramientas_dev/hacer_videos_tutorial.py)
+                'tutoriales',                           # v5.76: los videos de la guía y de Ajustes › Tutoriales (herramientas_dev/hacer_videos_tutorial.py)
+                'premiere'):                            # v5.78: el panel CineCaptions de Premiere Pro (premiere.py lo instala)
     origen = os.path.join(RECURSOS, carpeta)
     if not os.path.isdir(origen):
         raise SystemExit(f'Falta {origen}: sin eso el programa queda cojo')

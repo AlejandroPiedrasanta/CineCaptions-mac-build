@@ -13,7 +13,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     .cf\   (1 archivos)
         icono.ico
     herramientas_dev\   (46 archivos)
-    remotion\   (16190 archivos)
+    remotion\   (16766 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     actualizar_ui.py
@@ -302,6 +302,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         Efectos › «Captions detrás de ti» › Posición con el diseño nuevo (v5.32): cabecera, visor, panel y tira.
     posiciones_pro.py
         «Posición» de cada efecto de la Edición PRO: el usuario marca en la línea de tiempo de SU video (con sus
+    premiere.py
+        GO en Adobe Premiere Pro (v5.78): el panel CineCaptions de Premiere coloca el video, los captions y los sonidos.
     preparar_efectos.py
         herramienta de desarrollo: convierte las imágenes de iconos sobre fondo blanco en SPRITES con transparencia (uno por icono).
     pro_lateral_ui.py

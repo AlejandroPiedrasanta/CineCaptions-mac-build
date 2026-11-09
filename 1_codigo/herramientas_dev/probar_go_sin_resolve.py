@@ -3,7 +3,8 @@
 """
     6_compilacion/venv315/Scripts/python.exe 1_codigo/herramientas_dev/probar_go_sin_resolve.py <video> [--por-ajuste] [--tema Kinetic|Referencia|VIRAL|Tema4|Tema5|Tema6 (en memoria)]
 
---por-ajuste: en vez de CINECAPTIONS_SIN_RESOLVE=1, enciende en memoria el interruptor de Ajustes «Video MP4 en lugar de Resolve».
+--por-ajuste: en vez de CINECAPTIONS_SIN_RESOLVE=1, enciende en memoria el interruptor de Ajustes «Video sin editores (DaVinci y Premiere)»
+(go_salida_mp4; hasta la 5.77 «Video MP4 en lugar de Resolve»).
 
 Usa una COPIA del video (el MP4 sale junto a él: «<video> (CineCaptions).mp4»). No escribe las preferencias ni los proyectos recientes del
 usuario y no abre el Explorador; sí deja en ~/DaVinciSubtitles lo de cualquier GO (<video>.<idioma>.guion.json, .srt, .marcas.json): bórralo

@@ -6834,7 +6834,12 @@ class SubtitleApp(QWidget):
         fila, cf = caja_h(espacio=10)
         self.lat_punto_resolve = Punto(TEXT_MUTED, 10)
         cf.addWidget(self.lat_punto_resolve, 0, Qt.AlignmentFlag.AlignVCenter)
-        self.lat_resolve = _Elidida(tr('Comprobando Resolve…'), 15, peso='negrita', color='#FFFFFF')
+        try:
+            import ajustes_ui as _aj
+            _con_premiere = bool(_aj.leer_prefs().get('go_premiere'))
+        except Exception:
+            _con_premiere = False
+        self.lat_resolve = _Elidida(tr('Comprobando Premiere Pro…') if _con_premiere else tr('Comprobando Resolve…'), 15, peso='negrita', color='#FFFFFF')
         cf.addWidget(self.lat_resolve, 1)
         ct2.addWidget(fila)
         self.lat_resolve_det = _Elidida('', 12, color=TEXT_MUTED)
@@ -7048,9 +7053,12 @@ class SubtitleApp(QWidget):
     def _comprobar_conexion_lateral(self):
         """«Comprobar conexión»: rehace el estado de Resolve ahora (MCP)."""
         self.lat_punto_resolve.poner(TEXT_MUTED)
-        self.lat_resolve.configure(text=tr('Comprobando Resolve…'))
+        premiere_si = self._motivo_mp4() == 'premiere'
+        self.lat_resolve.configure(text=tr('Comprobando Premiere Pro…') if premiere_si else tr('Comprobando Resolve…'))
         self.lat_resolve_det.configure(text='')
         def trabajo():
+            if premiere_si:                                 # v5.78: con Premiere el estado lo da su panel (premiere.estado, en _recoger_estado)
+                return None
             import resolve_mcp
             return resolve_mcp.estado(refrescar=True)
         _correr_en_hilo(self, trabajo, lambda _r, _e: self._refrescar_estado())
@@ -7467,8 +7475,24 @@ class SubtitleApp(QWidget):
         archivo_ok = archivo and Path(archivo).exists()
         ruta_ok = bool(ruta) and Path(ruta).exists()
         motivo_mp4 = self._motivo_mp4()          # v5.4.48: GO entrega un MP4: Inicio lo dice (sin el rojo de «No encuentro DaVinci Resolve»)
+        est_p = (getattr(self, '_estado_sistema', None) or {}).get('premiere')
+        if motivo_mp4 == 'premiere' and est_p is not None:
+            # v5.78 (el usuario: «que en Inicio diga conexión con Premiere Pro, que ya no diga DaVinci Resolve»): como la de Resolve, con su punto
+            import premiere
+            texto_p, tono_p, _lat = premiere.textos_estado(est_p)
+            if archivo_ok or ruta_ok:
+                panel.reposo(_ajusta(texto_p, tr('«{n}»', n=Path(archivo if archivo_ok else ruta).name), tr('suelta otro vídeo para cambiarlo')),
+                             tono=tono_p)
+            else:
+                panel.reposo(_ajusta(texto_p, tr('suelta un video aquí')), listo=True, tono=tono_p)
+            return
         if motivo_mp4:
-            texto_mp4 = tr('GO te devuelve el video con los subtítulos (Ajustes)') if motivo_mp4 == 'ajuste' else tr('Sin DaVinci Resolve: GO te devuelve el video con los subtítulos')
+            if motivo_mp4 == 'premiere':                   # v5.78
+                texto_mp4 = tr('GO coloca en Adobe Premiere Pro (Ajustes)')
+            elif motivo_mp4 == 'ajuste':
+                texto_mp4 = tr('GO te devuelve el video con los subtítulos (Ajustes)')
+            else:
+                texto_mp4 = tr('Sin DaVinci Resolve: GO te devuelve el video con los subtítulos')
             if archivo_ok or ruta_ok:
                 panel.reposo(_ajusta(texto_mp4, tr('«{n}»', n=Path(archivo if archivo_ok else ruta).name), tr('suelta otro vídeo para cambiarlo')))
             else:
@@ -7520,6 +7544,8 @@ class SubtitleApp(QWidget):
                  # v5.5.8 (pedido: «a la par de Edición PRO un botón que diga Motions completo»): el último paso de GO
                  ('ph.film-strip', tr('Motions completo'), tr('Sí') if mc else tr('No'), 'verde' if mc else 'apagado', self._alternar_motions_completo_go,
                   tr('Motions completo: al final de GO, un video de solo motions de todo el video en el estilo de los mejores reels (un titular arriba y una tarjeta que explica lo que se dice; sin captions) en la pista de más arriba, encima de captions y efectos, para que lo cortes donde quieras ver tu video. Clic: sí o no.'), None)]
+        if self._motivo_mp4() == 'premiere':            # v5.78: la Edición PRO y Motions completo son de Resolve (no viajan a Premiere): no se ofrecen
+            chips = [c for c in chips if c[0] not in ('ph.crown', 'ph.film-strip')]
         act = getattr(self, '_actualizacion', None)
         if isinstance(act, dict) and act.get('version'):
             try:
@@ -8298,7 +8324,8 @@ class SubtitleApp(QWidget):
             import edicion_pro as _epl                     # v5.55: los emojis los decide el juez único (la PRO + «Emojis animados»), no go_emojis
             registro.info('GO empieza · %s · tema «%s» · Resolve %s · efectos %s · emojis %s' % (
                 ('video «%s»' % Path(str(archivo)).name) if archivo else 'audio del timeline de Resolve', _pl.nombre_visible(self._plantilla_un_clic()),
-                'Studio (MCP)' if hay_mcp else 'Free (Puente)', 'sí' if _fxl.activado() else 'no',
+                'no (Premiere Pro)' if getattr(self, '_go_motivo', None) == 'premiere' else ('Studio (MCP)' if hay_mcp else 'Free (Puente)'),
+                'sí' if _fxl.activado() else 'no',
                 'sí' if _epl.emojis_permitidos(self._plantilla_un_clic()) else 'no'), 'GO')
         except Exception:
             pass
@@ -8326,8 +8353,11 @@ class SubtitleApp(QWidget):
             self._go_generar()
             return
         if self._go_sin_resolve:
-            if self._motivo_mp4() == 'ajuste':      # v5.71: con Resolve instalado y «Video MP4» encendido, no decir «No hay DaVinci Resolve»
-                self._go_fallo('timeline', tr('Tienes encendido «Video MP4 en lugar de Resolve» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o apágalo para trabajar con el timeline de Resolve.'))
+            if getattr(self, '_go_motivo', None) == 'premiere':
+                self._go_fallo('timeline', tr('Tienes elegido «Usar con Premiere Pro» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO: lo coloco en Premiere Pro.'))
+                return
+            if self._motivo_mp4() == 'ajuste':      # v5.71: con Resolve instalado y el video sin editores elegido, no decir «No hay DaVinci Resolve»
+                self._go_fallo('timeline', tr('Tienes elegido «Video sin editores (DaVinci y Premiere)» (Ajustes > General). Suelta un video en CineCaptions y pulsa GO, o elige «Usar con DaVinci Resolve» para trabajar con el timeline de Resolve.'))
                 return
             self._go_fallo('timeline', tr('No hay DaVinci Resolve en este equipo. Suelta un video en CineCaptions y pulsa GO: te lo devuelvo con los subtítulos puestos.'))
             return
@@ -8422,14 +8452,19 @@ class SubtitleApp(QWidget):
                                diagnostico=diag)
         _correr_en_hilo(self, trabajo, fin)
     def _motivo_mp4(self):
-        """Por qué GO entregaría AHORA un MP4 con los subtítulos grabados en vez de colocarlos en Resolve: 'prueba' (CINECAPTIONS_SIN_RESOLVE=1),
-        'ajuste' (Ajustes > General: «Video MP4 en lugar de Resolve», go_salida_mp4), 'sin_resolve' (no está el PROGRAMA DaVinci Resolve ni su MCP;
-        v5.4.48: se mira Resolve.exe / la app, no la carpeta de ajustes que queda al desinstalar) o None. Barato: prefs y existencia de archivos."""
+        """Por qué GO NO coloca AHORA en Resolve: 'prueba' (CINECAPTIONS_SIN_RESOLVE=1: MP4), 'premiere' (Ajustes > General «Usar con Premiere
+        Pro», go_premiere: premiere.py), 'ajuste' (Ajustes > General «Video sin editores (DaVinci y Premiere)», go_salida_mp4: MP4; hasta la 5.77
+        «Video MP4 en lugar de Resolve»), 'sin_resolve' (no está el PROGRAMA DaVinci Resolve ni su MCP: MP4; v5.4.48: se mira Resolve.exe / la
+        app, no la carpeta de ajustes que queda al desinstalar) o None. Ajustes deja solo uno de los dos encendido; si hubiera dos, gana Premiere.
+        Barato: prefs y existencia de archivos."""
         if os.environ.get('CINECAPTIONS_SIN_RESOLVE') == '1':
             return 'prueba'
         try:
             import ajustes_ui
-            if ajustes_ui.leer_prefs().get('go_salida_mp4'):
+            prefs_go = ajustes_ui.leer_prefs()
+            if prefs_go.get('go_premiere'):
+                return 'premiere'
+            if prefs_go.get('go_salida_mp4'):
                 return 'ajuste'
         except Exception:
             pass
@@ -8444,8 +8479,11 @@ class SubtitleApp(QWidget):
     def _resolve_no_instalado(self):
         """v5.4.47: True si este GO entrega el MP4 (render_sin_resolve.py); deja en el Registro por qué."""
         motivo = self._motivo_mp4()
-        if motivo == 'ajuste':
-            registro.info(tr('GO entrega un video MP4 (Ajustes > General: «Video MP4 en lugar de Resolve»).'), 'GO')
+        self._go_motivo = motivo
+        if motivo == 'premiere':
+            registro.info(tr('GO coloca en Adobe Premiere Pro (Ajustes > General: «Usar con Premiere Pro»).'), 'GO')
+        elif motivo == 'ajuste':
+            registro.info(tr('GO entrega un video MP4 (Ajustes > General: «Video sin editores (DaVinci y Premiere)»).'), 'GO')
         elif motivo == 'sin_resolve':
             registro.info(tr('No encuentro DaVinci Resolve en este equipo: GO entrega el video con los subtítulos grabados.'), 'GO')
         return motivo is not None
@@ -8453,7 +8491,10 @@ class SubtitleApp(QWidget):
         """Los pasos de GO dicen lo que de verdad va a pasar: con Resolve, traer el timeline y colocar; sin Resolve, leer el video y grabarlo."""
         try:
             self.go_panel.final_cancelable = bool(getattr(self, '_go_sin_resolve', False))
-            if getattr(self, '_go_sin_resolve', False):
+            if getattr(self, '_go_motivo', None) == 'premiere':
+                self.go_panel.renombrar_paso('timeline', tr('Leer tu video'), tr('Leyendo tu video'))
+                self.go_panel.renombrar_paso('resolve', tr('Colocar en Premiere Pro'), tr('Colocando en Premiere'))
+            elif getattr(self, '_go_sin_resolve', False):
                 self.go_panel.renombrar_paso('timeline', tr('Leer tu video'), tr('Leyendo tu video'))
                 self.go_panel.renombrar_paso('resolve', tr('Grabar el video con los subtítulos'), tr('Grabando el video'))
             else:
@@ -8465,7 +8506,17 @@ class SubtitleApp(QWidget):
         """v5.5: al empezar GO la línea dice con qué Resolve va a trabajar (Studio o Free) y por qué camino; el Registro lo anota. Después sigue el proceso."""
         if getattr(self, '_go_sin_resolve', False):         # v5.4.48: sin Resolve no hay edición que anunciar (ni un «No encuentro DaVinci Resolve» en rojo)
             self._go_resolve = None
-            self.go_panel.linea.configure(text=tr('GO graba tu video con los subtítulos (sin Resolve)'))
+            if getattr(self, '_go_motivo', None) == 'premiere':
+                est_p = (getattr(self, '_estado_sistema', None) or {}).get('premiere')
+                if est_p:                                   # v5.78: la misma línea de conexión de Inicio
+                    import premiere
+                    texto_p = premiere.textos_estado(est_p)[0]
+                    self.go_panel.linea.configure(text=texto_p)
+                    registro.info(texto_p, 'GO · Premiere Pro')
+                else:
+                    self.go_panel.linea.configure(text=tr('GO coloca tu video en Adobe Premiere Pro'))
+            else:
+                self.go_panel.linea.configure(text=tr('GO graba tu video con los subtítulos (sin Resolve)'))
             return
         try:
             import colocacion
@@ -9214,6 +9265,9 @@ class SubtitleApp(QWidget):
         """v5.4.47, GO sin DaVinci Resolve: graba los subtítulos (con sus sonidos y emojis) en una copia MP4 del video, junto al original.
         v5.5.8: con el tema elegido (render_temas.py dibuja los 6; antes solo el Tema 4).
         El render corre en un hilo (render_sin_resolve.renderizar); la interfaz solo lee su avance."""
+        if getattr(self, '_go_motivo', None) == 'premiere':
+            self._go_colocar_premiere()
+            return
         video = self.video_var.get().strip().strip('"')
         cues = getattr(self, '_go_cues_render', None)
         estilo = getattr(self, '_go_render_estilo', None)
@@ -9293,6 +9347,114 @@ class SubtitleApp(QWidget):
             except Exception:
                 pass
             self.go_panel.terminar(True, tr('Listo: «{n}», junto a tu video. Pulsa GO para otro.', n=nombre), self._go_estadisticas())
+            self._borrar_go_en_curso()
+            self._go_corriendo = False
+            self._un_clic = False
+            self._set_inputs_enabled(True)
+        despues(200, revisar, self)
+
+    def _go_colocar_premiere(self):
+        """v5.78 (el usuario: «en Ajustes > General la opción para activar Premiere Pro; cuando se active debe funcionar tal cual como DaVinci
+        Resolve, que coloca todo en el timeline»): GO dibuja los captions del estilo (con sus emojis) sobre transparente
+        (render_sin_resolve.renderizar_capa, ProRes 4444 con alfa, junto al video) y premiere.colocar se lo pasa al panel CineCaptions de
+        Premiere, que arma la secuencia: V1 + A1 el video, V2 los captions, A2… los sonidos. Todo en un hilo; la interfaz solo lee el avance."""
+        video = self.video_var.get().strip().strip('"')
+        cues = getattr(self, '_go_cues_render', None)
+        estilo = getattr(self, '_go_render_estilo', None)
+        if not cues or not video or not Path(video).is_file():
+            self._go_fallo('resolve', tr('No pude preparar los subtítulos para Premiere Pro (¿el video tiene voz?).'))
+            return
+        try:
+            proyectos.guardar(video, project_name=Path(video).expanduser().stem, idioma=self._codigo_idioma(), traducir_ingles=False)
+            self._generado_para = video
+            self._refrescar_recientes()
+        except Exception:
+            pass
+        try:
+            import ajustes_ui
+            emoji_arriba = str(ajustes_ui.leer_prefs().get('emoji_posicion') or '') != 'abajo'
+        except Exception:
+            emoji_arriba = True
+        try:
+            nombre_estilo = plantillas.nombre_visible(self._plantilla_un_clic())
+        except Exception:
+            nombre_estilo = ''
+        self.go_panel.linea.configure(text=tr('Dibujando los subtítulos para Premiere Pro…'))
+        est = {'f': 0.0, 'fase': 'capa', 'texto': '', 'r': None, 'error': None, 'capa': None}
+
+        def parar():
+            """«Pausar» espera aquí; «Cancelar» corta (la capa a medias se borra y el pedido sin tomar se retira)."""
+            while getattr(self, '_pausa_go', False) and not getattr(self, '_cancelar_go', False):
+                time.sleep(0.2)
+            return bool(getattr(self, '_cancelar_go', False))
+
+        def trabajo():
+            import premiere
+            import render_sin_resolve
+            try:
+                capa = render_sin_resolve.renderizar_capa(video, cues, progreso=lambda f, t: est.update(f=f), cancelado=parar,
+                                                          emoji_arriba=emoji_arriba, estilo=estilo)
+                if not capa.get('ok'):
+                    est['r'] = capa
+                    return
+                est['capa'] = capa
+                est['fase'] = 'premiere'
+                res_sonido = None                          # el Sonido de GO (biblioteca / AI Sound Director): lo mismo que recibiría Resolve
+                hilo_sonido = getattr(self, '_director_hilo', None)
+                if hilo_sonido is not None:
+                    est['texto'] = 'Terminando el sonido…'
+                    hilo_sonido.join(300)
+                    try:
+                        import director_sonido
+                        res_sonido = director_sonido.cerrar_preparacion(getattr(self, '_director_res', None), sin_voz=True)
+                    except Exception:
+                        registro.excepcion(origen='GO en Premiere Pro · sonido')
+                sfx, musica = premiere.sonido_de_go(cues, res_sonido)
+                pedido = premiere.armar_pedido(video, capa, sfx, nombre_estilo, musica=musica)
+                est['r'] = premiere.colocar(pedido, cancelado=parar, aviso=lambda t: est.update(texto=t))
+            except BaseException as e:
+                est['error'] = f'{type(e).__name__}: {e}'
+                registro.excepcion(origen='GO en Premiere Pro')
+        hilo = threading.Thread(target=trabajo, daemon=True, name='go-premiere')
+        hilo.start()
+
+        def revisar():
+            if hilo.is_alive():
+                if vivo(self):
+                    if est['fase'] == 'capa':
+                        self.go_panel.linea.configure(text=tr('Dibujando los subtítulos para Premiere Pro… {p} %', p=int(round(100 * est['f']))))
+                    elif est['texto']:
+                        self.go_panel.linea.configure(text=tr(est['texto']))
+                    despues(200, revisar, self)
+                return
+            r = est['r'] or {}
+            if r.get('cancelado'):
+                self._go_cancelado()
+                return
+            if not r.get('ok'):
+                if est.get('capa'):
+                    registro.info(tr('Los subtítulos quedaron en «{r}» (ProRes con transparencia): puedes ponerlos a mano en V2.',
+                                     r=est['capa'].get('ruta')), 'GO · Premiere Pro')
+                motivo = est['error'] or tr(str(r.get('error') or '')) or tr('error desconocido')
+                self._go_fallo('resolve', tr('No pude colocar en Premiere Pro: {e}', e=motivo),
+                               diagnostico=f"causa: {r.get('causa') or '?'} · panel: {r.get('version') or '?'}")
+                return
+            sec = str(r.get('secuencia') or '')
+            n_sfx, total_sfx = int(r.get('sfx') or 0), int(r.get('sfx_total') or 0)
+            registro.ok(tr('En Premiere Pro {v}: secuencia «{s}» en el proyecto «{p}» (captions en V2, {n} de {t} sonidos).',
+                           v=r.get('version') or '', s=sec, p=r.get('proyecto') or '', n=n_sfx, t=total_sfx)
+                        + (tr(' Con música.') if r.get('musica') else ''), 'GO · Premiere Pro')
+            if total_sfx and n_sfx < total_sfx:
+                registro.aviso(tr('Premiere Pro no aceptó {f} de los {t} sonidos.', f=total_sfx - n_sfx, t=total_sfx), 'GO · Premiere Pro')
+            self._fin_tarea(True, '')
+            self.go_panel.paso('resolve', 'hecho', sec[:26])
+            self._go_termino = True
+            try:
+                import avisos_sistema
+                avisos_sistema.avisar(self, tr('GO terminó'), tr('Tu video está en Premiere Pro: «{s}»', s=sec)[:140])
+            except Exception:
+                pass
+            self.go_panel.terminar(True, tr('Listo: en Premiere Pro, secuencia «{s}». Pulsa GO para otro.', s=sec), self._go_estadisticas())
             self._borrar_go_en_curso()
             self._go_corriendo = False
             self._un_clic = False
@@ -9744,6 +9906,13 @@ class SubtitleApp(QWidget):
     def _recoger_estado():
         """Corre en un hilo: NO toca widgets."""
         d = {}
+        try:                                              # v5.78: con «Usar con Premiere Pro», Inicio y la barra hablan de Premiere (premiere.estado)
+            import ajustes_ui
+            if ajustes_ui.leer_prefs().get('go_premiere'):
+                import premiere
+                d['premiere'] = premiere.estado()
+        except Exception:
+            d['premiere'] = {}
         try:
             # v5.1: la conexion MCP oficial (Resolve 21.1+) se pregunta de
             # verdad aqui, en el hilo; arrancar ResolveMCP cuesta 0,2-4 s
@@ -9854,6 +10023,11 @@ class SubtitleApp(QWidget):
         else:
             tarjeta = (ui.AMBAR, tr('Free · sin Puente'), tr('Scripts instalados: {a} de {b}', a=hechos, b=total))
             lateral = (ui.AMBAR, tr('Resolve · sin Puente'), tr('Lanza CineCaptions_Puente en Resolve'))
+        if 'premiere' in d and self._motivo_mp4() == 'premiere':       # v5.78: la conexión que importa es la de Premiere Pro
+            import premiere
+            _l, tono_p, (titulo_p, detalle_p) = premiere.textos_estado(d['premiere'])
+            color_p = {'ok': ui.VERDE, 'aviso': ui.AMBAR}.get(tono_p, ui.ROJO)
+            tarjeta = lateral = (color_p, titulo_p, detalle_p)
         self.tarjeta_resolve.poner(*tarjeta)
         self.lat_punto_resolve.poner(lateral[0])
         if hasattr(self, 'isla'):
