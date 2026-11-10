@@ -671,7 +671,7 @@ class DemoCorrector(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def sizeHint(self):
-        return QSize(1000, 540)
+        return QSize(1040, 640)          # v5.82: los móviles ~20 % más grandes (la página tenía sitio de sobra arriba y abajo)
 
     def minimumSizeHint(self):
         return QSize(560, 250)

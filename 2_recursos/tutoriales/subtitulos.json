@@ -1,201 +1,366 @@
 {
  "ajustes": [
   [
-   0.03,
-   3.78,
-   "El engranaje abre los ajustes"
+   0.45,
+   3.49,
+   "El engranaje abre los ajustes rápidos"
   ],
   [
-   3.78,
-   7.64,
+   3.49,
+   7.0,
    "«Expandir ajustes» los abre todos"
   ],
   [
-   7.64,
-   10.69,
-   "Idioma, fondo y estilo de la interfaz"
+   7.0,
+   12.95,
+   "En General eliges con qué trabaja GO: Resolve, Premiere o solo el video"
   ],
   [
-   10.69,
-   16.41,
+   12.95,
+   18.05,
+   "En Interfaz, el idioma, el fondo y la escena de Inicio"
+  ],
+  [
+   18.05,
+   22.73,
    "En Tutoriales están todos estos videos"
   ],
   [
-   16.41,
-   20.25,
-   "Aquí apagas o enciendes esta guía"
+   22.73,
+   27.12,
+   "Y aquí apagas o enciendes esta guía"
+  ]
+ ],
+ "ayuda": [
+  [
+   0.32,
+   6.74,
+   "¿Algo no funciona? Abre Ayuda en los ajustes"
+  ],
+  [
+   6.74,
+   11.77,
+   "Escríbenos por WhatsApp: el informe de tu equipo va listo para enviar"
+  ],
+  [
+   11.77,
+   18.86,
+   "«Ejecutar diagnóstico» revisa Resolve, el motor de voz y tu licencia"
+  ],
+  [
+   18.86,
+   22.82,
+   "Y abajo ves tu versión y tu licencia"
   ]
  ],
  "corrector": [
   [
-   0.15,
-   2.76,
-   "Después de GO tus palabras salen aquí"
+   0.57,
+   4.66,
+   "Después de GO, tus palabras aparecen aquí"
   ],
   [
-   2.76,
-   4.71,
+   4.66,
+   8.74,
    "Elige un pincel: Principal es la palabra grande"
   ],
   [
-   4.71,
-   6.86,
-   "Toca la palabra para marcarla"
+   8.74,
+   11.15,
+   "Toca una palabra para marcarla"
   ],
   [
-   6.86,
-   14.04,
-   "Arriba: el texto pequeño de encima"
+   11.15,
+   17.14,
+   "Arriba es el texto pequeño de encima"
   ],
   [
-   14.04,
-   18.69,
-   "Doble clic para corregir lo que se oyó mal"
+   17.14,
+   21.77,
+   "Con doble clic corriges lo que se oyó mal"
   ],
   [
-   18.69,
-   21.48,
-   "Palabra corregida"
+   21.77,
+   25.92,
+   "Y listo: palabra corregida"
   ]
  ],
  "crea": [
   [
-   0.0,
-   5.9,
-   "La última tarjeta: «Crea tu estilo»"
+   0.32,
+   6.13,
+   "La última tarjeta de Estilo es «Crea tu estilo»"
   ],
   [
-   5.9,
-   8.35,
+   6.13,
+   9.72,
    "Elige un texto base: las palabras normales"
   ],
   [
-   8.35,
-   14.04,
-   "Elige los textos principales: se turnan"
+   9.72,
+   14.49,
+   "Y los textos principales que quieras: se turnan frase a frase"
   ],
   [
-   14.04,
-   16.64,
-   "La previa enseña cómo queda"
+   14.49,
+   18.4,
+   "La previa te enseña cómo queda"
   ],
   [
-   16.64,
-   21.35,
-   "Ponle nombre y créalo"
+   18.4,
+   22.65,
+   "Ponle un nombre y créalo"
   ]
  ],
  "efectos": [
   [
-   2.21,
-   3.81,
-   "El gancho del inicio: el primer segundo del video"
+   1.28,
+   4.54,
+   "Aquí eliges los efectos que GO pone solo"
   ],
   [
-   3.81,
-   9.67,
+   4.54,
+   8.19,
+   "El gancho del inicio es el primer segundo de tu video"
+  ],
+  [
+   8.19,
+   13.34,
    "Toca una tarjeta para elegirla"
   ],
   [
-   9.67,
-   14.65,
+   13.34,
+   17.97,
    "Apágalo o enciéndelo con su interruptor"
   ],
   [
-   14.65,
-   17.47,
-   "Más abajo: captions detrás de ti y más"
+   17.97,
+   22.25,
+   "Más abajo: captions detrás de ti, emojis y más"
   ],
   [
-   17.47,
-   22.12,
+   22.25,
+   26.28,
    "GO aplica solo lo que elijas"
   ]
  ],
  "estilo": [
   [
-   0.13,
-   2.33,
-   "Cada tarjeta es un estilo con subtítulos reales"
+   0.56,
+   4.52,
+   "Cada tarjeta es un estilo, con subtítulos de verdad"
   ],
   [
-   2.33,
-   8.13,
+   4.52,
+   9.28,
    "Toca una tarjeta de los lados para pasarlas"
   ],
   [
-   8.13,
-   9.98,
-   "Clic en la del centro para usarla"
+   9.28,
+   12.21,
+   "Haz clic en la del centro para usarla"
   ],
   [
-   9.98,
-   11.81,
+   12.21,
+   15.22,
    "La que usas dice «En uso»"
   ],
   [
-   11.81,
-   16.38,
+   15.22,
+   20.15,
    "Puedes cambiarlo cuando quieras"
   ]
  ],
  "inicio": [
   [
-   0.02,
-   3.55,
-   "Arrastra tu video a la ventana"
+   0.52,
+   4.13,
+   "Arrastra tu video a la ventana de CineCaptions"
   ],
   [
-   3.55,
-   6.7,
-   "CineCaptions crea el proyecto y empieza solo"
+   4.13,
+   8.42,
+   "Al soltarlo, crea su proyecto en Resolve y empieza solo"
   ],
   [
-   6.7,
-   9.43,
-   "¿Ya tienes tu timeline abierto en Resolve?"
+   8.42,
+   11.57,
+   "¿Ya tienes tu timeline abierto en DaVinci Resolve?"
   ],
   [
-   9.43,
-   13.93,
-   "Pulsa GO: transcribe, diseña y coloca todo"
+   11.57,
+   13.37,
+   "Solo pulsa GO"
   ],
   [
-   13.93,
-   17.95,
+   13.37,
+   17.34,
+   "Transcribe tu voz, diseña los subtítulos y los coloca"
+  ],
+  [
+   17.34,
+   21.65,
    "¡Listo! Todo queda en tu timeline"
+  ]
+ ],
+ "interfaz": [
+  [
+   0.34,
+   6.72,
+   "En los ajustes, Interfaz cambia cómo se ve CineCaptions"
+  ],
+  [
+   6.72,
+   11.66,
+   "Pasa el ratón por una escena para verla en movimiento"
+  ],
+  [
+   11.66,
+   15.42,
+   "Haz clic en la que más te guste"
+  ],
+  [
+   15.42,
+   19.57,
+   "Elige el fondo: azul o negro"
+  ],
+  [
+   19.57,
+   22.61,
+   "Y el color de resaltado que más te guste"
+  ],
+  [
+   22.61,
+   29.22,
+   "Pulsa «Aplicar»: el fondo, el color, el idioma y el tamaño se ven al reiniciar"
+  ]
+ ],
+ "premiere": [
+  [
+   0.46,
+   4.83,
+   "¿Editas en Premiere Pro? Abre los ajustes"
+  ],
+  [
+   4.83,
+   8.56,
+   "En General, enciende «Usar con Premiere Pro»"
+  ],
+  [
+   8.56,
+   13.01,
+   "Solo uno va encendido: el de DaVinci Resolve se apaga solo"
+  ],
+  [
+   13.01,
+   19.09,
+   "Para volver, enciende otra vez el de DaVinci Resolve"
+  ],
+  [
+   19.09,
+   21.89,
+   "Inicio ya dice que trabajas con Premiere Pro"
+  ],
+  [
+   21.89,
+   27.88,
+   "Suelta tu video y GO arma la secuencia: video, subtítulos y sonidos"
+  ],
+  [
+   27.88,
+   32.75,
+   "Si Premiere está cerrado, CineCaptions lo abre solo"
+  ]
+ ],
+ "probar": [
+  [
+   0.43,
+   4.14,
+   "Pasa los estilos arrastrando las tarjetas"
+  ],
+  [
+   4.14,
+   6.15,
+   "O con la rueda del ratón"
+  ],
+  [
+   6.15,
+   10.13,
+   "«Solo captions» enseña solo los subtítulos"
+  ],
+  [
+   10.13,
+   16.96,
+   "La opción «Con PRO» suma la edición de video: zooms, efectos y más"
+  ],
+  [
+   16.96,
+   21.55,
+   "Y con «Activar edición PRO», GO también edita tu video"
+  ],
+  [
+   21.55,
+   25.75,
+   "Cuando te guste uno, haz clic en el del centro para usarlo"
+  ]
+ ],
+ "sin_editores": [
+  [
+   0.45,
+   4.83,
+   "¿No usas editor de video? Abre los ajustes"
+  ],
+  [
+   4.83,
+   7.82,
+   "Enciende «Video sin editores»"
+  ],
+  [
+   7.82,
+   15.32,
+   "GO graba los subtítulos y los sonidos en una copia MP4 de tu video"
+  ],
+  [
+   15.32,
+   21.05,
+   "Suelta tu video y pulsa GO: no hace falta DaVinci ni Premiere"
+  ],
+  [
+   21.05,
+   25.35,
+   "Tu video con subtítulos queda junto al original"
   ]
  ],
  "sonido": [
   [
-   1.68,
-   3.54,
+   1.07,
+   3.19,
    "Elige cómo suena tu video"
   ],
   [
-   3.54,
-   6.29,
-   "Dinámico: un efecto en cada palabra clave"
+   3.19,
+   6.85,
+   "Dinámico pone un efecto en cada palabra clave"
   ],
   [
-   6.29,
-   7.7,
-   "Elegante: pocos efectos y suaves"
+   6.85,
+   10.35,
+   "Elegante usa pocos efectos, y suaves"
   ],
   [
-   7.7,
-   11.05,
-   "Activa o quita opciones con su interruptor"
+   10.35,
+   14.28,
+   "Enciende o apaga cada opción con su interruptor"
   ],
   [
-   11.05,
-   13.87,
+   14.28,
+   17.69,
    "«Aplicar a Resolve» pone los cambios en tu timeline"
   ],
   [
-   13.87,
-   17.28,
-   "Automático: según el estilo elegido"
+   17.69,
+   21.78,
+   "Automático elige según tu estilo"
   ]
  ]
 }

@@ -945,15 +945,38 @@ def _revisar_persona(tl, idx):
     return arreglos
 
 
-def _comp_zoom(ruta, n, sale):
+def _comp_zoom(ruta, n, sale, desenfoque=0.0):
     """La media transición con zoom (Fusion): MediaIn → Transform con desenfoque de movimiento → MediaOut, `n` fotogramas. Hacia el corte
     (sale=False) acerca cada vez más rápido; tras el corte (sale=True) llega acercado y vuelve a su sitio frenando. El desenfoque lo da el
-    propio movimiento (MotionBlur del Transform)."""
+    propio movimiento (MotionBlur del Transform).
+    v5.82 `desenfoque` (px): la ENTRADA con zoom y desenfoque de la referencia del Estilo 4 (edicion_pro_pila.entradas_zoom): el plano llega
+    acercado ×1,12 y desenfocado y se asienta frenando (curva cúbica: Size 1,12 → 1 en el 80 % del tramo, Blur `desenfoque` → 0 en todo él).
+    Gemela de comp_zoom en CineCaptions_EdicionPro.lua (mismo texto)."""
     n = max(2, int(n))
-    if sale:
+    desenfoque = float(desenfoque or 0.0)
+    if desenfoque > 0:
+        k = max(1, int(round((n - 1) * 0.8)))
+        claves = '[0] = { 1.12, RH = { %.3f, 1.0 } }, [%d] = { 1.0, LH = { %.3f, 1.0 } }' % (k / 3.0, k, k * 2.0 / 3.0)
+    elif sale:
         claves = '[0] = { 1.28, RH = { %.3f, 1.12 } }, [%d] = { 1.0, LH = { %.3f, 1.0 } }' % (n * 0.25, n - 1, (n - 1) * 0.55)
     else:
         claves = '[0] = { 1.0, RH = { %.3f, 1.0 } }, [%d] = { 1.28, LH = { %.3f, 1.12 } }' % (n * 0.45, n - 1, (n - 1) * 0.75)
+    salida, borrosa = 'CCZoom', ''
+    if desenfoque > 0:
+        salida = 'CCBlur'
+        borrosa = '''		CCBlur = Blur {
+			Inputs = {
+				XBlurSize = Input { SourceOp = "CCBlurSize", Source = "Value", },
+				Input = Input { SourceOp = "CCZoom", Source = "Output", },
+			},
+			ViewInfo = OperatorInfo { Pos = { 165, 50 } },
+		},
+		CCBlurSize = BezierSpline {
+			SplineColor = { Red = 0, Green = 200, Blue = 225 },
+			NameSet = true,
+			KeyFrames = { [0] = { %.2f, RH = { %.3f, 0 } }, [%d] = { 0, LH = { %.3f, 0 } } }
+		},
+''' % (desenfoque, (n - 1) / 3.0, n - 1, (n - 1) * 2.0 / 3.0)
     texto = '''Composition {
 	CurrentTime = 0,
 	Tools = ordered() {
@@ -973,16 +996,16 @@ def _comp_zoom(ruta, n, sale):
 			NameSet = true,
 			KeyFrames = { %s }
 		},
-		MediaOut1 = MediaOut {
+%s		MediaOut1 = MediaOut {
 			Inputs = {
 				Index = Input { Value = "0", },
-				Input = Input { SourceOp = "CCZoom", Source = "Output", },
+				Input = Input { SourceOp = "%s", Source = "Output", },
 			},
 			ViewInfo = OperatorInfo { Pos = { 220, 50 } },
 		},
 	},
 }
-''' % claves
+''' % (claves, borrosa, salida)
     with open(ruta, 'w', encoding='utf-8') as f:
         f.write(texto)
     return ruta
@@ -990,11 +1013,15 @@ def _comp_zoom(ruta, n, sale):
 
 def _zoom(tl, mp, cortes, base, pista):
     """Tema 5: la transición con zoom en cada corte [fotograma, n antes, n después]: dos copias de V1 (lo de antes del corte y lo de después) en
-    PRO-ZOOM, cada una con su media transición de Fusion y la transformación de V1. Nunca sobre un clip con el movimiento de Efectos."""
+    PRO-ZOOM, cada una con su media transición de Fusion y la transformación de V1. Nunca sobre un clip con el movimiento de Efectos.
+    v5.82: un 4.º valor = la ENTRADA con zoom y desenfoque (px de desenfoque; n antes = 0: solo la mitad de después)."""
     puestas = 0
     for c in cortes or []:
         f, antes, despues = base + int(c[0]), int(c[1]), int(c[2])
+        desenfoque = float(c[3]) if len(c) > 3 and isinstance(c[3], (int, float)) else 0.0
         for f0, f1, sale in ((f - antes, f, False), (f, f + despues, True)):
+            if f1 - f0 < 2:
+                continue                                                   # (la entrada no tiene mitad de antes)
             v1 = _clip_v1(tl, f0, f1)
             if v1 is None or 'CineCaptions FX' in (v1.GetFusionCompNameList() or []):
                 continue
@@ -1010,7 +1037,7 @@ def _zoom(tl, mp, cortes, base, pista):
                     it.DeleteFusionCompByName(nombre)
                 except Exception:
                     pass
-            comp = _comp_zoom(os.path.join(tempfile.gettempdir(), 'ccpro_zoom_%d_%d.comp' % (f0, int(sale))), f1 - f0, sale)
+            comp = _comp_zoom(os.path.join(tempfile.gettempdir(), 'ccpro_zoom_%d_%d.comp' % (f0, int(sale))), f1 - f0, sale, desenfoque if sale else 0.0)
             if not it.ImportFusionComp(comp):
                 tl.DeleteClips([it], False)
                 continue
@@ -1019,7 +1046,7 @@ def _zoom(tl, mp, cortes, base, pista):
                 if nombres:
                     it.RenameFusionCompByName(nombres[-1], NOMBRE_ZOOM)
                     it.LoadFusionCompByName(NOMBRE_ZOOM)
-                it.SetName('PRO · transición con zoom')
+                it.SetName('PRO · entrada con zoom y desenfoque' if desenfoque else 'PRO · transición con zoom')
                 it.SetClipColor('Purple')
             except Exception:
                 pass

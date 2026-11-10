@@ -8,7 +8,8 @@ Un estilo propio es la LISTA de temas que el usuario tocó, en ese orden. Desde 
     t1 · Tema 1 (pack «Kinetic»)      motor «kinetic»  títulos de gancho con la composición del kit; sus seis recetas rotan por todo el video
     t2 · Tema 2 (pack «Referencia»)   motor «guion»    palabra a palabra, con su rotación de estilos y sus barridos de luz
     t3 · Tema 3 (pack «VIRAL»)        motor «viral»    pila fina + negrita y un efecto (select, shatter, drag) cada dos bloques, en su orden
-    t4 · Tema 4 (pack «Tema4»)        motor «guion»    el recuadro limpio; la palabra clave en una de cada tres frases
+    t4 · Tema 4 (pack «Tema4»)        motor «viral»    (v5.82) la pila de tres alturas: arriba lo de antes, la clave grande en lima, abajo lo
+                                                       que sigue (pila_planificador, clips «v pila» del pack Tema4; antes, el recuadro limpio)
     t5 · Tema 5 (pack «Tema5»)        motor «viral»    (v5.76) la palabra clave grande y la serif cursiva que la muerde, palabra a palabra
                                                        (tipo_planificador, clip «v tipo» del pack Tema5); sin la «Edición total»
     t6 · Tema 6 (pack «Tema6»)        motor «guion»    sus captions Text+ (lima o blanco según de qué hable el video); sin la «Edición total»
@@ -71,7 +72,7 @@ TEMAS_ENTEROS = (
     {'id': 't1', 'tema': 1, 'motor': 'kinetic', 'pack': 'Kinetic', 'entero': True, 'nombre': 'Estilo 1'},
     {'id': 't2', 'tema': 2, 'motor': 'guion', 'pack': 'Referencia', 'entero': True, 'nombre': 'Estilo 2'},
     {'id': 't3', 'tema': 3, 'motor': 'viral', 'pack': 'VIRAL', 'entero': True, 'nombre': 'Estilo 3'},
-    {'id': 't4', 'tema': 4, 'motor': 'guion', 'pack': 'Tema4', 'entero': True, 'nombre': 'Estilo 4'},
+    {'id': 't4', 'tema': 4, 'motor': 'viral', 'pack': 'Tema4', 'entero': True, 'nombre': 'Estilo 4'},       # v5.82: «v pila» (pila_planificador; antes «guion»)
     {'id': 't5', 'tema': 5, 'motor': 'viral', 'pack': 'Tema5', 'entero': True, 'nombre': 'Estilo 5'},       # v5.76: «v tipo» (antes «guion»)
     {'id': 't6', 'tema': 6, 'motor': 'guion', 'pack': 'Tema6', 'entero': True, 'nombre': 'Estilo 6'},
     {'id': 't7', 'tema': 7, 'motor': 'viral', 'pack': 'Tema7', 'entero': True, 'nombre': 'Estilo 7'},       # v5.78: «v rojo» (linea_planificador, perfil ROJO)
@@ -79,7 +80,7 @@ TEMAS_ENTEROS = (
     {'id': 't9', 'tema': 9, 'motor': 'viral', 'pack': 'Tema9', 'entero': True, 'nombre': 'Estilo 9'},       # v5.80: «v edi» (editorial_planificador)
 )
 # v5.80: los temas enteros que tienen su PROPIO planificador de elementos (mismo contrato que viral_planificador.planificar, sin ancla)
-PLANIFICADOR_PROPIO = {'t5': 'tipo_planificador', 't8': 'ambar_planificador', 't9': 'editorial_planificador'}
+PLANIFICADOR_PROPIO = {'t4': 'pila_planificador', 't5': 'tipo_planificador', 't8': 'ambar_planificador', 't9': 'editorial_planificador'}   # v5.82: el 4 nuevo
 MAX_TEMAS = len(TEMAS_ENTEROS)       # un estilo lleva de 1 a 6 temas, sin repetir
 PACK_DE_MOTOR = {'kinetic': 'Kinetic', 'viral': 'VIRAL', 'guion': 'Referencia'}          # el pack de los looks sueltos de antes
 MOTOR_DE_PACK = {l['pack']: l['motor'] for l in TEMAS_ENTEROS}
@@ -117,7 +118,7 @@ BASES_CREA = (
     {'id': 'b_t1_serif', 'tema': 1, 'n': 2, 'fuente': 'DM Serif Text|Italic'},        # «k serif»
     {'id': 'b_t2', 'tema': 2, 'fuente': 'Poppins|Light'},                             # guion_captions.FINA
     {'id': 'b_t3', 'tema': 3, 'fuente': 'Inter 18pt|Medium'},                         # «v fina» (la del Tema 5 es la misma: no sale)
-    {'id': 'b_t4', 'tema': 4, 'fuente': 'Inter 24pt|Bold'},                           # tema4_planificador.FUENTE
+    {'id': 'b_t4', 'tema': 4, 'fuente': 'Inter 24pt|Bold'},                           # pila_planificador.PEQ (v5.82; la misma que el Estilo 4 de antes)
     {'id': 'b_t6', 'tema': 6, 'fuente': 'Instrument Serif|Regular'},                  # Tema6 vertical.variantes.json
 )
 PRINCIPALES_CREA = (
@@ -136,7 +137,7 @@ PRINCIPALES_CREA = (
     {'id': 'p_t3_shine', 'tema': 3, 'look': 't3:shine', 'efecto': 'Giro 3D'},         # v5.75: naranja con volumen, letras que giran una tras otra
     {'id': 'p_t3_resalta', 'tema': 3, 'look': 't3:resalta', 'efecto': 'Resaltado'},   # v5.75: la selección azul del iPhone con su asa
     {'id': 'p_t3_linea', 'tema': 3, 'look': 't3:linea', 'efecto': 'Línea'},            # v5.75: el Tema 3 nuevo (una línea, caja que salta); caja azul
-    {'id': 'p_t4', 'tema': 4, 'look': 't4', 'efecto': 'Brillo'},
+    {'id': 'p_t4', 'tema': 4, 'look': 't4', 'efecto': 'Lima'},                   # v5.82: el Estilo 4 nuevo (la clave grande en lima con brillo)
     {'id': 'p_t5', 'tema': 5, 'look': 't5', 'efecto': 'Tipografía'},                # v5.76: el Tema 5 nuevo (grande + serif que la muerde)
     {'id': 'p_t6', 'tema': 6, 'look': 't6', 'efecto': 'Brillo'},
     {'id': 'p_t7', 'tema': 7, 'look': 't7', 'efecto': 'Palabra roja'},           # v5.78: el Estilo 7 (la que suena en rojo; el color = el «color principal»)
@@ -537,7 +538,8 @@ def _a_su_hora(c, dichas, fin_ajeno, anterior=None, exactas=True):
 
 
 def _guion_entero(look, grupo, palabras, idioma, ancho_tl, ancla, mains, video):
-    """Los Temas 2, 4, 5 y 6 enteros: UNA llamada a su planificador (GP.cues_de: Referencia, o tema4_planificador para Tema4/5/6) con las palabras
+    """Los Temas «guion» enteros (2 y 6; el 4 y el 5 son de elementos desde la 5.82 y la 5.76): UNA llamada a su planificador (GP.cues_de: Referencia,
+    o tema4_planificador para el Tema 6) con las palabras
     de los tramos de `grupo` seguidas, cada tramo cerrado con 'fin_frase'. -> [(cue, n de tramo)] (el tramo, por la primera palabra del bloque).
     Un bloque que el tema hizo esperar hasta el tramo de otro tema entra antes, cuando se dice (_a_su_hora)."""
     lista, de_quien, marcas = [], [], []
@@ -737,6 +739,8 @@ def _etiqueta(motor, c):
             return 'ambar'                                # v5.80: el Estilo 8
         if any(str(r.get('k') or '').startswith('v edi') for r in c.get('runs') or []):
             return 'editorial'                            # v5.80: el Estilo 9
+        if any(str(r.get('k') or '').startswith('v pila') for r in c.get('runs') or []):
+            return 'pila4'                                # v5.82: el Estilo 4 nuevo («pila» a secas es el look de antes del Tema 3)
         efectos = [_base_efecto(r.get('k')) for r in c.get('runs') or [] if _base_efecto(r.get('k')) in VP.DURACION]
         return efectos[0] if efectos else 'pila'
     grande = any(r.get('rol') == 'main' for r in c.get('runs') or [])

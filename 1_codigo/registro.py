@@ -337,6 +337,24 @@ def instalar_ganchos():
 # v5.4: mas pistas para cuando algo falla
 SESION = CARPETA / 'sesion_abierta.flag'
 FALLOS_NATIVOS = CARPETA / 'fallo_nativo.log'
+MAXIMO_FALLOS_NATIVOS = 1_000_000           # v5.82: crecía sin fin (cada arranque escribe su cabecera): el del autor pesaba 1,2 MB con 428 sesiones
+# v5.82: lo que sí es una caída o un atasco en fallo_nativo.log. En Windows faulthandler apunta también excepciones de COM que Windows maneja
+# solo («Windows fatal exception: code 0x8001010d», el programa sigue): esas no cuentan
+_VOLCADO_REAL = re.compile(r'^(Fatal Python error|Timeout \(|Windows fatal exception: (access violation|stack overflow|float divide by zero|'
+                           r'integer divide by zero|code 0x[c-f]))', re.I | re.M)
+
+
+def _hubo_volcado():
+    """v5.82: ¿la sesión ANTERIOR dejó en fallo_nativo.log una caída o un atasco de verdad? Antes bastaba con que el archivo no estuviera vacío
+    y como cada arranque escribe su cabecera, «Hay un volcado del fallo» salía siempre. Se mira solo el tramo tras la última cabecera."""
+    try:
+        with open(FALLOS_NATIVOS, 'rb') as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - 300_000))
+            texto = f.read().decode('utf-8', 'replace')
+    except OSError:
+        return False
+    return bool(_VOLCADO_REAL.search(texto.rsplit('--- sesion ', 1)[-1]))
 
 
 def _cabecera_de_sesion():
@@ -375,12 +393,7 @@ def _revisar_cierre_anterior():
     """Si la sesion anterior no se cerro bien (se colgo o se cayo), lo deja anotado con la pista de donde mirar."""
     CARPETA.mkdir(parents=True, exist_ok=True)
     if SESION.is_file():
-        extra = ''
-        try:
-            if FALLOS_NATIVOS.is_file() and FALLOS_NATIVOS.stat().st_size > 0:
-                extra = f' Hay un volcado del fallo en {FALLOS_NATIVOS.name}.'
-        except OSError:
-            pass
+        extra = f' Hay un volcado del fallo en {FALLOS_NATIVOS.name}.' if _hubo_volcado() else ''
         estado = ''
         try:
             estado = SESION.read_text(encoding='utf-8').partition('|')[2].strip()
@@ -392,15 +405,17 @@ def _revisar_cierre_anterior():
             corte = vigilancia.tarea_cortada_anterior()
         except Exception:
             pass
-        if estado == 'abriendo':
-            error('La sesión anterior NO llegó a terminar de abrir: el programa se quedó atascado (o se cerró) durante el arranque.' + extra, 'sesión',
+        if estado.startswith('abriendo'):
+            fase = estado.partition('·')[2].strip()          # v5.82: «antes de la ventana» / «creando la ventana»
+            error('La sesión anterior NO llegó a terminar de abrir: el programa se quedó atascado (o se cerró) durante el arranque'
+                  + (f' ({fase})' if fase else '') + '.' + extra, 'sesión',
                   detalle='Mira errores.log y fallo_nativo.log (carpeta DaVinciSubtitles): ahí queda dónde se quedó. Si se repite, usa «Copiar informe» en el Registro y mándalo.')
         elif corte and corte[0]:
             error(f'La sesión anterior se cortó en mitad de «{corte[0]}», en el paso «{corte[1] or "?"}» (hace {int(corte[2] // 60)} min).' + extra, 'sesión')
         else:
             aviso('La sesión anterior de CineCaptions no se cerró bien (se colgó o se cayó).' + extra, 'sesión')
         _mac_informes_de_cierre()
-    SESION.write_text(f'{time.time()}|abriendo', encoding='utf-8')
+    SESION.write_text(f'{time.time()}|abriendo · antes de la ventana', encoding='utf-8')
     import atexit
     atexit.register(lambda: SESION.unlink(missing_ok=True))
 
@@ -421,10 +436,49 @@ def _mac_informes_de_cierre():
         pass
 
 
+def _idioma_qt():
+    """El idioma del sistema según Qt (en Mac lo lee de las preferencias del sistema aunque la app no herede LANG), o None."""
+    try:
+        from PySide6.QtCore import QLocale
+        n = QLocale.system().name()
+        return n if n and n not in ('C', 'POSIX') else None
+    except Exception:
+        return None
+
+
+def idioma_del_sistema(casa=None):
+    """v5.82 (informe de Mac: «Idioma del sistema None»): una app abierta desde el Finder no hereda LANG y locale.getlocale() da None. Por orden:
+    locale, Qt, las variables de entorno y, en Mac, AppleLocale de las preferencias globales. Nunca None."""
+    try:
+        import locale
+        v = locale.getlocale()[0]
+        if v:
+            return v
+    except Exception:
+        pass
+    v = _idioma_qt()
+    if v:
+        return v
+    for k in ('LC_ALL', 'LC_MESSAGES', 'LANG'):
+        v = (os.environ.get(k) or '').split('.')[0]
+        if v and v not in ('C', 'POSIX'):
+            return v
+    if sys.platform == 'darwin':
+        try:
+            import plistlib
+            with open(Path(casa or Path.home()) / 'Library' / 'Preferences' / '.GlobalPreferences.plist', 'rb') as f:
+                d = plistlib.load(f)
+            v = d.get('AppleLocale') or (d.get('AppleLanguages') or [None])[0]
+            if v:
+                return str(v)
+        except Exception:
+            pass
+    return 'desconocido'
+
+
 def entorno_detallado():
     """Líneas con el entorno real (Windows o Mac): sistema, arquitectura, Rosetta, memoria, GPU, si es el .exe/.app. Puede tardar unos segundos (subprocess):
     llamar en un hilo."""
-    import locale
     import platform
     import subprocess
     lineas = []
@@ -457,7 +511,7 @@ def entorno_detallado():
             lineas.append('GPU NVIDIA: no detectada (voz e IA irán en CPU)')
     lineas.append(('programa empaquetado' if getattr(sys, 'frozen', False) else 'desde código') + f' · {sys.executable}')
     try:
-        lineas.append(f'idioma del sistema {locale.getlocale()[0]} · datos en {CARPETA}')
+        lineas.append(f'idioma del sistema {idioma_del_sistema()} · datos en {CARPETA}')
     except Exception:
         pass
     _ENTORNO['lineas'] = lineas
@@ -578,9 +632,8 @@ def equipo():
             lineas.append('DaVinci Resolve: ' + ' '.join(str(x) for x in (st.get('producto'), st.get('version')) if x) + ' · conectado'
                           + (f" · página {st['pagina']}" if st.get('pagina') else ''))
     try:
-        import locale
         from i18n import idioma
-        lineas.append(f'Idioma del sistema {locale.getlocale()[0]} · interfaz {idioma()}')
+        lineas.append(f'Idioma del sistema {idioma_del_sistema()} · interfaz {idioma()}')
     except Exception:
         pass
     return lineas
@@ -594,12 +647,16 @@ def _motores(solo_problemas=True):
     except Exception:
         return []
     if not filas:
-        return ['  (el chequeo de arranque aún no terminó)']
+        # v5.82 (informe de Mac: «el chequeo de arranque aún no terminó»): que se sepa si iba en marcha (informe copiado al abrir) o atascado
+        empezo = (getattr(salud, '_ULTIMO', None) or {}).get('empezo')
+        if empezo:
+            s = int(time.time() - empezo)
+            return [f'  (el chequeo de arranque sigue en marcha: empezó hace {s} s' + (', demasiado: puede estar atascado)' if s > 60 else ')')]
+        return ['  (el chequeo de arranque aún no ha empezado: se hace unos segundos después de abrir)']
     lineas = ['  ' + salud.resumen(filas)[0]]
     for f in filas:
         if not solo_problemas or f['ok'] is not True:
-            marca = 'OK ' if f['ok'] else ('-- ' if f['ok'] is None else 'MAL')
-            lineas.append(_parrafo(f"{f['nombre']}: {f['detalle']}", f'  {marca} ', '      '))
+            lineas.append(_parrafo(f"{f['nombre']}: {f['detalle']}", f'  {salud.marca(f)} ', '      '))
     return lineas
 
 
@@ -755,6 +812,11 @@ def _fallos_nativos():
     """faulthandler: si Python o Qt se caen del todo (segfault), la traza de todos los hilos queda en fallo_nativo.log."""
     import faulthandler
     global _ARCHIVO_FALLOS
+    try:                                            # v5.82: con tope (lo viejo, a fallo_nativo.log.1); ya se leyó la sesión anterior (_revisar_cierre_anterior)
+        if FALLOS_NATIVOS.is_file() and FALLOS_NATIVOS.stat().st_size > MAXIMO_FALLOS_NATIVOS:
+            FALLOS_NATIVOS.replace(FALLOS_NATIVOS.with_name(FALLOS_NATIVOS.name + '.1'))
+    except OSError:
+        pass
     _ARCHIVO_FALLOS = open(FALLOS_NATIVOS, 'a', encoding='utf-8')
     _ARCHIVO_FALLOS.write(f'--- sesion {datetime.datetime.now():%Y-%m-%d %H:%M:%S} ---' + chr(10))
     _ARCHIVO_FALLOS.flush()
@@ -762,6 +824,26 @@ def _fallos_nativos():
 
 
 _ARCHIVO_FALLOS = None
+
+
+def vigilar_arranque_nativo(segundos=20):
+    """v5.82 (informe de Mac: «la sesión anterior NO llegó a terminar de abrir», sin rastro de dónde se quedó): si la ventana no termina de
+    abrir en `segundos`, faulthandler escribe la pila de TODOS los hilos en fallo_nativo.log («Timeout (0:00:20)!»). Lo hace un hilo de C:
+    sale aunque Python esté bloqueado y aunque luego se cierre el programa a la fuerza (el aviso de vigilancia, a los 45 s, necesita Python)."""
+    try:
+        import faulthandler
+        if _ARCHIVO_FALLOS is not None:
+            faulthandler.dump_traceback_later(segundos, repeat=False, file=_ARCHIVO_FALLOS, exit=False)
+    except Exception:
+        pass
+
+
+def fin_arranque_nativo():
+    try:
+        import faulthandler
+        faulthandler.cancel_dump_traceback_later()
+    except Exception:
+        pass
 
 
 def _gancho_unraisable():

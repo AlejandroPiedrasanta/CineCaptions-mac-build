@@ -80,8 +80,53 @@ def _compatible(v, fijada):
         return False
 
 
+REPARAR_MOTOR = 'Ajustes > General > Motor de voz > Reparar'
+
+
+def _fila_motor_qwen(mv):
+    """v5.82 (informe de un cliente con una RTX 4070 Laptop de 8 GB: «Falla al iniciar: Motor de IA (Qwen3) — faltan modelos», con la voz bien):
+    lo que le falta DE VERDAD al motor de voz e IA. Antes «faltan modelos» valía para cinco causas distintas (Python viejo, PyTorch, modelo
+    de voz, alineador o solo la IA de texto) y siempre como falla. Sin la IA de texto la voz funciona y el texto se corrige con reglas: aviso."""
+    nombre = 'Motor de IA (Qwen3)'
+    if not mv._python_al_dia():
+        return {'nombre': nombre, 'ok': False, 'detalle': f'es el motor de una versión anterior (Python 3.12): {REPARAR_MOTOR}'}
+    faltan = mv._faltan_requisitos()
+    if faltan:
+        return {'nombre': nombre, 'ok': False, 'detalle': f'faltan {len(faltan)} librerías: ' + ', '.join(faltan[:3])}
+    torch_v = mv._dist_instalada('torch')
+    if not torch_v or not mv._torch_valido(torch_v):
+        return {'nombre': nombre, 'ok': False,
+                'detalle': (f'PyTorch {torch_v} no es el que necesita' if torch_v else 'falta PyTorch') + f': {REPARAR_MOTOR}'}
+    voz = next((m for m, (repo, minimo) in mv.REPOS_ASR.items() if mv.modelo_descargado(repo, minimo)), None)
+    if voz is None:
+        return {'nombre': nombre, 'ok': False, 'detalle': f'falta el modelo de voz Qwen3-ASR: {REPARAR_MOTOR}'}
+    if not mv.modelo_descargado(*mv.REPO_ALINEADOR):
+        return {'nombre': nombre, 'ok': False, 'detalle': f'falta el alineador de palabras (Qwen3-ForcedAligner): {REPARAR_MOTOR}'}
+    texto = next((clave for clave, repo, minimo, _gb, _usa in mv.MODELOS_TEXTO if mv.modelo_descargado(repo, minimo)), None)
+    if texto is None:
+        vram = mv.vram_total_gb() or 0                  # (memorizada: nvidia-smi una vez)
+        quiere = mv.ia_texto_para_esta_gpu()
+        ia = ' + '.join(mv.NOMBRES_TEXTO.get(c, c) for c in quiere)
+        detalle = (f'la voz está lista (Qwen3-ASR {voz}); falta la IA de texto ({ia}' + (f', la de una tarjeta de {vram:.0f} GB' if vram else '')
+                   + f'): mientras, el texto se corrige con reglas. Se descarga con {REPARAR_MOTOR}')
+        try:
+            import shutil
+            casa = mv._cache_hf()
+            while not casa.exists() and casa.parent != casa:
+                casa = casa.parent
+            libre = shutil.disk_usage(str(casa)).free / 1024 ** 3
+            hace_falta = {'gemma4': 16.1, 'qwen3.5': 9.4, '4B': 8.1, '1.7B': 4.1}.get(quiere[-1], 4.1) + 2   # (= motor_texto.TAMANO_GB + 2 GB)
+            if libre < hace_falta:
+                detalle += f' (necesita unos {hace_falta:.0f} GB libres en el disco y quedan {libre:.0f} GB)'
+        except Exception:
+            pass
+        return {'nombre': nombre, 'ok': None, 'aviso': True, 'detalle': detalle}
+    return {'nombre': nombre, 'ok': True, 'detalle': f'torch {torch_v} · Qwen3-ASR {voz} · IA de texto {texto}'}
+
+
 def comprobar():
     """Carga cada libreria y compara su version. Tarda 1-3 s: llamar en un hilo."""
+    _ULTIMO['empezo'] = time.time()
     filas = []
     for modulo, nombre, fijada in LIBRERIAS:
         t = time.perf_counter()
@@ -101,17 +146,7 @@ def comprobar():
     try:
         import motor_voz
         if motor_voz.python_motor().exists():
-            faltan = motor_voz._faltan_requisitos()
-            torch_v = motor_voz._dist_instalada('torch')
-            modelos = motor_voz.detectar_por_archivos()
-            ok = not faltan and bool(torch_v) and bool(modelos and modelos.get('modelo_texto'))
-            if ok:
-                detalle = f"torch {torch_v} · Qwen3-ASR {modelos.get('modelo')} · IA de texto {modelos.get('modelo_texto')}"
-            elif faltan:
-                detalle = f'faltan {len(faltan)} librerías: ' + ', '.join(faltan[:3])
-            else:
-                detalle = 'faltan modelos: Ajustes > General > Motor de voz > Reparar'
-            filas.append({'nombre': 'Motor de IA (Qwen3)', 'ok': ok, 'detalle': detalle})
+            filas.append(_fila_motor_qwen(motor_voz))
         else:
             filas.append({'nombre': 'Motor de IA (Qwen3)', 'ok': None, 'detalle': 'no instalado (se usa Whisper)'})
     except Exception as e:
@@ -190,17 +225,22 @@ def resumen(filas=None):
         return ('…', None)
     malas = [f for f in filas if f['ok'] is False]
     total = len([f for f in filas if f['ok'] is not None])
+    avisos = [f for f in filas if f['ok'] is None and f.get('aviso')]
     if not malas:
         from i18n import tr
-        return (tr('Todo al día ({n} de {t})', n=total, t=total), True)
+        texto = tr('Todo al día ({n} de {t})', n=total, t=total)
+        if avisos:                                  # v5.82: p. ej. falta la IA de texto (la voz funciona): no es una falla, pero se dice
+            texto += ' · ' + tr('con aviso: {lista}', lista=', '.join(f['nombre'] for f in avisos[:3]))
+        return (texto, True)
     from i18n import tr
     return (tr('{n} con problemas: {lista}', n=len(malas), lista=', '.join(f['nombre'] for f in malas[:3])), False)
 
 
+def marca(f):
+    """La marca de una fila en los informes: OK, MAL, AVI (funciona con un aviso) o -- (no aplica)."""
+    return 'OK ' if f['ok'] else ('MAL' if f['ok'] is False else 'AVI' if f.get('aviso') else '-- ')
+
+
 def informe(filas=None):
     filas = filas if filas is not None else (_ULTIMO['filas'] or [])
-    lineas = []
-    for f in filas:
-        marca = 'OK ' if f['ok'] else ('-- ' if f['ok'] is None else 'MAL')
-        lineas.append(f"{marca} {f['nombre']:<26} {f['detalle']}")
-    return '\n'.join(lineas)
+    return '\n'.join(f"{marca(f)} {f['nombre']:<26} {f['detalle']}" for f in filas)

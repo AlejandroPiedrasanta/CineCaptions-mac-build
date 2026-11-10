@@ -1680,7 +1680,7 @@ def _encima_de(tramos, info, video, fps, W, H, carpeta, a_cuadro, neon_tema, fx_
             decir(f'Edición PRO: recortando a la persona con IA para «detrás de ti» ({n + 1} de {len(tramos)})…')
             avance(n, 0.0)
             try:                                                     # v5.31: la máscara GUARDADA (fuera de la caché; se reutiliza al momento)
-                destino = PE.mascara_guardada(fuente, t0, t0 + dur, al_progreso=lambda f, n=n: avance(n, f))
+                destino = PE.mascara_guardada(fuente, t0, t0 + dur, al_progreso=lambda f, n=n: avance(n, f), lado_max=PE.lado_recorte(W, H))   # v5.82: al tamaño del timeline
             except Exception:
                 destino = None
             hecho[0] += max(0.1, float(t['fin']) - float(t['ini']))
@@ -2150,7 +2150,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
 
         def foto5(t):
             ruta, t_src, _clip = _fuente_de(info, video, t)
-            return T5.foto(ruta, t_src)
+            return T5.foto(ruta, t_src, ancho=int(round(540 * max(1.0, min(W, H) / 1080.0))))   # v5.82: con los píxeles del timeline (4K: 1080)
 
         def recorte5(t):                             # el sticker del gancho: la persona recortada con la IA local y el fondo, como en el timeline
             ruta, t_src, clip = _fuente_de(info, video, t)
@@ -2263,7 +2263,7 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             import broll
             import efectos_visuales
             clave_b = broll.clave_guardada(efectos_visuales.opciones_guardadas())
-            fondo['broll'] = list(broll.preparar(plan['broll'], 'v' if vertical else 'h', clave_b, decir))
+            fondo['broll'] = list(broll.preparar(plan['broll'], 'v' if vertical else 'h', clave_b, decir, lado=min(W, H)))   # v5.82: al tamaño del timeline
         except Exception as e:
             fondo['broll_error'] = e
 
@@ -2364,10 +2364,11 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
             persona.append({'ini': f0, 'fin': f1, 'modo': 'magic', 'comp': str(OG.ruta_larga(comp)), 'ref': ref, 'herramienta': f'CCProMagic{f0}'})
         elif usar_ia:
             decir('Edición PRO: recortando a la persona con IA local…')
-            destino = carpeta / f'persona_{f0}_{f1}.mov'
+            lado = PE.lado_recorte(W, H)                              # v5.82: el recorte al tamaño del timeline (4K: 3840), no a 1920
+            destino = carpeta / (f'persona_{f0}_{f1}.mov' if lado == 1920 else f'persona_{f0}_{f1}_{lado}.mov')
             try:
                 if not destino.exists():
-                    PE.recorte_prores(ruta, t_src, t_src + (b - a) + MARGEN_RECORTE_S, destino)
+                    PE.recorte_prores(ruta, t_src, t_src + (b - a) + MARGEN_RECORTE_S, destino, lado_max=lado)
                 persona.append({'ini': f0, 'fin': f1, 'modo': 'clip', 'archivo': str(OG.ruta_larga(destino))})
             except Exception:
                 sin_persona.add((a, b))
@@ -2544,6 +2545,30 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 color_claves = TM.color_claves(info, video, fps)
         except Exception:
             pass
+    if not neon_tema and not plan.get('tema5') and 'kit' in (op.get('_menu') or []):
+        try:                                         # v5.82: los motions de la referencia del Estilo 4 (avión, tachado, visor REC, aro, persianas) con «Kit de motions»
+            import edicion_pro_pila as PILA
+
+            def caras_en(t):
+                ruta, t_src, clip = _fuente_de(info, video, t)
+                return _caras(_a_timeline(_personas(ruta, t_src), clip, W, H))
+            pila = PILA.piezas(plan, W, H, mover, tramos, caras_en if hay_ia else None, fps=fps)
+            plan['piezas'] = list(plan.get('piezas') or []) + pila
+            plan['_motions_pila'] = [p['motivo'] for p in pila]
+            import motions_catalogo as MC_
+            if MC_.permitido('kit:zoom', op):            # la entrada con zoom y desenfoque: copia de V1 en PRO-ZOOM (más abajo, con el `zoom` del Tema 5)
+                try:
+                    import intros_gancho
+                    fin_intro = intros_gancho.fin_zoom_s(op) if intros_gancho.activa(op) else 0.0
+                except Exception:
+                    fin_intro = 1.0
+                plan['_entradas_zoom'] = PILA.entradas_zoom(plan, tramos, [(t['_s'] - 0.2, t['_s'] + t['dur'] + 0.2) for t in tomas], fin_intro)
+        except Exception:
+            try:
+                import registro
+                registro.excepcion(origen='edición PRO (motions del Estilo 4)')
+            except Exception:
+                pass
     gris = [[int(round(a * fps)), int(round(b * fps))] for a, b in plan.get('gris') or []]
     if not con_emojis:                               # v5.55: el seguro final (lo añadido al aplicar): nada con emojis llega a renderizarse
         plan['piezas'] = quitar_emojis(plan.get('piezas') or [])
@@ -2675,6 +2700,9 @@ def aplicar(plan, al_estado=None, offset_frames=0, info=None):
                 plan['_zoom'].append(t)
         except Exception:
             zoom = []
+    for z in plan.get('_entradas_zoom') or []:      # v5.82: la entrada con zoom y desenfoque (motions del Estilo 4): solo la mitad de después, con su desenfoque
+        zoom.append([int(round(float(z['t']) * fps)), 0, max(2, int(round(float(z['dur']) * fps))), round(float(z['desenfoque']) * min(W, H) / 1080.0, 1)])
+        plan['_zoom'].append(float(z['t']))
     rng = random.Random(PL.semilla_de(video, [], int(op.get('pro_variacion') or 0)))
     sonidos = []
     voz_db = None

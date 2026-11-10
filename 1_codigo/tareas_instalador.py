@@ -519,7 +519,9 @@ def _tarea_motor_ia(estado):
                                 aviso=estado.info)
     info = motor_voz.info_instalado() or {}
     estado.progreso(100)
-    estado.ok(f"Qwen3-ASR {modelo} listo" + (' + IA de texto' if info.get('modelo_texto') else ''))
+    # v5.82: sin la IA de texto se dice (el porqué ya quedó en el Registro: motor_voz._avisar_sin_ia_de_texto)
+    estado.ok(f"Qwen3-ASR {modelo} listo" + (' + IA de texto' if info.get('modelo_texto') else
+                                             ', pero sin la IA de texto (no se pudo descargar: el porqué está en el Registro de CineCaptions)'))
 
 
 # ---------------------------------------------------------------------------

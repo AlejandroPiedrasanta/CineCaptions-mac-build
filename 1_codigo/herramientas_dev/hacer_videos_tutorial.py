@@ -1,19 +1,25 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/herramientas_dev/hacer_videos_tutorial.py — graba los videos de los tutoriales (2_recursos/tutoriales) con la interfaz REAL, sin pantalla: cursor, clics de verdad y cámara.
 """
-hacer_videos_tutorial.py  (v5.76)
+hacer_videos_tutorial.py  (v5.82)
 ---------------------------------
-    python hacer_videos_tutorial.py [ids...] [--salida CARPETA]        (sin ids: todos; ids en tutoriales.ORDEN)
+    python hacer_videos_tutorial.py [ids...] [--salida CARPETA] [--voz NOMBRE] [--voz-idiomas es,en,…]
+                                    (sin ids: todos; ids en tutoriales.ORDEN)
 
 La ventana real (QT_QPA_PLATFORM=offscreen, 1440×900 a escala 1,5) hace lo que pide el guion de cada página con clics y movimientos de
-ratón DE VERDAD (QTest sobre su QWindow: hover, clics, teclas). Cada 33 ms se copia su búfer (~2 ms) y un hilo pinta encima el cursor, la onda
-de cada clic y el archivo arrastrado, encuadra con la «cámara» (un rectángulo 16:10 que se acerca a lo que importa) y codifica a
-<id>.mp4 (960×600, H.264, 30 fps, sin audio) + <id>.jpg (el cuadro que el guion marca como miniatura).
+ratón DE VERDAD (QTest sobre su QWindow: hover, clics, arrastres, rueda, teclas). Cada 33 ms se copia su búfer (~2 ms) y un hilo pinta encima
+el cursor, la onda de cada clic y el archivo arrastrado, encuadra con la «cámara» (un rectángulo 16:10 que se acerca a lo que importa) y
+codifica a <id>.mp4 (960×600, H.264, 30 fps, sin audio) + <id>.jpg (el cuadro que el guion marca como miniatura).
 
-No ensucia nada del usuario: prefs, Registro y archivos_seguros parcheados, sin Resolve ni scripts; además copia los .json/.txt de
-~/DaVinciSubtitles antes y devuelve los que hubieran cambiado. Dentro de los videos no hay texto añadido: los subtítulos que el guion marca
-con g.texto(frase) van a subtitulos.json con su tiempo real y los pinta el reproductor encima, traducidos (el mismo video vale para los 10
-idiomas); la interfaz grabada es la española. Una frase nueva necesita su traducción en 2_recursos/locales.
+No ensucia nada del usuario: prefs, Registro y archivos_seguros parcheados, sin Resolve, Premiere ni scripts; además copia los .json/.txt de
+~/DaVinciSubtitles antes y devuelve los que hubieran cambiado. Dentro de los videos no hay texto añadido: lo que el guion dice con
+`yield from g.decir(frase)` va a subtitulos.json con su tiempo real y lo pinta el reproductor encima, traducido (el mismo video vale para los
+10 idiomas); la interfaz grabada es la española. Una frase nueva necesita su traducción en 2_recursos/locales.
+
+v5.82, la voz: cada frase de g.decir() es también LOCUCIÓN. Antes de grabar se hacen las frases con voz_tutoriales.py (ElevenLabs por el
+conector de Higgsfield, voz «Andre», hombre enérgico y alegre: --voz el_andre, la de fábrica); aquí se lee su índice: el guion espera a que acabe cada frase antes de lo siguiente (la más larga de --voz-idiomas, para que quepan
+todas) y, al terminar, cada idioma tiene su pista con cada frase en el segundo en que se dijo: voz/<idioma>/<id>.m4a (AAC mono 24 kHz).
+Sin índice se graba igual (con una duración estimada por letras) y sin pista.
 """
 import argparse
 import faulthandler
@@ -43,6 +49,31 @@ ANCHO_V, ALTO_V = 1440, 900
 TMP = Path(tempfile.mkdtemp(prefix='cc_tutoriales_'))
 DATOS = Path.home() / 'DaVinciSubtitles'
 
+# v5.82: lo que ESTE proceso escribe (gancho de auditoría de Python: open para escribir, os.replace/rename, copias, borrados). Al final solo se
+# devuelve eso: otras sesiones o la app del usuario pueden estar haciendo un GO a la vez y sus archivos (go_en_curso, kit7_historial…) no se pisan.
+_ESCRITOS = set()
+
+
+def _auditar(evento, args):
+    try:
+        if evento == 'open':
+            ruta, modo, flags = args[0], args[1], args[2]
+            if isinstance(ruta, int) or ruta is None:
+                return
+            escribe = any(c in str(modo or '') for c in 'wax+') or (modo is None and isinstance(flags, int) and
+                                                                   flags & (os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT))
+            if escribe:
+                _ESCRITOS.add(os.path.normcase(os.path.abspath(os.fspath(ruta))))
+        elif evento in ('os.rename', 'shutil.copyfile', 'shutil.copymode', 'shutil.copystat'):
+            _ESCRITOS.add(os.path.normcase(os.path.abspath(os.fspath(args[1]))))
+        elif evento == 'os.remove':
+            _ESCRITOS.add(os.path.normcase(os.path.abspath(os.fspath(args[0]))))
+    except Exception:
+        pass
+
+
+sys.addaudithook(_auditar)
+
 # ---------------------------------------------------------------------------------------------------- nada del usuario se toca
 import registro                                                    # noqa: E402
 registro.CARPETA = TMP
@@ -66,16 +97,23 @@ def _copia_datos():
 
 
 def _devolver_datos(copia, firmas):
+    """Los .json/.txt de ~/DaVinciSubtitles que ESTE proceso cambió vuelven a como estaban; lo que cambió otro programa a la vez (otra sesión
+    o la app con un GO en marcha) se deja como está y solo se dice."""
     cambiados = []
+    mios = set(_ESCRITOS)
     try:
         for e in os.scandir(DATOS):
+            propio = os.path.normcase(os.path.abspath(e.path)) in mios
             if e.is_file() and e.name in firmas:
                 st = e.stat()
                 if (st.st_mtime_ns, st.st_size) != firmas[e.name]:
-                    shutil.copy2(copia / e.name, e.path)
-                    cambiados.append(e.name)
+                    if propio:
+                        shutil.copy2(copia / e.name, e.path)
+                        cambiados.append(e.name)
+                    else:
+                        cambiados.append(e.name + ' (lo cambió otro programa: se deja)')
             elif e.is_file() and e.name.lower().endswith(('.json', '.txt')) and e.name not in firmas:
-                cambiados.append(e.name + ' (nuevo: revisar)')
+                cambiados.append(e.name + (' (nuevo, de este proceso: revisar)' if propio else ' (nuevo, de otro programa: se deja)'))
     except OSError:
         pass
     return cambiados
@@ -90,6 +128,11 @@ spec.loader.exec_module(M)
 import ajustes_ui, archivos_seguros, licencia, resolve_mcp, sfx_rules, tutoriales   # noqa: E402,E401
 _PREFS_MEM = {}
 licencia.vigente = lambda: True
+# v5.82: los videos viajan con la app: ni la clave, ni el nombre, el correo o el equipo del dueño (salían en el panel rápido y en Ayuda)
+_LIC_DEMO = {'clave': 'CC-0000-000-0000', 'ultima_ok': time.time(), 'visto': time.time(), 'usados': 1, 'limite': 2, 'expira_ts': None,
+             'prueba': False}
+licencia.local = lambda *a, **k: dict(_LIC_DEMO)
+licencia.nombre_equipo = lambda *a, **k: 'Mi PC'
 M.SubtitleApp._revisar_licencia_al_arrancar = lambda s: None
 M.SubtitleApp._recorrido_auto = lambda s, *a, **k: None
 ajustes_ui.guardar_prefs = lambda cambios, *a, **k: _PREFS_MEM.update(cambios or {})
@@ -109,6 +152,37 @@ try:
     resolve_bridge.asegurar_conexion = lambda *a, **k: None
 except Exception:
     pass
+# v5.82: Premiere e idioma sin tocar nada real (encender Premiere en Ajustes instala su panel en %APPDATA% y toca el registro de Adobe;
+# «Aplicar» con otro idioma escribe idioma.ini): los videos enseñan Premiere «conectado» sin que esté instalado
+try:
+    import premiere
+    _PREMIERE_FALSO = {'instalado': True, 'nombre': 'Adobe Premiere Pro 2026', 'abierto': True, 'conectado': True, 'version': '', 'proyecto': ''}
+    premiere.estado = lambda *a, **k: dict(_PREMIERE_FALSO)
+    premiere.instalar_panel = lambda *a, **k: {'ok': True, 'instalado': False, 'ruta': '', 'texto': ''}
+    premiere.preparar = lambda *a, **k: {'ok': True, 'premiere': None, 'reiniciar': False, 'texto': ''}
+    premiere.abrir = lambda *a, **k: None
+except Exception:
+    pass
+ajustes_ui.VentanaAjustes._preparar_premiere = lambda self, *a, **k: None
+try:
+    import i18n
+    i18n.guardar_idioma = lambda *a, **k: False
+except Exception:
+    pass
+M.SubtitleApp.reiniciar_programa = lambda *a, **k: None              # («Listo» con cambios pregunta si reiniciar: nunca)
+try:
+    ajustes_ui.messagebox.askyesno = lambda *a, **k: False
+except Exception:
+    pass
+import webbrowser                                                   # noqa: E402  (nada se abre fuera: WhatsApp, la web…)
+webbrowser.open = webbrowser.open_new = webbrowser.open_new_tab = lambda *a, **k: False
+try:
+    from PySide6.QtGui import QDesktopServices
+    QDesktopServices.openUrl = staticmethod(lambda *a, **k: False)
+except Exception:
+    pass
+import tutoriales_ui                                                # noqa: E402  (la pestaña Tutoriales grabada: el altavoz se ve, no suena)
+tutoriales_ui._Voz.sonar = lambda self, *a, **k: None
 for nombre in ('_programar_autoguardado', '_autoguardar', '_guardar_marcas', '_guardar_ahora', '_sugerir_con_ia', '_corregir_auto', '_corregir_ahora'):
     if hasattr(M.WordTagWindow, nombre):                           # (sin guardar marcas ni la IA de ortografía: escribe orto_cache.json y tarda)
         setattr(M.WordTagWindow, nombre, lambda self, *a, **k: None)
@@ -385,6 +459,10 @@ class Guion:
         self._ar = None
         self.camara = QRectF(0, 0, ANCHO_V, ALTO_V)
         self.subs = []                       # [(t, frase o None)]: los subtítulos (los pinta el reproductor)
+        self.voces = []                      # v5.82: [(t, frase)]: lo que se dice (g.decir); va a la pista de voz de cada idioma
+        self._fin_voz = 0.0                  # cuándo acaba de sonar la última frase (reloj del guion)
+        self.despues = []                    # v5.82: lo que se deshace al acabar de grabar (no sale en el video)
+        self.dlg = None
         self.hover = True
         self._ultimo_mov = None
         self._reloj = QTimer()
@@ -551,6 +629,46 @@ class Guion:
         self.subs.append((time.perf_counter() - self.t0, frase))
         return 0.0
 
+    def decir(self, frase, pausa=0.28):
+        """v5.82: la locución (y su subtítulo). Espera a que acabe la frase anterior más `pausa`, la marca aquí y la cuenta como sonando lo
+        que dura dicha (duracion_voz). Va con `yield from g.decir('…')` y SOLO con el texto literal: voz_tutoriales.py lo lee del código."""
+        if self._fin_voz > 0:
+            resto = self._fin_voz + pausa - (time.perf_counter() - self.t0)
+            if resto > 0.02:
+                yield resto
+        t = time.perf_counter() - self.t0
+        self.subs.append((t, frase))
+        self.voces.append((t, frase))
+        self._fin_voz = t + duracion_voz(frase)
+
+    def esperar_voz(self, extra=0.0):
+        """Lo que falta para que acabe la frase que suena (+ extra): `yield g.esperar_voz()` antes de lo que deba ir después de oírla."""
+        return max(0.0, self._fin_voz - (time.perf_counter() - self.t0)) + float(extra)
+
+    def apretar(self):
+        """v5.82: aprieta el botón donde está el cursor (para arrastrar: los movimientos que siguen llevan el botón apretado)."""
+        win, pt = self._ventana(), self.cursor.toPoint()
+        self.apretado = True
+        self.hover = True
+        QTimer.singleShot(0, lambda: QTest.mousePress(win, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, pt))
+        return 0.0
+
+    def soltar(self):
+        win, pt = self._ventana(), self.cursor.toPoint()
+        self.apretado = False
+        QTimer.singleShot(0, lambda: QTest.mouseRelease(win, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, pt))
+        return 0.0
+
+    def rueda(self, widget, pasos=1):
+        """v5.82: un golpe de rueda sobre `widget` donde está el cursor (pasos > 0: hacia abajo / la tarjeta siguiente)."""
+        from PySide6.QtGui import QWheelEvent
+        local = widget.mapFrom(self.fuente, self.cursor.toPoint())
+        glob = self.fuente.mapToGlobal(self.cursor.toPoint())
+        ev = QWheelEvent(QPointF(local), QPointF(glob), QPoint(0, 0), QPoint(0, -120 * int(pasos)), Qt.MouseButton.NoButton,
+                         Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.NoScrollPhase, False)
+        QTimer.singleShot(0, lambda: QApplication.sendEvent(widget, ev) if ui.vivo(widget) else None)
+        return 0.0
+
     # -- relojes
     def empezar(self):
         self.t0 = time.perf_counter()
@@ -617,6 +735,89 @@ class Guion:
 from PySide6.QtWidgets import QApplication   # noqa: E402
 
 
+# ---------------------------------------------------------------------------------------------------- la voz (v5.82)
+VOZ = {'nombre': 'el_andre', 'idiomas': ['es'], 'carpeta': None, 'indice': {}}
+SR_VOZ = 24000
+
+
+def cargar_voz(nombre, idiomas):
+    """El índice de voz_tutoriales.py (~/.cache/cinecaptions_tts/frases/<voz>/indice.json): {idioma: {frase: [archivo, segundos]}}."""
+    import json
+    carpeta = Path.home() / '.cache' / 'cinecaptions_tts' / 'frases' / nombre
+    try:
+        indice = json.loads((carpeta / 'indice.json').read_text(encoding='utf-8'))
+    except Exception:
+        indice = {}
+    VOZ.update(nombre=nombre, idiomas=list(idiomas), carpeta=carpeta, indice=indice)
+    hay = [i for i in idiomas if indice.get(i)]
+    print(f'voz «{nombre}»: ' + (', '.join(f'{i} ({len(indice[i])} frases)' for i in hay) if hay else 'sin índice (se graba sin voz)'), flush=True)
+
+
+def duracion_voz(frase):
+    """Lo que dura dicha (la más larga de los idiomas pedidos, para que quepan todas); sin índice, una estimación por letras."""
+    durs = [float(t[frase][1]) for t in ((VOZ['indice'].get(i) or {}) for i in VOZ['idiomas']) if frase in t]
+    return max(durs) if durs else 0.35 + 0.068 * len(frase)
+
+
+def montar_voz(ident, voces, fin_v, salida):
+    """v5.82: la pista de cada idioma: cada frase dicha (g.decir) en su segundo, nivelada (ya lo viene de voz_tutoriales.py) y sin pasar de
+    −1 dBFS, en <salida>/voz/<idioma>/<id>.m4a (AAC mono 24 kHz, 64 kb/s). Un idioma al que le falte alguna frase se salta (sin pista
+    a medias). Si una frase de otro idioma no cupiera hasta la siguiente, se corta con un fundido (se avisa: hay que grabar con ese idioma
+    en --voz-idiomas para que el guion la espere)."""
+    import wave
+    import av
+    import numpy as np
+    hechos = []
+    for idioma in VOZ['idiomas']:
+        tabla = VOZ['indice'].get(idioma) or {}
+        faltan = [f for _t, f in voces if f not in tabla]
+        if not voces or faltan:
+            if voces:
+                print(f'  {ident}: sin voz en {idioma} (faltan {len(faltan)} frases: corre voz_tutoriales.py --idiomas {idioma})', flush=True)
+            continue
+        n = int(math.ceil(fin_v * SR_VOZ)) + 1
+        pista = np.zeros(n, dtype=np.float32)
+        for k, (t, f) in enumerate(voces):
+            with wave.open(str(VOZ['carpeta'] / tabla[f][0]), 'rb') as w:
+                x = np.frombuffer(w.readframes(w.getnframes()), dtype='<i2').astype(np.float32) / 32768.0
+            i0 = int(round(t * SR_VOZ))
+            tope = min(n, int(round(voces[k + 1][0] * SR_VOZ)) if k + 1 < len(voces) else n)
+            if i0 >= tope:
+                continue
+            if i0 + len(x) > tope:
+                print(f'  {ident} [{idioma}]: «{f}» no cabe ({len(x) / SR_VOZ:.2f} s en {(tope - i0) / SR_VOZ:.2f} s): se corta', flush=True)
+                x = x[:tope - i0].copy()
+                fade = min(len(x), int(0.08 * SR_VOZ))
+                if fade > 1:
+                    x[-fade:] *= np.linspace(1.0, 0.0, fade, dtype=np.float32)
+            pista[i0:i0 + len(x)] += x
+        pico = float(np.max(np.abs(pista))) if len(pista) else 0.0
+        if pico > 0.891:
+            pista *= 0.891 / pico
+        destino = salida / 'voz' / idioma / f'{ident}.m4a'
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        tmp = destino.with_name(destino.stem + '.tmp.m4a')
+        with av.open(str(tmp), 'w') as o:
+            s = o.add_stream('aac', rate=SR_VOZ)
+            s.bit_rate = 64000
+            try:
+                s.layout = 'mono'
+            except Exception:
+                s.codec_context.layout = 'mono'
+            paso = 1024 * 8
+            for i in range(0, len(pista), paso):
+                fr = av.AudioFrame.from_ndarray(pista[i:i + paso].reshape(1, -1), format='fltp', layout='mono')
+                fr.sample_rate = SR_VOZ
+                fr.pts = i
+                for paq in s.encode(fr):
+                    o.mux(paq)
+            for paq in s.encode(None):
+                o.mux(paq)
+        os.replace(tmp, destino)
+        hechos.append(idioma)
+    return hechos
+
+
 # ---------------------------------------------------------------------------------------------------- ayudas para encontrar widgets
 def por_texto(raiz, texto, clase=QWidget):
     for w in raiz.findChildren(clase):
@@ -629,53 +830,158 @@ def por_texto(raiz, texto, clase=QWidget):
 
 
 # ---------------------------------------------------------------------------------------------------- los guiones
+# v5.82: cada guion CUENTA lo que hace (g.decir: voz + subtítulo) y la acción va con la frase: mientras se dice, el cursor va; lo que debe
+# oírse antes de verse espera con g.esperar_voz(). Frases cortas y claras, de tú, en el español neutro de la interfaz.
+def _trabajar(p, pasos, cada):
+    """Los pasos de GO, uno tras otro (la escena de Inicio los va cantando)."""
+    orden = [k for k, _n in p.PASOS]
+    for i, k in enumerate(pasos):
+        QTimer.singleShot(int(i * cada * 1000), lambda k=k, i=i: (i and p.paso(orden[orden.index(k) - 1], 'hecho'), p.paso(k, 'activo')))
+    return len(pasos) * cada
+
+
+def _reposo(p, modo='resolve'):
+    """La línea bajo GO como con el editor abierto (el arnés no tiene Resolve ni Premiere: diría «cerrado» o «no encuentro»). Los textos son
+    los de la app (_pintar_go_reposo / premiere.textos_estado)."""
+    p.boton.poner_estado('listo')
+    if modo == 'premiere':
+        p.reposo(M.tr('{n} detectado · conectado', n='Adobe Premiere Pro 2026') + ' · ' + M.tr('suelta un video aquí'), forzar=True, tono='ok')
+    elif modo == 'mp4':
+        p.reposo(M.tr('GO te devuelve el video con los subtítulos (Ajustes)') + ' · ' + M.tr('suelta un video aquí'), forzar=True)
+    else:
+        p.reposo('DaVinci Resolve Studio 21.2 detectado', forzar=True, tono='ok')
+
+
+def _pasos_de(p, modo):
+    """Los nombres de los pasos de GO en cada modo (los mismos que pone _go_lanzar)."""
+    if modo == 'premiere':
+        p.renombrar_paso('timeline', M.tr('Leer tu video'), M.tr('Leyendo tu video'))
+        p.renombrar_paso('resolve', M.tr('Colocar en Premiere Pro'), M.tr('Colocando en Premiere'))
+    elif modo == 'mp4':
+        p.renombrar_paso('timeline', M.tr('Leer tu video'), M.tr('Leyendo tu video'))
+        p.renombrar_paso('resolve', M.tr('Grabar el video con los subtítulos'), M.tr('Grabando el video'))
+    else:
+        p.renombrar_paso('timeline', M.tr('Traer el timeline de Resolve'), M.tr('Trayendo el timeline'))
+        p.renombrar_paso('resolve', M.tr('Colocar en el timeline'), M.tr('Colocando'))
+
+
+def _abrir_ajustes(g, pestana='general', expandir=True):
+    """El camino de verdad: el engranaje de la barra → «Expandir ajustes» → la pestaña. Deja la ventana en g.dlg (o None)."""
+    v = g.v
+    g.dlg = None
+    r = v.isla.rect_de('ajustes')
+    yield g.mover(QPointF(r.center()), 1.0)
+    yield 0.2
+    g.clic()                                          # el panel rápido
+    yield 0.9
+    boton = por_texto(v, M.tr('Expandir ajustes'), QAbstractButton) if expandir else None
+    if boton is not None:
+        yield g.mover(lambda: g.centro(boton), 0.8)
+        yield 0.2
+        g.clic()
+        yield 1.1
+    dlg = getattr(v, '_ventana_ajustes', None)
+    if dlg is None or not ui.vivo(dlg):
+        dlg = next((x for x in v.findChildren(ajustes_ui.VentanaAjustes) if x.isVisible()), None)
+    if dlg is None:
+        return
+    g.dlg = dlg
+    i = dlg.PESTANAS.index(pestana) if pestana in dlg.PESTANAS else 0
+    if i:
+        yield g.mover(lambda: _pestana(g, dlg, i), 0.9)
+        yield 0.2
+        g.clic()
+        yield 0.9
+
+
+def _pestana(g, dlg, i):
+    c = dlg.pestanas.mapTo(g.fuente, dlg.pestanas._cajas()[i].center().toPoint())
+    return QPointF(c.x(), c.y())
+
+
+def _fila(dlg, titulo):
+    """La fila de Ajustes con ese título (su _Fila) o None."""
+    t = M.tr(titulo)
+    for e in dlg.findChildren(QLabel):
+        try:
+            if e.isVisible() and (e.text() or '').strip() == t:
+                w = e.parentWidget()
+                while w is not None and type(w).__name__ != '_Fila':
+                    w = w.parentWidget()
+                if w is not None:
+                    return w
+        except Exception:
+            pass
+    return None
+
+
+def _llave(fila):
+    return next((x for x in fila.findChildren(QWidget) if type(x).__name__ == 'Interruptor' and x.isVisible()), None) if fila else None
+
+
+def _punto_llave(g, llave):
+    return g.centro(llave, -llave.width() / 2 + 22, 0) if llave.width() > 60 else g.centro(llave)
+
+
+def _desplazar(barra, hasta, ms=900):
+    """Mueve una barra de desplazamiento con suavidad (como la rueda de verdad)."""
+    a, pasos = barra.value(), 28
+    b = max(barra.minimum(), min(barra.maximum(), int(hasta)))
+    for i in range(pasos + 1):
+        QTimer.singleShot(int(i * ms / pasos), lambda i=i: barra.setValue(int(a + (b - a) * _suave2(i / pasos))))
+    return ms / 1000.0 + 0.1
+
+
+def _cerrar_ajustes(g):
+    dlg = getattr(g, 'dlg', None)
+    if dlg is not None:
+        try:
+            dlg.cerrar()
+        except Exception:
+            pass
+    g.dlg = None
+
+
 def g_inicio(g):
     v = g.v
     p = v.go_panel
     v._pintar_go_reposo = lambda *a, **k: None
-
-    def reposo():                                     # como con Resolve abierto (el arnés no tiene Resolve: la línea diría «cerrado»)
-        p.boton.poner_estado('listo')
-        p.reposo('DaVinci Resolve Studio 21.2 detectado', forzar=True, tono='ok')
-
-    def trabajar(pasos, cada):
-        orden = [k for k, _n in p.PASOS]
-        for i, k in enumerate(pasos):
-            QTimer.singleShot(int(i * cada * 1000), lambda k=k, i=i: (i and p.paso(orden[orden.index(k) - 1], 'hecho'), p.paso(k, 'activo')))
-        return len(pasos) * cada
     v.ir_a('inicio', animar=False)
-    reposo()
+    _pasos_de(p, 'resolve')
+    _reposo(p)
     g.cursor = QPointF(-60, 640)
     g.con_archivo(True)
-    g.texto('Arrastra tu video a la ventana')
-    yield 1.0
-    yield g.mover(QPointF(470, 520), 1.7)
+    yield 0.5
+    yield from g.decir('Arrastra tu video a la ventana de CineCaptions')
+    yield g.mover(QPointF(470, 520), 1.8)
     g.poster()
-    yield 0.5
+    yield 0.2
     yield g.soltar_archivo(0.3)
-    g.texto('CineCaptions crea el proyecto y empieza solo')
+    yield from g.decir('Al soltarlo, crea su proyecto en Resolve y empieza solo')
     p.empezar()
-    yield trabajar(['timeline', 'voz'], 1.3)
-    yield 0.5
-    # la otra manera: con Resolve abierto, GO
-    reposo()
-    g.texto('¿Ya tienes tu timeline abierto en Resolve?')
-    yield 0.8
+    yield _trabajar(p, ['timeline', 'voz'], 1.3)
+    yield g.esperar_voz(0.2)
+    _reposo(p)                                        # la otra manera: con tu timeline abierto, GO
+    yield from g.decir('¿Ya tienes tu timeline abierto en DaVinci Resolve?')
     boton = p.boton
     g.camara_a(g.rect(boton).adjusted(-40, -30, 40, 170), 1.2, aire=1.12)
     yield g.mover(lambda: g.centro(boton, 8, 4), 1.4)
-    yield 0.5
+    yield g.esperar_voz(0.1)
+    yield from g.decir('Solo pulsa GO')
+    yield 0.75
     g.clic(real=False)
-    g.texto('Pulsa GO: transcribe, diseña y coloca todo')
     p.empezar()
-    yield trabajar(['timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve'], 0.75)
+    yield g.esperar_voz(0.1)
+    yield from g.decir('Transcribe tu voz, diseña los subtítulos y los coloca')
+    yield _trabajar(p, ['timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve'], 0.62)
+    yield g.esperar_voz()
     p.paso('resolve', 'hecho')
     p.terminar(True, 'Todo colocado en tu timeline', [(12, 'bloques', 'n'), (48, 'palabras', 'n'), (18.5, 'duración', 't')])
-    g.texto('¡Listo! Todo queda en tu timeline')
-    yield 2.6
+    yield from g.decir('¡Listo! Todo queda en tu timeline')
+    yield g.esperar_voz(0.9)
     g.camara_a(None, 1.0)
-    yield 1.6
-    reposo()
+    yield 1.1
+    _reposo(p)
 
 
 def _carrusel(v):
@@ -689,53 +995,81 @@ def _centro_carta(g, carr, k):
     return QPointF(c.x(), c.y() + r.height() * 0.12)
 
 
+def _carrusel_en(carr, k):
+    """Deja el carrusel en la tarjeta k AL MOMENTO (sin la animación de girar): lo que un video movió no se arrastra al siguiente."""
+    carr._ir_a(k)
+    carr._pos = float(carr._obj)
+    carr.update()
+
+
+def _al_en_uso(carr):
+    """El carrusel en la tarjeta del estilo en uso, al momento: cada video de Estilo empieza igual, haga lo que haga el anterior."""
+    k = next((i for i, c in enumerate(carr._cartas) if c.valor == carr._elegido and c.tipo != 'anadir'), None)
+    if k is not None:
+        _carrusel_en(carr, k)
+
+
+def _rect_carta(g, carr, k):
+    w, h, cx, cy = carr._medidas()
+    r = carr._transformar(k - carr._pos, w, h, cx, cy)[0]
+    esq = carr.mapTo(g.fuente, QPoint(0, 0))
+    return QRectF(r).translated(esq.x(), esq.y())
+
+
 def g_estilo(g):
     v = g.v
     v.ir_a('nuevo', animar=False)
     carr = _carrusel(v)
-    g.texto('Cada tarjeta es un estilo con subtítulos reales')
-    yield 2.2
+    _al_en_uso(carr)
+    yield 0.4
+    yield from g.decir('Cada tarjeta es un estilo, con subtítulos de verdad')
+    yield g.esperar_voz(0.3)
     k0 = int(round(carr._pos))
-    g.texto('Toca una tarjeta de los lados para pasarlas')
-    yield g.mover(lambda: _centro_carta(g, carr, k0 + 1), 1.2)
-    yield 0.3
+    yield from g.decir('Toca una tarjeta de los lados para pasarlas')
+    yield g.mover(lambda: _centro_carta(g, carr, k0 + 1), 1.1)
+    yield 0.2
     g.clic()
-    yield 1.6
-    yield g.mover(lambda: _centro_carta(g, carr, k0 + 2), 0.9)
-    yield 0.3
+    yield 1.3
+    yield g.mover(lambda: _centro_carta(g, carr, k0 + 2), 0.8)
+    yield 0.2
     g.clic()
-    yield 1.4
-    g.texto('Clic en la del centro para usarla')
-    yield g.mover(lambda: _centro_carta(g, carr, k0 + 2), 0.9)
+    yield 1.1
+    yield from g.decir('Haz clic en la del centro para usarla')
+    yield g.mover(lambda: _centro_carta(g, carr, k0 + 2), 0.8)
     yield 0.5
     g.clic()                                          # la del centro: se usa («En uso»)
     g.poster()
-    yield 0.4
-    g.texto('La que usas dice «En uso»')
-    yield 1.8
-    g.texto('Puedes cambiarlo cuando quieras')
+    yield g.esperar_voz(0.2)
+    yield from g.decir('La que usas dice «En uso»')
+    yield g.esperar_voz(0.5)
+    yield from g.decir('Puedes cambiarlo cuando quieras')
     yield g.mover(lambda: _centro_carta(g, carr, k0 + 1), 0.9)
-    yield 0.3
+    yield 0.2
     g.clic()
     yield 1.0
     yield g.mover(lambda: _centro_carta(g, carr, k0), 0.8)
-    yield 0.3
+    yield 0.2
     g.clic()
-    yield 1.4
+    yield 1.2
+    g.clic()                                          # (vuelve a usar el de antes)
+    yield g.esperar_voz(0.8)
 
 
 def g_crea(g):
     v = g.v
     v.ir_a('nuevo', animar=False)
     carr = _carrusel(v)
-    g.texto('La última tarjeta: «Crea tu estilo»')
-    yield 1.0
+    _al_en_uso(carr)
     n = len(carr._cartas)
     k = next((i for i, c in enumerate(carr._cartas) if c.tipo == 'anadir'), n - 1)
+    k_antes = int(round(carr._pos))
+    g.despues.append(lambda: _carrusel_en(carr, k_antes))      # (el siguiente video no empieza en «Crea tu estilo»)
+    yield 0.3
+    yield from g.decir('La última tarjeta de Estilo es «Crea tu estilo»')
     carr._ir_a(k)
-    yield 1.4
-    yield g.mover(lambda: _centro_carta(g, carr, k), 1.1)
-    yield 0.4
+    yield 1.3
+    yield g.mover(lambda: _centro_carta(g, carr, k), 1.0)
+    yield g.esperar_voz(0.1)
     g.clic(real=False)
     yield 0.25
     v._plantillas_ventana._crear_estilo()
@@ -743,7 +1077,7 @@ def g_crea(g):
     yield 0.6
     g.poner_fuente(dlg)
     g.cursor = QPointF(dlg.width() * 0.55, dlg.height() * 0.62)
-    yield 1.0
+    yield 1.8                                                   # (las miniaturas de la galería tardan en salir: antes se veían negras)
     base, prin = dlg._rej_base, dlg._rej_prin
     previa = next((x for x in dlg.findChildren(QWidget) if type(x).__name__ == '_Previa' and x.isVisible()), None)
 
@@ -752,48 +1086,362 @@ def g_crea(g):
         c = rej.mapTo(dlg, r.center().toPoint())
         return QPointF(c.x(), c.y())
     g.camara_a(g.rect(base).united(g.rect(prin)), 1.0, aire=1.04)       # de cerca: las tarjetas
-    g.texto('Elige un texto base: las palabras normales')
+    yield from g.decir('Elige un texto base: las palabras normales')
     yield g.mover(lambda: celda(base, 1), 1.0)
     yield 0.3
     g.clic()
-    yield 1.1
-    g.texto('Elige los textos principales: se turnan')
+    yield g.esperar_voz(0.2)
+    yield from g.decir('Y los textos principales que quieras: se turnan frase a frase')
     yield g.mover(lambda: celda(prin, 0), 0.8)
-    yield 0.3
-    g.clic()
-    yield 1.0
-    yield g.mover(lambda: celda(prin, 3), 0.7)
-    yield 0.3
+    yield 0.2
     g.clic()
     yield 0.9
-    yield g.mover(lambda: celda(prin, 4), 0.6)
-    yield 0.3
+    yield g.mover(lambda: celda(prin, 3), 0.7)
+    yield 0.2
     g.clic()
-    yield 0.6
+    yield 0.8
+    yield g.mover(lambda: celda(prin, 4), 0.6)
+    yield 0.2
+    g.clic()
+    yield g.esperar_voz(0.2)
     if previa is not None:                                              # la previa vertical: se turnan frase a frase
         g.camara_a(g.rect(previa).adjusted(-200, 0, 0, 0), 1.1, aire=1.08)
         g.poster()
-        g.texto('La previa enseña cómo queda')
-        yield 2.6
+        yield from g.decir('La previa te enseña cómo queda')
+        yield g.esperar_voz(1.4)
     g.camara_a(None, 1.0)
     nombre = next((e for e in dlg.findChildren(QLineEdit) if e.isVisible()), None)
     if nombre is not None:
-        g.texto('Ponle nombre y créalo')
+        yield from g.decir('Ponle un nombre y créalo')
         yield g.mover(lambda: g.centro(nombre), 1.0)
         g.clic()
         yield 0.2
         nombre.selectAll()
         yield g.teclear('Mi estilo de reels', nombre, 55)
-        yield 0.4
+        yield 0.3
         crear = por_texto(dlg, 'Crear mi estilo', QAbstractButton)
         if crear is not None:
             yield g.mover(lambda: g.centro(crear), 0.8)
-            yield 1.2
+        yield g.esperar_voz(1.0)
     try:
         dlg.close()
     except Exception:
         pass
     g.poner_fuente(v)
+
+
+def g_probar(g):
+    """v5.82: probar los estilos en la página Estilo: arrastrar, la rueda, «Solo captions | Con PRO» y usar uno."""
+    v = g.v
+    v.ir_a('nuevo', animar=False)
+    carr = _carrusel(v)
+    _al_en_uso(carr)
+    k_crea = next((i for i, c in enumerate(carr._cartas) if c.tipo == 'anadir'), len(carr._cartas))
+    k0 = k_uso = int(round(carr._pos))
+    if k0 > k_crea - 3:                               # (sitio a la derecha: arrastre y rueda nunca llegan a «Crea tu estilo»)
+        _carrusel_en(carr, max(0, k_crea - 3))
+    yield 0.4
+    k0 = int(round(carr._pos))
+
+    def pildora(cual):
+        geo = carr._pill_geo
+        if not geo:
+            return _centro_carta(g, carr, round(carr._pos))
+        r = geo[1] if cual == 'pro' else geo[2]
+        c = carr.mapTo(g.fuente, r.center().toPoint())
+        return QPointF(c.x(), c.y())
+    yield from g.decir('Pasa los estilos arrastrando las tarjetas')
+    centro = _centro_carta(g, carr, k0)
+    yield g.mover(centro, 1.0)
+    g.apretar()
+    yield 0.12
+    paso = carr._medidas()[0] * carr.PASO                # una tarjeta justa, despacio (sin inercia al soltar)
+    yield g.mover(QPointF(centro.x() - paso, centro.y() + 6), 1.0)
+    yield 0.15
+    g.soltar()
+    yield 1.3
+    yield g.esperar_voz(0.1)
+    yield from g.decir('O con la rueda del ratón')
+    yield g.mover(lambda: _centro_carta(g, carr, round(carr._pos)), 0.6)
+    g.rueda(carr, 1)
+    yield 1.2
+    if carr._cartas[int(round(carr._pos))].tipo == 'anadir':   # (por si acaso: nunca la tarjeta de «Crea tu estilo»)
+        g.rueda(carr, -1)
+        yield 1.0
+    yield g.esperar_voz(0.2)
+    k = round(carr._pos)
+    g.camara_a(_rect_carta(g, carr, k).adjusted(-60, -10, 60, 90), 1.0, aire=1.05)
+    yield from g.decir('«Solo captions» enseña solo los subtítulos')
+    yield g.mover(lambda: pildora('sin'), 1.0)
+    yield 0.2
+    g.clic()
+    yield g.esperar_voz(0.8)
+    yield from g.decir('La opción «Con PRO» suma la edición de video: zooms, efectos y más')     # («Con PRO» solo sonaba a «compró»)
+    yield g.mover(lambda: pildora('pro'), 0.7)
+    yield 0.2
+    g.clic()
+    g.poster()
+    yield g.esperar_voz(1.2)
+    g.camara_a(None, 1.0)
+    pro = next((x for x in v.findChildren(QAbstractButton) if type(x).__name__ == 'BotonCompacto' and getattr(x, 'tipo', '') == 'pro'
+                and x.isVisible()), None)
+    if pro is not None:
+        yield from g.decir('Y con «Activar edición PRO», GO también edita tu video')
+        yield g.mover(lambda: g.centro(pro), 1.0)
+        yield g.esperar_voz(0.4)
+    yield from g.decir('Cuando te guste uno, haz clic en el del centro para usarlo')
+    yield g.mover(lambda: _centro_carta(g, carr, round(carr._pos)), 1.0)
+    yield 0.5
+    if carr._cartas[int(round(carr._pos))].tipo != 'anadir':
+        g.clic()
+    yield g.esperar_voz(1.0)
+    valor0 = carr._cartas[k_uso].valor if 0 <= k_uso < len(carr._cartas) else None
+
+    def volver():                                     # (ya sin grabar: el estilo de antes vuelve a estar en uso, para los demás videos)
+        _carrusel_en(carr, k_uso)
+        if valor0 is not None:
+            carr.elegida.emit(valor0)
+    g.despues.append(volver)
+
+
+def g_premiere(g):
+    """v5.82: cambiar GO de DaVinci Resolve a Premiere Pro (Ajustes › General) y un GO en Premiere."""
+    v = g.v
+    p = v.go_panel
+    v._pintar_go_reposo = lambda *a, **k: None
+    v.ir_a('inicio', animar=False)
+    _pasos_de(p, 'resolve')
+    _reposo(p)
+    ver = p.al_ver_resolve                            # (con Premiere, «Ver en Resolve» no pinta nada al final: no se enseña)
+    p.al_ver_resolve = None
+    g.despues += [lambda: setattr(p, 'al_ver_resolve', ver), lambda: _pasos_de(p, 'resolve'), lambda: _reposo(p)]
+    yield 0.4
+    yield from g.decir('¿Editas en Premiere Pro? Abre los ajustes')
+    yield from _abrir_ajustes(g, 'general')
+    dlg = g.dlg
+    if dlg is None:
+        return
+    f_res, f_pre, f_mp4 = _fila(dlg, 'Usar con DaVinci Resolve'), _fila(dlg, 'Usar con Premiere Pro'), _fila(dlg, 'Video sin editores (DaVinci y Premiere)')
+    if f_res is not None and f_mp4 is not None:
+        g.camara_a(g.rect(f_res).united(g.rect(f_mp4)), 1.0, aire=1.08)
+    yield g.esperar_voz(0.1)
+    llave = _llave(f_pre)
+    yield from g.decir('En General, enciende «Usar con Premiere Pro»')
+    if llave is not None:
+        yield g.mover(lambda: _punto_llave(g, llave), 1.1)
+        yield g.esperar_voz(0.1)
+        g.clic()
+        g.poster()
+    yield 0.8
+    yield from g.decir('Solo uno va encendido: el de DaVinci Resolve se apaga solo')
+    llave_r = _llave(f_res)
+    if llave_r is not None:
+        yield g.mover(lambda: _punto_llave(g, llave_r), 1.0)
+    yield g.esperar_voz(0.3)
+    yield from g.decir('Para volver, enciende otra vez el de DaVinci Resolve')
+    yield g.esperar_voz(0.3)
+    g.camara_a(None, 1.0)
+    listo = por_texto(dlg, M.tr('Listo'), QAbstractButton)
+    if listo is not None:
+        yield g.mover(lambda: g.centro(listo), 1.0)
+        yield 0.2
+        g.clic()
+        yield 0.9
+    _cerrar_ajustes(g)
+    _pasos_de(p, 'premiere')
+    _reposo(p, 'premiere')
+    g.camara_a(g.rect(p.boton).adjusted(-60, -40, 60, 190), 1.1, aire=1.1)
+    yield from g.decir('Inicio ya dice que trabajas con Premiere Pro')
+    yield g.esperar_voz(0.3)
+    g.camara_a(None, 1.0)
+    g.cursor = QPointF(-60, 640)
+    g.con_archivo(True)
+    yield from g.decir('Suelta tu video y GO arma la secuencia: video, subtítulos y sonidos')
+    yield g.mover(QPointF(470, 520), 1.6)
+    yield 0.2
+    yield g.soltar_archivo(0.3)
+    p.empezar()
+    yield _trabajar(p, ['timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve'], 0.6)
+    yield g.esperar_voz()
+    p.paso('resolve', 'hecho')
+    p.terminar(True, M.tr('Listo: en Premiere Pro, secuencia «{s}». Pulsa GO para otro.', s='mi_video'),
+               [(12, 'bloques', 'n'), (48, 'palabras', 'n'), (18.5, 'duración', 't')])
+    yield from g.decir('Si Premiere está cerrado, CineCaptions lo abre solo')
+    yield g.esperar_voz(1.0)
+    _pasos_de(p, 'resolve')
+    _reposo(p)
+
+
+def g_sin_editores(g):
+    """v5.82: cambiar a «Video sin editores (DaVinci y Premiere)»: GO devuelve una copia MP4 con los subtítulos."""
+    v = g.v
+    p = v.go_panel
+    v._pintar_go_reposo = lambda *a, **k: None
+    v.ir_a('inicio', animar=False)
+    _pasos_de(p, 'resolve')
+    _reposo(p)
+    ver = p.al_ver_resolve                            # (sin editores, «Ver en Resolve» no pinta nada al final: no se enseña)
+    p.al_ver_resolve = None
+    g.despues += [lambda: setattr(p, 'al_ver_resolve', ver), lambda: _pasos_de(p, 'resolve'), lambda: _reposo(p)]
+    yield 0.4
+    yield from g.decir('¿No usas editor de video? Abre los ajustes')
+    yield from _abrir_ajustes(g, 'general')
+    dlg = g.dlg
+    if dlg is None:
+        return
+    f_res, f_mp4 = _fila(dlg, 'Usar con DaVinci Resolve'), _fila(dlg, 'Video sin editores (DaVinci y Premiere)')
+    if f_res is not None and f_mp4 is not None:
+        g.camara_a(g.rect(f_res).united(g.rect(f_mp4)), 1.0, aire=1.08)
+    yield g.esperar_voz(0.1)
+    llave = _llave(f_mp4)
+    yield from g.decir('Enciende «Video sin editores»')
+    if llave is not None:
+        yield g.mover(lambda: _punto_llave(g, llave), 1.1)
+        yield g.esperar_voz(0.05)
+        g.clic()
+        g.poster()
+    yield g.esperar_voz(0.5)
+    yield from g.decir('GO graba los subtítulos y los sonidos en una copia MP4 de tu video')
+    yield g.esperar_voz(0.3)
+    g.camara_a(None, 1.0)
+    listo = por_texto(dlg, M.tr('Listo'), QAbstractButton)
+    if listo is not None:
+        yield g.mover(lambda: g.centro(listo), 1.0)
+        yield 0.2
+        g.clic()
+        yield 0.9
+    _cerrar_ajustes(g)
+    _pasos_de(p, 'mp4')
+    _reposo(p, 'mp4')
+    g.cursor = QPointF(-60, 640)
+    g.con_archivo(True)
+    yield from g.decir('Suelta tu video y pulsa GO: no hace falta DaVinci ni Premiere')
+    yield g.mover(QPointF(470, 520), 1.6)
+    yield 0.2
+    yield g.soltar_archivo(0.3)
+    p.empezar()
+    yield _trabajar(p, ['timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve'], 0.6)
+    yield g.esperar_voz()
+    p.paso('resolve', 'hecho')
+    p.terminar(True, M.tr('Listo: «{n}», junto a tu video. Pulsa GO para otro.', n='mi_video (CineCaptions).mp4'),
+               [(12, 'bloques', 'n'), (48, 'palabras', 'n'), (18.5, 'duración', 't')])
+    g.camara_a(g.rect(p.boton).adjusted(-80, -40, 80, 210), 1.1, aire=1.1)
+    yield from g.decir('Tu video con subtítulos queda junto al original')
+    yield g.esperar_voz(1.0)
+    g.camara_a(None, 0.8)
+    yield 0.6
+    _pasos_de(p, 'resolve')
+    _reposo(p)
+
+
+def g_interfaz(g):
+    """v5.82: Ajustes › Interfaz: la escena de Inicio (pasar el ratón la mueve), el fondo y el color de resaltado."""
+    v = g.v
+    v.ir_a('inicio', animar=False)
+    yield 0.3
+    yield from g.decir('En los ajustes, Interfaz cambia cómo se ve CineCaptions')
+    yield from _abrir_ajustes(g, 'interfaz')
+    dlg = g.dlg
+    if dlg is None:
+        return
+    tarjetas = list(getattr(dlg, '_tarjetas_estilo', []) or [])
+    if tarjetas:
+        g.camara_a(g.rect(tarjetas[0]).united(g.rect(tarjetas[-1])), 1.0, aire=1.12)
+    yield g.esperar_voz(0.1)
+    yield from g.decir('Pasa el ratón por una escena para verla en movimiento')
+    if tarjetas:
+        yield g.mover(lambda: g.centro(tarjetas[0], 0, -20), 1.0)
+        yield 1.6
+        yield g.mover(lambda: g.centro(tarjetas[-1], 0, -20), 1.0)
+        yield 1.2
+    yield g.esperar_voz(0.1)
+    elegida = next((t for t in tarjetas if t.isChecked()), tarjetas[0] if tarjetas else None)
+    otra = next((t for t in reversed(tarjetas) if t is not elegida), None)
+    if otra is not None:
+        yield from g.decir('Haz clic en la que más te guste')
+        yield g.mover(lambda: g.centro(otra, 0, -20), 0.5)
+        yield 0.2
+        g.clic()
+        g.poster()
+        yield g.esperar_voz(0.6)
+    zona = dlg.pila.currentWidget()
+    barra = zona.verticalScrollBar() if hasattr(zona, 'verticalScrollBar') else None
+    f_fondo = _fila(dlg, 'Fondo de la interfaz')
+    f_acento = _fila(dlg, 'Color de resaltado')
+    g.camara_a(None, 0.9)
+    if barra is not None:
+        yield _desplazar(barra, barra.maximum(), 900)
+    seg = next((x for x in f_fondo.findChildren(QWidget) if type(x).__name__ == 'Segmentado'), None) if f_fondo else None
+    if f_fondo is not None and f_acento is not None:
+        g.camara_a(g.rect(f_fondo).united(g.rect(f_acento)), 1.0, aire=1.15)
+    if seg is not None:
+        yield from g.decir('Elige el fondo: azul o negro')
+        actual = seg._indice()
+        for i in ([1 - actual, actual] if actual in (0, 1) else [0]):
+            r = seg._rect(i)
+            yield g.mover(lambda r=r: g.centro(seg, r.center().x() - seg.width() / 2, 0), 0.8)
+            yield 0.2
+            g.clic()
+            yield 0.9
+        yield g.esperar_voz(0.2)
+    muestras = getattr(dlg, '_muestras', None)
+    if muestras is not None:
+        yield from g.decir('Y el color de resaltado que más te guste')
+        paso = getattr(muestras, 'PASO', 42)
+        for i in (2, 4):
+            yield g.mover(lambda i=i: g.centro(muestras, (i + 0.5) * paso - muestras.width() / 2, -11), 0.7)
+            yield 0.5
+        yield g.esperar_voz(0.2)
+    aplicar = por_texto(dlg, M.tr('Aplicar'), QAbstractButton)
+    g.camara_a(None, 1.0)
+    yield from g.decir('Pulsa «Aplicar»: el fondo, el color, el idioma y el tamaño se ven al reiniciar')
+    if aplicar is not None:
+        yield g.mover(lambda: g.centro(aplicar), 1.2)
+    yield g.esperar_voz(0.9)
+    _cerrar_ajustes(g)
+    yield 0.4
+
+
+def g_ayuda(g):
+    """v5.82: Ajustes › Ayuda (soporte por WhatsApp, diagnóstico, versión y licencia). Solo se señala: ningún clic abre nada."""
+    v = g.v
+    v.ir_a('inicio', animar=False)
+    yield 0.3
+    yield from g.decir('¿Algo no funciona? Abre Ayuda en los ajustes')
+    yield from _abrir_ajustes(g, 'ayuda')
+    dlg = g.dlg
+    if dlg is None:
+        return
+    wa = por_texto(dlg, M.tr('Escribir por WhatsApp'), QAbstractButton)
+    if wa is None:
+        wa = next((b for b in dlg.findChildren(QAbstractButton) if b.isVisible() and 'WhatsApp' in (b.text() or '')), None)
+    tarjeta = wa.parentWidget() if wa is not None else None
+    while tarjeta is not None and tarjeta.width() < 700:
+        tarjeta = tarjeta.parentWidget()
+    if tarjeta is not None:
+        g.camara_a(tarjeta, 1.0, aire=1.15)
+    yield g.esperar_voz(0.1)
+    yield from g.decir('Escríbenos por WhatsApp: el informe de tu equipo va listo para enviar')
+    if wa is not None:
+        yield g.mover(lambda: g.centro(wa), 1.1)
+    g.poster()
+    yield g.esperar_voz(0.3)
+    diag = por_texto(dlg, M.tr('Ejecutar diagnóstico'), QAbstractButton)
+    if diag is not None:
+        g.camara_a(g.rect(diag).adjusted(-760, -60, 40, 160), 1.0, aire=1.05)
+        yield from g.decir('«Ejecutar diagnóstico» revisa Resolve, el motor de voz y tu licencia')
+        yield g.mover(lambda: g.centro(diag), 1.0)
+        yield g.esperar_voz(0.3)
+    zona = dlg.pila.currentWidget()
+    barra = zona.verticalScrollBar() if hasattr(zona, 'verticalScrollBar') else None
+    g.camara_a(None, 1.0)
+    if barra is not None:
+        yield _desplazar(barra, barra.maximum(), 1000)
+    yield from g.decir('Y abajo ves tu versión y tu licencia')
+    yield g.mover(QPointF(g.tam()[0] * 0.5, g.tam()[1] * 0.62), 1.0)
+    yield g.esperar_voz(1.0)
+    _cerrar_ajustes(g)
+    yield 0.3
 
 
 PALABRAS = 'Así ganamoz 10.000 euros en un mes con este truco que nadie te cuenta'.split()
@@ -818,8 +1466,9 @@ def g_corrector(g):
     except Exception:
         pass
     v.ir_a('editor', animar=False)
-    g.texto('Después de GO tus palabras salen aquí')
-    yield 2.0
+    yield 0.4
+    yield from g.decir('Después de GO, tus palabras aparecen aquí')
+    yield g.esperar_voz(0.3)
     lienzo = next((x for x in ed.findChildren(M.LienzoPalabras) if x.isVisible()), None)
 
     def palabra(i):
@@ -842,33 +1491,41 @@ def g_corrector(g):
     except Exception:
         pass
     g.camara_a(zona, 1.0, aire=1.08)                  # de cerca: los pinceles y las palabras
-    yield 0.6
-    for nombre_pincel, idx, f_pincel, f_palabra in (('Principal', 2, 'Elige un pincel: Principal es la palabra grande', 'Toca la palabra para marcarla'),
-                                                    ('Arriba', 0, 'Arriba: el texto pequeño de encima', None)):
-        g.texto(f_pincel)
-        destino = pincel(nombre_pincel)
-        if destino is not None:
-            yield g.mover(destino, 1.0)
-            yield 0.25
-            g.clic()
-            yield 0.7
-        if f_palabra:
-            g.texto(f_palabra)
-        yield g.mover(lambda i=idx: palabra(i), 0.9)
-        yield 0.25
-        g.clic()
-        yield 1.0
-    g.poster()
+    yield 0.5
+    yield from g.decir('Elige un pincel: Principal es la palabra grande')
     destino = pincel('Principal')
     if destino is not None:
+        yield g.mover(destino, 1.0)
+        yield 0.25
+        g.clic()
+    yield g.esperar_voz(0.1)
+    yield from g.decir('Toca una palabra para marcarla')
+    yield g.mover(lambda: palabra(2), 0.9)
+    yield 0.25
+    g.clic()
+    yield g.esperar_voz(0.3)
+    yield from g.decir('Arriba es el texto pequeño de encima')
+    destino = pincel('Arriba')
+    if destino is not None:
         yield g.mover(destino, 0.9)
+        yield 0.25
+        g.clic()
+    yield 0.6
+    yield g.mover(lambda: palabra(0), 0.9)
+    yield 0.25
+    g.clic()
+    g.poster()
+    yield g.esperar_voz(0.3)
+    destino = pincel('Principal')
+    if destino is not None:
+        yield g.mover(destino, 0.8)
         g.clic()
         yield 0.4
     yield g.mover(lambda: palabra(3), 0.7)
     g.clic()
-    yield 1.0
+    yield 0.8
     # corregir lo que se oyó mal: doble clic y escribir
-    g.texto('Doble clic para corregir lo que se oyó mal')
+    yield from g.decir('Con doble clic corriges lo que se oyó mal')
     yield g.mover(lambda: palabra(1), 1.0)
     yield 0.3
     g.clic(doble=True)
@@ -890,11 +1547,11 @@ def g_corrector(g):
                 yield g.teclear('ganamos', entrada, 80)
                 yield 0.4
                 g.tecla(Qt.Key.Key_Return, entrada)
-    yield 0.3
-    g.texto('Palabra corregida')
-    yield 1.6
+    yield g.esperar_voz(0.3)
+    yield from g.decir('Y listo: palabra corregida')
+    yield g.esperar_voz(0.8)
     g.camara_a(None, 1.0)
-    yield 1.4
+    yield 1.0
     try:
         v._editor = None
         ed.hide()
@@ -916,53 +1573,57 @@ def _de_clase(raiz, nombre):
 def g_sonido(g):
     v = g.v
     v.ir_a('sfx', animar=False)
-    yield 1.6
+    yield 1.0
     pag = getattr(v, '_director_pagina', None) or v
     estilos = _de_clase(pag, 'TarjetaEstilo')            # Automático, Elegante, Dinámico, Lista, Cinética
     llaves = {x.text(): x for x in _de_clase(pag, 'Interruptor')}
     aplicar = por_texto(pag, 'Aplicar a Resolve', QAbstractButton)
-    izq = estilos[0].parentWidget() if estilos else None
-    while izq is not None and type(izq).__name__ != 'Tarjeta':
-        izq = izq.parentWidget()
-    if izq is not None:
-        g.camara_a(g.rect(izq).adjusted(0, 0, 360, 0), 1.0, aire=1.02)
-    g.texto('Elige cómo suena tu video')
-    yield 0.6
-    for k, espera, frase in ((2, 1.5, 'Dinámico: un efecto en cada palabra clave'), (1, 1.4, 'Elegante: pocos efectos y suaves')):
-        if len(estilos) > k:
-            yield g.mover(lambda k=k: g.centro(estilos[k], -60, 0), 1.0)
-            yield 0.25
-            g.clic()
-            g.texto(frase)
-            yield espera
+    if estilos:                                          # v5.82: de cerca (antes la columna entera: la letra no se leía)
+        g.camara_a(g.rect(estilos[0]).united(g.rect(estilos[-1])).adjusted(-30, -70, 260, 40), 1.0, aire=1.05)
+    yield from g.decir('Elige cómo suena tu video')
+    yield g.esperar_voz(0.2)
+    def elegir(k):                                       # (las frases van literales en g.decir: voz_tutoriales.py las lee del código)
+        yield g.mover(lambda: g.centro(estilos[k], -60, 0), 1.0)
+        yield 0.2
+        g.clic()
+        yield g.esperar_voz(0.3)
+    if len(estilos) > 2:
+        yield from g.decir('Dinámico pone un efecto en cada palabra clave')
+        yield from elegir(2)
+    if len(estilos) > 1:
+        yield from g.decir('Elegante usa pocos efectos, y suaves')
+        yield from elegir(1)
     g.poster()
-    fiesta = llaves.get('Fiesta o mar')
+    fiesta = llaves.get('Fiesta o mar') or next(iter(llaves.values()), None)
     if fiesta is not None:
-        g.texto('Activa o quita opciones con su interruptor')
+        g.camara_a(g.rect(fiesta).adjusted(-40, -150, 300, 150), 1.0, aire=1.05)
+        yield from g.decir('Enciende o apaga cada opción con su interruptor')
         yield g.mover(lambda: g.centro(fiesta, -fiesta.width() / 2 + 22, 0), 1.0)
-        yield 0.3
+        yield 0.2
         g.clic()
-        yield 1.2
+        yield 1.1
         g.clic()
-        yield 0.8
+        yield g.esperar_voz(0.3)
     if aplicar is not None:
-        g.texto('«Aplicar a Resolve» pone los cambios en tu timeline')
+        g.camara_a(g.rect(aplicar).adjusted(-40, -170, 40, 60), 1.0, aire=1.1)
+        yield from g.decir('«Aplicar a Resolve» pone los cambios en tu timeline')
         yield g.mover(lambda: g.centro(aplicar), 1.0)
-        yield 1.8
+        yield g.esperar_voz(0.3)
     if estilos:
-        g.texto('Automático: según el estilo elegido')
+        g.camara_a(g.rect(estilos[0]).united(g.rect(estilos[-1])).adjusted(-30, -70, 260, 40), 1.0, aire=1.05)
+        yield from g.decir('Automático elige según tu estilo')
         yield g.mover(lambda: g.centro(estilos[0], -60, 0), 1.0)
-        yield 0.25
+        yield 0.2
         g.clic()
-        yield 1.0
+        yield g.esperar_voz(0.6)
     g.camara_a(None, 1.0)
-    yield 1.4
+    yield 1.0
 
 
 def g_efectos(g):
     v = g.v
     v.ir_a('efectos', animar=False)
-    yield 1.8
+    yield 1.0
     pag = getattr(v, '_efectos_widget', None) or v
     secciones = _de_clase(pag, 'SeccionEstilo')
     if not secciones:
@@ -971,133 +1632,134 @@ def g_efectos(g):
     cartas = sorted([x for x in s1.findChildren(QWidget) if type(x).__name__ == 'TarjetaEfecto' and x.isVisible()],
                     key=lambda x: x.mapTo(v, QPoint(0, 0)).x())
     llave = next(iter(_de_clase(s1, 'Interruptor')), None)
+    yield from g.decir('Aquí eliges los efectos que GO pone solo')
     g.camara_a(g.rect(s1), 1.0, aire=1.02)
-    g.texto('El gancho del inicio: el primer segundo del video')
-    yield 1.6
-    g.texto('Toca una tarjeta para elegirla')
+    yield g.esperar_voz(0.2)
+    yield from g.decir('El gancho del inicio es el primer segundo de tu video')
+    yield g.esperar_voz(0.2)
+    yield from g.decir('Toca una tarjeta para elegirla')
     elegida = next((i for i, c in enumerate(cartas) if getattr(c, 'elegida', getattr(c, '_elegida', False))), 4)
     for k in (5, 2):                                   # Fuego, Lima eléctrica
         if len(cartas) > k:
             yield g.mover(lambda k=k: g.centro(cartas[k], 0, -40), 1.0)
-            yield 0.3
+            yield 0.2
             g.clic()
             if k == 5:
                 g.poster()
-            yield 1.6
+            yield 1.3
+    yield g.esperar_voz(0.1)
     if llave is not None:                              # apagar y volver a encender en GO
-        g.texto('Apágalo o enciéndelo con su interruptor')
+        yield from g.decir('Apágalo o enciéndelo con su interruptor')
         yield g.mover(lambda: g.centro(llave, -llave.width() / 2 + 22, 0), 1.0)
-        yield 0.3
+        yield 0.2
         g.clic()
         yield 1.0
         g.clic()
-        yield 0.8
+        yield g.esperar_voz(0.3)
     if len(cartas) > elegida:                          # vuelve a la que estaba
-        yield g.mover(lambda: g.centro(cartas[elegida], 0, -40), 1.0)
+        yield g.mover(lambda: g.centro(cartas[elegida], 0, -40), 0.9)
         g.clic()
-        yield 0.8
+        yield 0.6
     zona = next((s for s in v.findChildren(QScrollArea) if s.isVisible() and s.height() > 500), None)
     if zona is not None and len(secciones) > 1:
         g.camara_a(None, 1.0)
-        g.texto('Más abajo: captions detrás de ti y más')
+        yield from g.decir('Más abajo: captions detrás de ti, emojis y más')
         barra = zona.verticalScrollBar()
         a = barra.value()
         b = min(barra.maximum(), a + int(secciones[1].mapTo(zona.widget(), QPoint(0, 0)).y() - 20))
-        pasos = 30
-        for i in range(pasos + 1):
-            QTimer.singleShot(int(i * 35), lambda i=i: barra.setValue(int(a + (b - a) * _suave2(i / pasos))))
-        yield 1.5
+        yield _desplazar(barra, b, 1050)
+        yield 0.3
         s2 = secciones[1]
         cartas2 = sorted([x for x in s2.findChildren(QWidget) if type(x).__name__ == 'TarjetaEfecto' and x.isVisible()],
                          key=lambda x: x.mapTo(v, QPoint(0, 0)).x())
         g.camara_a(g.rect(s2), 1.0, aire=1.02)
         if len(cartas2) > 2:
             yield g.mover(lambda: g.centro(cartas2[2], 0, -40), 1.0)
-            yield 0.3
+            yield 0.2
             g.clic()
-            g.texto('GO aplica solo lo que elijas')
-            yield 1.8
+            yield g.esperar_voz(0.2)
+            yield from g.decir('GO aplica solo lo que elijas')
             yield g.mover(lambda: g.centro(cartas2[1], 0, -40), 0.8)
             g.clic()
-            yield 0.8
+            yield g.esperar_voz(0.6)
         g.camara_a(None, 1.0)
-        for i in range(pasos + 1):
-            QTimer.singleShot(int(i * 30), lambda i=i: barra.setValue(int(b + (a - b) * _suave2(i / pasos))))
-        yield 1.4
+        yield _desplazar(barra, a, 900)
+        yield 0.4
 
 
 def g_ajustes(g):
     v = g.v
     v.ir_a('inicio', animar=False)
-    g.texto('El engranaje abre los ajustes')
-    yield 1.0
+    yield 0.4
+    yield from g.decir('El engranaje abre los ajustes rápidos')
     r = v.isla.rect_de('ajustes')
     yield g.mover(QPointF(r.center()), 1.2)
-    yield 0.3
+    yield 0.2
     g.clic()                                          # el panel rápido
-    yield 1.2
+    yield g.esperar_voz(0.3)
     expandir = por_texto(v, M.tr('Expandir ajustes'), QAbstractButton)
     if expandir is not None:
-        g.texto('«Expandir ajustes» los abre todos')
+        yield from g.decir('«Expandir ajustes» los abre todos')
         yield g.mover(lambda: g.centro(expandir), 1.0)
-        yield 0.3
+        yield 0.2
         g.clic()
-        yield 1.3
+        yield g.esperar_voz(0.2)
     dlg = getattr(v, '_ventana_ajustes', None)
     if dlg is None:
         dlg = next((x for x in v.findChildren(ajustes_ui.VentanaAjustes) if x.isVisible()), None)
     if dlg is None:
         return
-    pest = dlg.pestanas
-    cajas = pest._cajas()
-
-    def pestana(i):
-        c = pest.mapTo(g.fuente, cajas[i].center().toPoint())
-        return QPointF(c.x(), c.y())
-    yield g.mover(lambda: pestana(1), 1.0)
+    g.dlg = dlg
+    f_res, f_mp4 = _fila(dlg, 'Usar con DaVinci Resolve'), _fila(dlg, 'Video sin editores (DaVinci y Premiere)')
+    if f_res is not None and f_mp4 is not None:
+        g.camara_a(g.rect(f_res).united(g.rect(f_mp4)), 1.0, aire=1.1)
+    yield from g.decir('En General eliges con qué trabaja GO: Resolve, Premiere o solo el video')
+    yield g.esperar_voz(0.3)
+    g.camara_a(None, 1.0)
+    k = dlg.PESTANAS.index('interfaz') if 'interfaz' in dlg.PESTANAS else 1
+    yield from g.decir('En Interfaz, el idioma, el fondo y la escena de Inicio')
+    yield g.mover(lambda: _pestana(g, dlg, k), 1.0)
     yield 0.2
     g.clic()
-    g.texto('Idioma, fondo y estilo de la interfaz')
-    yield 1.8
-    k = dlg.PESTANAS.index('tutoriales') if 'tutoriales' in dlg.PESTANAS else len(cajas) - 2
-    yield g.mover(lambda: pestana(k), 1.0)
+    yield g.esperar_voz(0.4)
+    k = dlg.PESTANAS.index('tutoriales') if 'tutoriales' in dlg.PESTANAS else len(dlg.PESTANAS) - 2
+    yield from g.decir('En Tutoriales están todos estos videos')
+    yield g.mover(lambda: _pestana(g, dlg, k), 1.0)
     yield 0.2
     g.clic()
     g.poster()
-    g.texto('En Tutoriales están todos estos videos')
-    yield 2.2
+    yield 1.2
     lista = getattr(dlg, '_tut_filas', None) or []
     if len(lista) > 2:
         yield g.mover(lambda: g.centro(lista[1]), 1.0)
         yield 0.2
         g.clic()
-        yield 1.8
+    yield g.esperar_voz(0.6)
     guia = getattr(dlg, '_tut_interruptor', None)
     if guia is not None:
-        zona = next((s for s in dlg.findChildren(QScrollArea) if s.isVisible()), None)
+        zona = next((s for s in dlg.findChildren(QScrollArea) if s.isVisible() and s.height() > 300), None)
         if zona is not None:
             zona.ensureWidgetVisible(guia, 20, 60)
             yield 0.4
-        g.texto('Aquí apagas o enciendes esta guía')
+        yield from g.decir('Y aquí apagas o enciendes esta guía')
         yield g.mover(lambda: g.centro(guia), 1.0)
-        yield 0.3
+        yield 0.2
         g.clic()
         yield 0.9
         g.clic()
-        yield 1.2
-    try:
-        dlg.cerrar()
-    except Exception:
-        pass
+        yield g.esperar_voz(0.8)
+    _cerrar_ajustes(g)
     yield 0.6
 
 
 GUIONES = {'inicio': g_inicio, 'estilo': g_estilo, 'crea': g_crea, 'corrector': g_corrector, 'sonido': g_sonido, 'efectos': g_efectos,
-           'ajustes': g_ajustes}
+           'ajustes': g_ajustes, 'probar': g_probar, 'premiere': g_premiere, 'sin_editores': g_sin_editores, 'interfaz': g_interfaz,
+           'ayuda': g_ayuda}
 
 
 def grabar(v, ident, salida):
     print(f'· {ident}…', flush=True)
+    _PREFS_MEM.clear()                                # v5.82: cada video empieza con las prefs reales (Premiere / sin editores no se arrastran)
     graba = Grabadora(salida / f'{ident}.mp4', salida / f'{ident}.jpg', ui.ACCENT_CLARO)
     g = Guion(v, graba)
     gen = GUIONES[ident](g)
@@ -1138,7 +1800,27 @@ def grabar(v, ident, salida):
         time.sleep(0.002)
     t = time.perf_counter() - g.t0
     graba.terminar()
+    for fn in g.despues:                              # v5.82: deshacer lo del guion, ya sin grabar
+        try:
+            fn()
+        except Exception:
+            pass
+    for _ in range(30):
+        app.processEvents()
+        time.sleep(0.01)
     print(f'  {ident}: {t:.1f} s, {graba.cuadros} cuadros' + (f'  FALLO {graba.fallo}' if graba.fallo else ''), flush=True)
+    if not graba.fallo and not graba.jpg.is_file():   # v5.82: el guion no marcó miniatura: un cuadro a un tercio del video
+        try:
+            import av
+            with av.open(str(graba.mp4)) as c:
+                s = c.streams.video[0]
+                objetivo = graba.cuadros / float(FPS) / 3.0
+                for fr in c.decode(s):
+                    if float(fr.pts * s.time_base) >= objetivo:
+                        fr.to_image().save(str(graba.jpg), quality=86)
+                        break
+        except Exception:
+            pass
     if not graba.fallo:                               # la duración de cada video (la lista de Ajustes › Tutoriales la enseña sin abrir el mp4)
         import json
         ruta = salida / 'duraciones.json'
@@ -1163,16 +1845,26 @@ def grabar(v, ident, salida):
             s = {}
         s[ident] = cues
         ruta.write_text(json.dumps(dict(sorted(s.items())), ensure_ascii=False, indent=1), encoding='utf-8')
+        try:                                          # v5.82: la locución de cada idioma
+            hechos = montar_voz(ident, sorted(g.voces), fin_v, salida)
+            if hechos:
+                print(f'  {ident}: voz en {", ".join(hechos)}', flush=True)
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('ids', nargs='*')
     ap.add_argument('--salida', default=str(tutoriales.carpeta()))
+    ap.add_argument('--voz', default='el_andre', help='la voz de voz_tutoriales.py (su índice de frases): ElevenLabs «Andre», la que viaja')
+    ap.add_argument('--voz-idiomas', default='es', help='los idiomas con locución (el guion espera a la frase más larga de todos)')
     a = ap.parse_args()
     ids = a.ids or list(GUIONES)
     salida = Path(a.salida)
     salida.mkdir(parents=True, exist_ok=True)
+    cargar_voz(a.voz, [x.strip() for x in a.voz_idiomas.split(',') if x.strip()])
     v = M.SubtitleApp()
     v._guardar_preferencias = lambda *a, **k: None
     v._emojis_anim_anotado = True

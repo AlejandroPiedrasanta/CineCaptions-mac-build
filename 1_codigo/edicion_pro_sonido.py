@@ -374,6 +374,16 @@ def momentos(plan, cortes=()):
             tex('ui', a + max(0.12, _primer_tiempo(p)), 'etiqueta')
         elif pz == 'marco':
             tex('click', a, 'marco')
+        elif pz == 'avion':                                          # v5.82: los motions de la referencia del Estilo 4 (edicion_pro_pila)
+            mov(a + 0.05, largo=0.9, que='el avión de papel vuela')
+        elif pz == 'tachado':
+            tex('error', a + float((p.get('valores') or {}).get('entra') or 0.12), 'tachado rojo')
+        elif pz == 'rec':
+            tex('click', a + 0.05, 'visor REC')
+        elif pz == 'aro':
+            tex('pop', a + 0.35, 'aro de luz y su píldora')
+        elif pz == 'persianas':
+            mov(a + 0.05, largo=0.4, que='persianas en el corte')
         elif pz == 'nombres':
             transiciones.append((a + 0.5, 'los nombres'))
         elif pz in ('titular', 'rotulo'):

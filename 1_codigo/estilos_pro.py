@@ -41,6 +41,7 @@ PALETAS = {
     'halo':     {'acento': '#2F6BFF', 'acento2': '#FF7A1A', 'fondo': '#0B0C12', 'texto': '#FFFFFF'},
     'rosa':     {'acento': '#FF3D8B', 'acento2': '#FFB3D1', 'fondo': '#1F0712', 'texto': '#FFFFFF'},
     'mono':     {'acento': '#15161B', 'acento2': '#6B6E78', 'fondo': '#F2F1EC', 'texto': '#15161B'},
+    'rojo':     {'acento': '#E21C2E', 'acento2': '#FF6B76', 'fondo': '#140A0C', 'texto': '#FFFFFF'},   # v5.82: la píldora «Reflejo rojo» (la referencia del Estilo 4)
 }
 # los colores rápidos de la fila «Colores» (además de «Automático» y de escribir uno): los del tablero + blanco y negro
 MUESTRAS = ['#FFFFFF', '#0B0D12', '#2F6BFF', '#8B5CFF', '#C06BFF', '#FF3D8B', '#FF7A1A', '#FFC24D', '#2CFF7A', '#00C2FF', '#F5F4F0', '#15161B']
@@ -65,6 +66,8 @@ SECCIONES = [
          _v('etiqueta', 'Etiqueta', 'Blanca y recta, con una barra de color a la izquierda.', 'indigo'),
          _v('sticker', 'Sticker', 'Blanca con borde grueso y sombra dura, un poco girada.'),
          _v('degradado', 'Degradado', 'Un degradado de dos colores.', 'aurora'),
+         # v5.82 (el usuario, con la referencia del Estilo 4 nuevo: «los motions que salen déjalos para la Edición PRO con píldora abajo captions»)
+         _v('reflejo', 'Reflejo rojo', 'Casi negra con un reflejo rojo; el texto, fino, cae palabra a palabra.', 'rojo'),
      ]},
     # v5.25 (el usuario: «agrega la opción de emoji con diferentes estilos 3D-2D, siempre animados, archivo Lottie, posición e intensidad»): los
     # 2D son los Lottie animados de Google; los 3D, los de Microsoft con movimiento (remotion/src/EmojiPro.tsx). `ajustes`: filas propias de la

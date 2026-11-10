@@ -621,6 +621,18 @@ def _elemento_viral(r, s, aj=None):
                    dura=(0.022 * k_off, 0.030 * k_off, (0.0, 0.0, 0.0)))
         _anotar(sp, par_tema, em_tema, par, em, txt)
         return sp, em, _centro(par)
+    if base.startswith('v pila'):                                  # v5.82: el Estilo 4 nuevo (comp_pila): la grande y la que remata abajo en lima con su
+        em = float(r.get('size') or 0.06) * VC.K_PX                # brillo, las pequeñas en blanco algo cálido; todas con la sombra negra suave. Como
+        txt = str(r.get('texto') or '')                            # la referencia, los mismos px sea cual sea la letra (a 1080): sombra de 12 px con
+        em_tema = em                                               # bajada de 5 y brillo de ~22 px al 44 %
+        em *= factor_encaje(par_tema, em, par, em, txt)
+        lima = base in ('v pila', 'v pila lima')
+        color = _rgb01(nuevo) if nuevo else ((0.878, 0.984, 0.345) if lima else (1.0, 1.0, 0.973))
+        e_ = max(1.0, em)
+        sp = texto(txt, par, em * s, color=color, esp=1.0, apretar=(1.0 - esp) * K_ESP_TEXTPLUS * em * s, sombra=(0.55, 5.0 / e_, 12.0 / e_),
+                   halo=(22.0 / e_, 0.44) if lima else None)
+        _anotar(sp, par_tema, em_tema, par, em, txt)
+        return sp, em, _centro(par)
     if base.startswith(('v ambar', 'v edi')):                      # v5.80: los Estilos 8 (comp_ambar) y 9 (comp_edi): su em por Size, el de su planificador
         import ambar_planificador as AP
         import editorial_planificador as EDP

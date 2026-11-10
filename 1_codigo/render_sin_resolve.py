@@ -102,7 +102,9 @@ def _sprite_emoji(ruta, lado):
     try:
         with Image.open(ruta) as im:
             im = im.convert('RGBA')
-            im.thumbnail((int(lado), int(lado)), Image.LANCZOS)
+            k = float(lado) / max(im.size)                  # v5.82: también AGRANDA (thumbnail solo achicaba: en 4K el emoji salía un 15-37 % más pequeño)
+            if abs(k - 1.0) > 0.01:
+                im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
             arr = np.asarray(im, dtype=np.float32)
         return arr[..., :3].copy(), arr[..., 3:4] / 255.0
     except Exception:
@@ -337,8 +339,8 @@ def _abrir_codificador(out, fps, ancho, alto):
             vs.pix_fmt = 'yuv420p'
             if opciones:
                 vs.options = opciones
-            else:
-                vs.bit_rate = 14_000_000
+            else:                                               # v5.82: 14 Mbps a 1080×1920, crece con los píxeles (4K: 56 Mbps; antes 14 fijo)
+                vs.bit_rate = int(14_000_000 * max(1.0, (ancho * alto) / float(1080 * 1920)))
             return vs, nombre
         except Exception:
             continue

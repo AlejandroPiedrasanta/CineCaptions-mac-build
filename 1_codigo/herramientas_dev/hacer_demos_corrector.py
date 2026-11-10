@@ -30,6 +30,10 @@ sys.path.insert(0, str(AQUI))
 
 ANCHO, ALTO, FPS = 360, 780, 30
 QUIETO_S = 1.1                                                      # lo que se queda quieto cada tramo antes del siguiente
+# v5.82 (el usuario: «que haga zoom a los captions para apreciar mejor el cambio»): cada video va ACERCADO a los captions con el mismo encuadre
+# en todos sus tramos (el antes y el después se comparan en el mismo sitio y al mismo tamaño), como la cámara del móvil del Corrector
+# (qt_kit.MarcoVista.poner_zoom_captions); los captions se rasterizan RASTER veces más finos para que acercados sigan nítidos
+RASTER, ZOOM_MAX, LLENA = 2.0, 1.9, (0.92, 0.60)
 BUENA = 'Así ganamos 10.000 euros en un mes con este truco que nadie te cuenta'.split()
 MALA = 'Así ganamoz 10.000 euros en un mes con este truco que nadie te cuenta'.split()
 NADIE = [('main' if w == 'nadie' else None) for w in BUENA]
@@ -69,41 +73,81 @@ def main():
     app = QGuiApplication.instance() or QGuiApplication([])               # noqa: F841
     import vista_tema as VT
 
-    def pintar(cu, t, ruta):
+    def pintar(cu, t, camara, ruta=None):
+        """El cuadro t (360×780) con la cámara (zoom, cx, cy en fracciones): guardado en `ruta` o devuelto."""
         img = QImage(ANCHO, ALTO, QImage.Format.Format_RGB888)
         p = QPainter(img)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        z, cx, cy = camara
+        p.translate(ANCHO / 2.0, ALTO / 2.0)
+        p.scale(z, z)
+        p.translate(-cx * ANCHO, -cy * ALTO)
         cu.pintar(p, QRectF(0, 0, ANCHO, ALTO), t)
         p.end()
+        if ruta is None:
+            return img
         img.save(str(ruta))
+
+    def tinta(cu, k):
+        """La caja (fracciones) de lo que SE VE de los captions del cue k (sin emoji), de sus capas (alfa > 10 %)."""
+        import numpy as np
+        ini = float(cu.cues[k].get('start') or 0.0)
+        cajas = []
+        for c in cu.capas:
+            if c.get('tipo') == 'emoji' or abs(float(c.get('cue_t0', -99.0)) - ini) > 0.02:
+                continue
+            a = np.asarray(c['a'])[..., 0] > 0.1
+            filas, cols = np.nonzero(a.any(axis=1))[0], np.nonzero(a.any(axis=0))[0]
+            if len(filas) and len(cols):
+                cajas.append((c['x'] + cols[0], c['y'] + filas[0], c['x'] + cols[-1] + 1, c['y'] + filas[-1] + 1))
+        if not cajas:
+            return None
+        return (min(b[0] for b in cajas) / cu.ancho, min(b[1] for b in cajas) / cu.alto, max(b[2] for b in cajas) / cu.ancho,
+                max(b[3] for b in cajas) / cu.alto)
+
+    def camara(cajas):
+        """El encuadre común de todos los tramos: la unión de sus cajas llenando LLENA, sin salirse de la foto."""
+        cajas = [c for c in cajas if c]
+        if not cajas:
+            return 1.0, 0.5, 0.5
+        x0, y0 = min(c[0] for c in cajas), min(c[1] for c in cajas)
+        x1, y1 = max(c[2] for c in cajas), max(c[3] for c in cajas)
+        z = min(ZOOM_MAX, max(1.0, min(LLENA[0] / max(1e-3, x1 - x0), LLENA[1] / max(1e-3, y1 - y0))))
+        m = 0.5 / z
+        return z, min(max((x0 + x1) / 2.0, m), 1.0 - m), min(max((y0 + y1) / 2.0, m), 1.0 - m)
 
     ff = _ffmpeg()
     tramos = {}
     for ident, pack, pasos in DEMOS:
         tmp = Path(tempfile.mkdtemp(prefix=f'cc_demo_{ident}_'))
         try:
-            n, inicios = 0, []
+            hechos = []
             for frase, roles, palabra, ajustes in pasos:
                 palabras = [{'word': w, 'start': round(0.4 + i * 0.36, 3), 'end': round(0.4 + i * 0.36 + 0.32, 3)} for i, w in enumerate(frase)]
                 estilo = dict(VT.estilo_de_pack(pack))
                 if ajustes:
                     estilo['ajustes'] = ajustes
                 cues = VT.planificar(palabras, roles, pack, estilo, idioma='es', fin_video=palabras[-1]['end'] + 1.0)
-                cu = VT.Cuadros(cues, estilo, ANCHO, ALTO)
+                cu = VT.Cuadros(cues, estilo, int(ANCHO * RASTER), int(ALTO * RASTER))
                 k = cu.cue_de_palabra(palabra, palabras[frase.index(palabra)]['start'])
+                hechos.append((cu, k))
+            cam = camara([tinta(cu, k) for cu, k in hechos])
+            n, inicios = 0, []
+            for cu, k in hechos:
                 a, _b = cu.tramo(k)
                 quieto = cu.instante_quieto(k)
                 inicios.append(round(n / FPS, 3))
                 t = a
                 while t < quieto:                                         # el bloque entrando…
-                    pintar(cu, t, tmp / f'{n:04d}.png')
+                    pintar(cu, t, cam, tmp / f'{n:04d}.png')
                     n, t = n + 1, t + 1.0 / FPS
                 for _ in range(int(QUIETO_S * FPS)):                      # …y quieto un momento
-                    pintar(cu, quieto, tmp / f'{n:04d}.png')
+                    pintar(cu, quieto, cam, tmp / f'{n:04d}.png')
                     n += 1
-                ultimo = cu.cuadro(quieto)
+                ultimo = pintar(cu, quieto, cam)
             ultimo.save(str(salida / f'demo_{ident}.jpg'), quality=90)
+            print(f'{ident}: cámara zoom {cam[0]:.2f} centro ({cam[1]:.3f}, {cam[2]:.3f})', flush=True)
             subprocess.run([ff, '-y', '-loglevel', 'error', '-framerate', str(FPS), '-i', str(tmp / '%04d.png'), '-an', '-c:v', 'libx264',
                             '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', str(salida / f'demo_{ident}.mp4')], check=True)
             tramos[ident] = inicios

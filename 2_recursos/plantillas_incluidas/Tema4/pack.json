@@ -4,7 +4,10 @@
   "formatos": {
     "v": {
       "drb": "Tema4 vertical.drb"
+    },
+    "h": {
+      "drb": "Tema4 horizontal.drb"
     }
   },
-  "guion": "tema4"
+  "guion": "viral"
 }

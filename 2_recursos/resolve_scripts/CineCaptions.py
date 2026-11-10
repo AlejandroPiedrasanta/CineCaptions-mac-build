@@ -46,7 +46,7 @@ TEMPLATE_CLIP_NAME = "Subtitle Template"
 # coincide con la del programa (ver version.py). Se estampa en
 # ultimo_resultado.json: hasta la v1.0.28 este archivo no tenia version
 # ninguna y no habia forma de saber que build habia colocado los subtitulos.
-VERSION = "5.81 (subtitulos)"
+VERSION = "5.82 (subtitulos)"
 
 # Donde se escribe el resultado para que la app lo lea. Hasta la v1.0.26 este
 # script no escribia nada aca -a diferencia del de Importar Estilos, que si
@@ -942,6 +942,52 @@ def ajustar_barrido(item, visible_s, salto_s=0.0, ancho_rel=None):
         if ancho_rel:
             set_input_safe(macro, "inputShine", max(-0.05, (float(ancho_rel) + 0.16) / BARRIDO_K - BARRIDO_BASE))
         return bool(a and b)
+    except Exception:
+        return False
+
+
+# v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): la palabra grande del estilo «guion» con zoom > 1 se dibujaba al tamaño del pack y Resolve la
+# ESTIRABA (el zoom del clip escala la imagen ya dibujada: hasta ×2,2, borrosa en 1080 y en 4K). Ahora el macro Luxe la dibuja ya grande: su tamaño y todo lo que
+# va en px o en fracciones del cuadro (brillos, desenfoques, sombras «Premium», banda del barrido, distancia de la entrada) × z, y el clip sin zoom. La palabra está
+# en el centro del comp (positionCtrl.RestingCenter 0,5 0,5): cae en el mismo sitio. inputShine (= shineCtrl.OffsetShine) lo pone ajustar_barrido con el ancho × z.
+AGRANDAR_LUXE = (("sizeCtrl", ("StartSize", "EndSize")), ("glow1", ("GlowSize",)), ("shineGlow1", ("GlowSize",)),
+                 ("positionCtrl", ("StartDistance", "EndDistance")), ("blurCtrl", ("RestingBlur", "StartBlur", "EndBlur")),
+                 ("shineCtrl", ("ShineWidth", "ShineSoftness")), ("dropShadow", ("shadowBlur", "ShadowDistance")),
+                 ("Text1", ("SoftnessX4", "SoftnessY4", "SoftnessX5", "SoftnessY5", "Offset4", "Offset5")))
+
+
+def agrandar_sin_zoom(item, z):
+    """Dibuja la palabra grande del macro Luxe z veces más grande DENTRO del comp (en vez del zoom del clip). Devuelve True si lo hizo; False y nada tocado
+    si el clip no es un macro Luxe (presets de Amro: sin sizeCtrl) o no aceptó el tamaño: entonces va el zoom de siempre. Gemela de BARRIDO.agrandar del .lua."""
+    try:
+        comp = item.GetFusionCompByIndex(1)
+        tam = comp.FindTool("sizeCtrl") if comp else None
+        if tam is None:
+            return False
+        antes = tam.GetInput("RestingSize")
+        if not isinstance(antes, (int, float)) or antes <= 0:
+            return False
+        tam.SetInput("RestingSize", float(antes) * z)
+        ahora = tam.GetInput("RestingSize")
+        if not isinstance(ahora, (int, float)) or abs(float(ahora) - float(antes) * z) > 1e-4:
+            return False
+        for nombre, entradas in AGRANDAR_LUXE:
+            t = comp.FindTool(nombre)
+            if t is None:
+                continue
+            for e in entradas:
+                try:
+                    v = t.GetInput(e)
+                    if isinstance(v, (int, float)):
+                        if v:
+                            t.SetInput(e, float(v) * z)
+                    elif isinstance(v, dict):                          # un punto (Offset4/5 de las sombras): {1: x, 2: y}
+                        x, y = v.get(1, v.get(1.0)), v.get(2, v.get(2.0))
+                        if isinstance(x, (int, float)) and isinstance(y, (int, float)):
+                            t.SetInput(e, {1: float(x) * z, 2: float(y) * z})
+                except Exception:
+                    continue
+        return True
     except Exception:
         return False
 
@@ -3938,13 +3984,18 @@ def place_guion_track(timeline, media_pool, track_info, base_template,
             props["Pan"] = _pan_px(float(run["x"]) - 0.5, ancho_tl)
         if isinstance(run.get("y"), (int, float)):
             props["Tilt"] = _tilt_px(0.5 - float(run["y"]), alto_tl)
+        escala = 1.0
         if isinstance(run.get("zoom"), (int, float)) and run["zoom"] > 0:
-            props["ZoomX"] = props["ZoomY"] = float(run["zoom"])
+            if rol == "main" and run["zoom"] > 1.005 and agrandar_sin_zoom(item, float(run["zoom"])):
+                escala = float(run["zoom"])                           # v5.82: dibujada ya grande (nítida), sin estirar el clip
+            else:
+                props["ZoomX"] = props["ZoomY"] = float(run["zoom"])
         if props:
             _poner_props(item, props)
         poner_fuente_usuario(tool, track_info, rol == "main")
         if rol == "main":
-            ajustar_barrido(item, (fin - ini) / float(fps), salto, run.get("ancho_rel"))
+            ancho_rel = run.get("ancho_rel")
+            ajustar_barrido(item, (fin - ini) / float(fps), salto, float(ancho_rel) * escala if isinstance(ancho_rel, (int, float)) else ancho_rel)
         colocados += 1
         clave = (juego.get("numero"), rol)
         uso[clave] = uso.get(clave, 0) + 1

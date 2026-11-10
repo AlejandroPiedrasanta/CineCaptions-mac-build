@@ -1031,7 +1031,13 @@ def planificar(video, palabras, duracion=None, opciones=None, al_estado=None, co
                 al_estado('Buscando tomas de apoyo (B-roll)…')
             momentos = broll.elegir_momentos(palabras, duracion, None, desplazar(('pocos', 'normal', 'muchos'), op.get('fx_broll_cuanto', 'normal'), delta))
             formato_b = 'h' if ancho_z > alto_z * 1.2 else ('v' if alto_z > ancho_z * 1.2 else 'c')
-            eb = broll.preparar(momentos, formato_b, broll_clave(op), al_estado)
+            try:                                                   # v5.82: las tomas al escalón del video (4K: 2160 de lado corto), no siempre ~1080
+                import resolve_mcp
+                _m = resolve_mcp.medir_medio(video)
+                lado_b = min(resolve_mcp.tamano_timeline(_m.get('ancho'), _m.get('alto')))
+            except Exception:
+                lado_b = 1080
+            eb = broll.preparar(momentos, formato_b, broll_clave(op), al_estado, lado=lado_b)
             eventos.extend(eb)
             resumen.append(f'{len(eb)} tomas de apoyo (B-roll)')
     except Exception:

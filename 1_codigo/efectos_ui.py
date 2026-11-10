@@ -25,8 +25,9 @@ Respeta «Reducir animaciones» (Ajustes > Interfaz).
 import math
 import random
 import time
+import weakref
 
-from PySide6.QtCore import QEasingCurve, QPointF, QRectF, Qt, QTimer, QVariantAnimation
+from PySide6.QtCore import QEasingCurve, QPoint, QPointF, QRect, QRectF, Qt, QTimer, QVariantAnimation
 from PySide6.QtGui import QImage, QPainter, QPen, QPixmap, QRadialGradient, QRegion
 from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QWidget
 
@@ -107,6 +108,33 @@ def _hacer_grano(lado=192):
     return QPixmap.fromImage(img)
 
 
+_GRANO_REAL = {}
+
+
+def _grano_real(dpr):
+    """v5.82 (medido a 2293×928 al 1,5: el grano era lo más caro del fondo, 4,1 ms por repintado entero, porque Qt amplía la baldosa ×1,5
+    en cada cuadro): la baldosa ya ampliada a los píxeles reales, UNA vez y con el mismo filtro (sus bordes se mezclan con la de al lado
+    igual que al repetirla); luego solo se repite, sin ampliar. None si a esa escala la baldosa no mide un número entero de píxeles."""
+    k = round(float(dpr), 4)
+    pm = _GRANO_REAL.get(k)
+    if pm is None:
+        if _GRANO[0] is None:
+            _GRANO[0] = _hacer_grano()
+        base = _GRANO[0]
+        lado = base.width() * k
+        if k <= 1.0 or abs(lado - round(lado)) > 1e-6:
+            return None
+        pm = QPixmap(int(round(lado)), int(round(lado)))
+        pm.setDevicePixelRatio(k)
+        pm.fill(Qt.GlobalColor.transparent)
+        q = QPainter(pm)
+        q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        q.drawTiledPixmap(QRectF(0, 0, base.width(), base.height()), base)
+        q.end()
+        _GRANO_REAL[k] = pm
+    return pm
+
+
 def _rgb(hexa):
     h = str(hexa).lstrip('#')
     return [int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4)]
@@ -142,6 +170,7 @@ class FondoVivo(QWidget):
         self._col_resortes = [[ui.Resorte(v, 26.0, 7.0) for v in _rgb(c)] for c in _paleta_de('inicio')]
         self._col_mueve = False
         self._reloj = QTimer(self)
+        self._reloj.setTimerType(Qt.TimerType.PreciseTimer)   # (v5.82: el normal de Windows redondea a 15,6 ms: 66 ms salían 62 o 78, a tirones)
         self._reloj.timeout.connect(self._tic)
         self._fps = self.FPS_LLENO
         self._reloj.start(int(1000 / self._fps))
@@ -153,6 +182,12 @@ class FondoVivo(QWidget):
         self._excluidas = None
         self._excluidas_t = -1.0
         self._tarjetas_t = 0.0
+        # v5.82 (el usuario: «mejora la fluidez de todas las páginas y de los fondos»): los fondos OPACOS de página entera (el cielo de
+        # Proyecto, del Corrector y de Sonido: proyecto_ui.TarjetaCielo sin marco) tapan este escenario de borde a borde. Medido a 2293×928
+        # al 1,5: se seguía repintando debajo, sin verse, en cada cuadro de lo que se movía encima (80-233 ms por segundo según la página)
+        self._tapas = weakref.WeakSet()
+        self._vidrio_cola = []                   # (v5.82) las tarjetas de vidrio que faltan por refrescar en este medio segundo
+        self._vidrio_n = 1
         ui.Tarjeta.fondo = self
         self._sembrar()
 
@@ -200,6 +235,32 @@ class FondoVivo(QWidget):
                 self._ultimo = time.perf_counter()
                 self._reloj.start()
             self.update()
+
+    def tapar_con(self, widget):
+        """v5.82: `widget` (descendiente) pinta TODOS sus píxeles y, mientras se ve sin efectos Qt y ocupa todo el escenario, lo tapa
+        entero: el escenario no se repinta (no se vería). Las tarjetas de vidrio siguen tomando la aurora al día (_refrescar_tarjetas)."""
+        self._tapas.add(widget)
+
+    def _tapado(self):
+        if not self._tapas:
+            return False
+        mio = self.rect()
+        for w in list(self._tapas):
+            try:
+                if not w.isVisible():
+                    continue
+                x = w
+                while x is not None and x is not self:              # (con un fundido de entrada encima deja ver el escenario)
+                    if x.graphicsEffect() is not None:
+                        break
+                    x = x.parentWidget()
+                if x is not self:
+                    continue
+                if QRect(w.mapTo(self, QPoint(0, 0)), w.size()).contains(mio):
+                    return True
+            except RuntimeError:
+                pass
+        return False
 
     def explosion(self, x, y, n=90, colores=None):
         """Confeti desde (x, y) en coordenadas de este widget (el exito)."""
@@ -255,6 +316,8 @@ class FondoVivo(QWidget):
         if self._t - self._tarjetas_t > 0.5:
             self._tarjetas_t = self._t
             self._refrescar_tarjetas()
+        elif self._vidrio_cola:
+            self._repartir_vidrio()
         self._intensidad += (self._objetivo - self._intensidad) * min(1.0, dt * 3.0)
         if self._col_mueve:
             mueve = False
@@ -278,6 +341,9 @@ class FondoVivo(QWidget):
             vivas.append(p)
         self._efimeras = vivas
         self._ondas = [o for o in self._ondas if self._t - o[2] < 1.1]
+        if self._tapado():                       # v5.82: un fondo opaco de página entera lo tapa: nada que repintar (ver tapar_con)
+            self._excluidas = None
+            return
         if self._objetivo < 0.7 and self.proveedor_excluidas is not None and not self._efimeras and not self._ondas:
             if self._t - self._excluidas_t > 0.5 or self._excluidas is None:
                 self._excluidas_t = self._t
@@ -329,10 +395,32 @@ class FondoVivo(QWidget):
         return self._aurora, QRectF(rect.x() * f, rect.y() * f, rect.width() * f, rect.height() * f)
 
     def _refrescar_tarjetas(self):
+        # v5.82: tapado, paintEvent no corre y la aurora no se rehacía: se rehace aquí con la misma regla, para que el vidrio siga vivo
+        if (self._aurora is None or self._t - self._aurora_t > 0.2 or abs(self._intensidad - self._aurora_k) > 0.02) and self._tapado():
+            w, h = max(1, self.width()), max(1, self.height())
+            self._aurora, self._aurora_t, self._aurora_k = self._mapa_auroras(w, h), self._t, self._intensidad
+        # v5.82: cada tarjeta de vidrio se sigue refrescando cada 0,5 s, pero REPARTIDAS en los tics de ese medio segundo (de una en una o
+        # de dos en dos) y no todas en el mismo cuadro: medido en Sonido, ~12 ms de golpe dos veces por segundo (los tirones que quedaban)
+        cola = []
         for t in list(ui.Tarjeta._vivas):
             try:
                 if t.isVisible() and t.graphicsEffect() is None:
+                    cola.append(t)
+            except RuntimeError:
+                pass
+        pasos = max(1, int(0.5 / max(0.016, self._reloj.interval() / 1000.0)))
+        self._vidrio_cola = cola
+        self._vidrio_n = max(1, -(-len(cola) // pasos))
+        self._repartir_vidrio()
+
+    def _repartir_vidrio(self):
+        n = self._vidrio_n
+        while n > 0 and self._vidrio_cola:
+            t = self._vidrio_cola.pop()
+            try:
+                if t.isVisible() and t.graphicsEffect() is None:
                     t.update()
+                    n -= 1
             except RuntimeError:
                 pass
 
@@ -351,7 +439,7 @@ class FondoVivo(QWidget):
         return pm
 
     def paintEvent(self, _e):
-        if self._cubierto:
+        if self._cubierto or self._tapado():       # (v5.82: tapado entero por un fondo de página que pinta todos sus píxeles: no se vería)
             return
         w, h = self.width(), self.height()
         zona = _e.rect().adjusted(-4, -4, 4, 4)       # (5.3) solo se dibuja lo que de verdad se repinta
@@ -418,7 +506,8 @@ class FondoVivo(QWidget):
         if _GRANO[0] is None:
             _GRANO[0] = _hacer_grano()
         p.setOpacity(0.55)
-        p.drawTiledPixmap(self.rect(), _GRANO[0])
+        real = _grano_real(self.devicePixelRatioF()) if p.testRenderHint(QPainter.RenderHint.SmoothPixmapTransform) else None
+        p.drawTiledPixmap(self.rect(), real if real is not None else _GRANO[0])
         p.setOpacity(1.0)
         p.end()
 

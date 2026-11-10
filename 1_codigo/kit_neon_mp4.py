@@ -18,13 +18,23 @@ from pathlib import Path
 
 import numpy as np
 
-W, H = 1080, 1920
+W, H = 1080, 1920                    # el escenario del kit; v5.82: renderizar graba al tamaño del video (_tamano), no siempre a este
 # el orden de las pistas PRO de Resolve, de abajo arriba (colocar_pro.ORDEN + PRO-ICONOS encima de los captions)
 ORDEN = {'fondo': 0, 'velo': 1, 'detras': 2, 'delante': 3, 'subs': 4, 'subs2': 5, 'iconos': 6}
 
 
 class NoVertical(Exception):
     pass
+
+
+def _tamano(vw, vh):
+    """v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): el MP4 vertical al escalón del video (un 4K: 2160×3840), el mismo que el
+    timeline que GO arma en Resolve (resolve_mcp.tamano_timeline). Antes siempre 1080×1920: un video 4K salía con la cuarta parte de sus píxeles."""
+    try:
+        import resolve_mcp
+        return resolve_mcp.tamano_timeline(vw, vh)
+    except Exception:
+        return W, H
 
 
 def _cubrir(img, ancho, alto):
@@ -56,8 +66,9 @@ def _mezclar(arr, a):
 class _Clip:
     """Un clip ProRes 4444 con alfa leído en orden: `en(t_local)` devuelve su fotograma RGBA uint8 o None."""
 
-    def __init__(self, ruta, ini, fin, z, fps):
+    def __init__(self, ruta, ini, fin, z, fps, ancho=W, alto=H):
         self.ruta, self.ini, self.fin, self.z, self.fps = ruta, ini, fin, z, fps
+        self.ancho, self.alto = ancho, alto
         self.c = self.it = None
         self.k = -1
         self.ultimo = None
@@ -77,8 +88,8 @@ class _Clip:
                 break
             self.k += 1
             if self.k >= objetivo:
-                if fr.width != W or fr.height != H:
-                    fr = fr.reformat(width=W, height=H)
+                if fr.width != self.ancho or fr.height != self.alto:
+                    fr = fr.reformat(width=self.ancho, height=self.alto)
                 self.ultimo = fr.to_ndarray(format='rgba')
         return self.ultimo
 
@@ -115,6 +126,7 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
     vw, vh, dur, fps_f = EP.medir(str(video))
     if vw and vh and vw > vh:
         raise NoVertical('el Estilo 1 neón es vertical')
+    W, H = _tamano(vw, vh)                               # v5.82: al tamaño del video (un 4K: 2160×3840); los clips y la placa, también
     dur = float(dur or 0.0)
     if not dur:                                          # v5.70: un audio suelto (medir no ve imagen): su duración, para no cortar la voz
         try:
@@ -173,7 +185,7 @@ def renderizar(video, escena, plan=None, cues=None, salida=None, progreso=None, 
             avisar(0.03 + 0.5 * int(m.group(1)) / max(1, int(m.group(2))), 'Animando los captions y los motions…')
     hechos = RM.renderizar(trab, estado_rm)
     mirar_cancelar()
-    clips = [_Clip(s, p['ini'], p['fin'], ORDEN.get(p['capa'], 3), fps_f) for p, s in zip(piezas, salidas) if hechos.get(str(s))]
+    clips = [_Clip(s, p['ini'], p['fin'], ORDEN.get(p['capa'], 3), fps_f, W, H) for p, s in zip(piezas, salidas) if hechos.get(str(s))]
     if not clips:
         raise RuntimeError('Remotion no pudo animar los captions neón')
     clips.sort(key=lambda c: (c.z, c.ini))

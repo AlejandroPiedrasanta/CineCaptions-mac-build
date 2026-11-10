@@ -1,19 +1,31 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/tutoriales_ui.py — el reproductor de los videos tutoriales (guía y Ajustes) y el panel «Tutoriales» de Ajustes: el video grande y la lista de las páginas.
 """
-tutoriales_ui.py  (v5.76)
+tutoriales_ui.py  (v5.82)
 -------------------------
     VideoTutorial(ancho, alto)     un video del tutorial: esquinas redondas, en bucle, barra de avance y tiempo; un clic lo pausa / sigue.
                                    Encima, el subtítulo del momento (tutoriales.subtitulos, traducido): una píldora oscura centrada sobre la
                                    barra (estilo A que eligió el usuario), con un fundido corto al entrar y salir.
+                                   v5.82: con su LOCUCIÓN (tutoriales.ruta_voz, en el idioma de la interfaz): suena sincronizada con el video en
+                                   la primera vuelta (las siguientes van sin voz); el altavoz de la barra la apaga o la enciende (se recuerda).
         .poner(id)                 cambia de video (tutoriales.ruta_video); sin archivo se ve su miniatura o un fondo oscuro
         .tamano(ancho, alto)
     PanelTutoriales()              Ajustes › Tutoriales (propuesta B2 que eligió el usuario): a la izquierda el video elegido con su título y
-                                   explicación; a la derecha la lista de las páginas (miniatura, nombre y duración). Un clic en una fila la pone.
+                                   explicación; a la derecha la lista (miniatura, nombre y duración) en dos grupos, «Las páginas» y «Paso a
+                                   paso», con su propio desplazamiento para que el video no se vaya de la vista. Un clic en una fila la pone.
 
 El video lo decodifica vistas_slider.Reproductor en UN hilo y solo mientras se ve (hideEvent lo para: cambiar de pestaña o cerrar Ajustes).
-La interfaz solo copia el cuadro ya escalado al tamaño del widget (Reproductor.tam). Las miniaturas (.jpg) se leen en un hilo.
+La interfaz solo copia el cuadro ya escalado al tamaño del widget (Reproductor.tam). Las miniaturas (.jpg) se leen en un hilo. La voz
+(_Voz) se decodifica y suena en OTRO hilo (winsound en Windows, afplay en Mac, como el resto de sonidos del programa: sin Qt multimedia):
+la interfaz solo le manda «suena desde t» o «calla».
 """
+import os
+import queue
+import sys
+import tempfile
+import threading
+import time
+
 from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap, QPolygonF
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
@@ -65,6 +77,103 @@ def poster(ident, al_listo, contexto):
     ui.correr_en_hilo(contexto, leer, fin)
 
 
+class _Voz:
+    """v5.82: la locución de un tutorial. Su hilo la decodifica UNA vez (PyAV → mono de 16 bits a 24 kHz) y la hace sonar desde el segundo
+    que se le pida con lo que trae el sistema (winsound en Windows, afplay en Mac). La interfaz solo encola órdenes: nunca espera."""
+    SR = 24000
+
+    def __init__(self, ruta):
+        self.ruta = str(ruta)
+        self._ordenes = queue.Queue()
+        self._hilo = threading.Thread(target=self._correr, name='voz-tutorial', daemon=True)
+        self._hilo.start()
+
+    def sonar(self, desde):
+        self._ordenes.put(('sonar', float(desde)))
+
+    def callar(self):
+        self._ordenes.put(('callar', 0.0))
+
+    def cerrar(self):
+        self._ordenes.put(('cerrar', 0.0))
+
+    def _decodificar(self):
+        import av
+        import numpy as np
+        partes = []
+        with av.open(self.ruta) as c:
+            rs = av.AudioResampler(format='s16', layout='mono', rate=self.SR)
+            for fr in c.decode(c.streams.audio[0]):
+                for g in rs.resample(fr):
+                    partes.append(np.ascontiguousarray(g.to_ndarray().reshape(-1)).astype('<i2').tobytes())
+            for g in rs.resample(None):
+                partes.append(np.ascontiguousarray(g.to_ndarray().reshape(-1)).astype('<i2').tobytes())
+        return b''.join(partes)
+
+    @staticmethod
+    def _wav(ruta, pcm, sr):
+        import wave
+        with wave.open(str(ruta), 'wb') as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(sr)
+            w.writeframes(pcm)
+
+    def _correr(self):
+        pcm, proc, sonando, k = None, None, False, 0
+        tmp = [os.path.join(tempfile.gettempdir(), f'cinecaptions_tutorial_{os.getpid()}_{id(self)}_{i}.wav') for i in (0, 1)]
+        try:
+            while True:
+                orden, desde = self._ordenes.get()
+                while True:                                      # solo vale la última orden (p. ej. pausar y seguir muy rápido)
+                    try:
+                        orden, desde = self._ordenes.get_nowait()
+                    except queue.Empty:
+                        break
+                if sonando:
+                    try:
+                        if proc is not None:
+                            proc.terminate()
+                        elif sys.platform.startswith('win'):
+                            import winsound
+                            winsound.PlaySound(None, 0)
+                    except Exception:
+                        pass
+                    proc, sonando = None, False
+                if orden == 'cerrar':
+                    return
+                if orden != 'sonar':
+                    continue
+                if pcm is None:
+                    try:
+                        pcm = self._decodificar()
+                    except Exception:
+                        pcm = b''
+                i = int(max(0.0, desde) * self.SR) * 2
+                if i >= len(pcm) - self.SR // 5:                   # (menos de 0,1 s: no vale la pena)
+                    continue
+                k = 1 - k                                          # dos archivos: nunca se escribe el que aún suena
+                try:
+                    self._wav(tmp[k], pcm[i:], self.SR)
+                    if sys.platform.startswith('win'):
+                        import winsound
+                        winsound.PlaySound(tmp[k], winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
+                    elif sys.platform == 'darwin':
+                        import subprocess
+                        proc = subprocess.Popen(['afplay', tmp[k]], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    else:
+                        continue
+                    sonando = True
+                except Exception:
+                    proc, sonando = None, False
+        finally:
+            for r in tmp:
+                try:
+                    os.remove(r)
+                except OSError:
+                    pass
+
+
 class VideoTutorial(QWidget):
     """Un video del tutorial. Se reproduce solo mientras se ve; un clic lo pausa o lo sigue."""
 
@@ -78,6 +187,15 @@ class VideoTutorial(QWidget):
         self._img = None
         self._poster = None
         self._ultima = None
+        # v5.82: la locución (ver _sincronizar_voz)
+        self._voz = None
+        self._voz_caja = [None]                 # (para cerrarla si el widget se destruye sin esconderse)
+        self._voz_on = tutoriales.voz_activa()
+        self._voz_sonando = False
+        self._voz_ref = (0.0, 0.0)              # (reloj, segundo del video) cuando empezó a sonar
+        self._voz_vuelta = 0                    # la vuelta del bucle que lleva voz (la primera; o la que estaba al encender el altavoz)
+        self._r_altavoz = None
+        self.destroyed.connect(lambda *_a, caja=self._voz_caja: caja[0].cerrar() if caja[0] is not None else None)
         self.setFixedSize(int(ancho), int(alto))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._reloj = QTimer(self)
@@ -97,10 +215,18 @@ class VideoTutorial(QWidget):
         self._subs_lineas = {}
         ruta = tutoriales.ruta_video(ident)
         self._rep = None
+        if self._voz is not None:
+            self._voz.cerrar()
+        self._voz = None
         if ruta:
             import vistas_slider
             self._rep = vistas_slider.Reproductor(ruta, pausa_s=1.0)
             self._ajustar_tam()
+            voz = tutoriales.ruta_voz(ident)
+            if voz:
+                self._voz = _Voz(voz)
+        self._voz_caja[0] = self._voz
+        self._voz_vuelta = 0
         poster(ident, self._poner_poster, self)
         if self.isVisible():
             self._arrancar()
@@ -171,6 +297,28 @@ class VideoTutorial(QWidget):
             p.drawText(QRectF(caja.left(), caja.top() + tam * 0.45 + i * alto_l, caja.width(), alto_l), int(Qt.AlignmentFlag.AlignCenter), x)
         p.setOpacity(1.0)
 
+    @staticmethod
+    def _pintar_altavoz(p, caja, encendido):
+        """v5.82: un altavoz blanco (con dos ondas si suena, tachado si está apagado), del alto de los iconos de la barra."""
+        x, y, s = caja.x(), caja.y(), caja.height()
+        p.save()
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor('#FFFFFF'))
+        p.drawPolygon(QPolygonF([QPointF(x + s * 0.08, y + s * 0.36), QPointF(x + s * 0.30, y + s * 0.36), QPointF(x + s * 0.56, y + s * 0.12),
+                                 QPointF(x + s * 0.56, y + s * 0.88), QPointF(x + s * 0.30, y + s * 0.64), QPointF(x + s * 0.08, y + s * 0.64)]))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        pen = QPen(QColor('#FFFFFF'), 1.6)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        p.setPen(pen)
+        if encendido:
+            for rad in (0.20, 0.36):
+                rr = QRectF(x + s * 0.56 - s * rad, y + s * 0.5 - s * rad, 2 * s * rad, 2 * s * rad)
+                p.drawArc(rr, -50 * 16, 100 * 16)
+        else:
+            p.drawLine(QPointF(x + s * 0.70, y + s * 0.34), QPointF(x + s * 0.98, y + s * 0.66))
+            p.drawLine(QPointF(x + s * 0.70, y + s * 0.66), QPointF(x + s * 0.98, y + s * 0.34))
+        p.restore()
+
     def _ajustar_tam(self):
         if self._rep is not None:
             dpr = self.devicePixelRatioF() or 1.0
@@ -180,6 +328,8 @@ class VideoTutorial(QWidget):
     def _arrancar(self):
         if self._rep is not None:
             self._ajustar_tam()
+            if not self._rep.activo:                  # (arrancar() empieza desde el principio: la voz vuelve a la primera vuelta)
+                self._voz_vuelta = 0
             self._rep.arrancar()
             self._reloj.start()
 
@@ -187,6 +337,12 @@ class VideoTutorial(QWidget):
         self._reloj.stop()
         if self._rep is not None:
             self._rep.parar()
+        self._callar()
+
+    def _callar(self):
+        if self._voz is not None and self._voz_sonando:
+            self._voz.callar()
+        self._voz_sonando = False
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -204,10 +360,38 @@ class VideoTutorial(QWidget):
             self._ultima = img
             self._img = img
             self.update()
+        self._sincronizar_voz()
+
+    def _sincronizar_voz(self):
+        """v5.82: la voz sigue al video. Suena en la vuelta que toca (la primera) mientras el video avanza; en pausa, al esconderse o con el
+        altavoz apagado calla; si el video se atrasó o se adelantó más de 0,35 s (el equipo se trabó), vuelve a empezar desde el segundo
+        del video."""
+        voz, rep = self._voz, self._rep
+        if voz is None or rep is None:
+            return
+        pos = float(rep.posicion or 0.0)
+        quiere = (self._voz_on and self._img is not None and rep.activo and not rep.en_pausa and rep.vueltas == self._voz_vuelta)
+        if not quiere:
+            self._callar()
+            return
+        ahora = time.perf_counter()
+        if self._voz_sonando and abs(self._voz_ref[1] + (ahora - self._voz_ref[0]) - pos) <= 0.35:
+            return
+        voz.sonar(pos)
+        self._voz_sonando = True
+        self._voz_ref = (ahora, pos)
 
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton and self._rep is not None:
-            self._rep.pausar(not self._rep.en_pausa)
+            if self._r_altavoz is not None and self._r_altavoz.adjusted(-8, -8, 8, 8).contains(e.position()):
+                self._voz_on = not self._voz_on                # el altavoz: se recuerda para los demás videos
+                tutoriales.poner_voz_activa(self._voz_on)
+                if self._voz_on:
+                    self._voz_vuelta = self._rep.vueltas       # (encenderlo en otra vuelta: suena desde aquí)
+                self._sincronizar_voz()
+            else:
+                self._rep.pausar(not self._rep.en_pausa)
+                self._sincronizar_voz()
             self.update()
             e.accept()
             return
@@ -251,7 +435,14 @@ class VideoTutorial(QWidget):
             if texto:
                 p.setPen(QColor('#E6ECF5'))
                 p.drawText(QRectF(r.right() - tw - 13, r.bottom() - 26, tw + 2, 18), int(Qt.AlignmentFlag.AlignVCenter), texto)
-            pista = QRectF(32, r.bottom() - 18, max(10.0, r.width() - tw - 32 - 22), 4)
+            hueco = 0.0
+            self._r_altavoz = None
+            if self._voz is not None:                  # v5.82: el altavoz (apaga o enciende la voz), entre la barra y el tiempo
+                caja = QRectF(r.right() - tw - 13 - 26, r.bottom() - 26, 18, 18)
+                self._r_altavoz = caja
+                self._pintar_altavoz(p, caja, self._voz_on)
+                hueco = 28.0
+            pista = QRectF(32, r.bottom() - 18, max(10.0, r.width() - tw - 32 - 22 - hueco), 4)
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(QColor(255, 255, 255, 60))
             p.drawRoundedRect(pista, 2, 2)
@@ -374,8 +565,19 @@ class _FilaTutorial(QFrame):
         super().mouseReleaseEvent(e)
 
 
+def _seccion(texto):
+    """El rótulo de un grupo de la lista («LAS PÁGINAS»), como los de las secciones de Ajustes."""
+    e = ui.Etiqueta(texto.upper(), 11, peso='negrita', color='#7F8DA8')
+    f = e.font()
+    f.setLetterSpacing(f.SpacingType.AbsoluteSpacing, 2.2)
+    e.setFont(f)
+    return e
+
+
 class PanelTutoriales(QWidget):
-    """Ajustes › Tutoriales (B2): el video elegido grande, con su título y explicación, y la lista de todas las páginas a la derecha."""
+    """Ajustes › Tutoriales (B2): el video elegido grande, con su título y explicación, y la lista de los tutoriales a la derecha.
+    v5.82: la lista va en dos grupos («Las páginas» y «Paso a paso») y se desplaza sola, del alto del video y su texto: así el video
+    nunca se sale de la vista al buscar uno de abajo."""
     ANCHO_LISTA = 380
 
     def __init__(self, padre=None):
@@ -397,15 +599,28 @@ class PanelTutoriales(QWidget):
         lista.setObjectName('grupoAjustes')
         lista.setFixedWidth(self.ANCHO_LISTA)
         cl = QVBoxLayout(lista)
-        cl.setContentsMargins(10, 10, 10, 10)
-        cl.setSpacing(4)
+        cl.setContentsMargins(4, 6, 2, 6)
+        cl.setSpacing(0)
+        self._desplazable = ui.Desplazable(margenes=(6, 6, 8, 6), espacio=4, estirar_final=True)
+        cl.addWidget(self._desplazable)
         self.filas = []
-        for ident, titulo, _texto in tutoriales.TUTORIALES:
-            f = _FilaTutorial(ident, tr(titulo), _mmss(tutoriales.duracion(ident)) if tutoriales.duracion(ident) else '')
-            f.clic.connect(self.elegir)
-            cl.addWidget(f)
-            self.filas.append(f)
+        nombres = dict((i, t) for i, t, _x in tutoriales.TUTORIALES)
+        for k, (grupo, ids) in enumerate(tutoriales.GRUPOS):
+            cab = QWidget()
+            cc = QVBoxLayout(cab)
+            cc.setContentsMargins(8, 16 if k else 6, 0, 4)
+            cc.addWidget(_seccion(tr(grupo)))
+            self._desplazable.agregar(cab)
+            for ident in ids:
+                if ident not in nombres:
+                    continue
+                d = tutoriales.duracion(ident)
+                f = _FilaTutorial(ident, tr(nombres[ident]), _mmss(d) if d else '')
+                f.clic.connect(self.elegir)
+                self._desplazable.agregar(f)
+                self.filas.append(f)
         fila.addWidget(lista, 0, Qt.AlignmentFlag.AlignTop)
+        self._lista = lista
         self._izq = izq
         self.elegir(tutoriales.ORDEN[0])
 
@@ -415,9 +630,15 @@ class PanelTutoriales(QWidget):
         self.texto.configure(text=tr(texto))
         for f in self.filas:
             f.poner_elegida(f.ident == ident)
+            if f.ident == ident:
+                try:
+                    self._desplazable.ensureWidgetVisible(f, 0, 24)
+                except Exception:
+                    pass
         self.video.poner(ident)
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
         ancho = max(360, self.width() - self.ANCHO_LISTA - 22)
         self.video.tamano(ancho, ancho / 1.6)
+        self._lista.setFixedHeight(int(max(380, ancho / 1.6 + 110)))      # del alto del video y su título y texto

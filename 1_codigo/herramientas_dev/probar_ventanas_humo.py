@@ -31,6 +31,10 @@ archivos_seguros.mezclar_json = lambda *a, **k: None
 sfx_rules.guardar_modo = lambda *a, **k: None
 resolve_mcp.ruta_exe = lambda: None
 resolve_mcp.estado_cacheado = lambda *a, **k: {}
+# v5.82: al crear la ventana, _tras_sondear_resolve copia los .lua del ÁRBOL al menú de Scripts del Resolve REAL si difieren (pasó el
+# 2026-11-10 con dos .lua a medio cambiar; el CineCaptions instalado los devolvió a su versión al abrirse): aquí, nada a Resolve
+import instalador_scripts
+M.instalar_scripts_en_resolve = instalador_scripts.instalar_scripts_en_resolve = lambda *a, **k: (0, None, '')
 
 from PySide6.QtWidgets import QApplication, QWidget, QLabel, QAbstractButton
 app = QApplication.instance() or QApplication([])

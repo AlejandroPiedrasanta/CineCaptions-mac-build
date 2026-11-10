@@ -59,6 +59,7 @@ class TarjetaEfecto(QWidget):
         self._apagada = False
         self._poster = QImage(str(poster)) if poster else None
         self._reprod = None
+        self._img_pintada = None                  # (v5.82) el cuadro del video que se pintó la última vez (refrescar_vista)
         if previa:
             import vistas_slider
             self._reprod = vistas_slider.Reproductor(previa)
@@ -103,6 +104,17 @@ class TarjetaEfecto(QWidget):
             else:
                 self._reprod.parar()
 
+    def refrescar_vista(self):
+        """v5.82 (el usuario: «mejora la fluidez de todas las páginas»; medido a 2293×928 al 1,5: la página repintaba ENTERAS sus ~14
+        tarjetas 25 veces por segundo —textos, marco y, debajo, la sección y el fondo animado— aunque el video no hubiera cambiado):
+        en cada tic de la página solo se repinta la imagen, y solo si el video trae un cuadro nuevo."""
+        img = self._reprod.imagen() if self._reprod is not None else None
+        if img is not self._img_pintada:
+            self.update(self._rect_imagen().toAlignedRect())
+
+    def _rect_imagen(self):
+        return QRectF(8, 8, self.ANCHO - 16, self.ALTO_IMAGEN)
+
     def enterEvent(self, e):
         self._hover = True
         self.update()
@@ -123,6 +135,7 @@ class TarjetaEfecto(QWidget):
         p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         if self._apagada or (self._pack and not self._sel):
             p.setOpacity(0.55)
+        con_textos = _e.rect().bottom() >= self.ALTO_IMAGEN + 10        # (v5.82: solo la imagen al refrescar el video: sin maquetar textos)
         marco = QRectF(1, 1, self.width() - 2, self.height() - 2)
         p.setBrush(QColor('#13203A' if (self._sel or self._hover) else '#0F1A30'))
         p.setPen(QPen(QColor(VERDE if self._sel else ('#2C4068' if self._hover else '#1E2A42')), 2.2 if self._sel else 1.0))
@@ -139,6 +152,7 @@ class TarjetaEfecto(QWidget):
             p.drawText(rect, int(Qt.AlignmentFlag.AlignCenter), '∅')
         else:
             img = self._reprod.imagen() if self._reprod is not None else None
+            self._img_pintada = img
             if img is None:
                 img = self._poster
             if img is not None:
@@ -146,15 +160,16 @@ class TarjetaEfecto(QWidget):
             else:
                 p.fillRect(rect, QColor('#0B1424'))
         p.restore()
-        p.setPen(QColor('#FFFFFF'))
-        for _tam in (13, 12, 11, 10):                                     # el nombre se achica hasta caber («Fondo desenfocado», «Grano de película»)
-            p.setFont(ui.fuente(_tam, True))
-            if QFontMetricsF(p.font()).horizontalAdvance(self.nombre) <= self.width() - 26:
-                break
-        p.drawText(QRectF(10, self.ALTO_IMAGEN + 14, self.width() - 20, 20), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self.nombre)
-        p.setPen(QColor(TEXT_MUTED))
-        p.setFont(ui.fuente(10))
-        p.drawText(QRectF(10, self.ALTO_IMAGEN + 36, self.width() - 20, 40), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop | Qt.TextFlag.TextWordWrap), self.detalle)
+        if con_textos:
+            p.setPen(QColor('#FFFFFF'))
+            for _tam in (13, 12, 11, 10):                                     # el nombre se achica hasta caber («Fondo desenfocado», «Grano de película»)
+                p.setFont(ui.fuente(_tam, True))
+                if QFontMetricsF(p.font()).horizontalAdvance(self.nombre) <= self.width() - 26:
+                    break
+            p.drawText(QRectF(10, self.ALTO_IMAGEN + 14, self.width() - 20, 20), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self.nombre)
+            p.setPen(QColor(TEXT_MUTED))
+            p.setFont(ui.fuente(10))
+            p.drawText(QRectF(10, self.ALTO_IMAGEN + 36, self.width() - 20, 40), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop | Qt.TextFlag.TextWordWrap), self.detalle)
         if self._sel:
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(QColor(VERDE))
@@ -481,6 +496,7 @@ class PaginaEfectos(QWidget):
         self._mas.tarjeta_sonido.hide()
         capa.addStretch(1)
         self._reloj = QTimer(self)
+        self._reloj.setTimerType(Qt.TimerType.PreciseTimer)   # (v5.82: el normal de Windows redondea a 15,6 ms: 40 → 47 ms, los videos a ~21/s)
         self._reloj.setInterval(self.TIC_MS)
         self._reloj.timeout.connect(self._tic)            # v5.5.7: solo mientras la página se ve (showEvent / hideEvent); antes corría siempre
         self._aplicar_pro()
@@ -696,4 +712,4 @@ class PaginaEfectos(QWidget):
             v = visible_pagina and not c.visibleRegion().isEmpty()
             c.poner_visible(v)
             if v:
-                c.update()
+                getattr(c, 'refrescar_vista', c.update)()          # (v5.82: solo la imagen y solo con un cuadro nuevo)

@@ -347,11 +347,13 @@ if not ok_main then
 end
 
 local destino = carpeta_compartida() .. SEP .. "exportar_drb.txt"
-local salida = io.open(destino, "w")
+-- v5.82: Resolve Free no trae `io` (reventaba aqui con «attempt to index global 'io'»): el informe sale entonces por la consola
+local salida = io and io.open(destino, "w")
 if salida then
     salida:write(table.concat(lineas, "\n"))
     salida:close()
     print("Informe escrito en: " .. destino)
 else
-    print("No pude escribir el informe en: " .. destino)
+    print((io and "No pude escribir el informe en: " .. destino
+           or "Este Resolve no deja escribir archivos: copia el informe de aqui abajo.") .. "\n" .. table.concat(lineas, "\n"))
 end

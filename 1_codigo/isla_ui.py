@@ -102,6 +102,7 @@ class IslaNav(QWidget):
         self._presionado = None
         self._arrastre = None
         self._reloj = QTimer(self)
+        self._reloj.setTimerType(Qt.TimerType.PreciseTimer)   # (v5.82: el normal de Windows redondea a 15,6 ms: 33 → ~47 ms, el punto respiraba a saltos)
         self._reloj.setInterval(33)
         self._reloj.timeout.connect(self._respirar)
         self._reloj.start()
@@ -257,8 +258,12 @@ class IslaNav(QWidget):
             pg.setColorAt(1.0, acento)
             p.setBrush(QBrush(pg))
             p.drawRoundedRect(pa, H_ITEM / 2, H_ITEM / 2)
-        # los items
+        # los items (v5.82: solo los que tocan lo que se repinta: el punto de Resolve respira 30 veces por segundo y no hace falta rehacer
+        # el resto, que Qt recortaría igual)
+        zona = QRectF(_e.rect())
         for it in self._items:
+            if not zona.intersects(it.rect.adjusted(-6, -6, 6, 6)):
+                continue
             if it.tipo == 'sep':
                 p.setPen(Qt.PenStyle.NoPen)
                 p.setBrush(QColor(255, 255, 255, 34))
@@ -560,6 +565,9 @@ class MarcoVentana(QWidget):
     def paintEvent(self, _e):
         w = self.window()
         if w is not None and (w.isMaximized() or w.isFullScreen()):
+            return
+        r = _e.rect()                      # (v5.82: cubre la ventana entera y entra en cada repintado: si no toca el borde, nada que pintar)
+        if r.left() > 1 and r.top() > 1 and r.right() < self.width() - 2 and r.bottom() < self.height() - 2:
             return
         p = QPainter(self)
         p.setPen(QPen(QColor(255, 255, 255, 36), 1.0))

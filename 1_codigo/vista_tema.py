@@ -30,7 +30,7 @@ def estilo_de_pack(pack, formato='v'):
         return None
     if pack == 'Kinetic':
         return {'tipo': 'kinetic', 'pack': pack}
-    if pack in ('VIRAL', 'Tema5', 'Tema7', 'Tema8', 'Tema9'):      # (v5.76: el Tema 5 es un pack de elementos como el VIRAL: su «v tipo»; v5.78: el Estilo 7, sus «v rojo»; v5.80: los 8 y 9)
+    if pack in ('VIRAL', 'Tema4', 'Tema5', 'Tema7', 'Tema8', 'Tema9'):      # (v5.76: el Tema 5 es un pack de elementos como el VIRAL: su «v tipo»; v5.78: el Estilo 7, sus «v rojo»; v5.80: los 8 y 9; v5.82: el 4 nuevo, la pila)
         return {'tipo': 'viral', 'pack': pack}
     if guion_editor.es_guion(pack, formato or 'v'):
         return {'tipo': 'guion', 'pack': pack}
@@ -54,9 +54,10 @@ def planificar(palabras, roles, pack, estilo, idioma='es', fin_video=None, ancla
         cues = guion_editor.planear(palabras, roles, pack, ancla=ancla_guion, fin_video=fin_video, idioma=idioma, video=video)['cues']
     elif tipo in ('kinetic', 'viral'):
         mains = guion_editor.parametros_de_marcas(palabras, roles)[0]
-        if tipo == 'viral' and plantillas.tema_base(pack) in ('Tema5', 'Tema8', 'Tema9'):
-            # v5.76: el Tema 5 nuevo; v5.80: los Estilos 8 (ámbar) y 9 (editorial) (como GO)
-            kp = __import__({'Tema5': 'tipo_planificador', 'Tema8': 'ambar_planificador', 'Tema9': 'editorial_planificador'}[plantillas.tema_base(pack)])
+        if tipo == 'viral' and plantillas.tema_base(pack) in ('Tema4', 'Tema5', 'Tema8', 'Tema9'):
+            # v5.76: el Tema 5 nuevo; v5.80: los Estilos 8 (ámbar) y 9 (editorial); v5.82: el Estilo 4 nuevo (la pila) (como GO)
+            kp = __import__({'Tema4': 'pila_planificador', 'Tema5': 'tipo_planificador', 'Tema8': 'ambar_planificador',
+                             'Tema9': 'editorial_planificador'}[plantillas.tema_base(pack)])
             res = kp.planificar(palabras, idioma=idioma, ancho_tl=1080, alto_tl=1920, mains=mains, fin_video=fin_video)
         elif tipo == 'viral':
             import linea_planificador as kp       # v5.75: el Tema 3 es la línea con la caja negra (como GO)
@@ -193,6 +194,9 @@ def estado_animado(c, t):
                 return st
         elif k.startswith('v rojo'):                                    # v5.78: el Estilo 7, de golpe (comp_rojo); v5.80: blancas y roja SIN salida (corte seco
             return st                                                   # las dos: con la salida las blancas se borraban antes que la roja, «desaparece palabras»)
+        elif k.startswith('v pila'):                                    # v5.82: el Estilo 4 nuevo (comp_pila): aparece en 2 fotogramas, sin desenfoque
+            st.update(a=q(2.0 / 30.0))                                  # ni rebote, y se va de golpe con su bloque (sin salida, como la referencia)
+            return st
         elif k.startswith('v ambar'):                                   # v5.80: el Estilo 8 (comp_ambar): sube un poco y aparece en 7 fotogramas
             p = _ease(q(7.0 / 30.0))
             st.update(a=p, dy=0.33 * em * (1.0 - p))                   # (0,008 del alto ≈ 0,33 em de su tamaño)

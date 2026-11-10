@@ -16,8 +16,8 @@ av==19.0.2
 pyspellchecker==0.9.1
 certifi==2026.10.23
 pynput==1.8.2
-comtypes==1.4.17; sys_platform == "win32"   # v5.5.6: UI Automation sin PowerShell (uia_resolve)
+comtypes==1.5.0; sys_platform == "win32"   # v5.5.6: UI Automation sin PowerShell (uia_resolve); v5.82: 1.5.0, la primera con soporte de Python 3.15 (PyCArgObject, enum.IntFlag)
 six==1.17.0
 # Compilador
 pyinstaller==6.22.3
-pyinstaller-hooks-contrib==2026.9
+pyinstaller-hooks-contrib==2026.10

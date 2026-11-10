@@ -695,16 +695,27 @@ def calidad_mascara(mascara, visible=1.0):
         return None
 
 
-def mascara_guardada(video, t0, t1, corte=1.0, al_progreso=None):
+def lado_recorte(ancho_tl, alto_tl):
+    """v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): el lado largo máximo del recorte = el del timeline (3840 en un 4K), nunca
+    menos de 1920. Antes era siempre 1920: en un timeline 4K Resolve estiraba la persona ×2 y quedaba más borrosa que el video de detrás."""
+    try:
+        return max(1920, int(max(int(ancho_tl or 0), int(alto_tl or 0))))
+    except (TypeError, ValueError):
+        return 1920
+
+
+def mascara_guardada(video, t0, t1, corte=1.0, al_progreso=None, lado_max=1920):
     """v5.31 (el usuario: «guarda la máscara para que siempre quede ahí y no ponga lento nada»): el recorte de la persona de t0 a t1 en la
     carpeta de las máscaras (MASCARAS, fuera de la caché que se limpia: el proyecto de Resolve sigue apuntando a ella), una sola vez por video,
-    tramo y versión: volver a pulsar «Listo» o rehacer GO la reutiliza al momento. Devuelve la ruta o None."""
+    tramo y versión: volver a pulsar «Listo» o rehacer GO la reutiliza al momento. Devuelve la ruta o None.
+    v5.82: `lado_max` (lado_recorte del timeline) entra en la huella si no es 1920: las guardadas para un timeline 1080 siguen valiendo ahí."""
     import hashlib
     p = Path(str(video))
+    lado_max = int(lado_max or 1920)
     try:
         st = p.stat()
-        huella = hashlib.sha1(f'{p.resolve()}|{st.st_size}|{st.st_mtime_ns}|{float(t0):.3f}|{float(t1):.3f}|{float(corte):.3f}|v{VERSION_MATTE}'
-                              .encode('utf-8')).hexdigest()[:16]
+        huella = hashlib.sha1((f'{p.resolve()}|{st.st_size}|{st.st_mtime_ns}|{float(t0):.3f}|{float(t1):.3f}|{float(corte):.3f}|v{VERSION_MATTE}'
+                               + ('' if lado_max == 1920 else f'|L{lado_max}')).encode('utf-8')).hexdigest()[:16]
     except OSError:
         return None
     destino = MASCARAS / f'{p.stem[:40]}_{huella}.mov'
@@ -719,7 +730,7 @@ def mascara_guardada(video, t0, t1, corte=1.0, al_progreso=None):
         return destino
     MASCARAS.mkdir(parents=True, exist_ok=True)
     _podar_mascaras()
-    return recorte_prores(video, t0, t1, destino, al_progreso=al_progreso, corte=corte)
+    return recorte_prores(video, t0, t1, destino, al_progreso=al_progreso, lado_max=lado_max, corte=corte)
 
 
 def recorte_prores(video, t0, t1, destino, al_progreso=None, lado_max=1920, corte=1.0):

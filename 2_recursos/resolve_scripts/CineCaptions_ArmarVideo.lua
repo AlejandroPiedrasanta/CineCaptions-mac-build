@@ -8,7 +8,7 @@ crea un proyecto NUEVO «CineCaptions» (guardando y cerrando el que hubiera abi
 que su audio suena en A1 y reserva la pista FX-BROLL si hace falta. Sin esto, en Free los captions de un video soltado caian en el timeline que hubiera abierto.
 ]]
 
-local VERSION = "5.81 (armar video)"
+local VERSION = "5.82 (armar video)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -610,10 +610,25 @@ local function main()
     -- v5.4.40: Resolve hace una copia de respaldo del timeline recien creado en segundo plano; si los SetSetting llegan antes de que acabe, Resolve Free se cuelga (medido: el 2.º GO
     -- seguido se colgaba 5 de 7 veces, siempre justo ahi: «sequence setup changed» sin el «timeline backup created» de las veces que sale bien). Se le da tiempo y se espacian los cambios.
     pausa(2.0)
-    for _, par in ipairs({ { "useCustomSettings", "1" }, { "timelineResolutionWidth", tostring(ANCHO) }, { "timelineResolutionHeight", tostring(ALTO) },
-                           { "timelineOutputResolutionWidth", tostring(ANCHO) }, { "timelineOutputResolutionHeight", tostring(ALTO) }, { "timelineFrameRate", string.format("%g", FPS) } }) do
-        pcall(function() tl:SetSetting(par[1], par[2]) end)
-        pausa(0.3)
+    local function poner_formato(w, h)
+        for _, par in ipairs({ { "useCustomSettings", "1" }, { "timelineResolutionWidth", tostring(w) }, { "timelineResolutionHeight", tostring(h) },
+                               { "timelineOutputResolutionWidth", tostring(w) }, { "timelineOutputResolutionHeight", tostring(h) }, { "timelineFrameRate", string.format("%g", FPS) } }) do
+            pcall(function() tl:SetSetting(par[1], par[2]) end)
+            pausa(0.3)
+        end
+        local ok_l, rw, rh = pcall(function() return tl:GetSetting("timelineResolutionWidth"), tl:GetSetting("timelineResolutionHeight") end)
+        return ok_l and math.floor(tonumber(rw) or 0) == w and math.floor(tonumber(rh) or 0) == h
+    end
+    -- v5.82 (gemela de resolve_mcp._CREAR_TIMELINE): a la resolucion del video (un 4K, 2160x3840); si Resolve no la acepta (Free no pasa de UHD),
+    -- un escalon menos hasta 1080x1920
+    if not poner_formato(ANCHO, ALTO) then
+        for _, wh in ipairs({ { 2160, 3840 }, { 1080, 1920 } }) do
+            if wh[1] < ANCHO then
+                print(string.format("Resolve no acepto el timeline de %dx%d: pruebo %dx%d", ANCHO, ALTO, wh[1], wh[2]))
+                ANCHO, ALTO = wh[1], wh[2]
+                if poner_formato(ANCHO, ALTO) then break end
+            end
+        end
     end
     pcall(function() project:SetCurrentTimeline(tl) end)
     local ok_ap, puestos = pcall(function() return mp:AppendToTimeline({ clip }) end)

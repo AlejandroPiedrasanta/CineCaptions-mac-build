@@ -154,6 +154,9 @@ LOGO_MARCA_PATH = BASE_RECURSOS / 'logo_cinema_productions.png'      # v5.3.5: �
 # v5.2 (pedido: «que diga Cinema Productions en vez de By Alejandro, en todo»)
 CREDIT_TEXT = 'Cinema Productions'
 CREDIT_URL = ''
+class GeneracionCancelada(SystemExit):
+    """v5.82: el usuario cerró el editor de palabras (o el de texto) sin aceptar. Es una cancelación, no un fallo: antes salía «Algo salió mal»
+    con «Reintentar» y un «Fallo inesperado» en errores.log."""
 def guardar_log_de_error(texto: str):
     """Escribe el detalle de un error en un archivo y devuelve su ruta.
 
@@ -1943,16 +1946,14 @@ class PlantillasWindow(QWidget):
         import un_clic_ui
         import proyecto_ui
         # v5.62 (el usuario eligió la propuesta C, «Tarjeta más grande»): el nombre grande, los dos botones grandes y su halo con arcos
-        # (TituloGo, BotonEstado, FondoTema: ~170 px) pasan a UNA barra de cristal compacta (proyecto_ui.BarraTema) con los puntos del slider
-        # debajo (PuntosSlider); el slider gana ese alto
+        # (TituloGo, BotonEstado, FondoTema: ~170 px) pasan a UNA barra de cristal compacta (proyecto_ui.BarraTema); el slider gana ese alto.
+        # v5.82 (el usuario: «elimina esto y hazlo un poco más grande el slider»): sin los puntos de debajo (PuntosSlider) y con menos margen
         self.info_w = QWidget()
         iv = QVBoxLayout(self.info_w)
-        iv.setContentsMargins(6, 6, 6, 8)
+        iv.setContentsMargins(6, 2, 6, 4)
         iv.setSpacing(8)
         self.barra_tema = proyecto_ui.BarraTema()
         iv.addWidget(self.barra_tema, 0, Qt.AlignmentFlag.AlignHCenter)
-        self.puntos = proyecto_ui.PuntosSlider(self.carrusel)
-        iv.addWidget(self.puntos, 0, Qt.AlignmentFlag.AlignHCenter)
         fila_n, cn = caja_h(espacio=12)
         cn.addStretch(1)
         self.info_fuentes = ui.Enlace('', self._instalar_fuentes_central, 12, color=ui.AMBAR, color_hover=ui.NARANJA)
@@ -3941,6 +3942,7 @@ class WordTagWindow(QWidget):
         else:
             self.vista_bloque = MarcoVista(alto_min=150, movil=True)
         self.vista_bloque.setMinimumHeight(360)
+        self.vista_bloque.poner_zoom_captions(True)      # v5.82 (el usuario: «que haga zoom a los captions para apreciar mejor el cambio»)
         self.vista_bloque.al_cambiar_tamano = self._vt_al_cambiar_tamano      # (los cuadros del tema se rehacen al tamaño nuevo)
         dcapa.addWidget(self.vista_bloque, 1)
         self.reproducir_btn = editor_ui.BotonPlay(tr('Reproducir todo'), tr('Detener'), lado=62)
@@ -7870,14 +7872,14 @@ class SubtitleApp(QWidget):
             vigilancia.iniciar(nombre, hilo=hilo, paso=paso, al_aviso=al_aviso, al_atasco=self._destrabar)
         except Exception:
             registro.excepcion(origen='vigilancia · iniciar')
-    def _fin_tarea(self, ok=True, motivo=''):
+    def _fin_tarea(self, ok=True, motivo='', cancelado=False):
         nombre = getattr(self, '_vig_nombre', None)
         if not nombre:
             return
         self._vig_nombre = None
         try:
             import vigilancia
-            vigilancia.terminar(nombre, ok, motivo)
+            vigilancia.terminar(nombre, ok, motivo, cancelado=cancelado)
         except Exception:
             pass
     def _esperando_al_usuario(self, esperando):
@@ -8326,6 +8328,11 @@ class SubtitleApp(QWidget):
         self._un_clic = True
         self._pausa_go = False                # v5.4.8: «Pausar» / «Cancelar» (se miran en los puntos de control del trabajo)
         self._cancelar_go = False
+        try:
+            import resolve_mcp
+            resolve_mcp.permitir_esperas()    # v5.82: (por si un Cancelar de antes las dejó cortadas)
+        except Exception:
+            pass
         self._go_termino = False
         self._idioma_detectado_go = None
         self.go_panel.al_pausar = self._go_pausar
@@ -8399,12 +8406,16 @@ class SubtitleApp(QWidget):
             self.video_var.set(archivo)
             # v5.10: el video soltado manda: su orientación decide el formato (y con él el pack de GO) y Resolve le arma un timeline nuevo
             medio = resolve_mcp.medir_medio(archivo)
-            self._ancho_timeline, self._alto_timeline, self._fps_timeline = medio['tl_ancho'], medio['tl_alto'], medio['tl_fps']
             modo_sis = (getattr(self, '_estado_sistema', {}) or {}).get('modo')
             if not modo_sis:                         # soltado en los primeros segundos: el estado del sistema aún no llegó; sin MCP es Free (Puente), no «uso tu archivo»
                 import resolve_bridge as _rb
                 modo_sis = _rb.modo_actual(pasivo=True)
             libre_puente = (not hay_mcp) and modo_sis in ('puente', 'manual') and not self._go_sin_resolve       # DaVinci Resolve Free: se habla por el Puente
+            if (hay_mcp or libre_puente) and not self._go_sin_resolve:
+                # v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): el timeline nuevo, a la resolución del video (un 4K: 2160×3840; Free hasta UHD)
+                medio['tl_ancho'], medio['tl_alto'] = resolve_mcp.tamano_timeline(
+                    medio.get('ancho'), medio.get('alto'), resolve_mcp.TOPE_TIMELINE_STUDIO if hay_mcp else resolve_mcp.TOPE_TIMELINE_FREE)
+            self._ancho_timeline, self._alto_timeline, self._fps_timeline = medio['tl_ancho'], medio['tl_alto'], medio['tl_fps']
             self.go_panel.paso('timeline', 'saltado', tr('tu video, en un timeline nuevo') if (hay_mcp or libre_puente) else
                                (tr('sin Resolve: te devuelvo el video') if self._go_sin_resolve else tr('uso tu archivo')))
             if hay_mcp:
@@ -9109,11 +9120,23 @@ class SubtitleApp(QWidget):
         self._cancelando = True
         self._pausa_go = False
         try:
+            import resolve_mcp
+            resolve_mcp.cancelar_esperas()            # v5.82: la espera a que Resolve abra (y sus reintentos) se corta YA; no se vuelve a lanzar
+        except Exception:
+            pass
+        try:
             import motor_voz
             motor_voz.abortar()                       # la voz de Qwen (otro proceso) se corta ya; Whisper para al siguiente avance
         except Exception:
             pass
-        self.go_panel.linea.configure(text=tr('Cancelando: cierro DaVinci Resolve y lo que estaba haciendo…'))
+        # v5.82 (el usuario: «cuando cancelo no cancela rápido, tarda demasiado, debe ser inmediato»): la pantalla pasa YA a «GO cancelado» (antes
+        # se quedaba en «Cancelando…» hasta que el hilo de GO paraba: hasta 25 s); cerrar Resolve y los procesos sigue detrás, en un hilo, y al
+        # acabar Inicio queda como recién abierto (_go_cancelado). Mientras, las entradas siguen quietas: no puede arrancar otro GO encima.
+        try:
+            self.go_panel.cancelado(tr('Cancelado: cierro DaVinci Resolve y lo que estaba haciendo…'))
+            self.ir_a('inicio')
+        except Exception:
+            self.go_panel.linea.configure(text=tr('Cancelando: cierro DaVinci Resolve y lo que estaba haciendo…'))
         trabajador = getattr(self, 'worker', None)
 
         def cerrar_todo():
@@ -9121,11 +9144,16 @@ class SubtitleApp(QWidget):
             colocacion.parar_todo(decir=lambda t: self.msg_queue.put(('status', t)))
             t0 = time.time()
             while trabajador is not None and trabajador.is_alive() and time.time() - t0 < 25:
-                time.sleep(0.25)
+                time.sleep(0.1)
             return True
 
         def fin(_r, _e):
             self._cancelando = False
+            try:
+                import resolve_mcp
+                resolve_mcp.permitir_esperas()        # (ya está todo cerrado: Corrector, la conexión o un GO nuevo pueden volver a abrir Resolve)
+            except Exception:
+                pass
             if getattr(self, '_cancelar_go', False) or getattr(self, '_go_corriendo', False):
                 self._go_cancelado()
         _correr_en_hilo(self, cerrar_todo, fin)
@@ -9145,7 +9173,7 @@ class SubtitleApp(QWidget):
         if not getattr(self, '_go_corriendo', False) and not getattr(self, '_cancelar_go', False):
             return                                                # (ya se hizo)
         registro.info('GO cancelado por el usuario', 'GO')
-        self._fin_tarea(False, tr('GO cancelado'))
+        self._fin_tarea(False, tr('GO cancelado'), cancelado=True)       # v5.82: cancelar no es un fallo (salía «terminó con fallo» en errores.log)
         self._borrar_go_en_curso()
         self._go_corriendo = False
         self._un_clic = False
@@ -14253,7 +14281,7 @@ class SubtitleApp(QWidget):
         es_viral = bool(getattr(pack, 'viral', False))
         es_tipo = es_viral and plantillas.tema_base(pack.nombre) == 'Tema5'     # v5.76: el Tema 5 nuevo (clip «v tipo», solo vertical como antes)
         es_rojo = es_viral and plantillas.tema_base(pack.nombre) == 'Tema7'     # v5.78: el Estilo 7 (la línea con la palabra que suena en rojo)
-        propio = {'Tema8': 'ambar_planificador', 'Tema9': 'editorial_planificador'}.get(plantillas.tema_base(pack.nombre)) if es_viral else None   # v5.80: los Estilos 8 y 9
+        propio = {'Tema4': 'pila_planificador', 'Tema8': 'ambar_planificador', 'Tema9': 'editorial_planificador'}.get(plantillas.tema_base(pack.nombre)) if es_viral else None   # v5.80: los Estilos 8 y 9; v5.82: el Estilo 4 nuevo (la pila)
         if formato not in (('v', 'h') if es_viral and not es_tipo else ('v',)) or formato not in pack.formatos:
             avisar(tr('El estilo «{p}» es para vídeo vertical u horizontal: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)) if es_viral and not es_tipo
                    else tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
@@ -14337,7 +14365,7 @@ class SubtitleApp(QWidget):
         track = {'language': base_lang, 'style': 'kinetic', 'data_path': str(json_path), 'srt_path': str(srt_path), 'fonts': {}, 'adelanto_frames': 0,
                  'offset_frames': self._offset_frames(), **pista_plantilla, **pista_sfx, **pista_emojis}
         if es_viral:
-            track['clip_prueba'] = ('v tipo' if es_tipo else ('v rojo' if es_rojo else {'ambar_planificador': 'v ambar', 'editorial_planificador': 'v edi'}.get(propio, 'v linea')))      # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.75: el de la línea; v5.76: el del Tema 5)
+            track['clip_prueba'] = ('v tipo' if es_tipo else ('v rojo' if es_rojo else {'pila_planificador': 'v pila', 'ambar_planificador': 'v ambar', 'editorial_planificador': 'v edi'}.get(propio, 'v linea')))      # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.75: el de la línea; v5.76: el del Tema 5)
         else:
             # v5.45 (el usuario: «los rings se quedan a medias»): en el kit el bloque EMPIEZA a salir al acabar y la salida dura 0,32 s; los clips del pack
             # la hacen en sus últimos 0,32 s, así que se alargan eso (antes salían 0,32 s antes y el aro, que tarda 0,45 s, no acababa de dibujarse)
@@ -14559,7 +14587,7 @@ class SubtitleApp(QWidget):
             # el pack principal de la pista (Kinetic si hay Tema 1; si no VIRAL; si no el primero: el Tema 5 de la v5.76 es su propio pack «v tipo») y
             # los demás packs de elementos en plantillas_extra (los clips «v …» de VIRAL / Tema5 junto a los «k …» de Kinetic)
             principal_k = 'Kinetic' if hay_t1 else ('VIRAL' if hay_t3 else (packs_k[0] if packs_k else 'VIRAL'))
-            prueba_k = {'VIRAL': 'v fina', 'Tema5': 'v tipo', 'Tema7': 'v rojo', 'Tema8': 'v ambar', 'Tema9': 'v edi'}     # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.78: el Estilo 7)
+            prueba_k = {'VIRAL': 'v fina', 'Tema4': 'v pila', 'Tema5': 'v tipo', 'Tema7': 'v rojo', 'Tema8': 'v ambar', 'Tema9': 'v edi'}     # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.78: el Estilo 7; v5.82: el Estilo 4 nuevo)
             pl_k = plantilla_de(principal_k)
             if pl_k:
                 track_k['plantilla'] = pl_k
@@ -14804,7 +14832,7 @@ class SubtitleApp(QWidget):
                 self.msg_queue.put(('need_tags', (palabras, sugeridos, project_name)))
                 self._tag_event.wait()
                 if self._tag_result is None:
-                    raise SystemExit(tr('Generación cancelada por el usuario.'))
+                    raise GeneracionCancelada(tr('Generación cancelada por el usuario.'))
                 self.msg_queue.put(('phase_indeterminate', None))
                 self.msg_queue.put(('status', tr('Armando los bloques destacados...')))
                 self.msg_queue.put(('gen_fase', 'armar'))
@@ -14897,7 +14925,7 @@ class SubtitleApp(QWidget):
                         self.msg_queue.put(('need_tags', (palabras, sugeridos, project_name)))
                         self._tag_event.wait()
                         if self._tag_result is None:
-                            raise SystemExit(tr('Generación cancelada por el usuario.'))
+                            raise GeneracionCancelada(tr('Generación cancelada por el usuario.'))
                         palabras_finales, roles_finales = self._tag_result
                         self._words_corregidas = texto_corregido(words, palabras_finales)
                         self._registrar_sfx_manuales(palabras_finales)
@@ -14940,7 +14968,7 @@ class SubtitleApp(QWidget):
                     self.msg_queue.put(('need_text', (palabras, project_name, base_lang)))
                     self._tag_event.wait()
                     if self._tag_result is None:
-                        raise SystemExit(tr('Generación cancelada por el usuario.'))
+                        raise GeneracionCancelada(tr('Generación cancelada por el usuario.'))
                     palabras_finales, _ = self._tag_result
                     self.msg_queue.put(('phase_indeterminate', None))
                     self.msg_queue.put(('status', tr('Armando los bloques de subtitulo...')))
@@ -15010,9 +15038,10 @@ class SubtitleApp(QWidget):
             self._abortar_si_fallo_el_timeline()
             self.msg_queue.put(('done', (n_bloques, langs, str(st.SHARED_FOLDER))))
         except SystemExit as e:
-            if not getattr(self, '_cancelar_go', False):         # v5.5.12: cancelar no es un fallo (salía «Fallo inesperado» en el Registro)
+            editor_cerrado = isinstance(e, GeneracionCancelada)  # v5.82: cerrar el editor de palabras también es cancelar
+            if not getattr(self, '_cancelar_go', False) and not editor_cerrado:   # v5.5.12: cancelar no es un fallo (salía «Fallo inesperado» en el Registro)
                 guardar_log_de_error(traceback.format_exc())
-            self.msg_queue.put(('error', str(e)))
+            self.msg_queue.put(('cancelado' if editor_cerrado else 'error', str(e)))
             return None
         except Exception as e:
             log = guardar_log_de_error(traceback.format_exc())
@@ -15198,6 +15227,22 @@ class SubtitleApp(QWidget):
                         self._go_vista_previa(n_cues, langs, folder)
                     else:
                         self._al_terminar_generacion(n_cues, langs, folder)
+                elif kind == 'cancelado':
+                    # v5.82: el usuario cerró el editor de palabras sin aceptar: se para sin «Algo salió mal» ni nada en errores.log
+                    self._gen_fin(False)
+                    self._parar_reloj()
+                    self.progress.stop()
+                    self.progress.configure(mode='determinate')
+                    self.progress.set(0)
+                    self.porcentaje_lbl.configure(text='')
+                    if un_clic and getattr(self, '_go_corriendo', False):
+                        self.status_var.set(tr('GO cancelado.'))
+                        self._go_cancelado()
+                    else:
+                        self.status_var.set(str(payload or '').strip() or tr('GO cancelado.'))
+                        self._fin_tarea(False, str(payload or ''), cancelado=True)
+                        registro.info(str(payload or '').strip() or 'Cancelado por el usuario', 'generar')
+                        self._set_inputs_enabled(True)
                 elif kind == 'error' and un_clic and getattr(self, '_cancelar_go', False):
                     self._gen_fin(False)
                     self._parar_reloj()

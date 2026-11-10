@@ -5,6 +5,7 @@ Uso:  python pack_viral.py [--lab] [<carpeta de salida>]      (por defecto 2_rec
       python pack_viral.py --tema5                            (v5.76: el pack «Tema5»: solo «v tipo», en vertical; ver construir_tema5)
       python pack_viral.py --tema7                            (v5.78: el pack «Tema7» = Estilo 7: «v rojo» y «v rojo activa»; ver construir_tema7)
       python pack_viral.py --tema8 | --tema9                  (v5.80: «Tema8» = Estilo 8, «v ambar»/«v ambar clave»; «Tema9» = Estilo 9, «v edi»/«v edi serif»)
+      python pack_viral.py --tema4                            (v5.82: el Estilo 4 nuevo, la pila: «v pila»/«v pila peq»/«v pila lima»)
 
 Genera «VIRAL vertical.drb» y «VIRAL horizontal.drb» (un clip por elemento, ver viral_elementos.py; el horizontal lleva las mismas comps con las medidas de un cuadro 1920×1080) y su pack.json
 con «guion»: «viral»: la marca con la que la app sabe que este pack se coloca con viral_planificador.py. Comparte con Kinetic el camino de Resolve (place_kinetic_track) y el generador de clips (kinetic_pack.py).
@@ -75,9 +76,16 @@ def construir_tema9(carpeta_salida=None):
     return construir(carpeta_salida, nombre='Tema9', formatos=('v', 'h'), solo=('v edi', 'v edi serif'))
 
 
+def construir_tema4(carpeta_salida=None):
+    """v5.82 (el usuario: «crea este estilo… y reemplázalo por el Estilo 4»): el pack «Tema4» pasa a ser de ELEMENTOS como el VIRAL (como el Tema 5
+    en la 5.76): la pila de tres alturas con «v pila» (la grande lima), «v pila peq» (las pequeñas blancas) y «v pila lima» (la de abajo que remata
+    en lima); la planifica pila_planificador. Vertical y horizontal. El Estilo 4 de antes (pack_tema4.py) ya no se entrega."""
+    return construir(carpeta_salida, nombre='Tema4', formatos=('v', 'h'), solo=('v pila', 'v pila peq', 'v pila lima'))
+
+
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
-    for bandera, hacer in (('--tema7', construir_tema7), ('--tema8', construir_tema8), ('--tema9', construir_tema9)):
+    for bandera, hacer in (('--tema4', construir_tema4), ('--tema7', construir_tema7), ('--tema8', construir_tema8), ('--tema9', construir_tema9)):
         if bandera in sys.argv:
             d, clips = hacer(args[0] if args else None)
             print(d, len(clips), 'clips:', ', '.join(clips))

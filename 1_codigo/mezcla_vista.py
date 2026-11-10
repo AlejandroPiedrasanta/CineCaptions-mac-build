@@ -86,6 +86,8 @@ def _interesa(look, motor, cue):
         return sum(k == 'v rojo' for k in claves) >= 2
     if any(k.startswith(('v ambar', 'v edi')) for k in claves):   # v5.80: los Estilos 8 y 9 (un bloque con la clave y algo más)
         return len(claves) >= 3 and any(k in ('v ambar clave', 'v edi serif') for k in claves)
+    if any(k.startswith('v pila') for k in claves):               # v5.82: el Estilo 4 nuevo (la pila entera: arriba, la grande y abajo, mejor)
+        return 'v pila' in claves and len(claves) >= 3 and len(cue.get('lines') or []) >= 3
     if look.get('efecto'):
         return any(k.startswith(look['efecto']) for k in claves)
     return 'v negrita' in claves and len(claves) >= 4
@@ -244,6 +246,16 @@ def _dibujar_viral(lienzo, cue, esc):
             cx, cy = float(run.get('x', 0.5)) * ancho, float(run.get('y', 0.5)) * alto
             color = ((246, 184, 86) if base == 'v ambar clave' else (242, 194, 117)) if ambar else (255, 255, 255)
             ImageDraw.Draw(sombra).text((cx, cy + max(1.0, px * 0.04)), txt, font=f, fill=(0, 0, 0, 170), anchor='mm')
+            _texto_centrado(texto, (cx, cy), txt, f, color)
+            continue
+        if base.startswith('v pila'):                             # v5.82: el Estilo 4 nuevo: la grande y la que remata abajo en lima, las pequeñas en blanco
+            px = float(run.get('size') or 0.06) * VC.K_PX * esc
+            f = VC._fuente(par, px)
+            if f is None:
+                continue
+            cx, cy = float(run.get('x', 0.5)) * ancho, float(run.get('y', 0.5)) * alto
+            color = (224, 251, 88) if base in ('v pila', 'v pila lima') else (255, 255, 248)
+            ImageDraw.Draw(sombra).text((cx, cy + max(1.0, px * 0.03)), txt, font=f, fill=(0, 0, 0, 150), anchor='mm')
             _texto_centrado(texto, (cx, cy), txt, f, color)
             continue
         px = float(run.get('size') or 0.09) * VC.K_PX * esc

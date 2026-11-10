@@ -21,6 +21,47 @@ _REGLAS = [
     # v5.5: «el script de Resolve corrió pero NO colocó nada» (colocacion.CAUSAS): GO deja la marca [causa:clave] en el detalle del error
     (r'\[causa:' + clave + r'\]', titulo, que, pasos, 'bloquea') for _p, clave, titulo, que, pasos, _r in __import__('colocacion').CAUSAS
 ] + [
+    # v5.82 (informe de un cliente de Mac con la 5.78): lo que pasó en la sesión ANTERIOR (registro._revisar_cierre_anterior). Caía en la última
+    # regla por la palabra «sesión» («El programa arrancó · CineCaptions se abrió correctamente», en un Error) o, si el corte fue en el paso
+    # «timeline», en «No pude traer el audio del timeline»
+    (r'NO llegó a terminar de abrir',
+     'La vez anterior CineCaptions no terminó de abrirse',
+     'La última vez el programa se cerró, o se quedó esperando, antes de mostrar su ventana. Esta vez abrió bien. Si el arranque se atasca, '
+     'a los 20 s queda en fallo_nativo.log en qué estaba esperando.',
+     ['Si esta vez abrió bien, no hace falta hacer nada.',
+      'Si se repite, pulsa «Copiar informe» en el Registro y envíalo a soporte junto con errores.log y fallo_nativo.log (carpeta DaVinciSubtitles).'],
+     'parcial'),
+    (r'La sesión anterior se cortó en mitad de',
+     'La vez anterior el programa se cerró en mitad de un trabajo',
+     'CineCaptions se cerró (o se colgó) mientras hacía ese trabajo; el mensaje dice en qué paso. Lo que estaba haciendo quedó sin terminar.',
+     ['Vuelve a hacerlo: GO empieza de cero y no se pierde nada de lo que ya tenías.',
+      'Si se repite, pulsa «Copiar informe» en el Registro y envíalo a soporte junto con errores.log y fallo_nativo.log (carpeta DaVinciSubtitles).'],
+     'parcial'),
+    (r'no se cerró bien \(se colgó o se cayó\)|informe\(s\) de caída',
+     'La vez anterior CineCaptions se cerró de golpe',
+     'El programa se cerró sin pasar por su salida normal: se colgó, se cayó o se apagó el equipo. Lo que estuviera haciendo pudo quedar a '
+     'medias; tus ajustes y proyectos se guardan solos.',
+     ['Si se repite, pulsa «Copiar informe» en el Registro y envíalo a soporte junto con errores.log y fallo_nativo.log (carpeta DaVinciSubtitles).'],
+     'parcial'),
+    # v5.82 (informe de un cliente con la 5.76): «El programa lleva 46 s abriendo y no termina» caía en «Un efecto visual de Inicio falló»
+    # porque la pila del detalle pasaba por escena_go.py; y la prueba de escritura del monitor, en «El sistema no dejó escribir» (Detuvo la tarea)
+    (r'lleva .{1,20} abriendo y no termina',
+     'CineCaptions tarda mucho en abrir',
+     'La ventana lleva más de 45 segundos abriéndose: algo la tiene esperando, casi siempre el antivirus revisando los archivos del programa '
+     '(sobre todo la primera vez tras instalar o actualizar) o el disco muy ocupado. Debajo quedan las pilas de todos los hilos: dicen en qué '
+     'estaba esperando.',
+     ['Espera un poco: si termina de abrir, no hace falta hacer nada.',
+      'Si pasa cada vez que lo abres, añade la carpeta de CineCaptions a las excepciones de tu antivirus.',
+      'Si se repite, pulsa «Copiar informe» en el Registro y envíalo a soporte junto con errores.log y fallo_nativo.log (carpeta DaVinciSubtitles).'],
+     'parcial'),
+    (r'No se puede escribir en .*no se guardarán',
+     'No se puede escribir en la carpeta de datos',
+     'CineCaptions comprueba cada minuto que puede guardar en su carpeta DaVinciSubtitles y esta vez no pudo en varios intentos seguidos: '
+     'otro programa tiene bloqueados sus archivos (casi siempre el antivirus, OneDrive o una copia de seguridad) o la carpeta no deja escribir. '
+     'Mientras dure, los ajustes, las marcas y el registro pueden no guardarse.',
+     ['Añade la carpeta DaVinciSubtitles (en tu carpeta de usuario) a las excepciones de tu antivirus y, si usas OneDrive, quítala de la sincronización.',
+      'Si el disco está casi lleno, libera espacio.'],
+     'parcial'),
     # v5.4.27: los fallos nuevos de Resolve Free / Mac / IA, que antes caían en el genérico «Algo no salió como se esperaba». Van ANTES de las reglas generales (gana la primera que encaja).
     (r'pantalla de proyectos|Organizador de proyectos|no mostr[oó] un proyecto abierto|No veo la ventana principal de DaVinci Resolve|sin proyecto abierto',
      'Resolve está en la pantalla de proyectos',
@@ -259,6 +300,28 @@ _REGLAS = [
      ['Abre el proyecto en Resolve y haz clic en el timeline que quieres subtitular.',
       'Comprueba que el timeline tiene audio (no está silenciado ni vacío).',
       'También puedes soltar un vídeo en la ventana de CineCaptions y pulsar GO otra vez.'], 'bloquea'),
+    # v5.82 (informe de un cliente con una RTX 4070 Laptop de 8 GB): salud dice qué le falta al motor de voz e IA. Sin la IA de texto la voz
+    # funciona (aviso «Al abrir: …»); antes todo era «faltan modelos» y se explicaba como «le faltan librerías»
+    # v5.82: «Reparar el motor» terminaba en «listo» aunque no hubiera bajado la IA de texto; ahora lo dice (motor_voz._avisar_sin_ia_de_texto)
+    (r'no se descargó la IA de texto',
+     'No se descargó la IA de texto',
+     'La voz quedó lista, pero la IA que corrige el texto y elige las palabras clave no se pudo descargar; el mensaje dice por qué. Mientras '
+     'falte, GO corrige el texto con reglas: funciona, con menos acierto.',
+     ['Si no cabe en el disco: libera espacio en el disco del sistema (el mensaje dice cuánto hace falta) y vuelve a pulsar «Reparar el motor».',
+      'Si se cortó la descarga: comprueba la conexión (y que el antivirus o un firewall no bloqueen a CineCaptions) y vuelve a pulsar «Reparar el motor».'],
+     'parcial'),
+    (r'Al abrir: Motor de IA.*falta la IA de texto',
+     'Falta la IA de texto (la voz funciona)',
+     'El motor de voz está listo, pero la IA que corrige el texto y elige las palabras clave no se descargó (casi siempre por falta de espacio '
+     'en el disco o porque se cortó la conexión). Mientras falte, GO corrige el texto con reglas: funciona, con menos acierto.',
+     ['En Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
+      'Deja al menos 6 GB libres en el disco del sistema: la IA de texto ocupa unos 4 GB.'], 'parcial'),
+    (r'Falla al iniciar: Motor de IA.*(versión anterior|PyTorch|falta el modelo de voz|falta el alineador|faltan modelos)',
+     'Al motor de IA le falta una pieza',
+     'Al abrirse, CineCaptions comprobó el motor de voz e IA y le falta una pieza (el modelo de voz, el alineador de palabras o PyTorch) o es '
+     'de una versión anterior: una instalación o una descarga quedó a medias. Mientras, la voz se transcribe con Whisper.',
+     ['En Ajustes › General › Motor de voz pulsa «Reparar el motor» (descarga lo que falta; necesita internet).',
+      'Si el antivirus o el Control inteligente de aplicaciones de Windows bloquea la descarga, permite CineCaptions y repite.'], 'parcial'),
     # v5.54: el chequeo de arranque de un motor («Falla al iniciar: Motor de IA (Qwen3) — faltan 63 librerías…») caía en la de abajo por «Qwen»
     # y salía como «La transcripción no pudo terminar», con pasos de un audio dañado, sin haber transcrito nada
     (r'Falla al iniciar: Motor (de IA|auxiliar)',
@@ -373,7 +436,8 @@ _REGLAS = [
      ['Cierra y vuelve a abrir CineCaptions.',
       'Si se repite, reinstala CineCaptions con el último instalador (se conservan tus ajustes).',
       'Si sigue igual, pulsa «Copiar este error» y envíalo a soporte.'], 'parcial'),
-    (r'CineCaptions iniciado|sesión|inici',
+    # v5.82: antes también «sesión|inici»: cualquier aviso con esas palabras salía como «El programa arrancó · se abrió correctamente»
+    (r'CineCaptions iniciado',
      'El programa arrancó',
      'Anotación informativa: CineCaptions se abrió correctamente.', [], 'ninguno'),
 ]
@@ -404,7 +468,12 @@ def explicar(e):
                          tr('Un programa auxiliar terminó con un error pero sin explicar el motivo.'),
                          [tr('Vuelve a intentarlo.'), tr('Si se repite, copia el informe y envíalo a soporte.')],
                          'bloquea' if e.nivel == 'error' else 'parcial', tecnica)
-        texto = f'{origen} | {mensaje} | {detalle[-1500:]}'
+        para_reglas = mensaje
+        if origen == 'vigilancia':
+            # v5.82: la lista de pasos del resumen («(timeline 5 s · voz 14 s)») no es el motivo: con ella la regla de «timeline» explicaba
+            # cualquier fallo (y la cancelación) como «No pude traer el audio del timeline»
+            para_reglas = re.sub(r' \([^()]*\d s\)(?=:|$)', '', mensaje)
+        texto = f'{origen} | {para_reglas} | {detalle[-1500:]}'
         for patron, titulo, que, pasos, impacto in _COMPILADAS:
             if patron.search(texto):
                 if e.nivel == 'info' and impacto != 'ninguno':

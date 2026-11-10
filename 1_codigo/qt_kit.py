@@ -2670,6 +2670,13 @@ class MarcoVista(QWidget):
         self._fondo = None
         self._t_anim = None          # v5.4: segundos desde que entro el bloque (None = quieto, como siempre)
         self._salida = 0.0           # 0..1: el bloque se desvanece al terminar
+        self._zoom = False           # v5.82: la cámara que se acerca a los captions (solo el móvil del Corrector: poner_zoom_captions)
+        self._cam = None             # [zoom, centro x, centro y] de ahora (fracciones de la pantalla) y su objetivo
+        self._cam_t = 0.0
+        self._cam_obj = None
+        self._caja_cache = (None, None)
+        self._pulso = None           # cuándo llegó un cambio del mismo bloque (el acercamiento corto que lo señala)
+        self._reloj_cam = None
         self.setMinimumHeight(int(alto_min))
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -2850,6 +2857,9 @@ class MarcoVista(QWidget):
         """cuadros = vista_tema.Cuadros (None: sin vista exacta). k: el cue que se repite en bucle (vista quieta, con su propio reloj);
         t: un instante fijo (lo marca el play en cada tic)."""
         anterior = self._animador
+        if (self._zoom and cuadros is not None and anterior is not None and anterior.get('cu') is not cuadros and k is not None
+                and anterior.get('k') == k):
+            self._pulso = time.perf_counter()                           # v5.82: un cambio en el mismo bloque: la cámara lo señala
         self._animador = None if cuadros is None else {'cu': cuadros, 'k': k, 't': t}
         if cuadros is not None and k is not None:
             if anterior is None or anterior.get('cu') is not cuadros or anterior.get('k') != k or anterior.get('t') is not None:
@@ -2903,10 +2913,134 @@ class MarcoVista(QWidget):
         self.update()
 
     def tamano_pantalla(self):
-        """(ancho, alto) en píxeles REALES de la pantalla del móvil: a ese tamaño se rasterizan los cuadros del tema (nítidos en pantallas HiDPI)."""
+        """(ancho, alto) en píxeles REALES de la pantalla del móvil: a ese tamaño se rasterizan los cuadros del tema (nítidos en pantallas HiDPI).
+        v5.82: con la cámara de los captions, ZOOM_RASTER veces más fino (acercados siguen nítidos)."""
         _caja, pant, _r = self.geometria_movil()
-        dpr = max(1.0, float(self.devicePixelRatioF() or 1.0))
+        dpr = max(1.0, float(self.devicePixelRatioF() or 1.0)) * (self.ZOOM_RASTER if self._zoom else 1.0)
         return int(round(pant.width() * dpr)), int(round(pant.height() * dpr))
+
+    # -- v5.82 (el usuario: «que haga zoom a los captions para apreciar mejor el cambio»): la cámara del móvil del Corrector -----------------
+    ZOOM_MAX = 1.9                   # lo más que se acerca
+    ZOOM_RASTER = 1.75               # cuánto más fino se rasterizan los captions con la cámara puesta
+    ZOOM_LLENA = (0.96, 0.62)        # lo que llega a ocupar la caja de los captions acercada (ancho y alto de la pantalla)
+    ZOOM_TAU = 0.16                  # lo que tarda la cámara en seguir (s, exponencial): ~0,5 s de un bloque a otro
+    ZOOM_PULSO = (0.07, 0.65)        # el acercamiento corto al llegar un cambio del mismo bloque (cuánto, cuánto dura)
+
+    def poner_zoom_captions(self, si):
+        """La cámara que encuadra los captions del bloque (y los sigue al reproducir); False = la pantalla entera, como siempre."""
+        self._zoom = bool(si)
+        self._cam = self._cam_obj = None
+        self.update()
+
+    @staticmethod
+    def _tinta_capa(sp):
+        """(x0, y0, x1, y1) en píxeles de la capa de lo que SE VE (alfa > 10 %): las capas traen mucho margen transparente para el brillo y el
+        movimiento (la «k hero» del Estilo 1 mide más que la pantalla). Se guarda en la capa."""
+        if '_tinta' not in sp:
+            caja = None
+            try:
+                import numpy as np
+                img = sp['img']
+                w, h, bpl = img.width(), img.height(), img.bytesPerLine()
+                a = np.frombuffer(img.constBits(), np.uint8, count=bpl * h).reshape(h, bpl)[:, 3:4 * w:4]     # ARGB32: el alfa es el 4.º byte
+                filas, cols = np.nonzero(a.max(axis=1) > 25)[0], np.nonzero(a.max(axis=0) > 25)[0]
+                if len(filas) and len(cols):
+                    caja = (int(cols[0]), int(filas[0]), int(cols[-1]) + 1, int(filas[-1]) + 1)
+            except Exception:
+                caja = (0, 0, sp['w'], sp['h'])
+            sp['_tinta'] = caja
+        return sp['_tinta']
+
+    def _caja_captions(self, cu, k):
+        """(x0, y0, x1, y1) en fracciones de la pantalla de la TINTA de las capas del cue k (sin el emoji), o None. Las capas traen su cue
+        (cue_t0); quietas (escala 1) están donde dicen sus x, y."""
+        clave = (id(cu), k)
+        if self._caja_cache[0] == clave:
+            return self._caja_cache[1]
+        caja = None
+        try:
+            ini = float(cu.cues[k].get('start') or 0.0)
+            xs0, ys0, xs1, ys1 = [], [], [], []
+            for sp in cu.sprites:
+                if sp.get('tipo') == 'emoji' or abs(float(sp.get('cue_t0', -99.0)) - ini) > 0.02:
+                    continue
+                t = self._tinta_capa(sp)
+                if t is None:
+                    continue
+                xs0.append(sp['x'] + t[0])
+                ys0.append(sp['y'] + t[1])
+                xs1.append(sp['x'] + t[2])
+                ys1.append(sp['y'] + t[3])
+            if xs0:
+                caja = (max(0.0, min(xs0) / cu.ancho), max(0.0, min(ys0) / cu.alto), min(1.0, max(xs1) / cu.ancho), min(1.0, max(ys1) / cu.alto))
+        except Exception:
+            caja = None
+        self._caja_cache = (clave, caja)
+        return caja
+
+    def _cam_objetivo(self):
+        """[zoom, cx, cy] al que va la cámara: la caja de los captions del bloque que se ve, llenando ZOOM_LLENA, sin salirse de la foto."""
+        a = self._animador
+        if not self._zoom or a is None:
+            return [1.0, 0.5, 0.5]
+        cu = a['cu']
+        k = a.get('k')
+        if k is None:
+            try:
+                k = cu.cue_en(self._t_animador())
+            except Exception:
+                k = None
+        caja = self._caja_captions(cu, k) if k is not None and k >= 0 else None
+        if caja is None:
+            return list(self._cam_obj or [1.0, 0.5, 0.5])
+        x0, y0, x1, y1 = caja
+        z = min(self.ZOOM_MAX, max(1.0, min(self.ZOOM_LLENA[0] / max(1e-3, x1 - x0), self.ZOOM_LLENA[1] / max(1e-3, y1 - y0))))
+        m = 0.5 / z
+        return [z, min(max((x0 + x1) / 2.0, m), 1.0 - m), min(max((y0 + y1) / 2.0, m), 1.0 - m)]
+
+    def _cam_ahora(self):
+        """[zoom, cx, cy] de este cuadro: sigue al objetivo con suavidad (y se repinta sola mientras llega); el pulso de un cambio encima."""
+        obj = self._cam_objetivo()
+        self._cam_obj = obj
+        ahora = time.perf_counter()
+        if self._cam is None:
+            self._cam = [1.0, 0.5, 0.5]                                  # (la primera vez entra acercándose desde la pantalla entera)
+            self._cam_t = ahora
+        else:
+            f = 1.0 - math.exp(-max(0.0, min(0.2, ahora - self._cam_t)) / self.ZOOM_TAU)
+            self._cam = [c + (o - c) * f for c, o in zip(self._cam, obj)]
+        self._cam_t = ahora
+        z, cx, cy = self._cam
+        falta = abs(z - obj[0]) > 0.002 or abs(cx - obj[1]) > 0.0008 or abs(cy - obj[2]) > 0.0008
+        if self._pulso is not None:
+            q = (ahora - self._pulso) / self.ZOOM_PULSO[1]
+            if q >= 1.0:
+                self._pulso = None
+            else:
+                z *= 1.0 + self.ZOOM_PULSO[0] * math.sin(math.pi * q) ** 2
+                falta = True
+        if falta and (self._reloj_anim is None or not self._reloj_anim.isActive()):
+            if self._reloj_cam is None:
+                self._reloj_cam = QTimer(self)
+                self._reloj_cam.setInterval(16)
+                self._reloj_cam.timeout.connect(self.update)
+            if not self._reloj_cam.isActive():
+                self._reloj_cam.start()
+        elif not falta and self._reloj_cam is not None:
+            self._reloj_cam.stop()
+        m = 0.5 / max(1.0, z)
+        return z, min(max(cx, m), 1.0 - m), min(max(cy, m), 1.0 - m)
+
+    def _con_camara(self, p, pant):
+        """Pone en el pintor el encuadre de la cámara (si hace falta): lo que se dibuje en `pant` sale acercado a los captions."""
+        if not self._zoom:
+            return
+        z, cx, cy = self._cam_ahora()
+        if z <= 1.0005:
+            return
+        p.translate(pant.left() + pant.width() / 2.0, pant.top() + pant.height() / 2.0)
+        p.scale(z, z)
+        p.translate(-(pant.left() + cx * pant.width()), -(pant.top() + cy * pant.height()))
 
     def _imagen_en_pantalla(self):
         """(QImage, es_render_real) que se ve dentro de la pantalla: el render real de Resolve si lo hay; si no, la foto de muestra."""
@@ -2985,16 +3119,26 @@ class MarcoVista(QWidget):
         base = QColorReal(VERDE)
         p.save()
         p.setPen(Qt.PenStyle.NoPen)
-        aura = QRadialGradient(caja.center(), caja.height() * 0.62)
+        # v5.82: todo el resplandor cabe en el widget y se apaga antes del borde (antes el halo se salía y se veía cortado en un rectángulo verde)
+        cx_m = caja.center().x()
+        lado_x = max(12.0, min(cx_m, self.width() - cx_m) - 2.0)
+        aura_rx = min(caja.width() * 1.05, lado_x)
+        aura_ry = max(12.0, min(caja.height() * 0.62, min(caja.center().y(), self.height() - caja.center().y()) - 2.0))
+        aura = QRadialGradient(QPointF(0, 0), aura_rx)
         c0 = QColorReal(base)
         c0.setAlpha(int(34 * latido))
         aura.setColorAt(0.0, c0)
         aura.setColorAt(1.0, QColorReal(base.red(), base.green(), base.blue(), 0))
+        p.save()
+        p.translate(caja.center())
+        p.scale(1.0, aura_ry / aura_rx)
         p.setBrush(QBrush(aura))
-        p.drawEllipse(caja.center(), caja.width() * 1.05, caja.height() * 0.62)
+        p.drawEllipse(QPointF(0, 0), aura_rx, aura_rx)
+        p.restore()
         centro = QPointF(caja.center().x(), caja.bottom() + 10.0)
+        lado_y = max(6.0, self.height() - centro.y() - 2.0)
         for ancho_f, alto_px, a0, a1 in ((1.05, 46.0, 150, 70), (0.55, 16.0, 235, 120)):      # halo ancho y núcleo brillante
-            rx, ry = caja.width() * ancho_f, alto_px
+            rx, ry = min(caja.width() * ancho_f, lado_x), min(alto_px, lado_y)
             halo = QRadialGradient(QPointF(0, 0), rx)
             c1 = QColorReal(base)
             c1.setAlpha(min(255, int(a0 * latido)))
@@ -3034,11 +3178,14 @@ class MarcoVista(QWidget):
         p.fillRect(pant, QColorReal('#05080F'))
         img, real = self._imagen_en_pantalla()
         if not real and self._animador is not None:
-            # v5.5.10: los captions del tema ANIMADOS (cada capa entra como su macro), sobre la foto
+            # v5.5.10: los captions del tema ANIMADOS (cada capa entra como su macro), sobre la foto; v5.82: con la cámara del Corrector
+            p.save()
             try:
+                self._con_camara(p, pant)
                 self._animador['cu'].pintar(p, pant, self._t_animador())
             except Exception:
                 pass
+            p.restore()
             img = None
         elif not real and self._cuadro is not None:
             # v5.5.10: el cuadro exacto del tema (foto + captions de render_sin_resolve), ya del tamaño de la pantalla

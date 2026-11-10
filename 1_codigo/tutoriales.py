@@ -1,22 +1,28 @@
 # CineCaptions · By Cinema Productions
 # 1_codigo/tutoriales.py — los videos de los tutoriales (uno por página, grabados con la interfaz real) y la guía que sale sola UNA vez por versión nueva.
 """
-tutoriales.py  (v5.76)
+tutoriales.py  (v5.82)
 ----------------------
 Cada página tiene un video corto que enseña cómo se usa, grabado con la interfaz REAL sin pantalla (cursor, clics y cámara) por
 herramientas_dev/hacer_videos_tutorial.py: 2_recursos/tutoriales/<id>.mp4 (960×600, H.264, sin audio) + <id>.jpg (su miniatura).
 Los usan la guía (recorrido_ui: la tira con el video bajo la zona iluminada, propuesta C1 que eligió el usuario) y Ajustes › Tutoriales
-(el reproductor con la lista de las páginas, propuesta B2).
+(el reproductor con la lista, propuesta B2). v5.82 (el usuario: «agrégale voz… y tutoriales de cambiar de DaVinci Resolve por Premiere o sin
+editores… más de la interfaz, probando estilos»): cada video lleva su LOCUCIÓN aparte, una por idioma (voz/<idioma>/<id>.m4a, hecha con
+herramientas_dev/voz_tutoriales.py: voz natural local, sin servicios de fuera), y hay cinco tutoriales «paso a paso» además de las páginas.
 
-    TUTORIALES                      [(id, título, texto)] en el orden de las páginas. En español: quien los pinta pasa cada uno por tr()
+    TUTORIALES                      [(id, título, texto)]: las páginas y luego los «paso a paso». En español: quien los pinta pasa cada uno por tr()
+    GUIA / GRUPOS                   los ids de la guía (uno por página) y los grupos de la lista de Ajustes › Tutoriales
     ruta_video(id) / ruta_poster(id)   el archivo o None (si falta, la guía y Ajustes siguen sin ese video)
+    ruta_voz(id, idioma=None)       la locución en el idioma de la interfaz o None (entonces el video va solo con sus subtítulos)
     subtitulos(id)                  [(desde, hasta, frase)]: las frases que el reproductor pinta encima del video (traducidas)
+    voz_activa() / poner_voz_activa(si)   el altavoz del reproductor (de fábrica, con voz)
     guia_activa()                   el interruptor de Ajustes › Tutoriales («Guía en cada versión nueva»; de fábrica, encendido)
     poner_guia_activa(si)
     toca_guia()                     ¿sale sola al abrir? = activa y todavía no salió en ESTA versión
     marcar_guia_vista()             se llama al EMPEZAR la guía (así sale una sola vez aunque se cierre el programa a medias)
 
-Preferencias (ajustes_ui.guardar_prefs → archivos_seguros): `guia_activa` (bool) y `guia_version` (la versión en que salió por última vez).
+Preferencias (ajustes_ui.guardar_prefs → archivos_seguros): `guia_activa` (bool), `guia_version` (la versión en que salió por última vez) y
+`tutoriales_voz` (bool, el altavoz).
 """
 from pathlib import Path
 import sys
@@ -44,8 +50,26 @@ TUTORIALES = [
     ('ajustes', 'Ajustes',
      'Idioma, fondo, motor de voz y aquí mismo, en Tutoriales, todos estos videos. Desde ahí también apagas esta guía '
      'o la vuelves a ver cuando quieras.'),
+    # v5.82: paso a paso (solo en Ajustes › Tutoriales; la guía sigue con una página por paso)
+    ('probar', 'Prueba los estilos',
+     'Pasa los estilos arrastrando o con la rueda del ratón. «Solo captions» enseña solo los subtítulos y «Con PRO» suma la edición '
+     'de video; cuando te guste uno, haz clic en él para usarlo.'),
+    ('premiere', 'Usar con Premiere Pro',
+     'En Ajustes › General enciende «Usar con Premiere Pro»: GO arma una secuencia nueva con tu video, los subtítulos y los sonidos. '
+     'Para volver, enciende «Usar con DaVinci Resolve».'),
+    ('sin_editores', 'Video sin editores',
+     'En Ajustes › General enciende «Video sin editores (DaVinci y Premiere)»: GO graba los subtítulos y los sonidos en una copia MP4 '
+     'de tu video, junto al original.'),
+    ('interfaz', 'Cambia la interfaz',
+     'En Ajustes › Interfaz eliges la escena de Inicio, el fondo, el color de resaltado, el idioma y el tamaño. Pasa el ratón por una '
+     'tarjeta para verla en movimiento.'),
+    ('ayuda', '¿Necesitas ayuda?',
+     'En Ajustes › Ayuda nos escribes por WhatsApp con el informe de tu equipo ya listo, ejecutas el diagnóstico y ves tu versión y '
+     'tu licencia.'),
 ]
 ORDEN = [t[0] for t in TUTORIALES]
+GUIA = ('inicio', 'estilo', 'crea', 'corrector', 'sonido', 'efectos', 'ajustes')         # la guía: un paso por página
+GRUPOS = (('Las páginas', GUIA), ('Paso a paso', tuple(i for i in ORDEN if i not in GUIA)))
 
 
 def _base_recursos():
@@ -72,6 +96,46 @@ def ruta_video(ident):
 
 def ruta_poster(ident):
     return _archivo(ident, '.jpg')
+
+
+# v5.82: si la interfaz va en un idioma sin locución, el video va mudo con sus subtítulos traducidos (VOZ_RESPALDO = idiomas que se
+# prueban antes de rendirse, p. ej. ('en',); vacío = solo la del idioma de la interfaz)
+VOZ_RESPALDO = ()
+
+
+def ruta_voz(ident, idioma=None):
+    """La locución del tutorial (2_recursos/tutoriales/voz/<idioma>/<id>.m4a) en el idioma de la interfaz, o None."""
+    if idioma is None:
+        try:
+            import i18n
+            idioma = i18n.idioma()
+        except Exception:
+            idioma = 'es'
+    for cod in (idioma,) + tuple(c for c in VOZ_RESPALDO if c != idioma):
+        try:
+            ruta = carpeta() / 'voz' / str(cod) / f'{ident}.m4a'
+            if ruta.is_file() and ruta.stat().st_size > 1000:
+                return ruta
+        except Exception:
+            pass
+    return None
+
+
+def voz_activa():
+    """El altavoz del reproductor de los tutoriales (de fábrica, con voz)."""
+    try:
+        import ajustes_ui
+        return ajustes_ui.leer_prefs().get('tutoriales_voz', True) is not False
+    except Exception:
+        return True
+
+
+def poner_voz_activa(si):
+    try:
+        import ajustes_ui
+        ajustes_ui.guardar_prefs({'tutoriales_voz': bool(si)})
+    except Exception:
+        pass
 
 
 _DURACIONES = {}

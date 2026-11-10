@@ -32,7 +32,7 @@ const vestido = (variante: string, U: number, acento: string, acento2: string, f
   const [r, g, b] = rgb(acento);
   const [r2, g2, b2] = rgb(acento2);
   const sombra = `0 ${16 * U}px ${40 * U}px rgba(0,0,0,.45)`;
-  let v: { fondo: string; borde: string; sombra: string; radio: number; oscuro: boolean; giro?: number; barra?: boolean; textoSombra?: string } =
+  let v: { fondo: string; borde: string; sombra: string; radio: number; oscuro: boolean; giro?: number; barra?: boolean; textoSombra?: string; fina?: boolean } =
     { fondo: 'linear-gradient(180deg, rgba(38,42,58,.86), rgba(18,20,30,.86))', borde: `${1.3 * U}px solid rgba(255,255,255,.12)`,
       sombra: `${sombra}, 0 0 ${30 * U}px rgba(${r},${g},${b},.18)`, radio: 999, oscuro: true };
   if (variante === 'blanca') v = { fondo: 'rgba(255,255,255,.96)', borde: `${1.3 * U}px solid rgba(0,0,0,.04)`, sombra: `0 ${16 * U}px ${40 * U}px rgba(20,30,60,.22)`, radio: 999, oscuro: false };
@@ -53,6 +53,11 @@ const vestido = (variante: string, U: number, acento: string, acento2: string, f
   else if (variante === 'sticker') v = { fondo: '#FFFFFF', borde: `${6 * U}px solid #FFFFFF`, sombra: `${6 * U}px ${8 * U}px 0 rgba(0,0,0,.35)`, radio: 999, oscuro: false, giro: -3 };
   else if (variante === 'degradado') v = { fondo: `linear-gradient(100deg, rgb(${r},${g},${b}), rgb(${r2},${g2},${b2}))`, borde: `${1.3 * U}px solid rgba(255,255,255,.22)`,
                                            sombra: `0 ${14 * U}px ${40 * U}px rgba(${r},${g},${b},.4)`, radio: 999, oscuro: !(claroDe(acento) && claroDe(acento2)) };
+  // v5.82: «Reflejo rojo» (la referencia del Estilo 4 nuevo): casi negra con el reflejo rojo a la izquierda, esquinas suaves y el texto FINO que cae
+  // palabra a palabra (textos, `fina`)
+  else if (variante === 'reflejo') v = { fondo: 'linear-gradient(100deg, rgba(190,18,34,.96) 0%, rgba(110,10,22,.95) 20%, rgba(34,9,13,.95) 52%, rgba(14,12,16,.96) 100%)',
+                                         borde: `${1.2 * U}px solid rgba(255,96,108,.30)`, radio: 18 * U, oscuro: true, fina: true,
+                                         sombra: `0 ${14 * U}px ${36 * U}px rgba(0,0,0,.5), inset 0 ${1.4 * U}px 0 rgba(255,150,160,.28), 0 0 ${26 * U}px rgba(226,28,46,.22)` };
   if (fondoU) {
     v.fondo = variante === 'halo' ? `linear-gradient(${fondoU}, ${fondoU}) padding-box, linear-gradient(90deg, rgb(${r2},${g2},${b2}), rgb(${r},${g},${b})) border-box`
             : variante === 'transparente' ? 'rgba(0,0,0,0)' : fondoU;
@@ -91,10 +96,18 @@ export const AcompananteT5: React.FC<AcompananteProps> = ({ tipo = 'sticker', te
   const icono = (lado: number, contenido: React.ReactNode, fondo = `rgba(${r},${g},${b},.16)`) => (
     <div style={{ width: lado, height: lado, borderRadius: lado / 2, background: fondo, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{contenido}</div>
   );
+  // v5.82 («Reflejo rojo»): cada palabra cae desde arriba y aparece, una tras otra (la referencia)
+  const cae = (txt: string, grande: number) => txt.split(' ').filter(Boolean).map((w, i) => {
+    const q = easeOut((t - 0.30 - i * 0.12) / 0.22);
+    return <span key={i} style={{ display: 'inline-block', opacity: q, marginRight: '0.26em',
+                                  transform: `translateY(${((1 - q) * -0.55 * grande * U).toFixed(1)}px)` }}>{w}</span>;
+  });
   const textos = (arriba: string, abajo: React.ReactNode, grande = 40) => (
     <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.05 }}>
       {arriba && <span style={{ fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 15 * U, letterSpacing: '0.14em', color: gris, textTransform: 'uppercase' }}>{arriba}</span>}
-      <span style={{ fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: grande * U, letterSpacing: '-0.01em', color: tinta }}>{abajo}</span>
+      <span style={{ fontFamily: FAMILIA.inter, fontWeight: V.fina ? 500 : 700, fontSize: grande * U, letterSpacing: '-0.01em', color: tinta }}>
+        {V.fina && typeof abajo === 'string' ? cae(abajo, grande) : abajo}
+      </span>
     </div>
   );
   let cuerpo: React.ReactNode = null;

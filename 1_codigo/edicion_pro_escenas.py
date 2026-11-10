@@ -545,10 +545,12 @@ def fotos_de_internet(momentos, video):
                 with ThreadPoolExecutor(4) as ex:
                     res = list(ex.map(lambda pq: FW.buscar_foto(pq[1], formato, exigir=pq[0]['props'].get('exigir', '') if pq[0].get('comp') == 'FotoE' else ''), pedidos))
                 usadas, de_tablero = [], {}
+                import resolve_mcp
+                lado = int(round(1080 * resolve_mcp.escala_video(video))) if video else 1080     # v5.82: 2160 en un 4K (antes siempre 1080)
                 for (m, _q), r in zip(pedidos, res):
                     if not r or r['id'] in {u['id'] for u in usadas}:
                         continue
-                    uri = FW.foto_data_uri(r)
+                    uri = FW.foto_data_uri(r, lado=lado)
                     if not uri:
                         continue
                     usadas.append(r)
@@ -586,6 +588,8 @@ def completar(momentos, video, duracion, perfil=None):
         return momentos
     dur = float(duracion or 0) or 30.0
     formato, usadas = _formato(video), []
+    import resolve_mcp
+    u = resolve_mcp.escala_video(video)                                  # v5.82: las fotos con los píxeles del timeline (×2 en un 4K)
     for m in momentos:
         if m.get('comp') not in ('PolaroidE', 'TableroE', 'MovilE') or (m['comp'] == 'TableroE' and m['props'].get('imagenes')):
             continue
@@ -593,7 +597,7 @@ def completar(momentos, video, duracion, perfil=None):
         cuantas = 1 if m['comp'] == 'PolaroidE' else 3
         fotos = []
         for _ in range(cuantas):
-            r = foto_del_tema(textos, perfil, formato, evitar=[u['id'] for u in usadas], lado=600)
+            r = foto_del_tema(textos, perfil, formato, evitar=[x['id'] for x in usadas], lado=int(round(600 * u)))
             if not r:
                 break
             fotos.append(r[0])
@@ -601,7 +605,7 @@ def completar(momentos, video, duracion, perfil=None):
         if len(fotos) < cuantas:                                            # sin internet o sin bastantes: lo que falte, del propio video
             t0 = float(m['t'])
             otros = [x for x in (dur * 0.12, dur * 0.3, dur * 0.5, dur * 0.7, dur * 0.88) if abs(x - t0) > 2.0][:4]
-            fotos += [f for f in (T5.foto(video, x, ancho=480) for x in otros) if f][:cuantas - len(fotos)]
+            fotos += [f for f in (T5.foto(video, x, ancho=int(round(480 * u))) for x in otros) if f][:cuantas - len(fotos)]
         if not fotos:
             continue
         if m['comp'] == 'PolaroidE':

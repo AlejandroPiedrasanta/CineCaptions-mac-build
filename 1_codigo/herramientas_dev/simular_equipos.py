@@ -1127,6 +1127,368 @@ def codigo_sin_rutas_fijas_de_resolve_fuera_del_detector():
 AVISOS = []
 
 
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# I. Dos informes de clientes (2026-11-10). Windows, RTX 4070 Laptop de 8 GB: «Falla al iniciar: Motor de IA (Qwen3) — faltan modelos»,
+#    explicado como «le faltan librerías», con la voz bien y solo sin la IA de texto. Mac 5.78: «La sesión anterior NO llegó a terminar de
+#    abrir… Hay un volcado del fallo», explicado como «El programa arrancó», con «Idioma del sistema None».
+# ---------------------------------------------------------------------------------------------------------------------------------------
+import atexit  # noqa: E402
+
+import salud  # noqa: E402
+import vigilancia  # noqa: E402
+
+
+@contextlib.contextmanager
+def motor_qwen(python=True, librerias=(), torch='2.14.1+cu130', asr=True, alineador=True, texto=(), vram=8.0):
+    """El motor de voz e IA en el estado pedido, solo en memoria (nada del AppData real); el resto del chequeo, sin motores ni GPU."""
+    import cuda_libs
+    import motor_compat
+    presentes = set()
+    if asr:
+        presentes.add(motor_voz.REPOS_ASR['1.7B'][0])
+    if alineador:
+        presentes.add(motor_voz.REPO_ALINEADOR[0])
+    presentes |= {repo for clave, repo, *_r in motor_voz.MODELOS_TEXTO if clave in texto}
+    with parches((motor_voz, 'python_motor', lambda: types.SimpleNamespace(exists=lambda: True)),
+                 (motor_voz, '_python_al_dia', lambda: python), (motor_voz, '_faltan_requisitos', lambda: list(librerias)),
+                 (motor_voz, '_dist_instalada', lambda n, v=None: torch if n == 'torch' else '1'),
+                 (motor_voz, 'modelo_descargado', lambda repo, minimo=0: repo in presentes), (motor_voz, 'vram_total_gb', lambda: vram),
+                 (motor_compat, 'EN_PROCESO', False), (motor_compat, 'instalado', lambda: False),
+                 (cuda_libs, 'diagnostico', lambda: {'estado': 'no_aplica'}), (resolve_mcp, 'ruta_exe', lambda: None)):
+        yield
+
+
+def _fila_qwen(**estado):
+    with motor_qwen(**estado):
+        return next(f for f in salud.comprobar() if f['nombre'] == 'Motor de IA (Qwen3)')
+
+
+def _anotado_al_arrancar(**estado):
+    """Lo que el chequeo de arranque deja en el Registro sobre el motor: [(nivel, mensaje, título de «Qué significa»)]."""
+    anotado = []
+    with motor_qwen(**estado), parches((registro, 'anotar', lambda nivel, mensaje, origen='', detalle='': anotado.append((nivel, str(mensaje), origen))),
+                                       (vigilancia, 'avisar_equipo', lambda: None), (vigilancia, 'poner_motores_al_dia', lambda: None)):
+        vigilancia.revisar_salud_al_arrancar()
+    return [(n, m, registro_ayuda.explicar(types.SimpleNamespace(nivel=n, mensaje=m, origen=o, detalle=''))[0])
+            for n, m, o in anotado if 'Motor de IA' in m and n in ('aviso', 'error')]      # (la nota del resumen, «con aviso: …», es info)
+
+
+@caso('Informes de clientes')
+def cliente_rtx4070_8gb_sin_ia_de_texto_es_aviso_y_lo_dice():
+    f = _fila_qwen(texto=())
+    d = f['detalle']
+    esperar(f['ok'] is not False, f'la voz funciona: no es una falla ({f})')
+    esperar('voz' in d and 'IA de texto' in d and 'Qwen3-1.7B' in d and 'librer' not in d, d)
+    notas = _anotado_al_arrancar(texto=())
+    esperar(notas and all(n[0] == 'aviso' for n in notas), notas)
+    esperar(all('IA de texto' in n[2] and 'librer' not in n[2] for n in notas), [n[2] for n in notas])
+
+
+@caso('Informes de clientes')
+def motor_qwen_cada_falta_dice_que_falta():
+    casos = [(dict(python=False), 'versión anterior', 'pieza'), (dict(librerias=['transformers==5.22.2']), 'librerías', 'librerías'),
+             (dict(torch='2.9.0+cu126'), 'PyTorch', 'pieza'), (dict(asr=False), 'modelo de voz', 'pieza'), (dict(alineador=False), 'alineador', 'pieza')]
+    malas = []
+    for estado, en_detalle, en_titulo in casos:
+        f = _fila_qwen(texto=('1.7B',), **estado)
+        notas = _anotado_al_arrancar(texto=('1.7B',), **estado)
+        nivel, titulo = (notas[0][0], notas[0][2]) if notas else ('', '')
+        if f['ok'] is not False or en_detalle not in f['detalle'] or en_titulo not in titulo or nivel != 'error':
+            malas.append(f"{estado}: {f['ok']} «{f['detalle']}» → {nivel} «{titulo}»")
+    esperar(not malas, '\n      '.join(malas))
+
+
+@caso('Informes de clientes')
+def motor_qwen_completo_sin_avisos():
+    f = _fila_qwen(texto=('1.7B',))
+    esperar(f['ok'] is True and 'IA de texto 1.7B' in f['detalle'], f)
+    esperar(not _anotado_al_arrancar(texto=('1.7B',)))
+
+
+@caso('Informes de clientes')
+def mac_sesion_anterior_bien_explicada():
+    mensajes = [('error', 'La sesión anterior NO llegó a terminar de abrir: el programa se quedó atascado (o se cerró) durante el arranque.', 'abrir'),
+                ('aviso', 'La sesión anterior de CineCaptions no se cerró bien (se colgó o se cayó).', 'cerró'),
+                ('error', 'La sesión anterior se cortó en mitad de «go», en el paso «timeline» (hace 3 min).', 'mitad'),
+                ('aviso', 'macOS guardó 2 informe(s) de caída reciente(s) de CineCaptions: CineCaptions-2026-11-09.ips', 'cerró')]
+    malas = []
+    for nivel, msg, clave in mensajes:
+        a = registro_ayuda.explicar(types.SimpleNamespace(nivel=nivel, mensaje=msg, origen='sesión', detalle=''))
+        if 'arrancó' in a[0] or 'timeline' in a[0] or clave not in a[0].lower():
+            malas.append(f'«{msg[:55]}…» → «{a[0]}»')
+    esperar(not malas, '\n      '.join(malas))
+
+
+CABECERAS = '--- sesion 2026-11-08 10:00:00 ---\n--- sesion 2026-11-09 11:00:00 ---\n'
+RUIDO_COM = ('--- sesion 2026-11-09 12:00:00 ---\nWindows fatal exception: code 0x8001010d\n\nThread 0x00005928 [resolve-mcp] (most recent call first):\n'
+             '  File "resolve_mcp.py", line 86 in _leer\n')
+CAIDA = '--- sesion 2026-11-09 12:00:00 ---\nFatal Python error: Segmentation fault\n\nThread 0x0100 (most recent call first):\n  File "ui.py", line 10 in pintar\n'
+ATASCO = '--- sesion 2026-11-09 12:00:00 ---\nTimeout (0:00:20)!\nThread 0x01 (most recent call first):\n  File "CineCaptions.py", line 7000 in __init__\n'
+
+
+def _cierre_anterior(estado, volcado):
+    """_revisar_cierre_anterior con la marca y el fallo_nativo.log del caso, en una carpeta temporal (sin atexit: la marca real no se toca)."""
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_sesion_'))
+    (carpeta / 'sesion_abierta.flag').write_text(f'{time.time()}|{estado}', encoding='utf-8')
+    (carpeta / 'fallo_nativo.log').write_text(volcado, encoding='utf-8')
+    anotado = []
+    try:
+        with parches((registro, 'CARPETA', carpeta), (registro, 'SESION', carpeta / 'sesion_abierta.flag'),
+                     (registro, 'FALLOS_NATIVOS', carpeta / 'fallo_nativo.log'), (atexit, 'register', lambda *a, **k: None),
+                     (registro, 'anotar', lambda nivel, mensaje, origen='', detalle='': anotado.append((nivel, str(mensaje)))),
+                     (vigilancia, 'tarea_cortada_anterior', lambda: None)):
+            registro._revisar_cierre_anterior()
+    finally:
+        __import__('shutil').rmtree(carpeta, ignore_errors=True)
+    return anotado
+
+
+@caso('Informes de clientes')
+def volcado_solo_si_lo_hay():
+    """«Hay un volcado del fallo en fallo_nativo.log» salía SIEMPRE (cada arranque escribe su cabecera) y en Windows el ruido de COM parecía
+    una caída: solo si la sesión anterior dejó una caída o un atasco de verdad."""
+    casos = [(CABECERAS, False), (CABECERAS + RUIDO_COM, False), (CABECERAS + CAIDA, True), (CABECERAS + ATASCO, True),
+             (CABECERAS + CAIDA + '--- sesion 2026-11-10 09:00:00 ---\n', False)]
+    malas = []
+    for volcado, hay in casos:
+        dice = any('volcado' in m for _n, m in _cierre_anterior('abriendo', volcado))
+        if dice != hay:
+            malas.append(f'{volcado.strip().splitlines()[-1][:50]!r}: dice volcado={dice}, esperaba {hay}')
+    esperar(not malas, '\n      '.join(malas))
+
+
+@caso('Informes de clientes')
+def arranque_atascado_deja_las_pilas():
+    """Si la ventana no termina de abrir, a los N s faulthandler escribe la pila de TODOS los hilos en fallo_nativo.log (aunque luego se
+    cierre a la fuerza antes del aviso de los 45 s)."""
+    import faulthandler
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_atasco_'))
+    archivo = open(carpeta / 'fallo_nativo.log', 'a', encoding='utf-8')
+    try:
+        with parches((registro, '_ARCHIVO_FALLOS', archivo)):
+            registro.vigilar_arranque_nativo(1)
+            time.sleep(1.6)
+            registro.fin_arranque_nativo()
+        archivo.flush()
+        texto = (carpeta / 'fallo_nativo.log').read_text(encoding='utf-8')
+        esperar('Timeout' in texto and 'File' in texto, texto[:200])
+    finally:
+        faulthandler.cancel_dump_traceback_later()
+        archivo.close()
+        __import__('shutil').rmtree(carpeta, ignore_errors=True)
+
+
+@caso('Informes de clientes')
+def fallo_nativo_no_crece_sin_fin():
+    """El del autor pesaba 1,2 MB (428 sesiones): al abrir, si pasa del tope, el viejo pasa a fallo_nativo.log.1."""
+    import faulthandler
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_rota_'))
+    ruta = carpeta / 'fallo_nativo.log'
+    ruta.write_bytes(b'x' * (registro.MAXIMO_FALLOS_NATIVOS + 10))
+    try:
+        with parches((registro, 'FALLOS_NATIVOS', ruta), (registro, '_ARCHIVO_FALLOS', None)):
+            registro._fallos_nativos()
+            abierto = registro._ARCHIVO_FALLOS
+        faulthandler.disable()
+        abierto.close()
+        esperar(ruta.stat().st_size < 200 and (carpeta / 'fallo_nativo.log.1').is_file(), f'{ruta.stat().st_size} bytes')
+    finally:
+        __import__('shutil').rmtree(carpeta, ignore_errors=True)
+
+
+@caso('Informes de clientes')
+def mac_idioma_del_sistema_nunca_none():
+    import locale
+    import plistlib
+    with parches((locale, 'getlocale', lambda *a: (None, None))):
+        v = registro.idioma_del_sistema()
+    esperar(v and v != 'None', v)
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_idioma_'))
+    viejo = {k: os.environ.pop(k, None) for k in ('LANG', 'LC_ALL', 'LC_MESSAGES')}
+    try:
+        (carpeta / 'Library' / 'Preferences').mkdir(parents=True)
+        with open(carpeta / 'Library' / 'Preferences' / '.GlobalPreferences.plist', 'wb') as f:
+            plistlib.dump({'AppleLocale': 'es_ES', 'AppleLanguages': ['es-ES']}, f)
+        with parches((locale, 'getlocale', lambda *a: (None, None)), (registro, '_idioma_qt', lambda: None), (sys, 'platform', 'darwin')):
+            v = registro.idioma_del_sistema(casa=carpeta)
+        esperar(v == 'es_ES', v)
+    finally:
+        os.environ.update({k: x for k, x in viejo.items() if x is not None})
+        __import__('shutil').rmtree(carpeta, ignore_errors=True)
+
+
+@caso('Informes de clientes')
+def informe_dice_si_el_chequeo_sigue_en_marcha():
+    with parches((salud, '_ULTIMO', {'filas': None, 'cuando': 0.0, 'empezo': time.time() - 5})):
+        lineas = registro._motores()
+    esperar(lineas and 'en marcha' in lineas[0], lineas)
+
+
+# El mismo portátil con la 5.76 (13:07:26 y 13:07:44): «El programa lleva 46 s abriendo y no termina» con el hilo de la ventana en
+# escena_go._cargar_referencia, explicado como «Un efecto visual de Inicio falló», y el monitor: «No se puede escribir en … (PermissionError:
+# [WinError 32] …\.escritura.tmp): no se guardarán ajustes…», como «Detuvo la tarea».
+def _bloqueado(ruta):
+    return PermissionError(32, 'El proceso no tiene acceso al archivo porque está siendo utilizado por otro proceso', str(ruta))
+
+
+@caso('Informes de clientes')
+def monitor_escritura_con_bloqueo_de_un_momento_no_es_error():
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_escritura_'))
+    real = pathlib.Path.write_text
+    try:
+        with parches((vigilancia, 'CARPETA', carpeta)):
+            fijo = open(carpeta / '.escritura.tmp', 'a', encoding='utf-8')         # otro hilo (o el antivirus) tiene abierto el de nombre fijo
+            try:
+                a = dict((c, n) for c, n, _m in vigilancia._comprobaciones())
+            finally:
+                fijo.close()
+            veces = {'n': 0}
+
+            def falla_dos(self, *x, **k):
+                if self.name.startswith('.escritura') and veces['n'] < 2:
+                    veces['n'] += 1
+                    raise _bloqueado(self)
+                return real(self, *x, **k)
+            with parches((pathlib.Path, 'write_text', falla_dos)):
+                b = dict((c, n) for c, n, _m in vigilancia._comprobaciones())
+            with parches((pathlib.Path, 'write_text', lambda self, *x, **k: (_ for _ in ()).throw(PermissionError(13, 'Acceso denegado', str(self))))):
+                c = [(n, m) for k, n, m in vigilancia._comprobaciones() if k == 'escritura']
+        restos = sorted(p.name for p in carpeta.iterdir() if p.name != '.escritura.tmp')
+        esperar(a.get('escritura') is None, f'con el .tmp de antes abierto por otro: {a}')
+        esperar(b.get('escritura') is None, f'con 2 bloqueos de un momento: {b}')
+        esperar(c and c[0][0] == 'error' and 'Acceso denegado' in c[0][1], f'si de verdad no se puede escribir, sí debe decirlo: {c}')
+        esperar(not restos, f'quedaron archivos de prueba: {restos}')
+    finally:
+        __import__('shutil').rmtree(carpeta, ignore_errors=True)
+
+
+@caso('Informes de clientes')
+def monitor_y_chequeo_de_arranque_a_la_vez():
+    """El chequeo de arranque llama a revisar_ahora() en su hilo mientras el monitor hace su pasada: nunca «no se puede escribir»."""
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_escritura2_'))
+    anotado = []
+    try:
+        with parches((vigilancia, 'CARPETA', carpeta), (vigilancia, '_MONITOR', {'v': None, 'estado': {}}),
+                     (registro, 'anotar', lambda nivel, mensaje, origen='', detalle='': anotado.append((nivel, str(mensaje))))):
+            for _ in range(15):
+                hilos = [threading.Thread(target=vigilancia.revisar_ahora) for _h in range(3)]
+                for h in hilos:
+                    h.start()
+                for h in hilos:
+                    h.join(20)
+        malas = [m for n, m in anotado if 'escribir' in m]
+        esperar(not malas, malas[:2])
+    finally:
+        __import__('shutil').rmtree(carpeta, ignore_errors=True)
+
+
+@caso('Informes de clientes')
+def arranque_no_lee_la_imagen_de_la_escena():
+    """escena_go leía fondo_esfera.jpg en el hilo de la ventana al crearse (y nadie usaba el resultado): en ese portátil esa lectura dejó
+    el arranque 46 s parado."""
+    from PySide6.QtWidgets import QApplication
+    QApplication.instance() or QApplication([])
+    import escena_go
+    leidas = []
+    real = escena_go.QImage
+
+    def imagen(*a, **k):
+        if a and isinstance(a[0], str):
+            leidas.append(a[0])
+        return real(*a, **k)
+    with parches((escena_go, 'QImage', imagen)):
+        w = escena_go.EscenaGo()
+    w.deleteLater()
+    esperar(not [r for r in leidas if 'fondo_esfera' in r], leidas)
+
+
+def _reparar_motor(lineas_texto, codigo_texto):
+    """motor_voz.instalar() («Reparar el motor») con todo simulado (nada se baja ni se instala; listo.json en una carpeta temporal) y la descarga
+    de la IA de texto (motor_texto.py --descargar) contando `lineas_texto`. Devuelve (avisos del Registro, último texto del progreso, listo.json)."""
+    import cuda_libs
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_reparar_'))
+    (carpeta / 'python').mkdir()
+    (carpeta / 'python' / 'python.exe').write_text('', encoding='utf-8')
+    anotado, progreso = [], []
+
+    def lanzar(argumentos, on_linea, timeout=None, sin_senal=None):
+        if '--comprobar' in argumentos:
+            on_linea('LISTO', json.dumps({'torch': '2.14.1+cu130', 'cuda': True, 'gpu': 'NVIDIA GeForce RTX 4070 Laptop GPU', 'vram_gb': 8.0,
+                                          'modelo_auto': '1.7B'}))
+        return 0, []
+
+    def lanzar_texto(script, argumentos, on_linea, timeout=None, sin_senal=None):
+        for tipo, texto in lineas_texto:
+            on_linea(tipo, texto)
+        return codigo_texto, []
+    try:
+        with parches((motor_voz, 'carpeta', lambda: carpeta), (motor_voz, 'python_motor', lambda: carpeta / 'python' / 'python.exe'),
+                     (motor_voz, '_python_al_dia', lambda: True), (motor_voz, 'torch_para_este_equipo', lambda: ('cu130', '2.14.1')),
+                     (motor_voz, '_dist_instalada', lambda n, v=None: '2.14.1+cu130' if n == 'torch' else '1'),
+                     (motor_voz, '_faltan_requisitos', lambda: []), (motor_voz, '_lanzar', lanzar), (motor_voz, '_lanzar_script', lanzar_texto),
+                     (motor_voz, '_borrar_modelos_viejos', lambda: None), (motor_voz, 'ia_texto_para_esta_gpu', lambda: ['1.7B']),
+                     (cuda_libs, 'reparar', lambda **k: (True, 'GPU lista')),
+                     (registro, 'anotar', lambda nivel, mensaje, origen='', detalle='': anotado.append((nivel, str(mensaje), origen)))):
+            motor_voz.instalar(progreso=lambda f, t: progreso.append(t))
+        listo = json.loads((carpeta / 'listo.json').read_text(encoding='utf-8'))
+    finally:
+        __import__('shutil').rmtree(carpeta, ignore_errors=True)
+    return [(n, m, o) for n, m, o in anotado if n in ('aviso', 'error')], (progreso or [''])[-1], listo
+
+
+@caso('Informes de clientes')
+def reparar_dice_si_no_bajo_la_ia_de_texto():
+    """«Reparar el motor» terminaba en «Motor Qwen3-ASR listo» aunque la IA de texto no se hubiera bajado (sin espacio, sin red): ahora lo dice
+    en el Registro (qué no se bajó, por qué y qué hacer) y en el progreso."""
+    error = ('ERROR', 'RuntimeError: no se descargó ninguna IA de texto')
+    casos = {
+        'disco': ([('ESTADO', 'No descargo Qwen/Qwen3-1.7B: necesita unos 6 GB libres y en el disco quedan 3.2 GB'), error], 1, ('disco', '6 GB', '3.2')),
+        'disco (mensaje de antes)': ([('ESTADO', 'No descargo Qwen/Qwen3-1.7B: necesita unos 4 GB y en el disco quedan 3.2 GB libres'), error], 1,
+                                     ('disco', '3.2')),
+        'red': ([('ESTADO', 'Descargando Qwen/Qwen3-1.7B'), ('ESTADO', 'No pude descargar Qwen/Qwen3-1.7B: LocalEntryNotFoundError: An error happened '
+                 'while trying to locate the file on the Hub'), error], 1, ('conexión',)),
+    }
+    malas = []
+    for nombre, (lineas, codigo, debe) in casos.items():
+        avisos, ultimo, listo = _reparar_motor(lineas, codigo)
+        sobre = [m for _n, m, _o in avisos if 'IA de texto' in m]
+        titulo = registro_ayuda.explicar(types.SimpleNamespace(nivel='aviso', mensaje=sobre[0], origen=avisos[0][2], detalle=''))[0] if sobre else ''
+        if not sobre or not all(d in sobre[0] for d in debe) or 'Qwen3-1.7B' not in sobre[0] or 'sin la IA de texto' not in ultimo \
+                or titulo != 'No se descargó la IA de texto' or listo.get('modelo_texto'):
+            malas.append(f'{nombre}: avisos={sobre[:1]} · progreso «{ultimo}» · «{titulo}»')
+    avisos, ultimo, listo = _reparar_motor([('ESTADO', 'Descargando Qwen/Qwen3-1.7B'), ('LISTO', '1.7B')], 0)
+    if avisos or ultimo != 'Motor Qwen3-ASR listo' or listo.get('modelo_texto') != '1.7B':
+        malas.append(f'si se bajó: avisos={avisos} · «{ultimo}» · {listo.get("modelo_texto")}')
+    # y Ajustes, al terminar «Reparar», ya no lo pinta en verde como si estuviera todo
+    pintado = {}
+    falso = types.SimpleNamespace(motor_estado=types.SimpleNamespace(configure=lambda **k: pintado.update(k)),
+                                  motor_btn=types.SimpleNamespace(configure=lambda **k: None, hide=lambda: None))
+    for texto, hay in ((None, []), ('1.7B', ['1.7B'])):
+        pintado.clear()
+        with parches((motor_voz, 'info_instalado', lambda: {'modelo': '1.7B', 'gpu': 'RTX 4070 Laptop', 'modelo_texto': texto}),
+                     (motor_voz, 'modelos_texto_descargados', lambda: list(hay))):
+            ajustes_ui.VentanaAjustes._pintar_motor(falso)
+        sin = 'sin la IA de texto' in str(pintado.get('text'))
+        if sin != (texto is None):
+            malas.append(f'Ajustes con modelo_texto={texto}: «{pintado.get("text")}»')
+    esperar(not malas, '\n      '.join(malas))
+
+
+@caso('Informes de clientes')
+def arranque_lento_y_escritura_bien_explicados():
+    pila = ('Hilo principal:\n  File "CineCaptions (script principal).py", line 6785, in _build_ui\n  File "escena_go.py", line 419, in __init__\n'
+            '  File "escena_go.py", line 450, in _cargar_referencia\n')
+    casos = [('error', 'arranque', 'El programa lleva 46 s abriendo y no termina: algo se quedó esperando.', pila, 'abrir', 'efecto'),
+             ('error', 'monitor', 'No se puede escribir en ~\\DaVinciSubtitles (PermissionError: [WinError 32] El proceso no tiene acceso al archivo '
+              'porque está siendo utilizado por otro proceso): no se guardarán ajustes, marcas ni el registro.', '', 'carpeta', 'no dejó escribir')]
+    malas = []
+    for nivel, origen, msg, detalle, debe, no_debe in casos:
+        a = registro_ayuda.explicar(types.SimpleNamespace(nivel=nivel, mensaje=msg, origen=origen, detalle=detalle))
+        if debe not in a[0].lower() or no_debe in a[0].lower() or a[3] == 'bloquea':
+            malas.append(f'«{msg[:45]}…» → «{a[0]}» ({a[3]})')
+    esperar(not malas, '\n      '.join(malas))
+
+
 def main():
     t0 = time.time()
     for grupo, f, lento in CASOS:

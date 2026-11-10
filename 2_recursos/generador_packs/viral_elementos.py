@@ -1047,6 +1047,36 @@ def comp_edi(serif=False):
     return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - editorial' + (' serif' if serif else ''))
 
 
+# ------------------------------------------------------------------------------------------------------------------ Estilo 4 «pila»
+# v5.82 (el usuario, con su referencia «ESTILO 4.mp4»: «crea este estilo… y reemplázalo por el Estilo 4»): la pila de tres alturas de
+# pila_planificador. «v pila» = la grande (Inter 28pt ExtraBold lima con su brillo lima), «v pila peq» = las pequeñas (Inter 24pt Bold blanco algo
+# cálido) y «v pila lima» = la que remata abajo en lima (con brillo). Todas con la sombra negra suave de la referencia; colores, brillo y sombra
+# medidos en ella (la lima de «Understand» 224,251,88; el blanco 255,255,248; brillo ~22 px y sombra de 12 px bajada 5 a 1080). Cada palabra entra
+# en 2 fotogramas, sin desenfoque ni rebote, y NO tiene salida: el bloque entero se va de golpe al acabar (corte seco, como la referencia).
+PILA_GRANDE, PILA_PEQ = ('Inter 28pt', 'ExtraBold'), ('Inter 24pt', 'Bold')
+PILA_ESP = {'v pila': 0.97, 'v pila peq': 0.98, 'v pila lima': 0.98}     # (= pila_planificador.ESP_G / ESP_P: −0,046 y −0,031 em por letra)
+PILA_LIMA, PILA_BLANCO = (0.878, 0.984, 0.345), (1.0, 1.0, 0.973)
+PILA_SOMBRA = (0.55, -0.0026, 5.7)           # la negra (opacidad, bajada, Softness): 12 px de desenfoque a 1080
+PILA_BRILLO = (0.44, 10.5)                   # el brillo lima (opacidad, Softness): ~22 px. (Softness ≈ px / 2,1 a 1080: 14 = ~29 px, ver SIZE_CALIBRADO)
+
+
+def _difuso(num, color, opacidad, dy, blur):
+    """Como _halo (la forma de la letra y SoftnessBlend 1: sin él no se desenfoca), pero con el difuminado FIJO en el cuadro: los mismos px en la
+    grande y en las pequeñas, como la referencia (el Softness de Text+ va contra el cuadro)."""
+    cambios = {f'SoftnessBlend{num} = Input {{ Value = Number {{ Value = 0 }}, }},': f'SoftnessBlend{num} = Input {{ Value = Number {{ Value = 1 }}, }},'}
+    return [cambios.get(l, l) for l in E._sombra(num, opacidad, dy, blur, color=color)] + [f'ElementShape{num} = Input {{ Value = 0, }},']
+
+
+def comp_pila(tipo='v pila'):
+    par = PILA_GRANDE if tipo == 'v pila' else PILA_PEQ
+    lima = tipo in ('v pila', 'v pila lima')
+    a, dy, blur = PILA_SOMBRA
+    extra = (_difuso(2, PILA_LIMA, PILA_BRILLO[0], 0.0, PILA_BRILLO[1]) if lima else []) + _difuso(3 if lima else 2, (0.0, 0.0, 0.0), a, dy, blur)
+    t = texto_plus('Template', -220, 40, 'pila', par[0], par[1], 0.06, color=PILA_LIMA if lima else PILA_BLANCO, esp=PILA_ESP[tipo], extra=extra)
+    t += cadena('Template', dict(size='1', blend=_suave(_p(0, 2))))
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - pila' + {'v pila': '', 'v pila peq': ' peq', 'v pila lima': ' lima'}[tipo])
+
+
 # ------------------------------------------------------------------------------------------------------------------ el catálogo
 def todos(formato='v'):
     """{nombre del clip: texto de la comp} para el formato 'v' (vertical) o 'h' (horizontal). Los tamaños (Size) son los de partida: la app fija el real por clip."""
@@ -1069,6 +1099,8 @@ def todos(formato='v'):
     comps['v ambar clave'] = comp_ambar(True)
     comps['v edi'] = comp_edi()                             # v5.80: el Estilo 9 (palo seco fino y la clave grande en serif cursiva)
     comps['v edi serif'] = comp_edi(True)
+    for tipo in ('v pila', 'v pila peq', 'v pila lima'):      # v5.82: el Estilo 4 nuevo (la pila de tres alturas)
+        comps[tipo] = comp_pila(tipo)
     return comps
 
 

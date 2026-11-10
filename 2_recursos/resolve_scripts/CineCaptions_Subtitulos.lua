@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.81 (subtitulos)"
+local VERSION = "5.82 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -1110,6 +1110,42 @@ local function ajustar_barrido(item, visible_s, salto_s, ancho_rel)
             set_input(macro, "inputShine", math.max(-0.05, (ancho_rel + 0.16) / BARRIDO.K - BARRIDO.BASE))
         end
         hecho = a and b
+    end)
+    return hecho
+end
+-- v5.82 (gemela de agrandar_sin_zoom de CineCaptions.py): la palabra grande con zoom > 1 se dibuja YA grande dentro del macro Luxe (su tamano y los brillos,
+-- desenfoques, sombras, banda del barrido y distancia de la entrada x z) y el clip va sin zoom: el zoom de Resolve estiraba la imagen ya dibujada (borrosa).
+-- Sin sizeCtrl (presets de Amro) o si no acepta el tamano no toca nada y va el zoom de siempre. En la tabla BARRIDO (limite de 200 locales del chunk).
+BARRIDO.LUXE = { { "sizeCtrl", { "StartSize", "EndSize" } }, { "glow1", { "GlowSize" } }, { "shineGlow1", { "GlowSize" } },
+                 { "positionCtrl", { "StartDistance", "EndDistance" } }, { "blurCtrl", { "RestingBlur", "StartBlur", "EndBlur" } },
+                 { "shineCtrl", { "ShineWidth", "ShineSoftness" } }, { "dropShadow", { "shadowBlur", "ShadowDistance" } },
+                 { "Text1", { "SoftnessX4", "SoftnessY4", "SoftnessX5", "SoftnessY5", "Offset4", "Offset5" } } }
+BARRIDO.agrandar = function(item, z)
+    local hecho = false
+    pcall(function()
+        local comp = item:GetFusionCompByIndex(1)
+        local tam = comp and comp:FindTool("sizeCtrl") or nil
+        if not tam then return end
+        local antes = tonumber(tam:GetInput("RestingSize"))
+        if not antes or antes <= 0 then return end
+        tam:SetInput("RestingSize", antes * z)
+        if math.abs((tonumber(tam:GetInput("RestingSize")) or 0) - antes * z) > 1e-4 then return end
+        hecho = true
+        for _, par in ipairs(BARRIDO.LUXE) do
+            local t = comp:FindTool(par[1])
+            if t then
+                for _, e in ipairs(par[2]) do
+                    pcall(function()
+                        local v = t:GetInput(e)
+                        if type(v) == "number" then
+                            if v ~= 0 then t:SetInput(e, v * z) end
+                        elseif type(v) == "table" and tonumber(v[1]) and tonumber(v[2]) then      -- un punto (Offset4/5 de las sombras)
+                            t:SetInput(e, { v[1] * z, v[2] * z })
+                        end
+                    end)
+                end
+            end
+        end
     end)
     return hecho
 end
@@ -5684,13 +5720,20 @@ local function place_guion(timeline, media_pool, track, fps, start_frame, projec
                     local props = {}
                     if type(run.x) == "number" then props.Pan = pan_px(run.x - 0.5, ancho_tl) end
                     if type(run.y) == "number" then props.Tilt = tilt_px(0.5 - run.y, alto_tl) end
+                    local escala = 1
                     if type(run.zoom) == "number" and run.zoom > 0 then
-                        props.ZoomX = run.zoom
-                        props.ZoomY = run.zoom
+                        if rol == "main" and run.zoom > 1.005 and BARRIDO.agrandar(item, run.zoom) then
+                            escala = run.zoom                                      -- v5.82: dibujada ya grande (nitida), sin estirar el clip
+                        else
+                            props.ZoomX = run.zoom
+                            props.ZoomY = run.zoom
+                        end
                     end
                     if next(props) ~= nil then poner_props(item, props) end
                     COLORES_CC.fuente(tool, track, rol == "main")
-                    if rol == "main" then ajustar_barrido(item, (fin - ini) / fps, salto, run.ancho_rel) end
+                    if rol == "main" then
+                        ajustar_barrido(item, (fin - ini) / fps, salto, type(run.ancho_rel) == "number" and run.ancho_rel * escala or run.ancho_rel)
+                    end
                     colocados = colocados + 1
                 end
             end

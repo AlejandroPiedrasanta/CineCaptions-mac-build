@@ -121,7 +121,14 @@ def elegir_momentos(palabras, duracion, idioma, cuanto='normal', margen_ini=2.0,
     return salida
 
 
-def _pixabay(consulta, formato, clave, timeout):
+def _puntos_tam(w, h, lado):
+    """v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): el archivo cuyo lado CORTO llega a `lado` (el del timeline: 1080; 2160 en un
+    4K) con el menor tamaño; si ninguno llega, el más grande. Antes se buscaba siempre ~1080 de ANCHO (en horizontal, 960×540): en 4K se estiraba ×2-4."""
+    s = min(int(w or 0), int(h or 0))
+    return 10000 - (s - int(lado)) if s >= int(lado) else s
+
+
+def _pixabay(consulta, formato, clave, timeout, lado=1080):
     """v5.5.3: la toma de Pixabay (si la clave del B-roll es de Pixabay: «12345678-0a1b…»)."""
     import fuentes_web as FW
     d = FW._json('https://pixabay.com/api/videos/?' + urllib.parse.urlencode({'key': clave, 'q': consulta, 'safesearch': 'true', 'per_page': 20}), timeout=timeout)
@@ -135,19 +142,19 @@ def _pixabay(consulta, formato, clave, timeout):
             w, h = int(f.get('width') or 0), int(f.get('height') or 0)
             if not f.get('url') or min(w, h) < 480:
                 continue
-            puntos = (2000 if (formato == 'v') == (h > w) else 0) - abs(max(w, h) - 1920) / 10.0
+            puntos = (20000 if (formato == 'v') == (h > w) else 0) + _puntos_tam(w, h, lado)
             if puntos > mejor_puntos:
                 mejor_puntos = puntos
                 mejor = {'id': 'pb' + str(v.get('id')), 'url': f['url'], 'ancho': w, 'alto': h, 'dur': dur}
     return mejor
 
 
-def buscar(consulta, formato, clave, timeout=20):
+def buscar(consulta, formato, clave, timeout=20, lado=1080):
     """La mejor toma de Pexels para esa consulta (vertical para 'v', horizontal para 'h'). None si no hay o falla la red/clave.
-    v5.5.3: si la clave es de Pixabay, la busca en Pixabay."""
+    v5.5.3: si la clave es de Pixabay, la busca en Pixabay. v5.82: el archivo cuyo lado corto llega a `lado` (el del timeline; _puntos_tam)."""
     if re.fullmatch(r'\d{5,10}-[0-9a-f]{20,40}', str(clave or '').strip()):
         try:
-            return _pixabay(consulta, formato, str(clave).strip(), timeout)
+            return _pixabay(consulta, formato, str(clave).strip(), timeout, lado)
         except Exception:
             return None
     orient = {'v': 'portrait', 'h': 'landscape'}.get(formato, 'square')
@@ -166,18 +173,19 @@ def buscar(consulta, formato, clave, timeout=20):
         for f in v.get('video_files') or []:
             if str(f.get('file_type') or 'video/mp4') != 'video/mp4' or not f.get('link'):
                 continue
-            ancho = int(f.get('width') or 0)
-            if ancho < 480 or ancho > 2200:
+            ancho, alto = int(f.get('width') or 0), int(f.get('height') or 0)
+            if min(ancho, alto or ancho) < 480 or max(ancho, alto) > 4096:
                 continue
-            puntos = 1000 - abs(ancho - (1080 if formato in ('v', 'h') else 1080))               # lo más cercano a 1080 px
+            puntos = _puntos_tam(ancho, alto or ancho, lado)                                     # v5.82: al lado corto del timeline (antes ~1080 de ancho)
             if puntos > mejor_puntos:
                 mejor_puntos = puntos
-                mejor = {'id': str(v.get('id')), 'url': f['link'], 'ancho': ancho, 'alto': int(f.get('height') or 0), 'dur': dur}
+                mejor = {'id': str(v.get('id')), 'url': f['link'], 'ancho': ancho, 'alto': alto, 'dur': dur}
     return mejor
 
 
-def preparar(momentos, formato, clave, al_estado=None):
-    """Busca y descarga la toma de cada momento. Devuelve los eventos del plan (los que fallan se saltan: sin red o sin clave no hay B-roll y GO sigue igual)."""
+def preparar(momentos, formato, clave, al_estado=None, lado=1080):
+    """Busca y descarga la toma de cada momento. Devuelve los eventos del plan (los que fallan se saltan: sin red o sin clave no hay B-roll y GO sigue igual).
+    v5.82: `lado` = el lado corto del timeline (2160 en un 4K): las tomas llegan a esa resolución."""
     import descargas
     eventos = []
     CACHE.mkdir(parents=True, exist_ok=True)
@@ -187,10 +195,10 @@ def preparar(momentos, formato, clave, al_estado=None):
                 al_estado(f"B-roll: {m['consulta']}…")
             except Exception:
                 pass
-        clip = buscar(m['consulta'], formato, clave)
+        clip = buscar(m['consulta'], formato, clave, lado=lado)
         if not clip:
             continue
-        destino = CACHE / f"{clip['id']}.mp4"
+        destino = CACHE / f"{clip['id']}_{min(clip['ancho'], clip['alto'] or clip['ancho'])}.mp4"    # v5.82: con su tamaño (cada resolución, su archivo)
         try:
             if not destino.is_file() or destino.stat().st_size < 20000:
                 descargas.descargar(clip['url'], destino, timeout=30)

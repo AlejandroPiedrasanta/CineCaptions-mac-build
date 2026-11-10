@@ -167,6 +167,9 @@ def fase0(salida):
         H = _principal(viejo, 'cc_head')
     finally:
         viejo.unlink()
+    import sonido_skill                                  # v5.43: el sonido de la biblioteca va encendido de fábrica; «apagado» = los dos apagados
+    skill_antes = PREFS.get(sonido_skill.PREF_ON, None)
+    PREFS[sonido_skill.PREF_ON] = False
     for con_pro in (False, True):
         fx1, pro1 = _planes_de_muestra()
         fx2, pro2 = copy.deepcopy(fx1), copy.deepcopy(pro1)
@@ -180,6 +183,10 @@ def fase0(salida):
         ok(f'apagado = HEAD: _rectificar_planes {"con" if con_pro else "sin"} PRO deja los mismos planes', iguales)
         ok(f'apagado: el plan de Efectos es el MISMO objeto ({"con" if con_pro else "sin"} PRO)', A._efectos_plan is fx1)
         ok('apagado: el director no arrancó ningún hilo', getattr(A, '_director_hilo', 'x') is None)
+    if skill_antes is None:
+        PREFS.pop(sonido_skill.PREF_ON, None)
+    else:
+        PREFS[sonido_skill.PREF_ON] = skill_antes
     for plan in (None, {'eventos': []}):
         A, B = _app_falsa(M, plan, None, 'v.mp4'), _app_falsa(H, copy.deepcopy(plan), None, 'v.mp4')
         ok(f'_colocar_efectos con plan {plan!r}: igual que HEAD (no coloca)', A._colocar_efectos() == B._colocar_efectos() == '')
@@ -299,6 +306,7 @@ def casos_sinteticos(salida):
     import numpy as np
     import director_sonido_medir as M
     carpeta = Path(salida) / 'casos'
+    carpeta.mkdir(parents=True, exist_ok=True)          # (SAPI no crea la carpeta: sin ella Open da «El parámetro no es correcto»)
     voz_wav = carpeta / 'voz_limpia_sapi.wav'
     if not voz_wav.is_file():
         r = subprocess.run([sys.executable, str(Path(__file__).with_name('_voz_sapi.py')), str(voz_wav)], capture_output=True, text=True)
@@ -1121,7 +1129,10 @@ def fase3(salida, video):
     ok('al_colocar: los sonidos del director en sus pistas AI SFX', n_ai == len(res['sfx']['eventos']) and n_ai > 0, n_ai)
     ok('al_colocar: los sonidos de Simple se APAGAN (pistas «SFX…»)', 'SFX' in (nuevo.get('apagar_sfx') or []), nuevo.get('apagar_sfx'))
     ok('al_colocar: la PRO queda marcada (sus sonidos los hace el director) y sus piezas intactas', pro.get('_ai_sound') is True and pro['piezas'] == pro_antes['piezas'])
-    ok('al_colocar: queda anotado que hay pistas del director (para limpiarlas al apagarlo)', E.general().get('ai_puesto') is True)
+    # preparar el plan NO confirma nada: la marca se pone con el acuse de Resolve (director_sonido.confirmar_colocacion)
+    ok('al_colocar: sin acuse de Resolve aún no se anotan pistas del director', E.general().get('ai_puesto') is not True)
+    ok('al_colocar: con el acuse de Resolve queda anotado que hay pistas del director (para limpiarlas al apagarlo)',
+       D.confirmar_colocacion(nuevo, True) is True and E.general().get('ai_puesto') is True)
     # apagado: el MISMO plan y la PRO sin marcar
     os.environ['CINECAPTIONS_AI_SOUND'] = '0'
     E.poner_general(voz_ai_puesta=False, ai_puesto=False)

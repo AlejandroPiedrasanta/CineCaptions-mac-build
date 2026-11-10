@@ -10,7 +10,7 @@ Reglas (las mismas que la gemela): nunca toca V1/A1 ni las pistas de los caption
 los clips de una misma pista nunca se pisan; los archivos se importan una sola vez al bin «CC · Edición PRO».
 ]]
 
-local VERSION = "5.81 (edicion pro)"
+local VERSION = "5.82 (edicion pro)"
 
 -- La ENTREGA del Puente: ver CineCaptions_InsertarSFX.lua.
 local ENTREGA_PUENTE = ({...})[1]
@@ -1321,13 +1321,30 @@ end
 
 -- La media transicion con zoom (Fusion): MediaIn -> Transform con desenfoque de movimiento -> MediaOut, n fotogramas. Hacia el corte acerca
 -- cada vez mas rapido; tras el corte llega acercado y vuelve frenando.
-local function comp_zoom(ruta, n, sale)
+-- v5.82 (gemelo de colocar_pro._comp_zoom, MISMO texto): `desenfoque` (px) = la ENTRADA con zoom y desenfoque de la referencia del Estilo 4:
+-- llega acercado x1,12 y desenfocado y se asienta frenando (Size 1,12 -> 1 en el 80 % del tramo; Blur desenfoque -> 0 en todo el tramo).
+local function comp_zoom(ruta, n, sale, desenfoque)
     n = math.max(2, math.floor(n))
+    desenfoque = tonumber(desenfoque) or 0
     local claves
-    if sale then
+    if desenfoque > 0 then
+        local k = math.max(1, math.floor((n - 1) * 0.8 + 0.5))
+        claves = string.format("[0] = { 1.12, RH = { %.3f, 1.0 } }, [%d] = { 1.0, LH = { %.3f, 1.0 } }", k / 3.0, k, k * 2.0 / 3.0)
+    elseif sale then
         claves = string.format("[0] = { 1.28, RH = { %.3f, 1.12 } }, [%d] = { 1.0, LH = { %.3f, 1.0 } }", n * 0.25, n - 1, (n - 1) * 0.55)
     else
         claves = string.format("[0] = { 1.0, RH = { %.3f, 1.0 } }, [%d] = { 1.28, LH = { %.3f, 1.12 } }", n * 0.45, n - 1, (n - 1) * 0.75)
+    end
+    local salida, borrosa = "CCZoom", ""
+    if desenfoque > 0 then
+        salida = "CCBlur"
+        borrosa = "\t\tCCBlur = Blur {\n\t\t\tInputs = {\n" ..
+            "\t\t\t\tXBlurSize = Input { SourceOp = \"CCBlurSize\", Source = \"Value\", },\n" ..
+            "\t\t\t\tInput = Input { SourceOp = \"CCZoom\", Source = \"Output\", },\n\t\t\t},\n" ..
+            "\t\t\tViewInfo = OperatorInfo { Pos = { 165, 50 } },\n\t\t},\n" ..
+            "\t\tCCBlurSize = BezierSpline {\n\t\t\tSplineColor = { Red = 0, Green = 200, Blue = 225 },\n\t\t\tNameSet = true,\n" ..
+            string.format("\t\t\tKeyFrames = { [0] = { %.2f, RH = { %.3f, 0 } }, [%d] = { 0, LH = { %.3f, 0 } } }\n\t\t},\n",
+                          desenfoque, (n - 1) / 3.0, n - 1, (n - 1) * 2.0 / 3.0)
     end
     local texto = "Composition {\n\tCurrentTime = 0,\n\tTools = ordered() {\n" ..
         "\t\tMediaIn1 = MediaIn { ViewInfo = OperatorInfo { Pos = { 0, 50 } }, },\n" ..
@@ -1337,24 +1354,27 @@ local function comp_zoom(ruta, n, sale)
         "\t\t\t\tInput = Input { SourceOp = \"MediaIn1\", Source = \"Output\", },\n\t\t\t},\n" ..
         "\t\t\tViewInfo = OperatorInfo { Pos = { 110, 50 } },\n\t\t},\n" ..
         "\t\tCCZoomSize = BezierSpline {\n\t\t\tSplineColor = { Red = 225, Green = 0, Blue = 225 },\n\t\t\tNameSet = true,\n" ..
-        "\t\t\tKeyFrames = { " .. claves .. " }\n\t\t},\n" ..
+        "\t\t\tKeyFrames = { " .. claves .. " }\n\t\t},\n" .. borrosa ..
         "\t\tMediaOut1 = MediaOut {\n\t\t\tInputs = {\n\t\t\t\tIndex = Input { Value = \"0\", },\n" ..
-        "\t\t\t\tInput = Input { SourceOp = \"CCZoom\", Source = \"Output\", },\n\t\t\t},\n" ..
+        "\t\t\t\tInput = Input { SourceOp = \"" .. salida .. "\", Source = \"Output\", },\n\t\t\t},\n" ..
         "\t\t\tViewInfo = OperatorInfo { Pos = { 220, 50 } },\n\t\t},\n\t},\n}\n"
     escribir_archivo(ruta, texto)
     return ruta
 end
 
 -- Tema 5: la transicion con zoom en cada corte {fotograma, n antes, n despues}: dos copias de V1 en PRO-ZOOM con su media transicion.
+-- v5.82: un 4.o valor = la ENTRADA con zoom y desenfoque (px de desenfoque; n antes = 0: solo la mitad de despues).
 local function poner_zoom(tl, mp, cortes, base, pista)
     local puestas = 0
     local carpeta, sep = carpeta_compartida()
     for _, c in ipairs(cortes or {}) do
         local f = base + math.floor(tonumber(c[1]) or 0)
         local antes, despues = math.floor(tonumber(c[2]) or 5), math.floor(tonumber(c[3]) or 6)
+        local desenfoque = tonumber(c[4]) or 0
         for _, tramo in ipairs({ { f - antes, f, false }, { f, f + despues, true } }) do
             local f0, f1, sale = tramo[1], tramo[2], tramo[3]
-            local v1 = clip_v1(tl, f0, f1)
+            local v1 = nil
+            if f1 - f0 >= 2 then v1 = clip_v1(tl, f0, f1) end          -- (la entrada no tiene mitad de antes)
             local fx = false
             if v1 ~= nil then
                 local ok, nombres = pcall(function() return v1:GetFusionCompNameList() end)
@@ -1366,14 +1386,14 @@ local function poner_zoom(tl, mp, cortes, base, pista)
                 if it ~= nil then
                     copiar_transformacion(v1, it)
                     pcall(function() for _, n in ipairs(lista_api(it:GetFusionCompNameList())) do it:DeleteFusionCompByName(n) end end)
-                    local comp = comp_zoom(carpeta .. sep .. string.format("ccpro_zoom_%d_%d.comp", f0, sale and 1 or 0), f1 - f0, sale)
+                    local comp = comp_zoom(carpeta .. sep .. string.format("ccpro_zoom_%d_%d.comp", f0, sale and 1 or 0), f1 - f0, sale, sale and desenfoque or 0)
                     local ok, r = pcall(function() return it:ImportFusionComp(comp) end)
                     if ok and r then
                         pcall(function()
                             local nombres = lista_api(it:GetFusionCompNameList())
                             if #nombres > 0 then it:RenameFusionCompByName(nombres[#nombres], NOMBRE_ZOOM); it:LoadFusionCompByName(NOMBRE_ZOOM) end
                         end)
-                        pcall(function() it:SetName("PRO · transición con zoom") end)
+                        pcall(function() it:SetName(desenfoque > 0 and "PRO · entrada con zoom y desenfoque" or "PRO · transición con zoom") end)
                         pcall(function() it:SetClipColor("Purple") end)
                         table.insert(PEND_CACHE.fusion, it)
                         puestas = puestas + 1

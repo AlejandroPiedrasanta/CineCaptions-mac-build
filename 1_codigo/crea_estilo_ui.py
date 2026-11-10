@@ -434,8 +434,8 @@ ESTILOS_GRUESOS = ('Bold', 'Black', 'ExtraBold', 'Extra Bold', 'Heavy', 'SemiBol
 
 
 def letras_instaladas():
-    """Las familias de letra del equipo (QFontDatabase: las del sistema y las del programa), sin las privadas ni las verticales «@…», por orden
-    alfabético. En el hilo de la interfaz (Qt)."""
+    """Las familias de letra del equipo (QFontDatabase: las del sistema y las del programa), sin las privadas, las verticales «@…» ni las de
+    mapa de bits, por orden alfabético. En el hilo de la interfaz (Qt)."""
     vistas = set()
     salida = []
     for f in QFontDatabase.families():
@@ -443,6 +443,10 @@ def letras_instaladas():
             continue
         try:
             if QFontDatabase.isPrivateFamily(f):
+                continue
+            # v5.82: las de mapa de bits de Windows (8514oem, Fixedsys, MS Sans Serif, System, Terminal…) no escalan: el Text+ de Resolve
+            # no puede usarlas y al dibujar su nombre en la lista Qt dejaba «DirectWrite: CreateFontFaceFromHDC() failed» en errores.log
+            if not QFontDatabase.isSmoothlyScalable(f):
                 continue
         except Exception:
             pass

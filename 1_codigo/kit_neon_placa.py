@@ -328,6 +328,8 @@ def renderizar(video, plan, salida, ancho=1080, alto=1920, fps=None, progreso=No
         os_.width, os_.height, os_.pix_fmt = ancho, alto, 'yuv420p'
         if enc == 'libx264':
             os_.options = {'crf': '15', 'preset': 'veryfast'}
+        else:                                                            # v5.82: el de respaldo, con un bitrate que crece con los píxeles (4K: 72 Mbps)
+            os_.bit_rate = int(18_000_000 * max(1.0, (ancho * alto) / float(1080 * 1920)))
         dur = float(plan.get('duracion') or 0) or float(ent.duration or 0) / 1e6
         total = max(1, int(round(dur * fps)))
         # v5.5.17: VARIOS fotogramas a la vez (Pillow y numpy sueltan el GIL al escalar, desenfocar y mezclar); se escriben en orden

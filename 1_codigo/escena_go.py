@@ -387,7 +387,6 @@ class EscenaGo(QWidget):
         self._fin_pendiente = None
         self._post = False                      # después de la explosión: sigue colocando en Resolve
         self._cache_fondo = None
-        self._img_ref = None
         self._buf = None
         self._luts = (_tabla_color(0.0), _tabla_color(1.0))
         self._lut_e = -1.0
@@ -416,7 +415,8 @@ class EscenaGo(QWidget):
         self._reloj = ritmo_ui.RelojPantalla(self)     # v5.49: a 60/30 fps late con el refresco del monitor (antes un QTimer de 16 ms: 62,5 Hz)
         self._reloj.pantalla = self._ventana_hwnd
         self._reloj.timeout.connect(self._tic)
-        self._cargar_referencia()
+        # v5.82: ya no se lee fondo_esfera.jpg al crearse (antes _cargar_referencia, en el hilo de la ventana): su resultado no lo dibujaba
+        # nadie y en el portátil de un cliente esa lectura dejó el arranque 46 s parado («El programa lleva 46 s abriendo…»)
 
     # ------------------------------------------------------------------ preparación
     def _armar_esfera(self):
@@ -437,39 +437,6 @@ class EscenaGo(QWidget):
         self._pvx = ((self._rng.random(n) - 0.5) * 0.01).astype(np.float32)
         self._pvy = ((self._rng.random(n) - 0.5) * 0.01).astype(np.float32)
         self._pb = (0.25 + self._rng.random(n) * 0.75).astype(np.float32)
-
-    def _cargar_referencia(self):
-        """La imagen de referencia, muy desenfocada, como luz ambiente detrás de la esfera."""
-        try:
-            import sys
-            base = Path(getattr(sys, '_MEIPASS', '')) if getattr(sys, 'frozen', False) else Path(__file__).resolve().parent.parent / '2_recursos'
-            ruta = base / 'fondo_esfera.jpg'
-            if not ruta.is_file():
-                ruta = Path(__file__).resolve().parent.parent / '2_recursos' / 'fondo_esfera.jpg'
-            if ruta.is_file():
-                img = QImage(str(ruta))
-                if not img.isNull():
-                    chico = img.scaled(max(8, img.width() // 14), max(8, img.height() // 14), Qt.AspectRatioMode.IgnoreAspectRatio,
-                                       Qt.TransformationMode.SmoothTransformation)
-                    ref = chico.scaled(img.width() // 2, img.height() // 2, Qt.AspectRatioMode.IgnoreAspectRatio,
-                                       Qt.TransformationMode.SmoothTransformation)
-                    placa = QImage(ref.width(), ref.height(), QImage.Format.Format_ARGB32_Premultiplied)
-                    placa.fill(0)
-                    q = QPainter(placa)
-                    q.drawImage(0, 0, ref)
-                    q.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationIn)    # bordes que se funden con el fondo
-                    q.translate(ref.width() * 0.5, ref.height() * 0.42)
-                    q.scale(1.0, ref.height() / float(ref.width()))             # máscara elíptica: ningún borde llega a verse
-                    m = QRadialGradient(QPointF(0, 0), ref.width() * 0.5)
-                    m.setColorAt(0.0, QColor(0, 0, 0, 255))
-                    m.setColorAt(0.35, QColor(0, 0, 0, 150))
-                    m.setColorAt(0.7, QColor(0, 0, 0, 26))
-                    m.setColorAt(1.0, QColor(0, 0, 0, 0))
-                    q.fillRect(QRectF(-ref.width(), -ref.width(), ref.width() * 2.0, ref.width() * 2.0), m)
-                    q.end()
-                    self._img_ref = placa
-        except Exception:
-            self._img_ref = None
 
     # ------------------------------------------------------------------ API para el panel
     def activar(self, si):

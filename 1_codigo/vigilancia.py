@@ -143,7 +143,9 @@ def reanudar(nombre):
         t.avisado_en = 0.0
 
 
-def terminar(nombre, ok=True, motivo=''):
+def terminar(nombre, ok=True, motivo='', cancelado=False):
+    """cancelado=True (v5.82): el usuario la paró a propósito; va al Registro como información, no como «terminó con fallo» (ese aviso caía
+    en errores.log con la explicación de otro error)."""
     with _LOCK:
         t = _TAREAS.pop(nombre, None)
     if t is None:
@@ -157,8 +159,11 @@ def terminar(nombre, ok=True, motivo=''):
         pass
     try:
         lista = ' · '.join(f'{p} {_fmt_s(s)}' for p, s in t.pasos if s >= 1)
-        texto = f"«{nombre}» {'terminó' if ok else 'terminó con fallo'} en {_fmt_s(ahora - t.inicio)}" + (f' ({lista})' if lista else '') + (f': {motivo}' if motivo else '')
         r = _registro()
+        if cancelado:
+            r.info(f'«{nombre}» se canceló en {_fmt_s(ahora - t.inicio)}' + (f' ({lista})' if lista else ''), 'vigilancia')
+            return
+        texto = f"«{nombre}» {'terminó' if ok else 'terminó con fallo'} en {_fmt_s(ahora - t.inicio)}" + (f' ({lista})' if lista else '') + (f': {motivo}' if motivo else '')
         (r.info if ok else r.aviso)(texto, 'vigilancia')
     except Exception:
         pass
@@ -267,7 +272,11 @@ def _llamar(fn, *args):
 def vigilar_arranque(limite_s=45):
     """Llamar lo primero en main(): si `arranque_listo()` no llega en `limite_s`, se anota con la pila de todos los hilos."""
     _ARRANQUE.update(listo=False, inicio=time.time(), limite=limite_s, avisado=False)
-    _marcar_sesion('abriendo')
+    _marcar_sesion('abriendo · creando la ventana')     # v5.82: la fase va en la marca: el siguiente arranque dice dónde se quedó
+    try:
+        _registro().vigilar_arranque_nativo(20)      # v5.82: a los 20 s, la pila de todos los hilos en fallo_nativo.log (aunque se cierre a la fuerza)
+    except Exception:
+        pass
     _asegurar_hilo()
 
 
@@ -275,6 +284,10 @@ def arranque_listo():
     if _ARRANQUE['listo']:
         return
     _ARRANQUE['listo'] = True
+    try:
+        _registro().fin_arranque_nativo()
+    except Exception:
+        pass
     _marcar_sesion('listo')
     try:
         if _ARRANQUE['avisado']:
@@ -362,30 +375,61 @@ def _comprobaciones():
             res.append(('memoria', 'aviso', f'Memoria libre muy baja ({mem} MB): los modelos de voz e IA pueden fallar o ir muy lentos. Cierra otros programas.'))
         else:
             res.append(('memoria', None, ''))
-    try:
-        CARPETA.mkdir(parents=True, exist_ok=True)
-        prueba = CARPETA / '.escritura.tmp'
-        prueba.write_text('ok', encoding='utf-8')
-        prueba.unlink()
-        res.append(('escritura', None, ''))
-    except Exception as e:
-        res.append(('escritura', 'error', f'No se puede escribir en {CARPETA} ({type(e).__name__}: {e}): no se guardarán ajustes, marcas ni el registro.'))
+    res.append(_probar_escritura())
     return res
 
 
+def _probar_escritura(intentos=5):
+    """v5.82 (informe de un cliente: «No se puede escribir en … (PermissionError: [WinError 32] …\\.escritura.tmp): no se guardarán ajustes…»):
+    el archivo de prueba tenía nombre FIJO y el monitor y el chequeo de arranque lo creaban y borraban a la vez (o el antivirus lo tenía
+    abierto un instante); un solo fallo ya era «no se puede escribir». Ahora: nombre único, varios intentos en ~2 s y solo cuenta poder
+    ESCRIBIR (si el borrado falla, se limpia en la pasada siguiente)."""
+    try:
+        CARPETA.mkdir(parents=True, exist_ok=True)
+        for viejo in CARPETA.glob('.escritura*.tmp'):          # los de pasadas anteriores que no se pudieron borrar
+            try:
+                viejo.unlink()
+            except OSError:
+                pass
+    except OSError:
+        pass
+    error = None
+    for k in range(intentos):
+        prueba = CARPETA / f'.escritura.{os.getpid()}.{threading.get_ident()}.{k}.tmp'
+        try:
+            prueba.write_text('ok', encoding='utf-8')
+        except OSError as e:
+            error = e
+            if k < intentos - 1:
+                time.sleep(0.2 * (k + 1))
+            continue
+        try:
+            prueba.unlink()
+        except OSError:
+            pass
+        return ('escritura', None, '')
+    return ('escritura', 'error', f'No se puede escribir en {CARPETA} ({type(error).__name__}: {error}): mientras siga así no se guardarán '
+            'ajustes, marcas ni el registro.')
+
+
+_LOCK_REVISAR = threading.Lock()
+
+
 def revisar_ahora():
-    """Una pasada del monitor: anota solo lo que CAMBIÓ desde la anterior. Devuelve la lista de problemas actuales."""
+    """Una pasada del monitor: anota solo lo que CAMBIÓ desde la anterior. Devuelve la lista de problemas actuales.
+    v5.82: de una en una (el monitor y el chequeo de arranque la llamaban a la vez desde dos hilos)."""
     r = _registro()
     problemas = []
-    for clave, nivel, mensaje in _comprobaciones():
-        antes = _MONITOR['estado'].get(clave)
-        _MONITOR['estado'][clave] = nivel
-        if nivel:
-            problemas.append((clave, nivel, mensaje))
-            if antes != nivel:
-                (r.error if nivel == 'error' else r.aviso)(mensaje, 'monitor')
-        elif antes:
-            r.ok(f'Resuelto: {clave} vuelve a estar bien.', 'monitor')
+    with _LOCK_REVISAR:
+        for clave, nivel, mensaje in _comprobaciones():
+            antes = _MONITOR['estado'].get(clave)
+            _MONITOR['estado'][clave] = nivel
+            if nivel:
+                problemas.append((clave, nivel, mensaje))
+                if antes != nivel:
+                    (r.error if nivel == 'error' else r.aviso)(mensaje, 'monitor')
+            elif antes:
+                r.ok(f'Resuelto: {clave} vuelve a estar bien.', 'monitor')
     return problemas
 
 
@@ -421,6 +465,9 @@ def revisar_salud_al_arrancar():
         if f.get('ok') is False:
             fallas.append((f['nombre'], f['detalle']))
             r.error(f"Falla al iniciar: {f['nombre']} — {f['detalle']}", 'arranque')
+        elif f.get('ok') is None and f.get('aviso'):
+            # v5.82: funciona, pero le falta algo (p. ej. la IA de texto: la voz va bien y el texto se corrige con reglas): aviso, no «Falla»
+            r.aviso(f"Al abrir: {f['nombre']} — {f['detalle']}", 'arranque')
     if not fallas:
         r.info('Chequeo de arranque: todo en orden (' + salud.resumen(filas)[0] + ').', 'arranque')
     if any(f.get('cuda') == 'faltan' for f in filas):

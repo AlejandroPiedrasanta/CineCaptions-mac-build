@@ -842,13 +842,15 @@ def main():
                         continue
                     cabe, libre = cabe_en_disco(c)
                     if not cabe:                     # (v5.64: antes empezaba y fallaba a medias, dejando GB de archivos sin terminar)
-                        decir('ESTADO', f'No descargo {REPOS[c]}: necesita unos {TAMANO_GB.get(c, 10):.0f} GB y en el disco quedan {libre} GB libres')
+                        # (v5.82: lo que de verdad se pide, con los 2 GB de margen: antes decía «unos 4 GB» y pedía 6)
+                        decir('ESTADO', f'No descargo {REPOS[c]}: necesita unos {TAMANO_GB.get(c, 10) + 2.0:.0f} GB libres y en el disco quedan {libre} GB')
                         continue
                     decir('ESTADO', f'Descargando {REPOS[c]}')
                     snapshot_download(repo_id=REPOS[c])
                     listas.append(c)
                 except Exception as e:
-                    decir('ESTADO', f'No pude descargar {REPOS[c]}: {type(e).__name__}')
+                    # (v5.82: con el porqué, para que «Reparar» diga si fue la red o el disco)
+                    decir('ESTADO', f'No pude descargar {REPOS[c]}: {type(e).__name__}: ' + ' '.join(str(e).split())[:160])
             if not listas:
                 raise RuntimeError('no se descargó ninguna IA de texto')
             decir('LISTO', listas[0])

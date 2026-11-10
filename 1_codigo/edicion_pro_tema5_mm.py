@@ -498,10 +498,16 @@ def cara(rgb, det, lado=360):
     return _url(img)
 
 
+def _escala_fotos(W, H):
+    """v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): cuántas veces 1080 mide el lado corto del timeline (2 en un 4K). Las fotos de las
+    escenas se piden con esos píxeles de más: Remotion las muestra al mismo tamaño en pantalla, pero ya no estiradas ×2-3."""
+    return max(1.0, min(int(W or 1080), int(H or 1920)) / 1080.0)
+
+
 def imagenes_sticker(rgb, alfa_modelo, clip, W, H):
     """Las props del StickerT5 para ese fotograma de la fuente: {'fondo', 'recorte', 'caja'} o None."""
     fx, fy = mapeo(clip, W, H)
-    png, caja = sticker(rgb, alfa_completo(rgb, alfa_modelo), fx, fy, W, H)
+    png, caja = sticker(rgb, alfa_completo(rgb, alfa_modelo), fx, fy, W, H, lado_max=int(round(900 * _escala_fotos(W, H))))
     if not png:
         return None
     return {'fondo': _url(imagen_timeline(rgb, fx, fy, W, H, 0.5)), 'recorte': png, 'caja': caja}
@@ -509,7 +515,7 @@ def imagenes_sticker(rgb, alfa_modelo, clip, W, H):
 
 def imagenes_final(rgb, det, clip, W, H):
     """Las props del FinalT5 para ese fotograma de la fuente (det en fracciones de la fuente): {'fondo', 'cara'} o None."""
-    c = cara(rgb, det) if protagonista(det) else None                  # la cara de quien habla, no la de alguien del fondo
+    c = cara(rgb, det, lado=int(round(360 * _escala_fotos(W, H)))) if protagonista(det) else None      # la cara de quien habla, no la de alguien del fondo
     if not c:
         return None
     fx, fy = mapeo(clip, W, H)

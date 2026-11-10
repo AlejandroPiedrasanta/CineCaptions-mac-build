@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 4715
+/***/ 47
 (__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2980,6 +2980,14 @@ const vestido = (variante, U, acento, acento2, fondoU, tintaU) => {
     radio: 999,
     oscuro: !(claroDe(acento) && claroDe(acento2))
   };
+  else if (variante === "reflejo") v = {
+    fondo: "linear-gradient(100deg, rgba(190,18,34,.96) 0%, rgba(110,10,22,.95) 20%, rgba(34,9,13,.95) 52%, rgba(14,12,16,.96) 100%)",
+    borde: `${1.2 * U}px solid rgba(255,96,108,.30)`,
+    radio: 18 * U,
+    oscuro: true,
+    fina: true,
+    sombra: `0 ${14 * U}px ${36 * U}px rgba(0,0,0,.5), inset 0 ${1.4 * U}px 0 rgba(255,150,160,.28), 0 0 ${26 * U}px rgba(226,28,46,.22)`
+  };
   if (fondoU) {
     v.fondo = variante === "halo" ? `linear-gradient(${fondoU}, ${fondoU}) padding-box, linear-gradient(90deg, rgb(${r2},${g2},${b2}), rgb(${r},${g},${b})) border-box` : variante === "transparente" ? "rgba(0,0,0,0)" : fondoU;
     if (variante !== "transparente") v.oscuro = !claroDe(fondoU);
@@ -3039,9 +3047,18 @@ const AcompananteT5 = ({
   const flota = Math.sin(t * 2.1) * 4 * U;
   const pop = (t0) => resorte((t - t0) / 0.45);
   const icono = (lado, contenido, fondo2 = `rgba(${r},${g},${b},.16)`) => /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: lado, height: lado, borderRadius: lado / 2, background: fondo2, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }, children: contenido });
+  const cae = (txt, grande) => txt.split(" ").filter(Boolean).map((w, i) => {
+    const q = Acompanantes_easeOut((t - 0.3 - i * 0.12) / 0.22);
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
+      display: "inline-block",
+      opacity: q,
+      marginRight: "0.26em",
+      transform: `translateY(${((1 - q) * -0.55 * grande * U).toFixed(1)}px)`
+    }, children: w }, i);
+  });
   const textos = (arriba, abajo, grande = 40) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", lineHeight: 1.05 }, children: [
     arriba && /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: 15 * U, letterSpacing: "0.14em", color: gris, textTransform: "uppercase" }, children: arriba }),
-    /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: 700, fontSize: grande * U, letterSpacing: "-0.01em", color: tinta }, children: abajo })
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontFamily: FAMILIA.inter, fontWeight: V.fina ? 500 : 700, fontSize: grande * U, letterSpacing: "-0.01em", color: tinta }, children: V.fina && typeof abajo === "string" ? cae(abajo, grande) : abajo })
   ] });
   let cuerpo = null;
   if (tipo === "lugar") {
@@ -102724,6 +102741,288 @@ const EmojiPro = ({
   ] });
 };
 
+;// ./src/MotionsPila.tsx
+
+
+
+const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const MotionsPila_suave = (x) => {
+  const v = clamp(x);
+  return v * v * (3 - 2 * v);
+};
+const MotionsPila_unidad = (w, h) => Math.min(w, h * 9 / 16) / 1080;
+const MotionsPila_POSES = [
+  [0, 340.69, 593.12, -50, 1.1537, 1.14, 1.0037],
+  [0.033, 369.79, 520.46, -50, 1.1537, 1.14, 1.0037],
+  [0.067, 398.9, 447.79, -97.25, 1.2207, 1.1266, 0.9568],
+  [0.1, 367.75, 367, -128.67, 1.2585, 1.08, 0.9531],
+  [0.133, 300.83, 307.16, -143.53, 1.266, 1.0256, 0.962],
+  [0.167, 235.2, 268.35, -148.54, 1.2852, 0.9725, 0.9381],
+  [0.2, 181.69, 241.37, -148.44, 1.3344, 0.9116, 0.8856],
+  [0.233, 135.43, 218.99, -145.62, 1.3666, 0.87, 0.8481],
+  [0.267, 97.2, 200.78, -141.5, 1.3544, 0.8638, 0.8448],
+  [0.3, 64.84, 183.88, -136.62, 1.3267, 0.8688, 0.8551],
+  [0.333, 37.55, 168.28, -130.47, 1.2892, 0.8797, 0.8757],
+  [0.367, 14.62, 155.1, -122.19, 1.2299, 0.91, 0.9123],
+  [0.4, -4.68, 141.62, -112.84, 1.1685, 0.9506, 0.9507],
+  [0.433, -18.68, 128.88, -103.45, 1.1193, 0.9866, 0.9854],
+  [0.467, -32.07, 115.54, -93.86, 1.0858, 1.0062, 1.0091],
+  [0.5, -39.81, 101.69, -85.53, 1.079, 0.9997, 1.0058],
+  [0.533, -44.43, 87.87, -78.84, 1.0891, 0.9797, 0.9862],
+  [0.567, -45.56, 75.13, -73.01, 1.0945, 0.9675, 0.9721],
+  [0.6, -44.12, 63.34, -68.39, 1.0907, 0.9644, 0.9681],
+  [0.633, -40.43, 53.37, -64.81, 1.0846, 0.96, 0.9686],
+  [0.667, -36.89, 44.23, -61.75, 1.0877, 0.9469, 0.962],
+  [0.7, -31.87, 37.05, -59.11, 1.1069, 0.9244, 0.9409],
+  [0.733, -28.05, 30.53, -56.42, 1.1315, 0.9012, 0.9161],
+  [0.767, -23.95, 24.31, -54.06, 1.143, 0.8909, 0.903],
+  [0.8, -19.99, 20.43, -52.45, 1.127, 0.905, 0.9128],
+  [0.833, -16.44, 15.69, -51.09, 1.0818, 0.9434, 0.9491],
+  [0.867, -13.15, 12.54, -50.03, 1.0404, 0.9756, 0.9829],
+  [0.9, -9.94, 9.25, -49.09, 1.0378, 0.9709, 0.9824],
+  [0.933, -6.99, 6.22, -47.91, 1.0513, 0.9531, 0.9683],
+  [0.967, -5.52, 4.17, -46.88, 1.0448, 0.9572, 0.9709],
+  [1, -3.11, 2.16, -46.47, 1.0248, 0.9753, 0.9842],
+  [1.033, -1.67, 1.02, -46.31, 1.0094, 0.9875, 0.9948],
+  [1.067, 0, 0, -46, 1, 0.99, 1]
+];
+const GEO = { A: 57.5, B: 14.15, C: 36.75, trazo: 5.375, halo: 0.8375, radio: 5 };
+const OBT = 1;
+const REPOSO = [236.48, 768.7];
+const VUELO_AVION_S = MotionsPila_POSES[MotionsPila_POSES.length - 1][0];
+const poseEn = (u) => {
+  if (u <= MotionsPila_POSES[0][0]) return MotionsPila_POSES[0].slice(1);
+  for (let i = 0; i < MotionsPila_POSES.length - 1; i++) {
+    const a = MotionsPila_POSES[i], b = MotionsPila_POSES[i + 1];
+    if (u <= b[0]) {
+      const f = (u - a[0]) / Math.max(1e-6, b[0] - a[0]);
+      return a.slice(1).map((v, j) => v + (b[j + 1] - v) * f);
+    }
+  }
+  return MotionsPila_POSES[MotionsPila_POSES.length - 1].slice(1);
+};
+const puntosAvion = (cx, cy, th, s, k, p) => {
+  const { A, B, C } = GEO;
+  const ix = -(A - 2 * B) / 3;
+  const loc = [[ix + A, 0], [ix - B, -C * k], [ix, 0], [ix - B, C * k]];
+  const c = Math.cos(th * Math.PI / 180), sn = Math.sin(th * Math.PI / 180);
+  return loc.map(([x, y]) => [cx + s * (x * p * c - y * sn), cy + s * (x * p * sn + y * c)]);
+};
+const AvionPapel = ({ x = 30, y = 62, esc = 1, color = "#E0FB58", entra = 0 }) => {
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
+  const F = MotionsPila_unidad(W, H) * 1080 / 720;
+  const u = frame / fps - entra;
+  if (u < 0) return null;
+  const dx = x / 100 * W / F - REPOSO[0], dy = y / 100 * H / F - REPOSO[1];
+  const xMax4 = Math.max(...MotionsPila_POSES.slice(0, 4).map((q) => REPOSO[0] + q[1]));
+  const wx0 = dx <= 0 ? 1 : clamp(1 - (xMax4 + dx - 0.92 * (W / F)) / dx);
+  const wy0 = dy >= 0 ? 1 : 0;
+  const donde = (v) => {
+    const q = poseEn(v);
+    const e = MotionsPila_suave(v / 0.15);
+    return { q, cx: (REPOSO[0] + q[0] + dx * (wx0 + (1 - wx0) * e)) * F, cy: (REPOSO[1] + q[1] + dy * (wy0 + (1 - wy0) * e)) * F };
+  };
+  const m = 0.5 / fps;
+  const P = donde(u), Pa = donde(Math.max(0, u - m)), Pb = donde(u + m);
+  const vx = Pb.cx - Pa.cx, vy = Pb.cy - Pa.cy, giro = Pb.q[2] - Pa.q[2];
+  const largo = Math.max(Math.abs(vx), Math.abs(vy)) * OBT + Math.abs(giro) * OBT * 0.6;
+  const n = largo < 1.5 ? 1 : Math.min(25, 1 + 2 * Math.ceil(largo / 1.6));
+  const s = P.q[3] * F * esc;
+  const ancho = Math.max(1, GEO.trazo * s);
+  const copias = Array.from({ length: n }, (_, i) => {
+    const t = n === 1 ? 0 : (i / (n - 1) - 0.5) * OBT;
+    const pts = puntosAvion(P.cx + vx * t, P.cy + vy * t, P.q[2] + giro * t, s, P.q[4], P.q[5]);
+    const d = `M${pts[0][0]},${pts[0][1]} L${pts[1][0]},${pts[1][1]} L${pts[2][0]},${pts[2][1]} L${pts[3][0]},${pts[3][1]} Z M${pts[2][0]},${pts[2][1]} L${pts[0][0]},${pts[0][1]}`;
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      "path",
+      {
+        d,
+        fill: "none",
+        stroke: color,
+        strokeWidth: ancho,
+        strokeLinejoin: "round",
+        strokeLinecap: "round",
+        opacity: 1 / n,
+        style: { mixBlendMode: n > 1 ? "plus-lighter" : "normal" }
+      },
+      i
+    );
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: W, height: H, style: { position: "absolute", inset: 0, overflow: "visible" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("filter", { id: "halo-avion", x: "-50%", y: "-50%", width: "200%", height: "200%", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: GEO.radio * F * esc }) }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("g", { filter: "url(#halo-avion)", opacity: GEO.halo, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("g", { style: { isolation: "isolate" }, children: copias }) }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("g", { style: { isolation: "isolate" }, children: copias })
+  ] }) });
+};
+const VisorRec = ({ x0 = 5.5, y0 = 4.5, x1 = 94.5, y1 = 95.5, texto = "REC", _dur }) => {
+  useFuentes();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
+  const U = MotionsPila_unidad(W, H);
+  const t = frame / fps, dur = Number(_dur) || durationInFrames / fps;
+  const a = ease(t / 0.25) * (1 - ease((t - (dur - 0.2)) / 0.2));
+  const X0 = x0 / 100 * W, Y0 = y0 / 100 * H, X1 = x1 / 100 * W, Y1 = y1 / 100 * H;
+  const L = 64 * U, g = 4 * U;
+  const blanco = `rgba(255,255,255,${(0.86 * a).toFixed(3)})`;
+  const esquina = (x, y, sx, sy) => `M${x},${y + sy * L} L${x},${y} L${x + sx * L},${y}`;
+  const luz = Math.floor(t * 2) % 2 === 0;
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: W, height: H, style: { position: "absolute", inset: 0 }, children: [
+      [esquina(X0, Y0, 1, 1), esquina(X1, Y0, -1, 1), esquina(X0, Y1, 1, -1), esquina(X1, Y1, -1, -1)].map((d, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, fill: "none", stroke: blanco, strokeWidth: g, strokeLinecap: "square" }, i)),
+      luz && /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: X0 + 36 * U, cy: Y0 + 44 * U, r: 10 * U, fill: `rgba(240,30,40,${a.toFixed(3)})` })
+    ] }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+      position: "absolute",
+      left: X0 + 58 * U,
+      top: Y0 + 44 * U,
+      transform: "translateY(-50%)",
+      fontFamily: FAMILIA.inter,
+      fontWeight: 700,
+      fontSize: 34 * U,
+      letterSpacing: "0.02em",
+      color: blanco,
+      lineHeight: 1
+    }, children: texto })
+  ] });
+};
+const TachadoRojo = ({ x0 = 20, yc = 52, x1 = 80, yb = 58, color = "#E21C2E", entra = 0, lim0 = 0, lim1 = 100, muestra }) => {
+  useFuentes();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
+  const U = MotionsPila_unidad(W, H);
+  const k = ease((frame / fps - entra) / 0.2);
+  const palabra = muestra ? /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+    position: "absolute",
+    left: x0 / 100 * W,
+    width: (x1 - x0) / 100 * W,
+    top: yc / 100 * H,
+    height: (yb - yc) / 100 * H,
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    fontFamily: FAMILIA.inter,
+    fontWeight: 800,
+    color: "#E0FB58",
+    fontSize: (yb - yc) / 100 * H / 0.727,
+    lineHeight: 0.8,
+    letterSpacing: "-0.045em"
+  }, children: muestra }) : null;
+  if (k <= 0) return palabra ? /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { children: palabra }) : null;
+  const cap = (yb - yc) / 100 * H;
+  const xa0 = x0 / 100 * W - 0.018 * W, xb0 = x1 / 100 * W + 0.05 * W;
+  const ya0 = yc / 100 * H - 0.12 * cap, yb0 = yb / 100 * H - 0.3 * cap;
+  const yEn = (x) => ya0 + (yb0 - ya0) * (x - xa0) / Math.max(1, xb0 - xa0);
+  const xa = Math.max(xa0, lim0 / 100 * W), xb = Math.min(xb0, lim1 / 100 * W);
+  const ya = yEn(xa), yB = yEn(xb);
+  const d = `M${xa},${ya} L${xa + (xb - xa) * k},${ya + (yB - ya) * k}`;
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    palabra,
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: W, height: H, style: { position: "absolute", inset: 0, overflow: "visible" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("filter", { id: "brillo-tachado", x: "-20%", y: "-50%", width: "140%", height: "200%", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: 5 * U }) }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, stroke: color, strokeWidth: 12 * U, strokeLinecap: "butt", filter: "url(#brillo-tachado)" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d, stroke: color, strokeWidth: 12 * U, strokeLinecap: "butt" })
+    ] })
+  ] });
+};
+const AroCara = ({ cx = 50, cy = 32, r = 22, texto = "", lado = "der", aro = "#FFE4BA", pildora = "#CD6860" }) => {
+  useFuentes();
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H } = (0,esm/* useVideoConfig */.Bk)();
+  const U = MotionsPila_unidad(W, H);
+  const t = frame / fps;
+  const X = cx / 100 * W, Y = cy / 100 * H, R = r / 100 * W;
+  const k = ease(t / 0.45);
+  const largo = 2 * Math.PI * R;
+  const arco = {
+    cx: X,
+    cy: Y,
+    r: R,
+    fill: "none",
+    stroke: aro,
+    strokeWidth: 5 * U,
+    strokeDasharray: `${largo} ${largo}`,
+    strokeDashoffset: largo * (1 - k),
+    transform: `rotate(-90 ${X} ${Y})`
+  };
+  const tp = 0.35, kp = ease((t - tp) / 0.22);
+  const palabras = texto.split(/\s+/).filter(Boolean);
+  const [pr, pg, pb] = [1, 3, 5].map((i) => parseInt(pildora.slice(i, i + 2), 16));
+  const px = lado === "der" ? X + R * 0.5 : X - R * 0.5, py = Y - R * 1.02;
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: W, height: H, style: { position: "absolute", inset: 0, overflow: "visible" }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsx)("filter", { id: "luz-aro", x: "-30%", y: "-30%", width: "160%", height: "160%", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: 10 * U }) }) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { ...arco, filter: "url(#luz-aro)" }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { ...arco })
+    ] }),
+    palabras.length > 0 && t >= tp && /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
+      position: "absolute",
+      top: py,
+      left: lado === "der" ? px : void 0,
+      right: lado === "izq" ? W - px : void 0,
+      height: 58 * U,
+      display: "flex",
+      alignItems: "center",
+      padding: `0 ${24 * U}px`,
+      whiteSpace: "nowrap"
+    }, children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        inset: 0,
+        borderRadius: 29 * U,
+        background: `rgba(${pr},${pg},${pb},${(0.88 * kp).toFixed(3)})`,
+        border: `${2 * U}px solid rgba(255,190,180,${(0.59 * kp).toFixed(3)})`,
+        transformOrigin: lado === "der" ? "left center" : "right center",
+        transform: `scaleX(${(0.4 + 0.6 * kp).toFixed(3)})`
+      } }),
+      palabras.map((w, j) => {
+        const kw = (t - (tp + 0.12 + j * 0.16)) / 0.16;
+        const e = ease(kw);
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: {
+          position: "relative",
+          fontFamily: FAMILIA.inter,
+          fontWeight: 700,
+          fontSize: 30 * U,
+          color: "#fff",
+          lineHeight: 1,
+          marginRight: j < palabras.length - 1 ? 8 * U : 0,
+          opacity: clamp(kw * 1.5),
+          transform: `translateY(${(-16 * U * (1 - e)).toFixed(2)}px) scale(${(0.6 + 0.4 * e).toFixed(3)})`,
+          display: "inline-block"
+        }, children: w }, j);
+      })
+    ] })
+  ] });
+};
+const Persianas = ({ corte, periodo = 36, _dur }) => {
+  const frame = (0,esm/* useCurrentFrame */.UC)();
+  const { fps, width: W, height: H, durationInFrames } = (0,esm/* useVideoConfig */.Bk)();
+  const U = MotionsPila_unidad(W, H);
+  const t = frame / fps;
+  const c = typeof corte === "number" ? corte : (Number(_dur) || durationInFrames / fps) / 2;
+  const k = (t - (c - 0.2)) / 0.4;
+  if (!(k > 0 && k < 1)) return null;
+  const llena = Math.sin(Math.PI * k);
+  const per = periodo * U;
+  let color, ancho;
+  if (k < 0.3) {
+    color = "rgba(24,24,26,0.67)";
+    ancho = per * (0.25 + 1.2 * k);
+  } else if (k < 0.62) {
+    color = "rgba(238,238,240,0.96)";
+    ancho = per * 0.86;
+  } else {
+    const f = (1 - k) / 0.38;
+    color = `rgba(205,205,210,${(0.86 * f).toFixed(3)})`;
+    ancho = per * 0.75 * f;
+  }
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm/* AbsoluteFill */.H1, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `rgba(200,200,204,${(0.42 * llena).toFixed(3)})` } }),
+    k >= 0.3 && k < 0.62 && /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: "rgba(255,255,255,0.24)" } }),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(esm/* AbsoluteFill */.H1, { style: { background: `repeating-linear-gradient(90deg, ${color} 0px, ${color} ${ancho.toFixed(2)}px, transparent ${ancho.toFixed(2)}px, transparent ${per.toFixed(2)}px)` } })
+  ] });
+};
+
 ;// ./src/Root.tsx
 
 
@@ -102742,7 +103041,8 @@ const EmojiPro = ({
 
 
 
-const PLANTILLAS = { EmojiPro: EmojiPro, KitNeon: KitNeon, MotionsCompleto: MotionsCompleto, Pictos3DE: Pictos3DE, ListaRazonesK: ListaRazonesK, MisterioK: MisterioK, RuedaK: RuedaK, AbanicoK: AbanicoK, RutaK: RutaK, TituloNeonK: TituloNeonK, ConceptoK: ConceptoK, MixtoK: MixtoK, RecorteK: RecorteK, SeleccionK: SeleccionK, CalendarioK: CalendarioK, RedNeonK: RedNeonK, PictogramaE: PictogramaE, TableroE: TableroE, PolaroidE: PolaroidE, CuadernoE: CuadernoE, FechaE: FechaE, VidrioE: VidrioE, ChatE: ChatE, CollageE: CollageE, MovilE: MovilE, TijerasE: TijerasE, FotoE: FotoE, PasosT5: PasosT5, DeslizadorT5: DeslizadorT5, EscenaT5: EscenaT5, AcompananteT5: AcompananteT5, VeloCaptionT: VeloCaptionT, TarjetaT5: TarjetaT5, OrbitaT5: OrbitaT5, StickerT5: StickerT5, FinalT5: FinalT5, EditorialT6: EditorialT6, Titulo: Titulo, Saludo: Saludo, Capitulos: Capitulos, Fecha: Fecha, Pareja: Pareja, Pastilla: Pastilla, Encuesta: Encuesta, Comentario: Comentario, Sesion: Sesion, Ninas: Ninas, Notificacion: Notificacion, Tarjeta: Tarjeta, Grafica: Grafica, Pasos: Pasos, Interruptor: Interruptor };
+
+const PLANTILLAS = { AvionPapel: AvionPapel, VisorRec: VisorRec, TachadoRojo: TachadoRojo, AroCara: AroCara, Persianas: Persianas, EmojiPro: EmojiPro, KitNeon: KitNeon, MotionsCompleto: MotionsCompleto, Pictos3DE: Pictos3DE, ListaRazonesK: ListaRazonesK, MisterioK: MisterioK, RuedaK: RuedaK, AbanicoK: AbanicoK, RutaK: RutaK, TituloNeonK: TituloNeonK, ConceptoK: ConceptoK, MixtoK: MixtoK, RecorteK: RecorteK, SeleccionK: SeleccionK, CalendarioK: CalendarioK, RedNeonK: RedNeonK, PictogramaE: PictogramaE, TableroE: TableroE, PolaroidE: PolaroidE, CuadernoE: CuadernoE, FechaE: FechaE, VidrioE: VidrioE, ChatE: ChatE, CollageE: CollageE, MovilE: MovilE, TijerasE: TijerasE, FotoE: FotoE, PasosT5: PasosT5, DeslizadorT5: DeslizadorT5, EscenaT5: EscenaT5, AcompananteT5: AcompananteT5, VeloCaptionT: VeloCaptionT, TarjetaT5: TarjetaT5, OrbitaT5: OrbitaT5, StickerT5: StickerT5, FinalT5: FinalT5, EditorialT6: EditorialT6, Titulo: Titulo, Saludo: Saludo, Capitulos: Capitulos, Fecha: Fecha, Pareja: Pareja, Pastilla: Pastilla, Encuesta: Encuesta, Comentario: Comentario, Sesion: Sesion, Ninas: Ninas, Notificacion: Notificacion, Tarjeta: Tarjeta, Grafica: Grafica, Pasos: Pasos, Interruptor: Interruptor };
 for (const id of ["PictogramaE", "TableroE", "PolaroidE", "CuadernoE", "FechaE", "VidrioE", "ChatE", "CollageE", "MovilE", "TijerasE"]) PLANTILLAS[id] = conFondo(PLANTILLAS[id]);
 const medida = ({ props }) => {
   const fps = Number(props._fps) || 30;
@@ -163517,7 +163817,7 @@ var NoReactInternals = {
 /******/ 	__webpack_require__.u = (chunkId) => (chunkId + ".bundle.js");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
-/******/ 	__webpack_require__.h = () => ("2609a9d160417a9f");
+/******/ 	__webpack_require__.h = () => ("ea62bc514aeae6d7");
 /******/ 	
 /******/ 	/* webpack/runtime/global */
 /******/ 	__webpack_require__.g = (function() {
@@ -163712,7 +164012,7 @@ var NoReactInternals = {
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
 /******/ 	__webpack_require__(6507);
 /******/ 	__webpack_require__(3999);
-/******/ 	__webpack_require__(4715);
+/******/ 	__webpack_require__(47);
 /******/ 	__webpack_require__(3610);
 /******/ 	let __webpack_exports__ = __webpack_require__(3482);
 /******/ 	

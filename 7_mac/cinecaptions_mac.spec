@@ -38,7 +38,7 @@ for carpeta in ('resolve_scripts', 'locales', 'plantillas_incluidas', 'fonts',
     datas.append((origen, carpeta))
 datas.append((os.path.join(RECURSOS, 'logo_cinecaptions.png'), '.'))
 datas.append((os.path.join(RECURSOS, 'logo_cinema_productions.png'), '.'))
-datas.append((os.path.join(RECURSOS, 'fondo_esfera.jpg'), '.'))
+# (v5.82: fondo_esfera.jpg ya no va: la escena de Inicio no la usa)
 
 datas += collect_data_files('faster_whisper')
 datas += collect_data_files('spellchecker')

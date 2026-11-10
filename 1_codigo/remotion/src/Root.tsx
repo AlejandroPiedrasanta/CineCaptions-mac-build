@@ -17,8 +17,9 @@ import { MotionsCompleto } from './MotionsCompleto';
 import { Pictos3DE } from './Pictos3D';
 import { KitNeon } from './KitNeon';
 import { EmojiPro } from './EmojiPro';
+import { AroCara, AvionPapel, Persianas, TachadoRojo, VisorRec } from './MotionsPila';
 
-const PLANTILLAS: Record<string, React.FC<any>> = { EmojiPro, KitNeon,MotionsCompleto, Pictos3DE, ListaRazonesK, MisterioK, RuedaK, AbanicoK, RutaK, TituloNeonK, ConceptoK, MixtoK, RecorteK, SeleccionK, CalendarioK, RedNeonK, PictogramaE, TableroE, PolaroidE, CuadernoE, FechaE, VidrioE, ChatE, CollageE, MovilE, TijerasE, FotoE, PasosT5,DeslizadorT5, EscenaT5, AcompananteT5, VeloCaptionT, TarjetaT5, OrbitaT5, StickerT5, FinalT5, EditorialT6, Titulo, Saludo, Capitulos, Fecha, Pareja, Pastilla, Encuesta, Comentario, Sesion, Ninas, Notificacion, Tarjeta, Grafica, Pasos, Interruptor };
+const PLANTILLAS: Record<string, React.FC<any>> = { AvionPapel, VisorRec, TachadoRojo, AroCara, Persianas, EmojiPro, KitNeon,MotionsCompleto, Pictos3DE, ListaRazonesK, MisterioK, RuedaK, AbanicoK, RutaK, TituloNeonK, ConceptoK, MixtoK, RecorteK, SeleccionK, CalendarioK, RedNeonK, PictogramaE, TableroE, PolaroidE, CuadernoE, FechaE, VidrioE, ChatE, CollageE, MovilE, TijerasE, FotoE, PasosT5,DeslizadorT5, EscenaT5, AcompananteT5, VeloCaptionT, TarjetaT5, OrbitaT5, StickerT5, FinalT5, EditorialT6, Titulo, Saludo, Capitulos, Fecha, Pareja, Pastilla, Encuesta, Comentario, Sesion, Ninas, Notificacion, Tarjeta, Grafica, Pasos, Interruptor };
 
 // v5.20: las escenas a pantalla completa aceptan `fondoEscena` (el color del estilo elegido en Efectos › Escenas completas)
 for (const id of ['PictogramaE', 'TableroE', 'PolaroidE', 'CuadernoE', 'FechaE', 'VidrioE', 'ChatE', 'CollageE', 'MovilE', 'TijerasE']) PLANTILLAS[id] = conFondo(PLANTILLAS[id]);

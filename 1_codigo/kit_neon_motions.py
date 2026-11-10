@@ -79,11 +79,22 @@ def _cap(t):
     return t[:1].upper() + t[1:]
 
 
+_ESCALA_IMG = [1.0]        # v5.82: × lado de las fotos del kit (cara, cartel, emblema, insignia): 2 con un video 4K (la pone escena_motions)
+
+
+def _lado_foto(n):
+    """v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): el lado de una foto del kit a la resolución del video. El escenario del kit
+    mide 1080 y Remotion lo escala al timeline: con un video 4K las fotos salían estiradas ×1,5-2. Su tamaño en pantalla lo fija el CSS del
+    motor: con más píxeles solo ganan nitidez."""
+    return max(1, int(round(float(n) * _ESCALA_IMG[0])))
+
+
 def insignia(texto, ancho=320):
     """Imagen de relleno (data: URI) cuando no hay logo ni cara: el degradado magenta → violeta del neón con las iniciales."""
     import base64
     import io
     from PIL import Image, ImageDraw
+    ancho = _lado_foto(ancho)
     img = Image.new('RGB', (ancho, ancho))
     d = ImageDraw.Draw(img)
     for y in range(ancho):
@@ -169,6 +180,7 @@ def cara(video, t, lado=256, persona=None):
         x1, y1 = min(w, int(x0 + ancho)), min(h, int(y0 + ancho))
         if x1 - x0 < 24 or y1 - y0 < 24:
             return None
+        lado = _lado_foto(lado)
         im = Image.fromarray(img[y0:y1, x0:x1]).resize((lado, lado), Image.LANCZOS)
         b = io.BytesIO()
         im.save(b, 'JPEG', quality=88)
@@ -230,7 +242,7 @@ def _cartel(video, dur, ancho=1000, alto=400):
         acum = np.concatenate([[0.0], np.cumsum(filas)])
         y0 = int(np.argmax(acum[ch:] - acum[:-ch])) if h > ch else 0
         x0 = (w - cw) // 2
-        im = Image.fromarray(mejor[y0:y0 + ch, x0:x0 + cw]).resize((ancho, alto), Image.LANCZOS)
+        im = Image.fromarray(mejor[y0:y0 + ch, x0:x0 + cw]).resize((_lado_foto(ancho), _lado_foto(alto)), Image.LANCZOS)
         b = io.BytesIO()
         im.save(b, 'JPEG', quality=88)
         return 'data:image/jpeg;base64,' + base64.b64encode(b.getvalue()).decode('ascii')
@@ -283,7 +295,7 @@ def _emblema(video, dur, lado=640):
         m = int(s * 0.08)                                              # (un poco de aire alrededor)
         x0, y0 = max(0, x - m), max(0, y - m)
         x1, y1 = min(w, x + s + m), min(h, y + s + m)
-        im = Image.fromarray(img[y0:y1, x0:x1]).resize((lado, lado), Image.LANCZOS)
+        im = Image.fromarray(img[y0:y1, x0:x1]).resize((_lado_foto(lado), _lado_foto(lado)), Image.LANCZOS)
         b = io.BytesIO()
         im.save(b, 'JPEG', quality=88)
         return 'data:image/jpeg;base64,' + base64.b64encode(b.getvalue()).decode('ascii')
@@ -315,6 +327,11 @@ def escena_motions(palabras, idioma='es', duracion=None, cortes=None, imagen=Non
     if not w:
         return []
     dur = float(duracion or (float(w[-1]['end']) + 1.0))
+    try:                                                 # v5.82: las fotos del kit al escalón del video (un 4K: ×2; _lado_foto)
+        import resolve_mcp
+        _ESCALA_IMG[0] = resolve_mcp.escala_video(video) if video else 1.0
+    except Exception:
+        _ESCALA_IMG[0] = 1.0
     if imagen is None and video:
         imagen = _emblema(video, dur)                    # (kit: el «&» del cartel en la notificación y en la órbita; sin cartel, la insignia)
     fr = PL.frases_de(w)

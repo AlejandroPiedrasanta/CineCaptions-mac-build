@@ -495,6 +495,15 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.82', [
+        'Estilo 4 nuevo: tres alturas como en los reels: arriba lo que se dice antes, la palabra clave grande en lima con brillo y debajo lo que sigue; cada palabra aparece cuando se dice.',
+        'Edición PRO: motions nuevos que salen solos cuando encajan: el avión de papel que se posa junto a los captions, el tachado rojo, el visor REC, el aro de luz en la cara, las persianas, el zoom con desenfoque de entrada y la píldora «Reflejo rojo» bajo los captions.',
+        'Corrector: el móvil se acerca a los captions de cada bloque para que veas bien cada cambio, y los ejemplos también van acercados.',
+        'Tutoriales nuevos con voz: cambiar a Premiere Pro o a «Video sin editores», la interfaz, probar los estilos y la ayuda.',
+        'Más nítido en 4K y Cancelar inmediato: GO vuelve a Inicio al momento y Resolve se cierra detrás.',
+        'Ajustes abre más rápido y «Acerca de CineCaptions» va ahora dentro de Ayuda; en Estilo, el slider es más grande.',
+        'Arreglos: el aviso de la IA dice qué falta de verdad (y «Reparar» avisa si no pudo bajarla), el programa ya no se queda trabado al abrir y desaparecen los avisos falsos de «no se puede escribir».',
+    ]),
     ('5.81', [
         'Estilo 8 nuevo: una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra entra subiendo y enfocándose cuando se dice. También está en «Crea tu estilo» como texto principal «Ámbar».',
         'Estilo 9 nuevo: tres líneas centradas abajo, texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice. También está en «Crea tu estilo» como texto principal «Serif cursiva».',
@@ -2428,7 +2437,9 @@ class _MuestrasAcento(QWidget):
 
 
 class VentanaAjustes(_Panel):
-    PESTANAS = ('general', 'interfaz', 'atajos', 'acerca', 'tutoriales', 'ayuda')     # v5.76: «Tutoriales» (los videos de cada página y la guía)
+    # v5.76: «Tutoriales» (los videos de cada página y la guía). v5.82 (el usuario: «une la sección de Acerca de CineCaptions con Ayuda»):
+    # «Acerca de» va DENTRO de «Ayuda», debajo del soporte (quien pida 'acerca' llega a 'ayuda')
+    PESTANAS = ('general', 'interfaz', 'atajos', 'tutoriales', 'ayuda')
 
     def __init__(self, app, pestana='general'):
         super().__init__(radio=22)
@@ -2458,14 +2469,21 @@ class VentanaAjustes(_Panel):
         cc.addWidget(_cabecera(tr('Ajustes de la aplicación'), tr('Ajustes de CineCaptions'), self.cerrar, tam=32))   # (v5.70: más baja)
         c.addWidget(cab)
         nombres = [(tr('General'), 'gear-six'), (tr('Interfaz'), 'paint-brush'), (tr('Atajos'), 'keyboard'),
-                   (tr('Acerca de CineCaptions'), 'info'), (tr('Tutoriales'), 'play-circle'), (tr('Ayuda'), 'lifebuoy')]          # v5.70: con su ícono
+                   (tr('Tutoriales'), 'play-circle'), (tr('Ayuda'), 'lifebuoy')]          # v5.70: con su ícono
         self.pila = QStackedWidget()
-        self.pestanas = _Pestanas(nombres, self.pila.setCurrentIndex)
+        self.pestanas = _Pestanas(nombres, self._ir_a_pestana)
         c.addWidget(self.pestanas)
-        for armar in (self._pag_general, self._pag_interfaz, self._pag_atajos, self._pag_acerca, self._pag_tutoriales, self._pag_ayuda):
-            d = Desplazable(espacio=22, margenes=(60, 30, 56, 34), estirar_final=False)
-            armar(d.capa)
-            d.capa.addStretch(1)               # v5.70: el sobrante va ABAJO (con estirar_final las páginas cortas quedaban empujadas hacia abajo)
+        # v5.82 (el usuario: «mejora la fluidez»; medido a 2293×928 al 1,5: el clic en Ajustes congelaba la ventana 220-300 ms, ~150 de ellos
+        # armando las 5 páginas aunque se ve una): se arma la que se abre y cada otra la primera vez que se elige su pestaña (_ir_a_pestana);
+        # hasta entonces la pila lleva un hueco vacío. Cada una lee lo de siempre al armarse.
+        pestana = 'ayuda' if pestana == 'acerca' else pestana
+        inicial = self.PESTANAS.index(pestana) if pestana in self.PESTANAS else 0
+        self._armadores = (self._pag_general, self._pag_interfaz, self._pag_atajos, self._pag_tutoriales, self._pag_ayuda)
+        self._paginas_d = []
+        self._armadas = set()
+        for k in range(len(self._armadores)):
+            d = self._armar_pagina(k) if k == inicial else QWidget()
+            self._paginas_d.append(d)
             self.pila.addWidget(d)
         c.addWidget(self.pila, 1)
         pie = QFrame()
@@ -2487,8 +2505,31 @@ class VentanaAjustes(_Panel):
         cp.addWidget(self.aplicar_btn)
         cp.addWidget(Boton(tr('Listo'), self._listo, tipo='primario', alto=50, ancho=130, tam=17, negrita=True))
         c.addWidget(pie)
-        i = self.PESTANAS.index(pestana) if pestana in self.PESTANAS else 0
-        self.pestanas.elegir(i, animar=False)
+        self.pestanas.elegir(inicial, animar=False)
+
+    def _ir_a_pestana(self, k):
+        """v5.82: la primera vez, la página se arma FUERA de la pila, recibe su tamaño ya con todo dentro y ocupa el sitio de su hueco, como
+        cuando se armaban todas al abrir (armada en su sitio, el video de Tutoriales tomaba el ancho de antes de salir la barra de
+        desplazamiento y quedaba 10 px más ancho que la página)."""
+        if k not in self._armadas and 0 <= k < len(self._armadores):
+            hueco = self._paginas_d[k]
+            d = self._armar_pagina(k)
+            d.resize(self.pila.size())
+            self.pila.blockSignals(True)
+            self.pila.insertWidget(k, d)
+            self.pila.removeWidget(hueco)
+            self.pila.blockSignals(False)
+            hueco.deleteLater()
+            self._paginas_d[k] = d
+        self.pila.setCurrentIndex(k)
+
+    def _armar_pagina(self, k):
+        """v5.82: la página k armada (lo mismo que antes se hacía con las 5 al abrir), en su Desplazable."""
+        d = Desplazable(espacio=22, margenes=(60, 30, 56, 34), estirar_final=False)
+        self._armadores[k](d.capa)
+        d.capa.addStretch(1)                   # v5.70: el sobrante va ABAJO (con estirar_final las páginas cortas quedaban empujadas hacia abajo)
+        self._armadas.add(k)
+        return d
 
     # -- utilidades -----------------------------------------------------------
     def _idioma_actual(self):
@@ -2532,16 +2573,8 @@ class VentanaAjustes(_Panel):
         # v5.69: quitadas «IA de texto», «Otras IA (análisis, sonido y efectos)» y «GPU para la voz» (el usuario lo pidió): la IA de texto es
         # siempre la recomendada (Gemma 4 E4B, que baja sola a Qwen3.5-4B / Qwen3-1.7B si no cabe) y la GPU se repara sola al abrir
         # (vigilancia.preparar_gpu_voz)
-        # espacio de las cachés (v5.4.8)
-        caja_cache, cch = caja_v(espacio=10)
-        self.cache_texto = TextoAjustable(tr('Calculando…'), 13, ancho=340)
-        cch.addWidget(self.cache_texto)
-        self.cache_btn = Boton(tr('Limpiar ahora'), self._limpiar_caches, tipo='neutro', alto=42, tam=14)
-        cch.addWidget(self.cache_btn)
-        f_cache = _Fila(tr('Espacio de las cachés'),
-                        tr('Efectos animados, emojis, vistas de los packs y transcripciones se guardan para no rehacerlos. Cada una tiene un tope y se borra sola lo menos usado; «Limpiar ahora» aplica los topes ya. Todo se vuelve a crear cuando hace falta.'),
-                        caja_cache, 340, icono='hard-drives')
-        self._pintar_cache()
+        # v5.82 (el usuario: «elimina esto»): sin la tarjeta «Espacio de las cachés» (v5.4.8). Las cachés siguen con su tope y se recortan solas
+        # (lo menos usado primero), como antes; solo se quita la tarjeta y su botón «Limpiar ahora».
         # conexion con Resolve
         caja_con, cc = caja_v(espacio=10)
         fila_con, cfc = caja_h(espacio=10)
@@ -2601,12 +2634,17 @@ class VentanaAjustes(_Panel):
         # v5.22: «Copias de seguridad» quitada de Ajustes (el usuario lo pidió); copias.py queda sin uso
         # v5.52: quitadas «Reproducir al terminar», «Abrir siempre en vertical» y «Vista de Resolve al terminar» (el usuario lo pidió): van SIEMPRE
         # activadas (go_reproducir / go_vertical / go_vista_resolve ya no se leen); la vista que GO aplica es la que ya estuviera guardada
-        capa.addWidget(_grupo(f_motor, f_cache, f_resolve, f_premiere, f_mp4))
+        capa.addWidget(_grupo(f_motor, f_resolve, f_premiere, f_mp4))
 
     def _pintar_motor(self):
         import motor_voz
         info = motor_voz.info_instalado()
-        if info:
+        if info and not (info.get('modelo_texto') or motor_voz.modelos_texto_descargados()):
+            # v5.82: «Reparar» sin poder bajar la IA de texto ya no queda en verde como si todo estuviera (el porqué va al Registro)
+            self.motor_estado.configure(text=tr('Instalado: Qwen3-ASR {m} · {gpu} · sin la IA de texto (mira el Registro)', m=info.get('modelo', ''),
+                                                gpu=info.get('gpu') or 'CPU'), text_color=ui.AMBAR)
+            self.motor_btn.configure(text=tr('Reparar el motor'))
+        elif info:
             self.motor_estado.configure(text=tr('Instalado: Qwen3-ASR {m} · {gpu}', m=info.get('modelo', ''),
                                                 gpu=info.get('gpu') or 'CPU'), text_color=ui.VERDE)
             self.motor_btn.configure(text=tr('Reparar el motor'))
@@ -2617,35 +2655,6 @@ class VentanaAjustes(_Panel):
             self.motor_estado.configure(text=tr('No instalado (descarga de 4 a 15 GB): mientras tanto se usa Whisper.'),
                                         text_color=ui.AMBAR)
 
-    def _pintar_cache(self):
-        def trabajo():
-            import mantenimiento
-            return mantenimiento.resumen()
-
-        def fin(r, error):
-            if not ui.vivo(self.cache_texto) or error is not None or not r:
-                return
-            filas, total = r
-            mayores = sorted(filas, key=lambda f: -f[1])[:3]
-            self.cache_texto.configure(text=tr('{t} MB en total · ', t=f'{total:,.0f}'.replace(',', '.')) + ' · '.join(f'{n}: {mb:,.0f} MB'.replace(',', '.') for n, mb, _t in mayores if mb >= 1),
-                                       text_color=ui.TEXT_MUTED)
-        correr_en_hilo(self.app, trabajo, fin)
-
-    def _limpiar_caches(self):
-        self.cache_btn.setEnabled(False)
-
-        def trabajo():
-            import mantenimiento
-            return mantenimiento.limpiar_todo()
-
-        def fin(r, error):
-            if not ui.vivo(self.cache_btn):
-                return
-            self.cache_btn.setEnabled(True)
-            if error is None and r:
-                self.cache_texto.configure(text=tr('Liberados {mb} MB.', mb=f'{r[0]:,.0f}'.replace(',', '.')), text_color=ui.VERDE)
-                ui.despues(2500, self._pintar_cache, self)
-        correr_en_hilo(self.app, trabajo, fin)
 
     def _instalar_motor(self):
         if not messagebox.askyesno(tr('Motor de voz Qwen3-ASR'),
@@ -2872,10 +2881,13 @@ class VentanaAjustes(_Panel):
         capa.addWidget(_grupo(*filas))
         # v5.70: quitada la sección «Sonido» («Tu atajo … se configura en SFX Lab»): ese atajo global ya no existe en el programa
 
-    # -- Acerca de ------------------------------------------------------------
-    def _pag_acerca(self, capa):
-        self._cabeza_pagina(capa, tr('Información'), tr('Acerca de CineCaptions'),
-                            tr('Versión, licencia y créditos.'), icono='info')
+    # -- Acerca de (v5.82: una sección de Ayuda) ---------------------------------
+    def _pag_acerca(self, capa, seccion=False):
+        if seccion:
+            capa.addWidget(_etiqueta_seccion(tr('Acerca de CineCaptions')))
+        else:
+            self._cabeza_pagina(capa, tr('Información'), tr('Acerca de CineCaptions'),
+                                tr('Versión, licencia y créditos.'), icono='info')
         cab, cc = caja_h(espacio=18, margenes=(30, 26, 30, 26))
         logo = QLabel()
         try:
@@ -3018,6 +3030,7 @@ class VentanaAjustes(_Panel):
         # igual que la fila de arriba) pasa a la tarjeta de soporte con WhatsApp y la web
         capa.addWidget(_etiqueta_seccion(tr('Herramientas')))
         capa.addWidget(_grupo(f_diag, f_scripts))
+        self._pag_acerca(capa, seccion=True)                 # v5.82: «Acerca de CineCaptions» va aquí, debajo del soporte
 
     def _tarjeta_soporte(self):
         """v5.70 (pedido del usuario): arriba de Ayuda, WhatsApp de soporte (copia el informe y abre el chat con el resumen ya escrito, lo

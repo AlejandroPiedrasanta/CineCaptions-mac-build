@@ -12,8 +12,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (47 archivos)
-    remotion\   (16766 archivos)
+    herramientas_dev\   (48 archivos)
+    remotion\   (16767 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
     actualizar_ui.py
@@ -116,6 +116,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         Edición PRO: los gráficos animados como plantillas OGraf (HTML) de DaVinci Resolve 21.1+.
     edicion_pro_persona.py
         Edición PRO: dónde está la persona (IA local) para el Magic Mask de Resolve, y su recorte si no hay Magic Mask.
+    edicion_pro_pila.py
+        v5.82: los motions de la referencia del Estilo 4 («Pila lima») en la Edición PRO, con «Kit de motions».
     edicion_pro_planificador.py
         Edición PRO: qué gráfico va en cada momento de CUALQUIER video (sin Resolve, sin pantalla: se prueba solo).
     edicion_pro_remotion.py
@@ -304,6 +306,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         lee los packs .drt/.drb SIN abrir Resolve (sets, formatos, tipografías).
     pausas.py
         «Quitar pausas» (jump cuts en los silencios) para GO (v5.4.8).
+    pila_planificador.py
+        el Estilo 4 (v5.82): la pila de tres alturas de la referencia del usuario: arriba lo dicho antes de la clave en
     plantillas.py
         packs de estilos: leer, guardar, elegir y preparar el pack que se aplica.
     posiciones_detras_ui.py

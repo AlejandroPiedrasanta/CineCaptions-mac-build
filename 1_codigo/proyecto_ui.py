@@ -840,7 +840,7 @@ class TarjetaCielo(ui.Tarjeta):
         # borde de la ventana (sin esquinas redondeadas, borde ni filo de luz); la página le quita sus márgenes y la tarjeta los lleva dentro
         self._sin_marco = sin_marco
         self._radio = 0.0 if sin_marco else self.RADIO
-        self._pal = _paleta_cielo()                         # (v5.63: negro puro con el tema Negro profundo; el tema cambia al reiniciar)
+        self._pal = _paleta_cielo()                        # (v5.63: negro puro con el tema Negro profundo; el tema cambia al reiniciar)
         azar = random.Random(7)
         # por capa: [(x, y, fase, grueso)] en dos grosores (para dibujarlas por lotes)
         self._estrellas = [[(azar.random(), azar.random(), azar.random() * 6.283, 0 if azar.random() < 0.5 else 1) for _ in range(n)]
@@ -853,6 +853,7 @@ class TarjetaCielo(ui.Tarjeta):
         self._caja_fugaz = None                            # el rectángulo de la fugaz en el tic anterior (para borrarla)
         self._t0 = time.perf_counter()
         self._reloj = QTimer(self)
+        self._reloj.setTimerType(Qt.TimerType.PreciseTimer)   # (v5.82: el normal de Windows va de 15,6 en 15,6 ms: la fugaz a 24/s iba a ~21)
         self._reloj.timeout.connect(self._tic)
 
     # -- reloj ------------------------------------------------------------------------------------------------------------------------------
@@ -861,6 +862,12 @@ class TarjetaCielo(ui.Tarjeta):
         self._cuadro = None
         if not self._quieto():
             self._reloj.start(int(1000 / self.FPS))
+        # v5.82: sin marco el cielo pinta TODOS sus píxeles y tapa entero el fondo animado de la ventana (efectos_ui.FondoVivo), que se
+        # seguía repintando debajo sin verse: se le avisa (tapar_con) y no pinta. (Con WA_OpaquePaintEvent Qt dejaba píxeles viejos en los
+        # bordes de las tarjetas de vidrio de encima: medido, descartado.)
+        fondo = ui.Tarjeta.fondo
+        if self._sin_marco and fondo is not None and hasattr(fondo, 'tapar_con'):
+            fondo.tapar_con(self)
 
     def hideEvent(self, e):
         super().hideEvent(e)
@@ -954,22 +961,28 @@ class TarjetaCielo(ui.Tarjeta):
         pm.fill(Qt.GlobalColor.transparent)
         p = QPainter(pm)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setClipPath(self._camino(w, h))
+        if self._sin_marco:
+            # v5.82: sin marco tapa el fondo animado (que entonces no se pinta: efectos_ui.FondoVivo.tapar_con): opaco hasta el último píxel
+            # físico (a 2293 px al 1,5 el ancho físico es 3439,5 y la última columna quedaba a medias, transparente); dentro, cada píxel igual
+            caja = QRectF(0, 0, pm.width() / dpr, pm.height() / dpr)
+        else:
+            caja = QRectF(0, 0, w, h)
+            p.setClipPath(self._camino(w, h))
         pal = self._pal
         g = QRadialGradient(QPointF(w * 0.5, h * 0.42), max(w, h) * 0.8)
         for pos, hexa in zip((0.0, 0.6, 1.0), pal['fondo']):
             g.setColorAt(pos, QColorReal(hexa))
-        p.fillRect(QRectF(0, 0, w, h), g)
+        p.fillRect(caja, g)
         for (fx, fy, radio), (r_, g_, b_, a) in zip(((0.18, 0.25, 620.0), (0.82, 0.70, 640.0)), pal['nebulosas']):
             n = QRadialGradient(QPointF(w * fx, h * fy), radio)
             n.setColorAt(0.0, QColorReal(r_, g_, b_, a))
             n.setColorAt(0.45, QColorReal(r_, g_, b_, int(a * 0.55)))
             n.setColorAt(1.0, QColorReal(r_, g_, b_, 0))
-            p.fillRect(QRectF(0, 0, w, h), n)
+            p.fillRect(caja, n)
         v = QRadialGradient(QPointF(w * 0.5, h * 0.45), max(w, h) * 0.75)
         v.setColorAt(min(w, h) * 0.35 / (max(w, h) * 0.75), QColorReal(*pal['vineta'], 0))
         v.setColorAt(1.0, QColorReal(*pal['vineta'], 115))
-        p.fillRect(QRectF(0, 0, w, h), v)
+        p.fillRect(caja, v)
         p.end()
         self._fijo = (clave, pm)
         return pm

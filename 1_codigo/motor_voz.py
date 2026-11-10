@@ -30,6 +30,7 @@ Cuando NO se usa (y se usa Whisper sin que el usuario tenga que hacer nada):
 import json
 import os
 import queue
+import re
 import shutil
 import subprocess
 import sys
@@ -1005,16 +1006,25 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
     # mas, Qwen3-1.7B si no. Si falla, el motor de voz queda igual de listo.
     pr(0.8, tr('Descargando la IA de texto (Qwen3)'))
     texto_listo = {}
+    motivos = []                       # v5.82: por qué no se bajó (lo que cuenta motor_texto --descargar), para decirlo al terminar
 
     def linea_texto(tipo, texto):
         if tipo == 'LISTO':
             texto_listo['modelo'] = texto
-        elif tipo == 'ESTADO' and aviso:
-            aviso(texto)
+        elif tipo == 'ESTADO':
+            if texto.startswith(('No descargo', 'No pude descargar')):
+                motivos.append(texto)
+            if aviso:
+                aviso(texto)
+        elif tipo == 'ERROR':
+            motivos.append(texto)
 
     try:
-        _lanzar_script(_base_recursos() / 'motor_qwen' / 'motor_texto.py', ['--descargar'], linea_texto)
+        codigo_t, errores_t = _lanzar_script(_base_recursos() / 'motor_qwen' / 'motor_texto.py', ['--descargar'], linea_texto)
+        if codigo_t not in (0, None) and not motivos:
+            motivos.append(errores_t[-1] if errores_t else f'el proceso terminó con el código {codigo_t}')
     except Exception as e:
+        motivos.append(f'{type(e).__name__}: {e}')
         if aviso:
             aviso(f'IA de texto: {e}')
     if gpu:
@@ -1035,5 +1045,40 @@ def instalar(progreso=None, aviso=None, modelo='auto'):
         'instalado': time.strftime('%Y-%m-%d %H:%M'),
     }, ensure_ascii=False, indent=1), encoding='utf-8')
     _borrar_modelos_viejos()
-    pr(1.0, tr('Motor Qwen3-ASR listo'))
+    if texto_listo.get('modelo'):
+        pr(1.0, tr('Motor Qwen3-ASR listo'))
+    else:
+        # v5.82 (informe de un cliente con 8 GB de VRAM): antes terminaba igual en «Motor Qwen3-ASR listo» y el arranque siguiente decía
+        # «faltan modelos». Ahora el Registro dice qué no se bajó, por qué (disco, red) y qué hacer; sin globos
+        _avisar_sin_ia_de_texto(motivos)
+        pr(1.0, tr('Motor de voz listo, pero sin la IA de texto: mira el Registro'))
     return eleccion
+
+
+def motivo_sin_ia_de_texto(motivos):
+    """v5.82: (por qué, causa) de que no se bajara la IA de texto, con lo que contó motor_texto --descargar. causa: 'disco' | 'red' | 'otro'."""
+    texto = ' · '.join(str(m) for m in motivos or [])
+    m = re.search(r'necesita unos ([\d.,]+) GB(?: libres)? y en el disco quedan ([\d.,]+) GB', texto)
+    if m:
+        return f'no cabe en el disco (necesita unos {m.group(1)} GB libres y quedan {m.group(2)} GB)', 'disco'
+    if re.search(r'Errno 28|No space left|ENOSPC|espacio en el disco', texto, re.I):
+        return 'se llenó el disco durante la descarga', 'disco'
+    if re.search(r'Connection|Timeout|HTTPError|URLError|SSL|LocalEntryNotFound|OfflineMode|getaddrinfo|NameResolution|RemoteDisconnected|'
+                 r'IncompleteRead|ChunkedEncoding|ProtocolError|ReadError|NetworkError|HfHubHTTPError', texto):
+        return 'la descarga se cortó o no hubo conexión con Hugging Face (de donde se baja)', 'red'
+    return (str(motivos[-1])[:200] if motivos else 'no se descargó ninguna'), 'otro'
+
+
+def _avisar_sin_ia_de_texto(motivos):
+    motivo, causa = motivo_sin_ia_de_texto(motivos)
+    try:
+        ia = ' + '.join(NOMBRES_TEXTO.get(c, c) for c in ia_texto_para_esta_gpu())
+    except Exception:
+        ia = 'Qwen3'
+    hacer = {'disco': 'libera espacio en el disco del sistema y vuelve a pulsar «Reparar el motor»',
+             'red': 'comprueba la conexión (y que el antivirus o un firewall no bloqueen la descarga) y vuelve a pulsar «Reparar el motor»'}.get(
+        causa, 'vuelve a pulsar «Reparar el motor»')
+    r = _reg()
+    if r:
+        r.aviso(f'Reparar el motor: la voz quedó lista, pero no se descargó la IA de texto ({ia}): {motivo}. Mientras falte, el texto se corrige '
+                f'con reglas. Qué hacer: {hacer}.', 'motor de voz', detalle='\n'.join(str(m) for m in (motivos or [])[-6:]))

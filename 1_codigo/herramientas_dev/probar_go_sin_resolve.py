@@ -54,7 +54,9 @@ def main():
     proyectos.guardar = lambda *a, **k: None
     render_sin_resolve.mostrar_en_carpeta = lambda r: print('MOSTRARIA', r, flush=True)
     resolve_mcp.ruta_exe = lambda: None
-    qt_kit.mostrar_mensaje = lambda tipo, titulo, texto, parent=None, botones=None: print(f'DIALOGO[{tipo}] {titulo}: {str(texto)[:300]!r}', flush=True) or True
+    import instalador_scripts                           # v5.82: crear la ventana no copia los .lua del árbol al Resolve REAL
+    M.instalar_scripts_en_resolve = instalador_scripts.instalar_scripts_en_resolve = lambda *a, **k: (0, None, '')
+    qt_kit.mostrar_mensaje =lambda tipo, titulo, texto, parent=None, botones=None: print(f'DIALOGO[{tipo}] {titulo}: {str(texto)[:300]!r}', flush=True) or True
     M.ui.error_con_acciones = lambda *a, **k: print('ERROR_CON_ACCIONES', str(a)[:400], flush=True)
 
     app = M.ui.crear_app(['go'], carpeta_fuentes=M.BASE_RECURSOS / 'fonts')

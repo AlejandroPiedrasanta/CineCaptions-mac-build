@@ -887,8 +887,18 @@ def planificar(bloques, dur, idioma='es', perfil=None, video='', vertical=True, 
         e.update(ini=round(s['ini'], 3), fin=round(s['fin'], 3))
         escenas.append(e)
     _variar(escenas)
-    fotos = _fotogramas(video, escenas) if con_video else []
+    fotos = _fotogramas(video, escenas, alto=_alto_fotos(video)) if con_video else []
     return {'escenas': escenas, 'titulares': titulares, 'fotos': fotos, 'acento': '#2F5BE7', 'tema': 'claro'}
+
+
+def _alto_fotos(video, alto=720):
+    """v5.82 (el usuario: «que los estilos en 4K no pierdan calidad»): el alto de las fotos de las tarjetas, al escalón del video (720 con 1080;
+    1440 con un 4K): Remotion las pinta al mismo tamaño en pantalla, pero en 4K ya no estiradas ×2-3."""
+    try:
+        import resolve_mcp
+        return int(round(alto * resolve_mcp.escala_video(video)))
+    except Exception:
+        return alto
 
 
 def _palabras_titular(s, frases, textos, plegadas, tiempos, mapas, idioma, crudos=None, estilos=None, quitar=(), maximo=12):

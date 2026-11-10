@@ -268,6 +268,34 @@ def _version_app():
 
 
 _ESTADO = {'cliente': None, 'ultimo_fallo': 0.0, 'cache': None, 'cache_t': 0.0, 'motivo': '', 'fallos_arranque': 0, 'sin_contestar': 0}
+# v5.82 (el usuario: «cuando cancelo no cancela rápido, tarda demasiado, debe ser inmediato»): al cancelar GO, toda espera a que Resolve abra o
+# conteste (arrancar_resolve, preparar, crear y abrir el proyecto) se corta en ≤ 0,25 s y Resolve no se vuelve a lanzar; antes arrancar_resolve
+# seguía reintentando hasta 240 s (y relanzaba el Resolve que Cancelar acababa de cerrar) y Cancelar esperaba 25 s al hilo de GO.
+_CANCELADO = threading.Event()
+
+
+def cancelar_esperas():
+    """Corta ya las esperas a Resolve de este proceso (GO cancelado). Hasta permitir_esperas() no se abre Resolve ni se reintenta nada."""
+    _CANCELADO.set()
+
+
+def permitir_esperas():
+    """Al empezar un GO nuevo: las esperas a Resolve vuelven a funcionar."""
+    _CANCELADO.clear()
+
+
+def cancelado() -> bool:
+    return _CANCELADO.is_set()
+
+
+def _esperar(segundos) -> bool:
+    """Duerme `segundos` en pasos de 0,25 s; True (y vuelve ya) si se canceló entre medias."""
+    fin = time.time() + float(segundos)
+    while time.time() < fin:
+        if _CANCELADO.is_set():
+            return True
+        time.sleep(min(0.25, max(0.0, fin - time.time())))
+    return _CANCELADO.is_set()
 
 
 def espera_tras_fallo():
@@ -611,6 +639,8 @@ def estado_cacheado(max_edad_s=30.0):
 
 def abrir_resolve(timeout=90):
     """Abre DaVinci Resolve (herramienta launch_resolve) y espera a que conteste."""
+    if _CANCELADO.is_set():
+        return False, 'cancelado'
     c = cliente()
     if c is None:
         return False, _ESTADO['motivo']
@@ -630,8 +660,12 @@ def arrancar_resolve(decir=None, espera_s=240):
     inicio = time.time()
     texto, intento = '', 0
     while time.time() - inicio < espera_s:
+        if _CANCELADO.is_set():
+            return False, 'cancelado'
         intento += 1
         ok, texto = abrir_resolve(timeout=80)
+        if _CANCELADO.is_set():
+            return False, 'cancelado'
         if ok or resolve_abierto():
             return True, texto
         if decir:
@@ -639,7 +673,8 @@ def arrancar_resolve(decir=None, espera_s=240):
                 decir(tr('Resolve tarda en abrirse… (intento {n})', n=intento + 1))
             except Exception:
                 pass
-        time.sleep(3.0)
+        if _esperar(3.0):
+            return False, 'cancelado'
     return False, texto
 
 
@@ -793,6 +828,9 @@ def preparar_resolve(abrir=True, al_estado=None, forzar_reciente=False, pagina='
     codigo = f'PERMITIR_CAMBIO = {bool(forzar_reciente or salida["lanzado"])!r}\nPAGINA = {pagina!r}\n' + _PREPARAR
     # recien abierto, el gestor de proyectos puede tardar unos segundos en contestar
     for intento in range(6):
+        if _CANCELADO.is_set():
+            salida['motivo'] = 'cancelado'
+            return salida
         ok, r, err = script(codigo, timeout=60)
         if ok and isinstance(r, dict):
             break
@@ -806,7 +844,9 @@ def preparar_resolve(abrir=True, al_estado=None, forzar_reciente=False, pagina='
         if atascado:                                               # v5.56: fantasma o colgado: GO lo repara (no se insiste contra él)
             salida['motivo'] = atascado
             return salida
-        time.sleep(2.5)
+        if _esperar(2.5):
+            salida['motivo'] = 'cancelado'
+            return salida
     else:
         salida['motivo'] = f'MCP: {err}'
         return salida
@@ -1186,12 +1226,22 @@ if clip:
     res['timeline'] = nombre if tl else None
     if tl:
         ajustes = {}
-        for clave, valor in (('useCustomSettings', '1'), ('timelineResolutionWidth', str(ANCHO)), ('timelineResolutionHeight', str(ALTO)),
-                             ('timelineOutputResolutionWidth', str(ANCHO)), ('timelineOutputResolutionHeight', str(ALTO)), ('timelineFrameRate', fps_txt)):
+        def _formato(w, h):
+            for clave, valor in (('useCustomSettings', '1'), ('timelineResolutionWidth', str(w)), ('timelineResolutionHeight', str(h)),
+                                 ('timelineOutputResolutionWidth', str(w)), ('timelineOutputResolutionHeight', str(h)), ('timelineFrameRate', fps_txt)):
+                try:
+                    ajustes[clave] = bool(tl.SetSetting(clave, valor))
+                except Exception as e:
+                    ajustes[clave] = repr(e)
             try:
-                ajustes[clave] = bool(tl.SetSetting(clave, valor))
-            except Exception as e:
-                ajustes[clave] = repr(e)
+                return (int(float(tl.GetSetting('timelineResolutionWidth') or 0)), int(float(tl.GetSetting('timelineResolutionHeight') or 0))) == (w, h)
+            except Exception:
+                return False
+        # v5.82: a la resolución del video (un 4K, 2160x3840); si Resolve no la acepta (Free no pasa de UHD), un escalón menos hasta 1080x1920
+        for w, h in [(ANCHO, ALTO)] + [(a, b) for a, b in ((2160, 3840), (1080, 1920)) if a < ANCHO]:
+            if _formato(w, h):
+                break
+            res.setdefault('formato_rechazado', []).append(str(w) + 'x' + str(h))
         res['ajustes'] = ajustes
         project.SetCurrentTimeline(tl)
         puestos = mp.AppendToTimeline([clip])
@@ -1366,6 +1416,9 @@ def preparar_proyecto(nombre='CineCaptions', abrir=True, al_estado=None, espera_
     limite = time.time() + 150
     relanzado = False
     while True:
+        if _CANCELADO.is_set():
+            salida['motivo'] = 'cancelado'
+            return salida
         ok, r, err = script(codigo, timeout=60)
         if ok and isinstance(r, dict) and r.get('accion') == 'creado' and r.get('proyecto'):
             break
@@ -1385,7 +1438,9 @@ def preparar_proyecto(nombre='CineCaptions', abrir=True, al_estado=None, espera_
             salida['motivo'] = atascado
             return salida
         decir(tr('Resolve termina de arrancar…'))
-        time.sleep(5.0)
+        if _esperar(5.0):
+            salida['motivo'] = 'cancelado'
+            return salida
     if not (ok and isinstance(r, dict)):
         salida['motivo'] = f'MCP: {err}'
         return salida
@@ -1437,11 +1492,14 @@ def abrir_proyecto(nombre, intentos=6):
     """v5.56: abre el proyecto `nombre` (búsqueda en todas las carpetas). Recién abierto Resolve, el gestor de proyectos tarda unos segundos: se reintenta.
     True si queda abierto."""
     for _ in range(max(1, intentos)):
+        if _CANCELADO.is_set():
+            return False
         ok, r, _err = script(_ABRIR_PROYECTO % {'nombre': str(nombre)}, timeout=60)
         if ok and isinstance(r, dict) and r.get('abierto') and r.get('proyecto') == str(nombre):
             _refrescar_estado()
             return True
-        time.sleep(3.0)
+        if _esperar(3.0):
+            return False
     return False
 
 
@@ -1477,8 +1535,38 @@ def medir_medio(ruta):
     except Exception:
         pass
     info.update(tl_ancho=1080, tl_alto=1920)              # v5.5: «cada vez que abras un proyecto, siempre en vertical» (v5.52: ya sin opción, siempre)
-    info['tl_fps'] = info['fps']
+    info['tl_fps'] = info['fps']                           # v5.82: GO lo cambia por tamano_timeline (la resolución del video) si arma el timeline en Resolve
     return info
+
+
+# v5.82 (el usuario: «Todos los estilos que estén en 4K que no pierdan calidad»): el timeline que GO arma con un video soltado sigue SIEMPRE vertical
+# 9:16, pero ya no siempre a 1080×1920: el lado corto del video elige el escalón (2160 = 4K, 2880 = 5K), sin bajar nunca de 1080×1920. Antes un video
+# 4K se editaba con la cuarta parte de sus píxeles (el video, los captions, la PRO y el recorte salían a 1080). Los planificadores trabajan en
+# fracciones del cuadro: el mismo plan cae igual a cualquier escalón.
+ESCALONES_TIMELINE = (1080, 1440, 2160, 2880)
+TOPE_TIMELINE_STUDIO = 2880                               # 2880×5120 (5K): GO ya armó ahí los videos 5K de MEDIOS/05_Captions_5K
+TOPE_TIMELINE_FREE = 2160                                 # Resolve Free no pasa de UHD
+
+
+def tamano_timeline(ancho, alto, tope=TOPE_TIMELINE_STUDIO):
+    """(ancho, alto) del timeline vertical 9:16 para un video de ancho×alto: el mayor escalón de ESCALONES_TIMELINE que no pasa del lado corto del
+    video ni de `tope`; 1080×1920 si el video es más pequeño o no se pudo medir."""
+    try:
+        corto, tope = min(int(ancho or 0), int(alto or 0)), int(tope or 1080)
+    except (TypeError, ValueError):
+        corto, tope = 0, 1080
+    w = max([e for e in ESCALONES_TIMELINE if e <= corto and e <= tope] or [1080])
+    return w, w * 16 // 9
+
+
+def escala_video(ruta):
+    """v5.82: cuántas veces 1080 mide el lado corto del timeline de ese video (1 a 1080, 2 en 4K, 2,67 en 5K): las fotos y los renders que la PRO
+    prepara ANTES de que exista el timeline se piden con esos píxeles de más. 1 si no se puede medir."""
+    try:
+        m = medir_medio(ruta)
+        return min(tamano_timeline(m.get('ancho'), m.get('alto'))) / 1080.0
+    except Exception:
+        return 1.0
 
 
 def crear_timeline_con_video(ruta, nombre=None, ancho=1080, alto=1920, fps=30.0, pista_broll=False):

@@ -27,7 +27,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QBrush, QColor, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
-                           QRadialGradient, QTransform)
+                           QRadialGradient, QRegion, QTransform)
 from PySide6.QtWidgets import QFrame, QSizePolicy, QWidget
 
 import qt_kit as ui
@@ -181,6 +181,15 @@ class CarruselPacks(QWidget):
         self._tilt = [0.0, 0.0]                  # la del centro se inclina un poco hacia el ratón
         self._tilt_obj = [0.0, 0.0]
         self._motas = [((i * 0.6180339) % 1.0, (i * 0.3819660 + 0.13) % 1.0, 0.6 + (i % 5) * 0.35, 1.4 + (i % 4) * 0.9) for i in range(26)]
+        # v5.82 (el usuario: «mejora la fluidez de todas las páginas»; medido a 2293×928 al 1,5: cada repintado entero costaba ~23 ms, 18 de
+        # ellos las 6 tarjetas de los lados giradas en perspectiva, y se repintaba entero 30 veces por segundo aunque estuviera quieto).
+        # Quieto, el resplandor y las tarjetas de los lados no cambian: se pintan UNA vez en dos capas (_capas_quietas) y en cada tic solo se
+        # repinta lo que se mueve: la tarjeta del centro (su video o sus captions) y las motas (_repintar_tic). Moviéndose, como siempre.
+        self._capas = None                       # (clave, resplandor, lados): QPixmap del tamaño del widget a los píxeles reales
+        self._t_motas = None                     # el instante de las motas del último tic (pintado y zona a repintar usan el mismo)
+        self._cajas_previas = None               # dónde estaban las motas (para borrarlas)
+        self._cielo = None                       # el cielo de detrás (proyecto_ui.TarjetaCielo): cada cuadro suyo nuevo, repintado entero
+        self._cielo_visto = None
         # v5.5.10: con `flexible` el alto pedido es solo el preferido: el mínimo baja para que la página quepa en pantallas pequeñas
         self.setMinimumHeight(int(min(alto, 300)) if flexible else int(alto))
         self._alto_pref = int(alto)
@@ -192,6 +201,7 @@ class CarruselPacks(QWidget):
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._reloj = QTimer(self)
+        self._reloj.setTimerType(Qt.TimerType.PreciseTimer)      # (v5.82: el normal de Windows redondea a 15,6 ms: 33 → 47 ms, el video a ~21/s)
         self._reloj.timeout.connect(self._tic)
 
     # -- datos ----------------------------------------------------------------------------------------------------------
@@ -213,6 +223,7 @@ class CarruselPacks(QWidget):
             anterior = i
         destino = centrar if centrar is not None else (previa if previa is not None else elegido)
         idx = next((k for k, c in enumerate(self._cartas) if c.valor == destino), 0)
+        self._capas = None                                  # (v5.82: otras tarjetas: las capas quietas se rehacen)
         self._obj = idx
         if not self._entro:
             self._pos = float(idx) - 3.2                 # la primera vez las tarjetas entran deslizando desde la izquierda
@@ -302,7 +313,12 @@ class CarruselPacks(QWidget):
     def hideEvent(self, e):
         self._reloj.stop()
         self._gestionar_video()
+        self._capas = self._cajas_previas = None          # (v5.82: las capas pesan ~13 MB cada una: fuera de la página no se guardan)
         super().hideEvent(e)
+
+    def resizeEvent(self, e):
+        self._capas = self._cajas_previas = None
+        super().resizeEvent(e)
 
     def _gestionar_video(self):
         """Solo la tarjeta del centro reproduce su video (desde el principio al llegar); las demás se paran. Con el slider oculto no suena ninguno."""
@@ -355,8 +371,61 @@ class CarruselPacks(QWidget):
         for i in (0, 1):
             self._tilt[i] += (self._tilt_obj[i] - self._tilt[i]) * min(1.0, dt * 8.0)
         self._actualizar_glow()
-        self._reloj.setInterval(16 if self._en_movimiento() else 33)
-        self.update()
+        mueve = self._en_movimiento()
+        ms = 16 if mueve else 33
+        if self._reloj.interval() != ms:                 # (v5.82: setInterval REARRANCA el reloj: en cada tic alargaba el periodo, ~21/s)
+            self._reloj.setInterval(ms)
+        self._repintar_tic(mueve)
+
+    def _repintar_tic(self, mueve):
+        """v5.82: quieto, solo la tarjeta del centro y las motas (donde estaban y donde están); Qt recorta el resto y lo de fuera ya está
+        pintado igual. Entero si algo se mueve, al entrar o cuando el cielo de detrás compone un cuadro nuevo (sus estrellas bajo el slider)."""
+        t = time.perf_counter()
+        self._t_motas = t
+        cajas = self._cajas_motas(t)
+        previas, self._cajas_previas = self._cajas_previas, cajas
+        cielo = self._cuadro_cielo()
+        centro = self._rect_centro()
+        if (mueve or previas is None or centro is None or cielo != self._cielo_visto or self._entrada_t0 is None
+                or t - self._entrada_t0 < 0.6):
+            self._cielo_visto = cielo
+            self.update()
+            return
+        zona = QRegion(centro)
+        for r in previas + cajas:
+            zona += r
+        self.update(zona)
+
+    def _cajas_motas(self, t):
+        W, H = float(self.width()), float(self.height())
+        cajas = []
+        for x, y, r in self._pos_motas(t, W, H):
+            cajas.append(QRectF(x - r - 2.0, y - r - 2.0, 2.0 * r + 4.0, 2.0 * r + 4.0).toAlignedRect())
+        return cajas
+
+    def _pos_motas(self, t, W, H):
+        for sx, sy, vel, r in self._motas:
+            y = H - ((sy * H + t * 9.0 * vel) % (H + 20.0)) + 10.0
+            x = sx * W + math.sin(t * 0.35 * vel + sx * 9.0) * 14.0
+            yield x, y, r
+
+    def _rect_centro(self):
+        """El rectángulo de la tarjeta del centro (quieta), con 3 px de margen; None si no hay una justo al centro."""
+        if not self._cartas or abs(self._obj - self._pos) > 0.0008:
+            return None
+        w, h, cx, cy = self._medidas()
+        rect, _esc, _op = self._transformar(self._obj - self._pos, w, h, cx, cy)
+        return rect.adjusted(-3, -3, 3, 3).toAlignedRect()
+
+    def _cuadro_cielo(self):
+        """El instante del último cuadro del cielo de detrás (proyecto_ui.TarjetaCielo), o None."""
+        c = self._cielo
+        if c is None:
+            p = self.parentWidget()
+            while p is not None and not hasattr(p, '_t_cuadro'):
+                p = p.parentWidget()
+            self._cielo = c = p if p is not None else False
+        return getattr(c, '_t_cuadro', None) if c is not False else None
 
     def _actualizar_glow(self):
         fs = fotos()
@@ -377,10 +446,11 @@ class CarruselPacks(QWidget):
     def _medidas(self):
         # v5.4.22: crecen con la ventana; v5.5.9: más grandes (tope 1040). v5.5.10: también caben a lo ANCHO (la del centro y sus dos vecinas
         # enteras: 2,76 anchos de tarjeta) y el grupo se centra en el alto que sobra; antes en ventanas estrechas se pisaban y desbordaban.
-        disponible = self.height() - self.ALTO_CONTROLES - 16.0
+        # v5.82 (el usuario: «hazlo un poco más grande el slider»): menos margen arriba y abajo (8 px en vez de 16) y tope 1100
+        disponible = self.height() - self.ALTO_CONTROLES - 8.0
         por_ancho = max(0.0, self.width() - 32.0) / (0.88 + 2.0 * self.PASO) / ASPECTO
-        h_carta = max(180.0, min(1040.0, disponible, por_ancho))
-        arriba = 14.0 + max(0.0, (disponible - h_carta) / 2.0)
+        h_carta = max(180.0, min(1100.0, disponible, por_ancho))
+        arriba = 8.0 + max(0.0, (disponible - h_carta) / 2.0)
         return h_carta * ASPECTO, h_carta, self.width() / 2.0, arriba + h_carta / 2.0
 
     def _transformar(self, d, w, h, cx, cy):
@@ -427,6 +497,27 @@ class CarruselPacks(QWidget):
             p.drawText(self.rect(), int(Qt.AlignmentFlag.AlignCenter), tr('Todavía no hay estilos'))
             p.end()
             return
+        self._pill_geo = None
+        entrada = 1.0
+        if self._entrada_t0 is not None:
+            entrada = max(0.0, min(1.0, (time.perf_counter() - self._entrada_t0) / 0.55))
+        orden = sorted((k for k in range(n) if abs(k - self._pos) <= 3.2), key=lambda k: -abs(k - self._pos))
+        capas = self._capas_quietas(w, h, cx, cy, entrada, orden)
+        if capas is None:
+            self._dibujar_resplandor(p, w, cx, cy)
+            self._dibujar_motas(p)
+            for k in orden:
+                self._dibujar_carta(p, self._cartas[k], k - self._pos, w, h, cx, cy, entrada)
+        else:                                          # v5.82: quieto, lo mismo por capas (las mismas llamadas, pintadas una vez)
+            p.drawPixmap(0, 0, capas[0])
+            self._dibujar_motas(p)
+            p.drawPixmap(0, 0, capas[1])
+            for k in orden:
+                if abs(k - self._pos) < 0.5:
+                    self._dibujar_carta(p, self._cartas[k], k - self._pos, w, h, cx, cy, entrada)
+        p.end()
+
+    def _dibujar_resplandor(self, p, w, cx, cy):
         # el resplandor detrás de la tarjeta del centro: el color medio de su foto, que va cambiando al deslizar (una elipse que se apaga antes de los bordes)
         radio_g = w * 1.7
         p.save()
@@ -441,15 +532,42 @@ class CarruselPacks(QWidget):
         g.setColorAt(1.0, c1)
         p.fillRect(QRectF(-radio_g, -radio_g, radio_g * 2, radio_g * 2), QBrush(g))
         p.restore()
-        self._pill_geo = None
-        self._dibujar_motas(p)
-        entrada = 1.0
-        if self._entrada_t0 is not None:
-            entrada = max(0.0, min(1.0, (time.perf_counter() - self._entrada_t0) / 0.55))
-        orden = sorted((k for k in range(n) if abs(k - self._pos) <= 3.2), key=lambda k: -abs(k - self._pos))
-        for k in orden:
-            self._dibujar_carta(p, self._cartas[k], k - self._pos, w, h, cx, cy, entrada)
-        p.end()
+
+    def _capas_quietas(self, w, h, cx, cy, entrada, orden):
+        """v5.82: (resplandor, lados) ya pintados si el slider está QUIETO (nada se desliza, ni entra, ni anima la elección, la píldora o
+        la inclinación); None si no. Se rehacen solos si cambia algo de lo que pintan (la clave)."""
+        if (entrada < 1.0 or self._arrastre is not None or abs(self._obj - self._pos) > 0.0008 or abs(self._vel) > 0.004
+                or self._sel_t0 is not None and time.perf_counter() - self._sel_t0 < 1.0
+                or abs(self._tilt[0]) > 0.01 or abs(self._tilt[1]) > 0.01):
+            return None
+        dpr = self.devicePixelRatioF()
+        hover = None                             # (de las de los lados, el ratón encima solo cambia el borde de «Crea tu estilo»)
+        if self._hover and self._hover[0] == 'carta' and 0 <= self._hover[1] < len(self._cartas):
+            if abs(self._hover[1] - self._pos) >= 0.5 and self._cartas[self._hover[1]].tipo == 'anadir':
+                hover = self._hover
+        clave = (self.width(), self.height(), round(dpr, 3), round(self._pos, 4), self._glow.rgba(), self._elegido, self.modo_pro, hover,
+                 tuple(id(self._cartas[k]) for k in orden))
+        if self._capas is not None and self._capas[0] == clave:
+            return self._capas[1], self._capas[2]
+        capas = []
+        for fondo in (True, False):
+            pm = QPixmap(int(math.ceil(self.width() * dpr)), int(math.ceil(self.height() * dpr)))
+            pm.setDevicePixelRatio(dpr)
+            pm.fill(Qt.GlobalColor.transparent)
+            q = QPainter(pm)
+            q.setRenderHint(QPainter.RenderHint.Antialiasing)
+            q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+            q.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+            if fondo:
+                self._dibujar_resplandor(q, w, cx, cy)
+            else:
+                for k in orden:
+                    if abs(k - self._pos) >= 0.5:
+                        self._dibujar_carta(q, self._cartas[k], k - self._pos, w, h, cx, cy, entrada)
+            q.end()
+            capas.append(pm)
+        self._capas = (clave, capas[0], capas[1])
+        return capas[0], capas[1]
 
     def _dibujar_carta(self, p, carta, d, w, h, cx, cy, entrada):
         rect, esc, op = self._transformar(d, w, h, cx, cy)
@@ -814,15 +932,14 @@ class CarruselPacks(QWidget):
         p.restore()
 
     def _dibujar_motas(self, p):
-        """v5.5.9: motas de luz que suben despacio detrás de las tarjetas, del color del resplandor (más vida en Proyecto)."""
-        t = time.perf_counter()
+        """v5.5.9: motas de luz que suben despacio detrás de las tarjetas, del color del resplandor (más vida en Proyecto).
+        v5.82: en el instante del último tic (_t_motas): así la zona que se repinta (_repintar_tic) es justo donde se pintan."""
+        t = self._t_motas if self._t_motas is not None else time.perf_counter()
         W, H = float(self.width()), float(self.height())
         base = QColor(self._glow).lighter(170)
         p.save()
         p.setPen(Qt.PenStyle.NoPen)
-        for sx, sy, vel, r in self._motas:
-            y = H - ((sy * H + t * 9.0 * vel) % (H + 20.0)) + 10.0
-            x = sx * W + math.sin(t * 0.35 * vel + sx * 9.0) * 14.0
+        for x, y, r in self._pos_motas(t, W, H):
             vida = math.sin(math.pi * max(0.0, min(1.0, y / H)))
             col = QColor(base)
             col.setAlpha(int(70 * vida))

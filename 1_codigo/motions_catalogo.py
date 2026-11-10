@@ -50,6 +50,15 @@ def _kit():
         return {}
 
 
+def _pila():
+    """v5.82: los motions de la referencia del Estilo 4 (edicion_pro_pila): {composición: id} y {id: nombre}. Van con «Kit de motions»."""
+    try:
+        import edicion_pro_pila as PI
+        return dict(PI.IDS), dict(PI.NOMBRES)
+    except Exception:
+        return {}, {}
+
+
 def _escenas():
     try:
         import edicion_pro_escenas as ES
@@ -81,6 +90,16 @@ def catalogo():
                     'detalle': ', '.join(pl.get('frases') or [])[:80], 'props': dict(pl.get('props') or {}), 'dur': pl.get('dur')})
     for fam, comp in _kit().items():
         out.append({'id': 'kit:' + fam, 'nombre': NOMBRES_KIT.get(fam, fam.capitalize()), 'grupo': 'kit', 'comp': comp, 'detalle': ''})
+    ids_pila, nombres_pila = _pila()
+    try:
+        import edicion_pro_pila as PI
+        props_pila, dur_pila = PI.PROPS_PREVIA, PI.DUR_PREVIA
+    except Exception:
+        props_pila, dur_pila = {}, {}
+    comp_pila = {mid: comp for comp, mid in ids_pila.items()}
+    for mid, nombre in nombres_pila.items():          # (props y dur: los de su miniatura, hacer_previas_motions.py; «kit:zoom» no es de Remotion: la tarjeta se dibuja sola)
+        out.append({'id': mid, 'nombre': nombre, 'grupo': 'kit', 'comp': comp_pila.get(mid), 'detalle': '',
+                    'props': dict(props_pila.get(mid) or {}), 'dur': dur_pila.get(mid)})
     for fam, comp in _escenas().items():
         out.append({'id': 'escena:' + fam, 'nombre': NOMBRES_ESCENA.get(fam, fam.capitalize()), 'grupo': 'escena', 'comp': comp, 'detalle': ''})
     comp_de = {v: k for k, v in _COMP_T5.items()}       # (los que son una composición de Remotion tienen miniatura renderizada)
@@ -147,6 +166,9 @@ def id_de_pieza(p):
     pl = str(p.get('plantilla') or '')
     if pl and any(str(x.get('id')) == pl for x in _plantillas()):
         return 'plantilla:' + pl
+    ids_pila = _pila()[0]
+    if comp in ids_pila:
+        return ids_pila[comp]
     kit = {c: f for f, c in _kit().items()}
     if comp in kit:
         return 'kit:' + kit[comp]
