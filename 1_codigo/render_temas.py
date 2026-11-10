@@ -793,6 +793,8 @@ def capas_de_cue(estilo, cue, s, dx, dy):
                 'cue_t0': ini}
         if capa['k'].startswith(('v linea activa', 'v rojo')):     # v5.75: la caja del Tema 3 salta de palabra en palabra (corte seco, como el clip); v5.78: el Estilo 7, corte seco
             capa.update(entrada=0.0, sube=0.0)
+            if capa['k'].startswith('v rojo'):
+                capa['seco'] = True                                 # v5.80: el Estilo 7 se va de golpe (blancas y roja a la vez; render_sin_resolve sin SALIDA_S)
         total = getattr(sp, 'total', 0.0)
         if tipo == 'viral' and total:                               # v5.55: dónde va la palabra dentro del sprite y cuántas letras «mide» (lo que escribe el «select»)
             capa.update(tinta=(0.5 - total / (2.0 * W), 0.5 + total / (2.0 * W)), letras=total / (0.62 * em * s))

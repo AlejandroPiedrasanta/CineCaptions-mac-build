@@ -4494,6 +4494,9 @@
     "Estilo 7 nuevo: dos o tres palabras en letra gruesa blanca y la palabra que se dice se pone roja. También está en «Crea tu estilo» como texto principal «Palabra roja».": "全新样式 7：两三个词用粗白字，正在说的词变成红色。在「创建你的样式」中也可作为主文字「红色单词」使用。",
     "Corrector: tres ejemplos en video de lo que cambias (palabra principal, ortografía, colores y letra) y la tarjeta «Colores y letra» para cambiar ahí mismo el color y la letra del estilo.": "校对器：三个视频示例展示你改了什么（主词、拼写、颜色和字体），以及「颜色和字体」卡片，可直接在那里修改样式的颜色和字体。",
     "Menús más simples: el chip «Estilo» de Inicio enseña cada estilo con su póster, el de Edición PRO es un panel compacto y salen «B-roll con fotos», «Escenas completas» y «Gráficos».": "菜单更简洁：主页的「样式」标签用海报展示每种样式，PRO 编辑变成紧凑面板，并移除了「照片 B-roll」「完整场景」和「图形」。",
-    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "设置 › 常规 显示 DaVinci Resolve 和 Premiere Pro 的图标。"
+    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "设置 › 常规 显示 DaVinci Resolve 和 Premiere Pro 的图标。",
+    "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "样式 7：每句结尾的单词不再提前消失；整行像出现时一样一次性消失。",
+    "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "样式 7：两个词几乎同时说出时，两个词都会依次变红（之前会漏掉一个）。",
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "完整动态效果：使用样式 7 时，标题不再重复单词。"
   }
 }

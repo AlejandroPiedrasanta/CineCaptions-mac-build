@@ -1350,7 +1350,10 @@ def bloques_de_cues(cues):
             out.append({'ini': ini, 'fin': fin, 'arriba': arriba, 'abajo': abajo, 'linea': max(0.02, linea), 'xs': xs or [0.5],
                         **({'grande_abajo': grande} if grande is not None else {}),
                         **({'pack': c['pack']} if isinstance(c.get('pack'), str) and c['pack'] else {}),     # (v5.76: el de su estilo en una mezcla)
-                        'palabras': [(str(r.get('texto') or ''), float(r['t']) if isinstance(r.get('t'), (int, float)) else ini) for r in runs],
+                        # v5.80: sin la capa «activa» (run['exacto']: la roja del Estilo 7, la caja de la línea del Estilo 3), que REPITE cada palabra
+                        # del bloque: «Motions completo» sacaba «Ventas Ventas» en el titular (GO real del Estilo 7)
+                        'palabras': [(str(r.get('texto') or ''), float(r['t']) if isinstance(r.get('t'), (int, float)) else ini)
+                                     for r in ([r for r in runs if not r.get('exacto')] or runs)],
                         'emoji': c.get('emoji') if isinstance(c.get('emoji'), str) else None})    # (v5.25: el del tema, ya elegido con coherencia)
     out.sort(key=lambda b: b['ini'])
     return out

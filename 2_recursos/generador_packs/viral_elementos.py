@@ -913,13 +913,12 @@ def _elementos_rojo():
 
 
 def comp_rojo(activa=False):
-    """«v rojo»: la palabra blanca (entra de golpe con su bloque y se va con la salida de 5 fotogramas). «v rojo activa»: la misma palabra en rojo, sin
-    animación (va encima de su «v rojo» mientras suena). El color de la letra es el del Template (Red1…): lo cambia «Crea tu estilo»."""
+    """«v rojo»: la palabra blanca, de golpe al entrar y al salir con su bloque. «v rojo activa»: la misma palabra en rojo, sin animación (va encima
+    de su «v rojo» mientras suena). El color de la letra es el del Template (Red1…): lo cambia «Crea tu estilo».
+    v5.80 (el usuario: «el estilo 7 desaparece palabras»): la blanca ya NO se va con la salida de 5 fotogramas: al final del bloque las blancas se
+    borraban antes que la roja (que no tiene salida) y la línea se quedaba con una sola palabra. Corte seco las dos, como eligió (la A, «fiel»)."""
     t = texto_plus('Template', -220, 40, 'rojo', ROJO_FUENTE[0], ROJO_FUENTE[1], 0.09, color=ROJO_ROJO if activa else ROJO_BLANCO, extra=_elementos_rojo())
-    if activa:
-        t += cadena('Template', dict(size='1', blend='1'))
-    else:
-        t += cadena('Template', dict(size=f'(0.96 + 0.04 * {SALIDA})', blend=f'{SALIDA}'))
+    t += cadena('Template', dict(size='1', blend='1'))
     return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - rojo' + (' activa' if activa else ''))
 
 

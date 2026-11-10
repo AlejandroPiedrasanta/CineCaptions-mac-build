@@ -190,9 +190,8 @@ def estado_animado(c, t):
             st.update(a=q(c['entrada']) if c.get('entrada') else 1.0)
             if c.get('seco'):
                 return st
-        elif k.startswith('v rojo'):                                    # v5.78: el Estilo 7, de golpe (comp_rojo); la roja tampoco sale: se corta al acabar su palabra
-            if k == 'v rojo activa':
-                return st
+        elif k.startswith('v rojo'):                                    # v5.78: el Estilo 7, de golpe (comp_rojo); v5.80: blancas y roja SIN salida (corte seco
+            return st                                                   # las dos: con la salida las blancas se borraban antes que la roja, «desaparece palabras»)
         elif 'shatter' in k:
             st.update(s=1.55 - 0.55 * _ease(q(0.36)), a=q(0.14), brillo=e / 0.55 if e < 0.55 else None)
         elif 'select' in k:                                             # v5.55: los tiempos de comp_select (fotogramas de 24 fps): escribe en lineal desde T 0,5

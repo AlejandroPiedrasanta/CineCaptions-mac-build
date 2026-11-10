@@ -4494,6 +4494,9 @@
     "Estilo 7 nuevo: dos o tres palabras en letra gruesa blanca y la palabra que se dice se pone roja. También está en «Crea tu estilo» como texto principal «Palabra roja».": "新しいスタイル7：太い白文字で2〜3語、話している単語が赤くなります。「スタイルを作成」でもメインテキスト「赤い単語」として使えます。",
     "Corrector: tres ejemplos en video de lo que cambias (palabra principal, ortografía, colores y letra) y la tarjeta «Colores y letra» para cambiar ahí mismo el color y la letra del estilo.": "校正：変更内容（メインの単語、つづり、色とフォント）の動画例を3つと、その場でスタイルの色とフォントを変えられる「色とフォント」カード。",
     "Menús más simples: el chip «Estilo» de Inicio enseña cada estilo con su póster, el de Edición PRO es un panel compacto y salen «B-roll con fotos», «Escenas completas» y «Gráficos».": "メニューをシンプルに：ホームの「スタイル」チップは各スタイルをポスター付きで表示、PRO編集はコンパクトなパネルに。「写真のBロール」「フルシーン」「グラフィック」は削除しました。",
-    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "設定 › 一般 に DaVinci Resolve と Premiere Pro のアイコンを表示します。"
+    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "設定 › 一般 に DaVinci Resolve と Premiere Pro のアイコンを表示します。",
+    "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "スタイル7：各フレーズの終わりで単語が消えなくなりました。行全体が、入るときと同じように一度に消えます。",
+    "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "スタイル7：2つの単語がほぼ同時に話されても、両方が順番に赤くなります（以前は片方が飛ばされていました）。",
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "フルモーション：スタイル7で見出しの単語が繰り返されなくなりました。"
   }
 }

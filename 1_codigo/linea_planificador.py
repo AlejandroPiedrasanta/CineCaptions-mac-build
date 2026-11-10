@@ -94,6 +94,29 @@ def _lineas_de_frase(pal, frase, size, ancho_tl, ancho_max=ANCHO_MAX, perfil=LIN
     return lineas
 
 
+TURNO_MIN = 0.10      # (s) menos que esto entre dos inicios = la voz los dio «a la vez»
+
+
+def _turnos(ts, textos):
+    """Los inicios de la palabra que suena en una línea (+ el fin de la línea al final), con las que la transcripción dio A LA VEZ repartidas
+    por letras hasta la siguiente palabra distinta. v5.80 (GO real del Estilo 7): Qwen dio «el» y «Knockout» en el mismo instante y «el» nunca
+    se ponía roja (su turno medía 0 s y se saltaba)."""
+    ts = list(ts)
+    j, n = 0, len(textos)
+    while j < n:
+        m = j
+        while m + 1 < n and ts[m + 1] - ts[j] < TURNO_MIN:
+            m += 1
+        if m > j and ts[m + 1] - ts[j] > 0:
+            pesos = [max(1, len(str(textos[q]))) for q in range(j, m + 1)]
+            tramo, acc = ts[m + 1] - ts[j], ts[j]
+            for q in range(j, m + 1):
+                ts[q] = acc
+                acc += tramo * pesos[q - j] / sum(pesos)
+        j = m + 1
+    return ts
+
+
 def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo', mains=None, fin_video=None, clip_activa=None, perfil=None, **_otros):
     """palabras [{'word','start','end'}] -> {'cues': [...], 'plan': [...]} (el contrato de viral_planificador.planificar; `mains` no se usa: no hay
     palabra grande). `perfil`: LINEA (el Tema 3, de fábrica) o ROJO (el Estilo 7); `clip_activa` cambia el clip de la palabra que suena (Crea tu estilo)."""
@@ -143,11 +166,11 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
         alto_px = cap_px * 2.1
         y_l = y + ZS.meter_y(y - alto_px / 2 / alto_tl, y + alto_px / 2 / alto_tl, ancho_tl, alto_tl)     # (v5.76: la caja, dentro de la zona)
         runs, activas = [], []
+        ts = _turnos([max(t0, pal[k]['t']) for k in l] + [t1], textos)
         for j, (k, tx, a) in enumerate(zip(l, textos, anchos)):
             cx = (x + a / 2.0) / ancho_tl
             runs.append({'k': clip, 't': round(t0, 3), 'fin': round(t1, 3), 'x': round(cx, 5), 'y': round(y_l, 5), 'texto': tx, 'size': round(size, 4)})
-            ini = max(t0, pal[k]['t'])
-            fin = max(t0, pal[l[j + 1]]['t']) if j + 1 < len(l) else t1
+            ini, fin = ts[j], ts[j + 1]
             if fin - ini >= 0.03:
                 activas.append({'k': clip_activa, 't': round(ini, 3), 'fin': round(fin, 3), 'x': round(cx, 5), 'y': round(y_l, 5), 'texto': tx,
                                 'size': round(size, 4), 'exacto': True})

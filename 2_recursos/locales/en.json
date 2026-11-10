@@ -4569,6 +4569,9 @@
     "Estilo 7 nuevo: dos o tres palabras en letra gruesa blanca y la palabra que se dice se pone roja. También está en «Crea tu estilo» como texto principal «Palabra roja».": "New Style 7: two or three words in bold white letters, and the word being spoken turns red. It is also in «Create your style» as the main text «Red word».",
     "Corrector: tres ejemplos en video de lo que cambias (palabra principal, ortografía, colores y letra) y la tarjeta «Colores y letra» para cambiar ahí mismo el color y la letra del estilo.": "Proofreader: three video examples of what you change (main word, spelling, colors and font) and the «Colors and font» card to change the style's color and font right there.",
     "Menús más simples: el chip «Estilo» de Inicio enseña cada estilo con su póster, el de Edición PRO es un panel compacto y salen «B-roll con fotos», «Escenas completas» y «Gráficos».": "Simpler menus: the «Style» chip on Home shows each style with its poster, the PRO Edit one is a compact panel, and «B-roll with photos», «Full scenes» and «Graphics» are gone.",
-    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "Settings › General shows the DaVinci Resolve and Premiere Pro icons."
+    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "Settings › General shows the DaVinci Resolve and Premiere Pro icons.",
+    "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "Style 7: words no longer disappear at the end of each phrase; the whole line leaves at once, just as it comes in.",
+    "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "Style 7: if two words are said almost at the same time, both turn red in turn (before, one was skipped).",
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "Full motions: the headline no longer repeats words with Style 7."
   }
 }

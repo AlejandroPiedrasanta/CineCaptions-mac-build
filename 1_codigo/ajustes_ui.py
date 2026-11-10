@@ -495,6 +495,11 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.80', [
+        'Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.',
+        'Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).',
+        'Motions completo: el titular ya no repite las palabras con el Estilo 7.',
+    ]),
     ('5.79', [
         'Estilo 7 nuevo: dos o tres palabras en letra gruesa blanca y la palabra que se dice se pone roja. También está en «Crea tu estilo» como texto principal «Palabra roja».',
         'Corrector: tres ejemplos en video de lo que cambias (palabra principal, ortografía, colores y letra) y la tarjeta «Colores y letra» para cambiar ahí mismo el color y la letra del estilo.',

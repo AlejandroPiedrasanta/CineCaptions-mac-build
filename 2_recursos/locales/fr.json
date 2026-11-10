@@ -4569,6 +4569,9 @@
     "Estilo 7 nuevo: dos o tres palabras en letra gruesa blanca y la palabra que se dice se pone roja. También está en «Crea tu estilo» como texto principal «Palabra roja».": "Nouveau Style 7 : deux ou trois mots en lettres blanches épaisses, et le mot prononcé passe au rouge. Il est aussi dans «Créez votre style» comme texte principal «Mot rouge».",
     "Corrector: tres ejemplos en video de lo que cambias (palabra principal, ortografía, colores y letra) y la tarjeta «Colores y letra» para cambiar ahí mismo el color y la letra del estilo.": "Correcteur : trois exemples en vidéo de ce que vous changez (mot principal, orthographe, couleurs et police) et la carte «Couleurs et police» pour changer sur place la couleur et la police du style.",
     "Menús más simples: el chip «Estilo» de Inicio enseña cada estilo con su póster, el de Edición PRO es un panel compacto y salen «B-roll con fotos», «Escenas completas» y «Gráficos».": "Menus plus simples : la puce «Style» de l'Accueil montre chaque style avec son affiche, celle d'Édition PRO est un panneau compact, et «B-roll avec photos», «Scènes complètes» et «Graphiques» disparaissent.",
-    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "Réglages › Général affiche l'icône de DaVinci Resolve et celle de Premiere Pro."
+    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "Réglages › Général affiche l'icône de DaVinci Resolve et celle de Premiere Pro.",
+    "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "Style 7 : les mots ne disparaissent plus à la fin de chaque phrase ; toute la ligne part d'un coup, comme elle arrive.",
+    "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "Style 7 : si deux mots sont dits presque en même temps, les deux passent au rouge à tour de rôle (avant, l'un était sauté).",
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "Motions complet : le titre ne répète plus les mots avec le Style 7."
   }
 }

@@ -43,7 +43,9 @@ def _texto_de(b):
     if b.get('lines'):
         return ' '.join(str(l.get('text') or '') for l in b['lines'] if isinstance(l, dict)).strip()
     if b.get('runs'):
-        return ' '.join(str(r.get('texto') or '') for r in b['runs'] if isinstance(r, dict) and r.get('texto')).strip()
+        runs = [r for r in b['runs'] if isinstance(r, dict) and r.get('texto')]
+        runs = [r for r in runs if not r.get('exacto')] or runs          # v5.80: la capa «activa» (Estilo 7, línea del Estilo 3) repite las palabras
+        return ' '.join(str(r.get('texto') or '') for r in runs).strip()
     return str(b.get('text') or b.get('texto') or '').strip()
 
 

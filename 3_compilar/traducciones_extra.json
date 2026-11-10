@@ -11683,5 +11683,38 @@
   "ko": "설정 › 일반에 DaVinci Resolve와 Premiere Pro 아이콘이 보입니다.",
   "ru": "Настройки › Общие показывают значки DaVinci Resolve и Premiere Pro.",
   "zh": "设置 › 常规 显示 DaVinci Resolve 和 Premiere Pro 的图标。"
+ },
+ "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": {
+  "en": "Style 7: words no longer disappear at the end of each phrase; the whole line leaves at once, just as it comes in.",
+  "pt": "Estilo 7: as palavras já não desaparecem no fim de cada frase; a linha inteira sai de uma vez, como entra.",
+  "fr": "Style 7 : les mots ne disparaissent plus à la fin de chaque phrase ; toute la ligne part d'un coup, comme elle arrive.",
+  "de": "Stil 7: Wörter verschwinden am Ende jedes Satzes nicht mehr; die ganze Zeile geht auf einmal, so wie sie kommt.",
+  "it": "Stile 7: le parole non spariscono più alla fine di ogni frase; l'intera riga esce di colpo, come entra.",
+  "ja": "スタイル7：各フレーズの終わりで単語が消えなくなりました。行全体が、入るときと同じように一度に消えます。",
+  "ko": "스타일 7: 각 문장 끝에서 단어가 더 이상 사라지지 않습니다. 줄 전체가 들어올 때처럼 한 번에 사라집니다.",
+  "ru": "Стиль 7: слова больше не исчезают в конце каждой фразы; вся строка уходит сразу, как и появляется.",
+  "zh": "样式 7：每句结尾的单词不再提前消失；整行像出现时一样一次性消失。"
+ },
+ "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": {
+  "en": "Style 7: if two words are said almost at the same time, both turn red in turn (before, one was skipped).",
+  "pt": "Estilo 7: se duas palavras são ditas quase ao mesmo tempo, as duas ficam vermelhas por turnos (antes uma era pulada).",
+  "fr": "Style 7 : si deux mots sont dits presque en même temps, les deux passent au rouge à tour de rôle (avant, l'un était sauté).",
+  "de": "Stil 7: Werden zwei Wörter fast gleichzeitig gesagt, werden beide nacheinander rot (vorher wurde eines übersprungen).",
+  "it": "Stile 7: se due parole vengono dette quasi insieme, diventano rosse entrambe a turno (prima una veniva saltata).",
+  "ja": "スタイル7：2つの単語がほぼ同時に話されても、両方が順番に赤くなります（以前は片方が飛ばされていました）。",
+  "ko": "스타일 7: 두 단어를 거의 동시에 말해도 둘 다 차례로 빨간색이 됩니다(이전에는 하나를 건너뛰었습니다).",
+  "ru": "Стиль 7: если два слова сказаны почти одновременно, оба по очереди становятся красными (раньше одно пропускалось).",
+  "zh": "样式 7：两个词几乎同时说出时，两个词都会依次变红（之前会漏掉一个）。"
+ },
+ "Motions completo: el titular ya no repite las palabras con el Estilo 7.": {
+  "en": "Full motions: the headline no longer repeats words with Style 7.",
+  "pt": "Motions completo: o título já não repete as palavras com o Estilo 7.",
+  "fr": "Motions complet : le titre ne répète plus les mots avec le Style 7.",
+  "de": "Komplette Motions: Die Überschrift wiederholt mit Stil 7 keine Wörter mehr.",
+  "it": "Motions completo: il titolo non ripete più le parole con lo Stile 7.",
+  "ja": "フルモーション：スタイル7で見出しの単語が繰り返されなくなりました。",
+  "ko": "전체 모션: 스타일 7에서 제목의 단어가 더 이상 반복되지 않습니다.",
+  "ru": "Полные движения: заголовок больше не повторяет слова со стилем 7.",
+  "zh": "完整动态效果：使用样式 7 时，标题不再重复单词。"
  }
 }

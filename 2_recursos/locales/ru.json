@@ -4494,6 +4494,9 @@
     "Estilo 7 nuevo: dos o tres palabras en letra gruesa blanca y la palabra que se dice se pone roja. También está en «Crea tu estilo» como texto principal «Palabra roja».": "Новый стиль 7: два-три слова толстыми белыми буквами, а произносимое слово становится красным. Он есть и в «Создайте свой стиль» как основной текст «Красное слово».",
     "Corrector: tres ejemplos en video de lo que cambias (palabra principal, ortografía, colores y letra) y la tarjeta «Colores y letra» para cambiar ahí mismo el color y la letra del estilo.": "Корректор: три видеопримера того, что вы меняете (главное слово, орфография, цвета и шрифт), и карточка «Цвета и шрифт», чтобы прямо там менять цвет и шрифт стиля.",
     "Menús más simples: el chip «Estilo» de Inicio enseña cada estilo con su póster, el de Edición PRO es un panel compacto y salen «B-roll con fotos», «Escenas completas» y «Gráficos».": "Меню проще: чип «Стиль» на главной показывает каждый стиль с постером, меню «PRO Редактирование» стало компактной панелью, а «B-roll с фото», «Полные сцены» и «Графика» убраны.",
-    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "Настройки › Общие показывают значки DaVinci Resolve и Premiere Pro."
+    "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "Настройки › Общие показывают значки DaVinci Resolve и Premiere Pro.",
+    "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "Стиль 7: слова больше не исчезают в конце каждой фразы; вся строка уходит сразу, как и появляется.",
+    "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "Стиль 7: если два слова сказаны почти одновременно, оба по очереди становятся красными (раньше одно пропускалось).",
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "Полные движения: заголовок больше не повторяет слова со стилем 7."
   }
 }
