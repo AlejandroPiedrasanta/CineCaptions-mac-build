@@ -495,6 +495,10 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.81', [
+        'Estilo 8 nuevo: una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra entra subiendo y enfocándose cuando se dice. También está en «Crea tu estilo» como texto principal «Ámbar».',
+        'Estilo 9 nuevo: tres líneas centradas abajo, texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice. También está en «Crea tu estilo» como texto principal «Serif cursiva».',
+    ]),
     ('5.80', [
         'Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.',
         'Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).',

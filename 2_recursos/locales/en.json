@@ -4572,6 +4572,14 @@
     "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "Settings › General shows the DaVinci Resolve and Premiere Pro icons.",
     "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "Style 7: words no longer disappear at the end of each phrase; the whole line leaves at once, just as it comes in.",
     "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "Style 7: if two words are said almost at the same time, both turn red in turn (before, one was skipped).",
-    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "Full motions: the headline no longer repeats words with Style 7."
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "Full motions: the headline no longer repeats words with Style 7.",
+    "Ámbar elegante": "Elegant amber",
+    "Una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra aparece cuando se dice.": "One small line in thin amber letters with the key word in bold; each word appears when it is said.",
+    "Editorial cursiva": "Italic editorial",
+    "Tres líneas centradas abajo: texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice.": "Three centered lines at the bottom: thin text and the big key word in italic serif; each word appears when it is said.",
+    "Ámbar": "Amber",
+    "Serif cursiva": "Italic serif",
+    "Estilo 8 nuevo: una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra entra subiendo y enfocándose cuando se dice. También está en «Crea tu estilo» como texto principal «Ámbar».": "New Style 8: a small line in thin amber letters with the key word in bold; each word rises into place and comes into focus as it is spoken. It is also in «Create your style» as the main text «Amber».",
+    "Estilo 9 nuevo: tres líneas centradas abajo, texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice. También está en «Crea tu estilo» como texto principal «Serif cursiva».": "New Style 9: three centered lines at the bottom, thin text and the key word large in italic serif; each word appears as it is spoken. It is also in «Create your style» as the main text «Italic serif»."
   }
 }

@@ -30,7 +30,7 @@ def estilo_de_pack(pack, formato='v'):
         return None
     if pack == 'Kinetic':
         return {'tipo': 'kinetic', 'pack': pack}
-    if pack in ('VIRAL', 'Tema5', 'Tema7'):            # (v5.76: el Tema 5 es un pack de elementos como el VIRAL: su «v tipo»; v5.78: el Estilo 7, sus «v rojo»)
+    if pack in ('VIRAL', 'Tema5', 'Tema7', 'Tema8', 'Tema9'):      # (v5.76: el Tema 5 es un pack de elementos como el VIRAL: su «v tipo»; v5.78: el Estilo 7, sus «v rojo»; v5.80: los 8 y 9)
         return {'tipo': 'viral', 'pack': pack}
     if guion_editor.es_guion(pack, formato or 'v'):
         return {'tipo': 'guion', 'pack': pack}
@@ -54,8 +54,9 @@ def planificar(palabras, roles, pack, estilo, idioma='es', fin_video=None, ancla
         cues = guion_editor.planear(palabras, roles, pack, ancla=ancla_guion, fin_video=fin_video, idioma=idioma, video=video)['cues']
     elif tipo in ('kinetic', 'viral'):
         mains = guion_editor.parametros_de_marcas(palabras, roles)[0]
-        if tipo == 'viral' and plantillas.tema_base(pack) == 'Tema5':
-            import tipo_planificador as kp        # v5.76: el Tema 5 nuevo (como GO)
+        if tipo == 'viral' and plantillas.tema_base(pack) in ('Tema5', 'Tema8', 'Tema9'):
+            # v5.76: el Tema 5 nuevo; v5.80: los Estilos 8 (ámbar) y 9 (editorial) (como GO)
+            kp = __import__({'Tema5': 'tipo_planificador', 'Tema8': 'ambar_planificador', 'Tema9': 'editorial_planificador'}[plantillas.tema_base(pack)])
             res = kp.planificar(palabras, idioma=idioma, ancho_tl=1080, alto_tl=1920, mains=mains, fin_video=fin_video)
         elif tipo == 'viral':
             import linea_planificador as kp       # v5.75: el Tema 3 es la línea con la caja negra (como GO)
@@ -192,6 +193,12 @@ def estado_animado(c, t):
                 return st
         elif k.startswith('v rojo'):                                    # v5.78: el Estilo 7, de golpe (comp_rojo); v5.80: blancas y roja SIN salida (corte seco
             return st                                                   # las dos: con la salida las blancas se borraban antes que la roja, «desaparece palabras»)
+        elif k.startswith('v ambar'):                                   # v5.80: el Estilo 8 (comp_ambar): sube un poco y aparece en 7 fotogramas
+            p = _ease(q(7.0 / 30.0))
+            st.update(a=p, dy=0.33 * em * (1.0 - p))                   # (0,008 del alto ≈ 0,33 em de su tamaño)
+        elif k.startswith('v edi'):                                     # v5.80: el Estilo 9 (comp_edi): fundido de 8 fotogramas, casi sin subir
+            p = _ease(q(8.0 / 30.0))
+            st.update(a=p, dy=0.12 * em * (1.0 - p))
         elif 'shatter' in k:
             st.update(s=1.55 - 0.55 * _ease(q(0.36)), a=q(0.14), brillo=e / 0.55 if e < 0.55 else None)
         elif 'select' in k:                                             # v5.55: los tiempos de comp_select (fotogramas de 24 fps): escribe en lineal desde T 0,5

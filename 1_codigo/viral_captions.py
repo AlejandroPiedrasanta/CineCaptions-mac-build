@@ -28,6 +28,8 @@ BARLOW = ('Barlow Semi Condensed', 'Bold')
 CLIPS.update({'v linea': (BARLOW, 0.975), 'v linea activa': (BARLOW, 0.975), 'v linea activa azul': (BARLOW, 0.975)})      # v5.75: el Tema 3 nuevo (linea_planificador; su geometría va allí)
 ANTON = ('Anton', 'Regular')
 CLIPS.update({'v rojo': (ANTON, 1.0), 'v rojo activa': (ANTON, 1.0)})                       # v5.78: el Estilo 7 (linea_planificador, perfil ROJO)
+CLIPS.update({'v ambar': (('Montserrat', 'Regular'), 1.0), 'v ambar clave': (('Montserrat', 'ExtraBold'), 1.0),      # v5.80: el Estilo 8 (ambar_planificador)
+              'v edi': (('Inter 18pt', 'Regular'), 1.0), 'v edi serif': (('DM Serif Text', 'Italic'), 1.0)})     # v5.80: el Estilo 9 (editorial_planificador)
 EFECTOS = ('v shatter', 'v select', 'v drag')
 # v5.5: cada efecto viene en 4 COLORES (el primero es el de siempre: shatter azul cielo, select con caja roja, drag blanco); el planificador los va alternando para que el color no se repita.
 # El clip de la variante se llama «<efecto> <color>» («v shatter rosa»); la geometría (tipografía, tamaño, espacio) es la del efecto base.

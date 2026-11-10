@@ -60,6 +60,9 @@ def _espec(clave):
         return dict(tipo='linea')
     if clave.startswith('v rojo'):                 # v5.78: el Estilo 7 (Anton): fuente_usuario._encajar mide la letra elegida contra esta
         return dict(par=('Anton', 'Regular'), mayus=False, esp=1.0, tipo='texto')
+    if clave.startswith(('v ambar', 'v edi')):     # v5.80: los Estilos 8 y 9 (su letra de viral_captions.CLIPS)
+        import viral_captions as VC
+        return dict(par=VC.CLIPS[clave][0] if clave in VC.CLIPS else ('Montserrat', 'Regular'), mayus=False, esp=1.0, tipo='texto')
     return dict(par=HEROE, mayus=False, esp=1.0, tipo='texto')
 
 

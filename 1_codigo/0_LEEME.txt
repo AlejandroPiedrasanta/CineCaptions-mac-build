@@ -20,6 +20,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         la ventana «Actualizando CineCaptions» (v5.49, propuesta A + B elegida por el usuario; pulida: «más profesional,
     ajustes_ui.py
         Ajustes: panel rápido y ventana completa (General, Interfaz, Atajos, Acerca de, Ayuda) + notas de la versión.
+    ambar_planificador.py
+        el Estilo 8 (v5.80): una línea pequeña y elegante en Montserrat ámbar, la clave en ExtraBold, palabra a palabra.
     archivos_seguros.py
         escritura atómica de JSON/texto (preferencias, marcas, proyectos): un corte o dos hilos ya no dejan archivos a medias.
     audio_compatible.py
@@ -136,6 +138,8 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         el «pase ligero» de los Temas 1–4 (pedido del usuario, v5.4.51): sus captions (los Text+ de su pack, que se
     editor_ui.py
         piezas del editor Creativo: barra de herramientas, tarjeta del párrafo, palabras por línea, play y el panel de avance de Asistencia/Generar.
+    editorial_planificador.py
+        el Estilo 9 (v5.80): bloque editorial centrado y abajo, palo seco fino y la clave GRANDE en serif cursiva.
     efectos_extra.py
         más efectos para la página «Efectos» (v5.4.8): números 1-2-3, pegatinas, subrayados, overlays continuos, efectos propios y cierre (outro).
     efectos_extra_ui.py

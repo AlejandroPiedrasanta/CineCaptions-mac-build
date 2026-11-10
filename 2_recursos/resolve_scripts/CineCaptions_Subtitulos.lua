@@ -42,7 +42,7 @@ function frames_de_audio(item, fps)
     return 0
 end
 
-local VERSION = "5.80 (subtitulos)"
+local VERSION = "5.81 (subtitulos)"
 
 -- La ENTREGA del Puente (v1.0.43): el resolve validado llega como
 -- argumento del chunk, porque las globales del Puente NO cruzan el
@@ -5915,8 +5915,10 @@ local function place_kinetic(timeline, media_pool, track, fps, start_frame, proj
                 local ini = math.max(start_frame, start_frame + a_fotogramas(tonumber(run.t) or cue.start))
                 local fin_s = tonumber(run.fin) or cue["end"]
                 -- v5.75: run.exacto (la caja del Tema 3, «v linea activa»): dura justo lo que su palabra, sin cola ni mínimo (dos cajas nunca a la vez)
-                local fin = start_frame + a_fotogramas(fin_s + ((run.exacto and 0) or extra_fin))
-                fin = math.max(fin, ini + ((run.exacto and 1) or min_frames))
+                -- v5.80: run.sin_cola (las palabras de los Estilos 8 y 9, que entran al decirse y se van con su bloque): igual, sin cola ni mínimo
+                local justo = run.exacto or run.sin_cola
+                local fin = start_frame + a_fotogramas(fin_s + ((justo and 0) or extra_fin))
+                fin = math.max(fin, ini + ((justo and 1) or min_frames))
                 pendientes[#pendientes + 1] = { run = run, nombre = nombre, plantilla = plantilla, ini = ini, fin = fin,
                                                 grupo = grupo_kinetic(nombre), orden = #pendientes + 1 }
             end

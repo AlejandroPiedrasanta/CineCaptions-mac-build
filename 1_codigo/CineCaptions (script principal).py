@@ -14253,6 +14253,7 @@ class SubtitleApp(QWidget):
         es_viral = bool(getattr(pack, 'viral', False))
         es_tipo = es_viral and plantillas.tema_base(pack.nombre) == 'Tema5'     # v5.76: el Tema 5 nuevo (clip «v tipo», solo vertical como antes)
         es_rojo = es_viral and plantillas.tema_base(pack.nombre) == 'Tema7'     # v5.78: el Estilo 7 (la línea con la palabra que suena en rojo)
+        propio = {'Tema8': 'ambar_planificador', 'Tema9': 'editorial_planificador'}.get(plantillas.tema_base(pack.nombre)) if es_viral else None   # v5.80: los Estilos 8 y 9
         if formato not in (('v', 'h') if es_viral and not es_tipo else ('v',)) or formato not in pack.formatos:
             avisar(tr('El estilo «{p}» es para vídeo vertical u horizontal: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)) if es_viral and not es_tipo
                    else tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
@@ -14260,6 +14261,10 @@ class SubtitleApp(QWidget):
         if es_tipo:
             import viral_captions as kc
             import tipo_planificador as kp        # v5.76: la palabra clave GRANDE y la serif cursiva que la muerde, palabra a palabra (sus escenas PRO siguen igual)
+        elif propio:
+            import importlib
+            import viral_captions as kc
+            kp = importlib.import_module(propio)  # v5.80: Estilo 8 (una línea ámbar) / Estilo 9 (el bloque editorial centrado y abajo)
         elif es_viral:
             import viral_captions as kc
             import linea_planificador as kp       # v5.75: el Tema 3 es UNA línea con la caja negra que salta de palabra en palabra (los looks de antes siguen en «Crea tu estilo»)
@@ -14332,7 +14337,7 @@ class SubtitleApp(QWidget):
         track = {'language': base_lang, 'style': 'kinetic', 'data_path': str(json_path), 'srt_path': str(srt_path), 'fonts': {}, 'adelanto_frames': 0,
                  'offset_frames': self._offset_frames(), **pista_plantilla, **pista_sfx, **pista_emojis}
         if es_viral:
-            track['clip_prueba'] = 'v tipo' if es_tipo else ('v rojo' if es_rojo else 'v linea')      # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.75: el de la línea; v5.76: el del Tema 5)
+            track['clip_prueba'] = ('v tipo' if es_tipo else ('v rojo' if es_rojo else {'ambar_planificador': 'v ambar', 'editorial_planificador': 'v edi'}.get(propio, 'v linea')))      # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.75: el de la línea; v5.76: el del Tema 5)
         else:
             # v5.45 (el usuario: «los rings se quedan a medias»): en el kit el bloque EMPIEZA a salir al acabar y la salida dura 0,32 s; los clips del pack
             # la hacen en sus últimos 0,32 s, así que se alargan eso (antes salían 0,32 s antes y el aro, que tarda 0,45 s, no acababa de dibujarse)
@@ -14554,7 +14559,7 @@ class SubtitleApp(QWidget):
             # el pack principal de la pista (Kinetic si hay Tema 1; si no VIRAL; si no el primero: el Tema 5 de la v5.76 es su propio pack «v tipo») y
             # los demás packs de elementos en plantillas_extra (los clips «v …» de VIRAL / Tema5 junto a los «k …» de Kinetic)
             principal_k = 'Kinetic' if hay_t1 else ('VIRAL' if hay_t3 else (packs_k[0] if packs_k else 'VIRAL'))
-            prueba_k = {'VIRAL': 'v fina', 'Tema5': 'v tipo', 'Tema7': 'v rojo'}     # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.78: el Estilo 7)
+            prueba_k = {'VIRAL': 'v fina', 'Tema5': 'v tipo', 'Tema7': 'v rojo', 'Tema8': 'v ambar', 'Tema9': 'v edi'}     # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.78: el Estilo 7)
             pl_k = plantilla_de(principal_k)
             if pl_k:
                 track_k['plantilla'] = pl_k

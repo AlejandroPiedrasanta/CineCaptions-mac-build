@@ -4497,6 +4497,14 @@
     "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "설정 › 일반에 DaVinci Resolve와 Premiere Pro 아이콘이 보입니다.",
     "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "스타일 7: 각 문장 끝에서 단어가 더 이상 사라지지 않습니다. 줄 전체가 들어올 때처럼 한 번에 사라집니다.",
     "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "스타일 7: 두 단어를 거의 동시에 말해도 둘 다 차례로 빨간색이 됩니다(이전에는 하나를 건너뛰었습니다).",
-    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "전체 모션: 스타일 7에서 제목의 단어가 더 이상 반복되지 않습니다."
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "전체 모션: 스타일 7에서 제목의 단어가 더 이상 반복되지 않습니다.",
+    "Ámbar elegante": "우아한 앰버",
+    "Una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra aparece cuando se dice.": "가는 앰버색 글자의 작은 한 줄, 핵심 단어는 굵게. 각 단어는 말할 때 나타납니다.",
+    "Editorial cursiva": "이탤릭 에디토리얼",
+    "Tres líneas centradas abajo: texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice.": "아래쪽 가운데 세 줄: 가는 글자와 크게 세리프 이탤릭으로 쓴 핵심 단어. 각 단어는 말할 때 나타납니다.",
+    "Ámbar": "앰버",
+    "Serif cursiva": "세리프 이탤릭",
+    "Estilo 8 nuevo: una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra entra subiendo y enfocándose cuando se dice. También está en «Crea tu estilo» como texto principal «Ámbar».": "새 스타일 8: 가는 앰버색 글자의 작은 한 줄, 핵심 단어는 굵게. 각 단어는 말할 때 위로 올라오며 초점이 맞춰집니다. 「스타일 만들기」에서도 메인 텍스트 「앰버」로 쓸 수 있습니다.",
+    "Estilo 9 nuevo: tres líneas centradas abajo, texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice. También está en «Crea tu estilo» como texto principal «Serif cursiva».": "새 스타일 9: 아래쪽 가운데에 세 줄, 가는 글자에 핵심 단어는 크게 세리프 이탤릭으로. 각 단어는 말할 때 나타납니다. 「스타일 만들기」에서도 메인 텍스트 「세리프 이탤릭」으로 쓸 수 있습니다."
   }
 }

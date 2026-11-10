@@ -1005,6 +1005,48 @@ def comp_tipo():
     return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - tipo')
 
 
+# ------------------------------------------------------------------------------------------------------------------ Estilo 8 «ámbar»
+# v5.80 (el usuario, con un TikTok de referencia: una línea pequeña y elegante): cada palabra es un «v ambar» (Montserrat Regular ámbar claro) o,
+# la clave, un «v ambar clave» (Montserrat ExtraBold ámbar); entra cuando se dice, subiendo un poco, enfocándose y apareciendo en 7 fotogramas, y
+# todas se van a la vez con la salida de 5 fotogramas (las dos clases de clip la llevan: ninguna palabra se va antes que otra). Los colores, medidos
+# en la referencia; los planifica ambar_planificador.
+AMBAR_FUENTE, AMBAR_FUENTE_CLAVE = ('Montserrat', 'Regular'), ('Montserrat', 'ExtraBold')
+AMBAR_COLOR, AMBAR_COLOR_CLAVE = (0.949, 0.761, 0.459), (0.965, 0.722, 0.337)       # #F2C275 y #F6B856
+AMBAR_SOMBRA = (0.45, -0.003, 8)             # la sombra suave (opacidad, bajada, difuminado)
+AMBAR_DESENFOQUE = 6                         # el desenfoque con el que empieza a entrar (XBlurSize)
+
+
+def comp_ambar(clave=False):
+    par = AMBAR_FUENTE_CLAVE if clave else AMBAR_FUENTE
+    alfa, dy, blur = AMBAR_SOMBRA
+    extra = E._sombra(2, alfa, dy, blur, color=(0.0, 0.0, 0.0))
+    t = texto_plus('Template', -220, 40, 'ambar', par[0], par[1], 0.06, color=AMBAR_COLOR_CLAVE if clave else AMBAR_COLOR, esp=1.0, extra=extra)
+    p = _p(0, 7)
+    t += herramienta('Blur', 'Enfoca', -60, 40, [enlace('Input', 'Template'), 'Filter = Input { Value = FuID { "Gaussian" }, },',
+                                                 'XBlurSize = Input { Value = 0, Expression = "%s", },' % K.lua(f'{AMBAR_DESENFOQUE} * (1 - {_suave(p)})')])
+    t += cadena('Enfoca', dict(dy=f'(1 - {_suave(p)}) * (-0.008)', size='1', blend=f'{_suave(p)} * {SALIDA}'))
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - ambar' + (' clave' if clave else ''))
+
+
+# ------------------------------------------------------------------------------------------------------------------ Estilo 9 «editorial»
+# v5.80 (el usuario, con un TikTok de referencia «Polish your reels», y «el estilo 9 debe estar centrado y abajo»): el bloque de tres líneas
+# centradas —palo seco fino arriba, la palabra clave GRANDE en serif cursiva y debajo palo seco con la última palabra en serif cursiva pequeña—.
+# Cada palabra es un «v edi» (Inter Regular blanca) o un «v edi serif» (DM Serif Text Italic blanca); entran con un fundido cuando se dicen y se van
+# todas a la vez. La sombra es ancha y suave (abajo suele haber fondos claros). Los planifica editorial_planificador.
+EDI_SANS, EDI_SERIF = ('Inter 18pt', 'Regular'), ('DM Serif Text', 'Italic')
+EDI_SOMBRA = ((0.70, -0.003, 16), (0.45, -0.002, 5))      # la ancha y la corta, pegada a la letra
+
+
+def comp_edi(serif=False):
+    par = EDI_SERIF if serif else EDI_SANS
+    (a1, d1, b1), (a2, d2, b2) = EDI_SOMBRA
+    extra = E._sombra(2, a1, d1, b1, color=(0.0, 0.0, 0.0)) + E._sombra(3, a2, d2, b2, color=(0.0, 0.0, 0.0))
+    t = texto_plus('Template', -220, 40, 'editorial', par[0], par[1], 0.06, color=(1.0, 1.0, 1.0), esp=1.0, extra=extra)
+    p = _p(0, 8)
+    t += cadena('Template', dict(dy=f'(1 - {_suave(p)}) * (-0.004)', size='1', blend=f'{_suave(p)} * {SALIDA}'))
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - editorial' + (' serif' if serif else ''))
+
+
 # ------------------------------------------------------------------------------------------------------------------ el catálogo
 def todos(formato='v'):
     """{nombre del clip: texto de la comp} para el formato 'v' (vertical) o 'h' (horizontal). Los tamaños (Size) son los de partida: la app fija el real por clip."""
@@ -1023,6 +1065,10 @@ def todos(formato='v'):
     comps['v tipo'] = comp_tipo()                           # v5.76: el Tema 5 nuevo (grande + serif que la muerde, palabra a palabra, con bisel)
     comps['v rojo'] = comp_rojo()                           # v5.78: el Estilo 7 (Anton blanca y la palabra que suena en rojo)
     comps['v rojo activa'] = comp_rojo(True)
+    comps['v ambar'] = comp_ambar()                         # v5.80: el Estilo 8 (Montserrat ámbar, la clave en ExtraBold)
+    comps['v ambar clave'] = comp_ambar(True)
+    comps['v edi'] = comp_edi()                             # v5.80: el Estilo 9 (palo seco fino y la clave grande en serif cursiva)
+    comps['v edi serif'] = comp_edi(True)
     return comps
 
 

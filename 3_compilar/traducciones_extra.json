@@ -11706,6 +11706,28 @@
   "ru": "Стиль 7: если два слова сказаны почти одновременно, оба по очереди становятся красными (раньше одно пропускалось).",
   "zh": "样式 7：两个词几乎同时说出时，两个词都会依次变红（之前会漏掉一个）。"
  },
+ "Estilo 8 nuevo: una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra entra subiendo y enfocándose cuando se dice. También está en «Crea tu estilo» como texto principal «Ámbar».": {
+  "en": "New Style 8: a small line in thin amber letters with the key word in bold; each word rises into place and comes into focus as it is spoken. It is also in «Create your style» as the main text «Amber».",
+  "pt": "Novo Estilo 8: uma linha pequena em letra fina cor âmbar com a palavra-chave em negrito; cada palavra entra subindo e ganhando foco quando é dita. Também está em «Crie o seu estilo» como texto principal «Âmbar».",
+  "fr": "Nouveau Style 8 : une petite ligne en lettres fines couleur ambre avec le mot clé en gras ; chaque mot monte et devient net quand il est prononcé. Il est aussi dans «Créez votre style» comme texte principal «Ambre».",
+  "de": "Neuer Stil 8: eine kleine Zeile in dünner bernsteinfarbener Schrift mit dem Schlüsselwort in Fettdruck; jedes Wort gleitet nach oben und wird scharf, sobald es gesprochen wird. Auch in «Erstelle deinen Stil» als Haupttext «Bernstein».",
+  "it": "Nuovo Stile 8: una riga piccola in lettere sottili color ambra con la parola chiave in grassetto; ogni parola entra salendo e mettendosi a fuoco quando viene pronunciata. È anche in «Crea il tuo stile» come testo principale «Ambra».",
+  "ja": "新しいスタイル8：細いアンバー色の文字の小さな1行で、キーワードは太字。各単語は話された瞬間に下から上がりながらピントが合って現れます。「スタイルを作成」でもメインテキスト「アンバー」として使えます。",
+  "ko": "새 스타일 8: 가는 앰버색 글자의 작은 한 줄, 핵심 단어는 굵게. 각 단어는 말할 때 위로 올라오며 초점이 맞춰집니다. 「스타일 만들기」에서도 메인 텍스트 「앰버」로 쓸 수 있습니다.",
+  "ru": "Новый стиль 8: небольшая строка тонкими янтарными буквами с ключевым словом жирным; каждое слово поднимается и становится чётким, когда его произносят. Он есть и в «Создайте свой стиль» как основной текст «Янтарь».",
+  "zh": "全新样式 8：一行细字琥珀色小字，关键词加粗；每个词在说出时上移并逐渐清晰。在「创建你的样式」中也可作为主文字「琥珀」使用。"
+ },
+ "Estilo 9 nuevo: tres líneas centradas abajo, texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice. También está en «Crea tu estilo» como texto principal «Serif cursiva».": {
+  "en": "New Style 9: three centered lines at the bottom, thin text and the key word large in italic serif; each word appears as it is spoken. It is also in «Create your style» as the main text «Italic serif».",
+  "pt": "Novo Estilo 9: três linhas centralizadas embaixo, texto fino e a palavra-chave grande em serifa itálica; cada palavra aparece quando é dita. Também está em «Crie o seu estilo» como texto principal «Serifa itálica».",
+  "fr": "Nouveau Style 9 : trois lignes centrées en bas, texte fin et le mot clé en grand en serif italique ; chaque mot apparaît quand il est prononcé. Il est aussi dans «Créez votre style» comme texte principal «Serif italique».",
+  "de": "Neuer Stil 9: drei zentrierte Zeilen unten, dünner Text und das Schlüsselwort groß in kursiver Serifenschrift; jedes Wort erscheint, sobald es gesprochen wird. Auch in «Erstelle deinen Stil» als Haupttext «Kursive Serifenschrift».",
+  "it": "Nuovo Stile 9: tre righe centrate in basso, testo sottile e la parola chiave grande in serif corsivo; ogni parola appare quando viene pronunciata. È anche in «Crea il tuo stile» come testo principale «Serif corsivo».",
+  "ja": "新しいスタイル9：下部中央に3行、細い文字でキーワードは大きなセリフ・イタリック。各単語は話された瞬間に現れます。「スタイルを作成」でもメインテキスト「セリフ・イタリック」として使えます。",
+  "ko": "새 스타일 9: 아래쪽 가운데에 세 줄, 가는 글자에 핵심 단어는 크게 세리프 이탤릭으로. 각 단어는 말할 때 나타납니다. 「스타일 만들기」에서도 메인 텍스트 「세리프 이탤릭」으로 쓸 수 있습니다.",
+  "ru": "Новый стиль 9: три строки по центру внизу, тонкий текст и ключевое слово крупным курсивом с засечками; каждое слово появляется, когда его произносят. Он есть и в «Создайте свой стиль» как основной текст «Курсив с засечками».",
+  "zh": "全新样式 9：底部居中三行，细字文本，关键词以大号衬线斜体显示；每个词在说出时出现。在「创建你的样式」中也可作为主文字「衬线斜体」使用。"
+ },
  "Motions completo: el titular ya no repite las palabras con el Estilo 7.": {
   "en": "Full motions: the headline no longer repeats words with Style 7.",
   "pt": "Motions completo: o título já não repete as palavras com o Estilo 7.",
@@ -11716,5 +11738,71 @@
   "ko": "전체 모션: 스타일 7에서 제목의 단어가 더 이상 반복되지 않습니다.",
   "ru": "Полные движения: заголовок больше не повторяет слова со стилем 7.",
   "zh": "完整动态效果：使用样式 7 时，标题不再重复单词。"
+ },
+ "Ámbar elegante": {
+  "en": "Elegant amber",
+  "pt": "Âmbar elegante",
+  "fr": "Ambre élégant",
+  "de": "Elegantes Bernstein",
+  "it": "Ambra elegante",
+  "ja": "エレガントなアンバー",
+  "ko": "우아한 앰버",
+  "ru": "Элегантный янтарь",
+  "zh": "优雅琥珀"
+ },
+ "Una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra aparece cuando se dice.": {
+  "en": "One small line in thin amber letters with the key word in bold; each word appears when it is said.",
+  "pt": "Uma linha pequena em letra fina cor âmbar com a palavra-chave em negrito; cada palavra aparece quando é dita.",
+  "fr": "Une petite ligne en lettres fines couleur ambre avec le mot clé en gras ; chaque mot apparaît quand il est prononcé.",
+  "de": "Eine kleine Zeile in feiner bernsteinfarbener Schrift mit dem Schlüsselwort fett; jedes Wort erscheint, wenn es gesagt wird.",
+  "it": "Una piccola riga in lettere sottili color ambra con la parola chiave in grassetto; ogni parola appare quando viene detta.",
+  "ja": "細いアンバー色の文字の小さな1行で、キーワードは太字。各単語は話されたときに表示されます。",
+  "ko": "가는 앰버색 글자의 작은 한 줄, 핵심 단어는 굵게. 각 단어는 말할 때 나타납니다.",
+  "ru": "Одна маленькая строка тонкими янтарными буквами, ключевое слово жирным; каждое слово появляется, когда его произносят.",
+  "zh": "一行细小的琥珀色文字，关键词加粗；每个词在说出时出现。"
+ },
+ "Editorial cursiva": {
+  "en": "Italic editorial",
+  "pt": "Editorial em itálico",
+  "fr": "Éditorial italique",
+  "de": "Kursiv-Editorial",
+  "it": "Editoriale corsivo",
+  "ja": "イタリックのエディトリアル",
+  "ko": "이탤릭 에디토리얼",
+  "ru": "Курсивный editorial",
+  "zh": "斜体编辑风"
+ },
+ "Tres líneas centradas abajo: texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice.": {
+  "en": "Three centered lines at the bottom: thin text and the big key word in italic serif; each word appears when it is said.",
+  "pt": "Três linhas centralizadas embaixo: texto fino e a palavra-chave grande em serifa itálica; cada palavra aparece quando é dita.",
+  "fr": "Trois lignes centrées en bas : texte fin et le grand mot clé en serif italique ; chaque mot apparaît quand il est prononcé.",
+  "de": "Drei zentrierte Zeilen unten: feiner Text und das große Schlüsselwort in kursiver Serifenschrift; jedes Wort erscheint, wenn es gesagt wird.",
+  "it": "Tre righe centrate in basso: testo sottile e la grande parola chiave in serif corsivo; ogni parola appare quando viene detta.",
+  "ja": "下に中央揃えの3行：細い文字と、大きなキーワードはセリフのイタリック。各単語は話されたときに表示されます。",
+  "ko": "아래쪽 가운데 세 줄: 가는 글자와 크게 세리프 이탤릭으로 쓴 핵심 단어. 각 단어는 말할 때 나타납니다.",
+  "ru": "Три строки по центру внизу: тонкий текст и крупное ключевое слово курсивом с засечками; каждое слово появляется, когда его произносят.",
+  "zh": "底部居中三行：细字体，关键词用大号衬线斜体；每个词在说出时出现。"
+ },
+ "Ámbar": {
+  "en": "Amber",
+  "pt": "Âmbar",
+  "fr": "Ambre",
+  "de": "Bernstein",
+  "it": "Ambra",
+  "ja": "アンバー",
+  "ko": "앰버",
+  "ru": "Янтарь",
+  "zh": "琥珀"
+ },
+ "Serif cursiva": {
+  "en": "Italic serif",
+  "pt": "Serifa itálica",
+  "fr": "Serif italique",
+  "de": "Kursive Serifenschrift",
+  "it": "Serif corsivo",
+  "ja": "セリフ・イタリック",
+  "ko": "세리프 이탤릭",
+  "ru": "Курсив с засечками",
+  "zh": "衬线斜体"
  }
 }

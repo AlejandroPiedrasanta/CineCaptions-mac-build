@@ -84,6 +84,8 @@ def _interesa(look, motor, cue):
         return len(cue.get('lines') or []) >= 2
     if any(k.startswith('v rojo') for k in claves):               # v5.78: el Estilo 7 (un bloque de 2-3 palabras, mejor)
         return sum(k == 'v rojo' for k in claves) >= 2
+    if any(k.startswith(('v ambar', 'v edi')) for k in claves):   # v5.80: los Estilos 8 y 9 (un bloque con la clave y algo más)
+        return len(claves) >= 3 and any(k in ('v ambar clave', 'v edi serif') for k in claves)
     if look.get('efecto'):
         return any(k.startswith(look['efecto']) for k in claves)
     return 'v negrita' in claves and len(claves) >= 4
@@ -230,6 +232,19 @@ def _dibujar_viral(lienzo, cue, esc):
             d.text((cx + off, cy + off * 1.36), txt, font=f, fill=(0, 0, 0, 255), anchor='mm', stroke_width=borde, stroke_fill=(0, 0, 0, 255))
             d.text((cx, cy), txt, font=f, fill=((226, 6, 18) if activa else (250, 250, 250)) + (255,), anchor='mm', stroke_width=borde,
                    stroke_fill=(0, 0, 0, 255))
+            continue
+        if base.startswith(('v ambar', 'v edi')):                 # v5.80: los Estilos 8 (ámbar) y 9 (editorial): su em por Size, su color y la sombra suave
+            import ambar_planificador as AP
+            import editorial_planificador as EDP
+            ambar = base.startswith('v ambar')
+            px = float(run.get('size') or 0.06) * (AP.K_PX if ambar else EDP.K_PX.get(tuple(par), 691.0)) * esc
+            f = VC._fuente(par, px)
+            if f is None:
+                continue
+            cx, cy = float(run.get('x', 0.5)) * ancho, float(run.get('y', 0.5)) * alto
+            color = ((246, 184, 86) if base == 'v ambar clave' else (242, 194, 117)) if ambar else (255, 255, 255)
+            ImageDraw.Draw(sombra).text((cx, cy + max(1.0, px * 0.04)), txt, font=f, fill=(0, 0, 0, 170), anchor='mm')
+            _texto_centrado(texto, (cx, cy), txt, f, color)
             continue
         px = float(run.get('size') or 0.09) * VC.K_PX * esc
         f = VC._fuente(par, px)

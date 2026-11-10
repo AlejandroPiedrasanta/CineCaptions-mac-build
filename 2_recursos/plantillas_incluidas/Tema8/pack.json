@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "nombre": "Tema8",
+  "formatos": {
+    "v": {
+      "drb": "Tema8 vertical.drb"
+    },
+    "h": {
+      "drb": "Tema8 horizontal.drb"
+    }
+  },
+  "guion": "viral"
+}

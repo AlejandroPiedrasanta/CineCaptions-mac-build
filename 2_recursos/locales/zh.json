@@ -4497,6 +4497,14 @@
     "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "设置 › 常规 显示 DaVinci Resolve 和 Premiere Pro 的图标。",
     "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "样式 7：每句结尾的单词不再提前消失；整行像出现时一样一次性消失。",
     "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "样式 7：两个词几乎同时说出时，两个词都会依次变红（之前会漏掉一个）。",
-    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "完整动态效果：使用样式 7 时，标题不再重复单词。"
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "完整动态效果：使用样式 7 时，标题不再重复单词。",
+    "Ámbar elegante": "优雅琥珀",
+    "Una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra aparece cuando se dice.": "一行细小的琥珀色文字，关键词加粗；每个词在说出时出现。",
+    "Editorial cursiva": "斜体编辑风",
+    "Tres líneas centradas abajo: texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice.": "底部居中三行：细字体，关键词用大号衬线斜体；每个词在说出时出现。",
+    "Ámbar": "琥珀",
+    "Serif cursiva": "衬线斜体",
+    "Estilo 8 nuevo: una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra entra subiendo y enfocándose cuando se dice. También está en «Crea tu estilo» como texto principal «Ámbar».": "全新样式 8：一行细字琥珀色小字，关键词加粗；每个词在说出时上移并逐渐清晰。在「创建你的样式」中也可作为主文字「琥珀」使用。",
+    "Estilo 9 nuevo: tres líneas centradas abajo, texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice. También está en «Crea tu estilo» como texto principal «Serif cursiva».": "全新样式 9：底部居中三行，细字文本，关键词以大号衬线斜体显示；每个词在说出时出现。在「创建你的样式」中也可作为主文字「衬线斜体」使用。"
   }
 }

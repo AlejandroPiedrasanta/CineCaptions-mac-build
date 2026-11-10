@@ -4572,6 +4572,14 @@
     "Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.": "Réglages › Général affiche l'icône de DaVinci Resolve et celle de Premiere Pro.",
     "Estilo 7: las palabras ya no desaparecen al final de cada frase; la línea entera se va de golpe, como entra.": "Style 7 : les mots ne disparaissent plus à la fin de chaque phrase ; toute la ligne part d'un coup, comme elle arrive.",
     "Estilo 7: si dos palabras se dicen casi a la vez, las dos se ponen rojas por turnos (antes una se saltaba).": "Style 7 : si deux mots sont dits presque en même temps, les deux passent au rouge à tour de rôle (avant, l'un était sauté).",
-    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "Motions complet : le titre ne répète plus les mots avec le Style 7."
+    "Motions completo: el titular ya no repite las palabras con el Estilo 7.": "Motions complet : le titre ne répète plus les mots avec le Style 7.",
+    "Ámbar elegante": "Ambre élégant",
+    "Una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra aparece cuando se dice.": "Une petite ligne en lettres fines couleur ambre avec le mot clé en gras ; chaque mot apparaît quand il est prononcé.",
+    "Editorial cursiva": "Éditorial italique",
+    "Tres líneas centradas abajo: texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice.": "Trois lignes centrées en bas : texte fin et le grand mot clé en serif italique ; chaque mot apparaît quand il est prononcé.",
+    "Ámbar": "Ambre",
+    "Serif cursiva": "Serif italique",
+    "Estilo 8 nuevo: una línea pequeña en letra fina color ámbar con la palabra clave en negrita; cada palabra entra subiendo y enfocándose cuando se dice. También está en «Crea tu estilo» como texto principal «Ámbar».": "Nouveau Style 8 : une petite ligne en lettres fines couleur ambre avec le mot clé en gras ; chaque mot monte et devient net quand il est prononcé. Il est aussi dans «Créez votre style» comme texte principal «Ambre».",
+    "Estilo 9 nuevo: tres líneas centradas abajo, texto fino y la palabra clave grande en serif cursiva; cada palabra aparece cuando se dice. También está en «Crea tu estilo» como texto principal «Serif cursiva».": "Nouveau Style 9 : trois lignes centrées en bas, texte fin et le mot clé en grand en serif italique ; chaque mot apparaît quand il est prononcé. Il est aussi dans «Créez votre style» comme texte principal «Serif italique»."
   }
 }

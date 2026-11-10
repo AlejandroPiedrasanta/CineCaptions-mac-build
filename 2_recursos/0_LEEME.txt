@@ -95,7 +95,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         desktop.ini
         preparar_sonidos.py
             prepara los sonidos que el usuario aportó para los estilos (riser de gancho, golpecito del iPhone, obturadores de transición).
-    guia_estilo\   (436 archivos)
+    guia_estilo\   (438 archivos)
     iconos_programas\   (2 archivos)
         premiere.png
         resolve.png
@@ -128,7 +128,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
-    plantillas_incluidas\   (70 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    plantillas_incluidas\   (76 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
     premiere\   (5 archivos)
         com.cinecaptions.premiere\   (5 archivos)
     resolve_scripts\   (25 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
@@ -199,37 +199,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         sonido.jpg
         sonido.mp4
         subtitulos.json
-    vistas_slider\   (30 archivos)
-        .cf\   (1 archivos)
-        desktop.ini
-        Kinetic.jpg
-        Kinetic.mp4
-        Kinetic_captions.jpg
-        Kinetic_captions.mp4
-        Referencia.jpg
-        Referencia.mp4
-        Referencia_captions.jpg
-        Referencia_captions.mp4
-        Tema4.jpg
-        Tema4.mp4
-        Tema4_captions.jpg
-        Tema4_captions.mp4
-        Tema5.jpg
-        Tema5.mp4
-        Tema5_captions.jpg
-        Tema5_captions.mp4
-        Tema6.jpg
-        Tema6.mp4
-        Tema6_captions.jpg
-        Tema6_captions.mp4
-        Tema7.jpg
-        Tema7.mp4
-        Tema7_captions.jpg
-        Tema7_captions.mp4
-        VIRAL.jpg
-        VIRAL.mp4
-        VIRAL_captions.jpg
-        VIRAL_captions.mp4
+    vistas_slider\   (38 archivos)
     desktop.ini
     fondo_esfera.jpg
     logo_cinecaptions.ico

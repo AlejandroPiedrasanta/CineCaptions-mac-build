@@ -50,7 +50,8 @@ import zlib
 from pathlib import Path
 
 GENERADOR = 'per 2'           # súbelo si cambia lo que se escribe en las comps (la huella cambia: carpeta nueva y bin nuevo en Resolve). per 2 (v5.58): los reinicios del Inspector al día
-BASES = {'t1': 'Kinetic', 't2': 'Referencia', 't3': 'VIRAL', 't4': 'Tema4', 't5': 'Tema5', 't6': 'Tema6', 't7': 'Tema7'}   # v5.78: el Estilo 7
+BASES = {'t1': 'Kinetic', 't2': 'Referencia', 't3': 'VIRAL', 't4': 'Tema4', 't5': 'Tema5', 't6': 'Tema6', 't7': 'Tema7',
+         't8': 'Tema8', 't9': 'Tema9'}   # v5.78: el Estilo 7; v5.80: los Estilos 8 y 9
 CLAVES = ('fuente_principal', 'fuente_secundaria', 'color_principal', 'color_secundario')
 SEPARADOR = ' · '             # «VIRAL · a1b2c3d4»: los gemelos sacan el tema con nombre.split(" · ")[0]
 MARCA = 'personalizado.json'  # se escribe la última: sin ella (o con otra huella) la carpeta se rehace
@@ -73,7 +74,7 @@ def nombre_base(base):
     for nombre in BASES.values():
         if b.lower() == nombre.lower():
             return nombre
-    m = re.fullmatch(r'(?:tema|estilo)\s*([1-7])', b, re.I)          # (v5.76: en la interfaz los temas se llaman «Estilo N»)
+    m = re.fullmatch(r'(?:tema|estilo)\s*([1-9])', b, re.I)          # (v5.76: en la interfaz los temas se llaman «Estilo N»)
     if m:
         return BASES['t' + m.group(1)]
     return _base_de_look(b) if ':' in b else None

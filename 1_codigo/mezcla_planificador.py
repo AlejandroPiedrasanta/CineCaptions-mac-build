@@ -75,7 +75,11 @@ TEMAS_ENTEROS = (
     {'id': 't5', 'tema': 5, 'motor': 'viral', 'pack': 'Tema5', 'entero': True, 'nombre': 'Estilo 5'},       # v5.76: «v tipo» (antes «guion»)
     {'id': 't6', 'tema': 6, 'motor': 'guion', 'pack': 'Tema6', 'entero': True, 'nombre': 'Estilo 6'},
     {'id': 't7', 'tema': 7, 'motor': 'viral', 'pack': 'Tema7', 'entero': True, 'nombre': 'Estilo 7'},       # v5.78: «v rojo» (linea_planificador, perfil ROJO)
+    {'id': 't8', 'tema': 8, 'motor': 'viral', 'pack': 'Tema8', 'entero': True, 'nombre': 'Estilo 8'},       # v5.80: «v ambar» (ambar_planificador)
+    {'id': 't9', 'tema': 9, 'motor': 'viral', 'pack': 'Tema9', 'entero': True, 'nombre': 'Estilo 9'},       # v5.80: «v edi» (editorial_planificador)
 )
+# v5.80: los temas enteros que tienen su PROPIO planificador de elementos (mismo contrato que viral_planificador.planificar, sin ancla)
+PLANIFICADOR_PROPIO = {'t5': 'tipo_planificador', 't8': 'ambar_planificador', 't9': 'editorial_planificador'}
 MAX_TEMAS = len(TEMAS_ENTEROS)       # un estilo lleva de 1 a 6 temas, sin repetir
 PACK_DE_MOTOR = {'kinetic': 'Kinetic', 'viral': 'VIRAL', 'guion': 'Referencia'}          # el pack de los looks sueltos de antes
 MOTOR_DE_PACK = {l['pack']: l['motor'] for l in TEMAS_ENTEROS}
@@ -136,6 +140,8 @@ PRINCIPALES_CREA = (
     {'id': 'p_t5', 'tema': 5, 'look': 't5', 'efecto': 'Tipografía'},                # v5.76: el Tema 5 nuevo (grande + serif que la muerde)
     {'id': 'p_t6', 'tema': 6, 'look': 't6', 'efecto': 'Brillo'},
     {'id': 'p_t7', 'tema': 7, 'look': 't7', 'efecto': 'Palabra roja'},           # v5.78: el Estilo 7 (la que suena en rojo; el color = el «color principal»)
+    {'id': 'p_t8', 'tema': 8, 'look': 't8', 'efecto': 'Ámbar'},                  # v5.80: el Estilo 8 (la clave en negrita ámbar)
+    {'id': 'p_t9', 'tema': 9, 'look': 't9', 'efecto': 'Serif cursiva'},          # v5.80: el Estilo 9 (la clave grande en serif cursiva)
 )
 
 
@@ -568,9 +574,10 @@ def _de_una_vez(look, palabras, idioma, ancho_tl, alto_tl, anclas, mains, fin_vi
     m = [x for x in (mains or []) if x is not None and not isinstance(x, bool)] or None
     if look['motor'] == 'kinetic':
         return KP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=anclas['kinetic'], mains=m, fin_video=fin_video, kit=True)['cues']
-    if look['id'] == 't5':
-        import tipo_planificador as TP
-        return TP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, mains=m, fin_video=fin_video)['cues']
+    if look['id'] in PLANIFICADOR_PROPIO:                 # el Tema 5 (v5.76) y los Estilos 8 y 9 (v5.80)
+        import importlib
+        kp = importlib.import_module(PLANIFICADOR_PROPIO[look['id']])
+        return kp.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, mains=m, fin_video=fin_video)['cues']
     if look['id'] == 't7':                                # v5.78: el Estilo 7 (como su GO)
         import linea_planificador as LP
         return LP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=anclas['viral'], mains=m, fin_video=fin_video, perfil=LP.ROJO)['cues']
@@ -726,6 +733,10 @@ def _etiqueta(motor, c):
             return 'tipo'
         if any(str(r.get('k') or '').startswith('v rojo') for r in c.get('runs') or []):
             return 'rojo'
+        if any(str(r.get('k') or '').startswith('v ambar') for r in c.get('runs') or []):
+            return 'ambar'                                # v5.80: el Estilo 8
+        if any(str(r.get('k') or '').startswith('v edi') for r in c.get('runs') or []):
+            return 'editorial'                            # v5.80: el Estilo 9
         efectos = [_base_efecto(r.get('k')) for r in c.get('runs') or [] if _base_efecto(r.get('k')) in VP.DURACION]
         return efectos[0] if efectos else 'pila'
     grande = any(r.get('rol') == 'main' for r in c.get('runs') or [])
@@ -768,9 +779,10 @@ def planificar(palabras, looks, idioma='es', ancho_tl=1080, alto_tl=1920, ancla_
             m_sub = _mains_tramo(mains, palabras, t['i0'], t['i1']) or None
             if look.get('entero') and look['motor'] == 'kinetic':
                 cues, _plan = _tema1(sub, idioma, ancho_tl, alto_tl, ancla_kinetic, m_sub, t['fin'], estado['t1'])
-            elif look['id'] == 't5':                      # v5.76: el Tema 5 nuevo, tramo a tramo (sus bloques no dependen de los de antes)
-                import tipo_planificador as TP
-                res_t = TP.planificar(sub, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, mains=m_sub, fin_video=t['fin'])
+            elif look['id'] in PLANIFICADOR_PROPIO:       # v5.76: el Tema 5 nuevo; v5.80: los Estilos 8 y 9; tramo a tramo (sus bloques no dependen de los de antes)
+                import importlib
+                kp_t = importlib.import_module(PLANIFICADOR_PROPIO[look['id']])
+                res_t = kp_t.planificar(sub, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, mains=m_sub, fin_video=t['fin'])
                 cues, _plan = res_t['cues'], res_t['plan']
             elif look['id'] == 't7':                      # v5.78: el Estilo 7, tramo a tramo
                 import linea_planificador as LP

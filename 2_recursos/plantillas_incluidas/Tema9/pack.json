@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "nombre": "Tema9",
+  "formatos": {
+    "v": {
+      "drb": "Tema9 vertical.drb"
+    },
+    "h": {
+      "drb": "Tema9 horizontal.drb"
+    }
+  },
+  "guion": "viral"
+}

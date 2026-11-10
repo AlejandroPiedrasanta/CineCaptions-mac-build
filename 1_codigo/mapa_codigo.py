@@ -242,7 +242,14 @@ def simbolo(nombre, lineas=70, archivo='', desde=0):
             continue
         if e['tipo'] == 'class' and rel.endswith('.py') and fin - ini > lineas:
             metodos = [x for x in idx[rel] if x['qual'].startswith(e['qual'] + '.') and x['qual'].count('.') == e['qual'].count('.') + 1]
-            cab = '\n'.join(todas[ini - 1: min(fin, ini + 12)])
+            cab = []                                                      # «class …» y el primer párrafo del docstring (≤5 líneas): lo justo para saber qué es
+            for l in todas[ini - 1: min(fin, ini + 12)]:
+                if cab and not l.strip():
+                    break
+                cab.append(l)
+                if len(cab) >= 5:
+                    break
+            cab = '\n'.join(cab)
             salida.append(f"# {rel}:{ini}-{fin}  class {e['qual']}  ({len(metodos)} métodos; pide uno con simbolo('{e['qual']}.método'))\n{cab}\n...\n# métodos: " +
                           ', '.join(f"{x['nombre']}:{x['ini']}" for x in metodos))
             continue
@@ -290,15 +297,17 @@ def modulo(nombre, filtro=''):
     if len(clases) > 30:
         sal.append(f'  ({len(clases)} clases; se muestran las 30 más grandes)')
         clases = sorted(sorted(clases, key=lambda c: c['fin'] - c['ini'], reverse=True)[:30], key=lambda c: c['ini'])
+    if clases:
+        sal.append('  clases (líneas, nº de métodos):')
     for c in clases[:30]:
         ms = [e for e in idx if e['qual'].startswith(c['qual'] + '.')]
-        sal.append(f"  class {c['qual']}:{c['ini']}-{c['fin']} ({len(ms)} métodos){('  ' + c['doc']) if c['doc'] else ''}")
+        sal.append(f"   {c['qual']}:{c['ini']}-{c['fin']} ({len(ms)}){(' ' + _corta(c['doc'], 70)) if c['doc'] else ''}")
     libres = [e for e in idx if e['tipo'] == 'def' and '.' not in e['qual']]
     if libres:
         sal.append('  funciones: ' + ', '.join(f"{e['nombre']}:{e['ini']}" for e in libres[:80]) + (f' … +{len(libres) - 80}: modulo(…, filtro="palabra")' if len(libres) > 80 else ''))
     consts = [e for e in idx if e['tipo'] == 'const']
     if consts:
-        sal.append('  constantes: ' + ', '.join(e['nombre'] for e in consts[:25]))
+        sal.append('  constantes: ' + ', '.join(e['nombre'] for e in consts[:12]) + (f' … +{len(consts) - 12}: filtro=' if len(consts) > 12 else ''))
     return '\n'.join(s for s in sal if s)
 
 
@@ -505,7 +514,16 @@ def _nodos(nombre, archivo=''):
 
 
 def _marca(tipo, aprox):
-    return ('  (callback)' if tipo == 'usa' else '') + ('  ?' if aprox else '')
+    return (' (callback)' if tipo == 'usa' else '') + (' ?' if aprox else '')
+
+
+def _agrupar(filas):
+    """[(nivel, 'archivo:línea', qual)] de UN nivel → una línea por archivo, «archivo: línea qual · línea qual» (el archivo no se repite: −25-35 % de texto)."""
+    grupos = {}
+    for _nv, d, q in filas:
+        arch, _, lin = d.rpartition(':')
+        grupos.setdefault(arch, []).append(f'{lin} {q}')
+    return [f'  {a}: ' + ' · '.join(v) for a, v in grupos.items()]
 
 
 _LEYENDA = '(callback) = se pasa sin llamarla (connect, hilos, tablas) · ? = deducido por el nombre, compruébalo'
@@ -525,22 +543,25 @@ def llamadas(nombre, sentido='entra', niveles=1, archivo=''):
     for nodo in nodos:
         filas, vistos = [], {nodo}
 
-        def seguir(n, nivel):
+        def seguir(n, nivel, arch_padre):
             nonlocal marcas
             for otro, (linea, tipo, aprox) in sorted(aristas.get(n, {}).items(), key=lambda kv: (kv[0][0] != n[0], kv[0][0], kv[1][0])):
                 if otro in vistos or len(filas) >= 120:
                     continue
                 vistos.add(otro)
                 marcas = marcas or tipo == 'usa' or aprox
-                filas.append('  ' * nivel + f'{_donde(otro) if sale else _donde(otro, linea)}  {otro[1]}{_marca(tipo, aprox)}')
+                d = _donde(otro) if sale else _donde(otro, linea)
+                arch = d.rpartition(':')[0]
+                filas.append((nivel, d if arch != arch_padre else d.rpartition(':')[2], otro[1] + _marca(tipo, aprox)))
                 if nivel < niveles:
-                    seguir(otro, nivel + 1)
-        seguir(nodo, 1)
+                    seguir(otro, nivel + 1, arch)
+        seguir(nodo, 1, None)
         cab = (f'→ lo que usa «{nodo[1]}» ({_donde(nodo)}; dónde está cada una)' if sale else f'← quién usa «{nodo[1]}» ({_donde(nodo)}; línea de cada llamada)')
-        cab += (f', hasta {niveles} niveles' if niveles > 1 else '') + f': {len(filas)}' + (' (cortado en 120)' if len(filas) >= 120 else '')
+        cab += (f', hasta {niveles} niveles; sin archivo = el de la fila de la que cuelga' if niveles > 1 else '') + f': {len(filas)}' + (' (cortado en 120)' if len(filas) >= 120 else '')
         if not filas:
             cab += (' — no llama a nada del proyecto' if sale else ' — nadie la llama desde el código (¿señal Qt, getattr, el .lua o la línea de comandos?)')
-        salida.append('\n'.join([cab] + filas))
+        cuerpo = _agrupar(filas) if niveles == 1 else [' ' * (2 * nv) + f'{d} {q}' for nv, d, q in filas]   # un nivel: por archivo; más: árbol
+        salida.append('\n'.join([cab] + cuerpo))
     return '\n\n'.join(salida) + (f'\n{_LEYENDA}' if marcas else '')
 
 
@@ -727,9 +748,10 @@ def mapa(consulta='', id='', completo=False, maximo=5, parte=''):
                 linea = f"[{k}] {t['tema']} — {t['resumen']}\n    archivos: {', '.join(t['archivos']) or '—'} · símbolos: {', '.join(t['simbolos']) or '—'}"
                 if sec:
                     linea += '\n' + sec['texto'][:3500]
-            else:
-                linea = (f"[{k}] {_corta(t['tema'], 90)} — {_corta(t['resumen'], 160)}\n"
-                         f"    {_lista(t['archivos'], 3, '', 'archivos')} · {_lista(t['simbolos'], 4, '', 'simbolos')} · {_kcar(len(sec['texto']) if sec else 0)}")
+            else:                                    # compacto: el resumen solo si no repite el título; 3 símbolos (el resto: mapa(id=…))
+                res = '' if _norm(t['resumen'])[:25] == _norm(t['tema'])[:25] else f" — {_corta(t['resumen'], 110)}"
+                linea = (f"[{k}] {_corta(t['tema'], 80)}{res}\n"
+                         f"    {_lista(t['archivos'], 3, '', 'archivos')} · {_lista(t['simbolos'], 3, '', 'simbolos')} · {_kcar(len(sec['texto']) if sec else 0)}")
         else:
             g, _, tit = k.partition('#')
             sec = next((s for s in secs if s['grupo'] == g and s['titulo'].startswith(tit)), None)
@@ -844,7 +866,7 @@ def generar(escribir=True):
     if MARCA_INICIO in t and MARCA_FIN in t:
         nuevo = t[:t.index(MARCA_INICIO)] + bloque + t[t.index(MARCA_FIN) + len(MARCA_FIN):]
         if _version():
-            nuevo = re.sub(r'(?m)^(App PySide6 \()v[\d.]+(\))', lambda mo: mo.group(1) + 'v' + _version() + mo.group(2), nuevo, count=1)
+            nuevo = re.sub(r'(?m)^(App PySide6 \()v[\d.]+(?=[,)])', lambda mo: mo.group(1) + 'v' + _version(), nuevo, count=1)   # «(v5.80)» o «(v5.80, Python …)»
         if escribir and nuevo != t:
             ruta.write_text(nuevo, encoding='utf-8', newline='')
     else:

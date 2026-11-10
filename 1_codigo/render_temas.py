@@ -621,6 +621,22 @@ def _elemento_viral(r, s, aj=None):
                    dura=(0.022 * k_off, 0.030 * k_off, (0.0, 0.0, 0.0)))
         _anotar(sp, par_tema, em_tema, par, em, txt)
         return sp, em, _centro(par)
+    if base.startswith(('v ambar', 'v edi')):                      # v5.80: los Estilos 8 (comp_ambar) y 9 (comp_edi): su em por Size, el de su planificador
+        import ambar_planificador as AP
+        import editorial_planificador as EDP
+        ambar = base.startswith('v ambar')
+        em = float(r.get('size') or 0.06) * (AP.K_PX if ambar else EDP.K_PX[par_tema])
+        txt = str(r.get('texto') or '')
+        em_tema = em
+        em *= factor_encaje(par_tema, em, par, em, txt)
+        if ambar:                                                  # ámbar claro / la clave ámbar, sombra suave (comp_ambar: 0,45, 8)
+            color = _rgb01(nuevo) if nuevo else ((0.965, 0.722, 0.337) if base == 'v ambar clave' else (0.949, 0.761, 0.459))
+            sp = texto(txt, par, em * s, color=color, esp=1.0, sombra=(0.45, 0.04, 0.18))
+        else:                                                      # blanca con la sombra ancha y la corta (comp_edi)
+            sp = texto(txt, par, em * s, color=_rgb01(nuevo) if nuevo else (1.0, 1.0, 1.0), esp=1.0, sombra=(0.45, 0.03, 0.10),
+                       sombra2=(0.70, 0.04, 0.40))
+        _anotar(sp, par_tema, em_tema, par, em, txt)
+        return sp, em, _centro(par)
     if base.startswith('v linea'):                                 # v5.75: el Tema 3 de una línea (otra letra: su em por Size es el de linea_planificador)
         import linea_planificador as LP
         em = float(r.get('size') or 0.1) * LP.K_PX
