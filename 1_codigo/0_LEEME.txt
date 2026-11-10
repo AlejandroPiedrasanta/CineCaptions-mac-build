@@ -12,7 +12,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
 ------------------------------------------------------------------------------
     .cf\   (1 archivos)
         icono.ico
-    herramientas_dev\   (46 archivos)
+    herramientas_dev\   (47 archivos)
     remotion\   (16766 archivos)
     actualizaciones.py
         actualizaciones automáticas: lee un version.json publicado, descarga el instalador, comprueba su huella SHA-256 y lo lanza.
@@ -263,6 +263,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         mide, sobre un render de probar_barrido.py, si el barrido de luz recorre TODA la palabra y cuánto dura.
     medir_texto.py
         mide cuánto ocupa cada palabra en pantalla (look «pintado»).
+    menu_estilo_ui.py
+        el panel del chip «Estilo» de Inicio: los estilos en una tira de pósters.
+    menu_pro_ui.py
+        el panel del chip «Edición PRO» de Inicio: interruptor y una fila por ajuste.
     mezcla_planificador.py
         «Crea tu estilo»: los Temas 1 a 6 ENTEROS mezclados por frases (y los looks sueltos de los packs de antes) y el estilo del usuario en el disco (pack.json).
     mezcla_vista.py

@@ -26,6 +26,8 @@ CLIPS = {'v fina': (INTER_18, 1.0), 'v negrita': (INTER_28_EXTRA, 0.99), 'v shat
          'v corte': (INTER_28_NEGRA, 0.97), 'v shine': (INTER_28_NEGRA, 0.97), 'v resalta': (INTER_28_EXTRA, 0.97)}   # v5.75: «Crea tu estilo» (fuera de la rotación del Tema 3)
 BARLOW = ('Barlow Semi Condensed', 'Bold')
 CLIPS.update({'v linea': (BARLOW, 0.975), 'v linea activa': (BARLOW, 0.975), 'v linea activa azul': (BARLOW, 0.975)})      # v5.75: el Tema 3 nuevo (linea_planificador; su geometría va allí)
+ANTON = ('Anton', 'Regular')
+CLIPS.update({'v rojo': (ANTON, 1.0), 'v rojo activa': (ANTON, 1.0)})                       # v5.78: el Estilo 7 (linea_planificador, perfil ROJO)
 EFECTOS = ('v shatter', 'v select', 'v drag')
 # v5.5: cada efecto viene en 4 COLORES (el primero es el de siempre: shatter azul cielo, select con caja roja, drag blanco); el planificador los va alternando para que el color no se repita.
 # El clip de la variante se llama «<efecto> <color>» («v shatter rosa»); la geometría (tipografía, tamaño, espacio) es la del efecto base.

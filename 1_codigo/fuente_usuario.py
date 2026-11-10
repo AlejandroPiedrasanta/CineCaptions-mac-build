@@ -51,7 +51,7 @@ def es_principal(run):
     if run.get('heroe') or run.get('rol') == 'main' or run.get('principal'):
         return True
     k = str(run.get('k') or '').lower()
-    return any(p in k for p in ('hero', 'tapes', 'negrita', 'shatter', 'select', 'drag', 'corte', 'shine', 'resalta', 'linea', 'tipo'))   # v5.75; v5.76 «v tipo»
+    return any(p in k for p in ('hero', 'tapes', 'negrita', 'shatter', 'select', 'drag', 'corte', 'shine', 'resalta', 'linea', 'tipo', 'v rojo'))   # v5.75; v5.76 «v tipo»; v5.78 el Estilo 7 (una sola letra)
 
 
 def _encajar(run, fuente):

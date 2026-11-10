@@ -1224,6 +1224,7 @@ class ChipGo(QAbstractButton):
         super().__init__(padre)
         self._icono, self._nombre, self._valor, self._tono, self._menu = icono, nombre, valor, tono, bool(menu)
         self._cerrar = bool(cerrar)
+        self._abierto = False                          # v5.78: su panel (menu_estilo_ui) abierto: borde lleno y la flecha hacia arriba
         self._pix = {}                                 # el icono rasterizado por (color, dpr): icono_linea dibuja el glifo en cada llamada
         self._h = 0.0
         self._a_h = QVariantAnimation(self)
@@ -1269,6 +1270,10 @@ class ChipGo(QAbstractButton):
         self._a_h.setEndValue(float(meta))
         self._a_h.start()
 
+    def poner_abierto(self, si):
+        self._abierto = bool(si)
+        self.update()
+
     def enterEvent(self, e):
         self._ir_h(1.0)
         super().enterEvent(e)
@@ -1289,7 +1294,7 @@ class ChipGo(QAbstractButton):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         borde, c_ico, c_val = self._colores()
-        h = self._h
+        h = 1.0 if self._abierto else self._h
         r = QRectF(0.5, 0.5, self.width() - 1.0, self.height() - 1.0)
         rad = r.height() / 2.0
         g = QLinearGradient(0, 0, 0, self.height())
@@ -1326,8 +1331,9 @@ class ChipGo(QAbstractButton):
             x += 7
             cy = alto / 2.0
             p.setPen(QPen(QColor(ui.TEXT_MUTED), 1.4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-            p.drawLine(QPointF(x, cy - 2.0), QPointF(x + 3.5, cy + 1.8))
-            p.drawLine(QPointF(x + 3.5, cy + 1.8), QPointF(x + 7.0, cy - 2.0))
+            s = -1.0 if self._abierto else 1.0                        # (v5.78: con su panel abierto, hacia arriba)
+            p.drawLine(QPointF(x, cy - 2.0 * s), QPointF(x + 3.5, cy + 1.8 * s))
+            p.drawLine(QPointF(x + 3.5, cy + 1.8 * s), QPointF(x + 7.0, cy - 2.0 * s))
         if self._cerrar:                                              # la ✕ de «quitar»
             x += 8
             cy = alto / 2.0

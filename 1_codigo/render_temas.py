@@ -52,6 +52,7 @@ BISEL_V = {'': (0.05, 0.38, 0.86), 'rosa': (0.72, 0.05, 0.34), 'lima': (0.18, 0.
 CORTE_V, BISEL_CORTE_V = [(0.0, (0.99, 0.13, 0.82)), (0.5, (1.0, 0.55, 0.90)), (1.0, (0.99, 0.13, 0.82))], (0.68, 0.10, 0.51)
 SHINE_V, BISEL_SHINE_V = [(0.0, (0.99, 0.30, 0.0)), (0.27, (0.99, 0.73, 0.03)), (0.5, (0.99, 0.30, 0.0)), (0.73, (0.99, 0.73, 0.03)), (1.0, (0.99, 0.30, 0.0))], (0.80, 0.16, 0.0)
 CAJA_V = {'': (1.0, 0.04, 0.04), 'azul': (0.10, 0.45, 1.0), 'verde': (0.05, 0.85, 0.35), 'naranja': (1.0, 0.50, 0.05)}
+ROJO_V = (0.886, 0.024, 0.071)         # v5.78 (= viral_elementos.ROJO_ROJO): la palabra que suena en el Estilo 7
 TINTE_V = {'': (1.0, 1.0, 1.0), 'amarillo': (1.0, 0.92, 0.25), 'cian': (0.30, 0.92, 1.0), 'rosa': (1.0, 0.55, 0.80)}
 INCLINACION_V = 0.21                   # ShearX de la negrita (cursiva sintética)
 # v5.54 «B · Premium» (= viral_elementos.FINA_COLOR / NEGRITA_DEGRADADO / NEGRITA_BRILLO): la fina al 90 %, la negrita blanca → azul hielo con brillo frío
@@ -140,14 +141,15 @@ def _relleno(mascara, base_y, alto_tinta, color=None, degradado=None):
 
 
 def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, color_contorno=(0, 0, 0), sombra=None, halo=None, inclinacion=0.0,
-          caja=None, apretar=0.0, brillo=None, sombra2=None, solo_caja=False):
+          caja=None, apretar=0.0, brillo=None, sombra2=None, solo_caja=False, dura=None):
     """El sprite de una palabra. em = letra en px; esp = espaciado de letras (× avance); contorno = grosor (× em); sombra = (opacidad, bajada × em,
     desenfoque × em); halo = (radio × em, intensidad); inclinacion = cursiva sintética (× alto); caja = dict(color, pad_x, arriba, abajo (× em),
     punteada, dy (× em, + = arriba), degradado (clara, honda)). Ancla: centro del avance en x, línea de base en y.
     v5.54: apretar = px que el Character Spacing de Fusion quita entre cada dos letras (guion_captions._apretado); brillo = (radio × em, intensidad
     [, color]) del color de la letra (con degradado, el de su mitad); sombra2 = la sombra ancha («B · Premium»), como `sombra`.
     v5.55: solo_caja = solo la caja, en el mismo lienzo y con el mismo anclaje que la palabra (la vista anima la caja del «select» aparte);
-    el sprite lleva `total` = el avance de la palabra en px."""
+    el sprite lleva `total` = el avance de la palabra en px.
+    v5.78: dura = (derecha × em, bajada × em, color): la sombra DURA del Estilo 7 (la letra con su contorno, desplazada y sin difuminar)."""
     em = float(em)
     f = _fuente(par, em)
     if f is None:
@@ -214,6 +216,11 @@ def texto(txt, par, em, color=(1, 1, 1), degradado=None, esp=1.0, contorno=0.0, 
         desplazada = Image.new('RGBA', (W, H), (0, 0, 0, 0))
         desplazada.alpha_composite(capa_s, (0, int(round(baja * em))))
         img.alpha_composite(desplazada)
+    if dura:
+        ddx, ddy, col_d = dura
+        r_d = max(1, int(round(contorno * em))) if contorno > 0 else 0
+        m_d = masc.filter(ImageFilter.MaxFilter(2 * r_d + 1)) if r_d else masc
+        img.alpha_composite(_relleno(m_d, base, cap, color=col_d), (max(0, int(round(ddx * em))), max(0, int(round(ddy * em)))))
     if brillo:
         radio, fuerza = brillo[:2]
         color_b = brillo[2] if len(brillo) > 2 else (min(degradado, key=lambda pc: abs(float(pc[0]) - 0.5))[1] if degradado else color)
@@ -600,6 +607,20 @@ def _elemento_viral(r, s, aj=None):
     par_tema, esp = VC.CLIPS.get(base, (VC.INTER_18, 1.0))
     par = par_usuario(par_tema, aj)
     nuevo = (aj or {}).get('color')                                # v5.55: el color elegido para su rol (la caja del select no lo recibe)
+    if base.startswith('v rojo'):                                  # v5.78: el Estilo 7 (viral_elementos.comp_rojo): Anton blanca y la que suena en rojo
+        import linea_planificador as LP
+        em = float(r.get('size') or 0.1) * LP.ROJO['k_px']
+        txt = str(r.get('texto') or '')
+        em_tema = em
+        em *= factor_encaje(par_tema, em, par, em, txt)           # (la letra elegida no ocupa más que la Anton)
+        activa = base.startswith('v rojo activa')
+        color = _rgb01(nuevo) if nuevo else (ROJO_V if activa else (0.98, 0.98, 0.98))
+        # contorno negro (Thickness 0,035 ≈ 0,052 em, como la línea: 0,03 → 0,045) y la sombra dura: Offset = Size × (0,022; 0,030) del ANCHO
+        k_off = 1080.0 / LP.ROJO['k_px']
+        sp = texto(txt, par, em * s, color=color, esp=1.0, contorno=0.052, color_contorno=(0.0, 0.0, 0.0),
+                   dura=(0.022 * k_off, 0.030 * k_off, (0.0, 0.0, 0.0)))
+        _anotar(sp, par_tema, em_tema, par, em, txt)
+        return sp, em, _centro(par)
     if base.startswith('v linea'):                                 # v5.75: el Tema 3 de una línea (otra letra: su em por Size es el de linea_planificador)
         import linea_planificador as LP
         em = float(r.get('size') or 0.1) * LP.K_PX
@@ -736,6 +757,8 @@ def capas_de_cue(estilo, cue, s, dx, dy):
             continue
         n_antes = len(capas)
         aj = por_rol.get(rol_de_run(tipo, r)) if por_rol else None
+        if por_rol and tipo == 'viral' and r.get('k') == 'v rojo':   # v5.78 (= pack_personalizado.ajuste_de_clip): la blanca, letra principal y color del texto pequeño
+            aj = {'fuente': (por_rol.get('main') or {}).get('fuente'), 'color': (por_rol.get('extra') or {}).get('color')}
         if tipo == 'viral' and r.get('k') == 'v tipo':             # v5.76: el bloque del Tema 5 (todas sus líneas en un clip): una capa por estado
             try:
                 capas += _capas_tipo(r, s, dx, dy, ini, fin, aj, (estilo or {}).get('pack'))
@@ -768,7 +791,7 @@ def capas_de_cue(estilo, cue, s, dx, dy):
                 # v5.5.10: qué es cada capa, para que la vista de Creativo (vista_tema.py) la anime como su macro (el MP4 no lo usa)
                 'tipo': tipo, 'k': str(r.get('k') or ''), 'rol': r.get('rol'), 'pack': (estilo or {}).get('pack'), 'em': em * s,
                 'cue_t0': ini}
-        if capa['k'].startswith('v linea activa'):                 # v5.75: la caja del Tema 3 salta de palabra en palabra (corte seco, como el clip)
+        if capa['k'].startswith(('v linea activa', 'v rojo')):     # v5.75: la caja del Tema 3 salta de palabra en palabra (corte seco, como el clip); v5.78: el Estilo 7, corte seco
             capa.update(entrada=0.0, sube=0.0)
         total = getattr(sp, 'total', 0.0)
         if tipo == 'viral' and total:                               # v5.55: dónde va la palabra dentro del sprite y cuántas letras «mide» (lo que escribe el «select»)

@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "nombre": "Tema7",
+  "formatos": {
+    "v": {
+      "drb": "Tema7 vertical.drb"
+    },
+    "h": {
+      "drb": "Tema7 horizontal.drb"
+    }
+  },
+  "guion": "viral"
+}

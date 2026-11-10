@@ -884,6 +884,45 @@ def comp_linea(activa=False, color_caja=None):
     return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - linea' + (' activa' if activa else '') + (' azul' if color_caja else ''))
 
 
+# «Rojo» (v5.78, el Estilo 7: referencia del usuario, un video de captions de 2-3 palabras): la frase en UNA línea de Anton (minúscula normal), blanca
+# con contorno negro y una sombra negra DURA abajo a la derecha; la palabra que suena va en ROJO. Como «Línea»: cada palabra es un «v rojo» desde que
+# empieza el bloque hasta que acaba y la que suena lleva ENCIMA un «v rojo activa» (la misma palabra en rojo) que dura exactamente lo que dura.
+ROJO_FUENTE = ('Anton', 'Regular')
+ROJO_BLANCO, ROJO_ROJO, ROJO_BORDE = (0.98, 0.98, 0.98), (0.886, 0.024, 0.071), (0.0, 0.0, 0.0)     # #E20612: el rojo de la referencia
+ROJO_CONTORNO = 0.035                           # Thickness del contorno negro
+ROJO_SOMBRA = (0.022, 0.030)                    # la sombra dura: desplazamiento × Size (fracción del ANCHO), a la derecha y hacia abajo
+
+
+def _elementos_rojo():
+    """2 = contorno negro; 3 y 4 = la sombra dura (el contorno y la letra, desplazados y sin difuminar: la sombra es la de la palabra entera)."""
+    dx, dy = ROJO_SOMBRA
+
+    def color(k):
+        r, g, b = ROJO_BORDE
+        return [f'Red{k} = Input {{ Value = Number {{ Value = {n(r)} }}, }},', f'Green{k} = Input {{ Value = Number {{ Value = {n(g)} }}, }},',
+                f'Blue{k} = Input {{ Value = Number {{ Value = {n(b)} }}, }},', f'Opacity{k} = Input {{ Value = Number {{ Value = 1 }}, }},']
+
+    def desplazado(k):
+        return f'Offset{k} = Input {{ Value = {{ 0, 0 }}, Expression = "Point(Template.Size * {n(dx)}, -Template.Size * {n(dy)})", }},'
+
+    grosor = f'Number {{ Value = {n(ROJO_CONTORNO)} }}'
+    e = ['Enabled2 = Input { Value = 1, },', 'ElementShape2 = Input { Value = 1, },', f'Thickness2 = Input {{ Value = {grosor}, }},'] + color(2)
+    e += ['Enabled3 = Input { Value = 1, },', 'ElementShape3 = Input { Value = 1, },', f'Thickness3 = Input {{ Value = {grosor}, }},', desplazado(3)] + color(3)
+    e += ['Enabled4 = Input { Value = 1, },', 'ElementShape4 = Input { Value = 0, },', desplazado(4)] + color(4)      # (≥ 4: con forma de LETRA, no la caja)
+    return e
+
+
+def comp_rojo(activa=False):
+    """«v rojo»: la palabra blanca (entra de golpe con su bloque y se va con la salida de 5 fotogramas). «v rojo activa»: la misma palabra en rojo, sin
+    animación (va encima de su «v rojo» mientras suena). El color de la letra es el del Template (Red1…): lo cambia «Crea tu estilo»."""
+    t = texto_plus('Template', -220, 40, 'rojo', ROJO_FUENTE[0], ROJO_FUENTE[1], 0.09, color=ROJO_ROJO if activa else ROJO_BLANCO, extra=_elementos_rojo())
+    if activa:
+        t += cadena('Template', dict(size='1', blend='1'))
+    else:
+        t += cadena('Template', dict(size=f'(0.96 + 0.04 * {SALIDA})', blend=f'{SALIDA}'))
+    return K.armar_comp(MK.envolver(t), 'CineCaptions VIRAL - rojo' + (' activa' if activa else ''))
+
+
 # «Tipo» (v5.76, el Tema 5 nuevo: referencia del usuario «cómo hacer ESTA TIPOGRAFÍA en capcut», propuesta B con bisel): un bloque de hasta 3 líneas,
 # la palabra clave GRANDE (Montserrat Black, mayúsculas) y lo demás en serif cursiva (DM Serif Text Italic) encima y debajo, que se va escribiendo
 # palabra a palabra con la voz; la serif «muerde» la grande (un hueco con su contorno) y todo lleva un bisel de luz y una sombra suave.
@@ -983,6 +1022,8 @@ def todos(formato='v'):
     comps['v linea activa'] = comp_linea(True)
     comps['v linea activa azul'] = comp_linea(True, LINEA_CAJA_AZUL)  # (el look 't3:linea' de «Crea tu estilo»)
     comps['v tipo'] = comp_tipo()                           # v5.76: el Tema 5 nuevo (grande + serif que la muerde, palabra a palabra, con bisel)
+    comps['v rojo'] = comp_rojo()                           # v5.78: el Estilo 7 (Anton blanca y la palabra que suena en rojo)
+    comps['v rojo activa'] = comp_rojo(True)
     return comps
 
 

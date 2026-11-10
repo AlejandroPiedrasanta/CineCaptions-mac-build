@@ -3,6 +3,7 @@
 """
 Uso:  python pack_viral.py [--lab] [<carpeta de salida>]      (por defecto 2_recursos/plantillas_incluidas/VIRAL)
       python pack_viral.py --tema5                            (v5.76: el pack «Tema5»: solo «v tipo», en vertical; ver construir_tema5)
+      python pack_viral.py --tema7                            (v5.78: el pack «Tema7» = Estilo 7: «v rojo» y «v rojo activa»; ver construir_tema7)
 
 Genera «VIRAL vertical.drb» y «VIRAL horizontal.drb» (un clip por elemento, ver viral_elementos.py; el horizontal lleva las mismas comps con las medidas de un cuadro 1920×1080) y su pack.json
 con «guion»: «viral»: la marca con la que la app sabe que este pack se coloca con viral_planificador.py. Comparte con Kinetic el camino de Resolve (place_kinetic_track) y el generador de clips (kinetic_pack.py).
@@ -56,8 +57,19 @@ def construir_tema5(carpeta_salida=None):
     return construir(carpeta_salida, nombre='Tema5', formatos=('v',), solo=('v tipo',))
 
 
+def construir_tema7(carpeta_salida=None):
+    """v5.78 (el usuario: «crea un estilo 7 así de captions», con un video de referencia): el pack «Tema7», de ELEMENTOS como el VIRAL, con los dos
+    clips de la línea roja: «v rojo» (la palabra blanca) y «v rojo activa» (la que suena, en rojo); los planifica linea_planificador con su perfil
+    ROJO. Vertical y horizontal, como el Tema 3."""
+    return construir(carpeta_salida, nombre='Tema7', formatos=('v', 'h'), solo=('v rojo', 'v rojo activa'))
+
+
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    if '--tema7' in sys.argv:
+        d, clips = construir_tema7(args[0] if args else None)
+        print(d, len(clips), 'clips:', ', '.join(clips))
+        sys.exit(0)
     if '--tema5' in sys.argv:
         d, clips = construir_tema5(args[0] if args else None)
         print(d, len(clips), 'clips:', ', '.join(clips))

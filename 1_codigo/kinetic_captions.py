@@ -58,6 +58,8 @@ def _espec(clave):
         return dict(tipo='anillo')
     if clave.startswith('k line'):
         return dict(tipo='linea')
+    if clave.startswith('v rojo'):                 # v5.78: el Estilo 7 (Anton): fuente_usuario._encajar mide la letra elegida contra esta
+        return dict(par=('Anton', 'Regular'), mayus=False, esp=1.0, tipo='texto')
     return dict(par=HEROE, mayus=False, esp=1.0, tipo='texto')
 
 

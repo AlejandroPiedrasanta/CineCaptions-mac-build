@@ -13,6 +13,10 @@ viral_planificador y «Crea tu estilo» los usa igual; este planificador solo lo
      entera, como en la referencia); la que suena lleva encima un «v linea activa» (la palabra con la caja negra detrás) desde que se dice hasta que
      empieza la siguiente, con run['exacto'] (el colocador no le pone el mínimo de 0,45 s ni la cola: dos cajas nunca se ven a la vez).
   3. TAMAÑO: mayúsculas de CAP_REFERENCIA del lado de referencia (60 px a 1920, como la referencia); si la línea no cabe, se achica.
+
+v5.78 (el Estilo 7, pack «Tema7»; el usuario: «crea un estilo 7 así de captions», «el color pasa palabra por palabra»): el MISMO mecanismo con el
+perfil ROJO: Anton en minúscula normal, blanca con contorno y sombra negra dura, 2-3 palabras por bloque en el tercio de abajo, y la palabra que suena
+en ROJO («v rojo» / «v rojo activa») en lugar de la caja. Todo lo que cambia entre los dos está en el perfil (LINEA / ROJO): planificar(perfil=ROJO).
 """
 import guion_planificador as G
 import viral_captions as VC
@@ -34,33 +38,49 @@ MAX_PALABRAS, MAX_SEGUNDOS = 6, 3.2
 ADELANTO, COLA, MINIMO = 0.03, 0.45, 0.6
 K_ESP_TEXTPLUS = 1.53                 # Text+ SUMA (CharacterSpacing − 1) × 1,53 em por letra (render_temas.K_ESP_TEXTPLUS)
 
+# el perfil de cada estilo que usa este planificador
+LINEA = {'clip': CLIP, 'clip_activa': CLIP_ACTIVA, 'fuente': FUENTE, 'esp': ESP, 'k_px': K_PX, 'cap_em': CAP_EM, 'cap_ref': CAP_REFERENCIA,
+         'ancho_max': ANCHO_MAX, 'hueco': HUECO, 'caja_lado': CAJA_LADO, 'max_palabras': MAX_PALABRAS, 'max_segundos': MAX_SEGUNDOS,
+         'mayusculas': True, 'y': None}
+# v5.78 (Estilo 7): Anton. Su em por Size sale de la regla que cumplen las letras ya medidas en Resolve (K_PX × (ascendente + descendente) ≈ 860 px a
+# 1080: Barlow 857, Montserrat 862, DM Serif 861) con la de Anton (1177 + 330 de 1000): 571. Medidas de la referencia (1080×1920): la palabra
+# ~0,05 del alto, el hueco ~0,30 de la altura de la letra, 1-3 palabras por bloque (casi siempre 2), centrada al 75 % de la altura.
+ROJO = dict(LINEA, clip='v rojo', clip_activa='v rojo activa', fuente=('Anton', 'Regular'), esp=1.0, k_px=571.0, cap_em=0.86, cap_ref=0.050,
+            ancho_max=0.86, hueco=0.30, caja_lado=0.0, max_palabras=3, max_segundos=1.6, mayusculas=False, y=0.75)
 
-def _visible(texto):
-    return str(texto).strip().upper()
+
+def perfil_de(clip):
+    """El perfil por el nombre de un clip («v rojo…» → ROJO; lo demás, LINEA)."""
+    return ROJO if str(clip or '').startswith('v rojo') else LINEA
 
 
-def _ancho(texto, size, ancho_tl):
+def _visible(texto, perfil=LINEA):
+    t = str(texto).strip()
+    return t.upper() if perfil.get('mayusculas', True) else t
+
+
+def _ancho(texto, size, ancho_tl, perfil=LINEA):
     """Ancho (px) de la palabra con ese «Size» de Text+ (Pillow con la misma letra + lo que aprieta el CharacterSpacing)."""
-    em = size * K_PX * ancho_tl / 1080.0
-    f = VC._fuente(FUENTE, em)
+    em = size * perfil['k_px'] * ancho_tl / 1080.0
+    f = VC._fuente(perfil['fuente'], em)
     avance = f.getlength(texto) if f is not None else len(texto) * em * 0.48
-    return avance + (ESP - 1.0) * K_ESP_TEXTPLUS * em * max(0, len(texto) - 1)
+    return avance + (perfil['esp'] - 1.0) * K_ESP_TEXTPLUS * em * max(0, len(texto) - 1)
 
 
-def _size_para_cap(cap_px, ancho_tl):
-    return cap_px / CAP_EM / (K_PX * ancho_tl / 1080.0)
+def _size_para_cap(cap_px, ancho_tl, perfil=LINEA):
+    return cap_px / perfil['cap_em'] / (perfil['k_px'] * ancho_tl / 1080.0)
 
 
-def _lineas_de_frase(pal, frase, size, ancho_tl, ancho_max=ANCHO_MAX):
-    """Parte una frase (índices) en líneas que caben, de ≤ MAX_PALABRAS y ≤ MAX_SEGUNDOS."""
+def _lineas_de_frase(pal, frase, size, ancho_tl, ancho_max=ANCHO_MAX, perfil=LINEA):
+    """Parte una frase (índices) en líneas que caben, de ≤ max_palabras y ≤ max_segundos."""
     maximo = ancho_max * ancho_tl
-    cap_px = size * K_PX * ancho_tl / 1080.0 * CAP_EM
+    cap_px = size * perfil['k_px'] * ancho_tl / 1080.0 * perfil['cap_em']
     lineas, actual, ancho = [], [], 0.0
     for k in frase:
-        w = _ancho(_visible(pal[k]['texto']), size, ancho_tl)
-        extra = (HUECO * cap_px if actual else 0.0) + w
+        w = _ancho(_visible(pal[k]['texto'], perfil), size, ancho_tl, perfil)
+        extra = (perfil['hueco'] * cap_px if actual else 0.0) + w
         largo = (pal[k]['fin'] - pal[actual[0]]['t']) if actual else 0.0
-        if actual and (ancho + extra > maximo or len(actual) >= MAX_PALABRAS or largo > MAX_SEGUNDOS):
+        if actual and (ancho + extra > maximo or len(actual) >= perfil['max_palabras'] or largo > perfil['max_segundos']):
             lineas.append(actual)
             actual, ancho = [], 0.0
             extra = w
@@ -74,9 +94,11 @@ def _lineas_de_frase(pal, frase, size, ancho_tl, ancho_max=ANCHO_MAX):
     return lineas
 
 
-def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo', mains=None, fin_video=None, clip_activa=CLIP_ACTIVA, **_otros):
+def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo', mains=None, fin_video=None, clip_activa=None, perfil=None, **_otros):
     """palabras [{'word','start','end'}] -> {'cues': [...], 'plan': [...]} (el contrato de viral_planificador.planificar; `mains` no se usa: no hay
-    palabra grande)."""
+    palabra grande). `perfil`: LINEA (el Tema 3, de fábrica) o ROJO (el Estilo 7); `clip_activa` cambia el clip de la palabra que suena (Crea tu estilo)."""
+    perfil = perfil or LINEA
+    clip, clip_activa = perfil['clip'], clip_activa or perfil['clip_activa']
     unidas = VP.unir_fragmentos(palabras, idioma)
     pal = G._preparar(unidas)
     if not pal:
@@ -84,15 +106,18 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
     horizontal = ancho_tl > alto_tl
     tabla = VP.ANCLAS_HORIZONTAL if horizontal else VP.ANCLAS
     y = tabla.get(ancla, tabla['bajo']) if not isinstance(ancla, (int, float)) else float(ancla)
+    if perfil.get('y') and not horizontal and ancla in (None, 'bajo'):      # (Estilo 7: el tercio de abajo de su referencia)
+        y = float(perfil['y'])
     ref = VC.lado_de_referencia(ancho_tl, alto_tl)
-    size0 = _size_para_cap(CAP_REFERENCIA * ref, ancho_tl)
+    k_px, cap_em, hueco, caja_lado = perfil['k_px'], perfil['cap_em'], perfil['hueco'], perfil['caja_lado']
+    size0 = _size_para_cap(perfil['cap_ref'] * ref, ancho_tl, perfil)
     # v5.76 (zona segura): en vertical la línea cabe entre los iconos del reel y el borde (zona_segura.ANCHO): se parte antes, con la misma letra
-    ancho_max = ZS.ancho(ANCHO_MAX, ancho_tl, alto_tl)
+    ancho_max = ZS.ancho(perfil['ancho_max'], ancho_tl, alto_tl)
     if ZS.vertical(ancho_tl, alto_tl):                    # (contando la caja de la primera y la última palabra, que sobresale del texto)
-        ancho_max -= 2 * CAJA_LADO * size0 * K_PX / 1080.0 * CAP_EM
+        ancho_max -= 2 * caja_lado * size0 * k_px / 1080.0 * cap_em
     lineas = []
     for frase in G.frases(pal):
-        lineas += _lineas_de_frase(pal, frase, size0, ancho_tl, ancho_max)
+        lineas += _lineas_de_frase(pal, frase, size0, ancho_tl, ancho_max, perfil)
     fin_total = float(fin_video) if fin_video else pal[-1]['fin'] + 1.5
     # tiempos: cada línea desde su primera palabra (un pelín antes) hasta un poco después de la última, sin pisar a la siguiente
     t0s = [max(0.0, pal[l[0]]['t'] - ADELANTO) for l in lineas]
@@ -102,12 +127,12 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
         sig = t0s[n + 1] if n + 1 < len(lineas) else fin_total
         t1 = min(max(pal[l[-1]]['fin'] + COLA, t0 + MINIMO), max(sig, t0 + MINIMO))
         t1 = min(t1, fin_total) if fin_total > t0 + 0.2 else t1
-        textos = [_visible(pal[k]['texto']) for k in l]
+        textos = [_visible(pal[k]['texto'], perfil) for k in l]
         # tamaño: el de referencia; si no cabe (una palabra muy larga), se achica la línea entera
         size = size0
-        cap_px = size * K_PX * ancho_tl / 1080.0 * CAP_EM
-        anchos = [_ancho(tx, size, ancho_tl) for tx in textos]
-        total = sum(anchos) + HUECO * cap_px * (len(anchos) - 1)
+        cap_px = size * k_px * ancho_tl / 1080.0 * cap_em
+        anchos = [_ancho(tx, size, ancho_tl, perfil) for tx in textos]
+        total = sum(anchos) + hueco * cap_px * (len(anchos) - 1)
         if total > ancho_max * ancho_tl:
             f = ancho_max * ancho_tl / total
             size *= f
@@ -120,13 +145,13 @@ def planificar(palabras, idioma='es', ancho_tl=1080, alto_tl=1920, ancla='bajo',
         runs, activas = [], []
         for j, (k, tx, a) in enumerate(zip(l, textos, anchos)):
             cx = (x + a / 2.0) / ancho_tl
-            runs.append({'k': CLIP, 't': round(t0, 3), 'fin': round(t1, 3), 'x': round(cx, 5), 'y': round(y_l, 5), 'texto': tx, 'size': round(size, 4)})
+            runs.append({'k': clip, 't': round(t0, 3), 'fin': round(t1, 3), 'x': round(cx, 5), 'y': round(y_l, 5), 'texto': tx, 'size': round(size, 4)})
             ini = max(t0, pal[k]['t'])
             fin = max(t0, pal[l[j + 1]]['t']) if j + 1 < len(l) else t1
             if fin - ini >= 0.03:
                 activas.append({'k': clip_activa, 't': round(ini, 3), 'fin': round(fin, 3), 'x': round(cx, 5), 'y': round(y_l, 5), 'texto': tx,
                                 'size': round(size, 4), 'exacto': True})
-            x += a + HUECO * cap_px
+            x += a + hueco * cap_px
         caja = [round((0.5 * ancho_tl - total / 2) / ancho_tl, 4), round(y_l - alto_px / 2 / alto_tl, 4), round((0.5 * ancho_tl + total / 2) / ancho_tl, 4),
                 round(y_l + alto_px / 2 / alto_tl, 4)]
         texto = ' '.join(textos)

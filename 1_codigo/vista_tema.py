@@ -30,7 +30,7 @@ def estilo_de_pack(pack, formato='v'):
         return None
     if pack == 'Kinetic':
         return {'tipo': 'kinetic', 'pack': pack}
-    if pack in ('VIRAL', 'Tema5'):                     # (v5.76: el Tema 5 es un pack de elementos como el VIRAL: su «v tipo»)
+    if pack in ('VIRAL', 'Tema5', 'Tema7'):            # (v5.76: el Tema 5 es un pack de elementos como el VIRAL: su «v tipo»; v5.78: el Estilo 7, sus «v rojo»)
         return {'tipo': 'viral', 'pack': pack}
     if guion_editor.es_guion(pack, formato or 'v'):
         return {'tipo': 'guion', 'pack': pack}
@@ -59,7 +59,8 @@ def planificar(palabras, roles, pack, estilo, idioma='es', fin_video=None, ancla
             res = kp.planificar(palabras, idioma=idioma, ancho_tl=1080, alto_tl=1920, mains=mains, fin_video=fin_video)
         elif tipo == 'viral':
             import linea_planificador as kp       # v5.75: el Tema 3 es la línea con la caja negra (como GO)
-            res = kp.planificar(palabras, idioma=idioma, ancho_tl=1080, alto_tl=1920, ancla=_ancla('viral_ancla', 'bajo'), mains=mains, fin_video=fin_video)
+            extra = {'perfil': kp.ROJO} if plantillas.tema_base(pack) == 'Tema7' else {}     # v5.78: el Estilo 7 (como GO)
+            res = kp.planificar(palabras, idioma=idioma, ancho_tl=1080, alto_tl=1920, ancla=_ancla('viral_ancla', 'bajo'), mains=mains, fin_video=fin_video, **extra)
         else:
             import kinetic_planificador as kp
             res = kp.planificar(palabras, idioma=idioma, ancla=_ancla('kinetic_ancla', 'bajo'), mains=mains, fin_video=fin_video)
@@ -188,6 +189,9 @@ def estado_animado(c, t):
         if k == 'v tipo':                                               # v5.76: cada estado del bloque del Tema 5 aparece de golpe (el primero en 2 fotogramas)
             st.update(a=q(c['entrada']) if c.get('entrada') else 1.0)
             if c.get('seco'):
+                return st
+        elif k.startswith('v rojo'):                                    # v5.78: el Estilo 7, de golpe (comp_rojo); la roja tampoco sale: se corta al acabar su palabra
+            if k == 'v rojo activa':
                 return st
         elif 'shatter' in k:
             st.update(s=1.55 - 0.55 * _ease(q(0.36)), a=q(0.14), brillo=e / 0.55 if e < 0.55 else None)

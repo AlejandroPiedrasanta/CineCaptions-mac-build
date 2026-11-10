@@ -50,7 +50,7 @@ import zlib
 from pathlib import Path
 
 GENERADOR = 'per 2'           # súbelo si cambia lo que se escribe en las comps (la huella cambia: carpeta nueva y bin nuevo en Resolve). per 2 (v5.58): los reinicios del Inspector al día
-BASES = {'t1': 'Kinetic', 't2': 'Referencia', 't3': 'VIRAL', 't4': 'Tema4', 't5': 'Tema5', 't6': 'Tema6'}
+BASES = {'t1': 'Kinetic', 't2': 'Referencia', 't3': 'VIRAL', 't4': 'Tema4', 't5': 'Tema5', 't6': 'Tema6', 't7': 'Tema7'}   # v5.78: el Estilo 7
 CLAVES = ('fuente_principal', 'fuente_secundaria', 'color_principal', 'color_secundario')
 SEPARADOR = ' · '             # «VIRAL · a1b2c3d4»: los gemelos sacan el tema con nombre.split(" · ")[0]
 MARCA = 'personalizado.json'  # se escribe la última: sin ella (o con otra huella) la carpeta se rehace
@@ -73,7 +73,7 @@ def nombre_base(base):
     for nombre in BASES.values():
         if b.lower() == nombre.lower():
             return nombre
-    m = re.fullmatch(r'(?:tema|estilo)\s*([1-6])', b, re.I)          # (v5.76: en la interfaz los temas se llaman «Estilo N»)
+    m = re.fullmatch(r'(?:tema|estilo)\s*([1-7])', b, re.I)          # (v5.76: en la interfaz los temas se llaman «Estilo N»)
     if m:
         return BASES['t' + m.group(1)]
     return _base_de_look(b) if ':' in b else None
@@ -744,6 +744,20 @@ def rol_de(tipo, clip):
     return 'main' if rol in ('main', 'base') else 'extra' if rol in ('context', 'complement') else None
 
 
+def es_rojo_blanco(tipo, clip):
+    """v5.78: la palabra blanca del Estilo 7 («v rojo», no la activa)."""
+    return tipo == 'viral' and str(clip or '').strip().lower() == 'v rojo'
+
+
+def ajuste_de_clip(tipo, clip, rol, ajustes_rol):
+    """La letra y el color de UN clip: los de su rol. v5.78, el Estilo 7: todas sus palabras son 'main' para la LETRA (la roja va encima de la
+    blanca y tienen que coincidir), pero la blanca («v rojo») toma el COLOR del texto pequeño ('extra'); la roja, el de la palabra grande."""
+    ajuste = dict((ajustes_rol.get(rol) or {}) if rol else {})
+    if es_rojo_blanco(tipo, clip):
+        ajuste['color'] = (ajustes_rol.get('extra') or {}).get('color')
+    return ajuste
+
+
 def retocar_tools(tools, tipo, clip, rol, ajuste):
     """Las Tools de UN clip con la letra y el color de su rol. ajuste = {'fuente': [familia, estilo] | None, 'color': (r, g, b) | None}.
     Devuelve (texto nuevo, cambios [(herramienta, entrada, antes, después)], notas)."""
@@ -811,7 +825,9 @@ def retocar_drb(origen, destino, tipo, ajustes_rol, roles=None):
             rol = rol_de(tipo, nombre)
             if rol and ba is not None and roles is not None:
                 roles.add(rol)
-            ajuste = (ajustes_rol.get(rol) or {}) if rol else {}
+                if es_rojo_blanco(tipo, nombre):              # (v5.78: su color es el del texto pequeño)
+                    roles.add('extra')
+            ajuste = ajuste_de_clip(tipo, nombre, rol, ajustes_rol) if rol else {}
             if ba is None or not (ajuste.get('fuente') or ajuste.get('color')):
                 continue
             _, tools, _ = tools_de_blob(ba.group(2))

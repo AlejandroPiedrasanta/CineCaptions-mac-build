@@ -74,6 +74,7 @@ TEMAS_ENTEROS = (
     {'id': 't4', 'tema': 4, 'motor': 'guion', 'pack': 'Tema4', 'entero': True, 'nombre': 'Estilo 4'},
     {'id': 't5', 'tema': 5, 'motor': 'viral', 'pack': 'Tema5', 'entero': True, 'nombre': 'Estilo 5'},       # v5.76: «v tipo» (antes «guion»)
     {'id': 't6', 'tema': 6, 'motor': 'guion', 'pack': 'Tema6', 'entero': True, 'nombre': 'Estilo 6'},
+    {'id': 't7', 'tema': 7, 'motor': 'viral', 'pack': 'Tema7', 'entero': True, 'nombre': 'Estilo 7'},       # v5.78: «v rojo» (linea_planificador, perfil ROJO)
 )
 MAX_TEMAS = len(TEMAS_ENTEROS)       # un estilo lleva de 1 a 6 temas, sin repetir
 PACK_DE_MOTOR = {'kinetic': 'Kinetic', 'viral': 'VIRAL', 'guion': 'Referencia'}          # el pack de los looks sueltos de antes
@@ -134,6 +135,7 @@ PRINCIPALES_CREA = (
     {'id': 'p_t4', 'tema': 4, 'look': 't4', 'efecto': 'Brillo'},
     {'id': 'p_t5', 'tema': 5, 'look': 't5', 'efecto': 'Tipografía'},                # v5.76: el Tema 5 nuevo (grande + serif que la muerde)
     {'id': 'p_t6', 'tema': 6, 'look': 't6', 'efecto': 'Brillo'},
+    {'id': 'p_t7', 'tema': 7, 'look': 't7', 'efecto': 'Palabra roja'},           # v5.78: el Estilo 7 (la que suena en rojo; el color = el «color principal»)
 )
 
 
@@ -569,6 +571,9 @@ def _de_una_vez(look, palabras, idioma, ancho_tl, alto_tl, anclas, mains, fin_vi
     if look['id'] == 't5':
         import tipo_planificador as TP
         return TP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, mains=m, fin_video=fin_video)['cues']
+    if look['id'] == 't7':                                # v5.78: el Estilo 7 (como su GO)
+        import linea_planificador as LP
+        return LP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=anclas['viral'], mains=m, fin_video=fin_video, perfil=LP.ROJO)['cues']
     if look['motor'] == 'viral':
         return VP.planificar(palabras, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=anclas['viral'], mains=m, fin_video=fin_video)['cues']
     kw = {'ancla': anclas['guion'], 'mains': m, 'fin_video': fin_video}
@@ -719,6 +724,8 @@ def _etiqueta(motor, c):
     if motor == 'viral':
         if any(r.get('k') == 'v tipo' for r in c.get('runs') or []):
             return 'tipo'
+        if any(str(r.get('k') or '').startswith('v rojo') for r in c.get('runs') or []):
+            return 'rojo'
         efectos = [_base_efecto(r.get('k')) for r in c.get('runs') or [] if _base_efecto(r.get('k')) in VP.DURACION]
         return efectos[0] if efectos else 'pila'
     grande = any(r.get('rol') == 'main' for r in c.get('runs') or [])
@@ -765,6 +772,10 @@ def planificar(palabras, looks, idioma='es', ancho_tl=1080, alto_tl=1920, ancla_
                 import tipo_planificador as TP
                 res_t = TP.planificar(sub, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, mains=m_sub, fin_video=t['fin'])
                 cues, _plan = res_t['cues'], res_t['plan']
+            elif look['id'] == 't7':                      # v5.78: el Estilo 7, tramo a tramo
+                import linea_planificador as LP
+                res_r = LP.planificar(sub, idioma=idioma, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=ancla_viral, mains=m_sub, fin_video=t['fin'], perfil=LP.ROJO)
+                cues, _plan = res_r['cues'], res_r['plan']
             elif look.get('entero'):
                 cues, _plan = _tema3(sub, idioma, ancho_tl, alto_tl, ancla_viral, m_sub, t['fin'], estado)
             elif look['motor'] == 'kinetic':

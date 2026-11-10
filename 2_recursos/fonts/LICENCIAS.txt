@@ -208,3 +208,8 @@ Yellowtail-Regular.ttf   (62 KB)  — la palabra escrita a mano del Tema 1 neón
   Licencia  : Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
   Nota      : la misma de Google Fonts; copiada del kit «TEMA 1» del usuario (recursos/fuentes/script.ttf).
 ------------------------------------------------------------------
+Anton-Regular.ttf   (158 KB)  — la letra de los captions del Estilo 7 (pack «Tema7», clips «v rojo» / «v rojo activa»)
+  Copyright: Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/AntonFont.git)
+  Licencia  : This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL
+  URL       : https://scripts.sil.org/OFL
+------------------------------------------------------------------

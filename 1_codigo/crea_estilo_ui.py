@@ -815,6 +815,34 @@ def _tenido(img, hexa):
     return g
 
 
+def _hex_rgb(hexa, defecto):
+    h = str(hexa or '').strip().lstrip('#')
+    try:
+        return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) if len(h) == 6 else defecto
+    except ValueError:
+        return defecto
+
+
+def _tenido_rojo(img, principal, secundario):
+    """v5.78, la previa del Estilo 7 (blanco + la palabra que suena en rojo, con contorno y sombra negros): cada píxel es blanco × kb + rojo × kr
+    sobre negro; el rojo pasa al color principal y el blanco al secundario (como el pack derivado: pack_personalizado.ajuste_de_clip). Sin
+    colores, tal cual."""
+    if img is None or img.isNull() or not (principal or secundario):
+        return img
+    import numpy as np
+    g = img.convertToFormat(QImage.Format.Format_RGB32)
+    w, h = g.width(), g.height()
+    a = np.frombuffer(g.constBits(), np.uint8).reshape(h, g.bytesPerLine())[:, :w * 4].reshape(h, w, 4).astype(np.float32)
+    kb = np.minimum(a[..., 0], a[..., 1]) / 250.0                       # (BGRA: el blanco sube G y B; el rojo de la referencia, casi nada)
+    kr = np.clip(a[..., 2] - 250.0 * kb, 0.0, None) / 226.0
+    cp = np.array(_hex_rgb(principal, (226, 6, 18)), np.float32)
+    cs = np.array(_hex_rgb(secundario, (250, 250, 250)), np.float32)
+    rgb = np.clip(kb[..., None] * cs + kr[..., None] * cp, 0, 255).astype(np.uint8)
+    salida = np.empty((h, w, 4), np.uint8)
+    salida[..., 0], salida[..., 1], salida[..., 2], salida[..., 3] = rgb[..., 2], rgb[..., 1], rgb[..., 0], 255
+    return QImage(salida.tobytes(), w, h, w * 4, QImage.Format.Format_RGB32).copy()
+
+
 def _letra_de(valor):
     """'Familia|Estilo' -> QFont de esa letra (o None: la del tema)."""
     partes = str(valor or '').split('|')
@@ -962,8 +990,12 @@ class _Previa(QWidget):
                 alto_b = alto_p * 0.62
                 _dibujar_centro(p, QRectF(r.center().x() - ancho * 0.41, cy - alto_p / 2 - alto_b * 0.9, ancho * 0.82, alto_b),
                                 _tenido(self._rb.imagen() if self._rb else None, self._ajustes.get('color_secundario')))
-            _dibujar_centro(p, QRectF(r.center().x() - ancho / 2, cy - alto_p / 2, ancho, alto_p),
-                            _tenido(self._rp.imagen() if self._rp else None, self._ajustes.get('color_principal')))
+            img_p = self._rp.imagen() if self._rp else None
+            if self._principales[self._k % len(self._principales)] == 'p_t7':    # v5.78: el Estilo 7, cada color en lo suyo
+                img_p = _tenido_rojo(img_p, self._ajustes.get('color_principal'), self._ajustes.get('color_secundario'))
+            else:
+                img_p = _tenido(img_p, self._ajustes.get('color_principal'))
+            _dibujar_centro(p, QRectF(r.center().x() - ancho / 2, cy - alto_p / 2, ancho, alto_p), img_p)
             p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
             if letra is not None:
                 self._muestra(p, QRectF(r.left() + r.width() * 0.08, cy + alto_p / 2 + 4, r.width() * 0.84, alto_p * 0.62), letra,

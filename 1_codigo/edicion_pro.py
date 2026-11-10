@@ -330,7 +330,7 @@ def poner_detras(si, modo=None):
 def opciones_neon(op):
     """Las opciones de la PRO del Tema 1: las del usuario, con lo del menú lateral sacado de SUS interruptores ('_neon_extras')."""
     import pro_lateral_ui as LAT
-    ex = set(neon_extras(op)) - {'detras'}
+    ex = set(neon_extras(op)) - {'detras'} - set(LAT.QUITADAS)        # (v5.78: lo quitado del menú no va aunque siga guardado)
     if detras_encendido(op):                                          # v5.61: el de los 6 temas
         ex.add('detras')
     op = dict(op)

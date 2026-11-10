@@ -12,7 +12,14 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     .cf\   (1 archivos)
         icono.ico
     biblioteca_sonido\   (67 archivos)
-    creativo\   (4 archivos)
+    creativo\   (11 archivos)
+        demo_colores.jpg
+        demo_colores.mp4
+        demo_corrector.json
+        demo_ortografia.jpg
+        demo_ortografia.mp4
+        demo_principal.jpg
+        demo_principal.mp4
         desktop.ini
         movil.json
         movil_fondo.jpg
@@ -34,7 +41,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_09.jpg
         fondo_10.jpg
         fondo_11.jpg
-    fonts\   (49 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
+    fonts\   (50 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
     generador_packs\   (28 archivos)
         .cf\   (1 archivos)
         banner_cinecaptions.png
@@ -88,7 +95,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         desktop.ini
         preparar_sonidos.py
             prepara los sonidos que el usuario aportó para los estilos (riser de gancho, golpecito del iPhone, obturadores de transición).
-    guia_estilo\   (435 archivos)
+    guia_estilo\   (436 archivos)
+    iconos_programas\   (2 archivos)
+        premiere.png
+        resolve.png
     locales\   (11 archivos)  — textos de la interfaz en en, pt, fr, de, it, ja, ko, zh, ru, nl, tr, pl (la clave es el español)
         .cf\   (1 archivos)
         de.json
@@ -118,7 +128,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
             IA de texto Qwen3 Instruct: correcciones, pesos y emojis por frase (modo servidor).
         requisitos_motor_qwen.txt
             versiones FIJAS del motor (Python 3.12 + torch + qwen-asr)
-    plantillas_incluidas\   (67 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
+    plantillas_incluidas\   (70 archivos)  — los packs de estilos que trae el programa (.drt/.drb + posiciones + pack.json)
     premiere\   (5 archivos)
         com.cinecaptions.premiere\   (5 archivos)
     resolve_scripts\   (25 archivos)  — los scripts que se instalan en DaVinci Resolve (Lua = Free, Python = Studio) y sfx_rules.json
@@ -189,7 +199,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         sonido.jpg
         sonido.mp4
         subtitulos.json
-    vistas_slider\   (26 archivos)
+    vistas_slider\   (30 archivos)
         .cf\   (1 archivos)
         desktop.ini
         Kinetic.jpg
@@ -212,6 +222,10 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         Tema6.mp4
         Tema6_captions.jpg
         Tema6_captions.mp4
+        Tema7.jpg
+        Tema7.mp4
+        Tema7_captions.jpg
+        Tema7_captions.mp4
         VIRAL.jpg
         VIRAL.mp4
         VIRAL_captions.jpg

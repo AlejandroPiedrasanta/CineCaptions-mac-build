@@ -495,6 +495,12 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.79', [
+        'Estilo 7 nuevo: dos o tres palabras en letra gruesa blanca y la palabra que se dice se pone roja. También está en «Crea tu estilo» como texto principal «Palabra roja».',
+        'Corrector: tres ejemplos en video de lo que cambias (palabra principal, ortografía, colores y letra) y la tarjeta «Colores y letra» para cambiar ahí mismo el color y la letra del estilo.',
+        'Menús más simples: el chip «Estilo» de Inicio enseña cada estilo con su póster, el de Edición PRO es un panel compacto y salen «B-roll con fotos», «Escenas completas» y «Gráficos».',
+        'Ajustes › General enseña el icono de DaVinci Resolve y el de Premiere Pro.',
+    ]),
     ('5.78', [                                       # (la 5.77 ya se publicó sin esto; se ve cuando version.py pase a 5.78)
         'Adobe Premiere Pro: elige «Usar con Premiere Pro» en Ajustes › General y GO coloca todo en Premiere como en Resolve, en una secuencia nueva: tu video, los subtítulos del estilo elegido encima (con sus emojis), los sonidos en sus pistas y la música. Si Premiere está cerrado, se abre solo.',
         'En Ajustes › General eliges con qué trabaja GO, uno a la vez: «Usar con DaVinci Resolve» (de fábrica), «Usar con Premiere Pro» o «Video sin editores (DaVinci y Premiere)», el antiguo «Video MP4 en lugar de Resolve».',
@@ -1830,6 +1836,24 @@ def _azulejo(nombre, lado=44, glifo=22, color=None):
     return lbl
 
 
+def _logo_programa(archivo, lado=44):
+    """v5.78 (el usuario: «usa icono de los programas»): el icono del programa (2_recursos/iconos_programas: DaVinci Resolve sacado de su
+    Resolve.exe; Premiere Pro con los colores de Adobe) en lugar del cuadrito con un ícono genérico; None si no está el archivo."""
+    try:
+        import instalador_scripts
+        pm = ui.pixmap_de_archivo(instalador_scripts.BASE_RECURSOS / 'iconos_programas' / archivo, lado)
+    except Exception:
+        pm = None
+    if pm is None:
+        return None
+    lbl = QLabel()
+    lbl.setFixedSize(lado, lado)
+    lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    lbl.setStyleSheet('background: transparent; border: none;')
+    lbl.setPixmap(pm)
+    return lbl
+
+
 def _pastilla(icono, texto, color=None):
     """v5.70: una pastilla de estado (ícono + texto) con un tinte suave del color (de fábrica, el verde de «todo bien»)."""
     base = QColorReal(color or ui.VERDE)
@@ -1855,7 +1879,8 @@ def _pastilla(icono, texto, color=None):
 class _Fila(QFrame):
     """Una fila de ajuste: titulo y explicacion a la izquierda, control a la derecha. v5.70: con `icono` (Phosphor) lleva su cuadrito delante."""
 
-    def __init__(self, titulo, explicacion='', control=None, ancho_control=None, ultima=False, vertical=False, expandir=False, icono=None):
+    def __init__(self, titulo, explicacion='', control=None, ancho_control=None, ultima=False, vertical=False, expandir=False, icono=None,
+                 logo=None):
         super().__init__()
         self.setObjectName('filaAjuste')
         if not ultima:
@@ -1868,9 +1893,10 @@ class _Fila(QFrame):
         if explicacion:
             self.explicacion = TextoAjustable(explicacion, 14)
             cc.addWidget(self.explicacion)
-        if icono:
+        cuadro = (_logo_programa(logo) if logo else None) or (_azulejo(icono) if icono else None)   # (v5.78: `logo` = icono de un programa)
+        if cuadro is not None:
             envoltura, ce = caja_h(espacio=18)
-            ce.addWidget(_azulejo(icono), 0, Qt.AlignmentFlag.AlignVCenter)
+            ce.addWidget(cuadro, 0, Qt.AlignmentFlag.AlignVCenter)
             ce.addWidget(col, 1)
             col = envoltura
         if vertical:
@@ -2553,11 +2579,12 @@ class VentanaAjustes(_Panel):
         f_resolve = _Fila(tr('Usar con DaVinci Resolve'),
                           tr('GO coloca los subtítulos, los sonidos y los efectos en tu timeline de DaVinci Resolve (Studio o Free). '
                              'Si Resolve no está instalado, te devuelve el video con los subtítulos grabados en un MP4.'),
-                          Interruptor('', var=vars_modo['resolve'], comando=lambda: elegir('resolve')), icono='film-strip')
+                          Interruptor('', var=vars_modo['resolve'], comando=lambda: elegir('resolve')), icono='film-strip', logo='resolve.png')
         f_premiere = _Fila(tr('Usar con Premiere Pro'),
                            tr('GO coloca todo en Premiere Pro: una secuencia nueva con tu video, los subtítulos del estilo elegido encima '
                               '(con sus emojis) y los sonidos en sus pistas. Suelta un video y pulsa GO; si Premiere está cerrado, se abre solo.'),
-                           Interruptor('', var=vars_modo['premiere'], comando=lambda: elegir('premiere')), icono='video-camera')
+                           Interruptor('', var=vars_modo['premiere'], comando=lambda: elegir('premiere')), icono='video-camera',
+                           logo='premiere.png')
         f_mp4 = _Fila(tr('Video sin editores (DaVinci y Premiere)'),
                       tr('GO graba los subtítulos del estilo elegido (con sus sonidos) en una copia MP4 de tu video, junto al original, '
                          'sin usar DaVinci Resolve ni Premiere Pro.'),

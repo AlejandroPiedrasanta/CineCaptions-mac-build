@@ -58,6 +58,9 @@ OPCIONES = [
      'detalle': '«¡Hola amigos!», «Guárdalo», encuestas… justo cuando dices esa frase.'},
 ]
 _POR_CLAVE = {o['clave']: o for o in OPCIONES}
+# las que ya no se enseñan (ni en el menú ni en Efectos) y GO no pone aunque sigan guardadas (el usuario: «elimina esto»):
+# v5.20 «Plantillas por frase» · v5.78 «B-roll con fotos», «Escenas completas» y «Gráficos»
+QUITADAS = ('plantillas', 'broll', 'escenas', 'graficos')
 # v5.5.20: la intensidad de una opción, en la píldora del nombre (v5.25: la de «Emojis animados»; la de «Captions detrás de ti» se quitó en la
 # v5.58: el usuario: «si se activa, ya sabrá en qué momento aplicarlo»)
 NIVELES = (('suave', 'Suave'), ('media', 'Media'), ('fuerte', 'Fuerte'))
@@ -75,7 +78,7 @@ def opciones_visibles():
     """Las que se enseñan: «Captions detrás de ti» con cualquier Resolve, Free o Studio (v5.58; de la 5.5.20 a la 5.57, solo Studio); en el
     video MP4 sin Resolve no se enseña (la persona recortada va en el timeline de Resolve)."""
     cr = _con_resolve()
-    return [o for o in OPCIONES if (cr or not o.get('con_resolve')) and o['clave'] != 'plantillas']   # v5.20: «Plantillas por frase» quitado (el usuario lo pidió)
+    return [o for o in OPCIONES if (cr or not o.get('con_resolve')) and o['clave'] not in QUITADAS]
 
 
 def _pref_niveles(clave):

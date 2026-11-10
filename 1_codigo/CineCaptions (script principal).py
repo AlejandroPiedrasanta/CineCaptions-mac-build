@@ -273,6 +273,8 @@ PAD_SM = 8
 PAD_MD = 12
 PAD_LG = 16
 PAD_SANGRIA = 32
+# v5.78: los cuatro ajustes de letra y color de un estilo («Crea tu estilo» y «Colores y letra» del Corrector; pack_personalizado.CLAVES)
+CLAVES_ESTILO = ('color_principal', 'fuente_principal', 'color_secundario', 'fuente_secundaria')
 def fuente(tam=FS_NORMAL, negrita=False, **kw):
     """La letra de la casa, en pixeles (ver qt_kit.fuente; acepta peso=)."""
     return ui.fuente(tam, negrita, **kw)
@@ -3952,6 +3954,13 @@ class WordTagWindow(QWidget):
         self.sonido_btn = editor_ui.BotonSonido(mudo=mudo, lado=40)
         self.sonido_btn.clicked.connect(lambda _=False: self._guardar_mudo())
         self.vista_bloque.poner_boton_secundario(self.sonido_btn)
+        # v5.78 (el usuario eligió la propuesta B): «Colores y letra» bajo el móvil, siempre a la vista (solo pintando marcas y con la vista
+        # exacta del estilo: _colores_refrescar); cada toque se guarda para el estilo elegido y el móvil se rehace
+        self.tarjeta_colores = None
+        if self.modo == self.MODO_MARCAS:
+            self.tarjeta_colores = editor_ui.TarjetaColores(self._colores_cambiados)
+            self.tarjeta_colores.hide()
+            dcapa.addWidget(self.tarjeta_colores, 0)
         fila_v, cfv = caja_h(espacio=8)
         self.mini_pos = editor_ui.MiniPosicion()          # v5.8: dónde cae el bloque en el cuadro del video (arriba / centro / abajo)
         self.mini_pos.setFixedHeight(156)
@@ -5497,19 +5506,51 @@ class WordTagWindow(QWidget):
             registro.excepcion(origen='Creativo · vista del tema')
             return pack, None
 
+    def _colores_del_estilo(self):
+        """v5.78: (nombre del pack elegido, sus ajustes de letra y color —«Crea tu estilo» + «Colores y letra» del Corrector—)."""
+        nombre = getattr(self.master, 'plantilla_sel', '') or ''
+        try:
+            return nombre, self.master._ajustes_de_pack(plantillas.buscar_pack(nombre))
+        except Exception:
+            return nombre, {}
+
+    def _colores_refrescar(self, con_vista):
+        """v5.78: la tarjeta «Colores y letra» con lo de ahora; solo con la vista exacta del estilo (no en una mezcla ni un pack importado)."""
+        t = getattr(self, 'tarjeta_colores', None)
+        if t is None:
+            return
+        t.setVisible(bool(con_vista))
+        if not con_vista:
+            return
+        nombre, aj = self._colores_del_estilo()
+        nota = (tr('En el Estilo 2, las palabras grandes con letra Amro conservan su color.') if plantillas.tema_base(nombre) == 'Referencia' else
+                tr('En el Estilo 7 todas las palabras llevan la letra de la palabra grande; su color es el de la palabra que se dice.')
+                if plantillas.tema_base(nombre) == 'Tema7' else '')     # v5.78 (pack_personalizado.ajuste_de_clip)
+        t.poner(aj, plantillas.nombre_visible(nombre), nota)
+
+    def _colores_cambiados(self, ajustes):
+        """v5.78: un toque en «Colores y letra»: se guarda para el estilo elegido y el móvil se rehace (GO lo usará igual)."""
+        nombre = getattr(self.master, 'plantilla_sel', '') or ''
+        self.master._poner_ajustes_corrector(nombre, ajustes)
+        self._vt_preparar()
+
     def _vt_preparar(self):
         """Pide (si hace falta) los cuadros del tema para las marcas de ahora. Devuelve False si este tema no tiene vista exacta."""
         pack, estilo = self._vt_estilo()
+        self._colores_refrescar(estilo is not None)
         if estilo is None:
             self._vt = None
             self.vista_bloque.esperando_tema = False
             return False
+        _nombre, aj = self._colores_del_estilo()                         # v5.78: con la letra y los colores elegidos (render_temas los lee)
+        if aj:
+            estilo = dict(estilo, ajustes=aj)
         # (mientras llega la primera vista exacta, el móvil enseña la foto limpia, no la maqueta aproximada con otro estilo)
         self.vista_bloque.esperando_tema = (getattr(self, '_vt', None) or {}).get('cuadros') is None
         w, h = self.vista_bloque.tamano_pantalla()
         if w < 60 or h < 120:
             return True
-        clave = (self._version, pack, w, h)
+        clave = (self._version, pack, w, h, tuple(sorted(aj.items())))
         vt = getattr(self, '_vt', None) or {}
         if vt.get('clave') == clave or vt.get('pidiendo') == clave:
             return True
@@ -7579,7 +7620,10 @@ class SubtitleApp(QWidget):
             panel.opciones_capa.addWidget(ch)
     def _menu_estilo_go(self):
         """El chip «Estilo» de Inicio: elegir el estilo de GO sin salir de la página."""
-        menu = Menu(self)
+        try:
+            chip = self.sender()                        # el chip pulsado: el panel sale encima de él
+        except Exception:
+            chip = None
         actual = self._plantilla_un_clic()
         base = 'Base títulos dinámicos'
         try:
@@ -7594,6 +7638,17 @@ class SubtitleApp(QWidget):
         formato = self._formato_para_temas()
         guion = [p for p in packs if getattr(p, 'guion', None)]
         otros = [p for p in packs if not getattr(p, 'guion', None) and p.nombre != base]
+        if plantillas.SOLO_TEMAS and guion + otros:     # v5.78 (el usuario eligió la propuesta C): los estilos en una tira de pósters
+            try:
+                import menu_estilo_ui
+                lista = [{'nombre': p.nombre, 'etiqueta': plantillas.nombre_visible(p.nombre),
+                          'sirve': bool(plantillas.sirve_en_go(p, formato)) if p in guion else True} for p in guion + otros]
+                self._panel_estilo = menu_estilo_ui.abrir(self, lista, actual, self._poner_go_pack, lambda: self.ir_a('estilos'),
+                                                          ancla=chip if hasattr(chip, 'mapToGlobal') else None)
+                return
+            except Exception as e:                      # (si algo falla, la lista de siempre)
+                registro.aviso(f'Panel de estilos: {str(e)[:160]}', 'interfaz')
+        menu = Menu(self)
         for p in guion:
             marca = '✓  ' if p.nombre == actual else '      '
             extra = '' if plantillas.sirve_en_go(p, formato) else tr('  (solo vertical)')
@@ -7750,10 +7805,22 @@ class SubtitleApp(QWidget):
     def _menu_pro_go(self):
         """El chip «Edición PRO» de Inicio: activarla y elegir el estilo del video, el recorte de la persona y cuánta animación."""
         try:
+            chip = self.sender()                        # el chip pulsado: el panel sale encima de él
+        except Exception:
+            chip = None
+        try:
             import edicion_pro
             op, activa = edicion_pro.opciones_guardadas(), edicion_pro.activado()
         except Exception:
             return
+        try:                                            # v5.78 (el usuario eligió la propuesta C): un panel compacto, una fila por ajuste
+            import menu_pro_ui
+            self._panel_pro = menu_pro_ui.abrir(self, lambda: (edicion_pro.opciones_guardadas(), edicion_pro.activado()), self._poner_pro_go,
+                                                self._alternar_pro_go, edicion_pro.magic_mask_disponible(),
+                                                ancla=chip if hasattr(chip, 'mapToGlobal') else None)
+            return
+        except Exception as e:                          # (si algo falla, la lista de siempre)
+            registro.aviso(f'Panel de la Edición PRO: {str(e)[:160]}', 'interfaz')
         menu = Menu(self)
         menu.agregar(('✓  ' + tr('Edición PRO activada · desactivar')) if activa else ('      ' + tr('Activar la Edición PRO')), self._alternar_pro_go)
         if activa:                             # v5.4.49: la PRO sustituye a los efectos visuales (intro, gancho, punch-ins, motion graphics)
@@ -7776,9 +7843,7 @@ class SubtitleApp(QWidget):
             menu.agregar(marca + tr(nombre), lambda c=clave: self._poner_pro_go('pro_densidad', c))
         menu.separador()
         menu.agregar('      ' + tr('Otra combinación de colores y tipografías'), lambda: self._poner_pro_go('pro_variacion', int(op.get('pro_variacion') or 0) + 1))
-        internet = bool(op.get('pro_internet', True))         # v5.5.3: fotos de internet con licencia en las escenas (fuentes_web)
-        menu.agregar(('✓  ' if internet else '      ') + tr('Fotos de internet con licencia (B-roll)'), lambda: self._poner_pro_go('pro_internet', not internet))
-        menu.mostrar(QCursor.pos())
+        menu.mostrar(QCursor.pos())                     # (v5.78: sin «Fotos de internet (B-roll)»: el B-roll con fotos se quitó)
     def _alternar_sfx_go(self):
         try:
             import ajustes_ui
@@ -10721,35 +10786,40 @@ class SubtitleApp(QWidget):
         # v5.3.2: esta tarjeta MIRA lo que hay en Proyecto (el audio traído de Resolve o el video elegido, y si ya tiene palabras transcritas / la línea de
         # tiempo abierta en Resolve) y se adapta sola; si ya hay palabras, el editor se abre solo al entrar (ver _refrescar_editor_vacio)
         import editor_ui
-        t.capa.addWidget(editor_ui.MuestraPalabras(), 0, Qt.AlignmentFlag.AlignLeft)
+        self._ev_muestra = editor_ui.MuestraPalabras()
+        t.capa.addWidget(self._ev_muestra, 0, Qt.AlignmentFlag.AlignLeft)
         t.capa.addSpacing(4)
         self._ev_titulo = Etiqueta(tr('Todavía no hay palabras para corregir'), 22, peso='extra', color='#FFFFFF')
         t.capa.addWidget(self._ev_titulo)
         self._ev_texto = Etiqueta('', 14, color=TEXT_MUTED, envolver=True)
         t.capa.addWidget(self._ev_texto)
-        self._ev_pasos, cp = caja_v(espacio=8)
-        for i, paso in enumerate((tr('Abre tu timeline en Resolve o suelta un video en esta ventana.'),
-                                  tr('Pulsa GO en Inicio: transcribe y coloca los subtítulos.'),
-                                  tr('Vuelve aquí: las palabras aparecen solas para retocarlas.')), 1):
-            fp, cpp = caja_h(espacio=12)
-            fp.setMinimumHeight(28)
-            num = Etiqueta(str(i), 12, peso='negrita', color=ui.ACCENT_CLARO, alineacion=Qt.AlignmentFlag.AlignCenter)
-            num.setFixedSize(26, 26)
-            num.setStyleSheet(ui.traducir_hoja('QLabel { background: rgba(34, 181, 115, 0.12); border: 1px solid rgba(34, 181, 115, 0.45); border-radius: 13px; padding: 0px; }'))
-            cpp.addWidget(num, 0, Qt.AlignmentFlag.AlignVCenter)
-            cpp.addWidget(Etiqueta(paso, 14, color='#DCE4F2', envolver=True), 1)
-            cp.addWidget(fp)
-        self._ev_pasos.setMinimumHeight(3 * 28 + 2 * 8 + 6)        # (con el texto que se parte, la última fila salía recortada)
-        t.capa.addWidget(self._ev_pasos)
+        # v5.78 (el usuario eligió la propuesta B): sin audio, tres ejemplos reales con su video (Principal, Ortografía, Colores y letra)
+        # en lugar de la frase pequeña; los tres pasos van en una fila, junto a «Ir a Inicio»
+        self._ev_demo = editor_ui.DemoCorrector()
+        self._ev_demo.hide()
+        t.capa.addWidget(self._ev_demo, 1)
         self._ev_detalle = Etiqueta('', 13, color=ui.ACCENT_CLARO, envolver=True)
         t.capa.addWidget(self._ev_detalle)
         t.capa.addSpacing(8)
         fila, cf = caja_h(espacio=12)
+        self._ev_pasos, cp = caja_h(espacio=24)
+        for i, paso in enumerate((tr('Abre tu timeline o suelta un video'), tr('Pulsa GO en Inicio'), tr('Vuelve aquí a retocar')), 1):
+            fp, cpp = caja_h(espacio=10)
+            num = Etiqueta(str(i), 12, peso='negrita', color=ui.ACCENT_CLARO, alineacion=Qt.AlignmentFlag.AlignCenter)
+            num.setFixedSize(26, 26)
+            num.setStyleSheet(ui.traducir_hoja('QLabel { background: rgba(34, 181, 115, 0.12); border: 1px solid rgba(34, 181, 115, 0.45); border-radius: 13px; padding: 0px; }'))
+            cpp.addWidget(num, 0, Qt.AlignmentFlag.AlignVCenter)
+            cpp.addWidget(Etiqueta(paso, 13, color='#DCE4F2'), 0, Qt.AlignmentFlag.AlignVCenter)
+            cp.addWidget(fp)
+        cp.addStretch(1)
+        cf.addWidget(self._ev_pasos, 1)
         self.editar_btn2 = Boton(tr('Editar marcas del video elegido'), self._on_update, tipo='primario', alto=42)
         cf.addWidget(self.editar_btn2)
         self._ev_btn2 = Boton(tr('Ir a Estilo'), lambda: self.ir_a('estilos'), alto=42)
         cf.addWidget(self._ev_btn2)
-        cf.addStretch(1)
+        self._ev_relleno = QWidget()                                  # (sin los pasos, los botones siguen a la izquierda)
+        self._ev_relleno.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        cf.addWidget(self._ev_relleno, 1)
         t.capa.addWidget(fila)
         cv.addWidget(t, 0, Qt.AlignmentFlag.AlignHCenter)
         cv.addStretch(3)
@@ -10801,8 +10871,14 @@ class SubtitleApp(QWidget):
         b1.setVisible(True)
         b2.setVisible(True)
         b1.configure(state='normal')
-        self._ev_pasos.setVisible(modo == 'nada')              # (v5.66: los tres pasos, solo sin audio)
-        self._ev_tarjeta.setMinimumHeight(430 if modo == 'nada' else 300)
+        nada = modo == 'nada'
+        self._ev_pasos.setVisible(nada)                        # (v5.66: los tres pasos, solo sin audio)
+        self._ev_relleno.setVisible(not nada)
+        self._ev_demo.setVisible(nada)                         # (v5.78: sin audio, la demo con los dos videos en vez de la frase pequeña)
+        self._ev_muestra.setVisible(not nada)
+        self._ev_tarjeta.setMaximumWidth(1140 if nada else 720)
+        self._ev_tarjeta.setMinimumWidth(900 if nada else 640)
+        self._ev_tarjeta.setMinimumHeight(0 if nada else 300)
         if modo == 'ocupado':
             titulo, texto = tr('Transcribiendo…'), tr('En cuanto termine la transcripción, el editor se abre solo con todas las palabras para que pintes su rol.')
             b1.setVisible(False)
@@ -10824,7 +10900,7 @@ class SubtitleApp(QWidget):
         else:
             titulo = tr('Todavía no hay palabras para corregir')
             # (v5.63: «Obtener» ya no está en Proyecto: se quitó la franja del audio. v5.66: tres pasos y «Elegir un video…»)
-            texto = tr('Aquí retocas cada palabra de tus subtítulos: corriges lo que se oyó mal y eliges cuál va grande. Se llena solo en cuanto hay audio:')
+            texto = tr('Así se ve en el video lo que cambias aquí: tres ejemplos reales, a la vez.')
             b1.configure(text=tr('Ir a Inicio'))               # (el botón principal; el oculto deja su hueco: va el primero)
             b1.poner_comando(lambda: self.ir_a('inicio'))
             b2.setVisible(False)                               # (v5.66: sin «Elegir un video…», lo pidió el usuario)
@@ -14176,6 +14252,7 @@ class SubtitleApp(QWidget):
         formato = 'v' if sin_resolve else (self._formato_forzado() or self._formato_en_juego() or 'v')
         es_viral = bool(getattr(pack, 'viral', False))
         es_tipo = es_viral and plantillas.tema_base(pack.nombre) == 'Tema5'     # v5.76: el Tema 5 nuevo (clip «v tipo», solo vertical como antes)
+        es_rojo = es_viral and plantillas.tema_base(pack.nombre) == 'Tema7'     # v5.78: el Estilo 7 (la línea con la palabra que suena en rojo)
         if formato not in (('v', 'h') if es_viral and not es_tipo else ('v',)) or formato not in pack.formatos:
             avisar(tr('El estilo «{p}» es para vídeo vertical u horizontal: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)) if es_viral and not es_tipo
                    else tr('El estilo «{p}» es para vídeo vertical: uso el diseño de siempre.', p=plantillas.nombre_visible(pack.nombre)))
@@ -14205,7 +14282,9 @@ class SubtitleApp(QWidget):
             ancho_tl, alto_tl = (0, 0) if sin_resolve else (int(getattr(self, '_ancho_timeline', 0) or 0), int(getattr(self, '_alto_timeline', 0) or 0))
             if not (ancho_tl > 0 and alto_tl > 0):
                 ancho_tl, alto_tl = (1920, 1080) if formato == 'h' else (1080, 1920)
-            res = kp.planificar(palabras_finales, idioma=base_lang, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=ancla, mains=mains, fin_video=self._fin_video())
+            extra_rojo = {'perfil': kp.ROJO} if es_rojo else {}           # (v5.78: Estilo 7 = la misma línea con su perfil: Anton y el rojo)
+            res = kp.planificar(palabras_finales, idioma=base_lang, ancho_tl=ancho_tl, alto_tl=alto_tl, ancla=ancla, mains=mains, fin_video=self._fin_video(),
+                                **extra_rojo)
         else:
             res = kp.planificar(palabras_finales, idioma=base_lang, ancla=ancla, mains=mains, fin_video=self._fin_video(), kit=True)   # (v5.44: composición del kit)
         cues, plan = res['cues'], res['plan']
@@ -14253,7 +14332,7 @@ class SubtitleApp(QWidget):
         track = {'language': base_lang, 'style': 'kinetic', 'data_path': str(json_path), 'srt_path': str(srt_path), 'fonts': {}, 'adelanto_frames': 0,
                  'offset_frames': self._offset_frames(), **pista_plantilla, **pista_sfx, **pista_emojis}
         if es_viral:
-            track['clip_prueba'] = 'v tipo' if es_tipo else 'v linea'      # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.75: el de la línea; v5.76: el del Tema 5)
+            track['clip_prueba'] = 'v tipo' if es_tipo else ('v rojo' if es_rojo else 'v linea')      # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.75: el de la línea; v5.76: el del Tema 5)
         else:
             # v5.45 (el usuario: «los rings se quedan a medias»): en el kit el bloque EMPIEZA a salir al acabar y la salida dura 0,32 s; los clips del pack
             # la hacen en sus últimos 0,32 s, así que se alargan eso (antes salían 0,32 s antes y el aro, que tarda 0,45 s, no acababa de dibujarse)
@@ -14295,10 +14374,32 @@ class SubtitleApp(QWidget):
         return p if p is not None and getattr(p, 'mezcla', False) else None
     @staticmethod
     def _ajustes_de_pack(pack):
-        """v5.55: la letra y los colores que el usuario eligió en «Crea tu estilo» para ese pack (derivado o mezcla); {} si ninguno (los temas de
-        fábrica y los packs importados nunca llevan: la letra ya no sale de las prefs globales)."""
+        """v5.55: la letra y los colores que el usuario eligió en «Crea tu estilo» para ese pack (derivado o mezcla); {} si ninguno (los packs
+        importados nunca llevan: la letra ya no sale de las prefs globales).
+        v5.78: encima, los de «Colores y letra» del Corrector para ESE estilo (prefs 'corrector_ajustes' = {nombre del pack: ajustes}; también un
+        estilo de fábrica): lo vacío deja el de antes."""
         aj = getattr(pack, 'ajustes', None) or {}
-        return dict(aj) if isinstance(aj, dict) and any(aj.values()) else {}
+        aj = dict(aj) if isinstance(aj, dict) else {}
+        try:
+            import ajustes_ui
+            propios = (ajustes_ui.leer_prefs().get('corrector_ajustes') or {}).get(getattr(pack, 'nombre', None) or '') or {}
+            aj.update({k: v for k, v in propios.items() if k in CLAVES_ESTILO and v})
+        except Exception:
+            pass
+        return aj if any(aj.values()) else {}
+    def _poner_ajustes_corrector(self, nombre, ajustes):
+        """v5.78: guarda los «Colores y letra» del Corrector de un estilo (vacíos = se quitan: vuelve a los del estilo)."""
+        try:
+            import ajustes_ui
+            todos = dict(ajustes_ui.leer_prefs().get('corrector_ajustes') or {})
+            limpios = {k: v for k, v in (ajustes or {}).items() if k in CLAVES_ESTILO and v}
+            if limpios:
+                todos[nombre] = limpios
+            else:
+                todos.pop(nombre, None)
+            ajustes_ui.guardar_prefs({'corrector_ajustes': todos})
+        except Exception:
+            registro.excepcion(origen='Corrector · colores y letra')
     def _plantilla_personalizada(self, base, ajustes):
         """v5.55: el campo 'plantilla' del pack personalizado de `base` ('VIRAL', 'Tema4'…) con la letra y los colores ya en sus clips
         (pack_personalizado; en el hilo de generar: la primera vez tarda 0,1-0,7 s), o None sin ajustes o si no se pudo (va el pack de fábrica y
@@ -14315,8 +14416,8 @@ class SubtitleApp(QWidget):
     def _con_pack_personalizado(self, pack, pista_plantilla):
         """v5.55: un estilo DERIVADO de «Crea tu estilo» (un tema + letra y colores) sale por el camino normal de su tema; aquí su pista cambia el
         pack de fábrica por el personalizado. Sin ajustes, sin Resolve (GO sin Resolve los pinta él: _estilo_render) o si falla, tal cual."""
-        base = getattr(pack, 'base', None)
-        aj = self._ajustes_de_pack(pack)
+        base = getattr(pack, 'base', None) or (pack.nombre if plantillas.es_de_fabrica(getattr(pack, 'nombre', '')) else None)   # (v5.78: un
+        aj = self._ajustes_de_pack(pack)                                 # estilo de fábrica con «Colores y letra» del Corrector va igual que un derivado)
         if not base or not aj or getattr(self, '_go_sin_resolve', False):
             return pista_plantilla
         plantilla = self._plantilla_personalizada(base, aj)
@@ -14453,7 +14554,7 @@ class SubtitleApp(QWidget):
             # el pack principal de la pista (Kinetic si hay Tema 1; si no VIRAL; si no el primero: el Tema 5 de la v5.76 es su propio pack «v tipo») y
             # los demás packs de elementos en plantillas_extra (los clips «v …» de VIRAL / Tema5 junto a los «k …» de Kinetic)
             principal_k = 'Kinetic' if hay_t1 else ('VIRAL' if hay_t3 else (packs_k[0] if packs_k else 'VIRAL'))
-            prueba_k = {'VIRAL': 'v fina', 'Tema5': 'v tipo'}           # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»)
+            prueba_k = {'VIRAL': 'v fina', 'Tema5': 'v tipo', 'Tema7': 'v rojo'}     # el clip que prueba que el bin del pack está completo (el de Kinetic es «k hero blanco»; v5.78: el Estilo 7)
             pl_k = plantilla_de(principal_k)
             if pl_k:
                 track_k['plantilla'] = pl_k

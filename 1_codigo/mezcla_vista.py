@@ -82,6 +82,8 @@ def _interesa(look, motor, cue):
         return any(r.get('rol') == 'main' for r in (cue.get('runs') or []))
     if 'v tipo' in claves:                                       # v5.76: el Tema 5 (un bloque con serif encima o debajo, mejor)
         return len(cue.get('lines') or []) >= 2
+    if any(k.startswith('v rojo') for k in claves):               # v5.78: el Estilo 7 (un bloque de 2-3 palabras, mejor)
+        return sum(k == 'v rojo' for k in claves) >= 2
     if look.get('efecto'):
         return any(k.startswith(look['efecto']) for k in claves)
     return 'v negrita' in claves and len(claves) >= 4
@@ -196,6 +198,7 @@ def _dibujar_viral(lienzo, cue, esc):
     ancho, alto = lienzo.size
     texto, sombra, extra = _capa(ancho, alto), _capa(ancho, alto), _capa(ancho, alto)
     de = ImageDraw.Draw(extra)
+    rojo_puesto = False
     for i, run in enumerate(sorted(cue.get('runs') or [], key=lambda r: float(r.get('t') or 0))):
         clave, txt = str(run.get('k') or ''), str(run.get('texto') or '')
         if not txt:
@@ -211,6 +214,23 @@ def _dibujar_viral(lienzo, cue, esc):
         base = VC.base_de(clave)
         variante = clave[len(base):].strip() if clave.startswith(base) else ''
         par, _esp = VC._par(base if base in VC.CLIPS else 'v fina')
+        if base.startswith('v rojo'):                             # v5.78: el Estilo 7 (Anton blanca con contorno y sombra dura; UNA palabra en rojo)
+            activa = base.startswith('v rojo activa')
+            if activa and rojo_puesto:
+                continue
+            rojo_puesto = rojo_puesto or activa
+            import linea_planificador as LP
+            px = float(run.get('size') or 0.1) * LP.ROJO['k_px'] * esc
+            f = VC._fuente(par, px)
+            if f is None:
+                continue
+            cx, cy = float(run.get('x', 0.5)) * ancho, float(run.get('y', 0.5)) * alto
+            borde, off = max(1, int(round(px * 0.052))), px * 0.022 * 1080.0 / LP.ROJO['k_px']
+            d = ImageDraw.Draw(texto)
+            d.text((cx + off, cy + off * 1.36), txt, font=f, fill=(0, 0, 0, 255), anchor='mm', stroke_width=borde, stroke_fill=(0, 0, 0, 255))
+            d.text((cx, cy), txt, font=f, fill=((226, 6, 18) if activa else (250, 250, 250)) + (255,), anchor='mm', stroke_width=borde,
+                   stroke_fill=(0, 0, 0, 255))
+            continue
         px = float(run.get('size') or 0.09) * VC.K_PX * esc
         f = VC._fuente(par, px)
         if f is None:
@@ -311,7 +331,8 @@ def poster(ids, foto=0, ancho=540):
             continue
         motor, cue = b
         caja = cue.get('caja') or [0.45, 0.70]
-        centro = (float(caja[0]) + float(caja[1])) / 2.0
+        y0, y1 = (caja[1], caja[3]) if len(caja) == 4 else (caja[0], caja[1])     # (v5.78: la línea de los Estilos 3 y 7 trae (x0, y0, x1, y1))
+        centro = (float(y0) + float(y1)) / 2.0
         meta = (k + 1) / (len(ids) + 1.0) * 0.86 + 0.06           # franjas a lo largo del cuadro (sin pegar al borde)
         lienzo = _pintar(lienzo, motor, cue, esc, dy=meta - centro)
     return lienzo.convert('RGB')
