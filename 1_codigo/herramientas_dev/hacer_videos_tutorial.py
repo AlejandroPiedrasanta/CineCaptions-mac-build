@@ -15,6 +15,8 @@ No ensucia nada del usuario: prefs, Registro y archivos_seguros parcheados, sin 
 ~/DaVinciSubtitles antes y devuelve los que hubieran cambiado. Dentro de los videos no hay texto añadido: lo que el guion dice con
 `yield from g.decir(frase)` va a subtitulos.json con su tiempo real y lo pinta el reproductor encima, traducido (el mismo video vale para los
 10 idiomas); la interfaz grabada es la española. Una frase nueva necesita su traducción en 2_recursos/locales.
+v5.83: --idioma-ui en graba la interfaz EN INGLÉS con su voz (--voz-idiomas de fábrica = ese idioma) en 2_recursos/tutoriales/en/: el
+reproductor la usa con la interfaz en inglés (tutoriales.carpeta_de). Antes, las frases en inglés: voz_tutoriales.py --idiomas en.
 
 v5.82, la voz: cada frase de g.decir() es también LOCUCIÓN. Antes de grabar se hacen las frases con voz_tutoriales.py (ElevenLabs por el
 conector de Higgsfield, voz «Andre», hombre enérgico y alegre: --voz el_andre, la de fábrica); aquí se lee su índice: el guion espera a que acabe cada frase antes de lo siguiente (la más larga de --voz-idiomas, para que quepan
@@ -36,6 +38,17 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent.parent                       # 1_codigo
 os.environ.update(QT_QPA_PLATFORM='offscreen', QT_SCALE_FACTOR='1.5', QT_QPA_FONTDIR='C:/Windows/Fonts', CINECAPTIONS_SIN_MCP='1')
+# v5.83: --idioma-ui en graba la interfaz en ese idioma. Se lee AQUÍ, antes de importar el programa: i18n decide el idioma al importarse
+# (manda CINECAPTIONS_IDIOMA) y hay textos que se traducen al cargar cada módulo.
+IDIOMA_UI = next((sys.argv[i + 1] for i, x in enumerate(sys.argv[:-1]) if x == '--idioma-ui'), 'es').strip().lower() or 'es'
+os.environ['CINECAPTIONS_IDIOMA'] = IDIOMA_UI
+# lo que el guion teclea o enseña como «cosas del usuario» (el archivo soltado, el nombre de su estilo), en el idioma de la interfaz
+TEXTOS_UI = {'en': {'mi_video': 'my_video', 'Mi estilo de reels': 'My reels style'}}
+
+
+def _t(texto):
+    return TEXTOS_UI.get(IDIOMA_UI, {}).get(texto, texto)
+
 sys.path.insert(0, str(AQUI))
 os.chdir(AQUI)
 try:
@@ -262,7 +275,7 @@ def _sprite_archivo():
         p.restore()
     p.setPen(QColor('#FFFFFF'))
     p.setFont(ui.fuente(13, peso='negrita'))
-    p.drawText(QRectF(44, 7, 130, 20), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), 'mi_video.mp4')
+    p.drawText(QRectF(44, 7, 130, 20), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), _t('mi_video') + '.mp4')
     p.setPen(QColor('#8D9BB5'))
     p.setFont(ui.fuente(11))
     p.drawText(QRectF(44, 26, 130, 17), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), '0:32 · 24 MB')
@@ -849,7 +862,7 @@ def _reposo(p, modo='resolve'):
     elif modo == 'mp4':
         p.reposo(M.tr('GO te devuelve el video con los subtítulos (Ajustes)') + ' · ' + M.tr('suelta un video aquí'), forzar=True)
     else:
-        p.reposo('DaVinci Resolve Studio 21.2 detectado', forzar=True, tono='ok')
+        p.reposo(M.tr('DaVinci Resolve {e}{v} detectado', e='Studio', v=' 21.2'), forzar=True, tono='ok')   # el texto de colocacion.estado_resolve
 
 
 def _pasos_de(p, modo):
@@ -1117,9 +1130,9 @@ def g_crea(g):
         g.clic()
         yield 0.2
         nombre.selectAll()
-        yield g.teclear('Mi estilo de reels', nombre, 55)
+        yield g.teclear(_t('Mi estilo de reels'), nombre, 55)
         yield 0.3
-        crear = por_texto(dlg, 'Crear mi estilo', QAbstractButton)
+        crear = por_texto(dlg, M.tr('Crear mi estilo'), QAbstractButton)
         if crear is not None:
             yield g.mover(lambda: g.centro(crear), 0.8)
         yield g.esperar_voz(1.0)
@@ -1264,7 +1277,7 @@ def g_premiere(g):
     yield _trabajar(p, ['timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve'], 0.6)
     yield g.esperar_voz()
     p.paso('resolve', 'hecho')
-    p.terminar(True, M.tr('Listo: en Premiere Pro, secuencia «{s}». Pulsa GO para otro.', s='mi_video'),
+    p.terminar(True, M.tr('Listo: en Premiere Pro, secuencia «{s}». Pulsa GO para otro.', s=_t('mi_video')),
                [(12, 'bloques', 'n'), (48, 'palabras', 'n'), (18.5, 'duración', 't')])
     yield from g.decir('Si Premiere está cerrado, CineCaptions lo abre solo')
     yield g.esperar_voz(1.0)
@@ -1323,7 +1336,7 @@ def g_sin_editores(g):
     yield _trabajar(p, ['timeline', 'voz', 'ia', 'diseno', 'sfx', 'resolve'], 0.6)
     yield g.esperar_voz()
     p.paso('resolve', 'hecho')
-    p.terminar(True, M.tr('Listo: «{n}», junto a tu video. Pulsa GO para otro.', n='mi_video (CineCaptions).mp4'),
+    p.terminar(True, M.tr('Listo: «{n}», junto a tu video. Pulsa GO para otro.', n=_t('mi_video') + ' (CineCaptions).mp4'),
                [(12, 'bloques', 'n'), (48, 'palabras', 'n'), (18.5, 'duración', 't')])
     g.camara_a(g.rect(p.boton).adjusted(-80, -40, 80, 210), 1.1, aire=1.1)
     yield from g.decir('Tu video con subtítulos queda junto al original')
@@ -1577,7 +1590,7 @@ def g_sonido(g):
     pag = getattr(v, '_director_pagina', None) or v
     estilos = _de_clase(pag, 'TarjetaEstilo')            # Automático, Elegante, Dinámico, Lista, Cinética
     llaves = {x.text(): x for x in _de_clase(pag, 'Interruptor')}
-    aplicar = por_texto(pag, 'Aplicar a Resolve', QAbstractButton)
+    aplicar = por_texto(pag, M.tr('Aplicar a Resolve'), QAbstractButton)
     if estilos:                                          # v5.82: de cerca (antes la columna entera: la letra no se leía)
         g.camara_a(g.rect(estilos[0]).united(g.rect(estilos[-1])).adjusted(-30, -70, 260, 40), 1.0, aire=1.05)
     yield from g.decir('Elige cómo suena tu video')
@@ -1594,7 +1607,7 @@ def g_sonido(g):
         yield from g.decir('Elegante usa pocos efectos, y suaves')
         yield from elegir(1)
     g.poster()
-    fiesta = llaves.get('Fiesta o mar') or next(iter(llaves.values()), None)
+    fiesta = llaves.get(M.tr('Fiesta o mar')) or next(iter(llaves.values()), None)   # (textos de la app con M.tr: en inglés no se encontraban)
     if fiesta is not None:
         g.camara_a(g.rect(fiesta).adjusted(-40, -150, 300, 150), 1.0, aire=1.05)
         yield from g.decir('Enciende o apaga cada opción con su interruptor')
@@ -1857,14 +1870,17 @@ def grabar(v, ident, salida):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('ids', nargs='*')
-    ap.add_argument('--salida', default=str(tutoriales.carpeta()))
+    ap.add_argument('--idioma-ui', default='es', help='v5.83: el idioma de la interfaz grabada (en → 2_recursos/tutoriales/en/, con su voz)')
+    ap.add_argument('--salida', help='de fábrica, 2_recursos/tutoriales (español) o 2_recursos/tutoriales/<idioma>')
     ap.add_argument('--voz', default='el_andre', help='la voz de voz_tutoriales.py (su índice de frases): ElevenLabs «Andre», la que viaja')
-    ap.add_argument('--voz-idiomas', default='es', help='los idiomas con locución (el guion espera a la frase más larga de todos)')
+    ap.add_argument('--voz-idiomas', help='los idiomas con locución (el guion espera a la frase más larga de todos); de fábrica, el de la interfaz')
     a = ap.parse_args()
     ids = a.ids or list(GUIONES)
-    salida = Path(a.salida)
+    salida = Path(a.salida) if a.salida else (tutoriales.carpeta() if IDIOMA_UI == 'es' else tutoriales.carpeta() / IDIOMA_UI)
     salida.mkdir(parents=True, exist_ok=True)
-    cargar_voz(a.voz, [x.strip() for x in a.voz_idiomas.split(',') if x.strip()])
+    import i18n
+    print(f'interfaz en «{i18n.idioma()}» → {salida}', flush=True)
+    cargar_voz(a.voz, [x.strip() for x in (a.voz_idiomas or IDIOMA_UI).split(',') if x.strip()])
     v = M.SubtitleApp()
     v._guardar_preferencias = lambda *a, **k: None
     v._emojis_anim_anotado = True

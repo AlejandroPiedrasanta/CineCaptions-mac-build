@@ -51,6 +51,62 @@ def ruta_poster_captions(nombre):
     return _archivo(nombre, '_captions.jpg')
 
 
+# v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): imágenes decodificadas de antemano, en
+# varios hilos, y guardadas en memoria. QImage suelta el GIL al decodificar (medido: 240 JPEG en 224 ms con 4 hilos y el hilo de la interfaz
+# sin un solo hueco de más de 1,3 ms); antes, los ~100 pósters de las tarjetas de Efectos se decodificaban al armar la página, en el hilo de
+# la interfaz (la primera visita a Efectos tardaba ~0,3 s en verse).
+_IMAGENES = {}                                         # ruta (str) -> QImage
+_IMAGENES_CERROJO = threading.Lock()
+
+
+def imagen_de(ruta, guardar=True):
+    """La QImage de `ruta`: de la memoria si ya la decodificó precargar(); si no, ahora (y se guarda, salvo guardar=False: archivos del
+    usuario que pueden rehacerse con el mismo nombre, como la foto de un estilo de «Crea tu estilo»). La misma imagen que QImage(ruta)."""
+    from PySide6.QtGui import QImage
+    clave = str(ruta)
+    with _IMAGENES_CERROJO:
+        img = _IMAGENES.get(clave)
+    if img is None:
+        img = QImage(clave)
+        if guardar and not img.isNull():
+            with _IMAGENES_CERROJO:
+                img = _IMAGENES.setdefault(clave, img)
+    return img
+
+
+def precargar(carpetas, patron='*.jpg', hilos=None):
+    """Decodifica en varios hilos de prioridad baja las imágenes (`patron`) de esas carpetas y las guarda en memoria para `imagen_de`.
+    No espera: lista y decodifica fuera del hilo de la interfaz."""
+    def repartir():
+        import os
+        rutas = []
+        for c in carpetas:
+            try:
+                rutas += [str(p) for p in sorted(Path(c).glob(patron))]
+            except OSError:
+                pass
+        with _IMAGENES_CERROJO:
+            rutas = [r for r in rutas if r not in _IMAGENES]
+        n = max(1, min(len(rutas), hilos or max(2, min(8, (os.cpu_count() or 4) // 2))))
+        for i in range(n):
+            threading.Thread(target=_decodificar, args=(rutas[i::n],), name='precarga-imagenes', daemon=True).start()
+    threading.Thread(target=repartir, name='precarga-imagenes', daemon=True).start()
+
+
+def _decodificar(rutas):
+    from PySide6.QtGui import QImage
+    try:
+        import qt_kit
+        qt_kit.prioridad_hilo(-1)                      # (por debajo del hilo de la interfaz)
+    except Exception:
+        pass
+    for r in rutas:
+        img = QImage(r)
+        if not img.isNull():
+            with _IMAGENES_CERROJO:
+                _IMAGENES.setdefault(r, img)
+
+
 class Reproductor:
     """Reproduce un mp4 en bucle en un hilo y guarda el cuadro actual (QImage RGB32). Sin audio."""
     PAUSA_BUCLE_S = 0.8

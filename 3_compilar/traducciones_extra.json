@@ -13015,5 +13015,576 @@
   "ko": "다운로드가 끊겼다면: 연결을 확인하고(백신 프로그램이나 방화벽이 CineCaptions를 막고 있지 않은지도) “엔진 복구”를 다시 누르세요.",
   "ru": "Если загрузка прервалась: проверьте подключение (и что антивирус или брандмауэр не блокируют CineCaptions) и снова нажмите «Восстановить движок».",
   "zh": "如果下载中断：请检查网络连接（以及杀毒软件或防火墙没有拦截 CineCaptions），然后再点一次“修复引擎”。"
+ },
+ "1 anotación": {
+  "en": "1 note",
+  "pt": "1 nota",
+  "fr": "1 note",
+  "de": "1 Notiz",
+  "it": "1 annotazione",
+  "ja": "1件の注釈",
+  "ko": "1개 메모",
+  "ru": "1 заметка",
+  "zh": "1 个注释"
+ },
+ "carpeta «{c}»": {
+  "en": "folder “{c}”",
+  "pt": "pasta «{c}»",
+  "fr": "dossier « {c} »",
+  "de": "Ordner „{c}“",
+  "it": "cartella «{c}»",
+  "ja": "フォルダー「{c}」",
+  "ko": "폴더 “{c}”",
+  "ru": "папка «{c}»",
+  "zh": "文件夹“{c}”"
+ },
+ "Acento": {
+  "en": "Accent"
+ },
+ "Cristal oscuro": {
+  "en": "Dark glass"
+ },
+ "Oscura y translúcida, con un brillo del acento.": {
+  "en": "Dark and translucent, with a glow in the accent color."
+ },
+ "Blanca": {
+  "en": "White"
+ },
+ "Fondo blanco y letra oscura: se lee en cualquier video.": {
+  "en": "White background and dark text: readable on any video."
+ },
+ "Transparente": {
+  "en": "Transparent"
+ },
+ "Solo un contorno blanco: se ve el video detrás.": {
+  "en": "Just a white outline: the video shows through."
+ },
+ "Vidrio claro": {
+  "en": "Clear glass"
+ },
+ "Cristal esmerilado claro, con un brillo arriba.": {
+  "en": "Light frosted glass, with a shine on top."
+ },
+ "Neón": {
+  "en": "Neon"
+ },
+ "Un borde del acento que brilla.": {
+  "en": "A glowing border in the accent color."
+ },
+ "Color sólido": {
+  "en": "Solid color"
+ },
+ "Toda del color de acento, con letra blanca.": {
+  "en": "All in the accent color, with white text."
+ },
+ "Halo de luz": {
+  "en": "Light halo"
+ },
+ "Negra con un borde de luz de dos colores.": {
+  "en": "Black with a two-color glowing border."
+ },
+ "Etiqueta": {
+  "en": "Label"
+ },
+ "Blanca y recta, con una barra de color a la izquierda.": {
+  "en": "White and straight, with a color bar on the left."
+ },
+ "Blanca con borde grueso y sombra dura, un poco girada.": {
+  "en": "White with a thick border and a hard shadow, slightly tilted."
+ },
+ "Degradado": {
+  "en": "Gradient"
+ },
+ "Un degradado de dos colores.": {
+  "en": "A two-color gradient."
+ },
+ "Reflejo rojo": {
+  "en": "Red reflection"
+ },
+ "Casi negra con un reflejo rojo; el texto, fino, cae palabra a palabra.": {
+  "en": "Almost black with a red reflection; the thin text drops in word by word."
+ },
+ "Cuando el texto pasa por detrás de ti (Magic Mask), cómo se ve tu silueta: con sombra, con una orilla, con resplandor o sin nada.": {
+  "en": "When the text goes behind you (Magic Mask), how your silhouette looks: with a shadow, an outline, a glow or nothing at all."
+ },
+ "Color del efecto": {
+  "en": "Effect color"
+ },
+ "Sin efecto": {
+  "en": "No effect"
+ },
+ "Tu silueta tal cual, sin nada alrededor.": {
+  "en": "Your silhouette as it is, with nothing around it."
+ },
+ "Sombra suave": {
+  "en": "Soft shadow"
+ },
+ "Una sombra difuminada detrás de ti: te separa del texto.": {
+  "en": "A blurred shadow behind you: it sets you apart from the text."
+ },
+ "Sombra marcada": {
+  "en": "Hard shadow"
+ },
+ "Una sombra nítida desplazada, estilo póster.": {
+  "en": "A sharp offset shadow, poster style."
+ },
+ "Orilla blanca": {
+  "en": "White outline"
+ },
+ "Un borde blanco alrededor de tu silueta.": {
+  "en": "A white border around your silhouette."
+ },
+ "Aura blanca": {
+  "en": "White aura"
+ },
+ "Un halo blanco suave, como una luz de contra.": {
+  "en": "A soft white halo, like a backlight."
+ },
+ "Un trazo fino de color con brillo.": {
+  "en": "A thin glowing line of color."
+ },
+ "Borde blanco grueso y una sombra: pareces un recorte.": {
+  "en": "A thick white border and a shadow: you look like a cutout."
+ },
+ "El primer segundo: un destello de luz, el video que se aleja con un zoom y un golpe de sonido. Elige una intro y, si quieres, cambia su color, su sonido o su zoom en «Personaliza».": {
+  "en": "The first second: a flash of light, the video pulling back with a zoom and a hit of sound. Pick an intro and, if you like, change its color, sound or zoom in \"Customize\"."
+ },
+ "Color de la luz": {
+  "en": "Light color"
+ },
+ "Segundo color": {
+  "en": "Second color"
+ },
+ "Flash blanco": {
+  "en": "White flash"
+ },
+ "Un fogonazo blanco y el video se aleja de golpe.": {
+  "en": "A white flash and the video snaps back."
+ },
+ "Lima eléctrica": {
+  "en": "Electric lime"
+ },
+ "Luz lima con un borde rosa y un zoom suave.": {
+  "en": "Lime light with a pink edge and a gentle zoom."
+ },
+ "Verde neón": {
+  "en": "Neon green"
+ },
+ "Destello verde y el video sale desenfocado.": {
+  "en": "A green flash and the video emerges from a blur."
+ },
+ "Luz violeta y el cuadro gira al alejarse.": {
+  "en": "Violet light and the frame spins as it pulls back."
+ },
+ "Una raya de luz roja y amarilla con temblor.": {
+  "en": "A streak of red and yellow light with a shake."
+ },
+ "Atardecer": {
+  "en": "Sunset"
+ },
+ "Una mancha naranja y rosa; el zoom rebota.": {
+  "en": "An orange and pink glow; the zoom bounces."
+ },
+ "Hielo": {
+  "en": "Ice"
+ },
+ "Luz cian y los colores se separan un instante.": {
+  "en": "Cyan light and the colors split for an instant."
+ },
+ "Rosa y oro": {
+  "en": "Pink and gold"
+ },
+ "Una brasa rosa y dorada; el video entra de un latigazo.": {
+  "en": "A pink and gold ember; the video whips in."
+ },
+ "Las escenas a pantalla completa (cuaderno, chat, polaroid, calendario…) cuando cuentas algo. Eliges el tono y los colores.": {
+  "en": "Full-screen scenes (notebook, chat, polaroid, calendar…) when you tell a story. You choose the tone and the colors."
+ },
+ "Noche": {
+  "en": "Night"
+ },
+ "Escenas oscuras con brillos azules.": {
+  "en": "Dark scenes with blue highlights."
+ },
+ "Papel claro": {
+  "en": "Light paper"
+ },
+ "Escenas claras, como de papel.": {
+  "en": "Light scenes, like paper."
+ },
+ "Neón violeta": {
+  "en": "Violet neon"
+ },
+ "Oscuras con luces violeta.": {
+  "en": "Dark, with violet lights."
+ },
+ "Índigo eléctrico": {
+  "en": "Electric indigo"
+ },
+ "Azul profundo con luz eléctrica.": {
+  "en": "Deep blue with electric light."
+ },
+ "Cielo": {
+  "en": "Sky"
+ },
+ "Claras, con azules suaves.": {
+  "en": "Light, with soft blues."
+ },
+ "Oscuras con un brillo naranja cálido.": {
+  "en": "Dark, with a warm orange glow."
+ },
+ "Negro y verde de pantalla.": {
+  "en": "Black and screen green."
+ },
+ "Violeta y azul, mucho color.": {
+  "en": "Violet and blue, lots of color."
+ },
+ "Color con acentos rosas.": {
+  "en": "Color with pink accents."
+ },
+ "Monocromo": {
+  "en": "Monochrome"
+ },
+ "Blanco y tinta, sin color.": {
+  "en": "White and ink, no color."
+ },
+ "Listas, ruletas, rutas, títulos neón y cajas misterio sobre el video. Eliges la paleta y el tipo de diseño.": {
+  "en": "Lists, spinning wheels, routes, neon titles and mystery boxes over the video. You choose the palette and the design type."
+ },
+ "Violeta con brillos: el clásico del kit.": {
+  "en": "Violet with sparkles: the kit's classic."
+ },
+ "Azul eléctrico": {
+  "en": "Electric blue"
+ },
+ "Azules fríos y luminosos.": {
+  "en": "Cool, bright blues."
+ },
+ "Rojo y coral, con fuerza.": {
+  "en": "Red and coral, bold."
+ },
+ "Oro": {
+  "en": "Gold"
+ },
+ "Dorado cálido.": {
+  "en": "Warm gold."
+ },
+ "Papel claro y tinta, de revista.": {
+  "en": "Light paper and ink, magazine style."
+ },
+ "Magenta y lima": {
+  "en": "Magenta and lime"
+ },
+ "El neón del Estilo 1: magenta y lima.": {
+  "en": "The neon of Style 1: magenta and lime."
+ },
+ "Piezas de cristal translúcido.": {
+  "en": "Translucent glass pieces."
+ },
+ "Línea fina": {
+  "en": "Thin line"
+ },
+ "Diseños de línea, ligeros.": {
+  "en": "Light, line-based designs."
+ },
+ "Tarjetas": {
+  "en": "Cards"
+ },
+ "Diseños en tarjetas sólidas.": {
+  "en": "Designs on solid cards."
+ },
+ "Verde de pantalla sobre negro.": {
+  "en": "Screen green on black."
+ },
+ "Cifras, listas, mapas con bandera, rótulos y llamadas a la acción. Eliges la tipografía, el panel y los colores.": {
+  "en": "Numbers, lists, maps with flags, labels and calls to action. You choose the typeface, the panel and the colors."
+ },
+ "Panel oscuro translúcido, letra grotesca.": {
+  "en": "Dark translucent panel, grotesque type."
+ },
+ "Carta blanca": {
+  "en": "White card"
+ },
+ "Panel blanco y tinta oscura.": {
+  "en": "White panel and dark ink."
+ },
+ "Violeta con brillo.": {
+  "en": "Violet with a glow."
+ },
+ "Serif de revista sobre papel.": {
+  "en": "Magazine serif on paper."
+ },
+ "Monoespaciada en verde.": {
+  "en": "Monospaced in green."
+ },
+ "Naranja cálido sobre negro.": {
+  "en": "Warm orange on black."
+ },
+ "Redonda amable": {
+  "en": "Friendly round"
+ },
+ "Letra redonda y azules claros.": {
+  "en": "Rounded type and light blues."
+ },
+ "Azul profundo con luz.": {
+  "en": "Deep blue with light."
+ },
+ "Violeta y azul, redonda.": {
+  "en": "Violet and blue, rounded."
+ },
+ "Letra blanca y casi sin adornos.": {
+  "en": "White type with almost no frills."
+ },
+ "Las fotos de internet (con licencia) que salen cuando nombras algo. Eliges cómo se enmarcan.": {
+  "en": "Licensed photos from the internet that appear when you mention something. You choose how they're framed."
+ },
+ "Pantalla completa": {
+  "en": "Full screen"
+ },
+ "La foto llena el cuadro con un movimiento lento.": {
+  "en": "The photo fills the frame with a slow move."
+ },
+ "Marco blanco": {
+  "en": "White frame"
+ },
+ "Enmarcada en blanco, con una cinta adhesiva.": {
+  "en": "Framed in white, with a strip of tape."
+ },
+ "En un círculo con un anillo del acento.": {
+  "en": "In a circle with a ring in the accent color."
+ },
+ "Una polaroid girada con la palabra escrita en el pie.": {
+  "en": "A tilted polaroid with the word written at the bottom."
+ },
+ "Ventana": {
+  "en": "Window"
+ },
+ "Dentro de una ventana de app con su barra.": {
+  "en": "Inside an app window with its title bar."
+ },
+ "Pantalla dividida": {
+  "en": "Split screen"
+ },
+ "La foto arriba y la palabra grande abajo.": {
+  "en": "The photo on top and the big word below."
+ },
+ "Inclinada": {
+  "en": "Tilted"
+ },
+ "Una tarjeta en perspectiva que se endereza.": {
+  "en": "A card in perspective that straightens up."
+ },
+ "Marco neón": {
+  "en": "Neon frame"
+ },
+ "Bordes redondos con un borde que brilla.": {
+  "en": "Rounded corners with a glowing border."
+ },
+ "Cinta de película": {
+  "en": "Film strip"
+ },
+ "Dentro de una tira de película que entra.": {
+  "en": "Inside a film strip that slides in."
+ },
+ "En un panel de cristal sobre la misma foto desenfocada.": {
+  "en": "On a glass panel over the same photo, blurred."
+ },
+ "El video de motions que va encima de todo (el titular palabra a palabra y una tarjeta por idea). Eliges el fondo y los colores.": {
+  "en": "The motions video that goes on top of everything (the headline word by word and one card per idea). You choose the background and the colors."
+ },
+ "Fondo lavanda claro y tarjetas de colores.": {
+  "en": "Light lavender background and colorful cards."
+ },
+ "Fondo oscuro y tarjetas de colores.": {
+  "en": "Dark background and colorful cards."
+ },
+ "Índigo": {
+  "en": "Indigo"
+ },
+ "Azul noche y todo en azul eléctrico.": {
+  "en": "Midnight blue and everything in electric blue."
+ },
+ "Morado oscuro y violeta.": {
+  "en": "Dark purple and violet."
+ },
+ "Papel": {
+  "en": "Paper"
+ },
+ "Papel cálido y azul de tinta.": {
+  "en": "Warm paper and ink blue."
+ },
+ "Azul muy claro y azul vivo.": {
+  "en": "Very light blue and bright blue."
+ },
+ "Negro cálido y naranja.": {
+  "en": "Warm black and orange."
+ },
+ "Rosa claro y fucsia.": {
+  "en": "Light pink and fuchsia."
+ },
+ "Gris claro y tinta, sin color.": {
+  "en": "Light gray and ink, no color."
+ },
+ "según el estilo": {
+  "en": "based on the style"
+ },
+ "Elegante": {
+  "en": "Elegant"
+ },
+ "pocos y suaves": {
+  "en": "few and gentle"
+ },
+ "Dinámico": {
+  "en": "Dynamic"
+ },
+ "pop en cada clave": {
+  "en": "a pop on every key word"
+ },
+ "Lista": {
+  "en": "List"
+ },
+ "mismo sonido por ítem": {
+  "en": "same sound for each item"
+ },
+ "Cinética": {
+  "en": "Kinetic"
+ },
+ "palabra por palabra": {
+  "en": "word by word"
+ },
+ "Gancho": {
+  "en": "Hook"
+ },
+ "Palabra clave": {
+  "en": "Key word"
+ },
+ "Subtítulo": {
+  "en": "Caption"
+ },
+ "Aro": {
+  "en": "Ring"
+ },
+ "Cambio de escena": {
+  "en": "Scene change"
+ },
+ "Transición": {
+  "en": "Transition"
+ },
+ "Ícono": {
+  "en": "Icon"
+ },
+ "Tarjeta": {
+  "en": "Card"
+ },
+ "Foto": {
+  "en": "Photo"
+ },
+ "Botón ON": {
+  "en": "Switch ON"
+ },
+ "Botón OFF": {
+  "en": "Switch OFF"
+ },
+ "Notificación": {
+  "en": "Notification"
+ },
+ "Carga": {
+  "en": "Loading"
+ },
+ "Página": {
+  "en": "Page"
+ },
+ "Positivo": {
+  "en": "Positive"
+ },
+ "Negativo": {
+  "en": "Negative"
+ },
+ "Gráfica": {
+  "en": "Chart"
+ },
+ "Pegatina": {
+  "en": "Sticker"
+ },
+ "Tarjeta sube": {
+  "en": "Card rises"
+ },
+ "Impactos": {
+  "en": "Impacts"
+ },
+ "Acentos": {
+  "en": "Accents"
+ },
+ "Textura": {
+  "en": "Texture"
+ },
+ "Tipografía cinética": {
+  "en": "Kinetic typography"
+ },
+ "Tutoriales en inglés: con la interfaz en inglés, los 12 tutoriales salen con la interfaz, la voz y los subtítulos en inglés.": {
+  "en": "Tutorials in English: with the interface in English, the 12 tutorials show the interface, the voice and the subtitles in English.",
+  "pt": "Tutoriais em inglês: com a interface em inglês, os 12 tutoriais aparecem com a interface, a voz e as legendas em inglês.",
+  "fr": "Tutoriels en anglais : avec l'interface en anglais, les 12 tutoriels s'affichent avec l'interface, la voix et les sous-titres en anglais.",
+  "de": "Tutorials auf Englisch: Ist die Oberfläche auf Englisch, zeigen die 12 Tutorials die Oberfläche, die Stimme und die Untertitel auf Englisch.",
+  "it": "Tutorial in inglese: con l'interfaccia in inglese, i 12 tutorial mostrano l'interfaccia, la voce e i sottotitoli in inglese.",
+  "ja": "英語のチュートリアル：インターフェースを英語にすると、12本のチュートリアルがインターフェース・音声・字幕すべて英語になります。",
+  "ko": "영어 튜토리얼: 인터페이스를 영어로 하면 12개의 튜토리얼이 인터페이스, 음성, 자막 모두 영어로 나옵니다.",
+  "ru": "Обучающие видео на английском: при английском интерфейсе все 12 уроков идут с интерфейсом, голосом и субтитрами на английском.",
+  "zh": "英文教程：界面设为英文时，12 个教程的界面、配音和字幕都是英文。"
+ },
+ "Los estilos se llaman en el idioma de la interfaz y, en inglés, Efectos y Sonido ya no tienen textos en español.": {
+  "en": "The styles are named in the interface language and, in English, Effects and Sound no longer show Spanish text.",
+  "pt": "Os estilos aparecem com o nome no idioma da interface e, em inglês, Efeitos e Som já não têm textos em espanhol.",
+  "fr": "Les styles portent leur nom dans la langue de l'interface et, en anglais, Effets et Son n'ont plus de textes en espagnol.",
+  "de": "Die Stile heißen in der Sprache der Oberfläche, und auf Englisch zeigen Effekte und Ton keine spanischen Texte mehr.",
+  "it": "Gli stili hanno il nome nella lingua dell'interfaccia e, in inglese, Effetti e Suono non hanno più testi in spagnolo.",
+  "ja": "スタイル名がインターフェースの言語で表示されるようになり、英語ではエフェクトとサウンドにスペイン語が残らなくなりました。",
+  "ko": "스타일 이름이 인터페이스 언어로 표시되고, 영어에서는 효과와 사운드에 더 이상 스페인어가 나오지 않습니다.",
+  "ru": "Стили называются на языке интерфейса, а на английском в «Эффектах» и «Звуке» больше нет текстов на испанском.",
+  "zh": "样式名称会按界面语言显示；英文界面下，效果和声音页面不再出现西班牙语文字。"
+ },
+ "Arreglos: en Proyectos, los nombres muy largos ya no esconden «Abrir» y «Eliminar», y si dos videos se llaman igual se ve su carpeta; el panel de emojis del Corrector ya se lee bien.": {
+  "en": "Fixes: in Projects, very long names no longer hide «Open» and «Delete», and if two videos have the same name you see their folder; the Proofreader's emoji panel is readable again.",
+  "pt": "Correções: em Projetos, os nomes muito longos já não escondem «Abrir» e «Excluir» e, se dois vídeos têm o mesmo nome, aparece a pasta de cada um; o painel de emojis do Corretor já se lê bem.",
+  "fr": "Corrections : dans Projets, les noms très longs ne cachent plus «Ouvrir» et «Supprimer», et si deux vidéos ont le même nom, leur dossier s'affiche ; le panneau d'emojis du Correcteur est de nouveau lisible.",
+  "de": "Korrekturen: In Projekte verdecken sehr lange Namen nicht mehr «Öffnen» und «Löschen», und heißen zwei Videos gleich, wird ihr Ordner angezeigt; das Emoji-Panel im Korrektor ist wieder lesbar.",
+  "it": "Correzioni: in Progetti i nomi molto lunghi non nascondono più «Apri» ed «Elimina» e, se due video hanno lo stesso nome, si vede la loro cartella; il pannello delle emoji del Correttore ora si legge bene.",
+  "ja": "修正：プロジェクトで長すぎる名前が「開く」と「削除」を隠さなくなり、同じ名前の動画はフォルダーが表示されます。校正の絵文字パネルも読みやすくなりました。",
+  "ko": "수정: 프로젝트에서 아주 긴 이름이 더 이상 「열기」와 「삭제」를 가리지 않고, 이름이 같은 동영상은 폴더가 표시됩니다. 교정의 이모지 패널도 잘 읽힙니다.",
+  "ru": "Исправления: в «Проектах» очень длинные названия больше не скрывают «Открыть» и «Удалить», а у видео с одинаковым названием видна папка; панель эмодзи в «Корректоре» снова читается.",
+  "zh": "修复：在项目中，过长的名称不再挡住「打开」和「删除」，同名的视频会显示所在文件夹；校对器的表情面板也能看清了。"
+ },
+ "En alemán, francés y ruso ya no salen botones ni títulos cortados en Ajustes, y el Registro enseña los avisos al abrir y cuando «Reparar el motor» no puede bajar la IA de texto.": {
+  "en": "In German, French and Russian, buttons and titles in Settings are no longer cut off, and the Log shows the warnings at startup and when «Repair the engine» can't download the text AI.",
+  "pt": "Em alemão, francês e russo já não aparecem botões nem títulos cortados nos Ajustes, e o Registo mostra os avisos ao abrir e quando «Reparar o motor» não consegue baixar a IA de texto.",
+  "fr": "En allemand, français et russe, les boutons et les titres des Réglages ne sont plus coupés, et le Journal affiche les avertissements au démarrage et quand «Réparer le moteur» ne peut pas télécharger l'IA de texte.",
+  "de": "Auf Deutsch, Französisch und Russisch sind Schaltflächen und Titel in den Einstellungen nicht mehr abgeschnitten, und das Protokoll zeigt die Warnungen beim Start und wenn «Engine reparieren» die Text-KI nicht herunterladen kann.",
+  "it": "In tedesco, francese e russo i pulsanti e i titoli delle Impostazioni non sono più tagliati, e il Registro mostra gli avvisi all'avvio e quando «Ripara il motore» non riesce a scaricare l'IA di testo.",
+  "ja": "ドイツ語・フランス語・ロシア語で設定のボタンやタイトルが切れなくなり、ログには起動時の警告と、「エンジンを修復」がテキストAIをダウンロードできなかったときの警告が表示されます。",
+  "ko": "독일어, 프랑스어, 러시아어에서 설정의 버튼과 제목이 더 이상 잘리지 않고, 로그에 시작할 때의 경고와 「엔진 복구」가 텍스트 AI를 내려받지 못했을 때의 경고가 표시됩니다.",
+  "ru": "На немецком, французском и русском кнопки и заголовки в настройках больше не обрезаются, а журнал показывает предупреждения при запуске и когда «Восстановить движок» не может скачать текстовый ИИ.",
+  "zh": "德语、法语和俄语下，设置中的按钮和标题不再被截断；日志会显示启动时的警告，以及「修复引擎」无法下载文本 AI 时的警告。"
+ },
+ "Más fluido: Efectos, Estilo y Sonido se preparan mientras estás en Inicio y se abren al momento, y «Expandir ajustes» va más rápido.": {
+  "en": "Smoother: Effects, Style and Sound get ready while you're on Home and open instantly, and «Expand settings» is faster.",
+  "pt": "Mais fluido: Efeitos, Estilo e Som se preparam enquanto você está no Início e abrem na hora, e «Expandir ajustes» ficou mais rápido.",
+  "fr": "Plus fluide : Effets, Style et Son se préparent pendant que vous êtes sur l'Accueil et s'ouvrent aussitôt, et «Développer les réglages» est plus rapide.",
+  "de": "Flüssiger: Effekte, Stil und Ton werden vorbereitet, während du auf Start bist, und öffnen sich sofort; «Einstellungen erweitern» geht schneller.",
+  "it": "Più fluido: Effetti, Stile e Suono si preparano mentre sei in Home e si aprono subito, e «Espandi impostazioni» è più veloce.",
+  "ja": "よりなめらかに：ホームにいる間にエフェクト・スタイル・サウンドが準備され、すぐに開きます。「設定を展開」も速くなりました。",
+  "ko": "더 부드럽게: 홈에 있는 동안 효과, 스타일, 사운드가 준비되어 바로 열리고, 「설정 확장」도 더 빨라졌습니다.",
+  "ru": "Плавнее: «Эффекты», «Стиль» и «Звук» готовятся, пока вы на главной, и открываются сразу, а «Развернуть настройки» работает быстрее.",
+  "zh": "更流畅：在主页时，效果、样式和声音页面会提前准备好，点开即显示；「展开设置」也更快了。"
+ },
+ "En Sonido, la mezcla ya cabe entera en su recuadro: en ventanas bajas escondía las últimas pistas.": {
+  "en": "In Sound, the mix now fits entirely in its box: in short windows it hid the last tracks.",
+  "pt": "Em Som, a mixagem agora cabe inteira no seu quadro: em janelas baixas escondia as últimas faixas.",
+  "fr": "Dans Son, le mixage tient maintenant en entier dans son cadre : dans les fenêtres basses, il cachait les dernières pistes.",
+  "de": "In Ton passt die Mischung jetzt ganz in ihren Rahmen: In niedrigen Fenstern verdeckte sie die letzten Spuren.",
+  "it": "In Suono, il mix ora sta tutto nel suo riquadro: nelle finestre basse nascondeva le ultime tracce.",
+  "ja": "サウンドのミックスが枠内に収まるようになりました。高さの低いウィンドウでは最後のトラックが隠れていました。",
+  "ko": "사운드의 믹스가 이제 상자 안에 모두 들어갑니다. 높이가 낮은 창에서는 마지막 트랙이 가려졌습니다.",
+  "ru": "В «Звуке» микс теперь целиком помещается в свою рамку: в низких окнах он скрывал последние дорожки.",
+  "zh": "声音页面的混音现在能完整显示在框内：之前在较矮的窗口中会挡住最后几条音轨。"
  }
 }

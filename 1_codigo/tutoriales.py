@@ -9,9 +9,13 @@ Los usan la guía (recorrido_ui: la tira con el video bajo la zona iluminada, pr
 (el reproductor con la lista, propuesta B2). v5.82 (el usuario: «agrégale voz… y tutoriales de cambiar de DaVinci Resolve por Premiere o sin
 editores… más de la interfaz, probando estilos»): cada video lleva su LOCUCIÓN aparte, una por idioma (voz/<idioma>/<id>.m4a, hecha con
 herramientas_dev/voz_tutoriales.py: voz natural local, sin servicios de fuera), y hay cinco tutoriales «paso a paso» además de las páginas.
+v5.83 (el usuario: «si el usuario coloca inglés los videos tutoriales siguen en español»): un idioma puede tener SU grabación, con la
+interfaz en ese idioma, su voz y sus tiempos, en 2_recursos/tutoriales/<idioma>/ (hoy: en). Sin ella, la de español con los subtítulos
+traducidos.
 
     TUTORIALES                      [(id, título, texto)]: las páginas y luego los «paso a paso». En español: quien los pinta pasa cada uno por tr()
     GUIA / GRUPOS                   los ids de la guía (uno por página) y los grupos de la lista de Ajustes › Tutoriales
+    carpeta_de(id, idioma=None)     la carpeta de ese tutorial en el idioma de la interfaz (tutoriales/<idioma>/ o la de español)
     ruta_video(id) / ruta_poster(id)   el archivo o None (si falta, la guía y Ajustes siguen sin ese video)
     ruta_voz(id, idioma=None)       la locución en el idioma de la interfaz o None (entonces el video va solo con sus subtítulos)
     subtitulos(id)                  [(desde, hasta, frase)]: las frases que el reproductor pinta encima del video (traducidas)
@@ -82,12 +86,46 @@ def carpeta():
     return _base_recursos() / 'tutoriales'
 
 
-def _archivo(ident, ext):
+def _idioma_ui():
     try:
-        ruta = carpeta() / f'{ident}{ext}'
-        return ruta if ruta.is_file() and ruta.stat().st_size > 1000 else None
+        import i18n
+        return i18n.idioma() or 'es'
     except Exception:
-        return None
+        return 'es'
+
+
+_CARPETAS = {}
+
+
+def carpeta_de(ident, idioma=None):
+    """v5.83 (el usuario: «si el usuario coloca inglés los videos tutoriales siguen en español»): la carpeta de ESE tutorial en el idioma
+    de la interfaz: 2_recursos/tutoriales/<idioma>/ si allí está grabado (la interfaz en ese idioma, con su voz y sus tiempos) o la de
+    siempre (la interfaz en español; los subtítulos se traducen al pintarse). El video, su miniatura, su duración, sus subtítulos y su voz
+    salen SIEMPRE de la misma carpeta: los tiempos de una grabación no valen para la otra."""
+    idioma = str(idioma or _idioma_ui())
+    clave = (ident, idioma)
+    if clave not in _CARPETAS:
+        base = carpeta()
+        if idioma != 'es':
+            try:
+                ruta = base / idioma / f'{ident}.mp4'
+                if ruta.is_file() and ruta.stat().st_size > 1000:
+                    base = base / idioma
+            except Exception:
+                pass
+        _CARPETAS[clave] = base
+    return _CARPETAS[clave]
+
+
+def _archivo(ident, ext):
+    for base in dict.fromkeys((carpeta_de(ident), carpeta())):     # la miniatura que falte en otro idioma, la de español
+        try:
+            ruta = base / f'{ident}{ext}'
+            if ruta.is_file() and ruta.stat().st_size > 1000:
+                return ruta
+        except Exception:
+            pass
+    return None
 
 
 def ruta_video(ident):
@@ -104,16 +142,13 @@ VOZ_RESPALDO = ()
 
 
 def ruta_voz(ident, idioma=None):
-    """La locución del tutorial (2_recursos/tutoriales/voz/<idioma>/<id>.m4a) en el idioma de la interfaz, o None."""
+    """La locución del tutorial (<carpeta_de(id)>/voz/<idioma>/<id>.m4a) en el idioma de la interfaz, o None."""
     if idioma is None:
-        try:
-            import i18n
-            idioma = i18n.idioma()
-        except Exception:
-            idioma = 'es'
+        idioma = _idioma_ui()
+    base = carpeta_de(ident, idioma)
     for cod in (idioma,) + tuple(c for c in VOZ_RESPALDO if c != idioma):
         try:
-            ruta = carpeta() / 'voz' / str(cod) / f'{ident}.m4a'
+            ruta = base / 'voz' / str(cod) / f'{ident}.m4a'
             if ruta.is_file() and ruta.stat().st_size > 1000:
                 return ruta
         except Exception:
@@ -138,37 +173,36 @@ def poner_voz_activa(si):
         pass
 
 
-_DURACIONES = {}
+_DURACIONES = {}       # {carpeta: {id: segundos}}
+_SUBTITULOS = {}       # {carpeta: {id: [[desde, hasta, frase]]}}
+
+
+def _json_de(cache, base, nombre):
+    """El .json de esa carpeta (lo escribe el generador), leído una vez; {} si no está."""
+    clave = str(base)
+    if clave not in cache:
+        try:
+            import json
+            datos = json.loads((base / nombre).read_text(encoding='utf-8'))
+            cache[clave] = datos if isinstance(datos, dict) else {}
+        except Exception:
+            cache[clave] = {}
+    return cache[clave]
 
 
 def duracion(ident):
-    """Segundos del video (de 2_recursos/tutoriales/duraciones.json, que escribe el generador; 0 si no está). Se lee una vez."""
-    if not _DURACIONES:
-        try:
-            import json
-            _DURACIONES.update(json.loads((carpeta() / 'duraciones.json').read_text(encoding='utf-8')) or {})
-        except Exception:
-            _DURACIONES['_'] = 0
+    """Segundos del video (duraciones.json de su carpeta, que escribe el generador; 0 si no está)."""
     try:
-        return float(_DURACIONES.get(ident) or 0.0)
+        return float(_json_de(_DURACIONES, carpeta_de(ident), 'duraciones.json').get(ident) or 0.0)
     except (TypeError, ValueError):
         return 0.0
 
 
-_SUBTITULOS = {}
-
-
 def subtitulos(ident):
-    """[(desde, hasta, frase)] del video (2_recursos/tutoriales/subtitulos.json, que escribe el generador con los tiempos reales de cada
-    acción). Las frases van en español: el reproductor las pasa por tr() al pintarlas (v5.76, estilo A que eligió el usuario)."""
-    if not _SUBTITULOS:
-        try:
-            import json
-            _SUBTITULOS.update(json.loads((carpeta() / 'subtitulos.json').read_text(encoding='utf-8')) or {})
-        except Exception:
-            _SUBTITULOS['_'] = []
+    """[(desde, hasta, frase)] del video (subtitulos.json de su carpeta, que escribe el generador con los tiempos reales de cada
+    acción). Las frases van en español en todas las carpetas: el reproductor las pasa por tr() al pintarlas (v5.76, estilo A)."""
     out = []
-    for c in _SUBTITULOS.get(ident) or []:
+    for c in _json_de(_SUBTITULOS, carpeta_de(ident), 'subtitulos.json').get(ident) or []:
         try:
             out.append((float(c[0]), float(c[1]), str(c[2])))
         except (TypeError, ValueError, IndexError):

@@ -32,6 +32,24 @@ def _marcar(b, si):
         b.style().polish(b)
 
 
+def armar_paso(obj):
+    """v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): un trozo (unos ms) del armado POR
+    PARTES de `obj` (su generador `_pasos`); False cuando ya está entero. Así la página Efectos se arma entre cuadro y cuadro de Inicio, sin
+    trabar su animación, y el primer clic la encuentra hecha (PaginaEfectos, SeccionEstilosPro y SeccionEstilo)."""
+    pasos = getattr(obj, '_pasos', None)
+    if pasos is None:
+        return False
+    try:
+        next(pasos)
+        return True
+    except StopIteration:
+        obj._pasos = None
+        return False
+    except BaseException:
+        obj._pasos = None
+        raise
+
+
 # ====================================================================================== el slider de tarjetas (una fila que se desliza)
 class _Flecha(QWidget):
     """Un círculo con una flecha a un lado del slider (solo se ve si hay más tarjetas hacia ese lado)."""
@@ -392,8 +410,20 @@ class _Cabecera(QWidget):
 class SeccionEstilo(Tarjeta):
     cambio = Signal()
 
-    def __init__(self, seccion, opcion, padre=None):
+    def __init__(self, seccion, opcion, padre=None, por_partes=False):
         super().__init__(padre, espacio=12, margenes=(22, 18, 22, 18))
+        self._pasos = self._armar(seccion, opcion)       # v5.83: con por_partes=True quien la crea la termina a trozos (armar_paso)
+        if not por_partes:
+            self.completar()
+
+    def armar_paso(self):
+        return armar_paso(self)
+
+    def completar(self):
+        while armar_paso(self):
+            pass
+
+    def _armar(self, seccion, opcion):
         from efectos_pagina import TarjetaEfecto
         self.s = seccion
         self.clave = seccion['clave']
@@ -425,6 +455,7 @@ class SeccionEstilo(Tarjeta):
         cuerpo.addWidget(Etiqueta(tr(seccion['detalle']), 13, color=TEXT_MUTED, envolver=True))   # (v5.58: «detrás de ti» ya no es solo de Studio)
         self._lbl_estado = Etiqueta('', 12, color='#8EA2C6', envolver=True)
         cuerpo.addWidget(self._lbl_estado)
+        yield
         self.cartas = {}
         lista = []
         for ident, nombre, detalle in [('', tr('Automático'), tr('Lo deciden el estilo y el video, como siempre.'))] + \
@@ -434,8 +465,11 @@ class SeccionEstilo(Tarjeta):
             c.clic.connect(self._elegir)
             self.cartas[ident] = c
             lista.append(c)
+            if len(lista) % 4 == 0:
+                yield
         self.slider = SliderCartas(lista)
         cuerpo.addWidget(self.slider)
+        yield
         # ---- colores (v5.33, el gancho: «Personaliza» = colores + sonido + zoom en UNA fila; cada botón abre su tira debajo, una a la vez)
         fila, cf = caja_h(espacio=8)
         extras = seccion.get('sonidos') or seccion.get('zooms')
@@ -457,25 +491,13 @@ class SeccionEstilo(Tarjeta):
             cf.addWidget(self._chip_zoom)
         cf.addStretch(1)
         cuerpo.addWidget(fila)
-        self._tira = QWidget()
-        ct = QHBoxLayout(self._tira)
-        ct.setContentsMargins(0, 0, 0, 0)
-        ct.setSpacing(6)
-        ct.addWidget(Boton(tr('Automático'), lambda: self._poner_color(''), tipo='fantasma', alto=30, tam=12))
+        # la tira de colores (oculta hasta tocar un chip): v5.83, se arma la primera vez que se abre (_asegurar_tira); sus 12 muestras, el campo
+        # y los dos botones costaban ~3 ms por sección al abrir Efectos y casi nunca se abre
+        self._capa_cuerpo, self._fila_colores = cuerpo, fila
+        self._tira = None
         self._muestras = []
-        for col in EST.MUESTRAS:
-            m = Muestra(col)
-            m.clic.connect(self._poner_color)
-            ct.addWidget(m)
-            self._muestras.append(m)
         self._v_hex = StringVar('')
-        self._hex = Entrada(self._v_hex, placeholder='#RRGGBB', alto=30, tam=12, ancho=104)
-        self._hex.editingFinished.connect(lambda: self._poner_color(str(self._v_hex.get() or '')))
-        ct.addWidget(self._hex)
-        ct.addWidget(Boton(tr('Cerrar'), self._cerrar_tira, tipo='fantasma', alto=30, tam=12))
-        ct.addStretch(1)
-        self._tira.setVisible(False)
-        cuerpo.addWidget(self._tira)
+        yield
         # ---- v5.33, el gancho: la tira del SONIDO (el usuario: «por si el sonido por defecto no me gusta»: el de la intro, el de otra,
         # ninguno o uno tuyo; cada uno suena al tocarlo) y la del ZOOM («te faltó el botón de efecto de zoom»: el de la intro, otro o ninguno)
         self._tira_s = self._tira_z = self._b_propio = None
@@ -494,6 +516,8 @@ class SeccionEstilo(Tarjeta):
                    + [(intros_gancho.SIN_ZOOM, tr('Sin zoom'))])
             self._tira_z, self._botones_z = self._tira_opciones(ops, self._poner_zoom)
             cuerpo.addWidget(self._tira_z)
+        if self._tira_s is not None or self._tira_z is not None:
+            yield
         # v5.25: filas propias de la sección (Emojis animados: «Dónde» e «Intensidad»; las mismas preferencias que la píldora del menú lateral)
         self._ajustes = []
         for pref, etiqueta, opciones in seccion.get('ajustes') or []:
@@ -506,6 +530,8 @@ class SeccionEstilo(Tarjeta):
             ca.addStretch(1)
             cuerpo.addWidget(fila_a)
             self._ajustes.append((pref, opciones, var))
+        if self._ajustes:
+            yield
         self._abierta = True                            # v5.21 (el usuario: «siempre deja desplegadas las secciones»): abiertas al entrar
         self._cuerpo.setVisible(self._abierta)
         self._cab.poner_abierta(self._abierta)
@@ -824,8 +850,33 @@ class SeccionEstilo(Tarjeta):
         self.refrescar()
         self.cambio.emit()
 
+    def _asegurar_tira(self):
+        """v5.83: la tira de colores se arma la primera vez que se abre (debajo de la fila «Colores» / «Personaliza»)."""
+        if self._tira is not None:
+            return self._tira
+        tira = QWidget()
+        ct = QHBoxLayout(tira)
+        ct.setContentsMargins(0, 0, 0, 0)
+        ct.setSpacing(6)
+        ct.addWidget(Boton(tr('Automático'), lambda: self._poner_color(''), tipo='fantasma', alto=30, tam=12))
+        for col in EST.MUESTRAS:
+            m = Muestra(col)
+            m.clic.connect(self._poner_color)
+            ct.addWidget(m)
+            self._muestras.append(m)
+        self._hex = Entrada(self._v_hex, placeholder='#RRGGBB', alto=30, tam=12, ancho=104)
+        self._hex.editingFinished.connect(lambda: self._poner_color(str(self._v_hex.get() or '')))
+        ct.addWidget(self._hex)
+        ct.addWidget(Boton(tr('Cerrar'), self._cerrar_tira, tipo='fantasma', alto=30, tam=12))
+        ct.addStretch(1)
+        tira.setVisible(False)
+        self._capa_cuerpo.insertWidget(self._capa_cuerpo.indexOf(self._fila_colores) + 1, tira)
+        self._tira = tira
+        return tira
+
     def _abrir_tira(self, hueco):
-        if self._tira.isVisible() and self._hueco == hueco:
+        tira = self._asegurar_tira()
+        if tira.isVisible() and self._hueco == hueco:
             self._cerrar_tira()
             return
         self._hueco = hueco
@@ -834,12 +885,13 @@ class SeccionEstilo(Tarjeta):
         for t in (self._tira_s, self._tira_z):          # (v5.33: una tira a la vez)
             if t is not None:
                 t.setVisible(False)
-        self._tira.setVisible(True)
+        tira.setVisible(True)
         self.refrescar()
 
     def _cerrar_tira(self, refrescar=True):
         self._hueco = None
-        self._tira.setVisible(False)
+        if self._tira is not None:
+            self._tira.setVisible(False)
         if refrescar:
             self.refrescar()
 
@@ -860,8 +912,21 @@ class SeccionEstilosPro(QWidget):
     """Todas las secciones de la PRO, en el orden del menú lateral de Proyecto (las que se ven en este equipo: sin Studio no sale «detrás de ti»)."""
     cambio = Signal()
 
-    def __init__(self, padre=None):
+    def __init__(self, padre=None, por_partes=False):
         super().__init__(padre)
+        self.secciones = []
+        self._pasos = self._armar()                      # v5.83: con por_partes=True quien la crea la termina a trozos (armar_paso)
+        if not por_partes:
+            self.completar()
+
+    def armar_paso(self):
+        return armar_paso(self)
+
+    def completar(self):
+        while armar_paso(self):
+            pass
+
+    def _armar(self):
         capa = QVBoxLayout(self)
         capa.setContentsMargins(0, 0, 0, 0)
         capa.setSpacing(18)                              # (sin la tarjeta «Edición PRO: estilos» de cabecera: el usuario, «elimina esto»)
@@ -872,11 +937,13 @@ class SeccionEstilosPro(QWidget):
             visibles = []
         por = {o['clave']: o for o in visibles}
         orden = list(por)                                # v5.23 (el usuario: «ordena la página de Efectos conforme al menú»): el orden del menú lateral
-        self.secciones = []
         for s in sorted(EST.SECCIONES, key=lambda s: orden.index(s['clave']) if s['clave'] in orden else len(orden)):
             if visibles and s['clave'] not in por:
                 continue
-            sec = SeccionEstilo(s, por.get(s['clave']))
+            yield
+            sec = SeccionEstilo(s, por.get(s['clave']), self, por_partes=True)       # (v5.83: hija desde ya: sin re-colgarla después)
+            while sec.armar_paso():
+                yield
             sec.cambio.connect(self.cambio.emit)
             capa.addWidget(sec)
             self.secciones.append(sec)

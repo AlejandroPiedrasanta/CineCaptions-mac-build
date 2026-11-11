@@ -438,6 +438,19 @@ def nombre_visible(nombre):
     return FABRICA.get(nombre, nombre)
 
 
+def nombre_para_ui(nombre):
+    """v5.83 (los tutoriales en inglés enseñaban «Estilo 7» bajo el carrusel): el nombre que se PINTA en la interfaz, los de fábrica en el
+    idioma del usuario («Style 7»); el resto, el suyo. nombre_visible() sigue fijo en español (Registro, comparaciones, posiciones)."""
+    v = FABRICA.get(nombre)
+    if not v:
+        return nombre
+    try:
+        from i18n import tr
+        return tr('Estilo {n}', n=v.rsplit(' ', 1)[-1])
+    except Exception:
+        return v
+
+
 def es_de_fabrica(nombre):
     return nombre in FABRICA
 

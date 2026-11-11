@@ -545,7 +545,7 @@ class DialogoRegistro(Dialogo):
             vacio = Etiqueta(tr('Sin errores.') if self._nivel == 'error' else tr('Sin información todavía.'), 14, color='#6C7B96', alineacion=Qt.AlignmentFlag.AlignCenter)
             self._cl.insertWidget(0, vacio)
         extra = ' · ' + tr('mostrando las {n} más recientes', n=self.MAXIMO) if len(datos) > self.MAXIMO else ''
-        self._cuenta.setText(tr('{n} anotaciones', n=len(datos)) + extra)
+        self._cuenta.setText((tr('1 anotación') if len(datos) == 1 else tr('{n} anotaciones', n=len(datos))) + extra)   # (v5.83: decía «1 anotaciones»)
         registro.registro().marcar_leidas()
 
     def _copiar_una(self, e):

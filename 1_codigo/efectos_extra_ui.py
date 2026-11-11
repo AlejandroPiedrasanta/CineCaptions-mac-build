@@ -240,11 +240,24 @@ class DialogoPropio(Dialogo):
 class SeccionExtras(QWidget):
     """Las tarjetas de «Más efectos». Cada control guarda su preferencia al momento."""
 
-    def __init__(self, padre=None):
+    def __init__(self, padre=None, por_partes=False):
         super().__init__(padre)
         self._dialogo = None
         self.tarjetas = []                                 # las tarjetas con ejemplo animado (la página las mueve solo mientras se ven)
         self._filas = {}
+        self._pasos = self._armar()                        # v5.83: con por_partes=True la página Efectos la termina a trozos (armar_paso)
+        if not por_partes:
+            self.completar()
+
+    def armar_paso(self):
+        from efectos_pro_ui import armar_paso
+        return armar_paso(self)
+
+    def completar(self):
+        while self.armar_paso():
+            pass
+
+    def _armar(self):
         capa = QVBoxLayout(self)
         capa.setContentsMargins(0, 0, 0, 0)
         capa.setSpacing(18)
@@ -270,6 +283,7 @@ class SeccionExtras(QWidget):
         t3.capa.addWidget(Interruptor(tr('Sonido en el cierre'), self._v_snd, lambda: _guardar({'fx_outro_sonido': bool(self._v_snd.get())}), tam=14, color='#FFFFFF'))
         t3.setParent(self)
         t3.hide()                                        # v5.20: «Cierre del video» quitado de la página (GO tampoco lo pone)
+        yield
         # ---- sonido extra: sonidos de corte y de gancho, música de fondo, normalizar
         try:
             import ajustes_ui

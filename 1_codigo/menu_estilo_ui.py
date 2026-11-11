@@ -89,7 +89,15 @@ def colocar(w, ancla=None):
     w.move(x, y)
 
 
-def _numero(etiqueta):
+def _numero(etiqueta, nombre=None):
+    """El número del póster. v5.83: la etiqueta va traducida (plantillas.nombre_para_ui) y en coreano el número va DELANTE («4 스타일»):
+    en los de fábrica se saca de su nombre en español («Estilo 4»); los del usuario, de su etiqueta como siempre."""
+    try:
+        import plantillas
+        if nombre and plantillas.es_de_fabrica(nombre):
+            etiqueta = plantillas.nombre_visible(nombre)
+    except Exception:
+        pass
     m = re.search(r'(\d+)\s*$', str(etiqueta or ''))
     return m.group(1) if m else None
 
@@ -304,7 +312,7 @@ class PanelEstilo(QWidget):
         else:
             p.setPen(QPen(QColor(255, 255, 255, 22), 1.0))
             p.drawRoundedRect(rc.adjusted(0.5, 0.5, -0.5, -0.5), 11.5, 11.5)
-        num = _numero(pk.get('etiqueta'))
+        num = _numero(pk.get('etiqueta'), pk.get('nombre'))
         if num:                                                             # el número, arriba a la izquierda (el elegido, con ✓)
             fm = QFontMetricsF(self._f_num)
             w = max(22.0, fm.horizontalAdvance(num) + 14 + (14 if elegido else 0))

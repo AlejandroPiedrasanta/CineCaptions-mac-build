@@ -4617,6 +4617,14 @@
     "Tutoriales nuevos con voz: cambiar a Premiere Pro o a «Video sin editores», la interfaz, probar los estilos y la ayuda.": "音声付きの新しいチュートリアル：Premiere Proや「エディターなしの動画」への切り替え、インターフェース、スタイルの試し方、ヘルプ。",
     "Más nítido en 4K y Cancelar inmediato: GO vuelve a Inicio al momento y Resolve se cierra detrás.": "4Kでより鮮明に、キャンセルは即座に：GOはすぐにホームへ戻り、Resolveは裏で閉じます。",
     "Ajustes abre más rápido y «Acerca de CineCaptions» va ahora dentro de Ayuda; en Estilo, el slider es más grande.": "設定がより速く開き、「CineCaptionsについて」はヘルプの中に移りました。スタイルではスライダーが大きくなりました。",
-    "Arreglos: el aviso de la IA dice qué falta de verdad (y «Reparar» avisa si no pudo bajarla), el programa ya no se queda trabado al abrir y desaparecen los avisos falsos de «no se puede escribir».": "修正：AIの警告が本当に足りないものを伝えるようになり（ダウンロードできなかった場合は「修復」が知らせます）、起動時に固まらなくなり、「書き込めません」の誤った警告が出なくなりました。"
+    "Arreglos: el aviso de la IA dice qué falta de verdad (y «Reparar» avisa si no pudo bajarla), el programa ya no se queda trabado al abrir y desaparecen los avisos falsos de «no se puede escribir».": "修正：AIの警告が本当に足りないものを伝えるようになり（ダウンロードできなかった場合は「修復」が知らせます）、起動時に固まらなくなり、「書き込めません」の誤った警告が出なくなりました。",
+    "1 anotación": "1件の注釈",
+    "carpeta «{c}»": "フォルダー「{c}」",
+    "Tutoriales en inglés: con la interfaz en inglés, los 12 tutoriales salen con la interfaz, la voz y los subtítulos en inglés.": "英語のチュートリアル：インターフェースを英語にすると、12本のチュートリアルがインターフェース・音声・字幕すべて英語になります。",
+    "Los estilos se llaman en el idioma de la interfaz y, en inglés, Efectos y Sonido ya no tienen textos en español.": "スタイル名がインターフェースの言語で表示されるようになり、英語ではエフェクトとサウンドにスペイン語が残らなくなりました。",
+    "Arreglos: en Proyectos, los nombres muy largos ya no esconden «Abrir» y «Eliminar», y si dos videos se llaman igual se ve su carpeta; el panel de emojis del Corrector ya se lee bien.": "修正：プロジェクトで長すぎる名前が「開く」と「削除」を隠さなくなり、同じ名前の動画はフォルダーが表示されます。校正の絵文字パネルも読みやすくなりました。",
+    "En alemán, francés y ruso ya no salen botones ni títulos cortados en Ajustes, y el Registro enseña los avisos al abrir y cuando «Reparar el motor» no puede bajar la IA de texto.": "ドイツ語・フランス語・ロシア語で設定のボタンやタイトルが切れなくなり、ログには起動時の警告と、「エンジンを修復」がテキストAIをダウンロードできなかったときの警告が表示されます。",
+    "Más fluido: Efectos, Estilo y Sonido se preparan mientras estás en Inicio y se abren al momento, y «Expandir ajustes» va más rápido.": "よりなめらかに：ホームにいる間にエフェクト・スタイル・サウンドが準備され、すぐに開きます。「設定を展開」も速くなりました。",
+    "En Sonido, la mezcla ya cabe entera en su recuadro: en ventanas bajas escondía las últimas pistas.": "サウンドのミックスが枠内に収まるようになりました。高さの低いウィンドウでは最後のトラックが隠れていました。"
   }
 }

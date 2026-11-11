@@ -50,13 +50,16 @@ def _carpeta_fotos():
 
 
 def fotos():
-    """Las fotos de fondo (QImage), en orden. Se leen una sola vez."""
+    """Las fotos de fondo (QImage), en orden. Se leen una sola vez.
+    v5.83: de la memoria de vistas_slider.imagen_de (el programa las decodifica en otros hilos al abrir): leerlas aquí, en el hilo de la
+    interfaz, eran ~45 ms del primer clic en Estilo."""
     global _FOTOS
     if _FOTOS is None:
         lista = []
         try:
+            import vistas_slider
             for ruta in sorted(_carpeta_fotos().glob('fondo_*.jpg')):
-                img = QImage(str(ruta))
+                img = vistas_slider.imagen_de(ruta)
                 if not img.isNull():
                     lista.append(img)
         except Exception:
@@ -65,9 +68,16 @@ def fotos():
     return _FOTOS
 
 
+_COLOR_MEDIO = {}                    # v5.83: cacheKey de la foto -> su color medio (antes se reescalaba la foto entera a 1×1 en cada tic)
+
+
 def _color_medio(img):
-    c = QColor(img.scaled(1, 1, Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation).pixelColor(0, 0))
-    return c
+    clave = img.cacheKey()
+    c = _COLOR_MEDIO.get(clave)
+    if c is None:
+        c = _COLOR_MEDIO[clave] = QColor(img.scaled(1, 1, Qt.AspectRatioMode.IgnoreAspectRatio,
+                                                    Qt.TransformationMode.SmoothTransformation).pixelColor(0, 0))
+    return QColor(c)
 
 
 class Carta:
@@ -104,14 +114,15 @@ class Carta:
         self._poster_img = None
 
     def imagen_poster(self, sin=False):
-        if sin and self.poster_sin:
+        import vistas_slider                         # (v5.83: los de fábrica ya decodificados en otros hilos al abrir: vistas_slider.precargar;
+        if sin and self.poster_sin:                  #  los de «Crea tu estilo» se leen aquí, sin guardarlos: pueden rehacerse con el mismo nombre)
             if self._poster_sin_img is None:
-                img = QImage(str(self.poster_sin))
+                img = vistas_slider.imagen_de(self.poster_sin, guardar=False)
                 self._poster_sin_img = img if not img.isNull() else False
             if self._poster_sin_img:
                 return self._poster_sin_img
         if self._poster_img is None and self.poster:
-            img = QImage(str(self.poster))
+            img = vistas_slider.imagen_de(self.poster, guardar=False)
             self._poster_img = img if not img.isNull() else False
         return self._poster_img or None
 
@@ -313,7 +324,9 @@ class CarruselPacks(QWidget):
     def hideEvent(self, e):
         self._reloj.stop()
         self._gestionar_video()
-        self._capas = self._cajas_previas = None          # (v5.82: las capas pesan ~13 MB cada una: fuera de la página no se guardan)
+        # (v5.83, el usuario: «utiliza toda la memoria para que sea fluido y rápido»: las capas, ~14 MB cada una, se GUARDAN al salir de la
+        # página: al volver a Estilo no se rehacen —~20 ms— si nada cambió; su clave lo comprueba)
+        self._cajas_previas = None
         super().hideEvent(e)
 
     def resizeEvent(self, e):

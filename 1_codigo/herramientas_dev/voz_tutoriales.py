@@ -81,9 +81,11 @@ PRONUNCIA = {
            ('Premiere Pro', 'Premier Pro'), ('Premiere', 'Premier'), ('timeline', 'táimlain'), ('GO', 'Gou'), ('MP4', 'eme pe cuatro'),
            ('WhatsApp', 'Guatsap'), ('captions', 'cápshons'), ('PRO', 'Pro')],
 }
-# Con un servicio (ElevenLabs) las marcas en inglés ya salen bien dentro del español: solo que no deletree las mayúsculas
+# Con un servicio (ElevenLabs) las marcas en inglés ya salen bien dentro del español: solo que no deletree las mayúsculas.
+# En inglés, «CineCaptions» de una pieza se lee mal: separado suena «Cine Captions».
 PRONUNCIA_SERVICIO = {
     'es': [('GO', 'Go'), ('PRO', 'Pro')],
+    'en': [('CineCaptions', 'Cine Captions'), ('GO', 'Go'), ('PRO', 'Pro')],
 }
 
 
@@ -120,6 +122,35 @@ ANIMO_ES = {
     'GO aplica solo lo que elijas': '¡GO aplica solo lo que elijas!',
     'En Tutoriales están todos estos videos': '¡En Tutoriales están todos estos videos!',
 }
+# v5.83 (el usuario: «si está en idioma inglés hay que adaptarlo captions y audio»): las mismas frases exclamadas en inglés. La clave es
+# la traducción de locales/en.json: si esa traducción cambia, la frase se dice normal (no falla).
+ANIMO_EN = {
+    'Drag your video into the CineCaptions window': 'Drag your video into the CineCaptions window!',
+    'Done! Everything lands in your timeline': 'Done! Everything lands in your timeline!',
+    'Each card is a style, with real captions': 'Each card is a style, with real captions!',
+    'You can change it anytime': 'You can change it anytime!',
+    'Give it a name and create it': 'Give it a name and create it!',
+    'Browse the styles by dragging the cards': 'Browse the styles by dragging the cards!',
+    'When you like one, click the one in the middle to use it': 'When you like one, click the one in the middle to use it!',
+    'Edit in Premiere Pro? Open the settings': 'Edit in Premiere Pro? Open the settings!',
+    'In General, turn on "Use with Premiere Pro"': 'In General, turn on "Use with Premiere Pro"!',
+    'Drop your video and GO builds the sequence: video, captions and sounds': 'Drop your video and GO builds the sequence: video, captions and sounds!',
+    'If Premiere is closed, CineCaptions opens it for you': 'If Premiere is closed, CineCaptions opens it for you!',
+    "Don't use a video editor? Open the settings": "Don't use a video editor? Open the settings!",
+    'Turn on "Video without editors"': 'Turn on "Video without editors"!',
+    'Drop your video and press GO: no need for DaVinci or Premiere': 'Drop your video and press GO! No need for DaVinci or Premiere.',
+    'Your captioned video is saved next to the original': 'Your captioned video is saved next to the original!',
+    'Click the one you like best': 'Click the one you like best!',
+    'Something not working? Open Help in the settings': 'Something not working? Open Help in the settings!',
+    "Message us on WhatsApp: your computer's report is ready to send": "Message us on WhatsApp! Your computer's report is ready to send.",
+    'After GO, your words show up here': 'After GO, your words show up here!',
+    'And done: word fixed': 'And done! Word fixed.',
+    'Choose how your video sounds': 'Choose how your video sounds!',
+    'Here you choose the effects GO adds on its own': 'Here you choose the effects GO adds on its own!',
+    'GO applies whatever you choose on its own': 'GO applies whatever you choose on its own!',
+    'All these videos are in Tutorials': 'All these videos are in Tutorials!',
+}
+ANIMO = {'es': ANIMO_ES, 'en': ANIMO_EN}
 
 
 # ---------------------------------------------------------------------------------------------------- las frases
@@ -168,11 +199,11 @@ def traduccion(frase, idioma):
 
 
 def hablado(texto, idioma, motor='qwen', voz=None):
-    """El texto tal como se le da a la voz: con el ánimo de la voz (ANIMO_ES), sin comillas ni signos que se leerían, y con la
-    pronunciación del motor."""
+    """El texto tal como se le da a la voz: con el ánimo de la voz (ANIMO_ES / ANIMO_EN), sin comillas ni signos que se leerían, y con
+    la pronunciación del motor."""
     t = texto
-    if idioma == 'es' and (VOCES_SERVICIO.get(voz) or {}).get('animo'):
-        t = ANIMO_ES.get(texto, texto)
+    if (VOCES_SERVICIO.get(voz) or {}).get('animo'):
+        t = (ANIMO.get(idioma) or {}).get(texto, texto)
     for c in '«»“”„「」"':
         t = t.replace(c, '')
     t = t.replace('›', ',').replace('…', '...')

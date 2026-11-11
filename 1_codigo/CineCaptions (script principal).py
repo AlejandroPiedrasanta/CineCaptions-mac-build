@@ -452,9 +452,11 @@ class ProyectosWindow(Dialogo):
             self.lista_frame.agregar(Etiqueta(tr('Aún no hay proyectos guardados.\nGenera subtítulos de un video para que aparezca aquí.'), color='gray60', alineacion=Qt.AlignmentFlag.AlignCenter), alineacion=Qt.AlignmentFlag.AlignHCenter)
             self.lista_frame.capa.insertSpacing(0, 40)
         else:
+            from collections import Counter
+            veces = Counter(proyectos.nombre_display(p) for p in self._items)
             for proy in self._items:
-                self._agregar_fila(proy)
-    def _agregar_fila(self, proy):
+                self._agregar_fila(proy, veces[proyectos.nombre_display(proy)] > 1)
+    def _agregar_fila(self, proy, repetido=False):
         fila = QFrame()
         fila.setObjectName('fila')
         cf = QHBoxLayout(fila)
@@ -463,7 +465,8 @@ class ProyectosWindow(Dialogo):
         info, ci = caja_v(espacio=2)
         nombre = proyectos.nombre_display(proy)
         color_nombre = '#E0EBFB' if proy.get('existe') else '#B0836C'
-        ci.addWidget(Etiqueta(nombre, 13, True, color_nombre))
+        # v5.83: con «…» si no cabe. Antes un nombre de 150 letras ensanchaba TODAS las filas y «Abrir» y «Eliminar» quedaban fuera de la ventana
+        ci.addWidget(ui.Elidida(nombre, 13, True, color_nombre))
         ts = proy.get('modificado_en') or 0
         try:
             fecha = time.strftime('%Y-%m-%d %H:%M', time.localtime(ts))
@@ -472,7 +475,10 @@ class ProyectosWindow(Dialogo):
         detalle = tr('Última edición: {fecha}', fecha=fecha)
         if not proy.get('existe'):
             detalle += tr('  •  video no encontrado')
-        ci.addWidget(Etiqueta(detalle, 12, color='gray55'))
+        ci.addWidget(ui.Elidida(detalle, 12, color='gray55'))
+        carpeta = Path(proy.get('video_path') or '').parent.name
+        if repetido and carpeta:                     # v5.83: dos videos con el mismo nombre: de qué carpeta es cada uno (en su línea: al final se cortaba)
+            ci.addWidget(ui.Elidida(tr('carpeta «{c}»', c=carpeta), 12, color='gray55'))
         cf.addWidget(info, 1)
         botones, cb = caja_v(espacio=4)
         if proy.get('existe'):
@@ -917,6 +923,12 @@ class EmojiPickerWindow(QFrame):
         # v5.5: el ESTILO de los emojis: 3D (Fluent, de Microsoft), Google (Noto) o los del sistema (planos). Lo que el programa no trae se baja la primera vez que se usa y queda guardado.
         self._estilos = [('animado', tr('Animado')), ('fluent3d', tr('3D')), ('noto', tr('Google'))] + ([('sistema', tr('Sistema'))] if emojis.fuente_sistema() is not None else [])
         self.estilo_var = StringVar(next((n for k, n in self._estilos if k == emojis.estilo()), self._estilos[0][1]))
+        acciones = cb
+        cb.addStretch(1)
+        capa.addWidget(botones)
+        # v5.83: el estilo, en SU fila. En una sola con «Quitar emoji» y «➕ Mi PNG…» (como lo abre el editor de palabras) no cabía en los 480 px
+        # del panel: «Animado · 3D · Google · Sistema» quedaba aplastado e ilegible y «⬇ Bajar todos» cortado
+        fila_estilo, cb = caja_h(espacio=6)
         seg_estilo = Segmentado([n for _k, n in self._estilos], self.estilo_var, self._on_estilo, alto=28, tam=12)
         cb.addWidget(seg_estilo)
         Tooltip(seg_estilo, tr('El estilo de los emojis. Animado: los emojis que se mueven (Noto Animated, de Google) y, los que no, en 3D. 3D: Fluent de Microsoft (licencia MIT), fijos. Google: Noto, fijos. '
@@ -931,9 +943,29 @@ class EmojiPickerWindow(QFrame):
         self._reloj_sets.timeout.connect(self._tic_sets)
         self._reloj_sets.start(1200)
         cb.addStretch(1)
-        capa.addWidget(botones)
+        capa.addWidget(fila_estilo)
+        self._acomodar_bajar(acciones, cb, seg_estilo)
         self._sugeridos = emojis.sugerir(palabra, self._idioma)
         self._pintar()
+    def _acomodar_bajar(self, acciones, fila_estilo, seg_estilo):
+        """v5.83: «⬇ Bajar todos» va junto al estilo si cabe; si no (en ruso, «⬇ Скачать все»), al final de los botones de arriba y, si
+        tampoco cabe ahí, en su propia línea bajo el estilo. Nunca cortado."""
+        from PySide6.QtWidgets import QBoxLayout
+        ancho = self.ANCHO - 28                                   # (los márgenes del panel: 14 + 14)
+        def pide(*ws):
+            for w in ws:
+                w.ensurePolished()                                # (con la hoja de estilo: si no, el ancho pedido sale sin el relleno)
+            return sum(w.sizeHint().width() for w in ws) + 6 * max(0, len(ws) - 1)
+        if pide(seg_estilo, self.bajar_btn) <= ancho:
+            return
+        arriba = [acciones.itemAt(i).widget() for i in range(acciones.count()) if acciones.itemAt(i).widget() is not None]
+        fila_estilo.removeWidget(self.bajar_btn)
+        if pide(*arriba, self.bajar_btn) <= ancho:
+            acciones.insertWidget(acciones.count() - 1, self.bajar_btn)          # (antes del muelle del final)
+        else:
+            fila_estilo.setDirection(QBoxLayout.Direction.TopToBottom)
+            fila_estilo.setAlignment(seg_estilo, Qt.AlignmentFlag.AlignLeft)
+            fila_estilo.insertWidget(1, self.bajar_btn, 0, Qt.AlignmentFlag.AlignLeft)
     def mostrar_en(self, x, y, ancho=None, alto=None):
         """Aparece en esas coordenadas DE LA VENTANA y toma el teclado. Quien
         lo coloca es WordTagWindow._colocar_junto_a."""
@@ -1870,7 +1902,7 @@ class PlantillasWindow(QWidget):
     def __init__(self, master, seleccion=None, on_elegir=None,
                  on_importar=None, formato=None,
                  diseno_actual=None, on_diseno=None,
-                 basicos_actual=None, on_basicos=None, modo='dinamico', franja=None):
+                 basicos_actual=None, on_basicos=None, modo='dinamico', franja=None, por_partes=False):
         super().__init__()
         self.app = master
         self.on_elegir = on_elegir
@@ -1890,6 +1922,28 @@ class PlantillasWindow(QWidget):
         self._tarjetas = {}
         self._fuentes_cache = {}
         self._envolver = []
+        # v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): se arma con un generador; con
+        # por_partes=True quien la crea la termina a trozos (armar_paso) entre cuadro y cuadro de Inicio; si no, entera aquí, como siempre
+        self._pasos = self._armar(franja)
+        if not por_partes:
+            self.completar()
+    def armar_paso(self):
+        """v5.83: un trozo del armado (unos ms); False cuando ya está entera."""
+        if self._pasos is None:
+            return False
+        try:
+            next(self._pasos)
+            return True
+        except StopIteration:
+            self._pasos = None
+            return False
+        except BaseException:
+            self._pasos = None
+            raise
+    def completar(self):
+        while self.armar_paso():
+            pass
+    def _armar(self, franja):
         import estilos_slider
         capa = QVBoxLayout(self)
         capa.setContentsMargins(0, 0, 0, 0)
@@ -1930,6 +1984,7 @@ class PlantillasWindow(QWidget):
         self.carrusel.elegida.connect(self._elegir)
         self.carrusel.centrada.connect(self._pintar_info)
         self.carrusel.anadir.connect(self._crear_estilo)          # v5.62: la carta del final es «Crea tu estilo» (sin importar .drb)
+        yield
         # v5.5.10: con la PRO en juego, a los lados del slider: el ejemplo real (izquierda) y los motions que pondrá GO (derecha), en las mismas
         # preferencias que la página Efectos (pro_lateral_ui)
         import pro_lateral_ui
@@ -1941,6 +1996,7 @@ class PlantillasWindow(QWidget):
         self.carrusel.centrada.connect(lambda _c: self.lateral_pro.refrescar() if self.lateral_pro.isVisible() else None)
         self.tarjeta.capa.addWidget(self.lateral_pro, 1)
         self.tarjeta.zonas_vivas = self._zonas_vivas_cielo
+        yield
         # el panel del estilo que está al centro: nombre, aviso de tipografías, nota, estructura y botones
         self._carta_actual = None
         import un_clic_ui
@@ -1983,7 +2039,8 @@ class PlantillasWindow(QWidget):
         self.ocultos_lnk.hide()
         self.tarjeta.capa.addWidget(self.ocultos_lnk, 0, Qt.AlignmentFlag.AlignLeft)
         capa.addWidget(self.tarjeta, 1)
-        self._recargar()
+        yield
+        yield from self._recargar_pasos()
     def actualizar(self, seleccion=None, basicos_actual=None, modo=None, formato=None, diseno_actual=None):
         """La app avisa de un cambio de modo, formato o eleccion."""
         if seleccion is not None:
@@ -2494,6 +2551,10 @@ class PlantillasWindow(QWidget):
     def _recargar(self, seleccionar=None):
         """Rehace el slider. Con 'seleccionar', ademas apunta ese pack (hasta la v1.0.26 no lo hacia y un pack recien importado se pisaba
         con "auto": «simula que los importa pero al generar no los toma»). Se queda en la tarjeta que estaba al centro."""
+        for _ in self._recargar_pasos(seleccionar):
+            pass
+    def _recargar_pasos(self, seleccionar=None):
+        """v5.83: _recargar a trozos (una tarjeta por trozo): el armado por partes lo recorre entre cuadro y cuadro; _recargar, de un tirón."""
         if seleccionar:
             self.seleccion.set(seleccionar)
         self.setUpdatesEnabled(False)
@@ -2522,6 +2583,7 @@ class PlantillasWindow(QWidget):
             self.ocultos_lnk.hide()                   # v5.4.5: sin «Mostrar los packs quitados» (se quitó el enlace de Proyecto)
             for pack in packs:
                 cartas.append(self._carta_pack(pack))
+                yield
             cartas.append(estilos_slider.Carta('__anadir__', tr('Crea tu estilo'), tipo='anadir', detalle=tr('Elige los estilos, tu letra y tus colores, y ponle nombre.')))
             self.carrusel.poner_cartas(cartas, self._valor_actual())
             try:
@@ -2545,7 +2607,7 @@ class PlantillasWindow(QWidget):
         aviso = '\n'.join('· ' + p for p in pack.problemas) if pack.problemas else None
         est = plantillas.estructura_de(pack)
         import vistas_slider
-        return estilos_slider.Carta(pack.nombre, plantillas.nombre_visible(pack.nombre), lineas=lineas_de_vista(pack.nombre, self._formato_vista(pack)),
+        return estilos_slider.Carta(pack.nombre, plantillas.nombre_para_ui(pack.nombre), lineas=lineas_de_vista(pack.nombre, self._formato_vista(pack)),
                                     video=vistas_slider.ruta_video(pack.nombre), poster=vistas_slider.ruta_poster(pack.nombre) or self._poster_mezcla(pack),
                                     video_sin=vistas_slider.ruta_video_captions(pack.nombre), poster_sin=vistas_slider.ruta_poster_captions(pack.nombre),
                                     real=self._real_de(pack), formatos=self._texto_formatos(pack) or '', meta=self._meta_de(est),
@@ -2556,7 +2618,7 @@ class PlantillasWindow(QWidget):
         """Lo que lleva un estilo propio de «Crea tu estilo» (sus temas o looks y, si la eligió, «tu letra y tus colores»); '' si no es uno."""
         propios = tr(' · tu letra y tus colores') if getattr(pack, 'con_ajustes', False) else ''
         if getattr(pack, 'base', None):                  # v5.55: un tema con su letra y sus colores (pack derivado)
-            return plantillas.nombre_visible(pack.base) + propios
+            return plantillas.nombre_para_ui(pack.base) + propios
         if not getattr(pack, 'mezcla', False):
             return ''
         try:
@@ -3497,7 +3559,9 @@ class _AvisoToast:
         self._ultimo = ('', 0.0)
 
     def configure(self, text=None, text_color=None, silencio=False, **_):
-        if not text or silencio:
+        # v5.83: lo que está EN MARCHA («Corrigiendo la ortografía con IA…») no se anota: llegaba al Registro como «OK» y la línea de Inicio
+        # lo enseñaba con ✓, como si ya estuviera hecho. El resultado («✓ 3 correcciones aplicadas…») sí se anota
+        if not text or silencio or str(text).rstrip().endswith(('…', '...')):
             return None
         ahora = time.perf_counter()
         if text == self._ultimo[0] and ahora - self._ultimo[1] < 1.5:
@@ -5528,7 +5592,7 @@ class WordTagWindow(QWidget):
         nota = (tr('En el Estilo 2, las palabras grandes con letra Amro conservan su color.') if plantillas.tema_base(nombre) == 'Referencia' else
                 tr('En el Estilo 7 todas las palabras llevan la letra de la palabra grande; su color es el de la palabra que se dice.')
                 if plantillas.tema_base(nombre) == 'Tema7' else '')     # v5.78 (pack_personalizado.ajuste_de_clip)
-        t.poner(aj, plantillas.nombre_visible(nombre), nota)
+        t.poner(aj, plantillas.nombre_para_ui(nombre), nota)
 
     def _colores_cambiados(self, ajustes):
         """v5.78: un toque en «Colores y letra»: se guarda para el estilo elegido y el móvil se rehace (GO lo usará igual)."""
@@ -6525,30 +6589,37 @@ class SubtitleApp(QWidget):
         despues(2500, self._precalentar_mcp, self)
         despues(9000, self._precalentar_secuencias_emoji, self)
         despues(12000, self._precalentar_ondas_sfx, self)
-        despues(7000, self._prearmar_paginas, self)
+        despues(4000, self._prearmar_paginas, self)            # (v5.83: a trozos, sin tirones: ya no hace falta esperar a los 7 s)
+        despues(2000, self._precalentar_imagenes, self)
+    def _precalentar_imagenes(self):
+        """v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): los pósters de las tarjetas de
+        Efectos (~140 JPEG, ~70 MB en memoria), decodificados en varios hilos de prioridad baja (vistas_slider.precargar): al armar Efectos
+        ya no se decodifican en el hilo de la interfaz. Y las fotos de fondo y los pósters del slider de Estilo (fotos() costaba ~45 ms)."""
+        try:
+            import vistas_slider
+            from sfx_rules import base_recursos
+            base = Path(base_recursos())
+            vistas_slider.precargar([base / 'fondos_estilos', base / 'vistas_slider', base / 'edicion_pro' / 'estilos_pro', base / 'efectos' / 'previas'])
+            vistas_slider.precargar([base], patron='logo_cinecaptions.png')            # (el de Sonido: PNG de 1024 px, ~10 ms en la interfaz)
+        except Exception:
+            registro.excepcion(origen='precargar imágenes')
     def _prearmar_paginas(self, pendientes=None):
         """v5.47 (el usuario: «va lento y trabado cuando doy clic»; medido: el PRIMER clic en Efectos tardaba 0,77 s y en Estilos 0,29–0,37 s armando
         la página): se arman solas, una cada 2 s, mientras el programa está en reposo (en Inicio y sin GO). Si el usuario está en otra página o hay un
         GO, se espera; si ya se abrieron, no hace nada.
         v5.49 (el usuario: «la animación de Inicio se traba demasiado»): armar Efectos congela la ventana ~0,36 s y Estilos ~0,07 s; con la animación
         de Inicio a la vista se veía como un tirón a los 7-9 s de abrir. Ahora espera a que la ventana no tenga el foco (el usuario está en Resolve)
-        o esté minimizada: nadie mira la animación."""
-        pendientes = list(pendientes if pendientes is not None else ('efectos', 'estilos'))
+        o esté minimizada: nadie mira la animación.
+        v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): ya no se espera al foco: Efectos,
+        Estilo y Sonido se arman POR PARTES entre cuadro y cuadro de Inicio (_armar_por_partes, sin tirones), una tras otra."""
+        pendientes = [c for c in (pendientes if pendientes is not None else ('efectos', 'estilos', 'sfx')) if not self._pagina_hecha(c)]
         if not pendientes:
             return
-        if (getattr(self, '_go_corriendo', False) or getattr(self, '_pagina_actual', 'inicio') != 'inicio'
-                or (self.isActiveWindow() and not self.isMinimized())):
+        if getattr(self, '_go_corriendo', False) or getattr(self, '_pagina_actual', 'inicio') != 'inicio':
             despues(5000, lambda: self._prearmar_paginas(pendientes), self)
             return
         clave = pendientes.pop(0)
-        try:
-            if clave == 'efectos' and self._efectos_widget is None:
-                self._asegurar_efectos()
-            elif clave == 'estilos' and self._plantillas_ventana is None:
-                self._asegurar_estilos()
-        except Exception:
-            registro.excepcion(origen=f'preparar la página {clave}')
-        despues(2000, lambda: self._prearmar_paginas(pendientes), self)
+        self._armar_por_partes(clave, lambda: despues(300, lambda: self._prearmar_paginas(pendientes), self))
     def palabras_de_la_ultima_transcripcion(self):
         """[{'word', 'start', 'end'}] de la ultima transcripcion (la de la sesion o la guardada del video actual); [] si no hay."""
         sesion = getattr(self, '_sfx_palabras', None)
@@ -7115,7 +7186,8 @@ class SubtitleApp(QWidget):
         self._panel_rapido.abrir(self.isla, rect=self.isla.rect_de('ajustes'))
     def _abrir_ajustes(self, pestana='general'):
         import ajustes_ui
-        self._ventana_ajustes = ajustes_ui.VentanaAjustes(self, pestana)
+        # v5.83: la armada de antemano mientras se veía el panel rápido (ajustes_ui.preparar_ajustes), si sigue al día; si no, como siempre
+        self._ventana_ajustes = ajustes_ui.tomar_preparada(self, pestana) or ajustes_ui.VentanaAjustes(self, pestana)
         self._ventana_ajustes.abrir()
     def poner_encima(self, si, guardar=False):
         """El alfiler: CineCaptions por delante de Resolve (WindowStaysOnTop)."""
@@ -7643,7 +7715,7 @@ class SubtitleApp(QWidget):
         if plantillas.SOLO_TEMAS and guion + otros:     # v5.78 (el usuario eligió la propuesta C): los estilos en una tira de pósters
             try:
                 import menu_estilo_ui
-                lista = [{'nombre': p.nombre, 'etiqueta': plantillas.nombre_visible(p.nombre),
+                lista = [{'nombre': p.nombre, 'etiqueta': plantillas.nombre_para_ui(p.nombre),
                           'sirve': bool(plantillas.sirve_en_go(p, formato)) if p in guion else True} for p in guion + otros]
                 self._panel_estilo = menu_estilo_ui.abrir(self, lista, actual, self._poner_go_pack, lambda: self.ir_a('estilos'),
                                                           ancla=chip if hasattr(chip, 'mapToGlobal') else None)
@@ -7654,14 +7726,14 @@ class SubtitleApp(QWidget):
         for p in guion:
             marca = '✓  ' if p.nombre == actual else '      '
             extra = '' if plantillas.sirve_en_go(p, formato) else tr('  (solo vertical)')
-            etiqueta = plantillas.nombre_visible(p.nombre)              # v5.5.8 (pedido del usuario): solo «Tema 1» … «Tema 6», sin apodo
+            etiqueta = plantillas.nombre_para_ui(p.nombre)              # v5.5.8 (pedido del usuario): solo «Tema 1» … «Tema 6», sin apodo
             menu.agregar(marca + etiqueta + extra, lambda n=p.nombre: self._poner_go_pack(n))
         if not plantillas.SOLO_TEMAS:
             marca = '✓  ' if actual in (base, 'dinamico', 'auto') else '      '
             menu.agregar(marca + tr('Diseño automático · 3 líneas'), lambda: self._poner_go_pack('auto'))
         for p in otros:                                 # (con SOLO_TEMAS: solo los packs del usuario)
             marca = '✓  ' if p.nombre == actual else '      '
-            menu.agregar(marca + plantillas.nombre_visible(p.nombre), lambda n=p.nombre: self._poner_go_pack(n))
+            menu.agregar(marca + plantillas.nombre_para_ui(p.nombre), lambda n=p.nombre: self._poner_go_pack(n))
         if otros or not plantillas.SOLO_TEMAS:
             menu.separador()
         menu.agregar(tr('Ver los estilos…') if plantillas.SOLO_TEMAS else tr('Más estilos y vista real…'), lambda: self.ir_a('estilos'))
@@ -11183,20 +11255,31 @@ class SubtitleApp(QWidget):
         except Exception:
             pass
     def _asegurar_estilos(self):
+        """Arma la página Estilo la primera vez. v5.83: si se estaba armando por partes en Inicio (_armar_por_partes), acaba lo que falte."""
         if self._plantillas_ventana is not None:
             self._vistas_reales_solas()
             return
+        pv = (getattr(self, '_por_partes', None) or {}).pop('estilos', None)
+        if pv is None:
+            pv = self._crear_estilos()
+        pv.completar()
+        self._colocar_estilos(pv)
+        self._vistas_reales_solas()                   # v5.2: con Resolve conectado, las vistas reales que falten se renderizan solas
+    def _estado_estilos(self):
+        return dict(seleccion=self.plantilla_sel, formato=self._formato_en_juego(), diseno_actual=getattr(self, 'diseno_dinamico', None),
+                    basicos_actual=self._basicos_actual(), modo=self._modo())
+    def _crear_estilos(self):
+        """v5.83: el panel de Estilo SIN armar (por_partes): lo arma quien lo pide (completar() o, en Inicio, armar_paso a trozos)."""
+        self._estilos_creados_con = self._estado_estilos()
+        return PlantillasWindow(self, on_elegir=self._plantilla_elegida, on_importar=self._importar_estilos, on_diseno=self._plantilla_diseno,
+                                on_basicos=self._plantilla_basicos, franja=self._tarjeta_fuente, por_partes=True, **self._estilos_creados_con)
+    def _colocar_estilos(self, pv):
+        """v5.83: el panel ya armado, a su sitio. Lo que cambió mientras se armaba por partes (el estilo elegido desde Inicio, el modo…) no le
+        llegó: se le pasa ahora (actualizar)."""
         cuerpo, cc = caja_h(espacio=20)
-        self._plantillas_ventana = PlantillasWindow(self, seleccion=self.plantilla_sel, on_elegir=self._plantilla_elegida, on_importar=self._importar_estilos, formato=self._formato_en_juego(), diseno_actual=getattr(self, 'diseno_dinamico', None), on_diseno=self._plantilla_diseno, basicos_actual=self._basicos_actual(), on_basicos=self._plantilla_basicos, modo=self._modo(), franja=self._tarjeta_fuente)
-        cc.addWidget(self._plantillas_ventana, 8)
+        self._plantillas_ventana = pv
+        cc.addWidget(pv, 8)
         self._margenes_cielo()                        # (v5.64: los de la densidad de ahora, dentro del cielo)
-        # v5.2: con Resolve conectado, las vistas reales que falten se renderizan solas
-        try:
-            import resolve_mcp
-            if resolve_mcp.estado_cacheado().get('conectado') and getattr(self, '_recorrido', None) is None:      # (con el recorrido en pantalla se aplaza)
-                despues(1200, lambda: self._plantillas_ventana._renderizar_reales(silencioso=True), self)
-        except Exception:
-            pass
         if COMPOSICION_VISIBLE:
             self._composicion_ventana = ComposicionWindow(self)
             self._composicion_ventana.poner_habilitado(self._modo() != 'normal')
@@ -11204,6 +11287,12 @@ class SubtitleApp(QWidget):
         self._estilos_capa.addWidget(cuerpo, 1)
         # en Proyecto la rueda del ratón mueve el slider de packs en cualquier punto de la pantalla (la página ya no se desplaza)
         self._rueda_estilos = ui.RuedaHacia(self._paginas['estilos'], lambda ev: self._plantillas_ventana is not None and self._plantillas_ventana.carrusel.desplazar_con_rueda(ev))
+        ahora = self._estado_estilos()
+        if ahora != getattr(self, '_estilos_creados_con', ahora):
+            try:
+                pv.actualizar(**ahora)
+            except Exception:
+                registro.excepcion(origen='Estilo · ponerse al día')
     def _plantilla_elegida(self, valor):
         self.plantilla_sel = valor
         self._sincronizar_go_pack(valor)          # auditoría v5.11: el pack de Estilos y el chip «Estilo» de Inicio son UNA sola elección
@@ -11267,19 +11356,135 @@ class SubtitleApp(QWidget):
         self._go_archivo = str(ruta)
         self._pintar_go_reposo()
     def _asegurar_efectos(self):
-        """Arma la página Efectos la primera vez que se abre (lee las vistas previas); las demás veces solo sincroniza su interruptor."""
+        """Arma la página Efectos la primera vez que se abre (lee las vistas previas); las demás veces solo sincroniza su interruptor.
+        v5.83: si se estaba armando por partes en Inicio (_armar_por_partes), acaba lo que falte; y se crea ya dentro de su sitio (antes
+        se re-colgaban sus ~1000 controles al final: ~30 ms)."""
         if self._efectos_widget is not None:
             self._efectos_widget.refrescar()
             return True
+        pag = (getattr(self, '_por_partes', None) or {}).pop('efectos', None)
+        a_medias = pag is not None
         try:
-            import efectos_pagina
-            self._efectos_widget = efectos_pagina.PaginaEfectos(self, al_cambiar=self._pintar_opciones_go)
-            self._efectos_capa.addWidget(self._efectos_widget)
+            if pag is None:
+                pag = self._crear_por_partes('efectos')
+            pag.completar()
+            if a_medias:
+                pag.refrescar()                    # (lo armado hace rato pudo cambiar desde otra página)
+            self._colocar_por_partes('efectos', pag)
         except Exception:
             self._efectos_widget = None
+            if pag is not None:
+                pag.hide()
+                pag.deleteLater()
             registro.excepcion(origen='página Efectos')
             return False
         return True
+
+    # v5.83: lo que cada página importa antes de armarse por partes (uno por vuelta: importar uno cuesta 3-10 ms)
+    _MODULOS_POR_PARTES = {'efectos': ('estilos_pro', 'efectos_visuales', 'efectos_pro_ui', 'efectos_pagina', 'motions_ui', 'efectos_extra_ui'),
+                           'estilos': ('estilos_slider', 'proyecto_ui', 'pro_lateral_ui', 'un_clic_ui', 'vistas_reales'),
+                           'sfx': ('sonido_skill', 'sonido_musica', 'director_sonido_estado', 'sonido_skill_ui')}
+
+    def _pagina_hecha(self, clave):
+        if clave == 'efectos':
+            return self._efectos_widget is not None
+        if clave == 'estilos':
+            return self._plantillas_ventana is not None
+        return getattr(self, '_director_pagina', None) is not None or self._estudio_ventana is not None
+
+    def _crear_por_partes(self, clave):
+        """La página `clave` SIN armar (por_partes): la arma quien la pide (completar() o armar_paso a trozos)."""
+        if clave == 'efectos':                     # (dentro de su sitio desde ya: re-colgarla al final costaba ~30 ms)
+            import efectos_pagina
+            return efectos_pagina.PaginaEfectos(self._efectos_capa.parentWidget() or self, al_cambiar=self._pintar_opciones_go, por_partes=True)
+        if clave == 'estilos':
+            return self._crear_estilos()
+        return self._crear_sonido()
+
+    def _colocar_por_partes(self, clave, pag):
+        if clave == 'efectos':
+            self._efectos_capa.addWidget(pag)
+            self._efectos_widget = pag
+        elif clave == 'estilos':
+            self._colocar_estilos(pag)
+        else:
+            self._colocar_sonido(pag)
+
+    def _crear_sonido(self):
+        """v5.83: la página Sonido SIN armar (por_partes), ya dentro de su sitio."""
+        import sonido_skill_ui
+        video_fn = lambda: getattr(self, '_go_archivo', None) or self.video_var.get().strip().strip('"')  # noqa: E731
+        return sonido_skill_ui.PaginaSonido(self._sfx_capa.parentWidget() or self, video=video_fn, offset=self._offset_frames, por_partes=True)
+
+    def _colocar_sonido(self, pag):
+        self._sfx_capa.addWidget(pag, 1)
+        self._director_pagina = pag
+
+    def _armar_por_partes(self, clave, al_terminar=None):
+        """v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): arma la página `clave` (efectos,
+        estilos o sfx) en Inicio a trozos (su armar_paso, ~1-8 ms), uno cada ~16 ms: la animación de Inicio (~5 ms por cuadro) sigue a 60/s y en
+        ~1 s la página queda hecha; su primer clic ya no la arma (Efectos ~0,3 s, Estilo ~0,1 s, Sonido ~0,07 s). Antes, sus módulos, uno por
+        vuelta. En otra página o con GO espera; un clic en la página a medias la acaba (_asegurar_*)."""
+        modulos = list(self._MODULOS_POR_PARTES.get(clave, ()))
+        partes = self.__dict__.setdefault('_por_partes', {})
+        estado = {'pag': None, 'fin': False, 'ult': time.perf_counter()}
+        # un trozo cada ~16 ms con un reloj propio (medido: Inicio con saltos de hasta ~37 ms en vez de ~31 mientras se arman). Pegarlo al
+        # latido de la escena (escena_go._reloj) se probó: el trozo cae antes de pintar y salió peor (medido con el equipo cargado; sin decidir)
+        reloj = None
+
+        def paso():
+            """Un trozo; True si queda trabajo."""
+            pag = estado['pag']
+            if self._pagina_hecha(clave) or (pag is not None and partes.get(clave) is not pag):
+                return False                                                 # (la armó o la acabó un clic en la página)
+            if getattr(self, '_go_corriendo', False) or getattr(self, '_pagina_actual', 'inicio') != 'inicio':
+                return True                                                  # (espera)
+            try:
+                if modulos:
+                    __import__(modulos.pop(0))
+                    return True
+                if pag is None:
+                    estado['pag'] = partes[clave] = self._crear_por_partes(clave)
+                    return True
+                t0 = time.perf_counter()
+                while pag.armar_paso():
+                    if time.perf_counter() - t0 >= 0.0015:                     # (un trozo por latido; los muy cortos, juntos)
+                        return True
+                partes.pop(clave, None)
+                self._colocar_por_partes(clave, pag)
+            except Exception:
+                if pag is not None and partes.get(clave) is pag:
+                    partes.pop(clave, None)
+                    pag.hide()
+                    pag.deleteLater()
+                registro.excepcion(origen=f'preparar la página {clave}')
+            return False
+
+        def latido():
+            if estado['fin']:
+                return
+            estado['ult'] = time.perf_counter()
+            if paso():
+                return
+            estado['fin'] = True
+            if reloj is not None:
+                try:
+                    reloj.timeout.disconnect(latido)
+                except (RuntimeError, TypeError):
+                    pass
+            if al_terminar is not None:
+                al_terminar()
+
+        def vigilar():                                   # sin latidos (escena parada, ventana minimizada…): un trozo cada medio segundo
+            if estado['fin']:
+                return
+            if reloj is None or time.perf_counter() - estado['ult'] > 0.4:
+                latido()
+            if not estado['fin']:
+                despues(16 if reloj is None else 500, vigilar, self)
+        if reloj is not None:
+            reloj.timeout.connect(latido)
+        despues(16 if reloj is None else 500, vigilar, self)
     def _asegurar_sfx(self):
         """v5.34: la página SONIDO es «AI Sound Director» (director_sonido_ui): la IA hace el sonido y el usuario lo dirige. El SFX Lab de antes
         solo se arma si la nueva no pudiera construirse (red técnica, no una página a elegir); sus motores siguen trabajando por dentro."""
@@ -11288,15 +11493,19 @@ class SubtitleApp(QWidget):
             pag.refrescar()
             return True
         if self._estudio_ventana is None:
-            video_fn = lambda: getattr(self, '_go_archivo', None) or self.video_var.get().strip().strip('"')  # noqa: E731
+            pag = (getattr(self, '_por_partes', None) or {}).pop('sfx', None)      # v5.83: la que se armaba por partes en Inicio
             try:                                   # v5.43: la página Sonido = la biblioteca del autor + MAPA_SFX.md (sonido_skill_ui)
-                import sonido_skill_ui
-                self._director_pagina = sonido_skill_ui.PaginaSonido(self, video=video_fn, offset=self._offset_frames)
-                self._sfx_capa.addWidget(self._director_pagina, 1)
-                self._director_pagina.refrescar()
+                if pag is None:
+                    pag = self._crear_sonido()
+                pag.completar()
+                self._colocar_sonido(pag)
+                pag.refrescar()
                 return True
             except Exception:                      # (la página del AI Sound Director ya no se usa: el usuario la quitó en la v5.43)
                 self._director_pagina = None
+                if pag is not None:
+                    pag.hide()
+                    pag.deleteLater()
                 registro.excepcion(origen='página Sonido (biblioteca)')
         if self._estudio_ventana is not None:
             try:

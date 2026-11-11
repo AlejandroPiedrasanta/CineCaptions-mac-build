@@ -466,8 +466,9 @@ def revisar_salud_al_arrancar():
             fallas.append((f['nombre'], f['detalle']))
             r.error(f"Falla al iniciar: {f['nombre']} — {f['detalle']}", 'arranque')
         elif f.get('ok') is None and f.get('aviso'):
-            # v5.82: funciona, pero le falta algo (p. ej. la IA de texto: la voz va bien y el texto se corrige con reglas): aviso, no «Falla»
-            r.aviso(f"Al abrir: {f['nombre']} — {f['detalle']}", 'arranque')
+            # v5.83: funciona, pero le falta algo (p. ej. la IA de texto: la voz va bien y el texto se corrige con reglas): no es «Falla al
+            # iniciar» (ni cuenta para el aviso de fallas), pero va como error para que se vea: la ventana Registro solo enseña Errores e Información
+            r.error(f"Al abrir: {f['nombre']} — {f['detalle']}", 'arranque')
     if not fallas:
         r.info('Chequeo de arranque: todo en orden (' + salud.resumen(filas)[0] + ').', 'arranque')
     if any(f.get('cuda') == 'faltan' for f in filas):

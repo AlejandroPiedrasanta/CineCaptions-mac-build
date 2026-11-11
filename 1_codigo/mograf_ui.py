@@ -92,6 +92,10 @@ class _EfectoEntrada(QGraphicsEffect):
         return rect.adjusted(0, 0, 0, abs(self._dy) + 1.0)
 
     def draw(self, painter):
+        if self._op <= 0.0:
+            # v5.83 (el usuario: «que todo sea inmediato»): invisible, nada que dibujar. Las tarjetas que esperan su turno en la entrada
+            # escalonada (hasta ~0,6 s) se volvían a dibujar ENTERAS en cada cuadro con opacidad 0, sin verse: el cambio de página iba a ~30 fps
+            return
         pix = self.sourcePixmap(Qt.CoordinateSystem.LogicalCoordinates)
         if pix.isNull():
             return

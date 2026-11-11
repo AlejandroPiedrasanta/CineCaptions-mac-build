@@ -24,9 +24,9 @@ import time
 import webbrowser
 from pathlib import Path
 
-from PySide6.QtCore import QEasingCurve, QEvent, QPointF, QRect, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal
-from PySide6.QtGui import QConicalGradient, QFontMetricsF, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import (QAbstractButton, QApplication, QFrame, QGraphicsOpacityEffect,
+from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal
+from PySide6.QtGui import QConicalGradient, QFontMetricsF, QPainter, QPainterPath, QPen, QTransform
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QBoxLayout, QFrame, QGraphicsEffect,
                                QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget)
 
 import qt_kit as ui
@@ -323,6 +323,53 @@ def _etiqueta_seccion(texto):
 
 # ---------------------------------------------------------------------------
 # La capa que oscurece la ventana y aloja el panel
+class _EfectoFundido(QGraphicsEffect):
+    """v5.83 (el usuario: «que todo sea inmediato»): la opacidad del panel de una CapaModal mientras entra o sale. QGraphicsOpacityEffect
+    volvía a dibujar el panel ENTERO en cada cuadro del fundido (Ajustes: ~10-20 ms por cuadro); aquí se dibuja una vez por fundido y se
+    reutiliza con cada opacidad (los mismos píxeles: misma imagen, mismo sitio). Del todo opaco se dibuja en vivo, como aquel."""
+
+    def __init__(self, padre=None):
+        super().__init__(padre)
+        self._op = 0.0
+        self._pm = None
+        self._off = None
+
+    def opacity(self):
+        return self._op
+
+    def setOpacity(self, v):
+        v = max(0.0, min(1.0, float(v)))
+        if v <= 0.0 or v >= 1.0:               # (fundido terminado: la imagen guardada del panel, ~10 MB en Ajustes, se suelta)
+            self._pm = self._off = None
+        if v != self._op:
+            self._op = v
+            self.update()
+
+    def soltar(self):
+        """Un fundido nuevo: el panel se vuelve a dibujar la próxima vez (por si cambió)."""
+        self._pm = self._off = None
+
+    def draw(self, painter):
+        if self._op <= 0.0:
+            return
+        if self._op >= 1.0:
+            self._pm = self._off = None
+            self.drawSource(painter)
+            return
+        aqui = painter.worldTransform().map(QPoint(0, 0))
+        if self._pm is None or self._off != aqui:
+            off = QPoint()
+            pm = self.sourcePixmap(Qt.CoordinateSystem.DeviceCoordinates, off, QGraphicsEffect.PixmapPadMode.NoPad)
+            if pm.isNull():
+                return
+            self._pm, self._off = pm, off
+        painter.save()
+        painter.setOpacity(self._op)
+        painter.setWorldTransform(QTransform())
+        painter.drawPixmap(self._off, self._pm)
+        painter.restore()
+
+
 class CapaModal(QWidget):
     def __init__(self, ventana, panel, al_cerrar=None, cerrar_fuera=True, posicion=None):
         super().__init__(ventana)
@@ -334,7 +381,7 @@ class CapaModal(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, False)
         ventana.installEventFilter(self)
         self._opacidad = 0.0
-        self._efecto = QGraphicsOpacityEffect(panel)
+        self._efecto = _EfectoFundido(panel)                   # (v5.83: antes QGraphicsOpacityEffect, que redibujaba el panel en cada cuadro)
         self._efecto.setOpacity(0.0)
         panel.setGraphicsEffect(self._efecto)
         self._anim = QVariantAnimation(self)
@@ -356,6 +403,8 @@ class CapaModal(QWidget):
 
     def _animar(self, hasta, al_final=None):
         self._anim.stop()
+        if ui.vivo(self._efecto):
+            self._efecto.soltar()
         self._anim.setStartValue(self._opacidad)
         self._anim.setEndValue(float(hasta))
         if getattr(self, '_al_final', None) is not None:
@@ -431,11 +480,44 @@ class _Panel(QFrame):
             % radio))
 
 
+class _TituloQueCabe(Etiqueta):
+    """v5.83: el título de una cabecera, en UNA línea que encoge la letra (hasta el 70 %) si no cabe. En francés «À propos de CineCaptions»
+    se cortaba a secas en el panel rápido («…CineCaption»)."""
+
+    def __init__(self, texto, tam, **kw):
+        self._tam = 0
+        super().__init__(texto, tam, **kw)
+        self._tam = int(tam)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.setMinimumWidth(16)
+
+    def setText(self, texto):
+        super().setText(texto)
+        self._ajustar()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._ajustar()
+
+    def _ajustar(self):
+        ancho = self.contentsRect().width()
+        if not self._tam or ancho < 40:
+            return
+        f = self.font()
+        tam = self._tam
+        f.setPixelSize(tam)
+        while tam > self._tam * 0.7 and QFontMetricsF(f).horizontalAdvance(self.text()) > ancho:
+            tam -= 1
+            f.setPixelSize(tam)
+        if f.pixelSize() != self.font().pixelSize():
+            self.setFont(f)
+
+
 def _cabecera(sobre, titulo, al_cerrar, tam=30):
     w, c = caja_h(espacio=12)
     col, cc = caja_v(espacio=4)
     cc.addWidget(_etiqueta_seccion(sobre))
-    cc.addWidget(Etiqueta(titulo, tam, peso='extra', color='#FFFFFF'))
+    cc.addWidget(_TituloQueCabe(titulo, tam, peso='extra', color='#FFFFFF'))
     c.addWidget(col, 1)
     x = BotonIcono('cerrar', tr('Cerrar (Esc)'), lado=36, borde=False, radio=10)
     x.clicked.connect(lambda _=False: al_cerrar())
@@ -453,7 +535,8 @@ def datos_licencia():
         detalle = d['detalle']
         datos = licencia.local()
         if datos and d['activa']:
-            detalle = licencia.clave_enmascarada(datos.get('clave')) + ' · ' + detalle
+            # v5.83: la clave AL FINAL: en el panel rápido la línea se corta con «…» y en inglés o alemán se comía «1 de 2 equipos»
+            detalle = detalle + ' · ' + licencia.clave_enmascarada(datos.get('clave'))
         color = {'ok': ui.VERDE, 'aviso': ui.AMBAR}.get(d['nivel'], ui.ROJO)
         return {'color': color, 'estado': d['estado'], 'detalle': detalle, 'activa': d['activa'],
                 'hay_clave': d['hay_clave'], 'configurada': True}
@@ -495,6 +578,14 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.83', [
+        'Tutoriales en inglés: con la interfaz en inglés, los 12 tutoriales salen con la interfaz, la voz y los subtítulos en inglés.',
+        'Más fluido: Efectos, Estilo y Sonido se preparan mientras estás en Inicio y se abren al momento, y «Expandir ajustes» va más rápido.',
+        'Los estilos se llaman en el idioma de la interfaz y, en inglés, Efectos y Sonido ya no tienen textos en español.',
+        'Arreglos: en Proyectos, los nombres muy largos ya no esconden «Abrir» y «Eliminar», y si dos videos se llaman igual se ve su carpeta; el panel de emojis del Corrector ya se lee bien.',
+        'En alemán, francés y ruso ya no salen botones ni títulos cortados en Ajustes, y el Registro enseña los avisos al abrir y cuando «Reparar el motor» no puede bajar la IA de texto.',
+        'En Sonido, la mezcla ya cabe entera en su recuadro: en ventanas bajas escondía las últimas pistas.',
+    ]),
     ('5.82', [
         'Estilo 4 nuevo: tres alturas como en los reels: arriba lo que se dice antes, la palabra clave grande en lima con brillo y debajo lo que sigue; cada palabra aparece cuando se dice.',
         'Edición PRO: motions nuevos que salen solos cuando encajan: el avión de papel que se posa junto a los captions, el tachado rojo, el visor REC, el aro de luz en la cara, las persianas, el zoom con desenfoque de entrada y la píldora «Reflejo rojo» bajo los captions.',
@@ -1720,6 +1811,8 @@ class PanelRapido(_Panel):
             y = max(20, esquina.y() - alto - 12)
             return QRect(x, y, self.ANCHO, alto)
         self._capa = CapaModal(self.app, self, posicion=posicion)
+        app = self.app
+        ui.despues(220, lambda: preparar_ajustes(app), self)   # (v5.83: Ajustes se arma mientras se ve este panel; ver preparar_ajustes)
 
     def cerrar(self):
         if self._capa is not None and ui.vivo(self._capa):
@@ -2060,8 +2153,24 @@ class _TarjetaEstilo(QAbstractButton):
         self.update()
         super().leaveEvent(e)
 
-    def paintEvent(self, _e):
+    def preparar_miniatura(self):
+        """v5.83: la miniatura pintada de antemano, en un rato libre (VentanaAjustes._preparar_en_reposo), con la misma clave que paintEvent
+        (su primer cuadro costaba ~25 ms por tarjeta: Interfaz tardaba ~120 ms en verse). True si la pintó ahora."""
         import estilos_inicio
+        r = QRectF(self.rect()).adjusted(1, 1, -1, -1)
+        w, h = int(r.width() - 16), int(r.height() - 74)
+        dpr = self.devicePixelRatioF()
+        clave = (w, h, round(dpr, 2))
+        if self._pm is not None and self._clave_pm == clave:
+            return False
+        try:
+            self._pm = estilos_inicio.dibujar_miniatura(self._est, self._ctx, w, h, dpr)
+            self._clave_pm = clave
+        except Exception:
+            self._pm = None
+        return True
+
+    def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
@@ -2072,14 +2181,7 @@ class _TarjetaEstilo(QAbstractButton):
         p.fillPath(ruta, QColor('#0F1A2E' if elegido else ('#0F1828' if self._hover else '#0B1220')))
         # la miniatura (arriba, recortada con las esquinas redondas)
         w, h = int(r.width() - 16), int(r.height() - 74)
-        dpr = self.devicePixelRatioF()
-        clave = (w, h, round(dpr, 2))
-        if self._pm is None or self._clave_pm != clave:
-            try:
-                self._pm = estilos_inicio.dibujar_miniatura(self._est, self._ctx, w, h, dpr)
-                self._clave_pm = clave
-            except Exception:
-                self._pm = None
+        self.preparar_miniatura()
         if self._pm is not None:
             p.save()
             mini = QPainterPath()
@@ -2441,7 +2543,8 @@ class VentanaAjustes(_Panel):
     # «Acerca de» va DENTRO de «Ayuda», debajo del soporte (quien pida 'acerca' llega a 'ayuda')
     PESTANAS = ('general', 'interfaz', 'atajos', 'tutoriales', 'ayuda')
 
-    def __init__(self, app, pestana='general'):
+    def __init__(self, app, pestana='general', diferir=False):
+        # diferir (v5.83, preparar_ajustes): solo el marco; la página inicial la arma completar() en otro rato libre
         super().__init__(radio=22)
         self.app = app
         self._capa = None
@@ -2482,9 +2585,10 @@ class VentanaAjustes(_Panel):
         self._paginas_d = []
         self._armadas = set()
         for k in range(len(self._armadores)):
-            d = self._armar_pagina(k) if k == inicial else QWidget()
+            d = self._armar_pagina(k) if (k == inicial and not diferir) else QWidget()
             self._paginas_d.append(d)
             self.pila.addWidget(d)
+        self._inicial_k = inicial
         c.addWidget(self.pila, 1)
         pie = QFrame()
         pie.setObjectName('pieAjustes')
@@ -2505,23 +2609,50 @@ class VentanaAjustes(_Panel):
         cp.addWidget(self.aplicar_btn)
         cp.addWidget(Boton(tr('Listo'), self._listo, tipo='primario', alto=50, ancho=130, tam=17, negrita=True))
         c.addWidget(pie)
-        self.pestanas.elegir(inicial, animar=False)
+        if not diferir:
+            self.pestanas.elegir(inicial, animar=False)
+
+    def completar(self):
+        """v5.83: (la preparada en reposo) la página inicial armada y elegida: queda como recién construida entera."""
+        if self._inicial_k not in self._armadas:
+            self.pestanas.elegir(self._inicial_k, animar=False)
 
     def _ir_a_pestana(self, k):
+        self._armar_en_hueco(k)
+        self.pila.setCurrentIndex(k)
+
+    def _armar_en_hueco(self, k):
         """v5.82: la primera vez, la página se arma FUERA de la pila, recibe su tamaño ya con todo dentro y ocupa el sitio de su hueco, como
         cuando se armaban todas al abrir (armada en su sitio, el video de Tutoriales tomaba el ancho de antes de salir la barra de
-        desplazamiento y quedaba 10 px más ancho que la página)."""
-        if k not in self._armadas and 0 <= k < len(self._armadores):
-            hueco = self._paginas_d[k]
-            d = self._armar_pagina(k)
+        desplazamiento y quedaba 10 px más ancho que la página). Sin cambiar la pestaña que se ve."""
+        if k in self._armadas or not 0 <= k < len(self._armadores):
+            return
+        hueco = self._paginas_d[k]
+        d = self._armar_pagina(k)
+        if self.isVisible():                   # (antes de enseñarse por primera vez, la pila le da su tamaño al abrir, como antes)
             d.resize(self.pila.size())
-            self.pila.blockSignals(True)
-            self.pila.insertWidget(k, d)
-            self.pila.removeWidget(hueco)
-            self.pila.blockSignals(False)
-            hueco.deleteLater()
-            self._paginas_d[k] = d
-        self.pila.setCurrentIndex(k)
+        self.pila.blockSignals(True)
+        self.pila.insertWidget(k, d)
+        self.pila.removeWidget(hueco)
+        self.pila.blockSignals(False)
+        hueco.deleteLater()
+        self._paginas_d[k] = d
+
+    def _preparar_en_reposo(self):
+        """v5.83 (el usuario: «que todo sea inmediato»): con Ajustes abierto y su fundido ya hecho, arma en ratos libres, una cosa por vez,
+        las páginas que faltan y las miniaturas de Interfaz (~25 ms cada una en su primer cuadro): al elegir una pestaña ya está lista."""
+        capa = self._capa
+        if capa is None or not ui.vivo(capa) or getattr(capa, '_cerrando', False) or not self.isVisible():
+            return
+        for k in (1, 2, 3, 4, 0):
+            if k not in self._armadas:
+                self._armar_en_hueco(k)
+                ui.despues(70, self._preparar_en_reposo, self)
+                return
+        for t in getattr(self, '_tarjetas_estilo', None) or []:
+            if ui.vivo(t) and t.preparar_miniatura():
+                ui.despues(40, self._preparar_en_reposo, self)
+                return
 
     def _armar_pagina(self, k):
         """v5.82: la página k armada (lo mismo que antes se hacía con las 5 al abrir), en su Desplazable."""
@@ -2639,14 +2770,15 @@ class VentanaAjustes(_Panel):
     def _pintar_motor(self):
         import motor_voz
         info = motor_voz.info_instalado()
+        # v5.83: sin «NVIDIA GeForce» (con él no cabía y quedaba «Ti» solo en otra línea: «… RTX 5070 / Ti»)
+        gpu = ((info or {}).get('gpu') or 'CPU').replace('NVIDIA GeForce ', '').replace('NVIDIA ', '')
         if info and not (info.get('modelo_texto') or motor_voz.modelos_texto_descargados()):
             # v5.82: «Reparar» sin poder bajar la IA de texto ya no queda en verde como si todo estuviera (el porqué va al Registro)
             self.motor_estado.configure(text=tr('Instalado: Qwen3-ASR {m} · {gpu} · sin la IA de texto (mira el Registro)', m=info.get('modelo', ''),
-                                                gpu=info.get('gpu') or 'CPU'), text_color=ui.AMBAR)
+                                                gpu=gpu), text_color=ui.AMBAR)
             self.motor_btn.configure(text=tr('Reparar el motor'))
         elif info:
-            self.motor_estado.configure(text=tr('Instalado: Qwen3-ASR {m} · {gpu}', m=info.get('modelo', ''),
-                                                gpu=info.get('gpu') or 'CPU'), text_color=ui.VERDE)
+            self.motor_estado.configure(text=tr('Instalado: Qwen3-ASR {m} · {gpu}', m=info.get('modelo', ''), gpu=gpu), text_color=ui.VERDE)
             self.motor_btn.configure(text=tr('Reparar el motor'))
         elif sys.platform != 'win32':
             self.motor_estado.configure(text=tr('Qwen3-ASR por ahora solo está para Windows: se usa Whisper.'))
@@ -2921,6 +3053,7 @@ class VentanaAjustes(_Panel):
         self.lic_desact = Boton(tr('Desactivar este equipo'), lambda: desactivar_licencia(self.app, self._pintar_licencia),
                                 tipo='peligro', alto=42, tam=14)
         cfb.addWidget(self.lic_desact)
+        self._lic_fila = cfb
         cl.addWidget(fb)
         f_lic = _Fila(tr('Licencia'), tr('Tu clave de cinecaptions.shop. Desactiva este equipo para activarla en otra computadora.'),
                       caja_lic, 380, icono='key')
@@ -2972,6 +3105,19 @@ class VentanaAjustes(_Panel):
         self.lic_desact.setVisible(d['activa'])
         self.lic_btn.setVisible(d['configurada'])
         self.lic_btn.configure(text=tr('Ver mi licencia') if d['activa'] else tr('Activar licencia'))
+        self._acomodar_botones_licencia()
+
+    def _acomodar_botones_licencia(self, ancho=380):
+        """v5.83: los dos botones de la licencia, en fila si caben en su columna (380 px) y, si no, uno encima del otro. En alemán
+        («Diesen Computer deaktivieren»), francés o ruso no cabían juntos y el segundo salía cortado."""
+        fila = getattr(self, '_lic_fila', None)
+        if fila is None:
+            return
+        botones = [b for b in (self.lic_btn, self.lic_desact) if not b.isHidden()]
+        for b in botones:
+            b.ensurePolished()                   # (con la hoja de estilo ya puesta: si no, el ancho pedido sale sin el relleno)
+        pide = sum(b.sizeHint().width() for b in botones) + fila.spacing() * max(0, len(botones) - 1)
+        fila.setDirection(QBoxLayout.Direction.LeftToRight if pide <= ancho else QBoxLayout.Direction.TopToBottom)
 
     def _abrir_licencia(self):
         try:
@@ -3118,10 +3264,63 @@ class VentanaAjustes(_Panel):
 
     def abrir(self):
         self._capa = CapaModal(self.app, self, cerrar_fuera=False)
+        ui.despues(260, self._preparar_en_reposo, self)       # (v5.83: lo que falta, en ratos libres tras el fundido de entrada)
 
     def cerrar(self):
         if self._capa is not None and ui.vivo(self._capa):
             self._capa.cerrar()
+
+
+_PREPARADA = {}                     # v5.83: id(app) -> (VentanaAjustes armada de antemano, firma de lo que leyó)
+
+
+def _firma_ajustes():
+    """Lo que leen el marco de Ajustes y su página General al armarse: si cambió, la preparada ya no vale."""
+    try:
+        import i18n
+        idioma = i18n.idioma()
+    except Exception:
+        idioma = None
+    p = leer_prefs()
+    claves = ('motor_voz', 'ia_texto', 'actualizaciones_auto', 'ventana_encima', 'avisos_sistema', 'go_premiere', 'go_salida_mp4',
+              'go_estilo')
+    return repr(sorted(tema.leer().items())), tuple(repr(p.get(k)) for k in claves), idioma
+
+
+def preparar_ajustes(app):
+    """v5.83 (el usuario: «que todo sea inmediato»; medido: «Expandir ajustes» tardaba ~50 ms en armar Ajustes y su primer cuadro llegaba a
+    los 70-80 ms): mientras se ve el panel rápido, Ajustes se arma de antemano en dos ratos libres (el marco; luego General). Al expandir
+    solo se enseña (tomar_preparada). Cada página que falta se arma después, también en ratos libres."""
+    clave = id(app)
+    par = _PREPARADA.get(clave)
+    if par is not None and ui.vivo(par[0]) and par[1] == _firma_ajustes():
+        if par[0]._inicial_k not in par[0]._armadas:
+            ui.despues(60, par[0].completar, par[0])
+        return
+    if par is not None and ui.vivo(par[0]):
+        par[0].deleteLater()
+    v = VentanaAjustes(app, 'general', diferir=True)
+    _PREPARADA[clave] = (v, _firma_ajustes(), time.perf_counter())
+    ui.despues(60, v.completar, v)
+
+
+def tomar_preparada(app, pestana='general'):
+    """v5.83: la VentanaAjustes armada de antemano (preparar_ajustes) si sigue al día y abre en esa pestaña; si no, None (se arma como
+    siempre). La página General vuelve a mirar el motor de voz, como al construirla."""
+    par = _PREPARADA.pop(id(app), None)
+    if par is None or not ui.vivo(par[0]):
+        return None
+    v, firma, t_prep = par
+    if pestana != 'general' or firma != _firma_ajustes():
+        v.deleteLater()
+        return None
+    if v._inicial_k in v._armadas and time.perf_counter() - t_prep > 20.0:
+        try:                                   # (armada hace rato: el estado del motor, al día, como al construirla)
+            v._pintar_motor()
+        except Exception:
+            pass
+    v.completar()
+    return v
 
 
 class _FilaAtajo(QFrame):

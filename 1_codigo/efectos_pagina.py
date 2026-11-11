@@ -57,7 +57,8 @@ class TarjetaEfecto(QWidget):
         self._sel = False
         self._hover = False
         self._apagada = False
-        self._poster = QImage(str(poster)) if poster else None
+        import vistas_slider
+        self._poster = vistas_slider.imagen_de(poster) if poster else None     # (v5.83: ya decodificado en otros hilos al abrir el programa)
         self._reprod = None
         self._img_pintada = None                  # (v5.82) el cuadro del video que se pintó la última vez (refrescar_vista)
         if previa:
@@ -353,26 +354,49 @@ class _Lienzo(QWidget):
 class PaginaEfectos(QWidget):
     TIC_MS = 40
 
-    def __init__(self, padre=None, al_cambiar=None):
+    def __init__(self, padre=None, al_cambiar=None, por_partes=False):
         super().__init__(padre)
         self._al_cambiar = al_cambiar               # se llama tras cambiar el interruptor general (para que Inicio repinte su chip)
         self._tarjetas = []
         self._dialogo = None
+        # v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): armarla costaba ~0,3 s de golpe en
+        # el primer clic. Con por_partes=True quien la crea la termina a trozos de unos ms (armar_paso) entre cuadro y cuadro de Inicio y
+        # completar() acaba lo que falte; sin por_partes, entera aquí, como siempre.
+        self._pasos = self._armar()
+        if not por_partes:
+            self.completar()
+
+    def armar_paso(self):
+        """Un trozo del armado (unos ms); False cuando la página ya está entera."""
+        from efectos_pro_ui import armar_paso
+        return armar_paso(self)
+
+    def completar(self):
+        while self.armar_paso():
+            pass
+
+    def _armar(self):
         capa = QVBoxLayout(self)
         capa.setContentsMargins(0, 0, 0, 0)
         capa.setSpacing(18)
         op = F.opciones_guardadas()
+        yield
         # ---- v5.5.7: arriba, los motions de la Edición PRO (carrusel con todos; Automático o solo los elegidos)
-        from motions_ui import SeccionMotions
+        from motions_ui import SeccionMotions          # (v5.83: la primera vez se importa: un trozo aparte)
+        yield
         self._motions = SeccionMotions()
         self._motions.setParent(self)                  # v5.21: el carrusel «Motions de la Edición PRO» quitado de la página (el usuario lo pidió):
         self._motions.hide()                           # cada sección de «Edición PRO: estilos» enciende o apaga sus motions
+        yield
         # ---- v5.20: cada función de la PRO con sus 10 estilos y sus colores (efectos_pro_ui / estilos_pro)
         from efectos_pro_ui import SeccionEstilosPro
-        self._estilos_pro = SeccionEstilosPro()
+        self._estilos_pro = SeccionEstilosPro(self, por_partes=True)        # (v5.83: hija desde ya, sin re-colgarla después, y por partes)
+        while self._estilos_pro.armar_paso():
+            yield
         self._estilos_pro.cambio.connect(self._motions.refrescar)
         capa.addWidget(self._estilos_pro)
         self._tarjetas.extend(self._estilos_pro.tarjetas)
+        yield
         # ---- los efectos clásicos van en su propio bloque: con la Edición PRO activa NO se aplican (la PRO hace la intro, el gancho, los zooms y los
         #      gráficos; sumarlos la estropeaba), así que se esconden. «Ritmo: quitar pausas» sí vale con la PRO y queda fuera.
         #      v5.22: sin la línea «Edición PRO activa…» ni «Ver efectos clásicos» (el usuario: «elimina esto»).
@@ -407,6 +431,8 @@ class PaginaEfectos(QWidget):
         self._c_intro = {}
         for ident, nombre, detalle in [('', tr('Sin intro'), tr('El video empieza limpio.'))] + [(i, tr(n), tr(d)) for i, n, d in F.INTROS]:
             self._c_intro[ident] = self._carta(ident, nombre, detalle, 'intro', c1)
+            if len(self._c_intro) % 4 == 0:
+                yield
         c1.addStretch(1)
         t1.capa.addWidget(fila1)
         self._f_zoom_intro = self._fila(t1.capa, 'zoomintro', tr('Zoom en la intro'), tr('El cuadro se acerca mientras sube el riser y se suelta de golpe, con el destello, justo en su pico.'),
@@ -416,6 +442,7 @@ class PaginaEfectos(QWidget):
         t1.hide()
         self._pintar_unico(self._c_intro, self._intro)
         self._refrescar_sonido()
+        yield
         # ---- transiciones
         self._cortes = op.get('fx_cortes') or ''
         t2 = self._tarjeta(tr('Transiciones en los cortes'), tr('Se detecta cada salto entre tomas del video y se esconde con un efecto.'))
@@ -435,11 +462,14 @@ class PaginaEfectos(QWidget):
         self._c_cortes = {}
         for ident, nombre, detalle in [('', tr('Sin transición'), tr('Los cortes quedan secos.'))] + [(i, tr(n), tr(d)) for i, n, d in F.TRANSICIONES]:
             self._c_cortes[ident] = self._carta(ident, nombre, detalle, 'corte', c2)
+            if len(self._c_cortes) % 4 == 0:
+                yield
         c2.addStretch(1)
         t2.capa.addWidget(fila2)
         t2.setParent(self)                             # v5.21: «Transiciones en los cortes» quitada de la página (pedido; GO tampoco las pone)
         t2.hide()
         self._pintar_unico(self._c_cortes, self._cortes)
+        yield
         # ---- movimiento del video (Fusion)
         t4 = self._tarjeta(tr('Movimiento del video'), tr('Se aplica al propio video con una composición de Fusion: tu corrección de color sigue valiendo y no se duplica nada. Zoom lento todo el rato y, si el video no llena el cuadro, un fondo desenfocado.'))
         self._f_zoom = self._fila(t4.capa, 'zoom', tr('Zoom lento'), tr('El cuadro crece poco a poco durante todo el video (en el ejemplo se ve acelerado).'),
@@ -449,6 +479,7 @@ class PaginaEfectos(QWidget):
                                    'si' if bool(op.get('fx_fondo', True)) else 'no', None, guardar=lambda k: _guardar({'fx_fondo': k == 'si'}))
         t4.setParent(self)                             # v5.21: «Movimiento del video» quitado de la página (pedido): sin zoom lento; fondo desenfocado fijo
         t4.hide()
+        yield
         # ---- ritmo: quitar pausas (jump cuts) y zoom alterno
         t5 = self._tarjeta(tr('Ritmo: quitar pausas'), tr('GO corta los silencios del video en Resolve (los tramos con voz quedan pegados) ANTES de poner los captions, que ya salen con los tiempos nuevos. Solo en el video que sueltas en Inicio: nunca toca un timeline tuyo.'))
         self._f_pausas = self._fila(t5.capa, 'pausas', tr('Quitar pausas'), tr('Los silencios se cortan y los tramos con voz quedan pegados (en el ejemplo, las pausas rojas de la línea de tiempo se cierran).'),
@@ -458,6 +489,7 @@ class PaginaEfectos(QWidget):
                                     self._niveles(tr('Sin zoom'), tr('Todos los tramos igual.'), tr('Un acercamiento discreto.'), tr('Un acercamiento claro.'), tr('Un acercamiento grande.')), op.get('fx_zoom_saltos'), 'fx_zoom_saltos')
         capa.addWidget(t5)
         capa.addWidget(self._clasicos)
+        yield
         # ---- iconos
         self._iconos = set(op.get('fx_iconos') or [])
         t3 = self._tarjeta(tr('Iconos flotantes'), tr('Salen iconos animados cuando se dice una palabra que tú eliges (haz clic en un pack para escribirlas) y, si quieres, también en las frases importantes: un número, un aviso, una pregunta o el gancho.'))
@@ -480,6 +512,8 @@ class PaginaEfectos(QWidget):
         self._c_iconos = {}
         for ident, nombre, detalle in F.PACKS_ICONOS:
             self._c_iconos[ident] = self._carta(ident, tr(nombre), tr(detalle), 'iconos', c3, pack=True)
+            if len(self._c_iconos) % 4 == 0:
+                yield
         c3.addStretch(1)
         t3.capa.addWidget(fila3)
         t3.setParent(self)                             # v5.20: «Iconos flotantes» quitado de la página (GO tampoco los pone)
@@ -487,13 +521,18 @@ class PaginaEfectos(QWidget):
         for ident, c in self._c_iconos.items():
             c.poner_seleccionada(ident in self._iconos)
         self._aplicar_iconos_on()
+        yield
         # ---- más efectos (plegados tras un botón: números, pegatinas, énfasis, ambiente, cierre y mis efectos)
         from efectos_extra_ui import SeccionExtras
-        self._mas = SeccionExtras()                    # v5.4.23: siempre a la vista (antes plegado: había efectos activos que no se veían)
+        yield
+        self._mas = SeccionExtras(self._clasicos, por_partes=True)   # v5.4.23: siempre a la vista (antes plegado: había efectos activos que no se veían)
+        while self._mas.armar_paso():
+            yield
         self._tarjetas.extend(self._mas.tarjetas)
         cl.addWidget(self._mas)
         self._mas.tarjeta_sonido.setParent(self)          # v5.20: «Sonido extra» quitado de la página (el usuario lo pidió); sus ajustes guardados siguen valiendo
         self._mas.tarjeta_sonido.hide()
+        yield
         capa.addStretch(1)
         self._reloj = QTimer(self)
         self._reloj.setTimerType(Qt.TimerType.PreciseTimer)   # (v5.82: el normal de Windows redondea a 15,6 ms: 40 → 47 ms, los videos a ~21/s)

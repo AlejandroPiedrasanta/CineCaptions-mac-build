@@ -1180,7 +1180,8 @@ def cliente_rtx4070_8gb_sin_ia_de_texto_es_aviso_y_lo_dice():
     esperar(f['ok'] is not False, f'la voz funciona: no es una falla ({f})')
     esperar('voz' in d and 'IA de texto' in d and 'Qwen3-1.7B' in d and 'librer' not in d, d)
     notas = _anotado_al_arrancar(texto=())
-    esperar(notas and all(n[0] == 'aviso' for n in notas), notas)
+    # (error para que se vea: la ventana Registro solo enseña Errores e Información; pero no es «Falla al iniciar»)
+    esperar(notas and all(n[0] == 'error' and n[1].startswith('Al abrir:') for n in notas), notas)
     esperar(all('IA de texto' in n[2] and 'librer' not in n[2] for n in notas), [n[2] for n in notas])
 
 
@@ -1472,6 +1473,163 @@ def reparar_dice_si_no_bajo_la_ia_de_texto():
         if sin != (texto is None):
             malas.append(f'Ajustes con modelo_texto={texto}: «{pintado.get("text")}»')
     esperar(not malas, '\n      '.join(malas))
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# J. Fallos de la interfaz que se ven (revisión con capturas de todas las pantallas, 2026-11-10)
+# ---------------------------------------------------------------------------------------------------------------------------------------
+def _qapp():
+    from PySide6.QtWidgets import QApplication
+    return QApplication.instance() or QApplication([])
+
+
+@caso('Interfaz')
+def proyectos_con_nombres_largos_y_repetidos():
+    """Proyectos guardados: un video de 150 letras («From Klickpin.com-…», de verdad en la lista del autor) ensanchaba todas las filas y los
+    botones «Abrir» y «Eliminar» quedaban FUERA de la ventana; y dos videos con el mismo nombre no se distinguían."""
+    app = _qapp()
+    M = principal()
+    import qt_kit
+    from PySide6.QtWidgets import QWidget
+    largo = 'From Klickpin.com- Need fresh inspiration Save these cozy cottage garden ideas that help you plan a beautiful backyard this spring.mp4'
+    items = [{'video_path': rf'C:\Videos\{largo}', 'existe': True, 'modificado_en': 1.79e9},
+             {'video_path': r'C:\Clientes\Ana\PRUEBA.mp4', 'existe': True, 'modificado_en': 1.79e9},
+             {'video_path': r'D:\Pruebas\PRUEBA.mp4', 'existe': False, 'modificado_en': 1.78e9}]
+    padre = QWidget()
+    padre.resize(1400, 900)
+    with parches((M.proyectos, 'listar', lambda: [dict(i) for i in items])):
+        d = M.ProyectosWindow(padre)
+        d.show()
+        for _ in range(20):
+            app.processEvents()
+            time.sleep(0.02)
+        ancho = d.lista_frame.viewport().width()
+        botones = [b for b in d.findChildren(qt_kit.Boton) if getattr(b, '_texto', None) in ('Abrir', 'Eliminar')
+                   or (callable(getattr(b, 'text', None)) and b.text() in ('Abrir', 'Eliminar'))]
+        fuera = [b.mapTo(d.lista_frame.viewport(), b.rect().topRight()).x() for b in botones
+                 if b.mapTo(d.lista_frame.viewport(), b.rect().topRight()).x() > ancho]
+        textos = [l.text() for l in d.findChildren(qt_kit.Etiqueta)]
+        d.close()
+    esperar(botones and not fuera, f'{len(botones)} botones · fuera de la ventana (x > {ancho}): {fuera[:3]}')
+    esperar(any('Ana' in t for t in textos) and any('Pruebas' in t for t in textos), f'los dos «PRUEBA.mp4» deben decir su carpeta: {textos}')
+
+
+@caso('Interfaz')
+def registro_dice_1_anotacion():
+    _qapp()
+    import registro_ui
+    carpeta = pathlib.Path(tempfile.mkdtemp(prefix='cc_registro_ui_'))
+    try:
+        with parches((registro, 'CARPETA', carpeta), (registro, 'ARCHIVO', carpeta / 'c.log'), (registro, 'ARCHIVO_ERRORES', carpeta / 'e.log')):
+            r = registro.registro()
+            antes = list(r._lista)
+            r._lista.clear()
+            try:
+                registro.error('Prueba: KeyError: 7', 'prueba')
+                d = registro_ui.DialogoRegistro(None)
+                texto = d._cuenta.text()
+                d.close()
+            finally:
+                r._lista.clear()
+                r._lista.extend(antes)
+    finally:
+        __import__('shutil').rmtree(carpeta, ignore_errors=True)
+    esperar(texto.startswith('1 anotación'), texto)
+
+
+@caso('Interfaz')
+def editor_no_anota_lo_que_esta_en_marcha():
+    """«Corrigiendo la ortografía con IA…» llegaba al Registro como OK y la línea de Inicio lo enseñaba con ✓ (como si estuviera hecho)."""
+    M = principal()
+    import ui_toast
+    vistos = []
+    with parches((ui_toast, 'mostrar', lambda padre, texto, **k: vistos.append(texto))):
+        aviso = M._AvisoToast(None)
+        aviso.configure(text='Corrigiendo la ortografía con IA…')
+        aviso.configure(text='✓ 3 correcciones aplicadas (IA) · Ctrl+Z las deshace')
+    esperar(vistos == ['✓ 3 correcciones aplicadas (IA) · Ctrl+Z las deshace'], vistos)
+
+
+@caso('Interfaz')
+def panel_de_emojis_no_aplasta_sus_botones():
+    """El panel de emojis, como lo abre el editor de palabras (la palabra ya tiene emoji: «Quitar emoji»; y «➕ Mi PNG…»): en una sola fila
+    con el estilo no cabía en sus 480 px y «Animado · 3D · Google · Sistema» salía aplastado e ilegible, con los botones cortados."""
+    app = _qapp()
+    M = principal()
+    import emojis
+    import qt_kit
+    from PySide6.QtWidgets import QAbstractButton, QWidget
+
+    class Maestro(QWidget):
+        def _poner_mi_png(self, idx, ruta=None):
+            return None
+
+    maestro = Maestro()
+    maestro.resize(1000, 760)
+    with parches((emojis, 'estilo', lambda: 'sistema')):          # (los del sistema: nada que bajar)
+        maestro.show()
+        p = M.EmojiPickerWindow(maestro, 'hola', 'es', '😀', lambda *a: None, idx=0)
+        p.mostrar_en(10, 10)
+        for _ in range(20):
+            app.processEvents()
+            time.sleep(0.02)
+        cortados = [(b.text(), b.sizeHint().width(), b.width()) for b in p.findChildren(QAbstractButton)
+                    if b.isVisible() and b.text().strip() and b.sizeHint().width() > b.width() + 2]
+        aplastados = [(s.sizeHint().width(), s.width()) for s in p.findChildren(qt_kit.Segmentado) if s.isVisible() and s.width() + 2 < s.sizeHint().width()]
+        botones = [b.text() for b in p.findChildren(QAbstractButton) if b.isVisible() and b.text().strip()]
+        p.cerrar()
+        maestro.close()
+    esperar(len(botones) >= 2, f'no se vieron los botones del panel: {botones}')
+    esperar(not cortados and not aplastados, f'botones cortados (texto, pide, tiene): {cortados} · estilo aplastado (pide, tiene): {aplastados}')
+
+
+@caso('Interfaz')
+def botones_de_licencia_en_fila_solo_si_caben():
+    """Ajustes › Ayuda: «Actualizar licencia» y «Desactivar este equipo» iban siempre en fila en 380 px; en alemán, francés o ruso el
+    segundo salía cortado. Ahora van uno encima del otro cuando no caben."""
+    _qapp()
+    import qt_kit
+    from PySide6.QtWidgets import QBoxLayout, QHBoxLayout, QWidget
+
+    def direccion(t1, t2):
+        caja = QWidget()
+        fila = QHBoxLayout(caja)
+        fila.setSpacing(10)
+        b1, b2 = qt_kit.Boton(t1, None, tipo='neutro', alto=42, tam=14), qt_kit.Boton(t2, None, tipo='peligro', alto=42, tam=14)
+        fila.addWidget(b1)
+        fila.addWidget(b2)
+        ajustes_ui.VentanaAjustes._acomodar_botones_licencia(types.SimpleNamespace(lic_btn=b1, lic_desact=b2, _lic_fila=fila))
+        return fila.direction()
+
+    corta, larga = direccion('Ver', 'Desactivar'), direccion('Diesen Computer deaktivieren', 'Diesen Computer deaktivieren')
+    esperar(corta == QBoxLayout.Direction.LeftToRight, f'textos cortos: en fila ({corta})')
+    esperar(larga == QBoxLayout.Direction.TopToBottom, f'textos largos: uno encima del otro ({larga})')
+
+
+@caso('Interfaz')
+def titulo_de_cabecera_cabe_en_su_sitio():
+    """Panel rápido de Ajustes en francés: «À propos de CineCaptions» (26 px) no cabía y salía cortado a secas («…CineCaption»). Ahora el
+    título de las cabeceras encoge la letra hasta el 70 % para caber."""
+    app = _qapp()
+    import qt_kit
+    from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+    texto = 'À propos de CineCaptions · À propos de CineCaptions'
+    natural = qt_kit.Etiqueta(texto, 26, peso='extra').sizeHint().width()
+    caja = QWidget()
+    caja.setFixedWidth(int(natural * 0.8) + 48)            # (+ la X de cerrar y su separación)
+    capa = QVBoxLayout(caja)
+    capa.setContentsMargins(0, 0, 0, 0)
+    cab = ajustes_ui._cabecera('RÉGLAGES', texto, lambda: None, tam=26)
+    capa.addWidget(cab)
+    caja.show()
+    for _ in range(10):
+        app.processEvents()
+        time.sleep(0.02)
+    titulo = next(l for l in cab.findChildren(QLabel) if l.text() == texto)
+    pide, tiene = titulo.fontMetrics().horizontalAdvance(texto), titulo.contentsRect().width()
+    derecha = titulo.mapTo(caja, titulo.rect().topRight()).x()
+    caja.close()
+    esperar(pide <= tiene + 1 and derecha <= caja.width(), f'el título pide {pide} y tiene {tiene}; acaba en x={derecha} (la caja mide {caja.width()})')
 
 
 @caso('Informes de clientes')

@@ -1080,5 +1080,6 @@ def _avisar_sin_ia_de_texto(motivos):
         causa, 'vuelve a pulsar «Reparar el motor»')
     r = _reg()
     if r:
-        r.aviso(f'Reparar el motor: la voz quedó lista, pero no se descargó la IA de texto ({ia}): {motivo}. Mientras falte, el texto se corrige '
+        # (error y no aviso: la ventana Registro solo enseña Errores e Información; así se ve con su explicación, sin globos)
+        r.error(f'Reparar el motor: la voz quedó lista, pero no se descargó la IA de texto ({ia}): {motivo}. Mientras falte, el texto se corrige '
                 f'con reglas. Qué hacer: {hacer}.', 'motor de voz', detalle='\n'.join(str(m) for m in (motivos or [])[-6:]))

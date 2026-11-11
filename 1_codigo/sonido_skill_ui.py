@@ -22,7 +22,7 @@ Datos: sonido_skill.resumen (diseño) + sonido_skill.visual (miniaturas, voz, on
 """
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtCore import QEvent, QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
@@ -592,14 +592,39 @@ class TarjetaMomento(QWidget):
 class PaginaSonido(QWidget):
     """La página SONIDO. `video` = función que da el video de Inicio; `offset` = desplazamiento de GO en el timeline (Aplicar)."""
 
-    def __init__(self, padre=None, video=None, offset=None):
+    def __init__(self, padre=None, video=None, offset=None, por_partes=False):
         super().__init__(padre)
-        import sonido_skill as S
         self._video_fn = video or (lambda: '')
         self._offset_fn = offset or (lambda: 0)
         self._ocupado = False
         self._res, self._vis, self._sel = {}, {}, -1
         self._momentos = []
+        # v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): se arma con un generador; con
+        # por_partes=True quien la crea la termina a trozos (armar_paso) entre cuadro y cuadro de Inicio; si no, entera aquí, como siempre
+        self._pasos = self._armar()
+        if not por_partes:
+            self.completar()
+
+    def armar_paso(self):
+        """v5.83: un trozo del armado (unos ms); False cuando ya está entera."""
+        if self._pasos is None:
+            return False
+        try:
+            next(self._pasos)
+            return True
+        except StopIteration:
+            self._pasos = None
+            return False
+        except BaseException:
+            self._pasos = None
+            raise
+
+    def completar(self):
+        while self.armar_paso():
+            pass
+
+    def _armar(self):
+        import sonido_skill as S
         prefs = S._prefs()
         # v5.67 (el usuario eligió la propuesta C, «Mezclador», entre tres maquetas): TRES columnas, sin desplazar la página
         #   izquierda  «Sonido», video · sonidos, estado; ESTILO (lista con radio), OPCIONES (gancho, fiesta o mar, música, sonido en los
@@ -630,10 +655,16 @@ class PaginaSonido(QWidget):
         ci.setSpacing(8)
         cab, cc = caja_h(espacio=12)
         logo = Etiqueta('')
-        try:
+        try:                                                 # (v5.83: el PNG de 1024 px ya decodificado en otro hilo al abrir: vistas_slider)
             import sfx_rules
-            pm = ui.pixmap_de_archivo(sfx_rules.base_recursos() / 'logo_cinecaptions.png', 30)
-            if pm is not None:
+            import vistas_slider
+            img = vistas_slider.imagen_de(sfx_rules.base_recursos() / 'logo_cinecaptions.png')
+            if not img.isNull():
+                from PySide6.QtGui import QGuiApplication
+                dpr = QGuiApplication.instance().devicePixelRatio()          # (como ui.pixmap_de_archivo)
+                fis = max(1, int(round(30 * dpr)))
+                pm = QPixmap.fromImage(img.scaled(fis, fis, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                pm.setDevicePixelRatio(dpr)
                 logo.setPixmap(pm)
         except Exception:
             pass
@@ -647,6 +678,7 @@ class PaginaSonido(QWidget):
         self._lbl_estado = Etiqueta(tr('Haz GO con un video: aquí ves qué sonido va en cada momento y por qué.'), 12, color=MUT, envolver=True)
         ci.addWidget(self._lbl_estado)
         ci.addSpacing(6)
+        yield
         ci.addWidget(eti(tr('Estilo')))
         self._estilos = {}
         actual = prefs.get(S.PREF_ESTILO) or 'auto'
@@ -657,6 +689,7 @@ class PaginaSonido(QWidget):
             self._estilos[clave] = t
             ci.addWidget(t)
         ci.addSpacing(8)
+        yield
         ci.addWidget(eti(tr('Opciones')))
         import sonido_musica as M
         self._var_gancho = ui.BooleanVar(prefs.get(S.PREF_GANCHO, True) is not False)
@@ -669,6 +702,7 @@ class PaginaSonido(QWidget):
                                 (tr('Sonido en los próximos GO'), self._var_on, lambda: self._pref(S.PREF_ON, bool(self._var_on.get())))):
             ci.addWidget(Interruptor(texto, var, cmd, tam=13, color='#E0EBFB'))
         ci.addSpacing(8)
+        yield
         ci.addWidget(eti(tr('Biblioteca')))
         self._lbl_lib = ui.Elidida('', 13, color='#E0EBFB')
         ci.addWidget(self._lbl_lib)
@@ -676,6 +710,7 @@ class PaginaSonido(QWidget):
         ci.addStretch(1)
         self._aro = AroTipos(dentro)                         # (no está en la C: escondido; poner() lo sigue llenando)
         self._aro.hide()
+        yield
         desp_izq = QScrollArea()                             # (en ventanas bajas la columna se desplaza sola; los botones quedan abajo)
         desp_izq.setWidgetResizable(True)
         desp_izq.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -688,6 +723,7 @@ class PaginaSonido(QWidget):
         self._b_rehacer = Boton(tr('Rehacer'), self._rehacer, alto=38, tam=13)
         izq.capa.addWidget(self._b_rehacer)
         externa.addWidget(izq)
+        yield
 
         # ---- centro: la mezcla
         cen = Tarjeta(espacio=10, margenes=(18, 14, 18, 16))
@@ -704,6 +740,7 @@ class PaginaSonido(QWidget):
         cfz.addWidget(Boton('+', lambda: self._linea.zoom(1.4), alto=30, ancho=36, tam=14))
         cfz.addWidget(Boton(tr('Ajustar'), self._ajustar_zoom, alto=30, tam=12))
         cen.capa.addWidget(fila)
+        yield
         self._linea = LineaTiempo()
         self._linea.TIRA = 0                                 # (en la C el cuadro del momento va en el móvil de la derecha)
         self._linea.seleccionado.connect(self._elegir)
@@ -714,8 +751,10 @@ class PaginaSonido(QWidget):
         self._scroll.setStyleSheet(ui.traducir_hoja('QScrollArea{background:#0B1424;border:none;border-radius:12px}'))   # (v5.63: sigue al tema)
         self._scroll.viewport().setStyleSheet(ui.traducir_hoja('background:#0B1424'))
         self._scroll.setMinimumHeight(220)
+        self._scroll.viewport().installEventFilter(self)    # (v5.83: la mezcla sigue al alto de su recuadro: eventFilter)
         cen.capa.addWidget(self._scroll, 1)
-        ins = QWidget()                                      # el inspector, debajo de la mezcla
+        yield
+        ins = QWidget()                                     # el inspector, debajo de la mezcla
         ins.setObjectName('inspSonido')
         ins.setStyleSheet(ui.traducir_hoja('#inspSonido{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px}'))
         cins = QVBoxLayout(ins)
@@ -752,6 +791,7 @@ class PaginaSonido(QWidget):
         cins.addWidget(self._lbl_revision)
         cen.capa.addWidget(ins)
         externa.addWidget(cen, 1)
+        yield
 
         # ---- derecha: el móvil y la música
         der = columna(326, (16, 16, 16, 16))
@@ -760,7 +800,8 @@ class PaginaSonido(QWidget):
         der.capa.addWidget(self._cuadro, 0, Qt.AlignmentFlag.AlignHCenter)
         der.capa.addSpacing(6)
         der.capa.addWidget(eti(tr('Música')))
-        self._lbl_musica = ui.Elidida('', 12, color=MUT)
+        self._lbl_musica = ui.Etiqueta('', 12, color=MUT)          # v5.83: en dos líneas (cortado con «…» no se leía qué hacer)
+        self._lbl_musica.setWordWrap(True)
         der.capa.addWidget(self._lbl_musica)
         fila_m = QWidget()
         fila_m.setStyleSheet('background:transparent')
@@ -775,6 +816,7 @@ class PaginaSonido(QWidget):
         self._botones_musica = []
         externa.addWidget(der)
         self._columnas = (izq, cen, der)
+        yield
 
         # ---- la tira de momentos (no está en la C): construida y escondida, _llenar_momentos y _elegir la siguen usando
         self._tira = QWidget()
@@ -791,12 +833,25 @@ class PaginaSonido(QWidget):
         """La mezcla llena el alto de su recuadro (carriles más altos en ventanas altas)."""
         self._linea.ajustar_alto(max(220, self._scroll.viewport().height()))
 
+    def eventFilter(self, obj, ev):
+        """v5.83: la mezcla se vuelve a medir cada vez que cambia el ALTO de su recuadro, no solo cuando cambia la página. Se medía al
+        pintar los sonidos, antes de que la pista de música y el inspector tomaran su sitio: en una ventana baja se salía por abajo y
+        escondía Interfaz, Textura y la regla de tiempo (ya en la 5.82); armada por partes en Inicio, se medía escondida (220) y quedaba corta."""
+        try:
+            if ev.type() == QEvent.Type.Resize and obj is self._scroll.viewport() and ev.size().height() != ev.oldSize().height():
+                self._ajustar_linea()
+        except (AttributeError, RuntimeError):
+            pass
+        return super().eventFilter(obj, ev)
+
     def _ajustar_zoom(self):
         self._linea.ajustar_ancho(self._scroll.viewport().width())
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
-        alto = self._columnas[2].height() - 32               # el móvil: 9:16, sin pasar de 288 de ancho y dejando sitio a la música
+        if self._pasos is not None:                          # (v5.83: aún armándose por partes)
+            return
+        alto = self._columnas[2].height() - 32              # el móvil: 9:16, sin pasar de 288 de ancho y dejando sitio a la música
         h = int(max(280, min(512, alto - 300)))
         self._cuadro.setFixedSize(int(h * 9 / 16), h)
         self._ajustar_linea()
@@ -935,7 +990,8 @@ class PaginaSonido(QWidget):
         c = cands[el] if el is not None and 0 <= el < len(cands) else None
         if c:
             como = tr('debajo de tu voz, baja sola al hablar') if 'bajo la voz' in (c.get('nivel') or '') else tr('de fondo')
-            self._lbl_musica.setText(f"{M.NOMBRE_CARPETA.get(c['carpeta'], c['carpeta'])} · {c['bpm']:.0f} BPM · {como}")
+            carpeta = c.get('carpeta') or ''                          # (un estado guardado sin esos datos daba KeyError al pintar)
+            self._lbl_musica.setText(f"{M.NOMBRE_CARPETA.get(carpeta, carpeta) or c.get('titulo', '')} · {float(c.get('bpm') or 0):.0f} BPM · {como}")
         elif m.get('apagada'):
             self._lbl_musica.setText(tr('Apagada: enciéndela y pulsa «Rehacer».'))
         else:
