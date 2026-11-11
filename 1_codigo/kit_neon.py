@@ -13,6 +13,7 @@ pegatina inclinada ('stk', roja / lima / magenta / blanca), palabra a mano ('scr
 Tamaños con la regla del ejemplo (medidos con sus fuentes): la palabra grande llena hasta ~900 px (tope 200 px de letra; 250 el gancho, 300 el
 cierre), la pegatina ~60 % de ella, serif 80 px, a mano 120 px. Nada por debajo de y = 1560 ni por encima de 220 px (interfaz de Instagram).
 """
+import math
 from functools import lru_cache
 from pathlib import Path
 
@@ -238,8 +239,86 @@ def escena_captions(palabras, idioma='es', fin_video=None, mains=None):
                 if d.get('t') is None or tout - float(d['t']) >= 0.4:
                     quedan.append(d)                       # (sin 0,4 s para dibujarse antes de irse, mejor sin trazo)
             a['deco'] = quedan
+            _bloque_en_zona(a)
             out.append({'fn': 'hook', 'a': a, 't0': t0, 't1': round(float(b['t1']), 3), 'receta': b.get('receta')})
     return out
+
+
+# v5.84 (prueba de los 9 estilos: 6 de 13 bloques neón quedaban fuera de la zona segura ya quietos): bloque_hook encaja la pila con el alto de
+# sus LÍNEAS (_alto) y el ancho de su texto, pero el kit dibuja tinta fuera de ellos. Medido en los .mov con alfa de Remotion (alfa > 50 %,
+# 2026-11-11, 30 bloques de dos transcripciones): el aro sale ~34 px a cada lado de su palabra (el lazo ~48) con el centro ~9 px a la derecha
+# y girado −4° (el lazo −8°); la cinta lleva ~0,36 de su letra de relleno por lado; las versalitas miden su avance + el espaciado de la
+# maqueta (~12 % más que ancho()); abajo, la serif cursiva llega a ~0,97 de su letra bajo su centro, la cinta girada ~1,1 + el giro, la letra a
+# mano ~0,8 + el giro y el subrayado ~36 px bajo su línea. Márgenes de esas medidas, algo por exceso (el bloque sube como mucho ~20 px de más).
+ARO_LADO = {'circulo': 34.0, 'lazo': 48.0}       # px que el aro sobresale a cada lado de la palabra que rodea
+ARO_GIRO = {'circulo': 4.0, 'lazo': 8.0}         # grados de giro del aro (motor.ts)
+ARO_DESVIO = 9.0                                 # px que el centro del aro va a la derecha de la línea
+TAM_KIT = {'esp': 34, 'big': 170, 'serif': 78, 'script': 120, 'stk': 96}
+
+
+def _medio_ancho(it, m):
+    """Medio ancho (px) de la tinta de una línea del kit (centrada en x = 540)."""
+    fs = float(m['px'])
+    if it['k'] == 'esp':
+        return (float(m['avance']) + float(m['espacio'])) / 2.0
+    w = ancho(str(it.get('txt') or ''), it['k'], fs) / 2.0
+    if it['k'] == 'stk':
+        return w + 0.4 * fs                                  # relleno de la cinta (+ lo que añade el giro)
+    if it['k'] == 'script':
+        return w + 0.06 * fs
+    return w
+
+
+def _bajo(it, m):
+    """px (desde arriba del cuadro) donde acaba la tinta de una línea del kit, con su giro."""
+    fs, c = float(m['px']), float(m['centro'])
+    giro = abs(math.sin(math.radians(float(it.get('rot') or 0))))
+    if it['k'] == 'stk':                                     # la cinta: su caja con relleno y el giro
+        return c + 1.1 * fs + _medio_ancho(it, m) * giro
+    if it['k'] == 'script':                                  # a mano: rasgos largos y el giro
+        return c + 0.8 * fs + ancho(str(it.get('txt') or ''), 'script', fs) / 2.0 * giro
+    return c + {'big': 0.53, 'serif': 0.97}.get(it['k'], 0.5) * fs
+
+
+def _bloque_en_zona(a):
+    """El bloque neón entero (líneas, aros, subrayados, cintas giradas) dentro de la zona segura: una línea (o la palabra con aro) que se
+    saldría por los lados se achica y el bloque sube (sin pasar de TECHO) si algo bajaría de SUELO. Solo cambia `size` y `top`."""
+    items, deco = a.get('items') or [], a.get('deco') or []
+    if not items:
+        return a
+    medio = ZS.DER * 1080.0 - 540.0                          # medio ancho de la zona (centrada)
+    aros = {}
+    for d in deco:
+        if d.get('k') in ARO_LADO:
+            for i in d.get('i') or []:
+                aros[i] = max(aros.get(i, 0.0), ARO_LADO[d['k']] + ARO_DESVIO)
+    for _vuelta in range(2):                                 # (achicar una línea cambia la maqueta: se mide otra vez)
+        cambio = False
+        for i, (it, mm) in enumerate(zip(items, maqueta(a))):
+            mitad = _medio_ancho(it, mm) + aros.get(i, 0.0)
+            if mitad > medio:
+                fs = float(it.get('size') or TAM_KIT[it['k']])
+                nuevo = max(22, int(fs * (medio - aros.get(i, 0.0)) / max(1.0, mitad - aros.get(i, 0.0))))
+                if nuevo < fs:
+                    it['size'] = nuevo
+                    cambio = True
+        if not cambio:
+            break
+    m = maqueta(a)
+    fondo = max(_bajo(it, mm) for it, mm in zip(items, m))
+    for d in deco:
+        refs = [(items[i], m[i]) for i in d.get('i') or [] if i < len(items)]
+        if not refs:
+            continue
+        if d.get('k') == 'subraya':
+            fondo = max(fondo, max(mm['centro'] + 0.5 * mm['px'] + 36.0 for _it, mm in refs))
+        elif d.get('k') in ARO_LADO:
+            rx = max(_medio_ancho(it, mm) for it, mm in refs) + ARO_LADO[d['k']]
+            fondo = max(fondo, max(mm['centro'] + 0.5 * mm['px'] for _it, mm in refs) + (26.0 if d['k'] == 'lazo' else 14.0)
+                        + math.sin(math.radians(ARO_GIRO[d['k']])) * rx + 8.0)
+    if fondo > SUELO:
+        a['top'] = int(max(TECHO, float(a.get('top') or TOP) - (fondo - SUELO)))
+    return a
 
 
 def bloques_pro(escena, alto=1920.0):

@@ -21,6 +21,8 @@ de ~3 fotogramas en su sitio final, halo blanco suave, letras apretadas.
 import os
 import sys
 import time
+from collections import deque
+from concurrent.futures.thread import ThreadPoolExecutor      # (Python 3.15: NO desde concurrent.futures, que la da «lazy»: ver CLAUDE.md)
 from fractions import Fraction
 from pathlib import Path
 
@@ -34,6 +36,7 @@ ENTRADA_S = 0.09            # fundido de cada palabra (≈3 fotogramas a 30 fps)
 SALIDA_S = 0.05             # el bloque se va casi de golpe (la frase siguiente lo reemplaza)
 HALO = (0.14, 0.7)          # radio del halo blanco (× la letra) e intensidad (comparado con TEMA 4.mp4)
 EMOJI_LADO = 150.0          # px del diseño (1080×1920)
+HILOS_COMPONER = 0          # v5.84: hilos que componen fotogramas a la vez en `renderizar` (0 = la mitad de los del equipo, de 1 a 6)
 EMOJI_HUECO = 24.0
 EMOJI_ENTRADA_S = 0.14
 SR = 48000                  # audio de salida
@@ -152,74 +155,94 @@ def preparar(cues, ancho, alto, emoji_arriba=True, estilo=None):
     """Todo lo que se dibuja, ya rasterizado: [{'rgb','a','x','y','t0','t1','entrada'}] (x, y = esquina superior izquierda).
     estilo (v5.5.8): {'tipo': 'guion'|'kinetic'|'viral', 'pack'}: cualquier tema (render_temas.py); sin él (o con el pack «Tema4»), el Tema 4 de siempre."""
     s, dx, dy = encaje(ancho, alto)
-    capas = []
     otro_tema = bool(estilo) and not (estilo.get('tipo', 'guion') == 'guion' and estilo.get('pack', 'Tema4') == 'Tema4')
     por_rol = {}
     if not otro_tema and estilo and estilo.get('ajustes'):         # v5.55: la letra y los colores de «Crea tu estilo» en el Tema 4 (render_temas los lee él solo)
         import render_temas as RT
         por_rol = RT.ajustes_por_rol(estilo)
     con_letra = any((v or {}).get('fuente') for v in por_rol.values())
-    for cue in cues or []:
-        ini, fin = float(cue.get('start') or 0.0), float(cue.get('end') or 0.0)
-        if fin <= ini:
-            continue
-        lineas = []
-        if otro_tema:
-            import render_temas
-            capas += _encajar(lambda s_, dx_, dy_, c=cue: render_temas.capas_de_cue(estilo, c, s_, dx_, dy_), s, dx, dy, ancho, alto)
-        for r in ([] if otro_tema else cue.get('runs') or []):
-            texto = str(r.get('texto') or '').strip()
-            if not texto:
-                continue
-            em = T.EM_BASE * float(r.get('zoom', 1.0)) * s
-            d_rol = _roles_tema4().get(r.get('rol')) or _roles_tema4().get('complement') or {}
-            degradado = [(float(p), c) for p, c in d_rol['degradado']] if (r.get('rol') == 'main' and d_rol.get('degradado')) else None
-            color, fuente, em_tema = d_rol.get('color'), None, em
-            aj = por_rol.get('main' if r.get('rol') == 'main' else 'extra') if por_rol else None
-            if aj:
-                fuente = RT.par_usuario(T.FUENTE, aj) if aj.get('fuente') else None
-                if fuente:                                         # la letra elegida no ocupa más que la del tema (no pisa a sus vecinas)
-                    em *= RT.factor_encaje(T.FUENTE, em, fuente, em, texto)
-                if aj.get('color'):
-                    color, degradado = RT.color_usuario(color or (0.9, 0.9, 0.9), degradado, aj['color'], premium=(r.get('rol') == 'main'))
-            sp = _sprite_texto(texto, em, color=color, degradado=degradado, fuente=fuente)
-            if sp is None:
-                continue
-            rgb, a, x_ini, base, total = sp
-            cx = dx + float(r['x']) * 1080.0 * s
-            cy = dy + float(r['y']) * 1920.0 * s
-            izq = cx - total / 2.0 - x_ini
-            arriba = cy + T.CENTRO_CAP * em - base
-            capas.append({'rgb': rgb, 'a': a, 'x': int(round(izq)), 'y': int(round(arriba)),
-                          't0': max(ini, float(r.get('t', ini))), 't1': fin, 'entrada': ENTRADA_S,
-                          'tipo': 'tema4', 'rol': r.get('rol'), 'em': em, 'cue_t0': ini})          # (v5.5.10: para animarla en Creativo)
-            if con_letra:                                          # v5.55: la línea se recoloca con los huecos del planificador (render_temas.reespaciar)
-                an = RT.anchos(T.FUENTE, em_tema, fuente or T.FUENTE, em, texto)
-                if an:
-                    lineas.append((cx, cy, max(1.0, em), an[0], an[1], [capas[-1]]))
-        if lineas:
-            RT.reespaciar(lineas)
-        if cue.get('emoji'):
-            try:
-                import emojis
-                ruta = emojis.ruta_png(cue['emoji'])
-            except Exception:
-                ruta = None
-            lado = EMOJI_LADO * s
-            sp = _sprite_emoji(ruta, lado) if ruta else None
-            caja = cue.get('caja')
-            if sp is not None and isinstance(caja, (list, tuple)) and len(caja) == 2:
-                rgb, a = sp
-                hh, ww = a.shape[:2]
-                if emoji_arriba:
-                    cy = dy + float(caja[0]) * 1920.0 * s - EMOJI_HUECO * s - hh / 2.0
-                else:
-                    cy = dy + float(caja[1]) * 1920.0 * s + EMOJI_HUECO * s + hh / 2.0
-                cx = dx + 540.0 * s
-                capas.append({'rgb': rgb, 'a': a, 'x': int(round(cx - ww / 2.0)), 'y': int(round(cy - hh / 2.0)),
-                              't0': max(ini, float(cue.get('emoji_ini') or ini)), 't1': fin, 'entrada': EMOJI_ENTRADA_S,
-                              'tipo': 'emoji', 'em': lado, 'cue_t0': ini})
+    lista = list(cues or [])
+
+    def de_un_cue(cue):
+        return _capas_de_cue(cue, s, dx, dy, ancho, alto, emoji_arriba, estilo, otro_tema, por_rol, con_letra)
+    # v5.84 (el usuario: «usa el máximo en paralelo»): cada bloque se dibuja en un hilo del grupo (Estilo 5: 19,6 s en un hilo, casi todo numpy y
+    # filtros de Pillow, que sueltan el GIL; Estilo 7: 9,6 s en el filtro de máximo del contorno). Cada bloque solo lee lo común y devuelve SUS
+    # capas; se juntan en el orden de los bloques y se ordenan igual que antes: las mismas capas en el mismo orden.
+    hilos = HILOS_COMPONER or max(1, min(6, (os.cpu_count() or 2) // 2))
+    if hilos > 1 and len(lista) > 1:
+        with ThreadPoolExecutor(max_workers=min(hilos, len(lista)), thread_name_prefix='capas-mp4') as grupo:
+            por_cue = list(grupo.map(de_un_cue, lista))
+    else:
+        por_cue = [de_un_cue(c) for c in lista]
+    capas = [c for de_cue in por_cue for c in de_cue]
     capas.sort(key=lambda c: c['t0'])
+    return capas
+
+
+def _capas_de_cue(cue, s, dx, dy, ancho, alto, emoji_arriba, estilo, otro_tema, por_rol, con_letra):
+    """Las capas de UN bloque (lo que hacía el cuerpo del bucle de `preparar`; v5.84: aparte para dibujar los bloques en paralelo)."""
+    capas = []
+    if por_rol:
+        import render_temas as RT
+    ini, fin = float(cue.get('start') or 0.0), float(cue.get('end') or 0.0)
+    if fin <= ini:
+        return capas
+    lineas = []
+    if otro_tema:
+        import render_temas
+        capas += _encajar(lambda s_, dx_, dy_, c=cue: render_temas.capas_de_cue(estilo, c, s_, dx_, dy_), s, dx, dy, ancho, alto)
+    for r in ([] if otro_tema else cue.get('runs') or []):
+        texto = str(r.get('texto') or '').strip()
+        if not texto:
+            continue
+        em = T.EM_BASE * float(r.get('zoom', 1.0)) * s
+        d_rol = _roles_tema4().get(r.get('rol')) or _roles_tema4().get('complement') or {}
+        degradado = [(float(p), c) for p, c in d_rol['degradado']] if (r.get('rol') == 'main' and d_rol.get('degradado')) else None
+        color, fuente, em_tema = d_rol.get('color'), None, em
+        aj = por_rol.get('main' if r.get('rol') == 'main' else 'extra') if por_rol else None
+        if aj:
+            fuente = RT.par_usuario(T.FUENTE, aj) if aj.get('fuente') else None
+            if fuente:                                         # la letra elegida no ocupa más que la del tema (no pisa a sus vecinas)
+                em *= RT.factor_encaje(T.FUENTE, em, fuente, em, texto)
+            if aj.get('color'):
+                color, degradado = RT.color_usuario(color or (0.9, 0.9, 0.9), degradado, aj['color'], premium=(r.get('rol') == 'main'))
+        sp = _sprite_texto(texto, em, color=color, degradado=degradado, fuente=fuente)
+        if sp is None:
+            continue
+        rgb, a, x_ini, base, total = sp
+        cx = dx + float(r['x']) * 1080.0 * s
+        cy = dy + float(r['y']) * 1920.0 * s
+        izq = cx - total / 2.0 - x_ini
+        arriba = cy + T.CENTRO_CAP * em - base
+        capas.append({'rgb': rgb, 'a': a, 'x': int(round(izq)), 'y': int(round(arriba)),
+                      't0': max(ini, float(r.get('t', ini))), 't1': fin, 'entrada': ENTRADA_S,
+                      'tipo': 'tema4', 'rol': r.get('rol'), 'em': em, 'cue_t0': ini})          # (v5.5.10: para animarla en Creativo)
+        if con_letra:                                          # v5.55: la línea se recoloca con los huecos del planificador (render_temas.reespaciar)
+            an = RT.anchos(T.FUENTE, em_tema, fuente or T.FUENTE, em, texto)
+            if an:
+                lineas.append((cx, cy, max(1.0, em), an[0], an[1], [capas[-1]]))
+    if lineas:
+        RT.reespaciar(lineas)
+    if cue.get('emoji'):
+        try:
+            import emojis
+            ruta = emojis.ruta_png(cue['emoji'])
+        except Exception:
+            ruta = None
+        lado = EMOJI_LADO * s
+        sp = _sprite_emoji(ruta, lado) if ruta else None
+        caja = cue.get('caja')
+        if sp is not None and isinstance(caja, (list, tuple)) and len(caja) == 2:
+            rgb, a = sp
+            hh, ww = a.shape[:2]
+            if emoji_arriba:
+                cy = dy + float(caja[0]) * 1920.0 * s - EMOJI_HUECO * s - hh / 2.0
+            else:
+                cy = dy + float(caja[1]) * 1920.0 * s + EMOJI_HUECO * s + hh / 2.0
+            cx = dx + 540.0 * s
+            capas.append({'rgb': rgb, 'a': a, 'x': int(round(cx - ww / 2.0)), 'y': int(round(cy - hh / 2.0)),
+                          't0': max(ini, float(cue.get('emoji_ini') or ini)), 't1': fin, 'entrada': EMOJI_ENTRADA_S,
+                          'tipo': 'emoji', 'em': lado, 'cue_t0': ini})
     return capas
 
 
@@ -488,24 +511,18 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
                     arr = np.ascontiguousarray(np.rot90(arr, k=int(round(rot / 90.0)) % 4))
                 yield arr, ((fr.pts - inicio_pts) if fr.pts is not None else None)
 
-        for arr, pts in cuadros():
-            mirar_cancelar()
-            if arr.shape[0] % 2 or arr.shape[1] % 2:          # yuv420p pide lados pares
-                arr = np.ascontiguousarray(arr[:arr.shape[0] // 2 * 2, :arr.shape[1] // 2 * 2])
-            alto, ancho = arr.shape[:2]
-            if vs is None:
-                vs, nombre_codec = _abrir_codificador(out, fps, ancho, alto)
-                try:
-                    vs.codec_context.time_base = tb
-                except Exception:
-                    pass
-                capas = preparar(cues, ancho, alto, emoji_arriba=emoji_arriba, estilo=estilo)
-            t = float(pts * tb) if pts is not None else n / float(fps)
+        def hacer_cuadro(arr, pts, i):
+            """Compone los captions sobre un fotograma y lo pasa a VideoFrame (en un hilo del grupo: solo toca SU fotograma; `capas` se lee)."""
+            t = float(pts * tb) if pts is not None else i / float(fps)
             componer(arr, capas, t)
             nf = av.VideoFrame.from_ndarray(arr, format='rgb24')
             if pts is not None:
                 nf.pts = pts
                 nf.time_base = tb
+            return nf, t
+
+        def codificar(nf, t):
+            nonlocal n, ultimo_aviso
             for p in vs.encode(nf):
                 out.mux(p)
             audio_hasta(t + 0.5)
@@ -514,6 +531,34 @@ def renderizar(video, cues, salida=None, progreso=None, cancelado=None, emoji_ar
             if ahora - ultimo_aviso > 0.25:
                 ultimo_aviso = ahora
                 avisar(0.02 + 0.96 * n / total_cuadros, f'Grabando los subtítulos en el video… {min(99, int(100 * n / total_cuadros))} %')
+
+        # v5.84 (el usuario: «usa el máximo en paralelo para que lo haga más rápido»): decodificar, componer y codificar ya no van uno tras otro
+        # en un hilo (medido con el Estilo 2, 24 s: 20 s = 7 codificando + 8,5 componiendo + 2 convirtiendo). Este hilo decodifica y codifica EN
+        # ORDEN (el audio, intercalado igual) y un grupo de hilos compone y convierte varios fotogramas a la vez (numpy y FFmpeg sueltan el GIL).
+        # Mismo códec, mismos ajustes, mismos fotogramas en el mismo orden: el MP4 sale idéntico (comparado cuadro a cuadro).
+        hilos = HILOS_COMPONER or max(1, min(6, (os.cpu_count() or 2) // 2))
+        pendientes = deque()
+        i_cuadro = 0
+        with ThreadPoolExecutor(max_workers=hilos, thread_name_prefix='componer-mp4') as grupo:
+            for arr, pts in cuadros():
+                mirar_cancelar()
+                if arr.shape[0] % 2 or arr.shape[1] % 2:          # yuv420p pide lados pares
+                    arr = np.ascontiguousarray(arr[:arr.shape[0] // 2 * 2, :arr.shape[1] // 2 * 2])
+                if vs is None:
+                    alto, ancho = arr.shape[:2]
+                    vs, nombre_codec = _abrir_codificador(out, fps, ancho, alto)
+                    try:
+                        vs.codec_context.time_base = tb
+                    except Exception:
+                        pass
+                    capas = preparar(cues, ancho, alto, emoji_arriba=emoji_arriba, estilo=estilo)
+                pendientes.append(grupo.submit(hacer_cuadro, arr, pts, i_cuadro))
+                i_cuadro += 1
+                while pendientes and (len(pendientes) >= 2 * hilos or pendientes[0].done()):
+                    codificar(*pendientes.popleft().result())
+            while pendientes:
+                mirar_cancelar()
+                codificar(*pendientes.popleft().result())
         if vs is None:
             raise RuntimeError('no pude leer ningún fotograma del video')
         for p in vs.encode(None):

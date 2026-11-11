@@ -4625,6 +4625,11 @@
     "Arreglos: en Proyectos, los nombres muy largos ya no esconden «Abrir» y «Eliminar», y si dos videos se llaman igual se ve su carpeta; el panel de emojis del Corrector ya se lee bien.": "修复：在项目中，过长的名称不再挡住「打开」和「删除」，同名的视频会显示所在文件夹；校对器的表情面板也能看清了。",
     "En alemán, francés y ruso ya no salen botones ni títulos cortados en Ajustes, y el Registro enseña los avisos al abrir y cuando «Reparar el motor» no puede bajar la IA de texto.": "德语、法语和俄语下，设置中的按钮和标题不再被截断；日志会显示启动时的警告，以及「修复引擎」无法下载文本 AI 时的警告。",
     "Más fluido: Efectos, Estilo y Sonido se preparan mientras estás en Inicio y se abren al momento, y «Expandir ajustes» va más rápido.": "更流畅：在主页时，效果、样式和声音页面会提前准备好，点开即显示；「展开设置」也更快了。",
-    "En Sonido, la mezcla ya cabe entera en su recuadro: en ventanas bajas escondía las últimas pistas.": "声音页面的混音现在能完整显示在框内：之前在较矮的窗口中会挡住最后几条音轨。"
+    "En Sonido, la mezcla ya cabe entera en su recuadro: en ventanas bajas escondía las últimas pistas.": "声音页面的混音现在能完整显示在框内：之前在较矮的窗口中会挡住最后几条音轨。",
+    "Resolve reproduce antes los captions: el Estilo 5 llena su caché en menos de la mitad de tiempo y el Estilo 1 en un 22 % menos, con la misma imagen.": "Resolve 能更快播放字幕：样式 5 填充缓存的时间不到原来的一半，样式 1 缩短 22 %，画面完全相同。",
+    "«Video sin editores» graba hasta un 50 % más rápido: usa varios núcleos a la vez y el video sale idéntico.": "「无需剪辑软件的视频」导出最多快 50 %：同时使用多个核心，视频结果完全相同。",
+    "Inicio va más fluido mientras se preparan las páginas: el fondo animado se compone en otro hilo.": "页面准备期间主页更流畅：动画背景在另一个线程中合成。",
+    "Volver a pulsar el botón que abrió un panel o una lista lo cierra (el chip Estilo, Edición PRO, la letra y los demás).": "再次点击打开面板或列表的按钮即可将其关闭（样式标签、PRO 编辑、字体等）。",
+    "Arreglos: el neón del Estilo 1 queda dentro de la zona segura, y con videos largos «Video sin editores» ya no avisa en falso de que GO está atascado.": "修复：样式 1 的霓虹效果保持在安全区内；长视频使用「无需剪辑软件的视频」时，不再误报 GO 卡住。"
   }
 }

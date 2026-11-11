@@ -4625,6 +4625,11 @@
     "Arreglos: en Proyectos, los nombres muy largos ya no esconden «Abrir» y «Eliminar», y si dos videos se llaman igual se ve su carpeta; el panel de emojis del Corrector ya se lee bien.": "수정: 프로젝트에서 아주 긴 이름이 더 이상 「열기」와 「삭제」를 가리지 않고, 이름이 같은 동영상은 폴더가 표시됩니다. 교정의 이모지 패널도 잘 읽힙니다.",
     "En alemán, francés y ruso ya no salen botones ni títulos cortados en Ajustes, y el Registro enseña los avisos al abrir y cuando «Reparar el motor» no puede bajar la IA de texto.": "독일어, 프랑스어, 러시아어에서 설정의 버튼과 제목이 더 이상 잘리지 않고, 로그에 시작할 때의 경고와 「엔진 복구」가 텍스트 AI를 내려받지 못했을 때의 경고가 표시됩니다.",
     "Más fluido: Efectos, Estilo y Sonido se preparan mientras estás en Inicio y se abren al momento, y «Expandir ajustes» va más rápido.": "더 부드럽게: 홈에 있는 동안 효과, 스타일, 사운드가 준비되어 바로 열리고, 「설정 확장」도 더 빨라졌습니다.",
-    "En Sonido, la mezcla ya cabe entera en su recuadro: en ventanas bajas escondía las últimas pistas.": "사운드의 믹스가 이제 상자 안에 모두 들어갑니다. 높이가 낮은 창에서는 마지막 트랙이 가려졌습니다."
+    "En Sonido, la mezcla ya cabe entera en su recuadro: en ventanas bajas escondía las últimas pistas.": "사운드의 믹스가 이제 상자 안에 모두 들어갑니다. 높이가 낮은 창에서는 마지막 트랙이 가려졌습니다.",
+    "Resolve reproduce antes los captions: el Estilo 5 llena su caché en menos de la mitad de tiempo y el Estilo 1 en un 22 % menos, con la misma imagen.": "Resolve에서 자막을 더 빨리 재생합니다. 스타일 5는 캐시를 절반도 안 되는 시간에, 스타일 1은 22 % 더 짧은 시간에 채우며 화면은 그대로입니다.",
+    "«Video sin editores» graba hasta un 50 % más rápido: usa varios núcleos a la vez y el video sale idéntico.": "「편집기 없이 동영상」이 최대 50 % 더 빨리 녹화됩니다. 여러 코어를 동시에 쓰고 동영상은 똑같이 나옵니다.",
+    "Inicio va más fluido mientras se preparan las páginas: el fondo animado se compone en otro hilo.": "페이지를 준비하는 동안 홈이 더 부드럽게 움직입니다. 애니메이션 배경은 다른 스레드에서 합성됩니다.",
+    "Volver a pulsar el botón que abrió un panel o una lista lo cierra (el chip Estilo, Edición PRO, la letra y los demás).": "패널이나 목록을 연 버튼을 다시 누르면 닫힙니다(스타일 칩, PRO 편집, 글꼴 등).",
+    "Arreglos: el neón del Estilo 1 queda dentro de la zona segura, y con videos largos «Video sin editores» ya no avisa en falso de que GO está atascado.": "수정: 스타일 1의 네온이 안전 영역 안에 들어오고, 긴 동영상에서 「편집기 없이 동영상」이 GO가 멈췄다고 잘못 경고하지 않습니다."
   }
 }

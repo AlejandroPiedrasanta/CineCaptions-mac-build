@@ -294,7 +294,7 @@ class PanelPro(QWidget):
         menu = ui.Menu(self)
         for clave, texto in opciones:
             menu.agregar(('✓  ' if clave == actual else '      ') + texto, lambda c=clave, b=boton: self._elegido(b, c))
-        menu.mostrar(boton.mapToGlobal(QPoint(0, boton.height() + 6)))
+        menu.mostrar(boton.mapToGlobal(QPoint(0, boton.height() + 6)), ancla=boton)     # (v5.84: pulsar otra vez el botón la cierra)
 
     def _elegido(self, boton, clave):
         self._guardar('pro_genero' if boton is self.b_tipo else 'pro_mascara', clave)
@@ -353,5 +353,6 @@ def abrir(padre, leer, poner, alternar, studio, ancla=None):
     if ancla is not None and hasattr(ancla, 'poner_abierto'):
         ancla.poner_abierto(True)
         panel.al_cerrar = lambda: ancla.poner_abierto(False)
+    ui.no_reabrir(panel, ancla)                  # v5.84: volver a pulsar el chip lo cierra (antes se cerraba y se abría otra vez)
     panel.mostrar(ancla)
     return panel

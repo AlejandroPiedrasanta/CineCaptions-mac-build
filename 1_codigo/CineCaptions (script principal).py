@@ -1879,6 +1879,28 @@ class _EstructuraPack(QWidget):
             p.setPen(QColor('#7F8DA8'))
             p.drawText(QRectF(x + 8, 0, fm.horizontalAdvance(texto_n) + 6, self.height()), int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), texto_n)
         p.end()
+class _TrasPintar(QObject):
+    """v5.84: llama a `fn` justo DESPUÉS de cada pintado de `widget` (en la vuelta siguiente del bucle, cuando el cuadro ya salió): lo que se
+    hace ahí aprovecha el hueco hasta el cuadro siguiente sin retrasar ninguno (SubtitleApp._armar_por_partes con la escena de Inicio)."""
+    def __init__(self, widget, fn):
+        super().__init__(widget)
+        self._fn = fn
+        self._pendiente = False
+        widget.installEventFilter(self)
+    def eventFilter(self, obj, ev):
+        if not self._pendiente and ev.type() == QEvent.Type.Paint:
+            self._pendiente = True
+            ui.QTimer.singleShot(0, self._llamar)
+        return False
+    def _llamar(self):
+        self._pendiente = False
+        self._fn()
+    def quitar(self):
+        try:
+            self.parent().removeEventFilter(self)
+        except (RuntimeError, AttributeError):
+            pass
+        self.deleteLater()
 class PlantillasWindow(QWidget):
     """Elegir el diseño de los subtitulos. DOS vistas, una por MODO
     (v1.0.70, pedido literal: «las nuevas plantillas solo deben ser
@@ -2226,16 +2248,17 @@ class PlantillasWindow(QWidget):
             self.info_acciones.addWidget(b)
         menu_carta = None if solo_temas else carta.menu
         if menu_carta:
-            m = Boton('⋯', lambda menu=menu_carta: self._menu_carta(menu), tipo='fantasma', alto=36, ancho=40, tam=16)
+            m = Boton('⋯', None, tipo='fantasma', alto=36, ancho=40, tam=16)
+            m.poner_comando(lambda menu=menu_carta, b=m: self._menu_carta(menu, b))
             m.setFixedWidth(42)
             self.info_acciones.addWidget(m)
         self._pintar_boton_usar()
         self.barra_tema.ajustar()
-    def _menu_carta(self, opciones):
+    def _menu_carta(self, opciones, ancla=None):
         menu = Menu(self)
         for texto, fn in opciones:
             menu.agregar(texto, fn)
-        menu.mostrar(QCursor.pos())
+        menu.mostrar(QCursor.pos(), ancla=ancla)        # (v5.84: pulsar otra vez «⋯» lo cierra)
     def _boton_pro(self):
         """«Activar edición PRO»: con este tema, GO además edita el video en la línea de tiempo (motion graphics, Magic Mask, sonidos)."""
         try:
@@ -6601,6 +6624,15 @@ class SubtitleApp(QWidget):
             base = Path(base_recursos())
             vistas_slider.precargar([base / 'fondos_estilos', base / 'vistas_slider', base / 'edicion_pro' / 'estilos_pro', base / 'efectos' / 'previas'])
             vistas_slider.precargar([base], patron='logo_cinecaptions.png')            # (el de Sonido: PNG de 1024 px, ~10 ms en la interfaz)
+            vistas_slider.precargar([base / 'fondos_estilos'], patron='grano_fondo.png')   # (v5.84: el grano del fondo animado, efectos_ui._hacer_grano)
+
+            def movil():            # v5.84: el marco del móvil (PNG grande) y su foto del panel PRO de Estilo: ~6 ms del armado en la interfaz
+                ui.prioridad_hilo(-1)
+                try:
+                    ui.MarcoVista._recursos_movil()      # (solo QImage y JSON: se puede en otro hilo; queda en su caché de clase)
+                except Exception:
+                    pass
+            threading.Thread(target=movil, name='precarga-movil', daemon=True).start()
         except Exception:
             registro.excepcion(origen='precargar imágenes')
     def _prearmar_paginas(self, pendientes=None):
@@ -6612,7 +6644,7 @@ class SubtitleApp(QWidget):
         o esté minimizada: nadie mira la animación.
         v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): ya no se espera al foco: Efectos,
         Estilo y Sonido se arman POR PARTES entre cuadro y cuadro de Inicio (_armar_por_partes, sin tirones), una tras otra."""
-        pendientes = [c for c in (pendientes if pendientes is not None else ('efectos', 'estilos', 'sfx')) if not self._pagina_hecha(c)]
+        pendientes = [c for c in (pendientes if pendientes is not None else ('fondo', 'efectos', 'estilos', 'sfx')) if not self._pagina_hecha(c)]
         if not pendientes:
             return
         if getattr(self, '_go_corriendo', False) or getattr(self, '_pagina_actual', 'inicio') != 'inicio':
@@ -7939,11 +7971,29 @@ class SubtitleApp(QWidget):
             import vigilancia
             self._vig_nombre = nombre
             def al_aviso(texto):
-                pista = self.PISTAS_ATASCO.get(getattr(self, '_go_paso_actual', '') or paso or '', '')
+                paso_a = getattr(self, '_go_paso_actual', '') or paso or ''
+                # v5.84: sin editores (MP4 / Premiere) no hay Resolve al que mirar: sin la pista de Resolve
+                pista = '' if getattr(self, '_go_sin_resolve', False) and paso_a in ('timeline', 'resolve', 'colocar') else self.PISTAS_ATASCO.get(paso_a, '')
                 self.msg_queue.put(('vigia', (texto + ' ' + pista).strip()))          # (kind 'vigia' no cuenta como señal de vida)
             vigilancia.iniciar(nombre, hilo=hilo, paso=paso, al_aviso=al_aviso, al_atasco=self._destrabar)
         except Exception:
             registro.excepcion(origen='vigilancia · iniciar')
+    def _senal_sin_editores(self, est, firma):
+        """v5.84: GO sin editores (MP4 / Premiere) graba en un hilo que no pasa por la cola de mensajes, así que el vigía no recibía señales y
+        seguía en el paso «diseno»: un render de más de 60 s quedaba como «sin avanzar en el paso «diseno»» y a los 180 s (un video de ~3 min,
+        ~70 s con el Estilo 1) como ERROR «parece atascado», con el motor de voz cerrado sin motivo. Ahora el paso es «resolve» (el que la app
+        pinta como «Grabar el video») y cada avance del render (`firma` distinta) es una señal de vida; un render colgado sigue avisando."""
+        if firma is not None and firma == est.get('_firma_vigia'):
+            return
+        est['_firma_vigia'] = firma
+        nombre = getattr(self, '_vig_nombre', None)
+        if not nombre:
+            return
+        try:
+            import vigilancia
+            vigilancia.latido(nombre, paso='resolve')
+        except Exception:
+            pass
     def _fin_tarea(self, ok=True, motivo='', cancelado=False):
         nombre = getattr(self, '_vig_nombre', None)
         if not nombre:
@@ -9452,6 +9502,7 @@ class SubtitleApp(QWidget):
             emoji_arriba = True
         self.go_panel.linea.configure(text=tr('Grabando los subtítulos en el video…'))
         est = {'f': 0.0, 'texto': '', 'r': None, 'error': None}
+        self._senal_sin_editores(est, None)
 
         def parar():
             """«Pausar» espera aquí (entre fotogramas); «Cancelar» corta y no deja archivo a medias."""
@@ -9492,6 +9543,7 @@ class SubtitleApp(QWidget):
                 if vivo(self):
                     pct = int(round(100 * est['f']))
                     self.go_panel.linea.configure(text=tr('Grabando los subtítulos en el video… {p} %', p=pct))
+                    self._senal_sin_editores(est, (round(est['f'], 4), est.get('texto')))
                     despues(200, revisar, self)
                 return
             r = est['r'] or {}
@@ -9546,6 +9598,7 @@ class SubtitleApp(QWidget):
             nombre_estilo = ''
         self.go_panel.linea.configure(text=tr('Dibujando los subtítulos para Premiere Pro…'))
         est = {'f': 0.0, 'fase': 'capa', 'texto': '', 'r': None, 'error': None, 'capa': None}
+        self._senal_sin_editores(est, None)
 
         def parar():
             """«Pausar» espera aquí; «Cancelar» corta (la capa a medias se borra y el pedido sin tomar se retira)."""
@@ -9590,6 +9643,7 @@ class SubtitleApp(QWidget):
                         self.go_panel.linea.configure(text=tr('Dibujando los subtítulos para Premiere Pro… {p} %', p=int(round(100 * est['f']))))
                     elif est['texto']:
                         self.go_panel.linea.configure(text=tr(est['texto']))
+                    self._senal_sin_editores(est, (est['fase'], round(est['f'], 4), est['texto']))
                     despues(200, revisar, self)
                 return
             r = est['r'] or {}
@@ -11383,9 +11437,12 @@ class SubtitleApp(QWidget):
     # v5.83: lo que cada página importa antes de armarse por partes (uno por vuelta: importar uno cuesta 3-10 ms)
     _MODULOS_POR_PARTES = {'efectos': ('estilos_pro', 'efectos_visuales', 'efectos_pro_ui', 'efectos_pagina', 'motions_ui', 'efectos_extra_ui'),
                            'estilos': ('estilos_slider', 'proyecto_ui', 'pro_lateral_ui', 'un_clic_ui', 'vistas_reales'),
-                           'sfx': ('sonido_skill', 'sonido_musica', 'director_sonido_estado', 'sonido_skill_ui')}
+                           'sfx': ('sonido_skill', 'sonido_musica', 'director_sonido_estado', 'sonido_skill_ui'),
+                           'fondo': ()}             # v5.84: no es una página: las capas del fondo animado y lo fijo de los cielos
 
     def _pagina_hecha(self, clave):
+        if clave == 'fondo':
+            return self.fondo.capas_listas()
         if clave == 'efectos':
             return self._efectos_widget is not None
         if clave == 'estilos':
@@ -11394,6 +11451,8 @@ class SubtitleApp(QWidget):
 
     def _crear_por_partes(self, clave):
         """La página `clave` SIN armar (por_partes): la arma quien la pide (completar() o armar_paso a trozos)."""
+        if clave == 'fondo':                       # (v5.84: efectos_ui.FondoVivo.preparador: sus capas a trozos)
+            return self.fondo.preparador()
         if clave == 'efectos':                     # (dentro de su sitio desde ya: re-colgarla al final costaba ~30 ms)
             import efectos_pagina
             return efectos_pagina.PaginaEfectos(self._efectos_capa.parentWidget() or self, al_cambiar=self._pintar_opciones_go, por_partes=True)
@@ -11402,6 +11461,8 @@ class SubtitleApp(QWidget):
         return self._crear_sonido()
 
     def _colocar_por_partes(self, clave, pag):
+        if clave == 'fondo':
+            return
         if clave == 'efectos':
             self._efectos_capa.addWidget(pag)
             self._efectos_widget = pag
@@ -11420,6 +11481,8 @@ class SubtitleApp(QWidget):
         self._sfx_capa.addWidget(pag, 1)
         self._director_pagina = pag
 
+    _PARTES_TRAS_PINTAR = True                    # v5.84: los trozos, tras cada cuadro de la escena de Inicio (False: reloj propio de ~16 ms)
+
     def _armar_por_partes(self, clave, al_terminar=None):
         """v5.83 (el usuario: «utiliza todos los hilos y memoria para que CineCaptions sea fluido y rápido»): arma la página `clave` (efectos,
         estilos o sfx) en Inicio a trozos (su armar_paso, ~1-8 ms), uno cada ~16 ms: la animación de Inicio (~5 ms por cuadro) sigue a 60/s y en
@@ -11428,9 +11491,11 @@ class SubtitleApp(QWidget):
         modulos = list(self._MODULOS_POR_PARTES.get(clave, ()))
         partes = self.__dict__.setdefault('_por_partes', {})
         estado = {'pag': None, 'fin': False, 'ult': time.perf_counter()}
-        # un trozo cada ~16 ms con un reloj propio (medido: Inicio con saltos de hasta ~37 ms en vez de ~31 mientras se arman). Pegarlo al
-        # latido de la escena (escena_go._reloj) se probó: el trozo cae antes de pintar y salió peor (medido con el equipo cargado; sin decidir)
-        reloj = None
+        # v5.84: cada trozo justo DESPUÉS de que la escena de Inicio pinte su cuadro (_TrasPintar), en el hueco hasta el siguiente. Con un reloj
+        # propio de ~16 ms el trozo caía en cualquier punto del cuadro y a veces lo empujaba al siguiente; pegado al tic de la escena (antes de
+        # pintar) alargaba cada cuadro. Sin escena (o _PARTES_TRAS_PINTAR = False), el reloj propio.
+        escena = getattr(self, 'escena_go', None) if self._PARTES_TRAS_PINTAR else None
+        gancho = {'filtro': None}
 
         def paso():
             """Un trozo; True si queda trabajo."""
@@ -11467,24 +11532,21 @@ class SubtitleApp(QWidget):
             if paso():
                 return
             estado['fin'] = True
-            if reloj is not None:
-                try:
-                    reloj.timeout.disconnect(latido)
-                except (RuntimeError, TypeError):
-                    pass
+            if gancho['filtro'] is not None:
+                gancho['filtro'].quitar()
             if al_terminar is not None:
                 al_terminar()
 
-        def vigilar():                                   # sin latidos (escena parada, ventana minimizada…): un trozo cada medio segundo
+        def vigilar():                                   # sin cuadros (escena parada, ventana minimizada…): un trozo cada medio segundo
             if estado['fin']:
                 return
-            if reloj is None or time.perf_counter() - estado['ult'] > 0.4:
+            if gancho['filtro'] is None or time.perf_counter() - estado['ult'] > 0.4:
                 latido()
             if not estado['fin']:
-                despues(16 if reloj is None else 500, vigilar, self)
-        if reloj is not None:
-            reloj.timeout.connect(latido)
-        despues(16 if reloj is None else 500, vigilar, self)
+                despues(16 if gancho['filtro'] is None else 500, vigilar, self)
+        if escena is not None:
+            gancho['filtro'] = _TrasPintar(escena, latido)
+        despues(16 if gancho['filtro'] is None else 500, vigilar, self)
     def _asegurar_sfx(self):
         """v5.34: la página SONIDO es «AI Sound Director» (director_sonido_ui): la IA hace el sonido y el usuario lo dirige. El SFX Lab de antes
         solo se arma si la nueva no pudiera construirse (red técnica, no una página a elegir); sus motores siguen trabajando por dentro."""

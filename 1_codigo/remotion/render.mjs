@@ -24,8 +24,10 @@ let navegador = GL ? await abrir(GL).catch(() => null) : null;
 let gl = navegador ? GL : undefined;
 if (!navegador) navegador = await abrir(undefined);
 const nucleos = os.cpus().length;
-const paralelo = Math.max(1, Math.min(4, Math.floor(nucleos / 6)));            // clips a la vez (3 en un equipo de 18-23 hilos)
-const hilos = Math.max(1, Math.min(8, Math.floor(nucleos / (2 * paralelo)) + 1)); // fotogramas a la vez dentro de cada clip
+// v5.84 (pruebas de velocidad): CC_REMOTION_PARALELO / CC_REMOTION_HILOS fijan los clips a la vez y los fotogramas por clip (sin ellas, lo de siempre)
+const fijo = (k) => { const v = parseInt(process.env[k] || '', 10); return Number.isFinite(v) && v > 0 ? v : 0; };
+const paralelo = fijo('CC_REMOTION_PARALELO') || Math.max(1, Math.min(4, Math.floor(nucleos / 6)));            // clips a la vez (3 en un equipo de 18-23 hilos)
+const hilos = fijo('CC_REMOTION_HILOS') || Math.max(1, Math.min(8, Math.floor(nucleos / (2 * paralelo)) + 1)); // fotogramas a la vez dentro de cada clip
 const cola = [...(tareas.trabajos || [])];
 const fallidos = [];
 const fallo = (t, e) => console.log(JSON.stringify({ error: String(e && e.message || e).slice(0, 400), salida: t.salida }));

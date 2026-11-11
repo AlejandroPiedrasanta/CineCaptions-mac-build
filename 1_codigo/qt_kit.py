@@ -2230,6 +2230,39 @@ class RuedaHacia(QObject):
         return False
 
 
+class _NoReabrir(QObject):
+    """El filtro de no_reabrir: con el panel abierto, una pulsación FUERA de él y SOBRE el botón que lo abrió marca WA_NoMouseReplay antes de que
+    Qt cierre el panel (Qt borra la marca justo antes de entregar cada pulsación: hay que ponerla aquí, en el filtro del propio panel)."""
+
+    def eventFilter(self, obj, e):
+        if e.type() in (QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonDblClick):
+            ancla = getattr(obj, '_ancla_no_reabrir', None)
+            try:
+                if ancla is not None and vivo(ancla) and ancla.isVisible():
+                    g = e.globalPosition().toPoint()
+                    if not obj.rect().contains(obj.mapFromGlobal(g)) and ancla.rect().contains(ancla.mapFromGlobal(g)):
+                        obj.setAttribute(Qt.WidgetAttribute.WA_NoMouseReplay, True)
+            except Exception:
+                pass
+        return False
+
+
+_FILTRO_NO_REABRIR = None
+
+
+def no_reabrir(popup, ancla):
+    """v5.84 (el usuario: «cuando vuelva a darle clic que se cierre y si le doy otra vez que abra; va a ser más intuitivo en cada botón»): un panel
+    o menú emergente (Qt.Popup) que abrió un botón: volver a pulsar ESE botón lo cierra y ya; otro clic lo abre. Sin esto, en Windows Qt cerraba
+    el panel con ese clic y luego se lo devolvía al botón (el «replay» de los popups), que lo volvía a abrir: parecía que no se cerraba."""
+    global _FILTRO_NO_REABRIR
+    if popup is None or ancla is None or not hasattr(ancla, 'mapFromGlobal'):
+        return
+    if _FILTRO_NO_REABRIR is None:
+        _FILTRO_NO_REABRIR = _NoReabrir()
+    popup._ancla_no_reabrir = ancla
+    popup.installEventFilter(_FILTRO_NO_REABRIR)
+
+
 class Menu(QMenu):
     """El tk.Menu de clic derecho."""
     def __init__(self, padre=None):
@@ -2257,8 +2290,10 @@ class Menu(QMenu):
     def vacio(self):
         return not self.actions()
 
-    def mostrar(self, x, y=None):
+    def mostrar(self, x, y=None, ancla=None):
+        """`ancla`: el botón que abre este menú (pulsarlo otra vez lo cierra; ver no_reabrir)."""
         pos = x if y is None else QPoint(int(x), int(y))
+        no_reabrir(self, ancla)
         self.exec(pos)
 
 

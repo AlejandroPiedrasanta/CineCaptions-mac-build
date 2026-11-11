@@ -13586,5 +13586,60 @@
   "ko": "사운드의 믹스가 이제 상자 안에 모두 들어갑니다. 높이가 낮은 창에서는 마지막 트랙이 가려졌습니다.",
   "ru": "В «Звуке» микс теперь целиком помещается в свою рамку: в низких окнах он скрывал последние дорожки.",
   "zh": "声音页面的混音现在能完整显示在框内：之前在较矮的窗口中会挡住最后几条音轨。"
+ },
+ "Resolve reproduce antes los captions: el Estilo 5 llena su caché en menos de la mitad de tiempo y el Estilo 1 en un 22 % menos, con la misma imagen.": {
+  "en": "Resolve plays the captions sooner: Style 5 fills its cache in less than half the time and Style 1 in 22 % less, with the same image.",
+  "pt": "O Resolve reproduz os captions mais cedo: o Estilo 5 enche o cache em menos da metade do tempo e o Estilo 1 em 22 % menos, com a mesma imagem.",
+  "fr": "Resolve lit les sous-titres plus tôt : le Style 5 remplit son cache en moins de la moitié du temps et le Style 1 en 22 % de moins, avec la même image.",
+  "de": "Resolve spielt die Untertitel früher ab: Stil 5 füllt seinen Cache in weniger als der Hälfte der Zeit und Stil 1 in 22 % weniger, bei gleichem Bild.",
+  "it": "Resolve riproduce prima i sottotitoli: lo Stile 5 riempie la cache in meno della metà del tempo e lo Stile 1 nel 22 % in meno, con la stessa immagine.",
+  "ja": "Resolveで字幕がより早く再生できるようになりました。スタイル5はキャッシュの作成時間が半分以下に、スタイル1は22 %短くなり、見た目はそのままです。",
+  "ko": "Resolve에서 자막을 더 빨리 재생합니다. 스타일 5는 캐시를 절반도 안 되는 시간에, 스타일 1은 22 % 더 짧은 시간에 채우며 화면은 그대로입니다.",
+  "ru": "Resolve раньше воспроизводит субтитры: Стиль 5 заполняет кэш меньше чем за половину прежнего времени, а Стиль 1 на 22 % быстрее, изображение то же.",
+  "zh": "Resolve 能更快播放字幕：样式 5 填充缓存的时间不到原来的一半，样式 1 缩短 22 %，画面完全相同。"
+ },
+ "«Video sin editores» graba hasta un 50 % más rápido: usa varios núcleos a la vez y el video sale idéntico.": {
+  "en": "«Video without editors» records up to 50 % faster: it uses several cores at once and the video comes out identical.",
+  "pt": "«Vídeo sem editores» grava até 50 % mais rápido: usa vários núcleos ao mesmo tempo e o vídeo sai idêntico.",
+  "fr": "«Vidéo sans logiciel de montage» enregistre jusqu'à 50 % plus vite : elle utilise plusieurs cœurs à la fois et la vidéo sort identique.",
+  "de": "«Video ohne Schnittprogramm» nimmt bis zu 50 % schneller auf: Es nutzt mehrere Kerne gleichzeitig, und das Video bleibt identisch.",
+  "it": "«Video senza editor» registra fino al 50 % più velocemente: usa più core alla volta e il video esce identico.",
+  "ja": "「編集ソフトなしの動画」の書き出しが最大50 %速くなりました。複数のコアを同時に使い、動画はまったく同じに仕上がります。",
+  "ko": "「편집기 없이 동영상」이 최대 50 % 더 빨리 녹화됩니다. 여러 코어를 동시에 쓰고 동영상은 똑같이 나옵니다.",
+  "ru": "«Видео без монтажных программ» записывается до 50 % быстрее: используется несколько ядер одновременно, а видео получается идентичным.",
+  "zh": "「无需剪辑软件的视频」导出最多快 50 %：同时使用多个核心，视频结果完全相同。"
+ },
+ "Inicio va más fluido mientras se preparan las páginas: el fondo animado se compone en otro hilo.": {
+  "en": "Home runs more smoothly while the pages get ready: the animated background is composed on another thread.",
+  "pt": "O Início fica mais fluido enquanto as páginas se preparam: o fundo animado é composto em outra thread.",
+  "fr": "L'Accueil est plus fluide pendant que les pages se préparent : le fond animé est composé dans un autre fil.",
+  "de": "Start läuft flüssiger, während die Seiten vorbereitet werden: Der animierte Hintergrund wird in einem anderen Thread zusammengesetzt.",
+  "it": "La Home è più fluida mentre le pagine si preparano: lo sfondo animato viene composto in un altro thread.",
+  "ja": "ページの準備中もホームがよりなめらかに動きます。アニメーション背景は別のスレッドで合成されます。",
+  "ko": "페이지를 준비하는 동안 홈이 더 부드럽게 움직입니다. 애니메이션 배경은 다른 스레드에서 합성됩니다.",
+  "ru": "Главная работает плавнее, пока готовятся страницы: анимированный фон собирается в другом потоке.",
+  "zh": "页面准备期间主页更流畅：动画背景在另一个线程中合成。"
+ },
+ "Volver a pulsar el botón que abrió un panel o una lista lo cierra (el chip Estilo, Edición PRO, la letra y los demás).": {
+  "en": "Pressing again the button that opened a panel or a list closes it (the Style chip, PRO Edit, the font and the rest).",
+  "pt": "Pressionar de novo o botão que abriu um painel ou uma lista o fecha (o chip Estilo, Edição PRO, a fonte e os demais).",
+  "fr": "Appuyer de nouveau sur le bouton qui a ouvert un panneau ou une liste le ferme (la puce Style, Édition PRO, la police et les autres).",
+  "de": "Ein erneuter Klick auf die Schaltfläche, die ein Panel oder eine Liste geöffnet hat, schließt es (der Chip Stil, PRO-Bearbeitung, die Schrift und die übrigen).",
+  "it": "Premere di nuovo il pulsante che ha aperto un pannello o un elenco lo chiude (il chip Stile, Edizione PRO, il carattere e gli altri).",
+  "ja": "パネルやリストを開いたボタンをもう一度押すと閉じるようになりました（スタイルのチップ、PRO編集、フォントなど）。",
+  "ko": "패널이나 목록을 연 버튼을 다시 누르면 닫힙니다(스타일 칩, PRO 편집, 글꼴 등).",
+  "ru": "Повторное нажатие кнопки, которая открыла панель или список, закрывает их (чип «Стиль», PRO Редактирование, шрифт и остальные).",
+  "zh": "再次点击打开面板或列表的按钮即可将其关闭（样式标签、PRO 编辑、字体等）。"
+ },
+ "Arreglos: el neón del Estilo 1 queda dentro de la zona segura, y con videos largos «Video sin editores» ya no avisa en falso de que GO está atascado.": {
+  "en": "Fixes: Style 1's neon stays inside the safe zone, and with long videos «Video without editors» no longer falsely warns that GO is stuck.",
+  "pt": "Correções: o neon do Estilo 1 fica dentro da zona segura e, com vídeos longos, «Vídeo sem editores» já não avisa falsamente que o GO travou.",
+  "fr": "Corrections : le néon du Style 1 reste dans la zone de sécurité et, avec les vidéos longues, «Vidéo sans logiciel de montage» n'avertit plus à tort que GO est bloqué.",
+  "de": "Korrekturen: Das Neon von Stil 1 bleibt in der sicheren Zone, und bei langen Videos meldet «Video ohne Schnittprogramm» nicht mehr fälschlich, dass GO hängt.",
+  "it": "Correzioni: il neon dello Stile 1 resta dentro la zona sicura e, con i video lunghi, «Video senza editor» non avvisa più per errore che GO è bloccato.",
+  "ja": "修正：スタイル1のネオンがセーフゾーン内に収まるようになり、長い動画で「編集ソフトなしの動画」がGOが止まっていると誤って警告することもなくなりました。",
+  "ko": "수정: 스타일 1의 네온이 안전 영역 안에 들어오고, 긴 동영상에서 「편집기 없이 동영상」이 GO가 멈췄다고 잘못 경고하지 않습니다.",
+  "ru": "Исправления: неон Стиля 1 остаётся в безопасной зоне, а на длинных видео «Видео без монтажных программ» больше не сообщает ложно, что GO завис.",
+  "zh": "修复：样式 1 的霓虹效果保持在安全区内；长视频使用「无需剪辑软件的视频」时，不再误报 GO 卡住。"
  }
 }

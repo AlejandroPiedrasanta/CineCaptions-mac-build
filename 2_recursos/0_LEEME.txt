@@ -27,7 +27,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
     edicion_pro\   (4679 archivos)
     efectos\   (161 archivos)
     emojis\   (552 archivos)  — emojis Fluent 3D de Microsoft (MIT) en PNG + LICENCIAS.txt
-    fondos_estilos\   (13 archivos)
+    fondos_estilos\   (14 archivos)
         .cf\   (1 archivos)
         desktop.ini
         fondo_01.jpg
@@ -41,6 +41,7 @@ QUÉ HAY DENTRO (lo escribe 3_compilar/documentar.py; no lo edites a mano)
         fondo_09.jpg
         fondo_10.jpg
         fondo_11.jpg
+        grano_fondo.png
     fonts\   (50 archivos)  — tipografías: Inter (la interfaz) y las de los packs; LICENCIAS.txt
     generador_packs\   (28 archivos)
         .cf\   (1 archivos)

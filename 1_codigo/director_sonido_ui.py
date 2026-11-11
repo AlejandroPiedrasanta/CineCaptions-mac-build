@@ -1104,7 +1104,7 @@ class PaginaDirector(QWidget):
         for op, texto in (S.MENOS if cual == 'menos' else S.MAS):
             m.agregar(tr(texto), lambda op=op: self._retocar(f'{cual}:{op}'))
         b = self._b_menos if cual == 'menos' else self._b_mas
-        m.mostrar(b.mapToGlobal(b.rect().bottomLeft()))
+        m.mostrar(b.mapToGlobal(b.rect().bottomLeft()), ancla=b)      # (v5.84: pulsar otra vez el botón cierra el menú)
 
     def _retocar(self, accion):
         import director_sonido_sesion as S

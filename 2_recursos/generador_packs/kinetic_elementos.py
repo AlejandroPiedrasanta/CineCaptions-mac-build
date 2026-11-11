@@ -264,9 +264,11 @@ def comp_texto(nombre, texto, fuente, tam, relleno, esp=1.0, entrada='pop', reta
     return K.armar_comp(MK.envolver(t), f'CineCaptions Kinetic - {nombre}')
 
 
-def _custom(nombre, origen, r, g, b, a, x, y):
-    """Un Custom Tool con sus cuatro expresiones por píxel (fijas: v5.47, ni `time` ni NumberIn1 = time lo animaban en Resolve, medido)."""
-    return (f'\t\t{nombre} = Custom {{\n\t\t\tCtrlWZoom = false,\n\t\t\tInputs = {{\n'
+def _custom(nombre, origen, r, g, b, a, x, y, intermedios=()):
+    """Un Custom Tool con sus cuatro expresiones por píxel (fijas: v5.47, ni `time` ni NumberIn1 = time lo animaban en Resolve, medido).
+    `intermedios` (v5.84): expresiones «Intermediate1…» (i1, i2…) que se calculan UNA vez por píxel antes de los canales."""
+    inter = ''.join(f'\t\t\t\tIntermediate{k} = Input {{ Value = "{K.lua(e)}", }},\n' for k, e in enumerate(intermedios, 1))
+    return (f'\t\t{nombre} = Custom {{\n\t\t\tCtrlWZoom = false,\n\t\t\tInputs = {{\n' + inter +
             f'\t\t\t\tRedExpression = Input {{ Value = "{K.lua(r)}", }},\n'
             f'\t\t\t\tGreenExpression = Input {{ Value = "{K.lua(g)}", }},\n'
             f'\t\t\t\tBlueExpression = Input {{ Value = "{K.lua(b)}", }},\n'
@@ -348,15 +350,19 @@ def _trama(origen, matte, x=-60, y=-60):
     fx = f'(x * w - floor(x * w / {celda}) * {celda} - {celda} / 2)'
     fy = f'(y * h - floor(y * h / {celda}) * {celda} - {celda} / 2)'
     radio = '(1.65 * w / 1080)'
-    punto = f'max(0, min(1, ({radio} - sqrt({fx}*{fx} + {fy}*{fy})) / (0.5 * w / 1080 + 0.0001)))'
     # (v5.56, medido en Resolve 21.1.2: calcular los puntos solo dentro de la letra —el matte como entrada del Custom Tool— fue MÁS lento que esto
     # —caché 63,5 s frente a 56,1 s—: la rejilla sobre el Lienzo no cambia con el tiempo y Fusion la reutiliza entre cuadros; la de la letra se
     # recalculaba en cada uno porque la letra se mueve)
-    alfa = f'{punto} * 0.24'
+    # v5.84 (el usuario: «aligera la caché de los Estilos 1, 2 y 6»): la rejilla SÍ se calcula en cada cuadro (quitar la trama ahorraba el 26 % de
+    # la caché del Estilo 1) y cada canal repetía toda la distancia al punto (16 floor y 4 sqrt por píxel). Ahora la posición en la celda (i1, i2)
+    # y el punto (i3) van UNA vez por píxel en «Intermediate1-3» y cada canal es i3 × su color: render IDÉNTICO bit a bit (Resolve Studio 21.2,
+    # 10 cuadros con el héroe blanco) y la caché del Estilo 1 60,8 → 47,4 s (24 s de video).
+    punto = f'max(0, min(1, ({radio} - sqrt(i1*i1 + i2*i2)) / (0.5 * w / 1080 + 0.0001)))'
+    alfa = 'i3 * 0.24'
     t = herramienta('Background', 'Lienzo', x - 100, y - 80, [
         f'Width = Input {{ Value = {K.ANCHO}, }},', f'Height = Input {{ Value = {K.ALTO}, }},', 'UseFrameFormatSettings = Input { Value = 1, },',
         'TopLeftAlpha = Input { Value = 1, },'])
-    t += _custom('Trama', 'Lienzo', f'{alfa} * 0.1176', f'{alfa} * 0.0549', f'{alfa} * 0.2353', alfa, x, y - 80)
+    t += _custom('Trama', 'Lienzo', f'{alfa} * 0.1176', f'{alfa} * 0.0549', f'{alfa} * 0.2353', alfa, x, y - 80, intermedios=(fx, fy, punto))
     t += herramienta('Transform', 'TramaMov', x + 60, y - 80, [
         enlace('Input', 'Trama'),
         f'Center = Input {{ Value = {{ 0.5, 0.5 }}, Expression = "Point(0.5 + time * 0.35 / 1080, 0.5 - time * 0.2 / 1920)", }},'])

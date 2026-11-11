@@ -578,6 +578,13 @@ def desactivar_licencia(app, al_terminar=None):
 
 
 NOTAS_VERSION = [
+    ('5.84', [
+        'Resolve reproduce antes los captions: el Estilo 5 llena su caché en menos de la mitad de tiempo y el Estilo 1 en un 22 % menos, con la misma imagen.',
+        '«Video sin editores» graba hasta un 50 % más rápido: usa varios núcleos a la vez y el video sale idéntico.',
+        'Inicio va más fluido mientras se preparan las páginas: el fondo animado se compone en otro hilo.',
+        'Volver a pulsar el botón que abrió un panel o una lista lo cierra (el chip Estilo, Edición PRO, la letra y los demás).',
+        'Arreglos: el neón del Estilo 1 queda dentro de la zona segura, y con videos largos «Video sin editores» ya no avisa en falso de que GO está atascado.',
+    ]),
     ('5.83', [
         'Tutoriales en inglés: con la interfaz en inglés, los 12 tutoriales salen con la interfaz, la voz y los subtítulos en inglés.',
         'Más fluido: Efectos, Estilo y Sonido se preparan mientras estás en Inicio y se abren al momento, y «Expandir ajustes» va más rápido.',

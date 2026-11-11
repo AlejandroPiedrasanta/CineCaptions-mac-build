@@ -642,14 +642,20 @@ class PaginaSonido(QWidget):
             return e
 
         def columna(ancho, margenes):
-            t = Tarjeta(espacio=10, margenes=margenes)
+            t = Tarjeta(self, espacio=10, margenes=margenes)        # (v5.84: hija de la página desde ya: re-colgarla llena costaba ms)
             t.setFixedWidth(ancho)
             return t
 
         # ---- izquierda
         izq = columna(330, (20, 20, 20, 18))
+        desp_izq = QScrollArea(izq)                          # (en ventanas bajas la columna se desplaza sola; los botones quedan abajo)
+        desp_izq.setWidgetResizable(True)
+        desp_izq.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        desp_izq.setStyleSheet('QScrollArea{background:transparent;border:none}')
+        desp_izq.viewport().setStyleSheet('background:transparent')
         dentro = QWidget()
         dentro.setStyleSheet('background:transparent')
+        desp_izq.setWidget(dentro)                           # (v5.84: VACÍA y luego se llena: puesta llena bajo su hoja de estilo, ~10 ms de golpe)
         ci = QVBoxLayout(dentro)
         ci.setContentsMargins(0, 0, 0, 0)
         ci.setSpacing(8)
@@ -711,12 +717,6 @@ class PaginaSonido(QWidget):
         self._aro = AroTipos(dentro)                         # (no está en la C: escondido; poner() lo sigue llenando)
         self._aro.hide()
         yield
-        desp_izq = QScrollArea()                             # (en ventanas bajas la columna se desplaza sola; los botones quedan abajo)
-        desp_izq.setWidgetResizable(True)
-        desp_izq.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        desp_izq.setStyleSheet('QScrollArea{background:transparent;border:none}')
-        desp_izq.viewport().setStyleSheet('background:transparent')
-        desp_izq.setWidget(dentro)
         izq.capa.addWidget(desp_izq, 1)
         self._b_aplicar = Boton(tr('Aplicar a Resolve'), self._aplicar, tipo='primario', alto=46, tam=14, negrita=True)
         izq.capa.addWidget(self._b_aplicar)
@@ -726,7 +726,7 @@ class PaginaSonido(QWidget):
         yield
 
         # ---- centro: la mezcla
-        cen = Tarjeta(espacio=10, margenes=(18, 14, 18, 16))
+        cen = Tarjeta(self, espacio=10, margenes=(18, 14, 18, 16))   # (v5.84: cada pieza nace ya en su sitio)
         fila, cfz = caja_h(espacio=8)
         cfz.addWidget(eti(tr('Mezcla')), 1)
         self._b_ant = Boton('◀', lambda: self._elegir(self._sel - 1), alto=30, ancho=36, tam=12)   # recorrer los sonidos, junto al zoom
@@ -744,7 +744,7 @@ class PaginaSonido(QWidget):
         self._linea = LineaTiempo()
         self._linea.TIRA = 0                                 # (en la C el cuadro del momento va en el móvil de la derecha)
         self._linea.seleccionado.connect(self._elegir)
-        self._scroll = QScrollArea()
+        self._scroll = QScrollArea(cen)
         self._scroll.setWidget(self._linea)
         self._scroll.setWidgetResizable(False)
         self._scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -754,7 +754,7 @@ class PaginaSonido(QWidget):
         self._scroll.viewport().installEventFilter(self)    # (v5.83: la mezcla sigue al alto de su recuadro: eventFilter)
         cen.capa.addWidget(self._scroll, 1)
         yield
-        ins = QWidget()                                     # el inspector, debajo de la mezcla
+        ins = QWidget(cen)                                  # el inspector, debajo de la mezcla
         ins.setObjectName('inspSonido')
         ins.setStyleSheet(ui.traducir_hoja('#inspSonido{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px}'))
         cins = QVBoxLayout(ins)

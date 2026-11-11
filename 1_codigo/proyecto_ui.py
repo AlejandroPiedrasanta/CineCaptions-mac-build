@@ -19,7 +19,7 @@ import time
 import weakref
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, QRectF, QSize, QSizeF, Qt, QTimer
-from PySide6.QtGui import QFont, QFontMetricsF, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap, QRadialGradient, QRegion
+from PySide6.QtGui import QFont, QFontMetricsF, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap, QRadialGradient, QRegion
 from PySide6.QtWidgets import QAbstractButton, QHBoxLayout, QSizePolicy, QWidget
 
 import qt_kit as ui
@@ -817,6 +817,83 @@ def _paleta_cielo():
         return _PALETAS_CIELO['noche']
 
 
+# v5.84 (el usuario: «pule más eso que aprovecha al máximo la PC»): lo fijo del cielo (degradado, nebulosas y viñeta: ~25 ms a ventana
+# completa, en el primer cuadro de cada página con cielo) es la MISMA imagen para todos los cielos del mismo tamaño y paleta (Estilo,
+# Corrector y Sonido): se hace una vez, compartida, y de antemano en el hilo del taller del fondo (efectos_ui._taller: QImage + QPainter).
+_FIJOS = {}                     # (w, h, dpr, sin_marco, radio, id(paleta)) -> QImage, o el Future del taller mientras se hace
+
+
+def _clave_fijo(w, h, dpr, sin_marco, radio, pal):
+    return (int(w), int(h), round(float(dpr), 2), bool(sin_marco), float(radio), id(pal))
+
+
+def _dibujar_fijo(dispositivo, w, h, dpr, sin_marco, radio, pal):
+    """Lo fijo del cielo sobre `dispositivo` (QImage del tamaño real, ya transparente)."""
+    p = QPainter(dispositivo)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    if sin_marco:
+        # v5.82: sin marco tapa el fondo animado (que entonces no se pinta: efectos_ui.FondoVivo.tapar_con): opaco hasta el último píxel
+        # físico (a 2293 px al 1,5 el ancho físico es 3439,5 y la última columna quedaba a medias, transparente); dentro, cada píxel igual
+        caja = QRectF(0, 0, dispositivo.width() / dpr, dispositivo.height() / dpr)
+    else:
+        caja = QRectF(0, 0, w, h)
+        camino = QPainterPath()
+        camino.addRoundedRect(QRectF(0.5, 0.5, w - 1.0, h - 1.0), radio, radio)
+        p.setClipPath(camino)
+    g = QRadialGradient(QPointF(w * 0.5, h * 0.42), max(w, h) * 0.8)
+    for pos, hexa in zip((0.0, 0.6, 1.0), pal['fondo']):
+        g.setColorAt(pos, QColorReal(hexa))
+    p.fillRect(caja, g)
+    for (fx, fy, radio_n), (r_, g_, b_, a) in zip(((0.18, 0.25, 620.0), (0.82, 0.70, 640.0)), pal['nebulosas']):
+        n = QRadialGradient(QPointF(w * fx, h * fy), radio_n)
+        n.setColorAt(0.0, QColorReal(r_, g_, b_, a))
+        n.setColorAt(0.45, QColorReal(r_, g_, b_, int(a * 0.55)))
+        n.setColorAt(1.0, QColorReal(r_, g_, b_, 0))
+        p.fillRect(caja, n)
+    v = QRadialGradient(QPointF(w * 0.5, h * 0.45), max(w, h) * 0.75)
+    v.setColorAt(min(w, h) * 0.35 / (max(w, h) * 0.75), QColorReal(*pal['vineta'], 0))
+    v.setColorAt(1.0, QColorReal(*pal['vineta'], 115))
+    p.fillRect(caja, v)
+    p.end()
+
+
+def _componer_fijo(w, h, dpr, sin_marco, radio, pal):
+    img = QImage(int(math.ceil(w * dpr)), int(math.ceil(h * dpr)), QImage.Format.Format_ARGB32_Premultiplied)
+    img.setDevicePixelRatio(dpr)
+    img.fill(Qt.GlobalColor.transparent)
+    _dibujar_fijo(img, w, h, dpr, sin_marco, radio, pal)
+    return img
+
+
+def pedir_fijo(w, h, dpr, sin_marco=True, radio=0.0):
+    """Que el taller vaya haciendo lo fijo del cielo de ese tamaño (no espera): SubtitleApp lo pide al abrir para el tamaño de la ventana."""
+    pal = _paleta_cielo()
+    clave = _clave_fijo(w, h, dpr, sin_marco, radio, pal)
+    if clave not in _FIJOS and w >= 4 and h >= 4:
+        import efectos_ui
+        _FIJOS[clave] = efectos_ui._taller().submit(_componer_fijo, w, h, dpr, sin_marco, radio, pal)
+        while len(_FIJOS) > 3:
+            _FIJOS.pop(next(iter(_FIJOS)))
+
+
+def _fijo_compartido(w, h, dpr, sin_marco, radio, pal):
+    """La imagen fija de ese tamaño: la compartida (hecha o, si el taller la está haciendo, se espera: ya va adelantada) o hecha aquí."""
+    clave = _clave_fijo(w, h, dpr, sin_marco, radio, pal)
+    v = _FIJOS.get(clave)
+    if v is not None and not isinstance(v, QImage):
+        try:
+            v = v.result(timeout=0.2)
+        except Exception:
+            v = None
+    if v is None:
+        v = _componer_fijo(w, h, dpr, sin_marco, radio, pal)
+    _FIJOS.pop(clave, None)
+    _FIJOS[clave] = v                       # (al final: la más reciente)
+    while len(_FIJOS) > 3:                  # (~19 MB cada una a 2293×928 al 1,5: al redimensionar no se acumulan)
+        _FIJOS.pop(next(iter(_FIJOS)))
+    return v
+
+
 class TarjetaCielo(ui.Tarjeta):
     """v5.63 (el usuario eligió el fondo C, «Constelaciones», entre tres maquetas animadas): la tarjeta de Proyecto con un cielo como el de
     Inicio: degradado de espacio con dos nebulosas tenues (lila y verde), tres capas de estrellas que derivan a distinta velocidad
@@ -953,39 +1030,13 @@ class TarjetaCielo(ui.Tarjeta):
         return c
 
     def _fijo_pm(self, w, h, dpr):
+        """Lo fijo del cielo (QImage del tamaño real). v5.84: compartido entre cielos y hecho de antemano en el taller (_fijo_compartido)."""
         clave = (w, h, round(dpr, 2))
         if self._fijo is not None and self._fijo[0] == clave:
             return self._fijo[1]
-        pm = QPixmap(int(math.ceil(w * dpr)), int(math.ceil(h * dpr)))
-        pm.setDevicePixelRatio(dpr)
-        pm.fill(Qt.GlobalColor.transparent)
-        p = QPainter(pm)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        if self._sin_marco:
-            # v5.82: sin marco tapa el fondo animado (que entonces no se pinta: efectos_ui.FondoVivo.tapar_con): opaco hasta el último píxel
-            # físico (a 2293 px al 1,5 el ancho físico es 3439,5 y la última columna quedaba a medias, transparente); dentro, cada píxel igual
-            caja = QRectF(0, 0, pm.width() / dpr, pm.height() / dpr)
-        else:
-            caja = QRectF(0, 0, w, h)
-            p.setClipPath(self._camino(w, h))
-        pal = self._pal
-        g = QRadialGradient(QPointF(w * 0.5, h * 0.42), max(w, h) * 0.8)
-        for pos, hexa in zip((0.0, 0.6, 1.0), pal['fondo']):
-            g.setColorAt(pos, QColorReal(hexa))
-        p.fillRect(caja, g)
-        for (fx, fy, radio), (r_, g_, b_, a) in zip(((0.18, 0.25, 620.0), (0.82, 0.70, 640.0)), pal['nebulosas']):
-            n = QRadialGradient(QPointF(w * fx, h * fy), radio)
-            n.setColorAt(0.0, QColorReal(r_, g_, b_, a))
-            n.setColorAt(0.45, QColorReal(r_, g_, b_, int(a * 0.55)))
-            n.setColorAt(1.0, QColorReal(r_, g_, b_, 0))
-            p.fillRect(caja, n)
-        v = QRadialGradient(QPointF(w * 0.5, h * 0.45), max(w, h) * 0.75)
-        v.setColorAt(min(w, h) * 0.35 / (max(w, h) * 0.75), QColorReal(*pal['vineta'], 0))
-        v.setColorAt(1.0, QColorReal(*pal['vineta'], 115))
-        p.fillRect(caja, v)
-        p.end()
-        self._fijo = (clave, pm)
-        return pm
+        img = _fijo_compartido(w, h, dpr, self._sin_marco, self._radio, self._pal)
+        self._fijo = (clave, img)
+        return img
 
     def _nodo_pm(self, dpr):
         """El halo de un punto de constelación (14×14), pintado una vez por dpr."""
@@ -1018,7 +1069,7 @@ class TarjetaCielo(ui.Tarjeta):
             self._cuadro.fill(Qt.GlobalColor.transparent)                  # (sin esto el QPixmap no tiene alfa: esquinas negras)
         p = QPainter(self._cuadro)
         p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Source)      # (pisa el cuadro entero: sin borrarlo antes)
-        p.drawPixmap(0, 0, fijo)
+        p.drawImage(0, 0, fijo)
         p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setClipPath(self._camino(w, h))

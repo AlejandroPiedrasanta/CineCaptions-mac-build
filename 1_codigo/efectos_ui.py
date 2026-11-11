@@ -97,7 +97,18 @@ _GRANO = [None]
 
 
 def _hacer_grano(lado=192):
-    """Una baldosa de ruido blanco/negro casi transparente (determinista: la misma en cada arranque)."""
+    """Una baldosa de ruido blanco/negro casi transparente (determinista: la misma en cada arranque).
+    v5.84: la misma baldosa ya hecha viaja en 2_recursos/fondos_estilos/grano_fondo.png (comprobado: idéntica píxel a píxel; esa carpeta
+    ya va en el .exe y en el Mac); hacerla aquí, píxel a píxel en Python, eran ~32 ms del primer cuadro fuera de Inicio. Si faltara, se hace
+    como siempre."""
+    try:
+        import vistas_slider                     # (decodificada en otro hilo al abrir: SubtitleApp._precalentar_imagenes)
+        from sfx_rules import base_recursos
+        img = vistas_slider.imagen_de(base_recursos() / 'fondos_estilos' / 'grano_fondo.png')
+        if not img.isNull() and img.width() == lado and img.height() == lado:
+            return QPixmap.fromImage(img)
+    except Exception:
+        pass
     import random as _r
     azar = _r.Random(5)
     img = QImage(lado, lado, QImage.Format.Format_ARGB32)
@@ -140,6 +151,87 @@ def _rgb(hexa):
     return [int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4)]
 
 
+# v5.84 (el usuario: «pule más eso que aprovecha al máximo la PC del usuario»): un hilo aparte compone capas del fondo (QImage y QPainter
+# se pueden usar fuera de la interfaz; QPixmap no): la rejilla (una vez por tamaño) y la de debajo (relleno + aurora ya ampliada, ~6 veces
+# por segundo). La interfaz solo las copia: medido a 2293×928 al 1,5, el repintado entero del fondo baja de ~6,4 a ~3,4 ms.
+_TALLER = [None]
+
+
+def _taller():
+    if _TALLER[0] is None:
+        from concurrent.futures.thread import ThreadPoolExecutor      # (así, no «from concurrent.futures import»: en el .exe de 3.15 es perezoso)
+        _TALLER[0] = ThreadPoolExecutor(max_workers=1, thread_name_prefix='fondo-capas')
+        try:                                                           # al cerrar el programa: lo pendiente se tira (nada de pintar sin ventana)
+            from PySide6.QtCore import QCoreApplication
+            app = QCoreApplication.instance()
+            if app is not None:
+                app.aboutToQuit.connect(lambda ex=_TALLER[0]: ex.shutdown(wait=False, cancel_futures=True))
+        except Exception:
+            pass
+    return _TALLER[0]
+
+
+def _puntos_rejilla(dispositivo, w, h):
+    p = QPainter(dispositivo)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(_rgba('#8FB4FF', 26))
+    paso = 32
+    for y in range(0, h + 64, paso):
+        for x in range(0, w + 64, paso):
+            p.drawEllipse(QPointF(x, y), 1.0, 1.0)
+    p.end()
+
+
+def _componer_rejilla(w, h):
+    """(En el taller) la rejilla de puntos como QImage: los mismos puntos que FondoVivo._hacer_rejilla."""
+    img = QImage(w + 64, h + 64, QImage.Format.Format_ARGB32_Premultiplied)
+    img.fill(Qt.GlobalColor.transparent)
+    _puntos_rejilla(img, w, h)
+    return img
+
+
+class _Preparador:
+    """v5.84: armar_paso() de algo que no es una página (las capas del fondo, FondoVivo.preparador): el mismo trato que las páginas que el
+    script principal arma por partes en Inicio (SubtitleApp._armar_por_partes)."""
+
+    def __init__(self, pasos):
+        self._pasos = pasos
+
+    def armar_paso(self):
+        if self._pasos is None:
+            return False
+        try:
+            next(self._pasos)
+            return True
+        except StopIteration:
+            self._pasos = None
+            return False
+
+    def completar(self):
+        while self.armar_paso():
+            pass
+
+    def hide(self):
+        pass
+
+    def deleteLater(self):
+        pass
+
+
+def _componer_debajo(w, h, dpr, aurora, fondo):
+    """(En el taller) relleno + aurora ampliada, al tamaño real: lo mismo que pintaba paintEvent, en una sola imagen que luego se copia."""
+    img = QImage(int(math.ceil(w * dpr)), int(math.ceil(h * dpr)), QImage.Format.Format_ARGB32_Premultiplied)
+    img.setDevicePixelRatio(dpr)
+    img.fill(Qt.GlobalColor.transparent)
+    p = QPainter(img)
+    p.fillRect(QRect(0, 0, w, h), fondo)
+    p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+    p.drawImage(QRectF(0, 0, w, h), aurora)
+    p.end()
+    return img
+
+
 class FondoVivo(QWidget):
     """El escenario animado. Sus hijos (las pantallas) se pintan encima."""
     FPS_LLENO = 30            # (5.3) antes 60: cada cuadro repinta TODAS las tarjetas que hay encima; a 30 se ve igual de fluido
@@ -164,6 +256,13 @@ class FondoVivo(QWidget):
         self._aurora_t = -1.0
         self._aurora_k = -1.0
         self._vineta = None       # (5.3) la viñeta es fija: una sola imagen por tamaño
+        # v5.84: capas ya compuestas (ver _taller): debajo = (clave, QImage) relleno + aurora; encima = (clave, QImage) viñeta + grano; la
+        # aurora siguiente con su capa, pedidas al taller antes de hacer falta (_adelantar_aurora); la rejilla, también en el taller
+        self._debajo = None
+        self._debajo_fut = None
+        self._aurora_sig = None
+        self._encima = None
+        self._rejilla_fut = None
         self._reducido = reducir_animaciones()
         self._cubierto = False
         # los 3 colores secundarios de las auroras, como resortes (r, g, b) hacia la paleta de la pagina actual
@@ -306,7 +405,9 @@ class FondoVivo(QWidget):
         self._rejilla = None
         self._aurora = None
         self._vineta = None
+        self._debajo = self._debajo_fut = self._aurora_sig = self._encima = None
         super().resizeEvent(e)
+        self._pedir_rejilla()                    # (v5.84: la del tamaño nuevo, ya en el taller; al primer cuadro fuera de Inicio está hecha)
 
     def _tic(self):
         ahora = time.perf_counter()
@@ -344,6 +445,8 @@ class FondoVivo(QWidget):
         if self._tapado():                       # v5.82: un fondo opaco de página entera lo tapa: nada que repintar (ver tapar_con)
             self._excluidas = None
             return
+        if not self._cubierto:
+            self._adelantar_aurora()
         if self._objetivo < 0.7 and self.proveedor_excluidas is not None and not self._efimeras and not self._ondas:
             if self._t - self._excluidas_t > 0.5 or self._excluidas is None:
                 self._excluidas_t = self._t
@@ -427,36 +530,172 @@ class FondoVivo(QWidget):
     def _hacer_rejilla(self, w, h):
         pm = QPixmap(w + 64, h + 64)
         pm.fill(Qt.GlobalColor.transparent)
-        p = QPainter(pm)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(_rgba('#8FB4FF', 26))
-        paso = 32
-        for y in range(0, h + 64, paso):
-            for x in range(0, w + 64, paso):
-                p.drawEllipse(QPointF(x, y), 1.0, 1.0)
-        p.end()
+        _puntos_rejilla(pm, w, h)
         return pm
+
+    # -- v5.84: capas compuestas de antemano (ver _taller) ------------------------------------------------------------------------------
+    def _pedir_rejilla(self):
+        w, h = self.width(), self.height()
+        if self._rejilla is None and w > 8 and h > 8 and (self._rejilla_fut is None or self._rejilla_fut[0] != (w, h)):
+            self._rejilla_fut = ((w, h), _taller().submit(_componer_rejilla, w, h))
+
+    def _capa_rejilla(self, w, h):
+        """La rejilla del tamaño de ahora: la del taller si ya está (QImage); si no llegó a tiempo, aquí, como siempre (QPixmap)."""
+        if self._rejilla is None:
+            fut = self._rejilla_fut
+            if fut is not None and fut[0] == (w, h) and fut[1].done():
+                self._rejilla_fut = None
+                try:
+                    self._rejilla = fut[1].result()
+                except Exception:
+                    self._rejilla = None
+            if self._rejilla is None:
+                self._rejilla = self._hacer_rejilla(w, h)
+        return self._rejilla
+
+    def _capa_debajo(self, w, h, dpr):
+        """Relleno + aurora de AHORA ya compuestos (taller), o None (este cuadro se pinta como siempre y se pide al taller)."""
+        fondo = QColor(ui.BG_COLOR)
+        clave = (w, h, round(dpr, 3), self._aurora_t, self._aurora_k, fondo.rgba())
+        if self._debajo is not None and self._debajo[0] == clave:
+            return self._debajo[1]
+        fut = self._debajo_fut
+        if fut is not None and fut[0] == clave:
+            if not fut[1].done():
+                return None
+            self._debajo_fut = None
+            try:
+                self._debajo = (clave, fut[1].result())
+            except Exception:
+                return None
+            return self._debajo[1]
+        if self._aurora is not None and self._aurora_sig is None:
+            self._debajo_fut = (clave, _taller().submit(_componer_debajo, w, h, dpr, self._aurora, fondo))
+        return None
+
+    def _adelantar_aurora(self):
+        """La aurora siguiente y su capa de debajo se piden al taller un poco ANTES de hacer falta (a los 0,15 s de la anterior; paintEvent
+        la rehacía a los 0,2) y, cuando el taller las tiene, se cambian juntas: la interfaz ya no amplía la aurora en cada cuadro."""
+        k = self._intensidad
+        if k <= 0.01 or not self.isVisible():
+            return
+        sig = self._aurora_sig
+        if sig is not None:
+            clave, aurora, fut = sig
+            if not fut.done():
+                return
+            self._aurora_sig = None
+            try:
+                img = fut.result()
+            except Exception:
+                return
+            if clave[:3] == (self.width(), self.height(), round(self.devicePixelRatioF(), 3)) and clave[5] == QColor(ui.BG_COLOR).rgba():
+                self._aurora, self._aurora_t, self._aurora_k = aurora, clave[3], clave[4]
+                self._debajo = (clave, img)
+            return
+        if self._aurora is not None and self._t - self._aurora_t < 0.15 and abs(k - self._aurora_k) <= 0.02:
+            return
+        w, h, dpr = self.width(), self.height(), self.devicePixelRatioF()
+        if w < 8 or h < 8:
+            return
+        aurora = self._mapa_auroras(w, h)
+        fondo = QColor(ui.BG_COLOR)
+        clave = (w, h, round(dpr, 3), self._t, k, fondo.rgba())
+        self._aurora_sig = (clave, aurora, _taller().submit(_componer_debajo, w, h, dpr, aurora, fondo))
+
+    def _vineta_pm(self):
+        if self._vineta is None or self._vineta.size() != self.size():
+            w, h = self.width(), self.height()
+            pm = QPixmap(self.size())
+            pm.fill(Qt.GlobalColor.transparent)
+            pv = QPainter(pm)
+            vin = QRadialGradient(QPointF(w / 2, h * 0.45), max(w, h) * 0.75)
+            vin.setColorAt(0.55, _rgba(ui.BG_COLOR, 0))
+            vin.setColorAt(1.0, _rgba(ui.BG_COLOR, 170))
+            pv.setPen(Qt.PenStyle.NoPen)
+            pv.setBrush(vin)
+            pv.drawRect(pm.rect())
+            pv.end()
+            self._vineta = pm
+        return self._vineta
+
+    def capas_listas(self):
+        """¿Ya está la capa de encima del tamaño de ahora? (la de debajo y la rejilla las hace el taller solas)."""
+        clave = (self.width(), self.height(), round(self.devicePixelRatioF(), 3), QColor(ui.BG_COLOR).rgba())
+        return self._encima is not None and self._encima[0] == clave
+
+    def preparador(self):
+        """v5.84: lo que el primer cuadro fuera de Inicio pagaba de golpe (~20 ms: viñeta, grano a escala real, la capa de encima), a trozos
+        de pocos ms para el armado por partes de Inicio (SubtitleApp._prearmar_paginas, clave 'fondo'). Y lo fijo de los cielos, al taller."""
+        def pasos():
+            w, h, dpr = self.width(), self.height(), self.devicePixelRatioF()
+            try:
+                import proyecto_ui
+                proyecto_ui.pedir_fijo(w, h, dpr)          # (el cielo de borde a borde de Estilo, Corrector y Sonido: del tamaño de la ventana)
+            except Exception:
+                pass
+            yield
+            self._vineta_pm()
+            yield
+            if _GRANO[0] is None:
+                _GRANO[0] = _hacer_grano()
+                yield
+            _grano_real(dpr)
+            yield
+            self._capa_encima(w, h, dpr)
+        return _Preparador(pasos())
+
+    def _capa_encima(self, w, h, dpr):
+        """Viñeta + grano en UNA capa del tamaño real (fija por tamaño y tema): un solo dibujo por cuadro en vez de dos a ventana completa.
+        Las mismas llamadas que paintEvent (y con sus mismos modos), hechas una vez sobre una imagen transparente."""
+        clave = (w, h, round(dpr, 3), QColor(ui.BG_COLOR).rgba())
+        if self._encima is not None and self._encima[0] == clave:
+            return self._encima[1]
+        if _GRANO[0] is None:
+            _GRANO[0] = _hacer_grano()
+        img = QImage(int(math.ceil(w * dpr)), int(math.ceil(h * dpr)), QImage.Format.Format_ARGB32_Premultiplied)
+        img.setDevicePixelRatio(dpr)
+        img.fill(Qt.GlobalColor.transparent)
+        q = QPainter(img)
+        q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        q.setRenderHint(QPainter.RenderHint.Antialiasing)
+        q.drawPixmap(0, 0, self._vineta_pm())
+        q.setOpacity(0.55)
+        real = _grano_real(dpr)
+        q.drawTiledPixmap(QRect(0, 0, w, h), real if real is not None else _GRANO[0])
+        q.end()
+        self._encima = (clave, img)
+        return img
 
     def paintEvent(self, _e):
         if self._cubierto or self._tapado():       # (v5.82: tapado entero por un fondo de página que pinta todos sus píxeles: no se vería)
             return
         w, h = self.width(), self.height()
+        dpr = self.devicePixelRatioF()
         zona = _e.rect().adjusted(-4, -4, 4, 4)       # (5.3) solo se dibuja lo que de verdad se repinta
         p = QPainter(self)
-        p.fillRect(self.rect(), QColor(ui.BG_COLOR))
         k = self._intensidad
+        debajo = None
         if k > 0.01:
-            p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
             if (self._aurora is None or self._t - self._aurora_t > 0.2 or abs(k - self._aurora_k) > 0.02):
                 self._aurora, self._aurora_t, self._aurora_k = self._mapa_auroras(w, h), self._t, k
-            p.drawImage(QRectF(0, 0, w, h), self._aurora)
-            if self._rejilla is None:
-                self._rejilla = self._hacer_rejilla(w, h)
+            debajo = self._capa_debajo(w, h, dpr)
+        if debajo is not None:
+            p.drawImage(QPointF(0, 0), debajo)          # (v5.84: relleno + aurora, ya compuestos en el taller: una copia)
+        else:
+            p.fillRect(self.rect(), QColor(ui.BG_COLOR))
+        if k > 0.01:
+            p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+            if debajo is None:
+                p.drawImage(QRectF(0, 0, w, h), self._aurora)
+            rejilla = self._capa_rejilla(w, h)
             dx = (self._t * 6.0) % 32
             dy = (self._t * 3.5) % 32
             p.setOpacity(0.05 + 0.09 * k)
-            p.drawPixmap(QPointF(-dx, -dy), self._rejilla)
+            if isinstance(rejilla, QImage):
+                p.drawImage(QPointF(-dx, -dy), rejilla)
+            else:
+                p.drawPixmap(QPointF(-dx, -dy), rejilla)
             p.setOpacity(1.0)
             # v5.5: sin las formas geometricas a la deriva (hexagonos, cruces, triangulos): el fondo queda en luz, grano y puntos
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -488,27 +727,17 @@ class FondoVivo(QWidget):
                 p.restore()
             else:
                 p.drawEllipse(QPointF(part.x, part.y), part.r, part.r)
-        # viñeta: el centro respira, los bordes se apagan
-        if self._vineta is None or self._vineta.size() != self.size():
-            pm = QPixmap(self.size())
-            pm.fill(Qt.GlobalColor.transparent)
-            pv = QPainter(pm)
-            vin = QRadialGradient(QPointF(w / 2, h * 0.45), max(w, h) * 0.75)
-            vin.setColorAt(0.55, _rgba(ui.BG_COLOR, 0))
-            vin.setColorAt(1.0, _rgba(ui.BG_COLOR, 170))
-            pv.setPen(Qt.PenStyle.NoPen)
-            pv.setBrush(vin)
-            pv.drawRect(pm.rect())
-            pv.end()
-            self._vineta = pm
-        p.drawPixmap(0, 0, self._vineta)
-        # v5.5: el grano fino de las referencias (una sola baldosa de ruido, repetida: casi no cuesta)
-        if _GRANO[0] is None:
-            _GRANO[0] = _hacer_grano()
-        p.setOpacity(0.55)
-        real = _grano_real(self.devicePixelRatioF()) if p.testRenderHint(QPainter.RenderHint.SmoothPixmapTransform) else None
-        p.drawTiledPixmap(self.rect(), real if real is not None else _GRANO[0])
-        p.setOpacity(1.0)
+        # viñeta: el centro respira, los bordes se apagan; y el grano fino de las referencias (una baldosa de ruido, repetida).
+        # v5.84: las dos en una sola capa ya compuesta (_capa_encima); sin el modo suave (intensidad ~0), como siempre
+        if p.testRenderHint(QPainter.RenderHint.SmoothPixmapTransform):
+            p.drawImage(QPointF(0, 0), self._capa_encima(w, h, dpr))
+        else:
+            p.drawPixmap(0, 0, self._vineta_pm())
+            if _GRANO[0] is None:
+                _GRANO[0] = _hacer_grano()
+            p.setOpacity(0.55)
+            p.drawTiledPixmap(self.rect(), _GRANO[0])
+            p.setOpacity(1.0)
         p.end()
 
 

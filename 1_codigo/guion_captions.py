@@ -18,6 +18,7 @@ Una LÍNEA pequeña son varias palabras de dos pesos seguidas: aquí se miden co
 a continuación del anterior y la línea entera quede centrada donde se pide.
 """
 import json
+import threading
 from pathlib import Path
 
 FINA = ('Poppins', 'Light')
@@ -37,16 +38,25 @@ AFINADO = {'ancho': 1.0, 'espaciado': 0.99, 'k_espaciado': 1.4, 'espacio': 0.2, 
            'salto_amro': {3: 0.2, 6: 0.2, 7: 0.2, 8: 0.14}}
 
 _FUENTES = {}
+_FUENTES_HILO = threading.local()
 
 
 def _fuente(par, px):
+    """v5.84: cada hilo con SUS fuentes (el render sin editores dibuja los bloques en varios hilos y FreeType no admite usar la misma cara
+    desde dos a la vez); el hilo principal, con la caché de siempre."""
+    if threading.current_thread() is threading.main_thread():
+        cache = _FUENTES
+    else:
+        cache = getattr(_FUENTES_HILO, 'f', None)
+        if cache is None:
+            cache = _FUENTES_HILO.f = {}
     clave = (par, int(round(px)))
-    if clave not in _FUENTES:
+    if clave not in cache:
         from PIL import ImageFont
         import fuentes_sistema
         ruta = fuentes_sistema.ruta_de_fuente(par[0], par[1])
-        _FUENTES[clave] = ImageFont.truetype(str(ruta), int(round(px))) if ruta else None
-    return _FUENTES[clave]
+        cache[clave] = ImageFont.truetype(str(ruta), int(round(px))) if ruta else None
+    return cache[clave]
 
 
 def ancho_px(texto, par=FINA, tam=TAM_PEQUENA, ancho_tl=1080):

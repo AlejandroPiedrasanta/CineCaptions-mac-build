@@ -574,15 +574,19 @@ def _relieve(origen, prefijo, x, y, luz, sombra, blur_em, fuerza, k_luz=1.0, k_s
     radio = f'({n(blur_em)} * {EM_W} * {ANCHO_CUADRO})'                 # en píxeles del cuadro: sigue al tamaño de la palabra
     t = herramienta('Blur', prefijo + 'Alto', x, y + 80, [enlace('Input', origen), 'XBlurSize = Input { Value = 8, Expression = "%s", },' % K.lua(radio),
                                                           'Filter = Input { Value = FuID { "Gaussian" }, },'])
-    # pendiente del alfa con 1,5 px de paso. Sin variables intermedias (i1 no salía: ronda 1) ni min/max: las partes y los topes, con abs
+    # pendiente del alfa con 1,5 px de paso; sin min/max (no funcionaron): las partes y los topes, con abs.
+    # v5.84 (el usuario: «mejora la rapidez y el cache»): la pendiente va UNA vez por píxel en «Intermediate1» (i1) y el rojo y el verde la usan:
+    # 4 muestras geta1b por píxel en vez de 32, la misma aritmética. Antes estaba repetida 8 veces («i1 no salía: ronda 1»: hoy SÍ sale, con la
+    # entrada «Intermediate1»; Resolve Studio 21.2: render IDÉNTICO bit a bit en «v tipo», «v corte» y «v shine»; caché del Estilo 5 63 → 29 s).
     g = n(-fuerza * signo * 0.7071)        # (en Fusion la y crece hacia ARRIBA: sin el signo la luz salía abajo a la derecha; medido en la ronda 7)
     s = f'({g} * n1 * ((geta1b(x - s1, y) - geta1b(x + s1, y)) - (geta1b(x, y - s1) - geta1b(x, y + s1))))'
-    pos, neg = f'(({s} + abs({s})) / 2)', f'((abs({s}) - {s}) / 2)'
+    pos, neg = '((i1 + abs(i1)) / 2)', '((abs(i1) - i1) / 2)'
 
     def tope(p):
         return f'(({p} + 1 - abs({p} - 1)) / 2)'
     t += herramienta('Custom', prefijo + 'Pend', x + 140, y + 80, [
-        enlace('Image1', prefijo + 'Alto'), 'Setup1 = Input { Value = "1.5 / w", },', 'NumberIn1 = Input { Value = 10, Expression = "%s", },' % K.lua(radio),
+        enlace('Image1', prefijo + 'Alto'), 'Setup1 = Input { Value = "1.5 / w", },', f'Intermediate1 = Input {{ Value = "{K.lua(s)}", }},',
+        'NumberIn1 = Input { Value = 10, Expression = "%s", },' % K.lua(radio),
         f'RedExpression = Input {{ Value = "{K.lua(tope(pos))}", }},', f'GreenExpression = Input {{ Value = "{K.lua(tope(neg))}", }},',
         'BlueExpression = Input { Value = "0", },', 'AlphaExpression = Input { Value = "1", },'])
     kl, ks = (k if isinstance(k, str) else n(k) for k in (k_luz, k_sombra))

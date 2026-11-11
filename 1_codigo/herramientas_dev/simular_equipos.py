@@ -1632,6 +1632,132 @@ def titulo_de_cabecera_cabe_en_su_sitio():
     esperar(pide <= tiene + 1 and derecha <= caja.width(), f'el título pide {pide} y tiene {tiene}; acaba en x={derecha} (la caja mide {caja.width()})')
 
 
+@caso('Interfaz')
+def segundo_clic_en_su_boton_cierra_el_panel():
+    """v5.84 (el usuario, con el chip «Estilo» de Inicio abierto: «cuando vuelva a darle clic que se cierre y si le doy otra vez que abra; va a ser
+    más intuitivo en cada botón»). En Windows, Qt cierra un panel emergente con el clic de fuera y, si el panel no lleva WA_NoMouseReplay, se lo
+    DEVUELVE al botón que hay debajo: pulsar el chip con su panel abierto lo cerraba y lo volvía a abrir. Sin pantalla Qt no agarra el ratón y no
+    devuelve nada, así que se mira lo que lo decide: con qué marca se cierra el panel (con marca al pulsar SU botón; sin ella al pulsar en otro
+    sitio, para que ese clic llegue a lo pulsado). Clics por la QWindow (el mismo reparto de Qt que un clic de verdad)."""
+    app = _qapp()
+    import editor_ui
+    import menu_estilo_ui
+    import menu_pro_ui
+    import qt_kit as ui
+    import un_clic_ui
+    from PySide6.QtCore import QEvent, QObject, QPoint, Qt, QTimer
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QPushButton, QWidget
+    cierres = []
+
+    class Espia(QObject):
+        def eventFilter(self, obj, e):
+            if e.type() == QEvent.Type.Hide and isinstance(obj, QWidget) and obj.isWindow() and obj.windowType() == Qt.WindowType.Popup:
+                cierres.append(obj.testAttribute(Qt.WidgetAttribute.WA_NoMouseReplay))
+            return False
+
+    def bombear(s):
+        fin = time.time() + s
+        while time.time() < fin:
+            app.processEvents()
+            time.sleep(0.01)
+
+    def clic_en(w, punto):
+        QTest.mousePress(w.windowHandle(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, punto)
+        bombear(0.05)
+        QTest.mouseRelease(w.windowHandle(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, punto)
+        bombear(0.25)
+
+    def probar(nombre, armar, es_menu=False):
+        """armar(w, d) -> botón que abre el panel y lo deja en d['p']. Devuelve [] si va bien, o lo que falló."""
+        w, d = QWidget(), {}
+        w.resize(900, 700)
+        boton = armar(w, d)
+        w.show()
+        w.activateWindow()
+        bombear(0.25)
+        en_boton, fuera = boton.mapTo(w, boton.rect().center()), QPoint(860, 20)
+
+        def abierto():
+            return bool(d.get('p') is not None and ui.vivo(d['p']) and d['p'].isVisible())
+        visto, marcas = [], []
+        if es_menu:                                  # (QMenu.exec tiene su propio bucle: el segundo clic va por temporizador, dentro)
+            def dentro(punto):
+                visto.append(abierto())
+                n = len(cierres)
+                clic_en(w, punto)
+                marcas.append(cierres[n:n + 1])
+            QTimer.singleShot(300, lambda: dentro(en_boton))
+            clic_en(w, en_boton)
+            bombear(0.4)
+            visto.append(abierto())
+            QTimer.singleShot(300, lambda: dentro(fuera))
+            clic_en(w, en_boton)
+            bombear(0.4)
+            visto.append(abierto())
+        else:
+            for punto in (en_boton, en_boton, en_boton, fuera):
+                n = len(cierres)
+                clic_en(w, punto)
+                visto.append(abierto())
+                if len(visto) in (2, 4):
+                    marcas.append(cierres[n:n + 1])
+        w.close()
+        bombear(0.15)
+        malo = visto[:4] != [True, False, True, False] or marcas != [[True], [False]]
+        return [f'{nombre}: abierto {visto[:4]}, marca al pulsar su botón / fuera {marcas}'] if malo else []
+
+    def chip(w, nombre, valor, abrir):
+        c = un_clic_ui.ChipGo('ph.palette', nombre, valor, 'verde', None, menu=True, padre=w)
+        c.move(300, 600)
+        c.resize(c.sizeHint())
+        c.clicked.connect(lambda: abrir(c))
+        return c
+
+    def estilo(w, d):
+        packs = [{'nombre': f'Tema {i}', 'etiqueta': f'Estilo {i}', 'sirve': True} for i in range(1, 10)]
+        return chip(w, 'Estilo', '7', lambda c: d.__setitem__('p', menu_estilo_ui.abrir(w, packs, 'Tema 7', lambda n: None, lambda: None, ancla=c)))
+
+    def pro(w, d):
+        return chip(w, 'Edición PRO', 'No', lambda c: d.__setitem__('p', menu_pro_ui.abrir(w, lambda: ({}, False), lambda *a: None, lambda: None,
+                                                                                           False, ancla=c)))
+
+    def menu(w, d):
+        b = QPushButton('Menos…', w)
+        b.setGeometry(40, 40, 120, 36)
+
+        def abrir():
+            m = ui.Menu(w)
+            m.agregar('uno', lambda: None)
+            d['p'] = m
+            m.mostrar(b.mapToGlobal(QPoint(0, b.height() + 6)), ancla=b)
+        b.clicked.connect(abrir)
+        return b
+
+    def letras(w, d):
+        b = QPushButton('Del estilo', w)
+        b.setGeometry(300, 600, 160, 36)
+
+        def abrir():
+            t = editor_ui.TarjetaColores.__new__(editor_ui.TarjetaColores)        # (solo el método: sin armar toda la tarjeta)
+            t._aj, t._poner, t.window = {'fuente_principal': ''}, (lambda c, v: None), (lambda: w)
+            antes = {id(x) for x in w.findChildren(editor_ui._PopupLetras)}
+            editor_ui.TarjetaColores._abrir_letras(t, 'fuente_principal', b)
+            nuevos = [x for x in w.findChildren(editor_ui._PopupLetras) if id(x) not in antes]
+            d['p'] = nuevos[-1] if nuevos else None
+        b.clicked.connect(abrir)
+        return b
+
+    espia = Espia()
+    app.installEventFilter(espia)
+    try:
+        fallos = (probar('chip «Estilo»', estilo) + probar('chip «Edición PRO»', pro) + probar('ui.Menu de un botón', menu, es_menu=True)
+                  + probar('letras de «Colores y letra»', letras))
+    finally:
+        app.removeEventFilter(espia)
+    esperar(not fallos, ' | '.join(fallos))
+
+
 @caso('Informes de clientes')
 def arranque_lento_y_escritura_bien_explicados():
     pila = ('Hilo principal:\n  File "CineCaptions (script principal).py", line 6785, in _build_ui\n  File "escena_go.py", line 419, in __init__\n'

@@ -393,5 +393,6 @@ def abrir(padre, packs, actual, elegir, ver_estilos, ancla=None):
     if ancla is not None and hasattr(ancla, 'poner_abierto'):
         ancla.poner_abierto(True)
         panel.al_cerrar = lambda: ancla.poner_abierto(False)
+    ui.no_reabrir(panel, ancla)                  # v5.84: volver a pulsar el chip lo cierra (antes se cerraba y se abría otra vez)
     panel.mostrar(ancla)
     return panel

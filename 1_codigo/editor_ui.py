@@ -1133,6 +1133,7 @@ class TarjetaColores(QFrame):
         pop.adjustSize()
         g = boton.mapToGlobal(boton.rect().topRight())
         pop.move(int(g.x() - pop.width()), int(g.y() - pop.height() - 6))       # (la tarjeta va abajo del todo: la lista sale encima)
+        ui.no_reabrir(pop, boton)                # v5.84: volver a pulsar el botón de la letra cierra la lista (antes se cerraba y se abría otra vez)
         pop.show()
 
     def _volver_al_estilo(self):

@@ -666,6 +666,10 @@ def ajustar_captions(escena, motions):
                  for it in ult['a']['items']]
         out[-1] = dict(ult, a=dict(ult['a'], items=items, top=1060, tout=round(cierre['fin'] + 5.0, 3)))
         out[-1]['fin_clip'] = cierre['fin']
+    # v5.84: el tope de arriba solo cuenta el alto de las líneas; aros, cintas giradas, subrayados y la serif bajan más (kit_neon._bloque_en_zona,
+    # medido): cada bloque recolocado (órbita, tarjetas, cierre) otra vez dentro de la zona segura. Copias de los items: no toca la escena original.
+    for k, e in enumerate(out):
+        out[k] = dict(e, a=KN._bloque_en_zona(dict(e['a'], items=[dict(it) for it in e['a'].get('items') or []])))
     return out
 
 
