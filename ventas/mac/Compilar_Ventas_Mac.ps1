@@ -44,7 +44,13 @@ if (-not $SoloDescargar) {
     $sha = (git -C $espejo rev-parse HEAD).Trim()
 
     Paso "Compilando en GitHub (Apple Silicon e Intel)"
-    Nativo { gh workflow run $flujo -R $repo --ref main }
+    # (recién subido, GitHub tarda unos segundos en conocer el flujo: «workflow not found» se reintenta)
+    for ($i = 1; $i -le 12; $i++) {
+        gh workflow run $flujo -R $repo --ref main 2>$null
+        if ($LASTEXITCODE -eq 0) { break }
+        if ($i -eq 12) { throw "GitHub no encontró el flujo $flujo" }
+        Start-Sleep -Seconds 10
+    }
     $id = $null
     for ($i = 0; $i -lt 30 -and -not $id; $i++) {
         Start-Sleep -Seconds 4
